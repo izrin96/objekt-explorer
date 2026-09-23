@@ -94,7 +94,9 @@ function ListEntries() {
 
   const ids = useSelection((s) => s.ids);
   const toggle = useSelection((s) => s.toggle);
-  const [active, setActive] = useState<ValidObjekt | null>(null);
+  // the menu acts on every copy the card stands for, so the open card holds its
+  // whole group
+  const [activeGroup, setActiveGroup] = useState<ValidObjekt[]>([]);
   const [priceTarget, setPriceTarget] = useState<ValidObjekt[]>([]);
   const [removeTarget, setRemoveTarget] = useState<ValidObjekt[]>([]);
   const [priceOpen, setPriceOpen] = useState(false);
@@ -132,6 +134,31 @@ function ListEntries() {
     setRemoveOpen(true);
   }, []);
 
+  const menuItems = useCallback(
+    (objekts: ValidObjekt[]) => {
+      const objekt = objekts[0];
+      if (!objekt) return null;
+      return (
+        <>
+          <AddToListMenuItem objekts={[objekt]} />
+          {isOwner && compare === null ? (
+            <MenuItem variant="destructive" onClick={() => openRemove(objekts)}>
+              <TrashIcon />
+              {m.objekt_menu_remove_from_list()}
+            </MenuItem>
+          ) : null}
+          {canPrice && compare === null ? (
+            <MenuItem onClick={() => openPrice(objekts)}>
+              <CurrencyDollarIcon />
+              {m.objekt_menu_set_price()}
+            </MenuItem>
+          ) : null}
+        </>
+      );
+    },
+    [isOwner, canPrice, compare, openPrice, openRemove],
+  );
+
   const renderObjekt = useCallback(
     ({ item, rowIndex }: { item: ValidObjekt[]; rowIndex: number }) => {
       const objekt = item[0];
@@ -142,7 +169,7 @@ function ListEntries() {
           objekt={objekt}
           selected={ids.has(objekt.id)}
           onToggleSelect={user ? (value) => toggle(value.id) : undefined}
-          onOpen={setActive}
+          onOpen={() => setActiveGroup(item)}
           qty={item.length > 1 ? item.length : undefined}
           hideSerial={list.hideSerial === true}
           price={isSale ? formatPrice(currency, objekt) : undefined}
@@ -150,39 +177,11 @@ function ListEntries() {
           note={isSale ? objekt.note : undefined}
           priority={rowIndex < 2}
         >
-          {user ? (
-            <ObjektCardMenu>
-              <AddToListMenuItem objekts={[objekt]} />
-              {isOwner && compare === null ? (
-                <MenuItem variant="destructive" onClick={() => openRemove(item)}>
-                  <TrashIcon />
-                  {m.objekt_menu_remove_from_list()}
-                </MenuItem>
-              ) : null}
-              {canPrice && compare === null ? (
-                <MenuItem onClick={() => openPrice(item)}>
-                  <CurrencyDollarIcon />
-                  {m.objekt_menu_set_price()}
-                </MenuItem>
-              ) : null}
-            </ObjektCardMenu>
-          ) : null}
+          {user ? <ObjektCardMenu>{menuItems(item)}</ObjektCardMenu> : null}
         </ObjektCard>
       );
     },
-    [
-      ids,
-      toggle,
-      user,
-      isOwner,
-      canPrice,
-      compare,
-      currency,
-      isSale,
-      list.hideSerial,
-      openPrice,
-      openRemove,
-    ],
+    [ids, toggle, user, currency, isSale, list.hideSerial, menuItems],
   );
 
   const selected = useMemo(() => filtered.filter((objekt) => ids.has(objekt.id)), [filtered, ids]);
@@ -190,9 +189,10 @@ function ListEntries() {
   // a bound list hiding serials is a list of collections as far as the drawer
   // is concerned, exactly as the website decides its default tab
   const showOwned = list.isProfileBind && list.hideSerial !== true;
+  const activeObjekt = activeGroup[0] ?? null;
   const ownedCopies = useMemo(
-    () => (showOwned ? ownedCopiesOf(filtered, active) : []),
-    [active, filtered, showOwned],
+    () => (showOwned ? ownedCopiesOf(filtered, activeObjekt) : []),
+    [activeObjekt, filtered, showOwned],
   );
 
   if (compare !== null && compareQuery.isError) {
@@ -297,10 +297,13 @@ function ListEntries() {
       )}
 
       <ObjektDrawer
-        objekt={active}
-        onClose={() => setActive(null)}
+        objekt={activeObjekt}
+        onClose={() => setActiveGroup([])}
         owned={showOwned ? ownedCopies : undefined}
         ownedMenu={user ? (item) => <AddToListMenuItem objekts={[item]} /> : undefined}
+        selected={activeObjekt !== null && ids.has(activeObjekt.id)}
+        onToggleSelect={user ? (value) => toggle(value.id) : undefined}
+        menu={user ? menuItems(activeGroup) : undefined}
       />
 
       {canPrice ? (

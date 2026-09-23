@@ -1,8 +1,13 @@
-import { LockSimpleIcon, LockSimpleOpenIcon } from "@phosphor-icons/react";
+import {
+  CheckIcon,
+  DotsThreeIcon,
+  LockSimpleIcon,
+  LockSimpleOpenIcon,
+} from "@phosphor-icons/react";
 import type { SortBy } from "@repo/api/schemas/market";
 import type { OwnedObjekt, ValidObjekt } from "@repo/lib/types/objekt";
 import { useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { type ReactNode, useMemo, useState } from "react";
 
 import { ApolloIcon } from "@/components/shared/apollo-icon";
 import { Badge } from "@/components/ui/badge";
@@ -15,10 +20,12 @@ import {
   DrawerPopup,
   DrawerTitle,
 } from "@/components/ui/drawer";
+import { Menu, MenuPopup, MenuTrigger } from "@/components/ui/menu";
 import { Tabs, TabsList, TabsPanel, TabsTab } from "@/components/ui/tabs";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import { absoluteTime } from "@/lib/time";
 import { unobtainableSlugs } from "@/lib/unobtainables";
+import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import { ObjektFlip } from "../objekt-flip";
@@ -45,6 +52,11 @@ type Props = {
    */
   owned?: OwnedObjekt[];
   ownedMenu?: OwnedRowMenu;
+  selected?: boolean;
+  /** the card's check and menu are hover-only, so a touch surface reaches them here */
+  onToggleSelect?: (objekt: ValidObjekt) => void;
+  /** the items only; the sheet supplies the trigger and the popup */
+  menu?: ReactNode;
 };
 
 export function ObjektDrawer({
@@ -55,6 +67,9 @@ export function ObjektDrawer({
   defaultTab = "serials",
   owned,
   ownedMenu,
+  selected = false,
+  onToggleSelect,
+  menu,
 }: Props) {
   const showOwned = owned !== undefined;
   // the body unmounts on close, so the chosen tab is held here instead: one
@@ -83,6 +98,9 @@ export function ObjektDrawer({
             onTabChange={setTab}
             owned={owned}
             ownedMenu={ownedMenu}
+            selected={selected}
+            onToggleSelect={onToggleSelect}
+            menu={menu}
             marketSort={defaultTab === "market" ? "price" : "createdAt"}
           />
         )}
@@ -100,6 +118,9 @@ function DrawerBody({
   onTabChange,
   owned: ownedCopies,
   ownedMenu,
+  selected: isSelected,
+  onToggleSelect,
+  menu,
   marketSort,
 }: {
   objekt: ValidObjekt;
@@ -110,6 +131,9 @@ function DrawerBody({
   onTabChange: (tab: DrawerTab) => void;
   owned?: OwnedObjekt[];
   ownedMenu?: OwnedRowMenu;
+  selected: boolean;
+  onToggleSelect?: (objekt: ValidObjekt) => void;
+  menu?: ReactNode;
   marketSort: SortBy;
 }) {
   const owned = isObjektOwned(objekt);
@@ -150,22 +174,59 @@ function DrawerBody({
 
   return (
     <>
-      <DrawerHeader>
-        <DrawerTitle className="font-display flex flex-wrap items-center gap-2">
-          {objekt.member}
-          {/* the season and collection no. are what name this objekt — full contrast, not a caption */}
-          <span className="font-mono text-base font-medium">{getCollectionShortNo(objekt)}</span>
-          {unobtainableSlugs.has(objekt.slug) && (
-            <Badge variant="error" size="sm">
-              {m.objekt_unobtainable()}
-            </Badge>
-          )}
-        </DrawerTitle>
-        {/* artist / season / class are the first rows of the attribute list a
-            few pixels below, so the line is only for a screen reader */}
-        <DrawerDescription className="sr-only">
-          {artistName} · {objekt.season} · {objekt.class}
-        </DrawerDescription>
+      {/* the trailing padding clears the registry close button, which is absolute
+          at `inset-e-2 top-2` over the header */}
+      <DrawerHeader className="flex-row items-start gap-2 pe-13 sm:pe-12">
+        <div className="flex min-w-0 flex-1 flex-col gap-2">
+          <DrawerTitle className="font-display flex flex-wrap items-center gap-2">
+            {objekt.member}
+            {/* the season and collection no. are what name this objekt — full contrast, not a caption */}
+            <span className="font-mono text-base font-medium">{getCollectionShortNo(objekt)}</span>
+            {unobtainableSlugs.has(objekt.slug) && (
+              <Badge variant="error" size="sm">
+                {m.objekt_unobtainable()}
+              </Badge>
+            )}
+          </DrawerTitle>
+          {/* artist / season / class are the first rows of the attribute list a
+              few pixels below, so the line is only for a screen reader */}
+          <DrawerDescription className="sr-only">
+            {artistName} · {objekt.season} · {objekt.class}
+          </DrawerDescription>
+        </div>
+        {(onToggleSelect || menu) && (
+          <div className="flex shrink-0 items-center gap-1.5">
+            {onToggleSelect && (
+              <Button
+                variant="outline"
+                size="icon-sm"
+                aria-label={isSelected ? m.objekt_deselect_aria() : m.objekt_select_aria()}
+                aria-pressed={isSelected}
+                onClick={() => onToggleSelect(objekt)}
+                className={cn(
+                  isSelected &&
+                    "bg-foreground text-background border-foreground hover:bg-foreground/90 dark:bg-foreground dark:hover:bg-foreground/90",
+                )}
+              >
+                <CheckIcon weight="bold" />
+              </Button>
+            )}
+            {menu && (
+              <Menu>
+                <MenuTrigger
+                  render={
+                    <Button variant="outline" size="icon-sm" aria-label={m.objekt_menu_aria()} />
+                  }
+                >
+                  <DotsThreeIcon weight="bold" />
+                </MenuTrigger>
+                <MenuPopup align="end" className="min-w-44">
+                  {menu}
+                </MenuPopup>
+              </Menu>
+            )}
+          </div>
+        )}
       </DrawerHeader>
       <DrawerPanel className="flex flex-col gap-5">
         {/* one column below `sm`: the card at its natural 11rem plus an

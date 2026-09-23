@@ -138,7 +138,14 @@ export function MarketView() {
           <AddToListAction objekts={filtered} />
         </SelectBar>
       )}
-      <ObjektDrawer objekt={active} onClose={() => setActive(null)} defaultTab="market" />
+      <ObjektDrawer
+        objekt={active}
+        onClose={() => setActive(null)}
+        defaultTab="market"
+        selected={active !== null && ids.has(active.id)}
+        onToggleSelect={user ? (value) => toggle(value.id) : undefined}
+        menu={user && active ? <AddToListMenuItem objekts={[active]} /> : undefined}
+      />
     </AddToListProvider>
   );
 }
