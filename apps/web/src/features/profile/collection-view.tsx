@@ -415,15 +415,6 @@ export function CollectionView() {
         selected={active !== null && selected.has(active.id)}
         onToggleSelect={showActions ? (item) => toggleSelect(item.id) : undefined}
         menu={showActions && active !== null ? objektMenuItems(active) : undefined}
-        locked={active !== null && isObjektOwned(active) && active.isLocked === true}
-        onToggleLock={
-          showActions && isProfileAuthed && active !== null && isObjektOwned(active)
-            ? () =>
-                active.isLocked
-                  ? batchUnlock.mutate({ address, tokenIds: [Number(active.id)] })
-                  : batchLock.mutate({ address, tokenIds: [Number(active.id)] })
-            : undefined
-        }
       />
     </AddToListProvider>
   );

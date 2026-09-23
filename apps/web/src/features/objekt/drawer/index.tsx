@@ -1,9 +1,4 @@
-import {
-  CheckIcon,
-  DotsThreeIcon,
-  LockSimpleIcon,
-  LockSimpleOpenIcon,
-} from "@phosphor-icons/react";
+import { CheckIcon, DotsThreeIcon } from "@phosphor-icons/react";
 import type { SortBy } from "@repo/api/schemas/market";
 import type { OwnedObjekt, ValidObjekt } from "@repo/lib/types/objekt";
 import { useQuery } from "@tanstack/react-query";
@@ -41,9 +36,6 @@ type DrawerTab = "owned" | "serials" | "market" | "metadata";
 type Props = {
   objekt: ValidObjekt | null;
   onClose: () => void;
-  /** the drawer does not know whose collection it is looking at; the surface does */
-  locked?: boolean;
-  onToggleLock?: () => void;
   defaultTab?: Extract<DrawerTab, "serials" | "market">;
   /**
    * Every copy of the open collection the surface's profile holds. Passing it
@@ -62,8 +54,6 @@ type Props = {
 export function ObjektDrawer({
   objekt,
   onClose,
-  locked,
-  onToggleLock,
   defaultTab = "serials",
   owned,
   ownedMenu,
@@ -92,8 +82,6 @@ export function ObjektDrawer({
             key={objekt.id}
             objekt={objekt}
             onClose={onClose}
-            locked={locked}
-            onToggleLock={onToggleLock}
             tab={tab}
             onTabChange={setTab}
             owned={owned}
@@ -112,8 +100,6 @@ export function ObjektDrawer({
 function DrawerBody({
   objekt,
   onClose,
-  locked,
-  onToggleLock,
   tab,
   onTabChange,
   owned: ownedCopies,
@@ -125,8 +111,6 @@ function DrawerBody({
 }: {
   objekt: ValidObjekt;
   onClose: () => void;
-  locked?: boolean;
-  onToggleLock?: () => void;
   tab: DrawerTab;
   onTabChange: (tab: DrawerTab) => void;
   owned?: OwnedObjekt[];
@@ -275,12 +259,6 @@ function DrawerBody({
                 <ApolloIcon className="size-4" />
                 {m.objekt_view_in_apollo()}
               </Button>
-              {owned && onToggleLock && (
-                <Button variant="outline" size="sm" onClick={onToggleLock}>
-                  {locked ? <LockSimpleOpenIcon /> : <LockSimpleIcon />}
-                  {locked ? m.objekt_menu_unlock() : m.objekt_menu_lock()}
-                </Button>
-              )}
             </div>
           </div>
         </div>
