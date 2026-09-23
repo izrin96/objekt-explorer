@@ -7,7 +7,7 @@ import { useDeferredValue, useEffect, useMemo } from "react";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import { filterObjekts } from "@/features/filters/filter-utils";
 import type { FilterSearch } from "@/features/filters/search-schema";
-import { useCanonicalFilters, useFilters } from "@/features/filters/use-filters";
+import { useCanonicalFilters, useValidatedCanonicalFilters } from "@/features/filters/use-filters";
 import { collectionOptions } from "@/features/objekt/queries";
 import { useCollectionRarity } from "@/features/objekt/use-collection-rarity";
 
@@ -36,7 +36,7 @@ const SPIN_PAGE_SIZE = 300;
 function ownedServerFilters(
   address: string,
   artist: OwnedBySchema["artist"],
-  filters: Partial<FilterSearch>,
+  filters: FilterSearch,
 ) {
   if (!isSpinAddress(address)) return { artist, at: filters.at };
   return {
@@ -146,12 +146,12 @@ export function useProfileObjekts() {
 export function useProfileSummary() {
   const profile = useProfileTarget()!;
   const { selectedArtistIds } = useCosmoArtist();
-  // the layout sits above the routes that validate the filters, so only `at` is read here
-  const at = useFilters((f) => f.at);
+  // the tabs' own filters, so Spin's server-filtered first page is the one the grid fetched
+  const filters = useValidatedCanonicalFilters();
 
   const { query, objekts } = useOwnedPages(
     profile.address,
-    ownedServerFilters(profile.address, selectedArtistIds, { at }),
+    ownedServerFilters(profile.address, selectedArtistIds, filters),
   );
   const { pins, locks } = usePinsAndLocks(profile.address);
 

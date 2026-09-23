@@ -3,7 +3,7 @@ import { useCallback, useMemo } from "react";
 
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 
-import { defaultFilters, type FilterSearch } from "./search-schema";
+import { defaultFilters, filterSearchSchema, type FilterSearch } from "./search-schema";
 
 export type FilterPatch = Partial<FilterSearch>;
 
@@ -28,7 +28,20 @@ export function useFilters<T>(select?: (filters: FilterSearch) => T): FilterSear
  * against Cosmo's own spelling, so the value is folded onto it on the way in.
  */
 export function useCanonicalFilters(): FilterSearch {
-  const filters = useFilters();
+  return useCanonical(useFilters());
+}
+
+/**
+ * The same, for a component above the routes that declare `filterSearchSchema`,
+ * such as a layout: there the search is still the raw URL (`?member=a` is the
+ * string `"a"`), so it is read through the schema those routes apply.
+ */
+export function useValidatedCanonicalFilters(): FilterSearch {
+  const raw = useFilters();
+  return useCanonical(useMemo(() => filterSearchSchema.parse(raw), [raw]));
+}
+
+function useCanonical(filters: FilterSearch): FilterSearch {
   const { getMember } = useCosmoArtist();
 
   return useMemo(() => {
