@@ -224,9 +224,17 @@ export function ProgressView() {
   );
 
   const members = useChartMembers();
+  // a unit objekt credits every member on it, so a member filter still leaves
+  // the partners with a handful of totals; only the picked members are ranked
+  const rankedMembers = useMemo(() => {
+    const picked = filters.member?.map((name) => name.toLowerCase());
+    return picked?.length
+      ? members.filter((member) => picked.includes(member.name.toLowerCase()))
+      : members;
+  }, [members, filters.member]);
   const rows = useMemo(
-    () => memberProgress(catalogue, ownedSlugs, members),
-    [catalogue, ownedSlugs, members],
+    () => memberProgress(catalogue, ownedSlugs, rankedMembers),
+    [catalogue, ownedSlugs, rankedMembers],
   );
   const sections = useMemo(
     () =>
