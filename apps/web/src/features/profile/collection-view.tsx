@@ -247,12 +247,16 @@ export function CollectionView() {
     [dndEnabled, renderCard],
   );
 
+  // the floating copy is artwork only: a caption under it would cast the
+  // overlay's shadow below the card as a dark blob
   const renderOverlay = useCallback(
     (id: string) => {
       const objekt = pinned.find((item) => item.id === id);
-      return objekt ? renderCard(objekt) : null;
+      return objekt ? (
+        <ObjektCard objekt={objekt} pin hideLabel className="rounded-photocard shadow-xl" />
+      ) : null;
     },
-    [pinned, renderCard],
+    [pinned],
   );
 
   const ownedCopies = useMemo(() => ownedCopiesOf(filtered, active), [active, filtered]);

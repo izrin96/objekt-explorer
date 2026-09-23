@@ -143,9 +143,7 @@ function PinDragProvider({
       </SortableContext>
       <DragOverlay dropAnimation={dropAnimation}>
         {activeId !== null && moved ? (
-          <div className="rounded-photocard scale-103 shadow-2xl shadow-black/40">
-            {renderOverlay(activeId)}
-          </div>
+          <div className="scale-103">{renderOverlay(activeId)}</div>
         ) : null}
       </DragOverlay>
     </DndContext>
