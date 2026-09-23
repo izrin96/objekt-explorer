@@ -5,8 +5,12 @@ import type { CSSProperties, KeyboardEvent, PointerEvent } from "react";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { Group, GroupText } from "@/components/ui/group";
-import { Input } from "@/components/ui/input";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+  InputGroupText,
+} from "@/components/ui/input-group";
 import { Popover, PopoverPopup, PopoverTrigger } from "@/components/ui/popover";
 import { toastManager } from "@/components/ui/toast";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "@/components/ui/tooltip";
@@ -262,9 +266,11 @@ export function ColorPicker({
             />
           </div>
 
-          <Group className="w-full">
-            <GroupText className="font-mono">#</GroupText>
-            <Input
+          <InputGroup>
+            <InputGroupAddon>
+              <InputGroupText className="font-mono">#</InputGroupText>
+            </InputGroupAddon>
+            <InputGroupInput
               size="sm"
               name="hex"
               aria-label={m.filter_color_hex()}
@@ -277,39 +283,41 @@ export function ColorPicker({
                 if (event.key === "Enter") commitHex(draft ?? hex);
               }}
             />
-            <Tooltip>
-              <TooltipTrigger
-                render={
-                  <Button
-                    variant="outline"
-                    size="icon-sm"
-                    aria-label={m.common_copy_button()}
-                    onClick={() => void copyHex()}
-                  />
-                }
-              >
-                <CopyIcon />
-              </TooltipTrigger>
-              <TooltipPopup>{m.common_copy_button()}</TooltipPopup>
-            </Tooltip>
-            {eyeDropper && (
+            <InputGroupAddon align="inline-end">
               <Tooltip>
                 <TooltipTrigger
                   render={
                     <Button
-                      variant="outline"
-                      size="icon-sm"
-                      aria-label={m.filter_color_eyedropper()}
-                      onClick={() => void pickFromScreen()}
+                      variant="ghost"
+                      size="icon-xs"
+                      aria-label={m.common_copy_button()}
+                      onClick={() => void copyHex()}
                     />
                   }
                 >
-                  <EyedropperIcon />
+                  <CopyIcon />
                 </TooltipTrigger>
-                <TooltipPopup>{m.filter_color_eyedropper()}</TooltipPopup>
+                <TooltipPopup>{m.common_copy_button()}</TooltipPopup>
               </Tooltip>
-            )}
-          </Group>
+              {eyeDropper && (
+                <Tooltip>
+                  <TooltipTrigger
+                    render={
+                      <Button
+                        variant="ghost"
+                        size="icon-xs"
+                        aria-label={m.filter_color_eyedropper()}
+                        onClick={() => void pickFromScreen()}
+                      />
+                    }
+                  >
+                    <EyedropperIcon />
+                  </TooltipTrigger>
+                  <TooltipPopup>{m.filter_color_eyedropper()}</TooltipPopup>
+                </Tooltip>
+              )}
+            </InputGroupAddon>
+          </InputGroup>
 
           {swatches && swatches.length > 0 && (
             <div className="grid grid-cols-8 gap-1.5">
