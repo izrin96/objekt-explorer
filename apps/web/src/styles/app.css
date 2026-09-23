@@ -337,6 +337,15 @@
 }
 
 @layer base {
+  /* recharts 3 wraps each paint layer in a \`tabindex="-1"\` group, so a click
+     on a bar focuses the group and Chrome rings it. Such a group is never a
+     keyboard stop, so no one navigating by keyboard loses a focus indicator. */
+  .recharts-surface g[tabindex="-1"]:focus {
+    outline: none;
+  }
+}
+
+@layer base {
   /*
    * The Base UI overlays (drawer, dialog, popover) carry their transitions in
    * the registry copies under `components/ui`, which stay verbatim so the next

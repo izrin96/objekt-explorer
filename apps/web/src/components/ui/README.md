@@ -1,6 +1,6 @@
 # Registry components
 
-Every file here except `chart.tsx` is a vendored copy of a shadcn-style registry item: 32 from
+Every file here is a vendored copy of a shadcn-style registry item: 33 from
 cnippet (`https://ui.cnippet.dev/r/<name>.json`, configured as `@cnippet` in
 `apps/web/components.json`) and `color-picker.tsx` from Neon (`https://ui.neon.com/r/color-picker.json`).
 They are kept verbatim so an update is an overwrite, not a merge. Override styling at the usage
@@ -34,9 +34,3 @@ byte-identical to upstream after that normalisation.
 | `select.tsx`       | `SelectGroupLabel` accepts `className` and merges it with `cn()`                                                                                                         | The registry copy spread `props` after its own `className`, so a passed class replaced the base styles; needed to make the artist group label sticky.                                                           |
 | `color-picker.tsx` | Hugeicons glyphs replaced by Phosphor `EyedropperIcon`, `CopyIcon`, `CheckIcon`; the `neon-tokens` registry dependency skipped                                           | No second icon package for three icons; every token the file names already exists in `app.css`.                                                                                                                 |
 | `color-picker.tsx` | `z-50` on `Popover.Positioner`; the hex input gets `name="hex"`                                                                                                          | The registry put `z-50` on the static `Popover.Popup`, so the picker painted under the mobile Filters sheet; the positioned element is the Positioner. The nameless input was a devtools warning on every open. |
-
-## Not a registry copy
-
-`chart.tsx` is a port of `apps/website/src/components/intentui/chart.tsx` trimmed to what the
-Progress and Statistics charts use (container, tooltip, tooltip content). cnippet publishes a
-`chart` item with the same name; do not overwrite this file with it.

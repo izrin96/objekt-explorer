@@ -7,7 +7,12 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { Shimmer } from "@/components/shared/shimmer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Chart, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  type ChartConfig,
+} from "@/components/ui/chart";
 import { useFilterData } from "@/features/filters/filter-data-provider";
 import { LONG_TAIL } from "@/features/filters/filter-popover";
 import { useMemberColor } from "@/features/filters/member-colors";
@@ -63,20 +68,12 @@ const PIE_CONFIG = {} satisfies ChartConfig;
 
 function BreakdownPie({ data, label }: { data: Slice[]; label: string }) {
   return (
-    <Chart
-      layout="radial"
-      data={data}
-      dataKey="count"
-      config={PIE_CONFIG}
-      containerHeight={450}
-      className="size-full"
-    >
+    <ChartContainer config={PIE_CONFIG} className="aspect-auto h-112.5 w-full">
       <PieChart>
         <ChartTooltip
           cursor={false}
           content={
             <ChartTooltipContent
-              labelSeparator={false}
               hideLabel
               formatter={(value, _name, item) => {
                 const row = data.find((candidate) => candidate.name === item.payload?.name);
@@ -112,7 +109,7 @@ function BreakdownPie({ data, label }: { data: Slice[]; label: string }) {
           aria-label={label}
         />
       </PieChart>
-    </Chart>
+    </ChartContainer>
   );
 }
 

@@ -2,7 +2,12 @@ import { useMemo } from "react";
 import { Bar, BarChart, Rectangle, XAxis, YAxis } from "recharts";
 import type { BarShapeProps } from "recharts/types/cartesian/Bar";
 
-import { Chart, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  type ChartConfig,
+} from "@/components/ui/chart";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import { useMemberColor } from "@/features/filters/member-colors";
 import { inkOn } from "@/lib/color";
@@ -62,13 +67,10 @@ export function MemberProgressChart({
   } satisfies ChartConfig;
 
   return (
-    <Chart
-      layout="vertical"
-      data={data}
-      dataKey="percentage"
+    <ChartContainer
       config={config}
-      containerHeight={data.length * 40}
-      className="w-full"
+      className="aspect-auto w-full"
+      style={{ height: data.length * 40 }}
     >
       <BarChart accessibilityLayer data={data} layout="vertical" barSize={32}>
         <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} width={90} />
@@ -119,7 +121,6 @@ export function MemberProgressChart({
         <ChartTooltip
           content={
             <ChartTooltipContent
-              labelSeparator={false}
               indicator="line"
               formatter={(value, _name, item) => {
                 const row = data.find((candidate) => candidate.name === item.payload?.name);
@@ -150,6 +151,6 @@ export function MemberProgressChart({
           }
         />
       </BarChart>
-    </Chart>
+    </ChartContainer>
   );
 }
