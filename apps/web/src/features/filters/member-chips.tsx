@@ -199,8 +199,10 @@ export function MemberChips() {
     setFilters({ member: next.length > 0 ? next : undefined });
   };
 
+  // below `md` the artist switch and the Member dropdown share a row a 320px
+  // phone cannot fit, so the dropdown drops under the switch there
   return (
-    <div className="flex min-w-0 items-center gap-2">
+    <div className="flex min-w-0 items-center gap-2 max-md:flex-wrap">
       <div
         role="group"
         aria-label={m.filter_artist()}

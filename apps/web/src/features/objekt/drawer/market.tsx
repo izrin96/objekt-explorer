@@ -224,11 +224,17 @@ function MarketRow({
         )}
       </div>
 
-      <div className="col-span-full -mt-1 flex items-center justify-between gap-2">
+      {/* the timestamp does not wrap, so on a narrow drawer the button wraps under it */}
+      <div className="col-span-full -mt-1 flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5">
         <span className="text-muted-foreground font-mono text-xs whitespace-nowrap">
           <Timestamp date={new Date(item.createdAt)} />
         </span>
-        <Button variant="outline" size="xs" render={<Link {...getListLinkOption(item.list)} />}>
+        <Button
+          variant="outline"
+          size="xs"
+          className="ml-auto"
+          render={<Link {...getListLinkOption(item.list)} />}
+        >
           {m.objekt_market_view_list()}
         </Button>
       </div>
