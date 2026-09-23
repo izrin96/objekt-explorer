@@ -16,7 +16,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { isSameAddress } from "@/lib/address";
-import { SITE_NAME, getBaseURL, validColumns } from "@/lib/utils";
+import { SITE_NAME, getBaseURL } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import { LIST_TYPE_LABEL } from "./list-type-badge";
@@ -385,39 +385,6 @@ export function ListForm({ idPrefix, value, onChange, lists, profiles, mode, url
               </span>
             </span>
           </Label>
-        </div>
-      ) : null}
-
-      {isEdit ? (
-        <div className="flex min-w-0 flex-col gap-1.5">
-          <Label htmlFor={id("columns")}>{m.list_edit_objekt_columns_label()}</Label>
-          <span className="text-muted-foreground text-xs text-pretty">
-            {m.list_edit_objekt_columns_desc()}
-          </span>
-          <Select
-            value={value.gridColumns === null ? NONE : String(value.gridColumns)}
-            onValueChange={(next: string | null) =>
-              set({ gridColumns: next === null || next === NONE ? null : Number(next) })
-            }
-          >
-            <SelectTrigger id={id("columns")} className="w-38">
-              <SelectValue>
-                {(next: string) =>
-                  next === NONE
-                    ? m.list_edit_objekt_columns_not_set()
-                    : m.list_edit_objekt_columns_count({ count: next })
-                }
-              </SelectValue>
-            </SelectTrigger>
-            <SelectPopup>
-              <SelectItem value={NONE}>{m.list_edit_objekt_columns_not_set()}</SelectItem>
-              {validColumns.map((count) => (
-                <SelectItem key={count} value={String(count)}>
-                  {m.list_edit_objekt_columns_count({ count: String(count) })}
-                </SelectItem>
-              ))}
-            </SelectPopup>
-          </Select>
         </div>
       ) : null}
     </div>

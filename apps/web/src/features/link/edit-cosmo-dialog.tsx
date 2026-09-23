@@ -23,13 +23,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectItem,
-  SelectPopup,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
 import { toastManager } from "@/components/ui/toast";
@@ -45,7 +38,7 @@ import { MessageMarkup } from "@/features/link/message-markup";
 import { PROFILE_QUERY_KEY, profileOptions } from "@/features/link/queries";
 import { currentUserOptions } from "@/features/user/queries";
 import { client } from "@/lib/orpc";
-import { SITE_NAME, validColumns } from "@/lib/utils";
+import { SITE_NAME } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 type Profile = Awaited<ReturnType<typeof client.profile.find>>;
@@ -78,8 +71,6 @@ const FLAGS: { key: FlagKey; label: () => string; description: () => string }[] 
     description: m.profile_edit_private_profile_desc,
   },
 ];
-
-const NOT_SET = "0";
 
 /** Owns its data, so a trigger only has to know the address. */
 export function EditCosmoDialog({
@@ -234,40 +225,6 @@ function EditForm({
             />
           </Label>
         ))}
-
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="edit-cosmo-columns">{m.profile_edit_grid_columns_label()}</Label>
-          <span className="text-muted-foreground text-xs text-pretty">
-            {m.profile_edit_grid_columns_desc()}
-          </span>
-          <Select
-            value={draft.gridColumns === null ? NOT_SET : String(draft.gridColumns)}
-            onValueChange={(value: string | null) =>
-              setDraft({
-                ...draft,
-                gridColumns: value === null || value === NOT_SET ? null : Number(value),
-              })
-            }
-          >
-            <SelectTrigger id="edit-cosmo-columns" className="w-38">
-              <SelectValue>
-                {(value: string) =>
-                  value === NOT_SET
-                    ? m.profile_edit_grid_columns_not_set()
-                    : m.profile_edit_grid_columns_count({ count: value })
-                }
-              </SelectValue>
-            </SelectTrigger>
-            <SelectPopup>
-              <SelectItem value={NOT_SET}>{m.profile_edit_grid_columns_not_set()}</SelectItem>
-              {validColumns.map((count) => (
-                <SelectItem key={count} value={String(count)}>
-                  {m.profile_edit_grid_columns_count({ count: String(count) })}
-                </SelectItem>
-              ))}
-            </SelectPopup>
-          </Select>
-        </div>
 
         <div className="flex flex-col gap-2">
           <Label htmlFor="edit-cosmo-banner">{m.profile_edit_banner_label()}</Label>
