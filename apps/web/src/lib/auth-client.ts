@@ -5,6 +5,7 @@ import { createAuthClient } from "better-auth/react";
 import { getBaseURL } from "./utils";
 
 export const authClient = createAuthClient({
-  baseURL: getBaseURL(),
+  // in dev the client follows the page's own origin, so a LAN address signs in too
+  baseURL: import.meta.env.DEV ? undefined : getBaseURL(),
   plugins: [usernameClient(), inferAdditionalFields<typeof auth>()],
 });

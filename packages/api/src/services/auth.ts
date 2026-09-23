@@ -68,6 +68,11 @@ export const auth = betterAuth({
     },
   },
   baseURL: serverEnv.VITE_SITE_URL,
+  // a phone on the LAN reaches the dev server by IP, which is not the baseURL origin
+  trustedOrigins:
+    process.env.NODE_ENV === "production"
+      ? []
+      : ["http://localhost:*", "http://127.0.0.1:*", "http://192.168.*.*:*", "http://10.*.*.*:*"],
   advanced: {
     ipAddress: {
       ipAddressHeaders: ["x-client-ip", "x-forwarded-for", "cf-connecting-ip"],
