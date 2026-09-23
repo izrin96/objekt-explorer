@@ -14,7 +14,7 @@ import { ObjektNote } from "./objekt-note";
 import { ObjektSidebar } from "./objekt-sidebar";
 import { getCollectionShortNo, isObjektOwned } from "./objekt-utils";
 
-const priceClass = "truncate font-mono text-xs font-semibold tabular-nums";
+const priceClass = "truncate font-mono text-xxs font-semibold tabular-nums @[9rem]:text-xs";
 
 type ObjektCardProps = {
   objekt: ValidObjekt;
@@ -226,8 +226,8 @@ export function ObjektCard({
                than viewport: a 3-up phone grid and a 10-column desktop grid both
                land near 144px, where "GyeongBeen" + "Su26 229Z" stop fitting on
                one line. Below that the two stack, so neither value is truncated
-               away. */
-            <div className="flex min-w-0 flex-col gap-0.5 text-xs leading-tight @[9rem]:flex-row @[9rem]:items-baseline @[9rem]:justify-between @[9rem]:gap-1.5">
+               away, and the type steps down to `text-xxs` with them. */
+            <div className="text-xxs flex min-w-0 flex-col gap-0.5 leading-tight @[9rem]:flex-row @[9rem]:items-baseline @[9rem]:justify-between @[9rem]:gap-1.5 @[9rem]:text-xs">
               <span className="truncate font-medium">{objekt.member}</span>
               {/* an identifier people read off the card, not a caption — full contrast */}
               <span className="truncate font-mono @[9rem]:flex-none">
