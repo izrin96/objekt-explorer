@@ -3,7 +3,7 @@ import type { ValidObjekt } from "@repo/lib/types/objekt";
 
 import { Button } from "@/components/ui/button";
 import { MenuItem } from "@/components/ui/menu";
-import { selectBarFillClass } from "@/features/objekt/select-bar";
+import { selectBarFillClass, selectBarIconOnlyClass } from "@/features/objekt/select-bar";
 import { m } from "@/paraglide/messages";
 import { useSelection } from "@/stores/selection";
 
@@ -29,13 +29,12 @@ export function AddToListAction({ objekts }: { objekts: ValidObjekt[] }) {
   return (
     <Button
       size="sm"
-      className={`${selectBarFillClass} shrink-0`}
+      className={`${selectBarFillClass} ${selectBarIconOnlyClass} shrink-0`}
       disabled={ids.size === 0}
       onClick={() => openAddToList(objekts.filter((objekt) => ids.has(objekt.id)))}
     >
       <PlusIcon />
-      {/* a 320px phone has no room for the label beside the count, ⋯ and clear */}
-      <span className="max-[22.5rem]:sr-only">{m.filter_add_to_list()}</span>
+      <span className="max-sm:sr-only">{m.filter_add_to_list()}</span>
     </Button>
   );
 }

@@ -20,7 +20,7 @@ export function PageMain({ className, children }: { className?: string; children
     <InPageMain value={true}>
       <main
         data-overflow-guard
-        className={cn(containerClass, "flex flex-col gap-4.5 px-5 pt-5 pb-10", className)}
+        className={cn(containerClass, "flex flex-1 flex-col gap-4.5 px-5 pt-5 pb-10", className)}
       >
         {children}
       </main>

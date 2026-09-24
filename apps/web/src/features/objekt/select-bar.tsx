@@ -1,4 +1,11 @@
-import { CaretUpIcon, CheckSquareIcon, DotsThreeIcon, XIcon } from "@phosphor-icons/react";
+import {
+  CaretUpIcon,
+  CheckSquareIcon,
+  DotsThreeIcon,
+  SelectionAllIcon,
+  SelectionSlashIcon,
+  XIcon,
+} from "@phosphor-icons/react";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import type { ReactNode } from "react";
 
@@ -29,6 +36,8 @@ const SELECTED_PREVIEW_MAX = 50;
 /** filled action on the inverted bar */
 export const selectBarFillClass =
   "bg-background text-foreground border-background hover:bg-background/90 dark:hover:bg-background/90 dark:data-pressed:bg-background/90 h-7";
+/** a labelled action that drops to a square icon below `sm`; the label goes `max-sm:sr-only` */
+export const selectBarIconOnlyClass = "max-sm:w-7 max-sm:px-0";
 /** outlined action on the inverted bar */
 const selectBarActionClass =
   "border-background/25 text-background hover:bg-background/10 hover:text-background data-pressed:bg-background/10 dark:hover:bg-background/10 dark:data-pressed:bg-background/10 h-7 bg-transparent dark:bg-transparent";
@@ -51,8 +60,10 @@ type SelectBarProps = {
 
 /**
  * Open for as long as select mode is, so an empty selection still shows how to
- * fill it. Below `sm` the secondary actions collapse into a "⋯" menu; "Select
- * all" never does, since it is the way in to every other action.
+ * fill it. `mt-auto` drops it to the foot of `<main>` on a page shorter than
+ * the screen, where `sticky` alone would leave it under the last card. Below
+ * `sm` the secondary actions fold into a "⋯" menu and the labelled buttons go
+ * icon-only, so one row fits a 320px phone.
  */
 export function SelectBar({ objekts, children, secondary = [] }: SelectBarProps) {
   const ids = useSelection((s) => s.ids);
@@ -70,7 +81,7 @@ export function SelectBar({ objekts, children, secondary = [] }: SelectBarProps)
     <div
       role="toolbar"
       aria-label={m.selection_toolbar_aria()}
-      className="bg-foreground text-background sticky bottom-4 z-5 mx-auto mt-1.5 flex w-full max-w-full min-w-0 items-center gap-1.5 rounded-xl py-1.5 pr-1.5 pl-3.5 text-base shadow-lg sm:w-max sm:text-sm"
+      className="bg-foreground text-background sticky bottom-4 z-5 mx-auto mt-auto flex w-max max-w-full min-w-0 items-center gap-1.5 rounded-xl py-1.5 pr-1.5 pl-3.5 text-base shadow-lg sm:text-sm"
     >
       <SelectedPopover objekts={selected} count={ids.size} />
       <span className="bg-background/25 mx-1 h-5 w-px shrink-0 max-sm:hidden" />
@@ -96,13 +107,10 @@ export function SelectBar({ objekts, children, secondary = [] }: SelectBarProps)
         variant="outline"
         disabled={objekts.length === 0}
         onClick={() => selectAll(allSelected ? [] : objekts.map((objekt) => objekt.id))}
-        className={cn(selectBarActionClass, "shrink-0 max-sm:ml-auto")}
+        className={cn(selectBarActionClass, selectBarIconOnlyClass, "shrink-0")}
       >
-        {/* the short form keeps the bar on one line on a 320px phone */}
-        <span className="sm:hidden">
-          {allSelected ? m.selection_none_short() : m.selection_all_short()}
-        </span>
-        <span className="max-sm:hidden">
+        {allSelected ? <SelectionSlashIcon /> : <SelectionAllIcon />}
+        <span className="max-sm:sr-only">
           {allSelected ? m.selection_deselect_all() : m.filter_select_all()}
         </span>
       </Button>
@@ -160,16 +168,15 @@ function SelectedPopover({ objekts, count }: { objekts: ValidObjekt[]; count: nu
     <Popover>
       <PopoverTrigger
         disabled={count === 0}
-        aria-label={m.filter_selected_count({ count })}
         className={cn(
-          "focus-visible:ring-background flex shrink-0 cursor-pointer items-center gap-1 rounded-sm whitespace-nowrap outline-none focus-visible:ring-2",
+          "focus-visible:ring-background flex min-w-0 cursor-pointer items-center gap-1 rounded-sm whitespace-nowrap outline-none focus-visible:ring-2 max-sm:text-xs",
           "underline-offset-2 hover:underline disabled:cursor-default disabled:no-underline",
+          // not a `Button`, so it restates the registry's 44px touch target
+          "relative pointer-coarse:after:absolute pointer-coarse:after:size-full pointer-coarse:after:min-h-11",
         )}
       >
-        {/* a phone bar also carries "All", ⋯ and clear, so the count goes bare */}
-        <span className="sm:hidden">{count}</span>
-        <span className="max-sm:hidden">{m.filter_selected_count({ count })}</span>
-        <CaretUpIcon className="size-3 opacity-70" aria-hidden />
+        <span className="truncate">{m.filter_selected_count({ count })}</span>
+        <CaretUpIcon className="size-3 shrink-0 opacity-70" aria-hidden />
       </PopoverTrigger>
       <PopoverPopup
         side="top"

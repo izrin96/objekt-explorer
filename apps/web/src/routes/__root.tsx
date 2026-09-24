@@ -152,11 +152,16 @@ function RootComponent() {
     <ToastProvider position="bottom-right">
       <CosmoArtistProvider>
         <FilterDataProvider>
-          <AppNav />
-          {/* `clip` rather than `hidden`: it creates no scroll container, so a
-              sticky nav still works, and no page can scroll sideways */}
-          <div className="min-h-svh overflow-x-clip">
-            <Outlet />
+          {/* one screen tall counting the nav, so a short page does not scroll
+              and its content can grow into the rest */}
+          <div className="flex min-h-svh flex-col">
+            <AppNav />
+            {/* `clip` rather than `hidden`: it creates no scroll container, so
+                sticky content inside still works, and no page can scroll
+                sideways */}
+            <div className="flex flex-1 flex-col overflow-x-clip">
+              <Outlet />
+            </div>
           </div>
         </FilterDataProvider>
       </CosmoArtistProvider>
