@@ -21,16 +21,13 @@ const ITEMS: Item[] = [
   { label: m.profile_tabs_lists, to: "/@{$nickname}/list" },
 ];
 
-// Spin's collection is paged from the server, so the tabs that need it whole go
-const SPIN_ITEMS = ITEMS.slice(0, 2);
-
 /**
  * `value` is the current pathname and every tab is a real `<Link>`, so
  * middle-click, hover-preload and back-forward all work. Click navigation is
  * the Link's; `onValueChange` only handles keyboard activation, which moves
  * selection without firing the Link's click.
  */
-export function ProfileTabs({ nickname, spin }: { nickname: string; spin: boolean }) {
+export function ProfileTabs({ nickname }: { nickname: string }) {
   const router = useRouter();
   const navigate = useNavigate();
   const pathname = useLocation({ select: (state) => state.pathname });
@@ -55,7 +52,7 @@ export function ProfileTabs({ nickname, spin }: { nickname: string; spin: boolea
            to the scroller's width while the tabs spill past it */
         className="text-muted-foreground w-max min-w-full justify-start gap-0.5 border-b py-0 *:data-[slot=tabs-tab]:hover:bg-transparent"
       >
-        {(spin ? SPIN_ITEMS : ITEMS).map((item) => (
+        {ITEMS.map((item) => (
           <TabsTab
             key={item.to}
             /* the built location, not the template with the name pasted in: a

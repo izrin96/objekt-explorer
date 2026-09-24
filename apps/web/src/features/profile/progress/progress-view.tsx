@@ -18,7 +18,7 @@ import { ObjektDrawer } from "@/features/objekt/drawer";
 import { ObjektCard } from "@/features/objekt/objekt-card";
 import { ObjektCardMenu } from "@/features/objekt/objekt-card-menu";
 import { ObjektGrid } from "@/features/objekt/objekt-grid";
-import { isObjektOwned } from "@/features/objekt/objekt-utils";
+import { copiesIn, isObjektOwned } from "@/features/objekt/objekt-utils";
 import { useCurrentUser } from "@/features/user/hooks";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -26,7 +26,7 @@ import { m } from "@/paraglide/messages";
 import { CheckpointPopover } from "../checkpoint-popover";
 import { useProfileColumns, useProfileTarget } from "../profile-provider";
 import { ProfileToolbar } from "../profile-toolbar";
-import { useProfileCatalogue } from "../use-profile-objekts";
+import { isSpinAddress, useProfileCatalogue } from "../use-profile-objekts";
 import { MemberProgressChart, useChartMembers } from "./member-progress-chart";
 import {
   catalogueTotals,
@@ -197,7 +197,7 @@ function ClassCard({
               <ObjektCard
                 key={item.objekt.slug}
                 objekt={owned}
-                qty={copies.length > 1 ? copies.length : undefined}
+                qty={copiesIn(copies) > 1 ? copiesIn(copies) : undefined}
                 unobtainable={item.unobtainable}
                 onOpen={onOpen}
               >
@@ -298,7 +298,7 @@ export function ProgressView() {
       showSearch={false}
       showSort={false}
       hideEtcClasses
-      extra={<CheckpointPopover />}
+      extra={isSpinAddress(profile.address) ? undefined : <CheckpointPopover />}
     />
   );
 
@@ -436,7 +436,12 @@ export function ProgressView() {
         </div>
       )}
 
-      <ObjektDrawer objekt={active} onClose={() => setActive(null)} owned={activeOwned} />
+      <ObjektDrawer
+        objekt={active}
+        onClose={() => setActive(null)}
+        // Spin is counted per collection, so it has no tokens to list
+        owned={isSpinAddress(profile.address) ? undefined : activeOwned}
+      />
     </AddToListProvider>
   );
 }

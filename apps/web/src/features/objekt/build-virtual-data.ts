@@ -3,7 +3,7 @@ import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { sortObjekts } from "@/features/filters/filter-utils";
 import { isFiltering, type FilterSearch } from "@/features/filters/search-schema";
 
-import { isObjektOwned } from "./objekt-utils";
+import { copiesIn, isObjektOwned } from "./objekt-utils";
 
 export type VirtualItem =
   | { type: "label"; title: string }
@@ -104,8 +104,8 @@ export function buildVirtualData(config: BuildVirtualDataConfig): VirtualItem[] 
     if (filters.sort === "duplicate") {
       cells =
         filters.sort_dir === "asc"
-          ? cells.toSorted((a, b) => a.length - b.length)
-          : cells.toSorted((a, b) => b.length - a.length);
+          ? cells.toSorted((a, b) => copiesIn(a) - copiesIn(b))
+          : cells.toSorted((a, b) => copiesIn(b) - copiesIn(a));
     }
 
     const rowCount = Math.ceil(cells.length / columns);

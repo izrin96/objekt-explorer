@@ -731,7 +731,7 @@
   "profile_reorder_returned": "Pinned objekt returned to position {position} of {total}.",
   "profile_reorder_cancelled": "Reordering cancelled. Pinned objekt stays at position {position} of {total}.",
   "profile_checkpoint_notice": "Showing this collection as of {date}",
-  "profile_spin_notice": "Some filters are unavailable for COSMO Spin. Objekts spun on the Polygon chain have not been merged yet.",
+  "profile_spin_notice": "Objekts spun on the Polygon chain have not been merged yet.",
   "profile_checkpoint_date_label": "Snapshot date",
   "profile_checkpoint_time_label": "Snapshot time",
   "profile_count_summary": "{shown} shown · {unique} unique",

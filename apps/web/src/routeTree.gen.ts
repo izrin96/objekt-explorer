@@ -41,6 +41,7 @@ import { Route as ApiAuthSplatRouteImport } from './routes/api/auth.$'
 import { Route as ApiTransfersAddressRouteImport } from './routes/api/transfers.$address'
 import { Route as ApiUserSearchRouteImport } from './routes/api/user.search'
 import { Route as containerAtChar123nicknameChar125ListSlugRouteImport } from './routes/(container)/@{$nickname}_/list.$slug'
+import { Route as ApiObjektsHeldByAddressRouteImport } from './routes/api/objekts/held-by.$address'
 import { Route as ApiObjektsListCollectionSlugRouteImport } from './routes/api/objekts/list.$collectionSlug'
 import { Route as ApiObjektsMetadataCollectionSlugRouteImport } from './routes/api/objekts/metadata.$collectionSlug'
 import { Route as ApiObjektsOwnedByAddressRouteImport } from './routes/api/objekts/owned-by.$address'
@@ -213,6 +214,11 @@ const containerAtChar123nicknameChar125ListSlugRoute =
     path: '/@{$nickname}/list/$slug',
     getParentRoute: () => containerRouteRoute,
   } as any)
+const ApiObjektsHeldByAddressRoute = ApiObjektsHeldByAddressRouteImport.update({
+  id: '/api/objekts/held-by/$address',
+  path: '/api/objekts/held-by/$address',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiObjektsListCollectionSlugRoute =
   ApiObjektsListCollectionSlugRouteImport.update({
     id: '/api/objekts/list/$collectionSlug',
@@ -270,6 +276,7 @@ export interface FileRoutesByFullPath {
   '/list/': typeof containerListIndexRoute
   '/live/': typeof containerLiveIndexRoute
   '/@{$nickname}/list/$slug': typeof containerAtChar123nicknameChar125ListSlugRoute
+  '/api/objekts/held-by/$address': typeof ApiObjektsHeldByAddressRoute
   '/api/objekts/list/$collectionSlug': typeof ApiObjektsListCollectionSlugRoute
   '/api/objekts/metadata/$collectionSlug': typeof ApiObjektsMetadataCollectionSlugRoute
   '/api/objekts/owned-by/$address': typeof ApiObjektsOwnedByAddressRoute
@@ -306,6 +313,7 @@ export interface FileRoutesByTo {
   '/list': typeof containerListIndexRoute
   '/live': typeof containerLiveIndexRoute
   '/@{$nickname}/list/$slug': typeof containerAtChar123nicknameChar125ListSlugRoute
+  '/api/objekts/held-by/$address': typeof ApiObjektsHeldByAddressRoute
   '/api/objekts/list/$collectionSlug': typeof ApiObjektsListCollectionSlugRoute
   '/api/objekts/metadata/$collectionSlug': typeof ApiObjektsMetadataCollectionSlugRoute
   '/api/objekts/owned-by/$address': typeof ApiObjektsOwnedByAddressRoute
@@ -345,6 +353,7 @@ export interface FileRoutesById {
   '/(container)/list/': typeof containerListIndexRoute
   '/(container)/live/': typeof containerLiveIndexRoute
   '/(container)/@{$nickname}_/list/$slug': typeof containerAtChar123nicknameChar125ListSlugRoute
+  '/api/objekts/held-by/$address': typeof ApiObjektsHeldByAddressRoute
   '/api/objekts/list/$collectionSlug': typeof ApiObjektsListCollectionSlugRoute
   '/api/objekts/metadata/$collectionSlug': typeof ApiObjektsMetadataCollectionSlugRoute
   '/api/objekts/owned-by/$address': typeof ApiObjektsOwnedByAddressRoute
@@ -384,6 +393,7 @@ export interface FileRouteTypes {
     | '/list/'
     | '/live/'
     | '/@{$nickname}/list/$slug'
+    | '/api/objekts/held-by/$address'
     | '/api/objekts/list/$collectionSlug'
     | '/api/objekts/metadata/$collectionSlug'
     | '/api/objekts/owned-by/$address'
@@ -420,6 +430,7 @@ export interface FileRouteTypes {
     | '/list'
     | '/live'
     | '/@{$nickname}/list/$slug'
+    | '/api/objekts/held-by/$address'
     | '/api/objekts/list/$collectionSlug'
     | '/api/objekts/metadata/$collectionSlug'
     | '/api/objekts/owned-by/$address'
@@ -458,6 +469,7 @@ export interface FileRouteTypes {
     | '/(container)/list/'
     | '/(container)/live/'
     | '/(container)/@{$nickname}_/list/$slug'
+    | '/api/objekts/held-by/$address'
     | '/api/objekts/list/$collectionSlug'
     | '/api/objekts/metadata/$collectionSlug'
     | '/api/objekts/owned-by/$address'
@@ -478,6 +490,7 @@ export interface RootRouteChildren {
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiTransfersAddressRoute: typeof ApiTransfersAddressRoute
   ApiUserSearchRoute: typeof ApiUserSearchRoute
+  ApiObjektsHeldByAddressRoute: typeof ApiObjektsHeldByAddressRoute
   ApiObjektsListCollectionSlugRoute: typeof ApiObjektsListCollectionSlugRoute
   ApiObjektsMetadataCollectionSlugRoute: typeof ApiObjektsMetadataCollectionSlugRoute
   ApiObjektsOwnedByAddressRoute: typeof ApiObjektsOwnedByAddressRoute
@@ -710,6 +723,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof containerAtChar123nicknameChar125ListSlugRouteImport
       parentRoute: typeof containerRouteRoute
     }
+    '/api/objekts/held-by/$address': {
+      id: '/api/objekts/held-by/$address'
+      path: '/api/objekts/held-by/$address'
+      fullPath: '/api/objekts/held-by/$address'
+      preLoaderRoute: typeof ApiObjektsHeldByAddressRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/objekts/list/$collectionSlug': {
       id: '/api/objekts/list/$collectionSlug'
       path: '/api/objekts/list/$collectionSlug'
@@ -818,6 +838,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiTransfersAddressRoute: ApiTransfersAddressRoute,
   ApiUserSearchRoute: ApiUserSearchRoute,
+  ApiObjektsHeldByAddressRoute: ApiObjektsHeldByAddressRoute,
   ApiObjektsListCollectionSlugRoute: ApiObjektsListCollectionSlugRoute,
   ApiObjektsMetadataCollectionSlugRoute: ApiObjektsMetadataCollectionSlugRoute,
   ApiObjektsOwnedByAddressRoute: ApiObjektsOwnedByAddressRoute,

@@ -20,10 +20,11 @@ import { useResetFilters } from "@/features/filters/use-filters";
 import { m } from "@/paraglide/messages";
 
 import { CheckpointPopover } from "../checkpoint-popover";
+import { useProfileTarget } from "../profile-provider";
 import { ProfileToolbar } from "../profile-toolbar";
 import { MemberProgressChart, useChartMembers } from "../progress/member-progress-chart";
 import { memberProgress } from "../progress/shape-progress";
-import { useProfileCatalogue } from "../use-profile-objekts";
+import { isSpinAddress, useProfileCatalogue } from "../use-profile-objekts";
 
 type Slice = { name: string; count: number; percentage: number; fill: string };
 
@@ -59,7 +60,7 @@ function toSlices(
 function tally(objekts: readonly ValidObjekt[], keys: (objekt: ValidObjekt) => readonly string[]) {
   const counts = new Map<string, number>();
   for (const objekt of objekts) {
-    for (const key of keys(objekt)) counts.set(key, (counts.get(key) ?? 0) + 1);
+    for (const key of keys(objekt)) counts.set(key, (counts.get(key) ?? 0) + (objekt.copies ?? 1));
   }
   return counts;
 }
@@ -135,6 +136,7 @@ function StatsCard({
 
 export function StatsView() {
   const { owned, catalogue, isPending } = useProfileCatalogue();
+  const profile = useProfileTarget()!;
   const memberColor = useMemberColor();
   const members = useChartMembers();
   const { seasons } = useFilterData();
@@ -172,7 +174,7 @@ export function StatsView() {
         showSearch={false}
         showSort={false}
         showColumns={false}
-        extra={<CheckpointPopover />}
+        extra={isSpinAddress(profile.address) ? undefined : <CheckpointPopover />}
       />
 
       {isPending ? (

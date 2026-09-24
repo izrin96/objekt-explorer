@@ -37,9 +37,7 @@ export const objektTransferResultSchema = z.object({
 export type ObjektTransferResult = z.infer<typeof objektTransferResultSchema>;
 
 export const ownedObjektsCursorSchema = z.object({
-  receivedAt: z.string().optional(),
-  serial: z.number().optional(),
-  collectionNo: z.string().optional(),
+  receivedAt: z.string(),
   id: z.string(),
 });
 export type OwnedObjektsCursor = z.infer<typeof ownedObjektsCursorSchema>;

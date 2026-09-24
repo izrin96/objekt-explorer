@@ -29,7 +29,7 @@ import { ObjektDrawer } from "@/features/objekt/drawer";
 import type { OwnedRowMenu } from "@/features/objekt/drawer/owned";
 import { ObjektCard } from "@/features/objekt/objekt-card";
 import { ObjektCardMenu } from "@/features/objekt/objekt-card-menu";
-import { isObjektOwned, ownedCopiesOf } from "@/features/objekt/objekt-utils";
+import { copiesIn, isObjektOwned, ownedCopiesOf } from "@/features/objekt/objekt-utils";
 import { ObjektVirtualGrid } from "@/features/objekt/objekt-virtual-grid";
 import { SelectBar, type SelectBarAction, SelectModeButton } from "@/features/objekt/select-bar";
 import { ShimmerGrid } from "@/features/objekt/shimmer-grid";
@@ -233,7 +233,7 @@ export function CollectionView() {
           onOpen={setActive}
           pin={owned?.isPin === true}
           lock={owned?.isLocked === true}
-          faded={owned === null}
+          faded={owned === null && objekt.copies === undefined}
           qty={qty}
           hideSerial={grouped === true}
           priority={priority}
@@ -251,9 +251,10 @@ export function CollectionView() {
       if (!objekt) return null;
       const sortable = dndEnabled && isObjektOwned(objekt) && objekt.isPin === true;
       // in select mode a pin takes taps and long presses like any other card
+      const qty = copiesIn(item);
       const card = renderCard(
         objekt,
-        item.length > 1 ? item.length : undefined,
+        qty > 1 ? qty : undefined,
         rowIndex < 2,
         sortable && !selecting,
       );
@@ -361,7 +362,8 @@ export function CollectionView() {
         extras={extras}
         extra={
           <>
-            <CheckpointPopover />
+            {/* Spin is counted from today's holdings alone */}
+            {!isSpinAddress(address) && <CheckpointPopover />}
             <GenerateDiscordButton objekts={filtered} />
           </>
         }
@@ -384,7 +386,7 @@ export function CollectionView() {
           <div className="flex items-center justify-between gap-2">
             <p className="text-muted-foreground font-mono text-xs tabular-nums">
               {m.profile_count_summary({
-                shown: `${filtered.length.toLocaleString()}${hasNextPage ? "+" : ""}`,
+                shown: `${copiesIn(filtered).toLocaleString()}${hasNextPage ? "+" : ""}`,
                 unique: uniqueCount.toLocaleString(),
               })}
             </p>
@@ -436,7 +438,8 @@ export function CollectionView() {
       <ObjektDrawer
         objekt={active}
         onClose={() => setActive(null)}
-        owned={ownedCopies}
+        // Spin is counted per collection, so it has no tokens to list
+        owned={isSpinAddress(address) ? undefined : ownedCopies}
         ownedMenu={showActions ? ownedMenu : undefined}
         selected={active !== null && selected.has(active.id)}
         onToggleSelect={showActions ? (item) => toggleSelect(item.id) : undefined}

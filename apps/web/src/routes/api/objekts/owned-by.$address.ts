@@ -3,162 +3,40 @@ import { getCollectionColumns } from "@repo/api/services/objekt";
 import { isAddressHiddenFromCaller } from "@repo/api/services/privacy";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts, transfers } from "@repo/db/indexer/schema";
+import { Addresses } from "@repo/lib";
 import { mapOwnedObjekt } from "@repo/lib/server/objekt";
 import { createFileRoute } from "@tanstack/react-router";
-import {
-  and,
-  arrayOverlaps,
-  asc,
-  count,
-  desc,
-  eq,
-  getColumns,
-  gt,
-  inArray,
-  lt,
-  lte,
-  ne,
-  or,
-} from "drizzle-orm";
+import { and, count, desc, eq, getColumns, inArray, lt, lte, ne, or } from "drizzle-orm";
 
 const PER_PAGE = 8000;
 const ENABLE_COUNT = false;
 
 function buildCollectionFilters(query: OwnedBySchema) {
-  const filters = [];
-
-  if (query.artist?.length) {
-    filters.push(
-      inArray(
-        collections.artist,
-        query.artist.map((a) => a.toLowerCase()),
-      ),
-    );
-  }
-
-  if (query.member?.length) {
-    filters.push(arrayOverlaps(collections.members, query.member));
-  }
-
-  if (query.class?.length) {
-    filters.push(inArray(collections.class, query.class));
-  }
-
-  if (query.season?.length) {
-    filters.push(inArray(collections.season, query.season));
-  }
-
-  if (query.onOffline?.length) {
-    filters.push(inArray(collections.onOffline, query.onOffline));
-  }
-
-  if (query.collection?.length) {
-    filters.push(inArray(collections.collectionNo, query.collection));
-  }
-
-  return filters;
+  if (!query.artist?.length) return [];
+  return [
+    inArray(
+      collections.artist,
+      query.artist.map((a) => a.toLowerCase()),
+    ),
+  ];
 }
 
-function buildObjektFilters(query: OwnedBySchema) {
-  const filters = [];
-
-  if (query.transferable !== undefined) {
-    filters.push(eq(objekts.transferable, query.transferable));
-  }
-
-  return filters;
+function cursorWhere(query: OwnedBySchema) {
+  if (!query.cursor) return undefined;
+  return or(
+    lt(objekts.receivedAt, query.cursor.receivedAt),
+    and(eq(objekts.receivedAt, query.cursor.receivedAt), lt(objekts.id, query.cursor.id)),
+  );
 }
 
-function getSortConfig(query: OwnedBySchema) {
-  const sort = query.sort ?? "date";
-  const sortDir = query.sort_dir ?? "desc";
-  const isAsc = sortDir === "asc";
-
-  switch (sort) {
-    case "serial":
-      return {
-        orderBy: isAsc
-          ? [asc(objekts.serial), asc(objekts.id)]
-          : [desc(objekts.serial), desc(objekts.id)],
-        cursorWhere:
-          query.cursor?.serial !== undefined
-            ? isAsc
-              ? or(
-                  gt(objekts.serial, query.cursor.serial),
-                  and(eq(objekts.serial, query.cursor.serial), gt(objekts.id, query.cursor.id)),
-                )
-              : or(
-                  lt(objekts.serial, query.cursor.serial),
-                  and(eq(objekts.serial, query.cursor.serial), lt(objekts.id, query.cursor.id)),
-                )
-            : undefined,
-        nextCursor: (lastResult: { objekt: { serial: number; id: string } }) => ({
-          serial: lastResult.objekt.serial,
-          id: lastResult.objekt.id,
-        }),
-      };
-
-    case "collectionNo":
-      return {
-        orderBy: isAsc
-          ? [asc(collections.collectionNo), asc(objekts.id)]
-          : [desc(collections.collectionNo), desc(objekts.id)],
-        cursorWhere: query.cursor?.collectionNo
-          ? isAsc
-            ? or(
-                gt(collections.collectionNo, query.cursor.collectionNo),
-                and(
-                  eq(collections.collectionNo, query.cursor.collectionNo),
-                  gt(objekts.id, query.cursor.id),
-                ),
-              )
-            : or(
-                lt(collections.collectionNo, query.cursor.collectionNo),
-                and(
-                  eq(collections.collectionNo, query.cursor.collectionNo),
-                  lt(objekts.id, query.cursor.id),
-                ),
-              )
-          : undefined,
-        nextCursor: (lastResult: {
-          collection: { collectionNo: string };
-          objekt: { id: string };
-        }) => ({
-          collectionNo: lastResult.collection.collectionNo,
-          id: lastResult.objekt.id,
-        }),
-      };
-
-    // date (default)
-    default:
-      return {
-        orderBy: isAsc
-          ? [asc(objekts.receivedAt), asc(objekts.id)]
-          : [desc(objekts.receivedAt), desc(objekts.id)],
-        cursorWhere: query.cursor?.receivedAt
-          ? isAsc
-            ? or(
-                gt(objekts.receivedAt, query.cursor.receivedAt),
-                and(
-                  eq(objekts.receivedAt, query.cursor.receivedAt),
-                  gt(objekts.id, query.cursor.id),
-                ),
-              )
-            : or(
-                lt(objekts.receivedAt, query.cursor.receivedAt),
-                and(
-                  eq(objekts.receivedAt, query.cursor.receivedAt),
-                  lt(objekts.id, query.cursor.id),
-                ),
-              )
-          : undefined,
-        nextCursor: (lastResult: { objekt: { receivedAt: Date | string; id: string } }) => ({
-          receivedAt: new Date(lastResult.objekt.receivedAt).toISOString(),
-          id: lastResult.objekt.id,
-        }),
-      };
-  }
+function cursorAfter(lastResult: { objekt: { receivedAt: Date | string; id: string } }) {
+  return {
+    receivedAt: new Date(lastResult.objekt.receivedAt).toISOString(),
+    id: lastResult.objekt.id,
+  };
 }
+
+const ORDER_BY = [desc(objekts.receivedAt), desc(objekts.id)];
 
 export const Route = createFileRoute("/api/objekts/owned-by/$address")({
   server: {
@@ -170,17 +48,20 @@ export const Route = createFileRoute("/api/objekts/owned-by/$address")({
         if (!parsed.ok) return parsed.response;
         const query = parsed.data;
 
+        // Spin's past state means replaying millions of transfers, so it has no checkpoint
+        if (query.at && addr === Addresses.SPIN) {
+          return Response.json(
+            { error: "Checkpoint is unavailable for COSMO Spin" },
+            { status: 400 },
+          );
+        }
+
         if (await isAddressHiddenFromCaller(addr)) {
           return Response.json({ objekts: [] });
         }
 
         const collectionFilters = buildCollectionFilters(query);
-        const objektFilters = buildObjektFilters(query);
-        const sortConfig = getSortConfig(query);
         const isFirstPage = !query.cursor;
-        // clamped: `limit` comes off the query string
-        const requested = query.limit ?? PER_PAGE;
-        const limit = Math.min(Math.max(1, requested), PER_PAGE);
 
         if (query.at) {
           const latest = indexer.$with("latest").as(
@@ -217,12 +98,11 @@ export const Route = createFileRoute("/api/objekts/owned-by/$address")({
                 eq(latest.to, addr),
                 ne(collections.slug, "empty-collection"),
                 ...collectionFilters,
-                ...objektFilters,
-                sortConfig.cursorWhere,
+                cursorWhere(query),
               ),
             )
-            .orderBy(...sortConfig.orderBy)
-            .limit(limit + 1);
+            .orderBy(...ORDER_BY)
+            .limit(PER_PAGE + 1);
 
           const countQuery =
             ENABLE_COUNT && isFirstPage
@@ -237,20 +117,19 @@ export const Route = createFileRoute("/api/objekts/owned-by/$address")({
                       eq(latest.to, addr),
                       ne(collections.slug, "empty-collection"),
                       ...collectionFilters,
-                      ...objektFilters,
                     ),
                   )
               : null;
 
           const [results, countResult] = await Promise.all([mainQuery, countQuery]);
 
-          const hasNext = results.length > limit;
-          const nextCursor = hasNext ? sortConfig.nextCursor(results[limit - 1]!) : undefined;
+          const hasNext = results.length > PER_PAGE;
+          const nextCursor = hasNext ? cursorAfter(results[PER_PAGE - 1]!) : undefined;
           const total = countResult ? (countResult[0]?.count ?? 0) : undefined;
 
           return Response.json({
             nextCursor,
-            objekts: results.slice(0, limit).map((a) => mapOwnedObjekt(a.objekt, a.collection)),
+            objekts: results.slice(0, PER_PAGE).map((a) => mapOwnedObjekt(a.objekt, a.collection)),
             total,
           });
         }
@@ -267,12 +146,11 @@ export const Route = createFileRoute("/api/objekts/owned-by/$address")({
               eq(objekts.owner, addr),
               ne(collections.slug, "empty-collection"),
               ...collectionFilters,
-              ...objektFilters,
-              sortConfig.cursorWhere,
+              cursorWhere(query),
             ),
           )
-          .orderBy(...sortConfig.orderBy)
-          .limit(limit + 1);
+          .orderBy(...ORDER_BY)
+          .limit(PER_PAGE + 1);
 
         const countQuery =
           ENABLE_COUNT && isFirstPage
@@ -285,7 +163,6 @@ export const Route = createFileRoute("/api/objekts/owned-by/$address")({
                     eq(objekts.owner, addr),
                     ne(collections.slug, "empty-collection"),
                     ...collectionFilters,
-                    ...objektFilters,
                   ),
                 )
             : null;
@@ -293,12 +170,12 @@ export const Route = createFileRoute("/api/objekts/owned-by/$address")({
         const [results, countResult] = await Promise.all([mainQuery, countQuery]);
         const total = countResult ? (countResult[0]?.count ?? 0) : undefined;
 
-        const hasNext = results.length > limit;
-        const nextCursor = hasNext ? sortConfig.nextCursor(results[limit - 1]!) : undefined;
+        const hasNext = results.length > PER_PAGE;
+        const nextCursor = hasNext ? cursorAfter(results[PER_PAGE - 1]!) : undefined;
 
         return Response.json({
           nextCursor,
-          objekts: results.slice(0, limit).map((a) => mapOwnedObjekt(a.objekt, a.collection)),
+          objekts: results.slice(0, PER_PAGE).map((a) => mapOwnedObjekt(a.objekt, a.collection)),
           total,
         });
       },
@@ -322,28 +199,10 @@ function parseParams(
     }
   }
 
-  const limitRaw = params.get("limit");
-  const limitParsed = limitRaw ? Number(limitRaw) : undefined;
-  if (limitRaw && (Number.isNaN(limitParsed) || !Number.isFinite(limitParsed))) {
-    return {
-      ok: false,
-      response: Response.json({ error: "Invalid limit" }, { status: 400 }),
-    };
-  }
-
   const result = ownedBySchema.safeParse({
     at: params.get("at") ?? undefined,
     cursor,
     artist: params.getAll("artist").length ? params.getAll("artist") : undefined,
-    member: params.getAll("member").length ? params.getAll("member") : undefined,
-    class: params.getAll("class").length ? params.getAll("class") : undefined,
-    season: params.getAll("season").length ? params.getAll("season") : undefined,
-    onOffline: params.getAll("onOffline").length ? params.getAll("onOffline") : undefined,
-    transferable: params.get("transferable") ?? undefined,
-    collection: params.getAll("collection").length ? params.getAll("collection") : undefined,
-    sort: params.get("sort") ?? undefined,
-    sort_dir: params.get("sort_dir") ?? undefined,
-    limit: limitParsed,
   });
 
   if (!result.success) {

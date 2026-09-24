@@ -1,4 +1,4 @@
-import type { OwnedObjektsResult } from "@repo/api/schemas/objekt";
+import type { CollectionResult, OwnedObjektsResult } from "@repo/api/schemas/objekt";
 import type { OwnedBySchema } from "@repo/api/schemas/owned-by";
 import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query";
 import { ofetch } from "ofetch";
@@ -34,6 +34,20 @@ export const ownedCollectionOptions = (address: string, filters?: OwnedBySchema)
     refetchOnWindowFocus: false,
     // a past state never changes, so a checkpoint page is fetched once
     staleTime: filters?.at ? Infinity : 1000 * 60 * 5,
+    throwOnError: true,
+  });
+
+/** Today's copies counted per collection, for Spin, whose tokens are too many to list. */
+export const heldCollectionsOptions = (address: string, artist?: OwnedBySchema["artist"]) =>
+  queryOptions({
+    queryKey: ["held-collections", address, artist],
+    queryFn: () =>
+      ofetch<CollectionResult>(`/api/objekts/held-by/${address}`, { query: { artist } }).then(
+        (result) => result.collections.map(mapObjektWithTag),
+      ),
+    refetchOnWindowFocus: false,
+    // the server caches the count for as long
+    staleTime: 1000 * 60 * 5,
     throwOnError: true,
   });
 

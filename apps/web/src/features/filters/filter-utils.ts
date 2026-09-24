@@ -143,6 +143,8 @@ export function filterObjekts(filters: FilterSearch, objekts: ValidObjekt[]): Va
     if (onOfflineSet && !onOfflineSet.has(a.onOffline)) return false;
 
     if (filters.transferable && isObjektOwned(a) && !a.transferable) return false;
+    // a counted collection is Spin's, and nothing Spin holds is transferable
+    if (filters.transferable && a.copies !== undefined) return false;
 
     if (editionSet && (!a.edition || !editionSet.has(a.edition))) {
       return false;

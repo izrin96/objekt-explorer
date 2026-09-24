@@ -731,7 +731,7 @@
   "profile_reorder_returned": "ピン留めオブジェクトは{total}件中{position}番目に戻りました。",
   "profile_reorder_cancelled": "並べ替えを取り消しました。ピン留めオブジェクトは{total}件中{position}番目のままです。",
   "profile_checkpoint_notice": "{date}時点のコレクションを表示しています",
-  "profile_spin_notice": "COSMOSpinでは一部のフィルターが利用できません。PolygonチェーンでSpinされたObjektはまだ統合されていません。",
+  "profile_spin_notice": "PolygonチェーンでSpinされたObjektはまだ統合されていません。",
   "profile_checkpoint_date_label": "スナップショットの日付",
   "profile_checkpoint_time_label": "スナップショット時刻",
   "profile_count_summary": "{shown}件表示 · ユニーク{unique}件",

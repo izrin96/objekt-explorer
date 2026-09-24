@@ -16,6 +16,8 @@ type CollectionExtra = {
   /** the Cosmo-hosted image, before the processed copy replaced `frontImage` — set by `overrideCollection` */
   originalFrontImage?: string;
   originalBackImage?: string;
+  /** copies held, standing in for the tokens of an owner too large to list one by one (COSMO Spin) */
+  copies?: number;
 };
 
 // Indexed collection — base collection info without ownership

@@ -8,11 +8,17 @@ import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import { filterObjekts } from "@/features/filters/filter-utils";
 import type { FilterSearch } from "@/features/filters/search-schema";
 import { useCanonicalFilters, useValidatedCanonicalFilters } from "@/features/filters/use-filters";
+import { copiesIn } from "@/features/objekt/objekt-utils";
 import { collectionOptions } from "@/features/objekt/queries";
 import { useCollectionRarity } from "@/features/objekt/use-collection-rarity";
 
 import { useProfileTarget } from "./profile-provider";
-import { locksOptions, ownedCollectionOptions, pinsOptions } from "./queries";
+import {
+  heldCollectionsOptions,
+  locksOptions,
+  ownedCollectionOptions,
+  pinsOptions,
+} from "./queries";
 
 const NO_PINS: ReadonlyMap<string, number> = new Map();
 const NO_LOCKS: ReadonlySet<string> = new Set();
@@ -26,57 +32,53 @@ export function isSpinAddress(address: string): boolean {
   return address.toLowerCase() === Addresses.SPIN;
 }
 
-const SPIN_PAGE_SIZE = 300;
-
-/**
- * Spin holds every spun objekt, far too many to load whole, so its filters go
- * to the server and it pages on scroll; every other profile is loaded whole
- * and filtered in the browser.
- */
-function ownedServerFilters(
-  address: string,
-  artist: OwnedBySchema["artist"],
-  filters: FilterSearch,
-) {
-  if (!isSpinAddress(address)) return { artist, at: filters.at };
-  return {
-    artist,
-    at: filters.at,
-    limit: SPIN_PAGE_SIZE,
-    member: filters.member,
-    class: filters.class,
-    season: filters.season,
-    onOffline: filters.on_offline,
-    transferable: filters.transferable,
-    collection: filters.collection,
-    sort: filters.sort,
-    sort_dir: filters.sort_dir,
-  } satisfies OwnedBySchema;
+function ownedServerFilters(artist: OwnedBySchema["artist"], filters: FilterSearch): OwnedBySchema {
+  return { artist, at: filters.at };
 }
 
 /**
  * Filters, sorts and the missing set are computed in the browser, so every
- * page is fetched up front rather than on scroll.
+ * page is fetched up front rather than on scroll. Spin holds millions of
+ * tokens, so it loads one counted row per collection instead.
  */
 function useOwnedPages(address: string, filters: OwnedBySchema) {
-  const query = useInfiniteQuery(ownedCollectionOptions(address, filters));
-  const drain = !isSpinAddress(address);
+  const spin = isSpinAddress(address);
+  const query = useInfiniteQuery({ ...ownedCollectionOptions(address, filters), enabled: !spin });
+  const held = useQuery({ ...heldCollectionsOptions(address, filters.artist), enabled: spin });
   const { hasNextPage, isFetchingNextPage, isError, fetchNextPage } = query;
 
   // the profile header and the open tab both observe this query, so both run
   // this effect in the same commit; without `cancelRefetch: false` the second
   // call aborts the first and every page is requested twice
   useEffect(() => {
-    if (drain && hasNextPage && !isFetchingNextPage && !isError) {
+    if (hasNextPage && !isFetchingNextPage && !isError) {
       void fetchNextPage({ cancelRefetch: false });
     }
-  }, [drain, hasNextPage, isFetchingNextPage, isError, fetchNextPage]);
+  }, [hasNextPage, isFetchingNextPage, isError, fetchNextPage]);
 
+  const pages = query.data?.pages;
   const objekts = useMemo(
-    () => query.data?.pages.flatMap((page) => page.objekts) ?? [],
-    [query.data],
+    () => (spin ? (held.data ?? []) : (pages?.flatMap((page) => page.objekts) ?? [])),
+    [spin, held.data, pages],
   );
-  return { query, objekts };
+  return {
+    objekts,
+    isPending: spin ? held.isPending : query.isPending,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  };
+}
+
+/** Spin is counted from today's holdings alone, so a checkpoint in its URL is dropped. */
+function useProfileFilters(address: string, filters: FilterSearch): FilterSearch {
+  return useMemo(
+    () =>
+      isSpinAddress(address) && filters.at !== undefined
+        ? Object.assign({}, filters, { at: undefined })
+        : filters,
+    [address, filters],
+  );
 }
 
 /**
@@ -89,21 +91,22 @@ function useOwnedPages(address: string, filters: OwnedBySchema) {
 export function useProfileObjekts() {
   const profile = useProfileTarget()!;
   const { selectedArtistIds } = useCosmoArtist();
-  const filters = useCanonicalFilters();
+  const filters = useProfileFilters(profile.address, useCanonicalFilters());
   const deferredFilters = useDeferredValue(filters);
 
-  const serverFilters = ownedServerFilters(profile.address, selectedArtistIds, filters);
-  const { query, objekts } = useOwnedPages(profile.address, serverFilters);
+  const serverFilters = ownedServerFilters(selectedArtistIds, filters);
+  const { objekts, isPending, hasNextPage, isFetchingNextPage, fetchNextPage } = useOwnedPages(
+    profile.address,
+    serverFilters,
+  );
   const { pins, locks } = usePinsAndLocks(profile.address);
   const { rarityMap, isLoading: rarityLoading } = useCollectionRarity();
   // the catalogue is only worth fetching once every owned page is in, or the
   // missing set would be measured against a partial collection
   const collections = useQuery({
     ...collectionOptions({ artist: selectedArtistIds, at: filters.at }),
-    enabled: !query.hasNextPage && !isSpinAddress(profile.address),
+    enabled: !hasNextPage,
   });
-
-  const { fetchNextPage } = query;
 
   const derived = useMemo(() => {
     const withMarks: ValidObjekt[] = deferredFilters.at
@@ -134,11 +137,10 @@ export function useProfileObjekts() {
     ...derived,
     filters: deferredFilters,
     rarityMap,
-    status: query.status,
-    hasNextPage: query.hasNextPage,
-    isFetchingNextPage: query.isFetchingNextPage,
+    hasNextPage,
+    isFetchingNextPage,
     fetchNextPage,
-    isPending: query.isPending || rarityLoading,
+    isPending: isPending || rarityLoading,
   };
 }
 
@@ -151,18 +153,18 @@ export function useProfileObjekts() {
 export function useProfileSummary() {
   const profile = useProfileTarget()!;
   const { selectedArtistIds } = useCosmoArtist();
-  // the tabs' own filters, so Spin's server-filtered first page is the one the grid fetched
-  const filters = useValidatedCanonicalFilters();
+  // the tabs' own filters, so the header joins the query the grid fetched
+  const filters = useProfileFilters(profile.address, useValidatedCanonicalFilters());
 
-  const { query, objekts } = useOwnedPages(
+  const { objekts, isPending, hasNextPage } = useOwnedPages(
     profile.address,
-    ownedServerFilters(profile.address, selectedArtistIds, filters),
+    ownedServerFilters(selectedArtistIds, filters),
   );
   const { pins, locks } = usePinsAndLocks(profile.address);
 
   const counts = useMemo(
     () => ({
-      owned: objekts.length,
+      owned: copiesIn(objekts),
       collections: new Set(objekts.map((objekt) => objekt.collectionId)).size,
     }),
     [objekts],
@@ -170,8 +172,8 @@ export function useProfileSummary() {
 
   return {
     ...counts,
-    partial: query.hasNextPage,
-    isPending: query.isPending,
+    partial: hasNextPage,
+    isPending,
     pins: pins.size,
     locks: locks.size,
   };
@@ -181,14 +183,14 @@ export function useProfileSummary() {
 export function useProfileCatalogue() {
   const profile = useProfileTarget()!;
   const { selectedArtistIds } = useCosmoArtist();
-  const filters = useCanonicalFilters();
+  const filters = useProfileFilters(profile.address, useCanonicalFilters());
   const deferredFilters = useDeferredValue(filters);
 
-  const serverFilters = ownedServerFilters(profile.address, selectedArtistIds, filters);
-  const { query, objekts } = useOwnedPages(profile.address, serverFilters);
+  const serverFilters = ownedServerFilters(selectedArtistIds, filters);
+  const { objekts, isPending, hasNextPage } = useOwnedPages(profile.address, serverFilters);
   const collections = useQuery({
     ...collectionOptions({ artist: selectedArtistIds, at: filters.at }),
-    enabled: !query.hasNextPage,
+    enabled: !hasNextPage,
   });
 
   const derived = useMemo(
@@ -202,6 +204,6 @@ export function useProfileCatalogue() {
   return {
     ...derived,
     filters: deferredFilters,
-    isPending: query.isPending || collections.isPending,
+    isPending: isPending || collections.isPending,
   };
 }

@@ -93,6 +93,11 @@ export function isObjektOwned(objekt: ValidObjekt): objekt is OwnedObjekt {
   return "serial" in objekt;
 }
 
+/** how many tokens `objekts` stand for: a counted collection carries its copies */
+export function copiesIn(objekts: readonly ValidObjekt[]): number {
+  return objekts.reduce((total, objekt) => total + (objekt.copies ?? 1), 0);
+}
+
 /** The copies of `objekt`'s collection held in `objekts` — what the drawer's Owned tab lists. */
 export function ownedCopiesOf(objekts: ValidObjekt[], objekt: ValidObjekt | null): OwnedObjekt[] {
   if (objekt === null) return [];
