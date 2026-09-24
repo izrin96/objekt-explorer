@@ -21,7 +21,7 @@ import { Tabs, TabsList, TabsPanel, TabsTab } from "@/components/ui/tabs";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import { formatTimestamp } from "@/lib/time";
 import { unobtainableSlugs } from "@/lib/unobtainables";
-import { cn } from "@/lib/utils";
+import { cn, scrollXOnlyClass } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import { ObjektFlip } from "../objekt-flip";
@@ -278,11 +278,7 @@ function DrawerBody({
             }
             className="bg-popover sticky top-0 z-10"
           >
-            <ScrollArea
-              data-scroll-x
-              scrollFade
-              className="*:data-[slot=scroll-area-viewport]:overflow-y-hidden!"
-            >
+            <ScrollArea data-scroll-x scrollFade className={scrollXOnlyClass}>
               {/* `w-max min-w-full`, not `w-full`: `w-full` clamps the underline
                 rule to the scroller while the tabs spill past it */}
               <TabsList

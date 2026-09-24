@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ArtistAvatar } from "@/features/artist/artist-avatar";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
-import { cn } from "@/lib/utils";
+import { cn, scrollXOnlyClass } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import { EDITION_LABEL, GROUP_BY_LABEL, ONLINE_TYPE_LABEL, SORT_LABEL } from "./labels";
@@ -186,13 +186,7 @@ export function ActiveChips({
   if (chips.length === 0) return null;
 
   return (
-    // the viewport scrolls both axes, and on touch the Clear all button's 44px
-    // tap target overhangs the row, which would leave it scrollable vertically
-    <ScrollArea
-      data-scroll-x
-      scrollFade
-      className="*:data-[slot=scroll-area-viewport]:overflow-y-hidden!"
-    >
+    <ScrollArea data-scroll-x scrollFade className={scrollXOnlyClass}>
       <div className="flex w-max items-center gap-1.5 pb-0.5">
         {chips.map((chip) => {
           const artist = chip.artistId !== undefined ? getArtist(chip.artistId) : undefined;

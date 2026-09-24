@@ -18,6 +18,14 @@ export function cn(...inputs: ClassValue[]): string {
  */
 export const containerClass = "mx-auto w-full max-w-(--breakpoint-2xl) [[data-wide]_&]:max-w-none";
 
+/**
+ * A `ScrollArea` that is a horizontal strip. Its viewport scrolls both axes and
+ * Base UI writes the fade distances inline, so a touch target overhanging the
+ * strip would otherwise scroll it vertically and fade its bottom edge.
+ */
+export const scrollXOnlyClass =
+  "*:data-[slot=scroll-area-viewport]:overflow-y-hidden! *:data-[slot=scroll-area-viewport]:[--scroll-area-overflow-y-start:0px]! *:data-[slot=scroll-area-viewport]:[--scroll-area-overflow-y-end:0px]!";
+
 export const SITE_NAME = "Objekt Tracker";
 
 export const THEME_COLORS = {
