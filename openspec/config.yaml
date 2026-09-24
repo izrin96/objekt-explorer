@@ -11,8 +11,9 @@ context: |
   notes in `design/lab-code-review.md` remain requirements.
   Rules for code under `apps/web`: Zustand reads are selectors only; URL state is route
   `validateSearch` with zod, never nuqs; every user-facing string is `m.*` from Paraglide;
-  server data goes through React Query with `@orpc/tanstack-query` utils and route loaders
-  `ensureQueryData` the first paint; Phosphor icons; cnippet token names only; `virtua` grids.
+  server data goes through React Query with `@orpc/tanstack-query` utils, and route loaders
+  load the first paint with `queryClient.query({ ...options, staleTime: "static" })`;
+  Phosphor icons; cnippet token names only; `virtua` grids.
   A dialog's dismiss button is `m.common_modal_cancel()` only when the dialog has a primary
   action that commits something, and `m.common_modal_close()` when it is informational or only
   produces output to copy.

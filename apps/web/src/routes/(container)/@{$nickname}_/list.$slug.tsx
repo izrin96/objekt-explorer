@@ -16,10 +16,14 @@ import { m } from "@/paraglide/messages";
 export const Route = createFileRoute("/(container)/@{$nickname}_/list/$slug")({
   validateSearch: filterSearchSchema.extend(compareSearchSchema.shape),
   loader: async ({ params, context: { queryClient } }) => {
-    const profile = await queryClient.ensureQueryData(profileQuery({ nickname: params.nickname }));
-    const list = await queryClient.ensureQueryData(
-      listBySlugQuery({ slug: params.slug, address: profile.address }),
-    );
+    const profile = await queryClient.query({
+      ...profileQuery({ nickname: params.nickname }),
+      staleTime: "static",
+    });
+    const list = await queryClient.query({
+      ...listBySlugQuery({ slug: params.slug, address: profile.address }),
+      staleTime: "static",
+    });
     return { list };
   },
   head: ({ loaderData }) =>

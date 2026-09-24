@@ -14,7 +14,7 @@ import { m } from "@/paraglide/messages";
 
 export const Route = createFileRoute("/@{$nickname}")({
   loader: ({ params, context: { queryClient } }) =>
-    queryClient.ensureQueryData(profileQuery({ nickname: params.nickname })),
+    queryClient.query({ ...profileQuery({ nickname: params.nickname }), staleTime: "static" }),
   notFoundComponent: ProfileNotFound,
   component: ProfileLayout,
 });

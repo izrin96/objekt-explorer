@@ -9,7 +9,7 @@ import { m } from "@/paraglide/messages";
 export const Route = createFileRoute("/(container)/login")({
   validateSearch: z.object({ redirect: z.string().optional() }),
   beforeLoad: async ({ context: { queryClient } }) => {
-    const user = await queryClient.ensureQueryData(currentUserOptions);
+    const user = await queryClient.query({ ...currentUserOptions, staleTime: "static" });
     if (user) throw routerRedirect({ to: "/" });
   },
   head: () => generateMetadata({ title: m.page_titles_login() }),

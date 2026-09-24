@@ -10,8 +10,11 @@ import { m } from "@/paraglide/messages";
 
 export const Route = createFileRoute("/@{$nickname}/list")({
   loader: async ({ params, context: { queryClient } }) => {
-    const profile = await queryClient.ensureQueryData(profileQuery({ nickname: params.nickname }));
-    await queryClient.ensureQueryData(profileListsOptions(profile.address));
+    const profile = await queryClient.query({
+      ...profileQuery({ nickname: params.nickname }),
+      staleTime: "static",
+    });
+    await queryClient.query({ ...profileListsOptions(profile.address), staleTime: "static" });
     return profile;
   },
   head: ({ loaderData }) =>

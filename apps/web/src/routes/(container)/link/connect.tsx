@@ -8,7 +8,7 @@ import { m } from "@/paraglide/messages";
 
 export const Route = createFileRoute("/(container)/link/connect")({
   beforeLoad: async ({ context: { queryClient }, location }) => {
-    const user = await queryClient.ensureQueryData(currentUserOptions);
+    const user = await queryClient.query({ ...currentUserOptions, staleTime: "static" });
     if (!user) throw redirect({ to: "/login", search: { redirect: location.href } });
   },
   head: () => generateMetadata({ title: m.link_link_cosmo() }),

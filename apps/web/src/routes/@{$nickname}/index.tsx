@@ -10,7 +10,7 @@ import { m } from "@/paraglide/messages";
 export const Route = createFileRoute("/@{$nickname}/")({
   validateSearch: filterSearchSchema,
   loader: ({ params, context: { queryClient } }) =>
-    queryClient.ensureQueryData(profileQuery({ nickname: params.nickname })),
+    queryClient.query({ ...profileQuery({ nickname: params.nickname }), staleTime: "static" }),
   head: ({ loaderData }) =>
     loaderData
       ? generateMetadata({

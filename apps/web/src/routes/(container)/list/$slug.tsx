@@ -14,7 +14,7 @@ import { m } from "@/paraglide/messages";
 export const Route = createFileRoute("/(container)/list/$slug")({
   validateSearch: filterSearchSchema.extend(compareSearchSchema.shape),
   beforeLoad: async ({ params, context: { queryClient } }) => {
-    const list = await queryClient.fetchQuery(listBySlugQuery({ slug: params.slug }));
+    const list = await queryClient.query(listBySlugQuery({ slug: params.slug }));
 
     // a list filed under a Cosmo lives at the profile-scoped address
     if (list.profileAddress && list.profileSlug) {
