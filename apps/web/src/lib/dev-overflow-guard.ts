@@ -78,8 +78,8 @@ function report(route: string, scope: string, hit: Hit): void {
   );
 }
 
-/** One pass over the document and every open popup. Exported for manual runs. */
-export function checkOverflow(route: string): void {
+/** One pass over the document and every open popup. */
+function checkOverflow(route: string): void {
   const doc = document.documentElement;
   if (doc.scrollWidth > doc.clientWidth + TOLERANCE) {
     console.error(

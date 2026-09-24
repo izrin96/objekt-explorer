@@ -5,7 +5,7 @@ const endpoint = process.env.S3_ENDPOINT;
 const region = process.env.S3_REGION ?? "auto";
 const publicUrl = process.env.S3_PUBLIC_URL ?? endpoint;
 
-export const BUCKET = process.env.S3_BUCKET ?? "";
+const BUCKET = process.env.S3_BUCKET ?? "";
 export const FOLDER = "collection-images";
 
 // bun's S3Client has no cacheControl option, so uploads go through the aws sdk

@@ -231,24 +231,24 @@ export function computeOfflineSerialUpdates(
 
 const BATCH_SIZE = 20;
 
-export async function findBoundaryTokenId(
+async function findBoundaryTokenId(
   targetCollectionId: string,
   startTokenId: number,
   direction: -1,
   maxOffset?: number,
 ): Promise<number | null>;
-export async function findBoundaryTokenId(
+async function findBoundaryTokenId(
   targetCollectionId: string,
   startTokenId: number,
   direction: 1,
 ): Promise<number>;
-export async function findBoundaryTokenId(
+async function findBoundaryTokenId(
   targetCollectionId: string,
   startTokenId: number,
   direction: 1,
   maxOffset: number,
 ): Promise<number | null>;
-export async function findBoundaryTokenId(
+async function findBoundaryTokenId(
   targetCollectionId: string,
   startTokenId: number,
   direction: -1 | 1,
