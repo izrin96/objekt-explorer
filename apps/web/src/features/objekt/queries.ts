@@ -12,7 +12,7 @@ import { orpc } from "@/lib/orpc";
 
 import { mapObjektWithTag } from "./objekt-utils";
 
-export type SerialList = { serials: number[] };
+export type SerialList = { serials: number[]; spun: number[] };
 
 /** Never changes under a given artist scope, so it is fetched once and filtered in the browser. */
 export const collectionOptions = (filters?: OwnedBySchema) =>
@@ -40,7 +40,7 @@ export const collectionMetadataOptions = (slug: string) =>
 export const serialListOptions = (slug: string) =>
   queryOptions({
     queryKey: ["objekts", "list", slug],
-    queryFn: () => ofetch<SerialList>(`/api/objekts/list/${slug}`).then((a) => a.serials),
+    queryFn: () => ofetch<SerialList>(`/api/objekts/list/${slug}`),
     staleTime: 1000 * 60,
   });
 

@@ -1,5 +1,6 @@
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
+import { Addresses } from "@repo/lib";
 import { createFileRoute } from "@tanstack/react-router";
 import { and, asc, eq, ne } from "drizzle-orm";
 
@@ -10,6 +11,7 @@ export const Route = createFileRoute("/api/objekts/list/$collectionSlug")({
         const results = await indexer
           .select({
             serial: objekts.serial,
+            owner: objekts.owner,
           })
           .from(objekts)
           .innerJoin(collections, eq(objekts.collectionId, collections.id))
@@ -18,6 +20,7 @@ export const Route = createFileRoute("/api/objekts/list/$collectionSlug")({
 
         return Response.json({
           serials: results.map((a) => a.serial),
+          spun: results.filter((a) => a.owner === Addresses.SPIN).map((a) => a.serial),
         });
       },
     },

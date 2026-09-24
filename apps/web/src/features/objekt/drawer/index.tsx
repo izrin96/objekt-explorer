@@ -34,6 +34,8 @@ import { SerialsPanel, Timeline, toTimeline } from "./serials";
 
 type DrawerTab = "owned" | "serials" | "market" | "metadata";
 
+const NO_SERIALS: number[] = [];
+
 type Props = {
   objekt: ValidObjekt | null;
   onClose: () => void;
@@ -130,7 +132,7 @@ function DrawerBody({
   const serials = useQuery(serialListOptions(objekt.slug));
 
   // until the user picks one, a collection opens on the first minted serial
-  const selected = serial ?? serials.data?.[0] ?? null;
+  const selected = serial ?? serials.data?.serials[0] ?? null;
   const transfers = useQuery(transfersOptions(objekt.slug, selected));
 
   // the Metadata tab describes the token the card carried, not whatever serial
@@ -313,7 +315,8 @@ function DrawerBody({
           <TabsPanel value="serials">
             <SerialsPanel
               serial={selected}
-              serials={serials.data ?? []}
+              serials={serials.data?.serials ?? NO_SERIALS}
+              spun={serials.data?.spun ?? NO_SERIALS}
               metadata={metadata}
               physical={objekt.onOffline === "offline"}
               loading={serials.isPending}

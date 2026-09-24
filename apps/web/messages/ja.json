@@ -689,6 +689,7 @@
   "objekt_event_minted": "ミント",
   "objekt_event_transferred": "転送",
   "objekt_event_spun": "スピン",
+  "objekt_serial_scope_aria": "移動する対象",
   "objekt_slug": "スラッグ",
   "objekt_collection_id": "コレクションID",
   "objekt_background_color": "背景色",

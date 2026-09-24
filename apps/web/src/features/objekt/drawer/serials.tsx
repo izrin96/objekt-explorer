@@ -20,6 +20,7 @@ import { Shimmer } from "@/components/shared/shimmer";
 import { Timestamp } from "@/components/shared/timestamp";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Group } from "@/components/ui/group";
 import { NumberField, NumberFieldGroup, NumberFieldInput } from "@/components/ui/number-field";
 import { truncateAddress } from "@/lib/address";
 import { cn } from "@/lib/utils";
@@ -71,10 +72,22 @@ export function toTimeline(rows: ObjektTransfer[]): TimelineEvent[] {
   });
 }
 
-/** Previous and next snap to the nearest *existing* serial, never to `serial ± 1`. */
+type SerialScope = "all" | "spun" | "kept";
+
+const SCOPE_LABEL: Record<SerialScope, () => string> = {
+  all: m.filter_all,
+  spun: m.objekt_event_spun,
+  kept: m.objekt_non_spin,
+};
+
+/**
+ * Previous and next snap to the nearest *existing* serial, never to `serial ± 1`,
+ * and only within the scope picked: every serial, the spun ones, or the rest.
+ */
 export function SerialsPanel({
   serial,
   serials,
+  spun,
   metadata,
   physical,
   loading,
@@ -83,6 +96,8 @@ export function SerialsPanel({
 }: {
   serial: number | null;
   serials: number[];
+  /** the serials COSMO Spin holds, ascending */
+  spun: number[];
   metadata: UseQueryResult<{ total: number; spin: number; transferable: number }>;
   /** a physical objekt's copies only exist once scanned, so its total counts scans */
   physical: boolean;
@@ -90,17 +105,48 @@ export function SerialsPanel({
   onSerialChange: (serial: number) => void;
   children: ReactNode;
 }) {
+  const [scope, setScope] = useState<SerialScope>("all");
+  const spunSet = useMemo(() => new Set(spun), [spun]);
+
+  const serialsIn = (target: SerialScope) =>
+    target === "all"
+      ? serials
+      : target === "spun"
+        ? spun
+        : serials.filter((value) => !spunSet.has(value));
+  const scoped = serialsIn(scope);
+
   const updateSerial = (mode: "first" | "prev" | "next" | "last") => {
-    if (serials.length === 0) return;
+    if (scoped.length === 0) return;
     const current = serial ?? 0;
-    if (mode === "first") return onSerialChange(serials[0] ?? current);
-    if (mode === "last") return onSerialChange(serials[serials.length - 1] ?? current);
+    if (mode === "first") return onSerialChange(scoped[0] ?? current);
+    if (mode === "last") return onSerialChange(scoped[scoped.length - 1] ?? current);
+    // past either end, every serial can still reach one the list has not caught
+    // up with yet; a narrowed scope stops at its ends
     if (mode === "prev") {
-      const found = serials.findLast((value) => value < current);
-      return onSerialChange(found ?? (current > 1 ? current - 1 : 1));
+      const found = scoped.findLast((value) => value < current);
+      if (found !== undefined) return onSerialChange(found);
+      if (scope === "all") onSerialChange(current > 1 ? current - 1 : 1);
+      return;
     }
-    const found = serials.find((value) => value > current);
-    return onSerialChange(found ?? current + 1);
+    const found = scoped.find((value) => value > current);
+    if (found !== undefined) return onSerialChange(found);
+    if (scope === "all") onSerialChange(current + 1);
+  };
+
+  // a serial outside the new scope moves to the next one inside it
+  const changeScope = (next: SerialScope) => {
+    setScope(next);
+    const list = serialsIn(next);
+    if (serial !== null && list.includes(serial)) return;
+    const target = list.find((value) => value > (serial ?? 0)) ?? list[0];
+    if (target !== undefined) onSerialChange(target);
+  };
+
+  const scopeEmpty: Record<SerialScope, boolean> = {
+    all: serials.length === 0,
+    spun: spun.length === 0,
+    kept: spun.length === serials.length,
   };
 
   if (loading) {
@@ -167,6 +213,22 @@ export function SerialsPanel({
           <CaretLineRightIcon />
         </Button>
       </div>
+
+      <Group aria-label={m.objekt_serial_scope_aria()}>
+        {(["all", "spun", "kept"] as const).map((value) => (
+          <Button
+            key={value}
+            variant="outline"
+            size="xs"
+            aria-pressed={scope === value}
+            disabled={scopeEmpty[value] && scope !== value}
+            className="aria-pressed:bg-secondary aria-pressed:text-foreground text-muted-foreground"
+            onClick={() => changeScope(value)}
+          >
+            {SCOPE_LABEL[value]()}
+          </Button>
+        ))}
+      </Group>
 
       <div className="text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-xs">
         {metadata.isPending && <Shimmer className="h-3.5 w-52" />}
