@@ -66,7 +66,7 @@ const HOME_SORTS: readonly ValidCustomSort[] = ["date", "season", "collectionNo"
 /** the absence of `group_by`, spelled as a value so the select has a "None" item */
 const NO_GROUP = "none";
 
-function ColumnsSelect({ className, stacked = false }: { className?: string; stacked?: boolean }) {
+function ColumnsSelect() {
   const columns = useColumns();
   const setColumns = useColumnStore((s) => s.setColumns);
 
@@ -74,7 +74,7 @@ function ColumnsSelect({ className, stacked = false }: { className?: string; sta
     <Select value={columns} onValueChange={(value: number | null) => value && setColumns(value)}>
       <SelectPrimitive.Trigger
         aria-label={m.filter_column()}
-        className={cn(toolbarTrigger, "font-mono", stacked && "w-full justify-between", className)}
+        className={cn(toolbarTrigger, "font-mono")}
       >
         <ColumnsIcon />
         <SelectValue />
@@ -246,30 +246,13 @@ export function ResetButton({
 }
 
 /** The sheet block for the toolbar controls the inline row hides below `md`. */
-function StackedToolbarFields({
-  showGroupBy = false,
-  showColumns = false,
-}: {
-  showGroupBy?: boolean;
-  showColumns?: boolean;
-}) {
+function StackedToolbarFields({ showGroupBy = false }: { showGroupBy?: boolean }) {
+  if (!showGroupBy) return null;
+
   return (
     <>
-      {showGroupBy && (
-        <>
-          <div className="my-1 border-t" />
-          <GroupBySelect stacked />
-        </>
-      )}
-      {showColumns && (
-        <>
-          <div className="my-1 border-t" />
-          <div className="flex flex-col gap-1.5">
-            <span className="text-muted-foreground text-xs font-medium">{m.filter_column()}</span>
-            <ColumnsSelect stacked />
-          </div>
-        </>
-      )}
+      <div className="my-1 border-t" />
+      <GroupBySelect stacked />
     </>
   );
 }
@@ -341,7 +324,7 @@ export function FilterBar({
           >
             <div className="my-1 border-t" />
             <LongTailFields fields={longTail} surface="stacked" />
-            <StackedToolbarFields showGroupBy={showSort} showColumns={showColumns} />
+            <StackedToolbarFields showGroupBy={showSort} />
           </FilterSheet>
 
           {extrasFirst && <ExtraFacetControls surface="inline" extras={extras} />}
@@ -368,7 +351,7 @@ export function FilterBar({
               <GroupBySelect className="max-md:hidden" />
             </>
           )}
-          {showColumns && <ColumnsSelect className="max-md:hidden" />}
+          {showColumns && <ColumnsSelect />}
           <ResetButton onReset={reset} disabled={!isFiltering(filters)} className="max-md:hidden" />
         </div>
       </div>
