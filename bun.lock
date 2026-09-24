@@ -90,7 +90,6 @@
         "recharts": "^3.10.1",
         "slugify": "catalog:",
         "tailwind-merge": "^3.7.0",
-        "tanstack-meta": "^0.6.1",
         "virtua": "^0.51.3",
         "zod": "catalog:",
         "zustand": "^5.0.15",
@@ -1934,8 +1933,6 @@
     "tailwind-merge": ["tailwind-merge@3.7.0", "", {}, "sha512-XPPUyAc+cvspz3lHTcR/QgPfW2A0lv/xQNIjX3HGhLR+Nq2lHaLq5MtTesHn8GUr3W3DguT2KT5x3NVgRtYwmA=="],
 
     "tailwindcss": ["tailwindcss@4.3.3", "", {}, "sha512-gOhV3P7ufE62QDGg1zVaTgCR+EtPv92k2nIhVcVKcLmxT1sUBsQGhnZj175j+MqRt4zLF7ic+sCYjfhxMxj7YQ=="],
-
-    "tanstack-meta": ["tanstack-meta@0.6.1", "", {}, "sha512-8i2nz4frJSpcVnIPv0D/0tmnBlCL7XVaNThb01PrTmYlfxRvT/ZLzdM4XJKhaxQbhW4CUOvDgl1VIfMenJXM0w=="],
 
     "tapable": ["tapable@2.3.3", "", {}, "sha512-uxc/zpqFg6x7C8vOE7lh6Lbda8eEL9zmVm/PLeTPBRhh1xCgdWaQ+J1CUieGpIfm2HdtsUpRv+HshiasBMcc6A=="],
 

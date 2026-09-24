@@ -56,7 +56,6 @@
     "recharts": "^3.10.1",
     "slugify": "catalog:",
     "tailwind-merge": "^3.7.0",
-    "tanstack-meta": "^0.6.1",
     "virtua": "^0.51.3",
     "zod": "catalog:",
     "zustand": "^5.0.15"

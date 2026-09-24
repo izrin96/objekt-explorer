@@ -16,7 +16,7 @@ import { FilterDataProvider } from "@/features/filters/filter-data-provider";
 import { currentUserOptions } from "@/features/user/queries";
 import { startOverflowGuard } from "@/lib/dev-overflow-guard";
 import { clientEnv } from "@/lib/env/client";
-import { generateMetadata } from "@/lib/meta";
+import { pageTitle } from "@/lib/meta";
 import { orpc } from "@/lib/orpc";
 import { SITE_NAME, THEME_COLORS } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -48,65 +48,52 @@ const applySettingsScript = `(function(){try{var s=JSON.parse(localStorage.getIt
   THEME_COLORS.dark,
 )}:${JSON.stringify(THEME_COLORS.light)});if(s.wide)d.dataset.wide="true";}catch(e){}})();`;
 
+const KEYWORDS = [
+  "lunar",
+  "kpop",
+  "modhaus",
+  "모드하우스",
+  "cosmo",
+  "objekt",
+  "tripleS",
+  "idntt",
+  "트리플에스",
+  "artms",
+  "artemis",
+  "아르테미스",
+  "아르테미스 스트래티지",
+  "odd eye circle",
+  "오드아이써클",
+  "loona",
+  "이달의 소녀",
+];
+
 export const Route = createRootRouteWithContext<RouterContext>()({
   loader: async ({ context: { queryClient } }) => {
     await Promise.all([
-      queryClient.ensureQueryData(orpc.config.getArtists.queryOptions()),
-      queryClient.ensureQueryData(orpc.config.getSelectedArtists.queryOptions()),
-      queryClient.ensureQueryData(orpc.config.getFilterData.queryOptions()),
-      queryClient.ensureQueryData(currentUserOptions),
+      queryClient.query({ ...orpc.config.getArtists.queryOptions(), staleTime: "static" }),
+      queryClient.query({ ...orpc.config.getSelectedArtists.queryOptions(), staleTime: "static" }),
+      queryClient.query({ ...orpc.config.getFilterData.queryOptions(), staleTime: "static" }),
+      queryClient.query({ ...currentUserOptions, staleTime: "static" }),
     ]);
   },
   head: () => {
-    const { meta, links } = generateMetadata({
-      charSet: "utf-8",
-      applicationName: SITE_NAME,
-      manifest: "/site.webmanifest",
-      appleWebApp: {
-        title: SITE_NAME,
-        capable: true,
-        statusBarStyle: "default",
-      },
-      viewport: {
-        width: "device-width",
-        initialScale: 1,
-        maximumScale: 1,
-        colorScheme: "light dark",
-        // one only: React collapses two <meta name="theme-color"> into the last
-        themeColor: THEME_COLORS.dark,
-      },
-      referrer: "origin-when-cross-origin",
-      formatDetection: { telephone: false },
-      description: m.home_description(),
-      keywords: [
-        "lunar",
-        "kpop",
-        "modhaus",
-        "모드하우스",
-        "cosmo",
-        "objekt",
-        "tripleS",
-        "idntt",
-        "트리플에스",
-        "artms",
-        "artemis",
-        "아르테미스",
-        "아르테미스 스트래티지",
-        "odd eye circle",
-        "오드아이써클",
-        "loona",
-        "이달의 소녀",
-      ],
-      icons: {
-        icon: [
-          { url: "/favicon.svg", type: "image/svg+xml" },
-          { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
-          { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
-          { url: "/favicon.ico" },
-        ],
-        apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
-      },
-    });
+    const meta = [
+      { charSet: "utf-8" },
+      { title: pageTitle() },
+      { name: "description", content: m.home_description() },
+      { name: "application-name", content: SITE_NAME },
+      { name: "keywords", content: KEYWORDS.join(",") },
+      { name: "referrer", content: "origin-when-cross-origin" },
+      { name: "format-detection", content: "telephone=no" },
+      { name: "mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-title", content: SITE_NAME },
+      { name: "apple-mobile-web-app-status-bar-style", content: "default" },
+      { name: "viewport", content: "width=device-width, initial-scale=1, maximum-scale=1" },
+      // one only: React collapses two <meta name="theme-color"> into the last
+      { name: "theme-color", content: THEME_COLORS.dark },
+      { name: "color-scheme", content: "light dark" },
+    ];
 
     return {
       meta,
@@ -126,7 +113,12 @@ export const Route = createRootRouteWithContext<RouterContext>()({
           rel: "stylesheet",
           href: appCss,
         },
-        ...links,
+        { rel: "manifest", href: "/site.webmanifest" },
+        { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
+        { rel: "icon", href: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+        { rel: "icon", href: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+        { rel: "icon", href: "/favicon.ico" },
+        { rel: "apple-touch-icon", href: "/apple-touch-icon.png", sizes: "180x180" },
       ],
       scripts:
         import.meta.env.DEV || !clientEnv.VITE_UMAMI_WEBSITE_ID
