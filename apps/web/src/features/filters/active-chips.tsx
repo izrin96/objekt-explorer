@@ -219,7 +219,12 @@ export function ActiveChips({
             </button>
           );
         })}
-        <Button variant="outline" size="xs" onClick={onReset} className="h-6.5 flex-none sm:h-6.5">
+        <Button
+          variant="secondary"
+          size="xs"
+          onClick={onReset}
+          className="h-6.5 flex-none sm:h-6.5"
+        >
           {m.filter_clear_all()}
         </Button>
       </div>
