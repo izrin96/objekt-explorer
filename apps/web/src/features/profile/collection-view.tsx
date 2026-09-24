@@ -35,7 +35,7 @@ import { SelectBar, type SelectBarAction, SelectModeButton } from "@/features/ob
 import { ShimmerGrid } from "@/features/objekt/shimmer-grid";
 import { useCurrentUser } from "@/features/user/hooks";
 import { m } from "@/paraglide/messages";
-import { useClearSelectionOnNavigate, useSelection } from "@/stores/selection";
+import { selectIsSelecting, useClearSelectionOnNavigate, useSelection } from "@/stores/selection";
 
 import {
   pinOrderFor,
@@ -61,6 +61,7 @@ export function CollectionView() {
   const transferable = useFilters((f) => f.transferable);
   const grouped = useFilters((f) => f.grouped);
   const selected = useSelection((s) => s.ids);
+  const selecting = useSelection(selectIsSelecting);
   const toggleSelect = useSelection((s) => s.toggle);
   const clearSelection = useSelection((s) => s.clear);
   const [active, setActive] = useState<ValidObjekt | null>(null);
@@ -145,7 +146,7 @@ export function CollectionView() {
 
   const pinnedIds = useMemo(() => pinned.map((objekt) => objekt.id), [pinned]);
 
-  // one pin has nowhere to go, and an armed drag would only fight the long press
+  // one pin has nowhere to go
   const dndEnabled =
     isProfileAuthed &&
     showActions &&
@@ -219,7 +220,7 @@ export function CollectionView() {
   );
 
   const renderCard = useCallback(
-    (objekt: ValidObjekt, qty?: number, priority = false) => {
+    (objekt: ValidObjekt, qty?: number, priority = false, sortable = false) => {
       const owned = isObjektOwned(objekt) ? objekt : null;
       return (
         <ObjektCard
@@ -227,6 +228,8 @@ export function CollectionView() {
           selected={selected.has(objekt.id)}
           // a past state is read-only, so the cards carry no check control
           onToggleSelect={showActions ? (item) => toggleSelect(item.id) : undefined}
+          // a pin's long press lifts it for reordering; the Select button selects
+          longPressSelect={!sortable}
           onOpen={setActive}
           pin={owned?.isPin === true}
           lock={owned?.isLocked === true}
@@ -246,16 +249,27 @@ export function CollectionView() {
     ({ item, rowIndex }: { item: ValidObjekt[]; rowIndex: number }) => {
       const objekt = item[0];
       if (!objekt) return null;
-      const card = renderCard(objekt, item.length > 1 ? item.length : undefined, rowIndex < 2);
+      const sortable = dndEnabled && isObjektOwned(objekt) && objekt.isPin === true;
+      // in select mode a pin takes taps and long presses like any other card
+      const card = renderCard(
+        objekt,
+        item.length > 1 ? item.length : undefined,
+        rowIndex < 2,
+        sortable && !selecting,
+      );
       // only the grid cell is sortable: the drag overlay renders the same card
-      // and a second `useSortable` on its id would own the droppable instead
-      return dndEnabled && isObjektOwned(objekt) && objekt.isPin === true ? (
-        <SortablePin id={objekt.id}>{card}</SortablePin>
+      // and a second `useSortable` on its id would own the droppable instead.
+      // Select mode disables the sortable rather than unwrapping it, so the
+      // pins keep their subtree and do not remount on every toggle
+      return sortable ? (
+        <SortablePin id={objekt.id} disabled={selecting}>
+          {card}
+        </SortablePin>
       ) : (
         card
       );
     },
-    [dndEnabled, renderCard],
+    [dndEnabled, renderCard, selecting],
   );
 
   // the floating copy is artwork only: a caption under it would cast the

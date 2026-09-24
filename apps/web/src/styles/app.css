@@ -118,6 +118,16 @@
   --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-out-cubic: cubic-bezier(0.33, 1, 0.68, 1);
 
+  /* from the resting card to whatever tilt and scale the lifted pin sets */
+  --animate-pin-lift: pin-lift 150ms var(--ease-out-cubic);
+
+  @keyframes pin-lift {
+    from {
+      rotate: 0deg;
+      scale: 1;
+    }
+  }
+
   --animate-live-animation-bg: live-animation-bg 1s var(--ease-out-cubic) 0s 1;
 
   @keyframes live-animation-bg {

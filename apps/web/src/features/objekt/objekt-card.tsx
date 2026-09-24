@@ -21,6 +21,8 @@ type ObjektCardProps = {
   selected?: boolean;
   /** renders the check control in the top-right block; omit to make the card unselectable */
   onToggleSelect?: (objekt: ValidObjekt) => void;
+  /** false leaves the long press to a drag, as a sortable pin does; select mode still selects */
+  longPressSelect?: boolean;
   onOpen?: (objekt: ValidObjekt) => void;
   pin?: boolean;
   lock?: boolean;
@@ -80,6 +82,7 @@ export function ObjektCard({
   objekt,
   selected = false,
   onToggleSelect,
+  longPressSelect = true,
   onOpen,
   pin,
   lock,
@@ -110,7 +113,7 @@ export function ObjektCard({
   const caption = !labelHidden || unobtainable || price !== undefined;
 
   const { handlers, consumeClick } = useLongPress({
-    disabled: onToggleSelect === undefined,
+    disabled: onToggleSelect === undefined || !longPressSelect,
     onLongPress: () => onToggleSelect?.(objekt),
   });
 
