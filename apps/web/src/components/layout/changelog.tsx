@@ -23,8 +23,17 @@ import { DISCORD_INVITE } from "./about";
  */
 const CHANGELOG = [
   {
-    date: "2026-09-24",
-    items: ["Redesigned the whole site."],
+    date: "2026-09-24 - 2026-09-25",
+    items: [
+      "Redesigned the whole site, new heading fonts and many layout and usability improvements.",
+      "The Objekt view now slides in from the right, which works better on mobile.",
+      "The profile banner can now be hidden.",
+      "Temporarily removed the Objekt Columns setting from profiles and lists. It may not come back.",
+      "Added member chips on desktop for picking members quickly.",
+      "The select mode toolbar now lists the objekts you selected.",
+      "The COSMO Spin profile now shows one card per collection with its number of copies, and every filter, sort and tab works on it. Snapshots are not available for COSMO Spin.",
+      "The Serials tab in the Objekt view can now step through only spun or only non-spun serials.",
+    ],
   },
   {
     date: "2026-09-16",
