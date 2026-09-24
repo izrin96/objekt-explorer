@@ -16,6 +16,7 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import { Menu, MenuPopup, MenuTrigger } from "@/components/ui/menu";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsList, TabsPanel, TabsTab } from "@/components/ui/tabs";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import { formatTimestamp } from "@/lib/time";
@@ -267,33 +268,39 @@ function DrawerBody({
 
         <Tabs value={tab} onValueChange={(value) => onTabChange(value as DrawerTab)}>
           {/* four tabs outrun a phone-width sheet, so the strip scrolls and the
-              sheet does not; `data-scroll-x` declares that to the dev guard */}
+              sheet does not; the scroll area's root sets its own `position`,
+              so the sticky wrapper stays outside it */}
           <div
-            data-scroll-x
             // focus alone never scrolls the strip: a tab past the fold would
             // stay clipped once reached by keyboard or by tap
             onFocusCapture={(event) =>
               event.target.scrollIntoView({ block: "nearest", inline: "nearest" })
             }
-            className="bg-popover sticky top-0 z-10 [scrollbar-width:none] overflow-x-auto"
+            className="bg-popover sticky top-0 z-10"
           >
-            {/* `w-max min-w-full`, not `w-full`: `w-full` clamps the underline
-                rule to the scroller while the tabs spill past it */}
-            <TabsList
-              variant="underline"
-              aria-label={m.objekt_tab_aria()}
-              className="w-max min-w-full justify-start border-b"
+            <ScrollArea
+              data-scroll-x
+              scrollFade
+              className="*:data-[slot=scroll-area-viewport]:overflow-y-hidden!"
             >
-              {ownedCopies && (
-                <TabsTab value="owned">
-                  {m.objekt_owned()}
-                  {ownedCopies.length > 1 ? ` (${ownedCopies.length.toLocaleString()})` : ""}
-                </TabsTab>
-              )}
-              <TabsTab value="serials">{m.objekt_trades()}</TabsTab>
-              <TabsTab value="market">{m.objekt_market()}</TabsTab>
-              <TabsTab value="metadata">{m.objekt_metadata()}</TabsTab>
-            </TabsList>
+              {/* `w-max min-w-full`, not `w-full`: `w-full` clamps the underline
+                rule to the scroller while the tabs spill past it */}
+              <TabsList
+                variant="underline"
+                aria-label={m.objekt_tab_aria()}
+                className="w-max min-w-full justify-start border-b"
+              >
+                {ownedCopies && (
+                  <TabsTab value="owned">
+                    {m.objekt_owned()}
+                    {ownedCopies.length > 1 ? ` (${ownedCopies.length.toLocaleString()})` : ""}
+                  </TabsTab>
+                )}
+                <TabsTab value="serials">{m.objekt_trades()}</TabsTab>
+                <TabsTab value="market">{m.objekt_market()}</TabsTab>
+                <TabsTab value="metadata">{m.objekt_metadata()}</TabsTab>
+              </TabsList>
+            </ScrollArea>
           </div>
           {ownedCopies && (
             <TabsPanel value="owned">
