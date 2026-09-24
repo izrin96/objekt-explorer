@@ -622,6 +622,7 @@
   "filter_scroll_prev": "左へスクロール",
   "filter_scroll_next": "右へスクロール",
   "filter_search_info_aria": "検索ヘルプ",
+  "filter_search_clear_aria": "検索をクリア",
   "api_errors_cosmo_link_already_linked_self": "このCosmo IDはすでにあなたのアカウントに連携されています。",
   "api_errors_cosmo_link_already_linked_other": "このCosmo IDはすでに別のアカウントに連携されています。",
   "api_errors_cosmo_link_rate_limit": "試行回数が多すぎます。しばらく待ってから再度お試しください。",

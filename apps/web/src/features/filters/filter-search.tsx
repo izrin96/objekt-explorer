@@ -1,4 +1,4 @@
-import { MagnifyingGlassIcon, QuestionMarkIcon } from "@phosphor-icons/react";
+import { MagnifyingGlassIcon, QuestionMarkIcon, XIcon } from "@phosphor-icons/react";
 import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -115,7 +115,23 @@ export function FilterSearchField() {
         }}
         className="pr-8! pl-6!"
       />
-      {draft.length === 0 && <SearchHelp />}
+      {draft.length === 0 ? (
+        <SearchHelp />
+      ) : (
+        <Button
+          variant="ghost"
+          size="icon-xs"
+          aria-label={m.filter_search_clear_aria()}
+          className="absolute top-1/2 right-1 -translate-y-1/2"
+          onClick={() => {
+            setDraft("");
+            commit("");
+            ref.current?.focus();
+          }}
+        >
+          <XIcon />
+        </Button>
+      )}
     </div>
   );
 }

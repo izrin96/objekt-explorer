@@ -622,6 +622,7 @@
   "filter_scroll_prev": "Scroll left",
   "filter_scroll_next": "Scroll right",
   "filter_search_info_aria": "Search help",
+  "filter_search_clear_aria": "Clear search",
   "api_errors_cosmo_link_already_linked_self": "This Cosmo ID is already linked to your account.",
   "api_errors_cosmo_link_already_linked_other": "This Cosmo ID is already linked to another account.",
   "api_errors_cosmo_link_rate_limit": "Too many attempts. Please wait before trying again.",

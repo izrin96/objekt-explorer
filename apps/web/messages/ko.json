@@ -622,6 +622,7 @@
   "filter_scroll_prev": "왼쪽으로 스크롤",
   "filter_scroll_next": "오른쪽으로 스크롤",
   "filter_search_info_aria": "검색 도움말",
+  "filter_search_clear_aria": "검색어 지우기",
   "api_errors_cosmo_link_already_linked_self": "이 Cosmo ID는 이미 내 계정에 연결되어 있습니다.",
   "api_errors_cosmo_link_already_linked_other": "이 Cosmo ID는 이미 다른 계정에 연결되어 있습니다.",
   "api_errors_cosmo_link_rate_limit": "시도 횟수가 너무 많습니다. 잠시 후 다시 시도해주세요.",
