@@ -13,6 +13,9 @@ type CollectionExtra = {
   listingCount?: number;
   /** unix seconds */
   listedAt?: number;
+  /** the Cosmo-hosted image, before the processed copy replaced `frontImage` — set by `overrideCollection` */
+  originalFrontImage?: string;
+  originalBackImage?: string;
 };
 
 // Indexed collection — base collection info without ownership

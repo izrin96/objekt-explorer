@@ -85,13 +85,10 @@ export function MetadataPanel({
       </MetaRow>
 
       <MetaRow label={m.objekt_front_image()}>
-        <MetaLink href={objekt.frontImage} />
+        <MetaLink href={objekt.originalFrontImage ?? objekt.frontImage} />
       </MetaRow>
       <MetaRow label={m.objekt_back_image()}>
-        <MetaLink href={objekt.backImage} />
-      </MetaRow>
-      <MetaRow label={m.objekt_thumbnail()}>
-        <MetaLink href={objekt.thumbnailImage} />
+        <MetaLink href={objekt.originalBackImage ?? objekt.backImage} />
       </MetaRow>
       <MetaRow label={m.objekt_band_image_alt()}>
         <MetaLink href={objekt.bandImageUrl} />
