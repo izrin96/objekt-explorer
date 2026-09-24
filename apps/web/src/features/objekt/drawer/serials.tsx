@@ -1,15 +1,12 @@
 import {
-  ArrowsClockwiseIcon,
   ArrowsLeftRightIcon,
   CaretLeftIcon,
   CaretLineLeftIcon,
   CaretLineRightIcon,
   CaretRightIcon,
-  type Icon,
   ListMagnifyingGlassIcon,
   LockIcon,
   QuestionMarkIcon,
-  SparkleIcon,
   WarningIcon,
 } from "@phosphor-icons/react";
 import type { ObjektTransfer, ObjektTransferResult } from "@repo/api/schemas/objekt";
@@ -43,10 +40,10 @@ export const EVENT_COLOR: Record<EventKind, string> = {
   spin: "bg-event-spin",
 };
 
-const EVENT_BADGE: Record<EventKind, { label: () => string; icon: Icon }> = {
-  mint: { label: m.objekt_event_minted, icon: SparkleIcon },
-  transfer: { label: m.objekt_event_transferred, icon: ArrowsLeftRightIcon },
-  spin: { label: m.objekt_event_spun, icon: ArrowsClockwiseIcon },
+const EVENT_LABEL: Record<EventKind, () => string> = {
+  mint: m.objekt_event_minted,
+  transfer: m.objekt_event_transferred,
+  spin: m.objekt_event_spun,
 };
 
 export type TimelineEvent = {
@@ -72,15 +69,6 @@ export function toTimeline(rows: ObjektTransfer[]): TimelineEvent[] {
       at: new Date(row.timestamp),
     };
   });
-}
-
-function EventPill({ badge }: { badge: { label: () => string; icon: Icon } }) {
-  return (
-    <Badge variant="outline" size="sm" className="flex-none gap-1 font-normal">
-      <badge.icon className="size-3" aria-hidden />
-      {badge.label()}
-    </Badge>
-  );
 }
 
 /** Previous and next snap to the nearest *existing* serial, never to `serial ± 1`. */
@@ -430,9 +418,6 @@ function OwnershipTable({ events, onClose }: { events: TimelineEvent[]; onClose:
             <th scope="col" className="px-3 py-2 text-left font-medium">
               {m.objekt_owner()}
             </th>
-            <th scope="col" className="px-3 py-2 text-left font-medium">
-              {m.activity_table_event()}
-            </th>
             <SortableHeader
               sort={sort}
               column="at"
@@ -450,7 +435,12 @@ function OwnershipTable({ events, onClose }: { events: TimelineEvent[]; onClose:
               <tr key={event.id} className="border-t">
                 <th scope="row" className="px-3 py-1.5 text-left font-normal">
                   <span className="flex items-center gap-2">
-                    <i className={cn("size-1.5 shrink-0 rounded-full", EVENT_COLOR[event.kind])} />
+                    <i
+                      aria-hidden
+                      className={cn("size-1.5 shrink-0 rounded-full", EVENT_COLOR[event.kind])}
+                    />
+                    {/* the dot's colour is the event; this names it for a screen reader */}
+                    <span className="sr-only">{EVENT_LABEL[event.kind]()}:</span>
                     {/* the spin address is Cosmo's burn wallet, so it has no profile */}
                     {event.kind === "spin" ? (
                       <span className="truncate">{event.owner}</span>
@@ -469,9 +459,6 @@ function OwnershipTable({ events, onClose }: { events: TimelineEvent[]; onClose:
                     )}
                   </span>
                 </th>
-                <td className="px-3 py-1.5">
-                  <EventPill badge={EVENT_BADGE[event.kind]} />
-                </td>
                 <td className="text-muted-foreground px-3 py-1.5 font-mono text-xs whitespace-nowrap">
                   <Timestamp date={event.at} />
                 </td>
