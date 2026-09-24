@@ -243,13 +243,13 @@ export function ObjektCard({
 
           {/* shown whether or not labels are: it is a warning, not a caption */}
           {unobtainable && (
-            <Badge variant="error" size="sm" className="self-start">
+            <Badge variant="error" size="sm" className="self-center">
               {m.objekt_unobtainable()}
             </Badge>
           )}
 
           {price !== undefined && (
-            <div className="flex min-w-0 items-center gap-1">
+            <div className="flex min-w-0 items-center justify-center gap-1">
               {onPriceClick ? (
                 <button
                   type="button"
