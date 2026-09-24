@@ -1,10 +1,13 @@
+import { ArrowClockwiseIcon, VideoCameraSlashIcon, WarningIcon } from "@phosphor-icons/react";
 import type { LiveSession } from "@repo/cosmo/types/live";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { type CSSProperties, useState } from "react";
 
+import { EmptyState } from "@/components/shared/empty-state";
+import { Shimmer } from "@/components/shared/shimmer";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Spinner } from "@/components/ui/spinner";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsPanel, TabsTab } from "@/components/ui/tabs";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import { liveSessionsOptions } from "@/features/live/queries";
@@ -48,33 +51,63 @@ export function LiveSessionList({ token }: { token: string | undefined }) {
 }
 
 function SessionGrid({ artistId, token }: { artistId: string; token: string | undefined }) {
-  const { data, isPending, error } = useQuery(liveSessionsOptions(artistId));
+  const { data, isPending, isError, refetch } = useQuery(liveSessionsOptions(artistId));
 
   if (isPending) {
     return (
-      <div className="flex justify-center py-12">
-        <Spinner className="size-5" />
+      <div className={GRID}>
+        <SessionCardShimmer />
+        <SessionCardShimmer />
+        <SessionCardShimmer />
       </div>
     );
   }
 
-  if (error) {
+  if (isError) {
     return (
-      <div className="text-destructive-foreground flex justify-center py-12">{error.message}</div>
+      <EmptyState
+        icon={WarningIcon}
+        title={m.common_error_loading_data()}
+        action={
+          <Button variant="outline" size="sm" onClick={() => void refetch()}>
+            <ArrowClockwiseIcon />
+            {m.common_error_retry()}
+          </Button>
+        }
+      />
     );
   }
 
   if (data.length === 0) {
     return (
-      <div className="text-muted-foreground flex justify-center py-12">{m.live_no_live()}</div>
+      <EmptyState
+        icon={VideoCameraSlashIcon}
+        title={m.live_no_live()}
+        hint={m.live_no_live_hint()}
+      />
     );
   }
 
   return (
-    <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,380px),1fr))] gap-2">
+    <div className={GRID}>
       {data.map((live) => (
         <SessionCard key={live.id} live={live} token={token} />
       ))}
+    </div>
+  );
+}
+
+const GRID = "grid grid-cols-[repeat(auto-fill,minmax(min(100%,380px),1fr))] gap-2";
+
+function SessionCardShimmer() {
+  return (
+    <div className="flex flex-col gap-2">
+      <Shimmer className="aspect-square w-full rounded" />
+      <Shimmer className="h-6 w-2/3" />
+      <div className="flex items-center gap-2">
+        <Shimmer className="size-8 rounded-full" />
+        <Shimmer className="h-5 w-24" />
+      </div>
     </div>
   );
 }

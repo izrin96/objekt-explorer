@@ -523,6 +523,7 @@
   "live_title": "Cosmoライブ",
   "live_description": "Cosmoアプリのメンバー別ライブ",
   "live_no_live": "現在配信中のライブはありません",
+  "live_no_live_hint": "メンバーがCosmoでライブを始めると、ここに表示されます。",
   "live_live_badge": "ライブ",
   "live_live_stream_ended": "ライブ配信は終了しました",
   "live_tos_notice": "この機能はCosmoの利用規約に違反するため、提供を終了します。ライブ配信はCosmoアプリでご視聴ください。",

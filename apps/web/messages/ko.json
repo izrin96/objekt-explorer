@@ -523,6 +523,7 @@
   "live_title": "Cosmo Live",
   "live_description": "Cosmo 앱의 멤버별 라이브",
   "live_no_live": "현재 이용 가능한 라이브가 없습니다",
+  "live_no_live_hint": "멤버가 Cosmo에서 라이브를 시작하면 여기에 표시됩니다.",
   "live_live_badge": "라이브",
   "live_live_stream_ended": "라이브 스트림 종료",
   "live_tos_notice": "해당 기능이 Cosmo의 이용약관을 위반하므로 더 이상 제공하지 않습니다. 대신 Cosmo 앱에서 라이브 스트리밍을 시청해 주세요.",
