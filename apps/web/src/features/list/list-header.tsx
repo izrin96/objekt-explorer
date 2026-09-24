@@ -1,4 +1,12 @@
-import { ArrowsLeftRightIcon, PencilSimpleIcon, TrashIcon } from "@phosphor-icons/react";
+import {
+  ArrowsLeftRightIcon,
+  DotsThreeIcon,
+  DownloadSimpleIcon,
+  MagnifyingGlassIcon,
+  PencilSimpleIcon,
+  TrashIcon,
+  UsersIcon,
+} from "@phosphor-icons/react";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 
@@ -6,22 +14,27 @@ import { SocialBadge } from "@/components/shared/social-badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CompareButton } from "@/features/compare/compare-button";
+import { Menu, MenuItem, MenuPopup, MenuSeparator, MenuTrigger } from "@/components/ui/menu";
+import { CompareDialog } from "@/features/compare/compare-dialog";
 import { m } from "@/paraglide/messages";
 
 import { DeleteListDialog } from "./delete-list-dialog";
 import { EditListDialog } from "./edit-list-dialog";
-import { ExportButton } from "./export-button";
+import { ExportListDialog } from "./export-list-dialog";
 import { getListLinkOption } from "./list-link";
 import { useListTarget } from "./list-provider";
 import { ListTypeBadge } from "./list-type-badge";
 import { ShareListButton } from "./share-list-button";
-import { TradeMatchesButton } from "./trade-matches";
+import { TradeMatchesDialog, useCanTradeMatch } from "./trade-matches";
 import { useListOwned } from "./use-list-owned";
 
 export function ListHeader() {
   const list = useListTarget();
   const isOwner = useListOwned();
+  const canTradeMatch = useCanTradeMatch();
+  const [compareOpen, setCompareOpen] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
+  const [tradeOpen, setTradeOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const linked = list.linkedList;
@@ -29,8 +42,8 @@ export function ListHeader() {
 
   return (
     <div className="flex flex-col gap-3.5">
-      {/* the actions' own width would otherwise starve the title column: an
-          `auto` track sizes to max-content, and six buttons are wider than the page */}
+      {/* an `auto` track sizes to max-content, so the actions would otherwise
+          starve the title column */}
       <div className="grid gap-4 md:grid-cols-[minmax(16rem,1fr)_auto]">
         <div className="flex min-w-0 flex-col justify-center gap-1.5">
           <div className="flex flex-wrap items-center gap-2">
@@ -88,21 +101,44 @@ export function ListHeader() {
             </Button>
           ) : null}
           <ShareListButton list={list} />
-          <CompareButton sourceName={list.name} sourceId={list.slug} />
-          <ExportButton slug={list.slug} />
-          <TradeMatchesButton />
-          {isOwner ? (
-            <>
-              <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
-                <PencilSimpleIcon />
-                {m.list_card_edit()}
-              </Button>
-              <Button variant="destructive-outline" size="sm" onClick={() => setDeleteOpen(true)}>
-                <TrashIcon />
-                {m.list_card_delete()}
-              </Button>
-            </>
-          ) : null}
+          <Menu>
+            <MenuTrigger
+              render={
+                <Button variant="outline" size="icon-sm" aria-label={m.list_more_actions()} />
+              }
+            >
+              <DotsThreeIcon weight="bold" />
+            </MenuTrigger>
+            <MenuPopup align="end" className="min-w-44">
+              <MenuItem onClick={() => setCompareOpen(true)}>
+                <MagnifyingGlassIcon />
+                {m.common_actions_compare()}
+              </MenuItem>
+              <MenuItem onClick={() => setExportOpen(true)}>
+                <DownloadSimpleIcon />
+                {m.common_actions_export()}
+              </MenuItem>
+              {canTradeMatch ? (
+                <MenuItem onClick={() => setTradeOpen(true)}>
+                  <UsersIcon />
+                  {m.list_trade_matches_title()}
+                </MenuItem>
+              ) : null}
+              {isOwner ? (
+                <>
+                  <MenuSeparator />
+                  <MenuItem onClick={() => setEditOpen(true)}>
+                    <PencilSimpleIcon />
+                    {m.list_card_edit()}
+                  </MenuItem>
+                  <MenuItem variant="destructive" onClick={() => setDeleteOpen(true)}>
+                    <TrashIcon />
+                    {m.list_card_delete()}
+                  </MenuItem>
+                </>
+              ) : null}
+            </MenuPopup>
+          </Menu>
         </div>
       </div>
 
@@ -110,6 +146,14 @@ export function ListHeader() {
         <p className="text-foreground text-sm whitespace-pre-wrap">{list.description}</p>
       ) : null}
 
+      <CompareDialog
+        sourceName={list.name}
+        sourceId={list.slug}
+        open={compareOpen}
+        onOpenChange={setCompareOpen}
+      />
+      <ExportListDialog slug={list.slug} open={exportOpen} onOpenChange={setExportOpen} />
+      <TradeMatchesDialog open={tradeOpen} onOpenChange={setTradeOpen} />
       {isOwner ? (
         <>
           <EditListDialog

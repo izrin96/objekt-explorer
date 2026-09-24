@@ -1,4 +1,4 @@
-import { InfoIcon, UsersIcon } from "@phosphor-icons/react";
+import { InfoIcon } from "@phosphor-icons/react";
 import type { ListTypeNew } from "@repo/api/schemas/list";
 import { useState } from "react";
 
@@ -34,10 +34,22 @@ function naturalMode(type: ListTypeNew): TradeMode {
   return type === "have" ? "have-to-want" : "want-to-have";
 }
 
-export function TradeMatchesButton() {
+/** trade matching needs the owner's own Have or Want list */
+export function useCanTradeMatch() {
   const list = useListTarget();
   const isOwner = useListOwned();
-  const [open, setOpen] = useState(false);
+  return isOwner && (list.listTypeNew === "have" || list.listTypeNew === "want");
+}
+
+export function TradeMatchesDialog({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const list = useListTarget();
+  const canTradeMatch = useCanTradeMatch();
   const [mode, setMode] = useState<TradeMode>(() => naturalMode(list.listTypeNew));
   const [lastType, setLastType] = useState<ListTypeNew>(list.listTypeNew);
 
@@ -48,7 +60,7 @@ export function TradeMatchesButton() {
     setMode(naturalMode(list.listTypeNew));
   }
 
-  if (!isOwner || (list.listTypeNew !== "have" && list.listTypeNew !== "want")) return null;
+  if (!canTradeMatch) return null;
 
   const linked = list.linkedList ?? null;
   // "both" needs a Have and a Want list to match in each direction
@@ -65,53 +77,44 @@ export function TradeMatchesButton() {
   const body = <TradeMatchesContent slug={slug} mode={mode} />;
 
   return (
-    <>
-      <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
-        <UsersIcon />
-        {m.list_trade_matches_title()}
-      </Button>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogPopup className="max-w-3xl">
+        <DialogHeader>
+          <div className="flex items-center gap-1">
+            <DialogTitle className="font-display">{m.list_trade_matches_title()}</DialogTitle>
+            <TradeMatchesInfo />
+          </div>
+          <DialogDescription>{m.list_trade_matches_description()}</DialogDescription>
+        </DialogHeader>
 
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogPopup className="max-w-3xl">
-          <DialogHeader>
-            <div className="flex items-center gap-1">
-              <DialogTitle className="font-display">{m.list_trade_matches_title()}</DialogTitle>
-              <TradeMatchesInfo />
+        {modes.length > 1 ? (
+          <Tabs
+            value={mode}
+            onValueChange={(value) => setMode(value as TradeMode)}
+            className="min-h-0 gap-0"
+          >
+            <div className="shrink-0 px-6">
+              <TabsList>
+                {modes.map((value) => (
+                  <TabsTab key={value} value={value}>
+                    {MODE_LABEL[value]()}
+                  </TabsTab>
+                ))}
+              </TabsList>
             </div>
-            <DialogDescription>{m.list_trade_matches_description()}</DialogDescription>
-          </DialogHeader>
+            <DialogPanel className="pt-4!">
+              <TabsPanel value={mode}>{body}</TabsPanel>
+            </DialogPanel>
+          </Tabs>
+        ) : (
+          <DialogPanel>{body}</DialogPanel>
+        )}
 
-          {modes.length > 1 ? (
-            <Tabs
-              value={mode}
-              onValueChange={(value) => setMode(value as TradeMode)}
-              className="min-h-0 gap-0"
-            >
-              <div className="shrink-0 px-6">
-                <TabsList>
-                  {modes.map((value) => (
-                    <TabsTab key={value} value={value}>
-                      {MODE_LABEL[value]()}
-                    </TabsTab>
-                  ))}
-                </TabsList>
-              </div>
-              <DialogPanel className="pt-4!">
-                <TabsPanel value={mode}>{body}</TabsPanel>
-              </DialogPanel>
-            </Tabs>
-          ) : (
-            <DialogPanel>{body}</DialogPanel>
-          )}
-
-          <DialogFooter>
-            <DialogClose render={<Button variant="outline" />}>
-              {m.common_modal_close()}
-            </DialogClose>
-          </DialogFooter>
-        </DialogPopup>
-      </Dialog>
-    </>
+        <DialogFooter>
+          <DialogClose render={<Button variant="outline" />}>{m.common_modal_close()}</DialogClose>
+        </DialogFooter>
+      </DialogPopup>
+    </Dialog>
   );
 }
 

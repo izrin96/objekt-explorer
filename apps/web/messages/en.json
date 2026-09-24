@@ -754,6 +754,7 @@
   "list_filtered_empty_hint": "Every objekt in this list is filtered out by the current facets.",
   "list_share": "Share",
   "list_share_copied": "Link copied",
+  "list_more_actions": "More list actions",
   "list_back_to_lists": "Back to my lists",
   "list_price_none": "No price",
   "list_browse_objekts": "Browse objekts",
