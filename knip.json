@@ -5,19 +5,12 @@
       "entry": [],
       "project": []
     },
-    "apps/website": {
-      "entry": ["src/routes/**/*.{ts,tsx}"],
-      "project": ["src/**/*.{ts,tsx,css}"]
-    },
     "apps/web": {
       "entry": ["src/routes/**/*.{ts,tsx}", "src/{client,server,router}.tsx"],
       "project": ["src/**/*.{ts,tsx,css}"]
     },
-    "apps/lab": {
-      "entry": ["scripts/*.ts"],
-      "project": ["src/**/*.{ts,tsx,css}"]
-    },
     "apps/worker": {
+      "entry": ["src/script/*.ts"],
       "project": ["src/**/*.ts"]
     },
     "apps/indexer": {
@@ -48,5 +41,8 @@
       "entry": [],
       "project": []
     }
+  },
+  "ignoreIssues": {
+    "apps/web/src/components/ui/**": ["exports", "types"]
   }
 }

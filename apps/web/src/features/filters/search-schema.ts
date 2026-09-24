@@ -63,7 +63,7 @@ const editionValue = z.preprocess(
 
 /**
  * Every filter, sort and search value the surfaces share, under the parameter
- * names `apps/website` puts on the URL, so a website link opens the same view.
+ * names the old website put on the URL, so an old link opens the same view.
  * Routes declare it as their `validateSearch`.
  */
 export const filterSearchSchema = z.object({

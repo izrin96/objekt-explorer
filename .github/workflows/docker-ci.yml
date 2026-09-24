@@ -31,7 +31,6 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       web: ${{ steps.filter.outputs.web }}
-      website: ${{ steps.filter.outputs.website }}
       worker: ${{ steps.filter.outputs.worker }}
       indexer: ${{ steps.filter.outputs.indexer }}
       packages: ${{ steps.filter.outputs.packages }}
@@ -50,10 +49,6 @@ jobs:
               - 'turbo.json'
               - 'package.json'
               - 'bun.lock'
-              - '.github/workflows/**'
-            # kept as the legacy reference until its removal; lint and typecheck only
-            website:
-              - 'apps/website/**'
               - '.github/workflows/**'
             worker:
               - 'apps/worker/**'
@@ -79,7 +74,6 @@ jobs:
     # Only run validation if there are code changes
     if: |
       needs.detect-changes.outputs.web == 'true' ||
-      needs.detect-changes.outputs.website == 'true' ||
       needs.detect-changes.outputs.worker == 'true' ||
       needs.detect-changes.outputs.indexer == 'true' ||
       needs.detect-changes.outputs.packages == 'true'

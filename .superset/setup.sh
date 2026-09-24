@@ -23,4 +23,4 @@ bun install
 
 echo
 echo "Workspace ready"
-echo "  lab   bun run dev --filter=lab   (Vite picks the next free port after 3100)"
+echo "  web   bun run dev --filter=web"

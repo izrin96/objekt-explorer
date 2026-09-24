@@ -9,9 +9,9 @@
 | Path                | Name             | Purpose                                                                                      |
 | ------------------- | ---------------- | -------------------------------------------------------------------------------------------- |
 | `apps/web`          | `web`            | Main frontend (TanStack React Start + Vite, Base UI) with embedded WebSocket activity server |
-| `apps/website`      | `website`        | Legacy frontend, kept read-only as the behaviour reference until its removal; not deployed   |
 | `apps/worker`       | `worker`         | Background job worker (Croner)                                                               |
 | `apps/indexer`      | `indexer`        | NFT metadata indexer (Subsquid)                                                              |
+| `packages/api`      | `@repo/api`      | ORPC routers and services                                                                    |
 | `packages/db`       | `@repo/db`       | Database schema (Drizzle ORM + PostgreSQL)                                                   |
 | `packages/lib`      | `@repo/lib`      | Shared utilities                                                                             |
 | `packages/cosmo`    | `@repo/cosmo`    | Cosmo SDK                                                                                    |
@@ -64,7 +64,7 @@ bun run --filter=@repo/db db:push       # Push schema directly (needs approval)
 bun run --filter=@repo/db db:studio     # Drizzle Studio
 ```
 
-There is no test framework in this repo — `lint` + `typecheck` are the checks. `bun run check` runs both. `bun run knip` (config in `knip.json`) reports unused files, exports and dependencies; it is advisory today because `apps/website` carries pre-existing findings, and becomes a gate once `apps/website` and `intentui/` are deleted.
+There is no test framework in this repo — `lint` + `typecheck` are the checks. `bun run check` runs both. `bun run knip` (config in `knip.json`) reports unused files, exports and dependencies. It is advisory, not a gate: the worker and indexer still carry findings. Unused exports in the vendored `components/ui` files are ignored, since those files stay verbatim.
 
 ## Skills and specs
 
@@ -92,15 +92,15 @@ Skills live once under `.agents/skills/<name>` (agent-neutral) with `.claude/ski
 
 Install a new one with `npx skills@latest add <owner/repo> -s <skill> -a claude-code -y`, read the whole skill, move the directory to `.agents/skills/` and replace it with the symlink, then commit it with `skills-lock.json`.
 
-Specs use OpenSpec: `/opsx:propose` → review the change under `openspec/changes/` → `/opsx:apply` → `/opsx:archive`. `openspec/config.yaml` carries the project context every change is written against. The `openspec-*` skills and `opsx` commands under `.claude/` are `openspec init --tools claude` output — regenerate them, never edit or symlink them. The Base UI migration is worked as one change per slice.
+Specs use OpenSpec: `/opsx:propose` → review the change under `openspec/changes/` → `/opsx:apply` → `/opsx:archive`. `openspec/config.yaml` carries the project context every change is written against. The `openspec-*` skills and `opsx` commands under `.claude/` are `openspec init --tools claude` output — regenerate them, never edit or symlink them.
 
-Superset workspaces are git worktrees; `.superset/setup.sh` copies the root `.env` from the main checkout and runs `bun install`, and `run` starts the lab and web dev servers.
+Superset workspaces are git worktrees; `.superset/setup.sh` copies the root `.env` from the main checkout and runs `bun install`, and `run` starts the web dev server.
 
 ## Code Style
 
 Enforced by oxlint (`packages/lint/oxlint.config.ts`) and oxfmt (`oxfmt.config.ts`). TS strict mode is on. Module resolution: `bundler` (no `.js` extensions on imports).
 
-Every package extends the shared oxlint baseline from its own config file (`oxlint.config.ts` in apps that set `"type": "module"`, `oxlint.config.mts` elsewhere) and depends on `@repo/lint`. A new package needs both, otherwise oxlint silently falls back to its built-in defaults. The baseline sets `categories.correctness: "error"`, so correctness violations fail CI; everything else is a warning. The react-compiler rules (`set-state-in-effect`, `refs`, `incompatible-library`) are deliberately kept at `warn` while the existing violations in `apps/website` are worked through.
+Every package extends the shared oxlint baseline from its own config file (`oxlint.config.ts` in apps that set `"type": "module"`, `oxlint.config.mts` elsewhere) and depends on `@repo/lint`. A new package needs both, otherwise oxlint silently falls back to its built-in defaults. The baseline sets `categories.correctness: "error"`, so correctness violations fail CI; everything else is a warning. The react-compiler rules (`set-state-in-effect`, `refs`, `incompatible-library`) are kept at `warn`.
 
 - Path alias: `@/*` → `src/`
 - `import * as z from "zod"` — never `import { z }` (convention only; oxlint's `no-restricted-imports` cannot tell the two apart)
@@ -123,15 +123,15 @@ A single root `.env`, copied from `.env.example`, is shared by every app — pac
 
 Full list in `.env.example`.
 
-`apps/web` (and `apps/website`) compile Paraglide messages before type-checking (`typecheck` runs `paraglide:compile` first), so `src/paraglide` is generated output — never edit it by hand. Same for `src/routeTree.gen.ts`.
+`apps/web` compiles Paraglide messages before type-checking (`typecheck` runs `paraglide:compile` first), so `src/paraglide` is generated output — never edit it by hand. Same for `src/routeTree.gen.ts`.
 
 ## Docker
 
-`docker-compose.yml` provides the full stack: web (port 3000, built from `apps/web/Dockerfile`), worker, indexer processor, two PostgreSQL instances each behind pgbouncer, and Valkey. S3 storage and mail are external services configured through `.env`. `apps/website` has no service or image.
+`docker-compose.yml` provides the full stack: web (port 3000, built from `apps/web/Dockerfile`), worker, indexer processor, two PostgreSQL instances each behind pgbouncer, and Valkey. S3 storage and mail are external services configured through `.env`.
 
 ## CI/CD
 
-`.github/workflows/docker-ci.yml` — on push/PR to main: detects changed apps, runs the format check, lint, typecheck and the web production build, then builds Docker images for affected services. The `web` image is built from `apps/web`; a change under `apps/website` only triggers lint and typecheck.
+`.github/workflows/docker-ci.yml` — on push/PR to main: detects changed apps, runs the format check, lint, typecheck and the web production build, then builds Docker images for affected services. The `web` image is built from `apps/web`.
 
 ## Behavior
 

@@ -46,7 +46,7 @@ export type LongTailField =
   | "color";
 
 /**
- * `apps/website`'s filter matrix, one column per surface: a field absent here
+ * The old website's filter matrix, one column per surface: a field absent here
  * is absent from that surface's popover, its sheet and its "Filters · n" count.
  */
 export const LONG_TAIL = {

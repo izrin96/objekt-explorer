@@ -1,7 +1,7 @@
 import { createJSONStorage } from "zustand/middleware";
 
 /**
- * `apps/website` persisted the same device settings on this origin under its
+ * The old website persisted the same device settings on this origin under its
  * own key names, so a visitor arriving after the cutover has its keys and none
  * of ours. The first read seeds our key from them and writes it through, once.
  * The website's keys are left in place: it may still be serving.

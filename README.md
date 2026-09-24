@@ -29,16 +29,17 @@ Live at **[objekt.top](https://objekt.top)**.
 
 ## Repository layout
 
-| Path                | Package          | Purpose                                                    |
-| ------------------- | ---------------- | ---------------------------------------------------------- |
-| `apps/website`      | `website`        | Frontend + API, with an embedded WebSocket activity server |
-| `apps/worker`       | `worker`         | Background jobs (Croner)                                   |
-| `apps/indexer`      | `indexer`        | On-chain NFT metadata indexer (Subsquid)                   |
-| `packages/db`       | `@repo/db`       | Drizzle schema and migrations for both databases           |
-| `packages/lib`      | `@repo/lib`      | Shared utilities and types                                 |
-| `packages/cosmo`    | `@repo/cosmo`    | Cosmo SDK                                                  |
-| `packages/lint`     | `@repo/lint`     | Shared oxlint config                                       |
-| `packages/tsconfig` | `@repo/tsconfig` | Shared TypeScript configs                                  |
+| Path                | Package          | Purpose                                              |
+| ------------------- | ---------------- | ---------------------------------------------------- |
+| `apps/web`          | `web`            | Frontend, with an embedded WebSocket activity server |
+| `apps/worker`       | `worker`         | Background jobs (Croner)                             |
+| `apps/indexer`      | `indexer`        | On-chain NFT metadata indexer (Subsquid)             |
+| `packages/api`      | `@repo/api`      | ORPC routers and services shared by the server       |
+| `packages/db`       | `@repo/db`       | Drizzle schema and migrations for both databases     |
+| `packages/lib`      | `@repo/lib`      | Shared utilities and types                           |
+| `packages/cosmo`    | `@repo/cosmo`    | Cosmo SDK                                            |
+| `packages/lint`     | `@repo/lint`     | Shared oxlint config                                 |
+| `packages/tsconfig` | `@repo/tsconfig` | Shared TypeScript configs                            |
 
 Bun workspaces manage the packages, Turbo runs the tasks.
 
@@ -71,7 +72,7 @@ bun run --filter=@repo/db db:push
 bun run dev
 ```
 
-The website is then served on <http://localhost:3000>.
+The web app is then served on <http://localhost:3000>.
 
 ## Commands
 
@@ -79,7 +80,7 @@ Run from the repository root; `--filter` takes a package name.
 
 ```bash
 bun run dev                        # start all dev servers
-bun run dev --filter=website       # start one app
+bun run dev --filter=web           # start one app
 bun run build                      # build everything
 bun run lint                       # oxlint across the monorepo
 bun run lint:fix                   # lint and auto-fix
@@ -97,7 +98,7 @@ bun run --filter=@repo/db db:studio     # open Drizzle Studio
 
 ## Docker
 
-`docker-compose.yml` brings up the full stack: website, worker, indexer processor, both PostgreSQL instances with pgbouncer in front, and Valkey.
+`docker-compose.yml` brings up the full stack: web, worker, indexer processor, both PostgreSQL instances with pgbouncer in front, and Valkey.
 
 ```bash
 docker compose up -d

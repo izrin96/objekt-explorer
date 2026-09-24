@@ -18,7 +18,7 @@ import { DISCORD_INVITE } from "./about";
 
 /**
  * Release notes are a dated record of what shipped, not product chrome, so they
- * stay in the language they were written in — `apps/website` carries the same
+ * stay in the language they were written in — the old website carried the same
  * array verbatim. Everything around them goes through `m.*`.
  */
 const CHANGELOG = [

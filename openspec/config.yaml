@@ -6,28 +6,21 @@ context: |
   no class/enum, theme spacing over arbitrary values, catalog: for shared deps).
   Frontend: TanStack React Start + Vite + React 19 + Tailwind v4, ORPC + Zod, React Query,
   Zustand (selectors only), Better Auth, Paraglide i18n. Database: PostgreSQL 18 + Drizzle.
-  Current programme: migrate the frontend off intentui / react-aria-components onto Base UI via
-  the cnippet registry, as a new app `apps/web`, using `apps/lab` as the visual and behavioural
-  reference. Read `design/base-ui-prototype-findings.md` and the seven port notes in
-  `design/lab-code-review.md` before proposing any frontend change. `apps/website` is the
-  read-only reference for behaviour until cutover.
-  The programme is planned in `design/web-migration-plan.md` (changes C0–C8); every change
-  names the skills its implementer invokes first and the files it may touch — stay inside them.
+  The frontend is `apps/web` (Base UI via the cnippet registry). The legacy `apps/website` and
+  the `apps/lab` prototype are removed; `design/` keeps their notes as history, and the port
+  notes in `design/lab-code-review.md` remain requirements.
   Rules for code under `apps/web`: Zustand reads are selectors only; URL state is route
-  `validateSearch` with zod, never nuqs; every user-facing string is `m.*` from Paraglide,
-  reusing the website's key when the string is the same; server data goes through React Query
-  with `@orpc/tanstack-query` utils and route loaders `ensureQueryData` the first paint; no
-  import from `apps/website`, `apps/lab`, `intentui` or `react-aria-components` — copy the
-  file into `web`; Phosphor icons; cnippet token names only; `virtua` grids; the seven port
-  notes in `design/lab-code-review.md` are requirements. A dialog's dismiss button is
-  `m.common_modal_cancel()` only when the dialog has a primary action that commits something,
-  and `m.common_modal_close()` when it is informational or only produces output to copy.
-  `packages/api` is the shared server layer once change `extract-api-package` lands.
+  `validateSearch` with zod, never nuqs; every user-facing string is `m.*` from Paraglide;
+  server data goes through React Query with `@orpc/tanstack-query` utils and route loaders
+  `ensureQueryData` the first paint; Phosphor icons; cnippet token names only; `virtua` grids.
+  A dialog's dismiss button is `m.common_modal_cancel()` only when the dialog has a primary
+  action that commits something, and `m.common_modal_close()` when it is informational or only
+  produces output to copy.
+  `packages/api` is the shared server layer.
   Comments: as few as possible. Comment only a non-obvious why (workaround, invariant, trap)
   the code cannot express; never narrate what the next line does, never record history
-  ("round N", "the lab did X"), no JSDoc on obvious props. When porting lab code, drop its
-  narrative comments; files kept verbatim by a gate (git-mv'd files, registry files under
-  `components/ui`) are the exception.
+  ("round N", "the lab did X"), no JSDoc on obvious props. Registry files under
+  `components/ui` are the exception.
   The root `.env` points at the PRODUCTION database and services. Workers never delete, unlink,
   remove or reset anything through the app or the API, never run `db:*` scripts, and never
   create accounts or data without the user's explicit approval for that specific action.
@@ -38,9 +31,9 @@ context: |
 
 rules:
   proposal:
-    - Include a "Non-goals" section and name the website route(s) or lab surface(s) the change covers
+    - Include a "Non-goals" section and name the route(s) the change covers
     - Keep proposals under 600 words
   tasks:
     - Each task ends with lint + typecheck + build passing for the touched package
   design:
-    - Prefer the lab's existing component or store over a new one; say why when it does not fit
+    - Prefer an existing component or store over a new one; say why when it does not fit
