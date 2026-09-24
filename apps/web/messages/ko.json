@@ -729,7 +729,7 @@
   "profile_spin_notice": "COSMO 스핀에서는 일부 필터를 사용할 수 없습니다. 폴리곤 체인에서 스핀한 오브젝트가 아직 병합되지 않았습니다.",
   "profile_checkpoint_date_label": "스냅샷 날짜",
   "profile_checkpoint_time_label": "스냅샷 시간",
-  "profile_count_summary": "{shown}개 표시 · 보유 {owned}개 중 고유 {unique}개",
+  "profile_count_summary": "{shown}개 표시 · 고유 {unique}개",
   "profile_empty_title": "아직 오브젝트가 없습니다",
   "profile_empty_hint": "선택한 아티스트 범위에서 이 프로필이 보유한 오브젝트가 없습니다. 범위를 넓히거나 나중에 다시 확인하세요.",
   "profile_no_match_hint": "이 프로필이 보유한 오브젝트 중 현재 필터에 맞는 것이 없습니다.",

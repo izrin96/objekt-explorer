@@ -729,7 +729,7 @@
   "profile_spin_notice": "Some filters are unavailable for COSMO Spin. Objekts spun on the Polygon chain have not been merged yet.",
   "profile_checkpoint_date_label": "Snapshot date",
   "profile_checkpoint_time_label": "Snapshot time",
-  "profile_count_summary": "{shown} shown · {unique} unique of {owned} owned",
+  "profile_count_summary": "{shown} shown · {unique} unique",
   "profile_empty_title": "No objekts yet",
   "profile_empty_hint": "This profile holds nothing under the selected artists. Widen the artist scope, or check back once it mints.",
   "profile_no_match_hint": "Nothing this profile holds fits the current filters.",

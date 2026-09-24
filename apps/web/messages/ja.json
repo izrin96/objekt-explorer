@@ -729,7 +729,7 @@
   "profile_spin_notice": "COSMOSpinでは一部のフィルターが利用できません。PolygonチェーンでSpinされたObjektはまだ統合されていません。",
   "profile_checkpoint_date_label": "スナップショットの日付",
   "profile_checkpoint_time_label": "スナップショット時刻",
-  "profile_count_summary": "{shown}件表示 · 所有{owned}件中ユニーク{unique}件",
+  "profile_count_summary": "{shown}件表示 · ユニーク{unique}件",
   "profile_empty_title": "オブジェクトがまだありません",
   "profile_empty_hint": "選択中のアーティストの範囲でこのプロフィールが所有するオブジェクトはありません。範囲を広げるか、後ほどご確認ください。",
   "profile_no_match_hint": "このプロフィールが所有するオブジェクトに現在のフィルターと一致するものはありません。",

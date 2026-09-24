@@ -368,9 +368,8 @@ export function CollectionView() {
         <>
           <p className="text-muted-foreground font-mono text-xs tabular-nums">
             {m.profile_count_summary({
-              shown: filtered.length.toLocaleString(),
+              shown: `${filtered.length.toLocaleString()}${hasNextPage ? "+" : ""}`,
               unique: uniqueCount.toLocaleString(),
-              owned: `${filtered.length.toLocaleString()}${hasNextPage ? "+" : ""}`,
             })}
           </p>
 
