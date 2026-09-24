@@ -357,9 +357,9 @@ export function FilterBar({
           {!extrasFirst && <ExtraFacetControls surface="inline" extras={extras} />}
 
           <FilterPopover fields={longTail} className="max-md:hidden" />
-        </QuickFilters>
 
-        {extra}
+          {extra}
+        </QuickFilters>
 
         <div className="flex items-center gap-1.5 md:ml-auto">
           {showSort && (
