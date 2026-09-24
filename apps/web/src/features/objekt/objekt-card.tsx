@@ -230,7 +230,7 @@ export function ObjektCard({
             <div className="text-xxs flex min-w-0 flex-col gap-0.5 leading-tight @[9rem]:flex-row @[9rem]:items-baseline @[9rem]:justify-between @[9rem]:gap-1.5 @[9rem]:text-xs">
               <span className="truncate font-medium">{objekt.member}</span>
               {/* an identifier people read off the card, not a caption — full contrast */}
-              <span className="truncate font-mono @[9rem]:flex-none">
+              <span className="truncate @[9rem]:flex-none">
                 {shortNo}
                 {serial !== undefined && <b className="ml-1 font-semibold">#{serial}</b>}
               </span>

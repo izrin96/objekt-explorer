@@ -4,7 +4,7 @@ import { persist } from "zustand/middleware";
 
 import { legacyState, seededStorage } from "@/stores/legacy-storage";
 
-const MAX_LENGTH = 7;
+const MAX_LENGTH = 10;
 
 type UserSearchState = {
   users: CosmoPublicUser[];

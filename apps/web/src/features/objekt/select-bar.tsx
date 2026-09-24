@@ -202,7 +202,8 @@ function SelectedPopover({
         aria-label={m.selection_list_aria()}
         className="w-72 max-w-[calc(100vw-2rem)]"
       >
-        <ul className="max-h-72 divide-y overflow-y-auto">
+        {/* the rows' 44px touch targets overhang the edge; only the list height may scroll */}
+        <ul className="max-h-72 divide-y overflow-x-hidden overflow-y-auto">
           {shown.map((objekt) => (
             <li key={objekt.id} className="flex items-center gap-2 py-1.5 pr-1.5 pl-2.5">
               <img
