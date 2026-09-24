@@ -83,7 +83,7 @@ export function ObjektVirtualGrid({
           item.type === "label" ? (
             <div className="font-display pt-3 pb-3 text-base font-semibold">{item.title}</div>
           ) : (
-            <ObjektGrid columns={columns} className="pb-3">
+            <ObjektGrid columns={columns} className="pb-(--gutter)">
               {item.items.map((cell, index) => (
                 <div key={cell[0]?.id ?? index} className="contents">
                   {renderItem({ item: cell, rowIndex: item.rowIndex, groupTitle: item.groupTitle })}
