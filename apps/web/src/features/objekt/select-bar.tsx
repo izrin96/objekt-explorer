@@ -7,7 +7,7 @@ import {
   XIcon,
 } from "@phosphor-icons/react";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
-import type { ReactNode } from "react";
+import { useRef, useState, type ReactNode, type RefObject } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Menu, MenuItem, MenuPopup, MenuTrigger } from "@/components/ui/menu";
@@ -27,6 +27,9 @@ import { getCollectionShortNo, isObjektOwned } from "./objekt-utils";
 const SELECTED_PREVIEW_MAX = 50;
 
 /**
+ * Below `sm` every control is a 32px icon square rather than 28px: with the
+ * labels gone, the glyph is all there is to aim at.
+ *
  * The bar is `bg-foreground`, so it is dark in the light theme and light in
  * the dark one — the inverse of the page. Both classes therefore restate every
  * hover and pressed surface under `dark:`, or the registry's own
@@ -35,12 +38,12 @@ const SELECTED_PREVIEW_MAX = 50;
 
 /** filled action on the inverted bar */
 export const selectBarFillClass =
-  "bg-background text-foreground border-background hover:bg-background/90 dark:hover:bg-background/90 dark:data-pressed:bg-background/90 h-7";
+  "bg-background text-foreground border-background hover:bg-background/90 dark:hover:bg-background/90 dark:data-pressed:bg-background/90 h-7 max-sm:h-8";
 /** a labelled action that drops to a square icon below `sm`; the label goes `max-sm:sr-only` */
-export const selectBarIconOnlyClass = "max-sm:w-7 max-sm:px-0";
+export const selectBarIconOnlyClass = "max-sm:w-8 max-sm:px-0";
 /** outlined action on the inverted bar */
 const selectBarActionClass =
-  "border-background/25 text-background hover:bg-background/10 hover:text-background data-pressed:bg-background/10 dark:hover:bg-background/10 dark:data-pressed:bg-background/10 h-7 bg-transparent dark:bg-transparent";
+  "border-background/25 text-background hover:bg-background/10 hover:text-background data-pressed:bg-background/10 dark:hover:bg-background/10 dark:data-pressed:bg-background/10 h-7 bg-transparent max-sm:h-8 dark:bg-transparent";
 
 /** Data rather than a node: the button copy and the menu-item copy are one description. */
 export type SelectBarAction = {
@@ -67,6 +70,7 @@ type SelectBarProps = {
  */
 export function SelectBar({ objekts, children, secondary = [] }: SelectBarProps) {
   const ids = useSelection((s) => s.ids);
+  const barRef = useRef<HTMLDivElement>(null);
   const selecting = useSelection(selectIsSelecting);
   const selectAll = useSelection((s) => s.selectAll);
   const clear = useSelection((s) => s.clear);
@@ -79,11 +83,12 @@ export function SelectBar({ objekts, children, secondary = [] }: SelectBarProps)
 
   return (
     <div
+      ref={barRef}
       role="toolbar"
       aria-label={m.selection_toolbar_aria()}
       className="bg-foreground text-background sticky bottom-4 z-5 mx-auto mt-auto flex w-max max-w-full min-w-0 items-center gap-1.5 rounded-xl py-1.5 pr-1.5 pl-3.5 text-base shadow-lg sm:text-sm"
     >
-      <SelectedPopover objekts={selected} count={ids.size} />
+      <SelectedPopover objekts={selected} count={ids.size} anchor={barRef} />
       <span className="bg-background/25 mx-1 h-5 w-px shrink-0 max-sm:hidden" />
       {children}
 
@@ -124,7 +129,7 @@ export function SelectBar({ objekts, children, secondary = [] }: SelectBarProps)
                 size="icon-sm"
                 variant="outline"
                 aria-label={m.selection_more_actions()}
-                className={cn(selectBarActionClass, "size-7 shrink-0 sm:hidden")}
+                className={cn(selectBarActionClass, "size-8 shrink-0 sm:hidden")}
               />
             }
           >
@@ -146,7 +151,7 @@ export function SelectBar({ objekts, children, secondary = [] }: SelectBarProps)
         variant="outline"
         aria-label={m.selection_clear()}
         onClick={clear}
-        className={cn(selectBarActionClass, "size-7 shrink-0")}
+        className={cn(selectBarActionClass, "size-7 shrink-0 max-sm:size-8")}
       >
         <XIcon />
       </Button>
@@ -157,15 +162,26 @@ export function SelectBar({ objekts, children, secondary = [] }: SelectBarProps)
 /**
  * The count is the trigger: the bar says how many are selected, and the
  * popover says which. Each row deselects only itself, so trimming a selection
- * never costs the whole thing.
+ * never costs the whole thing. The list is centred on the whole bar rather
+ * than the count, so it stays over a bar that is only as wide as its controls.
  */
-function SelectedPopover({ objekts, count }: { objekts: ValidObjekt[]; count: number }) {
+function SelectedPopover({
+  objekts,
+  count,
+  anchor,
+}: {
+  objekts: ValidObjekt[];
+  count: number;
+  anchor: RefObject<HTMLDivElement | null>;
+}) {
   const toggle = useSelection((s) => s.toggle);
+  const [open, setOpen] = useState(false);
   const shown = objekts.slice(0, SELECTED_PREVIEW_MAX);
   const rest = count - shown.length;
 
   return (
-    <Popover>
+    // select mode keeps the bar up at zero, so an emptied list has to close itself
+    <Popover open={open && count > 0} onOpenChange={setOpen}>
       <PopoverTrigger
         disabled={count === 0}
         className={cn(
@@ -179,8 +195,9 @@ function SelectedPopover({ objekts, count }: { objekts: ValidObjekt[]; count: nu
         <CaretUpIcon className="size-3 shrink-0 opacity-70" aria-hidden />
       </PopoverTrigger>
       <PopoverPopup
+        anchor={anchor}
         side="top"
-        align="start"
+        sideOffset={6}
         padding="none"
         aria-label={m.selection_list_aria()}
         className="w-72 max-w-[calc(100vw-2rem)]"
@@ -206,7 +223,11 @@ function SelectedPopover({ objekts, count }: { objekts: ValidObjekt[]; count: nu
                 size="icon-sm"
                 variant="ghost"
                 aria-label={m.objekt_deselect_aria()}
-                onClick={() => toggle(objekt.id)}
+                onClick={() => {
+                  // or it would spring back open with the next selection
+                  if (count === 1) setOpen(false);
+                  toggle(objekt.id);
+                }}
                 className="size-7 shrink-0"
               >
                 <XIcon />
