@@ -17,7 +17,7 @@ import { ObjektDrawer } from "@/features/objekt/drawer";
 import { ObjektCard } from "@/features/objekt/objekt-card";
 import { ObjektCardMenu } from "@/features/objekt/objekt-card-menu";
 import { ObjektVirtualGrid } from "@/features/objekt/objekt-virtual-grid";
-import { SelectBar } from "@/features/objekt/select-bar";
+import { SelectBar, SelectModeButton } from "@/features/objekt/select-bar";
 import { ShimmerGrid } from "@/features/objekt/shimmer-grid";
 import { useCollectionObjekts } from "@/features/objekt/use-collection-objekts";
 import { useCurrentUser } from "@/features/user/hooks";
@@ -72,12 +72,15 @@ function HomePage() {
       <FilterBar facets={facets} groups={groups} />
 
       {!isPending && (
-        <div className="text-muted-foreground font-mono text-xs">
-          <b className="text-foreground font-semibold tabular-nums">
-            {m.common_count_total_prefix()}
-            {filtered.length.toLocaleString()}
-          </b>
-          {m.common_count_total_suffix()}
+        <div className="flex items-center justify-between gap-2">
+          <div className="text-muted-foreground font-mono text-xs">
+            <b className="text-foreground font-semibold tabular-nums">
+              {m.common_count_total_prefix()}
+              {filtered.length.toLocaleString()}
+            </b>
+            {m.common_count_total_suffix()}
+          </div>
+          {user && filtered.length > 0 && <SelectModeButton />}
         </div>
       )}
 

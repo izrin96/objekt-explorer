@@ -31,7 +31,7 @@ import { ObjektCard } from "@/features/objekt/objekt-card";
 import { ObjektCardMenu } from "@/features/objekt/objekt-card-menu";
 import { isObjektOwned, ownedCopiesOf } from "@/features/objekt/objekt-utils";
 import { ObjektVirtualGrid } from "@/features/objekt/objekt-virtual-grid";
-import { SelectBar, type SelectBarAction } from "@/features/objekt/select-bar";
+import { SelectBar, type SelectBarAction, SelectModeButton } from "@/features/objekt/select-bar";
 import { ShimmerGrid } from "@/features/objekt/shimmer-grid";
 import { useCurrentUser } from "@/features/user/hooks";
 import { m } from "@/paraglide/messages";
@@ -366,12 +366,15 @@ export function CollectionView() {
         <ShimmerGrid columns={columns} />
       ) : (
         <>
-          <p className="text-muted-foreground font-mono text-xs tabular-nums">
-            {m.profile_count_summary({
-              shown: `${filtered.length.toLocaleString()}${hasNextPage ? "+" : ""}`,
-              unique: uniqueCount.toLocaleString(),
-            })}
-          </p>
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-muted-foreground font-mono text-xs tabular-nums">
+              {m.profile_count_summary({
+                shown: `${filtered.length.toLocaleString()}${hasNextPage ? "+" : ""}`,
+                unique: uniqueCount.toLocaleString(),
+              })}
+            </p>
+            {showActions && filtered.length > 0 && <SelectModeButton />}
+          </div>
 
           {filtered.length === 0 ? (
             <EmptyState

@@ -1,4 +1,4 @@
-import { CaretUpIcon, DotsThreeIcon, XIcon } from "@phosphor-icons/react";
+import { CaretUpIcon, CheckSquareIcon, DotsThreeIcon, XIcon } from "@phosphor-icons/react";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import type { ReactNode } from "react";
 
@@ -7,7 +7,7 @@ import { Menu, MenuItem, MenuPopup, MenuTrigger } from "@/components/ui/menu";
 import { Popover, PopoverPopup, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
-import { useSelection } from "@/stores/selection";
+import { selectIsSelecting, useSelection } from "@/stores/selection";
 
 import { getCollectionShortNo, isObjektOwned } from "./objekt-utils";
 
@@ -45,30 +45,26 @@ type SelectBarProps = {
   objekts: ValidObjekt[];
   /** the surface's primary actions; these stay visible at every width */
   children?: ReactNode;
-  /** actions that collapse into the "⋯" menu below `sm`, before "Select all" */
+  /** actions that collapse into the "⋯" menu below `sm` */
   secondary?: SelectBarAction[];
 };
 
 /**
- * Below `sm` the secondary actions collapse into a "⋯" menu, so the primary
- * action stays reachable without sideways scrolling.
+ * Open for as long as select mode is, so an empty selection still shows how to
+ * fill it. Below `sm` the secondary actions collapse into a "⋯" menu; "Select
+ * all" never does, since it is the way in to every other action.
  */
 export function SelectBar({ objekts, children, secondary = [] }: SelectBarProps) {
   const ids = useSelection((s) => s.ids);
+  const selecting = useSelection(selectIsSelecting);
   const selectAll = useSelection((s) => s.selectAll);
   const clear = useSelection((s) => s.clear);
 
-  if (ids.size === 0) return null;
+  if (!selecting) return null;
 
   const selected = objekts.filter((objekt) => ids.has(objekt.id));
-  const collapsed: SelectBarAction[] = [
-    ...secondary,
-    {
-      label: m.filter_select_all(),
-      icon: null,
-      onClick: () => selectAll(objekts.map((objekt) => objekt.id)),
-    },
-  ];
+  const empty = ids.size === 0;
+  const allSelected = objekts.length > 0 && selected.length === objekts.length;
 
   return (
     <div
@@ -77,15 +73,16 @@ export function SelectBar({ objekts, children, secondary = [] }: SelectBarProps)
       className="bg-foreground text-background sticky bottom-4 z-5 mx-auto mt-1.5 flex w-full max-w-full min-w-0 items-center gap-1.5 rounded-xl py-1.5 pr-1.5 pl-3.5 text-base shadow-lg sm:w-max sm:text-sm"
     >
       <SelectedPopover objekts={selected} count={ids.size} />
-      <span className="bg-background/25 mx-1 h-5 w-px shrink-0" />
+      <span className="bg-background/25 mx-1 h-5 w-px shrink-0 max-sm:hidden" />
       {children}
 
       {/* the same actions twice over, but only ever one of them laid out */}
-      {collapsed.map((action) => (
+      {secondary.map((action) => (
         <Button
           key={action.label}
           size="sm"
           variant="outline"
+          disabled={empty}
           onClick={action.onClick}
           className={`${selectBarActionClass} max-sm:hidden`}
         >
@@ -94,28 +91,47 @@ export function SelectBar({ objekts, children, secondary = [] }: SelectBarProps)
         </Button>
       ))}
 
-      <Menu>
-        <MenuTrigger
-          render={
-            <Button
-              size="icon-sm"
-              variant="outline"
-              aria-label={m.selection_more_actions()}
-              className={cn(selectBarActionClass, "ml-auto size-7 shrink-0 sm:hidden")}
-            />
-          }
-        >
-          <DotsThreeIcon weight="bold" />
-        </MenuTrigger>
-        <MenuPopup align="end" side="top">
-          {collapsed.map((action) => (
-            <MenuItem key={action.label} onClick={action.onClick}>
-              {action.icon}
-              {action.label}
-            </MenuItem>
-          ))}
-        </MenuPopup>
-      </Menu>
+      <Button
+        size="sm"
+        variant="outline"
+        disabled={objekts.length === 0}
+        onClick={() => selectAll(allSelected ? [] : objekts.map((objekt) => objekt.id))}
+        className={cn(selectBarActionClass, "shrink-0 max-sm:ml-auto")}
+      >
+        {/* the short form keeps the bar on one line on a 320px phone */}
+        <span className="sm:hidden">
+          {allSelected ? m.selection_none_short() : m.selection_all_short()}
+        </span>
+        <span className="max-sm:hidden">
+          {allSelected ? m.selection_deselect_all() : m.filter_select_all()}
+        </span>
+      </Button>
+
+      {secondary.length > 0 && (
+        <Menu>
+          <MenuTrigger
+            disabled={empty}
+            render={
+              <Button
+                size="icon-sm"
+                variant="outline"
+                aria-label={m.selection_more_actions()}
+                className={cn(selectBarActionClass, "size-7 shrink-0 sm:hidden")}
+              />
+            }
+          >
+            <DotsThreeIcon weight="bold" />
+          </MenuTrigger>
+          <MenuPopup align="end" side="top">
+            {secondary.map((action) => (
+              <MenuItem key={action.label} onClick={action.onClick}>
+                {action.icon}
+                {action.label}
+              </MenuItem>
+            ))}
+          </MenuPopup>
+        </Menu>
+      )}
 
       <Button
         size="icon-sm"
@@ -143,12 +159,16 @@ function SelectedPopover({ objekts, count }: { objekts: ValidObjekt[]; count: nu
   return (
     <Popover>
       <PopoverTrigger
+        disabled={count === 0}
+        aria-label={m.filter_selected_count({ count })}
         className={cn(
           "focus-visible:ring-background flex shrink-0 cursor-pointer items-center gap-1 rounded-sm whitespace-nowrap outline-none focus-visible:ring-2",
-          "underline-offset-2 hover:underline",
+          "underline-offset-2 hover:underline disabled:cursor-default disabled:no-underline",
         )}
       >
-        {m.filter_selected_count({ count })}
+        {/* a phone bar also carries "All", ⋯ and clear, so the count goes bare */}
+        <span className="sm:hidden">{count}</span>
+        <span className="max-sm:hidden">{m.filter_selected_count({ count })}</span>
         <CaretUpIcon className="size-3 opacity-70" aria-hidden />
       </PopoverTrigger>
       <PopoverPopup
@@ -194,5 +214,23 @@ function SelectedPopover({ objekts, count }: { objekts: ValidObjekt[]; count: nu
         </ul>
       </PopoverPopup>
     </Popover>
+  );
+}
+
+/**
+ * The visible way into select mode, beside the result count. It stays a plain
+ * outline button in both states so the row does not jump as it flips; the label
+ * carries the state, so no `aria-pressed` beside it.
+ */
+export function SelectModeButton() {
+  const selecting = useSelection(selectIsSelecting);
+  const enter = useSelection((s) => s.enter);
+  const clear = useSelection((s) => s.clear);
+
+  return (
+    <Button size="xs" variant="outline" onClick={selecting ? clear : enter} className="shrink-0">
+      {selecting ? <XIcon /> : <CheckSquareIcon />}
+      {selecting ? m.common_modal_cancel() : m.selection_start()}
+    </Button>
   );
 }

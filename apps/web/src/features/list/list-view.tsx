@@ -29,7 +29,7 @@ import { ObjektCard } from "@/features/objekt/objekt-card";
 import { ObjektCardMenu } from "@/features/objekt/objekt-card-menu";
 import { ownedCopiesOf } from "@/features/objekt/objekt-utils";
 import { ObjektVirtualGrid } from "@/features/objekt/objekt-virtual-grid";
-import { SelectBar, type SelectBarAction } from "@/features/objekt/select-bar";
+import { SelectBar, type SelectBarAction, SelectModeButton } from "@/features/objekt/select-bar";
 import { ShimmerGrid } from "@/features/objekt/shimmer-grid";
 import { useCollectionRarity } from "@/features/objekt/use-collection-rarity";
 import { useCurrentUser } from "@/features/user/hooks";
@@ -300,11 +300,14 @@ function ListEntries() {
         />
       ) : (
         <>
-          <div className="text-muted-foreground font-mono text-xs">
-            <b className="text-foreground font-semibold tabular-nums">
-              {filtered.length.toLocaleString()}
-            </b>
-            {m.common_count_total_suffix()}
+          <div className="flex items-center justify-between gap-2">
+            <div className="text-muted-foreground font-mono text-xs">
+              <b className="text-foreground font-semibold tabular-nums">
+                {filtered.length.toLocaleString()}
+              </b>
+              {m.common_count_total_suffix()}
+            </div>
+            {user && <SelectModeButton />}
           </div>
           <ObjektVirtualGrid
             objekts={filtered}

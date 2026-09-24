@@ -30,6 +30,7 @@ export function AddToListAction({ objekts }: { objekts: ValidObjekt[] }) {
     <Button
       size="sm"
       className={`${selectBarFillClass} shrink-0`}
+      disabled={ids.size === 0}
       onClick={() => openAddToList(objekts.filter((objekt) => ids.has(objekt.id)))}
     >
       <PlusIcon />

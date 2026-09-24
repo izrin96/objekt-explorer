@@ -7,7 +7,7 @@ import { useLongPress } from "@/hooks/use-long-press";
 import { activateOnKey } from "@/lib/a11y";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
-import { useSelection } from "@/stores/selection";
+import { selectIsSelecting, useSelection } from "@/stores/selection";
 import { useSettings } from "@/stores/settings";
 
 import { ObjektNote } from "./objekt-note";
@@ -65,16 +65,16 @@ export const objektControlClass =
  * Hidden until the card is hovered or holds focus. The rule lives on the row,
  * never on a tile: a selected card shows the whole row, because a tick on its
  * own reads as a mark floating over the artwork rather than one of a pair of
- * controls. No `pointer-coarse` rule — a coarse pointer has no hover to spend,
+ * controls. In select mode every card shows it, so the grid reads as pickable. No `pointer-coarse` rule — a coarse pointer has no hover to spend,
  * and reaches selection through the long press instead.
  */
 const hoverOnlyClass =
   "opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100";
 
 /**
- * The card body opens the drawer and the check toggles selection. Touch
- * adds the iOS Photos model on top with no "select mode" button: a long press
- * selects, and while anything is selected a tap toggles instead of opening.
+ * The card body opens the drawer and the check toggles selection. The iOS
+ * Photos model sits on top: the "Select" button or a long press enters select
+ * mode, and in it a tap toggles instead of opening.
  */
 export function ObjektCard({
   objekt,
@@ -98,11 +98,11 @@ export function ObjektCard({
   className,
 }: ObjektCardProps) {
   const hideLabelSetting = useSettings((s) => s.hideLabel);
-  const anySelected = useSelection((s) => s.ids.size > 0);
+  const selecting = useSelection(selectIsSelecting);
 
   const labelHidden = hideLabel ?? hideLabelSetting;
   const openable = onOpen !== undefined;
-  const selectMode = onToggleSelect !== undefined && anySelected;
+  const selectMode = onToggleSelect !== undefined && selecting;
   const shortNo = getCollectionShortNo(objekt);
   // a grouped card stands for several tokens, so no single serial belongs to it
   const serialHidden = hideSerial || (qty !== undefined && qty > 1);
@@ -188,7 +188,7 @@ export function ObjektCard({
           <div
             className={cn(
               "rounded-bl-photocard absolute top-0 right-0 z-10 flex items-center overflow-hidden",
-              !selected && hoverOnlyClass,
+              !selected && !selectMode && hoverOnlyClass,
             )}
           >
             {onToggleSelect && (
