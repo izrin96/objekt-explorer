@@ -22,6 +22,7 @@ import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import { ColorPicker } from "./color-picker";
+import type { FacetSurface } from "./facet-controls";
 import { COLOR_SWATCHES } from "./facets";
 import { EDITION_LABEL, ONLINE_TYPE_LABEL } from "./labels";
 import {
@@ -110,7 +111,7 @@ function GroupHeading({ id, children }: { id: string; children: ReactNode }) {
  * `onValueChange` fires on every pointer move across the saturation plane, so
  * it reaches the URL through a debounce; each commit re-filters the catalogue.
  */
-function ColorField() {
+function ColorField({ embedded }: { embedded: boolean }) {
   const color = useFilters((f) => f.color);
   const colorSensitivity = useFilters((f) => f.colorSensitivity);
   const setFilters = useSetFilters();
@@ -126,6 +127,7 @@ function ColorField() {
         defaultValue={COLOR_SWATCHES[0]}
         swatches={COLOR_SWATCHES}
         onValueChange={commitColor}
+        embedded={embedded}
         className="w-full"
       />
       {color !== undefined && (
@@ -294,7 +296,13 @@ function SwitchRow({
 }
 
 /** One set of controls for the desktop popover and the mobile sheet both. */
-export function LongTailFields({ fields }: { fields: readonly LongTailField[] }) {
+export function LongTailFields({
+  fields,
+  surface = "inline",
+}: {
+  fields: readonly LongTailField[];
+  surface?: FacetSurface;
+}) {
   const filters = useFilters();
   const setFilters = useSetFilters();
   const has = (field: LongTailField) => fields.includes(field);
@@ -363,7 +371,7 @@ export function LongTailFields({ fields }: { fields: readonly LongTailField[] })
           <span className="text-muted-foreground mb-0.5 text-xs font-medium">
             {m.filter_color()}
           </span>
-          <ColorField />
+          <ColorField embedded={surface === "stacked"} />
         </>
       )}
     </div>

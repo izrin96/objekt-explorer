@@ -99,6 +99,7 @@ export function ColorPicker({
   onValueChange,
   swatches,
   label,
+  embedded = false,
   className,
 }: {
   value?: string;
@@ -108,6 +109,9 @@ export function ColorPicker({
   swatches?: readonly string[];
   /** accessible name of the trigger */
   label: string;
+  /** the panel in place, with no trigger or popover: a popover nested in the
+   * mobile Filters sheet closes on tap in iOS Safari */
+  embedded?: boolean;
   className?: string;
 }) {
   const [hsv, setHsv] = useState<Hsv>(
@@ -192,6 +196,140 @@ export function ColorPicker({
     commit({ ...hsv, h: (hsv.h + delta[0] * step + 360) % 360 });
   };
 
+  const panel = (
+    <div className="flex flex-col gap-3">
+      <div
+        role="slider"
+        aria-label={m.filter_color_plane()}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={Math.round(hsv.v * 100)}
+        aria-valuetext={hex}
+        tabIndex={0}
+        className="focus-visible:ring-ring relative h-36 cursor-crosshair touch-none rounded-md outline-none focus-visible:ring-2"
+        style={{
+          background: `linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, transparent), ${hueOnly}`,
+        }}
+        onKeyDown={onFieldKey}
+        onPointerDown={onFieldPointer}
+        onPointerMove={(event) => {
+          if (event.buttons > 0) onFieldPointer(event);
+        }}
+        onPointerUp={() => setDragging(null)}
+      >
+        <Thumb
+          dragging={dragging === "field"}
+          style={{
+            backgroundColor: hex,
+            left: `${hsv.s * 100}%`,
+            top: `${(1 - hsv.v) * 100}%`,
+          }}
+        />
+      </div>
+
+      <div
+        role="slider"
+        aria-label={m.filter_color_hue()}
+        aria-valuemin={0}
+        aria-valuemax={360}
+        aria-valuenow={Math.round(hsv.h)}
+        tabIndex={0}
+        className="focus-visible:ring-ring relative h-3 cursor-ew-resize touch-none rounded-full outline-none focus-visible:ring-2"
+        style={{
+          background: "linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00)",
+        }}
+        onKeyDown={onHueKey}
+        onPointerDown={onHuePointer}
+        onPointerMove={(event) => {
+          if (event.buttons > 0) onHuePointer(event);
+        }}
+        onPointerUp={() => setDragging(null)}
+      >
+        <Thumb
+          dragging={dragging === "hue"}
+          style={{ backgroundColor: hueOnly, left: `${(hsv.h / 360) * 100}%`, top: "50%" }}
+        />
+      </div>
+
+      <InputGroup>
+        <InputGroupAddon>
+          <InputGroupText className="font-mono">#</InputGroupText>
+        </InputGroupAddon>
+        <InputGroupInput
+          size="sm"
+          name="hex"
+          aria-label={m.filter_color_hex()}
+          spellCheck={false}
+          className="font-mono"
+          value={(draft ?? hex).replace("#", "")}
+          onChange={(event) => setDraft(event.target.value)}
+          onBlur={() => commitHex(draft ?? hex)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") commitHex(draft ?? hex);
+          }}
+        />
+        <InputGroupAddon align="inline-end">
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
+                  aria-label={m.common_copy_button()}
+                  onClick={() => void copyHex()}
+                />
+              }
+            >
+              <CopyIcon />
+            </TooltipTrigger>
+            <TooltipPopup>{m.common_copy_button()}</TooltipPopup>
+          </Tooltip>
+          {eyeDropper && (
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
+                    aria-label={m.filter_color_eyedropper()}
+                    onClick={() => void pickFromScreen()}
+                  />
+                }
+              >
+                <EyedropperIcon />
+              </TooltipTrigger>
+              <TooltipPopup>{m.filter_color_eyedropper()}</TooltipPopup>
+            </Tooltip>
+          )}
+        </InputGroupAddon>
+      </InputGroup>
+
+      {swatches && swatches.length > 0 && (
+        <div className="grid grid-cols-8 gap-1.5">
+          {swatches.map((swatch) => {
+            const active = swatch.toLowerCase() === hex;
+            return (
+              <button
+                key={swatch}
+                type="button"
+                aria-label={m.filter_color_use({ color: swatch })}
+                aria-pressed={active}
+                className={cn(
+                  "ring-foreground/15 focus-visible:ring-ring aspect-square w-full cursor-pointer rounded-full ring-1 transition-shadow outline-none focus-visible:ring-2",
+                  active && "ring-foreground ring-offset-popover ring-2 ring-offset-2",
+                )}
+                style={{ backgroundColor: swatch }}
+                onClick={() => commitHex(swatch)}
+              />
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+
+  if (embedded) return panel;
+
   return (
     <Popover>
       <PopoverTrigger
@@ -212,135 +350,7 @@ export function ColorPicker({
         {hex}
       </PopoverTrigger>
       <PopoverPopup align="start" className="w-64">
-        <div className="flex flex-col gap-3">
-          <div
-            role="slider"
-            aria-label={m.filter_color_plane()}
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-valuenow={Math.round(hsv.v * 100)}
-            aria-valuetext={hex}
-            tabIndex={0}
-            className="focus-visible:ring-ring relative h-36 cursor-crosshair touch-none rounded-md outline-none focus-visible:ring-2"
-            style={{
-              background: `linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, transparent), ${hueOnly}`,
-            }}
-            onKeyDown={onFieldKey}
-            onPointerDown={onFieldPointer}
-            onPointerMove={(event) => {
-              if (event.buttons > 0) onFieldPointer(event);
-            }}
-            onPointerUp={() => setDragging(null)}
-          >
-            <Thumb
-              dragging={dragging === "field"}
-              style={{
-                backgroundColor: hex,
-                left: `${hsv.s * 100}%`,
-                top: `${(1 - hsv.v) * 100}%`,
-              }}
-            />
-          </div>
-
-          <div
-            role="slider"
-            aria-label={m.filter_color_hue()}
-            aria-valuemin={0}
-            aria-valuemax={360}
-            aria-valuenow={Math.round(hsv.h)}
-            tabIndex={0}
-            className="focus-visible:ring-ring relative h-3 cursor-ew-resize touch-none rounded-full outline-none focus-visible:ring-2"
-            style={{
-              background: "linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00)",
-            }}
-            onKeyDown={onHueKey}
-            onPointerDown={onHuePointer}
-            onPointerMove={(event) => {
-              if (event.buttons > 0) onHuePointer(event);
-            }}
-            onPointerUp={() => setDragging(null)}
-          >
-            <Thumb
-              dragging={dragging === "hue"}
-              style={{ backgroundColor: hueOnly, left: `${(hsv.h / 360) * 100}%`, top: "50%" }}
-            />
-          </div>
-
-          <InputGroup>
-            <InputGroupAddon>
-              <InputGroupText className="font-mono">#</InputGroupText>
-            </InputGroupAddon>
-            <InputGroupInput
-              size="sm"
-              name="hex"
-              aria-label={m.filter_color_hex()}
-              spellCheck={false}
-              className="font-mono"
-              value={(draft ?? hex).replace("#", "")}
-              onChange={(event) => setDraft(event.target.value)}
-              onBlur={() => commitHex(draft ?? hex)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") commitHex(draft ?? hex);
-              }}
-            />
-            <InputGroupAddon align="inline-end">
-              <Tooltip>
-                <TooltipTrigger
-                  render={
-                    <Button
-                      variant="ghost"
-                      size="icon-xs"
-                      aria-label={m.common_copy_button()}
-                      onClick={() => void copyHex()}
-                    />
-                  }
-                >
-                  <CopyIcon />
-                </TooltipTrigger>
-                <TooltipPopup>{m.common_copy_button()}</TooltipPopup>
-              </Tooltip>
-              {eyeDropper && (
-                <Tooltip>
-                  <TooltipTrigger
-                    render={
-                      <Button
-                        variant="ghost"
-                        size="icon-xs"
-                        aria-label={m.filter_color_eyedropper()}
-                        onClick={() => void pickFromScreen()}
-                      />
-                    }
-                  >
-                    <EyedropperIcon />
-                  </TooltipTrigger>
-                  <TooltipPopup>{m.filter_color_eyedropper()}</TooltipPopup>
-                </Tooltip>
-              )}
-            </InputGroupAddon>
-          </InputGroup>
-
-          {swatches && swatches.length > 0 && (
-            <div className="grid grid-cols-8 gap-1.5">
-              {swatches.map((swatch) => {
-                const active = swatch.toLowerCase() === hex;
-                return (
-                  <button
-                    key={swatch}
-                    type="button"
-                    aria-label={m.filter_color_use({ color: swatch })}
-                    aria-pressed={active}
-                    className={cn(
-                      "ring-foreground/15 focus-visible:ring-ring aspect-square w-full cursor-pointer rounded-full ring-1 transition-shadow outline-none focus-visible:ring-2",
-                      active && "ring-foreground ring-offset-popover ring-2 ring-offset-2",
-                    )}
-                    style={{ backgroundColor: swatch }}
-                    onClick={() => commitHex(swatch)}
-                  />
-                );
-              })}
-            </div>
-          )}
-        </div>
+        {panel}
       </PopoverPopup>
     </Popover>
   );
