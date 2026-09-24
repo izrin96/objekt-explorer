@@ -13,8 +13,7 @@ export default defineConfig({
   bracketSameLine: false,
   arrowParens: "always",
   sortTailwindcss: {
-    attributes: ["classList"],
-    functions: ["twMerge", "twJoin", "tv", "composeRenderProps", "composeTailwindRenderProps"],
+    functions: ["cn", "cva"],
   },
   sortImports: {
     type: "natural",

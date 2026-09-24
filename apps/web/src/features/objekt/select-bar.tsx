@@ -145,7 +145,7 @@ function SelectedPopover({ objekts, count }: { objekts: ValidObjekt[]; count: nu
       <PopoverTrigger
         className={cn(
           "focus-visible:ring-background flex shrink-0 cursor-pointer items-center gap-1 rounded-sm whitespace-nowrap outline-none focus-visible:ring-2",
-          "hover:underline underline-offset-2",
+          "underline-offset-2 hover:underline",
         )}
       >
         {m.filter_selected_count({ count })}

@@ -100,7 +100,7 @@ Superset workspaces are git worktrees; `.superset/setup.sh` copies the root `.en
 
 Enforced by oxlint (`packages/lint/oxlint.config.ts`) and oxfmt (`oxfmt.config.ts`). TS strict mode is on. Module resolution: `bundler` (no `.js` extensions on imports).
 
-Every package extends the shared oxlint baseline from its own config file (`oxlint.config.ts` in apps that set `"type": "module"`, `oxlint.config.mts` elsewhere) and depends on `@repo/lint`. A new package needs both, otherwise oxlint silently falls back to its built-in defaults. The baseline sets `categories.correctness: "error"`, so correctness violations fail CI; everything else is a warning. The react-compiler rules (`set-state-in-effect`, `refs`, `incompatible-library`) are kept at `warn`.
+Every package extends the shared oxlint baseline from its own config file (`oxlint.config.ts` in apps that set `"type": "module"`, `oxlint.config.mts` elsewhere) and depends on `@repo/lint`. A new package needs both, otherwise oxlint silently falls back to its built-in defaults. The baseline sets `categories.correctness: "error"`, so correctness violations fail CI; everything else is a warning. The React Compiler runs in `apps/web`, so `react/set-state-in-effect` and `react/refs` are errors; `react/incompatible-library` stays a warning, since the compiler only skips a component that uses such a library.
 
 - Path alias: `@/*` → `src/`
 - `import * as z from "zod"` — never `import { z }` (convention only; oxlint's `no-restricted-imports` cannot tell the two apart)

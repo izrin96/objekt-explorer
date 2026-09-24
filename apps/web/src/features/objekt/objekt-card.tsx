@@ -124,7 +124,7 @@ export function ObjektCard({
   // `isolate`: the overlay controls use `z-10`, and without a stacking context
   // of their own they paint over the sticky nav as the card scrolls under it
   return (
-    <div className={cn("group isolate flex min-w-0 flex-col gap-1.5 @container", className)}>
+    <div className={cn("group @container isolate flex min-w-0 flex-col gap-1.5", className)}>
       <div
         role={interactive ? "button" : undefined}
         tabIndex={interactive ? 0 : undefined}
@@ -140,7 +140,7 @@ export function ObjektCard({
         }
         onKeyDown={interactive ? (event) => activateOnKey(event, activate) : undefined}
         className={cn(
-          "rounded-photocard bg-secondary relative aspect-photocard w-full overflow-hidden outline-none select-none",
+          "rounded-photocard bg-secondary aspect-photocard relative w-full overflow-hidden outline-none select-none",
           // no double-tap zoom delay, no iOS callout or drag on a long press
           "touch-manipulation [-webkit-touch-callout:none]",
           interactive && "focus-visible:ring-ring cursor-pointer focus-visible:ring-2",

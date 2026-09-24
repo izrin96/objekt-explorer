@@ -24,7 +24,7 @@ export function ObjektFlip({ objekt }: { objekt: ValidObjekt }) {
       >
         <div
           className={cn(
-            "aspect-photocard transform-3d relative w-full transition-transform duration-350 ease-out motion-reduce:transition-none",
+            "aspect-photocard relative w-full transition-transform duration-350 ease-out transform-3d motion-reduce:transition-none",
             flipped && "rotate-y-180",
           )}
         >

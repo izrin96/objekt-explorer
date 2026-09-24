@@ -12,8 +12,8 @@ export default defineConfig({
     "react/rules-of-hooks": "error",
     "react/exhaustive-deps": "off",
     "react/jsx-key": "warn",
-    "react/set-state-in-effect": "warn",
-    "react/refs": "warn",
+    "react/set-state-in-effect": "error",
+    "react/refs": "error",
     "react/incompatible-library": "warn",
     "eslint/no-unused-vars": "off",
     "typescript/consistent-type-imports": [
