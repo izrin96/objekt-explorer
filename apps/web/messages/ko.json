@@ -258,6 +258,7 @@
   "list_manage_objekt_list_placeholder": "목록 선택",
   "list_manage_objekt_skip_dups_label": "중복 방지",
   "list_manage_objekt_skip_dups_desc": "추가할 때 동일한 오브젝트 건너뛰기",
+  "list_manage_objekt_owned_only": "보유한 오브젝트만",
   "list_manage_objekt_add_button": "추가",
   "list_manage_objekt_remove_description": "목록에서 선택한 오브젝트가 영구적으로 제거됩니다. 계속하시겠습니까?",
   "objekt_artist": "아티스트",

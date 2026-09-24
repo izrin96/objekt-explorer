@@ -258,6 +258,7 @@
   "list_manage_objekt_list_placeholder": "リストを選択",
   "list_manage_objekt_skip_dups_label": "重複を防止",
   "list_manage_objekt_skip_dups_desc": "追加時に同じObjektをスキップする",
+  "list_manage_objekt_owned_only": "所有Objektのみ",
   "list_manage_objekt_add_button": "追加",
   "list_manage_objekt_remove_description": "選択したObjektをリストから完全に削除します。続行しますか？",
   "objekt_artist": "Artist",

@@ -258,6 +258,7 @@
   "list_manage_objekt_list_placeholder": "Select a list",
   "list_manage_objekt_skip_dups_label": "Prevent duplicate",
   "list_manage_objekt_skip_dups_desc": "Skip the same objekt when adding",
+  "list_manage_objekt_owned_only": "Owned objekts only",
   "list_manage_objekt_add_button": "Add",
   "list_manage_objekt_remove_description": "This will permanently remove the selected objekt from the list. Continue?",
   "objekt_artist": "Artist",

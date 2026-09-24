@@ -59,6 +59,7 @@ export function ListView() {
     // a bound list takes only objekts its own profile owns
     <AddToListProvider
       address={list.isProfileBind ? (list.profileAddress ?? undefined) : undefined}
+      sourceList={list.isProfileBind && list.hideSerial === true ? list.slug : undefined}
     >
       <ListEntries />
     </AddToListProvider>

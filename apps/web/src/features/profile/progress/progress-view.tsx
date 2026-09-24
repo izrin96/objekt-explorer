@@ -190,7 +190,7 @@ function ClassCard({
             const owned = copies?.[0];
             const menu = showActions ? (
               <ObjektCardMenu>
-                <AddToListMenuItem objekts={[owned ?? item.objekt]} />
+                <AddToListMenuItem objekts={[owned ?? item.objekt]} combined />
               </ObjektCardMenu>
             ) : null;
             return owned ? (

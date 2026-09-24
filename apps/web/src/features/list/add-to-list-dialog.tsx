@@ -1,4 +1,4 @@
-import type { PublicList } from "@repo/api/schemas/list";
+import type { AddSource, PublicList } from "@repo/api/schemas/list";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { createContext, type ReactNode, use, useCallback, useMemo, useState } from "react";
 
@@ -29,11 +29,21 @@ import { useUserLists } from "@/features/user/hooks";
 import { isSameAddress } from "@/lib/address";
 import { m } from "@/paraglide/messages";
 
-import { useAddObjektsToList } from "./actions";
+import { useAddToList } from "./actions";
 import { CreateListDialog } from "./create-list-dialog";
 import { LIST_TYPE_LABEL } from "./list-type-badge";
 
-const AddToListContext = createContext<((objekts: ValidObjekt[]) => void) | null>(null);
+/**
+ * A `combined` card stands for its whole collection, so a bound list takes
+ * every copy the profile owns of it rather than the one token on the card.
+ */
+type AddOptions = { combined?: boolean };
+
+type OpenAddToList = (objekts: ValidObjekt[], options?: AddOptions) => void;
+
+type AddTarget = AddOptions & { objekts: ValidObjekt[] };
+
+const AddToListContext = createContext<OpenAddToList | null>(null);
 
 /**
  * One dialog per surface, opened from anywhere under it: a menu closes on click
@@ -41,58 +51,81 @@ const AddToListContext = createContext<((objekts: ValidObjekt[]) => void) | null
  */
 export function AddToListProvider({
   address,
+  sourceList,
   children,
 }: {
   /** the profile whose objekts these are; unlocks that profile's bound lists */
   address?: string;
+  /** a bound list hiding serials whose entries these are: each `id` is an entry id */
+  sourceList?: string;
   children: ReactNode;
 }) {
-  const [objekts, setObjekts] = useState<ValidObjekt[]>([]);
+  const [target, setTarget] = useState<AddTarget>({ objekts: [] });
   const [open, setOpen] = useState(false);
 
-  const openAddToList = useCallback((next: ValidObjekt[]) => {
-    if (next.length === 0) return;
-    setObjekts(next);
+  const openAddToList = useCallback<OpenAddToList>((objekts, options) => {
+    if (objekts.length === 0) return;
+    setTarget({ objekts, combined: options?.combined });
     setOpen(true);
   }, []);
 
   return (
     <AddToListContext value={openAddToList}>
       {children}
-      <AddToListDialog open={open} onOpenChange={setOpen} objekts={objekts} address={address} />
+      <AddToListDialog
+        open={open}
+        onOpenChange={setOpen}
+        target={target}
+        address={address}
+        sourceList={sourceList}
+      />
     </AddToListContext>
   );
 }
 
-export function useOpenAddToList(): (objekts: ValidObjekt[]) => void {
+export function useOpenAddToList(): OpenAddToList {
   const open = use(AddToListContext);
   if (!open) throw new Error("useOpenAddToList must be used within AddToListProvider");
   return open;
 }
 
-/** A bound list only takes objekts that profile owns; every other list takes collections. */
-function toAddInput(list: PublicList, objekts: ValidObjekt[], skipDups: boolean) {
+/** `dropped` counts the picked objekts the source leaves out: unowned ones a bound list refuses. */
+function toSource(
+  list: PublicList,
+  { objekts, combined }: AddTarget,
+  sourceList: string | undefined,
+): { from: AddSource; dropped: number } {
+  if (!list.isProfileBind || combined === true) {
+    return { from: { type: "collections", slugs: objekts.map((o) => o.slug) }, dropped: 0 };
+  }
+  if (sourceList !== undefined) {
+    return {
+      from: { type: "list", slug: sourceList, entryIds: objekts.map((o) => Number(o.id)) },
+      dropped: 0,
+    };
+  }
+  const owned = objekts.filter(isObjektOwned);
   return {
-    slug: list.slug,
-    skipDups,
-    objekts: list.isProfileBind ? objekts.filter(isObjektOwned).map((o) => o.tokenId) : undefined,
-    collectionSlugs: list.isProfileBind ? undefined : objekts.map((o) => o.slug),
+    from: { type: "objekts", tokenIds: owned.map((o) => o.tokenId) },
+    dropped: objekts.length - owned.length,
   };
 }
 
 function AddToListDialog({
   open,
   onOpenChange,
-  objekts,
+  target,
   address,
+  sourceList,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  objekts: ValidObjekt[];
+  target: AddTarget;
   address?: string;
+  sourceList?: string;
 }) {
   const lists = useUserLists();
-  const addToList = useAddObjektsToList();
+  const addToList = useAddToList();
   const [slug, setSlug] = useState<string | null>(null);
   const [skipDups, setSkipDups] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
@@ -105,34 +138,40 @@ function AddToListDialog({
     [lists, address],
   );
 
-  const selected = available.find((list) => list.slug === slug);
+  // a bound list has nothing to take from collections the profile does not own
+  const bindable = sourceList !== undefined || target.objekts.some(isObjektOwned);
+  const isDisabled = (list: PublicList) => list.isProfileBind && !bindable;
+
+  const selected = available.find((list) => list.slug === slug && !isDisabled(list));
 
   const submit = () => {
     if (!selected) return;
-    const input = toAddInput(selected, objekts, skipDups);
-    const requested = (input.objekts ?? input.collectionSlugs ?? []).length;
+    const { from, dropped } = toSource(selected, target, sourceList);
 
-    addToList.mutate(input, {
-      onSuccess: (rows) => {
-        const skipped = requested - rows.length;
-        toastManager.add({
-          type: rows.length > 0 ? "success" : "info",
-          title:
-            rows.length === 1 && rows[0]
-              ? m.actions_add_to_list_success_single({ collectionId: rows[0].collectionId })
-              : rows.length > 1
-                ? m.actions_add_to_list_success_multiple({
-                    count: rows.length.toLocaleString(),
-                  })
-                : m.actions_add_to_list_nothing(),
-          description:
-            skipped > 0
-              ? m.actions_add_to_list_skipped({ count: skipped.toLocaleString() })
-              : undefined,
-        });
-        onOpenChange(false);
+    addToList.mutate(
+      { slug: selected.slug, skipDups, from },
+      {
+        onSuccess: ({ entries, skipped: refused }) => {
+          const skipped = refused + dropped;
+          toastManager.add({
+            type: entries.length > 0 ? "success" : "info",
+            title:
+              entries.length === 1 && entries[0]
+                ? m.actions_add_to_list_success_single({ collectionId: entries[0].collectionId })
+                : entries.length > 1
+                  ? m.actions_add_to_list_success_multiple({
+                      count: entries.length.toLocaleString(),
+                    })
+                  : m.actions_add_to_list_nothing(),
+            description:
+              skipped > 0
+                ? m.actions_add_to_list_skipped({ count: skipped.toLocaleString() })
+                : undefined,
+          });
+          onOpenChange(false);
+        },
       },
-    });
+    );
   };
 
   return (
@@ -151,7 +190,7 @@ function AddToListDialog({
           <DialogHeader>
             <DialogTitle className="font-display">{m.list_manage_objekt_add_title()}</DialogTitle>
             <DialogDescription>
-              {m.filter_selected_count({ count: objekts.length })}
+              {m.filter_selected_count({ count: target.objekts.length })}
             </DialogDescription>
           </DialogHeader>
           <DialogPanel>
@@ -171,7 +210,8 @@ function AddToListDialog({
               <div className="flex min-w-0 flex-col gap-4">
                 <div className="flex min-w-0 flex-col gap-1.5">
                   <Label htmlFor="add-to-list">{m.list_manage_objekt_list_label()}</Label>
-                  <Select value={slug} onValueChange={setSlug}>
+                  {/* the last pick outlives a successful add, and may be greyed out on this open */}
+                  <Select value={selected?.slug ?? null} onValueChange={setSlug}>
                     <SelectTrigger id="add-to-list" className="min-w-0">
                       <SelectValue placeholder={m.list_manage_objekt_list_placeholder()}>
                         {(value: string | null) =>
@@ -183,10 +223,12 @@ function AddToListDialog({
                     </SelectTrigger>
                     <SelectPopup>
                       {available.map((list) => (
-                        <SelectItem key={list.slug} value={list.slug}>
+                        <SelectItem key={list.slug} value={list.slug} disabled={isDisabled(list)}>
                           <span className="truncate">{list.name}</span>
                           <span className="text-muted-foreground ml-1.5 text-xs">
-                            {LIST_TYPE_LABEL[list.listTypeNew]()}
+                            {isDisabled(list)
+                              ? m.list_manage_objekt_owned_only()
+                              : LIST_TYPE_LABEL[list.listTypeNew]()}
                           </span>
                         </SelectItem>
                       ))}

@@ -80,12 +80,12 @@ export function useDeleteList() {
 }
 
 /** The caller reports the outcome: only it knows how many objekts it asked for. */
-export function useAddObjektsToList() {
+export function useAddToList() {
   const invalidate = useListInvalidation();
 
   return useMutation(
-    orpc.list.addObjektsToList.mutationOptions({
-      onSuccess: async (_rows, { slug }) => {
+    orpc.list.addToList.mutationOptions({
+      onSuccess: async (_result, { slug }) => {
         await invalidate(slug);
       },
       onError: ({ message }) => {
@@ -104,11 +104,11 @@ export function useRemoveObjektsFromList() {
 
   return useMutation(
     orpc.list.removeObjektsFromList.mutationOptions({
-      onSuccess: async (_data, { slug, entryIds }) => {
+      onSuccess: async ({ removed }, { slug }) => {
         toastManager.add({
           type: "success",
           title: m.actions_remove_from_list_success_multiple({
-            count: entryIds.length.toLocaleString(),
+            count: removed.toLocaleString(),
           }),
         });
         await invalidate(slug);

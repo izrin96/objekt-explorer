@@ -3,15 +3,15 @@ import type { ValidArtist } from "@repo/cosmo/types/common";
 import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
-import { lists, user, userAddress } from "@repo/db/schema";
-import type { ListEntry, UserAddress } from "@repo/db/schema";
+import { listEntries, lists, user, userAddress } from "@repo/db/schema";
+import type { List, ListEntry, UserAddress } from "@repo/db/schema";
 import { chunkMap } from "@repo/lib";
 import { mapOwnedObjekt, overrideCollection } from "@repo/lib/server/objekt";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
-import { and, eq, inArray, ne } from "drizzle-orm";
+import { and, eq, inArray, isNotNull, ne } from "drizzle-orm";
 import slugify from "slugify";
 
-import type { ListTypeNew, PublicList } from "../schemas/list";
+import type { AddSource, ListTypeNew, PublicList } from "../schemas/list";
 import { toPublicUser } from "./auth";
 import { getCollectionColumns, getPartialCollectionColumns } from "./objekt";
 import { TOKEN_CHUNK_SIZE } from "./utils";
@@ -348,6 +348,118 @@ export async function generateProfileSlug(
   }
 
   return slug;
+}
+
+type AddableList = Pick<List, "id" | "isProfileBind" | "profileAddress">;
+
+/** `skipped` counts the requested items that added nothing. */
+export async function addEntries(
+  list: AddableList,
+  from: AddSource,
+  skipDups: boolean,
+): Promise<{ rows: ListEntry[]; skipped: number }> {
+  const owner = list.isProfileBind ? list.profileAddress?.toLowerCase() : undefined;
+
+  if (owner) {
+    if (from.type === "collections") {
+      const slugs = Array.from(new Set(from.slugs));
+      const copies = await chunkMap(slugs, TOKEN_CHUNK_SIZE, (batch) =>
+        indexer
+          .select({ id: objekts.id, slug: collections.slug, serial: objekts.serial })
+          .from(objekts)
+          .innerJoin(collections, eq(collections.id, objekts.collectionId))
+          .where(and(inArray(collections.slug, batch), eq(objekts.owner, owner))),
+      );
+      const order = new Map(slugs.map((slug, i) => [slug, i]));
+      const rows = await insertTokens(
+        list.id,
+        copies.toSorted((a, b) => order.get(a.slug)! - order.get(b.slug)! || a.serial - b.serial),
+      );
+      const added = new Set(rows.map((row) => row.collectionSlug));
+      return { rows, skipped: slugs.filter((slug) => !added.has(slug)).length };
+    }
+
+    const tokenIds =
+      from.type === "list" ? await resolveEntryTokens(from.slug, from.entryIds) : from.tokenIds;
+    const requested = from.type === "list" ? from.entryIds.length : from.tokenIds.length;
+    const unique = Array.from(new Set(tokenIds));
+
+    const found = await chunkMap(unique, TOKEN_CHUNK_SIZE, (batch) =>
+      indexer
+        .select({ id: objekts.id, owner: objekts.owner, slug: collections.slug })
+        .from(objekts)
+        .innerJoin(collections, eq(collections.id, objekts.collectionId))
+        .where(inArray(objekts.id, batch)),
+    );
+    const owned = new Map(found.filter((o) => o.owner === owner).map((o) => [o.id, o]));
+    const rows = await insertTokens(
+      list.id,
+      unique.flatMap((id) => owned.get(id) ?? []),
+    );
+    return { rows, skipped: requested - rows.length };
+  }
+
+  if (from.type !== "collections") {
+    throw new ORPCError("BAD_REQUEST", {
+      message: "Collections required for non-profile-bound lists",
+    });
+  }
+
+  let slugs = from.slugs;
+  if (skipDups) {
+    const existing = await db
+      .selectDistinct({ slug: listEntries.collectionSlug })
+      .from(listEntries)
+      .where(eq(listEntries.listId, list.id));
+    const existingSlugs = new Set(existing.map((entry) => entry.slug));
+    slugs = Array.from(new Set(from.slugs)).filter((slug) => !existingSlugs.has(slug));
+  }
+
+  const rows =
+    slugs.length === 0
+      ? []
+      : await db.transaction((tx) =>
+          chunkMap(slugs, TOKEN_CHUNK_SIZE, (batch) =>
+            tx
+              .insert(listEntries)
+              .values(batch.map((collectionSlug) => ({ listId: list.id, collectionSlug })))
+              .returning(),
+          ),
+        );
+  return { rows, skipped: from.slugs.length - rows.length };
+}
+
+/** Only entries of that one list resolve, and only those holding a token. */
+async function resolveEntryTokens(slug: string, entryIds: number[]) {
+  const source = await db.query.lists.findFirst({ columns: { id: true }, where: { slug } });
+  if (!source) return [];
+
+  const entries = await chunkMap(entryIds, TOKEN_CHUNK_SIZE, (batch) =>
+    db
+      .select({ objektId: listEntries.objektId })
+      .from(listEntries)
+      .where(
+        and(
+          eq(listEntries.listId, source.id),
+          inArray(listEntries.id, batch),
+          isNotNull(listEntries.objektId),
+        ),
+      ),
+  );
+  return entries.flatMap((entry) => (entry.objektId ? [entry.objektId] : []));
+}
+
+async function insertTokens(listId: number, tokens: { id: string; slug: string }[]) {
+  if (tokens.length === 0) return [];
+  return db.transaction((tx) =>
+    chunkMap(tokens, TOKEN_CHUNK_SIZE, (batch) =>
+      tx
+        .insert(listEntries)
+        .values(batch.map((token) => ({ listId, objektId: token.id, collectionSlug: token.slug })))
+        .onConflictDoNothing()
+        .returning(),
+    ),
+  );
 }
 
 export async function findOwnedList(slug: string, userId: string) {

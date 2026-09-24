@@ -201,7 +201,7 @@ export function CollectionView() {
               </MenuItem>
             </>
           )}
-          <AddToListMenuItem objekts={[objekt]} />
+          <AddToListMenuItem objekts={[objekt]} combined={grouped === true} />
         </>
       );
     },
@@ -211,6 +211,7 @@ export function CollectionView() {
       batchPin,
       batchUnlock,
       batchUnpin,
+      grouped,
       handleReorder,
       isProfileAuthed,
       pinnedIds,
@@ -414,7 +415,7 @@ export function CollectionView() {
 
       {showActions && (
         <SelectBar objekts={filtered} secondary={ownerActions}>
-          <AddToListAction objekts={filtered} />
+          <AddToListAction objekts={filtered} combined={grouped === true} />
         </SelectBar>
       )}
 

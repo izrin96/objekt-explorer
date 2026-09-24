@@ -1,20 +1,19 @@
 import { ORPCError } from "@orpc/server";
 import { db } from "@repo/db";
-import { indexer } from "@repo/db/indexer";
-import { collections, objekts } from "@repo/db/indexer/schema";
 import { listEntries } from "@repo/db/schema";
-import { chunkMap } from "@repo/lib";
 import { and, eq, inArray } from "drizzle-orm";
 import * as z from "zod";
 
 import { authed, optionalAuthed, pub, selectedArtistsMiddleware } from "../orpc";
+import type { AddSource } from "../schemas/list";
+import { addSourceSchema } from "../schemas/list";
 import {
+  addEntries,
   buildListEntries,
   fetchListWithEntries,
   fetchOwnedLists,
   findOwnedList,
 } from "../services/list";
-import { TOKEN_CHUNK_SIZE } from "../services/utils";
 
 export const listEntriesRouter = {
   listEntries: pub
@@ -56,6 +55,7 @@ export const listEntriesRouter = {
       return await fetchOwnedLists("profileAddress", profileAddress);
     }),
 
+  /** The input shape clients shipped before `addToList`; kept until their tabs reload. */
   addObjektsToList: authed
     .use(selectedArtistsMiddleware)
     .input(
@@ -76,109 +76,58 @@ export const listEntriesRouter = {
       }) => {
         const list = await findOwnedList(slug, user.id);
 
+        let from: AddSource;
         if (list.isProfileBind && list.profileAddress) {
           if (!inputObjekts || inputObjekts.length === 0) {
             throw new ORPCError("BAD_REQUEST", {
               message: "Objekts required for profile-bound lists",
             });
           }
-
-          const objektsData = await indexer
-            .select({ id: objekts.id, owner: objekts.owner, slug: collections.slug })
-            .from(objekts)
-            .innerJoin(collections, eq(collections.id, objekts.collectionId))
-            .where(inArray(objekts.id, inputObjekts));
-
-          const owned = new Map(
-            objektsData
-              .filter((o) => o.owner === list.profileAddress!.toLowerCase())
-              .map((o) => [o.id, o]),
-          );
-
-          const values = inputObjekts
-            .map((id) => owned.get(id))
-            .filter((objekt) => objekt !== undefined)
-            .map((objekt) => ({
-              listId: list.id,
-              objektId: objekt.id,
-              collectionSlug: objekt.slug,
-            }));
-
-          if (values.length === 0) return [];
-
-          const result = await db.transaction((tx) =>
-            chunkMap(values, TOKEN_CHUNK_SIZE, (batch) =>
-              tx.insert(listEntries).values(batch).onConflictDoNothing().returning(),
-            ),
-          );
-
-          if (result.length === 0) return [];
-
-          return buildListEntries(result, list.isProfileBind, {
-            artists,
-            hideSerial: list.hideSerial,
-          });
+          from = { type: "objekts", tokenIds: inputObjekts };
+        } else {
+          if (!collectionSlugs || collectionSlugs.length === 0) {
+            throw new ORPCError("BAD_REQUEST", {
+              message: "Collections required for non-profile-bound lists",
+            });
+          }
+          from = { type: "collections", slugs: collectionSlugs };
         }
 
-        if (!collectionSlugs || collectionSlugs.length === 0) {
-          throw new ORPCError("BAD_REQUEST", {
-            message: "Collections required for non-profile-bound lists",
-          });
-        }
+        const { rows } = await addEntries(list, from, skipDups);
+        if (rows.length === 0) return [];
 
-        if (skipDups) {
-          const uniqueCollectionSlugs = Array.from(new Set(collectionSlugs));
-
-          const entries = await db
-            .selectDistinct({
-              slug: listEntries.collectionSlug,
-            })
-            .from(listEntries)
-            .where(eq(listEntries.listId, list.id));
-
-          const existingSlugs = new Set(entries.map((a) => a.slug));
-          const filteredSlugs = uniqueCollectionSlugs.filter((slug) => !existingSlugs.has(slug));
-
-          if (filteredSlugs.length === 0) return [];
-
-          const result = await db.transaction((tx) =>
-            chunkMap(filteredSlugs, TOKEN_CHUNK_SIZE, (batch) =>
-              tx
-                .insert(listEntries)
-                .values(
-                  batch.map((collectionSlug) => ({
-                    listId: list.id,
-                    collectionSlug,
-                  })),
-                )
-                .returning(),
-            ),
-          );
-
-          return buildListEntries(result, list.isProfileBind, {
-            artists,
-            hideSerial: list.hideSerial,
-          });
-        }
-
-        const result = await db.transaction((tx) =>
-          chunkMap(collectionSlugs, TOKEN_CHUNK_SIZE, (batch) =>
-            tx
-              .insert(listEntries)
-              .values(
-                batch.map((collectionSlug) => ({
-                  listId: list.id,
-                  collectionSlug,
-                })),
-              )
-              .returning(),
-          ),
-        );
-
-        return buildListEntries(result, list.isProfileBind, {
+        return buildListEntries(rows, list.isProfileBind, {
           artists,
           hideSerial: list.hideSerial,
         });
+      },
+    ),
+
+  addToList: authed
+    .input(
+      z.object({
+        slug: z.string(),
+        skipDups: z.boolean(),
+        from: addSourceSchema,
+      }),
+    )
+    .handler(
+      async ({
+        input: { slug, skipDups, from },
+        context: {
+          session: { user },
+        },
+      }) => {
+        const list = await findOwnedList(slug, user.id);
+        const { rows, skipped } = await addEntries(list, from, skipDups);
+
+        // unfiltered by the selected artists, so the entries are exactly what was added
+        const entries =
+          rows.length === 0
+            ? []
+            : await buildListEntries(rows, list.isProfileBind, { hideSerial: list.hideSerial });
+
+        return { entries, skipped };
       },
     ),
 
@@ -186,7 +135,7 @@ export const listEntriesRouter = {
     .input(
       z.object({
         slug: z.string(),
-        entryIds: z.number().array().max(50000),
+        entryIds: z.number().int().positive().array().max(50000),
       }),
     )
     .handler(
@@ -198,11 +147,15 @@ export const listEntriesRouter = {
       }) => {
         const list = await findOwnedList(slug, user.id);
 
-        if (entryIds.length === 0) return;
+        if (entryIds.length === 0) return { removed: 0 };
 
-        await db
+        // an entry already gone, say removed from another tab, is not counted
+        const rows = await db
           .delete(listEntries)
-          .where(and(inArray(listEntries.id, entryIds), eq(listEntries.listId, list.id)));
+          .where(and(inArray(listEntries.id, entryIds), eq(listEntries.listId, list.id)))
+          .returning({ id: listEntries.id });
+
+        return { removed: rows.length };
       },
     ),
 };
