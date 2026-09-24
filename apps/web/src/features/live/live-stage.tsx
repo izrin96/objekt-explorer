@@ -49,7 +49,7 @@ export function LiveStage({
       PictureInPicturePlaceholder={null}
       VideoPlaceholder={VideoPlaceholder}
       ParticipantViewUI={controls}
-      className={`${STAGE} flex-col gap-2 overflow-hidden rounded-lg bg-black [&>video]:size-full [&>video]:object-contain`}
+      className={`${STAGE} isolate flex-col gap-2 overflow-hidden rounded-lg bg-black [&>video]:size-full [&>video]:object-contain`}
       muteAudio
     />
   );
