@@ -225,19 +225,20 @@ export function ObjektCard({
            writes it: there is only the page behind it */
         <div className={cn("flex min-w-0 flex-col gap-1.5", faded && "opacity-35")}>
           {!labelHidden && (
-            /* The card is an `@container`, so the break is on card width rather
-               than viewport: a 3-up phone grid and a 10-column desktop grid both
-               land near 144px, where "GyeongBeen" + "Su26 229Z" stop fitting on
-               one line. Below that the two stack, so neither value is truncated
-               away, and the type steps down to `text-xxs` with them. */
-            <div className="text-xxs flex min-w-0 flex-col gap-0.5 leading-tight @[9rem]:flex-row @[9rem]:items-baseline @[9rem]:justify-between @[9rem]:gap-1.5 @[9rem]:text-xs">
-              <span className="truncate font-medium">{objekt.member}</span>
-              {/* an identifier people read off the card, not a caption — full contrast */}
-              <span className="truncate @[9rem]:flex-none">
-                {shortNo}
-                {serial !== undefined && <b className="ml-1 font-semibold">#{serial}</b>}
-              </span>
-            </div>
+            /* One line of text that wraps between values, never inside the
+               collection number, so nothing is truncated away on a narrow card.
+               The card is an `@container`: the type steps down on card width,
+               near 144px, rather than on viewport. */
+            <p className="text-xxs text-center leading-tight text-balance @[9rem]:text-xs">
+              <span className="font-medium">{objekt.member}</span>{" "}
+              <span className="whitespace-nowrap">{shortNo}</span>
+              {serial !== undefined && (
+                <>
+                  {" "}
+                  <b className="font-semibold whitespace-nowrap">#{serial}</b>
+                </>
+              )}
+            </p>
           )}
 
           {/* shown whether or not labels are: it is a warning, not a caption */}
