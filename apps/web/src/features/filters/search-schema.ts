@@ -90,7 +90,12 @@ export const filterSearchSchema = z.object({
   sort_dir: z.enum(validSortDirection).optional().catch(undefined),
   group_by: z.enum(validGroupBy).optional().catch(undefined),
   group_dir: z.enum(validSortDirection).optional().catch(undefined),
-  at: text(),
+  // an unparseable date would only come back from the API as an error
+  at: z
+    .string()
+    .refine((value) => !Number.isNaN(new Date(value).getTime()))
+    .optional()
+    .catch(undefined),
 });
 
 export type FilterSearch = z.infer<typeof filterSearchSchema>;

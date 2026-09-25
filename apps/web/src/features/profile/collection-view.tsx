@@ -162,8 +162,11 @@ export function CollectionView() {
     (objekt: ValidObjekt) => {
       const owned = isObjektOwned(objekt) ? objekt : null;
       const canEdit = isProfileAuthed && owned !== null;
-      // the pins lead the grid topmost-first, so "up" is one index earlier
-      const pinIndex = owned?.isPin === true ? pinnedIds.indexOf(owned.id) : -1;
+      // the pins lead the grid topmost-first, so "up" is one index earlier.
+      // A filter hides pins, and renumbering only the visible ones would tie
+      // them with the hidden ones, so moves wait for the full list as a drag does.
+      const pinIndex =
+        owned?.isPin === true && !isFiltering(filters) ? pinnedIds.indexOf(owned.id) : -1;
       const move = (to: number) => handleReorder(arrayMove(pinnedIds, pinIndex, to), true);
       return (
         <>
@@ -216,6 +219,7 @@ export function CollectionView() {
       batchPin,
       batchUnlock,
       batchUnpin,
+      filters,
       grouped,
       handleReorder,
       isProfileAuthed,

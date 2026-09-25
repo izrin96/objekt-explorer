@@ -1,4 +1,5 @@
 import { artistsArraySchema } from "@repo/api/schemas/artist";
+import { checkpointSchema } from "@repo/api/schemas/checkpoint";
 import { getCollectionColumns } from "@repo/api/services/objekt";
 import { redis } from "@repo/api/services/redis";
 import { indexer } from "@repo/db/indexer";
@@ -10,7 +11,7 @@ import * as z from "zod";
 
 const collectionSchema = z.object({
   artist: artistsArraySchema.default([]),
-  at: z.string().optional(),
+  at: checkpointSchema.optional(),
 });
 
 function parseParams(

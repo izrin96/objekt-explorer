@@ -4,12 +4,11 @@ import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
 import { isAddress } from "@repo/lib";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
-import { eq } from "drizzle-orm";
+import { and, eq, exists, sql } from "drizzle-orm";
 
 import { optionalAuthed, selectedArtistsMiddleware } from "../orpc";
 import { compareInputSchema } from "../schemas/compare";
 import { buildListEntries, fetchListWithEntries } from "../services/list";
-import { getCollectionColumns } from "../services/objekt";
 
 export const compareRouter = {
   compare: optionalAuthed
@@ -34,7 +33,8 @@ export const compareRouter = {
           });
         }
 
-        async function buildTargetEntries(): Promise<ValidObjekt[]> {
+        /** the collection slugs the target holds; the comparison needs nothing else */
+        async function buildTargetSlugs(): Promise<Set<string>> {
           if (targetType === "profile" && targetProfileId) {
             const targetIsAddress = isAddress(targetProfileId);
             const targetProfile = await db.query.userAddress.findFirst({
@@ -58,17 +58,24 @@ export const compareRouter = {
               targetProfile.privateProfile &&
               (!session?.user.id || session.user.id !== targetProfile.userId);
 
-            if (isProfileHidden) return [];
+            if (isProfileHidden) return new Set();
 
-            const ownedObjekts = await indexer
-              .select({
-                collection: getCollectionColumns(),
-              })
-              .from(objekts)
-              .innerJoin(collections, eq(collections.id, objekts.collectionId))
-              .where(eq(objekts.owner, targetProfile.address.toLowerCase()));
+            // one index probe per collection: a large owner such as Spin holds
+            // millions of copies, which listing them would pull into memory
+            const owner = targetProfile.address.toLowerCase();
+            const held = await indexer
+              .select({ slug: collections.slug })
+              .from(collections)
+              .where(
+                exists(
+                  indexer
+                    .select({ one: sql`1` })
+                    .from(objekts)
+                    .where(and(eq(objekts.collectionId, collections.id), eq(objekts.owner, owner))),
+                ),
+              );
 
-            return ownedObjekts.map((o) => o.collection);
+            return new Set(held.map((row) => row.slug));
           }
 
           if (targetType === "list" && targetListId) {
@@ -79,19 +86,20 @@ export const compareRouter = {
                 message: messages.compare_target_list_not_found(),
               });
 
-            return buildListEntries(targetList.entries, targetList.isProfileBind, {
+            const entries = await buildListEntries(targetList.entries, targetList.isProfileBind, {
               artists,
               hideSerial: targetList.hideSerial,
             });
+            return new Set(entries.map((entry) => entry.slug));
           }
 
-          return [];
+          return new Set();
         }
 
         // allSettled so a target failure never preempts the source NOT_FOUND
         const [source, target] = await Promise.allSettled([
           buildSourceEntries(),
-          buildTargetEntries(),
+          buildTargetSlugs(),
         ]);
 
         if (source.status === "rejected") throw source.reason;
@@ -108,11 +116,9 @@ export const compareRouter = {
 
 function performComparison(
   sourceEntries: ValidObjekt[],
-  targetEntries: ValidObjekt[],
+  targetCollectionSlugs: ReadonlySet<string>,
   mode: "missing" | "matches",
 ): ValidObjekt[] {
-  const targetCollectionSlugs = new Set(targetEntries.map((e) => e.slug));
-
   const filteredEntries =
     mode === "missing"
       ? sourceEntries.filter((e) => !targetCollectionSlugs.has(e.slug))

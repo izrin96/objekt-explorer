@@ -1,4 +1,5 @@
 import { artistsArraySchema } from "@repo/api/schemas/artist";
+import { checkpointSchema } from "@repo/api/schemas/checkpoint";
 import { validType } from "@repo/api/schemas/transfers";
 import { getCollectionColumns } from "@repo/api/services/objekt";
 import { isAddressHiddenFromCaller } from "@repo/api/services/privacy";
@@ -22,7 +23,7 @@ const transfersSchema = z.object({
   class: z.string().array(),
   on_offline: z.enum(validOnlineTypes).array(),
   collection: z.string().array(),
-  at: z.iso.datetime({ offset: true }).optional(),
+  at: checkpointSchema.optional(),
   cursor: z
     .object({
       timestamp: z.string(),
@@ -158,7 +159,7 @@ async function fetchTransfers(query: TransferParams, addr: string) {
 
     const getIds = (...addressFilters: (SQL | undefined)[]) =>
       indexer
-        .select({ id: transfers.id })
+        .select({ transfer: { id: transfers.id, timestamp: transfers.timestamp } })
         .from(transfers)
         .where(
           and(
@@ -171,14 +172,14 @@ async function fetchTransfers(query: TransferParams, addr: string) {
         .orderBy(desc(transfers.timestamp), desc(transfers.id))
         .limit(PER_PAGE + 1);
 
-    let ids: { id: string }[];
+    let ids: { transfer: { id: string; timestamp: string } }[];
 
     if (query.type === "all") {
       const [fromIds, toIds] = await Promise.all([
         getIds(eq(transfers.from, addr)),
         getIds(eq(transfers.to, addr)),
       ]);
-      ids = mergeSortedIds(fromIds, toIds, PER_PAGE + 1);
+      ids = mergeSortedTransfers(fromIds, toIds, PER_PAGE + 1);
     } else {
       ids = await getIds(...typeFilters);
     }
@@ -193,7 +194,7 @@ async function fetchTransfers(query: TransferParams, addr: string) {
       .where(
         inArray(
           transfers.id,
-          ids.map((t) => t.id),
+          ids.map((t) => t.transfer.id),
         ),
       )
       .orderBy(desc(transfers.timestamp), desc(transfers.id));
@@ -221,25 +222,6 @@ async function fetchTransfers(query: TransferParams, addr: string) {
   }
 
   return queryFn(...typeFilters);
-}
-
-/** Merge two ID arrays sorted by (timestamp DESC, id DESC), deduplicate, return top `limit` */
-function mergeSortedIds(a: { id: string }[], b: { id: string }[], limit: number): { id: string }[] {
-  // IDs come pre-sorted from the DB — just dedup and take top N
-  const seen = new Set<string>();
-  const result: { id: string }[] = [];
-  let i = 0;
-  let j = 0;
-
-  while (result.length < limit && (i < a.length || j < b.length)) {
-    const next = j >= b.length || (i < a.length && a[i]!.id >= b[j]!.id) ? a[i++]! : b[j++]!;
-    if (!seen.has(next.id)) {
-      seen.add(next.id);
-      result.push(next);
-    }
-  }
-
-  return result;
 }
 
 /** Merge two arrays sorted by (timestamp DESC, id DESC), deduplicate, return top `limit` */

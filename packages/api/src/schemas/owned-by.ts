@@ -1,6 +1,7 @@
 import * as z from "zod";
 
 import { artistsArraySchema } from "./artist";
+import { checkpointSchema } from "./checkpoint";
 
 const cursorSchema = z.object({
   receivedAt: z.string(),
@@ -8,7 +9,7 @@ const cursorSchema = z.object({
 });
 
 export const ownedBySchema = z.object({
-  at: z.string().optional(),
+  at: checkpointSchema.optional(),
   cursor: cursorSchema.optional(),
   artist: artistsArraySchema.optional(),
 });
