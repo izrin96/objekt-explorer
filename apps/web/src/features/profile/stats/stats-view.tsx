@@ -87,7 +87,7 @@ function BreakdownPie({ data, label }: { data: Slice[]; label: string }) {
                       className="ring-foreground/15 size-2.5 shrink-0 rounded-full bg-(--swatch) ring-1"
                       style={{ "--swatch": row.fill } as React.CSSProperties}
                     />
-                    <div className="flex flex-1 items-center justify-between leading-none">
+                    <div className="flex flex-1 items-center justify-between gap-2 leading-none">
                       <span className="text-foreground">{row.name}</span>
                       <span className="text-foreground font-mono font-medium tabular-nums">
                         {row.percentage}% ({String(value)})
