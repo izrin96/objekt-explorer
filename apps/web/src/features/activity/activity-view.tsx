@@ -3,7 +3,7 @@ import type { ActivityData, ValidType } from "@repo/api/schemas/activity";
 import { validType } from "@repo/api/schemas/activity";
 import { validOnlineTypes, type ValidOnlineType } from "@repo/cosmo/types/common";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useMemo, useRef, useState } from "react";
 
 import { EmptyState } from "@/components/shared/empty-state";
@@ -55,6 +55,9 @@ type LiveFeed = {
 function emptyFeed(key: ActivityParams): LiveFeed {
   return { key, rows: [], queued: [], newIds: new Set() };
 }
+
+/** live rows kept above the first page before the feed starts again from a fresh one */
+const LIVE_CAP = 500;
 
 const TYPE_LABEL: Record<ValidType, () => string> = {
   all: m.filter_event_all,
@@ -177,8 +180,16 @@ export function ActivityView() {
     ],
   );
 
-  const query = useInfiniteQuery(activityInfiniteOptions(params));
+  const queryClient = useQueryClient();
+  const options = activityInfiniteOptions(params);
+  const query = useInfiniteQuery(options);
   const pages = query.data?.pages;
+  const loaded = query.isSuccess;
+
+  // the socket outlives a filter change: a new key has no data while its first
+  // page loads, and gating on that alone would reconnect on every change
+  const [connected, setConnected] = useState(false);
+  if (loaded && !connected) setConnected(true);
 
   const [feed, setFeed] = useState<LiveFeed>(() => emptyFeed(params));
   if (feed.key !== params) setFeed(emptyFeed(params));
@@ -186,37 +197,52 @@ export function ActivityView() {
 
   const onMessage = useCallback(
     (message: ActivityMessage) => {
+      // the first page being fetched already holds whatever arrives meanwhile
+      if (!loaded) return;
+
       const fresh = message.data.filter((item) => matchesFilters(item, type, artist, filters));
       if (fresh.length === 0) return;
-
-      // a reconnect replays the backlog the first page usually already holds,
-      // so identity is the transfer rather than its position
-      const seen = new Set(
-        [...live.rows, ...live.queued, ...(pages?.[0]?.items ?? [])].map(
-          (item) => item.transfer.id,
-        ),
-      );
-      const added = fresh.filter((item) => !seen.has(item.transfer.id));
-      if (added.length === 0) return;
 
       // a held row is highlighted when it is released, not while it waits
       const held = hoveringRef.current;
 
-      setFeed((prev) =>
-        prev.key !== params
-          ? prev
-          : {
-              key: prev.key,
-              rows: held ? prev.rows : [...added, ...prev.rows],
-              queued: held ? [...added, ...prev.queued] : prev.queued,
-              newIds: held ? prev.newIds : new Set(added.map((item) => item.transfer.id)),
-            },
-      );
+      // a tab left open would grow without end; trimming the oldest live rows
+      // would open a gap above the first page, so start again from a fresh one
+      if (!held && live.rows.length + fresh.length > LIVE_CAP) {
+        setFeed(emptyFeed(params));
+        queryClient.setQueryData(options.queryKey, (data) =>
+          data ? { pages: data.pages.slice(0, 1), pageParams: data.pageParams.slice(0, 1) } : data,
+        );
+        void queryClient.invalidateQueries({ queryKey: options.queryKey, exact: true });
+        return;
+      }
+
+      const firstPage = pages?.[0]?.items ?? [];
+
+      setFeed((prev) => {
+        if (prev.key !== params) return prev;
+
+        // a reconnect replays the backlog the first page usually already holds,
+        // so identity is the transfer rather than its position; read off `prev`,
+        // since two messages can land before a render
+        const seen = new Set(
+          [...prev.rows, ...prev.queued, ...firstPage].map((item) => item.transfer.id),
+        );
+        const added = fresh.filter((item) => !seen.has(item.transfer.id));
+        if (added.length === 0) return prev;
+
+        return {
+          key: prev.key,
+          rows: held ? prev.rows : [...added, ...prev.rows],
+          queued: held ? [...added, ...prev.queued] : prev.queued,
+          newIds: held ? prev.newIds : new Set(added.map((item) => item.transfer.id)),
+        };
+      });
     },
-    [type, artist, filters, live, pages, params],
+    [loaded, type, artist, filters, live.rows.length, pages, params, queryClient, options.queryKey],
   );
 
-  useActivitySocket({ enabled: query.isSuccess, onMessage });
+  useActivitySocket({ enabled: connected, onMessage });
 
   const onPointerLeave = useCallback(() => {
     setHovering(false);
@@ -238,10 +264,12 @@ export function ActivityView() {
     hoveringRef.current = true;
   }, []);
 
-  const rows = useMemo(
-    () => [...live.rows, ...(pages ?? []).flatMap((page) => page.items)],
-    [live.rows, pages],
-  );
+  // a refetched first page can hold rows that already arrived live
+  const rows = useMemo(() => {
+    const paged = (pages ?? []).flatMap((page) => page.items);
+    const pagedIds = new Set(paged.map((item) => item.transfer.id));
+    return [...live.rows.filter((item) => !pagedIds.has(item.transfer.id)), ...paged];
+  }, [live.rows, pages]);
 
   const setFacet = (key: FacetKey, value: string[]) =>
     setFilters({ [key]: value.length > 0 ? value : undefined });
