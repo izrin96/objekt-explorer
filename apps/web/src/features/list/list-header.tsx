@@ -1,5 +1,6 @@
 import {
   ArrowsLeftRightIcon,
+  CheckIcon,
   DotsThreeIcon,
   DownloadSimpleIcon,
   MagnifyingGlassIcon,
@@ -52,6 +53,7 @@ export function ListHeader() {
             </h1>
             {list.isProfileBind ? (
               <Badge variant="outline" size="sm">
+                <CheckIcon weight="bold" aria-hidden />
                 {m.profile_header_verified()}
               </Badge>
             ) : null}

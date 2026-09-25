@@ -1,4 +1,10 @@
-import { LinkIcon, LinkSimpleIcon, PencilSimpleIcon, TrashIcon } from "@phosphor-icons/react";
+import {
+  CheckIcon,
+  LinkIcon,
+  LinkSimpleIcon,
+  PencilSimpleIcon,
+  TrashIcon,
+} from "@phosphor-icons/react";
 import type { PublicList } from "@repo/api/schemas/list";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
@@ -33,6 +39,7 @@ export function ListCard({ list }: { list: PublicList }) {
           </Link>
           {list.isProfileBind ? (
             <Badge variant="outline" size="sm">
+              <CheckIcon weight="bold" aria-hidden />
               {m.profile_header_verified()}
             </Badge>
           ) : null}

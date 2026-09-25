@@ -1,4 +1,4 @@
-import { EyeIcon, EyeSlashIcon } from "@phosphor-icons/react";
+import { CheckIcon, EyeIcon, EyeSlashIcon } from "@phosphor-icons/react";
 import type { PublicProfile } from "@repo/api/schemas/user";
 
 import { ApolloIcon } from "@/components/shared/apollo-icon";
@@ -45,6 +45,7 @@ export function ProfileHeader({ profile }: { profile: PublicProfile }) {
               </h1>
               {profile.verified === true && (
                 <Badge variant="outline" size="sm" className="font-semibold tracking-wide">
+                  <CheckIcon weight="bold" aria-hidden />
                   {m.profile_header_verified()}
                 </Badge>
               )}
