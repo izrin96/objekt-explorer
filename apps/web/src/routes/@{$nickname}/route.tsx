@@ -32,7 +32,9 @@ function ProfileLayout() {
           <ProfileHeader key={profile.address} profile={profile} />
           <ProfileSummary />
           <ProfileTabs nickname={nickname} />
-          <Outlet />
+          <div className="flex min-h-svh flex-col gap-4.5">
+            <Outlet />
+          </div>
         </ProfileProvider>
       )}
     </PageMain>
