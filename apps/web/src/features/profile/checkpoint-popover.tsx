@@ -78,54 +78,61 @@ export function CheckpointPopover() {
           <CaretDownIcon className="size-3 opacity-60" />
         </PopoverTrigger>
         <PopoverPopup align="start" className="w-auto">
-          <PopoverTitle className="mb-2 text-sm font-medium">
-            {m.checkpoint_description()}
-          </PopoverTitle>
-          <input
-            type="date"
-            aria-label={m.profile_checkpoint_date_label()}
-            value={draft ? format(draft, "yyyy-MM-dd") : ""}
-            min={format(EARLIEST, "yyyy-MM-dd")}
-            max={format(today, "yyyy-MM-dd")}
-            onChange={(event) => {
-              const next = event.target.valueAsDate ?? undefined;
-              setDraft(next);
-              if (next) setMonth(next);
-            }}
-            className="bg-background focus-visible:ring-ring mb-2 block h-8 w-full min-w-0 appearance-none rounded-lg border px-2.5 text-left font-mono text-base outline-none focus-visible:ring-2 sm:text-sm [&::-webkit-date-and-time-value]:text-left"
-          />
-          <Calendar
-            mode="single"
-            selected={draft}
-            onSelect={setDraft}
-            month={month}
-            onMonthChange={setMonth}
-            disabled={[{ before: EARLIEST }, { after: today }]}
-            startMonth={EARLIEST}
-            className="p-0"
-          />
-          <input
-            type="time"
-            step={1}
-            aria-label={m.profile_checkpoint_time_label()}
-            value={time}
-            onChange={(event) => setTime(event.target.value)}
-            className="bg-background focus-visible:ring-ring mt-2 block h-8 w-full min-w-0 appearance-none rounded-lg border px-2.5 text-left font-mono text-base outline-none focus-visible:ring-2 sm:text-sm [&::-webkit-date-and-time-value]:text-left"
-          />
-          <div className="mt-2 flex justify-end gap-1.5">
-            <Button variant="ghost" size="xs" disabled={!draft} onClick={() => setDraft(undefined)}>
-              {m.filter_clear()}
-            </Button>
-            <Button
-              size="xs"
-              disabled={!draft}
-              onClick={() => {
-                if (draft) setFilters({ at: toInstant(draft, time).toISOString() });
-                setOpen(false);
+          <div className="p-1">
+            <PopoverTitle className="mb-2 text-sm font-medium">
+              {m.checkpoint_description()}
+            </PopoverTitle>
+            <input
+              type="date"
+              aria-label={m.profile_checkpoint_date_label()}
+              value={draft ? format(draft, "yyyy-MM-dd") : ""}
+              min={format(EARLIEST, "yyyy-MM-dd")}
+              max={format(today, "yyyy-MM-dd")}
+              onChange={(event) => {
+                const next = event.target.valueAsDate ?? undefined;
+                setDraft(next);
+                if (next) setMonth(next);
               }}
-            >
-              {m.checkpoint_apply()}
-            </Button>
+              className="bg-background focus-visible:ring-ring mb-2 block h-8 w-full min-w-0 appearance-none rounded-lg border px-2.5 text-left font-mono text-base outline-none focus-visible:ring-2 sm:text-sm [&::-webkit-date-and-time-value]:text-left"
+            />
+            <Calendar
+              mode="single"
+              selected={draft}
+              onSelect={setDraft}
+              month={month}
+              onMonthChange={setMonth}
+              disabled={[{ before: EARLIEST }, { after: today }]}
+              startMonth={EARLIEST}
+              className="p-0"
+            />
+            <input
+              type="time"
+              step={1}
+              aria-label={m.profile_checkpoint_time_label()}
+              value={time}
+              onChange={(event) => setTime(event.target.value)}
+              className="bg-background focus-visible:ring-ring mt-2 block h-8 w-full min-w-0 appearance-none rounded-lg border px-2.5 text-left font-mono text-base outline-none focus-visible:ring-2 sm:text-sm [&::-webkit-date-and-time-value]:text-left"
+            />
+            <div className="mt-2 flex justify-end gap-1.5">
+              <Button
+                variant="ghost"
+                size="xs"
+                disabled={!draft}
+                onClick={() => setDraft(undefined)}
+              >
+                {m.filter_clear()}
+              </Button>
+              <Button
+                size="xs"
+                disabled={!draft}
+                onClick={() => {
+                  if (draft) setFilters({ at: toInstant(draft, time).toISOString() });
+                  setOpen(false);
+                }}
+              >
+                {m.checkpoint_apply()}
+              </Button>
+            </div>
           </div>
         </PopoverPopup>
       </Popover>

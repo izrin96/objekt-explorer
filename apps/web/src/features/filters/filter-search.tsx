@@ -41,7 +41,7 @@ function SearchHelp() {
       <PopoverPopup align="start" className="max-w-sm text-sm">
         <div className="flex flex-col gap-2">
           <span>{m.filter_search_help_intro()}</span>
-          <ul className="list-inside list-disc leading-6">
+          <ul className="list-outside list-disc space-y-1 ps-4 leading-5">
             {HELP_LINES.map((line) => {
               const text = line();
               return <li key={text}>{text}</li>;
