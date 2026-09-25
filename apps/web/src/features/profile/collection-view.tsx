@@ -2,7 +2,9 @@ import { arrayMove } from "@dnd-kit/sortable";
 import {
   CaretDownIcon,
   CaretUpIcon,
+  ClockCounterClockwiseIcon,
   ImagesSquareIcon,
+  InfoIcon,
   LockSimpleIcon,
   LockSimpleOpenIcon,
   MagnifyingGlassIcon,
@@ -15,6 +17,7 @@ import type { ReactNode } from "react";
 
 import { EmptyState } from "@/components/shared/empty-state";
 import { countMarkup, MessageMarkup } from "@/components/shared/message-markup";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { MenuItem, MenuSeparator } from "@/components/ui/menu";
 import { toastManager } from "@/components/ui/toast";
@@ -370,14 +373,22 @@ export function CollectionView() {
         }
       />
 
+      {/* a standing notice, so `status` rather than the component's interrupting `alert` */}
       {isSpinAddress(address) && (
-        <p className="text-muted-foreground text-sm">{m.profile_spin_notice()}</p>
+        <Alert role="status">
+          <InfoIcon aria-hidden />
+          <AlertTitle>{m.profile_spin_notice_title()}</AlertTitle>
+          <AlertDescription>{m.profile_spin_notice()}</AlertDescription>
+        </Alert>
       )}
 
       {at && (
-        <p className="text-muted-foreground text-sm">
-          {m.profile_checkpoint_notice({ date: formatCheckpoint(at) })}
-        </p>
+        <Alert role="status">
+          <ClockCounterClockwiseIcon aria-hidden />
+          <AlertDescription>
+            {m.profile_checkpoint_notice({ date: formatCheckpoint(at) })}
+          </AlertDescription>
+        </Alert>
       )}
 
       {isPending ? (
