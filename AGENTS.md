@@ -9,7 +9,7 @@
 | Path                | Name             | Purpose                                                                                      |
 | ------------------- | ---------------- | -------------------------------------------------------------------------------------------- |
 | `apps/web`          | `web`            | Main frontend (TanStack React Start + Vite, Base UI) with embedded WebSocket activity server |
-| `apps/worker`       | `worker`         | Background job worker (Croner)                                                               |
+| `apps/worker`       | `worker`         | Background job worker (`Bun.cron`)                                                           |
 | `apps/indexer`      | `indexer`        | NFT metadata indexer (Subsquid)                                                              |
 | `packages/api`      | `@repo/api`      | ORPC routers and services                                                                    |
 | `packages/db`       | `@repo/db`       | Database schema (Drizzle ORM + PostgreSQL)                                                   |
@@ -33,7 +33,7 @@
 | Real-time   | WebSockets, Valkey pub-sub                           |
 | i18n        | Inlang (Paraglide)                                   |
 | Lint/Format | oxlint, oxfmt                                        |
-| Jobs        | Croner                                               |
+| Jobs        | `Bun.cron`                                           |
 | Indexer     | Subsquid (EVM processor)                             |
 
 App schema lives in `packages/db/src/schema.ts` (plus `auth-schema.ts` and `relation.ts`); the indexer's read-only NFT schema lives in `packages/db/src/indexer/`. Uses `citext` for case-insensitive fields. Relations defined via Drizzle relations. Migrations: `packages/db/migrations` and `packages/db/indexer-migrations`.

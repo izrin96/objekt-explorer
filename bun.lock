@@ -119,7 +119,7 @@
       "name": "worker",
       "version": "0.0.0",
       "dependencies": {
-        "@aws-sdk/client-s3": "^3.1138.0",
+        "@aws-sdk/client-s3": "catalog:",
         "@repo/cosmo": "workspace:*",
         "@repo/db": "workspace:*",
         "@repo/lib": "workspace:*",
@@ -137,7 +137,7 @@
       "name": "@repo/api",
       "version": "0.0.0",
       "dependencies": {
-        "@aws-sdk/client-s3": "^3.1138.0",
+        "@aws-sdk/client-s3": "catalog:",
         "@aws-sdk/client-sesv2": "^3.1138.0",
         "@aws-sdk/s3-request-presigner": "^3.1138.0",
         "@better-auth/i18n": "^1.7.5",
@@ -220,6 +220,7 @@
     "@subsquid/typeorm-store@1.9.2": "patches/@subsquid%2Ftypeorm-store@1.9.2.patch",
   },
   "catalog": {
+    "@aws-sdk/client-s3": "^3.1138.0",
     "drizzle-orm": "^1.0.0-rc.5-ab785fc",
     "ofetch": "^1.5.1",
     "pg": "^8.23.0",
