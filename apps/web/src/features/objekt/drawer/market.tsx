@@ -18,6 +18,7 @@ import { m } from "@/paraglide/messages";
 
 import { ObjektNote } from "../objekt-note";
 import { marketListingsOptions, marketStatsOptions } from "../queries";
+import { type Stat, StatRow } from "./stat-row";
 
 function SortButton({
   active,
@@ -70,31 +71,30 @@ export function MarketPanel({
     setSortDir(field === "price" ? "asc" : "desc");
   };
 
-  const cells: [string, string | null][] = [
-    [
-      m.objekt_market_floor(),
-      stats.data ? (stats.data.floorPrice === null ? "—" : formatUsd(stats.data.floorPrice)) : null,
-    ],
-    [m.objekt_market_listings(), stats.data ? stats.data.total.toLocaleString() : null],
-    [m.objekt_market_sellers(), stats.data ? stats.data.sellers.toLocaleString() : null],
+  const figures: Stat[] = [
+    {
+      label: m.objekt_market_floor(),
+      value: stats.data
+        ? stats.data.floorPrice === null
+          ? "—"
+          : formatUsd(stats.data.floorPrice)
+        : null,
+    },
+    {
+      label: m.objekt_market_listings(),
+      value: stats.data ? stats.data.total.toLocaleString() : null,
+    },
+    {
+      label: m.objekt_market_sellers(),
+      value: stats.data ? stats.data.sellers.toLocaleString() : null,
+    },
   ];
 
   const items = listings.data?.pages.flatMap((page) => page.items) ?? [];
 
   return (
     <div className="flex flex-col gap-2.5">
-      <div className="bg-secondary grid grid-cols-3 gap-2 rounded-lg border p-3">
-        {cells.map(([label, value]) => (
-          <div key={label} className="flex flex-col">
-            <span className="text-muted-foreground text-xs">{label}</span>
-            {value === null ? (
-              <Shimmer className="my-1 h-3 w-12" />
-            ) : (
-              <span className="font-mono text-sm font-medium tabular-nums">{value}</span>
-            )}
-          </div>
-        ))}
-      </div>
+      <StatRow stats={figures} className="grid-cols-3" />
 
       <div className="flex items-center gap-1.5">
         <SortButton

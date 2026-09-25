@@ -27,6 +27,7 @@ import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import { SortableHeader, type SortState } from "./sortable-header";
+import { type Stat, StatRow } from "./stat-row";
 
 export type EventKind = "mint" | "transfer" | "spin";
 
@@ -149,20 +150,24 @@ export function SerialsPanel({
     kept: spun.length === serials.length,
   };
 
+  // the stats come from their own query, so they show while the serials load
   if (loading) {
     return (
-      <div className="flex flex-col gap-3" role="status">
-        {/* a live region announces its content, so the label has to be in it */}
-        <span className="sr-only">{m.objekt_serials_loading()}</span>
-        <Shimmer className="h-8 w-full rounded-md" />
-        <Shimmer className="h-3.5 w-52" />
-        <Shimmer className="h-21 w-full rounded-lg" />
+      <div className="flex flex-col gap-3">
+        <SerialStats metadata={metadata} physical={physical} />
+        <div className="flex flex-col gap-3" role="status">
+          {/* a live region announces its content, so the label has to be in it */}
+          <span className="sr-only">{m.objekt_serials_loading()}</span>
+          <Shimmer className="h-8 w-full rounded-md" />
+          <Shimmer className="h-21 w-full rounded-lg" />
+        </div>
       </div>
     );
   }
 
   return (
     <div className="flex flex-col gap-3">
+      <SerialStats metadata={metadata} physical={physical} />
       <div className="flex items-center gap-1.5">
         <NumberField
           value={serial}
@@ -230,44 +235,56 @@ export function SerialsPanel({
         ))}
       </Group>
 
-      <div className="text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-xs">
-        {metadata.isPending && <Shimmer className="h-3.5 w-52" />}
-        {metadata.isError && (
-          <Badge variant="error" size="sm" className="font-sans">
-            {m.objekt_error_fetching_metadata()}
-          </Badge>
-        )}
-        {metadata.data && (
-          <>
-            <span>
-              {physical ? m.objekt_scanned_copies() : m.objekt_copies()}{" "}
-              <b className="text-foreground font-semibold">
-                {metadata.data.total.toLocaleString()}
-              </b>
-            </span>
-            <span>
-              {m.objekt_event_spun()}{" "}
-              <b className="text-foreground font-semibold">{metadata.data.spin.toLocaleString()}</b>
-            </span>
-            <span>
-              {m.objekt_non_spin()}{" "}
-              <b className="text-foreground font-semibold">
-                {(metadata.data.total - metadata.data.spin).toLocaleString()}
-              </b>
-            </span>
-            <span>
-              {m.objekt_transferable()}{" "}
-              <b className="text-foreground font-semibold">
-                {((metadata.data.transferable / metadata.data.total) * 100).toFixed(2)}%
-              </b>{" "}
-              ({metadata.data.transferable.toLocaleString()})
-            </span>
-          </>
-        )}
-      </div>
-
       {children}
     </div>
+  );
+}
+
+/** The collection's counts, laid out like the market tab's floor, listings and sellers. */
+function SerialStats({
+  metadata,
+  physical,
+}: {
+  metadata: UseQueryResult<{ total: number; spin: number; transferable: number }>;
+  physical: boolean;
+}) {
+  if (metadata.isError) {
+    return (
+      <Badge variant="error" size="sm" className="self-start">
+        {m.objekt_error_fetching_metadata()}
+      </Badge>
+    );
+  }
+
+  const data = metadata.data;
+  const stats: Stat[] = [
+    {
+      label: physical ? m.objekt_scanned_copies() : m.objekt_copies(),
+      value: data ? data.total.toLocaleString() : null,
+    },
+    {
+      label: m.objekt_event_spun(),
+      value: data ? data.spin.toLocaleString() : null,
+    },
+    {
+      label: m.objekt_non_spin(),
+      value: data ? (data.total - data.spin).toLocaleString() : null,
+    },
+    {
+      label: m.objekt_transferable(),
+      value: data
+        ? data.total > 0
+          ? `${((data.transferable / data.total) * 100).toFixed(2)}%`
+          : "—"
+        : null,
+      detail: data?.transferable.toLocaleString(),
+    },
+  ];
+
+  // Transferable carries a percentage and a count, so it takes the width it
+  // needs and the three single figures share the rest
+  return (
+    <StatRow stats={stats} className="grid-cols-2 sm:grid-cols-[repeat(3,minmax(0,1fr))_auto]" />
   );
 }
 
