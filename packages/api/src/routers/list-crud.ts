@@ -13,6 +13,7 @@ import {
   fetchList,
   generateProfileSlug,
   findOwnedList,
+  resolveDiscoverable,
 } from "../services/list";
 
 export const listCrud = {
@@ -120,11 +121,11 @@ export const listCrud = {
               profileAddress: input.profileAddress ? input.profileAddress.toLowerCase() : null,
               description: input.description,
               currency: input.listTypeNew === "sale" ? input.currency : null,
-              discoverable: ["have", "sale", "want"].includes(input.listTypeNew)
-                ? input.listTypeNew === "want"
-                  ? input.discoverable
-                  : isProfileBind && input.discoverable
-                : false,
+              discoverable: resolveDiscoverable(
+                input.listTypeNew,
+                isProfileBind,
+                input.discoverable,
+              ),
             })
             .returning({ insertedId: lists.id });
 
@@ -140,8 +141,13 @@ export const listCrud = {
               .set({ linkedListId: inserted.insertedId })
               .where(eq(lists.id, linkedListId));
 
-            // Sync discoverable to paired list so both mode works out of the box
-            if (input.discoverable) {
+            // Sync discoverable to paired list so both mode works out of the box,
+            // under the partner's own rule
+            const partner = linkedCheck.value;
+            if (
+              partner &&
+              resolveDiscoverable(partner.listTypeNew, partner.isProfileBind, input.discoverable)
+            ) {
               await tx.update(lists).set({ discoverable: true }).where(eq(lists.id, linkedListId));
             }
           }
@@ -243,11 +249,11 @@ export const listCrud = {
                   ? input.hideSerial
                   : false,
               linkedListId,
-              discoverable: ["have", "sale", "want"].includes(list.listTypeNew)
-                ? list.listTypeNew === "want"
-                  ? input.discoverable
-                  : list.isProfileBind && input.discoverable
-                : false,
+              discoverable: resolveDiscoverable(
+                list.listTypeNew,
+                list.isProfileBind,
+                input.discoverable,
+              ),
             })
             .where(eq(lists.id, list.id));
 
@@ -275,11 +281,19 @@ export const listCrud = {
             }
           }
 
-          // Sync discoverable to paired list so both mode works out of the box
-          if (linkedListId !== null) {
+          // Sync discoverable to paired list so both mode works out of the box,
+          // under the partner's own rule
+          const partner = linkedCheck.value;
+          if (linkedListId !== null && partner) {
             await tx
               .update(lists)
-              .set({ discoverable: input.discoverable })
+              .set({
+                discoverable: resolveDiscoverable(
+                  partner.listTypeNew,
+                  partner.isProfileBind,
+                  input.discoverable,
+                ),
+              })
               .where(eq(lists.id, linkedListId));
           }
         });

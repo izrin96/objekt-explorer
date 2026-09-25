@@ -275,10 +275,22 @@ export async function fetchOwnedLists(
   });
 }
 
+/** Want is discoverable on request; have and sale only while bound to a profile, since matching reads that profile's holdings. */
+export function resolveDiscoverable(
+  type: ListTypeNew,
+  isProfileBind: boolean,
+  requested: boolean,
+): boolean {
+  if (type === "want") return requested;
+  if (type === "have" || type === "sale") return isProfileBind && requested;
+  return false;
+}
+
 export async function checkLinkedList(type: ListTypeNew, linkedListId: number, userId: string) {
   const linkedList = await db.query.lists.findFirst({
     columns: {
       listTypeNew: true,
+      isProfileBind: true,
     },
     where: {
       id: linkedListId,
@@ -303,6 +315,7 @@ export async function checkLinkedList(type: ListTypeNew, linkedListId: number, u
       message: "Want lists can only link to Have lists",
     });
   }
+  return linkedList;
 }
 
 export async function checkProfileOwnership(address: string, userId: string): Promise<void> {
