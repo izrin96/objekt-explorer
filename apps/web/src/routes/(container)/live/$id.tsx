@@ -7,7 +7,7 @@ import { generateMetadata } from "@/lib/meta";
 import { m } from "@/paraglide/messages";
 
 export const Route = createFileRoute("/(container)/live/$id")({
-  validateSearch: z.object({ token: z.string().optional() }),
+  validateSearch: z.object({ token: z.string().optional().catch(undefined) }),
   beforeLoad: async ({ search }) => {
     const isAllowed = await checkAccess({ data: { token: search.token } });
     if (!isAllowed) throw redirect({ to: "/live" });

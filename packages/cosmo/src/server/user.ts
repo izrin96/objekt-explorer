@@ -7,7 +7,7 @@ import { cosmo } from "./http";
  * Fetch a user from COSMO by nickname.
  */
 export async function fetchByNickname(nickname: string) {
-  return await cosmo<CosmoByNickname>(`/bff/v3/users/by-nickname/${nickname}`, {
+  return await cosmo<CosmoByNickname>(`/bff/v3/users/by-nickname/${encodeURIComponent(nickname)}`, {
     retry: false,
   });
 }

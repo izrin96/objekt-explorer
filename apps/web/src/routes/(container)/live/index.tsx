@@ -8,7 +8,7 @@ import { generateMetadata } from "@/lib/meta";
 import { m } from "@/paraglide/messages";
 
 export const Route = createFileRoute("/(container)/live/")({
-  validateSearch: z.object({ token: z.string().optional() }),
+  validateSearch: z.object({ token: z.string().optional().catch(undefined) }),
   loaderDeps: ({ search }) => ({ token: search.token }),
   loader: async ({ deps }) => ({ isAllowed: await checkAccess({ data: { token: deps.token } }) }),
   head: () => generateMetadata({ title: m.page_titles_live() }),

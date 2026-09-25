@@ -271,12 +271,23 @@ export function toPublicProfile(
   };
 }
 
-export async function fetchUserByIdentifier(
-  identifier: string,
-  currentUser?: User,
-): Promise<PublicProfile | undefined> {
-  if (!identifier) return undefined;
+function safeDecode(value: string) {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
 
+/** `retried` marks the lookup made after caching a user, so a failed cache write cannot loop */
+export async function fetchUserByIdentifier(
+  rawIdentifier: string,
+  currentUser?: User,
+  retried = false,
+): Promise<PublicProfile | undefined> {
+  if (!rawIdentifier) return undefined;
+
+  const identifier = safeDecode(rawIdentifier);
   const identifierIsAddress = isAddress(identifier);
 
   const cachedUser = await db.query.userAddress.findFirst({
@@ -284,7 +295,7 @@ export async function fetchUserByIdentifier(
       user: true,
     },
     where: {
-      [identifierIsAddress ? "address" : "nickname"]: decodeURIComponent(identifier),
+      [identifierIsAddress ? "address" : "nickname"]: identifier,
     },
     orderBy: {
       id: "desc",
@@ -312,7 +323,7 @@ export async function fetchUserByIdentifier(
             },
           ]);
 
-          return fetchUserByIdentifier(identifier, currentUser);
+          return fetchUserByIdentifier(identifier, currentUser, true);
         }
 
         // no changes, update last check
@@ -345,6 +356,9 @@ export async function fetchUserByIdentifier(
     };
   }
 
+  // the user was just cached and still is not found, so Cosmo is not asked again
+  if (retried) return undefined;
+
   const user = await safeFetchByNickname(identifier);
   if (!user) {
     return undefined;
@@ -357,5 +371,10 @@ export async function fetchUserByIdentifier(
     },
   ]);
 
-  return fetchUserByIdentifier(identifier, currentUser);
+  return (
+    (await fetchUserByIdentifier(identifier, currentUser, true)) ?? {
+      address: user.address,
+      nickname: user.nickname,
+    }
+  );
 }
