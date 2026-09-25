@@ -14,7 +14,7 @@ import { ObjektArtwork } from "./objekt-artwork";
 import { ObjektNote } from "./objekt-note";
 import { getCollectionShortNo, isObjektOwned } from "./objekt-utils";
 
-const priceClass = "truncate font-mono text-xxs font-semibold tabular-nums @[9rem]:text-xs";
+const priceClass = "truncate text-xxs font-semibold tabular-nums @[9rem]:text-xs";
 
 type ObjektCardProps = {
   objekt: ValidObjekt;

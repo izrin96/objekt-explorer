@@ -101,12 +101,12 @@ function SetPriceForm({
             format={{ minimumFractionDigits: 2, maximumFractionDigits: 2 }}
           >
             <div className="flex w-full items-stretch">
-              <span className="bg-secondary text-muted-foreground grid w-20 shrink-0 place-items-center rounded-s-lg border border-e-0 font-mono text-sm">
+              <span className="bg-secondary text-muted-foreground grid w-20 shrink-0 place-items-center rounded-s-lg border border-e-0 text-sm">
                 {currency}
               </span>
               <NumberFieldGroup className="rounded-s-none">
                 <NumberFieldDecrement aria-label={m.filter_sort_by_price_label()} />
-                <NumberFieldInput className="font-mono tabular-nums" />
+                <NumberFieldInput className="tabular-nums" />
                 <NumberFieldIncrement aria-label={m.filter_sort_by_price_label()} />
               </NumberFieldGroup>
             </div>

@@ -217,7 +217,7 @@ function MarketRow({
         </span>
         <div className="flex items-center gap-1">
           {/* a listing is set in the seller's currency, not the viewer's */}
-          <span className="font-mono font-medium tabular-nums">
+          <span className="font-medium tabular-nums">
             {item.isQyop
               ? m.objekt_qyop()
               : price !== null && listed !== null
@@ -227,9 +227,7 @@ function MarketRow({
           {item.note && <ObjektNote note={item.note} />}
         </div>
         {!item.isQyop && listed !== null && listed !== currency && usdPrice !== null && (
-          <span className="text-muted-foreground font-mono text-xs tabular-nums">
-            ≈{formatUsd(usdPrice)}
-          </span>
+          <span className="text-muted-foreground text-xs tabular-nums">≈{formatUsd(usdPrice)}</span>
         )}
       </div>
 

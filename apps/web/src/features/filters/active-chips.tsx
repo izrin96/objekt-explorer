@@ -143,7 +143,6 @@ function buildChips(filters: FilterSearch, memberColor: (name: string) => string
       label: `${m.filter_floor_price()}: ${floor}`,
       name: m.filter_floor_price(),
       value: floor,
-      mono: true,
       remove: { floor_min: undefined, floor_max: undefined },
     });
   }
