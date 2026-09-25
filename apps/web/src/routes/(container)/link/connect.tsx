@@ -17,9 +17,9 @@ export const Route = createFileRoute("/(container)/link/connect")({
 
 function LinkConnectPage() {
   return (
-    <>
+    <div className="mx-auto flex w-full max-w-xl flex-col gap-4.5 sm:pt-6">
       <PageHeader title={m.link_link_cosmo()} />
       <LinkFlow />
-    </>
+    </div>
   );
 }

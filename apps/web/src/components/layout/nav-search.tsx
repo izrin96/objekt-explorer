@@ -1,13 +1,8 @@
-import { MagnifyingGlassIcon, TrashSimpleIcon, UserIcon } from "@phosphor-icons/react";
-import type { CosmoPublicUser, CosmoSearchResult } from "@repo/cosmo/types/user";
-import { useQuery } from "@tanstack/react-query";
+import { MagnifyingGlassIcon, TrashSimpleIcon } from "@phosphor-icons/react";
+import type { CosmoPublicUser } from "@repo/cosmo/types/user";
 import { useNavigate } from "@tanstack/react-router";
-import { FetchError, ofetch } from "ofetch";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 
-import { EmptyState } from "@/components/shared/empty-state";
-import { Shimmer } from "@/components/shared/shimmer";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Combobox,
   ComboboxCollection,
@@ -15,18 +10,20 @@ import {
   ComboboxGroup,
   ComboboxGroupLabel,
   ComboboxInput,
-  ComboboxItem,
   ComboboxList,
 } from "@/components/ui/combobox";
 import { Dialog, DialogPopup, DialogTitle } from "@/components/ui/dialog";
 import { Kbd, KbdGroup } from "@/components/ui/kbd";
 import { useUserSearchStore } from "@/features/user/search-store";
-import { useDebouncedCallback } from "@/hooks/use-debounced-callback";
+import {
+  UserRowBody,
+  UserSearchEmpty,
+  UserSearchItem,
+  useUserSearch,
+} from "@/features/user/user-search";
 import { truncateAddress } from "@/lib/address";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
-
-const DEBOUNCE_MS = 350;
 
 /** a user row, the "open this raw address" escape hatch, or Recent's own clear */
 type Row =
@@ -49,20 +46,7 @@ const rowLabel = (r: Row) => {
 
 /** every row is the same 6.5 leading slot plus its own line */
 function RowBody({ row }: { row: Row }) {
-  if (row.kind === "user") {
-    return (
-      <span className="flex min-w-0 items-center gap-2.5">
-        <Avatar className="size-6.5 flex-none">
-          {row.user.profileImageUrl && <AvatarImage src={row.user.profileImageUrl} alt="" />}
-          <AvatarFallback>{row.user.nickname.slice(0, 1).toUpperCase()}</AvatarFallback>
-        </Avatar>
-        <span className="flex-none truncate font-semibold">{row.user.nickname}</span>
-        <span className="text-muted-foreground truncate font-mono text-xs">
-          {truncateAddress(row.user.address)}
-        </span>
-      </span>
-    );
-  }
+  if (row.kind === "user") return <UserRowBody user={row.user} />;
 
   if (row.kind === "address") {
     return (
@@ -90,22 +74,6 @@ function RowBody({ row }: { row: Row }) {
   );
 }
 
-/** the result rows' silhouette, so the list does not jump when they land */
-function SearchingRows() {
-  return (
-    <div role="status" aria-live="polite" className="flex flex-col gap-1 p-2 text-left">
-      <span className="sr-only">{m.nav_search_user_searching()}</span>
-      {[0, 1, 2].map((i) => (
-        <span key={i} aria-hidden className="flex items-center gap-2.5 px-2 py-1.5">
-          <Shimmer className="size-6.5 flex-none rounded-full" />
-          <Shimmer className="h-3.5 w-24" />
-          <Shimmer className="h-3 w-20" />
-        </span>
-      ))}
-    </div>
-  );
-}
-
 /**
  * ⌘K user search: cnippet Combobox rendered inline inside a cnippet Dialog
  * (`inline` + `open`, so the list lives in the dialog instead of a popup).
@@ -122,14 +90,12 @@ export function NavSearch({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const [query, setQuery] = useState("");
-  const [debouncedQuery, setDebouncedQuery] = useState("");
+  const search = useUserSearch();
+  const { query, trimmed, results, serverError, searching } = search;
   const recent = useUserSearchStore((s) => s.users);
   const addRecent = useUserSearchStore((s) => s.add);
   const clearRecent = useUserSearchStore((s) => s.clearAll);
   const navigate = useNavigate();
-
-  const debounce = useDebouncedCallback(setDebouncedQuery, DEBOUNCE_MS);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -141,28 +107,6 @@ export function NavSearch({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onOpenChange]);
-
-  const trimmed = debouncedQuery.trim();
-
-  const { data, error, isFetching } = useQuery({
-    queryKey: ["user-search", trimmed],
-    queryFn: () =>
-      ofetch<CosmoSearchResult>("/api/user/search", { query: { query: trimmed } }).then(
-        (res) => res.results,
-      ),
-    enabled: trimmed.length > 0,
-    retry: false,
-  });
-
-  // a rate limit is an answer, not a blank list: show what the server said
-  const serverError =
-    error instanceof FetchError
-      ? ((error.data as { error?: string } | undefined)?.error ?? error.message)
-      : null;
-
-  // the debounce wait counts as searching too, or the empty state flashes
-  // "no users match" against every keystroke before the request even starts
-  const searching = query.trim() !== "" && (query.trim() !== trimmed || isFetching);
 
   const groups = useMemo<Group[]>(() => {
     if (trimmed === "") {
@@ -179,11 +123,11 @@ export function NavSearch({
       ];
     }
 
-    if (data && data.length > 0) {
+    if (results && results.length > 0) {
       return [
         {
           value: m.nav_search_user_result_label(),
-          items: data.map((user): Row => ({ kind: "user", key: user.address, user })),
+          items: results.map((user): Row => ({ kind: "user", key: user.address, user })),
         },
       ];
     }
@@ -198,26 +142,19 @@ export function NavSearch({
     }
 
     return [];
-  }, [trimmed, recent, data]);
-
-  const setBothQueries = (next: string) => {
-    setQuery(next);
-    debounce(next);
-  };
+  }, [trimmed, recent, results]);
 
   const pick = (row: Row | null) => {
     if (!row) return;
     // clearing is not a navigation: the dialog stays open on the empty state
     if (row.kind === "clear") {
       clearRecent();
-      setQuery("");
-      setDebouncedQuery("");
+      search.reset();
       return;
     }
     if (row.kind === "user") addRecent(row.user);
     onOpenChange(false);
-    setQuery("");
-    setDebouncedQuery("");
+    search.reset();
     void navigate({
       to: "/@{$nickname}",
       params: { nickname: row.kind === "user" ? row.user.nickname : row.address },
@@ -230,8 +167,7 @@ export function NavSearch({
       onOpenChange={(next) => {
         onOpenChange(next);
         if (!next) {
-          setQuery("");
-          setDebouncedQuery("");
+          search.reset();
         }
       }}
     >
@@ -262,7 +198,7 @@ export function NavSearch({
           value={null}
           onValueChange={pick}
           inputValue={query}
-          onInputValueChange={setBothQueries}
+          onInputValueChange={search.setQuery}
           itemToStringLabel={rowLabel}
           autoHighlight
         >
@@ -281,23 +217,14 @@ export function NavSearch({
           <ComboboxEmpty className="text-muted-foreground text-center">
             {query.trim() === "" ? (
               <p className="px-3 py-8">{m.nav_search_user_hint()}</p>
-            ) : searching ? (
-              <SearchingRows />
-            ) : serverError !== null ? (
-              <EmptyState
-                icon={UserIcon}
-                title={m.nav_search_user_error()}
-                hint={serverError}
-                bordered={false}
-                className="py-8"
-              />
             ) : (
-              <EmptyState
-                icon={UserIcon}
-                title={m.nav_search_user_empty()}
-                hint={m.nav_search_user_empty_hint({ query: query.trim() })}
-                bordered={false}
-                className="py-8"
+              <UserSearchEmpty
+                searching={searching}
+                serverError={serverError}
+                notFound={{
+                  title: m.nav_search_user_empty(),
+                  hint: m.nav_search_user_empty_hint({ query: query.trim() }),
+                }}
               />
             )}
           </ComboboxEmpty>
@@ -307,16 +234,13 @@ export function NavSearch({
                 <ComboboxGroupLabel>{group.value}</ComboboxGroupLabel>
                 <ComboboxCollection>
                   {(row: Row) => (
-                    <ComboboxItem
+                    <UserSearchItem
                       key={row.key}
                       value={row}
-                      className={cn(
-                        "grid-cols-1 gap-0 px-2 py-1.5 [&>div]:col-start-1",
-                        row.kind === "clear" && "text-destructive-foreground",
-                      )}
+                      className={cn(row.kind === "clear" && "text-destructive-foreground")}
                     >
                       <RowBody row={row} />
-                    </ComboboxItem>
+                    </UserSearchItem>
                   )}
                 </ComboboxCollection>
               </ComboboxGroup>

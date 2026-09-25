@@ -114,12 +114,14 @@ export const cosmoLinkRouter = {
 
   // verify bio contains the code and link the account
   verifyStatusMessage: authed
+    // typed, so the client can offer a new code: its countdown starts after the TTL does
+    .errors({ VERIFICATION_EXPIRED: { status: 400 } })
     .input(z.string().refine((val) => isAddress(val)))
-    .handler(async ({ input: address, context: { messages, session } }) => {
+    .handler(async ({ input: address, context: { messages, session }, errors }) => {
       const redisKey = `cosmo-verify:${session.user.id}:${address}`;
       const raw = await redis.get(redisKey);
       if (!raw) {
-        throw new ORPCError("BAD_REQUEST", {
+        throw errors.VERIFICATION_EXPIRED({
           message: messages.cosmo_link_verification_expired(),
         });
       }

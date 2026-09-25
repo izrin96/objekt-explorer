@@ -59,7 +59,7 @@ export const Route = createFileRoute("/api/user/search")({
 
         const users = await db
           .selectDistinctOn([userAddress.nickname], {
-            id: userAddress.id,
+            cosmoId: userAddress.cosmoId,
             nickname: userAddress.nickname,
             address: userAddress.address,
           })
@@ -71,8 +71,10 @@ export const Route = createFileRoute("/api/user/search")({
         return Response.json({
           hasNext: false,
           nextStartAfter: null,
+          // `id` is the Cosmo ID, which a user cached from a profile visit
+          // never had: 0 there, so the link flow can leave them out
           results: users.map((a) => ({
-            id: a.id,
+            id: a.cosmoId ?? 0,
             nickname: a.nickname!,
             address: a.address,
             profileImageUrl: "",
