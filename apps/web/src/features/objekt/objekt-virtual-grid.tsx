@@ -12,6 +12,7 @@ import { useColumns } from "@/stores/columns";
 
 import { buildVirtualData } from "./build-virtual-data";
 import { ObjektGrid } from "./objekt-grid";
+import { SelectionOrderContext } from "./selection-order";
 
 type ObjektVirtualGridProps = {
   objekts: ValidObjekt[];
@@ -74,8 +75,16 @@ export function ObjektVirtualGrid({
     ],
   );
 
+  const order = useMemo(
+    () =>
+      data.flatMap((item) =>
+        item.type === "label" ? [] : item.items.flatMap((cell) => (cell[0] ? [cell[0].id] : [])),
+      ),
+    [data],
+  );
+
   return (
-    <>
+    <SelectionOrderContext value={order}>
       {/* `key`: every row's height changes with the column count, and virtua
           keeps the measurements it already took */}
       <WindowVirtualizer key={columns} data={data}>
@@ -109,6 +118,6 @@ export function ObjektVirtualGrid({
           )}
         </InView>
       )}
-    </>
+    </SelectionOrderContext>
   );
 }

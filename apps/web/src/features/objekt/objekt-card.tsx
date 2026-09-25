@@ -1,6 +1,6 @@
 import { CheckIcon, LockSimpleIcon, PushPinIcon } from "@phosphor-icons/react";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
-import type { ReactNode } from "react";
+import { type ReactNode, use } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { useLongPress } from "@/hooks/use-long-press";
@@ -13,6 +13,7 @@ import { useSettings } from "@/stores/settings";
 import { ObjektArtwork } from "./objekt-artwork";
 import { ObjektNote } from "./objekt-note";
 import { getCollectionShortNo, isObjektOwned } from "./objekt-utils";
+import { SelectionOrderContext } from "./selection-order";
 
 const priceClass = "truncate text-xxs font-semibold tabular-nums @[9rem]:text-xs";
 
@@ -76,7 +77,8 @@ const hoverOnlyClass =
 /**
  * The card body opens the drawer and the check toggles selection. The iOS
  * Photos model sits on top: the "Select" button or a long press enters select
- * mode, and in it a tap toggles instead of opening.
+ * mode, and in it a tap toggles instead of opening. Shift on the check, or on
+ * the card in select mode, selects the run from the card last toggled.
  */
 export function ObjektCard({
   objekt,
@@ -102,6 +104,7 @@ export function ObjektCard({
 }: ObjektCardProps) {
   const hideLabelSetting = useSettings((s) => s.hideLabel);
   const selecting = useSelection(selectIsSelecting);
+  const order = use(SelectionOrderContext);
 
   const labelHidden = hideLabel ?? hideLabelSetting;
   const openable = onOpen !== undefined;
@@ -119,8 +122,13 @@ export function ObjektCard({
 
   const interactive = openable || onToggleSelect !== undefined;
 
-  const activate = () => {
-    if (selectMode) onToggleSelect?.(objekt);
+  const select = (range: boolean) => {
+    if (range && order !== null) useSelection.getState().selectRange(order, objekt.id);
+    else onToggleSelect?.(objekt);
+  };
+
+  const activate = (range: boolean) => {
+    if (selectMode) select(range);
     else if (openable) onOpen(objekt);
   };
 
@@ -134,14 +142,24 @@ export function ObjektCard({
         {...handlers}
         onClick={
           interactive
-            ? () => {
+            ? (event) => {
                 // the long press already acted; swallow the click it releases
                 if (consumeClick()) return;
-                activate();
+                activate(event.shiftKey);
               }
             : undefined
         }
-        onKeyDown={interactive ? (event) => activateOnKey(event, activate) : undefined}
+        // a shift-click would otherwise extend the page's text selection
+        onMouseDown={
+          interactive
+            ? (event) => {
+                if (event.shiftKey) event.preventDefault();
+              }
+            : undefined
+        }
+        onKeyDown={
+          interactive ? (event) => activateOnKey(event, () => activate(event.shiftKey)) : undefined
+        }
         className={cn(
           "rounded-photocard bg-secondary aspect-photocard relative w-full overflow-hidden outline-none select-none",
           // no double-tap zoom delay, no iOS callout or drag on a long press
@@ -197,7 +215,7 @@ export function ObjektCard({
                 aria-pressed={selected}
                 onClick={(event) => {
                   event.stopPropagation();
-                  onToggleSelect(objekt);
+                  select(event.shiftKey);
                 }}
                 onKeyDown={(event) => event.stopPropagation()}
                 className={cn(objektControlClass, selected && "bg-foreground text-background")}
