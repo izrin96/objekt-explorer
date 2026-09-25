@@ -1,6 +1,6 @@
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 
-import { isFormerMember, isMeasured, tradeableFilter } from "@/lib/unobtainables";
+import { isMeasuredClass, tradeableFilter } from "@/lib/unobtainables";
 
 /** owned / total for one node of the breakdown */
 export type Tally = { owned: number; total: number; pct: number };
@@ -34,6 +34,17 @@ type Comparators = {
 /** one bar of the chart, named and coloured by the artist payload */
 export type ChartMember = { name: string; color: string };
 
+/** Members who have left their group. */
+const formerMembers = new Set(["MinGyeol"]);
+
+/** Former members are left out of the chart and its panels unless the Member filter picks them. */
+export function rankableMembers(members: readonly ChartMember[], picked: readonly string[] = []) {
+  const names = new Set(picked.map((name) => name.toLowerCase()));
+  return members.filter(
+    (member) => !formerMembers.has(member.name) || names.has(member.name.toLowerCase()),
+  );
+}
+
 /**
  * One row per member of the selected artists, in the payload's own order.
  *
@@ -63,15 +74,13 @@ export function memberProgress(
     }
   }
 
-  return members
-    .filter(({ name }) => !isFormerMember(name))
-    .map(({ name, color }) => {
-      const tally = tallies.get(name);
-      const owned = tally?.owned ?? 0;
-      const total = tally?.total ?? 0;
+  return members.map(({ name, color }) => {
+    const tally = tallies.get(name);
+    const owned = tally?.owned ?? 0;
+    const total = tally?.total ?? 0;
 
-      return { member: name, color, owned, total, pct: pct(owned, total) };
-    });
+    return { member: name, color, owned, total, pct: pct(owned, total) };
+  });
 }
 
 /** The overall bar: one collection counted once, however many members it lists. */
@@ -93,7 +102,7 @@ export function catalogueTotals(
 
 /**
  * The catalogue bucketed into `Member Season` sections, each holding its class
- * groups, with Welcome, Zero and former members dropped.
+ * groups, with Welcome and Zero dropped.
  *
  * A unit objekt lists several members, so while the Member facet is set it is
  * counted once under every selected member it carries rather than only under
@@ -108,12 +117,10 @@ export function shapeProgress(
   const sections = new Map<string, Map<string, ValidObjekt[]>>();
 
   for (const objekt of catalogue) {
-    if (!isMeasured(objekt)) continue;
+    if (!isMeasuredClass(objekt)) continue;
 
     const matched = selectedMembers?.length
-      ? objekt.members.filter(
-          (member) => selectedMembers.includes(member) && !isFormerMember(member),
-        )
+      ? objekt.members.filter((member) => selectedMembers.includes(member))
       : [];
     const members = matched.length > 0 ? matched : [objekt.member];
 

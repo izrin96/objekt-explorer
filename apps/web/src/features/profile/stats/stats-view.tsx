@@ -23,7 +23,7 @@ import { CheckpointPopover } from "../checkpoint-popover";
 import { useProfileTarget } from "../profile-provider";
 import { ProfileToolbar } from "../profile-toolbar";
 import { MemberProgressChart, useChartMembers } from "../progress/member-progress-chart";
-import { memberProgress } from "../progress/shape-progress";
+import { memberProgress, rankableMembers } from "../progress/shape-progress";
 import { isSpinAddress, useProfileCatalogue } from "../use-profile-objekts";
 
 type Slice = { name: string; count: number; percentage: number; fill: string };
@@ -135,7 +135,7 @@ function StatsCard({
 }
 
 export function StatsView() {
-  const { owned, catalogue, isPending } = useProfileCatalogue();
+  const { owned, catalogue, filters, isPending } = useProfileCatalogue();
   const profile = useProfileTarget()!;
   const memberColor = useMemberColor();
   const members = useChartMembers();
@@ -162,10 +162,11 @@ export function StatsView() {
   );
   const progress = useMemo(() => {
     const ownedSlugs = new Set(owned.map((objekt) => objekt.slug));
-    return memberProgress(catalogue, ownedSlugs, members).toSorted(
+    const ranked = rankableMembers(members, filters.member);
+    return memberProgress(catalogue, ownedSlugs, ranked).toSorted(
       (a, b) => b.pct - a.pct || b.total - a.total,
     );
-  }, [owned, catalogue, members]);
+  }, [owned, catalogue, members, filters.member]);
 
   return (
     <>

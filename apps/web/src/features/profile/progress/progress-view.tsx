@@ -32,6 +32,7 @@ import { MemberProgressChart, useChartMembers } from "./member-progress-chart";
 import {
   catalogueTotals,
   memberProgress,
+  rankableMembers,
   shapeProgress,
   type ClassGroup,
   type MemberSeason,
@@ -255,12 +256,14 @@ export function ProgressView() {
 
   const members = useChartMembers();
   // a unit objekt credits every member on it, so a member filter still leaves
-  // the partners with a handful of totals; only the picked members are ranked
+  // the partners with a handful of totals; only the picked members are ranked,
+  // and with none picked the former members sit out
   const rankedMembers = useMemo(() => {
+    const ranked = rankableMembers(members, filters.member);
     const picked = filters.member?.map((name) => name.toLowerCase());
     return picked?.length
-      ? members.filter((member) => picked.includes(member.name.toLowerCase()))
-      : members;
+      ? ranked.filter((member) => picked.includes(member.name.toLowerCase()))
+      : ranked;
   }, [members, filters.member]);
   const rows = useMemo(
     () => memberProgress(catalogue, ownedSlugs, rankedMembers),
