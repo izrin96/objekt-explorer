@@ -14,6 +14,7 @@ import { useCallback, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 
 import { EmptyState } from "@/components/shared/empty-state";
+import { countMarkup, MessageMarkup } from "@/components/shared/message-markup";
 import { Button } from "@/components/ui/button";
 import { MenuItem, MenuSeparator } from "@/components/ui/menu";
 import { toastManager } from "@/components/ui/toast";
@@ -385,10 +386,13 @@ export function CollectionView() {
         <>
           <div className="flex items-center justify-between gap-2">
             <p className="text-muted-foreground font-mono text-xs tabular-nums">
-              {m.profile_count_summary({
-                shown: `${copiesIn(filtered).toLocaleString()}${hasNextPage ? "+" : ""}`,
-                unique: uniqueCount.toLocaleString(),
-              })}
+              <MessageMarkup
+                parts={m.profile_count_summary.parts({
+                  shown: `${copiesIn(filtered).toLocaleString()}${hasNextPage ? "+" : ""}`,
+                  unique: uniqueCount.toLocaleString(),
+                })}
+                markup={countMarkup}
+              />
             </p>
             {showActions && filtered.length > 0 && <SelectModeButton />}
           </div>

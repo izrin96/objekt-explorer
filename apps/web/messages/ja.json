@@ -733,7 +733,7 @@
   "profile_spin_notice": "PolygonチェーンでスピンされたObjektはまだ統合されていません。読み込みに時間がかかる場合があります。",
   "profile_checkpoint_date_label": "スナップショットの日付",
   "profile_checkpoint_time_label": "スナップショット時刻",
-  "profile_count_summary": "{shown}件表示 · {unique}種類",
+  "profile_count_summary": "{#b}{shown}{/b}件表示 · {#b}{unique}{/b}種類",
   "profile_empty_title": "Objektがまだありません",
   "profile_empty_hint": "選択中のアーティストの範囲でこのプロフィールが所有するObjektはありません。範囲を広げるか、後ほどご確認ください。",
   "profile_no_match_hint": "このプロフィールが所有するObjektに現在のフィルターと一致するものはありません。",
