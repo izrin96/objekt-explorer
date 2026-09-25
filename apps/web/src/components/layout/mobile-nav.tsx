@@ -62,7 +62,7 @@ export function MobileNav({ links }: { links: readonly NavLink[] }) {
               <Link
                 key={l.key}
                 to={l.to}
-                activeOptions={{ exact: l.to === "/" }}
+                activeOptions={{ exact: l.exact }}
                 onClick={() => setOpen(false)}
                 className="text-muted-foreground hover:text-foreground data-[status=active]:bg-secondary data-[status=active]:text-foreground rounded-lg px-3 py-2 text-sm font-medium"
               >

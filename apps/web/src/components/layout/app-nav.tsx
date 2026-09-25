@@ -15,10 +15,11 @@ import { m } from "@/paraglide/messages";
 function useNavLinks() {
   const { data: user } = useCurrentUser();
   const links = [
-    { key: "home", label: m.home_title(), to: "/" },
-    { key: "market", label: m.nav_market(), to: "/market" },
-    { key: "activity", label: m.nav_activity(), to: "/activity" },
-    { key: "list", label: m.nav_my_list(), to: "/list" },
+    { key: "home", label: m.home_title(), to: "/", exact: true },
+    { key: "market", label: m.nav_market(), to: "/market", exact: false },
+    { key: "activity", label: m.nav_activity(), to: "/activity", exact: false },
+    // `/list/{slug}` is any user's list, not one of the viewer's own
+    { key: "list", label: m.nav_my_list(), to: "/list", exact: true },
   ] as const;
   // `/list` is the signed-in user's own lists; signed out it only bounces to /login
   return user ? links : links.filter((link) => link.key !== "list");
@@ -62,7 +63,7 @@ export function AppNav() {
             <Link
               key={l.key}
               to={l.to}
-              activeOptions={{ exact: l.to === "/" }}
+              activeOptions={{ exact: l.exact }}
               className="text-muted-foreground hover:text-foreground data-[status=active]:bg-secondary data-[status=active]:text-foreground rounded-[7px] px-2.5 py-1.5 text-sm font-medium whitespace-nowrap"
             >
               {l.label}
