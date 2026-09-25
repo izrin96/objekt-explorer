@@ -56,14 +56,20 @@ async function processBatch(events: ListEventOutbox[]): Promise<Set<string>> {
     addressToTokenIds.get(from)!.add(tokenId);
   }
 
+  // an objekt sent away and back before this run, or whose transfer a reorg
+  // undid, is the sender's again, and its pin, lock and list entry still apply
+  const owners = await fetchOwnerMap([...new Set(events.map((event) => event.tokenId))]);
+
   const failedAddresses = new Set<string>();
 
   // Process addresses with bounded concurrency to avoid exhausting the DB pool
   await chunk(Array.from(addressToTokenIds.entries()), ADDRESS_CONCURRENCY, async (entries) => {
     await Promise.all(
       entries.map(async ([address, tokenIdSet]) => {
+        const gone = [...tokenIdSet].filter((tokenId) => owners.get(tokenId) !== address);
+        if (gone.length === 0) return;
         try {
-          await cleanupAddress(address, Array.from(tokenIdSet));
+          await cleanupAddress(address, gone);
         } catch (error) {
           console.error(`[Outbox Drain] Error cleaning up for ${address}:`, error);
           failedAddresses.add(address);
