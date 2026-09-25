@@ -8,7 +8,12 @@ import { m } from "@/paraglide/messages";
 export function ProfileNotFound() {
   return (
     <PageMain>
-      <EmptyState bordered={false} icon={GhostIcon} title={m.profile_not_found()} />
+      <EmptyState
+        bordered={false}
+        icon={GhostIcon}
+        title={m.profile_not_found()}
+        hint={m.profile_not_found_hint()}
+      />
     </PageMain>
   );
 }

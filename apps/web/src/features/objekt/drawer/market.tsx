@@ -119,7 +119,12 @@ export function MarketPanel({
           <Shimmer className="h-16 rounded-lg" />
         </div>
       ) : items.length === 0 ? (
-        <EmptyState icon={StorefrontIcon} title={m.objekt_market_empty()} bordered={false} />
+        <EmptyState
+          icon={StorefrontIcon}
+          title={m.objekt_market_empty()}
+          hint={m.objekt_market_empty_hint()}
+          bordered={false}
+        />
       ) : (
         <div className="flex flex-col gap-1.5">
           {items.map((item) => (

@@ -81,7 +81,14 @@ export function TradeMatchesContent({ slug, mode }: { slug: string; mode: TradeM
   const { partners, collections } = query.data;
 
   if (partners.length === 0) {
-    return <EmptyState bordered={false} icon={UsersIcon} title={m.list_trade_matches_empty()} />;
+    return (
+      <EmptyState
+        bordered={false}
+        icon={UsersIcon}
+        title={m.list_trade_matches_empty()}
+        hint={m.list_trade_matches_empty_hint()}
+      />
+    );
   }
 
   return (

@@ -176,7 +176,11 @@ export function TradesView() {
     return (
       <>
         {toolbar}
-        <EmptyState icon={LockSimpleIcon} title={m.trades_history_private()} />
+        <EmptyState
+          icon={LockSimpleIcon}
+          title={m.trades_history_private()}
+          hint={m.trades_history_private_hint()}
+        />
       </>
     );
   }

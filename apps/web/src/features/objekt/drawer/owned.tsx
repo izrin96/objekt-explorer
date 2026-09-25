@@ -54,7 +54,14 @@ export function OwnedPanel({
   }, [objekts, sort]);
 
   if (objekts.length === 0) {
-    return <EmptyState icon={ArchiveIcon} title={m.objekt_not_owned()} bordered={false} />;
+    return (
+      <EmptyState
+        icon={ArchiveIcon}
+        title={m.objekt_not_owned()}
+        hint={m.objekt_not_owned_hint()}
+        bordered={false}
+      />
+    );
   }
 
   const totalPages = Math.ceil(sorted.length / PAGE_SIZE);

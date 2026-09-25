@@ -14,7 +14,13 @@ export function ProfileLists({ address }: { address: string }) {
   const { data: lists } = useSuspenseQuery(profileListsOptions(address));
 
   if (lists.length === 0) {
-    return <EmptyState icon={RectangleDashedIcon} title={m.list_no_lists_found()} />;
+    return (
+      <EmptyState
+        icon={RectangleDashedIcon}
+        title={m.list_no_lists_found()}
+        hint={m.list_no_lists_found_hint()}
+      />
+    );
   }
 
   return (
