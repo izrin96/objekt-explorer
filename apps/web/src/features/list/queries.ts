@@ -13,8 +13,9 @@ export const listBySlugQuery = (data: z.infer<typeof listBySlugInputSchema>) =>
   queryOptions({
     queryKey: [...LIST_QUERY_KEY, data],
     queryFn: () => getListBySlug({ data }),
-    // the header renders straight off this, so a rename shows on the next visit
-    staleTime: 0,
+    // long enough that hydration does not refetch what the server just rendered;
+    // the viewer's own edits invalidate it, so only a change made elsewhere waits
+    staleTime: 30_000,
   });
 
 export const listEntriesOptions = (slug: string) =>

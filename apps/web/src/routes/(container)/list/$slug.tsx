@@ -13,8 +13,12 @@ import { m } from "@/paraglide/messages";
 
 export const Route = createFileRoute("/(container)/list/$slug")({
   validateSearch: filterSearchSchema.extend(compareSearchSchema.shape),
-  beforeLoad: async ({ params, context: { queryClient } }) => {
-    const list = await queryClient.query(listBySlugQuery({ slug: params.slug }));
+  // a loader, not `beforeLoad`, which reruns on every filter change
+  loader: async ({ params, context: { queryClient } }) => {
+    const list = await queryClient.query({
+      ...listBySlugQuery({ slug: params.slug }),
+      staleTime: "static",
+    });
 
     // a list filed under a Cosmo lives at the profile-scoped address
     if (list.profileAddress && list.profileSlug) {
@@ -30,7 +34,6 @@ export const Route = createFileRoute("/(container)/list/$slug")({
 
     return { list };
   },
-  loader: ({ context: { list } }) => ({ list }),
   head: ({ loaderData }) =>
     loaderData ? generateMetadata({ title: m.page_titles_list_detail(loaderData.list) }) : {},
   component: ListDetailPage,

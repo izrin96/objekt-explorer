@@ -15,7 +15,9 @@ export const profileQuery = (data: z.infer<typeof profileInputSchema>) =>
   queryOptions({
     queryKey: [...PROFILE_PAGE_KEY, data.nickname],
     queryFn: () => getProfile({ data }),
-    staleTime: 0,
+    // long enough that hydration does not refetch what the server just rendered;
+    // the viewer's own edits and links invalidate it
+    staleTime: 30_000,
   });
 
 export const ownedCollectionOptions = (address: string, filters?: OwnedBySchema) =>

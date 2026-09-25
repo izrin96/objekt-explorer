@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { toastManager } from "@/components/ui/toast";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
+import { PROFILE_PAGE_KEY } from "@/features/profile/queries";
 import { currentUserOptions } from "@/features/user/queries";
 import { useDebouncedCallback } from "@/hooks/use-debounced-callback";
 import { orpc } from "@/lib/orpc";
@@ -286,7 +287,10 @@ function VerifyStep({
     orpc.cosmoLink.verifyStatusMessage.mutationOptions({
       onSuccess: async () => {
         toastManager.add({ type: "success", title: m.link_success({ nickname: found.nickname }) });
-        await queryClient.invalidateQueries({ queryKey: currentUserOptions.queryKey });
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: currentUserOptions.queryKey }),
+          queryClient.invalidateQueries({ queryKey: PROFILE_PAGE_KEY }),
+        ]);
         onLinked();
       },
     }),

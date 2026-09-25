@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { toastManager } from "@/components/ui/toast";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "@/components/ui/tooltip";
 import { EditCosmoDialog } from "@/features/link/edit-cosmo-dialog";
+import { PROFILE_PAGE_KEY } from "@/features/profile/queries";
 import { currentUserOptions } from "@/features/user/queries";
 import { truncateAddress } from "@/lib/address";
 import { orpc } from "@/lib/orpc";
@@ -32,7 +33,10 @@ export function LinkedCard({ profile }: { profile: LinkedProfile }) {
     orpc.cosmoLink.removeLink.mutationOptions({
       onSuccess: async () => {
         toastManager.add({ type: "success", title: m.link_unlink_success() });
-        await queryClient.invalidateQueries({ queryKey: currentUserOptions.queryKey });
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: currentUserOptions.queryKey }),
+          queryClient.invalidateQueries({ queryKey: PROFILE_PAGE_KEY }),
+        ]);
       },
       onError: ({ message }) => {
         toastManager.add({ type: "error", title: m.link_unlink_error(), description: message });
