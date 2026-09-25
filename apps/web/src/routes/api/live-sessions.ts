@@ -26,9 +26,10 @@ export const Route = createFileRoute("/api/live-sessions")({
           );
         }
 
-        // best-effort per-IP rate limit to protect the upstream Cosmo API
-        const ip =
-          request.headers.get("x-client-ip") ?? request.headers.get("x-forwarded-for") ?? "unknown";
+        // best-effort per-IP rate limit to protect the upstream Cosmo API.
+        // Traefik overwrites x-real-ip with the peer address; any other header
+        // arrives as the client wrote it.
+        const ip = request.headers.get("x-real-ip") ?? "unknown";
         const attempts = await rateLimit(`live-sessions:rl:${ip}`, RATE_WINDOW_SECONDS);
         if (attempts > RATE_LIMIT) {
           return Response.json({ status: "error", message: "Too many requests" }, { status: 429 });

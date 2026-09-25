@@ -75,7 +75,8 @@ export const auth = betterAuth({
       : ["http://localhost:*", "http://127.0.0.1:*", "http://192.168.*.*:*", "http://10.*.*.*:*"],
   advanced: {
     ipAddress: {
-      ipAddressHeaders: ["x-client-ip", "x-forwarded-for", "cf-connecting-ip"],
+      // the only one Traefik overwrites; the rest arrive as the client wrote them
+      ipAddressHeaders: ["x-real-ip"],
     },
   },
   user: {

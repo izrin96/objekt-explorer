@@ -2,13 +2,10 @@ import { serverEnv } from "@repo/api/env";
 import { createFileRoute } from "@tanstack/react-router";
 
 const FORWARDED_HEADERS = ["content-type", "user-agent", "accept-language"];
-const IP_HEADERS = ["x-client-ip", "cf-connecting-ip", "x-real-ip", "x-forwarded-for"];
-
+// Traefik overwrites x-real-ip with the peer address; any other header arrives
+// as the client wrote it
 function getClientIp(headers: Headers) {
-  for (const name of IP_HEADERS) {
-    const value = headers.get(name);
-    if (value) return value.split(",")[0]?.trim();
-  }
+  return headers.get("x-real-ip")?.trim() || undefined;
 }
 
 // umami prioritizes payload ip over proxy headers, which its reverse proxy overwrites
