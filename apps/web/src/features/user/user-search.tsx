@@ -65,7 +65,7 @@ export function useUserSearch(initialQuery = "") {
  * exist, and not again when they land. Its `autoHighlight: "always"` would, but
  * Combobox does not take it (Autocomplete only, as of 1.8); delete this once it
  * does. Until a row is highlighted, the typed query's first row stands in: it is
- * drawn highlighted and Enter picks it.
+ * drawn with a lighter highlight and Enter picks it.
  */
 export function useFirstRowStandIn<Row>({
   search,
@@ -127,7 +127,8 @@ export function UserSearchItem({
     <ComboboxItem
       className={cn(
         "grid-cols-1 gap-0 px-2 py-1.5 [&>div]:col-start-1",
-        standIn && "bg-accent text-accent-foreground",
+        // lighter than a real highlight, so the first ArrowDown visibly lands on it
+        standIn && "bg-accent/60",
         className,
       )}
       {...props}
