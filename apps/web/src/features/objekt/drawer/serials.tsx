@@ -373,7 +373,7 @@ function OwnershipHead({
           ) : (
             <Badge
               variant={
-                found.transferable === null ? "outline" : found.transferable ? "success" : "warning"
+                found.transferable === null ? "outline" : found.transferable ? "success" : "error"
               }
               size="sm"
               className={found.transferable === null ? "font-normal" : undefined}

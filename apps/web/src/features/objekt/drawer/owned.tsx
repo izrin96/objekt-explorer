@@ -121,7 +121,7 @@ export function OwnedPanel({
                   {formatTimestamp(new Date(item.receivedAt))}
                 </td>
                 <td className="px-3 py-1.5">
-                  <Badge variant={item.transferable ? "success" : "warning"} size="sm">
+                  <Badge variant={item.transferable ? "success" : "error"} size="sm">
                     {item.transferable ? m.objekt_yes() : m.objekt_no()}
                   </Badge>
                 </td>

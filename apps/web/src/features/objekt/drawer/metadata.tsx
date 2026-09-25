@@ -100,7 +100,7 @@ export function MetadataPanel({
           <MetaRow label={m.objekt_token_id()}>{tokenId ?? objekt.tokenId}</MetaRow>
           <dt className="text-muted-foreground">{m.objekt_transferable()}</dt>
           <dd>
-            <Badge variant={objekt.transferable ? "success" : "warning"} size="sm">
+            <Badge variant={objekt.transferable ? "success" : "error"} size="sm">
               {objekt.transferable ? m.objekt_yes() : m.objekt_no()}
             </Badge>
           </dd>
