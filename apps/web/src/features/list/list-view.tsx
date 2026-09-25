@@ -70,7 +70,8 @@ function ListEntries() {
   const list = useListTarget();
   const isOwner = useListOwned();
   const { data: user } = useCurrentUser();
-  const columns = list.gridColumns ?? undefined;
+  // the owner's column count is ignored while the Objekt Columns setting is removed
+  // const columns = list.gridColumns ?? undefined;
 
   const search = useCompareSearch();
   const compare = isComparing(search) ? search : null;
@@ -264,7 +265,7 @@ function ListEntries() {
       {compare !== null ? <CompareBanner compare={compare} onClear={clearCompare} /> : null}
 
       {query.isPending || rarityLoading ? (
-        <ShimmerGrid columns={columns} />
+        <ShimmerGrid />
       ) : objekts.length === 0 ? (
         compare !== null ? (
           <EmptyState
@@ -313,7 +314,6 @@ function ListEntries() {
           <ObjektVirtualGrid
             objekts={filtered}
             filters={deferredFilters}
-            columns={columns}
             rarityMap={rarityMap}
             renderItem={renderObjekt}
           />

@@ -3,7 +3,7 @@ import { createContext, use, type PropsWithChildren } from "react";
 
 import { useUserProfiles } from "@/features/user/hooks";
 import { isSameAddress } from "@/lib/address";
-import { useColumns, useColumnStore } from "@/stores/columns";
+import { useColumns } from "@/stores/columns";
 
 const ProfileContext = createContext<PublicProfile | null>(null);
 
@@ -26,10 +26,10 @@ export function useProfileAuthed(): boolean {
   return profiles.some((p) => isSameAddress(p.address, target.address));
 }
 
-/** The owner's configured column count stands in for the viewport default, until the viewer picks one of their own. */
+/** The owner's configured column count is ignored while the Objekt Columns setting is removed; the viewer's own count applies. */
 export function useProfileColumns(): number {
-  const profile = useProfileTarget();
-  const responsive = useColumns();
-  const picked = useColumnStore((s) => !s.initial);
-  return !picked && profile?.gridColumns ? profile.gridColumns : responsive;
+  // const profile = useProfileTarget();
+  // const picked = useColumnStore((s) => !s.initial);
+  // return !picked && profile?.gridColumns ? profile.gridColumns : responsive;
+  return useColumns();
 }
