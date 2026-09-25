@@ -66,7 +66,7 @@ export function ListHeader() {
             <Link
               to="/@{$nickname}"
               params={{ nickname: list.profile?.nickname || list.profileAddress.toLowerCase() }}
-              className="font-display text-foreground max-w-full truncate text-base font-semibold underline-offset-2 hover:underline"
+              className="text-muted-foreground hover:text-foreground max-w-full truncate text-sm font-medium underline-offset-2 transition-colors hover:underline"
             >
               {list.profile?.nickname ?? list.profileAddress.toLowerCase()}
             </Link>
@@ -143,7 +143,10 @@ export function ListHeader() {
       </div>
 
       {list.description ? (
-        <p className="text-foreground text-sm whitespace-pre-wrap">{list.description}</p>
+        // set apart from the app's own copy: the owner wrote it, not the site
+        <p className="text-foreground border-s-2 ps-3 text-sm text-pretty whitespace-pre-wrap">
+          {list.description}
+        </p>
       ) : null}
 
       <CompareDialog
