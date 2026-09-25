@@ -45,6 +45,15 @@ export const profileRouter = {
     .handler(async ({ input: { address, ...rest }, context: { messages, session } }) => {
       const profile = await fetchOwnedProfile(address, session.user.id, messages);
 
+      // `getPresignedPost` names every upload after its address, so a banner
+      // URL outside that prefix is another profile's file. Older uploads kept
+      // the checksummed address, hence the case-insensitive match.
+      const ownPrefix = `${S3_PUBLIC_URL}/profile-banner/${address}-`.toLowerCase();
+      const isOwnBanner = (url: string) => url.toLowerCase().startsWith(ownPrefix);
+      if (rest.bannerImgUrl && !isOwnBanner(rest.bannerImgUrl)) {
+        throw new ORPCError("BAD_REQUEST");
+      }
+
       await db
         .update(userAddress)
         .set({
@@ -55,7 +64,12 @@ export const profileRouter = {
 
       // Delete the old banner only once the row no longer points at it, so a
       // failed update cannot leave a dangling URL
-      if (profile.bannerImgUrl && rest.bannerImgUrl !== undefined) {
+      if (
+        profile.bannerImgUrl &&
+        isOwnBanner(profile.bannerImgUrl) &&
+        rest.bannerImgUrl !== undefined &&
+        rest.bannerImgUrl !== profile.bannerImgUrl
+      ) {
         const fileName = profile.bannerImgUrl.split("/").pop();
         if (fileName) {
           await deleteFileFromBucket(S3_BUCKET, `profile-banner/${fileName}`);

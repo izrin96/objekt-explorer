@@ -12,7 +12,10 @@ export const Route = createFileRoute("/(container)/live/$id")({
     const isAllowed = await checkAccess({ data: { token: search.token } });
     if (!isAllowed) throw redirect({ to: "/live" });
   },
-  loader: async ({ params }) => ({ live: await getLiveSessionById({ data: { id: params.id } }) }),
+  loaderDeps: ({ search }) => ({ token: search.token }),
+  loader: async ({ params, deps }) => ({
+    live: await getLiveSessionById({ data: { id: params.id, token: deps.token } }),
+  }),
   head: ({ loaderData }) => {
     const live = loaderData?.live;
     if (!live) return {};

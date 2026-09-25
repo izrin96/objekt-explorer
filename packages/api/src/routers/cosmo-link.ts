@@ -135,8 +135,12 @@ export const cosmoLinkRouter = {
         serverEnv.COSMO_KEY,
       );
 
-      // validate that the fetched profile matches claimed data
-      if (profile.nickname.toLowerCase() !== data.nickname.toLowerCase()) {
+      // the bio code proves control of the profile, not of the address the
+      // client sent, so the address must be the profile's own
+      if (
+        profile.nickname.toLowerCase() !== data.nickname.toLowerCase() ||
+        profile.address.toLowerCase() !== data.address.toLowerCase()
+      ) {
         throw new ORPCError("BAD_REQUEST", {
           message: messages.cosmo_link_profile_mismatch(),
         });

@@ -22,7 +22,7 @@ export async function fetchLiveSessions(token: string, artistId: ValidArtist) {
  * Fetch single live session.
  */
 export async function fetchLiveSession(token: string, id: string) {
-  return await cosmo<LiveSession>(`/bff/v3/live-sessions/${id}`, {
+  return await cosmo<LiveSession>(`/bff/v3/live-sessions/${encodeURIComponent(id)}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
