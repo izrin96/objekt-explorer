@@ -4,6 +4,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useState } from "react";
 
 import { EmptyState } from "@/components/shared/empty-state";
+import { countMarkup, MessageMarkup } from "@/components/shared/message-markup";
 import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
 import { useScopedFacets } from "@/features/filters/facets";
@@ -74,11 +75,10 @@ function HomePage() {
       {!isPending && (
         <div className="flex items-center justify-between gap-2">
           <div className="text-muted-foreground font-mono text-xs">
-            <b className="text-foreground font-semibold tabular-nums">
-              {m.common_count_total_prefix()}
-              {filtered.length.toLocaleString()}
-            </b>
-            {m.common_count_total_suffix()}
+            <MessageMarkup
+              parts={m.common_count_total.parts({ count: filtered.length.toLocaleString() })}
+              markup={countMarkup}
+            />
           </div>
           {user && filtered.length > 0 && <SelectModeButton />}
         </div>

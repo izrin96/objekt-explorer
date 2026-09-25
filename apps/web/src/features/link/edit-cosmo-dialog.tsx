@@ -8,6 +8,7 @@ import { Link } from "@tanstack/react-router";
 import { lazy, type ReactElement, Suspense, useRef, useState } from "react";
 import type { CropperRef } from "react-advanced-cropper";
 
+import { MessageMarkup } from "@/components/shared/message-markup";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -31,7 +32,6 @@ import {
   isCroppable,
   putBanner,
 } from "@/features/link/banner-upload";
-import { MessageMarkup } from "@/features/link/message-markup";
 import { PROFILE_QUERY_KEY, profileOptions } from "@/features/link/queries";
 import { PROFILE_PAGE_KEY } from "@/features/profile/queries";
 import { currentUserOptions } from "@/features/user/queries";

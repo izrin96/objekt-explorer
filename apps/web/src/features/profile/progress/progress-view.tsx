@@ -3,6 +3,7 @@ import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useMemo, useState, type ReactNode } from "react";
 
 import { EmptyState } from "@/components/shared/empty-state";
+import { MessageMarkup } from "@/components/shared/message-markup";
 import { Shimmer } from "@/components/shared/shimmer";
 import { Button } from "@/components/ui/button";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
@@ -345,7 +346,12 @@ export function ProgressView() {
                   />
                   <span className="truncate font-medium">{row.member}</span>
                   <span className="text-muted-foreground ml-auto flex-none font-mono text-xs tabular-nums">
-                    <b className="text-foreground">{row.total - row.owned}</b> {m.progress_to_go()}
+                    <MessageMarkup
+                      parts={m.progress_to_go.parts({
+                        count: (row.total - row.owned).toLocaleString(),
+                      })}
+                      markup={{ b: (children) => <b className="text-foreground">{children}</b> }}
+                    />
                   </span>
                 </button>
               </li>

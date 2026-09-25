@@ -40,3 +40,10 @@ export function MessageMarkup({
 
   return <>{out}</>;
 }
+
+/** The `{#b}` of a count message: the number stands out of muted text. */
+export const countMarkup = {
+  b: (children: ReactNode) => (
+    <b className="text-foreground font-semibold tabular-nums">{children}</b>
+  ),
+};

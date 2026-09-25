@@ -11,6 +11,7 @@ import { Link } from "@tanstack/react-router";
 import { useCallback, useDeferredValue, useMemo, useState } from "react";
 
 import { EmptyState } from "@/components/shared/empty-state";
+import { countMarkup, MessageMarkup } from "@/components/shared/message-markup";
 import { Button } from "@/components/ui/button";
 import { MenuItem } from "@/components/ui/menu";
 import { CompareBanner } from "@/features/compare/compare-banner";
@@ -304,10 +305,10 @@ function ListEntries() {
         <>
           <div className="flex items-center justify-between gap-2">
             <div className="text-muted-foreground font-mono text-xs">
-              <b className="text-foreground font-semibold tabular-nums">
-                {filtered.length.toLocaleString()}
-              </b>
-              {m.common_count_total_suffix()}
+              <MessageMarkup
+                parts={m.common_count_total.parts({ count: filtered.length.toLocaleString() })}
+                markup={countMarkup}
+              />
             </div>
             {user && <SelectModeButton />}
           </div>

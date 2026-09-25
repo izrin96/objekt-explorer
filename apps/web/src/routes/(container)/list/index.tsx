@@ -3,6 +3,7 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useState } from "react";
 
 import { EmptyState } from "@/components/shared/empty-state";
+import { MessageMarkup } from "@/components/shared/message-markup";
 import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
 import { DiscordFormatDialog } from "@/features/discord/discord-format-dialog";
@@ -32,10 +33,14 @@ function ListsPage() {
       <PageHeader
         title={m.list_title()}
         description={
-          <>
-            <b className="text-foreground font-mono font-semibold tabular-nums">{lists.length}</b>
-            {m.common_count_total_suffix()}
-          </>
+          <MessageMarkup
+            parts={m.common_count_total.parts({ count: lists.length.toLocaleString() })}
+            markup={{
+              b: (children) => (
+                <b className="text-foreground font-mono font-semibold tabular-nums">{children}</b>
+              ),
+            }}
+          />
         }
         aside={
           <div className="flex flex-wrap items-center gap-1.5">

@@ -6,13 +6,13 @@ import { Link } from "@tanstack/react-router";
 import { ofetch } from "ofetch";
 import { useEffect, useState } from "react";
 
+import { MessageMarkup } from "@/components/shared/message-markup";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { toastManager } from "@/components/ui/toast";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
-import { MessageMarkup } from "@/features/link/message-markup";
 import { currentUserOptions } from "@/features/user/queries";
 import { useDebouncedCallback } from "@/hooks/use-debounced-callback";
 import { orpc } from "@/lib/orpc";

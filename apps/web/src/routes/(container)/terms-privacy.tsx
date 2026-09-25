@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
+import { MessageMarkup } from "@/components/shared/message-markup";
 import { generateMetadata } from "@/lib/meta";
 import { SITE_NAME } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -24,16 +25,21 @@ function TermsPrivacyPage() {
           <li>{m.terms_privacy_points_only_app()}</li>
           <li>{m.terms_privacy_points_delete_anytime()}</li>
           <li>
-            {m.terms_privacy_points_open_source_prefix({ siteName: SITE_NAME })}{" "}
-            <a
-              href={GITHUB_URL}
-              target="_blank"
-              rel="noreferrer"
-              className="underline underline-offset-2"
-            >
-              {m.terms_privacy_points_available_here()}
-            </a>
-            .
+            <MessageMarkup
+              parts={m.terms_privacy_points_open_source.parts({ siteName: SITE_NAME })}
+              markup={{
+                link: (children) => (
+                  <a
+                    href={GITHUB_URL}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="underline underline-offset-2"
+                  >
+                    {children}
+                  </a>
+                ),
+              }}
+            />
           </li>
         </ul>
       </div>

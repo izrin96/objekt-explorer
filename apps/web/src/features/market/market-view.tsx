@@ -4,6 +4,7 @@ import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useCallback, useMemo, useState } from "react";
 
 import { EmptyState } from "@/components/shared/empty-state";
+import { countMarkup, MessageMarkup } from "@/components/shared/message-markup";
 import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
 import type { ExtraFacet } from "@/features/filters/facet-controls";
@@ -102,13 +103,15 @@ export function MarketView() {
       {!isPending && (
         <div className="flex items-center justify-between gap-2">
           <div className="text-muted-foreground font-mono text-xs">
-            <b className="text-foreground font-semibold tabular-nums">
-              {filtered.length.toLocaleString()}
-            </b>
-            {m.common_count_total_suffix()} ·{" "}
-            <b className="text-foreground font-semibold tabular-nums">
-              {m.market_listing_count({ count: totalListings.toLocaleString() })}
-            </b>
+            <MessageMarkup
+              parts={m.common_count_total.parts({ count: filtered.length.toLocaleString() })}
+              markup={countMarkup}
+            />
+            {" · "}
+            <MessageMarkup
+              parts={m.market_listing_count.parts({ count: totalListings.toLocaleString() })}
+              markup={countMarkup}
+            />
           </div>
           {user && filtered.length > 0 && <SelectModeButton />}
         </div>
