@@ -2,7 +2,7 @@ import { UserIcon } from "@phosphor-icons/react";
 import type { CosmoPublicUser, CosmoSearchResult } from "@repo/cosmo/types/user";
 import { useQuery } from "@tanstack/react-query";
 import { FetchError, ofetch } from "ofetch";
-import { type ComponentProps, useState } from "react";
+import { type ComponentProps, type KeyboardEvent, useState } from "react";
 
 import { EmptyState } from "@/components/shared/empty-state";
 import { Shimmer } from "@/components/shared/shimmer";
@@ -60,6 +60,41 @@ export function useUserSearch(initialQuery = "") {
   };
 }
 
+/**
+ * Base UI highlights the first row on the keystroke, before the server's rows
+ * exist, and not again when they land. Its `autoHighlight: "always"` would, but
+ * Combobox does not take it (Autocomplete only, as of 1.8); delete this once it
+ * does. Until a row is highlighted, the typed query's first row stands in: it is
+ * drawn highlighted and Enter picks it.
+ */
+export function useFirstRowStandIn<Row>({
+  search,
+  rows,
+  pick,
+}: {
+  search: Pick<ReturnType<typeof useUserSearch>, "query" | "trimmed">;
+  rows: readonly Row[];
+  pick: (row: Row) => void;
+}) {
+  const [highlighted, setHighlighted] = useState(false);
+  // until the debounce settles the rows are the last query's
+  const current = search.trimmed !== "" && search.query.trim() === search.trimmed;
+  const standIn = current && !highlighted ? rows[0] : undefined;
+
+  return {
+    onItemHighlighted: (row: Row | undefined) => setHighlighted(row !== undefined),
+    onKeyDown: (event: KeyboardEvent<HTMLInputElement>) => {
+      // an IME's Enter confirms the character being composed
+      if (event.key !== "Enter" || event.nativeEvent.isComposing || standIn === undefined) return;
+      event.preventDefault();
+      pick(standIn);
+    },
+    isStandIn: (row: Row) => row === standIn,
+    /** a remounted Combobox never reports that its last highlight went away */
+    reset: () => setHighlighted(false),
+  };
+}
+
 function UserAvatar({ image, label }: { image: string | undefined; label: string }) {
   return (
     <Avatar className="size-6.5 flex-none">
@@ -83,10 +118,18 @@ export function UserRowBody({ user }: { user: CosmoPublicUser }) {
 }
 
 /** a result row without the kit's check-mark column: picking one acts, it never stays selected */
-export function UserSearchItem({ className, ...props }: ComponentProps<typeof ComboboxItem>) {
+export function UserSearchItem({
+  standIn = false,
+  className,
+  ...props
+}: ComponentProps<typeof ComboboxItem> & { standIn?: boolean }) {
   return (
     <ComboboxItem
-      className={cn("grid-cols-1 gap-0 px-2 py-1.5 [&>div]:col-start-1", className)}
+      className={cn(
+        "grid-cols-1 gap-0 px-2 py-1.5 [&>div]:col-start-1",
+        standIn && "bg-accent text-accent-foreground",
+        className,
+      )}
       {...props}
     />
   );

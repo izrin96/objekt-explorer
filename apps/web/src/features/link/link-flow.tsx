@@ -24,6 +24,7 @@ import {
   UserRowBody,
   UserSearchEmpty,
   UserSearchItem,
+  useFirstRowStandIn,
   useUserSearch,
 } from "@/features/user/user-search";
 import { orpc } from "@/lib/orpc";
@@ -233,6 +234,7 @@ function NicknameStep({
     if (!user || check.isPending) return;
     check.mutate(user.address, { onSuccess: () => onFound(user) });
   };
+  const standIn = useFirstRowStandIn({ search, rows: results, pick });
 
   return (
     <div className="flex flex-col gap-3">
@@ -255,9 +257,11 @@ function NicknameStep({
         }}
         itemToStringLabel={(user) => user.nickname}
         autoHighlight
+        onItemHighlighted={standIn.onItemHighlighted}
       >
         <ComboboxInput
           autoFocus
+          onKeyDown={standIn.onKeyDown}
           aria-label={m.link_enter_nickname()}
           showTrigger={false}
           placeholder={m.link_nickname_placeholder()}
@@ -278,7 +282,7 @@ function NicknameStep({
             </ComboboxEmpty>
             <ComboboxList className="max-h-72">
               {(user: CosmoPublicUser) => (
-                <UserSearchItem key={user.address} value={user}>
+                <UserSearchItem key={user.address} value={user} standIn={standIn.isStandIn(user)}>
                   <span className="flex items-center justify-between gap-2">
                     <UserRowBody user={user} />
                     {check.isPending && check.variables === user.address && (

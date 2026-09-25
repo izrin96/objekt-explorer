@@ -1,7 +1,7 @@
 import { MagnifyingGlassIcon, TrashSimpleIcon } from "@phosphor-icons/react";
 import type { CosmoPublicUser } from "@repo/cosmo/types/user";
 import { useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import {
   Combobox,
@@ -19,6 +19,7 @@ import {
   UserRowBody,
   UserSearchEmpty,
   UserSearchItem,
+  useFirstRowStandIn,
   useUserSearch,
 } from "@/features/user/user-search";
 import { truncateAddress } from "@/lib/address";
@@ -160,6 +161,18 @@ export function NavSearch({
       params: { nickname: row.kind === "user" ? row.user.nickname : row.address },
     });
   };
+  const standIn = useFirstRowStandIn({
+    search,
+    rows: groups.flatMap((group) => group.items),
+    pick,
+  });
+
+  // the Combobox remounts with the dialog
+  const [wasOpen, setWasOpen] = useState(open);
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    standIn.reset();
+  }
 
   return (
     <Dialog
@@ -201,10 +214,12 @@ export function NavSearch({
           onInputValueChange={search.setQuery}
           itemToStringLabel={rowLabel}
           autoHighlight
+          onItemHighlighted={standIn.onItemHighlighted}
         >
           <div className="p-2">
             <ComboboxInput
               autoFocus
+              onKeyDown={standIn.onKeyDown}
               showTrigger={false}
               placeholder={m.nav_search_user_placeholder()}
               startAddon={<MagnifyingGlassIcon />}
@@ -237,6 +252,7 @@ export function NavSearch({
                     <UserSearchItem
                       key={row.key}
                       value={row}
+                      standIn={standIn.isStandIn(row)}
                       className={cn(row.kind === "clear" && "text-destructive-foreground")}
                     >
                       <RowBody row={row} />
