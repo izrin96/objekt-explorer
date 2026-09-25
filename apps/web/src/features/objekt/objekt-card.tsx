@@ -10,8 +10,8 @@ import { m } from "@/paraglide/messages";
 import { selectIsSelecting, useSelection } from "@/stores/selection";
 import { useSettings } from "@/stores/settings";
 
+import { ObjektArtwork } from "./objekt-artwork";
 import { ObjektNote } from "./objekt-note";
-import { ObjektSidebar } from "./objekt-sidebar";
 import { getCollectionShortNo, isObjektOwned } from "./objekt-utils";
 
 const priceClass = "truncate font-mono text-xxs font-semibold tabular-nums @[9rem]:text-xs";
@@ -151,16 +151,12 @@ export function ObjektCard({
           selected && "ring-accent-solid ring-[3cqw]",
         )}
       >
-        <img
-          src={image === "front" ? objekt.frontImage : objekt.thumbnailImage}
-          alt={`${objekt.member} ${shortNo}`}
-          loading={image === "front" || priority ? "eager" : "lazy"}
-          decoding="async"
-          draggable={false}
-          className="absolute inset-0 size-full object-cover"
+        <ObjektArtwork
+          objekt={objekt}
+          image={image}
+          hideSerial={serialHidden}
+          priority={priority}
         />
-
-        <ObjektSidebar objekt={objekt} hideSerial={serialHidden} />
 
         {(pin || lock) && (
           /* paints over the band and the image by DOM order, under the `z-10`

@@ -5,15 +5,14 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
-import { ObjektCard } from "./objekt-card";
+import { ObjektArtwork } from "./objekt-artwork";
 
 /** The card body is the whole control, so Enter and Space come for free. */
 export function ObjektFlip({ objekt }: { objekt: ValidObjekt }) {
   const [flipped, setFlipped] = useState(false);
 
   return (
-    // the container context `rounded-photocard` (5.4cqi) needs: the front face
-    // gets one from ObjektCard, the back face has no other ancestor carrying it
+    // the container context `rounded-photocard` (5.4cqi) needs
     <div className="@container relative">
       <button
         type="button"
@@ -28,8 +27,10 @@ export function ObjektFlip({ objekt }: { objekt: ValidObjekt }) {
             flipped && "rotate-y-180",
           )}
         >
-          <div className="absolute inset-0 backface-hidden">
-            <ObjektCard objekt={objekt} image="front" hideLabel />
+          {/* not ObjektCard: its long press turns the iOS callout off, and
+              here the image should be saveable */}
+          <div className="rounded-photocard bg-secondary absolute inset-0 overflow-hidden backface-hidden">
+            <ObjektArtwork objekt={objekt} image="front" />
           </div>
           <div className="rounded-photocard absolute inset-0 rotate-y-180 overflow-hidden backface-hidden">
             {objekt.backImage ? (
