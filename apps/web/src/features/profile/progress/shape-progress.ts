@@ -1,6 +1,6 @@
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 
-import { isMeasuredClass, tradeableFilter } from "@/lib/unobtainables";
+import { isFormerMember, isMeasured, tradeableFilter } from "@/lib/unobtainables";
 
 /** owned / total for one node of the breakdown */
 export type Tally = { owned: number; total: number; pct: number };
@@ -63,13 +63,15 @@ export function memberProgress(
     }
   }
 
-  return members.map(({ name, color }) => {
-    const tally = tallies.get(name);
-    const owned = tally?.owned ?? 0;
-    const total = tally?.total ?? 0;
+  return members
+    .filter(({ name }) => !isFormerMember(name))
+    .map(({ name, color }) => {
+      const tally = tallies.get(name);
+      const owned = tally?.owned ?? 0;
+      const total = tally?.total ?? 0;
 
-    return { member: name, color, owned, total, pct: pct(owned, total) };
-  });
+      return { member: name, color, owned, total, pct: pct(owned, total) };
+    });
 }
 
 /** The overall bar: one collection counted once, however many members it lists. */
@@ -91,7 +93,7 @@ export function catalogueTotals(
 
 /**
  * The catalogue bucketed into `Member Season` sections, each holding its class
- * groups, with Welcome and Zero dropped.
+ * groups, with Welcome, Zero and former members dropped.
  *
  * A unit objekt lists several members, so while the Member facet is set it is
  * counted once under every selected member it carries rather than only under
@@ -106,10 +108,12 @@ export function shapeProgress(
   const sections = new Map<string, Map<string, ValidObjekt[]>>();
 
   for (const objekt of catalogue) {
-    if (!isMeasuredClass(objekt)) continue;
+    if (!isMeasured(objekt)) continue;
 
     const matched = selectedMembers?.length
-      ? objekt.members.filter((member) => selectedMembers.includes(member))
+      ? objekt.members.filter(
+          (member) => selectedMembers.includes(member) && !isFormerMember(member),
+        )
       : [];
     const members = matched.length > 0 ? matched : [objekt.member];
 

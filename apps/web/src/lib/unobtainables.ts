@@ -110,12 +110,22 @@ export const unobtainableSlugs = new Set(unobtainables);
 /** Welcome and Zero are handed out rather than collected, so no total measures against them. */
 const excludedClasses = new Set(["Welcome", "Zero"]);
 
-/** Every class the progress breakdown lists; an unobtainable is listed but not counted. */
-export function isMeasuredClass(objekt: ValidObjekt) {
-  return !excludedClasses.has(objekt.class);
+/** Members who have left their group; progress no longer measures anyone against them. */
+const formerMembers = new Set(["MinGyeol"]);
+
+export function isFormerMember(name: string) {
+  return formerMembers.has(name);
+}
+
+/**
+ * Every objekt the progress breakdown lists; an unobtainable is listed but not
+ * counted. A unit objekt stays while it carries a current member.
+ */
+export function isMeasured(objekt: ValidObjekt) {
+  return !excludedClasses.has(objekt.class) && objekt.members.some((name) => !isFormerMember(name));
 }
 
 /** A collection a profile can still complete, and so the unit every total counts. */
 export function tradeableFilter(objekt: ValidObjekt) {
-  return isMeasuredClass(objekt) && !unobtainableSlugs.has(objekt.slug);
+  return isMeasured(objekt) && !unobtainableSlugs.has(objekt.slug);
 }
