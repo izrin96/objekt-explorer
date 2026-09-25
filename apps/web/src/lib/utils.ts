@@ -22,9 +22,12 @@ export const containerClass = "mx-auto w-full max-w-(--breakpoint-2xl) [[data-wi
  * A `ScrollArea` that is a horizontal strip. Its viewport scrolls both axes and
  * Base UI writes the fade distances inline, so a touch target overhanging the
  * strip would otherwise scroll it vertically and fade its bottom edge.
+ *
+ * A touch screen swipes the strip natively, and the custom scrollbar, invisible
+ * but still hit-testable over the items' bottom edge, would take their taps.
  */
 export const scrollXOnlyClass =
-  "*:data-[slot=scroll-area-viewport]:overflow-y-hidden! *:data-[slot=scroll-area-viewport]:[--scroll-area-overflow-y-start:0px]! *:data-[slot=scroll-area-viewport]:[--scroll-area-overflow-y-end:0px]!";
+  "*:data-[slot=scroll-area-viewport]:overflow-y-hidden! *:data-[slot=scroll-area-viewport]:[--scroll-area-overflow-y-start:0px]! *:data-[slot=scroll-area-viewport]:[--scroll-area-overflow-y-end:0px]! *:data-[slot=scroll-area-scrollbar]:pointer-coarse:hidden";
 
 export const SITE_NAME = "Objekt Tracker";
 
