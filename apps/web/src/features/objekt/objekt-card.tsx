@@ -227,11 +227,11 @@ export function ObjektCard({
                near 144px, rather than on viewport. */
             <p className="text-xxs text-center leading-tight text-balance @[9rem]:text-xs">
               <span className="font-medium">{objekt.member}</span>{" "}
-              <span className="whitespace-nowrap">{shortNo}</span>
+              <span className="font-medium whitespace-nowrap">{shortNo}</span>
               {serial !== undefined && (
                 <>
                   {" "}
-                  <b className="font-semibold whitespace-nowrap">#{serial}</b>
+                  <span className="font-medium whitespace-nowrap">#{serial}</span>
                 </>
               )}
             </p>
