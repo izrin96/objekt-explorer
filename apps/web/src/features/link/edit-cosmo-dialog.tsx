@@ -35,6 +35,7 @@ import {
 import { PROFILE_QUERY_KEY, profileOptions } from "@/features/link/queries";
 import { PROFILE_PAGE_KEY } from "@/features/profile/queries";
 import { currentUserOptions } from "@/features/user/queries";
+import { displayNickname } from "@/lib/address";
 import { client } from "@/lib/orpc";
 import { SITE_NAME } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -99,7 +100,9 @@ export function EditCosmoDialog({
               parts={m.profile_edit_desc.parts()}
               markup={{
                 nickname: () => (
-                  <span className="text-foreground">{data?.nickname ?? address}</span>
+                  <span className="text-foreground">
+                    {displayNickname(address, data?.nickname)}
+                  </span>
                 ),
               }}
             />

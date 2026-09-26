@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { getListLinkOption } from "@/features/list/list-link";
 import { formatCurrency, useCurrency } from "@/features/settings/use-currency";
-import { truncateAddress } from "@/lib/address";
+import { isSameAddress, truncateAddress } from "@/lib/address";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
@@ -170,8 +170,10 @@ function MarketRow({
   formatUsd: (usd: number) => string;
   onOpenSerial: (serial: number) => void;
 }) {
-  const nickname = item.list.profile?.nickname ?? null;
   const address = item.list.profile?.address ?? null;
+  const rawNickname = item.list.profile?.nickname ?? null;
+  // Cosmo gives an unnamed profile its own address as the nickname
+  const nickname = isSameAddress(rawNickname, address) ? null : rawNickname;
   // a seller with no Cosmo nickname still has a profile, addressed by wallet
   const handle = nickname ?? address?.toLowerCase() ?? null;
   const { price, currency: listed, usdPrice } = item;

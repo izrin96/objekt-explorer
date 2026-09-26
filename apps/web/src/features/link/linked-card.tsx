@@ -19,7 +19,7 @@ import { Tooltip, TooltipPopup, TooltipTrigger } from "@/components/ui/tooltip";
 import { EditCosmoDialog } from "@/features/link/edit-cosmo-dialog";
 import { PROFILE_PAGE_KEY } from "@/features/profile/queries";
 import { currentUserOptions } from "@/features/user/queries";
-import { truncateAddress } from "@/lib/address";
+import { displayNickname, truncateAddress } from "@/lib/address";
 import { orpc } from "@/lib/orpc";
 import { m } from "@/paraglide/messages";
 
@@ -27,7 +27,7 @@ export type LinkedProfile = { address: string; nickname: string | null };
 
 export function LinkedCard({ profile }: { profile: LinkedProfile }) {
   const queryClient = useQueryClient();
-  const nickname = profile.nickname ?? truncateAddress(profile.address);
+  const nickname = displayNickname(profile.address, profile.nickname);
 
   const removeLink = useMutation(
     orpc.cosmoLink.removeLink.mutationOptions({

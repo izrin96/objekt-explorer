@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Menu, MenuItem, MenuPopup, MenuSeparator, MenuTrigger } from "@/components/ui/menu";
 import { CompareDialog } from "@/features/compare/compare-dialog";
+import { displayNickname } from "@/lib/address";
 import { m } from "@/paraglide/messages";
 
 import { DeleteListDialog } from "./delete-list-dialog";
@@ -70,7 +71,7 @@ export function ListHeader() {
               params={{ nickname: list.profile?.nickname || list.profileAddress.toLowerCase() }}
               className="text-muted-foreground hover:text-foreground max-w-full truncate text-sm font-medium underline-offset-2 transition-colors hover:underline"
             >
-              {list.profile?.nickname ?? list.profileAddress.toLowerCase()}
+              {displayNickname(list.profileAddress, list.profile?.nickname)}
             </Link>
           ) : null}
 

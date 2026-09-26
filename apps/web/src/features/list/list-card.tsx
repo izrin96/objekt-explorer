@@ -11,6 +11,7 @@ import { useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { displayNickname } from "@/lib/address";
 import { m } from "@/paraglide/messages";
 
 import { DeleteListDialog } from "./delete-list-dialog";
@@ -68,7 +69,7 @@ export function ListCard({ list }: { list: PublicList }) {
                 <LinkIcon className="size-3 opacity-60" />
                 <span className="sr-only">{m.list_profile_chip_aria()}</span>
                 <span className="truncate">
-                  {list.profile?.nickname ?? list.profileAddress.toLowerCase()}
+                  {displayNickname(list.profileAddress, list.profile?.nickname)}
                 </span>
               </Link>
             ) : null}

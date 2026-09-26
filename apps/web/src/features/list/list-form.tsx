@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { isSameAddress } from "@/lib/address";
+import { displayNickname, isSameAddress } from "@/lib/address";
 import { SITE_NAME, getBaseURL } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
@@ -281,8 +281,10 @@ export function ListForm({ idPrefix, value, onChange, lists, profiles, mode, url
               {(next: string) =>
                 next === NONE
                   ? m.common_form_none()
-                  : (profiles.find((profile) => isSameAddress(profile.address, next))?.nickname ??
-                    next)
+                  : displayNickname(
+                      next,
+                      profiles.find((profile) => isSameAddress(profile.address, next))?.nickname,
+                    )
               }
             </SelectValue>
           </SelectTrigger>
@@ -290,7 +292,7 @@ export function ListForm({ idPrefix, value, onChange, lists, profiles, mode, url
             <SelectItem value={NONE}>{m.common_form_none()}</SelectItem>
             {profiles.map((profile) => (
               <SelectItem key={profile.address} value={profile.address}>
-                {profile.nickname ?? profile.address}
+                {displayNickname(profile.address, profile.nickname)}
               </SelectItem>
             ))}
           </SelectPopup>
