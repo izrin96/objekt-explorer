@@ -132,7 +132,7 @@
   "nav_market": "Marketplace",
   "market_title": "Marketplace",
   "market_empty": "No objekts match these filters.",
-  "market_floor_price": "from {price}",
+  "market_floor_price": "{price}+",
   "market_price_ask": "Ask",
   "market_listing_count": "{#b}{count}{/b} listings",
   "nav_home": "Home",
