@@ -39,39 +39,41 @@ export function FloorPriceFilter({ className }: { className?: string }) {
         <CurrencyDollarIcon />
         {m.filter_floor_price()}
       </PopoverTrigger>
-      <PopoverPopup className="flex w-64 flex-col gap-3">
-        <NumberField
-          min={0}
-          size="sm"
-          value={display(floorMin)}
-          onValueChange={(value) => setFilters({ floor_min: store(value) })}
-        >
-          <Label>{m.filter_floor_min({ currency })}</Label>
-          <NumberFieldGroup>
-            <NumberFieldInput className="tabular-nums" />
-          </NumberFieldGroup>
-        </NumberField>
+      <PopoverPopup className="w-64">
+        <div className="flex flex-col gap-3">
+          <NumberField
+            min={0}
+            size="sm"
+            value={display(floorMin)}
+            onValueChange={(value) => setFilters({ floor_min: store(value) })}
+          >
+            <Label>{m.filter_floor_min({ currency })}</Label>
+            <NumberFieldGroup>
+              <NumberFieldInput className="tabular-nums" />
+            </NumberFieldGroup>
+          </NumberField>
 
-        <NumberField
-          min={0}
-          size="sm"
-          value={display(floorMax)}
-          onValueChange={(value) => setFilters({ floor_max: store(value) })}
-        >
-          <Label>{m.filter_floor_max({ currency })}</Label>
-          <NumberFieldGroup>
-            <NumberFieldInput className="tabular-nums" />
-          </NumberFieldGroup>
-        </NumberField>
+          <NumberField
+            min={0}
+            size="sm"
+            value={display(floorMax)}
+            onValueChange={(value) => setFilters({ floor_max: store(value) })}
+          >
+            <Label>{m.filter_floor_max({ currency })}</Label>
+            <NumberFieldGroup>
+              <NumberFieldInput className="tabular-nums" />
+            </NumberFieldGroup>
+          </NumberField>
 
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={!active}
-          onClick={() => setFilters({ floor_min: undefined, floor_max: undefined })}
-        >
-          {m.filter_floor_clear()}
-        </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={!active}
+            onClick={() => setFilters({ floor_min: undefined, floor_max: undefined })}
+          >
+            {m.filter_floor_clear()}
+          </Button>
+        </div>
       </PopoverPopup>
     </Popover>
   );
