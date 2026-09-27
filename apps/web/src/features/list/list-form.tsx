@@ -186,9 +186,23 @@ export function ListForm({ idPrefix, value, onChange, lists, profiles, mode, url
           <Select
             value={value.listTypeNew}
             disabled={isEdit}
-            onValueChange={(next: ListTypeNew | null) =>
-              set({ listTypeNew: next ?? "general", linkedListId: null })
-            }
+            onValueChange={(next: ListTypeNew | null) => {
+              const listTypeNew = next ?? "general";
+              const nextBindable = listTypeNew === "have" || listTypeNew === "sale";
+              // entering have or sale binds by default, to the chosen profile or else
+              // the first; moving between the two keeps what the user set
+              const entering = nextBindable && !bindable;
+              const profileAddress = entering
+                ? (value.profileAddress ?? profiles[0]?.address ?? null)
+                : value.profileAddress;
+              set({
+                listTypeNew,
+                linkedListId: null,
+                profileAddress,
+                isProfileBind:
+                  nextBindable && profileAddress !== null && (entering || value.isProfileBind),
+              });
+            }}
           >
             <SelectTrigger id={id("type")} className="min-w-0">
               <SelectValue>{(type: ListTypeNew) => LIST_TYPE_LABEL[type]()}</SelectValue>
