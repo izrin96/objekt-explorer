@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ArtistAvatar } from "@/features/artist/artist-avatar";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
+import { useCurrency } from "@/features/settings/use-currency";
 import { cn, scrollXOnlyClass } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
@@ -33,10 +34,15 @@ function without<T>(values: readonly T[], value: T): T[] | undefined {
 export function useActiveChips(): ActiveChip[] {
   const filters = useCanonicalFilters();
   const memberColor = useMemberColor();
-  return buildChips(filters, memberColor);
+  const { formatUsd } = useCurrency();
+  return buildChips(filters, memberColor, formatUsd);
 }
 
-function buildChips(filters: FilterSearch, memberColor: (name: string) => string): ActiveChip[] {
+function buildChips(
+  filters: FilterSearch,
+  memberColor: (name: string) => string,
+  formatUsd: (usd: number) => string,
+): ActiveChip[] {
   const chips: ActiveChip[] = [];
 
   for (const value of filters.artist ?? []) {
@@ -137,7 +143,8 @@ function buildChips(filters: FilterSearch, memberColor: (name: string) => string
     });
   }
   if (filters.floor_min !== undefined || filters.floor_max !== undefined) {
-    const floor = `${filters.floor_min ?? "…"}–${filters.floor_max ?? "…"}`;
+    const bound = (usd: number | undefined) => (usd === undefined ? "…" : formatUsd(usd));
+    const floor = `${bound(filters.floor_min)}–${bound(filters.floor_max)}`;
     chips.push({
       key: "floor",
       label: `${m.filter_floor_price()}: ${floor}`,
