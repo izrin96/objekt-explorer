@@ -33,6 +33,7 @@ import { ObjektVirtualGrid } from "@/features/objekt/objekt-virtual-grid";
 import { SelectBar, type SelectBarAction, SelectModeButton } from "@/features/objekt/select-bar";
 import { ShimmerGrid } from "@/features/objekt/shimmer-grid";
 import { useCollectionRarity } from "@/features/objekt/use-collection-rarity";
+import { formatCurrency } from "@/features/settings/use-currency";
 import { useCurrentUser } from "@/features/user/hooks";
 import { m } from "@/paraglide/messages";
 import { useClearSelectionOnNavigate, useSelection } from "@/stores/selection";
@@ -50,7 +51,7 @@ function formatPrice(currency: string, objekt: ValidObjekt, canPrice: boolean): 
   if (objekt.isQyop) return m.list_manage_objekt_set_price_qyop();
   if (objekt.price === undefined || objekt.price === null)
     return canPrice ? m.objekt_set_price() : m.list_price_none();
-  return `${currency} ${objekt.price.toFixed(2)}`;
+  return formatCurrency(objekt.price, currency);
 }
 
 export function ListView() {
