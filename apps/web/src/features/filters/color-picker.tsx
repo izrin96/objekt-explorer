@@ -11,7 +11,6 @@ import {
   InputGroupInput,
   InputGroupText,
 } from "@/components/ui/input-group";
-import { Popover, PopoverPopup, PopoverTrigger } from "@/components/ui/popover";
 import { toastManager } from "@/components/ui/toast";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
@@ -98,21 +97,12 @@ export function ColorPicker({
   defaultValue,
   onValueChange,
   swatches,
-  label,
-  embedded = false,
-  className,
 }: {
   value?: string;
   /** the colour the plane opens on while there is no `value` */
   defaultValue?: string;
   onValueChange: (hex: string) => void;
   swatches?: readonly string[];
-  /** accessible name of the trigger */
-  label: string;
-  /** the panel in place, with no trigger or popover: a popover nested in the
-   * mobile Filters sheet closes on tap in iOS Safari */
-  embedded?: boolean;
-  className?: string;
 }) {
   const [hsv, setHsv] = useState<Hsv>(
     () => hexToHsv(value ?? defaultValue ?? "") ?? { h: 0, s: 1, v: 1 },
@@ -196,7 +186,7 @@ export function ColorPicker({
     commit({ ...hsv, h: (hsv.h + delta[0] * step + 360) % 360 });
   };
 
-  const panel = (
+  return (
     <div className="flex flex-col gap-3">
       <div
         role="slider"
@@ -326,32 +316,5 @@ export function ColorPicker({
         </div>
       )}
     </div>
-  );
-
-  if (embedded) return panel;
-
-  return (
-    <Popover>
-      <PopoverTrigger
-        aria-label={`${label}: ${hex}`}
-        render={
-          <Button
-            variant="outline"
-            size="sm"
-            className={cn("justify-start font-mono", className)}
-          />
-        }
-      >
-        <span
-          aria-hidden="true"
-          className="ring-foreground/15 size-4 shrink-0 rounded-full ring-1"
-          style={{ backgroundColor: hex }}
-        />
-        {hex}
-      </PopoverTrigger>
-      <PopoverPopup align="start" className="w-64">
-        {panel}
-      </PopoverPopup>
-    </Popover>
   );
 }

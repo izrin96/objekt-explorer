@@ -22,7 +22,6 @@ import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import { ColorPicker } from "./color-picker";
-import type { FacetSurface } from "./facet-controls";
 import { COLOR_SWATCHES } from "./facets";
 import { EDITION_LABEL, ONLINE_TYPE_LABEL } from "./labels";
 import {
@@ -111,7 +110,7 @@ function GroupHeading({ id, children }: { id: string; children: ReactNode }) {
  * `onValueChange` fires on every pointer move across the saturation plane, so
  * it reaches the URL through a debounce; each commit re-filters the catalogue.
  */
-function ColorField({ embedded }: { embedded: boolean }) {
+function ColorField() {
   const color = useFilters((f) => f.color);
   const colorSensitivity = useFilters((f) => f.colorSensitivity);
   const setFilters = useSetFilters();
@@ -122,13 +121,10 @@ function ColorField({ embedded }: { embedded: boolean }) {
   return (
     <div className="flex flex-col gap-2">
       <ColorPicker
-        label={m.filter_color()}
         value={color ?? undefined}
         defaultValue={COLOR_SWATCHES[0]}
         swatches={COLOR_SWATCHES}
         onValueChange={commitColor}
-        embedded={embedded}
-        className="w-full"
       />
       {color !== undefined && (
         <>
@@ -296,13 +292,7 @@ function SwitchRow({
 }
 
 /** One set of controls for the desktop popover and the mobile sheet both. */
-export function LongTailFields({
-  fields,
-  surface = "inline",
-}: {
-  fields: readonly LongTailField[];
-  surface?: FacetSurface;
-}) {
+export function LongTailFields({ fields }: { fields: readonly LongTailField[] }) {
   const filters = useFilters();
   const setFilters = useSetFilters();
   const has = (field: LongTailField) => fields.includes(field);
@@ -371,7 +361,7 @@ export function LongTailFields({
           <span className="text-muted-foreground mb-0.5 text-xs font-medium">
             {m.filter_color()}
           </span>
-          <ColorField embedded={surface === "stacked"} />
+          <ColorField />
         </>
       )}
     </div>

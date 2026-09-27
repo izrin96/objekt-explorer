@@ -323,7 +323,7 @@ export function FilterBar({
             onReset={reset}
           >
             <div className="my-1 border-t" />
-            <LongTailFields fields={longTail} surface="stacked" />
+            <LongTailFields fields={longTail} />
             <StackedToolbarFields showGroupBy={showSort} />
           </FilterSheet>
 
