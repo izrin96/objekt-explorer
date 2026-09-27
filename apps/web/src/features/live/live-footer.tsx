@@ -49,7 +49,9 @@ export function ParticipantCounter() {
 export function VolumeControl() {
   const { useParticipants, useSpeakerState } = useCallStateHooks();
   const [currentSpeaker] = useParticipants();
-  const { speaker } = useSpeakerState();
+  // call-wide, not per participant: the broadcaster's entry is replaced when
+  // they rejoin, and a volume stored on it would fall back to full
+  const { speaker, volume } = useSpeakerState();
 
   if (!currentSpeaker) return null;
 
@@ -69,10 +71,9 @@ export function VolumeControl() {
           min={0}
           max={1}
           step={0.01}
-          defaultValue={currentSpeaker.audioVolume ?? 1}
+          defaultValue={volume}
           onValueChange={(value) => {
-            if (typeof value === "number")
-              speaker.setParticipantVolume(currentSpeaker.sessionId, value);
+            if (typeof value === "number") speaker.setVolume(value);
           }}
           // cnippet sizes a vertical slider on `Slider.Control`, not on the root
           className="h-24 px-1 [&_[data-slot=slider-control]]:min-h-24"
