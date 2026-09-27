@@ -1,7 +1,7 @@
 import { format } from "date-fns";
 
-/** The one way the app writes an instant: `26/09/23 06:36:12 PM`. */
-const TIMESTAMP_FORMAT = "yy/MM/dd hh:mm:ss a";
+/** The one way the app writes an instant: `2026/09/23 06:36:12 PM`. */
+const TIMESTAMP_FORMAT = "yyyy/MM/dd hh:mm:ss a";
 
 export function formatTimestamp(date: Date): string {
   return format(date, TIMESTAMP_FORMAT);

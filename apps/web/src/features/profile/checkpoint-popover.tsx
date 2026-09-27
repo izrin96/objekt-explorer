@@ -22,7 +22,7 @@ const END_OF_DAY_TIME = "23:59:59";
 
 /** the day alone for the default end-of-day instant, the time as well when one was picked */
 export function formatCheckpoint(date: Date): string {
-  return isEqual(date, endOfDay(date)) ? format(date, "yy/MM/dd") : formatTimestamp(date);
+  return isEqual(date, endOfDay(date)) ? format(date, "yyyy/MM/dd") : formatTimestamp(date);
 }
 
 function timeOf(date: Date | undefined): string {

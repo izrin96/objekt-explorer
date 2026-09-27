@@ -38,7 +38,7 @@ const TYPE_LABEL: Record<ValidType, () => string> = {
   spin: m.trades_filter_type_spin,
 };
 
-const COLUMNS = "grid-cols-[9.5rem_minmax(14rem,1.5fr)_7rem_minmax(0,1fr)]";
+const COLUMNS = "grid-cols-[10.5rem_minmax(14rem,1.5fr)_7rem_minmax(0,1fr)]";
 const MIN_WIDTH = "min-w-168";
 
 /** the two counterparties that are Cosmo itself rather than another collector */
