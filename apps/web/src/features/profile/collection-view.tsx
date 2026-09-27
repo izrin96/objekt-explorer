@@ -21,6 +21,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { MenuItem, MenuSeparator } from "@/components/ui/menu";
 import { toastManager } from "@/components/ui/toast";
+import { useArtistScopeNarrowed } from "@/features/artist/cosmo-artist-provider";
 import { GenerateDiscordButton } from "@/features/discord/generate-discord-button";
 import type { ExtraFacet } from "@/features/filters/facet-controls";
 import { LONG_TAIL } from "@/features/filters/filter-popover";
@@ -59,6 +60,7 @@ export function CollectionView() {
   const profile = useProfileTarget()!;
   const address = profile.address;
   const { data: user } = useCurrentUser();
+  const scopeNarrowed = useArtistScopeNarrowed();
   const isProfileAuthed = useProfileAuthed();
   const columns = useProfileColumns();
   const reset = useResetFilters();
@@ -413,18 +415,32 @@ export function CollectionView() {
           </div>
 
           {filtered.length === 0 ? (
-            <EmptyState
-              icon={isFiltering(filters) ? MagnifyingGlassIcon : ImagesSquareIcon}
-              title={isFiltering(filters) ? m.home_empty_title() : m.profile_empty_title()}
-              hint={isFiltering(filters) ? m.profile_no_match_hint() : m.profile_empty_hint()}
-              action={
-                isFiltering(filters) ? (
+            isFiltering(filters) ? (
+              <EmptyState
+                icon={MagnifyingGlassIcon}
+                title={m.home_empty_title()}
+                hint={m.profile_no_match_hint()}
+                action={
                   <Button variant="outline" size="sm" onClick={reset}>
                     {m.filter_reset_filter()}
                   </Button>
-                ) : undefined
-              }
-            />
+                }
+              />
+            ) : scopeNarrowed ? (
+              <EmptyState
+                icon={ImagesSquareIcon}
+                title={m.common_scope_empty_title()}
+                hint={
+                  user ? m.profile_scope_empty_hint_menu() : m.profile_scope_empty_hint_settings()
+                }
+              />
+            ) : (
+              <EmptyState
+                icon={ImagesSquareIcon}
+                title={m.profile_empty_title()}
+                hint={m.profile_empty_hint()}
+              />
+            )
           ) : (
             <PinDnd
               ids={pinnedIds}

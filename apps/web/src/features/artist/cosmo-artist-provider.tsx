@@ -143,3 +143,9 @@ export function useCosmoArtist() {
     ],
   );
 }
+
+/** whether the artist scope leaves an artist out, so an empty page may be hiding some */
+export function useArtistScopeNarrowed() {
+  const { artists, selectedArtists } = useCosmoArtist();
+  return selectedArtists.length < artists.length;
+}
