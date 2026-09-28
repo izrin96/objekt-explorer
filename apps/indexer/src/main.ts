@@ -28,6 +28,8 @@ import { redis } from "./redis";
 
 const db = new TypeormDatabase({ supportHotBlocks: true });
 
+const EMPTY_COLLECTION = "empty-collection";
+
 processor.run(db, async (ctx) => {
   const { transfers, transferability, comoBalanceUpdates, votes, reveals } = parseBlocks(
     ctx.blocks,
@@ -60,14 +62,25 @@ processor.run(db, async (ctx) => {
           continue;
         }
 
-        // handle collection
-        const collection = await handleCollection(ctx, request.value, collectionBatch, transfer);
-        collectionBatch.set(collection.slug, collection);
-
         // handle objekt
         const { objekt, isNew } = await handleObjekt(ctx, request.value, objektBatch, transfer);
-        objekt.collection = collection;
         objektBatch.set(objekt.id, objekt);
+
+        // handle collection
+        // a token never changes collection, so a failed fetch must not move a known objekt
+        let collection: Collection;
+        if (
+          !isNew &&
+          request.value.objekt.collectionId === EMPTY_COLLECTION &&
+          objekt.collection &&
+          objekt.collection.slug !== EMPTY_COLLECTION
+        ) {
+          collection = objekt.collection;
+        } else {
+          collection = await handleCollection(ctx, request.value, collectionBatch, transfer);
+          collectionBatch.set(collection.slug, collection);
+          objekt.collection = collection;
+        }
         if (isNew) {
           newlyMintedIds.push(objekt.id);
         }
@@ -251,7 +264,10 @@ async function handleObjekt(
 
   // fetch from db
   if (!objekt) {
-    objekt = await ctx.store.get(Objekt, transfer.tokenId);
+    objekt = await ctx.store.get(Objekt, {
+      where: { id: transfer.tokenId },
+      relations: { collection: true },
+    });
   }
 
   // if not new, update fields. skip transferable
