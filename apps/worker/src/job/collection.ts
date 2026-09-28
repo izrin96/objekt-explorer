@@ -10,7 +10,11 @@ import { safeFetchMetadataV1, safeFetchMetadataV3 } from "@/lib/metadata-utils";
 const BATCH_SIZE = 50;
 
 export async function fixEmptyCollection({ version }: { version: MetadataVersion }) {
-  await fixStaleTransfers();
+  try {
+    await fixStaleTransfers();
+  } catch (error) {
+    console.error(`[fix empty collection] Stale transfer fix failed:`, error);
+  }
 
   const objektsResults = await indexer
     .select({
