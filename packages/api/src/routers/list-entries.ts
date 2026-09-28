@@ -10,6 +10,7 @@ import { addSourceSchema } from "../schemas/list";
 import {
   addEntries,
   buildListEntries,
+  fetchListPreviews,
   fetchListWithEntries,
   fetchOwnedLists,
   findOwnedList,
@@ -33,6 +34,11 @@ export const listEntriesRouter = {
         hideSerial: result.hideSerial,
       });
     }),
+
+  /** A slug is the list's address, so it reveals no more than opening the list would. */
+  listPreviews: pub
+    .input(z.object({ slugs: z.string().array().max(500) }))
+    .handler(({ input: { slugs } }) => fetchListPreviews(slugs)),
 
   profileLists: optionalAuthed
     .input(

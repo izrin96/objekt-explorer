@@ -31,3 +31,11 @@ export const listFindOptions = (slug: string, enabled: boolean) =>
 
 export const profileListsOptions = (profileAddress: string) =>
   orpc.list.profileLists.queryOptions({ input: { profileAddress } });
+
+export const listPreviewsOptions = (slugs: string[]) =>
+  orpc.list.listPreviews.queryOptions({
+    input: { slugs },
+    // entries are added from every objekt page, so each visit rereads them
+    staleTime: 0,
+    select: (data) => new Map(data.map((preview) => [preview.slug, preview])),
+  });

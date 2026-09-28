@@ -8,10 +8,11 @@ import type { List, ListEntry, UserAddress } from "@repo/db/schema";
 import { chunkMap } from "@repo/lib";
 import { mapOwnedObjekt, overrideCollection } from "@repo/lib/server/objekt";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
-import { and, eq, inArray, isNotNull, ne } from "drizzle-orm";
+import { and, eq, inArray, isNotNull, ne, sql } from "drizzle-orm";
 import slugify from "slugify";
 
-import type { AddSource, ListTypeNew, PublicList } from "../schemas/list";
+import type { AddSource, ListPreview, ListTypeNew, PublicList } from "../schemas/list";
+import { LIST_PREVIEW_SIZE } from "../schemas/list";
 import { toPublicUser } from "./auth";
 import { getCollectionColumns, getPartialCollectionColumns } from "./objekt";
 import { TOKEN_CHUNK_SIZE } from "./utils";
@@ -273,6 +274,71 @@ export async function fetchOwnedLists(
       profile: userAddress ? toPartialProfile(userAddress) : null,
     };
   });
+}
+
+/** Each list's entry count and its latest few artworks, newest first. */
+export async function fetchListPreviews(slugs: string[]) {
+  if (slugs.length === 0) return [];
+
+  // the list page reads only the column its binding uses, so the preview does too
+  const shown = sql`${listEntries.listId} = ${lists.id} AND CASE WHEN ${lists.isProfileBind}
+    THEN ${listEntries.objektId} IS NOT NULL ELSE ${listEntries.collectionSlug} IS NOT NULL END`;
+
+  const { rows } = await db.execute<{
+    slug: string;
+    count: number;
+    collection_slug: string | null;
+    objekt_id: string | null;
+  }>(sql`
+    SELECT ${lists.slug}, c.count, p.collection_slug, p.objekt_id
+    FROM ${lists}
+    CROSS JOIN LATERAL (
+      SELECT count(*)::int AS count FROM ${listEntries} WHERE ${shown}
+    ) c
+    LEFT JOIN LATERAL (
+      SELECT ${listEntries.id}, ${listEntries.collectionSlug}, ${listEntries.objektId}
+      FROM ${listEntries}
+      WHERE ${shown}
+      ORDER BY ${listEntries.id} DESC
+      LIMIT ${LIST_PREVIEW_SIZE}
+    ) p ON true
+    WHERE ${inArray(lists.slug, slugs)}
+    ORDER BY p.id DESC
+  `);
+
+  const collectionSlugs = rows.map((r) => r.collection_slug).filter((s) => s !== null);
+  const objektIds = rows.map((r) => r.objekt_id).filter((s) => s !== null);
+
+  const [bySlug, byObjekt] = await Promise.all([
+    fetchCollectionsBySlug(collectionSlugs, []),
+    objektIds.length
+      ? indexer
+          .select({ objektId: objekts.id, collection: getCollectionColumns() })
+          .from(objekts)
+          .innerJoin(collections, eq(collections.id, objekts.collectionId))
+          .where(inArray(objekts.id, objektIds))
+      : [],
+  ]);
+
+  const slugMap = new Map(bySlug.map((c) => [c.slug, c]));
+  const objektMap = new Map(byObjekt.map((o) => [o.objektId, overrideCollection(o.collection)]));
+
+  const previews = new Map<string, ListPreview>();
+  for (const row of rows) {
+    let preview = previews.get(row.slug);
+    if (!preview) {
+      preview = { slug: row.slug, count: row.count, objekts: [] };
+      previews.set(row.slug, preview);
+    }
+    const objekt = row.objekt_id
+      ? objektMap.get(row.objekt_id)
+      : row.collection_slug
+        ? slugMap.get(row.collection_slug)
+        : undefined;
+    if (objekt) preview.objekts.push(objekt);
+  }
+
+  return Array.from(previews.values());
 }
 
 /** Want is discoverable on request; have and sale only while bound to a profile, since matching reads that profile's holdings. */

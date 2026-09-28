@@ -1,3 +1,4 @@
+import type { ValidObjekt } from "@repo/lib/types/objekt";
 import * as z from "zod";
 
 import { publicProfileSchema, publicUserSchema } from "./user";
@@ -22,6 +23,11 @@ export const baseListSchema = z.object({
   user: publicUserSchema.nullish(),
   profile: publicProfileSchema.nullish(),
 });
+
+/** How many artworks a list card previews. */
+export const LIST_PREVIEW_SIZE = 4;
+
+export type ListPreview = { slug: string; count: number; objekts: ValidObjekt[] };
 
 export const publicListSchema = baseListSchema.extend({
   linkedList: baseListSchema.nullish(),
