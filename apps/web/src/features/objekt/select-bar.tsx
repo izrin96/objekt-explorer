@@ -24,7 +24,7 @@ import { getCollectionShortNo, isObjektOwned } from "./objekt-utils";
  * mount thousands of thumbnails behind one popover. The cap is the whole lag
  * guard — no virtualiser, no eager images.
  */
-const SELECTED_PREVIEW_MAX = 50;
+const SELECTED_PREVIEW_MAX = 200;
 
 /**
  * Below `sm` every control is a 32px icon square rather than 28px: with the
