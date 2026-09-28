@@ -23,6 +23,14 @@ export const publicProfileSchema = baseProfileSchema.extend({
 });
 export type PublicProfile = z.infer<typeof publicProfileSchema>;
 
+/** A linked Cosmo's card: its banner and its objekt count. */
+export type LinkedPreview = {
+  address: string;
+  bannerImgUrl: string | null;
+  bannerImgType: string | null;
+  count: number;
+};
+
 export const providerIdSchema = z.enum(["twitter", "discord"]);
 export type ProviderId = z.infer<typeof providerIdSchema>;
 

@@ -2,7 +2,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 
 import { ProfileLists } from "@/features/list/profile-lists";
-import { profileListsOptions } from "@/features/list/queries";
+import { listPreviewsOptions, profileListsOptions } from "@/features/list/queries";
 import { profileQuery } from "@/features/profile/queries";
 import { displayNickname } from "@/lib/address";
 import { generateMetadata } from "@/lib/meta";
@@ -14,7 +14,14 @@ export const Route = createFileRoute("/@{$nickname}/list")({
       ...profileQuery({ nickname: params.nickname }),
       staleTime: "static",
     });
-    await queryClient.query({ ...profileListsOptions(profile.address), staleTime: "static" });
+    const lists = await queryClient.query({
+      ...profileListsOptions(profile.address),
+      staleTime: "static",
+    });
+    // a failed preview read leaves the cards to fetch it again, not the page to fail
+    await queryClient
+      .query({ ...listPreviewsOptions(lists.map((list) => list.slug)), staleTime: "static" })
+      .catch(() => undefined);
     return profile;
   },
   head: ({ loaderData }) =>

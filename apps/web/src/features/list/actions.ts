@@ -8,9 +8,9 @@ import { m } from "@/paraglide/messages";
 import { LIST_QUERY_KEY } from "./queries";
 
 /**
- * A list's identity lives in `currentUser`, in both of its addresses and in
- * the edit form's `find`, and its entries in their own key, so every write
- * settles all of them.
+ * A list's identity lives in `currentUser`, in both of its addresses, in the
+ * edit form's `find` and in the profile it is filed under, and its entries in
+ * their own key and the cards' previews, so every write settles all of them.
  */
 function useListInvalidation() {
   const queryClient = useQueryClient();
@@ -26,6 +26,8 @@ function useListInvalidation() {
             }),
             // refetched while the dialog is still open, so the next open seeds from the saved list
             queryClient.invalidateQueries({ queryKey: orpc.list.find.key({ input: { slug } }) }),
+            queryClient.invalidateQueries({ queryKey: orpc.list.listPreviews.key() }),
+            queryClient.invalidateQueries({ queryKey: orpc.list.profileLists.key() }),
           ]
         : [queryClient.invalidateQueries({ queryKey: orpc.list.key() })]),
     ]);

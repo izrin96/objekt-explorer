@@ -1,8 +1,8 @@
 import type { ValidArtist, ValidFourSeason } from "@repo/cosmo/types/common";
 import { validArtists, validFourSeason } from "@repo/cosmo/types/common";
 import { indexer } from "@repo/db/indexer";
-import { collections } from "@repo/db/indexer/schema";
-import { asc, ne } from "drizzle-orm";
+import { collections, objekts } from "@repo/db/indexer/schema";
+import { and, asc, count, eq, inArray, ne } from "drizzle-orm";
 
 import { getCache } from "./redis";
 import { classOrder } from "./utils";
@@ -153,4 +153,24 @@ export function getPartialCollectionColumns() {
     collectionId: collections.collectionId,
     class: collections.class,
   };
+}
+
+/** Each owner's objekt count, as the profile's grid counts them, keyed by lowercased address. */
+export async function fetchOwnerCounts(addresses: string[]) {
+  if (addresses.length === 0) return new Map<string, number>();
+  const rows = await indexer
+    .select({ owner: objekts.owner, count: count() })
+    .from(objekts)
+    .innerJoin(collections, eq(objekts.collectionId, collections.id))
+    .where(
+      and(
+        inArray(
+          objekts.owner,
+          addresses.map((address) => address.toLowerCase()),
+        ),
+        ne(collections.slug, "empty-collection"),
+      ),
+    )
+    .groupBy(objekts.owner);
+  return new Map(rows.map((row) => [row.owner, row.count]));
 }

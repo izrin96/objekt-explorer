@@ -1,5 +1,4 @@
 import { CardsThreeIcon, DiscordLogoIcon, PlusIcon } from "@phosphor-icons/react";
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useState } from "react";
 
@@ -11,6 +10,7 @@ import { DiscordFormatDialog } from "@/features/discord/discord-format-dialog";
 import { CreateListDialog } from "@/features/list/create-list-dialog";
 import { ListCard } from "@/features/list/list-card";
 import { listPreviewsOptions } from "@/features/list/queries";
+import { useListPreviews } from "@/features/list/use-list-previews";
 import { useUserLists } from "@/features/user/hooks";
 import { currentUserOptions } from "@/features/user/queries";
 import { generateMetadata } from "@/lib/meta";
@@ -21,17 +21,23 @@ export const Route = createFileRoute("/(container)/list/")({
     const user = await queryClient.query({ ...currentUserOptions, staleTime: "static" });
     if (!user) throw redirect({ to: "/login", search: { redirect: location.href } });
   },
+  loader: async ({ context: { queryClient } }) => {
+    const user = await queryClient.query({ ...currentUserOptions, staleTime: "static" });
+    // a failed preview read leaves the cards to fetch it again, not the page to fail
+    await queryClient
+      .query({
+        ...listPreviewsOptions(user?.lists.map((list) => list.slug) ?? []),
+        staleTime: "static",
+      })
+      .catch(() => undefined);
+  },
   head: () => generateMetadata({ title: m.page_titles_my_list() }),
   component: ListsPage,
 });
 
 function ListsPage() {
   const lists = useUserLists();
-  const { data: previews, isPending } = useQuery({
-    ...listPreviewsOptions(lists.map((list) => list.slug)),
-    // a created or deleted list changes the key; the other cards keep their previews meanwhile
-    placeholderData: keepPreviousData,
-  });
+  const getPreview = useListPreviews(lists.map((list) => list.slug));
   const [createOpen, setCreateOpen] = useState(false);
   const [discordOpen, setDiscordOpen] = useState(false);
 
@@ -78,11 +84,7 @@ function ListsPage() {
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {lists.map((list) => (
-            <ListCard
-              key={list.slug}
-              list={list}
-              preview={isPending ? undefined : (previews?.get(list.slug) ?? null)}
-            />
+            <ListCard key={list.slug} list={list} preview={getPreview(list.slug)} />
           ))}
         </div>
       )}

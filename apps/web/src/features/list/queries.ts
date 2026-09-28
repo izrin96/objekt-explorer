@@ -35,7 +35,7 @@ export const profileListsOptions = (profileAddress: string) =>
 export const listPreviewsOptions = (slugs: string[]) =>
   orpc.list.listPreviews.queryOptions({
     input: { slugs },
-    // entries are added from every objekt page, so each visit rereads them
-    staleTime: 0,
+    // as with `listBySlugQuery`: hydration keeps the server's read, and the viewer's edits invalidate it
+    staleTime: 30_000,
     select: (data) => new Map(data.map((preview) => [preview.slug, preview])),
   });

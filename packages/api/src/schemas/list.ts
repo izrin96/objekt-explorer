@@ -1,6 +1,6 @@
-import type { ValidObjekt } from "@repo/lib/types/objekt";
 import * as z from "zod";
 
+import type { ObjektPreview } from "./objekt";
 import { publicProfileSchema, publicUserSchema } from "./user";
 
 export const listTypeNewSchema = z.enum(["general", "sale", "have", "want"]);
@@ -24,10 +24,7 @@ export const baseListSchema = z.object({
   profile: publicProfileSchema.nullish(),
 });
 
-/** How many artworks a list card previews. */
-export const LIST_PREVIEW_SIZE = 4;
-
-export type ListPreview = { slug: string; count: number; objekts: ValidObjekt[] };
+export type ListPreview = ObjektPreview & { slug: string };
 
 export const publicListSchema = baseListSchema.extend({
   linkedList: baseListSchema.nullish(),

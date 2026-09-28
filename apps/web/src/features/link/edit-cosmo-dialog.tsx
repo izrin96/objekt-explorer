@@ -36,7 +36,7 @@ import { PROFILE_QUERY_KEY, profileOptions } from "@/features/link/queries";
 import { PROFILE_PAGE_KEY } from "@/features/profile/queries";
 import { currentUserOptions } from "@/features/user/queries";
 import { displayNickname } from "@/lib/address";
-import { client } from "@/lib/orpc";
+import { client, orpc } from "@/lib/orpc";
 import { SITE_NAME } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
@@ -75,23 +75,32 @@ const BannerCropper = lazy(() =>
   import("@/features/link/banner-cropper").then((mod) => ({ default: mod.BannerCropper })),
 );
 
-/** Owns its data, so a trigger only has to know the address. */
+/**
+ * Owns its data, so a caller only has to know the address. It opens from
+ * `children` as its trigger, or from `open` when a menu item controls it.
+ */
 export function EditCosmoDialog({
   address,
   showUnlinkNote = true,
   children,
+  open: controlledOpen,
+  onOpenChange,
 }: {
   address: string;
   /** a link to the page you are already on is noise */
   showUnlinkNote?: boolean;
-  children: ReactElement;
-}) {
-  const [open, setOpen] = useState(false);
+} & (
+  | { children: ReactElement; open?: never; onOpenChange?: never }
+  | { children?: never; open: boolean; onOpenChange: (open: boolean) => void }
+)) {
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+  const open = controlledOpen ?? uncontrolledOpen;
+  const setOpen = onOpenChange ?? setUncontrolledOpen;
   const { data, error } = useQuery(profileOptions(address, open));
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={children} />
+      {children ? <DialogTrigger render={children} /> : null}
       <DialogPopup className="max-w-md">
         <DialogHeader>
           <DialogTitle className="font-display">{m.profile_edit_title()}</DialogTitle>
@@ -200,6 +209,7 @@ function EditForm({
         queryClient.invalidateQueries({ queryKey: PROFILE_QUERY_KEY }),
         queryClient.invalidateQueries({ queryKey: PROFILE_PAGE_KEY }),
         queryClient.invalidateQueries({ queryKey: currentUserOptions.queryKey }),
+        queryClient.invalidateQueries({ queryKey: orpc.cosmoLink.linkedPreviews.key() }),
       ]);
     },
     onError: ({ message }) => {

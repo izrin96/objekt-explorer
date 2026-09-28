@@ -4,6 +4,8 @@ import { Link, createFileRoute, redirect } from "@tanstack/react-router";
 import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
 import { LinkedCard } from "@/features/link/linked-card";
+import { linkedPreviewsOptions } from "@/features/link/queries";
+import { useLinkedPreviews } from "@/features/link/use-linked-previews";
 import { useUserProfiles } from "@/features/user/hooks";
 import { currentUserOptions } from "@/features/user/queries";
 import { generateMetadata } from "@/lib/meta";
@@ -14,12 +16,23 @@ export const Route = createFileRoute("/(container)/link/")({
     const user = await queryClient.query({ ...currentUserOptions, staleTime: "static" });
     if (!user) throw redirect({ to: "/login", search: { redirect: location.href } });
   },
+  loader: async ({ context: { queryClient } }) => {
+    const user = await queryClient.query({ ...currentUserOptions, staleTime: "static" });
+    // a failed preview read leaves the cards to fetch it again, not the page to fail
+    await queryClient
+      .query({
+        ...linkedPreviewsOptions(user?.profiles.map((profile) => profile.address) ?? []),
+        staleTime: "static",
+      })
+      .catch(() => undefined);
+  },
   head: () => generateMetadata({ title: m.page_titles_my_cosmo_link() }),
   component: LinkPage,
 });
 
 function LinkPage() {
   const profiles = useUserProfiles();
+  const getPreview = useLinkedPreviews(profiles.map((profile) => profile.address));
 
   return (
     <>
@@ -39,9 +52,13 @@ function LinkPage() {
       />
 
       {profiles.length > 0 && (
-        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {profiles.map((profile) => (
-            <LinkedCard key={profile.address} profile={profile} />
+            <LinkedCard
+              key={profile.address}
+              profile={profile}
+              preview={getPreview(profile.address)}
+            />
           ))}
         </div>
       )}

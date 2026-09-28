@@ -6,12 +6,14 @@ import type { ValidArtist } from "@repo/cosmo/types/common";
 import { db } from "@repo/db";
 import { userAddress } from "@repo/db/schema";
 import { isAddress } from "@repo/lib";
-import { and, eq, isNotNull, sql } from "drizzle-orm";
+import { and, eq, inArray, isNotNull, sql } from "drizzle-orm";
 import * as z from "zod";
 
 import { serverEnv } from "../env";
 import { type ApiMessages, authed } from "../orpc";
 import { artistSchema } from "../schemas/artist";
+import type { LinkedPreview } from "../schemas/user";
+import { fetchOwnerCounts } from "../services/objekt";
 import { redis } from "../services/redis";
 import { getAccessToken } from "../services/token";
 
@@ -51,6 +53,30 @@ export const cosmoLinkRouter = {
     .input(z.string().refine((val) => isAddress(val)))
     .handler(async ({ input: address, context: { messages, session } }) => {
       await assertAddressNotLinked(address, session.user.id, messages);
+    }),
+
+  /** Only addresses the caller has linked, whatever else is asked for. */
+  linkedPreviews: authed
+    .input(z.object({ addresses: z.string().array().max(100) }))
+    .handler(async ({ input: { addresses }, context: { session } }) => {
+      if (addresses.length === 0) return [];
+      const linked = await db
+        .select({
+          address: userAddress.address,
+          bannerImgUrl: userAddress.bannerImgUrl,
+          bannerImgType: userAddress.bannerImgType,
+        })
+        .from(userAddress)
+        .where(
+          and(eq(userAddress.userId, session.user.id), inArray(userAddress.address, addresses)),
+        );
+      const counts = await fetchOwnerCounts(linked.map((row) => row.address));
+      return linked.map((row): LinkedPreview => ({
+        address: row.address,
+        bannerImgUrl: row.bannerImgUrl,
+        bannerImgType: row.bannerImgType,
+        count: counts.get(row.address.toLowerCase()) ?? 0,
+      }));
     }),
 
   // remove link

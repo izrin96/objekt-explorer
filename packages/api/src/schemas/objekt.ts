@@ -1,5 +1,11 @@
-import type { IndexedObjekt, OwnedObjekt } from "@repo/lib/types/objekt";
+import type { IndexedObjekt, OwnedObjekt, ValidObjekt } from "@repo/lib/types/objekt";
 import * as z from "zod";
+
+/** How many artworks a card previews. */
+export const OBJEKT_PREVIEW_SIZE = 4;
+
+/** A card's total and its latest few artworks, newest first. */
+export type ObjektPreview = { count: number; objekts: ValidObjekt[] };
 
 export const pinObjektSchema = z.object({
   tokenId: z.string(),
