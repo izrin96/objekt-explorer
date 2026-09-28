@@ -143,15 +143,28 @@ function ScrollButton({ direction, onClick }: { direction: -1 | 1; onClick: () =
 function MemberAvatar({ src, color }: { src: string | undefined; color: string }) {
   return (
     <Avatar
-      className="size-5.5 border-2 border-(--member)"
+      className="relative size-5.5 border-2 border-(--member)"
       style={{ "--member": color } as CSSProperties}
     >
+      {/* keepMounted: without it Base UI preloads every src through a detached
+          Image, which ignores `loading="lazy"` and waits for hydration, so the
+          visible chips queue behind ~50 full-size photos */}
       {src ? (
-        <AvatarImage src={src} alt="" loading="lazy" decoding="async" draggable={false} />
+        <AvatarImage
+          src={src}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          draggable={false}
+          keepMounted
+          className="relative z-1 data-error:hidden"
+        />
       ) : null}
-      {/* the fallback is the old colour dot, and a near-white one has no edge of its own on light */}
+      {/* the fallback is the old colour dot, and a near-white one has no edge of its own on light;
+          absolute and under the image, which paints over it as soon as it loads,
+          even before hydration removes the fallback */}
       <AvatarFallback
-        className="inset-ring-foreground/15 inset-ring-1"
+        className="inset-ring-foreground/15 absolute inset-0 inset-ring-1"
         style={{ background: color }}
       />
     </Avatar>
