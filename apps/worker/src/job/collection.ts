@@ -3,13 +3,15 @@ import type { CosmoObjektMetadataV1, MetadataVersion } from "@repo/cosmo/types/m
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts, transfers } from "@repo/db/indexer/schema";
 import { addr, chunk, slugifyObjekt } from "@repo/lib";
-import { eq, inArray } from "drizzle-orm";
+import { eq, inArray, sql } from "drizzle-orm";
 
 import { safeFetchMetadataV1, safeFetchMetadataV3 } from "@/lib/metadata-utils";
 
 const BATCH_SIZE = 50;
 
 export async function fixEmptyCollection({ version }: { version: MetadataVersion }) {
+  await fixStaleTransfers();
+
   const objektsResults = await indexer
     .select({
       id: objekts.id,
@@ -32,6 +34,25 @@ export async function fixEmptyCollection({ version }: { version: MetadataVersion
       console.error(`[fix empty collection] Batch ${batchNumber}/${totalBatches} failed:`, error);
     }
   });
+}
+
+/**
+ * Transfers left on empty-collection after their objekt moved back to its real
+ * collection. The objekt is no longer empty, so the metadata pass never sees them.
+ */
+async function fixStaleTransfers() {
+  const result = await indexer.execute(sql`
+    update ${transfers} t
+    set collection_id = o.collection_id
+    from ${objekts} o, ${collections} tc, ${collections} oc
+    where t.objekt_id = o.id
+      and t.collection_id = tc.id
+      and o.collection_id = oc.id
+      and tc.slug = 'empty-collection'
+      and oc.slug <> 'empty-collection'
+  `);
+
+  console.log(`[fix empty collection] Fixed ${result.rowCount ?? 0} stale transfers`);
 }
 
 async function processMetadataBatch(
