@@ -188,7 +188,9 @@ function GroupBySelect({ className, stacked = false }: { className?: string; sta
           className={cn(
             toolbarTrigger,
             "data-active:border-foreground",
-            stacked && "w-full justify-between",
+            // `flex-1`, not `w-full`: the direction button shares the row once a
+            // grouping is set, and a full-width trigger pushes it past the sheet
+            stacked && "min-w-0 flex-1 justify-between",
           )}
         >
           <span>
