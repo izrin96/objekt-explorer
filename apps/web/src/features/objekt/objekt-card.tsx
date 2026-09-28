@@ -15,7 +15,9 @@ import { ObjektNote } from "./objekt-note";
 import { getCollectionShortNo, isObjektOwned } from "./objekt-utils";
 import { SelectionOrderContext } from "./selection-order";
 
-const priceClass = "truncate text-xxs font-semibold tabular-nums @[9rem]:text-xs";
+// wraps rather than truncates: a clipped price reads as a different price
+const priceClass =
+  "text-xxs text-center leading-tight font-semibold text-balance tabular-nums wrap-anywhere @[9rem]:text-xs";
 
 type ObjektCardProps = {
   objekt: ValidObjekt;
