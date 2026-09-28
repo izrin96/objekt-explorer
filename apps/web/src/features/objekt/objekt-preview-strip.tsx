@@ -19,7 +19,11 @@ export const previewCardLinkClass =
  */
 export function ObjektPreviewStrip({ preview }: { preview: ObjektPreview | null | undefined }) {
   return (
-    <div className="bg-secondary/40 grid grid-cols-4 gap-1.5 border-b p-2.5" aria-hidden>
+    <div
+      className="bg-secondary/40 grid gap-1 border-b p-2"
+      style={{ gridTemplateColumns: `repeat(${OBJEKT_PREVIEW_SIZE}, minmax(0, 1fr))` }}
+      aria-hidden
+    >
       {Array.from({ length: OBJEKT_PREVIEW_SIZE }, (_, i) => {
         const objekt = preview?.objekts[i];
         return (

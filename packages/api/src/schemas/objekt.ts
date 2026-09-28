@@ -2,7 +2,7 @@ import type { IndexedObjekt, OwnedObjekt, ValidObjekt } from "@repo/lib/types/ob
 import * as z from "zod";
 
 /** How many artworks a card previews. */
-export const OBJEKT_PREVIEW_SIZE = 4;
+export const OBJEKT_PREVIEW_SIZE = 5;
 
 /** A card's total and its latest few artworks, newest first. */
 export type ObjektPreview = { count: number; objekts: ValidObjekt[] };
