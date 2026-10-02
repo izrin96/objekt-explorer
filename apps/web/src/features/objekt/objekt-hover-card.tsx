@@ -6,6 +6,9 @@ import { TooltipPrimitive } from "@/components/ui/tooltip";
 import { ObjektArtwork } from "./objekt-artwork";
 import { getCollectionShortNo } from "./objekt-utils";
 
+// off for now; flip back on to bring the card back
+const OBJEKT_CARD_ENABLED = false;
+
 const objektCardHandle = TooltipPrimitive.createHandle<OwnedObjekt>();
 
 /** A table's objekt cell: opens the drawer, and shows the card while a mouse rests on it. */
@@ -20,6 +23,7 @@ export function ObjektNameButton({
     <TooltipPrimitive.Trigger
       handle={objektCardHandle}
       payload={objekt}
+      disabled={!OBJEKT_CARD_ENABLED}
       {...cursorCardDelays}
       render={
         <button
@@ -54,6 +58,8 @@ function ObjektName({ objekt, className }: { objekt: OwnedObjekt; className?: st
 
 /** Mounted once at the root. */
 export function ObjektHoverCard() {
+  if (!OBJEKT_CARD_ENABLED) return null;
+
   return (
     <CursorCard handle={objektCardHandle} className="w-36 p-1.5">
       {(objekt) => (
