@@ -1,8 +1,10 @@
+import { getCollectionEdition } from "@repo/api/schemas/collection-grid";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import type { ReactNode } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
+import { EDITION_LABEL } from "@/features/filters/labels";
 import { formatTimestamp } from "@/lib/time";
 import { m } from "@/paraglide/messages";
 
@@ -42,6 +44,8 @@ export function MetadataPanel({
 }) {
   const owned = isObjektOwned(objekt);
   const { getArtist } = useCosmoArtist();
+  // not every list maps `edition` onto its objekts, so derive it here
+  const edition = objekt.edition ?? getCollectionEdition(objekt);
 
   return (
     /* `minmax(0,1fr)`: a bare `1fr` is floored at the value's min-content, and
@@ -59,7 +63,7 @@ export function MetadataPanel({
       <MetaRow label={m.objekt_type()}>
         {objekt.onOffline === "offline" ? m.objekt_physical() : m.objekt_digital()}
       </MetaRow>
-      <MetaRow label={m.objekt_edition()}>{objekt.edition ?? "—"}</MetaRow>
+      <MetaRow label={m.objekt_edition()}>{edition ? EDITION_LABEL[edition] : "—"}</MetaRow>
       <MetaRow label={m.objekt_created_at()}>{formatTimestamp(new Date(objekt.createdAt))}</MetaRow>
 
       <MetaRow label={m.objekt_background_color()}>
