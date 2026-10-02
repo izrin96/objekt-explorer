@@ -491,11 +491,14 @@ export function computeOfflineSerials(
 //  - a batch absorbs unminted tokens at its start and gets a length that is not
 //    a multiple of 100, so every later serial comes out too high.
 const BLOCK_SIZE = 100;
-// separators seen between blocks are 1-3 tokens; a gap with more minted tokens
-// than this holds a foreign block, not only separators
-const MAX_GAP_SEPARATORS = 6;
-// gaps up to this size were validated against v1 serials
-const MAX_RESERVED_GAP = 2000;
+// separators number 1-3 between two blocks and grow with the gap (13 in a
+// 6,213-token gap); more minted tokens than this means a foreign block
+const maxGapSeparators = (gapLength: number) => Math.max(6, Math.ceil(gapLength / 200));
+// separators can still be unminted themselves, leaving runs a few tokens past a
+// whole number of blocks
+const MAX_UNMINTED_SEPARATORS = 15;
+// gaps up to this size were validated against v1 and user-reported serials
+const MAX_RESERVED_GAP = 20000;
 
 type Batch = { start: number; end: number };
 
@@ -518,12 +521,13 @@ export function tokenIdRange(start: number, end: number) {
 
 /**
  * Claim the reserved blocks hiding in the gaps between a collection's batches:
- * when a gap's minted tokens are only a few separators and every unminted run
- * in it is a whole number of blocks, those runs are this collection's own
- * unminted reservations and become batches.
+ * when a gap's minted tokens are only separators and its unminted runs are
+ * whole blocks give or take a few unminted separators, the whole blocks are
+ * this collection's own unminted reservations and become batches.
  *
  * Checked on anchored collections: in 29 of 36 such gaps the v1 serials count
- * the block as the collection's own, and never as foreign. If a foreign token
+ * the block as the collection's own, and never as foreign. User-reported
+ * Summer26 serials agree, including one 6,213-token gap. If a foreign token
  * mints inside a claimed block later, verifyBatchBoundaries rediscovers.
  */
 async function fillReservedGaps(batches: Batch[], presentTokenIds: number[]): Promise<Batch[]> {
@@ -545,7 +549,7 @@ async function fillReservedGaps(batches: Batch[], presentTokenIds: number[]): Pr
       .select({ id: objekts.id })
       .from(objekts)
       .where(tokenIdRange(gapStart, gapEnd));
-    if (minted.length > MAX_GAP_SEPARATORS) continue;
+    if (minted.length > maxGapSeparators(gapLength)) continue;
 
     const mintedIds = minted.map((o) => parseInt(o.id)).sort((a, b) => a - b);
     // our own token inside the gap means the stored ranges are stale
@@ -557,9 +561,13 @@ async function fillReservedGaps(batches: Batch[], presentTokenIds: number[]): Pr
       if (t > runStart) runs.push({ start: runStart, end: t - 1 });
       runStart = t + 1;
     }
-    if (runs.length === 0 || runs.some((r) => (r.end - r.start + 1) % BLOCK_SIZE !== 0)) continue;
+    const unmintedSeparators = runs.reduce((n, r) => n + ((r.end - r.start + 1) % BLOCK_SIZE), 0);
+    if (unmintedSeparators > MAX_UNMINTED_SEPARATORS) continue;
 
-    result.push(...runs);
+    for (const r of runs) {
+      const length = r.end - r.start + 1;
+      if (length >= BLOCK_SIZE) result.push({ start: r.start + (length % BLOCK_SIZE), end: r.end });
+    }
   }
 
   return result;
