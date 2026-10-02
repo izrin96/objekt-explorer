@@ -10,3 +10,7 @@ export const preAssignedCollections = [
   "cream02-xinyu-315z",
   "cream02-yeonji-315z",
 ];
+
+// Seasons from before Modhaus reserved offline batches in whole 100-token
+// blocks. The block rules in refineBatches do not hold for them.
+export const preBlockSeasons = ["Atom01", "Binary01", "Cream01", "Divine01", "Ever01"];

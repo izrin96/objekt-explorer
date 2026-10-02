@@ -2,10 +2,13 @@ import { fetchMetadataV3, normalizeV3 } from "@repo/cosmo/server/metadata";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
 import { slugifyObjekt, chunk } from "@repo/lib";
-import { and, eq, asc, ne, notInArray, inArray, or, lte, sql } from "drizzle-orm";
+import { and, eq, asc, between, ne, notInArray, inArray, or, lte, sql } from "drizzle-orm";
 import { FetchError } from "ofetch";
 
-import { preAssignedCollections as excludeCollections } from "@/lib/serial-constants";
+import {
+  preAssignedCollections as excludeCollections,
+  preBlockSeasons,
+} from "@/lib/serial-constants";
 
 const COLLECTION_CONCURRENCY = 5;
 const DB_BATCH_SIZE = 500;
@@ -480,6 +483,124 @@ export function computeOfflineSerials(
   return result;
 }
 
+// From Atom02 on, Modhaus reserves offline batches in whole 100-token blocks,
+// separated by a few foreign "separator" tokens. Discovery only sees minted
+// tokens, so it misreads two shapes, both fixed by refineBatches:
+//  - a reserved block with no mints yet sits between two minted separators and
+//    is taken for a foreign gap, so every later serial comes out 100 too low;
+//  - a batch absorbs unminted tokens at its start and gets a length that is not
+//    a multiple of 100, so every later serial comes out too high.
+const BLOCK_SIZE = 100;
+// separators seen between blocks are 1-3 tokens; a gap with more minted tokens
+// than this holds a foreign block, not only separators
+const MAX_GAP_SEPARATORS = 6;
+// gaps up to this size were validated against v1 serials
+const MAX_RESERVED_GAP = 2000;
+
+type Batch = { start: number; end: number };
+
+/**
+ * Match tokenIds in [start, end]. Ids are varchar, so the range is compared per
+ * digit length, where string order equals numeric order and the primary key
+ * index still applies.
+ */
+export function tokenIdRange(start: number, end: number) {
+  const parts = [];
+  for (let len = String(start).length; len <= String(end).length; len++) {
+    const lo = Math.max(start, 10 ** (len - 1));
+    const hi = Math.min(end, 10 ** len - 1);
+    parts.push(
+      and(sql`length(${objekts.id}) = ${len}`, between(objekts.id, String(lo), String(hi))),
+    );
+  }
+  return or(...parts);
+}
+
+/**
+ * Claim the reserved blocks hiding in the gaps between a collection's batches:
+ * when a gap's minted tokens are only a few separators and every unminted run
+ * in it is a whole number of blocks, those runs are this collection's own
+ * unminted reservations and become batches.
+ *
+ * Checked on anchored collections: in 29 of 36 such gaps the v1 serials count
+ * the block as the collection's own, and never as foreign. If a foreign token
+ * mints inside a claimed block later, verifyBatchBoundaries rediscovers.
+ */
+async function fillReservedGaps(batches: Batch[], presentTokenIds: number[]): Promise<Batch[]> {
+  const present = new Set(presentTokenIds);
+  const result: Batch[] = [];
+
+  for (let i = 0; i < batches.length; i++) {
+    const cur = batches[i]!;
+    result.push(cur);
+    const next = batches[i + 1];
+    if (next === undefined) break;
+
+    const gapStart = cur.end + 1;
+    const gapEnd = next.start - 1;
+    const gapLength = gapEnd - gapStart + 1;
+    if (gapLength < BLOCK_SIZE || gapLength > MAX_RESERVED_GAP) continue;
+
+    const minted = await indexer
+      .select({ id: objekts.id })
+      .from(objekts)
+      .where(tokenIdRange(gapStart, gapEnd));
+    if (minted.length > MAX_GAP_SEPARATORS) continue;
+
+    const mintedIds = minted.map((o) => parseInt(o.id)).sort((a, b) => a - b);
+    // our own token inside the gap means the stored ranges are stale
+    if (mintedIds.some((t) => present.has(t))) continue;
+
+    const runs: Batch[] = [];
+    let runStart = gapStart;
+    for (const t of [...mintedIds, gapEnd + 1]) {
+      if (t > runStart) runs.push({ start: runStart, end: t - 1 });
+      runStart = t + 1;
+    }
+    if (runs.length === 0 || runs.some((r) => (r.end - r.start + 1) % BLOCK_SIZE !== 0)) continue;
+
+    result.push(...runs);
+  }
+
+  return result;
+}
+
+/**
+ * Trim a closed batch whose length is not a whole number of blocks to the
+ * smallest whole-block range that ends at its discovered end and still holds
+ * all its tokens. Only ever shrinks: growing would swallow the foreign token
+ * that ended discovery. The frontier batch is left alone, its end is
+ * provisional.
+ */
+function snapBatchLengths(batches: Batch[], presentTokenIds: number[]): Batch[] {
+  return batches.map((b, i) => {
+    if (i === batches.length - 1) return b;
+    if ((b.end - b.start + 1) % BLOCK_SIZE === 0) return b;
+
+    let lowest = Infinity;
+    for (const t of presentTokenIds) {
+      if (t >= b.start && t <= b.end && t < lowest) lowest = t;
+    }
+    if (lowest === Infinity) return b;
+
+    const start = b.end - Math.ceil((b.end - lowest + 1) / BLOCK_SIZE) * BLOCK_SIZE + 1;
+    return start > b.start ? { start, end: b.end } : b;
+  });
+}
+
+/**
+ * Apply the 100-token block rules to discovered batches. Idempotent, so it can
+ * run on a mix of stored and freshly discovered ranges.
+ */
+export async function refineBatches(
+  season: string,
+  batches: Batch[],
+  presentTokenIds: number[],
+): Promise<Batch[]> {
+  if (preBlockSeasons.includes(season)) return batches;
+  return snapBatchLengths(await fillReservedGaps(batches, presentTokenIds), presentTokenIds);
+}
+
 export async function populateSerialOffline() {
   const affectedCollections = await indexer
     .selectDistinctOn([collections.id], { id: collections.id })
@@ -543,6 +664,7 @@ async function processCollectionOffline(collectionId: string) {
   const [collection] = await indexer
     .select({
       collectionId: collections.collectionId,
+      season: collections.season,
       serialBatches: collections.serialBatches,
     })
     .from(collections)
@@ -591,6 +713,8 @@ async function processCollectionOffline(collectionId: string) {
       console.log(`[populateSerialOffline] Collection ${collectionId}: API error, skipping`);
       return;
     }
+
+    batches = await refineBatches(collection.season, batches, presentTokenIds);
 
     if (batches.length === 0) {
       console.log(`[populateSerialOffline] Collection ${collectionId}: No batches discovered`);

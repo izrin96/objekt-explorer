@@ -15,6 +15,10 @@
  * drift it re-runs full discovery for that one collection and rewrites the
  * affected serials — so the expensive path runs only for the few that moved.
  *
+ * It also asks the indexer whether a foreign objekt has minted inside a stored
+ * range. That catches a reserved block that refineBatches claimed from a gap
+ * but which turned out to belong to another collection.
+ *
  * Runs weekly from the worker cron. Manual run:
  *   DRY_RUN=1 bun run --env-file=../../.env src/job/verify-batch-boundaries.ts
  *   bun run --env-file=../../.env src/job/verify-batch-boundaries.ts
@@ -29,6 +33,8 @@ import { FetchError } from "ofetch";
 import {
   computeOfflineSerialUpdates,
   discoverBatches,
+  refineBatches,
+  tokenIdRange,
   V1_CUTOFF_MS,
   writeSerialUpdates,
 } from "@/job/populate-serial";
@@ -58,6 +64,7 @@ export async function verifyBatchBoundaries(dryRun = false) {
       id: collections.id,
       slug: collections.slug,
       cid: collections.collectionId,
+      season: collections.season,
       batches: collections.serialBatches,
     })
     .from(collections)
@@ -79,7 +86,13 @@ export async function verifyBatchBoundaries(dryRun = false) {
   let fixed = 0;
   const failed: string[] = [];
 
-  async function processOne(t: { id: string; slug: string; cid: string; batches: Batch[] | null }) {
+  async function processOne(t: {
+    id: string;
+    slug: string;
+    cid: string;
+    season: string;
+    batches: Batch[] | null;
+  }) {
     const batches = t.batches ?? [];
     if (batches.length === 0) return;
 
@@ -113,6 +126,16 @@ export async function verifyBatchBoundaries(dryRun = false) {
     const frontier = batches[batches.length - 1]!;
 
     const reasons: string[] = [];
+
+    const [foreignInside] = await indexer
+      .select({ id: objekts.id })
+      .from(objekts)
+      .where(
+        and(or(...atRisk.map((b) => tokenIdRange(b.start, b.end))), ne(objekts.collectionId, t.id)),
+      )
+      .limit(1);
+    if (foreignInside) reasons.push(`foreign token ${foreignInside.id} inside a stored range`);
+
     try {
       for (const b of atRisk) {
         const isFrontier = b === frontier;
@@ -174,6 +197,7 @@ export async function verifyBatchBoundaries(dryRun = false) {
       failed.push(t.slug);
       return;
     }
+    fresh = await refineBatches(t.season, fresh, tokenIds);
     if (fresh.length === 0) return;
 
     await indexer.update(collections).set({ serialBatches: fresh }).where(eq(collections.id, t.id));
