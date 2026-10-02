@@ -1,5 +1,6 @@
 import { type ComponentType, useEffect } from "react";
 
+import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
@@ -12,6 +13,7 @@ type FacetControlProps = {
   label: string;
   options: readonly string[];
   groups?: readonly MemberGroup[];
+  getOptionLabel?: (option: string) => string;
   value: string[];
   onChange: (value: string[]) => void;
   className?: string;
@@ -28,6 +30,8 @@ type FacetDef = {
   options: (facets: Facets) => readonly string[];
   /** Member only: the dropdown groups by artist when several are in scope */
   grouped?: boolean;
+  /** the option values are artist ids, shown as the artist's title */
+  artistLabels?: boolean;
   Control: ComponentType<FacetControlProps>;
 };
 
@@ -37,7 +41,13 @@ type FacetDef = {
  * so a facet added here shows up in both places and on every page.
  */
 const FACETS: readonly FacetDef[] = [
-  { key: "artist", label: m.filter_artist, options: (f) => f.artists, Control: MultiSelect },
+  {
+    key: "artist",
+    label: m.filter_artist,
+    options: (f) => f.artists,
+    artistLabels: true,
+    Control: MultiSelect,
+  },
   {
     key: "member",
     label: m.filter_member,
@@ -118,13 +128,17 @@ export function FacetControls({
   onChange,
   keys = FACET_KEYS,
 }: FacetControlsProps) {
+  const { getArtist } = useCosmoArtist();
+  const artistTitle = (id: string) => getArtist(id)?.title ?? id;
+
   return FACETS.filter((def) => keys.includes(def.key)).map(
-    ({ key, label, options, grouped, Control }) => (
+    ({ key, label, options, grouped, artistLabels, Control }) => (
       <Control
         key={key}
         label={label()}
         options={options(facets)}
         groups={grouped ? groups : undefined}
+        getOptionLabel={artistLabels ? artistTitle : undefined}
         value={values[key]}
         onChange={(value) => onChange(key, value)}
         className={cn(

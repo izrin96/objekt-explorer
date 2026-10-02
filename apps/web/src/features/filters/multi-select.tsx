@@ -20,6 +20,8 @@ type MultiSelectProps = {
   onChange: (value: string[]) => void;
   /** one group per artist instead of the flat `options`; a single group falls back to flat */
   groups?: readonly MemberGroup[];
+  /** display text for a flat option whose value is not what the user should read */
+  getOptionLabel?: (option: string) => string;
   className?: string;
 };
 
@@ -30,6 +32,7 @@ export function MultiSelect({
   value,
   onChange,
   groups,
+  getOptionLabel,
   className,
 }: MultiSelectProps) {
   const grouped = groups !== undefined && groups.length > 1;
@@ -72,7 +75,7 @@ export function MultiSelect({
             ))
           : options.map((option) => (
               <SelectItem key={option} value={option}>
-                {option}
+                {getOptionLabel?.(option) ?? option}
               </SelectItem>
             ))}
       </SelectPopup>

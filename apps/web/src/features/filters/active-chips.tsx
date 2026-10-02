@@ -35,21 +35,23 @@ export function useActiveChips(): ActiveChip[] {
   const filters = useCanonicalFilters();
   const memberColor = useMemberColor();
   const { formatUsd } = useCurrency();
-  return buildChips(filters, memberColor, formatUsd);
+  const { getArtist } = useCosmoArtist();
+  return buildChips(filters, memberColor, formatUsd, (id) => getArtist(id)?.title ?? id);
 }
 
 function buildChips(
   filters: FilterSearch,
   memberColor: (name: string) => string,
   formatUsd: (usd: number) => string,
+  artistTitle: (id: string) => string,
 ): ActiveChip[] {
   const chips: ActiveChip[] = [];
 
   for (const value of filters.artist ?? []) {
     chips.push({
       key: `artist:${value}`,
-      label: `${m.filter_artist()}: ${value}`,
-      value,
+      label: `${m.filter_artist()}: ${artistTitle(value)}`,
+      value: artistTitle(value),
       artistId: value,
       remove: { artist: without(filters.artist ?? [], value) },
     });
