@@ -1,4 +1,4 @@
-import type { CollectionResult, OwnedObjektsResult } from "@repo/api/schemas/objekt";
+import type { HeldResult, OwnedObjektsResult } from "@repo/api/schemas/objekt";
 import type { OwnedBySchema } from "@repo/api/schemas/owned-by";
 import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query";
 import { ofetch } from "ofetch";
@@ -44,8 +44,8 @@ export const heldCollectionsOptions = (address: string, artist?: OwnedBySchema["
   queryOptions({
     queryKey: ["held-collections", address, artist],
     queryFn: () =>
-      ofetch<CollectionResult>(`/api/objekts/held-by/${address}`, { query: { artist } }).then(
-        (result) => result.collections.map(mapObjektWithTag),
+      ofetch<HeldResult>(`/api/objekts/held-by/${address}`, { query: { artist } }).then((result) =>
+        result.collections.map(mapObjektWithTag),
       ),
     refetchOnWindowFocus: false,
     // the server caches the count for as long

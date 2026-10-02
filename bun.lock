@@ -180,6 +180,7 @@
       "name": "@repo/db",
       "version": "0.0.0",
       "dependencies": {
+        "@repo/cosmo": "workspace:*",
         "drizzle-orm": "catalog:",
         "pg": "catalog:",
         "zod": "catalog:",

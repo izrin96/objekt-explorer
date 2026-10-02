@@ -1,6 +1,6 @@
 import { StorefrontIcon } from "@phosphor-icons/react";
 import type { ValidCustomSort } from "@repo/cosmo/types/common";
-import type { ValidObjekt } from "@repo/lib/types/objekt";
+import type { MarketObjekt, ValidObjekt } from "@repo/lib/types/objekt";
 import { useCallback, useMemo, useState } from "react";
 
 import { EmptyState } from "@/components/shared/empty-state";
@@ -63,7 +63,7 @@ export function MarketView() {
   );
 
   const renderObjekt = useCallback(
-    ({ item, rowIndex }: { item: ValidObjekt[]; rowIndex: number }) => {
+    ({ item, rowIndex }: { item: MarketObjekt[]; rowIndex: number }) => {
       const objekt = item[0];
       if (!objekt) return null;
       return (

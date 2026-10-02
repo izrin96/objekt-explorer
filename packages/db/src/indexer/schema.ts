@@ -1,3 +1,4 @@
+import type { IndexedArtist } from "@repo/cosmo/types/common";
 import { sql } from "drizzle-orm";
 import {
   pgTable,
@@ -26,7 +27,7 @@ export const collections = pgTable(
     season: text().notNull(),
     member: text().notNull(),
     members: text().array().notNull().default([]),
-    artist: text().notNull(),
+    artist: text().notNull().$type<IndexedArtist>(),
     collectionNo: text("collection_no").notNull(),
     class: text().notNull(),
     thumbnailImage: text("thumbnail_image").notNull(),

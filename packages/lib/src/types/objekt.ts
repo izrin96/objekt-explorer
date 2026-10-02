@@ -1,60 +1,97 @@
-// Extra fields not in DB schema
-type CollectionExtra = {
-  tags?: string[];
-  edition?: 1 | 2 | 3 | null;
-  order?: number;
-  price?: number | null;
-  isQyop?: boolean;
-  note?: string | null;
-  /** cheapest live sale listing, always USD — set by the marketplace only */
-  floorPrice?: number | null;
-  /** at least one live sale listing is QYOP — set by the marketplace only */
-  hasQyop?: boolean;
-  listingCount?: number;
-  /** unix seconds */
-  listedAt?: number;
-  /** the Cosmo-hosted image, before the processed copy replaced `frontImage` — set by `overrideCollection` */
-  originalFrontImage?: string;
-  originalBackImage?: string;
-  /** copies held, standing in for the tokens of an owner too large to list one by one (COSMO Spin) */
-  copies?: number;
-};
+import type { Collection, Objekt } from "@repo/db/indexer/schema";
 
-// Indexed collection — base collection info without ownership
-export type IndexedObjekt = {
-  id: string;
-  createdAt: string;
-  slug: string;
-  collectionId: string;
-  season: string;
-  member: string;
-  members: string[];
-  artist: string;
-  collectionNo: string;
-  class: string;
-  thumbnailImage: string;
-  frontImage: string;
-  backImage: string;
-  backgroundColor: string;
-  textColor: string;
-  onOffline: "online" | "offline";
-  bandImageUrl: string | null;
-  frontMedia: string | null;
-  hasAudio: boolean;
-} & CollectionExtra;
+/** The collection columns every objekt carries — what `getCollectionColumns` selects. */
+export type CollectionField =
+  | "id"
+  | "createdAt"
+  | "slug"
+  | "collectionId"
+  | "season"
+  | "member"
+  | "members"
+  | "artist"
+  | "collectionNo"
+  | "class"
+  | "thumbnailImage"
+  | "frontImage"
+  | "backImage"
+  | "backgroundColor"
+  | "textColor"
+  | "onOffline"
+  | "bandImageUrl"
+  | "frontMedia"
+  | "hasAudio";
+
+/** Columns `overrideCollection` folds into the image fields. */
+export type ProcessedImageField =
+  | "processedThumbnailImage"
+  | "processedFrontImage"
+  | "processedBackImage";
+
+/**
+ * Indexed collection — base collection info without ownership.
+ *
+ * `id` is a unique key within one surface: the collection uuid, the token id
+ * or the list entry id, depending on where the row came from. Never parse it;
+ * act on `tokenId`, `entryId` or `slug`.
+ */
+export type IndexedObjekt = Pick<Collection, CollectionField> & {
+  /** the Cosmo-hosted image, before the processed copy replaced `frontImage` */
+  originalFrontImage: string;
+  originalBackImage: string;
+};
 
 // Owned objekt — collection + ownership info
-export type OwnedObjekt = IndexedObjekt & {
-  mintedAt: string;
-  receivedAt: string;
-  serial: number;
-  transferable: boolean;
-  tokenId: string;
-  // todo: separate this
-  isPin?: boolean;
-  isLocked?: boolean;
-  pinOrder?: number | null;
-};
+export type OwnedObjekt = IndexedObjekt &
+  Pick<Objekt, "mintedAt" | "receivedAt" | "serial" | "transferable"> & {
+    tokenId: string;
+  };
 
 // Union type for functions that accept either indexed or owned objekts
 export type ValidObjekt = OwnedObjekt | IndexedObjekt;
+
+/** set by the list builders */
+export type ListEntryFields = {
+  entryId: number;
+  price: number | null;
+  isQyop: boolean;
+  note: string | null;
+};
+
+/** set by the marketplace from its listing summary */
+export type MarketFields = {
+  /** cheapest live sale listing, always USD */
+  floorPrice: number | null;
+  /** at least one live sale listing is QYOP */
+  hasQyop: boolean;
+  listingCount: number;
+  /** unix seconds */
+  listedAt: number;
+};
+
+export type HeldFields = {
+  /** copies held, standing in for the tokens of an owner too large to list one by one (COSMO Spin) */
+  copies: number;
+};
+
+/** the profile owner's marks, set on the client */
+export type PinState = {
+  isPin: boolean;
+  isLocked: boolean;
+  pinOrder: number | null;
+};
+
+/** derived on the client by `mapObjektWithTag` */
+export type ObjektTags = {
+  tags: string[];
+  edition: 1 | 2 | 3 | null;
+};
+
+export type ListObjekt = ValidObjekt & ListEntryFields;
+export type MarketObjekt = IndexedObjekt & MarketFields;
+export type HeldObjekt = IndexedObjekt & HeldFields;
+
+/** what the shared filter, sort and grid code reads: any surface's row, tagged */
+export type GridObjekt = ValidObjekt &
+  ObjektTags &
+  Partial<ListEntryFields & MarketFields & HeldFields & PinState>;

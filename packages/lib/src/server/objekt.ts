@@ -1,22 +1,18 @@
-import type { Objekt } from "@repo/db/indexer/schema";
+import type { Collection, Objekt } from "@repo/db/indexer/schema";
 
-import type { IndexedObjekt, OwnedObjekt } from "../types/objekt";
+import type {
+  CollectionField,
+  IndexedObjekt,
+  OwnedObjekt,
+  ProcessedImageField,
+} from "../types/objekt";
 
 type CollectionOverride = Partial<{
   backgroundColor: string;
   textColor: string;
 }>;
 
-type CollectionInput = IndexedObjekt & {
-  processedFrontImage?: string | null;
-  processedBackImage?: string | null;
-  processedThumbnailImage?: string | null;
-};
-
-export type OverriddenCollection = IndexedObjekt & {
-  originalFrontImage: string;
-  originalBackImage: string;
-};
+type CollectionInput = Pick<Collection, CollectionField | ProcessedImageField>;
 
 type TransferRow = {
   id: string;
@@ -85,23 +81,35 @@ function getBandImageUrl(objekt: CollectionInput) {
 }
 
 /**
- * Apply color and band image overrides to any objekt type
+ * Apply color and band image overrides to any objekt type. Fields are listed
+ * rather than spread, so a full row (the activity feed's) carries no other column.
  */
-export function overrideCollection(collection: CollectionInput): OverriddenCollection {
-  const { processedThumbnailImage, processedFrontImage, processedBackImage, ...base } = collection;
-  const overrides = collectionOverrides[collection.slug as keyof typeof collectionOverrides];
-  const bandImageUrl = getBandImageUrl(collection);
+export function overrideCollection(collection: CollectionInput): IndexedObjekt {
+  const overrides: CollectionOverride =
+    collectionOverrides[collection.slug as keyof typeof collectionOverrides] ?? {};
 
   return {
-    ...base,
-    ...overrides,
-    thumbnailImage: processedThumbnailImage ?? collection.thumbnailImage,
-    frontImage: processedFrontImage ?? collection.frontImage,
-    backImage: processedBackImage ?? collection.backImage,
-    originalFrontImage: base.frontImage,
-    originalBackImage: base.backImage,
-    bandImageUrl,
+    id: collection.id,
     createdAt: new Date(collection.createdAt).toISOString(),
+    slug: collection.slug,
+    collectionId: collection.collectionId,
+    season: collection.season,
+    member: collection.member,
+    members: collection.members,
+    artist: collection.artist,
+    collectionNo: collection.collectionNo,
+    class: collection.class,
+    thumbnailImage: collection.processedThumbnailImage ?? collection.thumbnailImage,
+    frontImage: collection.processedFrontImage ?? collection.frontImage,
+    backImage: collection.processedBackImage ?? collection.backImage,
+    originalFrontImage: collection.frontImage,
+    originalBackImage: collection.backImage,
+    backgroundColor: overrides.backgroundColor ?? collection.backgroundColor,
+    textColor: overrides.textColor ?? collection.textColor,
+    onOffline: collection.onOffline,
+    bandImageUrl: getBandImageUrl(collection),
+    frontMedia: collection.frontMedia,
+    hasAudio: collection.hasAudio,
   };
 }
 

@@ -1,5 +1,4 @@
 import { PlusIcon } from "@phosphor-icons/react";
-import type { ValidObjekt } from "@repo/lib/types/objekt";
 
 import { Button } from "@/components/ui/button";
 import { MenuItem } from "@/components/ui/menu";
@@ -7,14 +6,14 @@ import { selectBarFillClass, selectBarIconOnlyClass } from "@/features/objekt/se
 import { m } from "@/paraglide/messages";
 import { useSelection } from "@/stores/selection";
 
-import { useOpenAddToList } from "./add-to-list-dialog";
+import { type AddableObjekt, useOpenAddToList } from "./add-to-list-dialog";
 
 /** An `ObjektCardMenu` item; must sit under an `AddToListProvider`. */
 export function AddToListMenuItem({
   objekts,
   combined,
 }: {
-  objekts: ValidObjekt[];
+  objekts: AddableObjekt[];
   combined?: boolean;
 }) {
   const openAddToList = useOpenAddToList();
@@ -32,7 +31,7 @@ export function AddToListAction({
   objekts,
   combined,
 }: {
-  objekts: ValidObjekt[];
+  objekts: AddableObjekt[];
   combined?: boolean;
 }) {
   const openAddToList = useOpenAddToList();

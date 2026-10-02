@@ -3,6 +3,12 @@ export const COSMO_ENDPOINT = "https://api.cosmo.fans";
 // artists
 export const validArtists = ["tripleS", "artms", "idntt"] as const;
 export type ValidArtist = (typeof validArtists)[number];
+/** the indexer stores an artist lowercased */
+export type IndexedArtist = Lowercase<ValidArtist>;
+
+export function toIndexedArtist(artist: ValidArtist): IndexedArtist {
+  return artist.toLowerCase() as IndexedArtist;
+}
 
 // sort values
 export const validSorts = [

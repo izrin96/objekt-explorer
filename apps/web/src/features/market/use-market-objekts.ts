@@ -1,4 +1,4 @@
-import type { IndexedObjekt, ValidObjekt } from "@repo/lib/types/objekt";
+import type { MarketObjekt, ObjektTags } from "@repo/lib/types/objekt";
 import { useQuery } from "@tanstack/react-query";
 import { useDeferredValue, useMemo } from "react";
 
@@ -44,7 +44,7 @@ export function useMarketObjekts() {
     if (!collections || !summary) return [];
 
     const bySlug = new Map(summary.map((entry) => [entry.slug, entry]));
-    const objekts: IndexedObjekt[] = [];
+    const objekts: (MarketObjekt & ObjektTags)[] = [];
 
     for (const collection of collections) {
       const entry = bySlug.get(collection.slug);
@@ -61,10 +61,7 @@ export function useMarketObjekts() {
     return objekts;
   }, [collectionQuery.data, summaryQuery.data]);
 
-  const filtered: ValidObjekt[] = useMemo(
-    () => filterObjekts(deferredFilters, listed),
-    [deferredFilters, listed],
-  );
+  const filtered = useMemo(() => filterObjekts(deferredFilters, listed), [deferredFilters, listed]);
 
   const marketFilters: FilterSearch = useMemo(
     () => ({ ...deferredFilters, sort: deferredFilters.sort ?? DEFAULT_MARKET_SORT }),
@@ -75,7 +72,7 @@ export function useMarketObjekts() {
     filtered,
     filters: marketFilters,
     rarityMap,
-    totalListings: filtered.reduce((total, objekt) => total + (objekt.listingCount ?? 0), 0),
+    totalListings: filtered.reduce((total, objekt) => total + objekt.listingCount, 0),
     isStale: filters !== deferredFilters,
     isPending: collectionQuery.isPending || summaryQuery.isPending || rarityLoading,
   };

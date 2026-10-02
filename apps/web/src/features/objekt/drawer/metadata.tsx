@@ -44,8 +44,8 @@ export function MetadataPanel({
 }) {
   const owned = isObjektOwned(objekt);
   const { getArtist } = useCosmoArtist();
-  // not every list maps `edition` onto its objekts, so derive it here
-  const edition = objekt.edition ?? getCollectionEdition(objekt);
+  // not every surface tags its objekts, so derive it here
+  const edition = getCollectionEdition(objekt);
 
   return (
     /* `minmax(0,1fr)`: a bare `1fr` is floored at the value's min-content, and

@@ -2,6 +2,7 @@ import type { ValidArtist, ValidFourSeason } from "@repo/cosmo/types/common";
 import { validArtists, validFourSeason } from "@repo/cosmo/types/common";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
+import type { CollectionField, ProcessedImageField } from "@repo/lib/types/objekt";
 import { and, asc, count, eq, inArray, ne } from "drizzle-orm";
 
 import { getCache } from "./redis";
@@ -140,7 +141,7 @@ export function getCollectionColumns() {
     processedThumbnailImage: collections.processedThumbnailImage,
     processedFrontImage: collections.processedFrontImage,
     processedBackImage: collections.processedBackImage,
-  };
+  } satisfies Record<CollectionField | ProcessedImageField, unknown>;
 }
 
 export function getPartialCollectionColumns() {

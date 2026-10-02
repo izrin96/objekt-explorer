@@ -1,16 +1,16 @@
-import type { ValidObjekt } from "@repo/lib/types/objekt";
+import type { GridObjekt } from "@repo/lib/types/objekt";
 
 import { sortObjekts } from "@/features/filters/filter-utils";
 import { isFiltering, type FilterSearch } from "@/features/filters/search-schema";
 
 import { copiesIn, isObjektOwned } from "./objekt-utils";
 
-export type VirtualItem =
+export type VirtualItem<T extends GridObjekt = GridObjekt> =
   | { type: "label"; title: string }
-  | { type: "row"; items: ValidObjekt[][]; rowIndex: number; groupTitle: string };
+  | { type: "row"; items: T[][]; rowIndex: number; groupTitle: string };
 
-export type BuildVirtualDataConfig = {
-  objekts: ValidObjekt[];
+export type BuildVirtualDataConfig<T extends GridObjekt = GridObjekt> = {
+  objekts: T[];
   filters: FilterSearch;
   columns: number;
   getArtist: (id: string) => { title: string } | undefined;
@@ -23,7 +23,7 @@ export type BuildVirtualDataConfig = {
 };
 
 function groupKey(
-  objekt: ValidObjekt,
+  objekt: GridObjekt,
   groupBy: NonNullable<FilterSearch["group_by"]>,
   getArtist: BuildVirtualDataConfig["getArtist"],
 ): string {
@@ -37,11 +37,13 @@ function groupKey(
   }
 }
 
-function pinOrder(objekt: ValidObjekt): number {
+function pinOrder(objekt: GridObjekt): number {
   return isObjektOwned(objekt) ? (objekt.pinOrder ?? 0) : 0;
 }
 
-export function buildVirtualData(config: BuildVirtualDataConfig): VirtualItem[] {
+export function buildVirtualData<T extends GridObjekt>(
+  config: BuildVirtualDataConfig<T>,
+): VirtualItem<T>[] {
   const {
     objekts,
     filters,
@@ -59,10 +61,10 @@ export function buildVirtualData(config: BuildVirtualDataConfig): VirtualItem[] 
   const pinFirst = isProfile && !filters.hidePin && !isFiltering(filters);
 
   const groupBy = filters.group_by;
-  const groups: Record<string, ValidObjekt[]> = groupBy
+  const groups: Record<string, T[]> = groupBy
     ? (Object.groupBy(objekts, (objekt) => groupKey(objekt, groupBy, getArtist)) as Record<
         string,
-        ValidObjekt[]
+        T[]
       >)
     : { "": objekts };
 
@@ -75,7 +77,7 @@ export function buildVirtualData(config: BuildVirtualDataConfig): VirtualItem[] 
     return first.localeCompare(second);
   });
 
-  const result: VirtualItem[] = [];
+  const result: VirtualItem<T>[] = [];
 
   for (const [key, items] of ordered) {
     if (key) result.push({ type: "label", title: key });
@@ -92,10 +94,10 @@ export function buildVirtualData(config: BuildVirtualDataConfig): VirtualItem[] 
       }
     }
 
-    let cells: ValidObjekt[][];
+    let cells: T[][];
     if (filters.grouped) {
       cells = Object.values(
-        Object.groupBy(sorted, (objekt) => objekt.collectionId) as Record<string, ValidObjekt[]>,
+        Object.groupBy(sorted, (objekt) => objekt.collectionId) as Record<string, T[]>,
       );
     } else {
       cells = sorted.map((objekt) => [objekt]);

@@ -11,7 +11,7 @@ import {
   PushPinIcon,
   PushPinSlashIcon,
 } from "@phosphor-icons/react";
-import type { OwnedObjekt, ValidObjekt } from "@repo/lib/types/objekt";
+import type { GridObjekt, OwnedObjekt } from "@repo/lib/types/objekt";
 import { useCallback, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 
@@ -70,7 +70,7 @@ export function CollectionView() {
   const selecting = useSelection(selectIsSelecting);
   const toggleSelect = useSelection((s) => s.toggle);
   const clearSelection = useSelection((s) => s.clear);
-  const [active, setActive] = useState<ValidObjekt | null>(null);
+  const [active, setActive] = useState<GridObjekt | null>(null);
 
   const {
     filtered,
@@ -135,7 +135,7 @@ export function CollectionView() {
   const objekts = useMemo(() => {
     if (!pinOrderOverride) return filtered;
     return filtered.map((objekt) => {
-      const order = pinOrderOverride.get(objekt.id);
+      const order = isObjektOwned(objekt) ? pinOrderOverride.get(objekt.tokenId) : undefined;
       return order === undefined ? objekt : Object.assign({}, objekt, { pinOrder: order });
     });
   }, [filtered, pinOrderOverride]);
@@ -145,12 +145,15 @@ export function CollectionView() {
       filters.hidePin === true
         ? []
         : objekts
-            .filter((objekt) => isObjektOwned(objekt) && objekt.isPin === true)
+            .filter(
+              (objekt): objekt is GridObjekt & OwnedObjekt =>
+                isObjektOwned(objekt) && objekt.isPin === true,
+            )
             .toSorted((a, b) => pinOrder(b) - pinOrder(a)),
     [objekts, filters.hidePin],
   );
 
-  const pinnedIds = useMemo(() => pinned.map((objekt) => objekt.id), [pinned]);
+  const pinnedIds = useMemo(() => pinned.map((objekt) => objekt.tokenId), [pinned]);
 
   // one pin has nowhere to go
   const dndEnabled =
@@ -161,14 +164,14 @@ export function CollectionView() {
     pinnedIds.length > 1;
 
   const objektMenuItems = useCallback(
-    (objekt: ValidObjekt) => {
+    (objekt: GridObjekt) => {
       const owned = isObjektOwned(objekt) ? objekt : null;
       const canEdit = isProfileAuthed && owned !== null;
       // the pins lead the grid topmost-first, so "up" is one index earlier.
       // A filter hides pins, and renumbering only the visible ones would tie
       // them with the hidden ones, so moves wait for the full list as a drag does.
       const pinIndex =
-        owned?.isPin === true && !isFiltering(filters) ? pinnedIds.indexOf(owned.id) : -1;
+        owned?.isPin === true && !isFiltering(filters) ? pinnedIds.indexOf(owned.tokenId) : -1;
       const move = (to: number) => handleReorder(arrayMove(pinnedIds, pinIndex, to), true);
       return (
         <>
@@ -177,8 +180,8 @@ export function CollectionView() {
               <MenuItem
                 onClick={() =>
                   owned.isPin
-                    ? batchUnpin.mutate({ address, tokenIds: [Number(owned.id)] })
-                    : batchPin.mutate({ address, tokenIds: [Number(owned.id)] })
+                    ? batchUnpin.mutate({ address, tokenIds: [Number(owned.tokenId)] })
+                    : batchPin.mutate({ address, tokenIds: [Number(owned.tokenId)] })
                 }
               >
                 {owned.isPin ? <PushPinSlashIcon /> : <PushPinIcon />}
@@ -202,8 +205,8 @@ export function CollectionView() {
               <MenuItem
                 onClick={() =>
                   owned.isLocked
-                    ? batchUnlock.mutate({ address, tokenIds: [Number(owned.id)] })
-                    : batchLock.mutate({ address, tokenIds: [Number(owned.id)] })
+                    ? batchUnlock.mutate({ address, tokenIds: [Number(owned.tokenId)] })
+                    : batchLock.mutate({ address, tokenIds: [Number(owned.tokenId)] })
                 }
               >
                 {owned.isLocked ? <LockSimpleOpenIcon /> : <LockSimpleIcon />}
@@ -230,7 +233,7 @@ export function CollectionView() {
   );
 
   const renderCard = useCallback(
-    (objekt: ValidObjekt, qty?: number, priority = false, sortable = false) => {
+    (objekt: GridObjekt, qty?: number, priority = false, sortable = false) => {
       const owned = isObjektOwned(objekt) ? objekt : null;
       return (
         <ObjektCard
@@ -256,7 +259,7 @@ export function CollectionView() {
   );
 
   const renderItem = useCallback(
-    ({ item, rowIndex }: { item: ValidObjekt[]; rowIndex: number }) => {
+    ({ item, rowIndex }: { item: GridObjekt[]; rowIndex: number }) => {
       const objekt = item[0];
       if (!objekt) return null;
       const sortable = dndEnabled && isObjektOwned(objekt) && objekt.isPin === true;
@@ -273,7 +276,7 @@ export function CollectionView() {
       // Select mode disables the sortable rather than unwrapping it, so the
       // pins keep their subtree and do not remount on every toggle
       return sortable ? (
-        <SortablePin id={objekt.id} disabled={selecting}>
+        <SortablePin id={objekt.tokenId} disabled={selecting}>
           {card}
         </SortablePin>
       ) : (
@@ -287,7 +290,7 @@ export function CollectionView() {
   // overlay's shadow below the card as a dark blob
   const renderOverlay = useCallback(
     (id: string) => {
-      const objekt = pinned.find((item) => item.id === id);
+      const objekt = pinned.find((item) => item.tokenId === id);
       return objekt ? (
         <ObjektCard objekt={objekt} pin hideLabel className="rounded-photocard shadow-xl" />
       ) : null;
@@ -305,8 +308,8 @@ export function CollectionView() {
             <MenuItem
               onClick={() =>
                 item.isPin
-                  ? batchUnpin.mutate({ address, tokenIds: [Number(item.id)] })
-                  : batchPin.mutate({ address, tokenIds: [Number(item.id)] })
+                  ? batchUnpin.mutate({ address, tokenIds: [Number(item.tokenId)] })
+                  : batchPin.mutate({ address, tokenIds: [Number(item.tokenId)] })
               }
             >
               {item.isPin ? <PushPinSlashIcon /> : <PushPinIcon />}
@@ -315,8 +318,8 @@ export function CollectionView() {
             <MenuItem
               onClick={() =>
                 item.isLocked
-                  ? batchUnlock.mutate({ address, tokenIds: [Number(item.id)] })
-                  : batchLock.mutate({ address, tokenIds: [Number(item.id)] })
+                  ? batchUnlock.mutate({ address, tokenIds: [Number(item.tokenId)] })
+                  : batchLock.mutate({ address, tokenIds: [Number(item.tokenId)] })
               }
             >
               {item.isLocked ? <LockSimpleOpenIcon /> : <LockSimpleIcon />}
@@ -335,8 +338,11 @@ export function CollectionView() {
   const uniqueCount = new Set(filtered.map((objekt) => objekt.collectionId)).size;
 
   const selectedObjekts = filtered.filter((objekt) => selected.has(objekt.id));
-  const run = (mutate: (input: { address: string; tokenIds: number[] }) => void, ids: string[]) => {
-    mutate({ address, tokenIds: ids.map(Number) });
+  const run = (
+    mutate: (input: { address: string; tokenIds: number[] }) => void,
+    tokenIds: string[],
+  ) => {
+    mutate({ address, tokenIds: tokenIds.map(Number) });
     clearSelection();
   };
 
@@ -484,7 +490,7 @@ export function CollectionView() {
   );
 }
 
-function pinOrder(objekt: ValidObjekt): number {
+function pinOrder(objekt: GridObjekt): number {
   return isObjektOwned(objekt) ? (objekt.pinOrder ?? 0) : 0;
 }
 
@@ -494,14 +500,14 @@ function pinOrder(objekt: ValidObjekt): number {
  * a mixed selection.
  */
 function pick(
-  objekts: ValidObjekt[],
-  matches: (objekt: OwnedObjekt) => boolean,
-  action: { label: string; icon: ReactNode; run: (ids: string[]) => void },
+  objekts: GridObjekt[],
+  matches: (objekt: GridObjekt & OwnedObjekt) => boolean,
+  action: { label: string; icon: ReactNode; run: (tokenIds: string[]) => void },
 ): SelectBarAction[] {
-  const ids: string[] = [];
+  const tokenIds: string[] = [];
   for (const objekt of objekts) {
-    if (isObjektOwned(objekt) && matches(objekt)) ids.push(objekt.id);
+    if (isObjektOwned(objekt) && matches(objekt)) tokenIds.push(objekt.tokenId);
   }
-  if (ids.length === 0) return [];
-  return [{ label: action.label, icon: action.icon, onClick: () => action.run(ids) }];
+  if (tokenIds.length === 0) return [];
+  return [{ label: action.label, icon: action.icon, onClick: () => action.run(tokenIds) }];
 }

@@ -1,5 +1,5 @@
 import { MagnifyingGlassIcon } from "@phosphor-icons/react";
-import type { ValidObjekt } from "@repo/lib/types/objekt";
+import type { GridObjekt } from "@repo/lib/types/objekt";
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useState } from "react";
 
@@ -37,12 +37,12 @@ function HomePage() {
   const reset = useResetFilters();
   const ids = useSelection((s) => s.ids);
   const toggle = useSelection((s) => s.toggle);
-  const [active, setActive] = useState<ValidObjekt | null>(null);
+  const [active, setActive] = useState<GridObjekt | null>(null);
 
   useClearSelectionOnNavigate();
 
   const renderObjekt = useCallback(
-    ({ item, rowIndex }: { item: ValidObjekt[]; rowIndex: number }) => {
+    ({ item, rowIndex }: { item: GridObjekt[]; rowIndex: number }) => {
       const objekt = item[0];
       if (!objekt) return null;
       return (

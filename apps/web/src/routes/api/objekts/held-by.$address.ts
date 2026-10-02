@@ -5,7 +5,7 @@ import { getCache } from "@repo/api/services/redis";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
 import { overrideCollection } from "@repo/lib/server/objekt";
-import type { IndexedObjekt } from "@repo/lib/types/objekt";
+import type { HeldObjekt } from "@repo/lib/types/objekt";
 import { createFileRoute } from "@tanstack/react-router";
 import { count, eq, ne } from "drizzle-orm";
 
@@ -18,7 +18,7 @@ const heldBySchema = ownedBySchema.pick({ artist: true });
  * token (COSMO Spin holds millions). Copies are grouped before the join, so
  * only one row per collection meets the collection table.
  */
-async function countHeld(addr: string): Promise<IndexedObjekt[]> {
+async function countHeld(addr: string): Promise<HeldObjekt[]> {
   const held = indexer.$with("held").as(
     indexer
       .select({ collectionId: objekts.collectionId, copies: count().as("copies") })
@@ -34,7 +34,7 @@ async function countHeld(addr: string): Promise<IndexedObjekt[]> {
     .innerJoin(collections, eq(collections.id, held.collectionId))
     .where(ne(collections.slug, "empty-collection"));
 
-  return results.map((row): IndexedObjekt =>
+  return results.map((row): HeldObjekt =>
     Object.assign(overrideCollection(row.collection), { copies: row.copies }),
   );
 }

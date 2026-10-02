@@ -1,4 +1,4 @@
-import type { IndexedObjekt, OwnedObjekt, ValidObjekt } from "@repo/lib/types/objekt";
+import type { HeldObjekt, IndexedObjekt, OwnedObjekt, ValidObjekt } from "@repo/lib/types/objekt";
 import * as z from "zod";
 
 /** How many artworks a card previews. */
@@ -59,3 +59,8 @@ export const collectionResultSchema = z.object({
   collections: z.custom<IndexedObjekt[]>(),
 });
 export type CollectionResult = z.infer<typeof collectionResultSchema>;
+
+export const heldResultSchema = z.object({
+  collections: z.custom<HeldObjekt[]>(),
+});
+export type HeldResult = z.infer<typeof heldResultSchema>;

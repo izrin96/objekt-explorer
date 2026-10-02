@@ -2,6 +2,7 @@ import { artistsArraySchema } from "@repo/api/schemas/artist";
 import { checkpointSchema } from "@repo/api/schemas/checkpoint";
 import { getCollectionColumns } from "@repo/api/services/objekt";
 import { redis } from "@repo/api/services/redis";
+import { toIndexedArtist } from "@repo/cosmo/types/common";
 import { indexer } from "@repo/db/indexer";
 import { collections } from "@repo/db/indexer/schema";
 import { overrideCollection } from "@repo/lib/server/objekt";
@@ -43,12 +44,7 @@ export const Route = createFileRoute("/api/collection")({
 
         const whereQuery = and(
           ...(query.artist.length
-            ? [
-                inArray(
-                  collections.artist,
-                  query.artist.map((a) => a.toLowerCase()),
-                ),
-              ]
+            ? [inArray(collections.artist, query.artist.map(toIndexedArtist))]
             : []),
           ...(query.at ? [lte(collections.createdAt, query.at)] : []),
           ne(collections.slug, "empty-collection"),

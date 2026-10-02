@@ -19,14 +19,14 @@ import { SelectionOrderContext } from "./selection-order";
 const priceClass =
   "text-xxs text-center leading-tight font-semibold text-balance tabular-nums wrap-anywhere @[9rem]:text-xs";
 
-type ObjektCardProps = {
-  objekt: ValidObjekt;
+type ObjektCardProps<T extends ValidObjekt> = {
+  objekt: T;
   selected?: boolean;
   /** renders the check control in the top-right block; omit to make the card unselectable */
-  onToggleSelect?: (objekt: ValidObjekt) => void;
+  onToggleSelect?: (objekt: T) => void;
   /** false leaves the long press to a drag, as a sortable pin does; select mode still selects */
   longPressSelect?: boolean;
-  onOpen?: (objekt: ValidObjekt) => void;
+  onOpen?: (objekt: T) => void;
   pin?: boolean;
   lock?: boolean;
   qty?: number;
@@ -34,7 +34,7 @@ type ObjektCardProps = {
   price?: string;
   priceMuted?: boolean;
   /** makes the price caption a button: the owner's way to set or change a card's price */
-  onPriceClick?: (objekt: ValidObjekt) => void;
+  onPriceClick?: (objekt: T) => void;
   note?: string | null;
   /** overrides the hide-label setting; the drawer's big card always hides it */
   hideLabel?: boolean;
@@ -82,7 +82,7 @@ const hoverOnlyClass =
  * mode, and in it a tap toggles instead of opening. Shift on the check, or on
  * the card in select mode, selects the run from the card last toggled.
  */
-export function ObjektCard({
+export function ObjektCard<T extends ValidObjekt>({
   objekt,
   selected = false,
   onToggleSelect,
@@ -103,7 +103,7 @@ export function ObjektCard({
   priority = false,
   children,
   className,
-}: ObjektCardProps) {
+}: ObjektCardProps<T>) {
   const hideLabelSetting = useSettings((s) => s.hideLabel);
   const selecting = useSelection(selectIsSelecting);
   const order = use(SelectionOrderContext);

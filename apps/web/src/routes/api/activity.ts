@@ -1,7 +1,7 @@
 import { validType } from "@repo/api/schemas/activity";
 import { artistsArraySchema } from "@repo/api/schemas/artist";
 import { getCollectionColumns } from "@repo/api/services/objekt";
-import { validOnlineTypes } from "@repo/cosmo/types/common";
+import { toIndexedArtist, validOnlineTypes } from "@repo/cosmo/types/common";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts, transfers } from "@repo/db/indexer/schema";
 import { Addresses } from "@repo/lib";
@@ -34,12 +34,7 @@ type ActivityParams = z.infer<typeof activitySchema>;
 function getCollectionFilters(query: ActivityParams): SQL[] {
   const filters: SQL[] = [];
   if (query.artist.length)
-    filters.push(
-      inArray(
-        collections.artist,
-        query.artist.map((a) => a.toLowerCase()),
-      ),
-    );
+    filters.push(inArray(collections.artist, query.artist.map(toIndexedArtist)));
   if (query.member.length) filters.push(arrayOverlaps(collections.members, query.member));
   if (query.season.length) filters.push(inArray(collections.season, query.season));
   if (query.class.length) filters.push(inArray(collections.class, query.class));

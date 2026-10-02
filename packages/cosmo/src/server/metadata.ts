@@ -1,5 +1,6 @@
 import { ofetch } from "ofetch";
 
+import type { IndexedArtist } from "../types/common";
 import type {
   CosmoObjektMetadataV1,
   CosmoObjektMetadataV3,
@@ -186,7 +187,7 @@ export function enrichUpdateMetadata(
     season: metadata.objekt.season,
     member: metadata.objekt.member,
     members: metadata.objekt.members ?? [metadata.objekt.member],
-    artist: metadata.objekt.artists[0]!.toLowerCase(),
+    artist: metadata.objekt.artists[0]!.toLowerCase() as IndexedArtist,
     collectionNo: metadata.objekt.collectionNo,
     class: metadata.objekt.class,
     comoAmount: metadata.objekt.comoAmount,

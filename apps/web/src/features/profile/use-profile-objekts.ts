@@ -1,6 +1,6 @@
 import type { OwnedBySchema } from "@repo/api/schemas/owned-by";
 import { Addresses } from "@repo/lib";
-import type { OwnedObjekt, ValidObjekt } from "@repo/lib/types/objekt";
+import type { GridObjekt, PinState } from "@repo/lib/types/objekt";
 import { useInfiniteQuery, useQueries, useQuery } from "@tanstack/react-query";
 import { useDeferredValue, useEffect, useMemo } from "react";
 
@@ -8,7 +8,7 @@ import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import { filterObjekts } from "@/features/filters/filter-utils";
 import type { FilterSearch } from "@/features/filters/search-schema";
 import { useCanonicalFilters, useValidatedCanonicalFilters } from "@/features/filters/use-filters";
-import { copiesIn } from "@/features/objekt/objekt-utils";
+import { copiesIn, isObjektOwned } from "@/features/objekt/objekt-utils";
 import { collectionOptions } from "@/features/objekt/queries";
 import { useCollectionRarity } from "@/features/objekt/use-collection-rarity";
 
@@ -57,7 +57,7 @@ function useOwnedPages(address: string, filters: OwnedBySchema) {
   }, [hasNextPage, isFetchingNextPage, isError, fetchNextPage]);
 
   const pages = query.data?.pages;
-  const objekts = useMemo(
+  const objekts = useMemo<GridObjekt[]>(
     () => (spin ? (held.data ?? []) : (pages?.flatMap((page) => page.objekts) ?? [])),
     [spin, held.data, pages],
   );
@@ -109,15 +109,16 @@ export function useProfileObjekts() {
   });
 
   const derived = useMemo(() => {
-    const withMarks: ValidObjekt[] = deferredFilters.at
+    const withMarks = deferredFilters.at
       ? objekts
       : objekts.map((objekt) => {
-          const isPin = pins.has(objekt.id);
+          if (!isObjektOwned(objekt)) return objekt;
+          const pinOrder = pins.get(objekt.tokenId);
           return Object.assign({}, objekt, {
-            isPin,
-            isLocked: locks.has(objekt.id),
-            pinOrder: isPin ? (pins.get(objekt.id) ?? null) : null,
-          } satisfies Pick<OwnedObjekt, "isPin" | "isLocked" | "pinOrder">);
+            isPin: pinOrder !== undefined,
+            isLocked: locks.has(objekt.tokenId),
+            pinOrder: pinOrder ?? null,
+          } satisfies PinState);
         });
 
     const owned = filterObjekts(deferredFilters, withMarks);
@@ -130,7 +131,8 @@ export function useProfileObjekts() {
           )
         : [];
 
-    return { filtered: [...owned, ...missing], ownedSlugs };
+    const filtered: GridObjekt[] = [...owned, ...missing];
+    return { filtered, ownedSlugs };
   }, [deferredFilters, objekts, pins, locks, collections.data]);
 
   return {

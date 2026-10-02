@@ -3,7 +3,7 @@ import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
 import { isAddress } from "@repo/lib";
-import type { ValidObjekt } from "@repo/lib/types/objekt";
+import type { ListObjekt } from "@repo/lib/types/objekt";
 import { and, eq, exists, sql } from "drizzle-orm";
 
 import { optionalAuthed, selectedArtistsMiddleware } from "../orpc";
@@ -19,7 +19,7 @@ export const compareRouter = {
         context: { artists, messages, session },
         input: { sourceId, targetType, mode, targetProfile: targetProfileId, targetListId },
       }) => {
-        async function buildSourceEntries(): Promise<ValidObjekt[]> {
+        async function buildSourceEntries(): Promise<ListObjekt[]> {
           const sourceList = await fetchListWithEntries(sourceId);
 
           if (!sourceList)
@@ -115,10 +115,10 @@ export const compareRouter = {
 };
 
 function performComparison(
-  sourceEntries: ValidObjekt[],
+  sourceEntries: ListObjekt[],
   targetCollectionSlugs: ReadonlySet<string>,
   mode: "missing" | "matches",
-): ValidObjekt[] {
+): ListObjekt[] {
   const filteredEntries =
     mode === "missing"
       ? sourceEntries.filter((e) => !targetCollectionSlugs.has(e.slug))

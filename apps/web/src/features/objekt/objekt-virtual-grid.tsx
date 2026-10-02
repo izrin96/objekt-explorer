@@ -1,5 +1,5 @@
 import { CaretDownIcon } from "@phosphor-icons/react";
-import type { ValidObjekt } from "@repo/lib/types/objekt";
+import type { GridObjekt } from "@repo/lib/types/objekt";
 import { type ReactElement, useMemo } from "react";
 import { InView } from "react-intersection-observer";
 import { WindowVirtualizer } from "virtua";
@@ -14,16 +14,12 @@ import { buildVirtualData } from "./build-virtual-data";
 import { ObjektGrid } from "./objekt-grid";
 import { SelectionOrderContext } from "./selection-order";
 
-type ObjektVirtualGridProps = {
-  objekts: ValidObjekt[];
+type ObjektVirtualGridProps<T extends GridObjekt> = {
+  objekts: T[];
   filters: FilterSearch;
   /** overrides the shared column setting */
   columns?: number;
-  renderItem: (props: {
-    item: ValidObjekt[];
-    rowIndex: number;
-    groupTitle: string;
-  }) => ReactElement | null;
+  renderItem: (props: { item: T[]; rowIndex: number; groupTitle: string }) => ReactElement | null;
   /** pinned objekts lead their group, in the owner's order */
   isProfile?: boolean;
   rarityMap?: Map<string, number>;
@@ -33,7 +29,7 @@ type ObjektVirtualGridProps = {
   isFetchingNextPage?: boolean;
 };
 
-export function ObjektVirtualGrid({
+export function ObjektVirtualGrid<T extends GridObjekt>({
   objekts,
   filters,
   columns: columnsProp,
@@ -43,7 +39,7 @@ export function ObjektVirtualGrid({
   onLoadMore,
   hasNextPage = false,
   isFetchingNextPage = false,
-}: ObjektVirtualGridProps) {
+}: ObjektVirtualGridProps<T>) {
   const responsiveColumns = useColumns();
   const columns = columnsProp ?? responsiveColumns;
   const { compareSeason, compareClass } = useFilterData();

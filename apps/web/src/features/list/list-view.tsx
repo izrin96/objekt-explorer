@@ -5,7 +5,7 @@ import {
   TrashIcon,
 } from "@phosphor-icons/react";
 import type { ValidCustomSort } from "@repo/cosmo/types/common";
-import type { ValidObjekt } from "@repo/lib/types/objekt";
+import type { ListObjekt } from "@repo/lib/types/objekt";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useCallback, useDeferredValue, useMemo, useState } from "react";
@@ -49,10 +49,9 @@ import { SetPriceDialog } from "./set-price-dialog";
 import { useListOwned } from "./use-list-owned";
 
 /** the list's own currency, not the viewer's; an unpriced card nudges the owner to set one */
-function formatPrice(currency: string, objekt: ValidObjekt, canPrice: boolean): string {
+function formatPrice(currency: string, objekt: ListObjekt, canPrice: boolean): string {
   if (objekt.isQyop) return m.list_manage_objekt_set_price_qyop();
-  if (objekt.price === undefined || objekt.price === null)
-    return canPrice ? m.objekt_set_price() : m.list_price_none();
+  if (objekt.price === null) return canPrice ? m.objekt_set_price() : m.list_price_none();
   return formatCurrency(objekt.price, currency);
 }
 
@@ -112,9 +111,9 @@ function ListEntries() {
   const toggle = useSelection((s) => s.toggle);
   // the menu acts on every copy the card stands for, so the open card holds its
   // whole group
-  const [activeGroup, setActiveGroup] = useState<ValidObjekt[]>([]);
-  const [priceTarget, setPriceTarget] = useState<ValidObjekt[]>([]);
-  const [removeTarget, setRemoveTarget] = useState<ValidObjekt[]>([]);
+  const [activeGroup, setActiveGroup] = useState<ListObjekt[]>([]);
+  const [priceTarget, setPriceTarget] = useState<ListObjekt[]>([]);
+  const [removeTarget, setRemoveTarget] = useState<ListObjekt[]>([]);
   const [priceOpen, setPriceOpen] = useState(false);
   const [removeOpen, setRemoveOpen] = useState(false);
 
@@ -140,18 +139,18 @@ function ListEntries() {
     [list.isProfileBind, list.hideSerial, list.listTypeNew],
   );
 
-  const openPrice = useCallback((objekts: ValidObjekt[]) => {
+  const openPrice = useCallback((objekts: ListObjekt[]) => {
     setPriceTarget(objekts);
     setPriceOpen(true);
   }, []);
 
-  const openRemove = useCallback((objekts: ValidObjekt[]) => {
+  const openRemove = useCallback((objekts: ListObjekt[]) => {
     setRemoveTarget(objekts);
     setRemoveOpen(true);
   }, []);
 
   const menuItems = useCallback(
-    (objekts: ValidObjekt[]) => {
+    (objekts: ListObjekt[]) => {
       const objekt = objekts[0];
       if (!objekt) return null;
       return (
@@ -176,10 +175,10 @@ function ListEntries() {
   );
 
   const renderObjekt = useCallback(
-    ({ item, rowIndex }: { item: ValidObjekt[]; rowIndex: number }) => {
+    ({ item, rowIndex }: { item: ListObjekt[]; rowIndex: number }) => {
       const objekt = item[0];
       if (!objekt) return null;
-      const unpriced = (objekt.price ?? null) === null && objekt.isQyop !== true;
+      const unpriced = objekt.price === null && !objekt.isQyop;
 
       return (
         <ObjektCard

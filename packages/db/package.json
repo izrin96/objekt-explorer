@@ -21,6 +21,7 @@
     "db:migrate:indexer": "bun run --env-file=../../.env drizzle-kit migrate --config drizzle-indexer.config.ts"
   },
   "dependencies": {
+    "@repo/cosmo": "workspace:*",
     "drizzle-orm": "catalog:",
     "pg": "catalog:",
     "zod": "catalog:"

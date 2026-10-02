@@ -1,4 +1,4 @@
-import type { ValidObjekt } from "@repo/lib/types/objekt";
+import type { GridObjekt, ValidObjekt } from "@repo/lib/types/objekt";
 import chroma from "chroma-js";
 
 import { isObjektOwned } from "@/features/objekt/objekt-utils";
@@ -48,7 +48,7 @@ function toSeasonKey(seasonCode: string, seasonNumber: number) {
  * `a201z-aa204z` a collection range with optional season codes on either end,
  * and anything else is matched against the objekt's tags.
  */
-function searchFilter(keyword: string, objekt: ValidObjekt) {
+function searchFilter(keyword: string, objekt: GridObjekt) {
   if (keyword.startsWith("#") && isObjektOwned(objekt)) {
     const [start, end] = keyword.split("-").map(parseSerial);
     if (!start) return false;
@@ -84,18 +84,18 @@ function searchFilter(keyword: string, objekt: ValidObjekt) {
     );
   }
 
-  return objekt.tags?.some((value) => value === keyword);
+  return objekt.tags.some((value) => value === keyword);
 }
 
-function getSortDate(obj: ValidObjekt) {
-  return obj.order
-    ? obj.order
+function getSortDate(obj: GridObjekt) {
+  return obj.entryId !== undefined
+    ? obj.entryId
     : isObjektOwned(obj)
       ? new Date(obj.receivedAt).getTime()
       : new Date(obj.createdAt).getTime();
 }
 
-export function filterObjekts(filters: FilterSearch, objekts: ValidObjekt[]): ValidObjekt[] {
+export function filterObjekts<T extends GridObjekt>(filters: FilterSearch, objekts: T[]): T[] {
   const queries = (filters.search ?? "")
     .toLowerCase()
     .split(",")
@@ -192,13 +192,13 @@ export function filterObjekts(filters: FilterSearch, objekts: ValidObjekt[]): Va
   });
 }
 
-export function sortObjekts(
-  data: ValidObjekt[],
+export function sortObjekts<T extends GridObjekt>(
+  data: T[],
   filters: FilterSearch,
   compareMember: (a: string, b: string) => number,
   compareSeason: (a: string, b: string) => number,
   rarityMap?: Map<string, number>,
-): ValidObjekt[] {
+): T[] {
   let objekts = data;
 
   const sort = filters.sort ?? DEFAULT_SORT;

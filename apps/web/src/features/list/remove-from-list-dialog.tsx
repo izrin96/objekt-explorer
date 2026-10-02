@@ -1,4 +1,4 @@
-import type { ValidObjekt } from "@repo/lib/types/objekt";
+import type { ListObjekt } from "@repo/lib/types/objekt";
 
 import {
   AlertDialog,
@@ -22,7 +22,7 @@ export function RemoveFromListDialog({
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  objekts: ValidObjekt[];
+  objekts: ListObjekt[];
   slug: string;
 }) {
   const remove = useRemoveObjektsFromList();
@@ -48,7 +48,7 @@ export function RemoveFromListDialog({
             loading={remove.isPending}
             onClick={() =>
               remove.mutate(
-                { slug, entryIds: objekts.map((objekt) => Number(objekt.id)) },
+                { slug, entryIds: objekts.map((objekt) => objekt.entryId) },
                 {
                   // the removed entries are gone from the grid, so a selection of them would linger unseen
                   onSuccess: () => {

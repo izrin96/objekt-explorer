@@ -1,5 +1,5 @@
 import { getCollectionEdition } from "@repo/api/schemas/collection-grid";
-import type { OwnedObjekt, ValidObjekt } from "@repo/lib/types/objekt";
+import type { HeldFields, ObjektTags, OwnedObjekt, ValidObjekt } from "@repo/lib/types/objekt";
 
 function getMemberShortKeys(value: string) {
   return Object.keys(shortformMembers).filter((key) => shortformMembers[key] === value);
@@ -76,7 +76,7 @@ function makeCollectionTags(objekt: ValidObjekt) {
   return tags.map((t) => t.toLowerCase());
 }
 
-export function mapObjektWithTag<T extends ValidObjekt>(objekt: T): T {
+export function mapObjektWithTag<T extends ValidObjekt>(objekt: T): T & ObjektTags {
   return {
     ...objekt,
     tags: makeCollectionTags(objekt),
@@ -89,12 +89,12 @@ export function memberNames(objekt: ValidObjekt): string {
   return (objekt.members.length > 0 ? objekt.members : [objekt.member]).join(", ");
 }
 
-export function isObjektOwned(objekt: ValidObjekt): objekt is OwnedObjekt {
+export function isObjektOwned<T extends ValidObjekt>(objekt: T): objekt is T & OwnedObjekt {
   return "serial" in objekt;
 }
 
 /** how many tokens `objekts` stand for: a counted collection carries its copies */
-export function copiesIn(objekts: readonly ValidObjekt[]): number {
+export function copiesIn(objekts: readonly (ValidObjekt & Partial<HeldFields>)[]): number {
   return objekts.reduce((total, objekt) => total + (objekt.copies ?? 1), 0);
 }
 

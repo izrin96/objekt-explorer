@@ -1,4 +1,4 @@
-import type { ValidObjekt } from "@repo/lib/types/objekt";
+import type { ListObjekt } from "@repo/lib/types/objekt";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -29,8 +29,7 @@ import { useUpdateEntryPrices } from "./actions";
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** list entries; `id` is the entry id `updateEntryPrices` writes against */
-  objekts: ValidObjekt[];
+  objekts: ListObjekt[];
   slug: string;
   currency: string;
 };
@@ -68,7 +67,7 @@ function SetPriceForm({
   const [isQyop, setIsQyop] = useState(first?.isQyop ?? false);
   const [note, setNote] = useState(first?.note ?? "");
 
-  const entryIds = objekts.map((objekt) => Number(objekt.id));
+  const entryIds = objekts.map((objekt) => objekt.entryId);
   const save = (updates: Update[]) => update.mutate({ slug, updates }, { onSuccess: onDone });
 
   return (

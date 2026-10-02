@@ -1,5 +1,5 @@
 import { ChartPieSliceIcon } from "@phosphor-icons/react";
-import type { ValidObjekt } from "@repo/lib/types/objekt";
+import type { HeldFields, ValidObjekt } from "@repo/lib/types/objekt";
 import { useMemo } from "react";
 import { Pie, PieChart } from "recharts";
 
@@ -57,7 +57,10 @@ function toSlices(
 }
 
 /** A unit objekt lists every member it carries and counts towards each of them. */
-function tally(objekts: readonly ValidObjekt[], keys: (objekt: ValidObjekt) => readonly string[]) {
+function tally(
+  objekts: readonly (ValidObjekt & Partial<HeldFields>)[],
+  keys: (objekt: ValidObjekt) => readonly string[],
+) {
   const counts = new Map<string, number>();
   for (const objekt of objekts) {
     for (const key of keys(objekt)) counts.set(key, (counts.get(key) ?? 0) + (objekt.copies ?? 1));

@@ -1,5 +1,5 @@
 import { ORPCError } from "@orpc/server";
-import type { ValidArtist } from "@repo/cosmo/types/common";
+import { toIndexedArtist, type ValidArtist } from "@repo/cosmo/types/common";
 import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
@@ -7,7 +7,7 @@ import { listEntries, lists, user, userAddress } from "@repo/db/schema";
 import type { List, ListEntry, UserAddress } from "@repo/db/schema";
 import { chunkMap } from "@repo/lib";
 import { mapOwnedObjekt, overrideCollection } from "@repo/lib/server/objekt";
-import type { ValidObjekt } from "@repo/lib/types/objekt";
+import type { ListEntryFields, ListObjekt } from "@repo/lib/types/objekt";
 import { and, eq, inArray, isNotNull, ne } from "drizzle-orm";
 import slugify from "slugify";
 
@@ -20,6 +20,22 @@ import { TOKEN_CHUNK_SIZE } from "./utils";
 export interface ListEntryTransformConfig {
   artists?: ValidArtist[];
   hideSerial?: boolean;
+}
+
+type EntryPick = Pick<
+  ListEntry,
+  "collectionSlug" | "objektId" | "id" | "price" | "isQyop" | "note"
+>;
+
+/** `id` stays unique when a list holds the same collection twice */
+function entryFields(entry: EntryPick): ListEntryFields & { id: string } {
+  return {
+    id: entry.id.toString(),
+    entryId: entry.id,
+    price: entry.price,
+    isQyop: entry.isQyop,
+    note: entry.note,
+  };
 }
 
 export async function fetchCollectionsBySlug(slugs: string[], artists: ValidArtist[]) {
@@ -36,14 +52,7 @@ export async function fetchCollectionsBySlug(slugs: string[], artists: ValidArti
       .where(
         and(
           inArray(collections.slug, batch),
-          ...(artists.length
-            ? [
-                inArray(
-                  collections.artist,
-                  artists.map((a) => a.toLowerCase()),
-                ),
-              ]
-            : []),
+          ...(artists.length ? [inArray(collections.artist, artists.map(toIndexedArtist))] : []),
         ),
       ),
   );
@@ -52,9 +61,9 @@ export async function fetchCollectionsBySlug(slugs: string[], artists: ValidArti
 }
 
 async function buildProfileListEntries(
-  entries: Pick<ListEntry, "collectionSlug" | "objektId" | "id" | "price" | "isQyop" | "note">[],
+  entries: EntryPick[],
   config?: ListEntryTransformConfig,
-): Promise<ValidObjekt[]> {
+): Promise<ListObjekt[]> {
   const objektIds = entries.map((e) => e.objektId).filter((a) => a !== null);
 
   if (objektIds.length === 0) return [];
@@ -71,12 +80,7 @@ async function buildProfileListEntries(
         and(
           inArray(objekts.id, batch),
           ...(config?.artists?.length
-            ? [
-                inArray(
-                  collections.artist,
-                  config.artists.map((a) => a.toLowerCase()),
-                ),
-              ]
+            ? [inArray(collections.artist, config.artists.map(toIndexedArtist))]
             : []),
         ),
       ),
@@ -92,26 +96,15 @@ async function buildProfileListEntries(
       const objekt = config?.hideSerial
         ? overrideCollection(data.collection)
         : mapOwnedObjekt(data.objekt, data.collection);
-      return Object.assign({}, objekt, {
-        id: entry.id.toString(),
-        order: entry.id,
-        price: entry.price ?? undefined,
-        isQyop: entry.isQyop ?? undefined,
-        note: entry.note ?? undefined,
-      });
+      return Object.assign({}, objekt, entryFields(entry));
     })
     .filter((a) => a !== null);
 }
 
-type EntryPick = Pick<
-  ListEntry,
-  "collectionSlug" | "objektId" | "id" | "price" | "isQyop" | "note"
->;
-
 async function buildNormalListEntries(
   entries: EntryPick[],
   config?: ListEntryTransformConfig,
-): Promise<ValidObjekt[]> {
+): Promise<ListObjekt[]> {
   const validEntries = entries
     .toSorted((a, b) => a.id - b.id)
     .filter((a) => a.collectionSlug !== null);
@@ -125,21 +118,15 @@ async function buildNormalListEntries(
     .map((entry) => {
       const collectionSlug = entry.collectionSlug!;
       const collection = collectionsMap.get(collectionSlug)!;
-      return Object.assign({}, collection, {
-        id: entry.id.toString(),
-        order: entry.id,
-        price: entry.price ?? undefined,
-        isQyop: entry.isQyop ?? undefined,
-        note: entry.note ?? undefined,
-      });
+      return Object.assign({}, collection, entryFields(entry));
     });
 }
 
 export async function buildListEntries(
-  entries: Pick<ListEntry, "collectionSlug" | "objektId" | "id" | "price" | "isQyop" | "note">[],
+  entries: EntryPick[],
   isProfileBind: boolean,
   config?: ListEntryTransformConfig,
-): Promise<ValidObjekt[]> {
+): Promise<ListObjekt[]> {
   if (isProfileBind) {
     return buildProfileListEntries(entries, config);
   }
@@ -673,12 +660,17 @@ export async function buildTradePartnersResponse(
     db.select().from(user).where(inArray(user.id, userIds)),
     db.select().from(userAddress).where(inArray(userAddress.userId, userIds)),
     allSlugs.length > 0
-      ? indexer.select().from(collections).where(inArray(collections.slug, allSlugs))
+      ? indexer
+          .select(getCollectionColumns())
+          .from(collections)
+          .where(inArray(collections.slug, allSlugs))
       : Promise.resolve([]),
   ]);
 
   const userMap = new Map(users.map((u) => [u.id, u]));
-  const collectionsData = Object.fromEntries(collectionRows.map((c) => [c.slug, c]));
+  const collectionsData = Object.fromEntries(
+    collectionRows.map((c) => [c.slug, overrideCollection(c)]),
+  );
 
   // address → nickname map (hiding respected, addresses normalized to lowercase)
   const addrNickMap = new Map<string, string>();

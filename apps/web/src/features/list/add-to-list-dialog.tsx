@@ -1,5 +1,5 @@
 import type { AddSource, PublicList } from "@repo/api/schemas/list";
-import type { ValidObjekt } from "@repo/lib/types/objekt";
+import type { ListEntryFields, ValidObjekt } from "@repo/lib/types/objekt";
 import { createContext, type ReactNode, use, useCallback, useMemo, useState } from "react";
 
 import { Note } from "@/components/shared/note";
@@ -39,9 +39,12 @@ import { LIST_TYPE_LABEL } from "./list-type-badge";
  */
 type AddOptions = { combined?: boolean };
 
-type OpenAddToList = (objekts: ValidObjekt[], options?: AddOptions) => void;
+/** a list's own cards carry their entry, which a list-to-list add copies from */
+export type AddableObjekt = ValidObjekt & Partial<ListEntryFields>;
 
-type AddTarget = AddOptions & { objekts: ValidObjekt[] };
+type OpenAddToList = (objekts: AddableObjekt[], options?: AddOptions) => void;
+
+type AddTarget = AddOptions & { objekts: AddableObjekt[] };
 
 const AddToListContext = createContext<OpenAddToList | null>(null);
 
@@ -89,7 +92,7 @@ export function useOpenAddToList(): OpenAddToList {
   return open;
 }
 
-/** `dropped` counts the picked objekts the source leaves out: unowned ones a bound list refuses. */
+/** `dropped` counts the picked objekts the source leaves out: unowned ones a bound list refuses, or rows that are no list entry. */
 function toSource(
   list: PublicList,
   { objekts, combined }: AddTarget,
@@ -99,9 +102,10 @@ function toSource(
     return { from: { type: "collections", slugs: objekts.map((o) => o.slug) }, dropped: 0 };
   }
   if (sourceList !== undefined) {
+    const entryIds = objekts.flatMap((o) => (o.entryId === undefined ? [] : [o.entryId]));
     return {
-      from: { type: "list", slug: sourceList, entryIds: objekts.map((o) => Number(o.id)) },
-      dropped: 0,
+      from: { type: "list", slug: sourceList, entryIds },
+      dropped: objekts.length - entryIds.length,
     };
   }
   const owned = objekts.filter(isObjektOwned);

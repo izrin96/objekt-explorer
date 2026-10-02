@@ -1,6 +1,7 @@
 import { ownedBySchema, type OwnedBySchema } from "@repo/api/schemas/owned-by";
 import { getCollectionColumns } from "@repo/api/services/objekt";
 import { isAddressHiddenFromCaller } from "@repo/api/services/privacy";
+import { toIndexedArtist } from "@repo/cosmo/types/common";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts, transfers } from "@repo/db/indexer/schema";
 import { Addresses } from "@repo/lib";
@@ -13,12 +14,7 @@ const ENABLE_COUNT = false;
 
 function buildCollectionFilters(query: OwnedBySchema) {
   if (!query.artist?.length) return [];
-  return [
-    inArray(
-      collections.artist,
-      query.artist.map((a) => a.toLowerCase()),
-    ),
-  ];
+  return [inArray(collections.artist, query.artist.map(toIndexedArtist))];
 }
 
 function cursorWhere(query: OwnedBySchema) {
