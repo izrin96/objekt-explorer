@@ -65,6 +65,8 @@
  */
 
 import path from "node:path";
+import { Readable, pipeline } from "node:stream";
+import { constants, createGzip } from "node:zlib";
 
 import {
   closeWebSocketConnections,
@@ -251,8 +253,7 @@ function compressResponse(req: Request, response: Response): Response {
   if (!req.headers.get("accept-encoding")?.includes("gzip")) return response;
 
   const mimeType = (response.headers.get("content-type") ?? "").split(";")[0]!.trim();
-  // an event stream has to reach the client event by event, which gzip buffers
-  if (mimeType === "text/event-stream" || !isMimeTypeCompressible(mimeType)) return response;
+  if (!isMimeTypeCompressible(mimeType)) return response;
   const length = response.headers.get("content-length");
   if (length !== null && Number(length) < GZIP_MIN_BYTES) return response;
 
@@ -260,7 +261,18 @@ function compressResponse(req: Request, response: Response): Response {
   headers.set("Content-Encoding", "gzip");
   headers.delete("Content-Length");
   headers.append("Vary", "Accept-Encoding");
-  return new Response(response.body.pipeThrough(new CompressionStream("gzip")), {
+  // an event stream has to reach the client event by event, so flush after every chunk
+  const body =
+    mimeType === "text/event-stream"
+      ? (Readable.toWeb(
+          pipeline(
+            Readable.fromWeb(response.body as never),
+            createGzip({ flush: constants.Z_SYNC_FLUSH }),
+            () => {},
+          ),
+        ) as unknown as ReadableStream<Uint8Array>)
+      : response.body.pipeThrough(new CompressionStream("gzip"));
+  return new Response(body, {
     status: response.status,
     statusText: response.statusText,
     headers,
