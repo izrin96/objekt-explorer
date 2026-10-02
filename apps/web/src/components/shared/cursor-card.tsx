@@ -4,7 +4,7 @@ import { TooltipPrimitive } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
 /** Every hover card opens and closes on the same beat. */
-export const cursorCardDelays = { delay: 120, closeDelay: 100 } as const;
+export const cursorCardDelays = { delay: 120, closeDelay: 0 } as const;
 
 /**
  * One card shared by every trigger on its handle, so a long table mounts a
