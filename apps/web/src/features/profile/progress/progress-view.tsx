@@ -201,6 +201,7 @@ function ClassCard({
                 objekt={owned}
                 qty={copiesIn(copies) > 1 ? copiesIn(copies) : undefined}
                 unobtainable={item.unobtainable}
+                hideSerial
                 onOpen={onOpen}
               >
                 {menu}
