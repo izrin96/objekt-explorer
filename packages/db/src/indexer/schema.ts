@@ -102,7 +102,6 @@ export const objekts = pgTable(
   },
   (table) => [
     index("IDX_19209bac5cab521e9327f74013").using("btree", table.serial.asc().nullsLast()),
-    index("IDX_f47af96878c586b3fbb6d9439c").using("btree", table.transferable.asc().nullsLast()),
     index("IDX_objekt_collection_owner").using(
       "btree",
       table.collectionId.asc().nullsLast(),
@@ -194,12 +193,6 @@ export const transfers = pgTable(
       table.timestamp.desc().nullsFirst(),
       table.id.desc().nullsFirst(),
     ),
-    index("idx_transfer_from_objekt_ts").using(
-      "btree",
-      table.from.asc().nullsLast(),
-      table.objektId.asc().nullsLast(),
-      table.timestamp.desc().nullsFirst(),
-    ),
     index("idx_transfer_from_ts_id").using(
       "btree",
       table.from.asc().nullsLast(),
@@ -243,12 +236,6 @@ export const transfers = pgTable(
     index("idx_transfer_spin_ts")
       .using("btree", table.timestamp.desc().nullsFirst(), table.id.desc().nullsFirst())
       .where(sql`("to" = '0xd3d5f29881ad87bb10c1100e2c709c9596de345f'::text)`),
-    index("idx_transfer_to_objekt_ts").using(
-      "btree",
-      table.to.asc().nullsLast(),
-      table.objektId.asc().nullsLast(),
-      table.timestamp.desc().nullsFirst(),
-    ),
     index("idx_transfer_to_ts_id").using(
       "btree",
       table.to.asc().nullsLast(),
@@ -260,11 +247,6 @@ export const transfers = pgTable(
       table.timestamp.desc().nullsFirst(),
       table.id.desc().nullsFirst(),
     ),
-    index("idx_transfer_type_transfer_ts_id")
-      .using("btree", table.timestamp.desc().nullsFirst(), table.id.desc().nullsFirst())
-      .where(
-        sql`(("from" != '0x0000000000000000000000000000000000000000'::text) AND ("to" != '0xd3d5f29881ad87bb10c1100e2c709c9596de345f'::text))`,
-      ),
     index("idx_transfer_type_transfer_collection_ts_id")
       .using(
         "btree",
