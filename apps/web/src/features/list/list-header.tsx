@@ -69,7 +69,7 @@ export function ListHeader() {
             <Link
               to="/@{$nickname}"
               params={{ nickname: list.profile?.nickname || list.profileAddress.toLowerCase() }}
-              className="text-muted-foreground hover:text-foreground max-w-full truncate text-sm font-medium underline-offset-2 transition-colors hover:underline"
+              className="text-muted-foreground hover:text-foreground max-w-full self-start truncate text-sm font-medium underline-offset-2 transition-colors hover:underline"
             >
               {displayNickname(list.profileAddress, list.profile?.nickname)}
             </Link>
