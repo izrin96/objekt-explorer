@@ -12,7 +12,6 @@ import {
 import type { ObjektTransfer, ObjektTransferResult } from "@repo/api/schemas/objekt";
 import { Addresses } from "@repo/lib";
 import type { UseQueryResult } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
 import { type ReactNode, useMemo, useState } from "react";
 
 import { EmptyState } from "@/components/shared/empty-state";
@@ -22,6 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Group } from "@/components/ui/group";
 import { NumberField, NumberFieldGroup, NumberFieldInput } from "@/components/ui/number-field";
+import { ProfileCell, ProfileLink } from "@/features/profile/profile-hover-card";
 import { truncateAddress } from "@/lib/address";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -53,6 +53,7 @@ export type TimelineEvent = {
   kind: EventKind;
   /** a nickname, or a raw `0x…` address when Cosmo has no name for the holder */
   owner: string;
+  address: string;
   /** render the owner in mono — it is a raw address, not a nickname */
   mono: boolean;
   at: Date;
@@ -67,6 +68,7 @@ export function toTimeline(rows: ObjektTransfer[]): TimelineEvent[] {
       id: row.id,
       kind,
       owner: spun ? "COSMO" : (row.nickname ?? row.to),
+      address: row.to,
       mono: !spun && !row.nickname,
       at: new Date(row.timestamp),
     };
@@ -298,6 +300,7 @@ type SerialView =
       kind: "found";
       /** a nickname, or a raw `0x…` address when Cosmo has no name for the holder */
       owner: string;
+      ownerAddress: string;
       ownerIsAddress: boolean;
       tokenId: string | null;
       transferable: boolean | null;
@@ -326,11 +329,22 @@ function resolveSerial(
   return {
     kind: "found",
     owner: nickname ?? owner,
+    ownerAddress: owner,
     ownerIsAddress: !nickname,
     tokenId: data.tokenId ?? null,
     transferable: data.transferable ?? null,
     events: toTimeline(data.transfers),
   };
+}
+
+function EventMarker({ kind }: { kind: EventKind }) {
+  return (
+    <>
+      <i aria-hidden className={cn("size-1.5 shrink-0 rounded-full", EVENT_COLOR[kind])} />
+      {/* the dot's colour is the event; this names it for a screen reader */}
+      <span className="sr-only">{EVENT_LABEL[kind]()}:</span>
+    </>
+  );
 }
 
 function Fact({ label, children }: { label: string; children: ReactNode }) {
@@ -364,9 +378,9 @@ function OwnershipHead({
             <Shimmer className="h-4.5 w-28" />
           ) : (
             // a holder with no Cosmo nickname still has a profile, addressed by wallet
-            <Link
-              to="/@{$nickname}"
-              params={{ nickname: found.ownerIsAddress ? found.owner.toLowerCase() : found.owner }}
+            <ProfileLink
+              address={found.ownerAddress}
+              nickname={found.ownerIsAddress ? null : found.owner}
               onClick={onClose}
               className={cn(
                 "truncate underline-offset-2 hover:underline",
@@ -374,7 +388,7 @@ function OwnershipHead({
               )}
             >
               {found.ownerIsAddress ? truncateAddress(found.owner) : found.owner}
-            </Link>
+            </ProfileLink>
           )}
         </Fact>
         <Fact label={m.objekt_token_id()}>
@@ -513,30 +527,27 @@ function OwnershipTable({ events, onClose }: { events: TimelineEvent[]; onClose:
             return (
               <tr key={event.id} className="border-t">
                 <th scope="row" className="px-3 py-1.5 text-left font-normal">
-                  <span className="flex items-center gap-2">
-                    <i
-                      aria-hidden
-                      className={cn("size-1.5 shrink-0 rounded-full", EVENT_COLOR[event.kind])}
-                    />
-                    {/* the dot's colour is the event; this names it for a screen reader */}
-                    <span className="sr-only">{EVENT_LABEL[event.kind]()}:</span>
-                    {/* the spin address is Cosmo's burn wallet, so it has no profile */}
-                    {event.kind === "spin" ? (
+                  {/* the spin address is Cosmo's burn wallet, so it has no profile */}
+                  {event.kind === "spin" ? (
+                    <span className="flex items-center gap-2">
+                      <EventMarker kind={event.kind} />
                       <span className="truncate">{event.owner}</span>
-                    ) : (
-                      <Link
-                        to="/@{$nickname}"
-                        params={{ nickname: event.mono ? event.owner.toLowerCase() : event.owner }}
-                        onClick={onClose}
-                        className={cn(
-                          "truncate underline-offset-2 hover:underline",
-                          event.mono && "font-mono text-xs",
-                        )}
-                      >
-                        {event.mono ? truncateAddress(event.owner) : event.owner}
-                      </Link>
-                    )}
-                  </span>
+                    </span>
+                  ) : (
+                    <ProfileCell
+                      address={event.address}
+                      nickname={event.mono ? null : event.owner}
+                      onClick={onClose}
+                      className="-mx-3 -my-1.5 flex items-center gap-2 px-3 py-1.5"
+                      before={<EventMarker kind={event.kind} />}
+                      linkClassName={cn(
+                        "truncate underline-offset-2 hover:underline",
+                        event.mono && "font-mono text-xs",
+                      )}
+                    >
+                      {event.mono ? truncateAddress(event.owner) : event.owner}
+                    </ProfileCell>
+                  )}
                 </th>
                 <td className="text-muted-foreground px-3 py-1.5 font-mono text-xs whitespace-nowrap">
                   <Timestamp date={event.at} />

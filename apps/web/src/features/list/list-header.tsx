@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Menu, MenuItem, MenuPopup, MenuSeparator, MenuTrigger } from "@/components/ui/menu";
 import { CompareDialog } from "@/features/compare/compare-dialog";
+import { ProfileLink } from "@/features/profile/profile-hover-card";
 import { displayNickname } from "@/lib/address";
 import { m } from "@/paraglide/messages";
 
@@ -66,13 +67,13 @@ export function ListHeader() {
 
           {/* which Cosmo owns the list: the address, never `isProfileBind` */}
           {list.profileAddress ? (
-            <Link
-              to="/@{$nickname}"
-              params={{ nickname: list.profile?.nickname || list.profileAddress.toLowerCase() }}
+            <ProfileLink
+              address={list.profileAddress}
+              nickname={list.profile?.nickname || null}
               className="text-muted-foreground hover:text-foreground max-w-full self-start truncate text-sm font-medium underline-offset-2 transition-colors hover:underline"
             >
               {displayNickname(list.profileAddress, list.profile?.nickname)}
-            </Link>
+            </ProfileLink>
           ) : null}
 
           {list.user ? (

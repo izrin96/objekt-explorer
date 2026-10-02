@@ -3,7 +3,6 @@ import { validType, type AggregatedTransfer, type ValidType } from "@repo/api/sc
 import { Addresses } from "@repo/lib";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 
 import { DataTable, DataTableHead, DataTableRow } from "@/components/shared/data-table";
@@ -20,11 +19,12 @@ import { isFiltering } from "@/features/filters/search-schema";
 import { SingleSelect } from "@/features/filters/single-select";
 import { useCanonicalFilters } from "@/features/filters/use-filters";
 import { ObjektDrawer } from "@/features/objekt/drawer";
-import { getCollectionShortNo } from "@/features/objekt/objekt-utils";
+import { ObjektNameButton } from "@/features/objekt/objekt-hover-card";
 import { isSameAddress, truncateAddress } from "@/lib/address";
 import { m } from "@/paraglide/messages";
 
 import { CheckpointPopover } from "../checkpoint-popover";
+import { ProfileCell } from "../profile-hover-card";
 import { useProfileTarget } from "../profile-provider";
 import { ProfileToolbar } from "../profile-toolbar";
 import { transfersOptions } from "./queries";
@@ -44,10 +44,16 @@ const MIN_WIDTH = "min-w-168";
 /** the two counterparties that are Cosmo itself rather than another collector */
 function Counterparty({ row, isReceiver }: { row: AggregatedTransfer; isReceiver: boolean }) {
   if (isReceiver && row.transfer.from === Addresses.NULL) {
-    return <span className="text-muted-foreground font-mono">{m.trades_cosmo()}</span>;
+    return (
+      <span className="text-muted-foreground min-w-0 truncate font-mono">{m.trades_cosmo()}</span>
+    );
   }
   if (!isReceiver && row.transfer.to === Addresses.SPIN) {
-    return <span className="text-muted-foreground font-mono">{m.trades_cosmo_spin()}</span>;
+    return (
+      <span className="text-muted-foreground min-w-0 truncate font-mono">
+        {m.trades_cosmo_spin()}
+      </span>
+    );
   }
 
   const address = isReceiver ? row.transfer.from : row.transfer.to;
@@ -56,13 +62,14 @@ function Counterparty({ row, isReceiver }: { row: AggregatedTransfer; isReceiver
   const nickname = isReceiver ? row.nickname.from : row.nickname.to;
 
   return (
-    <Link
-      to="/@{$nickname}"
-      params={{ nickname: nickname ?? address }}
-      className="truncate underline-offset-2 hover:underline"
+    <ProfileCell
+      address={address}
+      nickname={nickname}
+      className="flex min-w-0 items-center self-stretch"
+      linkClassName="truncate underline-offset-2 hover:underline"
     >
       {nickname ?? <span className="font-mono">{truncateAddress(address)}</span>}
-    </Link>
+    </ProfileCell>
   );
 }
 
@@ -84,33 +91,13 @@ function TradeRow({
       <span className="text-muted-foreground font-mono text-xs whitespace-nowrap">
         <Timestamp date={new Date(row.transfer.timestamp)} />
       </span>
-      <button
-        type="button"
-        onClick={() => onOpen(row.objekt)}
-        className="focus-visible:ring-ring flex min-w-0 cursor-pointer items-center gap-2.5 rounded-sm text-left outline-none focus-visible:ring-2"
-      >
-        <img
-          src={row.objekt.thumbnailImage}
-          alt=""
-          loading="lazy"
-          decoding="async"
-          className="bg-secondary h-7 w-4.5 shrink-0 rounded-[3px] object-cover"
-        />
-        <span className="truncate">
-          {row.objekt.member}
-          <span className="ml-1.5 font-mono text-xs">
-            {getCollectionShortNo(row.objekt)} <b className="font-semibold">#{row.objekt.serial}</b>
-          </span>
-        </span>
-      </button>
+      <ObjektNameButton objekt={row.objekt} onOpen={onOpen} />
       <span>
         <Badge variant={isReceiver ? "info" : "error"} size="sm">
           {isReceiver ? m.trades_actions_received_from() : m.trades_actions_sent_to()}
         </Badge>
       </span>
-      <span className="min-w-0 truncate">
-        <Counterparty row={row} isReceiver={isReceiver} />
-      </span>
+      <Counterparty row={row} isReceiver={isReceiver} />
     </DataTableRow>
   );
 }

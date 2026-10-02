@@ -18,6 +18,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ObjektDrawer } from "@/features/objekt/drawer";
 import { ObjektCard } from "@/features/objekt/objekt-card";
+import { ProfileLink } from "@/features/profile/profile-hover-card";
 import { truncateAddress } from "@/lib/address";
 import { m } from "@/paraglide/messages";
 
@@ -170,6 +171,8 @@ function PartnerDisclosure({
   );
 }
 
+const cosmoLinkClass = "text-foreground font-medium underline-offset-2 hover:underline";
+
 function MatchBlock({
   match,
   collections,
@@ -180,6 +183,7 @@ function MatchBlock({
   onOpen: (objekt: ValidObjekt) => void;
 }) {
   const cosmoHandle = match.profileNickname ?? match.profileAddress?.toLowerCase() ?? null;
+  const cosmoLabel = cosmoHandle && (match.profileNickname ?? truncateAddress(cosmoHandle));
 
   return (
     <div className="flex flex-col gap-4">
@@ -203,13 +207,23 @@ function MatchBlock({
           <span className="text-muted-foreground min-w-0 text-sm font-normal">
             {"· "}
             {m.list_trade_cosmo_id()}{" "}
-            <Link
-              to="/@{$nickname}"
-              params={{ nickname: cosmoHandle }}
-              className="text-foreground font-medium underline-offset-2 hover:underline"
-            >
-              {match.profileNickname ?? truncateAddress(cosmoHandle)}
-            </Link>
+            {match.profileAddress ? (
+              <ProfileLink
+                address={match.profileAddress}
+                nickname={match.profileNickname}
+                className={cosmoLinkClass}
+              >
+                {cosmoLabel}
+              </ProfileLink>
+            ) : (
+              <Link
+                to="/@{$nickname}"
+                params={{ nickname: cosmoHandle }}
+                className={cosmoLinkClass}
+              >
+                {cosmoLabel}
+              </Link>
+            )}
           </span>
         )}
       </h3>

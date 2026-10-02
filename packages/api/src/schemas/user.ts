@@ -23,6 +23,11 @@ export const publicProfileSchema = baseProfileSchema.extend({
 });
 export type PublicProfile = z.infer<typeof publicProfileSchema>;
 
+/** A profile's hover card: the public profile plus its counts, null when private or uncounted. */
+export type ProfilePreview = PublicProfile & {
+  counts: { objekts: number; collections: number } | null;
+};
+
 /** A linked Cosmo's card: its banner and its objekt count. */
 export type LinkedPreview = {
   address: string;

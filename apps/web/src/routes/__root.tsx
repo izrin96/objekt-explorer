@@ -13,6 +13,8 @@ import { AppNav } from "@/components/layout/app-nav";
 import { ToastProvider } from "@/components/ui/toast";
 import { CosmoArtistProvider } from "@/features/artist/cosmo-artist-provider";
 import { FilterDataProvider } from "@/features/filters/filter-data-provider";
+import { ObjektHoverCard } from "@/features/objekt/objekt-hover-card";
+import { ProfileHoverCard } from "@/features/profile/profile-hover-card";
 import { currentUserOptions } from "@/features/user/queries";
 import { startOverflowGuard } from "@/lib/dev-overflow-guard";
 import { clientEnv } from "@/lib/env/client";
@@ -165,6 +167,8 @@ function RootComponent() {
           </div>
         </FilterDataProvider>
       </CosmoArtistProvider>
+      <ProfileHoverCard />
+      <ObjektHoverCard />
       {import.meta.env.DEV && <OverflowGuard />}
     </ToastProvider>
   );

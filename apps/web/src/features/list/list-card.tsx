@@ -20,6 +20,7 @@ import {
   previewCardClass,
   previewCardLinkClass,
 } from "@/features/objekt/objekt-preview-strip";
+import { ProfileLink } from "@/features/profile/profile-hover-card";
 import { displayNickname } from "@/lib/address";
 import { m } from "@/paraglide/messages";
 
@@ -90,9 +91,9 @@ export function ListCard({
                 </Link>
               ) : null}
               {chipAddress ? (
-                <Link
-                  to="/@{$nickname}"
-                  params={{ nickname: list.profile?.nickname || chipAddress.toLowerCase() }}
+                <ProfileLink
+                  address={chipAddress}
+                  nickname={list.profile?.nickname || null}
                   className={chipClass}
                 >
                   <LinkIcon className="size-3 opacity-60" />
@@ -100,7 +101,7 @@ export function ListCard({
                   <span className="truncate">
                     {displayNickname(chipAddress, list.profile?.nickname)}
                   </span>
-                </Link>
+                </ProfileLink>
               ) : null}
             </div>
           ) : null}

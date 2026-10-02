@@ -11,6 +11,7 @@ import { Timestamp } from "@/components/shared/timestamp";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { getListLinkOption } from "@/features/list/list-link";
+import { ProfileCell } from "@/features/profile/profile-hover-card";
 import { formatCurrency, useCurrency } from "@/features/settings/use-currency";
 import { isSameAddress, truncateAddress } from "@/lib/address";
 import { cn } from "@/lib/utils";
@@ -174,8 +175,6 @@ function MarketRow({
   const rawNickname = item.list.profile?.nickname ?? null;
   // Cosmo gives an unnamed profile its own address as the nickname
   const nickname = isSameAddress(rawNickname, address) ? null : rawNickname;
-  // a seller with no Cosmo nickname still has a profile, addressed by wallet
-  const handle = nickname ?? address?.toLowerCase() ?? null;
   const { price, currency: listed, usdPrice } = item;
 
   return (
@@ -195,23 +194,26 @@ function MarketRow({
         )}
       </div>
 
-      <div className="flex min-w-0 flex-col">
-        <span className="text-muted-foreground text-xs">{m.objekt_owner()}</span>
-        {handle === null ? (
+      {address === null ? (
+        <div className="flex min-w-0 flex-col">
+          <span className="text-muted-foreground text-xs">{m.objekt_owner()}</span>
           <span className="truncate font-mono text-xs">—</span>
-        ) : (
-          <Link
-            to="/@{$nickname}"
-            params={{ nickname: handle }}
-            className={cn(
-              "truncate underline-offset-2 hover:underline",
-              nickname === null && "font-mono text-xs",
-            )}
-          >
-            {nickname ?? truncateAddress(handle)}
-          </Link>
-        )}
-      </div>
+        </div>
+      ) : (
+        // a seller with no Cosmo nickname still has a profile, addressed by wallet
+        <ProfileCell
+          address={address}
+          nickname={nickname}
+          className="flex min-w-0 flex-col items-start"
+          before={<span className="text-muted-foreground text-xs">{m.objekt_owner()}</span>}
+          linkClassName={cn(
+            "max-w-full truncate underline-offset-2 hover:underline",
+            nickname === null && "font-mono text-xs",
+          )}
+        >
+          {nickname ?? truncateAddress(address.toLowerCase())}
+        </ProfileCell>
+      )}
 
       <div className="flex flex-col items-end">
         <span className="text-muted-foreground text-xs">

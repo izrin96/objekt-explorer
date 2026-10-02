@@ -25,6 +25,7 @@ import {
   previewCardClass,
   previewCardLinkClass,
 } from "@/features/objekt/objekt-preview-strip";
+import { BannerThumb, bannerThumbFrameClass } from "@/features/profile/banner-thumb";
 import { PROFILE_PAGE_KEY } from "@/features/profile/queries";
 import { currentUserOptions } from "@/features/user/queries";
 import { displayNickname, truncateAddress } from "@/lib/address";
@@ -169,9 +170,7 @@ export function LinkedCard({
   );
 }
 
-const headerFrameClass = "aspect-banner relative w-full overflow-hidden border-b";
-
-/** The banner when there is one, else a quiet grey carrying the Cosmo's initial. */
+/** The banner, or a shimmer in its frame while the preview loads. */
 function LinkedCardHeader({
   preview,
   initial,
@@ -181,47 +180,16 @@ function LinkedCardHeader({
   initial: string | undefined;
   videoRef: RefObject<HTMLVideoElement | null>;
 }) {
-  if (preview === undefined) return <Shimmer className={cn(headerFrameClass, "rounded-none")} />;
-
-  if (preview?.bannerImgUrl && preview.bannerImgType) {
-    return (
-      <div className={cn(headerFrameClass, "bg-secondary")} aria-hidden>
-        {preview.bannerImgType.startsWith("video") ? (
-          <video
-            ref={videoRef}
-            src={preview.bannerImgUrl}
-            muted
-            loop
-            playsInline
-            preload="metadata"
-            className="absolute inset-0 size-full object-cover"
-          />
-        ) : (
-          <img
-            src={preview.bannerImgUrl}
-            alt=""
-            loading="lazy"
-            decoding="async"
-            className="absolute inset-0 size-full object-cover"
-          />
-        )}
-      </div>
-    );
+  if (preview === undefined) {
+    return <Shimmer className={cn(bannerThumbFrameClass, "rounded-none")} />;
   }
 
   return (
-    <div
-      className={cn(
-        headerFrameClass,
-        "from-secondary to-muted grid place-items-center bg-linear-to-br",
-      )}
-      aria-hidden
-    >
-      {initial ? (
-        <span className="font-display text-muted-foreground/40 text-6xl font-semibold uppercase select-none">
-          {initial}
-        </span>
-      ) : null}
-    </div>
+    <BannerThumb
+      bannerImgUrl={preview?.bannerImgUrl}
+      bannerImgType={preview?.bannerImgType}
+      initial={initial}
+      videoRef={videoRef}
+    />
   );
 }

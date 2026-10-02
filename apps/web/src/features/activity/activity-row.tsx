@@ -1,13 +1,13 @@
 import type { ActivityData } from "@repo/api/schemas/activity";
 import { Addresses } from "@repo/lib";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
-import { Link } from "@tanstack/react-router";
 import { memo } from "react";
 
 import { DataTableRow } from "@/components/shared/data-table";
 import { Timestamp } from "@/components/shared/timestamp";
 import { EVENT_COLOR, type EventKind } from "@/features/objekt/drawer/serials";
-import { getCollectionShortNo } from "@/features/objekt/objekt-utils";
+import { ObjektNameButton } from "@/features/objekt/objekt-hover-card";
+import { ProfileCell } from "@/features/profile/profile-hover-card";
 import { truncateAddress } from "@/lib/address";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -27,21 +27,26 @@ export function getEventKind(from: string, to: string): EventKind {
 /** A nickname the owner hides never reaches the client, so the address stands in. */
 function Who({ address, nickname }: { address: string; nickname: string | undefined }) {
   return (
-    <Link
-      to="/@{$nickname}"
-      params={{ nickname: nickname ?? address.toLowerCase() }}
-      className={cn(
+    <ProfileCell
+      address={address}
+      nickname={nickname}
+      className="flex min-w-0 items-center self-stretch"
+      linkClassName={cn(
         "truncate underline-offset-2 hover:underline",
         nickname === undefined && "text-muted-foreground font-mono text-xs",
       )}
     >
       {nickname ?? truncateAddress(address)}
-    </Link>
+    </ProfileCell>
   );
 }
 
 function System({ label }: { label: string }) {
-  return <span className="text-muted-foreground truncate font-mono text-xs">{label}</span>;
+  return (
+    <span className="flex min-w-0">
+      <span className="text-muted-foreground truncate font-mono text-xs">{label}</span>
+    </span>
+  );
 }
 
 /**
@@ -66,42 +71,19 @@ export const ActivityRow = memo(function ActivityRow({
         {EVENT_LABEL[kind]()}
       </span>
 
-      <button
-        type="button"
-        onClick={() => onOpen(item.objekt)}
-        className="focus-visible:ring-ring flex min-w-0 cursor-pointer items-center gap-2.5 rounded-sm text-left outline-none focus-visible:ring-2"
-      >
-        <img
-          src={item.objekt.thumbnailImage}
-          alt=""
-          loading="lazy"
-          decoding="async"
-          className="bg-secondary h-7 w-4.5 shrink-0 rounded-[3px] object-cover"
-        />
-        <span className="truncate">
-          {item.objekt.member}
-          <span className="ml-1.5 font-mono text-xs">
-            {getCollectionShortNo(item.objekt)}{" "}
-            <b className="font-semibold">#{item.objekt.serial}</b>
-          </span>
-        </span>
-      </button>
+      <ObjektNameButton objekt={item.objekt} onOpen={onOpen} />
 
-      <span className="flex min-w-0">
-        {kind === "mint" ? (
-          <System label={m.activity_cosmo()} />
-        ) : (
-          <Who address={item.transfer.from} nickname={item.nickname.from} />
-        )}
-      </span>
+      {kind === "mint" ? (
+        <System label={m.activity_cosmo()} />
+      ) : (
+        <Who address={item.transfer.from} nickname={item.nickname.from} />
+      )}
 
-      <span className="flex min-w-0">
-        {kind === "spin" ? (
-          <System label={m.activity_cosmo_spin()} />
-        ) : (
-          <Who address={item.transfer.to} nickname={item.nickname.to} />
-        )}
-      </span>
+      {kind === "spin" ? (
+        <System label={m.activity_cosmo_spin()} />
+      ) : (
+        <Who address={item.transfer.to} nickname={item.nickname.to} />
+      )}
 
       <span className="text-muted-foreground text-right font-mono text-xs whitespace-nowrap">
         <Timestamp date={new Date(item.transfer.timestamp)} />

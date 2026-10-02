@@ -3,7 +3,7 @@ import { validArtists, validFourSeason } from "@repo/cosmo/types/common";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
 import type { CollectionField, ProcessedImageField } from "@repo/lib/types/objekt";
-import { and, asc, count, eq, inArray, ne } from "drizzle-orm";
+import { and, asc, count, countDistinct, eq, inArray, ne } from "drizzle-orm";
 
 import { getCache } from "./redis";
 import { classOrder } from "./utils";
@@ -174,4 +174,14 @@ export async function fetchOwnerCounts(addresses: string[]) {
     )
     .groupBy(objekts.owner);
   return new Map(rows.map((row) => [row.owner, row.count]));
+}
+
+/** One owner's objekt and collection counts, as the profile header counts them. */
+export async function fetchOwnerSummary(address: string) {
+  const [row] = await indexer
+    .select({ objekts: count(), collections: countDistinct(collections.collectionId) })
+    .from(objekts)
+    .innerJoin(collections, eq(objekts.collectionId, collections.id))
+    .where(and(eq(objekts.owner, address.toLowerCase()), ne(collections.slug, "empty-collection")));
+  return { objekts: row?.objekts ?? 0, collections: row?.collections ?? 0 };
 }
