@@ -41,13 +41,11 @@ export type IndexedObjekt = Pick<Collection, CollectionField> & {
   originalBackImage: string;
 };
 
-// Owned objekt — collection + ownership info
 export type OwnedObjekt = IndexedObjekt &
   Pick<Objekt, "mintedAt" | "receivedAt" | "serial" | "transferable"> & {
     tokenId: string;
   };
 
-// Union type for functions that accept either indexed or owned objekts
 export type ValidObjekt = OwnedObjekt | IndexedObjekt;
 
 /** set by the list builders */
@@ -95,3 +93,5 @@ export type HeldObjekt = IndexedObjekt & HeldFields;
 export type GridObjekt = ValidObjekt &
   ObjektTags &
   Partial<ListEntryFields & MarketFields & HeldFields & PinState>;
+
+export type OwnedGridObjekt = GridObjekt & OwnedObjekt;

@@ -11,7 +11,7 @@ import {
   PushPinIcon,
   PushPinSlashIcon,
 } from "@phosphor-icons/react";
-import type { GridObjekt, OwnedObjekt } from "@repo/lib/types/objekt";
+import type { GridObjekt, OwnedGridObjekt } from "@repo/lib/types/objekt";
 import { useCallback, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 
@@ -34,7 +34,7 @@ import { ObjektDrawer } from "@/features/objekt/drawer";
 import type { OwnedRowMenu } from "@/features/objekt/drawer/owned";
 import { ObjektCard } from "@/features/objekt/objekt-card";
 import { ObjektCardMenu } from "@/features/objekt/objekt-card-menu";
-import { copiesIn, isObjektOwned, ownedCopiesOf } from "@/features/objekt/objekt-utils";
+import { copiesIn, isObjektOwned, ownedCopiesOf, pinOrderOf } from "@/features/objekt/objekt-utils";
 import { ObjektVirtualGrid } from "@/features/objekt/objekt-virtual-grid";
 import { SelectBar, type SelectBarAction, SelectModeButton } from "@/features/objekt/select-bar";
 import { ShimmerGrid } from "@/features/objekt/shimmer-grid";
@@ -146,10 +146,9 @@ export function CollectionView() {
         ? []
         : objekts
             .filter(
-              (objekt): objekt is GridObjekt & OwnedObjekt =>
-                isObjektOwned(objekt) && objekt.isPin === true,
+              (objekt): objekt is OwnedGridObjekt => isObjektOwned(objekt) && objekt.isPin === true,
             )
-            .toSorted((a, b) => pinOrder(b) - pinOrder(a)),
+            .toSorted((a, b) => pinOrderOf(b) - pinOrderOf(a)),
     [objekts, filters.hidePin],
   );
 
@@ -162,6 +161,24 @@ export function CollectionView() {
     !isFiltering(filters) &&
     filters.hidePin !== true &&
     pinnedIds.length > 1;
+
+  const togglePin = useCallback(
+    (objekt: OwnedGridObjekt) =>
+      (objekt.isPin ? batchUnpin : batchPin).mutate({
+        address,
+        tokenIds: [Number(objekt.tokenId)],
+      }),
+    [address, batchPin, batchUnpin],
+  );
+
+  const toggleLock = useCallback(
+    (objekt: OwnedGridObjekt) =>
+      (objekt.isLocked ? batchUnlock : batchLock).mutate({
+        address,
+        tokenIds: [Number(objekt.tokenId)],
+      }),
+    [address, batchLock, batchUnlock],
+  );
 
   const objektMenuItems = useCallback(
     (objekt: GridObjekt) => {
@@ -177,13 +194,7 @@ export function CollectionView() {
         <>
           {canEdit && owned && (
             <>
-              <MenuItem
-                onClick={() =>
-                  owned.isPin
-                    ? batchUnpin.mutate({ address, tokenIds: [Number(owned.tokenId)] })
-                    : batchPin.mutate({ address, tokenIds: [Number(owned.tokenId)] })
-                }
-              >
+              <MenuItem onClick={() => togglePin(owned)}>
                 {owned.isPin ? <PushPinSlashIcon /> : <PushPinIcon />}
                 {owned.isPin ? m.objekt_menu_unpin() : m.objekt_menu_pin()}
               </MenuItem>
@@ -202,13 +213,7 @@ export function CollectionView() {
                   </MenuItem>
                 </>
               )}
-              <MenuItem
-                onClick={() =>
-                  owned.isLocked
-                    ? batchUnlock.mutate({ address, tokenIds: [Number(owned.tokenId)] })
-                    : batchLock.mutate({ address, tokenIds: [Number(owned.tokenId)] })
-                }
-              >
+              <MenuItem onClick={() => toggleLock(owned)}>
                 {owned.isLocked ? <LockSimpleOpenIcon /> : <LockSimpleIcon />}
                 {owned.isLocked ? m.objekt_menu_unlock() : m.objekt_menu_lock()}
               </MenuItem>
@@ -218,18 +223,7 @@ export function CollectionView() {
         </>
       );
     },
-    [
-      address,
-      batchLock,
-      batchPin,
-      batchUnlock,
-      batchUnpin,
-      filters,
-      grouped,
-      handleReorder,
-      isProfileAuthed,
-      pinnedIds,
-    ],
+    [filters, grouped, handleReorder, isProfileAuthed, pinnedIds, togglePin, toggleLock],
   );
 
   const renderCard = useCallback(
@@ -305,23 +299,11 @@ export function CollectionView() {
       <>
         {isProfileAuthed && (
           <>
-            <MenuItem
-              onClick={() =>
-                item.isPin
-                  ? batchUnpin.mutate({ address, tokenIds: [Number(item.tokenId)] })
-                  : batchPin.mutate({ address, tokenIds: [Number(item.tokenId)] })
-              }
-            >
+            <MenuItem onClick={() => togglePin(item)}>
               {item.isPin ? <PushPinSlashIcon /> : <PushPinIcon />}
               {item.isPin ? m.objekt_menu_unpin() : m.objekt_menu_pin()}
             </MenuItem>
-            <MenuItem
-              onClick={() =>
-                item.isLocked
-                  ? batchUnlock.mutate({ address, tokenIds: [Number(item.tokenId)] })
-                  : batchLock.mutate({ address, tokenIds: [Number(item.tokenId)] })
-              }
-            >
+            <MenuItem onClick={() => toggleLock(item)}>
               {item.isLocked ? <LockSimpleOpenIcon /> : <LockSimpleIcon />}
               {item.isLocked ? m.objekt_menu_unlock() : m.objekt_menu_lock()}
             </MenuItem>
@@ -331,7 +313,7 @@ export function CollectionView() {
         <AddToListMenuItem objekts={[item]} />
       </>
     ),
-    [address, batchLock, batchPin, batchUnlock, batchUnpin, isProfileAuthed],
+    [isProfileAuthed, togglePin, toggleLock],
   );
 
   const at = checkpointDate(filters.at);
@@ -340,9 +322,9 @@ export function CollectionView() {
   const selectedObjekts = filtered.filter((objekt) => selected.has(objekt.id));
   const run = (
     mutate: (input: { address: string; tokenIds: number[] }) => void,
-    tokenIds: string[],
+    tokenIds: number[],
   ) => {
-    mutate({ address, tokenIds: tokenIds.map(Number) });
+    mutate({ address, tokenIds });
     clearSelection();
   };
 
@@ -351,22 +333,22 @@ export function CollectionView() {
         ...pick(selectedObjekts, (objekt) => objekt.isPin !== true, {
           label: m.objekt_menu_pin(),
           icon: <PushPinIcon />,
-          run: (ids) => run(batchPin.mutate, ids),
+          run: (tokenIds) => run(batchPin.mutate, tokenIds),
         }),
         ...pick(selectedObjekts, (objekt) => objekt.isPin === true, {
           label: m.objekt_menu_unpin(),
           icon: <PushPinSlashIcon />,
-          run: (ids) => run(batchUnpin.mutate, ids),
+          run: (tokenIds) => run(batchUnpin.mutate, tokenIds),
         }),
         ...pick(selectedObjekts, (objekt) => objekt.isLocked !== true, {
           label: m.objekt_menu_lock(),
           icon: <LockSimpleIcon />,
-          run: (ids) => run(batchLock.mutate, ids),
+          run: (tokenIds) => run(batchLock.mutate, tokenIds),
         }),
         ...pick(selectedObjekts, (objekt) => objekt.isLocked === true, {
           label: m.objekt_menu_unlock(),
           icon: <LockSimpleOpenIcon />,
-          run: (ids) => run(batchUnlock.mutate, ids),
+          run: (tokenIds) => run(batchUnlock.mutate, tokenIds),
         }),
       ]
     : [];
@@ -490,10 +472,6 @@ export function CollectionView() {
   );
 }
 
-function pinOrder(objekt: GridObjekt): number {
-  return isObjektOwned(objekt) ? (objekt.pinOrder ?? 0) : 0;
-}
-
 /**
  * An action is offered while the selection holds anything it would change:
  * Lock while something is unlocked, Unlock while something is locked, both on
@@ -501,12 +479,12 @@ function pinOrder(objekt: GridObjekt): number {
  */
 function pick(
   objekts: GridObjekt[],
-  matches: (objekt: GridObjekt & OwnedObjekt) => boolean,
-  action: { label: string; icon: ReactNode; run: (tokenIds: string[]) => void },
+  matches: (objekt: OwnedGridObjekt) => boolean,
+  action: { label: string; icon: ReactNode; run: (tokenIds: number[]) => void },
 ): SelectBarAction[] {
-  const tokenIds: string[] = [];
+  const tokenIds: number[] = [];
   for (const objekt of objekts) {
-    if (isObjektOwned(objekt) && matches(objekt)) tokenIds.push(objekt.tokenId);
+    if (isObjektOwned(objekt) && matches(objekt)) tokenIds.push(Number(objekt.tokenId));
   }
   if (tokenIds.length === 0) return [];
   return [{ label: action.label, icon: action.icon, onClick: () => action.run(tokenIds) }];

@@ -6,7 +6,7 @@ import {
   LockSimpleIcon,
   PushPinIcon,
 } from "@phosphor-icons/react";
-import type { OwnedObjekt, PinState } from "@repo/lib/types/objekt";
+import type { OwnedGridObjekt } from "@repo/lib/types/objekt";
 import { type ReactNode, useMemo, useState } from "react";
 
 import { EmptyState } from "@/components/shared/empty-state";
@@ -23,11 +23,8 @@ const PAGE_SIZE = 10;
 type SortKey = "serial" | "receivedAt";
 type Sort = SortState<SortKey>;
 
-/** a copy carries the owner's marks only on their own profile */
-export type OwnedCopy = OwnedObjekt & Partial<PinState>;
-
 /** The items only; the panel supplies the trigger and the popup. */
-export type OwnedRowMenu = (objekt: OwnedCopy) => ReactNode;
+export type OwnedRowMenu = (objekt: OwnedGridObjekt) => ReactNode;
 
 /**
  * Every copy of this collection the surface's profile holds. The table is the
@@ -39,7 +36,7 @@ export function OwnedPanel({
   onOpenSerial,
   menu,
 }: {
-  objekts: OwnedCopy[];
+  objekts: OwnedGridObjekt[];
   onOpenSerial: (serial: number) => void;
   /** omitting it drops the column, which is what a visitor gets */
   menu?: OwnedRowMenu;

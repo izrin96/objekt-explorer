@@ -3,7 +3,7 @@ import type { GridObjekt } from "@repo/lib/types/objekt";
 import { sortObjekts } from "@/features/filters/filter-utils";
 import { isFiltering, type FilterSearch } from "@/features/filters/search-schema";
 
-import { copiesIn, isObjektOwned } from "./objekt-utils";
+import { copiesIn, isObjektOwned, pinOrderOf } from "./objekt-utils";
 
 export type VirtualItem<T extends GridObjekt = GridObjekt> =
   | { type: "label"; title: string }
@@ -35,10 +35,6 @@ function groupKey(
     default:
       return objekt[groupBy];
   }
-}
-
-function pinOrder(objekt: GridObjekt): number {
-  return isObjektOwned(objekt) ? (objekt.pinOrder ?? 0) : 0;
 }
 
 export function buildVirtualData<T extends GridObjekt>(
@@ -88,7 +84,7 @@ export function buildVirtualData<T extends GridObjekt>(
       const pinned = sorted.filter((objekt) => isObjektOwned(objekt) && objekt.isPin === true);
       if (pinned.length > 0) {
         sorted = [
-          ...pinned.toSorted((a, b) => pinOrder(b) - pinOrder(a)),
+          ...pinned.toSorted((a, b) => pinOrderOf(b) - pinOrderOf(a)),
           ...sorted.filter((objekt) => !(isObjektOwned(objekt) && objekt.isPin === true)),
         ];
       }

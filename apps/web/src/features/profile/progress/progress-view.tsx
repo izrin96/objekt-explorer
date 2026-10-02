@@ -1,5 +1,5 @@
 import { CaretDownIcon, ChartBarIcon, CheckIcon } from "@phosphor-icons/react";
-import type { ValidObjekt } from "@repo/lib/types/objekt";
+import type { GridObjekt, ValidObjekt } from "@repo/lib/types/objekt";
 import { useMemo, useState, type ReactNode } from "react";
 
 import { EmptyState } from "@/components/shared/empty-state";
@@ -127,7 +127,7 @@ function ClassCard({
   open: boolean;
   onToggle: () => void;
   onOpen: (objekt: ValidObjekt) => void;
-  ownedBySlug: ReadonlyMap<string, ValidObjekt[]>;
+  ownedBySlug: ReadonlyMap<string, GridObjekt[]>;
   /** a missing objekt is as addable as an owned one: it is how a want list is built */
   showActions: boolean;
 }) {

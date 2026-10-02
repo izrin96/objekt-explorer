@@ -1,6 +1,6 @@
 import { CheckIcon, DotsThreeIcon } from "@phosphor-icons/react";
 import type { SortBy } from "@repo/api/schemas/market";
-import type { ValidObjekt } from "@repo/lib/types/objekt";
+import type { OwnedGridObjekt, ValidObjekt } from "@repo/lib/types/objekt";
 import { useQuery } from "@tanstack/react-query";
 import { type ReactNode, useMemo, useState } from "react";
 
@@ -29,7 +29,7 @@ import { getCollectionShortNo, isObjektOwned, memberNames } from "../objekt-util
 import { collectionMetadataOptions, serialListOptions, transfersOptions } from "../queries";
 import { MarketPanel } from "./market";
 import { MetadataPanel } from "./metadata";
-import { type OwnedCopy, OwnedPanel, type OwnedRowMenu } from "./owned";
+import { OwnedPanel, type OwnedRowMenu } from "./owned";
 import { SerialsPanel, Timeline, toTimeline } from "./serials";
 
 type DrawerTab = "owned" | "serials" | "market" | "metadata";
@@ -45,7 +45,7 @@ type Props = {
    * at all marks the surface an owned view, so an unowned collection still gets
    * the tab — empty — rather than the tab appearing and vanishing per card.
    */
-  owned?: OwnedCopy[];
+  owned?: OwnedGridObjekt[];
   ownedMenu?: OwnedRowMenu;
   selected?: boolean;
   /** the card's check and menu are hover-only, so a touch surface reaches them here */
@@ -116,7 +116,7 @@ function DrawerBody({
   onClose: () => void;
   tab: DrawerTab;
   onTabChange: (tab: DrawerTab) => void;
-  owned?: OwnedCopy[];
+  owned?: OwnedGridObjekt[];
   ownedMenu?: OwnedRowMenu;
   selected: boolean;
   onToggleSelect?: (objekt: ValidObjekt) => void;

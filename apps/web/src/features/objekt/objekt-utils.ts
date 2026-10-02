@@ -1,5 +1,5 @@
 import { getCollectionEdition } from "@repo/api/schemas/collection-grid";
-import type { HeldFields, ObjektTags, OwnedObjekt, ValidObjekt } from "@repo/lib/types/objekt";
+import type { GridObjekt, ObjektTags, OwnedObjekt, ValidObjekt } from "@repo/lib/types/objekt";
 
 function getMemberShortKeys(value: string) {
   return Object.keys(shortformMembers).filter((key) => shortformMembers[key] === value);
@@ -94,14 +94,24 @@ export function isObjektOwned<T extends ValidObjekt>(objekt: T): objekt is T & O
 }
 
 /** how many tokens `objekts` stand for: a counted collection carries its copies */
-export function copiesIn(objekts: readonly (ValidObjekt & Partial<HeldFields>)[]): number {
+export function copiesIn(objekts: readonly GridObjekt[]): number {
   return objekts.reduce((total, objekt) => total + (objekt.copies ?? 1), 0);
 }
 
+/** the owner's pins lead highest first; anything unpinned sorts as 0 */
+export function pinOrderOf(objekt: GridObjekt): number {
+  return isObjektOwned(objekt) ? (objekt.pinOrder ?? 0) : 0;
+}
+
 /** The copies of `objekt`'s collection held in `objekts` — what the drawer's Owned tab lists. */
-export function ownedCopiesOf(objekts: ValidObjekt[], objekt: ValidObjekt | null): OwnedObjekt[] {
+export function ownedCopiesOf<T extends GridObjekt>(
+  objekts: T[],
+  objekt: ValidObjekt | null,
+): (T & OwnedObjekt)[] {
   if (objekt === null) return [];
-  return objekts.filter(isObjektOwned).filter((copy) => copy.slug === objekt.slug);
+  return objekts.filter(
+    (copy): copy is T & OwnedObjekt => isObjektOwned(copy) && copy.slug === objekt.slug,
+  );
 }
 
 // Member shortform aliases
