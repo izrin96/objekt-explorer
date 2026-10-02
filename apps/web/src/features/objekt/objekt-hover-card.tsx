@@ -55,9 +55,9 @@ function ObjektName({ objekt, className }: { objekt: OwnedObjekt; className?: st
 /** Mounted once at the root. */
 export function ObjektHoverCard() {
   return (
-    <CursorCard handle={objektCardHandle} className="w-48 p-2">
+    <CursorCard handle={objektCardHandle} className="w-36 p-1.5">
       {(objekt) => (
-        <div key={objekt.id} className="flex flex-col gap-2">
+        <div key={objekt.id} className="flex flex-col gap-1.5">
           {/* the container context `rounded-photocard` (5.4cqi) needs */}
           <div className="@container">
             <div className="rounded-photocard bg-secondary aspect-photocard relative overflow-hidden">
@@ -71,7 +71,7 @@ export function ObjektHoverCard() {
               <ObjektArtwork objekt={objekt} image="front" />
             </div>
           </div>
-          <ObjektName objekt={objekt} className="truncate px-0.5 text-sm" />
+          <ObjektName objekt={objekt} className="px-0.5 text-xs leading-snug" />
         </div>
       )}
     </CursorCard>
