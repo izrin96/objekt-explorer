@@ -14,8 +14,15 @@ export function ProfileProvider({
   return <ProfileContext value={profile}>{children}</ProfileContext>;
 }
 
-export function useProfileTarget(): PublicProfile | null {
+function useProfileTarget(): PublicProfile | null {
   return use(ProfileContext);
+}
+
+/** for views that only render inside a profile route */
+export function useProfile(): PublicProfile {
+  const profile = use(ProfileContext);
+  if (!profile) throw new Error("useProfile must be used within a ProfileProvider");
+  return profile;
 }
 
 /** the signed-in account owns the Cosmo this page is about, so it may edit it */

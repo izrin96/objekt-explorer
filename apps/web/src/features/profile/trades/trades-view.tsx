@@ -25,7 +25,7 @@ import { m } from "@/paraglide/messages";
 
 import { CheckpointPopover } from "../checkpoint-popover";
 import { ProfileCell } from "../profile-hover-card";
-import { useProfileTarget } from "../profile-provider";
+import { useProfile } from "../profile-provider";
 import { ProfileToolbar } from "../profile-toolbar";
 import { transfersOptions } from "./queries";
 import { useResetTrades, useSetTradesType, useTradesType } from "./search-schema";
@@ -118,7 +118,7 @@ function TradesTypeFilter({ className }: { className?: string }) {
 }
 
 export function TradesView() {
-  const profile = useProfileTarget()!;
+  const profile = useProfile();
   const { selectedArtistIds } = useCosmoArtist();
   const filters = useCanonicalFilters();
   const reset = useResetTrades();

@@ -25,7 +25,7 @@ import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import { CheckpointPopover } from "../checkpoint-popover";
-import { useProfileColumns, useProfileTarget } from "../profile-provider";
+import { useProfileColumns, useProfile } from "../profile-provider";
 import { ProfileToolbar } from "../profile-toolbar";
 import { isSpinAddress, useProfileCatalogue } from "../use-profile-objekts";
 import { MemberProgressChart, useChartMembers } from "./member-progress-chart";
@@ -227,7 +227,7 @@ function ClassCard({
 
 export function ProgressView() {
   const { owned, catalogue, filters, isPending } = useProfileCatalogue();
-  const profile = useProfileTarget()!;
+  const profile = useProfile();
   const { data: user } = useCurrentUser();
   // a past state belongs to nobody to edit, and a signed-out visitor has nothing to act with
   const showActions = Boolean(user) && filters.at === undefined;

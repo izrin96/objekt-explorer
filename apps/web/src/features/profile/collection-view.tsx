@@ -52,12 +52,12 @@ import {
 } from "./actions";
 import { CheckpointPopover, checkpointDate, formatCheckpoint } from "./checkpoint-popover";
 import { PinDnd, SortablePin } from "./pin-dnd";
-import { useProfileColumns, useProfileAuthed, useProfileTarget } from "./profile-provider";
+import { useProfileColumns, useProfileAuthed, useProfile } from "./profile-provider";
 import { ProfileToolbar } from "./profile-toolbar";
 import { isSpinAddress, useProfileObjekts } from "./use-profile-objekts";
 
 export function CollectionView() {
-  const profile = useProfileTarget()!;
+  const profile = useProfile();
   const address = profile.address;
   const { data: user } = useCurrentUser();
   const scopeNarrowed = useArtistScopeNarrowed();

@@ -12,7 +12,7 @@ import { copiesIn, isObjektOwned } from "@/features/objekt/objekt-utils";
 import { collectionOptions } from "@/features/objekt/queries";
 import { useCollectionRarity } from "@/features/objekt/use-collection-rarity";
 
-import { useProfileTarget } from "./profile-provider";
+import { useProfile } from "./profile-provider";
 import {
   heldCollectionsOptions,
   locksOptions,
@@ -89,7 +89,7 @@ function useProfileFilters(address: string, filters: FilterSearch): FilterSearch
  * today's marks onto yesterday's collection.
  */
 export function useProfileObjekts() {
-  const profile = useProfileTarget()!;
+  const profile = useProfile();
   const { selectedArtistIds } = useCosmoArtist();
   const filters = useProfileFilters(profile.address, useCanonicalFilters());
   const deferredFilters = useDeferredValue(filters);
@@ -153,7 +153,7 @@ export function useProfileObjekts() {
  * cursor and never counts the whole set.
  */
 export function useProfileSummary() {
-  const profile = useProfileTarget()!;
+  const profile = useProfile();
   const { selectedArtistIds } = useCosmoArtist();
   // the tabs' own filters, so the header joins the query the grid fetched
   const filters = useProfileFilters(profile.address, useValidatedCanonicalFilters());
@@ -183,7 +183,7 @@ export function useProfileSummary() {
 
 /** Owned objekts and the catalogue behind them, for Progress and Statistics. */
 export function useProfileCatalogue() {
-  const profile = useProfileTarget()!;
+  const profile = useProfile();
   const { selectedArtistIds } = useCosmoArtist();
   const filters = useProfileFilters(profile.address, useCanonicalFilters());
   const deferredFilters = useDeferredValue(filters);

@@ -20,7 +20,7 @@ import { useResetFilters } from "@/features/filters/use-filters";
 import { m } from "@/paraglide/messages";
 
 import { CheckpointPopover } from "../checkpoint-popover";
-import { useProfileTarget } from "../profile-provider";
+import { useProfile } from "../profile-provider";
 import { ProfileToolbar } from "../profile-toolbar";
 import { MemberProgressChart, useChartMembers } from "../progress/member-progress-chart";
 import { memberProgress, rankableMembers } from "../progress/shape-progress";
@@ -136,7 +136,7 @@ function StatsCard({
 
 export function StatsView() {
   const { owned, catalogue, filters, isPending } = useProfileCatalogue();
-  const profile = useProfileTarget()!;
+  const profile = useProfile();
   const memberColor = useMemberColor();
   const members = useChartMembers();
   const { seasons } = useFilterData();
