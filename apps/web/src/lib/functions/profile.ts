@@ -1,4 +1,4 @@
-import { fetchUserByIdentifier } from "@repo/api/services/auth";
+import { fetchUserByIdentifier } from "@repo/api/services/profile";
 import { notFound } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import * as z from "zod";

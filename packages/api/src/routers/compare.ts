@@ -9,6 +9,7 @@ import { and, eq, exists, sql } from "drizzle-orm";
 import { optionalAuthed, selectedArtistsMiddleware } from "../orpc";
 import { compareInputSchema } from "../schemas/compare";
 import { buildListEntries, fetchListWithEntries } from "../services/list";
+import { isProfileHidden } from "../services/privacy";
 
 export const compareRouter = {
   compare: optionalAuthed
@@ -54,11 +55,7 @@ export const compareRouter = {
                 message: messages.compare_target_profile_not_found(),
               });
 
-            const isProfileHidden =
-              targetProfile.privateProfile &&
-              (!session?.user.id || session.user.id !== targetProfile.userId);
-
-            if (isProfileHidden) return new Set();
+            if (isProfileHidden(targetProfile, session?.user.id)) return new Set();
 
             // one index probe per collection: a large owner such as Spin holds
             // millions of copies, which listing them would pull into memory

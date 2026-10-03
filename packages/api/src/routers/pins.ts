@@ -8,8 +8,8 @@ import * as z from "zod";
 
 import { authed, pub } from "../orpc";
 import { isAddressHiddenFromCaller } from "../services/privacy";
+import { assertProfileOwned } from "../services/profile";
 import { TOKEN_CHUNK_SIZE } from "../services/utils";
-import { checkAddressOwned } from "./profile";
 
 async function getValidPins(address: string) {
   const allPins = await db
@@ -54,7 +54,7 @@ export const pinsRouter = {
       }),
     )
     .handler(async ({ input: { address, tokenIds }, context: { messages, session } }) => {
-      await checkAddressOwned(address, session.user.id, messages);
+      await assertProfileOwned(address, session.user.id, messages);
 
       if (tokenIds.length === 0) return;
 
@@ -91,7 +91,7 @@ export const pinsRouter = {
       }),
     )
     .handler(async ({ input: { address, tokenIds }, context: { messages, session } }) => {
-      await checkAddressOwned(address, session.user.id, messages);
+      await assertProfileOwned(address, session.user.id, messages);
 
       if (tokenIds.length === 0) return;
 
@@ -107,7 +107,7 @@ export const pinsRouter = {
       }),
     )
     .handler(async ({ input: { address, tokenId, direction }, context: { messages, session } }) => {
-      await checkAddressOwned(address, session.user.id, messages);
+      await assertProfileOwned(address, session.user.id, messages);
 
       const validPins = await getValidPins(address);
 
@@ -148,7 +148,7 @@ export const pinsRouter = {
       }),
     )
     .handler(async ({ input: { address, tokenIds }, context: { messages, session } }) => {
-      await checkAddressOwned(address, session.user.id, messages);
+      await assertProfileOwned(address, session.user.id, messages);
 
       const validPins = await getValidPins(address);
 

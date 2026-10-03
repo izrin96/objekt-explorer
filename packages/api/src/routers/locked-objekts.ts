@@ -6,8 +6,8 @@ import * as z from "zod";
 
 import { authed, pub } from "../orpc";
 import { isAddressHiddenFromCaller } from "../services/privacy";
+import { assertProfileOwned } from "../services/profile";
 import { TOKEN_CHUNK_SIZE } from "../services/utils";
-import { checkAddressOwned } from "./profile";
 
 export const lockedObjektsRouter = {
   list: pub
@@ -34,7 +34,7 @@ export const lockedObjektsRouter = {
       }),
     )
     .handler(async ({ input: { address, tokenIds }, context: { messages, session } }) => {
-      await checkAddressOwned(address, session.user.id, messages);
+      await assertProfileOwned(address, session.user.id, messages);
 
       if (tokenIds.length === 0) return;
 
@@ -65,7 +65,7 @@ export const lockedObjektsRouter = {
       }),
     )
     .handler(async ({ input: { address, tokenIds }, context: { messages, session } }) => {
-      await checkAddressOwned(address, session.user.id, messages);
+      await assertProfileOwned(address, session.user.id, messages);
 
       if (tokenIds.length === 0) return;
 

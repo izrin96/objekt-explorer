@@ -1,26 +1,28 @@
 import { db } from "@repo/db";
-import { fetchUserProfiles } from "@repo/lib/server/user";
 
 import { getSession } from "./auth";
+
+/** a private profile shows only to the account that linked the address */
+export function isProfileHidden(
+  profile: { privateProfile: boolean; userId: string | null },
+  viewerId: string | undefined,
+): boolean {
+  return profile.privateProfile && (viewerId === undefined || viewerId !== profile.userId);
+}
 
 export async function isAddressHiddenFromCaller(
   address: string,
   opts?: { checkHideTransfer?: boolean },
 ): Promise<boolean> {
-  const addr = address.toLowerCase();
   const owner = await db.query.userAddress.findFirst({
-    where: { address: addr },
-    columns: { privateProfile: true, hideTransfer: true },
-    orderBy: { id: "desc" },
+    where: { address: address.toLowerCase() },
+    columns: { privateProfile: true, hideTransfer: true, userId: true },
   });
-  const isPrivate =
-    (owner?.privateProfile ?? false) ||
-    (!!opts?.checkHideTransfer && (owner?.hideTransfer ?? false));
+  if (!owner) return false;
+
+  const isPrivate = owner.privateProfile || (!!opts?.checkHideTransfer && owner.hideTransfer);
   if (!isPrivate) return false;
 
   const session = await getSession();
-  if (!session) return true;
-
-  const profiles = await fetchUserProfiles(session.user.id);
-  return !profiles.some((a) => a.address.toLowerCase() === addr);
+  return isProfileHidden({ privateProfile: isPrivate, userId: owner.userId }, session?.user.id);
 }

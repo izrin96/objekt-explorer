@@ -10,12 +10,12 @@ import * as z from "zod";
 import { authed, pub } from "../orpc";
 import {
   checkLinkedList,
-  checkProfileOwnership,
   fetchList,
   generateProfileSlug,
   findOwnedList,
   resolveDiscoverable,
 } from "../services/list";
+import { assertProfileOwned } from "../services/profile";
 
 export const listCrud = {
   find: authed
@@ -56,6 +56,7 @@ export const listCrud = {
       async ({
         input,
         context: {
+          messages,
           session: { user },
         },
       }) => {
@@ -84,7 +85,9 @@ export const listCrud = {
         // Validate profile ownership and linked list ownership + type compatibility.
         // allSettled keeps the profile error taking precedence over the linked one.
         const [profileCheck, linkedCheck] = await Promise.allSettled([
-          input.profileAddress ? checkProfileOwnership(input.profileAddress, user.id) : undefined,
+          input.profileAddress
+            ? assertProfileOwned(input.profileAddress, user.id, messages)
+            : undefined,
           linkedListId !== null
             ? checkLinkedList(input.listTypeNew, linkedListId, user.id)
             : undefined,
@@ -182,6 +185,7 @@ export const listCrud = {
       async ({
         input,
         context: {
+          messages,
           session: { user },
         },
       }) => {
@@ -203,7 +207,7 @@ export const listCrud = {
         // allSettled keeps the profile error taking precedence over the linked one.
         const [profileCheck, linkedCheck] = await Promise.allSettled([
           input.profileAddress && !list.isProfileBind
-            ? checkProfileOwnership(input.profileAddress, user.id)
+            ? assertProfileOwned(input.profileAddress, user.id, messages)
             : undefined,
           linkedListId !== null
             ? checkLinkedList(list.listTypeNew, linkedListId, user.id)

@@ -13,8 +13,8 @@ import slugify from "slugify";
 
 import type { AddSource, ListPreview, ListTypeNew, PublicList } from "../schemas/list";
 import { OBJEKT_PREVIEW_SIZE } from "../schemas/objekt";
-import { toPublicUser } from "./auth";
 import { getCollectionColumns, getPartialCollectionColumns } from "./objekt";
+import { toPublicUser } from "./profile";
 import { TOKEN_CHUNK_SIZE } from "./utils";
 
 export interface ListEntryTransformConfig {
@@ -393,19 +393,6 @@ export async function checkLinkedList(type: ListTypeNew, linkedListId: number, u
     });
   }
   return linkedList;
-}
-
-export async function checkProfileOwnership(address: string, userId: string): Promise<void> {
-  const count = await db.$count(
-    userAddress,
-    and(eq(userAddress.address, address.toLowerCase()), eq(userAddress.userId, userId)),
-  );
-
-  if (count < 1) {
-    throw new ORPCError("FORBIDDEN", {
-      message: "Profile not owned by user",
-    });
-  }
 }
 
 export async function generateProfileSlug(

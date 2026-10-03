@@ -6,7 +6,8 @@ import * as z from "zod";
 
 import { authed, pub } from "../orpc";
 import { providerIdSchema, providersMap } from "../schemas/user";
-import { auth, getCurrentUser, getProviderUsername } from "../services/auth";
+import { auth, getProviderUsername } from "../services/auth";
+import { getCurrentUser } from "../services/user";
 
 export const userRouter = {
   refreshProfile: authed.input(providerIdSchema).handler(

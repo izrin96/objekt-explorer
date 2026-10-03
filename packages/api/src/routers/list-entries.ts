@@ -15,6 +15,7 @@ import {
   fetchOwnedLists,
   findOwnedList,
 } from "../services/list";
+import { isProfileHidden } from "../services/privacy";
 
 export const listEntriesRouter = {
   listEntries: pub
@@ -54,7 +55,7 @@ export const listEntriesRouter = {
 
       // Hide lists entirely for private profiles unless the requester owns
       // the profile.
-      if (owner?.privateProfile && session?.user.id !== owner.userId) {
+      if (owner && isProfileHidden(owner, session?.user.id)) {
         return [];
       }
 

@@ -9,8 +9,8 @@ import * as z from "zod";
 import { MAX_FILE_SIZE } from "../constants";
 import { type ApiMessages, authed, optionalAuthed } from "../orpc";
 import type { ProfilePreview } from "../schemas/user";
-import { toPublicProfile } from "../services/auth";
 import { fetchOwnerSummary } from "../services/objekt";
+import { assertProfileOwned, toPublicProfile } from "../services/profile";
 import { getCache } from "../services/redis";
 import {
   createPresignedUploadUrl,
@@ -114,7 +114,7 @@ export const profileRouter = {
       }),
     )
     .handler(async ({ input: { address, mimeType, fileSize }, context: { messages, session } }) => {
-      await checkAddressOwned(address, session.user.id, messages);
+      await assertProfileOwned(address, session.user.id, messages);
 
       const ext = mimeTypeToExtension[mimeType as (typeof acceptedFileMimeTypes)[number]];
       const key = `${address.toLowerCase()}-${Date.now()}.${ext}`;
@@ -132,19 +132,6 @@ export const profileRouter = {
       };
     }),
 };
-
-export async function checkAddressOwned(address: string, userId: string, messages: ApiMessages) {
-  const count = await db.$count(
-    userAddress,
-    and(eq(userAddress.address, address), eq(userAddress.userId, userId)),
-  );
-
-  if (count < 1) {
-    throw new ORPCError("UNAUTHORIZED", {
-      message: messages.profile_not_linked(),
-    });
-  }
-}
 
 async function fetchOwnedProfile(address: string, userId: string, messages: ApiMessages) {
   const profile = await db.query.userAddress.findFirst({
