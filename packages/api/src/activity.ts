@@ -1,10 +1,14 @@
 import type { Collection, Objekt, Transfer } from "@repo/db/indexer/schema";
 import { mapOwnedObjekt } from "@repo/lib/server/objekt";
-import { fetchKnownAddresses } from "@repo/lib/server/user";
+import { fetchPublicNicknames } from "@repo/lib/server/user";
 import { RedisClient, type ServerWebSocket } from "bun";
 
 import { serverEnv } from "./env";
-import type { ActivityData, ActivityMessage } from "./schemas/activity";
+import {
+  type ActivityData,
+  type ActivityMessage,
+  activityClientMessageSchema,
+} from "./schemas/activity";
 
 const pubsub = new RedisClient(serverEnv.REDIS_URL, {
   connectionTimeout: 5000,
@@ -28,10 +32,7 @@ export async function startActivityWebSocket(): Promise<void> {
       try {
         const transfers = JSON.parse(message) as TransferData[];
 
-        const addresses = transfers.flatMap((a) => [a.from, a.to]);
-        const knownAddresses = await fetchKnownAddresses(addresses);
-
-        const addressMap = new Map(knownAddresses.map((a) => [a.address.toLowerCase(), a]));
+        const nicknameOf = await fetchPublicNicknames(transfers.flatMap((a) => [a.from, a.to]));
 
         const transferBatch: ActivityData[] = [];
 
@@ -39,13 +40,10 @@ export async function startActivityWebSocket(): Promise<void> {
           if (transfer.collection.slug === "empty-collection") continue;
 
           const { objekt, collection, ...rest } = transfer;
-          const fromUser = addressMap.get(transfer.from.toLowerCase());
-          const toUser = addressMap.get(transfer.to.toLowerCase());
-
           const transferEvent = {
             nickname: {
-              from: fromUser?.hideNickname ? undefined : (fromUser?.nickname ?? undefined),
-              to: toUser?.hideNickname ? undefined : (toUser?.nickname ?? undefined),
+              from: nicknameOf(transfer.from),
+              to: nicknameOf(transfer.to),
             },
             transfer: rest,
             objekt: mapOwnedObjekt(objekt, collection),
@@ -98,14 +96,9 @@ export const websocketHandlers = {
     } catch {
       return; // ignore malformed frames
     }
-    // `null` parses fine, and reading `.type` off it would throw out of the handler
-    if (typeof data !== "object" || data === null) return;
-    if ((data as { type?: unknown }).type === "request_history") {
-      if (transferHistory.length > 0) {
-        ws.send(
-          JSON.stringify({ type: "history", data: transferHistory } satisfies ActivityMessage),
-        );
-      }
+    if (!activityClientMessageSchema.safeParse(data).success) return;
+    if (transferHistory.length > 0) {
+      ws.send(JSON.stringify({ type: "history", data: transferHistory } satisfies ActivityMessage));
     }
   },
   close(ws: ServerWebSocket) {

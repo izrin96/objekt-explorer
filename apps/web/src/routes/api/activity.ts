@@ -9,7 +9,7 @@ import { indexer } from "@repo/db/indexer";
 import { collections, objekts, transfers } from "@repo/db/indexer/schema";
 import { Addresses } from "@repo/lib";
 import { mapOwnedObjekt, mapTransfer } from "@repo/lib/server/objekt";
-import { fetchKnownAddresses } from "@repo/lib/server/user";
+import { fetchPublicNicknames } from "@repo/lib/server/user";
 import { createFileRoute } from "@tanstack/react-router";
 import { type SQL, and, arrayOverlaps, desc, eq, inArray, lt, ne, or } from "drizzle-orm";
 
@@ -42,20 +42,13 @@ export const Route = createFileRoute("/api/activity")({
 
         const addresses = slicedResults.flatMap((r) => [r.transfer.from, r.transfer.to]);
 
-        const addressesUnique = Array.from(new Set(addresses));
-
-        const knownAddresses = await fetchKnownAddresses(addressesUnique);
-
-        const addressMap = new Map(knownAddresses.map((a) => [a.address.toLowerCase(), a]));
+        const nicknameOf = await fetchPublicNicknames(Array.from(new Set(addresses)));
 
         const items = slicedResults.map((t) => {
-          const from = addressMap.get(t.transfer.from.toLowerCase());
-          const to = addressMap.get(t.transfer.to.toLowerCase());
-
           return {
             nickname: {
-              from: from?.hideNickname ? undefined : (from?.nickname ?? undefined),
-              to: to?.hideNickname ? undefined : (to?.nickname ?? undefined),
+              from: nicknameOf(t.transfer.from),
+              to: nicknameOf(t.transfer.to),
             },
             transfer: mapTransfer(t.transfer),
             objekt: mapOwnedObjekt(t.objekt, t.collection),

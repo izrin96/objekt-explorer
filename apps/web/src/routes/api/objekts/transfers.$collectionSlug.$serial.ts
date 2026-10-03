@@ -4,7 +4,7 @@ import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts, transfers } from "@repo/db/indexer/schema";
 import { Addresses } from "@repo/lib";
-import { fetchKnownAddresses, fetchUserProfiles } from "@repo/lib/server/user";
+import { fetchPublicNicknames, fetchUserProfiles } from "@repo/lib/server/user";
 import { createFileRoute } from "@tanstack/react-router";
 import { and, desc, eq } from "drizzle-orm";
 
@@ -78,11 +78,9 @@ export const Route = createFileRoute("/api/objekts/transfers/$collectionSlug/$se
             } satisfies ObjektTransferResult);
         }
 
-        const addresses = Array.from(new Set(results.map((r) => r.to)));
-
-        const knownAddresses = await fetchKnownAddresses(addresses);
-
-        const addressMap = new Map(knownAddresses.map((a) => [a.address.toLowerCase(), a]));
+        const nicknameOf = await fetchPublicNicknames(
+          Array.from(new Set(results.map((r) => r.to))),
+        );
 
         const isSpin = result.owner.toLowerCase() === Addresses.SPIN;
 
@@ -90,15 +88,12 @@ export const Route = createFileRoute("/api/objekts/transfers/$collectionSlug/$se
           tokenId: result.tokenId,
           owner: result.owner,
           transferable: isSpin ? false : result.transferable,
-          transfers: results.map((result) => {
-            const addr = addressMap.get(result.to.toLowerCase());
-            return {
-              id: result.id,
-              to: result.to,
-              timestamp: new Date(result.timestamp).toISOString(),
-              nickname: addr?.hideNickname ? undefined : (addr?.nickname ?? undefined),
-            };
-          }),
+          transfers: results.map((result) => ({
+            id: result.id,
+            to: result.to,
+            timestamp: new Date(result.timestamp).toISOString(),
+            nickname: nicknameOf(result.to),
+          })),
         } satisfies ObjektTransferResult);
       },
     },

@@ -2,7 +2,7 @@ import { db } from "@repo/db";
 import { userAddress } from "@repo/db/schema";
 import { and, desc, eq, inArray, notInArray, sql } from "drizzle-orm";
 
-export async function fetchKnownAddresses(addresses: string[]) {
+async function fetchKnownAddresses(addresses: string[]) {
   if (addresses.length === 0) return [];
   const result = await db
     .selectDistinctOn([userAddress.address], {
@@ -19,6 +19,20 @@ export async function fetchKnownAddresses(addresses: string[]) {
     )
     .orderBy(userAddress.address, desc(userAddress.id));
   return result;
+}
+
+/** Looks up the nickname to show for each address, honouring the owner's `hideNickname`. */
+export async function fetchPublicNicknames(
+  addresses: string[],
+): Promise<(address: string) => string | undefined> {
+  const known = await fetchKnownAddresses(addresses);
+  const nicknames = new Map(
+    known.map((a) => [
+      a.address.toLowerCase(),
+      a.hideNickname ? undefined : (a.nickname ?? undefined),
+    ]),
+  );
+  return (address) => nicknames.get(address.toLowerCase());
 }
 
 export async function fetchUserProfiles(id: string) {

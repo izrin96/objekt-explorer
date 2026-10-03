@@ -1,4 +1,8 @@
-import { type ActivityMessage, activityMessageSchema } from "@repo/api/schemas/activity";
+import {
+  type ActivityClientMessage,
+  type ActivityMessage,
+  activityMessageSchema,
+} from "@repo/api/schemas/activity";
 import { useEffect, useRef } from "react";
 
 import { clientEnv } from "@/lib/env/client";
@@ -49,7 +53,7 @@ export function useActivitySocket({
         attempt = 0;
         // the server answers with the last batch it published, which fills the
         // gap between the page request and the socket being ready
-        socket?.send(JSON.stringify({ type: "request_history" }));
+        socket?.send(JSON.stringify({ type: "request_history" } satisfies ActivityClientMessage));
       });
 
       socket.addEventListener("message", (event: MessageEvent<string>) => {
