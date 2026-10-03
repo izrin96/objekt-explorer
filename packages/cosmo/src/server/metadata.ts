@@ -133,6 +133,7 @@ export function normalizeV3(
   const thumbnail = metadata.image.replace(/\/(4x|3x|2x|original)/, "/thumbnail");
   const comoAmount = className === "Motion" ? 3 : ["Double", "Premier"].includes(className) ? 2 : 1;
   const textColor = getTextColor(className, collection);
+  const transferable = className === "Welcome" ? false : true;
 
   return {
     name: metadata.name,
@@ -158,7 +159,7 @@ export function normalizeV3(
       textColor: textColor,
       objektNo: 0,
       tokenAddress: "0x0000000000000000000000000000000000000000",
-      transferable: true,
+      transferable: transferable,
     },
   };
 }
