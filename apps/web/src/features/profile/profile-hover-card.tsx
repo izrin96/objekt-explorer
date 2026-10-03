@@ -64,6 +64,7 @@ export function ProfileCell({
   linkClassName,
   onClick,
   before,
+  after,
   children,
 }: {
   address: string;
@@ -73,6 +74,8 @@ export function ProfileCell({
   onClick?: () => void;
   /** content ahead of the name, inside the hover area */
   before?: ReactNode;
+  /** content after the name, inside the hover area */
+  after?: ReactNode;
   children: ReactNode;
 }) {
   return (
@@ -91,6 +94,7 @@ export function ProfileCell({
       >
         {children}
       </Link>
+      {after}
     </TooltipPrimitive.Trigger>
   );
 }

@@ -55,3 +55,44 @@ export type HeldResult = z.infer<typeof heldResultSchema>;
 
 /** every minted serial of a collection, and which of them were spun */
 export type SerialList = { serials: number[]; spun: number[] };
+
+export const holdersInputSchema = z.object({
+  collectionSlug: z.string(),
+  offset: z.number().int().min(0).default(0),
+  limit: z.number().int().min(1).max(50).default(10),
+});
+
+export const holderBucketKeySchema = z.enum(["1", "2-4", "5-9", "10+"]);
+export type HolderBucketKey = z.infer<typeof holderBucketKeySchema>;
+
+export const holderRowSchema = z.object({
+  rank: z.number(),
+  copies: z.number(),
+  /** null when the holder hides serials from this viewer */
+  lowestSerial: z.number().nullable(),
+  holder: z.discriminatedUnion("kind", [
+    z.object({
+      kind: z.literal("public"),
+      address: z.string(),
+      nickname: z.string().nullable(),
+    }),
+    z.object({ kind: z.literal("private") }),
+  ]),
+  isViewer: z.boolean(),
+});
+export type HolderRow = z.infer<typeof holderRowSchema>;
+
+export const holdersResultSchema = z.object({
+  summary: z.object({
+    holders: z.number(),
+    copies: z.number(),
+    buckets: z.array(
+      z.object({ key: holderBucketKeySchema, holders: z.number(), copies: z.number() }),
+    ),
+  }),
+  rows: z.array(holderRowSchema),
+  /** the viewer's own holding addresses, filled on the first page only */
+  viewer: z.array(holderRowSchema),
+  nextOffset: z.number().optional(),
+});
+export type HoldersResult = z.infer<typeof holdersResultSchema>;

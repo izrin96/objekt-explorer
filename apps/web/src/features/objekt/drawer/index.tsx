@@ -27,12 +27,13 @@ import { m } from "@/paraglide/messages";
 import { ObjektFlip } from "../objekt-flip";
 import { getCollectionShortNo, isObjektOwned, memberNames } from "../objekt-utils";
 import { collectionMetadataOptions, serialListOptions, transfersOptions } from "../queries";
+import { HoldersPanel } from "./holders";
 import { MarketPanel } from "./market";
 import { MetadataPanel } from "./metadata";
 import { OwnedPanel, type OwnedRowMenu } from "./owned";
 import { SerialsPanel, Timeline, toTimeline } from "./serials";
 
-type DrawerTab = "owned" | "serials" | "market" | "metadata";
+type DrawerTab = "owned" | "serials" | "market" | "metadata" | "holders";
 
 const NO_SERIALS: number[] = [];
 
@@ -269,7 +270,7 @@ function DrawerBody({
         </div>
 
         <Tabs value={tab} onValueChange={(value) => onTabChange(value as DrawerTab)}>
-          {/* four tabs outrun a phone-width sheet, so the strip scrolls and the
+          {/* five tabs outrun a phone-width sheet, so the strip scrolls and the
               sheet does not; the scroll area's root sets its own `position`,
               so the sticky wrapper stays outside it */}
           <div
@@ -296,6 +297,7 @@ function DrawerBody({
                 )}
                 <TabsTab value="serials">{m.objekt_trades()}</TabsTab>
                 <TabsTab value="market">{m.objekt_market()}</TabsTab>
+                <TabsTab value="holders">{m.objekt_holders()}</TabsTab>
                 <TabsTab value="metadata">{m.objekt_metadata()}</TabsTab>
               </TabsList>
             </ScrollArea>
@@ -334,6 +336,9 @@ function DrawerBody({
                 onTabChange("serials");
               }}
             />
+          </TabsPanel>
+          <TabsPanel value="holders">
+            <HoldersPanel slug={objekt.slug} physical={objekt.onOffline === "offline"} />
           </TabsPanel>
           <TabsPanel value="metadata">
             <MetadataPanel

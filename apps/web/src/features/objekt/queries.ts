@@ -62,6 +62,14 @@ export const marketListingsOptions = (slug: string, sortBy: SortBy, sortDir: Sor
     placeholderData: keepPreviousData,
   });
 
+export const holdersOptions = (slug: string) =>
+  orpc.collections.holders.infiniteOptions({
+    input: (offset: number) => ({ collectionSlug: slug, offset, limit: offset === 0 ? 10 : 50 }),
+    initialPageParam: 0,
+    getNextPageParam: (page) => page.nextOffset,
+    staleTime: 1000 * 60,
+  });
+
 export const marketStatsOptions = (slug: string) =>
   orpc.market.stats.queryOptions({
     input: { collectionSlug: slug },
