@@ -116,10 +116,7 @@ function performComparison(
   targetCollectionSlugs: ReadonlySet<string>,
   mode: "missing" | "matches",
 ): ListObjekt[] {
-  const filteredEntries =
-    mode === "missing"
-      ? sourceEntries.filter((e) => !targetCollectionSlugs.has(e.slug))
-      : sourceEntries.filter((e) => targetCollectionSlugs.has(e.slug));
-
-  return filteredEntries.map((entry) => entry);
+  return mode === "missing"
+    ? sourceEntries.filter((e) => !targetCollectionSlugs.has(e.slug))
+    : sourceEntries.filter((e) => targetCollectionSlugs.has(e.slug));
 }
