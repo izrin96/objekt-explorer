@@ -3,7 +3,7 @@ import { toIndexedArtist, type ValidArtist } from "@repo/cosmo/types/common";
 import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
-import { listEntries, lists, user, userAddress } from "@repo/db/schema";
+import { listEntries, lists } from "@repo/db/schema";
 import type { List, ListEntry, UserAddress } from "@repo/db/schema";
 import { chunkMap } from "@repo/lib";
 import { mapOwnedObjekt, overrideCollection } from "@repo/lib/server/objekt";
@@ -619,96 +619,4 @@ export async function fetchPartialOwnedListCollections(slug: string, userId: str
       return collection ?? null;
     })
     .filter((a) => a !== null);
-}
-
-export type PartnerRow = {
-  userId: string;
-  listId: number;
-  listSlug: string;
-  listName: string;
-  profileAddress: string | null;
-  profileSlug: string | null;
-  theyHaveIWant: string[];
-  iHaveTheyWant: string[];
-};
-
-export async function buildTradePartnersResponse(
-  partners: PartnerRow[],
-  sortField: "theyHaveIWant" | "iHaveTheyWant",
-) {
-  if (partners.length === 0) {
-    return { partners: [], collections: {} };
-  }
-
-  const userIds = [...new Set(partners.map((r) => r.userId))];
-  const allSlugs = [...new Set(partners.flatMap((r) => [...r.theyHaveIWant, ...r.iHaveTheyWant]))];
-
-  const [users, userAddrs, collectionRows] = await Promise.all([
-    db.select().from(user).where(inArray(user.id, userIds)),
-    db.select().from(userAddress).where(inArray(userAddress.userId, userIds)),
-    allSlugs.length > 0
-      ? indexer
-          .select(getCollectionColumns())
-          .from(collections)
-          .where(inArray(collections.slug, allSlugs))
-      : Promise.resolve([]),
-  ]);
-
-  const userMap = new Map(users.map((u) => [u.id, u]));
-  const collectionsData = Object.fromEntries(
-    collectionRows.map((c) => [c.slug, overrideCollection(c)]),
-  );
-
-  // address → nickname map (hiding respected, addresses normalized to lowercase)
-  const addrNickMap = new Map<string, string>();
-  for (const addr of userAddrs) {
-    if (addr.nickname && !addr.hideNickname) {
-      addrNickMap.set(addr.address.toLowerCase(), addr.nickname);
-    }
-  }
-
-  const order: string[] = [];
-  const matchesByUser = new Map<string, PartnerRow[]>();
-  for (const row of partners) {
-    if (matchesByUser.has(row.userId)) {
-      matchesByUser.get(row.userId)!.push(row);
-    } else {
-      order.push(row.userId);
-      matchesByUser.set(row.userId, [row]);
-    }
-  }
-
-  const tradePartners = order
-    .map((userId) => {
-      const usr = userMap.get(userId);
-      if (!usr) return null;
-      const matches = matchesByUser.get(userId) ?? [];
-
-      return {
-        userId,
-        username: usr.name ?? "unknown",
-        user: toPublicUser(usr),
-        matches: matches.map((m) => ({
-          listId: m.listId,
-          listSlug: m.listSlug,
-          listName: m.listName,
-          profileAddress: m.profileAddress,
-          profileSlug: m.profileSlug,
-          profileNickname: m.profileAddress
-            ? (addrNickMap.get(m.profileAddress.toLowerCase()) ?? null)
-            : null,
-          theyHaveIWant: m.theyHaveIWant,
-          iHaveTheyWant: m.iHaveTheyWant,
-        })),
-      };
-    })
-    .filter((p): p is NonNullable<typeof p> => p !== null);
-
-  tradePartners.sort((a, b) => {
-    const aTotal = new Set(a.matches.flatMap((m) => m[sortField])).size;
-    const bTotal = new Set(b.matches.flatMap((m) => m[sortField])).size;
-    return bTotal - aTotal;
-  });
-
-  return { partners: tradePartners, collections: collectionsData };
 }
