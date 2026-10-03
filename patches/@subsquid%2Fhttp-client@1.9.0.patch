@@ -1,0 +1,24 @@
+diff --git a/lib/client.js b/lib/client.js
+index 876ad9245d33a1e67fe4494da89b6a2f8df06245..e3ac6da043dfeeeddc74c0c530bc4f3b6fd46855 100644
+--- a/lib/client.js
++++ b/lib/client.js
+@@ -121,7 +121,6 @@ class HttpClient {
+             headers: new request_1.nodeFetch.Headers(options.headers),
+             url: this.getAbsUrl(url),
+             signal: options.abort,
+-            compress: true,
+             timeout: options.httpTimeout ?? this.httpTimeout,
+             stream: options.stream
+         };
+diff --git a/src/client.ts b/src/client.ts
+index 91659027565fa35bf6fc61a145494966dc823c14..e9ad213e2cdf19d5c5ac8aac479a519b70c6c96f 100644
+--- a/src/client.ts
++++ b/src/client.ts
+@@ -212,7 +212,6 @@ export class HttpClient {
+             headers: new nodeFetch.Headers(options.headers),
+             url: this.getAbsUrl(url),
+             signal: options.abort,
+-            compress: true,
+             timeout: options.httpTimeout ?? this.httpTimeout,
+             stream: options.stream
+         }

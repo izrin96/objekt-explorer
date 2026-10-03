@@ -5,7 +5,10 @@
   "license": "MIT",
   "scripts": {
     "build": "rm -rf lib/ && tsc -p tsconfig.build.json",
-    "start": "squid-commands process:prod",
+    "start": "squid-typeorm-migration apply && bun lib/main.js",
+    "process": "bun run build && bun run --bun start",
+    "migration:apply": "squid-typeorm-migration apply",
+    "codegen": "squid-typeorm-codegen",
     "lint": "oxlint --type-aware --config ./oxlint.config.mts",
     "lint:fix": "oxlint --type-aware --fix --config ./oxlint.config.mts",
     "typecheck": "tsc --pretty --noEmit",
@@ -17,30 +20,16 @@
     "@subsquid/evm-abi": "^1.0.0",
     "@subsquid/evm-codec": "^1.0.0",
     "@subsquid/evm-processor": "^1.30.1",
-    "@subsquid/graphql-server": "^4.12.1",
     "@subsquid/typeorm-migration": "^1.4.0",
     "@subsquid/typeorm-store": "^1.9.2",
-    "@subsquid/util-internal": "^3.3.1",
-    "dotenv": "^17.4.2",
-    "ethers": "^6.17.0",
-    "glob": "^13.0.6",
-    "ioredis": "^6.0.0",
-    "lru-cache": "^11.5.3",
-    "ofetch": "catalog:",
-    "path-scurry": "^2.0.2",
     "typeorm": "^0.3.31",
-    "uuid": "^14.0.2",
     "zod": "catalog:"
   },
   "devDependencies": {
     "@repo/lint": "workspace:*",
     "@repo/tsconfig": "workspace:*",
-    "@subsquid/commands": "^2.3.1",
-    "@subsquid/evm-typegen": "^5.0.0",
-    "@subsquid/squid-gen-evm": "^2.0.0",
     "@subsquid/typeorm-codegen": "^2.4.0",
     "@types/bun": "catalog:dev",
-    "turbo": "catalog:dev",
     "typescript": "catalog:dev"
   }
 }

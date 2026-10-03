@@ -3,6 +3,8 @@
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules", ".turbo", "lib"],
   "compilerOptions": {
+    "types": ["bun"],
+
     // TypeORM decorators
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,

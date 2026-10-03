@@ -25,16 +25,15 @@ COPY --from=pruner /app/out/json/ .
 COPY --from=pruner /app/patches ./patches
 RUN --mount=type=cache,target=/root/.bun/install/cache bun install --frozen-lockfile --production --ignore-scripts
 
-# stage 3: run with node due to the subsquid SDK not working in bun
-FROM node:22-slim AS runner
+# stage 3: run the tsc output with bun; the generated TypeORM models need CommonJS,
+# since their circular decorator metadata throws when bun loads src/ as ESM
+FROM oven/bun:1.4-slim AS runner
 WORKDIR /app/apps/indexer
 ENV NODE_ENV=production
 COPY --from=installer /app/apps/indexer/lib ./lib
 COPY --from=installer /app/apps/indexer/db ./db
 COPY --from=installer /app/apps/indexer/package.json ./package.json
-COPY --from=installer /app/apps/indexer/commands.json ./commands.json
 COPY --from=prod-deps /app/apps/indexer/node_modules ./node_modules
 COPY --from=prod-deps /app/node_modules/.bun /app/node_modules/.bun
 COPY --from=installer /app/packages /app/packages
-RUN npm install -g @subsquid/commands && mv $(which squid-commands) /usr/local/bin/sqd
-CMD ["sqd", "process:prod"]
+CMD ["bun", "run", "--bun", "start"]

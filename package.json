@@ -47,6 +47,7 @@
   },
   "packageManager": "bun@1.4.2",
   "patchedDependencies": {
-    "@subsquid/typeorm-store@1.9.2": "patches/@subsquid%2Ftypeorm-store@1.9.2.patch"
+    "@subsquid/typeorm-store@1.9.2": "patches/@subsquid%2Ftypeorm-store@1.9.2.patch",
+    "@subsquid/http-client@1.9.0": "patches/@subsquid%2Fhttp-client@1.9.0.patch"
   }
 }

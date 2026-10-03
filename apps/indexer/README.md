@@ -6,6 +6,11 @@ Forked from [teamreflex/cosmo-web/apps/indexer](https://github.com/teamreflex/co
 
 ## Changes
 
+### Runtime
+
+- Runs on Bun: `tsc` compiles to CommonJS in `lib/` and `bun lib/main.js` runs it. Running `src/` directly fails, since Bun loads it as ESM and the generated models' circular decorator metadata throws
+- Patches `@subsquid/http-client` to drop `compress: true`, which makes Bun's fetch gzip request bodies the SQD gateway cannot read
+
 ### Database
 
 - Uses PostgreSQL 18 with UUID v7 primary keys

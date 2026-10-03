@@ -3,7 +3,6 @@ import type { CosmoObjektMetadataV1 } from "@repo/cosmo/types/metadata";
 import { addr, chunk, slugifyObjekt, Addresses } from "@repo/lib";
 import { TypeormDatabase, type Store } from "@subsquid/typeorm-store";
 import { IsNull } from "typeorm";
-import { v7 as randomUUID } from "uuid";
 
 import { env } from "./env";
 import { fetchMetadata } from "./metadata";
@@ -24,7 +23,7 @@ import {
   parseBlocks,
 } from "./parser";
 import { processor, type ProcessorContext } from "./processor";
-import { redis } from "./redis";
+import { publish } from "./redis";
 
 const db = new TypeormDatabase({ supportHotBlocks: true });
 
@@ -134,9 +133,9 @@ processor.run(db, async (ctx) => {
 
     // publish transfers to redis for websocket broadcast
     if (transferBatchAll.length > 0) {
-      redis
-        .publish("transfers", JSON.stringify(transferBatchAll))
-        .catch((error) => ctx.log.warn(`Failed to publish transfers to Redis: ${error}`));
+      publish("transfers", JSON.stringify(transferBatchAll)).catch((error) =>
+        ctx.log.warn(`Failed to publish transfers to Redis: ${error}`),
+      );
     }
 
     // process transferability updates separately from transfers
@@ -223,7 +222,7 @@ async function handleCollection(
   // create
   if (!collection) {
     collection = new Collection({
-      id: randomUUID(),
+      id: Bun.randomUUIDv7(),
       contract: addr(metadata.objekt.tokenAddress),
       createdAt: new Date(transfer.timestamp),
       collectionId: metadata.objekt.collectionId,
@@ -319,7 +318,7 @@ async function handleTransferabilityUpdates(
 
     updateRows.push(
       new TransferabilityUpdate({
-        id: randomUUID(),
+        id: Bun.randomUUIDv7(),
         tokenId: update.tokenId,
         transferable: update.transferable,
         blockNumber: update.blockNumber,
@@ -434,7 +433,7 @@ async function getBalance(
   // create
   if (!balance) {
     balance = new ComoBalance({
-      id: randomUUID(),
+      id: Bun.randomUUIDv7(),
       tokenId: tokenId,
       owner: owner,
       amount: BigInt(0),
@@ -449,7 +448,7 @@ async function getBalance(
  */
 function handleVoteCreation(event: VoteEvent) {
   return new Vote({
-    id: randomUUID(),
+    id: Bun.randomUUIDv7(),
     from: event.from,
     createdAt: new Date(event.timestamp),
     tokenId: event.tokenId,
