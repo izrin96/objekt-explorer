@@ -1,20 +1,8 @@
-import type { ActivityResponse, ValidType } from "@repo/api/schemas/activity";
+import type { ActivityCursor, ActivityParams, ActivityResponse } from "@repo/api/schemas/activity";
 import { infiniteQueryOptions } from "@tanstack/react-query";
 import { ofetch } from "ofetch";
 
 import { mapObjektWithTag } from "@/features/objekt/objekt-utils";
-
-export type ActivityCursor = { timestamp: string; id: string };
-
-export type ActivityParams = {
-  type: ValidType | undefined;
-  artist: string[];
-  member: string[];
-  season: string[];
-  class: string[];
-  on_offline: string[];
-  collection: string[];
-};
 
 /** the feed is append-only, so a short window is enough to avoid a refetch storm */
 const ACTIVITY_STALE_TIME = 1000 * 30;

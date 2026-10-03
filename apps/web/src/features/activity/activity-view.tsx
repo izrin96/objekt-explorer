@@ -1,5 +1,10 @@
 import { PulseIcon } from "@phosphor-icons/react";
-import type { ActivityData, ValidType } from "@repo/api/schemas/activity";
+import type {
+  ActivityData,
+  ActivityMessage,
+  ActivityParams,
+  ValidType,
+} from "@repo/api/schemas/activity";
 import { validType } from "@repo/api/schemas/activity";
 import { validOnlineTypes, type ValidOnlineType } from "@repo/cosmo/types/common";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
@@ -34,9 +39,9 @@ import { m } from "@/paraglide/messages";
 
 import { getEventKind } from "./activity-row";
 import { ActivityTable } from "./activity-table";
-import { type ActivityParams, activityInfiniteOptions } from "./queries";
+import { activityInfiniteOptions } from "./queries";
 import { useActivityType, useResetActivity, useSetActivityType } from "./search-schema";
-import { type ActivityMessage, useActivitySocket } from "./use-activity-socket";
+import { useActivitySocket } from "./use-activity-socket";
 
 /**
  * Everything the socket contributes, tagged with the request it belongs to:

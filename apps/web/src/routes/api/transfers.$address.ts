@@ -1,9 +1,11 @@
-import { artistsArraySchema } from "@repo/api/schemas/artist";
-import { checkpointSchema } from "@repo/api/schemas/checkpoint";
-import { validType } from "@repo/api/schemas/transfers";
+import {
+  type TransferResult,
+  type TransfersQuery,
+  transfersQuerySchema,
+} from "@repo/api/schemas/transfers";
 import { getCollectionColumns } from "@repo/api/services/objekt";
 import { isAddressHiddenFromCaller } from "@repo/api/services/privacy";
-import { toIndexedArtist, validOnlineTypes } from "@repo/cosmo/types/common";
+import { toIndexedArtist } from "@repo/cosmo/types/common";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts, transfers } from "@repo/db/indexer/schema";
 import { Addresses } from "@repo/lib";
@@ -11,30 +13,10 @@ import { mapOwnedObjekt, mapTransfer } from "@repo/lib/server/objekt";
 import { fetchKnownAddresses } from "@repo/lib/server/user";
 import { createFileRoute } from "@tanstack/react-router";
 import { type SQL, and, arrayOverlaps, desc, eq, inArray, lt, lte, ne, or } from "drizzle-orm";
-import * as z from "zod";
 
 const PER_PAGE = 150;
 
-const transfersSchema = z.object({
-  type: z.enum(validType).default("all"),
-  artist: artistsArraySchema,
-  member: z.string().array(),
-  season: z.string().array(),
-  class: z.string().array(),
-  on_offline: z.enum(validOnlineTypes).array(),
-  collection: z.string().array(),
-  at: checkpointSchema.optional(),
-  cursor: z
-    .object({
-      timestamp: z.string(),
-      id: z.string(),
-    })
-    .optional(),
-});
-
-type TransferParams = z.infer<typeof transfersSchema>;
-
-function getCollectionFilters(query: TransferParams): SQL[] {
+function getCollectionFilters(query: TransfersQuery): SQL[] {
   const filters: SQL[] = [];
   if (query.artist.length)
     filters.push(inArray(collections.artist, query.artist.map(toIndexedArtist)));
@@ -58,7 +40,7 @@ export const Route = createFileRoute("/api/transfers/$address")({
         const addr = params.address.toLowerCase();
 
         if (await isAddressHiddenFromCaller(addr, { checkHideTransfer: true })) {
-          return Response.json({ hide: true, results: [] });
+          return Response.json({ hide: true, results: [] } satisfies TransferResult);
         }
 
         const results = await fetchTransfers(query, addr);
@@ -95,7 +77,7 @@ export const Route = createFileRoute("/api/transfers/$address")({
               },
             };
           }),
-        });
+        } satisfies TransferResult);
       },
     },
   },
@@ -112,8 +94,8 @@ const transferSelect = {
   collection: getCollectionColumns(),
 };
 
-function getTypeFilters(type: TransferParams["type"], addr: string): SQL[] {
-  const filters: Record<TransferParams["type"], SQL[] | null> = {
+function getTypeFilters(type: TransfersQuery["type"], addr: string): SQL[] {
+  const filters: Record<TransfersQuery["type"], SQL[] | null> = {
     all: null,
     mint: [eq(transfers.from, Addresses.NULL), eq(transfers.to, addr)],
     received: [ne(transfers.from, Addresses.NULL), eq(transfers.to, addr)],
@@ -125,7 +107,7 @@ function getTypeFilters(type: TransferParams["type"], addr: string): SQL[] {
   return result ?? [];
 }
 
-async function fetchTransfers(query: TransferParams, addr: string) {
+async function fetchTransfers(query: TransfersQuery, addr: string) {
   const typeFilters = getTypeFilters(query.type, addr);
   const cursorFilter = query.cursor
     ? [
@@ -258,7 +240,7 @@ function mergeSortedTransfers<T extends { transfer: { id: string; timestamp: str
 
 function parseParams(
   params: URLSearchParams,
-): { ok: true; data: TransferParams } | { ok: false; response: Response } {
+): { ok: true; data: TransfersQuery } | { ok: false; response: Response } {
   let cursor: unknown = undefined;
   const cursorRaw = params.get("cursor");
   if (cursorRaw) {
@@ -272,7 +254,7 @@ function parseParams(
     }
   }
 
-  const result = transfersSchema.safeParse({
+  const result = transfersQuerySchema.safeParse({
     type: params.get("type") ?? "all",
     artist: params.getAll("artist"),
     member: params.getAll("member"),

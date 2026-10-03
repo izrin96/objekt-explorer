@@ -2,6 +2,7 @@ import { artistSchema } from "@repo/api/schemas/artist";
 import { rateLimit } from "@repo/api/services/redis";
 import { getAccessToken } from "@repo/api/services/token";
 import { fetchLiveSessions } from "@repo/cosmo/server/live";
+import type { LiveSession } from "@repo/cosmo/types/live";
 import { createFileRoute } from "@tanstack/react-router";
 import * as z from "zod";
 
@@ -38,7 +39,7 @@ export const Route = createFileRoute("/api/live-sessions")({
         const { accessToken } = await getAccessToken();
         const sessions = await fetchLiveSessions(accessToken, parsed.data.artistId);
 
-        return Response.json(sessions);
+        return Response.json(sessions satisfies LiveSession[]);
       },
     },
   },

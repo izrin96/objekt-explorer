@@ -1,7 +1,10 @@
-import { validType } from "@repo/api/schemas/activity";
-import { artistsArraySchema } from "@repo/api/schemas/artist";
+import {
+  type ActivityQuery,
+  type ActivityResponse,
+  activityQuerySchema,
+} from "@repo/api/schemas/activity";
 import { getCollectionColumns } from "@repo/api/services/objekt";
-import { toIndexedArtist, validOnlineTypes } from "@repo/cosmo/types/common";
+import { toIndexedArtist } from "@repo/cosmo/types/common";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts, transfers } from "@repo/db/indexer/schema";
 import { Addresses } from "@repo/lib";
@@ -9,29 +12,10 @@ import { mapOwnedObjekt, mapTransfer } from "@repo/lib/server/objekt";
 import { fetchKnownAddresses } from "@repo/lib/server/user";
 import { createFileRoute } from "@tanstack/react-router";
 import { type SQL, and, arrayOverlaps, desc, eq, inArray, lt, ne, or } from "drizzle-orm";
-import * as z from "zod";
 
 const PAGE_SIZE = 300;
 
-const activitySchema = z.object({
-  type: z.enum(validType).default("all"),
-  artist: artistsArraySchema,
-  member: z.string().array(),
-  season: z.string().array(),
-  class: z.string().array(),
-  on_offline: z.enum(validOnlineTypes).array(),
-  collection: z.string().array(),
-  cursor: z
-    .object({
-      timestamp: z.string(),
-      id: z.string(),
-    })
-    .optional(),
-});
-
-type ActivityParams = z.infer<typeof activitySchema>;
-
-function getCollectionFilters(query: ActivityParams): SQL[] {
+function getCollectionFilters(query: ActivityQuery): SQL[] {
   const filters: SQL[] = [];
   if (query.artist.length)
     filters.push(inArray(collections.artist, query.artist.map(toIndexedArtist)));
@@ -89,7 +73,7 @@ export const Route = createFileRoute("/api/activity")({
         return Response.json({
           items,
           nextCursor,
-        });
+        } satisfies ActivityResponse);
       },
     },
   },
@@ -107,7 +91,7 @@ const transferSelect = {
   collection: getCollectionColumns(),
 };
 
-function getTypeFilters(type: ActivityParams["type"]): SQL[] {
+function getTypeFilters(type: ActivityQuery["type"]): SQL[] {
   const typeFilters = {
     mint: [eq(transfers.from, Addresses.NULL)],
     transfer: [ne(transfers.from, Addresses.NULL), ne(transfers.to, Addresses.SPIN)],
@@ -117,7 +101,7 @@ function getTypeFilters(type: ActivityParams["type"]): SQL[] {
   return typeFilters[type];
 }
 
-async function fetchTransfers(query: ActivityParams) {
+async function fetchTransfers(query: ActivityQuery) {
   const typeFilters = getTypeFilters(query.type);
   const cursorFilter = query.cursor
     ? [
@@ -186,7 +170,7 @@ async function fetchTransfers(query: ActivityParams) {
 
 function parseParams(
   params: URLSearchParams,
-): { ok: true; data: ActivityParams } | { ok: false; response: Response } {
+): { ok: true; data: ActivityQuery } | { ok: false; response: Response } {
   let cursor: unknown = undefined;
   const cursorRaw = params.get("cursor");
   if (cursorRaw) {
@@ -200,7 +184,7 @@ function parseParams(
     }
   }
 
-  const result = activitySchema.safeParse({
+  const result = activityQuerySchema.safeParse({
     type: params.get("type") ?? "all",
     artist: params.getAll("artist"),
     member: params.getAll("member"),

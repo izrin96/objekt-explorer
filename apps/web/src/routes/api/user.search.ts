@@ -1,6 +1,7 @@
 import { rateLimit } from "@repo/api/services/redis";
 import { getAccessToken } from "@repo/api/services/token";
 import { search } from "@repo/cosmo/server/user";
+import type { CosmoSearchResult } from "@repo/cosmo/types/user";
 import { db } from "@repo/db";
 import { userAddress } from "@repo/db/schema";
 import { cacheUsers } from "@repo/lib/server/user";
@@ -18,7 +19,13 @@ export const Route = createFileRoute("/api/user/search")({
         const url = new URL(request.url);
         const query = url.searchParams.get("query") ?? "";
 
-        if (query.length < 1) return Response.json({ results: [] });
+        if (query.length < 1) {
+          return Response.json({
+            hasNext: false,
+            nextStartAfter: null,
+            results: [],
+          } satisfies CosmoSearchResult);
+        }
         if (query.length > MAX_QUERY_LENGTH) {
           return Response.json({ error: "Query too long" }, { status: 400 });
         }
@@ -50,7 +57,7 @@ export const Route = createFileRoute("/api/user/search")({
             );
           }
 
-          return Response.json({ ...results, results: validUsers });
+          return Response.json({ ...results, results: validUsers } satisfies CosmoSearchResult);
         } catch (err) {
           console.error("Cosmo user search failed:", err);
         }
@@ -80,7 +87,7 @@ export const Route = createFileRoute("/api/user/search")({
             profileImageUrl: "",
             userProfiles: [],
           })),
-        });
+        } satisfies CosmoSearchResult);
       },
     },
   },

@@ -3,6 +3,7 @@ import type {
   CollectionMetadata,
   CollectionResult,
   ObjektTransferResult,
+  SerialList,
 } from "@repo/api/schemas/objekt";
 import type { OwnedBySchema } from "@repo/api/schemas/owned-by";
 import { keepPreviousData, queryOptions } from "@tanstack/react-query";
@@ -11,8 +12,6 @@ import { ofetch } from "ofetch";
 import { orpc } from "@/lib/orpc";
 
 import { mapObjektWithTag } from "./objekt-utils";
-
-export type SerialList = { serials: number[]; spun: number[] };
 
 /** Never changes under a given artist scope, so it is fetched once and filtered in the browser. */
 export const collectionOptions = (filters?: OwnedBySchema) =>

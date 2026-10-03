@@ -1,19 +1,8 @@
-import type { TransferResult } from "@repo/api/schemas/transfers";
+import type { TransferResult, TransfersParams } from "@repo/api/schemas/transfers";
 import { infiniteQueryOptions } from "@tanstack/react-query";
 import { ofetch } from "ofetch";
 
-export type TransferQuery = {
-  type: string;
-  artist?: string[];
-  member?: string[];
-  season?: string[];
-  class?: string[];
-  on_offline?: string[];
-  collection?: string[];
-  at?: string;
-};
-
-export const transfersOptions = (address: string, query: TransferQuery) =>
+export const transfersOptions = (address: string, query: TransfersParams) =>
   infiniteQueryOptions({
     queryKey: ["transfers", address, query],
     queryFn: ({ pageParam }) =>

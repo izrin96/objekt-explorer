@@ -1,3 +1,4 @@
+import type { HeldResult } from "@repo/api/schemas/objekt";
 import { ownedBySchema } from "@repo/api/schemas/owned-by";
 import { getCollectionColumns } from "@repo/api/services/objekt";
 import { isAddressHiddenFromCaller } from "@repo/api/services/privacy";
@@ -55,7 +56,7 @@ export const Route = createFileRoute("/api/objekts/held-by/$address")({
         }
 
         if (await isAddressHiddenFromCaller(addr)) {
-          return Response.json({ collections: [] });
+          return Response.json({ collections: [] } satisfies HeldResult);
         }
 
         // one entry per owner, whatever the artist scope, so every visitor shares it
@@ -66,7 +67,7 @@ export const Route = createFileRoute("/api/objekts/held-by/$address")({
           collections: artists?.length
             ? all.filter((collection) => artists.includes(collection.artist.toLowerCase()))
             : all,
-        });
+        } satisfies HeldResult);
       },
     },
   },

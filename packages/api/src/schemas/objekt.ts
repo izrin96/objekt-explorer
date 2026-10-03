@@ -64,3 +64,6 @@ export const heldResultSchema = z.object({
   collections: z.custom<HeldObjekt[]>(),
 });
 export type HeldResult = z.infer<typeof heldResultSchema>;
+
+/** every minted serial of a collection, and which of them were spun */
+export type SerialList = { serials: number[]; spun: number[] };

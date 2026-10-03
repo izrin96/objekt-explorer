@@ -14,16 +14,6 @@ type CollectionOverride = Partial<{
 
 type CollectionInput = Pick<Collection, CollectionField | ProcessedImageField>;
 
-type TransferRow = {
-  id: string;
-  from: string;
-  to: string;
-  timestamp: string | null;
-  hash?: string;
-  objektId?: string | null;
-  collectionId?: string | null;
-};
-
 /**
  * Override color for some collection
  */
@@ -128,9 +118,9 @@ export function mapOwnedObjekt(objekt: Objekt, collection: CollectionInput): Own
   };
 }
 
-export function mapTransfer(transfer: TransferRow): TransferRow {
+export function mapTransfer<T extends { timestamp: string }>(transfer: T): T {
   return {
     ...transfer,
-    timestamp: transfer.timestamp ? new Date(transfer.timestamp).toISOString() : null,
+    timestamp: new Date(transfer.timestamp).toISOString(),
   };
 }

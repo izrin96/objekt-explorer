@@ -1,10 +1,10 @@
 import type { Collection, Objekt, Transfer } from "@repo/db/indexer/schema";
 import { mapOwnedObjekt } from "@repo/lib/server/objekt";
 import { fetchKnownAddresses } from "@repo/lib/server/user";
-import type { OwnedObjekt } from "@repo/lib/types/objekt";
 import { RedisClient, type ServerWebSocket } from "bun";
 
 import { serverEnv } from "./env";
+import type { ActivityData, ActivityMessage } from "./schemas/activity";
 
 const pubsub = new RedisClient(serverEnv.REDIS_URL, {
   connectionTimeout: 5000,
@@ -12,21 +12,12 @@ const pubsub = new RedisClient(serverEnv.REDIS_URL, {
 
 const clients = new Set<ServerWebSocket>();
 
-const transferHistory: TransferSendData[] = [];
+const transferHistory: ActivityData[] = [];
 const MAX_HISTORY_SIZE = 50;
 
 type TransferData = Transfer & {
   collection: Collection;
   objekt: Objekt;
-};
-
-type TransferSendData = {
-  nickname: {
-    from: string | undefined;
-    to: string | undefined;
-  };
-  transfer: Transfer;
-  objekt: OwnedObjekt;
 };
 
 export async function startActivityWebSocket(): Promise<void> {
@@ -42,7 +33,7 @@ export async function startActivityWebSocket(): Promise<void> {
 
         const addressMap = new Map(knownAddresses.map((a) => [a.address.toLowerCase(), a]));
 
-        const transferBatch: TransferSendData[] = [];
+        const transferBatch: ActivityData[] = [];
 
         for (const transfer of transfers) {
           if (transfer.collection.slug === "empty-collection") continue;
@@ -76,7 +67,7 @@ export async function startActivityWebSocket(): Promise<void> {
               JSON.stringify({
                 type: "transfer",
                 data: transferBatch,
-              }),
+              } satisfies ActivityMessage),
             );
           }
         });
@@ -111,7 +102,9 @@ export const websocketHandlers = {
     if (typeof data !== "object" || data === null) return;
     if ((data as { type?: unknown }).type === "request_history") {
       if (transferHistory.length > 0) {
-        ws.send(JSON.stringify({ type: "history", data: transferHistory }));
+        ws.send(
+          JSON.stringify({ type: "history", data: transferHistory } satisfies ActivityMessage),
+        );
       }
     }
   },

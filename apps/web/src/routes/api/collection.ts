@@ -1,5 +1,6 @@
 import { artistsArraySchema } from "@repo/api/schemas/artist";
 import { checkpointSchema } from "@repo/api/schemas/checkpoint";
+import type { CollectionResult } from "@repo/api/schemas/objekt";
 import { getCollectionColumns } from "@repo/api/services/objekt";
 import { redis } from "@repo/api/services/redis";
 import { toIndexedArtist } from "@repo/cosmo/types/common";
@@ -73,7 +74,7 @@ export const Route = createFileRoute("/api/collection")({
           if (!singleResult)
             return Response.json({
               collections: [],
-            });
+            } satisfies CollectionResult);
 
           const createdAtMs = new Date(singleResult.createdAt).getTime();
           const lastModifiedMs = Math.floor(Math.max(createdAtMs, overrideMs) / 1000) * 1000;
@@ -103,7 +104,7 @@ export const Route = createFileRoute("/api/collection")({
 
         const body = JSON.stringify({
           collections: result.map(overrideCollection),
-        });
+        } satisfies CollectionResult);
 
         const lastModifiedMs =
           result.length > 0

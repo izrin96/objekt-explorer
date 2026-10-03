@@ -1,21 +1,10 @@
-import type { ActivityData } from "@repo/api/schemas/activity";
+import { type ActivityMessage, activityMessageSchema } from "@repo/api/schemas/activity";
 import { useEffect, useRef } from "react";
 
 import { clientEnv } from "@/lib/env/client";
 
-export type ActivityMessage = {
-  type: "transfer" | "history";
-  data: ActivityData[];
-};
-
 const RECONNECT_BASE = 1000;
 const RECONNECT_MAX = 30_000;
-
-function isActivityMessage(value: unknown): value is ActivityMessage {
-  if (typeof value !== "object" || value === null) return false;
-  const message = value as Partial<ActivityMessage>;
-  return (message.type === "transfer" || message.type === "history") && Array.isArray(message.data);
-}
 
 function socketUrl(): string {
   const configured = clientEnv.VITE_ACTIVITY_WEBSOCKET_URL;
@@ -70,7 +59,8 @@ export function useActivitySocket({
         } catch {
           return;
         }
-        if (isActivityMessage(parsed)) handler.current(parsed);
+        const message = activityMessageSchema.safeParse(parsed);
+        if (message.success) handler.current(message.data);
       });
 
       socket.addEventListener("close", () => {

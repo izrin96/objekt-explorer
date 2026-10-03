@@ -1,3 +1,4 @@
+import type { ObjektTransferResult } from "@repo/api/schemas/objekt";
 import { getSession } from "@repo/api/services/auth";
 import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
@@ -21,7 +22,7 @@ export const Route = createFileRoute("/api/objekts/transfers/$collectionSlug/$se
         if (serial < 1)
           return Response.json({
             transfers: [],
-          });
+          } satisfies ObjektTransferResult);
 
         const [session, results] = await Promise.all([
           getSession(),
@@ -45,7 +46,7 @@ export const Route = createFileRoute("/api/objekts/transfers/$collectionSlug/$se
         if (!result)
           return Response.json({
             transfers: [],
-          });
+          } satisfies ObjektTransferResult);
 
         const owner = await db.query.userAddress.findFirst({
           where: { address: result.owner },
@@ -63,7 +64,7 @@ export const Route = createFileRoute("/api/objekts/transfers/$collectionSlug/$se
           return Response.json({
             hide: true,
             transfers: [],
-          });
+          } satisfies ObjektTransferResult);
 
         if (session && isPrivate) {
           const profiles = await fetchUserProfiles(session.user.id);
@@ -74,7 +75,7 @@ export const Route = createFileRoute("/api/objekts/transfers/$collectionSlug/$se
             return Response.json({
               hide: true,
               transfers: [],
-            });
+            } satisfies ObjektTransferResult);
         }
 
         const addresses = Array.from(new Set(results.map((r) => r.to)));
@@ -98,7 +99,7 @@ export const Route = createFileRoute("/api/objekts/transfers/$collectionSlug/$se
               nickname: addr?.hideNickname ? undefined : (addr?.nickname ?? undefined),
             };
           }),
-        });
+        } satisfies ObjektTransferResult);
       },
     },
   },

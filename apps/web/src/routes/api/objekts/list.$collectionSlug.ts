@@ -1,3 +1,4 @@
+import type { SerialList } from "@repo/api/schemas/objekt";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
 import { Addresses } from "@repo/lib";
@@ -21,7 +22,7 @@ export const Route = createFileRoute("/api/objekts/list/$collectionSlug")({
         return Response.json({
           serials: results.map((a) => a.serial),
           spun: results.filter((a) => a.owner === Addresses.SPIN).map((a) => a.serial),
-        });
+        } satisfies SerialList);
       },
     },
   },

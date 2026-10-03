@@ -1,3 +1,4 @@
+import type { OwnedObjektsResult } from "@repo/api/schemas/objekt";
 import { ownedBySchema, type OwnedBySchema } from "@repo/api/schemas/owned-by";
 import { getCollectionColumns } from "@repo/api/services/objekt";
 import { isAddressHiddenFromCaller } from "@repo/api/services/privacy";
@@ -53,7 +54,7 @@ export const Route = createFileRoute("/api/objekts/owned-by/$address")({
         }
 
         if (await isAddressHiddenFromCaller(addr)) {
-          return Response.json({ objekts: [] });
+          return Response.json({ objekts: [] } satisfies OwnedObjektsResult);
         }
 
         const collectionFilters = buildCollectionFilters(query);
@@ -127,7 +128,7 @@ export const Route = createFileRoute("/api/objekts/owned-by/$address")({
             nextCursor,
             objekts: results.slice(0, PER_PAGE).map((a) => mapOwnedObjekt(a.objekt, a.collection)),
             total,
-          });
+          } satisfies OwnedObjektsResult);
         }
 
         const mainQuery = indexer
@@ -173,7 +174,7 @@ export const Route = createFileRoute("/api/objekts/owned-by/$address")({
           nextCursor,
           objekts: results.slice(0, PER_PAGE).map((a) => mapOwnedObjekt(a.objekt, a.collection)),
           total,
-        });
+        } satisfies OwnedObjektsResult);
       },
     },
   },

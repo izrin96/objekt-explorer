@@ -1,3 +1,4 @@
+import type { CollectionMetadata } from "@repo/api/schemas/objekt";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
 import { Addresses } from "@repo/lib";
@@ -23,7 +24,9 @@ export const Route = createFileRoute("/api/objekts/metadata/$collectionSlug")({
           .innerJoin(objekts, eq(collections.id, objekts.collectionId))
           .where(eq(collections.slug, params.collectionSlug));
 
-        return Response.json(result ?? { total: 0, spin: 0, transferable: 0 });
+        return Response.json(
+          (result ?? { total: 0, spin: 0, transferable: 0 }) satisfies CollectionMetadata,
+        );
       },
     },
   },
