@@ -67,9 +67,3 @@ export const tradePartnerSchema = z.object({
   matches: partnerListMatchSchema.array(),
 });
 export type TradePartner = z.infer<typeof tradePartnerSchema>;
-
-export const tradePartnersResponseSchema = z.object({
-  partners: tradePartnerSchema.array(),
-  collections: z.record(z.string(), z.unknown()),
-});
-export type TradePartnersResponse = z.infer<typeof tradePartnersResponseSchema>;

@@ -7,17 +7,6 @@ export const OBJEKT_PREVIEW_SIZE = 5;
 /** A card's total and its latest few artworks, newest first. */
 export type ObjektPreview = { count: number; objekts: ValidObjekt[] };
 
-export const pinObjektSchema = z.object({
-  tokenId: z.string(),
-  order: z.number().nullable(),
-});
-export type PinObjekt = z.infer<typeof pinObjektSchema>;
-
-export const lockObjektSchema = z.object({
-  tokenId: z.string(),
-});
-export type LockObjekt = z.infer<typeof lockObjektSchema>;
-
 export const collectionMetadataSchema = z.object({
   transferable: z.number(),
   total: z.number(),
@@ -42,11 +31,10 @@ export const objektTransferResultSchema = z.object({
 });
 export type ObjektTransferResult = z.infer<typeof objektTransferResultSchema>;
 
-export const ownedObjektsCursorSchema = z.object({
+const ownedObjektsCursorSchema = z.object({
   receivedAt: z.string(),
   id: z.string(),
 });
-export type OwnedObjektsCursor = z.infer<typeof ownedObjektsCursorSchema>;
 
 export const ownedObjektsResultSchema = z.object({
   nextCursor: ownedObjektsCursorSchema.optional(),

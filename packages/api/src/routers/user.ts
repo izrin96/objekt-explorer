@@ -5,11 +5,11 @@ import { eq } from "drizzle-orm";
 import * as z from "zod";
 
 import { authed, pub } from "../orpc";
-import { providersMap } from "../schemas/user";
+import { providerIdSchema, providersMap } from "../schemas/user";
 import { auth, getCurrentUser, getProviderUsername } from "../services/auth";
 
 export const userRouter = {
-  refreshProfile: authed.input(z.enum(["discord", "twitter"])).handler(
+  refreshProfile: authed.input(providerIdSchema).handler(
     async ({
       input: providerId,
       context: {
