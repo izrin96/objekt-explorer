@@ -8,7 +8,6 @@
     "start": "squid-typeorm-migration apply && bun lib/migrate-drizzle.js && bun lib/main.js",
     "process": "bun run build && bun run --bun start",
     "migration:apply": "squid-typeorm-migration apply && bun lib/migrate-drizzle.js",
-    "codegen": "squid-typeorm-codegen",
     "lint": "oxlint --type-aware --config ./oxlint.config.mts",
     "lint:fix": "oxlint --type-aware --fix --config ./oxlint.config.mts",
     "typecheck": "tsc --pretty --noEmit",
@@ -30,7 +29,6 @@
   "devDependencies": {
     "@repo/lint": "workspace:*",
     "@repo/tsconfig": "workspace:*",
-    "@subsquid/typeorm-codegen": "^2.4.0",
     "@types/bun": "catalog:dev",
     "typescript": "catalog:dev"
   }

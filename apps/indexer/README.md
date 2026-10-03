@@ -16,6 +16,7 @@ Forked from [teamreflex/cosmo-web/apps/indexer](https://github.com/teamreflex/co
 - Uses PostgreSQL 18 with UUID v7 primary keys
 - Patches `@subsquid/typeorm-store/lib/hot.js` to remove `text[]` cast for UUID support
 - Updates migration script to use cascade delete/update
+- `src/model/generated/` is hand-maintained (column types and lengths, plus columns added through drizzle migrations), so the squid codegen is removed: regenerating would drop them. `schema.graphql` is kept as a reference only
 
 ### Real-time
 
