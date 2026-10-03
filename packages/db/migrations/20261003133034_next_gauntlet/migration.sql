@@ -1,0 +1,1 @@
+CREATE INDEX "lists_user_id_idx" ON "lists" ("user_id");

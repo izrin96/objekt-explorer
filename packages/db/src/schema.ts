@@ -88,6 +88,7 @@ export const lists = pgTable(
   },
   (t) => [
     uniqueIndex("lists_slug_idx").on(t.slug),
+    index("lists_user_id_idx").on(t.userId),
     uniqueIndex("lists_profile_slug_idx")
       .on(t.profileAddress, t.profileSlug)
       .where(sql`profile_address IS NOT NULL AND profile_slug IS NOT NULL`),
