@@ -1,3 +1,4 @@
+import { normalizeCurrency } from "@repo/lib/currency";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 
@@ -9,7 +10,8 @@ import { useSettings } from "@/stores/settings";
 const RATES_STALE_TIME = 1000 * 60 * 60;
 
 /** An amount in the currency it was set in — a seller's own price, not the viewer's. */
-export function formatCurrency(amount: number, currency: string): string {
+export function formatCurrency(amount: number, code: string): string {
+  const currency = normalizeCurrency(code);
   try {
     return new Intl.NumberFormat(getLocale(), { style: "currency", currency }).format(amount);
   } catch {
@@ -53,8 +55,9 @@ export function useCurrency() {
       /** an amount already in `currency` */
       format: (amount: number) => formatCurrency(amount, currency),
       formatUsd: (usd: number) => formatCurrency(usd / rate, currency),
-      /** null when `from` is already `currency`, or has no rate to convert through */
-      formatConverted: (amount: number, from: string) => {
+      /** null when `code` is already `currency`, or has no rate to convert through */
+      formatConverted: (amount: number, code: string) => {
+        const from = normalizeCurrency(code);
         if (from === currency) return null;
         const usdPerFrom = from === "USD" ? 1 : rates?.[from];
         if (usdPerFrom === undefined) return null;

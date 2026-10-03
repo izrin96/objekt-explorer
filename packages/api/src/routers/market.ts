@@ -2,6 +2,7 @@ import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { objekts } from "@repo/db/indexer/schema";
 import { listEntries, lists, userAddress } from "@repo/db/schema";
+import { CURRENCY_ALIASES, normalizeCurrency } from "@repo/lib/currency";
 import { and, asc, desc, eq, inArray, isNotNull, sql } from "drizzle-orm";
 import * as z from "zod";
 
@@ -37,10 +38,14 @@ async function fetchObjektMap(
 }
 
 function usdPriceExpr(rates: Record<string, number>) {
-  const whens = Object.entries(rates)
+  const aliased = Object.entries(CURRENCY_ALIASES).flatMap(([alias, code]) =>
+    rates[code] === undefined ? [] : [[alias, rates[code]] as const],
+  );
+  const whens = [...Object.entries(rates), ...aliased]
     .filter(([code]) => code !== "USD")
     .map(
-      ([code, rate]) => sql`WHEN ${lists.currency} = ${code} THEN ${listEntries.price} * ${rate}`,
+      ([code, rate]) =>
+        sql`WHEN upper(${lists.currency}) = ${code} THEN ${listEntries.price} * ${rate}`,
     );
 
   if (whens.length === 0) {
@@ -161,7 +166,8 @@ export const marketRouter = {
       const items = rows.map((row) => {
         const objekt = row.objektId ? objektMap.get(row.objektId) : null;
         const nickname = row.ownerHideNickname || !row.ownerNickname ? null : row.ownerNickname;
-        const rate = row.currency ? (rates[row.currency] ?? 1) : 1;
+        const currency = row.currency ? normalizeCurrency(row.currency) : null;
+        const rate = currency ? (rates[currency] ?? 1) : 1;
         const usdPrice = row.price !== null ? row.price * rate : null;
 
         return {
@@ -170,7 +176,7 @@ export const marketRouter = {
           isQyop: row.isQyop,
           note: row.note,
           createdAt: row.createdAt,
-          currency: row.currency,
+          currency,
           usdPrice,
           list: {
             slug: row.slug,

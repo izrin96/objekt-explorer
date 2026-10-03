@@ -2,6 +2,7 @@ import { ORPCError } from "@orpc/server";
 import { db } from "@repo/db";
 import { lists } from "@repo/db/schema";
 import { isAddress } from "@repo/lib";
+import { normalizeCurrency } from "@repo/lib/currency";
 import { and, eq, ne } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import * as z from "zod";
@@ -120,7 +121,10 @@ export const listCrud = {
               linkedListId,
               profileAddress: input.profileAddress ? input.profileAddress.toLowerCase() : null,
               description: input.description,
-              currency: input.listTypeNew === "sale" ? input.currency : null,
+              currency:
+                input.listTypeNew === "sale" && input.currency
+                  ? normalizeCurrency(input.currency)
+                  : null,
               discoverable: resolveDiscoverable(
                 input.listTypeNew,
                 isProfileBind,
@@ -242,7 +246,10 @@ export const listCrud = {
                   ? input.profileAddress.toLowerCase()
                   : null,
               description: input.description,
-              currency: list.listTypeNew === "sale" ? input.currency : null,
+              currency:
+                list.listTypeNew === "sale" && input.currency
+                  ? normalizeCurrency(input.currency)
+                  : null,
               profileSlug,
               hideSerial:
                 ["sale", "have"].includes(list.listTypeNew) && list.isProfileBind
