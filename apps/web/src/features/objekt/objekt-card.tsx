@@ -33,6 +33,8 @@ type ObjektCardProps<T extends ValidObjekt> = {
   /** already formatted and localised by the caller */
   price?: string;
   priceMuted?: boolean;
+  /** `price` in the viewer's currency, shown under it */
+  priceConverted?: string;
   /** makes the price caption a button: the owner's way to set or change a card's price */
   onPriceClick?: (objekt: T) => void;
   note?: string | null;
@@ -93,6 +95,7 @@ export function ObjektCard<T extends ValidObjekt>({
   qty,
   price,
   priceMuted,
+  priceConverted,
   onPriceClick,
   note,
   hideLabel,
@@ -265,30 +268,37 @@ export function ObjektCard<T extends ValidObjekt>({
           )}
 
           {price !== undefined && (
-            <div className="flex min-w-0 items-center justify-center gap-1">
-              {onPriceClick ? (
-                <button
-                  type="button"
-                  onClick={() => onPriceClick(objekt)}
-                  className={cn(
-                    priceClass,
-                    "focus-visible:ring-ring cursor-pointer rounded-xs underline-offset-2 outline-none hover:underline focus-visible:ring-2",
-                    priceMuted ? "text-muted-foreground" : "text-foreground",
-                  )}
-                >
-                  {price}
-                </button>
-              ) : (
-                <span
-                  className={cn(
-                    priceClass,
-                    priceMuted ? "text-muted-foreground" : "text-foreground",
-                  )}
-                >
-                  {price}
+            <div className="flex min-w-0 flex-col items-center">
+              <div className="flex min-w-0 items-center justify-center gap-1">
+                {onPriceClick ? (
+                  <button
+                    type="button"
+                    onClick={() => onPriceClick(objekt)}
+                    className={cn(
+                      priceClass,
+                      "focus-visible:ring-ring cursor-pointer rounded-xs underline-offset-2 outline-none hover:underline focus-visible:ring-2",
+                      priceMuted ? "text-muted-foreground" : "text-foreground",
+                    )}
+                  >
+                    {price}
+                  </button>
+                ) : (
+                  <span
+                    className={cn(
+                      priceClass,
+                      priceMuted ? "text-muted-foreground" : "text-foreground",
+                    )}
+                  >
+                    {price}
+                  </span>
+                )}
+                {note ? <ObjektNote note={note} /> : null}
+              </div>
+              {priceConverted !== undefined && (
+                <span className={cn(priceClass, "text-muted-foreground font-normal")}>
+                  ≈{priceConverted}
                 </span>
               )}
-              {note ? <ObjektNote note={note} /> : null}
             </div>
           )}
         </div>

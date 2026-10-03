@@ -53,6 +53,13 @@ export function useCurrency() {
       /** an amount already in `currency` */
       format: (amount: number) => formatCurrency(amount, currency),
       formatUsd: (usd: number) => formatCurrency(usd / rate, currency),
+      /** null when `from` is already `currency`, or has no rate to convert through */
+      formatConverted: (amount: number, from: string) => {
+        if (from === currency) return null;
+        const usdPerFrom = from === "USD" ? 1 : rates?.[from];
+        if (usdPerFrom === undefined) return null;
+        return formatCurrency((amount * usdPerFrom) / rate, currency);
+      },
     }),
     [currency, rate, rates],
   );

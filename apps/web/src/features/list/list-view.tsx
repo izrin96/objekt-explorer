@@ -34,7 +34,7 @@ import { ObjektVirtualGrid } from "@/features/objekt/objekt-virtual-grid";
 import { SelectBar, type SelectBarAction, SelectModeButton } from "@/features/objekt/select-bar";
 import { ShimmerGrid } from "@/features/objekt/shimmer-grid";
 import { useCollectionRarity } from "@/features/objekt/use-collection-rarity";
-import { formatCurrency } from "@/features/settings/use-currency";
+import { formatCurrency, useCurrency } from "@/features/settings/use-currency";
 import { useCurrentUser } from "@/features/user/hooks";
 import { displayNickname } from "@/lib/address";
 import { m } from "@/paraglide/messages";
@@ -53,6 +53,15 @@ function formatPrice(currency: string, objekt: ListObjekt, canPrice: boolean): s
   if (objekt.isQyop) return m.list_manage_objekt_set_price_qyop();
   if (objekt.price === null) return canPrice ? m.objekt_set_price() : m.list_price_none();
   return formatCurrency(objekt.price, currency);
+}
+
+function formatConvertedPrice(
+  currency: string,
+  objekt: ListObjekt,
+  formatConverted: (amount: number, from: string) => string | null,
+): string | undefined {
+  if (objekt.isQyop || objekt.price === null) return undefined;
+  return formatConverted(objekt.price, currency) ?? undefined;
 }
 
 export function ListView() {
@@ -122,6 +131,7 @@ function ListEntries() {
   const isSale = list.listTypeNew === "sale" && list.currency !== null;
   const canPrice = isOwner && isSale;
   const currency = list.currency ?? "";
+  const { formatConverted } = useCurrency();
 
   // a list card can stand for several copies, so it always sorts by duplicate
   // count; by serial only where the cards carry one, by price only on a sale list
@@ -190,6 +200,9 @@ function ListEntries() {
           hideSerial={grouped || list.hideSerial === true}
           price={isSale ? formatPrice(currency, objekt, canPrice) : undefined}
           priceMuted={isSale && unpriced}
+          priceConverted={
+            isSale ? formatConvertedPrice(currency, objekt, formatConverted) : undefined
+          }
           onPriceClick={canPrice && compare === null ? () => openPrice(item) : undefined}
           note={isSale ? objekt.note : undefined}
           priority={rowIndex < 2}
@@ -203,6 +216,7 @@ function ListEntries() {
       toggle,
       user,
       currency,
+      formatConverted,
       isSale,
       canPrice,
       compare,
