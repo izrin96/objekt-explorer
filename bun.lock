@@ -25,6 +25,8 @@
         "@subsquid/evm-processor": "^1.30.1",
         "@subsquid/typeorm-migration": "^1.4.0",
         "@subsquid/typeorm-store": "^1.9.2",
+        "drizzle-orm": "catalog:",
+        "pg": "catalog:",
         "typeorm": "^0.3.31",
         "zod": "catalog:",
       },
