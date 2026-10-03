@@ -20,9 +20,10 @@ function useNavLinks() {
     { key: "activity", label: m.nav_activity(), to: "/activity", exact: false },
     // `/list/{slug}` is any user's list, not one of the viewer's own
     { key: "list", label: m.nav_my_list(), to: "/list", exact: true },
+    { key: "link", label: m.nav_my_cosmo_link(), to: "/link", exact: false },
   ] as const;
-  // `/list` is the signed-in user's own lists; signed out it only bounces to /login
-  return user ? links : links.filter((link) => link.key !== "list");
+  // `/list` and `/link` are the signed-in user's own; signed out they only bounce to /login
+  return user ? links : links.filter((link) => link.key !== "list" && link.key !== "link");
 }
 
 export type NavLink = ReturnType<typeof useNavLinks>[number];
