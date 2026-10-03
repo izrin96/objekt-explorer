@@ -432,7 +432,7 @@
   "common_settings_language_ko": "한국어",
   "common_settings_language_ja": "日本語",
   "common_settings_currency_label": "通貨",
-  "common_settings_currency_desc": "マーケットプレイスの価格をこの通貨で表示する",
+  "common_settings_currency_desc": "マーケットプレイスと販売リストの価格をこの通貨で表示する",
   "common_changelog": "変更履歴",
   "common_export_title": "リストをエクスポート",
   "common_export_description": "すべてのObjektをCSVにエクスポートしますか？",
