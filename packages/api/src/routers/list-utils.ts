@@ -1,7 +1,7 @@
 import { ORPCError } from "@orpc/server";
 import { db } from "@repo/db";
 import { listEntries } from "@repo/db/schema";
-import { and, eq } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 import * as z from "zod";
 
 import { authed, pub, selectedArtistsMiddleware } from "../orpc";
@@ -48,14 +48,21 @@ export const listUtils = {
           });
         }
 
-        await db.transaction(async (tx) => {
-          for (const { entryId, price, isQyop, note } of updates) {
-            await tx
-              .update(listEntries)
-              .set({ price, isQyop, note })
-              .where(and(eq(listEntries.id, entryId), eq(listEntries.listId, list.id)));
-          }
-        });
+        // one statement for the whole batch; an omitted note keeps the stored one
+        await db.execute(sql`
+          UPDATE ${listEntries}
+          SET price = v.price,
+              is_qyop = v.is_qyop,
+              note = CASE WHEN v.has_note THEN v.note ELSE ${listEntries.note} END
+          FROM unnest(
+            ${sql.param(updates.map((u) => u.entryId))}::int[],
+            ${sql.param(updates.map((u) => u.price))}::real[],
+            ${sql.param(updates.map((u) => u.isQyop))}::boolean[],
+            ${sql.param(updates.map((u) => u.note !== undefined))}::boolean[],
+            ${sql.param(updates.map((u) => u.note ?? null))}::varchar[]
+          ) AS v(id, price, is_qyop, has_note, note)
+          WHERE ${listEntries.id} = v.id AND ${listEntries.listId} = ${list.id}
+        `);
       },
     ),
 

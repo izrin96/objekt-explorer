@@ -164,13 +164,23 @@ export const pinsRouter = {
       // unique values instead of permuting the pre-existing (possibly tied) pool.
       const total = orderedTokenIds.length;
 
-      await db.transaction(async (tx) => {
-        for (let i = 0; i < orderedTokenIds.length; i++) {
-          const pin = validPinsByTokenId.get(orderedTokenIds[i]!)!;
-          const newOrder = total - i;
-          if (newOrder === (pin.order ?? pin.id)) continue;
-          await tx.update(pins).set({ order: newOrder }).where(eq(pins.id, pin.id));
-        }
-      });
+      const ids: number[] = [];
+      const orders: number[] = [];
+      for (let i = 0; i < orderedTokenIds.length; i++) {
+        const pin = validPinsByTokenId.get(orderedTokenIds[i]!)!;
+        const newOrder = total - i;
+        if (newOrder === (pin.order ?? pin.id)) continue;
+        ids.push(pin.id);
+        orders.push(newOrder);
+      }
+
+      if (ids.length === 0) return;
+
+      await db.execute(sql`
+        UPDATE ${pins}
+        SET "order" = v.ord
+        FROM unnest(${sql.param(ids)}::int[], ${sql.param(orders)}::int[]) AS v(id, ord)
+        WHERE ${pins.id} = v.id
+      `);
     }),
 };
