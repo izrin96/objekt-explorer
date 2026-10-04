@@ -110,7 +110,12 @@ export function FilterSheet({
   return (
     <Sheet open={open} onOpenChange={setOpen} handle={handle}>
       <FilterSheetTrigger handle={handle} count={count} className="md:hidden" />
-      <SheetPopup side="right" className="flex max-w-80 flex-col">
+      {/* `SheetPopup` renders its own backdrop, so the portal is the only way to reach it */}
+      <SheetPopup
+        side="right"
+        className="flex max-w-80 flex-col"
+        portalProps={{ className: "**:data-[slot=sheet-backdrop]:backdrop-blur-none" }}
+      >
         <SheetHeader>
           <SheetTitle className="font-display text-base">{m.filter_filters()}</SheetTitle>
           <SheetDescription className="sr-only">{m.filter_sheet_description()}</SheetDescription>
