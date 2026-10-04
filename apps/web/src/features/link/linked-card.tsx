@@ -5,7 +5,6 @@ import { Link } from "@tanstack/react-router";
 import { type RefObject, useRef, useState } from "react";
 
 import { CopyButton } from "@/components/shared/copy-button";
-import { Shimmer } from "@/components/shared/shimmer";
 import {
   AlertDialog,
   AlertDialogClose,
@@ -17,6 +16,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Menu, MenuItem, MenuPopup, MenuSeparator, MenuTrigger } from "@/components/ui/menu";
+import { Skeleton } from "@/components/ui/skeleton";
 import { toastManager } from "@/components/ui/toast";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "@/components/ui/tooltip";
 import { EditCosmoDialog } from "@/features/link/edit-cosmo-dialog";
@@ -170,7 +170,7 @@ export function LinkedCard({
   );
 }
 
-/** The banner, or a shimmer in its frame while the preview loads. */
+/** The banner, or a skeleton in its frame while the preview loads. */
 function LinkedCardHeader({
   preview,
   initial,
@@ -181,7 +181,7 @@ function LinkedCardHeader({
   videoRef: RefObject<HTMLVideoElement | null>;
 }) {
   if (preview === undefined) {
-    return <Shimmer className={cn(bannerThumbFrameClass, "rounded-none")} />;
+    return <Skeleton className={cn(bannerThumbFrameClass, "rounded-none")} />;
   }
 
   return (

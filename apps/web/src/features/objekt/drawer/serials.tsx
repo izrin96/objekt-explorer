@@ -15,12 +15,12 @@ import type { UseQueryResult } from "@tanstack/react-query";
 import { type ReactNode, useMemo, useState } from "react";
 
 import { EmptyState } from "@/components/shared/empty-state";
-import { Shimmer } from "@/components/shared/shimmer";
 import { Timestamp } from "@/components/shared/timestamp";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Group } from "@/components/ui/group";
 import { NumberField, NumberFieldGroup, NumberFieldInput } from "@/components/ui/number-field";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ProfileCell, ProfileLink } from "@/features/profile/profile-hover-card";
 import { truncateAddress } from "@/lib/address";
 import { cn } from "@/lib/utils";
@@ -160,8 +160,8 @@ export function SerialsPanel({
         <div className="flex flex-col gap-3" role="status">
           {/* a live region announces its content, so the label has to be in it */}
           <span className="sr-only">{m.objekt_serials_loading()}</span>
-          <Shimmer className="h-8 w-full rounded-md" />
-          <Shimmer className="h-21 w-full rounded-lg" />
+          <Skeleton className="h-8 w-full rounded-md" />
+          <Skeleton className="h-21 w-full rounded-lg" />
         </div>
       </div>
     );
@@ -357,7 +357,7 @@ function Fact({ label, children }: { label: string; children: ReactNode }) {
 }
 
 /**
- * Owner, token id and transferable keep their boxes as shimmer blocks while
+ * Owner, token id and transferable keep their boxes as skeleton blocks while
  * the request is in flight, so the timeline underneath does not jump when it
  * lands.
  */
@@ -375,7 +375,7 @@ function OwnershipHead({
       <dl className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-4 gap-y-1.5 text-sm">
         <Fact label={m.objekt_owner()}>
           {found === null ? (
-            <Shimmer className="h-4.5 w-28" />
+            <Skeleton className="h-4.5 w-28" />
           ) : (
             // a holder with no Cosmo nickname still has a profile, addressed by wallet
             <ProfileLink
@@ -393,14 +393,14 @@ function OwnershipHead({
         </Fact>
         <Fact label={m.objekt_token_id()}>
           {found === null ? (
-            <Shimmer className="h-4.5 w-16" />
+            <Skeleton className="h-4.5 w-16" />
           ) : (
             <span className="truncate font-mono text-xs">{found.tokenId ?? "—"}</span>
           )}
         </Fact>
         <Fact label={m.objekt_transferable()}>
           {found === null ? (
-            <Shimmer className="h-5 w-11 rounded-full" />
+            <Skeleton className="h-5 w-11 rounded-full" />
           ) : (
             <Badge
               variant={
@@ -468,7 +468,7 @@ export function Timeline({
 
   const body =
     view.kind === "loading" ? (
-      <Shimmer className="h-21 w-full rounded-lg" />
+      <Skeleton className="h-21 w-full rounded-lg" />
     ) : view.events.length === 0 ? (
       <EmptyState icon={ArrowsLeftRightIcon} title={m.objekt_no_transfers()} bordered={false} />
     ) : (

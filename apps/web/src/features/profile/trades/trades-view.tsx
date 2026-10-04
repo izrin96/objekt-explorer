@@ -8,10 +8,10 @@ import { useMemo, useState } from "react";
 import { DataTable, DataTableHead, DataTableRow } from "@/components/shared/data-table";
 import { EmptyState } from "@/components/shared/empty-state";
 import { InfiniteSentinel } from "@/components/shared/infinite-sentinel";
-import { Shimmer } from "@/components/shared/shimmer";
 import { Timestamp } from "@/components/shared/timestamp";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import type { ExtraFacet } from "@/features/filters/facet-controls";
 import { LONG_TAIL } from "@/features/filters/filter-popover";
@@ -179,7 +179,7 @@ export function TradesView() {
       {toolbar}
 
       {query.isPending ? (
-        <Shimmer className="h-64 w-full rounded-lg" />
+        <Skeleton className="h-64 w-full rounded-lg" />
       ) : rows.length === 0 ? (
         <EmptyState
           icon={ArrowsLeftRightIcon}

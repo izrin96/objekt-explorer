@@ -4,8 +4,8 @@ import { Link } from "@tanstack/react-router";
 import { type ReactNode, useEffect, useRef } from "react";
 
 import { CursorCard, cursorCardDelays } from "@/components/shared/cursor-card";
-import { Shimmer } from "@/components/shared/shimmer";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Skeleton } from "@/components/ui/skeleton";
 import { TooltipPrimitive } from "@/components/ui/tooltip";
 import { displayNickname, truncateAddress } from "@/lib/address";
 import { orpc } from "@/lib/orpc";
@@ -154,7 +154,7 @@ function CardBody({ address, nickname }: Payload) {
           </span>
 
           {data === undefined ? (
-            <Shimmer className="h-4 w-32" />
+            <Skeleton className="h-4 w-32" />
           ) : data.isGuard ? (
             <span className="text-muted-foreground flex items-center gap-1 text-xs">
               <LockSimpleIcon weight="fill" aria-hidden />

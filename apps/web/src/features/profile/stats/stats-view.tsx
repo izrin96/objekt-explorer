@@ -4,7 +4,6 @@ import { useMemo } from "react";
 import { Pie, PieChart } from "recharts";
 
 import { EmptyState } from "@/components/shared/empty-state";
-import { Shimmer } from "@/components/shared/shimmer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -13,6 +12,7 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useFilterData } from "@/features/filters/filter-data-provider";
 import { LONG_TAIL } from "@/features/filters/filter-popover";
 import { useMemberColor } from "@/features/filters/member-colors";
@@ -179,7 +179,7 @@ export function StatsView() {
       />
 
       {isPending ? (
-        <Shimmer className="h-64 w-full rounded-lg" />
+        <Skeleton className="h-64 w-full rounded-lg" />
       ) : owned.length === 0 ? (
         <EmptyState
           icon={ChartPieSliceIcon}

@@ -19,7 +19,7 @@ import { ObjektCard } from "@/features/objekt/objekt-card";
 import { ObjektCardMenu } from "@/features/objekt/objekt-card-menu";
 import { ObjektVirtualGrid } from "@/features/objekt/objekt-virtual-grid";
 import { SelectBar, SelectModeButton } from "@/features/objekt/select-bar";
-import { ShimmerGrid } from "@/features/objekt/shimmer-grid";
+import { SkeletonGrid } from "@/features/objekt/skeleton-grid";
 import { useCurrency } from "@/features/settings/use-currency";
 import { useCurrentUser } from "@/features/user/hooks";
 import { m } from "@/paraglide/messages";
@@ -118,7 +118,7 @@ export function MarketView() {
       )}
 
       {isPending ? (
-        <ShimmerGrid />
+        <SkeletonGrid />
       ) : filtered.length === 0 ? (
         <EmptyState
           icon={StorefrontIcon}

@@ -4,8 +4,8 @@ import { useMemo, useState, type ReactNode } from "react";
 
 import { EmptyState } from "@/components/shared/empty-state";
 import { MessageMarkup } from "@/components/shared/message-markup";
-import { Shimmer } from "@/components/shared/shimmer";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import type { ExtraFacet } from "@/features/filters/facet-controls";
 import { useFilterData } from "@/features/filters/filter-data-provider";
@@ -311,7 +311,7 @@ export function ProgressView() {
     return (
       <>
         {toolbar}
-        <Shimmer className="h-64 w-full rounded-lg" />
+        <Skeleton className="h-64 w-full rounded-lg" />
       </>
     );
   }

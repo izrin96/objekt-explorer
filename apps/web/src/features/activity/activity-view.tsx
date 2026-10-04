@@ -14,8 +14,8 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import { EmptyState } from "@/components/shared/empty-state";
 import { InfiniteSentinel } from "@/components/shared/infinite-sentinel";
 import { PageHeader } from "@/components/shared/page-header";
-import { Shimmer } from "@/components/shared/shimmer";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import { ActiveChips, useActiveChips } from "@/features/filters/active-chips";
 import {
@@ -342,7 +342,7 @@ export function ActivityView() {
       {query.isPending ? (
         <div className="flex flex-col gap-1.5">
           {Array.from({ length: 8 }).map((_, index) => (
-            <Shimmer key={index} className="h-11 rounded-lg" />
+            <Skeleton key={index} className="h-11 rounded-lg" />
           ))}
         </div>
       ) : rows.length === 0 ? (

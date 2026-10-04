@@ -5,9 +5,9 @@ import { FetchError, ofetch } from "ofetch";
 import { type ComponentProps, type KeyboardEvent, useState } from "react";
 
 import { EmptyState } from "@/components/shared/empty-state";
-import { Shimmer } from "@/components/shared/shimmer";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ComboboxItem } from "@/components/ui/combobox";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useDebouncedCallback } from "@/hooks/use-debounced-callback";
 import { truncateAddress } from "@/lib/address";
 import { cn } from "@/lib/utils";
@@ -142,11 +142,11 @@ function SearchingRows() {
     <div role="status" aria-live="polite" className="flex flex-col gap-1 p-2 text-left">
       <span className="sr-only">{m.nav_search_user_searching()}</span>
       {[0, 1, 2].map((i) => (
-        <span key={i} aria-hidden className="flex items-center gap-2.5 px-2 py-1.5">
-          <Shimmer className="size-6.5 flex-none rounded-full" />
-          <Shimmer className="h-3.5 w-24" />
-          <Shimmer className="h-3 w-20" />
-        </span>
+        <div key={i} aria-hidden className="flex items-center gap-2.5 px-2 py-1.5">
+          <Skeleton className="size-6.5 flex-none rounded-full" />
+          <Skeleton className="h-3.5 w-24" />
+          <Skeleton className="h-3 w-20" />
+        </div>
       ))}
     </div>
   );

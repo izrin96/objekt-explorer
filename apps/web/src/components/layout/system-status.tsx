@@ -1,12 +1,12 @@
 import { PulseIcon } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
 
-import { Shimmer } from "@/components/shared/shimmer";
 import { Timestamp } from "@/components/shared/timestamp";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverPopup, PopoverTrigger } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -145,16 +145,16 @@ function StatusSkeleton() {
     <div className="flex flex-col gap-3">
       <div className="flex flex-col gap-1">
         <div className="flex items-center justify-between">
-          <Shimmer className="h-4 w-16" />
-          <Shimmer className="h-4.5 w-20" />
+          <Skeleton className="h-4 w-16" />
+          <Skeleton className="h-4.5 w-20" />
         </div>
-        <Shimmer className="h-3 w-44" />
+        <Skeleton className="h-3 w-44" />
       </div>
       <Separator className="-mx-3 data-[orientation=horizontal]:w-auto" />
       <div className="flex flex-col gap-1">
         <div className="flex items-center justify-between">
-          <Shimmer className="h-4 w-20" />
-          <Shimmer className="h-4.5 w-12" />
+          <Skeleton className="h-4 w-20" />
+          <Skeleton className="h-4.5 w-12" />
         </div>
       </div>
     </div>

@@ -1,7 +1,7 @@
 import { OBJEKT_PREVIEW_SIZE } from "@repo/api/schemas/objekt";
 import type { ObjektPreview } from "@repo/api/schemas/objekt";
 
-import { Shimmer } from "@/components/shared/shimmer";
+import { Skeleton } from "@/components/ui/skeleton";
 import { m } from "@/paraglide/messages";
 
 /** The card frame; `relative` anchors the stretched link. */
@@ -29,7 +29,7 @@ export function ObjektPreviewStrip({ preview }: { preview: ObjektPreview | null 
         return (
           <div key={i} className="@container">
             {preview === undefined ? (
-              <Shimmer className="aspect-photocard rounded-photocard" />
+              <Skeleton className="aspect-photocard rounded-photocard" />
             ) : objekt ? (
               <div className="rounded-photocard bg-secondary aspect-photocard relative overflow-hidden transition-transform duration-200 ease-out motion-safe:group-hover/card:-translate-y-0.5">
                 <img
@@ -58,7 +58,7 @@ export function ObjektPreviewCount({
   preview: Pick<ObjektPreview, "count"> | null | undefined;
 }) {
   if (preview === null) return null;
-  if (preview === undefined) return <Shimmer className="h-3 w-16" />;
+  if (preview === undefined) return <Skeleton className="h-3 w-16" />;
   return (
     <span className="font-mono tabular-nums">
       {preview.count === 0

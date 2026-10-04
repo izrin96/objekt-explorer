@@ -4,8 +4,8 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { InView } from "react-intersection-observer";
 
 import { EmptyState } from "@/components/shared/empty-state";
-import { Shimmer } from "@/components/shared/shimmer";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { ProfileCell } from "@/features/profile/profile-hover-card";
 import { isSameAddress, truncateAddress } from "@/lib/address";
@@ -104,13 +104,13 @@ export function HoldersPanel({ slug, physical }: { slug: string; physical: boole
       {summary === undefined ? (
         <>
           <div className="flex flex-col gap-1.5">
-            <Shimmer className="h-5 rounded-md" />
-            <Shimmer className="h-5 rounded-md" />
+            <Skeleton className="h-5 rounded-md" />
+            <Skeleton className="h-5 rounded-md" />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Shimmer className="h-9 rounded-lg" />
-            <Shimmer className="h-9 rounded-lg" />
-            <Shimmer className="h-9 rounded-lg" />
+            <Skeleton className="h-9 rounded-lg" />
+            <Skeleton className="h-9 rounded-lg" />
+            <Skeleton className="h-9 rounded-lg" />
           </div>
         </>
       ) : (

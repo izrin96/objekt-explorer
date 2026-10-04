@@ -143,6 +143,12 @@
      the places that need a solid mark rather than a hover surface */
   --color-accent-solid: var(--accent-solid);
   --color-discord: #5865f2;
+  --animate-skeleton: skeleton 2s -1s infinite linear;
+  @keyframes skeleton {
+    to {
+      background-position: -200% 0;
+    }
+  }
 }
 
 :root {

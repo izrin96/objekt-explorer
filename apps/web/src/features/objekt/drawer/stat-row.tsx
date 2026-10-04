@@ -1,4 +1,4 @@
-import { Shimmer } from "@/components/shared/shimmer";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
 export type Stat = {
@@ -24,7 +24,7 @@ export function StatRow({ stats, className }: { stats: Stat[]; className?: strin
         >
           <dt className="text-muted-foreground text-xs">{label}</dt>
           <dd className="flex flex-wrap items-baseline gap-x-1.5 font-mono text-base font-medium tabular-nums">
-            {value === null ? <Shimmer className="my-1 h-4 w-14" /> : value}
+            {value === null ? <Skeleton className="my-1 h-4 w-14" /> : value}
             {value !== null && detail !== undefined && (
               <span className="text-muted-foreground text-xs font-normal">{detail}</span>
             )}

@@ -32,7 +32,7 @@ import { ObjektCardMenu } from "@/features/objekt/objekt-card-menu";
 import { ownedCopiesOf } from "@/features/objekt/objekt-utils";
 import { ObjektVirtualGrid } from "@/features/objekt/objekt-virtual-grid";
 import { SelectBar, type SelectBarAction, SelectModeButton } from "@/features/objekt/select-bar";
-import { ShimmerGrid } from "@/features/objekt/shimmer-grid";
+import { SkeletonGrid } from "@/features/objekt/skeleton-grid";
 import { useCollectionRarity } from "@/features/objekt/use-collection-rarity";
 import { formatCurrency, useCurrency } from "@/features/settings/use-currency";
 import { useCurrentUser } from "@/features/user/hooks";
@@ -282,7 +282,7 @@ function ListEntries() {
       {compare !== null ? <CompareBanner compare={compare} onClear={clearCompare} /> : null}
 
       {query.isPending || rarityLoading ? (
-        <ShimmerGrid />
+        <SkeletonGrid />
       ) : objekts.length === 0 ? (
         compare !== null ? (
           <EmptyState

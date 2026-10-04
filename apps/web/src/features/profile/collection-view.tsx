@@ -37,7 +37,7 @@ import { ObjektCardMenu } from "@/features/objekt/objekt-card-menu";
 import { copiesIn, isObjektOwned, ownedCopiesOf, pinOrderOf } from "@/features/objekt/objekt-utils";
 import { ObjektVirtualGrid } from "@/features/objekt/objekt-virtual-grid";
 import { SelectBar, type SelectBarAction, SelectModeButton } from "@/features/objekt/select-bar";
-import { ShimmerGrid } from "@/features/objekt/shimmer-grid";
+import { SkeletonGrid } from "@/features/objekt/skeleton-grid";
 import { useCurrentUser } from "@/features/user/hooks";
 import { m } from "@/paraglide/messages";
 import { selectIsSelecting, useClearSelectionOnNavigate, useSelection } from "@/stores/selection";
@@ -382,7 +382,7 @@ export function CollectionView() {
       )}
 
       {isPending ? (
-        <ShimmerGrid columns={columns} />
+        <SkeletonGrid columns={columns} />
       ) : (
         <>
           <div className="flex items-center justify-between gap-2">

@@ -1,4 +1,4 @@
-import { Shimmer } from "@/components/shared/shimmer";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useColumns } from "@/stores/columns";
 
 import { ObjektGrid } from "./objekt-grid";
@@ -8,14 +8,14 @@ import { ObjektGrid } from "./objekt-grid";
  * page does not shift the layout. `columns` is for a surface that owns its own
  * count (a profile, a list); everything else takes the responsive one.
  */
-export function ShimmerGrid({ columns }: { columns?: number }) {
+export function SkeletonGrid({ columns }: { columns?: number }) {
   const responsive = useColumns();
   const count = columns ?? responsive;
 
   return (
     <ObjektGrid columns={count}>
       {Array.from({ length: count * 3 }).map((_, index) => (
-        <Shimmer key={index} className="aspect-photocard rounded-photocard w-full" />
+        <Skeleton key={index} className="aspect-photocard rounded-photocard w-full" />
       ))}
     </ObjektGrid>
   );

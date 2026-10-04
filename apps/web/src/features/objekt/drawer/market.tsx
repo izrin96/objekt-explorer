@@ -6,9 +6,9 @@ import { type ReactNode, useState } from "react";
 import { InView } from "react-intersection-observer";
 
 import { EmptyState } from "@/components/shared/empty-state";
-import { Shimmer } from "@/components/shared/shimmer";
 import { Timestamp } from "@/components/shared/timestamp";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { getListLinkOption } from "@/features/list/list-link";
 import { ProfileCell } from "@/features/profile/profile-hover-card";
@@ -116,8 +116,8 @@ export function MarketPanel({
 
       {listings.isPending ? (
         <div className="flex flex-col gap-1.5">
-          <Shimmer className="h-16 rounded-lg" />
-          <Shimmer className="h-16 rounded-lg" />
+          <Skeleton className="h-16 rounded-lg" />
+          <Skeleton className="h-16 rounded-lg" />
         </div>
       ) : items.length === 0 ? (
         <EmptyState

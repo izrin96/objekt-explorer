@@ -12,11 +12,11 @@ import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 
 import { EmptyState } from "@/components/shared/empty-state";
-import { Shimmer } from "@/components/shared/shimmer";
 import { SocialBadge } from "@/components/shared/social-badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ObjektDrawer } from "@/features/objekt/drawer";
 import { ObjektCard } from "@/features/objekt/objekt-card";
 import { ProfileLink } from "@/features/profile/profile-hover-card";
@@ -57,9 +57,9 @@ export function TradeMatchesContent({ slug, mode }: { slug: string; mode: TradeM
   if (query.isPending) {
     return (
       <div className="flex flex-col gap-1.5">
-        <Shimmer className="h-17 rounded-lg" />
-        <Shimmer className="h-17 rounded-lg" />
-        <Shimmer className="h-17 rounded-lg" />
+        <Skeleton className="h-17 rounded-lg" />
+        <Skeleton className="h-17 rounded-lg" />
+        <Skeleton className="h-17 rounded-lg" />
       </div>
     );
   }

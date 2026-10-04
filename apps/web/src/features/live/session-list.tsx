@@ -5,9 +5,9 @@ import { Link } from "@tanstack/react-router";
 import { type CSSProperties, useState } from "react";
 
 import { EmptyState } from "@/components/shared/empty-state";
-import { Shimmer } from "@/components/shared/shimmer";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsPanel, TabsTab } from "@/components/ui/tabs";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import { liveSessionsOptions } from "@/features/live/queries";
@@ -56,9 +56,9 @@ function SessionGrid({ artistId, token }: { artistId: string; token: string | un
   if (isPending) {
     return (
       <div className={GRID}>
-        <SessionCardShimmer />
-        <SessionCardShimmer />
-        <SessionCardShimmer />
+        <SessionCardSkeleton />
+        <SessionCardSkeleton />
+        <SessionCardSkeleton />
       </div>
     );
   }
@@ -99,14 +99,14 @@ function SessionGrid({ artistId, token }: { artistId: string; token: string | un
 
 const GRID = "grid grid-cols-[repeat(auto-fill,minmax(min(100%,380px),1fr))] gap-2";
 
-function SessionCardShimmer() {
+function SessionCardSkeleton() {
   return (
     <div className="flex flex-col gap-2">
-      <Shimmer className="aspect-square w-full rounded" />
-      <Shimmer className="h-6 w-2/3" />
+      <Skeleton className="aspect-square w-full rounded" />
+      <Skeleton className="h-6 w-2/3" />
       <div className="flex items-center gap-2">
-        <Shimmer className="size-8 rounded-full" />
-        <Shimmer className="h-5 w-24" />
+        <Skeleton className="size-8 rounded-full" />
+        <Skeleton className="h-5 w-24" />
       </div>
     </div>
   );
