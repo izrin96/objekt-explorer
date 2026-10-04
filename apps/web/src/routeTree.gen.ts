@@ -17,6 +17,7 @@ import { Route as containerLoginRouteImport } from './routes/(container)/login'
 import { Route as containerMarketRouteImport } from './routes/(container)/market'
 import { Route as containerTermsPrivacyRouteImport } from './routes/(container)/terms-privacy'
 import { Route as AtChar123nicknameChar125IndexRouteImport } from './routes/@{$nickname}/index'
+import { Route as AtChar123nicknameChar125SplatRouteImport } from './routes/@{$nickname}/$'
 import { Route as AtChar123nicknameChar125ListRouteImport } from './routes/@{$nickname}/list'
 import { Route as AtChar123nicknameChar125ProgressRouteImport } from './routes/@{$nickname}/progress'
 import { Route as AtChar123nicknameChar125StatsRouteImport } from './routes/@{$nickname}/stats'
@@ -86,6 +87,12 @@ const AtChar123nicknameChar125IndexRoute =
   AtChar123nicknameChar125IndexRouteImport.update({
     id: '/',
     path: '/',
+    getParentRoute: () => AtChar123nicknameChar125RouteRoute,
+  } as any)
+const AtChar123nicknameChar125SplatRoute =
+  AtChar123nicknameChar125SplatRouteImport.update({
+    id: '/$',
+    path: '/$',
     getParentRoute: () => AtChar123nicknameChar125RouteRoute,
   } as any)
 const AtChar123nicknameChar125ListRoute =
@@ -250,6 +257,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof containerLoginRoute
   '/market': typeof containerMarketRoute
   '/terms-privacy': typeof containerTermsPrivacyRoute
+  '/@{$nickname}/$': typeof AtChar123nicknameChar125SplatRoute
   '/@{$nickname}/list': typeof AtChar123nicknameChar125ListRoute
   '/@{$nickname}/progress': typeof AtChar123nicknameChar125ProgressRoute
   '/@{$nickname}/stats': typeof AtChar123nicknameChar125StatsRoute
@@ -287,6 +295,7 @@ export interface FileRoutesByTo {
   '/login': typeof containerLoginRoute
   '/market': typeof containerMarketRoute
   '/terms-privacy': typeof containerTermsPrivacyRoute
+  '/@{$nickname}/$': typeof AtChar123nicknameChar125SplatRoute
   '/@{$nickname}/list': typeof AtChar123nicknameChar125ListRoute
   '/@{$nickname}/progress': typeof AtChar123nicknameChar125ProgressRoute
   '/@{$nickname}/stats': typeof AtChar123nicknameChar125StatsRoute
@@ -327,6 +336,7 @@ export interface FileRoutesById {
   '/(container)/login': typeof containerLoginRoute
   '/(container)/market': typeof containerMarketRoute
   '/(container)/terms-privacy': typeof containerTermsPrivacyRoute
+  '/@{$nickname}/$': typeof AtChar123nicknameChar125SplatRoute
   '/@{$nickname}/list': typeof AtChar123nicknameChar125ListRoute
   '/@{$nickname}/progress': typeof AtChar123nicknameChar125ProgressRoute
   '/@{$nickname}/stats': typeof AtChar123nicknameChar125StatsRoute
@@ -367,6 +377,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/market'
     | '/terms-privacy'
+    | '/@{$nickname}/$'
     | '/@{$nickname}/list'
     | '/@{$nickname}/progress'
     | '/@{$nickname}/stats'
@@ -404,6 +415,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/market'
     | '/terms-privacy'
+    | '/@{$nickname}/$'
     | '/@{$nickname}/list'
     | '/@{$nickname}/progress'
     | '/@{$nickname}/stats'
@@ -443,6 +455,7 @@ export interface FileRouteTypes {
     | '/(container)/login'
     | '/(container)/market'
     | '/(container)/terms-privacy'
+    | '/@{$nickname}/$'
     | '/@{$nickname}/list'
     | '/@{$nickname}/progress'
     | '/@{$nickname}/stats'
@@ -553,6 +566,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/@{$nickname}/'
       preLoaderRoute: typeof AtChar123nicknameChar125IndexRouteImport
+      parentRoute: typeof AtChar123nicknameChar125RouteRoute
+    }
+    '/@{$nickname}/$': {
+      id: '/@{$nickname}/$'
+      path: '/$'
+      fullPath: '/@{$nickname}/$'
+      preLoaderRoute: typeof AtChar123nicknameChar125SplatRouteImport
       parentRoute: typeof AtChar123nicknameChar125RouteRoute
     }
     '/@{$nickname}/list': {
@@ -801,6 +821,7 @@ const containerRouteRouteWithChildren = containerRouteRoute._addFileChildren(
 )
 
 interface AtChar123nicknameChar125RouteRouteChildren {
+  AtChar123nicknameChar125SplatRoute: typeof AtChar123nicknameChar125SplatRoute
   AtChar123nicknameChar125ListRoute: typeof AtChar123nicknameChar125ListRoute
   AtChar123nicknameChar125ProgressRoute: typeof AtChar123nicknameChar125ProgressRoute
   AtChar123nicknameChar125StatsRoute: typeof AtChar123nicknameChar125StatsRoute
@@ -810,6 +831,7 @@ interface AtChar123nicknameChar125RouteRouteChildren {
 
 const AtChar123nicknameChar125RouteRouteChildren: AtChar123nicknameChar125RouteRouteChildren =
   {
+    AtChar123nicknameChar125SplatRoute: AtChar123nicknameChar125SplatRoute,
     AtChar123nicknameChar125ListRoute: AtChar123nicknameChar125ListRoute,
     AtChar123nicknameChar125ProgressRoute:
       AtChar123nicknameChar125ProgressRoute,
