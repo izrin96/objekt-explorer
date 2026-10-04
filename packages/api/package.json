@@ -16,15 +16,15 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "catalog:",
-    "@aws-sdk/client-sesv2": "^3.1138.0",
-    "@aws-sdk/s3-request-presigner": "^3.1138.0",
-    "@better-auth/i18n": "^1.7.5",
-    "@orpc/server": "^1.15.3",
+    "@aws-sdk/client-sesv2": "^3.1146.0",
+    "@aws-sdk/s3-request-presigner": "^3.1146.0",
+    "@better-auth/i18n": "^1.7.7",
+    "@orpc/server": "^1.15.4",
     "@repo/cosmo": "workspace:*",
     "@repo/db": "workspace:*",
     "@repo/lib": "workspace:*",
     "@t3-oss/env-core": "^0.13.11",
-    "better-auth": "^1.7.5",
+    "better-auth": "^1.7.7",
     "drizzle-orm": "catalog:",
     "nanoid": "^6.0.1",
     "ofetch": "catalog:",
@@ -38,6 +38,6 @@
     "typescript": "catalog:dev"
   },
   "peerDependencies": {
-    "@tanstack/react-start": "^1.168.57"
+    "@tanstack/react-start": "^1.168.60"
   }
 }

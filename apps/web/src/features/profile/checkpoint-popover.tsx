@@ -54,8 +54,7 @@ export function CheckpointPopover() {
   // the calendar shows the draft's month, so a typed or restored date is in view
   const [month, setMonth] = useState<Date>(() => date ?? new Date());
   const [open, setOpen] = useState(false);
-
-  const today = new Date();
+  const [today, setToday] = useState(() => new Date());
 
   return (
     <>
@@ -68,6 +67,7 @@ export function CheckpointPopover() {
             setDraft(date);
             setTime(timeOf(date));
             setMonth(date ?? new Date());
+            setToday(new Date());
           }
           setOpen(next);
         }}
