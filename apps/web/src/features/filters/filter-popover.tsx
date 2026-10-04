@@ -23,6 +23,7 @@ import { m } from "@/paraglide/messages";
 
 import { ColorPicker } from "./color-picker";
 import { COLOR_SWATCHES } from "./facets";
+import { FilterCollection } from "./filter-collection";
 import { EDITION_LABEL, ONLINE_TYPE_LABEL } from "./labels";
 import {
   COLOR_SENSITIVITY_RANGE,
@@ -36,6 +37,7 @@ import { useFilters, useSetFilters } from "./use-filters";
  * not a member; everything else is named per surface by `LONG_TAIL` below.
  */
 export type LongTailField =
+  | "collection"
   | "transferable"
   | "grouped"
   | "hidePin"
@@ -50,19 +52,20 @@ export type LongTailField =
  * is absent from that surface's popover, its sheet and its "Filters · n" count.
  */
 export const LONG_TAIL = {
-  home: ["edition", "color"],
-  market: ["priced", "edition", "color"],
-  list: ["edition", "color"],
-  collection: ["hidePin", "locked", "missing", "edition", "color"],
+  home: ["collection", "edition", "color"],
+  market: ["collection", "priced", "edition", "color"],
+  list: ["collection", "edition", "color"],
+  collection: ["collection", "hidePin", "locked", "missing", "edition", "color"],
   trades: [],
-  progress: ["edition"],
-  stats: ["edition"],
+  progress: ["collection", "edition"],
+  stats: ["collection", "edition"],
 } as const satisfies Record<string, readonly LongTailField[]>;
 
 /** Count shown on the "Filters" button: long-tail filters only. */
 export function longTailCount(filters: FilterSearch, fields: readonly LongTailField[]): number {
   const set = (field: LongTailField, on: boolean) => Number(fields.includes(field) && on);
   return (
+    set("collection", (filters.collection?.length ?? 0) > 0) +
     set("transferable", filters.transferable === true) +
     set("grouped", filters.grouped === true) +
     set("hidePin", filters.hidePin === true) +
@@ -291,8 +294,29 @@ function SwitchRow({
   );
 }
 
-/** One set of controls for the desktop popover and the mobile sheet both. */
-export function LongTailFields({ fields }: { fields: readonly LongTailField[] }) {
+function CollectionField({ options }: { options: readonly string[] }) {
+  const collection = useFilters((f) => f.collection);
+  const setFilters = useSetFilters();
+
+  return (
+    <FilterCollection
+      label={m.filter_collection_no()}
+      options={options}
+      value={collection ?? []}
+      onChange={(value) => setFilters({ collection: value.length > 0 ? value : undefined })}
+      className="w-full justify-between"
+    />
+  );
+}
+
+/** One set of controls for the Filters popover or sheet on desktop and the sheet on mobile. */
+export function LongTailFields({
+  fields,
+  collectionNos = [],
+}: {
+  fields: readonly LongTailField[];
+  collectionNos?: readonly string[];
+}) {
   const filters = useFilters();
   const setFilters = useSetFilters();
   const has = (field: LongTailField) => fields.includes(field);
@@ -306,6 +330,12 @@ export function LongTailFields({ fields }: { fields: readonly LongTailField[] })
 
   return (
     <div className="flex flex-col gap-1">
+      {has("collection") && (
+        <>
+          <CollectionField options={collectionNos} />
+          <div className="my-1 border-t" />
+        </>
+      )}
       {has("transferable") && (
         <SwitchRow
           label={m.filter_transferable()}
@@ -371,9 +401,11 @@ export function LongTailFields({ fields }: { fields: readonly LongTailField[] })
 /** Long-tail filters behind a "Filters · n" button. */
 export function FilterPopover({
   fields,
+  collectionNos,
   className,
 }: {
   fields: readonly LongTailField[];
+  collectionNos?: readonly string[];
   className?: string;
 }) {
   const count = useFilters((filters) => longTailCount(filters, fields));
@@ -392,7 +424,7 @@ export function FilterPopover({
         )}
       </PopoverTrigger>
       <PopoverPopup align="start" className="w-60">
-        <LongTailFields fields={fields} />
+        <LongTailFields fields={fields} collectionNos={collectionNos} />
       </PopoverPopup>
     </Popover>
   );

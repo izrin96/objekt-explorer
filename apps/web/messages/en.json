@@ -694,7 +694,6 @@
   "filter_collection_search": "Search collection no…",
   "filter_collection_empty": "No collection found",
   "filter_picked_count": "{count} picked",
-  "filter_clear_all": "Clear all",
   "filter_remove_chip": "Remove {label}",
   "filter_done": "Done",
   "filter_sheet_description": "Every facet the toolbar shows on a wider screen",

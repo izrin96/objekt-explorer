@@ -276,7 +276,7 @@ function ListEntries() {
         sorts={sorts}
         longTail={LONG_TAIL.list}
         extras={extras}
-        extra={<GenerateDiscordButton objekts={filtered} />}
+        actions={<GenerateDiscordButton objekts={filtered} />}
       />
 
       {compare !== null ? <CompareBanner compare={compare} onClear={clearCompare} /> : null}

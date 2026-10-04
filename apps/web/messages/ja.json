@@ -694,7 +694,6 @@
   "filter_collection_search": "コレクション番号を検索…",
   "filter_collection_empty": "コレクションが見つかりません",
   "filter_picked_count": "{count}件選択中",
-  "filter_clear_all": "すべてクリア",
   "filter_remove_chip": "{label}を削除",
   "filter_done": "完了",
   "filter_sheet_description": "画面が広いときにツールバーに表示されるすべてのフィルター",

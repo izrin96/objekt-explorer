@@ -10,9 +10,11 @@ import {
   SheetHeader,
   SheetPanel,
   SheetPopup,
+  type SheetPrimitive,
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import {
@@ -27,18 +29,52 @@ import {
   type FacetValues,
 } from "./facet-controls";
 import type { Facets, MemberGroup } from "./facets";
+import { ResetButton } from "./reset-button";
 
 type FilterSheetProps = {
   facets: Facets;
   groups?: readonly MemberGroup[];
   values: FacetValues;
   onChange: (key: FacetKey, value: string[]) => void;
+  /** the facets this sheet renders; must match the toolbar's */
+  keys?: readonly FacetKey[];
   extras?: readonly ExtraFacet[];
-  /** anything this surface also hides below `md`: long-tail switches, columns… */
+  /** the long-tail fields, plus toolbar controls this surface hides below `md` */
   children?: ReactNode;
   extraCount?: number;
   onReset?: () => void;
+  resetDisabled?: boolean;
+  /**
+   * Lets a `FilterSheetTrigger` on the `md+` toolbar open this sheet too. The
+   * toolbar shows every facet from `md`, so there the sheet holds only `children`.
+   */
+  handle?: SheetPrimitive.Handle<unknown>;
 };
+
+export function FilterSheetTrigger({
+  handle,
+  count,
+  className,
+}: {
+  handle?: SheetPrimitive.Handle<unknown>;
+  count: number;
+  className?: string;
+}) {
+  return (
+    <SheetTrigger
+      handle={handle}
+      render={<Button variant="outline" size="sm" className={cn("gap-1.5", className)} />}
+    >
+      <FunnelSimpleIcon />
+      {m.filter_filters()}
+      {count > 0 && (
+        <Badge size="sm" className="bg-accent text-accent-foreground font-mono">
+          {count}
+        </Badge>
+      )}
+    </SheetTrigger>
+  );
+}
 
 /**
  * The keys are declared here rather than inside `FacetControls`: Base UI
@@ -50,13 +86,15 @@ export function FilterSheet({
   groups,
   values,
   onChange,
+  keys = FACET_KEYS,
   extras = NO_EXTRAS,
   children,
   extraCount = 0,
   onReset,
+  resetDisabled = false,
+  handle,
 }: FilterSheetProps) {
   const [open, setOpen] = useState(false);
-  const keys = FACET_KEYS;
   const declaredKeys = useMemo(() => [...keys, ...extras.map((e) => e.key)], [keys, extras]);
   useDeclaredFacets("stacked", declaredKeys);
 
@@ -70,39 +108,29 @@ export function FilterSheet({
     extraCount;
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger render={<Button variant="outline" size="sm" className="gap-1.5 md:hidden" />}>
-        <FunnelSimpleIcon />
-        {m.filter_filters()}
-        {count > 0 && (
-          <Badge size="sm" className="bg-accent text-accent-foreground font-mono">
-            {count}
-          </Badge>
-        )}
-      </SheetTrigger>
+    <Sheet open={open} onOpenChange={setOpen} handle={handle}>
+      <FilterSheetTrigger handle={handle} count={count} className="md:hidden" />
       <SheetPopup side="right" className="flex max-w-80 flex-col">
         <SheetHeader>
           <SheetTitle className="font-display text-base">{m.filter_filters()}</SheetTitle>
           <SheetDescription className="sr-only">{m.filter_sheet_description()}</SheetDescription>
         </SheetHeader>
         <SheetPanel className="flex flex-col gap-4">
-          <ExtraFacetControls surface="stacked" extras={extras} />
-          <FacetControls
-            surface="stacked"
-            facets={facets}
-            groups={groups}
-            values={values}
-            onChange={onChange}
-            keys={keys}
-          />
+          <div className={cn("flex flex-col gap-4", handle && "md:hidden")}>
+            <ExtraFacetControls surface="stacked" extras={extras} />
+            <FacetControls
+              surface="stacked"
+              facets={facets}
+              groups={groups}
+              values={values}
+              onChange={onChange}
+              keys={keys}
+            />
+          </div>
           {children}
         </SheetPanel>
         <SheetFooter className="flex-row justify-end gap-1.5">
-          {onReset && (
-            <Button variant="outline" size="sm" onClick={onReset}>
-              {m.filter_reset_filter()}
-            </Button>
-          )}
+          {onReset && <ResetButton onReset={onReset} disabled={resetDisabled} />}
           <Button size="sm" onClick={() => setOpen(false)}>
             {m.filter_done()}
           </Button>

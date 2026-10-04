@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import type { ExtraFacet } from "@/features/filters/facet-controls";
 import { LONG_TAIL } from "@/features/filters/filter-popover";
-import { isFiltering } from "@/features/filters/search-schema";
+import { canReset, isFiltering } from "@/features/filters/search-schema";
 import { SingleSelect } from "@/features/filters/single-select";
 import { useCanonicalFilters } from "@/features/filters/use-filters";
 import { ObjektDrawer } from "@/features/objekt/drawer";
@@ -156,6 +156,8 @@ export function TradesView() {
       extras={extras}
       extrasFirst
       extra={<CheckpointPopover />}
+      onReset={reset}
+      resetDisabled={!canReset(filters) && type === "all"}
     />
   );
 

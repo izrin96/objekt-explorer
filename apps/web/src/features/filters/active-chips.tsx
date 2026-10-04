@@ -1,6 +1,5 @@
 import { XIcon } from "@phosphor-icons/react";
 
-import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ArtistAvatar } from "@/features/artist/artist-avatar";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
@@ -184,11 +183,9 @@ function buildChips(
 export function ActiveChips({
   chips,
   onRemove,
-  onReset,
 }: {
   chips: readonly ActiveChip[];
   onRemove: (chip: ActiveChip) => void;
-  onReset: () => void;
 }) {
   const { getArtist } = useCosmoArtist();
   if (chips.length === 0) return null;
@@ -227,14 +224,6 @@ export function ActiveChips({
             </button>
           );
         })}
-        <Button
-          variant="secondary"
-          size="xs"
-          onClick={onReset}
-          className="h-6.5 flex-none sm:h-6.5"
-        >
-          {m.filter_clear_all()}
-        </Button>
       </div>
     </ScrollArea>
   );

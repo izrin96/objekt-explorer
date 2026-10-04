@@ -119,3 +119,8 @@ export const COLOR_SENSITIVITY_RANGE = { min: 1, max: 20 } as const;
 export function isFiltering(filters: FilterSearch): boolean {
   return FILTER_KEYS.some((key) => filters[key] !== undefined);
 }
+
+/** `isFiltering` without `at`, which a reset leaves in place */
+export function canReset(filters: FilterSearch): boolean {
+  return FILTER_KEYS.some((key) => key !== "at" && filters[key] !== undefined);
+}

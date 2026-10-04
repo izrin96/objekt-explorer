@@ -28,10 +28,11 @@ import {
   type FacetKey,
 } from "@/features/filters/facet-controls";
 import { useScopedFacets } from "@/features/filters/facets";
-import { QuickFilters, ResetButton } from "@/features/filters/filter-bar";
+import { QuickFilters } from "@/features/filters/filter-bar";
 import { FilterSheet } from "@/features/filters/filter-sheet";
 import { ONLINE_TYPE_LABEL } from "@/features/filters/labels";
-import { isFiltering } from "@/features/filters/search-schema";
+import { ResetButton } from "@/features/filters/reset-button";
+import { canReset } from "@/features/filters/search-schema";
 import { SingleSelect } from "@/features/filters/single-select";
 import { useCanonicalFilters, useFilters, useSetFilters } from "@/features/filters/use-filters";
 import { ObjektDrawer } from "@/features/objekt/drawer";
@@ -299,6 +300,8 @@ export function ActivityView() {
   useDeclaredFacets("inline", declaredKeys);
   useFacetParity();
 
+  const nothingToReset = !canReset(filters) && type === "all";
+
   const typeChip =
     type === "all"
       ? []
@@ -317,6 +320,7 @@ export function ActivityView() {
             onChange={setFacet}
             extras={extras}
             onReset={reset}
+            resetDisabled={nothingToReset}
           />
           <ExtraFacetControls surface="inline" extras={extras} />
           <FacetControls
@@ -326,18 +330,13 @@ export function ActivityView() {
             values={values}
             onChange={setFacet}
           />
+          <ResetButton onReset={reset} disabled={nothingToReset} />
         </QuickFilters>
-        <ResetButton
-          onReset={reset}
-          disabled={!isFiltering(filters) && type === "all"}
-          className="max-md:hidden"
-        />
       </div>
 
       <ActiveChips
         chips={[...typeChip, ...chips]}
         onRemove={(chip) => (chip.key === "type" ? setType("all") : setFilters(chip.remove))}
-        onReset={reset}
       />
 
       {query.isPending ? (

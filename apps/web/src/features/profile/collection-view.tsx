@@ -358,13 +358,9 @@ export function CollectionView() {
       <ProfileToolbar
         longTail={LONG_TAIL.collection}
         extras={extras}
-        extra={
-          <>
-            {/* Spin is counted from today's holdings alone */}
-            {!isSpinAddress(address) && <CheckpointPopover />}
-            <GenerateDiscordButton objekts={filtered} />
-          </>
-        }
+        // Spin is counted from today's holdings alone
+        extra={isSpinAddress(address) ? undefined : <CheckpointPopover />}
+        actions={<GenerateDiscordButton objekts={filtered} />}
       />
 
       {/* a standing notice, so `status` rather than the component's interrupting `alert` */}

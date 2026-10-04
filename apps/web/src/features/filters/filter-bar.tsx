@@ -1,7 +1,7 @@
-import { ColumnsIcon, SortAscendingIcon, SortDescendingIcon, XIcon } from "@phosphor-icons/react";
+import { ColumnsIcon, SortAscendingIcon, SortDescendingIcon } from "@phosphor-icons/react";
 import type { ValidCustomSort, ValidGroupBy, ValidSortDirection } from "@repo/cosmo/types/common";
 import { validGroupBy } from "@repo/cosmo/types/common";
-import { type ReactNode, useMemo } from "react";
+import { type ReactNode, useMemo, useState } from "react";
 
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
@@ -11,6 +11,7 @@ import {
   SelectPrimitive,
   SelectValue,
 } from "@/components/ui/select";
+import { SheetPrimitive } from "@/components/ui/sheet";
 import { cn, validColumns } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 import { useColumns, useColumnStore } from "@/stores/columns";
@@ -35,10 +36,14 @@ import {
   type LongTailField,
 } from "./filter-popover";
 import { FilterSearchField } from "./filter-search";
-import { FilterSheet } from "./filter-sheet";
+import { FilterSheet, FilterSheetTrigger } from "./filter-sheet";
 import { GROUP_BY_LABEL, SORT_DESC, SORT_LABEL } from "./labels";
-import { DEFAULT_SORT_DIR, isFiltering } from "./search-schema";
+import { ResetButton } from "./reset-button";
+import { canReset, DEFAULT_SORT_DIR } from "./search-schema";
 import { useCanonicalFilters, useFilters, useResetFilters, useSetFilters } from "./use-filters";
+
+/** `md+` opens the long-tail filters in the side sheet; `false` brings back the popover */
+const FILTERS_IN_SHEET = true;
 
 const toolbarTrigger = cn(buttonVariants({ variant: "outline", size: "sm" }), "gap-1.5");
 
@@ -223,39 +228,15 @@ function GroupBySelect({ className, stacked = false }: { className?: string; sta
   );
 }
 
-/** Always on the toolbar and only ever disabled, so its place never moves. */
-export function ResetButton({
-  onReset,
-  disabled,
-  className,
-}: {
-  onReset: () => void;
-  disabled: boolean;
-  className?: string;
-}) {
-  return (
-    <Button
-      variant="outline"
-      size="sm"
-      className={cn("gap-1.5", className)}
-      disabled={disabled}
-      onClick={onReset}
-    >
-      <XIcon />
-      {m.filter_reset_filter()}
-    </Button>
-  );
-}
-
 /** The sheet block for the toolbar controls the inline row hides below `md`. */
 function StackedToolbarFields({ showGroupBy = false }: { showGroupBy?: boolean }) {
   if (!showGroupBy) return null;
 
   return (
-    <>
+    <div className="flex flex-col gap-4 md:hidden">
       <div className="my-1 border-t" />
       <GroupBySelect stacked />
-    </>
+    </div>
   );
 }
 
@@ -270,8 +251,13 @@ type FilterBarProps = {
   extras?: readonly ExtraFacet[];
   /** the extras lead the facets, as the sheet always has them */
   extrasFirst?: boolean;
-  /** trailing controls this surface alone carries, e.g. the checkpoint popover */
+  /** controls this surface alone carries, after Filters and before Reset, e.g. the checkpoint popover */
   extra?: ReactNode;
+  /** buttons that act on the result rather than filter it, placed after Reset */
+  actions?: ReactNode;
+  /** a surface with filters of its own resets and counts them here */
+  onReset?: () => void;
+  resetDisabled?: boolean;
   showSearch?: boolean;
   /** sort and group-by together: a surface that orders nothing has neither */
   showSort?: boolean;
@@ -286,14 +272,21 @@ export function FilterBar({
   extras = NO_EXTRAS,
   extrasFirst = false,
   extra,
+  actions,
+  onReset,
+  resetDisabled,
   showSearch = true,
   showSort = true,
   showColumns = true,
 }: FilterBarProps) {
   const filters = useCanonicalFilters();
   const setFilters = useSetFilters();
-  const reset = useResetFilters();
+  const sharedReset = useResetFilters();
+  const reset = onReset ?? sharedReset;
   const chips = useActiveChips();
+  const [sheet] = useState(() => SheetPrimitive.createHandle());
+  const longTailActive = longTailCount(filters, longTail);
+  const nothingToReset = resetDisabled ?? !canReset(filters);
 
   const values = {
     artist: filters.artist ?? [],
@@ -305,7 +298,18 @@ export function FilterBar({
   const setFacet = (key: FacetKey, value: string[]) =>
     setFilters({ [key]: value.length > 0 ? value : undefined });
 
-  const declaredKeys = useMemo(() => [...FACET_KEYS, ...extras.map((item) => item.key)], [extras]);
+  // a surface that lists Collection no. in its long tail shows it in the Filters panel instead
+  const facetKeys = useMemo(
+    () =>
+      longTail.includes("collection")
+        ? FACET_KEYS.filter((key) => key !== "collection")
+        : FACET_KEYS,
+    [longTail],
+  );
+  const declaredKeys = useMemo(
+    () => [...facetKeys, ...extras.map((item) => item.key)],
+    [facetKeys, extras],
+  );
   useDeclaredFacets("inline", declaredKeys);
   useFacetParity();
 
@@ -320,12 +324,15 @@ export function FilterBar({
             groups={groups}
             values={values}
             onChange={setFacet}
+            keys={facetKeys}
             extras={extras}
-            extraCount={longTailCount(filters, longTail)}
+            extraCount={longTailActive}
             onReset={reset}
+            resetDisabled={nothingToReset}
+            handle={FILTERS_IN_SHEET ? sheet : undefined}
           >
-            <div className="my-1 border-t" />
-            <LongTailFields fields={longTail} />
+            <div className="my-1 border-t md:hidden" />
+            <LongTailFields fields={longTail} collectionNos={facets.collectionNos} />
             <StackedToolbarFields showGroupBy={showSort} />
           </FilterSheet>
 
@@ -337,13 +344,26 @@ export function FilterBar({
             groups={groups}
             values={values}
             onChange={setFacet}
+            keys={facetKeys}
           />
 
           {!extrasFirst && <ExtraFacetControls surface="inline" extras={extras} />}
 
-          <FilterPopover fields={longTail} className="max-md:hidden" />
+          {FILTERS_IN_SHEET ? (
+            <FilterSheetTrigger handle={sheet} count={longTailActive} className="max-md:hidden" />
+          ) : (
+            <FilterPopover
+              fields={longTail}
+              collectionNos={facets.collectionNos}
+              className="max-md:hidden"
+            />
+          )}
 
           {extra}
+
+          <ResetButton onReset={reset} disabled={nothingToReset} />
+
+          {actions}
         </QuickFilters>
 
         <div className="flex items-center gap-1.5 md:ml-auto">
@@ -354,11 +374,10 @@ export function FilterBar({
             </>
           )}
           {showColumns && <ColumnsSelect />}
-          <ResetButton onReset={reset} disabled={!isFiltering(filters)} className="max-md:hidden" />
         </div>
       </div>
 
-      <ActiveChips chips={chips} onRemove={(chip) => setFilters(chip.remove)} onReset={reset} />
+      <ActiveChips chips={chips} onRemove={(chip) => setFilters(chip.remove)} />
     </>
   );
 }

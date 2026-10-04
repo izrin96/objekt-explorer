@@ -38,7 +38,8 @@ type FacetDef = {
 /**
  * The single source of truth for the facet row. Every surface renders from
  * this array twice — inline on `md+` and stacked in the mobile Filters sheet —
- * so a facet added here shows up in both places and on every page.
+ * so a facet added here shows up in both places and on every page, unless
+ * that page's `LONG_TAIL` column moves it into the Filters panel.
  */
 const FACETS: readonly FacetDef[] = [
   {
@@ -68,7 +69,13 @@ const FACETS: readonly FacetDef[] = [
 export const FACET_KEYS: readonly FacetKey[] = FACETS.map((facet) => facet.key);
 
 /** the facets a phone keeps on the toolbar; the rest live in the Filters sheet only */
-export const QUICK_FACET_KEYS: readonly FacetKey[] = ["artist", "member", "season", "class"];
+export const QUICK_FACET_KEYS: readonly FacetKey[] = [
+  "artist",
+  "member",
+  "season",
+  "class",
+  "collection",
+];
 
 export type FacetSurface = "inline" | "stacked";
 
@@ -116,7 +123,7 @@ type FacetControlsProps = {
   groups?: readonly MemberGroup[];
   values: FacetValues;
   onChange: (key: FacetKey, value: string[]) => void;
-  /** defaults to every facet; a surface that narrows it trips the dev parity guard */
+  /** defaults to every facet; narrow the sheet's too, or the dev parity guard trips */
   keys?: readonly FacetKey[];
 };
 
