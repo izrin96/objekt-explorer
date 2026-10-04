@@ -202,7 +202,7 @@ export function ActiveChips({
               type="button"
               aria-label={m.filter_remove_chip({ label: chip.label })}
               onClick={() => onRemove(chip)}
-              className="bg-secondary hover:bg-muted inline-flex h-6.5 flex-none cursor-pointer items-center gap-1.5 rounded-full pr-2 pl-2.5 text-xs whitespace-nowrap data-swatched:pl-1"
+              className="bg-secondary hover:bg-input inline-flex h-6.5 flex-none cursor-pointer items-center gap-1.5 rounded-full pr-2 pl-2.5 text-xs whitespace-nowrap data-swatched:pl-1"
               data-swatched={swatched || undefined}
             >
               {artist !== undefined && <ArtistAvatar artist={artist} className="size-4 ring-0" />}

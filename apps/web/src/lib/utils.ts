@@ -33,7 +33,7 @@ export const SITE_NAME = "Objekt Tracker";
 
 export const THEME_COLORS = {
   light: "#FBFBFB",
-  dark: "#09090B",
+  dark: "#0D0D0E",
 };
 
 /** The origin the user is on, for links they copy out; its callers only run in the browser. */

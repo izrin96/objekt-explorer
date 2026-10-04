@@ -32,7 +32,7 @@ import { useCopyListLink } from "./share-list-button";
 import { useIsListOwner } from "./use-list-owned";
 
 const chipClass =
-  "bg-secondary hover:bg-muted relative z-10 inline-flex items-center gap-1 rounded-full px-2 py-0.5";
+  "bg-secondary hover:bg-input relative z-10 inline-flex items-center gap-1 rounded-full px-2 py-0.5";
 
 /**
  * `preview` is undefined while loading and null when it could not be read.

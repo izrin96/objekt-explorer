@@ -152,20 +152,23 @@
 }
 
 :root {
+  /* neutrals, ring and sidebar included, are cnippet's docs theme (ui.cnippet.dev) in oklch;
+     accent stays indigo, and the light page stays off-white (#fbfbfb) so white
+     cards and popovers lift off it */
   --background: oklch(0.987 0 0);
-  --foreground: oklch(0.21 0.006 285.885);
+  --foreground: oklch(0.205 0.006 285.911);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.21 0.006 285.885);
+  --card-foreground: oklch(0.205 0.006 285.911);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.141 0.005 285.823);
-  --primary: oklch(0.141 0.005 285.823);
+  --popover-foreground: oklch(0.205 0.006 285.911);
+  --primary: oklch(0.225 0.006 285.902);
   --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.92 0.004 286.32);
-  --secondary-foreground: oklch(0.141 0.005 285.823);
+  --secondary: oklch(0 0 0 / 4%);
+  --secondary-foreground: oklch(0.205 0.006 285.911);
   --accent: oklch(0.585 0.233 277.117 / 0.15);
   --accent-foreground: oklch(0.457 0.24 277.023);
-  --muted: oklch(0.967 0.001 286.375);
-  --muted-foreground: oklch(0.512 0.016 285.938);
+  --muted: oklch(0 0 0 / 4%);
+  --muted-foreground: oklch(0.5 0.01 285.871);
   /*
    * Feedback pairs, light theme. Dark's halves are near-white pastels that
    * only ever appear behind an 8-16% tint; on a white page they leave the chip
@@ -202,17 +205,17 @@
   --event-mint: oklch(0.58 0.158 131);
   --event-spin: oklch(0.58 0.232 277.117);
   --event-transfer: oklch(0.58 0.143 55);
-  --border: oklch(0.911 0.006 286.286);
-  --input: oklch(0.871 0.006 286.286);
-  --ring: oklch(0.141 0.005 285.823);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.141 0.005 285.823);
-  --sidebar-primary: oklch(0.442 0.017 285.786 / 0.1);
-  --sidebar-primary-foreground: oklch(0.37 0.013 285.805);
-  --sidebar-accent: oklch(0.585 0.233 277.117);
-  --sidebar-accent-foreground: oklch(1 0 0);
-  --sidebar-border: oklch(0.901 0.006 286.286);
-  --sidebar-ring: oklch(0.141 0.005 285.823);
+  --border: oklch(0 0 0 / 8%);
+  --input: oklch(0 0 0 / 10%);
+  --ring: oklch(0.56 0.22 276.986 / 60%);
+  --sidebar: oklch(0.968 0.003 285.196);
+  --sidebar-foreground: oklch(0.5 0.01 285.871);
+  --sidebar-primary: oklch(0.225 0.006 285.902);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(1 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0.006 285.911);
+  --sidebar-border: oklch(0 0 0 / 8%);
+  --sidebar-ring: oklch(0.56 0.22 276.986 / 60%);
   --chart-1: oklch(0.274 0.006 286.033);
   --chart-2: oklch(0.37 0.013 285.805);
   --chart-3: oklch(0.442 0.017 285.786);
@@ -241,22 +244,20 @@
 }
 
 .dark {
-  --background: oklch(0.141 0.005 285.823);
-  --foreground: oklch(0.985 0 0);
-  /* the page background shows through a card; only the popover surfaces
-     (`--popover`) lift off it */
-  --card: transparent;
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.19 0.006 285.885);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.985 0 0);
-  --primary-foreground: oklch(0.141 0.005 285.823);
-  --secondary: oklch(0.244 0.006 286.033);
-  --secondary-foreground: oklch(0.985 0 0);
+  --background: oklch(0.158 0.004 285.898);
+  --foreground: oklch(0.965 0.002 284.795);
+  --card: oklch(0.178 0.004 285.886);
+  --card-foreground: oklch(0.965 0.002 284.795);
+  --popover: oklch(0.19 0.004 285.877);
+  --popover-foreground: oklch(0.965 0.002 284.795);
+  --primary: oklch(0.965 0.002 284.795);
+  --primary-foreground: oklch(0.18 0.005 285.906);
+  --secondary: oklch(1 0 0 / 5%);
+  --secondary-foreground: oklch(0.965 0.002 284.795);
   --accent: oklch(0.585 0.233 277.117 / 0.1);
   --accent-foreground: oklch(0.673 0.182 276.935);
-  --muted: oklch(0.21 0.006 285.885);
-  --muted-foreground: oklch(0.705 0.015 286.067);
+  --muted: oklch(1 0 0 / 5%);
+  --muted-foreground: oklch(0.7 0.008 285.778);
   /*
    * Same roles, same hues, chroma clamped to the sRGB maximum for each L —
    * warning excepted: yellow holds no chroma at hue 85 this close to white
@@ -275,17 +276,17 @@
   --event-mint: oklch(0.72 0.157 131);
   --event-spin: oklch(0.72 0.118 277.117);
   --event-transfer: oklch(0.72 0.142 55);
-  --border: oklch(0.27 0.013 285.805);
-  --input: oklch(0.31 0.013 285.805);
-  --ring: oklch(0.985 0 0);
-  --sidebar: oklch(0.18 0.006 285.885);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.442 0.017 285.786 / 0.1);
-  --sidebar-primary-foreground: oklch(0.705 0.015 286.067);
-  --sidebar-accent: oklch(0.585 0.233 277.117);
-  --sidebar-accent-foreground: oklch(1 0 0);
-  --sidebar-border: oklch(0.274 0.006 286.033);
-  --sidebar-ring: oklch(0.985 0 0);
+  --border: oklch(1 0 0 / 7%);
+  --input: oklch(1 0 0 / 9%);
+  --ring: oklch(0.72 0.16 276.983 / 60%);
+  --sidebar: oklch(0.118 0.004 285.923);
+  --sidebar-foreground: oklch(0.7 0.008 285.778);
+  --sidebar-primary: oklch(0.965 0.002 284.795);
+  --sidebar-primary-foreground: oklch(0.18 0.005 285.906);
+  --sidebar-accent: oklch(0.158 0.004 285.898);
+  --sidebar-accent-foreground: oklch(0.965 0.002 284.795);
+  --sidebar-border: oklch(1 0 0 / 7%);
+  --sidebar-ring: oklch(0.72 0.16 276.983 / 60%);
   --chart-1: oklch(0.985 0 0);
   --chart-2: oklch(0.92 0.004 286.32);
   --chart-3: oklch(0.871 0.006 286.286);
