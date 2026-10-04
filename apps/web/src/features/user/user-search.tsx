@@ -2,11 +2,10 @@ import { UserIcon } from "@phosphor-icons/react";
 import type { CosmoPublicUser, CosmoSearchResult } from "@repo/cosmo/types/user";
 import { useQuery } from "@tanstack/react-query";
 import { FetchError, ofetch } from "ofetch";
-import { type ComponentProps, type KeyboardEvent, useState } from "react";
+import { useState } from "react";
 
 import { EmptyState } from "@/components/shared/empty-state";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ComboboxItem } from "@/components/ui/combobox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDebouncedCallback } from "@/hooks/use-debounced-callback";
 import { truncateAddress } from "@/lib/address";
@@ -60,41 +59,6 @@ export function useUserSearch(initialQuery = "") {
   };
 }
 
-/**
- * Base UI highlights the first row on the keystroke, before the server's rows
- * exist, and not again when they land. Its `autoHighlight: "always"` would, but
- * Combobox does not take it (Autocomplete only, as of 1.8); delete this once it
- * does. Until a row is highlighted, the typed query's first row stands in: it is
- * drawn with a lighter highlight and Enter picks it.
- */
-export function useFirstRowStandIn<Row>({
-  search,
-  rows,
-  pick,
-}: {
-  search: Pick<ReturnType<typeof useUserSearch>, "query" | "trimmed">;
-  rows: readonly Row[];
-  pick: (row: Row) => void;
-}) {
-  const [highlighted, setHighlighted] = useState(false);
-  // until the debounce settles the rows are the last query's
-  const current = search.trimmed !== "" && search.query.trim() === search.trimmed;
-  const standIn = current && !highlighted ? rows[0] : undefined;
-
-  return {
-    onItemHighlighted: (row: Row | undefined) => setHighlighted(row !== undefined),
-    onKeyDown: (event: KeyboardEvent<HTMLInputElement>) => {
-      // an IME's Enter confirms the character being composed
-      if (event.key !== "Enter" || event.nativeEvent.isComposing || standIn === undefined) return;
-      event.preventDefault();
-      pick(standIn);
-    },
-    isStandIn: (row: Row) => row === standIn,
-    /** a remounted Combobox never reports that its last highlight went away */
-    reset: () => setHighlighted(false),
-  };
-}
-
 function UserAvatar({ image, label }: { image: string | undefined; label: string }) {
   return (
     <Avatar className="size-6.5 flex-none">
@@ -117,35 +81,19 @@ export function UserRowBody({ user }: { user: CosmoPublicUser }) {
   );
 }
 
-/** a result row without the kit's check-mark column: picking one acts, it never stays selected */
-export function UserSearchItem({
-  standIn = false,
-  className,
-  ...props
-}: ComponentProps<typeof ComboboxItem> & { standIn?: boolean }) {
-  return (
-    <ComboboxItem
-      className={cn(
-        "grid-cols-1 gap-0 px-2 py-1.5 [&>div]:col-start-1",
-        // lighter than a real highlight, so the first ArrowDown visibly lands on it
-        standIn && "bg-accent/60",
-        className,
-      )}
-      {...props}
-    />
-  );
-}
+/** nicknames vary in length and addresses do not, so only the name bars differ */
+const NAME_WIDTHS = ["w-20", "w-14", "w-24", "w-16", "w-28"] as const;
 
 /** the result rows' silhouette, so the list does not jump when they land */
 function SearchingRows() {
   return (
-    <div role="status" aria-live="polite" className="flex flex-col gap-1 p-2 text-left">
+    <div role="status" aria-live="polite" className="flex flex-col p-2 text-left">
       <span className="sr-only">{m.nav_search_user_searching()}</span>
-      {[0, 1, 2].map((i) => (
-        <div key={i} aria-hidden className="flex items-center gap-2.5 px-2 py-1.5">
+      {NAME_WIDTHS.map((width) => (
+        <div key={width} aria-hidden className="flex items-center gap-2.5 px-2 py-1.5">
           <Skeleton className="size-6.5 flex-none rounded-full" />
-          <Skeleton className="h-3.5 w-24" />
-          <Skeleton className="h-3 w-20" />
+          <Skeleton className={cn("h-3.5", width)} />
+          <Skeleton className="h-3 w-24" />
         </div>
       ))}
     </div>

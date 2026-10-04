@@ -12,21 +12,21 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { type ReactNode, useEffect, useState } from "react";
 
+import {
+  Autocomplete,
+  AutocompleteEmpty,
+  AutocompleteInput,
+  AutocompleteItem,
+  AutocompleteList,
+} from "@/components/ui/autocomplete";
 import { Button } from "@/components/ui/button";
-import { Combobox, ComboboxEmpty, ComboboxInput, ComboboxList } from "@/components/ui/combobox";
 import { Spinner } from "@/components/ui/spinner";
 import { toastManager } from "@/components/ui/toast";
 import { ArtistAvatar } from "@/features/artist/artist-avatar";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import { PROFILE_PAGE_KEY } from "@/features/profile/queries";
 import { currentUserOptions } from "@/features/user/queries";
-import {
-  UserRowBody,
-  UserSearchEmpty,
-  UserSearchItem,
-  useFirstRowStandIn,
-  useUserSearch,
-} from "@/features/user/user-search";
+import { UserRowBody, UserSearchEmpty, useUserSearch } from "@/features/user/user-search";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -230,11 +230,10 @@ function NicknameStep({
     .filter((user) => user.id > 0)
     .slice(0, MAX_NICKNAME_RESULTS);
 
-  const pick = (user: CosmoPublicUser | null) => {
-    if (!user || check.isPending) return;
+  const pick = (user: CosmoPublicUser) => {
+    if (check.isPending) return;
     check.mutate(user.address, { onSuccess: () => onFound(user) });
   };
-  const standIn = useFirstRowStandIn({ search, rows: results, pick });
 
   return (
     <div className="flex flex-col gap-3">
@@ -242,35 +241,36 @@ function NicknameStep({
         {m.link_process_nickname_step_prompt()}
       </p>
 
-      <Combobox<CosmoPublicUser>
+      {/* the server filters (`mode="none"`); a row acts from its own `onClick`,
+          which Enter on the highlighted row also fires */}
+      <Autocomplete
         inline
         open
-        filter={null}
+        mode="none"
+        autoHighlight="always"
+        keepHighlight
         items={results}
-        value={null}
-        onValueChange={pick}
-        inputValue={query}
-        onInputValueChange={(next) => {
+        value={query}
+        onValueChange={(next, details) => {
+          // picking a row writes its nickname into the input; the row acts instead
+          if (details.reason === "item-press") return;
           search.setQuery(next);
           // an "already linked" belongs to the pick, not to the next search
           check.reset();
         }}
-        itemToStringLabel={(user) => user.nickname}
-        autoHighlight
-        onItemHighlighted={standIn.onItemHighlighted}
+        itemToStringValue={(user) => user.nickname}
       >
-        <ComboboxInput
+        <AutocompleteInput
           autoFocus
-          onKeyDown={standIn.onKeyDown}
           aria-label={m.link_enter_nickname()}
-          showTrigger={false}
           placeholder={m.link_nickname_placeholder()}
           startAddon={<MagnifyingGlassIcon />}
           className="w-full"
         />
         {query.trim() !== "" && (
-          <div className="bg-background mt-2 overflow-hidden rounded-lg border">
-            <ComboboxEmpty className="text-muted-foreground text-center">
+          <div className="bg-background mt-2 flex max-h-72 flex-col overflow-hidden rounded-lg border">
+            {/* the searching rows bring their own padding */}
+            <AutocompleteEmpty className={cn(searching && "not-empty:p-0")}>
               <UserSearchEmpty
                 searching={searching}
                 serverError={serverError}
@@ -279,22 +279,27 @@ function NicknameStep({
                   hint: m.link_nickname_not_found_hint(),
                 }}
               />
-            </ComboboxEmpty>
-            <ComboboxList className="max-h-72">
+            </AutocompleteEmpty>
+            <AutocompleteList>
               {(user: CosmoPublicUser) => (
-                <UserSearchItem key={user.address} value={user} standIn={standIn.isStandIn(user)}>
-                  <span className="flex items-center justify-between gap-2">
+                <AutocompleteItem
+                  key={user.address}
+                  value={user}
+                  onClick={() => pick(user)}
+                  className="py-1.5"
+                >
+                  <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
                     <UserRowBody user={user} />
                     {check.isPending && check.variables === user.address && (
                       <Spinner className="size-4 flex-none" />
                     )}
                   </span>
-                </UserSearchItem>
+                </AutocompleteItem>
               )}
-            </ComboboxList>
+            </AutocompleteList>
           </div>
         )}
-      </Combobox>
+      </Autocomplete>
 
       {check.isError && <StepError message={check.error.message} />}
     </div>
