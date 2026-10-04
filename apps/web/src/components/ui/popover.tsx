@@ -27,7 +27,7 @@ export function PopoverTrigger({
  * adds its own `p-*` doubles the inset. Callers pick the inset here instead.
  */
 const VIEWPORT_PADDING = {
-  default: "py-3 [--viewport-inline-padding:--spacing(3)]",
+  default: "py-4 [--viewport-inline-padding:--spacing(4)]",
   sm: "py-2 [--viewport-inline-padding:--spacing(2.5)]",
   none: "py-0 [--viewport-inline-padding:0px]",
 } as const;
