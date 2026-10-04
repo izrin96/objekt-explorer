@@ -16,6 +16,7 @@ import { Shimmer } from "@/components/shared/shimmer";
 import { SocialBadge } from "@/components/shared/social-badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ObjektDrawer } from "@/features/objekt/drawer";
 import { ObjektCard } from "@/features/objekt/objekt-card";
 import { ProfileLink } from "@/features/profile/profile-hover-card";
@@ -123,18 +124,17 @@ function PartnerDisclosure({
   onOpen: (objekt: ValidObjekt) => void;
 }) {
   return (
-    /* `<details>` rather than a rebuilt disclosure: it already toggles on Enter
-       and Space and announces its expanded state */
-    <details className="group">
-      {/* the padding rides on the summary so the whole row is one touch target */}
-      <summary className="focus-visible:ring-ring flex cursor-pointer touch-manipulation items-center gap-3 rounded-sm px-4 py-3 outline-none focus-visible:ring-2">
+    <Collapsible>
+      {/* the padding rides on the trigger so the whole row is one touch target;
+          spans throughout, since a button only takes phrasing content */}
+      <CollapsibleTrigger className="group focus-visible:ring-ring flex w-full touch-manipulation items-center gap-3 rounded-sm px-4 py-3 text-left outline-none focus-visible:ring-2">
         <Avatar className="size-9 shrink-0">
           {partner.user.image ? <AvatarImage src={partner.user.image} alt="" /> : null}
           <AvatarFallback>{(partner.user.name ?? "?").slice(0, 1).toUpperCase()}</AvatarFallback>
         </Avatar>
 
-        <div className="flex min-w-0 flex-1 flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-          <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+        <span className="flex min-w-0 flex-1 flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+          <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
             <span className="truncate text-base leading-snug font-semibold">
               {partner.username}
             </span>
@@ -144,30 +144,38 @@ function PartnerDisclosure({
             {partner.user.twitter ? (
               <SocialBadge platform="twitter" username={partner.user.twitter} />
             ) : null}
-          </div>
+          </span>
 
           {/* each count is a whole sentence, so its accessible name needs no `title` */}
-          <div className="text-muted-foreground flex flex-wrap gap-x-3 gap-y-0.5 text-sm tabular-nums sm:shrink-0 sm:justify-end">
+          <span className="text-muted-foreground flex flex-wrap gap-x-3 gap-y-0.5 text-sm tabular-nums sm:shrink-0 sm:justify-end">
             {DIRECTIONS.map((direction) => {
               const count = new Set(partner.matches.flatMap((match) => match[direction])).size;
               if (count === 0) return null;
               return <span key={direction}>{DIRECTION[direction].summary({ count })}</span>;
             })}
-          </div>
-        </div>
+          </span>
+        </span>
 
         <CaretRightIcon
           aria-hidden
-          className="text-muted-foreground size-4 shrink-0 transition-transform group-open:rotate-90"
+          className="text-muted-foreground size-4 shrink-0 transition-transform group-data-panel-open:rotate-90"
         />
-      </summary>
+      </CollapsibleTrigger>
 
-      <div className="flex flex-col gap-6 px-4 pt-1 pb-4">
-        {partner.matches.map((match) => (
-          <MatchBlock key={match.listId} match={match} collections={collections} onOpen={onOpen} />
-        ))}
-      </div>
-    </details>
+      {/* hiddenUntilFound: find-in-page still reaches a shut partner's matches */}
+      <CollapsiblePanel hiddenUntilFound>
+        <div className="flex flex-col gap-6 px-4 pt-1 pb-4">
+          {partner.matches.map((match) => (
+            <MatchBlock
+              key={match.listId}
+              match={match}
+              collections={collections}
+              onOpen={onOpen}
+            />
+          ))}
+        </div>
+      </CollapsiblePanel>
+    </Collapsible>
   );
 }
 
