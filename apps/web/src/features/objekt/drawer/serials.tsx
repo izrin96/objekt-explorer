@@ -18,9 +18,9 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { Timestamp } from "@/components/shared/timestamp";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Group } from "@/components/ui/group";
 import { NumberField, NumberFieldGroup, NumberFieldInput } from "@/components/ui/number-field";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { ProfileCell, ProfileLink } from "@/features/profile/profile-hover-card";
 import { truncateAddress } from "@/lib/address";
 import { cn } from "@/lib/utils";
@@ -75,7 +75,10 @@ export function toTimeline(rows: ObjektTransfer[]): TimelineEvent[] {
   });
 }
 
-type SerialScope = "all" | "spun" | "kept";
+const SCOPES = ["all", "spun", "kept"] as const;
+type SerialScope = (typeof SCOPES)[number];
+
+const isScope = (value: string): value is SerialScope => SCOPES.some((scope) => scope === value);
 
 const SCOPE_LABEL: Record<SerialScope, () => string> = {
   all: m.filter_all,
@@ -221,21 +224,27 @@ export function SerialsPanel({
         </Button>
       </div>
 
-      <Group aria-label={m.objekt_serial_scope_aria()}>
-        {(["all", "spun", "kept"] as const).map((value) => (
-          <Button
+      {/* single choice, so pressing the active scope again (an empty group) is ignored */}
+      <ToggleGroup
+        variant="outline"
+        size="sm"
+        aria-label={m.objekt_serial_scope_aria()}
+        value={[scope]}
+        onValueChange={([next]) => {
+          if (next !== undefined && isScope(next)) changeScope(next);
+        }}
+      >
+        {SCOPES.map((value) => (
+          <ToggleGroupItem
             key={value}
-            variant="outline"
-            size="xs"
-            aria-pressed={scope === value}
+            value={value}
             disabled={scopeEmpty[value] && scope !== value}
-            className="aria-pressed:bg-secondary aria-pressed:text-foreground text-muted-foreground"
-            onClick={() => changeScope(value)}
+            className="text-muted-foreground data-pressed:text-foreground h-7 sm:h-6 sm:text-xs"
           >
             {SCOPE_LABEL[value]()}
-          </Button>
+          </ToggleGroupItem>
         ))}
-      </Group>
+      </ToggleGroup>
 
       {children}
     </div>

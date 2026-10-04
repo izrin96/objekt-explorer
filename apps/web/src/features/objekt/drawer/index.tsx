@@ -18,10 +18,11 @@ import {
 import { Menu, MenuPopup, MenuTrigger } from "@/components/ui/menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsList, TabsPanel, TabsTab } from "@/components/ui/tabs";
+import { Toggle } from "@/components/ui/toggle";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import { formatTimestamp } from "@/lib/time";
 import { unobtainableSlugs } from "@/lib/unobtainables";
-import { cn, scrollXOnlyClass } from "@/lib/utils";
+import { scrollXOnlyClass } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import { ObjektFlip } from "../objekt-flip";
@@ -185,19 +186,16 @@ function DrawerBody({
         {(onToggleSelect || menu) && (
           <div className="flex shrink-0 items-center gap-1.5">
             {onToggleSelect && (
-              <Button
+              <Toggle
                 variant="outline"
-                size="icon-sm"
+                size="sm"
                 aria-label={isSelected ? m.objekt_deselect_aria() : m.objekt_select_aria()}
-                aria-pressed={isSelected}
-                onClick={() => onToggleSelect(objekt)}
-                className={cn(
-                  isSelected &&
-                    "bg-foreground text-background border-foreground hover:bg-foreground/90 dark:bg-foreground dark:hover:bg-foreground/90",
-                )}
+                pressed={isSelected}
+                onPressedChange={() => onToggleSelect(objekt)}
+                className="data-pressed:bg-foreground data-pressed:text-background data-pressed:border-foreground data-pressed:hover:bg-foreground/90 dark:data-pressed:bg-foreground dark:data-pressed:hover:bg-foreground/90"
               >
                 <CheckIcon weight="bold" />
-              </Button>
+              </Toggle>
             )}
             {menu && (
               <Menu>

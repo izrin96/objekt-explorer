@@ -1,7 +1,7 @@
 import { ArrowsLeftRightIcon, StackSimpleIcon } from "@phosphor-icons/react";
 import type { ReactNode } from "react";
 
-import { Button } from "@/components/ui/button";
+import { Toggle } from "@/components/ui/toggle";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
@@ -26,12 +26,12 @@ function FilterToggle({
   const setFilters = useSetFilters();
 
   return (
-    <Button
+    <Toggle
       variant="outline"
       size="sm"
-      aria-pressed={on}
-      className={cn("aria-pressed:border-foreground", className)}
-      onClick={() => setFilters({ [field]: on ? undefined : true })}
+      pressed={on}
+      onPressedChange={(pressed) => setFilters({ [field]: pressed ? true : undefined })}
+      className={cn("data-pressed:border-foreground", className)}
     >
       {/* the sheet stretches its controls with `justify-between`, which would
           otherwise throw the icon and its label to opposite edges */}
@@ -39,7 +39,7 @@ function FilterToggle({
         {icon}
         {label}
       </span>
-    </Button>
+    </Toggle>
   );
 }
 
