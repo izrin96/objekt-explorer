@@ -1,4 +1,4 @@
-import { ORPCError, onError } from "@orpc/server";
+import { ORPCError, ValidationError, onError } from "@orpc/server";
 import { RPCHandler } from "@orpc/server/fetch";
 import { BatchHandlerPlugin } from "@orpc/server/plugins";
 import { router } from "@repo/api";
@@ -8,11 +8,30 @@ import { apiMessages } from "@/lib/api-messages";
 
 const handler = new RPCHandler(router, {
   interceptors: [
-    onError((error) => {
-      console.error("ORPC Internal Error:", error);
-      if (error instanceof ORPCError && error.cause) {
-        console.error("Underlying cause:", error.cause);
+    onError((error, { request }) => {
+      const where = `${request.method} ${request.url.pathname}`;
+      const ua = request.headers["user-agent"];
+
+      if (error instanceof SyntaxError) {
+        console.error("ORPC malformed input:", where, {
+          data: request.url.searchParams.get("data")?.slice(0, 500),
+          contentType: request.headers["content-type"],
+          contentLength: request.headers["content-length"],
+          ua,
+        });
+        return;
       }
+
+      if (error instanceof ORPCError && error.cause instanceof ValidationError) {
+        console.error("ORPC input validation:", where, {
+          issues: error.cause.issues,
+          input: error.cause.data,
+          ua,
+        });
+        return;
+      }
+
+      console.error("ORPC error:", where, error, error instanceof ORPCError ? error.cause : "");
     }),
   ],
   plugins: [new BatchHandlerPlugin()],
