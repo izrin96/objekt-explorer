@@ -1,7 +1,7 @@
+import { ORPCError } from "@orpc/client";
 import { UserIcon } from "@phosphor-icons/react";
-import type { CosmoPublicUser, CosmoSearchResult } from "@repo/cosmo/types/user";
+import type { CosmoPublicUser } from "@repo/cosmo/types/user";
 import { useQuery } from "@tanstack/react-query";
-import { FetchError, ofetch } from "ofetch";
 import { useState } from "react";
 
 import { EmptyState } from "@/components/shared/empty-state";
@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDebouncedCallback } from "@/hooks/use-debounced-callback";
 import { truncateAddress } from "@/lib/address";
+import { client } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
@@ -23,19 +24,13 @@ export function useUserSearch(initialQuery = "") {
 
   const { data, error, isFetching } = useQuery({
     queryKey: ["user-search", trimmed],
-    queryFn: () =>
-      ofetch<CosmoSearchResult>("/api/user/search", { query: { query: trimmed } }).then(
-        (res) => res.results,
-      ),
+    queryFn: () => client.user.search({ query: trimmed }).then((res) => res.results),
     enabled: trimmed.length > 0,
     retry: false,
   });
 
   // a rate limit is an answer, not a blank list: show what the server said
-  const serverError =
-    error instanceof FetchError
-      ? ((error.data as { error?: string } | undefined)?.error ?? error.message)
-      : null;
+  const serverError = error instanceof ORPCError ? error.message : null;
 
   // the debounce wait counts as searching too, or the empty state flashes
   // "no users match" against every keystroke before the request even starts

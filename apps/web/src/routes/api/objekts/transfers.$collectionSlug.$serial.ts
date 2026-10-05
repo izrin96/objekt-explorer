@@ -1,14 +1,5 @@
-import type { ObjektTransferResult } from "@repo/api/schemas/objekt";
-import { getSession } from "@repo/api/services/auth";
-import { db } from "@repo/db";
-import { indexer } from "@repo/db/indexer";
-import { collections, objekts, transfers } from "@repo/db/indexer/schema";
-import { Addresses } from "@repo/lib";
-import { fetchPublicNicknames, fetchUserProfiles } from "@repo/lib/server/user";
+import { fetchSerialTransfers } from "@repo/api/services/collection";
 import { createFileRoute } from "@tanstack/react-router";
-import { and, desc, eq } from "drizzle-orm";
-
-import { isSameAddress } from "@/lib/address";
 
 export const Route = createFileRoute("/api/objekts/transfers/$collectionSlug/$serial")({
   server: {
@@ -19,82 +10,7 @@ export const Route = createFileRoute("/api/objekts/transfers/$collectionSlug/$se
           return Response.json({ message: "Invalid serial" }, { status: 422 });
         }
 
-        if (serial < 1)
-          return Response.json({
-            transfers: [],
-          } satisfies ObjektTransferResult);
-
-        const [session, results] = await Promise.all([
-          getSession(),
-          indexer
-            .select({
-              tokenId: objekts.id,
-              id: transfers.id,
-              to: transfers.to,
-              timestamp: transfers.timestamp,
-              owner: objekts.owner,
-              transferable: objekts.transferable,
-            })
-            .from(transfers)
-            .innerJoin(objekts, eq(transfers.objektId, objekts.id))
-            .innerJoin(collections, eq(objekts.collectionId, collections.id))
-            .where(and(eq(collections.slug, params.collectionSlug), eq(objekts.serial, serial)))
-            .orderBy(desc(transfers.timestamp), desc(transfers.id)),
-        ]);
-
-        const [result] = results;
-        if (!result)
-          return Response.json({
-            transfers: [],
-          } satisfies ObjektTransferResult);
-
-        const owner = await db.query.userAddress.findFirst({
-          where: { address: result.owner },
-          columns: {
-            privateSerial: true,
-          },
-          orderBy: {
-            id: "desc",
-          },
-        });
-
-        const isPrivate = owner?.privateSerial ?? false;
-
-        if (!session && isPrivate)
-          return Response.json({
-            hide: true,
-            transfers: [],
-          } satisfies ObjektTransferResult);
-
-        if (session && isPrivate) {
-          const profiles = await fetchUserProfiles(session.user.id);
-
-          const isProfileAuthed = profiles.some((a) => isSameAddress(a.address, result.owner));
-
-          if (!isProfileAuthed)
-            return Response.json({
-              hide: true,
-              transfers: [],
-            } satisfies ObjektTransferResult);
-        }
-
-        const nicknameOf = await fetchPublicNicknames(
-          Array.from(new Set(results.map((r) => r.to))),
-        );
-
-        const isSpin = result.owner.toLowerCase() === Addresses.SPIN;
-
-        return Response.json({
-          tokenId: result.tokenId,
-          owner: result.owner,
-          transferable: isSpin ? false : result.transferable,
-          transfers: results.map((result) => ({
-            id: result.id,
-            to: result.to,
-            timestamp: new Date(result.timestamp).toISOString(),
-            nickname: nicknameOf(result.to),
-          })),
-        } satisfies ObjektTransferResult);
+        return Response.json(await fetchSerialTransfers(params.collectionSlug, serial));
       },
     },
   },

@@ -41,6 +41,7 @@ import { Route as containerLiveIdRouteImport } from './routes/(container)/live/$
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth.$'
 import { Route as ApiTransfersAddressRouteImport } from './routes/api/transfers.$address'
 import { Route as ApiUserSearchRouteImport } from './routes/api/user.search'
+import { Route as ApiV1SplatRouteImport } from './routes/api/v1.$'
 import { Route as containerAtChar123nicknameChar125ListSlugRouteImport } from './routes/(container)/@{$nickname}_/list.$slug'
 import { Route as ApiObjektsHeldByAddressRouteImport } from './routes/api/objekts/held-by.$address'
 import { Route as ApiObjektsListCollectionSlugRouteImport } from './routes/api/objekts/list.$collectionSlug'
@@ -215,6 +216,11 @@ const ApiUserSearchRoute = ApiUserSearchRouteImport.update({
   path: '/api/user/search',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiV1SplatRoute = ApiV1SplatRouteImport.update({
+  id: '/api/v1/$',
+  path: '/api/v1/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const containerAtChar123nicknameChar125ListSlugRoute =
   containerAtChar123nicknameChar125ListSlugRouteImport.update({
     id: '/@{$nickname}_/list/$slug',
@@ -280,6 +286,7 @@ export interface FileRoutesByFullPath {
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/transfers/$address': typeof ApiTransfersAddressRoute
   '/api/user/search': typeof ApiUserSearchRoute
+  '/api/v1/$': typeof ApiV1SplatRoute
   '/link/': typeof containerLinkIndexRoute
   '/list/': typeof containerListIndexRoute
   '/live/': typeof containerLiveIndexRoute
@@ -318,6 +325,7 @@ export interface FileRoutesByTo {
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/transfers/$address': typeof ApiTransfersAddressRoute
   '/api/user/search': typeof ApiUserSearchRoute
+  '/api/v1/$': typeof ApiV1SplatRoute
   '/link': typeof containerLinkIndexRoute
   '/list': typeof containerListIndexRoute
   '/live': typeof containerLiveIndexRoute
@@ -359,6 +367,7 @@ export interface FileRoutesById {
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/transfers/$address': typeof ApiTransfersAddressRoute
   '/api/user/search': typeof ApiUserSearchRoute
+  '/api/v1/$': typeof ApiV1SplatRoute
   '/(container)/link/': typeof containerLinkIndexRoute
   '/(container)/list/': typeof containerListIndexRoute
   '/(container)/live/': typeof containerLiveIndexRoute
@@ -400,6 +409,7 @@ export interface FileRouteTypes {
     | '/api/auth/$'
     | '/api/transfers/$address'
     | '/api/user/search'
+    | '/api/v1/$'
     | '/link/'
     | '/list/'
     | '/live/'
@@ -438,6 +448,7 @@ export interface FileRouteTypes {
     | '/api/auth/$'
     | '/api/transfers/$address'
     | '/api/user/search'
+    | '/api/v1/$'
     | '/link'
     | '/list'
     | '/live'
@@ -478,6 +489,7 @@ export interface FileRouteTypes {
     | '/api/auth/$'
     | '/api/transfers/$address'
     | '/api/user/search'
+    | '/api/v1/$'
     | '/(container)/link/'
     | '/(container)/list/'
     | '/(container)/live/'
@@ -503,6 +515,7 @@ export interface RootRouteChildren {
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiTransfersAddressRoute: typeof ApiTransfersAddressRoute
   ApiUserSearchRoute: typeof ApiUserSearchRoute
+  ApiV1SplatRoute: typeof ApiV1SplatRoute
   ApiObjektsHeldByAddressRoute: typeof ApiObjektsHeldByAddressRoute
   ApiObjektsListCollectionSlugRoute: typeof ApiObjektsListCollectionSlugRoute
   ApiObjektsMetadataCollectionSlugRoute: typeof ApiObjektsMetadataCollectionSlugRoute
@@ -736,6 +749,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiUserSearchRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/v1/$': {
+      id: '/api/v1/$'
+      path: '/api/v1/$'
+      fullPath: '/api/v1/$'
+      preLoaderRoute: typeof ApiV1SplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/(container)/@{$nickname}_/list/$slug': {
       id: '/(container)/@{$nickname}_/list/$slug'
       path: '/@{$nickname}/list/$slug'
@@ -860,6 +880,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiTransfersAddressRoute: ApiTransfersAddressRoute,
   ApiUserSearchRoute: ApiUserSearchRoute,
+  ApiV1SplatRoute: ApiV1SplatRoute,
   ApiObjektsHeldByAddressRoute: ApiObjektsHeldByAddressRoute,
   ApiObjektsListCollectionSlugRoute: ApiObjektsListCollectionSlugRoute,
   ApiObjektsMetadataCollectionSlugRoute: ApiObjektsMetadataCollectionSlugRoute,

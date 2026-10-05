@@ -1,15 +1,37 @@
 import { ORPCError } from "@orpc/server";
 import { db } from "@repo/db";
 import { user as userSchema } from "@repo/db/auth-schema";
+import { getRequestHeaders } from "@tanstack/react-start/server";
 import { eq } from "drizzle-orm";
 import * as z from "zod";
 
 import { authed, pub } from "../orpc";
 import { providerIdSchema, providersMap } from "../schemas/user";
 import { auth, getProviderUsername } from "../services/auth";
+import { isIpRateLimited } from "../services/redis";
 import { getCurrentUser } from "../services/user";
+import { MAX_USER_SEARCH_LENGTH, searchUsers } from "../services/user-search";
 
 export const userRouter = {
+  search: pub
+    .route({
+      method: "GET",
+      path: "/users/search",
+      tags: ["Users"],
+      summary: "Find Cosmo users by nickname",
+    })
+    .input(z.object({ query: z.string().default("") }))
+    .handler(async ({ input: { query }, context }) => {
+      if (query.length < 1) return searchUsers(query);
+      if (query.length > MAX_USER_SEARCH_LENGTH) {
+        throw new ORPCError("BAD_REQUEST", { message: "Query too long" });
+      }
+      if (await isIpRateLimited("user-search", context.headers ?? getRequestHeaders())) {
+        throw new ORPCError("TOO_MANY_REQUESTS");
+      }
+      return searchUsers(query);
+    }),
+
   refreshProfile: authed.input(providerIdSchema).handler(
     async ({
       input: providerId,

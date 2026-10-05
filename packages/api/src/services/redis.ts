@@ -41,3 +41,17 @@ export async function rateLimit(key: string, windowSeconds: number): Promise<num
   }
   return attempts;
 }
+
+const IP_RATE_LIMIT = 30;
+const IP_RATE_WINDOW_SECONDS = 60;
+
+/**
+ * A best-effort per-IP limit protecting the upstream Cosmo API. Traefik
+ * overwrites x-real-ip with the peer address; any other header arrives as the
+ * client wrote it.
+ */
+export async function isIpRateLimited(scope: string, headers: Headers): Promise<boolean> {
+  const ip = headers.get("x-real-ip") ?? "unknown";
+  const attempts = await rateLimit(`${scope}:rl:${ip}`, IP_RATE_WINDOW_SECONDS);
+  return attempts > IP_RATE_LIMIT;
+}

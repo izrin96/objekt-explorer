@@ -4,6 +4,7 @@ import * as z from "zod";
 
 import { artistsArraySchema } from "./artist";
 import { checkpointSchema } from "./checkpoint";
+import { queryArray } from "./query";
 
 const partialTransferSchema = z.object({
   id: z.string(),
@@ -37,15 +38,15 @@ export type TransferResult = z.infer<typeof transferResultSchema>;
 export const validType = ["all", "mint", "received", "sent", "spin"] as const;
 export type ValidType = (typeof validType)[number];
 
-/** `GET /api/transfers/$address` search params; the cursor travels as JSON */
+/** an address's transfers input; the legacy `GET /api/transfers/$address` sends the cursor as JSON */
 export const transfersQuerySchema = z.object({
   type: z.enum(validType).default("all"),
-  artist: artistsArraySchema,
-  member: z.string().array(),
-  season: z.string().array(),
-  class: z.string().array(),
-  on_offline: z.enum(validOnlineTypes).array(),
-  collection: z.string().array(),
+  artist: artistsArraySchema.default([]),
+  member: queryArray(z.string()).default([]),
+  season: queryArray(z.string()).default([]),
+  class: queryArray(z.string()).default([]),
+  on_offline: queryArray(z.enum(validOnlineTypes)).default([]),
+  collection: queryArray(z.string()).default([]),
   at: checkpointSchema.optional(),
   cursor: transferCursorSchema.optional(),
 });

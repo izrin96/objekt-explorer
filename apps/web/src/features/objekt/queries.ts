@@ -1,15 +1,10 @@
 import type { SortBy, SortDir } from "@repo/api/schemas/market";
-import type {
-  CollectionMetadata,
-  CollectionResult,
-  ObjektTransferResult,
-  SerialList,
-} from "@repo/api/schemas/objekt";
+import type { CollectionResult } from "@repo/api/schemas/objekt";
 import type { OwnedBySchema } from "@repo/api/schemas/owned-by";
 import { keepPreviousData, queryOptions } from "@tanstack/react-query";
 import { ofetch } from "ofetch";
 
-import { orpc } from "@/lib/orpc";
+import { client, orpc } from "@/lib/orpc";
 
 import { mapObjektWithTag } from "./objekt-utils";
 
@@ -20,7 +15,8 @@ export const collectionOptions = (filters?: OwnedBySchema) =>
     staleTime: Infinity,
     refetchOnWindowFocus: false,
     queryFn: async () => {
-      const result = await ofetch<CollectionResult>("/api/collection", {
+      // plain GET rather than RPC, so the browser revalidates its cached copy with Last-Modified
+      const result = await ofetch<CollectionResult>("/api/v1/collections", {
         query: { ...filters },
       }).then((response) => response.collections);
 
@@ -32,21 +28,22 @@ export const collectionOptions = (filters?: OwnedBySchema) =>
 export const collectionMetadataOptions = (slug: string) =>
   queryOptions({
     queryKey: ["objekts", "metadata", slug],
-    queryFn: () => ofetch<CollectionMetadata>(`/api/objekts/metadata/${slug}`),
+    queryFn: () => client.collections.metadata({ collectionSlug: slug }),
     staleTime: 1000 * 60,
   });
 
 export const serialListOptions = (slug: string) =>
   queryOptions({
     queryKey: ["objekts", "list", slug],
-    queryFn: () => ofetch<SerialList>(`/api/objekts/list/${slug}`),
+    queryFn: () => client.collections.serials({ collectionSlug: slug }),
     staleTime: 1000 * 60,
   });
 
 export const transfersOptions = (slug: string, serial: number | null) =>
   queryOptions({
     queryKey: ["objekts", "transfers", slug, serial],
-    queryFn: () => ofetch<ObjektTransferResult>(`/api/objekts/transfers/${slug}/${serial}`),
+    queryFn: () =>
+      client.collections.serialTransfers({ collectionSlug: slug, serial: serial ?? 0 }),
     enabled: serial !== null && serial > 0,
     retry: 1,
     staleTime: 0,

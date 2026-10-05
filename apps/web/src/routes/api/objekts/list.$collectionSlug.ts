@@ -1,29 +1,10 @@
-import type { SerialList } from "@repo/api/schemas/objekt";
-import { indexer } from "@repo/db/indexer";
-import { collections, objekts } from "@repo/db/indexer/schema";
-import { Addresses } from "@repo/lib";
+import { fetchSerialList } from "@repo/api/services/collection";
 import { createFileRoute } from "@tanstack/react-router";
-import { and, asc, eq, ne } from "drizzle-orm";
 
 export const Route = createFileRoute("/api/objekts/list/$collectionSlug")({
   server: {
     handlers: {
-      GET: async ({ params }) => {
-        const results = await indexer
-          .select({
-            serial: objekts.serial,
-            owner: objekts.owner,
-          })
-          .from(objekts)
-          .innerJoin(collections, eq(objekts.collectionId, collections.id))
-          .where(and(eq(collections.slug, params.collectionSlug), ne(objekts.serial, 0)))
-          .orderBy(asc(objekts.serial));
-
-        return Response.json({
-          serials: results.map((a) => a.serial),
-          spun: results.filter((a) => a.owner === Addresses.SPIN).map((a) => a.serial),
-        } satisfies SerialList);
-      },
+      GET: async ({ params }) => Response.json(await fetchSerialList(params.collectionSlug)),
     },
   },
 });
