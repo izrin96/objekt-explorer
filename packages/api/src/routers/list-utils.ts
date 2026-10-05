@@ -5,6 +5,7 @@ import { sql } from "drizzle-orm";
 import * as z from "zod";
 
 import { authed, pub } from "../orpc";
+import { errorResponses } from "../schemas/common/documented";
 import {
   generateDiscordFormatInputSchema,
   listEntriesInputSchema,
@@ -77,6 +78,7 @@ export const listUtils = {
       path: "/lists/{slug}/export",
       tags: ["Lists"],
       summary: "A list's entries as a CSV file",
+      spec: errorResponses(400, 404),
     })
     .input(listEntriesInputSchema)
     .output(z.file().mime("text/csv"))

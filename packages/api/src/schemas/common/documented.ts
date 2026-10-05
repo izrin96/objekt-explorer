@@ -1,3 +1,4 @@
+import type { Route } from "@orpc/server";
 import { JSON_SCHEMA_OUTPUT_REGISTRY } from "@orpc/zod/zod4";
 import * as z from "zod";
 
@@ -26,4 +27,48 @@ export function documented<T extends z.ZodType>(schema: T, options?: { open?: bo
     not: undefined,
   } as never);
   return wrapper;
+}
+
+type OperationObject = Exclude<NonNullable<Route["spec"]>, (...args: never) => unknown>;
+
+const errorDescriptions = {
+  400: "Invalid input",
+  404: "Not found",
+  429: "Too many requests",
+} as const;
+
+/** The body oRPC sends for an error it raises without a declared `.errors()` entry. */
+const errorBodySchema = {
+  type: "object",
+  properties: {
+    defined: { type: "boolean" },
+    code: { type: "string" },
+    status: { type: "integer" },
+    message: { type: "string" },
+    data: {},
+  },
+  required: ["defined", "code", "status", "message"],
+};
+
+/**
+ * A route `spec` that documents the error statuses an operation can return. It changes
+ * only the document; declaring `.errors()` instead would also mark those errors as
+ * defined at runtime.
+ */
+export function errorResponses(...statuses: (keyof typeof errorDescriptions)[]) {
+  return (current: OperationObject): OperationObject => ({
+    ...current,
+    responses: {
+      ...current.responses,
+      ...(Object.fromEntries(
+        statuses.map((status) => [
+          status,
+          {
+            description: errorDescriptions[status],
+            content: { "application/json": { schema: errorBodySchema } },
+          },
+        ]),
+      ) as OperationObject["responses"]),
+    },
+  });
 }

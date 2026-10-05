@@ -55,7 +55,6 @@ export const openApiRouter = {
     findPublic: listRouter.findPublic,
     listEntries: listRouter.listEntries,
     export: listRouter.export,
-    profileLists: listRouter.profileLists,
   },
   config: { getArtists: configRouter.getArtists, getFilterData: configRouter.getFilterData },
 };

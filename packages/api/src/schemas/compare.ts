@@ -11,7 +11,6 @@ export const compareInputSchema = z.object({
   targetProfile: z.string().optional(),
   targetListId: z.string().optional(),
   mode: modeSchema,
-  /** an omitted `artist` means every artist */
   artist: artistsArraySchema.default([]),
 });
 

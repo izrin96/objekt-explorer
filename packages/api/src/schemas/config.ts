@@ -1,8 +1,8 @@
 import type { CosmoArtistWithMembersBFF } from "@repo/cosmo/types/artists";
-import { validArtists } from "@repo/cosmo/types/common";
 import * as z from "zod";
 
-const artistIdSchema = z.enum(validArtists);
+import { artistIdSchema } from "./common/artist";
+
 const snsLinkSchema = z.object({ name: z.string(), address: z.string() });
 
 const artistMemberSchema = z.object({

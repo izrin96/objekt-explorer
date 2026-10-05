@@ -14,7 +14,7 @@ import {
   serialTransfersOutputSchema,
 } from "../schemas/collections";
 import { collectionSlugInputSchema } from "../schemas/common/collection";
-import { documented } from "../schemas/common/documented";
+import { documented, errorResponses } from "../schemas/common/documented";
 import {
   fetchCollectionList,
   fetchCollectionMetadata,
@@ -53,6 +53,7 @@ export const collectionsRouter = {
       path: "/collections/{collectionSlug}/holders",
       tags: ["Collections"],
       summary: "Who holds a collection, ranked by copies",
+      spec: errorResponses(400),
     })
     .input(holdersInputSchema)
     .output(documented(holdersOutputSchema))
@@ -66,6 +67,7 @@ export const collectionsRouter = {
       tags: ["Collections"],
       summary: "Every collection, newest first",
       outputStructure: "detailed",
+      spec: errorResponses(400),
     })
     .input(collectionListInputSchema)
     .output(collectionListOutput)
@@ -119,6 +121,7 @@ export const collectionsRouter = {
       path: "/collections/{collectionSlug}/serials/{serial}/transfers",
       tags: ["Collections"],
       summary: "One serial's transfer history",
+      spec: errorResponses(400),
     })
     .input(serialTransfersInputSchema)
     .output(documented(serialTransfersOutputSchema))

@@ -1,7 +1,7 @@
 import { ORPCError } from "@orpc/server";
 
 import { pub } from "../orpc";
-import { documented } from "../schemas/common/documented";
+import { documented, errorResponses } from "../schemas/common/documented";
 import {
   heldByInputSchema,
   ownedByInputSchema,
@@ -17,6 +17,7 @@ export const objektsRouter = {
       path: "/objekts/owned-by/{address}",
       tags: ["Objekts"],
       summary: "Objekts an address owns, newest received first",
+      spec: errorResponses(400),
     })
     .input(ownedByInputSchema)
     .output(documented(ownedByOutputSchema))
@@ -35,6 +36,7 @@ export const objektsRouter = {
       path: "/objekts/held-by/{address}",
       tags: ["Objekts"],
       summary: "Copies an address holds, counted per collection",
+      spec: errorResponses(400),
     })
     .input(heldByInputSchema)
     .output(documented(heldByOutputSchema))

@@ -5,7 +5,7 @@ import { getRequestHeaders } from "@tanstack/react-start/server";
 import { eq } from "drizzle-orm";
 
 import { authed, pub } from "../orpc";
-import { documented } from "../schemas/common/documented";
+import { documented, errorResponses } from "../schemas/common/documented";
 import {
   providerIdSchema,
   providersMap,
@@ -25,6 +25,7 @@ export const userRouter = {
       path: "/users/search",
       tags: ["Users"],
       summary: "Find Cosmo users by nickname",
+      spec: errorResponses(400, 429),
     })
     .input(userSearchInputSchema)
     .output(documented(userSearchOutputSchema, { open: true }))

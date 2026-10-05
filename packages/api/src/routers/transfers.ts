@@ -1,5 +1,5 @@
 import { pub } from "../orpc";
-import { documented } from "../schemas/common/documented";
+import { documented, errorResponses } from "../schemas/common/documented";
 import { addressTransfersInputSchema, addressTransfersOutputSchema } from "../schemas/transfers";
 import { fetchAddressTransfers } from "../services/transfers";
 
@@ -10,6 +10,7 @@ export const transfersRouter = {
       path: "/transfers/{address}",
       tags: ["Transfers"],
       summary: "Transfers to and from an address",
+      spec: errorResponses(400),
     })
     .input(addressTransfersInputSchema)
     .output(documented(addressTransfersOutputSchema))

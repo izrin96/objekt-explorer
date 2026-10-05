@@ -4,14 +4,13 @@ import { listEntries } from "@repo/db/schema";
 import { and, eq, inArray } from "drizzle-orm";
 
 import { authed, optionalAuthed, pub } from "../orpc";
-import { documented } from "../schemas/common/documented";
+import { documented, errorResponses } from "../schemas/common/documented";
 import {
   addToListInputSchema,
   listEntriesInputSchema,
   listEntriesOutputSchema,
   listPreviewsInputSchema,
   profileListsInputSchema,
-  profileListsOutputSchema,
   removeObjektsFromListInputSchema,
 } from "../schemas/list";
 import {
@@ -19,10 +18,9 @@ import {
   buildListEntries,
   fetchListPreviews,
   fetchListWithEntries,
-  fetchOwnedLists,
+  fetchProfileLists,
   findOwnedList,
 } from "../services/list";
-import { isProfileHidden } from "../services/privacy";
 
 export const listEntriesRouter = {
   listEntries: pub
@@ -31,6 +29,7 @@ export const listEntriesRouter = {
       path: "/lists/{slug}/entries",
       tags: ["Lists"],
       summary: "A list's objekts, with their price and note",
+      spec: errorResponses(400, 404),
     })
     .input(listEntriesInputSchema)
     .output(documented(listEntriesOutputSchema))
@@ -51,28 +50,10 @@ export const listEntriesRouter = {
     .handler(({ input: { slugs } }) => fetchListPreviews(slugs)),
 
   profileLists: optionalAuthed
-    .route({
-      method: "GET",
-      path: "/profiles/{profileAddress}/lists",
-      tags: ["Profiles"],
-      summary: "A profile's lists",
-    })
     .input(profileListsInputSchema)
-    .output(documented(profileListsOutputSchema))
-    .handler(async ({ input: { profileAddress }, context: { session } }) => {
-      const owner = await db.query.userAddress.findFirst({
-        columns: { privateProfile: true, userId: true },
-        where: { address: profileAddress },
-      });
-
-      // Hide lists entirely for private profiles unless the requester owns
-      // the profile.
-      if (owner && isProfileHidden(owner, session?.user.id)) {
-        return [];
-      }
-
-      return await fetchOwnedLists("profileAddress", profileAddress);
-    }),
+    .handler(({ input: { profileAddress }, context: { session } }) =>
+      fetchProfileLists(profileAddress, session?.user.id),
+    ),
 
   addToList: authed.input(addToListInputSchema).handler(
     async ({

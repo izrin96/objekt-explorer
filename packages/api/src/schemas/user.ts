@@ -1,8 +1,8 @@
-import { validArtists } from "@repo/cosmo/types/common";
 import type { CosmoSearchResult } from "@repo/cosmo/types/user";
 import * as z from "zod";
 
 import type { User } from "../services/auth";
+import { artistIdSchema } from "./common/artist";
 import { publicListSchema } from "./list";
 import { baseProfileSchema } from "./profile";
 
@@ -44,8 +44,8 @@ export const updateAccountInputSchema = z.object({
 });
 
 const cosmoProfileSchema = z.object({
-  artistId: z.enum(validArtists),
-  artistName: z.enum(validArtists),
+  artistId: artistIdSchema,
+  artistName: artistIdSchema,
   image: z.object({ original: z.string(), thumbnail: z.string() }),
 });
 

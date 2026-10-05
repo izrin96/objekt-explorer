@@ -45,7 +45,7 @@ const listEntryFields = {
   note: z.string().nullable(),
 };
 
-export const listObjektSchema = z.union([
+const listObjektSchema = z.union([
   ownedObjektSchema.extend(listEntryFields),
   indexedObjektSchema.extend(listEntryFields),
 ]) satisfies z.ZodType<ListObjekt>;
@@ -91,7 +91,6 @@ export type TradePartner = z.infer<typeof tradePartnerSchema>;
 
 export const listSlugInputSchema = z.object({ slug: z.string() });
 
-/** an omitted `artist` means every artist */
 export const listEntriesInputSchema = listSlugInputSchema.extend({
   artist: artistsArraySchema.default([]),
 });

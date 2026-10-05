@@ -45,7 +45,7 @@ export const listCrud = {
     .input(listSlugInputSchema)
     .output(documented(findPublicOutputSchema))
     .handler(async ({ input: { slug } }) => {
-      return fetchList({ slug: slug });
+      return fetchList({ slug });
     }),
 
   create: authed.input(createListInputSchema).handler(

@@ -8,11 +8,13 @@ export function toCanonicalArtist(value: string) {
   return Object.values(validArtists).find((v) => v.toLowerCase() === lower) ?? lower;
 }
 
+export const artistIdSchema = z.enum(validArtists);
+
 /** Case-insensitive single artist enum. */
-export const artistSchema = z.string().transform(toCanonicalArtist).pipe(z.enum(validArtists));
+export const artistSchema = z.string().transform(toCanonicalArtist).pipe(artistIdSchema);
 
 /** Case-insensitive artist array enum. */
 export const artistsArraySchema = queryArray(z.string())
   .pipe(z.array(z.string()).max(10))
   .transform((arr) => arr.map(toCanonicalArtist))
-  .pipe(z.array(z.enum(validArtists)));
+  .pipe(z.array(artistIdSchema));

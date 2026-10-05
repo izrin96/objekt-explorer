@@ -14,6 +14,7 @@ import slugify from "slugify";
 import { OBJEKT_PREVIEW_SIZE } from "../constants";
 import type { AddSource, ListPreview, ListTypeNew, PublicList } from "../schemas/list";
 import { getCollectionColumns, getPartialCollectionColumns } from "./objekt";
+import { isProfileHidden } from "./privacy";
 import { toPublicUser } from "./profile";
 import { TOKEN_CHUNK_SIZE } from "./utils";
 
@@ -290,6 +291,20 @@ export async function fetchOwnedLists(
         : null,
     };
   });
+}
+
+export async function fetchProfileLists(
+  profileAddress: string,
+  viewerId: string | undefined,
+): Promise<PublicList[]> {
+  const owner = await db.query.userAddress.findFirst({
+    columns: { privateProfile: true, userId: true },
+    where: { address: profileAddress },
+  });
+
+  if (owner && isProfileHidden(owner, viewerId)) return [];
+
+  return fetchOwnedLists("profileAddress", profileAddress);
 }
 
 /** Each list's entry count and its latest few artworks, newest first. */

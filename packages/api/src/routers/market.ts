@@ -7,7 +7,7 @@ import { and, asc, desc, eq, inArray, isNotNull, sql } from "drizzle-orm";
 
 import { pub } from "../orpc";
 import { collectionSlugInputSchema } from "../schemas/common/collection";
-import { documented } from "../schemas/common/documented";
+import { documented, errorResponses } from "../schemas/common/documented";
 import {
   type MarketListing,
   type MarketListingsOutput,
@@ -121,6 +121,7 @@ export const marketRouter = {
       path: "/market/{collectionSlug}/listings",
       tags: ["Market"],
       summary: "One collection's listings, by price or by date",
+      spec: errorResponses(400),
     })
     .input(marketListingsInputSchema)
     .output(documented(marketListingsOutputSchema))

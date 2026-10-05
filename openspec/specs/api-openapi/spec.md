@@ -16,7 +16,7 @@ request and response contracts third-party clients build against.
 `/objekts/held-by/{address}`, `/transfers/{address}`, `/users/search`, `/live-sessions`,
 `/market`, `/market/rates`, `/market/{collectionSlug}/listings`,
 `/market/{collectionSlug}/stats`, `/profiles/{address}`, `/profiles/{address}/pins`,
-`/profiles/{address}/locked-objekts`, `/profiles/{profileAddress}/lists` and `/status`.
+`/profiles/{address}/locked-objekts`, `/profiles/{address}/lists` and `/status`.
 No procedure that writes data or needs a signed-in account SHALL be reachable under
 `/api/v1`.
 
@@ -41,13 +41,20 @@ document.
 
 ### Requirement: Documented response bodies
 Every public operation in the document SHALL describe its success response body with a
-schema naming that body's fields. `/collections` SHALL document both its 200 response and
-its 304 response to a conditional request.
+schema naming that body's fields, and SHALL list each error status it can return (400 for
+invalid input, 404 for an unknown resource, 429 when rate limited) with the error body.
+`/collections` SHALL document both its 200 response and its 304 response to a conditional
+request.
 
 #### Scenario: Owned-by response is described
 - **WHEN** a client reads the `GET /objekts/owned-by/{address}` operation in the document
 - **THEN** its 200 response schema names `objekts`, `nextCursor` and `total`, and each
   objekt's fields, instead of an empty schema
+
+#### Scenario: Error statuses are described
+- **WHEN** a client reads the `GET /lists/{slug}/entries` operation in the document
+- **THEN** besides its 200 response it documents 400 and 404, each with a body naming
+  `defined`, `code`, `status` and `message`
 
 #### Scenario: Collection list revalidation is described
 - **WHEN** a client reads the `GET /collections` operation in the document

@@ -16,7 +16,7 @@ export const configRouter = {
     .route({
       method: "GET",
       path: "/filters",
-      tags: ["Artists"],
+      tags: ["Filters"],
       summary: "The seasons, classes and collection numbers the filters offer",
     })
     .output(documented(filterDataOutputSchema))
