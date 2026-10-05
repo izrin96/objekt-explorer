@@ -4,9 +4,11 @@ import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
+import { Input } from "@/components/ui/input";
 import { Popover, PopoverPopup, PopoverTitle, PopoverTrigger } from "@/components/ui/popover";
 import { useFilters, useSetFilters } from "@/features/filters/use-filters";
 import { formatTimestamp } from "@/lib/time";
+import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 /** the `at` parameter is an instant; a checkpoint defaults to "the end of that day" */
@@ -19,6 +21,9 @@ export function checkpointDate(at: string | undefined): Date | undefined {
 /** Cosmo's chain history starts here, so an earlier snapshot is always empty */
 const EARLIEST = new Date(2022, 7, 1);
 const END_OF_DAY_TIME = "23:59:59";
+/** Safari centres a date or time value unless its inner field is told otherwise */
+const dateTimeClass =
+  "font-mono [&_input]:appearance-none [&_input::-webkit-date-and-time-value]:text-left";
 
 /** the day alone for the default end-of-day instant, the time as well when one was picked */
 export function formatCheckpoint(date: Date): string {
@@ -82,7 +87,7 @@ export function CheckpointPopover() {
             <PopoverTitle className="mb-2 text-sm font-medium">
               {m.checkpoint_description()}
             </PopoverTitle>
-            <input
+            <Input
               type="date"
               aria-label={m.profile_checkpoint_date_label()}
               value={draft ? format(draft, "yyyy-MM-dd") : ""}
@@ -93,7 +98,7 @@ export function CheckpointPopover() {
                 setDraft(next);
                 if (next) setMonth(next);
               }}
-              className="bg-background focus-visible:ring-ring mb-2 block h-8 w-full min-w-0 appearance-none rounded-lg border px-2.5 text-left font-mono text-base outline-none focus-visible:ring-2 sm:text-sm [&::-webkit-date-and-time-value]:text-left"
+              className={cn("mb-2", dateTimeClass)}
             />
             <Calendar
               mode="single"
@@ -105,13 +110,13 @@ export function CheckpointPopover() {
               startMonth={EARLIEST}
               className="p-0"
             />
-            <input
+            <Input
               type="time"
               step={1}
               aria-label={m.profile_checkpoint_time_label()}
               value={time}
               onChange={(event) => setTime(event.target.value)}
-              className="bg-background focus-visible:ring-ring mt-2 block h-8 w-full min-w-0 appearance-none rounded-lg border px-2.5 text-left font-mono text-base outline-none focus-visible:ring-2 sm:text-sm [&::-webkit-date-and-time-value]:text-left"
+              className={cn("mt-2", dateTimeClass)}
             />
             <div className="mt-2 flex justify-end gap-1.5">
               <Button
