@@ -47,7 +47,8 @@ export async function fetchOwnedObjekts(
 ): Promise<OwnedByOutput> {
   const addr = address.toLowerCase();
 
-  if (await isAddressHiddenFromCaller(addr)) {
+  // a snapshot's receivedAt dates reveal transfer history
+  if (await isAddressHiddenFromCaller(addr, { checkHideTransfer: !!query.at })) {
     return { objekts: [] };
   }
 
