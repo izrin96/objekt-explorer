@@ -29,6 +29,16 @@ import { DISCORD_INVITE } from "./about";
  */
 const CHANGELOG = [
   {
+    date: "2026-09-26 - 2026-10-06",
+    items: [
+      "Added a public API. Find it under API in the About dialog.",
+      "Added a Holders tab in the Objekt view, showing who holds the objekt and how many copies.",
+      "Improved serial number estimates for offline objekts. Spot a wrong one? Report it in our Discord.",
+      "Sale list cards now show the price in your preferred currency.",
+      "In select mode, Shift+click selects a range of objekts.",
+    ],
+  },
+  {
     date: "2026-09-24 - 2026-09-25",
     items: [
       "Redesigned the whole site, new heading fonts and many layout and usability improvements.",
