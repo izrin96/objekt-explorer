@@ -2,7 +2,7 @@ import { fetchMetadataV3, normalizeV3 } from "@repo/cosmo/server/metadata";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
 import { slugifyObjekt, chunk } from "@repo/lib";
-import { and, eq, asc, between, ne, notInArray, inArray, or, lte, sql } from "drizzle-orm";
+import { and, eq, gte, between, ne, notInArray, inArray, or, lte, sql } from "drizzle-orm";
 import { FetchError } from "ofetch";
 
 import {
@@ -18,6 +18,9 @@ const DB_BATCH_SIZE = 500;
 // never overwrite; objekts minted at/after it have no serial from Cosmo and are
 // this job's responsibility to compute.
 export const V1_CUTOFF_MS = Date.parse("2026-06-04T08:07:02Z");
+
+// objekts minted within this window are left for a later run
+const MINT_DELAY_MS = 120 * 1000;
 
 // ===========================================================================
 // Online objekt serial numbering
@@ -43,6 +46,9 @@ export async function populateSerial() {
     .where(
       and(
         eq(objekts.serial, 0),
+        // pre-cutoff serials are never changed, and processCollection skips fresh mints
+        gte(objekts.mintedAt, new Date(V1_CUTOFF_MS).toISOString()),
+        lte(objekts.mintedAt, new Date(Date.now() - MINT_DELAY_MS).toISOString()),
         eq(collections.onOffline, "online"),
         ne(collections.slug, "empty-collection"),
         // skip collection that already pre-assigned tokenId
@@ -131,10 +137,9 @@ async function processCollection(collectionId: string) {
       and(
         eq(objekts.collectionId, collectionId),
         // give some delay
-        lte(objekts.mintedAt, new Date(Date.now() - 120 * 1000).toISOString()),
+        lte(objekts.mintedAt, new Date(Date.now() - MINT_DELAY_MS).toISOString()),
       ),
-    )
-    .orderBy(asc(objekts.id));
+    );
 
   if (allObjekts.length === 0) {
     return;
@@ -658,10 +663,9 @@ async function processCollectionOffline(collectionId: string) {
       and(
         eq(objekts.collectionId, collectionId),
         // give some delay
-        lte(objekts.mintedAt, new Date(Date.now() - 120 * 1000).toISOString()),
+        lte(objekts.mintedAt, new Date(Date.now() - MINT_DELAY_MS).toISOString()),
       ),
-    )
-    .orderBy(asc(objekts.id));
+    );
 
   const zeroObjekts = allObjekts.filter((o) => o.serial === 0);
 
