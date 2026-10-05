@@ -5,6 +5,7 @@ import { useMemo, useState, type ReactNode } from "react";
 import { EmptyState } from "@/components/shared/empty-state";
 import { MessageMarkup } from "@/components/shared/message-markup";
 import { Button } from "@/components/ui/button";
+import { Meter, MeterIndicator, MeterTrack } from "@/components/ui/meter";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import type { ExtraFacet } from "@/features/filters/facet-controls";
@@ -50,17 +51,6 @@ function Panel({ title, children }: { title: string; children: ReactNode }) {
       <h2 className="font-display text-foreground/80 mb-2.5 text-sm font-semibold">{title}</h2>
       {children}
     </section>
-  );
-}
-
-function Meter({ pct, color }: { pct: number; color?: string }) {
-  return (
-    <div className="bg-secondary mt-2.5 h-1.5 overflow-hidden rounded-sm">
-      <i
-        className="bg-foreground block h-full rounded-sm"
-        style={{ width: `${Math.max(pct, 1.2)}%`, background: color }}
-      />
-    </div>
   );
 }
 
@@ -320,13 +310,29 @@ export function ProgressView() {
     <AddToListProvider address={profile.address}>
       <div className="grid gap-3 md:grid-cols-[1.4fr_1fr]">
         <Panel title={m.progress_overall()}>
-          <div className="font-mono text-3xl leading-none font-semibold tracking-tight tabular-nums">
+          {/* hidden from screen readers: the meter below announces the same figures */}
+          <div
+            aria-hidden
+            className="font-mono text-3xl leading-none font-semibold tracking-tight tabular-nums"
+          >
             {totals.pct.toFixed(1)}
             <small className="text-muted-foreground text-sm font-medium tracking-normal">
               % · {totals.owned.toLocaleString()} / {totals.total.toLocaleString()}
             </small>
           </div>
-          <Meter pct={totals.pct} />
+          {/* min-w-1 keeps a sliver showing at 0% */}
+          <Meter
+            value={totals.pct}
+            aria-label={m.progress_overall()}
+            getAriaValueText={() =>
+              `${totals.pct.toFixed(1)}%, ${totals.owned.toLocaleString()} / ${totals.total.toLocaleString()}`
+            }
+            className="mt-2.5"
+          >
+            <MeterTrack className="bg-secondary h-1.5 rounded-sm">
+              <MeterIndicator className="bg-foreground min-w-1 rounded-sm" />
+            </MeterTrack>
+          </Meter>
           {best && (
             <p className="text-muted-foreground mt-2 text-xs">
               {m.progress_best_member()}: <b className="text-foreground font-mono">{best.member}</b>{" "}
