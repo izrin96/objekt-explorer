@@ -28,9 +28,10 @@ export const publicProfileSchema = baseProfileSchema.extend({
 export type PublicProfile = z.infer<typeof publicProfileSchema>;
 
 /** A profile's hover card: the public profile plus its counts, null when private or uncounted. */
-export type ProfilePreview = PublicProfile & {
-  counts: { objekts: number; collections: number } | null;
-};
+export const profilePreviewOutputSchema = publicProfileSchema.extend({
+  counts: z.object({ objekts: z.number(), collections: z.number() }).nullable(),
+});
+export type ProfilePreview = z.infer<typeof profilePreviewOutputSchema>;
 
 /** The banner URL must sit under `bannerUrlPrefix`, which comes from server config. */
 export function makeEditProfileInputSchema(bannerUrlPrefix: string) {

@@ -7,3 +7,5 @@ export const movePinInputSchema = z.object({
   tokenId: z.number(),
   direction: z.enum(["up", "down"]),
 });
+
+export const pinsOutputSchema = z.array(z.object({ tokenId: z.string(), order: z.number() }));

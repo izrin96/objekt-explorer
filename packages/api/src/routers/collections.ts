@@ -6,7 +6,9 @@ import {
   collectionListInputSchema,
   collectionListOutputSchema,
   collectionMetadataOutputSchema,
+  collectionRarityOutputSchema,
   holdersInputSchema,
+  holdersOutputSchema,
   serialsOutputSchema,
   serialTransfersInputSchema,
   serialTransfersOutputSchema,
@@ -35,12 +37,25 @@ const collectionListOutput = z.union([
 ]);
 
 export const collectionsRouter = {
-  rarity: pub.handler(() => {
-    return fetchCollectionRarity();
-  }),
+  rarity: pub
+    .route({
+      method: "GET",
+      path: "/collections/rarity",
+      tags: ["Collections"],
+      summary: "Copies minted of every collection",
+    })
+    .output(documented(collectionRarityOutputSchema))
+    .handler(() => fetchCollectionRarity()),
 
   holders: optionalAuthed
+    .route({
+      method: "GET",
+      path: "/collections/{collectionSlug}/holders",
+      tags: ["Collections"],
+      summary: "Who holds a collection, ranked by copies",
+    })
     .input(holdersInputSchema)
+    .output(documented(holdersOutputSchema))
     .handler(({ input, context: { session } }) => fetchHolders(input, session?.user.id)),
 
   /** Answers a conditional GET with 304, so a browser revalidates its copy instead of downloading it again. */

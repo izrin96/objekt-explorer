@@ -48,6 +48,11 @@ export const marketSummaryEntrySchema = z.object({
 
 export type MarketSummaryEntry = z.infer<typeof marketSummaryEntrySchema>;
 
+export const marketSummaryOutputSchema = z.array(marketSummaryEntrySchema);
+
+/** USD value of one unit of each known currency, keyed by ISO 4217 code */
+export const currencyRatesOutputSchema = z.record(z.string(), z.number());
+
 export const marketStatsOutputSchema = z.object({
   total: z.number(),
   /** cheapest listing in USD — null when every listing is QYOP or unpriced */
@@ -69,6 +74,6 @@ export const marketListingsInputSchema = z.object({
   collectionSlug: z.string(),
   sortBy: sortBySchema.default("createdAt"),
   sortDir: sortDirSchema.default("desc"),
-  offset: z.number().int().min(0).default(0),
-  limit: z.number().int().min(1).max(100).default(20),
+  offset: z.coerce.number<number>().int().min(0).default(0),
+  limit: z.coerce.number<number>().int().min(1).max(100).default(20),
 });

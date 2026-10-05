@@ -17,6 +17,7 @@ import { marketRouter } from "./market";
 import { objektsRouter } from "./objekts";
 import { pinsRouter } from "./pins";
 import { profileRouter } from "./profile";
+import { profilesRouter } from "./profiles";
 import { statusRouter } from "./status";
 import { transfersRouter } from "./transfers";
 import { userRouter } from "./user";
@@ -42,16 +43,14 @@ export const router = {
 /** What `/api/v1` serves and documents; everything else stays RPC-only. */
 export const openApiRouter = {
   activity: activityRouter,
-  collections: {
-    list: collectionsRouter.list,
-    metadata: collectionsRouter.metadata,
-    serials: collectionsRouter.serials,
-    serialTransfers: collectionsRouter.serialTransfers,
-  },
+  collections: collectionsRouter,
   objekts: objektsRouter,
   transfers: transfersRouter,
   user: { search: userRouter.search },
   live: liveRouter,
+  market: marketRouter,
+  profiles: profilesRouter,
+  status: statusRouter,
 };
 
 export type Inputs = InferRouterInputs<typeof router>;

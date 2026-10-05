@@ -2,15 +2,17 @@ import { ORPCError } from "@orpc/server";
 import { fetchByNickname } from "@repo/cosmo/server/user";
 import { db } from "@repo/db";
 import { type UserAddress, userAddress } from "@repo/db/schema";
-import { isAddress } from "@repo/lib";
+import { Addresses, isAddress } from "@repo/lib";
 import { cacheUsers } from "@repo/lib/server/user";
 import { and, eq, sql } from "drizzle-orm";
 import type { FetchError } from "ofetch";
 
 import type { ApiMessages } from "../orpc";
-import type { PublicProfile, PublicUser } from "../schemas/profile";
+import type { ProfilePreview, PublicProfile, PublicUser } from "../schemas/profile";
 import type { User } from "./auth";
+import { fetchOwnerSummary } from "./objekt";
 import { isProfileHidden } from "./privacy";
+import { getCache } from "./redis";
 
 /** the signed-in user has linked this Cosmo address */
 export async function assertProfileOwned(address: string, userId: string, messages: ApiMessages) {
@@ -73,6 +75,28 @@ export function toPublicProfile(
     gridColumns: profile.gridColumns,
     user: profile.hideUser || !user ? null : toPublicUser(user),
   };
+}
+
+/** The hover card: database only, so a hover never asks Cosmo or writes a row. */
+export async function fetchProfilePreview(
+  input: string,
+  viewer: User | undefined,
+): Promise<ProfilePreview> {
+  const address = input.toLowerCase();
+  const row = await db.query.userAddress.findFirst({
+    with: { user: true },
+    where: { address },
+    orderBy: { id: "desc" },
+  });
+  const profile = row ? toPublicProfile(row, row.user, viewer) : { address, nickname: null };
+
+  // Spin holds too many tokens to count on a hover
+  if (profile.isGuard || address === Addresses.SPIN) return { ...profile, counts: null };
+
+  const counts = await getCache(`profile-preview:${address}`, 300, () =>
+    fetchOwnerSummary(address),
+  );
+  return { ...profile, counts };
 }
 
 function safeDecode(value: string) {

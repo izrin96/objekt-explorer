@@ -5,24 +5,12 @@ import { and, eq, inArray } from "drizzle-orm";
 
 import { authed, pub } from "../orpc";
 import { addressSchema, addressTokenIdsInputSchema } from "../schemas/common/address";
-import { isAddressHiddenFromCaller } from "../services/privacy";
+import { fetchLockedObjekts } from "../services/locked-objekts";
 import { assertProfileOwned } from "../services/profile";
 import { TOKEN_CHUNK_SIZE } from "../services/utils";
 
 export const lockedObjektsRouter = {
-  list: pub.input(addressSchema).handler(async ({ input: address }) => {
-    if (await isAddressHiddenFromCaller(address)) return [];
-    const result = await db.query.lockedObjekts.findMany({
-      columns: {
-        tokenId: true,
-      },
-      where: { address },
-      orderBy: { id: "asc" },
-    });
-    return result.map((a) => ({
-      tokenId: a.tokenId.toString(),
-    }));
-  }),
+  list: pub.input(addressSchema).handler(({ input }) => fetchLockedObjekts(input)),
 
   batchLock: authed
     .input(addressTokenIdsInputSchema)

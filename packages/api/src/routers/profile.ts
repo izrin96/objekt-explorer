@@ -1,20 +1,13 @@
 import { ORPCError } from "@orpc/server";
 import { db } from "@repo/db";
 import { userAddress } from "@repo/db/schema";
-import { Addresses } from "@repo/lib";
 import { type acceptedFileMimeTypes, mimeTypeToExtension } from "@repo/lib/media";
 import { and, eq, sql } from "drizzle-orm";
 
 import { type ApiMessages, authed, optionalAuthed } from "../orpc";
 import { addressSchema } from "../schemas/common/address";
-import {
-  makeEditProfileInputSchema,
-  presignedPostInputSchema,
-  type ProfilePreview,
-} from "../schemas/profile";
-import { fetchOwnerSummary } from "../services/objekt";
-import { assertProfileOwned, toPublicProfile } from "../services/profile";
-import { getCache } from "../services/redis";
+import { makeEditProfileInputSchema, presignedPostInputSchema } from "../schemas/profile";
+import { assertProfileOwned, fetchProfilePreview } from "../services/profile";
 import {
   createPresignedUploadUrl,
   deleteFileFromBucket,
@@ -24,28 +17,9 @@ import {
 } from "../services/s3";
 
 export const profileRouter = {
-  /** The hover card: database only, so a hover never asks Cosmo or writes a row. */
   preview: optionalAuthed
     .input(addressSchema)
-    .handler(async ({ input, context: { session } }): Promise<ProfilePreview> => {
-      const address = input.toLowerCase();
-      const row = await db.query.userAddress.findFirst({
-        with: { user: true },
-        where: { address },
-        orderBy: { id: "desc" },
-      });
-      const profile = row
-        ? toPublicProfile(row, row.user, session?.user)
-        : { address, nickname: null };
-
-      // Spin holds too many tokens to count on a hover
-      if (profile.isGuard || address === Addresses.SPIN) return { ...profile, counts: null };
-
-      const counts = await getCache(`profile-preview:${address}`, 300, () =>
-        fetchOwnerSummary(address),
-      );
-      return { ...profile, counts };
-    }),
+    .handler(({ input, context: { session } }) => fetchProfilePreview(input, session?.user)),
 
   find: authed
     .input(addressSchema)

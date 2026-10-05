@@ -2,24 +2,35 @@ import { indexer } from "@repo/db/indexer";
 import { transfers } from "@repo/db/indexer/schema";
 import { desc } from "drizzle-orm";
 import { ofetch } from "ofetch";
+import type * as z from "zod";
 
 import { pub } from "../orpc";
+import { documented } from "../schemas/common/documented";
+import { statusOutputSchema } from "../schemas/status";
 import { getCache } from "../services/redis";
 
 export const statusRouter = {
-  get: pub.handler(async () => {
-    return getCache("system-status", 60, async () => {
-      const [dbResult, cosmoResult] = await Promise.all([
-        fetchDatabaseStatus(),
-        fetchCosmoStatus(),
-      ]);
+  get: pub
+    .route({
+      method: "GET",
+      path: "/status",
+      tags: ["Status"],
+      summary: "Whether the indexer is current and Cosmo is reachable",
+    })
+    .output(documented(statusOutputSchema))
+    .handler(async () => {
+      return getCache("system-status", 60, async () => {
+        const [dbResult, cosmoResult] = await Promise.all([
+          fetchDatabaseStatus(),
+          fetchCosmoStatus(),
+        ]);
 
-      return {
-        database: dbResult,
-        cosmo: cosmoResult,
-      };
-    });
-  }),
+        return {
+          database: dbResult,
+          cosmo: cosmoResult,
+        };
+      });
+    }),
 };
 
 async function fetchDatabaseStatus() {
@@ -63,7 +74,7 @@ async function fetchCosmoStatus() {
   const v3Up = v3Res.status === "fulfilled" && v3Res.value;
   const v1Up = v1Res.status === "fulfilled" && v1Res.value;
 
-  let status: "up" | "partial" | "down";
+  let status: z.infer<typeof statusOutputSchema>["cosmo"]["status"];
   if (v3Up && v1Up) {
     status = "up";
   } else if (v3Up && !v1Up) {

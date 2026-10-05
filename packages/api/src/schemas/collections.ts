@@ -13,6 +13,10 @@ export const collectionMetadataOutputSchema = z.object({
 });
 export type CollectionMetadataOutput = z.infer<typeof collectionMetadataOutputSchema>;
 
+export const collectionRarityOutputSchema = z.array(
+  z.object({ slug: z.string(), count: z.number() }),
+);
+
 const serialTransferSchema = transferRowSchema
   .pick({ id: true, to: true, timestamp: true })
   .extend({ nickname: z.string().nullish() });
@@ -41,8 +45,8 @@ export type SerialsOutput = z.infer<typeof serialsOutputSchema>;
 
 export const holdersInputSchema = z.object({
   collectionSlug: z.string(),
-  offset: z.number().int().min(0).default(0),
-  limit: z.number().int().min(1).max(50).default(10),
+  offset: z.coerce.number<number>().int().min(0).default(0),
+  limit: z.coerce.number<number>().int().min(1).max(50).default(10),
 });
 
 export const holderBucketKeySchema = z.enum(["1", "2-4", "5-9", "10+"]);
