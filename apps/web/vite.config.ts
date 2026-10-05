@@ -54,6 +54,29 @@ export default defineConfig(({ command }) => {
       tailwindcss(),
       tanstackStart({
         srcDirectory: "src",
+        importProtection: {
+          // workspace packages resolve outside the vite root, so their importers
+          // are matched by absolute path
+          include: ["src/**", /\/packages\/[^/]+\/src\//],
+          client: {
+            specifiers: [
+              "bun",
+              "pg",
+              "drizzle-orm/node-postgres",
+              "@better-auth/**",
+              // better-auth's client entries are `better-auth/react` and `better-auth/client/*`
+              /^better-auth(?!\/(react|client)(\/|$))(\/|$)/,
+            ],
+            // setting `files` replaces the defaults, so `*.server.*` is listed again
+            files: [
+              "**/*.server.*",
+              "src/lib/server/**",
+              /\/packages\/db\//,
+              /\/packages\/api\/src\/(?!schemas\/|constants\.ts$)/,
+              /\/packages\/(lib|cosmo)\/src\/server\//,
+            ],
+          },
+        },
       }),
       viteReact(),
       babel({ presets: [reactCompilerPreset()] }),

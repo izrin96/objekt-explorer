@@ -3,7 +3,7 @@ import { notFound } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import * as z from "zod";
 
-import { optionalAuth } from "../server/middleware";
+import { optionalAuth } from "../middleware";
 
 export const profileInputSchema = z.object({ nickname: z.string() });
 
