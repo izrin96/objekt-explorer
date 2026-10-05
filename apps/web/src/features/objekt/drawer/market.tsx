@@ -1,13 +1,12 @@
-import { CaretDownIcon, StorefrontIcon } from "@phosphor-icons/react";
-import type { MarketListing, SortBy, SortDir } from "@repo/api/schemas/market";
+import { CaretDownIcon, CaretRightIcon, StorefrontIcon } from "@phosphor-icons/react";
+import type { MarketListing, SortBy } from "@repo/api/schemas/market";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { type ReactNode, useState } from "react";
+import { useState } from "react";
 import { InView } from "react-intersection-observer";
 
 import { EmptyState } from "@/components/shared/empty-state";
 import { Timestamp } from "@/components/shared/timestamp";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { getListLinkOption } from "@/features/list/list-link";
@@ -19,58 +18,29 @@ import { m } from "@/paraglide/messages";
 
 import { ObjektNote } from "../objekt-note";
 import { marketListingsOptions, marketStatsOptions } from "../queries";
+import { SortableHeader, type SortState } from "./sortable-header";
 import { type Stat, StatRow } from "./stat-row";
-
-function SortButton({
-  active,
-  descending,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  descending: boolean;
-  onClick: () => void;
-  children: ReactNode;
-}) {
-  return (
-    <Button
-      variant={active ? "default" : "outline"}
-      size="xs"
-      aria-pressed={active}
-      onClick={onClick}
-    >
-      {children}
-      {active && <CaretDownIcon className={descending ? undefined : "rotate-180"} />}
-    </Button>
-  );
-}
 
 export function MarketPanel({
   slug,
-  defaultSortBy = "createdAt",
   onOpenSerial,
 }: {
   slug: string;
-  /** the market sends the viewer here to compare prices; everywhere else, to see the latest */
-  defaultSortBy?: SortBy;
   onOpenSerial: (serial: number) => void;
 }) {
-  const [sortBy, setSortBy] = useState<SortBy>(defaultSortBy);
-  const [sortDir, setSortDir] = useState<SortDir>(defaultSortBy === "price" ? "asc" : "desc");
+  const [sort, setSort] = useState<SortState<SortBy>>({ key: "createdAt", dir: "desc" });
   const { currency, formatUsd } = useCurrency();
 
   const stats = useQuery(marketStatsOptions(slug));
-  const listings = useInfiniteQuery(marketListingsOptions(slug, sortBy, sortDir));
+  const listings = useInfiniteQuery(marketListingsOptions(slug, sort.key, sort.dir));
 
-  const toggleSort = (field: SortBy) => {
-    if (sortBy === field) {
-      setSortDir((prev) => (prev === "asc" ? "desc" : "asc"));
-      return;
-    }
-    setSortBy(field);
-    // cheapest first, newest first — the default each field is most useful in
-    setSortDir(field === "price" ? "asc" : "desc");
-  };
+  const toggle = (key: SortBy) =>
+    setSort((prev) =>
+      prev.key === key
+        ? { key, dir: prev.dir === "asc" ? "desc" : "asc" }
+        : // cheapest first, newest first — the default each field is most useful in
+          { key, dir: key === "price" ? "asc" : "desc" },
+    );
 
   const figures: Stat[] = [
     {
@@ -94,30 +64,14 @@ export function MarketPanel({
   const items = listings.data?.pages.flatMap((page) => page.items) ?? [];
 
   return (
-    <div className="flex flex-col gap-2.5">
+    <div className="flex flex-col gap-4">
       <StatRow stats={figures} className="grid-cols-3" />
-
-      <div className="flex items-center gap-1.5">
-        <SortButton
-          active={sortBy === "price"}
-          descending={sortDir === "desc"}
-          onClick={() => toggleSort("price")}
-        >
-          {m.list_manage_objekt_set_price_label()}
-        </SortButton>
-        <SortButton
-          active={sortBy === "createdAt"}
-          descending={sortDir === "desc"}
-          onClick={() => toggleSort("createdAt")}
-        >
-          {m.objekt_date()}
-        </SortButton>
-      </div>
 
       {listings.isPending ? (
         <div className="flex flex-col gap-1.5">
-          <Skeleton className="h-16 rounded-lg" />
-          <Skeleton className="h-16 rounded-lg" />
+          <Skeleton className="h-9 rounded-lg" />
+          <Skeleton className="h-9 rounded-lg" />
+          <Skeleton className="h-9 rounded-lg" />
         </div>
       ) : items.length === 0 ? (
         <EmptyState
@@ -128,15 +82,54 @@ export function MarketPanel({
         />
       ) : (
         <div className="flex flex-col gap-1.5">
-          {items.map((item) => (
-            <MarketRow
-              key={item.id}
-              item={item}
-              currency={currency}
-              formatUsd={formatUsd}
-              onOpenSerial={onOpenSerial}
-            />
-          ))}
+          {/* the price leads so it stays in view when a phone-width drawer
+              scrolls the table sideways */}
+          <div
+            data-scroll-x
+            tabIndex={0}
+            role="region"
+            aria-label={m.objekt_market_listings()}
+            className="bg-card focus-visible:ring-ring overflow-x-auto overflow-y-hidden rounded-lg border outline-none focus-visible:ring-2"
+          >
+            <table className="w-full min-w-96 border-collapse text-sm">
+              <caption className="sr-only">{m.objekt_market_listings()}</caption>
+              <thead>
+                <tr className="text-muted-foreground bg-secondary/60 text-xs tracking-wide uppercase">
+                  <SortableHeader
+                    sort={sort}
+                    column="price"
+                    onToggle={toggle}
+                    className="text-right"
+                  >
+                    {m.list_manage_objekt_set_price_label()}
+                  </SortableHeader>
+                  <th scope="col" className="px-3 py-2 text-left font-medium">
+                    {m.objekt_serial()}
+                  </th>
+                  <th scope="col" className="w-full px-3 py-2 text-left font-medium">
+                    {m.objekt_market_seller()}
+                  </th>
+                  <SortableHeader sort={sort} column="createdAt" onToggle={toggle}>
+                    {m.objekt_date()}
+                  </SortableHeader>
+                  <th scope="col" className="w-8">
+                    <span className="sr-only">{m.objekt_market_view_list()}</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {items.map((item) => (
+                  <MarketRow
+                    key={item.id}
+                    item={item}
+                    currency={currency}
+                    formatUsd={formatUsd}
+                    onOpenSerial={onOpenSerial}
+                  />
+                ))}
+              </tbody>
+            </table>
+          </div>
 
           {listings.hasNextPage && (
             <InView
@@ -159,6 +152,10 @@ export function MarketPanel({
   );
 }
 
+/**
+ * The whole row opens the seller's list; the serial, the seller and the note
+ * sit above that link (`relative z-10`) so each keeps its own click.
+ */
 function MarketRow({
   item,
   currency,
@@ -176,79 +173,76 @@ function MarketRow({
   // Cosmo gives an unnamed profile its own address as the nickname
   const nickname = isSameAddress(rawNickname, address) ? null : rawNickname;
   const { price, currency: listed, usdPrice } = item;
+  const priced = !item.isQyop && price !== null && listed !== null;
 
   return (
-    <div className="bg-card grid grid-cols-[4.5rem_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 rounded-lg border px-3 py-2 text-sm">
-      <div className="flex flex-col">
-        <span className="text-muted-foreground text-xs">{m.objekt_serial()}</span>
+    <tr className="hover:bg-secondary/40 relative border-t">
+      <td className="px-3 py-1.5 text-right whitespace-nowrap">
+        <div className="flex items-center justify-end gap-1">
+          {item.note && (
+            <span className="relative z-10">
+              <ObjektNote note={item.note} />
+            </span>
+          )}
+          {/* a listing is set in the seller's currency, not the viewer's */}
+          <span
+            className={cn(
+              "font-mono tabular-nums",
+              priced ? "font-medium" : "text-muted-foreground",
+            )}
+          >
+            {item.isQyop ? m.objekt_qyop() : priced ? formatCurrency(price, listed) : "—"}
+          </span>
+        </div>
+        {priced && listed !== currency && usdPrice !== null && (
+          <div className="text-muted-foreground font-mono text-xs tabular-nums">
+            ≈{formatUsd(usdPrice)}
+          </div>
+        )}
+      </td>
+      <th scope="row" className="px-3 py-1.5 text-left font-normal">
         {item.serial === null ? (
-          <span className="font-mono font-medium tabular-nums">—</span>
+          <span className="text-muted-foreground font-mono">—</span>
         ) : (
           <button
             type="button"
-            className="hover:text-accent-solid w-fit cursor-pointer font-mono font-medium tabular-nums underline-offset-2 hover:underline"
+            className="hover:text-accent-solid relative z-10 cursor-pointer font-mono font-medium tabular-nums underline-offset-2 hover:underline"
             onClick={() => onOpenSerial(item.serial ?? 0)}
           >
             #{item.serial}
           </button>
         )}
-      </div>
-
-      {address === null ? (
-        <div className="flex min-w-0 flex-col">
-          <span className="text-muted-foreground text-xs">{m.objekt_owner()}</span>
-          <span className="truncate font-mono text-xs">—</span>
-        </div>
-      ) : (
-        // a seller with no Cosmo nickname still has a profile, addressed by wallet
-        <ProfileCell
-          address={address}
-          nickname={nickname}
-          className="flex min-w-0 flex-col items-start"
-          before={<span className="text-muted-foreground text-xs">{m.objekt_owner()}</span>}
-          linkClassName={cn(
-            "max-w-full truncate underline-offset-2 hover:underline",
-            nickname === null && "font-mono text-xs",
-          )}
-        >
-          {nickname ?? truncateAddress(address.toLowerCase())}
-        </ProfileCell>
-      )}
-
-      <div className="flex flex-col items-end">
-        <span className="text-muted-foreground text-xs">
-          {m.list_manage_objekt_set_price_label()}
-        </span>
-        <div className="flex items-center gap-1">
-          {/* a listing is set in the seller's currency, not the viewer's */}
-          <span className="font-medium tabular-nums">
-            {item.isQyop
-              ? m.objekt_qyop()
-              : price !== null && listed !== null
-                ? formatCurrency(price, listed)
-                : "—"}
-          </span>
-          {item.note && <ObjektNote note={item.note} />}
-        </div>
-        {!item.isQyop && listed !== null && listed !== currency && usdPrice !== null && (
-          <span className="text-muted-foreground text-xs tabular-nums">≈{formatUsd(usdPrice)}</span>
+      </th>
+      <td className="max-w-0 px-3 py-1.5">
+        {address === null ? (
+          <span className="text-muted-foreground font-mono">—</span>
+        ) : (
+          // a seller with no Cosmo nickname still has a profile, addressed by wallet
+          <ProfileCell
+            address={address}
+            nickname={nickname}
+            className="relative z-10 -mx-3 -my-1.5 flex min-w-0 px-3 py-1.5"
+            linkClassName={cn(
+              "truncate underline-offset-2 hover:underline",
+              nickname === null && "font-mono text-xs",
+            )}
+          >
+            {nickname ?? truncateAddress(address.toLowerCase())}
+          </ProfileCell>
         )}
-      </div>
-
-      {/* the timestamp does not wrap, so on a narrow drawer the button wraps under it */}
-      <div className="col-span-full -mt-1 flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5">
-        <span className="text-muted-foreground font-mono text-xs whitespace-nowrap">
-          <Timestamp date={new Date(item.createdAt)} />
-        </span>
-        <Button
-          variant="outline"
-          size="xs"
-          className="ml-auto"
-          render={<Link {...getListLinkOption(item.list)} />}
+      </td>
+      <td className="text-muted-foreground px-3 py-1.5 font-mono text-xs whitespace-nowrap tabular-nums">
+        <Timestamp date={new Date(item.createdAt)} />
+      </td>
+      <td className="pr-2">
+        <Link
+          {...getListLinkOption(item.list)}
+          aria-label={m.objekt_market_view_list()}
+          className="text-muted-foreground hover:text-foreground focus-visible:after:ring-ring flex items-center justify-center outline-none after:absolute after:inset-0 focus-visible:after:ring-2 focus-visible:after:ring-inset"
         >
-          {m.objekt_market_view_list()}
-        </Button>
-      </div>
-    </div>
+          <CaretRightIcon className="size-4" aria-hidden />
+        </Link>
+      </td>
+    </tr>
   );
 }

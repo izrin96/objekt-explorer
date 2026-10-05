@@ -304,6 +304,7 @@
   "objekt_market_floor": "최저가",
   "objekt_market_listings": "매물",
   "objekt_market_sellers": "판매자",
+  "objekt_market_seller": "판매자",
   "objekt_holders": "보유자",
   "objekt_holders_copies_detail": "{count}개",
   "objekt_holders_scanned_detail": "스캔 {count}개",

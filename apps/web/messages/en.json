@@ -304,6 +304,7 @@
   "objekt_market_floor": "Floor",
   "objekt_market_listings": "Listings",
   "objekt_market_sellers": "Sellers",
+  "objekt_market_seller": "Seller",
   "objekt_holders": "Holders",
   "objekt_holders_copies_detail": "{count} copies",
   "objekt_holders_scanned_detail": "{count} scanned",

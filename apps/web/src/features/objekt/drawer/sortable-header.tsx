@@ -10,11 +10,13 @@ export function SortableHeader<Key extends string>({
   sort,
   column,
   onToggle,
+  className,
   children,
 }: {
   sort: SortState<Key>;
   column: Key;
   onToggle: (key: Key) => void;
+  className?: string;
   children: ReactNode;
 }) {
   const active = sort.key === column;
@@ -23,7 +25,7 @@ export function SortableHeader<Key extends string>({
     <th
       scope="col"
       aria-sort={active ? (sort.dir === "asc" ? "ascending" : "descending") : "none"}
-      className="px-3 py-2 text-left font-medium"
+      className={cn("px-3 py-2 text-left font-medium", className)}
     >
       <button
         type="button"

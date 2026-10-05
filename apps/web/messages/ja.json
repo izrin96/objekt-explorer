@@ -304,6 +304,7 @@
   "objekt_market_floor": "最安値",
   "objekt_market_listings": "出品",
   "objekt_market_sellers": "出品者",
+  "objekt_market_seller": "出品者",
   "objekt_holders": "保有者",
   "objekt_holders_copies_detail": "{count}枚",
   "objekt_holders_scanned_detail": "スキャン済み{count}枚",

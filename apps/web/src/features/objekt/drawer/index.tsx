@@ -1,5 +1,4 @@
 import { CheckIcon, DotsThreeIcon } from "@phosphor-icons/react";
-import type { SortBy } from "@repo/api/schemas/market";
 import type { OwnedGridObjekt, ValidObjekt } from "@repo/lib/types/objekt";
 import { useQuery } from "@tanstack/react-query";
 import { type ReactNode, useMemo, useState } from "react";
@@ -95,7 +94,6 @@ export function ObjektDrawer({
             selected={selected}
             onToggleSelect={onToggleSelect}
             menu={menu}
-            marketSort={defaultTab === "market" ? "price" : "createdAt"}
           />
         )}
       </DrawerPopup>
@@ -113,7 +111,6 @@ function DrawerBody({
   selected: isSelected,
   onToggleSelect,
   menu,
-  marketSort,
 }: {
   objekt: ValidObjekt;
   onClose: () => void;
@@ -124,7 +121,6 @@ function DrawerBody({
   selected: boolean;
   onToggleSelect?: (objekt: ValidObjekt) => void;
   menu?: ReactNode;
-  marketSort: SortBy;
 }) {
   const owned = isObjektOwned(objekt);
   const ownSerial = owned ? objekt.serial : null;
@@ -346,7 +342,6 @@ function DrawerBody({
           <TabsPanel value="market">
             <MarketPanel
               slug={objekt.slug}
-              defaultSortBy={marketSort}
               onOpenSerial={(value) => {
                 setSerial(value);
                 onTabChange("serials");
