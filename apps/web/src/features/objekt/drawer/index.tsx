@@ -264,20 +264,23 @@ function DrawerBody({
                 <ApolloIcon className="size-4" />
                 {m.objekt_view_in_apollo()}
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                render={
-                  <a
-                    href={`https://wavbase.app/objekts/${objekt.slug}`}
-                    target="_blank"
-                    rel="noreferrer"
-                  />
-                }
-              >
-                <WavbaseIcon className="size-4" />
-                {m.objekt_view_in_wavbase()}
-              </Button>
+              {/* WAVBase only covers tripleS */}
+              {objekt.artist.toLowerCase() === "triples" && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  render={
+                    <a
+                      href={`https://wavbase.app/objekts/${objekt.slug}`}
+                      target="_blank"
+                      rel="noreferrer"
+                    />
+                  }
+                >
+                  <WavbaseIcon className="size-4" />
+                  {m.objekt_view_in_wavbase()}
+                </Button>
+              )}
             </div>
           </div>
         </div>
