@@ -5,8 +5,13 @@ import { type acceptedFileMimeTypes, mimeTypeToExtension } from "@repo/lib/media
 import { and, eq, sql } from "drizzle-orm";
 
 import { type ApiMessages, authed, optionalAuthed } from "../orpc";
-import { addressSchema } from "../schemas/common/address";
-import { makeEditProfileInputSchema, presignedPostInputSchema } from "../schemas/profile";
+import { addressOrBareInputSchema, addressSchema } from "../schemas/common/address";
+import { documented, errorResponses } from "../schemas/common/documented";
+import {
+  makeEditProfileInputSchema,
+  presignedPostInputSchema,
+  profilePreviewOutputSchema,
+} from "../schemas/profile";
 import { assertProfileOwned, fetchProfilePreview } from "../services/profile";
 import {
   createPresignedUploadUrl,
@@ -18,8 +23,18 @@ import {
 
 export const profileRouter = {
   preview: optionalAuthed
-    .input(addressSchema)
-    .handler(({ input, context: { session } }) => fetchProfilePreview(input, session?.user)),
+    .route({
+      method: "GET",
+      path: "/profiles/{address}",
+      tags: ["Profiles"],
+      summary: "A profile's hover card: nickname, banner and counts",
+      spec: errorResponses(400),
+    })
+    .input(addressOrBareInputSchema)
+    .output(documented(profilePreviewOutputSchema))
+    .handler(({ input, context: { session } }) =>
+      fetchProfilePreview(input.address, session?.user),
+    ),
 
   find: authed
     .input(addressSchema)

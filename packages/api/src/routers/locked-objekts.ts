@@ -4,13 +4,25 @@ import { chunk } from "@repo/lib";
 import { and, eq, inArray } from "drizzle-orm";
 
 import { authed, pub } from "../orpc";
-import { addressSchema, addressTokenIdsInputSchema } from "../schemas/common/address";
+import { addressOrBareInputSchema, addressTokenIdsInputSchema } from "../schemas/common/address";
+import { documented, errorResponses } from "../schemas/common/documented";
+import { lockedObjektsOutputSchema } from "../schemas/locked-objekts";
 import { fetchLockedObjekts } from "../services/locked-objekts";
 import { assertProfileOwned } from "../services/profile";
 import { TOKEN_CHUNK_SIZE } from "../services/utils";
 
 export const lockedObjektsRouter = {
-  list: pub.input(addressSchema).handler(({ input }) => fetchLockedObjekts(input)),
+  list: pub
+    .route({
+      method: "GET",
+      path: "/profiles/{address}/locked-objekts",
+      tags: ["Profiles"],
+      summary: "The objekts a profile has locked",
+      spec: errorResponses(400),
+    })
+    .input(addressOrBareInputSchema)
+    .output(documented(lockedObjektsOutputSchema))
+    .handler(({ input }) => fetchLockedObjekts(input.address)),
 
   batchLock: authed
     .input(addressTokenIdsInputSchema)

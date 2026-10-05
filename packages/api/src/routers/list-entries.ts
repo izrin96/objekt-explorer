@@ -11,6 +11,7 @@ import {
   listEntriesOutputSchema,
   listPreviewsInputSchema,
   profileListsInputSchema,
+  profileListsOutputSchema,
   removeObjektsFromListInputSchema,
 } from "../schemas/list";
 import {
@@ -50,9 +51,17 @@ export const listEntriesRouter = {
     .handler(({ input: { slugs } }) => fetchListPreviews(slugs)),
 
   profileLists: optionalAuthed
+    .route({
+      method: "GET",
+      path: "/profiles/{address}/lists",
+      tags: ["Profiles"],
+      summary: "A profile's lists",
+      spec: errorResponses(400),
+    })
     .input(profileListsInputSchema)
-    .handler(({ input: { profileAddress }, context: { session } }) =>
-      fetchProfileLists(profileAddress, session?.user.id),
+    .output(documented(profileListsOutputSchema))
+    .handler(({ input, context: { session } }) =>
+      fetchProfileLists(input.address, session?.user.id),
     ),
 
   addToList: authed.input(addToListInputSchema).handler(

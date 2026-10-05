@@ -30,8 +30,8 @@ export const listEntriesOptions = (slug: string, artist: ValidArtist[]) =>
 export const listFindOptions = (slug: string, enabled: boolean) =>
   orpc.list.find.queryOptions({ input: { slug }, staleTime: 0, enabled });
 
-export const profileListsOptions = (profileAddress: string) =>
-  orpc.list.profileLists.queryOptions({ input: { profileAddress } });
+export const profileListsOptions = (address: string) =>
+  orpc.list.profileLists.queryOptions({ input: { address } });
 
 export const listPreviewsOptions = (slugs: string[]) =>
   orpc.list.listPreviews.queryOptions({

@@ -17,7 +17,6 @@ import { marketRouter } from "./market";
 import { objektsRouter } from "./objekts";
 import { pinsRouter } from "./pins";
 import { profileRouter } from "./profile";
-import { profilesRouter } from "./profiles";
 import { statusRouter } from "./status";
 import { transfersRouter } from "./transfers";
 import { userRouter } from "./user";
@@ -49,7 +48,12 @@ export const openApiRouter = {
   user: { search: userRouter.search },
   live: liveRouter,
   market: marketRouter,
-  profiles: profilesRouter,
+  profiles: {
+    preview: profileRouter.preview,
+    pins: pinsRouter.list,
+    lockedObjekts: lockedObjektsRouter.list,
+    lists: listRouter.profileLists,
+  },
   status: statusRouter,
   list: {
     findPublic: listRouter.findPublic,

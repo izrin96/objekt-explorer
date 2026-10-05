@@ -4,14 +4,25 @@ import { chunk } from "@repo/lib";
 import { and, eq, inArray, isNull, sql } from "drizzle-orm";
 
 import { authed, pub } from "../orpc";
-import { addressSchema, addressTokenIdsInputSchema } from "../schemas/common/address";
-import { movePinInputSchema } from "../schemas/pins";
+import { addressOrBareInputSchema, addressTokenIdsInputSchema } from "../schemas/common/address";
+import { documented, errorResponses } from "../schemas/common/documented";
+import { movePinInputSchema, pinsOutputSchema } from "../schemas/pins";
 import { fetchPins, getValidPins } from "../services/pins";
 import { assertProfileOwned } from "../services/profile";
 import { TOKEN_CHUNK_SIZE } from "../services/utils";
 
 export const pinsRouter = {
-  list: pub.input(addressSchema).handler(({ input }) => fetchPins(input)),
+  list: pub
+    .route({
+      method: "GET",
+      path: "/profiles/{address}/pins",
+      tags: ["Profiles"],
+      summary: "A profile's pinned objekts, in display order",
+      spec: errorResponses(400),
+    })
+    .input(addressOrBareInputSchema)
+    .output(documented(pinsOutputSchema))
+    .handler(({ input }) => fetchPins(input.address)),
 
   batchPin: authed
     .input(addressTokenIdsInputSchema)

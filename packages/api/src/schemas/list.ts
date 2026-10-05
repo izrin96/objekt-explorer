@@ -1,7 +1,7 @@
 import type { ListObjekt } from "@repo/lib/types/objekt";
 import * as z from "zod";
 
-import { addressSchema } from "./common/address";
+import { addressInputSchema, addressSchema } from "./common/address";
 import { artistsArraySchema } from "./common/artist";
 import { indexedObjektSchema, ownedObjektSchema } from "./common/objekt";
 import type { ObjektPreview } from "./objekts";
@@ -124,7 +124,14 @@ export const editListInputSchema = z.object({
 
 export const listPreviewsInputSchema = z.object({ slugs: z.string().array().max(500) });
 
-export const profileListsInputSchema = z.object({ profileAddress: z.string() });
+/** `{ address }`, and also the `{ profileAddress }` that `/rpc` clients built before it send. */
+export const profileListsInputSchema = z.preprocess(
+  (value: { address: string } | { profileAddress: string }) =>
+    typeof value === "object" && value !== null && !("address" in value)
+      ? { address: value.profileAddress }
+      : value,
+  addressInputSchema,
+);
 
 export const addToListInputSchema = z.object({
   slug: z.string(),

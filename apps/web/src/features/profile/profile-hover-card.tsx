@@ -111,7 +111,10 @@ export function ProfileHoverCard() {
 function CardBody({ address, nickname }: Payload) {
   const { data } = useQuery(
     // the server reads the address lowercased, so one profile keeps one cache entry
-    orpc.profile.preview.queryOptions({ input: address.toLowerCase(), staleTime: 60_000 }),
+    orpc.profile.preview.queryOptions({
+      input: { address: address.toLowerCase() },
+      staleTime: 60_000,
+    }),
   );
   const bannerHidden = useSettings((s) => s.hideBanner);
   const videoRef = useRef<HTMLVideoElement>(null);

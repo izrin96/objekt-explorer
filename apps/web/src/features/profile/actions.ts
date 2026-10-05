@@ -5,8 +5,8 @@ import { toastManager } from "@/components/ui/toast";
 import { orpc } from "@/lib/orpc";
 import { m } from "@/paraglide/messages";
 
-const pinsKey = (address: string) => orpc.pins.list.queryKey({ input: address });
-const locksKey = (address: string) => orpc.lockedObjekt.list.queryKey({ input: address });
+const pinsKey = (address: string) => orpc.pins.list.queryKey({ input: { address } });
+const locksKey = (address: string) => orpc.lockedObjekt.list.queryKey({ input: { address } });
 
 function plural(count: number, single: () => string, multiple: (n: { count: string }) => string) {
   return count > 1 ? multiple({ count: count.toLocaleString() }) : single();
