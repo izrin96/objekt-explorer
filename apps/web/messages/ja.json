@@ -412,7 +412,7 @@
   "auth_account_link_accounts_profile_updated": "プロフィールを更新しました",
   "auth_account_link_accounts_profile_update_error": "プロフィールの更新に失敗しました。{message}",
   "auth_account_link_accounts_update_profile_title": "{provider}からプロフィールを更新",
-  "auth_account_link_accounts_update_profile_desc": "{provider}のユーザー名とプロフィール画像を更新します。{provider}のサインインの有効期限が切れている場合は、再度サインインが必要です。続行しますか？",
+  "auth_account_link_accounts_update_profile_desc": "{provider}のユーザー名とプロフィール画像を更新します。{provider}のログインの有効期限が切れている場合は、再度ログインが必要です。続行しますか？",
   "auth_account_link_accounts_unlink_title": "{provider}の連携を解除",
   "auth_account_link_accounts_unlink_description": "{provider}アカウントの連携を解除しますか？この操作は取り消せません。",
   "checkpoint_title": "スナップショット",
