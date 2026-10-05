@@ -1,4 +1,4 @@
-/* oxlint-disable jsx-a11y/prefer-tag-over-role -- the 2D saturation/brightness plane and the hue rail have no native input equivalent; both implement the slider keyboard contract */
+/* oxlint-disable jsx-a11y/prefer-tag-over-role -- the 2D saturation/brightness plane has no native input equivalent; it implements the slider keyboard contract */
 
 import { CopyIcon, EyedropperIcon } from "@phosphor-icons/react";
 import type { CSSProperties, KeyboardEvent, PointerEvent } from "react";
@@ -11,6 +11,7 @@ import {
   InputGroupInput,
   InputGroupText,
 } from "@/components/ui/input-group";
+import { SliderPrimitive } from "@/components/ui/slider";
 import { toastManager } from "@/components/ui/toast";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
@@ -79,12 +80,17 @@ const ARROW_DELTA: Record<string, [number, number]> = {
   ArrowRight: [1, 0],
 };
 
+/** the plane's thumb and the hue thumb share one look */
+const thumbClass =
+  "size-3.5 rounded-full border-2 border-white shadow-[0_0_0_1px_rgb(0_0_0/0.5)] transition-transform duration-150 motion-reduce:transition-none";
+
 function Thumb({ dragging, style }: { dragging: boolean; style: CSSProperties }) {
   return (
     <span
       aria-hidden="true"
       className={cn(
-        "pointer-events-none absolute size-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow-[0_0_0_1px_rgb(0_0_0/0.5)] transition-transform duration-150 motion-reduce:transition-none",
+        thumbClass,
+        "pointer-events-none absolute -translate-x-1/2 -translate-y-1/2",
         dragging && "scale-125",
       )}
       style={style}
@@ -109,7 +115,7 @@ export function ColorPicker({
   );
   // the hex field's text, only while it is being edited
   const [draft, setDraft] = useState<string | null>(null);
-  const [dragging, setDragging] = useState<"field" | "hue" | null>(null);
+  const [dragging, setDragging] = useState(false);
   // a controlled value re-seeds the plane during render, not in an effect
   const [seenValue, setSeenValue] = useState(value);
   if (value !== seenValue) {
@@ -155,7 +161,7 @@ export function ColorPicker({
 
   const onFieldPointer = (event: PointerEvent<HTMLDivElement>) => {
     event.currentTarget.setPointerCapture(event.pointerId);
-    setDragging("field");
+    setDragging(true);
     const { x, y } = fraction(event);
     commit({ ...hsv, s: x, v: 1 - y });
   };
@@ -170,20 +176,6 @@ export function ColorPicker({
       s: clamp01(hsv.s + delta[0] * step),
       v: clamp01(hsv.v - delta[1] * step),
     });
-  };
-
-  const onHuePointer = (event: PointerEvent<HTMLDivElement>) => {
-    event.currentTarget.setPointerCapture(event.pointerId);
-    setDragging("hue");
-    commit({ ...hsv, h: fraction(event).x * 360 });
-  };
-
-  const onHueKey = (event: KeyboardEvent<HTMLDivElement>) => {
-    const delta = ARROW_DELTA[event.key];
-    if (!delta) return;
-    event.preventDefault();
-    const step = event.shiftKey ? 30 : 4;
-    commit({ ...hsv, h: (hsv.h + delta[0] * step + 360) % 360 });
   };
 
   return (
@@ -205,10 +197,10 @@ export function ColorPicker({
         onPointerMove={(event) => {
           if (event.buttons > 0) onFieldPointer(event);
         }}
-        onPointerUp={() => setDragging(null)}
+        onPointerUp={() => setDragging(false)}
       >
         <Thumb
-          dragging={dragging === "field"}
+          dragging={dragging}
           style={{
             backgroundColor: hex,
             left: `${hsv.s * 100}%`,
@@ -217,29 +209,31 @@ export function ColorPicker({
         />
       </div>
 
-      <div
-        role="slider"
-        aria-label={m.filter_color_hue()}
-        aria-valuemin={0}
-        aria-valuemax={360}
-        aria-valuenow={Math.round(hsv.h)}
-        tabIndex={0}
-        className="focus-visible:ring-ring relative h-3 cursor-ew-resize touch-none rounded-full outline-none focus-visible:ring-2"
-        style={{
-          background: "linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00)",
-        }}
-        onKeyDown={onHueKey}
-        onPointerDown={onHuePointer}
-        onPointerMove={(event) => {
-          if (event.buttons > 0) onHuePointer(event);
-        }}
-        onPointerUp={() => setDragging(null)}
+      <SliderPrimitive.Root
+        value={hsv.h}
+        onValueChange={(h) => commit({ ...hsv, h })}
+        min={0}
+        max={360}
+        largeStep={30}
       >
-        <Thumb
-          dragging={dragging === "hue"}
-          style={{ backgroundColor: hueOnly, left: `${(hsv.h / 360) * 100}%`, top: "50%" }}
-        />
-      </div>
+        <SliderPrimitive.Control className="flex h-3 cursor-ew-resize touch-none items-center select-none">
+          <SliderPrimitive.Track
+            className="relative h-3 w-full rounded-full"
+            style={{
+              background: "linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00)",
+            }}
+          >
+            <SliderPrimitive.Thumb
+              aria-label={m.filter_color_hue()}
+              className={cn(
+                thumbClass,
+                "has-focus-visible:ring-ring outline-none has-focus-visible:ring-2 data-dragging:scale-125",
+              )}
+              style={{ backgroundColor: hueOnly }}
+            />
+          </SliderPrimitive.Track>
+        </SliderPrimitive.Control>
+      </SliderPrimitive.Root>
 
       <InputGroup>
         <InputGroupAddon>
