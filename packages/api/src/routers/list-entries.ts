@@ -5,7 +5,6 @@ import { and, eq, inArray } from "drizzle-orm";
 import * as z from "zod";
 
 import { authed, optionalAuthed, pub, selectedArtistsMiddleware } from "../orpc";
-import type { AddSource } from "../schemas/list";
 import { addSourceSchema } from "../schemas/list";
 import {
   addEntries,
@@ -61,54 +60,6 @@ export const listEntriesRouter = {
 
       return await fetchOwnedLists("profileAddress", profileAddress);
     }),
-
-  /** The input shape clients shipped before `addToList`; kept until their tabs reload. */
-  addObjektsToList: authed
-    .use(selectedArtistsMiddleware)
-    .input(
-      z.object({
-        slug: z.string(),
-        skipDups: z.boolean(),
-        collectionSlugs: z.string().array().max(50000).optional(),
-        objekts: z.string().array().max(50000).optional(),
-      }),
-    )
-    .handler(
-      async ({
-        input: { slug, skipDups, collectionSlugs, objekts: inputObjekts },
-        context: {
-          session: { user },
-          artists,
-        },
-      }) => {
-        const list = await findOwnedList(slug, user.id);
-
-        let from: AddSource;
-        if (list.isProfileBind && list.profileAddress) {
-          if (!inputObjekts || inputObjekts.length === 0) {
-            throw new ORPCError("BAD_REQUEST", {
-              message: "Objekts required for profile-bound lists",
-            });
-          }
-          from = { type: "objekts", tokenIds: inputObjekts };
-        } else {
-          if (!collectionSlugs || collectionSlugs.length === 0) {
-            throw new ORPCError("BAD_REQUEST", {
-              message: "Collections required for non-profile-bound lists",
-            });
-          }
-          from = { type: "collections", slugs: collectionSlugs };
-        }
-
-        const { rows } = await addEntries(list, from, skipDups);
-        if (rows.length === 0) return [];
-
-        return buildListEntries(rows, list.isProfileBind, {
-          artists,
-          hideSerial: list.hideSerial,
-        });
-      },
-    ),
 
   addToList: authed
     .input(
