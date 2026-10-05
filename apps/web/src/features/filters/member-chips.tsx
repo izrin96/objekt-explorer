@@ -7,11 +7,12 @@ import {
   useRef,
   useState,
   type CSSProperties,
-  type KeyboardEvent,
   type ReactNode,
 } from "react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { TogglePrimitive } from "@/components/ui/toggle";
+import { ToggleGroupPrimitive } from "@/components/ui/toggle-group";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -21,52 +22,18 @@ import { useMemberColor } from "./member-colors";
 import { useCanonicalFilters, useFilters, useSetFilters } from "./use-filters";
 
 /**
- * APG toolbar pattern: the strip is one tab stop and the arrows walk its chips,
- * so a keyboard user reaches the search field in one Tab rather than 60.
+ * A strip that scrolls sideways, with the buttons that say so. The scroller is
+ * the toggle group, so the strip is one tab stop and the arrows walk its chips.
  */
-function useRovingChips() {
-  const [active, setActive] = useState(0);
-
-  const onKeyDown = (event: KeyboardEvent<HTMLElement>) => {
-    const all = Array.from(event.currentTarget.querySelectorAll<HTMLElement>("[data-chip]"));
-    if (all.length === 0) return;
-    const from = all.findIndex((chip) => chip === event.target);
-    const next =
-      event.key === "ArrowRight"
-        ? Math.min(from + 1, all.length - 1)
-        : event.key === "ArrowLeft"
-          ? Math.max(from - 1, 0)
-          : event.key === "Home"
-            ? 0
-            : event.key === "End"
-              ? all.length - 1
-              : -1;
-    if (next < 0) return;
-    event.preventDefault();
-    setActive(next);
-    all[next]?.focus();
-  };
-
-  return {
-    onKeyDown,
-    /* an index past the end leaves the strip with no tab stop at all, so it is
-       clamped rather than reset when the artist scope shrinks the chip list */
-    chipProps: (index: number, count: number) => ({
-      "data-chip": true,
-      tabIndex: index === Math.min(active, count - 1) ? 0 : -1,
-      onFocus: () => setActive(index),
-    }),
-  };
-}
-
-/** A strip that scrolls sideways, with the buttons that say so. */
 function ScrollStrip({
   label,
-  onKeyDown,
+  value,
+  onValueChange,
   children,
 }: {
   label: string;
-  onKeyDown: (event: KeyboardEvent<HTMLElement>) => void;
+  value: string[];
+  onValueChange: (value: string[]) => void;
   children: ReactNode;
 }) {
   const stripRef = useRef<HTMLDivElement>(null);
@@ -99,11 +66,13 @@ function ScrollStrip({
 
   return (
     <div className="relative min-w-0 flex-1">
-      <div
+      <ToggleGroupPrimitive
         ref={stripRef}
-        role="group"
+        multiple
+        loopFocus={false}
+        value={value}
+        onValueChange={onValueChange}
         aria-label={label}
-        onKeyDown={onKeyDown}
         onScroll={measure}
         data-scroll-x
         className={cn(
@@ -112,7 +81,7 @@ function ScrollStrip({
         )}
       >
         {children}
-      </div>
+      </ToggleGroupPrimitive>
       {edges.start && <ScrollButton direction={-1} onClick={() => page(-1)} />}
       {edges.end && <ScrollButton direction={1} onClick={() => page(1)} />}
     </div>
@@ -184,63 +153,51 @@ export function MemberChips() {
   const memberColor = useMemberColor();
   const { getMember } = useCosmoArtist();
   const { groups } = useScopedFacets();
-  const artistRoving = useRovingChips();
-  const memberRoving = useRovingChips();
 
   const selected = member ?? [];
   const current = artist?.length === 1 ? artist[0] : null;
   const shown = current === null ? groups : groups.filter((g) => g.artist.id === current);
-  const allMembers = shown.flatMap((group) => group.members);
 
-  const pickArtist = (next: ValidArtist) => {
-    const off = current === next;
-    const keep = off
-      ? groups.flatMap((group) => group.members)
-      : (groups.find((group) => group.artist.id === next)?.members ?? []);
+  /** `undefined` is pressing the current artist again, back to every artist */
+  const pickArtist = (next: ValidArtist | undefined) => {
+    const keep =
+      next === undefined
+        ? groups.flatMap((group) => group.members)
+        : (groups.find((group) => group.artist.id === next)?.members ?? []);
     const kept = selected.filter((name) => keep.includes(name));
     setFilters({
-      artist: off ? undefined : [next],
+      artist: next === undefined ? undefined : [next],
       member: kept.length > 0 ? kept : undefined,
     });
-  };
-
-  const toggleMember = (name: string) => {
-    const next = selected.includes(name)
-      ? selected.filter((value) => value !== name)
-      : [...selected, name];
-    setFilters({ member: next.length > 0 ? next : undefined });
   };
 
   // below `md` the toolbar's Artist and Member dropdowns stand in for both strips
   return (
     <div className="flex min-w-0 items-center gap-2 max-md:hidden">
-      <div
-        role="group"
+      <ToggleGroupPrimitive
+        value={current ? [current] : []}
+        onValueChange={([next]: ValidArtist[]) => pickArtist(next)}
+        loopFocus={false}
         aria-label={m.filter_artist()}
-        onKeyDown={artistRoving.onKeyDown}
         className="bg-secondary flex flex-none items-center gap-0.5 rounded-full p-0.75"
       >
-        {groups.map(({ artist: cosmoArtist }, index) => (
-          <button
+        {groups.map(({ artist: cosmoArtist }) => (
+          <TogglePrimitive
             key={cosmoArtist.id}
-            type="button"
-            aria-pressed={current === cosmoArtist.id}
-            onClick={() => pickArtist(cosmoArtist.id as ValidArtist)}
-            {...artistRoving.chipProps(index, groups.length)}
-            className={cn(
-              "h-8 cursor-pointer rounded-full px-3 text-sm font-medium whitespace-nowrap",
-              current === cosmoArtist.id
-                ? "bg-background text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground",
-            )}
+            value={cosmoArtist.id}
+            className="text-muted-foreground hover:text-foreground data-pressed:bg-background data-pressed:text-foreground h-8 cursor-pointer rounded-full px-3 text-sm font-medium whitespace-nowrap data-pressed:shadow-sm"
           >
             {cosmoArtist.title}
-          </button>
+          </TogglePrimitive>
         ))}
-      </div>
+      </ToggleGroupPrimitive>
 
       <div className="min-w-0 flex-1">
-        <ScrollStrip label={m.filter_member()} onKeyDown={memberRoving.onKeyDown}>
+        <ScrollStrip
+          label={m.filter_member()}
+          value={selected}
+          onValueChange={(next) => setFilters({ member: next.length > 0 ? next : undefined })}
+        >
           {shown.map((group) => (
             <Fragment key={group.artist.id}>
               {shown.length > 1 && (
@@ -248,30 +205,16 @@ export function MemberChips() {
                   {group.artist.title}
                 </span>
               )}
-              {group.members.map((name) => {
-                const on = selected.includes(name);
-                return (
-                  <button
-                    key={name}
-                    type="button"
-                    aria-pressed={on}
-                    onClick={() => toggleMember(name)}
-                    {...memberRoving.chipProps(allMembers.indexOf(name), allMembers.length)}
-                    className={cn(
-                      "bg-popover flex h-8 flex-none cursor-pointer items-center gap-1.75 rounded-full border pr-3 pl-1.25 text-sm font-medium",
-                      on
-                        ? "bg-foreground text-background border-foreground"
-                        : "hover:border-foreground/30",
-                    )}
-                  >
-                    <MemberAvatar
-                      src={getMember(name)?.profileImageUrl}
-                      color={memberColor(name)}
-                    />
-                    {name}
-                  </button>
-                );
-              })}
+              {group.members.map((name) => (
+                <TogglePrimitive
+                  key={name}
+                  value={name}
+                  className="bg-popover data-pressed:bg-foreground data-pressed:text-background data-pressed:border-foreground not-data-pressed:hover:border-foreground/30 flex h-8 flex-none cursor-pointer items-center gap-1.75 rounded-full border pr-3 pl-1.25 text-sm font-medium"
+                >
+                  <MemberAvatar src={getMember(name)?.profileImageUrl} color={memberColor(name)} />
+                  {name}
+                </TogglePrimitive>
+              ))}
             </Fragment>
           ))}
         </ScrollStrip>
