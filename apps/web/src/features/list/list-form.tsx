@@ -336,7 +336,9 @@ export function ListForm({ idPrefix, value, onChange, lists, profiles, mode, url
       {value.listTypeNew !== "general" ? (
         <SwitchRow
           id={id("discoverable")}
-          label={m.list_create_discoverable_label()}
+          label={
+            isSale ? m.list_create_discoverable_sale_label() : m.list_create_discoverable_label()
+          }
           description={
             discoverableDisabled
               ? m.list_create_requires_bind_desc()
