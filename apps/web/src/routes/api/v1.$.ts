@@ -13,9 +13,9 @@ const handler = new OpenAPIHandler(openApiRouter, {
   plugins: [
     new OpenAPIReferencePlugin({
       schemaConverters: [new ZodToJsonSchemaConverter()],
-      docsTitle: "Objekt Explorer API",
+      docsTitle: "Objekt Tracker API",
       specGenerateOptions: {
-        info: { title: "Objekt Explorer API", version: "1.0.0" },
+        info: { title: "Objekt Tracker API", version: "1.0.0" },
         servers: [{ url: "/api/v1" }],
       },
     }),
