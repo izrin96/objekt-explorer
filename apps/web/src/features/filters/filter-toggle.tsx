@@ -31,7 +31,7 @@ function FilterToggle({
       size="sm"
       pressed={on}
       onPressedChange={(pressed) => setFilters({ [field]: pressed ? true : undefined })}
-      className={cn("data-pressed:border-foreground", className)}
+      className={cn("data-pressed:border-foreground data-pressed:text-foreground", className)}
     >
       {/* the sheet stretches its controls with `justify-between`, which would
           otherwise throw the icon and its label to opposite edges */}
