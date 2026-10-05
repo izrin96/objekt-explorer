@@ -1,5 +1,6 @@
+import { MAX_USER_SEARCH_LENGTH } from "@repo/api/schemas/user";
 import { isIpRateLimited } from "@repo/api/services/redis";
-import { MAX_USER_SEARCH_LENGTH, searchUsers } from "@repo/api/services/user-search";
+import { searchUsers } from "@repo/api/services/user-search";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/api/user/search")({

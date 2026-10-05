@@ -6,6 +6,7 @@ import {
   MagnifyingGlassIcon,
   WarningIcon,
 } from "@phosphor-icons/react";
+import { MAX_USER_SEARCH_LENGTH } from "@repo/api/schemas/user";
 import type { ValidArtist } from "@repo/cosmo/types/common";
 import type { CosmoPublicUser } from "@repo/cosmo/types/user";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -264,6 +265,7 @@ function NicknameStep({
           autoFocus
           aria-label={m.link_enter_nickname()}
           placeholder={m.link_nickname_placeholder()}
+          maxLength={MAX_USER_SEARCH_LENGTH}
           startAddon={<MagnifyingGlassIcon />}
           className="w-full"
         />

@@ -1,5 +1,6 @@
 import { ORPCError } from "@orpc/client";
 import { UserIcon } from "@phosphor-icons/react";
+import { MAX_USER_SEARCH_LENGTH } from "@repo/api/schemas/user";
 import type { CosmoPublicUser } from "@repo/cosmo/types/user";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
@@ -25,7 +26,8 @@ export function useUserSearch(initialQuery = "") {
   const { data, error, isFetching } = useQuery({
     queryKey: ["user-search", trimmed],
     queryFn: () => client.user.search({ query: trimmed }).then((res) => res.results),
-    enabled: trimmed.length > 0,
+    // the server refuses a longer query, and no nickname or address is that long
+    enabled: trimmed.length > 0 && trimmed.length <= MAX_USER_SEARCH_LENGTH,
     retry: false,
   });
 

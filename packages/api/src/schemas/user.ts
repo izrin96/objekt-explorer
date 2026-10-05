@@ -35,6 +35,9 @@ export const currentUserOutputSchema = z
   .nullable();
 export type CurrentUserOutput = z.infer<typeof currentUserOutputSchema>;
 
+/** longer than any nickname or address; the server refuses past it */
+export const MAX_USER_SEARCH_LENGTH = 50;
+
 export const userSearchInputSchema = z.object({ query: z.string().default("") });
 
 export const updateAccountInputSchema = z.object({

@@ -7,8 +7,6 @@ import { desc, like } from "drizzle-orm";
 
 import { getAccessToken } from "./token";
 
-export const MAX_USER_SEARCH_LENGTH = 50;
-
 const emptyResult: CosmoSearchResult = { hasNext: false, nextStartAfter: null, results: [] };
 
 /** Cosmo's user search, falling back to the nicknames cached here when Cosmo fails. */

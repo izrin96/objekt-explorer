@@ -7,6 +7,7 @@ import { eq } from "drizzle-orm";
 import { authed, pub } from "../orpc";
 import { documented, errorResponses } from "../schemas/common/documented";
 import {
+  MAX_USER_SEARCH_LENGTH,
   providerIdSchema,
   providersMap,
   updateAccountInputSchema,
@@ -16,7 +17,7 @@ import {
 import { refreshProviderProfile } from "../services/auth";
 import { isIpRateLimited } from "../services/redis";
 import { getCurrentUser } from "../services/user";
-import { MAX_USER_SEARCH_LENGTH, searchUsers } from "../services/user-search";
+import { searchUsers } from "../services/user-search";
 
 export const userRouter = {
   search: pub

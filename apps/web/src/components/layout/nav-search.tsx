@@ -1,4 +1,5 @@
 import { MagnifyingGlassIcon, TrashSimpleIcon } from "@phosphor-icons/react";
+import { MAX_USER_SEARCH_LENGTH } from "@repo/api/schemas/user";
 import type { CosmoPublicUser } from "@repo/cosmo/types/user";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo } from "react";
@@ -193,7 +194,10 @@ export function NavSearch({
           // the wrapper drops Autocomplete's item generic, so the value arrives as unknown
           itemToStringValue={(row) => rowLabel(row as Row)}
         >
-          <CommandInput placeholder={m.nav_search_user_placeholder()} />
+          <CommandInput
+            placeholder={m.nav_search_user_placeholder()}
+            maxLength={MAX_USER_SEARCH_LENGTH}
+          />
           <CommandPanel>
             {/* nothing typed, searching, the server refusing, or nothing found;
                 the searching rows bring the list's own padding */}
