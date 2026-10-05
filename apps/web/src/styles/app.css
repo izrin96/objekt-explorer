@@ -226,6 +226,8 @@
 
   /* custom */
   --accent-solid: oklch(0.585 0.233 277.117);
+  /* cnippet's docs site `--signal-soft`: the ring's indigo as a text-selection wash */
+  --selection: oklch(0.56 0.22 277 / 10%);
   --season-atom: #ffdd00;
   --season-binary: #75fb4c;
   --season-cream: #ff7477;
@@ -295,6 +297,7 @@
 
   /* custom */
   --accent-solid: oklch(0.585 0.233 277.117);
+  --selection: oklch(0.72 0.16 277 / 16%);
 }
 
 @layer base {
@@ -336,6 +339,11 @@
        under the toolbar; without a positioned body it only covers the first
        screen of a scrolled page (Base UI quick start) */
     position: relative;
+  }
+
+  ::selection {
+    background-color: var(--selection);
+    color: var(--foreground);
   }
 
   ::-webkit-scrollbar {
