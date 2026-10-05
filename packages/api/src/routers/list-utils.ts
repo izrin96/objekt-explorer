@@ -2,9 +2,13 @@ import { ORPCError } from "@orpc/server";
 import { db } from "@repo/db";
 import { listEntries } from "@repo/db/schema";
 import { sql } from "drizzle-orm";
-import * as z from "zod";
 
 import { authed, pub, selectedArtistsMiddleware } from "../orpc";
+import {
+  generateDiscordFormatInputSchema,
+  listSlugInputSchema,
+  updateEntryPricesInputSchema,
+} from "../schemas/list";
 import {
   buildListEntries,
   fetchListWithEntries,
@@ -14,42 +18,26 @@ import {
 import { escapeCSV } from "../services/utils";
 
 export const listUtils = {
-  updateEntryPrices: authed
-    .input(
-      z.object({
-        slug: z.string(),
-        updates: z
-          .array(
-            z.object({
-              entryId: z.number(),
-              price: z.number().min(0).nullable(),
-              isQyop: z.boolean(),
-              note: z.string().max(255).optional().nullable(),
-            }),
-          )
-          .max(50000),
-      }),
-    )
-    .handler(
-      async ({
-        input: { slug, updates },
-        context: {
-          session: { user },
-        },
-      }) => {
-        if (updates.length === 0) return;
+  updateEntryPrices: authed.input(updateEntryPricesInputSchema).handler(
+    async ({
+      input: { slug, updates },
+      context: {
+        session: { user },
+      },
+    }) => {
+      if (updates.length === 0) return;
 
-        const list = await findOwnedList(slug, user.id);
+      const list = await findOwnedList(slug, user.id);
 
-        // Only sale lists can set prices
-        if (list.listTypeNew !== "sale") {
-          throw new ORPCError("BAD_REQUEST", {
-            message: "Only sale lists can set prices",
-          });
-        }
+      // Only sale lists can set prices
+      if (list.listTypeNew !== "sale") {
+        throw new ORPCError("BAD_REQUEST", {
+          message: "Only sale lists can set prices",
+        });
+      }
 
-        // one statement for the whole batch; an omitted note keeps the stored one
-        await db.execute(sql`
+      // one statement for the whole batch; an omitted note keeps the stored one
+      await db.execute(sql`
           UPDATE ${listEntries}
           SET price = v.price,
               is_qyop = v.is_qyop,
@@ -63,35 +51,28 @@ export const listUtils = {
           ) AS v(id, price, is_qyop, has_note, note)
           WHERE ${listEntries.id} = v.id AND ${listEntries.listId} = ${list.id}
         `);
-      },
-    ),
+    },
+  ),
 
-  generateDiscordFormat: authed
-    .input(
-      z.object({
-        haveListSlug: z.string().optional(),
-        wantListSlug: z.string().optional(),
-      }),
-    )
-    .handler(
-      async ({
-        input: { haveListSlug, wantListSlug },
-        context: {
-          session: { user },
-        },
-      }) => {
-        const [haveCollections, wantCollections] = await Promise.all([
-          haveListSlug ? fetchPartialOwnedListCollections(haveListSlug, user.id) : null,
-          wantListSlug ? fetchPartialOwnedListCollections(wantListSlug, user.id) : null,
-        ]);
-
-        return { have: haveCollections ?? [], want: wantCollections ?? [] };
+  generateDiscordFormat: authed.input(generateDiscordFormatInputSchema).handler(
+    async ({
+      input: { haveListSlug, wantListSlug },
+      context: {
+        session: { user },
       },
-    ),
+    }) => {
+      const [haveCollections, wantCollections] = await Promise.all([
+        haveListSlug ? fetchPartialOwnedListCollections(haveListSlug, user.id) : null,
+        wantListSlug ? fetchPartialOwnedListCollections(wantListSlug, user.id) : null,
+      ]);
+
+      return { have: haveCollections ?? [], want: wantCollections ?? [] };
+    },
+  ),
 
   export: pub
     .use(selectedArtistsMiddleware)
-    .input(z.object({ slug: z.string() }))
+    .input(listSlugInputSchema)
     .handler(async ({ input: { slug }, context: { artists } }) => {
       const result = await fetchListWithEntries(slug);
 

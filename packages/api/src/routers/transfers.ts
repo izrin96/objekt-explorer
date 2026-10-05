@@ -1,7 +1,6 @@
-import * as z from "zod";
-
 import { pub } from "../orpc";
-import { transfersQuerySchema } from "../schemas/transfers";
+import { documented } from "../schemas/common/documented";
+import { addressTransfersInputSchema, addressTransfersOutputSchema } from "../schemas/transfers";
 import { fetchAddressTransfers } from "../services/transfers";
 
 export const transfersRouter = {
@@ -12,6 +11,7 @@ export const transfersRouter = {
       tags: ["Transfers"],
       summary: "Transfers to and from an address",
     })
-    .input(transfersQuerySchema.extend({ address: z.string() }))
+    .input(addressTransfersInputSchema)
+    .output(documented(addressTransfersOutputSchema))
     .handler(({ input: { address, ...query } }) => fetchAddressTransfers(address, query)),
 };

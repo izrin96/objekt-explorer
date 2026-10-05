@@ -20,6 +20,7 @@
     "@aws-sdk/s3-request-presigner": "^3.1146.0",
     "@better-auth/i18n": "^1.7.7",
     "@orpc/server": "^1.15.4",
+    "@orpc/zod": "^1.15.4",
     "@repo/cosmo": "workspace:*",
     "@repo/db": "workspace:*",
     "@repo/lib": "workspace:*",

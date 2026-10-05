@@ -1,4 +1,4 @@
-import { artistSchema } from "@repo/api/schemas/artist";
+import { artistSchema } from "@repo/api/schemas/common/artist";
 import { createFileRoute } from "@tanstack/react-router";
 import * as z from "zod";
 

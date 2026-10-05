@@ -1,4 +1,4 @@
-import { toCanonicalArtist } from "@repo/api/schemas/artist";
+import { toCanonicalArtist } from "@repo/api/schemas/common/artist";
 import {
   validArtists,
   validCustomSorts,

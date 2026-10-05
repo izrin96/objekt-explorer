@@ -1,40 +1,10 @@
+import { validArtists } from "@repo/cosmo/types/common";
+import type { CosmoSearchResult } from "@repo/cosmo/types/user";
 import * as z from "zod";
 
-export const publicUserSchema = z.object({
-  name: z.string().nullable(),
-  image: z.string().nullable(),
-  discord: z.string().nullable(),
-  twitter: z.string().nullable(),
-});
-export type PublicUser = z.infer<typeof publicUserSchema>;
-
-export const baseProfileSchema = z.object({
-  address: z.string(),
-  nickname: z.string().nullable(),
-});
-
-export const publicProfileSchema = baseProfileSchema.extend({
-  isGuard: z.boolean().nullish(),
-  bannerImgUrl: z.string().nullish(),
-  bannerImgType: z.string().nullish(),
-  gridColumns: z.number().nullish(),
-  user: publicUserSchema.nullish(),
-  verified: z.boolean().nullish(),
-});
-export type PublicProfile = z.infer<typeof publicProfileSchema>;
-
-/** A profile's hover card: the public profile plus its counts, null when private or uncounted. */
-export type ProfilePreview = PublicProfile & {
-  counts: { objekts: number; collections: number } | null;
-};
-
-/** A linked Cosmo's card: its banner and its objekt count. */
-export type LinkedPreview = {
-  address: string;
-  bannerImgUrl: string | null;
-  bannerImgType: string | null;
-  count: number;
-};
+import type { User } from "../services/auth";
+import { publicListSchema } from "./list";
+import { baseProfileSchema } from "./profile";
 
 export const providerIdSchema = z.enum(["twitter", "discord"]);
 export type ProviderId = z.infer<typeof providerIdSchema>;
@@ -55,3 +25,40 @@ export const providersMap: Record<ProviderId, Provider> = {
     label: "Discord",
   },
 };
+
+export const currentUserOutputSchema = z
+  .object({
+    user: z.custom<User>(),
+    lists: publicListSchema.array(),
+    profiles: baseProfileSchema.array(),
+  })
+  .nullable();
+export type CurrentUserOutput = z.infer<typeof currentUserOutputSchema>;
+
+export const userSearchInputSchema = z.object({ query: z.string().default("") });
+
+export const updateAccountInputSchema = z.object({
+  name: z.string().min(1).max(256),
+  showSocial: z.boolean(),
+  removePic: z.boolean(),
+});
+
+const cosmoProfileSchema = z.object({
+  artistId: z.enum(validArtists),
+  artistName: z.enum(validArtists),
+  image: z.object({ original: z.string(), thumbnail: z.string() }),
+});
+
+export const userSearchOutputSchema = z.object({
+  hasNext: z.boolean(),
+  nextStartAfter: z.string().nullable(),
+  results: z.array(
+    z.object({
+      id: z.number().int(),
+      nickname: z.string(),
+      profileImageUrl: z.string(),
+      address: z.string(),
+      userProfiles: z.array(cosmoProfileSchema),
+    }),
+  ),
+}) satisfies z.ZodType<CosmoSearchResult>;

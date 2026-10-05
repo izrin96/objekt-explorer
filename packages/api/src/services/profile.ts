@@ -8,7 +8,7 @@ import { and, eq, sql } from "drizzle-orm";
 import type { FetchError } from "ofetch";
 
 import type { ApiMessages } from "../orpc";
-import type { PublicProfile, PublicUser } from "../schemas/user";
+import type { PublicProfile, PublicUser } from "../schemas/profile";
 import type { User } from "./auth";
 import { isProfileHidden } from "./privacy";
 

@@ -3,10 +3,16 @@ import { db } from "@repo/db";
 import { user as userSchema } from "@repo/db/auth-schema";
 import { getRequestHeaders } from "@tanstack/react-start/server";
 import { eq } from "drizzle-orm";
-import * as z from "zod";
 
 import { authed, pub } from "../orpc";
-import { providerIdSchema, providersMap } from "../schemas/user";
+import { documented } from "../schemas/common/documented";
+import {
+  providerIdSchema,
+  providersMap,
+  updateAccountInputSchema,
+  userSearchInputSchema,
+  userSearchOutputSchema,
+} from "../schemas/user";
 import { auth, getProviderUsername } from "../services/auth";
 import { isIpRateLimited } from "../services/redis";
 import { getCurrentUser } from "../services/user";
@@ -20,7 +26,8 @@ export const userRouter = {
       tags: ["Users"],
       summary: "Find Cosmo users by nickname",
     })
-    .input(z.object({ query: z.string().default("") }))
+    .input(userSearchInputSchema)
+    .output(documented(userSearchOutputSchema, { open: true }))
     .handler(async ({ input: { query }, context }) => {
       if (query.length < 1) return searchUsers(query);
       if (query.length > MAX_USER_SEARCH_LENGTH) {
@@ -93,13 +100,7 @@ export const userRouter = {
   currentUser: pub.handler(getCurrentUser),
 
   updateAccount: authed
-    .input(
-      z.object({
-        name: z.string().min(1).max(256),
-        showSocial: z.boolean(),
-        removePic: z.boolean(),
-      }),
-    )
+    .input(updateAccountInputSchema)
     .handler(async ({ input, context: { session } }) => {
       await db
         .update(userSchema)

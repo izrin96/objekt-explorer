@@ -2,10 +2,15 @@ import { ORPCError } from "@orpc/server";
 import { db } from "@repo/db";
 import { listEntries } from "@repo/db/schema";
 import { and, eq, inArray } from "drizzle-orm";
-import * as z from "zod";
 
 import { authed, optionalAuthed, pub, selectedArtistsMiddleware } from "../orpc";
-import { addSourceSchema } from "../schemas/list";
+import {
+  addToListInputSchema,
+  listPreviewsInputSchema,
+  listSlugInputSchema,
+  profileListsInputSchema,
+  removeObjektsFromListInputSchema,
+} from "../schemas/list";
 import {
   addEntries,
   buildListEntries,
@@ -19,11 +24,7 @@ import { isProfileHidden } from "../services/privacy";
 export const listEntriesRouter = {
   listEntries: pub
     .use(selectedArtistsMiddleware)
-    .input(
-      z.object({
-        slug: z.string(),
-      }),
-    )
+    .input(listSlugInputSchema)
     .handler(async ({ input: { slug }, context: { artists } }) => {
       const result = await fetchListWithEntries(slug);
 
@@ -37,15 +38,11 @@ export const listEntriesRouter = {
 
   /** A slug is the list's address, so it reveals no more than opening the list would. */
   listPreviews: pub
-    .input(z.object({ slugs: z.string().array().max(500) }))
+    .input(listPreviewsInputSchema)
     .handler(({ input: { slugs } }) => fetchListPreviews(slugs)),
 
   profileLists: optionalAuthed
-    .input(
-      z.object({
-        profileAddress: z.string(),
-      }),
-    )
+    .input(profileListsInputSchema)
     .handler(async ({ input: { profileAddress }, context: { session } }) => {
       const owner = await db.query.userAddress.findFirst({
         columns: { privateProfile: true, userId: true },
@@ -61,59 +58,44 @@ export const listEntriesRouter = {
       return await fetchOwnedLists("profileAddress", profileAddress);
     }),
 
-  addToList: authed
-    .input(
-      z.object({
-        slug: z.string(),
-        skipDups: z.boolean(),
-        from: addSourceSchema,
-      }),
-    )
-    .handler(
-      async ({
-        input: { slug, skipDups, from },
-        context: {
-          session: { user },
-        },
-      }) => {
-        const list = await findOwnedList(slug, user.id);
-        const { rows, skipped } = await addEntries(list, from, skipDups);
-
-        // unfiltered by the selected artists, so the entries are exactly what was added
-        const entries =
-          rows.length === 0
-            ? []
-            : await buildListEntries(rows, list.isProfileBind, { hideSerial: list.hideSerial });
-
-        return { entries, skipped };
+  addToList: authed.input(addToListInputSchema).handler(
+    async ({
+      input: { slug, skipDups, from },
+      context: {
+        session: { user },
       },
-    ),
+    }) => {
+      const list = await findOwnedList(slug, user.id);
+      const { rows, skipped } = await addEntries(list, from, skipDups);
 
-  removeObjektsFromList: authed
-    .input(
-      z.object({
-        slug: z.string(),
-        entryIds: z.number().int().positive().array().max(50000),
-      }),
-    )
-    .handler(
-      async ({
-        input: { slug, entryIds },
-        context: {
-          session: { user },
-        },
-      }) => {
-        const list = await findOwnedList(slug, user.id);
+      // unfiltered by the selected artists, so the entries are exactly what was added
+      const entries =
+        rows.length === 0
+          ? []
+          : await buildListEntries(rows, list.isProfileBind, { hideSerial: list.hideSerial });
 
-        if (entryIds.length === 0) return { removed: 0 };
+      return { entries, skipped };
+    },
+  ),
 
-        // an entry already gone, say removed from another tab, is not counted
-        const rows = await db
-          .delete(listEntries)
-          .where(and(inArray(listEntries.id, entryIds), eq(listEntries.listId, list.id)))
-          .returning({ id: listEntries.id });
-
-        return { removed: rows.length };
+  removeObjektsFromList: authed.input(removeObjektsFromListInputSchema).handler(
+    async ({
+      input: { slug, entryIds },
+      context: {
+        session: { user },
       },
-    ),
+    }) => {
+      const list = await findOwnedList(slug, user.id);
+
+      if (entryIds.length === 0) return { removed: 0 };
+
+      // an entry already gone, say removed from another tab, is not counted
+      const rows = await db
+        .delete(listEntries)
+        .where(and(inArray(listEntries.id, entryIds), eq(listEntries.listId, list.id)))
+        .returning({ id: listEntries.id });
+
+      return { removed: rows.length };
+    },
+  ),
 };

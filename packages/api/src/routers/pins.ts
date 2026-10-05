@@ -2,11 +2,12 @@ import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { objekts } from "@repo/db/indexer/schema";
 import { pins } from "@repo/db/schema";
-import { chunk, chunkMap, isAddress } from "@repo/lib";
+import { chunk, chunkMap } from "@repo/lib";
 import { and, asc, eq, inArray, isNull, sql } from "drizzle-orm";
-import * as z from "zod";
 
 import { authed, pub } from "../orpc";
+import { addressSchema, addressTokenIdsInputSchema } from "../schemas/common/address";
+import { movePinInputSchema } from "../schemas/pins";
 import { isAddressHiddenFromCaller } from "../services/privacy";
 import { assertProfileOwned } from "../services/profile";
 import { TOKEN_CHUNK_SIZE } from "../services/utils";
@@ -35,24 +36,17 @@ async function getValidPins(address: string) {
 }
 
 export const pinsRouter = {
-  list: pub
-    .input(z.string().refine((val) => isAddress(val)))
-    .handler(async ({ input: address }) => {
-      if (await isAddressHiddenFromCaller(address)) return [];
-      const validPins = await getValidPins(address);
-      return validPins.map((a) => ({
-        tokenId: a.tokenId.toString(),
-        order: a.order ?? a.id,
-      }));
-    }),
+  list: pub.input(addressSchema).handler(async ({ input: address }) => {
+    if (await isAddressHiddenFromCaller(address)) return [];
+    const validPins = await getValidPins(address);
+    return validPins.map((a) => ({
+      tokenId: a.tokenId.toString(),
+      order: a.order ?? a.id,
+    }));
+  }),
 
   batchPin: authed
-    .input(
-      z.object({
-        address: z.string().refine((val) => isAddress(val)),
-        tokenIds: z.number().array().max(50000),
-      }),
-    )
+    .input(addressTokenIdsInputSchema)
     .handler(async ({ input: { address, tokenIds }, context: { messages, session } }) => {
       await assertProfileOwned(address, session.user.id, messages);
 
@@ -84,12 +78,7 @@ export const pinsRouter = {
     }),
 
   batchUnpin: authed
-    .input(
-      z.object({
-        address: z.string().refine((val) => isAddress(val)),
-        tokenIds: z.number().array().max(50000),
-      }),
-    )
+    .input(addressTokenIdsInputSchema)
     .handler(async ({ input: { address, tokenIds }, context: { messages, session } }) => {
       await assertProfileOwned(address, session.user.id, messages);
 
@@ -99,13 +88,7 @@ export const pinsRouter = {
     }),
 
   movePin: authed
-    .input(
-      z.object({
-        address: z.string().refine((val) => isAddress(val)),
-        tokenId: z.number(),
-        direction: z.enum(["up", "down"]),
-      }),
-    )
+    .input(movePinInputSchema)
     .handler(async ({ input: { address, tokenId, direction }, context: { messages, session } }) => {
       await assertProfileOwned(address, session.user.id, messages);
 
@@ -141,12 +124,7 @@ export const pinsRouter = {
     }),
 
   reorderPins: authed
-    .input(
-      z.object({
-        address: z.string().refine((val) => isAddress(val)),
-        tokenIds: z.number().array().max(50000),
-      }),
-    )
+    .input(addressTokenIdsInputSchema)
     .handler(async ({ input: { address, tokenIds }, context: { messages, session } }) => {
       await assertProfileOwned(address, session.user.id, messages);
 

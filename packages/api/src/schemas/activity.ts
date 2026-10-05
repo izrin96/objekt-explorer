@@ -1,32 +1,23 @@
-import { validOnlineTypes } from "@repo/cosmo/types/common";
 import type { OwnedObjekt } from "@repo/lib/types/objekt";
 import * as z from "zod";
 
-import { artistsArraySchema } from "./artist";
-import { queryArray } from "./query";
+import { timestampCursorSchema } from "./common/cursor";
+import { collectionFiltersSchema } from "./common/filters";
+import { ownedObjektSchema } from "./common/objekt";
+import { transferNicknamesSchema, transferRowSchema } from "./common/transfer";
 
-const partialTransferSchema = z.object({
-  id: z.string(),
-  from: z.string(),
-  to: z.string(),
-  timestamp: z.string(),
-  hash: z.string(),
-});
-
-export const activityDataSchema = z.object({
-  transfer: partialTransferSchema,
+/** the socket parses live rows with this in the browser, so its objekt stays unchecked */
+export const activityItemSchema = z.object({
+  transfer: transferRowSchema.extend({ hash: z.string() }),
   objekt: z.custom<OwnedObjekt>(),
-  nickname: z.object({
-    from: z.string().optional(),
-    to: z.string().optional(),
-  }),
+  nickname: transferNicknamesSchema,
 });
-export type ActivityData = z.infer<typeof activityDataSchema>;
+export type ActivityItem = z.infer<typeof activityItemSchema>;
 
 /** what the activity socket sends: live batches, and the backlog replayed on request */
 export const activityMessageSchema = z.object({
   type: z.enum(["transfer", "history"]),
-  data: z.array(activityDataSchema),
+  data: z.array(activityItemSchema),
 });
 export type ActivityMessage = z.infer<typeof activityMessageSchema>;
 
@@ -36,32 +27,21 @@ export const activityClientMessageSchema = z.object({
 });
 export type ActivityClientMessage = z.infer<typeof activityClientMessageSchema>;
 
-const activityCursorSchema = z.object({
-  timestamp: z.string(),
-  id: z.string(),
+export const activityFeedOutputSchema = z.object({
+  items: z.array(activityItemSchema.extend({ objekt: ownedObjektSchema })),
+  nextCursor: timestampCursorSchema.optional(),
 });
-export type ActivityCursor = z.infer<typeof activityCursorSchema>;
+export type ActivityFeedOutput = z.infer<typeof activityFeedOutputSchema>;
 
-export const activityResponseSchema = z.object({
-  items: z.array(activityDataSchema),
-  nextCursor: activityCursorSchema.optional(),
-});
-export type ActivityResponse = z.infer<typeof activityResponseSchema>;
-
-export const validType = ["all", "mint", "transfer", "spin"] as const;
-export type ValidType = (typeof validType)[number];
+export const activityTypeSchema = z.enum(["all", "mint", "transfer", "spin"]);
+export type ActivityType = z.infer<typeof activityTypeSchema>;
 
 /** activity feed input; the legacy `GET /api/activity` sends the cursor as JSON */
-export const activityQuerySchema = z.object({
-  type: z.enum(validType).default("all"),
-  artist: artistsArraySchema.default([]),
-  member: queryArray(z.string()).default([]),
-  season: queryArray(z.string()).default([]),
-  class: queryArray(z.string()).default([]),
-  on_offline: queryArray(z.enum(validOnlineTypes)).default([]),
-  collection: queryArray(z.string()).default([]),
-  cursor: activityCursorSchema.optional(),
+export const activityFeedInputSchema = z.object({
+  type: activityTypeSchema.default("all"),
+  ...collectionFiltersSchema.shape,
+  cursor: timestampCursorSchema.optional(),
 });
-export type ActivityQuery = z.infer<typeof activityQuerySchema>;
+export type ActivityFeedInput = z.infer<typeof activityFeedInputSchema>;
 /** what the client sends; the cursor is added per page */
-export type ActivityParams = Omit<z.input<typeof activityQuerySchema>, "cursor">;
+export type ActivityParams = Omit<z.input<typeof activityFeedInputSchema>, "cursor">;

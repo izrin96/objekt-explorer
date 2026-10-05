@@ -1,7 +1,7 @@
-import { validType, type ValidType } from "@repo/api/schemas/transfers";
+import { transferTypeSchema, type TransferType } from "@repo/api/schemas/transfers";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useCallback } from "react";
-import * as z from "zod";
+import type * as z from "zod";
 
 import { defaultFilters, filterSearchSchema } from "@/features/filters/search-schema";
 
@@ -12,23 +12,23 @@ const { at: _at, ...resetPatch } = defaultFilters;
  * table a link opens is the table the link was written on.
  */
 export const tradesSearchSchema = filterSearchSchema.extend({
-  type: z.enum(validType).optional().catch(undefined),
+  type: transferTypeSchema.optional().catch(undefined),
 });
 
 type TradesSearch = z.infer<typeof tradesSearchSchema>;
 
 /** `all` is the absence of the parameter, so a default view carries no key. */
-export function useTradesType(): ValidType {
+export function useTradesType(): TransferType {
   return useSearch({
     strict: false,
     select: (search) => (search as TradesSearch).type ?? "all",
   });
 }
 
-export function useSetTradesType(): (type: ValidType) => void {
+export function useSetTradesType(): (type: TransferType) => void {
   const navigate = useNavigate();
   return useCallback(
-    (type: ValidType) => {
+    (type: TransferType) => {
       void navigate({
         replace: true,
         resetScroll: false,

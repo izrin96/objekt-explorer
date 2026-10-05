@@ -1,5 +1,9 @@
 import { ArrowsLeftRightIcon, LockSimpleIcon } from "@phosphor-icons/react";
-import { validType, type AggregatedTransfer, type ValidType } from "@repo/api/schemas/transfers";
+import {
+  transferTypeSchema,
+  type TransferItem,
+  type TransferType,
+} from "@repo/api/schemas/transfers";
 import { Addresses } from "@repo/lib";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useInfiniteQuery } from "@tanstack/react-query";
@@ -30,7 +34,7 @@ import { ProfileToolbar } from "../profile-toolbar";
 import { transfersOptions } from "./queries";
 import { useResetTrades, useSetTradesType, useTradesType } from "./search-schema";
 
-const TYPE_LABEL: Record<ValidType, () => string> = {
+const TYPE_LABEL: Record<TransferType, () => string> = {
   all: m.trades_filter_type_all,
   mint: m.trades_filter_type_mint,
   received: m.trades_filter_type_received,
@@ -42,7 +46,7 @@ const COLUMNS = "grid-cols-[10.5rem_minmax(14rem,1.5fr)_7rem_minmax(0,1fr)]";
 const MIN_WIDTH = "min-w-168";
 
 /** the two counterparties that are Cosmo itself rather than another collector */
-function Counterparty({ row, isReceiver }: { row: AggregatedTransfer; isReceiver: boolean }) {
+function Counterparty({ row, isReceiver }: { row: TransferItem; isReceiver: boolean }) {
   if (isReceiver && row.transfer.from === Addresses.NULL) {
     return (
       <span className="text-muted-foreground min-w-0 truncate font-mono">{m.trades_cosmo()}</span>
@@ -80,7 +84,7 @@ function TradeRow({
   address,
   onOpen,
 }: {
-  row: AggregatedTransfer;
+  row: TransferItem;
   address: string;
   onOpen: (objekt: ValidObjekt) => void;
 }) {
@@ -108,7 +112,7 @@ function TradesTypeFilter({ className }: { className?: string }) {
   return (
     <SingleSelect
       label={m.trades_filter_type_label()}
-      options={validType.map((value) => ({ value, label: TYPE_LABEL[value]() }))}
+      options={transferTypeSchema.options.map((value) => ({ value, label: TYPE_LABEL[value]() }))}
       value={type}
       defaultValue="all"
       onChange={setType}

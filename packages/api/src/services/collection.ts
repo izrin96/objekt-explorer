@@ -8,11 +8,11 @@ import { fetchPublicNicknames, fetchUserProfiles } from "@repo/lib/server/user";
 import { type SQL, and, asc, count, desc, eq, inArray, lte, ne, sql } from "drizzle-orm";
 
 import type {
-  CollectionMetadata,
-  CollectionResult,
-  ObjektTransferResult,
-  SerialList,
-} from "../schemas/objekt";
+  CollectionMetadataOutput,
+  CollectionListOutput,
+  SerialTransfersOutput,
+  SerialsOutput,
+} from "../schemas/collections";
 import { getSession } from "./auth";
 import { getCollectionColumns } from "./objekt";
 import { redis } from "./redis";
@@ -21,14 +21,14 @@ export type CollectionListQuery = { artist: ValidArtist[]; at?: string };
 
 export type CollectionList =
   | { notModified: true; lastModifiedMs: number }
-  | { notModified: false; lastModifiedMs: number; result: CollectionResult };
+  | { notModified: false; lastModifiedMs: number; result: CollectionListOutput };
 
 // Nearly every request is the unfiltered list, so it is built once and reused
 // until Last-Modified moves past it. The TTL picks up in-place edits that don't
 // move it, such as indexer upserts.
 const FULL_LIST_TTL_MS = 5 * 60 * 1000;
 let fullListCache:
-  | { lastModifiedMs: number; expiresAt: number; result: Promise<CollectionResult> }
+  | { lastModifiedMs: number; expiresAt: number; result: Promise<CollectionListOutput> }
   | undefined;
 
 function getFullList(whereQuery: SQL | undefined, lastModifiedMs: number) {
@@ -46,7 +46,7 @@ function getFullList(whereQuery: SQL | undefined, lastModifiedMs: number) {
   return fullListCache.result;
 }
 
-async function queryCollections(whereQuery: SQL | undefined): Promise<CollectionResult> {
+async function queryCollections(whereQuery: SQL | undefined): Promise<CollectionListOutput> {
   const result = await indexer
     .select({
       ...getCollectionColumns(),
@@ -105,7 +105,7 @@ export async function fetchCollectionList(
   return { notModified: false, lastModifiedMs, result };
 }
 
-export async function fetchCollectionMetadata(slug: string): Promise<CollectionMetadata> {
+export async function fetchCollectionMetadata(slug: string): Promise<CollectionMetadataOutput> {
   const [result] = await indexer
     .select({
       total: count(),
@@ -122,7 +122,7 @@ export async function fetchCollectionMetadata(slug: string): Promise<CollectionM
   return result ?? { total: 0, spin: 0, transferable: 0 };
 }
 
-export async function fetchSerialList(slug: string): Promise<SerialList> {
+export async function fetchSerialList(slug: string): Promise<SerialsOutput> {
   const results = await indexer
     .select({
       serial: objekts.serial,
@@ -143,7 +143,7 @@ export async function fetchSerialList(slug: string): Promise<SerialList> {
 export async function fetchSerialTransfers(
   slug: string,
   serial: number,
-): Promise<ObjektTransferResult> {
+): Promise<SerialTransfersOutput> {
   if (serial < 1) return { transfers: [] };
 
   const [session, results] = await Promise.all([

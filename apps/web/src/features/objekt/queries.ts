@@ -1,6 +1,6 @@
+import type { CollectionListOutput } from "@repo/api/schemas/collections";
 import type { SortBy, SortDir } from "@repo/api/schemas/market";
-import type { CollectionResult } from "@repo/api/schemas/objekt";
-import type { OwnedBySchema } from "@repo/api/schemas/owned-by";
+import type { OwnedByFilters } from "@repo/api/schemas/objekts";
 import { keepPreviousData, queryOptions } from "@tanstack/react-query";
 import { ofetch } from "ofetch";
 
@@ -9,14 +9,14 @@ import { client, orpc } from "@/lib/orpc";
 import { mapObjektWithTag } from "./objekt-utils";
 
 /** Never changes under a given artist scope, so it is fetched once and filtered in the browser. */
-export const collectionOptions = (filters?: OwnedBySchema) =>
+export const collectionOptions = (filters?: OwnedByFilters) =>
   queryOptions({
     queryKey: ["collections", filters],
     staleTime: Infinity,
     refetchOnWindowFocus: false,
     queryFn: async () => {
       // plain GET rather than RPC, so the browser revalidates its cached copy with Last-Modified
-      const result = await ofetch<CollectionResult>("/api/v1/collections", {
+      const result = await ofetch<CollectionListOutput>("/api/v1/collections", {
         query: { ...filters },
       }).then((response) => response.collections);
 

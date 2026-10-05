@@ -4,16 +4,15 @@ import { objekts } from "@repo/db/indexer/schema";
 import { listEntries, lists, userAddress } from "@repo/db/schema";
 import { CURRENCY_ALIASES, normalizeCurrency } from "@repo/lib/currency";
 import { and, asc, desc, eq, inArray, isNotNull, sql } from "drizzle-orm";
-import * as z from "zod";
 
 import { pub } from "../orpc";
+import { collectionSlugInputSchema } from "../schemas/common/collection";
 import {
-  sortBySchema,
-  sortDirSchema,
   type MarketListing,
-  type MarketResult,
-  type MarketStats,
+  type MarketListingsOutput,
+  type MarketStatsOutput,
   type MarketSummaryEntry,
+  marketListingsInputSchema,
 } from "../schemas/market";
 import { getUsdRates } from "../services/currency-rates";
 import { getCache } from "../services/redis";
@@ -103,102 +102,92 @@ export const marketRouter = {
     }
   }),
 
-  marketListings: pub
-    .input(
-      z.object({
-        collectionSlug: z.string(),
-        sortBy: sortBySchema.default("createdAt"),
-        sortDir: sortDirSchema.default("desc"),
-        offset: z.number().int().min(0).default(0),
-        limit: z.number().int().min(1).max(100).default(20),
-      }),
-    )
-    .handler(async ({ input }) => {
-      const rates = await getUsdRates();
+  marketListings: pub.input(marketListingsInputSchema).handler(async ({ input }) => {
+    const rates = await getUsdRates();
 
-      const where = listingsWhere(input.collectionSlug);
+    const where = listingsWhere(input.collectionSlug);
 
-      const baseQuery = () =>
-        db
-          .select({
-            id: listEntries.id,
-            price: listEntries.price,
-            isQyop: listEntries.isQyop,
-            note: listEntries.note,
-            createdAt: listEntries.createdAt,
-            objektId: listEntries.objektId,
-            hideSerial: lists.hideSerial,
-            currency: lists.currency,
-            slug: lists.slug,
-            profileSlug: lists.profileSlug,
-            profileAddress: lists.profileAddress,
-            ownerNickname: userAddress.nickname,
-            ownerHideNickname: userAddress.hideNickname,
-          })
-          .from(listEntries)
-          .innerJoin(lists, eq(listEntries.listId, lists.id))
-          .leftJoin(userAddress, eq(lists.profileAddress, userAddress.address))
-          .where(where);
+    const baseQuery = () =>
+      db
+        .select({
+          id: listEntries.id,
+          price: listEntries.price,
+          isQyop: listEntries.isQyop,
+          note: listEntries.note,
+          createdAt: listEntries.createdAt,
+          objektId: listEntries.objektId,
+          hideSerial: lists.hideSerial,
+          currency: lists.currency,
+          slug: lists.slug,
+          profileSlug: lists.profileSlug,
+          profileAddress: lists.profileAddress,
+          ownerNickname: userAddress.nickname,
+          ownerHideNickname: userAddress.hideNickname,
+        })
+        .from(listEntries)
+        .innerJoin(lists, eq(listEntries.listId, lists.id))
+        .leftJoin(userAddress, eq(lists.profileAddress, userAddress.address))
+        .where(where);
 
-      const dir = input.sortDir === "desc" ? desc : asc;
+    const dir = input.sortDir === "desc" ? desc : asc;
 
-      const paginatedRows =
-        input.sortBy === "price"
-          ? await baseQuery()
-              .orderBy(
-                sql`CASE WHEN ${listEntries.isQyop} THEN 1 WHEN ${listEntries.price} IS NULL THEN 2 ELSE 0 END`,
-                dir(usdPriceExpr(rates)),
-              )
-              .offset(input.offset)
-              .limit(input.limit + 1)
-          : await baseQuery()
-              .orderBy(dir(listEntries.createdAt))
-              .offset(input.offset)
-              .limit(input.limit + 1);
+    const paginatedRows =
+      input.sortBy === "price"
+        ? await baseQuery()
+            .orderBy(
+              sql`CASE WHEN ${listEntries.isQyop} THEN 1 WHEN ${listEntries.price} IS NULL THEN 2 ELSE 0 END`,
+              dir(usdPriceExpr(rates)),
+            )
+            .offset(input.offset)
+            .limit(input.limit + 1)
+        : await baseQuery()
+            .orderBy(dir(listEntries.createdAt))
+            .offset(input.offset)
+            .limit(input.limit + 1);
 
-      const hasMore = paginatedRows.length > input.limit;
-      const rows = hasMore ? paginatedRows.slice(0, input.limit) : paginatedRows;
-      const nextOffset = hasMore ? input.offset + rows.length : undefined;
+    const hasMore = paginatedRows.length > input.limit;
+    const rows = hasMore ? paginatedRows.slice(0, input.limit) : paginatedRows;
+    const nextOffset = hasMore ? input.offset + rows.length : undefined;
 
-      const objektIds = rows.map((r) => r.objektId).filter((id): id is string => id !== null);
-      const objektMap = await fetchObjektMap(objektIds);
+    const objektIds = rows.map((r) => r.objektId).filter((id): id is string => id !== null);
+    const objektMap = await fetchObjektMap(objektIds);
 
-      const items = rows.map((row) => {
-        const objekt = row.objektId ? objektMap.get(row.objektId) : null;
-        const nickname = row.ownerHideNickname || !row.ownerNickname ? null : row.ownerNickname;
-        const currency = row.currency ? normalizeCurrency(row.currency) : null;
-        const rate = currency ? (rates[currency] ?? 1) : 1;
-        const usdPrice = row.price !== null ? row.price * rate : null;
-
-        return {
-          id: row.id,
-          price: row.price,
-          isQyop: row.isQyop,
-          note: row.note,
-          createdAt: row.createdAt,
-          currency,
-          usdPrice,
-          list: {
-            slug: row.slug,
-            profileSlug: row.profileSlug,
-            profile: row.profileAddress ? { nickname, address: row.profileAddress } : null,
-          },
-          serial: row.hideSerial ? null : (objekt?.serial ?? null),
-          transferable: row.hideSerial ? null : (objekt?.transferable ?? null),
-        } satisfies MarketListing;
-      });
+    const items = rows.map((row) => {
+      const objekt = row.objektId ? objektMap.get(row.objektId) : null;
+      const nickname = row.ownerHideNickname || !row.ownerNickname ? null : row.ownerNickname;
+      const currency = row.currency ? normalizeCurrency(row.currency) : null;
+      const rate = currency ? (rates[currency] ?? 1) : 1;
+      const usdPrice = row.price !== null ? row.price * rate : null;
 
       return {
-        items,
-        hasMore,
-        nextOffset,
-      } satisfies MarketResult;
-    }),
+        id: row.id,
+        price: row.price,
+        isQyop: row.isQyop,
+        note: row.note,
+        createdAt: row.createdAt,
+        currency,
+        usdPrice,
+        list: {
+          slug: row.slug,
+          profileSlug: row.profileSlug,
+          profile: row.profileAddress ? { nickname, address: row.profileAddress } : null,
+        },
+        serial: row.hideSerial ? null : (objekt?.serial ?? null),
+        transferable: row.hideSerial ? null : (objekt?.transferable ?? null),
+      } satisfies MarketListing;
+    });
+
+    return {
+      items,
+      hasMore,
+      nextOffset,
+    } satisfies MarketListingsOutput;
+  }),
 
   /** USD value of one unit of each known currency, keyed by ISO 4217 code */
   rates: pub.handler(getUsdRates),
 
-  stats: pub.input(z.object({ collectionSlug: z.string() })).handler(async ({ input }) => {
+  stats: pub.input(collectionSlugInputSchema).handler(async ({ input }) => {
     const rates = await getUsdRates();
 
     const [row] = await db
@@ -214,6 +203,6 @@ export const marketRouter = {
       .where(listingsWhere(input.collectionSlug));
 
     // aggregate without GROUP BY always yields exactly one row
-    return row! satisfies MarketStats;
+    return row! satisfies MarketStatsOutput;
   }),
 };

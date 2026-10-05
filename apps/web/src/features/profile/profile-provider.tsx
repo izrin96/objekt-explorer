@@ -1,4 +1,4 @@
-import type { PublicProfile } from "@repo/api/schemas/user";
+import type { PublicProfile } from "@repo/api/schemas/profile";
 import { createContext, use, type PropsWithChildren } from "react";
 
 import { useUserProfiles } from "@/features/user/hooks";

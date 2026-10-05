@@ -1,4 +1,4 @@
-import type { ActivityData } from "@repo/api/schemas/activity";
+import type { ActivityItem } from "@repo/api/schemas/activity";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { WindowVirtualizer } from "virtua";
 
@@ -18,7 +18,7 @@ export function ActivityTable({
   onPointerEnter,
   onPointerLeave,
 }: {
-  rows: ActivityData[];
+  rows: ActivityItem[];
   newIds: ReadonlySet<string>;
   onOpen: (objekt: ValidObjekt) => void;
   onPointerEnter: () => void;
@@ -40,7 +40,7 @@ export function ActivityTable({
         onPointerLeave={onPointerLeave}
       >
         <WindowVirtualizer data={rows}>
-          {(row: ActivityData) => (
+          {(row: ActivityItem) => (
             <ActivityRow
               key={row.transfer.id}
               item={row}

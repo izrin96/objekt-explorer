@@ -1,4 +1,5 @@
-import type { ActivityCursor, ActivityParams } from "@repo/api/schemas/activity";
+import type { ActivityParams } from "@repo/api/schemas/activity";
+import type { TimestampCursor } from "@repo/api/schemas/common/cursor";
 import { infiniteQueryOptions } from "@tanstack/react-query";
 
 import { mapObjektWithTag } from "@/features/objekt/objekt-utils";
@@ -34,7 +35,7 @@ export const activityInfiniteOptions = (params: ActivityParams) =>
         })),
       };
     },
-    initialPageParam: undefined as ActivityCursor | undefined,
+    initialPageParam: undefined as TimestampCursor | undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     staleTime: ACTIVITY_STALE_TIME,
     refetchOnWindowFocus: false,

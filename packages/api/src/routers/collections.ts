@@ -2,9 +2,17 @@ import { getRequestHeaders } from "@tanstack/react-start/server";
 import * as z from "zod";
 
 import { optionalAuthed, pub } from "../orpc";
-import { artistsArraySchema } from "../schemas/artist";
-import { checkpointSchema } from "../schemas/checkpoint";
-import { collectionResultSchema, holdersInputSchema } from "../schemas/objekt";
+import {
+  collectionListInputSchema,
+  collectionListOutputSchema,
+  collectionMetadataOutputSchema,
+  holdersInputSchema,
+  serialsOutputSchema,
+  serialTransfersInputSchema,
+  serialTransfersOutputSchema,
+} from "../schemas/collections";
+import { collectionSlugInputSchema } from "../schemas/common/collection";
+import { documented } from "../schemas/common/documented";
 import {
   fetchCollectionList,
   fetchCollectionMetadata,
@@ -14,13 +22,11 @@ import {
 import { fetchHolders } from "../services/holders";
 import { fetchCollectionRarity } from "../services/rarity";
 
-const slugInput = z.object({ collectionSlug: z.string() });
-
 const collectionListOutput = z.union([
   z.object({
     status: z.literal(200),
     headers: z.object({ "last-modified": z.string().optional(), "cache-control": z.string() }),
-    body: collectionResultSchema,
+    body: documented(collectionListOutputSchema),
   }),
   z.object({
     status: z.literal(304).meta({ description: "Not modified since If-Modified-Since" }),
@@ -46,12 +52,7 @@ export const collectionsRouter = {
       summary: "Every collection, newest first",
       outputStructure: "detailed",
     })
-    .input(
-      z.object({
-        artist: artistsArraySchema.default([]),
-        at: checkpointSchema.optional(),
-      }),
-    )
+    .input(collectionListInputSchema)
     .output(collectionListOutput)
     .handler(async ({ input, context }) => {
       const ifModifiedSince = (context.headers ?? getRequestHeaders()).get("if-modified-since");
@@ -82,7 +83,8 @@ export const collectionsRouter = {
       tags: ["Collections"],
       summary: "Copies minted, spun and transferable",
     })
-    .input(slugInput)
+    .input(collectionSlugInputSchema)
+    .output(documented(collectionMetadataOutputSchema))
     .handler(({ input }) => fetchCollectionMetadata(input.collectionSlug)),
 
   serials: pub
@@ -92,7 +94,8 @@ export const collectionsRouter = {
       tags: ["Collections"],
       summary: "Every minted serial, and which were spun",
     })
-    .input(slugInput)
+    .input(collectionSlugInputSchema)
+    .output(documented(serialsOutputSchema))
     .handler(({ input }) => fetchSerialList(input.collectionSlug)),
 
   serialTransfers: pub
@@ -102,6 +105,7 @@ export const collectionsRouter = {
       tags: ["Collections"],
       summary: "One serial's transfer history",
     })
-    .input(slugInput.extend({ serial: z.coerce.number().int() }))
+    .input(serialTransfersInputSchema)
+    .output(documented(serialTransfersOutputSchema))
     .handler(({ input }) => fetchSerialTransfers(input.collectionSlug, input.serial)),
 };

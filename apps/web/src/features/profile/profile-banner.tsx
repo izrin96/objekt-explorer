@@ -1,4 +1,4 @@
-import type { PublicProfile } from "@repo/api/schemas/user";
+import type { PublicProfile } from "@repo/api/schemas/profile";
 
 import { useElementSize } from "@/hooks/use-element-size";
 import { cn, containerClass } from "@/lib/utils";

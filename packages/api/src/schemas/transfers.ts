@@ -1,55 +1,41 @@
-import { validOnlineTypes } from "@repo/cosmo/types/common";
-import type { OwnedObjekt } from "@repo/lib/types/objekt";
 import * as z from "zod";
 
-import { artistsArraySchema } from "./artist";
-import { checkpointSchema } from "./checkpoint";
-import { queryArray } from "./query";
+import { checkpointSchema } from "./common/checkpoint";
+import { timestampCursorSchema } from "./common/cursor";
+import { collectionFiltersSchema } from "./common/filters";
+import { ownedObjektSchema } from "./common/objekt";
+import { transferNicknamesSchema, transferRowSchema } from "./common/transfer";
 
-const partialTransferSchema = z.object({
-  id: z.string(),
-  from: z.string(),
-  to: z.string(),
-  timestamp: z.string(),
+const transferItemSchema = z.object({
+  transfer: transferRowSchema,
+  objekt: ownedObjektSchema,
+  nickname: transferNicknamesSchema,
 });
+export type TransferItem = z.infer<typeof transferItemSchema>;
 
-export const aggregatedTransferSchema = z.object({
-  transfer: partialTransferSchema,
-  objekt: z.custom<OwnedObjekt>(),
-  nickname: z.object({
-    from: z.string().optional(),
-    to: z.string().optional(),
-  }),
-});
-export type AggregatedTransfer = z.infer<typeof aggregatedTransferSchema>;
-
-const transferCursorSchema = z.object({
-  timestamp: z.string(),
-  id: z.string(),
-});
-
-export const transferResultSchema = z.object({
+export const addressTransfersOutputSchema = z.object({
   hide: z.boolean().optional(),
-  results: z.array(aggregatedTransferSchema),
-  nextCursor: transferCursorSchema.optional(),
+  results: z.array(transferItemSchema),
+  nextCursor: timestampCursorSchema.optional(),
 });
-export type TransferResult = z.infer<typeof transferResultSchema>;
+export type AddressTransfersOutput = z.infer<typeof addressTransfersOutputSchema>;
 
-export const validType = ["all", "mint", "received", "sent", "spin"] as const;
-export type ValidType = (typeof validType)[number];
+export const transferTypeSchema = z.enum(["all", "mint", "received", "sent", "spin"]);
+export type TransferType = z.infer<typeof transferTypeSchema>;
 
 /** an address's transfers input; the legacy `GET /api/transfers/$address` sends the cursor as JSON */
-export const transfersQuerySchema = z.object({
-  type: z.enum(validType).default("all"),
-  artist: artistsArraySchema.default([]),
-  member: queryArray(z.string()).default([]),
-  season: queryArray(z.string()).default([]),
-  class: queryArray(z.string()).default([]),
-  on_offline: queryArray(z.enum(validOnlineTypes)).default([]),
-  collection: queryArray(z.string()).default([]),
+export const addressTransfersFiltersSchema = z.object({
+  type: transferTypeSchema.default("all"),
+  ...collectionFiltersSchema.shape,
   at: checkpointSchema.optional(),
-  cursor: transferCursorSchema.optional(),
+  cursor: timestampCursorSchema.optional(),
 });
-export type TransfersQuery = z.infer<typeof transfersQuerySchema>;
+export type AddressTransfersFilters = z.infer<typeof addressTransfersFiltersSchema>;
 /** what the client sends: an omitted facet reads as empty, and the cursor is added per page */
-export type TransfersParams = Partial<Omit<z.input<typeof transfersQuerySchema>, "cursor">>;
+export type TransfersParams = Partial<
+  Omit<z.input<typeof addressTransfersFiltersSchema>, "cursor">
+>;
+
+export const addressTransfersInputSchema = addressTransfersFiltersSchema.extend({
+  address: z.string(),
+});

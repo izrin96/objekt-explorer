@@ -1,8 +1,13 @@
 import { ORPCError } from "@orpc/server";
-import * as z from "zod";
 
 import { pub } from "../orpc";
-import { ownedBySchema } from "../schemas/owned-by";
+import { documented } from "../schemas/common/documented";
+import {
+  heldByInputSchema,
+  ownedByInputSchema,
+  heldByOutputSchema,
+  ownedByOutputSchema,
+} from "../schemas/objekts";
 import { fetchHeldObjekts, fetchOwnedObjekts, isCheckpointUnavailable } from "../services/owned";
 
 export const objektsRouter = {
@@ -13,7 +18,8 @@ export const objektsRouter = {
       tags: ["Objekts"],
       summary: "Objekts an address owns, newest received first",
     })
-    .input(ownedBySchema.extend({ address: z.string() }))
+    .input(ownedByInputSchema)
+    .output(documented(ownedByOutputSchema))
     .handler(({ input: { address, ...query } }) => {
       if (isCheckpointUnavailable(address, query)) {
         throw new ORPCError("BAD_REQUEST", {
@@ -30,6 +36,7 @@ export const objektsRouter = {
       tags: ["Objekts"],
       summary: "Copies an address holds, counted per collection",
     })
-    .input(ownedBySchema.pick({ artist: true }).extend({ address: z.string() }))
+    .input(heldByInputSchema)
+    .output(documented(heldByOutputSchema))
     .handler(({ input: { address, artist } }) => fetchHeldObjekts(address, artist)),
 };

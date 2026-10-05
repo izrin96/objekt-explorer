@@ -1,5 +1,5 @@
 import { CheckIcon, EyeIcon, EyeSlashIcon } from "@phosphor-icons/react";
-import type { PublicProfile } from "@repo/api/schemas/user";
+import type { PublicProfile } from "@repo/api/schemas/profile";
 
 import { ApolloIcon } from "@/components/shared/apollo-icon";
 import { CopyButton } from "@/components/shared/copy-button";

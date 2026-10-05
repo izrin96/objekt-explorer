@@ -1,5 +1,5 @@
 import { DotsThreeIcon, LinkBreakIcon, PencilSimpleIcon } from "@phosphor-icons/react";
-import type { LinkedPreview } from "@repo/api/schemas/user";
+import type { LinkedPreview } from "@repo/api/schemas/cosmo-link";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { type RefObject, useRef, useState } from "react";

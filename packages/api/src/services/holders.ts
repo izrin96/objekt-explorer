@@ -10,9 +10,9 @@ import type * as z from "zod";
 import type {
   HolderBucketKey,
   HolderRow,
-  HoldersResult,
+  HoldersOutput,
   holdersInputSchema,
-} from "../schemas/objekt";
+} from "../schemas/collections";
 import { isProfileHidden } from "./privacy";
 import { getCache } from "./redis";
 
@@ -23,7 +23,7 @@ const RANKING_TTL = 4 * 60;
 type RankedHolder = [address: string, copies: number, lowestSerial: number, rank: number];
 
 type Ranking = {
-  summary: HoldersResult["summary"];
+  summary: HoldersOutput["summary"];
   holders: RankedHolder[];
 };
 
@@ -139,7 +139,7 @@ function toRow(
 export async function fetchHolders(
   input: z.output<typeof holdersInputSchema>,
   viewerId: string | undefined,
-): Promise<HoldersResult> {
+): Promise<HoldersOutput> {
   const [ranking, profiles] = await Promise.all([
     fetchRanking(input.collectionSlug),
     viewerId ? fetchUserProfiles(viewerId) : [],

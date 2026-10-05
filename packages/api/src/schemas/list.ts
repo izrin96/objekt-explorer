@@ -1,7 +1,8 @@
 import * as z from "zod";
 
-import type { ObjektPreview } from "./objekt";
-import { publicProfileSchema, publicUserSchema } from "./user";
+import { addressSchema } from "./common/address";
+import type { ObjektPreview } from "./objekts";
+import { publicProfileSchema, publicUserSchema } from "./profile";
 
 export const listTypeNewSchema = z.enum(["general", "sale", "have", "want"]);
 export type ListTypeNew = z.infer<typeof listTypeNewSchema>;
@@ -67,3 +68,71 @@ export const tradePartnerSchema = z.object({
   matches: partnerListMatchSchema.array(),
 });
 export type TradePartner = z.infer<typeof tradePartnerSchema>;
+
+export const listSlugInputSchema = z.object({ slug: z.string() });
+
+export const createListInputSchema = z.object({
+  name: z.string().min(1).max(256),
+  hideUser: z.boolean(),
+  listTypeNew: listTypeNewSchema.default("general"),
+  isProfileBind: z.boolean().default(false),
+  hideSerial: z.boolean().default(false),
+  linkedListId: z.number().nullable(),
+  profileAddress: addressSchema.nullable(),
+  description: z.string().max(5000).nullable(),
+  currency: z.string().max(10).nullable(),
+  discoverable: z.boolean().default(false),
+});
+
+export const editListInputSchema = z.object({
+  slug: z.string(),
+  name: z.string().min(1).max(256),
+  hideUser: z.boolean(),
+  gridColumns: z.number().min(2).max(18).nullable(),
+  profileAddress: addressSchema.nullable(),
+  description: z.string().max(5000).nullable(),
+  currency: z.string().max(10).nullable(),
+  hideSerial: z.boolean(),
+  linkedListId: z.number().nullable(),
+  discoverable: z.boolean(),
+  regenerateSlug: z.boolean().default(false),
+});
+
+export const listPreviewsInputSchema = z.object({ slugs: z.string().array().max(500) });
+
+export const profileListsInputSchema = z.object({ profileAddress: z.string() });
+
+export const addToListInputSchema = z.object({
+  slug: z.string(),
+  skipDups: z.boolean(),
+  from: addSourceSchema,
+});
+
+export const removeObjektsFromListInputSchema = z.object({
+  slug: z.string(),
+  entryIds: z.number().int().positive().array().max(50000),
+});
+
+export const findTradePartnersInputSchema = z.object({
+  slug: z.string(),
+  mode: z.enum(["have-to-want", "want-to-have", "both"]).optional(),
+});
+
+export const updateEntryPricesInputSchema = z.object({
+  slug: z.string(),
+  updates: z
+    .array(
+      z.object({
+        entryId: z.number(),
+        price: z.number().min(0).nullable(),
+        isQyop: z.boolean(),
+        note: z.string().max(255).optional().nullable(),
+      }),
+    )
+    .max(50000),
+});
+
+export const generateDiscordFormatInputSchema = z.object({
+  haveListSlug: z.string().optional(),
+  wantListSlug: z.string().optional(),
+});

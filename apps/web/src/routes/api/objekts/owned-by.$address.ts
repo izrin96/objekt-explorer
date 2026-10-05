@@ -1,4 +1,4 @@
-import { ownedBySchema, type OwnedBySchema } from "@repo/api/schemas/owned-by";
+import { ownedByFiltersSchema, type OwnedByFilters } from "@repo/api/schemas/objekts";
 import { fetchOwnedObjekts, isCheckpointUnavailable } from "@repo/api/services/owned";
 import { createFileRoute } from "@tanstack/react-router";
 
@@ -26,7 +26,7 @@ export const Route = createFileRoute("/api/objekts/owned-by/$address")({
 
 function parseParams(
   params: URLSearchParams,
-): { ok: true; data: OwnedBySchema } | { ok: false; response: Response } {
+): { ok: true; data: OwnedByFilters } | { ok: false; response: Response } {
   let cursor: unknown = undefined;
   const cursorRaw = params.get("cursor");
   if (cursorRaw) {
@@ -40,7 +40,7 @@ function parseParams(
     }
   }
 
-  const result = ownedBySchema.safeParse({
+  const result = ownedByFiltersSchema.safeParse({
     at: params.get("at") ?? undefined,
     cursor,
     artist: params.getAll("artist").length ? params.getAll("artist") : undefined,

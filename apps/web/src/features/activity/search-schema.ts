@@ -1,7 +1,7 @@
-import { validType, type ValidType } from "@repo/api/schemas/activity";
+import { activityTypeSchema, type ActivityType } from "@repo/api/schemas/activity";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useCallback } from "react";
-import * as z from "zod";
+import type * as z from "zod";
 
 import { defaultFilters, filterSearchSchema } from "@/features/filters/search-schema";
 
@@ -13,23 +13,23 @@ const { at: _at, ...resetPatch } = defaultFilters;
  * link written on either surface keeps the facets it has in common.
  */
 export const activitySearchSchema = filterSearchSchema.extend({
-  type: z.enum(validType).optional().catch(undefined),
+  type: activityTypeSchema.optional().catch(undefined),
 });
 
 type ActivitySearch = z.infer<typeof activitySearchSchema>;
 
 /** `all` is the absence of the parameter, so a default view carries no key. */
-export function useActivityType(): ValidType {
+export function useActivityType(): ActivityType {
   return useSearch({
     strict: false,
     select: (search) => (search as ActivitySearch).type ?? "all",
   });
 }
 
-export function useSetActivityType(): (type: ValidType) => void {
+export function useSetActivityType(): (type: ActivityType) => void {
   const navigate = useNavigate();
   return useCallback(
-    (type: ValidType) => {
+    (type: ActivityType) => {
       void navigate({
         replace: true,
         resetScroll: false,

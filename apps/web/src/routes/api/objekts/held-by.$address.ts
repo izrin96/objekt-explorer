@@ -1,8 +1,8 @@
-import { ownedBySchema } from "@repo/api/schemas/owned-by";
+import { ownedByFiltersSchema } from "@repo/api/schemas/objekts";
 import { fetchHeldObjekts } from "@repo/api/services/owned";
 import { createFileRoute } from "@tanstack/react-router";
 
-const heldBySchema = ownedBySchema.pick({ artist: true });
+const heldBySchema = ownedByFiltersSchema.pick({ artist: true });
 
 export const Route = createFileRoute("/api/objekts/held-by/$address")({
   server: {

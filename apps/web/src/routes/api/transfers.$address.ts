@@ -1,4 +1,7 @@
-import { type TransfersQuery, transfersQuerySchema } from "@repo/api/schemas/transfers";
+import {
+  type AddressTransfersFilters,
+  addressTransfersFiltersSchema,
+} from "@repo/api/schemas/transfers";
 import { fetchAddressTransfers } from "@repo/api/services/transfers";
 import { createFileRoute } from "@tanstack/react-router";
 
@@ -18,7 +21,7 @@ export const Route = createFileRoute("/api/transfers/$address")({
 
 function parseParams(
   params: URLSearchParams,
-): { ok: true; data: TransfersQuery } | { ok: false; response: Response } {
+): { ok: true; data: AddressTransfersFilters } | { ok: false; response: Response } {
   let cursor: unknown = undefined;
   const cursorRaw = params.get("cursor");
   if (cursorRaw) {
@@ -32,7 +35,7 @@ function parseParams(
     }
   }
 
-  const result = transfersQuerySchema.safeParse({
+  const result = addressTransfersFiltersSchema.safeParse({
     type: params.get("type") ?? "all",
     artist: params.getAll("artist"),
     member: params.getAll("member"),

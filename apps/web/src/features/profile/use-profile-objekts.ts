@@ -1,4 +1,4 @@
-import type { OwnedBySchema } from "@repo/api/schemas/owned-by";
+import type { OwnedByFilters } from "@repo/api/schemas/objekts";
 import { Addresses } from "@repo/lib";
 import type { GridObjekt, PinState } from "@repo/lib/types/objekt";
 import { useInfiniteQuery, useQueries, useQuery } from "@tanstack/react-query";
@@ -32,7 +32,10 @@ export function isSpinAddress(address: string): boolean {
   return address.toLowerCase() === Addresses.SPIN;
 }
 
-function ownedServerFilters(artist: OwnedBySchema["artist"], filters: FilterSearch): OwnedBySchema {
+function ownedServerFilters(
+  artist: OwnedByFilters["artist"],
+  filters: FilterSearch,
+): OwnedByFilters {
   return { artist, at: filters.at };
 }
 
@@ -41,7 +44,7 @@ function ownedServerFilters(artist: OwnedBySchema["artist"], filters: FilterSear
  * page is fetched up front rather than on scroll. Spin holds millions of
  * tokens, so it loads one counted row per collection instead.
  */
-function useOwnedPages(address: string, filters: OwnedBySchema) {
+function useOwnedPages(address: string, filters: OwnedByFilters) {
   const spin = isSpinAddress(address);
   const query = useInfiniteQuery({ ...ownedCollectionOptions(address, filters), enabled: !spin });
   const held = useQuery({ ...heldCollectionsOptions(address, filters.artist), enabled: spin });

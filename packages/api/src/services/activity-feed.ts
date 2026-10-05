@@ -6,12 +6,12 @@ import { mapOwnedObjekt, mapTransfer } from "@repo/lib/server/objekt";
 import { fetchPublicNicknames } from "@repo/lib/server/user";
 import { type SQL, and, arrayOverlaps, desc, eq, inArray, lt, ne, or } from "drizzle-orm";
 
-import type { ActivityQuery, ActivityResponse } from "../schemas/activity";
+import type { ActivityFeedInput, ActivityFeedOutput } from "../schemas/activity";
 import { getCollectionColumns } from "./objekt";
 
 const PAGE_SIZE = 300;
 
-export async function fetchActivityPage(query: ActivityQuery): Promise<ActivityResponse> {
+export async function fetchActivityPage(query: ActivityFeedInput): Promise<ActivityFeedOutput> {
   const transferResults = await fetchTransfers(query);
 
   const slicedResults = transferResults.slice(0, PAGE_SIZE);
@@ -42,7 +42,7 @@ export async function fetchActivityPage(query: ActivityQuery): Promise<ActivityR
   return { items, nextCursor };
 }
 
-function getCollectionFilters(query: ActivityQuery): SQL[] {
+function getCollectionFilters(query: ActivityFeedInput): SQL[] {
   const filters: SQL[] = [];
   if (query.artist.length)
     filters.push(inArray(collections.artist, query.artist.map(toIndexedArtist)));
@@ -66,7 +66,7 @@ const transferSelect = {
   collection: getCollectionColumns(),
 };
 
-function getTypeFilters(type: ActivityQuery["type"]): SQL[] {
+function getTypeFilters(type: ActivityFeedInput["type"]): SQL[] {
   const typeFilters = {
     mint: [eq(transfers.from, Addresses.NULL)],
     transfer: [ne(transfers.from, Addresses.NULL), ne(transfers.to, Addresses.SPIN)],
@@ -76,7 +76,7 @@ function getTypeFilters(type: ActivityQuery["type"]): SQL[] {
   return typeFilters[type];
 }
 
-async function fetchTransfers(query: ActivityQuery) {
+async function fetchTransfers(query: ActivityFeedInput) {
   const typeFilters = getTypeFilters(query.type);
   const cursorFilter = query.cursor
     ? [

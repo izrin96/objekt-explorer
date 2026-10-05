@@ -9,7 +9,7 @@ import {
   QuestionMarkIcon,
   WarningIcon,
 } from "@phosphor-icons/react";
-import type { ObjektTransfer, ObjektTransferResult } from "@repo/api/schemas/objekt";
+import type { SerialTransfer, SerialTransfersOutput } from "@repo/api/schemas/collections";
 import { Addresses } from "@repo/lib";
 import type { UseQueryResult } from "@tanstack/react-query";
 import { type ReactNode, useMemo, useState } from "react";
@@ -60,7 +60,7 @@ export type TimelineEvent = {
 };
 
 /** the response is newest first, so the last row is the mint */
-export function toTimeline(rows: ObjektTransfer[]): TimelineEvent[] {
+export function toTimeline(rows: SerialTransfer[]): TimelineEvent[] {
   return rows.map((row, index) => {
     const spun = row.to.toLowerCase() === Addresses.SPIN;
     const kind: EventKind = spun ? "spin" : index === rows.length - 1 ? "mint" : "transfer";
@@ -318,7 +318,7 @@ type SerialView =
 
 function resolveSerial(
   serial: number | null,
-  query: UseQueryResult<ObjektTransferResult>,
+  query: UseQueryResult<SerialTransfersOutput>,
 ): SerialView {
   if (serial === null || serial <= 0) return { kind: "idle" };
   if (query.isPending) return { kind: "loading" };
@@ -437,7 +437,7 @@ export function Timeline({
   onClose,
 }: {
   serial: number | null;
-  query: UseQueryResult<ObjektTransferResult>;
+  query: UseQueryResult<SerialTransfersOutput>;
   onClose: () => void;
 }) {
   const view = resolveSerial(serial, query);

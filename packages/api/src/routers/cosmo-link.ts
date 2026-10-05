@@ -5,14 +5,16 @@ import { fetchUserProfile } from "@repo/cosmo/server/user";
 import type { ValidArtist } from "@repo/cosmo/types/common";
 import { db } from "@repo/db";
 import { userAddress } from "@repo/db/schema";
-import { isAddress } from "@repo/lib";
 import { and, eq, inArray, isNotNull, sql } from "drizzle-orm";
-import * as z from "zod";
 
 import { serverEnv } from "../env";
 import { type ApiMessages, authed } from "../orpc";
-import { artistSchema } from "../schemas/artist";
-import type { LinkedPreview } from "../schemas/user";
+import { addressSchema } from "../schemas/common/address";
+import {
+  generateCodeInputSchema,
+  type LinkedPreview,
+  linkedPreviewsInputSchema,
+} from "../schemas/cosmo-link";
 import { fetchOwnerCounts } from "../services/objekt";
 import { redis } from "../services/redis";
 import { getAccessToken } from "../services/token";
@@ -50,14 +52,14 @@ async function assertAddressNotLinked(address: string, userId: string, messages:
 export const cosmoLinkRouter = {
   // check if address is already linked
   checkAddress: authed
-    .input(z.string().refine((val) => isAddress(val)))
+    .input(addressSchema)
     .handler(async ({ input: address, context: { messages, session } }) => {
       await assertAddressNotLinked(address, session.user.id, messages);
     }),
 
   /** Only addresses the caller has linked, whatever else is asked for. */
   linkedPreviews: authed
-    .input(z.object({ addresses: z.string().array().max(100) }))
+    .input(linkedPreviewsInputSchema)
     .handler(async ({ input: { addresses }, context: { session } }) => {
       if (addresses.length === 0) return [];
       const linked = await db
@@ -81,7 +83,7 @@ export const cosmoLinkRouter = {
 
   // remove link
   removeLink: authed
-    .input(z.string().refine((val) => isAddress(val)))
+    .input(addressSchema)
     .handler(async ({ input: address, context: { session } }) => {
       await db
         .update(userAddress)
@@ -93,14 +95,7 @@ export const cosmoLinkRouter = {
 
   // generate verification code for a specific artist profile
   generateCode: authed
-    .input(
-      z.object({
-        address: z.string().refine((val) => isAddress(val)),
-        cosmoId: z.number().int().positive(),
-        nickname: z.string().min(1).max(24),
-        artistId: artistSchema,
-      }),
-    )
+    .input(generateCodeInputSchema)
     .handler(async ({ input, context: { messages, session } }) => {
       // rate limit: max 5 attempts per user per 30s.
       // INCR creates the counter; EXPIRE NX (Redis 7+) sets the TTL only
@@ -142,7 +137,7 @@ export const cosmoLinkRouter = {
   verifyStatusMessage: authed
     // typed, so the client can offer a new code: its countdown starts after the TTL does
     .errors({ VERIFICATION_EXPIRED: { status: 400 } })
-    .input(z.string().refine((val) => isAddress(val)))
+    .input(addressSchema)
     .handler(async ({ input: address, context: { messages, session }, errors }) => {
       const redisKey = `cosmo-verify:${session.user.id}:${address}`;
       const raw = await redis.get(redisKey);

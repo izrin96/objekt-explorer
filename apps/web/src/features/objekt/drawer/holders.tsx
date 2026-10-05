@@ -1,5 +1,5 @@
 import { CaretDownIcon, UsersThreeIcon, WarningIcon } from "@phosphor-icons/react";
-import type { HolderBucketKey, HolderRow, HoldersResult } from "@repo/api/schemas/objekt";
+import type { HolderBucketKey, HolderRow, HoldersOutput } from "@repo/api/schemas/collections";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { InView } from "react-intersection-observer";
 
@@ -15,7 +15,7 @@ import { m } from "@/paraglide/messages";
 import { holdersOptions } from "../queries";
 import { type Stat, StatRow } from "./stat-row";
 
-type Summary = HoldersResult["summary"];
+type Summary = HoldersOutput["summary"];
 
 const BUCKETS: Record<HolderBucketKey, { label: () => string; color: string }> = {
   "1": { label: m.objekt_holders_bucket_1, color: "bg-chart-1" },

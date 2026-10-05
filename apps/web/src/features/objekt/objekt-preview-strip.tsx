@@ -1,5 +1,5 @@
-import { OBJEKT_PREVIEW_SIZE } from "@repo/api/schemas/objekt";
-import type { ObjektPreview } from "@repo/api/schemas/objekt";
+import { OBJEKT_PREVIEW_SIZE } from "@repo/api/constants";
+import type { ObjektPreview } from "@repo/api/schemas/objekts";
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { m } from "@/paraglide/messages";

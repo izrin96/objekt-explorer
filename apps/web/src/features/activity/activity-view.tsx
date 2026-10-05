@@ -1,11 +1,11 @@
 import { PulseIcon } from "@phosphor-icons/react";
 import type {
-  ActivityData,
+  ActivityItem,
   ActivityMessage,
   ActivityParams,
-  ValidType,
+  ActivityType,
 } from "@repo/api/schemas/activity";
-import { validType } from "@repo/api/schemas/activity";
+import { activityTypeSchema } from "@repo/api/schemas/activity";
 import { validOnlineTypes, type ValidOnlineType } from "@repo/cosmo/types/common";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
@@ -51,9 +51,9 @@ import { useActivitySocket } from "./use-activity-socket";
  */
 type LiveFeed = {
   key: ActivityParams;
-  rows: ActivityData[];
+  rows: ActivityItem[];
   /** withheld while the pointer is over the table */
-  queued: ActivityData[];
+  queued: ActivityItem[];
   /** the batch that arrived last; `animate-live-animation-bg` plays once and settles */
   newIds: ReadonlySet<string>;
 };
@@ -65,7 +65,7 @@ function emptyFeed(key: ActivityParams): LiveFeed {
 /** live rows kept above the first page before the feed starts again from a fresh one */
 const LIVE_CAP = 500;
 
-const TYPE_LABEL: Record<ValidType, () => string> = {
+const TYPE_LABEL: Record<ActivityType, () => string> = {
   all: m.filter_event_all,
   mint: m.filter_event_mint,
   transfer: m.filter_event_transfer,
@@ -77,7 +77,10 @@ function EventFilter({ className }: { className?: string }) {
   const setType = useSetActivityType();
   // built per render: the map callback runs at module load, where a message
   // resolves once in the base locale on the server
-  const options = validType.map((value) => ({ value, label: TYPE_LABEL[value]() }));
+  const options = activityTypeSchema.options.map((value) => ({
+    value,
+    label: TYPE_LABEL[value](),
+  }));
   return (
     <SingleSelect
       label={m.filter_event_label()}
@@ -124,8 +127,8 @@ function OnlineFilter({ className }: { className?: string }) {
  * through the same predicate the request already applied server-side.
  */
 function matchesFilters(
-  item: ActivityData,
-  type: ValidType,
+  item: ActivityItem,
+  type: ActivityType,
   artist: string[],
   filters: ReturnType<typeof useCanonicalFilters>,
 ): boolean {

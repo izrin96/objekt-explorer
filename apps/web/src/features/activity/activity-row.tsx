@@ -1,4 +1,4 @@
-import type { ActivityData } from "@repo/api/schemas/activity";
+import type { ActivityItem } from "@repo/api/schemas/activity";
 import { Addresses } from "@repo/lib";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { memo } from "react";
@@ -58,7 +58,7 @@ export const ActivityRow = memo(function ActivityRow({
   isNew,
   onOpen,
 }: {
-  item: ActivityData;
+  item: ActivityItem;
   isNew: boolean;
   onOpen: (objekt: ValidObjekt) => void;
 }) {

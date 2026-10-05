@@ -1,4 +1,4 @@
-import { artistSchema } from "@repo/api/schemas/artist";
+import { artistSchema } from "@repo/api/schemas/common/artist";
 import { fetchArtistLiveSessions } from "@repo/api/services/live";
 import { isIpRateLimited } from "@repo/api/services/redis";
 import { createFileRoute } from "@tanstack/react-router";

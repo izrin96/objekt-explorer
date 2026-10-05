@@ -1,6 +1,6 @@
 import { getCookie } from "@tanstack/react-start/server";
 
-import { artistsArraySchema } from "../schemas/artist";
+import { artistsArraySchema } from "../schemas/common/artist";
 
 export async function parseSelectedArtists() {
   const value = getCookie("artists");

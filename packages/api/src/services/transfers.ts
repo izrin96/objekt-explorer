@@ -6,7 +6,7 @@ import { mapOwnedObjekt, mapTransfer } from "@repo/lib/server/objekt";
 import { fetchPublicNicknames } from "@repo/lib/server/user";
 import { type SQL, and, arrayOverlaps, desc, eq, inArray, lt, lte, ne, or } from "drizzle-orm";
 
-import type { TransferResult, TransfersQuery } from "../schemas/transfers";
+import type { AddressTransfersOutput, AddressTransfersFilters } from "../schemas/transfers";
 import { getCollectionColumns } from "./objekt";
 import { isAddressHiddenFromCaller } from "./privacy";
 
@@ -14,8 +14,8 @@ const PER_PAGE = 150;
 
 export async function fetchAddressTransfers(
   address: string,
-  query: TransfersQuery,
-): Promise<TransferResult> {
+  query: AddressTransfersFilters,
+): Promise<AddressTransfersOutput> {
   const addr = address.toLowerCase();
 
   if (await isAddressHiddenFromCaller(addr, { checkHideTransfer: true })) {
@@ -52,7 +52,7 @@ export async function fetchAddressTransfers(
   };
 }
 
-function getCollectionFilters(query: TransfersQuery): SQL[] {
+function getCollectionFilters(query: AddressTransfersFilters): SQL[] {
   const filters: SQL[] = [];
   if (query.artist.length)
     filters.push(inArray(collections.artist, query.artist.map(toIndexedArtist)));
@@ -75,8 +75,8 @@ const transferSelect = {
   collection: getCollectionColumns(),
 };
 
-function getTypeFilters(type: TransfersQuery["type"], addr: string): SQL[] {
-  const filters: Record<TransfersQuery["type"], SQL[] | null> = {
+function getTypeFilters(type: AddressTransfersFilters["type"], addr: string): SQL[] {
+  const filters: Record<AddressTransfersFilters["type"], SQL[] | null> = {
     all: null,
     mint: [eq(transfers.from, Addresses.NULL), eq(transfers.to, addr)],
     received: [ne(transfers.from, Addresses.NULL), eq(transfers.to, addr)],
@@ -88,7 +88,7 @@ function getTypeFilters(type: TransfersQuery["type"], addr: string): SQL[] {
   return result ?? [];
 }
 
-async function fetchTransfers(query: TransfersQuery, addr: string) {
+async function fetchTransfers(query: AddressTransfersFilters, addr: string) {
   const typeFilters = getTypeFilters(query.type, addr);
   const cursorFilter = query.cursor
     ? [

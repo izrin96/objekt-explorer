@@ -1,4 +1,4 @@
-import { type ActivityQuery, activityQuerySchema } from "@repo/api/schemas/activity";
+import { type ActivityFeedInput, activityFeedInputSchema } from "@repo/api/schemas/activity";
 import { fetchActivityPage } from "@repo/api/services/activity-feed";
 import { createFileRoute } from "@tanstack/react-router";
 
@@ -18,7 +18,7 @@ export const Route = createFileRoute("/api/activity")({
 
 function parseParams(
   params: URLSearchParams,
-): { ok: true; data: ActivityQuery } | { ok: false; response: Response } {
+): { ok: true; data: ActivityFeedInput } | { ok: false; response: Response } {
   let cursor: unknown = undefined;
   const cursorRaw = params.get("cursor");
   if (cursorRaw) {
@@ -32,7 +32,7 @@ function parseParams(
     }
   }
 
-  const result = activityQuerySchema.safeParse({
+  const result = activityFeedInputSchema.safeParse({
     type: params.get("type") ?? "all",
     artist: params.getAll("artist"),
     member: params.getAll("member"),

@@ -1,4 +1,4 @@
-import { getCollectionEdition } from "@repo/api/schemas/collection-grid";
+import { getCollectionEdition } from "@repo/lib/collection-edition";
 import type { GridObjekt, ObjektTags, OwnedObjekt, ValidObjekt } from "@repo/lib/types/objekt";
 
 function getMemberShortKeys(value: string) {

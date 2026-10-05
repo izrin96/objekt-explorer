@@ -1,7 +1,7 @@
 import { setCookie } from "@tanstack/react-start/server";
 
 import { pub } from "../orpc";
-import { artistsArraySchema } from "../schemas/artist";
+import { artistsArraySchema } from "../schemas/common/artist";
 import { getArtists } from "../services/artist";
 import { parseSelectedArtists } from "../services/cookie";
 import { fetchFilterData } from "../services/objekt";

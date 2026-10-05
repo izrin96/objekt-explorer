@@ -5,7 +5,7 @@ import { RedisClient, type ServerWebSocket } from "bun";
 
 import { serverEnv } from "./env";
 import {
-  type ActivityData,
+  type ActivityItem,
   type ActivityMessage,
   activityClientMessageSchema,
 } from "./schemas/activity";
@@ -16,7 +16,7 @@ const pubsub = new RedisClient(serverEnv.REDIS_URL, {
 
 const clients = new Set<ServerWebSocket>();
 
-const transferHistory: ActivityData[] = [];
+const transferHistory: ActivityItem[] = [];
 const MAX_HISTORY_SIZE = 50;
 
 type TransferData = Transfer & {
@@ -34,7 +34,7 @@ export async function startActivityWebSocket(): Promise<void> {
 
         const nicknameOf = await fetchPublicNicknames(transfers.flatMap((a) => [a.from, a.to]));
 
-        const transferBatch: ActivityData[] = [];
+        const transferBatch: ActivityItem[] = [];
 
         for (const transfer of transfers) {
           if (transfer.collection.slug === "empty-collection") continue;

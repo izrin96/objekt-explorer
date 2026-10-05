@@ -1,5 +1,5 @@
 import type { PublicList } from "@repo/api/schemas/list";
-import type { PublicProfile } from "@repo/api/schemas/user";
+import type { PublicProfile } from "@repo/api/schemas/profile";
 import { linkOptions } from "@tanstack/react-router";
 
 /** A market listing carries the profile without the address beside it, so both are optional. */

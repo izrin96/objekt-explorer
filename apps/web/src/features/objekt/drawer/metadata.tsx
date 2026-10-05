@@ -1,4 +1,4 @@
-import { getCollectionEdition } from "@repo/api/schemas/collection-grid";
+import { getCollectionEdition } from "@repo/lib/collection-edition";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import type { ReactNode } from "react";
 

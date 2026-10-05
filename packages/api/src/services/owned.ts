@@ -6,8 +6,7 @@ import { mapOwnedObjekt, overrideCollection } from "@repo/lib/server/objekt";
 import type { HeldObjekt } from "@repo/lib/types/objekt";
 import { and, count, desc, eq, getColumns, inArray, lt, lte, ne, or } from "drizzle-orm";
 
-import type { HeldResult, OwnedObjektsResult } from "../schemas/objekt";
-import type { OwnedBySchema } from "../schemas/owned-by";
+import type { HeldByOutput, OwnedByFilters, OwnedByOutput } from "../schemas/objekts";
 import { getCollectionColumns } from "./objekt";
 import { isAddressHiddenFromCaller } from "./privacy";
 import { getCache } from "./redis";
@@ -15,12 +14,12 @@ import { getCache } from "./redis";
 const PER_PAGE = 8000;
 const ENABLE_COUNT = false;
 
-function buildCollectionFilters(query: OwnedBySchema) {
+function buildCollectionFilters(query: OwnedByFilters) {
   if (!query.artist?.length) return [];
   return [inArray(collections.artist, query.artist.map(toIndexedArtist))];
 }
 
-function cursorWhere(query: OwnedBySchema) {
+function cursorWhere(query: OwnedByFilters) {
   if (!query.cursor) return undefined;
   return or(
     lt(objekts.receivedAt, query.cursor.receivedAt),
@@ -38,14 +37,14 @@ function cursorAfter(lastResult: { objekt: { receivedAt: Date | string; id: stri
 const ORDER_BY = [desc(objekts.receivedAt), desc(objekts.id)];
 
 /** Spin's past state means replaying millions of transfers, so it has no checkpoint. */
-export function isCheckpointUnavailable(address: string, query: OwnedBySchema): boolean {
+export function isCheckpointUnavailable(address: string, query: OwnedByFilters): boolean {
   return !!query.at && address.toLowerCase() === Addresses.SPIN;
 }
 
 export async function fetchOwnedObjekts(
   address: string,
-  query: OwnedBySchema,
-): Promise<OwnedObjektsResult> {
+  query: OwnedByFilters,
+): Promise<OwnedByOutput> {
   const addr = address.toLowerCase();
 
   if (await isAddressHiddenFromCaller(addr)) {
@@ -202,8 +201,8 @@ async function countHeld(addr: string): Promise<HeldObjekt[]> {
 
 export async function fetchHeldObjekts(
   address: string,
-  artist: OwnedBySchema["artist"],
-): Promise<HeldResult> {
+  artist: OwnedByFilters["artist"],
+): Promise<HeldByOutput> {
   const addr = address.toLowerCase();
 
   if (await isAddressHiddenFromCaller(addr)) {

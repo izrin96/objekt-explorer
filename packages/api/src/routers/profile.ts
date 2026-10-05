@@ -1,14 +1,17 @@
 import { ORPCError } from "@orpc/server";
 import { db } from "@repo/db";
 import { userAddress } from "@repo/db/schema";
-import { Addresses, isAddress } from "@repo/lib";
-import { acceptedFileMimeTypes, mimeTypeToExtension } from "@repo/lib/media";
+import { Addresses } from "@repo/lib";
+import { type acceptedFileMimeTypes, mimeTypeToExtension } from "@repo/lib/media";
 import { and, eq, sql } from "drizzle-orm";
-import * as z from "zod";
 
-import { MAX_FILE_SIZE } from "../constants";
 import { type ApiMessages, authed, optionalAuthed } from "../orpc";
-import type { ProfilePreview } from "../schemas/user";
+import { addressSchema } from "../schemas/common/address";
+import {
+  makeEditProfileInputSchema,
+  presignedPostInputSchema,
+  type ProfilePreview,
+} from "../schemas/profile";
 import { fetchOwnerSummary } from "../services/objekt";
 import { assertProfileOwned, toPublicProfile } from "../services/profile";
 import { getCache } from "../services/redis";
@@ -23,7 +26,7 @@ import {
 export const profileRouter = {
   /** The hover card: database only, so a hover never asks Cosmo or writes a row. */
   preview: optionalAuthed
-    .input(z.string().refine((val) => isAddress(val)))
+    .input(addressSchema)
     .handler(async ({ input, context: { session } }): Promise<ProfilePreview> => {
       const address = input.toLowerCase();
       const row = await db.query.userAddress.findFirst({
@@ -45,30 +48,14 @@ export const profileRouter = {
     }),
 
   find: authed
-    .input(z.string().refine((val) => isAddress(val)))
+    .input(addressSchema)
     .handler(async ({ input: address, context: { messages, session } }) => {
       const profile = await fetchOwnedProfile(address, session.user.id, messages);
       return profile;
     }),
 
   edit: authed
-    .input(
-      z.object({
-        address: z.string().refine((val) => isAddress(val)),
-        hideUser: z.boolean(),
-        bannerImgUrl: z
-          .url()
-          .max(512)
-          .refine((url) => url.startsWith(`${S3_PUBLIC_URL}/profile-banner/`))
-          .nullish(),
-        bannerImgType: z.string().max(50).nullish(),
-        privateSerial: z.boolean(),
-        privateProfile: z.boolean(),
-        hideNickname: z.boolean(),
-        hideTransfer: z.boolean(),
-        gridColumns: z.number().min(2).max(18).nullable(),
-      }),
-    )
+    .input(makeEditProfileInputSchema(`${S3_PUBLIC_URL}/profile-banner/`))
     .handler(async ({ input: { address, ...rest }, context: { messages, session } }) => {
       const profile = await fetchOwnedProfile(address, session.user.id, messages);
 
@@ -105,14 +92,7 @@ export const profileRouter = {
     }),
 
   getPresignedPost: authed
-    .input(
-      z.object({
-        address: z.string().refine((val) => isAddress(val)),
-        fileName: z.string().min(1),
-        mimeType: z.string().refine((val) => new Set<string>(acceptedFileMimeTypes).has(val)),
-        fileSize: z.number().int().min(1).max(MAX_FILE_SIZE),
-      }),
-    )
+    .input(presignedPostInputSchema)
     .handler(async ({ input: { address, mimeType, fileSize }, context: { messages, session } }) => {
       await assertProfileOwned(address, session.user.id, messages);
 

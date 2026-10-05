@@ -1,10 +1,10 @@
 import { fetchUserProfiles } from "@repo/lib/server/user";
 
-import type { CurrentUser } from "../schemas/current-user";
+import type { CurrentUserOutput } from "../schemas/user";
 import { getSession } from "./auth";
 import { fetchOwnedLists } from "./list";
 
-export async function getCurrentUser(): Promise<CurrentUser> {
+export async function getCurrentUser(): Promise<CurrentUserOutput> {
   const session = await getSession();
   if (!session) return null;
 

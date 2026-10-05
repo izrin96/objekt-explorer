@@ -1,5 +1,4 @@
-import type { OwnedObjektsResult } from "@repo/api/schemas/objekt";
-import type { OwnedBySchema } from "@repo/api/schemas/owned-by";
+import type { OwnedByFilters, OwnedByOutput } from "@repo/api/schemas/objekts";
 import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query";
 import type * as z from "zod";
 
@@ -19,7 +18,7 @@ export const profileQuery = (data: z.infer<typeof profileInputSchema>) =>
     staleTime: 30_000,
   });
 
-export const ownedCollectionOptions = (address: string, filters?: OwnedBySchema) =>
+export const ownedCollectionOptions = (address: string, filters?: OwnedByFilters) =>
   infiniteQueryOptions({
     queryKey: ["owned-collections", address, filters],
     queryFn: ({ pageParam }) =>
@@ -28,7 +27,7 @@ export const ownedCollectionOptions = (address: string, filters?: OwnedBySchema)
         nextCursor: result.nextCursor,
         total: result.total,
       })),
-    initialPageParam: undefined as OwnedObjektsResult["nextCursor"],
+    initialPageParam: undefined as OwnedByOutput["nextCursor"],
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     refetchOnWindowFocus: false,
     // a past state never changes, so a checkpoint page is fetched once
@@ -37,7 +36,7 @@ export const ownedCollectionOptions = (address: string, filters?: OwnedBySchema)
   });
 
 /** Today's copies counted per collection, for Spin, whose tokens are too many to list. */
-export const heldCollectionsOptions = (address: string, artist?: OwnedBySchema["artist"]) =>
+export const heldCollectionsOptions = (address: string, artist?: OwnedByFilters["artist"]) =>
   queryOptions({
     queryKey: ["held-collections", address, artist],
     queryFn: () =>

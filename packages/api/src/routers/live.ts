@@ -1,9 +1,9 @@
 import { ORPCError } from "@orpc/server";
 import { getRequestHeaders } from "@tanstack/react-start/server";
-import * as z from "zod";
 
 import { pub } from "../orpc";
-import { artistSchema } from "../schemas/artist";
+import { documented } from "../schemas/common/documented";
+import { liveSessionsInputSchema, liveSessionsOutputSchema } from "../schemas/live";
 import { fetchArtistLiveSessions } from "../services/live";
 import { isIpRateLimited } from "../services/redis";
 
@@ -15,7 +15,8 @@ export const liveRouter = {
       tags: ["Live"],
       summary: "An artist's live sessions",
     })
-    .input(z.object({ artistId: artistSchema }))
+    .input(liveSessionsInputSchema)
+    .output(documented(liveSessionsOutputSchema, { open: true }))
     .handler(async ({ input: { artistId }, context }) => {
       if (await isIpRateLimited("live-sessions", context.headers ?? getRequestHeaders())) {
         throw new ORPCError("TOO_MANY_REQUESTS");

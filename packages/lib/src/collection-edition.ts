@@ -1,4 +1,4 @@
-import type { ValidObjekt } from "@repo/lib/types/objekt";
+import type { ValidObjekt } from "./types/objekt";
 
 function getScoEdition(objekt: ValidObjekt, collection: number) {
   // tripleS atom01 sco for 2nd and 3rd edition start from 216z

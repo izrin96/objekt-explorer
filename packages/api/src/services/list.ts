@@ -11,8 +11,8 @@ import type { ListEntryFields, ListObjekt } from "@repo/lib/types/objekt";
 import { and, eq, inArray, isNotNull, ne } from "drizzle-orm";
 import slugify from "slugify";
 
+import { OBJEKT_PREVIEW_SIZE } from "../constants";
 import type { AddSource, ListPreview, ListTypeNew, PublicList } from "../schemas/list";
-import { OBJEKT_PREVIEW_SIZE } from "../schemas/objekt";
 import { getCollectionColumns, getPartialCollectionColumns } from "./objekt";
 import { toPublicUser } from "./profile";
 import { TOKEN_CHUNK_SIZE } from "./utils";
