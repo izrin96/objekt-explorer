@@ -4,6 +4,7 @@ import * as authSchema from "@repo/db/auth-schema";
 import { userAddress } from "@repo/db/schema";
 import { getRequestHeaders, setResponseHeader } from "@tanstack/react-start/server";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { getOAuthState } from "better-auth/api";
 import { betterAuth } from "better-auth/minimal";
 import { username } from "better-auth/plugins/username";
 import { eq } from "drizzle-orm";
@@ -151,6 +152,15 @@ export const auth = betterAuth({
             .where(eq(authSchema.user.id, account.userId));
         },
       },
+      update: {
+        // Refresh re-links an already linked provider, which only stores fresh
+        // tokens; sign-ins and token refreshes carry no `link` and are skipped
+        after: async (account) => {
+          const state = await getOAuthState();
+          if (!state?.link) return;
+          await refreshProviderProfile(account);
+        },
+      },
       delete: {
         // must be `before` — better-auth defers `after` past commit
         before: async (account) => {
@@ -173,7 +183,34 @@ export const auth = betterAuth({
 
 export type User = (typeof auth.$Infer.Session)["user"];
 
-export function getProviderUsername(
+/** Copies the provider username and avatar onto the user; false when the provider refuses the token. */
+export async function refreshProviderProfile(account: {
+  userId: string;
+  providerId: string;
+  accessToken?: string | null;
+  idToken?: string | null;
+  refreshToken?: string | null;
+}) {
+  const authContext = await auth.$context;
+  const provider = authContext.socialProviders.find((p) => p.id === account.providerId);
+  const info = await provider?.getUserInfo({
+    idToken: account.idToken ?? undefined,
+    accessToken: account.accessToken ?? undefined,
+    refreshToken: account.refreshToken ?? undefined,
+  });
+  if (!info) return false;
+
+  await db
+    .update(authSchema.user)
+    .set({
+      [account.providerId]: getProviderUsername(account.providerId, info),
+      image: info.user.image,
+    })
+    .where(eq(authSchema.user.id, account.userId));
+  return true;
+}
+
+function getProviderUsername(
   providerId: string,
   info: { data?: unknown } | null | undefined,
 ) {

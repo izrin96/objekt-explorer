@@ -13,7 +13,7 @@ import {
   userSearchInputSchema,
   userSearchOutputSchema,
 } from "../schemas/user";
-import { auth, getProviderUsername } from "../services/auth";
+import { refreshProviderProfile } from "../services/auth";
 import { isIpRateLimited } from "../services/redis";
 import { getCurrentUser } from "../services/user";
 import { MAX_USER_SEARCH_LENGTH, searchUsers } from "../services/user-search";
@@ -40,63 +40,43 @@ export const userRouter = {
       return searchUsers(query);
     }),
 
-  refreshProfile: authed.input(providerIdSchema).handler(
-    async ({
-      input: providerId,
-      context: {
-        messages,
-        session: { user },
-      },
-    }) => {
-      // get accessToken from account
-      const account = await db.query.account.findFirst({
-        columns: {
-          idToken: true,
-          accessToken: true,
-          refreshToken: true,
+  refreshProfile: authed
+    // typed, so the client can send the user back through the provider for a fresh token
+    .errors({ REAUTH_REQUIRED: { status: 400 } })
+    .input(providerIdSchema)
+    .handler(
+      async ({
+        input: providerId,
+        context: {
+          messages,
+          session: { user },
         },
-        where: { userId: user.id, providerId },
-      });
-
-      if (!account)
-        throw new ORPCError("BAD_REQUEST", {
-          message: messages.user_not_linked_provider(),
+        errors,
+      }) => {
+        const account = await db.query.account.findFirst({
+          columns: {
+            userId: true,
+            providerId: true,
+            idToken: true,
+            accessToken: true,
+            refreshToken: true,
+          },
+          where: { userId: user.id, providerId },
         });
 
-      const authContext = await auth.$context;
+        if (!account)
+          throw new ORPCError("BAD_REQUEST", {
+            message: messages.user_not_linked_provider(),
+          });
 
-      const provider = authContext.socialProviders.find((p) => p.id === providerId);
-
-      if (!provider) {
-        throw new ORPCError("BAD_REQUEST", {
-          message: messages.user_not_linked_provider(),
-        });
-      }
-
-      // fetch from provider
-      const info = await provider.getUserInfo({
-        idToken: account.idToken ?? undefined,
-        accessToken: account.accessToken ?? undefined,
-        refreshToken: account.refreshToken ?? undefined,
-      });
-
-      if (!info)
-        throw new ORPCError("INTERNAL_SERVER_ERROR", {
-          message: messages.user_failed_get_info({
-            provider: providersMap[providerId].label,
-          }),
-        });
-
-      // update user
-      await db
-        .update(userSchema)
-        .set({
-          [providerId]: getProviderUsername(providerId, info),
-          image: info.user.image,
-        })
-        .where(eq(userSchema.id, user.id));
-    },
-  ),
+        if (!(await refreshProviderProfile(account)))
+          throw errors.REAUTH_REQUIRED({
+            message: messages.user_failed_get_info({
+              provider: providersMap[providerId].label,
+            }),
+          });
+      },
+    ),
 
   currentUser: pub.handler(getCurrentUser),
 

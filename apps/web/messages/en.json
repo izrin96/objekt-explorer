@@ -412,7 +412,7 @@
   "auth_account_link_accounts_profile_updated": "Profile updated",
   "auth_account_link_accounts_profile_update_error": "Error updating profile. {message}",
   "auth_account_link_accounts_update_profile_title": "Update Profile from {provider}",
-  "auth_account_link_accounts_update_profile_desc": "This will update your {provider} username and profile picture. Continue?",
+  "auth_account_link_accounts_update_profile_desc": "This will update your {provider} username and profile picture. If your {provider} sign-in has expired, you'll be asked to sign in again. Continue?",
   "auth_account_link_accounts_unlink_title": "Unlink {provider}",
   "auth_account_link_accounts_unlink_description": "Are you sure you want to unlink your {provider} account? This action cannot be undone.",
   "checkpoint_title": "Snapshot",

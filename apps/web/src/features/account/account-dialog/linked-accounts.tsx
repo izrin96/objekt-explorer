@@ -1,3 +1,4 @@
+import { isDefinedError } from "@orpc/client";
 import {
   ArrowsClockwiseIcon,
   DiscordLogoIcon,
@@ -77,6 +78,8 @@ function LinkedRow({
   handle: string;
 }) {
   const invalidate = useInvalidateAccount();
+  // the server pulls the profile when the re-link lands
+  const relink = useLinkSocial(provider);
 
   const refresh = useMutation(
     orpc.user.refreshProfile.mutationOptions({
@@ -87,10 +90,14 @@ function LinkedRow({
           title: m.auth_account_link_accounts_profile_updated(),
         });
       },
-      onError: ({ message }) => {
+      onError: (error) => {
+        if (isDefinedError(error) && error.code === "REAUTH_REQUIRED") {
+          relink.mutate();
+          return;
+        }
         toastManager.add({
           type: "error",
-          title: m.auth_account_link_accounts_profile_update_error({ message }),
+          title: m.auth_account_link_accounts_profile_update_error({ message: error.message }),
         });
       },
     }),
@@ -131,7 +138,9 @@ function LinkedRow({
             provider and has no undo, so it is asked for first */}
         <AlertDialog>
           <AlertDialogTrigger
-            render={<Button variant="outline" size="xs" loading={refresh.isPending} />}
+            render={
+              <Button variant="outline" size="xs" loading={refresh.isPending || relink.isPending} />
+            }
           >
             <ArrowsClockwiseIcon />
             {m.auth_account_link_accounts_refresh()}
@@ -187,12 +196,13 @@ function LinkedRow({
   );
 }
 
-function UnlinkedRow({ provider }: { provider: Provider }) {
-  const link = useMutation({
+function useLinkSocial(provider: Provider) {
+  return useMutation({
     mutationFn: async () => {
       const result = await authClient.linkSocial({
         provider: provider.id,
         callbackURL: window.location.href,
+        errorCallbackURL: window.location.href,
       });
       if (result.error) throw new Error(result.error.message);
       return result.data;
@@ -201,6 +211,10 @@ function UnlinkedRow({ provider }: { provider: Provider }) {
       toastManager.add({ type: "error", title: message });
     },
   });
+}
+
+function UnlinkedRow({ provider }: { provider: Provider }) {
+  const link = useLinkSocial(provider);
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-2">
