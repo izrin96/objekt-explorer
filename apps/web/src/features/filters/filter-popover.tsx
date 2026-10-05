@@ -1,5 +1,6 @@
 import {
   ArrowsClockwiseIcon,
+  CaretDownIcon,
   FunnelSimpleIcon,
   LockSimpleIcon,
   LockSimpleOpenIcon,
@@ -12,6 +13,7 @@ import { useId, type ReactNode } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverPopup, PopoverTrigger } from "@/components/ui/popover";
 import { Radio, RadioGroup } from "@/components/ui/radio-group";
@@ -112,6 +114,8 @@ function GroupHeading({ id, children }: { id: string; children: ReactNode }) {
 /**
  * `onValueChange` fires on every pointer move across the saturation plane, so
  * it reaches the URL through a debounce; each commit re-filters the catalogue.
+ * The picker starts collapsed: on a phone, a tap that stops a scroll over the
+ * swatches or the plane would otherwise pick a colour.
  */
 function ColorField() {
   const color = useFilters((f) => f.color);
@@ -122,52 +126,78 @@ function ColorField() {
   const sensitivity = colorSensitivity ?? DEFAULT_COLOR_SENSITIVITY;
 
   return (
-    <div className="flex flex-col gap-2">
-      <ColorPicker
-        value={color ?? undefined}
-        defaultValue={COLOR_SWATCHES[0]}
-        swatches={COLOR_SWATCHES}
-        onValueChange={commitColor}
-      />
-      {color !== undefined && (
-        <>
-          <div className="flex h-6 items-center justify-between gap-3">
-            <Label id={sensitivityId} render={<span />} className="font-medium">
-              {m.filter_color_sensitivity()}
-            </Label>
-            <span className="text-muted-foreground font-mono text-xs tabular-nums">
-              {sensitivity}
-            </span>
-          </div>
-          <Slider
-            aria-labelledby={sensitivityId}
-            /* names the hidden range input the Base UI thumb renders; without it
-               devtools reports a form field with no id or name */
-            name="colorSensitivity"
-            className="px-0.5 pb-1"
-            min={COLOR_SENSITIVITY_RANGE.min}
-            max={COLOR_SENSITIVITY_RANGE.max}
-            step={1}
-            value={sensitivity}
-            onValueChange={(value) => {
-              const next = typeof value === "number" ? value : (value[0] ?? sensitivity);
-              // the URL carries the sensitivity only once it is off the default
-              setFilters({
-                colorSensitivity: next === DEFAULT_COLOR_SENSITIVITY ? undefined : next,
-              });
-            }}
+    <Collapsible>
+      <CollapsibleTrigger className="group/color focus-visible:ring-ring flex h-8 w-full touch-manipulation items-center justify-between gap-3 rounded-md text-base font-medium outline-none focus-visible:ring-2 sm:text-sm">
+        <span>{m.filter_color()}</span>
+        <span className="text-muted-foreground flex items-center gap-1.5 font-normal">
+          {color === undefined ? (
+            m.filter_all()
+          ) : (
+            <>
+              <span
+                aria-hidden="true"
+                className="ring-foreground/15 size-3.5 rounded-full ring-1"
+                style={{ backgroundColor: color }}
+              />
+              <span className="font-mono text-xs">{color}</span>
+            </>
+          )}
+          <CaretDownIcon
+            aria-hidden="true"
+            className="size-3.5 opacity-50 transition-transform group-data-panel-open/color:rotate-180 motion-reduce:transition-none"
           />
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setFilters({ color: undefined, colorSensitivity: undefined })}
-          >
-            <XIcon />
-            {m.filter_clear_color()}
-          </Button>
-        </>
-      )}
-    </div>
+        </span>
+      </CollapsibleTrigger>
+      {/* the bleed keeps focus rings and the hue thumb clear of the panel's clip */}
+      <CollapsiblePanel className="-mx-2 motion-reduce:transition-none">
+        <div className="flex flex-col gap-2 px-2 pt-2 pb-1">
+          <ColorPicker
+            value={color ?? undefined}
+            defaultValue={COLOR_SWATCHES[0]}
+            swatches={COLOR_SWATCHES}
+            onValueChange={commitColor}
+          />
+          {color !== undefined && (
+            <>
+              <div className="flex h-6 items-center justify-between gap-3">
+                <Label id={sensitivityId} render={<span />} className="font-medium">
+                  {m.filter_color_sensitivity()}
+                </Label>
+                <span className="text-muted-foreground font-mono text-xs tabular-nums">
+                  {sensitivity}
+                </span>
+              </div>
+              <Slider
+                aria-labelledby={sensitivityId}
+                /* names the hidden range input the Base UI thumb renders; without it
+                   devtools reports a form field with no id or name */
+                name="colorSensitivity"
+                className="px-0.5 pb-1"
+                min={COLOR_SENSITIVITY_RANGE.min}
+                max={COLOR_SENSITIVITY_RANGE.max}
+                step={1}
+                value={sensitivity}
+                onValueChange={(value) => {
+                  const next = typeof value === "number" ? value : (value[0] ?? sensitivity);
+                  // the URL carries the sensitivity only once it is off the default
+                  setFilters({
+                    colorSensitivity: next === DEFAULT_COLOR_SENSITIVITY ? undefined : next,
+                  });
+                }}
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setFilters({ color: undefined, colorSensitivity: undefined })}
+              >
+                <XIcon />
+                {m.filter_clear_color()}
+              </Button>
+            </>
+          )}
+        </div>
+      </CollapsiblePanel>
+    </Collapsible>
   );
 }
 
@@ -388,9 +418,6 @@ export function LongTailFields({
       {has("color") && (
         <>
           <div className="my-1 border-t" />
-          <span className="text-muted-foreground mb-0.5 text-xs font-medium">
-            {m.filter_color()}
-          </span>
           <ColorField />
         </>
       )}
