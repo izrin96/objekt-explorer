@@ -665,6 +665,7 @@
   "api_errors_compare_target_list_not_found": "比較対象のリストが見つかりません",
   "about_description": "ObjektトラッカーはObjektを探すためのシンプルなエクスプローラーです。",
   "about_discord_invite": "バグ報告やご提案は、サポートDiscordサーバーにご参加ください。",
+  "about_api_docs": "API",
   "trade_view_serial_first_aria": "最初のシリアル",
   "trade_view_serial_previous_aria": "前のシリアル",
   "trade_view_serial_next_aria": "次のシリアル",

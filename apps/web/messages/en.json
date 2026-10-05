@@ -665,6 +665,7 @@
   "api_errors_compare_target_list_not_found": "Target list not found",
   "about_description": "Objekt Tracker is a simple, client-side explorer built specifically for exploring objekts.",
   "about_discord_invite": "Join our support Discord server for bug reporting or suggestions.",
+  "about_api_docs": "API",
   "trade_view_serial_first_aria": "First serial",
   "trade_view_serial_previous_aria": "Previous serial",
   "trade_view_serial_next_aria": "Next serial",

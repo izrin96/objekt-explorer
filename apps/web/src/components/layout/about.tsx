@@ -1,4 +1,4 @@
-import { DiscordLogoIcon, GithubLogoIcon } from "@phosphor-icons/react";
+import { CodeIcon, DiscordLogoIcon, GithubLogoIcon } from "@phosphor-icons/react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -15,6 +15,7 @@ import { m } from "@/paraglide/messages";
 
 export const DISCORD_INVITE = "https://discord.gg/SWEm6RbJD3";
 const GITHUB_REPO = "https://github.com/izrin96/objekt-explorer";
+const API_DOCS = "/api/v1/";
 
 export function AboutDialog({
   open,
@@ -49,6 +50,10 @@ export function AboutDialog({
           >
             <DiscordLogoIcon weight="fill" />
             Discord
+          </Button>
+          <Button variant="outline" render={<a href={API_DOCS} target="_blank" rel="noreferrer" />}>
+            <CodeIcon />
+            {m.about_api_docs()}
           </Button>
         </DialogFooter>
       </DialogPopup>

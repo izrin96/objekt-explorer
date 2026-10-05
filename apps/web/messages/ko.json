@@ -665,6 +665,7 @@
   "api_errors_compare_target_list_not_found": "대상 목록을 찾을 수 없습니다",
   "about_description": "오브젝트 트래커는 오브젝트 탐색을 위해 특별히 제작된 간편한 클라이언트 사이드 탐색기입니다.",
   "about_discord_invite": "버그 제보나 건의 사항이 있으시면 지원 Discord 서버에 참여해 주세요.",
+  "about_api_docs": "API",
   "trade_view_serial_first_aria": "첫 번째 시리얼",
   "trade_view_serial_previous_aria": "이전 시리얼",
   "trade_view_serial_next_aria": "다음 시리얼",
