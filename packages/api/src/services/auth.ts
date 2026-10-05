@@ -210,10 +210,7 @@ export async function refreshProviderProfile(account: {
   return true;
 }
 
-function getProviderUsername(
-  providerId: string,
-  info: { data?: unknown } | null | undefined,
-) {
+function getProviderUsername(providerId: string, info: { data?: unknown } | null | undefined) {
   const data = info?.data as { username?: string; data?: { username?: string } } | undefined;
   return providerId === "discord" ? data?.username : data?.data?.username;
 }
