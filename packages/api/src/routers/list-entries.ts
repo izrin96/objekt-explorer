@@ -3,12 +3,15 @@ import { db } from "@repo/db";
 import { listEntries } from "@repo/db/schema";
 import { and, eq, inArray } from "drizzle-orm";
 
-import { authed, optionalAuthed, pub, selectedArtistsMiddleware } from "../orpc";
+import { authed, optionalAuthed, pub } from "../orpc";
+import { documented } from "../schemas/common/documented";
 import {
   addToListInputSchema,
+  listEntriesInputSchema,
+  listEntriesOutputSchema,
   listPreviewsInputSchema,
-  listSlugInputSchema,
   profileListsInputSchema,
+  profileListsOutputSchema,
   removeObjektsFromListInputSchema,
 } from "../schemas/list";
 import {
@@ -23,9 +26,15 @@ import { isProfileHidden } from "../services/privacy";
 
 export const listEntriesRouter = {
   listEntries: pub
-    .use(selectedArtistsMiddleware)
-    .input(listSlugInputSchema)
-    .handler(async ({ input: { slug }, context: { artists } }) => {
+    .route({
+      method: "GET",
+      path: "/lists/{slug}/entries",
+      tags: ["Lists"],
+      summary: "A list's objekts, with their price and note",
+    })
+    .input(listEntriesInputSchema)
+    .output(documented(listEntriesOutputSchema))
+    .handler(async ({ input: { slug, artist: artists } }) => {
       const result = await fetchListWithEntries(slug);
 
       if (!result) throw new ORPCError("NOT_FOUND");
@@ -42,7 +51,14 @@ export const listEntriesRouter = {
     .handler(({ input: { slugs } }) => fetchListPreviews(slugs)),
 
   profileLists: optionalAuthed
+    .route({
+      method: "GET",
+      path: "/profiles/{profileAddress}/lists",
+      tags: ["Profiles"],
+      summary: "A profile's lists",
+    })
     .input(profileListsInputSchema)
+    .output(documented(profileListsOutputSchema))
     .handler(async ({ input: { profileAddress }, context: { session } }) => {
       const owner = await db.query.userAddress.findFirst({
         columns: { privateProfile: true, userId: true },

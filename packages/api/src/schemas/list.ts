@@ -1,6 +1,9 @@
+import type { ListObjekt } from "@repo/lib/types/objekt";
 import * as z from "zod";
 
 import { addressSchema } from "./common/address";
+import { artistsArraySchema } from "./common/artist";
+import { indexedObjektSchema, ownedObjektSchema } from "./common/objekt";
 import type { ObjektPreview } from "./objekts";
 import { publicProfileSchema, publicUserSchema } from "./profile";
 
@@ -31,6 +34,23 @@ export const publicListSchema = baseListSchema.extend({
   linkedList: baseListSchema.nullish(),
 });
 export type PublicList = z.infer<typeof publicListSchema>;
+
+export const findPublicOutputSchema = publicListSchema.nullable();
+export const profileListsOutputSchema = z.array(publicListSchema);
+
+const listEntryFields = {
+  entryId: z.number(),
+  price: z.number().nullable(),
+  isQyop: z.boolean(),
+  note: z.string().nullable(),
+};
+
+export const listObjektSchema = z.union([
+  ownedObjektSchema.extend(listEntryFields),
+  indexedObjektSchema.extend(listEntryFields),
+]) satisfies z.ZodType<ListObjekt>;
+
+export const listEntriesOutputSchema = z.array(listObjektSchema);
 
 /**
  * Where added objekts come from. A bound list takes tokens its profile owns and
@@ -70,6 +90,11 @@ export const tradePartnerSchema = z.object({
 export type TradePartner = z.infer<typeof tradePartnerSchema>;
 
 export const listSlugInputSchema = z.object({ slug: z.string() });
+
+/** an omitted `artist` means every artist */
+export const listEntriesInputSchema = listSlugInputSchema.extend({
+  artist: artistsArraySchema.default([]),
+});
 
 export const createListInputSchema = z.object({
   name: z.string().min(1).max(256),

@@ -1,3 +1,4 @@
+import type { ValidArtist } from "@repo/cosmo/types/common";
 import { queryOptions } from "@tanstack/react-query";
 import type * as z from "zod";
 
@@ -18,9 +19,9 @@ export const listBySlugQuery = (data: z.infer<typeof listBySlugInputSchema>) =>
     staleTime: 30_000,
   });
 
-export const listEntriesOptions = (slug: string) =>
+export const listEntriesOptions = (slug: string, artist: ValidArtist[]) =>
   orpc.list.listEntries.queryOptions({
-    input: { slug },
+    input: { slug, artist },
     // search and the edition facet read fields the endpoint does not carry
     select: (data) => data.map(mapObjektWithTag),
     staleTime: 0,

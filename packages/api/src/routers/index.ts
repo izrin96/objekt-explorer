@@ -51,6 +51,13 @@ export const openApiRouter = {
   market: marketRouter,
   profiles: profilesRouter,
   status: statusRouter,
+  list: {
+    findPublic: listRouter.findPublic,
+    listEntries: listRouter.listEntries,
+    export: listRouter.export,
+    profileLists: listRouter.profileLists,
+  },
+  config: { getArtists: configRouter.getArtists, getFilterData: configRouter.getFilterData },
 };
 
 export type Inputs = InferRouterInputs<typeof router>;

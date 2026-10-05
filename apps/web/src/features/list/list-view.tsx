@@ -14,7 +14,7 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { countMarkup, MessageMarkup } from "@/components/shared/message-markup";
 import { Button } from "@/components/ui/button";
 import { MenuItem } from "@/components/ui/menu";
-import { useArtistScopeNarrowed } from "@/features/artist/cosmo-artist-provider";
+import { useArtistScopeNarrowed, useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import { CompareBanner } from "@/features/compare/compare-banner";
 import { isComparing } from "@/features/compare/search-schema";
 import { useCompareQuery, useCompareSearch, useSetCompare } from "@/features/compare/use-compare";
@@ -90,7 +90,11 @@ function ListEntries() {
   const setCompare = useSetCompare();
   const clearCompare = useCallback(() => setCompare(null), [setCompare]);
 
-  const entriesQuery = useQuery({ ...listEntriesOptions(list.slug), enabled: compare === null });
+  const { selectedArtistIds } = useCosmoArtist();
+  const entriesQuery = useQuery({
+    ...listEntriesOptions(list.slug, selectedArtistIds),
+    enabled: compare === null,
+  });
   const compareQuery = useCompareQuery(list.slug, compare);
   const query = compare !== null ? compareQuery : entriesQuery;
 

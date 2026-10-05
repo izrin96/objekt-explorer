@@ -11,6 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toastManager } from "@/components/ui/toast";
+import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import { orpc } from "@/lib/orpc";
 import { m } from "@/paraglide/messages";
 
@@ -23,6 +24,7 @@ export function ExportListDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const { selectedArtistIds } = useCosmoArtist();
   const exportList = useMutation(
     orpc.list.export.mutationOptions({
       onSuccess: (file) => {
@@ -49,7 +51,10 @@ export function ExportListDialog({
         </DialogHeader>
         <DialogFooter>
           <DialogClose render={<Button variant="outline" />}>{m.common_modal_cancel()}</DialogClose>
-          <Button loading={exportList.isPending} onClick={() => exportList.mutate({ slug })}>
+          <Button
+            loading={exportList.isPending}
+            onClick={() => exportList.mutate({ slug, artist: selectedArtistIds })}
+          >
             {m.common_actions_export()}
           </Button>
         </DialogFooter>

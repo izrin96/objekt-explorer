@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useCallback } from "react";
 
+import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import { mapObjektWithTag } from "@/features/objekt/objekt-utils";
 import { orpc } from "@/lib/orpc";
 
@@ -35,6 +36,7 @@ export function useSetCompare(): (next: ActiveCompare | null) => void {
 }
 
 export function useCompareQuery(sourceId: string, compare: ActiveCompare | null) {
+  const { selectedArtistIds } = useCosmoArtist();
   return useQuery(
     orpc.compare.compare.queryOptions({
       input: {
@@ -43,6 +45,7 @@ export function useCompareQuery(sourceId: string, compare: ActiveCompare | null)
         targetProfile: compare?.cmp_type === "profile" ? compare.cmp_to : undefined,
         targetListId: compare?.cmp_type === "list" ? compare.cmp_to : undefined,
         mode: compare?.cmp_mode ?? "missing",
+        artist: selectedArtistIds,
       },
       // search and the edition facet read fields the endpoint does not carry
       select: (data) => ({ objekts: data.objekts.map(mapObjektWithTag) }),

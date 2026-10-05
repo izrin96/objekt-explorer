@@ -6,19 +6,25 @@ import { isAddress } from "@repo/lib";
 import type { ListObjekt } from "@repo/lib/types/objekt";
 import { and, eq, exists, sql } from "drizzle-orm";
 
-import { optionalAuthed, selectedArtistsMiddleware } from "../orpc";
+import { optionalAuthed } from "../orpc";
 import { compareInputSchema } from "../schemas/compare";
 import { buildListEntries, fetchListWithEntries } from "../services/list";
 import { isProfileHidden } from "../services/privacy";
 
 export const compareRouter = {
   compare: optionalAuthed
-    .use(selectedArtistsMiddleware)
     .input(compareInputSchema)
     .handler(
       async ({
-        context: { artists, messages, session },
-        input: { sourceId, targetType, mode, targetProfile: targetProfileId, targetListId },
+        context: { messages, session },
+        input: {
+          sourceId,
+          targetType,
+          mode,
+          targetProfile: targetProfileId,
+          targetListId,
+          artist: artists,
+        },
       }) => {
         async function buildSourceEntries(): Promise<ListObjekt[]> {
           const sourceList = await fetchListWithEntries(sourceId);

@@ -6,7 +6,13 @@ import { and, eq, ne } from "drizzle-orm";
 import { nanoid } from "nanoid";
 
 import { authed, pub } from "../orpc";
-import { createListInputSchema, editListInputSchema, listSlugInputSchema } from "../schemas/list";
+import { documented } from "../schemas/common/documented";
+import {
+  createListInputSchema,
+  editListInputSchema,
+  findPublicOutputSchema,
+  listSlugInputSchema,
+} from "../schemas/list";
 import {
   checkLinkedList,
   fetchList,
@@ -29,9 +35,18 @@ export const listCrud = {
       return result;
     }),
 
-  findPublic: pub.input(listSlugInputSchema).handler(async ({ input: { slug } }) => {
-    return fetchList({ slug: slug });
-  }),
+  findPublic: pub
+    .route({
+      method: "GET",
+      path: "/lists/{slug}",
+      tags: ["Lists"],
+      summary: "A list's name, type and owner; null when no list has the slug",
+    })
+    .input(listSlugInputSchema)
+    .output(documented(findPublicOutputSchema))
+    .handler(async ({ input: { slug } }) => {
+      return fetchList({ slug: slug });
+    }),
 
   create: authed.input(createListInputSchema).handler(
     async ({

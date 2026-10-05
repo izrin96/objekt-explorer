@@ -2,11 +2,12 @@ import { ORPCError } from "@orpc/server";
 import { db } from "@repo/db";
 import { listEntries } from "@repo/db/schema";
 import { sql } from "drizzle-orm";
+import * as z from "zod";
 
-import { authed, pub, selectedArtistsMiddleware } from "../orpc";
+import { authed, pub } from "../orpc";
 import {
   generateDiscordFormatInputSchema,
-  listSlugInputSchema,
+  listEntriesInputSchema,
   updateEntryPricesInputSchema,
 } from "../schemas/list";
 import {
@@ -71,9 +72,15 @@ export const listUtils = {
   ),
 
   export: pub
-    .use(selectedArtistsMiddleware)
-    .input(listSlugInputSchema)
-    .handler(async ({ input: { slug }, context: { artists } }) => {
+    .route({
+      method: "GET",
+      path: "/lists/{slug}/export",
+      tags: ["Lists"],
+      summary: "A list's entries as a CSV file",
+    })
+    .input(listEntriesInputSchema)
+    .output(z.file().mime("text/csv"))
+    .handler(async ({ input: { slug, artist: artists } }) => {
       const result = await fetchListWithEntries(slug);
 
       if (!result) throw new ORPCError("NOT_FOUND");

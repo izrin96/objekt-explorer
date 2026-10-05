@@ -2,7 +2,6 @@ import { ORPCError, os } from "@orpc/server";
 import { getRequestHeaders, setResponseHeader } from "@tanstack/react-start/server";
 
 import { auth } from "./services/auth";
-import { parseSelectedArtists } from "./services/cookie";
 
 export type ApiErrorKey =
   | "compare_source_list_not_found"
@@ -62,13 +61,6 @@ const optionalAuthMiddleware = base.middleware(async ({ next, context }) => {
 
   return next({
     context: { ...context, session: session.response },
-  });
-});
-
-export const selectedArtistsMiddleware = os.middleware(async ({ next, context }) => {
-  const artists = await parseSelectedArtists();
-  return next({
-    context: { ...context, artists },
   });
 });
 
