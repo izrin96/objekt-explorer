@@ -2,9 +2,9 @@ import { modeSchema, targetTypeSchema } from "@repo/api/schemas/compare";
 import * as z from "zod";
 
 /**
- * Compare is not a page: it is three parameters on the list detail routes, so
- * a comparison survives a reload, can be shared, and is gone the moment
- * another list is opened.
+ * Compare is not a page: it is three parameters on the list detail routes and
+ * the market, so a comparison survives a reload, can be shared, and is gone
+ * the moment the page changes.
  */
 export const compareSearchSchema = z.object({
   cmp_type: targetTypeSchema.optional().catch(undefined),

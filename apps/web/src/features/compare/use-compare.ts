@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { skipToken, useQuery } from "@tanstack/react-query";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useCallback } from "react";
 
@@ -39,18 +39,20 @@ export function useCompareQuery(sourceId: string, compare: ActiveCompare | null)
   const { selectedArtistIds } = useCosmoArtist();
   return useQuery(
     orpc.compare.compare.queryOptions({
-      input: {
-        sourceId,
-        targetType: compare?.cmp_type ?? "profile",
-        targetProfile: compare?.cmp_type === "profile" ? compare.cmp_to : undefined,
-        targetListId: compare?.cmp_type === "list" ? compare.cmp_to : undefined,
-        mode: compare?.cmp_mode ?? "missing",
-        artist: selectedArtistIds,
-      },
+      input:
+        compare === null
+          ? skipToken
+          : {
+              sourceId,
+              mode: compare.cmp_mode,
+              artist: selectedArtistIds,
+              ...(compare.cmp_type === "profile"
+                ? { targetType: "profile", targetProfile: compare.cmp_to }
+                : { targetType: "list", targetListId: compare.cmp_to }),
+            },
       // search and the edition facet read fields the endpoint does not carry
       select: (data) => ({ objekts: data.objekts.map(mapObjektWithTag) }),
       staleTime: 0,
-      enabled: compare !== null,
       retry: false,
     }),
   );

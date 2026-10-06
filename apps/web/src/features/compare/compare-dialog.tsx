@@ -17,13 +17,27 @@ import { Form } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Radio, RadioGroup } from "@/components/ui/radio-group";
+import {
+  Select,
+  SelectItem,
+  SelectPopup,
+  SelectSeparator,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useUserProfiles } from "@/features/user/hooks";
+import { displayNickname } from "@/lib/address";
 import { type FieldErrors, zodErrors } from "@/lib/form";
 import { m } from "@/paraglide/messages";
 
+import { compareWithProfile } from "./profile-target";
 import { useSetCompare } from "./use-compare";
 
 type TargetType = "profile" | "list";
 type Mode = "missing" | "matches";
+
+/** the picker's value for typing a Cosmo ID instead of choosing a linked profile */
+const OTHER_PROFILE = "other";
 
 type Choice<T extends string> = { value: T; label: () => string; description: () => string };
 
@@ -89,11 +103,18 @@ export function CompareDialog({
   onOpenChange: (open: boolean) => void;
 }) {
   const setCompare = useSetCompare();
+  const profiles = useUserProfiles();
   const [targetType, setTargetType] = useState<TargetType>("profile");
+  // unset until picked, so profiles that load after the first render still lead
+  const [pickedChoice, setPickedChoice] = useState<string | null>(null);
   const [mode, setMode] = useState<Mode>("missing");
   const [errors, setErrors] = useState<FieldErrors>({});
 
   const field = TARGET_FIELD[targetType];
+  const showPicker = targetType === "profile" && profiles.length > 0;
+  const profileChoice = pickedChoice ?? profiles[0]?.address ?? OTHER_PROFILE;
+  const choiceProfile = profiles.find((profile) => profile.address === profileChoice);
+  const pickedProfile = showPicker ? choiceProfile : undefined;
 
   return (
     <Dialog
@@ -101,6 +122,7 @@ export function CompareDialog({
       onOpenChange={(next) => {
         if (!next) {
           setTargetType("profile");
+          setPickedChoice(null);
           setMode("missing");
           setErrors({});
         }
@@ -112,6 +134,12 @@ export function CompareDialog({
           className="contents"
           errors={errors}
           onFormSubmit={(values) => {
+            if (pickedProfile) {
+              setCompare(compareWithProfile(pickedProfile, mode));
+              onOpenChange(false);
+              return;
+            }
+
             const schema = z.object({ target: z.string().trim().min(1, field.required()) });
             const next = zodErrors(schema, values);
             setErrors(next);
@@ -141,14 +169,53 @@ export function CompareDialog({
               onValueChange={setTargetType}
             />
 
+            {showPicker ? (
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="compare-profile">{field.label()}</Label>
+                <span className="text-muted-foreground text-xs">
+                  {m.compare_profile_picker_description()}
+                </span>
+                <Select
+                  value={profileChoice}
+                  onValueChange={(next: string | null) => {
+                    setPickedChoice(next);
+                    setErrors({});
+                  }}
+                >
+                  <SelectTrigger id="compare-profile" className="min-w-0">
+                    <SelectValue>
+                      {choiceProfile
+                        ? displayNickname(choiceProfile.address, choiceProfile.nickname)
+                        : m.compare_profile_picker_other()}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectPopup>
+                    {profiles.map((profile) => (
+                      <SelectItem key={profile.address} value={profile.address}>
+                        {displayNickname(profile.address, profile.nickname)}
+                      </SelectItem>
+                    ))}
+                    <SelectSeparator />
+                    <SelectItem value={OTHER_PROFILE}>
+                      {m.compare_profile_picker_other()}
+                    </SelectItem>
+                  </SelectPopup>
+                </Select>
+              </div>
+            ) : null}
+
             {/* keyed on the type: a Cosmo ID is not a list ID, so switching
                 clears the text and the error rather than carrying them over */}
-            <Field key={targetType} name="target" className="w-full gap-1.5">
-              <FieldLabel>{field.label()}</FieldLabel>
-              <FieldDescription>{field.description()}</FieldDescription>
-              <Input autoFocus aria-required placeholder={field.placeholder()} />
-              <FieldError />
-            </Field>
+            {pickedProfile ? null : (
+              <Field key={targetType} name="target" className="w-full gap-1.5">
+                <FieldLabel>
+                  {showPicker ? m.compare_profile_other_label() : field.label()}
+                </FieldLabel>
+                <FieldDescription>{field.description()}</FieldDescription>
+                <Input autoFocus aria-required placeholder={field.placeholder()} />
+                <FieldError />
+              </Field>
+            )}
 
             <ChoiceGroup
               label={m.compare_modal_comparison_type_label()}

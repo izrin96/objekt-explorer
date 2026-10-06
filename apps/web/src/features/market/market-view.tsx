@@ -1,4 +1,4 @@
-import { StorefrontIcon } from "@phosphor-icons/react";
+import { MagnifyingGlassIcon, StorefrontIcon } from "@phosphor-icons/react";
 import type { ValidCustomSort } from "@repo/cosmo/types/common";
 import type { MarketObjekt, ValidObjekt } from "@repo/lib/types/objekt";
 import { useCallback, useMemo, useState } from "react";
@@ -7,6 +7,8 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { countMarkup, MessageMarkup } from "@/components/shared/message-markup";
 import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
+import { CompareBanner } from "@/features/compare/compare-banner";
+import { useSetCompare } from "@/features/compare/use-compare";
 import type { ExtraFacet } from "@/features/filters/facet-controls";
 import { useScopedFacets } from "@/features/filters/facets";
 import { FilterBar } from "@/features/filters/filter-bar";
@@ -26,7 +28,9 @@ import { m } from "@/paraglide/messages";
 import { useClearSelectionOnNavigate, useSelection } from "@/stores/selection";
 
 import { FloorPriceFilter } from "./filter-floor-price";
+import { MarketCompareButton } from "./market-compare-button";
 import { getPriceLabel, hasFloorPrice } from "./price-label";
+import { useMarketCompare } from "./use-market-compare";
 import { useMarketObjekts } from "./use-market-objekts";
 
 /** a listing has a floor, an age and a depth; a catalogue row has none of the three */
@@ -44,7 +48,15 @@ const MARKET_SORTS: readonly ValidCustomSort[] = [
 export function MarketView() {
   const { data: user } = useCurrentUser();
   const { facets, groups } = useScopedFacets();
-  const { filtered, filters, rarityMap, totalListings, isPending } = useMarketObjekts();
+  const marketCompare = useMarketCompare();
+  const { compare } = marketCompare;
+  const setCompare = useSetCompare();
+  const clearCompare = useCallback(() => setCompare(null), [setCompare]);
+  const market = useMarketObjekts(marketCompare.ownedSlugs);
+  const { filtered, filters, rarityMap, totalListings } = market;
+  const isPending = market.isPending || marketCompare.isPending;
+  // the banner carries the error; an unfiltered grid under it would read as the result
+  const compareFailed = marketCompare.error !== undefined;
   const { formatUsd } = useCurrency();
   const reset = useResetFilters();
   const floorMin = useFilters((f) => f.floor_min);
@@ -98,9 +110,16 @@ export function MarketView() {
         sorts={MARKET_SORTS}
         longTail={LONG_TAIL.market}
         extras={extras}
+        actions={
+          user ? <MarketCompareButton activeAddress={marketCompare.activeAddress} /> : undefined
+        }
       />
 
-      {!isPending && (
+      {compare !== null ? (
+        <CompareBanner compare={compare} onClear={clearCompare} error={marketCompare.error} />
+      ) : null}
+
+      {!isPending && !compareFailed && (
         <div className="flex items-center justify-between gap-2">
           <div className="text-muted-foreground font-mono text-xs">
             <MessageMarkup
@@ -117,8 +136,14 @@ export function MarketView() {
         </div>
       )}
 
-      {isPending ? (
+      {compareFailed ? null : isPending ? (
         <SkeletonGrid />
+      ) : compare !== null && market.listedCount === 0 ? (
+        <EmptyState
+          icon={MagnifyingGlassIcon}
+          title={m.compare_view_empty_title()}
+          hint={m.market_compare_empty()}
+        />
       ) : filtered.length === 0 ? (
         <EmptyState
           icon={StorefrontIcon}

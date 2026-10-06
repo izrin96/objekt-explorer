@@ -20,9 +20,10 @@ const DEFAULT_MARKET_SORT = "listedAt";
  * Collections and sale listings live in separate databases and cannot be
  * joined server-side, so the cached catalogue is merged with the per-collection
  * listing aggregate by slug. Filtering runs over every row, so it follows a
- * deferred copy of the filters.
+ * deferred copy of the filters. `ownedSlugs` drops what a compared profile
+ * already holds.
  */
-export function useMarketObjekts() {
+export function useMarketObjekts(ownedSlugs?: ReadonlySet<string>) {
   const { selectedArtistIds } = useCosmoArtist();
   const filters = useCanonicalFilters();
   const deferredFilters = useDeferredValue(filters);
@@ -48,7 +49,7 @@ export function useMarketObjekts() {
 
     for (const collection of collections) {
       const entry = bySlug.get(collection.slug);
-      if (!entry) continue;
+      if (!entry || ownedSlugs?.has(collection.slug)) continue;
       objekts.push({
         ...collection,
         floorPrice: entry.minPrice,
@@ -59,7 +60,7 @@ export function useMarketObjekts() {
     }
 
     return objekts;
-  }, [collectionQuery.data, summaryQuery.data]);
+  }, [collectionQuery.data, summaryQuery.data, ownedSlugs]);
 
   const filtered = useMemo(() => filterObjekts(deferredFilters, listed), [deferredFilters, listed]);
 
@@ -70,6 +71,7 @@ export function useMarketObjekts() {
 
   return {
     filtered,
+    listedCount: listed.length,
     filters: marketFilters,
     rarityMap,
     totalListings: filtered.reduce((total, objekt) => total + objekt.listingCount, 0),
