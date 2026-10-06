@@ -39,7 +39,7 @@ import { ListTypeBadge } from "@/features/list/list-type-badge";
 import { ArtistsSubmenu } from "@/features/settings/artists-menu";
 import { SettingsDialog } from "@/features/settings/settings-dialog";
 import { useUserLists, useUserProfiles } from "@/features/user/hooks";
-import { displayNickname } from "@/lib/address";
+import { displayNickname, nicknameParam } from "@/lib/address";
 import { authClient } from "@/lib/auth-client";
 import { m } from "@/paraglide/messages";
 
@@ -180,7 +180,7 @@ function MyCosmoSubmenu() {
               render={
                 <Link
                   to="/@{$nickname}"
-                  params={{ nickname: profile.nickname || profile.address.toLowerCase() }}
+                  params={{ nickname: nicknameParam(profile.address, profile.nickname) }}
                 />
               }
             >

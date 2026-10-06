@@ -2,6 +2,8 @@ import type { PublicList } from "@repo/api/schemas/list";
 import type { PublicProfile } from "@repo/api/schemas/profile";
 import { linkOptions } from "@tanstack/react-router";
 
+import { nicknameParam } from "@/lib/address";
+
 /** A market listing carries the profile without the address beside it, so both are optional. */
 type ListLinkTarget = Pick<PublicList, "slug" | "profileSlug"> & {
   profileAddress?: string | null;
@@ -20,7 +22,7 @@ export function getListLinkOption(list: ListLinkTarget) {
     return linkOptions({
       to: "/@{$nickname}/list/$slug",
       params: {
-        nickname: list.profile?.nickname || address.toLowerCase(),
+        nickname: nicknameParam(address, list.profile?.nickname),
         slug: list.profileSlug,
       },
     });

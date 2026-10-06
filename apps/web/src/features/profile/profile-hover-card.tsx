@@ -7,7 +7,7 @@ import { CursorCard, cursorCardDelays } from "@/components/shared/cursor-card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TooltipPrimitive } from "@/components/ui/tooltip";
-import { displayNickname, truncateAddress } from "@/lib/address";
+import { displayNickname, nicknameParam, truncateAddress } from "@/lib/address";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -20,7 +20,7 @@ type Payload = { address: string; nickname: string | null | undefined };
 const profileCardHandle = TooltipPrimitive.createHandle<Payload>();
 
 function profileParams(address: string, nickname: string | null | undefined) {
-  return { nickname: nickname ?? address.toLowerCase() };
+  return { nickname: nicknameParam(address, nickname) };
 }
 
 /** A link to a profile that shows its hover card while a mouse rests on it. */

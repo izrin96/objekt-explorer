@@ -16,7 +16,7 @@ import {
 import { Form } from "@/components/ui/form";
 import { Spinner } from "@/components/ui/spinner";
 import { useUserLists, useUserProfiles } from "@/features/user/hooks";
-import { isSameAddress } from "@/lib/address";
+import { isSameAddress, nicknameParam } from "@/lib/address";
 import { type FieldErrors, zodErrors } from "@/lib/form";
 import type { client } from "@/lib/orpc";
 import { m } from "@/paraglide/messages";
@@ -107,7 +107,7 @@ function toListUrl(
   if (!address || !list.profileSlug) return undefined;
   const profile = profiles.find((entry) => isSameAddress(entry.address, address));
   return {
-    nickname: profile?.nickname || address,
+    nickname: nicknameParam(address, profile?.nickname),
     profileSlug: list.profileSlug,
     fallbackSlug: list.slug,
   };

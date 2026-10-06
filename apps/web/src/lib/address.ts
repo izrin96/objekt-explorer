@@ -19,3 +19,8 @@ export function displayNickname(address: string, nickname?: string | null): stri
   if (!nickname || isSameAddress(nickname, address)) return truncateAddress(address);
   return nickname;
 }
+
+/** the `$nickname` route param: a profile's nickname, or its address when it has none */
+export function nicknameParam(address: string, nickname?: string | null): string {
+  return nickname || address.toLowerCase();
+}

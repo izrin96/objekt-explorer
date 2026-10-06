@@ -28,7 +28,7 @@ import {
 import { BannerThumb, bannerThumbFrameClass } from "@/features/profile/banner-thumb";
 import { PROFILE_PAGE_KEY } from "@/features/profile/queries";
 import { currentUserOptions } from "@/features/user/queries";
-import { displayNickname, truncateAddress } from "@/lib/address";
+import { displayNickname, nicknameParam, truncateAddress } from "@/lib/address";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -87,7 +87,7 @@ export function LinkedCard({
           <h2 className="font-display truncate text-base font-semibold">
             <Link
               to="/@{$nickname}"
-              params={{ nickname: profile.nickname ?? profile.address.toLowerCase() }}
+              params={{ nickname: nicknameParam(profile.address, profile.nickname) }}
               className={previewCardLinkClass}
             >
               {nickname}

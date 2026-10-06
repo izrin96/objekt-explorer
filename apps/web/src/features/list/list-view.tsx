@@ -36,7 +36,7 @@ import { SkeletonGrid } from "@/features/objekt/skeleton-grid";
 import { useCollectionRarity } from "@/features/objekt/use-collection-rarity";
 import { formatCurrency, useCurrency } from "@/features/settings/use-currency";
 import { useCurrentUser } from "@/features/user/hooks";
-import { displayNickname } from "@/lib/address";
+import { displayNickname, nicknameParam } from "@/lib/address";
 import { m } from "@/paraglide/messages";
 import { useClearSelectionOnNavigate, useSelection } from "@/stores/selection";
 
@@ -414,7 +414,7 @@ function EmptyList() {
             render={
               <Link
                 to="/@{$nickname}"
-                params={{ nickname: list.profile?.nickname || list.profileAddress.toLowerCase() }}
+                params={{ nickname: nicknameParam(list.profileAddress, list.profile?.nickname) }}
               />
             }
           >

@@ -8,6 +8,7 @@ import { ListNotFound } from "@/features/list/list-not-found";
 import { ListProvider } from "@/features/list/list-provider";
 import { ListView } from "@/features/list/list-view";
 import { listBySlugQuery } from "@/features/list/queries";
+import { nicknameParam } from "@/lib/address";
 import { generateMetadata } from "@/lib/meta";
 import { m } from "@/paraglide/messages";
 
@@ -26,7 +27,7 @@ export const Route = createFileRoute("/(container)/list/$slug")({
       throw redirect({
         to: "/@{$nickname}/list/$slug",
         params: {
-          nickname: list.profile.nickname || list.profile.address.toLowerCase(),
+          nickname: nicknameParam(list.profile.address, list.profile.nickname),
           slug: list.profileSlug,
         },
       });
