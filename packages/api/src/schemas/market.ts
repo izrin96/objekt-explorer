@@ -31,6 +31,10 @@ export const marketListingSchema = z.object({
   usdPrice: z.number().nullable(),
   serial: z.number().nullable(),
   transferable: z.boolean().nullable(),
+  /** null when the list hides serials */
+  objektId: z.string().nullable(),
+  /** whether the list's owner accepts a message started from this row */
+  messageable: z.boolean(),
   list: marketListInfoSchema,
 });
 

@@ -1,0 +1,25 @@
+import { createFileRoute } from "@tanstack/react-router";
+
+import { PageHeader } from "@/components/shared/page-header";
+import { ModQueue } from "@/features/moderation/mod-queue";
+import { queueOptions } from "@/features/moderation/queries";
+import { generateMetadata } from "@/lib/meta";
+import { m } from "@/paraglide/messages";
+
+export const Route = createFileRoute("/(container)/mod/reports/")({
+  loader: async ({ context: { queryClient } }) => {
+    // a failed read leaves the queue to show its error and retry, not the page to fail
+    await queryClient.query({ ...queueOptions(), staleTime: "static" }).catch(() => undefined);
+  },
+  head: () => generateMetadata({ title: m.page_titles_mod_reports() }),
+  component: QueuePage,
+});
+
+function QueuePage() {
+  return (
+    <>
+      <PageHeader title={m.mod_queue_title()} description={m.mod_queue_description()} />
+      <ModQueue />
+    </>
+  );
+}

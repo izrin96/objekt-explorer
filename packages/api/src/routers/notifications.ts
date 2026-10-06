@@ -4,6 +4,7 @@ import { and, desc, eq, gt, inArray, isNull, or, sql } from "drizzle-orm";
 
 import { authed } from "../orpc";
 import {
+  LISTED_NOTIFICATION_TYPES,
   listNotificationsInputSchema,
   markReadInputSchema,
   NOTIFICATION_DEFAULTS,
@@ -55,7 +56,9 @@ export const notificationsRouter = {
       });
 
       const collections = await fetchCollectionsBySlug(
-        items.flatMap((item) => item.payload.latest.map((match) => match.collectionSlug)),
+        items.flatMap((item) =>
+          item.type === "sanction" ? [] : item.payload.latest.map((match) => match.collectionSlug),
+        ),
         [],
       );
 
@@ -78,7 +81,7 @@ export const notificationsRouter = {
       and(
         eq(notification.userId, session.user.id),
         isNull(notification.readAt),
-        inArray(notification.type, [...NOTIFICATION_TYPES]),
+        inArray(notification.type, [...LISTED_NOTIFICATION_TYPES]),
       ),
     ),
   ),

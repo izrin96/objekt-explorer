@@ -14,6 +14,10 @@ export const relations = defineRelations(schema, (r) => ({
   },
   user: {
     userAddresses: r.many.userAddress(),
+    messagePref: r.one.messagePref({
+      from: r.user.id,
+      to: r.messagePref.userId,
+    }),
   },
   lists: {
     entries: r.many.listEntries(),

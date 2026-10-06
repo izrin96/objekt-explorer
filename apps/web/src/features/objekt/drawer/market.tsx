@@ -9,10 +9,12 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { Timestamp } from "@/components/shared/timestamp";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
+import { MessageButton } from "@/features/chat/message-button";
 import { getListLinkOption } from "@/features/list/list-link";
 import { ProfileCell } from "@/features/profile/profile-hover-card";
 import { formatCurrency, useCurrency } from "@/features/settings/use-currency";
 import { collectionPostCountsOptions } from "@/features/trade/queries";
+import { useUserLists, useUserProfiles } from "@/features/user/hooks";
 import { isSameAddress, truncateAddress } from "@/lib/address";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -63,6 +65,12 @@ export function MarketPanel({
   ];
 
   const items = listings.data?.pages.flatMap((page) => page.items) ?? [];
+  // the rows are public, so the viewer's own listings are told apart here
+  const myListSlugs = new Set(useUserLists().map((list) => list.slug));
+  const myAddresses = useUserProfiles().map((profile) => profile.address);
+  const isMine = (item: MarketListing) =>
+    myListSlugs.has(item.list.slug) ||
+    myAddresses.some((address) => isSameAddress(address, item.list.profile?.address));
 
   return (
     <div className="flex flex-col gap-4">
@@ -115,6 +123,9 @@ export function MarketPanel({
                     {m.objekt_date()}
                   </SortableHeader>
                   <th scope="col" className="w-8">
+                    <span className="sr-only">{m.chat_message()}</span>
+                  </th>
+                  <th scope="col" className="w-8">
                     <span className="sr-only">{m.objekt_market_view_list()}</span>
                   </th>
                 </tr>
@@ -124,6 +135,8 @@ export function MarketPanel({
                   <MarketRow
                     key={item.id}
                     item={item}
+                    slug={slug}
+                    messageable={item.messageable && !isMine(item)}
                     currency={currency}
                     formatUsd={formatUsd}
                     onOpenSerial={onOpenSerial}
@@ -185,11 +198,16 @@ function OnTradeLine({ slug }: { slug: string }) {
  */
 function MarketRow({
   item,
+  slug,
+  messageable,
   currency,
   formatUsd,
   onOpenSerial,
 }: {
   item: MarketListing;
+  slug: string;
+  /** false on the viewer's own listings too */
+  messageable: boolean;
   /** the viewer's code; the conversion is only worth showing when the seller's differs */
   currency: string;
   formatUsd: (usd: number) => string;
@@ -256,6 +274,21 @@ function MarketRow({
       </td>
       <td className="text-muted-foreground px-3 py-1.5 font-mono text-xs whitespace-nowrap tabular-nums">
         <Timestamp date={new Date(item.createdAt)} />
+      </td>
+      <td className="px-1">
+        {messageable ? (
+          <MessageButton
+            target={{ kind: "list", slug: item.list.slug }}
+            card={{
+              collectionSlug: slug,
+              objektId: item.objektId ?? undefined,
+              listSlug: item.list.slug,
+            }}
+            name={nickname ?? (address ? truncateAddress(address.toLowerCase()) : undefined)}
+            iconOnly
+            variant="ghost"
+          />
+        ) : null}
       </td>
       <td className="pr-2">
         <Link

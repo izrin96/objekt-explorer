@@ -2,7 +2,12 @@ import { RedisClient, type ServerWebSocket } from "bun";
 
 import { websocketHandlers as activityHandlers } from "./activity";
 import { serverEnv } from "./env";
-import { NOTIFY_PREFIX, notifyChannel, type UserSocketMessage } from "./schemas/notification";
+import {
+  NOTIFY_PREFIX,
+  notifyChannel,
+  type UserSocketMessage,
+  userSocketMessageSchema,
+} from "./schemas/notification";
 import { auth } from "./services/auth";
 import { redis } from "./services/redis";
 
@@ -25,16 +30,29 @@ function logError(action: string) {
   };
 }
 
-function relay(_message: string, channel: string) {
+// the worker publishes a bare "1", which means notifications changed
+function toFrame(message: string) {
+  try {
+    const parsed = userSocketMessageSchema.safeParse(JSON.parse(message));
+    if (parsed.success) return JSON.stringify(parsed.data);
+  } catch {}
+  return CHANGED;
+}
+
+function relay(message: string, channel: string) {
   const userId = channel.slice(NOTIFY_PREFIX.length);
+  const frame = toFrame(message);
   for (const ws of sockets.get(userId) ?? []) {
-    if (ws.readyState === WebSocket.OPEN) ws.send(CHANGED);
+    if (ws.readyState === WebSocket.OPEN) ws.send(frame);
   }
 }
 
 /** Tells the user's open tabs to refetch, through Valkey so a socket in any process hears it. */
-export async function publishNotify(userId: string) {
-  await redis.publish(notifyChannel(userId), "1").catch(logError("publish"));
+export async function publishNotify(
+  userId: string,
+  message: UserSocketMessage = { type: "notifications_changed" },
+) {
+  await redis.publish(notifyChannel(userId), JSON.stringify(message)).catch(logError("publish"));
 }
 
 export async function authorizeUserSocket(req: Request): Promise<string | Response> {

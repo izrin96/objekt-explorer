@@ -2,6 +2,7 @@ import { userSocketMessageSchema } from "@repo/api/schemas/notification";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 
+import { fetchNewer, fetchNewerEverywhere, invalidateChatLists } from "@/features/chat/queries";
 import { clientEnv } from "@/lib/env/client";
 
 import { notificationKeys } from "./queries";
@@ -25,7 +26,7 @@ export function useUserSocket(): boolean {
 
   useEffect(() => {
     const url = socketUrl();
-    const refetch = () => {
+    const refetchNotifications = () => {
       for (const queryKey of notificationKeys) void queryClient.invalidateQueries({ queryKey });
     };
 
@@ -40,7 +41,9 @@ export function useUserSocket(): boolean {
       socket.addEventListener("open", () => {
         attempt = 0;
         setOpen(true);
-        refetch();
+        refetchNotifications();
+        void invalidateChatLists(queryClient);
+        void fetchNewerEverywhere(queryClient);
       });
 
       socket.addEventListener("message", (event: MessageEvent<string>) => {
@@ -50,7 +53,20 @@ export function useUserSocket(): boolean {
         } catch {
           return;
         }
-        if (userSocketMessageSchema.safeParse(parsed).success) refetch();
+        const message = userSocketMessageSchema.safeParse(parsed);
+        if (!message.success) return;
+        switch (message.data.type) {
+          case "notifications_changed":
+            refetchNotifications();
+            // a moderator's mute arrives only as a notification; open threads swap the
+            // message box for the mute notice from the conversation state this returns
+            void fetchNewerEverywhere(queryClient);
+            break;
+          case "chat_changed":
+            void invalidateChatLists(queryClient);
+            void fetchNewer(queryClient, message.data.conversationId);
+            break;
+        }
       });
 
       socket.addEventListener("close", () => {

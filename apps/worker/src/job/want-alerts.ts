@@ -6,6 +6,7 @@ import {
   NOTIFICATION_TYPES,
   notifyChannel,
 } from "@repo/api/schemas/notification";
+import { notBlockedEither, notTradeBlocked } from "@repo/api/services/safety";
 import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import {
@@ -153,14 +154,15 @@ async function fetchPairs(floor: number, upTo: number, newlyDiscoverable: number
     ),
     pairs AS (
       SELECT c.id AS entry_id, 'forward' AS direction, c.list_id AS offer_list_id,
-        w.list_id AS want_list_id, c.slug, c.objekt_id
+        w.list_id AS want_list_id, c.slug, c.objekt_id,
+        c.user_id AS offer_user_id, wl.user_id AS want_user_id
       FROM cand c
       JOIN list_entries w ON w.collection_slug = c.slug
       JOIN lists wl ON wl.id = w.list_id
       WHERE c.type IN ('have', 'sale')
         AND wl.list_type_new = 'want' AND wl.match_alerts AND wl.user_id <> c.user_id
       UNION ALL
-      SELECT c.id, 'reverse', o.list_id, c.list_id, c.slug, o.objekt_id
+      SELECT c.id, 'reverse', o.list_id, c.list_id, c.slug, o.objekt_id, ol.user_id, c.user_id
       FROM cand c
       JOIN list_entries o ON o.collection_slug = c.slug
       JOIN lists ol ON ol.id = o.list_id
@@ -168,7 +170,10 @@ async function fetchPairs(floor: number, upTo: number, newlyDiscoverable: number
         AND ol.list_type_new IN ('have', 'sale') AND ol.match_alerts AND ol.user_id <> c.user_id
     )
     SELECT direction, offer_list_id, want_list_id, slug, objekt_id FROM pairs p
-    WHERE NOT EXISTS (
+    WHERE ${notBlockedEither(sql`p.want_user_id`, sql`p.offer_user_id`)}
+      AND ${notTradeBlocked(sql`p.offer_user_id`)}
+      AND ${notTradeBlocked(sql`p.want_user_id`)}
+      AND NOT EXISTS (
       SELECT 1 FROM want_alert_sent s
       WHERE s.want_list_id = p.want_list_id
         AND s.source_list_id = p.offer_list_id

@@ -226,7 +226,7 @@ function NotShown({
   notShown,
   onShowHidden,
 }: {
-  notShown: { notOwned: number; notTransferable: number; hidden: number };
+  notShown: { notOwned: number; notTransferable: number; hidden: number; blocked: number };
   onShowHidden: () => void;
 }) {
   const parts = [
@@ -235,6 +235,7 @@ function NotShown({
       ? m.trade_not_shown_not_transferable({ count: notShown.notTransferable })
       : null,
     notShown.hidden > 0 ? m.trade_not_shown_hidden({ count: notShown.hidden }) : null,
+    notShown.blocked > 0 ? m.trade_not_shown_blocked({ count: notShown.blocked }) : null,
   ].filter((part) => part !== null);
 
   if (parts.length === 0) return null;

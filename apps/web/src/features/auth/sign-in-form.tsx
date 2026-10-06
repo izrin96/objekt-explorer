@@ -4,6 +4,7 @@ import {
   UserPlusIcon,
   XLogoIcon,
 } from "@phosphor-icons/react";
+import { parseBanNotice } from "@repo/api/schemas/moderation";
 import { useMutation } from "@tanstack/react-query";
 import type React from "react";
 import { useState } from "react";
@@ -20,6 +21,7 @@ import type { AuthState } from "@/features/auth/sign-in";
 import { authClient } from "@/lib/auth-client";
 import { type FieldErrors, zodErrors } from "@/lib/form";
 import { m } from "@/paraglide/messages";
+import { getLocale } from "@/paraglide/runtime";
 
 // built per submit, not at module scope: the message functions read the
 // request's locale, which on the server is only bound while a request runs
@@ -28,6 +30,28 @@ function schema() {
     email: z.string().min(1, m.common_validation_required_email()),
     password: z.string().min(1, m.common_validation_required_password()),
   });
+}
+
+const BANNED = "BANNED_USER";
+
+/**
+ * Better Auth checks a ban only after the password, so this message reaches only someone
+ * who already proved the account is theirs; a wrong password never says it is banned.
+ */
+function banText(message: string | undefined) {
+  const notice = parseBanNotice(message);
+  if (!notice) return m.auth_banned();
+  if (!notice.until) return m.auth_banned_forever({ reason: notice.reason });
+  const end = new Date(notice.until);
+  // Intl throws on an invalid date; the generic notice still says why sign-in failed
+  if (Number.isNaN(end.getTime())) return m.auth_banned();
+  const until = new Intl.DateTimeFormat(getLocale(), { dateStyle: "long" }).format(end);
+  return m.auth_banned_until({ until, reason: notice.reason });
+}
+
+/** Marks an error whose message is already the whole sentence to show. */
+function bannedError(message: string | undefined) {
+  return Object.assign(new Error(banText(message)), { name: BANNED });
 }
 
 export function SignInForm({
@@ -43,6 +67,7 @@ export function SignInForm({
   const mutation = useMutation({
     mutationFn: async ({ email, password }: { email: string; password: string }) => {
       const result = await authClient.signIn.email({ email, password });
+      if (result.error?.code === BANNED) throw bannedError(result.error.message);
       if (result.error) throw new Error(result.error.message);
       return result.data;
     },
@@ -95,7 +120,9 @@ export function SignInForm({
 
         {mutation.isError && (
           <p role="alert" className="text-destructive-foreground text-xs text-pretty">
-            {m.auth_sign_in_error({ message: mutation.error.message })}
+            {mutation.error.name === BANNED
+              ? mutation.error.message
+              : m.auth_sign_in_error({ message: mutation.error.message })}
           </p>
         )}
       </Form>
@@ -146,11 +173,18 @@ function SocialButton({
   const mutation = useMutation({
     mutationFn: async () => {
       const result = await authClient.signIn.social({ provider });
+      // the OAuth callback does not carry the ban's details, so this one stays generic
+      if (result.error?.code === BANNED) throw bannedError(undefined);
       if (result.error) throw new Error(result.error.message);
       return result.data;
     },
-    onError: ({ message }) => {
-      toastManager.add({ type: "error", title: m.auth_sign_in_error({ message }) });
+    onError: (error) => {
+      toastManager.add({
+        type: "error",
+        // a ban is already the whole sentence; anything else gets the sign-in framing
+        title:
+          error.name === BANNED ? error.message : m.auth_sign_in_error({ message: error.message }),
+      });
     },
   });
 

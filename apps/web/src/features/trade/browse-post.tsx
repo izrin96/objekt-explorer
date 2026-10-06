@@ -5,7 +5,9 @@ import { Link } from "@tanstack/react-router";
 import { SocialBadge } from "@/components/shared/social-badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { MessageButton } from "@/features/chat/message-button";
 import { getListLinkOption } from "@/features/list/list-link";
+import { SafetyMenu } from "@/features/moderation/safety-menu";
 import { ObjektCard } from "@/features/objekt/objekt-card";
 import { ProfileLink } from "@/features/profile/profile-hover-card";
 import { formatCurrency } from "@/features/settings/use-currency";
@@ -84,6 +86,9 @@ export function BrowsePost({
   const { identity, user, match } = post;
   const { changed, time } = postTime(post);
   const when = relativeTime(new Date(time).getTime(), now);
+  // the post's own list (the have list of a pair), with the first collection it shows
+  const anchor = post.sides.find((side) => side.list.id === post.id);
+  const firstShown = anchor?.items[0]?.slug;
 
   return (
     <article className="bg-card flex flex-col gap-4 rounded-lg border p-4">
@@ -118,6 +123,17 @@ export function BrowsePost({
             </time>
           </div>
         </div>
+        {post.messageable && anchor ? (
+          <MessageButton
+            target={{ kind: "list", slug: anchor.list.slug }}
+            card={
+              firstShown ? { collectionSlug: firstShown, listSlug: anchor.list.slug } : undefined
+            }
+            name={identity.name}
+            className="shrink-0"
+          />
+        ) : null}
+        <SafetyMenu userId={post.userId} name={identity.name} className="shrink-0" />
       </header>
 
       {match && (match.youHave > 0 || match.youWant > 0) ? (

@@ -42,9 +42,21 @@ const rowFields = {
   createdAt: z.string(),
 };
 
+/** A moderator's notice; never grouped, and not something a user can turn off. */
+export const sanctionPayloadSchema = z.object({
+  action: z.enum(["warn", "chat_mute", "trade_block"]),
+  reason: z.string(),
+  endsAt: z.string().nullable(),
+});
+export type SanctionPayload = z.infer<typeof sanctionPayloadSchema>;
+
+/** Every type the bell lists; `NOTIFICATION_TYPES` are only the ones with a preference. */
+export const LISTED_NOTIFICATION_TYPES = [...NOTIFICATION_TYPES, "sanction"] as const;
+
 export const notificationSchema = z.discriminatedUnion("type", [
   z.object({ ...rowFields, type: z.literal("want_match"), payload: alertPayloadSchema }),
   z.object({ ...rowFields, type: z.literal("have_wanted"), payload: alertPayloadSchema }),
+  z.object({ ...rowFields, type: z.literal("sanction"), payload: sanctionPayloadSchema }),
 ]);
 export type Notification = z.infer<typeof notificationSchema>;
 
@@ -65,5 +77,8 @@ export const setPrefInputSchema = z.object({
   enabled: z.boolean(),
 });
 
-export const userSocketMessageSchema = z.object({ type: z.literal("notifications_changed") });
+export const userSocketMessageSchema = z.discriminatedUnion("type", [
+  z.object({ type: z.literal("notifications_changed") }),
+  z.object({ type: z.literal("chat_changed"), conversationId: z.number().int() }),
+]);
 export type UserSocketMessage = z.infer<typeof userSocketMessageSchema>;

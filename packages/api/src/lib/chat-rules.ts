@@ -1,0 +1,249 @@
+import {
+  type ChatBox,
+  type ChatRefusal,
+  MESSAGE_LIMIT_PER_MINUTE,
+  type MessageAllow,
+  MESSAGE_PREF_DEFAULTS,
+  NEW_ACCOUNT_DAYS,
+  NEW_ACCOUNT_START_LIMIT,
+  START_LIMIT,
+  START_WINDOW_HOURS,
+} from "../schemas/chat";
+import { type AddressInfo, type PartnerIdentity, visibleNickname } from "./trade-rank";
+
+const HOUR_MS = 60 * 60 * 1000;
+const MINUTE_MS = 60 * 1000;
+
+/** Ordered by code point, as the `conversation_pair_ordered` check compares them. */
+export function pairKey(a: string, b: string) {
+  return a < b ? { userLow: a, userHigh: b } : { userLow: b, userHigh: a };
+}
+
+export type MessagePref = { allow: MessageAllow; allowHidden: boolean };
+
+/** A `message_pref` row, possibly from a LEFT JOIN, or the defaults when the user has none. */
+export function toMessagePref(
+  row: { allow: string | null; allowHidden: boolean | null } | null | undefined,
+): MessagePref {
+  if (!row || row.allow === null) return { ...MESSAGE_PREF_DEFAULTS };
+  return {
+    allow: row.allow === "nobody" ? "nobody" : "anyone",
+    allowHidden: row.allowHidden ?? false,
+  };
+}
+
+/** Whether a Message button for this recipient shows; `hidesOwner` is the list's or profile's Hide User. */
+export function isMessageable(pref: MessagePref, hidesOwner: boolean) {
+  return pref.allow !== "nobody" && (!hidesOwner || pref.allowHidden);
+}
+
+export type RateDecision = { ok: true } | { ok: false; retryAt: Date };
+
+/** `prior` are the times of the earlier counted events; one more fits while fewer than `limit` are in the window. */
+export function slidingWindow(
+  prior: number[],
+  now: Date,
+  windowMs: number,
+  limit: number,
+): RateDecision {
+  const inWindow = prior.filter((at) => at > now.getTime() - windowMs).toSorted((a, b) => a - b);
+  if (inWindow.length < limit) return { ok: true };
+  // the event that has to leave the window before one more fits
+  return { ok: false, retryAt: new Date(inWindow[inWindow.length - limit]! + windowMs) };
+}
+
+/** `starts` are the times of the user's new conversations. */
+export function rateDecision(starts: number[], accountCreatedAt: Date, now: Date): RateDecision {
+  const isNew = now.getTime() - accountCreatedAt.getTime() < NEW_ACCOUNT_DAYS * 24 * HOUR_MS;
+  const limit = isNew ? NEW_ACCOUNT_START_LIMIT : START_LIMIT;
+  return slidingWindow(starts, now, START_WINDOW_HOURS * HOUR_MS, limit);
+}
+
+export const MESSAGE_WINDOW_MS = MINUTE_MS;
+
+/** `sends` are the times of the user's earlier messages, not counting the one being sent. */
+export function messageRateDecision(sends: number[], now: Date): RateDecision {
+  return slidingWindow(sends, now, MESSAGE_WINDOW_MS, MESSAGE_LIMIT_PER_MINUTE);
+}
+
+export type CardList = { ownerId: string; hideUser: boolean; slug: string };
+
+/**
+ * The sender's own lists are always fine. A partner's list is fine only when it shows its
+ * owner or is the list the conversation is being started from, so a card can never test
+ * whether a hidden list belongs to the partner; a list of neither member is refused alike.
+ */
+export function cardListAllowed(
+  list: CardList,
+  senderId: string,
+  partnerId: string,
+  targetListSlug: string | null,
+) {
+  if (list.ownerId === senderId) return true;
+  if (list.ownerId !== partnerId) return false;
+  return !list.hideUser || list.slug === targetListSlug;
+}
+
+export type StartFacts = {
+  senderId: string;
+  recipientId: string;
+  senderHasAddress: boolean;
+  pref: MessagePref;
+  hidesOwner: boolean;
+  /** either account has blocked the other */
+  blocked: boolean;
+  senderMuted: boolean;
+  /** a conversation between the two already exists, so this start reopens it */
+  existing: boolean;
+  rate: RateDecision;
+};
+
+export type StartVerdict = { ok: true } | { ok: false; reason: ChatRefusal; retryAt?: Date };
+
+/**
+ * The recipient's settings, blocks, mutes and the start limit apply to new conversations
+ * only; a reopen that sends a card goes through `sendVerdict` too. A block reads exactly
+ * like Nobody, so the blocked side cannot tell.
+ */
+export function startVerdict(facts: StartFacts): StartVerdict {
+  if (!facts.senderHasAddress) return { ok: false, reason: "no_address" };
+  if (facts.senderId === facts.recipientId) return { ok: false, reason: "self" };
+  if (facts.existing) return { ok: true };
+  if (facts.senderMuted) return { ok: false, reason: "muted" };
+  if (facts.blocked || facts.pref.allow === "nobody") return { ok: false, reason: "not_accepting" };
+  if (!isMessageable(facts.pref, facts.hidesOwner)) return { ok: false, reason: "hidden_owner" };
+  if (!facts.rate.ok) return { ok: false, reason: "start_limit", retryAt: facts.rate.retryAt };
+  return { ok: true };
+}
+
+export function sendVerdict(facts: { blocked: boolean; senderMuted: boolean }): StartVerdict {
+  if (facts.senderMuted) return { ok: false, reason: "muted" };
+  if (facts.blocked) return { ok: false, reason: "not_accepting" };
+  return { ok: true };
+}
+
+export type MemberState = {
+  request: boolean;
+  archivedAt: string | null;
+  /** `"infinity"` for always */
+  mutedUntil: string | null;
+  lastReadMessageId: number | null;
+};
+
+const EMPTY_MEMBER: MemberState = {
+  request: false,
+  archivedAt: null,
+  mutedUntil: null,
+  lastReadMessageId: null,
+};
+
+/** A start without a card waits in the recipient's Requests. */
+export function startMembers(withCard: boolean): { sender: MemberState; recipient: MemberState } {
+  return { sender: EMPTY_MEMBER, recipient: { ...EMPTY_MEMBER, request: !withCard } };
+}
+
+export type MemberEvent =
+  | { type: "send"; messageId: number }
+  | { type: "incoming" }
+  | { type: "read"; messageId: number }
+  | { type: "accept" }
+  | { type: "decline" }
+  | { type: "archive" }
+  | { type: "unarchive" }
+  | { type: "mute"; until: string | null };
+
+const maxId = (a: number | null, b: number) => (a === null ? b : Math.max(a, b));
+
+/** `now` is an ISO time. Declining keeps `request`, so the conversation never reaches the Inbox unasked. */
+export function nextMemberState(state: MemberState, event: MemberEvent, now: string): MemberState {
+  switch (event.type) {
+    case "send":
+      return {
+        ...state,
+        request: false,
+        archivedAt: null,
+        lastReadMessageId: maxId(state.lastReadMessageId, event.messageId),
+      };
+    case "incoming":
+      return { ...state, archivedAt: null };
+    case "read":
+      return { ...state, lastReadMessageId: maxId(state.lastReadMessageId, event.messageId) };
+    case "accept":
+      return { ...state, request: false };
+    case "decline":
+      return { ...state, archivedAt: state.archivedAt ?? now };
+    case "archive":
+      return { ...state, archivedAt: state.archivedAt ?? now };
+    case "unarchive":
+      return { ...state, archivedAt: null };
+    case "mute":
+      return { ...state, mutedUntil: event.until };
+  }
+}
+
+export function boxOf(state: Pick<MemberState, "request" | "archivedAt">): ChatBox {
+  if (state.archivedAt !== null) return "archived";
+  return state.request ? "requests" : "inbox";
+}
+
+/** A conversation with an account the user blocked leaves their Inbox and Requests, not Archived. */
+export function visibleBox(
+  state: Pick<MemberState, "request" | "archivedAt">,
+  blockedPartner: boolean,
+): ChatBox | null {
+  const box = boxOf(state);
+  return blockedPartner && box !== "archived" ? null : box;
+}
+
+export function isMuted(mutedUntil: string | null, now: Date) {
+  if (mutedUntil === null) return false;
+  return mutedUntil === "infinity" || new Date(mutedUntil).getTime() > now.getTime();
+}
+
+export type LastMessage = { id: number; senderId: string };
+
+export function isUnread(
+  last: LastMessage | null,
+  userId: string,
+  lastReadMessageId: number | null,
+) {
+  return last !== null && last.senderId !== userId && last.id > (lastReadMessageId ?? 0);
+}
+
+/** A list row's unread mark: requests never show one. */
+export function rowUnread(
+  state: Pick<MemberState, "request" | "lastReadMessageId">,
+  last: LastMessage | null,
+  userId: string,
+) {
+  return !state.request && isUnread(last, userId, state.lastReadMessageId);
+}
+
+/** The badge: unread Inbox conversations that are not muted. */
+export function countsTowardBadge(
+  state: MemberState,
+  last: LastMessage | null,
+  userId: string,
+  now: Date,
+  blockedPartner = false,
+) {
+  return (
+    visibleBox(state, blockedPartner) === "inbox" &&
+    !isMuted(state.mutedUntil, now) &&
+    isUnread(last, userId, state.lastReadMessageId)
+  );
+}
+
+export type ChatAddress = AddressInfo & { hideUser: boolean };
+
+/**
+ * Named by a linked address's nickname only when that address shows its owner, so a
+ * conversation never ties a Hide User address to the account; otherwise the account name.
+ */
+export function chatIdentity(accountName: string, addresses: ChatAddress[]): PartnerIdentity {
+  for (const info of addresses) {
+    const nickname = info.hideUser ? null : visibleNickname(info);
+    if (nickname) return { name: nickname, address: info.address.toLowerCase(), also: [] };
+  }
+  return { name: accountName, address: null, also: [] };
+}

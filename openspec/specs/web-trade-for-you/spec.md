@@ -101,3 +101,17 @@ The view SHALL reflect the user's own list changes on the next load. Other accou
 #### Scenario: Own edit
 - **WHEN** the user adds a collection to their want list and returns to For you
 - **THEN** partners holding that collection are counted
+
+### Requirement: Message a partner
+Each partner row SHALL offer Message, under the rules in `web-chat`. Message SHALL open the conversation with the partner, adding a card for the partner's best-matching list.
+
+#### Scenario: From For you
+- **WHEN** the user activates Message on nakyoung.cards's row
+- **THEN** the conversation with nakyoung.cards opens, with a card for the list that matched most
+
+### Requirement: Blocks and trade blocks
+For you SHALL leave out partners the user blocked, partners who blocked the user, and partners under an active trade block. Not shown SHALL count the accounts the user blocked, separately from hidden partners. Each row SHALL offer Block beside Hide partner.
+
+#### Scenario: Blocked partner
+- **WHEN** the user has blocked 2 accounts
+- **THEN** neither appears, and Not shown includes "2 blocked users"

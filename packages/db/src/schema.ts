@@ -1,6 +1,8 @@
 import { sql } from "drizzle-orm";
 import {
   type AnyPgColumn,
+  bigint,
+  bigserial,
   boolean,
   check,
   index,
@@ -211,6 +213,207 @@ export const wantAlertSent = pgTable(
       .defaultNow(),
   },
   (t) => [primaryKey({ columns: [t.wantListId, t.sourceListId, t.collectionSlug] })],
+);
+
+export const conversation = pgTable(
+  "conversation",
+  {
+    id: serial("id").primaryKey(),
+    userLow: text("user_low")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    userHigh: text("user_high")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    // no foreign key: the pair's cascade already removes the row
+    createdBy: text("created_by").notNull(),
+    createdAt: timestamp("created_at", { mode: "string", withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    lastMessageId: bigint("last_message_id", { mode: "number" }),
+    lastMessageAt: timestamp("last_message_at", { mode: "string", withTimezone: true }),
+  },
+  (t) => [
+    uniqueIndex("conversation_pair_uniq").on(t.userLow, t.userHigh),
+    index("conversation_user_high_idx").on(t.userHigh),
+    // ids are mixed-case and the database collation is not byte order, so `pairKey` sorts by code point
+    check("conversation_pair_ordered", sql`${t.userLow} COLLATE "C" < ${t.userHigh}`),
+    check("conversation_created_by_member", sql`${t.createdBy} IN (${t.userLow}, ${t.userHigh})`),
+  ],
+);
+
+export const conversationMember = pgTable(
+  "conversation_member",
+  {
+    conversationId: integer("conversation_id")
+      .notNull()
+      .references(() => conversation.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    request: boolean("request").notNull().default(false),
+    archivedAt: timestamp("archived_at", { mode: "string", withTimezone: true }),
+    mutedUntil: timestamp("muted_until", { mode: "string", withTimezone: true }),
+    lastReadMessageId: bigint("last_read_message_id", { mode: "number" }),
+  },
+  (t) => [
+    primaryKey({ columns: [t.conversationId, t.userId] }),
+    index("conversation_member_user_id_idx").on(t.userId),
+  ],
+);
+
+export const message = pgTable(
+  "message",
+  {
+    id: bigserial("id", { mode: "number" }).primaryKey(),
+    conversationId: integer("conversation_id")
+      .notNull()
+      .references(() => conversation.id, { onDelete: "cascade" }),
+    // no foreign key: a sender is a member, and the conversation's cascade removes the row
+    senderId: text("sender_id").notNull(),
+    body: text("body"),
+    card: jsonb("card"),
+    caution: text("caution").array(),
+    createdAt: timestamp("created_at", { mode: "string", withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index("message_conversation_id_idx").on(t.conversationId, t.id.desc()),
+    check("message_has_content", sql`${t.body} IS NOT NULL OR ${t.card} IS NOT NULL`),
+    check("message_body_length", sql`char_length(${t.body}) BETWEEN 1 AND 2000`),
+  ],
+);
+
+export const messagePref = pgTable(
+  "message_pref",
+  {
+    userId: text("user_id")
+      .primaryKey()
+      .references(() => user.id, { onDelete: "cascade" }),
+    allow: text("allow").notNull().default("anyone"),
+    allowHidden: boolean("allow_hidden").notNull().default(false),
+  },
+  (t) => [check("message_pref_allow", sql`${t.allow} IN ('anyone', 'nobody')`)],
+);
+
+export const userBlock = pgTable(
+  "user_block",
+  {
+    blockerId: text("blocker_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    blockedId: text("blocked_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { mode: "string", withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.blockerId, t.blockedId] }),
+    index("user_block_blocked_id_idx").on(t.blockedId),
+    check("user_block_not_self", sql`${t.blockerId} <> ${t.blockedId}`),
+  ],
+);
+
+export const report = pgTable(
+  "report",
+  {
+    id: serial("id").primaryKey(),
+    reporterId: text("reporter_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    targetUserId: text("target_user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    // the excerpt is the evidence, so the report outlives the conversation
+    conversationId: integer("conversation_id").references(() => conversation.id, {
+      onDelete: "set null",
+    }),
+    reason: text("reason").notNull(),
+    note: text("note"),
+    excerpt: jsonb("excerpt"),
+    status: text("status").notNull().default("open"),
+    createdAt: timestamp("created_at", { mode: "string", withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    resolvedBy: text("resolved_by").references(() => user.id, { onDelete: "set null" }),
+    resolvedAt: timestamp("resolved_at", { mode: "string", withTimezone: true }),
+  },
+  (t) => [
+    index("report_status_target_idx").on(t.status, t.targetUserId),
+    index("report_target_user_id_idx").on(t.targetUserId),
+    index("report_reporter_target_idx").on(t.reporterId, t.targetUserId, t.createdAt.desc()),
+    check(
+      "report_reason",
+      sql`${t.reason} IN ('scam', 'harassment', 'spam', 'impersonation', 'other')`,
+    ),
+    check("report_status", sql`${t.status} IN ('open', 'dismissed', 'actioned')`),
+    check("report_note_length", sql`char_length(${t.note}) <= 500`),
+  ],
+);
+
+export const messageFlag = pgTable(
+  "message_flag",
+  {
+    id: serial("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    // no foreign key: a flag outlives its message, and is never joined to it
+    messageId: bigint("message_id", { mode: "number" }).notNull(),
+    category: text("category").notNull(),
+    createdAt: timestamp("created_at", { mode: "string", withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index("message_flag_user_category_idx").on(t.userId, t.category),
+    check("message_flag_category", sql`${t.category} IN ('send_first', 'outside_payment')`),
+  ],
+);
+
+export const userSanction = pgTable(
+  "user_sanction",
+  {
+    id: serial("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    type: text("type").notNull(),
+    reason: text("reason").notNull(),
+    expiresAt: timestamp("expires_at", { mode: "string", withTimezone: true }),
+    issuedBy: text("issued_by").references(() => user.id, { onDelete: "set null" }),
+    createdAt: timestamp("created_at", { mode: "string", withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    revokedAt: timestamp("revoked_at", { mode: "string", withTimezone: true }),
+    revokedBy: text("revoked_by").references(() => user.id, { onDelete: "set null" }),
+  },
+  (t) => [
+    index("user_sanction_user_id_idx").on(t.userId),
+    index("user_sanction_active_idx")
+      .on(t.userId, t.type)
+      .where(sql`revoked_at IS NULL`),
+    check("user_sanction_type", sql`${t.type} IN ('warn', 'chat_mute', 'trade_block', 'ban')`),
+  ],
+);
+
+export const modAudit = pgTable(
+  "mod_audit",
+  {
+    id: serial("id").primaryKey(),
+    actorId: text("actor_id").references(() => user.id, { onDelete: "set null" }),
+    action: text("action").notNull(),
+    targetUserId: text("target_user_id").references(() => user.id, { onDelete: "set null" }),
+    reportIds: integer("report_ids").array(),
+    detail: jsonb("detail"),
+    createdAt: timestamp("created_at", { mode: "string", withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [index("mod_audit_target_created_idx").on(t.targetUserId, t.createdAt.desc())],
 );
 
 export const pins = pgTable(

@@ -1,10 +1,19 @@
 import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
-import { hiddenTradePartner, listEntries, lists, user, userAddress } from "@repo/db/schema";
+import {
+  hiddenTradePartner,
+  listEntries,
+  lists,
+  messagePref,
+  user,
+  userAddress,
+  userBlock,
+} from "@repo/db/schema";
 import { tradeVersionKey } from "@repo/lib/server/list-touch";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { and, eq, inArray, or, sql } from "drizzle-orm";
 
+import { isMessageable, toMessagePref } from "../lib/chat-rules";
 import {
   CANDIDATE_LIMIT,
   type Candidate,
@@ -24,6 +33,8 @@ import { CARD_LIMIT, type TradeFilter } from "../schemas/trade";
 import { fetchCollectionsBySlug } from "./list";
 import { toPublicUser } from "./profile";
 import { getCache, redis } from "./redis";
+import { notBlockedEither, notTradeBlocked } from "./safety";
+import { marketVersion } from "./safety-cache";
 
 const HAVING: Record<TradeFilter, ReturnType<typeof sql>> = {
   all: sql``,
@@ -73,6 +84,8 @@ export async function fetchTradeCandidates(
           SELECT 1 FROM hidden_trade_partner h
           WHERE h.user_id = ${userId} AND h.hidden_user_id = l.user_id
         )
+        AND ${notBlockedEither(userId, sql`l.user_id`)}
+        AND ${notTradeBlocked(sql`l.user_id`)}
     ),
     matched AS (
       SELECT p.user_id, p.id AS list_id, p.updated_at, true AS they_have, e.collection_slug, e.objekt_id
@@ -136,9 +149,12 @@ export async function resolveTradeSides(userId: string, slug: string | undefined
 const CACHE_TTL_SECONDS = 300;
 
 export async function getTradeMatches(userId: string, sides: Sides, filter: TradeFilter) {
-  const version = (await redis.get(tradeVersionKey(userId))) ?? "0";
+  const [version, market] = await Promise.all([
+    redis.get(tradeVersionKey(userId)).then((v) => v ?? "0"),
+    marketVersion(),
+  ]);
   return getCache(
-    `trade:foryou:${userId}:${version}:${filter}:${sides.listId ?? "all"}`,
+    `trade:foryou:${userId}:${version}:${market}:${filter}:${sides.listId ?? "all"}`,
     CACHE_TTL_SECONDS,
     () => computeTradeMatches(userId, sides, filter),
   );
@@ -146,13 +162,40 @@ export async function getTradeMatches(userId: string, sides: Sides, filter: Trad
 
 export type TradeMatches = Awaited<ReturnType<typeof computeTradeMatches>>;
 
+/** Read past the matches cache, so a partner's Messages setting applies on the next load. */
+export async function withMessageable(matches: TradeMatches) {
+  const ids = matches.partners.map((partner) => partner.userId);
+  const prefs =
+    ids.length === 0
+      ? []
+      : await db
+          .select({
+            userId: messagePref.userId,
+            allow: messagePref.allow,
+            allowHidden: messagePref.allowHidden,
+          })
+          .from(messagePref)
+          .where(inArray(messagePref.userId, ids));
+  const prefOf = new Map(prefs.map((row) => [row.userId, row]));
+  return {
+    ...matches,
+    partners: matches.partners.map((partner) =>
+      Object.assign(partner, {
+        messageable: isMessageable(toMessagePref(prefOf.get(partner.userId)), false),
+      }),
+    ),
+  };
+}
+
 const unique = <T>(values: T[]) => [...new Set(values)];
 
 async function computeTradeMatches(userId: string, sides: Sides, filter: TradeFilter) {
   const now = new Date();
-  const [candidates, hidden] = await Promise.all([
+  const [candidates, hidden, blocked] = await Promise.all([
     fetchTradeCandidates(userId, sides, filter),
     db.$count(hiddenTradePartner, eq(hiddenTradePartner.userId, userId)),
+    // only the user's own blocks: counting who blocked them would tell them
+    db.$count(userBlock, eq(userBlock.blockerId, userId)),
   ]);
 
   const theyHaveSlugs = unique(candidates.flatMap((c) => c.theyHave.map((e) => e.slug)));
@@ -320,7 +363,7 @@ async function computeTradeMatches(userId: string, sides: Sides, filter: TradeFi
   return {
     checkedAt: now.toISOString(),
     partners,
-    notShown: { ...countDropped(recounted), hidden },
+    notShown: { ...countDropped(recounted), hidden, blocked },
     collections: Object.fromEntries(collectionRows.map((c) => [c.slug, c])) as Record<
       string,
       ValidObjekt

@@ -1,4 +1,5 @@
 import { CubeIcon } from "@phosphor-icons/react";
+import type { User } from "@repo/api/services/auth";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 
@@ -8,7 +9,9 @@ import { NavSearch } from "@/components/layout/nav-search";
 import { SystemStatus, statusDotClass, useOverallStatus } from "@/components/layout/system-status";
 import { SignedOutNav, UserMenu } from "@/components/layout/user-menu";
 import { Group } from "@/components/ui/group";
+import { MessagesIcon } from "@/features/chat/messages-icon";
 import { NotificationBell } from "@/features/notifications/notification-bell";
+import { useUserSocket } from "@/features/notifications/use-user-socket";
 import { useCurrentUser } from "@/features/user/hooks";
 import { SITE_NAME, cn, containerClass } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -85,15 +88,20 @@ export function AppNav() {
 
         <NavSearch open={searchOpen} onOpenChange={setSearchOpen} />
 
-        {user ? (
-          <>
-            <NotificationBell />
-            <UserMenu user={user.user} />
-          </>
-        ) : (
-          <SignedOutNav />
-        )}
+        {user ? <SignedInActions user={user.user} /> : <SignedOutNav />}
       </div>
     </header>
+  );
+}
+
+/** One socket per tab: the bell and the messages icon share it. */
+function SignedInActions({ user }: { user: User }) {
+  const live = useUserSocket();
+  return (
+    <>
+      <MessagesIcon live={live} />
+      <NotificationBell live={live} />
+      <UserMenu user={user} />
+    </>
   );
 }

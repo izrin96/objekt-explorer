@@ -24,6 +24,10 @@ export const publicProfileSchema = baseProfileSchema.extend({
   gridColumns: z.number().nullish(),
   user: publicUserSchema.nullish(),
   verified: z.boolean().nullish(),
+  /** whether the profile offers Message to this viewer; set only by the profile page's read */
+  messageable: z.boolean().nullish(),
+  /** the owner's account id, set by the profile page's read only when `user` is shown */
+  userId: z.string().optional(),
 });
 export type PublicProfile = z.infer<typeof publicProfileSchema>;
 

@@ -1,4 +1,4 @@
-import { BellIcon, ChecksIcon } from "@phosphor-icons/react";
+import { BellIcon, ChecksIcon, ShieldWarningIcon } from "@phosphor-icons/react";
 import type { Outputs } from "@repo/api";
 import type { Notification } from "@repo/api/schemas/notification";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -9,18 +9,18 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverPopup, PopoverTitle, PopoverTrigger } from "@/components/ui/popover";
 import { Skeleton } from "@/components/ui/skeleton";
+import { untilLabel } from "@/features/chat/format";
 import { orpc } from "@/lib/orpc";
 import { relativeTime } from "@/lib/time";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import { notificationKeys, notificationsOptions, unreadCountOptions } from "./queries";
-import { useUserSocket } from "./use-user-socket";
 
 type Collections = Outputs["notifications"]["list"]["collections"];
 
-export function NotificationBell() {
-  const live = useUserSocket();
+/** `live` is whether the tab's user socket is open; the bell polls while it is not. */
+export function NotificationBell({ live }: { live: boolean }) {
   const { data: unread = 0 } = useQuery(unreadCountOptions(live));
   const [open, setOpen] = useState(false);
   // the popup itself, not its first button: that one is Mark all read
@@ -129,15 +129,25 @@ function NotificationPanel({ unread, onNavigate }: { unread: number; onNavigate:
           <ul className="flex flex-col py-1">
             {items.map((item) => (
               <li key={item.id}>
-                <NotificationItem
-                  notification={item}
-                  collections={collections}
-                  now={now}
-                  onOpen={() => {
-                    if (item.readAt === null) markRead.mutate({ ids: [item.id] });
-                    onNavigate();
-                  }}
-                />
+                {item.type === "sanction" ? (
+                  <SanctionItem
+                    notification={item}
+                    now={now}
+                    onRead={() => {
+                      if (item.readAt === null) markRead.mutate({ ids: [item.id] });
+                    }}
+                  />
+                ) : (
+                  <NotificationItem
+                    notification={item}
+                    collections={collections}
+                    now={now}
+                    onOpen={() => {
+                      if (item.readAt === null) markRead.mutate({ ids: [item.id] });
+                      onNavigate();
+                    }}
+                  />
+                )}
               </li>
             ))}
           </ul>
@@ -177,13 +187,80 @@ function NotificationSkeleton() {
   );
 }
 
+type ListNotification = Exclude<Notification, { type: "sanction" }>;
+type SanctionNotification = Extract<Notification, { type: "sanction" }>;
+
+function sanctionText({ action, reason, endsAt }: SanctionNotification["payload"]) {
+  switch (action) {
+    case "warn":
+      return m.notification_sanction_warn({ reason });
+    case "chat_mute":
+      return endsAt
+        ? m.notification_sanction_chat_mute({ time: untilLabel(endsAt), reason })
+        : m.notification_sanction_chat_mute_always({ reason });
+    case "trade_block":
+      return m.notification_sanction_trade_block({ reason });
+    default:
+      return null;
+  }
+}
+
+/** A notice from moderators: it leads nowhere, so activating it only marks it read. */
+function SanctionItem({
+  notification,
+  now,
+  onRead,
+}: {
+  notification: SanctionNotification;
+  now: number;
+  onRead: () => void;
+}) {
+  const text = sanctionText(notification.payload);
+  if (text === null) return null;
+  const unread = notification.readAt === null;
+
+  return (
+    <button
+      type="button"
+      onClick={onRead}
+      className="hover:bg-accent focus-visible:bg-accent focus-visible:ring-ring flex w-full items-start gap-3 px-4 py-2.5 text-start outline-none focus-visible:ring-2 focus-visible:ring-inset"
+    >
+      <span className="bg-muted text-muted-foreground grid h-10 w-7 shrink-0 place-items-center rounded">
+        <ShieldWarningIcon aria-hidden className="size-4" />
+      </span>
+      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <span className="text-muted-foreground text-xs font-medium">
+          {m.notification_sanction_from()}
+        </span>
+        <span
+          className={cn(
+            "text-sm text-pretty break-words",
+            unread ? "text-foreground" : "text-muted-foreground",
+          )}
+        >
+          {text}
+        </span>
+        <time dateTime={notification.createdAt} className="text-muted-foreground text-xs">
+          {relativeTime(new Date(notification.createdAt).getTime(), now)}
+        </time>
+      </span>
+      {unread ? (
+        <span className="mt-1.5 flex size-2 shrink-0">
+          <span className="bg-accent-solid size-full rounded-full" />
+          <span className="sr-only">{m.notification_unread()}</span>
+        </span>
+      ) : null}
+    </button>
+  );
+}
+
 function NotificationItem({
   notification,
   collections,
   now,
   onOpen,
 }: {
-  notification: Notification;
+  notification: ListNotification;
   collections: Collections;
   now: number;
   onOpen: () => void;
@@ -240,7 +317,7 @@ function collectionName(slug: string, collections: Collections) {
   return collection ? `${collection.member} ${collection.collectionNo}` : slug;
 }
 
-function notificationText(notification: Notification, collections: Collections) {
+function notificationText(notification: ListNotification, collections: Collections) {
   const { list, count, latest } = notification.payload;
   const first = latest[0];
   if (!first) return null;

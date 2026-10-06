@@ -6,11 +6,14 @@ import { getRequestHeaders, setResponseHeader } from "@tanstack/react-start/serv
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { getOAuthState } from "better-auth/api";
 import { betterAuth } from "better-auth/minimal";
+import { admin } from "better-auth/plugins/admin";
 import { username } from "better-auth/plugins/username";
 import { eq } from "drizzle-orm";
 
 import { SITE_NAME } from "../constants";
 import { serverEnv } from "../env";
+import { ac, roles } from "../permissions";
+import { banNoticeMessage } from "../schemas/moderation";
 import { betterAuthLocale } from "./auth-locale";
 import { sendDeleteAccountVerification, sendResetPassword, sendVerificationEmail } from "./mail";
 
@@ -22,6 +25,13 @@ export const auth = betterAuth({
   }),
   plugins: [
     username(),
+    admin({
+      ac,
+      roles,
+      adminRoles: ["admin"],
+      // reached only after the password check, so it never tells a stranger who is banned
+      bannedUserMessage: (user) => banNoticeMessage(user.banReason, user.banExpires),
+    }),
     i18n({
       defaultLocale: "en",
       translations: betterAuthLocale,

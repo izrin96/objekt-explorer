@@ -6,6 +6,7 @@ import type {
 } from "@orpc/server";
 
 import { activityRouter } from "./activity";
+import { chatRouter } from "./chat";
 import { collectionsRouter } from "./collections";
 import { compareRouter } from "./compare";
 import { configRouter } from "./config";
@@ -14,6 +15,7 @@ import { listRouter } from "./list";
 import { liveRouter } from "./live";
 import { lockedObjektsRouter } from "./locked-objekts";
 import { marketRouter } from "./market";
+import { moderationRouter } from "./moderation";
 import { notificationsRouter } from "./notifications";
 import { objektsRouter } from "./objekts";
 import { pinsRouter } from "./pins";
@@ -41,6 +43,8 @@ export const router = {
   live: liveRouter,
   trade: tradeRouter,
   notifications: notificationsRouter,
+  chat: chatRouter,
+  moderation: moderationRouter,
 };
 
 /** What `/api/v1` serves and documents; everything else stays RPC-only. */

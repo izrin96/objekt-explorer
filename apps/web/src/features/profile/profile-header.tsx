@@ -9,7 +9,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "@/components/ui/tooltip";
+import { MessageButton } from "@/features/chat/message-button";
 import { EditCosmoDialog } from "@/features/link/edit-cosmo-dialog";
+import { SafetyMenu } from "@/features/moderation/safety-menu";
 import { displayNickname, truncateAddress } from "@/lib/address";
 import { m } from "@/paraglide/messages";
 import { useSettings } from "@/stores/settings";
@@ -144,6 +146,15 @@ export function ProfileHeader({ profile }: { profile: PublicProfile }) {
             </TooltipTrigger>
             <TooltipPopup>{m.profile_header_view_in_wavbase()}</TooltipPopup>
           </Tooltip>
+
+          {profile.messageable === true && !isProfileAuthed && (
+            <MessageButton target={{ kind: "profile", address: profile.address }} />
+          )}
+
+          {/* only when the profile shows its owner: a hidden owner's account is never named */}
+          {profile.userId !== undefined && !isProfileAuthed && (
+            <SafetyMenu userId={profile.userId} name={nickname} report />
+          )}
 
           {isProfileAuthed && (
             <EditCosmoDialog address={profile.address}>

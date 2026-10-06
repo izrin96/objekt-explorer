@@ -7,6 +7,7 @@ import { tradeVersionKey } from "@repo/lib/server/list-touch";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { type SQL, and, eq, inArray, isNotNull, ne, sql } from "drizzle-orm";
 
+import { isMessageable, toMessagePref } from "../lib/chat-rules";
 import {
   assemblePost,
   BUMP_COOLDOWN_HOURS,
@@ -42,6 +43,8 @@ import {
 } from "./list";
 import { toPublicUser } from "./profile";
 import { getCache, redis } from "./redis";
+import { notBlockedEither, notTradeBlocked } from "./safety";
+import { marketVersion } from "./safety-cache";
 import { fetchHoldings } from "./trade-matches";
 
 const POST_TTL_SECONDS = 60;
@@ -100,7 +103,14 @@ const hasEntryIn = (listIds: SQL, slugs: string[]) =>
     WHERE e.list_id IN (${listIds}) AND e.collection_slug = ANY(${sql.param(slugs)}::text[])
   )`;
 
-type FeedRow = { id: number; partner_id: number | null; cursor_at: string };
+type FeedRow = {
+  id: number;
+  partner_id: number | null;
+  cursor_at: string;
+  message_allow: string | null;
+  message_allow_hidden: boolean | null;
+  hides_owner: boolean;
+};
 
 type Stage1 = {
   viewerId: string | null;
@@ -113,9 +123,10 @@ type Stage1 = {
 
 /** Stage 1: which posts make the page, in order. Uncached; it reads only the partial index's rows. */
 async function fetchFeedRows(query: Stage1): Promise<FeedRow[]> {
-  const where: SQL[] = [listedPost];
+  const where: SQL[] = [listedPost, notTradeBlocked(sql`posts.user_id`)];
   if (query.viewerId !== null) {
     where.push(sql`posts.user_id <> ${query.viewerId}`);
+    where.push(notBlockedEither(query.viewerId, sql`posts.user_id`));
     where.push(sql`NOT EXISTS (
       SELECT 1 FROM hidden_trade_partner h
       WHERE h.user_id = ${query.viewerId} AND h.hidden_user_id = posts.user_id
@@ -140,8 +151,17 @@ async function fetchFeedRows(query: Stage1): Promise<FeedRow[]> {
 
   const result = await db.execute<FeedRow>(sql`
     WITH ${postsCte}
-    SELECT posts.id, posts.partner_id, posts.bumped_at::text AS cursor_at
+    SELECT
+      posts.id,
+      posts.partner_id,
+      posts.bumped_at::text AS cursor_at,
+      mp.allow AS message_allow,
+      mp.allow_hidden AS message_allow_hidden,
+      EXISTS (
+        SELECT 1 FROM lists x WHERE x.id IN (posts.id, posts.partner_id) AND x.hide_user
+      ) AS hides_owner
     FROM posts
+    LEFT JOIN message_pref mp ON mp.user_id = posts.user_id
     WHERE ${sql.join(where, sql` AND `)}
     ORDER BY posts.bumped_at DESC, posts.id DESC
     LIMIT ${FEED_FETCH_SIZE}
@@ -541,6 +561,7 @@ export async function browseFeed(
       posts.push({
         id: post.anchor.id,
         tag: post.tag,
+        userId: account.id,
         user: toPublicUser(account),
         identity: toPartnerIdentity(
           account.name,
@@ -556,6 +577,10 @@ export async function browseFeed(
           more: side.more,
         })),
         match: assembled.match,
+        messageable: isMessageable(
+          toMessagePref({ allow: row.message_allow, allowHidden: row.message_allow_hidden }),
+          row.hides_owner,
+        ),
       });
     }
   }
@@ -692,7 +717,7 @@ async function computePostCounts(slug: string) {
     FROM posts
     JOIN list_entries e ON e.list_id IN (posts.id, posts.partner_id)
     JOIN on_trade t ON t.id = e.list_id
-    WHERE e.collection_slug = ${slug} AND ${listedPost}
+    WHERE e.collection_slug = ${slug} AND ${listedPost} AND ${notTradeBlocked(sql`posts.user_id`)}
   `);
 
   const owned = result.rows.filter((row) => row.list_type_new !== "want");
@@ -712,6 +737,9 @@ async function computePostCounts(slug: string) {
   return { have: havePosts.size, want: wantPosts.size };
 }
 
-export function collectionPostCounts(slug: string) {
-  return getCache(`trade:counts:${slug}`, COUNTS_TTL_SECONDS, () => computePostCounts(slug));
+export async function collectionPostCounts(slug: string) {
+  const version = await marketVersion();
+  return getCache(`trade:counts:${version}:${slug}`, COUNTS_TTL_SECONDS, () =>
+    computePostCounts(slug),
+  );
 }

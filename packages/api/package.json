@@ -13,7 +13,8 @@
     "lint:fix": "oxlint --type-aware --fix",
     "typecheck": "tsc --noEmit",
     "test": "bun test",
-    "format": "oxfmt ."
+    "format": "oxfmt .",
+    "set-role": "bun run --env-file=../../.env --env-file=../../.env.local scripts/set-role.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "catalog:",

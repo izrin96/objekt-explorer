@@ -1,7 +1,12 @@
-import { ArrowUpRightIcon, CaretRightIcon, EyeSlashIcon } from "@phosphor-icons/react";
+import {
+  ArrowUpRightIcon,
+  CaretRightIcon,
+  EyeSlashIcon,
+  ProhibitIcon,
+} from "@phosphor-icons/react";
+import type { Outputs } from "@repo/api";
 import type { Dropped, Match } from "@repo/api/lib/trade-rank";
 import { CARD_LIMIT } from "@repo/api/schemas/trade";
-import type { TradeMatches } from "@repo/api/services/trade-matches";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
@@ -11,15 +16,17 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { MessageButton } from "@/features/chat/message-button";
 import { getListLinkOption } from "@/features/list/list-link";
 import { ListTypeBadge } from "@/features/list/list-type-badge";
+import { useSafetyDialogs } from "@/features/moderation/safety-dialogs";
 import { ObjektCard } from "@/features/objekt/objekt-card";
 import { ProfileLink } from "@/features/profile/profile-hover-card";
 import { displayNickname } from "@/lib/address";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
-export type TradePartner = TradeMatches["partners"][number];
+export type TradePartner = Outputs["trade"]["forYou"]["partners"][number];
 export type TradeCollections = Record<string, ValidObjekt | undefined>;
 
 /** theirs first in both places, so the row's summary and the panel read in one order */
@@ -50,6 +57,7 @@ export function PartnerRow({
   const want = partner.iHaveTheyWant.length;
   const { identity, user } = partner;
   const also = identity.also.map((ref) => displayNickname(ref.address, ref.nickname));
+  const safety = useSafetyDialogs({ userId: partner.userId, name: identity.name });
 
   return (
     <Collapsible>
@@ -149,16 +157,41 @@ export function PartnerRow({
             </MatchSection>
           ) : null}
 
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2">
+            {partner.messageable ? (
+              <MessageButton
+                target={{ kind: "user", userId: partner.userId }}
+                card={bestCard(partner)}
+                name={identity.name}
+              />
+            ) : null}
             <Button variant="ghost" size="sm" onClick={() => onHide(partner)}>
               <EyeSlashIcon />
               {m.trade_hide()}
             </Button>
+            <Button variant="ghost" size="sm" onClick={safety.openBlock}>
+              <ProhibitIcon />
+              {m.mod_block()}
+            </Button>
           </div>
         </div>
       </CollapsiblePanel>
+      {safety.dialogs}
     </Collapsible>
   );
+}
+
+/**
+ * The first collection their best-matching list matched on. The list itself stays off the
+ * card: the server takes only a list that shows its owner, which a For you list may not.
+ */
+function bestCard(partner: TradePartner) {
+  const list = partner.lists[0];
+  if (!list) return undefined;
+  const match = [...partner.theyHaveIWant, ...partner.iHaveTheyWant].find((item) =>
+    item.partnerListIds.includes(list.id),
+  );
+  return match ? { collectionSlug: match.slug } : undefined;
 }
 
 function myListCaption(

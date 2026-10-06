@@ -1,11 +1,12 @@
 import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { objekts } from "@repo/db/indexer/schema";
-import { listEntries, lists, userAddress } from "@repo/db/schema";
+import { listEntries, lists, messagePref, userAddress } from "@repo/db/schema";
 import { CURRENCY_ALIASES, normalizeCurrency } from "@repo/lib/currency";
 import { and, asc, desc, eq, inArray, isNotNull, sql } from "drizzle-orm";
 
-import { pub } from "../orpc";
+import { isMessageable, toMessagePref } from "../lib/chat-rules";
+import { optionalAuthed, pub } from "../orpc";
 import { collectionSlugInputSchema } from "../schemas/common/collection";
 import { documented, errorResponses } from "../schemas/common/documented";
 import {
@@ -21,6 +22,8 @@ import {
 } from "../schemas/market";
 import { getUsdRates } from "../services/currency-rates";
 import { getCache } from "../services/redis";
+import { notBlockedEither, notTradeBlocked } from "../services/safety";
+import { marketVersion } from "../services/safety-cache";
 
 const SUMMARY_TTL = 60;
 
@@ -65,6 +68,7 @@ function listingsWhere(collectionSlug: string) {
     eq(listEntries.collectionSlug, collectionSlug),
     eq(lists.listTypeNew, "sale"),
     eq(lists.discoverable, true),
+    notTradeBlocked(sql`${lists.userId}`),
   );
 }
 
@@ -90,6 +94,7 @@ async function fetchMarketSummary(): Promise<MarketSummaryEntry[]> {
         eq(lists.listTypeNew, "sale"),
         eq(lists.discoverable, true),
         isNotNull(listEntries.collectionSlug),
+        notTradeBlocked(sql`${lists.userId}`),
       ),
     )
     .groupBy(listEntries.collectionSlug);
@@ -108,14 +113,16 @@ export const marketRouter = {
     .output(documented(marketSummaryOutputSchema))
     .handler(async () => {
       try {
-        return await getCache("market:summary", SUMMARY_TTL, fetchMarketSummary);
+        const version = await marketVersion();
+        return await getCache(`market:summary:${version}`, SUMMARY_TTL, fetchMarketSummary);
       } catch {
         console.warn("[market] Redis unavailable, falling back to direct DB query");
         return fetchMarketSummary();
       }
     }),
 
-  marketListings: pub
+  /** With a session, `messageable` is false for a seller the viewer and they have blocked. */
+  marketListings: optionalAuthed
     .route({
       method: "GET",
       path: "/market/{collectionSlug}/listings",
@@ -125,7 +132,8 @@ export const marketRouter = {
     })
     .input(marketListingsInputSchema)
     .output(documented(marketListingsOutputSchema))
-    .handler(async ({ input }) => {
+    .handler(async ({ input, context: { session } }) => {
+      const viewerId = session?.user.id ?? null;
       const rates = await getUsdRates();
 
       const where = listingsWhere(input.collectionSlug);
@@ -146,10 +154,17 @@ export const marketRouter = {
             profileAddress: lists.profileAddress,
             ownerNickname: userAddress.nickname,
             ownerHideNickname: userAddress.hideNickname,
+            hideUser: lists.hideUser,
+            messageAllow: messagePref.allow,
+            messageAllowHidden: messagePref.allowHidden,
+            blocked: viewerId
+              ? sql<boolean>`NOT ${notBlockedEither(viewerId, sql`${lists.userId}`)}`
+              : sql<boolean>`false`,
           })
           .from(listEntries)
           .innerJoin(lists, eq(listEntries.listId, lists.id))
           .leftJoin(userAddress, eq(lists.profileAddress, userAddress.address))
+          .leftJoin(messagePref, eq(messagePref.userId, lists.userId))
           .where(where);
 
       const dir = input.sortDir === "desc" ? desc : asc;
@@ -196,6 +211,13 @@ export const marketRouter = {
             profile: row.profileAddress ? { nickname, address: row.profileAddress } : null,
           },
           serial: row.hideSerial ? null : (objekt?.serial ?? null),
+          objektId: row.hideSerial ? null : row.objektId,
+          messageable:
+            !row.blocked &&
+            isMessageable(
+              toMessagePref({ allow: row.messageAllow, allowHidden: row.messageAllowHidden }),
+              row.hideUser,
+            ),
           transferable: row.hideSerial ? null : (objekt?.transferable ?? null),
         } satisfies MarketListing;
       });

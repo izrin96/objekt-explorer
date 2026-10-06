@@ -166,3 +166,22 @@ Show on Trade changes and bumps SHALL show on every viewer's next load of `/trad
 #### Scenario: Entry added
 - **WHEN** an owner adds an objekt to a list on Trade
 - **THEN** viewers see it in the post within 1 minute
+
+### Requirement: Message a post's owner
+Each post not owned by the viewer SHALL offer Message, under the rules in `web-chat`. Message SHALL open the conversation with the owner, adding a card for the post's list.
+
+#### Scenario: From a post
+- **WHEN** a signed-in user with a linked address activates Message on rin.trades's WTT post
+- **THEN** the conversation with rin.trades opens in the Inbox, with a card for the post's have list
+
+### Requirement: Blocks and trade blocks
+The feed SHALL leave out, for each viewer:
+- posts by accounts the viewer blocked;
+- posts by accounts that blocked the viewer;
+- posts by any account under an active trade block.
+
+The drawer's On Trade counts SHALL leave out trade-blocked accounts. Each post not owned by the viewer SHALL offer Block in its menu.
+
+#### Scenario: Trade-blocked owner
+- **WHEN** rin.trades is under a trade block
+- **THEN** no viewer sees rin.trades's posts on `/trade`

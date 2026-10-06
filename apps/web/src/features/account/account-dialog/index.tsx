@@ -13,9 +13,11 @@ import {
 } from "@/components/ui/dialog";
 import { Spinner } from "@/components/ui/spinner";
 import { Tabs, TabsList, TabsPanel, TabsTab } from "@/components/ui/tabs";
+import { BlockedUsersSection } from "@/features/account/account-dialog/blocked";
 import { DangerSection } from "@/features/account/account-dialog/danger";
 import { GeneralSection } from "@/features/account/account-dialog/general";
 import { LinkedAccountsSection } from "@/features/account/account-dialog/linked-accounts";
+import { MessagesSection } from "@/features/account/account-dialog/messages";
 import { PasswordSection } from "@/features/account/account-dialog/password";
 import { accountsOptions } from "@/features/account/queries";
 import { useCurrentUser } from "@/features/user/hooks";
@@ -50,6 +52,8 @@ export function AccountDialog({
             <div data-scroll-x className="mx-6 shrink-0 [scrollbar-width:none] overflow-x-auto">
               <TabsList variant="underline" className="w-max min-w-full justify-start border-b">
                 <TabsTab value="general">{m.auth_account_general()}</TabsTab>
+                <TabsTab value="messages">{m.chat_settings_tab()}</TabsTab>
+                <TabsTab value="blocked">{m.mod_blocked_tab()}</TabsTab>
                 <TabsTab value="linked">{m.auth_account_social_link()}</TabsTab>
                 {hasPassword && (
                   <TabsTab value="password">{m.auth_account_change_password()}</TabsTab>
@@ -61,6 +65,14 @@ export function AccountDialog({
             <DialogPanel className="pt-4!">
               <TabsPanel value="general">
                 <GeneralSection user={user} />
+              </TabsPanel>
+
+              <TabsPanel value="messages">
+                <MessagesSection />
+              </TabsPanel>
+
+              <TabsPanel value="blocked">
+                <BlockedUsersSection />
               </TabsPanel>
 
               <TabsPanel value="linked">

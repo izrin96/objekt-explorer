@@ -7,9 +7,11 @@ import { cacheUsers } from "@repo/lib/server/user";
 import { and, eq, sql } from "drizzle-orm";
 import type { FetchError } from "ofetch";
 
+import { isMessageable, toMessagePref } from "../lib/chat-rules";
 import type { ApiMessages } from "../orpc";
 import type { ProfilePreview, PublicProfile, PublicUser } from "../schemas/profile";
 import type { User } from "./auth";
+import { isBlockedEither } from "./moderation";
 import { fetchOwnerSummary } from "./objekt";
 import { isProfileHidden } from "./privacy";
 import { getCache } from "./redis";
@@ -77,6 +79,24 @@ export function toPublicProfile(
   };
 }
 
+type ProfileUser = User & { messagePref: { allow: string; allowHidden: boolean } | null };
+
+/** The profile page's read: the public profile plus whether it offers Message to the viewer. */
+async function toProfilePage(profile: UserAddress, user: ProfileUser | null, currentUser?: User) {
+  const shown = toPublicProfile(profile, user, currentUser);
+  // the account id only where the profile already shows its owner, so Hide User stays untied
+  const publicProfile = shown.user && user ? { ...shown, userId: user.id } : shown;
+  if (publicProfile.isGuard || !user || user.id === currentUser?.id) {
+    return { ...publicProfile, messageable: false };
+  }
+  // a blocked pair sees no button at all, as with Nobody, rather than a refusal
+  const blocked = currentUser ? await isBlockedEither(currentUser.id, user.id) : false;
+  return {
+    ...publicProfile,
+    messageable: !blocked && isMessageable(toMessagePref(user.messagePref), profile.hideUser),
+  };
+}
+
 /** The hover card: database only, so a hover never asks Cosmo or writes a row. */
 export async function fetchProfilePreview(
   input: string,
@@ -120,7 +140,7 @@ export async function fetchUserByIdentifier(
 
   const cachedUser = await db.query.userAddress.findFirst({
     with: {
-      user: true,
+      user: { with: { messagePref: true } },
     },
     where: {
       [identifierIsAddress ? "address" : "nickname"]: identifier,
@@ -157,7 +177,7 @@ export async function fetchUserByIdentifier(
         // no changes, update last check
         await touchLastCheck(cachedUser.nickname);
 
-        return toPublicProfile(cachedUser, cachedUser.user, currentUser);
+        return toProfilePage(cachedUser, cachedUser.user, currentUser);
       }
 
       // nickname not found, unbind
@@ -174,7 +194,7 @@ export async function fetchUserByIdentifier(
       await touchLastCheck(cachedUser.nickname);
     }
 
-    return toPublicProfile(cachedUser, cachedUser.user, currentUser);
+    return toProfilePage(cachedUser, cachedUser.user, currentUser);
   }
 
   if (identifierIsAddress) {
