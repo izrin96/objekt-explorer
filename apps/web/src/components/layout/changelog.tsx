@@ -1,4 +1,4 @@
-import { NoteIcon } from "@phosphor-icons/react";
+import { InfoIcon, NoteIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 
 import {
@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/dialog";
 import { m } from "@/paraglide/messages";
 
-import { DISCORD_INVITE } from "./about";
+import { AboutDialog, DISCORD_INVITE } from "./about";
 
 /**
  * Release notes are a dated record of what shipped, not product chrome, so they
@@ -141,6 +141,8 @@ export function ChangelogDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const [aboutOpen, setAboutOpen] = useState(false);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogPopup className="sm:max-w-2xl">
@@ -185,9 +187,14 @@ export function ChangelogDialog({
           </Accordion>
         </DialogPanel>
         <DialogFooter>
+          <Button variant="outline" className="sm:mr-auto" onClick={() => setAboutOpen(true)}>
+            <InfoIcon />
+            {m.nav_about()}
+          </Button>
           <DialogClose render={<Button variant="outline" />}>{m.common_modal_close()}</DialogClose>
         </DialogFooter>
       </DialogPopup>
+      <AboutDialog open={aboutOpen} onOpenChange={setAboutOpen} />
     </Dialog>
   );
 }
