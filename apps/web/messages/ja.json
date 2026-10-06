@@ -461,6 +461,7 @@
   "common_settings_currency_label": "通貨",
   "common_settings_currency_desc": "マーケットプレイスと販売リストの価格をこの通貨で表示する",
   "common_changelog": "変更履歴",
+  "common_changelog_new": "変更履歴、新しい更新",
   "common_export_title": "リストをエクスポート",
   "common_export_description": "すべてのObjektをCSVにエクスポートしますか？",
   "common_export_error": "リストのエクスポートに失敗しました",

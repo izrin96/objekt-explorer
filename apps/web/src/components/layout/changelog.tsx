@@ -1,4 +1,5 @@
 import { InfoIcon, NoteIcon } from "@phosphor-icons/react";
+import { useHydrated } from "@tanstack/react-router";
 import { useState } from "react";
 
 import {
@@ -18,7 +19,9 @@ import {
   DialogPopup,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
+import { useChangelogStore } from "@/stores/changelog";
 
 import { AboutDialog, DISCORD_INVITE } from "./about";
 
@@ -117,19 +120,75 @@ const CHANGELOG = [
   },
 ] as const;
 
+const NEW_FOR_DAYS = 5;
+
+const LATEST = CHANGELOG[0];
+/** changes when the newest entry gains an item, not only when a new entry starts */
+const LATEST_KEY = `${LATEST.date}:${LATEST.items.length}`;
+
+/** local midnight once the entry's last day and `NEW_FOR_DAYS` more have passed */
+function expiresAt(date: string): number {
+  const [year = 0, month = 1, day = 1] = (date.split(" - ").at(-1) ?? date).split("-").map(Number);
+  return new Date(year, month - 1, day + 1 + NEW_FOR_DAYS).getTime();
+}
+
+// once per page load, outside render
+const LATEST_IS_RECENT = Date.now() < expiresAt(LATEST.date);
+
+/** The server cannot know what this browser has seen, so nothing is new before hydration. */
+export function useChangelogNew() {
+  const hydrated = useHydrated();
+  const seen = useChangelogStore((s) => s.seen);
+  const markSeen = useChangelogStore((s) => s.markSeen);
+  const isNew = hydrated && LATEST_IS_RECENT && seen !== LATEST_KEY;
+
+  return {
+    isNew,
+    label: isNew ? m.common_changelog_new() : m.common_changelog(),
+    markSeen: () => markSeen(LATEST_KEY),
+  };
+}
+
+/** Not `::after` on the corner: Button spends it on the touch target. */
+export function NewDot({ placement }: { placement: "corner" | "inline" }) {
+  return (
+    <span
+      aria-hidden
+      className={cn(
+        "flex size-1.5",
+        placement === "corner" ? "absolute -top-0.5 -right-0.5" : "relative",
+      )}
+    >
+      <span className="bg-accent-solid absolute size-full rounded-full opacity-75 motion-safe:animate-ping" />
+      <span
+        className={cn(
+          "bg-accent-solid relative size-full rounded-full",
+          // separates the dot from the button's border
+          placement === "corner" && "ring-background ring-2",
+        )}
+      />
+    </span>
+  );
+}
+
 /** The nav's entry point: an icon button that owns the dialog beside it. */
 export function ChangelogButton() {
   const [open, setOpen] = useState(false);
+  const { isNew, label, markSeen } = useChangelogNew();
 
   return (
     <>
       <Button
         variant="outline"
         size="icon-sm"
-        aria-label={m.common_changelog()}
-        onClick={() => setOpen(true)}
+        aria-label={label}
+        onClick={() => {
+          markSeen();
+          setOpen(true);
+        }}
       >
         <NoteIcon />
+        {isNew ? <NewDot placement="corner" /> : null}
       </Button>
       <ChangelogDialog open={open} onOpenChange={setOpen} />
     </>

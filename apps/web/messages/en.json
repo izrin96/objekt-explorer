@@ -461,6 +461,7 @@
   "common_settings_currency_label": "Currency",
   "common_settings_currency_desc": "Show Marketplace and sale list prices in this currency",
   "common_changelog": "Changelog",
+  "common_changelog_new": "Changelog, new updates",
   "common_export_title": "Export List",
   "common_export_description": "Export all objekts to CSV?",
   "common_export_error": "Failed to export list",

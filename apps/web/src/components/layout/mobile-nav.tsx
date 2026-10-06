@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 
 import type { NavLink } from "@/components/layout/app-nav";
-import { ChangelogDialog } from "@/components/layout/changelog";
+import { ChangelogDialog, NewDot, useChangelogNew } from "@/components/layout/changelog";
 import { SystemStatus } from "@/components/layout/system-status";
 import { UserAvatar, useSignInSearch } from "@/components/layout/user-menu";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,7 @@ import { m } from "@/paraglide/messages";
 export function MobileNav({ links }: { links: readonly NavLink[] }) {
   const [open, setOpen] = useState(false);
   const [changelogOpen, setChangelogOpen] = useState(false);
+  const changelog = useChangelogNew();
   const { data: user } = useCurrentUser();
   const search = useSignInSearch();
 
@@ -72,7 +73,9 @@ export function MobileNav({ links }: { links: readonly NavLink[] }) {
 
             <button
               type="button"
+              aria-label={changelog.label}
               onClick={() => {
+                changelog.markSeen();
                 setOpen(false);
                 setChangelogOpen(true);
               }}
@@ -80,6 +83,7 @@ export function MobileNav({ links }: { links: readonly NavLink[] }) {
             >
               <NoteIcon className="size-4 shrink-0" />
               {m.common_changelog()}
+              {changelog.isNew ? <NewDot placement="inline" /> : null}
             </button>
 
             {/* the nav's status button has nowhere to sit below `md`, so it lands here */}
