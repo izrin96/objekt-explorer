@@ -1,75 +1,50 @@
 import { arrayMove } from "@dnd-kit/sortable";
-import {
-  CaretDownIcon,
-  CaretUpIcon,
-  ClockCounterClockwiseIcon,
-  ImagesSquareIcon,
-  InfoIcon,
-  LockSimpleIcon,
-  LockSimpleOpenIcon,
-  MagnifyingGlassIcon,
-  PushPinIcon,
-  PushPinSlashIcon,
-} from "@phosphor-icons/react";
-import type { GridObjekt, OwnedGridObjekt } from "@repo/lib/types/objekt";
+import { CaretDownIcon, CaretUpIcon } from "@phosphor-icons/react";
+import type { GridObjekt } from "@repo/lib/types/objekt";
 import { useCallback, useMemo, useState } from "react";
-import type { ReactNode } from "react";
 
-import { EmptyState } from "@/components/shared/empty-state";
 import { countMarkup, MessageMarkup } from "@/components/shared/message-markup";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
 import { MenuItem, MenuSeparator } from "@/components/ui/menu";
-import { toastManager } from "@/components/ui/toast";
-import { useArtistScopeNarrowed } from "@/features/artist/cosmo-artist-provider";
 import { GenerateDiscordButton } from "@/features/discord/generate-discord-button";
 import type { ExtraFacet } from "@/features/filters/facet-controls";
 import { LONG_TAIL } from "@/features/filters/filter-popover";
 import { CombineDupsToggle, TransferableToggle } from "@/features/filters/filter-toggle";
 import { isFiltering } from "@/features/filters/search-schema";
-import { useFilters, useResetFilters } from "@/features/filters/use-filters";
+import { useFilters } from "@/features/filters/use-filters";
 import { AddToListProvider } from "@/features/list/add-to-list-dialog";
 import { AddToListAction, AddToListMenuItem } from "@/features/list/add-to-list-menu-item";
 import { ObjektDrawer } from "@/features/objekt/drawer";
 import type { OwnedRowMenu } from "@/features/objekt/drawer/owned";
 import { ObjektCard } from "@/features/objekt/objekt-card";
 import { ObjektCardMenu } from "@/features/objekt/objekt-card-menu";
-import { copiesIn, isObjektOwned, ownedCopiesOf, pinOrderOf } from "@/features/objekt/objekt-utils";
+import { copiesIn, isObjektOwned, ownedCopiesOf } from "@/features/objekt/objekt-utils";
 import { ObjektVirtualGrid } from "@/features/objekt/objekt-virtual-grid";
-import { SelectBar, type SelectBarAction, SelectModeButton } from "@/features/objekt/select-bar";
+import { SelectBar, SelectModeButton } from "@/features/objekt/select-bar";
 import { SkeletonGrid } from "@/features/objekt/skeleton-grid";
 import { useCurrentUser } from "@/features/user/hooks";
 import { m } from "@/paraglide/messages";
 import { selectIsSelecting, useClearSelectionOnNavigate, useSelection } from "@/stores/selection";
 
-import {
-  pinOrderFor,
-  useBatchLock,
-  useBatchPin,
-  useBatchUnlock,
-  useBatchUnpin,
-  useReorderPins,
-} from "./actions";
-import { CheckpointPopover, checkpointDate, formatCheckpoint } from "./checkpoint-popover";
+import { CheckpointPopover } from "./checkpoint-popover";
+import { CollectionEmpty, CollectionNotices } from "./collection-states";
+import { LockMenuItem, PinMenuItem, useOwnerActions } from "./owner-actions";
 import { PinDnd, SortablePin } from "./pin-dnd";
 import { useProfileColumns, useProfileAuthed, useProfile } from "./profile-provider";
 import { ProfileToolbar } from "./profile-toolbar";
+import { usePinOrder } from "./use-pin-order";
 import { isSpinAddress, useProfileObjekts } from "./use-profile-objekts";
 
 export function CollectionView() {
   const profile = useProfile();
   const address = profile.address;
   const { data: user } = useCurrentUser();
-  const scopeNarrowed = useArtistScopeNarrowed();
   const isProfileAuthed = useProfileAuthed();
   const columns = useProfileColumns();
-  const reset = useResetFilters();
   const transferable = useFilters((f) => f.transferable);
   const grouped = useFilters((f) => f.grouped);
   const selected = useSelection((s) => s.ids);
   const selecting = useSelection(selectIsSelecting);
   const toggleSelect = useSelection((s) => s.toggle);
-  const clearSelection = useSelection((s) => s.clear);
   const [active, setActive] = useState<GridObjekt | null>(null);
 
   const {
@@ -82,11 +57,12 @@ export function CollectionView() {
     isPending,
   } = useProfileObjekts();
 
-  const batchPin = useBatchPin(address);
-  const batchUnpin = useBatchUnpin(address);
-  const batchLock = useBatchLock(address);
-  const batchUnlock = useBatchUnlock(address);
-  const reorderPins = useReorderPins(address);
+  const { togglePin, toggleLock, selectActions } = useOwnerActions(address);
+  const { objekts, pinned, pinnedIds, reorder } = usePinOrder(
+    address,
+    filtered,
+    filters.hidePin === true,
+  );
 
   useClearSelectionOnNavigate();
 
@@ -108,52 +84,6 @@ export function CollectionView() {
   // nothing to act with
   const showActions = Boolean(user) && filters.at === undefined;
 
-  // applied in the same commit as dnd-kit's own drag-end cleanup, so the drop
-  // frame shows the final order without waiting on React Query's notify
-  // scheduler, which lands the optimistic cache write a tick later
-  const [pinOrderOverride, setPinOrderOverride] = useState<ReadonlyMap<string, number> | null>(
-    null,
-  );
-
-  // a drop shows its own result, so only the menu route confirms in words
-  const handleReorder = useCallback(
-    (tokenIds: string[], notify = false) => {
-      setPinOrderOverride(pinOrderFor(tokenIds));
-      reorderPins.mutate(
-        { address, tokenIds: tokenIds.map(Number) },
-        {
-          onSuccess: notify
-            ? () => toastManager.add({ type: "success", title: m.actions_move_pin_success() })
-            : undefined,
-          onSettled: () => setPinOrderOverride(null),
-        },
-      );
-    },
-    [address, reorderPins],
-  );
-
-  const objekts = useMemo(() => {
-    if (!pinOrderOverride) return filtered;
-    return filtered.map((objekt) => {
-      const order = isObjektOwned(objekt) ? pinOrderOverride.get(objekt.tokenId) : undefined;
-      return order === undefined ? objekt : Object.assign({}, objekt, { pinOrder: order });
-    });
-  }, [filtered, pinOrderOverride]);
-
-  const pinned = useMemo(
-    () =>
-      filters.hidePin === true
-        ? []
-        : objekts
-            .filter(
-              (objekt): objekt is OwnedGridObjekt => isObjektOwned(objekt) && objekt.isPin === true,
-            )
-            .toSorted((a, b) => pinOrderOf(b) - pinOrderOf(a)),
-    [objekts, filters.hidePin],
-  );
-
-  const pinnedIds = useMemo(() => pinned.map((objekt) => objekt.tokenId), [pinned]);
-
   // one pin has nowhere to go
   const dndEnabled =
     isProfileAuthed &&
@@ -161,24 +91,6 @@ export function CollectionView() {
     !isFiltering(filters) &&
     filters.hidePin !== true &&
     pinnedIds.length > 1;
-
-  const togglePin = useCallback(
-    (objekt: OwnedGridObjekt) =>
-      (objekt.isPin ? batchUnpin : batchPin).mutate({
-        address,
-        tokenIds: [Number(objekt.tokenId)],
-      }),
-    [address, batchPin, batchUnpin],
-  );
-
-  const toggleLock = useCallback(
-    (objekt: OwnedGridObjekt) =>
-      (objekt.isLocked ? batchUnlock : batchLock).mutate({
-        address,
-        tokenIds: [Number(objekt.tokenId)],
-      }),
-    [address, batchLock, batchUnlock],
-  );
 
   const objektMenuItems = useCallback(
     (objekt: GridObjekt) => {
@@ -189,15 +101,12 @@ export function CollectionView() {
       // them with the hidden ones, so moves wait for the full list as a drag does.
       const pinIndex =
         owned?.isPin === true && !isFiltering(filters) ? pinnedIds.indexOf(owned.tokenId) : -1;
-      const move = (to: number) => handleReorder(arrayMove(pinnedIds, pinIndex, to), true);
+      const move = (to: number) => reorder(arrayMove(pinnedIds, pinIndex, to), true);
       return (
         <>
           {canEdit && owned && (
             <>
-              <MenuItem onClick={() => togglePin(owned)}>
-                {owned.isPin ? <PushPinSlashIcon /> : <PushPinIcon />}
-                {owned.isPin ? m.objekt_menu_unpin() : m.objekt_menu_pin()}
-              </MenuItem>
+              <PinMenuItem objekt={owned} onToggle={togglePin} />
               {pinIndex !== -1 && (
                 <>
                   <MenuItem disabled={pinIndex === 0} onClick={() => move(pinIndex - 1)}>
@@ -213,17 +122,14 @@ export function CollectionView() {
                   </MenuItem>
                 </>
               )}
-              <MenuItem onClick={() => toggleLock(owned)}>
-                {owned.isLocked ? <LockSimpleOpenIcon /> : <LockSimpleIcon />}
-                {owned.isLocked ? m.objekt_menu_unlock() : m.objekt_menu_lock()}
-              </MenuItem>
+              <LockMenuItem objekt={owned} onToggle={toggleLock} />
             </>
           )}
           <AddToListMenuItem objekts={[objekt]} combined={grouped === true} />
         </>
       );
     },
-    [filters, grouped, handleReorder, isProfileAuthed, pinnedIds, togglePin, toggleLock],
+    [filters, grouped, reorder, isProfileAuthed, pinnedIds, togglePin, toggleLock],
   );
 
   const renderCard = useCallback(
@@ -299,14 +205,8 @@ export function CollectionView() {
       <>
         {isProfileAuthed && (
           <>
-            <MenuItem onClick={() => togglePin(item)}>
-              {item.isPin ? <PushPinSlashIcon /> : <PushPinIcon />}
-              {item.isPin ? m.objekt_menu_unpin() : m.objekt_menu_pin()}
-            </MenuItem>
-            <MenuItem onClick={() => toggleLock(item)}>
-              {item.isLocked ? <LockSimpleOpenIcon /> : <LockSimpleIcon />}
-              {item.isLocked ? m.objekt_menu_unlock() : m.objekt_menu_lock()}
-            </MenuItem>
+            <PinMenuItem objekt={item} onToggle={togglePin} />
+            <LockMenuItem objekt={item} onToggle={toggleLock} />
             <MenuSeparator />
           </>
         )}
@@ -316,41 +216,9 @@ export function CollectionView() {
     [isProfileAuthed, togglePin, toggleLock],
   );
 
-  const at = checkpointDate(filters.at);
   const uniqueCount = new Set(filtered.map((objekt) => objekt.collectionId)).size;
-
-  const selectedObjekts = filtered.filter((objekt) => selected.has(objekt.id));
-  const run = (
-    mutate: (input: { address: string; tokenIds: number[] }) => void,
-    tokenIds: number[],
-  ) => {
-    mutate({ address, tokenIds });
-    clearSelection();
-  };
-
-  const ownerActions: SelectBarAction[] = isProfileAuthed
-    ? [
-        ...pick(selectedObjekts, (objekt) => objekt.isPin !== true, {
-          label: m.objekt_menu_pin(),
-          icon: <PushPinIcon />,
-          run: (tokenIds) => run(batchPin.mutate, tokenIds),
-        }),
-        ...pick(selectedObjekts, (objekt) => objekt.isPin === true, {
-          label: m.objekt_menu_unpin(),
-          icon: <PushPinSlashIcon />,
-          run: (tokenIds) => run(batchUnpin.mutate, tokenIds),
-        }),
-        ...pick(selectedObjekts, (objekt) => objekt.isLocked !== true, {
-          label: m.objekt_menu_lock(),
-          icon: <LockSimpleIcon />,
-          run: (tokenIds) => run(batchLock.mutate, tokenIds),
-        }),
-        ...pick(selectedObjekts, (objekt) => objekt.isLocked === true, {
-          label: m.objekt_menu_unlock(),
-          icon: <LockSimpleOpenIcon />,
-          run: (tokenIds) => run(batchUnlock.mutate, tokenIds),
-        }),
-      ]
+  const ownerActions = isProfileAuthed
+    ? selectActions(filtered.filter((objekt) => selected.has(objekt.id)))
     : [];
 
   return (
@@ -363,23 +231,7 @@ export function CollectionView() {
         actions={<GenerateDiscordButton objekts={filtered} />}
       />
 
-      {/* a standing notice, so `status` rather than the component's interrupting `alert` */}
-      {isSpinAddress(address) && (
-        <Alert role="status">
-          <InfoIcon aria-hidden />
-          <AlertTitle>{m.profile_spin_notice_title()}</AlertTitle>
-          <AlertDescription>{m.profile_spin_notice()}</AlertDescription>
-        </Alert>
-      )}
-
-      {at && (
-        <Alert role="status">
-          <ClockCounterClockwiseIcon aria-hidden />
-          <AlertDescription>
-            {m.profile_checkpoint_notice({ date: formatCheckpoint(at) })}
-          </AlertDescription>
-        </Alert>
-      )}
+      <CollectionNotices address={address} at={filters.at} />
 
       {isPending ? (
         <SkeletonGrid columns={columns} />
@@ -399,36 +251,11 @@ export function CollectionView() {
           </div>
 
           {filtered.length === 0 ? (
-            isFiltering(filters) ? (
-              <EmptyState
-                icon={MagnifyingGlassIcon}
-                title={m.home_empty_title()}
-                hint={m.profile_no_match_hint()}
-                action={
-                  <Button variant="outline" size="sm" onClick={reset}>
-                    {m.filter_reset_filter()}
-                  </Button>
-                }
-              />
-            ) : scopeNarrowed ? (
-              <EmptyState
-                icon={ImagesSquareIcon}
-                title={m.common_scope_empty_title()}
-                hint={
-                  user ? m.profile_scope_empty_hint_menu() : m.profile_scope_empty_hint_settings()
-                }
-              />
-            ) : (
-              <EmptyState
-                icon={ImagesSquareIcon}
-                title={m.profile_empty_title()}
-                hint={m.profile_empty_hint()}
-              />
-            )
+            <CollectionEmpty filtering={isFiltering(filters)} />
           ) : (
             <PinDnd
               ids={pinnedIds}
-              onReorder={handleReorder}
+              onReorder={reorder}
               renderOverlay={renderOverlay}
               disabled={!dndEnabled}
             >
@@ -466,22 +293,4 @@ export function CollectionView() {
       />
     </AddToListProvider>
   );
-}
-
-/**
- * An action is offered while the selection holds anything it would change:
- * Lock while something is unlocked, Unlock while something is locked, both on
- * a mixed selection.
- */
-function pick(
-  objekts: GridObjekt[],
-  matches: (objekt: OwnedGridObjekt) => boolean,
-  action: { label: string; icon: ReactNode; run: (tokenIds: number[]) => void },
-): SelectBarAction[] {
-  const tokenIds: number[] = [];
-  for (const objekt of objekts) {
-    if (isObjektOwned(objekt) && matches(objekt)) tokenIds.push(Number(objekt.tokenId));
-  }
-  if (tokenIds.length === 0) return [];
-  return [{ label: action.label, icon: action.icon, onClick: () => action.run(tokenIds) }];
 }
