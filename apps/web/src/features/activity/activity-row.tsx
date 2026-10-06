@@ -5,7 +5,7 @@ import { memo } from "react";
 
 import { DataTableRow } from "@/components/shared/data-table";
 import { Timestamp } from "@/components/shared/timestamp";
-import { EVENT_COLOR, type EventKind } from "@/features/objekt/drawer/serials";
+import { EVENT_COLOR, type EventKind } from "@/features/objekt/drawer/timeline";
 import { ObjektNameButton } from "@/features/objekt/objekt-hover-card";
 import { ProfileCell } from "@/features/profile/profile-hover-card";
 import { truncateAddress } from "@/lib/address";

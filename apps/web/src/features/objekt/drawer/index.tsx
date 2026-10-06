@@ -3,8 +3,6 @@ import type { OwnedGridObjekt, ValidObjekt } from "@repo/lib/types/objekt";
 import { useQuery } from "@tanstack/react-query";
 import { type ReactNode, useMemo, useState } from "react";
 
-import { ApolloIcon } from "@/components/shared/apollo-icon";
-import { WavbaseIcon } from "@/components/shared/wavbase-icon";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,19 +18,20 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsList, TabsPanel, TabsTab } from "@/components/ui/tabs";
 import { Toggle } from "@/components/ui/toggle";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
-import { formatTimestamp } from "@/lib/time";
 import { unobtainableSlugs } from "@/lib/unobtainables";
 import { scrollXOnlyClass } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import { ObjektFlip } from "../objekt-flip";
-import { getCollectionShortNo, isObjektOwned, memberNames } from "../objekt-utils";
+import { getCollectionShortNo, isObjektOwned } from "../objekt-utils";
 import { collectionMetadataOptions, serialListOptions, transfersOptions } from "../queries";
 import { HoldersPanel } from "./holders";
 import { MarketPanel } from "./market";
 import { MetadataPanel } from "./metadata";
 import { OwnedPanel, type OwnedRowMenu } from "./owned";
-import { SerialsPanel, Timeline, toTimeline } from "./serials";
+import { SerialsPanel } from "./serials";
+import { ObjektSummary } from "./summary";
+import { Timeline, toTimeline } from "./timeline";
 
 type DrawerTab = "owned" | "serials" | "market" | "metadata" | "holders";
 
@@ -148,16 +147,6 @@ function DrawerBody({
 
   const artistName = getArtist(objekt.artist)?.title ?? objekt.artist;
 
-  const attributes: [string, string][] = [
-    [m.objekt_artist(), artistName],
-    [m.objekt_member(), memberNames(objekt)],
-    [m.objekt_season(), objekt.season],
-    [m.objekt_class(), objekt.class],
-    [m.objekt_collection_no(), objekt.collectionNo],
-    [m.objekt_type(), objekt.onOffline === "offline" ? m.objekt_physical() : m.objekt_digital()],
-  ];
-  if (owned) attributes.push([m.objekt_serial(), `#${objekt.serial}`]);
-
   return (
     <>
       {/* the trailing padding clears the registry close button, which is absolute
@@ -221,64 +210,7 @@ function DrawerBody({
           <div className="w-full max-sm:mx-auto max-sm:max-w-44">
             <ObjektFlip objekt={objekt} />
           </div>
-          <div className="flex min-w-0 flex-col gap-3">
-            <dl className="grid grid-cols-[auto_minmax(0,1fr)] content-start gap-x-4 gap-y-1.5 text-sm">
-              {attributes.map(([label, value]) => (
-                <div key={label} className="contents">
-                  <dt className="text-muted-foreground">{label}</dt>
-                  <dd className="font-mono">{value}</dd>
-                </div>
-              ))}
-              {owned && (
-                <>
-                  <dt className="text-muted-foreground">{m.objekt_transferable()}</dt>
-                  <dd>
-                    <Badge variant={objekt.transferable ? "success" : "error"} size="sm">
-                      {objekt.transferable ? m.objekt_yes() : m.objekt_no()}
-                    </Badge>
-                  </dd>
-                  <dt className="text-muted-foreground">{m.objekt_received()}</dt>
-                  <dd className="font-mono">{formatTimestamp(new Date(objekt.receivedAt))}</dd>
-                </>
-              )}
-            </dl>
-
-            <div className="flex flex-wrap items-center gap-2">
-              {/* a drawer tab list that navigates away reads as a trap, so this
-                  sits with the actions rather than in the tabs */}
-              <Button
-                variant="outline"
-                size="sm"
-                render={
-                  <a
-                    href={`https://apollo.cafe/?id=${objekt.slug}`}
-                    target="_blank"
-                    rel="noreferrer"
-                  />
-                }
-              >
-                <ApolloIcon className="size-4" />
-                {m.objekt_view_in_apollo()}
-              </Button>
-              {/* WAVBase only covers tripleS */}
-              {objekt.artist.toLowerCase() === "triples" && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  render={
-                    <a
-                      href={`https://wavbase.app/objekts/${objekt.slug}`}
-                      target="_blank"
-                      rel="noreferrer"
-                    />
-                  }
-                >
-                  <WavbaseIcon className="size-4" />
-                  {m.objekt_view_in_wavbase()}
-                </Button>
-              )}
-            </div>
-          </div>
+          <ObjektSummary objekt={objekt} artistName={artistName} />
         </div>
 
         <Tabs value={tab} onValueChange={(value) => onTabChange(value as DrawerTab)}>
