@@ -43,6 +43,7 @@
     }
   },
   "ignoreIssues": {
-    "apps/web/src/components/ui/**": ["exports", "types"]
+    "apps/web/src/components/ui/**": ["exports", "types"],
+    "apps/indexer/src/model/generated/**": ["unlisted", "duplicates"]
   }
 }

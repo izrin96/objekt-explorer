@@ -34,7 +34,6 @@
     "@phosphor-icons/react": "^2.1.10",
     "@repo/api": "workspace:*",
     "@repo/cosmo": "workspace:*",
-    "@repo/db": "workspace:*",
     "@repo/lib": "workspace:*",
     "@stream-io/video-react-sdk": "^1.43.3",
     "@t3-oss/env-core": "^0.13.11",
