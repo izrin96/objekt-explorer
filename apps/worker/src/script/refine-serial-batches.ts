@@ -19,17 +19,16 @@ import { collections, objekts } from "@repo/db/indexer/schema";
 import { chunk } from "@repo/lib";
 import { and, asc, eq, inArray, isNotNull, lte, ne, notInArray, or } from "drizzle-orm";
 
-import {
-  computeOfflineSerials,
-  computeOfflineSerialUpdates,
-  refineBatches,
-  V1_CUTOFF_MS,
-  writeSerialUpdates,
-} from "@/job/populate-serial";
+import { refineBatches, writeSerialUpdates } from "@/job/populate-serial";
 import {
   preAssignedCollections as excludeCollections,
   preBlockSeasons,
 } from "@/lib/serial-constants";
+import {
+  computeOfflineSerials,
+  computeOfflineSerialUpdates,
+  V1_CUTOFF_MS,
+} from "@/lib/serial-math";
 
 const CONCURRENCY = 5;
 const APPLY = process.env.APPLY === "1";

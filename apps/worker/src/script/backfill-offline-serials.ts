@@ -20,8 +20,9 @@ import { collections, objekts } from "@repo/db/indexer/schema";
 import { chunk } from "@repo/lib";
 import { and, asc, eq, inArray, isNull, lte, ne, or, sql } from "drizzle-orm";
 
-import { computeOfflineSerials, discoverBatches, V1_CUTOFF_MS } from "@/job/populate-serial";
+import { discoverBatches } from "@/job/populate-serial";
 import { preAssignedCollections as excludeCollections } from "@/lib/serial-constants";
+import { computeOfflineSerials, V1_CUTOFF_MS } from "@/lib/serial-math";
 
 const CONCURRENCY = 5;
 const DB_BATCH_SIZE = 500;

@@ -2,8 +2,8 @@ import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
 import { and, eq, inArray, notInArray, sql } from "drizzle-orm";
 
-import { computeOnlineSerials, V1_CUTOFF_MS } from "@/job/populate-serial";
 import { preAssignedCollections as excludeCollections } from "@/lib/serial-constants";
+import { computeOnlineSerials, V1_CUTOFF_MS } from "@/lib/serial-math";
 
 const excludeSlugs = ["empty-collection", ...excludeCollections];
 

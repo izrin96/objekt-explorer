@@ -31,14 +31,13 @@ import { and, asc, eq, inArray, isNotNull, ne, or } from "drizzle-orm";
 import { FetchError } from "ofetch";
 
 import {
-  computeOfflineSerialUpdates,
   discoverBatches,
   refineBatches,
   tokenIdRange,
-  V1_CUTOFF_MS,
   writeSerialUpdates,
 } from "@/job/populate-serial";
 import { preAssignedCollections as excludeCollections } from "@/lib/serial-constants";
+import { computeOfflineSerialUpdates, V1_CUTOFF_MS } from "@/lib/serial-math";
 
 const CONCURRENCY = 5;
 
