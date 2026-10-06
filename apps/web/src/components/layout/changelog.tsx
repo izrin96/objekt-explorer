@@ -36,6 +36,8 @@ const CHANGELOG = [
       "Improved serial number estimates for offline objekts. Spot a wrong one? Report it in our Discord.",
       "Sale list cards now show the price in your preferred currency.",
       "In select mode, Shift+click selects a range of objekts.",
+      "The Marketplace can now show only what your profile doesn't own yet. Pick one of your profiles under Compare.",
+      "The Compare dialog on a list now lets you pick one of your profiles, or choose Other profile to enter any Cosmo ID.",
     ],
   },
   {
