@@ -1,20 +1,14 @@
-import {
-  CurrencyDollarIcon,
-  MagnifyingGlassIcon,
-  SelectionPlusIcon,
-  TrashIcon,
-} from "@phosphor-icons/react";
+import { CurrencyDollarIcon, MagnifyingGlassIcon, TrashIcon } from "@phosphor-icons/react";
 import type { ValidCustomSort } from "@repo/cosmo/types/common";
 import type { ListObjekt } from "@repo/lib/types/objekt";
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
 import { useCallback, useDeferredValue, useMemo, useState } from "react";
 
 import { EmptyState } from "@/components/shared/empty-state";
 import { countMarkup, MessageMarkup } from "@/components/shared/message-markup";
 import { Button } from "@/components/ui/button";
 import { MenuItem } from "@/components/ui/menu";
-import { useArtistScopeNarrowed, useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
+import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import { CompareBanner } from "@/features/compare/compare-banner";
 import { isComparing } from "@/features/compare/search-schema";
 import { useCompareQuery, useCompareSearch, useSetCompare } from "@/features/compare/use-compare";
@@ -34,35 +28,21 @@ import { ObjektVirtualGrid } from "@/features/objekt/objekt-virtual-grid";
 import { SelectBar, type SelectBarAction, SelectModeButton } from "@/features/objekt/select-bar";
 import { SkeletonGrid } from "@/features/objekt/skeleton-grid";
 import { useCollectionRarity } from "@/features/objekt/use-collection-rarity";
-import { formatCurrency, useCurrency } from "@/features/settings/use-currency";
+import { useCurrency } from "@/features/settings/use-currency";
 import { useCurrentUser } from "@/features/user/hooks";
-import { displayNickname, nicknameParam } from "@/lib/address";
 import { m } from "@/paraglide/messages";
 import { useClearSelectionOnNavigate, useSelection } from "@/stores/selection";
 
 import { AddToListProvider } from "./add-to-list-dialog";
 import { AddToListAction, AddToListMenuItem } from "./add-to-list-menu-item";
+import { EmptyList } from "./list-empty";
+import { formatConvertedPrice, formatPrice } from "./list-price";
 import { useListTarget } from "./list-provider";
 import { listEntriesOptions } from "./queries";
 import { RemoveFromListDialog } from "./remove-from-list-dialog";
 import { SetPriceDialog } from "./set-price-dialog";
+import { useEntryDialogs } from "./use-entry-dialogs";
 import { useListOwned } from "./use-list-owned";
-
-/** the list's own currency, not the viewer's; an unpriced card nudges the owner to set one */
-function formatPrice(currency: string, objekt: ListObjekt, canPrice: boolean): string {
-  if (objekt.isQyop) return m.list_manage_objekt_set_price_qyop();
-  if (objekt.price === null) return canPrice ? m.objekt_set_price() : m.list_price_none();
-  return formatCurrency(objekt.price, currency);
-}
-
-function formatConvertedPrice(
-  currency: string,
-  objekt: ListObjekt,
-  formatConverted: (amount: number, from: string) => string | null,
-): string | undefined {
-  if (objekt.isQyop || objekt.price === null) return undefined;
-  return formatConverted(objekt.price, currency) ?? undefined;
-}
 
 export function ListView() {
   const list = useListTarget();
@@ -125,10 +105,6 @@ function ListEntries() {
   // the menu acts on every copy the card stands for, so the open card holds its
   // whole group
   const [activeGroup, setActiveGroup] = useState<ListObjekt[]>([]);
-  const [priceTarget, setPriceTarget] = useState<ListObjekt[]>([]);
-  const [removeTarget, setRemoveTarget] = useState<ListObjekt[]>([]);
-  const [priceOpen, setPriceOpen] = useState(false);
-  const [removeOpen, setRemoveOpen] = useState(false);
 
   useClearSelectionOnNavigate();
 
@@ -153,15 +129,8 @@ function ListEntries() {
     [list.isProfileBind, list.hideSerial, list.listTypeNew],
   );
 
-  const openPrice = useCallback((objekts: ListObjekt[]) => {
-    setPriceTarget(objekts);
-    setPriceOpen(true);
-  }, []);
-
-  const openRemove = useCallback((objekts: ListObjekt[]) => {
-    setRemoveTarget(objekts);
-    setRemoveOpen(true);
-  }, []);
+  const dialogs = useEntryDialogs();
+  const { openPrice, openRemove } = dialogs;
 
   const menuItems = useCallback(
     (objekts: ListObjekt[]) => {
@@ -348,93 +317,8 @@ function ListEntries() {
         menu={user ? menuItems(activeGroup) : undefined}
       />
 
-      {canPrice ? (
-        <SetPriceDialog
-          open={priceOpen}
-          onOpenChange={setPriceOpen}
-          objekts={priceTarget}
-          slug={list.slug}
-          currency={currency}
-        />
-      ) : null}
-      {isOwner ? (
-        <RemoveFromListDialog
-          open={removeOpen}
-          onOpenChange={setRemoveOpen}
-          objekts={removeTarget}
-          slug={list.slug}
-        />
-      ) : null}
+      {canPrice ? <SetPriceDialog {...dialogs.price} slug={list.slug} currency={currency} /> : null}
+      {isOwner ? <RemoveFromListDialog {...dialogs.remove} slug={list.slug} /> : null}
     </>
-  );
-}
-
-/**
- * `listEntries` is scoped to the selected artists, so with an artist left out
- * an empty result may be hiding entries rather than meaning there are none.
- */
-function EmptyList() {
-  const list = useListTarget();
-  const isOwner = useListOwned();
-  const { data: user } = useCurrentUser();
-  const scopeNarrowed = useArtistScopeNarrowed();
-
-  if (scopeNarrowed) {
-    return (
-      <EmptyState
-        icon={SelectionPlusIcon}
-        title={m.common_scope_empty_title()}
-        hint={user ? m.list_scope_empty_hint_menu() : m.list_scope_empty_hint_settings()}
-      />
-    );
-  }
-
-  if (!isOwner) {
-    return (
-      <EmptyState
-        icon={SelectionPlusIcon}
-        title={m.list_empty_visitor_title()}
-        hint={m.list_empty_visitor_hint()}
-      />
-    );
-  }
-
-  // a bound list only takes objekts its profile owns, so point at that collection
-  if (list.isProfileBind && list.profileAddress) {
-    const profile = displayNickname(list.profileAddress, list.profile?.nickname);
-    return (
-      <EmptyState
-        icon={SelectionPlusIcon}
-        title={m.list_empty_title()}
-        hint={m.list_empty_bound_hint({ profile })}
-        action={
-          <Button
-            variant="outline"
-            size="sm"
-            render={
-              <Link
-                to="/@{$nickname}"
-                params={{ nickname: nicknameParam(list.profileAddress, list.profile?.nickname) }}
-              />
-            }
-          >
-            {m.list_open_profile_collection({ profile })}
-          </Button>
-        }
-      />
-    );
-  }
-
-  return (
-    <EmptyState
-      icon={SelectionPlusIcon}
-      title={m.list_empty_title()}
-      hint={m.list_empty_hint()}
-      action={
-        <Button variant="outline" size="sm" render={<Link to="/" />}>
-          {m.list_browse_objekts()}
-        </Button>
-      }
-    />
   );
 }
