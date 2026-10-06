@@ -153,8 +153,8 @@ export function MarketPanel({
 }
 
 /**
- * The whole row opens the seller's list; the serial, the seller and the note
- * sit above that link (`relative z-10`) so each keeps its own click.
+ * The caret opens the seller's list; a link stretched over the row would
+ * escape it in Safari, which never makes a `<tr>` a containing block.
  */
 function MarketRow({
   item,
@@ -176,14 +176,10 @@ function MarketRow({
   const priced = !item.isQyop && price !== null && listed !== null;
 
   return (
-    <tr className="hover:bg-secondary/40 relative border-t">
+    <tr className="border-t">
       <td className="px-3 py-1.5 text-right whitespace-nowrap">
         <div className="flex items-center justify-end gap-1">
-          {item.note && (
-            <span className="relative z-10">
-              <ObjektNote note={item.note} />
-            </span>
-          )}
+          {item.note && <ObjektNote note={item.note} />}
           {/* a listing is set in the seller's currency, not the viewer's */}
           <span
             className={cn(
@@ -206,7 +202,7 @@ function MarketRow({
         ) : (
           <button
             type="button"
-            className="hover:text-accent-solid relative z-10 cursor-pointer font-mono font-medium tabular-nums underline-offset-2 hover:underline"
+            className="hover:text-accent-solid cursor-pointer font-mono font-medium tabular-nums underline-offset-2 hover:underline"
             onClick={() => onOpenSerial(item.serial ?? 0)}
           >
             #{item.serial}
@@ -221,7 +217,7 @@ function MarketRow({
           <ProfileCell
             address={address}
             nickname={nickname}
-            className="relative z-10 -mx-3 -my-1.5 flex min-w-0 px-3 py-1.5"
+            className="-mx-3 -my-1.5 flex min-w-0 px-3 py-1.5"
             linkClassName={cn(
               "truncate underline-offset-2 hover:underline",
               nickname === null && "font-mono text-xs",
@@ -238,7 +234,9 @@ function MarketRow({
         <Link
           {...getListLinkOption(item.list)}
           aria-label={m.objekt_market_view_list()}
-          className="text-muted-foreground hover:text-foreground focus-visible:after:ring-ring flex items-center justify-center outline-none after:absolute after:inset-0 focus-visible:after:ring-2 focus-visible:after:ring-inset"
+          // centred on the caret: as wide as the cell allows without widening
+          // the table, shorter than a row so it never reaches the next caret
+          className="text-muted-foreground hover:text-foreground focus-visible:ring-ring relative flex items-center justify-center rounded-sm outline-none focus-visible:ring-2 pointer-coarse:after:absolute pointer-coarse:after:h-8 pointer-coarse:after:w-10"
         >
           <CaretRightIcon className="size-4" aria-hidden />
         </Link>
