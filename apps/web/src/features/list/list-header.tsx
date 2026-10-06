@@ -60,6 +60,12 @@ export function ListHeader() {
               </Badge>
             ) : null}
             {list.listTypeNew !== "general" ? <ListTypeBadge type={list.listTypeNew} /> : null}
+            {list.showOnTrade ? (
+              <Badge variant="outline" size="sm" render={<Link to="/trade" />}>
+                <ArrowsLeftRightIcon aria-hidden />
+                {m.list_on_trade()}
+              </Badge>
+            ) : null}
             {list.listTypeNew === "sale" && list.currency ? (
               <span className="text-muted-foreground font-mono text-xs">({list.currency})</span>
             ) : null}

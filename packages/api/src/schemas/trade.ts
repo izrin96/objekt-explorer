@@ -1,5 +1,7 @@
 import * as z from "zod";
 
+import { collectionFiltersSchema } from "./common/filters";
+
 export const TRADE_FILTERS = ["all", "mutual", "they_have", "they_want"] as const;
 export type TradeFilter = (typeof TRADE_FILTERS)[number];
 
@@ -18,3 +20,30 @@ export const forYouInputSchema = z.object({
 export const listMatchCountInputSchema = z.object({ slug: z.string() });
 
 export const tradePartnerInputSchema = z.object({ userId: z.string().min(1) });
+
+export const POST_TYPES = ["all", "wtt", "wtb", "wts"] as const;
+export type PostType = (typeof POST_TYPES)[number];
+
+export const browseFiltersSchema = collectionFiltersSchema.extend({
+  type: z.enum(POST_TYPES).default("all"),
+  /** "They want something I have"; absent means the server's default for the viewer */
+  have: z.boolean().optional(),
+  slug: z.string().optional(),
+});
+export type BrowseFilters = z.infer<typeof browseFiltersSchema>;
+
+export const feedCursorSchema = z.object({
+  bumpedAt: z.iso.datetime({ offset: true }),
+  id: z.number().int(),
+});
+export type FeedCursor = z.infer<typeof feedCursorSchema>;
+
+export const browseInputSchema = browseFiltersSchema.extend({
+  cursor: feedCursorSchema.optional(),
+});
+
+export const setShowOnTradeInputSchema = z.object({ slug: z.string(), on: z.boolean() });
+
+export const bumpInputSchema = z.object({ slug: z.string() });
+
+export const collectionPostCountsInputSchema = z.object({ slug: z.string() });

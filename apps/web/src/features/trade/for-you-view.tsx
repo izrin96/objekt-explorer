@@ -6,11 +6,10 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 
 import { EmptyState } from "@/components/shared/empty-state";
-import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsList, TabsTab } from "@/components/ui/tabs";
 import { toastManager } from "@/components/ui/toast";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { SingleSelect } from "@/features/filters/single-select";
 import { ObjektDrawer } from "@/features/objekt/drawer";
 import { useUserLists } from "@/features/user/hooks";
@@ -54,25 +53,27 @@ export function ForYouView({ filter, list }: { filter: TradeFilter; list: string
 
   return (
     <>
-      <PageHeader title={m.trade_title()} description={m.trade_description()} />
+      <p className="text-muted-foreground text-sm text-pretty">{m.trade_description()}</p>
 
       <div className="flex flex-wrap items-center gap-2">
-        <ToggleGroup
-          aria-label={m.trade_filter_label()}
-          size="sm"
-          className="flex-wrap gap-1.5"
-          value={[filter]}
+        <Tabs
+          value={filter}
           onValueChange={(value) => {
-            const next = FILTERS.find((item) => item.value === value[0]);
+            const next = FILTERS.find((item) => item.value === value);
             if (next && next.value !== filter) setSearch({ filter: next.value });
           }}
+          /* the four labels outgrow a phone: the strip scrolls, the page does not */
+          data-scroll-x
+          className="max-w-full [scrollbar-width:none] overflow-x-auto max-md:mask-r-from-[calc(100%-2rem)]"
         >
-          {FILTERS.map((item) => (
-            <ToggleGroupItem key={item.value} value={item.value} className="border-input">
-              {item.label()}
-            </ToggleGroupItem>
-          ))}
-        </ToggleGroup>
+          <TabsList aria-label={m.trade_filter_label()} className="w-max">
+            {FILTERS.map((item) => (
+              <TabsTab key={item.value} value={item.value}>
+                {item.label()}
+              </TabsTab>
+            ))}
+          </TabsList>
+        </Tabs>
 
         {tradeLists.length > 0 ? (
           <SingleSelect

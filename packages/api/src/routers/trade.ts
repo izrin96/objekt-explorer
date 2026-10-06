@@ -4,17 +4,51 @@ import { hiddenTradePartner, user, userAddress } from "@repo/db/schema";
 import { bumpTradeVersion } from "@repo/lib/server/list-touch";
 import { and, desc, eq, inArray } from "drizzle-orm";
 
-import { authed } from "../orpc";
+import { authed, optionalAuthed, pub } from "../orpc";
 import {
+  browseInputSchema,
+  bumpInputSchema,
+  collectionPostCountsInputSchema,
   forYouInputSchema,
   listMatchCountInputSchema,
+  setShowOnTradeInputSchema,
   tradePartnerInputSchema,
 } from "../schemas/trade";
 import { toPublicUser } from "../services/profile";
 import { redis } from "../services/redis";
+import {
+  browseFeed,
+  bumpPost,
+  collectionPostCounts,
+  fetchMyPosts,
+  setShowOnTrade,
+} from "../services/trade-feed";
 import { getTradeMatches, resolveTradeSides } from "../services/trade-matches";
 
 export const tradeRouter = {
+  /** Public; viewer fields are present only with a session. */
+  browse: optionalAuthed
+    .input(browseInputSchema)
+    .handler(async ({ input, context: { session } }) =>
+      browseFeed(session?.user.id ?? null, input),
+    ),
+
+  bump: authed
+    .input(bumpInputSchema)
+    .handler(async ({ input: { slug }, context: { session } }) => bumpPost(session.user.id, slug)),
+
+  myPosts: authed.handler(async ({ context: { session } }) => fetchMyPosts(session.user.id)),
+
+  setShowOnTrade: authed
+    .input(setShowOnTradeInputSchema)
+    .handler(async ({ input: { slug, on }, context: { session } }) =>
+      setShowOnTrade(session.user.id, slug, on),
+    ),
+
+  collectionPostCounts: pub
+    .input(collectionPostCountsInputSchema)
+    .handler(async ({ input: { slug } }) => collectionPostCounts(slug)),
+
   forYou: authed
     .input(forYouInputSchema)
     .handler(async ({ input: { filter, list }, context: { session } }) => {

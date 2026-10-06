@@ -18,6 +18,7 @@ function useNavLinks() {
   const links = [
     { key: "home", label: m.home_title(), to: "/", exact: true },
     { key: "market", label: m.nav_market(), to: "/market", exact: false },
+    { key: "trade", label: m.nav_trade(), to: "/trade", exact: false },
     { key: "activity", label: m.nav_activity(), to: "/activity", exact: false },
     // `/list/{slug}` is any user's list, not one of the viewer's own
     { key: "list", label: m.nav_my_list(), to: "/list", exact: true },

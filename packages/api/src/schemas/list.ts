@@ -24,6 +24,8 @@ export const baseListSchema = z.object({
   gridColumns: z.number().nullish(),
   description: z.string().nullish(),
   discoverable: z.boolean().nullish(),
+  showOnTrade: z.boolean().nullish(),
+  bumpedAt: z.string().nullish(),
   user: publicUserSchema.nullish(),
   profile: publicProfileSchema.nullish(),
 });
@@ -106,6 +108,7 @@ export const createListInputSchema = z.object({
   description: z.string().max(5000).nullable(),
   currency: z.string().max(10).nullable(),
   discoverable: z.boolean().default(false),
+  showOnTrade: z.boolean().optional(),
   matchAlerts: z.boolean().optional(),
 });
 
@@ -120,6 +123,7 @@ export const editListInputSchema = z.object({
   hideSerial: z.boolean(),
   linkedListId: z.number().nullable(),
   discoverable: z.boolean(),
+  showOnTrade: z.boolean().optional(),
   matchAlerts: z.boolean().optional(),
   regenerateSlug: z.boolean().default(false),
 });

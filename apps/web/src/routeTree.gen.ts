@@ -16,6 +16,7 @@ import { Route as containerActivityRouteImport } from './routes/(container)/acti
 import { Route as containerLoginRouteImport } from './routes/(container)/login'
 import { Route as containerMarketRouteImport } from './routes/(container)/market'
 import { Route as containerTermsPrivacyRouteImport } from './routes/(container)/terms-privacy'
+import { Route as containerTradeRouteRouteImport } from './routes/(container)/trade/route'
 import { Route as AtChar123nicknameChar125IndexRouteImport } from './routes/@{$nickname}/index'
 import { Route as AtChar123nicknameChar125SplatRouteImport } from './routes/@{$nickname}/$'
 import { Route as AtChar123nicknameChar125ListRouteImport } from './routes/@{$nickname}/list'
@@ -84,6 +85,11 @@ const containerMarketRoute = containerMarketRouteImport.update({
 const containerTermsPrivacyRoute = containerTermsPrivacyRouteImport.update({
   id: '/terms-privacy',
   path: '/terms-privacy',
+  getParentRoute: () => containerRouteRoute,
+} as any)
+const containerTradeRouteRoute = containerTradeRouteRouteImport.update({
+  id: '/trade',
+  path: '/trade',
   getParentRoute: () => containerRouteRoute,
 } as any)
 const AtChar123nicknameChar125IndexRoute =
@@ -204,14 +210,14 @@ const containerLiveIdRoute = containerLiveIdRouteImport.update({
   getParentRoute: () => containerRouteRoute,
 } as any)
 const containerTradeIndexRoute = containerTradeIndexRouteImport.update({
-  id: '/trade/',
-  path: '/trade/',
-  getParentRoute: () => containerRouteRoute,
+  id: '/',
+  path: '/',
+  getParentRoute: () => containerTradeRouteRoute,
 } as any)
 const containerTradeForYouRoute = containerTradeForYouRouteImport.update({
-  id: '/trade/for-you',
-  path: '/trade/for-you',
-  getParentRoute: () => containerRouteRoute,
+  id: '/for-you',
+  path: '/for-you',
+  getParentRoute: () => containerTradeRouteRoute,
 } as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
@@ -271,6 +277,7 @@ const ApiObjektsTransfersCollectionSlugSerialRoute =
 
 export interface FileRoutesByFullPath {
   '/@{$nickname}': typeof AtChar123nicknameChar125RouteRouteWithChildren
+  '/trade': typeof containerTradeRouteRouteWithChildren
   '/activity': typeof containerActivityRoute
   '/login': typeof containerLoginRoute
   '/market': typeof containerMarketRoute
@@ -356,6 +363,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/(container)': typeof containerRouteRouteWithChildren
   '/@{$nickname}': typeof AtChar123nicknameChar125RouteRouteWithChildren
+  '/(container)/trade': typeof containerTradeRouteRouteWithChildren
   '/(container)/activity': typeof containerActivityRoute
   '/(container)/login': typeof containerLoginRoute
   '/(container)/market': typeof containerMarketRoute
@@ -400,6 +408,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/@{$nickname}'
+    | '/trade'
     | '/activity'
     | '/login'
     | '/market'
@@ -484,6 +493,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/(container)'
     | '/@{$nickname}'
+    | '/(container)/trade'
     | '/(container)/activity'
     | '/(container)/login'
     | '/(container)/market'
@@ -596,6 +606,13 @@ declare module '@tanstack/react-router' {
       path: '/terms-privacy'
       fullPath: '/terms-privacy'
       preLoaderRoute: typeof containerTermsPrivacyRouteImport
+      parentRoute: typeof containerRouteRoute
+    }
+    '/(container)/trade': {
+      id: '/(container)/trade'
+      path: '/trade'
+      fullPath: '/trade'
+      preLoaderRoute: typeof containerTradeRouteRouteImport
       parentRoute: typeof containerRouteRoute
     }
     '/@{$nickname}/': {
@@ -754,17 +771,17 @@ declare module '@tanstack/react-router' {
     }
     '/(container)/trade/': {
       id: '/(container)/trade/'
-      path: '/trade'
+      path: '/'
       fullPath: '/trade/'
       preLoaderRoute: typeof containerTradeIndexRouteImport
-      parentRoute: typeof containerRouteRoute
+      parentRoute: typeof containerTradeRouteRoute
     }
     '/(container)/trade/for-you': {
       id: '/(container)/trade/for-you'
-      path: '/trade/for-you'
+      path: '/for-you'
       fullPath: '/trade/for-you'
       preLoaderRoute: typeof containerTradeForYouRouteImport
-      parentRoute: typeof containerRouteRoute
+      parentRoute: typeof containerTradeRouteRoute
     }
     '/api/auth/$': {
       id: '/api/auth/$'
@@ -839,7 +856,21 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface containerTradeRouteRouteChildren {
+  containerTradeForYouRoute: typeof containerTradeForYouRoute
+  containerTradeIndexRoute: typeof containerTradeIndexRoute
+}
+
+const containerTradeRouteRouteChildren: containerTradeRouteRouteChildren = {
+  containerTradeForYouRoute: containerTradeForYouRoute,
+  containerTradeIndexRoute: containerTradeIndexRoute,
+}
+
+const containerTradeRouteRouteWithChildren =
+  containerTradeRouteRoute._addFileChildren(containerTradeRouteRouteChildren)
+
 interface containerRouteRouteChildren {
+  containerTradeRouteRoute: typeof containerTradeRouteRouteWithChildren
   containerActivityRoute: typeof containerActivityRoute
   containerLoginRoute: typeof containerLoginRoute
   containerMarketRoute: typeof containerMarketRoute
@@ -850,15 +881,14 @@ interface containerRouteRouteChildren {
   containerLinkConnectRoute: typeof containerLinkConnectRoute
   containerListSlugRoute: typeof containerListSlugRoute
   containerLiveIdRoute: typeof containerLiveIdRoute
-  containerTradeForYouRoute: typeof containerTradeForYouRoute
   containerLinkIndexRoute: typeof containerLinkIndexRoute
   containerListIndexRoute: typeof containerListIndexRoute
   containerLiveIndexRoute: typeof containerLiveIndexRoute
-  containerTradeIndexRoute: typeof containerTradeIndexRoute
   containerAtChar123nicknameChar125ListSlugRoute: typeof containerAtChar123nicknameChar125ListSlugRoute
 }
 
 const containerRouteRouteChildren: containerRouteRouteChildren = {
+  containerTradeRouteRoute: containerTradeRouteRouteWithChildren,
   containerActivityRoute: containerActivityRoute,
   containerLoginRoute: containerLoginRoute,
   containerMarketRoute: containerMarketRoute,
@@ -869,11 +899,9 @@ const containerRouteRouteChildren: containerRouteRouteChildren = {
   containerLinkConnectRoute: containerLinkConnectRoute,
   containerListSlugRoute: containerListSlugRoute,
   containerLiveIdRoute: containerLiveIdRoute,
-  containerTradeForYouRoute: containerTradeForYouRoute,
   containerLinkIndexRoute: containerLinkIndexRoute,
   containerListIndexRoute: containerListIndexRoute,
   containerLiveIndexRoute: containerLiveIndexRoute,
-  containerTradeIndexRoute: containerTradeIndexRoute,
   containerAtChar123nicknameChar125ListSlugRoute:
     containerAtChar123nicknameChar125ListSlugRoute,
 }

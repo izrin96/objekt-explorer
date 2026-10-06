@@ -9,10 +9,11 @@ import { chunkMap } from "@repo/lib";
 import { touchListWith } from "@repo/lib/server/list-touch";
 import { mapOwnedObjekt, overrideCollection } from "@repo/lib/server/objekt";
 import type { ListEntryFields, ListObjekt } from "@repo/lib/types/objekt";
-import { and, eq, inArray, isNotNull, ne } from "drizzle-orm";
+import { type SQL, and, eq, inArray, isNotNull, ne, sql } from "drizzle-orm";
 import slugify from "slugify";
 
 import { OBJEKT_PREVIEW_SIZE } from "../constants";
+import { BUMP_COOLDOWN_HOURS } from "../lib/trade-feed";
 import type { AddSource, ListPreview, ListTypeNew, PublicList } from "../schemas/list";
 import { getCollectionColumns, getPartialCollectionColumns } from "./objekt";
 import { isProfileHidden } from "./privacy";
@@ -212,6 +213,8 @@ export async function fetchList(
     hideSerial: result.hideSerial,
     gridColumns: result.gridColumns,
     discoverable: result.discoverable,
+    showOnTrade: result.showOnTrade,
+    bumpedAt: result.bumpedAt,
     user: result.hideUser || !result.user ? null : toPublicUser(result.user),
     profile: result.userAddress ? toPartialProfile(result.userAddress) : null,
     description: result.description,
@@ -241,6 +244,8 @@ export async function fetchOwnedLists(
       profileSlug: true,
       profileAddress: true,
       currency: true,
+      showOnTrade: true,
+      bumpedAt: true,
     },
     where: {
       [column]: identifier,
@@ -378,6 +383,70 @@ export function resolveDiscoverable(
   if (type === "want") return requested;
   if (type === "have" || type === "sale") return isProfileBind && requested;
   return false;
+}
+
+const bumpCutoff = sql`now() - make_interval(hours => ${BUMP_COOLDOWN_HOURS})`;
+
+/**
+ * The bump time of the list linked to this one when that list is on Trade, so the two form
+ * one post. `link` is the linked list id, or `lists.linked_list_id` of the row being updated.
+ */
+function partnerBumpedAt(link: SQL | number | null, type: SQL | ListTypeNew, userId: SQL | string) {
+  if (link === null) return sql`NULL::timestamptz`;
+  return sql`(
+    SELECT p.bumped_at FROM lists p
+    WHERE p.id = ${link} AND p.show_on_trade AND p.user_id = ${userId}
+      AND p.list_type_new IN ('have', 'want') AND p.list_type_new <> ${type}
+  )`;
+}
+
+/**
+ * The bump time of a list turning Show on Trade on. It counts as a bump only once the post,
+ * this list with its linked partner on Trade, is past the bump cooldown; within it the post
+ * keeps its bump time, so turning Show on Trade off and on cannot stand in for Bump.
+ */
+function turnOnBumpedAt(own: SQL, partner: SQL) {
+  return sql`CASE
+    WHEN ${own} > ${bumpCutoff} THEN ${own}
+    WHEN ${partner} > ${bumpCutoff} THEN ${partner}
+    ELSE now()
+  END`;
+}
+
+/** `bumpedAt` for a list created with Show on Trade on. */
+export function createdBumpedAt(linkedListId: number | null, type: ListTypeNew, userId: string) {
+  return turnOnBumpedAt(sql`NULL::timestamptz`, partnerBumpedAt(linkedListId, type, userId));
+}
+
+/**
+ * The Show on Trade columns for a write that sets `discoverable`. Written as SQL over the
+ * stored row, so an omitted `show` keeps the stored value unless discoverable goes off.
+ * `link` is the linked list id the write leaves in place (null for none); omitted, the stored
+ * one.
+ */
+export function tradeColumns(
+  show: boolean | undefined,
+  discoverable: boolean,
+  link?: number | null,
+) {
+  const next =
+    show === undefined
+      ? sql`(${lists.showOnTrade} AND ${discoverable}::boolean)`
+      : sql`${show && discoverable}::boolean`;
+  // raw names: inside the partner subquery a rendered column could bind to `p`
+  const partner = partnerBumpedAt(
+    link === undefined ? sql`lists.linked_list_id` : link,
+    sql`lists.list_type_new`,
+    sql`lists.user_id`,
+  );
+  return {
+    showOnTrade: sql<boolean>`${next}`,
+    bumpedAt: sql<string | null>`CASE
+      WHEN NOT lists.show_on_trade AND ${next}
+      THEN ${turnOnBumpedAt(sql`lists.bumped_at`, partner)}
+      ELSE lists.bumped_at
+    END`,
+  };
 }
 
 export async function checkLinkedList(type: ListTypeNew, linkedListId: number, userId: string) {

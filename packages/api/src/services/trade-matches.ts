@@ -333,7 +333,7 @@ const bySlug = (a: { slug: string }, b: { slug: string }) => a.slug.localeCompar
 type HoldingRow = { owner: string; key: string; transferable: boolean; token: boolean };
 
 /** Restricted to the matched collections, so no wallet is scanned whole. */
-async function fetchHoldings(
+export async function fetchHoldings(
   tokenIds: string[],
   slugs: string[],
   owners: string[],

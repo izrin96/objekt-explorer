@@ -43,6 +43,7 @@ export type ListDraft = {
   profileAddress: string | null;
   isProfileBind: boolean;
   discoverable: boolean;
+  showOnTrade: boolean;
   matchAlerts: boolean;
   gridColumns: number | null;
   hideSerial: boolean;
@@ -59,6 +60,7 @@ export const EMPTY_DRAFT: ListDraft = {
   profileAddress: null,
   isProfileBind: false,
   discoverable: false,
+  showOnTrade: false,
   matchAlerts: true,
   gridColumns: null,
   hideSerial: false,
@@ -111,6 +113,7 @@ export function toCreateInput(draft: ListDraft) {
     profileAddress: draft.profileAddress,
     isProfileBind,
     discoverable: draft.discoverable,
+    showOnTrade: draft.listTypeNew !== "general" && draft.showOnTrade,
     matchAlerts: draft.listTypeNew === "want" ? draft.matchAlerts : undefined,
     hideSerial: draft.hideSerial,
     hideUser: draft.hideUser,
@@ -353,7 +356,29 @@ export function ListForm({ idPrefix, value, onChange, lists, profiles, mode, url
           }
           checked={value.discoverable}
           disabled={discoverableDisabled}
-          onCheckedChange={(checked) => set({ discoverable: checked })}
+          // a list on Trade is always discoverable, so this switch takes Trade with it
+          onCheckedChange={(checked) =>
+            set({ discoverable: checked, showOnTrade: checked && value.showOnTrade })
+          }
+        />
+      ) : null}
+
+      {value.listTypeNew !== "general" ? (
+        <SwitchRow
+          id={id("show-on-trade")}
+          label={m.list_create_show_on_trade_label()}
+          description={
+            discoverableDisabled
+              ? m.list_create_requires_bind_desc()
+              : isSale
+                ? m.list_create_show_on_trade_sale_desc()
+                : m.list_create_show_on_trade_desc()
+          }
+          checked={value.showOnTrade && !discoverableDisabled}
+          disabled={discoverableDisabled}
+          onCheckedChange={(checked) =>
+            set({ showOnTrade: checked, discoverable: checked || value.discoverable })
+          }
         />
       ) : null}
 

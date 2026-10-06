@@ -2,6 +2,7 @@ import { sql } from "drizzle-orm";
 import {
   type AnyPgColumn,
   boolean,
+  check,
   index,
   integer,
   jsonb,
@@ -91,6 +92,8 @@ export const lists = pgTable(
     updatedAt: timestamp("updated_at", { mode: "string", withTimezone: true })
       .notNull()
       .defaultNow(),
+    showOnTrade: boolean("show_on_trade").notNull().default(false),
+    bumpedAt: timestamp("bumped_at", { mode: "string", withTimezone: true }),
   },
   (t) => [
     uniqueIndex("lists_slug_idx").on(t.slug),
@@ -107,6 +110,11 @@ export const lists = pgTable(
     index("lists_trade_discoverable_idx")
       .on(t.listTypeNew)
       .where(sql`list_type_new IN ('have', 'want') AND discoverable = true`),
+    index("lists_trade_feed_idx")
+      .on(t.bumpedAt.desc(), t.id)
+      .where(sql`show_on_trade`),
+    // trade matching only sees discoverable lists, so a list on Trade must be one
+    check("lists_trade_needs_discoverable", sql`NOT ${t.showOnTrade} OR ${t.discoverable}`),
   ],
 );
 

@@ -6,7 +6,7 @@ The account-wide trade match view on `apps/web` at `/trade/for-you`: who the use
 ## Requirements
 
 ### Requirement: Account-wide matches
-`/trade/for-you` SHALL list the other accounts whose discoverable have, sale or want lists overlap the signed-in user's have and want lists, grouped one row per account. The user's own lists count whether or not they are discoverable. The user's own account SHALL never appear. `/trade` SHALL open `/trade/for-you`. A signed-out visitor SHALL be sent to `/login?redirect=/trade/for-you`, keeping the search parameters.
+`/trade/for-you` SHALL list the other accounts whose discoverable have, sale or want lists overlap the signed-in user's have and want lists, grouped one row per account. The user's own lists count whether or not they are discoverable. The user's own account SHALL never appear. `/trade` SHALL open the Browse feed (see `web-trade-browse`), not For you. A signed-out visitor SHALL be sent to `/login?redirect=/trade/for-you`, keeping the search parameters.
 
 #### Scenario: Matches across lists
 - **WHEN** a user has two have lists and one want list, and a partner's discoverable lists overlap two of them
@@ -15,6 +15,10 @@ The account-wide trade match view on `apps/web` at `/trade/for-you`: who the use
 #### Scenario: Signed out
 - **WHEN** a visitor without a session opens `/trade/for-you?list=spares`
 - **THEN** the browser is at `/login?redirect=%2Ftrade%2Ffor-you%3Flist%3Dspares`
+
+#### Scenario: Trade opens Browse
+- **WHEN** a signed-in user opens `/trade`
+- **THEN** the browser stays at `/trade` and shows the Browse feed
 
 ### Requirement: Both directions and mutual-first ranking
 Each partner row SHALL show both counts: objekts they have that the user wants, and objekts the user has that they want. Rows SHALL be ordered by:

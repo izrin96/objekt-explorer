@@ -49,6 +49,8 @@ type ObjektCardProps<T extends ValidObjekt> = {
   image?: "thumbnail" | "front";
   /** load eagerly — the first rows are above the fold */
   priority?: boolean;
+  /** read with the card's own name, for state its artwork shows */
+  description?: string;
   /** extra controls, rendered after the check in the top-right block */
   children?: ReactNode;
   className?: string;
@@ -104,6 +106,7 @@ export function ObjektCard<T extends ValidObjekt>({
   hideSerial = false,
   image = "thumbnail",
   priority = false,
+  description,
   children,
   className,
 }: ObjektCardProps<T>) {
@@ -180,6 +183,7 @@ export function ObjektCard<T extends ValidObjekt>({
           hideSerial={serialHidden}
           priority={priority}
         />
+        {description !== undefined && <span className="sr-only">{description}</span>}
 
         {(pin || lock) && (
           /* paints over the band and the image by DOM order, under the `z-10`

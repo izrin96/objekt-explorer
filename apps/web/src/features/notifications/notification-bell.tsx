@@ -10,9 +10,9 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverPopup, PopoverTitle, PopoverTrigger } from "@/components/ui/popover";
 import { Skeleton } from "@/components/ui/skeleton";
 import { orpc } from "@/lib/orpc";
+import { relativeTime } from "@/lib/time";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
-import { getLocale } from "@/paraglide/runtime";
 
 import { notificationKeys, notificationsOptions, unreadCountOptions } from "./queries";
 import { useUserSocket } from "./use-user-socket";
@@ -263,22 +263,4 @@ function notificationText(notification: Notification, collections: Collections) 
     default:
       return null;
   }
-}
-
-const UNITS: [Intl.RelativeTimeFormatUnit, number][] = [
-  ["year", 365 * 24 * 3600],
-  ["month", 30 * 24 * 3600],
-  ["week", 7 * 24 * 3600],
-  ["day", 24 * 3600],
-  ["hour", 3600],
-  ["minute", 60],
-];
-
-function relativeTime(at: number, now: number) {
-  const seconds = Math.round((at - now) / 1000);
-  const format = new Intl.RelativeTimeFormat(getLocale(), { numeric: "auto" });
-  for (const [unit, size] of UNITS) {
-    if (Math.abs(seconds) >= size) return format.format(Math.round(seconds / size), unit);
-  }
-  return format.format(0, "second");
 }

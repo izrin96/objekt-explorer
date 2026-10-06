@@ -12,6 +12,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { getListLinkOption } from "@/features/list/list-link";
 import { ProfileCell } from "@/features/profile/profile-hover-card";
 import { formatCurrency, useCurrency } from "@/features/settings/use-currency";
+import { collectionPostCountsOptions } from "@/features/trade/queries";
 import { isSameAddress, truncateAddress } from "@/lib/address";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -66,6 +67,7 @@ export function MarketPanel({
   return (
     <div className="flex flex-col gap-4">
       <StatRow stats={figures} className="grid-cols-3" />
+      <OnTradeLine slug={slug} />
 
       {listings.isPending ? (
         <div className="flex flex-col gap-1.5">
@@ -149,6 +151,31 @@ export function MarketPanel({
         </div>
       )}
     </div>
+  );
+}
+
+/** hidden at zero on both sides: an empty Trade has nothing to link to */
+function OnTradeLine({ slug }: { slug: string }) {
+  const { data } = useQuery(collectionPostCountsOptions(slug));
+  if (!data || (data.have === 0 && data.want === 0)) return null;
+
+  return (
+    <Link
+      to="/trade"
+      search={{ slug }}
+      className="hover:bg-secondary/60 focus-visible:ring-ring flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-sm outline-none focus-visible:ring-2"
+    >
+      <span className="tabular-nums">
+        {[
+          m.objekt_market_on_trade(),
+          data.have > 0 ? m.objekt_market_on_trade_have({ count: data.have }) : null,
+          data.want > 0 ? m.objekt_market_on_trade_want({ count: data.want }) : null,
+        ]
+          .filter((part) => part !== null)
+          .join(" · ")}
+      </span>
+      <CaretRightIcon className="text-muted-foreground size-4 shrink-0" aria-hidden />
+    </Link>
   );
 }
 
