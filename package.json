@@ -32,9 +32,10 @@
     "lint": "turbo run lint",
     "lint:fix": "turbo run lint:fix",
     "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
     "format": "turbo run format",
     "knip": "knip",
-    "check": "bun run lint && bun run typecheck"
+    "check": "bun run lint && bun run typecheck && bun run test"
   },
   "devDependencies": {
     "@types/node": "^26.6.4",

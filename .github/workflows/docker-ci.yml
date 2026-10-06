@@ -99,6 +99,9 @@ jobs:
       - name: Run type checking
         run: bun run typecheck
 
+      - name: Run tests
+        run: bun run test
+
       - name: Build web
         run: bun run --filter web build:prod
 

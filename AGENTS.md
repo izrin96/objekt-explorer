@@ -52,6 +52,7 @@ bun run build --filter=web         # Build specific app
 bun run lint                       # Lint all (oxlint)
 bun run lint:fix                   # Lint and auto-fix
 bun run typecheck                  # Type-check all
+bun run test                       # Run tests (bun test)
 bun run format                     # Format all (oxfmt)
 ```
 
@@ -64,7 +65,7 @@ bun run --filter=@repo/db db:push       # Push schema directly (needs approval)
 bun run --filter=@repo/db db:studio     # Drizzle Studio
 ```
 
-There is no test framework in this repo — `lint` + `typecheck` are the checks. `bun run check` runs both. `bun run knip` (config in `knip.json`) reports unused files, exports and dependencies. It is advisory, not a gate: the worker and indexer still carry findings. Unused exports in the vendored `components/ui` files are ignored, since those files stay verbatim.
+The checks are `lint`, `typecheck` and `test`; `bun run check` runs all three, and CI runs each. Tests use `bun test`, sit beside the code as `*.test.ts`, and cover pure modules only: the root `.env` is production, so a test never touches the database, Redis or the Cosmo API. To test logic that lives in a hook or a job, move it into a module with no such imports (as `apps/worker/src/lib/serial-math.ts` and `apps/web/src/features/activity/live-feed.ts` do) and test that. `bun run knip` (config in `knip.json`) reports unused files, exports and dependencies. It is advisory, not a gate. Unused exports in the vendored `components/ui` files are ignored, since those files stay verbatim.
 
 ## Skills and specs
 

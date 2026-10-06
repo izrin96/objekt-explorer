@@ -1,5 +1,4 @@
 import type { ActivityItem } from "@repo/api/schemas/activity";
-import { Addresses } from "@repo/lib";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { memo } from "react";
 
@@ -12,17 +11,13 @@ import { truncateAddress } from "@/lib/address";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
+import { getEventKind } from "./live-feed";
+
 const EVENT_LABEL: Record<EventKind, () => string> = {
   mint: m.activity_event_type_mint,
   transfer: m.activity_event_type_transfer,
   spin: m.activity_event_type_spin,
 };
-
-export function getEventKind(from: string, to: string): EventKind {
-  if (from === Addresses.NULL) return "mint";
-  if (to === Addresses.SPIN) return "spin";
-  return "transfer";
-}
 
 /** A nickname the owner hides never reaches the client, so the address stands in. */
 function Who({ address, nickname }: { address: string; nickname: string | undefined }) {

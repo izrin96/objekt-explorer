@@ -33,6 +33,10 @@
       "outputs": [],
       "cache": true
     },
+    "test": {
+      "outputs": [],
+      "cache": true
+    },
     "format": {
       "inputs": ["$TURBO_DEFAULT$", "oxfmt.config.ts"],
       "outputs": ["**/*.{ts,tsx,js,jsx,json,css,md}"],

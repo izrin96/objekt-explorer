@@ -15,6 +15,7 @@
     "lint:fix": "bun run paraglide:compile && oxlint --type-aware --fix",
     "paraglide:compile": "bun run --bun paraglide-js compile",
     "typecheck": "bun run paraglide:compile && tsc --noEmit",
+    "test": "bun test",
     "format": "oxfmt .",
     "scan": "bunx react-scan@latest localhost:3200"
   },
