@@ -9,6 +9,8 @@ import { m } from "@/paraglide/messages";
 
 export const Route = createFileRoute("/@{$nickname}/")({
   validateSearch: filterSearchSchema,
+  // another profile starts fresh, so an open objekt drawer does not carry over to it
+  remountDeps: ({ params }) => params.nickname,
   loader: ({ params, context: { queryClient } }) =>
     queryClient.query({ ...profileQuery({ nickname: params.nickname }), staleTime: "static" }),
   head: ({ loaderData }) =>

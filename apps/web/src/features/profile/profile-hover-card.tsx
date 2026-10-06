@@ -28,13 +28,11 @@ export function ProfileLink({
   address,
   nickname,
   className,
-  onClick,
   children,
 }: {
   address: string;
   nickname: string | null | undefined;
   className?: string;
-  onClick?: () => void;
   children: ReactNode;
 }) {
   return (
@@ -43,12 +41,7 @@ export function ProfileLink({
       payload={{ address, nickname }}
       {...cursorCardDelays}
       render={
-        <Link
-          to="/@{$nickname}"
-          params={profileParams(address, nickname)}
-          className={className}
-          onClick={onClick}
-        />
+        <Link to="/@{$nickname}" params={profileParams(address, nickname)} className={className} />
       }
     >
       {children}
@@ -62,7 +55,6 @@ export function ProfileCell({
   nickname,
   className,
   linkClassName,
-  onClick,
   before,
   after,
   children,
@@ -71,7 +63,6 @@ export function ProfileCell({
   nickname: string | null | undefined;
   className?: string;
   linkClassName?: string;
-  onClick?: () => void;
   /** content ahead of the name, inside the hover area */
   before?: ReactNode;
   /** content after the name, inside the hover area */
@@ -86,12 +77,7 @@ export function ProfileCell({
       render={<span className={className} />}
     >
       {before}
-      <Link
-        to="/@{$nickname}"
-        params={profileParams(address, nickname)}
-        className={linkClassName}
-        onClick={onClick}
-      >
+      <Link to="/@{$nickname}" params={profileParams(address, nickname)} className={linkClassName}>
         {children}
       </Link>
       {after}

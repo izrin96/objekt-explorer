@@ -85,7 +85,6 @@ export function ObjektDrawer({
           <DrawerBody
             key={objekt.id}
             objekt={objekt}
-            onClose={onClose}
             tab={tab}
             onTabChange={setTab}
             owned={owned}
@@ -102,7 +101,6 @@ export function ObjektDrawer({
 
 function DrawerBody({
   objekt,
-  onClose,
   tab,
   onTabChange,
   owned: ownedCopies,
@@ -112,7 +110,6 @@ function DrawerBody({
   menu,
 }: {
   objekt: ValidObjekt;
-  onClose: () => void;
   tab: DrawerTab;
   onTabChange: (tab: DrawerTab) => void;
   owned?: OwnedGridObjekt[];
@@ -268,7 +265,7 @@ function DrawerBody({
               loading={serials.isPending}
               onSerialChange={setSerial}
             >
-              <Timeline serial={selected} query={transfers} onClose={onClose} />
+              <Timeline serial={selected} query={transfers} />
             </SerialsPanel>
           </TabsPanel>
           <TabsPanel value="market">

@@ -138,13 +138,7 @@ function Fact({ label, children }: { label: string; children: ReactNode }) {
  * the request is in flight, so the timeline underneath does not jump when it
  * lands.
  */
-function OwnershipHead({
-  view,
-  onClose,
-}: {
-  view: Extract<SerialView, { kind: "loading" | "found" }>;
-  onClose: () => void;
-}) {
+function OwnershipHead({ view }: { view: Extract<SerialView, { kind: "loading" | "found" }> }) {
   const found = view.kind === "found" ? view : null;
 
   return (
@@ -158,7 +152,6 @@ function OwnershipHead({
             <ProfileLink
               address={found.ownerAddress}
               nickname={found.ownerIsAddress ? null : found.owner}
-              onClick={onClose}
               className={cn(
                 "truncate underline-offset-2 hover:underline",
                 found.ownerIsAddress ? "font-mono text-xs" : "font-medium",
@@ -202,11 +195,9 @@ function OwnershipHead({
 export function Timeline({
   serial,
   query,
-  onClose,
 }: {
   serial: number | null;
   query: UseQueryResult<SerialTransfersOutput>;
-  onClose: () => void;
 }) {
   const view = resolveSerial(serial, query);
 
@@ -249,12 +240,12 @@ export function Timeline({
     ) : view.events.length === 0 ? (
       <EmptyState icon={ArrowsLeftRightIcon} title={m.objekt_no_transfers()} bordered={false} />
     ) : (
-      <OwnershipTable events={view.events} onClose={onClose} />
+      <OwnershipTable events={view.events} />
     );
 
   return (
     <div className="flex flex-col gap-1.5">
-      <OwnershipHead view={view} onClose={onClose} />
+      <OwnershipHead view={view} />
       {body}
     </div>
   );
@@ -262,7 +253,7 @@ export function Timeline({
 
 type TimelineSortKey = "at";
 
-function OwnershipTable({ events, onClose }: { events: TimelineEvent[]; onClose: () => void }) {
+function OwnershipTable({ events }: { events: TimelineEvent[] }) {
   const [sort, setSort] = useState<SortState<TimelineSortKey>>({ key: "at", dir: "desc" });
 
   const rows = useMemo(() => {
@@ -314,7 +305,6 @@ function OwnershipTable({ events, onClose }: { events: TimelineEvent[]; onClose:
                     <ProfileCell
                       address={event.address}
                       nickname={event.mono ? null : event.owner}
-                      onClick={onClose}
                       className="-mx-3 -my-1.5 flex items-center gap-2 px-3 py-1.5"
                       before={<EventMarker kind={event.kind} />}
                       linkClassName={cn(
