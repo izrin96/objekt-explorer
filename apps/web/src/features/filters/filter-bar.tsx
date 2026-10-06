@@ -28,16 +28,11 @@ import {
   type FacetKey,
 } from "./facet-controls";
 import type { Facets, MemberGroup } from "./facets";
-import {
-  FilterPopover,
-  LONG_TAIL,
-  LongTailFields,
-  longTailCount,
-  type LongTailField,
-} from "./filter-popover";
+import { FilterPopover, LongTailFields } from "./filter-popover";
 import { FilterSearchField } from "./filter-search";
 import { FilterSheet, FilterSheetTrigger } from "./filter-sheet";
 import { GROUP_BY_LABEL, SORT_DESC, SORT_LABEL } from "./labels";
+import { LONG_TAIL, longTailCount, type LongTailField } from "./long-tail";
 import { ResetButton } from "./reset-button";
 import { canReset, DEFAULT_SORT_DIR } from "./search-schema";
 import { useCanonicalFilters, useFilters, useResetFilters, useSetFilters } from "./use-filters";

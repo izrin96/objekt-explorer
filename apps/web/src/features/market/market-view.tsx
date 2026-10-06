@@ -12,7 +12,7 @@ import { useSetCompare } from "@/features/compare/use-compare";
 import type { ExtraFacet } from "@/features/filters/facet-controls";
 import { useScopedFacets } from "@/features/filters/facets";
 import { FilterBar } from "@/features/filters/filter-bar";
-import { LONG_TAIL } from "@/features/filters/filter-popover";
+import { LONG_TAIL } from "@/features/filters/long-tail";
 import { useFilters, useResetFilters } from "@/features/filters/use-filters";
 import { AddToListProvider } from "@/features/list/add-to-list-dialog";
 import { AddToListAction, AddToListMenuItem } from "@/features/list/add-to-list-menu-item";

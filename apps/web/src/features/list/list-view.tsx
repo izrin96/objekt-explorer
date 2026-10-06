@@ -16,9 +16,9 @@ import { GenerateDiscordButton } from "@/features/discord/generate-discord-butto
 import type { ExtraFacet } from "@/features/filters/facet-controls";
 import { useScopedFacets } from "@/features/filters/facets";
 import { FilterBar } from "@/features/filters/filter-bar";
-import { LONG_TAIL } from "@/features/filters/filter-popover";
 import { CombineDupsToggle } from "@/features/filters/filter-toggle";
 import { filterObjekts } from "@/features/filters/filter-utils";
+import { LONG_TAIL } from "@/features/filters/long-tail";
 import { useCanonicalFilters, useResetFilters } from "@/features/filters/use-filters";
 import { ObjektDrawer } from "@/features/objekt/drawer";
 import { ObjektCard } from "@/features/objekt/objekt-card";

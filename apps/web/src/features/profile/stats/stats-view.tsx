@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/chart";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useFilterData } from "@/features/filters/filter-data-provider";
-import { LONG_TAIL } from "@/features/filters/filter-popover";
+import { LONG_TAIL } from "@/features/filters/long-tail";
 import { useMemberColor } from "@/features/filters/member-colors";
 import { useResetFilters } from "@/features/filters/use-filters";
 import { m } from "@/paraglide/messages";

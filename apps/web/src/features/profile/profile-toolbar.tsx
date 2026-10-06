@@ -3,7 +3,7 @@ import { type ComponentProps, useMemo } from "react";
 
 import { ETC_CLASSES, useScopedFacets } from "@/features/filters/facets";
 import { FilterBar } from "@/features/filters/filter-bar";
-import type { LongTailField } from "@/features/filters/filter-popover";
+import type { LongTailField } from "@/features/filters/long-tail";
 
 /** an owned row carries a serial and a received date, so the profile sorts by them */
 const PROFILE_SORTS: readonly ValidCustomSort[] = [

@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import type { ExtraFacet } from "@/features/filters/facet-controls";
-import { LONG_TAIL } from "@/features/filters/filter-popover";
+import { LONG_TAIL } from "@/features/filters/long-tail";
 import { canReset, isFiltering } from "@/features/filters/search-schema";
 import { SingleSelect } from "@/features/filters/single-select";
 import { useCanonicalFilters } from "@/features/filters/use-filters";
