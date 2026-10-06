@@ -2,6 +2,7 @@ import { ORPCError } from "@orpc/server";
 import { db } from "@repo/db";
 import { lists } from "@repo/db/schema";
 import { normalizeCurrency } from "@repo/lib/currency";
+import { bumpTradeVersion } from "@repo/lib/server/list-touch";
 import { and, eq, ne } from "drizzle-orm";
 import { nanoid } from "nanoid";
 
@@ -19,8 +20,10 @@ import {
   generateProfileSlug,
   findOwnedList,
   resolveDiscoverable,
+  touchList,
 } from "../services/list";
 import { assertProfileOwned } from "../services/profile";
+import { redis } from "../services/redis";
 
 export const listCrud = {
   find: authed
@@ -100,7 +103,7 @@ export const listCrud = {
         );
       }
 
-      await db.transaction(async (tx) => {
+      const touched = await db.transaction(async (tx) => {
         const [inserted] = await tx
           .insert(lists)
           .values({
@@ -123,15 +126,21 @@ export const listCrud = {
                 ? normalizeCurrency(input.currency)
                 : null,
             discoverable: resolveDiscoverable(input.listTypeNew, isProfileBind, input.discoverable),
+            matchAlerts: input.listTypeNew === "general" || (input.matchAlerts ?? true),
           })
           .returning({ insertedId: lists.id });
 
+        if (!inserted) return [];
+        const changed = [inserted.insertedId];
+
         // Bidirectional link: clear any existing reverse link on target, then set new one
-        if (linkedListId !== null && inserted) {
-          await tx
+        if (linkedListId !== null) {
+          const unlinked = await tx
             .update(lists)
             .set({ linkedListId: null })
-            .where(and(eq(lists.linkedListId, linkedListId), ne(lists.id, inserted.insertedId)));
+            .where(and(eq(lists.linkedListId, linkedListId), ne(lists.id, inserted.insertedId)))
+            .returning({ id: lists.id });
+          changed.push(linkedListId, ...unlinked.map((row) => row.id));
 
           await tx
             .update(lists)
@@ -148,7 +157,10 @@ export const listCrud = {
             await tx.update(lists).set({ discoverable: true }).where(eq(lists.id, linkedListId));
           }
         }
+
+        return changed;
       });
+      await touchList(touched);
     },
   ),
 
@@ -206,7 +218,7 @@ export const listCrud = {
           : await generateProfileSlug(input.name, list.slug, address, list.id);
       }
 
-      await db.transaction(async (tx) => {
+      const touched = await db.transaction(async (tx) => {
         await tx
           .update(lists)
           .set({
@@ -234,8 +246,11 @@ export const listCrud = {
               list.isProfileBind,
               input.discoverable,
             ),
+            matchAlerts: list.listTypeNew === "general" ? undefined : input.matchAlerts,
           })
           .where(eq(lists.id, list.id));
+
+        const changed = [list.id];
 
         // Bidirectional link: update reverse links
         if (linkedListId !== list.linkedListId) {
@@ -245,16 +260,19 @@ export const listCrud = {
               .update(lists)
               .set({ linkedListId: null })
               .where(eq(lists.id, list.linkedListId));
+            changed.push(list.linkedListId);
           }
 
           // Set new reverse link, clearing any existing partner on the target
           if (linkedListId !== null) {
-            await tx
+            const unlinked = await tx
               .update(lists)
               .set({ linkedListId: null })
-              .where(and(eq(lists.linkedListId, linkedListId), ne(lists.id, list.id)));
+              .where(and(eq(lists.linkedListId, linkedListId), ne(lists.id, list.id)))
+              .returning({ id: lists.id });
 
             await tx.update(lists).set({ linkedListId: list.id }).where(eq(lists.id, linkedListId));
+            changed.push(...unlinked.map((row) => row.id));
           }
         }
 
@@ -272,8 +290,12 @@ export const listCrud = {
               ),
             })
             .where(eq(lists.id, linkedListId));
+          changed.push(linkedListId);
         }
+
+        return changed;
       });
+      await touchList(touched);
     },
   ),
 
@@ -287,6 +309,7 @@ export const listCrud = {
       const list = await findOwnedList(slug, user.id);
 
       await db.delete(lists).where(eq(lists.id, list.id));
+      await bumpTradeVersion(redis, [user.id]);
     },
   ),
 };

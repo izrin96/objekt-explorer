@@ -6,6 +6,7 @@ import { collections, objekts } from "@repo/db/indexer/schema";
 import { listEntries, lists } from "@repo/db/schema";
 import type { List, ListEntry, UserAddress } from "@repo/db/schema";
 import { chunkMap } from "@repo/lib";
+import { touchListWith } from "@repo/lib/server/list-touch";
 import { mapOwnedObjekt, overrideCollection } from "@repo/lib/server/objekt";
 import type { ListEntryFields, ListObjekt } from "@repo/lib/types/objekt";
 import { and, eq, inArray, isNotNull, ne } from "drizzle-orm";
@@ -16,6 +17,7 @@ import type { AddSource, ListPreview, ListTypeNew, PublicList } from "../schemas
 import { getCollectionColumns, getPartialCollectionColumns } from "./objekt";
 import { isProfileHidden } from "./privacy";
 import { toPublicUser } from "./profile";
+import { redis } from "./redis";
 import { TOKEN_CHUNK_SIZE } from "./utils";
 
 export interface ListEntryTransformConfig {
@@ -442,6 +444,11 @@ export async function generateProfileSlug(
   return slug;
 }
 
+/** Every list or entry write calls this once committed, so idle ranking and the cached trade matches stay right. */
+export function touchList(listIds: number[]) {
+  return touchListWith(redis, listIds);
+}
+
 type AddableList = Pick<List, "id" | "isProfileBind" | "profileAddress">;
 
 /** `skipped` counts the requested items that added nothing. */
@@ -518,6 +525,7 @@ export async function addEntries(
               .returning(),
           ),
         );
+  if (rows.length > 0) await touchList([list.id]);
   return { rows, skipped: from.slugs.length - rows.length };
 }
 
@@ -543,7 +551,7 @@ async function resolveEntryTokens(slug: string, entryIds: number[]) {
 
 async function insertTokens(listId: number, tokens: { id: string; slug: string }[]) {
   if (tokens.length === 0) return [];
-  return db.transaction((tx) =>
+  const inserted = await db.transaction((tx) =>
     chunkMap(tokens, TOKEN_CHUNK_SIZE, (batch) =>
       tx
         .insert(listEntries)
@@ -552,6 +560,8 @@ async function insertTokens(listId: number, tokens: { id: string; slug: string }
         .returning(),
     ),
   );
+  if (inserted.length > 0) await touchList([listId]);
+  return inserted;
 }
 
 export async function findOwnedList(slug: string, userId: string) {

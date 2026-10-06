@@ -6,9 +6,11 @@ import { cleanupStaleEntries, drainOutbox } from "./job/drain";
 import { populateRarity } from "./job/populate-rarity";
 import { populateSerial, populateSerialOffline } from "./job/populate-serial";
 import { processCollectionImages } from "./job/process-collection-images";
+import { pruneNotifications } from "./job/prune-notifications";
 import { refreshAccessToken } from "./job/refresh-access-token";
 import { updateCurrencyRates } from "./job/update-currency-rates";
 import { verifyBatchBoundaries } from "./job/verify-batch-boundaries";
+import { sendWantAlerts } from "./job/want-alerts";
 
 const crons: CronJob[] = [];
 
@@ -80,6 +82,13 @@ crons.push(
 // process collection images - download, convert to WebP, upload to S3
 await safeRun("processCollectionImages", processCollectionImages)();
 crons.push(cron("*/10 * * * *", safeRun("processCollectionImages", processCollectionImages)));
+
+// want-list alerts; the first run only sets the cursor
+await safeRun("sendWantAlerts", sendWantAlerts)();
+crons.push(cron("*/5 * * * *", safeRun("sendWantAlerts", sendWantAlerts)));
+
+// no startup run: retention is not urgent
+crons.push(cron("0 5 * * 1", safeRun("pruneNotifications", pruneNotifications)));
 
 async function shutdown(signal: NodeJS.Signals) {
   console.log(`[shutdown] Received ${signal}, stopping cron jobs...`);

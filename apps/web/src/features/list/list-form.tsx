@@ -43,6 +43,7 @@ export type ListDraft = {
   profileAddress: string | null;
   isProfileBind: boolean;
   discoverable: boolean;
+  matchAlerts: boolean;
   gridColumns: number | null;
   hideSerial: boolean;
   hideUser: boolean;
@@ -58,6 +59,7 @@ export const EMPTY_DRAFT: ListDraft = {
   profileAddress: null,
   isProfileBind: false,
   discoverable: false,
+  matchAlerts: true,
   gridColumns: null,
   hideSerial: false,
   hideUser: false,
@@ -109,6 +111,7 @@ export function toCreateInput(draft: ListDraft) {
     profileAddress: draft.profileAddress,
     isProfileBind,
     discoverable: draft.discoverable,
+    matchAlerts: draft.listTypeNew === "want" ? draft.matchAlerts : undefined,
     hideSerial: draft.hideSerial,
     hideUser: draft.hideUser,
   };
@@ -351,6 +354,16 @@ export function ListForm({ idPrefix, value, onChange, lists, profiles, mode, url
           checked={value.discoverable}
           disabled={discoverableDisabled}
           onCheckedChange={(checked) => set({ discoverable: checked })}
+        />
+      ) : null}
+
+      {value.listTypeNew === "want" ? (
+        <SwitchRow
+          id={id("match-alerts")}
+          label={m.list_create_alert_me_label()}
+          description={m.list_create_alert_me_desc()}
+          checked={value.matchAlerts}
+          onCheckedChange={(checked) => set({ matchAlerts: checked })}
         />
       ) : null}
 

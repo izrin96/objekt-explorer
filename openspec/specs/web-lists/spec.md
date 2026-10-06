@@ -11,7 +11,9 @@ A signed-in user SHALL see their lists at `/list` and create, edit and delete th
 has a name, a type (general, have, want, sale), a currency when it is a sale list, a
 description, an optional linked Have or Want list of the complementary type, an optional
 Cosmo profile it is filed under with a flag deciding whether that profile's Lists tab shows
-it, and a public flag. A signed-out visitor SHALL be sent to `/login?redirect=/list`.
+it, and a public flag. A want list also has an Alert me switch, on by default, deciding
+whether new matches for it create notifications (see `web-notifications`). A signed-out
+visitor SHALL be sent to `/login?redirect=/list`.
 
 #### Scenario: Sale list needs a currency
 - **WHEN** the user picks the sale type and leaves currency empty
@@ -20,6 +22,10 @@ it, and a public flag. A signed-out visitor SHALL be sent to `/login?redirect=/l
 #### Scenario: Profile-bound but hidden
 - **WHEN** a list is filed under a profile with the show-on-profile flag off
 - **THEN** its card on `/list` carries the profile chip and the profile's Lists tab does not show it
+
+#### Scenario: Alert me on a want list
+- **WHEN** the user creates a want list without touching Alert me
+- **THEN** the list is saved with Alert me on, and the switch is not offered for other list types
 
 ### Requirement: List addresses
 `/list/<slug>` SHALL open a list that is not filed under a profile, and SHALL redirect to
@@ -49,3 +55,14 @@ profile header and the account menu for the user's Have and Want lists.
 #### Scenario: Export
 - **WHEN** the owner activates Export
 - **THEN** a CSV file named after the list downloads with one row per entry
+
+### Requirement: Trade matches shortcut
+On their own have or want list, the owner SHALL see a Trade matches control in the list header, showing the number of mutual partners for that list once it is known. Activating it SHALL open `/trade/for-you?list=<slug>`. Other visitors SHALL not see the control.
+
+#### Scenario: Owner opens matches
+- **WHEN** the owner of have list "spares" activates Trade matches
+- **THEN** the browser is at `/trade/for-you?list=spares` with that list selected in the list filter
+
+#### Scenario: Visitor
+- **WHEN** a signed-in user opens someone else's have list
+- **THEN** no Trade matches control is shown

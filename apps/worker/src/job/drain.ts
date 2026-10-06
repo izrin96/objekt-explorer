@@ -3,7 +3,10 @@ import { indexer } from "@repo/db/indexer";
 import { type ListEventOutbox, listEventOutbox, objekts } from "@repo/db/indexer/schema";
 import { listEntries, lists, lockedObjekts, pins } from "@repo/db/schema";
 import { chunk } from "@repo/lib";
+import { touchListWith } from "@repo/lib/server/list-touch";
 import { and, asc, eq, inArray } from "drizzle-orm";
+
+import { redis } from "../lib/redis";
 
 const BATCH_SIZE = 5000;
 const IN_CHUNK_SIZE = 500;
@@ -107,9 +110,14 @@ async function cleanupProfileListEntries(fromAddress: string, tokenIds: string[]
   const removed = await db
     .delete(listEntries)
     .where(and(inArray(listEntries.listId, listIds), inArray(listEntries.objektId, tokenIds)))
-    .returning({ id: listEntries.id });
+    .returning({ id: listEntries.id, listId: listEntries.listId });
 
   if (removed.length > 0) {
+    // the owner traded the objekt away, so this counts as their own activity
+    await touchListWith(
+      redis,
+      removed.map((row) => row.listId),
+    );
     console.log(`[Outbox Drain] Removed ${removed.length} list entries for ${fromAddress}`);
   }
 }
@@ -197,6 +205,7 @@ async function cleanupStaleListEntries(): Promise<number> {
   const ownerMap = await fetchOwnerMap(Array.from(allObjektIds));
 
   const staleIds: number[] = [];
+  const staleListIds = new Set<number>();
   for (const list of profileLists) {
     if (!list.profileAddress) continue;
 
@@ -207,6 +216,7 @@ async function cleanupStaleListEntries(): Promise<number> {
       const owner = ownerMap.get(entry.objektId);
       if (!owner || owner !== profileAddressLower) {
         staleIds.push(entry.id);
+        staleListIds.add(list.id);
       }
     }
   }
@@ -216,6 +226,7 @@ async function cleanupStaleListEntries(): Promise<number> {
     await db.delete(listEntries).where(inArray(listEntries.id, idChunk));
     totalRemoved += idChunk.length;
   });
+  await touchListWith(redis, [...staleListIds]);
 
   return totalRemoved;
 }

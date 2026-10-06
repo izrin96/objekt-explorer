@@ -10,7 +10,8 @@ import { LIST_QUERY_KEY } from "./queries";
 /**
  * A list's identity lives in `currentUser`, in both of its addresses, in the
  * edit form's `find` and in the profile it is filed under, and its entries in
- * their own key and the cards' previews, so every write settles all of them.
+ * their own key, the cards' previews and the trade matches, so every write
+ * settles all of them.
  */
 function useListInvalidation() {
   const queryClient = useQueryClient();
@@ -19,6 +20,7 @@ function useListInvalidation() {
     Promise.all([
       queryClient.invalidateQueries({ queryKey: currentUserOptions.queryKey }),
       queryClient.invalidateQueries({ queryKey: LIST_QUERY_KEY }),
+      queryClient.invalidateQueries({ queryKey: orpc.trade.key() }),
       ...(slug !== undefined
         ? [
             queryClient.invalidateQueries({

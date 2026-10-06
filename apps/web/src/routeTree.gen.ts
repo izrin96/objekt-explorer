@@ -38,6 +38,8 @@ import { Route as containerListIndexRouteImport } from './routes/(container)/lis
 import { Route as containerListSlugRouteImport } from './routes/(container)/list/$slug'
 import { Route as containerLiveIndexRouteImport } from './routes/(container)/live/index'
 import { Route as containerLiveIdRouteImport } from './routes/(container)/live/$id'
+import { Route as containerTradeIndexRouteImport } from './routes/(container)/trade/index'
+import { Route as containerTradeForYouRouteImport } from './routes/(container)/trade/for-you'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth.$'
 import { Route as ApiTransfersAddressRouteImport } from './routes/api/transfers.$address'
 import { Route as ApiUserSearchRouteImport } from './routes/api/user.search'
@@ -201,6 +203,16 @@ const containerLiveIdRoute = containerLiveIdRouteImport.update({
   path: '/live/$id',
   getParentRoute: () => containerRouteRoute,
 } as any)
+const containerTradeIndexRoute = containerTradeIndexRouteImport.update({
+  id: '/trade/',
+  path: '/trade/',
+  getParentRoute: () => containerRouteRoute,
+} as any)
+const containerTradeForYouRoute = containerTradeForYouRouteImport.update({
+  id: '/trade/for-you',
+  path: '/trade/for-you',
+  getParentRoute: () => containerRouteRoute,
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -283,6 +295,7 @@ export interface FileRoutesByFullPath {
   '/link/connect': typeof containerLinkConnectRoute
   '/list/$slug': typeof containerListSlugRoute
   '/live/$id': typeof containerLiveIdRoute
+  '/trade/for-you': typeof containerTradeForYouRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/transfers/$address': typeof ApiTransfersAddressRoute
   '/api/user/search': typeof ApiUserSearchRoute
@@ -290,6 +303,7 @@ export interface FileRoutesByFullPath {
   '/link/': typeof containerLinkIndexRoute
   '/list/': typeof containerListIndexRoute
   '/live/': typeof containerLiveIndexRoute
+  '/trade/': typeof containerTradeIndexRoute
   '/@{$nickname}/list/$slug': typeof containerAtChar123nicknameChar125ListSlugRoute
   '/api/objekts/held-by/$address': typeof ApiObjektsHeldByAddressRoute
   '/api/objekts/list/$collectionSlug': typeof ApiObjektsListCollectionSlugRoute
@@ -322,6 +336,7 @@ export interface FileRoutesByTo {
   '/link/connect': typeof containerLinkConnectRoute
   '/list/$slug': typeof containerListSlugRoute
   '/live/$id': typeof containerLiveIdRoute
+  '/trade/for-you': typeof containerTradeForYouRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/transfers/$address': typeof ApiTransfersAddressRoute
   '/api/user/search': typeof ApiUserSearchRoute
@@ -329,6 +344,7 @@ export interface FileRoutesByTo {
   '/link': typeof containerLinkIndexRoute
   '/list': typeof containerListIndexRoute
   '/live': typeof containerLiveIndexRoute
+  '/trade': typeof containerTradeIndexRoute
   '/@{$nickname}/list/$slug': typeof containerAtChar123nicknameChar125ListSlugRoute
   '/api/objekts/held-by/$address': typeof ApiObjektsHeldByAddressRoute
   '/api/objekts/list/$collectionSlug': typeof ApiObjektsListCollectionSlugRoute
@@ -364,6 +380,7 @@ export interface FileRoutesById {
   '/(container)/link/connect': typeof containerLinkConnectRoute
   '/(container)/list/$slug': typeof containerListSlugRoute
   '/(container)/live/$id': typeof containerLiveIdRoute
+  '/(container)/trade/for-you': typeof containerTradeForYouRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/transfers/$address': typeof ApiTransfersAddressRoute
   '/api/user/search': typeof ApiUserSearchRoute
@@ -371,6 +388,7 @@ export interface FileRoutesById {
   '/(container)/link/': typeof containerLinkIndexRoute
   '/(container)/list/': typeof containerListIndexRoute
   '/(container)/live/': typeof containerLiveIndexRoute
+  '/(container)/trade/': typeof containerTradeIndexRoute
   '/(container)/@{$nickname}_/list/$slug': typeof containerAtChar123nicknameChar125ListSlugRoute
   '/api/objekts/held-by/$address': typeof ApiObjektsHeldByAddressRoute
   '/api/objekts/list/$collectionSlug': typeof ApiObjektsListCollectionSlugRoute
@@ -406,6 +424,7 @@ export interface FileRouteTypes {
     | '/link/connect'
     | '/list/$slug'
     | '/live/$id'
+    | '/trade/for-you'
     | '/api/auth/$'
     | '/api/transfers/$address'
     | '/api/user/search'
@@ -413,6 +432,7 @@ export interface FileRouteTypes {
     | '/link/'
     | '/list/'
     | '/live/'
+    | '/trade/'
     | '/@{$nickname}/list/$slug'
     | '/api/objekts/held-by/$address'
     | '/api/objekts/list/$collectionSlug'
@@ -445,6 +465,7 @@ export interface FileRouteTypes {
     | '/link/connect'
     | '/list/$slug'
     | '/live/$id'
+    | '/trade/for-you'
     | '/api/auth/$'
     | '/api/transfers/$address'
     | '/api/user/search'
@@ -452,6 +473,7 @@ export interface FileRouteTypes {
     | '/link'
     | '/list'
     | '/live'
+    | '/trade'
     | '/@{$nickname}/list/$slug'
     | '/api/objekts/held-by/$address'
     | '/api/objekts/list/$collectionSlug'
@@ -486,6 +508,7 @@ export interface FileRouteTypes {
     | '/(container)/link/connect'
     | '/(container)/list/$slug'
     | '/(container)/live/$id'
+    | '/(container)/trade/for-you'
     | '/api/auth/$'
     | '/api/transfers/$address'
     | '/api/user/search'
@@ -493,6 +516,7 @@ export interface FileRouteTypes {
     | '/(container)/link/'
     | '/(container)/list/'
     | '/(container)/live/'
+    | '/(container)/trade/'
     | '/(container)/@{$nickname}_/list/$slug'
     | '/api/objekts/held-by/$address'
     | '/api/objekts/list/$collectionSlug'
@@ -728,6 +752,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof containerLiveIdRouteImport
       parentRoute: typeof containerRouteRoute
     }
+    '/(container)/trade/': {
+      id: '/(container)/trade/'
+      path: '/trade'
+      fullPath: '/trade/'
+      preLoaderRoute: typeof containerTradeIndexRouteImport
+      parentRoute: typeof containerRouteRoute
+    }
+    '/(container)/trade/for-you': {
+      id: '/(container)/trade/for-you'
+      path: '/trade/for-you'
+      fullPath: '/trade/for-you'
+      preLoaderRoute: typeof containerTradeForYouRouteImport
+      parentRoute: typeof containerRouteRoute
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
@@ -812,9 +850,11 @@ interface containerRouteRouteChildren {
   containerLinkConnectRoute: typeof containerLinkConnectRoute
   containerListSlugRoute: typeof containerListSlugRoute
   containerLiveIdRoute: typeof containerLiveIdRoute
+  containerTradeForYouRoute: typeof containerTradeForYouRoute
   containerLinkIndexRoute: typeof containerLinkIndexRoute
   containerListIndexRoute: typeof containerListIndexRoute
   containerLiveIndexRoute: typeof containerLiveIndexRoute
+  containerTradeIndexRoute: typeof containerTradeIndexRoute
   containerAtChar123nicknameChar125ListSlugRoute: typeof containerAtChar123nicknameChar125ListSlugRoute
 }
 
@@ -829,9 +869,11 @@ const containerRouteRouteChildren: containerRouteRouteChildren = {
   containerLinkConnectRoute: containerLinkConnectRoute,
   containerListSlugRoute: containerListSlugRoute,
   containerLiveIdRoute: containerLiveIdRoute,
+  containerTradeForYouRoute: containerTradeForYouRoute,
   containerLinkIndexRoute: containerLinkIndexRoute,
   containerListIndexRoute: containerListIndexRoute,
   containerLiveIndexRoute: containerLiveIndexRoute,
+  containerTradeIndexRoute: containerTradeIndexRoute,
   containerAtChar123nicknameChar125ListSlugRoute:
     containerAtChar123nicknameChar125ListSlugRoute,
 }

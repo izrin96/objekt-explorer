@@ -99,3 +99,17 @@ type, with Create list, Discord format and All lists actions.
 #### Scenario: Open a list from the menu
 - **WHEN** a signed-in user picks a list in My lists
 - **THEN** the URL is that list's address
+
+### Requirement: Account menu reaches trade matches
+The account menu SHALL include a Trade matches item opening `/trade/for-you`.
+
+#### Scenario: From the menu
+- **WHEN** the user opens the account menu and activates Trade matches
+- **THEN** the browser is at `/trade/for-you`
+
+### Requirement: Notification bell in the frame
+When a session exists, the frame SHALL show the notification bell (see `web-notifications`) next to the account area on desktop. Below the `md` breakpoint, it SHALL show the bell in the top bar, outside the navigation sheet, so it is reachable without opening the sheet.
+
+#### Scenario: Mobile
+- **WHEN** a signed-in user loads any page at 390 px
+- **THEN** the bell is visible in the top bar and opens the notification popover without opening the sheet

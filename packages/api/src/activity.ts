@@ -14,7 +14,7 @@ const pubsub = new RedisClient(serverEnv.REDIS_URL, {
   connectionTimeout: 5000,
 });
 
-const clients = new Set<ServerWebSocket>();
+const clients = new Set<ServerWebSocket<unknown>>();
 
 const transferHistory: ActivityItem[] = [];
 const MAX_HISTORY_SIZE = 50;
@@ -86,10 +86,10 @@ export async function startActivityWebSocket(): Promise<void> {
 }
 
 export const websocketHandlers = {
-  open(ws: ServerWebSocket) {
+  open(ws: ServerWebSocket<unknown>) {
     clients.add(ws);
   },
-  message(ws: ServerWebSocket, message: string | Buffer) {
+  message(ws: ServerWebSocket<unknown>, message: string | Buffer) {
     let data: unknown;
     try {
       data = JSON.parse(message as string);
@@ -101,7 +101,7 @@ export const websocketHandlers = {
       ws.send(JSON.stringify({ type: "history", data: transferHistory } satisfies ActivityMessage));
     }
   },
-  close(ws: ServerWebSocket) {
+  close(ws: ServerWebSocket<unknown>) {
     clients.delete(ws);
   },
 };

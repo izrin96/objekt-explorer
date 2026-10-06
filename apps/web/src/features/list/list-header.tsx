@@ -8,6 +8,7 @@ import {
   TrashIcon,
   UsersIcon,
 } from "@phosphor-icons/react";
+import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 
@@ -18,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Menu, MenuItem, MenuPopup, MenuSeparator, MenuTrigger } from "@/components/ui/menu";
 import { CompareDialog } from "@/features/compare/compare-dialog";
 import { ProfileLink } from "@/features/profile/profile-hover-card";
+import { listMatchCountOptions } from "@/features/trade/queries";
 import { displayNickname } from "@/lib/address";
 import { m } from "@/paraglide/messages";
 
@@ -28,16 +30,14 @@ import { getListLinkOption } from "./list-link";
 import { useListTarget } from "./list-provider";
 import { ListTypeBadge } from "./list-type-badge";
 import { ShareListButton } from "./share-list-button";
-import { TradeMatchesDialog, useCanTradeMatch } from "./trade-matches";
 import { useListOwned } from "./use-list-owned";
 
 export function ListHeader() {
   const list = useListTarget();
   const isOwner = useListOwned();
-  const canTradeMatch = useCanTradeMatch();
+  const canTradeMatch = isOwner && (list.listTypeNew === "have" || list.listTypeNew === "want");
   const [compareOpen, setCompareOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
-  const [tradeOpen, setTradeOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const linked = list.linkedList;
@@ -104,6 +104,7 @@ export function ListHeader() {
               {list.listTypeNew === "have" ? m.list_swap_to_want() : m.list_swap_to_have()}
             </Button>
           ) : null}
+          {canTradeMatch ? <TradeMatchesLink slug={list.slug} /> : null}
           <ShareListButton list={list} />
           <Menu>
             <MenuTrigger
@@ -122,12 +123,6 @@ export function ListHeader() {
                 <DownloadSimpleIcon />
                 {m.common_actions_export()}
               </MenuItem>
-              {canTradeMatch ? (
-                <MenuItem onClick={() => setTradeOpen(true)}>
-                  <UsersIcon />
-                  {m.list_trade_matches_title()}
-                </MenuItem>
-              ) : null}
               {isOwner ? (
                 <>
                   <MenuSeparator />
@@ -160,7 +155,6 @@ export function ListHeader() {
         onOpenChange={setCompareOpen}
       />
       <ExportListDialog slug={list.slug} open={exportOpen} onOpenChange={setExportOpen} />
-      <TradeMatchesDialog open={tradeOpen} onOpenChange={setTradeOpen} />
       {isOwner ? (
         <>
           <EditListDialog
@@ -179,5 +173,27 @@ export function ListHeader() {
         </>
       ) : null}
     </div>
+  );
+}
+
+/** The count is this list's Mutual only partners, the rows For you shows for it. */
+function TradeMatchesLink({ slug }: { slug: string }) {
+  const { data: count } = useQuery(listMatchCountOptions(slug));
+
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      aria-label={count === undefined ? undefined : m.trade_matches_link_label({ count })}
+      render={<Link to="/trade/for-you" search={{ list: slug }} />}
+    >
+      <UsersIcon />
+      {m.nav_trade_matches()}
+      {count === undefined ? null : (
+        <Badge variant="secondary" size="sm" className="font-mono tabular-nums">
+          {count}
+        </Badge>
+      )}
+    </Button>
   );
 }

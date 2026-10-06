@@ -1,0 +1,105 @@
+# web-notifications Specification
+
+## Purpose
+In-app notifications on `apps/web`: what a signed-in user is told, how they see and clear it, how open tabs stay current, and the rules that turn new listings into want-list alerts.
+
+## Requirements
+
+### Requirement: Notification bell and popover
+A signed-in visitor SHALL see a bell in the frame with the number of unread notifications. It shows no number at zero, and `9+` above nine. Activating the bell SHALL open a popover that lists the user's notifications newest first, 20 at a time with a control to load more. Each notification shows its text, how long ago it happened, and whether it is unread. The popover SHALL offer Mark all read. Activating a notification SHALL mark it read and navigate to its target. A signed-out visitor SHALL see no bell.
+
+#### Scenario: Unread count
+- **WHEN** a signed-in user has 12 unread notifications
+- **THEN** the bell shows `9+`, and the popover lists the newest 20 with the 12 unread ones marked
+
+#### Scenario: Open a notification
+- **WHEN** the user activates an unread want-list alert in the popover
+- **THEN** it is shown as read, the bell's count drops by one, and the browser is at the alert's target
+
+#### Scenario: Mark all read
+- **WHEN** the user activates Mark all read
+- **THEN** no notification is unread and the bell shows no number
+
+#### Scenario: Signed out
+- **WHEN** a visitor without a session loads any page
+- **THEN** no bell is rendered, and no notification request or per-user connection is made
+
+#### Scenario: Language follows the viewer
+- **WHEN** a want-list alert is created while the user browses in English, and they then switch the site to 한국어
+- **THEN** the same notification reads in Korean
+
+### Requirement: Read state is per account
+Read state SHALL be stored on the server per account, so a notification read in one tab or on one device is read everywhere. A user SHALL only ever be able to list or change their own notifications.
+
+#### Scenario: Another device
+- **WHEN** the user marks all read on their phone and then focuses a desktop tab that was open the whole time
+- **THEN** the desktop bell shows no number without a reload
+
+#### Scenario: Foreign id
+- **WHEN** a request asks to mark read a notification id that belongs to another account
+- **THEN** nothing changes and the response reveals nothing about that notification
+
+### Requirement: Open tabs stay current
+While a signed-in page is open, a new notification or a change in read state SHALL appear in the bell within 5 seconds when the per-user live connection is open. Without the connection, it SHALL appear when the window regains focus or within 60 seconds. The live connection SHALL require a valid session and SHALL refuse a connection whose `Origin` is not the site's own origin. It SHALL only deliver events for the account whose session opened it. A dropped connection SHALL reconnect with backoff and then refetch, so nothing missed while disconnected is lost.
+
+#### Scenario: Live arrival
+- **WHEN** a want-list alert is created for a user with the site open
+- **THEN** the bell's count rises within 5 seconds without user action
+
+#### Scenario: Cross-site page
+- **WHEN** a page on another origin tries to open the per-user connection with the user's cookies
+- **THEN** the connection is refused and no event is delivered
+
+#### Scenario: No session
+- **WHEN** the per-user connection is requested without a valid session
+- **THEN** it is refused
+
+### Requirement: Notification settings
+The account dialog SHALL have a Notifications section with one switch per notification type: Want-list matches (on by default) and Someone wants what you have (off by default). Turning a type off SHALL stop new notifications of that type. Notifications already created SHALL stay.
+
+#### Scenario: Turn off want-list matches
+- **WHEN** the user turns Want-list matches off and a matching objekt is listed afterwards
+- **THEN** no new notification is created for it
+
+### Requirement: Want-list alerts
+For each of a user's want lists with Alert me on, the system SHALL notify the user when an entry for a collection on that want list is newly added to another account's discoverable sale list or discoverable have list. It SHALL also notify when such a list becomes discoverable. The alert SHALL arrive within 10 minutes, including when entries are committed out of order. Alerts SHALL be grouped as one unread notification per want list per day. While that notification is unread, further matches SHALL update its count and the latest objekts instead of creating new ones. Its target SHALL be `/trade/for-you?list=<want-list-slug>`. A given want list, source list and collection SHALL alert at most once, even if the entry is removed and added again.
+
+No alert SHALL be created for:
+- the user's own lists;
+- a hidden partner;
+- an entry whose objekt the source list's owner no longer owns, or which is not transferable;
+- a collection the user already owns a copy of.
+
+#### Scenario: New sale listing matches a want list
+- **WHEN** another account adds SeoYeon 204Z to a sale list shown on the Market, and SeoYeon 204Z is on the user's want list "Binary hunt" with Alert me on
+- **THEN** within 10 minutes the user has an unread notification for "Binary hunt" naming that objekt and seller, linking to `/trade/for-you?list=<slug>`
+
+#### Scenario: Grouped while unread
+- **WHEN** three more matches for "Binary hunt" arrive the same day before the user opens the first notification
+- **THEN** the user still has one unread notification for "Binary hunt", and it now counts four matches
+
+#### Scenario: Re-added entry
+- **WHEN** the seller removes the matched entry and adds it again
+- **THEN** no new alert is created for it
+
+#### Scenario: Already owned
+- **WHEN** a matching objekt is listed but the user already owns a copy of that collection
+- **THEN** no alert is created
+
+#### Scenario: Alert me off
+- **WHEN** a want list has Alert me off
+- **THEN** matches for its collections create no alert
+
+### Requirement: Reverse-direction alerts
+When the user has Someone wants what you have turned on, the system SHALL notify them when another account adds, to a discoverable want list, a collection that is on one of the user's have or sale lists. The same grouping, once-only, timing and exclusion rules as want-list alerts SHALL apply, grouped per the user's list. The target SHALL be `/trade/for-you?list=<that-list-slug>`.
+
+#### Scenario: Off by default
+- **WHEN** a user has never changed the setting and someone wants a collection on their have list
+- **THEN** no notification is created
+
+### Requirement: Retention
+Read notifications SHALL be removed 90 days after they were created. Unread notifications SHALL be kept.
+
+#### Scenario: Old read notification
+- **WHEN** a notification was read and created more than 90 days ago
+- **THEN** it no longer appears in the popover

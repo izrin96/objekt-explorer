@@ -1,0 +1,254 @@
+import { ArrowClockwiseIcon, CardsThreeIcon, UsersIcon, WarningIcon } from "@phosphor-icons/react";
+import { DEFAULT_TRADE_FILTER, type TradeFilter } from "@repo/api/schemas/trade";
+import type { ValidObjekt } from "@repo/lib/types/objekt";
+import { useQuery } from "@tanstack/react-query";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
+
+import { EmptyState } from "@/components/shared/empty-state";
+import { PageHeader } from "@/components/shared/page-header";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { toastManager } from "@/components/ui/toast";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { SingleSelect } from "@/features/filters/single-select";
+import { ObjektDrawer } from "@/features/objekt/drawer";
+import { useUserLists } from "@/features/user/hooks";
+import { cn } from "@/lib/utils";
+import { m } from "@/paraglide/messages";
+
+import { useHidePartner, useUnhidePartner } from "./actions";
+import { HiddenPartnersDialog } from "./hidden-partners-dialog";
+import { PartnerRow, type TradePartner } from "./partner-row";
+import { forYouOptions } from "./queries";
+
+const FILTERS: { value: TradeFilter; label: () => string }[] = [
+  { value: "all", label: m.trade_filter_all },
+  { value: "mutual", label: m.trade_filter_mutual },
+  { value: "they_have", label: m.trade_filter_they_have },
+  { value: "they_want", label: m.trade_filter_they_want },
+];
+
+/** no list slug is this short, so it cannot collide with one */
+const ALL_LISTS = "all";
+
+export function ForYouView({ filter, list }: { filter: TradeFilter; list: string | undefined }) {
+  const navigate = useNavigate({ from: "/trade/for-you" });
+  const tradeLists = useUserLists().filter(
+    (l) => l.listTypeNew === "have" || l.listTypeNew === "want",
+  );
+  // a slug that is not one of mine is ignored by the server, so the select shows All lists
+  const selectedList = tradeLists.some((l) => l.slug === list) ? list! : ALL_LISTS;
+
+  const setSearch = (next: { filter?: TradeFilter; list?: string }) =>
+    void navigate({
+      search: (prev) => {
+        const merged = { ...prev, ...next };
+        return {
+          filter: merged.filter === DEFAULT_TRADE_FILTER ? undefined : merged.filter,
+          list: merged.list === ALL_LISTS ? undefined : merged.list,
+        };
+      },
+      resetScroll: false,
+    });
+
+  return (
+    <>
+      <PageHeader title={m.trade_title()} description={m.trade_description()} />
+
+      <div className="flex flex-wrap items-center gap-2">
+        <ToggleGroup
+          aria-label={m.trade_filter_label()}
+          size="sm"
+          className="flex-wrap gap-1.5"
+          value={[filter]}
+          onValueChange={(value) => {
+            const next = FILTERS.find((item) => item.value === value[0]);
+            if (next && next.value !== filter) setSearch({ filter: next.value });
+          }}
+        >
+          {FILTERS.map((item) => (
+            <ToggleGroupItem key={item.value} value={item.value} className="border-input">
+              {item.label()}
+            </ToggleGroupItem>
+          ))}
+        </ToggleGroup>
+
+        {tradeLists.length > 0 ? (
+          <SingleSelect
+            label={m.trade_list_label()}
+            options={[
+              { value: ALL_LISTS, label: m.trade_list_all() },
+              ...tradeLists.map((l) => ({ value: l.slug, label: l.name })),
+            ]}
+            value={selectedList}
+            defaultValue={ALL_LISTS}
+            onChange={(value) => setSearch({ list: value })}
+          />
+        ) : null}
+      </div>
+
+      {tradeLists.length === 0 ? (
+        <EmptyState
+          icon={CardsThreeIcon}
+          title={m.trade_empty_title()}
+          hint={m.trade_no_lists_hint()}
+          action={
+            <Button size="sm" render={<Link to="/list" />}>
+              {m.nav_manage_list()}
+            </Button>
+          }
+        />
+      ) : (
+        <ForYouResults
+          filter={filter}
+          list={list}
+          myListNames={new Map(tradeLists.map((l) => [l.id, l.name]))}
+          onShowAll={() => setSearch({ filter: "all" })}
+        />
+      )}
+    </>
+  );
+}
+
+function ForYouResults({
+  filter,
+  list,
+  myListNames,
+  onShowAll,
+}: {
+  filter: TradeFilter;
+  list: string | undefined;
+  myListNames: ReadonlyMap<number, string>;
+  onShowAll: () => void;
+}) {
+  const query = useQuery(forYouOptions(filter, list));
+  const hide = useHidePartner();
+  const unhide = useUnhidePartner();
+  const [active, setActive] = useState<ValidObjekt | null>(null);
+  const [hiddenOpen, setHiddenOpen] = useState(false);
+
+  const onHide = (partner: TradePartner) =>
+    hide.mutate(
+      { userId: partner.userId },
+      {
+        onSuccess: () =>
+          toastManager.add({
+            type: "success",
+            title: m.trade_hide_success({ name: partner.identity.name }),
+            actionProps: {
+              children: m.common_actions_undo(),
+              onClick: () => unhide.mutate({ userId: partner.userId }),
+            },
+          }),
+      },
+    );
+
+  if (query.isPending) {
+    return (
+      <div className="flex flex-col gap-1.5">
+        <Skeleton className="h-16 rounded-lg" />
+        <Skeleton className="h-16 rounded-lg" />
+        <Skeleton className="h-16 rounded-lg" />
+      </div>
+    );
+  }
+
+  if (query.isError) {
+    return (
+      <EmptyState
+        icon={WarningIcon}
+        title={m.common_error_loading_data()}
+        action={
+          <Button variant="outline" size="sm" onClick={() => void query.refetch()}>
+            <ArrowClockwiseIcon />
+            {m.common_error_retry()}
+          </Button>
+        }
+      />
+    );
+  }
+
+  const { partners, collections, notShown } = query.data;
+
+  return (
+    <div
+      aria-busy={query.isPlaceholderData}
+      className={cn("flex flex-col gap-3", query.isPlaceholderData && "opacity-60")}
+    >
+      {partners.length === 0 ? (
+        <EmptyState
+          icon={UsersIcon}
+          title={m.trade_empty_title()}
+          hint={m.trade_empty_hint()}
+          action={
+            filter === "all" ? (
+              <Button variant="outline" size="sm" render={<Link to="/list" />}>
+                {m.nav_manage_list()}
+              </Button>
+            ) : (
+              <Button variant="outline" size="sm" onClick={onShowAll}>
+                {m.trade_show_all()}
+              </Button>
+            )
+          }
+        />
+      ) : (
+        <>
+          <p className="text-muted-foreground text-sm tabular-nums">
+            {m.trade_partner_count({ count: partners.length })}
+          </p>
+          <div className="flex flex-col divide-y rounded-lg border">
+            {partners.map((partner) => (
+              <PartnerRow
+                key={partner.userId}
+                partner={partner}
+                collections={collections}
+                myListNames={myListNames}
+                onOpen={setActive}
+                onHide={onHide}
+              />
+            ))}
+          </div>
+        </>
+      )}
+
+      <NotShown notShown={notShown} onShowHidden={() => setHiddenOpen(true)} />
+
+      <ObjektDrawer objekt={active} onClose={() => setActive(null)} />
+      <HiddenPartnersDialog open={hiddenOpen} onOpenChange={setHiddenOpen} />
+    </div>
+  );
+}
+
+function NotShown({
+  notShown,
+  onShowHidden,
+}: {
+  notShown: { notOwned: number; notTransferable: number; hidden: number };
+  onShowHidden: () => void;
+}) {
+  const parts = [
+    notShown.notOwned > 0 ? m.trade_not_shown_not_owned({ count: notShown.notOwned }) : null,
+    notShown.notTransferable > 0
+      ? m.trade_not_shown_not_transferable({ count: notShown.notTransferable })
+      : null,
+    notShown.hidden > 0 ? m.trade_not_shown_hidden({ count: notShown.hidden }) : null,
+  ].filter((part) => part !== null);
+
+  if (parts.length === 0) return null;
+
+  return (
+    <div className="text-muted-foreground flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-lg border border-dashed px-4 py-2.5 text-sm">
+      <p className="text-pretty tabular-nums">
+        <span className="text-foreground font-medium">{m.trade_not_shown()}</span>{" "}
+        {parts.join(" · ")}
+      </p>
+      {notShown.hidden > 0 ? (
+        <Button variant="ghost" size="sm" onClick={onShowHidden}>
+          {m.trade_hidden_partners()}
+        </Button>
+      ) : null}
+    </div>
+  );
+}

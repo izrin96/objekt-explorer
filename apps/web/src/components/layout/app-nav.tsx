@@ -8,6 +8,7 @@ import { NavSearch } from "@/components/layout/nav-search";
 import { SystemStatus, statusDotClass, useOverallStatus } from "@/components/layout/system-status";
 import { SignedOutNav, UserMenu } from "@/components/layout/user-menu";
 import { Group } from "@/components/ui/group";
+import { NotificationBell } from "@/features/notifications/notification-bell";
 import { useCurrentUser } from "@/features/user/hooks";
 import { SITE_NAME, cn, containerClass } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -83,7 +84,14 @@ export function AppNav() {
 
         <NavSearch open={searchOpen} onOpenChange={setSearchOpen} />
 
-        {user ? <UserMenu user={user.user} /> : <SignedOutNav />}
+        {user ? (
+          <>
+            <NotificationBell />
+            <UserMenu user={user.user} />
+          </>
+        ) : (
+          <SignedOutNav />
+        )}
       </div>
     </header>
   );

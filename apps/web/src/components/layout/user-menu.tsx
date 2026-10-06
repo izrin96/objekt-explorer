@@ -8,6 +8,7 @@ import {
   SignInIcon,
   SignOutIcon,
   UserIcon,
+  UsersIcon,
   XLogoIcon,
 } from "@phosphor-icons/react";
 import type { Icon } from "@phosphor-icons/react";
@@ -117,6 +118,11 @@ export function UserMenu({ user }: { user: User }) {
           />
 
           <MyCosmoSubmenu />
+
+          <MenuItem render={<Link to="/trade/for-you" />}>
+            <UsersIcon />
+            {m.nav_trade_matches()}
+          </MenuItem>
 
           <MenuItem onClick={() => setAccountOpen(true)}>
             <UserIcon />

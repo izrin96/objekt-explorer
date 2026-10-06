@@ -4,8 +4,10 @@ import {
   boolean,
   index,
   integer,
+  jsonb,
   pgEnum,
   pgTable,
+  primaryKey,
   real,
   serial,
   text,
@@ -85,6 +87,10 @@ export const lists = pgTable(
     description: text("description"),
     currency: varchar("currency", { length: 10 }),
     discoverable: boolean("discoverable").notNull().default(false),
+    matchAlerts: boolean("match_alerts").notNull().default(true),
+    updatedAt: timestamp("updated_at", { mode: "string", withTimezone: true })
+      .notNull()
+      .defaultNow(),
   },
   (t) => [
     uniqueIndex("lists_slug_idx").on(t.slug),
@@ -130,6 +136,73 @@ export const listEntries = pgTable(
       .on(t.listId, t.objektId)
       .where(sql`objekt_id IS NOT NULL`),
   ],
+);
+
+export const hiddenTradePartner = pgTable(
+  "hidden_trade_partner",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    hiddenUserId: text("hidden_user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { mode: "string", withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.userId, t.hiddenUserId] }),
+    index("hidden_trade_partner_hidden_user_id_idx").on(t.hiddenUserId),
+  ],
+);
+
+export const notification = pgTable(
+  "notification",
+  {
+    id: serial("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    type: text("type").notNull(),
+    payload: jsonb("payload").notNull(),
+    groupKey: text("group_key").notNull(),
+    readAt: timestamp("read_at", { mode: "string", withTimezone: true }),
+    createdAt: timestamp("created_at", { mode: "string", withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index("notification_user_created_idx").on(t.userId, t.createdAt.desc()),
+    uniqueIndex("notification_unread_group_uniq")
+      .on(t.userId, t.groupKey)
+      .where(sql`read_at IS NULL`),
+  ],
+);
+
+export const notificationPref = pgTable(
+  "notification_pref",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    type: text("type").notNull(),
+    enabled: boolean("enabled").notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.type] })],
+);
+
+export const wantAlertSent = pgTable(
+  "want_alert_sent",
+  {
+    wantListId: integer("want_list_id").notNull(),
+    sourceListId: integer("source_list_id").notNull(),
+    collectionSlug: varchar("collection_slug", { length: 255 }).notNull(),
+    createdAt: timestamp("created_at", { mode: "string", withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.wantListId, t.sourceListId, t.collectionSlug] })],
 );
 
 export const pins = pgTable(

@@ -14,10 +14,12 @@ import { listRouter } from "./list";
 import { liveRouter } from "./live";
 import { lockedObjektsRouter } from "./locked-objekts";
 import { marketRouter } from "./market";
+import { notificationsRouter } from "./notifications";
 import { objektsRouter } from "./objekts";
 import { pinsRouter } from "./pins";
 import { profileRouter } from "./profile";
 import { statusRouter } from "./status";
+import { tradeRouter } from "./trade";
 import { transfersRouter } from "./transfers";
 import { userRouter } from "./user";
 
@@ -37,6 +39,8 @@ export const router = {
   objekts: objektsRouter,
   transfers: transfersRouter,
   live: liveRouter,
+  trade: tradeRouter,
+  notifications: notificationsRouter,
 };
 
 /** What `/api/v1` serves and documents; everything else stays RPC-only. */

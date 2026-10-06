@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "catalog:",
+    "@repo/api": "workspace:*",
     "@repo/cosmo": "workspace:*",
     "@repo/db": "workspace:*",
     "@repo/lib": "workspace:*",
