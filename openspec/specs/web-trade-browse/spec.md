@@ -80,46 +80,34 @@ A filter value that does not parse SHALL be ignored.
 
 ### Requirement: Matches to the signed-in viewer
 For a signed-in viewer, each post SHALL show:
-- how many collections on its want side are on one of the viewer's have lists and still tradeable by the viewer, by the ownership rule above;
+- how many collections on its want side the viewer owns a transferable copy of, across their linked Cosmo profiles;
 - how many collections on its have or sale side are on one of the viewer's want lists.
 
 Those objekts SHALL be marked with a ring.
 
-Matching SHALL use the viewer's have lists, not everything their wallet holds, so an objekt the viewer keeps off their have lists never counts as offered.
-
-The feed SHALL offer a Match control (`match` in the URL) with four choices:
-- **All posts**, the default: every post, with the counts and rings above;
-- **Mutual only** (`mutual`): posts that match both of the next two choices at once, so only WTT posts; offered when both of them are;
-- **They want what I have** (`they_want`): posts whose want side has at least one collection counted above, offered when the viewer has a have list with an entry still tradeable;
-- **They have what I want** (`they_have`): posts whose have or sale side has at least one collection on the viewer's want lists, offered when the viewer has a want list with an entry.
-
-The control SHALL not be offered to signed-out viewers, or to viewers who can use neither filter.
+The want side SHALL be matched against what the viewer owns, not their have lists, as For you does (see `web-trade-for-you`), so the two pages count alike. Browse SHALL offer no Match filter: narrowing to matches is For you's job. A post whose owner is a Mutual only partner in the viewer's For you SHALL instead carry a "Mutual match · See in For you" link to `/trade/for-you?partner=<their id>`. The link SHALL show only for a partner For you lists.
 
 The viewer's own posts SHALL not be listed in the feed. Posts by partners the viewer hid in For you SHALL also be left out.
 
 #### Scenario: Default
-- **WHEN** a signed-in viewer with a have list opens `/trade` with no parameters
-- **THEN** Match reads All posts, and posts of every type are listed with their counts and rings
+- **WHEN** a signed-in viewer opens `/trade` with no parameters
+- **THEN** posts of every type are listed with their counts and rings, and there is no Match control
 
-#### Scenario: Mutual only
-- **WHEN** the viewer picks Mutual only
-- **THEN** every listed post is a WTT post with a ringed objekt on both its want side and its have side
+#### Scenario: Owned but not on a have list
+- **WHEN** the viewer holds a transferable SeoYeon 204Z that is on none of their have lists, and a post wants it
+- **THEN** SeoYeon 204Z is ringed and counted on that post
 
-#### Scenario: They have what I want
-- **WHEN** the viewer picks They have what I want
-- **THEN** every listed post has a ringed objekt on its have or sale side, so WTS posts can be listed
+#### Scenario: Mutual partner
+- **WHEN** rin.trades is listed under Mutual only in the viewer's For you
+- **THEN** each of rin.trades's posts links to For you with rin.trades's row open
 
-#### Scenario: Held but not on a have list
-- **WHEN** the viewer holds SeoYeon 204Z but it is on none of their have lists, and a post wants it
-- **THEN** SeoYeon 204Z is not ringed or counted on that post
-
-#### Scenario: No have list
-- **WHEN** a signed-in viewer has no have list
-- **THEN** They want what I have is not offered and every post is listed
+#### Scenario: Old link
+- **WHEN** the viewer opens `/trade?match=mutual` from an older link
+- **THEN** the parameter is ignored and every post is listed
 
 #### Scenario: Signed out
 - **WHEN** a visitor without a session opens `/trade`
-- **THEN** posts are listed with no match counts, no rings and no Match control
+- **THEN** posts are listed with no match counts, no rings and no For you links
 
 #### Scenario: Hidden partner
 - **WHEN** the viewer hid rin.trades in For you

@@ -34,7 +34,7 @@ const entry = (id: number, slug: string, objektId: string | null = null): FeedEn
   isQyop: false,
 });
 
-const NO_FILTER = { slugs: null, slug: null, match: "all" } as const;
+const NO_FILTER = { slugs: null, slug: null } as const;
 
 describe("pairPosts", () => {
   test("linked pair is one post", () => {
@@ -155,7 +155,7 @@ describe("assemblePost", () => {
     2: [entry(20, "want-a"), entry(21, "want-b"), entry(22, "want-c")],
   };
   const of = (id: number) => entries[id] ?? [];
-  const viewer = { haveSlugs: new Set(["want-a", "want-c"]), wantSlugs: new Set(["offer-b"]) };
+  const viewer = { ownedSlugs: new Set(["want-a", "want-c"]), wantSlugs: new Set(["offer-b"]) };
 
   test("counts and rings for the viewer", () => {
     const post = assemblePost(pair!, of, viewer, NO_FILTER);
@@ -167,8 +167,13 @@ describe("assemblePost", () => {
     ]);
   });
 
-  test("held but not on a have list is not counted", () => {
-    const post = assemblePost(pair!, of, { haveSlugs: new Set(), wantSlugs: new Set() }, NO_FILTER);
+  test("nothing owned or wanted counts nothing", () => {
+    const post = assemblePost(
+      pair!,
+      of,
+      { ownedSlugs: new Set(), wantSlugs: new Set() },
+      NO_FILTER,
+    );
     expect(post?.match).toEqual({ youHave: 0, youWant: 0 });
   });
 
@@ -182,36 +187,5 @@ describe("assemblePost", () => {
     expect(
       assemblePost(pair!, of, null, { ...NO_FILTER, slugs: new Set(["want-b"]) }),
     ).not.toBeNull();
-    expect(assemblePost(pair!, of, viewer, { ...NO_FILTER, match: "they_want" })).not.toBeNull();
-    expect(
-      assemblePost(
-        pair!,
-        of,
-        { ...viewer, haveSlugs: new Set() },
-        { ...NO_FILTER, match: "they_want" },
-      ),
-    ).toBeNull();
-  });
-
-  test("they_have keeps posts offering something on the viewer's want lists", () => {
-    expect(assemblePost(pair!, of, viewer, { ...NO_FILTER, match: "they_have" })).not.toBeNull();
-    expect(
-      assemblePost(
-        pair!,
-        of,
-        { ...viewer, wantSlugs: new Set() },
-        { ...NO_FILTER, match: "they_have" },
-      ),
-    ).toBeNull();
-    expect(assemblePost(pair!, of, null, { ...NO_FILTER, match: "they_have" })).toBeNull();
-  });
-
-  test("mutual needs a match on both sides", () => {
-    expect(assemblePost(pair!, of, viewer, { ...NO_FILTER, match: "mutual" })).not.toBeNull();
-    for (const missing of [{ haveSlugs: new Set<string>() }, { wantSlugs: new Set<string>() }]) {
-      expect(
-        assemblePost(pair!, of, { ...viewer, ...missing }, { ...NO_FILTER, match: "mutual" }),
-      ).toBeNull();
-    }
   });
 });

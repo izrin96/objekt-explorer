@@ -105,7 +105,7 @@ No alert SHALL be created for:
 - **THEN** matches for its collections create no alert
 
 ### Requirement: Reverse-direction alerts
-When the user has Someone wants what you have turned on, the system SHALL notify them when another account adds, to a discoverable want list, a collection that is on one of the user's have or sale lists. The same grouping, once-only, timing and exclusion rules as want-list alerts SHALL apply, grouped per the user's list. The target SHALL be `/trade/for-you?list=<that-list-slug>`.
+When the user has Someone wants what you have turned on, the system SHALL notify them when another account adds, to a discoverable want list, a collection that is on one of the user's have or sale lists. The alert SHALL stay tied to those lists, though For you and Browse match against everything the user owns: an alert names the list it is for, and a collection the user owns but has not listed is not something they have offered. The same grouping, once-only, timing and exclusion rules as want-list alerts SHALL apply, grouped per the user's list. The target SHALL be `/trade/for-you?list=<that-list-slug>`.
 
 #### Scenario: Off by default
 - **WHEN** a user has never changed the setting and someone wants a collection on their have list

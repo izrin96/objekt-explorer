@@ -40,11 +40,15 @@ const REASON: Record<Dropped["reason"], () => string> = {
 };
 
 export function PartnerRow({
+  id,
+  defaultOpen = false,
   partner,
   collections,
   onOpen,
   onHide,
 }: {
+  id?: string;
+  defaultOpen?: boolean;
   partner: TradePartner;
   collections: TradeCollections;
   onOpen: (objekt: ValidObjekt) => void;
@@ -56,7 +60,7 @@ export function PartnerRow({
   const also = identity.also.map((ref) => displayNickname(ref.address, ref.nickname));
 
   return (
-    <Collapsible>
+    <Collapsible id={id} defaultOpen={defaultOpen} className="scroll-mt-20">
       {/* the padding rides on the trigger so the whole row is one touch target;
           spans throughout, since a button only takes phrasing content */}
       <CollapsibleTrigger

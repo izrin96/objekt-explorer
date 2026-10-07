@@ -4,10 +4,9 @@ import * as z from "zod";
 
 import { filterSearchSchema } from "@/features/filters/search-schema";
 
-/** `all` is the absence of `type` and of `match` */
+/** `all` is the absence of `type` */
 export const browseSearchSchema = filterSearchSchema.extend({
   type: z.enum(["wtt", "wtb", "wts"]).optional().catch(undefined),
-  match: z.enum(["mutual", "they_want", "they_have"]).optional().catch(undefined),
   slug: z.string().min(1).optional().catch(undefined),
 });
 
@@ -42,7 +41,6 @@ export function toBrowseInput(
 
   return {
     type,
-    match: search.match ?? ("all" as const),
     slug: search.slug,
     artist,
     member: (search.member ?? []).map((name) => memberName.get(name.toLowerCase()) ?? name),

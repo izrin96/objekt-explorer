@@ -1,7 +1,6 @@
 import { ArrowClockwiseIcon, CardsThreeIcon, WarningIcon } from "@phosphor-icons/react";
-import type { BrowseMatch } from "@repo/api/schemas/trade";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { WindowVirtualizer } from "virtua";
@@ -28,10 +27,9 @@ import { FilterSheet } from "@/features/filters/filter-sheet";
 import { OnlineFilter } from "@/features/filters/online-filter";
 import { ResetButton } from "@/features/filters/reset-button";
 import { canReset } from "@/features/filters/search-schema";
-import { SingleSelect } from "@/features/filters/single-select";
 import { useCanonicalFilters, useSetFilters } from "@/features/filters/use-filters";
 import { ObjektDrawer } from "@/features/objekt/drawer";
-import { getCollectionShortNo } from "@/features/objekt/objekt-utils";
+import { collectionName } from "@/features/objekt/objekt-label";
 import { useCurrentUser } from "@/features/user/hooks";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -40,7 +38,7 @@ import { BrowsePost, BrowsePostSkeleton, TagLabel } from "./browse-post";
 import { type BrowseSearch, toBrowseInput } from "./browse-search";
 import { MyPosts } from "./my-posts";
 import { PostListDialog } from "./post-list-dialog";
-import { browseOptions } from "./queries";
+import { browseOptions, forYouOptions } from "./queries";
 
 type PostType = NonNullable<BrowseSearch["type"]> | "all";
 
@@ -58,6 +56,17 @@ export function BrowseView({ search }: { search: BrowseSearch }) {
     [search, artists, selected],
   );
   const query = useInfiniteQuery(browseOptions(input));
+  // For you's own read, so a post's link only promises a row For you shows
+  const forYou = useQuery({ ...forYouOptions("all", undefined), enabled: Boolean(user) });
+  const mutualIds = useMemo(
+    () =>
+      new Set(
+        forYou.data?.partners
+          .filter((p) => p.theyHaveIWant.length > 0 && p.iHaveTheyWant.length > 0)
+          .map((p) => p.userId),
+      ),
+    [forYou.data],
+  );
   const navigate = useNavigate({ from: "/trade/" });
   // the drawer's On Trade link lands on this same page; the new slug closes the drawer
   const [opened, setOpened] = useState<{ objekt: ValidObjekt; slug?: string } | null>(null);
@@ -77,17 +86,7 @@ export function BrowseView({ search }: { search: BrowseSearch }) {
 
   const type: PostType = search.type ?? "all";
   const filtering = canReset(search) || search.type !== undefined || search.slug !== undefined;
-  const reset = () =>
-    void navigate({
-      search: (prev) => ({ match: prev.match }),
-      replace: true,
-      resetScroll: false,
-    });
-  const viewer = query.data?.pages[0]?.viewer ?? null;
-  const matchOptions = viewer ? matchOptionsFor(viewer) : [];
-  // the URL leads: the previous page's viewer still answers while the next one loads
-  const match =
-    matchOptions.find((option) => option.value === (search.match ?? "all"))?.value ?? "all";
+  const reset = () => void navigate({ search: {}, replace: true, resetScroll: false });
   const posts = useMemo(() => query.data?.pages.flatMap((page) => page.posts) ?? [], [query.data]);
   const collections = useMemo(
     () => Object.assign({}, ...(query.data?.pages.map((page) => page.collections) ?? [])),
@@ -136,21 +135,11 @@ export function BrowseView({ search }: { search: BrowseSearch }) {
             ))}
           </TabsList>
         </Tabs>
-
-        {matchOptions.length > 1 ? (
-          <SingleSelect<BrowseMatch>
-            label={m.trade_match_label()}
-            options={matchOptions}
-            value={match}
-            defaultValue="all"
-            onChange={(value) => setSearch({ match: value === "all" ? undefined : value })}
-          />
-        ) : null}
       </div>
 
       <BrowseFilters
         search={search}
-        slugName={search.slug ? collectionName(search.slug, collections) : undefined}
+        slugName={search.slug ? collectionName(search.slug, collections[search.slug]) : undefined}
         filtering={filtering}
         onClearSlug={() => setSearch({ slug: undefined })}
         onReset={reset}
@@ -180,23 +169,9 @@ export function BrowseView({ search }: { search: BrowseSearch }) {
         <EmptyState
           icon={CardsThreeIcon}
           title={m.trade_browse_empty_title()}
-          hint={
-            viewer?.match === "mutual"
-              ? m.trade_browse_empty_mutual_hint()
-              : viewer?.match === "they_want"
-                ? m.trade_browse_empty_have_hint()
-                : viewer?.match === "they_have"
-                  ? m.trade_browse_empty_want_hint()
-                  : filtering
-                    ? m.trade_browse_empty_hint()
-                    : m.trade_browse_empty_none_hint()
-          }
+          hint={filtering ? m.trade_browse_empty_hint() : m.trade_browse_empty_none_hint()}
           action={
-            viewer && viewer.match !== "all" ? (
-              <Button variant="outline" size="sm" onClick={() => setSearch({ match: undefined })}>
-                {m.trade_browse_show_every_post()}
-              </Button>
-            ) : filtering ? (
+            filtering ? (
               <Button variant="outline" size="sm" onClick={reset}>
                 {m.filter_reset_filter()}
               </Button>
@@ -216,6 +191,7 @@ export function BrowseView({ search }: { search: BrowseSearch }) {
                 <BrowsePost
                   post={post}
                   own={post.userId === user?.user.id}
+                  mutual={mutualIds.has(post.userId)}
                   collections={collections}
                   now={now}
                   onOpen={setActive}
@@ -247,23 +223,6 @@ export function BrowseView({ search }: { search: BrowseSearch }) {
       {user ? <PostListDialog open={postOpen} onOpenChange={setPostOpen} /> : null}
     </>
   );
-}
-
-function matchOptionsFor(viewer: { haveOffered: boolean; wantOffered: boolean }) {
-  const options: { value: BrowseMatch; label: string }[] = [];
-  if (!viewer.haveOffered && !viewer.wantOffered) return options;
-  options.push({ value: "all", label: m.trade_match_all() });
-  if (viewer.haveOffered && viewer.wantOffered) {
-    options.push({ value: "mutual", label: m.trade_filter_mutual() });
-  }
-  if (viewer.haveOffered) options.push({ value: "they_want", label: m.trade_filter_they_want() });
-  if (viewer.wantOffered) options.push({ value: "they_have", label: m.trade_filter_they_have() });
-  return options;
-}
-
-function collectionName(slug: string, collections: Record<string, ValidObjekt | undefined>) {
-  const collection = collections[slug];
-  return collection ? `${collection.member} ${getCollectionShortNo(collection)}` : slug;
 }
 
 function BrowseFilters({

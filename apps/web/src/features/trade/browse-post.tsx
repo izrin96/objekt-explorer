@@ -77,11 +77,14 @@ export function BrowsePost({
   own,
   collections,
   now,
+  mutual = false,
   onOpen,
 }: {
   post: BrowsePostData;
   /** the viewer's own post: no Message, and no note saying so */
   own: boolean;
+  /** the owner is a Mutual only partner in the viewer's For you */
+  mutual?: boolean;
   collections: Readonly<Record<string, ValidObjekt | undefined>>;
   now: number;
   onOpen: (objekt: ValidObjekt) => void;
@@ -155,13 +158,22 @@ export function BrowsePost({
         </div>
       </header>
 
-      {match && (match.youHave > 0 || match.youWant > 0) ? (
+      {mutual || (match && (match.youHave > 0 || match.youWant > 0)) ? (
         <p className="flex flex-wrap gap-x-3 gap-y-1 text-xs tabular-nums">
-          {match.youHave > 0 ? (
+          {match && match.youHave > 0 ? (
             <span>{m.trade_match_you_have({ count: match.youHave })}</span>
           ) : null}
-          {match.youWant > 0 ? (
+          {match && match.youWant > 0 ? (
             <span>{m.trade_match_you_want({ count: match.youWant })}</span>
+          ) : null}
+          {mutual ? (
+            <Link
+              to="/trade/for-you"
+              search={{ partner: post.userId }}
+              className="font-medium underline underline-offset-2"
+            >
+              {m.trade_browse_mutual_link()}
+            </Link>
           ) : null}
         </p>
       ) : null}

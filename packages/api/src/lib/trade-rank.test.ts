@@ -277,6 +277,7 @@ describe("matchSides", () => {
   test("no list uses every have and want list", () => {
     expect(matchSides(lists, null)).toEqual({
       listId: null,
+      haveFromOwned: true,
       haveListIds: [1, 2],
       wantListIds: [3],
     });
@@ -284,13 +285,27 @@ describe("matchSides", () => {
 
   test("a foreign or non-trade list is ignored", () => {
     expect(matchSides(lists, 99).listId).toBeNull();
-    expect(matchSides(lists, 4)).toEqual({ listId: null, haveListIds: [1, 2], wantListIds: [3] });
+    expect(matchSides(lists, 4)).toEqual({
+      listId: null,
+      haveFromOwned: true,
+      haveListIds: [1, 2],
+      wantListIds: [3],
+    });
+  });
+
+  test("a want list keeps the owned side", () => {
+    expect(matchSides(lists, 3)).toEqual({
+      listId: 3,
+      haveFromOwned: true,
+      haveListIds: [1, 2],
+      wantListIds: [3],
+    });
   });
 
   test("one have list, still mutual", () => {
     // Spares (1) narrows "they want what I have"; Binary hunt (3) still answers "they have what I want"
     const sides = matchSides(lists, 1);
-    expect(sides).toEqual({ listId: 1, haveListIds: [1], wantListIds: [3] });
+    expect(sides).toEqual({ listId: 1, haveFromOwned: false, haveListIds: [1], wantListIds: [3] });
 
     const myHaveEntries = [
       { listId: 1, slug: "on-spares", objektId: null },

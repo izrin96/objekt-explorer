@@ -1,9 +1,9 @@
-import { ArrowClockwiseIcon, CardsThreeIcon, UsersIcon, WarningIcon } from "@phosphor-icons/react";
+import { ArrowClockwiseIcon, UsersIcon, WarningIcon } from "@phosphor-icons/react";
 import type { TradeFilter } from "@repo/api/schemas/trade";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { EmptyState } from "@/components/shared/empty-state";
 import { Button } from "@/components/ui/button";
@@ -32,7 +32,17 @@ const MATCHES: { value: TradeFilter; label: () => string }[] = [
 /** no list slug is this short, so it cannot collide with one */
 const ALL_LISTS = "all";
 
-export function ForYouView({ filter, list }: { filter: TradeFilter; list: string | undefined }) {
+const partnerRowId = (userId: string) => `partner-${userId}`;
+
+export function ForYouView({
+  filter,
+  list,
+  partner,
+}: {
+  filter: TradeFilter;
+  list: string | undefined;
+  partner: string | undefined;
+}) {
   const navigate = useNavigate({ from: "/trade/for-you" });
   const tradeLists = useUserLists().filter(
     (l) => l.listTypeNew === "have" || l.listTypeNew === "want",
@@ -80,20 +90,12 @@ export function ForYouView({ filter, list }: { filter: TradeFilter; list: string
         ) : null}
       </div>
 
-      {tradeLists.length === 0 ? (
-        <EmptyState
-          icon={CardsThreeIcon}
-          title={m.trade_empty_title()}
-          hint={m.trade_no_lists_hint()}
-          action={
-            <Button size="sm" render={<Link to="/list" />}>
-              {m.nav_manage_list()}
-            </Button>
-          }
-        />
-      ) : (
-        <ForYouResults filter={filter} list={list} onShowAll={() => setSearch({ match: "all" })} />
-      )}
+      <ForYouResults
+        filter={filter}
+        list={list}
+        partner={partner}
+        onShowAll={() => setSearch({ match: "all" })}
+      />
     </>
   );
 }
@@ -101,10 +103,13 @@ export function ForYouView({ filter, list }: { filter: TradeFilter; list: string
 function ForYouResults({
   filter,
   list,
+  partner,
   onShowAll,
 }: {
   filter: TradeFilter;
   list: string | undefined;
+  /** opened and scrolled to once the rows are in */
+  partner: string | undefined;
   onShowAll: () => void;
 }) {
   const query = useQuery(forYouOptions(filter, list));
@@ -112,6 +117,12 @@ function ForYouResults({
   const unhide = useUnhidePartner();
   const [active, setActive] = useState<ValidObjekt | null>(null);
   const [hiddenOpen, setHiddenOpen] = useState(false);
+  const loaded = query.data !== undefined;
+
+  useEffect(() => {
+    if (!partner || !loaded) return;
+    document.getElementById(partnerRowId(partner))?.scrollIntoView({ block: "start" });
+  }, [partner, loaded]);
 
   const onHide = (partner: TradePartner) =>
     hide.mutate(
@@ -184,10 +195,12 @@ function ForYouResults({
             {m.trade_partner_count({ count: partners.length })}
           </p>
           <div className="flex flex-col divide-y rounded-lg border">
-            {partners.map((partner) => (
+            {partners.map((item) => (
               <PartnerRow
-                key={partner.userId}
-                partner={partner}
+                key={item.userId}
+                id={partnerRowId(item.userId)}
+                defaultOpen={item.userId === partner}
+                partner={item}
                 collections={collections}
                 onOpen={setActive}
                 onHide={onHide}

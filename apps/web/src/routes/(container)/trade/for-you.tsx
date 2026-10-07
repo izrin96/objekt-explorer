@@ -30,5 +30,5 @@ export const Route = createFileRoute("/(container)/trade/for-you")({
 
 function ForYouPage() {
   const search = Route.useSearch();
-  return <ForYouView filter={toForYouFilter(search)} list={search.list} />;
+  return <ForYouView filter={toForYouFilter(search)} list={search.list} partner={search.partner} />;
 }

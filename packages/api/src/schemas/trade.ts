@@ -24,13 +24,8 @@ export const tradePartnerInputSchema = z.object({ userId: z.string().min(1) });
 export const POST_TYPES = ["all", "wtt", "wtb", "wts"] as const;
 export type PostType = (typeof POST_TYPES)[number];
 
-/** Which posts to keep against the viewer's lists: their want side, their have side, or both */
-export const BROWSE_MATCHES = ["all", "mutual", "they_want", "they_have"] as const;
-export type BrowseMatch = (typeof BROWSE_MATCHES)[number];
-
 export const browseFiltersSchema = collectionFiltersSchema.extend({
   type: z.enum(POST_TYPES).default("all"),
-  match: z.enum(BROWSE_MATCHES).default("all"),
   slug: z.string().optional(),
 });
 export type BrowseFilters = z.infer<typeof browseFiltersSchema>;

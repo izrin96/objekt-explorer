@@ -82,7 +82,7 @@ import { fetchOffers, iso, itemViews, offerItemCards, toOfferView, topupView } f
 import { redis } from "./redis";
 import { forgetReputation, reputationOf } from "./reputation";
 import { activeSanctionWhere } from "./safety";
-import { resolveTradeSides } from "./trade-matches";
+import { getOwnedSlugs, resolveTradeSides } from "./trade-matches";
 import { loadOpenLegs, matchOpenLegs } from "./trade-verify";
 
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
@@ -1749,7 +1749,7 @@ export async function fetchMine(me: string, cursor: HistoryCursor | undefined) {
   };
 }
 
-/** For you's overlap with one partner, as items that can be offered right now. */
+/** For you's overlap with one partner, as items that can be offered right now; the give side is what the user owns. */
 export async function suggestOffer(me: string, partnerId: string) {
   if (partnerId === me) refuseOffer("self");
   const empty = { give: [] as CandidateItem[], get: [] as CandidateItem[], collections: {} };
@@ -1810,11 +1810,17 @@ export async function suggestOffer(me: string, partnerId: string) {
       const giveEntries = myEntries.filter(
         (e) => haveIds.has(e.listId) && e.collectionSlug && theyWant.has(e.collectionSlug),
       );
-      const addresses = [...((await linkedAddresses([me])).get(me) ?? [])];
+      const [linked, ownedSlugs] = await Promise.all([linkedAddresses([me]), getOwnedSlugs(me)]);
+      const addresses = [...(linked.get(me) ?? [])];
+      // what they want and the user owns, whether or not it is on a have list
+      const ownedWanted = ownedSlugs.filter((slug) => theyWant.has(slug));
       const [tokens, copies] = await Promise.all([
         fetchObjekts(giveEntries.flatMap((e) => (e.objektId ? [e.objektId] : []))),
         fetchCopies(
-          giveEntries.flatMap((e) => (e.objektId === null ? [e.collectionSlug!] : [])),
+          [
+            ...giveEntries.flatMap((e) => (e.objektId === null ? [e.collectionSlug!] : [])),
+            ...ownedWanted,
+          ],
           addresses,
         ),
       ]);
@@ -1838,6 +1844,17 @@ export async function suggestOffer(me: string, partnerId: string) {
             itemFlags(choice, reserved, holders, addressed.conversationId),
             entry.listSlug,
           ),
+        );
+      }
+      // a have list's choice of copy comes first; any other owned copy fills the rest
+      const pickedSlugs = new Set([...picked.values()].map((item) => item.collectionSlug));
+      for (const slug of ownedWanted) {
+        if (pickedSlugs.has(slug)) continue;
+        const choice = copies.find((o) => o.slug === slug && offerable(o));
+        if (!choice) continue;
+        picked.set(
+          choice.id,
+          toCandidate(choice, itemFlags(choice, reserved, holders, addressed.conversationId), null),
         );
       }
       return [...picked.values()];

@@ -1,16 +1,20 @@
 # web-trade-for-you Specification
 
 ## Purpose
-The account-wide trade match view on `apps/web` at `/trade/for-you`: who the user could trade with across all their have and want lists, ranked by how mutual the trade is, using current ownership.
+The account-wide trade match view on `apps/web` at `/trade/for-you`: who the user could trade with, from what the user owns and what is on their want lists, ranked by how mutual the trade is, using current ownership.
 
 ## Requirements
 
 ### Requirement: Account-wide matches
-`/trade/for-you` SHALL list the other accounts whose discoverable have, sale or want lists overlap the signed-in user's have and want lists, grouped one row per account. The user's own lists count whether or not they are discoverable. The user's own account SHALL never appear. `/trade` SHALL open the Browse feed (see `web-trade-browse`), not For you. A signed-out visitor SHALL be sent to `/login?redirect=/trade/for-you`, keeping the search parameters.
+`/trade/for-you` SHALL list the other accounts whose discoverable lists overlap the signed-in user, grouped one row per account: their want lists against the collections the user owns a transferable copy of, across their linked Cosmo profiles, and their have and sale lists against the user's want lists. The user's own lists count whether or not they are discoverable, and a user with no list still sees who wants what they own. The user's own account SHALL never appear. `/trade` SHALL open the Browse feed (see `web-trade-browse`), not For you. A signed-out visitor SHALL be sent to `/login?redirect=/trade/for-you`, keeping the search parameters.
 
 #### Scenario: Matches across lists
-- **WHEN** a user has two have lists and one want list, and a partner's discoverable lists overlap two of them
-- **THEN** the partner appears once, with the matched objekts from both of the user's lists
+- **WHEN** a partner's want list holds two collections the user owns, one of them on none of the user's have lists, and their have list holds one on the user's want list
+- **THEN** the partner appears once, with both owned collections under "You have, they want" and the third under "They have, you want"
+
+#### Scenario: Opened from Browse
+- **WHEN** the user follows a post's Mutual match link to `/trade/for-you?partner=<id>`
+- **THEN** that partner's row is open and scrolled into view
 
 #### Scenario: Signed out
 - **WHEN** a visitor without a session opens `/trade/for-you?list=spares`
@@ -33,11 +37,11 @@ The row SHALL show the mutual score and both counts, each with a visible label (
 - **THEN** under All, B is listed above A
 
 ### Requirement: Filters
-The view SHALL offer a Match control, the same control and option order as Browse (see `web-trade-browse`): All, Mutual only, They want what I have, and They have what I want. All is the default. Mutual only keeps partners with both counts above zero. The view SHALL also offer a list filter naming one of the user's have or want lists. The named list replaces the user's side only in its own direction:
-- for a have list, "they want what I have" counts only that list's entries;
+The view SHALL offer a Match control: All, Mutual only, They want what I own, and They have what I want. All is the default. Mutual only keeps partners with both counts above zero. The view SHALL also offer a list filter naming one of the user's have or want lists. The named list replaces the user's side only in its own direction:
+- for a have list, "they want what I own" counts only that list's entries, in place of everything the user owns;
 - for a want list, "they have what I want" counts only that list's entries.
 
-The other direction keeps using all of the user's lists of the other type, so a list's Mutual only partners also trade back against the user's other lists. The filters SHALL live in the URL (`match`, `list`). A `list` value that is not one of the user's have or want lists SHALL be ignored, and all lists used.
+The other direction keeps using all of the user's lists of the other type, so a list's Mutual only partners also trade back against the user's other lists. The filters SHALL live in the URL (`match`, `list`), beside `partner`, which only opens a row. A `list` value that is not one of the user's have or want lists SHALL be ignored, and all lists used.
 
 #### Scenario: Default filter
 - **WHEN** the user opens `/trade/for-you` with no parameters
@@ -45,7 +49,7 @@ The other direction keeps using all of the user's lists of the other type, so a 
 
 #### Scenario: One have list, still mutual
 - **WHEN** the user filters to have list "spares", and a partner wants a collection on Spares and has a collection on the user's want list "binary hunt"
-- **THEN** the partner is listed under Mutual only, and "they want what I have" counts only the Spares entries
+- **THEN** the partner is listed under Mutual only, and "they want what I own" counts only the Spares entries
 
 #### Scenario: Foreign list slug
 - **WHEN** the URL's `list` is the slug of another account's list
@@ -56,7 +60,7 @@ An entry on a have or sale list SHALL count toward a match only while its owner 
 - an entry for a specific objekt counts only while one of the owner's linked Cosmo addresses holds that objekt and it is transferable;
 - an entry for a collection counts only while one of those addresses holds a transferable copy.
 
-This applies to both the partner's entries and the user's own. Ranking and filters SHALL use the counts after this check, and at most 50 partners SHALL be listed. Entries left out this way SHALL be summarised in a Not shown line, with counts by reason.
+This applies to the partner's entries, and to the user's own when a have list is named; otherwise the user's side is already only what they own and can transfer. Ranking and filters SHALL use the counts after this check, and at most 50 partners SHALL be listed. Entries left out this way SHALL be summarised in a Not shown line, with counts by reason.
 
 #### Scenario: Sold objekt
 - **WHEN** a partner's have list still lists Mayu 203Z but none of their linked addresses holds a copy
@@ -118,7 +122,7 @@ For you SHALL leave out partners the user blocked, partners who blocked the user
 
 ### Requirement: Propose this trade
 Each partner row that shows Message SHALL also offer Propose this trade. It opens the offer builder addressed to the partner, prefilled with the overlap:
-- **You give**: objekts on the user's have lists that the partner wants and the user still owns;
+- **You give**: one copy of each collection the partner wants and the user owns, preferring the copy the user named on a have list;
 - **You get**: the partner's have entries that the user wants.
 
 Objekts that can't be offered SHALL be left out of the prefill.

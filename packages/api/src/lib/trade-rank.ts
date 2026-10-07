@@ -12,7 +12,8 @@ export type MyList = { id: number; listTypeNew: ListTypeNew };
 /**
  * The lists each direction matches from. A named list narrows only its own direction,
  * so the other keeps all of the user's lists and a single list can still be mutual.
- * A list that is not one of the user's have or want lists is ignored.
+ * Without a named have list, the user's side is what they own (`haveFromOwned`), not their
+ * have lists. A list that is not one of the user's have or want lists is ignored.
  */
 export function matchSides(myLists: MyList[], listId: number | null) {
   const named = myLists.find(
@@ -22,7 +23,12 @@ export function matchSides(myLists: MyList[], listId: number | null) {
     named?.listTypeNew === type
       ? [named.id]
       : myLists.filter((list) => list.listTypeNew === type).map((list) => list.id);
-  return { listId: named?.id ?? null, haveListIds: side("have"), wantListIds: side("want") };
+  return {
+    listId: named?.id ?? null,
+    haveFromOwned: named?.listTypeNew !== "have",
+    haveListIds: side("have"),
+    wantListIds: side("want"),
+  };
 }
 
 export type Verdict = "ok" | "not_owned" | "not_transferable";

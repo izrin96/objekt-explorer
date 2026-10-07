@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+
 import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import {
@@ -65,6 +67,8 @@ type CandidateRow = {
 export async function fetchTradeCandidates(
   userId: string,
   sides: { haveListIds: number[]; wantListIds: number[] },
+  /** what the user owns, or null when a named have list stands in for it */
+  ownedSlugs: string[] | null,
   filter: TradeFilter,
 ): Promise<Candidate[]> {
   const result = await db.execute<CandidateRow>(sql`
@@ -73,8 +77,12 @@ export async function fetchTradeCandidates(
       WHERE list_id = ANY(${sql.param(sides.wantListIds)}::int[]) AND collection_slug IS NOT NULL
     ),
     my_have AS (
-      SELECT DISTINCT collection_slug FROM list_entries
-      WHERE list_id = ANY(${sql.param(sides.haveListIds)}::int[]) AND collection_slug IS NOT NULL
+      ${
+        ownedSlugs
+          ? sql`SELECT unnest(${sql.param(ownedSlugs)}::text[]) AS collection_slug`
+          : sql`SELECT DISTINCT collection_slug FROM list_entries
+            WHERE list_id = ANY(${sql.param(sides.haveListIds)}::int[]) AND collection_slug IS NOT NULL`
+      }
     ),
     partner_lists AS (
       SELECT l.id, l.user_id, l.list_type_new, l.updated_at FROM lists l
@@ -148,16 +156,42 @@ export async function resolveTradeSides(userId: string, slug: string | undefined
 }
 
 const CACHE_TTL_SECONDS = 300;
+const OWNED_TTL_SECONDS = 60;
+
+/** Collections the user holds a transferable copy of, across their linked Cosmo addresses. */
+export async function getOwnedSlugs(userId: string): Promise<string[]> {
+  return getCache(`trade:owned:${userId}`, OWNED_TTL_SECONDS, async () => {
+    const rows = await db
+      .select({ address: userAddress.address })
+      .from(userAddress)
+      .where(eq(userAddress.userId, userId));
+    if (rows.length === 0) return [];
+    const result = await indexer.execute<{ slug: string }>(sql`
+      SELECT DISTINCT c.slug
+      FROM objekt o
+      JOIN collection c ON c.id = o.collection_id
+      WHERE o.owner = ANY(${sql.param(rows.map((row) => row.address.toLowerCase()))}::text[])
+        AND o.transferable
+    `);
+    return result.rows.map((row) => row.slug);
+  });
+}
+
+/** Changes with what the user owns, so a trade reaches For you with the owned read, not 5 minutes later. */
+const ownedFingerprint = (slugs: string[]) =>
+  createHash("sha1").update(slugs.toSorted().join(",")).digest("base64url").slice(0, 16);
 
 export async function getTradeMatches(userId: string, sides: Sides, filter: TradeFilter) {
-  const [version, market] = await Promise.all([
+  const [version, market, ownedSlugs] = await Promise.all([
     redis.get(tradeVersionKey(userId)).then((v) => v ?? "0"),
     marketVersion(),
+    sides.haveFromOwned ? getOwnedSlugs(userId) : null,
   ]);
+  const owned = ownedSlugs ? ownedFingerprint(ownedSlugs) : "list";
   return getCache(
-    `trade:foryou:${userId}:${version}:${market}:${filter}:${sides.listId ?? "all"}`,
+    `trade:foryou:${userId}:${version}:${market}:${owned}:${filter}:${sides.listId ?? "all"}`,
     CACHE_TTL_SECONDS,
-    () => computeTradeMatches(userId, sides, filter),
+    () => computeTradeMatches(userId, sides, ownedSlugs, filter),
   );
 }
 
@@ -201,10 +235,16 @@ export async function withReputation(matches: Awaited<ReturnType<typeof withMess
 
 const unique = <T>(values: T[]) => [...new Set(values)];
 
-async function computeTradeMatches(userId: string, sides: Sides, filter: TradeFilter) {
+async function computeTradeMatches(
+  userId: string,
+  sides: Sides,
+  /** what the user owns, or null when a named have list stands in for it */
+  ownedSlugs: string[] | null,
+  filter: TradeFilter,
+) {
   const now = new Date();
   const [candidates, hidden, blocked] = await Promise.all([
-    fetchTradeCandidates(userId, sides, filter),
+    fetchTradeCandidates(userId, sides, ownedSlugs, filter),
     db.$count(hiddenTradePartner, eq(hiddenTradePartner.userId, userId)),
     // only the user's own blocks: counting who blocked them would tell them
     db.$count(userBlock, eq(userBlock.blockerId, userId)),
@@ -226,10 +266,12 @@ async function computeTradeMatches(userId: string, sides: Sides, filter: TradeFi
           .from(listEntries)
           .where(
             or(
-              and(
-                inArray(listEntries.listId, sides.haveListIds),
-                inArray(listEntries.collectionSlug, theyWantSlugs),
-              ),
+              ownedSlugs
+                ? undefined
+                : and(
+                    inArray(listEntries.listId, sides.haveListIds),
+                    inArray(listEntries.collectionSlug, theyWantSlugs),
+                  ),
               and(
                 inArray(listEntries.listId, sides.wantListIds),
                 inArray(listEntries.collectionSlug, theyHaveSlugs),
@@ -283,12 +325,15 @@ async function computeTradeMatches(userId: string, sides: Sides, filter: TradeFi
   );
 
   const myAddresses = addressesOf.get(userId) ?? none;
-  const myHaves = new Map(
-    [...groupBySlug(myHaveEntries)].map(([slug, entries]) => [
-      slug,
-      collectionVerdict(entries, myAddresses, holdings),
-    ]),
-  );
+  // owned slugs are already transferable copies, so only a named list's entries are judged
+  const myHaves = ownedSlugs
+    ? new Map(ownedSlugs.map((slug) => [slug, { verdict: "ok" as const, listIds: [] as number[] }]))
+    : new Map(
+        [...groupBySlug(myHaveEntries)].map(([slug, entries]) => [
+          slug,
+          collectionVerdict(entries, myAddresses, holdings),
+        ]),
+      );
 
   const recounted = candidates.map((c) =>
     recount(c, addressesOf.get(c.userId) ?? none, holdings, myWants, myHaves),

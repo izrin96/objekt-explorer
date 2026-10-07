@@ -1,5 +1,5 @@
 import type { ListTypeNew } from "../schemas/list";
-import type { BrowseMatch, PostType } from "../schemas/trade";
+import type { PostType } from "../schemas/trade";
 import { isIdle } from "./trade-rank";
 
 export const FEED_PAGE_SIZE = 24;
@@ -155,19 +155,13 @@ export function countCollections(entries: { slug: string }[], slugs: ReadonlySet
   return new Set(entries.filter((entry) => slugs.has(entry.slug)).map((entry) => entry.slug)).size;
 }
 
-export type Viewer = { haveSlugs: ReadonlySet<string>; wantSlugs: ReadonlySet<string> };
+export type Viewer = { ownedSlugs: ReadonlySet<string>; wantSlugs: ReadonlySet<string> };
 
 export type PostFilter = {
   /** keep posts with a shown objekt from one of these collections */
   slugs: ReadonlySet<string> | null;
   /** keep posts with this collection on any side */
   slug: string | null;
-  /**
-   * they_want keeps posts whose want side holds a collection on the viewer's have lists;
-   * they_have keeps posts whose have or sale side holds one on the viewer's want lists;
-   * mutual needs both
-   */
-  match: BrowseMatch;
 };
 
 /**
@@ -193,15 +187,10 @@ export function assemblePost<L extends TradeList>(
 
   const wanted = roles.find((side) => side.role === "want")?.entries ?? [];
   const offered = roles.filter((side) => side.role !== "want").flatMap((side) => side.entries);
-  const needsWanted = filter.match === "they_want" || filter.match === "mutual";
-  const needsOffered = filter.match === "they_have" || filter.match === "mutual";
-  if (needsWanted && (!viewer || countCollections(wanted, viewer.haveSlugs) === 0)) return null;
-  if (needsOffered && (!viewer || countCollections(offered, viewer.wantSlugs) === 0)) return null;
-
   const sides = roles.map(({ role, list, entries }) => {
     const { items, more } = previewSide(
       entries,
-      viewer ? (role === "want" ? viewer.haveSlugs : viewer.wantSlugs) : null,
+      viewer ? (role === "want" ? viewer.ownedSlugs : viewer.wantSlugs) : null,
     );
     return { role, list, items, more };
   });
@@ -210,7 +199,7 @@ export function assemblePost<L extends TradeList>(
     sides,
     match: viewer
       ? {
-          youHave: countCollections(wanted, viewer.haveSlugs),
+          youHave: countCollections(wanted, viewer.ownedSlugs),
           youWant: countCollections(offered, viewer.wantSlugs),
         }
       : undefined,

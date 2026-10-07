@@ -5,6 +5,8 @@ import * as z from "zod";
 export const forYouSearchSchema = z.object({
   match: z.enum(["mutual", "they_want", "they_have"]).optional().catch(undefined),
   list: z.string().min(1).optional().catch(undefined),
+  /** a partner to open and scroll to, from a Browse post */
+  partner: z.string().min(1).optional().catch(undefined),
 });
 
 export type ForYouSearch = z.infer<typeof forYouSearchSchema>;
