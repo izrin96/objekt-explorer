@@ -110,7 +110,7 @@ function NotificationPanel({ unread, onNavigate }: { unread: number; onNavigate:
         )}
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto">
+      <div className="relative min-h-0 flex-1 overflow-y-auto">
         {query.isPending ? (
           <NotificationSkeleton />
         ) : query.isError ? (

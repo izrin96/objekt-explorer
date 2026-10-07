@@ -220,7 +220,7 @@ function ThreadView({
           const el = event.currentTarget;
           stick.current = el.scrollHeight - el.scrollTop - el.clientHeight < STICK_PX;
         }}
-        className="focus-visible:ring-ring min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-4 outline-none focus-visible:ring-2 focus-visible:ring-inset md:px-4"
+        className="focus-visible:ring-ring relative min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-4 outline-none focus-visible:ring-2 focus-visible:ring-inset md:px-4"
       >
         <div className="flex min-h-full flex-col justify-end">
           {olderPage.has ? (
