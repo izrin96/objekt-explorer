@@ -417,7 +417,12 @@ function BuilderForm({
                 ) : null}
               </p>
               {error.link ? (
-                <Button variant="outline" size="sm" render={<Link to="/link" />} onClick={onDone}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  render={<Link to="/account/profiles" />}
+                  onClick={onDone}
+                >
                   <LinkIcon />
                   {m.link_link_cosmo()}
                 </Button>
@@ -489,7 +494,12 @@ function BuilderRefused({
             {offerRefusalText(refusal, m.offer_refused_some()) ?? m.offer_send_error()}
           </p>
           {refusal.reason === "no_address" ? (
-            <Button variant="outline" size="sm" render={<Link to="/link" />} onClick={onDone}>
+            <Button
+              variant="outline"
+              size="sm"
+              render={<Link to="/account/profiles" />}
+              onClick={onDone}
+            >
               <LinkIcon />
               {m.link_link_cosmo()}
             </Button>

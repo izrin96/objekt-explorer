@@ -36,12 +36,7 @@ export function DangerSection() {
 
   return (
     <div className="border-destructive/32 flex flex-col gap-2 rounded-lg border p-3">
-      <span className="text-destructive-foreground text-sm font-medium">
-        {m.auth_account_danger_zone()}
-      </span>
-      <span className="text-muted-foreground text-xs text-pretty">
-        {m.auth_account_delete_account_description()}
-      </span>
+      <span className="text-sm text-pretty">{m.auth_account_delete_account_description()}</span>
       <div className="flex">
         <AlertDialog>
           <AlertDialogTrigger render={<Button variant="destructive-outline" size="sm" />}>

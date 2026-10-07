@@ -483,6 +483,7 @@ export const messagePref = pgTable(
       .primaryKey()
       .references(() => user.id, { onDelete: "cascade" }),
     allow: text("allow").notNull().default("anyone"),
+    chatAs: citext("chat_as", { length: 42 }),
   },
   (t) => [check("message_pref_allow", sql`${t.allow} IN ('anyone', 'nobody')`)],
 );

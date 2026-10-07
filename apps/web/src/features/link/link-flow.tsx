@@ -65,12 +65,17 @@ export function LinkFlow() {
       <div className="bg-card flex w-full flex-col items-start gap-3 rounded-lg border p-5">
         <CheckCircleIcon className="text-success-foreground size-10" weight="fill" />
         <p className="text-sm text-pretty">{m.link_success({ nickname: found.nickname })}</p>
-        <Button
-          variant="outline"
-          render={<Link to="/@{$nickname}" params={{ nickname: found.nickname }} />}
-        >
-          {m.link_go_to_cosmo()}
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant="outline"
+            render={<Link to="/@{$nickname}" params={{ nickname: found.nickname }} />}
+          >
+            {m.link_go_to_cosmo()}
+          </Button>
+          <Button variant="ghost" render={<Link to="/account/profiles" />}>
+            {m.account_section_profiles()}
+          </Button>
+        </div>
       </div>
     );
   }

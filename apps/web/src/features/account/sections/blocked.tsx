@@ -20,13 +20,7 @@ export function BlockedUsersSection() {
   const unblock = useUnblock();
 
   return (
-    <section aria-labelledby="account-blocked-title" className="flex flex-col gap-3">
-      <div className="flex flex-col gap-0.5">
-        <h3 id="account-blocked-title" className="text-sm font-medium">
-          {m.mod_blocked_title()}
-        </h3>
-        <p className="text-muted-foreground text-xs text-pretty">{m.mod_blocked_desc()}</p>
-      </div>
+    <div className="flex flex-col gap-3">
       {query.isPending ? (
         <div className="flex flex-col gap-2">
           <Skeleton className="h-12 rounded-lg" />
@@ -51,7 +45,7 @@ export function BlockedUsersSection() {
           onUnblock={(userId) => unblock.mutate({ userId })}
         />
       )}
-    </section>
+    </div>
   );
 }
 

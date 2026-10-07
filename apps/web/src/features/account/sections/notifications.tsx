@@ -55,13 +55,7 @@ export function NotificationsSection() {
   );
 
   return (
-    <section aria-labelledby="account-notifications-title" className="flex flex-col gap-3">
-      <div className="flex flex-col gap-0.5">
-        <h3 id="account-notifications-title" className="text-sm font-medium text-balance">
-          {m.notification_section()}
-        </h3>
-        <p className="text-muted-foreground text-xs text-pretty">{m.notification_section_desc()}</p>
-      </div>
+    <div className="flex flex-col gap-4">
       {PREF_ROWS.map((row) => (
         <Label
           key={row.type}
@@ -81,6 +75,6 @@ export function NotificationsSection() {
           />
         </Label>
       ))}
-    </section>
+    </div>
   );
 }

@@ -312,7 +312,7 @@ function EditForm({
               parts={m.profile_edit_unlink_note.parts()}
               markup={{
                 link: (children) => (
-                  <Link to="/link" className="underline underline-offset-2">
+                  <Link to="/account/profiles" className="underline underline-offset-2">
                     {children}
                   </Link>
                 ),

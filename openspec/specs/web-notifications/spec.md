@@ -28,6 +28,13 @@ A signed-in visitor SHALL see a bell in the frame with the number of unread noti
 - **WHEN** a want-list alert is created while the user browses in English, and they then switch the site to 한국어
 - **THEN** the same notification reads in Korean
 
+### Requirement: Bell links to its settings
+The bell's popover SHALL offer a Notification settings link opening `/account/notifications`.
+
+#### Scenario: Open settings from the bell
+- **WHEN** the user opens the bell and activates Notification settings
+- **THEN** the URL is `/account/notifications` and the popover is closed
+
 ### Requirement: Read state is per account
 Read state SHALL be stored on the server per account, so a notification read in one tab or on one device is read everywhere. A user SHALL only ever be able to list or change their own notifications.
 
@@ -55,7 +62,7 @@ While a signed-in page is open, a new notification or a change in read state SHA
 - **THEN** it is refused
 
 ### Requirement: Notification settings
-The account dialog SHALL have a Notifications section with one switch per notification type:
+The Notifications section of the account page (`/account/notifications`) SHALL have one switch per notification type:
 - Want-list matches, on by default;
 - Someone wants what you have, off by default;
 - Offers, on by default;

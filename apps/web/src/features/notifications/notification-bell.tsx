@@ -2,6 +2,7 @@ import {
   ArrowClockwiseIcon,
   BellIcon,
   ChecksIcon,
+  GearIcon,
   HandshakeIcon,
   ShieldWarningIcon,
   WarningIcon,
@@ -185,6 +186,17 @@ function NotificationPanel({ unread, onNavigate }: { unread: number; onNavigate:
             </Button>
           </div>
         ) : null}
+      </div>
+      <div className="flex justify-end border-t px-2 py-1.5">
+        <Button
+          variant="ghost"
+          size="sm"
+          render={<Link to="/account/notifications" />}
+          onClick={onNavigate}
+        >
+          <GearIcon />
+          {m.notification_settings_link()}
+        </Button>
       </div>
     </div>
   );

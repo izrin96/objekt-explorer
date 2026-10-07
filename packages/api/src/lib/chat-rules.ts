@@ -9,7 +9,7 @@ import {
   START_LIMIT,
   START_WINDOW_HOURS,
 } from "../schemas/chat";
-import { type AddressInfo, type PartnerIdentity, visibleNickname } from "./trade-rank";
+import { type AddressRef, type PartnerIdentity } from "./trade-rank";
 
 const HOUR_MS = 60 * 60 * 1000;
 const MINUTE_MS = 60 * 1000;
@@ -216,11 +216,26 @@ export function countsTowardBadge(
   );
 }
 
-/** Named by the first linked address's visible nickname, otherwise the account name. */
-export function chatIdentity(accountName: string, addresses: AddressInfo[]): PartnerIdentity {
-  for (const info of addresses) {
-    const nickname = visibleNickname(info);
-    if (nickname) return { name: nickname, address: info.address.toLowerCase(), also: [] };
-  }
-  return { name: accountName, address: null, also: [] };
+/**
+ * Named by the address the account chose to chat as while it is still linked, else its first.
+ * Hide nickname does not apply: the account picked this name to be seen by.
+ */
+export function chatIdentity(
+  accountName: string,
+  addresses: AddressRef[],
+  chatAs: string | null = null,
+): PartnerIdentity {
+  const chosen =
+    addresses.find(
+      (info) => chatAs !== null && info.address.toLowerCase() === chatAs.toLowerCase(),
+    ) ?? addresses[0];
+  if (!chosen) return { name: accountName, address: null, also: [] };
+  const address = chosen.address.toLowerCase();
+  // Cosmo stores an unnamed profile's nickname as its own address
+  const named = chosen.nickname && chosen.nickname.toLowerCase() !== address;
+  return {
+    name: named ? chosen.nickname! : `${address.slice(0, 6)}…${address.slice(-4)}`,
+    address,
+    also: [],
+  };
 }

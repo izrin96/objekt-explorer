@@ -1,8 +1,8 @@
 import { CubeIcon, ListIcon, NoteIcon, SignInIcon } from "@phosphor-icons/react";
-import { Link } from "@tanstack/react-router";
+import { Link, useLocation } from "@tanstack/react-router";
 import { useState } from "react";
 
-import type { NavLink } from "@/components/layout/app-nav";
+import { alsoActive, type NavLink } from "@/components/layout/app-nav";
 import { ChangelogDialog, NewDot, useChangelogNew } from "@/components/layout/changelog";
 import { SystemStatus } from "@/components/layout/system-status";
 import { UserAvatar, useSignInSearch } from "@/components/layout/user-menu";
@@ -28,6 +28,7 @@ import { m } from "@/paraglide/messages";
  */
 export function MobileNav({ links }: { links: readonly NavLink[] }) {
   const [open, setOpen] = useState(false);
+  const pathname = useLocation({ select: (s) => s.pathname });
   const [changelogOpen, setChangelogOpen] = useState(false);
   const changelog = useChangelogNew();
   const { data: user } = useCurrentUser();
@@ -64,6 +65,7 @@ export function MobileNav({ links }: { links: readonly NavLink[] }) {
                 key={l.key}
                 to={l.to}
                 activeOptions={{ exact: l.exact }}
+                data-status={alsoActive(l, pathname) ? "active" : undefined}
                 onClick={() => setOpen(false)}
                 className="text-muted-foreground hover:text-foreground data-[status=active]:bg-secondary data-[status=active]:text-foreground rounded-lg px-3 py-2 text-sm font-medium"
               >

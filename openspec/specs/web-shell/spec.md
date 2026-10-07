@@ -86,12 +86,16 @@ language SHALL set the locale cookie and re-render the page in that language.
 - **THEN** the frame's strings are Korean and a reload keeps them Korean
 
 ### Requirement: Account menu reaches Cosmo and account settings
-The account menu SHALL include a My Cosmo item opening `/link` and an Account item opening
-the account dialog.
+The account menu SHALL include a My Cosmo item whose manage entry opens `/account/profiles`, and an Account item opening
+`/account`. The primary nav's My Cosmo link SHALL open `/account/profiles` and SHALL show as current on any `/account/profiles` or `/link` route.
 
 #### Scenario: My Cosmo
-- **WHEN** a signed-in user picks My Cosmo
-- **THEN** the URL is `/link`
+- **WHEN** a signed-in user picks My Cosmo's manage entry
+- **THEN** the URL is `/account/profiles`
+
+#### Scenario: Account
+- **WHEN** a signed-in user picks Account
+- **THEN** the URL is `/account` and the General section is open
 
 ### Requirement: Account menu reaches lists
 The account menu SHALL include a My lists submenu listing the user's lists by name and

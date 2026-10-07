@@ -1,6 +1,6 @@
 import { ORPCError } from "@orpc/server";
 import { db } from "@repo/db";
-import { conversationMember, message, messagePref } from "@repo/db/schema";
+import { conversationMember, message, messagePref, userAddress } from "@repo/db/schema";
 import { and, asc, desc, eq, gt, lt, sql } from "drizzle-orm";
 
 import { isMuted, rowUnread, sendVerdict } from "../lib/chat-rules";
@@ -14,6 +14,7 @@ import {
   listConversationsInputSchema,
   markReadInputSchema,
   MESSAGE_PREF_DEFAULTS,
+  type MessageAllow,
   MUTE_HOURS,
   muteInputSchema,
   sendInputSchema,
@@ -29,7 +30,7 @@ import {
   checkStart,
   ensureConversation,
   fetchPartners,
-  fetchPref,
+  fetchSettings,
   findMembership,
   parseCard,
   prepareStart,
@@ -386,17 +387,31 @@ export const chatRouter = {
     return result.rows[0]?.count ?? 0;
   }),
 
-  settings: authed.handler(async ({ context: { session } }) => fetchPref(session.user.id)),
+  settings: authed.handler(async ({ context: { session } }) => fetchSettings(session.user.id)),
 
   setSettings: authed
     .input(setSettingsInputSchema)
     .handler(async ({ input, context: { session } }) => {
-      if (input.allow !== undefined) {
+      const me = session.user.id;
+      const set: { allow?: MessageAllow; chatAs?: string | null } = {};
+      if (input.allow !== undefined) set.allow = input.allow;
+      if (input.chatAs !== undefined) {
+        const chatAs = input.chatAs?.toLowerCase() ?? null;
+        if (chatAs !== null) {
+          const linked = await db.$count(
+            userAddress,
+            and(eq(userAddress.address, chatAs), eq(userAddress.userId, me)),
+          );
+          if (linked === 0) throw new ORPCError("BAD_REQUEST", { message: "Not your profile" });
+        }
+        set.chatAs = chatAs;
+      }
+      if (Object.keys(set).length > 0) {
         await db
           .insert(messagePref)
-          .values({ userId: session.user.id, ...MESSAGE_PREF_DEFAULTS, ...input })
-          .onConflictDoUpdate({ target: messagePref.userId, set: input });
+          .values({ userId: me, ...MESSAGE_PREF_DEFAULTS, ...set })
+          .onConflictDoUpdate({ target: messagePref.userId, set });
       }
-      return fetchPref(session.user.id);
+      return fetchSettings(me);
     }),
 };

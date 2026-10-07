@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as containerRouteRouteImport } from './routes/(container)/route'
 import { Route as AtChar123nicknameChar125RouteRouteImport } from './routes/@{$nickname}/route'
 import { Route as containerIndexRouteImport } from './routes/(container)/index'
+import { Route as containerAccountRouteRouteImport } from './routes/(container)/account/route'
 import { Route as containerActivityRouteImport } from './routes/(container)/activity'
 import { Route as containerLoginRouteImport } from './routes/(container)/login'
 import { Route as containerMarketRouteImport } from './routes/(container)/market'
@@ -32,6 +33,15 @@ import { Route as ApiOpenAppRouteImport } from './routes/api/open-app'
 import { Route as MERouteImport } from './routes/m/e'
 import { Route as MSRouteImport } from './routes/m/s'
 import { Route as RpcSplatRouteImport } from './routes/rpc.$'
+import { Route as containerAccountIndexRouteImport } from './routes/(container)/account/index'
+import { Route as containerAccountBlockedRouteImport } from './routes/(container)/account/blocked'
+import { Route as containerAccountDangerRouteImport } from './routes/(container)/account/danger'
+import { Route as containerAccountGeneralRouteImport } from './routes/(container)/account/general'
+import { Route as containerAccountMessagesRouteImport } from './routes/(container)/account/messages'
+import { Route as containerAccountNotificationsRouteImport } from './routes/(container)/account/notifications'
+import { Route as containerAccountPasswordRouteImport } from './routes/(container)/account/password'
+import { Route as containerAccountProfilesRouteImport } from './routes/(container)/account/profiles'
+import { Route as containerAccountSignInRouteImport } from './routes/(container)/account/sign-in'
 import { Route as containerAuthResetPasswordRouteImport } from './routes/(container)/auth/reset-password'
 import { Route as containerAuthVerifiedRouteImport } from './routes/(container)/auth/verified'
 import { Route as containerLinkIndexRouteImport } from './routes/(container)/link/index'
@@ -74,6 +84,11 @@ const AtChar123nicknameChar125RouteRoute =
 const containerIndexRoute = containerIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => containerRouteRoute,
+} as any)
+const containerAccountRouteRoute = containerAccountRouteRouteImport.update({
+  id: '/account',
+  path: '/account',
   getParentRoute: () => containerRouteRoute,
 } as any)
 const containerActivityRoute = containerActivityRouteImport.update({
@@ -181,6 +196,55 @@ const RpcSplatRoute = RpcSplatRouteImport.update({
   id: '/rpc/$',
   path: '/rpc/$',
   getParentRoute: () => rootRouteImport,
+} as any)
+const containerAccountIndexRoute = containerAccountIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => containerAccountRouteRoute,
+} as any)
+const containerAccountBlockedRoute = containerAccountBlockedRouteImport.update({
+  id: '/blocked',
+  path: '/blocked',
+  getParentRoute: () => containerAccountRouteRoute,
+} as any)
+const containerAccountDangerRoute = containerAccountDangerRouteImport.update({
+  id: '/danger',
+  path: '/danger',
+  getParentRoute: () => containerAccountRouteRoute,
+} as any)
+const containerAccountGeneralRoute = containerAccountGeneralRouteImport.update({
+  id: '/general',
+  path: '/general',
+  getParentRoute: () => containerAccountRouteRoute,
+} as any)
+const containerAccountMessagesRoute =
+  containerAccountMessagesRouteImport.update({
+    id: '/messages',
+    path: '/messages',
+    getParentRoute: () => containerAccountRouteRoute,
+  } as any)
+const containerAccountNotificationsRoute =
+  containerAccountNotificationsRouteImport.update({
+    id: '/notifications',
+    path: '/notifications',
+    getParentRoute: () => containerAccountRouteRoute,
+  } as any)
+const containerAccountPasswordRoute =
+  containerAccountPasswordRouteImport.update({
+    id: '/password',
+    path: '/password',
+    getParentRoute: () => containerAccountRouteRoute,
+  } as any)
+const containerAccountProfilesRoute =
+  containerAccountProfilesRouteImport.update({
+    id: '/profiles',
+    path: '/profiles',
+    getParentRoute: () => containerAccountRouteRoute,
+  } as any)
+const containerAccountSignInRoute = containerAccountSignInRouteImport.update({
+  id: '/sign-in',
+  path: '/sign-in',
+  getParentRoute: () => containerAccountRouteRoute,
 } as any)
 const containerAuthResetPasswordRoute =
   containerAuthResetPasswordRouteImport.update({
@@ -334,6 +398,7 @@ const ApiObjektsTransfersCollectionSlugSerialRoute =
 
 export interface FileRoutesByFullPath {
   '/@{$nickname}': typeof AtChar123nicknameChar125RouteRouteWithChildren
+  '/account': typeof containerAccountRouteRouteWithChildren
   '/messages': typeof containerMessagesRouteRouteWithChildren
   '/trade': typeof containerTradeRouteRouteWithChildren
   '/activity': typeof containerActivityRoute
@@ -356,6 +421,14 @@ export interface FileRoutesByFullPath {
   '/': typeof containerIndexRoute
   '/@{$nickname}/': typeof AtChar123nicknameChar125IndexRoute
   '/trade/mine': typeof containerTradeMineRouteRouteWithChildren
+  '/account/blocked': typeof containerAccountBlockedRoute
+  '/account/danger': typeof containerAccountDangerRoute
+  '/account/general': typeof containerAccountGeneralRoute
+  '/account/messages': typeof containerAccountMessagesRoute
+  '/account/notifications': typeof containerAccountNotificationsRoute
+  '/account/password': typeof containerAccountPasswordRoute
+  '/account/profiles': typeof containerAccountProfilesRoute
+  '/account/sign-in': typeof containerAccountSignInRoute
   '/auth/reset-password': typeof containerAuthResetPasswordRoute
   '/auth/verified': typeof containerAuthVerifiedRoute
   '/link/connect': typeof containerLinkConnectRoute
@@ -368,6 +441,7 @@ export interface FileRoutesByFullPath {
   '/api/transfers/$address': typeof ApiTransfersAddressRoute
   '/api/user/search': typeof ApiUserSearchRoute
   '/api/v1/$': typeof ApiV1SplatRoute
+  '/account/': typeof containerAccountIndexRoute
   '/link/': typeof containerLinkIndexRoute
   '/list/': typeof containerListIndexRoute
   '/live/': typeof containerLiveIndexRoute
@@ -404,6 +478,14 @@ export interface FileRoutesByTo {
   '/rpc/$': typeof RpcSplatRoute
   '/': typeof containerIndexRoute
   '/@{$nickname}': typeof AtChar123nicknameChar125IndexRoute
+  '/account/blocked': typeof containerAccountBlockedRoute
+  '/account/danger': typeof containerAccountDangerRoute
+  '/account/general': typeof containerAccountGeneralRoute
+  '/account/messages': typeof containerAccountMessagesRoute
+  '/account/notifications': typeof containerAccountNotificationsRoute
+  '/account/password': typeof containerAccountPasswordRoute
+  '/account/profiles': typeof containerAccountProfilesRoute
+  '/account/sign-in': typeof containerAccountSignInRoute
   '/auth/reset-password': typeof containerAuthResetPasswordRoute
   '/auth/verified': typeof containerAuthVerifiedRoute
   '/link/connect': typeof containerLinkConnectRoute
@@ -415,6 +497,7 @@ export interface FileRoutesByTo {
   '/api/transfers/$address': typeof ApiTransfersAddressRoute
   '/api/user/search': typeof ApiUserSearchRoute
   '/api/v1/$': typeof ApiV1SplatRoute
+  '/account': typeof containerAccountIndexRoute
   '/link': typeof containerLinkIndexRoute
   '/list': typeof containerListIndexRoute
   '/live': typeof containerLiveIndexRoute
@@ -435,6 +518,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/(container)': typeof containerRouteRouteWithChildren
   '/@{$nickname}': typeof AtChar123nicknameChar125RouteRouteWithChildren
+  '/(container)/account': typeof containerAccountRouteRouteWithChildren
   '/(container)/messages': typeof containerMessagesRouteRouteWithChildren
   '/(container)/trade': typeof containerTradeRouteRouteWithChildren
   '/(container)/activity': typeof containerActivityRoute
@@ -457,6 +541,14 @@ export interface FileRoutesById {
   '/(container)/': typeof containerIndexRoute
   '/@{$nickname}/': typeof AtChar123nicknameChar125IndexRoute
   '/(container)/trade/mine': typeof containerTradeMineRouteRouteWithChildren
+  '/(container)/account/blocked': typeof containerAccountBlockedRoute
+  '/(container)/account/danger': typeof containerAccountDangerRoute
+  '/(container)/account/general': typeof containerAccountGeneralRoute
+  '/(container)/account/messages': typeof containerAccountMessagesRoute
+  '/(container)/account/notifications': typeof containerAccountNotificationsRoute
+  '/(container)/account/password': typeof containerAccountPasswordRoute
+  '/(container)/account/profiles': typeof containerAccountProfilesRoute
+  '/(container)/account/sign-in': typeof containerAccountSignInRoute
   '/(container)/auth/reset-password': typeof containerAuthResetPasswordRoute
   '/(container)/auth/verified': typeof containerAuthVerifiedRoute
   '/(container)/link/connect': typeof containerLinkConnectRoute
@@ -469,6 +561,7 @@ export interface FileRoutesById {
   '/api/transfers/$address': typeof ApiTransfersAddressRoute
   '/api/user/search': typeof ApiUserSearchRoute
   '/api/v1/$': typeof ApiV1SplatRoute
+  '/(container)/account/': typeof containerAccountIndexRoute
   '/(container)/link/': typeof containerLinkIndexRoute
   '/(container)/list/': typeof containerListIndexRoute
   '/(container)/live/': typeof containerLiveIndexRoute
@@ -489,6 +582,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/@{$nickname}'
+    | '/account'
     | '/messages'
     | '/trade'
     | '/activity'
@@ -511,6 +605,14 @@ export interface FileRouteTypes {
     | '/'
     | '/@{$nickname}/'
     | '/trade/mine'
+    | '/account/blocked'
+    | '/account/danger'
+    | '/account/general'
+    | '/account/messages'
+    | '/account/notifications'
+    | '/account/password'
+    | '/account/profiles'
+    | '/account/sign-in'
     | '/auth/reset-password'
     | '/auth/verified'
     | '/link/connect'
@@ -523,6 +625,7 @@ export interface FileRouteTypes {
     | '/api/transfers/$address'
     | '/api/user/search'
     | '/api/v1/$'
+    | '/account/'
     | '/link/'
     | '/list/'
     | '/live/'
@@ -559,6 +662,14 @@ export interface FileRouteTypes {
     | '/rpc/$'
     | '/'
     | '/@{$nickname}'
+    | '/account/blocked'
+    | '/account/danger'
+    | '/account/general'
+    | '/account/messages'
+    | '/account/notifications'
+    | '/account/password'
+    | '/account/profiles'
+    | '/account/sign-in'
     | '/auth/reset-password'
     | '/auth/verified'
     | '/link/connect'
@@ -570,6 +681,7 @@ export interface FileRouteTypes {
     | '/api/transfers/$address'
     | '/api/user/search'
     | '/api/v1/$'
+    | '/account'
     | '/link'
     | '/list'
     | '/live'
@@ -589,6 +701,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/(container)'
     | '/@{$nickname}'
+    | '/(container)/account'
     | '/(container)/messages'
     | '/(container)/trade'
     | '/(container)/activity'
@@ -611,6 +724,14 @@ export interface FileRouteTypes {
     | '/(container)/'
     | '/@{$nickname}/'
     | '/(container)/trade/mine'
+    | '/(container)/account/blocked'
+    | '/(container)/account/danger'
+    | '/(container)/account/general'
+    | '/(container)/account/messages'
+    | '/(container)/account/notifications'
+    | '/(container)/account/password'
+    | '/(container)/account/profiles'
+    | '/(container)/account/sign-in'
     | '/(container)/auth/reset-password'
     | '/(container)/auth/verified'
     | '/(container)/link/connect'
@@ -623,6 +744,7 @@ export interface FileRouteTypes {
     | '/api/transfers/$address'
     | '/api/user/search'
     | '/api/v1/$'
+    | '/(container)/account/'
     | '/(container)/link/'
     | '/(container)/list/'
     | '/(container)/live/'
@@ -683,6 +805,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof containerIndexRouteImport
+      parentRoute: typeof containerRouteRoute
+    }
+    '/(container)/account': {
+      id: '/(container)/account'
+      path: '/account'
+      fullPath: '/account'
+      preLoaderRoute: typeof containerAccountRouteRouteImport
       parentRoute: typeof containerRouteRoute
     }
     '/(container)/activity': {
@@ -824,6 +953,69 @@ declare module '@tanstack/react-router' {
       fullPath: '/rpc/$'
       preLoaderRoute: typeof RpcSplatRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/(container)/account/': {
+      id: '/(container)/account/'
+      path: '/'
+      fullPath: '/account/'
+      preLoaderRoute: typeof containerAccountIndexRouteImport
+      parentRoute: typeof containerAccountRouteRoute
+    }
+    '/(container)/account/blocked': {
+      id: '/(container)/account/blocked'
+      path: '/blocked'
+      fullPath: '/account/blocked'
+      preLoaderRoute: typeof containerAccountBlockedRouteImport
+      parentRoute: typeof containerAccountRouteRoute
+    }
+    '/(container)/account/danger': {
+      id: '/(container)/account/danger'
+      path: '/danger'
+      fullPath: '/account/danger'
+      preLoaderRoute: typeof containerAccountDangerRouteImport
+      parentRoute: typeof containerAccountRouteRoute
+    }
+    '/(container)/account/general': {
+      id: '/(container)/account/general'
+      path: '/general'
+      fullPath: '/account/general'
+      preLoaderRoute: typeof containerAccountGeneralRouteImport
+      parentRoute: typeof containerAccountRouteRoute
+    }
+    '/(container)/account/messages': {
+      id: '/(container)/account/messages'
+      path: '/messages'
+      fullPath: '/account/messages'
+      preLoaderRoute: typeof containerAccountMessagesRouteImport
+      parentRoute: typeof containerAccountRouteRoute
+    }
+    '/(container)/account/notifications': {
+      id: '/(container)/account/notifications'
+      path: '/notifications'
+      fullPath: '/account/notifications'
+      preLoaderRoute: typeof containerAccountNotificationsRouteImport
+      parentRoute: typeof containerAccountRouteRoute
+    }
+    '/(container)/account/password': {
+      id: '/(container)/account/password'
+      path: '/password'
+      fullPath: '/account/password'
+      preLoaderRoute: typeof containerAccountPasswordRouteImport
+      parentRoute: typeof containerAccountRouteRoute
+    }
+    '/(container)/account/profiles': {
+      id: '/(container)/account/profiles'
+      path: '/profiles'
+      fullPath: '/account/profiles'
+      preLoaderRoute: typeof containerAccountProfilesRouteImport
+      parentRoute: typeof containerAccountRouteRoute
+    }
+    '/(container)/account/sign-in': {
+      id: '/(container)/account/sign-in'
+      path: '/sign-in'
+      fullPath: '/account/sign-in'
+      preLoaderRoute: typeof containerAccountSignInRouteImport
+      parentRoute: typeof containerAccountRouteRoute
     }
     '/(container)/auth/reset-password': {
       id: '/(container)/auth/reset-password'
@@ -1024,6 +1216,35 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface containerAccountRouteRouteChildren {
+  containerAccountBlockedRoute: typeof containerAccountBlockedRoute
+  containerAccountDangerRoute: typeof containerAccountDangerRoute
+  containerAccountGeneralRoute: typeof containerAccountGeneralRoute
+  containerAccountMessagesRoute: typeof containerAccountMessagesRoute
+  containerAccountNotificationsRoute: typeof containerAccountNotificationsRoute
+  containerAccountPasswordRoute: typeof containerAccountPasswordRoute
+  containerAccountProfilesRoute: typeof containerAccountProfilesRoute
+  containerAccountSignInRoute: typeof containerAccountSignInRoute
+  containerAccountIndexRoute: typeof containerAccountIndexRoute
+}
+
+const containerAccountRouteRouteChildren: containerAccountRouteRouteChildren = {
+  containerAccountBlockedRoute: containerAccountBlockedRoute,
+  containerAccountDangerRoute: containerAccountDangerRoute,
+  containerAccountGeneralRoute: containerAccountGeneralRoute,
+  containerAccountMessagesRoute: containerAccountMessagesRoute,
+  containerAccountNotificationsRoute: containerAccountNotificationsRoute,
+  containerAccountPasswordRoute: containerAccountPasswordRoute,
+  containerAccountProfilesRoute: containerAccountProfilesRoute,
+  containerAccountSignInRoute: containerAccountSignInRoute,
+  containerAccountIndexRoute: containerAccountIndexRoute,
+}
+
+const containerAccountRouteRouteWithChildren =
+  containerAccountRouteRoute._addFileChildren(
+    containerAccountRouteRouteChildren,
+  )
+
 interface containerMessagesRouteRouteChildren {
   containerMessagesIdRoute: typeof containerMessagesIdRoute
   containerMessagesIndexRoute: typeof containerMessagesIndexRoute
@@ -1085,6 +1306,7 @@ const containerModReportsRouteWithChildren =
   containerModReportsRoute._addFileChildren(containerModReportsRouteChildren)
 
 interface containerRouteRouteChildren {
+  containerAccountRouteRoute: typeof containerAccountRouteRouteWithChildren
   containerMessagesRouteRoute: typeof containerMessagesRouteRouteWithChildren
   containerTradeRouteRoute: typeof containerTradeRouteRouteWithChildren
   containerActivityRoute: typeof containerActivityRoute
@@ -1105,6 +1327,7 @@ interface containerRouteRouteChildren {
 }
 
 const containerRouteRouteChildren: containerRouteRouteChildren = {
+  containerAccountRouteRoute: containerAccountRouteRouteWithChildren,
   containerMessagesRouteRoute: containerMessagesRouteRouteWithChildren,
   containerTradeRouteRoute: containerTradeRouteRouteWithChildren,
   containerActivityRoute: containerActivityRoute,

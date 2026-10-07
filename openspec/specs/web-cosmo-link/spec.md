@@ -8,14 +8,18 @@ banner, and unlinking.
 ## Requirements
 
 ### Requirement: Linked profiles list
-`/link` SHALL require a session (redirecting to `/login?redirect=/link` otherwise) and
-SHALL list every Cosmo profile linked to the account with its nickname and address, an
-Edit action and an Unlink action behind a confirmation. Unlinking SHALL remove the profile
-from the list and from the account without a reload.
+`/account/profiles` SHALL list every Cosmo profile linked to the account with its nickname and address, an
+Edit action, an Unlink action behind a confirmation, and a Link Cosmo action opening `/link/connect`.
+Unlinking SHALL remove the profile from the list and from the account without a reload. `/link` SHALL redirect to
+`/account/profiles`, and every in-app link that opened `/link` SHALL open `/account/profiles`.
 
 #### Scenario: Signed out
 - **WHEN** a signed-out visitor opens `/link`
-- **THEN** the URL is `/login?redirect=/link`
+- **THEN** the URL is `/login?redirect=/account/profiles`
+
+#### Scenario: Old address
+- **WHEN** a signed-in user opens `/link`
+- **THEN** the URL is `/account/profiles` and their linked profiles are listed
 
 #### Scenario: Unlink
 - **WHEN** the user confirms Unlink on a profile
@@ -28,7 +32,7 @@ code with a countdown from the server's expiry, an "Open Cosmo" action that deep
 into the Cosmo app, and verifying that the code appears in the profile's status message.
 Each server refusal (already linked, rate limited, expired, mismatch, code not found) SHALL
 be shown in the user's locale at the step it applies to. Success SHALL add the profile to
-the account and offer a link to it.
+the account and offer a link to it and a way back to `/account/profiles`.
 
 #### Scenario: Already linked elsewhere
 - **WHEN** the chosen address is linked to another account
@@ -40,7 +44,7 @@ the account and offer a link to it.
 
 ### Requirement: Edit profile
 The edit dialog SHALL load the profile's current settings and let the user toggle hide
-user, hide nickname, private serial, hide transfers and private profile, choose a grid
+nickname, private serial, hide transfers and private profile, choose a grid
 column count between 2 and 18 or unset, and set, replace or remove a banner. Images SHALL
 be cropped to the banner ratio before upload; videos and GIFs SHALL upload as-is; files
 over the size limit or of an unsupported type SHALL be refused before upload. Saving SHALL

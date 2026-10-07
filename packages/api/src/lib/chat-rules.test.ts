@@ -231,22 +231,40 @@ describe("cardListAllowed", () => {
 });
 
 describe("chatIdentity", () => {
-  const address = (overrides: Partial<Parameters<typeof chatIdentity>[1][number]> = {}) => ({
-    address: "0xAbc",
-    nickname: "rin.trades",
-    hideNickname: false,
-    ...overrides,
-  });
+  const main = { address: "0xAbc0000000000000000000000000000000000001", nickname: "rin.main" };
+  const alt = { address: "0xAbc0000000000000000000000000000000000002", nickname: "rin.alt" };
 
-  test("a shown nickname heads the conversation", () => {
-    expect(chatIdentity("Rin", [address()])).toEqual({
-      name: "rin.trades",
-      address: "0xabc",
+  test("without a choice, the first linked profile heads the conversation", () => {
+    expect(chatIdentity("Rin", [main, alt])).toEqual({
+      name: "rin.main",
+      address: main.address.toLowerCase(),
       also: [],
     });
   });
 
-  test("an address that hides its nickname falls back to the account name", () => {
-    expect(chatIdentity("Rin", [address({ hideNickname: true })]).name).toBe("Rin");
+  test("the chosen profile wins, matched without case", () => {
+    expect(chatIdentity("Rin", [main, alt], alt.address.toUpperCase()).name).toBe("rin.alt");
+  });
+
+  test("Hide nickname does not hide the chat name", () => {
+    const hidden = { ...main, hideNickname: true };
+    expect(chatIdentity("Rin", [hidden]).name).toBe("rin.main");
+  });
+
+  test("a choice no longer linked falls back to the first", () => {
+    expect(chatIdentity("Rin", [main], alt.address).name).toBe("rin.main");
+  });
+
+  test("a profile with no nickname shows its shortened address", () => {
+    expect(chatIdentity("Rin", [{ address: main.address, nickname: null }]).name).toBe(
+      "0xabc0…0001",
+    );
+    expect(chatIdentity("Rin", [{ address: main.address, nickname: main.address }]).name).toBe(
+      "0xabc0…0001",
+    );
+  });
+
+  test("no linked profile uses the account name", () => {
+    expect(chatIdentity("Rin", [], alt.address)).toEqual({ name: "Rin", address: null, also: [] });
   });
 });

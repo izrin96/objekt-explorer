@@ -1,6 +1,6 @@
 import { CubeIcon } from "@phosphor-icons/react";
 import type { User } from "@repo/api/services/auth";
-import { Link } from "@tanstack/react-router";
+import { Link, useLocation } from "@tanstack/react-router";
 import { useState } from "react";
 
 import { ChangelogButton } from "@/components/layout/changelog";
@@ -25,19 +25,32 @@ function useNavLinks() {
     { key: "activity", label: m.nav_activity(), to: "/activity", exact: false },
     // `/list/{slug}` is any user's list, not one of the viewer's own
     { key: "list", label: m.nav_my_list(), to: "/list", exact: true },
-    { key: "link", label: m.nav_my_cosmo_link(), to: "/link", exact: false },
+    // the link flow at `/link/connect` still belongs to My Cosmo
+    {
+      key: "link",
+      label: m.nav_my_cosmo_link(),
+      to: "/account/profiles",
+      exact: false,
+      also: "/link",
+    },
   ] as const;
-  // `/list` and `/link` are the signed-in user's own; signed out they only bounce to /login
+  // `/list` and My Cosmo are the signed-in user's own; signed out they only bounce to /login
   return user ? links : links.filter((link) => link.key !== "list" && link.key !== "link");
 }
 
 export type NavLink = ReturnType<typeof useNavLinks>[number];
+
+/** A link that also counts as current under another path prefix. */
+export function alsoActive(link: NavLink, pathname: string) {
+  return "also" in link && (pathname === link.also || pathname.startsWith(`${link.also}/`));
+}
 
 export function AppNav() {
   const [searchOpen, setSearchOpen] = useState(false);
   const { data: user } = useCurrentUser();
   const overall = useOverallStatus();
   const links = useNavLinks();
+  const pathname = useLocation({ select: (s) => s.pathname });
 
   // z-30: above the cards' own layers and the floating select bar, below every
   // Base UI overlay (sheet / drawer / dialog / popover / menu at z-50, toasts at z-60)
@@ -70,6 +83,7 @@ export function AppNav() {
               key={l.key}
               to={l.to}
               activeOptions={{ exact: l.exact }}
+              data-status={alsoActive(l, pathname) ? "active" : undefined}
               className="text-muted-foreground hover:text-foreground data-[status=active]:bg-secondary data-[status=active]:text-foreground rounded-[7px] px-2.5 py-1.5 text-sm font-medium whitespace-nowrap"
             >
               {l.label}

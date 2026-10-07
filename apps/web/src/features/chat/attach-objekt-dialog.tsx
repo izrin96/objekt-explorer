@@ -116,7 +116,7 @@ function OwnedPicker({ onPick }: { onPick: (attachment: Attachment) => void }) {
         bordered={false}
         title={m.chat_attach_no_profile()}
         action={
-          <Button variant="outline" size="sm" render={<Link to="/link" />}>
+          <Button variant="outline" size="sm" render={<Link to="/account/profiles" />}>
             {m.link_link_cosmo()}
           </Button>
         }

@@ -1,10 +1,9 @@
-import { db } from "@repo/db";
-import { notification, notificationPref, user, userAddress } from "@repo/db/schema";
-import { and, asc, eq, inArray, sql } from "drizzle-orm";
+import type { db } from "@repo/db";
+import { notification, notificationPref } from "@repo/db/schema";
+import { and, eq, inArray, sql } from "drizzle-orm";
 
-import { chatIdentity } from "../lib/chat-rules";
-import type { AddressInfo } from "../lib/trade-rank";
 import type { OfferPayload, TradePayload } from "../schemas/offer";
+import { loadIdentities } from "./identities";
 
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
@@ -55,29 +54,6 @@ export async function writeNotes(tx: Tx, notes: Note[]): Promise<string[]> {
 
 /** Each account as a conversation names it, for notification payloads. */
 export async function partyNames(userIds: string[]) {
-  const ids = unique(userIds);
-  const [users, addresses] =
-    ids.length === 0
-      ? [[], []]
-      : await Promise.all([
-          db.select({ id: user.id, name: user.name }).from(user).where(inArray(user.id, ids)),
-          db
-            .select({
-              userId: userAddress.userId,
-              address: userAddress.address,
-              nickname: userAddress.nickname,
-              hideNickname: userAddress.hideNickname,
-            })
-            .from(userAddress)
-            .where(inArray(userAddress.userId, ids))
-            .orderBy(asc(userAddress.id)),
-        ]);
-  const addressesOf = new Map<string, AddressInfo[]>();
-  for (const { userId, ...info } of addresses) {
-    if (userId) addressesOf.set(userId, [...(addressesOf.get(userId) ?? []), info]);
-  }
-  const names = new Map(
-    users.map((u) => [u.id, chatIdentity(u.name, addressesOf.get(u.id) ?? []).name]),
-  );
-  return (userId: string) => ({ userId, name: names.get(userId) ?? "" });
+  const identities = await loadIdentities(userIds);
+  return (userId: string) => ({ userId, name: identities.get(userId)?.identity.name ?? "" });
 }

@@ -1,8 +1,17 @@
+import { GearIcon } from "@phosphor-icons/react";
 import type { ChatBox } from "@repo/api/schemas/chat";
-import { Outlet, createFileRoute, redirect, useLocation, useParams } from "@tanstack/react-router";
+import {
+  Link,
+  Outlet,
+  createFileRoute,
+  redirect,
+  useLocation,
+  useParams,
+} from "@tanstack/react-router";
 import { type ReactNode, useEffect, useRef } from "react";
 
 import { PageHeader } from "@/components/shared/page-header";
+import { Button } from "@/components/ui/button";
 import { BoxTabs } from "@/features/chat/box-tabs";
 import { ConversationList, ConversationListSkeleton } from "@/features/chat/conversation-list";
 import { conversationsOptions } from "@/features/chat/queries";
@@ -79,7 +88,20 @@ function MessagesFrame({
   return (
     <>
       <div className={cn(threadOpen && "max-md:hidden")}>
-        <PageHeader title={m.chat_title()} description={m.chat_page_description()} />
+        <PageHeader
+          title={m.chat_title()}
+          description={m.chat_page_description()}
+          aside={
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              aria-label={m.chat_settings_open()}
+              render={<Link to="/account/messages" />}
+            >
+              <GearIcon />
+            </Button>
+          }
+        />
       </div>
       <div
         className={cn(

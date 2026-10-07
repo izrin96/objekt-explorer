@@ -2,17 +2,10 @@
   "version": "8",
   "dialect": "postgres",
   "id": "0345017a-1f6d-4b5c-85b1-f4c8b9ac80d3",
-  "prevIds": [
-    "67113b00-45fd-4494-bc8f-c1754ec94542"
-  ],
+  "prevIds": ["67113b00-45fd-4494-bc8f-c1754ec94542"],
   "ddl": [
     {
-      "values": [
-        "general",
-        "sale",
-        "have",
-        "want"
-      ],
+      "values": ["general", "sale", "have", "want"],
       "name": "list_type_new",
       "entityType": "enums",
       "schema": "public"
@@ -4543,14 +4536,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "user_id"
-      ],
+      "columns": ["user_id"],
       "schemaTo": "public",
       "tableTo": "user",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "account_user_id_user_id_fk",
@@ -4560,14 +4549,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "user_low"
-      ],
+      "columns": ["user_low"],
       "schemaTo": "public",
       "tableTo": "user",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "conversation_user_low_user_id_fkey",
@@ -4577,14 +4562,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "user_high"
-      ],
+      "columns": ["user_high"],
       "schemaTo": "public",
       "tableTo": "user",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "conversation_user_high_user_id_fkey",
@@ -4594,14 +4575,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "conversation_id"
-      ],
+      "columns": ["conversation_id"],
       "schemaTo": "public",
       "tableTo": "conversation",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "conversation_member_conversation_id_conversation_id_fkey",
@@ -4611,14 +4588,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "user_id"
-      ],
+      "columns": ["user_id"],
       "schemaTo": "public",
       "tableTo": "user",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "conversation_member_user_id_user_id_fkey",
@@ -4628,14 +4601,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "user_id"
-      ],
+      "columns": ["user_id"],
       "schemaTo": "public",
       "tableTo": "user",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "hidden_trade_partner_user_id_user_id_fkey",
@@ -4645,14 +4614,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "hidden_user_id"
-      ],
+      "columns": ["hidden_user_id"],
       "schemaTo": "public",
       "tableTo": "user",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "hidden_trade_partner_hidden_user_id_user_id_fkey",
@@ -4662,14 +4627,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "list_id"
-      ],
+      "columns": ["list_id"],
       "schemaTo": "public",
       "tableTo": "lists",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "list_entries_list_id_lists_id_fk",
@@ -4679,14 +4640,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "user_id"
-      ],
+      "columns": ["user_id"],
       "schemaTo": "public",
       "tableTo": "user",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "lists_user_id_user_id_fk",
@@ -4696,14 +4653,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "linked_list_id"
-      ],
+      "columns": ["linked_list_id"],
       "schemaTo": "public",
       "tableTo": "lists",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "SET NULL",
       "name": "lists_linked_list_id_lists_id_fkey",
@@ -4713,14 +4666,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "conversation_id"
-      ],
+      "columns": ["conversation_id"],
       "schemaTo": "public",
       "tableTo": "conversation",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "message_conversation_id_conversation_id_fkey",
@@ -4730,14 +4679,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "offer_id"
-      ],
+      "columns": ["offer_id"],
       "schemaTo": "public",
       "tableTo": "offer",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "message_offer_id_offer_id_fkey",
@@ -4747,14 +4692,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "user_id"
-      ],
+      "columns": ["user_id"],
       "schemaTo": "public",
       "tableTo": "user",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "message_flag_user_id_user_id_fkey",
@@ -4764,14 +4705,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "user_id"
-      ],
+      "columns": ["user_id"],
       "schemaTo": "public",
       "tableTo": "user",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "message_pref_user_id_user_id_fkey",
@@ -4781,14 +4718,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "actor_id"
-      ],
+      "columns": ["actor_id"],
       "schemaTo": "public",
       "tableTo": "user",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "SET NULL",
       "name": "mod_audit_actor_id_user_id_fkey",
@@ -4798,14 +4731,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "target_user_id"
-      ],
+      "columns": ["target_user_id"],
       "schemaTo": "public",
       "tableTo": "user",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "SET NULL",
       "name": "mod_audit_target_user_id_user_id_fkey",
@@ -4815,14 +4744,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "user_id"
-      ],
+      "columns": ["user_id"],
       "schemaTo": "public",
       "tableTo": "user",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "notification_user_id_user_id_fkey",
@@ -4832,14 +4757,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "user_id"
-      ],
+      "columns": ["user_id"],
       "schemaTo": "public",
       "tableTo": "user",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "notification_pref_user_id_user_id_fkey",
@@ -4849,14 +4770,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "conversation_id"
-      ],
+      "columns": ["conversation_id"],
       "schemaTo": "public",
       "tableTo": "conversation",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "offer_conversation_id_conversation_id_fkey",
@@ -4866,14 +4783,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "from_user_id"
-      ],
+      "columns": ["from_user_id"],
       "schemaTo": "public",
       "tableTo": "user",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "offer_from_user_id_user_id_fkey",
@@ -4883,14 +4796,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "to_user_id"
-      ],
+      "columns": ["to_user_id"],
       "schemaTo": "public",
       "tableTo": "user",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "offer_to_user_id_user_id_fkey",
@@ -4900,14 +4809,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "parent_id"
-      ],
+      "columns": ["parent_id"],
       "schemaTo": "public",
       "tableTo": "offer",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "SET NULL",
       "name": "offer_parent_id_offer_id_fkey",
@@ -4917,14 +4822,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "offer_id"
-      ],
+      "columns": ["offer_id"],
       "schemaTo": "public",
       "tableTo": "offer",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "offer_item_offer_id_offer_id_fkey",
@@ -4934,14 +4835,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "list_id"
-      ],
+      "columns": ["list_id"],
       "schemaTo": "public",
       "tableTo": "lists",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "SET NULL",
       "name": "offer_item_list_id_lists_id_fkey",
@@ -4951,14 +4848,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "reporter_id"
-      ],
+      "columns": ["reporter_id"],
       "schemaTo": "public",
       "tableTo": "user",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "report_reporter_id_user_id_fkey",
@@ -4968,14 +4861,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "target_user_id"
-      ],
+      "columns": ["target_user_id"],
       "schemaTo": "public",
       "tableTo": "user",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "report_target_user_id_user_id_fkey",
@@ -4985,14 +4874,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "conversation_id"
-      ],
+      "columns": ["conversation_id"],
       "schemaTo": "public",
       "tableTo": "conversation",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "SET NULL",
       "name": "report_conversation_id_conversation_id_fkey",
@@ -5002,14 +4887,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "resolved_by"
-      ],
+      "columns": ["resolved_by"],
       "schemaTo": "public",
       "tableTo": "user",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "SET NULL",
       "name": "report_resolved_by_user_id_fkey",
@@ -5019,14 +4900,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "trade_id"
-      ],
+      "columns": ["trade_id"],
       "schemaTo": "public",
       "tableTo": "trade",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "SET NULL",
       "name": "report_trade_id_trade_id_fkey",
@@ -5036,14 +4913,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "user_id"
-      ],
+      "columns": ["user_id"],
       "schemaTo": "public",
       "tableTo": "user",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "session_user_id_user_id_fk",
@@ -5053,14 +4926,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "offer_id"
-      ],
+      "columns": ["offer_id"],
       "schemaTo": "public",
       "tableTo": "offer",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "trade_offer_id_offer_id_fkey",
@@ -5070,14 +4939,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "user_a"
-      ],
+      "columns": ["user_a"],
       "schemaTo": "public",
       "tableTo": "user",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "trade_user_a_user_id_fkey",
@@ -5087,14 +4952,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "user_b"
-      ],
+      "columns": ["user_b"],
       "schemaTo": "public",
       "tableTo": "user",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "trade_user_b_user_id_fkey",
@@ -5104,14 +4965,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "cancelled_by"
-      ],
+      "columns": ["cancelled_by"],
       "schemaTo": "public",
       "tableTo": "user",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "trade_cancelled_by_user_id_fkey",
@@ -5121,14 +4978,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "trade_id"
-      ],
+      "columns": ["trade_id"],
       "schemaTo": "public",
       "tableTo": "trade",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "trade_feedback_trade_id_trade_id_fkey",
@@ -5138,14 +4991,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "from_user_id"
-      ],
+      "columns": ["from_user_id"],
       "schemaTo": "public",
       "tableTo": "user",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "trade_feedback_from_user_id_user_id_fkey",
@@ -5155,14 +5004,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "to_user_id"
-      ],
+      "columns": ["to_user_id"],
       "schemaTo": "public",
       "tableTo": "user",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "trade_feedback_to_user_id_user_id_fkey",
@@ -5172,14 +5017,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "trade_id"
-      ],
+      "columns": ["trade_id"],
       "schemaTo": "public",
       "tableTo": "trade",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "trade_leg_trade_id_trade_id_fkey",
@@ -5189,14 +5030,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "from_user_id"
-      ],
+      "columns": ["from_user_id"],
       "schemaTo": "public",
       "tableTo": "user",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "trade_leg_from_user_id_user_id_fkey",
@@ -5206,14 +5043,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "to_user_id"
-      ],
+      "columns": ["to_user_id"],
       "schemaTo": "public",
       "tableTo": "user",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "trade_leg_to_user_id_user_id_fkey",
@@ -5223,14 +5056,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "user_id"
-      ],
+      "columns": ["user_id"],
       "schemaTo": "public",
       "tableTo": "user",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "SET NULL",
       "name": "user_address_user_id_user_id_fk",
@@ -5240,14 +5069,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "blocker_id"
-      ],
+      "columns": ["blocker_id"],
       "schemaTo": "public",
       "tableTo": "user",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "user_block_blocker_id_user_id_fkey",
@@ -5257,14 +5082,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "blocked_id"
-      ],
+      "columns": ["blocked_id"],
       "schemaTo": "public",
       "tableTo": "user",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "user_block_blocked_id_user_id_fkey",
@@ -5274,14 +5095,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "user_id"
-      ],
+      "columns": ["user_id"],
       "schemaTo": "public",
       "tableTo": "user",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "user_sanction_user_id_user_id_fkey",
@@ -5291,14 +5108,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "issued_by"
-      ],
+      "columns": ["issued_by"],
       "schemaTo": "public",
       "tableTo": "user",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "SET NULL",
       "name": "user_sanction_issued_by_user_id_fkey",
@@ -5308,14 +5121,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "revoked_by"
-      ],
+      "columns": ["revoked_by"],
       "schemaTo": "public",
       "tableTo": "user",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "SET NULL",
       "name": "user_sanction_revoked_by_user_id_fkey",
@@ -5324,10 +5133,7 @@
       "table": "user_sanction"
     },
     {
-      "columns": [
-        "conversation_id",
-        "user_id"
-      ],
+      "columns": ["conversation_id", "user_id"],
       "nameExplicit": false,
       "name": "conversation_member_pkey",
       "entityType": "pks",
@@ -5335,10 +5141,7 @@
       "table": "conversation_member"
     },
     {
-      "columns": [
-        "user_id",
-        "hidden_user_id"
-      ],
+      "columns": ["user_id", "hidden_user_id"],
       "nameExplicit": false,
       "name": "hidden_trade_partner_pkey",
       "entityType": "pks",
@@ -5346,10 +5149,7 @@
       "table": "hidden_trade_partner"
     },
     {
-      "columns": [
-        "user_id",
-        "type"
-      ],
+      "columns": ["user_id", "type"],
       "nameExplicit": false,
       "name": "notification_pref_pkey",
       "entityType": "pks",
@@ -5357,10 +5157,7 @@
       "table": "notification_pref"
     },
     {
-      "columns": [
-        "trade_id",
-        "from_user_id"
-      ],
+      "columns": ["trade_id", "from_user_id"],
       "nameExplicit": false,
       "name": "trade_feedback_pkey",
       "entityType": "pks",
@@ -5368,10 +5165,7 @@
       "table": "trade_feedback"
     },
     {
-      "columns": [
-        "blocker_id",
-        "blocked_id"
-      ],
+      "columns": ["blocker_id", "blocked_id"],
       "nameExplicit": false,
       "name": "user_block_pkey",
       "entityType": "pks",
@@ -5379,11 +5173,7 @@
       "table": "user_block"
     },
     {
-      "columns": [
-        "want_list_id",
-        "source_list_id",
-        "collection_slug"
-      ],
+      "columns": ["want_list_id", "source_list_id", "collection_slug"],
       "nameExplicit": false,
       "name": "want_alert_sent_pkey",
       "entityType": "pks",
@@ -5391,9 +5181,7 @@
       "table": "want_alert_sent"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "access_token_pkey",
       "schema": "public",
@@ -5401,9 +5189,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "account_pkey",
       "schema": "public",
@@ -5411,9 +5197,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "conversation_pkey",
       "schema": "public",
@@ -5421,9 +5205,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "code"
-      ],
+      "columns": ["code"],
       "nameExplicit": false,
       "name": "currency_rates_pkey",
       "schema": "public",
@@ -5431,9 +5213,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "list_entries_pkey",
       "schema": "public",
@@ -5441,9 +5221,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "lists_pkey",
       "schema": "public",
@@ -5451,9 +5229,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "locked_objekts_pkey",
       "schema": "public",
@@ -5461,9 +5237,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "message_pkey",
       "schema": "public",
@@ -5471,9 +5245,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "message_flag_pkey",
       "schema": "public",
@@ -5481,9 +5253,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "user_id"
-      ],
+      "columns": ["user_id"],
       "nameExplicit": false,
       "name": "message_pref_pkey",
       "schema": "public",
@@ -5491,9 +5261,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "mod_audit_pkey",
       "schema": "public",
@@ -5501,9 +5269,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "notification_pkey",
       "schema": "public",
@@ -5511,9 +5277,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "offer_pkey",
       "schema": "public",
@@ -5521,9 +5285,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "offer_item_pkey",
       "schema": "public",
@@ -5531,9 +5293,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "pins_pkey",
       "schema": "public",
@@ -5541,9 +5301,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "report_pkey",
       "schema": "public",
@@ -5551,9 +5309,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "session_pkey",
       "schema": "public",
@@ -5561,9 +5317,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "trade_pkey",
       "schema": "public",
@@ -5571,9 +5325,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "trade_leg_pkey",
       "schema": "public",
@@ -5581,9 +5333,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "user_pkey",
       "schema": "public",
@@ -5591,9 +5341,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "user_address_pkey",
       "schema": "public",
@@ -5601,9 +5349,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "user_sanction_pkey",
       "schema": "public",
@@ -5611,9 +5357,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "verification_pkey",
       "schema": "public",
@@ -5622,9 +5366,7 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "token"
-      ],
+      "columns": ["token"],
       "nullsNotDistinct": false,
       "name": "session_token_unique",
       "schema": "public",
@@ -5633,9 +5375,7 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "email"
-      ],
+      "columns": ["email"],
       "nullsNotDistinct": false,
       "name": "user_email_unique",
       "schema": "public",
@@ -5644,9 +5384,7 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "username"
-      ],
+      "columns": ["username"],
       "nullsNotDistinct": false,
       "name": "user_username_unique",
       "schema": "public",

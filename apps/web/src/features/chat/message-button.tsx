@@ -104,7 +104,7 @@ export function useStartGate() {
       timeout: 0,
       actionProps: {
         children: m.link_link_cosmo(),
-        onClick: () => void navigate({ to: "/link" }),
+        onClick: () => void navigate({ to: "/account/profiles" }),
       },
     });
 

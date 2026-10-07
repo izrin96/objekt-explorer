@@ -16,10 +16,9 @@ import {
 } from "@repo/db/schema";
 import { bumpTradeVersion } from "@repo/lib/server/list-touch";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
-import { and, asc, eq, gt, inArray, or, sql } from "drizzle-orm";
+import { and, eq, gt, inArray, or, sql } from "drizzle-orm";
 
 import {
-  chatIdentity,
   type MemberEvent,
   type MemberState,
   type MessagePref,
@@ -35,7 +34,6 @@ import {
 } from "../lib/chat-rules";
 import type { ActorLimits } from "../lib/offer-rules";
 import { effectiveSanction } from "../lib/sanctions";
-import type { AddressInfo } from "../lib/trade-rank";
 import {
   type CardInput,
   type CardView,
@@ -47,8 +45,10 @@ import {
   START_WINDOW_HOURS,
   type StoredCard,
   storedCardSchema,
+  type MessageSettings,
 } from "../schemas/chat";
 import { publishNotify } from "../user-socket";
+import { loadIdentities } from "./identities";
 import { fetchCollectionsBySlug } from "./list";
 import { fetchOffers, offerItemCards, toOfferView } from "./offer-view";
 import { toPublicUser } from "./profile";
@@ -79,6 +79,12 @@ export async function fetchPref(userId: string): Promise<MessagePref> {
     .from(messagePref)
     .where(eq(messagePref.userId, userId));
   return toMessagePref(row);
+}
+
+/** The settings as the account sees them, with Chat as resolved to what partners see. */
+export async function fetchSettings(userId: string): Promise<MessageSettings> {
+  const [pref, identities] = await Promise.all([fetchPref(userId), loadIdentities([userId])]);
+  return { ...pref, chatAs: identities.get(userId)?.identity.address ?? null };
 }
 
 /** The account behind a Message target. */
@@ -494,35 +500,11 @@ export async function publishChatChanged(userIds: string[], conversationId: numb
 
 /** Each account as a conversation heads it, with its avatar. */
 export async function fetchPartners(userIds: string[]) {
-  const ids = unique(userIds);
-  if (ids.length === 0) return new Map<string, never>();
-  const [users, addresses] = await Promise.all([
-    db.select().from(user).where(inArray(user.id, ids)),
-    db
-      .select({
-        userId: userAddress.userId,
-        address: userAddress.address,
-        nickname: userAddress.nickname,
-        hideNickname: userAddress.hideNickname,
-      })
-      .from(userAddress)
-      .where(inArray(userAddress.userId, ids))
-      .orderBy(asc(userAddress.id)),
-  ]);
-
-  const addressesOf = new Map<string, AddressInfo[]>();
-  for (const { userId, ...info } of addresses) {
-    if (!userId) continue;
-    addressesOf.set(userId, [...(addressesOf.get(userId) ?? []), info]);
-  }
+  const identities = await loadIdentities(userIds);
   return new Map(
-    users.map((account) => [
-      account.id,
-      {
-        userId: account.id,
-        user: toPublicUser(account),
-        identity: chatIdentity(account.name, addressesOf.get(account.id) ?? []),
-      },
+    [...identities].map(([userId, { account, identity }]) => [
+      userId,
+      { userId, user: toPublicUser(account), identity },
     ]),
   );
 }
