@@ -13,6 +13,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useId, useState } from "react";
 
+import { PendingStatus } from "@/components/router/pending";
 import { CopyButton } from "@/components/shared/copy-button";
 import { EmptyState } from "@/components/shared/empty-state";
 import {
@@ -60,14 +61,7 @@ export function TradeView({ id }: { id: number }) {
   const live = useUserSocketLive((state) => state.live);
   const query = useQuery(tradeOptions(id, live));
 
-  if (query.isPending) {
-    return (
-      <div className="flex flex-col gap-3">
-        <Skeleton className="h-8 w-1/3" />
-        <Skeleton className="h-24 rounded-lg" />
-      </div>
-    );
-  }
+  if (query.isPending) return <TradeViewSkeleton />;
 
   if (query.isError) {
     return (
@@ -417,5 +411,16 @@ function CancelTrade({ trade, collections }: { trade: Trade; collections: Collec
         </AlertDialogPopup>
       </AlertDialog>
     </>
+  );
+}
+
+/** Also the route's pending view. */
+export function TradeViewSkeleton() {
+  return (
+    <div className="flex flex-col gap-3">
+      <PendingStatus />
+      <Skeleton className="h-8 w-1/3" />
+      <Skeleton className="h-24 rounded-lg" />
+    </div>
   );
 }

@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { browseSearchSchema, toBrowseInput } from "@/features/trade/browse-search";
-import { BrowseView } from "@/features/trade/browse-view";
+import { BrowsePending, BrowseView } from "@/features/trade/browse-view";
 import { browseOptions, myPostsOptions } from "@/features/trade/queries";
 import { currentUserOptions } from "@/features/user/queries";
 import { generateMetadata } from "@/lib/meta";
@@ -35,6 +35,7 @@ export const Route = createFileRoute("/(container)/trade/")({
   },
   head: () => generateMetadata({ title: m.page_titles_trade() }),
   component: BrowsePage,
+  pendingComponent: BrowsePending,
 });
 
 function BrowsePage() {

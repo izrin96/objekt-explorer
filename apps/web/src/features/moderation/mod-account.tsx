@@ -6,6 +6,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 
+import { PendingStatus } from "@/components/router/pending";
 import { EmptyState } from "@/components/shared/empty-state";
 import { PageHeader } from "@/components/shared/page-header";
 import {
@@ -52,15 +53,7 @@ function personName(person: Person) {
 export function ModAccount({ userId, viewerIsAdmin }: { userId: string; viewerIsAdmin: boolean }) {
   const query = useQuery(accountOptions(userId));
 
-  if (query.isPending) {
-    return (
-      <div className="flex flex-col gap-4">
-        <Skeleton className="h-10 w-1/2" />
-        <Skeleton className="h-24 rounded-lg" />
-        <Skeleton className="h-40 rounded-lg" />
-      </div>
-    );
-  }
+  if (query.isPending) return <ModAccountSkeleton />;
 
   if (query.isError) {
     return (
@@ -628,5 +621,17 @@ function RoleControl({
         </AlertDialogPopup>
       </AlertDialog>
     </section>
+  );
+}
+
+/** Also the route's pending view. */
+export function ModAccountSkeleton() {
+  return (
+    <div className="flex flex-col gap-4">
+      <PendingStatus />
+      <Skeleton className="h-10 w-1/2" />
+      <Skeleton className="h-24 rounded-lg" />
+      <Skeleton className="h-40 rounded-lg" />
+    </div>
   );
 }

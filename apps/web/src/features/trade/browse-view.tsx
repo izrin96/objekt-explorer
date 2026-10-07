@@ -5,9 +5,11 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { WindowVirtualizer } from "virtua";
 
+import { PendingStatus } from "@/components/router/pending";
 import { EmptyState } from "@/components/shared/empty-state";
 import { InfiniteSentinel } from "@/components/shared/infinite-sentinel";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTab } from "@/components/ui/tabs";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import { useSelectedArtists } from "@/features/artist/use-selected-artists";
@@ -46,6 +48,7 @@ const TYPES: PostType[] = ["all", "wtt", "wtb", "wts"];
 
 /** `virtua` measures each post; the gap rides on the item so it is part of the measurement */
 const POST_GAP = "pb-3";
+const SSR_POSTS = 4;
 
 export function BrowseView({ search }: { search: BrowseSearch }) {
   const { data: user } = useCurrentUser();
@@ -146,14 +149,10 @@ export function BrowseView({ search }: { search: BrowseSearch }) {
       />
 
       {query.isPending ? (
-        <div className="flex flex-col gap-3">
-          <span role="status" className="sr-only">
-            {m.status_loading()}
-          </span>
-          <BrowsePostSkeleton />
-          <BrowsePostSkeleton />
-          <BrowsePostSkeleton />
-        </div>
+        <>
+          <PendingStatus />
+          <BrowseFeedSkeleton />
+        </>
       ) : query.isError && posts.length === 0 ? (
         <EmptyState
           icon={WarningIcon}
@@ -185,7 +184,8 @@ export function BrowseView({ search }: { search: BrowseSearch }) {
           aria-busy={query.isPlaceholderData}
           className={cn(query.isPlaceholderData && "opacity-60")}
         >
-          <WindowVirtualizer data={posts}>
+          {/* the server draws the first posts, so a full load is not blank until hydration */}
+          <WindowVirtualizer data={posts} ssrCount={SSR_POSTS}>
             {(post: (typeof posts)[number]) => (
               <div key={post.id} className={POST_GAP}>
                 <BrowsePost
@@ -311,5 +311,33 @@ function BrowseFilters({
         onRemove={(chip) => (chip.key === "slug" ? onClearSlug() : setFilters(chip.remove))}
       />
     </>
+  );
+}
+
+/** The route's pending view, under the layout's header and tabs. */
+export function BrowsePending() {
+  return (
+    <>
+      <PendingStatus />
+      <div className="flex items-center justify-between gap-4">
+        <Skeleton className="h-4 w-80 max-w-full" />
+        <Skeleton className="h-8 w-28 shrink-0 rounded-md" />
+      </div>
+      <div className="flex flex-wrap gap-2">
+        <Skeleton className="h-9 w-48 rounded-lg" />
+        <Skeleton className="h-9 w-72 max-w-full rounded-lg" />
+      </div>
+      <BrowseFeedSkeleton />
+    </>
+  );
+}
+
+function BrowseFeedSkeleton() {
+  return (
+    <div className="flex flex-col gap-3">
+      <BrowsePostSkeleton />
+      <BrowsePostSkeleton />
+      <BrowsePostSkeleton />
+    </div>
   );
 }

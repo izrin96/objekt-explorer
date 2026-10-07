@@ -9,6 +9,7 @@ import { REPORT_REASONS } from "@repo/api/schemas/moderation";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 
+import { PendingStatus } from "@/components/router/pending";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -24,14 +25,7 @@ import { When } from "./when";
 export function ModQueue() {
   const query = useQuery(queueOptions());
 
-  if (query.isPending) {
-    return (
-      <div className="flex flex-col gap-1.5">
-        <Skeleton className="h-16 rounded-lg" />
-        <Skeleton className="h-16 rounded-lg" />
-      </div>
-    );
-  }
+  if (query.isPending) return <ModQueueSkeleton />;
 
   if (query.isError) {
     return (
@@ -108,5 +102,16 @@ export function ModQueue() {
         );
       })}
     </ul>
+  );
+}
+
+/** Also the route's pending view, under its header. */
+export function ModQueueSkeleton() {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <PendingStatus />
+      <Skeleton className="h-16 rounded-lg" />
+      <Skeleton className="h-16 rounded-lg" />
+    </div>
   );
 }

@@ -5,6 +5,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useId } from "react";
 
+import { PendingStatus } from "@/components/router/pending";
 import { EmptyState } from "@/components/shared/empty-state";
 import { InfiniteSentinel } from "@/components/shared/infinite-sentinel";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -22,15 +23,7 @@ type Collections = Readonly<Record<string, ValidObjekt | undefined>>;
 export function MyTradesView() {
   const query = useInfiniteQuery(mineOptions());
 
-  if (query.isPending) {
-    return (
-      <div className="flex flex-col gap-1.5">
-        <Skeleton className="h-16 rounded-lg" />
-        <Skeleton className="h-16 rounded-lg" />
-        <Skeleton className="h-16 rounded-lg" />
-      </div>
-    );
-  }
+  if (query.isPending) return <MyTradesSkeleton />;
 
   if (query.isError) {
     return (
@@ -192,5 +185,17 @@ function MineRowLink({
     <Link to="/messages/$id" params={{ id: String(row.conversationId) }} className={rowClass}>
       {body}
     </Link>
+  );
+}
+
+/** Also the route's pending view, under the layout's header and tabs. */
+export function MyTradesSkeleton() {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <PendingStatus />
+      <Skeleton className="h-16 rounded-lg" />
+      <Skeleton className="h-16 rounded-lg" />
+      <Skeleton className="h-16 rounded-lg" />
+    </div>
   );
 }

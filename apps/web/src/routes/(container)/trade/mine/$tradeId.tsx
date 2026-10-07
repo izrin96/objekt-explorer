@@ -4,7 +4,7 @@ import { Link, createFileRoute, notFound } from "@tanstack/react-router";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Button } from "@/components/ui/button";
 import { tradeOptions } from "@/features/offers/queries";
-import { TradeView } from "@/features/offers/trade-view";
+import { TradeView, TradeViewSkeleton } from "@/features/offers/trade-view";
 import { generateMetadata } from "@/lib/meta";
 import { isNotFound } from "@/lib/orpc-error";
 import { m } from "@/paraglide/messages";
@@ -28,6 +28,7 @@ export const Route = createFileRoute("/(container)/trade/mine/$tradeId")({
         : m.page_titles_trade_mine(),
     }),
   notFoundComponent: TradeNotFound,
+  pendingComponent: TradeViewSkeleton,
   component: TradePage,
 });
 

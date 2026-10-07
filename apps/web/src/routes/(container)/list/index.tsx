@@ -11,6 +11,7 @@ import { CreateListDialog } from "@/features/list/create-list-dialog";
 import { ListCard } from "@/features/list/list-card";
 import { listPreviewsOptions } from "@/features/list/queries";
 import { useListPreviews } from "@/features/list/use-list-previews";
+import { PreviewCardsSkeleton } from "@/features/objekt/objekt-preview-strip";
 import { useUserLists } from "@/features/user/hooks";
 import { currentUserOptions } from "@/features/user/queries";
 import { generateMetadata } from "@/lib/meta";
@@ -33,6 +34,7 @@ export const Route = createFileRoute("/(container)/list/")({
   },
   head: () => generateMetadata({ title: m.page_titles_my_list() }),
   component: ListsPage,
+  pendingComponent: ListsPending,
 });
 
 function ListsPage() {
@@ -91,6 +93,15 @@ function ListsPage() {
 
       <CreateListDialog open={createOpen} onOpenChange={setCreateOpen} />
       <DiscordFormatDialog open={discordOpen} onOpenChange={setDiscordOpen} />
+    </>
+  );
+}
+
+function ListsPending() {
+  return (
+    <>
+      <PageHeader title={m.list_title()} />
+      <PreviewCardsSkeleton />
     </>
   );
 }

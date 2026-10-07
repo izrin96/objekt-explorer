@@ -1,9 +1,10 @@
-import { Outlet, createFileRoute, redirect, useParams } from "@tanstack/react-router";
-import { useEffect, useRef } from "react";
+import type { ChatBox } from "@repo/api/schemas/chat";
+import { Outlet, createFileRoute, redirect, useLocation, useParams } from "@tanstack/react-router";
+import { type ReactNode, useEffect, useRef } from "react";
 
 import { PageHeader } from "@/components/shared/page-header";
 import { BoxTabs } from "@/features/chat/box-tabs";
-import { ConversationList } from "@/features/chat/conversation-list";
+import { ConversationList, ConversationListSkeleton } from "@/features/chat/conversation-list";
 import { conversationsOptions } from "@/features/chat/queries";
 import { messagesSearchSchema } from "@/features/chat/search-schema";
 import { currentUserOptions } from "@/features/user/queries";
@@ -25,6 +26,7 @@ export const Route = createFileRoute("/(container)/messages")({
       .catch(() => undefined);
   },
   component: MessagesLayout,
+  pendingComponent: MessagesPending,
 });
 
 function MessagesLayout() {
@@ -42,8 +44,38 @@ function MessagesLayout() {
     document.querySelector<HTMLElement>(`[data-conversation-link="${CSS.escape(left)}"]`)?.focus();
   }, [openId]);
 
-  // the frame fills the viewport under the nav (and its 1px border) and the page header, so
-  // the thread scrolls inside it and the page does not; a phone's open thread drops the header
+  return (
+    <MessagesFrame box={box} threadOpen={threadOpen} list={<ConversationList box={box} />}>
+      {/* on a phone the list and its heading are hidden while a thread is open */}
+      {threadOpen ? <h1 className="sr-only md:hidden">{m.chat_title()}</h1> : null}
+      <Outlet />
+    </MessagesFrame>
+  );
+}
+
+/** The conversation list loading: the page's frame, with the list's skeleton in place. */
+function MessagesPending() {
+  const box = useLocation({
+    select: (location) => messagesSearchSchema.parse(location.search).box ?? "inbox",
+  });
+  return <MessagesFrame box={box} threadOpen={false} list={<ConversationListSkeleton />} />;
+}
+
+/**
+ * The frame fills the viewport under the nav (and its 1px border) and the page header, so
+ * the thread scrolls inside it and the page does not; a phone's open thread drops the header.
+ */
+function MessagesFrame({
+  box,
+  threadOpen,
+  list,
+  children,
+}: {
+  box: ChatBox;
+  threadOpen: boolean;
+  list: ReactNode;
+  children?: ReactNode;
+}) {
   return (
     <>
       <div className={cn(threadOpen && "max-md:hidden")}>
@@ -59,12 +91,10 @@ function MessagesLayout() {
           className={cn("flex min-h-0 min-w-0 flex-col md:border-r", threadOpen && "max-md:hidden")}
         >
           <BoxTabs box={box} />
-          <ConversationList box={box} />
+          {list}
         </aside>
         <section className={cn("flex min-h-0 min-w-0 flex-col", !threadOpen && "max-md:hidden")}>
-          {/* on a phone the list and its heading are hidden while a thread is open */}
-          {threadOpen ? <h1 className="sr-only md:hidden">{m.chat_title()}</h1> : null}
-          <Outlet />
+          {children}
         </section>
       </div>
     </>

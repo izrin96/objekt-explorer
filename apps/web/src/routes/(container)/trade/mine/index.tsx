@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { MyTradesView } from "@/features/offers/my-trades-view";
+import { MyTradesSkeleton, MyTradesView } from "@/features/offers/my-trades-view";
 import { mineOptions } from "@/features/offers/queries";
 import { generateMetadata } from "@/lib/meta";
 import { m } from "@/paraglide/messages";
@@ -14,4 +14,5 @@ export const Route = createFileRoute("/(container)/trade/mine/")({
   },
   head: () => generateMetadata({ title: m.page_titles_trade_mine() }),
   component: MyTradesView,
+  pendingComponent: MyTradesSkeleton,
 });

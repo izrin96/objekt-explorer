@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { LinkedCard } from "@/features/link/linked-card";
 import { linkedPreviewsOptions } from "@/features/link/queries";
 import { useLinkedPreviews } from "@/features/link/use-linked-previews";
+import { PreviewCardsSkeleton } from "@/features/objekt/objekt-preview-strip";
 import { useUserProfiles } from "@/features/user/hooks";
 import { currentUserOptions } from "@/features/user/queries";
 import { generateMetadata } from "@/lib/meta";
@@ -28,6 +29,7 @@ export const Route = createFileRoute("/(container)/link/")({
   },
   head: () => generateMetadata({ title: m.page_titles_my_cosmo_link() }),
   component: LinkPage,
+  pendingComponent: LinkPending,
 });
 
 function LinkPage() {
@@ -62,6 +64,15 @@ function LinkPage() {
           ))}
         </div>
       )}
+    </>
+  );
+}
+
+function LinkPending() {
+  return (
+    <>
+      <PageHeader title={m.link_my_cosmo()} />
+      <PreviewCardsSkeleton />
     </>
   );
 }

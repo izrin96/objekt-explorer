@@ -11,6 +11,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 
+import { PendingStatus } from "@/components/router/pending";
 import { EmptyState } from "@/components/shared/empty-state";
 import { InfiniteSentinel } from "@/components/shared/infinite-sentinel";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -48,21 +49,7 @@ export function ConversationList({ box }: { box: ChatBox }) {
   const query = useInfiniteQuery(conversationsOptions(box));
   const now = useMinuteClock();
 
-  if (query.isPending) {
-    return (
-      <div className="flex flex-col gap-1 p-2">
-        {[0, 1, 2, 3].map((row) => (
-          <div key={row} className="flex items-center gap-3 px-2 py-2.5">
-            <Skeleton className="size-10 shrink-0 rounded-full" />
-            <div className="flex flex-1 flex-col gap-1.5">
-              <Skeleton className="h-3.5 w-1/2" />
-              <Skeleton className="h-3.5 w-full" />
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  }
+  if (query.isPending) return <ConversationListSkeleton />;
 
   if (query.isError) {
     return (
@@ -187,5 +174,22 @@ function ConversationItem({ row, now }: { row: ConversationRow; now: number }) {
         className="absolute end-2 top-1/2 -translate-y-1/2"
       />
     </li>
+  );
+}
+
+export function ConversationListSkeleton() {
+  return (
+    <div className="flex flex-col gap-1 p-2">
+      <PendingStatus />
+      {[0, 1, 2, 3].map((row) => (
+        <div key={row} className="flex items-center gap-3 px-2 py-2.5">
+          <Skeleton className="size-10 shrink-0 rounded-full" />
+          <div className="flex flex-1 flex-col gap-1.5">
+            <Skeleton className="h-3.5 w-1/2" />
+            <Skeleton className="h-3.5 w-full" />
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }

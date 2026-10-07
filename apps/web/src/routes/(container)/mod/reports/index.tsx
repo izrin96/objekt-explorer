@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { PageHeader } from "@/components/shared/page-header";
-import { ModQueue } from "@/features/moderation/mod-queue";
+import { ModQueue, ModQueueSkeleton } from "@/features/moderation/mod-queue";
 import { queueOptions } from "@/features/moderation/queries";
 import { generateMetadata } from "@/lib/meta";
 import { m } from "@/paraglide/messages";
@@ -13,6 +13,7 @@ export const Route = createFileRoute("/(container)/mod/reports/")({
   },
   head: () => generateMetadata({ title: m.page_titles_mod_reports() }),
   component: QueuePage,
+  pendingComponent: QueuePending,
 });
 
 function QueuePage() {
@@ -20,6 +21,15 @@ function QueuePage() {
     <>
       <PageHeader title={m.mod_queue_title()} description={m.mod_queue_description()} />
       <ModQueue />
+    </>
+  );
+}
+
+function QueuePending() {
+  return (
+    <>
+      <PageHeader title={m.mod_queue_title()} description={m.mod_queue_description()} />
+      <ModQueueSkeleton />
     </>
   );
 }

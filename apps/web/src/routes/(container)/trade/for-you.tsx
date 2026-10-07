@@ -1,6 +1,6 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 
-import { ForYouView } from "@/features/trade/for-you-view";
+import { ForYouPending, ForYouView } from "@/features/trade/for-you-view";
 import { forYouOptions } from "@/features/trade/queries";
 import { forYouSearchSchema, toForYouFilter } from "@/features/trade/search-schema";
 import { currentUserOptions } from "@/features/user/queries";
@@ -26,6 +26,7 @@ export const Route = createFileRoute("/(container)/trade/for-you")({
   },
   head: () => generateMetadata({ title: m.page_titles_trade_for_you() }),
   component: ForYouPage,
+  pendingComponent: ForYouPending,
 });
 
 function ForYouPage() {

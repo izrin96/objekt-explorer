@@ -12,13 +12,16 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 
+import { PendingStatus } from "@/components/router/pending";
 import { SocialBadge } from "@/components/shared/social-badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Menu, MenuItem, MenuPopup, MenuSeparator, MenuTrigger } from "@/components/ui/menu";
+import { Skeleton } from "@/components/ui/skeleton";
 import { MessageButton } from "@/features/chat/message-button";
 import { CompareDialog } from "@/features/compare/compare-dialog";
+import { SkeletonGrid } from "@/features/objekt/skeleton-grid";
 import { ProfileLink } from "@/features/profile/profile-hover-card";
 import { listMatchCountOptions } from "@/features/trade/queries";
 import { displayNickname } from "@/lib/address";
@@ -205,5 +208,27 @@ function TradeMatchesLink({ slug }: { slug: string }) {
         </Badge>
       )}
     </Button>
+  );
+}
+
+/** A list page while it loads: the header's shape over the objekt grid. */
+export function ListPageSkeleton() {
+  return (
+    <>
+      <PendingStatus />
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="flex flex-col gap-2">
+          <Skeleton className="h-7 w-56 max-w-full" />
+          <Skeleton className="h-4 w-36" />
+          <Skeleton className="h-6 w-44" />
+        </div>
+        <div className="flex gap-1.5">
+          <Skeleton className="h-8 w-24 rounded-md" />
+          <Skeleton className="size-8 rounded-md" />
+        </div>
+      </div>
+      <Skeleton className="h-9 w-full max-w-xl rounded-lg" />
+      <SkeletonGrid />
+    </>
   );
 }

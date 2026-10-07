@@ -1,7 +1,7 @@
 import { roleList } from "@repo/api/schemas/moderation";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 
-import { ModAccount } from "@/features/moderation/mod-account";
+import { ModAccount, ModAccountSkeleton } from "@/features/moderation/mod-account";
 import { accountOptions } from "@/features/moderation/queries";
 import { generateMetadata } from "@/lib/meta";
 import { isNotFound } from "@/lib/orpc-error";
@@ -17,6 +17,7 @@ export const Route = createFileRoute("/(container)/mod/reports/$userId")({
   },
   head: () => generateMetadata({ title: m.page_titles_mod_reports() }),
   component: AccountPage,
+  pendingComponent: ModAccountSkeleton,
 });
 
 function AccountPage() {

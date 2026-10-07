@@ -1,6 +1,7 @@
 import { OBJEKT_PREVIEW_SIZE } from "@repo/api/constants";
 import type { ObjektPreview } from "@repo/api/schemas/objekts";
 
+import { PendingStatus } from "@/components/router/pending";
 import { Skeleton } from "@/components/ui/skeleton";
 import { m } from "@/paraglide/messages";
 
@@ -67,5 +68,30 @@ export function ObjektPreviewCount({
           ? m.objekt_count_single()
           : m.objekt_count_multiple({ count: preview.count.toLocaleString() })}
     </span>
+  );
+}
+
+/** A list or linked-profile card while its page loads. */
+function PreviewCardSkeleton() {
+  return (
+    <div className="bg-card flex flex-col overflow-hidden rounded-lg border">
+      <ObjektPreviewStrip preview={undefined} />
+      <div className="flex flex-col gap-2 px-3.5 pt-3 pb-3.5">
+        <Skeleton className="h-4 w-1/2" />
+        <Skeleton className="h-3 w-1/3" />
+      </div>
+    </div>
+  );
+}
+
+/** The card grid lists and linked profiles share, as their routes' pending view. */
+export function PreviewCardsSkeleton() {
+  return (
+    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <PendingStatus />
+      <PreviewCardSkeleton />
+      <PreviewCardSkeleton />
+      <PreviewCardSkeleton />
+    </div>
   );
 }

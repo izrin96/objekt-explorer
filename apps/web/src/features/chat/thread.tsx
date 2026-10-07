@@ -12,6 +12,7 @@ import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-q
 import { Link } from "@tanstack/react-router";
 import { Fragment, type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react";
 
+import { PendingStatus } from "@/components/router/pending";
 import { EmptyState } from "@/components/shared/empty-state";
 import { InfiniteSentinel } from "@/components/shared/infinite-sentinel";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -49,15 +50,7 @@ export function Thread({ id }: { id: number }) {
   const query = useInfiniteQuery(threadOptions(id));
   useCatchUp(id);
 
-  if (query.isPending) {
-    return (
-      <div className="flex flex-1 flex-col gap-3 p-4">
-        <Skeleton className="h-10 w-1/2" />
-        <Skeleton className="ms-auto h-10 w-2/3" />
-        <Skeleton className="h-10 w-1/3" />
-      </div>
-    );
-  }
+  if (query.isPending) return <ThreadSkeleton />;
 
   if (query.isError) {
     return (
@@ -505,4 +498,16 @@ function useCatchUp(id: number) {
       clearInterval(timer);
     };
   }, [queryClient, id, live]);
+}
+
+/** Also the route's pending view, in the thread pane. */
+export function ThreadSkeleton() {
+  return (
+    <div className="flex flex-1 flex-col gap-3 p-4">
+      <PendingStatus />
+      <Skeleton className="h-10 w-1/2" />
+      <Skeleton className="ms-auto h-10 w-2/3" />
+      <Skeleton className="h-10 w-1/3" />
+    </div>
+  );
 }

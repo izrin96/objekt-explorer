@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 
+import { PendingStatus } from "@/components/router/pending";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -140,15 +141,7 @@ function ForYouResults({
       },
     );
 
-  if (query.isPending) {
-    return (
-      <div className="flex flex-col gap-1.5">
-        <Skeleton className="h-16 rounded-lg" />
-        <Skeleton className="h-16 rounded-lg" />
-        <Skeleton className="h-16 rounded-lg" />
-      </div>
-    );
-  }
+  if (query.isPending) return <PartnerRowsSkeleton />;
 
   if (query.isError) {
     return (
@@ -248,5 +241,30 @@ function NotShown({
         </Button>
       ) : null}
     </div>
+  );
+}
+
+function PartnerRowsSkeleton() {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <Skeleton className="h-16 rounded-lg" />
+      <Skeleton className="h-16 rounded-lg" />
+      <Skeleton className="h-16 rounded-lg" />
+    </div>
+  );
+}
+
+/** The route's pending view, under the layout's header and tabs. */
+export function ForYouPending() {
+  return (
+    <>
+      <PendingStatus />
+      <Skeleton className="h-4 w-80 max-w-full" />
+      <div className="flex flex-wrap gap-2">
+        <Skeleton className="h-8 w-32 rounded-md" />
+        <Skeleton className="h-8 w-32 rounded-md" />
+      </div>
+      <PartnerRowsSkeleton />
+    </>
   );
 }
