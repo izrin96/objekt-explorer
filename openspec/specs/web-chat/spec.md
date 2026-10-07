@@ -45,11 +45,15 @@ The setting applies to new conversations only. Existing conversations stay open.
 - **THEN** no Message button is shown for that account, and a direct request to start a conversation is refused
 
 ### Requirement: No Hide User
-Hide User, on a list or a linked Cosmo profile, SHALL have no effect: a list's page and a profile show the linked account, and Message follows only "Who can message you" and blocks. Creating or editing a list or a profile SHALL no longer offer Hide User, and new lists SHALL be saved with it off. The stored settings stay until a later migration removes them.
+Lists and linked Cosmo profiles SHALL have no Hide User setting: a list's page and a profile always show the linked account, and Message follows only "Who can message you" and blocks. A save from an older tab that still sends Hide User SHALL succeed and ignore it.
 
-#### Scenario: A list that had Hide User on
-- **WHEN** a visitor opens a sale list whose owner had turned Hide User on, and the owner accepts messages from anyone
+#### Scenario: A sale list shows its owner
+- **WHEN** a visitor opens a sale list whose owner accepts messages from anyone
 - **THEN** the page shows the owner's account and offers Message
+
+#### Scenario: Older tab sends Hide User
+- **WHEN** a tab loaded before the setting was removed saves a list with Hide User on
+- **THEN** the save succeeds and nothing about the list hides its owner
 
 ### Requirement: Message from a list page
 A list's page SHALL offer Message in its header, so a list reached from a shared link can start a chat with its owner. It SHALL not be offered on the viewer's own list, between accounts where either blocked the other, or where the rules above hide it. It attaches no card, so the conversation starts as a request, as from a profile.

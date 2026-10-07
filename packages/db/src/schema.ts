@@ -46,7 +46,6 @@ export const userAddress = pgTable(
     linkedAt: timestamp("linked_at", { mode: "string", withTimezone: true }),
     bannerImgUrl: text("banner_img_url"),
     bannerImgType: text("banner_img_type"),
-    hideUser: boolean("hide_user").notNull().default(true),
     privateProfile: boolean("private_profile").notNull().default(false),
     privateSerial: boolean("private_serial").notNull().default(false),
     hideTransfer: boolean("hide_transfer").notNull().default(false),
@@ -76,7 +75,6 @@ export const lists = pgTable(
       }),
     slug: varchar("slug", { length: 12 }).notNull(),
     name: text("name").notNull(),
-    hideUser: boolean("hide_user").notNull().default(true),
     createdAt: timestamp("created_at", { mode: "string", withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -485,7 +483,6 @@ export const messagePref = pgTable(
       .primaryKey()
       .references(() => user.id, { onDelete: "cascade" }),
     allow: text("allow").notNull().default("anyone"),
-    allowHidden: boolean("allow_hidden").notNull().default(false),
   },
   (t) => [check("message_pref_allow", sql`${t.allow} IN ('anyone', 'nobody')`)],
 );

@@ -117,8 +117,6 @@ export const listCrud = {
             userId: user.id,
             slug,
             profileSlug,
-            // Hide User is no longer offered; the column goes in a later migration
-            hideUser: false,
             listTypeNew: input.listTypeNew,
             isProfileBind,
             hideSerial:
