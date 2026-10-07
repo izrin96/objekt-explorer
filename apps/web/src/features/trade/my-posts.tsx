@@ -1,21 +1,27 @@
-import { ArrowClockwiseIcon, ArrowFatLineUpIcon } from "@phosphor-icons/react";
+import { ArrowClockwiseIcon, ArrowFatLineUpIcon, CaretDownIcon } from "@phosphor-icons/react";
 import type { Outputs } from "@repo/api";
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
+import { Link, useHydrated } from "@tanstack/react-router";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { relativeTime } from "@/lib/time";
 import { m } from "@/paraglide/messages";
+import { useSettings } from "@/stores/settings";
 
 import { useBumpPost } from "./actions";
 import { postTime } from "./browse-post";
 import { ListRoleBadge } from "./list-role-badge";
+import { summarizePosts } from "./my-posts-summary";
 import { myPostsOptions } from "./queries";
 
 /** Hidden until the viewer has a list on Trade; Post a list sits beside the page description. */
 export function MyPosts() {
   const query = useQuery(myPostsOptions());
+  const saved = useSettings((s) => s.myPostsShown);
+  const setSettings = useSettings((s) => s.set);
+  const hydrated = useHydrated();
   // times are relative to the fetch, which a bump refreshes
   const now = query.dataUpdatedAt;
 
@@ -34,16 +40,63 @@ export function MyPosts() {
   }
   if (query.data.length === 0) return null;
 
+  const summary = summarizePosts(query.data);
+  // the server cannot read the saved choice, so the default holds until hydration
+  const open = hydrated ? (saved ?? summary.shownByDefault) : summary.shownByDefault;
+
   return (
-    <section aria-labelledby="my-posts-title" className="flex flex-col gap-2">
-      <h2 id="my-posts-title" className="text-muted-foreground text-sm font-medium">
-        {m.trade_my_posts_title()}
-      </h2>
-      <ul className="bg-card flex flex-col divide-y rounded-lg border">
-        {query.data.map((post) => (
-          <MyPostRow key={post.id} post={post} now={now} />
-        ))}
-      </ul>
+    <section aria-labelledby="my-posts-title">
+      <Collapsible open={open} onOpenChange={(next) => setSettings({ myPostsShown: next })}>
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+            <h2 id="my-posts-title" className="text-muted-foreground font-medium">
+              {m.trade_my_posts_title()}
+            </h2>
+            <span aria-hidden className="text-muted-foreground">
+              ·
+            </span>
+            <span className="text-muted-foreground tabular-nums">
+              {m.trade_my_posts_listed({ count: summary.listed })}
+            </span>
+            {summary.idle > 0 ? (
+              <>
+                <span aria-hidden className="text-muted-foreground">
+                  ·
+                </span>
+                <Badge variant="outline" size="sm" className="tabular-nums">
+                  {m.trade_my_posts_idle({ count: summary.idle })}
+                </Badge>
+              </>
+            ) : null}
+            {summary.ready > 0 ? (
+              <>
+                <span aria-hidden className="text-muted-foreground">
+                  ·
+                </span>
+                <span className="text-muted-foreground tabular-nums">
+                  {m.trade_my_posts_ready({ count: summary.ready })}
+                </span>
+              </>
+            ) : null}
+          </div>
+          <CollapsibleTrigger
+            render={<Button variant="ghost" size="sm" className="group shrink-0" />}
+          >
+            {open ? m.trade_my_posts_hide() : m.trade_my_posts_show()}
+            <CaretDownIcon
+              aria-hidden
+              className="transition-transform group-data-panel-open:rotate-180"
+            />
+          </CollapsibleTrigger>
+        </div>
+        <CollapsiblePanel>
+          <ul className="bg-card mt-2 flex flex-col divide-y rounded-lg border">
+            {query.data.map((post) => (
+              <MyPostRow key={post.id} post={post} now={now} />
+            ))}
+          </ul>
+        </CollapsiblePanel>
+      </Collapsible>
     </section>
   );
 }
