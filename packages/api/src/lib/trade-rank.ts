@@ -228,10 +228,12 @@ export function countDropped(partners: { userId: string; dropped: Dropped[] }[])
 
 export type AddressRef = { address: string; nickname: string | null };
 export type PartnerIdentity = {
-  /** the Cosmo nickname, or the account name when there is none */
+  /** what to call the partner: a Cosmo nickname, a shortened address or the account name */
   name: string;
-  /** set when `name` is a Cosmo nickname */
+  /** the profile `name` stands for, when it stands for one */
   address: string | null;
+  /** that profile's Cosmo nickname; null when it has none, so a link uses the address */
+  nickname: string | null;
   /** the partner's other bound addresses among the matched lists */
   also: AddressRef[];
 };
@@ -282,6 +284,7 @@ export function toPartnerIdentity(
   return {
     name: heading?.nickname ?? accountName,
     address: heading?.address ?? null,
+    nickname: heading?.nickname ?? null,
     also: [...others].map(refOf),
   };
 }

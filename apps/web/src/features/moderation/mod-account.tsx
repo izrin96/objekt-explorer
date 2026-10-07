@@ -109,7 +109,7 @@ export function ModAccount({ userId, viewerIsAdmin }: { userId: string; viewerIs
             {account.identity.address ? (
               <ProfileLink
                 address={account.identity.address}
-                nickname={name}
+                nickname={account.identity.nickname}
                 className="text-sm underline-offset-2 hover:underline"
               >
                 {m.mod_view_profile()}

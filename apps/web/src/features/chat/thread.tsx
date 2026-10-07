@@ -188,7 +188,7 @@ function ThreadView({
             {partner.identity.address ? (
               <ProfileLink
                 address={partner.identity.address}
-                nickname={name}
+                nickname={partner.identity.nickname}
                 className="underline-offset-2 hover:underline"
               >
                 {name}

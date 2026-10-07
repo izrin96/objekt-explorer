@@ -248,13 +248,14 @@ export function chatIdentity(
     addresses.find(
       (info) => chatAs !== null && info.address.toLowerCase() === chatAs.toLowerCase(),
     ) ?? addresses[0];
-  if (!chosen) return { name: accountName, address: null, also: [] };
+  if (!chosen) return { name: accountName, address: null, nickname: null, also: [] };
   const address = chosen.address.toLowerCase();
   // Cosmo stores an unnamed profile's nickname as its own address
   const named = chosen.nickname && chosen.nickname.toLowerCase() !== address;
   return {
     name: named ? chosen.nickname! : truncateAddress(address),
     address,
+    nickname: named ? chosen.nickname : null,
     also: [],
   };
 }

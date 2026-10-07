@@ -231,19 +231,19 @@ describe("toPartnerIdentity", () => {
   test("bound nickname", () => {
     expect(
       toPartnerIdentity("rin.account", [{ profileAddress: "0xrin", matches: 3 }], [rin]),
-    ).toEqual({ name: "rinrin", address: "0xrin", also: [] });
+    ).toEqual({ name: "rinrin", address: "0xrin", nickname: "rinrin", also: [] });
   });
 
   test("Hide Cosmo ID does not apply to Trade", () => {
     const hidden = { ...rin, hideNickname: true };
     expect(
       toPartnerIdentity("rin.account", [{ profileAddress: "0xrin", matches: 3 }], [hidden]),
-    ).toEqual({ name: "rinrin", address: "0xrin", also: [] });
+    ).toEqual({ name: "rinrin", address: "0xrin", nickname: "rinrin", also: [] });
   });
 
   test("no bound address", () => {
     expect(toPartnerIdentity("rin.account", [{ profileAddress: null, matches: 3 }], [rin])).toEqual(
-      { name: "rin.account", address: null, also: [] },
+      { name: "rin.account", address: null, nickname: null, also: [] },
     );
   });
 
@@ -261,6 +261,7 @@ describe("toPartnerIdentity", () => {
     ).toEqual({
       name: "rinrin",
       address: "0xrin",
+      nickname: "rinrin",
       also: [{ address: "0xalt", nickname: "rin2" }],
     });
   });

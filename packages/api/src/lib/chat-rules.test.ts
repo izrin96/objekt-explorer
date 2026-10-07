@@ -250,6 +250,7 @@ describe("chatIdentity", () => {
     expect(chatIdentity("Rin", [main, alt])).toEqual({
       name: "rin.main",
       address: main.address.toLowerCase(),
+      nickname: "rin.main",
       also: [],
     });
   });
@@ -267,17 +268,24 @@ describe("chatIdentity", () => {
     expect(chatIdentity("Rin", [main], alt.address).name).toBe("rin.main");
   });
 
-  test("a profile with no nickname shows its shortened address", () => {
-    expect(chatIdentity("Rin", [{ address: main.address, nickname: null }]).name).toBe(
-      "0xabc0…0001",
-    );
-    expect(chatIdentity("Rin", [{ address: main.address, nickname: main.address }]).name).toBe(
-      "0xabc0…0001",
-    );
+  test("a profile with no nickname shows its shortened address and links by the full one", () => {
+    for (const nickname of [null, main.address]) {
+      expect(chatIdentity("Rin", [{ address: main.address, nickname }])).toEqual({
+        name: "0xabc0…0001",
+        address: main.address.toLowerCase(),
+        nickname: null,
+        also: [],
+      });
+    }
   });
 
   test("no linked profile uses the account name", () => {
-    expect(chatIdentity("Rin", [], alt.address)).toEqual({ name: "Rin", address: null, also: [] });
+    expect(chatIdentity("Rin", [], alt.address)).toEqual({
+      name: "Rin",
+      address: null,
+      nickname: null,
+      also: [],
+    });
   });
 });
 

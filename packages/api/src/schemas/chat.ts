@@ -152,6 +152,7 @@ export const setSettingsInputSchema = messageSettingsSchema.partial();
 const partnerIdentitySchema = z.object({
   name: z.string(),
   address: z.string().nullable(),
+  nickname: z.string().nullable(),
   also: z.object({ address: z.string(), nickname: z.string().nullable() }).array(),
 });
 

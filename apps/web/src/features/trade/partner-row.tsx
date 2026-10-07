@@ -219,7 +219,7 @@ function PartnerContact({ partner }: { partner: TradePartner }) {
       {identity.address ? (
         <ProfileLink
           address={identity.address}
-          nickname={identity.name}
+          nickname={identity.nickname}
           className="text-sm font-medium underline-offset-2 hover:underline"
         >
           {m.trade_view_profile()}

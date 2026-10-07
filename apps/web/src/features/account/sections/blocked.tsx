@@ -60,7 +60,7 @@ function BlockedIdentity({ row }: { row: BlockedRow }) {
           {identity.address ? (
             <ProfileLink
               address={identity.address}
-              nickname={identity.name}
+              nickname={identity.nickname}
               className="underline-offset-2 hover:underline"
             >
               {identity.name}
