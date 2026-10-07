@@ -32,7 +32,7 @@ import {
   visibleNickname,
 } from "../lib/trade-rank";
 import type { ListTypeNew } from "../schemas/list";
-import type { BrowseFilters, FeedCursor, PostType } from "../schemas/trade";
+import type { BrowseFilters, BrowseMatch, FeedCursor, PostType } from "../schemas/trade";
 import { getCollectionFilters } from "./activity-feed";
 import {
   fetchCollectionsBySlug,
@@ -44,7 +44,7 @@ import {
 import { toPublicUser } from "./profile";
 import { getCache, redis } from "./redis";
 import { reputationOf } from "./reputation";
-import { notBlockedEither, notTradeBlocked } from "./safety";
+import { notBlockedEither, notTradeSanctioned } from "./safety";
 import { marketVersion } from "./safety-cache";
 import { fetchHoldings } from "./trade-matches";
 
@@ -118,13 +118,16 @@ type Stage1 = {
   type: PostType;
   slugs: string[] | null;
   slug: string | null;
-  haveSlugs: string[] | null;
+  /** keeps posts whose want side holds one of these: what the viewer can offer */
+  wantSideIn: string[] | null;
+  /** keeps posts whose have or sale side holds one of these: what the viewer wants */
+  haveSideIn: string[] | null;
   cursor: FeedCursor | undefined;
 };
 
 /** Stage 1: which posts make the page, in order. Uncached; it reads only the partial index's rows. */
 async function fetchFeedRows(query: Stage1): Promise<FeedRow[]> {
-  const where: SQL[] = [listedPost, notTradeBlocked(sql`posts.user_id`)];
+  const where: SQL[] = [listedPost, notTradeSanctioned(sql`posts.user_id`)];
   if (query.viewerId !== null) {
     where.push(sql`posts.user_id <> ${query.viewerId}`);
     where.push(notBlockedEither(query.viewerId, sql`posts.user_id`));
@@ -136,12 +139,17 @@ async function fetchFeedRows(query: Stage1): Promise<FeedRow[]> {
   if (query.type !== "all") where.push(sql`posts.type = ${TAG_TYPE[query.type]}`);
   if (query.slugs) where.push(hasEntryIn(sql`posts.id, posts.partner_id`, query.slugs));
   if (query.slug !== null) where.push(hasEntryIn(sql`posts.id, posts.partner_id`, [query.slug]));
-  if (query.haveSlugs) {
+  if (query.wantSideIn) {
     where.push(
       hasEntryIn(
         sql`CASE WHEN posts.type = 'want' THEN posts.id ELSE posts.partner_id END`,
-        query.haveSlugs,
+        query.wantSideIn,
       ),
+    );
+  }
+  if (query.haveSideIn) {
+    where.push(
+      hasEntryIn(sql`CASE WHEN posts.type = 'want' THEN NULL ELSE posts.id END`, query.haveSideIn),
     );
   }
   if (query.cursor) {
@@ -493,12 +501,22 @@ export async function browseFeed(
   ]);
 
   const haveOffered = viewer !== null && viewer.haveSlugs.size > 0;
-  const have = haveOffered && (input.have ?? true);
+  const wantOffered = viewer !== null && viewer.wantSlugs.size > 0;
+  // a match the viewer has no lists for falls back to every post
+  const usable: Record<BrowseMatch, boolean> = {
+    all: true,
+    mutual: haveOffered && wantOffered,
+    they_want: haveOffered,
+    they_have: wantOffered,
+  };
+  const match: BrowseMatch = usable[input.match] ? input.match : "all";
+  const wantSide = match === "they_want" || match === "mutual";
+  const haveSide = match === "they_have" || match === "mutual";
   const empty = {
     posts: [],
     nextCursor: undefined,
     collections: {},
-    viewer: viewer ? { have, haveOffered } : null,
+    viewer: viewer ? { match, haveOffered, wantOffered } : null,
   };
   if (slugs?.length === 0) return empty;
 
@@ -507,7 +525,8 @@ export async function browseFeed(
     type: input.type,
     slugs,
     slug: input.slug ?? null,
-    haveSlugs: have ? [...viewer!.haveSlugs] : null,
+    wantSideIn: wantSide ? [...viewer!.haveSlugs] : null,
+    haveSideIn: haveSide ? [...viewer!.wantSlugs] : null,
     cursor: input.cursor,
   });
   if (rows.length === 0) return empty;
@@ -531,7 +550,7 @@ export async function browseFeed(
   const filter = {
     slugs: slugs ? new Set(slugs) : null,
     slug: input.slug ?? null,
-    theyWantMine: have,
+    match,
   };
 
   const membersOf = (row: FeedRow) =>
@@ -601,7 +620,7 @@ export async function browseFeed(
       string,
       ValidObjekt
     >,
-    viewer: viewer ? { have, haveOffered } : null,
+    viewer: viewer ? { match, haveOffered, wantOffered } : null,
   };
 }
 
@@ -720,7 +739,7 @@ async function computePostCounts(slug: string) {
     FROM posts
     JOIN list_entries e ON e.list_id IN (posts.id, posts.partner_id)
     JOIN on_trade t ON t.id = e.list_id
-    WHERE e.collection_slug = ${slug} AND ${listedPost} AND ${notTradeBlocked(sql`posts.user_id`)}
+    WHERE e.collection_slug = ${slug} AND ${listedPost} AND ${notTradeSanctioned(sql`posts.user_id`)}
   `);
 
   const owned = result.rows.filter((row) => row.list_type_new !== "want");

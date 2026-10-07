@@ -6,7 +6,7 @@ import {
   NOTIFICATION_TYPES,
   notifyChannel,
 } from "@repo/api/schemas/notification";
-import { notBlockedEither, notTradeBlocked } from "@repo/api/services/safety";
+import { notBlockedEither, notTradeSanctioned } from "@repo/api/services/safety";
 import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import {
@@ -18,7 +18,7 @@ import {
   userAddress,
   wantAlertSent,
 } from "@repo/db/schema";
-import { and, eq, inArray, isNull, sql } from "drizzle-orm";
+import { and, eq, inArray, isNull, type SQL, sql } from "drizzle-orm";
 
 import { redis } from "../lib/redis";
 import {
@@ -27,8 +27,10 @@ import {
   type AlertList,
   type AlertPair,
   hiddenKey,
+  listProgress,
   prefKey,
   selectAlerts,
+  wholeEntries,
 } from "../lib/want-alert-match";
 
 const CURSOR_KEY = "alerts:cursor";
@@ -36,21 +38,32 @@ const STATE_KEY = "alerts:state";
 const BATCH_SIZE = 5000;
 const OVERLAP_MS = 10 * 60 * 1000;
 const MARK_LIMIT = 12;
+// pairs one run takes from new entries and newly discoverable lists; the rest wait a run
+const PAIR_LIMIT = 10_000;
+const WRITE_CHUNK = 1000;
 
 /**
  * `marks` are each run's time and highest visible entry id. An id is assigned when
  * its row is inserted but seen only at commit, so the run re-reads every id above
  * the mark from at least `OVERLAP_MS` ago; `want_alert_sent` absorbs the repeats.
+ * `progress` holds, for a newly discoverable list not yet read to the end, the last
+ * entry id read; such a list stays out of `discoverable` until it is done.
  */
-type State = { discoverable: number[]; marks: [number, number][] };
+type State = { discoverable: number[]; marks: [number, number][]; progress?: [number, number][] };
 
 type PairRow = {
+  entry_id: number;
+  list_id: number;
   direction: "forward" | "reverse";
   offer_list_id: number;
   want_list_id: number;
   slug: string;
   objekt_id: string | null;
 };
+
+type Pair = AlertPair & { entryId: number; listId: number };
+/** `list` reads a list's entries together, so a list is finished before the next starts */
+type Order = "entry" | "list";
 
 export async function sendWantAlerts() {
   const {
@@ -96,7 +109,7 @@ export async function sendWantAlerts() {
       SELECT id FROM list_entries WHERE id > ${cursor} ORDER BY id LIMIT ${BATCH_SIZE}
     ) b
   `);
-  const nextCursor = batch?.last_id ?? cursor;
+  const batchEnd = batch?.last_id ?? cursor;
   const floor = Math.min(
     cursor,
     state.marks.findLast(([at]) => at <= nowMs - OVERLAP_MS)?.[1] ?? state.marks[0]?.[1] ?? cursor,
@@ -104,22 +117,61 @@ export async function sendWantAlerts() {
 
   const known = new Set(state.discoverable);
   // the previous run's set, not `updated_at`: that is only touched after the edit commits
-  const newlyDiscoverable = discoverable.map((list) => list.id).filter((id) => !known.has(id));
+  const pending = discoverable.map((list) => list.id).filter((id) => !known.has(id));
+  const storedProgress = new Map(state.progress ?? []);
 
-  const pairs = await fetchPairs(floor, nextCursor, newlyDiscoverable);
+  // late commits under the cursor are re-read whole; that window is minutes of entries
+  const overlap = await fetchPairs(sql`e.id > ${floor} AND e.id <= ${cursor}`, "entry", null);
+
+  const fresh = await takeWhole(sql`e.id > ${cursor} AND e.id <= ${batchEnd}`, "entry", PAIR_LIMIT);
+  const nextCursor = fresh.complete ? batchEnd : (fresh.taken.at(-1)?.entryId ?? cursor);
+
+  // entries above the floor reach the cursor's reads; a new list's older ones come only here
+  const afterProgress = storedProgress.size
+    ? sql`AND e.id > coalesce((
+        SELECT n.after FROM unnest(
+          ${sql.param([...storedProgress.keys()])}::int[], ${sql.param([...storedProgress.values()])}::int[]
+        ) AS n(list_id, after) WHERE n.list_id = e.list_id
+      ), 0)`
+    : sql``;
+  const newLists =
+    pending.length === 0
+      ? { complete: true, taken: [] as Pair[] }
+      : await takeWhole(
+          sql`e.list_id = ANY(${sql.param(pending)}::int[]) AND e.id <= ${floor} ${afterProgress}`,
+          "list",
+          Math.max(PAIR_LIMIT - fresh.taken.length, 0),
+        );
+  const resume = listProgress(pending, storedProgress, newLists.taken, newLists.complete);
+
+  const pairs = [...overlap, ...fresh.taken, ...newLists.taken].toSorted(
+    (a, b) => b.entryId - a.entryId,
+  );
   const alerts = pairs.length === 0 ? [] : selectAlerts(await loadContext(pairs));
   const notified = alerts.length === 0 ? [] : await recordAlerts(alerts, new Date(nowMs));
 
   await Promise.all(notified.map((userId) => redis.publish(notifyChannel(userId), "1")));
 
+  const unfinished = new Set(pending.filter((id) => !resume.done.includes(id)));
   await saveProgress(nextCursor, {
-    discoverable: discoverable.map((list) => list.id),
+    discoverable: discoverable.map((list) => list.id).filter((id) => !unfinished.has(id)),
     marks: [...state.marks, [nowMs, maxId] as [number, number]].slice(-MARK_LIMIT),
+    progress: [...resume.progress],
   });
 
   console.log(
-    `[Want Alerts] ${pairs.length} pairs, ${alerts.length} alerts, ${notified.length} users notified; cursor ${cursor} → ${nextCursor}`,
+    `[Want Alerts] ${pairs.length} pairs, ${alerts.length} alerts, ${notified.length} users notified; cursor ${cursor} → ${nextCursor}; ${unfinished.size} lists to resume`,
   );
+}
+
+/** Pairs up to `limit`, cut back to whole entries; an entry that alone passes it is read whole. */
+async function takeWhole(where: SQL, order: Order, limit: number) {
+  const cut = wholeEntries(await fetchPairs(where, order, limit + 1), limit);
+  if (cut.complete || cut.oversized === null) return cut;
+  return {
+    complete: false,
+    taken: await fetchPairs(sql`e.id = ${cut.oversized}`, "entry", null),
+  } as const;
 }
 
 function parseState(stored: string): State | null {
@@ -137,8 +189,8 @@ async function saveProgress(cursor: number, state: State) {
   await redis.set(CURSOR_KEY, String(cursor));
 }
 
-/** Unsent pairs whose new side is an entry above `floor` or on a list just made discoverable. */
-async function fetchPairs(floor: number, upTo: number, newlyDiscoverable: number[]) {
+/** Unsent pairs whose new side is a discoverable list's entry matching `where`, in `order`. */
+async function fetchPairs(where: SQL, order: Order, limit: number | null): Promise<Pair[]> {
   const result = await db.execute<PairRow>(sql`
     WITH cand AS (
       SELECT e.id, e.list_id, e.collection_slug AS slug, e.objekt_id, l.list_type_new AS type, l.user_id
@@ -147,13 +199,10 @@ async function fetchPairs(floor: number, upTo: number, newlyDiscoverable: number
       WHERE l.discoverable
         AND l.list_type_new IN ('have', 'sale', 'want')
         AND e.collection_slug IS NOT NULL
-        AND (
-          (e.id > ${floor} AND e.id <= ${upTo})
-          OR e.list_id = ANY(${sql.param(newlyDiscoverable)}::int[])
-        )
+        AND ${where}
     ),
     pairs AS (
-      SELECT c.id AS entry_id, 'forward' AS direction, c.list_id AS offer_list_id,
+      SELECT c.id AS entry_id, c.list_id, 'forward' AS direction, c.list_id AS offer_list_id,
         w.list_id AS want_list_id, c.slug, c.objekt_id,
         c.user_id AS offer_user_id, wl.user_id AS want_user_id
       FROM cand c
@@ -162,27 +211,30 @@ async function fetchPairs(floor: number, upTo: number, newlyDiscoverable: number
       WHERE c.type IN ('have', 'sale')
         AND wl.list_type_new = 'want' AND wl.match_alerts AND wl.user_id <> c.user_id
       UNION ALL
-      SELECT c.id, 'reverse', o.list_id, c.list_id, c.slug, o.objekt_id, ol.user_id, c.user_id
+      SELECT c.id, c.list_id, 'reverse', o.list_id, c.list_id, c.slug, o.objekt_id, ol.user_id, c.user_id
       FROM cand c
       JOIN list_entries o ON o.collection_slug = c.slug
       JOIN lists ol ON ol.id = o.list_id
       WHERE c.type = 'want'
         AND ol.list_type_new IN ('have', 'sale') AND ol.match_alerts AND ol.user_id <> c.user_id
     )
-    SELECT direction, offer_list_id, want_list_id, slug, objekt_id FROM pairs p
+    SELECT entry_id, list_id, direction, offer_list_id, want_list_id, slug, objekt_id FROM pairs p
     WHERE ${notBlockedEither(sql`p.want_user_id`, sql`p.offer_user_id`)}
-      AND ${notTradeBlocked(sql`p.offer_user_id`)}
-      AND ${notTradeBlocked(sql`p.want_user_id`)}
+      AND ${notTradeSanctioned(sql`p.offer_user_id`)}
+      AND ${notTradeSanctioned(sql`p.want_user_id`)}
       AND NOT EXISTS (
       SELECT 1 FROM want_alert_sent s
       WHERE s.want_list_id = p.want_list_id
         AND s.source_list_id = p.offer_list_id
         AND s.collection_slug = p.slug
     )
-    ORDER BY entry_id DESC
+    ORDER BY ${order === "list" ? sql`list_id, entry_id` : sql`entry_id`}
+    ${limit === null ? sql`` : sql`LIMIT ${limit}`}
   `);
 
-  return result.rows.map((row): AlertPair => ({
+  return result.rows.map((row): Pair => ({
+    entryId: row.entry_id,
+    listId: row.list_id,
     direction: row.direction,
     offerListId: row.offer_list_id,
     wantListId: row.want_list_id,
@@ -310,18 +362,27 @@ async function fetchHoldings(
   return { objekts, copies };
 }
 
+function chunks<T>(values: T[]): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < values.length; i += WRITE_CHUNK) out.push(values.slice(i, i + WRITE_CHUNK));
+  return out;
+}
+
 async function recordAlerts(alerts: Alert[], now: Date) {
   return db.transaction(async (tx) => {
     // runs that overlap queue here, and the later one finds its keys already sent
     await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext('want-alerts'))`);
 
-    const inserted = await tx
-      .insert(wantAlertSent)
-      .values(alerts.map((alert) => alert.key))
-      .onConflictDoNothing()
-      .returning();
     // a key sent in this batch serves both directions; a later batch finds it sent
-    const fresh = new Set(inserted.map(alertKeyId));
+    const fresh = new Set<string>();
+    for (const chunk of chunks(alerts.map((alert) => alert.key))) {
+      const inserted = await tx
+        .insert(wantAlertSent)
+        .values(chunk)
+        .onConflictDoNothing()
+        .returning();
+      for (const row of inserted) fresh.add(alertKeyId(row));
+    }
 
     const groups = new Map<string, { alert: Alert; key: string; matches: AlertMatch[] }>();
     for (const alert of alerts) {
@@ -332,33 +393,46 @@ async function recordAlerts(alerts: Alert[], now: Date) {
       else groups.set(`${alert.userId}:${key}`, { alert, key, matches: [alert.match] });
     }
 
-    for (const { alert, key, matches } of groups.values()) {
-      const [existing] = await tx
-        .select({ id: notification.id, payload: notification.payload })
+    for (const chunk of chunks([...groups.values()])) {
+      const existing = await tx
+        .select({
+          userId: notification.userId,
+          groupKey: notification.groupKey,
+          payload: notification.payload,
+        })
         .from(notification)
         .where(
           and(
-            eq(notification.userId, alert.userId),
-            eq(notification.groupKey, key),
+            inArray(
+              notification.groupKey,
+              chunk.map((group) => group.key),
+            ),
             isNull(notification.readAt),
           ),
         )
         .for("update");
+      const previousOf = new Map(existing.map((row) => [`${row.userId}:${row.groupKey}`, row]));
 
-      const previous = existing ? alertPayloadSchema.safeParse(existing.payload) : null;
-      const payload = mergePayload(previous?.success ? previous.data : null, alert.list, matches);
-
-      if (existing) {
-        // a fresh match lifts the notification back to the top of the list
-        await tx
-          .update(notification)
-          .set({ payload, createdAt: sql`now()` })
-          .where(eq(notification.id, existing.id));
-      } else {
-        await tx
-          .insert(notification)
-          .values({ userId: alert.userId, type: alert.type, payload, groupKey: key });
-      }
+      // a fresh match lifts the notification back to the top of the list
+      await tx
+        .insert(notification)
+        .values(
+          chunk.map(({ alert, key, matches }) => {
+            const previous = previousOf.get(`${alert.userId}:${key}`);
+            const parsed = previous ? alertPayloadSchema.safeParse(previous.payload) : null;
+            return {
+              userId: alert.userId,
+              type: alert.type,
+              groupKey: key,
+              payload: mergePayload(parsed?.success ? parsed.data : null, alert.list, matches),
+            };
+          }),
+        )
+        .onConflictDoUpdate({
+          target: [notification.userId, notification.groupKey],
+          targetWhere: isNull(notification.readAt),
+          set: { payload: sql`excluded.payload`, createdAt: sql`now()` },
+        });
     }
 
     return unique([...groups.values()].map(({ alert }) => alert.userId));

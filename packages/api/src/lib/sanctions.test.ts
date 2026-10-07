@@ -2,10 +2,12 @@ import { describe, expect, test } from "bun:test";
 
 import {
   effectiveSanction,
+  type ExcerptOfferSource,
   type ExcerptSource,
   reportRetryAt,
   sanctionEnd,
   shapeExcerpt,
+  shapeExcerptOffer,
 } from "./sanctions";
 
 const NOW = new Date("2026-10-07T12:00:00Z");
@@ -41,6 +43,7 @@ describe("shapeExcerpt", () => {
     senderId: i % 2 === 0 ? "spam" : "kaede",
     body: `m${i + 1}`,
     card: null,
+    offer: null,
     createdAt: at(i * 1000),
   }));
 
@@ -59,7 +62,64 @@ describe("shapeExcerpt", () => {
       "body",
       "card",
       "fromTarget",
+      "offer",
     ]);
+  });
+});
+
+describe("shapeExcerptOffer", () => {
+  const sent: ExcerptOfferSource = {
+    id: 7,
+    fromUserId: "spam",
+    toUserId: "kaede",
+    status: "open",
+    expiresAt: at(DAY),
+    topupAmount: "5.00",
+    topupCurrency: "USD",
+    topupPayer: "to",
+    note: "quick",
+    items: [
+      { side: "give", collectionSlug: "a", objektId: "1" },
+      { side: "get", collectionSlug: "b", objektId: null },
+    ],
+  };
+  const serialOf = (id: string) => (id === "1" ? 42 : null);
+
+  test("the same terms read alike whichever side sent them", () => {
+    const fromTarget = shapeExcerptOffer(sent, "spam", NOW, serialOf);
+    const mirrored: ExcerptOfferSource = {
+      ...sent,
+      fromUserId: "kaede",
+      toUserId: "spam",
+      topupPayer: "from",
+      items: sent.items.map((i) => ({
+        side: i.side === "give" ? "get" : "give",
+        collectionSlug: i.collectionSlug,
+        objektId: i.objektId,
+      })),
+    };
+    const toTarget = shapeExcerptOffer(mirrored, "spam", NOW, serialOf);
+    expect(fromTarget).toEqual(toTarget);
+    expect(fromTarget).toEqual({
+      offerId: 7,
+      status: "open",
+      give: [{ collectionSlug: "a", objektId: "1", serial: 42 }],
+      get: [{ collectionSlug: "b", objektId: null, serial: null }],
+      topup: { amount: "5.00", currency: "USD", payer: "reporter" },
+      note: "quick",
+    });
+  });
+
+  test("an offer the reporter sent puts its gives on the target's get side", () => {
+    const view = shapeExcerptOffer(sent, "kaede", NOW, serialOf);
+    expect(view.give).toEqual([{ collectionSlug: "b", objektId: null, serial: null }]);
+    expect(view.topup?.payer).toBe("target");
+  });
+
+  test("an open offer past its end reads as expired", () => {
+    expect(shapeExcerptOffer({ ...sent, expiresAt: at(-1) }, "spam", NOW, serialOf).status).toBe(
+      "expired",
+    );
   });
 });
 

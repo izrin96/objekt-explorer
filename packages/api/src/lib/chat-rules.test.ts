@@ -83,6 +83,16 @@ describe("startVerdict", () => {
     expect(isMessageable({ allow: "anyone", allowHidden: false }, true)).toBe(false);
   });
 
+  test("a hidden owner reads the same whether or not a conversation already exists", () => {
+    const refused = { ok: false, reason: "hidden_owner" } as const;
+    expect(startVerdict(facts({ hidesOwner: true, existing: true }))).toEqual(refused);
+    expect(startVerdict(facts({ hidesOwner: true, blocked: true }))).toEqual(refused);
+    expect(startVerdict(facts({ hidesOwner: true, senderMuted: true }))).toEqual(refused);
+    expect(
+      startVerdict(facts({ hidesOwner: true, pref: { allow: "nobody", allowHidden: false } })),
+    ).toEqual(refused);
+  });
+
   test("hidden owner, opted in", () => {
     const pref = { allow: "anyone" as const, allowHidden: true };
     expect(startVerdict(facts({ hidesOwner: true, pref }))).toEqual({ ok: true });

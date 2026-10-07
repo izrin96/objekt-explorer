@@ -103,15 +103,16 @@ export type StartVerdict = { ok: true } | { ok: false; reason: ChatRefusal; retr
 /**
  * The recipient's settings, blocks, mutes and the start limit apply to new conversations
  * only; a reopen that sends a card goes through `sendVerdict` too. A block reads exactly
- * like Nobody, so the blocked side cannot tell.
+ * like Nobody, so the blocked side cannot tell. Hide User is checked before anything that
+ * depends on who the owner is, so a refusal never tells a hidden owner apart.
  */
 export function startVerdict(facts: StartFacts): StartVerdict {
   if (!facts.senderHasAddress) return { ok: false, reason: "no_address" };
   if (facts.senderId === facts.recipientId) return { ok: false, reason: "self" };
+  if (facts.hidesOwner && !facts.pref.allowHidden) return { ok: false, reason: "hidden_owner" };
   if (facts.existing) return { ok: true };
   if (facts.senderMuted) return { ok: false, reason: "muted" };
   if (facts.blocked || facts.pref.allow === "nobody") return { ok: false, reason: "not_accepting" };
-  if (!isMessageable(facts.pref, facts.hidesOwner)) return { ok: false, reason: "hidden_owner" };
   if (!facts.rate.ok) return { ok: false, reason: "start_limit", retryAt: facts.rate.retryAt };
   return { ok: true };
 }

@@ -2,7 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { browseSearchSchema, toBrowseInput } from "@/features/trade/browse-search";
 import { BrowseView } from "@/features/trade/browse-view";
-import { browseOptions } from "@/features/trade/queries";
+import { browseOptions, myPostsOptions } from "@/features/trade/queries";
+import { currentUserOptions } from "@/features/user/queries";
 import { generateMetadata } from "@/lib/meta";
 import { orpc } from "@/lib/orpc";
 import { m } from "@/paraglide/messages";
@@ -22,7 +23,15 @@ export const Route = createFileRoute("/(container)/trade/")({
       return;
     }
     // a failed read leaves the view to show its error and retry, not the page to fail
-    await queryClient.infiniteQuery({ ...options, staleTime: "static" }).catch(() => undefined);
+    const feed = queryClient
+      .infiniteQuery({ ...options, staleTime: "static" })
+      .catch(() => undefined);
+    const user = await queryClient.query({ ...currentUserOptions, staleTime: "static" });
+    // Your posts sits above the feed, so it is in the first paint rather than pushing it down
+    const mine = user
+      ? queryClient.query({ ...myPostsOptions(), staleTime: "static" }).catch(() => undefined)
+      : undefined;
+    await Promise.all([feed, mine]);
   },
   head: () => generateMetadata({ title: m.page_titles_trade() }),
   component: BrowsePage,

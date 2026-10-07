@@ -60,7 +60,7 @@ It SHALL also show the summary "n of m transfers verified". The accepted offer's
 - **THEN** both pages show that leg Verified and "1 of 2 transfers verified" without a reload
 
 ### Requirement: Who sends first
-The trade page SHALL suggest which party sends first, the same way to both:
+The trade page SHALL suggest which party sends first, the same way to both. When only one party gives objekts (a cash buy or sale), that party is suggested. Otherwise:
 - the party with fewer verified trades sends first;
 - on a tie, the newer account sends first.
 

@@ -11,7 +11,7 @@ export const Route = createFileRoute("/(container)/trade")({
 function TradeLayout() {
   return (
     <>
-      <PageHeader title={m.nav_trade()} />
+      <PageHeader title={m.nav_trade()} description={m.trade_page_description()} />
       <TradeTabs />
       <Outlet />
     </>

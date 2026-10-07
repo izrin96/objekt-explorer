@@ -68,7 +68,7 @@ A conversation started without an objekt card (from a profile) SHALL appear in t
 
 ### Requirement: Inbox, Requests and Archived
 `/messages` SHALL list the signed-in user's conversations under Inbox, Requests and Archived, newest activity first. Each row SHALL show:
-- the other account, headed as For you heads a partner;
+- the other account, headed by the nickname of its first linked address that shows its owner, else by its display name;
 - the latest message, or a description of its card;
 - its time;
 - an unread mark;

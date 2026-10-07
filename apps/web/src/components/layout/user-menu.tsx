@@ -121,7 +121,7 @@ export function UserMenu({ user }: { user: User }) {
 
           <MenuItem render={<Link to="/trade/for-you" />}>
             <UsersIcon />
-            {m.nav_trade_matches()}
+            {m.trade_tab_for_you()}
           </MenuItem>
 
           <MenuItem onClick={() => setAccountOpen(true)}>

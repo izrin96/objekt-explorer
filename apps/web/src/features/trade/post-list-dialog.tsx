@@ -15,11 +15,11 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { ListTypeBadge } from "@/features/list/list-type-badge";
 import { useUserLists } from "@/features/user/hooks";
 import { m } from "@/paraglide/messages";
 
 import { useSetShowOnTrade } from "./actions";
+import { ListRoleBadge } from "./list-role-badge";
 
 /** Each switch saves on its own, so the dismiss button only closes. */
 export function PostListDialog({
@@ -85,11 +85,11 @@ function PostListRow({ list }: { list: PublicList }) {
           <Label htmlFor={id} className="min-w-0 text-sm font-medium break-words">
             {list.name}
           </Label>
-          <ListTypeBadge type={list.listTypeNew} />
+          <ListRoleBadge type={list.listTypeNew} />
         </span>
         {needsProfile ? (
           <span id={`${id}-reason`} className="text-muted-foreground text-xs text-pretty">
-            {m.list_create_requires_bind_desc()}
+            {m.trade_post_needs_profile()}
           </span>
         ) : list.listTypeNew === "sale" ? (
           <span id={`${id}-reason`} className="text-muted-foreground text-xs text-pretty">

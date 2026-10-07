@@ -28,10 +28,10 @@ describe("toBrowseInput", () => {
 
 describe("browseSearchSchema", () => {
   test("drops values that do not parse", () => {
-    expect(browseSearchSchema.parse({ type: "bogus", have: "nope" })).toMatchObject({
+    expect(browseSearchSchema.parse({ type: "bogus", match: "nope" })).toMatchObject({
       type: undefined,
-      have: undefined,
+      match: undefined,
     });
-    expect(browseSearchSchema.parse({ have: "false" }).have).toBe(false);
+    expect(browseSearchSchema.parse({ match: "they_have" }).match).toBe("they_have");
   });
 });

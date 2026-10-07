@@ -1,11 +1,6 @@
-import {
-  ArrowUpRightIcon,
-  CaretRightIcon,
-  EyeSlashIcon,
-  ProhibitIcon,
-} from "@phosphor-icons/react";
+import { CaretRightIcon, EyeSlashIcon } from "@phosphor-icons/react";
 import type { Outputs } from "@repo/api";
-import type { Dropped, Match } from "@repo/api/lib/trade-rank";
+import type { Dropped } from "@repo/api/lib/trade-rank";
 import { CARD_LIMIT } from "@repo/api/schemas/trade";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { Link } from "@tanstack/react-router";
@@ -18,8 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { MessageButton } from "@/features/chat/message-button";
 import { getListLinkOption } from "@/features/list/list-link";
-import { ListTypeBadge } from "@/features/list/list-type-badge";
-import { useSafetyDialogs } from "@/features/moderation/safety-dialogs";
+import { SafetyMenu } from "@/features/moderation/safety-menu";
 import { ObjektCard } from "@/features/objekt/objekt-card";
 import { MakeOfferButton } from "@/features/offers/make-offer-button";
 import { TrustLine } from "@/features/offers/trust-line";
@@ -28,13 +22,16 @@ import { displayNickname } from "@/lib/address";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
+import { ListRoleBadge } from "./list-role-badge";
+import { THUMB_GRID } from "./thumb-grid";
+
 export type TradePartner = Outputs["trade"]["forYou"]["partners"][number];
 export type TradeCollections = Record<string, ValidObjekt | undefined>;
 
 /** theirs first in both places, so the row's summary and the panel read in one order */
 const DIRECTIONS = [
-  { key: "theyHaveIWant", section: m.trade_section_they_have, label: m.trade_for_list },
-  { key: "iHaveTheyWant", section: m.trade_section_you_have, label: m.trade_from_list },
+  { key: "theyHaveIWant", section: m.trade_section_they_have },
+  { key: "iHaveTheyWant", section: m.trade_section_you_have },
 ] as const;
 
 const REASON: Record<Dropped["reason"], () => string> = {
@@ -45,13 +42,11 @@ const REASON: Record<Dropped["reason"], () => string> = {
 export function PartnerRow({
   partner,
   collections,
-  myListNames,
   onOpen,
   onHide,
 }: {
   partner: TradePartner;
   collections: TradeCollections;
-  myListNames: ReadonlyMap<number, string>;
   onOpen: (objekt: ValidObjekt) => void;
   onHide: (partner: TradePartner) => void;
 }) {
@@ -59,7 +54,6 @@ export function PartnerRow({
   const want = partner.iHaveTheyWant.length;
   const { identity, user } = partner;
   const also = identity.also.map((ref) => displayNickname(ref.address, ref.nickname));
-  const safety = useSafetyDialogs({ userId: partner.userId, name: identity.name });
 
   return (
     <Collapsible>
@@ -82,8 +76,6 @@ export function PartnerRow({
               <span className="min-w-0 text-base leading-snug font-semibold break-words">
                 {identity.name}
               </span>
-              {user.discord ? <SocialBadge platform="discord" username={user.discord} /> : null}
-              {user.twitter ? <SocialBadge platform="twitter" username={user.twitter} /> : null}
               {partner.idle ? (
                 <Badge variant="outline" size="sm">
                   {m.trade_idle()}
@@ -98,15 +90,19 @@ export function PartnerRow({
             ) : null}
           </span>
 
-          <span className="flex shrink-0 items-baseline gap-2 font-mono text-sm tabular-nums sm:justify-end">
-            <span className="text-foreground font-semibold">
-              {m.trade_mutual_score({ score: Math.min(have, want) })}
-            </span>
-            <span className="text-muted-foreground">·</span>
-            <span aria-hidden className="text-muted-foreground">
-              {have} ⇄ {want}
-            </span>
+          <span className="text-muted-foreground flex shrink-0 flex-wrap items-baseline gap-x-1.5 text-sm whitespace-nowrap tabular-nums sm:justify-end">
             <span className="sr-only">{m.trade_counts_label({ have, want })}</span>
+            {/* the dot ends each count, so a wrapped line never starts with one */}
+            <span
+              aria-hidden
+              className="*:not-last:after:text-muted-foreground contents *:not-last:after:ms-1.5 *:not-last:after:font-normal *:not-last:after:content-['·']"
+            >
+              <span className="text-foreground font-semibold">
+                {m.trade_count_mutual({ count: Math.min(have, want) })}
+              </span>
+              <span>{m.trade_count_they_have({ count: have })}</span>
+              <span>{m.trade_count_you_have({ count: want })}</span>
+            </span>
           </span>
         </span>
 
@@ -122,6 +118,7 @@ export function PartnerRow({
           {partner.idle ? (
             <p className="text-muted-foreground text-sm text-pretty">{m.trade_idle_hint()}</p>
           ) : null}
+          <PartnerContact partner={partner} />
           <PartnerLists partner={partner} />
 
           {DIRECTIONS.map((direction) =>
@@ -135,7 +132,6 @@ export function PartnerRow({
                     key={match.slug}
                     slug={match.slug}
                     collection={collections[match.slug]}
-                    caption={myListCaption(match, myListNames, direction.label)}
                     onOpen={onOpen}
                   />
                 ))}
@@ -160,13 +156,14 @@ export function PartnerRow({
             </MatchSection>
           ) : null}
 
-          <div className="flex justify-end gap-2">
+          <div className="flex flex-wrap items-center justify-end gap-2">
             {partner.messageable ? (
               <>
                 <MessageButton
                   target={{ kind: "user", userId: partner.userId }}
                   card={bestCard(partner)}
                   name={identity.name}
+                  labelClassName="max-sm:sr-only"
                 />
                 <MakeOfferButton
                   request={{
@@ -175,21 +172,22 @@ export function PartnerRow({
                     suggestFor: partner.userId,
                   }}
                   label={m.offer_propose()}
+                  labelClassName="max-sm:sr-only"
                 />
               </>
-            ) : null}
+            ) : (
+              <span className="text-muted-foreground me-auto text-sm">
+                {m.trade_not_messageable()}
+              </span>
+            )}
             <Button variant="ghost" size="sm" onClick={() => onHide(partner)}>
               <EyeSlashIcon />
               {m.trade_hide()}
             </Button>
-            <Button variant="ghost" size="sm" onClick={safety.openBlock}>
-              <ProhibitIcon />
-              {m.mod_block()}
-            </Button>
+            <SafetyMenu userId={partner.userId} name={identity.name} report />
           </div>
         </div>
       </CollapsiblePanel>
-      {safety.dialogs}
     </Collapsible>
   );
 }
@@ -207,34 +205,33 @@ function bestCard(partner: TradePartner) {
   return match ? { collectionSlug: match.slug } : undefined;
 }
 
-function myListCaption(
-  match: Match,
-  names: ReadonlyMap<number, string>,
-  label: (inputs: { list: string }) => string,
-) {
-  const lists = match.myListIds.flatMap((id) => names.get(id) ?? []);
-  return lists.length > 0 ? label({ list: lists.join(", ") }) : undefined;
-}
-
-const linkClass = "text-foreground font-medium underline-offset-2 hover:underline";
-
-function PartnerLists({ partner }: { partner: TradePartner }) {
-  const { identity } = partner;
+/** Kept out of the row's toggle, so the handles can be selected and copied. */
+function PartnerContact({ partner }: { partner: TradePartner }) {
+  const { identity, user } = partner;
+  if (!identity.address && !user.discord && !user.twitter) return null;
 
   return (
+    <div className="flex flex-wrap items-center gap-2">
+      {identity.address ? (
+        <ProfileLink
+          address={identity.address}
+          nickname={identity.name}
+          className="text-sm font-medium underline-offset-2 hover:underline"
+        >
+          {m.trade_view_profile()}
+          <span className="sr-only"> {identity.name}</span>
+        </ProfileLink>
+      ) : null}
+      {user.discord ? <SocialBadge platform="discord" username={user.discord} /> : null}
+      {user.twitter ? <SocialBadge platform="twitter" username={user.twitter} /> : null}
+    </div>
+  );
+}
+
+function PartnerLists({ partner }: { partner: TradePartner }) {
+  return (
     <section className="flex flex-col gap-2">
-      <h2 className="text-muted-foreground flex flex-wrap items-baseline gap-x-2 text-sm font-medium">
-        {m.trade_their_lists()}
-        {identity.address ? (
-          <span className="font-normal">
-            {"· "}
-            {m.trade_cosmo_id()}{" "}
-            <ProfileLink address={identity.address} nickname={identity.name} className={linkClass}>
-              {identity.name}
-            </ProfileLink>
-          </span>
-        ) : null}
-      </h2>
+      <h2 className="text-muted-foreground text-sm font-medium">{m.trade_their_lists()}</h2>
       <ul className="flex flex-wrap gap-x-4 gap-y-1.5">
         {partner.lists.map((list) => (
           <li key={list.id} className="flex min-w-0 items-center gap-1.5">
@@ -250,12 +247,8 @@ function PartnerLists({ partner }: { partner: TradePartner }) {
               className="min-w-0 text-sm font-medium break-words underline-offset-2 hover:underline"
             >
               {list.name}
-              <ArrowUpRightIcon
-                aria-hidden
-                className="text-muted-foreground ml-0.5 inline size-3.5"
-              />
             </Link>
-            <ListTypeBadge type={list.listTypeNew} />
+            <ListRoleBadge type={list.listTypeNew} />
           </li>
         ))}
       </ul>
@@ -267,7 +260,7 @@ function MatchSection({ title, children }: { title: string; children: ReactNode 
   return (
     <section className="flex flex-col gap-2">
       <h2 className="text-muted-foreground text-sm font-medium tabular-nums">{title}</h2>
-      <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-5">{children}</div>
+      <div className={THUMB_GRID}>{children}</div>
     </section>
   );
 }
@@ -290,7 +283,7 @@ function MatchObjekt({
 }: {
   slug: string;
   collection: ValidObjekt | undefined;
-  caption: string | undefined;
+  caption?: string;
   muted?: boolean;
   onOpen: (objekt: ValidObjekt) => void;
 }) {
@@ -298,7 +291,12 @@ function MatchObjekt({
     <figure className="flex min-w-0 flex-col gap-1 self-start">
       <div className={cn(muted && "opacity-50 grayscale")}>
         {collection ? (
-          <ObjektCard objekt={collection} image="thumbnail" onOpen={() => onOpen(collection)} />
+          <ObjektCard
+            objekt={collection}
+            image="thumbnail"
+            captionClassName="text-xs"
+            onOpen={() => onOpen(collection)}
+          />
         ) : (
           <div className="bg-muted text-muted-foreground rounded-photocard aspect-photocard grid place-items-center p-2 text-center font-mono text-xs leading-snug break-all">
             {slug}

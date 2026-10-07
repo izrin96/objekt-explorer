@@ -34,7 +34,7 @@ import { fetchCollectionsBySlug } from "./list";
 import { toPublicUser } from "./profile";
 import { getCache, redis } from "./redis";
 import { reputationOf } from "./reputation";
-import { notBlockedEither, notTradeBlocked } from "./safety";
+import { notBlockedEither, notTradeSanctioned } from "./safety";
 import { marketVersion } from "./safety-cache";
 
 const HAVING: Record<TradeFilter, ReturnType<typeof sql>> = {
@@ -86,7 +86,7 @@ export async function fetchTradeCandidates(
           WHERE h.user_id = ${userId} AND h.hidden_user_id = l.user_id
         )
         AND ${notBlockedEither(userId, sql`l.user_id`)}
-        AND ${notTradeBlocked(sql`l.user_id`)}
+        AND ${notTradeSanctioned(sql`l.user_id`)}
     ),
     matched AS (
       SELECT p.user_id, p.id AS list_id, p.updated_at, true AS they_have, e.collection_slug, e.objekt_id

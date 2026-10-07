@@ -3,10 +3,11 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toastManager } from "@/components/ui/toast";
 import { fetchNewer, invalidateChatLists } from "@/features/chat/queries";
 import { orpc } from "@/lib/orpc";
+import { isNotFound } from "@/lib/orpc-error";
 import { m } from "@/paraglide/messages";
 
 import { offerRefusalOf, offerRefusalText } from "./format";
-import { invalidateOfferLists, isNotFound } from "./queries";
+import { invalidateOfferLists } from "./queries";
 
 /**
  * Accept, decline, withdraw and cancel. Each refreshes the thread and the lists itself, so they

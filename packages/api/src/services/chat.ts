@@ -127,9 +127,10 @@ const sendTime = (member: string) => Number(member.split(":")[0]);
 
 /**
  * Reads the earlier sends and adds this one in one script, so parallel sends each see the
- * others; a refused send is taken back out and never counts.
+ * others; a refused send is taken back out and never counts. Returns the release for a send
+ * refused later on.
  */
-export async function checkMessageRate(userId: string, now: Date) {
+export async function checkMessageRate(userId: string, now: Date): Promise<() => Promise<void>> {
   const key = `chat:msgs:${userId}`;
   const member = `${now.getTime()}:${crypto.randomUUID()}`;
   const prior = (await redis.send("EVAL", [
@@ -141,11 +142,15 @@ export async function checkMessageRate(userId: string, now: Date) {
     member,
   ])) as string[];
 
+  const release = async () => {
+    await redis.send("ZREM", [key, member]);
+  };
   const decision = messageRateDecision(prior.map(sendTime), now);
   if (!decision.ok) {
-    await redis.send("ZREM", [key, member]);
+    await release();
     refuse("message_limit", decision.retryAt);
   }
+  return release;
 }
 
 /** Taken inside the start transaction, so a user's parallel starts are counted one at a time. */

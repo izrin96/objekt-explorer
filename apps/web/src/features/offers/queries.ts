@@ -5,11 +5,11 @@ import type { ValidObjekt } from "@repo/lib/types/objekt";
 import type { QueryClient } from "@tanstack/react-query";
 
 import { orpc } from "@/lib/orpc";
+import { isNotFound } from "@/lib/orpc-error";
 
 export type OfferAddress = { conversationId: number } | { target: ChatTarget };
 
-export const isNotFound = (error: unknown) =>
-  error instanceof ORPCError && error.code === "NOT_FOUND";
+const POLL_MS = 60_000;
 
 /** A refusal answers the same on every try. */
 const retryUnlessRefused = (count: number, error: unknown) =>
@@ -67,10 +67,13 @@ export const mineOptions = () =>
     staleTime: 0,
   });
 
-export const tradeOptions = (tradeId: number) =>
+/** A trade changes on chain with no message, so it polls while the live socket is down. */
+export const tradeOptions = (tradeId: number, live = true) =>
   orpc.offer.trade.queryOptions({
     input: { tradeId },
     staleTime: 0,
+    refetchOnWindowFocus: true,
+    refetchInterval: live ? false : POLL_MS,
     retry: (count, error) => !isNotFound(error) && count < 2,
   });
 

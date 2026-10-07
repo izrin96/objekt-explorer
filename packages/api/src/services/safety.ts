@@ -31,16 +31,7 @@ export const activeSanctionWhere = and(
   or(isNull(userSanction.expiresAt), gt(userSanction.expiresAt, sql`now()`)),
 )!;
 
-export function notTradeBlocked(user: UserRef) {
-  return sql`NOT EXISTS (
-    SELECT 1 FROM ${userSanction}
-    WHERE ${userSanction.userId} = ${ref(user)}
-      AND ${userSanction.type} = 'trade_block'
-      AND ${activeSanctionWhere}
-  )`;
-}
-
-/** An active trade block or ban: the account takes no part in offers or trades. */
+/** An active trade block or ban: the account takes no part in offers, trades or any feed of lists. */
 export function notTradeSanctioned(user: UserRef) {
   return sql`NOT EXISTS (
     SELECT 1 FROM ${userSanction}
@@ -50,5 +41,5 @@ export function notTradeSanctioned(user: UserRef) {
   )`;
 }
 
-/** Folded into Market's and Trade's shared cache keys, so a trade block applies on the next load. */
+/** Folded into Market's and Trade's shared cache keys, so a trade block or ban applies on the next load. */
 export const MARKET_VERSION_KEY = "market:v";

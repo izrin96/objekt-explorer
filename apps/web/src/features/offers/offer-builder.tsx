@@ -33,6 +33,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { fetchNewer, invalidateChatLists } from "@/features/chat/queries";
+import { CollectionLabel } from "@/features/objekt/objekt-label";
 import { currencyName, formatCurrency, useCurrency } from "@/features/settings/use-currency";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
@@ -354,8 +355,9 @@ function BuilderForm({
                 onAdd={() => setPicking(side)}
                 onRemove={(key) => setPicks(picks.filter((pick) => pick.key !== key))}
               >
-                {side === "get" &&
-                focus.some((item) => !get.some((p) => p.key === pickKey(item))) ? (
+                {side !== "get" || request.focusList === undefined ? null : theirs.isPending ? (
+                  <FocusStripSkeleton />
+                ) : focus.some((item) => !get.some((p) => p.key === pickKey(item))) ? (
                   <FocusStrip
                     items={focus.filter((item) => !get.some((p) => p.key === pickKey(item)))}
                     collections={collections}
@@ -554,7 +556,11 @@ function SideColumn({
                 />
                 <span className="flex min-w-0 flex-1 flex-col gap-0.5 text-sm">
                   <span className="font-medium break-words">
-                    {pick.objektId === null ? itemName(pick, collections) : label}
+                    <CollectionLabel
+                      slug={pick.collectionSlug}
+                      collection={collections[pick.collectionSlug]}
+                      serial={pick.objektId === null ? null : pick.serial}
+                    />
                   </span>
                   {pick.objektId === null && flags?.copies != null ? (
                     <span className="text-muted-foreground text-xs">
@@ -589,7 +595,7 @@ function SideColumn({
           })}
         </ul>
       ) : (
-        <p className="text-muted-foreground rounded-lg border border-dashed px-3 py-4 text-sm text-pretty">
+        <p className="text-muted-foreground flex min-h-20 items-center rounded-lg border border-dashed px-3 py-4 text-sm text-pretty">
           {side === "give" ? m.offer_side_give_empty() : m.offer_side_get_empty()}
         </p>
       )}
@@ -629,6 +635,24 @@ function FocusStrip({
           </li>
         ))}
       </ul>
+    </div>
+  );
+}
+
+/** The strip's shape while their lists load, so the dialog does not grow under the reader. */
+function FocusStripSkeleton() {
+  return (
+    <div className="flex flex-col gap-2">
+      <p className="text-muted-foreground text-xs">{m.offer_focus_hint()}</p>
+      <div className="grid grid-cols-4 gap-2">
+        {Array.from({ length: 4 }).map((_, index) => (
+          <div key={index} className="flex flex-col gap-1">
+            <Skeleton className="aspect-photocard rounded-photocard w-full" />
+            <Skeleton className="h-3 w-3/4" />
+            <Skeleton className="h-3 w-1/2" />
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

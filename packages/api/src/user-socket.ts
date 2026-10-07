@@ -19,6 +19,10 @@ const subscriber = new RedisClient(serverEnv.REDIS_URL, { connectionTimeout: 500
 
 const sockets = new Map<string, Set<UserSocket>>();
 const CHANGED = JSON.stringify({ type: "notifications_changed" } satisfies UserSocketMessage);
+// never relayed: it tells every process to close the user's sockets
+const REVOKED = "session_revoked";
+/** The close code a tab sees when its account's sessions were revoked, as on a ban. */
+export const SESSION_REVOKED_CLOSE_CODE = 4001;
 const siteOrigin = new URL(serverEnv.SITE_URL).origin;
 
 function logError(action: string) {
@@ -41,6 +45,10 @@ function toFrame(message: string) {
 
 function relay(message: string, channel: string) {
   const userId = channel.slice(NOTIFY_PREFIX.length);
+  if (message === REVOKED) {
+    for (const ws of sockets.get(userId) ?? []) ws.close(SESSION_REVOKED_CLOSE_CODE, REVOKED);
+    return;
+  }
   const frame = toFrame(message);
   for (const ws of sockets.get(userId) ?? []) {
     if (ws.readyState === WebSocket.OPEN) ws.send(frame);
@@ -53,6 +61,11 @@ export async function publishNotify(
   message: UserSocketMessage = { type: "notifications_changed" },
 ) {
   await redis.publish(notifyChannel(userId), JSON.stringify(message)).catch(logError("publish"));
+}
+
+/** Closes the user's open sockets in every process, after their sessions were deleted. */
+export async function publishSessionRevoked(userId: string) {
+  await redis.publish(notifyChannel(userId), REVOKED).catch(logError("publish"));
 }
 
 export async function authorizeUserSocket(req: Request): Promise<string | Response> {

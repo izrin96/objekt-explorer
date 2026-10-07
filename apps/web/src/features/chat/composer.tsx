@@ -5,13 +5,13 @@ import { type FormEvent, type KeyboardEvent, useEffect, useId, useState } from "
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { CollectionLabel } from "@/features/objekt/objekt-label";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import { type Attachment, AttachObjektDialog } from "./attach-objekt-dialog";
 import { refusalOf, refusalText } from "./format";
-import { collectionName } from "./objekt-card-message";
 import { fetchNewer, invalidateChatLists } from "./queries";
 
 /** The counter shows from here, so it never sits there for an ordinary message. */
@@ -129,7 +129,7 @@ export function Composer({
           />
           <span className="min-w-0 text-sm">
             <span className="font-medium">
-              {collectionName(attachment.objekt.slug, attachment.objekt)}
+              <CollectionLabel slug={attachment.objekt.slug} collection={attachment.objekt} />
             </span>
             {attachment.listName ? (
               <span className="text-muted-foreground"> · {attachment.listName}</span>
@@ -176,7 +176,7 @@ export function Composer({
           aria-describedby={describedBy || undefined}
           placeholder={m.chat_composer_placeholder()}
           rows={1}
-          className="min-w-0 flex-1 *:data-[slot=textarea]:max-h-40 *:data-[slot=textarea]:min-h-9 sm:*:data-[slot=textarea]:min-h-8"
+          className="min-w-0 flex-1 *:data-[slot=textarea]:max-h-40 *:data-[slot=textarea]:min-h-9 *:data-[slot=textarea]:resize-none sm:*:data-[slot=textarea]:min-h-8"
         />
         <Button
           type="submit"

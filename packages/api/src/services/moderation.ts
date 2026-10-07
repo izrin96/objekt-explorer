@@ -8,7 +8,13 @@ import type { Role } from "../permissions";
 import type { AuditAction } from "../schemas/moderation";
 import { activeSanctionWhere, notBlockedEither } from "./safety";
 
-export const MODERATION_REFUSALS = ["self", "report_limit", "staff_target", "not_active"] as const;
+export const MODERATION_REFUSALS = [
+  "self",
+  "report_limit",
+  "staff_target",
+  "not_active",
+  "not_reportable",
+] as const;
 export type ModerationRefusal = (typeof MODERATION_REFUSALS)[number];
 
 export function refuseModeration(reason: ModerationRefusal, retryAt?: Date): never {
@@ -20,6 +26,7 @@ export function refuseModeration(reason: ModerationRefusal, retryAt?: Date): nev
       throw new ORPCError("FORBIDDEN", { data });
     case "self":
     case "not_active":
+    case "not_reportable":
       throw new ORPCError("BAD_REQUEST", { data });
   }
 }
@@ -31,6 +38,8 @@ export function refuseModeration(reason: ModerationRefusal, retryAt?: Date): nev
  * table, as no secondary storage or cookie cache is configured.
  */
 export async function syncBan(tx: Tx, userId: string, options: { revokeSessions: boolean }) {
+  // a ban and a revoke for one user each read the bans in force; the row lock orders them
+  await tx.execute(sql`SELECT 1 FROM "user" WHERE id = ${userId} FOR UPDATE`);
   const bans = await tx
     .select({ reason: userSanction.reason, expiresAt: userSanction.expiresAt })
     .from(userSanction)

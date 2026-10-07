@@ -27,8 +27,12 @@ export type LegRow = {
   accepted_at: string;
 };
 
-/** The open legs of in-progress trades, or of one trade, with both sides' current addresses. */
-export async function loadOpenLegs(tradeId?: number): Promise<LegRow[]> {
+/**
+ * The open legs of in-progress trades, or of the ones these users give in, with both sides'
+ * current addresses. A transfer can only verify a leg its sender gives, so the legs the
+ * givers give hold every leg that competes for their transfers.
+ */
+export async function loadOpenLegs(giverIds?: string[]): Promise<LegRow[]> {
   const result = await db.execute<LegRow>(sql`
     SELECT l.id, l.trade_id, t.offer_id, o.conversation_id, t.user_a, t.user_b,
       l.from_user_id, l.to_user_id, l.from_addresses, l.to_addresses,
@@ -40,7 +44,7 @@ export async function loadOpenLegs(tradeId?: number): Promise<LegRow[]> {
     JOIN trade t ON t.id = l.trade_id
     JOIN offer o ON o.id = t.offer_id
     WHERE l.open AND t.status = 'in_progress'
-      ${tradeId === undefined ? sql`` : sql`AND t.id = ${tradeId}`}
+      ${giverIds === undefined ? sql`` : sql`AND l.from_user_id = ANY(${sql.param(giverIds)}::text[])`}
   `);
   return result.rows;
 }

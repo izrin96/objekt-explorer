@@ -96,11 +96,11 @@ export function AppNav() {
 
 /** One socket per tab: the bell and the messages icon share it. */
 function SignedInActions({ user }: { user: User }) {
-  const live = useUserSocket();
+  useUserSocket();
   return (
     <>
-      <MessagesIcon live={live} />
-      <NotificationBell live={live} />
+      <MessagesIcon />
+      <NotificationBell />
       <UserMenu user={user} />
     </>
   );

@@ -22,6 +22,7 @@ export function MessageButton({
   card,
   name,
   iconOnly = false,
+  labelClassName,
   variant = "outline",
   size,
   className,
@@ -30,15 +31,38 @@ export function MessageButton({
   card?: CardInput;
   name?: string;
   iconOnly?: boolean;
+  /** e.g. `max-sm:sr-only`, where a row has no room for the word */
+  labelClassName?: string;
   variant?: ButtonProps["variant"];
   size?: ButtonProps["size"];
   className?: string;
 }) {
+  const { start, pending } = useStartConversation();
+  const label = name ? m.chat_message_name({ name }) : m.chat_message();
+
+  return (
+    <Button
+      variant={variant}
+      size={size ?? (iconOnly ? "icon-sm" : "sm")}
+      aria-label={name ? label : undefined}
+      title={iconOnly ? label : undefined}
+      loading={pending}
+      onClick={() => start(target, card)}
+      className={className}
+    >
+      <ChatCircleIcon />
+      {iconOnly ? null : <span className={labelClassName}>{m.chat_message()}</span>}
+    </Button>
+  );
+}
+
+/** Opens the conversation with the target's account, for a button or a menu item. */
+export function useStartConversation() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { gate, offerLink } = useStartGate();
 
-  const start = useMutation(
+  const mutation = useMutation(
     orpc.chat.start.mutationOptions({
       onSuccess: ({ id }) => {
         void invalidateChatLists(queryClient);
@@ -50,32 +74,17 @@ export function MessageButton({
         toastManager.add({
           type: "error",
           title: refusal ? refusalText(refusal) : m.chat_start_error(),
-          description: refusal ? undefined : error.message,
         });
       },
     }),
   );
 
-  const onClick = () => {
-    if (gate()) start.mutate({ to: target, card });
+  return {
+    start: (target: ChatTarget, card?: CardInput) => {
+      if (gate()) mutation.mutate({ to: target, card });
+    },
+    pending: mutation.isPending,
   };
-
-  const label = name ? m.chat_message_name({ name }) : m.chat_message();
-
-  return (
-    <Button
-      variant={variant}
-      size={size ?? (iconOnly ? "icon-sm" : "sm")}
-      aria-label={name ? label : undefined}
-      title={iconOnly ? label : undefined}
-      loading={start.isPending}
-      onClick={onClick}
-      className={className}
-    >
-      <ChatCircleIcon />
-      {iconOnly ? null : m.chat_message()}
-    </Button>
-  );
 }
 
 /**

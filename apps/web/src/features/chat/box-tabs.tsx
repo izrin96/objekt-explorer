@@ -28,13 +28,20 @@ export function BoxTabs({ box }: { box: ChatBox }) {
         if (!next || next === box || details.event?.type === "click") return;
         void navigate({ to: "/messages", search: boxSearch(next) });
       }}
+      className="shrink-0 gap-0"
     >
-      <TabsList aria-label={m.chat_box_label()} className="w-full *:flex-1">
+      {/* the Trade tabs' underline strip, so the two pages' folders read alike */}
+      <TabsList
+        variant="underline"
+        aria-label={m.chat_box_label()}
+        className="text-muted-foreground w-full justify-start gap-0.5 border-b px-2 py-0 *:data-[slot=tabs-tab]:hover:bg-transparent"
+      >
         {CHAT_BOXES.map((item) => (
           <TabsTab
             key={item}
             value={item}
             nativeButton={false}
+            className="hover:text-foreground data-active:text-foreground h-10 grow-0 rounded-none px-3"
             render={<Link to="/messages" search={boxSearch(item)} />}
           >
             {LABEL[item]()}

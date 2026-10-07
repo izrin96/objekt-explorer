@@ -21,6 +21,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import { SingleSelect } from "@/features/filters/single-select";
 import { ObjektCard } from "@/features/objekt/objekt-card";
+import { CollectionLabel } from "@/features/objekt/objekt-label";
 import { useElementSize } from "@/hooks/use-element-size";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -379,7 +380,6 @@ export function CandidateTile({
   const blocked = blockedReason(item);
   // focusable while unavailable, so the reason under it is read with it
   const unavailable = blocked !== null || (full && !selected);
-  const name = collection ? `${collection.member} ${collection.collectionNo}` : item.collectionSlug;
   const detail =
     item.objektId === null
       ? m.offer_any_copy_count({ count: item.copies ?? 0 })
@@ -417,7 +417,9 @@ export function CandidateTile({
         ) : null}
       </span>
       <span className="flex min-w-0 flex-col text-xs leading-tight">
-        <span className="font-medium break-words">{name}</span>
+        <span className="font-medium break-words">
+          <CollectionLabel slug={item.collectionSlug} collection={collection} />
+        </span>
         {detail ? (
           <span className="text-muted-foreground font-mono tabular-nums">{detail}</span>
         ) : null}

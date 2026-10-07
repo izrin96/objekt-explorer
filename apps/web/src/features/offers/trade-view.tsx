@@ -35,6 +35,7 @@ import { useHydrated } from "@/hooks/use-hydrated";
 import { truncateAddress } from "@/lib/address";
 import { orpc } from "@/lib/orpc";
 import { m } from "@/paraglide/messages";
+import { useUserSocketLive } from "@/stores/user-socket";
 
 import { useOfferActions } from "./actions";
 import {
@@ -47,6 +48,7 @@ import {
   tradeNo,
   tradeStatusText,
 } from "./format";
+import { ItemLabel } from "./item-label";
 import { OfferThumb } from "./offer-item";
 import { invalidateOfferLists, tradeOptions } from "./queries";
 import { SegmentedChoice } from "./segmented-choice";
@@ -55,7 +57,8 @@ import { TrustLine } from "./trust-line";
 type Collections = Readonly<Record<string, ValidObjekt | undefined>>;
 
 export function TradeView({ id }: { id: number }) {
-  const query = useQuery(tradeOptions(id));
+  const live = useUserSocketLive((state) => state.live);
+  const query = useQuery(tradeOptions(id, live));
 
   if (query.isPending) {
     return (
@@ -171,7 +174,7 @@ function TradeDetail({ trade, collections }: { trade: Trade; collections: Collec
               />
               <span className="flex min-w-0 flex-1 flex-col gap-0.5">
                 <span className="text-sm font-medium break-words">
-                  {itemLabel(leg, collections)}
+                  <ItemLabel item={leg} collections={collections} />
                 </span>
                 <span className="text-muted-foreground flex items-center gap-1.5 text-xs">
                   <span>{leg.fromYou ? m.offer_you() : name}</span>

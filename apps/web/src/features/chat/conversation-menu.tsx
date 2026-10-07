@@ -122,6 +122,10 @@ export function ConversationMenu({
             </>
           )}
           <MenuSeparator />
+          <MenuItem onClick={safety.openReport}>
+            <FlagIcon />
+            {m.mod_report()}
+          </MenuItem>
           {blockedByMe ? (
             <MenuItem onClick={() => unblock.mutate({ userId: partner.userId })}>
               <ProhibitIcon />
@@ -133,10 +137,6 @@ export function ConversationMenu({
               {m.mod_block()}
             </MenuItem>
           )}
-          <MenuItem onClick={safety.openReport}>
-            <FlagIcon />
-            {m.mod_report()}
-          </MenuItem>
         </MenuPopup>
       </Menu>
       {safety.dialogs}

@@ -2,12 +2,24 @@ import { db } from "@repo/db";
 import { lists } from "@repo/db/schema";
 import { inArray, sql } from "drizzle-orm";
 
-type Counter = { incr(key: string): Promise<number> };
+type Counter = {
+  incr(key: string): Promise<number>;
+  expire(key: string, seconds: number): Promise<number>;
+};
 
 export const tradeVersionKey = (userId: string) => `trade:foryou:v:${userId}`;
 
+// far past the matches cache's 5 minutes, so a version that lapses never meets its old entries
+const VERSION_TTL_SECONDS = 7 * 24 * 60 * 60;
+
 export async function bumpTradeVersion(redis: Counter, userIds: Iterable<string>) {
-  await Promise.all([...new Set(userIds)].map((userId) => redis.incr(tradeVersionKey(userId))));
+  await Promise.all(
+    [...new Set(userIds)].map(async (userId) => {
+      const key = tradeVersionKey(userId);
+      await redis.incr(key);
+      await redis.expire(key, VERSION_TTL_SECONDS);
+    }),
+  );
 }
 
 /**

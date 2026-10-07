@@ -1,13 +1,18 @@
 import { userSocketMessageSchema } from "@repo/api/schemas/notification";
 import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useRouter } from "@tanstack/react-router";
+import { useEffect } from "react";
 
 import { fetchNewer, fetchNewerEverywhere, invalidateChatLists } from "@/features/chat/queries";
 import { invalidateOfferLists } from "@/features/offers/queries";
+import { currentUserOptions } from "@/features/user/queries";
 import { clientEnv } from "@/lib/env/client";
+import { useUserSocketLive } from "@/stores/user-socket";
 
 import { notificationKeys } from "./queries";
 
+/** `SESSION_REVOKED_CLOSE_CODE` in `@repo/api/user-socket`, a server-only module */
+const SESSION_REVOKED = 4001;
 const RECONNECT_BASE = 1000;
 const RECONNECT_MAX = 30_000;
 
@@ -19,11 +24,11 @@ function socketUrl(): string {
 
 /**
  * The per-user nudge channel: it only says "refetch", so every open also refetches
- * whatever changed while it was down. Returns whether it is open.
+ * whatever changed while it was down. `useUserSocketLive` says whether it is open.
  */
-export function useUserSocket(): boolean {
+export function useUserSocket() {
   const queryClient = useQueryClient();
-  const [open, setOpen] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     const url = socketUrl();
@@ -41,7 +46,7 @@ export function useUserSocket(): boolean {
 
       socket.addEventListener("open", () => {
         attempt = 0;
-        setOpen(true);
+        useUserSocketLive.setState({ live: true });
         refetchNotifications();
         void invalidateChatLists(queryClient);
         void invalidateOfferLists(queryClient);
@@ -72,9 +77,16 @@ export function useUserSocket(): boolean {
         }
       });
 
-      socket.addEventListener("close", () => {
+      socket.addEventListener("close", (event) => {
         if (disposed) return;
-        setOpen(false);
+        useUserSocketLive.setState({ live: false });
+        // a ban ended every session: a retry would only be refused, so the tab signs out instead
+        if (event.code === SESSION_REVOKED) {
+          void queryClient
+            .invalidateQueries({ queryKey: currentUserOptions.queryKey })
+            .then(() => router.invalidate());
+          return;
+        }
         const delay = Math.min(RECONNECT_BASE * 2 ** attempt, RECONNECT_MAX);
         attempt += 1;
         retry = setTimeout(connect, delay);
@@ -87,8 +99,7 @@ export function useUserSocket(): boolean {
       disposed = true;
       clearTimeout(retry);
       socket?.close();
+      useUserSocketLive.setState({ live: false });
     };
-  }, [queryClient]);
-
-  return open;
+  }, [queryClient, router]);
 }

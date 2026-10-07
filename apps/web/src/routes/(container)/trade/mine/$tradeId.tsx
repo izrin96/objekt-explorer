@@ -3,9 +3,10 @@ import { Link, createFileRoute, notFound } from "@tanstack/react-router";
 
 import { EmptyState } from "@/components/shared/empty-state";
 import { Button } from "@/components/ui/button";
-import { isNotFound, tradeOptions } from "@/features/offers/queries";
+import { tradeOptions } from "@/features/offers/queries";
 import { TradeView } from "@/features/offers/trade-view";
 import { generateMetadata } from "@/lib/meta";
+import { isNotFound } from "@/lib/orpc-error";
 import { m } from "@/paraglide/messages";
 
 export const Route = createFileRoute("/(container)/trade/mine/$tradeId")({

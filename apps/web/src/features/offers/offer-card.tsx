@@ -22,6 +22,7 @@ import {
   tradeNo,
   tradeStatusText,
 } from "./format";
+import { ItemLabel } from "./item-label";
 import type { OfferRequest } from "./offer-builder";
 import { OfferThumb } from "./offer-item";
 
@@ -314,7 +315,9 @@ function OfferSideList({
                 onOpen={onOpen}
                 className="w-9"
               />
-              <span className="min-w-0 text-sm break-words">{itemLabel(item, collections)}</span>
+              <span className="min-w-0 text-sm break-words">
+                <ItemLabel item={item} collections={collections} />
+              </span>
             </li>
           ))}
         </ul>

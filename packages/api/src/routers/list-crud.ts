@@ -282,7 +282,7 @@ export const listCrud = {
               .returning({ id: lists.id });
 
             await tx.update(lists).set({ linkedListId: list.id }).where(eq(lists.id, linkedListId));
-            changed.push(...unlinked.map((row) => row.id));
+            changed.push(linkedListId, ...unlinked.map((row) => row.id));
           }
         }
 

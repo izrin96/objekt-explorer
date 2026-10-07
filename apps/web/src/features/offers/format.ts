@@ -12,7 +12,7 @@ import {
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 
 import { refusalText as chatRefusalText } from "@/features/chat/format";
-import { collectionName } from "@/features/chat/objekt-card-message";
+import { collectionName } from "@/features/objekt/objekt-label";
 import { formatCurrency } from "@/features/settings/use-currency";
 import { errorReason } from "@/lib/orpc-error";
 import { relativeTime } from "@/lib/time";
@@ -91,7 +91,7 @@ export function itemName(item: Pick<OfferItemView, "collectionSlug">, collection
   return collectionName(item.collectionSlug, collections[item.collectionSlug]);
 }
 
-/** "SeoYeon 204Z #537", or "SeoYeon 204Z (any copy)" */
+/** "SeoYeon A204Z #537", or "SeoYeon A204Z (any copy)" */
 export function itemLabel(
   item: Pick<OfferItemView, "collectionSlug" | "objektId" | "serial">,
   collections: Collections,
@@ -113,7 +113,7 @@ export function topupText(topup: TopupView) {
     : m.offer_topup_they_pay({ amount });
 }
 
-/** One line for both sides: "HyeRin 301Z + 1,000 KRW ⇄ SeoYeon 204Z". */
+/** One line for both sides: "HyeRin A301Z + 1,000 KRW ⇄ SeoYeon A204Z". */
 export function offerSummary(
   offer: Pick<OfferView, "give" | "get" | "topup">,
   collections: Collections,

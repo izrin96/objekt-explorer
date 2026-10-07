@@ -1,5 +1,7 @@
 import { ORPCError } from "@orpc/server";
 import { db } from "@repo/db";
+import { indexer } from "@repo/db/indexer";
+import { objekts } from "@repo/db/indexer/schema";
 import {
   conversation,
   message,
@@ -15,7 +17,8 @@ import {
 } from "@repo/db/schema";
 import { and, desc, eq, gt, inArray, or, sql } from "drizzle-orm";
 
-import { reportRetryAt, sanctionEnd, shapeExcerpt } from "../lib/sanctions";
+import { canReport } from "../lib/offer-rules";
+import { reportRetryAt, sanctionEnd, shapeExcerpt, shapeExcerptOffer } from "../lib/sanctions";
 import { authed, moderator } from "../orpc";
 import { FLAG_CATEGORIES, type FlagCategory } from "../schemas/chat";
 import {
@@ -32,6 +35,7 @@ import {
   userIdInputSchema,
 } from "../schemas/moderation";
 import type { SanctionPayload } from "../schemas/notification";
+import type { TradeStatus } from "../schemas/offer";
 import {
   afterBlockChange,
   fetchPartners,
@@ -55,11 +59,54 @@ import {
   offersOf,
   publishCancelled,
 } from "../services/offer";
+import { fetchOffers } from "../services/offer-view";
 import { activeSanctionWhere } from "../services/safety";
 import { bumpSafetyVersions } from "../services/safety-cache";
-import { publishNotify } from "../user-socket";
+import { publishNotify, publishSessionRevoked } from "../user-socket";
 
 const PAGE_LIMIT = 100;
+
+/** The offers behind shared messages, as they stand now, so the report keeps what was offered. */
+async function excerptOffers(offerIds: number[], targetUserId: string, now: Date) {
+  const offers = [...(await fetchOffers(offerIds)).values()];
+  const objektIds = [
+    ...new Set(offers.flatMap((o) => o.items.flatMap(([, , objektId]) => objektId ?? []))),
+  ];
+  const serials =
+    objektIds.length === 0
+      ? []
+      : await indexer
+          .select({ id: objekts.id, serial: objekts.serial })
+          .from(objekts)
+          .where(inArray(objekts.id, objektIds));
+  const serialOf = new Map(serials.map((row) => [row.id, row.serial]));
+  return new Map(
+    offers.map((o) => [
+      o.id,
+      shapeExcerptOffer(
+        {
+          id: o.id,
+          fromUserId: o.from_user_id,
+          toUserId: o.to_user_id,
+          status: o.status,
+          expiresAt: o.expires_at,
+          topupAmount: o.topup_amount,
+          topupCurrency: o.topup_currency,
+          topupPayer: o.topup_payer,
+          note: o.note,
+          items: o.items.map(([side, collectionSlug, objektId]) => ({
+            side,
+            collectionSlug,
+            objektId,
+          })),
+        },
+        targetUserId,
+        now,
+        (id) => serialOf.get(id) ?? null,
+      ),
+    ]),
+  );
+}
 
 const iso = (at: string | null) => (at === null ? null : new Date(at).toISOString());
 
@@ -187,17 +234,21 @@ export const moderationRouter = {
       if (partnerId !== input.userId) throw new ORPCError("NOT_FOUND");
     }
     if (input.tradeId !== undefined) {
-      const between = await db.$count(
-        trade,
-        and(
-          eq(trade.id, input.tradeId),
-          or(
-            and(eq(trade.userA, me), eq(trade.userB, input.userId)),
-            and(eq(trade.userA, input.userId), eq(trade.userB, me)),
+      const [between] = await db
+        .select({ status: trade.status, acceptedAt: trade.acceptedAt, endedAt: trade.endedAt })
+        .from(trade)
+        .where(
+          and(
+            eq(trade.id, input.tradeId),
+            or(
+              and(eq(trade.userA, me), eq(trade.userB, input.userId)),
+              and(eq(trade.userA, input.userId), eq(trade.userB, me)),
+            ),
           ),
-        ),
-      );
-      if (between === 0) throw new ORPCError("NOT_FOUND");
+        );
+      if (!between) throw new ORPCError("NOT_FOUND");
+      const state = { ...between, status: between.status as TradeStatus, verifiedLegs: 0 };
+      if (!canReport(state, new Date())) refuseModeration("not_reportable");
     }
 
     const { id, cancelled } = await db.transaction(async (tx) => {
@@ -219,6 +270,7 @@ export const moderationRouter = {
                 senderId: message.senderId,
                 body: message.body,
                 card: message.card,
+                offerId: message.offerId,
                 createdAt: message.createdAt,
               })
               .from(message)
@@ -226,6 +278,13 @@ export const moderationRouter = {
               .orderBy(desc(message.id))
               .limit(EXCERPT_SIZE)
           : null;
+      const offers = shared
+        ? await excerptOffers(
+            shared.flatMap((m) => m.offerId ?? []),
+            input.userId,
+            new Date(),
+          )
+        : null;
 
       const [row] = await tx
         .insert(report)
@@ -243,6 +302,7 @@ export const moderationRouter = {
                   senderId: m.senderId,
                   body: m.body,
                   card: parseCard(m.card),
+                  offer: (m.offerId === null ? undefined : offers?.get(m.offerId)) ?? null,
                   createdAt: m.createdAt,
                 })),
                 input.userId,
@@ -518,8 +578,11 @@ export const moderationRouter = {
       return { sanctionId, resolvedReports: resolved.length, cancelled };
     });
 
-    if (input.action === "trade_block") await bumpSafetyVersions([input.userId]);
-    if (input.action !== "dismiss" && input.action !== "ban") await publishNotify(input.userId);
+    if (input.action === "trade_block" || input.action === "ban") {
+      await bumpSafetyVersions([input.userId]);
+    }
+    if (input.action === "ban") await publishSessionRevoked(input.userId);
+    else if (input.action !== "dismiss") await publishNotify(input.userId);
     if (result.cancelled) await publishCancelled(result.cancelled);
     return { sanctionId: result.sanctionId, resolvedReports: result.resolvedReports };
   }),
@@ -548,7 +611,9 @@ export const moderationRouter = {
       });
     });
 
-    if (sanction.type === "trade_block") await bumpSafetyVersions([sanction.userId]);
+    if (sanction.type === "trade_block" || sanction.type === "ban") {
+      await bumpSafetyVersions([sanction.userId]);
+    }
     // an open tab drops the mute notice, or shows its trade lists again
     await publishNotify(sanction.userId);
   }),

@@ -87,13 +87,27 @@ Those objekts SHALL be marked with a ring.
 
 Matching SHALL use the viewer's have lists, not everything their wallet holds, so an objekt the viewer keeps off their have lists never counts as offered.
 
-The feed SHALL offer a "They want something I have" toggle (`have` in the URL). It keeps posts whose want side has at least one collection counted above. It SHALL be on by default when the viewer has a have list with at least one entry still tradeable. It SHALL not be offered to signed-out viewers or to viewers with no such have list.
+The feed SHALL offer a Match control (`match` in the URL) with four choices:
+- **All posts**, the default: every post, with the counts and rings above;
+- **Mutual only** (`mutual`): posts that match both of the next two choices at once, so only WTT posts; offered when both of them are;
+- **They want what I have** (`they_want`): posts whose want side has at least one collection counted above, offered when the viewer has a have list with an entry still tradeable;
+- **They have what I want** (`they_have`): posts whose have or sale side has at least one collection on the viewer's want lists, offered when the viewer has a want list with an entry.
+
+The control SHALL not be offered to signed-out viewers, or to viewers who can use neither filter.
 
 The viewer's own posts SHALL not be listed in the feed. Posts by partners the viewer hid in For you SHALL also be left out.
 
-#### Scenario: Default toggle
+#### Scenario: Default
 - **WHEN** a signed-in viewer with a have list opens `/trade` with no parameters
-- **THEN** "They want something I have" is on, and every listed post's want side has a ringed objekt
+- **THEN** Match reads All posts, and posts of every type are listed with their counts and rings
+
+#### Scenario: Mutual only
+- **WHEN** the viewer picks Mutual only
+- **THEN** every listed post is a WTT post with a ringed objekt on both its want side and its have side
+
+#### Scenario: They have what I want
+- **WHEN** the viewer picks They have what I want
+- **THEN** every listed post has a ringed objekt on its have or sale side, so WTS posts can be listed
 
 #### Scenario: Held but not on a have list
 - **WHEN** the viewer holds SeoYeon 204Z but it is on none of their have lists, and a post wants it
@@ -101,11 +115,11 @@ The viewer's own posts SHALL not be listed in the feed. Posts by partners the vi
 
 #### Scenario: No have list
 - **WHEN** a signed-in viewer has no have list
-- **THEN** the toggle is not offered and every post is listed
+- **THEN** They want what I have is not offered and every post is listed
 
 #### Scenario: Signed out
 - **WHEN** a visitor without a session opens `/trade`
-- **THEN** posts are listed with no match counts, no rings and no toggle
+- **THEN** posts are listed with no match counts, no rings and no Match control
 
 #### Scenario: Hidden partner
 - **WHEN** the viewer hid rin.trades in For you
@@ -172,7 +186,7 @@ Show on Trade changes and bumps SHALL show on every viewer's next load of `/trad
 - **THEN** viewers see it in the post within 1 minute
 
 ### Requirement: Message a post's owner
-Each post not owned by the viewer SHALL offer Message, under the rules in `web-chat`. Message SHALL open the conversation with the owner, adding a card for the post's list.
+Each post not owned by the viewer SHALL offer Message, under the rules in `web-chat`. Message SHALL open the conversation with the owner, adding a card for the post's list. A post whose owner doesn't take messages from the viewer SHALL show "Not taking messages" in place of Message and Make offer.
 
 #### Scenario: From a post
 - **WHEN** a signed-in user with a linked address activates Message on rin.trades's WTT post
@@ -182,9 +196,9 @@ Each post not owned by the viewer SHALL offer Message, under the rules in `web-c
 The feed SHALL leave out, for each viewer:
 - posts by accounts the viewer blocked;
 - posts by accounts that blocked the viewer;
-- posts by any account under an active trade block.
+- posts by any account under an active trade block or ban.
 
-The drawer's On Trade counts SHALL leave out trade-blocked accounts. Each post not owned by the viewer SHALL offer Block in its menu.
+The drawer's On Trade counts SHALL leave out trade-blocked and banned accounts. Each post not owned by the viewer SHALL offer Block and Report… in its menu.
 
 #### Scenario: Trade-blocked owner
 - **WHEN** rin.trades is under a trade block

@@ -1,9 +1,9 @@
-import { ORPCError } from "@orpc/client";
 import type { ChatBox, ConversationCursor } from "@repo/api/schemas/chat";
 import { OFFER_VIEWS_LIMIT } from "@repo/api/schemas/offer";
 import type { QueryClient } from "@tanstack/react-query";
 
 import { client, orpc } from "@/lib/orpc";
+import { isNotFound } from "@/lib/orpc-error";
 
 import {
   appendToThread,
@@ -14,9 +14,6 @@ import {
 } from "./thread-cache";
 
 const POLL_MS = 60_000;
-
-export const isNotFound = (error: unknown) =>
-  error instanceof ORPCError && error.code === "NOT_FOUND";
 
 /** Polls only while the live socket is down; focus always refetches. */
 export const chatUnreadOptions = (live: boolean) =>

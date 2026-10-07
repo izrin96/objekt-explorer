@@ -30,7 +30,7 @@ The account dialog SHALL have a Blocked users section listing every account the 
 - **THEN** spam.seller22 can message them again, and their old conversation is back in the Inbox
 
 ### Requirement: Report a user
-A signed-in user SHALL be able to report another account from a conversation's menu or a profile, choosing:
+A signed-in user SHALL be able to report another account from a conversation's menu, a Trade post's menu or a profile, choosing:
 - a reason: scam or fake offer, harassment, spam, pretending to be someone else, or something else;
 - an optional note of up to 500 characters;
 - "Share the last 20 messages with moderators", on by default and offered only from a conversation;
@@ -83,7 +83,7 @@ A moderator action SHALL resolve the account's open reports, write an audit entr
 - **Warn**: the user gets a notification with the reason.
 - **Chat mute**: until it ends, the user cannot start conversations or send messages. Their message box is replaced by a notice with the reason and end date. It ends on its own.
 - **Trade block**: until revoked, the user's lists are left out of Market, Trade, For you and want-list alerts for everyone else. The user is notified with the reason.
-- **Ban**: the account is banned with the reason and optional end date. All its sessions are revoked, and sign-in is refused until the end date.
+- **Ban**: the account is banned with the reason and optional end date. All its sessions are revoked, its open tabs lose their live connection, its lists leave Market, Trade, For you and want-list alerts as under a trade block, and sign-in is refused until the end date.
 
 A moderator SHALL be able to revoke an active sanction, with an audit entry. Dismiss SHALL resolve reports with no sanction.
 

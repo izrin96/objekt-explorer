@@ -1,5 +1,6 @@
 import { ArrowClockwiseIcon, EyeIcon, WarningIcon } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
+import { Fragment } from "react";
 
 import { EmptyState } from "@/components/shared/empty-state";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -92,9 +93,17 @@ function HiddenPartnersList({ enabled }: { enabled: boolean }) {
             </Avatar>
             <span className="flex min-w-0 flex-1 flex-col">
               <span className="text-sm font-medium break-words">{name}</span>
+              {/* only the profiles their discoverable lists show; a hidden nickname leaves the address */}
               {partner.profiles.length > 0 ? (
                 <span className="text-muted-foreground text-xs break-words">
-                  {partner.profiles.map((p) => displayNickname(p.address, p.nickname)).join(", ")}
+                  {partner.profiles.map((p, index) => (
+                    <Fragment key={p.address}>
+                      {index > 0 ? ", " : null}
+                      <span className={p.nickname ? undefined : "font-mono"}>
+                        {displayNickname(p.address, p.nickname)}
+                      </span>
+                    </Fragment>
+                  ))}
                 </span>
               ) : null}
             </span>

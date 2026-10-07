@@ -1,5 +1,5 @@
 import { ArrowClockwiseIcon, CardsThreeIcon, UsersIcon, WarningIcon } from "@phosphor-icons/react";
-import { DEFAULT_TRADE_FILTER, type TradeFilter } from "@repo/api/schemas/trade";
+import type { TradeFilter } from "@repo/api/schemas/trade";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
@@ -8,7 +8,6 @@ import { useState } from "react";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsList, TabsTab } from "@/components/ui/tabs";
 import { toastManager } from "@/components/ui/toast";
 import { SingleSelect } from "@/features/filters/single-select";
 import { ObjektDrawer } from "@/features/objekt/drawer";
@@ -20,12 +19,14 @@ import { useHidePartner, useUnhidePartner } from "./actions";
 import { HiddenPartnersDialog } from "./hidden-partners-dialog";
 import { PartnerRow, type TradePartner } from "./partner-row";
 import { forYouOptions } from "./queries";
+import type { ForYouSearch } from "./search-schema";
 
-const FILTERS: { value: TradeFilter; label: () => string }[] = [
+/** Browse's order and labels, so the two Match selects read alike */
+const MATCHES: { value: TradeFilter; label: () => string }[] = [
   { value: "all", label: m.trade_filter_all },
   { value: "mutual", label: m.trade_filter_mutual },
-  { value: "they_have", label: m.trade_filter_they_have },
   { value: "they_want", label: m.trade_filter_they_want },
+  { value: "they_have", label: m.trade_filter_they_have },
 ];
 
 /** no list slug is this short, so it cannot collide with one */
@@ -39,13 +40,14 @@ export function ForYouView({ filter, list }: { filter: TradeFilter; list: string
   // a slug that is not one of mine is ignored by the server, so the select shows All lists
   const selectedList = tradeLists.some((l) => l.slug === list) ? list! : ALL_LISTS;
 
-  const setSearch = (next: { filter?: TradeFilter; list?: string }) =>
+  const setSearch = (next: { match?: TradeFilter; list?: string }) =>
     void navigate({
-      search: (prev) => {
-        const merged = { ...prev, ...next };
+      search: (prev): ForYouSearch => {
+        const match = next.match ?? prev.match ?? "all";
+        const merged = next.list ?? prev.list ?? ALL_LISTS;
         return {
-          filter: merged.filter === DEFAULT_TRADE_FILTER ? undefined : merged.filter,
-          list: merged.list === ALL_LISTS ? undefined : merged.list,
+          match: match === "all" ? undefined : match,
+          list: merged === ALL_LISTS ? undefined : merged,
         };
       },
       resetScroll: false,
@@ -53,27 +55,16 @@ export function ForYouView({ filter, list }: { filter: TradeFilter; list: string
 
   return (
     <>
-      <p className="text-muted-foreground text-sm text-pretty">{m.trade_description()}</p>
+      <p className="text-muted-foreground text-sm text-pretty">{m.trade_for_you_description()}</p>
 
       <div className="flex flex-wrap items-center gap-2">
-        <Tabs
+        <SingleSelect<TradeFilter>
+          label={m.trade_match_label()}
+          options={MATCHES.map((item) => ({ value: item.value, label: item.label() }))}
           value={filter}
-          onValueChange={(value) => {
-            const next = FILTERS.find((item) => item.value === value);
-            if (next && next.value !== filter) setSearch({ filter: next.value });
-          }}
-          /* the four labels outgrow a phone: the strip scrolls, the page does not */
-          data-scroll-x
-          className="max-w-full [scrollbar-width:none] overflow-x-auto max-md:mask-r-from-[calc(100%-2rem)]"
-        >
-          <TabsList aria-label={m.trade_filter_label()} className="w-max">
-            {FILTERS.map((item) => (
-              <TabsTab key={item.value} value={item.value}>
-                {item.label()}
-              </TabsTab>
-            ))}
-          </TabsList>
-        </Tabs>
+          defaultValue="all"
+          onChange={(value) => setSearch({ match: value })}
+        />
 
         {tradeLists.length > 0 ? (
           <SingleSelect
@@ -101,12 +92,7 @@ export function ForYouView({ filter, list }: { filter: TradeFilter; list: string
           }
         />
       ) : (
-        <ForYouResults
-          filter={filter}
-          list={list}
-          myListNames={new Map(tradeLists.map((l) => [l.id, l.name]))}
-          onShowAll={() => setSearch({ filter: "all" })}
-        />
+        <ForYouResults filter={filter} list={list} onShowAll={() => setSearch({ match: "all" })} />
       )}
     </>
   );
@@ -115,12 +101,10 @@ export function ForYouView({ filter, list }: { filter: TradeFilter; list: string
 function ForYouResults({
   filter,
   list,
-  myListNames,
   onShowAll,
 }: {
   filter: TradeFilter;
   list: string | undefined;
-  myListNames: ReadonlyMap<number, string>;
   onShowAll: () => void;
 }) {
   const query = useQuery(forYouOptions(filter, list));
@@ -205,7 +189,6 @@ function ForYouResults({
                 key={partner.userId}
                 partner={partner}
                 collections={collections}
-                myListNames={myListNames}
                 onOpen={setActive}
                 onHide={onHide}
               />

@@ -14,6 +14,7 @@ import {
   effectiveStatus,
   firstItemRefusal,
   itemFlags,
+  itemStillHeld,
   itemVerdict,
   type OfferState,
   offerSummary,
@@ -347,5 +348,42 @@ describe("toReputation", () => {
     expect(toReputation({ verified: 2, positive: 0, negative: 0, since: "2025-03" }).positive).toBe(
       null,
     );
+  });
+});
+
+describe("itemStillHeld", () => {
+  const item = {
+    objektId: "1",
+    holders: ["0xgiver"],
+    receivers: ["0xreceiver"],
+    since: "2026-10-05T00:00:00.000Z",
+  };
+  const send = (overrides: Partial<{ from: string; to: string; timestamp: string }> = {}) => ({
+    objektId: "1",
+    from: "0xGIVER",
+    to: "0xreceiver",
+    timestamp: "2026-10-06T00:00:00.000Z",
+    ...overrides,
+  });
+
+  test("still with the giver", () => {
+    expect(itemStillHeld(item, "0xGiver", [])).toBe(true);
+  });
+
+  test("the giver sent it to the receiver after the offer: an early send, not a move", () => {
+    expect(itemStillHeld(item, "0xreceiver", [send()])).toBe(true);
+  });
+
+  test("in the receiver's wallet by any other route, or before the offer, it moved", () => {
+    expect(itemStillHeld(item, "0xreceiver", [])).toBe(false);
+    expect(itemStillHeld(item, "0xreceiver", [send({ from: "0xstranger" })])).toBe(false);
+    expect(
+      itemStillHeld(item, "0xreceiver", [send({ timestamp: "2026-10-04T00:00:00.000Z" })]),
+    ).toBe(false);
+  });
+
+  test("anywhere else, or unknown to the indexer, it moved", () => {
+    expect(itemStillHeld(item, "0xstranger", [send({ to: "0xstranger" })])).toBe(false);
+    expect(itemStillHeld(item, undefined, [])).toBe(false);
   });
 });

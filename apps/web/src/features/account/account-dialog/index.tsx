@@ -18,6 +18,7 @@ import { DangerSection } from "@/features/account/account-dialog/danger";
 import { GeneralSection } from "@/features/account/account-dialog/general";
 import { LinkedAccountsSection } from "@/features/account/account-dialog/linked-accounts";
 import { MessagesSection } from "@/features/account/account-dialog/messages";
+import { NotificationsSection } from "@/features/account/account-dialog/notifications";
 import { PasswordSection } from "@/features/account/account-dialog/password";
 import { accountsOptions } from "@/features/account/queries";
 import { useCurrentUser } from "@/features/user/hooks";
@@ -46,12 +47,17 @@ export function AccountDialog({
         {user ? (
           /* the strip is a sibling of the scrolling panel, not inside it: in
              the panel it scrolls out of the dialog and there is no way back to
-             another section */
+             another section. It wraps rather than scrolls, so every tab is in view */
           <Tabs defaultValue="general" className="min-h-0 gap-0">
             {/* `shrink-0` so the flex column cannot squeeze the strip below the list */}
-            <div data-scroll-x className="mx-6 shrink-0 [scrollbar-width:none] overflow-x-auto">
-              <TabsList variant="underline" className="w-max min-w-full justify-start border-b">
+            <div className="mx-6 shrink-0 border-b">
+              {/* the shared indicator cannot follow a wrapped row, so the active tab draws its own */}
+              <TabsList
+                variant="underline"
+                className="w-full flex-wrap justify-start *:data-[slot=tab-indicator]:hidden *:data-[slot=tabs-tab]:grow-0 *:data-[slot=tabs-tab]:rounded-none *:data-[slot=tabs-tab]:data-active:shadow-[inset_0_-2px_0_var(--color-primary)]"
+              >
                 <TabsTab value="general">{m.auth_account_general()}</TabsTab>
+                <TabsTab value="notifications">{m.notification_section()}</TabsTab>
                 <TabsTab value="messages">{m.chat_settings_tab()}</TabsTab>
                 <TabsTab value="blocked">{m.mod_blocked_tab()}</TabsTab>
                 <TabsTab value="linked">{m.auth_account_social_link()}</TabsTab>
@@ -65,6 +71,10 @@ export function AccountDialog({
             <DialogPanel className="pt-4!">
               <TabsPanel value="general">
                 <GeneralSection user={user} />
+              </TabsPanel>
+
+              <TabsPanel value="notifications">
+                <NotificationsSection />
               </TabsPanel>
 
               <TabsPanel value="messages">

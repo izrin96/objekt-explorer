@@ -117,3 +117,42 @@ export function selectAlerts(input: AlertInput): Alert[] {
   }
   return alerts;
 }
+
+export type Cut<T> =
+  | { complete: true; taken: T[] }
+  /** `oversized` is set when the first entry alone passes the limit; it is read again whole */
+  | { complete: false; taken: T[]; oversized: number | null };
+
+/**
+ * The first `limit` rows cut back to whole entries, so a run never stops partway through an
+ * entry's pairs. `rows` are grouped by entry and hold one more than `limit` when there were more.
+ */
+export function wholeEntries<T extends { entryId: number }>(rows: T[], limit: number): Cut<T> {
+  if (rows.length <= limit) return { complete: true, taken: rows };
+  const cutEntry = rows[limit]!.entryId;
+  const taken = rows.slice(0, limit).filter((row) => row.entryId !== cutEntry);
+  return { complete: false, taken, oversized: taken.length === 0 ? cutEntry : null };
+}
+
+/**
+ * Lists made discoverable are read in list id, then entry id, order. When the run stopped
+ * short, every list before the last one it reached is done, and that one resumes after its
+ * last whole entry; `consumed` is never empty then, since the first entry is always taken.
+ */
+export function listProgress(
+  pending: number[],
+  progress: ReadonlyMap<number, number>,
+  consumed: { entryId: number; listId: number }[],
+  complete: boolean,
+): { done: number[]; progress: Map<number, number> } {
+  const last = consumed.at(-1);
+  if (complete || !last) return { done: pending, progress: new Map() };
+  const done = pending.filter((id) => id < last.listId);
+  const next = new Map<number, number>();
+  for (const id of pending) {
+    const after = progress.get(id);
+    if (id > last.listId && after !== undefined) next.set(id, after);
+  }
+  next.set(last.listId, last.entryId);
+  return { done, progress: next };
+}

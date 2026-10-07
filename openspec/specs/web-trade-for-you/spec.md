@@ -10,7 +10,7 @@ The account-wide trade match view on `apps/web` at `/trade/for-you`: who the use
 
 #### Scenario: Matches across lists
 - **WHEN** a user has two have lists and one want list, and a partner's discoverable lists overlap two of them
-- **THEN** the partner appears once, with the matched objekts from both of the user's lists, each labelled with the user's list it came from
+- **THEN** the partner appears once, with the matched objekts from both of the user's lists
 
 #### Scenario: Signed out
 - **WHEN** a visitor without a session opens `/trade/for-you?list=spares`
@@ -26,22 +26,22 @@ Each partner row SHALL show both counts: objekts they have that the user wants, 
 2. then the sum of both counts;
 3. then the partner's most recently updated matched list.
 
-The row SHALL show the mutual score. Expanding a row SHALL show the matched objekts in each direction.
+The row SHALL show the mutual score and both counts, each with a visible label (for example "Mutual 2 · They have 4 · You have 2"). Expanding a row SHALL show the matched objekts in each direction.
 
 #### Scenario: Mutual beats one-sided
 - **WHEN** partner A has 9 the user wants and wants 0 of the user's, and partner B has 2 and wants 2
 - **THEN** under All, B is listed above A
 
 ### Requirement: Filters
-The view SHALL offer the filters All, Mutual only, They have what I want and They want what I have. Mutual only is the default and keeps partners with both counts above zero. The view SHALL also offer a list filter naming one of the user's have or want lists. The named list replaces the user's side only in its own direction:
+The view SHALL offer a Match control, the same control and option order as Browse (see `web-trade-browse`): All, Mutual only, They want what I have, and They have what I want. All is the default. Mutual only keeps partners with both counts above zero. The view SHALL also offer a list filter naming one of the user's have or want lists. The named list replaces the user's side only in its own direction:
 - for a have list, "they want what I have" counts only that list's entries;
 - for a want list, "they have what I want" counts only that list's entries.
 
-The other direction keeps using all of the user's lists of the other type, so a list's Mutual only partners also trade back against the user's other lists. The filters SHALL live in the URL (`filter`, `list`). A `list` value that is not one of the user's have or want lists SHALL be ignored, and all lists used.
+The other direction keeps using all of the user's lists of the other type, so a list's Mutual only partners also trade back against the user's other lists. The filters SHALL live in the URL (`match`, `list`). A `list` value that is not one of the user's have or want lists SHALL be ignored, and all lists used.
 
 #### Scenario: Default filter
 - **WHEN** the user opens `/trade/for-you` with no parameters
-- **THEN** Mutual only is selected and only partners with both counts above zero are listed
+- **THEN** All is selected, and every partner is listed, mutual ones first
 
 #### Scenario: One have list, still mutual
 - **WHEN** the user filters to have list "spares", and a partner wants a collection on Spares and has a collection on the user's want list "binary hunt"
@@ -85,7 +85,7 @@ The user SHALL be able to hide a partner from the row. A hidden partner SHALL no
 - **THEN** rin.trades disappears from the list at once, and returns after unhiding
 
 ### Requirement: Partner identity
-A partner row SHALL be headed by the Cosmo nickname of the address their best-matching list is bound to, unless that address hides its nickname. Otherwise it SHALL use the account's display name. When the partner's matched lists are bound to more than one address, the row SHALL name the others as well. The row SHALL show the account's avatar, and Discord and Twitter badges when the partner has chosen to show socials, whatever the list's Hide User setting, as the per-list match dialog does today.
+A partner row SHALL be headed by the Cosmo nickname of the address their best-matching list is bound to, unless that address hides its nickname. Otherwise it SHALL use the account's display name. When the partner's matched lists are bound to more than one address, the row SHALL name the others as well. The row SHALL show the account's avatar. Expanding the row SHALL show a link to the partner's profile and Discord and Twitter badges when the partner has chosen to show socials, whatever the list's Hide User setting. They sit inside the expanded row, not on the row's toggle, so a handle can be selected and copied.
 
 #### Scenario: Bound nickname
 - **WHEN** a partner's matched list is bound to the Cosmo address with nickname "rinrin"
@@ -103,11 +103,11 @@ The view SHALL reflect the user's own list changes on the next load. Other accou
 - **THEN** partners holding that collection are counted
 
 ### Requirement: Message a partner
-Each partner row SHALL offer Message, under the rules in `web-chat`. Message SHALL open the conversation with the partner, adding a card for the partner's best-matching list.
+Each partner row SHALL offer Message, under the rules in `web-chat`. Message SHALL open the conversation with the partner, adding a card for a collection their best-matching list matched on. The card SHALL NOT name the list, so a list that hides its owner is never tied to the account. A partner who doesn't take messages SHALL show "Not taking messages" in place of Message and Propose this trade.
 
 #### Scenario: From For you
 - **WHEN** the user activates Message on nakyoung.cards's row
-- **THEN** the conversation with nakyoung.cards opens, with a card for the list that matched most
+- **THEN** the conversation with nakyoung.cards opens, with a card for a collection from the list that matched most
 
 ### Requirement: Blocks and trade blocks
 For you SHALL leave out partners the user blocked, partners who blocked the user, and partners under an active trade block. Not shown SHALL count the accounts the user blocked, separately from hidden partners. Each row SHALL offer Block beside Hide partner.

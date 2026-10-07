@@ -1,3 +1,4 @@
+import { type HeldItem, itemStillHeld, type SeenTransfer } from "@repo/api/lib/offer-rules";
 import { batchMatters, type LegResult, tradeOutcome } from "@repo/api/lib/trade-match";
 import { notifyChannel, type UserSocketMessage } from "@repo/api/schemas/notification";
 import { type OfferPayload, type TradePayload, VERIFIER_LAST_KEY } from "@repo/api/schemas/offer";
@@ -6,11 +7,11 @@ import { partyNames, writeNotes } from "@repo/api/services/offer-notes";
 import { type LegRow, loadOpenLegs, matchOpenLegs } from "@repo/api/services/trade-verify";
 import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
-import { collections, objekts } from "@repo/db/indexer/schema";
+import { collections, objekts, transfers } from "@repo/db/indexer/schema";
 import { offer, trade, tradeLeg } from "@repo/db/schema";
 import { chunkMap } from "@repo/lib";
 import { RedisClient } from "bun";
-import { and, eq, inArray, isNull, lte, sql } from "drizzle-orm";
+import { and, eq, gte, inArray, isNull, lte, sql } from "drizzle-orm";
 
 import { redis } from "../lib/redis";
 
@@ -304,20 +305,31 @@ async function offerUpkeep() {
   const held = await db.execute<{
     offer_id: number;
     objekt_id: string;
-    holder: string;
-    addresses: string[];
+    created_at: string;
+    holders: string[];
+    receivers: string[];
   }>(sql`
-    SELECT o.id AS offer_id, i.objekt_id,
-      CASE WHEN i.side = 'give' THEN o.from_user_id ELSE o.to_user_id END AS holder,
+    SELECT o.id AS offer_id, i.objekt_id, o.created_at::text AS created_at,
       ARRAY(
         SELECT lower(a.address) FROM user_address a
         WHERE a.user_id = CASE WHEN i.side = 'give' THEN o.from_user_id ELSE o.to_user_id END
-      ) AS addresses
+      ) AS holders,
+      ARRAY(
+        SELECT lower(a.address) FROM user_address a
+        WHERE a.user_id = CASE WHEN i.side = 'give' THEN o.to_user_id ELSE o.from_user_id END
+      ) AS receivers
     FROM offer o
     JOIN offer_item i ON i.offer_id = o.id
     WHERE o.status = 'open' AND o.expires_at > now() AND i.objekt_id IS NOT NULL
   `);
-  const watchedObjekts = unique(held.rows.map((row) => row.objekt_id));
+  const items = held.rows.map((row) => ({
+    offerId: row.offer_id,
+    objektId: row.objekt_id,
+    holders: row.holders,
+    receivers: row.receivers,
+    since: row.created_at,
+  }));
+  const watchedObjekts = unique(items.map((item) => item.objektId));
   const owners = await chunkMap(watchedObjekts, OWNER_BATCH, (ids) =>
     indexer
       .select({ id: objekts.id, owner: objekts.owner })
@@ -325,13 +337,16 @@ async function offerUpkeep() {
       .where(inArray(objekts.id, ids)),
   );
   const ownerOf = new Map(owners.map((row) => [row.id, row.owner.toLowerCase()]));
+  const sent = await sentToReceivers(
+    items.filter((item) => {
+      const owner = ownerOf.get(item.objektId);
+      return owner !== undefined && item.receivers.includes(owner);
+    }),
+  );
   const movedIds = unique(
-    held.rows
-      .filter((row) => {
-        const owner = ownerOf.get(row.objekt_id);
-        return owner === undefined || !row.addresses.includes(owner);
-      })
-      .map((row) => row.offer_id),
+    items
+      .filter((item) => !itemStillHeld(item, ownerOf.get(item.objektId), sent))
+      .map((item) => item.offerId),
   );
 
   let moved = 0;
@@ -352,6 +367,35 @@ async function offerUpkeep() {
     publishes.push(publish);
   }
   return { publishes, expired, moved, watchedObjekts };
+}
+
+/** Transfers into the receivers' wallets since the earliest of these offers, for `itemStillHeld`. */
+async function sentToReceivers(items: HeldItem[]): Promise<SeenTransfer[]> {
+  if (items.length === 0) return [];
+  const since = items
+    .map((item) => item.since)
+    .reduce((a, b) => (new Date(a).getTime() <= new Date(b).getTime() ? a : b));
+  const receivers = unique(items.flatMap((item) => item.receivers));
+  const rows = await chunkMap(unique(items.map((item) => item.objektId)), OWNER_BATCH, (ids) =>
+    indexer
+      .select({
+        objektId: transfers.objektId,
+        from: transfers.from,
+        to: transfers.to,
+        timestamp: transfers.timestamp,
+      })
+      .from(transfers)
+      .where(
+        and(
+          inArray(transfers.objektId, ids),
+          inArray(transfers.to, receivers),
+          gte(transfers.timestamp, since),
+        ),
+      ),
+  );
+  return rows.flatMap(({ objektId, from, to, timestamp }) =>
+    objektId ? [{ objektId, from, to, timestamp }] : [],
+  );
 }
 
 /** One reminder per trade, 72 hours after accept, to each party still owing a transfer. */

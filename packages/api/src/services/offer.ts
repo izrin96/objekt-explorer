@@ -311,21 +311,20 @@ async function resolveAddressed(
     .select({ id: conversation.id })
     .from(conversation)
     .where(and(eq(conversation.userLow, userLow), eq(conversation.userHigh, userHigh)));
-  if (!existing) {
-    const verdict = startVerdict({
-      senderId: me,
-      recipientId: partnerId,
-      senderHasAddress: start.senderHasAddress,
-      pref: start.pref,
-      hidesOwner: start.hidesOwner,
-      blocked: start.safety.blocked,
-      senderMuted: start.safety.mute !== null,
-      existing: false,
-      // counted when the conversation is created, not on a read
-      rate: { ok: true },
-    });
-    if (!verdict.ok) refuseOffer(verdict.reason as Exclude<ChatRefusal, "invalid_card">);
-  }
+  // an existing conversation passes too, but only after Hide User, which must not tell it apart
+  const verdict = startVerdict({
+    senderId: me,
+    recipientId: partnerId,
+    senderHasAddress: start.senderHasAddress,
+    pref: start.pref,
+    hidesOwner: start.hidesOwner,
+    blocked: start.safety.blocked,
+    senderMuted: start.safety.mute !== null,
+    existing: existing !== undefined,
+    // counted when the conversation is created, not on a read
+    rate: { ok: true },
+  });
+  if (!verdict.ok) refuseOffer(verdict.reason as Exclude<ChatRefusal, "invalid_card">);
   return {
     partnerId,
     conversationId: existing?.id ?? null,
@@ -660,8 +659,8 @@ export async function offerCandidates(
   },
 ) {
   const addressed = await resolveAddressed(me, meCreatedAt, input);
-  // however the partner was named: a target can resolve to an existing conversation, which
-  // skips the start verdict
+  // however the partner was named: the start verdict lets an existing conversation through
+  // whatever the blocks
   if (input.side === "theirs") {
     const safety = addressed.start?.safety ?? (await chatSafety(me, addressed.partnerId));
     if (safety.blocked || safety.partnerTradeBlocked) refuseOffer("not_accepting");
@@ -931,108 +930,119 @@ export async function createOffer(
     return offerIds.length > 0 ? [{ objektId, offerIds }] : [];
   });
 
-  await checkMessageRate(me, now);
+  const name = await partyNames([me, partnerId]);
+  const releaseSlot = await checkMessageRate(me, now);
   const note = input.note ? input.note : null;
   const caution: FlagCategory[] = note === null ? [] : scanMessage(note);
-  const name = await partyNames([me, partnerId]);
 
-  const result = await db.transaction(async (tx) => {
-    let conversationId: number;
-    let created = false;
-    if (startCtx) {
-      const existingId = await checkStart(tx, startCtx);
-      ({ id: conversationId, created } = await ensureConversation(tx, startCtx, existingId, true));
-    } else {
-      conversationId = addressed.conversationId!;
-    }
-    await lockConversation(tx, conversationId);
-    await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext('offer_open'), hashtext(${me}))`);
+  const result = await db
+    .transaction(async (tx) => {
+      let conversationId: number;
+      let created = false;
+      if (startCtx) {
+        const existingId = await checkStart(tx, startCtx);
+        ({ id: conversationId, created } = await ensureConversation(
+          tx,
+          startCtx,
+          existingId,
+          true,
+        ));
+      } else {
+        conversationId = addressed.conversationId!;
+      }
+      await lockConversation(tx, conversationId);
+      await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext('offer_open'), hashtext(${me}))`);
 
-    const [current] = await tx
-      .select(offerRowColumns)
-      .from(offer)
-      .where(and(eq(offer.conversationId, conversationId), eq(offer.status, "open")));
-    let open: OfferRow | null = current ?? null;
-    if (open && effectiveStatus(open, now) === "expired") {
-      await tx.update(offer).set({ status: "expired" }).where(eq(offer.id, open.id));
-      open = null;
-    }
-    const effect = createEffect(open, me);
-    // kept objekts ride on countering that very offer; anything else lists them again
-    if (keptIds.size > 0 && (effect !== "counter" || open?.id !== kept?.offerId)) {
-      refuseOffer("not_listed", { objektIds: [...keptIds] });
-    }
+      const [current] = await tx
+        .select(offerRowColumns)
+        .from(offer)
+        .where(and(eq(offer.conversationId, conversationId), eq(offer.status, "open")));
+      let open: OfferRow | null = current ?? null;
+      if (open && effectiveStatus(open, now) === "expired") {
+        await tx.update(offer).set({ status: "expired" }).where(eq(offer.id, open.id));
+        open = null;
+      }
+      const effect = createEffect(open, me);
+      // kept objekts ride on countering that very offer; anything else lists them again
+      if (keptIds.size > 0 && (effect !== "counter" || open?.id !== kept?.offerId)) {
+        refuseOffer("not_listed", { objektIds: [...keptIds] });
+      }
 
-    const openSent = await tx.$count(
-      offer,
-      and(
-        eq(offer.fromUserId, me),
-        eq(offer.status, "open"),
-        gt(offer.expiresAt, sql`now()`),
-        effect === "replace" ? ne(offer.id, open!.id) : undefined,
-      ),
-    );
-    if (openSent >= OPEN_OFFER_LIMIT) refuseOffer("too_many_open");
+      const openSent = await tx.$count(
+        offer,
+        and(
+          eq(offer.fromUserId, me),
+          eq(offer.status, "open"),
+          gt(offer.expiresAt, sql`now()`),
+          effect === "replace" ? ne(offer.id, open!.id) : undefined,
+        ),
+      );
+      if (openSent >= OPEN_OFFER_LIMIT) refuseOffer("too_many_open");
 
-    if (open && effect !== "new") {
-      await tx
-        .update(offer)
-        .set({
-          status: effect === "counter" ? "countered" : "withdrawn",
-          respondedAt: sql`now()`,
-        })
-        .where(eq(offer.id, open.id));
-    }
+      if (open && effect !== "new") {
+        await tx
+          .update(offer)
+          .set({
+            status: effect === "counter" ? "countered" : "withdrawn",
+            respondedAt: sql`now()`,
+          })
+          .where(eq(offer.id, open.id));
+      }
 
-    const [inserted] = await tx
-      .insert(offer)
-      .values({
-        conversationId,
-        fromUserId: me,
-        toUserId: partnerId,
-        parentId: effect === "counter" ? open!.id : null,
-        topupAmount: shape.topup?.amount ?? null,
-        topupCurrency: shape.topup?.currency ?? null,
-        topupPayer: shape.topup?.payer ?? null,
-        note,
-        caution: caution.length ? caution : null,
-      })
-      .returning({ id: offer.id });
-    const offerId = inserted!.id;
-
-    await tx.insert(offerItem).values([
-      ...input.give.map((item) => ({
-        offerId,
-        side: "give",
-        collectionSlug: item.collectionSlug,
-        objektId: item.objektId,
-      })),
-      ...getRows.map(({ item, listId }) => ({
-        offerId,
-        side: "get",
-        collectionSlug: item.collectionSlug,
-        objektId: item.objektId ?? null,
-        listId,
-      })),
-    ]);
-    await appendMessage(tx, conversationId, me, null, null, caution, offerId);
-
-    const notified = await writeNotes(tx, [
-      {
-        type: "offer",
-        userId: partnerId,
-        payload: {
-          offerId,
+      const [inserted] = await tx
+        .insert(offer)
+        .values({
           conversationId,
-          tradeId: null,
-          event: effect === "counter" ? "countered" : "received",
-          reason: null,
-          partner: name(me),
+          fromUserId: me,
+          toUserId: partnerId,
+          parentId: effect === "counter" ? open!.id : null,
+          topupAmount: shape.topup?.amount ?? null,
+          topupCurrency: shape.topup?.currency ?? null,
+          topupPayer: shape.topup?.payer ?? null,
+          note,
+          caution: caution.length ? caution : null,
+        })
+        .returning({ id: offer.id });
+      const offerId = inserted!.id;
+
+      await tx.insert(offerItem).values([
+        ...input.give.map((item) => ({
+          offerId,
+          side: "give",
+          collectionSlug: item.collectionSlug,
+          objektId: item.objektId,
+        })),
+        ...getRows.map(({ item, listId }) => ({
+          offerId,
+          side: "get",
+          collectionSlug: item.collectionSlug,
+          objektId: item.objektId ?? null,
+          listId,
+        })),
+      ]);
+      await appendMessage(tx, conversationId, me, null, null, caution, offerId);
+
+      const notified = await writeNotes(tx, [
+        {
+          type: "offer",
+          userId: partnerId,
+          payload: {
+            offerId,
+            conversationId,
+            tradeId: null,
+            event: effect === "counter" ? "countered" : "received",
+            reason: null,
+            partner: name(me),
+          },
         },
-      },
-    ]);
-    return { offerId, conversationId, created, notified };
-  });
+      ]);
+      return { offerId, conversationId, created, notified };
+    })
+    // a refusal inside the transaction sends nothing, so it gives the slot back
+    .catch(async (error: unknown) => {
+      await releaseSlot();
+      throw error;
+    });
 
   await publishChatChanged([me, partnerId], result.conversationId);
   await Promise.all(result.notified.map((userId) => publishNotify(userId)));
@@ -1401,10 +1411,15 @@ export async function cancelTrade(me: string, tradeId: number) {
   if (safety.tradeBlocked) refuseOffer("trade_blocked");
   // a transfer the verifier hasn't run on yet locks the trade too, or a party could send
   // nothing back and cancel right after receiving
-  const legs = await loadOpenLegs(tradeId);
-  if (legs.length > 0) {
+  // matched with the parties' other trades, as the verifier matches them, so a transfer
+  // another trade's leg takes doesn't lock this one
+  const legs = await loadOpenLegs([me, partnerId]);
+  if (legs.some((leg) => leg.trade_id === tradeId)) {
     const results = await matchOpenLegs(legs);
-    if ([...results.values()].some((result) => result.kind === "verified")) refuseOffer("locked");
+    const locked = legs.some(
+      (leg) => leg.trade_id === tradeId && results.get(leg.id)?.kind === "verified",
+    );
+    if (locked) refuseOffer("locked");
   }
   const name = await partyNames([me]);
 

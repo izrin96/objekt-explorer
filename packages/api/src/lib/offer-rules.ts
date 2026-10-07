@@ -197,6 +197,40 @@ export function topupPayer(payer: string, viewerIsSender: boolean): "you" | "the
   return (payer === "from") === viewerIsSender ? "you" : "them";
 }
 
+export type HeldItem = {
+  objektId: string;
+  /** the giving side's addresses, lowercase */
+  holders: string[];
+  /** the receiving side's addresses, lowercase */
+  receivers: string[];
+  /** when the offer was made */
+  since: string;
+};
+export type SeenTransfer = { objektId: string; from: string; to: string; timestamp: string };
+
+/**
+ * An open offer's specific objekt still counts while its giver holds it, or once the giver
+ * has sent it to the receiver since the offer was made, as accept counts an early send.
+ */
+export function itemStillHeld(
+  item: HeldItem,
+  owner: string | undefined,
+  transfers: SeenTransfer[],
+): boolean {
+  if (owner === undefined) return false;
+  const at = owner.toLowerCase();
+  if (item.holders.includes(at)) return true;
+  if (!item.receivers.includes(at)) return false;
+  const since = new Date(item.since).getTime();
+  return transfers.some(
+    (t) =>
+      t.objektId === item.objektId &&
+      item.holders.includes(t.from.toLowerCase()) &&
+      item.receivers.includes(t.to.toLowerCase()) &&
+      new Date(t.timestamp).getTime() >= since,
+  );
+}
+
 export type TradeParty = { userId: string; verified: number; createdAt: string | Date };
 
 /**

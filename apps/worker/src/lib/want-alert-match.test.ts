@@ -7,8 +7,10 @@ import {
   type AlertList,
   type AlertPair,
   hiddenKey,
+  listProgress,
   prefKey,
   selectAlerts,
+  wholeEntries,
 } from "./want-alert-match";
 
 const SELLER = "seller";
@@ -198,5 +200,61 @@ describe("selectAlerts, reverse", () => {
         input({ pairs: [reverse], prefs: on, lists: new Map([quiet, WANT].map((l) => [l.id, l])) }),
       ),
     ).toEqual([]);
+  });
+});
+
+describe("wholeEntries", () => {
+  const rows = (...entries: number[]) => entries.map((entryId) => ({ entryId }));
+
+  test("under the limit, everything and done", () => {
+    expect(wholeEntries(rows(1, 1, 2), 3)).toEqual({ complete: true, taken: rows(1, 1, 2) });
+  });
+
+  test("past the limit, cut back to the last whole entry", () => {
+    expect(wholeEntries(rows(1, 2, 2, 3), 3)).toEqual({
+      complete: false,
+      taken: rows(1, 2, 2),
+      oversized: null,
+    });
+    expect(wholeEntries(rows(1, 2, 2, 2), 3)).toEqual({
+      complete: false,
+      taken: rows(1),
+      oversized: null,
+    });
+  });
+
+  test("a first entry that alone passes the limit is named, so it is read whole", () => {
+    expect(wholeEntries(rows(5, 5, 5), 2)).toEqual({ complete: false, taken: [], oversized: 5 });
+    expect(wholeEntries(rows(5), 0)).toEqual({ complete: false, taken: [], oversized: 5 });
+  });
+});
+
+describe("listProgress", () => {
+  const read = (listId: number, entryId: number) => ({ listId, entryId });
+
+  test("read to the end: every pending list is done and nothing resumes", () => {
+    expect(listProgress([3, 1], new Map([[3, 10]]), [read(1, 4)], true)).toEqual({
+      done: [3, 1],
+      progress: new Map(),
+    });
+  });
+
+  test("stopped short: earlier lists are done, the reached one resumes, later ones keep theirs", () => {
+    const result = listProgress(
+      [1, 2, 3],
+      new Map([
+        [1, 5],
+        [3, 7],
+      ]),
+      [read(1, 6), read(2, 8), read(2, 9)],
+      false,
+    );
+    expect(result.done).toEqual([1]);
+    expect(result.progress).toEqual(
+      new Map([
+        [3, 7],
+        [2, 9],
+      ]),
+    );
   });
 });

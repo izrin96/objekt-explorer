@@ -5,6 +5,7 @@ import { Link } from "@tanstack/react-router";
 import { SocialBadge } from "@/components/shared/social-badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { MessageButton } from "@/features/chat/message-button";
 import { getListLinkOption } from "@/features/list/list-link";
 import { SafetyMenu } from "@/features/moderation/safety-menu";
@@ -16,6 +17,9 @@ import { formatCurrency } from "@/features/settings/use-currency";
 import { relativeTime } from "@/lib/time";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
+
+import { ListRoleBadge } from "./list-role-badge";
+import { THUMB_GRID } from "./thumb-grid";
 
 type BrowsePage = Outputs["trade"]["browse"];
 export type BrowsePostData = BrowsePage["posts"][number];
@@ -37,12 +41,6 @@ const RING = "ring-foreground ring-offset-card ring-2 ring-offset-2";
 const CARD_RING =
   "*:first:after:pointer-events-none *:first:after:absolute *:first:after:inset-0 *:first:after:rounded-photocard *:first:after:border-2 *:first:after:border-foreground *:first:after:shadow-[inset_0_0_0_2px_var(--color-card)]";
 
-const ROLE_LABEL: Record<Side["role"], () => string> = {
-  have: m.trade_side_have,
-  want: m.trade_side_want,
-  sale: m.trade_side_sale,
-};
-
 /** The short tag stays visible; the spelled-out one is read and shown on hover. */
 export function TagLabel({ tag }: { tag: PostTag }) {
   return (
@@ -55,7 +53,7 @@ export function TagLabel({ tag }: { tag: PostTag }) {
   );
 }
 
-export function TagBadge({ tag }: { tag: PostTag }) {
+function TagBadge({ tag }: { tag: PostTag }) {
   return (
     <Badge variant="outline" size="sm" className="font-mono">
       <TagLabel tag={tag} />
@@ -76,11 +74,14 @@ export function postTime(post: { bumpedAt: string | null; updatedAt: string }) {
 
 export function BrowsePost({
   post,
+  own,
   collections,
   now,
   onOpen,
 }: {
   post: BrowsePostData;
+  /** the viewer's own post: no Message, and no note saying so */
+  own: boolean;
   collections: Readonly<Record<string, ValidObjekt | undefined>>;
   now: number;
   onOpen: (objekt: ValidObjekt) => void;
@@ -94,7 +95,8 @@ export function BrowsePost({
 
   return (
     <article className="bg-card flex flex-col gap-4 rounded-lg border p-4">
-      <header className="flex items-start gap-3">
+      {/* below `sm` the actions take a row of their own, so the name keeps the width */}
+      <header className="flex flex-wrap items-start gap-3">
         <Avatar className="size-9 shrink-0">
           {user.image ? <AvatarImage src={user.image} alt="" /> : null}
           <AvatarFallback>{identity.name.slice(0, 1).toUpperCase()}</AvatarFallback>
@@ -126,28 +128,31 @@ export function BrowsePost({
             </time>
           </div>
         </div>
-        {post.messageable && anchor ? (
-          <>
-            <MessageButton
-              target={{ kind: "list", slug: anchor.list.slug }}
-              card={
-                firstShown ? { collectionSlug: firstShown, listSlug: anchor.list.slug } : undefined
-              }
-              name={identity.name}
-              className="shrink-0"
-            />
-            <MakeOfferButton
-              request={{
-                to: { target: { kind: "list", slug: anchor.list.slug } },
-                name: identity.name,
-                focusList: anchor.list.slug,
-              }}
-              labelClassName="max-sm:sr-only"
-              className="shrink-0"
-            />
-          </>
-        ) : null}
-        <SafetyMenu userId={post.userId} name={identity.name} className="shrink-0" />
+        <div className="flex shrink-0 flex-wrap items-center gap-2 max-sm:w-full max-sm:ps-12">
+          {post.messageable && anchor ? (
+            <>
+              <MessageButton
+                target={{ kind: "list", slug: anchor.list.slug }}
+                card={
+                  firstShown
+                    ? { collectionSlug: firstShown, listSlug: anchor.list.slug }
+                    : undefined
+                }
+                name={identity.name}
+              />
+              <MakeOfferButton
+                request={{
+                  to: { target: { kind: "list", slug: anchor.list.slug } },
+                  name: identity.name,
+                  focusList: anchor.list.slug,
+                }}
+              />
+            </>
+          ) : own ? null : (
+            <span className="text-muted-foreground text-sm">{m.trade_not_messageable()}</span>
+          )}
+          <SafetyMenu userId={post.userId} name={identity.name} report />
+        </div>
       </header>
 
       {match && (match.youHave > 0 || match.youWant > 0) ? (
@@ -187,8 +192,8 @@ function PostSide({
 
   return (
     <section className="flex flex-col gap-2">
-      <h3 className="flex min-w-0 flex-wrap items-baseline gap-x-2 text-sm">
-        <span className="text-muted-foreground font-medium">{ROLE_LABEL[side.role]()}</span>
+      <h3 className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+        <ListRoleBadge type={side.role} />
         <Link
           {...getListLinkOption(list)}
           className="min-w-0 font-medium break-words underline-offset-2 hover:underline"
@@ -204,8 +209,7 @@ function PostSide({
           {list.description}
         </p>
       ) : null}
-      {/* auto-fill keeps a card near thumbnail size however wide the page is */}
-      <ul className="grid grid-cols-[repeat(auto-fill,minmax(4rem,1fr))] gap-2 sm:grid-cols-[repeat(auto-fill,minmax(7rem,1fr))]">
+      <ul className={THUMB_GRID}>
         {side.items.map((item) => {
           const collection = collections[item.slug];
           return (
@@ -216,6 +220,7 @@ function PostSide({
                   objekt={collection}
                   image="thumbnail"
                   onOpen={() => onOpen(collection)}
+                  captionClassName="text-xs"
                   price={priceOf(item)}
                   priceMuted={item.isQyop}
                   className={item.ringed ? CARD_RING : undefined}
@@ -248,5 +253,29 @@ function PostSide({
         ) : null}
       </ul>
     </section>
+  );
+}
+
+/** A post's shape (byline, one side, a row of thumbnails), so the first page lands in place. */
+export function BrowsePostSkeleton() {
+  return (
+    <div className="bg-card flex flex-col gap-4 rounded-lg border p-4">
+      <div className="flex items-start gap-3">
+        <Skeleton className="size-9 shrink-0 rounded-full" />
+        <div className="flex flex-1 flex-col gap-2 pt-0.5">
+          <Skeleton className="h-4 w-32" />
+          <Skeleton className="h-3 w-44" />
+          <Skeleton className="h-3 w-24" />
+        </div>
+      </div>
+      <div className="flex flex-col gap-2">
+        <Skeleton className="h-4 w-40" />
+        <div className={THUMB_GRID}>
+          {Array.from({ length: 4 }).map((_, index) => (
+            <Skeleton key={index} className="aspect-photocard rounded-photocard w-full" />
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }

@@ -1,5 +1,5 @@
 import type { ListTypeNew } from "../schemas/list";
-import type { PostType } from "../schemas/trade";
+import type { BrowseMatch, PostType } from "../schemas/trade";
 import { isIdle } from "./trade-rank";
 
 export const FEED_PAGE_SIZE = 24;
@@ -162,8 +162,12 @@ export type PostFilter = {
   slugs: ReadonlySet<string> | null;
   /** keep posts with this collection on any side */
   slug: string | null;
-  /** keep posts whose want side holds a collection on the viewer's have lists */
-  theyWantMine: boolean;
+  /**
+   * they_want keeps posts whose want side holds a collection on the viewer's have lists;
+   * they_have keeps posts whose have or sale side holds one on the viewer's want lists;
+   * mutual needs both
+   */
+  match: BrowseMatch;
 };
 
 /**
@@ -189,9 +193,10 @@ export function assemblePost<L extends TradeList>(
 
   const wanted = roles.find((side) => side.role === "want")?.entries ?? [];
   const offered = roles.filter((side) => side.role !== "want").flatMap((side) => side.entries);
-  if (filter.theyWantMine && (!viewer || countCollections(wanted, viewer.haveSlugs) === 0)) {
-    return null;
-  }
+  const needsWanted = filter.match === "they_want" || filter.match === "mutual";
+  const needsOffered = filter.match === "they_have" || filter.match === "mutual";
+  if (needsWanted && (!viewer || countCollections(wanted, viewer.haveSlugs) === 0)) return null;
+  if (needsOffered && (!viewer || countCollections(offered, viewer.wantSlugs) === 0)) return null;
 
   const sides = roles.map(({ role, list, entries }) => {
     const { items, more } = previewSide(

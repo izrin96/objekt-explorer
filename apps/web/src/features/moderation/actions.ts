@@ -1,3 +1,4 @@
+import { REPORT_AFTER_DAYS } from "@repo/api/schemas/offer";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { toastManager } from "@/components/ui/toast";
@@ -81,9 +82,10 @@ export function useBlock() {
   return { block, isPending: mutation.isPending };
 }
 
-/** The wait before the same account can be reported again, worded; null for other errors. */
+/** A report the server refused, worded; null for any other error. */
 export function reportRefusal(error: unknown) {
   const { reason, retryAt } = errorReason(error);
+  if (reason === "not_reportable") return m.mod_report_not_reportable({ days: REPORT_AFTER_DAYS });
   if (reason !== "report_limit") return null;
   const at = retryAt ? new Date(retryAt).getTime() : Date.now();
   return m.mod_report_limit({ time: relativeTime(at, Date.now(), "hour") });

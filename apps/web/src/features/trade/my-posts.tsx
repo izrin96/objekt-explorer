@@ -5,12 +5,12 @@ import { Link } from "@tanstack/react-router";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { relativeTime } from "@/lib/time";
 import { m } from "@/paraglide/messages";
 
 import { useBumpPost } from "./actions";
-import { postTime, TagBadge } from "./browse-post";
+import { postTime } from "./browse-post";
+import { ListRoleBadge } from "./list-role-badge";
 import { myPostsOptions } from "./queries";
 
 /** Hidden until the viewer has a list on Trade; Post a list sits beside the page description. */
@@ -19,7 +19,8 @@ export function MyPosts() {
   // times are relative to the fetch, which a bump refreshes
   const now = query.dataUpdatedAt;
 
-  if (query.isPending) return <Skeleton className="h-16 rounded-lg" />;
+  // the loader reads it first; a placeholder here would flash and vanish for viewers with no posts
+  if (query.isPending) return null;
   if (query.isError) {
     return (
       <div className="text-muted-foreground flex flex-wrap items-center justify-between gap-2 rounded-lg border border-dashed px-4 py-2.5 text-sm">
@@ -54,18 +55,19 @@ function MyPostRow({ post, now }: { post: MyPost; now: number }) {
   const { changed, time } = postTime(post);
   const when = relativeTime(new Date(time).getTime(), now);
 
+  // two columns, so Bump sits at the same top-right corner of every row however long the names
   return (
-    <li className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-3">
+    <li className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-4 gap-y-2 px-4 py-3">
       <div className="flex min-w-0 flex-col gap-1">
         <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
-          <TagBadge tag={post.tag} />
           {post.lists.map((list, index) => (
-            <span key={list.slug} className="min-w-0 text-sm font-medium break-words">
-              {index > 0 ? <span className="text-muted-foreground font-normal">+ </span> : null}
+            <span key={list.slug} className="flex min-w-0 items-center gap-1.5 text-sm font-medium">
+              {index > 0 ? <span className="text-muted-foreground font-normal">+</span> : null}
+              <ListRoleBadge type={list.listTypeNew} />
               <Link
                 to="/list/$slug"
                 params={{ slug: list.slug }}
-                className="underline-offset-2 hover:underline"
+                className="min-w-0 break-words underline-offset-2 hover:underline"
               >
                 {list.name}
               </Link>
@@ -86,28 +88,24 @@ function MyPostRow({ post, now }: { post: MyPost; now: number }) {
             {changed ? m.trade_updated_at({ time: when }) : m.trade_bumped_at({ time: when })}
           </time>
           {post.listed ? null : ` · ${m.trade_post_idle_hint()}`}
+          {post.nextBumpAt
+            ? ` · ${m.trade_bump_next({
+                time: relativeTime(new Date(post.nextBumpAt).getTime(), now, "hour"),
+              })}`
+            : null}
         </p>
       </div>
 
-      <div className="flex items-center gap-2">
-        {post.nextBumpAt ? (
-          <span className="text-muted-foreground text-xs">
-            {m.trade_bump_next({
-              time: relativeTime(new Date(post.nextBumpAt).getTime(), now, "hour"),
-            })}
-          </span>
-        ) : null}
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={post.nextBumpAt !== null}
-          loading={bump.isPending}
-          onClick={() => bump.mutate({ slug: post.slug })}
-        >
-          <ArrowFatLineUpIcon />
-          {m.trade_bump()}
-        </Button>
-      </div>
+      <Button
+        variant="outline"
+        size="sm"
+        disabled={post.nextBumpAt !== null}
+        loading={bump.isPending}
+        onClick={() => bump.mutate({ slug: post.slug })}
+      >
+        <ArrowFatLineUpIcon />
+        {m.trade_bump()}
+      </Button>
     </li>
   );
 }

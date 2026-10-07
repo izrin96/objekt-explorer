@@ -1,4 +1,5 @@
 import { ArrowClockwiseIcon, CardsThreeIcon, WarningIcon } from "@phosphor-icons/react";
+import type { BrowseMatch } from "@repo/api/schemas/trade";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
@@ -8,9 +9,6 @@ import { WindowVirtualizer } from "virtua";
 import { EmptyState } from "@/components/shared/empty-state";
 import { InfiniteSentinel } from "@/components/shared/infinite-sentinel";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsList, TabsTab } from "@/components/ui/tabs";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import { useSelectedArtists } from "@/features/artist/use-selected-artists";
@@ -30,6 +28,7 @@ import { FilterSheet } from "@/features/filters/filter-sheet";
 import { OnlineFilter } from "@/features/filters/online-filter";
 import { ResetButton } from "@/features/filters/reset-button";
 import { canReset } from "@/features/filters/search-schema";
+import { SingleSelect } from "@/features/filters/single-select";
 import { useCanonicalFilters, useSetFilters } from "@/features/filters/use-filters";
 import { ObjektDrawer } from "@/features/objekt/drawer";
 import { getCollectionShortNo } from "@/features/objekt/objekt-utils";
@@ -37,7 +36,7 @@ import { useCurrentUser } from "@/features/user/hooks";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
-import { BrowsePost, TagLabel } from "./browse-post";
+import { BrowsePost, BrowsePostSkeleton, TagLabel } from "./browse-post";
 import { type BrowseSearch, toBrowseInput } from "./browse-search";
 import { MyPosts } from "./my-posts";
 import { PostListDialog } from "./post-list-dialog";
@@ -80,11 +79,15 @@ export function BrowseView({ search }: { search: BrowseSearch }) {
   const filtering = canReset(search) || search.type !== undefined || search.slug !== undefined;
   const reset = () =>
     void navigate({
-      search: (prev) => ({ have: prev.have }),
+      search: (prev) => ({ match: prev.match }),
       replace: true,
       resetScroll: false,
     });
   const viewer = query.data?.pages[0]?.viewer ?? null;
+  const matchOptions = viewer ? matchOptionsFor(viewer) : [];
+  // the URL leads: the previous page's viewer still answers while the next one loads
+  const match =
+    matchOptions.find((option) => option.value === (search.match ?? "all"))?.value ?? "all";
   const posts = useMemo(() => query.data?.pages.flatMap((page) => page.posts) ?? [], [query.data]);
   const collections = useMemo(
     () => Object.assign({}, ...(query.data?.pages.map((page) => page.collections) ?? [])),
@@ -134,14 +137,14 @@ export function BrowseView({ search }: { search: BrowseSearch }) {
           </TabsList>
         </Tabs>
 
-        {viewer?.haveOffered ? (
-          <Label className="flex items-center gap-2 text-sm font-normal">
-            <Switch
-              checked={viewer.have}
-              onCheckedChange={(checked) => setSearch({ have: checked ? undefined : false })}
-            />
-            {m.trade_have_toggle()}
-          </Label>
+        {matchOptions.length > 1 ? (
+          <SingleSelect<BrowseMatch>
+            label={m.trade_match_label()}
+            options={matchOptions}
+            value={match}
+            defaultValue="all"
+            onChange={(value) => setSearch({ match: value === "all" ? undefined : value })}
+          />
         ) : null}
       </div>
 
@@ -154,10 +157,13 @@ export function BrowseView({ search }: { search: BrowseSearch }) {
       />
 
       {query.isPending ? (
-        <div className="flex flex-col gap-3" aria-busy>
-          <Skeleton className="h-56 rounded-lg" />
-          <Skeleton className="h-56 rounded-lg" />
-          <Skeleton className="h-56 rounded-lg" />
+        <div className="flex flex-col gap-3">
+          <span role="status" className="sr-only">
+            {m.status_loading()}
+          </span>
+          <BrowsePostSkeleton />
+          <BrowsePostSkeleton />
+          <BrowsePostSkeleton />
         </div>
       ) : query.isError && posts.length === 0 ? (
         <EmptyState
@@ -175,15 +181,19 @@ export function BrowseView({ search }: { search: BrowseSearch }) {
           icon={CardsThreeIcon}
           title={m.trade_browse_empty_title()}
           hint={
-            viewer?.have
-              ? m.trade_browse_empty_have_hint()
-              : filtering
-                ? m.trade_browse_empty_hint()
-                : m.trade_browse_empty_none_hint()
+            viewer?.match === "mutual"
+              ? m.trade_browse_empty_mutual_hint()
+              : viewer?.match === "they_want"
+                ? m.trade_browse_empty_have_hint()
+                : viewer?.match === "they_have"
+                  ? m.trade_browse_empty_want_hint()
+                  : filtering
+                    ? m.trade_browse_empty_hint()
+                    : m.trade_browse_empty_none_hint()
           }
           action={
-            viewer?.have ? (
-              <Button variant="outline" size="sm" onClick={() => setSearch({ have: false })}>
+            viewer && viewer.match !== "all" ? (
+              <Button variant="outline" size="sm" onClick={() => setSearch({ match: undefined })}>
                 {m.trade_browse_show_every_post()}
               </Button>
             ) : filtering ? (
@@ -203,7 +213,13 @@ export function BrowseView({ search }: { search: BrowseSearch }) {
           <WindowVirtualizer data={posts}>
             {(post: (typeof posts)[number]) => (
               <div key={post.id} className={POST_GAP}>
-                <BrowsePost post={post} collections={collections} now={now} onOpen={setActive} />
+                <BrowsePost
+                  post={post}
+                  own={post.userId === user?.user.id}
+                  collections={collections}
+                  now={now}
+                  onOpen={setActive}
+                />
               </div>
             )}
           </WindowVirtualizer>
@@ -231,6 +247,18 @@ export function BrowseView({ search }: { search: BrowseSearch }) {
       {user ? <PostListDialog open={postOpen} onOpenChange={setPostOpen} /> : null}
     </>
   );
+}
+
+function matchOptionsFor(viewer: { haveOffered: boolean; wantOffered: boolean }) {
+  const options: { value: BrowseMatch; label: string }[] = [];
+  if (!viewer.haveOffered && !viewer.wantOffered) return options;
+  options.push({ value: "all", label: m.trade_match_all() });
+  if (viewer.haveOffered && viewer.wantOffered) {
+    options.push({ value: "mutual", label: m.trade_filter_mutual() });
+  }
+  if (viewer.haveOffered) options.push({ value: "they_want", label: m.trade_filter_they_want() });
+  if (viewer.wantOffered) options.push({ value: "they_have", label: m.trade_filter_they_have() });
+  return options;
 }
 
 function collectionName(slug: string, collections: Record<string, ValidObjekt | undefined>) {

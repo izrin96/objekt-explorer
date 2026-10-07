@@ -1,6 +1,7 @@
 import * as z from "zod";
 
 import { messageLength, storedCardSchema } from "./chat";
+import { OFFER_STATUSES } from "./offer";
 
 export { FLAG_CATEGORIES, type FlagCategory } from "./chat";
 
@@ -84,11 +85,32 @@ export const setRoleInputSchema = z.object({
   role: z.enum(["user", "moderator"]),
 });
 
+const excerptOfferItemSchema = z.object({
+  collectionSlug: z.string(),
+  objektId: z.string().nullable(),
+  serial: z.number().nullable(),
+});
+
+/** An offer as it stood at the report: `give` and `get` are the reported account's sides. */
+export const excerptOfferSchema = z.object({
+  offerId: z.number(),
+  status: z.enum(OFFER_STATUSES),
+  give: excerptOfferItemSchema.array(),
+  get: excerptOfferItemSchema.array(),
+  topup: z
+    .object({ amount: z.string(), currency: z.string(), payer: z.enum(["target", "reporter"]) })
+    .nullable(),
+  note: z.string().nullable(),
+});
+export type ExcerptOffer = z.infer<typeof excerptOfferSchema>;
+
 /** A shared message as the report keeps it; `fromTarget` is true for the reported account's messages. */
 export const excerptEntrySchema = z.object({
   fromTarget: z.boolean(),
   body: z.string().nullable(),
   card: storedCardSchema.nullable(),
+  /** absent on reports filed before offers were kept */
+  offer: excerptOfferSchema.nullable().optional(),
   at: z.string(),
 });
 export type ExcerptEntry = z.infer<typeof excerptEntrySchema>;

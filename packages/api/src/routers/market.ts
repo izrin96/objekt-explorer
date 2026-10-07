@@ -22,7 +22,7 @@ import {
 } from "../schemas/market";
 import { getUsdRates } from "../services/currency-rates";
 import { getCache } from "../services/redis";
-import { notBlockedEither, notTradeBlocked } from "../services/safety";
+import { notBlockedEither, notTradeSanctioned } from "../services/safety";
 import { marketVersion } from "../services/safety-cache";
 
 const SUMMARY_TTL = 60;
@@ -68,7 +68,7 @@ function listingsWhere(collectionSlug: string) {
     eq(listEntries.collectionSlug, collectionSlug),
     eq(lists.listTypeNew, "sale"),
     eq(lists.discoverable, true),
-    notTradeBlocked(sql`${lists.userId}`),
+    notTradeSanctioned(sql`${lists.userId}`),
   );
 }
 
@@ -94,7 +94,7 @@ async function fetchMarketSummary(): Promise<MarketSummaryEntry[]> {
         eq(lists.listTypeNew, "sale"),
         eq(lists.discoverable, true),
         isNotNull(listEntries.collectionSlug),
-        notTradeBlocked(sql`${lists.userId}`),
+        notTradeSanctioned(sql`${lists.userId}`),
       ),
     )
     .groupBy(listEntries.collectionSlug);

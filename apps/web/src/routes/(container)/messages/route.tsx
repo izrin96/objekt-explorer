@@ -1,6 +1,7 @@
 import { Outlet, createFileRoute, redirect, useParams } from "@tanstack/react-router";
 import { useEffect, useRef } from "react";
 
+import { PageHeader } from "@/components/shared/page-header";
 import { BoxTabs } from "@/features/chat/box-tabs";
 import { ConversationList } from "@/features/chat/conversation-list";
 import { conversationsOptions } from "@/features/chat/queries";
@@ -41,24 +42,31 @@ function MessagesLayout() {
     document.querySelector<HTMLElement>(`[data-conversation-link="${CSS.escape(left)}"]`)?.focus();
   }, [openId]);
 
-  // the frame fills the viewport under the header (and its 1px border), so the thread
-  // scrolls inside it and the page does not
+  // the frame fills the viewport under the nav (and its 1px border) and the page header, so
+  // the thread scrolls inside it and the page does not; a phone's open thread drops the header
   return (
-    <div className="bg-card grid h-[calc(100dvh-(--spacing(28))-1px)] min-h-96 grid-rows-1 overflow-hidden rounded-lg border md:grid-cols-[--spacing(80)_minmax(0,1fr)] lg:grid-cols-[--spacing(96)_minmax(0,1fr)]">
-      <aside
-        className={cn("flex min-h-0 min-w-0 flex-col md:border-r", threadOpen && "max-md:hidden")}
+    <>
+      <div className={cn(threadOpen && "max-md:hidden")}>
+        <PageHeader title={m.chat_title()} description={m.chat_page_description()} />
+      </div>
+      <div
+        className={cn(
+          "bg-card grid h-[calc(100dvh-(--spacing(45))-1px)] min-h-96 grid-rows-1 overflow-hidden rounded-lg border md:grid-cols-[--spacing(80)_minmax(0,1fr)] lg:grid-cols-[--spacing(96)_minmax(0,1fr)]",
+          threadOpen && "max-md:h-[calc(100dvh-(--spacing(28))-1px)]",
+        )}
       >
-        <div className="flex flex-col gap-3 border-b p-4">
-          <h1 className="font-display text-xl font-semibold tracking-tight">{m.chat_title()}</h1>
+        <aside
+          className={cn("flex min-h-0 min-w-0 flex-col md:border-r", threadOpen && "max-md:hidden")}
+        >
           <BoxTabs box={box} />
-        </div>
-        <ConversationList box={box} />
-      </aside>
-      <section className={cn("flex min-h-0 min-w-0 flex-col", !threadOpen && "max-md:hidden")}>
-        {/* on a phone the list and its heading are hidden while a thread is open */}
-        {threadOpen ? <h1 className="sr-only md:hidden">{m.chat_title()}</h1> : null}
-        <Outlet />
-      </section>
-    </div>
+          <ConversationList box={box} />
+        </aside>
+        <section className={cn("flex min-h-0 min-w-0 flex-col", !threadOpen && "max-md:hidden")}>
+          {/* on a phone the list and its heading are hidden while a thread is open */}
+          {threadOpen ? <h1 className="sr-only md:hidden">{m.chat_title()}</h1> : null}
+          <Outlet />
+        </section>
+      </div>
+    </>
   );
 }

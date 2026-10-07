@@ -1,9 +1,10 @@
 import { ORPCError } from "@orpc/server";
 import { db } from "@repo/db";
-import { hiddenTradePartner, user, userAddress } from "@repo/db/schema";
+import { hiddenTradePartner, lists, user, userAddress } from "@repo/db/schema";
 import { bumpTradeVersion } from "@repo/lib/server/list-touch";
 import { and, desc, eq, inArray } from "drizzle-orm";
 
+import { visibleNickname } from "../lib/trade-rank";
 import { authed, optionalAuthed, pub } from "../orpc";
 import {
   browseInputSchema,
@@ -73,12 +74,23 @@ export const tradeRouter = {
       return result.partners.length;
     }),
 
+  /**
+   * Only a partner with a list For you or Browse can show is hidden; any other id gets the
+   * same empty response, so the call never tells whether an account exists.
+   */
   hidePartner: authed
     .input(tradePartnerInputSchema)
     .handler(async ({ input: { userId }, context: { session } }) => {
       if (userId === session.user.id) throw new ORPCError("BAD_REQUEST");
-      const exists = await db.$count(user, eq(user.id, userId));
-      if (exists === 0) throw new ORPCError("NOT_FOUND");
+      const tradeLists = await db.$count(
+        lists,
+        and(
+          eq(lists.userId, userId),
+          eq(lists.discoverable, true),
+          inArray(lists.listTypeNew, ["have", "sale", "want"]),
+        ),
+      );
+      if (tradeLists === 0) return;
 
       await db
         .insert(hiddenTradePartner)
@@ -109,24 +121,30 @@ export const tradeRouter = {
       .where(eq(hiddenTradePartner.userId, session.user.id))
       .orderBy(desc(hiddenTradePartner.createdAt));
 
-    // rows are headed by Cosmo nickname, so the list names partners the same way
+    // only addresses a discoverable list is bound to, as For you named the partner, and never
+    // one that hides its owner
     const addresses =
       rows.length === 0
         ? []
         : await db
-            .select({
-              userId: userAddress.userId,
+            .selectDistinct({
+              userId: lists.userId,
               address: userAddress.address,
               nickname: userAddress.nickname,
+              hideNickname: userAddress.hideNickname,
             })
-            .from(userAddress)
+            .from(lists)
+            .innerJoin(userAddress, eq(userAddress.address, lists.profileAddress))
             .where(
               and(
                 inArray(
-                  userAddress.userId,
+                  lists.userId,
                   rows.map((row) => row.user.id),
                 ),
-                eq(userAddress.hideNickname, false),
+                eq(lists.discoverable, true),
+                inArray(lists.listTypeNew, ["have", "sale", "want"]),
+                eq(userAddress.userId, lists.userId),
+                eq(userAddress.hideUser, false),
               ),
             );
 
@@ -135,7 +153,7 @@ export const tradeRouter = {
       user: toPublicUser(row.user),
       profiles: addresses
         .filter((a) => a.userId === row.user.id)
-        .map((a) => ({ address: a.address, nickname: a.nickname })),
+        .map((a) => ({ address: a.address.toLowerCase(), nickname: visibleNickname(a) })),
       hiddenAt: row.hiddenAt,
     }));
   }),

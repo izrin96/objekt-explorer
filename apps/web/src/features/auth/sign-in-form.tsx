@@ -32,13 +32,13 @@ function schema() {
   });
 }
 
-const BANNED = "BANNED_USER";
+export const BANNED = "BANNED_USER";
 
 /**
- * Better Auth checks a ban only after the password, so this message reaches only someone
- * who already proved the account is theirs; a wrong password never says it is banned.
+ * Better Auth checks a ban only after the password or the provider's consent, so this message
+ * reaches only someone who already proved the account is theirs.
  */
-function banText(message: string | undefined) {
+export function banText(message: string | undefined) {
   const notice = parseBanNotice(message);
   if (!notice) return m.auth_banned();
   if (!notice.until) return m.auth_banned_forever({ reason: notice.reason });
@@ -57,9 +57,12 @@ function bannedError(message: string | undefined) {
 export function SignInForm({
   setState,
   redirect,
+  notice,
 }: {
   setState: (state: AuthState) => void;
   redirect?: string;
+  /** a refusal the OAuth callback sent back, already worded */
+  notice?: string | null;
 }) {
   const onSuccess = useAuthSuccess(redirect);
   const [errors, setErrors] = useState<FieldErrors>({});
@@ -83,6 +86,15 @@ export function SignInForm({
         <h1 className="font-display text-xl font-semibold">{m.auth_sign_in_title()}</h1>
         <span className="text-muted-foreground text-sm">{m.auth_sign_in_description()}</span>
       </div>
+
+      {notice ? (
+        <p
+          role="alert"
+          className="border-destructive/32 text-destructive-foreground rounded-lg border px-3 py-2 text-sm text-pretty"
+        >
+          {notice}
+        </p>
+      ) : null}
 
       <Form
         errors={errors}
@@ -172,18 +184,15 @@ function SocialButton({
 }) {
   const mutation = useMutation({
     mutationFn: async () => {
-      const result = await authClient.signIn.social({ provider });
-      // the OAuth callback does not carry the ban's details, so this one stays generic
-      if (result.error?.code === BANNED) throw bannedError(undefined);
+      // a ban surfaces at the callback, after the redirect; `/login` reads it from the URL
+      const result = await authClient.signIn.social({ provider, errorCallbackURL: "/login" });
       if (result.error) throw new Error(result.error.message);
       return result.data;
     },
     onError: (error) => {
       toastManager.add({
         type: "error",
-        // a ban is already the whole sentence; anything else gets the sign-in framing
-        title:
-          error.name === BANNED ? error.message : m.auth_sign_in_error({ message: error.message }),
+        title: m.auth_sign_in_error({ message: error.message }),
       });
     },
   });

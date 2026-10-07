@@ -3,9 +3,10 @@ import { Link, createFileRoute, notFound } from "@tanstack/react-router";
 
 import { EmptyState } from "@/components/shared/empty-state";
 import { Button } from "@/components/ui/button";
-import { isNotFound, threadOptions } from "@/features/chat/queries";
+import { threadOptions } from "@/features/chat/queries";
 import { Thread } from "@/features/chat/thread";
 import { generateMetadata } from "@/lib/meta";
+import { isNotFound } from "@/lib/orpc-error";
 import { m } from "@/paraglide/messages";
 
 export const Route = createFileRoute("/(container)/messages/$id")({

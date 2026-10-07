@@ -8,7 +8,7 @@ export type TradeFilter = (typeof TRADE_FILTERS)[number];
 /** a partner can match on hundreds of collections; past this many per side they are counted, not drawn */
 export const CARD_LIMIT = 50;
 
-export const DEFAULT_TRADE_FILTER = "mutual" satisfies TradeFilter;
+export const DEFAULT_TRADE_FILTER = "all" satisfies TradeFilter;
 
 export const tradeFilterSchema = z.enum(TRADE_FILTERS);
 
@@ -24,10 +24,13 @@ export const tradePartnerInputSchema = z.object({ userId: z.string().min(1) });
 export const POST_TYPES = ["all", "wtt", "wtb", "wts"] as const;
 export type PostType = (typeof POST_TYPES)[number];
 
+/** Which posts to keep against the viewer's lists: their want side, their have side, or both */
+export const BROWSE_MATCHES = ["all", "mutual", "they_want", "they_have"] as const;
+export type BrowseMatch = (typeof BROWSE_MATCHES)[number];
+
 export const browseFiltersSchema = collectionFiltersSchema.extend({
   type: z.enum(POST_TYPES).default("all"),
-  /** "They want something I have"; absent means the server's default for the viewer */
-  have: z.boolean().optional(),
+  match: z.enum(BROWSE_MATCHES).default("all"),
   slug: z.string().optional(),
 });
 export type BrowseFilters = z.infer<typeof browseFiltersSchema>;

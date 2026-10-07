@@ -3,14 +3,11 @@ import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { Link } from "@tanstack/react-router";
 
 import { getListLinkOption } from "@/features/list/list-link";
-import { ListTypeBadge } from "@/features/list/list-type-badge";
 import { ObjektCard } from "@/features/objekt/objekt-card";
+import { CollectionLabel } from "@/features/objekt/objekt-label";
 import { formatCurrency } from "@/features/settings/use-currency";
+import { ListRoleBadge } from "@/features/trade/list-role-badge";
 import { m } from "@/paraglide/messages";
-
-export function collectionName(slug: string, collection: ValidObjekt | undefined) {
-  return collection ? `${collection.member} ${collection.collectionNo}` : slug;
-}
 
 /** Read live: a list or entry deleted since the card was sent drops out, the card stays. */
 export function ObjektCardMessage({
@@ -41,7 +38,9 @@ export function ObjektCardMessage({
         )}
       </div>
       <div className="flex min-w-0 flex-1 flex-col gap-1 py-0.5 text-sm">
-        <p className="font-medium break-words">{collectionName(card.collectionSlug, collection)}</p>
+        <p className="font-medium break-words">
+          <CollectionLabel slug={card.collectionSlug} collection={collection} />
+        </p>
         {card.serial !== null ? (
           <p className="text-muted-foreground font-mono text-xs tabular-nums">
             {m.chat_card_serial({ serial: card.serial })}
@@ -55,7 +54,7 @@ export function ObjektCardMessage({
             >
               {list.name}
             </Link>
-            <ListTypeBadge type={list.listTypeNew} />
+            <ListRoleBadge type={list.listTypeNew} />
           </p>
         ) : null}
         {price ? <p className="mt-auto font-mono font-semibold tabular-nums">{price}</p> : null}

@@ -1,4 +1,12 @@
-import { CaretDownIcon, CaretRightIcon, StorefrontIcon } from "@phosphor-icons/react";
+import {
+  CaretDownIcon,
+  CaretRightIcon,
+  ChatCircleIcon,
+  DotsThreeIcon,
+  HandshakeIcon,
+  ListIcon,
+  StorefrontIcon,
+} from "@phosphor-icons/react";
 import type { MarketListing, SortBy } from "@repo/api/schemas/market";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
@@ -6,17 +14,19 @@ import { useState } from "react";
 import { InView } from "react-intersection-observer";
 
 import { EmptyState } from "@/components/shared/empty-state";
-import { Timestamp } from "@/components/shared/timestamp";
+import { Button } from "@/components/ui/button";
+import { Menu, MenuItem, MenuPopup, MenuSeparator, MenuTrigger } from "@/components/ui/menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
-import { MessageButton } from "@/features/chat/message-button";
+import { useStartConversation, useStartGate } from "@/features/chat/message-button";
 import { getListLinkOption } from "@/features/list/list-link";
-import { MakeOfferButton } from "@/features/offers/make-offer-button";
+import { type OfferRequest, useOfferBuilder } from "@/features/offers/offer-builder";
 import { ProfileCell } from "@/features/profile/profile-hover-card";
 import { formatCurrency, useCurrency } from "@/features/settings/use-currency";
 import { collectionPostCountsOptions } from "@/features/trade/queries";
 import { useUserLists, useUserProfiles } from "@/features/user/hooks";
 import { isSameAddress, truncateAddress } from "@/lib/address";
+import { formatTimestamp } from "@/lib/time";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
@@ -36,6 +46,20 @@ export function MarketPanel({
   const { currency, formatUsd } = useCurrency();
 
   const stats = useQuery(marketStatsOptions(slug));
+  // one of each for the whole table, rather than a dialog per row
+  const builder = useOfferBuilder();
+  const { gate } = useStartGate();
+  const { start } = useStartConversation();
+  const actions: RowActions = {
+    message: (item) =>
+      start(
+        { kind: "list", slug: item.list.slug },
+        { collectionSlug: slug, objektId: item.objektId ?? undefined, listSlug: item.list.slug },
+      ),
+    offer: (request) => {
+      if (gate()) builder.open(request);
+    },
+  };
   const listings = useInfiniteQuery(marketListingsOptions(slug, sort.key, sort.dir));
 
   const toggle = (key: SortBy) =>
@@ -102,7 +126,7 @@ export function MarketPanel({
             aria-label={m.objekt_market_listings()}
             className="bg-card focus-visible:ring-ring overflow-x-auto overflow-y-hidden rounded-lg border outline-none focus-visible:ring-2"
           >
-            <table className="w-full min-w-96 border-collapse text-sm">
+            <table className="w-full border-collapse text-sm max-sm:[&_td]:px-1.5 max-sm:[&_th]:px-1.5">
               <caption className="sr-only">{m.objekt_market_listings()}</caption>
               <thead>
                 <tr className="text-muted-foreground bg-secondary/60 text-xs tracking-wide uppercase">
@@ -123,14 +147,8 @@ export function MarketPanel({
                   <SortableHeader sort={sort} column="createdAt" onToggle={toggle}>
                     {m.objekt_date()}
                   </SortableHeader>
-                  <th scope="col" className="w-8">
-                    <span className="sr-only">{m.chat_message()}</span>
-                  </th>
-                  <th scope="col" className="w-8">
-                    <span className="sr-only">{m.offer_make()}</span>
-                  </th>
-                  <th scope="col" className="w-8">
-                    <span className="sr-only">{m.objekt_market_view_list()}</span>
+                  <th scope="col" className="w-10">
+                    <span className="sr-only">{m.objekt_market_actions()}</span>
                   </th>
                 </tr>
               </thead>
@@ -144,6 +162,7 @@ export function MarketPanel({
                     currency={currency}
                     formatUsd={formatUsd}
                     onOpenSerial={onOpenSerial}
+                    actions={actions}
                   />
                 ))}
               </tbody>
@@ -167,13 +186,23 @@ export function MarketPanel({
           )}
         </div>
       )}
+      {builder.element}
     </div>
   );
 }
 
-/** hidden at zero on both sides: an empty Trade has nothing to link to */
+type RowActions = {
+  message: (item: MarketListing) => void;
+  offer: (request: OfferRequest) => void;
+};
+
+/**
+ * Hidden at zero on both sides: an empty Trade has nothing to link to. Its height is held
+ * while it loads, so the table under it does not move.
+ */
 function OnTradeLine({ slug }: { slug: string }) {
-  const { data } = useQuery(collectionPostCountsOptions(slug));
+  const { data, isPending } = useQuery(collectionPostCountsOptions(slug));
+  if (isPending) return <Skeleton className="h-9.5 rounded-lg" />;
   if (!data || (data.have === 0 && data.want === 0)) return null;
 
   return (
@@ -196,10 +225,19 @@ function OnTradeLine({ slug }: { slug: string }) {
   );
 }
 
-/**
- * The caret opens the seller's list; a link stretched over the row would
- * escape it in Safari, which never makes a `<tr>` a containing block.
- */
+/** The app's one timestamp; a phone-width drawer keeps the day and leaves the time to `title`. */
+function ListingTime({ date }: { date: Date }) {
+  const full = formatTimestamp(date);
+  const [day, ...time] = full.split(" ");
+  return (
+    <time dateTime={date.toISOString()} title={full}>
+      <span className="whitespace-nowrap">{day}</span>
+      <span className="whitespace-nowrap max-sm:hidden"> {time.join(" ")}</span>
+    </time>
+  );
+}
+
+/** The row's actions sit in one menu, so the table fits the drawer at phone width. */
 function MarketRow({
   item,
   slug,
@@ -207,6 +245,7 @@ function MarketRow({
   currency,
   formatUsd,
   onOpenSerial,
+  actions,
 }: {
   item: MarketListing;
   slug: string;
@@ -216,6 +255,7 @@ function MarketRow({
   currency: string;
   formatUsd: (usd: number) => string;
   onOpenSerial: (serial: number) => void;
+  actions: RowActions;
 }) {
   const address = item.list.profile?.address ?? null;
   const rawNickname = item.list.profile?.nickname ?? null;
@@ -267,7 +307,8 @@ function MarketRow({
           <ProfileCell
             address={address}
             nickname={nickname}
-            className="-mx-3 -my-1.5 flex min-w-0 px-3 py-1.5"
+            title={nickname ?? address.toLowerCase()}
+            className="-mx-3 -my-1.5 flex min-w-0 px-3 py-1.5 max-sm:-mx-1.5 max-sm:px-1.5"
             linkClassName={cn(
               "truncate underline-offset-2 hover:underline",
               nickname === null && "font-mono text-xs",
@@ -277,58 +318,70 @@ function MarketRow({
           </ProfileCell>
         )}
       </td>
-      <td className="text-muted-foreground px-3 py-1.5 font-mono text-xs whitespace-nowrap tabular-nums">
-        <Timestamp date={new Date(item.createdAt)} />
+      <td className="text-muted-foreground px-3 py-1.5 font-mono text-xs tabular-nums">
+        <ListingTime date={new Date(item.createdAt)} />
       </td>
-      <td className="px-1">
+      <td className="pe-1.5 max-sm:px-0!">
         {messageable ? (
-          <MessageButton
-            target={{ kind: "list", slug: item.list.slug }}
-            card={{
-              collectionSlug: slug,
-              objektId: item.objektId ?? undefined,
-              listSlug: item.list.slug,
-            }}
-            name={sellerName}
-            iconOnly
+          <Menu>
+            <MenuTrigger
+              render={
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label={m.objekt_market_listing_actions({
+                    name: sellerName ?? m.objekt_market_seller(),
+                  })}
+                />
+              }
+            >
+              <DotsThreeIcon weight="bold" />
+            </MenuTrigger>
+            <MenuPopup align="end" className="min-w-44">
+              <MenuItem onClick={() => actions.message(item)}>
+                <ChatCircleIcon />
+                {m.chat_message()}
+              </MenuItem>
+              <MenuItem
+                onClick={() =>
+                  actions.offer({
+                    to: { target: { kind: "list", slug: item.list.slug } },
+                    name: sellerName ?? m.objekt_market_seller(),
+                    prefill: {
+                      get: [
+                        {
+                          key: item.objektId ?? `any:${slug}`,
+                          collectionSlug: slug,
+                          objektId: item.objektId,
+                          serial: item.serial,
+                          listSlug: item.list.slug,
+                          flags: null,
+                        },
+                      ],
+                    },
+                  })
+                }
+              >
+                <HandshakeIcon />
+                {m.offer_make()}
+              </MenuItem>
+              <MenuSeparator />
+              <MenuItem render={<Link {...getListLinkOption(item.list)} />}>
+                <ListIcon />
+                {m.objekt_market_view_list()}
+              </MenuItem>
+            </MenuPopup>
+          </Menu>
+        ) : (
+          <Button
             variant="ghost"
-          />
-        ) : null}
-      </td>
-      <td className="px-1">
-        {messageable ? (
-          <MakeOfferButton
-            request={{
-              to: { target: { kind: "list", slug: item.list.slug } },
-              name: sellerName ?? m.objekt_market_seller(),
-              prefill: {
-                get: [
-                  {
-                    key: item.objektId ?? `any:${slug}`,
-                    collectionSlug: slug,
-                    objektId: item.objektId,
-                    serial: item.serial,
-                    listSlug: item.list.slug,
-                    flags: null,
-                  },
-                ],
-              },
-            }}
-            iconOnly
-            variant="ghost"
-          />
-        ) : null}
-      </td>
-      <td className="pr-2">
-        <Link
-          {...getListLinkOption(item.list)}
-          aria-label={m.objekt_market_view_list()}
-          // centred on the caret: as wide as the cell allows without widening
-          // the table, shorter than a row so it never reaches the next caret
-          className="text-muted-foreground hover:text-foreground focus-visible:ring-ring relative flex items-center justify-center rounded-sm outline-none focus-visible:ring-2 pointer-coarse:after:absolute pointer-coarse:after:h-8 pointer-coarse:after:w-10"
-        >
-          <CaretRightIcon className="size-4" aria-hidden />
-        </Link>
+            size="icon-sm"
+            aria-label={m.objekt_market_view_list()}
+            render={<Link {...getListLinkOption(item.list)} />}
+          >
+            <CaretRightIcon />
+          </Button>
+        )}
       </td>
     </tr>
   );

@@ -5,6 +5,7 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tansta
 import { Link } from "@tanstack/react-router";
 import { useRef, useState } from "react";
 
+import { CountBadge } from "@/components/shared/count-badge";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverPopup, PopoverTitle, PopoverTrigger } from "@/components/ui/popover";
@@ -15,13 +16,15 @@ import { orpc } from "@/lib/orpc";
 import { relativeTime } from "@/lib/time";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
+import { useUserSocketLive } from "@/stores/user-socket";
 
 import { notificationKeys, notificationsOptions, unreadCountOptions } from "./queries";
 
 type Collections = Outputs["notifications"]["list"]["collections"];
 
-/** `live` is whether the tab's user socket is open; the bell polls while it is not. */
-export function NotificationBell({ live }: { live: boolean }) {
+/** The bell polls while the tab's user socket is down. */
+export function NotificationBell() {
+  const live = useUserSocketLive((state) => state.live);
   const { data: unread = 0 } = useQuery(unreadCountOptions(live));
   const [open, setOpen] = useState(false);
   // the popup itself, not its first button: that one is Mark all read
@@ -44,14 +47,7 @@ export function NotificationBell({ live }: { live: boolean }) {
         }
       >
         <BellIcon />
-        {unread > 0 ? (
-          <span
-            aria-hidden
-            className="bg-accent-solid ring-background absolute top-0.5 right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] leading-none font-semibold text-white tabular-nums ring-2"
-          >
-            {unread > 9 ? "9+" : unread}
-          </span>
-        ) : null}
+        <CountBadge count={unread} />
       </PopoverTrigger>
       <PopoverPopup
         ref={popupRef}
@@ -81,6 +77,7 @@ function NotificationPanel({ unread, onNavigate }: { unread: number; onNavigate:
   const markRead = useMutation(orpc.notifications.markRead.mutationOptions({ onSettled: refetch }));
 
   const items = query.data?.pages.flatMap((page) => page.items) ?? [];
+  const empty = query.isSuccess && items.length === 0;
   const collections: Collections = Object.assign(
     {},
     ...(query.data?.pages.map((page) => page.collections) ?? []),
@@ -90,16 +87,18 @@ function NotificationPanel({ unread, onNavigate }: { unread: number; onNavigate:
     <div className="flex max-h-128 flex-col">
       <div className="flex items-center justify-between gap-2 border-b py-2 ps-4 pe-2">
         <PopoverTitle className="font-display text-base">{m.notification_title()}</PopoverTitle>
-        <Button
-          variant="ghost"
-          size="sm"
-          disabled={unread === 0}
-          loading={markAllRead.isPending}
-          onClick={() => markAllRead.mutate(undefined)}
-        >
-          <ChecksIcon />
-          {m.notification_mark_all_read()}
-        </Button>
+        {empty ? null : (
+          <Button
+            variant="ghost"
+            size="sm"
+            disabled={unread === 0}
+            loading={markAllRead.isPending}
+            onClick={() => markAllRead.mutate(undefined)}
+          >
+            <ChecksIcon />
+            {m.notification_mark_all_read()}
+          </Button>
+        )}
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto">
@@ -114,7 +113,7 @@ function NotificationPanel({ unread, onNavigate }: { unread: number; onNavigate:
               {m.common_error_retry()}
             </Button>
           </div>
-        ) : items.length === 0 ? (
+        ) : empty ? (
           <EmptyState
             icon={BellIcon}
             bordered={false}
@@ -122,7 +121,7 @@ function NotificationPanel({ unread, onNavigate }: { unread: number; onNavigate:
             hint={m.notification_empty_hint()}
             action={
               <Button variant="outline" size="sm" render={<Link to="/list" />} onClick={onNavigate}>
-                {m.nav_manage_list()}
+                {m.notification_go_to_lists()}
               </Button>
             }
           />
@@ -387,6 +386,7 @@ function NotificationItem({
   );
 }
 
+/** the payload carries no season, so the code here is the bare collection number */
 function collectionName(slug: string, collections: Collections) {
   const collection = collections[slug];
   return collection ? `${collection.member} ${collection.collectionNo}` : slug;

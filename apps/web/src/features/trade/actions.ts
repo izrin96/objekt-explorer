@@ -6,6 +6,7 @@ import { toastManager } from "@/components/ui/toast";
 import { LIST_QUERY_KEY } from "@/features/list/queries";
 import { currentUserOptions } from "@/features/user/queries";
 import { orpc } from "@/lib/orpc";
+import { errorReason } from "@/lib/orpc-error";
 import { relativeTime } from "@/lib/time";
 import { m } from "@/paraglide/messages";
 
@@ -34,8 +35,8 @@ export function useHidePartner() {
         );
       },
       onSettled: () => invalidate(),
-      onError: ({ message }) => {
-        toastManager.add({ type: "error", title: m.trade_hide_error(), description: message });
+      onError: () => {
+        toastManager.add({ type: "error", title: m.trade_hide_error() });
       },
     }),
   );
@@ -47,8 +48,8 @@ export function useUnhidePartner() {
   return useMutation(
     orpc.trade.unhidePartner.mutationOptions({
       onSuccess: () => invalidate(),
-      onError: ({ message }) => {
-        toastManager.add({ type: "error", title: m.trade_unhide_error(), description: message });
+      onError: () => {
+        toastManager.add({ type: "error", title: m.trade_unhide_error() });
       },
     }),
   );
@@ -78,12 +79,19 @@ export function useBumpPost() {
         toastManager.add(
           next
             ? { type: "error", title: bumpTooSoon(next) }
-            : { type: "error", title: m.trade_bump_error(), description: error.message },
+            : { type: "error", title: m.trade_bump_error() },
         );
       },
       onSettled: () => invalidate(),
     }),
   );
+}
+
+function showOnTradeErrorText(error: unknown) {
+  const { reason } = errorReason(error);
+  if (reason === "needs_profile") return m.trade_post_needs_profile();
+  if (reason === "not_tradeable") return m.trade_show_on_trade_not_tradeable();
+  return m.trade_show_on_trade_error();
 }
 
 /** a list on Trade is in the viewer's lists, its own page and both trade views */
@@ -92,12 +100,8 @@ export function useSetShowOnTrade() {
 
   return useMutation(
     orpc.trade.setShowOnTrade.mutationOptions({
-      onError: ({ message }) => {
-        toastManager.add({
-          type: "error",
-          title: m.trade_show_on_trade_error(),
-          description: message,
-        });
+      onError: (error) => {
+        toastManager.add({ type: "error", title: showOnTradeErrorText(error) });
       },
       onSettled: () =>
         Promise.all([

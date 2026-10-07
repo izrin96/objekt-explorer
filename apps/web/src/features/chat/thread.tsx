@@ -27,6 +27,7 @@ import { useHydrated } from "@/hooks/use-hydrated";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
+import { useUserSocketLive } from "@/stores/user-socket";
 
 import { useConversationActions } from "./actions";
 import { CautionLine } from "./caution-line";
@@ -41,9 +42,12 @@ import { latestOfferId, mergeCollections, threadMessages, type ThreadPage } from
 const GROUP_MS = 5 * 60_000;
 /** How close to the bottom still counts as reading the newest message. */
 const STICK_PX = 96;
+/** How often an open thread asks for newer messages while the socket is down. */
+const CATCH_UP_MS = 10_000;
 
 export function Thread({ id }: { id: number }) {
   const query = useInfiniteQuery(threadOptions(id));
+  useCatchUp(id);
 
   if (query.isPending) {
     return (
@@ -479,4 +483,26 @@ function useMarkRead(
     document.addEventListener("visibilitychange", mark);
     return () => document.removeEventListener("visibilitychange", mark);
   }, [id, upTo, lastReadMessageId, mutate]);
+}
+
+/**
+ * New messages reach an open thread as a socket nudge. Without the socket nothing would
+ * arrive until a reload, so the thread polls then, and always catches up when shown again.
+ */
+function useCatchUp(id: number) {
+  const queryClient = useQueryClient();
+  const live = useUserSocketLive((state) => state.live);
+
+  useEffect(() => {
+    const catchUp = () => {
+      if (document.hidden) return;
+      void fetchNewer(queryClient, id).catch(() => undefined);
+    };
+    document.addEventListener("visibilitychange", catchUp);
+    const timer = live ? undefined : setInterval(catchUp, CATCH_UP_MS);
+    return () => {
+      document.removeEventListener("visibilitychange", catchUp);
+      clearInterval(timer);
+    };
+  }, [queryClient, id, live]);
 }

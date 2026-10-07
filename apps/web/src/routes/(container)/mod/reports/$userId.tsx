@@ -1,10 +1,10 @@
 import { roleList } from "@repo/api/schemas/moderation";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 
-import { isNotFound } from "@/features/chat/queries";
 import { ModAccount } from "@/features/moderation/mod-account";
 import { accountOptions } from "@/features/moderation/queries";
 import { generateMetadata } from "@/lib/meta";
+import { isNotFound } from "@/lib/orpc-error";
 import { m } from "@/paraglide/messages";
 
 export const Route = createFileRoute("/(container)/mod/reports/$userId")({

@@ -55,6 +55,7 @@ export function ProfileCell({
   nickname,
   className,
   linkClassName,
+  title,
   before,
   after,
   children,
@@ -63,6 +64,8 @@ export function ProfileCell({
   nickname: string | null | undefined;
   className?: string;
   linkClassName?: string;
+  /** the full name, where the cell truncates it */
+  title?: string;
   /** content ahead of the name, inside the hover area */
   before?: ReactNode;
   /** content after the name, inside the hover area */
@@ -77,7 +80,12 @@ export function ProfileCell({
       render={<span className={className} />}
     >
       {before}
-      <Link to="/@{$nickname}" params={profileParams(address, nickname)} className={linkClassName}>
+      <Link
+        to="/@{$nickname}"
+        params={profileParams(address, nickname)}
+        title={title}
+        className={linkClassName}
+      >
         {children}
       </Link>
       {after}

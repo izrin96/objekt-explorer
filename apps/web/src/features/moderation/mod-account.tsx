@@ -1,7 +1,7 @@
 import { ArrowClockwiseIcon, ArrowLeftIcon, WarningIcon } from "@phosphor-icons/react";
 import type { Outputs } from "@repo/api";
 import { FLAG_CATEGORIES } from "@repo/api/schemas/chat";
-import { isStaffRole, roleList } from "@repo/api/schemas/moderation";
+import { type ExcerptOffer, isStaffRole, roleList } from "@repo/api/schemas/moderation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
@@ -23,8 +23,10 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toastManager } from "@/components/ui/toast";
 import { StatRow } from "@/features/objekt/drawer/stat-row";
-import { itemLabel, tradeNo, tradeStatusText } from "@/features/offers/format";
+import { offerNo, tradeNo, tradeStatusText } from "@/features/offers/format";
+import { ItemLabel } from "@/features/offers/item-label";
 import { ProfileLink } from "@/features/profile/profile-hover-card";
+import { formatCurrency } from "@/features/settings/use-currency";
 import { useHydrated } from "@/hooks/use-hydrated";
 import { displayNickname } from "@/lib/address";
 import { orpc } from "@/lib/orpc";
@@ -129,7 +131,7 @@ export function ModAccount({ userId, viewerIsAdmin }: { userId: string; viewerIs
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_--spacing(96)]">
         <div className="flex min-w-0 flex-col gap-6">
-          <Reports reports={data.reports} targetName={name} />
+          <Reports reports={data.reports} collections={data.tradeCollections} targetName={name} />
           <AttachedTrades
             trades={data.trades}
             collections={data.tradeCollections}
@@ -211,7 +213,15 @@ function Signals({ data }: { data: Account }) {
   );
 }
 
-function Reports({ reports, targetName }: { reports: Account["reports"]; targetName: string }) {
+function Reports({
+  reports,
+  collections,
+  targetName,
+}: {
+  reports: Account["reports"];
+  collections: Account["tradeCollections"];
+  targetName: string;
+}) {
   return (
     <section aria-labelledby="mod-reports" className="flex flex-col gap-3">
       <h2 id="mod-reports" className={sectionTitle}>
@@ -246,6 +256,7 @@ function Reports({ reports, targetName }: { reports: Account["reports"]; targetN
               {report.excerpt ? (
                 <Excerpt
                   entries={report.excerpt}
+                  collections={collections}
                   targetName={targetName}
                   reporterName={personName(report.reporter)}
                 />
@@ -265,10 +276,12 @@ function Reports({ reports, targetName }: { reports: Account["reports"]; targetN
 /** The only message text moderators ever see: the copy a reporter chose to share. */
 function Excerpt({
   entries,
+  collections,
   targetName,
   reporterName,
 }: {
   entries: NonNullable<Account["reports"][number]["excerpt"]>;
+  collections: Account["tradeCollections"];
   targetName: string;
   reporterName: string;
 }) {
@@ -292,10 +305,88 @@ function Excerpt({
                 {m.mod_excerpt_card({ slug: entry.card.collectionSlug })}
               </p>
             ) : null}
+            {entry.offer ? (
+              <ExcerptOfferView
+                offer={entry.offer}
+                collections={collections}
+                targetName={targetName}
+                reporterName={reporterName}
+              />
+            ) : null}
           </li>
         ))}
       </ol>
     </details>
+  );
+}
+
+const OFFER_STATUS_LABEL: Record<ExcerptOffer["status"], () => string> = {
+  open: m.mod_excerpt_offer_open,
+  accepted: m.offer_status_accepted,
+  declined: m.offer_status_declined,
+  countered: m.offer_status_countered,
+  withdrawn: m.offer_status_withdrawn,
+  expired: m.offer_status_expired,
+  cancelled: m.offer_status_cancelled,
+};
+
+/** The offer as it stood when the report was filed, told from the reported account's side. */
+function ExcerptOfferView({
+  offer,
+  collections,
+  targetName,
+  reporterName,
+}: {
+  offer: ExcerptOffer;
+  collections: Account["tradeCollections"];
+  targetName: string;
+  reporterName: string;
+}) {
+  const sides = [
+    { key: "give", label: m.mod_excerpt_offer_gives({ name: targetName }), items: offer.give },
+    { key: "get", label: m.mod_excerpt_offer_gets({ name: targetName }), items: offer.get },
+  ] as const;
+  const { topup } = offer;
+
+  return (
+    <div className="bg-secondary/40 flex flex-col gap-2 rounded-md border p-2.5 text-xs">
+      <p className="flex flex-wrap items-center gap-2">
+        <span className="font-mono font-medium">{offerNo(offer.offerId)}</span>
+        <Badge variant="outline" size="sm">
+          {OFFER_STATUS_LABEL[offer.status]()}
+        </Badge>
+      </p>
+      {sides.map((side) => (
+        <div key={side.key} className="flex flex-col gap-0.5">
+          <span className="text-muted-foreground">{side.label}</span>
+          {side.items.length === 0 ? (
+            <span>{m.offer_side_nothing()}</span>
+          ) : (
+            <ul className="flex flex-col gap-0.5">
+              {side.items.map((item) => (
+                <li key={item.objektId ?? `any:${item.collectionSlug}`} className="break-words">
+                  <ItemLabel item={item} collections={collections} />
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      ))}
+      {topup ? (
+        <p>
+          {m.mod_excerpt_offer_topup({
+            name: topup.payer === "target" ? targetName : reporterName,
+            amount: formatCurrency(Number(topup.amount), topup.currency),
+          })}
+        </p>
+      ) : null}
+      {offer.note ? (
+        <p className="text-pretty break-words whitespace-pre-wrap">
+          <span className="text-muted-foreground">{m.mod_excerpt_offer_note()} </span>
+          {offer.note}
+        </p>
+      ) : null}
+    </div>
   );
 }
 
@@ -335,7 +426,9 @@ function AttachedTrades({
                 {trade.legs.map((leg) => (
                   <li key={leg.id} className="flex flex-col gap-0.5 px-3 py-2 text-sm">
                     <span className="flex flex-wrap items-baseline gap-x-2">
-                      <span className="font-medium">{itemLabel(leg, collections)}</span>
+                      <span className="font-medium">
+                        <ItemLabel item={leg} collections={collections} />
+                      </span>
                       <span className="text-muted-foreground text-xs">
                         {leg.fromTarget
                           ? m.mod_trade_direction({ from: targetName, to: other })

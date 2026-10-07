@@ -2,9 +2,12 @@ import type { StoredCard } from "../schemas/chat";
 import {
   EXCERPT_SIZE,
   type ExcerptEntry,
+  type ExcerptOffer,
   type ModAction,
   REPORT_WINDOW_HOURS,
 } from "../schemas/moderation";
+import type { OfferSide, OfferStatus } from "../schemas/offer";
+import { effectiveStatus } from "./offer-rules";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -31,11 +34,56 @@ export function reportRetryAt(lastReportAt: string | null, now: Date): Date | nu
   return next > now.getTime() ? new Date(next) : null;
 }
 
+export type ExcerptOfferSource = {
+  id: number;
+  fromUserId: string;
+  toUserId: string;
+  status: OfferStatus;
+  expiresAt: string;
+  topupAmount: string | null;
+  topupCurrency: string | null;
+  topupPayer: string | null;
+  note: string | null;
+  items: { side: OfferSide; collectionSlug: string; objektId: string | null }[];
+};
+
+/** Turned to the reported account's sides, so it reads the same whoever filed the report. */
+export function shapeExcerptOffer(
+  offer: ExcerptOfferSource,
+  targetUserId: string,
+  now: Date,
+  serialOf: (objektId: string) => number | null,
+): ExcerptOffer {
+  const targetSent = offer.fromUserId === targetUserId;
+  const targetGives: OfferSide = targetSent ? "give" : "get";
+  const item = (i: ExcerptOfferSource["items"][number]) => ({
+    collectionSlug: i.collectionSlug,
+    objektId: i.objektId,
+    serial: i.objektId === null ? null : serialOf(i.objektId),
+  });
+  return {
+    offerId: offer.id,
+    status: effectiveStatus(offer, now),
+    give: offer.items.filter((i) => i.side === targetGives).map(item),
+    get: offer.items.filter((i) => i.side !== targetGives).map(item),
+    topup:
+      offer.topupAmount === null || offer.topupCurrency === null || offer.topupPayer === null
+        ? null
+        : {
+            amount: offer.topupAmount,
+            currency: offer.topupCurrency,
+            payer: (offer.topupPayer === "from") === targetSent ? "target" : "reporter",
+          },
+    note: offer.note,
+  };
+}
+
 export type ExcerptSource = {
   id: number;
   senderId: string;
   body: string | null;
   card: StoredCard | null;
+  offer: ExcerptOffer | null;
   createdAt: string;
 };
 
@@ -49,6 +97,7 @@ export function shapeExcerpt(messages: ExcerptSource[], targetUserId: string): E
       fromTarget: message.senderId === targetUserId,
       body: message.body,
       card: message.card,
+      offer: message.offer,
       at: new Date(message.createdAt).toISOString(),
     }));
 }

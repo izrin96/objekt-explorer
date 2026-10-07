@@ -4,16 +4,10 @@ import * as z from "zod";
 
 import { filterSearchSchema } from "@/features/filters/search-schema";
 
-/** `all` is the absence of `type`; `have` absent means the server's default for the viewer */
+/** `all` is the absence of `type` and of `match` */
 export const browseSearchSchema = filterSearchSchema.extend({
   type: z.enum(["wtt", "wtb", "wts"]).optional().catch(undefined),
-  have: z
-    .preprocess(
-      (value) => (value === "true" ? true : value === "false" ? false : value),
-      z.boolean(),
-    )
-    .optional()
-    .catch(undefined),
+  match: z.enum(["mutual", "they_want", "they_have"]).optional().catch(undefined),
   slug: z.string().min(1).optional().catch(undefined),
 });
 
@@ -48,7 +42,7 @@ export function toBrowseInput(
 
   return {
     type,
-    have: search.have,
+    match: search.match ?? ("all" as const),
     slug: search.slug,
     artist,
     member: (search.member ?? []).map((name) => memberName.get(name.toLowerCase()) ?? name),
