@@ -70,7 +70,7 @@ On their own have or want list, the owner SHALL see a Find matches control in th
 ### Requirement: Show on Trade
 The list form SHALL offer a Show on Trade switch on have, want and sale lists, off by default and off for every list that existed before it. Show on Trade puts the list on the `/trade` feed (see `web-trade-browse`).
 - A list on Trade SHALL always be discoverable: turning Show on Trade on SHALL turn discoverable on, and turning discoverable off SHALL turn Show on Trade off.
-- For a sale list, discoverable is Show on Marketplace, so a sale list on Trade is also on the Marketplace.
+- For a sale list, discoverable is Show on Market, so a sale list on Trade is also on Market.
 - Where discoverable cannot be on (a have or sale list not filed under a Cosmo profile), Show on Trade SHALL be disabled and say why.
 - Turning Show on Trade on SHALL count as a bump, unless the list's post was bumped in the last 24 hours, in which case it keeps that bump time.
 - Saving a list SHALL never turn its linked list's discoverable or Show on Trade off.
