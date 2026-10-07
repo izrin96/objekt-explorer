@@ -127,11 +127,11 @@ A sent message SHALL appear in the recipient's open thread and inbox within 2 se
 - **THEN** all 3 appear in order
 
 ### Requirement: Unread badge
-When a session exists, the frame SHALL show a Messages icon linking to `/messages`, with the number of Inbox conversations holding unread messages. Muted conversations and requests SHALL not count.
+When a session exists, the frame SHALL show a Messages icon linking to `/messages`, with a dot while any Inbox conversation holds unread messages, as the bell does. The icon's label carries the number of such conversations. Muted conversations and requests SHALL not count.
 
 #### Scenario: Muted does not count
 - **WHEN** the user has 2 unread conversations and mutes one of them
-- **THEN** the badge shows 1
+- **THEN** the dot stays and the icon's label counts 1 unread conversation
 
 ### Requirement: Mute
 The user SHALL be able to mute a conversation for 8 hours, 1 week or until unmuted. A muted conversation SHALL still receive messages, SHALL not count toward the badge, and SHALL show a muted mark. Muting SHALL be private to the user who muted.

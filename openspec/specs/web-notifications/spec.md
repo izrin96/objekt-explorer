@@ -6,11 +6,11 @@ In-app notifications on `apps/web`: what a signed-in user is told, how they see 
 ## Requirements
 
 ### Requirement: Notification bell and popover
-A signed-in visitor SHALL see a bell in the frame with the number of unread notifications. It shows no number at zero, and `9+` above nine. Activating the bell SHALL open a popover that lists the user's notifications newest first, 20 at a time with a control to load more. Each notification shows its text, how long ago it happened, and whether it is unread. The popover SHALL offer Mark all read. Activating a notification SHALL mark it read and navigate to its target. A signed-out visitor SHALL see no bell.
+A signed-in visitor SHALL see a bell in the frame with a dot while any notification is unread, and none at zero; the bell's label carries the count, and the popover's header shows it as "N unread". Activating the bell SHALL open a popover that lists the user's notifications newest first, 20 at a time with a control to load more. Each notification shows its text, how long ago it happened, and whether it is unread. The popover SHALL offer Mark all read. Activating a notification SHALL mark it read and navigate to its target. A signed-out visitor SHALL see no bell.
 
 #### Scenario: Unread count
 - **WHEN** a signed-in user has 12 unread notifications
-- **THEN** the bell shows `9+`, and the popover lists the newest 20 with the 12 unread ones marked
+- **THEN** the bell shows a dot, the popover's header reads "12 unread", and it lists the newest 20 with the 12 unread ones marked
 
 #### Scenario: Open a notification
 - **WHEN** the user activates an unread want-list alert in the popover

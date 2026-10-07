@@ -13,7 +13,7 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tansta
 import { Link } from "@tanstack/react-router";
 import { useRef, useState } from "react";
 
-import { CountBadge } from "@/components/shared/count-badge";
+import { UnreadDot } from "@/components/shared/unread-dot";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverPopup, PopoverTitle, PopoverTrigger } from "@/components/ui/popover";
@@ -56,7 +56,7 @@ export function NotificationBell() {
         }
       >
         <BellIcon />
-        <CountBadge count={unread} dot />
+        <UnreadDot count={unread} />
       </PopoverTrigger>
       <PopoverPopup
         ref={popupRef}
