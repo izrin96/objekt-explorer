@@ -183,8 +183,9 @@ export function BrowseView({ search }: { search: BrowseSearch }) {
           aria-busy={query.isPlaceholderData}
           className={cn(query.isPlaceholderData && "opacity-60")}
         >
-          {/* the server draws the first posts, so a full load is not blank until hydration */}
-          <WindowVirtualizer data={posts} ssrCount={SSR_POSTS}>
+          {/* the server draws the first posts, so a full load is not blank until hydration;
+              virtua renders `ssrCount` items whether or not the data has that many */}
+          <WindowVirtualizer data={posts} ssrCount={Math.min(SSR_POSTS, posts.length)}>
             {(post: (typeof posts)[number]) => (
               <div key={post.id} className={POST_GAP}>
                 <BrowsePost
