@@ -14,7 +14,7 @@ Each post SHALL be tagged:
 - WTS for a sale list.
 
 Each post SHALL show:
-- the owner, headed the way For you heads a partner (the Cosmo nickname of the list's bound address whatever its Hide Cosmo ID setting, otherwise the account's display name; see `web-cosmo-link`), with the avatar;
+- the owner, headed the way For you heads a partner (the Cosmo nickname of the list's bound address whatever its Hide Cosmo ID setting, the shortened address when it has none, and the account's display name only for a list bound to no address; see `web-cosmo-link`), with the avatar;
 - the tag, and each list's name and description;
 - up to 8 objekts per side, with the number of further objekts;
 - on a WTS post, each objekt's price in the list's currency, or QYOP;

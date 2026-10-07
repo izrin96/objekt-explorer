@@ -28,6 +28,7 @@ import {
   userAddress,
   wantAlertSent,
 } from "@repo/db/schema";
+import { realNickname, truncateAddress } from "@repo/lib/address";
 import { and, eq, inArray, isNull, type SQL, sql } from "drizzle-orm";
 
 import { redis } from "../lib/redis";
@@ -304,10 +305,10 @@ async function loadContext(pairs: AlertPair[]) {
         userId: list.userId,
         slug: list.slug,
         name: list.name,
-        ownerName:
-          (list.profileAddress ? nicknameOf.get(list.profileAddress.toLowerCase()) : null) ??
-          nameOf.get(list.userId) ??
-          "",
+        ownerName: list.profileAddress
+          ? (realNickname(list.profileAddress, nicknameOf.get(list.profileAddress.toLowerCase())) ??
+            truncateAddress(list.profileAddress.toLowerCase()))
+          : (nameOf.get(list.userId) ?? ""),
       },
     ]),
   );

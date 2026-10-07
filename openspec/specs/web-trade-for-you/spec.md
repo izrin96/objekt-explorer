@@ -109,11 +109,15 @@ The user SHALL be able to hide a partner from the row. A hidden partner SHALL no
 - **THEN** rin.trades disappears from the list at once, and returns after unhiding
 
 ### Requirement: Partner identity
-A partner row SHALL be headed by the Cosmo nickname of the address their best-matching list is bound to, whether or not that address has Hide Cosmo ID on (see `web-cosmo-link`). When the list is bound to no address, or the address has no nickname, it SHALL use the account's display name. When the partner's matched lists are bound to more than one address, the row SHALL name the others as well. The row SHALL show the account's avatar. Expanding the row SHALL show a link to the partner's profile and Discord and Twitter badges when the partner has chosen to show socials. They sit inside the expanded row, not on the row's toggle, so a handle can be selected and copied.
+A partner row SHALL be headed by the Cosmo nickname of the address their best-matching list is bound to, whether or not that address has Hide Cosmo ID on (see `web-cosmo-link`). When that address has no nickname it SHALL be headed by the shortened address, and only when no matched list is bound to an address SHALL it use the account's display name. Want-list alerts SHALL name a partner the same way. When the partner's matched lists are bound to more than one address, the row SHALL name the others as well. The row SHALL show the account's avatar. Expanding the row SHALL show a link to the partner's profile and Discord and Twitter badges when the partner has chosen to show socials. They sit inside the expanded row, not on the row's toggle, so a handle can be selected and copied.
 
 #### Scenario: Bound nickname
 - **WHEN** a partner's matched list is bound to the Cosmo address with nickname "rinrin"
 - **THEN** the row is headed "rinrin"
+
+#### Scenario: Bound address without a nickname
+- **WHEN** a partner's best-matching list is bound to an address whose Cosmo profile has no nickname
+- **THEN** the row is headed by that address shortened, as in `0x9ca6…8b0d`, and links to its profile
 
 #### Scenario: No bound address
 - **WHEN** a partner's matched lists are bound to no address

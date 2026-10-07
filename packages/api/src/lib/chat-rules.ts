@@ -1,4 +1,4 @@
-import { truncateAddress } from "@repo/lib/address";
+import { realNickname, truncateAddress } from "@repo/lib/address";
 
 import {
   type ChatBox,
@@ -250,12 +250,11 @@ export function chatIdentity(
     ) ?? addresses[0];
   if (!chosen) return { name: accountName, address: null, nickname: null, also: [] };
   const address = chosen.address.toLowerCase();
-  // Cosmo stores an unnamed profile's nickname as its own address
-  const named = chosen.nickname && chosen.nickname.toLowerCase() !== address;
+  const nickname = realNickname(address, chosen.nickname);
   return {
-    name: named ? chosen.nickname! : truncateAddress(address),
+    name: nickname ?? truncateAddress(address),
     address,
-    nickname: named ? chosen.nickname : null,
+    nickname,
     also: [],
   };
 }

@@ -241,6 +241,19 @@ describe("toPartnerIdentity", () => {
     ).toEqual({ name: "rinrin", address: "0xrin", nickname: "rinrin", also: [] });
   });
 
+  test("a bound profile with no Cosmo ID is named by its shortened address", () => {
+    const address = "0x9ca6eb130d3aa5150e2f2fee61fd140e14cd8b0d";
+    for (const nickname of [null, address]) {
+      expect(
+        toPartnerIdentity(
+          "tester",
+          [{ profileAddress: address, matches: 2 }],
+          [{ address, nickname }],
+        ),
+      ).toEqual({ name: "0x9ca6…8b0d", address, nickname: null, also: [] });
+    }
+  });
+
   test("no bound address", () => {
     expect(toPartnerIdentity("rin.account", [{ profileAddress: null, matches: 3 }], [rin])).toEqual(
       { name: "rin.account", address: null, nickname: null, also: [] },

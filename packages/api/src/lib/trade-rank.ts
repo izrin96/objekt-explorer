@@ -1,3 +1,5 @@
+import { realNickname, truncateAddress } from "@repo/lib/address";
+
 import { type ListTypeNew, tradeSideOf } from "../schemas/list";
 import type { TradeFilter } from "../schemas/trade";
 import { DAY_MS } from "./time";
@@ -255,7 +257,10 @@ export function nicknamesByAddress(rows: readonly AddressRef[]) {
   return new Map(rows.map((row) => [row.address.toLowerCase(), row.nickname]));
 }
 
-/** Named by the address of the list with the most matches. */
+/**
+ * Named by the profile of the list with the most matches: its nickname, else its shortened
+ * address; the account name only when no matched list is filed under a profile.
+ */
 export function toPartnerIdentity(
   accountName: string,
   matchedLists: { profileAddress: string | null; matches: number }[],
@@ -273,18 +278,16 @@ export function toPartnerIdentity(
       Number(y.profileAddress !== null) - Number(x.profileAddress !== null),
   );
   const bestAddress = ranked[0]?.profileAddress?.toLowerCase() ?? null;
-  const best = bestAddress ? refOf(bestAddress) : null;
-
-  const heading = best?.nickname ? best : null;
+  const nickname = bestAddress ? realNickname(bestAddress, refOf(bestAddress).nickname) : null;
   const others = new Set(
     ranked.flatMap((list) => (list.profileAddress ? [list.profileAddress.toLowerCase()] : [])),
   );
   if (bestAddress) others.delete(bestAddress);
 
   return {
-    name: heading?.nickname ?? accountName,
-    address: heading?.address ?? null,
-    nickname: heading?.nickname ?? null,
+    name: nickname ?? (bestAddress ? truncateAddress(bestAddress) : accountName),
+    address: bestAddress,
+    nickname,
     also: [...others].map(refOf),
   };
 }
