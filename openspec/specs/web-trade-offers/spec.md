@@ -12,7 +12,7 @@ An offer SHALL be sent inside a conversation from one account to the other. It h
 
 A counter-offer MAY also ask for any objekt the recipient listed under You give in the offer it counters, since the recipient already offered it.
 
-An offer SHALL hold at least one objekt, and at most 10 on each side. Either side may be empty. An offer MAY carry:
+An offer SHALL hold at least one objekt, and at most 50 on each side. On the offer card, a side longer than 6 SHALL show the first 6 and a control to show the rest. Either side may be empty. An offer MAY carry:
 - a money top-up with an amount, a currency and which side pays, always shown as "paid outside, not verified";
 - a note of up to 280 characters.
 

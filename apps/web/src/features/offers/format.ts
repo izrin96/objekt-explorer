@@ -1,5 +1,6 @@
 import {
   OFFER_REFUSALS,
+  OFFER_SIDE_LIMIT,
   type MineRow,
   type OfferItemView,
   type OfferPayload,
@@ -55,7 +56,7 @@ export function offerRefusalText(refusal: OfferRefusalInfo, named: string) {
     case "empty":
       return m.offer_refused_empty();
     case "too_many":
-      return m.offer_refused_too_many();
+      return m.offer_refused_too_many({ max: OFFER_SIDE_LIMIT });
     case "invalid_topup":
       return m.offer_refused_invalid_topup();
     case "too_many_open":

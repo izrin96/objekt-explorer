@@ -2,7 +2,7 @@ import { CaretRightIcon, WarningIcon } from "@phosphor-icons/react";
 import type { OfferItemView, OfferView } from "@repo/api/schemas/offer";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { Link } from "@tanstack/react-router";
-import { useId } from "react";
+import { useId, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -280,6 +280,9 @@ function OfferBody({
   );
 }
 
+/** a long side shows this many rows until it is opened, so the card stays short in the thread */
+const SIDE_PREVIEW = 6;
+
 function OfferSideList({
   label,
   items,
@@ -292,6 +295,8 @@ function OfferSideList({
   onOpen: (objekt: ValidObjekt) => void;
 }) {
   const headingId = useId();
+  const [expanded, setExpanded] = useState(false);
+  const shown = expanded ? items : items.slice(0, SIDE_PREVIEW);
   return (
     <section aria-labelledby={headingId} className="flex flex-col gap-1.5">
       <h4
@@ -304,7 +309,7 @@ function OfferSideList({
         <p className="text-muted-foreground text-sm">{m.offer_side_nothing()}</p>
       ) : (
         <ul className="flex flex-col gap-1.5">
-          {items.map((item) => (
+          {shown.map((item) => (
             <li
               key={item.objektId ?? `any:${item.collectionSlug}`}
               className="flex min-w-0 items-center gap-2.5"
@@ -322,6 +327,11 @@ function OfferSideList({
           ))}
         </ul>
       )}
+      {items.length > shown.length ? (
+        <Button variant="ghost" size="xs" className="self-start" onClick={() => setExpanded(true)}>
+          {m.offer_side_more({ count: items.length - shown.length })}
+        </Button>
+      ) : null}
     </section>
   );
 }

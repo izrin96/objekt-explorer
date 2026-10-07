@@ -4,7 +4,7 @@ import { chatPartnerSchema, chatTargetSchema, FLAG_CATEGORIES } from "./chat";
 import { collectionFiltersSchema } from "./common/filters";
 import { reputationSchema } from "./reputation";
 
-export const OFFER_SIDE_LIMIT = 10;
+export const OFFER_SIDE_LIMIT = 50;
 export const OFFER_NOTE_MAX_LENGTH = 280;
 export const OPEN_OFFER_LIMIT = 20;
 export const OFFER_EXPIRY_DAYS = 7;

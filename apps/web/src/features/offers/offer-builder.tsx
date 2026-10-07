@@ -431,7 +431,7 @@ function BuilderForm({
           {empty
             ? m.offer_builder_empty_hint()
             : overLimit
-              ? m.offer_refused_too_many()
+              ? m.offer_refused_too_many({ max: OFFER_SIDE_LIMIT })
               : blocked
                 ? m.offer_builder_blocked_hint()
                 : m.offer_builder_expiry()}
@@ -532,7 +532,7 @@ function SideColumn({
       <h3 id={headingId} className="flex items-baseline gap-2 text-sm font-medium">
         {side === "give" ? m.offer_side_give() : m.offer_side_get()}
         <span className="text-muted-foreground font-mono text-xs font-normal tabular-nums">
-          {m.offer_side_count({ count: picks.length })}
+          {m.offer_side_count({ count: picks.length, max: OFFER_SIDE_LIMIT })}
         </span>
       </h3>
       {picks.length > 0 ? (

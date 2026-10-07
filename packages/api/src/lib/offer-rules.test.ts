@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
+import { OFFER_SIDE_LIMIT } from "../schemas/offer";
 import {
   actionRefusal,
   allowedActions,
@@ -140,17 +141,17 @@ describe("validateShape", () => {
     expect(shape).toEqual({ ok: false, reason: "empty" });
   });
 
-  test("11 objekts on one side are refused, 10 pass", () => {
-    const eleven = Array.from({ length: 11 }, () => item);
-    expect(validateShape({ give: eleven, get: [] }, CURRENCIES)).toEqual({
+  test("one past the limit on a side is refused, the limit passes", () => {
+    const tooMany = Array.from({ length: OFFER_SIDE_LIMIT + 1 }, () => item);
+    expect(validateShape({ give: tooMany, get: [] }, CURRENCIES)).toEqual({
       ok: false,
       reason: "too_many",
     });
-    expect(validateShape({ give: [], get: eleven }, CURRENCIES)).toEqual({
+    expect(validateShape({ give: [], get: tooMany }, CURRENCIES)).toEqual({
       ok: false,
       reason: "too_many",
     });
-    expect(validateShape({ give: eleven.slice(1), get: eleven.slice(1) }, CURRENCIES).ok).toBe(
+    expect(validateShape({ give: tooMany.slice(1), get: tooMany.slice(1) }, CURRENCIES).ok).toBe(
       true,
     );
   });
