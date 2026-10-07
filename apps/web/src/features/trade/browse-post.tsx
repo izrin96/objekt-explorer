@@ -1,19 +1,23 @@
 import type { Outputs } from "@repo/api";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { Link } from "@tanstack/react-router";
+import { Fragment } from "react";
 
 import { SocialBadge } from "@/components/shared/social-badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Popover, PopoverPopup, PopoverTitle, PopoverTrigger } from "@/components/ui/popover";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MessageButton } from "@/features/chat/message-button";
 import { getListLinkOption } from "@/features/list/list-link";
+import { LIST_TYPE_LABEL } from "@/features/list/list-type-badge";
 import { SafetyMenu } from "@/features/moderation/safety-menu";
 import { ObjektCard } from "@/features/objekt/objekt-card";
 import { MakeOfferButton } from "@/features/offers/make-offer-button";
 import { TrustLine } from "@/features/offers/trust-line";
 import { ProfileLink } from "@/features/profile/profile-hover-card";
 import { formatCurrency } from "@/features/settings/use-currency";
+import { useUserLists } from "@/features/user/hooks";
 import { relativeTime } from "@/lib/time";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -159,12 +163,22 @@ export function BrowsePost({
       </header>
 
       {mutual || (match && (match.youHave > 0 || match.youWant > 0)) ? (
-        <p className="flex flex-wrap gap-x-3 gap-y-1 text-xs tabular-nums">
-          {match && match.youHave > 0 ? (
-            <span>{m.trade_match_you_have({ count: match.youHave })}</span>
-          ) : null}
-          {match && match.youWant > 0 ? (
-            <span>{m.trade_match_you_want({ count: match.youWant })}</span>
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs tabular-nums">
+          {match && (match.youHave > 0 || match.youWant > 0) ? (
+            <Popover>
+              {/* the counts open the lists they were taken from */}
+              <PopoverTrigger className="focus-visible:ring-ring flex cursor-pointer flex-wrap gap-x-3 gap-y-1 rounded-sm text-start underline decoration-dotted underline-offset-2 outline-none focus-visible:ring-2">
+                {match.youHave > 0 ? (
+                  <span>{m.trade_match_you_have({ count: match.youHave })}</span>
+                ) : null}
+                {match.youWant > 0 ? (
+                  <span>{m.trade_match_you_want({ count: match.youWant })}</span>
+                ) : null}
+              </PopoverTrigger>
+              <PopoverPopup align="start" className="w-72">
+                <MatchedLists />
+              </PopoverPopup>
+            </Popover>
           ) : null}
           {mutual ? (
             <Link
@@ -175,7 +189,7 @@ export function BrowsePost({
               {m.trade_browse_mutual_link()}
             </Link>
           ) : null}
-        </p>
+        </div>
       ) : null}
 
       {post.sides.map((side) => (
@@ -288,6 +302,49 @@ export function BrowsePostSkeleton() {
           ))}
         </div>
       </div>
+    </div>
+  );
+}
+
+/** The viewer's lists a post's counts compare against: every have list one way, every want list the other. */
+function MatchedLists() {
+  const lists = useUserLists();
+  return (
+    <div className="flex flex-col gap-3">
+      <PopoverTitle className="text-sm">{m.trade_match_lists_title()}</PopoverTitle>
+      <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-2 text-sm">
+        {(["have", "want"] as const).map((type) => {
+          const ofType = lists.filter((list) => list.listTypeNew === type);
+          return (
+            <Fragment key={type}>
+              <dt className="text-muted-foreground pt-px font-mono text-xs">
+                {LIST_TYPE_LABEL[type]()}
+              </dt>
+              <dd className="flex min-w-0 flex-col items-start gap-1">
+                {ofType.length > 0 ? (
+                  ofType.map((list) => (
+                    <Link
+                      key={list.id}
+                      {...getListLinkOption(list)}
+                      className="min-w-0 break-words underline-offset-2 hover:underline"
+                    >
+                      {list.name}
+                    </Link>
+                  ))
+                ) : (
+                  <span className="text-muted-foreground">{m.trade_match_lists_none()}</span>
+                )}
+              </dd>
+            </Fragment>
+          );
+        })}
+      </dl>
+      <Link
+        to="/list"
+        className="text-muted-foreground hover:text-foreground self-start text-xs underline-offset-2 hover:underline"
+      >
+        {m.nav_manage_list()}
+      </Link>
     </div>
   );
 }

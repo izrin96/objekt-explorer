@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toastManager } from "@/components/ui/toast";
 import { SingleSelect } from "@/features/filters/single-select";
+import { LIST_TYPE_LABEL } from "@/features/list/list-type-badge";
 import { ObjektDrawer } from "@/features/objekt/drawer";
 import { useUserLists } from "@/features/user/hooks";
 import { cn } from "@/lib/utils";
@@ -22,13 +23,26 @@ import { PartnerRow, type TradePartner } from "./partner-row";
 import { forYouOptions } from "./queries";
 import type { ForYouSearch } from "./search-schema";
 
-/** Browse's order and labels, so the two Match selects read alike */
 const MATCHES: { value: TradeFilter; label: () => string }[] = [
-  { value: "all", label: m.trade_filter_all },
+  { value: "all", label: m.trade_show_everyone },
   { value: "mutual", label: m.trade_filter_mutual },
   { value: "they_want", label: m.trade_filter_they_want },
   { value: "they_have", label: m.trade_filter_they_have },
 ];
+
+/** the kind of list a one-way view compares; both ways it is either */
+const SIDE: Record<TradeFilter, "have" | "want" | null> = {
+  all: null,
+  mutual: null,
+  they_want: "have",
+  they_have: "want",
+};
+
+const ALL_LABEL = {
+  both: m.trade_list_all,
+  have: m.trade_list_all_have,
+  want: m.trade_list_all_want,
+};
 
 /** no list slug is this short, so it cannot collide with one */
 const ALL_LISTS = "all";
@@ -48,8 +62,13 @@ export function ForYouView({
   const tradeLists = useUserLists().filter(
     (l) => l.listTypeNew === "have" || l.listTypeNew === "want",
   );
-  // a slug that is not one of mine is ignored by the server, so the select shows All lists
-  const selectedList = tradeLists.some((l) => l.slug === list) ? list! : ALL_LISTS;
+  // a one-way view compares only one kind of list, so the picker offers only that kind
+  const side = SIDE[filter];
+  const pickable = side ? tradeLists.filter((l) => l.listTypeNew === side) : tradeLists;
+  // a slug that is not one of mine, or not this view's kind, reads as All lists
+  const selectedList = pickable.some((l) => l.slug === list) ? list! : ALL_LISTS;
+  const applies = (match: TradeFilter, slug: string) =>
+    !SIDE[match] || tradeLists.find((l) => l.slug === slug)?.listTypeNew === SIDE[match];
 
   const setSearch = (next: { match?: TradeFilter; list?: string }) =>
     void navigate({
@@ -74,15 +93,28 @@ export function ForYouView({
           options={MATCHES.map((item) => ({ value: item.value, label: item.label() }))}
           value={filter}
           defaultValue="all"
-          onChange={(value) => setSearch({ match: value })}
+          onChange={(value) =>
+            setSearch({
+              match: value,
+              ...(selectedList !== ALL_LISTS && !applies(value, selectedList)
+                ? { list: ALL_LISTS }
+                : {}),
+            })
+          }
         />
 
         {tradeLists.length > 0 ? (
           <SingleSelect
             label={m.trade_list_label()}
             options={[
-              { value: ALL_LISTS, label: m.trade_list_all() },
-              ...tradeLists.map((l) => ({ value: l.slug, label: l.name })),
+              { value: ALL_LISTS, label: ALL_LABEL[side ?? "both"]() },
+              ...pickable.map((l) => ({
+                value: l.slug,
+                label: m.trade_list_option({
+                  name: l.name,
+                  type: LIST_TYPE_LABEL[l.listTypeNew](),
+                }),
+              })),
             ]}
             value={selectedList}
             defaultValue={ALL_LISTS}
@@ -90,6 +122,15 @@ export function ForYouView({
           />
         ) : null}
       </div>
+
+      {tradeLists.length > 0 ? (
+        <p className="text-muted-foreground -mt-1 text-xs text-pretty">
+          {compareSentence(
+            pickable.find((l) => l.slug === selectedList),
+            side,
+          )}
+        </p>
+      ) : null}
 
       {tradeLists.length === 0 ? (
         <EmptyState
@@ -105,7 +146,7 @@ export function ForYouView({
       ) : (
         <ForYouResults
           filter={filter}
-          list={list}
+          list={selectedList === ALL_LISTS ? undefined : selectedList}
           partner={partner}
           onShowAll={() => setSearch({ match: "all" })}
         />
@@ -280,4 +321,24 @@ export function ForYouPending() {
       <PartnerRowsSkeleton />
     </>
   );
+}
+
+/**
+ * What is compared. Both ways, a named list narrows only its own direction, so the other
+ * keeps every list; a one-way view names only the side it shows.
+ */
+function compareSentence(
+  list: { name: string; listTypeNew: string } | undefined,
+  side: "have" | "want" | null,
+) {
+  if (side === "have") {
+    return list ? m.trade_compare_have_only({ list: list.name }) : m.trade_compare_all_have();
+  }
+  if (side === "want") {
+    return list ? m.trade_compare_want_only({ list: list.name }) : m.trade_compare_all_want();
+  }
+  if (!list) return m.trade_compare_all();
+  return list.listTypeNew === "have"
+    ? m.trade_compare_have({ list: list.name })
+    : m.trade_compare_want({ list: list.name });
 }
