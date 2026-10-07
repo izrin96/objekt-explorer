@@ -1,4 +1,4 @@
-import { ArrowClockwiseIcon, UsersIcon, WarningIcon } from "@phosphor-icons/react";
+import { ArrowClockwiseIcon, CardsThreeIcon, UsersIcon, WarningIcon } from "@phosphor-icons/react";
 import type { TradeFilter } from "@repo/api/schemas/trade";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useQuery } from "@tanstack/react-query";
@@ -91,12 +91,25 @@ export function ForYouView({
         ) : null}
       </div>
 
-      <ForYouResults
-        filter={filter}
-        list={list}
-        partner={partner}
-        onShowAll={() => setSearch({ match: "all" })}
-      />
+      {tradeLists.length === 0 ? (
+        <EmptyState
+          icon={CardsThreeIcon}
+          title={m.trade_empty_title()}
+          hint={m.trade_no_lists_hint()}
+          action={
+            <Button size="sm" render={<Link to="/list" />}>
+              {m.nav_manage_list()}
+            </Button>
+          }
+        />
+      ) : (
+        <ForYouResults
+          filter={filter}
+          list={list}
+          partner={partner}
+          onShowAll={() => setSearch({ match: "all" })}
+        />
+      )}
     </>
   );
 }

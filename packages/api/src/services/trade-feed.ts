@@ -3,6 +3,7 @@ import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { collections } from "@repo/db/indexer/schema";
 import { listEntries, lists, user, userAddress } from "@repo/db/schema";
+import { tradeVersionKey } from "@repo/lib/server/list-touch";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { type SQL, and, eq, inArray, isNotNull, ne, sql } from "drizzle-orm";
 
@@ -23,7 +24,13 @@ import {
   untradeableKey,
   type Viewer,
 } from "../lib/trade-feed";
-import { IDLE_DAYS, toPartnerIdentity, visibleNickname } from "../lib/trade-rank";
+import {
+  collectionVerdict,
+  groupBySlug,
+  IDLE_DAYS,
+  toPartnerIdentity,
+  visibleNickname,
+} from "../lib/trade-rank";
 import type { ListTypeNew } from "../schemas/list";
 import type { BrowseFilters, FeedCursor, PostType } from "../schemas/trade";
 import { getCollectionFilters } from "./activity-feed";
@@ -39,9 +46,10 @@ import { getCache, redis } from "./redis";
 import { reputationOf } from "./reputation";
 import { notBlockedEither, notTradeSanctioned } from "./safety";
 import { marketVersion } from "./safety-cache";
-import { getOwnedSlugs } from "./trade-matches";
+import { fetchHoldings } from "./trade-matches";
 
 const POST_TTL_SECONDS = 60;
+const HAVE_TTL_SECONDS = 300;
 const COUNTS_TTL_SECONDS = 60;
 
 const TRADE_TYPES = ["have", "want", "sale"] as const satisfies ListTypeNew[];
@@ -380,9 +388,49 @@ async function fetchPostEntries(
   return result;
 }
 
+/** Collections on the user's have lists that they can still trade; never the whole wallet. */
+async function computeHaveSlugs(userId: string): Promise<string[]> {
+  const [entries, addressRows] = await Promise.all([
+    db
+      .select({
+        listId: listEntries.listId,
+        slug: listEntries.collectionSlug,
+        objektId: listEntries.objektId,
+      })
+      .from(listEntries)
+      .innerJoin(lists, eq(lists.id, listEntries.listId))
+      .where(
+        and(
+          eq(lists.userId, userId),
+          eq(lists.listTypeNew, "have"),
+          isNotNull(listEntries.collectionSlug),
+        ),
+      ),
+    fetchAddresses([userId]),
+  ]);
+  if (entries.length === 0) return [];
+
+  const addresses = addressesByUser(addressRows).get(userId) ?? new Set<string>();
+  const owned = entries.map((entry) => ({
+    listId: entry.listId,
+    slug: entry.slug!,
+    objektId: entry.objektId,
+  }));
+  const holdings = await fetchHoldings(
+    unique(owned.flatMap((entry) => (entry.objektId ? [entry.objektId] : []))),
+    unique(owned.flatMap((entry) => (entry.objektId ? [] : [entry.slug]))),
+    [...addresses],
+  );
+
+  return [...groupBySlug(owned)].flatMap(([slug, group]) =>
+    collectionVerdict(group, addresses, holdings).verdict === "ok" ? [slug] : [],
+  );
+}
+
 async function fetchViewer(userId: string): Promise<Viewer> {
-  const [ownedSlugs, wantRows] = await Promise.all([
-    getOwnedSlugs(userId),
+  const version = (await redis.get(tradeVersionKey(userId))) ?? "0";
+  const [haveSlugs, wantRows] = await Promise.all([
+    getCache(`trade:have:${userId}:${version}`, HAVE_TTL_SECONDS, () => computeHaveSlugs(userId)),
     db
       .selectDistinct({ slug: listEntries.collectionSlug })
       .from(listEntries)
@@ -396,7 +444,7 @@ async function fetchViewer(userId: string): Promise<Viewer> {
       ),
   ]);
   return {
-    ownedSlugs: new Set(ownedSlugs),
+    haveSlugs: new Set(haveSlugs),
     wantSlugs: new Set(wantRows.map((row) => row.slug!)),
   };
 }

@@ -1,8 +1,8 @@
 import { ArrowClockwiseIcon, CardsThreeIcon, CheckIcon, WarningIcon } from "@phosphor-icons/react";
 import { type CandidateItem, OFFER_SIDE_LIMIT } from "@repo/api/schemas/offer";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { useId, useState } from "react";
 import { VList } from "virtua";
 
 import { EmptyState } from "@/components/shared/empty-state";
@@ -17,17 +17,25 @@ import {
   DialogPopup,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
+import { Switch } from "@/components/ui/switch";
+import { useScopedFacets } from "@/features/filters/facets";
 import { SingleSelect } from "@/features/filters/single-select";
 import { ObjektCard } from "@/features/objekt/objekt-card";
 import { CollectionLabel } from "@/features/objekt/objekt-label";
+import { useUserLists } from "@/features/user/hooks";
 import { useElementSize } from "@/hooks/use-element-size";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import { offerNo, offerRefusalOf, offerRefusalText } from "./format";
-import { myCandidatesOptions, type OfferAddress, theirCandidatesOptions } from "./queries";
+import {
+  myCandidatesOptions,
+  type OfferAddress,
+  type PickerFilters,
+  theirPickerOptions,
+} from "./queries";
 
 export type OfferSide = "give" | "get";
 
@@ -147,7 +155,11 @@ function PickerBody({
         </DialogDescription>
       </DialogHeader>
       <div className="flex min-h-0 flex-1 flex-col px-6 pb-4">
-        {side === "give" ? <MineGrid to={to} {...grid} /> : <TheirsGrid to={to} {...grid} />}
+        {side === "give" ? (
+          <MineGrid to={to} {...grid} />
+        ) : (
+          <TheirsGrid to={to} name={name} {...grid} />
+        )}
       </div>
       <DialogFooter className="sm:items-center">
         <p
@@ -174,12 +186,59 @@ type GridProps = {
 
 const ALL = "all";
 
-function MineGrid({ to, ...grid }: GridProps) {
-  const { selectedArtists } = useCosmoArtist();
-  const [member, setMember] = useState(ALL);
-  const query = useInfiniteQuery(myCandidatesOptions(to, member === ALL ? undefined : member));
+/** Member, season and class, plus the side's own "only what matches" switch. */
+function PickerFilterBar({
+  filters,
+  onChange,
+  matchLabel,
+}: {
+  filters: PickerFilters;
+  onChange: (next: PickerFilters) => void;
+  matchLabel: string;
+}) {
+  const { facets } = useScopedFacets();
+  const switchId = useId();
+  const select = (key: "member" | "season" | "class", label: string, values: readonly string[]) => (
+    <SingleSelect
+      label={label}
+      options={[
+        { value: ALL, label: m.filter_all() },
+        ...values.map((value) => ({ value, label: value })),
+      ]}
+      value={filters[key][0] ?? ALL}
+      defaultValue={ALL}
+      onChange={(value) => onChange({ ...filters, [key]: value === ALL ? [] : [value] })}
+    />
+  );
 
-  const members = selectedArtists.flatMap((artist) => artist.artistMembers.map((x) => x.name));
+  return (
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+      {select("member", m.filter_member(), facets.members)}
+      {select("season", m.filter_season(), facets.seasons)}
+      {select("class", m.filter_class(), facets.classes)}
+      <span className="flex items-center gap-2">
+        <Switch
+          id={switchId}
+          checked={filters.matchOnly}
+          onCheckedChange={(matchOnly) => onChange({ ...filters, matchOnly })}
+        />
+        <Label htmlFor={switchId} className="text-sm">
+          {matchLabel}
+        </Label>
+      </span>
+    </div>
+  );
+}
+
+const narrowed = (filters: PickerFilters) =>
+  filters.matchOnly || filters.member.length + filters.season.length + filters.class.length > 0;
+
+const NO_FILTERS: PickerFilters = { member: [], season: [], class: [], matchOnly: false };
+
+function MineGrid({ to, ...grid }: GridProps) {
+  const [filters, setFilters] = useState(NO_FILTERS);
+  const query = useInfiniteQuery(myCandidatesOptions(to, filters));
+
   const pages = query.data?.pages ?? [];
   const collections: Collections = Object.assign({}, ...pages.map((page) => page.collections));
   const suggested = pages[0]?.suggested ?? [];
@@ -187,16 +246,10 @@ function MineGrid({ to, ...grid }: GridProps) {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">
-      <SingleSelect
-        label={m.offer_picker_member()}
-        options={[
-          { value: ALL, label: m.offer_picker_member_all() },
-          ...members.map((name) => ({ value: name, label: name })),
-        ]}
-        value={member}
-        defaultValue={ALL}
-        onChange={setMember}
-        className="self-start"
+      <PickerFilterBar
+        filters={filters}
+        onChange={setFilters}
+        matchLabel={m.offer_picker_only_they_want()}
       />
       <CandidateGrid
         {...grid}
@@ -207,7 +260,11 @@ function MineGrid({ to, ...grid }: GridProps) {
         collections={collections}
         pending={query.isPending}
         error={query.isError && items.length === 0 ? loadError(query.error, query.refetch) : null}
-        empty={m.offer_picker_mine_empty()}
+        empty={
+          narrowed(filters)
+            ? { title: m.offer_picker_filtered() }
+            : { title: m.offer_picker_mine_empty() }
+        }
         more={{
           has: query.hasNextPage,
           loading: query.isFetchingNextPage,
@@ -219,17 +276,54 @@ function MineGrid({ to, ...grid }: GridProps) {
   );
 }
 
-function TheirsGrid({ to, ...grid }: GridProps) {
-  const query = useQuery(theirCandidatesOptions(to));
+function TheirsGrid({ to, name, ...grid }: GridProps & { name: string }) {
+  // what they have that the sender wants comes first, when the sender keeps a want list
+  const wantsSomething = useUserLists().some((list) => list.listTypeNew === "want");
+  const [filters, setFilters] = useState<PickerFilters>({
+    ...NO_FILTERS,
+    matchOnly: wantsSomething,
+  });
+  const query = useInfiniteQuery(theirPickerOptions(to, filters));
+
+  const pages = query.data?.pages ?? [];
+  const collections: Collections = Object.assign({}, ...pages.map((page) => page.collections));
+  const items = pages.flatMap((page) => page.items);
+  const listed = pages[0]?.listed ?? true;
+
   return (
-    <CandidateGrid
-      {...grid}
-      sections={[{ title: null, items: query.data?.items ?? [] }]}
-      collections={query.data?.collections ?? {}}
-      pending={query.isPending}
-      error={query.isError ? loadError(query.error, query.refetch) : null}
-      empty={m.offer_picker_theirs_empty()}
-    />
+    <div className="flex min-h-0 flex-1 flex-col gap-3">
+      <PickerFilterBar
+        filters={filters}
+        onChange={setFilters}
+        matchLabel={m.offer_picker_only_i_want()}
+      />
+      <CandidateGrid
+        {...grid}
+        sections={[{ title: null, items }]}
+        collections={collections}
+        pending={query.isPending}
+        error={query.isError && items.length === 0 ? loadError(query.error, query.refetch) : null}
+        empty={
+          narrowed(filters)
+            ? { title: m.offer_picker_filtered() }
+            : listed
+              ? {
+                  title: m.offer_picker_theirs_none_held({ name }),
+                  hint: m.offer_picker_theirs_none_held_hint(),
+                }
+              : {
+                  title: m.offer_picker_theirs_none_listed({ name }),
+                  hint: m.offer_picker_theirs_none_listed_hint(),
+                }
+        }
+        more={{
+          has: query.hasNextPage,
+          loading: query.isFetchingNextPage,
+          failed: query.isFetchNextPageError,
+          load: () => void query.fetchNextPage(),
+        }}
+      />
+    </div>
   );
 }
 
@@ -264,7 +358,7 @@ function CandidateGrid({
   collections: Collections;
   pending: boolean;
   error: { retry: () => void; text: string | null } | null;
-  empty: string;
+  empty: { title: string; hint?: string };
   more?: { has: boolean; loading: boolean; failed: boolean; load: () => void };
   isSelected: (item: CandidateItem) => boolean;
   full: boolean;
@@ -305,7 +399,9 @@ function CandidateGrid({
     );
   }
   if (sections.every((section) => section.items.length === 0)) {
-    return <EmptyState icon={CardsThreeIcon} bordered={false} title={empty} />;
+    return (
+      <EmptyState icon={CardsThreeIcon} bordered={false} title={empty.title} hint={empty.hint} />
+    );
   }
 
   const rows: Row[] = [];
@@ -397,7 +493,8 @@ export function CandidateTile({
       }}
       className="group/tile focus-visible:ring-ring flex w-full flex-col gap-1 rounded-md text-start outline-none focus-visible:ring-2 aria-disabled:cursor-not-allowed"
     >
-      <span className="relative block">
+      {/* a container, so the selection ring's photocard radius measures the tile, not the page */}
+      <span className="@container relative block">
         <span className={cn("block", blocked && "opacity-40 grayscale")}>
           {collection ? (
             <ObjektCard objekt={collection} image="thumbnail" hideLabel hideSerial />

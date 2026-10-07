@@ -12,8 +12,7 @@ export type MyList = { id: number; listTypeNew: ListTypeNew };
 /**
  * The lists each direction matches from. A named list narrows only its own direction,
  * so the other keeps all of the user's lists and a single list can still be mutual.
- * Without a named have list, the user's side is what they own (`haveFromOwned`), not their
- * have lists. A list that is not one of the user's have or want lists is ignored.
+ * A list that is not one of the user's have or want lists is ignored.
  */
 export function matchSides(myLists: MyList[], listId: number | null) {
   const named = myLists.find(
@@ -23,16 +22,12 @@ export function matchSides(myLists: MyList[], listId: number | null) {
     named?.listTypeNew === type
       ? [named.id]
       : myLists.filter((list) => list.listTypeNew === type).map((list) => list.id);
-  return {
-    listId: named?.id ?? null,
-    haveFromOwned: named?.listTypeNew !== "have",
-    haveListIds: side("have"),
-    wantListIds: side("want"),
-  };
+  return { listId: named?.id ?? null, haveListIds: side("have"), wantListIds: side("want") };
 }
 
-export type Verdict = "ok" | "not_owned" | "not_transferable";
-export type DropReason = Exclude<Verdict, "ok">;
+/** `hidden`: held at an address that hides its owner, so it can't be offered by id and is never named */
+export type Verdict = "ok" | "not_owned" | "not_transferable" | "hidden";
+export type DropReason = Exclude<Verdict, "ok" | "hidden">;
 
 /** A have or sale entry: one specific objekt, or (with no `objektId`) any copy of its collection. */
 export type OwnedEntry = { listId: number; slug: string; objektId: string | null };
@@ -49,16 +44,27 @@ export type Holdings = {
 
 export const copyKey = (owner: string, slug: string) => `${owner}:${slug}`;
 
-const VERDICT_RANK: Record<Verdict, number> = { ok: 2, not_transferable: 1, not_owned: 0 };
+const VERDICT_RANK: Record<Verdict, number> = {
+  ok: 3,
+  hidden: 2,
+  not_transferable: 1,
+  not_owned: 0,
+};
 
+/**
+ * `tokenAddresses` are where a specific objekt may be offered: a partner's visible addresses,
+ * as the offer picker allows. Any-copy entries count at every address, as the picker's do.
+ */
 export function entryVerdict(
   entry: OwnedEntry,
   addresses: ReadonlySet<string>,
   holdings: Holdings,
+  tokenAddresses: ReadonlySet<string> = addresses,
 ): Verdict {
   if (entry.objektId !== null) {
     const objekt = holdings.objekts.get(entry.objektId);
     if (!objekt || !addresses.has(objekt.owner)) return "not_owned";
+    if (!tokenAddresses.has(objekt.owner)) return "hidden";
     return objekt.transferable ? "ok" : "not_transferable";
   }
 
@@ -76,11 +82,12 @@ export function collectionVerdict(
   entries: OwnedEntry[],
   addresses: ReadonlySet<string>,
   holdings: Holdings,
+  tokenAddresses: ReadonlySet<string> = addresses,
 ): { verdict: Verdict; listIds: number[] } {
   let best: Verdict = "not_owned";
   const listIds = new Set<number>();
   for (const entry of entries) {
-    const verdict = entryVerdict(entry, addresses, holdings);
+    const verdict = entryVerdict(entry, addresses, holdings, tokenAddresses);
     if (verdict === "ok") listIds.add(entry.listId);
     if (VERDICT_RANK[verdict] > VERDICT_RANK[best]) best = verdict;
   }
@@ -125,6 +132,7 @@ export type Recounted = {
 /**
  * The candidate's matches after the ownership check. `myWants` maps a collection to
  * my want lists holding it; `myHaves` is my own have side, already judged.
+ * `partnerVisible` are the partner's addresses that show their owner (see `entryVerdict`).
  */
 export function recount(
   candidate: Candidate,
@@ -132,16 +140,22 @@ export function recount(
   holdings: Holdings,
   myWants: ReadonlyMap<string, number[]>,
   myHaves: ReadonlyMap<string, { verdict: Verdict; listIds: number[] }>,
+  partnerVisible: ReadonlySet<string> = partnerAddresses,
 ): Recounted {
   const theyHaveIWant: Match[] = [];
   const iHaveTheyWant: Match[] = [];
   const dropped: Dropped[] = [];
 
   for (const [slug, entries] of groupBySlug(candidate.theyHave)) {
-    const { verdict, listIds } = collectionVerdict(entries, partnerAddresses, holdings);
+    const { verdict, listIds } = collectionVerdict(
+      entries,
+      partnerAddresses,
+      holdings,
+      partnerVisible,
+    );
     if (verdict === "ok") {
       theyHaveIWant.push({ slug, myListIds: myWants.get(slug) ?? [], partnerListIds: listIds });
-    } else {
+    } else if (verdict !== "hidden") {
       dropped.push({ slug, direction: "theyHaveIWant", reason: verdict });
     }
   }
@@ -155,7 +169,7 @@ export function recount(
         myListIds: mine.listIds,
         partnerListIds: [...new Set(entries.map((entry) => entry.listId))],
       });
-    } else {
+    } else if (mine.verdict !== "hidden") {
       dropped.push({ slug, direction: "iHaveTheyWant", reason: mine.verdict });
     }
   }

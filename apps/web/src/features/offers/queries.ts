@@ -15,7 +15,21 @@ const POLL_MS = 60_000;
 const retryUnlessRefused = (count: number, error: unknown) =>
   !(error instanceof ORPCError && error.status < 500) && count < 2;
 
-/** Bounded by the partner's allowed lists, so it is read whole. */
+/** What the picker narrows a side to; empty arrays mean no filter. */
+export type PickerFilters = {
+  member: string[];
+  season: string[];
+  class: string[];
+  /** mine: only what the partner wants; theirs: only what the sender wants */
+  matchOnly: boolean;
+};
+
+const toInput = (filters: PickerFilters) => ({
+  filters: { member: filters.member, season: filters.season, class: filters.class },
+  matchOnly: filters.matchOnly,
+});
+
+/** Every item on the partner's allowed lists, for the builder to check picks against. */
 export const theirCandidatesOptions = (to: OfferAddress) =>
   orpc.offer.candidates.queryOptions({
     input: { ...to, side: "theirs" },
@@ -23,13 +37,28 @@ export const theirCandidatesOptions = (to: OfferAddress) =>
     retry: retryUnlessRefused,
   });
 
-export const myCandidatesOptions = (to: OfferAddress, member: string | undefined) =>
+/** The picker's view: resolved whole on the server, then paged, so a long list does not land at once. */
+export const theirPickerOptions = (to: OfferAddress, filters: PickerFilters) =>
+  orpc.offer.candidates.infiniteOptions({
+    input: (offset: number) => ({
+      ...to,
+      side: "theirs" as const,
+      offset,
+      ...toInput(filters),
+    }),
+    initialPageParam: 0,
+    getNextPageParam: (page) => page.nextOffset ?? undefined,
+    staleTime: 30_000,
+    retry: retryUnlessRefused,
+  });
+
+export const myCandidatesOptions = (to: OfferAddress, filters: PickerFilters) =>
   orpc.offer.candidates.infiniteOptions({
     input: (cursor: { receivedAt: string; id: string } | undefined) => ({
       ...to,
       side: "mine" as const,
       cursor,
-      filters: member ? { member: [member] } : undefined,
+      ...toInput(filters),
     }),
     initialPageParam: undefined as { receivedAt: string; id: string } | undefined,
     getNextPageParam: (page) => page.nextCursor ?? undefined,

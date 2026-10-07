@@ -80,12 +80,12 @@ A filter value that does not parse SHALL be ignored.
 
 ### Requirement: Matches to the signed-in viewer
 For a signed-in viewer, each post SHALL show:
-- how many collections on its want side the viewer owns a transferable copy of, across their linked Cosmo profiles;
+- how many collections on its want side are on one of the viewer's have lists and still tradeable by the viewer, by the ownership rule above;
 - how many collections on its have or sale side are on one of the viewer's want lists.
 
 Those objekts SHALL be marked with a ring.
 
-The want side SHALL be matched against what the viewer owns, not their have lists, as For you does (see `web-trade-for-you`), so the two pages count alike. Browse SHALL offer no Match filter: narrowing to matches is For you's job. A post whose owner is a Mutual only partner in the viewer's For you SHALL instead carry a "Mutual match · See in For you" link to `/trade/for-you?partner=<their id>`. The link SHALL show only for a partner For you lists.
+Matching SHALL use the viewer's have lists, not everything their wallet holds, as For you does (see `web-trade-for-you`), so an objekt the viewer keeps off their have lists never counts as offered. Browse SHALL offer no Match filter: narrowing to matches is For you's job. A post whose owner is a Mutual only partner in the viewer's For you SHALL instead carry a "Mutual match · See in For you" link to `/trade/for-you?partner=<their id>`. The link SHALL show only for a partner For you lists.
 
 The viewer's own posts SHALL not be listed in the feed. Posts by partners the viewer hid in For you SHALL also be left out.
 
@@ -93,9 +93,9 @@ The viewer's own posts SHALL not be listed in the feed. Posts by partners the vi
 - **WHEN** a signed-in viewer opens `/trade` with no parameters
 - **THEN** posts of every type are listed with their counts and rings, and there is no Match control
 
-#### Scenario: Owned but not on a have list
-- **WHEN** the viewer holds a transferable SeoYeon 204Z that is on none of their have lists, and a post wants it
-- **THEN** SeoYeon 204Z is ringed and counted on that post
+#### Scenario: Held but not on a have list
+- **WHEN** the viewer holds SeoYeon 204Z but it is on none of their have lists, and a post wants it
+- **THEN** SeoYeon 204Z is not ringed or counted on that post
 
 #### Scenario: Mutual partner
 - **WHEN** rin.trades is listed under Mutual only in the viewer's For you

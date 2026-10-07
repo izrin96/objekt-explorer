@@ -155,7 +155,7 @@ export function countCollections(entries: { slug: string }[], slugs: ReadonlySet
   return new Set(entries.filter((entry) => slugs.has(entry.slug)).map((entry) => entry.slug)).size;
 }
 
-export type Viewer = { ownedSlugs: ReadonlySet<string>; wantSlugs: ReadonlySet<string> };
+export type Viewer = { haveSlugs: ReadonlySet<string>; wantSlugs: ReadonlySet<string> };
 
 export type PostFilter = {
   /** keep posts with a shown objekt from one of these collections */
@@ -190,7 +190,7 @@ export function assemblePost<L extends TradeList>(
   const sides = roles.map(({ role, list, entries }) => {
     const { items, more } = previewSide(
       entries,
-      viewer ? (role === "want" ? viewer.ownedSlugs : viewer.wantSlugs) : null,
+      viewer ? (role === "want" ? viewer.haveSlugs : viewer.wantSlugs) : null,
     );
     return { role, list, items, more };
   });
@@ -199,7 +199,7 @@ export function assemblePost<L extends TradeList>(
     sides,
     match: viewer
       ? {
-          youHave: countCollections(wanted, viewer.ownedSlugs),
+          youHave: countCollections(wanted, viewer.haveSlugs),
           youWant: countCollections(offered, viewer.wantSlugs),
         }
       : undefined,

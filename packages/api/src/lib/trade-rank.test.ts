@@ -100,6 +100,16 @@ describe("ownership", () => {
     expect(entryVerdict(entry("t-locked"), theirs, holdings)).toBe("not_transferable");
   });
 
+  test("an objekt at an address that hides its owner is hidden, a copy there still counts", () => {
+    const visible = new Set<string>();
+    expect(
+      entryVerdict({ listId: 1, slug: "s", objektId: "t-owned" }, theirs, holdings, visible),
+    ).toBe("hidden");
+    expect(
+      entryVerdict({ listId: 1, slug: "held", objektId: null }, theirs, holdings, visible),
+    ).toBe("ok");
+  });
+
   test("a collection entry counts while any transferable copy is held", () => {
     const entry = (slug: string) => ({ listId: 1, slug, objektId: null });
     expect(entryVerdict(entry("held"), theirs, holdings)).toBe("ok");
@@ -212,6 +222,24 @@ describe("recount details", () => {
     expect(rankPartners([result], "all", NOW)[0]!.idle).toBe(true);
   });
 
+  test("a partner's objekt at a hidden address is neither matched nor named", () => {
+    const result = recount(
+      {
+        userId: "P",
+        listUpdatedAt: { 1: RECENT },
+        theyHave: [{ listId: 1, slug: "a", objektId: "kept" }],
+        theyWant: [],
+      },
+      new Set(["0xp"]),
+      holdings,
+      new Map([["a", [9]]]),
+      new Map(),
+      new Set(),
+    );
+    expect(result.theyHaveIWant).toEqual([]);
+    expect(result.dropped).toEqual([]);
+  });
+
   test("my own dropped have counts once, a partner's once per partner", () => {
     const mine = { slug: "x", direction: "iHaveTheyWant", reason: "not_owned" } as const;
     const theirs = { slug: "y", direction: "theyHaveIWant", reason: "not_transferable" } as const;
@@ -277,7 +305,6 @@ describe("matchSides", () => {
   test("no list uses every have and want list", () => {
     expect(matchSides(lists, null)).toEqual({
       listId: null,
-      haveFromOwned: true,
       haveListIds: [1, 2],
       wantListIds: [3],
     });
@@ -285,27 +312,13 @@ describe("matchSides", () => {
 
   test("a foreign or non-trade list is ignored", () => {
     expect(matchSides(lists, 99).listId).toBeNull();
-    expect(matchSides(lists, 4)).toEqual({
-      listId: null,
-      haveFromOwned: true,
-      haveListIds: [1, 2],
-      wantListIds: [3],
-    });
-  });
-
-  test("a want list keeps the owned side", () => {
-    expect(matchSides(lists, 3)).toEqual({
-      listId: 3,
-      haveFromOwned: true,
-      haveListIds: [1, 2],
-      wantListIds: [3],
-    });
+    expect(matchSides(lists, 4)).toEqual({ listId: null, haveListIds: [1, 2], wantListIds: [3] });
   });
 
   test("one have list, still mutual", () => {
     // Spares (1) narrows "they want what I have"; Binary hunt (3) still answers "they have what I want"
     const sides = matchSides(lists, 1);
-    expect(sides).toEqual({ listId: 1, haveFromOwned: false, haveListIds: [1], wantListIds: [3] });
+    expect(sides).toEqual({ listId: 1, haveListIds: [1], wantListIds: [3] });
 
     const myHaveEntries = [
       { listId: 1, slug: "on-spares", objektId: null },

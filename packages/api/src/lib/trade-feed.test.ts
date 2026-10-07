@@ -155,7 +155,7 @@ describe("assemblePost", () => {
     2: [entry(20, "want-a"), entry(21, "want-b"), entry(22, "want-c")],
   };
   const of = (id: number) => entries[id] ?? [];
-  const viewer = { ownedSlugs: new Set(["want-a", "want-c"]), wantSlugs: new Set(["offer-b"]) };
+  const viewer = { haveSlugs: new Set(["want-a", "want-c"]), wantSlugs: new Set(["offer-b"]) };
 
   test("counts and rings for the viewer", () => {
     const post = assemblePost(pair!, of, viewer, NO_FILTER);
@@ -167,13 +167,8 @@ describe("assemblePost", () => {
     ]);
   });
 
-  test("nothing owned or wanted counts nothing", () => {
-    const post = assemblePost(
-      pair!,
-      of,
-      { ownedSlugs: new Set(), wantSlugs: new Set() },
-      NO_FILTER,
-    );
+  test("nothing listed counts nothing", () => {
+    const post = assemblePost(pair!, of, { haveSlugs: new Set(), wantSlugs: new Set() }, NO_FILTER);
     expect(post?.match).toEqual({ youHave: 0, youWant: 0 });
   });
 
