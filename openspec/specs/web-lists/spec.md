@@ -11,9 +11,9 @@ A signed-in user SHALL see their lists at `/list` and create, edit and delete th
 has a name, a type (general, have, want, sale), a currency when it is a sale list, a
 description, an optional linked Have or Want list of the complementary type, an optional
 Cosmo profile it is filed under with a flag deciding whether that profile's Lists tab shows
-it, and, on a have, want or sale list, one Show on Trade switch (see Show on Trade). A want
-list also has an Alert me switch, on by default, deciding whether new matches for it create
-notifications (see `web-notifications`). A signed-out visitor SHALL be sent to
+it, and, on a have, want or sale list, one Show on Trade switch (see Show on Trade). Every want
+list alerts its owner to new matches, whether or not it is on Trade (see `web-notifications`).
+A signed-out visitor SHALL be sent to
 `/login?redirect=/list`.
 
 #### Scenario: Sale list needs a currency
@@ -23,10 +23,6 @@ notifications (see `web-notifications`). A signed-out visitor SHALL be sent to
 #### Scenario: Profile-bound but hidden
 - **WHEN** a list is filed under a profile with the show-on-profile flag off
 - **THEN** its card on `/list` carries the profile chip and the profile's Lists tab does not show it
-
-#### Scenario: Alert me on a want list
-- **WHEN** the user creates a want list without touching Alert me
-- **THEN** the list is saved with Alert me on, and the switch is not offered for other list types
 
 ### Requirement: List addresses
 `/list/<slug>` SHALL open a list that is not filed under a profile, and SHALL redirect to
@@ -73,7 +69,7 @@ The list form SHALL offer exactly one visibility switch on a have, want or sale 
 - a have or want list SHALL be on the `/trade` feed (see `web-trade-browse`) and take part in matching (For you, want alerts and the offer picker);
 - a sale list SHALL additionally be on Market and in each objekt's Market tab.
 
-With it off the list SHALL be in none of these. The form SHALL offer no other switch for them, and the switch's description SHALL name everything it turns on.
+With it off the list SHALL be in none of these, except that a want list still alerts its owner to matches (see `web-notifications`). The form SHALL offer no other switch for them, and the switch's description SHALL name everything it turns on.
 - Where the switch cannot be on (a have or sale list not filed under a Cosmo profile), it SHALL be disabled and say why.
 - Turning the switch on SHALL count as a bump, unless the list's post was bumped in the last 24 hours, in which case it keeps that bump time.
 - Linking a have list and a want list SHALL turn the switch on for the newly linked list when the saved list's switch is on and the linked list can have it on. Saving a list whose link does not change SHALL leave its linked list's switch as it is, and saving a list SHALL never turn its linked list's switch off.

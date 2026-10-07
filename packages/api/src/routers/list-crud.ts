@@ -136,7 +136,6 @@ export const listCrud = {
             bumpedAt: discoverable
               ? createdBumpedAt(linkedListId, input.listTypeNew, user.id)
               : null,
-            matchAlerts: input.listTypeNew === "general" || (input.matchAlerts ?? true),
           })
           .returning({ insertedId: lists.id });
 
@@ -255,7 +254,6 @@ export const listCrud = {
                 : false,
             linkedListId,
             ...tradeColumns(discoverable, linkedListId),
-            matchAlerts: list.listTypeNew === "general" ? undefined : input.matchAlerts,
           })
           .where(eq(lists.id, list.id));
 

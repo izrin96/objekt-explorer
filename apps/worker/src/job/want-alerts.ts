@@ -219,7 +219,7 @@ async function fetchPairs(where: SQL, order: Order, limit: number | null): Promi
       JOIN list_entries w ON w.collection_slug = c.slug
       JOIN lists wl ON wl.id = w.list_id
       WHERE c.type IN ('have', 'sale')
-        AND wl.list_type_new = 'want' AND wl.match_alerts AND wl.user_id <> c.user_id
+        AND wl.list_type_new = 'want' AND wl.user_id <> c.user_id
       UNION ALL
       SELECT c.id, c.list_id, 'reverse', o.list_id, c.list_id, c.slug, o.objekt_id, ol.user_id, c.user_id
       FROM cand c
@@ -227,7 +227,7 @@ async function fetchPairs(where: SQL, order: Order, limit: number | null): Promi
       JOIN lists ol ON ol.id = o.list_id
       WHERE c.type = 'want'
         AND ${offersOnTradeSql("ol")}
-        AND ol.match_alerts AND ol.user_id <> c.user_id
+        AND ol.user_id <> c.user_id
     )
     SELECT entry_id, list_id, direction, offer_list_id, want_list_id, slug, objekt_id FROM pairs p
     WHERE ${notBlockedEither(sql`p.want_user_id`, sql`p.offer_user_id`)}
@@ -264,7 +264,6 @@ async function loadContext(pairs: AlertPair[]) {
       userId: lists.userId,
       slug: lists.slug,
       name: lists.name,
-      matchAlerts: lists.matchAlerts,
       profileAddress: lists.profileAddress,
     })
     .from(lists)
@@ -305,7 +304,6 @@ async function loadContext(pairs: AlertPair[]) {
         userId: list.userId,
         slug: list.slug,
         name: list.name,
-        matchAlerts: list.matchAlerts,
         ownerName:
           (list.profileAddress ? nicknameOf.get(list.profileAddress.toLowerCase()) : null) ??
           nameOf.get(list.userId) ??

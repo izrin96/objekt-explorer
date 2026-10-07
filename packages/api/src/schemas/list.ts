@@ -120,7 +120,6 @@ export const createListInputSchema = z.object({
   description: z.string().max(5000).nullable(),
   currency: z.string().max(10).nullable(),
   discoverable: z.boolean().default(false),
-  matchAlerts: z.boolean().optional(),
 });
 
 export const editListInputSchema = z.object({
@@ -133,7 +132,6 @@ export const editListInputSchema = z.object({
   hideSerial: z.boolean(),
   linkedListId: z.number().nullable(),
   discoverable: z.boolean(),
-  matchAlerts: z.boolean().optional(),
   regenerateSlug: z.boolean().default(false),
 });
 

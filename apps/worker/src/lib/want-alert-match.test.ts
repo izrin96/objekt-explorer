@@ -24,7 +24,6 @@ const list = (id: number, userId: string, extra: Partial<AlertList> = {}): Alert
   userId,
   slug: `list${id}`,
   name: `List ${id}`,
-  matchAlerts: true,
   ownerName: `${userId}-name`,
   ...extra,
 });
@@ -129,13 +128,6 @@ describe("selectAlerts, forward", () => {
     expect(result).toEqual([]);
   });
 
-  test("Alert me off on the want list is skipped", () => {
-    const quiet = { ...WANT, matchAlerts: false };
-    expect(selectAlerts(input({ lists: new Map([SALE, quiet].map((l) => [l.id, l])) }))).toEqual(
-      [],
-    );
-  });
-
   test("want_match off is skipped", () => {
     expect(
       selectAlerts(input({ prefs: new Map([[prefKey(WANTER, "want_match"), false]]) })),
@@ -194,12 +186,6 @@ describe("selectAlerts, reverse", () => {
     expect(selectAlerts(input({ pairs: [reverse], prefs: on, holdings: holdings([]) }))).toEqual(
       [],
     );
-    const quiet = { ...SALE, matchAlerts: false };
-    expect(
-      selectAlerts(
-        input({ pairs: [reverse], prefs: on, lists: new Map([quiet, WANT].map((l) => [l.id, l])) }),
-      ),
-    ).toEqual([]);
   });
 });
 

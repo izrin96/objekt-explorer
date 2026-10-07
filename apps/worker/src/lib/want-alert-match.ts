@@ -10,7 +10,6 @@ export type AlertList = {
   userId: string;
   slug: string;
   name: string;
-  matchAlerts: boolean;
   /** what a notification calls the list's owner */
   ownerName: string;
 };
@@ -85,7 +84,6 @@ export function selectAlerts(input: AlertInput): Alert[] {
     const recipient = forward ? want : offer;
     const partner = forward ? offer : want;
 
-    if (!recipient.matchAlerts) continue;
     if (!(input.prefs.get(prefKey(recipient.userId, type)) ?? NOTIFICATION_DEFAULTS[type])) {
       continue;
     }
