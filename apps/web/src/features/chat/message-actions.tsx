@@ -11,20 +11,27 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Menu, MenuItem, MenuPopup, MenuTrigger } from "@/components/ui/menu";
+import { toastManager } from "@/components/ui/toast";
 import { m } from "@/paraglide/messages";
 
 import { useUnsendMessage } from "./actions";
+import { canUnsend, type ThreadPage } from "./thread-cache";
 
 /** The menu on one of the viewer's own messages; shown only while it can still be unsent. */
 export function MessageActions({
   conversationId,
-  messageId,
+  message,
 }: {
   conversationId: number;
-  messageId: number;
+  message: ThreadPage["messages"][number];
 }) {
   const [confirming, setConfirming] = useState(false);
   const unsend = useUnsendMessage(conversationId);
+  // the menu's clock moves once a minute, so the window is checked again when Unsend is chosen
+  const confirm = () => {
+    if (canUnsend(message, Date.now())) setConfirming(true);
+    else toastManager.add({ type: "error", title: m.chat_refused_unsend_closed() });
+  };
 
   return (
     <>
@@ -42,7 +49,7 @@ export function MessageActions({
           <DotsThreeIcon weight="bold" />
         </MenuTrigger>
         <MenuPopup align="end">
-          <MenuItem variant="destructive" onClick={() => setConfirming(true)}>
+          <MenuItem variant="destructive" onClick={confirm}>
             {m.chat_unsend()}
           </MenuItem>
         </MenuPopup>
@@ -61,7 +68,7 @@ export function MessageActions({
               variant="destructive"
               loading={unsend.isPending}
               onClick={() =>
-                unsend.mutate({ messageId }, { onSettled: () => setConfirming(false) })
+                unsend.mutate({ messageId: message.id }, { onSettled: () => setConfirming(false) })
               }
             >
               {m.chat_unsend()}

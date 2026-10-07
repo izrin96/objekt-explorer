@@ -11,7 +11,8 @@ import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 import { dropDraftCard, useChatDraft } from "@/stores/chat-draft";
 
-import { type Attachment, AttachObjektDialog } from "./attach-objekt-dialog";
+import { AttachObjektDialog } from "./attach-objekt-dialog";
+import type { Attachment } from "./attachment";
 import { refusalOf, refusalText } from "./format";
 import { fetchNewer, invalidateChatLists } from "./queries";
 import { firstLineSuggestions } from "./suggestions";
@@ -35,9 +36,15 @@ export function Composer({
 }) {
   const queryClient = useQueryClient();
   const [body, setBody] = useState("");
-  // a card handed over by a Message button is attached once, then forgotten
+  // a card handed over by a Message button is attached, then forgotten; also while this thread
+  // is already open, as from the objekt drawer's Market tab
   const handed = useChatDraft((state) => state.cards[conversationId]);
   const [attachment, setAttachment] = useState<Attachment | null>(handed ?? null);
+  const [taken, setTaken] = useState(handed);
+  if (handed && handed !== taken) {
+    setTaken(handed);
+    setAttachment(handed);
+  }
   const [attachOpen, setAttachOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // over the per-minute limit the server names when it takes messages again

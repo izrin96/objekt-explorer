@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-import type { Attachment } from "@/features/chat/attach-objekt-dialog";
+import type { Attachment } from "@/features/chat/attachment";
 
 /**
  * A card a Message button hands to the thread it opens, by conversation id. Held in memory only,

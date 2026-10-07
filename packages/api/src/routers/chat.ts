@@ -21,6 +21,7 @@ import {
   startInputSchema,
   THREAD_PAGE_SIZE,
   threadInputSchema,
+  TYPING_GUARD_MS,
   UNSEND_WINDOW_MINUTES,
   unsendInputSchema,
 } from "../schemas/chat";
@@ -165,14 +166,16 @@ export const chatRouter = {
     .input(conversationIdInputSchema)
     .handler(async ({ input: { id }, context: { session } }) => {
       const me = session.user.id;
-      const { partnerId } = await findMembership(id, me);
+      const { partnerId, lastMessageId } = await findMembership(id, me);
+      // the conversation reaches the partner only with its first message
+      if (lastMessageId === null) return;
       // one ping per user and conversation gets through per interval, however often it is sent
       const first = await redis.send("SET", [
         `chat:typing:${me}:${id}`,
         "1",
         "NX",
         "PX",
-        "2000",
+        String(TYPING_GUARD_MS),
       ]);
       if (first === null) return;
       const [safety, activity] = await Promise.all([

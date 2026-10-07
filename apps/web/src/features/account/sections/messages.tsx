@@ -38,6 +38,11 @@ export function MessagesSection() {
         queryClient.setQueryData(queryKey, context?.previous);
         toastManager.add({ type: "error", title: m.chat_settings_error() });
       },
+      // open threads read Seen from the conversation, so they read it again under the new switch
+      onSuccess: (_, input) =>
+        input.showActivity === undefined
+          ? undefined
+          : queryClient.invalidateQueries({ queryKey: orpc.chat.thread.key() }),
       onSettled: () => queryClient.invalidateQueries({ queryKey }),
     }),
   );

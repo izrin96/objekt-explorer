@@ -369,7 +369,7 @@ function MessageItem({
         <div className="group flex max-w-full items-center gap-1">
           {/* the clock is the viewer's, so the window is read once the client renders */}
           {hydrated && canUnsend(message, now) ? (
-            <MessageActions conversationId={conversationId} messageId={message.id} />
+            <MessageActions conversationId={conversationId} message={message} />
           ) : null}
           <div className={cn("flex min-w-0 flex-col gap-1", mine ? "items-end" : "items-start")}>
             {message.card ? (

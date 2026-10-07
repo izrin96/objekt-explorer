@@ -1,5 +1,5 @@
 import type { Outputs } from "@repo/api";
-import { UNSEND_WINDOW_MINUTES } from "@repo/api/schemas/chat";
+import { UNSEND_WINDOW_MINUTES, unsentMessage } from "@repo/api/schemas/chat";
 import type { OfferView } from "@repo/api/schemas/offer";
 import type { InfiniteData } from "@tanstack/react-query";
 
@@ -91,15 +91,7 @@ export function markUnsent(data: ThreadData, ids: ReadonlySet<number>): ThreadDa
       page.messages.some(held)
         ? Object.assign({}, page, {
             messages: page.messages.map((message) =>
-              held(message)
-                ? Object.assign({}, message, {
-                    body: null,
-                    card: null,
-                    caution: null,
-                    offer: null,
-                    unsent: true,
-                  })
-                : message,
+              held(message) ? unsentMessage(message) : message,
             ),
           })
         : page,

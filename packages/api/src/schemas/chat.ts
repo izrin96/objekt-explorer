@@ -91,6 +91,8 @@ export const startInputSchema = z.object({
 /** How often the message box says the user is typing, and how long the other side shows it. */
 export const TYPING_PING_MS = 3000;
 export const TYPING_SHOWN_MS = 6000;
+/** Shorter than the ping interval, so each ping gets through and a flood does not. */
+export const TYPING_GUARD_MS = TYPING_PING_MS - 1000;
 
 /** How long after sending a message its sender may unsend it. */
 export const UNSEND_WINDOW_MINUTES = 15;
@@ -194,6 +196,20 @@ const chatMessageSchema = z.object({
 });
 /** `offer` is set on an offer message, and null on others; it lives in `./offer`, which imports this file. */
 export type ChatMessage = z.infer<typeof chatMessageSchema> & { offer?: OfferView | null };
+
+/** What an unsent message keeps in chat: its place, side and time, never its text or card. */
+export function unsentMessage(message: Pick<ChatMessage, "id" | "mine" | "createdAt">) {
+  return {
+    id: message.id,
+    mine: message.mine,
+    createdAt: message.createdAt,
+    body: null,
+    card: null,
+    caution: null,
+    unsent: true,
+    offer: null,
+  } satisfies ChatMessage;
+}
 
 /** `until` is null for "always". */
 const muteStateSchema = z.object({ until: z.string().nullable() }).nullable();

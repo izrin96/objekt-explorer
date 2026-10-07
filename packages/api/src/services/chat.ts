@@ -50,6 +50,7 @@ import {
   storedCardSchema,
   type MessageSettings,
   MESSAGE_PREF_DEFAULTS,
+  unsentMessage,
 } from "../schemas/chat";
 import { publishNotify } from "../user-socket";
 import { loadIdentities } from "./identities";
@@ -326,7 +327,7 @@ export async function checkStart(tx: Tx, ctx: StartContext): Promise<number | un
   return existing?.id;
 }
 
-/** Creates the conversation when `existingId` is undefined; `opensWithContent` keeps it out of the recipient's Requests. */
+/** Creates the conversation when `existingId` is undefined; its first message decides Requests. */
 export async function ensureConversation(
   tx: Tx,
   ctx: StartContext,
@@ -740,16 +741,11 @@ export async function toChatMessages(
     const card = cards[i] ?? null;
     const offer = row.offerId ? offers.get(row.offerId) : undefined;
     if (row.unsentAt) {
-      return {
+      return unsentMessage({
         id: row.id,
         mine: row.senderId === viewerId,
-        body: null,
-        card: null,
         createdAt: new Date(row.createdAt).toISOString(),
-        caution: null,
-        unsent: true,
-        offer: null,
-      };
+      });
     }
     return {
       id: row.id,
