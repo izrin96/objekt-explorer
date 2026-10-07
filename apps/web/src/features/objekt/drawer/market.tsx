@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { MessageButton } from "@/features/chat/message-button";
 import { getListLinkOption } from "@/features/list/list-link";
+import { MakeOfferButton } from "@/features/offers/make-offer-button";
 import { ProfileCell } from "@/features/profile/profile-hover-card";
 import { formatCurrency, useCurrency } from "@/features/settings/use-currency";
 import { collectionPostCountsOptions } from "@/features/trade/queries";
@@ -126,6 +127,9 @@ export function MarketPanel({
                     <span className="sr-only">{m.chat_message()}</span>
                   </th>
                   <th scope="col" className="w-8">
+                    <span className="sr-only">{m.offer_make()}</span>
+                  </th>
+                  <th scope="col" className="w-8">
                     <span className="sr-only">{m.objekt_market_view_list()}</span>
                   </th>
                 </tr>
@@ -219,6 +223,7 @@ function MarketRow({
   const nickname = isSameAddress(rawNickname, address) ? null : rawNickname;
   const { price, currency: listed, usdPrice } = item;
   const priced = !item.isQyop && price !== null && listed !== null;
+  const sellerName = nickname ?? (address ? truncateAddress(address.toLowerCase()) : undefined);
 
   return (
     <tr className="border-t">
@@ -284,7 +289,31 @@ function MarketRow({
               objektId: item.objektId ?? undefined,
               listSlug: item.list.slug,
             }}
-            name={nickname ?? (address ? truncateAddress(address.toLowerCase()) : undefined)}
+            name={sellerName}
+            iconOnly
+            variant="ghost"
+          />
+        ) : null}
+      </td>
+      <td className="px-1">
+        {messageable ? (
+          <MakeOfferButton
+            request={{
+              to: { target: { kind: "list", slug: item.list.slug } },
+              name: sellerName ?? m.objekt_market_seller(),
+              prefill: {
+                get: [
+                  {
+                    key: item.objektId ?? `any:${slug}`,
+                    collectionSlug: slug,
+                    objektId: item.objektId,
+                    serial: item.serial,
+                    listSlug: item.list.slug,
+                    flags: null,
+                  },
+                ],
+              },
+            }}
             iconOnly
             variant="ghost"
           />

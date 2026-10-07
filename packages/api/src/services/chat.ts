@@ -30,7 +30,11 @@ import {
   nextMemberState,
   toMessagePref,
   pairKey,
+  rateDecision,
+  startMembers,
+  startVerdict,
 } from "../lib/chat-rules";
+import type { ActorLimits } from "../lib/offer-rules";
 import { effectiveSanction } from "../lib/sanctions";
 import {
   type CardInput,
@@ -38,17 +42,18 @@ import {
   type ChatMessage,
   type ChatRefusal,
   type ChatTarget,
-  FLAG_CATEGORIES,
   type FlagCategory,
+  parseCaution,
   START_WINDOW_HOURS,
   type StoredCard,
   storedCardSchema,
 } from "../schemas/chat";
 import { publishNotify } from "../user-socket";
 import { fetchCollectionsBySlug } from "./list";
+import { fetchOffers, offerItemCards, toOfferView } from "./offer-view";
 import { toPublicUser } from "./profile";
 import { redis } from "./redis";
-import { activeSanctionWhere, notBlockedBy, notBlockedEither } from "./safety";
+import { activeSanctionWhere, notBlockedBy, notBlockedEither, notTradeSanctioned } from "./safety";
 
 export function refuse(reason: ChatRefusal, retryAt?: Date): never {
   const data = retryAt ? { reason, retryAt: retryAt.toISOString() } : { reason };
@@ -164,6 +169,106 @@ export async function recentStarts(tx: Tx, userId: string, now: Date): Promise<n
   return rows.map((row) => new Date(row.createdAt).getTime());
 }
 
+export type StartContext = {
+  senderId: string;
+  senderCreatedAt: Date;
+  recipientId: string;
+  hidesOwner: boolean;
+  senderHasAddress: boolean;
+  pref: MessagePref;
+  safety: Awaited<ReturnType<typeof chatSafety>>;
+  now: Date;
+};
+
+/** What a start reads before its transaction. */
+export async function prepareStart(
+  senderId: string,
+  senderCreatedAt: Date,
+  target: ChatTarget,
+  now: Date,
+): Promise<StartContext> {
+  const { recipientId, hidesOwner } = await resolveTarget(target);
+  const [senderHasAddress, pref, safety] = await Promise.all([
+    hasLinkedAddress(senderId),
+    fetchPref(recipientId),
+    chatSafety(senderId, recipientId),
+  ]);
+  return {
+    senderId,
+    senderCreatedAt,
+    recipientId,
+    hidesOwner,
+    senderHasAddress,
+    pref,
+    safety,
+    now,
+  };
+}
+
+/**
+ * Under the sender's start lock: refuses a start `startVerdict` refuses, and returns the
+ * pair's existing conversation, if any.
+ */
+export async function checkStart(tx: Tx, ctx: StartContext): Promise<number | undefined> {
+  const { senderId, recipientId, now } = ctx;
+  await lockStarts(tx, senderId);
+  const { userLow, userHigh } = pairKey(senderId, recipientId);
+  const [existing] = await tx
+    .select({ id: conversation.id })
+    .from(conversation)
+    .where(and(eq(conversation.userLow, userLow), eq(conversation.userHigh, userHigh)));
+  const rate =
+    existing || senderId === recipientId
+      ? ({ ok: true } as const)
+      : rateDecision(await recentStarts(tx, senderId, now), ctx.senderCreatedAt, now);
+
+  const verdict = startVerdict({
+    senderId,
+    recipientId,
+    senderHasAddress: ctx.senderHasAddress,
+    pref: ctx.pref,
+    hidesOwner: ctx.hidesOwner,
+    blocked: ctx.safety.blocked,
+    senderMuted: ctx.safety.mute !== null,
+    existing: existing !== undefined,
+    rate,
+  });
+  if (!verdict.ok) refuse(verdict.reason, verdict.retryAt);
+  return existing?.id;
+}
+
+/** Creates the conversation when `existingId` is undefined; `opensWithContent` keeps it out of the recipient's Requests. */
+export async function ensureConversation(
+  tx: Tx,
+  ctx: StartContext,
+  existingId: number | undefined,
+  opensWithContent: boolean,
+): Promise<{ id: number; created: boolean }> {
+  if (existingId !== undefined) return { id: existingId, created: false };
+  const { senderId, recipientId } = ctx;
+  const { userLow, userHigh } = pairKey(senderId, recipientId);
+  const [row] = await tx
+    .insert(conversation)
+    .values({ userLow, userHigh, createdBy: senderId })
+    .onConflictDoNothing()
+    .returning({ id: conversation.id });
+  if (row) {
+    const members = startMembers(opensWithContent);
+    await tx.insert(conversationMember).values([
+      { conversationId: row.id, userId: senderId, ...members.sender },
+      { conversationId: row.id, userId: recipientId, ...members.recipient },
+    ]);
+    return { id: row.id, created: true };
+  }
+  // the other side started it at the same moment
+  const [raced] = await tx
+    .select({ id: conversation.id })
+    .from(conversation)
+    .where(and(eq(conversation.userLow, userLow), eq(conversation.userHigh, userHigh)));
+  if (!raced) throw new ORPCError("CONFLICT");
+  return { id: raced.id, created: false };
+}
+
 export type CardContext = { senderId: string; partnerId: string; targetListSlug: string | null };
 
 /** An objekt only of the card's collection, and a list by `cardListAllowed`. */
@@ -241,6 +346,7 @@ export async function appendMessage(
   body: string | null,
   card: StoredCard | null,
   caution: FlagCategory[] = [],
+  offerId: number | null = null,
 ) {
   await tx
     .select({ id: conversation.id })
@@ -250,7 +356,14 @@ export async function appendMessage(
 
   const [inserted] = await tx
     .insert(message)
-    .values({ conversationId, senderId, body, card, caution: caution.length ? caution : null })
+    .values({
+      conversationId,
+      senderId,
+      body,
+      card,
+      offerId,
+      caution: caution.length ? caution : null,
+    })
     .returning({ id: message.id, createdAt: message.createdAt });
   if (!inserted) throw new Error("message insert returned no row");
 
@@ -331,9 +444,16 @@ export async function updateMember(
 /** Blocks between the pair, and the user's own chat mute in force. */
 export async function chatSafety(userId: string, partnerId: string) {
   const [blocks, mutes] = await Promise.all([
-    db.execute<{ blocked: boolean; blocked_by_me: boolean }>(sql`
+    db.execute<{
+      blocked: boolean;
+      blocked_by_me: boolean;
+      trade_blocked: boolean;
+      partner_trade_blocked: boolean;
+    }>(sql`
       SELECT NOT ${notBlockedEither(userId, partnerId)} AS blocked,
-        NOT ${notBlockedBy(userId, partnerId)} AS blocked_by_me
+        NOT ${notBlockedBy(userId, partnerId)} AS blocked_by_me,
+        NOT ${notTradeSanctioned(userId)} AS trade_blocked,
+        NOT ${notTradeSanctioned(partnerId)} AS partner_trade_blocked
     `),
     db
       .select({ reason: userSanction.reason, expiresAt: userSanction.expiresAt })
@@ -351,6 +471,8 @@ export async function chatSafety(userId: string, partnerId: string) {
     blocked: row?.blocked ?? false,
     blockedByMe: row?.blocked_by_me ?? false,
     mute: effectiveSanction(mutes),
+    tradeBlocked: row?.trade_blocked ?? false,
+    partnerTradeBlocked: row?.partner_trade_blocked ?? false,
   };
 }
 
@@ -407,13 +529,6 @@ export async function fetchPartners(userIds: string[]) {
       },
     ]),
   );
-}
-
-function parseCaution(value: string[] | null): FlagCategory[] | null {
-  const categories = (value ?? []).filter((c): c is FlagCategory =>
-    (FLAG_CATEGORIES as readonly string[]).includes(c),
-  );
-  return categories.length > 0 ? categories : null;
 }
 
 export function parseCard(value: unknown): StoredCard | null {
@@ -518,6 +633,7 @@ export async function hydrateCards(cards: StoredCard[]) {
 
   return {
     view,
+    serial: (objektId: string) => serialOf.get(objektId) ?? null,
     collections: Object.fromEntries(collectionRows.map((c) => [c.slug, c])) as Record<
       string,
       ValidObjekt
@@ -532,22 +648,38 @@ export type MessageRow = {
   card: unknown;
   createdAt: string;
   caution: string[] | null;
+  offerId?: number | null;
 };
 
-export async function toChatMessages(rows: MessageRow[], viewerId: string) {
+/** `limits` are the viewer's own, so an offer card offers only what the viewer may do. */
+export async function toChatMessages(
+  rows: MessageRow[],
+  viewerId: string,
+  limits: ActorLimits = {},
+) {
   const cards = rows.map((row) => parseCard(row.card));
-  const { view, collections: collectionMap } = await hydrateCards(
-    cards.filter((card): card is StoredCard => card !== null),
-  );
+  const offers = await fetchOffers(rows.flatMap((row) => (row.offerId ? [row.offerId] : [])));
+  const {
+    view,
+    serial,
+    collections: collectionMap,
+  } = await hydrateCards([
+    ...cards.filter((card): card is StoredCard => card !== null),
+    ...offerItemCards(offers.values()),
+  ]);
+  const now = new Date();
   const messages: ChatMessage[] = rows.map((row, i) => {
     const card = cards[i] ?? null;
+    const offer = row.offerId ? offers.get(row.offerId) : undefined;
     return {
       id: row.id,
       mine: row.senderId === viewerId,
       body: row.body,
       card: card ? view(card) : null,
       createdAt: new Date(row.createdAt).toISOString(),
-      caution: row.senderId === viewerId ? null : parseCaution(row.caution),
+      // an offer's caution is its note's, shown on the offer card
+      caution: row.senderId === viewerId || offer ? null : parseCaution(row.caution),
+      offer: offer ? toOfferView(offer, viewerId, now, limits, serial) : null,
     };
   });
   return { messages, collections: collectionMap };

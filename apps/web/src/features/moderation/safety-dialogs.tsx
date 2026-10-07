@@ -1,3 +1,4 @@
+import type { ReportReason } from "@repo/api/schemas/moderation";
 import { useState } from "react";
 
 import { m } from "@/paraglide/messages";
@@ -14,11 +15,14 @@ export function useSafetyDialogs({
   userId,
   name,
   conversationId,
+  trade,
 }: {
   userId: string;
   name: string;
   /** set when reporting from a conversation, which is what makes sharing messages possible */
   conversationId?: number;
+  /** Report a problem: the trade goes along, and the reason starts on scam */
+  trade?: { id: number; attachment: string; reason: ReportReason };
 }) {
   const [blockOpen, setBlockOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
@@ -41,6 +45,8 @@ export function useSafetyDialogs({
         }}
         name={name}
         fromConversation={conversationId !== undefined}
+        defaultReason={trade?.reason}
+        attachment={trade?.attachment}
         pending={report.isPending}
         error={report.error ? (reportRefusal(report.error) ?? m.mod_report_error()) : null}
         onSubmit={(values) =>
@@ -51,6 +57,7 @@ export function useSafetyDialogs({
             conversationId,
             share: values.share,
             alsoBlock: values.alsoBlock,
+            tradeId: trade?.id,
           })
         }
       />

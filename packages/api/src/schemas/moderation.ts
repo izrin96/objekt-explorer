@@ -47,6 +47,8 @@ export const reportInputSchema = z.object({
   /** share the conversation's last 20 messages; ignored without `conversationId` */
   share: z.boolean().default(true),
   alsoBlock: z.boolean().default(false),
+  /** Report a problem: a trade between the reporter and the reported account */
+  tradeId: z.number().int().positive().optional(),
 });
 
 const modReasonSchema = z

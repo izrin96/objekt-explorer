@@ -203,6 +203,16 @@ const PREF_ROWS: { type: NotificationType; label: () => string; description: () 
     label: m.notification_pref_have_wanted,
     description: m.notification_pref_have_wanted_desc,
   },
+  {
+    type: "offer",
+    label: m.notification_pref_offer,
+    description: m.notification_pref_offer_desc,
+  },
+  {
+    type: "trade",
+    label: m.notification_pref_trade,
+    description: m.notification_pref_trade_desc,
+  },
 ];
 
 function NotificationPrefs() {

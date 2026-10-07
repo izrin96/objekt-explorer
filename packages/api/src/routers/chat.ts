@@ -1,17 +1,9 @@
 import { ORPCError } from "@orpc/server";
 import { db } from "@repo/db";
-import { conversation, conversationMember, message, messagePref } from "@repo/db/schema";
+import { conversationMember, message, messagePref } from "@repo/db/schema";
 import { and, asc, desc, eq, gt, lt, sql } from "drizzle-orm";
 
-import {
-  isMuted,
-  pairKey,
-  rateDecision,
-  rowUnread,
-  sendVerdict,
-  startMembers,
-  startVerdict,
-} from "../lib/chat-rules";
+import { isMuted, rowUnread, sendVerdict } from "../lib/chat-rules";
 import { scanMessage } from "../lib/scam-patterns";
 import { authed } from "../orpc";
 import {
@@ -34,20 +26,20 @@ import {
   appendMessage,
   chatSafety,
   checkMessageRate,
+  checkStart,
+  ensureConversation,
   fetchPartners,
   fetchPref,
   findMembership,
-  hasLinkedAddress,
   parseCard,
+  prepareStart,
   publishChatChanged,
-  lockStarts,
-  recentStarts,
   refuse,
   resolveCard,
-  resolveTarget,
   toChatMessages,
   updateMember,
 } from "../services/chat";
+import { reputationOf } from "../services/reputation";
 import { notBlockedBy } from "../services/safety";
 
 /** A blocked send reads exactly like a recipient who accepts no messages. */
@@ -85,6 +77,7 @@ type ConversationListRow = {
   sender_id: string | null;
   body: string | null;
   card: unknown;
+  offer_id: number | null;
   created_at: string | null;
 };
 
@@ -98,79 +91,29 @@ export const chatRouter = {
   start: authed.input(startInputSchema).handler(async ({ input, context: { session } }) => {
     const me = session.user.id;
     const now = new Date();
-    const { recipientId, hidesOwner } = await resolveTarget(input.to);
-    const { userLow, userHigh } = pairKey(me, recipientId);
-    const [senderHasAddress, pref, safety] = await Promise.all([
-      hasLinkedAddress(me),
-      fetchPref(recipientId),
-      chatSafety(me, recipientId),
-    ]);
+    const ctx = await prepareStart(me, new Date(session.user.createdAt), input.to, now);
 
     const result = await db.transaction(async (tx) => {
-      await lockStarts(tx, me);
-      const [existing] = await tx
-        .select({ id: conversation.id })
-        .from(conversation)
-        .where(and(eq(conversation.userLow, userLow), eq(conversation.userHigh, userHigh)));
-      const rate =
-        existing || me === recipientId
-          ? ({ ok: true } as const)
-          : rateDecision(await recentStarts(tx, me, now), new Date(session.user.createdAt), now);
-
-      const verdict = startVerdict({
-        senderId: me,
-        recipientId,
-        senderHasAddress,
-        pref,
-        hidesOwner,
-        blocked: safety.blocked,
-        senderMuted: safety.mute !== null,
-        existing: existing !== undefined,
-        rate,
-      });
-      if (!verdict.ok) refuse(verdict.reason, verdict.retryAt);
-      if (input.card) refuseSend(safety);
+      const existingId = await checkStart(tx, ctx);
+      if (input.card) refuseSend(ctx.safety);
 
       const card = input.card
         ? await resolveCard(input.card, {
             senderId: me,
-            partnerId: recipientId,
+            partnerId: ctx.recipientId,
             targetListSlug: input.to.kind === "list" ? input.to.slug : null,
           })
         : null;
       if (card) await checkMessageRate(me, now);
 
-      let id = existing?.id;
-      let created = false;
-      if (id === undefined) {
-        const [row] = await tx
-          .insert(conversation)
-          .values({ userLow, userHigh, createdBy: me })
-          .onConflictDoNothing()
-          .returning({ id: conversation.id });
-        if (row) {
-          id = row.id;
-          created = true;
-          const members = startMembers(card !== null);
-          await tx.insert(conversationMember).values([
-            { conversationId: id, userId: me, ...members.sender },
-            { conversationId: id, userId: recipientId, ...members.recipient },
-          ]);
-        } else {
-          // the other side started it at the same moment
-          const [raced] = await tx
-            .select({ id: conversation.id })
-            .from(conversation)
-            .where(and(eq(conversation.userLow, userLow), eq(conversation.userHigh, userHigh)));
-          if (!raced) throw new ORPCError("CONFLICT");
-          id = raced.id;
-        }
-      }
+      const { id, created } = await ensureConversation(tx, ctx, existingId, card !== null);
       const sent = card ? await appendMessage(tx, id, me, null, card) : null;
       return { id, created, sent: sent !== null };
     });
 
-    if (result.created || result.sent) await publishChatChanged([me, recipientId], result.id);
+    if (result.created || result.sent) {
+      await publishChatChanged([me, ctx.recipientId], result.id);
+    }
     return { id: result.id, created: result.created };
   }),
 
@@ -220,6 +163,7 @@ export const chatRouter = {
           msg.sender_id,
           msg.body,
           msg.card,
+          msg.offer_id,
           msg.created_at::text AS created_at
         FROM conversation_member m
         JOIN conversation c ON c.id = m.conversation_id
@@ -252,6 +196,7 @@ export const chatRouter = {
               mine: last.senderId === me,
               body: row.body,
               card: parseCard(row.card),
+              offerId: row.offer_id,
               createdAt: new Date(last.createdAt).toISOString(),
             },
             unread: rowUnread({ request: row.request, lastReadMessageId: lastRead }, last, me),
@@ -291,6 +236,7 @@ export const chatRouter = {
           card: message.card,
           createdAt: message.createdAt,
           caution: message.caution,
+          offerId: message.offerId,
         })
         .from(message)
         .where(
@@ -315,17 +261,23 @@ export const chatRouter = {
         ),
       fetchPartners([partnerId]),
     ]);
-    const safety = await chatSafety(me, partnerId);
+    const [safety, reputations] = await Promise.all([
+      chatSafety(me, partnerId),
+      reputationOf([partnerId]),
+    ]);
     const partner = partners.get(partnerId);
     if (!member || !partner) throw new ORPCError("NOT_FOUND");
 
     const page = rows.slice(0, THREAD_PAGE_SIZE);
-    const { messages, collections } = await toChatMessages(forward ? page : page.toReversed(), me);
+    const { messages, collections } = await toChatMessages(forward ? page : page.toReversed(), me, {
+      muted: safety.mute !== null,
+      tradeBlocked: safety.tradeBlocked,
+    });
 
     return {
       conversation: {
         id: input.id,
-        partner,
+        partner: { ...partner, reputation: reputations.get(partnerId) ?? null },
         request: member.request,
         archived: member.archivedAt !== null,
         muted: toMuted(member.mutedUntil, now),

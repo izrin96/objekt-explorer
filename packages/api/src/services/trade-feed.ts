@@ -43,6 +43,7 @@ import {
 } from "./list";
 import { toPublicUser } from "./profile";
 import { getCache, redis } from "./redis";
+import { reputationOf } from "./reputation";
 import { notBlockedEither, notTradeBlocked } from "./safety";
 import { marketVersion } from "./safety-cache";
 import { fetchHoldings } from "./trade-matches";
@@ -516,9 +517,10 @@ export async function browseFeed(
   const listById = new Map(feedLists.map((list) => [list.id, list]));
   const ownerIds = unique(feedLists.map((list) => list.userId));
 
-  const [users, addressRows] = await Promise.all([
+  const [users, addressRows, reputations] = await Promise.all([
     db.select().from(user).where(inArray(user.id, ownerIds)),
     fetchAddresses(ownerIds),
+    reputationOf(ownerIds),
   ]);
   const addressesOf = addressesByUser(addressRows);
   const userMap = new Map(users.map((u) => [u.id, u]));
@@ -563,6 +565,7 @@ export async function browseFeed(
         tag: post.tag,
         userId: account.id,
         user: toPublicUser(account),
+        reputation: reputations.get(account.id) ?? null,
         identity: toPartnerIdentity(
           account.name,
           members.map((list) => ({ profileAddress: list.profileAddress, matches: 0 })),

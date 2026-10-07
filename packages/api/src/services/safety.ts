@@ -40,5 +40,15 @@ export function notTradeBlocked(user: UserRef) {
   )`;
 }
 
+/** An active trade block or ban: the account takes no part in offers or trades. */
+export function notTradeSanctioned(user: UserRef) {
+  return sql`NOT EXISTS (
+    SELECT 1 FROM ${userSanction}
+    WHERE ${userSanction.userId} = ${ref(user)}
+      AND ${userSanction.type} IN ('trade_block', 'ban')
+      AND ${activeSanctionWhere}
+  )`;
+}
+
 /** Folded into Market's and Trade's shared cache keys, so a trade block applies on the next load. */
 export const MARKET_VERSION_KEY = "market:v";

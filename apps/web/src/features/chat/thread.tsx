@@ -6,11 +6,11 @@ import {
   ProhibitIcon,
   WarningIcon,
 } from "@phosphor-icons/react";
-import type { ChatMessage, FlagCategory } from "@repo/api/schemas/chat";
+import type { ChatMessage } from "@repo/api/schemas/chat";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { Fragment, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { Fragment, type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { EmptyState } from "@/components/shared/empty-state";
 import { InfiniteSentinel } from "@/components/shared/infinite-sentinel";
@@ -19,6 +19,9 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useUnblock } from "@/features/moderation/actions";
 import { ObjektDrawer } from "@/features/objekt/drawer";
+import { useOfferBuilder } from "@/features/offers/offer-builder";
+import { counterRequest, OfferCard } from "@/features/offers/offer-card";
+import { TrustLine } from "@/features/offers/trust-line";
 import { ProfileLink } from "@/features/profile/profile-hover-card";
 import { useHydrated } from "@/hooks/use-hydrated";
 import { orpc } from "@/lib/orpc";
@@ -26,12 +29,13 @@ import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import { useConversationActions } from "./actions";
+import { CautionLine } from "./caution-line";
 import { Composer } from "./composer";
 import { ConversationMenu } from "./conversation-menu";
 import { dayLabel, messageTime, mutedLabel, untilLabel } from "./format";
 import { ObjektCardMessage } from "./objekt-card-message";
 import { fetchNewer, invalidateChatLists, threadOptions } from "./queries";
-import { mergeCollections, threadMessages, type ThreadPage } from "./thread-cache";
+import { latestOfferId, mergeCollections, threadMessages, type ThreadPage } from "./thread-cache";
 
 /** Within this, consecutive messages from one side share one time stamp. */
 const GROUP_MS = 5 * 60_000;
@@ -103,6 +107,8 @@ function ThreadView({
   const heightBeforeOlder = useRef<number | null>(null);
   const heading = useRef<HTMLHeadingElement>(null);
   const hydrated = useHydrated();
+  const builder = useOfferBuilder();
+  const latestOffer = latestOfferId(messages);
 
   // below `md` the list just hid, taking focus with it: start the reader at the thread
   useEffect(() => {
@@ -176,6 +182,7 @@ function ThreadView({
               name
             )}
           </h2>
+          <TrustLine reputation={partner.reputation} className="truncate" />
           {muted ? (
             <p className="text-muted-foreground flex items-center gap-1 text-xs">
               <BellSlashIcon aria-hidden className="size-3.5 shrink-0" />
@@ -249,6 +256,21 @@ function ThreadView({
                       collection={
                         message.card ? collections[message.card.collectionSlug] : undefined
                       }
+                      offerCard={
+                        message.offer ? (
+                          <OfferCard
+                            offer={message.offer}
+                            name={name}
+                            collections={collections}
+                            collapsed={message.offer.id !== latestOffer}
+                            hydrated={hydrated}
+                            onCounter={(offer) =>
+                              builder.open(counterRequest(offer, name, collections))
+                            }
+                            onOpen={setActive}
+                          />
+                        ) : null
+                      }
                       showTime={showTime}
                       hydrated={hydrated}
                       onOpen={setActive}
@@ -267,9 +289,15 @@ function ThreadView({
       ) : conversation.blockedByMe ? (
         <BlockedNotice userId={partner.userId} name={name} />
       ) : (
-        <Composer conversationId={id} name={name} onSent={() => (stick.current = true)} />
+        <Composer
+          conversationId={id}
+          name={name}
+          onSent={() => (stick.current = true)}
+          onOffer={() => builder.open({ to: { conversationId: id }, name })}
+        />
       )}
       <ObjektDrawer objekt={active} onClose={() => setActive(null)} />
+      {builder.element}
     </div>
   );
 }
@@ -278,6 +306,7 @@ function MessageItem({
   message,
   name,
   collection,
+  offerCard,
   showTime,
   hydrated,
   onOpen,
@@ -285,6 +314,7 @@ function MessageItem({
   message: ChatMessage;
   name: string;
   collection: ValidObjekt | undefined;
+  offerCard: ReactNode;
   /** the last of a run from one side shows its time; the others keep it for screen readers */
   showTime: boolean;
   hydrated: boolean;
@@ -300,6 +330,7 @@ function MessageItem({
       )}
     >
       <span className="sr-only">{mine ? m.chat_sender_you() : m.chat_sender_name({ name })}</span>
+      {offerCard}
       {message.card ? (
         <ObjektCardMessage card={message.card} collection={collection} onOpen={onOpen} />
       ) : null}
@@ -323,30 +354,6 @@ function MessageItem({
         {hydrated ? messageTime(message.createdAt) : null}
       </time>
     </li>
-  );
-}
-
-const CAUTION: Record<FlagCategory, () => string> = {
-  send_first: m.mod_caution_send_first,
-  outside_payment: m.mod_caution_outside_payment,
-};
-
-/** Shown only to the recipient; it informs, it never hides the message. */
-function CautionLine({ categories }: { categories: FlagCategory[] }) {
-  return (
-    <p className="text-foreground flex max-w-xs items-start gap-1.5 px-1 text-xs text-pretty">
-      <WarningIcon
-        aria-hidden
-        weight="fill"
-        className="text-muted-foreground mt-px size-3.5 shrink-0"
-      />
-      <span>
-        <span className="font-medium">{m.mod_caution_title()}</span>{" "}
-        {categories.length > 1
-          ? m.mod_caution_both()
-          : categories.map((category) => CAUTION[category]()).join(" ")}
-      </span>
-    </p>
   );
 }
 

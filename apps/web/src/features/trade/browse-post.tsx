@@ -9,6 +9,8 @@ import { MessageButton } from "@/features/chat/message-button";
 import { getListLinkOption } from "@/features/list/list-link";
 import { SafetyMenu } from "@/features/moderation/safety-menu";
 import { ObjektCard } from "@/features/objekt/objekt-card";
+import { MakeOfferButton } from "@/features/offers/make-offer-button";
+import { TrustLine } from "@/features/offers/trust-line";
 import { ProfileLink } from "@/features/profile/profile-hover-card";
 import { formatCurrency } from "@/features/settings/use-currency";
 import { relativeTime } from "@/lib/time";
@@ -115,6 +117,7 @@ export function BrowsePost({
             {user.discord ? <SocialBadge platform="discord" username={user.discord} /> : null}
             {user.twitter ? <SocialBadge platform="twitter" username={user.twitter} /> : null}
           </div>
+          <TrustLine reputation={post.reputation} />
           <div className="text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
             <TagBadge tag={post.tag} />
             {/* relative to the render: the server's minute and the browser's can differ */}
@@ -124,14 +127,25 @@ export function BrowsePost({
           </div>
         </div>
         {post.messageable && anchor ? (
-          <MessageButton
-            target={{ kind: "list", slug: anchor.list.slug }}
-            card={
-              firstShown ? { collectionSlug: firstShown, listSlug: anchor.list.slug } : undefined
-            }
-            name={identity.name}
-            className="shrink-0"
-          />
+          <>
+            <MessageButton
+              target={{ kind: "list", slug: anchor.list.slug }}
+              card={
+                firstShown ? { collectionSlug: firstShown, listSlug: anchor.list.slug } : undefined
+              }
+              name={identity.name}
+              className="shrink-0"
+            />
+            <MakeOfferButton
+              request={{
+                to: { target: { kind: "list", slug: anchor.list.slug } },
+                name: identity.name,
+                focusList: anchor.list.slug,
+              }}
+              labelClassName="max-sm:sr-only"
+              className="shrink-0"
+            />
+          </>
         ) : null}
         <SafetyMenu userId={post.userId} name={identity.name} className="shrink-0" />
       </header>

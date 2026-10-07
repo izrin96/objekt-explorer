@@ -8,6 +8,7 @@ import {
   index,
   integer,
   jsonb,
+  numeric,
   pgEnum,
   pgTable,
   primaryKey,
@@ -16,6 +17,7 @@ import {
   text,
   timestamp,
   uniqueIndex,
+  uuid,
   varchar,
 } from "drizzle-orm/pg-core";
 
@@ -274,14 +276,205 @@ export const message = pgTable(
     body: text("body"),
     card: jsonb("card"),
     caution: text("caution").array(),
+    offerId: integer("offer_id").references((): AnyPgColumn => offer.id, { onDelete: "cascade" }),
     createdAt: timestamp("created_at", { mode: "string", withTimezone: true })
       .notNull()
       .defaultNow(),
   },
   (t) => [
     index("message_conversation_id_idx").on(t.conversationId, t.id.desc()),
-    check("message_has_content", sql`${t.body} IS NOT NULL OR ${t.card} IS NOT NULL`),
+    index("message_offer_id_idx")
+      .on(t.offerId)
+      .where(sql`offer_id IS NOT NULL`),
+    check(
+      "message_has_content",
+      sql`${t.body} IS NOT NULL OR ${t.card} IS NOT NULL OR ${t.offerId} IS NOT NULL`,
+    ),
     check("message_body_length", sql`char_length(${t.body}) BETWEEN 1 AND 2000`),
+  ],
+);
+
+export const offer = pgTable(
+  "offer",
+  {
+    id: serial("id").primaryKey(),
+    conversationId: integer("conversation_id")
+      .notNull()
+      .references(() => conversation.id, { onDelete: "cascade" }),
+    fromUserId: text("from_user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    toUserId: text("to_user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    parentId: integer("parent_id").references((): AnyPgColumn => offer.id, {
+      onDelete: "set null",
+    }),
+    status: text("status").notNull().default("open"),
+    cancelReason: text("cancel_reason"),
+    topupAmount: numeric("topup_amount", { precision: 12, scale: 2 }),
+    topupCurrency: varchar("topup_currency", { length: 10 }),
+    topupPayer: text("topup_payer"),
+    note: text("note"),
+    caution: text("caution").array(),
+    createdAt: timestamp("created_at", { mode: "string", withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    expiresAt: timestamp("expires_at", { mode: "string", withTimezone: true })
+      .notNull()
+      .default(sql`now() + interval '7 days'`),
+    respondedAt: timestamp("responded_at", { mode: "string", withTimezone: true }),
+  },
+  (t) => [
+    uniqueIndex("offer_one_open")
+      .on(t.conversationId)
+      .where(sql`status = 'open'`),
+    index("offer_conversation_id_idx").on(t.conversationId, t.id.desc()),
+    index("offer_from_user_idx").on(t.fromUserId, t.createdAt.desc()),
+    index("offer_to_user_idx").on(t.toUserId, t.createdAt.desc()),
+    index("offer_parent_id_idx")
+      .on(t.parentId)
+      .where(sql`parent_id IS NOT NULL`),
+    check(
+      "offer_status",
+      sql`${t.status} IN ('open', 'accepted', 'declined', 'withdrawn', 'countered', 'cancelled', 'expired')`,
+    ),
+    check(
+      "offer_cancel_reason",
+      sql`${t.cancelReason} IN ('reserved', 'blocked', 'sanction', 'token_moved')`,
+    ),
+    check("offer_topup_payer", sql`${t.topupPayer} IN ('from', 'to')`),
+    check(
+      "offer_topup_complete",
+      sql`(${t.topupAmount} IS NULL) = (${t.topupCurrency} IS NULL) AND (${t.topupAmount} IS NULL) = (${t.topupPayer} IS NULL)`,
+    ),
+    check("offer_topup_positive", sql`${t.topupAmount} > 0`),
+    check("offer_note_length", sql`char_length(${t.note}) BETWEEN 1 AND 280`),
+    check("offer_parties_differ", sql`${t.fromUserId} <> ${t.toUserId}`),
+  ],
+);
+
+export const offerItem = pgTable(
+  "offer_item",
+  {
+    id: serial("id").primaryKey(),
+    offerId: integer("offer_id")
+      .notNull()
+      .references(() => offer.id, { onDelete: "cascade" }),
+    side: text("side").notNull(),
+    collectionSlug: varchar("collection_slug", { length: 255 }).notNull(),
+    objektId: varchar("objekt_id", { length: 255 }),
+    listId: integer("list_id").references(() => lists.id, { onDelete: "set null" }),
+  },
+  (t) => [
+    index("offer_item_offer_id_idx").on(t.offerId),
+    index("offer_item_objekt_id_idx")
+      .on(t.objektId)
+      .where(sql`objekt_id IS NOT NULL`),
+    index("offer_item_list_id_idx")
+      .on(t.listId)
+      .where(sql`list_id IS NOT NULL`),
+    check("offer_item_side", sql`${t.side} IN ('give', 'get')`),
+    check("offer_item_give_specific", sql`${t.side} <> 'give' OR ${t.objektId} IS NOT NULL`),
+  ],
+);
+
+export const trade = pgTable(
+  "trade",
+  {
+    id: serial("id").primaryKey(),
+    offerId: integer("offer_id")
+      .notNull()
+      .references(() => offer.id, { onDelete: "cascade" }),
+    userA: text("user_a")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    userB: text("user_b")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    status: text("status").notNull().default("in_progress"),
+    acceptedAt: timestamp("accepted_at", { mode: "string", withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    endedAt: timestamp("ended_at", { mode: "string", withTimezone: true }),
+    cancelledBy: text("cancelled_by").references(() => user.id, { onDelete: "cascade" }),
+    cancelReason: text("cancel_reason"),
+    remindedAt: timestamp("reminded_at", { mode: "string", withTimezone: true }),
+  },
+  (t) => [
+    uniqueIndex("trade_offer_id_uniq").on(t.offerId),
+    index("trade_user_a_idx").on(t.userA, t.acceptedAt.desc()),
+    index("trade_user_b_idx").on(t.userB, t.acceptedAt.desc()),
+    check("trade_status", sql`${t.status} IN ('in_progress', 'completed', 'cancelled', 'failed')`),
+    check("trade_cancel_reason", sql`${t.cancelReason} IN ('party', 'token_moved')`),
+  ],
+);
+
+export const tradeLeg = pgTable(
+  "trade_leg",
+  {
+    id: serial("id").primaryKey(),
+    tradeId: integer("trade_id")
+      .notNull()
+      .references(() => trade.id, { onDelete: "cascade" }),
+    fromUserId: text("from_user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    toUserId: text("to_user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    // lowercase, as linked at accept, so a later unlink cannot strand or misattribute a leg
+    fromAddresses: text("from_addresses").array().notNull(),
+    toAddresses: text("to_addresses").array().notNull(),
+    collectionSlug: varchar("collection_slug", { length: 255 }).notNull(),
+    objektId: varchar("objekt_id", { length: 255 }),
+    open: boolean("open").notNull().default(true),
+    verifiedAt: timestamp("verified_at", { mode: "string", withTimezone: true }),
+    txHash: text("tx_hash"),
+    verifiedObjektId: varchar("verified_objekt_id", { length: 255 }),
+    // the indexer's transfer row: one transfer verifies at most one leg anywhere
+    transferId: uuid("transfer_id"),
+  },
+  (t) => [
+    index("trade_leg_trade_id_idx").on(t.tradeId),
+    index("trade_leg_open_idx")
+      .on(t.tradeId)
+      .where(sql`open`),
+    uniqueIndex("trade_leg_transfer_id_uniq").on(t.transferId),
+    // an objekt sits in at most one open trade; accept relies on this to settle races
+    uniqueIndex("trade_leg_reserved")
+      .on(t.objektId)
+      .where(sql`open AND objekt_id IS NOT NULL`),
+    index("trade_leg_from_user_id_idx").on(t.fromUserId),
+    index("trade_leg_to_user_id_idx").on(t.toUserId),
+  ],
+);
+
+export const tradeFeedback = pgTable(
+  "trade_feedback",
+  {
+    tradeId: integer("trade_id")
+      .notNull()
+      .references(() => trade.id, { onDelete: "cascade" }),
+    fromUserId: text("from_user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    toUserId: text("to_user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    rating: text("rating").notNull(),
+    createdAt: timestamp("created_at", { mode: "string", withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { mode: "string", withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.tradeId, t.fromUserId] }),
+    index("trade_feedback_to_user_id_idx").on(t.toUserId),
+    check("trade_feedback_rating", sql`${t.rating} IN ('positive', 'neutral', 'negative')`),
+    check("trade_feedback_not_self", sql`${t.fromUserId} <> ${t.toUserId}`),
   ],
 );
 
@@ -340,8 +533,12 @@ export const report = pgTable(
       .defaultNow(),
     resolvedBy: text("resolved_by").references(() => user.id, { onDelete: "set null" }),
     resolvedAt: timestamp("resolved_at", { mode: "string", withTimezone: true }),
+    tradeId: integer("trade_id").references((): AnyPgColumn => trade.id, { onDelete: "set null" }),
   },
   (t) => [
+    index("report_trade_id_idx")
+      .on(t.tradeId)
+      .where(sql`trade_id IS NOT NULL`),
     index("report_status_target_idx").on(t.status, t.targetUserId),
     index("report_target_user_id_idx").on(t.targetUserId),
     index("report_reporter_target_idx").on(t.reporterId, t.targetUserId, t.createdAt.desc()),
@@ -464,3 +661,8 @@ export type Account = typeof account.$inferSelect;
 export type Verification = typeof verification.$inferSelect;
 export type List = typeof lists.$inferSelect;
 export type ListEntry = typeof listEntries.$inferSelect;
+export type Offer = typeof offer.$inferSelect;
+export type OfferItem = typeof offerItem.$inferSelect;
+export type Trade = typeof trade.$inferSelect;
+export type TradeLeg = typeof tradeLeg.$inferSelect;
+export type TradeFeedback = typeof tradeFeedback.$inferSelect;

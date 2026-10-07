@@ -1,4 +1,5 @@
 import type { Outputs } from "@repo/api";
+import type { OfferView } from "@repo/api/schemas/offer";
 import type { InfiniteData } from "@tanstack/react-query";
 
 export type ThreadPage = Outputs["chat"]["thread"];
@@ -46,4 +47,40 @@ export function mergeCollections(data: ThreadData) {
     {},
     ...data.pages.map((page) => page.collections),
   ) as ThreadPage["collections"];
+}
+
+/**
+ * Offers whose state can change with no new message (an answer, a cancel, a trade ending), newest
+ * last, so their cards are read again through `offer.views`.
+ */
+export function liveOfferIds(data: ThreadData) {
+  const ids = threadMessages(data).flatMap(({ offer }) =>
+    offer && (offer.status === "open" || offer.tradeStatus === "in_progress") ? [offer.id] : [],
+  );
+  return [...new Set(ids)];
+}
+
+type OfferViews = { offers: OfferView[]; collections: ThreadPage["collections"] };
+
+/** Swaps in the fresh views of offers already held, wherever their pages are; nothing else moves. */
+export function patchOffers(data: ThreadData, views: OfferViews): ThreadData {
+  const fresh = new Map(views.offers.map((offer) => [offer.id, offer]));
+  if (fresh.size === 0) return data;
+  return {
+    ...data,
+    pages: data.pages.map((page, i) =>
+      Object.assign({}, page, {
+        messages: page.messages.map((message) => {
+          const offer = message.offer ? fresh.get(message.offer.id) : undefined;
+          return offer ? Object.assign({}, message, { offer }) : message;
+        }),
+        collections: i === 0 ? { ...page.collections, ...views.collections } : page.collections,
+      }),
+    ),
+  };
+}
+
+/** Only the newest offer card is drawn in full; computed here, since a newer one arrives without re-reading the old. */
+export function latestOfferId(messages: ThreadPage["messages"]) {
+  return messages.findLast((message) => message.offer)?.offer?.id ?? null;
 }

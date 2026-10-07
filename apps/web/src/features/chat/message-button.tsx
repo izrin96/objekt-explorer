@@ -35,21 +35,8 @@ export function MessageButton({
   className?: string;
 }) {
   const queryClient = useQueryClient();
-  const { data: current } = useCurrentUser();
   const navigate = useNavigate();
-  const href = useLocation({ select: (location) => location.href });
-
-  const offerLink = () =>
-    toastManager.add({
-      type: "info",
-      title: m.chat_refused_no_address(),
-      // it carries the only way forward, so it stays until dismissed
-      timeout: 0,
-      actionProps: {
-        children: m.link_link_cosmo(),
-        onClick: () => void navigate({ to: "/link" }),
-      },
-    });
+  const { gate, offerLink } = useStartGate();
 
   const start = useMutation(
     orpc.chat.start.mutationOptions({
@@ -70,9 +57,7 @@ export function MessageButton({
   );
 
   const onClick = () => {
-    if (!current) return void navigate({ to: "/login", search: { redirect: href } });
-    if (current.profiles.length === 0) return void offerLink();
-    start.mutate({ to: target, card });
+    if (gate()) start.mutate({ to: target, card });
   };
 
   const label = name ? m.chat_message_name({ name }) : m.chat_message();
@@ -91,4 +76,40 @@ export function MessageButton({
       {iconOnly ? null : m.chat_message()}
     </Button>
   );
+}
+
+/**
+ * What starting a conversation needs before any request: a session, and a linked Cosmo
+ * profile. `gate` sends the visitor where they can get the missing one and says whether to go on.
+ */
+export function useStartGate() {
+  const { data: current } = useCurrentUser();
+  const navigate = useNavigate();
+  const href = useLocation({ select: (location) => location.href });
+
+  const offerLink = () =>
+    toastManager.add({
+      type: "info",
+      title: m.chat_refused_no_address(),
+      // it carries the only way forward, so it stays until dismissed
+      timeout: 0,
+      actionProps: {
+        children: m.link_link_cosmo(),
+        onClick: () => void navigate({ to: "/link" }),
+      },
+    });
+
+  const gate = () => {
+    if (!current) {
+      void navigate({ to: "/login", search: { redirect: href } });
+      return false;
+    }
+    if (current.profiles.length === 0) {
+      offerLink();
+      return false;
+    }
+    return true;
+  };
+
+  return { gate, offerLink };
 }

@@ -16,6 +16,7 @@ import { InfiniteSentinel } from "@/components/shared/infinite-sentinel";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { offerNo } from "@/features/offers/format";
 import { useHydrated } from "@/hooks/use-hydrated";
 import { relativeTime } from "@/lib/time";
 import { cn } from "@/lib/utils";
@@ -108,7 +109,10 @@ export function ConversationList({ box }: { box: ChatBox }) {
 function preview(last: ConversationRow["last"]) {
   // the starter's row of a conversation nobody has written in yet
   if (!last) return m.chat_preview_empty();
-  const text = last.body ?? m.chat_preview_card();
+  const text =
+    last.body ??
+    (last.offerId !== null ? m.chat_preview_offer({ offer: offerNo(last.offerId) }) : null) ??
+    m.chat_preview_card();
   return last.mine ? m.chat_preview_mine({ text }) : text;
 }
 

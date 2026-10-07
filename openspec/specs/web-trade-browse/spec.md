@@ -150,11 +150,15 @@ A have or sale list not filed under a Cosmo profile cannot be discoverable, so i
 - **THEN** its switch in the dialog is disabled with the reason shown
 
 ### Requirement: Trade tabs
-`/trade` and `/trade/for-you` SHALL share a tab bar with Browse and For you, marking the current one. For a signed-out visitor, For you SHALL lead to `/login?redirect=/trade/for-you`.
+`/trade`, `/trade/for-you` and `/trade/mine` SHALL share a tab bar with Browse, For you and My trades, marking the current one. For a signed-out visitor, For you and My trades SHALL lead to `/login?redirect=` with their path.
 
 #### Scenario: Switch tabs
 - **WHEN** a signed-in user on `/trade` activates For you
 - **THEN** the browser is at `/trade/for-you` and For you is marked current
+
+#### Scenario: My trades signed out
+- **WHEN** a signed-out visitor activates My trades
+- **THEN** the browser is at `/login?redirect=/trade/mine`
 
 ### Requirement: Freshness
 Show on Trade changes and bumps SHALL show on every viewer's next load of `/trade`. Changes to entries SHALL appear within 1 minute.
@@ -185,3 +189,17 @@ The drawer's On Trade counts SHALL leave out trade-blocked accounts. Each post n
 #### Scenario: Trade-blocked owner
 - **WHEN** rin.trades is under a trade block
 - **THEN** no viewer sees rin.trades's posts on `/trade`
+
+### Requirement: Make offer on a post
+Each post that shows Message SHALL also offer Make offer. It opens the offer builder for the post's owner, with the post's list available on the You get side.
+
+#### Scenario: From a WTT post
+- **WHEN** a user activates Make offer on rin.trades's post
+- **THEN** the builder opens addressed to rin.trades, listing that post's have entries under You get
+
+### Requirement: Owner reputation on posts
+Each post SHALL show its owner's reputation line (see `web-verified-trades`) beside the owner's name.
+
+#### Scenario: Post byline
+- **WHEN** a viewer sees nakyoung.cards's post
+- **THEN** the byline shows nakyoung.cards's verified count and positive share

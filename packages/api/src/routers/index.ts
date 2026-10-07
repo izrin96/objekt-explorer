@@ -18,6 +18,7 @@ import { marketRouter } from "./market";
 import { moderationRouter } from "./moderation";
 import { notificationsRouter } from "./notifications";
 import { objektsRouter } from "./objekts";
+import { offerRouter } from "./offer";
 import { pinsRouter } from "./pins";
 import { profileRouter } from "./profile";
 import { statusRouter } from "./status";
@@ -45,6 +46,7 @@ export const router = {
   notifications: notificationsRouter,
   chat: chatRouter,
   moderation: moderationRouter,
+  offer: offerRouter,
 };
 
 /** What `/api/v1` serves and documents; everything else stays RPC-only. */

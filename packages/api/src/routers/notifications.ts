@@ -57,7 +57,9 @@ export const notificationsRouter = {
 
       const collections = await fetchCollectionsBySlug(
         items.flatMap((item) =>
-          item.type === "sanction" ? [] : item.payload.latest.map((match) => match.collectionSlug),
+          item.type === "want_match" || item.type === "have_wanted"
+            ? item.payload.latest.map((match) => match.collectionSlug)
+            : [],
         ),
         [],
       );

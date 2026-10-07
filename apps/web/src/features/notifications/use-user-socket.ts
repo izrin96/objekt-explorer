@@ -3,6 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 
 import { fetchNewer, fetchNewerEverywhere, invalidateChatLists } from "@/features/chat/queries";
+import { invalidateOfferLists } from "@/features/offers/queries";
 import { clientEnv } from "@/lib/env/client";
 
 import { notificationKeys } from "./queries";
@@ -43,6 +44,7 @@ export function useUserSocket(): boolean {
         setOpen(true);
         refetchNotifications();
         void invalidateChatLists(queryClient);
+        void invalidateOfferLists(queryClient);
         void fetchNewerEverywhere(queryClient);
       });
 
@@ -64,6 +66,7 @@ export function useUserSocket(): boolean {
             break;
           case "chat_changed":
             void invalidateChatLists(queryClient);
+            void invalidateOfferLists(queryClient);
             void fetchNewer(queryClient, message.data.conversationId);
             break;
         }

@@ -1,6 +1,7 @@
 import * as z from "zod";
 
 import { addressSchema } from "./common/address";
+import type { OfferView } from "./offer";
 import { publicUserSchema } from "./profile";
 
 export const MESSAGE_MAX_LENGTH = 2000;
@@ -36,6 +37,14 @@ export type ChatRefusal = (typeof CHAT_REFUSALS)[number];
 
 export const FLAG_CATEGORIES = ["send_first", "outside_payment"] as const;
 export type FlagCategory = (typeof FLAG_CATEGORIES)[number];
+
+/** Stored categories this server knows, or null when none are left. */
+export function parseCaution(value: string[] | null): FlagCategory[] | null {
+  const categories = (value ?? []).filter((c): c is FlagCategory =>
+    (FLAG_CATEGORIES as readonly string[]).includes(c),
+  );
+  return categories.length > 0 ? categories : null;
+}
 
 export const CHAT_BOXES = ["inbox", "requests", "archived"] as const;
 export type ChatBox = (typeof CHAT_BOXES)[number];
@@ -169,7 +178,8 @@ export const chatMessageSchema = z.object({
   /** scam-phrase categories, only on messages the viewer received */
   caution: z.enum(FLAG_CATEGORIES).array().nullable(),
 });
-export type ChatMessage = z.infer<typeof chatMessageSchema>;
+/** `offer` is set on an offer message, and null on others; it lives in `./offer`, which imports this file. */
+export type ChatMessage = z.infer<typeof chatMessageSchema> & { offer?: OfferView | null };
 
 /** `until` is null for "always". */
 export const muteStateSchema = z.object({ until: z.string().nullable() }).nullable();
@@ -183,6 +193,7 @@ export const conversationRowSchema = z.object({
       mine: z.boolean(),
       body: z.string().nullable(),
       card: storedCardSchema.nullable(),
+      offerId: z.number().nullable(),
       createdAt: z.string(),
     })
     /** null only on the starter's row of a conversation with no message yet */

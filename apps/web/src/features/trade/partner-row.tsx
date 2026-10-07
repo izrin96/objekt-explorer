@@ -21,6 +21,8 @@ import { getListLinkOption } from "@/features/list/list-link";
 import { ListTypeBadge } from "@/features/list/list-type-badge";
 import { useSafetyDialogs } from "@/features/moderation/safety-dialogs";
 import { ObjektCard } from "@/features/objekt/objekt-card";
+import { MakeOfferButton } from "@/features/offers/make-offer-button";
+import { TrustLine } from "@/features/offers/trust-line";
 import { ProfileLink } from "@/features/profile/profile-hover-card";
 import { displayNickname } from "@/lib/address";
 import { cn } from "@/lib/utils";
@@ -88,6 +90,7 @@ export function PartnerRow({
                 </Badge>
               ) : null}
             </span>
+            <TrustLine reputation={partner.reputation} />
             {also.length > 0 ? (
               <span className="text-muted-foreground text-sm break-words">
                 {m.trade_also({ names: also.join(", ") })}
@@ -159,11 +162,21 @@ export function PartnerRow({
 
           <div className="flex justify-end gap-2">
             {partner.messageable ? (
-              <MessageButton
-                target={{ kind: "user", userId: partner.userId }}
-                card={bestCard(partner)}
-                name={identity.name}
-              />
+              <>
+                <MessageButton
+                  target={{ kind: "user", userId: partner.userId }}
+                  card={bestCard(partner)}
+                  name={identity.name}
+                />
+                <MakeOfferButton
+                  request={{
+                    to: { target: { kind: "user", userId: partner.userId } },
+                    name: identity.name,
+                    suggestFor: partner.userId,
+                  }}
+                  label={m.offer_propose()}
+                />
+              </>
             ) : null}
             <Button variant="ghost" size="sm" onClick={() => onHide(partner)}>
               <EyeSlashIcon />

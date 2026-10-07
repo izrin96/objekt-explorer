@@ -7,11 +7,13 @@ import {
   modAudit,
   notification,
   report,
+  trade,
+  tradeLeg,
   userAddress,
   userBlock,
   userSanction,
 } from "@repo/db/schema";
-import { and, desc, eq, gt, inArray, sql } from "drizzle-orm";
+import { and, desc, eq, gt, inArray, or, sql } from "drizzle-orm";
 
 import { reportRetryAt, sanctionEnd, shapeExcerpt } from "../lib/sanctions";
 import { authed, moderator } from "../orpc";
@@ -30,7 +32,13 @@ import {
   userIdInputSchema,
 } from "../schemas/moderation";
 import type { SanctionPayload } from "../schemas/notification";
-import { afterBlockChange, fetchPartners, findMembership, parseCard } from "../services/chat";
+import {
+  afterBlockChange,
+  fetchPartners,
+  findMembership,
+  hydrateCards,
+  parseCard,
+} from "../services/chat";
 import {
   audit,
   changeRole,
@@ -40,6 +48,13 @@ import {
   sanctionColumns,
   syncBan,
 } from "../services/moderation";
+import {
+  type CancelResult,
+  cancelOpenOffers,
+  offersBetween,
+  offersOf,
+  publishCancelled,
+} from "../services/offer";
 import { activeSanctionWhere } from "../services/safety";
 import { bumpSafetyVersions } from "../services/safety-cache";
 import { publishNotify } from "../user-socket";
@@ -67,13 +82,77 @@ async function flagCounts(userIds: string[]) {
     .groupBy(messageFlag.userId, messageFlag.category);
 }
 
+/**
+ * The trades attached to the account's open reports: status, legs, hashes and times, and
+ * never message text.
+ */
+async function attachedTrades(userId: string, tradeIds: number[]) {
+  const ids = [...new Set(tradeIds)];
+  if (ids.length === 0) return { trades: [], collections: {} };
+  const [rows, legs] = await Promise.all([
+    db
+      .select({
+        id: trade.id,
+        status: trade.status,
+        cancelReason: trade.cancelReason,
+        userA: trade.userA,
+        userB: trade.userB,
+        acceptedAt: trade.acceptedAt,
+        endedAt: trade.endedAt,
+      })
+      .from(trade)
+      .where(inArray(trade.id, ids))
+      .orderBy(desc(trade.acceptedAt)),
+    db.select().from(tradeLeg).where(inArray(tradeLeg.tradeId, ids)).orderBy(tradeLeg.id),
+  ]);
+  const { serial, collections } = await hydrateCards(
+    legs.map((leg) =>
+      leg.objektId === null
+        ? { collectionSlug: leg.collectionSlug }
+        : { collectionSlug: leg.collectionSlug, objektId: leg.objektId },
+    ),
+  );
+  return {
+    trades: rows.map((t) => ({
+      id: t.id,
+      status: t.status as "in_progress" | "completed" | "cancelled" | "failed",
+      cancelReason: t.cancelReason,
+      acceptedAt: iso(t.acceptedAt)!,
+      endedAt: iso(t.endedAt),
+      otherId: t.userA === userId ? t.userB : t.userA,
+      legs: legs
+        .filter((leg) => leg.tradeId === t.id)
+        .map((leg) => ({
+          id: leg.id,
+          collectionSlug: leg.collectionSlug,
+          objektId: leg.objektId,
+          serial: leg.objektId === null ? null : serial(leg.objektId),
+          /** the reported account gives this leg */
+          fromTarget: leg.fromUserId === userId,
+          state: (leg.verifiedAt !== null ? "verified" : leg.open ? "waiting" : "closed") as
+            | "verified"
+            | "waiting"
+            | "closed",
+          verifiedAt: iso(leg.verifiedAt),
+          txHash: leg.txHash,
+          verifiedObjektId: leg.verifiedObjektId,
+        })),
+    })),
+    collections,
+  };
+}
+
 export const moderationRouter = {
   block: authed.input(userIdInputSchema).handler(async ({ input: { userId }, context }) => {
     const me = context.session.user.id;
     if (userId === me) refuseModeration("self");
     await findAccount(userId);
-    await db.insert(userBlock).values({ blockerId: me, blockedId: userId }).onConflictDoNothing();
+    const cancelled = await db.transaction(async (tx) => {
+      await tx.insert(userBlock).values({ blockerId: me, blockedId: userId }).onConflictDoNothing();
+      return cancelOpenOffers(tx, offersBetween(me, userId), "blocked");
+    });
     await afterBlockChange(me, userId);
+    await publishCancelled(cancelled);
   }),
 
   unblock: authed.input(userIdInputSchema).handler(async ({ input: { userId }, context }) => {
@@ -107,8 +186,21 @@ export const moderationRouter = {
       const { partnerId } = await findMembership(input.conversationId, me);
       if (partnerId !== input.userId) throw new ORPCError("NOT_FOUND");
     }
+    if (input.tradeId !== undefined) {
+      const between = await db.$count(
+        trade,
+        and(
+          eq(trade.id, input.tradeId),
+          or(
+            and(eq(trade.userA, me), eq(trade.userB, input.userId)),
+            and(eq(trade.userA, input.userId), eq(trade.userB, me)),
+          ),
+        ),
+      );
+      if (between === 0) throw new ORPCError("NOT_FOUND");
+    }
 
-    const id = await db.transaction(async (tx) => {
+    const { id, cancelled } = await db.transaction(async (tx) => {
       await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext('chat_report'), hashtext(${me}))`);
       const [last] = await tx
         .select({ createdAt: report.createdAt })
@@ -141,6 +233,7 @@ export const moderationRouter = {
           reporterId: me,
           targetUserId: input.userId,
           conversationId: input.conversationId ?? null,
+          tradeId: input.tradeId ?? null,
           reason: input.reason,
           note: input.note || null,
           excerpt: shared
@@ -157,16 +250,19 @@ export const moderationRouter = {
             : null,
         })
         .returning({ id: report.id });
+      let cancelled: CancelResult | null = null;
       if (input.alsoBlock) {
         await tx
           .insert(userBlock)
           .values({ blockerId: me, blockedId: input.userId })
           .onConflictDoNothing();
+        cancelled = await cancelOpenOffers(tx, offersBetween(me, input.userId), "blocked");
       }
-      return row!.id;
+      return { id: row!.id, cancelled };
     });
 
     if (input.alsoBlock) await afterBlockChange(me, input.userId);
+    if (cancelled) await publishCancelled(cancelled);
     return { id };
   }),
 
@@ -254,6 +350,7 @@ export const moderationRouter = {
             excerpt: report.excerpt,
             status: report.status,
             conversationId: report.conversationId,
+            tradeId: report.tradeId,
             createdAt: report.createdAt,
             resolvedAt: report.resolvedAt,
           })
@@ -282,7 +379,12 @@ export const moderationRouter = {
       ],
     );
 
+    const attached = await attachedTrades(
+      userId,
+      reports.flatMap((r) => (r.status === "open" && r.tradeId !== null ? [r.tradeId] : [])),
+    );
     const people = await fetchPartners([
+      ...attached.trades.map((t) => t.otherId),
       ...reports.map((r) => r.reporterId),
       ...sanctions.flatMap((s) => [s.issuedBy, s.revokedBy].filter((id) => id !== null)),
       ...auditRows.flatMap((a) => (a.actorId ? [a.actorId] : [])),
@@ -317,6 +419,7 @@ export const moderationRouter = {
           note: r.note,
           status: r.status as "open" | "dismissed" | "actioned",
           fromConversation: r.conversationId !== null,
+          tradeId: r.tradeId,
           excerpt: excerpt.success ? excerpt.data : null,
           createdAt: iso(r.createdAt)!,
           resolvedAt: iso(r.resolvedAt),
@@ -333,6 +436,8 @@ export const moderationRouter = {
         issuedBy: nameOf(s.issuedBy),
         revokedBy: nameOf(s.revokedBy),
       })),
+      trades: attached.trades.map(({ otherId, ...t }) => ({ ...t, other: nameOf(otherId) })),
+      tradeCollections: attached.collections,
       audit: auditRows.map((a) => ({
         id: a.id,
         actor: nameOf(a.actorId),
@@ -406,12 +511,17 @@ export const moderationRouter = {
           groupKey: `sanction:${sanctionId}`,
         });
       }
-      return { sanctionId, resolvedReports: resolved.length };
+      const cancelled =
+        input.action === "trade_block" || input.action === "ban"
+          ? await cancelOpenOffers(tx, offersOf(input.userId), "sanction")
+          : null;
+      return { sanctionId, resolvedReports: resolved.length, cancelled };
     });
 
     if (input.action === "trade_block") await bumpSafetyVersions([input.userId]);
     if (input.action !== "dismiss" && input.action !== "ban") await publishNotify(input.userId);
-    return result;
+    if (result.cancelled) await publishCancelled(result.cancelled);
+    return { sanctionId: result.sanctionId, resolvedReports: result.resolvedReports };
   }),
 
   revoke: moderator.input(revokeInputSchema).handler(async ({ input, context }) => {

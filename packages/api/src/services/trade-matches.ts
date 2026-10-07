@@ -33,6 +33,7 @@ import { CARD_LIMIT, type TradeFilter } from "../schemas/trade";
 import { fetchCollectionsBySlug } from "./list";
 import { toPublicUser } from "./profile";
 import { getCache, redis } from "./redis";
+import { reputationOf } from "./reputation";
 import { notBlockedEither, notTradeBlocked } from "./safety";
 import { marketVersion } from "./safety-cache";
 
@@ -183,6 +184,17 @@ export async function withMessageable(matches: TradeMatches) {
       Object.assign(partner, {
         messageable: isMessageable(toMessagePref(prefOf.get(partner.userId)), false),
       }),
+    ),
+  };
+}
+
+/** Read past the matches cache, which outlives a reputation change. */
+export async function withReputation(matches: Awaited<ReturnType<typeof withMessageable>>) {
+  const reputations = await reputationOf(matches.partners.map((partner) => partner.userId));
+  return {
+    ...matches,
+    partners: matches.partners.map((partner) =>
+      Object.assign(partner, { reputation: reputations.get(partner.userId) ?? null }),
     ),
   };
 }

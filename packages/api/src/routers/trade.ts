@@ -23,7 +23,12 @@ import {
   fetchMyPosts,
   setShowOnTrade,
 } from "../services/trade-feed";
-import { getTradeMatches, resolveTradeSides, withMessageable } from "../services/trade-matches";
+import {
+  getTradeMatches,
+  resolveTradeSides,
+  withMessageable,
+  withReputation,
+} from "../services/trade-matches";
 
 export const tradeRouter = {
   /** Public; viewer fields are present only with a session. */
@@ -53,7 +58,9 @@ export const tradeRouter = {
     .input(forYouInputSchema)
     .handler(async ({ input: { filter, list }, context: { session } }) => {
       const sides = await resolveTradeSides(session.user.id, list);
-      return withMessageable(await getTradeMatches(session.user.id, sides, filter));
+      return withReputation(
+        await withMessageable(await getTradeMatches(session.user.id, sides, filter)),
+      );
     }),
 
   /** The list header's count: that list's Mutual only partners, from the same cache entry For you reads. */

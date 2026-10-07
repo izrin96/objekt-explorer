@@ -105,3 +105,34 @@ Accounts SHALL have a role of user (default), moderator or admin. A moderator SH
 #### Scenario: Grant moderator
 - **WHEN** an admin grants mod.hana the moderator role
 - **THEN** mod.hana can open `/mod/reports` on the next load, and the audit log records the grant
+
+### Requirement: Blocks and sanctions apply to offers
+- **Block**: blocking an account SHALL cancel the open offers between the two accounts, and refuse new offer actions between them in either direction. The refusal reads the same as "this user isn't accepting messages".
+- **Chat mute**: while it lasts, the user SHALL be unable to send or counter offers, but can still accept, decline, withdraw and cancel a trade.
+- **Trade block or ban**: either one SHALL cancel the user's open offers and refuse every offer action until it ends.
+
+None of these SHALL change a trade that was already accepted.
+
+#### Scenario: Block cancels offers
+- **WHEN** a user blocks rin.trades while O-882 between them is open
+- **THEN** O-882 shows Cancelled, and neither side can send a new offer
+
+#### Scenario: Trade block
+- **WHEN** a moderator blocks spam.seller22 from trading
+- **THEN** spam.seller22's open offers are cancelled and their recipients are notified
+
+### Requirement: Reports with a trade attached
+A report filed through Report a problem SHALL carry its trade. It may attach only a trade between the reporter and the reported account. The moderator console's account page SHALL show each attached trade:
+- its status;
+- when it was accepted;
+- each leg's objekt, direction, state, transaction hash and time.
+
+Attaching a trade SHALL add no message text beyond a shared excerpt. The usual once-per-24-hours report limit SHALL apply.
+
+#### Scenario: Moderator sees the trade
+- **WHEN** a user reports binary.bin from failed trade T-1042
+- **THEN** the console shows T-1042 with one leg Verified (with its hash) and one leg broken
+
+#### Scenario: Someone else's trade
+- **WHEN** a request attaches a trade the reporter isn't part of
+- **THEN** the report is refused

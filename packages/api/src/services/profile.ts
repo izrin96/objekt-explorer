@@ -15,6 +15,7 @@ import { isBlockedEither } from "./moderation";
 import { fetchOwnerSummary } from "./objekt";
 import { isProfileHidden } from "./privacy";
 import { getCache } from "./redis";
+import { reputationOf } from "./reputation";
 
 /** the signed-in user has linked this Cosmo address */
 export async function assertProfileOwned(address: string, userId: string, messages: ApiMessages) {
@@ -85,7 +86,10 @@ type ProfileUser = User & { messagePref: { allow: string; allowHidden: boolean }
 async function toProfilePage(profile: UserAddress, user: ProfileUser | null, currentUser?: User) {
   const shown = toPublicProfile(profile, user, currentUser);
   // the account id only where the profile already shows its owner, so Hide User stays untied
-  const publicProfile = shown.user && user ? { ...shown, userId: user.id } : shown;
+  const publicProfile =
+    shown.user && user
+      ? { ...shown, userId: user.id, reputation: (await reputationOf([user.id])).get(user.id) }
+      : shown;
   if (publicProfile.isGuard || !user || user.id === currentUser?.id) {
     return { ...publicProfile, messageable: false };
   }

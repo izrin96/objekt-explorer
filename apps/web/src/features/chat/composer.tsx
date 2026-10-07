@@ -1,4 +1,4 @@
-import { CardsThreeIcon, PaperPlaneRightIcon, XIcon } from "@phosphor-icons/react";
+import { CardsThreeIcon, HandshakeIcon, PaperPlaneRightIcon, XIcon } from "@phosphor-icons/react";
 import { MESSAGE_MAX_LENGTH, messageLength } from "@repo/api/schemas/chat";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { type FormEvent, type KeyboardEvent, useEffect, useId, useState } from "react";
@@ -21,10 +21,12 @@ export function Composer({
   conversationId,
   name,
   onSent,
+  onOffer,
 }: {
   conversationId: number;
   name: string;
   onSent: () => void;
+  onOffer: () => void;
 }) {
   const queryClient = useQueryClient();
   const [body, setBody] = useState("");
@@ -154,6 +156,16 @@ export function Composer({
           className="shrink-0"
         >
           <CardsThreeIcon />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label={m.offer_composer()}
+          title={m.offer_composer()}
+          onClick={onOffer}
+          className="shrink-0"
+        >
+          <HandshakeIcon />
         </Button>
         <Textarea
           value={body}

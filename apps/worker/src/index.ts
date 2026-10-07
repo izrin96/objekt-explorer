@@ -8,6 +8,7 @@ import { populateSerial, populateSerialOffline } from "./job/populate-serial";
 import { processCollectionImages } from "./job/process-collection-images";
 import { pruneNotifications } from "./job/prune-notifications";
 import { refreshAccessToken } from "./job/refresh-access-token";
+import { runTradeVerifier, watchTransfers } from "./job/trade-verifier";
 import { updateCurrencyRates } from "./job/update-currency-rates";
 import { verifyBatchBoundaries } from "./job/verify-batch-boundaries";
 import { sendWantAlerts } from "./job/want-alerts";
@@ -90,11 +91,23 @@ crons.push(cron("*/5 * * * *", safeRun("sendWantAlerts", sendWantAlerts)));
 // no startup run: retention is not urgent
 crons.push(cron("0 5 * * 1", safeRun("pruneNotifications", pruneNotifications)));
 
+// verifies trade legs from indexer transfers and keeps offers current; the rescan is the
+// source of truth, and the `transfers` subscription only makes a run sooner
+await safeRun("runTradeVerifier", runTradeVerifier)();
+crons.push(cron("*/2 * * * *", safeRun("runTradeVerifier", runTradeVerifier)));
+const stopTransferWatch = await watchTransfers((error) =>
+  console.error("[runTradeVerifier] Job failed:", error),
+).catch((error: unknown) => {
+  console.error("[runTradeVerifier] Failed to subscribe to transfers:", error);
+  return null;
+});
+
 async function shutdown(signal: NodeJS.Signals) {
   console.log(`[shutdown] Received ${signal}, stopping cron jobs...`);
   for (const cron of crons) {
     cron.stop();
   }
+  stopTransferWatch?.();
   console.log("[shutdown] All cron jobs stopped");
   process.exit(0);
 }

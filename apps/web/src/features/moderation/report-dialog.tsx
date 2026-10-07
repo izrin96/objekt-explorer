@@ -43,6 +43,8 @@ export function ReportDialog({
   onOpenChange,
   name,
   fromConversation,
+  defaultReason,
+  attachment,
   pending = false,
   error,
   onSubmit,
@@ -51,6 +53,9 @@ export function ReportDialog({
   onOpenChange: (open: boolean) => void;
   name: string;
   fromConversation: boolean;
+  defaultReason?: ReportReason;
+  /** what goes along with the report besides the form, e.g. a trade */
+  attachment?: string;
   pending?: boolean;
   error?: string | null;
   onSubmit: (values: ReportValues) => void;
@@ -63,6 +68,8 @@ export function ReportDialog({
           <ReportForm
             name={name}
             fromConversation={fromConversation}
+            defaultReason={defaultReason}
+            attachment={attachment}
             pending={pending}
             error={error ?? null}
             onSubmit={onSubmit}
@@ -76,17 +83,21 @@ export function ReportDialog({
 function ReportForm({
   name,
   fromConversation,
+  defaultReason,
+  attachment,
   pending,
   error,
   onSubmit,
 }: {
   name: string;
   fromConversation: boolean;
+  defaultReason: ReportReason | undefined;
+  attachment: string | undefined;
   pending: boolean;
   error: string | null;
   onSubmit: (values: ReportValues) => void;
 }) {
-  const [reason, setReason] = useState<ReportReason | null>(null);
+  const [reason, setReason] = useState<ReportReason | null>(defaultReason ?? null);
   const [note, setNote] = useState("");
   const [share, setShare] = useState(fromConversation);
   const [alsoBlock, setAlsoBlock] = useState(false);
@@ -114,6 +125,9 @@ function ReportForm({
       </DialogHeader>
 
       <DialogPanel className="flex flex-col gap-6">
+        {attachment ? (
+          <p className="bg-secondary rounded-md px-3 py-2 text-sm text-pretty">{attachment}</p>
+        ) : null}
         <section aria-labelledby={ids.reason} className="flex flex-col gap-2.5">
           <h3 id={ids.reason} className="text-sm font-medium">
             {m.mod_report_reason()}

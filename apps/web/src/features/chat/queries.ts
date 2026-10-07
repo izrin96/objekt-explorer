@@ -1,10 +1,17 @@
 import { ORPCError } from "@orpc/client";
 import type { ChatBox, ConversationCursor } from "@repo/api/schemas/chat";
+import { OFFER_VIEWS_LIMIT } from "@repo/api/schemas/offer";
 import type { QueryClient } from "@tanstack/react-query";
 
 import { client, orpc } from "@/lib/orpc";
 
-import { appendToThread, newestId, type ThreadData } from "./thread-cache";
+import {
+  appendToThread,
+  liveOfferIds,
+  newestId,
+  patchOffers,
+  type ThreadData,
+} from "./thread-cache";
 
 const POLL_MS = 60_000;
 
@@ -57,8 +64,26 @@ export function invalidateChatLists(queryClient: QueryClient) {
   return Promise.all(chatListKeys.map((queryKey) => queryClient.invalidateQueries({ queryKey })));
 }
 
-/** Appends everything after the newest message a cached thread holds; a no-op when none is cached. */
+/**
+ * Appends everything after the newest message a cached thread holds, then re-reads the offers
+ * still in play, whose cards change with no new message. A no-op when none is cached.
+ */
 export async function fetchNewer(queryClient: QueryClient, id: number) {
+  await appendNewer(queryClient, id);
+  await refreshOffers(queryClient, id);
+}
+
+async function refreshOffers(queryClient: QueryClient, id: number) {
+  const { queryKey } = threadOptions(id);
+  const data = queryClient.getQueryData<ThreadData>(queryKey);
+  const ids = data ? liveOfferIds(data).slice(-OFFER_VIEWS_LIMIT) : [];
+  if (ids.length === 0) return;
+  const views = await client.offer.views({ ids }).catch(() => null);
+  if (!views) return;
+  queryClient.setQueryData<ThreadData>(queryKey, (old) => (old ? patchOffers(old, views) : old));
+}
+
+async function appendNewer(queryClient: QueryClient, id: number) {
   const { queryKey } = threadOptions(id);
   for (;;) {
     const data = queryClient.getQueryData<ThreadData>(queryKey);

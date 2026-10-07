@@ -1,12 +1,16 @@
 import * as z from "zod";
 
-export const NOTIFICATION_TYPES = ["want_match", "have_wanted"] as const;
+import { offerPayloadSchema, tradePayloadSchema } from "./offer";
+
+export const NOTIFICATION_TYPES = ["want_match", "have_wanted", "offer", "trade"] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
 /** A type with no `notification_pref` row uses its default. */
 export const NOTIFICATION_DEFAULTS: Record<NotificationType, boolean> = {
   want_match: true,
   have_wanted: false,
+  offer: true,
+  trade: true,
 };
 
 export const NOTIFICATION_PAGE_SIZE = 20;
@@ -57,6 +61,8 @@ export const notificationSchema = z.discriminatedUnion("type", [
   z.object({ ...rowFields, type: z.literal("want_match"), payload: alertPayloadSchema }),
   z.object({ ...rowFields, type: z.literal("have_wanted"), payload: alertPayloadSchema }),
   z.object({ ...rowFields, type: z.literal("sanction"), payload: sanctionPayloadSchema }),
+  z.object({ ...rowFields, type: z.literal("offer"), payload: offerPayloadSchema }),
+  z.object({ ...rowFields, type: z.literal("trade"), payload: tradePayloadSchema }),
 ]);
 export type Notification = z.infer<typeof notificationSchema>;
 
