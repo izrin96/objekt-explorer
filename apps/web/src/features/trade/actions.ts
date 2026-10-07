@@ -94,7 +94,7 @@ function showOnTradeErrorText(error: unknown) {
   return m.trade_show_on_trade_error();
 }
 
-/** a list on Trade is in the viewer's lists, its own page and both trade views */
+/** a list on Trade is in the viewer's lists, its own page, both trade views and, if for sale, Market */
 export function useSetShowOnTrade() {
   const queryClient = useQueryClient();
 
@@ -109,6 +109,7 @@ export function useSetShowOnTrade() {
           queryClient.invalidateQueries({ queryKey: LIST_QUERY_KEY }),
           queryClient.invalidateQueries({ queryKey: orpc.list.key() }),
           queryClient.invalidateQueries({ queryKey: orpc.trade.key() }),
+          queryClient.invalidateQueries({ queryKey: orpc.market.key() }),
         ]),
     }),
   );

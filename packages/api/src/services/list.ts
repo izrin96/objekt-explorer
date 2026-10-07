@@ -15,7 +15,13 @@ import slugify from "slugify";
 import { OBJEKT_PREVIEW_SIZE } from "../constants";
 import { isMessageable, toMessagePref } from "../lib/chat-rules";
 import { BUMP_COOLDOWN_HOURS } from "../lib/trade-feed";
-import type { AddSource, ListPreview, ListTypeNew, PublicList } from "../schemas/list";
+import {
+  type AddSource,
+  canBeOnTrade,
+  type ListPreview,
+  type ListTypeNew,
+  type PublicList,
+} from "../schemas/list";
 import { isBlockedEither } from "./moderation";
 import { getCollectionColumns, getPartialCollectionColumns } from "./objekt";
 import { isProfileHidden } from "./privacy";
@@ -215,7 +221,6 @@ export async function fetchList(
     hideSerial: result.hideSerial,
     gridColumns: result.gridColumns,
     discoverable: result.discoverable,
-    showOnTrade: result.showOnTrade,
     bumpedAt: result.bumpedAt,
     user: result.user ? toPublicUser(result.user) : null,
     profile: result.userAddress ? toPartialProfile(result.userAddress) : null,
@@ -261,7 +266,7 @@ export async function fetchOwnedLists(
       profileSlug: true,
       profileAddress: true,
       currency: true,
-      showOnTrade: true,
+      discoverable: true,
       bumpedAt: true,
     },
     where: {
@@ -391,15 +396,12 @@ export async function fetchListPreviews(slugs: string[]): Promise<ListPreview[]>
   }));
 }
 
-/** Want is discoverable on request; have and sale only while bound to a profile, since matching reads that profile's holdings. */
 export function resolveDiscoverable(
   type: ListTypeNew,
   isProfileBind: boolean,
   requested: boolean,
 ): boolean {
-  if (type === "want") return requested;
-  if (type === "have" || type === "sale") return isProfileBind && requested;
-  return false;
+  return requested && canBeOnTrade(type, isProfileBind);
 }
 
 const bumpCutoff = sql`now() - make_interval(hours => ${BUMP_COOLDOWN_HOURS})`;
@@ -412,7 +414,7 @@ function partnerBumpedAt(link: SQL | number | null, type: SQL | ListTypeNew, use
   if (link === null) return sql`NULL::timestamptz`;
   return sql`(
     SELECT p.bumped_at FROM lists p
-    WHERE p.id = ${link} AND p.show_on_trade AND p.user_id = ${userId}
+    WHERE p.id = ${link} AND p.discoverable AND p.user_id = ${userId}
       AND p.list_type_new IN ('have', 'want') AND p.list_type_new <> ${type}
   )`;
 }
@@ -436,20 +438,11 @@ export function createdBumpedAt(linkedListId: number | null, type: ListTypeNew, 
 }
 
 /**
- * The Show on Trade columns for a write that sets `discoverable`. Written as SQL over the
- * stored row, so an omitted `show` keeps the stored value unless discoverable goes off.
- * `link` is the linked list id the write leaves in place (null for none); omitted, the stored
- * one.
+ * The columns that put a list on or off Trade: turning it on from off counts as a bump. `link` is
+ * the linked list id the write leaves in place (null for none); omitted, the stored one.
  */
-export function tradeColumns(
-  show: boolean | undefined,
-  discoverable: boolean,
-  link?: number | null,
-) {
-  const next =
-    show === undefined
-      ? sql`(${lists.showOnTrade} AND ${discoverable}::boolean)`
-      : sql`${show && discoverable}::boolean`;
+export function tradeColumns(on: boolean, link?: number | null) {
+  if (!on) return { discoverable: false };
   // raw names: inside the partner subquery a rendered column could bind to `p`
   const partner = partnerBumpedAt(
     link === undefined ? sql`lists.linked_list_id` : link,
@@ -457,11 +450,10 @@ export function tradeColumns(
     sql`lists.user_id`,
   );
   return {
-    showOnTrade: sql<boolean>`${next}`,
+    discoverable: true,
     bumpedAt: sql<string | null>`CASE
-      WHEN NOT lists.show_on_trade AND ${next}
-      THEN ${turnOnBumpedAt(sql`lists.bumped_at`, partner)}
-      ELSE lists.bumped_at
+      WHEN lists.discoverable THEN lists.bumped_at
+      ELSE ${turnOnBumpedAt(sql`lists.bumped_at`, partner)}
     END`,
   };
 }

@@ -6,7 +6,7 @@ The public Trade Browse feed on `apps/web` at `/trade`: posts by people who put 
 ## Requirements
 
 ### Requirement: Posts from lists on Trade
-`/trade` SHALL list one post per list whose owner turned Show on Trade on. A have or sale list SHALL appear only while it is bound to a Cosmo profile; a want list needs no profile. A have list and the want list linked to it SHALL form one post when both are on Trade. When only one of the pair is on Trade, the post SHALL hold only that list. The page SHALL be open to signed-out visitors.
+`/trade` SHALL list one post per list whose owner turned its Show on Trade switch on (Show on Market on a sale list; see `web-lists`). A have or sale list SHALL appear only while it is bound to a Cosmo profile; a want list needs no profile. A have list and the want list linked to it SHALL form one post when both are on Trade. When only one of the pair is on Trade, the post SHALL hold only that list. The page SHALL be open to signed-out visitors.
 
 Each post SHALL be tagged:
 - WTT for a have list, alone or paired with its want list;
@@ -30,9 +30,21 @@ Each list in a post SHALL link to its list page.
 - **WHEN** "spares" is on Trade and its linked want list is not
 - **THEN** the feed shows a WTT post with only the Have side
 
+#### Scenario: Sale list on Market
+- **WHEN** a sale list bound to a Cosmo profile has Show on Market on
+- **THEN** the feed shows it as a WTS post
+
 #### Scenario: Not on Trade
-- **WHEN** a discoverable have list has Show on Trade off
-- **THEN** it does not appear on `/trade`, and For you still matches it
+- **WHEN** a have list has Show on Trade off
+- **THEN** it does not appear on `/trade`, and For you does not match it
+
+#### Scenario: Discoverable before launch
+- **WHEN** a want list was discoverable before Browse launched and was last changed 3 days before launch
+- **THEN** at launch it appears on `/trade` with its time showing that change, ordered as if bumped then
+
+#### Scenario: Long-untouched before launch
+- **WHEN** a want list was discoverable before Browse launched and was last changed 60 days before launch
+- **THEN** at launch it is idle and not listed on `/trade` until its owner bumps or changes it, and For you still matches it
 
 ### Requirement: Only what is still owned
 A have or sale entry SHALL be left out of a post when its owner can no longer trade it, by the same rule For you uses:
@@ -143,13 +155,17 @@ A signed-in viewer's own posts SHALL be summarised above the feed. Each entry SH
 - when it was last bumped;
 - a Bump control.
 
-A Post a list control SHALL open a dialog listing the viewer's have, want and sale lists, each with a Show on Trade switch that saves at once.
+A Post a list control SHALL open a dialog listing the viewer's have, want and sale lists, each with the same Show on Trade switch the list form offers (Show on Market on a sale list), saving at once. Turning it off SHALL also take the list out of matching, and on a sale list off Market.
 
-A have or sale list not filed under a Cosmo profile cannot be discoverable, so its switch SHALL be disabled and say why. A signed-out visitor activating Post a list SHALL be sent to `/login?redirect=/trade`.
+A have or sale list not filed under a Cosmo profile cannot be on Trade, so its switch SHALL be disabled and say why. A signed-out visitor activating Post a list SHALL be sent to `/login?redirect=/trade`.
 
 #### Scenario: Post from the dialog
 - **WHEN** the viewer turns Show on Trade on for want list "binary hunt" in the dialog
-- **THEN** the list becomes discoverable and on Trade, and appears under Your posts as bumped just now
+- **THEN** the list is on Trade and in matching, and appears under Your posts as bumped just now
+
+#### Scenario: Take down from the dialog
+- **WHEN** the viewer turns Show on Market off for a sale list in the dialog
+- **THEN** the list leaves `/trade`, Market and For you
 
 #### Scenario: Unbound have list
 - **WHEN** the viewer's have list is not filed under a Cosmo profile

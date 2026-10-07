@@ -95,9 +95,11 @@ export const listCrud = {
       if (profileCheck.status === "rejected") throw profileCheck.reason;
       if (linkedCheck.status === "rejected") throw linkedCheck.reason;
 
-      const requested = input.discoverable || input.showOnTrade === true;
-      const discoverable = resolveDiscoverable(input.listTypeNew, isProfileBind, requested);
-      const showOnTrade = input.showOnTrade === true && discoverable;
+      const discoverable = resolveDiscoverable(
+        input.listTypeNew,
+        isProfileBind,
+        input.discoverable,
+      );
 
       const slug = nanoid(9);
       let profileSlug: string | null = null;
@@ -131,8 +133,7 @@ export const listCrud = {
                 ? normalizeCurrency(input.currency)
                 : null,
             discoverable,
-            showOnTrade,
-            bumpedAt: showOnTrade
+            bumpedAt: discoverable
               ? createdBumpedAt(linkedListId, input.listTypeNew, user.id)
               : null,
             matchAlerts: input.listTypeNew === "general" || (input.matchAlerts ?? true),
@@ -156,14 +157,12 @@ export const listCrud = {
             .set({ linkedListId: inserted.insertedId })
             .where(eq(lists.id, linkedListId));
 
-          // Sync discoverable to paired list so both mode works out of the box,
-          // under the partner's own rule
           const partner = linkedCheck.value;
           if (
             partner &&
-            resolveDiscoverable(partner.listTypeNew, partner.isProfileBind, requested)
+            resolveDiscoverable(partner.listTypeNew, partner.isProfileBind, discoverable)
           ) {
-            await tx.update(lists).set({ discoverable: true }).where(eq(lists.id, linkedListId));
+            await tx.update(lists).set(tradeColumns(true)).where(eq(lists.id, linkedListId));
           }
         }
 
@@ -227,8 +226,11 @@ export const listCrud = {
           : await generateProfileSlug(input.name, list.slug, address, list.id);
       }
 
-      const requested = input.discoverable || input.showOnTrade === true;
-      const discoverable = resolveDiscoverable(list.listTypeNew, list.isProfileBind, requested);
+      const discoverable = resolveDiscoverable(
+        list.listTypeNew,
+        list.isProfileBind,
+        input.discoverable,
+      );
 
       const touched = await db.transaction(async (tx) => {
         await tx
@@ -252,8 +254,7 @@ export const listCrud = {
                 ? input.hideSerial
                 : false,
             linkedListId,
-            discoverable,
-            ...tradeColumns(input.showOnTrade, discoverable, linkedListId),
+            ...tradeColumns(discoverable, linkedListId),
             matchAlerts: list.listTypeNew === "general" ? undefined : input.matchAlerts,
           })
           .where(eq(lists.id, list.id));
@@ -284,16 +285,16 @@ export const listCrud = {
           }
         }
 
-        // Sync discoverable to paired list so both mode works out of the box, under the
-        // partner's own rule. Only ever up: an edit of this list must not take its partner
-        // off discovery or off Trade.
+        // a new link brings the partner onto Trade; a save that keeps the link leaves the
+        // partner's own choice alone
         const partner = linkedCheck.value;
         if (
           linkedListId !== null &&
+          linkedListId !== list.linkedListId &&
           partner &&
-          resolveDiscoverable(partner.listTypeNew, partner.isProfileBind, requested)
+          resolveDiscoverable(partner.listTypeNew, partner.isProfileBind, discoverable)
         ) {
-          await tx.update(lists).set({ discoverable: true }).where(eq(lists.id, linkedListId));
+          await tx.update(lists).set(tradeColumns(true)).where(eq(lists.id, linkedListId));
           changed.push(linkedListId);
         }
 

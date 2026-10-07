@@ -10,6 +10,14 @@ import { publicProfileSchema, publicUserSchema } from "./profile";
 const listTypeNewSchema = z.enum(["general", "sale", "have", "want"]);
 export type ListTypeNew = z.infer<typeof listTypeNewSchema>;
 
+/**
+ * Whether the list's Show on Trade switch can be on: a want list any time, a have or sale list
+ * only while bound to a Cosmo profile, since matching reads that profile's holdings.
+ */
+export function canBeOnTrade(type: ListTypeNew, isProfileBind: boolean) {
+  return type === "want" || ((type === "have" || type === "sale") && isProfileBind);
+}
+
 /** Which side of a trade a list stands for: a sale list offers its objekts as a have list does. */
 export function tradeSideOf(type: ListTypeNew): "have" | "want" | null {
   if (type === "want") return "want";
@@ -30,7 +38,6 @@ const baseListSchema = z.object({
   gridColumns: z.number().nullish(),
   description: z.string().nullish(),
   discoverable: z.boolean().nullish(),
-  showOnTrade: z.boolean().nullish(),
   bumpedAt: z.string().nullish(),
   user: publicUserSchema.nullish(),
   profile: publicProfileSchema.nullish(),
@@ -113,7 +120,6 @@ export const createListInputSchema = z.object({
   description: z.string().max(5000).nullable(),
   currency: z.string().max(10).nullable(),
   discoverable: z.boolean().default(false),
-  showOnTrade: z.boolean().optional(),
   matchAlerts: z.boolean().optional(),
 });
 
@@ -127,7 +133,6 @@ export const editListInputSchema = z.object({
   hideSerial: z.boolean(),
   linkedListId: z.number().nullable(),
   discoverable: z.boolean(),
-  showOnTrade: z.boolean().optional(),
   matchAlerts: z.boolean().optional(),
   regenerateSlug: z.boolean().default(false),
 });

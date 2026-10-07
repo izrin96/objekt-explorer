@@ -48,7 +48,7 @@ import { getCache, redis } from "./redis";
 import { reputationOf } from "./reputation";
 import { notBlockedEither, notTradeSanctioned } from "./safety";
 import { marketVersion } from "./safety-cache";
-import { offersOnTrade, takesPartInTradeSql } from "./trade-lists";
+import { offersOnTrade, takesPartInTrade, takesPartInTradeSql } from "./trade-lists";
 import { fetchHoldings } from "./trade-matches";
 
 const POST_TTL_SECONDS = 60;
@@ -71,7 +71,7 @@ const postsCte = sql`
   on_trade AS (
     SELECT id, user_id, list_type_new, linked_list_id, bumped_at, updated_at, created_at
     FROM lists
-    WHERE show_on_trade AND ${takesPartInTradeSql()}
+    WHERE discoverable AND ${takesPartInTradeSql()}
   ),
   posts AS (
     SELECT
@@ -79,8 +79,12 @@ const postsCte = sql`
       a.user_id,
       a.list_type_new AS type,
       p.id AS partner_id,
-      -- milliseconds, so the ISO cursor names a row exactly
-      date_trunc('milliseconds', coalesce(greatest(a.bumped_at, p.bumped_at), a.created_at)) AS bumped_at,
+      -- milliseconds, so the ISO cursor names a row exactly; a post never bumped sorts by its
+      -- last change
+      date_trunc(
+        'milliseconds',
+        coalesce(greatest(a.bumped_at, p.bumped_at), greatest(a.updated_at, p.updated_at))
+      ) AS bumped_at,
       greatest(a.updated_at, p.updated_at) AS updated_at
     FROM on_trade a
     LEFT JOIN on_trade p
@@ -575,7 +579,7 @@ async function fetchOwnTradeLists(userId: string) {
   return db
     .select(feedListColumns)
     .from(lists)
-    .where(and(eq(lists.userId, userId), eq(lists.showOnTrade, true)));
+    .where(and(eq(lists.userId, userId), eq(lists.discoverable, true), takesPartInTrade));
 }
 
 export async function fetchMyPosts(userId: string) {
@@ -604,13 +608,13 @@ export async function bumpPost(userId: string, slug: string) {
   const result = await db.execute<{ id: number; bumped_at: string }>(sql`
     WITH target AS (
       SELECT id, list_type_new, linked_list_id FROM lists
-      WHERE slug = ${slug} AND user_id = ${userId} AND show_on_trade
+      WHERE slug = ${slug} AND user_id = ${userId} AND discoverable
     ),
     members AS (
       SELECT id FROM target
       UNION
       SELECT l.id FROM lists l, target t
-      WHERE l.show_on_trade AND l.user_id = ${userId}
+      WHERE l.discoverable AND l.user_id = ${userId}
         AND (
           (t.list_type_new = 'have' AND l.list_type_new = 'want' AND l.id = t.linked_list_id)
           OR (t.list_type_new = 'want' AND l.list_type_new = 'have' AND l.linked_list_id = t.id)
@@ -619,7 +623,7 @@ export async function bumpPost(userId: string, slug: string) {
     UPDATE lists SET bumped_at = now()
     WHERE id IN (SELECT id FROM members)
       AND user_id = ${userId}
-      AND show_on_trade
+      AND discoverable
       AND (bumped_at IS NULL OR bumped_at <= now() - make_interval(hours => ${BUMP_COOLDOWN_HOURS}))
       AND NOT EXISTS (
         SELECT 1 FROM lists x
@@ -660,10 +664,9 @@ export async function setShowOnTrade(userId: string, slug: string, on: boolean) 
 
   const [saved] = await db
     .update(lists)
-    .set(on ? { discoverable: true, ...tradeColumns(true, true) } : { showOnTrade: false })
+    .set(tradeColumns(on))
     .where(eq(lists.id, list.id))
     .returning({
-      showOnTrade: lists.showOnTrade,
       discoverable: lists.discoverable,
       bumpedAt: lists.bumpedAt,
     });

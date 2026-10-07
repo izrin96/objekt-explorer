@@ -1,5 +1,5 @@
 import { CardsThreeIcon } from "@phosphor-icons/react";
-import type { PublicList } from "@repo/api/schemas/list";
+import { canBeOnTrade, type PublicList } from "@repo/api/schemas/list";
 import { Link } from "@tanstack/react-router";
 import { useRef } from "react";
 
@@ -79,9 +79,8 @@ export function PostListDialog({
 
 function PostListRow({ list }: { list: PublicList }) {
   const set = useSetShowOnTrade();
-  // a have or sale list is discoverable only when filed under a Cosmo profile
-  const needsProfile = list.listTypeNew !== "want" && !list.isProfileBind;
-  const checked = set.isPending ? set.variables.on : (list.showOnTrade ?? false);
+  const needsProfile = !canBeOnTrade(list.listTypeNew, list.isProfileBind);
+  const checked = set.isPending ? set.variables.on : (list.discoverable ?? false);
   const id = `post-list-${list.id}`;
 
   return (
@@ -108,6 +107,7 @@ function PostListRow({ list }: { list: PublicList }) {
         className="mt-0.5 shrink-0"
         aria-describedby={needsProfile || list.listTypeNew === "sale" ? `${id}-reason` : undefined}
         checked={checked}
+        // an older unbound sale list can still be on Market, so it can always be turned off
         disabled={(needsProfile && !checked) || set.isPending}
         onCheckedChange={(on) => set.mutate({ slug: list.slug, on })}
       />

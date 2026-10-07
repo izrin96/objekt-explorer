@@ -79,12 +79,16 @@ export function pairPosts<L extends TradeList>(lists: L[]): Post<L>[] {
     .map((list) => toPost(list, partnerOf(list)));
 }
 
-/** Newest bump first; an edit moves `updatedAt` only, so it never reorders. */
-export function comparePosts(
-  a: { bumpedAt: string | null; anchor: { id: number } },
-  b: { bumpedAt: string | null; anchor: { id: number } },
-) {
-  return time(b.bumpedAt) - time(a.bumpedAt) || b.anchor.id - a.anchor.id;
+type Ordered = { bumpedAt: string | null; updatedAt: string; anchor: { id: number } };
+
+/**
+ * Newest bump first; an edit moves `updatedAt` only, so it never reorders a bumped post. A post
+ * never bumped sorts by its last change, as the feed query does.
+ */
+export function comparePosts(a: Ordered, b: Ordered) {
+  return (
+    time(b.bumpedAt ?? b.updatedAt) - time(a.bumpedAt ?? a.updatedAt) || b.anchor.id - a.anchor.id
+  );
 }
 
 /** Idle once 30 days have passed since both the last bump and the last change. */

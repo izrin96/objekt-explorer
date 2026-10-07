@@ -91,7 +91,6 @@ function toDraft(list: StoredList): ListDraft {
     profileAddress: list.profileAddress,
     isProfileBind: list.isProfileBind,
     discoverable: list.discoverable ?? false,
-    showOnTrade: list.showOnTrade ?? false,
     matchAlerts: list.matchAlerts,
     gridColumns: list.gridColumns,
     hideSerial: list.hideSerial,

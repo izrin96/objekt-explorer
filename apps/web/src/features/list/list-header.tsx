@@ -8,7 +8,7 @@ import {
   TrashIcon,
   UsersIcon,
 } from "@phosphor-icons/react";
-import { tradeSideOf } from "@repo/api/schemas/list";
+import { canBeOnTrade, tradeSideOf } from "@repo/api/schemas/list";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
@@ -66,7 +66,7 @@ export function ListHeader() {
               </Badge>
             ) : null}
             {list.listTypeNew !== "general" ? <ListTypeBadge type={list.listTypeNew} /> : null}
-            {list.showOnTrade ? (
+            {list.discoverable && canBeOnTrade(list.listTypeNew, list.isProfileBind) ? (
               <Badge variant="outline" size="sm" render={<Link to="/trade" />}>
                 <ArrowsLeftRightIcon aria-hidden />
                 {m.list_on_trade()}

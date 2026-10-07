@@ -81,6 +81,15 @@ describe("order and idle", () => {
     expect(isPostIdle(edited!, NOW)).toBe(false);
   });
 
+  test("a post never bumped sorts by its last change", () => {
+    const posts = pairPosts([
+      list({ id: 1, listTypeNew: "want", bumpedAt: daysAgo(3) }),
+      list({ id: 2, listTypeNew: "want", bumpedAt: null, updatedAt: daysAgo(1) }),
+      list({ id: 3, listTypeNew: "want", bumpedAt: null, updatedAt: daysAgo(5) }),
+    ]);
+    expect(posts.toSorted(comparePosts).map((post) => post.anchor.id)).toEqual([2, 1, 3]);
+  });
+
   test("idle post drops out", () => {
     expect(isPostIdle({ bumpedAt: daysAgo(31), updatedAt: daysAgo(31) }, NOW)).toBe(true);
     expect(isPostIdle({ bumpedAt: daysAgo(31), updatedAt: daysAgo(2) }, NOW)).toBe(false);

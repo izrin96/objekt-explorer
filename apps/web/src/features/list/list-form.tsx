@@ -1,4 +1,4 @@
-import type { ListTypeNew, PublicList } from "@repo/api/schemas/list";
+import { canBeOnTrade, type ListTypeNew, type PublicList } from "@repo/api/schemas/list";
 import slugify from "slugify";
 import * as z from "zod";
 
@@ -43,7 +43,6 @@ export type ListDraft = {
   profileAddress: string | null;
   isProfileBind: boolean;
   discoverable: boolean;
-  showOnTrade: boolean;
   matchAlerts: boolean;
   gridColumns: number | null;
   hideSerial: boolean;
@@ -59,7 +58,6 @@ export const EMPTY_DRAFT: ListDraft = {
   profileAddress: null,
   isProfileBind: false,
   discoverable: false,
-  showOnTrade: false,
   matchAlerts: true,
   gridColumns: null,
   hideSerial: false,
@@ -110,8 +108,7 @@ export function toCreateInput(draft: ListDraft) {
     linkedListId: ["have", "want"].includes(draft.listTypeNew) ? draft.linkedListId : null,
     profileAddress: draft.profileAddress,
     isProfileBind,
-    discoverable: draft.discoverable,
-    showOnTrade: draft.listTypeNew !== "general" && draft.showOnTrade,
+    discoverable: draft.listTypeNew !== "general" && draft.discoverable,
     matchAlerts: draft.listTypeNew === "want" ? draft.matchAlerts : undefined,
     hideSerial: draft.hideSerial,
   };
@@ -149,7 +146,7 @@ export function ListForm({ idPrefix, value, onChange, lists, profiles, mode, url
   const linkable = lists.filter((list) =>
     value.listTypeNew === "have" ? list.listTypeNew === "want" : list.listTypeNew === "have",
   );
-  const discoverableDisabled = value.listTypeNew !== "want" && !value.isProfileBind;
+  const discoverableDisabled = !canBeOnTrade(value.listTypeNew, value.isProfileBind);
 
   return (
     <div className="flex flex-col gap-4">
@@ -338,44 +335,20 @@ export function ListForm({ idPrefix, value, onChange, lists, profiles, mode, url
 
       {value.listTypeNew !== "general" ? (
         <SwitchRow
-          id={id("discoverable")}
-          label={
-            isSale ? m.list_create_discoverable_sale_label() : m.list_create_discoverable_label()
-          }
-          description={
-            discoverableDisabled
-              ? m.list_create_requires_bind_desc()
-              : value.listTypeNew === "want"
-                ? m.list_create_discoverable_want_desc()
-                : isSale
-                  ? m.list_create_discoverable_sale_desc()
-                  : m.list_create_discoverable_have_desc()
-          }
-          checked={value.discoverable}
-          disabled={discoverableDisabled}
-          // a list on Trade is always discoverable, so this switch takes Trade with it
-          onCheckedChange={(checked) =>
-            set({ discoverable: checked, showOnTrade: checked && value.showOnTrade })
-          }
-        />
-      ) : null}
-
-      {value.listTypeNew !== "general" ? (
-        <SwitchRow
           id={id("show-on-trade")}
-          label={m.list_create_show_on_trade_label()}
+          label={
+            isSale ? m.list_create_discoverable_sale_label() : m.list_create_show_on_trade_label()
+          }
           description={
             discoverableDisabled
               ? m.list_create_requires_bind_desc()
               : isSale
-                ? m.list_create_show_on_trade_sale_desc()
-                : m.list_create_show_on_trade_desc()
+                ? m.list_create_on_market_desc()
+                : m.list_create_on_trade_desc()
           }
-          checked={value.showOnTrade && !discoverableDisabled}
+          checked={value.discoverable && !discoverableDisabled}
           disabled={discoverableDisabled}
-          onCheckedChange={(checked) =>
-            set({ showOnTrade: checked, discoverable: checked || value.discoverable })
-          }
+          onCheckedChange={(checked) => set({ discoverable: checked })}
         />
       ) : null}
 
