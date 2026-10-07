@@ -93,7 +93,7 @@ function HiddenPartnersList({ enabled }: { enabled: boolean }) {
             </Avatar>
             <span className="flex min-w-0 flex-1 flex-col">
               <span className="text-sm font-medium break-words">{name}</span>
-              {/* only the profiles their discoverable lists show; a hidden nickname leaves the address */}
+              {/* only the profiles their discoverable lists show */}
               {partner.profiles.length > 0 ? (
                 <span className="text-muted-foreground text-xs break-words">
                   {partner.profiles.map((p, index) => (

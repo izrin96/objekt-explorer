@@ -228,7 +228,7 @@ export function countDropped(partners: { userId: string; dropped: Dropped[] }[])
 
 export type AddressRef = { address: string; nickname: string | null };
 export type PartnerIdentity = {
-  /** the Cosmo nickname, or the account name when there is none to show */
+  /** the Cosmo nickname, or the account name when there is none */
   name: string;
   /** set when `name` is a Cosmo nickname */
   address: string | null;
@@ -248,20 +248,22 @@ export function addressesByUser(rows: readonly { userId: string | null; address:
   return map;
 }
 
+/** Each address's Cosmo nickname, keyed lowercase. */
+export function nicknamesByAddress(rows: readonly AddressRef[]) {
+  return new Map(rows.map((row) => [row.address.toLowerCase(), row.nickname]));
+}
+
 /** Named by the address of the list with the most matches. */
 export function toPartnerIdentity(
   accountName: string,
   matchedLists: { profileAddress: string | null; matches: number }[],
   addresses: AddressRef[],
 ): PartnerIdentity {
-  const byAddress = new Map(addresses.map((a) => [a.address.toLowerCase(), a]));
-  const visible = (address: string): AddressRef => {
-    const info = byAddress.get(address);
-    return {
-      address,
-      nickname: info?.nickname ?? null,
-    };
-  };
+  const nicknames = nicknamesByAddress(addresses);
+  const refOf = (address: string): AddressRef => ({
+    address,
+    nickname: nicknames.get(address) ?? null,
+  });
 
   const ranked = matchedLists.toSorted(
     (x, y) =>
@@ -269,7 +271,7 @@ export function toPartnerIdentity(
       Number(y.profileAddress !== null) - Number(x.profileAddress !== null),
   );
   const bestAddress = ranked[0]?.profileAddress?.toLowerCase() ?? null;
-  const best = bestAddress ? visible(bestAddress) : null;
+  const best = bestAddress ? refOf(bestAddress) : null;
 
   const heading = best?.nickname ? best : null;
   const others = new Set(
@@ -280,6 +282,6 @@ export function toPartnerIdentity(
   return {
     name: heading?.nickname ?? accountName,
     address: heading?.address ?? null,
-    also: [...others].map(visible),
+    also: [...others].map(refOf),
   };
 }

@@ -119,10 +119,6 @@ A partner row SHALL be headed by the Cosmo nickname of the address their best-ma
 - **WHEN** a partner's matched lists are bound to no address
 - **THEN** the row is headed by the account's display name
 
-#### Scenario: Hide Cosmo ID
-- **WHEN** the address "rinrin" has Hide Cosmo ID on
-- **THEN** the row is still headed "rinrin"
-
 ### Requirement: Freshness
 The view SHALL reflect the user's own list changes on the next load. Other accounts' changes SHALL appear within 5 minutes.
 

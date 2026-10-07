@@ -7,6 +7,7 @@ import { overrideCollection } from "@repo/lib/server/objekt";
 import { and, countDistinct, desc, eq, inArray, isNotNull, ne, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 
+import { nicknamesByAddress } from "../lib/trade-rank";
 import { getCollectionColumns } from "./objekt";
 import { toPublicUser } from "./profile";
 
@@ -323,13 +324,7 @@ async function buildTradePartnersResponse(
     collectionRows.map((c) => [c.slug, overrideCollection(c)]),
   );
 
-  // address → nickname map, addresses normalized to lowercase
-  const addrNickMap = new Map<string, string>();
-  for (const addr of userAddrs) {
-    if (addr.nickname) {
-      addrNickMap.set(addr.address.toLowerCase(), addr.nickname);
-    }
-  }
+  const addrNickMap = nicknamesByAddress(userAddrs);
 
   const order: string[] = [];
   const matchesByUser = new Map<string, PartnerRow[]>();

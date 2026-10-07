@@ -31,6 +31,7 @@ import {
   IDLE_DAYS,
   toPartnerIdentity,
   addressesByUser,
+  nicknamesByAddress,
 } from "../lib/trade-rank";
 import type { ListTypeNew } from "../schemas/list";
 import type { BrowseFilters, FeedCursor, PostType } from "../schemas/trade";
@@ -496,7 +497,7 @@ export async function browseFeed(
   ]);
   const addressesOf = addressesByUser(addressRows);
   const userMap = new Map(users.map((u) => [u.id, u]));
-  const nicknameOf = new Map(addressRows.map((row) => [row.address.toLowerCase(), row.nickname]));
+  const nicknameOf = nicknamesByAddress(addressRows);
 
   const filter = {
     slugs: slugs ? new Set(slugs) : null,

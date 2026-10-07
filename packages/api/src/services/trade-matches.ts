@@ -28,6 +28,7 @@ import {
   recount,
   toPartnerIdentity,
   addressesByUser,
+  nicknamesByAddress,
 } from "../lib/trade-rank";
 import { CARD_LIMIT, type TradeFilter } from "../schemas/trade";
 import { fetchCollectionsBySlug } from "./list";
@@ -325,7 +326,7 @@ async function computeTradeMatches(userId: string, sides: Sides, filter: TradeFi
   ]);
 
   const userMap = new Map(users.map((u) => [u.id, u]));
-  const nicknameOf = new Map(addressRows.map((row) => [row.address.toLowerCase(), row.nickname]));
+  const nicknameOf = nicknamesByAddress(addressRows);
 
   const partners = ranked.flatMap(({ partner, idle }) => {
     const account = userMap.get(partner.userId);

@@ -165,7 +165,7 @@ The Messages section of the account page (`/account/messages`) SHALL have "Who c
 ### Requirement: Chat as
 Messages settings SHALL offer Chat as when the account has at least one linked Cosmo profile. It is a choice of one of those profiles, each shown by its nickname. The chosen profile SHALL name the account wherever another account sees it as a partner: conversation rows and threads, offers and trades, offer notes in a thread, and blocked lists.
 - Without a choice, the first profile the account linked SHALL be used.
-- Hide nickname SHALL not affect it: the chosen or default profile is shown by its nickname, or by its shortened address when Cosmo gave it none.
+- The chosen or default profile SHALL be shown by its nickname, or by its shortened address when Cosmo gave it none; Hide Cosmo ID does not apply here (see `web-cosmo-link`).
 - A change SHALL apply to every conversation, past ones included, on the other side's next load.
 - When the chosen profile is unlinked, the default SHALL apply again.
 - With no linked profile, the setting SHALL not be shown and the display name SHALL be used.
@@ -175,8 +175,8 @@ Messages settings SHALL offer Chat as when the account has at least one linked C
 - **WHEN** a user whose first linked profile is "rin.main" picks "rin.alt" under Chat as
 - **THEN** their partners' conversation rows and threads head them as "rin.alt"
 
-#### Scenario: Hidden nickname
-- **WHEN** the user's chosen profile has Hide nickname on
+#### Scenario: Hide Cosmo ID
+- **WHEN** the user's chosen profile has Hide Cosmo ID on
 - **THEN** partners still see that profile's nickname
 
 #### Scenario: Chosen profile unlinked
