@@ -1219,6 +1219,7 @@
   "offer_flag_reserved": "進行中の交換に含まれています",
   "offer_flag_refused": "拒否されました",
   "offer_focus_hint": "この投稿から：選んで追加",
+  "offer_focus_give_hint": "この投稿が欲しいあなたのObjekt：選んで追加",
   "offer_leg_waiting": "送付待ち",
   "offer_leg_verified": "確認済み",
   "offer_leg_closed": "終了",

@@ -99,6 +99,8 @@ export function BrowsePost({
   // the post's own list (the have list of a pair), with the first collection it shows
   const anchor = post.sides.find((side) => side.list.id === post.id);
   const firstShown = anchor?.items[0]?.slug;
+  const offerSide = post.sides.find((side) => side.role !== "want");
+  const wantSide = post.sides.find((side) => side.role === "want");
 
   return (
     <article className="bg-card flex flex-col gap-4 rounded-lg border p-4">
@@ -151,7 +153,8 @@ export function BrowsePost({
                 request={{
                   to: { target: { kind: "list", slug: anchor.list.slug } },
                   name: identity.name,
-                  focusList: anchor.list.slug,
+                  focusList: offerSide?.list.slug,
+                  focusWantList: wantSide?.list.slug,
                 }}
               />
             </>

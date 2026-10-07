@@ -1219,6 +1219,7 @@
   "offer_flag_reserved": "진행 중인 거래에 포함됨",
   "offer_flag_refused": "거부됨",
   "offer_focus_hint": "이 게시물에서: 선택하여 추가",
+  "offer_focus_give_hint": "이 게시물이 원하는 내 오브젝트: 선택하여 추가",
   "offer_leg_waiting": "전송 대기 중",
   "offer_leg_verified": "확인됨",
   "offer_leg_closed": "종료됨",

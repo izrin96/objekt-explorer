@@ -80,6 +80,15 @@ export const myCopyOptions = (to: OfferAddress, collection: ValidObjekt | undefi
     retry: retryUnlessRefused,
   });
 
+/** The viewer's objekts in collections on one of the partner's want lists, have-list ones first. */
+export const myWantListOptions = (to: OfferAddress, wantList: string | undefined) =>
+  orpc.offer.candidates.queryOptions({
+    input: { ...to, side: "mine", wantList },
+    enabled: wantList !== undefined,
+    staleTime: 30_000,
+    retry: retryUnlessRefused,
+  });
+
 export const suggestOptions = (partnerId: string) =>
   orpc.offer.suggest.queryOptions({ input: { partnerId }, staleTime: 0, gcTime: 0 });
 

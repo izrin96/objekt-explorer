@@ -60,13 +60,18 @@ import {
 import {
   invalidateOfferLists,
   myCopyOptions,
+  myWantListOptions,
   type OfferAddress,
   suggestOptions,
   theirCandidatesOptions,
 } from "./queries";
 import { SegmentedChoice } from "./segmented-choice";
+import { shortcutItems } from "./shortcuts";
 
 type Collections = Readonly<Record<string, ValidObjekt | undefined>>;
+
+const holds = (picks: readonly OfferPick[], item: CandidateItem) =>
+  picks.some((pick) => pick.key === pickKey(item));
 
 type TopupDraft = { amount: number; currency: string; payer: TopupPayer };
 
@@ -88,10 +93,9 @@ export type OfferRequest = {
   suggestFor?: string;
   /** a list of theirs whose entries are laid out under You get, ready to add */
   focusList?: string;
+  /** a want list of theirs: what the viewer holds from it is laid out under You give */
+  focusWantList?: string;
 };
-
-/** How many of the focused list's entries show under You get before the picker is needed. */
-const FOCUS_LIMIT = 8;
 
 function OfferBuilder({
   request,
@@ -207,8 +211,13 @@ function BuilderForm({
   const hintId = useId();
 
   const theirs = useQuery(theirCandidatesOptions(to));
+  const mineWanted = useQuery(myWantListOptions(to, request.focusWantList));
   const theirFlags = new Map((theirs.data?.items ?? []).map((item) => [pickKey(item), item]));
-  const collections: Collections = { ...theirs.data?.collections, ...seen };
+  const collections: Collections = {
+    ...theirs.data?.collections,
+    ...mineWanted.data?.collections,
+    ...seen,
+  };
   const flagsOf = (pick: OfferPick) => {
     const live = theirFlags.get(pick.key);
     return pick.flags ?? (live ? toPick(live).flags : null);
@@ -247,12 +256,30 @@ function BuilderForm({
     return blockedReason(flagsOf(pick));
   };
 
-  const focus =
-    request.focusList === undefined
-      ? []
-      : (theirs.data?.items ?? [])
-          .filter((item) => item.listSlug === request.focusList && blockedReason(item) === null)
-          .slice(0, FOCUS_LIMIT);
+  const wanted = new Set(theirs.data?.wanted ?? []);
+  const getFocus = shortcutItems(
+    (theirs.data?.items ?? []).filter(
+      (item) => item.listSlug === request.focusList && blockedReason(item) === null,
+    ),
+    {
+      first: (item) => wanted.has(item.collectionSlug),
+      added: (item) => holds(get, item),
+    },
+  );
+  // the first page's have-list objekts lead it and recur among its items
+  const mineOnWant = new Map(
+    [...(mineWanted.data?.suggested ?? []), ...(mineWanted.data?.items ?? [])].map((item) => [
+      pickKey(item),
+      item,
+    ]),
+  );
+  const giveFocus = shortcutItems(
+    [...mineOnWant.values()].filter((item) => blockedReason(item) === null),
+    {
+      first: (item) => item.listSlug !== null,
+      added: (item) => holds(giveShown, item),
+    },
+  );
 
   const noteLength = Array.from(note.trim()).length;
   const blocked =
@@ -319,13 +346,28 @@ function BuilderForm({
 
   const sides = { give: [give, setGive], get: [get, setGet] } as const;
 
-  const addFocused = (item: CandidateItem) => {
-    const key = pickKey(item);
-    setGet((current) =>
-      current.some((pick) => pick.key === key) || current.length >= OFFER_SIDE_LIMIT
+  const addFocused = (side: OfferSide, item: CandidateItem) => {
+    sides[side][1]((current) =>
+      holds(current, item) || current.length >= OFFER_SIDE_LIMIT
         ? current
         : [...current, toPick(item)],
     );
+  };
+  const shortcuts = {
+    give: {
+      shown: request.focusWantList !== undefined,
+      pending: mineWanted.isPending,
+      items: giveFocus,
+      full: giveShown.length >= OFFER_SIDE_LIMIT,
+      label: m.offer_focus_give_hint(),
+    },
+    get: {
+      shown: request.focusList !== undefined,
+      pending: theirs.isPending,
+      items: getFocus,
+      full: get.length >= OFFER_SIDE_LIMIT,
+      label: m.offer_focus_hint(),
+    },
   };
 
   // a target the sender may not reach is refused before anything can be picked
@@ -342,6 +384,7 @@ function BuilderForm({
         <div className="grid min-w-0 gap-6 sm:grid-cols-2">
           {(["give", "get"] as const).map((side) => {
             const [picks, setPicks] = sides[side];
+            const shortcut = shortcuts[side];
             return (
               <SideColumn
                 key={side}
@@ -355,14 +398,15 @@ function BuilderForm({
                 onAdd={() => setPicking(side)}
                 onRemove={(key) => setPicks(picks.filter((pick) => pick.key !== key))}
               >
-                {side !== "get" || request.focusList === undefined ? null : theirs.isPending ? (
-                  <FocusStripSkeleton />
-                ) : focus.some((item) => !get.some((p) => p.key === pickKey(item))) ? (
+                {!shortcut.shown ? null : shortcut.pending ? (
+                  <FocusStripSkeleton label={shortcut.label} />
+                ) : shortcut.items.length > 0 ? (
                   <FocusStrip
-                    items={focus.filter((item) => !get.some((p) => p.key === pickKey(item)))}
+                    label={shortcut.label}
+                    items={shortcut.items}
                     collections={collections}
-                    full={get.length >= OFFER_SIDE_LIMIT}
-                    onAdd={addFocused}
+                    full={shortcut.full}
+                    onAdd={(item) => addFocused(side, item)}
                   />
                 ) : null}
               </SideColumn>
@@ -619,11 +663,13 @@ function SideColumn({
 }
 
 function FocusStrip({
+  label,
   items,
   collections,
   full,
   onAdd,
 }: {
+  label: string;
   items: CandidateItem[];
   collections: Collections;
   full: boolean;
@@ -631,7 +677,7 @@ function FocusStrip({
 }) {
   return (
     <div className="flex flex-col gap-2">
-      <p className="text-muted-foreground text-xs">{m.offer_focus_hint()}</p>
+      <p className="text-muted-foreground text-xs">{label}</p>
       <ul className="grid grid-cols-4 gap-2 sm:grid-cols-4">
         {items.map((item) => (
           <li key={pickKey(item)} className="min-w-0">
@@ -649,11 +695,11 @@ function FocusStrip({
   );
 }
 
-/** The strip's shape while their lists load, so the dialog does not grow under the reader. */
-function FocusStripSkeleton() {
+/** The strip's shape while it loads, so the dialog does not grow under the reader. */
+function FocusStripSkeleton({ label }: { label: string }) {
   return (
     <div className="flex flex-col gap-2">
-      <p className="text-muted-foreground text-xs">{m.offer_focus_hint()}</p>
+      <p className="text-muted-foreground text-xs">{label}</p>
       <div className="grid grid-cols-4 gap-2">
         {Array.from({ length: 4 }).map((_, index) => (
           <div key={index} className="flex flex-col gap-1">

@@ -6,7 +6,7 @@ import { conversation, listEntries, lists, offer, offerItem } from "@repo/db/sch
 import { and, desc, eq, gt, inArray, lt, ne, or, sql } from "drizzle-orm";
 
 import { pairKey } from "../lib/chat-rules";
-import { itemFlags } from "../lib/offer-rules";
+import { giveNarrowing, itemFlags } from "../lib/offer-rules";
 import { type ChatTarget } from "../schemas/chat";
 import { type CollectionFilters } from "../schemas/common/filters";
 import {
@@ -88,7 +88,7 @@ async function mineCandidates(
   me: string,
   addressed: Addressed,
   cursor: { receivedAt: string; id: string } | undefined,
-  { filters, matchOnly }: PickerNarrowing,
+  { filters, matchOnly, wantList }: PickerNarrowing,
 ) {
   const empty = {
     items: [],
@@ -96,14 +96,17 @@ async function mineCandidates(
     nextCursor: null,
     nextOffset: null,
     listed: true,
+    wanted: [],
     collections: {},
   };
-  const [linked, wanted] = await Promise.all([
+  const [linked, partnerWants, named] = await Promise.all([
     linkedAddresses([me]),
     matchOnly ? wantSlugsOf(addressed.partnerId, true) : null,
+    wantList === undefined ? null : wantListOf(wantList),
   ]);
+  const keptSlugs = giveNarrowing(addressed.partnerId, partnerWants, named);
   const addresses = [...(linked.get(me) ?? [])];
-  if (addresses.length === 0 || wanted?.length === 0) return empty;
+  if (addresses.length === 0 || keptSlugs?.length === 0) return empty;
 
   const [rows, haveEntries] = await Promise.all([
     indexer
@@ -115,7 +118,7 @@ async function mineCandidates(
           inArray(objekts.owner, addresses),
           ne(collections.slug, "empty-collection"),
           ...collectionWhere(filters),
-          wanted ? inArray(collections.slug, wanted) : undefined,
+          keptSlugs ? inArray(collections.slug, keptSlugs) : undefined,
           cursor
             ? or(
                 lt(objekts.receivedAt, cursor.receivedAt),
@@ -163,9 +166,9 @@ async function mineCandidates(
       }
     }
   }
-  const wantedSet = wanted ? new Set(wanted) : null;
+  const kept = keptSlugs ? new Set(keptSlugs) : null;
   const suggestedList = [...suggestedObjekts.values()]
-    .filter((s) => !wantedSet || wantedSet.has(s.objekt.slug))
+    .filter((s) => !kept || kept.has(s.objekt.slug))
     .slice(0, CANDIDATE_PAGE_SIZE);
 
   const ids = unique([...page.map((o) => o.id), ...suggestedList.map((s) => s.objekt.id)]);
@@ -188,6 +191,7 @@ async function mineCandidates(
         : null,
     nextOffset: null,
     listed: true,
+    wanted: [],
     collections: await collectionsOf(
       [...page, ...suggestedList.map((s) => s.objekt)].map((o) => o.slug),
     ),
@@ -233,6 +237,24 @@ async function wantSlugsOf(userId: string, discoverableOnly: boolean) {
       ),
     );
   return rows.flatMap((row) => (row.slug ? [row.slug] : []));
+}
+
+async function wantListOf(slug: string) {
+  const [list] = await db
+    .select({
+      id: lists.id,
+      userId: lists.userId,
+      listTypeNew: lists.listTypeNew,
+      discoverable: lists.discoverable,
+    })
+    .from(lists)
+    .where(eq(lists.slug, slug));
+  if (!list) return { list: null, slugs: [] };
+  const rows = await db
+    .select({ slug: listEntries.collectionSlug })
+    .from(listEntries)
+    .where(eq(listEntries.listId, list.id));
+  return { list, slugs: rows.flatMap((row) => (row.slug ? [row.slug] : [])) };
 }
 
 /** Of `slugs`, the collections `filters` keep. */
@@ -316,15 +338,25 @@ async function resolveTheirItems(me: string, addressed: Addressed) {
   return { items, listed: entries.length > 0 || keptIds.length > 0 };
 }
 
-/** Every item the sender may ask for, for the builder to check picks against and for suggestions. */
-async function theirCandidates(me: string, addressed: Addressed) {
-  const { items, listed } = await resolveTheirItems(me, addressed);
+/**
+ * Every item the sender may ask for, for the builder to check picks against and for suggestions;
+ * `wanted` names those on the sender's want lists.
+ */
+async function theirCandidates(me: string, addressed: Addressed, myWants?: string[]) {
+  const [{ items, listed }, mineWanted] = await Promise.all([
+    resolveTheirItems(me, addressed),
+    myWants ?? wantSlugsOf(me, false),
+  ]);
+  const want = new Set(mineWanted);
   return {
     items,
     suggested: [],
     nextCursor: null,
     nextOffset: null,
     listed,
+    wanted: unique(
+      items.flatMap((item) => (want.has(item.collectionSlug) ? [item.collectionSlug] : [])),
+    ),
     collections: await collectionsOf(items.map((item) => item.collectionSlug)),
   };
 }
@@ -354,6 +386,7 @@ async function theirPickerPage(
     nextCursor: null,
     nextOffset: end < shown.length ? end : null,
     listed,
+    wanted: [],
     collections: await collectionsOf(slice.map((item) => item.collectionSlug)),
   };
 }
@@ -437,7 +470,7 @@ export async function suggestOffer(me: string, partnerId: string) {
   };
 
   const [theirs, mine] = await Promise.all([
-    myWantSlugs.length === 0 ? null : theirCandidates(me, addressed),
+    myWantSlugs.length === 0 ? null : theirCandidates(me, addressed, myWantSlugs),
     (async () => {
       const giveEntries = myEntries.filter(
         (e) => haveIds.has(e.listId) && e.collectionSlug && theyWant.has(e.collectionSlug),

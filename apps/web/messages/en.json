@@ -1219,6 +1219,7 @@
   "offer_flag_reserved": "In a trade in progress",
   "offer_flag_refused": "Refused",
   "offer_focus_hint": "From this post: select to add",
+  "offer_focus_give_hint": "Yours that this post wants: select to add",
   "offer_leg_waiting": "Waiting for transfer",
   "offer_leg_verified": "Verified",
   "offer_leg_closed": "Closed",

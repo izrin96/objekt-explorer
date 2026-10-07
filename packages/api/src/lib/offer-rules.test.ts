@@ -14,6 +14,7 @@ import {
   createEffect,
   effectiveStatus,
   firstItemRefusal,
+  giveNarrowing,
   itemFlags,
   itemStillHeld,
   itemVerdict,
@@ -393,5 +394,33 @@ describe("itemStillHeld", () => {
   test("anywhere else, or unknown to the indexer, it moved", () => {
     expect(itemStillHeld(item, "0xstranger", [send({ to: "0xstranger" })])).toBe(false);
     expect(itemStillHeld(item, undefined, [])).toBe(false);
+  });
+});
+
+describe("giveNarrowing", () => {
+  const list = { userId: "rin", listTypeNew: "want" as const, discoverable: true };
+
+  test("no want list keeps the partner-wide narrowing", () => {
+    expect(giveNarrowing("rin", null, null)).toBeNull();
+    expect(giveNarrowing("rin", ["a"], null)).toEqual(["a"]);
+  });
+
+  test("the partner's want list on Trade keeps its collections", () => {
+    expect(giveNarrowing("rin", null, { list, slugs: ["a", "b", "a"] })).toEqual(["a", "b"]);
+  });
+
+  test("with Only what they want too, both apply", () => {
+    expect(giveNarrowing("rin", ["b", "c"], { list, slugs: ["a", "b"] })).toEqual(["b"]);
+  });
+
+  test("anyone else's list, a private one, a have list or none keeps nothing", () => {
+    for (const other of [
+      { ...list, userId: "yuki" },
+      { ...list, discoverable: false },
+      { ...list, listTypeNew: "have" as const },
+      null,
+    ]) {
+      expect(giveNarrowing("rin", null, { list: other, slugs: ["a"] })).toEqual([]);
+    }
   });
 });

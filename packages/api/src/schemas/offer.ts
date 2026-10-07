@@ -147,6 +147,8 @@ const pickerNarrowingSchema = z.object({
   filters: collectionFiltersSchema.partial().optional(),
   /** mine: only what the partner wants; theirs: only what the sender wants */
   matchOnly: z.boolean().optional(),
+  /** mine: only collections on this want list of the partner's */
+  wantList: z.string().min(1).max(12).optional(),
 });
 export type PickerNarrowing = z.infer<typeof pickerNarrowingSchema>;
 

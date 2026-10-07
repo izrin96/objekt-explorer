@@ -1,3 +1,4 @@
+import type { ListTypeNew } from "../schemas/list";
 import {
   type OfferAction,
   type OfferRefusal,
@@ -288,4 +289,26 @@ export function toReputation(counts: RatingCounts) {
     positive: rated === 0 ? null : Math.round((100 * counts.positive) / rated),
     since: counts.since,
   };
+}
+
+type WantListRef = { userId: string; listTypeNew: ListTypeNew; discoverable: boolean };
+
+/**
+ * The collections the give picker keeps, null for all. A named want list counts only when it
+ * is the partner's and on Trade, so a slug cannot read someone else's private list.
+ */
+export function giveNarrowing(
+  partnerId: string,
+  partnerWants: string[] | null,
+  wantList: { list: WantListRef | null; slugs: string[] } | null,
+): string[] | null {
+  if (wantList === null) return partnerWants;
+  const { list } = wantList;
+  const named =
+    list && list.userId === partnerId && list.listTypeNew === "want" && list.discoverable
+      ? [...new Set(wantList.slugs)]
+      : [];
+  if (partnerWants === null) return named;
+  const kept = new Set(partnerWants);
+  return named.filter((slug) => kept.has(slug));
 }
