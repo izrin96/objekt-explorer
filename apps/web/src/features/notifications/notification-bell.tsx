@@ -56,7 +56,7 @@ export function NotificationBell() {
         }
       >
         <BellIcon />
-        <CountBadge count={unread} />
+        <CountBadge count={unread} dot />
       </PopoverTrigger>
       <PopoverPopup
         ref={popupRef}
@@ -95,7 +95,14 @@ function NotificationPanel({ unread, onNavigate }: { unread: number; onNavigate:
   return (
     <div className="flex max-h-128 flex-col">
       <div className="flex items-center justify-between gap-2 border-b py-2 ps-4 pe-2">
-        <PopoverTitle className="font-display text-base">{m.notification_title()}</PopoverTitle>
+        <div className="flex min-w-0 items-baseline gap-2">
+          <PopoverTitle className="font-display text-base">{m.notification_title()}</PopoverTitle>
+          {unread > 0 ? (
+            <span className="text-muted-foreground text-xs tabular-nums">
+              {m.notification_unread_count({ count: unread })}
+            </span>
+          ) : null}
+        </div>
         {empty ? null : (
           <Button
             variant="ghost"

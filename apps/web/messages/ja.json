@@ -847,6 +847,7 @@
   "notification_mark_all_read": "すべて既読にする",
   "notification_load_more": "さらに読み込む",
   "notification_unread": "未読",
+  "notification_unread_count": "未読{count}件",
   "notification_empty": "通知はまだありません",
   "notification_empty_hint": "希望リストのObjektが出品されたときや、オファーに返答があったときにここに表示されます。",
   "notification_go_to_lists": "マイリストへ",

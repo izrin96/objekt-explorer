@@ -847,6 +847,7 @@
   "notification_mark_all_read": "모두 읽음으로 표시",
   "notification_load_more": "더 보기",
   "notification_unread": "읽지 않음",
+  "notification_unread_count": "읽지 않음 {count}개",
   "notification_empty": "아직 알림이 없습니다",
   "notification_empty_hint": "누군가 내 희망 목록의 오브젝트를 올리거나 오퍼에 답하면 여기에 표시됩니다.",
   "notification_go_to_lists": "내 목록으로",

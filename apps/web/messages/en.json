@@ -847,6 +847,7 @@
   "notification_mark_all_read": "Mark all read",
   "notification_load_more": "Load more",
   "notification_unread": "Unread",
+  "notification_unread_count": "{count} unread",
   "notification_empty": "No notifications yet",
   "notification_empty_hint": "When someone lists an objekt from your want lists, or answers an offer, it shows up here.",
   "notification_go_to_lists": "Go to My List",
