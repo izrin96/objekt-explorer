@@ -121,8 +121,7 @@ export const tradeRouter = {
       .where(eq(hiddenTradePartner.userId, session.user.id))
       .orderBy(desc(hiddenTradePartner.createdAt));
 
-    // only addresses a discoverable list is bound to, as For you named the partner, and never
-    // one that hides its owner
+    // only addresses a discoverable list is bound to, as For you named the partner
     const addresses =
       rows.length === 0
         ? []
@@ -144,7 +143,6 @@ export const tradeRouter = {
                 eq(lists.discoverable, true),
                 inArray(lists.listTypeNew, ["have", "sale", "want"]),
                 eq(userAddress.userId, lists.userId),
-                eq(userAddress.hideUser, false),
               ),
             );
 

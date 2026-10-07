@@ -8,7 +8,7 @@ Offers between two accounts on `apps/web`: specific objekts (or any copy) on eac
 ### Requirement: Offers name objekts on both sides
 An offer SHALL be sent inside a conversation from one account to the other. It has two sides:
 - **You give**: specific objekts owned by one of the sender's linked addresses.
-- **You get**: specific objekts, or "any copy" of a collection. Each comes from an entry on one of the recipient's have or sale lists bound to a Cosmo profile, at any of the recipient's linked addresses, that the sender may see in that conversation. Those are lists that show their owner, the list the conversation started from, and lists already shown on a card in the conversation.
+- **You get**: specific objekts, or "any copy" of a collection. Each comes from an entry on one of the recipient's have or sale lists bound to a Cosmo profile, at any of the recipient's linked addresses.
 
 A counter-offer MAY also ask for any objekt the recipient listed under You give in the offer it counters, since the recipient already offered it.
 
@@ -31,10 +31,6 @@ An offer SHALL hold at least one objekt, and at most 50 on each side. On the off
 #### Scenario: Counter keeps their objekt
 - **WHEN** rin.trades offers HyeRin 301Z #1203, which is on none of their lists, and the user counters, keeping it under You get and adding a top-up
 - **THEN** the counter is sent
-
-#### Scenario: Hidden list stays hidden
-- **WHEN** the recipient has a have list that hides its owner and was never shown in this conversation
-- **THEN** the builder doesn't offer that list's entries
 
 ### Requirement: Checks before sending
 Before an offer is sent, each specific objekt SHALL be checked against current on-chain ownership:
@@ -101,7 +97,7 @@ The builder SHALL open as a dialog, and as a full-height sheet on a phone. It sh
 Each pickable objekt SHALL show its flags (not transferable, reserved, in another open offer). Send SHALL stay disabled until the offer holds at least one objekt.
 
 Each picker SHALL narrow by member, season and class, and SHALL load more as it scrolls, 200 objekts at a time, so a long list does not land at once. Each SHALL also offer a matching switch:
-- You give: "Only what they want", off by default, keeps collections on the partner's discoverable want lists. Like For you, it never names the list, so a list that hides its owner stays untied to the account.
+- You give: "Only what they want", off by default, keeps collections on the partner's discoverable want lists.
 - You get: "Only what I want", on by default when the sender keeps a want list, keeps collections on the sender's want lists.
 
 An empty You get picker SHALL say why: the partner lists nothing the sender may ask for; nothing matches the filters; or the partner no longer holds anything they listed. The first reason SHALL win over the filters.

@@ -95,7 +95,6 @@ function toDraft(list: StoredList): ListDraft {
     matchAlerts: list.matchAlerts,
     gridColumns: list.gridColumns,
     hideSerial: list.hideSerial,
-    hideUser: list.hideUser,
     regenerateSlug: false,
   };
 }

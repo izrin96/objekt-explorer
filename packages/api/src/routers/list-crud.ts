@@ -117,7 +117,8 @@ export const listCrud = {
             userId: user.id,
             slug,
             profileSlug,
-            hideUser: input.hideUser,
+            // Hide User is no longer offered; the column goes in a later migration
+            hideUser: false,
             listTypeNew: input.listTypeNew,
             isProfileBind,
             hideSerial:
@@ -236,7 +237,6 @@ export const listCrud = {
           .update(lists)
           .set({
             name: input.name,
-            hideUser: input.hideUser,
             gridColumns: input.gridColumns,
             profileAddress: list.isProfileBind
               ? undefined

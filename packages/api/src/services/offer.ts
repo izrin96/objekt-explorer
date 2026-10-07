@@ -18,7 +18,7 @@ import {
 } from "@repo/db/schema";
 import { and, desc, eq, gt, gte, inArray, isNull, lt, ne, or, sql } from "drizzle-orm";
 
-import { cardListAllowed, pairKey, startVerdict } from "../lib/chat-rules";
+import { pairKey, startVerdict } from "../lib/chat-rules";
 import {
   type ActorLimits,
   actionRefusal,
@@ -110,7 +110,6 @@ const REFUSAL_STATUS: Record<OfferRefusal, ConstructorParameters<typeof ORPCErro
   trade_blocked: "FORBIDDEN",
   no_address: "FORBIDDEN",
   not_accepting: "FORBIDDEN",
-  hidden_owner: "FORBIDDEN",
   muted: "FORBIDDEN",
   too_many_open: "TOO_MANY_REQUESTS",
   start_limit: "TOO_MANY_REQUESTS",
@@ -276,7 +275,6 @@ async function openOfferHolders(ids: string[]) {
 type Addressed = {
   partnerId: string;
   conversationId: number | null;
-  targetListSlug: string | null;
   /** set for a `target`: what a start needs, read once */
   start: StartContext | null;
 };
@@ -293,7 +291,7 @@ async function resolveAddressed(
 ): Promise<Addressed> {
   if (input.conversationId !== undefined) {
     const { partnerId } = await findMembership(input.conversationId, me);
-    return { partnerId, conversationId: input.conversationId, targetListSlug: null, start: null };
+    return { partnerId, conversationId: input.conversationId, start: null };
   }
   const target = input.target!;
   const start = await prepareStart(me, meCreatedAt, target, new Date());
@@ -304,13 +302,11 @@ async function resolveAddressed(
     .select({ id: conversation.id })
     .from(conversation)
     .where(and(eq(conversation.userLow, userLow), eq(conversation.userHigh, userHigh)));
-  // an existing conversation passes too, but only after Hide User, which must not tell it apart
   const verdict = startVerdict({
     senderId: me,
     recipientId: partnerId,
     senderHasAddress: start.senderHasAddress,
     pref: start.pref,
-    hidesOwner: start.hidesOwner,
     blocked: start.safety.blocked,
     senderMuted: start.safety.mute !== null,
     existing: existing !== undefined,
@@ -321,7 +317,6 @@ async function resolveAddressed(
   return {
     partnerId,
     conversationId: existing?.id ?? null,
-    targetListSlug: target.kind === "list" ? target.slug : null,
     start,
   };
 }
@@ -333,45 +328,18 @@ type AllowedEntry = {
   objektId: string | null;
 };
 
-/**
- * The partner's have and sale entries the sender may ask for: lists that show their owner,
- * the list being started from, and lists already named in the conversation, on a card or
- * on an earlier offer (an offer started from a hidden list leaves no card).
- */
-async function allowedEntries(
-  me: string,
-  addressed: Addressed,
-  slugs?: string[],
-): Promise<AllowedEntry[]> {
-  const { partnerId, conversationId, targetListSlug } = addressed;
-  const [partnerLists, carded] = await Promise.all([
-    db
-      .select({ id: lists.id, slug: lists.slug, hideUser: lists.hideUser })
-      .from(lists)
-      .where(
-        and(
-          eq(lists.userId, partnerId),
-          inArray(lists.listTypeNew, ["have", "sale"]),
-          eq(lists.isProfileBind, true),
-        ),
+/** The partner's entries the sender may ask for: those on their bound have and sale lists. */
+async function allowedEntries(addressed: Addressed, slugs?: string[]): Promise<AllowedEntry[]> {
+  const allowed = await db
+    .select({ id: lists.id, slug: lists.slug })
+    .from(lists)
+    .where(
+      and(
+        eq(lists.userId, addressed.partnerId),
+        inArray(lists.listTypeNew, ["have", "sale"]),
+        eq(lists.isProfileBind, true),
       ),
-    conversationId === null
-      ? { rows: [] }
-      : db.execute<{ list_id: number }>(sql`
-          SELECT DISTINCT (card->>'listId')::int AS list_id FROM message
-          WHERE conversation_id = ${conversationId} AND card ? 'listId'
-          UNION
-          SELECT DISTINCT i.list_id FROM offer_item i
-          JOIN offer o ON o.id = i.offer_id
-          WHERE o.conversation_id = ${conversationId} AND i.list_id IS NOT NULL
-        `),
-  ]);
-  const cardIds = new Set(carded.rows.map((row) => row.list_id));
-  const allowed = partnerLists.filter(
-    (list) =>
-      cardIds.has(list.id) ||
-      cardListAllowed({ ownerId: partnerId, ...list }, me, partnerId, targetListSlug),
-  );
+    );
   if (allowed.length === 0 || slugs?.length === 0) return [];
 
   const slugOf = new Map(allowed.map((list) => [list.id, list.slug]));
@@ -616,7 +584,7 @@ async function filterSlugs(slugs: string[], filters: Partial<CollectionFilters>)
 async function resolveTheirItems(me: string, addressed: Addressed) {
   const { partnerId } = addressed;
   const [entries, linked, kept] = await Promise.all([
-    allowedEntries(me, addressed),
+    allowedEntries(addressed),
     linkedAddresses([partnerId]),
     counteredGives(addressed.conversationId, me),
   ]);
@@ -957,7 +925,6 @@ export async function createOffer(
 
   const [entries, kept] = await Promise.all([
     allowedEntries(
-      me,
       addressed,
       input.get.map((item) => item.collectionSlug),
     ),
@@ -1870,7 +1837,6 @@ export async function suggestOffer(me: string, partnerId: string) {
   const addressed: Addressed = {
     partnerId,
     conversationId: existing[0]?.id ?? null,
-    targetListSlug: null,
     start: null,
   };
 

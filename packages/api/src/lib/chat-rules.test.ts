@@ -31,8 +31,7 @@ const facts = (overrides: Partial<StartFacts> = {}): StartFacts => ({
   senderId: "alice",
   recipientId: "rin",
   senderHasAddress: true,
-  pref: { allow: "anyone", allowHidden: false },
-  hidesOwner: false,
+  pref: { allow: "anyone" },
   blocked: false,
   senderMuted: false,
   existing: false,
@@ -68,41 +67,18 @@ describe("startVerdict", () => {
   });
 
   test("recipient allows nobody", () => {
-    const pref = { allow: "nobody" as const, allowHidden: true };
+    const pref = { allow: "nobody" as const };
     expect(startVerdict(facts({ pref }))).toEqual({ ok: false, reason: "not_accepting" });
-    expect(isMessageable(pref, false)).toBe(false);
+    expect(isMessageable(pref)).toBe(false);
+    expect(isMessageable({ allow: "anyone" })).toBe(true);
     // the setting applies to new conversations only
     expect(startVerdict(facts({ pref, existing: true }))).toEqual({ ok: true });
-  });
-
-  test("hidden owner, not opted in", () => {
-    expect(startVerdict(facts({ hidesOwner: true }))).toEqual({
-      ok: false,
-      reason: "hidden_owner",
-    });
-    expect(isMessageable({ allow: "anyone", allowHidden: false }, true)).toBe(false);
-  });
-
-  test("a hidden owner reads the same whether or not a conversation already exists", () => {
-    const refused = { ok: false, reason: "hidden_owner" } as const;
-    expect(startVerdict(facts({ hidesOwner: true, existing: true }))).toEqual(refused);
-    expect(startVerdict(facts({ hidesOwner: true, blocked: true }))).toEqual(refused);
-    expect(startVerdict(facts({ hidesOwner: true, senderMuted: true }))).toEqual(refused);
-    expect(
-      startVerdict(facts({ hidesOwner: true, pref: { allow: "nobody", allowHidden: false } })),
-    ).toEqual(refused);
-  });
-
-  test("hidden owner, opted in", () => {
-    const pref = { allow: "anyone" as const, allowHidden: true };
-    expect(startVerdict(facts({ hidesOwner: true, pref }))).toEqual({ ok: true });
-    expect(isMessageable(pref, true)).toBe(true);
   });
 });
 
 describe("blocks and mutes", () => {
   test("a block reads exactly like a recipient who accepts nobody", () => {
-    const nobody = startVerdict(facts({ pref: { allow: "nobody", allowHidden: false } }));
+    const nobody = startVerdict(facts({ pref: { allow: "nobody" } }));
     expect(startVerdict(facts({ blocked: true }))).toEqual(nobody);
     expect(sendVerdict({ blocked: true, senderMuted: false })).toEqual(nobody);
   });
@@ -247,27 +223,10 @@ describe("rate limits", () => {
 });
 
 describe("cardListAllowed", () => {
-  const list = (ownerId: string, hideUser: boolean, slug = "s1") => ({ ownerId, hideUser, slug });
-
-  test("the sender's own lists, hidden or not", () => {
-    expect(cardListAllowed(list("alice", true), "alice", "rin", null)).toBe(true);
-    expect(cardListAllowed(list("alice", false), "alice", "rin", null)).toBe(true);
-  });
-
-  test("a partner's list that shows its owner", () => {
-    expect(cardListAllowed(list("rin", false), "alice", "rin", null)).toBe(true);
-  });
-
-  test("a partner's hidden list is refused exactly like a stranger's list", () => {
-    const hidden = cardListAllowed(list("rin", true), "alice", "rin", null);
-    const stranger = cardListAllowed(list("kaede", false), "alice", "rin", null);
-    expect(hidden).toBe(false);
-    expect(stranger).toBe(false);
-  });
-
-  test("the hidden list the conversation is started from", () => {
-    expect(cardListAllowed(list("rin", true, "s1"), "alice", "rin", "s1")).toBe(true);
-    expect(cardListAllowed(list("rin", true, "s2"), "alice", "rin", "s1")).toBe(false);
+  test("a list of either member, never a stranger's", () => {
+    expect(cardListAllowed({ ownerId: "alice" }, "alice", "rin")).toBe(true);
+    expect(cardListAllowed({ ownerId: "rin" }, "alice", "rin")).toBe(true);
+    expect(cardListAllowed({ ownerId: "kaede" }, "alice", "rin")).toBe(false);
   });
 });
 
@@ -276,7 +235,6 @@ describe("chatIdentity", () => {
     address: "0xAbc",
     nickname: "rin.trades",
     hideNickname: false,
-    hideUser: false,
     ...overrides,
   });
 
@@ -288,8 +246,7 @@ describe("chatIdentity", () => {
     });
   });
 
-  test("an address that hides its owner or its nickname falls back to the account name", () => {
-    expect(chatIdentity("Rin", [address({ hideUser: true })]).name).toBe("Rin");
+  test("an address that hides its nickname falls back to the account name", () => {
     expect(chatIdentity("Rin", [address({ hideNickname: true })]).name).toBe("Rin");
   });
 });

@@ -76,16 +76,15 @@ export function toPublicProfile(
     bannerImgType: profile.bannerImgType,
     bannerImgUrl: profile.bannerImgUrl,
     gridColumns: profile.gridColumns,
-    user: profile.hideUser || !user ? null : toPublicUser(user),
+    user: user ? toPublicUser(user) : null,
   };
 }
 
-type ProfileUser = User & { messagePref: { allow: string; allowHidden: boolean } | null };
+type ProfileUser = User & { messagePref: { allow: string } | null };
 
 /** The profile page's read: the public profile plus whether it offers Message to the viewer. */
 async function toProfilePage(profile: UserAddress, user: ProfileUser | null, currentUser?: User) {
   const shown = toPublicProfile(profile, user, currentUser);
-  // the account id only where the profile already shows its owner, so Hide User stays untied
   const publicProfile =
     shown.user && user
       ? { ...shown, userId: user.id, reputation: (await reputationOf([user.id])).get(user.id) }
@@ -97,7 +96,7 @@ async function toProfilePage(profile: UserAddress, user: ProfileUser | null, cur
   const blocked = currentUser ? await isBlockedEither(currentUser.id, user.id) : false;
   return {
     ...publicProfile,
-    messageable: !blocked && isMessageable(toMessagePref(user.messagePref), profile.hideUser),
+    messageable: !blocked && isMessageable(toMessagePref(user.messagePref)),
   };
 }
 

@@ -80,7 +80,6 @@ export function offerRefusalText(refusal: OfferRefusalInfo, named: string) {
     case "no_address":
     case "self":
     case "not_accepting":
-    case "hidden_owner":
     case "start_limit":
     case "message_limit":
     case "muted":

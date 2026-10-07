@@ -44,7 +44,6 @@ export type ProfilePreview = z.infer<typeof profilePreviewOutputSchema>;
 export function makeEditProfileInputSchema(bannerUrlPrefix: string) {
   return z.object({
     address: addressSchema,
-    hideUser: z.boolean(),
     bannerImgUrl: z
       .url()
       .max(512)

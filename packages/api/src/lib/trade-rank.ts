@@ -242,7 +242,7 @@ export function visibleNickname(info: Pick<AddressInfo, "nickname" | "hideNickna
   return info.hideNickname ? null : (info.nickname ?? null);
 }
 
-/** Named by the address of the list with the most matches; `lists.hide_user` does not apply. */
+/** Named by the address of the list with the most matches. */
 export function toPartnerIdentity(
   accountName: string,
   matchedLists: { profileAddress: string | null; matches: number }[],

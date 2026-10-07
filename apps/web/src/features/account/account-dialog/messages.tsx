@@ -2,9 +2,7 @@ import { MESSAGE_ALLOW, type MessageAllow } from "@repo/api/schemas/chat";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
-import { Label } from "@/components/ui/label";
 import { Radio, RadioGroup } from "@/components/ui/radio-group";
-import { Switch } from "@/components/ui/switch";
 import { toastManager } from "@/components/ui/toast";
 import { chatSettingsOptions } from "@/features/chat/queries";
 import { orpc } from "@/lib/orpc";
@@ -72,25 +70,6 @@ export function MessagesSection() {
           ))}
         </RadioGroup>
       </section>
-
-      <Label
-        htmlFor="account-messages-hidden"
-        className="flex items-start justify-between gap-4 font-normal"
-      >
-        <span className="flex flex-col gap-0.5">
-          <span className="text-sm font-medium">{m.chat_settings_hidden()}</span>
-          <span className="text-muted-foreground text-xs text-pretty">
-            {m.chat_settings_hidden_desc()}
-          </span>
-        </span>
-        <Switch
-          id="account-messages-hidden"
-          className="mt-0.5 shrink-0"
-          checked={settings.data?.allowHidden ?? false}
-          disabled={!settings.data}
-          onCheckedChange={(allowHidden) => mutation.mutate({ allowHidden })}
-        />
-      </Label>
     </div>
   );
 }

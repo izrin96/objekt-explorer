@@ -2,7 +2,8 @@ import { db } from "@repo/db";
 import { notification, notificationPref, user, userAddress } from "@repo/db/schema";
 import { and, asc, eq, inArray, sql } from "drizzle-orm";
 
-import { type ChatAddress, chatIdentity } from "../lib/chat-rules";
+import { chatIdentity } from "../lib/chat-rules";
+import type { AddressInfo } from "../lib/trade-rank";
 import type { OfferPayload, TradePayload } from "../schemas/offer";
 
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
@@ -66,13 +67,12 @@ export async function partyNames(userIds: string[]) {
               address: userAddress.address,
               nickname: userAddress.nickname,
               hideNickname: userAddress.hideNickname,
-              hideUser: userAddress.hideUser,
             })
             .from(userAddress)
             .where(inArray(userAddress.userId, ids))
             .orderBy(asc(userAddress.id)),
         ]);
-  const addressesOf = new Map<string, ChatAddress[]>();
+  const addressesOf = new Map<string, AddressInfo[]>();
   for (const { userId, ...info } of addresses) {
     if (userId) addressesOf.set(userId, [...(addressesOf.get(userId) ?? []), info]);
   }

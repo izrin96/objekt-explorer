@@ -154,9 +154,7 @@ export const marketRouter = {
             profileAddress: lists.profileAddress,
             ownerNickname: userAddress.nickname,
             ownerHideNickname: userAddress.hideNickname,
-            hideUser: lists.hideUser,
             messageAllow: messagePref.allow,
-            messageAllowHidden: messagePref.allowHidden,
             blocked: viewerId
               ? sql<boolean>`NOT ${notBlockedEither(viewerId, sql`${lists.userId}`)}`
               : sql<boolean>`false`,
@@ -212,12 +210,7 @@ export const marketRouter = {
           },
           serial: row.hideSerial ? null : (objekt?.serial ?? null),
           objektId: row.hideSerial ? null : row.objektId,
-          messageable:
-            !row.blocked &&
-            isMessageable(
-              toMessagePref({ allow: row.messageAllow, allowHidden: row.messageAllowHidden }),
-              row.hideUser,
-            ),
+          messageable: !row.blocked && isMessageable(toMessagePref({ allow: row.messageAllow })),
           transferable: row.hideSerial ? null : (objekt?.transferable ?? null),
         } satisfies MarketListing;
       });

@@ -58,15 +58,15 @@ collection by member and by season.
 - **THEN** Progress totals do not count them
 
 ### Requirement: Message from a profile
-A profile whose address is linked to an account other than the viewer's SHALL offer Message in its header, under the rules in `web-chat`, including the hidden-owner opt-in when the profile hides its owner. A conversation started here carries no card, so it lands in the recipient's Requests. A profile with no linked account, and the viewer's own profile, SHALL show no Message.
+A profile whose address is linked to an account other than the viewer's SHALL offer Message in its header, under the rules in `web-chat`. A conversation started here carries no card, so it lands in the recipient's Requests. A profile with no linked account, and the viewer's own profile, SHALL show no Message.
 
 #### Scenario: Unlinked address
 - **WHEN** a visitor opens the profile of an address no account has linked
 - **THEN** the header shows no Message action
 
 ### Requirement: Reputation on a profile
-A profile whose header shows the linked account SHALL show that account's reputation line (see `web-verified-trades`). A profile that hides its user, or whose address no account has linked, SHALL show none.
+A profile whose header shows the linked account SHALL show that account's reputation line (see `web-verified-trades`). A profile whose address no account has linked SHALL show none.
 
-#### Scenario: Hidden user
-- **WHEN** a visitor opens the profile of an address whose owner has Hide User on
+#### Scenario: Unlinked address
+- **WHEN** a visitor opens the profile of an address no account has linked
 - **THEN** no reputation line is shown

@@ -20,14 +20,13 @@ export const MESSAGE_ALLOW = ["anyone", "nobody"] as const;
 export type MessageAllow = (typeof MESSAGE_ALLOW)[number];
 
 /** A user with no `message_pref` row uses these. */
-export const MESSAGE_PREF_DEFAULTS = { allow: "anyone", allowHidden: false } as const;
+export const MESSAGE_PREF_DEFAULTS = { allow: "anyone" } as const;
 
 /** `data.reason` on a refused start or send. */
 export const CHAT_REFUSALS = [
   "no_address",
   "self",
   "not_accepting",
-  "hidden_owner",
   "start_limit",
   "message_limit",
   "invalid_card",
@@ -129,7 +128,6 @@ export const muteInputSchema = z.object({
 
 export const messageSettingsSchema = z.object({
   allow: z.enum(MESSAGE_ALLOW),
-  allowHidden: z.boolean(),
 });
 export type MessageSettings = z.infer<typeof messageSettingsSchema>;
 

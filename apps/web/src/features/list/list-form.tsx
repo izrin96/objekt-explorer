@@ -16,7 +16,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { displayNickname, isSameAddress } from "@/lib/address";
-import { SITE_NAME, getBaseURL } from "@/lib/utils";
+import { getBaseURL } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import { LIST_TYPE_LABEL } from "./list-type-badge";
@@ -47,7 +47,6 @@ export type ListDraft = {
   matchAlerts: boolean;
   gridColumns: number | null;
   hideSerial: boolean;
-  hideUser: boolean;
   regenerateSlug: boolean;
 };
 
@@ -64,7 +63,6 @@ export const EMPTY_DRAFT: ListDraft = {
   matchAlerts: true,
   gridColumns: null,
   hideSerial: false,
-  hideUser: false,
   regenerateSlug: false,
 };
 
@@ -116,7 +114,6 @@ export function toCreateInput(draft: ListDraft) {
     showOnTrade: draft.listTypeNew !== "general" && draft.showOnTrade,
     matchAlerts: draft.listTypeNew === "want" ? draft.matchAlerts : undefined,
     hideSerial: draft.hideSerial,
-    hideUser: draft.hideUser,
   };
 }
 
@@ -407,14 +404,6 @@ export function ListForm({ idPrefix, value, onChange, lists, profiles, mode, url
           onCheckedChange={(checked) => set({ hideSerial: checked })}
         />
       ) : null}
-
-      <SwitchRow
-        id={id("hide-user")}
-        label={m.list_create_hide_user_label()}
-        description={m.list_create_hide_user_desc({ siteName: SITE_NAME })}
-        checked={value.hideUser}
-        onCheckedChange={(checked) => set({ hideUser: checked })}
-      />
 
       {isEdit && url ? (
         <div className="flex min-w-0 flex-col gap-2">

@@ -69,7 +69,6 @@ export const OFFER_REFUSALS = [
   "no_address",
   "self",
   "not_accepting",
-  "hidden_owner",
   "start_limit",
   "message_limit",
   "muted",

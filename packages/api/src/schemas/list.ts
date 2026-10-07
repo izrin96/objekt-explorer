@@ -99,7 +99,6 @@ export const listEntriesInputSchema = listSlugInputSchema.extend({
 
 export const createListInputSchema = z.object({
   name: z.string().min(1).max(256),
-  hideUser: z.boolean(),
   listTypeNew: listTypeNewSchema.default("general"),
   isProfileBind: z.boolean().default(false),
   hideSerial: z.boolean().default(false),
@@ -115,7 +114,6 @@ export const createListInputSchema = z.object({
 export const editListInputSchema = z.object({
   slug: z.string(),
   name: z.string().min(1).max(256),
-  hideUser: z.boolean(),
   gridColumns: z.number().min(2).max(18).nullable(),
   profileAddress: addressSchema.nullable(),
   description: z.string().max(5000).nullable(),

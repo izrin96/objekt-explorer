@@ -217,7 +217,7 @@ export async function fetchList(
     discoverable: result.discoverable,
     showOnTrade: result.showOnTrade,
     bumpedAt: result.bumpedAt,
-    user: result.hideUser || !result.user ? null : toPublicUser(result.user),
+    user: result.user ? toPublicUser(result.user) : null,
     profile: result.userAddress ? toPartialProfile(result.userAddress) : null,
     description: result.description,
     linkedList: result.linkedList
@@ -236,16 +236,14 @@ export async function isListMessageable(listId: number, viewerId: string | undef
   const [row] = await db
     .select({
       userId: lists.userId,
-      hideUser: lists.hideUser,
       allow: messagePref.allow,
-      allowHidden: messagePref.allowHidden,
     })
     .from(lists)
     .leftJoin(messagePref, eq(messagePref.userId, lists.userId))
     .where(eq(lists.id, listId));
   if (!row || row.userId === viewerId) return false;
   if (viewerId && (await isBlockedEither(viewerId, row.userId))) return false;
-  return isMessageable(toMessagePref(row), row.hideUser);
+  return isMessageable(toMessagePref(row));
 }
 
 export async function fetchOwnedLists(

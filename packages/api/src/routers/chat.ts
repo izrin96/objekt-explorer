@@ -101,7 +101,6 @@ export const chatRouter = {
         ? await resolveCard(input.card, {
             senderId: me,
             partnerId: ctx.recipientId,
-            targetListSlug: input.to.kind === "list" ? input.to.slug : null,
           })
         : null;
       if (card) await checkMessageRate(me, now);
@@ -123,9 +122,7 @@ export const chatRouter = {
     const { partnerId } = await findMembership(input.conversationId, me);
     refuseSend(await chatSafety(me, partnerId));
     await checkMessageRate(me, now);
-    const card = input.card
-      ? await resolveCard(input.card, { senderId: me, partnerId, targetListSlug: null })
-      : null;
+    const card = input.card ? await resolveCard(input.card, { senderId: me, partnerId }) : null;
     const body = input.body ?? null;
     const caution = body === null ? [] : scanMessage(body);
 
@@ -394,7 +391,7 @@ export const chatRouter = {
   setSettings: authed
     .input(setSettingsInputSchema)
     .handler(async ({ input, context: { session } }) => {
-      if (input.allow !== undefined || input.allowHidden !== undefined) {
+      if (input.allow !== undefined) {
         await db
           .insert(messagePref)
           .values({ userId: session.user.id, ...MESSAGE_PREF_DEFAULTS, ...input })

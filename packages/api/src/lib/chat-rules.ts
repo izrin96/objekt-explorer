@@ -19,22 +19,17 @@ export function pairKey(a: string, b: string) {
   return a < b ? { userLow: a, userHigh: b } : { userLow: b, userHigh: a };
 }
 
-export type MessagePref = { allow: MessageAllow; allowHidden: boolean };
+export type MessagePref = { allow: MessageAllow };
 
 /** A `message_pref` row, possibly from a LEFT JOIN, or the defaults when the user has none. */
-export function toMessagePref(
-  row: { allow: string | null; allowHidden: boolean | null } | null | undefined,
-): MessagePref {
+export function toMessagePref(row: { allow: string | null } | null | undefined): MessagePref {
   if (!row || row.allow === null) return { ...MESSAGE_PREF_DEFAULTS };
-  return {
-    allow: row.allow === "nobody" ? "nobody" : "anyone",
-    allowHidden: row.allowHidden ?? false,
-  };
+  return { allow: row.allow === "nobody" ? "nobody" : "anyone" };
 }
 
-/** Whether a Message button for this recipient shows; `hidesOwner` is the list's or profile's Hide User. */
-export function isMessageable(pref: MessagePref, hidesOwner: boolean) {
-  return pref.allow !== "nobody" && (!hidesOwner || pref.allowHidden);
+/** Whether a Message button for this recipient shows. */
+export function isMessageable(pref: MessagePref) {
+  return pref.allow !== "nobody";
 }
 
 export type RateDecision = { ok: true } | { ok: false; retryAt: Date };
@@ -66,22 +61,11 @@ export function messageRateDecision(sends: number[], now: Date): RateDecision {
   return slidingWindow(sends, now, MESSAGE_WINDOW_MS, MESSAGE_LIMIT_PER_MINUTE);
 }
 
-export type CardList = { ownerId: string; hideUser: boolean; slug: string };
+export type CardList = { ownerId: string };
 
-/**
- * The sender's own lists are always fine. A partner's list is fine only when it shows its
- * owner or is the list the conversation is being started from, so a card can never test
- * whether a hidden list belongs to the partner; a list of neither member is refused alike.
- */
-export function cardListAllowed(
-  list: CardList,
-  senderId: string,
-  partnerId: string,
-  targetListSlug: string | null,
-) {
-  if (list.ownerId === senderId) return true;
-  if (list.ownerId !== partnerId) return false;
-  return !list.hideUser || list.slug === targetListSlug;
+/** A list of either member of the conversation; anyone else's is refused. */
+export function cardListAllowed(list: CardList, senderId: string, partnerId: string) {
+  return list.ownerId === senderId || list.ownerId === partnerId;
 }
 
 export type StartFacts = {
@@ -89,7 +73,6 @@ export type StartFacts = {
   recipientId: string;
   senderHasAddress: boolean;
   pref: MessagePref;
-  hidesOwner: boolean;
   /** either account has blocked the other */
   blocked: boolean;
   senderMuted: boolean;
@@ -103,13 +86,11 @@ export type StartVerdict = { ok: true } | { ok: false; reason: ChatRefusal; retr
 /**
  * The recipient's settings, blocks, mutes and the start limit apply to new conversations
  * only; a reopen that sends a card goes through `sendVerdict` too. A block reads exactly
- * like Nobody, so the blocked side cannot tell. Hide User is checked before anything that
- * depends on who the owner is, so a refusal never tells a hidden owner apart.
+ * like Nobody, so the blocked side cannot tell.
  */
 export function startVerdict(facts: StartFacts): StartVerdict {
   if (!facts.senderHasAddress) return { ok: false, reason: "no_address" };
   if (facts.senderId === facts.recipientId) return { ok: false, reason: "self" };
-  if (facts.hidesOwner && !facts.pref.allowHidden) return { ok: false, reason: "hidden_owner" };
   if (facts.existing) return { ok: true };
   if (facts.senderMuted) return { ok: false, reason: "muted" };
   if (facts.blocked || facts.pref.allow === "nobody") return { ok: false, reason: "not_accepting" };
@@ -235,15 +216,10 @@ export function countsTowardBadge(
   );
 }
 
-export type ChatAddress = AddressInfo & { hideUser: boolean };
-
-/**
- * Named by a linked address's nickname only when that address shows its owner, so a
- * conversation never ties a Hide User address to the account; otherwise the account name.
- */
-export function chatIdentity(accountName: string, addresses: ChatAddress[]): PartnerIdentity {
+/** Named by the first linked address's visible nickname, otherwise the account name. */
+export function chatIdentity(accountName: string, addresses: AddressInfo[]): PartnerIdentity {
   for (const info of addresses) {
-    const nickname = info.hideUser ? null : visibleNickname(info);
+    const nickname = visibleNickname(info);
     if (nickname) return { name: nickname, address: info.address.toLowerCase(), also: [] };
   }
   return { name: accountName, address: null, also: [] };

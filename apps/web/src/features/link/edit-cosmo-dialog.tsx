@@ -37,18 +37,12 @@ import { PROFILE_PAGE_KEY } from "@/features/profile/queries";
 import { currentUserOptions } from "@/features/user/queries";
 import { displayNickname } from "@/lib/address";
 import { client, orpc } from "@/lib/orpc";
-import { SITE_NAME } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 type Profile = Awaited<ReturnType<typeof client.profile.find>>;
-type FlagKey = "hideUser" | "hideNickname" | "privateSerial" | "hideTransfer" | "privateProfile";
+type FlagKey = "hideNickname" | "privateSerial" | "hideTransfer" | "privateProfile";
 
 const FLAGS: { key: FlagKey; label: () => string; description: () => string }[] = [
-  {
-    key: "hideUser",
-    label: m.profile_edit_hide_user_label,
-    description: () => m.profile_edit_hide_user_desc({ siteName: SITE_NAME }),
-  },
   {
     key: "hideNickname",
     label: m.profile_edit_hide_nickname_label,
@@ -161,7 +155,6 @@ function EditForm({
   const queryClient = useQueryClient();
   const cropperRef = useRef<CropperRef>(null);
   const [draft, setDraft] = useState(() => ({
-    hideUser: profile.hideUser ?? false,
     hideNickname: profile.hideNickname ?? false,
     privateSerial: profile.privateSerial ?? false,
     hideTransfer: profile.hideTransfer ?? false,

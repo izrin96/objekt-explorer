@@ -6,7 +6,7 @@ The account-wide trade match view on `apps/web` at `/trade/for-you`: who the use
 ## Requirements
 
 ### Requirement: Account-wide matches
-`/trade/for-you` SHALL list the other accounts whose discoverable have, sale or want lists overlap the signed-in user's have and want lists, grouped one row per account. The user's own lists count whether or not they are discoverable. Matching SHALL use the user's have lists, never everything their wallet holds: owning an objekt does not mean it is up for trade. A have or sale list SHALL take part only while it is bound to one of its owner's Cosmo profiles, since Trade checks that profile's holdings; want lists always take part. A user's address with Hide User on SHALL make no difference to Trade. The user's own account SHALL never appear. `/trade` SHALL open the Browse feed (see `web-trade-browse`), not For you. A signed-out visitor SHALL be sent to `/login?redirect=/trade/for-you`, keeping the search parameters.
+`/trade/for-you` SHALL list the other accounts whose discoverable have, sale or want lists overlap the signed-in user's have and want lists, grouped one row per account. The user's own lists count whether or not they are discoverable. Matching SHALL use the user's have lists, never everything their wallet holds: owning an objekt does not mean it is up for trade. A have or sale list SHALL take part only while it is bound to one of its owner's Cosmo profiles, since Trade checks that profile's holdings; want lists always take part. The user's own account SHALL never appear. `/trade` SHALL open the Browse feed (see `web-trade-browse`), not For you. A signed-out visitor SHALL be sent to `/login?redirect=/trade/for-you`, keeping the search parameters.
 
 #### Scenario: Matches across lists
 - **WHEN** a user has two have lists and one want list, and a partner's discoverable lists overlap two of them
@@ -109,7 +109,7 @@ The user SHALL be able to hide a partner from the row. A hidden partner SHALL no
 - **THEN** rin.trades disappears from the list at once, and returns after unhiding
 
 ### Requirement: Partner identity
-A partner row SHALL be headed by the Cosmo nickname of the address their best-matching list is bound to, unless that address hides its nickname. Otherwise it SHALL use the account's display name. When the partner's matched lists are bound to more than one address, the row SHALL name the others as well. The row SHALL show the account's avatar. Expanding the row SHALL show a link to the partner's profile and Discord and Twitter badges when the partner has chosen to show socials, whatever the list's Hide User setting. They sit inside the expanded row, not on the row's toggle, so a handle can be selected and copied.
+A partner row SHALL be headed by the Cosmo nickname of the address their best-matching list is bound to, unless that address hides its nickname. Otherwise it SHALL use the account's display name. When the partner's matched lists are bound to more than one address, the row SHALL name the others as well. The row SHALL show the account's avatar. Expanding the row SHALL show a link to the partner's profile and Discord and Twitter badges when the partner has chosen to show socials. They sit inside the expanded row, not on the row's toggle, so a handle can be selected and copied.
 
 #### Scenario: Bound nickname
 - **WHEN** a partner's matched list is bound to the Cosmo address with nickname "rinrin"
@@ -127,7 +127,7 @@ The view SHALL reflect the user's own list changes on the next load. Other accou
 - **THEN** partners holding that collection are counted
 
 ### Requirement: Message a partner
-Each partner row SHALL offer Message, under the rules in `web-chat`. Message SHALL open the conversation with the partner, adding a card for a collection their best-matching list matched on. The card SHALL NOT name the list, so a list that hides its owner is never tied to the account. A partner who doesn't take messages SHALL show "Not taking messages" in place of Message and Propose this trade.
+Each partner row SHALL offer Message, under the rules in `web-chat`. Message SHALL open the conversation with the partner, adding a card for a collection their best-matching list matched on. The card SHALL NOT name the list. A partner who doesn't take messages SHALL show "Not taking messages" in place of Message and Propose this trade.
 
 #### Scenario: From For you
 - **WHEN** the user activates Message on nakyoung.cards's row

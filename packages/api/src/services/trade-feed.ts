@@ -111,8 +111,6 @@ type FeedRow = {
   partner_id: number | null;
   cursor_at: string;
   message_allow: string | null;
-  message_allow_hidden: boolean | null;
-  hides_owner: boolean;
 };
 
 type Stage1 = {
@@ -149,11 +147,7 @@ async function fetchFeedRows(query: Stage1): Promise<FeedRow[]> {
       posts.id,
       posts.partner_id,
       posts.bumped_at::text AS cursor_at,
-      mp.allow AS message_allow,
-      mp.allow_hidden AS message_allow_hidden,
-      EXISTS (
-        SELECT 1 FROM lists x WHERE x.id IN (posts.id, posts.partner_id) AND x.hide_user
-      ) AS hides_owner
+      mp.allow AS message_allow
     FROM posts
     LEFT JOIN message_pref mp ON mp.user_id = posts.user_id
     WHERE ${sql.join(where, sql` AND `)}
@@ -574,10 +568,7 @@ export async function browseFeed(
           more: side.more,
         })),
         match: assembled.match,
-        messageable: isMessageable(
-          toMessagePref({ allow: row.message_allow, allowHidden: row.message_allow_hidden }),
-          row.hides_owner,
-        ),
+        messageable: isMessageable(toMessagePref({ allow: row.message_allow })),
       });
     }
   }

@@ -19,7 +19,6 @@ import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { and, asc, eq, gt, inArray, or, sql } from "drizzle-orm";
 
 import {
-  type ChatAddress,
   chatIdentity,
   type MemberEvent,
   type MemberState,
@@ -36,6 +35,7 @@ import {
 } from "../lib/chat-rules";
 import type { ActorLimits } from "../lib/offer-rules";
 import { effectiveSanction } from "../lib/sanctions";
+import type { AddressInfo } from "../lib/trade-rank";
 import {
   type CardInput,
   type CardView,
@@ -66,7 +66,6 @@ export function refuse(reason: ChatRefusal, retryAt?: Date): never {
       throw new ORPCError("BAD_REQUEST", { data });
     case "no_address":
     case "not_accepting":
-    case "hidden_owner":
     case "muted":
       throw new ORPCError("FORBIDDEN", { data });
   }
@@ -76,37 +75,35 @@ const unique = <T>(values: T[]) => [...new Set(values)];
 
 export async function fetchPref(userId: string): Promise<MessagePref> {
   const [row] = await db
-    .select({ allow: messagePref.allow, allowHidden: messagePref.allowHidden })
+    .select({ allow: messagePref.allow })
     .from(messagePref)
     .where(eq(messagePref.userId, userId));
   return toMessagePref(row);
 }
 
-/** The account behind a Message target, and whether that surface hides it. */
-export async function resolveTarget(
-  target: ChatTarget,
-): Promise<{ recipientId: string; hidesOwner: boolean }> {
+/** The account behind a Message target. */
+export async function resolveTarget(target: ChatTarget): Promise<{ recipientId: string }> {
   switch (target.kind) {
     case "list": {
       const [row] = await db
-        .select({ userId: lists.userId, hideUser: lists.hideUser })
+        .select({ userId: lists.userId })
         .from(lists)
         .where(eq(lists.slug, target.slug));
       if (!row) throw new ORPCError("NOT_FOUND");
-      return { recipientId: row.userId, hidesOwner: row.hideUser };
+      return { recipientId: row.userId };
     }
     case "profile": {
       const [row] = await db
-        .select({ userId: userAddress.userId, hideUser: userAddress.hideUser })
+        .select({ userId: userAddress.userId })
         .from(userAddress)
         .where(eq(userAddress.address, target.address.toLowerCase()));
       if (!row?.userId) throw new ORPCError("NOT_FOUND");
-      return { recipientId: row.userId, hidesOwner: row.hideUser };
+      return { recipientId: row.userId };
     }
     case "user": {
       const exists = await db.$count(user, eq(user.id, target.userId));
       if (exists === 0) throw new ORPCError("NOT_FOUND");
-      return { recipientId: target.userId, hidesOwner: false };
+      return { recipientId: target.userId };
     }
   }
 }
@@ -178,7 +175,6 @@ export type StartContext = {
   senderId: string;
   senderCreatedAt: Date;
   recipientId: string;
-  hidesOwner: boolean;
   senderHasAddress: boolean;
   pref: MessagePref;
   safety: Awaited<ReturnType<typeof chatSafety>>;
@@ -192,7 +188,7 @@ export async function prepareStart(
   target: ChatTarget,
   now: Date,
 ): Promise<StartContext> {
-  const { recipientId, hidesOwner } = await resolveTarget(target);
+  const { recipientId } = await resolveTarget(target);
   const [senderHasAddress, pref, safety] = await Promise.all([
     hasLinkedAddress(senderId),
     fetchPref(recipientId),
@@ -202,7 +198,6 @@ export async function prepareStart(
     senderId,
     senderCreatedAt,
     recipientId,
-    hidesOwner,
     senderHasAddress,
     pref,
     safety,
@@ -232,7 +227,6 @@ export async function checkStart(tx: Tx, ctx: StartContext): Promise<number | un
     recipientId,
     senderHasAddress: ctx.senderHasAddress,
     pref: ctx.pref,
-    hidesOwner: ctx.hidesOwner,
     blocked: ctx.safety.blocked,
     senderMuted: ctx.safety.mute !== null,
     existing: existing !== undefined,
@@ -274,7 +268,7 @@ export async function ensureConversation(
   return { id: raced.id, created: false };
 }
 
-export type CardContext = { senderId: string; partnerId: string; targetListSlug: string | null };
+export type CardContext = { senderId: string; partnerId: string };
 
 /** An objekt only of the card's collection, and a list by `cardListAllowed`. */
 export async function resolveCard(input: CardInput, context: CardContext): Promise<StoredCard> {
@@ -285,8 +279,6 @@ export async function resolveCard(input: CardInput, context: CardContext): Promi
           .select({
             id: lists.id,
             ownerId: lists.userId,
-            hideUser: lists.hideUser,
-            slug: lists.slug,
           })
           .from(lists)
           .where(eq(lists.slug, input.listSlug))
@@ -306,7 +298,7 @@ export async function resolveCard(input: CardInput, context: CardContext): Promi
   ]);
 
   if (list === null || collection === null || objekt === null) refuse("invalid_card");
-  if (list && !cardListAllowed(list, context.senderId, context.partnerId, context.targetListSlug)) {
+  if (list && !cardListAllowed(list, context.senderId, context.partnerId)) {
     refuse("invalid_card");
   }
   if (objekt && objekt.collectionId !== collection.id) refuse("invalid_card");
@@ -512,14 +504,13 @@ export async function fetchPartners(userIds: string[]) {
         address: userAddress.address,
         nickname: userAddress.nickname,
         hideNickname: userAddress.hideNickname,
-        hideUser: userAddress.hideUser,
       })
       .from(userAddress)
       .where(inArray(userAddress.userId, ids))
       .orderBy(asc(userAddress.id)),
   ]);
 
-  const addressesOf = new Map<string, ChatAddress[]>();
+  const addressesOf = new Map<string, AddressInfo[]>();
   for (const { userId, ...info } of addresses) {
     if (!userId) continue;
     addressesOf.set(userId, [...(addressesOf.get(userId) ?? []), info]);

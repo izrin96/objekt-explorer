@@ -44,16 +44,12 @@ The setting applies to new conversations only. Existing conversations stay open.
 - **WHEN** an account's setting is Nobody
 - **THEN** no Message button is shown for that account, and a direct request to start a conversation is refused
 
-### Requirement: Lists that hide their owner
-A list or profile that hides its owner's account SHALL offer Message only when the owner turned on "Allow messages on lists that hide my identity". That setting is off by default. Starting a conversation from such a list reveals the owner's account to the sender, and the setting's description SHALL say so.
+### Requirement: No Hide User
+Hide User, on a list or a linked Cosmo profile, SHALL have no effect: a list's page and a profile show the linked account, and Message follows only "Who can message you" and blocks. Creating or editing a list or a profile SHALL no longer offer Hide User, and new lists SHALL be saved with it off. The stored settings stay until a later migration removes them.
 
-#### Scenario: Hidden owner, not opted in
-- **WHEN** a Market drawer row belongs to a sale list with Hide User on, and its owner has not opted in
-- **THEN** that row has no Message action
-
-#### Scenario: Hidden owner, opted in
-- **WHEN** the owner turned the setting on
-- **THEN** the row has a Message action, and the conversation shows the owner's account
+#### Scenario: A list that had Hide User on
+- **WHEN** a visitor opens a sale list whose owner had turned Hide User on, and the owner accepts messages from anyone
+- **THEN** the page shows the owner's account and offers Message
 
 ### Requirement: Message from a list page
 A list's page SHALL offer Message in its header, so a list reached from a shared link can start a chat with its owner. It SHALL not be offered on the viewer's own list, between accounts where either blocked the other, or where the rules above hide it. It attaches no card, so the conversation starts as a request, as from a profile.
@@ -140,7 +136,7 @@ A user SHALL be able to start at most 20 new conversations per rolling 24 hours,
 - **THEN** it is refused, and the UI says when it can start another
 
 ### Requirement: Messages settings
-The account dialog SHALL have a Messages section with "Who can message you" (Anyone with a linked Cosmo address, or Nobody) and "Allow messages on lists that hide my identity". Changes SHALL save at once.
+The account dialog SHALL have a Messages section with "Who can message you" (Anyone with a linked Cosmo address, or Nobody). Changes SHALL save at once.
 
 #### Scenario: Turn off messages
 - **WHEN** the user picks Nobody

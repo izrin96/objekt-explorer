@@ -116,7 +116,7 @@ The objekt drawer's Market tab SHALL show how many posts on Trade have the colle
 - **THEN** the On Trade line is not shown
 
 ### Requirement: Message a seller from the Market tab
-Each listing row in the objekt drawer's Market tab SHALL offer Message, unless the viewer owns the listing, under the rules in `web-chat`, including the hidden-owner opt-in. Message SHALL open the conversation with the list's owner, adding a card for that objekt and sale list.
+Each listing row in the objekt drawer's Market tab SHALL offer Message, unless the viewer owns the listing, under the rules in `web-chat`. Message SHALL open the conversation with the list's owner, adding a card for that objekt and sale list.
 
 #### Scenario: From a listing
 - **WHEN** a user activates Message on the #537 row of SeoYeon 204Z

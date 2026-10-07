@@ -185,7 +185,6 @@ export async function withMessageable(matches: TradeMatches) {
           .select({
             userId: messagePref.userId,
             allow: messagePref.allow,
-            allowHidden: messagePref.allowHidden,
           })
           .from(messagePref)
           .where(inArray(messagePref.userId, ids));
@@ -194,7 +193,7 @@ export async function withMessageable(matches: TradeMatches) {
     ...matches,
     partners: matches.partners.map((partner) =>
       Object.assign(partner, {
-        messageable: isMessageable(toMessagePref(prefOf.get(partner.userId)), false),
+        messageable: isMessageable(toMessagePref(prefOf.get(partner.userId))),
       }),
     ),
   };

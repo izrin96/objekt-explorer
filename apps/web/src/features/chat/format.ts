@@ -48,7 +48,6 @@ export function refusalText(refusal: { reason: ChatRefusal; retryAt: string | nu
     case "self":
       return m.chat_refused_self();
     case "not_accepting":
-    case "hidden_owner":
       return m.chat_refused_not_accepting();
     case "start_limit":
       return m.chat_refused_start_limit({ time: wait });
