@@ -8,6 +8,7 @@ import { InView } from "react-intersection-observer";
 
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
+import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 /** roughly a viewport of runway, so the next page lands before the last row does */
@@ -20,6 +21,10 @@ const ROOT_MARGIN = { down: "0px 0px 900px 0px", up: "900px 0px 0px 0px" } as co
  * The observer unmounts while a page is in flight. Left mounted, `onChange`
  * only fires on a *change* of intersection, so a short page that never pushes
  * the sentinel back out of the margin would stall until the user scrolled.
+ *
+ * Going down it is never a scroll anchor: anchored to it, the browser keeps it in view as the
+ * new page renders above it, which fetches the next page, and so on to the end of the list.
+ * Going up the list keeps its own place (the chat thread adjusts `scrollTop`).
  */
 export function InfiniteSentinel({
   label,
@@ -44,7 +49,12 @@ export function InfiniteSentinel({
   const Caret = direction === "up" ? CaretUpIcon : CaretDownIcon;
 
   return (
-    <div className="text-muted-foreground flex justify-center py-4">
+    <div
+      className={cn(
+        "text-muted-foreground flex justify-center py-4",
+        direction === "down" && "[overflow-anchor:none]",
+      )}
+    >
       {hasNextPage && !isFetchingNextPage && isError && (
         <Button variant="outline" size="sm" onClick={fetchNextPage}>
           <ArrowClockwiseIcon />
