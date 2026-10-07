@@ -401,7 +401,7 @@ async function computeHaveIndex(userId: string): Promise<[string, number[]][]> {
       .where(
         and(
           eq(lists.userId, userId),
-          eq(lists.listTypeNew, "have"),
+          inArray(lists.listTypeNew, ["have", "sale"]),
           eq(lists.isProfileBind, true),
           isNotNull(listEntries.collectionSlug),
         ),

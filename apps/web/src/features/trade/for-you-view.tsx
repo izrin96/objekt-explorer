@@ -1,4 +1,5 @@
 import { ArrowClockwiseIcon, CardsThreeIcon, UsersIcon, WarningIcon } from "@phosphor-icons/react";
+import { tradeSideOf } from "@repo/api/schemas/list";
 import type { TradeFilter } from "@repo/api/schemas/trade";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useQuery } from "@tanstack/react-query";
@@ -32,7 +33,7 @@ const MATCHES: { value: TradeFilter; label: () => string }[] = [
 ];
 
 type Compared = "have" | "want" | "both";
-type TradeList = { name: string; listTypeNew: "have" | "want" };
+type TradeList = { name: string; listTypeNew: "have" | "want" | "sale" };
 
 /** the kind of list a one-way view compares; both ways it is either */
 const SIDE: Record<TradeFilter, Compared> = {
@@ -64,7 +65,7 @@ const COMPARE: Record<
     allLabel: m.trade_list_all,
     all: m.trade_compare_all,
     one: (list) =>
-      list.listTypeNew === "have"
+      tradeSideOf(list.listTypeNew) === "have"
         ? m.trade_compare_have({ list: list.name })
         : m.trade_compare_want({ list: list.name }),
   },
@@ -85,20 +86,23 @@ export function ForYouView({
   partner: string | undefined;
 }) {
   const navigate = useNavigate({ from: "/trade/for-you" });
-  // a have list counts only while bound to a profile, whose holdings Trade checks
+  // a have or sale list counts only while bound to a profile
   const tradeLists = useUserLists().filter(
     (l): l is typeof l & TradeList =>
-      l.listTypeNew === "want" || (l.listTypeNew === "have" && l.isProfileBind),
+      tradeSideOf(l.listTypeNew) === "want" ||
+      (tradeSideOf(l.listTypeNew) === "have" && l.isProfileBind),
   );
   // a one-way view compares only one kind of list, so the picker offers only that kind
   const side = SIDE[filter];
   const compare = COMPARE[side];
-  const pickable = side === "both" ? tradeLists : tradeLists.filter((l) => l.listTypeNew === side);
+  const pickable =
+    side === "both" ? tradeLists : tradeLists.filter((l) => tradeSideOf(l.listTypeNew) === side);
   // a slug that is not one of mine, or not this view's kind, reads as All lists
   const selected = pickable.find((l) => l.slug === list);
   const selectedList = selected?.slug ?? ALL_LISTS;
   const applies = (match: TradeFilter, slug: string) =>
-    SIDE[match] === "both" || tradeLists.find((l) => l.slug === slug)?.listTypeNew === SIDE[match];
+    SIDE[match] === "both" ||
+    tradeSideOf(tradeLists.find((l) => l.slug === slug)?.listTypeNew ?? "general") === SIDE[match];
 
   const setSearch = (next: { match?: TradeFilter; list?: string }) =>
     void navigate({

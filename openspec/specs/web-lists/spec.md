@@ -57,7 +57,7 @@ profile header and the account menu for the user's Have and Want lists.
 - **THEN** a CSV file named after the list downloads with one row per entry
 
 ### Requirement: Find matches shortcut
-On their own want list, or their own have list bound to a Cosmo profile, the owner SHALL see a Find matches control in the list header, showing the number of mutual people for that list once it is known. Activating it SHALL open `/trade/for-you?list=<slug>`. Other visitors SHALL not see the control.
+On their own want list, or their own have or sale list bound to a Cosmo profile, the owner SHALL see a Find matches control in the list header, showing the number of mutual people for that list once it is known. Activating it SHALL open `/trade/for-you?list=<slug>`. Other visitors SHALL not see the control.
 
 #### Scenario: Owner opens matches
 - **WHEN** the owner of have list "spares" activates Find matches

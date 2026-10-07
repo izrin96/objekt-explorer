@@ -95,13 +95,20 @@ describe("allowedActions", () => {
     expect(safetyRefusal("respond", facts)).toBeNull();
   });
 
-  test("a trade block stops every action", () => {
-    expect(allowedActions(offer(), RIN, NOW, { tradeBlocked: true })).toEqual([]);
-    expect(actionRefusal(offer(), ME, "withdraw", NOW, { tradeBlocked: true })).toBe(
+  test("a trade block stops accepting and countering, never backing out", () => {
+    expect(allowedActions(offer(), RIN, NOW, { tradeBlocked: true })).toEqual(["decline"]);
+    expect(allowedActions(offer(), ME, NOW, { tradeBlocked: true })).toEqual(["withdraw"]);
+    expect(actionRefusal(offer(), RIN, "accept", NOW, { tradeBlocked: true })).toBe(
       "trade_blocked",
     );
+    expect(actionRefusal(offer(), RIN, "counter", NOW, { tradeBlocked: true })).toBe(
+      "trade_blocked",
+    );
+    expect(actionRefusal(offer(), RIN, "decline", NOW, { tradeBlocked: true })).toBeNull();
+    expect(actionRefusal(offer(), ME, "withdraw", NOW, { tradeBlocked: true })).toBeNull();
     const facts = { blocked: false, muted: false, tradeBlocked: true, partnerTradeBlocked: false };
-    expect(safetyRefusal("respond", facts)).toBe("trade_blocked");
+    expect(safetyRefusal("respond", facts)).toBeNull();
+    expect(safetyRefusal("accept", facts)).toBe("trade_blocked");
   });
 
   test("a block, or a partner's trade block, reads like not accepting", () => {

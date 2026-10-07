@@ -139,8 +139,8 @@ export async function fetchTradeCandidates(
 type Sides = ReturnType<typeof matchSides>;
 
 /**
- * The user's bound have lists and their want lists, narrowed by `slug` when it names one of
- * them. A have list counts only while bound to a profile, whose holdings Trade checks.
+ * The user's bound have and sale lists and their want lists, narrowed by `slug` when it names
+ * one of them. A have or sale list counts only while bound to a profile.
  */
 export async function resolveTradeSides(userId: string, slug: string | undefined): Promise<Sides> {
   const myLists = await db
@@ -151,7 +151,7 @@ export async function resolveTradeSides(userId: string, slug: string | undefined
         eq(lists.userId, userId),
         or(
           eq(lists.listTypeNew, "want"),
-          and(eq(lists.listTypeNew, "have"), eq(lists.isProfileBind, true)),
+          and(inArray(lists.listTypeNew, ["have", "sale"]), eq(lists.isProfileBind, true)),
         ),
       ),
     );

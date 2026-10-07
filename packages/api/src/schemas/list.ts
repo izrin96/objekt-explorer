@@ -10,6 +10,12 @@ import { publicProfileSchema, publicUserSchema } from "./profile";
 export const listTypeNewSchema = z.enum(["general", "sale", "have", "want"]);
 export type ListTypeNew = z.infer<typeof listTypeNewSchema>;
 
+/** Which side of a trade a list stands for: a sale list offers its objekts as a have list does. */
+export function tradeSideOf(type: ListTypeNew): "have" | "want" | null {
+  if (type === "want") return "want";
+  return type === "have" || type === "sale" ? "have" : null;
+}
+
 export const baseListSchema = z.object({
   id: z.number(),
   slug: z.string(),

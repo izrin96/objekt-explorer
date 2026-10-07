@@ -287,6 +287,12 @@ describe("matchSides", () => {
     expect(matchSides(lists, 4)).toEqual({ listId: null, haveListIds: [1, 2], wantListIds: [3] });
   });
 
+  test("a sale list counts on the have side, alone or named", () => {
+    const withSale: MyList[] = [...lists, { id: 5, listTypeNew: "sale" }];
+    expect(matchSides(withSale, null).haveListIds).toEqual([1, 2, 5]);
+    expect(matchSides(withSale, 5)).toEqual({ listId: 5, haveListIds: [5], wantListIds: [3] });
+  });
+
   test("one have list, still mutual", () => {
     // Spares (1) narrows "they want what I have"; Binary hunt (3) still answers "they have what I want"
     const sides = matchSides(lists, 1);

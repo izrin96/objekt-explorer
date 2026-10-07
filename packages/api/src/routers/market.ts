@@ -10,13 +10,15 @@ import { optionalAuthed, pub } from "../orpc";
 import { collectionSlugInputSchema } from "../schemas/common/collection";
 import { documented, errorResponses } from "../schemas/common/documented";
 import {
-  type MarketListing,
-  type MarketListingsOutput,
+  type MarketListingsInput,
   type MarketStatsOutput,
   type MarketSummaryEntry,
   currencyRatesOutputSchema,
   marketListingsInputSchema,
   marketListingsOutputSchema,
+  type ViewerMarketListing,
+  type ViewerMarketListingsOutput,
+  viewerMarketListingsOutputSchema,
   marketStatsOutputSchema,
   marketSummaryOutputSchema,
 } from "../schemas/market";
@@ -102,6 +104,99 @@ async function fetchMarketSummary(): Promise<MarketSummaryEntry[]> {
   return rows;
 }
 
+/**
+ * One collection's listings. With a viewer, `messageable` is false for a seller either of
+ * them blocked; the public route drops the field.
+ */
+async function findListings(input: MarketListingsInput, viewerId: string | null) {
+  const rates = await getUsdRates();
+
+  const where = listingsWhere(input.collectionSlug);
+
+  const baseQuery = () =>
+    db
+      .select({
+        id: listEntries.id,
+        price: listEntries.price,
+        isQyop: listEntries.isQyop,
+        note: listEntries.note,
+        createdAt: listEntries.createdAt,
+        objektId: listEntries.objektId,
+        hideSerial: lists.hideSerial,
+        currency: lists.currency,
+        slug: lists.slug,
+        profileSlug: lists.profileSlug,
+        profileAddress: lists.profileAddress,
+        ownerNickname: userAddress.nickname,
+        ownerHideNickname: userAddress.hideNickname,
+        messageAllow: messagePref.allow,
+        blocked: viewerId
+          ? sql<boolean>`NOT ${notBlockedEither(viewerId, sql`${lists.userId}`)}`
+          : sql<boolean>`false`,
+      })
+      .from(listEntries)
+      .innerJoin(lists, eq(listEntries.listId, lists.id))
+      .leftJoin(userAddress, eq(lists.profileAddress, userAddress.address))
+      .leftJoin(messagePref, eq(messagePref.userId, lists.userId))
+      .where(where);
+
+  const dir = input.sortDir === "desc" ? desc : asc;
+
+  const paginatedRows =
+    input.sortBy === "price"
+      ? await baseQuery()
+          .orderBy(
+            sql`CASE WHEN ${listEntries.isQyop} THEN 1 WHEN ${listEntries.price} IS NULL THEN 2 ELSE 0 END`,
+            dir(usdPriceExpr(rates)),
+          )
+          .offset(input.offset)
+          .limit(input.limit + 1)
+      : await baseQuery()
+          .orderBy(dir(listEntries.createdAt))
+          .offset(input.offset)
+          .limit(input.limit + 1);
+
+  const hasMore = paginatedRows.length > input.limit;
+  const rows = hasMore ? paginatedRows.slice(0, input.limit) : paginatedRows;
+  const nextOffset = hasMore ? input.offset + rows.length : undefined;
+
+  const objektIds = rows.map((r) => r.objektId).filter((id): id is string => id !== null);
+  const objektMap = await fetchObjektMap(objektIds);
+
+  const items = rows.map((row) => {
+    const objekt = row.objektId ? objektMap.get(row.objektId) : null;
+    const nickname = row.ownerHideNickname || !row.ownerNickname ? null : row.ownerNickname;
+    const currency = row.currency ? normalizeCurrency(row.currency) : null;
+    const rate = currency ? (rates[currency] ?? 1) : 1;
+    const usdPrice = row.price !== null ? row.price * rate : null;
+
+    return {
+      id: row.id,
+      price: row.price,
+      isQyop: row.isQyop,
+      note: row.note,
+      createdAt: row.createdAt,
+      currency,
+      usdPrice,
+      list: {
+        slug: row.slug,
+        profileSlug: row.profileSlug,
+        profile: row.profileAddress ? { nickname, address: row.profileAddress } : null,
+      },
+      serial: row.hideSerial ? null : (objekt?.serial ?? null),
+      objektId: row.hideSerial ? null : row.objektId,
+      messageable: !row.blocked && isMessageable(toMessagePref({ allow: row.messageAllow })),
+      transferable: row.hideSerial ? null : (objekt?.transferable ?? null),
+    } satisfies ViewerMarketListing;
+  });
+
+  return {
+    items,
+    hasMore,
+    nextOffset,
+  } satisfies ViewerMarketListingsOutput;
+}
+
 export const marketRouter = {
   summary: pub
     .route({
@@ -121,8 +216,7 @@ export const marketRouter = {
       }
     }),
 
-  /** With a session, `messageable` is false for a seller the viewer and they have blocked. */
-  marketListings: optionalAuthed
+  marketListings: pub
     .route({
       method: "GET",
       path: "/market/{collectionSlug}/listings",
@@ -132,95 +226,17 @@ export const marketRouter = {
     })
     .input(marketListingsInputSchema)
     .output(documented(marketListingsOutputSchema))
-    .handler(async ({ input, context: { session } }) => {
-      const viewerId = session?.user.id ?? null;
-      const rates = await getUsdRates();
-
-      const where = listingsWhere(input.collectionSlug);
-
-      const baseQuery = () =>
-        db
-          .select({
-            id: listEntries.id,
-            price: listEntries.price,
-            isQyop: listEntries.isQyop,
-            note: listEntries.note,
-            createdAt: listEntries.createdAt,
-            objektId: listEntries.objektId,
-            hideSerial: lists.hideSerial,
-            currency: lists.currency,
-            slug: lists.slug,
-            profileSlug: lists.profileSlug,
-            profileAddress: lists.profileAddress,
-            ownerNickname: userAddress.nickname,
-            ownerHideNickname: userAddress.hideNickname,
-            messageAllow: messagePref.allow,
-            blocked: viewerId
-              ? sql<boolean>`NOT ${notBlockedEither(viewerId, sql`${lists.userId}`)}`
-              : sql<boolean>`false`,
-          })
-          .from(listEntries)
-          .innerJoin(lists, eq(listEntries.listId, lists.id))
-          .leftJoin(userAddress, eq(lists.profileAddress, userAddress.address))
-          .leftJoin(messagePref, eq(messagePref.userId, lists.userId))
-          .where(where);
-
-      const dir = input.sortDir === "desc" ? desc : asc;
-
-      const paginatedRows =
-        input.sortBy === "price"
-          ? await baseQuery()
-              .orderBy(
-                sql`CASE WHEN ${listEntries.isQyop} THEN 1 WHEN ${listEntries.price} IS NULL THEN 2 ELSE 0 END`,
-                dir(usdPriceExpr(rates)),
-              )
-              .offset(input.offset)
-              .limit(input.limit + 1)
-          : await baseQuery()
-              .orderBy(dir(listEntries.createdAt))
-              .offset(input.offset)
-              .limit(input.limit + 1);
-
-      const hasMore = paginatedRows.length > input.limit;
-      const rows = hasMore ? paginatedRows.slice(0, input.limit) : paginatedRows;
-      const nextOffset = hasMore ? input.offset + rows.length : undefined;
-
-      const objektIds = rows.map((r) => r.objektId).filter((id): id is string => id !== null);
-      const objektMap = await fetchObjektMap(objektIds);
-
-      const items = rows.map((row) => {
-        const objekt = row.objektId ? objektMap.get(row.objektId) : null;
-        const nickname = row.ownerHideNickname || !row.ownerNickname ? null : row.ownerNickname;
-        const currency = row.currency ? normalizeCurrency(row.currency) : null;
-        const rate = currency ? (rates[currency] ?? 1) : 1;
-        const usdPrice = row.price !== null ? row.price * rate : null;
-
-        return {
-          id: row.id,
-          price: row.price,
-          isQyop: row.isQyop,
-          note: row.note,
-          createdAt: row.createdAt,
-          currency,
-          usdPrice,
-          list: {
-            slug: row.slug,
-            profileSlug: row.profileSlug,
-            profile: row.profileAddress ? { nickname, address: row.profileAddress } : null,
-          },
-          serial: row.hideSerial ? null : (objekt?.serial ?? null),
-          objektId: row.hideSerial ? null : row.objektId,
-          messageable: !row.blocked && isMessageable(toMessagePref({ allow: row.messageAllow })),
-          transferable: row.hideSerial ? null : (objekt?.transferable ?? null),
-        } satisfies MarketListing;
-      });
-
-      return {
-        items,
-        hasMore,
-        nextOffset,
-      } satisfies MarketListingsOutput;
+    .handler(async ({ input }) => {
+      const page = await findListings(input, null);
+      // output validation does not strip keys, and the public API never had this one
+      return { ...page, items: page.items.map(({ messageable: _, ...item }) => item) };
     }),
+
+  /** The same listings for the site, with whether each seller can be messaged. */
+  listingsForViewer: optionalAuthed
+    .input(marketListingsInputSchema)
+    .output(viewerMarketListingsOutputSchema)
+    .handler(({ input, context: { session } }) => findListings(input, session?.user.id ?? null)),
 
   rates: pub
     .route({

@@ -470,7 +470,11 @@ async function mineCandidates(
           .from(listEntries)
           .innerJoin(lists, eq(lists.id, listEntries.listId))
           .where(
-            and(eq(lists.userId, me), eq(lists.listTypeNew, "have"), eq(lists.isProfileBind, true)),
+            and(
+              eq(lists.userId, me),
+              inArray(lists.listTypeNew, ["have", "sale"]),
+              eq(lists.isProfileBind, true),
+            ),
           )
           .orderBy(listEntries.id),
   ]);
@@ -1444,8 +1448,6 @@ const countVerified = (tx: Tx, tradeId: number) =>
 export async function cancelTrade(me: string, tradeId: number) {
   const row = await findTrade(tradeId, me);
   const { partnerId } = row;
-  const safety = await chatSafety(me, partnerId);
-  if (safety.tradeBlocked) refuseOffer("trade_blocked");
   // a transfer the verifier hasn't run on yet locks the trade too, or a party could send
   // nothing back and cancel right after receiving
   // matched with the parties' other trades, as the verifier matches them, so a transfer

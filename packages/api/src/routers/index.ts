@@ -57,7 +57,13 @@ export const openApiRouter = {
   transfers: transfersRouter,
   user: { search: userRouter.search },
   live: liveRouter,
-  market: marketRouter,
+  // `listingsForViewer` is the site's own read
+  market: {
+    summary: marketRouter.summary,
+    marketListings: marketRouter.marketListings,
+    rates: marketRouter.rates,
+    stats: marketRouter.stats,
+  },
   profiles: {
     preview: profileRouter.preview,
     pins: pinsRouter.list,

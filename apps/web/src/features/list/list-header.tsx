@@ -8,6 +8,7 @@ import {
   TrashIcon,
   UsersIcon,
 } from "@phosphor-icons/react";
+import { tradeSideOf } from "@repo/api/schemas/list";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
@@ -39,8 +40,8 @@ import { useListOwned } from "./use-list-owned";
 export function ListHeader() {
   const list = useListTarget();
   const isOwner = useListOwned();
-  const canTradeMatch =
-    isOwner && (list.listTypeNew === "want" || (list.listTypeNew === "have" && list.isProfileBind));
+  const side = tradeSideOf(list.listTypeNew);
+  const canTradeMatch = isOwner && (side === "want" || (side === "have" && list.isProfileBind));
   const [compareOpen, setCompareOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);

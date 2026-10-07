@@ -1,12 +1,12 @@
 # web-trade-for-you Specification
 
 ## Purpose
-The account-wide trade match view on `apps/web` at `/trade/for-you`: who the user could trade with across all their have and want lists, ranked by how mutual the trade is, using current ownership.
+The account-wide trade match view on `apps/web` at `/trade/for-you`: who the user could trade with across all their have, sale and want lists, ranked by how mutual the trade is, using current ownership.
 
 ## Requirements
 
 ### Requirement: Account-wide matches
-`/trade/for-you` SHALL list the other accounts whose discoverable have, sale or want lists overlap the signed-in user's have and want lists, grouped one row per account. The user's own lists count whether or not they are discoverable. Matching SHALL use the user's have lists, never everything their wallet holds: owning an objekt does not mean it is up for trade. A have or sale list SHALL take part only while it is bound to one of its owner's Cosmo profiles, since Trade checks that profile's holdings; want lists always take part. The user's own account SHALL never appear. `/trade` SHALL open the Browse feed (see `web-trade-browse`), not For you. A signed-out visitor SHALL be sent to `/login?redirect=/trade/for-you`, keeping the search parameters.
+`/trade/for-you` SHALL list the other accounts whose discoverable have, sale or want lists overlap the signed-in user's have, sale and want lists, grouped one row per account. A sale list counts as a have list. The user's own lists count whether or not they are discoverable. Matching SHALL use the user's have and sale lists, never everything their wallet holds: owning an objekt does not mean it is up for trade. A have or sale list SHALL take part only while it is bound to one of its owner's Cosmo profiles, since Trade checks that profile's holdings; want lists always take part. The user's own account SHALL never appear. `/trade` SHALL open the Browse feed (see `web-trade-browse`), not For you. A signed-out visitor SHALL be sent to `/login?redirect=/trade/for-you`, keeping the search parameters.
 
 #### Scenario: Matches across lists
 - **WHEN** a user has two have lists and one want list, and a partner's discoverable lists overlap two of them
@@ -49,15 +49,15 @@ The row SHALL show the mutual score and both counts, each with a visible label (
 - **THEN** under All, B is listed above A
 
 ### Requirement: Filters
-The view SHALL offer a Show control: Everyone, Mutual only, They want what I have, and They have what I want. Everyone is the default. Mutual only keeps partners with both counts above zero. The view SHALL also offer a Compare with control naming one of the user's have or want lists, each option tagged with its list type. The named list replaces the user's side only in its own direction:
-- for a have list, "they want what I have" counts only that list's entries;
+The view SHALL offer a Show control: Everyone, Mutual only, They want what I have, and They have what I want. Everyone is the default. Mutual only keeps partners with both counts above zero. The view SHALL also offer a Compare with control naming one of the user's have, sale or want lists, each option tagged with its list type. The named list replaces the user's side only in its own direction:
+- for a have or sale list, "they want what I have" counts only that list's entries;
 - for a want list, "they have what I want" counts only that list's entries.
 
 The other direction keeps using all of the user's lists of the other type, so a list's Mutual only partners also trade back against the user's other lists.
 
-A one-way Show compares one kind of list, so Compare with SHALL offer only that kind: have lists under They want what I have, want lists under They have what I want. Its All option SHALL name the kind ("All my have lists"). Choosing a Show that the selected list does not apply to SHALL reset Compare with to All. Under the controls, one line SHALL say what is compared, naming the selected list or all lists, and only the side a one-way Show uses.
+A one-way Show compares one kind of list, so Compare with SHALL offer only that kind: have and sale lists under They want what I have, want lists under They have what I want. Its All option SHALL name the kind ("All my have and sale lists"). Choosing a Show that the selected list does not apply to SHALL reset Compare with to All. Under the controls, one line SHALL say what is compared, naming the selected list or all lists, and only the side a one-way Show uses.
 
-The filters SHALL live in the URL (`match`, `list`), beside `partner`, which only opens a row and does nothing when that partner is not in the current results. A `list` value that is not one of the user's have or want lists, or not of the kind the Show compares, SHALL be ignored, and all lists used.
+The filters SHALL live in the URL (`match`, `list`), beside `partner`, which only opens a row and does nothing when that partner is not in the current results. A `list` value that is not one of the user's have, sale or want lists, or not of the kind the Show compares, SHALL be ignored, and all lists used.
 
 #### Scenario: Default filter
 - **WHEN** the user opens `/trade/for-you` with no parameters

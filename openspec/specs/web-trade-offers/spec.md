@@ -90,7 +90,7 @@ Of two offers holding the same objekt, the first accepted wins. Either party SHA
 
 ### Requirement: Offer builder
 The builder SHALL open as a dialog, and as a full-height sheet on a phone. It shows:
-- You give, with an Add picker over the sender's own objekts, entries on their bound have lists first;
+- You give, with an Add picker over the sender's own objekts, entries on their bound have and sale lists first;
 - You get, with an Add picker over the allowed list entries;
 - the top-up and the note.
 

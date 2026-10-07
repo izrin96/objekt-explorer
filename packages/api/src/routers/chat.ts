@@ -94,22 +94,29 @@ export const chatRouter = {
     const now = new Date();
     const ctx = await prepareStart(me, new Date(session.user.createdAt), input.to, now);
 
-    const result = await db.transaction(async (tx) => {
-      const existingId = await checkStart(tx, ctx);
-      if (input.card) refuseSend(ctx.safety);
+    let release: (() => Promise<void>) | null = null;
+    const result = await db
+      .transaction(async (tx) => {
+        const existingId = await checkStart(tx, ctx);
+        if (input.card) refuseSend(ctx.safety);
 
-      const card = input.card
-        ? await resolveCard(input.card, {
-            senderId: me,
-            partnerId: ctx.recipientId,
-          })
-        : null;
-      if (card) await checkMessageRate(me, now);
+        const card = input.card
+          ? await resolveCard(input.card, {
+              senderId: me,
+              partnerId: ctx.recipientId,
+            })
+          : null;
+        if (card) release = await checkMessageRate(me, now);
 
-      const { id, created } = await ensureConversation(tx, ctx, existingId, card !== null);
-      const sent = card ? await appendMessage(tx, id, me, null, card) : null;
-      return { id, created, sent: sent !== null };
-    });
+        const { id, created } = await ensureConversation(tx, ctx, existingId, card !== null);
+        const sent = card ? await appendMessage(tx, id, me, null, card) : null;
+        return { id, created, sent: sent !== null };
+      })
+      .catch(async (error: unknown) => {
+        // a send refused after it was counted must not count
+        await release?.();
+        throw error;
+      });
 
     if (result.created || result.sent) {
       await publishChatChanged([me, ctx.recipientId], result.id);
@@ -122,18 +129,25 @@ export const chatRouter = {
     const now = new Date();
     const { partnerId } = await findMembership(input.conversationId, me);
     refuseSend(await chatSafety(me, partnerId));
-    await checkMessageRate(me, now);
-    const card = input.card ? await resolveCard(input.card, { senderId: me, partnerId }) : null;
+    const release = await checkMessageRate(me, now);
     const body = input.body ?? null;
     const caution = body === null ? [] : scanMessage(body);
 
-    const sent = await db.transaction((tx) =>
-      appendMessage(tx, input.conversationId, me, body, card, caution),
-    );
+    const sent = await (async () => {
+      const card = input.card ? await resolveCard(input.card, { senderId: me, partnerId }) : null;
+      const row = await db.transaction((tx) =>
+        appendMessage(tx, input.conversationId, me, body, card, caution),
+      );
+      return { ...row, card };
+    })().catch(async (error: unknown) => {
+      // a send refused after it was counted must not count
+      await release();
+      throw error;
+    });
     await publishChatChanged([me, partnerId], input.conversationId);
 
     const { messages, collections } = await toChatMessages(
-      [{ ...sent, senderId: me, body, card, caution }],
+      [{ ...sent, senderId: me, body, caution }],
       me,
     );
     return { message: messages[0]!, collections };

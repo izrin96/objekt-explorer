@@ -12,7 +12,7 @@ A signed-in user SHALL be able to block another account from a conversation's me
 - the blocked account's posts and rows SHALL leave the blocker's Trade feed and For you;
 - the blocker SHALL get no want-list alerts from or about the blocked account.
 
-Blocking SHALL work in one direction only: the blocker can still open the blocked account's public profile and lists.
+Feeds and alerts SHALL apply the block in both directions: the blocker's posts, For you row and want-list alerts also leave the blocked account's views. Either account can still open the other's public profile and lists.
 
 #### Scenario: Blocked sender
 - **WHEN** kaede.k blocks spam.seller22 and spam.seller22 then sends a message in their conversation
@@ -20,7 +20,7 @@ Blocking SHALL work in one direction only: the blocker can still open the blocke
 
 #### Scenario: Feeds
 - **WHEN** kaede.k blocks rin.trades
-- **THEN** rin.trades's posts and For you row no longer appear for kaede.k
+- **THEN** rin.trades's posts and For you row no longer appear for kaede.k, and kaede.k's no longer appear for rin.trades
 
 ### Requirement: Blocked users
 The Blocked users section of the account page (`/account/blocked`) SHALL list every account the user blocked, headed by its Chat as profile (see `web-chat`), with Unblock. Unblocking SHALL restore messaging and feeds. A conversation that existed before SHALL return with its history.
@@ -109,7 +109,7 @@ Accounts SHALL have a role of user (default), moderator or admin. A moderator SH
 ### Requirement: Blocks and sanctions apply to offers
 - **Block**: blocking an account SHALL cancel the open offers between the two accounts, and refuse new offer actions between them in either direction. The refusal reads the same as "this user isn't accepting messages".
 - **Chat mute**: while it lasts, the user SHALL be unable to send or counter offers, but can still accept, decline, withdraw and cancel a trade.
-- **Trade block or ban**: either one SHALL cancel the user's open offers and refuse every offer action until it ends.
+- **Trade block or ban**: either one SHALL cancel the user's open offers and, until it ends, refuse sending, countering and accepting. Declining, withdrawing and cancelling an in-progress trade SHALL stay allowed, so the other party is never left waiting.
 
 None of these SHALL change a trade that was already accepted.
 
@@ -120,6 +120,10 @@ None of these SHALL change a trade that was already accepted.
 #### Scenario: Trade block
 - **WHEN** a moderator blocks spam.seller22 from trading
 - **THEN** spam.seller22's open offers are cancelled and their recipients are notified
+
+#### Scenario: Cancel under a trade block
+- **WHEN** spam.seller22, trade blocked, cancels trade T-1050 that has no verified leg
+- **THEN** T-1050 is Cancelled, as it would be without the block
 
 ### Requirement: Reports with a trade attached
 A report filed through Report a problem SHALL carry its trade. It may attach only a trade between the reporter and the reported account. The moderator console's account page SHALL show each attached trade:

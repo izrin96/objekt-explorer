@@ -39,8 +39,10 @@ export function allowedActions(
   now: Date,
   limits: ActorLimits = {},
 ): OfferAction[] {
-  if (effectiveStatus(offer, now) !== "open" || limits.tradeBlocked) return [];
+  if (effectiveStatus(offer, now) !== "open") return [];
   if (offer.toUserId === viewerId) {
+    // a trade block leaves a way to back out
+    if (limits.tradeBlocked) return ["decline"];
     return limits.muted ? ["accept", "decline"] : ["accept", "decline", "counter"];
   }
   if (offer.fromUserId === viewerId) return ["withdraw"];
@@ -55,7 +57,9 @@ export function actionRefusal(
   now: Date,
   limits: ActorLimits = {},
 ): OfferRefusal | null {
-  if (limits.tradeBlocked) return "trade_blocked";
+  if (limits.tradeBlocked && (action === "accept" || action === "counter")) {
+    return "trade_blocked";
+  }
   const status = effectiveStatus(offer, now);
   if (status === "expired") return "expired";
   if (status !== "open") return "not_open";
@@ -73,14 +77,15 @@ export type SafetyFacts = {
 
 /**
  * Sending and countering need everything. Accepting starts a trade, so a block refuses it
- * too, but not a mute; declining, withdrawing and cancelling need only no trade block.
+ * too, but not a mute; declining, withdrawing and cancelling are always allowed, so a trade
+ * block never leaves the other side waiting.
  */
 export function safetyRefusal(
   kind: "send" | "accept" | "respond",
   facts: SafetyFacts,
 ): OfferRefusal | null {
-  if (facts.tradeBlocked) return "trade_blocked";
   if (kind === "respond") return null;
+  if (facts.tradeBlocked) return "trade_blocked";
   if (kind === "send" && facts.muted) return "muted";
   if (facts.blocked || facts.partnerTradeBlocked) return "not_accepting";
   return null;

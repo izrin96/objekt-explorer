@@ -33,12 +33,15 @@ export const marketListingSchema = z.object({
   transferable: z.boolean().nullable(),
   /** null when the list hides serials */
   objektId: z.string().nullable(),
-  /** whether the list's owner accepts a message started from this row */
-  messageable: z.boolean(),
   list: marketListInfoSchema,
 });
 
 export type MarketListing = z.infer<typeof marketListingSchema>;
+
+/** The site's own read: whether the list's owner accepts a message started from this row. */
+export const viewerMarketListingSchema = marketListingSchema.extend({ messageable: z.boolean() });
+
+export type ViewerMarketListing = z.infer<typeof viewerMarketListingSchema>;
 
 export const marketSummaryEntrySchema = z.object({
   slug: z.string(),
@@ -74,6 +77,12 @@ export const marketListingsOutputSchema = z.object({
 
 export type MarketListingsOutput = z.infer<typeof marketListingsOutputSchema>;
 
+export const viewerMarketListingsOutputSchema = marketListingsOutputSchema.extend({
+  items: z.array(viewerMarketListingSchema),
+});
+
+export type ViewerMarketListingsOutput = z.infer<typeof viewerMarketListingsOutputSchema>;
+
 export const marketListingsInputSchema = z.object({
   collectionSlug: z.string(),
   sortBy: sortBySchema.default("createdAt"),
@@ -81,3 +90,5 @@ export const marketListingsInputSchema = z.object({
   offset: z.coerce.number<number>().int().min(0).default(0),
   limit: z.coerce.number<number>().int().min(1).max(100).default(20),
 });
+
+export type MarketListingsInput = z.output<typeof marketListingsInputSchema>;

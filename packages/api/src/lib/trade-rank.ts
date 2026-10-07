@@ -1,4 +1,4 @@
-import type { ListTypeNew } from "../schemas/list";
+import { type ListTypeNew, tradeSideOf } from "../schemas/list";
 import type { TradeFilter } from "../schemas/trade";
 
 export const PARTNER_LIMIT = 50;
@@ -12,16 +12,16 @@ export type MyList = { id: number; listTypeNew: ListTypeNew };
 /**
  * The lists each direction matches from. A named list narrows only its own direction,
  * so the other keeps all of the user's lists and a single list can still be mutual.
- * A list that is not one of the user's have or want lists is ignored.
+ * A list that is not one of the user's have, sale or want lists is ignored.
  */
 export function matchSides(myLists: MyList[], listId: number | null) {
   const named = myLists.find(
-    (list) => list.id === listId && (list.listTypeNew === "have" || list.listTypeNew === "want"),
+    (list) => list.id === listId && tradeSideOf(list.listTypeNew) !== null,
   );
   const side = (type: "have" | "want") =>
-    named?.listTypeNew === type
+    named && tradeSideOf(named.listTypeNew) === type
       ? [named.id]
-      : myLists.filter((list) => list.listTypeNew === type).map((list) => list.id);
+      : myLists.filter((list) => tradeSideOf(list.listTypeNew) === type).map((list) => list.id);
   return { listId: named?.id ?? null, haveListIds: side("have"), wantListIds: side("want") };
 }
 
