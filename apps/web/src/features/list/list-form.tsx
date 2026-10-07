@@ -390,7 +390,7 @@ export function ListForm({ idPrefix, value, onChange, lists, profiles, mode, url
                 id={id("url")}
                 readOnly
                 unstyled
-                className="grow px-3 text-sm"
+                className="grow text-sm"
                 value={
                   value.regenerateSlug
                     ? slugify(value.name, { lower: true, strict: true }) || url.fallbackSlug
