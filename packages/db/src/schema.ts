@@ -90,7 +90,6 @@ export const lists = pgTable(
     description: text("description"),
     currency: varchar("currency", { length: 10 }),
     discoverable: boolean("discoverable").notNull().default(false),
-    matchAlerts: boolean("match_alerts").notNull().default(true),
     updatedAt: timestamp("updated_at", { mode: "string", withTimezone: true })
       .notNull()
       .defaultNow(),
