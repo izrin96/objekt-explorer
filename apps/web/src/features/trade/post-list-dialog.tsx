@@ -1,7 +1,9 @@
+import { CardsThreeIcon } from "@phosphor-icons/react";
 import type { PublicList } from "@repo/api/schemas/list";
 import { Link } from "@tanstack/react-router";
 import { useRef } from "react";
 
+import { EmptyState } from "@/components/shared/empty-state";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -42,17 +44,21 @@ export function PostListDialog({
         </DialogHeader>
         <DialogPanel>
           {lists.length === 0 ? (
-            <div className="flex flex-col items-start gap-3">
-              <p className="text-muted-foreground text-sm">{m.trade_post_dialog_empty()}</p>
-              <Button
-                variant="outline"
-                size="sm"
-                render={<Link to="/list" />}
-                onClick={() => onOpenChange(false)}
-              >
-                {m.nav_create_list()}
-              </Button>
-            </div>
+            <EmptyState
+              icon={CardsThreeIcon}
+              bordered={false}
+              title={m.trade_post_dialog_empty()}
+              action={
+                <Button
+                  variant="outline"
+                  size="sm"
+                  render={<Link to="/list" />}
+                  onClick={() => onOpenChange(false)}
+                >
+                  {m.nav_create_list()}
+                </Button>
+              }
+            />
           ) : (
             <ul className="flex flex-col divide-y">
               {lists.map((list) => (

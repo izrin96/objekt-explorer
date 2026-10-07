@@ -851,7 +851,6 @@
   "notification_empty": "아직 알림이 없습니다",
   "notification_empty_hint": "희망 목록에서 알림 받기를 켜면 찾는 오브젝트가 올라올 때 알려 드립니다.",
   "notification_go_to_lists": "내 목록으로",
-  "notification_error": "알림을 불러오지 못했습니다",
   "notification_want_match_single": "{partner}님이 {objekt}을(를) 올렸습니다 (희망 목록 ‘{list}’)",
   "notification_want_match_multiple": "희망 목록 ‘{list}’에 {count}개 일치, 최근 {partner}님의 {objekt}",
   "notification_have_wanted_single": "{partner}님이 {objekt}을(를) 희망합니다 (목록 ‘{list}’)",

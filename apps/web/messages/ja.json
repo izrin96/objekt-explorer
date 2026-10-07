@@ -851,7 +851,6 @@
   "notification_empty": "通知はまだありません",
   "notification_empty_hint": "希望リストで「通知する」をオンにすると、探しているObjektが出品されたときにお知らせします。",
   "notification_go_to_lists": "マイリストへ",
-  "notification_error": "通知を読み込めませんでした",
   "notification_want_match_single": "{partner}さんが{objekt}を出品しました（希望リスト「{list}」）",
   "notification_want_match_multiple": "希望リスト「{list}」に{count}件の一致、最新は{partner}さんの{objekt}",
   "notification_have_wanted_single": "{partner}さんが{objekt}を希望しています（リスト「{list}」）",

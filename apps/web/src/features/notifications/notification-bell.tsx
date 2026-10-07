@@ -1,4 +1,11 @@
-import { BellIcon, ChecksIcon, HandshakeIcon, ShieldWarningIcon } from "@phosphor-icons/react";
+import {
+  ArrowClockwiseIcon,
+  BellIcon,
+  ChecksIcon,
+  HandshakeIcon,
+  ShieldWarningIcon,
+  WarningIcon,
+} from "@phosphor-icons/react";
 import type { Outputs } from "@repo/api";
 import type { Notification } from "@repo/api/schemas/notification";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -106,14 +113,17 @@ function NotificationPanel({ unread, onNavigate }: { unread: number; onNavigate:
         {query.isPending ? (
           <NotificationSkeleton />
         ) : query.isError ? (
-          <div className="flex flex-col items-start gap-2 px-4 py-6">
-            <p className="text-destructive-foreground text-sm text-pretty">
-              {m.notification_error()}
-            </p>
-            <Button variant="outline" size="sm" onClick={() => void query.refetch()}>
-              {m.common_error_retry()}
-            </Button>
-          </div>
+          <EmptyState
+            icon={WarningIcon}
+            bordered={false}
+            title={m.common_error_loading_data()}
+            action={
+              <Button variant="outline" size="sm" onClick={() => void query.refetch()}>
+                <ArrowClockwiseIcon />
+                {m.common_error_retry()}
+              </Button>
+            }
+          />
         ) : empty ? (
           <EmptyState
             icon={BellIcon}

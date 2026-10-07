@@ -851,7 +851,6 @@
   "notification_empty": "No notifications yet",
   "notification_empty_hint": "Turn on Alert me for a want list to hear when someone lists what you're after.",
   "notification_go_to_lists": "Go to My List",
-  "notification_error": "Couldn't load notifications",
   "notification_want_match_single": "{partner} listed {objekt}, on your want list “{list}”",
   "notification_want_match_multiple": "{count} matches for your want list “{list}”, latest {objekt} from {partner}",
   "notification_have_wanted_single": "{partner} wants {objekt}, on your list “{list}”",
