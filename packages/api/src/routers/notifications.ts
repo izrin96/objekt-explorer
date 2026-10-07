@@ -71,7 +71,13 @@ export const notificationsRouter = {
         collections: Object.fromEntries(
           collections.map((c) => [
             c.slug,
-            { member: c.member, collectionNo: c.collectionNo, thumbnailImage: c.thumbnailImage },
+            {
+              member: c.member,
+              artist: c.artist,
+              season: c.season,
+              collectionNo: c.collectionNo,
+              thumbnailImage: c.thumbnailImage,
+            },
           ]),
         ),
       };

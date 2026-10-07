@@ -56,16 +56,16 @@ profile header and the account menu for the user's Have and Want lists.
 - **WHEN** the owner activates Export
 - **THEN** a CSV file named after the list downloads with one row per entry
 
-### Requirement: Trade matches shortcut
-On their own have or want list, the owner SHALL see a Trade matches control in the list header, showing the number of mutual partners for that list once it is known. Activating it SHALL open `/trade/for-you?list=<slug>`. Other visitors SHALL not see the control.
+### Requirement: Find matches shortcut
+On their own have or want list, the owner SHALL see a Find matches control in the list header, showing the number of mutual people for that list once it is known. Activating it SHALL open `/trade/for-you?list=<slug>`. Other visitors SHALL not see the control.
 
 #### Scenario: Owner opens matches
-- **WHEN** the owner of have list "spares" activates Trade matches
+- **WHEN** the owner of have list "spares" activates Find matches
 - **THEN** the browser is at `/trade/for-you?list=spares` with that list selected in the list filter
 
 #### Scenario: Visitor
 - **WHEN** a signed-in user opens someone else's have list
-- **THEN** no Trade matches control is shown
+- **THEN** no Find matches control is shown
 
 ### Requirement: Show on Trade
 The list form SHALL offer a Show on Trade switch on have, want and sale lists, off by default and off for every list that existed before it. Show on Trade puts the list on the `/trade` feed (see `web-trade-browse`).

@@ -101,11 +101,11 @@ type, with Create list, Discord format and All lists actions.
 - **WHEN** a signed-in user picks a list in My lists
 - **THEN** the URL is that list's address
 
-### Requirement: Account menu reaches trade matches
-The account menu SHALL include a Trade matches item opening `/trade/for-you`.
+### Requirement: Account menu reaches For you
+The account menu SHALL include a For you item opening `/trade/for-you`.
 
 #### Scenario: From the menu
-- **WHEN** the user opens the account menu and activates Trade matches
+- **WHEN** the user opens the account menu and activates For you
 - **THEN** the browser is at `/trade/for-you`
 
 ### Requirement: Notification bell in the frame

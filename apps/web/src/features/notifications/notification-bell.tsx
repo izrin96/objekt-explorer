@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverPopup, PopoverTitle, PopoverTrigger } from "@/components/ui/popover";
 import { Skeleton } from "@/components/ui/skeleton";
 import { untilLabel } from "@/features/chat/format";
+import { collectionName } from "@/features/objekt/objekt-label";
 import { offerNotificationText, tradeNotificationText } from "@/features/offers/format";
 import { orpc } from "@/lib/orpc";
 import { relativeTime } from "@/lib/time";
@@ -386,12 +387,6 @@ function NotificationItem({
   );
 }
 
-/** the payload carries no season, so the code here is the bare collection number */
-function collectionName(slug: string, collections: Collections) {
-  const collection = collections[slug];
-  return collection ? `${collection.member} ${collection.collectionNo}` : slug;
-}
-
 function notificationText(notification: ListNotification, collections: Collections) {
   const { list, count, latest } = notification.payload;
   const first = latest[0];
@@ -400,7 +395,7 @@ function notificationText(notification: ListNotification, collections: Collectio
     count,
     list: list.name,
     partner: first.partnerName,
-    objekt: collectionName(first.collectionSlug, collections),
+    objekt: collectionName(first.collectionSlug, collections[first.collectionSlug]),
   };
 
   switch (notification.type) {
