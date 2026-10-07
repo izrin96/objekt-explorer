@@ -33,9 +33,15 @@ If a reserved objekt in an in-progress trade moves to anyone other than the rece
 
 Either way both parties SHALL be notified, and every reservation of the trade SHALL be released.
 
+A move away shortly before the accept counts too when the objekt never came back, since the accept's ownership check can trail the chain. A move away and back before the accept SHALL not break the trade.
+
 #### Scenario: Sold elsewhere before sending
 - **WHEN** the giver sends a reserved objekt to a third account, and no leg was verified
 - **THEN** the trade shows Cancelled with the reason, and both parties are notified
+
+#### Scenario: Sold just before the accept
+- **WHEN** the giver sold a reserved objekt to a third account minutes before the accept, and the accept still saw it in their wallet
+- **THEN** once the sale is indexed, the trade shows Cancelled with the reason, and both parties are notified
 
 #### Scenario: Received but never returned
 - **WHEN** one leg verified, then the other side sends its reserved objekt to someone else

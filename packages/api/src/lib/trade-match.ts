@@ -9,8 +9,9 @@ export type MatchLeg = {
   /** the offer's `created_at`: a transfer before it never counts */
   windowStart: string;
   /**
-   * The trade's `accepted_at`. A transfer before it may verify the leg, but never breaks
-   * it: the accept rechecked ownership, so an earlier move out (and back) was resolved.
+   * The trade's `accepted_at`. A move away after it breaks the leg at once. One before it
+   * breaks the leg only if the token never came back: the accept read the indexer, which
+   * can lag the chain, so it may not have seen that move.
    */
   acceptedAt: string;
   giver: ReadonlySet<string>;
@@ -74,17 +75,26 @@ export function matchLegs(
 
     if (leg.objektId !== null) {
       let result: LegResult = { kind: "pending" };
+      // the move that took the token from the giver before the accept, while it stays away
+      let away: MatchTransfer | null = null;
       for (const t of sorted) {
         if (t.objektId !== leg.objektId || !inWindow(t)) continue;
-        if (giver.has(t.from) && giver.has(t.to)) continue;
+        if (giver.has(t.to)) {
+          away = null;
+          continue;
+        }
         if (giver.has(t.from) && receiver.has(t.to)) {
           result = verified(t);
           break;
         }
-        if (time(t.timestamp) < accepted) continue;
-        result = { kind: "broken", transferId: t.id };
+        if (time(t.timestamp) < accepted) {
+          if (giver.has(t.from)) away = t;
+          continue;
+        }
+        result = { kind: "broken", transferId: (away ?? t).id };
         break;
       }
+      if (result.kind === "pending" && away) result = { kind: "broken", transferId: away.id };
       if (result.kind === "verified") taken.add(result.transferId);
       results.set(leg.id, result);
       continue;
