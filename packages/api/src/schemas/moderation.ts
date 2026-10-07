@@ -51,6 +51,7 @@ export const reportInputSchema = z.object({
   /** Report a problem: a trade between the reporter and the reported account */
   tradeId: z.number().int().positive().optional(),
 });
+export type ReportInput = z.infer<typeof reportInputSchema>;
 
 const modReasonSchema = z
   .string()
@@ -73,16 +74,19 @@ export const actInputSchema = z
         : input.action === "ban" || input.days === undefined,
     { message: "invalid_days", path: ["days"] },
   );
+export type ActInput = z.infer<typeof actInputSchema>;
 
 export const revokeInputSchema = z.object({
   sanctionId: z.number().int().positive(),
   reason: modReasonSchema,
 });
+export type RevokeInput = z.infer<typeof revokeInputSchema>;
 
 export const setRoleInputSchema = z.object({
   userId: z.string().min(1),
   role: z.enum(["user", "moderator"]),
 });
+export type SetRoleInput = z.infer<typeof setRoleInputSchema>;
 
 const excerptOfferItemSchema = z.object({
   collectionSlug: z.string(),
