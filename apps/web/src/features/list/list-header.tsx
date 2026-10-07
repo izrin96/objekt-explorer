@@ -17,6 +17,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Menu, MenuItem, MenuPopup, MenuSeparator, MenuTrigger } from "@/components/ui/menu";
+import { MessageButton } from "@/features/chat/message-button";
 import { CompareDialog } from "@/features/compare/compare-dialog";
 import { ProfileLink } from "@/features/profile/profile-hover-card";
 import { listMatchCountOptions } from "@/features/trade/queries";
@@ -111,6 +112,9 @@ export function ListHeader() {
             </Button>
           ) : null}
           {canTradeMatch ? <TradeMatchesLink slug={list.slug} /> : null}
+          {list.messageable && !isOwner ? (
+            <MessageButton target={{ kind: "list", slug: list.slug }} />
+          ) : null}
           <ShareListButton list={list} />
           <Menu>
             <MenuTrigger

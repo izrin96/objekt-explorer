@@ -2,13 +2,14 @@ import { REPORT_AFTER_DAYS } from "@repo/api/schemas/offer";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { toastManager } from "@/components/ui/toast";
+import { LIST_QUERY_KEY } from "@/features/list/queries";
 import { PROFILE_PAGE_KEY } from "@/features/profile/queries";
 import { orpc } from "@/lib/orpc";
 import { errorReason } from "@/lib/orpc-error";
 import { relativeTime } from "@/lib/time";
 import { m } from "@/paraglide/messages";
 
-/** A block reaches chat lists, Trade, For you, Market rows' Message and profiles. */
+/** A block reaches chat lists, Trade, For you, Market rows' Message, profiles and list pages. */
 function useBlockInvalidation() {
   const queryClient = useQueryClient();
   return () =>
@@ -19,6 +20,7 @@ function useBlockInvalidation() {
         orpc.market.key(),
         orpc.moderation.blocked.key(),
         PROFILE_PAGE_KEY,
+        LIST_QUERY_KEY,
       ].map((queryKey) => queryClient.invalidateQueries({ queryKey })),
     );
 }

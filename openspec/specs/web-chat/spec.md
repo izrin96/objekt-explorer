@@ -55,6 +55,17 @@ A list or profile that hides its owner's account SHALL offer Message only when t
 - **WHEN** the owner turned the setting on
 - **THEN** the row has a Message action, and the conversation shows the owner's account
 
+### Requirement: Message from a list page
+A list's page SHALL offer Message in its header, so a list reached from a shared link can start a chat with its owner. It SHALL not be offered on the viewer's own list, between accounts where either blocked the other, or where the rules above hide it. It attaches no card, so the conversation starts as a request, as from a profile.
+
+#### Scenario: List shared on Discord
+- **WHEN** a signed-out visitor opens rin.trades's list from a Discord link and activates Message
+- **THEN** they sign in, come back to the list, and Message opens a conversation with rin.trades
+
+#### Scenario: Own list
+- **WHEN** rin.trades opens their own list
+- **THEN** the header has no Message button
+
 ### Requirement: Requests
 A conversation started without an objekt card (from a profile) SHALL appear in the recipient's Requests, not their Inbox, until they reply or accept. Request conversations SHALL not count as unread. Declining a request SHALL archive it for the recipient without telling the sender. A conversation started with a card SHALL go straight to the Inbox.
 

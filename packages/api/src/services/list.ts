@@ -3,7 +3,7 @@ import { toIndexedArtist, type ValidArtist } from "@repo/cosmo/types/common";
 import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
-import { listEntries, lists } from "@repo/db/schema";
+import { listEntries, lists, messagePref } from "@repo/db/schema";
 import type { List, ListEntry, UserAddress } from "@repo/db/schema";
 import { chunkMap } from "@repo/lib";
 import { touchListWith } from "@repo/lib/server/list-touch";
@@ -13,8 +13,10 @@ import { type SQL, and, eq, inArray, isNotNull, ne, sql } from "drizzle-orm";
 import slugify from "slugify";
 
 import { OBJEKT_PREVIEW_SIZE } from "../constants";
+import { isMessageable, toMessagePref } from "../lib/chat-rules";
 import { BUMP_COOLDOWN_HOURS } from "../lib/trade-feed";
 import type { AddSource, ListPreview, ListTypeNew, PublicList } from "../schemas/list";
+import { isBlockedEither } from "./moderation";
 import { getCollectionColumns, getPartialCollectionColumns } from "./objekt";
 import { isProfileHidden } from "./privacy";
 import { toPublicUser } from "./profile";
@@ -227,6 +229,23 @@ export async function fetchList(
         }
       : null,
   };
+}
+
+/** Whether the list page offers Message to the viewer: never on their own list, nor a blocked pair. */
+export async function isListMessageable(listId: number, viewerId: string | undefined) {
+  const [row] = await db
+    .select({
+      userId: lists.userId,
+      hideUser: lists.hideUser,
+      allow: messagePref.allow,
+      allowHidden: messagePref.allowHidden,
+    })
+    .from(lists)
+    .leftJoin(messagePref, eq(messagePref.userId, lists.userId))
+    .where(eq(lists.id, listId));
+  if (!row || row.userId === viewerId) return false;
+  if (viewerId && (await isBlockedEither(viewerId, row.userId))) return false;
+  return isMessageable(toMessagePref(row), row.hideUser);
 }
 
 export async function fetchOwnedLists(
