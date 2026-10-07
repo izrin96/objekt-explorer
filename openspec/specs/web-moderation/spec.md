@@ -62,7 +62,7 @@ A received message matching a scam pattern SHALL show the recipient an inline ca
 - **THEN** the message is shown with the caution, and moderators see one "send first" and one "outside payment" flag on the sender, without the text
 
 ### Requirement: Moderator console
-`/mod/reports` SHALL be reachable only by accounts with the moderator or admin role. Anyone else SHALL get the not-found surface. It SHALL list open reports grouped by reported account, newest first, with reason counts and flag counts. Opening an account SHALL show:
+`/mod/reports` SHALL be reachable only by accounts with the moderator or admin role. Anyone else SHALL get the not-found surface. The account menu SHALL link to it for staff only. It SHALL list open reports grouped by reported account, newest first, with reason counts and flag counts. Opening an account SHALL show:
 - every open report's reason, note, reporter and time, and its shared excerpt;
 - account signals:
   - account age;

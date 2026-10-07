@@ -5,6 +5,7 @@ import {
   InfoIcon,
   LinkIcon,
   PlusIcon,
+  ShieldCheckIcon,
   SignInIcon,
   SignOutIcon,
   UserIcon,
@@ -12,6 +13,7 @@ import {
   XLogoIcon,
 } from "@phosphor-icons/react";
 import type { Icon } from "@phosphor-icons/react";
+import { isStaffRole } from "@repo/api/schemas/moderation";
 import type { User } from "@repo/api/services/auth";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link, useLocation } from "@tanstack/react-router";
@@ -131,6 +133,13 @@ export function UserMenu({ user }: { user: User }) {
             <GearIcon />
             {m.nav_setting()}
           </MenuItem>
+
+          {isStaffRole(user.role) && (
+            <MenuItem render={<Link to="/mod/reports" />}>
+              <ShieldCheckIcon />
+              {m.nav_mod_reports()}
+            </MenuItem>
+          )}
 
           <MenuSeparator />
 
