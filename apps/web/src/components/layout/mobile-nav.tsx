@@ -22,7 +22,7 @@ import { SITE_NAME } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 /**
- * Below `md` the nav links live here instead: a left Sheet holding the same
+ * Below `lg` the nav links live here instead: a left Sheet holding the same
  * links plus the changelog, which the bar has no room for. Each Link closes
  * the sheet on click — Base UI's Dialog has no router awareness.
  */
@@ -42,7 +42,7 @@ export function MobileNav({ links }: { links: readonly NavLink[] }) {
               variant="ghost"
               size="icon"
               aria-label={m.nav_open_menu()}
-              className="-ml-1.5 md:hidden"
+              className="-ml-1.5 lg:hidden"
             />
           }
         >
@@ -86,7 +86,7 @@ export function MobileNav({ links }: { links: readonly NavLink[] }) {
               {changelog.isNew ? <NewDot placement="inline" /> : null}
             </button>
 
-            {/* the nav's status button has nowhere to sit below `md`, so it lands here */}
+            {/* the nav's status button has nowhere to sit below `lg`, so it lands here */}
             <SystemStatus label={m.nav_system_status()} className="mt-1.5 justify-start" />
 
             <Separator className="mt-auto" />

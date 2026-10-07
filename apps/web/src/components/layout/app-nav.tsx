@@ -59,12 +59,12 @@ export function AppNav() {
           >
             <CubeIcon weight="bold" className="size-3.5" />
           </span>
-          {/* on a phone the search field needs the room, and between `md` and `lg`
+          {/* on a phone the search field needs the room, and between `lg` and `xl`
               the nav links do; the logo still reads as home */}
-          <span className="max-sm:sr-only md:max-lg:sr-only">{SITE_NAME}</span>
+          <span className="max-sm:sr-only lg:max-xl:sr-only">{SITE_NAME}</span>
         </Link>
 
-        <nav className="ml-1.5 hidden shrink-0 gap-0.5 md:flex">
+        <nav className="ml-1.5 hidden shrink-0 gap-0.5 lg:flex">
           {links.map((l) => (
             <Link
               key={l.key}
@@ -77,11 +77,11 @@ export function AppNav() {
           ))}
         </nav>
 
-        <span className="flex-1 max-md:hidden" />
+        <span className="flex-1 max-lg:hidden" />
 
-        {/* below `md` the changelog moves into the sheet and the logo's dot
+        {/* below `lg` the changelog moves into the sheet and the logo's dot
             carries the status, so the search field keeps the room */}
-        <Group className="max-md:hidden">
+        <Group className="max-lg:hidden">
           <SystemStatus />
           <ChangelogButton />
         </Group>

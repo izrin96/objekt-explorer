@@ -169,11 +169,11 @@ export function NavSearch({
       }}
     >
       <CommandDialogTrigger
-        /* below `md` it takes the room the nav links leave up to 176px, and the
-           margin keeps the account menu at the far end; from `md` it is 240px
-           and gives way before the links do; a phone has no ⌘K, and a narrow
-           desktop row has no room for it */
-        className="bg-background dark:bg-input/32 border-input text-muted-foreground hover:border-foreground/30 hover:text-foreground focus-visible:ring-ring flex h-8 max-w-44 min-w-0 flex-1 items-center gap-2 rounded-lg border ps-2.5 pe-1 text-sm shadow-xs/4 transition-colors duration-150 outline-none focus-visible:ring-2 max-md:mr-auto md:w-60 md:max-w-60 md:flex-initial"
+        /* below `lg` it takes the room the nav links leave, up to 176px on a
+           phone and 240px from `md`, and the margin keeps the account menu at
+           the far end; from `lg` it is 240px and gives way before the links do;
+           a phone has no ⌘K, and a narrow desktop row has no room for it */
+        className="bg-background dark:bg-input/32 border-input text-muted-foreground hover:border-foreground/30 hover:text-foreground focus-visible:ring-ring flex h-8 max-w-44 min-w-0 flex-1 items-center gap-2 rounded-lg border ps-2.5 pe-1 text-sm shadow-xs/4 transition-colors duration-150 outline-none focus-visible:ring-2 max-lg:mr-auto md:max-w-60 lg:w-60 lg:flex-initial"
       >
         <MagnifyingGlassIcon className="size-3.5 shrink-0" />
         <span className="flex-1 truncate text-left">{m.nav_search_user_label()}…</span>
