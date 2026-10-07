@@ -7,7 +7,7 @@ import { and, desc, eq, inArray, or, sql } from "drizzle-orm";
 
 import { canReport } from "../lib/offer-rules";
 import { reportRetryAt, shapeExcerpt, shapeExcerptOffer } from "../lib/sanctions";
-import { EXCERPT_SIZE, type ReportInput } from "../schemas/moderation";
+import type { ReportInput } from "../schemas/moderation";
 import { afterBlockChange, findMembership, parseCard } from "./chat";
 import { findAccount, refuseModeration } from "./moderation";
 import { type CancelResult, cancelOpenOffers, offersBetween, publishCancelled } from "./offer";
@@ -103,11 +103,11 @@ export async function fileReport(me: string, input: ReportInput) {
               card: message.card,
               offerId: message.offerId,
               createdAt: message.createdAt,
+              unsentAt: message.unsentAt,
             })
             .from(message)
             .where(eq(message.conversationId, input.conversationId))
             .orderBy(desc(message.id))
-            .limit(EXCERPT_SIZE)
         : null;
     const offers = shared
       ? await excerptOffers(
@@ -133,6 +133,7 @@ export async function fileReport(me: string, input: ReportInput) {
                 senderId: m.senderId,
                 body: m.body,
                 card: parseCard(m.card),
+                unsent: m.unsentAt !== null,
                 offer: (m.offerId === null ? undefined : offers?.get(m.offerId)) ?? null,
                 createdAt: m.createdAt,
               })),

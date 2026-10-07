@@ -1,5 +1,6 @@
 import { ArrowClockwiseIcon, CardsThreeIcon, LinkIcon, WarningIcon } from "@phosphor-icons/react";
 import type { CardInput } from "@repo/api/schemas/chat";
+import type { ListTypeNew } from "@repo/api/schemas/list";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
@@ -29,7 +30,13 @@ import { useUserLists, useUserProfiles } from "@/features/user/hooks";
 import { displayNickname } from "@/lib/address";
 import { m } from "@/paraglide/messages";
 
-export type Attachment = { input: CardInput; objekt: ValidObjekt; listName: string | null };
+export type Attachment = {
+  input: CardInput;
+  objekt: ValidObjekt;
+  listName: string | null;
+  /** the type of the other person's list it came from, when a Message button attached it */
+  listType?: ListTypeNew;
+};
 
 export function AttachObjektDialog({
   open,

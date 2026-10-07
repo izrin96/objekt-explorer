@@ -33,10 +33,10 @@ The Blocked users section of the account page (`/account/blocked`) SHALL list ev
 A signed-in user SHALL be able to report another account from a conversation's menu, a Trade post's menu or a profile, choosing:
 - a reason: scam or fake offer, harassment, spam, pretending to be someone else, or something else;
 - an optional note of up to 500 characters;
-- "Share the last 20 messages with moderators", on by default and offered only from a conversation;
+- "Share this conversation with moderators", on by default and offered only from a conversation;
 - "Also block", off by default.
 
-A shared excerpt SHALL be a copy of at most the last 100 messages of that conversation at the time of the report, kept with the report. It SHALL be the only way message text reaches moderators. A user SHALL be able to report the same account at most once per 24 hours.
+A shared excerpt SHALL be a copy of every message of that conversation at the time of the report, kept with the report; later messages, unsends or deletions SHALL not change it. A message unsent before the report SHALL be in the excerpt with its text and card, marked as unsent. The excerpt SHALL be the only way message text reaches moderators. A user SHALL be able to report the same account at most once per 24 hours.
 
 #### Scenario: Report without sharing
 - **WHEN** a user reports harassment with sharing turned off
@@ -45,6 +45,14 @@ A shared excerpt SHALL be a copy of at most the last 100 messages of that conver
 #### Scenario: Report and block
 - **WHEN** the user reports spam with "Also block" on
 - **THEN** the report is filed and the account is blocked
+
+#### Scenario: Long conversation
+- **WHEN** a user reports from a conversation holding 450 messages with sharing on
+- **THEN** the moderator sees all 450 messages in the excerpt
+
+#### Scenario: Unsent message in the excerpt
+- **WHEN** a user reports a conversation in which the other account unsent a payment request
+- **THEN** the moderator sees that message's text in the excerpt, marked as unsent
 
 ### Requirement: Scam-phrase caution
 A received message matching a scam pattern SHALL show the recipient an inline caution under the message. The patterns cover asking the other side to send first, and payment outside the site (payment links and app names). The sender SHALL see nothing. Each match SHALL record a flag on the sender with its category and time, without the message text. Flags SHALL never block or hide a message.

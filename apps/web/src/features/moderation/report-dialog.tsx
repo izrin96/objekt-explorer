@@ -1,5 +1,4 @@
 import {
-  EXCERPT_SIZE,
   REPORT_NOTE_MAX_LENGTH,
   REPORT_REASONS,
   type ReportReason,
@@ -190,8 +189,8 @@ function ReportForm({
             id={ids.share}
             checked={share}
             onCheckedChange={setShare}
-            label={m.mod_report_share({ count: EXCERPT_SIZE })}
-            description={m.mod_report_share_desc({ count: EXCERPT_SIZE })}
+            label={m.mod_report_share()}
+            description={m.mod_report_share_desc()}
           />
         ) : null}
         <SwitchRow

@@ -5,11 +5,15 @@ import type { OfferView } from "@repo/api/schemas/offer";
 import {
   appendToThread,
   latestOfferId,
+  canUnsend,
   liveOfferIds,
+  markUnsent,
   newestId,
   patchOffers,
+  seenMessageId,
   threadMessages,
   type ThreadData,
+  unsentIds,
 } from "./thread-cache";
 
 const message = (id: number) => ({
@@ -19,6 +23,7 @@ const message = (id: number) => ({
   card: null,
   caution: null,
   createdAt: new Date(id * 1000).toISOString(),
+  unsent: false,
 });
 
 const conversation = {
@@ -177,5 +182,64 @@ describe("latestOfferId", () => {
     ];
     expect(latestOfferId(messages)).toBe(20);
     expect(latestOfferId([withOffer(3, null)])).toBeNull();
+  });
+});
+
+describe("markUnsent", () => {
+  test("blanks the message where it is held and keeps its place and time", () => {
+    const data = thread([3, 4], [1, 2]);
+    const next = markUnsent(data, new Set([2]));
+    const two = threadMessages(next).find((item) => item.id === 2)!;
+    expect(threadMessages(next).map((item) => item.id)).toEqual([1, 2, 3, 4]);
+    expect(two).toMatchObject({ unsent: true, body: null, card: null, caution: null });
+    expect(two.createdAt).toBe(message(2).createdAt);
+    expect(next.pages[0]).toBe(data.pages[0]);
+  });
+
+  test("a message not held, or already unsent, changes nothing", () => {
+    const data = thread([1, 2]);
+    expect(markUnsent(data, new Set([9]))).toBe(data);
+    const once = markUnsent(data, new Set([1]));
+    expect(markUnsent(once, new Set([1]))).toBe(once);
+  });
+
+  test("unsentIds reads a fresh page", () => {
+    const page = { messages: [message(1), { ...message(2), unsent: true }] };
+    expect([...unsentIds(page)]).toEqual([2]);
+  });
+});
+
+describe("canUnsend", () => {
+  const sent = Date.parse("2026-10-07T10:00:00Z");
+  const own = { mine: true, unsent: false, offer: null, createdAt: new Date(sent).toISOString() };
+
+  test("own text or card within 15 minutes", () => {
+    expect(canUnsend(own, sent + 14 * 60_000)).toBe(true);
+    expect(canUnsend(own, sent + 15 * 60_000)).toBe(false);
+  });
+
+  test("never another's, an offer, or one already unsent", () => {
+    expect(canUnsend({ ...own, mine: false }, sent)).toBe(false);
+    expect(canUnsend({ ...own, unsent: true }, sent)).toBe(false);
+    expect(canUnsend({ ...own, offer: {} as never }, sent)).toBe(false);
+  });
+});
+
+describe("seenMessageId", () => {
+  const messages = [
+    { id: 1, mine: true },
+    { id: 2, mine: false },
+    { id: 3, mine: true },
+    { id: 4, mine: true },
+  ];
+
+  test("the latest own message at or before the partner's read mark", () => {
+    expect(seenMessageId(messages, 3)).toBe(3);
+    expect(seenMessageId(messages, 2)).toBe(1);
+  });
+
+  test("nothing read, or nothing of mine read", () => {
+    expect(seenMessageId(messages, null)).toBeNull();
+    expect(seenMessageId(messages.slice(1, 2), 2)).toBeNull();
   });
 });

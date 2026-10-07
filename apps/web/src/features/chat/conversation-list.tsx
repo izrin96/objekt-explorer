@@ -9,7 +9,6 @@ import {
 import type { ChatBox, ConversationRow } from "@repo/api/schemas/chat";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { Link, useHydrated } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
 
 import { PendingStatus } from "@/components/router/pending";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -18,6 +17,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { offerNo } from "@/features/offers/format";
+import { useMinuteClock } from "@/hooks/use-minute-clock";
 import { relativeTime } from "@/lib/time";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -31,18 +31,6 @@ const EMPTY = {
   requests: { icon: TrayIcon, title: m.chat_empty_requests, hint: m.chat_empty_requests_hint },
   archived: { icon: ArchiveIcon, title: m.chat_empty_archived, hint: m.chat_empty_archived_hint },
 } as const;
-
-const MINUTE = 60_000;
-
-/** Relative times re-read once a minute while the list stays open beside a thread. */
-function useMinuteClock() {
-  const [now, setNow] = useState(Date.now);
-  useEffect(() => {
-    const timer = setInterval(() => setNow(Date.now()), MINUTE);
-    return () => clearInterval(timer);
-  }, []);
-  return now;
-}
 
 export function ConversationList({ box }: { box: ChatBox }) {
   const query = useInfiniteQuery(conversationsOptions(box));
@@ -95,6 +83,7 @@ export function ConversationList({ box }: { box: ChatBox }) {
 function preview(last: ConversationRow["last"]) {
   // the starter's row of a conversation nobody has written in yet
   if (!last) return m.chat_preview_empty();
+  if (last.unsent) return m.chat_unsent();
   const text =
     last.body ??
     (last.offerId !== null ? m.chat_preview_offer({ offer: offerNo(last.offerId) }) : null) ??

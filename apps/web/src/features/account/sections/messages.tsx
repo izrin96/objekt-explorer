@@ -3,7 +3,9 @@ import { truncateAddress } from "@repo/lib/address";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
+import { Label } from "@/components/ui/label";
 import { Radio, RadioGroup } from "@/components/ui/radio-group";
+import { Switch } from "@/components/ui/switch";
 import { toastManager } from "@/components/ui/toast";
 import { chatSettingsOptions } from "@/features/chat/queries";
 import { useUserProfiles } from "@/features/user/hooks";
@@ -74,6 +76,25 @@ export function MessagesSection() {
           ))}
         </RadioGroup>
       </section>
+
+      <Label
+        htmlFor="account-messages-activity"
+        className="flex min-w-0 items-start justify-between gap-3 font-normal"
+      >
+        <span className="flex min-w-0 flex-col gap-0.5">
+          <span className="text-sm font-medium">{m.chat_settings_activity()}</span>
+          <span className="text-muted-foreground text-xs text-pretty">
+            {m.chat_settings_activity_desc()}
+          </span>
+        </span>
+        <Switch
+          id="account-messages-activity"
+          className="mt-0.5 shrink-0"
+          checked={settings.data?.showActivity ?? true}
+          disabled={!settings.data}
+          onCheckedChange={(showActivity) => mutation.mutate({ showActivity })}
+        />
+      </Label>
 
       {profiles.length > 0 ? (
         <section aria-labelledby="account-messages-chat-as" className="flex flex-col gap-3">

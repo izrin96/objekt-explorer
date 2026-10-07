@@ -16,6 +16,7 @@ import {
   slidingWindow,
   sendVerdict,
   type StartFacts,
+  showsActivityTo,
   startMembers,
   startVerdict,
   visibleBox,
@@ -108,26 +109,37 @@ describe("blocks and mutes", () => {
 
 describe("requests", () => {
   test("cold message goes to Requests and does not count", () => {
-    const { sender, recipient } = startMembers(false);
+    const { sender, recipient } = startMembers();
     expect(boxOf(sender)).toBe("inbox");
     expect(boxOf(recipient)).toBe("requests");
     expect(isUnread({ id: 1, senderId: "alice" }, "kaede", null)).toBe(true);
     expect(countsTowardBadge(recipient, { id: 1, senderId: "alice" }, "kaede", NOW)).toBe(false);
   });
 
-  test("a start with a card goes straight to the Inbox", () => {
-    expect(boxOf(startMembers(true).recipient)).toBe("inbox");
+  test("a first message with a card or an offer goes straight to the Inbox", () => {
+    const { recipient } = startMembers();
+    const opened = nextMemberState(
+      recipient,
+      { type: "incoming", opensWithContent: true },
+      NOW_ISO,
+    );
+    expect(boxOf(opened)).toBe("inbox");
+  });
+
+  test("a first message without one stays a request", () => {
+    const { recipient } = startMembers();
+    expect(boxOf(nextMemberState(recipient, { type: "incoming" }, NOW_ISO))).toBe("requests");
   });
 
   test("accept by reply", () => {
-    const { recipient } = startMembers(false);
+    const { recipient } = startMembers();
     const replied = nextMemberState(recipient, { type: "send", messageId: 2 }, NOW_ISO);
     expect(boxOf(replied)).toBe("inbox");
     expect(replied.lastReadMessageId).toBe(2);
   });
 
   test("decline archives and stays a request", () => {
-    const declined = nextMemberState(startMembers(false).recipient, { type: "decline" }, NOW_ISO);
+    const declined = nextMemberState(startMembers().recipient, { type: "decline" }, NOW_ISO);
     expect(boxOf(declined)).toBe("archived");
     expect(declined.request).toBe(true);
   });
@@ -266,5 +278,22 @@ describe("chatIdentity", () => {
 
   test("no linked profile uses the account name", () => {
     expect(chatIdentity("Rin", [], alt.address)).toEqual({ name: "Rin", address: null, also: [] });
+  });
+});
+
+describe("Seen and typing", () => {
+  const on = { shownShows: true, viewerShows: true, shownRequest: false };
+
+  test("shown when both keep the switch on", () => {
+    expect(showsActivityTo(on)).toBe(true);
+  });
+
+  test("hidden both ways when either turns it off", () => {
+    expect(showsActivityTo({ ...on, shownShows: false })).toBe(false);
+    expect(showsActivityTo({ ...on, viewerShows: false })).toBe(false);
+  });
+
+  test("hidden while the shown member has not accepted the request", () => {
+    expect(showsActivityTo({ ...on, shownRequest: true })).toBe(false);
   });
 });

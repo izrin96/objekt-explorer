@@ -9,9 +9,11 @@ import { pollUnlessLive } from "@/stores/user-socket";
 import {
   appendToThread,
   liveOfferIds,
+  markUnsent,
   newestId,
   patchOffers,
   type ThreadData,
+  unsentIds,
 } from "./thread-cache";
 
 /** Polls only while the live socket is down; focus always refetches. */
@@ -93,14 +95,41 @@ async function appendNewer(queryClient: QueryClient, id: number) {
   }
 }
 
-/** After a reconnect: every thread still in the cache catches up. */
-export function fetchNewerEverywhere(queryClient: QueryClient) {
-  const ids = queryClient
+/** One message was unsent: it blanks wherever its thread is cached. */
+export function applyUnsent(queryClient: QueryClient, id: number, messageId: number) {
+  queryClient.setQueryData<ThreadData>(threadOptions(id).queryKey, (old) =>
+    old ? markUnsent(old, new Set([messageId])) : old,
+  );
+}
+
+/**
+ * After a reconnect, unsends missed while it was down: only a message's first minutes can be
+ * unsent, so the newest page of each cached thread holds them.
+ */
+export function syncUnsentEverywhere(queryClient: QueryClient) {
+  return Promise.all(
+    cachedThreadIds(queryClient).map(async (id) => {
+      const page = await client.chat.thread({ id }).catch(() => null);
+      if (!page) return;
+      const ids = unsentIds(page);
+      if (ids.size === 0) return;
+      queryClient.setQueryData<ThreadData>(threadOptions(id).queryKey, (old) =>
+        old ? markUnsent(old, ids) : old,
+      );
+    }),
+  );
+}
+
+const cachedThreadIds = (queryClient: QueryClient) =>
+  queryClient
     .getQueryCache()
     .findAll({ queryKey: orpc.chat.thread.key() })
     .flatMap((query) => {
       const id = (query.state.data as ThreadData | undefined)?.pages[0]?.conversation.id;
       return id === undefined ? [] : [id];
     });
-  return Promise.all(ids.map((id) => fetchNewer(queryClient, id)));
+
+/** After a reconnect: every thread still in the cache catches up. */
+export function fetchNewerEverywhere(queryClient: QueryClient) {
+  return Promise.all(cachedThreadIds(queryClient).map((id) => fetchNewer(queryClient, id)));
 }

@@ -1,4 +1,5 @@
 import type { Outputs } from "@repo/api";
+import { UNSEND_WINDOW_MINUTES } from "@repo/api/schemas/chat";
 import type { OfferView } from "@repo/api/schemas/offer";
 import type { InfiniteData } from "@tanstack/react-query";
 
@@ -78,6 +79,61 @@ export function patchOffers(data: ThreadData, views: OfferViews): ThreadData {
       }),
     ),
   };
+}
+
+/** Blanks the given messages as unsent where they are held, keeping their place and time. */
+export function markUnsent(data: ThreadData, ids: ReadonlySet<number>): ThreadData {
+  const held = (message: ThreadPage["messages"][number]) => ids.has(message.id) && !message.unsent;
+  if (!data.pages.some((page) => page.messages.some(held))) return data;
+  return {
+    ...data,
+    pages: data.pages.map((page) =>
+      page.messages.some(held)
+        ? Object.assign({}, page, {
+            messages: page.messages.map((message) =>
+              held(message)
+                ? Object.assign({}, message, {
+                    body: null,
+                    card: null,
+                    caution: null,
+                    offer: null,
+                    unsent: true,
+                  })
+                : message,
+            ),
+          })
+        : page,
+    ),
+  };
+}
+
+/** Whether the viewer may still unsend it: their own text or card, within the window. */
+export function canUnsend(
+  message: Pick<ThreadPage["messages"][number], "mine" | "unsent" | "offer" | "createdAt">,
+  now: number,
+) {
+  return (
+    message.mine &&
+    !message.unsent &&
+    !message.offer &&
+    Date.parse(message.createdAt) + UNSEND_WINDOW_MINUTES * 60_000 > now
+  );
+}
+
+/** The viewer's own message that carries "Seen": the latest one the partner has read. */
+export function seenMessageId(
+  messages: Pick<ThreadPage["messages"][number], "id" | "mine">[],
+  partnerReadMessageId: number | null,
+) {
+  if (partnerReadMessageId === null) return null;
+  return (
+    messages.findLast((message) => message.mine && message.id <= partnerReadMessageId)?.id ?? null
+  );
+}
+
+/** The ids a fresh page reports unsent, to apply to what is already held. */
+export function unsentIds(page: Pick<ThreadPage, "messages">) {
+  return new Set(page.messages.flatMap((message) => (message.unsent ? [message.id] : [])));
 }
 
 /** Only the newest offer card is drawn in full; computed here, since a newer one arrives without re-reading the old. */

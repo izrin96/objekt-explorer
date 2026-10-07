@@ -29,6 +29,7 @@ import {
   toMessagePref,
   pairKey,
   rateDecision,
+  showsActivityTo,
   startMembers,
   startVerdict,
 } from "../lib/chat-rules";
@@ -66,6 +67,7 @@ export function refuse(reason: ChatRefusal, retryAt?: Date): never {
       throw new ORPCError("TOO_MANY_REQUESTS", { data });
     case "self":
     case "invalid_card":
+    case "unsend_closed":
       throw new ORPCError("BAD_REQUEST", { data });
     case "no_address":
     case "not_accepting":
@@ -86,14 +88,69 @@ export async function fetchPref(userId: string): Promise<MessagePref> {
 
 /** The settings as the account sees them, with Chat as resolved to what partners see. */
 export async function fetchSettings(userId: string): Promise<MessageSettings> {
-  const [pref, identities] = await Promise.all([fetchPref(userId), loadIdentities([userId])]);
-  return { ...pref, chatAs: identities.get(userId)?.identity.address ?? null };
+  const [pref, identities, activity] = await Promise.all([
+    fetchPref(userId),
+    loadIdentities([userId]),
+    showsActivity([userId]),
+  ]);
+  return {
+    ...pref,
+    chatAs: identities.get(userId)?.identity.address ?? null,
+    showActivity: activity(userId),
+  };
+}
+
+/**
+ * For one conversation: whether the partner's Seen and typing reach the viewer, whether the
+ * viewer's reach the partner, and how far the partner has read.
+ */
+export async function activityBetween(conversationId: number, viewerId: string, partnerId: string) {
+  const [members, shows] = await Promise.all([
+    db
+      .select({
+        userId: conversationMember.userId,
+        request: conversationMember.request,
+        lastReadMessageId: conversationMember.lastReadMessageId,
+      })
+      .from(conversationMember)
+      .where(eq(conversationMember.conversationId, conversationId)),
+    showsActivity([viewerId, partnerId]),
+  ]);
+  const viewer = members.find((member) => member.userId === viewerId);
+  const partner = members.find((member) => member.userId === partnerId);
+  return {
+    toViewer: showsActivityTo({
+      shownShows: shows(partnerId),
+      viewerShows: shows(viewerId),
+      shownRequest: partner?.request ?? true,
+    }),
+    toPartner: showsActivityTo({
+      shownShows: shows(viewerId),
+      viewerShows: shows(partnerId),
+      shownRequest: viewer?.request ?? true,
+    }),
+    partnerReadMessageId: partner?.lastReadMessageId ?? null,
+  };
+}
+
+/** Whether each account shows Seen and typing; on unless it turned the switch off. */
+export async function showsActivity(userIds: string[]) {
+  const rows =
+    userIds.length === 0
+      ? []
+      : await db
+          .select({ userId: messagePref.userId })
+          .from(messagePref)
+          .where(and(inArray(messagePref.userId, userIds), eq(messagePref.showActivity, false)));
+  const off = new Set(rows.map((row) => row.userId));
+  return (userId: string) => !off.has(userId);
 }
 
 /** Saves what the input names; Chat as must be one of the account's linked addresses. */
 export async function saveSettings(userId: string, input: Partial<MessageSettings>) {
   const set: Partial<MessageSettings> = {};
   if (input.allow !== undefined) set.allow = input.allow;
+  if (input.showActivity !== undefined) set.showActivity = input.showActivity;
   if (input.chatAs !== undefined) {
     const chatAs = input.chatAs?.toLowerCase() ?? null;
     if (chatAs !== null) {
@@ -274,7 +331,6 @@ export async function ensureConversation(
   tx: Tx,
   ctx: StartContext,
   existingId: number | undefined,
-  opensWithContent: boolean,
 ): Promise<{ id: number; created: boolean }> {
   if (existingId !== undefined) return { id: existingId, created: false };
   const { senderId, recipientId } = ctx;
@@ -285,7 +341,7 @@ export async function ensureConversation(
     .onConflictDoNothing()
     .returning({ id: conversation.id });
   if (row) {
-    const members = startMembers(opensWithContent);
+    const members = startMembers();
     await tx.insert(conversationMember).values([
       { conversationId: row.id, userId: senderId, ...members.sender },
       { conversationId: row.id, userId: recipientId, ...members.recipient },
@@ -378,11 +434,12 @@ export async function appendMessage(
   caution: FlagCategory[] = [],
   offerId: number | null = null,
 ) {
-  await tx
-    .select({ id: conversation.id })
+  const [locked] = await tx
+    .select({ lastMessageId: conversation.lastMessageId })
     .from(conversation)
     .where(eq(conversation.id, conversationId))
     .for("update");
+  const opensWithContent = locked?.lastMessageId === null && (card !== null || offerId !== null);
 
   const [inserted] = await tx
     .insert(message)
@@ -417,7 +474,9 @@ export async function appendMessage(
   const now = new Date().toISOString();
   for (const { userId, ...state } of members) {
     const event: MemberEvent =
-      userId === senderId ? { type: "send", messageId: inserted.id } : { type: "incoming" };
+      userId === senderId
+        ? { type: "send", messageId: inserted.id }
+        : { type: "incoming", opensWithContent };
     await writeMember(tx, conversationId, userId, nextMemberState(state, event, now));
   }
   return inserted;
@@ -657,6 +716,7 @@ type MessageRow = {
   createdAt: string;
   caution: string[] | null;
   offerId?: number | null;
+  unsentAt?: string | null;
 };
 
 /** `limits` are the viewer's own, so an offer card offers only what the viewer may do. */
@@ -665,7 +725,7 @@ export async function toChatMessages(
   viewerId: string,
   limits: ActorLimits = {},
 ) {
-  const cards = rows.map((row) => parseCard(row.card));
+  const cards = rows.map((row) => (row.unsentAt ? null : parseCard(row.card)));
   const offers = await fetchOffers(rows.flatMap((row) => (row.offerId ? [row.offerId] : [])));
   const {
     view,
@@ -679,6 +739,18 @@ export async function toChatMessages(
   const messages: ChatMessage[] = rows.map((row, i) => {
     const card = cards[i] ?? null;
     const offer = row.offerId ? offers.get(row.offerId) : undefined;
+    if (row.unsentAt) {
+      return {
+        id: row.id,
+        mine: row.senderId === viewerId,
+        body: null,
+        card: null,
+        createdAt: new Date(row.createdAt).toISOString(),
+        caution: null,
+        unsent: true,
+        offer: null,
+      };
+    }
     return {
       id: row.id,
       mine: row.senderId === viewerId,
@@ -688,6 +760,7 @@ export async function toChatMessages(
       // an offer's caution is its note's, shown on the offer card
       caution: row.senderId === viewerId || offer ? null : parseCaution(row.caution),
       offer: offer ? toOfferView(offer, viewerId, now, limits, serial) : null,
+      unsent: false,
     };
   });
   return { messages, collections: collectionMap };

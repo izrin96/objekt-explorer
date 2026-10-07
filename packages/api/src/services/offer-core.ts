@@ -247,7 +247,8 @@ export async function resolveAddressed(
     // counted when the conversation is created, not on a read
     rate: { ok: true },
   });
-  if (!verdict.ok) refuseOffer(verdict.reason as Exclude<ChatRefusal, "invalid_card">);
+  if (!verdict.ok)
+    refuseOffer(verdict.reason as Exclude<ChatRefusal, "invalid_card" | "unsend_closed">);
   return {
     partnerId,
     conversationId: existing?.id ?? null,

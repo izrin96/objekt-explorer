@@ -24,9 +24,11 @@ import { useOfferBuilder } from "@/features/offers/offer-builder";
 import { counterRequest, OfferCard } from "@/features/offers/offer-card";
 import { TrustLine } from "@/features/offers/trust-line";
 import { ProfileLink } from "@/features/profile/profile-hover-card";
+import { useMinuteClock } from "@/hooks/use-minute-clock";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
+import { clearTyping, useChatTyping } from "@/stores/chat-typing";
 import { useUserSocketLive } from "@/stores/user-socket";
 
 import { useConversationActions } from "./actions";
@@ -34,9 +36,17 @@ import { CautionLine } from "./caution-line";
 import { Composer } from "./composer";
 import { ConversationMenu } from "./conversation-menu";
 import { dayLabel, messageTime, mutedLabel, untilLabel } from "./format";
+import { MessageActions } from "./message-actions";
 import { ObjektCardMessage } from "./objekt-card-message";
 import { fetchNewer, invalidateChatLists, threadOptions } from "./queries";
-import { latestOfferId, mergeCollections, threadMessages, type ThreadPage } from "./thread-cache";
+import {
+  canUnsend,
+  latestOfferId,
+  mergeCollections,
+  seenMessageId,
+  threadMessages,
+  type ThreadPage,
+} from "./thread-cache";
 
 /** Within this, consecutive messages from one side share one time stamp. */
 const GROUP_MS = 5 * 60_000;
@@ -103,8 +113,17 @@ function ThreadView({
   const heightBeforeOlder = useRef<number | null>(null);
   const heading = useRef<HTMLHeadingElement>(null);
   const hydrated = useHydrated();
+  const now = useMinuteClock();
   const builder = useOfferBuilder();
   const latestOffer = latestOfferId(messages);
+  const seenId = seenMessageId(messages, conversation.partnerReadMessageId);
+  const typing = useChatTyping((state) => id in state.typing);
+  const newestIncoming = messages.findLast((message) => !message.mine)?.id;
+
+  // their message has landed, so whatever they were typing is no longer pending
+  useEffect(() => {
+    clearTyping(id);
+  }, [id, newestIncoming]);
 
   // below `md` the list just hid, taking focus with it: start the reader at the thread
   useEffect(() => {
@@ -247,6 +266,7 @@ function ThreadView({
                       </li>
                     ) : null}
                     <MessageItem
+                      conversationId={id}
                       message={message}
                       name={name}
                       collection={
@@ -268,7 +288,9 @@ function ThreadView({
                         ) : null
                       }
                       showTime={showTime}
+                      seen={message.id === seenId}
                       hydrated={hydrated}
+                      now={now}
                       onOpen={setActive}
                     />
                   </Fragment>
@@ -276,6 +298,10 @@ function ThreadView({
               })}
             </ol>
           )}
+          {/* always rendered, so each change is announced */}
+          <p role="status" className="text-muted-foreground min-h-5 px-1 text-xs italic">
+            {typing ? m.chat_typing({ name }) : null}
+          </p>
         </div>
       </div>
 
@@ -288,6 +314,7 @@ function ThreadView({
         <Composer
           conversationId={id}
           name={name}
+          empty={messages.length === 0}
           onSent={() => (stick.current = true)}
           onOffer={() => builder.open({ to: { conversationId: id }, name })}
         />
@@ -299,21 +326,28 @@ function ThreadView({
 }
 
 function MessageItem({
+  conversationId,
   message,
   name,
   collection,
   offerCard,
   showTime,
+  seen,
   hydrated,
+  now,
   onOpen,
 }: {
+  conversationId: number;
   message: ChatMessage;
   name: string;
   collection: ValidObjekt | undefined;
   offerCard: ReactNode;
   /** the last of a run from one side shows its time; the others keep it for screen readers */
   showTime: boolean;
+  /** the latest of the viewer's messages the partner has read */
+  seen: boolean;
   hydrated: boolean;
+  now: number;
   onOpen: (objekt: ValidObjekt) => void;
 }) {
   const { mine } = message;
@@ -327,19 +361,33 @@ function MessageItem({
     >
       <span className="sr-only">{mine ? m.chat_sender_you() : m.chat_sender_name({ name })}</span>
       {offerCard}
-      {message.card ? (
-        <ObjektCardMessage card={message.card} collection={collection} onOpen={onOpen} />
-      ) : null}
-      {message.body ? (
-        <p
-          className={cn(
-            "rounded-2xl px-3 py-2 text-sm wrap-anywhere whitespace-pre-wrap",
-            mine ? "bg-foreground text-background" : "bg-secondary text-foreground",
-          )}
-        >
-          {message.body}
+      {message.unsent ? (
+        <p className="text-muted-foreground rounded-2xl border border-dashed px-3 py-2 text-sm italic">
+          {m.chat_unsent()}
         </p>
-      ) : null}
+      ) : (
+        <div className="group flex max-w-full items-center gap-1">
+          {/* the clock is the viewer's, so the window is read once the client renders */}
+          {hydrated && canUnsend(message, now) ? (
+            <MessageActions conversationId={conversationId} messageId={message.id} />
+          ) : null}
+          <div className={cn("flex min-w-0 flex-col gap-1", mine ? "items-end" : "items-start")}>
+            {message.card ? (
+              <ObjektCardMessage card={message.card} collection={collection} onOpen={onOpen} />
+            ) : null}
+            {message.body ? (
+              <p
+                className={cn(
+                  "rounded-2xl px-3 py-2 text-sm wrap-anywhere whitespace-pre-wrap",
+                  mine ? "bg-foreground text-background" : "bg-secondary text-foreground",
+                )}
+              >
+                {message.body}
+              </p>
+            ) : null}
+          </div>
+        </div>
+      )}
       {message.caution && message.caution.length > 0 ? (
         <CautionLine categories={message.caution} />
       ) : null}
@@ -349,6 +397,7 @@ function MessageItem({
       >
         {hydrated ? messageTime(message.createdAt) : null}
       </time>
+      {seen ? <span className="text-muted-foreground px-1 text-xs">{m.chat_seen()}</span> : null}
     </li>
   );
 }

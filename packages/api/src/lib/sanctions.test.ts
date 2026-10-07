@@ -1,6 +1,5 @@
 import { describe, expect, test } from "bun:test";
 
-import { EXCERPT_SIZE } from "../schemas/moderation";
 import {
   effectiveSanction,
   type ExcerptOfferSource,
@@ -39,22 +38,27 @@ describe("reportRetryAt", () => {
 });
 
 describe("shapeExcerpt", () => {
-  const messages: ExcerptSource[] = Array.from({ length: EXCERPT_SIZE + 5 }, (_, i) => ({
+  const messages: ExcerptSource[] = Array.from({ length: 450 }, (_, i) => ({
     id: i + 1,
     senderId: i % 2 === 0 ? "spam" : "kaede",
     body: `m${i + 1}`,
     card: null,
     offer: null,
     createdAt: at(i * 1000),
+    unsent: i === 449,
   }));
 
-  test("the latest EXCERPT_SIZE, oldest first, marked by side", () => {
+  test("every message, oldest first, marked by side", () => {
     const excerpt = shapeExcerpt(messages.toReversed(), "spam");
-    expect(excerpt).toHaveLength(EXCERPT_SIZE);
-    expect(excerpt[0]!.body).toBe("m6");
-    expect(excerpt.at(-1)!.body).toBe(`m${EXCERPT_SIZE + 5}`);
-    expect(excerpt.at(-1)!.fromTarget).toBe(true);
-    expect(excerpt[0]!.fromTarget).toBe(false);
+    expect(excerpt).toHaveLength(450);
+    expect(excerpt[0]!.body).toBe("m1");
+    expect(excerpt[0]!.fromTarget).toBe(true);
+    expect(excerpt.at(-1)!.fromTarget).toBe(false);
+  });
+
+  test("an unsent message keeps its content, marked unsent", () => {
+    const last = shapeExcerpt(messages, "spam").at(-1)!;
+    expect(last).toMatchObject({ body: "m450", unsent: true });
   });
 
   test("keeps no ids or sender ids", () => {
@@ -64,6 +68,7 @@ describe("shapeExcerpt", () => {
       "card",
       "fromTarget",
       "offer",
+      "unsent",
     ]);
   });
 });

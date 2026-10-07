@@ -4,7 +4,8 @@ import { toastManager } from "@/components/ui/toast";
 import { orpc } from "@/lib/orpc";
 import { m } from "@/paraglide/messages";
 
-import { fetchNewer, invalidateChatLists } from "./queries";
+import { refusalOf, refusalText } from "./format";
+import { applyUnsent, fetchNewer, invalidateChatLists } from "./queries";
 
 /**
  * Archive, mute, accept and decline. Each refreshes the lists and the open thread's state
@@ -25,4 +26,24 @@ export function useConversationActions(id: number) {
     accept: useMutation(orpc.chat.accept.mutationOptions(options)),
     decline: useMutation(orpc.chat.decline.mutationOptions(options)),
   };
+}
+
+/** Unsends one of the viewer's messages in `id`, blanking it here before the nudge arrives. */
+export function useUnsendMessage(id: number) {
+  const queryClient = useQueryClient();
+  return useMutation(
+    orpc.chat.unsend.mutationOptions({
+      onSuccess: (_, { messageId }) => {
+        applyUnsent(queryClient, id, messageId);
+        return invalidateChatLists(queryClient);
+      },
+      onError: (error) => {
+        const refusal = refusalOf(error);
+        toastManager.add({
+          type: "error",
+          title: refusal ? refusalText(refusal) : m.chat_unsend_error(),
+        });
+      },
+    }),
+  );
 }

@@ -1,6 +1,5 @@
 import type { StoredCard } from "../schemas/chat";
 import {
-  EXCERPT_SIZE,
   type ExcerptEntry,
   type ExcerptOffer,
   type ModAction,
@@ -84,20 +83,20 @@ export type ExcerptSource = {
   card: StoredCard | null;
   offer: ExcerptOffer | null;
   createdAt: string;
+  unsent: boolean;
 };
 
-/** The latest messages, oldest first, without ids or sender ids. */
+/** Every message, oldest first, without ids or sender ids; an unsent one keeps its content. */
 export function shapeExcerpt(messages: ExcerptSource[], targetUserId: string): ExcerptEntry[] {
   return messages
-    .toSorted((a, b) => b.id - a.id)
-    .slice(0, EXCERPT_SIZE)
-    .toReversed()
+    .toSorted((a, b) => a.id - b.id)
     .map((message) => ({
       fromTarget: message.senderId === targetUserId,
       body: message.body,
       card: message.card,
       offer: message.offer,
       at: new Date(message.createdAt).toISOString(),
+      unsent: message.unsent,
     }));
 }
 

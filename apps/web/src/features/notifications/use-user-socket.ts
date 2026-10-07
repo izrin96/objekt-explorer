@@ -3,10 +3,17 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
 import { useEffect } from "react";
 
-import { fetchNewer, fetchNewerEverywhere, invalidateChatLists } from "@/features/chat/queries";
+import {
+  applyUnsent,
+  fetchNewer,
+  fetchNewerEverywhere,
+  invalidateChatLists,
+  syncUnsentEverywhere,
+} from "@/features/chat/queries";
 import { invalidateOfferLists } from "@/features/offers/queries";
 import { currentUserOptions } from "@/features/user/queries";
 import { clientEnv } from "@/lib/env/client";
+import { showTyping } from "@/stores/chat-typing";
 import { useUserSocketLive } from "@/stores/user-socket";
 
 import { notificationKeys } from "./queries";
@@ -51,6 +58,7 @@ export function useUserSocket() {
         void invalidateChatLists(queryClient);
         void invalidateOfferLists(queryClient);
         void fetchNewerEverywhere(queryClient);
+        void syncUnsentEverywhere(queryClient);
       });
 
       socket.addEventListener("message", (event: MessageEvent<string>) => {
@@ -73,6 +81,13 @@ export function useUserSocket() {
             void invalidateChatLists(queryClient);
             void invalidateOfferLists(queryClient);
             void fetchNewer(queryClient, message.data.conversationId);
+            break;
+          case "chat_typing":
+            showTyping(message.data.conversationId);
+            break;
+          case "chat_unsent":
+            applyUnsent(queryClient, message.data.conversationId, message.data.messageId);
+            void invalidateChatLists(queryClient);
             break;
         }
       });

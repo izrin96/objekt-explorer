@@ -316,12 +316,7 @@ export async function createOffer(
       let created = false;
       if (startCtx) {
         const existingId = await checkStart(tx, startCtx);
-        ({ id: conversationId, created } = await ensureConversation(
-          tx,
-          startCtx,
-          existingId,
-          true,
-        ));
+        ({ id: conversationId, created } = await ensureConversation(tx, startCtx, existingId));
       } else {
         conversationId = addressed.conversationId!;
       }

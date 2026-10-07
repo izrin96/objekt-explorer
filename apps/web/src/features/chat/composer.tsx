@@ -1,18 +1,20 @@
 import { CardsThreeIcon, HandshakeIcon, PaperPlaneRightIcon, XIcon } from "@phosphor-icons/react";
-import { MESSAGE_MAX_LENGTH, messageLength } from "@repo/api/schemas/chat";
+import { MESSAGE_MAX_LENGTH, messageLength, TYPING_PING_MS } from "@repo/api/schemas/chat";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { type FormEvent, type KeyboardEvent, useEffect, useId, useState } from "react";
+import { type FormEvent, type KeyboardEvent, useEffect, useId, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { CollectionLabel } from "@/features/objekt/objekt-label";
-import { orpc } from "@/lib/orpc";
+import { client, orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
+import { dropDraftCard, useChatDraft } from "@/stores/chat-draft";
 
 import { type Attachment, AttachObjektDialog } from "./attach-objekt-dialog";
 import { refusalOf, refusalText } from "./format";
 import { fetchNewer, invalidateChatLists } from "./queries";
+import { firstLineSuggestions } from "./suggestions";
 
 /** The counter shows from here, so it never sits there for an ordinary message. */
 const COUNTER_FROM = MESSAGE_MAX_LENGTH - 200;
@@ -20,23 +22,32 @@ const COUNTER_FROM = MESSAGE_MAX_LENGTH - 200;
 export function Composer({
   conversationId,
   name,
+  empty: conversationEmpty,
   onSent,
   onOffer,
 }: {
   conversationId: number;
   name: string;
+  /** the conversation has no message yet, so first lines are offered */
+  empty: boolean;
   onSent: () => void;
   onOffer: () => void;
 }) {
   const queryClient = useQueryClient();
   const [body, setBody] = useState("");
-  const [attachment, setAttachment] = useState<Attachment | null>(null);
+  // a card handed over by a Message button is attached once, then forgotten
+  const handed = useChatDraft((state) => state.cards[conversationId]);
+  const [attachment, setAttachment] = useState<Attachment | null>(handed ?? null);
   const [attachOpen, setAttachOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // over the per-minute limit the server names when it takes messages again
   const [blockedUntil, setBlockedUntil] = useState<number | null>(null);
   const counterId = useId();
   const errorId = useId();
+
+  useEffect(() => {
+    if (handed) dropDraftCard(conversationId);
+  }, [handed, conversationId]);
 
   useEffect(() => {
     if (blockedUntil === null) return;
@@ -49,6 +60,15 @@ export function Composer({
     );
     return () => clearTimeout(timer);
   }, [blockedUntil]);
+
+  // at most one "typing" ping per interval; the server decides whether the partner sees it
+  const lastPing = useRef(0);
+  const textarea = useRef<HTMLTextAreaElement>(null);
+  const pingTyping = (next: string) => {
+    if (next.trim() === "" || Date.now() - lastPing.current < TYPING_PING_MS) return;
+    lastPing.current = Date.now();
+    void client.chat.typing({ id: conversationId }).catch(() => undefined);
+  };
 
   const length = messageLength(body.trim());
   const over = length - MESSAGE_MAX_LENGTH;
@@ -146,6 +166,29 @@ export function Composer({
         </div>
       ) : null}
 
+      {conversationEmpty && body === "" ? (
+        <div
+          role="group"
+          aria-label={m.chat_suggestions_label()}
+          className="flex flex-wrap gap-1.5"
+        >
+          {firstLineSuggestions(attachment?.listType).map((suggestion) => (
+            <Button
+              key={suggestion()}
+              variant="outline"
+              size="xs"
+              className="rounded-full before:rounded-full"
+              onClick={() => {
+                setBody(suggestion());
+                textarea.current?.focus();
+              }}
+            >
+              {suggestion()}
+            </Button>
+          ))}
+        </div>
+      ) : null}
+
       <div className="flex items-end gap-2">
         <Button
           variant="ghost"
@@ -168,8 +211,12 @@ export function Composer({
           <HandshakeIcon />
         </Button>
         <Textarea
+          ref={textarea}
           value={body}
-          onChange={(event) => setBody(event.target.value)}
+          onChange={(event) => {
+            setBody(event.target.value);
+            pingTyping(event.target.value);
+          }}
           onKeyDown={onKeyDown}
           aria-label={m.chat_composer_label({ name })}
           aria-invalid={over > 0 || undefined}

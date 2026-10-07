@@ -277,6 +277,8 @@ export const message = pgTable(
     createdAt: timestamp("created_at", { mode: "string", withTimezone: true })
       .notNull()
       .defaultNow(),
+    // the content stays, so a report can still show what was unsent
+    unsentAt: timestamp("unsent_at", { mode: "string", withTimezone: true }),
   },
   (t) => [
     index("message_conversation_id_idx").on(t.conversationId, t.id.desc()),
@@ -493,6 +495,7 @@ export const messagePref = pgTable(
       .references(() => user.id, { onDelete: "cascade" }),
     allow: text("allow").$type<"anyone" | "nobody">().notNull().default("anyone"),
     chatAs: citext("chat_as", { length: 42 }),
+    showActivity: boolean("show_activity").notNull().default(true),
   },
   (t) => [check("message_pref_allow", sql`${t.allow} IN ('anyone', 'nobody')`)],
 );

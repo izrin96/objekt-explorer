@@ -31,6 +31,7 @@ export const CHAT_REFUSALS = [
   "message_limit",
   "invalid_card",
   "muted",
+  "unsend_closed",
 ] as const;
 export type ChatRefusal = (typeof CHAT_REFUSALS)[number];
 
@@ -87,6 +88,15 @@ export const startInputSchema = z.object({
   card: cardInputSchema.optional(),
 });
 
+/** How often the message box says the user is typing, and how long the other side shows it. */
+export const TYPING_PING_MS = 3000;
+export const TYPING_SHOWN_MS = 6000;
+
+/** How long after sending a message its sender may unsend it. */
+export const UNSEND_WINDOW_MINUTES = 15;
+
+export const unsendInputSchema = z.object({ messageId: z.number().int().positive() });
+
 export const sendInputSchema = z
   .object({
     conversationId: idSchema,
@@ -130,6 +140,8 @@ const messageSettingsSchema = z.object({
   allow: z.enum(MESSAGE_ALLOW),
   /** the linked address that names the account in chat; null is the first linked */
   chatAs: addressSchema.nullable(),
+  /** Seen and typing, both ways: off hides the account's and shows it no one's */
+  showActivity: z.boolean(),
 });
 export type MessageSettings = z.infer<typeof messageSettingsSchema>;
 
@@ -177,6 +189,8 @@ const chatMessageSchema = z.object({
   createdAt: z.string(),
   /** scam-phrase categories, only on messages the viewer received */
   caution: z.enum(FLAG_CATEGORIES).array().nullable(),
+  /** removed by its sender: no body or card is sent */
+  unsent: z.boolean(),
 });
 /** `offer` is set on an offer message, and null on others; it lives in `./offer`, which imports this file. */
 export type ChatMessage = z.infer<typeof chatMessageSchema> & { offer?: OfferView | null };
@@ -195,6 +209,7 @@ const conversationRowSchema = z.object({
       card: storedCardSchema.nullable(),
       offerId: z.number().nullable(),
       createdAt: z.string(),
+      unsent: z.boolean(),
     })
     /** null only on the starter's row of a conversation with no message yet */
     .nullable(),

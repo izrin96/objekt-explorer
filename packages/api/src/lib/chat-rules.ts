@@ -121,14 +121,15 @@ const EMPTY_MEMBER: MemberState = {
   lastReadMessageId: null,
 };
 
-/** A start without a card waits in the recipient's Requests. */
-export function startMembers(withCard: boolean): { sender: MemberState; recipient: MemberState } {
-  return { sender: EMPTY_MEMBER, recipient: { ...EMPTY_MEMBER, request: !withCard } };
+/** The recipient waits in Requests until the first message says otherwise (see `incoming`). */
+export function startMembers(): { sender: MemberState; recipient: MemberState } {
+  return { sender: EMPTY_MEMBER, recipient: { ...EMPTY_MEMBER, request: true } };
 }
 
 export type MemberEvent =
   | { type: "send"; messageId: number }
-  | { type: "incoming" }
+  /** `opensWithContent`: the conversation's first message, carrying a card or an offer */
+  | { type: "incoming"; opensWithContent?: boolean }
   | { type: "read"; messageId: number }
   | { type: "accept" }
   | { type: "decline" }
@@ -149,7 +150,11 @@ export function nextMemberState(state: MemberState, event: MemberEvent, now: str
         lastReadMessageId: maxId(state.lastReadMessageId, event.messageId),
       };
     case "incoming":
-      return { ...state, archivedAt: null };
+      return {
+        ...state,
+        request: event.opensWithContent ? false : state.request,
+        archivedAt: null,
+      };
     case "read":
       return { ...state, lastReadMessageId: maxId(state.lastReadMessageId, event.messageId) };
     case "accept":
@@ -163,6 +168,18 @@ export function nextMemberState(state: MemberState, event: MemberEvent, now: str
     case "mute":
       return { ...state, mutedUntil: event.until };
   }
+}
+
+/**
+ * Whether one member's Seen and typing reach the other: both keep the switch on, and the member
+ * shown has accepted the conversation if it reached them as a request.
+ */
+export function showsActivityTo(facts: {
+  shownShows: boolean;
+  viewerShows: boolean;
+  shownRequest: boolean;
+}) {
+  return facts.shownShows && facts.viewerShows && !facts.shownRequest;
 }
 
 export function boxOf(state: Pick<MemberState, "request" | "archivedAt">): ChatBox {

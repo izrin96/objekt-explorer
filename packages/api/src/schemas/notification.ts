@@ -86,5 +86,11 @@ export const setPrefInputSchema = z.object({
 export const userSocketMessageSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("notifications_changed") }),
   z.object({ type: z.literal("chat_changed"), conversationId: z.number().int() }),
+  z.object({ type: z.literal("chat_typing"), conversationId: z.number().int() }),
+  z.object({
+    type: z.literal("chat_unsent"),
+    conversationId: z.number().int(),
+    messageId: z.number().int(),
+  }),
 ]);
 export type UserSocketMessage = z.infer<typeof userSocketMessageSchema>;

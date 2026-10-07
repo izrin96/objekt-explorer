@@ -282,7 +282,7 @@ function Excerpt({
       <summary className="text-muted-foreground hover:text-foreground cursor-pointer px-3 py-2 text-xs font-medium">
         {m.mod_excerpt_summary({ count: entries.length })}
       </summary>
-      <ol className="flex flex-col gap-2 border-t px-3 py-3">
+      <ol className="flex max-h-128 flex-col gap-2 overflow-y-auto overscroll-contain border-t px-3 py-3">
         {entries.map((entry, i) => (
           <li key={i} className="flex flex-col gap-0.5 text-sm">
             <span className="text-muted-foreground flex flex-wrap items-baseline gap-x-2 text-xs">
@@ -290,6 +290,11 @@ function Excerpt({
                 {entry.fromTarget ? targetName : reporterName}
               </span>
               <When iso={entry.at} className="font-mono tabular-nums" />
+              {entry.unsent ? (
+                <span className="text-warning-foreground font-medium">
+                  {m.mod_excerpt_unsent()}
+                </span>
+              ) : null}
             </span>
             {entry.body ? <p className="break-words whitespace-pre-wrap">{entry.body}</p> : null}
             {entry.card ? (

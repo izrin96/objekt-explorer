@@ -1,7 +1,7 @@
 import { ORPCError } from "@orpc/server";
 import { db } from "@repo/db";
 import { conversationMember, message } from "@repo/db/schema";
-import { and, asc, desc, eq, gt, lt, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, isNull, lt, sql } from "drizzle-orm";
 
 import { isMuted, rowUnread, sendVerdict } from "../lib/chat-rules";
 import { scanMessage } from "../lib/scam-patterns";
@@ -21,8 +21,11 @@ import {
   startInputSchema,
   THREAD_PAGE_SIZE,
   threadInputSchema,
+  UNSEND_WINDOW_MINUTES,
+  unsendInputSchema,
 } from "../schemas/chat";
 import {
+  activityBetween,
   appendMessage,
   chatSafety,
   checkMessageRate,
@@ -30,6 +33,7 @@ import {
   ensureConversation,
   fetchPartners,
   fetchSettings,
+  hydrateCards,
   findMembership,
   parseCard,
   prepareStart,
@@ -40,8 +44,10 @@ import {
   updateMember,
   saveSettings,
 } from "../services/chat";
+import { redis } from "../services/redis";
 import { reputationOf } from "../services/reputation";
 import { notBlockedBy } from "../services/safety";
+import { publishNotify } from "../user-socket";
 
 /** A blocked send reads exactly like a recipient who accepts no messages. */
 function refuseSend(safety: { blocked: boolean; mute: { until: string | null } | null }) {
@@ -79,8 +85,16 @@ type ConversationListRow = {
   body: string | null;
   card: unknown;
   offer_id: number | null;
+  unsent: boolean | null;
   created_at: string | null;
+  incoming_id: string | null;
 };
+
+/** The id of the newest message the other member sent and did not unsend: unread is measured by it. */
+const lastIncoming = (me: string) => sql`(
+  SELECT max(u.id) FROM message u
+  WHERE u.conversation_id = c.id AND u.sender_id <> ${me} AND u.unsent_at IS NULL
+)`;
 
 const toMuted = (mutedUntil: string | null, now: Date) =>
   isMuted(mutedUntil, now)
@@ -88,40 +102,33 @@ const toMuted = (mutedUntil: string | null, now: Date) =>
     : null;
 
 export const chatRouter = {
-  /** Opens the conversation with the target's account, creating it when there is none. */
+  /**
+   * Opens the conversation with the target's account, creating it when there is none. A card is
+   * checked as sending would check it and handed back to attach, never sent from here.
+   */
   start: authed.input(startInputSchema).handler(async ({ input, context: { session } }) => {
     const me = session.user.id;
     const now = new Date();
     const ctx = await prepareStart(me, new Date(session.user.createdAt), input.to, now);
 
-    let release: (() => Promise<void>) | null = null;
-    const result = await db
-      .transaction(async (tx) => {
-        const existingId = await checkStart(tx, ctx);
-        if (input.card) refuseSend(ctx.safety);
+    const result = await db.transaction(async (tx) => {
+      const existingId = await checkStart(tx, ctx);
+      if (input.card) refuseSend(ctx.safety);
+      const card = input.card
+        ? await resolveCard(input.card, { senderId: me, partnerId: ctx.recipientId })
+        : null;
+      return { ...(await ensureConversation(tx, ctx, existingId)), card };
+    });
 
-        const card = input.card
-          ? await resolveCard(input.card, {
-              senderId: me,
-              partnerId: ctx.recipientId,
-            })
-          : null;
-        if (card) release = await checkMessageRate(me, now);
-
-        const { id, created } = await ensureConversation(tx, ctx, existingId, card !== null);
-        const sent = card ? await appendMessage(tx, id, me, null, card) : null;
-        return { id, created, sent: sent !== null };
-      })
-      .catch(async (error: unknown) => {
-        // a send refused after it was counted must not count
-        await release?.();
-        throw error;
-      });
-
-    if (result.created || result.sent) {
-      await publishChatChanged([me, ctx.recipientId], result.id);
-    }
-    return { id: result.id, created: result.created };
+    // only the opener lists an empty conversation, so only the opener hears of it
+    if (result.created) await publishChatChanged([me], result.id);
+    if (!input.card || !result.card) return { id: result.id, created: result.created, card: null };
+    const { view, collections } = await hydrateCards([result.card]);
+    return {
+      id: result.id,
+      created: result.created,
+      card: { input: input.card, view: view(result.card), collections },
+    };
   }),
 
   send: authed.input(sendInputSchema).handler(async ({ input, context: { session } }) => {
@@ -153,6 +160,60 @@ export const chatRouter = {
     return { message: messages[0]!, collections };
   }),
 
+  /** Tells the partner the caller is typing, when both show activity and the caller may send. */
+  typing: authed
+    .input(conversationIdInputSchema)
+    .handler(async ({ input: { id }, context: { session } }) => {
+      const me = session.user.id;
+      const { partnerId } = await findMembership(id, me);
+      // one ping per user and conversation gets through per interval, however often it is sent
+      const first = await redis.send("SET", [
+        `chat:typing:${me}:${id}`,
+        "1",
+        "NX",
+        "PX",
+        "2000",
+      ]);
+      if (first === null) return;
+      const [safety, activity] = await Promise.all([
+        chatSafety(me, partnerId),
+        activityBetween(id, me, partnerId),
+      ]);
+      if (!activity.toPartner || safety.blocked || safety.mute !== null) return;
+      await publishNotify(partnerId, { type: "chat_typing", conversationId: id });
+    }),
+
+  /** The sender takes back a text or card message within the window; its row stays for reports. */
+  unsend: authed
+    .input(unsendInputSchema)
+    .handler(async ({ input: { messageId }, context: { session } }) => {
+      const me = session.user.id;
+      const [row] = await db
+        .update(message)
+        .set({ unsentAt: sql`now()` })
+        .where(
+          and(
+            eq(message.id, messageId),
+            eq(message.senderId, me),
+            isNull(message.offerId),
+            isNull(message.unsentAt),
+            gt(message.createdAt, sql`now() - make_interval(mins => ${UNSEND_WINDOW_MINUTES})`),
+          ),
+        )
+        .returning({ conversationId: message.conversationId });
+      if (!row) refuse("unsend_closed");
+      const { partnerId } = await findMembership(row.conversationId, me);
+      await Promise.all(
+        [me, partnerId].map((userId) =>
+          publishNotify(userId, {
+            type: "chat_unsent",
+            conversationId: row.conversationId,
+            messageId,
+          }),
+        ),
+      );
+    }),
+
   /**
    * Newest activity first. A conversation with no message yet is listed only for the one
    * who started it, so an empty request never reaches the recipient.
@@ -176,7 +237,9 @@ export const chatRouter = {
           msg.body,
           msg.card,
           msg.offer_id,
-          msg.created_at::text AS created_at
+          msg.unsent_at IS NOT NULL AS unsent,
+          msg.created_at::text AS created_at,
+          ${lastIncoming(me)} AS incoming_id
         FROM conversation_member m
         JOIN conversation c ON c.id = m.conversation_id
         LEFT JOIN message msg ON msg.id = c.last_message_id
@@ -199,6 +262,10 @@ export const chatRouter = {
             : { id: Number(row.message_id), senderId: row.sender_id, createdAt: row.created_at };
         const lastRead =
           row.last_read_message_id === null ? null : Number(row.last_read_message_id);
+        const incoming =
+          row.incoming_id === null
+            ? null
+            : { id: Number(row.incoming_id), senderId: row.partner_id };
         return [
           {
             id: row.id,
@@ -206,12 +273,13 @@ export const chatRouter = {
             last: last && {
               id: last.id,
               mine: last.senderId === me,
-              body: row.body,
-              card: parseCard(row.card),
+              body: row.unsent ? null : row.body,
+              card: row.unsent ? null : parseCard(row.card),
               offerId: row.offer_id,
               createdAt: new Date(last.createdAt).toISOString(),
+              unsent: row.unsent === true,
             },
-            unread: rowUnread({ request: row.request, lastReadMessageId: lastRead }, last, me),
+            unread: rowUnread({ request: row.request, lastReadMessageId: lastRead }, incoming, me),
             request: row.request,
             archived: row.archived_at !== null,
             muted: toMuted(row.muted_until, now),
@@ -249,6 +317,7 @@ export const chatRouter = {
           createdAt: message.createdAt,
           caution: message.caution,
           offerId: message.offerId,
+          unsentAt: message.unsentAt,
         })
         .from(message)
         .where(
@@ -273,9 +342,10 @@ export const chatRouter = {
         ),
       fetchPartners([partnerId]),
     ]);
-    const [safety, reputations] = await Promise.all([
+    const [safety, reputations, activity] = await Promise.all([
       chatSafety(me, partnerId),
       reputationOf([partnerId]),
+      activityBetween(input.id, me, partnerId),
     ]);
     const partner = partners.get(partnerId);
     if (!member || !partner) throw new ORPCError("NOT_FOUND");
@@ -294,6 +364,8 @@ export const chatRouter = {
         archived: member.archivedAt !== null,
         muted: toMuted(member.mutedUntil, now),
         lastReadMessageId: member.lastReadMessageId,
+        /** how far the partner has read, when their Seen reaches the viewer */
+        partnerReadMessageId: activity.toViewer ? activity.partnerReadMessageId : null,
         /** the viewer's own chat mute, shown in place of the message box */
         sendBlocked: safety.mute,
         /** whether the viewer blocked this account; never whether they were blocked */
@@ -308,12 +380,17 @@ export const chatRouter = {
   markRead: authed
     .input(markReadInputSchema)
     .handler(async ({ input: { id, upTo }, context: { session } }) => {
-      const { changed } = await updateMember(id, session.user.id, (state, lastMessageId) => {
+      const me = session.user.id;
+      const { changed } = await updateMember(id, me, (state, lastMessageId) => {
         if (lastMessageId === null) return null;
         const messageId = Math.min(upTo ?? lastMessageId, lastMessageId);
         return messageId > (state.lastReadMessageId ?? 0) ? { type: "read", messageId } : null;
       });
-      if (changed) await publishChatChanged([session.user.id], id);
+      if (!changed) return;
+      const { partnerId } = await findMembership(id, me);
+      // the partner's open thread moves its Seen only when the reader's Seen reaches them
+      const { toPartner } = await activityBetween(id, me, partnerId);
+      await publishChatChanged(toPartner ? [me, partnerId] : [me], id);
     }),
 
   archive: authed
@@ -375,11 +452,10 @@ export const chatRouter = {
       SELECT count(*)::int AS count
       FROM conversation_member m
       JOIN conversation c ON c.id = m.conversation_id
-      JOIN message last ON last.id = c.last_message_id
       WHERE m.user_id = ${me}
         AND ${visibleIn("inbox", me)}
         AND NOT (m.muted_until IS NOT NULL AND m.muted_until > now())
-        AND last.sender_id <> ${me} AND last.id > coalesce(m.last_read_message_id, 0)
+        AND ${lastIncoming(me)} > coalesce(m.last_read_message_id, 0)
     `);
     return result.rows[0]?.count ?? 0;
   }),
@@ -396,6 +472,7 @@ export const chatRouter = {
         AND EXISTS (
           SELECT 1 FROM message msg
           WHERE msg.conversation_id = m.conversation_id AND msg.sender_id <> ${me}
+            AND msg.unsent_at IS NULL
         )
     `);
     return result.rows[0]?.count ?? 0;

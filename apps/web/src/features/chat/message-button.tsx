@@ -8,12 +8,13 @@ import { toastManager } from "@/components/ui/toast";
 import { useCurrentUser } from "@/features/user/hooks";
 import { orpc } from "@/lib/orpc";
 import { m } from "@/paraglide/messages";
+import { putDraftCard } from "@/stores/chat-draft";
 
 import { refusalOf, refusalText } from "./format";
 import { invalidateChatLists } from "./queries";
 
 /**
- * Opens the conversation with the target's account, adding `card` as a message. The
+ * Opens the conversation with the target's account, with `card` attached to send. The
  * caller decides whether to show it at all (`messageable`, and never on the viewer's own).
  * `name` makes an icon-only button say whom it messages.
  */
@@ -64,7 +65,16 @@ export function useStartConversation() {
 
   const mutation = useMutation(
     orpc.chat.start.mutationOptions({
-      onSuccess: ({ id }) => {
+      onSuccess: ({ id, card }) => {
+        const objekt = card?.collections[card.input.collectionSlug];
+        if (card && objekt) {
+          putDraftCard(id, {
+            input: card.input,
+            objekt,
+            listName: card.view.list?.name ?? null,
+            listType: card.view.list?.listTypeNew,
+          });
+        }
         void invalidateChatLists(queryClient);
         void navigate({ to: "/messages/$id", params: { id: String(id) } });
       },
