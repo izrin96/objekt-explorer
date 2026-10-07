@@ -86,11 +86,11 @@ language SHALL set the locale cookie and re-render the page in that language.
 - **THEN** the frame's strings are Korean and a reload keeps them Korean
 
 ### Requirement: Account menu reaches Cosmo and account settings
-The account menu SHALL include a My Cosmo item whose manage entry opens `/account/profiles`, and an Account item opening
-`/account`. The primary nav's My Cosmo link SHALL open `/account/profiles` and SHALL show as current on any `/account/profiles` or `/link` route.
+The account menu SHALL include a Profiles item whose manage entry opens `/account/profiles`, and an Account item opening
+`/account`. The primary nav's Profiles link SHALL open `/account/profiles` and SHALL show as current on any `/account/profiles` or `/link` route.
 
-#### Scenario: My Cosmo
-- **WHEN** a signed-in user picks My Cosmo's manage entry
+#### Scenario: Profiles
+- **WHEN** a signed-in user picks Profiles's manage entry
 - **THEN** the URL is `/account/profiles`
 
 #### Scenario: Account
@@ -98,11 +98,11 @@ The account menu SHALL include a My Cosmo item whose manage entry opens `/accoun
 - **THEN** the URL is `/account` and the General section is open
 
 ### Requirement: Account menu reaches lists
-The account menu SHALL include a My lists submenu listing the user's lists by name and
+The account menu SHALL include a Lists submenu listing the user's lists by name and
 type, with Create list, Discord format and All lists actions.
 
 #### Scenario: Open a list from the menu
-- **WHEN** a signed-in user picks a list in My lists
+- **WHEN** a signed-in user picks a list in Lists
 - **THEN** the URL is that list's address
 
 ### Requirement: Account menu reaches For you

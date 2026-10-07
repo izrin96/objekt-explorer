@@ -25,7 +25,7 @@ function useNavLinks() {
     { key: "activity", label: m.nav_activity(), to: "/activity", exact: false },
     // `/list/{slug}` is any user's list, not one of the viewer's own
     { key: "list", label: m.nav_my_list(), to: "/list", exact: true },
-    // the link flow at `/link/connect` still belongs to My Cosmo
+    // the link flow at `/link/connect` still belongs to Profiles
     {
       key: "link",
       label: m.nav_my_cosmo_link(),
@@ -34,7 +34,7 @@ function useNavLinks() {
       also: "/link",
     },
   ] as const;
-  // `/list` and My Cosmo are the signed-in user's own; signed out they only bounce to /login
+  // `/list` and Profiles are the signed-in user's own; signed out they only bounce to /login
   return user ? links : links.filter((link) => link.key !== "list" && link.key !== "link");
 }
 
