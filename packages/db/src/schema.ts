@@ -174,7 +174,9 @@ export const notification = pgTable(
     userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
-    type: text("type").notNull(),
+    type: text("type")
+      .$type<"want_match" | "have_wanted" | "offer" | "trade" | "sanction">()
+      .notNull(),
     payload: jsonb("payload").notNull(),
     groupKey: text("group_key").notNull(),
     readAt: timestamp("read_at", { mode: "string", withTimezone: true }),
@@ -196,7 +198,7 @@ export const notificationPref = pgTable(
     userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
-    type: text("type").notNull(),
+    type: text("type").$type<"want_match" | "have_wanted" | "offer" | "trade">().notNull(),
     enabled: boolean("enabled").notNull(),
   },
   (t) => [primaryKey({ columns: [t.userId, t.type] })],
@@ -308,11 +310,18 @@ export const offer = pgTable(
     parentId: integer("parent_id").references((): AnyPgColumn => offer.id, {
       onDelete: "set null",
     }),
-    status: text("status").notNull().default("open"),
-    cancelReason: text("cancel_reason"),
+    status: text("status")
+      .$type<
+        "open" | "accepted" | "declined" | "withdrawn" | "countered" | "cancelled" | "expired"
+      >()
+      .notNull()
+      .default("open"),
+    cancelReason: text("cancel_reason").$type<
+      "reserved" | "blocked" | "sanction" | "token_moved"
+    >(),
     topupAmount: numeric("topup_amount", { precision: 12, scale: 2 }),
     topupCurrency: varchar("topup_currency", { length: 10 }),
-    topupPayer: text("topup_payer"),
+    topupPayer: text("topup_payer").$type<"from" | "to">(),
     note: text("note"),
     caution: text("caution").array(),
     createdAt: timestamp("created_at", { mode: "string", withTimezone: true })
@@ -359,7 +368,7 @@ export const offerItem = pgTable(
     offerId: integer("offer_id")
       .notNull()
       .references(() => offer.id, { onDelete: "cascade" }),
-    side: text("side").notNull(),
+    side: text("side").$type<"give" | "get">().notNull(),
     collectionSlug: varchar("collection_slug", { length: 255 }).notNull(),
     objektId: varchar("objekt_id", { length: 255 }),
     listId: integer("list_id").references(() => lists.id, { onDelete: "set null" }),
@@ -390,13 +399,16 @@ export const trade = pgTable(
     userB: text("user_b")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
-    status: text("status").notNull().default("in_progress"),
+    status: text("status")
+      .$type<"in_progress" | "completed" | "cancelled" | "failed">()
+      .notNull()
+      .default("in_progress"),
     acceptedAt: timestamp("accepted_at", { mode: "string", withTimezone: true })
       .notNull()
       .defaultNow(),
     endedAt: timestamp("ended_at", { mode: "string", withTimezone: true }),
     cancelledBy: text("cancelled_by").references(() => user.id, { onDelete: "cascade" }),
-    cancelReason: text("cancel_reason"),
+    cancelReason: text("cancel_reason").$type<"party" | "token_moved">(),
     remindedAt: timestamp("reminded_at", { mode: "string", withTimezone: true }),
   },
   (t) => [
@@ -460,7 +472,7 @@ export const tradeFeedback = pgTable(
     toUserId: text("to_user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
-    rating: text("rating").notNull(),
+    rating: text("rating").$type<"positive" | "neutral" | "negative">().notNull(),
     createdAt: timestamp("created_at", { mode: "string", withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -482,7 +494,7 @@ export const messagePref = pgTable(
     userId: text("user_id")
       .primaryKey()
       .references(() => user.id, { onDelete: "cascade" }),
-    allow: text("allow").notNull().default("anyone"),
+    allow: text("allow").$type<"anyone" | "nobody">().notNull().default("anyone"),
     chatAs: citext("chat_as", { length: 42 }),
   },
   (t) => [check("message_pref_allow", sql`${t.allow} IN ('anyone', 'nobody')`)],
@@ -522,10 +534,12 @@ export const report = pgTable(
     conversationId: integer("conversation_id").references(() => conversation.id, {
       onDelete: "set null",
     }),
-    reason: text("reason").notNull(),
+    reason: text("reason")
+      .$type<"scam" | "harassment" | "spam" | "impersonation" | "other">()
+      .notNull(),
     note: text("note"),
     excerpt: jsonb("excerpt"),
-    status: text("status").notNull().default("open"),
+    status: text("status").$type<"open" | "dismissed" | "actioned">().notNull().default("open"),
     createdAt: timestamp("created_at", { mode: "string", withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -558,7 +572,7 @@ export const messageFlag = pgTable(
       .references(() => user.id, { onDelete: "cascade" }),
     // no foreign key: a flag outlives its message, and is never joined to it
     messageId: bigint("message_id", { mode: "number" }).notNull(),
-    category: text("category").notNull(),
+    category: text("category").$type<"send_first" | "outside_payment">().notNull(),
     createdAt: timestamp("created_at", { mode: "string", withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -576,7 +590,7 @@ export const userSanction = pgTable(
     userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
-    type: text("type").notNull(),
+    type: text("type").$type<"warn" | "chat_mute" | "trade_block" | "ban">().notNull(),
     reason: text("reason").notNull(),
     expiresAt: timestamp("expires_at", { mode: "string", withTimezone: true }),
     issuedBy: text("issued_by").references(() => user.id, { onDelete: "set null" }),
@@ -600,7 +614,9 @@ export const modAudit = pgTable(
   {
     id: serial("id").primaryKey(),
     actorId: text("actor_id").references(() => user.id, { onDelete: "set null" }),
-    action: text("action").notNull(),
+    action: text("action")
+      .$type<"dismiss" | "warn" | "chat_mute" | "trade_block" | "ban" | "revoke" | "set_role">()
+      .notNull(),
     targetUserId: text("target_user_id").references(() => user.id, { onDelete: "set null" }),
     reportIds: integer("report_ids").array(),
     detail: jsonb("detail"),

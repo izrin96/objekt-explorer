@@ -383,13 +383,13 @@ export async function createOffer(
       await tx.insert(offerItem).values([
         ...input.give.map((item) => ({
           offerId,
-          side: "give",
+          side: "give" as const,
           collectionSlug: item.collectionSlug,
           objektId: item.objektId,
         })),
         ...getRows.map(({ item, listId }) => ({
           offerId,
-          side: "get",
+          side: "get" as const,
           collectionSlug: item.collectionSlug,
           objektId: item.objektId ?? null,
           listId,
