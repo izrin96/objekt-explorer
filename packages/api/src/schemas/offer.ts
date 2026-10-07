@@ -144,15 +144,21 @@ export const suggestInputSchema = z.object({ partnerId: z.string().min(1) });
 
 export const candidateCursorSchema = z.object({ receivedAt: z.string(), id: z.string() });
 
+/** How the offer picker narrows a side. */
+export const pickerNarrowingSchema = z.object({
+  filters: collectionFiltersSchema.partial().optional(),
+  /** mine: only what the partner wants; theirs: only what the sender wants */
+  matchOnly: z.boolean().optional(),
+});
+export type PickerNarrowing = z.infer<typeof pickerNarrowingSchema>;
+
 export const candidatesInputSchema = addressedSchema
   .extend({
     side: z.enum(["mine", "theirs"]),
     cursor: candidateCursorSchema.optional(),
     /** theirs: where the next page starts in the resolved list */
     offset: z.number().int().min(0).optional(),
-    filters: collectionFiltersSchema.partial().optional(),
-    /** mine: only what the partner wants; theirs: only what the sender wants */
-    matchOnly: z.boolean().optional(),
+    ...pickerNarrowingSchema.shape,
   })
   .refine(addressed, { message: "conversation_or_target" });
 

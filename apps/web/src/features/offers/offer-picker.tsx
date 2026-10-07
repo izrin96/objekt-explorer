@@ -277,12 +277,12 @@ function MineGrid({ to, ...grid }: GridProps) {
 }
 
 function TheirsGrid({ to, name, ...grid }: GridProps & { name: string }) {
-  // what they have that the sender wants comes first, when the sender keeps a want list
   const wantsSomething = useUserLists().some((list) => list.listTypeNew === "want");
-  const [filters, setFilters] = useState<PickerFilters>({
-    ...NO_FILTERS,
-    matchOnly: wantsSomething,
-  });
+  const [chosen, setFilters] = useState<
+    Omit<PickerFilters, "matchOnly"> & { matchOnly: boolean | null }
+  >({ ...NO_FILTERS, matchOnly: null });
+  // until the sender flips it, the switch is on when they keep a want list, once their lists load
+  const filters = { ...chosen, matchOnly: chosen.matchOnly ?? wantsSomething };
   const query = useInfiniteQuery(theirPickerOptions(to, filters));
 
   const pages = query.data?.pages ?? [];
@@ -304,16 +304,17 @@ function TheirsGrid({ to, name, ...grid }: GridProps & { name: string }) {
         pending={query.isPending}
         error={query.isError && items.length === 0 ? loadError(query.error, query.refetch) : null}
         empty={
-          narrowed(filters)
-            ? { title: m.offer_picker_filtered() }
-            : listed
-              ? {
+          // nothing listed is the reason whatever the filters
+          !listed
+            ? {
+                title: m.offer_picker_theirs_none_listed({ name }),
+                hint: m.offer_picker_theirs_none_listed_hint(),
+              }
+            : narrowed(filters)
+              ? { title: m.offer_picker_filtered() }
+              : {
                   title: m.offer_picker_theirs_none_held({ name }),
                   hint: m.offer_picker_theirs_none_held_hint(),
-                }
-              : {
-                  title: m.offer_picker_theirs_none_listed({ name }),
-                  hint: m.offer_picker_theirs_none_listed_hint(),
                 }
         }
         more={{

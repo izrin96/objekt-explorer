@@ -83,9 +83,9 @@ For a signed-in viewer, each post SHALL show:
 - how many collections on its want side are on one of the viewer's have lists and still tradeable by the viewer, by the ownership rule above;
 - how many collections on its have or sale side are on one of the viewer's want lists.
 
-Those objekts SHALL be marked with a ring.
+Those objekts SHALL be marked with a ring. The counts SHALL open a popover naming the viewer's lists they came from: the have lists for the first count, the want lists for the second, each linking to its list.
 
-Matching SHALL use the viewer's have lists, not everything their wallet holds, as For you does (see `web-trade-for-you`), so an objekt the viewer keeps off their have lists never counts as offered. Browse SHALL offer no Match filter: narrowing to matches is For you's job. A post whose owner is a Mutual only partner in the viewer's For you SHALL instead carry a "Mutual match · See in For you" link to `/trade/for-you?partner=<their id>`. The link SHALL show only for a partner For you lists.
+Matching SHALL use the viewer's have lists, not everything their wallet holds, as For you does (see `web-trade-for-you`), so an objekt the viewer keeps off their have lists never counts as offered. Browse SHALL offer no Match filter: narrowing to matches is For you's job. A post whose owner is a Mutual only partner in the viewer's For you SHALL instead carry a "Mutual match · See in For you" link to `/trade/for-you?match=mutual&partner=<their id>`. The link SHALL show only for a partner For you lists under Mutual only.
 
 The viewer's own posts SHALL not be listed in the feed. Posts by partners the viewer hid in For you SHALL also be left out.
 
@@ -97,9 +97,13 @@ The viewer's own posts SHALL not be listed in the feed. Posts by partners the vi
 - **WHEN** the viewer holds SeoYeon 204Z but it is on none of their have lists, and a post wants it
 - **THEN** SeoYeon 204Z is not ringed or counted on that post
 
+#### Scenario: Which lists matched
+- **WHEN** a post wants two collections that are on the viewer's have list "spares" and none on their other have lists
+- **THEN** the post's popover names only "spares"
+
 #### Scenario: Mutual partner
 - **WHEN** rin.trades is listed under Mutual only in the viewer's For you
-- **THEN** each of rin.trades's posts links to For you with rin.trades's row open
+- **THEN** each of rin.trades's posts links to For you's Mutual only view with rin.trades's row open
 
 #### Scenario: Old link
 - **WHEN** the viewer opens `/trade?match=mutual` from an older link

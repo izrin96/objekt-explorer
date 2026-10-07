@@ -21,8 +21,8 @@ The account-wide trade match view on `apps/web` at `/trade/for-you`: who the use
 - **THEN** the page asks them to create one, with a link to their lists
 
 #### Scenario: Opened from Browse
-- **WHEN** the user follows a post's Mutual match link to `/trade/for-you?partner=<id>`
-- **THEN** that partner's row is open and scrolled into view
+- **WHEN** the user follows a post's Mutual match link to `/trade/for-you?match=mutual&partner=<id>`
+- **THEN** Mutual only is selected, and that partner's row is open and scrolled into view
 
 #### Scenario: Signed out
 - **WHEN** a visitor without a session opens `/trade/for-you?list=spares`
@@ -45,15 +45,23 @@ The row SHALL show the mutual score and both counts, each with a visible label (
 - **THEN** under All, B is listed above A
 
 ### Requirement: Filters
-The view SHALL offer a Match control: All, Mutual only, They want what I have, and They have what I want. All is the default. Mutual only keeps partners with both counts above zero. The view SHALL also offer a list filter naming one of the user's have or want lists. The named list replaces the user's side only in its own direction:
+The view SHALL offer a Show control: Everyone, Mutual only, They want what I have, and They have what I want. Everyone is the default. Mutual only keeps partners with both counts above zero. The view SHALL also offer a Compare with control naming one of the user's have or want lists, each option tagged with its list type. The named list replaces the user's side only in its own direction:
 - for a have list, "they want what I have" counts only that list's entries;
 - for a want list, "they have what I want" counts only that list's entries.
 
-The other direction keeps using all of the user's lists of the other type, so a list's Mutual only partners also trade back against the user's other lists. The filters SHALL live in the URL (`match`, `list`), beside `partner`, which only opens a row. A `list` value that is not one of the user's have or want lists SHALL be ignored, and all lists used.
+The other direction keeps using all of the user's lists of the other type, so a list's Mutual only partners also trade back against the user's other lists.
+
+A one-way Show compares one kind of list, so Compare with SHALL offer only that kind: have lists under They want what I have, want lists under They have what I want. Its All option SHALL name the kind ("All my have lists"). Choosing a Show that the selected list does not apply to SHALL reset Compare with to All. Under the controls, one line SHALL say what is compared, naming the selected list or all lists, and only the side a one-way Show uses.
+
+The filters SHALL live in the URL (`match`, `list`), beside `partner`, which only opens a row and does nothing when that partner is not in the current results. A `list` value that is not one of the user's have or want lists, or not of the kind the Show compares, SHALL be ignored, and all lists used.
 
 #### Scenario: Default filter
 - **WHEN** the user opens `/trade/for-you` with no parameters
-- **THEN** All is selected, and every partner is listed, mutual ones first
+- **THEN** Everyone is selected, and every partner is listed, mutual ones first
+
+#### Scenario: One-way Show offers one kind of list
+- **WHEN** the user selects They want what I have
+- **THEN** Compare with offers only their have lists, under "All my have lists", and a selected want list resets to it
 
 #### Scenario: One have list, still mutual
 - **WHEN** the user filters to have list "spares", and a partner wants a collection on Spares and has a collection on the user's want list "binary hunt"
@@ -61,7 +69,7 @@ The other direction keeps using all of the user's lists of the other type, so a 
 
 #### Scenario: Foreign list slug
 - **WHEN** the URL's `list` is the slug of another account's list
-- **THEN** all of the user's lists are used and the list filter shows All lists
+- **THEN** all of the user's lists are used and Compare with shows All my lists
 
 ### Requirement: Current ownership
 An entry on a have or sale list SHALL count toward a match only while its owner can trade it:
@@ -70,6 +78,8 @@ An entry on a have or sale list SHALL count toward a match only while its owner 
 
 This applies to both the partner's entries and the user's own. Ranking and filters SHALL use the counts after this check, and at most 50 partners SHALL be listed. Entries left out this way SHALL be summarised in a Not shown line, with counts by reason.
 
+A partner's entry for a specific objekt held at one of their addresses with Hide User on SHALL NOT count, since the offer builder cannot offer it, and SHALL NOT be summarised in Not shown, which would reveal the address. A partner's entry for a collection counts a copy at any of their addresses.
+
 #### Scenario: Sold objekt
 - **WHEN** a partner's have list still lists Mayu 203Z but none of their linked addresses holds a copy
 - **THEN** Mayu 203Z does not count toward that partner, and Not shown includes it under "no longer owned"
@@ -77,6 +87,10 @@ This applies to both the partner's entries and the user's own. Ranking and filte
 #### Scenario: Not transferable
 - **WHEN** the only copy a partner holds is not transferable
 - **THEN** it does not count, and Not shown includes it under "not transferable"
+
+#### Scenario: Held at a hidden address
+- **WHEN** a partner's have list names Mayu 203Z #12, and they hold it at an address with Hide User on
+- **THEN** it does not count toward that partner, and Not shown does not mention it
 
 #### Scenario: Ranked on what is still owned
 - **WHEN** partner A's list overlaps 5 ⇄ 5 but only 1 ⇄ 5 is still owned, and partner B's overlaps 3 ⇄ 3, all owned

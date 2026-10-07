@@ -5,13 +5,12 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useId } from "react";
 
-import { PendingStatus } from "@/components/router/pending";
 import { EmptyState } from "@/components/shared/empty-state";
 import { InfiniteSentinel } from "@/components/shared/infinite-sentinel";
+import { RowsSkeleton } from "@/components/shared/rows-skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { relativeTime } from "@/lib/time";
 import { m } from "@/paraglide/messages";
 
@@ -190,12 +189,5 @@ function MineRowLink({
 
 /** Also the route's pending view, under the layout's header and tabs. */
 export function MyTradesSkeleton() {
-  return (
-    <div className="flex flex-col gap-1.5">
-      <PendingStatus />
-      <Skeleton className="h-16 rounded-lg" />
-      <Skeleton className="h-16 rounded-lg" />
-      <Skeleton className="h-16 rounded-lg" />
-    </div>
-  );
+  return <RowsSkeleton status />;
 }

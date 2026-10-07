@@ -1,6 +1,7 @@
 import { ORPCError } from "@orpc/client";
 import type { ChatTarget } from "@repo/api/schemas/chat";
-import type { HistoryCursor } from "@repo/api/schemas/offer";
+import type { CollectionFilters } from "@repo/api/schemas/common/filters";
+import type { HistoryCursor, PickerNarrowing } from "@repo/api/schemas/offer";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import type { QueryClient } from "@tanstack/react-query";
 
@@ -16,15 +17,10 @@ const retryUnlessRefused = (count: number, error: unknown) =>
   !(error instanceof ORPCError && error.status < 500) && count < 2;
 
 /** What the picker narrows a side to; empty arrays mean no filter. */
-export type PickerFilters = {
-  member: string[];
-  season: string[];
-  class: string[];
-  /** mine: only what the partner wants; theirs: only what the sender wants */
-  matchOnly: boolean;
-};
+export type PickerFilters = Pick<CollectionFilters, "member" | "season" | "class"> &
+  Required<Pick<PickerNarrowing, "matchOnly">>;
 
-const toInput = (filters: PickerFilters) => ({
+const toInput = (filters: PickerFilters): PickerNarrowing => ({
   filters: { member: filters.member, season: filters.season, class: filters.class },
   matchOnly: filters.matchOnly,
 });

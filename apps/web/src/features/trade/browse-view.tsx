@@ -60,15 +60,14 @@ export function BrowseView({ search }: { search: BrowseSearch }) {
   );
   const query = useInfiniteQuery(browseOptions(input));
   // For you's own read, so a post's link only promises a row For you shows
-  const forYou = useQuery({ ...forYouOptions("all", undefined), enabled: Boolean(user) });
+  const mutual = useQuery({
+    ...forYouOptions("mutual", undefined),
+    staleTime: 60_000,
+    enabled: Boolean(user),
+  });
   const mutualIds = useMemo(
-    () =>
-      new Set(
-        forYou.data?.partners
-          .filter((p) => p.theyHaveIWant.length > 0 && p.iHaveTheyWant.length > 0)
-          .map((p) => p.userId),
-      ),
-    [forYou.data],
+    () => new Set(mutual.data?.partners.map((p) => p.userId)),
+    [mutual.data],
   );
   const navigate = useNavigate({ from: "/trade/" });
   // the drawer's On Trade link lands on this same page; the new slug closes the drawer

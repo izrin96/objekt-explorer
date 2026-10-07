@@ -6,7 +6,7 @@ import { PageHeader } from "@/components/shared/page-header";
 import { BoxTabs } from "@/features/chat/box-tabs";
 import { ConversationList, ConversationListSkeleton } from "@/features/chat/conversation-list";
 import { conversationsOptions } from "@/features/chat/queries";
-import { messagesSearchSchema } from "@/features/chat/search-schema";
+import { boxOf, messagesSearchSchema } from "@/features/chat/search-schema";
 import { currentUserOptions } from "@/features/user/queries";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -18,7 +18,7 @@ export const Route = createFileRoute("/(container)/messages")({
     const user = await queryClient.query({ ...currentUserOptions, staleTime: "static" });
     if (!user) throw redirect({ to: "/login", search: { redirect: location.href } });
   },
-  loaderDeps: ({ search }) => ({ box: search.box ?? "inbox" }),
+  loaderDeps: ({ search }) => ({ box: boxOf(search) }),
   loader: async ({ context: { queryClient }, deps }) => {
     // a failed read leaves the list to show its error and retry, not the page to fail
     await queryClient
@@ -30,7 +30,7 @@ export const Route = createFileRoute("/(container)/messages")({
 });
 
 function MessagesLayout() {
-  const box = Route.useSearch({ select: (search) => search.box ?? "inbox" });
+  const box = Route.useSearch({ select: boxOf });
   const openId = useParams({ strict: false, select: (params) => params.id });
   const threadOpen = openId !== undefined;
   const lastOpen = useRef(openId);
@@ -56,7 +56,7 @@ function MessagesLayout() {
 /** The conversation list loading: the page's frame, with the list's skeleton in place. */
 function MessagesPending() {
   const box = useLocation({
-    select: (location) => messagesSearchSchema.parse(location.search).box ?? "inbox",
+    select: (location) => boxOf(messagesSearchSchema.parse(location.search)),
   });
   return <MessagesFrame box={box} threadOpen={false} list={<ConversationListSkeleton />} />;
 }

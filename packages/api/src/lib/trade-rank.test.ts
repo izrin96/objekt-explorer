@@ -158,8 +158,8 @@ describe("ownership", () => {
 
     const owned = { objekts: ownedTokens, copies };
     const recounted = [
-      recount(a, new Set(["0xa"]), owned, myWants, myHaves),
-      recount(b, new Set(["0xb"]), owned, myWants, myHaves),
+      recount(a, new Set(["0xa"]), owned, myWants, myHaves, new Set(["0xa"])),
+      recount(b, new Set(["0xb"]), owned, myWants, myHaves, new Set(["0xb"])),
     ];
     const ranked = rankPartners(recounted, "all", NOW);
 
@@ -182,6 +182,7 @@ describe("ownership", () => {
       holdings,
       new Map(),
       new Map([["mine", { verdict: "not_owned", listIds: [] }]]),
+      theirs,
     );
     expect(result.iHaveTheyWant).toEqual([]);
     expect(result.dropped).toEqual([
@@ -217,6 +218,7 @@ describe("recount details", () => {
         ["b", [9]],
       ]),
       new Map(),
+      new Set(["0xp"]),
     );
     expect(result.updatedAt).toBe(IDLE);
     expect(rankPartners([result], "all", NOW)[0]!.idle).toBe(true);
@@ -352,6 +354,7 @@ describe("matchSides", () => {
       holdings,
       new Map([["binary", [3]]]),
       myHaves,
+      new Set(["0xp"]),
     );
 
     expect(result.iHaveTheyWant.map((m) => m.slug)).toEqual(["on-spares"]);

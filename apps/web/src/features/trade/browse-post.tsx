@@ -176,14 +176,14 @@ export function BrowsePost({
                 ) : null}
               </PopoverTrigger>
               <PopoverPopup align="start" className="w-72">
-                <MatchedLists />
+                <MatchedLists have={match.haveListIds} want={match.wantListIds} />
               </PopoverPopup>
             </Popover>
           ) : null}
           {mutual ? (
             <Link
               to="/trade/for-you"
-              search={{ partner: post.userId }}
+              search={{ match: "mutual", partner: post.userId }}
               className="font-medium underline underline-offset-2"
             >
               {m.trade_browse_mutual_link()}
@@ -307,37 +307,36 @@ export function BrowsePostSkeleton() {
 }
 
 /** The viewer's lists a post's counts compare against: every have list one way, every want list the other. */
-function MatchedLists() {
+/** The viewer's lists this post's counts came from. */
+function MatchedLists({ have, want }: { have: number[]; want: number[] }) {
   const lists = useUserLists();
+  const rows = (["have", "want"] as const).flatMap((type) => {
+    const ids = new Set(type === "have" ? have : want);
+    const matched = lists.filter((list) => ids.has(list.id));
+    return matched.length > 0 ? [{ type, matched }] : [];
+  });
   return (
     <div className="flex flex-col gap-3">
       <PopoverTitle className="text-sm">{m.trade_match_lists_title()}</PopoverTitle>
       <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-2 text-sm">
-        {(["have", "want"] as const).map((type) => {
-          const ofType = lists.filter((list) => list.listTypeNew === type);
-          return (
-            <Fragment key={type}>
-              <dt className="text-muted-foreground pt-px font-mono text-xs">
-                {LIST_TYPE_LABEL[type]()}
-              </dt>
-              <dd className="flex min-w-0 flex-col items-start gap-1">
-                {ofType.length > 0 ? (
-                  ofType.map((list) => (
-                    <Link
-                      key={list.id}
-                      {...getListLinkOption(list)}
-                      className="min-w-0 break-words underline-offset-2 hover:underline"
-                    >
-                      {list.name}
-                    </Link>
-                  ))
-                ) : (
-                  <span className="text-muted-foreground">{m.trade_match_lists_none()}</span>
-                )}
-              </dd>
-            </Fragment>
-          );
-        })}
+        {rows.map(({ type, matched }) => (
+          <Fragment key={type}>
+            <dt className="text-muted-foreground pt-px font-mono text-xs">
+              {LIST_TYPE_LABEL[type]()}
+            </dt>
+            <dd className="flex min-w-0 flex-col items-start gap-1">
+              {matched.map((list) => (
+                <Link
+                  key={list.id}
+                  {...getListLinkOption(list)}
+                  className="min-w-0 break-words underline-offset-2 hover:underline"
+                >
+                  {list.name}
+                </Link>
+              ))}
+            </dd>
+          </Fragment>
+        ))}
       </dl>
       <Link
         to="/list"

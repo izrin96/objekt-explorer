@@ -388,8 +388,11 @@ async function fetchPostEntries(
   return result;
 }
 
-/** Collections on the user's have lists that they can still trade; never the whole wallet. */
-async function computeHaveSlugs(userId: string): Promise<string[]> {
+/**
+ * Collections on the user's have lists that they can still trade, with the lists that can
+ * trade each; never the whole wallet.
+ */
+async function computeHaveIndex(userId: string): Promise<[string, number[]][]> {
   const [entries, addressRows] = await Promise.all([
     db
       .select({
@@ -422,17 +425,20 @@ async function computeHaveSlugs(userId: string): Promise<string[]> {
     [...addresses],
   );
 
-  return [...groupBySlug(owned)].flatMap(([slug, group]) =>
-    collectionVerdict(group, addresses, holdings).verdict === "ok" ? [slug] : [],
-  );
+  return [...groupBySlug(owned)].flatMap(([slug, group]) => {
+    const { verdict, listIds } = collectionVerdict(group, addresses, holdings);
+    return verdict === "ok" ? [[slug, listIds] as [string, number[]]] : [];
+  });
 }
 
 async function fetchViewer(userId: string): Promise<Viewer> {
   const version = (await redis.get(tradeVersionKey(userId))) ?? "0";
-  const [haveSlugs, wantRows] = await Promise.all([
-    getCache(`trade:have:${userId}:${version}`, HAVE_TTL_SECONDS, () => computeHaveSlugs(userId)),
+  const [have, wantRows] = await Promise.all([
+    getCache(`trade:have-lists:${userId}:${version}`, HAVE_TTL_SECONDS, () =>
+      computeHaveIndex(userId),
+    ),
     db
-      .selectDistinct({ slug: listEntries.collectionSlug })
+      .selectDistinct({ listId: listEntries.listId, slug: listEntries.collectionSlug })
       .from(listEntries)
       .innerJoin(lists, eq(lists.id, listEntries.listId))
       .where(
@@ -443,10 +449,13 @@ async function fetchViewer(userId: string): Promise<Viewer> {
         ),
       ),
   ]);
-  return {
-    haveSlugs: new Set(haveSlugs),
-    wantSlugs: new Set(wantRows.map((row) => row.slug!)),
-  };
+  const want = new Map<string, number[]>();
+  for (const row of wantRows) {
+    const listIds = want.get(row.slug!);
+    if (listIds) listIds.push(row.listId);
+    else want.set(row.slug!, [row.listId]);
+  }
+  return { have: new Map(have), want };
 }
 
 /** The shared collection filters as slugs, resolved in the indexer; null when none is set. */

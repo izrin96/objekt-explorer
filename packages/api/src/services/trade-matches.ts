@@ -250,17 +250,15 @@ async function computeTradeMatches(userId: string, sides: Sides, filter: TradeFi
 
   const addressesOf = new Map<string, Set<string>>();
   const visibleOf = new Map<string, Set<string>>();
+  const add = (map: Map<string, Set<string>>, userId: string, address: string) => {
+    const set = map.get(userId) ?? new Set<string>();
+    set.add(address.toLowerCase());
+    map.set(userId, set);
+  };
   for (const row of addressRows) {
     if (!row.userId) continue;
-    for (const [map, include] of [
-      [addressesOf, true],
-      [visibleOf, !row.hideUser],
-    ] as const) {
-      if (!include) continue;
-      const set = map.get(row.userId) ?? new Set<string>();
-      set.add(row.address.toLowerCase());
-      map.set(row.userId, set);
-    }
+    add(addressesOf, row.userId, row.address);
+    if (!row.hideUser) add(visibleOf, row.userId, row.address);
   }
   const none = new Set<string>();
 

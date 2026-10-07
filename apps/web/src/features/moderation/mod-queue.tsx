@@ -9,12 +9,11 @@ import { REPORT_REASONS } from "@repo/api/schemas/moderation";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 
-import { PendingStatus } from "@/components/router/pending";
 import { EmptyState } from "@/components/shared/empty-state";
+import { RowsSkeleton } from "@/components/shared/rows-skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { m } from "@/paraglide/messages";
 
 import { FLAG_LABEL, REASON_LABEL } from "./labels";
@@ -107,11 +106,5 @@ export function ModQueue() {
 
 /** Also the route's pending view, under its header. */
 export function ModQueueSkeleton() {
-  return (
-    <div className="flex flex-col gap-1.5">
-      <PendingStatus />
-      <Skeleton className="h-16 rounded-lg" />
-      <Skeleton className="h-16 rounded-lg" />
-    </div>
-  );
+  return <RowsSkeleton rows={2} status />;
 }

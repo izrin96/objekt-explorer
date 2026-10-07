@@ -184,7 +184,6 @@
   "trade_compare_have_only": "所持：{list}のみ。",
   "trade_compare_want_only": "希望：{list}のみ。",
   "trade_match_lists_title": "比較した自分のリスト",
-  "trade_match_lists_none": "なし",
   "trade_partner_count": "人数：{count}",
   "trade_count_mutual": "相互 {count}",
   "trade_count_they_have": "相手の所持 {count}",

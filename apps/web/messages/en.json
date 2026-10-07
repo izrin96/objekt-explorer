@@ -184,7 +184,6 @@
   "trade_compare_have_only": "What you have: {list} only.",
   "trade_compare_want_only": "What you want: {list} only.",
   "trade_match_lists_title": "Matched with your lists",
-  "trade_match_lists_none": "None",
   "trade_partner_count": "People: {count}",
   "trade_count_mutual": "Mutual {count}",
   "trade_count_they_have": "They have {count}",

@@ -52,6 +52,7 @@ import {
   type OfferEvent,
   type OfferRefusal,
   type OfferStatus,
+  type PickerNarrowing,
   OPEN_OFFER_LIMIT,
   type TradeCancelReason,
   RATE_WINDOW_DAYS,
@@ -454,8 +455,7 @@ async function mineCandidates(
   me: string,
   addressed: Addressed,
   cursor: { receivedAt: string; id: string } | undefined,
-  filters: Partial<CollectionFilters> | undefined,
-  matchOnly: boolean,
+  { filters, matchOnly }: PickerNarrowing,
 ) {
   const empty = {
     items: [],
@@ -612,17 +612,8 @@ async function filterSlugs(slugs: string[], filters: Partial<CollectionFilters>)
   return new Set(rows.map((row) => row.slug));
 }
 
-type TheirPage = {
-  offset: number;
-  filters: Partial<CollectionFilters> | undefined;
-  matchOnly: boolean;
-};
-
-/**
- * The allowed list entries resolved against the partner's current wallet. With `page`, the
- * picker's view: narrowed, then sliced from `offset`; without it, every item, for suggestions.
- */
-async function theirCandidates(me: string, addressed: Addressed, page?: TheirPage) {
+/** The allowed list entries resolved against the partner's current wallet. */
+async function resolveTheirItems(me: string, addressed: Addressed) {
   const { partnerId } = addressed;
   const [entries, all, visible, kept] = await Promise.all([
     allowedEntries(me, addressed),
@@ -692,29 +683,41 @@ async function theirCandidates(me: string, addressed: Addressed, page?: TheirPag
   }
 
   // whether the partner listed anything at all, so an empty picker can say why
-  const listed = entries.length > 0 || keptIds.length > 0;
-  if (!page) {
-    return {
-      items,
-      suggested: [],
-      nextCursor: null,
-      nextOffset: null,
-      listed,
-      collections: await collectionsOf(items.map((item) => item.collectionSlug)),
-    };
-  }
+  return { items, listed: entries.length > 0 || keptIds.length > 0 };
+}
 
+/** Every item the sender may ask for, for the builder to check picks against and for suggestions. */
+async function theirCandidates(me: string, addressed: Addressed) {
+  const { items, listed } = await resolveTheirItems(me, addressed);
+  return {
+    items,
+    suggested: [],
+    nextCursor: null,
+    nextOffset: null,
+    listed,
+    collections: await collectionsOf(items.map((item) => item.collectionSlug)),
+  };
+}
+
+/** The picker's view: resolved whole, narrowed, then one page from `offset`. */
+async function theirPickerPage(
+  me: string,
+  addressed: Addressed,
+  offset: number,
+  { filters, matchOnly }: PickerNarrowing,
+) {
+  const { items, listed } = await resolveTheirItems(me, addressed);
   let shown = items;
-  if (page.matchOnly) {
+  if (matchOnly) {
     const wanted = new Set(await wantSlugsOf(me, false));
     shown = shown.filter((item) => wanted.has(item.collectionSlug));
   }
-  if (page.filters && Object.values(page.filters).some((value) => value?.length)) {
-    const kept = await filterSlugs(unique(shown.map((item) => item.collectionSlug)), page.filters);
+  if (filters && Object.values(filters).some((value) => value?.length)) {
+    const kept = await filterSlugs(unique(shown.map((item) => item.collectionSlug)), filters);
     shown = shown.filter((item) => kept.has(item.collectionSlug));
   }
-  const slice = shown.slice(page.offset, page.offset + CANDIDATE_PAGE_SIZE);
-  const end = page.offset + CANDIDATE_PAGE_SIZE;
+  const end = offset + CANDIDATE_PAGE_SIZE;
+  const slice = shown.slice(offset, end);
   return {
     items: slice,
     suggested: [],
@@ -734,9 +737,7 @@ export async function offerCandidates(
     side: "mine" | "theirs";
     cursor?: { receivedAt: string; id: string };
     offset?: number;
-    filters?: Partial<CollectionFilters>;
-    matchOnly?: boolean;
-  },
+  } & PickerNarrowing,
 ) {
   const addressed = await resolveAddressed(me, meCreatedAt, input);
   // however the partner was named: the start verdict lets an existing conversation through
@@ -745,17 +746,11 @@ export async function offerCandidates(
     const safety = addressed.start?.safety ?? (await chatSafety(me, addressed.partnerId));
     if (safety.blocked || safety.partnerTradeBlocked) refuseOffer("not_accepting");
   }
-  const matchOnly = input.matchOnly ?? false;
-  return input.side === "mine"
-    ? mineCandidates(me, addressed, input.cursor, input.filters, matchOnly)
-    : // the picker pages; without an offset the whole list comes back, as the builder checks against it
-      theirCandidates(
-        me,
-        addressed,
-        input.offset === undefined
-          ? undefined
-          : { offset: input.offset, filters: input.filters, matchOnly },
-      );
+  if (input.side === "mine") return mineCandidates(me, addressed, input.cursor, input);
+  // without an offset the whole list comes back, as the builder checks picks against it
+  return input.offset === undefined
+    ? theirCandidates(me, addressed)
+    : theirPickerPage(me, addressed, input.offset, input);
 }
 
 type OfferRow = {

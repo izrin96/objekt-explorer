@@ -184,7 +184,6 @@
   "trade_compare_have_only": "보유: {list}만.",
   "trade_compare_want_only": "희망: {list}만.",
   "trade_match_lists_title": "비교한 내 목록",
-  "trade_match_lists_none": "없음",
   "trade_partner_count": "사람: {count}",
   "trade_count_mutual": "상호 {count}",
   "trade_count_they_have": "상대 보유 {count}",

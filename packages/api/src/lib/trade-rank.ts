@@ -140,7 +140,7 @@ export function recount(
   holdings: Holdings,
   myWants: ReadonlyMap<string, number[]>,
   myHaves: ReadonlyMap<string, { verdict: Verdict; listIds: number[] }>,
-  partnerVisible: ReadonlySet<string> = partnerAddresses,
+  partnerVisible: ReadonlySet<string>,
 ): Recounted {
   const theyHaveIWant: Match[] = [];
   const iHaveTheyWant: Match[] = [];

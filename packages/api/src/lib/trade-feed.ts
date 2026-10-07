@@ -132,7 +132,7 @@ export type PreviewItem = {
   ringed?: true;
 };
 
-export function previewSide(entries: FeedEntry[], ringed: ReadonlySet<string> | null) {
+export function previewSide(entries: FeedEntry[], ringed: SlugIndex | null) {
   const isRinged = (entry: FeedEntry) => ringed?.has(entry.slug) ?? false;
   const items = entries
     .toSorted((a, b) => Number(isRinged(b)) - Number(isRinged(a)) || b.id - a.id)
@@ -151,11 +151,18 @@ export function previewSide(entries: FeedEntry[], ringed: ReadonlySet<string> | 
   return { items, more: Math.max(0, entries.length - PREVIEW_LIMIT) };
 }
 
-export function countCollections(entries: { slug: string }[], slugs: ReadonlySet<string>) {
-  return new Set(entries.filter((entry) => slugs.has(entry.slug)).map((entry) => entry.slug)).size;
+/** A collection slug to the viewer's lists that have it on. */
+export type SlugIndex = ReadonlyMap<string, readonly number[]>;
+
+/** How many of `entries`' collections `index` holds, and the viewer's lists they are on. */
+export function matchCollections(entries: { slug: string }[], index: SlugIndex) {
+  const slugs = new Set(entries.flatMap((entry) => (index.has(entry.slug) ? [entry.slug] : [])));
+  const listIds = new Set([...slugs].flatMap((slug) => index.get(slug)!));
+  return { count: slugs.size, listIds: [...listIds] };
 }
 
-export type Viewer = { haveSlugs: ReadonlySet<string>; wantSlugs: ReadonlySet<string> };
+/** The viewer's have lists (still-owned entries only) and want lists, by collection. */
+export type Viewer = { have: SlugIndex; want: SlugIndex };
 
 export type PostFilter = {
   /** keep posts with a shown objekt from one of these collections */
@@ -190,18 +197,21 @@ export function assemblePost<L extends TradeList>(
   const sides = roles.map(({ role, list, entries }) => {
     const { items, more } = previewSide(
       entries,
-      viewer ? (role === "want" ? viewer.haveSlugs : viewer.wantSlugs) : null,
+      viewer ? (role === "want" ? viewer.have : viewer.want) : null,
     );
     return { role, list, items, more };
   });
 
+  if (!viewer) return { sides, match: undefined };
+  const youHave = matchCollections(wanted, viewer.have);
+  const youWant = matchCollections(offered, viewer.want);
   return {
     sides,
-    match: viewer
-      ? {
-          youHave: countCollections(wanted, viewer.haveSlugs),
-          youWant: countCollections(offered, viewer.wantSlugs),
-        }
-      : undefined,
+    match: {
+      youHave: youHave.count,
+      youWant: youWant.count,
+      haveListIds: youHave.listIds,
+      wantListIds: youWant.listIds,
+    },
   };
 }

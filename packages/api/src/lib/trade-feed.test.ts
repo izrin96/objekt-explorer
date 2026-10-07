@@ -131,7 +131,7 @@ describe("ownership", () => {
 describe("previewSide", () => {
   test("ringed first, then newest, with the rest counted", () => {
     const entries = Array.from({ length: 12 }, (_, i) => entry(i + 1, `s${i + 1}`));
-    const { items, more } = previewSide(entries, new Set(["s2"]));
+    const { items, more } = previewSide(entries, new Map([["s2", [1]]]));
     expect(items).toHaveLength(PREVIEW_LIMIT);
     expect(items.map((item) => item.entryId)).toEqual([2, 12, 11, 10, 9, 8, 7, 6]);
     expect(items[0]?.ringed).toBe(true);
@@ -155,11 +155,17 @@ describe("assemblePost", () => {
     2: [entry(20, "want-a"), entry(21, "want-b"), entry(22, "want-c")],
   };
   const of = (id: number) => entries[id] ?? [];
-  const viewer = { haveSlugs: new Set(["want-a", "want-c"]), wantSlugs: new Set(["offer-b"]) };
+  const viewer = {
+    have: new Map([
+      ["want-a", [7]],
+      ["want-c", [7, 8]],
+    ]),
+    want: new Map([["offer-b", [9]]]),
+  };
 
-  test("counts and rings for the viewer", () => {
+  test("counts, rings and the viewer's lists they came from", () => {
     const post = assemblePost(pair!, of, viewer, NO_FILTER);
-    expect(post?.match).toEqual({ youHave: 2, youWant: 1 });
+    expect(post?.match).toEqual({ youHave: 2, youWant: 1, haveListIds: [7, 8], wantListIds: [9] });
     const want = post?.sides.find((side) => side.role === "want");
     expect(want?.items.filter((item) => item.ringed).map((item) => item.slug)).toEqual([
       "want-c",
@@ -168,8 +174,8 @@ describe("assemblePost", () => {
   });
 
   test("nothing listed counts nothing", () => {
-    const post = assemblePost(pair!, of, { haveSlugs: new Set(), wantSlugs: new Set() }, NO_FILTER);
-    expect(post?.match).toEqual({ youHave: 0, youWant: 0 });
+    const post = assemblePost(pair!, of, { have: new Map(), want: new Map() }, NO_FILTER);
+    expect(post?.match).toEqual({ youHave: 0, youWant: 0, haveListIds: [], wantListIds: [] });
   });
 
   test("signed out has no match", () => {
