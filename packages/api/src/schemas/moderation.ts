@@ -20,7 +20,7 @@ export type AuditAction = (typeof AUDIT_ACTIONS)[number];
 export const MUTE_DAYS = [1, 7, 30] as const;
 export const REPORT_NOTE_MAX_LENGTH = 500;
 export const MOD_REASON_MAX_LENGTH = 500;
-export const EXCERPT_SIZE = 20;
+export const EXCERPT_SIZE = 100;
 export const REPORT_WINDOW_HOURS = 24;
 
 export const STAFF_ROLES = ["moderator", "admin"] as const;
@@ -45,7 +45,7 @@ export const reportInputSchema = z.object({
     .optional(),
   /** set when reporting from a conversation */
   conversationId: z.number().int().positive().optional(),
-  /** share the conversation's last 20 messages; ignored without `conversationId` */
+  /** share the conversation's last `EXCERPT_SIZE` messages; ignored without `conversationId` */
   share: z.boolean().default(true),
   alsoBlock: z.boolean().default(false),
   /** Report a problem: a trade between the reporter and the reported account */

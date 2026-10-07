@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
+import { EXCERPT_SIZE } from "../schemas/moderation";
 import {
   effectiveSanction,
   type ExcerptOfferSource,
@@ -38,7 +39,7 @@ describe("reportRetryAt", () => {
 });
 
 describe("shapeExcerpt", () => {
-  const messages: ExcerptSource[] = Array.from({ length: 25 }, (_, i) => ({
+  const messages: ExcerptSource[] = Array.from({ length: EXCERPT_SIZE + 5 }, (_, i) => ({
     id: i + 1,
     senderId: i % 2 === 0 ? "spam" : "kaede",
     body: `m${i + 1}`,
@@ -47,11 +48,11 @@ describe("shapeExcerpt", () => {
     createdAt: at(i * 1000),
   }));
 
-  test("the latest 20, oldest first, marked by side", () => {
+  test("the latest EXCERPT_SIZE, oldest first, marked by side", () => {
     const excerpt = shapeExcerpt(messages.toReversed(), "spam");
-    expect(excerpt).toHaveLength(20);
+    expect(excerpt).toHaveLength(EXCERPT_SIZE);
     expect(excerpt[0]!.body).toBe("m6");
-    expect(excerpt.at(-1)!.body).toBe("m25");
+    expect(excerpt.at(-1)!.body).toBe(`m${EXCERPT_SIZE + 5}`);
     expect(excerpt.at(-1)!.fromTarget).toBe(true);
     expect(excerpt[0]!.fromTarget).toBe(false);
   });

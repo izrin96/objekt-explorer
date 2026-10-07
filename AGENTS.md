@@ -113,7 +113,7 @@ Every package extends the shared oxlint baseline from its own config file (`oxli
 
 ## Environment
 
-A single root `.env`, copied from `.env.example`, is shared by every app — package scripts load it with `--env-file=../../.env`. Key variables:
+A single root `.env`, copied from `.env.example`, is shared by every app. Package scripts load `--env-file=../../.env --env-file=../../.env.local`: an optional, gitignored root `.env.local` overrides it per variable, so a `DATABASE_URL` there keeps the dev servers and `db:*` scripts on a local database instead of production. Key variables:
 
 - `DATABASE_URL` — main PostgreSQL connection
 - `INDEXER_DATABASE_URL` — indexer PostgreSQL connection

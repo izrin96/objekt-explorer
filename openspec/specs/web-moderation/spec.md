@@ -36,7 +36,7 @@ A signed-in user SHALL be able to report another account from a conversation's m
 - "Share the last 20 messages with moderators", on by default and offered only from a conversation;
 - "Also block", off by default.
 
-A shared excerpt SHALL be a copy of at most the last 20 messages of that conversation at the time of the report, kept with the report. It SHALL be the only way message text reaches moderators. A user SHALL be able to report the same account at most once per 24 hours.
+A shared excerpt SHALL be a copy of at most the last 100 messages of that conversation at the time of the report, kept with the report. It SHALL be the only way message text reaches moderators. A user SHALL be able to report the same account at most once per 24 hours.
 
 #### Scenario: Report without sharing
 - **WHEN** a user reports harassment with sharing turned off
