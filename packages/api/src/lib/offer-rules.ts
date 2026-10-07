@@ -12,10 +12,10 @@ import {
 } from "../schemas/offer";
 import { DAY_MS } from "./time";
 
-export type OfferParties = { fromUserId: string; toUserId: string };
+type OfferParties = { fromUserId: string; toUserId: string };
 export type OfferState = OfferParties & { status: OfferStatus; expiresAt: string | Date };
 
-export type CreateEffect = "counter" | "replace" | "new";
+type CreateEffect = "counter" | "replace" | "new";
 
 /** What a new offer from `senderId` does to the conversation's open offer. */
 export function createEffect(open: OfferParties | null, senderId: string): CreateEffect {
@@ -66,7 +66,7 @@ export function actionRefusal(
   return allowedActions(offer, viewerId, now, limits).includes(action) ? null : "not_allowed";
 }
 
-export type SafetyFacts = {
+type SafetyFacts = {
   blocked: boolean;
   muted: boolean;
   tradeBlocked: boolean;
@@ -90,13 +90,13 @@ export function safetyRefusal(
   return null;
 }
 
-export type ShapeInput = {
+type ShapeInput = {
   give: unknown[];
   get: unknown[];
   topup?: TopupInput;
 };
 
-export type Shape =
+type Shape =
   | { ok: true; topup: { amount: string; currency: string; payer: TopupInput["payer"] } | null }
   | { ok: false; reason: OfferRefusal };
 
@@ -123,7 +123,7 @@ export function validateShape(input: ShapeInput, currencies: ReadonlySet<string>
   return { ok: true, topup: { amount, currency, payer: input.topup.payer } };
 }
 
-export type ItemFlags = { transferable: boolean; reserved: boolean; inOpenOffer: number[] };
+type ItemFlags = { transferable: boolean; reserved: boolean; inOpenOffer: number[] };
 
 /**
  * `openOffers` maps an objekt id to the open offers holding it, each with its
@@ -146,7 +146,7 @@ export function itemFlags(
   };
 }
 
-export type ItemVerdict = "ok" | "not_owned" | "not_transferable" | "reserved";
+type ItemVerdict = "ok" | "not_owned" | "not_transferable" | "reserved";
 
 /** One specific objekt against the side that gives it; `addresses` are lowercase. */
 export function itemVerdict(
@@ -278,7 +278,7 @@ export function rateRefusal(trade: TradeState, now: Date): OfferRefusal | null {
   return now.getTime() > closes ? "rating_closed" : null;
 }
 
-export type RatingCounts = { verified: number; positive: number; negative: number; since: string };
+type RatingCounts = { verified: number; positive: number; negative: number; since: string };
 
 /** Neutral ratings count toward neither side of the share. */
 export function toReputation(counts: RatingCounts) {

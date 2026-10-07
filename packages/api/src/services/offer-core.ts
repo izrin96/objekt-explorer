@@ -26,7 +26,7 @@ export type Safety = Awaited<ReturnType<typeof chatSafety>>;
 
 export const unique = <T>(values: T[]) => [...new Set(values)];
 
-export const REFUSAL_STATUS: Record<OfferRefusal, ConstructorParameters<typeof ORPCError>[0]> = {
+const REFUSAL_STATUS: Record<OfferRefusal, ConstructorParameters<typeof ORPCError>[0]> = {
   empty: "BAD_REQUEST",
   too_many: "BAD_REQUEST",
   invalid_topup: "BAD_REQUEST",
@@ -51,7 +51,7 @@ export const REFUSAL_STATUS: Record<OfferRefusal, ConstructorParameters<typeof O
   message_limit: "TOO_MANY_REQUESTS",
 };
 
-export type RefusalDetail = { retryAt?: Date; objektIds?: string[]; collectionSlugs?: string[] };
+type RefusalDetail = { retryAt?: Date; objektIds?: string[]; collectionSlugs?: string[] };
 
 export function refuseOffer(reason: OfferRefusal, detail: RefusalDetail = {}): never {
   throw new ORPCError(REFUSAL_STATUS[reason], {

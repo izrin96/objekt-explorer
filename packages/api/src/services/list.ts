@@ -23,7 +23,7 @@ import { toPublicUser } from "./profile";
 import { redis } from "./redis";
 import { TOKEN_CHUNK_SIZE } from "./utils";
 
-export interface ListEntryTransformConfig {
+interface ListEntryTransformConfig {
   artists?: ValidArtist[];
   hideSerial?: boolean;
 }

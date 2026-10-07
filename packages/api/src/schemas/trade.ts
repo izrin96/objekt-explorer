@@ -2,15 +2,15 @@ import * as z from "zod";
 
 import { collectionFiltersSchema } from "./common/filters";
 
-export const TRADE_FILTERS = ["all", "mutual", "they_have", "they_want"] as const;
+const TRADE_FILTERS = ["all", "mutual", "they_have", "they_want"] as const;
 export type TradeFilter = (typeof TRADE_FILTERS)[number];
 
 /** a partner can match on hundreds of collections; past this many per side they are counted, not drawn */
 export const CARD_LIMIT = 50;
 
-export const DEFAULT_TRADE_FILTER = "all" satisfies TradeFilter;
+const DEFAULT_TRADE_FILTER = "all" satisfies TradeFilter;
 
-export const tradeFilterSchema = z.enum(TRADE_FILTERS);
+const tradeFilterSchema = z.enum(TRADE_FILTERS);
 
 export const forYouInputSchema = z.object({
   filter: tradeFilterSchema.default(DEFAULT_TRADE_FILTER),
@@ -21,16 +21,16 @@ export const listMatchCountInputSchema = z.object({ slug: z.string() });
 
 export const tradePartnerInputSchema = z.object({ userId: z.string().min(1) });
 
-export const POST_TYPES = ["all", "wtt", "wtb", "wts"] as const;
+const POST_TYPES = ["all", "wtt", "wtb", "wts"] as const;
 export type PostType = (typeof POST_TYPES)[number];
 
-export const browseFiltersSchema = collectionFiltersSchema.extend({
+const browseFiltersSchema = collectionFiltersSchema.extend({
   type: z.enum(POST_TYPES).default("all"),
   slug: z.string().optional(),
 });
 export type BrowseFilters = z.infer<typeof browseFiltersSchema>;
 
-export const feedCursorSchema = z.object({
+const feedCursorSchema = z.object({
   bumpedAt: z.iso.datetime({ offset: true }),
   id: z.number().int(),
 });

@@ -7,7 +7,7 @@ import { ownedObjektSchema } from "./common/objekt";
 import { transferNicknamesSchema, transferRowSchema } from "./common/transfer";
 
 /** the socket parses live rows with this in the browser, so its objekt stays unchecked */
-export const activityItemSchema = z.object({
+const activityItemSchema = z.object({
   transfer: transferRowSchema.extend({ hash: z.string() }),
   objekt: z.custom<OwnedObjekt>(),
   nickname: transferNicknamesSchema,

@@ -49,10 +49,10 @@ export const holdersInputSchema = z.object({
   limit: z.coerce.number<number>().int().min(1).max(50).default(10),
 });
 
-export const holderBucketKeySchema = z.enum(["1", "2-4", "5-9", "10+"]);
+const holderBucketKeySchema = z.enum(["1", "2-4", "5-9", "10+"]);
 export type HolderBucketKey = z.infer<typeof holderBucketKeySchema>;
 
-export const holderRowSchema = z.object({
+const holderRowSchema = z.object({
   rank: z.number(),
   copies: z.number(),
   /** null when the holder hides serials from this viewer */

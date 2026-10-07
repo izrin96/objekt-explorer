@@ -64,7 +64,7 @@ type CandidateRow = {
  * Aggregated and pre-ranked in SQL, so a large want list never ships its rows to Node;
  * ownership is checked afterwards, on these candidates only.
  */
-export async function fetchTradeCandidates(
+async function fetchTradeCandidates(
   userId: string,
   sides: { haveListIds: number[]; wantListIds: number[] },
   filter: TradeFilter,

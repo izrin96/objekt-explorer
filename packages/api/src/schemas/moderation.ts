@@ -8,7 +8,7 @@ export { FLAG_CATEGORIES, type FlagCategory } from "./chat";
 export const REPORT_REASONS = ["scam", "harassment", "spam", "impersonation", "other"] as const;
 export type ReportReason = (typeof REPORT_REASONS)[number];
 
-export const SANCTION_TYPES = ["warn", "chat_mute", "trade_block", "ban"] as const;
+const SANCTION_TYPES = ["warn", "chat_mute", "trade_block", "ban"] as const;
 export type SanctionType = (typeof SANCTION_TYPES)[number];
 
 export const MOD_ACTIONS = ["dismiss", ...SANCTION_TYPES] as const;
@@ -95,7 +95,7 @@ const excerptOfferItemSchema = z.object({
 });
 
 /** An offer as it stood at the report: `give` and `get` are the reported account's sides. */
-export const excerptOfferSchema = z.object({
+const excerptOfferSchema = z.object({
   offerId: z.number(),
   status: z.enum(OFFER_STATUSES),
   give: excerptOfferItemSchema.array(),
@@ -119,8 +119,8 @@ export const excerptEntrySchema = z.object({
 export type ExcerptEntry = z.infer<typeof excerptEntrySchema>;
 
 /** The ban sign-in error's message: data only, so the client words it in the viewer's language. */
-export const banNoticeSchema = z.object({ reason: z.string(), until: z.string().nullable() });
-export type BanNotice = z.infer<typeof banNoticeSchema>;
+const banNoticeSchema = z.object({ reason: z.string(), until: z.string().nullable() });
+type BanNotice = z.infer<typeof banNoticeSchema>;
 
 export function banNoticeMessage(
   reason: string | null | undefined,

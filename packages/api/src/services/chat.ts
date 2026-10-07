@@ -115,7 +115,7 @@ export async function saveSettings(userId: string, input: Partial<MessageSetting
 }
 
 /** The account behind a Message target. */
-export async function resolveTarget(target: ChatTarget): Promise<{ recipientId: string }> {
+async function resolveTarget(target: ChatTarget): Promise<{ recipientId: string }> {
   switch (target.kind) {
     case "list": {
       const [row] = await db
@@ -141,7 +141,7 @@ export async function resolveTarget(target: ChatTarget): Promise<{ recipientId: 
   }
 }
 
-export async function hasLinkedAddress(userId: string) {
+async function hasLinkedAddress(userId: string) {
   return (await db.$count(userAddress, eq(userAddress.userId, userId))) > 0;
 }
 
@@ -184,12 +184,12 @@ export async function checkMessageRate(userId: string, now: Date): Promise<() =>
 }
 
 /** Taken inside the start transaction, so a user's parallel starts are counted one at a time. */
-export async function lockStarts(tx: Tx, userId: string) {
+async function lockStarts(tx: Tx, userId: string) {
   await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext('chat_start'), hashtext(${userId}))`);
 }
 
 /** The times of the user's new conversations in the start window. */
-export async function recentStarts(tx: Tx, userId: string, now: Date): Promise<number[]> {
+async function recentStarts(tx: Tx, userId: string, now: Date): Promise<number[]> {
   const since = new Date(now.getTime() - START_WINDOW_HOURS * HOUR_MS).toISOString();
   const rows = await tx
     .select({ createdAt: conversation.createdAt })
@@ -301,7 +301,7 @@ export async function ensureConversation(
   return { id: raced.id, created: false };
 }
 
-export type CardContext = { senderId: string; partnerId: string };
+type CardContext = { senderId: string; partnerId: string };
 
 /** An objekt only of the card's collection, and a list by `cardListAllowed`. */
 export async function resolveCard(input: CardInput, context: CardContext): Promise<StoredCard> {
@@ -649,7 +649,7 @@ export async function hydrateCards(cards: StoredCard[]) {
   };
 }
 
-export type MessageRow = {
+type MessageRow = {
   id: number;
   senderId: string;
   body: string | null;

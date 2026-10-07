@@ -8,14 +8,14 @@ import type { Role } from "../permissions";
 import type { AuditAction } from "../schemas/moderation";
 import { activeSanctionWhere, notBlockedEither } from "./safety";
 
-export const MODERATION_REFUSALS = [
+const MODERATION_REFUSALS = [
   "self",
   "report_limit",
   "staff_target",
   "not_active",
   "not_reportable",
 ] as const;
-export type ModerationRefusal = (typeof MODERATION_REFUSALS)[number];
+type ModerationRefusal = (typeof MODERATION_REFUSALS)[number];
 
 export function refuseModeration(reason: ModerationRefusal, retryAt?: Date): never {
   const data = retryAt ? { reason, retryAt: retryAt.toISOString() } : { reason };

@@ -51,7 +51,7 @@ export type ChatBox = (typeof CHAT_BOXES)[number];
 /** Code points, as Postgres `char_length` counts them. */
 export const messageLength = (body: string) => Array.from(body).length;
 
-export const messageBodySchema = z
+const messageBodySchema = z
   .string()
   .trim()
   .min(1)
@@ -66,7 +66,7 @@ export const storedCardSchema = z.object({
 export type StoredCard = z.infer<typeof storedCardSchema>;
 
 /** A card as the client sends it; the list is named by slug and stored by id. */
-export const cardInputSchema = z.object({
+const cardInputSchema = z.object({
   collectionSlug: z.string().min(1).max(255),
   objektId: z.string().min(1).max(255).optional(),
   listSlug: z.string().min(1).max(12).optional(),
@@ -98,7 +98,7 @@ export const sendInputSchema = z
   });
 
 /** The last row of the previous page; `at` is its last activity (`last_message_at`, else `created_at`) exactly as the database wrote it. */
-export const conversationCursorSchema = z.object({ at: z.string(), id: z.number().int() });
+const conversationCursorSchema = z.object({ at: z.string(), id: z.number().int() });
 export type ConversationCursor = z.infer<typeof conversationCursorSchema>;
 
 export const listConversationsInputSchema = z.object({
@@ -126,7 +126,7 @@ export const muteInputSchema = z.object({
   until: z.enum(["8h", "1w", "always"]).nullable(),
 });
 
-export const messageSettingsSchema = z.object({
+const messageSettingsSchema = z.object({
   allow: z.enum(MESSAGE_ALLOW),
   /** the linked address that names the account in chat; null is the first linked */
   chatAs: addressSchema.nullable(),
@@ -148,7 +148,7 @@ export const chatPartnerSchema = z.object({
 });
 
 /** A card as the thread draws it, read live: a deleted list or entry drops out, not the card. */
-export const cardViewSchema = z.object({
+const cardViewSchema = z.object({
   collectionSlug: z.string(),
   objektId: z.string().nullable(),
   serial: z.number().nullable(),
@@ -169,7 +169,7 @@ export const cardViewSchema = z.object({
 });
 export type CardView = z.infer<typeof cardViewSchema>;
 
-export const chatMessageSchema = z.object({
+const chatMessageSchema = z.object({
   id: z.number(),
   mine: z.boolean(),
   body: z.string().nullable(),
@@ -182,9 +182,9 @@ export const chatMessageSchema = z.object({
 export type ChatMessage = z.infer<typeof chatMessageSchema> & { offer?: OfferView | null };
 
 /** `until` is null for "always". */
-export const muteStateSchema = z.object({ until: z.string().nullable() }).nullable();
+const muteStateSchema = z.object({ until: z.string().nullable() }).nullable();
 
-export const conversationRowSchema = z.object({
+const conversationRowSchema = z.object({
   id: z.number(),
   partner: chatPartnerSchema,
   last: z

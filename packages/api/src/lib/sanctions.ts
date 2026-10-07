@@ -101,7 +101,7 @@ export function shapeExcerpt(messages: ExcerptSource[], targetUserId: string): E
     }));
 }
 
-export type EffectiveSanction = { reason: string; until: string | null };
+type EffectiveSanction = { reason: string; until: string | null };
 
 /**
  * Which of a user's active sanctions of one type is in force: one with no end wins, else the

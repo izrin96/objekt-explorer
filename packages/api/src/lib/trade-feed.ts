@@ -40,7 +40,7 @@ export function latest(...times: (string | null)[]): string | null {
   return best;
 }
 
-export function postTag(post: { have: unknown; want: unknown; sale: unknown }): PostTag {
+function postTag(post: { have: unknown; want: unknown; sale: unknown }): PostTag {
   if (post.sale) return "wts";
   return post.have ? "wtt" : "wtb";
 }
@@ -123,7 +123,7 @@ export function tradeableEntries(
   return entries.filter((entry) => !untradeable.has(untradeableKey(userId, entry)));
 }
 
-export type PreviewItem = {
+type PreviewItem = {
   entryId: number;
   slug: string;
   price: number | null;
@@ -151,10 +151,10 @@ export function previewSide(entries: FeedEntry[], ringed: SlugIndex | null) {
 }
 
 /** A collection slug to the viewer's lists that have it on. */
-export type SlugIndex = ReadonlyMap<string, readonly number[]>;
+type SlugIndex = ReadonlyMap<string, readonly number[]>;
 
 /** How many of `entries`' collections `index` holds, and the viewer's lists they are on. */
-export function matchCollections(entries: { slug: string }[], index: SlugIndex) {
+function matchCollections(entries: { slug: string }[], index: SlugIndex) {
   const slugs = new Set(entries.flatMap((entry) => (index.has(entry.slug) ? [entry.slug] : [])));
   const listIds = new Set([...slugs].flatMap((slug) => index.get(slug)!));
   return { count: slugs.size, listIds: [...listIds] };
@@ -163,7 +163,7 @@ export function matchCollections(entries: { slug: string }[], index: SlugIndex) 
 /** The viewer's have lists (still-owned entries only) and want lists, by collection. */
 export type Viewer = { have: SlugIndex; want: SlugIndex };
 
-export type PostFilter = {
+type PostFilter = {
   /** keep posts with a shown objekt from one of these collections */
   slugs: ReadonlySet<string> | null;
   /** keep posts with this collection on any side */

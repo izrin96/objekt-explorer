@@ -9,7 +9,7 @@ import { baseProfileSchema } from "./profile";
 export const providerIdSchema = z.enum(["twitter", "discord"]);
 export type ProviderId = z.infer<typeof providerIdSchema>;
 
-export const providerSchema = z.object({
+const providerSchema = z.object({
   id: providerIdSchema,
   label: z.string(),
 });
@@ -26,7 +26,7 @@ export const providersMap: Record<ProviderId, Provider> = {
   },
 };
 
-export const currentUserOutputSchema = z
+const currentUserOutputSchema = z
   .object({
     user: z.custom<User>(),
     lists: publicListSchema.array(),

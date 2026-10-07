@@ -28,23 +28,23 @@ export const OFFER_STATUSES = [
 ] as const;
 export type OfferStatus = (typeof OFFER_STATUSES)[number];
 
-export const OFFER_CANCEL_REASONS = ["reserved", "blocked", "sanction", "token_moved"] as const;
+const OFFER_CANCEL_REASONS = ["reserved", "blocked", "sanction", "token_moved"] as const;
 export type OfferCancelReason = (typeof OFFER_CANCEL_REASONS)[number];
 
-export const TRADE_STATUSES = ["in_progress", "completed", "cancelled", "failed"] as const;
+const TRADE_STATUSES = ["in_progress", "completed", "cancelled", "failed"] as const;
 export type TradeStatus = (typeof TRADE_STATUSES)[number];
 
-export const TRADE_CANCEL_REASONS = ["party", "token_moved"] as const;
+const TRADE_CANCEL_REASONS = ["party", "token_moved"] as const;
 export type TradeCancelReason = (typeof TRADE_CANCEL_REASONS)[number];
 
-export const OFFER_ACTIONS = ["accept", "decline", "counter", "withdraw"] as const;
+const OFFER_ACTIONS = ["accept", "decline", "counter", "withdraw"] as const;
 export type OfferAction = (typeof OFFER_ACTIONS)[number];
 
-export const OFFER_SIDES = ["give", "get"] as const;
+const OFFER_SIDES = ["give", "get"] as const;
 export type OfferSide = (typeof OFFER_SIDES)[number];
 
 /** `from` is the offer's sender. */
-export const TOPUP_PAYERS = ["from", "to"] as const;
+const TOPUP_PAYERS = ["from", "to"] as const;
 export type TopupPayer = (typeof TOPUP_PAYERS)[number];
 
 /** `data.reason` on a refused offer action; the chat ones keep chat's meaning. */
@@ -87,19 +87,19 @@ const addressed = (input: z.infer<typeof addressedSchema>) =>
   (input.conversationId === undefined) !== (input.target === undefined);
 
 /** A give item is always one specific objekt. */
-export const giveItemInputSchema = z.object({
+const giveItemInputSchema = z.object({
   collectionSlug: slugSchema,
   objektId: objektIdSchema,
 });
 
 /** No `objektId` asks for any copy of the collection; `listSlug` names the list it was picked from. */
-export const getItemInputSchema = z.object({
+const getItemInputSchema = z.object({
   collectionSlug: slugSchema,
   objektId: objektIdSchema.optional(),
   listSlug: z.string().min(1).max(12).optional(),
 });
 
-export const topupInputSchema = z.object({
+const topupInputSchema = z.object({
   amount: z.number(),
   currency: z.string().min(1).max(10),
   payer: z.enum(TOPUP_PAYERS),
@@ -140,10 +140,10 @@ export const rateInputSchema = z.object({ tradeId: idSchema, rating: z.enum(TRAD
 export const tradeIdInputSchema = z.object({ tradeId: idSchema });
 export const suggestInputSchema = z.object({ partnerId: z.string().min(1) });
 
-export const candidateCursorSchema = z.object({ receivedAt: z.string(), id: z.string() });
+const candidateCursorSchema = z.object({ receivedAt: z.string(), id: z.string() });
 
 /** How the offer picker narrows a side. */
-export const pickerNarrowingSchema = z.object({
+const pickerNarrowingSchema = z.object({
   filters: collectionFiltersSchema.partial().optional(),
   /** mine: only what the partner wants; theirs: only what the sender wants */
   matchOnly: z.boolean().optional(),
@@ -161,7 +161,7 @@ export const candidatesInputSchema = addressedSchema
   .refine(addressed, { message: "conversation_or_target" });
 
 /** The last History row of the previous page, as the server sent it. */
-export const historyCursorSchema = z.object({
+const historyCursorSchema = z.object({
   at: z.string(),
   kind: z.enum(["offer", "trade"]),
   id: z.number().int(),
@@ -171,7 +171,7 @@ export type HistoryCursor = z.infer<typeof historyCursorSchema>;
 export const mineInputSchema = z.object({ cursor: historyCursorSchema.optional() });
 
 /** One objekt the builder may pick; `objektId` null is "any copy". */
-export const candidateItemSchema = z.object({
+const candidateItemSchema = z.object({
   collectionSlug: z.string(),
   objektId: z.string().nullable(),
   serial: z.number().nullable(),
@@ -187,9 +187,9 @@ export const candidateItemSchema = z.object({
 });
 export type CandidateItem = z.infer<typeof candidateItemSchema>;
 
-export const progressSchema = z.object({ verified: z.number(), total: z.number() });
+const progressSchema = z.object({ verified: z.number(), total: z.number() });
 
-export const offerItemViewSchema = z.object({
+const offerItemViewSchema = z.object({
   collectionSlug: z.string(),
   objektId: z.string().nullable(),
   serial: z.number().nullable(),
@@ -197,7 +197,7 @@ export const offerItemViewSchema = z.object({
 });
 export type OfferItemView = z.infer<typeof offerItemViewSchema>;
 
-export const topupViewSchema = z.object({
+const topupViewSchema = z.object({
   /** decimal string, as `numeric(12,2)` holds it */
   amount: z.string(),
   currency: z.string(),
@@ -206,7 +206,7 @@ export const topupViewSchema = z.object({
 export type TopupView = z.infer<typeof topupViewSchema>;
 
 /** Sides and the top-up's payer are relative to the viewer. */
-export const offerViewSchema = z.object({
+const offerViewSchema = z.object({
   id: z.number(),
   conversationId: z.number(),
   /** the viewer sent it */
@@ -235,7 +235,7 @@ export const offerViewSchema = z.object({
 });
 export type OfferView = z.infer<typeof offerViewSchema>;
 
-export const tradeLegViewSchema = z.object({
+const tradeLegViewSchema = z.object({
   id: z.number(),
   collectionSlug: z.string(),
   objektId: z.string().nullable(),
@@ -249,7 +249,7 @@ export const tradeLegViewSchema = z.object({
   verifiedObjektId: z.string().nullable(),
 });
 
-export const tradeViewSchema = z.object({
+const tradeViewSchema = z.object({
   id: z.number(),
   offerId: z.number(),
   conversationId: z.number(),
@@ -280,7 +280,7 @@ export const tradeViewSchema = z.object({
 export type TradeView = z.infer<typeof tradeViewSchema>;
 
 /** A My trades row; `kind` says whether `id` is an offer's or a trade's. */
-export const mineRowSchema = z.object({
+const mineRowSchema = z.object({
   kind: z.enum(["offer", "trade"]),
   id: z.number(),
   offerId: z.number(),
@@ -299,7 +299,7 @@ export const mineRowSchema = z.object({
 });
 export type MineRow = z.infer<typeof mineRowSchema>;
 
-export const OFFER_EVENTS = [
+const OFFER_EVENTS = [
   "received",
   "countered",
   "accepted",
@@ -321,13 +321,7 @@ export const offerPayloadSchema = z.object({
 });
 export type OfferPayload = z.infer<typeof offerPayloadSchema>;
 
-export const TRADE_EVENTS = [
-  "leg_verified",
-  "completed",
-  "cancelled",
-  "failed",
-  "reminder",
-] as const;
+const TRADE_EVENTS = ["leg_verified", "completed", "cancelled", "failed", "reminder"] as const;
 
 /** Data only. `reason` is set on `cancelled`: the other party cancelled, or an objekt left the wallet. */
 export const tradePayloadSchema = z.object({

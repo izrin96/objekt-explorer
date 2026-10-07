@@ -34,7 +34,7 @@ export function isMessageable(pref: MessagePref) {
   return pref.allow !== "nobody";
 }
 
-export type RateDecision = { ok: true } | { ok: false; retryAt: Date };
+type RateDecision = { ok: true } | { ok: false; retryAt: Date };
 
 /** `prior` are the times of the earlier counted events; one more fits while fewer than `limit` are in the window. */
 export function slidingWindow(
@@ -63,7 +63,7 @@ export function messageRateDecision(sends: number[], now: Date): RateDecision {
   return slidingWindow(sends, now, MESSAGE_WINDOW_MS, MESSAGE_LIMIT_PER_MINUTE);
 }
 
-export type CardList = { ownerId: string };
+type CardList = { ownerId: string };
 
 /** A list of either member of the conversation; anyone else's is refused. */
 export function cardListAllowed(list: CardList, senderId: string, partnerId: string) {
@@ -83,7 +83,7 @@ export type StartFacts = {
   rate: RateDecision;
 };
 
-export type StartVerdict = { ok: true } | { ok: false; reason: ChatRefusal; retryAt?: Date };
+type StartVerdict = { ok: true } | { ok: false; reason: ChatRefusal; retryAt?: Date };
 
 /**
  * The recipient's settings, blocks, mutes and the start limit apply to new conversations
@@ -184,7 +184,7 @@ export function isMuted(mutedUntil: string | null, now: Date) {
   return mutedUntil === "infinity" || new Date(mutedUntil).getTime() > now.getTime();
 }
 
-export type LastMessage = { id: number; senderId: string };
+type LastMessage = { id: number; senderId: string };
 
 export function isUnread(
   last: LastMessage | null,

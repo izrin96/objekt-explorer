@@ -14,7 +14,7 @@ import type { OfferCancelReason, OfferStatus, OfferView, TradeStatus } from "../
 
 const unique = <T>(values: T[]) => [...new Set(values)];
 
-export type HydratedOffer = {
+type HydratedOffer = {
   id: number;
   conversation_id: number;
   from_user_id: string;

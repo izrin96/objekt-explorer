@@ -21,11 +21,11 @@ export const LATEST_LIMIT = 3;
 export const NOTIFY_PREFIX = "notify:";
 export const notifyChannel = (userId: string) => `${NOTIFY_PREFIX}${userId}`;
 
-export const notificationTypeSchema = z.enum(NOTIFICATION_TYPES);
+const notificationTypeSchema = z.enum(NOTIFICATION_TYPES);
 
 const listRefSchema = z.object({ id: z.number(), slug: z.string(), name: z.string() });
 
-export const alertMatchSchema = z.object({
+const alertMatchSchema = z.object({
   collectionSlug: z.string(),
   partnerName: z.string(),
   sourceListSlug: z.string(),
@@ -47,7 +47,7 @@ const rowFields = {
 };
 
 /** A moderator's notice; never grouped, and not something a user can turn off. */
-export const sanctionPayloadSchema = z.object({
+const sanctionPayloadSchema = z.object({
   action: z.enum(["warn", "chat_mute", "trade_block"]),
   reason: z.string(),
   endsAt: z.string().nullable(),
@@ -67,7 +67,7 @@ export const notificationSchema = z.discriminatedUnion("type", [
 export type Notification = z.infer<typeof notificationSchema>;
 
 /** The last row of the previous page; `at` is its `created_at` exactly as the database wrote it. */
-export const notificationCursorSchema = z.object({ at: z.string(), id: z.number().int() });
+const notificationCursorSchema = z.object({ at: z.string(), id: z.number().int() });
 export type NotificationCursor = z.infer<typeof notificationCursorSchema>;
 
 export const listNotificationsInputSchema = z.object({

@@ -117,7 +117,7 @@ function lower(addresses: ReadonlySet<string>) {
   return new Set([...addresses].map((address) => address.toLowerCase()));
 }
 
-export type TradeOutcome =
+type TradeOutcome =
   | { status: "in_progress" }
   | { status: "completed" }
   | { status: "cancelled"; reason: "token_moved" }
@@ -139,7 +139,7 @@ export function tradeOutcome(results: LegResult[], alreadyVerified: number): Tra
     : { status: "in_progress" };
 }
 
-export type WatchSet = { objekts: ReadonlySet<string>; collections: ReadonlySet<string> };
+type WatchSet = { objekts: ReadonlySet<string>; collections: ReadonlySet<string> };
 
 /** One transfer as the indexer publishes it on `transfers`: Subsquid entities, nested. */
 type PublishedTransfer = {

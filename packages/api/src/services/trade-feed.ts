@@ -643,7 +643,7 @@ export async function bumpPost(userId: string, slug: string) {
   });
 }
 
-export type ShowOnTradeRefusal = "not_tradeable" | "needs_profile";
+type ShowOnTradeRefusal = "not_tradeable" | "needs_profile";
 
 export async function setShowOnTrade(userId: string, slug: string, on: boolean) {
   const list = await findOwnedList(slug, userId);

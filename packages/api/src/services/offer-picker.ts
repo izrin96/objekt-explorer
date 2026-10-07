@@ -38,7 +38,7 @@ import {
 import { offersOnTrade } from "./trade-lists";
 import { resolveTradeSides } from "./trade-matches";
 
-export type GetItem = { collectionSlug: string; objektId?: string; listSlug?: string };
+type GetItem = { collectionSlug: string; objektId?: string; listSlug?: string };
 
 /** The entry a get item comes from: its own token, else a collection entry; the named list first. */
 export function matchEntry(item: GetItem, entries: AllowedEntry[]) {
@@ -49,7 +49,7 @@ export function matchEntry(item: GetItem, entries: AllowedEntry[]) {
   return candidates.find((entry) => entry.listSlug === item.listSlug) ?? candidates[0] ?? null;
 }
 
-export function toCandidate(
+function toCandidate(
   objekt: IndexedObjekt,
   flags: ReturnType<typeof itemFlags>,
   listSlug: string | null,
@@ -64,12 +64,12 @@ export function toCandidate(
   };
 }
 
-export async function collectionsOf(slugs: string[]) {
+async function collectionsOf(slugs: string[]) {
   const rows = await fetchCollectionsBySlug(unique(slugs), []);
   return Object.fromEntries(rows.map((row) => [row.slug, row]));
 }
 
-export function collectionWhere(filters: Partial<CollectionFilters> | undefined) {
+function collectionWhere(filters: Partial<CollectionFilters> | undefined) {
   if (!filters) return [];
   return [
     filters.artist?.length
@@ -84,7 +84,7 @@ export function collectionWhere(filters: Partial<CollectionFilters> | undefined)
 }
 
 /** The sender's own objekts, newest received first; on the first page, their have-list objekts too. */
-export async function mineCandidates(
+async function mineCandidates(
   me: string,
   addressed: Addressed,
   cursor: { receivedAt: string; id: string } | undefined,
@@ -220,7 +220,7 @@ export async function counteredGives(conversationId: number | null, me: string) 
 }
 
 /** Collections on the user's want lists; `discoverableOnly` for someone else's. */
-export async function wantSlugsOf(userId: string, discoverableOnly: boolean) {
+async function wantSlugsOf(userId: string, discoverableOnly: boolean) {
   const rows = await db
     .selectDistinct({ slug: listEntries.collectionSlug })
     .from(listEntries)
@@ -236,7 +236,7 @@ export async function wantSlugsOf(userId: string, discoverableOnly: boolean) {
 }
 
 /** Of `slugs`, the collections `filters` keep. */
-export async function filterSlugs(slugs: string[], filters: Partial<CollectionFilters>) {
+async function filterSlugs(slugs: string[], filters: Partial<CollectionFilters>) {
   if (slugs.length === 0) return new Set<string>();
   const rows = await indexer
     .select({ slug: collections.slug })
@@ -246,7 +246,7 @@ export async function filterSlugs(slugs: string[], filters: Partial<CollectionFi
 }
 
 /** The allowed list entries resolved against the partner's current wallet. */
-export async function resolveTheirItems(me: string, addressed: Addressed) {
+async function resolveTheirItems(me: string, addressed: Addressed) {
   const { partnerId } = addressed;
   const [entries, linked, kept] = await Promise.all([
     allowedEntries(addressed),
@@ -317,7 +317,7 @@ export async function resolveTheirItems(me: string, addressed: Addressed) {
 }
 
 /** Every item the sender may ask for, for the builder to check picks against and for suggestions. */
-export async function theirCandidates(me: string, addressed: Addressed) {
+async function theirCandidates(me: string, addressed: Addressed) {
   const { items, listed } = await resolveTheirItems(me, addressed);
   return {
     items,
@@ -330,7 +330,7 @@ export async function theirCandidates(me: string, addressed: Addressed) {
 }
 
 /** The picker's view: resolved whole, narrowed, then one page from `offset`. */
-export async function theirPickerPage(
+async function theirPickerPage(
   me: string,
   addressed: Addressed,
   offset: number,

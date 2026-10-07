@@ -24,8 +24,8 @@ export function matchSides(myLists: MyList[], listId: number | null) {
   return { listId: named?.id ?? null, haveListIds: side("have"), wantListIds: side("want") };
 }
 
-export type Verdict = "ok" | "not_owned" | "not_transferable";
-export type DropReason = Exclude<Verdict, "ok">;
+type Verdict = "ok" | "not_owned" | "not_transferable";
+type DropReason = Exclude<Verdict, "ok">;
 
 /** A have or sale entry: one specific objekt, or (with no `objektId`) any copy of its collection. */
 export type OwnedEntry = { listId: number; slug: string; objektId: string | null };
@@ -107,7 +107,7 @@ export type Candidate = {
   theyWant: { listId: number; slug: string }[];
 };
 
-export type Recounted = {
+type Recounted = {
   userId: string;
   updatedAt: string;
   theyHaveIWant: Match[];
@@ -167,7 +167,7 @@ export function recount(
   return { userId: candidate.userId, updatedAt, theyHaveIWant, iHaveTheyWant, dropped };
 }
 
-export function passesFilter(filter: TradeFilter, theyHave: number, theyWant: number) {
+function passesFilter(filter: TradeFilter, theyHave: number, theyWant: number) {
   switch (filter) {
     case "all":
       return theyHave > 0 || theyWant > 0;
@@ -226,7 +226,7 @@ export function countDropped(partners: { userId: string; dropped: Dropped[] }[])
   };
 }
 
-export type AddressInfo = { address: string; nickname: string | null; hideNickname: boolean };
+type AddressInfo = { address: string; nickname: string | null; hideNickname: boolean };
 export type AddressRef = { address: string; nickname: string | null };
 export type PartnerIdentity = {
   /** the Cosmo nickname, or the account name when there is none to show */

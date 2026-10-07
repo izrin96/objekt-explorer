@@ -57,7 +57,7 @@ export function toPublicUser(user: User): PublicUser {
   };
 }
 
-export function toPublicProfile(
+function toPublicProfile(
   profile: UserAddress,
   user: User | null,
   currentUser?: User,

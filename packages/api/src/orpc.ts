@@ -4,7 +4,7 @@ import { getRequestHeaders, setResponseHeader } from "@tanstack/react-start/serv
 import { isStaffRole, roleList } from "./schemas/moderation";
 import { auth } from "./services/auth";
 
-export type ApiErrorKey =
+type ApiErrorKey =
   | "compare_source_list_not_found"
   | "compare_target_profile_not_found"
   | "compare_target_list_not_found"

@@ -7,7 +7,7 @@ import { indexedObjektSchema, ownedObjektSchema } from "./common/objekt";
 import type { ObjektPreview } from "./objekts";
 import { publicProfileSchema, publicUserSchema } from "./profile";
 
-export const listTypeNewSchema = z.enum(["general", "sale", "have", "want"]);
+const listTypeNewSchema = z.enum(["general", "sale", "have", "want"]);
 export type ListTypeNew = z.infer<typeof listTypeNewSchema>;
 
 /** Which side of a trade a list stands for: a sale list offers its objekts as a have list does. */
@@ -16,7 +16,7 @@ export function tradeSideOf(type: ListTypeNew): "have" | "want" | null {
   return type === "have" || type === "sale" ? "have" : null;
 }
 
-export const baseListSchema = z.object({
+const baseListSchema = z.object({
   id: z.number(),
   slug: z.string(),
   name: z.string(),
@@ -64,7 +64,7 @@ export const listEntriesOutputSchema = z.array(listObjektSchema);
  * Where added objekts come from. A bound list takes tokens its profile owns and
  * expands collections to every copy it owns; any other list takes collections.
  */
-export const addSourceSchema = z.discriminatedUnion("type", [
+const addSourceSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("objekts"), tokenIds: z.string().array().min(1).max(50000) }),
   z.object({ type: z.literal("collections"), slugs: z.string().array().min(1).max(50000) }),
   // a bound list hiding serials hands out entries: its cards carry no token id
@@ -77,7 +77,7 @@ export const addSourceSchema = z.discriminatedUnion("type", [
 export type AddSource = z.infer<typeof addSourceSchema>;
 
 // Trade match schemas
-export const partnerListMatchSchema = z.object({
+const partnerListMatchSchema = z.object({
   listId: z.number(),
   listSlug: z.string(),
   listName: z.string(),
@@ -89,7 +89,7 @@ export const partnerListMatchSchema = z.object({
 });
 export type PartnerListMatch = z.infer<typeof partnerListMatchSchema>;
 
-export const tradePartnerSchema = z.object({
+const tradePartnerSchema = z.object({
   userId: z.string(),
   username: z.string(),
   user: publicUserSchema,

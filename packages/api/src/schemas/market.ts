@@ -1,16 +1,16 @@
 import * as z from "zod";
 
-export const sortBySchema = z.enum(["price", "createdAt"]);
+const sortBySchema = z.enum(["price", "createdAt"]);
 export type SortBy = z.infer<typeof sortBySchema>;
 
-export const sortDirSchema = z.enum(["asc", "desc"]);
+const sortDirSchema = z.enum(["asc", "desc"]);
 export type SortDir = z.infer<typeof sortDirSchema>;
 
 /**
  * Minimal list info for constructing {@link getListLinkOption}.
  * Only includes the fields `getListLinkOption` reads.
  */
-export const marketListInfoSchema = z.object({
+const marketListInfoSchema = z.object({
   slug: z.string(),
   profileSlug: z.string().nullable(),
   profile: z
@@ -21,7 +21,7 @@ export const marketListInfoSchema = z.object({
     .nullable(),
 });
 
-export const marketListingSchema = z.object({
+const marketListingSchema = z.object({
   id: z.number(),
   price: z.number().nullable(),
   isQyop: z.boolean(),
@@ -39,11 +39,11 @@ export const marketListingSchema = z.object({
 export type MarketListing = z.infer<typeof marketListingSchema>;
 
 /** The site's own read: whether the list's owner accepts a message started from this row. */
-export const viewerMarketListingSchema = marketListingSchema.extend({ messageable: z.boolean() });
+const viewerMarketListingSchema = marketListingSchema.extend({ messageable: z.boolean() });
 
 export type ViewerMarketListing = z.infer<typeof viewerMarketListingSchema>;
 
-export const marketSummaryEntrySchema = z.object({
+const marketSummaryEntrySchema = z.object({
   slug: z.string(),
   count: z.number(),
   /** cheapest listing in USD — null when every listing is QYOP or unpriced */
