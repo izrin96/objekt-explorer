@@ -6,7 +6,7 @@ The public Trade Browse feed on `apps/web` at `/trade`: posts by people who put 
 ## Requirements
 
 ### Requirement: Posts from lists on Trade
-`/trade` SHALL list one post per list whose owner turned Show on Trade on. A have list and the want list linked to it SHALL form one post when both are on Trade. When only one of the pair is on Trade, the post SHALL hold only that list. The page SHALL be open to signed-out visitors.
+`/trade` SHALL list one post per list whose owner turned Show on Trade on. A have or sale list SHALL appear only while it is bound to a Cosmo profile; a want list needs no profile. A have list and the want list linked to it SHALL form one post when both are on Trade. When only one of the pair is on Trade, the post SHALL hold only that list. The page SHALL be open to signed-out visitors.
 
 Each post SHALL be tagged:
 - WTT for a have list, alone or paired with its want list;

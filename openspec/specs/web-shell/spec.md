@@ -7,7 +7,7 @@ find a user, see who they are signed in as, scope the site to artists and read s
 ## Requirements
 
 ### Requirement: Primary navigation with active state
-The frame SHALL offer links to Objekts (`/`), Market, Trade (`/trade`), Activity and Lists on every page, in that order. It SHALL mark the link of the current page as active: an exact match for `/`, and for Trade any path under `/trade`. On viewports below the `md` breakpoint it SHALL move those links into a side sheet opened from a menu button, and the sheet SHALL close when a link is followed.
+The frame SHALL offer links to Objekts (`/`), Market, Trade (`/trade`), Activity and Lists on every page, in that order. It SHALL mark the link of the current page as active: an exact match for `/`, and for Trade any path under `/trade`. On viewports below the `lg` breakpoint it SHALL move those links into a side sheet, so the search field keeps its width, opened from a menu button, and the sheet SHALL close when a link is followed.
 
 #### Scenario: Active link on desktop
 - **WHEN** the user is on `/market` at 1280 px
@@ -113,14 +113,14 @@ The account menu SHALL include a For you item opening `/trade/for-you`.
 - **THEN** the browser is at `/trade/for-you`
 
 ### Requirement: Notification bell in the frame
-When a session exists, the frame SHALL show the notification bell (see `web-notifications`) next to the account area on desktop. Below the `md` breakpoint, it SHALL show the bell in the top bar, outside the navigation sheet, so it is reachable without opening the sheet.
+When a session exists, the frame SHALL show the notification bell (see `web-notifications`) next to the account area on desktop. Below the `lg` breakpoint, it SHALL show the bell in the top bar, outside the navigation sheet, so it is reachable without opening the sheet.
 
 #### Scenario: Mobile
 - **WHEN** a signed-in user loads any page at 390 px
 - **THEN** the bell is visible in the top bar and opens the notification popover without opening the sheet
 
 ### Requirement: Messages icon in the frame
-When a session exists, the frame SHALL show a Messages icon with its unread badge (see `web-chat`) beside the notification bell. Below the `md` breakpoint, it SHALL sit in the top bar beside the bell, outside the navigation sheet.
+When a session exists, the frame SHALL show a Messages icon with its unread badge (see `web-chat`) beside the notification bell. Below the `lg` breakpoint, it SHALL sit in the top bar beside the bell, outside the navigation sheet.
 
 #### Scenario: Mobile
 - **WHEN** a signed-in user loads any page at 390 px

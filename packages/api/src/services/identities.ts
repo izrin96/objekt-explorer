@@ -1,6 +1,6 @@
 import { db } from "@repo/db";
 import { messagePref, user, userAddress } from "@repo/db/schema";
-import { asc, eq, inArray } from "drizzle-orm";
+import { asc, eq, inArray, sql } from "drizzle-orm";
 
 import { chatIdentity } from "../lib/chat-rules";
 import type { AddressRef, PartnerIdentity } from "../lib/trade-rank";
@@ -27,7 +27,8 @@ export async function loadIdentities(userIds: string[]) {
       })
       .from(userAddress)
       .where(inArray(userAddress.userId, ids))
-      .orderBy(asc(userAddress.id)),
+      // a re-link keeps its old row, so the row id is not link order
+      .orderBy(sql`${userAddress.linkedAt} ASC NULLS LAST`, asc(userAddress.id)),
   ]);
 
   const addressesOf = new Map<string, AddressRef[]>();

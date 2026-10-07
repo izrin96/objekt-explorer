@@ -14,7 +14,7 @@ import {
   listConversationsInputSchema,
   markReadInputSchema,
   MESSAGE_PREF_DEFAULTS,
-  type MessageAllow,
+  type MessageSettings,
   MUTE_HOURS,
   muteInputSchema,
   sendInputSchema,
@@ -393,7 +393,7 @@ export const chatRouter = {
     .input(setSettingsInputSchema)
     .handler(async ({ input, context: { session } }) => {
       const me = session.user.id;
-      const set: { allow?: MessageAllow; chatAs?: string | null } = {};
+      const set: Partial<MessageSettings> = {};
       if (input.allow !== undefined) set.allow = input.allow;
       if (input.chatAs !== undefined) {
         const chatAs = input.chatAs?.toLowerCase() ?? null;
