@@ -18,7 +18,7 @@ import {
   userAddress,
   wantAlertSent,
 } from "@repo/db/schema";
-import { and, eq, inArray, isNull, type SQL, sql } from "drizzle-orm";
+import { and, eq, inArray, isNull, or, type SQL, sql } from "drizzle-orm";
 
 import { redis } from "../lib/redis";
 import {
@@ -77,7 +77,15 @@ export async function sendWantAlerts() {
   const discoverable = await db
     .select({ id: lists.id })
     .from(lists)
-    .where(and(eq(lists.discoverable, true), inArray(lists.listTypeNew, ["have", "sale", "want"])));
+    .where(
+      and(
+        eq(lists.discoverable, true),
+        or(
+          eq(lists.listTypeNew, "want"),
+          and(inArray(lists.listTypeNew, ["have", "sale"]), eq(lists.isProfileBind, true)),
+        ),
+      ),
+    );
 
   const [storedCursor, storedState] = await Promise.all([
     redis.get(CURSOR_KEY),
@@ -198,6 +206,7 @@ async function fetchPairs(where: SQL, order: Order, limit: number | null): Promi
       JOIN lists l ON l.id = e.list_id
       WHERE l.discoverable
         AND l.list_type_new IN ('have', 'sale', 'want')
+        AND (l.list_type_new = 'want' OR l.is_profile_bind)
         AND e.collection_slug IS NOT NULL
         AND ${where}
     ),
@@ -216,7 +225,8 @@ async function fetchPairs(where: SQL, order: Order, limit: number | null): Promi
       JOIN list_entries o ON o.collection_slug = c.slug
       JOIN lists ol ON ol.id = o.list_id
       WHERE c.type = 'want'
-        AND ol.list_type_new IN ('have', 'sale') AND ol.match_alerts AND ol.user_id <> c.user_id
+        AND ol.list_type_new IN ('have', 'sale') AND ol.is_profile_bind
+        AND ol.match_alerts AND ol.user_id <> c.user_id
     )
     SELECT entry_id, list_id, direction, offer_list_id, want_list_id, slug, objekt_id FROM pairs p
     WHERE ${notBlockedEither(sql`p.want_user_id`, sql`p.offer_user_id`)}

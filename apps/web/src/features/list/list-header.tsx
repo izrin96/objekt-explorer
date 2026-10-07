@@ -39,7 +39,8 @@ import { useListOwned } from "./use-list-owned";
 export function ListHeader() {
   const list = useListTarget();
   const isOwner = useListOwned();
-  const canTradeMatch = isOwner && (list.listTypeNew === "have" || list.listTypeNew === "want");
+  const canTradeMatch =
+    isOwner && (list.listTypeNew === "want" || (list.listTypeNew === "have" && list.isProfileBind));
   const [compareOpen, setCompareOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);

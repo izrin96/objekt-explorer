@@ -212,7 +212,7 @@
   "trade_hidden_partners_empty": "非表示の人はいません",
   "trade_empty_title": "マッチがありません",
   "trade_empty_hint": "別の絞り込みを試すか、所持・希望リストに項目を追加してください。",
-  "trade_no_lists_hint": "所持または希望リストを作成すると交換できる人を探せます。",
+  "trade_no_lists_hint": "希望リスト、またはCosmoプロフィールに紐付けた所持リストを作成すると、交換できる人を探せます。",
   "trade_show_all": "全員を表示",
   "trade_matches_link_label": "マッチを探す：相互の相手{count}人",
   "list_create_button": "リストを作成",

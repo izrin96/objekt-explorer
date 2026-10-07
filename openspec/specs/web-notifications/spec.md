@@ -76,7 +76,7 @@ Turning a type off SHALL stop new notifications of that type. Notifications alre
 - **THEN** no notification is created, and the trade page still shows the leg Verified
 
 ### Requirement: Want-list alerts
-For each of a user's want lists with Alert me on, the system SHALL notify the user when an entry for a collection on that want list is newly added to another account's discoverable sale list or discoverable have list. It SHALL also notify when such a list becomes discoverable. The alert SHALL arrive within 10 minutes, including when entries are committed out of order. Alerts SHALL be grouped as one unread notification per want list per day. While that notification is unread, further matches SHALL update its count and the latest objekts instead of creating new ones. Its target SHALL be `/trade/for-you?list=<want-list-slug>`. A given want list, source list and collection SHALL alert at most once, even if the entry is removed and added again.
+For each of a user's want lists with Alert me on, the system SHALL notify the user when an entry for a collection on that want list is newly added to another account's discoverable sale or have list bound to a Cosmo profile. It SHALL also notify when such a list becomes discoverable. The alert SHALL arrive within 10 minutes, including when entries are committed out of order. Alerts SHALL be grouped as one unread notification per want list per day. While that notification is unread, further matches SHALL update its count and the latest objekts instead of creating new ones. Its target SHALL be `/trade/for-you?list=<want-list-slug>`. A given want list, source list and collection SHALL alert at most once, even if the entry is removed and added again.
 
 No alert SHALL be created for:
 - the user's own lists;
@@ -105,7 +105,7 @@ No alert SHALL be created for:
 - **THEN** matches for its collections create no alert
 
 ### Requirement: Reverse-direction alerts
-When the user has Someone wants what you have turned on, the system SHALL notify them when another account adds, to a discoverable want list, a collection that is on one of the user's have or sale lists. The same grouping, once-only, timing and exclusion rules as want-list alerts SHALL apply, grouped per the user's list. The target SHALL be `/trade/for-you?list=<that-list-slug>`.
+When the user has Someone wants what you have turned on, the system SHALL notify them when another account adds, to a discoverable want list, a collection that is on one of the user's have or sale lists bound to a Cosmo profile. The same grouping, once-only, timing and exclusion rules as want-list alerts SHALL apply, grouped per the user's list. The target SHALL be `/trade/for-you?list=<that-list-slug>`.
 
 #### Scenario: Off by default
 - **WHEN** a user has never changed the setting and someone wants a collection on their have list

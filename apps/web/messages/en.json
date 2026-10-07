@@ -212,7 +212,7 @@
   "trade_hidden_partners_empty": "No one is hidden",
   "trade_empty_title": "No matches",
   "trade_empty_hint": "Try another filter, or add more to your have and want lists.",
-  "trade_no_lists_hint": "Create a have or want list to find people to trade with.",
+  "trade_no_lists_hint": "Create a want list, or a have list bound to one of your Cosmo profiles, to find people to trade with.",
   "trade_show_all": "Show everyone",
   "trade_matches_link_label": "Find matches: {count} mutual people",
   "list_create_button": "Create list",

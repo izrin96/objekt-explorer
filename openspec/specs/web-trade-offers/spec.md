@@ -8,7 +8,7 @@ Offers between two accounts on `apps/web`: specific objekts (or any copy) on eac
 ### Requirement: Offers name objekts on both sides
 An offer SHALL be sent inside a conversation from one account to the other. It has two sides:
 - **You give**: specific objekts owned by one of the sender's linked addresses.
-- **You get**: specific objekts, or "any copy" of a collection. Each comes from an entry on one of the recipient's have or sale lists that the sender may see in that conversation. Those are lists that show their owner, the list the conversation started from, and lists already shown on a card in the conversation.
+- **You get**: specific objekts, or "any copy" of a collection. Each comes from an entry on one of the recipient's have or sale lists bound to a Cosmo profile, at any of the recipient's linked addresses, that the sender may see in that conversation. Those are lists that show their owner, the list the conversation started from, and lists already shown on a card in the conversation.
 
 A counter-offer MAY also ask for any objekt the recipient listed under You give in the offer it counters, since the recipient already offered it.
 
@@ -94,7 +94,7 @@ Of two offers holding the same objekt, the first accepted wins. Either party SHA
 
 ### Requirement: Offer builder
 The builder SHALL open as a dialog, and as a full-height sheet on a phone. It shows:
-- You give, with an Add picker over the sender's own objekts, have-list entries first;
+- You give, with an Add picker over the sender's own objekts, entries on their bound have lists first;
 - You get, with an Add picker over the allowed list entries;
 - the top-up and the note.
 

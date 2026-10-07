@@ -212,7 +212,7 @@
   "trade_hidden_partners_empty": "숨긴 사람이 없습니다",
   "trade_empty_title": "매치가 없습니다",
   "trade_empty_hint": "다른 필터를 시도하거나 보유·희망 목록에 항목을 추가해 보세요.",
-  "trade_no_lists_hint": "보유 또는 희망 목록을 만들면 거래할 사람을 찾을 수 있습니다.",
+  "trade_no_lists_hint": "희망 목록이나 내 Cosmo 프로필에 연결된 보유 목록을 만들면 거래할 사람을 찾을 수 있습니다.",
   "trade_show_all": "모두 표시",
   "trade_matches_link_label": "매치 찾기: 상호 상대 {count}명",
   "list_create_button": "목록 만들기",

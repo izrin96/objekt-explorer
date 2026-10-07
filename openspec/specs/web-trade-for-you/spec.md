@@ -6,7 +6,7 @@ The account-wide trade match view on `apps/web` at `/trade/for-you`: who the use
 ## Requirements
 
 ### Requirement: Account-wide matches
-`/trade/for-you` SHALL list the other accounts whose discoverable have, sale or want lists overlap the signed-in user's have and want lists, grouped one row per account. The user's own lists count whether or not they are discoverable. Matching SHALL use the user's have lists, never everything their wallet holds: owning an objekt does not mean it is up for trade. The user's own account SHALL never appear. `/trade` SHALL open the Browse feed (see `web-trade-browse`), not For you. A signed-out visitor SHALL be sent to `/login?redirect=/trade/for-you`, keeping the search parameters.
+`/trade/for-you` SHALL list the other accounts whose discoverable have, sale or want lists overlap the signed-in user's have and want lists, grouped one row per account. The user's own lists count whether or not they are discoverable. Matching SHALL use the user's have lists, never everything their wallet holds: owning an objekt does not mean it is up for trade. A have or sale list SHALL take part only while it is bound to one of its owner's Cosmo profiles, since Trade checks that profile's holdings; want lists always take part. A user's address with Hide User on SHALL make no difference to Trade. The user's own account SHALL never appear. `/trade` SHALL open the Browse feed (see `web-trade-browse`), not For you. A signed-out visitor SHALL be sent to `/login?redirect=/trade/for-you`, keeping the search parameters.
 
 #### Scenario: Matches across lists
 - **WHEN** a user has two have lists and one want list, and a partner's discoverable lists overlap two of them
@@ -16,8 +16,12 @@ The account-wide trade match view on `apps/web` at `/trade/for-you`: who the use
 - **WHEN** the user holds SeoYeon 204Z but it is on none of their have lists, and a partner wants it
 - **THEN** SeoYeon 204Z does not count toward that partner
 
+#### Scenario: Unbound have list
+- **WHEN** the user's only have list is not bound to a Cosmo profile, and a partner wants a collection on it
+- **THEN** that collection does not count toward the partner, and Compare with does not offer the list
+
 #### Scenario: No lists
-- **WHEN** a signed-in user with no have or want list opens `/trade/for-you`
+- **WHEN** a signed-in user with no want list and no bound have list opens `/trade/for-you`
 - **THEN** the page asks them to create one, with a link to their lists
 
 #### Scenario: Opened from Browse
@@ -78,8 +82,6 @@ An entry on a have or sale list SHALL count toward a match only while its owner 
 
 This applies to both the partner's entries and the user's own. Ranking and filters SHALL use the counts after this check, and at most 50 partners SHALL be listed. Entries left out this way SHALL be summarised in a Not shown line, with counts by reason.
 
-A partner's entry for a specific objekt held at one of their addresses with Hide User on SHALL NOT count, since the offer builder cannot offer it, and SHALL NOT be summarised in Not shown, which would reveal the address. A partner's entry for a collection counts a copy at any of their addresses.
-
 #### Scenario: Sold objekt
 - **WHEN** a partner's have list still lists Mayu 203Z but none of their linked addresses holds a copy
 - **THEN** Mayu 203Z does not count toward that partner, and Not shown includes it under "no longer owned"
@@ -87,10 +89,6 @@ A partner's entry for a specific objekt held at one of their addresses with Hide
 #### Scenario: Not transferable
 - **WHEN** the only copy a partner holds is not transferable
 - **THEN** it does not count, and Not shown includes it under "not transferable"
-
-#### Scenario: Held at a hidden address
-- **WHEN** a partner's have list names Mayu 203Z #12, and they hold it at an address with Hide User on
-- **THEN** it does not count toward that partner, and Not shown does not mention it
 
 #### Scenario: Ranked on what is still owned
 - **WHEN** partner A's list overlaps 5 ⇄ 5 but only 1 ⇄ 5 is still owned, and partner B's overlaps 3 ⇄ 3, all owned

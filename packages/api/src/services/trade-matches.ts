@@ -80,6 +80,7 @@ export async function fetchTradeCandidates(
       SELECT l.id, l.user_id, l.list_type_new, l.updated_at FROM lists l
       WHERE l.discoverable
         AND l.list_type_new IN ('have', 'sale', 'want')
+        AND (l.list_type_new = 'want' OR l.is_profile_bind)
         AND l.user_id <> ${userId}
         AND NOT EXISTS (
           SELECT 1 FROM hidden_trade_partner h
@@ -137,12 +138,23 @@ export async function fetchTradeCandidates(
 
 type Sides = ReturnType<typeof matchSides>;
 
-/** The user's have and want lists, narrowed by `slug` when it names one of them. */
+/**
+ * The user's bound have lists and their want lists, narrowed by `slug` when it names one of
+ * them. A have list counts only while bound to a profile, whose holdings Trade checks.
+ */
 export async function resolveTradeSides(userId: string, slug: string | undefined): Promise<Sides> {
   const myLists = await db
     .select({ id: lists.id, slug: lists.slug, listTypeNew: lists.listTypeNew })
     .from(lists)
-    .where(and(eq(lists.userId, userId), inArray(lists.listTypeNew, ["have", "want"])));
+    .where(
+      and(
+        eq(lists.userId, userId),
+        or(
+          eq(lists.listTypeNew, "want"),
+          and(eq(lists.listTypeNew, "have"), eq(lists.isProfileBind, true)),
+        ),
+      ),
+    );
   const named = slug === undefined ? undefined : myLists.find((list) => list.slug === slug);
   return matchSides(myLists, named?.id ?? null);
 }
@@ -242,23 +254,17 @@ async function computeTradeMatches(userId: string, sides: Sides, filter: TradeFi
         address: userAddress.address,
         nickname: userAddress.nickname,
         hideNickname: userAddress.hideNickname,
-        hideUser: userAddress.hideUser,
       })
       .from(userAddress)
       .where(inArray(userAddress.userId, [userId, ...partnerIds])),
   ]);
 
   const addressesOf = new Map<string, Set<string>>();
-  const visibleOf = new Map<string, Set<string>>();
-  const add = (map: Map<string, Set<string>>, userId: string, address: string) => {
-    const set = map.get(userId) ?? new Set<string>();
-    set.add(address.toLowerCase());
-    map.set(userId, set);
-  };
   for (const row of addressRows) {
     if (!row.userId) continue;
-    add(addressesOf, row.userId, row.address);
-    if (!row.hideUser) add(visibleOf, row.userId, row.address);
+    const set = addressesOf.get(row.userId) ?? new Set<string>();
+    set.add(row.address.toLowerCase());
+    addressesOf.set(row.userId, set);
   }
   const none = new Set<string>();
 
@@ -297,14 +303,7 @@ async function computeTradeMatches(userId: string, sides: Sides, filter: TradeFi
   );
 
   const recounted = candidates.map((c) =>
-    recount(
-      c,
-      addressesOf.get(c.userId) ?? none,
-      holdings,
-      myWants,
-      myHaves,
-      visibleOf.get(c.userId) ?? none,
-    ),
+    recount(c, addressesOf.get(c.userId) ?? none, holdings, myWants, myHaves),
   );
   const ranked = rankPartners(recounted, filter, now);
 

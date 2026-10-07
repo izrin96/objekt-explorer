@@ -100,16 +100,6 @@ describe("ownership", () => {
     expect(entryVerdict(entry("t-locked"), theirs, holdings)).toBe("not_transferable");
   });
 
-  test("an objekt at an address that hides its owner is hidden, a copy there still counts", () => {
-    const visible = new Set<string>();
-    expect(
-      entryVerdict({ listId: 1, slug: "s", objektId: "t-owned" }, theirs, holdings, visible),
-    ).toBe("hidden");
-    expect(
-      entryVerdict({ listId: 1, slug: "held", objektId: null }, theirs, holdings, visible),
-    ).toBe("ok");
-  });
-
   test("a collection entry counts while any transferable copy is held", () => {
     const entry = (slug: string) => ({ listId: 1, slug, objektId: null });
     expect(entryVerdict(entry("held"), theirs, holdings)).toBe("ok");
@@ -158,8 +148,8 @@ describe("ownership", () => {
 
     const owned = { objekts: ownedTokens, copies };
     const recounted = [
-      recount(a, new Set(["0xa"]), owned, myWants, myHaves, new Set(["0xa"])),
-      recount(b, new Set(["0xb"]), owned, myWants, myHaves, new Set(["0xb"])),
+      recount(a, new Set(["0xa"]), owned, myWants, myHaves),
+      recount(b, new Set(["0xb"]), owned, myWants, myHaves),
     ];
     const ranked = rankPartners(recounted, "all", NOW);
 
@@ -182,7 +172,6 @@ describe("ownership", () => {
       holdings,
       new Map(),
       new Map([["mine", { verdict: "not_owned", listIds: [] }]]),
-      theirs,
     );
     expect(result.iHaveTheyWant).toEqual([]);
     expect(result.dropped).toEqual([
@@ -218,28 +207,9 @@ describe("recount details", () => {
         ["b", [9]],
       ]),
       new Map(),
-      new Set(["0xp"]),
     );
     expect(result.updatedAt).toBe(IDLE);
     expect(rankPartners([result], "all", NOW)[0]!.idle).toBe(true);
-  });
-
-  test("a partner's objekt at a hidden address is neither matched nor named", () => {
-    const result = recount(
-      {
-        userId: "P",
-        listUpdatedAt: { 1: RECENT },
-        theyHave: [{ listId: 1, slug: "a", objektId: "kept" }],
-        theyWant: [],
-      },
-      new Set(["0xp"]),
-      holdings,
-      new Map([["a", [9]]]),
-      new Map(),
-      new Set(),
-    );
-    expect(result.theyHaveIWant).toEqual([]);
-    expect(result.dropped).toEqual([]);
   });
 
   test("my own dropped have counts once, a partner's once per partner", () => {
@@ -354,7 +324,6 @@ describe("matchSides", () => {
       holdings,
       new Map([["binary", [3]]]),
       myHaves,
-      new Set(["0xp"]),
     );
 
     expect(result.iHaveTheyWant.map((m) => m.slug)).toEqual(["on-spares"]);

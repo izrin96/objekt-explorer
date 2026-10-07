@@ -85,8 +85,10 @@ export function ForYouView({
   partner: string | undefined;
 }) {
   const navigate = useNavigate({ from: "/trade/for-you" });
+  // a have list counts only while bound to a profile, whose holdings Trade checks
   const tradeLists = useUserLists().filter(
-    (l): l is typeof l & TradeList => l.listTypeNew === "have" || l.listTypeNew === "want",
+    (l): l is typeof l & TradeList =>
+      l.listTypeNew === "want" || (l.listTypeNew === "have" && l.isProfileBind),
   );
   // a one-way view compares only one kind of list, so the picker offers only that kind
   const side = SIDE[filter];

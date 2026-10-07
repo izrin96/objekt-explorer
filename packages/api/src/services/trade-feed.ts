@@ -70,6 +70,8 @@ const postsCte = sql`
     SELECT id, user_id, list_type_new, linked_list_id, bumped_at, updated_at, created_at
     FROM lists
     WHERE show_on_trade AND list_type_new IN ('have', 'want', 'sale')
+      -- have and sale only while bound: Trade checks the bound profile's holdings
+      AND (list_type_new = 'want' OR is_profile_bind)
   ),
   posts AS (
     SELECT
@@ -389,8 +391,8 @@ async function fetchPostEntries(
 }
 
 /**
- * Collections on the user's have lists that they can still trade, with the lists that can
- * trade each; never the whole wallet.
+ * Collections on the user's bound have lists that they can still trade, with the lists that
+ * can trade each; never the whole wallet.
  */
 async function computeHaveIndex(userId: string): Promise<[string, number[]][]> {
   const [entries, addressRows] = await Promise.all([
@@ -406,6 +408,7 @@ async function computeHaveIndex(userId: string): Promise<[string, number[]][]> {
         and(
           eq(lists.userId, userId),
           eq(lists.listTypeNew, "have"),
+          eq(lists.isProfileBind, true),
           isNotNull(listEntries.collectionSlug),
         ),
       ),

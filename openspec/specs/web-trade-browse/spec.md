@@ -85,7 +85,7 @@ For a signed-in viewer, each post SHALL show:
 
 Those objekts SHALL be marked with a ring. The counts SHALL open a popover naming the viewer's lists they came from: the have lists for the first count, the want lists for the second, each linking to its list.
 
-Matching SHALL use the viewer's have lists, not everything their wallet holds, as For you does (see `web-trade-for-you`), so an objekt the viewer keeps off their have lists never counts as offered. Browse SHALL offer no Match filter: narrowing to matches is For you's job. A post whose owner is a Mutual only partner in the viewer's For you SHALL instead carry a "Mutual match · See in For you" link to `/trade/for-you?match=mutual&partner=<their id>`. The link SHALL show only for a partner For you lists under Mutual only.
+Matching SHALL use the viewer's have lists bound to a Cosmo profile, not everything their wallet holds, as For you does (see `web-trade-for-you`), so an objekt the viewer keeps off their have lists never counts as offered. Browse SHALL offer no Match filter: narrowing to matches is For you's job. A post whose owner is a Mutual only partner in the viewer's For you SHALL instead carry a "Mutual match · See in For you" link to `/trade/for-you?match=mutual&partner=<their id>`. The link SHALL show only for a partner For you lists under Mutual only.
 
 The viewer's own posts SHALL not be listed in the feed. Posts by partners the viewer hid in For you SHALL also be left out.
 

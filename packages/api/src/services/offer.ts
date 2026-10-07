@@ -142,23 +142,15 @@ function refuseUnsafe(kind: "send" | "accept" | "respond", safety: Safety) {
   refuseOffer(reason, until ? { retryAt: new Date(until) } : {});
 }
 
-/**
- * Each user's linked addresses, lowercase. `visibleOnly` keeps the ones that show their owner:
- * naming a token held at a Hide User address would tie that address to the account.
- */
-async function linkedAddresses(userIds: string[], visibleOnly = false) {
+/** Each user's linked addresses, lowercase. */
+async function linkedAddresses(userIds: string[]) {
   const rows =
     userIds.length === 0
       ? []
       : await db
           .select({ userId: userAddress.userId, address: userAddress.address })
           .from(userAddress)
-          .where(
-            and(
-              inArray(userAddress.userId, unique(userIds)),
-              visibleOnly ? eq(userAddress.hideUser, false) : undefined,
-            ),
-          );
+          .where(inArray(userAddress.userId, unique(userIds)));
   const map = new Map<string, Set<string>>(userIds.map((id) => [id, new Set<string>()]));
   for (const row of rows) {
     if (row.userId) map.get(row.userId)?.add(row.address.toLowerCase());
@@ -356,7 +348,13 @@ async function allowedEntries(
     db
       .select({ id: lists.id, slug: lists.slug, hideUser: lists.hideUser })
       .from(lists)
-      .where(and(eq(lists.userId, partnerId), inArray(lists.listTypeNew, ["have", "sale"]))),
+      .where(
+        and(
+          eq(lists.userId, partnerId),
+          inArray(lists.listTypeNew, ["have", "sale"]),
+          eq(lists.isProfileBind, true),
+        ),
+      ),
     conversationId === null
       ? { rows: [] }
       : db.execute<{ list_id: number }>(sql`
@@ -503,7 +501,9 @@ async function mineCandidates(
           })
           .from(listEntries)
           .innerJoin(lists, eq(lists.id, listEntries.listId))
-          .where(and(eq(lists.userId, me), eq(lists.listTypeNew, "have")))
+          .where(
+            and(eq(lists.userId, me), eq(lists.listTypeNew, "have"), eq(lists.isProfileBind, true)),
+          )
           .orderBy(listEntries.id),
   ]);
 
@@ -615,15 +615,14 @@ async function filterSlugs(slugs: string[], filters: Partial<CollectionFilters>)
 /** The allowed list entries resolved against the partner's current wallet. */
 async function resolveTheirItems(me: string, addressed: Addressed) {
   const { partnerId } = addressed;
-  const [entries, all, visible, kept] = await Promise.all([
+  const [entries, linked, kept] = await Promise.all([
     allowedEntries(me, addressed),
     linkedAddresses([partnerId]),
-    linkedAddresses([partnerId], true),
     counteredGives(addressed.conversationId, me),
   ]);
   const keptIds = [...(kept?.objekts.keys() ?? [])];
-  const addresses = [...(all.get(partnerId) ?? [])];
-  const theirs = visible.get(partnerId) ?? new Set<string>();
+  const theirs = linked.get(partnerId) ?? new Set<string>();
+  const addresses = [...theirs];
   const anySlugs = unique(entries.flatMap((e) => (e.objektId === null ? [e.collectionSlug] : [])));
 
   const [tokens, copies, promised] = await Promise.all([
@@ -648,7 +647,6 @@ async function resolveTheirItems(me: string, addressed: Addressed) {
       continue;
     }
     const held = copies.filter((o) => o.slug === entry.collectionSlug);
-    // the count may include Hide User addresses; their token ids are never returned
     const spare =
       held.filter((o) => o.transferable && !reserved.has(o.id)).length -
       (promised.get(copyKey(partnerId, entry.collectionSlug)) ?? 0);
@@ -673,11 +671,10 @@ async function resolveTheirItems(me: string, addressed: Addressed) {
     }
   }
 
-  // what the countered offer gave, still with the partner: it showed these, at any address
-  const allOf = new Set(addresses);
+  // what the countered offer gave, still with the partner
   for (const id of keptIds) {
     const objekt = tokens.get(id);
-    if (!objekt || seen.has(id) || !allOf.has(objekt.owner)) continue;
+    if (!objekt || seen.has(id) || !theirs.has(objekt.owner)) continue;
     seen.add(id);
     items.push(toCandidate(objekt, flags(objekt), null));
   }
@@ -807,8 +804,8 @@ type ItemRow = { side: Side; collectionSlug: string; objektId: string | null };
 
 type ItemParties = {
   giverId: (side: Side) => string;
-  /** where a side's specific objekts may sit; `objektId` lets one objekt widen it */
-  holders: (side: Side, objektId?: string) => ReadonlySet<string>;
+  /** where a side's specific objekts may sit */
+  holders: (side: Side) => ReadonlySet<string>;
   /** where a side's any-copy copies are counted */
   copyHolders: (side: Side) => ReadonlySet<string>;
   /**
@@ -889,11 +886,7 @@ async function checkItems(
         objektId: item.objektId!,
         verdict: early.has(item.objektId!)
           ? "ok"
-          : itemVerdict(
-              valid,
-              parties.holders(item.side, item.objektId!),
-              reserved.has(item.objektId!),
-            ),
+          : itemVerdict(valid, parties.holders(item.side), reserved.has(item.objektId!)),
       };
     }),
   );
@@ -954,10 +947,9 @@ export async function createOffer(
   const addressed = await resolveAddressed(me, meCreatedAt, input);
   const { partnerId } = addressed;
   const startCtx = addressed.start;
-  const [safety, addresses, visible] = await Promise.all([
+  const [safety, addresses] = await Promise.all([
     startCtx ? startCtx.safety : chatSafety(me, partnerId),
     linkedAddresses([me, partnerId]),
-    linkedAddresses([partnerId], true),
   ]);
   const myAddresses = addresses.get(me)!;
   if (myAddresses.size === 0) refuseOffer("no_address");
@@ -995,12 +987,7 @@ export async function createOffer(
   ];
   await checkItems(items, {
     giverId: (side) => (side === "give" ? me : partnerId),
-    holders: (side, objektId) =>
-      side === "give"
-        ? myAddresses
-        : objektId !== undefined && keptIds.has(objektId)
-          ? addresses.get(partnerId)!
-          : visible.get(partnerId)!,
+    holders: (side) => (side === "give" ? myAddresses : addresses.get(partnerId)!),
     copyHolders: (side) => (side === "give" ? myAddresses : addresses.get(partnerId)!),
   });
 
