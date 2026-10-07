@@ -1,18 +1,15 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 
 import { ForYouPending, ForYouView } from "@/features/trade/for-you-view";
 import { forYouOptions } from "@/features/trade/queries";
 import { forYouSearchSchema, toForYouFilter } from "@/features/trade/search-schema";
-import { currentUserOptions } from "@/features/user/queries";
+import { requireSignedIn } from "@/features/user/queries";
 import { generateMetadata } from "@/lib/meta";
 import { m } from "@/paraglide/messages";
 
 export const Route = createFileRoute("/(container)/trade/for-you")({
   validateSearch: forYouSearchSchema,
-  beforeLoad: async ({ context: { queryClient }, location }) => {
-    const user = await queryClient.query({ ...currentUserOptions, staleTime: "static" });
-    if (!user) throw redirect({ to: "/login", search: { redirect: location.href } });
-  },
+  beforeLoad: requireSignedIn,
   loaderDeps: ({ search }) => search,
   loader: async ({ context: { queryClient }, deps, cause }) => {
     const options = forYouOptions(toForYouFilter(deps), deps.list);

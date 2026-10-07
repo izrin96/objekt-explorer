@@ -7,6 +7,7 @@ import {
 } from "@phosphor-icons/react";
 import type { SerialTransfer, SerialTransfersOutput } from "@repo/api/schemas/collections";
 import { Addresses } from "@repo/lib";
+import { truncateAddress } from "@repo/lib/address";
 import type { UseQueryResult } from "@tanstack/react-query";
 import { type ReactNode, useMemo, useState } from "react";
 
@@ -15,7 +16,6 @@ import { Timestamp } from "@/components/shared/timestamp";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ProfileCell, ProfileLink } from "@/features/profile/profile-hover-card";
-import { truncateAddress } from "@/lib/address";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 

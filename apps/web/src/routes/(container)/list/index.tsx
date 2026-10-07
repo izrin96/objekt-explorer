@@ -1,5 +1,5 @@
 import { CardsThreeIcon, DiscordLogoIcon, PlusIcon } from "@phosphor-icons/react";
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 
 import { EmptyState } from "@/components/shared/empty-state";
@@ -13,15 +13,12 @@ import { listPreviewsOptions } from "@/features/list/queries";
 import { useListPreviews } from "@/features/list/use-list-previews";
 import { PreviewCardsSkeleton } from "@/features/objekt/objekt-preview-strip";
 import { useUserLists } from "@/features/user/hooks";
-import { currentUserOptions } from "@/features/user/queries";
+import { currentUserOptions, requireSignedIn } from "@/features/user/queries";
 import { generateMetadata } from "@/lib/meta";
 import { m } from "@/paraglide/messages";
 
 export const Route = createFileRoute("/(container)/list/")({
-  beforeLoad: async ({ context: { queryClient }, location }) => {
-    const user = await queryClient.query({ ...currentUserOptions, staleTime: "static" });
-    if (!user) throw redirect({ to: "/login", search: { redirect: location.href } });
-  },
+  beforeLoad: requireSignedIn,
   loader: async ({ context: { queryClient } }) => {
     const user = await queryClient.query({ ...currentUserOptions, staleTime: "static" });
     // a failed preview read leaves the cards to fetch it again, not the page to fail

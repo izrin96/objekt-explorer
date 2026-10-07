@@ -1,5 +1,5 @@
 import { groupKey, mergePayload } from "@repo/api/lib/notification-group";
-import { copyKey, type Holdings } from "@repo/api/lib/trade-rank";
+import { copyKey, type Holdings, addressesByUser, visibleNickname } from "@repo/api/lib/trade-rank";
 import {
   type AlertMatch,
   alertPayloadSchema,
@@ -7,6 +7,11 @@ import {
   notifyChannel,
 } from "@repo/api/schemas/notification";
 import { notBlockedEither, notTradeSanctioned } from "@repo/api/services/safety";
+import {
+  offersOnTradeSql,
+  takesPartInTrade,
+  takesPartInTradeSql,
+} from "@repo/api/services/trade-lists";
 import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import {
@@ -18,7 +23,7 @@ import {
   userAddress,
   wantAlertSent,
 } from "@repo/db/schema";
-import { and, eq, inArray, isNull, or, type SQL, sql } from "drizzle-orm";
+import { and, eq, inArray, isNull, type SQL, sql } from "drizzle-orm";
 
 import { redis } from "../lib/redis";
 import {
@@ -77,15 +82,7 @@ export async function sendWantAlerts() {
   const discoverable = await db
     .select({ id: lists.id })
     .from(lists)
-    .where(
-      and(
-        eq(lists.discoverable, true),
-        or(
-          eq(lists.listTypeNew, "want"),
-          and(inArray(lists.listTypeNew, ["have", "sale"]), eq(lists.isProfileBind, true)),
-        ),
-      ),
-    );
+    .where(and(eq(lists.discoverable, true), takesPartInTrade));
 
   const [storedCursor, storedState] = await Promise.all([
     redis.get(CURSOR_KEY),
@@ -205,8 +202,7 @@ async function fetchPairs(where: SQL, order: Order, limit: number | null): Promi
       FROM list_entries e
       JOIN lists l ON l.id = e.list_id
       WHERE l.discoverable
-        AND l.list_type_new IN ('have', 'sale', 'want')
-        AND (l.list_type_new = 'want' OR l.is_profile_bind)
+        AND ${takesPartInTradeSql("l")}
         AND e.collection_slug IS NOT NULL
         AND ${where}
     ),
@@ -225,7 +221,7 @@ async function fetchPairs(where: SQL, order: Order, limit: number | null): Promi
       JOIN list_entries o ON o.collection_slug = c.slug
       JOIN lists ol ON ol.id = o.list_id
       WHERE c.type = 'want'
-        AND ol.list_type_new IN ('have', 'sale') AND ol.is_profile_bind
+        AND ${offersOnTradeSql("ol")}
         AND ol.match_alerts AND ol.user_id <> c.user_id
     )
     SELECT entry_id, list_id, direction, offer_list_id, want_list_id, slug, objekt_id FROM pairs p
@@ -295,15 +291,9 @@ async function loadContext(pairs: AlertPair[]) {
 
   const nameOf = new Map(users.map((u) => [u.id, u.name]));
   const nicknameOf = new Map(
-    addressRows.map((row) => [row.address.toLowerCase(), row.hideNickname ? null : row.nickname]),
+    addressRows.map((row) => [row.address.toLowerCase(), visibleNickname(row)]),
   );
-  const addresses = new Map<string, Set<string>>();
-  for (const row of addressRows) {
-    if (!row.userId) continue;
-    const set = addresses.get(row.userId) ?? new Set<string>();
-    set.add(row.address.toLowerCase());
-    addresses.set(row.userId, set);
-  }
+  const addresses = addressesByUser(addressRows);
 
   const alertLists = new Map(
     listRows.map((list): [number, AlertList] => [

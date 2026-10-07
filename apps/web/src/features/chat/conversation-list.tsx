@@ -8,7 +8,7 @@ import {
 } from "@phosphor-icons/react";
 import type { ChatBox, ConversationRow } from "@repo/api/schemas/chat";
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
+import { Link, useHydrated } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 
 import { PendingStatus } from "@/components/router/pending";
@@ -18,7 +18,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { offerNo } from "@/features/offers/format";
-import { useHydrated } from "@/hooks/use-hydrated";
 import { relativeTime } from "@/lib/time";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";

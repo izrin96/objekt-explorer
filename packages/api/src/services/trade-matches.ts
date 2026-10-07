@@ -28,6 +28,7 @@ import {
   recount,
   toPartnerIdentity,
   visibleNickname,
+  addressesByUser,
 } from "../lib/trade-rank";
 import { CARD_LIMIT, type TradeFilter } from "../schemas/trade";
 import { fetchCollectionsBySlug } from "./list";
@@ -36,6 +37,7 @@ import { getCache, redis } from "./redis";
 import { reputationOf } from "./reputation";
 import { notBlockedEither, notTradeSanctioned } from "./safety";
 import { marketVersion } from "./safety-cache";
+import { takesPartInTrade, takesPartInTradeSql } from "./trade-lists";
 
 const HAVING: Record<TradeFilter, ReturnType<typeof sql>> = {
   all: sql``,
@@ -79,8 +81,7 @@ export async function fetchTradeCandidates(
     partner_lists AS (
       SELECT l.id, l.user_id, l.list_type_new, l.updated_at FROM lists l
       WHERE l.discoverable
-        AND l.list_type_new IN ('have', 'sale', 'want')
-        AND (l.list_type_new = 'want' OR l.is_profile_bind)
+        AND ${takesPartInTradeSql("l")}
         AND l.user_id <> ${userId}
         AND NOT EXISTS (
           SELECT 1 FROM hidden_trade_partner h
@@ -146,15 +147,7 @@ export async function resolveTradeSides(userId: string, slug: string | undefined
   const myLists = await db
     .select({ id: lists.id, slug: lists.slug, listTypeNew: lists.listTypeNew })
     .from(lists)
-    .where(
-      and(
-        eq(lists.userId, userId),
-        or(
-          eq(lists.listTypeNew, "want"),
-          and(inArray(lists.listTypeNew, ["have", "sale"]), eq(lists.isProfileBind, true)),
-        ),
-      ),
-    );
+    .where(and(eq(lists.userId, userId), takesPartInTrade));
   const named = slug === undefined ? undefined : myLists.find((list) => list.slug === slug);
   return matchSides(myLists, named?.id ?? null);
 }
@@ -258,13 +251,7 @@ async function computeTradeMatches(userId: string, sides: Sides, filter: TradeFi
       .where(inArray(userAddress.userId, [userId, ...partnerIds])),
   ]);
 
-  const addressesOf = new Map<string, Set<string>>();
-  for (const row of addressRows) {
-    if (!row.userId) continue;
-    const set = addressesOf.get(row.userId) ?? new Set<string>();
-    set.add(row.address.toLowerCase());
-    addressesOf.set(row.userId, set);
-  }
+  const addressesOf = addressesByUser(addressRows);
   const none = new Set<string>();
 
   const haveIds = new Set(sides.haveListIds);

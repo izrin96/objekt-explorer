@@ -73,7 +73,6 @@ export const actInputSchema = z
         : input.action === "ban" || input.days === undefined,
     { message: "invalid_days", path: ["days"] },
   );
-export type ActInput = z.infer<typeof actInputSchema>;
 
 export const revokeInputSchema = z.object({
   sanctionId: z.number().int().positive(),

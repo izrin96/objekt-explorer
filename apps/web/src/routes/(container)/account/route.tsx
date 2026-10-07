@@ -1,15 +1,12 @@
-import { Outlet, createFileRoute, redirect } from "@tanstack/react-router";
+import { Outlet, createFileRoute } from "@tanstack/react-router";
 
 import { PageHeader } from "@/components/shared/page-header";
 import { AccountMenu } from "@/features/account/account-nav";
-import { currentUserOptions } from "@/features/user/queries";
+import { requireSignedIn } from "@/features/user/queries";
 import { m } from "@/paraglide/messages";
 
 export const Route = createFileRoute("/(container)/account")({
-  beforeLoad: async ({ context: { queryClient }, location }) => {
-    const user = await queryClient.query({ ...currentUserOptions, staleTime: "static" });
-    if (!user) throw redirect({ to: "/login", search: { redirect: location.href } });
-  },
+  beforeLoad: requireSignedIn,
   component: AccountLayout,
 });
 

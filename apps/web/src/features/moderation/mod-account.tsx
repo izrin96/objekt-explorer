@@ -3,7 +3,7 @@ import type { Outputs } from "@repo/api";
 import { FLAG_CATEGORIES } from "@repo/api/schemas/chat";
 import { type ExcerptOffer, isStaffRole, roleList } from "@repo/api/schemas/moderation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
+import { Link, useHydrated } from "@tanstack/react-router";
 import { useState } from "react";
 
 import { PendingStatus } from "@/components/router/pending";
@@ -28,7 +28,6 @@ import { offerNo, tradeNo, tradeStatusText } from "@/features/offers/format";
 import { ItemLabel } from "@/features/offers/item-label";
 import { ProfileLink } from "@/features/profile/profile-hover-card";
 import { formatCurrency } from "@/features/settings/use-currency";
-import { useHydrated } from "@/hooks/use-hydrated";
 import { displayNickname } from "@/lib/address";
 import { orpc } from "@/lib/orpc";
 import { errorReason } from "@/lib/orpc-error";

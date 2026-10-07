@@ -5,6 +5,7 @@ import {
   type TransferType,
 } from "@repo/api/schemas/transfers";
 import { Addresses } from "@repo/lib";
+import { truncateAddress } from "@repo/lib/address";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
@@ -24,7 +25,7 @@ import { SingleSelect } from "@/features/filters/single-select";
 import { useCanonicalFilters } from "@/features/filters/use-filters";
 import { ObjektDrawer } from "@/features/objekt/drawer";
 import { ObjektNameButton } from "@/features/objekt/objekt-hover-card";
-import { isSameAddress, truncateAddress } from "@/lib/address";
+import { isSameAddress } from "@/lib/address";
 import { m } from "@/paraglide/messages";
 
 import { CheckpointPopover } from "../checkpoint-popover";

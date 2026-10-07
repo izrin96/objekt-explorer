@@ -662,5 +662,3 @@ export type ListEntry = typeof listEntries.$inferSelect;
 export type Offer = typeof offer.$inferSelect;
 export type OfferItem = typeof offerItem.$inferSelect;
 export type Trade = typeof trade.$inferSelect;
-export type TradeLeg = typeof tradeLeg.$inferSelect;
-export type TradeFeedback = typeof tradeFeedback.$inferSelect;

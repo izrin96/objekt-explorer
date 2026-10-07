@@ -8,6 +8,7 @@ import {
   StorefrontIcon,
 } from "@phosphor-icons/react";
 import type { MarketListing, SortBy } from "@repo/api/schemas/market";
+import { truncateAddress } from "@repo/lib/address";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
@@ -25,7 +26,7 @@ import { ProfileCell } from "@/features/profile/profile-hover-card";
 import { formatCurrency, useCurrency } from "@/features/settings/use-currency";
 import { collectionPostCountsOptions } from "@/features/trade/queries";
 import { useUserLists, useUserProfiles } from "@/features/user/hooks";
-import { isSameAddress, truncateAddress } from "@/lib/address";
+import { isSameAddress } from "@/lib/address";
 import { formatTimestamp } from "@/lib/time";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";

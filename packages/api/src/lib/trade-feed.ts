@@ -1,5 +1,6 @@
 import type { ListTypeNew } from "../schemas/list";
 import type { PostType } from "../schemas/trade";
+import { HOUR_MS } from "./time";
 import { isIdle } from "./trade-rank";
 
 export const FEED_PAGE_SIZE = 24;
@@ -7,8 +8,6 @@ export const FEED_PAGE_SIZE = 24;
 export const FEED_FETCH_SIZE = 36;
 export const PREVIEW_LIMIT = 8;
 export const BUMP_COOLDOWN_HOURS = 24;
-
-const HOUR_MS = 60 * 60 * 1000;
 
 export type PostTag = Exclude<PostType, "all">;
 export type SideRole = "have" | "want" | "sale";

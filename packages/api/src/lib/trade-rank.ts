@@ -1,11 +1,10 @@
 import { type ListTypeNew, tradeSideOf } from "../schemas/list";
 import type { TradeFilter } from "../schemas/trade";
+import { DAY_MS } from "./time";
 
 export const PARTNER_LIMIT = 50;
 export const CANDIDATE_LIMIT = 200;
 export const IDLE_DAYS = 30;
-
-const DAY_MS = 24 * 60 * 60 * 1000;
 
 export type MyList = { id: number; listTypeNew: ListTypeNew };
 
@@ -237,6 +236,18 @@ export type PartnerIdentity = {
   /** the partner's other bound addresses among the matched lists */
   also: AddressRef[];
 };
+
+/** Each account's linked addresses, lowercase. */
+export function addressesByUser(rows: readonly { userId: string | null; address: string }[]) {
+  const map = new Map<string, Set<string>>();
+  for (const row of rows) {
+    if (!row.userId) continue;
+    const set = map.get(row.userId) ?? new Set<string>();
+    set.add(row.address.toLowerCase());
+    map.set(row.userId, set);
+  }
+  return map;
+}
 
 export function visibleNickname(info: Pick<AddressInfo, "nickname" | "hideNickname">) {
   return info.hideNickname ? null : (info.nickname ?? null);

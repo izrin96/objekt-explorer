@@ -8,9 +8,10 @@ import {
   WarningIcon,
 } from "@phosphor-icons/react";
 import { type TradeView as Trade, TRADE_RATINGS, type TradeRating } from "@repo/api/schemas/offer";
+import { truncateAddress } from "@repo/lib/address";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
+import { Link, useHydrated } from "@tanstack/react-router";
 import { useId, useState } from "react";
 
 import { PendingStatus } from "@/components/router/pending";
@@ -32,8 +33,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { untilLabel } from "@/features/chat/format";
 import { useSafetyDialogs } from "@/features/moderation/safety-dialogs";
 import { ObjektDrawer } from "@/features/objekt/drawer";
-import { useHydrated } from "@/hooks/use-hydrated";
-import { truncateAddress } from "@/lib/address";
 import { orpc } from "@/lib/orpc";
 import { m } from "@/paraglide/messages";
 import { useUserSocketLive } from "@/stores/user-socket";

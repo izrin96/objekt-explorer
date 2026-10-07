@@ -1,13 +1,6 @@
 import { GearIcon } from "@phosphor-icons/react";
 import type { ChatBox } from "@repo/api/schemas/chat";
-import {
-  Link,
-  Outlet,
-  createFileRoute,
-  redirect,
-  useLocation,
-  useParams,
-} from "@tanstack/react-router";
+import { Link, Outlet, createFileRoute, useLocation, useParams } from "@tanstack/react-router";
 import { type ReactNode, useEffect, useRef } from "react";
 
 import { PageHeader } from "@/components/shared/page-header";
@@ -16,17 +9,14 @@ import { BoxTabs } from "@/features/chat/box-tabs";
 import { ConversationList, ConversationListSkeleton } from "@/features/chat/conversation-list";
 import { conversationsOptions } from "@/features/chat/queries";
 import { boxOf, messagesSearchSchema } from "@/features/chat/search-schema";
-import { currentUserOptions } from "@/features/user/queries";
+import { requireSignedIn } from "@/features/user/queries";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 // on the layout so the list keeps its folder while a thread is open beside it
 export const Route = createFileRoute("/(container)/messages")({
   validateSearch: messagesSearchSchema,
-  beforeLoad: async ({ context: { queryClient }, location }) => {
-    const user = await queryClient.query({ ...currentUserOptions, staleTime: "static" });
-    if (!user) throw redirect({ to: "/login", search: { redirect: location.href } });
-  },
+  beforeLoad: requireSignedIn,
   loaderDeps: ({ search }) => ({ box: boxOf(search) }),
   loader: async ({ context: { queryClient }, deps }) => {
     // a failed read leaves the list to show its error and retry, not the page to fail

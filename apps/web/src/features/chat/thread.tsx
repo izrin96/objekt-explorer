@@ -9,7 +9,7 @@ import {
 import type { ChatMessage } from "@repo/api/schemas/chat";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
+import { Link, useHydrated } from "@tanstack/react-router";
 import { Fragment, type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { PendingStatus } from "@/components/router/pending";
@@ -24,7 +24,6 @@ import { useOfferBuilder } from "@/features/offers/offer-builder";
 import { counterRequest, OfferCard } from "@/features/offers/offer-card";
 import { TrustLine } from "@/features/offers/trust-line";
 import { ProfileLink } from "@/features/profile/profile-hover-card";
-import { useHydrated } from "@/hooks/use-hydrated";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";

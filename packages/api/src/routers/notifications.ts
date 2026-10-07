@@ -2,6 +2,7 @@ import { db } from "@repo/db";
 import { notification, notificationPref } from "@repo/db/schema";
 import { and, desc, eq, gt, inArray, isNull, or, sql } from "drizzle-orm";
 
+import { iso } from "../lib/time";
 import { authed } from "../orpc";
 import {
   LISTED_NOTIFICATION_TYPES,
@@ -49,7 +50,7 @@ export const notificationsRouter = {
           id: row.id,
           type: row.type,
           payload: row.payload,
-          readAt: row.readAt === null ? null : new Date(row.readAt).toISOString(),
+          readAt: iso(row.readAt),
           createdAt: new Date(row.createdAt).toISOString(),
         });
         return parsed.success ? [parsed.data] : [];

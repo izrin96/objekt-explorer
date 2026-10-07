@@ -8,6 +8,7 @@ import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { type SQL, and, eq, inArray, isNotNull, ne, sql } from "drizzle-orm";
 
 import { isMessageable, toMessagePref } from "../lib/chat-rules";
+import { iso } from "../lib/time";
 import {
   assemblePost,
   BUMP_COOLDOWN_HOURS,
@@ -30,6 +31,7 @@ import {
   IDLE_DAYS,
   toPartnerIdentity,
   visibleNickname,
+  addressesByUser,
 } from "../lib/trade-rank";
 import type { ListTypeNew } from "../schemas/list";
 import type { BrowseFilters, FeedCursor, PostType } from "../schemas/trade";
@@ -46,6 +48,7 @@ import { getCache, redis } from "./redis";
 import { reputationOf } from "./reputation";
 import { notBlockedEither, notTradeSanctioned } from "./safety";
 import { marketVersion } from "./safety-cache";
+import { offersOnTrade, takesPartInTradeSql } from "./trade-lists";
 import { fetchHoldings } from "./trade-matches";
 
 const POST_TTL_SECONDS = 60;
@@ -59,7 +62,6 @@ const isTradeType = (type: ListTypeNew): type is (typeof TRADE_TYPES)[number] =>
 const TAG_TYPE: Record<PostTag, ListTypeNew> = { wtt: "have", wtb: "want", wts: "sale" };
 
 const unique = <T>(values: T[]) => [...new Set(values)];
-const toIso = (at: string | null) => (at === null ? null : new Date(at).toISOString());
 
 /**
  * Posts on Trade: each list on Trade, with a want list folded into the have list that links
@@ -69,9 +71,7 @@ const postsCte = sql`
   on_trade AS (
     SELECT id, user_id, list_type_new, linked_list_id, bumped_at, updated_at, created_at
     FROM lists
-    WHERE show_on_trade AND list_type_new IN ('have', 'want', 'sale')
-      -- have and sale only while bound: Trade checks the bound profile's holdings
-      AND (list_type_new = 'want' OR is_profile_bind)
+    WHERE show_on_trade AND ${takesPartInTradeSql()}
   ),
   posts AS (
     SELECT
@@ -207,17 +207,6 @@ function fetchAddresses(userIds: string[]): Promise<AddressRow[]> {
     })
     .from(userAddress)
     .where(inArray(userAddress.userId, userIds));
-}
-
-function addressesByUser(rows: AddressRow[]) {
-  const map = new Map<string, Set<string>>();
-  for (const row of rows) {
-    if (!row.userId) continue;
-    const set = map.get(row.userId) ?? new Set<string>();
-    set.add(row.address.toLowerCase());
-    map.set(row.userId, set);
-  }
-  return map;
 }
 
 type OwnedRef = { userId: string; objektId: string | null; slug: string };
@@ -398,14 +387,7 @@ async function computeHaveIndex(userId: string): Promise<[string, number[]][]> {
       })
       .from(listEntries)
       .innerJoin(lists, eq(lists.id, listEntries.listId))
-      .where(
-        and(
-          eq(lists.userId, userId),
-          inArray(lists.listTypeNew, ["have", "sale"]),
-          eq(lists.isProfileBind, true),
-          isNotNull(listEntries.collectionSlug),
-        ),
-      ),
+      .where(and(eq(lists.userId, userId), offersOnTrade, isNotNull(listEntries.collectionSlug))),
     fetchAddresses([userId]),
   ]);
   if (entries.length === 0) return [];
@@ -559,8 +541,8 @@ export async function browseFeed(
           members.map((list) => ({ profileAddress: list.profileAddress, matches: 0 })),
           addressRows.filter((a) => a.userId === account.id),
         ),
-        bumpedAt: toIso(post.bumpedAt),
-        updatedAt: toIso(post.updatedAt)!,
+        bumpedAt: iso(post.bumpedAt),
+        updatedAt: iso(post.updatedAt)!,
         sides: assembled.sides.map((side) => ({
           role: side.role,
           list: toListLink(side.list, nicknameOf),
@@ -581,7 +563,7 @@ export async function browseFeed(
   const hasMore = examined < rows.length || rows.length === FEED_FETCH_SIZE;
   return {
     posts,
-    nextCursor: hasMore && last ? { bumpedAt: toIso(last.cursor_at)!, id: last.id } : undefined,
+    nextCursor: hasMore && last ? { bumpedAt: iso(last.cursor_at)!, id: last.id } : undefined,
     collections: Object.fromEntries(collectionRows.map((c) => [c.slug, c])) as Record<
       string,
       ValidObjekt
@@ -607,8 +589,8 @@ export async function fetchMyPosts(userId: string) {
       list ? [{ slug: list.slug, name: list.name, listTypeNew: list.listTypeNew }] : [],
     ),
     listed: !isPostIdle(post, now),
-    bumpedAt: toIso(post.bumpedAt),
-    updatedAt: toIso(post.updatedAt)!,
+    bumpedAt: iso(post.bumpedAt),
+    updatedAt: iso(post.updatedAt)!,
     nextBumpAt: nextBumpAt(post.bumpedAt, now),
   }));
 }
@@ -649,7 +631,7 @@ export async function bumpPost(userId: string, slug: string) {
 
   const now = new Date();
   const bumped = latest(...result.rows.map((row) => row.bumped_at));
-  if (bumped !== null) return { bumpedAt: toIso(bumped)!, nextBumpAt: nextBumpAt(bumped, now) };
+  if (bumped !== null) return { bumpedAt: iso(bumped)!, nextBumpAt: nextBumpAt(bumped, now) };
 
   const own = await fetchOwnTradeLists(userId);
   const post = pairPosts(own).find((p) =>
@@ -687,7 +669,7 @@ export async function setShowOnTrade(userId: string, slug: string, on: boolean) 
     });
   if (!saved) throw new ORPCError("NOT_FOUND");
   await touchList([list.id]);
-  return { ...saved, bumpedAt: toIso(saved.bumpedAt) };
+  return { ...saved, bumpedAt: iso(saved.bumpedAt) };
 }
 
 type CountRow = {

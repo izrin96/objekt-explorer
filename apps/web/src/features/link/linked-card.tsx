@@ -1,5 +1,6 @@
 import { DotsThreeIcon, LinkBreakIcon, PencilSimpleIcon } from "@phosphor-icons/react";
 import type { LinkedPreview } from "@repo/api/schemas/cosmo-link";
+import { truncateAddress } from "@repo/lib/address";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { type RefObject, useRef, useState } from "react";
@@ -28,7 +29,7 @@ import {
 import { BannerThumb, bannerThumbFrameClass } from "@/features/profile/banner-thumb";
 import { PROFILE_PAGE_KEY } from "@/features/profile/queries";
 import { currentUserOptions } from "@/features/user/queries";
-import { displayNickname, nicknameParam, truncateAddress } from "@/lib/address";
+import { displayNickname, nicknameParam } from "@/lib/address";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";

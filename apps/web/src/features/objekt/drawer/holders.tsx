@@ -1,5 +1,6 @@
 import { CaretDownIcon, UsersThreeIcon, WarningIcon } from "@phosphor-icons/react";
 import type { HolderBucketKey, HolderRow, HoldersOutput } from "@repo/api/schemas/collections";
+import { truncateAddress } from "@repo/lib/address";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { InView } from "react-intersection-observer";
 
@@ -8,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { ProfileCell } from "@/features/profile/profile-hover-card";
-import { isSameAddress, truncateAddress } from "@/lib/address";
+import { isSameAddress } from "@/lib/address";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 

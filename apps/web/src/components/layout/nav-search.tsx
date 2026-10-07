@@ -1,6 +1,7 @@
 import { MagnifyingGlassIcon, TrashSimpleIcon } from "@phosphor-icons/react";
 import { MAX_USER_SEARCH_LENGTH } from "@repo/api/schemas/user";
 import type { CosmoPublicUser } from "@repo/cosmo/types/user";
+import { truncateAddress } from "@repo/lib/address";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo } from "react";
 
@@ -22,7 +23,6 @@ import {
 import { Kbd, KbdGroup } from "@/components/ui/kbd";
 import { useUserSearchStore } from "@/features/user/search-store";
 import { UserRowBody, UserSearchEmpty, useUserSearch } from "@/features/user/user-search";
-import { truncateAddress } from "@/lib/address";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 

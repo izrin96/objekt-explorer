@@ -1,7 +1,12 @@
 import { type HeldItem, itemStillHeld, type SeenTransfer } from "@repo/api/lib/offer-rules";
 import { batchMatters, type LegResult, tradeOutcome } from "@repo/api/lib/trade-match";
 import { notifyChannel, type UserSocketMessage } from "@repo/api/schemas/notification";
-import { type OfferPayload, type TradePayload, VERIFIER_LAST_KEY } from "@repo/api/schemas/offer";
+import {
+  type OfferPayload,
+  REMIND_AFTER_HOURS,
+  type TradePayload,
+  VERIFIER_LAST_KEY,
+} from "@repo/api/schemas/offer";
 import { reputationKey } from "@repo/api/schemas/reputation";
 import { partyNames, writeNotes } from "@repo/api/services/offer-notes";
 import { type LegRow, loadOpenLegs, matchOpenLegs } from "@repo/api/services/trade-verify";
@@ -21,7 +26,7 @@ const LOCK_TTL_MS = 5 * 60 * 1000;
 const LOCK_REFRESH_MS = 60 * 1000;
 const DEBOUNCE_MS = 5000;
 const OWNER_BATCH = 500;
-const REMIND_AFTER = sql`interval '72 hours'`;
+const REMIND_AFTER = sql`make_interval(hours => ${REMIND_AFTER_HOURS})`;
 
 const unique = <T>(values: T[]) => [...new Set(values)];
 
@@ -398,7 +403,7 @@ async function sentToReceivers(items: HeldItem[]): Promise<SeenTransfer[]> {
   );
 }
 
-/** One reminder per trade, 72 hours after accept, to each party still owing a transfer. */
+/** One reminder per trade, `REMIND_AFTER_HOURS` after accept, to each party still owing a transfer. */
 async function remindStalls(): Promise<Publish[]> {
   const stalled = await db
     .select({ id: trade.id })

@@ -1,4 +1,5 @@
-import { useHydrated } from "@/hooks/use-hydrated";
+import { useHydrated } from "@tanstack/react-router";
+
 import { formatTimestamp } from "@/lib/time";
 
 /** An instant in the viewer's zone, printed once hydrated: the server renders in UTC. */

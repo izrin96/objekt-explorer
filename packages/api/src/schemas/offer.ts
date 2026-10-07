@@ -7,7 +7,6 @@ import { reputationSchema } from "./reputation";
 export const OFFER_SIDE_LIMIT = 50;
 export const OFFER_NOTE_MAX_LENGTH = 280;
 export const OPEN_OFFER_LIMIT = 20;
-export const OFFER_EXPIRY_DAYS = 7;
 export const TOPUP_MAX = 9_999_999_999.99;
 export const CANDIDATE_PAGE_SIZE = 200;
 export const HISTORY_PAGE_SIZE = 20;
@@ -249,7 +248,6 @@ export const tradeLegViewSchema = z.object({
   txHash: z.string().nullable(),
   verifiedObjektId: z.string().nullable(),
 });
-export type TradeLegView = z.infer<typeof tradeLegViewSchema>;
 
 export const tradeViewSchema = z.object({
   id: z.number(),
@@ -330,7 +328,6 @@ export const TRADE_EVENTS = [
   "failed",
   "reminder",
 ] as const;
-export type TradeEvent = (typeof TRADE_EVENTS)[number];
 
 /** Data only. `reason` is set on `cancelled`: the other party cancelled, or an objekt left the wallet. */
 export const tradePayloadSchema = z.object({

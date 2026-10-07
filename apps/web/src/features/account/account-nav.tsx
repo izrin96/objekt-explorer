@@ -15,7 +15,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation } from "@tanstack/react-router";
 import { type ReactNode, useId } from "react";
 
-import { accountsOptions } from "@/features/account/queries";
+import { accountsOptions, hasPassword } from "@/features/account/queries";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
@@ -33,8 +33,8 @@ const SECTIONS = [
 /** The sections this account has: Password only with a password to change. */
 function useSections() {
   const accounts = useQuery(accountsOptions);
-  const hasPassword = accounts.data?.some((a) => a.providerId === "credential") ?? false;
-  return SECTIONS.filter((section) => section.to !== "/account/password" || hasPassword);
+  const password = accounts.data ? hasPassword(accounts.data) : false;
+  return SECTIONS.filter((section) => section.to !== "/account/password" || password);
 }
 
 /** `/account` shows General beside the menu, so General is current there too. */

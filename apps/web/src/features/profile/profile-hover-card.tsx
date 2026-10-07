@@ -1,4 +1,5 @@
 import { LockSimpleIcon } from "@phosphor-icons/react";
+import { truncateAddress } from "@repo/lib/address";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { type ReactNode, useEffect, useRef } from "react";
@@ -7,7 +8,7 @@ import { CursorCard, cursorCardDelays } from "@/components/shared/cursor-card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TooltipPrimitive } from "@/components/ui/tooltip";
-import { displayNickname, nicknameParam, truncateAddress } from "@/lib/address";
+import { displayNickname, nicknameParam } from "@/lib/address";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";

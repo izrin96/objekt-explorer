@@ -1,15 +1,14 @@
 import type { NotificationCursor } from "@repo/api/schemas/notification";
 
 import { orpc } from "@/lib/orpc";
-
-const POLL_MS = 60_000;
+import { pollUnlessLive } from "@/stores/user-socket";
 
 /** Polls only while the live socket is down; focus always refetches. */
 export const unreadCountOptions = (live: boolean) =>
   orpc.notifications.unreadCount.queryOptions({
     staleTime: 0,
     refetchOnWindowFocus: true,
-    refetchInterval: live ? false : POLL_MS,
+    refetchInterval: pollUnlessLive(live),
   });
 
 export const notificationsOptions = () =>

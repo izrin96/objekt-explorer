@@ -129,7 +129,7 @@ export const muteInputSchema = z.object({
 export const messageSettingsSchema = z.object({
   allow: z.enum(MESSAGE_ALLOW),
   /** the linked address that names the account in chat; null is the first linked */
-  chatAs: z.string().max(42).nullable(),
+  chatAs: addressSchema.nullable(),
 });
 export type MessageSettings = z.infer<typeof messageSettingsSchema>;
 

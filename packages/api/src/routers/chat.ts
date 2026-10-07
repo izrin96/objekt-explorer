@@ -1,10 +1,11 @@
 import { ORPCError } from "@orpc/server";
 import { db } from "@repo/db";
-import { conversationMember, message, messagePref, userAddress } from "@repo/db/schema";
+import { conversationMember, message } from "@repo/db/schema";
 import { and, asc, desc, eq, gt, lt, sql } from "drizzle-orm";
 
 import { isMuted, rowUnread, sendVerdict } from "../lib/chat-rules";
 import { scanMessage } from "../lib/scam-patterns";
+import { HOUR_MS } from "../lib/time";
 import { authed } from "../orpc";
 import {
   CONVERSATION_PAGE_SIZE,
@@ -13,8 +14,6 @@ import {
   type ConversationRow,
   listConversationsInputSchema,
   markReadInputSchema,
-  MESSAGE_PREF_DEFAULTS,
-  type MessageSettings,
   MUTE_HOURS,
   muteInputSchema,
   sendInputSchema,
@@ -39,6 +38,7 @@ import {
   resolveCard,
   toChatMessages,
   updateMember,
+  saveSettings,
 } from "../services/chat";
 import { reputationOf } from "../services/reputation";
 import { notBlockedBy } from "../services/safety";
@@ -339,7 +339,7 @@ export const chatRouter = {
           ? null
           : until === "always"
             ? "infinity"
-            : new Date(now.getTime() + MUTE_HOURS[until] * 60 * 60 * 1000).toISOString();
+            : new Date(now.getTime() + MUTE_HOURS[until] * HOUR_MS).toISOString();
       const { state } = await updateMember(id, session.user.id, () => ({
         type: "mute",
         until: mutedUntil,
@@ -405,27 +405,5 @@ export const chatRouter = {
 
   setSettings: authed
     .input(setSettingsInputSchema)
-    .handler(async ({ input, context: { session } }) => {
-      const me = session.user.id;
-      const set: Partial<MessageSettings> = {};
-      if (input.allow !== undefined) set.allow = input.allow;
-      if (input.chatAs !== undefined) {
-        const chatAs = input.chatAs?.toLowerCase() ?? null;
-        if (chatAs !== null) {
-          const linked = await db.$count(
-            userAddress,
-            and(eq(userAddress.address, chatAs), eq(userAddress.userId, me)),
-          );
-          if (linked === 0) throw new ORPCError("BAD_REQUEST", { message: "Not your profile" });
-        }
-        set.chatAs = chatAs;
-      }
-      if (Object.keys(set).length > 0) {
-        await db
-          .insert(messagePref)
-          .values({ userId: me, ...MESSAGE_PREF_DEFAULTS, ...set })
-          .onConflictDoUpdate({ target: messagePref.userId, set });
-      }
-      return fetchSettings(me);
-    }),
+    .handler(({ input, context: { session } }) => saveSettings(session.user.id, input)),
 };

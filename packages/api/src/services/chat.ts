@@ -34,6 +34,8 @@ import {
 } from "../lib/chat-rules";
 import type { ActorLimits } from "../lib/offer-rules";
 import { effectiveSanction } from "../lib/sanctions";
+import { HOUR_MS } from "../lib/time";
+import { visibleNickname } from "../lib/trade-rank";
 import {
   type CardInput,
   type CardView,
@@ -46,6 +48,7 @@ import {
   type StoredCard,
   storedCardSchema,
   type MessageSettings,
+  MESSAGE_PREF_DEFAULTS,
 } from "../schemas/chat";
 import { publishNotify } from "../user-socket";
 import { loadIdentities } from "./identities";
@@ -85,6 +88,30 @@ export async function fetchPref(userId: string): Promise<MessagePref> {
 export async function fetchSettings(userId: string): Promise<MessageSettings> {
   const [pref, identities] = await Promise.all([fetchPref(userId), loadIdentities([userId])]);
   return { ...pref, chatAs: identities.get(userId)?.identity.address ?? null };
+}
+
+/** Saves what the input names; Chat as must be one of the account's linked addresses. */
+export async function saveSettings(userId: string, input: Partial<MessageSettings>) {
+  const set: Partial<MessageSettings> = {};
+  if (input.allow !== undefined) set.allow = input.allow;
+  if (input.chatAs !== undefined) {
+    const chatAs = input.chatAs?.toLowerCase() ?? null;
+    if (chatAs !== null) {
+      const linked = await db.$count(
+        userAddress,
+        and(eq(userAddress.address, chatAs), eq(userAddress.userId, userId)),
+      );
+      if (linked === 0) throw new ORPCError("BAD_REQUEST", { message: "Not your profile" });
+    }
+    set.chatAs = chatAs;
+  }
+  if (Object.keys(set).length > 0) {
+    await db
+      .insert(messagePref)
+      .values({ userId, ...MESSAGE_PREF_DEFAULTS, ...set })
+      .onConflictDoUpdate({ target: messagePref.userId, set });
+  }
+  return fetchSettings(userId);
 }
 
 /** The account behind a Message target. */
@@ -163,7 +190,7 @@ export async function lockStarts(tx: Tx, userId: string) {
 
 /** The times of the user's new conversations in the start window. */
 export async function recentStarts(tx: Tx, userId: string, now: Date): Promise<number[]> {
-  const since = new Date(now.getTime() - START_WINDOW_HOURS * 60 * 60 * 1000).toISOString();
+  const since = new Date(now.getTime() - START_WINDOW_HOURS * HOUR_MS).toISOString();
   const rows = await tx
     .select({ createdAt: conversation.createdAt })
     .from(conversation)
@@ -599,7 +626,10 @@ export async function hydrateCards(cards: StoredCard[]) {
             profile: list.profileAddress
               ? {
                   address: list.profileAddress.toLowerCase(),
-                  nickname: list.hideNickname ? null : (list.nickname ?? null),
+                  nickname: visibleNickname({
+                    nickname: list.nickname ?? null,
+                    hideNickname: list.hideNickname ?? false,
+                  }),
                 }
               : null,
           }

@@ -4,6 +4,7 @@ import type { QueryClient } from "@tanstack/react-query";
 
 import { client, orpc } from "@/lib/orpc";
 import { isNotFound } from "@/lib/orpc-error";
+import { pollUnlessLive } from "@/stores/user-socket";
 
 import {
   appendToThread,
@@ -13,14 +14,12 @@ import {
   type ThreadData,
 } from "./thread-cache";
 
-const POLL_MS = 60_000;
-
 /** Polls only while the live socket is down; focus always refetches. */
 export const chatUnreadOptions = (live: boolean) =>
   orpc.chat.unreadCount.queryOptions({
     staleTime: 0,
     refetchOnWindowFocus: true,
-    refetchInterval: live ? false : POLL_MS,
+    refetchInterval: pollUnlessLive(live),
   });
 
 /** Requests never reach the badge, so the Requests tab carries their count. */

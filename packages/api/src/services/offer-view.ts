@@ -8,6 +8,7 @@ import {
   offerSummary,
   topupPayer,
 } from "../lib/offer-rules";
+import { iso } from "../lib/time";
 import { parseCaution, type StoredCard } from "../schemas/chat";
 import type { OfferCancelReason, OfferStatus, OfferView, TradeStatus } from "../schemas/offer";
 
@@ -72,8 +73,6 @@ export function offerItemCards(offers: Iterable<HydratedOffer>): StoredCard[] {
     ),
   );
 }
-
-export const iso = (at: string | null) => (at === null ? null : new Date(at).toISOString());
 
 export function topupView(row: HydratedOffer, viewerIsSender: boolean) {
   if (row.topup_amount === null || row.topup_currency === null || row.topup_payer === null) {

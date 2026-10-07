@@ -7,10 +7,9 @@ import type { QueryClient } from "@tanstack/react-query";
 
 import { orpc } from "@/lib/orpc";
 import { isNotFound } from "@/lib/orpc-error";
+import { pollUnlessLive } from "@/stores/user-socket";
 
 export type OfferAddress = { conversationId: number } | { target: ChatTarget };
-
-const POLL_MS = 60_000;
 
 /** A refusal answers the same on every try. */
 const retryUnlessRefused = (count: number, error: unknown) =>
@@ -98,7 +97,7 @@ export const tradeOptions = (tradeId: number, live = true) =>
     input: { tradeId },
     staleTime: 0,
     refetchOnWindowFocus: true,
-    refetchInterval: live ? false : POLL_MS,
+    refetchInterval: pollUnlessLive(live),
     retry: (count, error) => !isNotFound(error) && count < 2,
   });
 

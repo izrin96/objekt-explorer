@@ -1,4 +1,5 @@
 import { MESSAGE_ALLOW, type MessageAllow } from "@repo/api/schemas/chat";
+import { truncateAddress } from "@repo/lib/address";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
@@ -6,7 +7,7 @@ import { Radio, RadioGroup } from "@/components/ui/radio-group";
 import { toastManager } from "@/components/ui/toast";
 import { chatSettingsOptions } from "@/features/chat/queries";
 import { useUserProfiles } from "@/features/user/hooks";
-import { displayNickname, truncateAddress } from "@/lib/address";
+import { displayNickname } from "@/lib/address";
 import { orpc } from "@/lib/orpc";
 import { m } from "@/paraglide/messages";
 

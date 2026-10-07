@@ -10,8 +10,7 @@ import {
   type TopupInput,
   type TradeStatus,
 } from "../schemas/offer";
-
-const DAY_MS = 24 * 60 * 60 * 1000;
+import { DAY_MS } from "./time";
 
 export type OfferParties = { fromUserId: string; toUserId: string };
 export type OfferState = OfferParties & { status: OfferStatus; expiresAt: string | Date };

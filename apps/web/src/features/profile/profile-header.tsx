@@ -1,5 +1,6 @@
 import { CheckIcon, EyeIcon, EyeSlashIcon } from "@phosphor-icons/react";
 import type { PublicProfile } from "@repo/api/schemas/profile";
+import { truncateAddress } from "@repo/lib/address";
 
 import { ApolloIcon } from "@/components/shared/apollo-icon";
 import { CopyButton } from "@/components/shared/copy-button";
@@ -13,7 +14,7 @@ import { MessageButton } from "@/features/chat/message-button";
 import { EditCosmoDialog } from "@/features/link/edit-cosmo-dialog";
 import { SafetyMenu } from "@/features/moderation/safety-menu";
 import { TrustLine } from "@/features/offers/trust-line";
-import { displayNickname, truncateAddress } from "@/lib/address";
+import { displayNickname } from "@/lib/address";
 import { m } from "@/paraglide/messages";
 import { useSettings } from "@/stores/settings";
 

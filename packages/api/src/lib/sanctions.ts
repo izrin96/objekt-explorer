@@ -8,8 +8,7 @@ import {
 } from "../schemas/moderation";
 import type { OfferSide, OfferStatus } from "../schemas/offer";
 import { effectiveStatus } from "./offer-rules";
-
-const DAY_MS = 24 * 60 * 60 * 1000;
+import { DAY_MS, HOUR_MS, iso } from "./time";
 
 /**
  * When an action's sanction ends: a chat mute after its days, a ban after its days or
@@ -30,7 +29,7 @@ export function sanctionEnd(action: ModAction, days: number | undefined, now: Da
 /** When the reporter may report this account again, or null when they may now. */
 export function reportRetryAt(lastReportAt: string | null, now: Date): Date | null {
   if (lastReportAt === null) return null;
-  const next = new Date(lastReportAt).getTime() + REPORT_WINDOW_HOURS * 60 * 60 * 1000;
+  const next = new Date(lastReportAt).getTime() + REPORT_WINDOW_HOURS * HOUR_MS;
   return next > now.getTime() ? new Date(next) : null;
 }
 
@@ -119,6 +118,6 @@ export function effectiveSanction(
     );
   return {
     reason: last.reason,
-    until: last.expiresAt === null ? null : new Date(last.expiresAt).toISOString(),
+    until: iso(last.expiresAt),
   };
 }

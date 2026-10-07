@@ -8,6 +8,7 @@ import { and, eq, sql } from "drizzle-orm";
 import type { FetchError } from "ofetch";
 
 import { isMessageable, toMessagePref } from "../lib/chat-rules";
+import { HOUR_MS } from "../lib/time";
 import type { ApiMessages } from "../orpc";
 import type { ProfilePreview, PublicProfile, PublicUser } from "../schemas/profile";
 import type { User } from "./auth";
@@ -157,7 +158,7 @@ export async function fetchUserByIdentifier(
     // double check address with cosmo if last check more than 1 hour
     const needsCheck =
       !cachedUser.lastCosmoCheck ||
-      Date.now() - new Date(cachedUser.lastCosmoCheck).getTime() > 60 * 60 * 1000;
+      Date.now() - new Date(cachedUser.lastCosmoCheck).getTime() > HOUR_MS;
 
     if (needsCheck && cachedUser.nickname) {
       const user = await safeFetchByNickname(cachedUser.nickname);

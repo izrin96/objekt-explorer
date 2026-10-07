@@ -40,9 +40,11 @@ function useNavLinks() {
 
 export type NavLink = ReturnType<typeof useNavLinks>[number];
 
-/** A link that also counts as current under another path prefix. */
-export function alsoActive(link: NavLink, pathname: string) {
-  return "also" in link && (pathname === link.also || pathname.startsWith(`${link.also}/`));
+/** Whether a link counts as current under its `also` prefix, beside its own path. */
+export function useAlsoActive() {
+  const pathname = useLocation({ select: (s) => s.pathname });
+  return (link: NavLink) =>
+    "also" in link && (pathname === link.also || pathname.startsWith(`${link.also}/`));
 }
 
 export function AppNav() {
@@ -50,7 +52,7 @@ export function AppNav() {
   const { data: user } = useCurrentUser();
   const overall = useOverallStatus();
   const links = useNavLinks();
-  const pathname = useLocation({ select: (s) => s.pathname });
+  const alsoActive = useAlsoActive();
 
   // z-30: above the cards' own layers and the floating select bar, below every
   // Base UI overlay (sheet / drawer / dialog / popover / menu at z-50, toasts at z-60)
@@ -83,7 +85,7 @@ export function AppNav() {
               key={l.key}
               to={l.to}
               activeOptions={{ exact: l.exact }}
-              data-status={alsoActive(l, pathname) ? "active" : undefined}
+              data-status={alsoActive(l) ? "active" : undefined}
               className="text-muted-foreground hover:text-foreground data-[status=active]:bg-secondary data-[status=active]:text-foreground rounded-[7px] px-2.5 py-1.5 text-sm font-medium whitespace-nowrap"
             >
               {l.label}

@@ -19,6 +19,7 @@ import { and, desc, eq, gt, inArray, or, sql } from "drizzle-orm";
 
 import { canReport } from "../lib/offer-rules";
 import { reportRetryAt, sanctionEnd, shapeExcerpt, shapeExcerptOffer } from "../lib/sanctions";
+import { iso } from "../lib/time";
 import { authed, moderator } from "../orpc";
 import { FLAG_CATEGORIES, type FlagCategory } from "../schemas/chat";
 import {
@@ -107,8 +108,6 @@ async function excerptOffers(offerIds: number[], targetUserId: string, now: Date
     ]),
   );
 }
-
-const iso = (at: string | null) => (at === null ? null : new Date(at).toISOString());
 
 const countBy = <K extends string>(keys: readonly K[], rows: { key: string; count: number }[]) =>
   Object.fromEntries(

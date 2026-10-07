@@ -1,7 +1,7 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 
 import { PasswordPanel } from "@/features/account/panels";
-import { accountsOptions } from "@/features/account/queries";
+import { accountsOptions, hasPassword } from "@/features/account/queries";
 import { generateMetadata } from "@/lib/meta";
 import { m } from "@/paraglide/messages";
 
@@ -10,7 +10,7 @@ export const Route = createFileRoute("/(container)/account/password")({
   ssr: false,
   beforeLoad: async ({ context: { queryClient } }) => {
     const accounts = await queryClient.query({ ...accountsOptions, staleTime: "static" });
-    if (!accounts.some((a) => a.providerId === "credential")) throw notFound();
+    if (!hasPassword(accounts)) throw notFound();
   },
   head: () => generateMetadata({ title: m.account_section_password() }),
   component: PasswordPanel,

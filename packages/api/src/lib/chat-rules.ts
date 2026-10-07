@@ -1,3 +1,5 @@
+import { truncateAddress } from "@repo/lib/address";
+
 import {
   type ChatBox,
   type ChatRefusal,
@@ -9,9 +11,9 @@ import {
   START_LIMIT,
   START_WINDOW_HOURS,
 } from "../schemas/chat";
+import { HOUR_MS } from "./time";
 import { type AddressRef, type PartnerIdentity } from "./trade-rank";
 
-const HOUR_MS = 60 * 60 * 1000;
 const MINUTE_MS = 60 * 1000;
 
 /** Ordered by code point, as the `conversation_pair_ordered` check compares them. */
@@ -234,7 +236,7 @@ export function chatIdentity(
   // Cosmo stores an unnamed profile's nickname as its own address
   const named = chosen.nickname && chosen.nickname.toLowerCase() !== address;
   return {
-    name: named ? chosen.nickname! : `${address.slice(0, 6)}…${address.slice(-4)}`,
+    name: named ? chosen.nickname! : truncateAddress(address),
     address,
     also: [],
   };

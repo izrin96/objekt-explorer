@@ -1,4 +1,5 @@
 import type { ActivityItem } from "@repo/api/schemas/activity";
+import { truncateAddress } from "@repo/lib/address";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { memo } from "react";
 
@@ -7,7 +8,6 @@ import { Timestamp } from "@/components/shared/timestamp";
 import { EVENT_COLOR, type EventKind } from "@/features/objekt/drawer/timeline";
 import { ObjektNameButton } from "@/features/objekt/objekt-hover-card";
 import { ProfileCell } from "@/features/profile/profile-hover-card";
-import { truncateAddress } from "@/lib/address";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
