@@ -109,7 +109,7 @@ The user SHALL be able to hide a partner from the row. A hidden partner SHALL no
 - **THEN** rin.trades disappears from the list at once, and returns after unhiding
 
 ### Requirement: Partner identity
-A partner row SHALL be headed by the Cosmo nickname of the address their best-matching list is bound to, unless that address hides its nickname. Otherwise it SHALL use the account's display name. When the partner's matched lists are bound to more than one address, the row SHALL name the others as well. The row SHALL show the account's avatar. Expanding the row SHALL show a link to the partner's profile and Discord and Twitter badges when the partner has chosen to show socials. They sit inside the expanded row, not on the row's toggle, so a handle can be selected and copied.
+A partner row SHALL be headed by the Cosmo nickname of the address their best-matching list is bound to, whether or not that address has Hide Cosmo ID on (see `web-cosmo-link`). When the list is bound to no address, or the address has no nickname, it SHALL use the account's display name. When the partner's matched lists are bound to more than one address, the row SHALL name the others as well. The row SHALL show the account's avatar. Expanding the row SHALL show a link to the partner's profile and Discord and Twitter badges when the partner has chosen to show socials. They sit inside the expanded row, not on the row's toggle, so a handle can be selected and copied.
 
 #### Scenario: Bound nickname
 - **WHEN** a partner's matched list is bound to the Cosmo address with nickname "rinrin"
@@ -118,6 +118,10 @@ A partner row SHALL be headed by the Cosmo nickname of the address their best-ma
 #### Scenario: No bound address
 - **WHEN** a partner's matched lists are bound to no address
 - **THEN** the row is headed by the account's display name
+
+#### Scenario: Hide Cosmo ID
+- **WHEN** the address "rinrin" has Hide Cosmo ID on
+- **THEN** the row is still headed "rinrin"
 
 ### Requirement: Freshness
 The view SHALL reflect the user's own list changes on the next load. Other accounts' changes SHALL appear within 5 minutes.

@@ -226,7 +226,6 @@ export function countDropped(partners: { userId: string; dropped: Dropped[] }[])
   };
 }
 
-type AddressInfo = { address: string; nickname: string | null; hideNickname: boolean };
 export type AddressRef = { address: string; nickname: string | null };
 export type PartnerIdentity = {
   /** the Cosmo nickname, or the account name when there is none to show */
@@ -249,22 +248,18 @@ export function addressesByUser(rows: readonly { userId: string | null; address:
   return map;
 }
 
-export function visibleNickname(info: Pick<AddressInfo, "nickname" | "hideNickname">) {
-  return info.hideNickname ? null : (info.nickname ?? null);
-}
-
 /** Named by the address of the list with the most matches. */
 export function toPartnerIdentity(
   accountName: string,
   matchedLists: { profileAddress: string | null; matches: number }[],
-  addresses: AddressInfo[],
+  addresses: AddressRef[],
 ): PartnerIdentity {
   const byAddress = new Map(addresses.map((a) => [a.address.toLowerCase(), a]));
   const visible = (address: string): AddressRef => {
     const info = byAddress.get(address);
     return {
       address,
-      nickname: info ? visibleNickname(info) : null,
+      nickname: info?.nickname ?? null,
     };
   };
 

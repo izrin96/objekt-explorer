@@ -4,7 +4,6 @@ import { hiddenTradePartner, lists, user, userAddress } from "@repo/db/schema";
 import { bumpTradeVersion } from "@repo/lib/server/list-touch";
 import { and, desc, eq, inArray } from "drizzle-orm";
 
-import { visibleNickname } from "../lib/trade-rank";
 import { authed, optionalAuthed, pub } from "../orpc";
 import {
   browseInputSchema,
@@ -130,7 +129,6 @@ export const tradeRouter = {
               userId: lists.userId,
               address: userAddress.address,
               nickname: userAddress.nickname,
-              hideNickname: userAddress.hideNickname,
             })
             .from(lists)
             .innerJoin(userAddress, eq(userAddress.address, lists.profileAddress))
@@ -151,7 +149,7 @@ export const tradeRouter = {
       user: toPublicUser(row.user),
       profiles: addresses
         .filter((a) => a.userId === row.user.id)
-        .map((a) => ({ address: a.address.toLowerCase(), nickname: visibleNickname(a) })),
+        .map((a) => ({ address: a.address.toLowerCase(), nickname: a.nickname })),
       hiddenAt: row.hiddenAt,
     }));
   }),

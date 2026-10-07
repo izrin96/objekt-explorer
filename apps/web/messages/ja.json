@@ -94,7 +94,7 @@
   "profile_edit_title": "プロフィールを編集",
   "profile_edit_desc": "現在{#nickname/}さんのCosmoプロフィールを編集中です",
   "profile_edit_hide_nickname_label": "Cosmo IDを非表示",
-  "profile_edit_hide_nickname_desc": "アクティビティ、アクティビティ履歴、シリアル検索、およびプロフィールからCosmo IDを非表示にします。",
+  "profile_edit_hide_nickname_desc": "アクティビティ、アクティビティ履歴、シリアル検索、保有者、リスト、およびプロフィールからCosmo IDを非表示にします。交換、マーケット、メッセージでは表示されます。",
   "profile_edit_private_serial_label": "シリアル検索から非表示",
   "profile_edit_private_serial_desc": "シリアル番号から他のユーザーにObjektを検索されないようにします。自分だけが閲覧できます。",
   "profile_edit_hide_transfer_label": "アクティビティ履歴を非表示",

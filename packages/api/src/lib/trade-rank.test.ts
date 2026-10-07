@@ -225,8 +225,8 @@ describe("recount details", () => {
 });
 
 describe("toPartnerIdentity", () => {
-  const rin = { address: "0xRIN", nickname: "rinrin", hideNickname: false };
-  const alt = { address: "0xalt", nickname: "rin2", hideNickname: false };
+  const rin = { address: "0xRIN", nickname: "rinrin" };
+  const alt = { address: "0xalt", nickname: "rin2" };
 
   test("bound nickname", () => {
     expect(
@@ -234,11 +234,11 @@ describe("toPartnerIdentity", () => {
     ).toEqual({ name: "rinrin", address: "0xrin", also: [] });
   });
 
-  test("hidden nickname falls back to the account name", () => {
+  test("Hide Cosmo ID does not apply to Trade", () => {
     const hidden = { ...rin, hideNickname: true };
     expect(
       toPartnerIdentity("rin.account", [{ profileAddress: "0xrin", matches: 3 }], [hidden]),
-    ).toEqual({ name: "rin.account", address: null, also: [] });
+    ).toEqual({ name: "rinrin", address: "0xrin", also: [] });
   });
 
   test("no bound address", () => {

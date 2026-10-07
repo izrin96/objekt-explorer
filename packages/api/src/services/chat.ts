@@ -36,7 +36,6 @@ import {
 import type { ActorLimits } from "../lib/offer-rules";
 import { effectiveSanction } from "../lib/sanctions";
 import { HOUR_MS } from "../lib/time";
-import { visibleNickname } from "../lib/trade-rank";
 import {
   type CardInput,
   type CardView,
@@ -623,7 +622,6 @@ export async function hydrateCards(cards: StoredCard[]) {
             profileSlug: lists.profileSlug,
             profileAddress: lists.profileAddress,
             nickname: userAddress.nickname,
-            hideNickname: userAddress.hideNickname,
           })
           .from(lists)
           .leftJoin(userAddress, eq(userAddress.address, lists.profileAddress))
@@ -686,10 +684,7 @@ export async function hydrateCards(cards: StoredCard[]) {
             profile: list.profileAddress
               ? {
                   address: list.profileAddress.toLowerCase(),
-                  nickname: visibleNickname({
-                    nickname: list.nickname ?? null,
-                    hideNickname: list.hideNickname ?? false,
-                  }),
+                  nickname: list.nickname ?? null,
                 }
               : null,
           }

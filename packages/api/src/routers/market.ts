@@ -128,7 +128,6 @@ async function findListings(input: MarketListingsInput, viewerId: string | null)
         profileSlug: lists.profileSlug,
         profileAddress: lists.profileAddress,
         ownerNickname: userAddress.nickname,
-        ownerHideNickname: userAddress.hideNickname,
         messageAllow: messagePref.allow,
         blocked: viewerId
           ? sql<boolean>`NOT ${notBlockedEither(viewerId, sql`${lists.userId}`)}`
@@ -165,7 +164,7 @@ async function findListings(input: MarketListingsInput, viewerId: string | null)
 
   const items = rows.map((row) => {
     const objekt = row.objektId ? objektMap.get(row.objektId) : null;
-    const nickname = row.ownerHideNickname || !row.ownerNickname ? null : row.ownerNickname;
+    const nickname = row.ownerNickname || null;
     const currency = row.currency ? normalizeCurrency(row.currency) : null;
     const rate = currency ? (rates[currency] ?? 1) : 1;
     const usdPrice = row.price !== null ? row.price * rate : null;

@@ -94,7 +94,7 @@
   "profile_edit_title": "Edit Profile",
   "profile_edit_desc": "Currently editing {#nickname/} Cosmo profile",
   "profile_edit_hide_nickname_label": "Hide Cosmo ID",
-  "profile_edit_hide_nickname_desc": "Hide Cosmo ID from Activity, Activity History, Serial Lookup and your profile.",
+  "profile_edit_hide_nickname_desc": "Hide Cosmo ID from Activity, Activity History, Serial Lookup, Holders, your lists and your profile. Trade, Market and Messages still show it.",
   "profile_edit_private_serial_label": "Hide from Serial Lookup",
   "profile_edit_private_serial_desc": "Prevent others from finding your objekt via serial number. Only you can see it.",
   "profile_edit_hide_transfer_label": "Hide Activity History",

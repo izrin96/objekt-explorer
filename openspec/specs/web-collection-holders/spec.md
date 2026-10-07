@@ -57,7 +57,7 @@ When the signed-in viewer has a linked address that holds copies and that holder
 - **THEN** its row in the list is marked as the viewer's and no row is pinned
 
 ### Requirement: Holder privacy
-The tab SHALL apply a holder address's private-profile and private-serial settings to every viewer except the account that linked that address. A holder with a private profile SHALL appear as an unlinked "Private collector" row with no address, nickname or lowest serial, since a serial looked up in the Trades tab names its owner, and SHALL still count in every figure and rank. A holder who hides their nickname SHALL appear by their shortened address to every viewer, the linking account included, as nicknames are hidden everywhere else in the app. A holder who hides serials SHALL show no lowest serial. The response sent to the browser SHALL NOT contain the address, nickname or serial that a setting hides.
+The tab SHALL apply a holder address's private-profile and private-serial settings to every viewer except the account that linked that address. A holder with a private profile SHALL appear as an unlinked "Private collector" row with no address, nickname or lowest serial, since a serial looked up in the Trades tab names its owner, and SHALL still count in every figure and rank. A holder who hides their nickname SHALL appear by their shortened address to every viewer, the linking account included, as Hide Cosmo ID applies here (see `web-cosmo-link`). A holder who hides serials SHALL show no lowest serial. The response sent to the browser SHALL NOT contain the address, nickname or serial that a setting hides.
 
 #### Scenario: Private profile seen by another viewer
 - **WHEN** the third-ranked holder has a private profile and the viewer is signed out

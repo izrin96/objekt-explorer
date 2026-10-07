@@ -1,5 +1,5 @@
 import { groupKey, mergePayload } from "@repo/api/lib/notification-group";
-import { copyKey, type Holdings, addressesByUser, visibleNickname } from "@repo/api/lib/trade-rank";
+import { copyKey, type Holdings, addressesByUser } from "@repo/api/lib/trade-rank";
 import {
   type AlertMatch,
   alertPayloadSchema,
@@ -273,7 +273,6 @@ async function loadContext(pairs: AlertPair[]) {
         userId: userAddress.userId,
         address: userAddress.address,
         nickname: userAddress.nickname,
-        hideNickname: userAddress.hideNickname,
       })
       .from(userAddress)
       .where(inArray(userAddress.userId, userIds)),
@@ -290,9 +289,7 @@ async function loadContext(pairs: AlertPair[]) {
   ]);
 
   const nameOf = new Map(users.map((u) => [u.id, u.name]));
-  const nicknameOf = new Map(
-    addressRows.map((row) => [row.address.toLowerCase(), visibleNickname(row)]),
-  );
+  const nicknameOf = new Map(addressRows.map((row) => [row.address.toLowerCase(), row.nickname]));
   const addresses = addressesByUser(addressRows);
 
   const alertLists = new Map(

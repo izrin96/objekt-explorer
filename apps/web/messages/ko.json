@@ -94,7 +94,7 @@
   "profile_edit_title": "프로필 편집",
   "profile_edit_desc": "현재 {#nickname/}님의 Cosmo 프로필을 편집 중입니다",
   "profile_edit_hide_nickname_label": "Cosmo ID 숨기기",
-  "profile_edit_hide_nickname_desc": "활동, 활동 내역, 시리얼 조회 및 프로필에서 Cosmo ID를 숨깁니다.",
+  "profile_edit_hide_nickname_desc": "활동, 활동 내역, 시리얼 조회, 보유자, 목록 및 프로필에서 Cosmo ID를 숨깁니다. 거래, 마켓, 메시지에서는 계속 표시됩니다.",
   "profile_edit_private_serial_label": "시리얼 조회에서 숨기기",
   "profile_edit_private_serial_desc": "다른 사람이 시리얼 번호로 오브젝트를 찾지 못하도록 합니다. 본인만 볼 수 있습니다.",
   "profile_edit_hide_transfer_label": "활동 내역 숨기기",

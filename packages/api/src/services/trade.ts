@@ -323,10 +323,10 @@ async function buildTradePartnersResponse(
     collectionRows.map((c) => [c.slug, overrideCollection(c)]),
   );
 
-  // address → nickname map (hiding respected, addresses normalized to lowercase)
+  // address → nickname map, addresses normalized to lowercase
   const addrNickMap = new Map<string, string>();
   for (const addr of userAddrs) {
-    if (addr.nickname && !addr.hideNickname) {
+    if (addr.nickname) {
       addrNickMap.set(addr.address.toLowerCase(), addr.nickname);
     }
   }

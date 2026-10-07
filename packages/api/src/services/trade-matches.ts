@@ -27,7 +27,6 @@ import {
   rankPartners,
   recount,
   toPartnerIdentity,
-  visibleNickname,
   addressesByUser,
 } from "../lib/trade-rank";
 import { CARD_LIMIT, type TradeFilter } from "../schemas/trade";
@@ -245,7 +244,6 @@ async function computeTradeMatches(userId: string, sides: Sides, filter: TradeFi
         userId: userAddress.userId,
         address: userAddress.address,
         nickname: userAddress.nickname,
-        hideNickname: userAddress.hideNickname,
       })
       .from(userAddress)
       .where(inArray(userAddress.userId, [userId, ...partnerIds])),
@@ -327,9 +325,7 @@ async function computeTradeMatches(userId: string, sides: Sides, filter: TradeFi
   ]);
 
   const userMap = new Map(users.map((u) => [u.id, u]));
-  const nicknameOf = new Map(
-    addressRows.map((row) => [row.address.toLowerCase(), visibleNickname(row)]),
-  );
+  const nicknameOf = new Map(addressRows.map((row) => [row.address.toLowerCase(), row.nickname]));
 
   const partners = ranked.flatMap(({ partner, idle }) => {
     const account = userMap.get(partner.userId);
