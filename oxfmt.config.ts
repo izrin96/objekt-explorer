@@ -18,6 +18,16 @@ export default defineConfig({
   sortImports: {
     type: "natural",
   },
-  // third-party skills, OpenSpec artifacts and design notes are prose, not code
-  ignorePatterns: ["node_modules", "*.gen.ts", ".agents", ".claude", "openspec", "design"],
+  // third-party skills, OpenSpec artifacts and design notes are prose, not code;
+  // drizzle-kit writes the migrations and their snapshots
+  ignorePatterns: [
+    "node_modules",
+    "*.gen.ts",
+    ".agents",
+    ".claude",
+    "openspec",
+    "design",
+    "packages/db/migrations",
+    "packages/db/indexer-migrations",
+  ],
 });
