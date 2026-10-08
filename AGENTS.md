@@ -15,6 +15,7 @@
 | `packages/db`       | `@repo/db`       | Database schema (Drizzle ORM + PostgreSQL)                                                   |
 | `packages/lib`      | `@repo/lib`      | Shared utilities                                                                             |
 | `packages/cosmo`    | `@repo/cosmo`    | Cosmo SDK                                                                                    |
+| `packages/email`    | `@repo/email`    | Auth email templates (jsx-email), rendered to HTML and plain text for SES                    |
 | `packages/lint`     | `@repo/lint`     | Shared oxlint config                                                                         |
 | `packages/tsconfig` | `@repo/tsconfig` | Shared TypeScript configs                                                                    |
 

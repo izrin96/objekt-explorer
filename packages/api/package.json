@@ -25,6 +25,7 @@
     "@orpc/zod": "^1.15.4",
     "@repo/cosmo": "workspace:*",
     "@repo/db": "workspace:*",
+    "@repo/email": "workspace:*",
     "@repo/lib": "workspace:*",
     "@t3-oss/env-core": "^0.13.11",
     "better-auth": "^1.7.7",
