@@ -32,7 +32,7 @@ import { AboutDialog, DISCORD_INVITE } from "./about";
  */
 const CHANGELOG = [
   {
-    date: "2026-10-07 - 2026-10-08",
+    date: "2026-10-09",
     items: [
       "Added a Trade page: Browse lists trade and sale posts, and For you (formerly Trade Matches) finds people to trade with across all your lists.",
       "Lists now have one Show on Trade or Show on Market switch, replacing Discoverable.",
