@@ -16,6 +16,7 @@ import { m } from "@/paraglide/messages";
 import { ListRoleBadge } from "./list-role-badge";
 import { MatchGrid, MatchObjekt } from "./match-grid";
 import { MATCH_TONE, MatchLine } from "./match-line";
+import { MatchedLists } from "./matched-lists";
 import { TradeCard } from "./trade-card";
 
 export type TradePartner = Outputs["trade"]["forYou"]["partners"][number];
@@ -49,6 +50,7 @@ export function PartnerCard({
 }) {
   const { identity } = partner;
   const also = identity.also.map((ref) => displayNickname(ref.address, ref.nickname));
+  const match = matchedLists(partner);
 
   return (
     <TradeCard
@@ -103,7 +105,11 @@ export function PartnerCard({
         </MenuItem>
       }
       match={
-        <MatchLine theyHave={partner.theyHaveIWant.length} youHave={partner.iHaveTheyWant.length} />
+        <MatchLine
+          theyHave={match.youWant}
+          youHave={match.youHave}
+          popover={<MatchedLists match={match} />}
+        />
       }
     >
       {partner.idle ? (
@@ -163,6 +169,19 @@ export function PartnerCard({
       ) : null}
     </TradeCard>
   );
+}
+
+/** Browse's match shape, so both tabs open the same Matched with your lists popover. */
+function matchedLists(partner: TradePartner) {
+  const listIdsOf = (matches: TradePartner["theyHaveIWant"]) => [
+    ...new Set(matches.flatMap((match) => match.myListIds)),
+  ];
+  return {
+    youWant: partner.theyHaveIWant.length,
+    youHave: partner.iHaveTheyWant.length,
+    wantListIds: listIdsOf(partner.theyHaveIWant),
+    haveListIds: listIdsOf(partner.iHaveTheyWant),
+  };
 }
 
 /**
