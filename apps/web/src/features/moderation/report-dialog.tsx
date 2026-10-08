@@ -1,3 +1,4 @@
+import { InfoIcon } from "@phosphor-icons/react";
 import {
   REPORT_NOTE_MAX_LENGTH,
   REPORT_REASONS,
@@ -5,6 +6,7 @@ import {
 } from "@repo/api/schemas/moderation";
 import { type FormEvent, useId, useRef, useState } from "react";
 
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -125,6 +127,10 @@ function ReportForm({
       </DialogHeader>
 
       <DialogPanel className="flex flex-col gap-6">
+        <Alert>
+          <InfoIcon aria-hidden />
+          <AlertDescription>{m.mod_report_slow_notice()}</AlertDescription>
+        </Alert>
         {attachment ? (
           <p className="bg-secondary rounded-md px-3 py-2 text-sm text-pretty">{attachment}</p>
         ) : null}
