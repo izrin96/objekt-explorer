@@ -2,13 +2,11 @@ import type { Outputs } from "@repo/api";
 import type { ListTypeNew } from "@repo/api/schemas/list";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { Link } from "@tanstack/react-router";
-import { Fragment } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { PopoverTitle } from "@/components/ui/popover";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getListLinkOption } from "@/features/list/list-link";
-import { LIST_TYPE_LABEL } from "@/features/list/list-type-badge";
 import { ObjektCard } from "@/features/objekt/objekt-card";
 import { PhotocardSkeleton } from "@/features/objekt/photocard-skeleton";
 import { formatCurrency } from "@/features/settings/use-currency";
@@ -132,9 +130,7 @@ export function BrowsePost({
         <MatchLine
           theyHave={match?.youWant ?? 0}
           youHave={match?.youHave ?? 0}
-          popover={
-            match ? <MatchedLists have={match.haveListIds} want={match.wantListIds} /> : null
-          }
+          popover={match ? <MatchedLists match={match} /> : null}
         >
           {mutual ? (
             <Link
@@ -262,43 +258,55 @@ export function BrowsePostSkeleton() {
   );
 }
 
-/** The viewer's lists this post's counts came from. */
-function MatchedLists({ have, want }: { have: number[]; want: number[] }) {
+/** The viewer's lists behind each count, in the match line's order. A sale list can feed You have. */
+function MatchedLists({ match }: { match: NonNullable<BrowsePostData["match"]> }) {
   const lists = useUserLists();
-  const rows = (["have", "want"] as const).flatMap((type) => {
-    const ids = new Set(type === "have" ? have : want);
+  const groups = [
+    {
+      key: "want",
+      ids: match.wantListIds,
+      count: m.trade_match_they_have({ count: match.youWant }),
+    },
+    {
+      key: "have",
+      ids: match.haveListIds,
+      count: m.trade_match_you_have({ count: match.youHave }),
+    },
+  ];
+  const rows = groups.flatMap((group) => {
+    const ids = new Set(group.ids);
     const matched = lists.filter((list) => ids.has(list.id));
-    return matched.length > 0 ? [{ type, matched }] : [];
+    return matched.length > 0 ? [{ key: group.key, count: group.count, matched }] : [];
   });
   return (
     <div className="flex flex-col gap-3">
       <PopoverTitle className="text-sm">{m.trade_match_lists_title()}</PopoverTitle>
-      <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-2 text-sm">
-        {rows.map(({ type, matched }) => (
-          <Fragment key={type}>
-            <dt className="text-muted-foreground pt-px font-mono text-xs">
-              {LIST_TYPE_LABEL[type]()}
-            </dt>
-            <dd className="flex min-w-0 flex-col items-start gap-1">
-              {matched.map((list) => (
+      {rows.map(({ key, count, matched }) => (
+        <section key={key} className="flex flex-col gap-1.5">
+          <h4 className="text-muted-foreground text-xs tabular-nums">{count}</h4>
+          <ul className="flex flex-col gap-1.5 text-sm">
+            {matched.map((list) => (
+              <li key={list.id} className="flex min-w-0 items-center gap-2">
+                <ListRoleBadge type={list.listTypeNew} />
                 <Link
-                  key={list.id}
                   {...getListLinkOption(list)}
                   className="min-w-0 break-words underline-offset-2 hover:underline"
                 >
                   {list.name}
                 </Link>
-              ))}
-            </dd>
-          </Fragment>
-        ))}
-      </dl>
-      <Link
-        to="/list"
-        className="text-muted-foreground hover:text-foreground self-start text-xs underline-offset-2 hover:underline"
-      >
-        {m.nav_manage_list()}
-      </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))}
+      <div className="border-t pt-2">
+        <Link
+          to="/list"
+          className="text-muted-foreground hover:text-foreground text-xs underline-offset-2 hover:underline"
+        >
+          {m.nav_manage_list()}
+        </Link>
+      </div>
     </div>
   );
 }
