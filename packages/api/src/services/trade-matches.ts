@@ -298,12 +298,15 @@ async function computeTradeMatches(userId: string, sides: Sides, filter: TradeFi
       [...partner.theyHaveIWant, ...partner.iHaveTheyWant].flatMap((m) => m.partnerListIds),
     ),
   );
+  // the card shows the first of each list in slug order, so draw from that order
   const drawn = unique(
-    ranked.flatMap(({ partner }) => [
-      ...partner.theyHaveIWant.slice(0, CARD_LIMIT).map((m) => m.slug),
-      ...partner.iHaveTheyWant.slice(0, CARD_LIMIT).map((m) => m.slug),
-      ...partner.dropped.slice(0, CARD_LIMIT).map((d) => d.slug),
-    ]),
+    ranked
+      .flatMap(({ partner }) => [
+        ...partner.theyHaveIWant.toSorted(bySlug).slice(0, CARD_LIMIT),
+        ...partner.iHaveTheyWant.toSorted(bySlug).slice(0, CARD_LIMIT),
+        ...partner.dropped.toSorted(bySlug).slice(0, CARD_LIMIT),
+      ])
+      .map((item) => item.slug),
   );
 
   const [users, partnerLists, collectionRows] = await Promise.all([
