@@ -107,7 +107,6 @@ export function BrowsePost({
           kind: "open",
           target: { kind: "list", slug: anchor.list.slug },
           card: firstShown ? { collectionSlug: firstShown, listSlug: anchor.list.slug } : undefined,
-          // no focusList / focusWantList: the builder's shortcut strips are off for now
         }
       : { kind: "closed" };
 

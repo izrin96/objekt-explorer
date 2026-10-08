@@ -67,7 +67,7 @@ import {
   theirCandidatesOptions,
 } from "./queries";
 import { SegmentedChoice } from "./segmented-choice";
-import { shortcutItems } from "./shortcuts";
+import { shortcutItems, togglePick } from "./shortcuts";
 
 type Collections = Readonly<Record<string, ValidObjekt | undefined>>;
 
@@ -343,18 +343,8 @@ function BuilderForm({
 
   const shown = { give: giveShown, get };
 
-  const toggleFocused = (side: OfferSide, item: CandidateItem) => {
-    const held = shown[side].find((pick) => pick.key === pickKey(item));
-    // a resolved copy is held under the any-copy ask it stands in for
-    const key = held ? (held.replaces ?? held.key) : null;
-    sides[side][1]((current) =>
-      key !== null
-        ? current.filter((pick) => pick.key !== key)
-        : holds(current, item) || current.length >= OFFER_SIDE_LIMIT
-          ? current
-          : [...current, toPick(item)],
-    );
-  };
+  const toggleFocused = (side: OfferSide, item: CandidateItem) =>
+    sides[side][1]((current) => togglePick(current, shown[side], toPick(item), OFFER_SIDE_LIMIT));
   const shortcuts = {
     give: {
       shown: request.focusWantList !== undefined,
@@ -392,7 +382,7 @@ function BuilderForm({
                 key={side}
                 side={side}
                 name={name}
-                picks={side === "give" ? giveShown : picks}
+                picks={shown[side]}
                 collections={collections}
                 flagsOf={flagsOf}
                 reasonOf={(pick) => reasonOf(side, pick)}
@@ -584,8 +574,8 @@ function SideColumn({
   children?: ReactNode;
 }) {
   const headingId = useId();
+  // every control sits above the picks, so a growing list never moves one under the pointer
   return (
-    // every control sits above the picks, so a growing list never moves one under the pointer
     <section aria-labelledby={headingId} className="flex min-w-0 flex-col gap-2">
       <h3 id={headingId} className="flex items-baseline gap-2 text-sm font-medium">
         {side === "give" ? m.offer_side_give() : m.offer_side_get()}
