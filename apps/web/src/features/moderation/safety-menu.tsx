@@ -1,4 +1,5 @@
 import { DotsThreeIcon, FlagIcon, ProhibitIcon } from "@phosphor-icons/react";
+import type { ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Menu, MenuItem, MenuPopup, MenuTrigger } from "@/components/ui/menu";
@@ -15,27 +16,40 @@ export function SafetyMenu({
   userId,
   name,
   report = false,
+  extraItems,
   className,
 }: {
   userId: string;
   name: string;
   report?: boolean;
+  /** the surface's own items, above Block */
+  extraItems?: ReactNode;
   className?: string;
 }) {
   const { data: current } = useCurrentUser();
   if (!current || current.user.id === userId) return null;
-  return <SafetyMenuInner userId={userId} name={name} report={report} className={className} />;
+  return (
+    <SafetyMenuInner
+      userId={userId}
+      name={name}
+      report={report}
+      extraItems={extraItems}
+      className={className}
+    />
+  );
 }
 
 function SafetyMenuInner({
   userId,
   name,
   report,
+  extraItems,
   className,
 }: {
   userId: string;
   name: string;
   report: boolean;
+  extraItems: ReactNode;
   className?: string;
 }) {
   const safety = useSafetyDialogs({ userId, name });
@@ -56,6 +70,7 @@ function SafetyMenuInner({
           <DotsThreeIcon weight="bold" />
         </MenuTrigger>
         <MenuPopup align="end" className="min-w-44">
+          {extraItems}
           <MenuItem variant="destructive" onClick={safety.openBlock}>
             <ProhibitIcon />
             {m.mod_block()}

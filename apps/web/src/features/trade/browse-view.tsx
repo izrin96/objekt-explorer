@@ -1,4 +1,5 @@
 import { ArrowClockwiseIcon, CardsThreeIcon, WarningIcon } from "@phosphor-icons/react";
+import { canBeOnTrade } from "@repo/api/schemas/list";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
@@ -9,7 +10,9 @@ import { PendingStatus } from "@/components/router/pending";
 import { EmptyState } from "@/components/shared/empty-state";
 import { InfiniteSentinel } from "@/components/shared/infinite-sentinel";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsList, TabsTab } from "@/components/ui/tabs";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import { useSelectedArtists } from "@/features/artist/use-selected-artists";
@@ -32,7 +35,7 @@ import { canReset } from "@/features/filters/search-schema";
 import { useCanonicalFilters, useSetFilters } from "@/features/filters/use-filters";
 import { ObjektDrawer } from "@/features/objekt/drawer";
 import { collectionName } from "@/features/objekt/objekt-label";
-import { useCurrentUser } from "@/features/user/hooks";
+import { useCurrentUser, useUserLists } from "@/features/user/hooks";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
@@ -52,6 +55,10 @@ const SSR_POSTS = 4;
 
 export function BrowseView({ search }: { search: BrowseSearch }) {
   const { data: user } = useCurrentUser();
+  const canMatch = useUserLists().some((list) =>
+    canBeOnTrade(list.listTypeNew, list.isProfileBind),
+  );
+  const onlyMatches = canMatch && search.matches === 1;
   const { artists } = useCosmoArtist();
   const { data: selected } = useSelectedArtists();
   const input = useMemo(
@@ -118,7 +125,7 @@ export function BrowseView({ search }: { search: BrowseSearch }) {
 
       {user ? <MyPosts /> : null}
 
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
         <Tabs
           value={type}
           onValueChange={(value) => {
@@ -137,6 +144,15 @@ export function BrowseView({ search }: { search: BrowseSearch }) {
             ))}
           </TabsList>
         </Tabs>
+        {canMatch ? (
+          <Label className="cursor-pointer gap-2 text-sm font-medium">
+            <Switch
+              checked={onlyMatches}
+              onCheckedChange={(on) => setSearch({ matches: on ? 1 : undefined })}
+            />
+            {m.trade_only_matches()}
+          </Label>
+        ) : null}
       </div>
 
       <BrowseFilters
@@ -160,6 +176,17 @@ export function BrowseView({ search }: { search: BrowseSearch }) {
             <Button variant="outline" size="sm" onClick={() => void query.refetch()}>
               <ArrowClockwiseIcon />
               {m.common_error_retry()}
+            </Button>
+          }
+        />
+      ) : posts.length === 0 && !query.hasNextPage && onlyMatches ? (
+        <EmptyState
+          icon={CardsThreeIcon}
+          title={m.trade_browse_no_matches_title()}
+          hint={m.trade_browse_no_matches_hint()}
+          action={
+            <Button variant="outline" size="sm" onClick={() => setSearch({ matches: undefined })}>
+              {m.trade_browse_show_all_posts()}
             </Button>
           }
         />

@@ -34,6 +34,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { fetchNewer, invalidateChatLists } from "@/features/chat/queries";
 import { CollectionLabel } from "@/features/objekt/objekt-label";
+import { PhotocardSkeleton } from "@/features/objekt/photocard-skeleton";
 import { currencyName, formatCurrency, useCurrency } from "@/features/settings/use-currency";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
@@ -703,7 +704,7 @@ function FocusStripSkeleton({ label }: { label: string }) {
       <div className="grid grid-cols-4 gap-2">
         {Array.from({ length: 4 }).map((_, index) => (
           <div key={index} className="flex flex-col gap-1">
-            <Skeleton className="aspect-photocard rounded-photocard w-full" />
+            <PhotocardSkeleton />
             <Skeleton className="h-3 w-3/4" />
             <Skeleton className="h-3 w-1/2" />
           </div>

@@ -20,6 +20,15 @@ describe("toBrowseInput", () => {
     expect(toBrowseInput(search, artists, ["tripleS"]).artist).toEqual(["artms"]);
   });
 
+  test("Only matches", () => {
+    // the URL's `?matches=1` arrives as a string, a patch as the number
+    for (const matches of ["1", 1]) {
+      const on = browseSearchSchema.parse({ matches });
+      expect(toBrowseInput(on, artists, []).matches).toBe(true);
+    }
+    expect(toBrowseInput(browseSearchSchema.parse({}), artists, []).matches).toBeUndefined();
+  });
+
   test("folds members onto Cosmo's spelling", () => {
     const search = browseSearchSchema.parse({ member: "seoyeon" });
     expect(toBrowseInput(search, artists, []).member).toEqual(["SeoYeon"]);
@@ -29,6 +38,8 @@ describe("toBrowseInput", () => {
 describe("browseSearchSchema", () => {
   test("drops values that do not parse", () => {
     expect(browseSearchSchema.parse({ type: "bogus" })).toMatchObject({ type: undefined });
+    expect(browseSearchSchema.parse({ matches: 2 })).toMatchObject({ matches: undefined });
+    expect(browseSearchSchema.parse({ matches: "yes" })).toMatchObject({ matches: undefined });
     // an old link's `match` is dropped
     expect(browseSearchSchema.parse({ match: "they_have" })).not.toHaveProperty("match");
   });

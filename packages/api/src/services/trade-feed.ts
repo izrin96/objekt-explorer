@@ -18,6 +18,7 @@ import {
   FEED_PAGE_SIZE,
   isPostIdle,
   latest,
+  matchesViewer,
   nextBumpAt,
   pairPosts,
   type PostTag,
@@ -110,6 +111,18 @@ const hasEntryIn = (listIds: SQL, slugs: string[]) =>
     WHERE e.list_id IN (${listIds}) AND e.collection_slug = ANY(${sql.param(slugs)}::text[])
   )`;
 
+/** A post entry that would show in the viewer's match line, in either direction. */
+const matchesIndex = (index: { want: string[]; have: string[] }) =>
+  sql`EXISTS (
+    SELECT 1 FROM list_entries e
+    JOIN on_trade t ON t.id = e.list_id
+    WHERE e.list_id IN (posts.id, posts.partner_id)
+      AND (
+        (t.list_type_new IN ('have', 'sale') AND e.collection_slug = ANY(${sql.param(index.want)}::text[]))
+        OR (t.list_type_new = 'want' AND e.collection_slug = ANY(${sql.param(index.have)}::text[]))
+      )
+  )`;
+
 type FeedRow = {
   id: number;
   partner_id: number | null;
@@ -122,6 +135,8 @@ type Stage1 = {
   type: PostType;
   slugs: string[] | null;
   slug: string | null;
+  /** the viewer's want and have slugs, when Only matches is on */
+  matches: { want: string[]; have: string[] } | null;
   cursor: FeedCursor | undefined;
 };
 
@@ -139,6 +154,7 @@ async function fetchFeedRows(query: Stage1): Promise<FeedRow[]> {
   if (query.type !== "all") where.push(sql`posts.type = ${TAG_TYPE[query.type]}`);
   if (query.slugs) where.push(hasEntryIn(sql`posts.id, posts.partner_id`, query.slugs));
   if (query.slug !== null) where.push(hasEntryIn(sql`posts.id, posts.partner_id`, [query.slug]));
+  if (query.matches) where.push(matchesIndex(query.matches));
   if (query.cursor) {
     where.push(
       sql`(posts.bumped_at, posts.id) < (${query.cursor.bumpedAt}::timestamptz, ${query.cursor.id})`,
@@ -412,6 +428,15 @@ async function computeHaveIndex(userId: string): Promise<[string, number[]][]> {
   });
 }
 
+async function hasTradeList(userId: string) {
+  const [row] = await db
+    .select({ id: lists.id })
+    .from(lists)
+    .where(and(eq(lists.userId, userId), takesPartInTrade))
+    .limit(1);
+  return row !== undefined;
+}
+
 async function fetchViewer(userId: string): Promise<Viewer> {
   const version = (await redis.get(tradeVersionKey(userId))) ?? "0";
   const [have, wantRows] = await Promise.all([
@@ -468,19 +493,28 @@ export async function browseFeed(
   viewerId: string | null,
   input: BrowseFilters & { cursor?: FeedCursor },
 ) {
-  const [viewer, slugs] = await Promise.all([
+  const [viewer, slugs, takesPart] = await Promise.all([
     viewerId === null ? null : fetchViewer(viewerId),
     resolveFilterSlugs(input),
+    viewerId !== null && input.matches === true ? hasTradeList(viewerId) : false,
   ]);
 
   const empty = { posts: [], nextCursor: undefined, collections: {} };
   if (slugs?.length === 0) return empty;
+
+  // the switch shows on the same test, so a stale `matches=1` from a viewer with no list on
+  // Trade lists every post; a list that matches nothing yet empties the feed
+  const onlyMatches = takesPart && viewer !== null;
+  if (onlyMatches && viewer!.have.size === 0 && viewer!.want.size === 0) return empty;
 
   const rows = await fetchFeedRows({
     viewerId,
     type: input.type,
     slugs,
     slug: input.slug ?? null,
+    matches: onlyMatches
+      ? { want: [...viewer!.want.keys()], have: [...viewer!.have.keys()] }
+      : null,
     cursor: input.cursor,
   });
   if (rows.length === 0) return empty;
@@ -529,6 +563,8 @@ export async function browseFeed(
 
       const assembled = assemblePost(post, (id) => entriesOf.get(id) ?? [], viewer, filter);
       if (!assembled) continue;
+      // SQL can't see that an owner sold the only matching objekt
+      if (onlyMatches && !matchesViewer(assembled.match)) continue;
 
       posts.push({
         id: post.anchor.id,

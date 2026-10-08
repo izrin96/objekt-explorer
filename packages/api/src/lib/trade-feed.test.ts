@@ -1,13 +1,14 @@
 import { describe, expect, test } from "bun:test";
 
+import { PREVIEW_LIMIT } from "../schemas/trade";
 import {
   assemblePost,
   comparePosts,
   type FeedEntry,
   isPostIdle,
+  matchesViewer,
   nextBumpAt,
   pairPosts,
-  PREVIEW_LIMIT,
   previewSide,
   type TradeList,
   tradeableEntries,
@@ -139,13 +140,13 @@ describe("ownership", () => {
 
 describe("previewSide", () => {
   test("ringed first, then newest, with the rest counted", () => {
-    const entries = Array.from({ length: 12 }, (_, i) => entry(i + 1, `s${i + 1}`));
+    const entries = Array.from({ length: 14 }, (_, i) => entry(i + 1, `s${i + 1}`));
     const { items, more } = previewSide(entries, new Map([["s2", [1]]]));
     expect(items).toHaveLength(PREVIEW_LIMIT);
-    expect(items.map((item) => item.entryId)).toEqual([2, 12, 11, 10, 9, 8, 7, 6]);
+    expect(items.map((item) => item.entryId)).toEqual([2, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5]);
     expect(items[0]?.ringed).toBe(true);
     expect("ringed" in items[1]!).toBe(false);
-    expect(more).toBe(4);
+    expect(more).toBe(3);
   });
 
   test("a signed-out viewer gets no rings", () => {
@@ -197,5 +198,24 @@ describe("assemblePost", () => {
     expect(
       assemblePost(pair!, of, null, { ...NO_FILTER, slugs: new Set(["want-b"]) }),
     ).not.toBeNull();
+  });
+});
+
+describe("matchesViewer", () => {
+  test("both zero is no match", () => {
+    expect(matchesViewer({ youHave: 0, youWant: 0 })).toBe(false);
+  });
+
+  test("one side is enough", () => {
+    expect(matchesViewer({ youHave: 2, youWant: 0 })).toBe(true);
+    expect(matchesViewer({ youHave: 0, youWant: 1 })).toBe(true);
+  });
+
+  test("both sides", () => {
+    expect(matchesViewer({ youHave: 3, youWant: 4 })).toBe(true);
+  });
+
+  test("signed out has no match", () => {
+    expect(matchesViewer(undefined)).toBe(false);
   });
 });

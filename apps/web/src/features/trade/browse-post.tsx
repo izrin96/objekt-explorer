@@ -3,19 +3,13 @@ import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { Link } from "@tanstack/react-router";
 import { Fragment } from "react";
 
-import { SocialBadge } from "@/components/shared/social-badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Popover, PopoverPopup, PopoverTitle, PopoverTrigger } from "@/components/ui/popover";
+import { PopoverTitle } from "@/components/ui/popover";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MessageButton } from "@/features/chat/message-button";
 import { getListLinkOption } from "@/features/list/list-link";
 import { LIST_TYPE_LABEL } from "@/features/list/list-type-badge";
-import { SafetyMenu } from "@/features/moderation/safety-menu";
 import { ObjektCard } from "@/features/objekt/objekt-card";
-import { MakeOfferButton } from "@/features/offers/make-offer-button";
-import { TrustLine } from "@/features/offers/trust-line";
-import { ProfileLink } from "@/features/profile/profile-hover-card";
+import { PhotocardSkeleton } from "@/features/objekt/photocard-skeleton";
 import { formatCurrency } from "@/features/settings/use-currency";
 import { useUserLists } from "@/features/user/hooks";
 import { relativeTime } from "@/lib/time";
@@ -23,7 +17,9 @@ import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import { ListRoleBadge } from "./list-role-badge";
+import { MatchLine } from "./match-line";
 import { THUMB_GRID } from "./thumb-grid";
+import { TradeCard, type TradeContact } from "./trade-card";
 
 type BrowsePage = Outputs["trade"]["browse"];
 export type BrowsePostData = BrowsePage["posts"][number];
@@ -93,7 +89,7 @@ export function BrowsePost({
   now: number;
   onOpen: (objekt: ValidObjekt) => void;
 }) {
-  const { identity, user, match } = post;
+  const { match } = post;
   const { changed, time } = postTime(post);
   const when = relativeTime(new Date(time).getTime(), now);
   // the post's own list (the have list of a pair), with the first collection it shows
@@ -101,88 +97,38 @@ export function BrowsePost({
   const firstShown = anchor?.items[0]?.slug;
   const offerSide = post.sides.find((side) => side.role !== "want");
   const wantSide = post.sides.find((side) => side.role === "want");
+  const contact: TradeContact = own
+    ? { kind: "own" }
+    : post.messageable && anchor
+      ? {
+          kind: "open",
+          target: { kind: "list", slug: anchor.list.slug },
+          card: firstShown ? { collectionSlug: firstShown, listSlug: anchor.list.slug } : undefined,
+          offer: { focusList: offerSide?.list.slug, focusWantList: wantSide?.list.slug },
+        }
+      : { kind: "closed" };
 
   return (
-    <article className="bg-card flex flex-col gap-4 rounded-lg border p-4">
-      {/* below `sm` the actions take a row of their own, so the name keeps the width */}
-      <header className="flex flex-wrap items-start gap-3">
-        <Avatar className="size-9 shrink-0">
-          {user.image ? <AvatarImage src={user.image} alt="" /> : null}
-          <AvatarFallback>{identity.name.slice(0, 1).toUpperCase()}</AvatarFallback>
-        </Avatar>
-        <div className="flex min-w-0 flex-1 flex-col gap-1">
-          <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
-            <h2 className="min-w-0 text-base leading-snug font-semibold break-words">
-              {identity.address ? (
-                <ProfileLink
-                  address={identity.address}
-                  nickname={identity.nickname}
-                  className="underline-offset-2 hover:underline"
-                >
-                  {identity.name}
-                </ProfileLink>
-              ) : (
-                identity.name
-              )}
-            </h2>
-            {user.discord ? <SocialBadge platform="discord" username={user.discord} /> : null}
-            {user.twitter ? <SocialBadge platform="twitter" username={user.twitter} /> : null}
-          </div>
-          <TrustLine reputation={post.reputation} />
-          <div className="text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
-            <TagBadge tag={post.tag} />
-            {/* relative to the render: the server's minute and the browser's can differ */}
-            <time dateTime={time} suppressHydrationWarning>
-              {changed ? m.trade_updated_at({ time: when }) : m.trade_bumped_at({ time: when })}
-            </time>
-          </div>
-        </div>
-        <div className="flex shrink-0 flex-wrap items-center gap-2 max-sm:w-full max-sm:ps-12">
-          {post.messageable && anchor ? (
-            <>
-              <MessageButton
-                target={{ kind: "list", slug: anchor.list.slug }}
-                card={
-                  firstShown
-                    ? { collectionSlug: firstShown, listSlug: anchor.list.slug }
-                    : undefined
-                }
-                name={identity.name}
-              />
-              <MakeOfferButton
-                request={{
-                  to: { target: { kind: "list", slug: anchor.list.slug } },
-                  name: identity.name,
-                  focusList: offerSide?.list.slug,
-                  focusWantList: wantSide?.list.slug,
-                }}
-              />
-            </>
-          ) : own ? null : (
-            <span className="text-muted-foreground text-sm">{m.trade_not_messageable()}</span>
-          )}
-          <SafetyMenu userId={post.userId} name={identity.name} report />
-        </div>
-      </header>
-
-      {mutual || (match && (match.youHave > 0 || match.youWant > 0)) ? (
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs tabular-nums">
-          {match && (match.youHave > 0 || match.youWant > 0) ? (
-            <Popover>
-              {/* the counts open the lists they were taken from */}
-              <PopoverTrigger className="focus-visible:ring-ring flex cursor-pointer flex-wrap gap-x-3 gap-y-1 rounded-sm text-start underline decoration-dotted underline-offset-2 outline-none focus-visible:ring-2">
-                {match.youHave > 0 ? (
-                  <span>{m.trade_match_you_have({ count: match.youHave })}</span>
-                ) : null}
-                {match.youWant > 0 ? (
-                  <span>{m.trade_match_you_want({ count: match.youWant })}</span>
-                ) : null}
-              </PopoverTrigger>
-              <PopoverPopup align="start" className="w-72">
-                <MatchedLists have={match.haveListIds} want={match.wantListIds} />
-              </PopoverPopup>
-            </Popover>
-          ) : null}
+    <TradeCard
+      person={post}
+      contact={contact}
+      meta={
+        <>
+          <TagBadge tag={post.tag} />
+          {/* relative to the render: the server's minute and the browser's can differ */}
+          <time dateTime={time} suppressHydrationWarning>
+            {changed ? m.trade_updated_at({ time: when }) : m.trade_bumped_at({ time: when })}
+          </time>
+        </>
+      }
+      match={
+        <MatchLine
+          theyHave={match?.youWant ?? 0}
+          youHave={match?.youHave ?? 0}
+          popover={
+            match ? <MatchedLists have={match.haveListIds} want={match.wantListIds} /> : null
+          }
+        >
           {mutual ? (
             <Link
               to="/trade/for-you"
@@ -192,13 +138,13 @@ export function BrowsePost({
               {m.trade_browse_mutual_link()}
             </Link>
           ) : null}
-        </div>
-      ) : null}
-
+        </MatchLine>
+      }
+    >
       {post.sides.map((side) => (
         <PostSide key={side.list.id} side={side} collections={collections} onOpen={onOpen} />
       ))}
-    </article>
+    </TradeCard>
   );
 }
 
@@ -301,7 +247,7 @@ export function BrowsePostSkeleton() {
         <Skeleton className="h-4 w-40" />
         <div className={THUMB_GRID}>
           {Array.from({ length: 4 }).map((_, index) => (
-            <Skeleton key={index} className="aspect-photocard rounded-photocard w-full" />
+            <PhotocardSkeleton key={index} />
           ))}
         </div>
       </div>
@@ -309,7 +255,6 @@ export function BrowsePostSkeleton() {
   );
 }
 
-/** The viewer's lists a post's counts compare against: every have list one way, every want list the other. */
 /** The viewer's lists this post's counts came from. */
 function MatchedLists({ have, want }: { have: number[]; want: number[] }) {
   const lists = useUserLists();

@@ -1,7 +1,7 @@
-import { Skeleton } from "@/components/ui/skeleton";
 import { useColumns } from "@/stores/columns";
 
 import { ObjektGrid } from "./objekt-grid";
+import { PhotocardSkeleton } from "./photocard-skeleton";
 
 /**
  * Three rows of placeholders in the grid the results will land in, so the first
@@ -15,7 +15,7 @@ export function SkeletonGrid({ columns }: { columns?: number }) {
   return (
     <ObjektGrid columns={count}>
       {Array.from({ length: count * 3 }).map((_, index) => (
-        <Skeleton key={index} className="aspect-photocard rounded-photocard w-full" />
+        <PhotocardSkeleton key={index} />
       ))}
     </ObjektGrid>
   );

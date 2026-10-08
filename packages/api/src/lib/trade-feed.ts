@@ -1,12 +1,11 @@
 import type { ListTypeNew } from "../schemas/list";
-import type { PostType } from "../schemas/trade";
+import { PREVIEW_LIMIT, type PostType } from "../schemas/trade";
 import { HOUR_MS } from "./time";
 import { isIdle } from "./trade-rank";
 
 export const FEED_PAGE_SIZE = 24;
 /** stage 2 can empty a post, so stage 1 reads more than a page */
 export const FEED_FETCH_SIZE = 36;
-export const PREVIEW_LIMIT = 8;
 export const BUMP_COOLDOWN_HOURS = 24;
 
 export type PostTag = Exclude<PostType, "all">;
@@ -162,6 +161,11 @@ function matchCollections(entries: { slug: string }[], index: SlugIndex) {
   const slugs = new Set(entries.flatMap((entry) => (index.has(entry.slug) ? [entry.slug] : [])));
   const listIds = new Set([...slugs].flatMap((slug) => index.get(slug)!));
   return { count: slugs.size, listIds: [...listIds] };
+}
+
+/** Whether a post's match line shows anything, so Only matches keeps it. */
+export function matchesViewer(match: { youHave: number; youWant: number } | undefined) {
+  return !!match && (match.youHave > 0 || match.youWant > 0);
 }
 
 /** The viewer's have lists (still-owned entries only) and want lists, by collection. */

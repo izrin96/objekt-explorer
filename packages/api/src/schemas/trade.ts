@@ -8,6 +8,9 @@ export type TradeFilter = (typeof TRADE_FILTERS)[number];
 /** a partner can match on hundreds of collections; past this many per side they are counted, not drawn */
 export const CARD_LIMIT = 50;
 
+/** objekts drawn per side of a trade card; with the +N tile, one row at 1280 px */
+export const PREVIEW_LIMIT = 11;
+
 const DEFAULT_TRADE_FILTER = "all" satisfies TradeFilter;
 
 const tradeFilterSchema = z.enum(TRADE_FILTERS);
@@ -27,6 +30,7 @@ export type PostType = (typeof POST_TYPES)[number];
 const browseFiltersSchema = collectionFiltersSchema.extend({
   type: z.enum(POST_TYPES).default("all"),
   slug: z.string().optional(),
+  matches: z.boolean().optional(),
 });
 export type BrowseFilters = z.infer<typeof browseFiltersSchema>;
 

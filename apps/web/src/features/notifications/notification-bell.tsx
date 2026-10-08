@@ -13,8 +13,8 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tansta
 import { Link } from "@tanstack/react-router";
 import { useRef, useState } from "react";
 
-import { UnreadDot } from "@/components/shared/unread-dot";
 import { EmptyState } from "@/components/shared/empty-state";
+import { UnreadDot } from "@/components/shared/unread-dot";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverPopup, PopoverTitle, PopoverTrigger } from "@/components/ui/popover";
 import { Skeleton } from "@/components/ui/skeleton";

@@ -8,6 +8,11 @@ import { filterSearchSchema } from "@/features/filters/search-schema";
 export const browseSearchSchema = filterSearchSchema.extend({
   type: z.enum(["wtt", "wtb", "wts"]).optional().catch(undefined),
   slug: z.string().min(1).optional().catch(undefined),
+  /** Only matches; the server ignores it for a viewer with no list on Trade */
+  matches: z
+    .preprocess((value) => (value === "1" ? 1 : value), z.literal(1))
+    .optional()
+    .catch(undefined),
 });
 
 export type BrowseSearch = z.infer<typeof browseSearchSchema>;
@@ -42,6 +47,7 @@ export function toBrowseInput(
   return {
     type,
     slug: search.slug,
+    matches: search.matches === 1 ? true : undefined,
     artist,
     member: (search.member ?? []).map((name) => memberName.get(name.toLowerCase()) ?? name),
     season: search.season ?? [],

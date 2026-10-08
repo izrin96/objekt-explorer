@@ -18,12 +18,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { useScopedFacets } from "@/features/filters/facets";
 import { SingleSelect } from "@/features/filters/single-select";
 import { ObjektCard } from "@/features/objekt/objekt-card";
 import { CollectionLabel } from "@/features/objekt/objekt-label";
+import { PhotocardSkeleton } from "@/features/objekt/photocard-skeleton";
 import { useUserLists } from "@/features/user/hooks";
 import { useElementSize } from "@/hooks/use-element-size";
 import { cn } from "@/lib/utils";
@@ -372,7 +372,7 @@ function CandidateGrid({
     return (
       <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
         {[0, 1, 2, 3, 4].map((i) => (
-          <Skeleton key={i} className="rounded-photocard aspect-photocard" />
+          <PhotocardSkeleton key={i} />
         ))}
       </div>
     );

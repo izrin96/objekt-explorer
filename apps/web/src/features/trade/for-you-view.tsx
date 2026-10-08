@@ -1,5 +1,5 @@
 import { ArrowClockwiseIcon, CardsThreeIcon, UsersIcon, WarningIcon } from "@phosphor-icons/react";
-import { tradeSideOf } from "@repo/api/schemas/list";
+import { canBeOnTrade, tradeSideOf } from "@repo/api/schemas/list";
 import type { TradeFilter } from "@repo/api/schemas/trade";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useQuery } from "@tanstack/react-query";
@@ -8,7 +8,6 @@ import { useEffect, useState } from "react";
 
 import { PendingStatus } from "@/components/router/pending";
 import { EmptyState } from "@/components/shared/empty-state";
-import { RowsSkeleton } from "@/components/shared/rows-skeleton";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toastManager } from "@/components/ui/toast";
@@ -20,8 +19,9 @@ import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import { useHidePartner, useUnhidePartner } from "./actions";
+import { BrowsePostSkeleton } from "./browse-post";
 import { HiddenPartnersDialog } from "./hidden-partners-dialog";
-import { PartnerRow, type TradePartner } from "./partner-row";
+import { PartnerCard, type TradePartner } from "./partner-card";
 import { forYouOptions } from "./queries";
 import type { ForYouSearch } from "./search-schema";
 
@@ -74,7 +74,8 @@ const COMPARE: Record<
 /** no list slug is this short, so it cannot collide with one */
 const ALL_LISTS = "all";
 
-const partnerRowId = (userId: string) => `partner-${userId}`;
+const partnerCardId = (userId: string) => `partner-${userId}`;
+const HIGHLIGHT_MS = 2000;
 
 export function ForYouView({
   filter,
@@ -86,11 +87,8 @@ export function ForYouView({
   partner: string | undefined;
 }) {
   const navigate = useNavigate({ from: "/trade/for-you" });
-  // a have or sale list counts only while bound to a profile
-  const tradeLists = useUserLists().filter(
-    (l): l is typeof l & TradeList =>
-      tradeSideOf(l.listTypeNew) === "want" ||
-      (tradeSideOf(l.listTypeNew) === "have" && l.isProfileBind),
+  const tradeLists = useUserLists().filter((l): l is typeof l & TradeList =>
+    canBeOnTrade(l.listTypeNew, l.isProfileBind),
   );
   // a one-way view compares only one kind of list, so the picker offers only that kind
   const side = SIDE[filter];
@@ -194,7 +192,7 @@ function ForYouResults({
 }: {
   filter: TradeFilter;
   list: string | undefined;
-  /** opened and scrolled to once the rows are in */
+  /** scrolled to and highlighted once the cards are in */
   partner: string | undefined;
   onShowAll: () => void;
 }) {
@@ -207,7 +205,15 @@ function ForYouResults({
 
   useEffect(() => {
     if (!partner || !loaded) return;
-    document.getElementById(partnerRowId(partner))?.scrollIntoView({ block: "start" });
+    const card = document.getElementById(partnerCardId(partner));
+    if (!card) return;
+    card.scrollIntoView({ block: "start" });
+    card.dataset.highlight = "";
+    const timer = setTimeout(() => delete card.dataset.highlight, HIGHLIGHT_MS);
+    return () => {
+      clearTimeout(timer);
+      delete card.dataset.highlight;
+    };
   }, [partner, loaded]);
 
   const onHide = (partner: TradePartner) =>
@@ -226,7 +232,7 @@ function ForYouResults({
       },
     );
 
-  if (query.isPending) return <RowsSkeleton />;
+  if (query.isPending) return <CardsSkeleton />;
 
   if (query.isError) {
     return (
@@ -272,12 +278,11 @@ function ForYouResults({
           <p className="text-muted-foreground text-sm tabular-nums">
             {m.trade_partner_count({ count: partners.length })}
           </p>
-          <div className="flex flex-col divide-y rounded-lg border">
+          <div className="flex flex-col gap-4">
             {partners.map((item) => (
-              <PartnerRow
+              <PartnerCard
                 key={item.userId}
-                id={partnerRowId(item.userId)}
-                defaultOpen={item.userId === partner}
+                id={partnerCardId(item.userId)}
                 partner={item}
                 collections={collections}
                 onOpen={setActive}
@@ -339,7 +344,17 @@ export function ForYouPending() {
         <Skeleton className="h-8 w-32 rounded-md" />
         <Skeleton className="h-8 w-32 rounded-md" />
       </div>
-      <RowsSkeleton />
+      <CardsSkeleton />
     </>
+  );
+}
+
+function CardsSkeleton() {
+  return (
+    <div className="flex flex-col gap-4">
+      <BrowsePostSkeleton />
+      <BrowsePostSkeleton />
+      <BrowsePostSkeleton />
+    </div>
   );
 }

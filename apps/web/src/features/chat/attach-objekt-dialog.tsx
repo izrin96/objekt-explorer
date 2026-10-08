@@ -16,12 +16,12 @@ import {
   DialogPopup,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsPanel, TabsTab } from "@/components/ui/tabs";
 import { SingleSelect } from "@/features/filters/single-select";
 import { listEntriesOptions } from "@/features/list/queries";
 import { ObjektCard } from "@/features/objekt/objekt-card";
 import { isObjektOwned } from "@/features/objekt/objekt-utils";
+import { PhotocardSkeleton } from "@/features/objekt/photocard-skeleton";
 import { ownedCollectionOptions } from "@/features/profile/queries";
 import { useUserLists, useUserProfiles } from "@/features/user/hooks";
 import { displayNickname } from "@/lib/address";
@@ -96,7 +96,7 @@ function GridSkeleton() {
   return (
     <div className={GRID}>
       {[0, 1, 2, 3, 4].map((i) => (
-        <Skeleton key={i} className="rounded-photocard aspect-photocard" />
+        <PhotocardSkeleton key={i} />
       ))}
     </div>
   );
