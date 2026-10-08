@@ -105,8 +105,8 @@ export type Candidate = {
   listUpdatedAt: Record<string, string>;
   /** their have and sale entries on collections I want */
   theyHave: OwnedEntry[];
-  /** their want entries on collections I have */
-  theyWant: { listId: number; slug: string }[];
+  /** their want entries on collections I have, with whether the want list takes sales */
+  theyWant: { listId: number; slug: string; matchSale: boolean }[];
 };
 
 type Recounted = {
@@ -117,16 +117,22 @@ type Recounted = {
   dropped: Dropped[];
 };
 
+type Judged = ReturnType<typeof collectionVerdict>;
+
+/** My have side, already judged: over my have and sale lists, and over my have lists alone. */
+export type MyHaves = { all: ReadonlyMap<string, Judged>; trade: ReadonlyMap<string, Judged> };
+
 /**
  * The candidate's matches after the ownership check. `myWants` maps a collection to
- * my want lists holding it; `myHaves` is my own have side, already judged.
+ * my want lists holding it. A partner's want list that matches trades only is judged
+ * against `myHaves.trade`, so my sale lists never answer it.
  */
 export function recount(
   candidate: Candidate,
   partnerAddresses: ReadonlySet<string>,
   holdings: Holdings,
   myWants: ReadonlyMap<string, number[]>,
-  myHaves: ReadonlyMap<string, { verdict: Verdict; listIds: number[] }>,
+  myHaves: MyHaves,
 ): Recounted {
   const theyHaveIWant: Match[] = [];
   const iHaveTheyWant: Match[] = [];
@@ -142,16 +148,20 @@ export function recount(
   }
 
   for (const [slug, entries] of groupBySlug(candidate.theyWant)) {
-    const mine = myHaves.get(slug);
-    if (!mine) continue;
-    if (mine.verdict === "ok") {
+    const judged = entries.flatMap((entry) => {
+      const mine = (entry.matchSale ? myHaves.all : myHaves.trade).get(slug);
+      return mine ? [{ listId: entry.listId, mine }] : [];
+    });
+    if (judged.length === 0) continue;
+    const ok = judged.filter(({ mine }) => mine.verdict === "ok");
+    if (ok.length > 0) {
       iHaveTheyWant.push({
         slug,
-        myListIds: mine.listIds,
-        partnerListIds: [...new Set(entries.map((entry) => entry.listId))],
+        myListIds: [...new Set(ok.flatMap(({ mine }) => mine.listIds))],
+        partnerListIds: [...new Set(ok.map(({ listId }) => listId))],
       });
     } else {
-      dropped.push({ slug, direction: "iHaveTheyWant", reason: mine.verdict });
+      dropped.push({ slug, direction: "iHaveTheyWant", reason: bestDrop(judged) });
     }
   }
 
@@ -167,6 +177,12 @@ export function recount(
   ).reduce((latest, [, at]) => (at > latest ? at : latest), "");
 
   return { userId: candidate.userId, updatedAt, theyHaveIWant, iHaveTheyWant, dropped };
+}
+
+function bestDrop(judged: { mine: Judged }[]): DropReason {
+  return judged.some(({ mine }) => mine.verdict === "not_transferable")
+    ? "not_transferable"
+    : "not_owned";
 }
 
 function passesFilter(filter: TradeFilter, theyHave: number, theyWant: number) {

@@ -119,6 +119,7 @@ export const createListInputSchema = z.object({
   description: z.string().max(5000).nullable(),
   currency: z.string().max(10).nullable(),
   discoverable: z.boolean().default(false),
+  matchSale: z.boolean().default(true),
 });
 
 export const editListInputSchema = z.object({
@@ -131,6 +132,8 @@ export const editListInputSchema = z.object({
   hideSerial: z.boolean(),
   linkedListId: z.number().nullable(),
   discoverable: z.boolean(),
+  // optional: a tab opened before the switch existed leaves the list's setting alone
+  matchSale: z.boolean().optional(),
   regenerateSlug: z.boolean().default(false),
 });
 

@@ -18,6 +18,7 @@ export const feedListColumns = {
   description: lists.description,
   listTypeNew: lists.listTypeNew,
   linkedListId: lists.linkedListId,
+  matchSale: lists.matchSale,
   currency: lists.currency,
   isProfileBind: lists.isProfileBind,
   profileAddress: lists.profileAddress,
@@ -34,6 +35,7 @@ export type FeedList = {
   description: string | null;
   listTypeNew: ListTypeNew;
   linkedListId: number | null;
+  matchSale: boolean;
   currency: string | null;
   isProfileBind: boolean;
   profileAddress: string | null;

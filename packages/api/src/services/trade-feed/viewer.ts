@@ -58,14 +58,32 @@ export async function hasTradeList(userId: string) {
   return row !== undefined;
 }
 
+/** `index` keeping only the lists `keep` passes, and only the collections left on one. */
+function narrow(index: Map<string, number[]>, keep: (listId: number) => boolean) {
+  const narrowed = new Map<string, number[]>();
+  for (const [slug, listIds] of index) {
+    const kept = listIds.filter(keep);
+    if (kept.length > 0) narrowed.set(slug, kept);
+  }
+  return narrowed;
+}
+
 export async function fetchViewer(userId: string): Promise<Viewer> {
   const version = (await redis.get(tradeVersionKey(userId))) ?? "0";
-  const [have, wantRows] = await Promise.all([
+  const [haveIndex, saleLists, wantRows] = await Promise.all([
     getCache(`trade:have-lists:${userId}:${version}`, HAVE_TTL_SECONDS, () =>
       computeHaveIndex(userId),
     ),
     db
-      .selectDistinct({ listId: listEntries.listId, slug: listEntries.collectionSlug })
+      .select({ id: lists.id })
+      .from(lists)
+      .where(and(eq(lists.userId, userId), eq(lists.listTypeNew, "sale"))),
+    db
+      .selectDistinct({
+        listId: listEntries.listId,
+        slug: listEntries.collectionSlug,
+        matchSale: lists.matchSale,
+      })
       .from(listEntries)
       .innerJoin(lists, eq(lists.id, listEntries.listId))
       .where(
@@ -82,5 +100,13 @@ export async function fetchViewer(userId: string): Promise<Viewer> {
     if (listIds) listIds.push(row.listId);
     else want.set(row.slug!, [row.listId]);
   }
-  return { have: new Map(have), want };
+  const have = new Map(haveIndex);
+  const saleIds = new Set(saleLists.map((list) => list.id));
+  const tradeOnlyIds = new Set(wantRows.flatMap((row) => (row.matchSale ? [] : [row.listId])));
+  return {
+    have,
+    want,
+    tradeHave: narrow(have, (id) => !saleIds.has(id)),
+    saleWant: narrow(want, (id) => !tradeOnlyIds.has(id)),
+  };
 }

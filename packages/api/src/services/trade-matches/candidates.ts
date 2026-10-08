@@ -4,7 +4,7 @@ import { sql } from "drizzle-orm";
 import { CANDIDATE_LIMIT, type Candidate } from "../../lib/trade-rank";
 import type { TradeFilter } from "../../schemas/trade";
 import { notBlockedEither, notTradeSanctioned } from "../safety";
-import { takesPartInTradeSql } from "../trade-lists";
+import { offerMatchesWantSql, takesPartInTradeSql } from "../trade-lists";
 
 const HAVING: Record<TradeFilter, ReturnType<typeof sql>> = {
   all: sql``,
@@ -24,7 +24,7 @@ type CandidateRow = {
   user_id: string;
   list_updated_at: Record<string, string>;
   they_have: [number, string, string | null][];
-  they_want: [number, string][];
+  they_want: [number, string, boolean][];
 };
 
 /**
@@ -38,15 +38,21 @@ export async function fetchTradeCandidates(
 ): Promise<Candidate[]> {
   const result = await db.execute<CandidateRow>(sql`
     WITH my_want AS (
-      SELECT DISTINCT collection_slug FROM list_entries
-      WHERE list_id = ANY(${sql.param(sides.wantListIds)}::int[]) AND collection_slug IS NOT NULL
+      SELECT e.collection_slug, bool_or(l.match_sale) AS match_sale
+      FROM list_entries e
+      JOIN lists l ON l.id = e.list_id
+      WHERE e.list_id = ANY(${sql.param(sides.wantListIds)}::int[]) AND e.collection_slug IS NOT NULL
+      GROUP BY e.collection_slug
     ),
     my_have AS (
-      SELECT DISTINCT collection_slug FROM list_entries
-      WHERE list_id = ANY(${sql.param(sides.haveListIds)}::int[]) AND collection_slug IS NOT NULL
+      SELECT e.collection_slug, bool_or(l.list_type_new = 'have') AS on_have
+      FROM list_entries e
+      JOIN lists l ON l.id = e.list_id
+      WHERE e.list_id = ANY(${sql.param(sides.haveListIds)}::int[]) AND e.collection_slug IS NOT NULL
+      GROUP BY e.collection_slug
     ),
     partner_lists AS (
-      SELECT l.id, l.user_id, l.list_type_new, l.updated_at FROM lists l
+      SELECT l.id, l.user_id, l.list_type_new, l.match_sale, l.updated_at FROM lists l
       WHERE l.discoverable
         AND ${takesPartInTradeSql("l")}
         AND l.user_id <> ${userId}
@@ -58,17 +64,18 @@ export async function fetchTradeCandidates(
         AND ${notTradeSanctioned(sql`l.user_id`)}
     ),
     matched AS (
-      SELECT p.user_id, p.id AS list_id, p.updated_at, true AS they_have, e.collection_slug, e.objekt_id
+      SELECT p.user_id, p.id AS list_id, p.updated_at, p.match_sale, true AS they_have,
+        e.collection_slug, e.objekt_id
       FROM partner_lists p
       JOIN list_entries e ON e.list_id = p.id
       JOIN my_want w ON w.collection_slug = e.collection_slug
-      WHERE p.list_type_new IN ('have', 'sale')
+      WHERE p.list_type_new IN ('have', 'sale') AND ${offerMatchesWantSql("p", "w")}
       UNION ALL
-      SELECT p.user_id, p.id, p.updated_at, false, e.collection_slug, NULL
+      SELECT p.user_id, p.id, p.updated_at, p.match_sale, false, e.collection_slug, NULL
       FROM partner_lists p
       JOIN list_entries e ON e.list_id = p.id
       JOIN my_have h ON h.collection_slug = e.collection_slug
-      WHERE p.list_type_new = 'want'
+      WHERE p.list_type_new = 'want' AND (p.match_sale OR h.on_have)
     ),
     grouped AS (
       SELECT
@@ -80,7 +87,8 @@ export async function fetchTradeCandidates(
           '[]'
         ) AS they_have,
         coalesce(
-          json_agg(DISTINCT jsonb_build_array(list_id, collection_slug)) FILTER (WHERE NOT they_have),
+          json_agg(DISTINCT jsonb_build_array(list_id, collection_slug, match_sale))
+            FILTER (WHERE NOT they_have),
           '[]'
         ) AS they_want,
         max(updated_at) AS updated_at,
@@ -100,6 +108,6 @@ export async function fetchTradeCandidates(
       Object.entries(row.list_updated_at).map(([id, at]) => [id, new Date(at).toISOString()]),
     ),
     theyHave: row.they_have.map(([listId, slug, objektId]) => ({ listId, slug, objektId })),
-    theyWant: row.they_want.map(([listId, slug]) => ({ listId, slug })),
+    theyWant: row.they_want.map(([listId, slug, matchSale]) => ({ listId, slug, matchSale })),
   }));
 }

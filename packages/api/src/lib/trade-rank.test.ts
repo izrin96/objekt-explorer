@@ -137,19 +137,19 @@ describe("ownership", () => {
       userId: "A",
       listUpdatedAt: { 1: RECENT, 2: RECENT },
       theyHave: aHave.map((slug, i) => ({ listId: 1, slug, objektId: `a-${i}` })),
-      theyWant: aWant.map((slug) => ({ listId: 2, slug })),
+      theyWant: aWant.map((slug) => ({ listId: 2, slug, matchSale: true })),
     };
     const b: Candidate = {
       userId: "B",
       listUpdatedAt: { 3: RECENT, 4: RECENT },
       theyHave: bHave.map((slug) => ({ listId: 3, slug, objektId: null })),
-      theyWant: bWant.map((slug) => ({ listId: 4, slug })),
+      theyWant: bWant.map((slug) => ({ listId: 4, slug, matchSale: true })),
     };
 
     const owned = { objekts: ownedTokens, copies };
     const recounted = [
-      recount(a, new Set(["0xa"]), owned, myWants, myHaves),
-      recount(b, new Set(["0xb"]), owned, myWants, myHaves),
+      recount(a, new Set(["0xa"]), owned, myWants, { all: myHaves, trade: myHaves }),
+      recount(b, new Set(["0xb"]), owned, myWants, { all: myHaves, trade: myHaves }),
     ];
     const ranked = rankPartners(recounted, "all", NOW);
 
@@ -160,19 +160,14 @@ describe("ownership", () => {
   });
 
   test("my own sold have entry drops the match it made", () => {
+    const judged = new Map([["mine", { verdict: "not_owned" as const, listIds: [] }]]);
     const candidate: Candidate = {
       userId: "P",
       listUpdatedAt: { 5: RECENT },
       theyHave: [],
-      theyWant: [{ listId: 5, slug: "mine" }],
+      theyWant: [{ listId: 5, slug: "mine", matchSale: true }],
     };
-    const result = recount(
-      candidate,
-      theirs,
-      holdings,
-      new Map(),
-      new Map([["mine", { verdict: "not_owned", listIds: [] }]]),
-    );
+    const result = recount(candidate, theirs, holdings, new Map(), { all: judged, trade: judged });
     expect(result.iHaveTheyWant).toEqual([]);
     expect(result.dropped).toEqual([
       { slug: "mine", direction: "iHaveTheyWant", reason: "not_owned" },
@@ -188,6 +183,42 @@ describe("recount details", () => {
     ]),
     copies: new Map(),
   };
+
+  // "x" is owned only through my sale list 2; my have list 1 no longer owns it
+  const myHaves = {
+    all: new Map([["x", { verdict: "ok" as const, listIds: [2] }]]),
+    trade: new Map([["x", { verdict: "not_owned" as const, listIds: [] }]]),
+  };
+  const wantedBy = (theyWant: Candidate["theyWant"]) =>
+    recount(
+      { userId: "P", listUpdatedAt: { 8: RECENT, 9: RECENT }, theyHave: [], theyWant },
+      new Set(["0xp"]),
+      holdings,
+      new Map(),
+      myHaves,
+    );
+
+  test("my sale list answers a want list that takes sales", () => {
+    const result = wantedBy([{ listId: 8, slug: "x", matchSale: true }]);
+    expect(result.iHaveTheyWant).toEqual([{ slug: "x", myListIds: [2], partnerListIds: [8] }]);
+  });
+
+  test("a want list that matches trades only is judged on my have lists alone", () => {
+    const result = wantedBy([{ listId: 8, slug: "x", matchSale: false }]);
+    expect(result.iHaveTheyWant).toEqual([]);
+    expect(result.dropped).toEqual([
+      { slug: "x", direction: "iHaveTheyWant", reason: "not_owned" },
+    ]);
+  });
+
+  test("of two want lists on a collection, only the one my side answers is credited", () => {
+    const result = wantedBy([
+      { listId: 8, slug: "x", matchSale: false },
+      { listId: 9, slug: "x", matchSale: true },
+    ]);
+    expect(result.iHaveTheyWant).toEqual([{ slug: "x", myListIds: [2], partnerListIds: [9] }]);
+    expect(result.dropped).toEqual([]);
+  });
 
   test("idle is judged on the lists still contributing a match", () => {
     const result = recount(
@@ -206,7 +237,7 @@ describe("recount details", () => {
         ["a", [9]],
         ["b", [9]],
       ]),
-      new Map(),
+      { all: new Map(), trade: new Map() },
     );
     expect(result.updatedAt).toBe(IDLE);
     expect(rankPartners([result], "all", NOW)[0]!.idle).toBe(true);
@@ -336,14 +367,14 @@ describe("matchSides", () => {
         listUpdatedAt: { 7: RECENT, 8: RECENT },
         theyHave: [{ listId: 7, slug: "binary", objektId: "t1" }],
         theyWant: [
-          { listId: 8, slug: "on-spares" },
-          { listId: 8, slug: "on-dupes" },
+          { listId: 8, slug: "on-spares", matchSale: true },
+          { listId: 8, slug: "on-dupes", matchSale: true },
         ],
       },
       new Set(["0xp"]),
       holdings,
       new Map([["binary", [3]]]),
-      myHaves,
+      { all: myHaves, trade: myHaves },
     );
 
     expect(result.iHaveTheyWant.map((m) => m.slug)).toEqual(["on-spares"]);

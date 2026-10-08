@@ -22,6 +22,7 @@ const daysAgo = (d: number) => hoursAgo(d * 24);
 const list = (over: Partial<TradeList> & Pick<TradeList, "id" | "listTypeNew">): TradeList => ({
   userId: "u1",
   linkedListId: null,
+  matchSale: true,
   bumpedAt: daysAgo(1),
   updatedAt: daysAgo(1),
   ...over,
@@ -165,13 +166,13 @@ describe("assemblePost", () => {
     2: [entry(20, "want-a"), entry(21, "want-b"), entry(22, "want-c")],
   };
   const of = (id: number) => entries[id] ?? [];
-  const viewer = {
-    have: new Map([
-      ["want-a", [7]],
-      ["want-c", [7, 8]],
-    ]),
-    want: new Map([["offer-b", [9]]]),
-  };
+  const have = new Map([
+    ["want-a", [7]],
+    ["want-c", [7, 8]],
+  ]);
+  const want = new Map([["offer-b", [9]]]);
+  const viewer = { have, want, tradeHave: have, saleWant: want };
+  const nothing = new Map<string, number[]>();
 
   test("counts, rings and the viewer's lists they came from", () => {
     const post = assemblePost(pair!, of, viewer, NO_FILTER);
@@ -184,7 +185,8 @@ describe("assemblePost", () => {
   });
 
   test("nothing listed counts nothing", () => {
-    const post = assemblePost(pair!, of, { have: new Map(), want: new Map() }, NO_FILTER);
+    const empty = { have: nothing, want: nothing, tradeHave: nothing, saleWant: nothing };
+    const post = assemblePost(pair!, of, empty, NO_FILTER);
     expect(post?.match).toEqual({ youHave: 0, youWant: 0, haveListIds: [], wantListIds: [] });
   });
 
@@ -198,6 +200,33 @@ describe("assemblePost", () => {
     expect(
       assemblePost(pair!, of, null, { ...NO_FILTER, slugs: new Set(["want-b"]) }),
     ).not.toBeNull();
+  });
+
+  // list 8 is the viewer's sale list, list 9 a want list that matches trades only
+  const tradeOnly = {
+    have,
+    want,
+    tradeHave: new Map([
+      ["want-a", [7]],
+      ["want-c", [7]],
+    ]),
+    saleWant: nothing,
+  };
+
+  test("a sale post does not match a want list that trades only", () => {
+    const [sale] = pairPosts([list({ id: 3, listTypeNew: "sale" })]);
+    const post = assemblePost(sale!, () => [entry(30, "offer-b")], tradeOnly, NO_FILTER);
+    expect(post?.match).toEqual({ youHave: 0, youWant: 0, haveListIds: [], wantListIds: [] });
+    expect(post?.sides[0]?.items.some((item) => item.ringed)).toBe(false);
+  });
+
+  test("a want list that trades only matches the viewer's have lists, not their sale lists", () => {
+    const [tradeOnlyPair] = pairPosts([
+      list({ id: 1, listTypeNew: "have", linkedListId: 2 }),
+      list({ id: 2, listTypeNew: "want", matchSale: false }),
+    ]);
+    const post = assemblePost(tradeOnlyPair!, of, tradeOnly, NO_FILTER);
+    expect(post?.match).toEqual({ youHave: 2, youWant: 1, haveListIds: [7], wantListIds: [9] });
   });
 });
 

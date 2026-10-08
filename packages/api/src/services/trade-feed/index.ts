@@ -99,7 +99,12 @@ export async function browseFeed(
     slugs,
     slug: input.slug ?? null,
     matches: onlyMatches
-      ? { want: [...viewer!.want.keys()], have: [...viewer!.have.keys()] }
+      ? {
+          want: [...viewer!.want.keys()],
+          saleWant: [...viewer!.saleWant.keys()],
+          have: [...viewer!.have.keys()],
+          tradeHave: [...viewer!.tradeHave.keys()],
+        }
       : null,
     cursor: input.cursor,
   });

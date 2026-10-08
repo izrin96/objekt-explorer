@@ -16,7 +16,7 @@ const TAG_TYPE: Record<PostTag, ListTypeNew> = { wtt: "have", wtb: "want", wts: 
  */
 export const postsCte = sql`
   on_trade AS (
-    SELECT id, user_id, list_type_new, linked_list_id, bumped_at, updated_at, created_at
+    SELECT id, user_id, list_type_new, linked_list_id, match_sale, bumped_at, updated_at, created_at
     FROM lists
     WHERE discoverable AND ${takesPartInTradeSql()}
   ),
@@ -58,16 +58,22 @@ const hasEntryIn = (listIds: SQL, slugs: string[]) =>
   )`;
 
 /** A post entry that would show in the viewer's match line, in either direction. */
-const matchesIndex = (index: { want: string[]; have: string[] }) =>
+const matchesIndex = (index: MatchIndex) =>
   sql`EXISTS (
     SELECT 1 FROM list_entries e
     JOIN on_trade t ON t.id = e.list_id
     WHERE e.list_id IN (posts.id, posts.partner_id)
       AND (
-        (t.list_type_new IN ('have', 'sale') AND e.collection_slug = ANY(${sql.param(index.want)}::text[]))
-        OR (t.list_type_new = 'want' AND e.collection_slug = ANY(${sql.param(index.have)}::text[]))
+        (t.list_type_new = 'have' AND e.collection_slug = ANY(${sql.param(index.want)}::text[]))
+        OR (t.list_type_new = 'sale' AND e.collection_slug = ANY(${sql.param(index.saleWant)}::text[]))
+        OR (t.list_type_new = 'want' AND e.collection_slug = ANY(
+          CASE WHEN t.match_sale THEN ${sql.param(index.have)}::text[] ELSE ${sql.param(index.tradeHave)}::text[] END
+        ))
       )
   )`;
+
+/** The viewer's slugs as `Viewer` holds them, by which side of a post they match. */
+type MatchIndex = { want: string[]; saleWant: string[]; have: string[]; tradeHave: string[] };
 
 export type FeedRow = {
   id: number;
@@ -81,8 +87,8 @@ type Stage1 = {
   type: PostType;
   slugs: string[] | null;
   slug: string | null;
-  /** the viewer's want and have slugs, when Only matches is on */
-  matches: { want: string[]; have: string[] } | null;
+  /** the viewer's slugs by the post side they match, when Only matches is on */
+  matches: MatchIndex | null;
   cursor: FeedCursor | undefined;
 };
 

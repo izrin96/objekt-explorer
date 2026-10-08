@@ -6,6 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Radio, RadioGroup } from "@/components/ui/radio-group";
 import {
   Select,
   SelectItem,
@@ -27,6 +28,21 @@ const CURRENCY_RE = /^[A-Za-z]{3}$/;
 
 const LIST_TYPES: ListTypeNew[] = ["general", "have", "want", "sale"];
 
+const MATCH_WITH = [
+  {
+    value: "sales",
+    matchSale: true,
+    label: m.list_create_match_sales_label,
+    description: m.list_create_match_sales_desc,
+  },
+  {
+    value: "trades",
+    matchSale: false,
+    label: m.list_create_match_trades_label,
+    description: m.list_create_match_trades_desc,
+  },
+] as const;
+
 const LIST_TYPE_DESC: Record<ListTypeNew, () => string> = {
   general: m.list_create_general_list_desc,
   sale: m.list_create_sale_list_desc,
@@ -43,6 +59,7 @@ export type ListDraft = {
   profileAddress: string | null;
   isProfileBind: boolean;
   discoverable: boolean;
+  matchSale: boolean;
   gridColumns: number | null;
   hideSerial: boolean;
   regenerateSlug: boolean;
@@ -57,6 +74,7 @@ export const EMPTY_DRAFT: ListDraft = {
   profileAddress: null,
   isProfileBind: false,
   discoverable: false,
+  matchSale: true,
   gridColumns: null,
   hideSerial: false,
   regenerateSlug: false,
@@ -107,6 +125,7 @@ export function toCreateInput(draft: ListDraft) {
     profileAddress: draft.profileAddress,
     isProfileBind,
     discoverable: draft.listTypeNew !== "general" && draft.discoverable,
+    matchSale: draft.listTypeNew !== "want" || draft.matchSale,
     hideSerial: draft.hideSerial,
   };
 }
@@ -347,6 +366,33 @@ export function ListForm({ idPrefix, value, onChange, lists, profiles, mode, url
           disabled={discoverableDisabled}
           onCheckedChange={(checked) => set({ discoverable: checked })}
         />
+      ) : null}
+
+      {value.listTypeNew === "want" ? (
+        <div className="flex min-w-0 flex-col gap-1.5">
+          <Label render={<span />} id={id("match-with")}>
+            {m.list_create_match_with_label()}
+          </Label>
+          <RadioGroup
+            aria-labelledby={id("match-with")}
+            value={value.matchSale ? "sales" : "trades"}
+            onValueChange={(next) => {
+              const picked = MATCH_WITH.find((option) => option.value === next);
+              if (picked) set({ matchSale: picked.matchSale });
+            }}
+            className="gap-2.5"
+          >
+            {MATCH_WITH.map((option) => (
+              <Field key={option.value} className="w-full flex-row items-start gap-2.5">
+                <Radio value={option.value} className="mt-0.5" />
+                <FieldLabel className="flex-col items-start gap-0.5 font-normal">
+                  <span className="text-sm font-medium">{option.label()}</span>
+                  <FieldDescription render={<span />}>{option.description()}</FieldDescription>
+                </FieldLabel>
+              </Field>
+            ))}
+          </RadioGroup>
+        </div>
       ) : null}
 
       {/* a serial only exists on an entry the bound profile owns */}

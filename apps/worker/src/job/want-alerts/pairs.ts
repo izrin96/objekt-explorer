@@ -1,5 +1,9 @@
 import { notBlockedEither, notTradeSanctioned } from "@repo/api/services/safety";
-import { offersOnTradeSql, takesPartInTradeSql } from "@repo/api/services/trade-lists";
+import {
+  offerMatchesWantSql,
+  offersOnTradeSql,
+  takesPartInTradeSql,
+} from "@repo/api/services/trade-lists";
 import { db } from "@repo/db";
 import { type SQL, sql } from "drizzle-orm";
 
@@ -33,7 +37,8 @@ export async function takeWhole(where: SQL, order: Order, limit: number) {
 export async function fetchPairs(where: SQL, order: Order, limit: number | null): Promise<Pair[]> {
   const result = await db.execute<PairRow>(sql`
     WITH cand AS (
-      SELECT e.id, e.list_id, e.collection_slug AS slug, e.objekt_id, l.list_type_new AS type, l.user_id
+      SELECT e.id, e.list_id, e.collection_slug AS slug, e.objekt_id, l.list_type_new,
+        l.match_sale, l.user_id
       FROM list_entries e
       JOIN lists l ON l.id = e.list_id
       WHERE l.discoverable
@@ -48,15 +53,17 @@ export async function fetchPairs(where: SQL, order: Order, limit: number | null)
       FROM cand c
       JOIN list_entries w ON w.collection_slug = c.slug
       JOIN lists wl ON wl.id = w.list_id
-      WHERE c.type IN ('have', 'sale')
+      WHERE c.list_type_new IN ('have', 'sale')
+        AND ${offerMatchesWantSql("c", "wl")}
         AND wl.list_type_new = 'want' AND wl.user_id <> c.user_id
       UNION ALL
       SELECT c.id, c.list_id, 'reverse', o.list_id, c.list_id, c.slug, o.objekt_id, ol.user_id, c.user_id
       FROM cand c
       JOIN list_entries o ON o.collection_slug = c.slug
       JOIN lists ol ON ol.id = o.list_id
-      WHERE c.type = 'want'
+      WHERE c.list_type_new = 'want'
         AND ${offersOnTradeSql("ol")}
+        AND ${offerMatchesWantSql("ol", "c")}
         AND ol.user_id <> c.user_id
     )
     SELECT entry_id, list_id, direction, offer_list_id, want_list_id, slug, objekt_id FROM pairs p

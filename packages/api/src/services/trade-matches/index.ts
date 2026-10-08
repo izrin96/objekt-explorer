@@ -17,6 +17,7 @@ import {
   countDropped,
   groupBySlug,
   matchSides,
+  type MyHaves,
   type OwnedEntry,
   rankPartners,
   recount,
@@ -122,8 +123,10 @@ async function computeTradeMatches(userId: string, sides: Sides, filter: TradeFi
             listId: listEntries.listId,
             slug: listEntries.collectionSlug,
             objektId: listEntries.objektId,
+            listTypeNew: lists.listTypeNew,
           })
           .from(listEntries)
+          .innerJoin(lists, eq(lists.id, listEntries.listId))
           .where(
             or(
               and(
@@ -144,11 +147,13 @@ async function computeTradeMatches(userId: string, sides: Sides, filter: TradeFi
 
   const haveIds = new Set(sides.haveListIds);
   const myHaveEntries: OwnedEntry[] = [];
+  const mySaleListIds = new Set<number>();
   const myWants = new Map<string, number[]>();
   for (const entry of myEntries) {
     if (entry.slug === null) continue;
     if (haveIds.has(entry.listId)) {
       myHaveEntries.push({ listId: entry.listId, slug: entry.slug, objektId: entry.objektId });
+      if (entry.listTypeNew === "sale") mySaleListIds.add(entry.listId);
     } else {
       myWants.set(entry.slug, unique([...(myWants.get(entry.slug) ?? []), entry.listId]));
     }
@@ -169,12 +174,17 @@ async function computeTradeMatches(userId: string, sides: Sides, filter: TradeFi
   );
 
   const myAddresses = addressesOf.get(userId) ?? none;
-  const myHaves = new Map(
-    [...groupBySlug(myHaveEntries)].map(([slug, entries]) => [
-      slug,
-      collectionVerdict(entries, myAddresses, holdings),
-    ]),
-  );
+  const judge = (entries: OwnedEntry[]) =>
+    new Map(
+      [...groupBySlug(entries)].map(([slug, group]) => [
+        slug,
+        collectionVerdict(group, myAddresses, holdings),
+      ]),
+    );
+  const myHaves: MyHaves = {
+    all: judge(myHaveEntries),
+    trade: judge(myHaveEntries.filter((entry) => !mySaleListIds.has(entry.listId))),
+  };
 
   const recounted = candidates.map((c) =>
     recount(c, addressesOf.get(c.userId) ?? none, holdings, myWants, myHaves),

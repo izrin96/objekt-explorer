@@ -15,6 +15,8 @@ export type TradeList = {
   userId: string;
   listTypeNew: ListTypeNew;
   linkedListId: number | null;
+  /** a want list's: whether sale lists match it */
+  matchSale: boolean;
   bumpedAt: string | null;
   updatedAt: string;
 };
@@ -155,10 +157,18 @@ export function previewSide(entries: FeedEntry[], ringed: SlugIndex | null) {
 /** A collection slug to the viewer's lists that have it on. */
 type SlugIndex = ReadonlyMap<string, readonly number[]>;
 
-/** How many of `entries`' collections `index` holds, and the viewer's lists they are on. */
-function matchCollections(entries: { slug: string }[], index: SlugIndex) {
-  const slugs = new Set(entries.flatMap((entry) => (index.has(entry.slug) ? [entry.slug] : [])));
-  const listIds = new Set([...slugs].flatMap((slug) => index.get(slug)!));
+/** How many collections the sides' indexes hold between them, and the viewer's lists they are on. */
+function matchCollections(sides: { entries: { slug: string }[]; index: SlugIndex }[]) {
+  const slugs = new Set<string>();
+  const listIds = new Set<number>();
+  for (const { entries, index } of sides) {
+    for (const entry of entries) {
+      const ids = index.get(entry.slug);
+      if (!ids) continue;
+      slugs.add(entry.slug);
+      for (const id of ids) listIds.add(id);
+    }
+  }
   return { count: slugs.size, listIds: [...listIds] };
 }
 
@@ -167,8 +177,24 @@ export function matchesViewer(match: { youHave: number; youWant: number } | unde
   return !!match && (match.youHave > 0 || match.youWant > 0);
 }
 
-/** The viewer's have lists (still-owned entries only) and want lists, by collection. */
-export type Viewer = { have: SlugIndex; want: SlugIndex };
+/**
+ * The viewer's have and sale lists (still-owned entries only) and want lists, by collection.
+ * A sale list and a want list match only when the want list takes sales, so `tradeHave` drops
+ * the sale lists and `saleWant` the want lists that match trades only.
+ */
+export type Viewer = {
+  have: SlugIndex;
+  want: SlugIndex;
+  tradeHave: SlugIndex;
+  saleWant: SlugIndex;
+};
+
+/** What a post's side is matched and ringed against: the viewer's lists it can match. */
+function indexFor(role: "have" | "want" | "sale", list: TradeList, viewer: Viewer) {
+  if (role === "have") return viewer.want;
+  if (role === "sale") return viewer.saleWant;
+  return list.matchSale ? viewer.have : viewer.tradeHave;
+}
 
 type PostFilter = {
   /** keep posts with a shown objekt from one of these collections */
@@ -198,19 +224,19 @@ export function assemblePost<L extends TradeList>(
   if (filter.slugs && !all.some((entry) => filter.slugs!.has(entry.slug))) return null;
   if (filter.slug !== null && !all.some((entry) => entry.slug === filter.slug)) return null;
 
-  const wanted = roles.find((side) => side.role === "want")?.entries ?? [];
-  const offered = roles.filter((side) => side.role !== "want").flatMap((side) => side.entries);
   const sides = roles.map(({ role, list, entries }) => {
-    const { items, more } = previewSide(
-      entries,
-      viewer ? (role === "want" ? viewer.have : viewer.want) : null,
-    );
+    const { items, more } = previewSide(entries, viewer ? indexFor(role, list, viewer) : null);
     return { role, list, items, more };
   });
 
   if (!viewer) return { sides, match: undefined };
-  const youHave = matchCollections(wanted, viewer.have);
-  const youWant = matchCollections(offered, viewer.want);
+  const matched = roles.map(({ role, list, entries }) => ({
+    role,
+    entries,
+    index: indexFor(role, list, viewer),
+  }));
+  const youHave = matchCollections(matched.filter((side) => side.role === "want"));
+  const youWant = matchCollections(matched.filter((side) => side.role !== "want"));
   return {
     sides,
     match: {
