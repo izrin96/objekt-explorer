@@ -1,29 +1,34 @@
 import { realNickname, truncateAddress } from "@repo/lib/address";
 
-import { type ListTypeNew, tradeSideOf } from "../schemas/list";
-import type { TradeFilter } from "../schemas/trade";
+import { type ListTypeNew, pickedSides, tradeSideOf } from "../schemas/list";
+import { filterFits, type TradeFilter } from "../schemas/trade";
 import { DAY_MS } from "./time";
 
 export const PARTNER_LIMIT = 50;
 export const CANDIDATE_LIMIT = 200;
 export const IDLE_DAYS = 30;
 
-export type MyList = { id: number; listTypeNew: ListTypeNew };
+export type MyList = { id: number; listTypeNew: ListTypeNew; linkedListId: number | null };
 
 /**
- * The lists each direction matches from. A named list narrows only its own direction,
- * so the other keeps all of the user's lists and a single list can still be mutual.
+ * The lists each direction matches from: every one of the user's, or a named list and the list
+ * it links to (see {@link pickedSides}). A one-way filter compares only its own direction.
  * A list that is not one of the user's have, sale or want lists is ignored.
  */
-export function matchSides(myLists: MyList[], listId: number | null) {
+export function matchSides(myLists: MyList[], listId: number | null, filter: TradeFilter) {
   const named = myLists.find(
     (list) => list.id === listId && tradeSideOf(list.listTypeNew) !== null,
   );
-  const side = (type: "have" | "want") =>
-    named && tradeSideOf(named.listTypeNew) === type
-      ? [named.id]
-      : myLists.filter((list) => tradeSideOf(list.listTypeNew) === type).map((list) => list.id);
-  return { listId: named?.id ?? null, haveListIds: side("have"), wantListIds: side("want") };
+  const ofSide = (type: "have" | "want") =>
+    myLists.filter((list) => tradeSideOf(list.listTypeNew) === type).map((list) => list.id);
+  const sides = named
+    ? pickedSides(named, myLists)
+    : { haveListIds: ofSide("have"), wantListIds: ofSide("want") };
+  return {
+    listId: named?.id ?? null,
+    haveListIds: filter === "they_have" ? [] : sides.haveListIds,
+    wantListIds: filter === "they_want" ? [] : sides.wantListIds,
+  };
 }
 
 type Verdict = "ok" | "not_owned" | "not_transferable";
@@ -185,19 +190,6 @@ function bestDrop(judged: { mine: Judged }[]): DropReason {
     : "not_owned";
 }
 
-function passesFilter(filter: TradeFilter, theyHave: number, theyWant: number) {
-  switch (filter) {
-    case "all":
-      return theyHave > 0 || theyWant > 0;
-    case "mutual":
-      return theyHave > 0 && theyWant > 0;
-    case "they_have":
-      return theyHave > 0;
-    case "they_want":
-      return theyWant > 0;
-  }
-}
-
 export function isIdle(updatedAt: string, now: Date) {
   return now.getTime() - new Date(updatedAt).getTime() >= IDLE_DAYS * DAY_MS;
 }
@@ -207,7 +199,9 @@ type Rankable = { theyHaveIWant: unknown[]; iHaveTheyWant: unknown[]; updatedAt:
 /** Active before idle, then the mutual score, the sum, and the most recent change. */
 export function rankPartners<T extends Rankable>(partners: T[], filter: TradeFilter, now: Date) {
   return partners
-    .filter((p) => passesFilter(filter, p.theyHaveIWant.length, p.iHaveTheyWant.length))
+    .filter((p) =>
+      filterFits(filter, { have: p.iHaveTheyWant.length > 0, want: p.theyHaveIWant.length > 0 }),
+    )
     .map((p) => ({
       partner: p,
       idle: isIdle(p.updatedAt, now),

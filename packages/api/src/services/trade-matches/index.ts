@@ -40,15 +40,24 @@ type Sides = ReturnType<typeof matchSides>;
 
 /**
  * The user's bound have and sale lists and their want lists, narrowed by `slug` when it names
- * one of them. A have or sale list counts only while bound to a profile.
+ * one of them, and by a one-way `filter`. A have or sale list counts only while bound to a profile.
  */
-export async function resolveTradeSides(userId: string, slug: string | undefined): Promise<Sides> {
+export async function resolveTradeSides(
+  userId: string,
+  slug: string | undefined,
+  filter: TradeFilter,
+): Promise<Sides> {
   const myLists = await db
-    .select({ id: lists.id, slug: lists.slug, listTypeNew: lists.listTypeNew })
+    .select({
+      id: lists.id,
+      slug: lists.slug,
+      listTypeNew: lists.listTypeNew,
+      linkedListId: lists.linkedListId,
+    })
     .from(lists)
     .where(and(eq(lists.userId, userId), takesPartInTrade));
   const named = slug === undefined ? undefined : myLists.find((list) => list.slug === slug);
-  return matchSides(myLists, named?.id ?? null);
+  return matchSides(myLists, named?.id ?? null, filter);
 }
 
 const CACHE_TTL_SECONDS = 300;

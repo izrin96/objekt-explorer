@@ -55,7 +55,7 @@ export async function suggestOffer(me: string, partnerId: string) {
   const safety = await chatSafety(me, partnerId);
   if (safety.blocked || safety.tradeBlocked || safety.partnerTradeBlocked) return empty;
 
-  const sides = await resolveTradeSides(me, undefined);
+  const sides = await resolveTradeSides(me, undefined, "all");
   const { userLow, userHigh } = pairKey(me, partnerId);
   const [myEntries, partnerWants, existing] = await Promise.all([
     db

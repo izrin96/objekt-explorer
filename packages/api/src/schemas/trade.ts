@@ -13,6 +13,29 @@ export const PREVIEW_LIMIT = 11;
 
 const DEFAULT_TRADE_FILTER = "all" satisfies TradeFilter;
 
+/** Whether `filter` can show anything for these sides: a one-way view needs its own side. */
+export function filterFits(filter: TradeFilter, sides: { have: boolean; want: boolean }) {
+  switch (filter) {
+    case "all":
+      return sides.have || sides.want;
+    case "mutual":
+      return sides.have && sides.want;
+    case "they_want":
+      return sides.have;
+    case "they_have":
+      return sides.want;
+  }
+}
+
+/** The view a list's Matches link opens: Mutual when it compares both ways, else its own way. */
+export function fullestFilter(sides: {
+  have: boolean;
+  want: boolean;
+}): Exclude<TradeFilter, "all"> {
+  if (sides.have && sides.want) return "mutual";
+  return sides.have ? "they_want" : "they_have";
+}
+
 const tradeFilterSchema = z.enum(TRADE_FILTERS);
 
 export const forYouInputSchema = z.object({

@@ -1,6 +1,6 @@
 import { CardsThreeIcon } from "@phosphor-icons/react";
-import { canBeOnTrade, tradeSideOf } from "@repo/api/schemas/list";
-import type { TradeFilter } from "@repo/api/schemas/trade";
+import { canBeOnTrade, pickedSides, tradeSideOf } from "@repo/api/schemas/list";
+import { filterFits, type TradeFilter } from "@repo/api/schemas/trade";
 import { Link, useNavigate } from "@tanstack/react-router";
 
 import { PendingStatus } from "@/components/router/pending";
@@ -14,6 +14,7 @@ import { m } from "@/paraglide/messages";
 
 import { ALL_LISTS, COMPARE, MATCHES, SIDE, type TradeList } from "./for-you-compare";
 import { CardsSkeleton, ForYouResults } from "./for-you-results";
+import { MatchHelp } from "./match-help";
 import type { ForYouSearch } from "./search-schema";
 
 export function ForYouView({
@@ -26,26 +27,43 @@ export function ForYouView({
   partner: string | undefined;
 }) {
   const navigate = useNavigate({ from: "/trade/for-you" });
-  const tradeLists = useUserLists().filter((l): l is typeof l & TradeList =>
-    canBeOnTrade(l.listTypeNew, l.isProfileBind),
+  const tradeLists: TradeList[] = useUserLists().flatMap((l) =>
+    l.listTypeNew !== "general" && canBeOnTrade(l.listTypeNew, l.isProfileBind)
+      ? [
+          {
+            id: l.id,
+            slug: l.slug,
+            name: l.name,
+            listTypeNew: l.listTypeNew,
+            linkedListId: l.linkedList?.id ?? null,
+          },
+        ]
+      : [],
   );
+  const pickOf = (l: TradeList) => {
+    const sides = pickedSides(l, tradeLists);
+    return {
+      paired: sides.paired,
+      ways: { have: sides.haveListIds.length > 0, want: sides.wantListIds.length > 0 },
+    };
+  };
   // a one-way view compares only one kind of list, so the picker offers only that kind
-  const side = SIDE[filter];
-  const compare = COMPARE[side];
-  const pickable =
-    side === "both" ? tradeLists : tradeLists.filter((l) => tradeSideOf(l.listTypeNew) === side);
-  // a slug that is not one of mine, or not this view's kind, reads as All lists
-  const selected = pickable.find((l) => l.slug === list);
+  const ofKind = (match: TradeFilter, l: TradeList) =>
+    SIDE[match] === "both" || tradeSideOf(l.listTypeNew) === SIDE[match];
+  const compare = COMPARE[SIDE[filter]];
+  const pickable = tradeLists.filter((l) => ofKind(filter, l));
+  // a view a list cannot fill is offered disabled rather than shown empty
+  const canShow = (match: TradeFilter, l: TradeList) => filterFits(match, pickOf(l).ways);
+  // a slug that is not one of mine, or that this view cannot show, reads as All lists
+  const selected = pickable.find((l) => l.slug === list && canShow(filter, l));
   const selectedList = selected?.slug ?? ALL_LISTS;
-  const applies = (match: TradeFilter, slug: string) =>
-    SIDE[match] === "both" ||
-    tradeSideOf(tradeLists.find((l) => l.slug === slug)?.listTypeNew ?? "general") === SIDE[match];
 
   const setSearch = (next: { match?: TradeFilter; list?: string }) =>
     void navigate({
       search: (prev): ForYouSearch => {
         const match = next.match ?? prev.match ?? "all";
-        const merged = next.list ?? prev.list ?? ALL_LISTS;
+        // the list as read, so a slug that read as All lists does not come back on the next change
+        const merged = next.list ?? selectedList;
         return {
           match: match === "all" ? undefined : match,
           list: merged === ALL_LISTS ? undefined : merged,
@@ -61,17 +79,24 @@ export function ForYouView({
       <div className="flex flex-wrap items-center gap-2">
         <SingleSelect<TradeFilter>
           label={m.trade_match_label()}
-          options={MATCHES.map((item) => ({ value: item.value, label: item.label() }))}
+          options={MATCHES.map((item) => ({
+            value: item.value,
+            label: item.label(),
+            disabled: selected !== undefined && !canShow(item.value, selected),
+          }))}
           value={filter}
           defaultValue="all"
-          onChange={(value) =>
-            setSearch({
-              match: value,
-              ...(selectedList !== ALL_LISTS && !applies(value, selectedList)
-                ? { list: ALL_LISTS }
-                : {}),
-            })
-          }
+          onChange={(value) => {
+            // a one-way view of the other kind names the linked list, so the pair stays compared
+            const paired = selected && pickOf(selected).paired;
+            const nextList =
+              !selected || ofKind(value, selected)
+                ? undefined
+                : paired && ofKind(value, paired)
+                  ? paired.slug
+                  : ALL_LISTS;
+            setSearch({ match: value, list: nextList });
+          }}
         />
 
         {tradeLists.length > 0 ? (
@@ -85,6 +110,7 @@ export function ForYouView({
                   name: l.name,
                   type: LIST_TYPE_LABEL[l.listTypeNew](),
                 }),
+                disabled: !canShow(filter, l),
               })),
             ]}
             value={selectedList}
@@ -92,11 +118,13 @@ export function ForYouView({
             onChange={(value) => setSearch({ list: value })}
           />
         ) : null}
+
+        <MatchHelp view="forYou" />
       </div>
 
       {tradeLists.length > 0 ? (
         <p className="text-muted-foreground -mt-1 text-xs text-pretty">
-          {selected ? compare.one(selected) : compare.all()}
+          {selected ? compare.one(selected, pickOf(selected).paired) : compare.all()}
         </p>
       ) : null}
 

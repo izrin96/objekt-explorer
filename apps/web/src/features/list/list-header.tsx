@@ -8,7 +8,8 @@ import {
   TrashIcon,
   UsersIcon,
 } from "@phosphor-icons/react";
-import { canBeOnTrade, tradeSideOf } from "@repo/api/schemas/list";
+import { canBeOnTrade, pickedSides, tradeSideOf } from "@repo/api/schemas/list";
+import { fullestFilter } from "@repo/api/schemas/trade";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
@@ -47,6 +48,16 @@ export function ListHeader() {
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const linked = list.linkedList;
+  const self = { id: list.id, listTypeNew: list.listTypeNew, linkedListId: linked?.id ?? null };
+  const linkedOnTrade =
+    linked && canBeOnTrade(linked.listTypeNew, linked.isProfileBind)
+      ? [{ id: linked.id, listTypeNew: linked.listTypeNew, linkedListId: list.id }]
+      : [];
+  const sides = pickedSides(self, [self, ...linkedOnTrade]);
+  const match = fullestFilter({
+    have: sides.haveListIds.length > 0,
+    want: sides.wantListIds.length > 0,
+  });
   const swappable = (list.listTypeNew === "have" || list.listTypeNew === "want") && linked;
 
   return (
@@ -116,7 +127,7 @@ export function ListHeader() {
               {list.listTypeNew === "have" ? m.list_swap_to_want() : m.list_swap_to_have()}
             </Button>
           ) : null}
-          {canTradeMatch ? <TradeMatchesLink slug={list.slug} /> : null}
+          {canTradeMatch ? <TradeMatchesLink slug={list.slug} match={match} /> : null}
           {list.messageable && !isOwner ? (
             <MessageButton target={{ kind: "list", slug: list.slug }} />
           ) : null}
@@ -191,8 +202,14 @@ export function ListHeader() {
   );
 }
 
-/** The count is this list's Mutual only partners, the rows For you shows for it. */
-function TradeMatchesLink({ slug }: { slug: string }) {
+/** The count is the partners For you shows for this list in `match`, its fullest view. */
+function TradeMatchesLink({
+  slug,
+  match,
+}: {
+  slug: string;
+  match: ReturnType<typeof fullestFilter>;
+}) {
   const { data: count } = useQuery(listMatchCountOptions(slug));
 
   return (
@@ -200,7 +217,7 @@ function TradeMatchesLink({ slug }: { slug: string }) {
       variant="outline"
       size="sm"
       aria-label={count === undefined ? undefined : m.trade_matches_link_label({ count })}
-      render={<Link to="/trade/for-you" search={{ list: slug, match: "mutual" }} />}
+      render={<Link to="/trade/for-you" search={{ list: slug, match }} />}
     >
       <UsersIcon />
       {m.nav_trade_matches()}

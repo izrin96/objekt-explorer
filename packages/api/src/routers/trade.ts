@@ -10,6 +10,7 @@ import {
   bumpInputSchema,
   collectionPostCountsInputSchema,
   forYouInputSchema,
+  fullestFilter,
   listMatchCountInputSchema,
   setShowOnTradeInputSchema,
   tradePartnerInputSchema,
@@ -57,19 +58,23 @@ export const tradeRouter = {
   forYou: authed
     .input(forYouInputSchema)
     .handler(async ({ input: { filter, list }, context: { session } }) => {
-      const sides = await resolveTradeSides(session.user.id, list);
+      const sides = await resolveTradeSides(session.user.id, list, filter);
       return withReputation(
         await withMessageable(await getTradeMatches(session.user.id, sides, filter)),
       );
     }),
 
-  /** The list header's count: that list's Mutual only partners, from the same cache entry For you reads. */
+  /** The list header's count: the partners its Matches link opens on, from the same cache entry For you reads. */
   listMatchCount: authed
     .input(listMatchCountInputSchema)
     .handler(async ({ input: { slug }, context: { session } }) => {
-      const sides = await resolveTradeSides(session.user.id, slug);
+      const sides = await resolveTradeSides(session.user.id, slug, "all");
       if (sides.listId === null) throw new ORPCError("NOT_FOUND");
-      const result = await getTradeMatches(session.user.id, sides, "mutual");
+      const filter = fullestFilter({
+        have: sides.haveListIds.length > 0,
+        want: sides.wantListIds.length > 0,
+      });
+      const result = await getTradeMatches(session.user.id, sides, filter);
       return result.partners.length;
     }),
 

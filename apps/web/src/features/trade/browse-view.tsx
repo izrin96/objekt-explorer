@@ -27,6 +27,7 @@ import { BrowseFilters } from "./browse-filters";
 import { BrowsePost, BrowsePostSkeleton } from "./browse-post";
 import { type BrowseSearch, toBrowseInput } from "./browse-search";
 import { LoadError } from "./load-error";
+import { MatchHelp } from "./match-help";
 import { MyPosts } from "./my-posts";
 import { PostListDialog } from "./post-list-dialog";
 import { browseOptions, forYouOptions, hiddenPartnersOptions } from "./queries";
@@ -133,13 +134,16 @@ export function BrowseView({ search }: { search: BrowseSearch }) {
           </TabsList>
         </Tabs>
         {canMatch ? (
-          <Label className="cursor-pointer gap-2 text-sm font-medium">
-            <Switch
-              checked={onlyMatches}
-              onCheckedChange={(on) => setSearch({ matches: on ? 1 : undefined })}
-            />
-            {m.trade_only_matches()}
-          </Label>
+          <div className="flex items-center gap-1">
+            <Label className="cursor-pointer gap-2 text-sm font-medium">
+              <Switch
+                checked={onlyMatches}
+                onCheckedChange={(on) => setSearch({ matches: on ? 1 : undefined })}
+              />
+              {m.trade_only_matches()}
+            </Label>
+            <MatchHelp view="browse" />
+          </div>
         ) : null}
       </div>
 

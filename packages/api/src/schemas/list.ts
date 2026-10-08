@@ -24,6 +24,23 @@ export function tradeSideOf(type: ListTypeNew): "have" | "want" | null {
   return type === "have" || type === "sale" ? "have" : null;
 }
 
+type TradeListRef = { id: number; listTypeNew: ListTypeNew; linkedListId: number | null };
+
+/**
+ * The sides a list compares when it is picked on its own: its own, and the other side when it
+ * links to a list in `onTrade` that stands for it. With no such link it compares one way.
+ */
+export function pickedSides<L extends TradeListRef>(list: L, onTrade: readonly L[]) {
+  const own = tradeSideOf(list.listTypeNew);
+  const paired = onTrade.find((other) => {
+    const side = tradeSideOf(other.listTypeNew);
+    return other.id === list.linkedListId && side !== null && side !== own;
+  });
+  const ids = (side: "have" | "want") =>
+    [list, paired].flatMap((l) => (l && tradeSideOf(l.listTypeNew) === side ? [l.id] : []));
+  return { haveListIds: ids("have"), wantListIds: ids("want"), paired };
+}
+
 const baseListSchema = z.object({
   id: z.number(),
   slug: z.string(),

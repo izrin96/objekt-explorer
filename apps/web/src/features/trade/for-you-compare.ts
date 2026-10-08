@@ -11,7 +11,13 @@ export const MATCHES: { value: TradeFilter; label: () => string }[] = [
 ];
 
 type Compared = "have" | "want" | "both";
-export type TradeList = { name: string; listTypeNew: "have" | "want" | "sale" };
+export type TradeList = {
+  id: number;
+  slug: string;
+  name: string;
+  listTypeNew: "have" | "want" | "sale";
+  linkedListId: number | null;
+};
 
 /** the kind of list a one-way view compares; both ways it is either */
 export const SIDE: Record<TradeFilter, Compared> = {
@@ -22,12 +28,16 @@ export const SIDE: Record<TradeFilter, Compared> = {
 };
 
 /**
- * Per kind compared: the All option and what is compared. Both ways, a named list narrows
- * only its own direction, so the other keeps every list; a one-way view names only its side.
+ * Per kind compared: the All option and what is compared. Both ways, a named list compares
+ * with the list it links to (`paired`), or one way without one; a one-way view names only its side.
  */
 export const COMPARE: Record<
   Compared,
-  { allLabel: () => string; all: () => string; one: (list: TradeList) => string }
+  {
+    allLabel: () => string;
+    all: () => string;
+    one: (list: TradeList, paired: TradeList | undefined) => string;
+  }
 > = {
   have: {
     allLabel: m.trade_list_all_have,
@@ -42,10 +52,19 @@ export const COMPARE: Record<
   both: {
     allLabel: m.trade_list_all,
     all: m.trade_compare_all,
-    one: (list) =>
-      tradeSideOf(list.listTypeNew) === "have"
-        ? m.trade_compare_have({ list: list.name })
-        : m.trade_compare_want({ list: list.name }),
+    one: (list, paired) => {
+      const isHave = tradeSideOf(list.listTypeNew) === "have";
+      if (paired) {
+        const [have, want] = isHave ? [list, paired] : [paired, list];
+        return m.trade_compare_pair({ have: have.name, want: want.name });
+      }
+      if (list.listTypeNew === "sale") return m.trade_compare_sale_alone({ list: list.name });
+      // only a have list can be off Trade, for want of a bound profile
+      if (list.linkedListId !== null) return m.trade_compare_want_link_off({ list: list.name });
+      return isHave
+        ? m.trade_compare_have_alone({ list: list.name })
+        : m.trade_compare_want_alone({ list: list.name });
+    },
   },
 };
 
