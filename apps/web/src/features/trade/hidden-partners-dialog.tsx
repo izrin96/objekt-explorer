@@ -47,7 +47,7 @@ export function HiddenPartnersDialog({
   );
 }
 
-function HiddenPartnersList({ enabled }: { enabled: boolean }) {
+export function HiddenPartnersList({ enabled }: { enabled: boolean }) {
   const query = useQuery(hiddenPartnersOptions(enabled));
   const unhide = useUnhidePartner();
 

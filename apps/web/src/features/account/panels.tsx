@@ -11,6 +11,7 @@ import { MessagesSection } from "@/features/account/sections/messages";
 import { NotificationsSection } from "@/features/account/sections/notifications";
 import { PasswordSection } from "@/features/account/sections/password";
 import { SectionStatus } from "@/features/account/sections/section-status";
+import { HiddenPartnersList } from "@/features/trade/hidden-partners-dialog";
 import { useCurrentUser } from "@/features/user/hooks";
 import { m } from "@/paraglide/messages";
 
@@ -43,6 +44,17 @@ export function BlockedPanel() {
   return (
     <AccountSection title={m.mod_blocked_title()} description={m.mod_blocked_desc()}>
       <BlockedUsersSection />
+    </AccountSection>
+  );
+}
+
+export function HiddenPanel() {
+  return (
+    <AccountSection
+      title={m.trade_hidden_partners()}
+      description={m.trade_hidden_partners_description()}
+    >
+      <HiddenPartnersList enabled />
     </AccountSection>
   );
 }

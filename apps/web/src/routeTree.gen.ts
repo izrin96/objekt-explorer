@@ -37,6 +37,7 @@ import { Route as containerAccountIndexRouteImport } from './routes/(container)/
 import { Route as containerAccountBlockedRouteImport } from './routes/(container)/account/blocked'
 import { Route as containerAccountDangerRouteImport } from './routes/(container)/account/danger'
 import { Route as containerAccountGeneralRouteImport } from './routes/(container)/account/general'
+import { Route as containerAccountHiddenRouteImport } from './routes/(container)/account/hidden'
 import { Route as containerAccountMessagesRouteImport } from './routes/(container)/account/messages'
 import { Route as containerAccountNotificationsRouteImport } from './routes/(container)/account/notifications'
 import { Route as containerAccountPasswordRouteImport } from './routes/(container)/account/password'
@@ -215,6 +216,11 @@ const containerAccountDangerRoute = containerAccountDangerRouteImport.update({
 const containerAccountGeneralRoute = containerAccountGeneralRouteImport.update({
   id: '/general',
   path: '/general',
+  getParentRoute: () => containerAccountRouteRoute,
+} as any)
+const containerAccountHiddenRoute = containerAccountHiddenRouteImport.update({
+  id: '/hidden',
+  path: '/hidden',
   getParentRoute: () => containerAccountRouteRoute,
 } as any)
 const containerAccountMessagesRoute =
@@ -424,6 +430,7 @@ export interface FileRoutesByFullPath {
   '/account/blocked': typeof containerAccountBlockedRoute
   '/account/danger': typeof containerAccountDangerRoute
   '/account/general': typeof containerAccountGeneralRoute
+  '/account/hidden': typeof containerAccountHiddenRoute
   '/account/messages': typeof containerAccountMessagesRoute
   '/account/notifications': typeof containerAccountNotificationsRoute
   '/account/password': typeof containerAccountPasswordRoute
@@ -481,6 +488,7 @@ export interface FileRoutesByTo {
   '/account/blocked': typeof containerAccountBlockedRoute
   '/account/danger': typeof containerAccountDangerRoute
   '/account/general': typeof containerAccountGeneralRoute
+  '/account/hidden': typeof containerAccountHiddenRoute
   '/account/messages': typeof containerAccountMessagesRoute
   '/account/notifications': typeof containerAccountNotificationsRoute
   '/account/password': typeof containerAccountPasswordRoute
@@ -544,6 +552,7 @@ export interface FileRoutesById {
   '/(container)/account/blocked': typeof containerAccountBlockedRoute
   '/(container)/account/danger': typeof containerAccountDangerRoute
   '/(container)/account/general': typeof containerAccountGeneralRoute
+  '/(container)/account/hidden': typeof containerAccountHiddenRoute
   '/(container)/account/messages': typeof containerAccountMessagesRoute
   '/(container)/account/notifications': typeof containerAccountNotificationsRoute
   '/(container)/account/password': typeof containerAccountPasswordRoute
@@ -608,6 +617,7 @@ export interface FileRouteTypes {
     | '/account/blocked'
     | '/account/danger'
     | '/account/general'
+    | '/account/hidden'
     | '/account/messages'
     | '/account/notifications'
     | '/account/password'
@@ -665,6 +675,7 @@ export interface FileRouteTypes {
     | '/account/blocked'
     | '/account/danger'
     | '/account/general'
+    | '/account/hidden'
     | '/account/messages'
     | '/account/notifications'
     | '/account/password'
@@ -727,6 +738,7 @@ export interface FileRouteTypes {
     | '/(container)/account/blocked'
     | '/(container)/account/danger'
     | '/(container)/account/general'
+    | '/(container)/account/hidden'
     | '/(container)/account/messages'
     | '/(container)/account/notifications'
     | '/(container)/account/password'
@@ -982,6 +994,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof containerAccountGeneralRouteImport
       parentRoute: typeof containerAccountRouteRoute
     }
+    '/(container)/account/hidden': {
+      id: '/(container)/account/hidden'
+      path: '/hidden'
+      fullPath: '/account/hidden'
+      preLoaderRoute: typeof containerAccountHiddenRouteImport
+      parentRoute: typeof containerAccountRouteRoute
+    }
     '/(container)/account/messages': {
       id: '/(container)/account/messages'
       path: '/messages'
@@ -1220,6 +1239,7 @@ interface containerAccountRouteRouteChildren {
   containerAccountBlockedRoute: typeof containerAccountBlockedRoute
   containerAccountDangerRoute: typeof containerAccountDangerRoute
   containerAccountGeneralRoute: typeof containerAccountGeneralRoute
+  containerAccountHiddenRoute: typeof containerAccountHiddenRoute
   containerAccountMessagesRoute: typeof containerAccountMessagesRoute
   containerAccountNotificationsRoute: typeof containerAccountNotificationsRoute
   containerAccountPasswordRoute: typeof containerAccountPasswordRoute
@@ -1232,6 +1252,7 @@ const containerAccountRouteRouteChildren: containerAccountRouteRouteChildren = {
   containerAccountBlockedRoute: containerAccountBlockedRoute,
   containerAccountDangerRoute: containerAccountDangerRoute,
   containerAccountGeneralRoute: containerAccountGeneralRoute,
+  containerAccountHiddenRoute: containerAccountHiddenRoute,
   containerAccountMessagesRoute: containerAccountMessagesRoute,
   containerAccountNotificationsRoute: containerAccountNotificationsRoute,
   containerAccountPasswordRoute: containerAccountPasswordRoute,

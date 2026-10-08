@@ -29,7 +29,7 @@ import { type BrowseSearch, toBrowseInput } from "./browse-search";
 import { LoadError } from "./load-error";
 import { MyPosts } from "./my-posts";
 import { PostListDialog } from "./post-list-dialog";
-import { browseOptions, forYouOptions } from "./queries";
+import { browseOptions, forYouOptions, hiddenPartnersOptions } from "./queries";
 import { TagLabel } from "./tag-label";
 
 type PostType = NonNullable<BrowseSearch["type"]> | "all";
@@ -59,6 +59,7 @@ export function BrowseView({ search }: { search: BrowseSearch }) {
     staleTime: 60_000,
     enabled: Boolean(user),
   });
+  const hidden = useQuery(hiddenPartnersOptions(Boolean(user)));
   const mutualIds = useMemo(
     () => new Set(mutual.data?.partners.map((p) => p.userId)),
     [mutual.data],
@@ -223,6 +224,16 @@ export function BrowseView({ search }: { search: BrowseSearch }) {
           )}
         </div>
       )}
+
+      {/* Browse drops their posts silently, so name the way back */}
+      {hidden.data && hidden.data.length > 0 && query.isSuccess && !query.hasNextPage ? (
+        <p className="text-muted-foreground text-center text-sm text-pretty">
+          {m.trade_browse_hidden_note()}{" "}
+          <Link to="/account/hidden" className="text-foreground underline-offset-2 hover:underline">
+            {m.trade_hidden_partners()}
+          </Link>
+        </p>
+      ) : null}
 
       <ObjektDrawer objekt={active} onClose={() => setActive(null)} />
       {user ? <PostListDialog open={postOpen} onOpenChange={setPostOpen} /> : null}
