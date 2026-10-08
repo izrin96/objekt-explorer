@@ -100,8 +100,6 @@ export function BrowsePost({
   // the post's own list (the have list of a pair), with the first collection it shows
   const anchor = post.sides.find((side) => side.list.id === post.id);
   const firstShown = anchor?.items[0]?.slug;
-  const offerSide = post.sides.find((side) => side.role !== "want");
-  const wantSide = post.sides.find((side) => side.role === "want");
   const contact: TradeContact = own
     ? { kind: "own" }
     : post.messageable && anchor
@@ -109,7 +107,7 @@ export function BrowsePost({
           kind: "open",
           target: { kind: "list", slug: anchor.list.slug },
           card: firstShown ? { collectionSlug: firstShown, listSlug: anchor.list.slug } : undefined,
-          offer: { focusList: offerSide?.list.slug, focusWantList: wantSide?.list.slug },
+          // no focusList / focusWantList: the builder's shortcut strips are off for now
         }
       : { kind: "closed" };
 
