@@ -9,8 +9,12 @@ import type { Publish } from "../../lib/trade-publish";
 
 const REMIND_AFTER = sql`make_interval(hours => ${REMIND_AFTER_HOURS})`;
 
-/** One reminder per trade, `REMIND_AFTER_HOURS` after accept, to each party still owing a transfer. */
-export async function remindStalls(): Promise<Publish[]> {
+/**
+ * One reminder per trade, `REMIND_AFTER_HOURS` after accept, to each party still owing a transfer.
+ * Due against `seenUntil`, as expiry is, so nobody is reminded of a transfer the indexer hasn't read.
+ */
+export async function remindStalls(seenUntil: string | null): Promise<Publish[]> {
+  if (seenUntil === null) return [];
   const stalled = await db
     .select({ id: trade.id })
     .from(trade)
@@ -18,7 +22,7 @@ export async function remindStalls(): Promise<Publish[]> {
       and(
         eq(trade.status, "in_progress"),
         isNull(trade.remindedAt),
-        lte(trade.acceptedAt, sql`now() - ${REMIND_AFTER}`),
+        lte(trade.acceptedAt, sql`${seenUntil}::timestamptz - ${REMIND_AFTER}`),
       ),
     );
   const publishes: Publish[] = [];

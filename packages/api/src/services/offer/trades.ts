@@ -3,6 +3,7 @@ import { db } from "@repo/db";
 import { offer, trade, tradeFeedback, tradeLeg, user } from "@repo/db/schema";
 import { and, desc, eq, gt, inArray, or, sql } from "drizzle-orm";
 
+import { isBehind, parseIndexerSeen } from "../../lib/indexer-seen";
 import {
   cancelRefusal,
   canReport,
@@ -21,6 +22,7 @@ import {
   type TradeStatus,
   type TradeView,
   type Progress,
+  INDEXER_SEEN_KEY,
   VERIFIER_LAST_KEY,
 } from "../../schemas/offer";
 import { chatSafety, fetchPartners, hydrateCards } from "../chat";
@@ -68,9 +70,12 @@ const countVerified = (tx: Tx, tradeId: number) =>
     .where(eq(tradeLeg.tradeId, tradeId))
     .then((rows) => rows[0] ?? { total: 0, verified: 0 });
 
+const readIndexerSeen = async () => parseIndexerSeen(await redis.get(INDEXER_SEEN_KEY));
+
 export async function cancelTrade(me: string, tradeId: number) {
   const row = await findTrade(tradeId, me);
   const { partnerId } = row;
+  const behind = isBehind(await readIndexerSeen(), Date.now());
   // a transfer the verifier hasn't run on yet locks the trade too, or a party could send
   // nothing back and cancel right after receiving
   // matched with the parties' other trades, as the verifier matches them, so a transfer
@@ -93,12 +98,15 @@ export async function cancelTrade(me: string, tradeId: number) {
       .where(eq(trade.id, tradeId))
       .for("update");
     const counts = await countVerified(tx, tradeId);
-    const refusal = cancelRefusal({
-      status: locked!.status,
-      acceptedAt: row.acceptedAt,
-      endedAt: row.endedAt,
-      verifiedLegs: counts.verified,
-    });
+    const refusal = cancelRefusal(
+      {
+        status: locked!.status,
+        acceptedAt: row.acceptedAt,
+        endedAt: row.endedAt,
+        verifiedLegs: counts.verified,
+      },
+      behind,
+    );
     if (refusal) refuseOffer(refusal);
 
     await tx
@@ -174,7 +182,7 @@ export async function fetchTrade(me: string, tradeId: number) {
   const row = await findTrade(tradeId, me);
   const { partnerId } = row;
 
-  const [offers, legs, partners, reputations, accounts, [feedback], lastChecked] =
+  const [offers, legs, partners, reputations, accounts, [feedback], lastChecked, seen] =
     await Promise.all([
       fetchOffers([row.offerId]),
       db.select().from(tradeLeg).where(eq(tradeLeg.tradeId, tradeId)).orderBy(tradeLeg.id),
@@ -189,6 +197,7 @@ export async function fetchTrade(me: string, tradeId: number) {
         .from(tradeFeedback)
         .where(and(eq(tradeFeedback.tradeId, tradeId), eq(tradeFeedback.fromUserId, me))),
       redis.get(VERIFIER_LAST_KEY),
+      readIndexerSeen(),
     ]);
   const source = offers.get(row.offerId)!;
   const partner = partners.get(partnerId);
@@ -213,7 +222,8 @@ export async function fetchTrade(me: string, tradeId: number) {
     row.status === "in_progress"
       ? suggestFirstSender(row, legs, new Map([row.userA, row.userB].map((id) => [id, party(id)])))
       : null;
-  const cancel = cancelRefusal(state);
+  const behind = row.status === "in_progress" && isBehind(seen, now.getTime());
+  const cancel = cancelRefusal(state, behind);
 
   const result: TradeView = {
     id: row.id,
@@ -244,6 +254,8 @@ export async function fetchTrade(me: string, tradeId: number) {
     firstSender: first && { userId: first.userId, you: first.userId === me, sent: first.sent },
     canCancel: cancel === null,
     cancelLocked: cancel === "locked",
+    seenUntil: seen?.seenUntil ?? null,
+    indexerBehind: behind,
     canReport: canReport(state, now),
     rating: feedback?.rating ?? null,
     canRate: rateRefusal(state, now) === null,

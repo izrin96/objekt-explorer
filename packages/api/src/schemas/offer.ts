@@ -72,6 +72,7 @@ export const OFFER_REFUSALS = [
   "trade_blocked",
   "trade_ended",
   "locked",
+  "indexer_behind",
   "not_completed",
   "rating_closed",
   "no_address",
@@ -281,6 +282,10 @@ const tradeViewSchema = z.object({
   canCancel: z.boolean(),
   /** in progress, but a leg already verified */
   cancelLocked: z.boolean(),
+  /** ISO time of the newest block the indexer has read; transfers after it aren't seen yet */
+  seenUntil: z.string().nullable(),
+  /** the indexer's reading is too old to trust (see `isBehind`) */
+  indexerBehind: z.boolean(),
   canReport: z.boolean(),
   /** the viewer's own rating; nobody else's is ever returned */
   rating: z.enum(TRADE_RATINGS).nullable(),
@@ -354,3 +359,8 @@ export type TradePayload = z.infer<typeof tradePayloadSchema>;
 
 /** ISO time of the verifier's last finished run. */
 export const VERIFIER_LAST_KEY = "trade-verifier:last";
+
+/** How far the indexer has read: the newest recorded block's time, and when the worker read it. */
+export const indexerSeenSchema = z.object({ seenUntil: z.string(), readAt: z.string() });
+export type IndexerSeen = z.infer<typeof indexerSeenSchema>;
+export const INDEXER_SEEN_KEY = "trade-verifier:seen";

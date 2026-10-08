@@ -68,7 +68,7 @@ Below the stepper, a table SHALL list each leg with three columns:
 - **Direction**: from whom to whom, as "You → rin.trades";
 - **Status**, one of:
   - a green Verified chip with a check, the shortened transaction hash and how long ago;
-  - an amber Waiting chip with a clock, and when the transfers were last checked;
+  - an amber Waiting chip with a clock, and how recent the transfers the site has seen are ("transfers seen up to 1 minute ago");
   - a red Closed chip for a leg of an ended trade that never verified.
 
 Below `sm` each row SHALL stack, with the status beside the objekt.
@@ -91,6 +91,10 @@ From `lg` up, a side panel SHALL sit beside the table; below `lg` it SHALL follo
 #### Scenario: Phone width
 - **WHEN** the trade page is shown at 390 px
 - **THEN** the side panel follows the transfers table, each leg's row stacks, and the page doesn't scroll sideways
+
+#### Scenario: Seen up to
+- **WHEN** a leg is waiting and the indexer has read the chain up to 40 seconds ago
+- **THEN** its Waiting chip reads "transfers seen up to 40 seconds ago", worded as other relative times are
 
 ### Requirement: Who sends first
 The trade page SHALL suggest which party sends first, the same way to both. When only one party gives objekts (a cash buy or sale), that party is suggested. Otherwise:
@@ -124,6 +128,32 @@ Report a problem files a report against the other party, with the trade attached
 #### Scenario: Report after a week
 - **WHEN** a trade is still in progress 7 days after accept
 - **THEN** its page offers Report a problem, which opens the report dialog with the trade attached
+
+### Requirement: Indexer delay
+The system SHALL know how far the indexer has read the chain: the time of the newest block whose transfers it has recorded. It SHALL refresh this at least every 3 minutes. The indexer is **behind** when that time is more than 5 minutes old, or when it could not be determined for more than 5 minutes.
+
+While the indexer is behind:
+- every in-progress trade page SHALL show a notice above the transfers table: transfers sent after a given time aren't seen yet, and nothing sent is lost;
+- a trade SHALL NOT expire, and no stall reminder SHALL be sent, unless the indexer has read the chain past the moment the expiry or reminder was due;
+- a request to cancel an in-progress trade SHALL be refused with "We can't see the latest transfers yet. Try again in a few minutes."
+
+The notice SHALL disappear, and these rules SHALL lift, within 3 minutes of the indexer catching up. Any expiry or reminder that was held SHALL then happen as usual.
+
+#### Scenario: Indexer stalled
+- **WHEN** the indexer has recorded nothing past 14:02 and it is now 15:30
+- **THEN** every in-progress trade page shows that transfers after 14:02 aren't seen yet
+
+#### Scenario: Expiry held
+- **WHEN** a trade reaches 14 days after accept while the indexer is 3 hours behind, and the giver's transfer happened 2 hours ago
+- **THEN** the trade doesn't expire; once the indexer catches up, the leg verifies instead
+
+#### Scenario: Cancel while behind
+- **WHEN** a party who just received an objekt asks to cancel while the indexer is behind
+- **THEN** the cancel is refused with the message, and the trade stays in progress
+
+#### Scenario: Caught up
+- **WHEN** the indexer catches up
+- **THEN** within 3 minutes the notice is gone, and cancel, expiry and reminders behave as before
 
 ### Requirement: Feedback
 After a trade completes, each party SHALL be able to rate the other Positive, Neutral or Negative, and change that rating for 14 days after completion. Only Completed trades SHALL accept feedback. Single ratings SHALL never be shown to anyone but their author; they count only toward totals.

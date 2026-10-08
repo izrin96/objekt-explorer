@@ -14,6 +14,7 @@ import { isUniqueViolation } from "../../lib/pg-error";
 import { redis } from "../../lib/redis";
 import { withRedisLock } from "../../lib/redis-lock";
 import { type Publish, publishAll } from "../../lib/trade-publish";
+import { readIndexerHead } from "./indexer-head";
 import { offerUpkeep } from "./offer-upkeep";
 import { expireStalls } from "./trade-expiry";
 import { remindStalls } from "./trade-reminders";
@@ -62,6 +63,7 @@ async function runLocked() {
 
 async function verifyRun() {
   const started = Date.now();
+  const seen = await readIndexerHead();
   const legs = await loadOpenLegs();
   const touched = { trades: 0, verified: 0, ended: 0 };
   const publishes: Publish[] = [];
@@ -83,16 +85,20 @@ async function verifyRun() {
 
   const upkeep = await offerUpkeep();
   publishes.push(...upkeep.publishes);
-  const expired = await expireStalls();
+  const seenUntil = seen?.seenUntil ?? null;
+  const expired = await expireStalls(seenUntil);
   publishes.push(...expired);
-  publishes.push(...(await remindStalls()));
+  publishes.push(...(await remindStalls(seenUntil)));
   // before publishing, so a page that refetches on the event reads this run's time
   await redis.set(VERIFIER_LAST_KEY, new Date().toISOString());
   await publishAll(publishes);
 
   await refreshWatch(legs, upkeep.watchedObjekts);
+  const lag = seen
+    ? `indexer ${Math.round((started - new Date(seen.seenUntil).getTime()) / 1000)}s behind`
+    : "indexer head unknown";
   console.log(
-    `[Trade Verifier] ${legs.length} open legs; ${touched.verified} verified across ${touched.trades} trades, ${touched.ended} ended; ${upkeep.expired} offers expired, ${upkeep.moved} cancelled; ${expired.length} trades expired; ${Date.now() - started}ms`,
+    `[Trade Verifier] ${lag}; ${legs.length} open legs; ${touched.verified} verified across ${touched.trades} trades, ${touched.ended} ended; ${upkeep.expired} offers expired, ${upkeep.moved} cancelled; ${expired.length} trades expired; ${Date.now() - started}ms`,
   );
 }
 

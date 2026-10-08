@@ -70,7 +70,7 @@ export function LegTable({
               </span>
             </td>
             <td className="py-3 text-end max-sm:col-start-2 max-sm:row-start-1 max-sm:max-w-40 max-sm:p-0">
-              <LegState leg={leg} lastCheckedAt={trade.lastCheckedAt} hydrated={hydrated} />
+              <LegState leg={leg} seenUntil={trade.seenUntil} hydrated={hydrated} />
             </td>
           </tr>
         ))}
@@ -81,11 +81,11 @@ export function LegTable({
 
 function LegState({
   leg,
-  lastCheckedAt,
+  seenUntil,
   hydrated,
 }: {
   leg: Leg;
-  lastCheckedAt: string | null;
+  seenUntil: string | null;
   hydrated: boolean;
 }) {
   if (leg.state === "verified") {
@@ -121,9 +121,9 @@ function LegState({
           <ClockIcon weight="bold" aria-hidden />
           {m.offer_leg_waiting()}
         </StatusBadge>
-        {lastCheckedAt && hydrated ? (
-          <time dateTime={lastCheckedAt} className="text-muted-foreground">
-            {m.offer_leg_checked({ time: agoLabel(lastCheckedAt) })}
+        {seenUntil && hydrated ? (
+          <time dateTime={seenUntil} className="text-muted-foreground">
+            {m.offer_leg_seen({ time: agoLabel(seenUntil) })}
           </time>
         ) : null}
       </span>

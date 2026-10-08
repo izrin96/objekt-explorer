@@ -38,6 +38,7 @@ const REFUSAL_STATUS: Record<OfferRefusal, ConstructorParameters<typeof ORPCErro
   expired: "CONFLICT",
   trade_ended: "CONFLICT",
   locked: "CONFLICT",
+  indexer_behind: "CONFLICT",
   not_completed: "CONFLICT",
   rating_closed: "CONFLICT",
   not_allowed: "FORBIDDEN",

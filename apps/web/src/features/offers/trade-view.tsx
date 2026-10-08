@@ -1,6 +1,7 @@
 import {
   ArrowClockwiseIcon,
   ChatCircleIcon,
+  ClockCountdownIcon,
   FlagIcon,
   LockSimpleIcon,
   WarningIcon,
@@ -13,6 +14,7 @@ import { useId, useState } from "react";
 
 import { PendingStatus } from "@/components/router/pending";
 import { EmptyState } from "@/components/shared/empty-state";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -94,6 +96,7 @@ function TradeDetail({ trade, collections }: { trade: Trade; collections: Collec
   const inProgress = trade.status === "in_progress";
   const completed = trade.status === "completed";
   const firstSender = inProgress ? trade.firstSender : null;
+  const behind = trade.indexerBehind;
   const aside = inProgress || completed;
 
   return (
@@ -149,6 +152,17 @@ function TradeDetail({ trade, collections }: { trade: Trade; collections: Collec
               {m.offer_progress(trade.progress)}
             </p>
           </div>
+          {behind ? (
+            <Alert variant="warning" className="my-1">
+              <ClockCountdownIcon aria-hidden />
+              <AlertDescription>
+                {/* the viewer's own clock time, so it waits for the client */}
+                {trade.seenUntil && hydrated
+                  ? m.offer_indexer_behind({ time: untilLabel(trade.seenUntil) })
+                  : m.offer_indexer_behind_unknown()}
+              </AlertDescription>
+            </Alert>
+          ) : null}
           <LegTable
             trade={trade}
             name={name}
@@ -194,6 +208,11 @@ function TradeDetail({ trade, collections }: { trade: Trade; collections: Collec
             <p className="text-muted-foreground ms-auto flex items-center gap-1.5 text-xs text-pretty">
               <LockSimpleIcon aria-hidden className="size-3.5 shrink-0" />
               {m.offer_cancel_locked()}
+            </p>
+          ) : behind ? (
+            <p className="text-muted-foreground ms-auto flex items-center gap-1.5 text-xs text-pretty">
+              <ClockCountdownIcon aria-hidden className="size-3.5 shrink-0" />
+              {m.offer_refused_indexer_behind()}
             </p>
           ) : null}
         </div>

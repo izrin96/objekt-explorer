@@ -326,9 +326,15 @@ describe("trade rules", () => {
   });
 
   test("cancelling locks after the first verified leg", () => {
-    expect(cancelRefusal(trade())).toBeNull();
-    expect(cancelRefusal(trade({ verifiedLegs: 1 }))).toBe("locked");
-    expect(cancelRefusal(trade({ status: "cancelled" }))).toBe("trade_ended");
+    expect(cancelRefusal(trade(), false)).toBeNull();
+    expect(cancelRefusal(trade({ verifiedLegs: 1 }), false)).toBe("locked");
+    expect(cancelRefusal(trade({ status: "cancelled" }), false)).toBe("trade_ended");
+  });
+
+  test("a lagging indexer holds cancelling, after the lock and the end", () => {
+    expect(cancelRefusal(trade(), true)).toBe("indexer_behind");
+    expect(cancelRefusal(trade({ verifiedLegs: 1 }), true)).toBe("locked");
+    expect(cancelRefusal(trade({ status: "cancelled" }), true)).toBe("trade_ended");
   });
 
   test("feedback only on a completed trade, for 14 days", () => {

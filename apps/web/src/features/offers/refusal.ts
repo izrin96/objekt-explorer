@@ -55,6 +55,8 @@ export function offerRefusalText(refusal: OfferRefusalInfo, named: string) {
       return m.offer_refused_trade_ended();
     case "locked":
       return m.offer_cancel_locked();
+    case "indexer_behind":
+      return m.offer_refused_indexer_behind();
     case "not_completed":
       return m.offer_refused_not_completed();
     case "rating_closed":

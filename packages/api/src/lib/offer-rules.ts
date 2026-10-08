@@ -266,10 +266,14 @@ export function canReport(trade: TradeState, now: Date) {
   );
 }
 
-/** Either party may cancel until the first leg verifies. */
-export function cancelRefusal(trade: TradeState): OfferRefusal | null {
+/**
+ * Either party may cancel until the first leg verifies, and not while the indexer is behind:
+ * a party could otherwise cancel right after receiving, before the transfer is read.
+ */
+export function cancelRefusal(trade: TradeState, indexerBehind: boolean): OfferRefusal | null {
   if (trade.status !== "in_progress") return "trade_ended";
-  return trade.verifiedLegs > 0 ? "locked" : null;
+  if (trade.verifiedLegs > 0) return "locked";
+  return indexerBehind ? "indexer_behind" : null;
 }
 
 /** Only a completed trade takes feedback, until 14 days after it ended. */

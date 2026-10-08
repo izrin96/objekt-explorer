@@ -12,13 +12,19 @@ const EXPIRE_AFTER = sql`make_interval(days => ${TRADE_EXPIRE_DAYS})`;
 /**
  * Ends every trade still in progress `TRADE_EXPIRE_DAYS` after accept, releasing its reserved
  * objekts. Runs after the run's own verification, so a transfer that just landed completes first.
+ * Due against `seenUntil`, not the clock, so a lagging indexer can't expire a trade whose
+ * transfer it hasn't read yet; with no reading, nothing expires.
  */
-export async function expireStalls(): Promise<Publish[]> {
+export async function expireStalls(seenUntil: string | null): Promise<Publish[]> {
+  if (seenUntil === null) return [];
   const stalled = await db
     .select({ id: trade.id })
     .from(trade)
     .where(
-      and(eq(trade.status, "in_progress"), lte(trade.acceptedAt, sql`now() - ${EXPIRE_AFTER}`)),
+      and(
+        eq(trade.status, "in_progress"),
+        lte(trade.acceptedAt, sql`${seenUntil}::timestamptz - ${EXPIRE_AFTER}`),
+      ),
     );
   const publishes: Publish[] = [];
   for (const { id } of stalled) {

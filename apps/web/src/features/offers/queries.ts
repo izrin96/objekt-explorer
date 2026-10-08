@@ -106,7 +106,9 @@ export const tradeOptions = (tradeId: number, live = true) =>
     input: { tradeId },
     staleTime: 0,
     refetchOnWindowFocus: true,
-    refetchInterval: pollUnlessLive(live),
+    // no event fires when the indexer falls behind or catches up, so an in-progress trade polls
+    refetchInterval: (query) =>
+      query.state.data?.trade.status === "in_progress" ? 60_000 : pollUnlessLive(live),
     retry: (count, error) => !isNotFound(error) && count < 2,
   });
 
