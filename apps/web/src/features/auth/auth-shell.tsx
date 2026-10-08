@@ -4,11 +4,6 @@ import type React from "react";
 
 import { SITE_NAME, cn } from "@/lib/utils";
 
-/**
- * `bg-popover`, not `bg-card`: `--card` is transparent in the dark theme, so a
- * `bg-card` auth card would be a bare outline and the divider label below would
- * have nothing to mask the rule with.
- */
 export function AuthShell({
   children,
   className,
@@ -28,9 +23,7 @@ export function AuthShell({
           </span>
           <span>{SITE_NAME}</span>
         </Link>
-        <div
-          className={cn("bg-popover flex min-w-0 flex-col gap-5 rounded-xl border p-5", className)}
-        >
+        <div className={cn("bg-card flex min-w-0 flex-col gap-5 rounded-xl border p-5", className)}>
           {children}
         </div>
       </div>

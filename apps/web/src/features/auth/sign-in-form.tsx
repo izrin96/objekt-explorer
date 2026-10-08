@@ -151,12 +151,12 @@ export function SignInForm({
       </div>
 
       {/* the divider's label masks the rule with the surface behind it, which
-          inside this card is `bg-popover`, not `bg-background` */}
+          inside this card is `bg-card`, not `bg-background` */}
       <div className="relative flex items-center justify-center text-sm">
         <div className="absolute inset-0 flex items-center">
           <div className="bg-border h-px w-full shrink-0" />
         </div>
-        <span className="bg-popover text-muted-foreground relative px-3">
+        <span className="bg-card text-muted-foreground relative px-3">
           {m.auth_sign_in_or_continue()}
         </span>
       </div>

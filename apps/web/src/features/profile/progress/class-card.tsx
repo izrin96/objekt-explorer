@@ -96,7 +96,7 @@ export function ClassCard({
         /* below `sm` the title takes the whole row and the bar shares the next
            one with the value: three fixed tracks do not fit a phone */
         className={cn(
-          "bg-popover hover:bg-secondary/60 grid w-full cursor-pointer grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 rounded-lg border px-3.5 py-3 text-left text-sm transition-colors",
+          "bg-card hover:bg-secondary/60 grid w-full cursor-pointer grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 rounded-lg border px-3.5 py-3 text-left text-sm transition-colors",
           "sm:grid-cols-[7.5rem_minmax(0,1fr)_auto]",
           open && "bg-secondary/40",
         )}
