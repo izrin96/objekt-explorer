@@ -15,7 +15,9 @@ import { relativeTime } from "@/lib/time";
 import { m } from "@/paraglide/messages";
 
 import { mineStatusText, offerNo, offerSummary, tradeNo } from "./format";
+import { ProgressRing } from "./progress-ring";
 import { mineOptions } from "./queries";
+import { StatusBadge, statusTone } from "./status-badge";
 
 type Collections = Readonly<Record<string, ValidObjekt | undefined>>;
 
@@ -170,9 +172,18 @@ function MineRowLink({
           {offerSummary(row, collections)}
         </span>
       </span>
-      <Badge variant={row.yourTurn ? "secondary" : "outline"} className="shrink-0">
-        {mineStatusText(row)}
-      </Badge>
+      {row.status === "in_progress" && row.progress && row.progress.total > 0 ? (
+        <ProgressRing verified={row.progress.verified} total={row.progress.total} />
+      ) : null}
+      {row.yourTurn ? (
+        <Badge variant="secondary" className="shrink-0">
+          {mineStatusText(row)}
+        </Badge>
+      ) : (
+        <StatusBadge tone={statusTone(row.status)} className="shrink-0">
+          {mineStatusText(row)}
+        </StatusBadge>
+      )}
     </>
   );
 

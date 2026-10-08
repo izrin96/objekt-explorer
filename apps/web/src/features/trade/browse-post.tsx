@@ -1,4 +1,5 @@
 import type { Outputs } from "@repo/api";
+import type { ListTypeNew } from "@repo/api/schemas/list";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { Link } from "@tanstack/react-router";
 import { Fragment } from "react";
@@ -13,6 +14,7 @@ import { PhotocardSkeleton } from "@/features/objekt/photocard-skeleton";
 import { formatCurrency } from "@/features/settings/use-currency";
 import { useUserLists } from "@/features/user/hooks";
 import { relativeTime } from "@/lib/time";
+import { toneChip } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
@@ -53,9 +55,14 @@ export function TagLabel({ tag }: { tag: PostTag }) {
   );
 }
 
+const TAG_TYPE = { wtt: "have", wtb: "want", wts: "sale" } as const satisfies Record<
+  PostTag,
+  ListTypeNew
+>;
+
 function TagBadge({ tag }: { tag: PostTag }) {
   return (
-    <Badge variant="outline" size="sm" className="font-mono">
+    <Badge variant="outline" size="sm" className={cn("font-mono", toneChip(TAG_TYPE[tag]))}>
       <TagLabel tag={tag} />
     </Badge>
   );

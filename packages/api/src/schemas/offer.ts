@@ -190,6 +190,7 @@ const candidateItemSchema = z.object({
 export type CandidateItem = z.infer<typeof candidateItemSchema>;
 
 const progressSchema = z.object({ verified: z.number(), total: z.number() });
+export type Progress = z.infer<typeof progressSchema>;
 
 const offerItemViewSchema = z.object({
   collectionSlug: z.string(),
@@ -296,6 +297,8 @@ const mineRowSchema = z.object({
   give: offerItemViewSchema.array(),
   get: offerItemViewSchema.array(),
   topup: topupViewSchema.nullable(),
+  /** a trade's verified legs; null on an offer */
+  progress: progressSchema.nullable(),
   /** what the row is ordered by: when it ended, else when it started */
   at: z.string(),
 });

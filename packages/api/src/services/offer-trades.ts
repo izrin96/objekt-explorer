@@ -20,6 +20,7 @@ import {
   type TradeRating,
   type TradeStatus,
   type TradeView,
+  type Progress,
   VERIFIER_LAST_KEY,
 } from "../schemas/offer";
 import { chatSafety, fetchPartners, hydrateCards } from "./chat";
@@ -54,12 +55,14 @@ async function findTrade(tradeId: number, me: string) {
   return { ...row, partnerId: row.userA === me ? row.userB : row.userA };
 }
 
+const progressColumns = {
+  total: sql<number>`count(*)::int`,
+  verified: sql<number>`(count(*) FILTER (WHERE ${tradeLeg.verifiedAt} IS NOT NULL))::int`,
+};
+
 const countVerified = (tx: Tx, tradeId: number) =>
   tx
-    .select({
-      total: sql<number>`count(*)::int`,
-      verified: sql<number>`(count(*) FILTER (WHERE ${tradeLeg.verifiedAt} IS NOT NULL))::int`,
-    })
+    .select(progressColumns)
     .from(tradeLeg)
     .where(eq(tradeLeg.tradeId, tradeId))
     .then((rows) => rows[0] ?? { total: 0, verified: 0 });
@@ -272,6 +275,16 @@ type HistoryRow = {
 
 const GROUP_LIMIT = 100;
 
+async function fetchProgress(tradeIds: number[]): Promise<Map<number, Progress>> {
+  if (tradeIds.length === 0) return new Map();
+  const rows = await db
+    .select({ tradeId: tradeLeg.tradeId, ...progressColumns })
+    .from(tradeLeg)
+    .where(inArray(tradeLeg.tradeId, tradeIds))
+    .groupBy(tradeLeg.tradeId);
+  return new Map(rows.map((row) => [row.tradeId, { verified: row.verified, total: row.total }]));
+}
+
 /** Needs you, Waiting on them and In progress on the first page; History paged by `cursor`. */
 export async function fetchMine(me: string, cursor: HistoryCursor | undefined) {
   const now = new Date();
@@ -357,7 +370,10 @@ export async function fetchMine(me: string, cursor: HistoryCursor | undefined) {
     .map(toEntry);
 
   const all = [...needsYou, ...waiting, ...inProgress, ...historyPage];
-  const offers = await fetchOffers(all.map((entry) => entry.offerId));
+  const [offers, progressOf] = await Promise.all([
+    fetchOffers(all.map((entry) => entry.offerId)),
+    fetchProgress(all.flatMap((entry) => (entry.kind === "trade" ? [entry.id] : []))),
+  ]);
   const [partners, { serial: serialOf, collections }] = await Promise.all([
     fetchPartners(
       [...offers.values()].map((o) => (o.from_user_id === me ? o.to_user_id : o.from_user_id)),
@@ -384,6 +400,7 @@ export async function fetchMine(me: string, cursor: HistoryCursor | undefined) {
         yourTurn: entry.kind === "offer" && entry.status === "open" && source.to_user_id === me,
         ...itemViews(source, me, serialOf),
         topup: topupView(source, source.from_user_id === me),
+        progress: entry.kind === "trade" ? (progressOf.get(entry.id) ?? null) : null,
         at: new Date(entry.at).toISOString(),
       },
     ];

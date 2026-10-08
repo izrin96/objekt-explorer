@@ -1,11 +1,17 @@
 import {
   ArrowClockwiseIcon,
+  ArrowRightIcon,
   BellIcon,
+  CheckIcon,
   ChecksIcon,
+  ClockIcon,
   GearIcon,
-  HandshakeIcon,
+  HeartIcon,
+  type Icon,
+  PackageIcon,
   ShieldWarningIcon,
   WarningIcon,
+  XIcon,
 } from "@phosphor-icons/react";
 import type { Outputs } from "@repo/api";
 import type { Notification } from "@repo/api/schemas/notification";
@@ -23,11 +29,13 @@ import { collectionName } from "@/features/objekt/objekt-label";
 import { offerNotificationText, tradeNotificationText } from "@/features/offers/format";
 import { orpc } from "@/lib/orpc";
 import { relativeTime } from "@/lib/time";
+import { TONE_FILL, TONE_INK, type Tone } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 import { useUserSocketLive } from "@/stores/user-socket";
 
 import { notificationKeys, notificationsOptions, unreadCountOptions } from "./queries";
+import { type NotificationIcon, notificationTone } from "./tone";
 
 type Collections = Outputs["notifications"]["list"]["collections"];
 
@@ -226,6 +234,38 @@ function NotificationSkeleton() {
   );
 }
 
+const TONE_ICON: Record<NotificationIcon, Icon> = {
+  check: CheckIcon,
+  clock: ClockIcon,
+  cross: XIcon,
+  arrow: ArrowRightIcon,
+  heart: HeartIcon,
+  package: PackageIcon,
+  shield: ShieldWarningIcon,
+};
+
+/** An alert's objekt thumbnail keeps its picture, framed in its list type's colour. */
+const TONE_FRAME: Partial<Record<Tone, string>> = {
+  want: "outline-type-want",
+  have: "outline-type-have",
+};
+
+function ToneTile({ notification }: { notification: Notification }) {
+  const { icon, tone } = notificationTone(notification);
+  const Glyph = TONE_ICON[icon];
+  return (
+    <span
+      className={cn(
+        "grid h-10 w-7 shrink-0 place-items-center rounded",
+        TONE_FILL[tone],
+        TONE_INK[tone],
+      )}
+    >
+      <Glyph aria-hidden weight="bold" className="size-4" />
+    </span>
+  );
+}
+
 type ListNotification = Extract<Notification, { type: "want_match" | "have_wanted" }>;
 type OfferNotification = Extract<Notification, { type: "offer" | "trade" }>;
 type SanctionNotification = Extract<Notification, { type: "sanction" }>;
@@ -265,9 +305,7 @@ function SanctionItem({
       onClick={onRead}
       className="hover:bg-accent focus-visible:bg-accent focus-visible:ring-ring flex w-full items-start gap-3 px-4 py-2.5 text-start outline-none focus-visible:ring-2 focus-visible:ring-inset"
     >
-      <span className="bg-muted text-muted-foreground grid h-10 w-7 shrink-0 place-items-center rounded">
-        <ShieldWarningIcon aria-hidden className="size-4" />
-      </span>
+      <ToneTile notification={notification} />
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span className="text-muted-foreground text-xs font-medium">
           {m.notification_sanction_from()}
@@ -310,9 +348,7 @@ function OfferItem({
     "hover:bg-accent focus-visible:bg-accent focus-visible:ring-ring flex items-start gap-3 px-4 py-2.5 outline-none focus-visible:ring-2 focus-visible:ring-inset";
   const body = (
     <>
-      <span className="bg-muted text-muted-foreground grid h-10 w-7 shrink-0 place-items-center rounded">
-        <HandshakeIcon aria-hidden className="size-4" />
-      </span>
+      <ToneTile notification={notification} />
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span
           className={cn(
@@ -388,10 +424,13 @@ function NotificationItem({
         <img
           src={thumbnail}
           alt=""
-          className="h-10 w-7 shrink-0 rounded object-cover outline -outline-offset-1 outline-black/10 dark:outline-white/10"
+          className={cn(
+            "h-10 w-7 shrink-0 rounded object-cover outline-2 outline-offset-1",
+            TONE_FRAME[notificationTone(notification).tone],
+          )}
         />
       ) : (
-        <span className="bg-muted h-10 w-7 shrink-0 rounded" />
+        <ToneTile notification={notification} />
       )}
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span

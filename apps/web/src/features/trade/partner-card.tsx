@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import { ListRoleBadge } from "./list-role-badge";
-import { MatchLine } from "./match-line";
+import { MATCH_TONE, MatchLine } from "./match-line";
 import { THUMB_GRID } from "./thumb-grid";
 import { TradeCard } from "./trade-card";
 
@@ -25,8 +25,8 @@ export type TradeCollections = Record<string, ValidObjekt | undefined>;
 
 /** theirs first, as the match line reads */
 const DIRECTIONS = [
-  { key: "theyHaveIWant", section: m.trade_section_they_have },
-  { key: "iHaveTheyWant", section: m.trade_section_you_have },
+  { key: "theyHaveIWant", section: m.trade_section_they_have, tone: MATCH_TONE.theyHave },
+  { key: "iHaveTheyWant", section: m.trade_section_you_have, tone: MATCH_TONE.youHave },
 ] as const;
 
 const REASON: Record<Dropped["reason"], () => string> = {
@@ -117,7 +117,7 @@ export function PartnerCard({
       {DIRECTIONS.map((direction) =>
         partner[direction.key].length > 0 ? (
           <section key={direction.key} className="flex flex-col gap-2">
-            <h3 className={SECTION_TITLE}>
+            <h3 className={cn(SECTION_TITLE, direction.tone)}>
               {direction.section({ count: partner[direction.key].length })}
             </h3>
             <MatchGrid count={partner[direction.key].length}>
