@@ -110,10 +110,11 @@ async function verifyRun() {
   const upkeep = await offerUpkeep();
   publishes.push(...upkeep.publishes);
   publishes.push(...(await remindStalls()));
+  // before publishing, so a page that refetches on the event reads this run's time
+  await redis.set(VERIFIER_LAST_KEY, new Date().toISOString());
   await publishAll(publishes);
 
   await refreshWatch(legs, upkeep.watchedObjekts);
-  await redis.set(VERIFIER_LAST_KEY, new Date().toISOString());
   console.log(
     `[Trade Verifier] ${legs.length} open legs; ${touched.verified} verified across ${touched.trades} trades, ${touched.ended} ended; ${upkeep.expired} offers expired, ${upkeep.moved} cancelled; ${Date.now() - started}ms`,
   );
