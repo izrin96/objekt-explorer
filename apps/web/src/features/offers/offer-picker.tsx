@@ -28,7 +28,6 @@ import { CollectionLabel } from "@/features/objekt/objekt-label";
 import { mapObjektWithTag } from "@/features/objekt/objekt-utils";
 import { PhotocardSkeleton } from "@/features/objekt/photocard-skeleton";
 import { VirtualCardGrid } from "@/features/objekt/virtual-card-grid";
-import { useUserLists } from "@/features/user/hooks";
 import { useLoadAllPages } from "@/hooks/use-load-all-pages";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -190,6 +189,7 @@ type GridProps = {
 
 type Filters = PickerFilters & { search: string };
 
+// both switches start off, so a picker never opens on nothing
 const NO_FILTERS: Filters = { ...NO_PICKER_FILTERS, matchOnly: false };
 
 const narrowed = (filters: Filters) => filters.matchOnly || pickerFiltered(filters);
@@ -286,12 +286,7 @@ function MineGrid({ to, ...grid }: GridProps) {
 }
 
 function TheirsGrid({ to, name, ...grid }: GridProps & { name: string }) {
-  const wantsSomething = useUserLists().some((list) => list.listTypeNew === "want");
-  const [chosen, setFilters] = useState<Omit<Filters, "matchOnly"> & { matchOnly: boolean | null }>(
-    { ...NO_FILTERS, matchOnly: null },
-  );
-  // until the sender flips it, the switch is on when they keep a want list, once their lists load
-  const filters = { ...chosen, matchOnly: chosen.matchOnly ?? wantsSomething };
+  const [filters, setFilters] = useState(NO_FILTERS);
   const query = useInfiniteQuery(theirPickerOptions(to, filters));
   useLoadAllPages(filters.search.trim().length > 0, query);
 
