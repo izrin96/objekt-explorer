@@ -9,7 +9,6 @@ export const FEED_FETCH_SIZE = 36;
 export const BUMP_COOLDOWN_HOURS = 24;
 
 export type PostTag = Exclude<PostType, "all">;
-export type SideRole = "have" | "want" | "sale";
 
 export type TradeList = {
   id: number;

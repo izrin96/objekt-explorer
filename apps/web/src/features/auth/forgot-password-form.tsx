@@ -8,6 +8,7 @@ import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Form } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { AuthHeader, authLinkClass } from "@/features/auth/auth-shell";
+import { FormError } from "@/features/auth/form-error";
 import { authClient } from "@/lib/auth-client";
 import { type FieldErrors, zodErrors } from "@/lib/form";
 import { cn } from "@/lib/utils";
@@ -87,9 +88,7 @@ export function ForgotPasswordForm({ redirect }: { redirect?: string }) {
         </Button>
 
         {mutation.isError && (
-          <p role="alert" className="text-destructive-foreground text-xs text-pretty">
-            {m.auth_forgot_password_error({ message: mutation.error.message })}
-          </p>
+          <FormError>{m.auth_forgot_password_error({ message: mutation.error.message })}</FormError>
         )}
       </Form>
 

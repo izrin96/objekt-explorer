@@ -286,7 +286,7 @@ async function fetchPairedPartners(
   }));
 }
 
-export type PartnerRow = {
+type PartnerRow = {
   userId: string;
   listId: number;
   listSlug: string;

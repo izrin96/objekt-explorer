@@ -2,12 +2,11 @@ import { db } from "@repo/db";
 import { sql } from "drizzle-orm";
 
 import { toReputation } from "../lib/offer-rules";
+import { unique } from "../lib/unique";
 import { type Reputation, reputationKey, reputationSchema } from "../schemas/reputation";
 import { redis } from "./redis";
 
 const TTL_SECONDS = 600;
-
-const unique = <T>(values: T[]) => [...new Set(values)];
 
 type Row = { id: string; since: string; verified: number; positive: number; negative: number };
 

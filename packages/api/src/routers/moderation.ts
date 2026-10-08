@@ -7,13 +7,8 @@ import {
   userIdInputSchema,
 } from "../schemas/moderation";
 import { blockedAccounts, blockUser, unblockUser } from "../services/blocks";
-import {
-  accountDossier,
-  applyModAction,
-  reportQueue,
-  revokeSanction,
-  setUserRole,
-} from "../services/mod-console";
+import { applyModAction, revokeSanction, setUserRole } from "../services/mod-console";
+import { accountDossier, reportQueue } from "../services/mod-reads";
 import { fileReport } from "../services/report";
 
 export const moderationRouter = {

@@ -1,4 +1,3 @@
-import { parseBanNotice } from "@repo/api/schemas/moderation";
 import { useMutation } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
@@ -11,13 +10,14 @@ import { Form } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { toastManager } from "@/components/ui/toast";
 import { AuthDivider, AuthHeader, authLinkClass } from "@/features/auth/auth-shell";
+import { BANNED, bannedError } from "@/features/auth/ban-notice";
+import { FormError } from "@/features/auth/form-error";
 import { PasswordInput } from "@/features/auth/password-input";
 import { useAuthSuccess } from "@/features/auth/redirect";
 import { SocialSignIn } from "@/features/auth/social-sign-in";
 import { authClient } from "@/lib/auth-client";
 import { type FieldErrors, zodErrors } from "@/lib/form";
 import { m } from "@/paraglide/messages";
-import { getLocale } from "@/paraglide/runtime";
 
 // built per submit, not at module scope: the message functions read the
 // request's locale, which on the server is only bound while a request runs
@@ -26,28 +26,6 @@ function schema() {
     email: z.string().min(1, m.common_validation_required_email()),
     password: z.string().min(1, m.common_validation_required_password()),
   });
-}
-
-export const BANNED = "BANNED_USER";
-
-/**
- * Better Auth checks a ban only after the password or the provider's consent, so this message
- * reaches only someone who already proved the account is theirs.
- */
-export function banText(message: string | undefined) {
-  const notice = parseBanNotice(message);
-  if (!notice) return m.auth_banned();
-  if (!notice.until) return m.auth_banned_forever({ reason: notice.reason });
-  const end = new Date(notice.until);
-  // Intl throws on an invalid date; the generic notice still says why sign-in failed
-  if (Number.isNaN(end.getTime())) return m.auth_banned();
-  const until = new Intl.DateTimeFormat(getLocale(), { dateStyle: "long" }).format(end);
-  return m.auth_banned_until({ until, reason: notice.reason });
-}
-
-/** Marks an error whose message is already the whole sentence to show. */
-function bannedError(message: string | undefined) {
-  return Object.assign(new Error(banText(message)), { name: BANNED });
 }
 
 export function SignInForm({
@@ -122,11 +100,11 @@ export function SignInForm({
         </Button>
 
         {mutation.isError && (
-          <p role="alert" className="text-destructive-foreground text-xs text-pretty">
+          <FormError>
             {mutation.error.name === BANNED
               ? mutation.error.message
               : m.auth_sign_in_error({ message: mutation.error.message })}
-          </p>
+          </FormError>
         )}
       </Form>
 

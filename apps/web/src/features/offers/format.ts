@@ -1,91 +1,22 @@
 import {
-  OFFER_REFUSALS,
-  OFFER_SIDE_LIMIT,
   type MineRow,
   type OfferItemView,
   type OfferPayload,
-  type OfferRefusal,
   type OfferView,
   type TopupView,
   type TradePayload,
   type TradeView,
 } from "@repo/api/schemas/offer";
-import type { ValidObjekt } from "@repo/lib/types/objekt";
 
-import { refusalText as chatRefusalText } from "@/features/chat/format";
 import { collectionName } from "@/features/objekt/objekt-label";
 import { formatCurrency } from "@/features/settings/use-currency";
-import { errorReason } from "@/lib/orpc-error";
 import { relativeTime } from "@/lib/time";
 import { m } from "@/paraglide/messages";
 
-type Collections = Readonly<Record<string, ValidObjekt | undefined>>;
+import type { Collections } from "./pick";
 
 export const offerNo = (id: number) => `O-${id}`;
 export const tradeNo = (id: number) => `T-${id}`;
-
-export function offerRefusalOf(error: unknown) {
-  const { reason: code, retryAt } = errorReason(error);
-  const reason = OFFER_REFUSALS.find((item) => item === code);
-  if (!reason) return null;
-  const data = (error as { data?: { objektIds?: unknown; collectionSlugs?: unknown } }).data;
-  const strings = (value: unknown) =>
-    Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
-  return {
-    reason,
-    retryAt,
-    objektIds: strings(data?.objektIds),
-    collectionSlugs: strings(data?.collectionSlugs),
-  };
-}
-
-export type OfferRefusalInfo = NonNullable<ReturnType<typeof offerRefusalOf>>;
-
-/** `named` lists the objekts the refusal names, already worded. */
-export function offerRefusalText(refusal: OfferRefusalInfo, named: string) {
-  const reason: OfferRefusal = refusal.reason;
-  switch (reason) {
-    case "not_owned":
-      return m.offer_refused_not_owned({ objekts: named });
-    case "not_transferable":
-      return m.offer_refused_not_transferable({ objekts: named });
-    case "reserved":
-      return m.offer_refused_reserved({ objekts: named });
-    case "not_listed":
-      return m.offer_refused_not_listed();
-    case "empty":
-      return m.offer_refused_empty();
-    case "too_many":
-      return m.offer_refused_too_many({ max: OFFER_SIDE_LIMIT });
-    case "invalid_topup":
-      return m.offer_refused_invalid_topup();
-    case "too_many_open":
-      return m.offer_refused_too_many_open();
-    case "not_open":
-      return m.offer_refused_not_open();
-    case "expired":
-      return m.offer_refused_expired();
-    case "not_allowed":
-      return m.offer_refused_not_allowed();
-    case "trade_blocked":
-      return m.offer_refused_trade_blocked();
-    case "trade_ended":
-      return m.offer_refused_trade_ended();
-    case "locked":
-      return m.offer_cancel_locked();
-    case "not_completed":
-      return m.offer_refused_not_completed();
-    case "rating_closed":
-      return m.offer_refused_rating_closed();
-    case "no_address":
-    case "self":
-    case "not_accepting":
-    case "start_limit":
-    case "message_limit":
-    case "muted":
-      return chatRefusalText({ reason, retryAt: refusal.retryAt });
-  }
-}
 
 export function itemName(item: Pick<OfferItemView, "collectionSlug">, collections: Collections) {
   return collectionName(item.collectionSlug, collections[item.collectionSlug]);

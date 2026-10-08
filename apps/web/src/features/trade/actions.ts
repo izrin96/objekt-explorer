@@ -1,5 +1,5 @@
 import { ORPCError } from "@orpc/client";
-import type { TradeMatches } from "@repo/api/services/trade-matches";
+import type { TradeMatches } from "@repo/api/services/trade-matches/index";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { toastManager } from "@/components/ui/toast";

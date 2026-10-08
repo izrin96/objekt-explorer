@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { PageHeader } from "@/components/shared/page-header";
-import { ModQueue, ModQueueSkeleton } from "@/features/moderation/mod-queue";
-import { queueOptions } from "@/features/moderation/queries";
+import { queueOptions } from "@/features/moderation/console/queries";
+import { ModQueue, ModQueueSkeleton } from "@/features/moderation/console/queue";
 import { generateMetadata } from "@/lib/meta";
 import { m } from "@/paraglide/messages";
 

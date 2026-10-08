@@ -2,8 +2,8 @@ import { createFileRoute, redirect as routerRedirect } from "@tanstack/react-rou
 import { useEffect, useState } from "react";
 import * as z from "zod";
 
+import { BANNED, banText } from "@/features/auth/ban-notice";
 import { SignIn } from "@/features/auth/sign-in";
-import { BANNED, banText } from "@/features/auth/sign-in-form";
 import { currentUserOptions } from "@/features/user/queries";
 import { generateMetadata } from "@/lib/meta";
 import { m } from "@/paraglide/messages";

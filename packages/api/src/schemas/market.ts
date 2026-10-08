@@ -75,8 +75,6 @@ export const marketListingsOutputSchema = z.object({
   nextOffset: z.number().optional(),
 });
 
-export type MarketListingsOutput = z.infer<typeof marketListingsOutputSchema>;
-
 export const viewerMarketListingsOutputSchema = marketListingsOutputSchema.extend({
   items: z.array(viewerMarketListingSchema),
 });

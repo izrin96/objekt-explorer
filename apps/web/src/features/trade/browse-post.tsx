@@ -1,81 +1,21 @@
-import type { Outputs } from "@repo/api";
-import type { ListTypeNew } from "@repo/api/schemas/list";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { Link } from "@tanstack/react-router";
 
-import { Badge } from "@/components/ui/badge";
-import { PopoverTitle } from "@/components/ui/popover";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getListLinkOption } from "@/features/list/list-link";
-import { ObjektCard } from "@/features/objekt/objekt-card";
 import { PhotocardSkeleton } from "@/features/objekt/photocard-skeleton";
-import { formatCurrency } from "@/features/settings/use-currency";
-import { useUserLists } from "@/features/user/hooks";
 import { relativeTime } from "@/lib/time";
-import { toneChip } from "@/lib/tone";
-import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
-import { ListRoleBadge } from "./list-role-badge";
 import { MatchLine } from "./match-line";
+import { MatchedLists } from "./matched-lists";
+import { PostSide } from "./post-side";
+import { postTime } from "./post-time";
+import type { BrowsePostData } from "./post-types";
+import { TagBadge } from "./tag-label";
 import { THUMB_GRID } from "./thumb-grid";
 import { TradeCard, type TradeContact } from "./trade-card";
 
-type BrowsePage = Outputs["trade"]["browse"];
-export type BrowsePostData = BrowsePage["posts"][number];
-type Side = BrowsePostData["sides"][number];
-type PostTag = BrowsePostData["tag"];
-
-const TAG_LABEL: Record<PostTag, { short: () => string; long: () => string }> = {
-  wtt: { short: m.trade_tag_wtt, long: m.trade_tag_wtt_desc },
-  wtb: { short: m.trade_tag_wtb, long: m.trade_tag_wtb_desc },
-  wts: { short: m.trade_tag_wts, long: m.trade_tag_wts_desc },
-};
-
-/** monochrome on purpose: the class stripes stay the only colour in the grid */
-const RING = "ring-foreground ring-offset-card ring-2 ring-offset-2";
-/**
- * Drawn inside the artwork (its first child) by a pseudo-element, so the card's own
- * focus ring, a box-shadow on the same element, still shows on a ringed card.
- */
-const CARD_RING =
-  "*:first:after:pointer-events-none *:first:after:absolute *:first:after:inset-0 *:first:after:rounded-photocard *:first:after:border-2 *:first:after:border-foreground *:first:after:shadow-[inset_0_0_0_2px_var(--color-card)]";
-
-/** The short tag stays visible; the spelled-out one is read and shown on hover. */
-export function TagLabel({ tag }: { tag: PostTag }) {
-  return (
-    <>
-      <abbr aria-hidden title={TAG_LABEL[tag].long()} className="no-underline">
-        {TAG_LABEL[tag].short()}
-      </abbr>
-      <span className="sr-only">{TAG_LABEL[tag].long()}</span>
-    </>
-  );
-}
-
-const TAG_TYPE = { wtt: "have", wtb: "want", wts: "sale" } as const satisfies Record<
-  PostTag,
-  ListTypeNew
->;
-
-function TagBadge({ tag }: { tag: PostTag }) {
-  return (
-    <Badge variant="outline" size="sm" className={cn("font-mono", toneChip(TAG_TYPE[tag]))}>
-      <TagLabel tag={tag} />
-    </Badge>
-  );
-}
-
-/** Posting a list touches it a moment after the bump, so that touch still reads as the bump. */
-const BUMP_TOUCH_MS = 60_000;
-
-/** An edit does not move a post, but it does make it current. */
-export function postTime(post: { bumpedAt: string | null; updatedAt: string }) {
-  const changed =
-    post.bumpedAt === null ||
-    new Date(post.updatedAt).getTime() - new Date(post.bumpedAt).getTime() > BUMP_TOUCH_MS;
-  return { changed, time: changed ? post.updatedAt : post.bumpedAt! };
-}
+export type { BrowsePostData } from "./post-types";
 
 export function BrowsePost({
   post,
@@ -148,89 +88,6 @@ export function BrowsePost({
   );
 }
 
-function PostSide({
-  side,
-  collections,
-  onOpen,
-}: {
-  side: Side;
-  collections: Readonly<Record<string, ValidObjekt | undefined>>;
-  onOpen: (objekt: ValidObjekt) => void;
-}) {
-  const { list } = side;
-  const currency = side.role === "sale" ? list.currency : null;
-  const priceOf = (item: Side["items"][number]) => {
-    if (side.role !== "sale") return undefined;
-    if (item.isQyop) return m.objekt_qyop();
-    return item.price !== null && currency ? formatCurrency(item.price, currency) : undefined;
-  };
-
-  return (
-    <section className="flex flex-col gap-2">
-      <h3 className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-sm">
-        <ListRoleBadge type={side.role} />
-        <Link
-          {...getListLinkOption(list)}
-          className="min-w-0 font-medium break-words underline-offset-2 hover:underline"
-        >
-          {list.name}
-        </Link>
-        {currency ? (
-          <span className="text-muted-foreground font-mono text-xs">({currency})</span>
-        ) : null}
-      </h3>
-      {list.description ? (
-        <p className="text-muted-foreground line-clamp-2 text-sm text-pretty break-words whitespace-pre-wrap">
-          {list.description}
-        </p>
-      ) : null}
-      <ul className={THUMB_GRID}>
-        {side.items.map((item) => {
-          const collection = collections[item.slug];
-          return (
-            /* a container, so the slug tile's radius matches the cards' */
-            <li key={item.entryId} className="@container min-w-0">
-              {collection ? (
-                <ObjektCard
-                  objekt={collection}
-                  image="thumbnail"
-                  onOpen={() => onOpen(collection)}
-                  captionClassName="text-xs"
-                  price={priceOf(item)}
-                  priceMuted={item.isQyop}
-                  className={item.ringed ? CARD_RING : undefined}
-                  description={item.ringed ? m.trade_match_ring() : undefined}
-                />
-              ) : (
-                <div
-                  className={cn(
-                    "bg-muted text-muted-foreground rounded-photocard aspect-photocard grid place-items-center p-2 text-center font-mono text-xs leading-snug break-all",
-                    item.ringed && RING,
-                  )}
-                >
-                  {item.slug}
-                  {item.ringed ? <span className="sr-only">{m.trade_match_ring()}</span> : null}
-                </div>
-              )}
-            </li>
-          );
-        })}
-        {side.more > 0 ? (
-          <li className="@container self-start">
-            <Link
-              {...getListLinkOption(list)}
-              className="bg-muted text-muted-foreground hover:text-foreground focus-visible:ring-ring rounded-photocard aspect-photocard grid place-items-center font-mono text-sm tabular-nums outline-none focus-visible:ring-2"
-            >
-              <span aria-hidden>+{side.more}</span>
-              <span className="sr-only">{m.trade_more_count({ count: side.more })}</span>
-            </Link>
-          </li>
-        ) : null}
-      </ul>
-    </section>
-  );
-}
-
 /** A post's shape (byline, one side, a row of thumbnails), so the first page lands in place. */
 export function BrowsePostSkeleton() {
   return (
@@ -250,59 +107,6 @@ export function BrowsePostSkeleton() {
             <PhotocardSkeleton key={index} />
           ))}
         </div>
-      </div>
-    </div>
-  );
-}
-
-/** The viewer's lists behind each count, in the match line's order. A sale list can feed You have. */
-function MatchedLists({ match }: { match: NonNullable<BrowsePostData["match"]> }) {
-  const lists = useUserLists();
-  const groups = [
-    {
-      key: "want",
-      ids: match.wantListIds,
-      count: m.trade_match_they_have({ count: match.youWant }),
-    },
-    {
-      key: "have",
-      ids: match.haveListIds,
-      count: m.trade_match_you_have({ count: match.youHave }),
-    },
-  ];
-  const rows = groups.flatMap((group) => {
-    const ids = new Set(group.ids);
-    const matched = lists.filter((list) => ids.has(list.id));
-    return matched.length > 0 ? [{ key: group.key, count: group.count, matched }] : [];
-  });
-  return (
-    <div className="flex flex-col gap-3">
-      <PopoverTitle className="text-sm">{m.trade_match_lists_title()}</PopoverTitle>
-      {rows.map(({ key, count, matched }) => (
-        <section key={key} className="flex flex-col gap-1.5">
-          <h4 className="text-muted-foreground text-xs tabular-nums">{count}</h4>
-          <ul className="flex flex-col gap-1.5 text-sm">
-            {matched.map((list) => (
-              <li key={list.id} className="flex min-w-0 items-center gap-2">
-                <ListRoleBadge type={list.listTypeNew} />
-                <Link
-                  {...getListLinkOption(list)}
-                  className="min-w-0 break-words underline-offset-2 hover:underline"
-                >
-                  {list.name}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ))}
-      <div className="border-t pt-2">
-        <Link
-          to="/list"
-          className="text-muted-foreground hover:text-foreground text-xs underline-offset-2 hover:underline"
-        >
-          {m.nav_manage_list()}
-        </Link>
       </div>
     </div>
   );

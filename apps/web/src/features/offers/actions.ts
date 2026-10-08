@@ -6,8 +6,8 @@ import { orpc } from "@/lib/orpc";
 import { isNotFound } from "@/lib/orpc-error";
 import { m } from "@/paraglide/messages";
 
-import { offerRefusalOf, offerRefusalText } from "./format";
 import { invalidateOfferLists } from "./queries";
+import { offerRefusalOf, offerRefusalText, refusedKeys } from "./refusal";
 
 /**
  * Accept, decline, withdraw and cancel. Each refreshes the thread and the lists itself, so they
@@ -30,10 +30,7 @@ export function useOfferActions(
     onError: (error: Error) => {
       void refresh();
       const refusal = offerRefusalOf(error);
-      const keys = new Set([
-        ...(refusal?.objektIds ?? []),
-        ...(refusal?.collectionSlugs ?? []).map((slug) => `any:${slug}`),
-      ]);
+      const keys = refusedKeys(refusal ?? { objektIds: [], collectionSlugs: [] });
       toastManager.add({
         type: "error",
         title:

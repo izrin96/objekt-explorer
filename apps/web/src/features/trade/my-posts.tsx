@@ -11,9 +11,9 @@ import { m } from "@/paraglide/messages";
 import { useSettings } from "@/stores/settings";
 
 import { useBumpPost } from "./actions";
-import { postTime } from "./browse-post";
 import { ListRoleBadge } from "./list-role-badge";
 import { summarizePosts } from "./my-posts-summary";
+import { postTime } from "./post-time";
 import { myPostsOptions } from "./queries";
 
 /** Hidden until the viewer has a list on Trade; Post a list sits beside the page description. */
@@ -46,8 +46,12 @@ export function MyPosts() {
 
   return (
     <section aria-labelledby="my-posts-title">
-      <Collapsible open={open} onOpenChange={(next) => setSettings({ myPostsShown: next })}>
-        <div className="flex items-center justify-between gap-2">
+      <Collapsible
+        open={open}
+        onOpenChange={(next) => setSettings({ myPostsShown: next })}
+        className="bg-card rounded-lg border"
+      >
+        <div className="flex items-center justify-between gap-2 px-4 py-2.5">
           <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-sm">
             <h2 id="my-posts-title" className="text-muted-foreground font-medium">
               {m.trade_my_posts_title()}
@@ -90,7 +94,7 @@ export function MyPosts() {
           </CollapsibleTrigger>
         </div>
         <CollapsiblePanel>
-          <ul className="bg-card mt-2 flex flex-col divide-y rounded-lg border">
+          <ul className="flex flex-col divide-y border-t">
             {query.data.map((post) => (
               <MyPostRow key={post.id} post={post} now={now} />
             ))}

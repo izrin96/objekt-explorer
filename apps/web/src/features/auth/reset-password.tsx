@@ -8,8 +8,9 @@ import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui
 import { Form } from "@/components/ui/form";
 import { toastManager } from "@/components/ui/toast";
 import { AuthHeader, AuthShell } from "@/features/auth/auth-shell";
+import { FormError } from "@/features/auth/form-error";
 import { PasswordInput } from "@/features/auth/password-input";
-import { MIN_PASSWORD } from "@/features/auth/sign-up-form";
+import { MIN_PASSWORD } from "@/features/auth/password-rules";
 import { authClient } from "@/lib/auth-client";
 import { type FieldErrors, zodErrors } from "@/lib/form";
 import { m } from "@/paraglide/messages";
@@ -67,9 +68,7 @@ export function ResetPassword({ token }: { token: string }) {
         </Button>
 
         {mutation.isError && (
-          <p role="alert" className="text-destructive-foreground text-xs text-pretty">
-            {m.auth_reset_password_error({ message: mutation.error.message })}
-          </p>
+          <FormError>{m.auth_reset_password_error({ message: mutation.error.message })}</FormError>
         )}
       </Form>
     </AuthShell>

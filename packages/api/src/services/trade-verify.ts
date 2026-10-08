@@ -5,8 +5,7 @@ import { tradeLeg } from "@repo/db/schema";
 import { and, gte, inArray, sql } from "drizzle-orm";
 
 import { type MatchLeg, type MatchTransfer, matchLegs } from "../lib/trade-match";
-
-const unique = <T>(values: T[]) => [...new Set(values)];
+import { unique } from "../lib/unique";
 
 export type LegRow = {
   id: number;

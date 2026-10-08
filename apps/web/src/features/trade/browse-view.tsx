@@ -1,4 +1,4 @@
-import { ArrowClockwiseIcon, CardsThreeIcon, WarningIcon } from "@phosphor-icons/react";
+import { ArrowClockwiseIcon, CardsThreeIcon } from "@phosphor-icons/react";
 import { canBeOnTrade } from "@repo/api/schemas/list";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
@@ -16,34 +16,21 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsList, TabsTab } from "@/components/ui/tabs";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import { useSelectedArtists } from "@/features/artist/use-selected-artists";
-import { ActiveChips, type ActiveChip, useActiveChips } from "@/features/filters/active-chips";
-import {
-  type ExtraFacet,
-  ExtraFacetControls,
-  FACET_KEYS,
-  FacetControls,
-  type FacetKey,
-  useDeclaredFacets,
-  useFacetParity,
-} from "@/features/filters/facet-controls";
-import { useScopedFacets } from "@/features/filters/facets";
-import { QuickFilters } from "@/features/filters/filter-bar";
-import { FilterSheet } from "@/features/filters/filter-sheet";
-import { OnlineFilter } from "@/features/filters/online-filter";
-import { ResetButton } from "@/features/filters/reset-button";
 import { canReset } from "@/features/filters/search-schema";
-import { useCanonicalFilters, useSetFilters } from "@/features/filters/use-filters";
 import { ObjektDrawer } from "@/features/objekt/drawer";
 import { collectionName } from "@/features/objekt/objekt-label";
 import { useCurrentUser, useUserLists } from "@/features/user/hooks";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
-import { BrowsePost, BrowsePostSkeleton, TagLabel } from "./browse-post";
+import { BrowseFilters } from "./browse-filters";
+import { BrowsePost, BrowsePostSkeleton } from "./browse-post";
 import { type BrowseSearch, toBrowseInput } from "./browse-search";
+import { LoadError } from "./load-error";
 import { MyPosts } from "./my-posts";
 import { PostListDialog } from "./post-list-dialog";
 import { browseOptions, forYouOptions } from "./queries";
+import { TagLabel } from "./tag-label";
 
 type PostType = NonNullable<BrowseSearch["type"]> | "all";
 
@@ -125,7 +112,7 @@ export function BrowseView({ search }: { search: BrowseSearch }) {
 
       {user ? <MyPosts /> : null}
 
-      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
         <Tabs
           value={type}
           onValueChange={(value) => {
@@ -169,16 +156,7 @@ export function BrowseView({ search }: { search: BrowseSearch }) {
           <BrowseFeedSkeleton />
         </>
       ) : query.isError && posts.length === 0 ? (
-        <EmptyState
-          icon={WarningIcon}
-          title={m.common_error_loading_data()}
-          action={
-            <Button variant="outline" size="sm" onClick={() => void query.refetch()}>
-              <ArrowClockwiseIcon />
-              {m.common_error_retry()}
-            </Button>
-          }
-        />
+        <LoadError onRetry={() => void query.refetch()} />
       ) : posts.length === 0 && !query.hasNextPage && onlyMatches ? (
         <EmptyState
           icon={CardsThreeIcon}
@@ -248,95 +226,6 @@ export function BrowseView({ search }: { search: BrowseSearch }) {
 
       <ObjektDrawer objekt={active} onClose={() => setActive(null)} />
       {user ? <PostListDialog open={postOpen} onOpenChange={setPostOpen} /> : null}
-    </>
-  );
-}
-
-function BrowseFilters({
-  search,
-  slugName,
-  filtering,
-  onClearSlug,
-  onReset,
-}: {
-  search: BrowseSearch;
-  slugName: string | undefined;
-  filtering: boolean;
-  onClearSlug: () => void;
-  onReset: () => void;
-}) {
-  const { facets, groups } = useScopedFacets();
-  const filters = useCanonicalFilters();
-  const setFilters = useSetFilters();
-  const chips = useActiveChips();
-
-  const setFacet = (key: FacetKey, value: string[]) =>
-    setFilters({ [key]: value.length > 0 ? value : undefined });
-
-  const values = {
-    artist: filters.artist ?? [],
-    member: filters.member ?? [],
-    season: filters.season ?? [],
-    class: filters.class ?? [],
-    collection: filters.collection ?? [],
-  };
-
-  const extras = useMemo<ExtraFacet[]>(
-    () => [
-      { key: "on_offline", active: (filters.on_offline?.length ?? 0) > 0, Control: OnlineFilter },
-    ],
-    [filters.on_offline],
-  );
-
-  const declaredKeys = useMemo(() => [...FACET_KEYS, ...extras.map((e) => e.key)], [extras]);
-  useDeclaredFacets("inline", declaredKeys);
-  useFacetParity();
-
-  const nothingToReset = !filtering;
-
-  const slugChip: ActiveChip[] =
-    search.slug && slugName
-      ? [
-          {
-            key: "slug",
-            label: `${m.trade_collection_chip()}: ${slugName}`,
-            name: m.trade_collection_chip(),
-            value: slugName,
-            mono: slugName === search.slug,
-            remove: {},
-          },
-        ]
-      : [];
-
-  return (
-    <>
-      <div className="flex flex-wrap items-center gap-2">
-        <QuickFilters>
-          <FilterSheet
-            facets={facets}
-            groups={groups}
-            values={values}
-            onChange={setFacet}
-            extras={extras}
-            onReset={onReset}
-            resetDisabled={nothingToReset}
-          />
-          <ExtraFacetControls surface="inline" extras={extras} />
-          <FacetControls
-            surface="inline"
-            facets={facets}
-            groups={groups}
-            values={values}
-            onChange={setFacet}
-          />
-          <ResetButton onReset={onReset} disabled={nothingToReset} />
-        </QuickFilters>
-      </div>
-
-      <ActiveChips
-        chips={[...slugChip, ...chips]}
-        onRemove={(chip) => (chip.key === "slug" ? onClearSlug() : setFilters(chip.remove))}
-      />
     </>
   );
 }

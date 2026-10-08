@@ -9,9 +9,10 @@ import {
   suggestInputSchema,
   tradeIdInputSchema,
 } from "../schemas/offer";
-import { acceptOffer, createOffer, offerViews, respondToOffer } from "../services/offer";
-import { offerCandidates, suggestOffer } from "../services/offer-picker";
-import { cancelTrade, fetchMine, fetchTrade, rateTrade } from "../services/offer-trades";
+import { createOffer, offerViews, respondToOffer } from "../services/offer";
+import { acceptOffer } from "../services/offer/accept";
+import { offerCandidates, suggestOffer } from "../services/offer/picker";
+import { cancelTrade, fetchMine, fetchTrade, rateTrade } from "../services/offer/trades";
 
 export const offerRouter = {
   /** What the builder can pick: `mine` paged from the sender's wallet, `theirs` from the partner's allowed lists. */

@@ -10,8 +10,13 @@ import { reportRetryAt, shapeExcerpt, shapeExcerptOffer } from "../lib/sanctions
 import type { ReportInput } from "../schemas/moderation";
 import { afterBlockChange, findMembership, parseCard } from "./chat";
 import { findAccount, refuseModeration } from "./moderation";
-import { type CancelResult, cancelOpenOffers, offersBetween, publishCancelled } from "./offer";
-import { fetchOffers } from "./offer-view";
+import {
+  type CancelResult,
+  cancelOpenOffers,
+  offersBetween,
+  publishCancelled,
+} from "./offer/cancel";
+import { fetchOffers } from "./offer/view";
 
 /** The offers behind shared messages, as they stand now, so the report keeps what was offered. */
 async function excerptOffers(offerIds: number[], targetUserId: string, now: Date) {

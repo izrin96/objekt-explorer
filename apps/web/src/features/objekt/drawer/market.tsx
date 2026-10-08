@@ -22,6 +22,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { useStartConversation, useStartGate } from "@/features/chat/message-button";
 import { getListLinkOption } from "@/features/list/list-link";
 import { type OfferRequest, useOfferBuilder } from "@/features/offers/offer-builder";
+import { anyKey } from "@/features/offers/pick";
 import { ProfileCell } from "@/features/profile/profile-hover-card";
 import { formatCurrency, useCurrency } from "@/features/settings/use-currency";
 import { collectionPostCountsOptions } from "@/features/trade/queries";
@@ -351,7 +352,7 @@ function MarketRow({
                     prefill: {
                       get: [
                         {
-                          key: item.objektId ?? `any:${slug}`,
+                          key: item.objektId ?? anyKey(slug),
                           collectionSlug: slug,
                           objektId: item.objektId,
                           serial: item.serial,

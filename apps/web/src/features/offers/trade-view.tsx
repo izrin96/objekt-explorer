@@ -3,56 +3,36 @@ import {
   ChatCircleIcon,
   FlagIcon,
   LockSimpleIcon,
-  ShieldCheckIcon,
   WarningIcon,
 } from "@phosphor-icons/react";
-import { type TradeView as Trade, TRADE_RATINGS, type TradeRating } from "@repo/api/schemas/offer";
+import type { TradeView as Trade } from "@repo/api/schemas/offer";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Link, useHydrated } from "@tanstack/react-router";
 import { useId, useState } from "react";
 
 import { PendingStatus } from "@/components/router/pending";
 import { EmptyState } from "@/components/shared/empty-state";
-import {
-  AlertDialog,
-  AlertDialogClose,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogPopup,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { untilLabel } from "@/features/chat/format";
 import { useSafetyDialogs } from "@/features/moderation/safety-dialogs";
 import { ObjektDrawer } from "@/features/objekt/drawer";
-import { orpc } from "@/lib/orpc";
-import { TONE_EDGE, TONE_FILL, TONE_INK } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 import { useUserSocketLive } from "@/stores/user-socket";
 
-import { useOfferActions } from "./actions";
-import {
-  itemLabel,
-  offerNo,
-  offerRefusalOf,
-  offerRefusalText,
-  topupText,
-  tradeNo,
-  tradeStatusText,
-} from "./format";
+import { CancelTrade } from "./cancel-trade";
+import { FirstSender } from "./first-sender";
+import { offerNo, topupText, tradeNo, tradeStatusText } from "./format";
 import { LegTable } from "./leg-table";
-import { invalidateOfferLists, tradeOptions } from "./queries";
-import { SegmentedChoice } from "./segmented-choice";
+import type { Collections } from "./pick";
+import { tradeOptions } from "./queries";
 import { StatusBadge, statusTone } from "./status-badge";
+import { Feedback } from "./trade-feedback";
 import { TradeSteps } from "./trade-steps";
 import { TrustLine } from "./trust-line";
-
-type Collections = Readonly<Record<string, ValidObjekt | undefined>>;
 
 export function TradeView({ id }: { id: number }) {
   const live = useUserSocketLive((state) => state.live);
@@ -228,159 +208,6 @@ function TradeDetail({ trade, collections }: { trade: Trade; collections: Collec
       <ObjektDrawer objekt={active} onClose={() => setActive(null)} />
       {safety.dialogs}
     </article>
-  );
-}
-
-/** A suggestion shown the same way to both sides; nothing enforces it. */
-function FirstSender({
-  sender,
-  name,
-}: {
-  sender: NonNullable<Trade["firstSender"]>;
-  name: string;
-}) {
-  const headline = sender.you ? m.offer_first_you() : m.offer_first_them({ name });
-  const follow = sender.sent
-    ? sender.you
-      ? m.offer_first_you_sent()
-      : m.offer_first_them_sent({ name })
-    : null;
-  return (
-    <section
-      className={cn(
-        "flex flex-col gap-1 rounded-lg border p-3 text-sm",
-        TONE_EDGE.progress,
-        TONE_FILL.progress,
-      )}
-    >
-      <h3 className="flex items-center gap-1.5 font-medium">
-        <ShieldCheckIcon
-          aria-hidden
-          weight="fill"
-          className={cn("size-4 shrink-0", TONE_INK.progress)}
-        />
-        {m.offer_first_title()}
-      </h3>
-      <p className="text-pretty">
-        {headline}
-        {follow ? <> {follow}</> : null}
-      </p>
-      <p className="text-muted-foreground text-xs text-pretty">{m.offer_first_hint()}</p>
-    </section>
-  );
-}
-
-const RATING_LABEL: Record<TradeRating, () => string> = {
-  positive: m.offer_rating_positive,
-  neutral: m.offer_rating_neutral,
-  negative: m.offer_rating_negative,
-};
-
-function Feedback({ trade, name, hydrated }: { trade: Trade; name: string; hydrated: boolean }) {
-  const queryClient = useQueryClient();
-  const headingId = useId();
-  const [error, setError] = useState<string | null>(null);
-  const rate = useMutation(
-    orpc.offer.rate.mutationOptions({
-      // a quick change of mind is sent after the one before it, never beside it
-      scope: { id: `rate-${trade.id}` },
-      onSuccess: () => {
-        setError(null);
-        return invalidateOfferLists(queryClient);
-      },
-      onError: (failure) => {
-        const refusal = offerRefusalOf(failure);
-        setError((refusal ? offerRefusalText(refusal, "") : null) ?? m.offer_rating_error());
-        void invalidateOfferLists(queryClient);
-      },
-    }),
-  );
-  const value = rate.isPending ? rate.variables.rating : trade.rating;
-
-  return (
-    <section
-      aria-labelledby={headingId}
-      className={cn(
-        "flex flex-col gap-2 rounded-lg border p-3",
-        trade.canRate && [TONE_EDGE.success, TONE_FILL.success],
-      )}
-    >
-      <h3 id={headingId} className="text-sm font-medium">
-        {trade.status === "in_progress"
-          ? m.offer_rating_pending_title()
-          : m.offer_rating_title({ name })}
-      </h3>
-      <SegmentedChoice
-        label={m.offer_rating_title({ name })}
-        options={TRADE_RATINGS.map((rating) => ({ value: rating, label: RATING_LABEL[rating]() }))}
-        value={value}
-        disabled={!trade.canRate}
-        className="grid w-full grid-cols-3 *:px-1"
-        onChange={(rating) => {
-          if (rating !== value) rate.mutate({ tradeId: trade.id, rating });
-        }}
-      />
-      <p className="text-muted-foreground text-xs text-pretty">
-        {trade.status === "in_progress"
-          ? m.offer_rating_pending()
-          : trade.canRate && trade.rateUntil && hydrated
-            ? m.offer_rating_until({ time: untilLabel(trade.rateUntil) })
-            : !trade.canRate
-              ? m.offer_rating_closed()
-              : null}{" "}
-        {m.offer_rating_private()}
-      </p>
-      <p role="alert" className="text-destructive-foreground text-xs empty:hidden">
-        {error}
-      </p>
-    </section>
-  );
-}
-
-function CancelTrade({ trade, collections }: { trade: Trade; collections: Collections }) {
-  const [open, setOpen] = useState(false);
-  const actions = useOfferActions(trade.conversationId, (keys) =>
-    trade.legs
-      .filter((leg) => keys.has(leg.objektId ?? `any:${leg.collectionSlug}`))
-      .map((leg) => itemLabel(leg, collections))
-      .join(", "),
-  );
-
-  return (
-    <>
-      <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
-        {m.offer_trade_cancel()}
-      </Button>
-      <AlertDialog open={open} onOpenChange={setOpen}>
-        <AlertDialogPopup>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {m.offer_trade_cancel_title({ trade: tradeNo(trade.id) })}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {m.offer_trade_cancel_desc({ name: trade.partner.identity.name })}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogClose render={<Button variant="outline" />}>
-              {m.offer_trade_keep()}
-            </AlertDialogClose>
-            <Button
-              variant="destructive"
-              loading={actions.cancelTrade.isPending}
-              onClick={() =>
-                actions.cancelTrade.mutate(
-                  { tradeId: trade.id },
-                  { onSettled: () => setOpen(false) },
-                )
-              }
-            >
-              {m.offer_trade_cancel()}
-            </Button>
-          </AlertDialogFooter>
-        </AlertDialogPopup>
-      </AlertDialog>
-    </>
   );
 }
 

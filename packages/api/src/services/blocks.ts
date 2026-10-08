@@ -5,7 +5,7 @@ import { and, desc, eq } from "drizzle-orm";
 import { iso } from "../lib/time";
 import { afterBlockChange, fetchPartners } from "./chat";
 import { findAccount, refuseModeration } from "./moderation";
-import { cancelOpenOffers, offersBetween, publishCancelled } from "./offer";
+import { cancelOpenOffers, offersBetween, publishCancelled } from "./offer/cancel";
 
 export async function blockUser(me: string, userId: string) {
   if (userId === me) refuseModeration("self");

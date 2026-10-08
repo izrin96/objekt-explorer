@@ -313,7 +313,6 @@ const OFFER_EVENTS = [
   "cancelled",
   "expired",
 ] as const;
-export type OfferEvent = (typeof OFFER_EVENTS)[number];
 
 /** Data only: the client words it. `reason` is set on `cancelled`; `party` is kept only for rows written before trade notifications existed. */
 export const offerPayloadSchema = z.object({

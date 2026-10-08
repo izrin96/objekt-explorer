@@ -1,10 +1,8 @@
-import { ArrowClockwiseIcon, CardsThreeIcon, CheckIcon, WarningIcon } from "@phosphor-icons/react";
 import { type CandidateItem, OFFER_SIDE_LIMIT } from "@repo/api/schemas/offer";
-import type { GridObjekt, ValidObjekt } from "@repo/lib/types/objekt";
+import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useId, useState } from "react";
 
-import { EmptyState } from "@/components/shared/empty-state";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -17,74 +15,22 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { searchMatcher } from "@/features/filters/filter-utils";
 import {
   NO_PICKER_FILTERS,
   PickerFilterBar,
   pickerFiltered,
 } from "@/features/filters/picker-filter-bar";
-import { ObjektCard } from "@/features/objekt/objekt-card";
-import { CollectionLabel } from "@/features/objekt/objekt-label";
-import { mapObjektWithTag } from "@/features/objekt/objekt-utils";
-import { PhotocardSkeleton } from "@/features/objekt/photocard-skeleton";
-import { VirtualCardGrid } from "@/features/objekt/virtual-card-grid";
 import { useLoadAllPages } from "@/hooks/use-load-all-pages";
-import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
-import { offerNo, offerRefusalOf, offerRefusalText } from "./format";
+import { CandidateGrid, candidateMatcher, pagedGridProps } from "./candidate-grid";
+import { type Collections, type OfferPick, type OfferSide, pickKey, toPick } from "./pick";
 import {
   myCandidatesOptions,
   type OfferAddress,
   type PickerFilters,
   theirPickerOptions,
 } from "./queries";
-
-export type OfferSide = "give" | "get";
-
-export type OfferPick = {
-  key: string;
-  collectionSlug: string;
-  /** null asks for any copy */
-  objektId: string | null;
-  serial: number | null;
-  listSlug: string | null;
-  /** null when the pick did not come from candidates, as in a counter's prefill */
-  flags: Pick<CandidateItem, "transferable" | "reserved" | "inOpenOffer" | "copies"> | null;
-  /** a counter keeps what the countered offer gave, listed or not */
-  kept?: boolean;
-  /** the any-copy placeholder this resolved copy stands in for */
-  replaces?: string;
-};
-
-type Collections = Readonly<Record<string, ValidObjekt | undefined>>;
-
-export const pickKey = (item: Pick<CandidateItem, "collectionSlug" | "objektId">) =>
-  item.objektId ?? `any:${item.collectionSlug}`;
-
-export function toPick(item: CandidateItem): OfferPick {
-  return {
-    key: pickKey(item),
-    collectionSlug: item.collectionSlug,
-    objektId: item.objektId,
-    serial: item.serial,
-    listSlug: item.listSlug,
-    flags: {
-      transferable: item.transferable,
-      reserved: item.reserved,
-      inOpenOffer: item.inOpenOffer,
-      copies: item.copies,
-    },
-  };
-}
-
-/** Why a pick can't go in an offer, or null when it can. */
-export function blockedReason(flags: OfferPick["flags"]) {
-  if (!flags) return null;
-  if (!flags.transferable) return m.offer_flag_not_transferable();
-  if (flags.reserved) return m.offer_flag_reserved();
-  return null;
-}
 
 export function OfferPicker({
   open,
@@ -215,27 +161,6 @@ function MatchSwitch({
   );
 }
 
-/**
- * The quick search over loaded candidates; the facets narrow on the server, but the search
- * reads collection tags the endpoint does not carry, so the caller pages everything in.
- */
-function candidateMatcher(search: string, collections: Collections) {
-  const matches = searchMatcher(search);
-  if (!matches) return null;
-  const tagged = new Map<string, GridObjekt>();
-  return (item: CandidateItem) => {
-    const collection = collections[item.collectionSlug];
-    if (!collection) return false;
-    let objekt = tagged.get(item.collectionSlug);
-    if (!objekt) {
-      objekt = mapObjektWithTag(collection);
-      tagged.set(item.collectionSlug, objekt);
-    }
-    // a serial term only reads an objekt that has one
-    return matches(item.serial === null ? objekt : { ...objekt, serial: item.serial });
-  };
-}
-
 function MineGrid({ to, ...grid }: GridProps) {
   const [filters, setFilters] = useState(NO_FILTERS);
   const query = useInfiniteQuery(myCandidatesOptions(to, filters));
@@ -259,6 +184,7 @@ function MineGrid({ to, ...grid }: GridProps) {
       </PickerFilterBar>
       <CandidateGrid
         {...grid}
+        {...pagedGridProps(query, items.length)}
         sections={[
           { title: m.offer_picker_suggested(), items: suggested },
           {
@@ -267,19 +193,11 @@ function MineGrid({ to, ...grid }: GridProps) {
           },
         ]}
         collections={collections}
-        pending={query.isPending}
-        error={query.isError && items.length === 0 ? loadError(query.error, query.refetch) : null}
         empty={
           narrowed(filters)
             ? { title: m.offer_picker_filtered() }
             : { title: m.offer_picker_mine_empty() }
         }
-        more={{
-          has: query.hasNextPage,
-          loading: query.isFetchingNextPage,
-          failed: query.isFetchNextPageError,
-          load: () => void query.fetchNextPage(),
-        }}
       />
     </div>
   );
@@ -307,10 +225,9 @@ function TheirsGrid({ to, name, ...grid }: GridProps & { name: string }) {
       </PickerFilterBar>
       <CandidateGrid
         {...grid}
+        {...pagedGridProps(query, items.length)}
         sections={[{ title: null, items: match ? items.filter(match) : items }]}
         collections={collections}
-        pending={query.isPending}
-        error={query.isError && items.length === 0 ? loadError(query.error, query.refetch) : null}
         empty={
           // nothing listed is the reason whatever the filters
           !listed
@@ -325,170 +242,7 @@ function TheirsGrid({ to, name, ...grid }: GridProps & { name: string }) {
                   hint: m.offer_picker_theirs_none_held_hint(),
                 }
         }
-        more={{
-          has: query.hasNextPage,
-          loading: query.isFetchingNextPage,
-          failed: query.isFetchNextPageError,
-          load: () => void query.fetchNextPage(),
-        }}
       />
     </div>
-  );
-}
-
-function loadError(error: unknown, refetch: () => Promise<unknown>) {
-  const refusal = offerRefusalOf(error);
-  return {
-    retry: () => void refetch(),
-    text: refusal ? (offerRefusalText(refusal, m.offer_refused_some()) ?? null) : null,
-  };
-}
-
-function CandidateGrid({
-  sections,
-  collections,
-  pending,
-  error,
-  empty,
-  more,
-  isSelected,
-  full,
-  onToggle,
-}: {
-  sections: { title: string | null; items: CandidateItem[] }[];
-  collections: Collections;
-  pending: boolean;
-  error: { retry: () => void; text: string | null } | null;
-  empty: { title: string; hint?: string };
-  more?: { has: boolean; loading: boolean; failed: boolean; load: () => void };
-  isSelected: (item: CandidateItem) => boolean;
-  full: boolean;
-  onToggle: (item: CandidateItem, collections: Collections) => void;
-}) {
-  if (pending) {
-    return (
-      <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
-        {[0, 1, 2, 3, 4].map((i) => (
-          <PhotocardSkeleton key={i} />
-        ))}
-      </div>
-    );
-  }
-  if (error) {
-    if (error.text) {
-      return (
-        <p role="alert" className="text-sm text-pretty">
-          {error.text}
-        </p>
-      );
-    }
-    return (
-      <EmptyState
-        icon={WarningIcon}
-        bordered={false}
-        title={m.common_error_loading_data()}
-        action={
-          <Button variant="outline" size="sm" onClick={error.retry}>
-            <ArrowClockwiseIcon />
-            {m.common_error_retry()}
-          </Button>
-        }
-      />
-    );
-  }
-  // a search still paging in has nothing to show yet, not nothing at all
-  if (sections.every((section) => section.items.length === 0) && !more?.has) {
-    return (
-      <EmptyState icon={CardsThreeIcon} bordered={false} title={empty.title} hint={empty.hint} />
-    );
-  }
-
-  return (
-    <VirtualCardGrid
-      sections={sections}
-      getKey={pickKey}
-      more={more}
-      renderItem={(item) => (
-        <CandidateTile
-          item={item}
-          collection={collections[item.collectionSlug]}
-          selected={isSelected(item)}
-          full={full}
-          onToggle={() => onToggle(item, collections)}
-        />
-      )}
-    />
-  );
-}
-
-export function CandidateTile({
-  item,
-  collection,
-  selected,
-  full,
-  onToggle,
-}: {
-  item: CandidateItem;
-  collection: ValidObjekt | undefined;
-  selected: boolean;
-  full: boolean;
-  onToggle: () => void;
-}) {
-  const blocked = blockedReason(item);
-  // focusable while unavailable, so the reason under it is read with it
-  const unavailable = blocked !== null || (full && !selected);
-  const detail =
-    item.objektId === null
-      ? m.offer_any_copy_count({ count: item.copies ?? 0 })
-      : item.serial !== null
-        ? `#${item.serial}`
-        : null;
-
-  return (
-    <button
-      type="button"
-      aria-pressed={selected}
-      aria-disabled={unavailable || undefined}
-      onClick={() => {
-        if (!unavailable) onToggle();
-      }}
-      className="group/tile focus-visible:ring-ring flex w-full flex-col gap-1 rounded-md text-start outline-none focus-visible:ring-2 aria-disabled:cursor-not-allowed"
-    >
-      {/* a container, so the selection ring's photocard radius measures the tile, not the page */}
-      <span className="@container relative block">
-        <span className={cn("block", blocked && "opacity-40 grayscale")}>
-          {collection ? (
-            <ObjektCard objekt={collection} image="thumbnail" hideLabel hideSerial />
-          ) : (
-            <span className="bg-muted text-muted-foreground rounded-photocard aspect-photocard grid place-items-center p-1 text-center font-mono text-xs break-all">
-              {item.collectionSlug}
-            </span>
-          )}
-        </span>
-        {/* monochrome on purpose: the class stripes stay the only colour in the grid */}
-        {selected ? (
-          <span className="rounded-photocard border-foreground pointer-events-none absolute inset-0 grid place-items-start justify-end border-2 p-1">
-            <span className="bg-foreground text-background grid size-5 place-items-center rounded-full">
-              <CheckIcon weight="bold" className="size-3" />
-            </span>
-          </span>
-        ) : null}
-      </span>
-      <span className="flex min-w-0 flex-col text-xs leading-tight">
-        <span className="font-medium break-words">
-          <CollectionLabel slug={item.collectionSlug} collection={collection} />
-        </span>
-        {detail ? (
-          <span className="text-muted-foreground font-mono tabular-nums">{detail}</span>
-        ) : null}
-        {blocked ? (
-          <span className="text-destructive-foreground">{blocked}</span>
-        ) : item.inOpenOffer.length > 0 ? (
-          <span className="text-warning-foreground">
-            {m.offer_flag_in_open_offer({ offers: item.inOpenOffer.map(offerNo).join(", ") })}
-          </span>
-        ) : null}
-      </span>
-    </button>
   );
 }

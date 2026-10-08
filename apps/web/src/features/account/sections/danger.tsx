@@ -1,16 +1,8 @@
 import { TrashSimpleIcon } from "@phosphor-icons/react";
 import { useMutation } from "@tanstack/react-query";
 
-import {
-  AlertDialog,
-  AlertDialogClose,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogPopup,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from "@/components/shared/confirm-dialog";
+import { AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { toastManager } from "@/components/ui/toast";
 import { authClient } from "@/lib/auth-client";
@@ -38,33 +30,19 @@ export function DangerSection() {
     <div className="border-destructive/32 flex flex-col gap-2 rounded-lg border p-3">
       <span className="text-sm text-pretty">{m.auth_account_delete_account_description()}</span>
       <div className="flex">
-        <AlertDialog>
-          <AlertDialogTrigger render={<Button variant="destructive-outline" size="sm" />}>
-            <TrashSimpleIcon />
-            {m.auth_account_delete_account()}
-          </AlertDialogTrigger>
-          <AlertDialogPopup className="max-w-sm">
-            <AlertDialogHeader>
-              <AlertDialogTitle className="font-display">
-                {m.auth_account_delete_account()}
-              </AlertDialogTitle>
-              <AlertDialogDescription>
-                {m.auth_account_delete_account_description()}
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogClose render={<Button variant="outline" />}>
-                {m.common_modal_cancel()}
-              </AlertDialogClose>
-              <AlertDialogClose
-                render={<Button variant="destructive" />}
-                onClick={() => mutation.mutate()}
-              >
-                {m.auth_account_continue()}
-              </AlertDialogClose>
-            </AlertDialogFooter>
-          </AlertDialogPopup>
-        </AlertDialog>
+        <ConfirmDialog
+          trigger={
+            <AlertDialogTrigger render={<Button variant="destructive-outline" size="sm" />}>
+              <TrashSimpleIcon />
+              {m.auth_account_delete_account()}
+            </AlertDialogTrigger>
+          }
+          title={m.auth_account_delete_account()}
+          description={m.auth_account_delete_account_description()}
+          confirmLabel={m.auth_account_continue()}
+          destructive
+          onConfirm={() => mutation.mutate()}
+        />
       </div>
     </div>
   );

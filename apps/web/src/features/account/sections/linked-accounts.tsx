@@ -10,16 +10,8 @@ import { type Provider, type ProviderId, providersMap } from "@repo/api/schemas/
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type React from "react";
 
-import {
-  AlertDialog,
-  AlertDialogClose,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogPopup,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from "@/components/shared/confirm-dialog";
+import { AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { toastManager } from "@/components/ui/toast";
 import { ACCOUNTS_QUERY_KEY, type LinkedAccount } from "@/features/account/queries";
@@ -136,61 +128,43 @@ function LinkedRow({
       <div className="flex gap-1.5">
         {/* the mutation overwrites the stored name and avatar from the
             provider and has no undo, so it is asked for first */}
-        <AlertDialog>
-          <AlertDialogTrigger
-            render={
-              <Button variant="outline" size="xs" loading={refresh.isPending || relink.isPending} />
-            }
-          >
-            <ArrowsClockwiseIcon />
-            {m.auth_account_link_accounts_refresh()}
-          </AlertDialogTrigger>
-          <AlertDialogPopup className="max-w-sm">
-            <AlertDialogHeader>
-              <AlertDialogTitle className="font-display">
-                {m.auth_account_link_accounts_update_profile_title({ provider: provider.label })}
-              </AlertDialogTitle>
-              <AlertDialogDescription>
-                {m.auth_account_link_accounts_update_profile_desc({ provider: provider.label })}
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogClose render={<Button variant="outline" />}>
-                {m.common_modal_cancel()}
-              </AlertDialogClose>
-              <AlertDialogClose render={<Button />} onClick={() => refresh.mutate(provider.id)}>
-                {m.auth_account_link_accounts_refresh()}
-              </AlertDialogClose>
-            </AlertDialogFooter>
-          </AlertDialogPopup>
-        </AlertDialog>
-        <AlertDialog>
-          <AlertDialogTrigger render={<Button variant="destructive-outline" size="xs" />}>
-            <LinkBreakIcon />
-            {m.auth_account_link_accounts_unlink()}
-          </AlertDialogTrigger>
-          <AlertDialogPopup className="max-w-sm">
-            <AlertDialogHeader>
-              <AlertDialogTitle className="font-display">
-                {m.auth_account_link_accounts_unlink_title({ provider: provider.label })}
-              </AlertDialogTitle>
-              <AlertDialogDescription>
-                {m.auth_account_link_accounts_unlink_description({ provider: provider.label })}
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogClose render={<Button variant="outline" />}>
-                {m.common_modal_cancel()}
-              </AlertDialogClose>
-              <AlertDialogClose
-                render={<Button variant="destructive" />}
-                onClick={() => unlink.mutate()}
-              >
-                {m.auth_account_link_accounts_unlink()}
-              </AlertDialogClose>
-            </AlertDialogFooter>
-          </AlertDialogPopup>
-        </AlertDialog>
+        <ConfirmDialog
+          trigger={
+            <AlertDialogTrigger
+              render={
+                <Button
+                  variant="outline"
+                  size="xs"
+                  loading={refresh.isPending || relink.isPending}
+                />
+              }
+            >
+              <ArrowsClockwiseIcon />
+              {m.auth_account_link_accounts_refresh()}
+            </AlertDialogTrigger>
+          }
+          title={m.auth_account_link_accounts_update_profile_title({ provider: provider.label })}
+          description={m.auth_account_link_accounts_update_profile_desc({
+            provider: provider.label,
+          })}
+          confirmLabel={m.auth_account_link_accounts_refresh()}
+          onConfirm={() => refresh.mutate(provider.id)}
+        />
+        <ConfirmDialog
+          trigger={
+            <AlertDialogTrigger render={<Button variant="destructive-outline" size="xs" />}>
+              <LinkBreakIcon />
+              {m.auth_account_link_accounts_unlink()}
+            </AlertDialogTrigger>
+          }
+          title={m.auth_account_link_accounts_unlink_title({ provider: provider.label })}
+          description={m.auth_account_link_accounts_unlink_description({
+            provider: provider.label,
+          })}
+          confirmLabel={m.auth_account_link_accounts_unlink()}
+          destructive
+          onConfirm={() => unlink.mutate()}
+        />
       </div>
     </div>
   );

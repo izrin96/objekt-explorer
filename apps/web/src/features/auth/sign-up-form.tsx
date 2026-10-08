@@ -10,15 +10,14 @@ import { Form } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { toastManager } from "@/components/ui/toast";
 import { AuthDivider, AuthHeader, authLinkClass } from "@/features/auth/auth-shell";
+import { FormError } from "@/features/auth/form-error";
 import { PasswordInput } from "@/features/auth/password-input";
+import { MIN_PASSWORD } from "@/features/auth/password-rules";
 import { useAuthSuccess } from "@/features/auth/redirect";
 import { SocialSignIn } from "@/features/auth/social-sign-in";
 import { authClient } from "@/lib/auth-client";
 import { type FieldErrors, zodErrors } from "@/lib/form";
 import { m } from "@/paraglide/messages";
-
-// Better Auth's default `minPasswordLength`
-export const MIN_PASSWORD = 8;
 
 function schema() {
   return z.object({
@@ -103,9 +102,7 @@ export function SignUpForm({ redirect }: { redirect?: string }) {
         </Button>
 
         {mutation.isError && (
-          <p role="alert" className="text-destructive-foreground text-xs text-pretty">
-            {m.auth_sign_up_error({ message: mutation.error.message })}
-          </p>
+          <FormError>{m.auth_sign_up_error({ message: mutation.error.message })}</FormError>
         )}
       </Form>
 
