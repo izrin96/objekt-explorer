@@ -83,6 +83,7 @@ async function resolveTheirItems(me: string, addressed: Addressed) {
         collectionSlug: entry.collectionSlug,
         objektId: null,
         serial: null,
+        serialEstimated: false,
         transferable: true,
         reserved: false,
         inOpenOffer: [],

@@ -14,6 +14,7 @@ import { DialogClose, DialogFooter, DialogPanel } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { fetchNewer, invalidateChatLists } from "@/features/chat/queries";
+import { EstimatedSerialNote } from "@/features/offers/estimated-serial-note";
 import { itemLabel, itemName } from "@/features/offers/format";
 import { OfferPicker } from "@/features/offers/offer-picker";
 import {
@@ -90,6 +91,8 @@ export function BuilderForm({
     const live = theirFlags.get(pick.key);
     return pick.flags ?? (live ? toPick(live).flags : null);
   };
+  const estimatedOf = (pick: OfferPick) =>
+    pick.serialEstimated ?? theirFlags.get(pick.key)?.serialEstimated ?? false;
 
   // a counter's any-copy asks: each takes one free copy of the viewer's own, when there is one
   const asks = give.filter((pick) => pick.objektId === null);
@@ -173,7 +176,7 @@ export function BuilderForm({
         const keys = refusedKeys(refusal);
         const named = [...giveShown, ...get]
           .filter((pick) => keys.has(pick.key))
-          .map((pick) => itemLabel(pick, collections))
+          .map((pick) => itemLabel({ ...pick, serialEstimated: estimatedOf(pick) }, collections))
           .join(", ");
         setRefused(keys);
         const text =
@@ -249,6 +252,7 @@ export function BuilderForm({
                 picks={shown[side]}
                 collections={collections}
                 flagsOf={flagsOf}
+                estimatedOf={estimatedOf}
                 reasonOf={(pick) => reasonOf(side, pick)}
                 refused={refused}
                 onAdd={() => setPicking(side)}
@@ -270,6 +274,11 @@ export function BuilderForm({
             );
           })}
         </div>
+        {[...giveShown, ...get].some(
+          (pick) => pick.objektId !== null && pick.serial !== null && estimatedOf(pick),
+        ) ? (
+          <EstimatedSerialNote />
+        ) : null}
 
         <Topup
           on={topupOn}

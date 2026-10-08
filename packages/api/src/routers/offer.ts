@@ -6,12 +6,14 @@ import {
   offerIdInputSchema,
   offerViewsInputSchema,
   rateInputSchema,
+  substituteIdInputSchema,
   suggestInputSchema,
   tradeIdInputSchema,
 } from "../schemas/offer";
 import { createOffer, offerViews, respondToOffer } from "../services/offer";
 import { acceptOffer } from "../services/offer/accept";
 import { offerCandidates, suggestOffer } from "../services/offer/picker";
+import { acceptSubstitute, declineSubstitute } from "../services/offer/substitute";
 import { cancelTrade, fetchMine, fetchTrade, rateTrade } from "../services/offer/trades";
 
 export const offerRouter = {
@@ -81,5 +83,19 @@ export const offerRouter = {
     .input(tradeIdInputSchema)
     .handler(async ({ input: { tradeId }, context: { session } }) =>
       cancelTrade(session.user.id, tradeId),
+    ),
+
+  /** The receiver takes a wrong copy in place of the asked-for objekt, verifying its leg. */
+  acceptSubstitute: authed
+    .input(substituteIdInputSchema)
+    .handler(async ({ input: { substituteId }, context: { session } }) =>
+      acceptSubstitute(session.user.id, substituteId),
+    ),
+
+  /** The receiver turns a wrong copy down; the leg keeps waiting for its own objekt. */
+  declineSubstitute: authed
+    .input(substituteIdInputSchema)
+    .handler(async ({ input: { substituteId }, context: { session } }) =>
+      declineSubstitute(session.user.id, substituteId),
     ),
 };

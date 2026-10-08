@@ -12,6 +12,7 @@
     "lint": "oxlint --type-aware",
     "lint:fix": "oxlint --type-aware --fix",
     "typecheck": "tsc --noEmit",
+    "test": "bun test",
     "format": "oxfmt ."
   },
   "dependencies": {

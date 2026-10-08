@@ -16,6 +16,7 @@ export function SideColumn({
   picks,
   collections,
   flagsOf,
+  estimatedOf,
   reasonOf,
   refused,
   onAdd,
@@ -27,6 +28,7 @@ export function SideColumn({
   picks: OfferPick[];
   collections: Collections;
   flagsOf: (pick: OfferPick) => OfferPick["flags"];
+  estimatedOf: (pick: OfferPick) => boolean;
   reasonOf: (pick: OfferPick) => string | null;
   refused: ReadonlySet<string>;
   onAdd: () => void;
@@ -53,7 +55,8 @@ export function SideColumn({
           {picks.map((pick) => {
             const flags = flagsOf(pick);
             const blocked = reasonOf(pick);
-            const label = itemLabel(pick, collections);
+            const estimated = estimatedOf(pick);
+            const label = itemLabel({ ...pick, serialEstimated: estimated }, collections);
             return (
               <li
                 key={pick.key}
@@ -73,6 +76,7 @@ export function SideColumn({
                       slug={pick.collectionSlug}
                       collection={collections[pick.collectionSlug]}
                       serial={pick.objektId === null ? null : pick.serial}
+                      estimated={estimated}
                     />
                   </span>
                   {pick.objektId === null && flags?.copies != null ? (

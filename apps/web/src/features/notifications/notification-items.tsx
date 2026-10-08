@@ -6,6 +6,7 @@ import {
   type Icon,
   PackageIcon,
   ShieldWarningIcon,
+  WarningIcon,
   XIcon,
 } from "@phosphor-icons/react";
 import type { Outputs } from "@repo/api";
@@ -32,6 +33,7 @@ const TONE_ICON: Record<NotificationIcon, Icon> = {
   heart: HeartIcon,
   package: PackageIcon,
   shield: ShieldWarningIcon,
+  warning: WarningIcon,
 };
 
 /** An alert's objekt thumbnail keeps its picture, framed in its list type's colour. */

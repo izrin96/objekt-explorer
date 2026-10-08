@@ -11,7 +11,13 @@ import {
 import { iso } from "../../lib/time";
 import { unique } from "../../lib/unique";
 import { parseCaution, type StoredCard } from "../../schemas/chat";
-import type { OfferCancelReason, OfferStatus, OfferView, TradeStatus } from "../../schemas/offer";
+import type {
+  OfferCancelReason,
+  OfferStatus,
+  OfferView,
+  ShownSerial,
+  TradeStatus,
+} from "../../schemas/offer";
 
 type HydratedOffer = {
   id: number;
@@ -87,17 +93,16 @@ export function topupView(row: HydratedOffer, viewerIsSender: boolean) {
 export function itemViews(
   row: HydratedOffer,
   viewerId: string,
-  serialOf: (id: string) => number | null,
+  serialOf: (id: string) => ShownSerial,
 ) {
-  const items = row.items.map(([side, collectionSlug, objektId, listSlug]) => ({
-    side,
-    view: {
-      collectionSlug,
-      objektId,
-      serial: objektId === null ? null : serialOf(objektId),
-      listSlug,
-    },
-  }));
+  const items = row.items.map(([side, collectionSlug, objektId, listSlug]) => {
+    const { serial, estimated } =
+      objektId === null ? { serial: null, estimated: false } : serialOf(objektId);
+    return {
+      side,
+      view: { collectionSlug, objektId, serial, serialEstimated: estimated, listSlug },
+    };
+  });
   const { give, get } = offerSummary(items, row.from_user_id === viewerId);
   return { give: give.map((i) => i.view), get: get.map((i) => i.view) };
 }
@@ -107,7 +112,7 @@ export function toOfferView(
   viewerId: string,
   now: Date,
   limits: ActorLimits,
-  serialOf: (id: string) => number | null,
+  serialOf: (id: string) => ShownSerial,
 ): OfferView {
   const mine = row.from_user_id === viewerId;
   const state = {

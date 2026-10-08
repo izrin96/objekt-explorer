@@ -16,6 +16,14 @@ describe("notificationTone", () => {
     expect(notificationTone(trade("reminder"))).toEqual({ icon: "clock", tone: "warning" });
   });
 
+  test("a wrong copy sent is an amber warning sign, and declined stays neutral", () => {
+    expect(notificationTone(trade("wrong_copy"))).toEqual({ icon: "warning", tone: "warning" });
+    expect(notificationTone(trade("wrong_copy_declined"))).toEqual({
+      icon: "arrow",
+      tone: "neutral",
+    });
+  });
+
   test("cancelled, failed and expired are a red cross", () => {
     for (const n of [trade("cancelled"), trade("failed"), offer("cancelled"), offer("expired")]) {
       expect(notificationTone(n)).toEqual({ icon: "cross", tone: "destructive" });

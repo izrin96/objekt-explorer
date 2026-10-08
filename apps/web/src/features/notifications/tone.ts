@@ -9,7 +9,8 @@ export type NotificationIcon =
   | "arrow"
   | "heart"
   | "package"
-  | "shield";
+  | "shield"
+  | "warning";
 type Toned = { icon: NotificationIcon; tone: Tone };
 
 /** each member's own type and payload, so the switch still narrows */
@@ -38,6 +39,10 @@ export function notificationTone(notification: ToneInput): Toned {
           return DONE;
         case "reminder":
           return { icon: "clock", tone: "warning" };
+        case "wrong_copy":
+          return { icon: "warning", tone: "warning" };
+        case "wrong_copy_declined":
+          return { icon: "arrow", tone: "neutral" };
         case "cancelled":
         case "failed":
           return ENDED;

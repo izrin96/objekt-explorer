@@ -26,6 +26,7 @@ import { m } from "@/paraglide/messages";
 import { useUserSocketLive } from "@/stores/user-socket";
 
 import { CancelTrade } from "./cancel-trade";
+import { EstimatedSerialNote } from "./estimated-serial-note";
 import { FirstSender } from "./first-sender";
 import { offerNo, topupText, tradeNo, tradeStatusText } from "./format";
 import { LegTable } from "./leg-table";
@@ -170,6 +171,15 @@ function TradeDetail({ trade, collections }: { trade: Trade; collections: Collec
             hydrated={hydrated}
             onOpen={setActive}
           />
+          {trade.legs.some(
+            (leg) =>
+              leg.state === "waiting" &&
+              [leg, ...leg.substitutes].some(
+                (shown) => shown.serial !== null && shown.serialEstimated,
+              ),
+          ) ? (
+            <EstimatedSerialNote />
+          ) : null}
         </section>
 
         {trade.topup ? (

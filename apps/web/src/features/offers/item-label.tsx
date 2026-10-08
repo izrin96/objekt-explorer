@@ -7,12 +7,13 @@ import { m } from "@/paraglide/messages";
 /** stands in for the name, so each locale keeps its own word order around it */
 const SLOT = "";
 
-/** `itemLabel` as markup: "SeoYeon A204Z #537", or "SeoYeon A204Z (any copy)". */
+/** `itemLabel` as markup: "SeoYeon A204Z #537", or "SeoYeon A204Z (any copy)". The moderation console passes no `serialEstimated`. */
 export function ItemLabel({
   item,
   collections,
 }: {
-  item: Pick<OfferItemView, "collectionSlug" | "objektId" | "serial">;
+  item: Pick<OfferItemView, "collectionSlug" | "objektId" | "serial"> &
+    Partial<Pick<OfferItemView, "serialEstimated">>;
   collections: Readonly<Record<string, ValidObjekt | undefined>>;
 }) {
   const name = (
@@ -20,6 +21,7 @@ export function ItemLabel({
       slug={item.collectionSlug}
       collection={collections[item.collectionSlug]}
       serial={item.objektId === null ? null : item.serial}
+      estimated={item.serialEstimated}
     />
   );
   if (item.objektId !== null) return name;

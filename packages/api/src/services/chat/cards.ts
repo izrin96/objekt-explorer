@@ -2,6 +2,7 @@ import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
 import { listEntries, lists, userAddress } from "@repo/db/schema";
+import { isSerialEstimated, shownSerial } from "@repo/lib/serial";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { and, eq, inArray } from "drizzle-orm";
 
@@ -17,6 +18,7 @@ import {
   storedCardSchema,
   unsentMessage,
 } from "../../schemas/chat";
+import type { ShownSerial } from "../../schemas/offer";
 import { fetchCollectionsBySlug } from "../list";
 import { fetchOffers, offerItemCards, toOfferView } from "../offer/view";
 import { refuse } from "./refuse";
@@ -97,7 +99,7 @@ export async function hydrateCards(cards: StoredCard[]) {
     objektIds.length === 0
       ? []
       : indexer
-          .select({ id: objekts.id, serial: objekts.serial })
+          .select({ id: objekts.id, serial: objekts.serial, mintedAt: objekts.mintedAt })
           .from(objekts)
           .where(inArray(objekts.id, objektIds)),
     fetchCollectionsBySlug(slugs, []),
@@ -124,7 +126,7 @@ export async function hydrateCards(cards: StoredCard[]) {
           );
 
   const listById = new Map(listRows.map((row) => [row.id, row]));
-  const serialOf = new Map(serialRows.map((row) => [row.id, row.serial]));
+  const serialOf = new Map(serialRows.map((row) => [row.id, row]));
 
   const view = (card: StoredCard): CardView => {
     const list = card.listId === undefined ? undefined : listById.get(card.listId);
@@ -140,7 +142,7 @@ export async function hydrateCards(cards: StoredCard[]) {
     return {
       collectionSlug: card.collectionSlug,
       objektId: card.objektId ?? null,
-      serial: card.objektId === undefined ? null : (serialOf.get(card.objektId) ?? null),
+      serial: card.objektId === undefined ? null : (serialOf.get(card.objektId)?.serial ?? null),
       list: list
         ? {
             id: list.id,
@@ -164,7 +166,12 @@ export async function hydrateCards(cards: StoredCard[]) {
 
   return {
     view,
-    serial: (objektId: string) => serialOf.get(objektId) ?? null,
+    serial: (objektId: string): ShownSerial => {
+      const row = serialOf.get(objektId);
+      return row
+        ? { serial: shownSerial(row.serial), estimated: isSerialEstimated(row.mintedAt) }
+        : { serial: null, estimated: false };
+    },
     collections: Object.fromEntries(collectionRows.map((c) => [c.slug, c])) as Record<
       string,
       ValidObjekt

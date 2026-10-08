@@ -42,6 +42,10 @@ export type OfferCancelReason = (typeof OFFER_CANCEL_REASONS)[number];
 const TRADE_STATUSES = ["in_progress", "completed", "cancelled", "failed"] as const;
 export type TradeStatus = (typeof TRADE_STATUSES)[number];
 
+/** A wrong copy before its receiver: still to decide, or turned down. An accepted one verified its leg. */
+export const HELD_COPY_STATUSES = ["pending", "declined"] as const;
+export type HeldCopyStatus = (typeof HELD_COPY_STATUSES)[number];
+
 /** Set on a cancelled trade; `expired` also on a failed one. */
 const TRADE_CANCEL_REASONS = ["party", "token_moved", "expired"] as const;
 export type TradeCancelReason = (typeof TRADE_CANCEL_REASONS)[number];
@@ -73,6 +77,9 @@ export const OFFER_REFUSALS = [
   "trade_ended",
   "locked",
   "indexer_behind",
+  "not_receiver",
+  "substitute_closed",
+  "substitute_taken",
   "not_completed",
   "rating_closed",
   "no_address",
@@ -149,6 +156,7 @@ export const offerViewsInputSchema = z.object({
 });
 export const rateInputSchema = z.object({ tradeId: idSchema, rating: z.enum(TRADE_RATINGS) });
 export const tradeIdInputSchema = z.object({ tradeId: idSchema });
+export const substituteIdInputSchema = z.object({ substituteId: idSchema });
 export const suggestInputSchema = z.object({ partnerId: z.string().min(1) });
 
 const candidateCursorSchema = z.object({ receivedAt: z.string(), id: z.string() });
@@ -188,6 +196,8 @@ const candidateItemSchema = z.object({
   collectionSlug: z.string(),
   objektId: z.string().nullable(),
   serial: z.number().nullable(),
+  /** minted after Cosmo stopped supplying serials: `serial` is our estimate */
+  serialEstimated: z.boolean(),
   transferable: z.boolean(),
   /** in an accepted trade still in progress */
   reserved: z.boolean(),
@@ -207,6 +217,7 @@ const offerItemViewSchema = z.object({
   collectionSlug: z.string(),
   objektId: z.string().nullable(),
   serial: z.number().nullable(),
+  serialEstimated: z.boolean(),
   listSlug: z.string().nullable(),
 });
 export type OfferItemView = z.infer<typeof offerItemViewSchema>;
@@ -254,6 +265,7 @@ const tradeLegViewSchema = z.object({
   collectionSlug: z.string(),
   objektId: z.string().nullable(),
   serial: z.number().nullable(),
+  serialEstimated: z.boolean(),
   fromYou: z.boolean(),
   open: z.boolean(),
   /** closed: the trade ended before this leg verified */
@@ -261,6 +273,21 @@ const tradeLegViewSchema = z.object({
   verifiedAt: z.string().nullable(),
   txHash: z.string().nullable(),
   verifiedObjektId: z.string().nullable(),
+  /** set when the leg verified with another objekt than it asked for */
+  verifiedSerial: z.number().nullable(),
+  verifiedSerialEstimated: z.boolean(),
+  /** wrong copies before the receiver, while the leg waits */
+  substitutes: z
+    .object({
+      id: z.number(),
+      objektId: z.string(),
+      serial: z.number().nullable(),
+      serialEstimated: z.boolean(),
+      txHash: z.string(),
+      at: z.string(),
+      status: z.enum(HELD_COPY_STATUSES),
+    })
+    .array(),
 });
 
 const tradeViewSchema = z.object({
@@ -281,7 +308,7 @@ const tradeViewSchema = z.object({
   /** a suggestion only, while in progress; `sent` once every leg that party gives is verified */
   firstSender: z.object({ userId: z.string(), you: z.boolean(), sent: z.boolean() }).nullable(),
   canCancel: z.boolean(),
-  /** in progress, but a leg already verified */
+  /** in progress, but a leg already verified or a wrong copy is held */
   cancelLocked: z.boolean(),
   /** ISO time of the newest block the indexer has read; transfers after it aren't seen yet */
   seenUntil: z.string().nullable(),
@@ -340,11 +367,23 @@ export const offerPayloadSchema = z.object({
 });
 export type OfferPayload = z.infer<typeof offerPayloadSchema>;
 
-const TRADE_EVENTS = ["leg_verified", "completed", "cancelled", "failed", "reminder"] as const;
+const TRADE_EVENTS = [
+  "leg_verified",
+  "completed",
+  "cancelled",
+  "failed",
+  "reminder",
+  "wrong_copy",
+  "wrong_copy_declined",
+] as const;
+
+/** A serial as trade surfaces show it: null before it's numbered, `estimated` after Cosmo's cutoff. */
+const shownSerialSchema = z.object({ serial: z.number().nullable(), estimated: z.boolean() });
+export type ShownSerial = z.infer<typeof shownSerialSchema>;
 
 /**
  * Data only. `reason` is set on `cancelled`: the other party cancelled, an objekt left the wallet,
- * or the trade expired; and on `failed` when it expired.
+ * or the trade expired; and on `failed` when it expired. `copy` is set on the wrong-copy events.
  */
 export const tradePayloadSchema = z.object({
   tradeId: z.number(),
@@ -355,6 +394,7 @@ export const tradePayloadSchema = z.object({
   /** legs verified of all legs, when the row was written */
   progress: progressSchema,
   partner: z.object({ userId: z.string(), name: z.string() }),
+  copy: z.object({ asked: shownSerialSchema, sent: shownSerialSchema }).optional(),
 });
 export type TradePayload = z.infer<typeof tradePayloadSchema>;
 

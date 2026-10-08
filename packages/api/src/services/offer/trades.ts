@@ -1,6 +1,6 @@
 import { ORPCError } from "@orpc/server";
 import { db } from "@repo/db";
-import { offer, trade, tradeFeedback, tradeLeg, user } from "@repo/db/schema";
+import { offer, trade, tradeFeedback, tradeLeg, tradeSubstitute, user } from "@repo/db/schema";
 import { and, desc, eq, gt, inArray, or, sql } from "drizzle-orm";
 
 import { isBehind, parseIndexerSeen } from "../../lib/indexer-seen";
@@ -22,13 +22,14 @@ import {
   type TradeStatus,
   type TradeView,
   type Progress,
+  type HeldCopyStatus,
   INDEXER_SEEN_KEY,
   VERIFIER_LAST_KEY,
 } from "../../schemas/offer";
 import { chatSafety, fetchPartners, hydrateCards } from "../chat";
 import { redis } from "../redis";
 import { forgetReputation, reputationOf } from "../reputation";
-import { loadOpenLegs, matchOpenLegs } from "../trade-verify";
+import { heldCopies, heldCopyWhere, loadOpenLegs, matchOpenLegs } from "../trade-verify";
 import { offersOf } from "./cancel";
 import { type Tx, refuseOffer } from "./core";
 import { partyNames, writeNotes } from "./notes";
@@ -76,16 +77,17 @@ export async function cancelTrade(me: string, tradeId: number) {
   const row = await findTrade(tradeId, me);
   const { partnerId } = row;
   const behind = isBehind(await readIndexerSeen(), Date.now());
-  // a transfer the verifier hasn't run on yet locks the trade too, or a party could send
-  // nothing back and cancel right after receiving
+  // a transfer the verifier hasn't run on yet locks the trade too, a wrong copy included, or a
+  // party could send nothing back and cancel right after receiving
   // matched with the parties' other trades, as the verifier matches them, so a transfer
   // another trade's leg takes doesn't lock this one
   const legs = await loadOpenLegs([me, partnerId]);
-  if (legs.some((leg) => leg.trade_id === tradeId)) {
-    const results = await matchOpenLegs(legs);
-    const locked = legs.some(
-      (leg) => leg.trade_id === tradeId && results.get(leg.id)?.kind === "verified",
-    );
+  const ours = new Set(legs.filter((leg) => leg.trade_id === tradeId).map((leg) => leg.id));
+  if (ours.size > 0) {
+    const { results, nearMisses } = await matchOpenLegs(legs);
+    const locked =
+      [...ours].some((id) => results.get(id)?.kind === "verified") ||
+      nearMisses.some((miss) => ours.has(miss.legId));
     if (locked) refuseOffer("locked");
   }
   const name = await partyNames([me]);
@@ -106,6 +108,7 @@ export async function cancelTrade(me: string, tradeId: number) {
         verifiedLegs: counts.verified,
       },
       behind,
+      await heldCopies(tx, tradeId),
     );
     if (refusal) refuseOffer(refusal);
 
@@ -182,33 +185,66 @@ export async function fetchTrade(me: string, tradeId: number) {
   const row = await findTrade(tradeId, me);
   const { partnerId } = row;
 
-  const [offers, legs, partners, reputations, accounts, [feedback], lastChecked, seen] =
-    await Promise.all([
-      fetchOffers([row.offerId]),
-      db.select().from(tradeLeg).where(eq(tradeLeg.tradeId, tradeId)).orderBy(tradeLeg.id),
-      fetchPartners([partnerId]),
-      reputationOf([row.userA, row.userB]),
-      db
-        .select({ id: user.id, createdAt: user.createdAt })
-        .from(user)
-        .where(inArray(user.id, [row.userA, row.userB])),
-      db
-        .select({ rating: sql<TradeRating>`${tradeFeedback.rating}` })
-        .from(tradeFeedback)
-        .where(and(eq(tradeFeedback.tradeId, tradeId), eq(tradeFeedback.fromUserId, me))),
-      redis.get(VERIFIER_LAST_KEY),
-      readIndexerSeen(),
-    ]);
+  const [
+    offers,
+    legs,
+    substitutes,
+    partners,
+    reputations,
+    accounts,
+    [feedback],
+    lastChecked,
+    seen,
+  ] = await Promise.all([
+    fetchOffers([row.offerId]),
+    db.select().from(tradeLeg).where(eq(tradeLeg.tradeId, tradeId)).orderBy(tradeLeg.id),
+    db
+      .select({
+        id: tradeSubstitute.id,
+        legId: tradeSubstitute.tradeLegId,
+        objektId: tradeSubstitute.objektId,
+        txHash: tradeSubstitute.txHash,
+        at: tradeSubstitute.transferredAt,
+        status: sql<HeldCopyStatus>`${tradeSubstitute.status}`,
+      })
+      .from(tradeSubstitute)
+      .innerJoin(tradeLeg, eq(tradeLeg.id, tradeSubstitute.tradeLegId))
+      .where(and(eq(tradeLeg.tradeId, tradeId), heldCopyWhere))
+      .orderBy(tradeSubstitute.transferredAt),
+    fetchPartners([partnerId]),
+    reputationOf([row.userA, row.userB]),
+    db
+      .select({ id: user.id, createdAt: user.createdAt })
+      .from(user)
+      .where(inArray(user.id, [row.userA, row.userB])),
+    db
+      .select({ rating: sql<TradeRating>`${tradeFeedback.rating}` })
+      .from(tradeFeedback)
+      .where(and(eq(tradeFeedback.tradeId, tradeId), eq(tradeFeedback.fromUserId, me))),
+    redis.get(VERIFIER_LAST_KEY),
+    readIndexerSeen(),
+  ]);
   const source = offers.get(row.offerId)!;
   const partner = partners.get(partnerId);
   if (!partner) throw new ORPCError("NOT_FOUND");
-  const { serial: serialOf, collections } = await hydrateCards(
-    legs.map((leg) =>
+  const slugOf = new Map(legs.map((leg) => [leg.id, leg.collectionSlug]));
+  const { serial: serialOf, collections } = await hydrateCards([
+    ...legs.map((leg) =>
       leg.objektId === null
         ? { collectionSlug: leg.collectionSlug }
         : { collectionSlug: leg.collectionSlug, objektId: leg.objektId },
     ),
-  );
+    ...legs.flatMap((leg) =>
+      leg.verifiedObjektId === null
+        ? []
+        : [{ collectionSlug: leg.collectionSlug, objektId: leg.verifiedObjektId }],
+    ),
+    ...substitutes.map((sub) => ({
+      collectionSlug: slugOf.get(sub.legId)!,
+      objektId: sub.objektId,
+    })),
+  ]);
+  const held = substitutes.length;
 
   const verified = legs.filter((leg) => leg.verifiedAt !== null).length;
   const state = { ...row, verifiedLegs: verified };
@@ -223,7 +259,7 @@ export async function fetchTrade(me: string, tradeId: number) {
       ? suggestFirstSender(row, legs, new Map([row.userA, row.userB].map((id) => [id, party(id)])))
       : null;
   const behind = row.status === "in_progress" && isBehind(seen, now.getTime());
-  const cancel = cancelRefusal(state, behind);
+  const cancel = cancelRefusal(state, behind, held);
 
   const result: TradeView = {
     id: row.id,
@@ -238,18 +274,46 @@ export async function fetchTrade(me: string, tradeId: number) {
     endedAt: iso(row.endedAt),
     topup: topupView(source, source.from_user_id === me),
     note: source.note,
-    legs: legs.map((leg) => ({
-      id: leg.id,
-      collectionSlug: leg.collectionSlug,
-      objektId: leg.objektId,
-      serial: leg.objektId === null ? null : serialOf(leg.objektId),
-      fromYou: leg.fromUserId === me,
-      open: leg.open,
-      state: leg.verifiedAt !== null ? "verified" : leg.open ? "waiting" : "closed",
-      verifiedAt: iso(leg.verifiedAt),
-      txHash: leg.txHash,
-      verifiedObjektId: leg.verifiedObjektId,
-    })),
+    legs: legs.map((leg) => {
+      const shown = leg.objektId === null ? null : serialOf(leg.objektId);
+      const swapped =
+        leg.objektId !== null &&
+        leg.verifiedObjektId !== null &&
+        leg.verifiedObjektId !== leg.objektId
+          ? serialOf(leg.verifiedObjektId)
+          : null;
+      return {
+        id: leg.id,
+        collectionSlug: leg.collectionSlug,
+        objektId: leg.objektId,
+        serial: shown?.serial ?? null,
+        serialEstimated: shown?.estimated ?? false,
+        fromYou: leg.fromUserId === me,
+        open: leg.open,
+        state: leg.verifiedAt !== null ? "verified" : leg.open ? "waiting" : "closed",
+        verifiedAt: iso(leg.verifiedAt),
+        txHash: leg.txHash,
+        verifiedObjektId: leg.verifiedObjektId,
+        verifiedSerial: swapped?.serial ?? null,
+        verifiedSerialEstimated: swapped?.estimated ?? false,
+        substitutes: leg.open
+          ? substitutes
+              .filter((sub) => sub.legId === leg.id)
+              .map((sub) => {
+                const sent = serialOf(sub.objektId);
+                return {
+                  id: sub.id,
+                  objektId: sub.objektId,
+                  serial: sent.serial,
+                  serialEstimated: sent.estimated,
+                  txHash: sub.txHash,
+                  at: iso(sub.at)!,
+                  status: sub.status,
+                };
+              })
+          : [],
+      };
+    }),
     progress: { verified, total: legs.length },
     firstSender: first && { userId: first.userId, you: first.userId === me, sent: first.sent },
     canCancel: cancel === null,

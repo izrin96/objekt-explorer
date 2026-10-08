@@ -443,7 +443,7 @@ export const tradeLeg = pgTable(
     verifiedAt: timestamp("verified_at", { mode: "string", withTimezone: true }),
     txHash: text("tx_hash"),
     verifiedObjektId: varchar("verified_objekt_id", { length: 255 }),
-    // the indexer's transfer row: one transfer verifies at most one leg anywhere
+    // the indexer's transfer row, kept for debugging; a re-index gives it a new id, so nothing reads it
     transferId: uuid("transfer_id"),
   },
   (t) => [
@@ -452,12 +452,44 @@ export const tradeLeg = pgTable(
       .on(t.tradeId)
       .where(sql`open`),
     uniqueIndex("trade_leg_transfer_id_uniq").on(t.transferId),
+    // one transfer verifies at most one leg anywhere; hash and token survive a re-index
+    uniqueIndex("trade_leg_transfer_uniq")
+      .on(t.txHash, t.verifiedObjektId)
+      .where(sql`tx_hash IS NOT NULL`),
     // an objekt sits in at most one open trade; accept relies on this to settle races
     uniqueIndex("trade_leg_reserved")
       .on(t.objektId)
       .where(sql`open AND objekt_id IS NOT NULL`),
     index("trade_leg_from_user_id_idx").on(t.fromUserId),
     index("trade_leg_to_user_id_idx").on(t.toUserId),
+  ],
+);
+
+/** Another copy of a specific leg's collection the giver sent the receiver, for the receiver to accept or decline. */
+export const tradeSubstitute = pgTable(
+  "trade_substitute",
+  {
+    id: serial("id").primaryKey(),
+    tradeLegId: integer("trade_leg_id")
+      .notNull()
+      .references(() => tradeLeg.id, { onDelete: "cascade" }),
+    txHash: text("tx_hash").notNull(),
+    // the transfer's token_id
+    objektId: varchar("objekt_id", { length: 255 }).notNull(),
+    transferredAt: timestamp("transferred_at", { mode: "string", withTimezone: true }).notNull(),
+    status: text("status")
+      .$type<"pending" | "accepted" | "declined">()
+      .notNull()
+      .default("pending"),
+    decidedAt: timestamp("decided_at", { mode: "string", withTimezone: true }),
+    createdAt: timestamp("created_at", { mode: "string", withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    // not unique without the leg: one copy may wait against legs of two trades
+    uniqueIndex("trade_substitute_transfer_uniq").on(t.tradeLegId, t.txHash, t.objektId),
+    check("trade_substitute_status", sql`${t.status} IN ('pending', 'accepted', 'declined')`),
   ],
 );
 

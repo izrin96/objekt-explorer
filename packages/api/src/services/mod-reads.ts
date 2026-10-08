@@ -82,7 +82,7 @@ async function attachedTrades(userId: string, tradeIds: number[]) {
           id: leg.id,
           collectionSlug: leg.collectionSlug,
           objektId: leg.objektId,
-          serial: leg.objektId === null ? null : serial(leg.objektId),
+          serial: leg.objektId === null ? null : serial(leg.objektId).serial,
           /** the reported account gives this leg */
           fromTarget: leg.fromUserId === userId,
           state: (leg.verifiedAt !== null ? "verified" : leg.open ? "waiting" : "closed") as

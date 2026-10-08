@@ -330,15 +330,20 @@ describe("trade rules", () => {
   });
 
   test("cancelling locks after the first verified leg", () => {
-    expect(cancelRefusal(trade(), false)).toBeNull();
-    expect(cancelRefusal(trade({ verifiedLegs: 1 }), false)).toBe("locked");
-    expect(cancelRefusal(trade({ status: "cancelled" }), false)).toBe("trade_ended");
+    expect(cancelRefusal(trade(), false, 0)).toBeNull();
+    expect(cancelRefusal(trade({ verifiedLegs: 1 }), false, 0)).toBe("locked");
+    expect(cancelRefusal(trade({ status: "cancelled" }), false, 0)).toBe("trade_ended");
+  });
+
+  test("a held wrong copy locks cancelling as a verified leg does", () => {
+    expect(cancelRefusal(trade(), false, 1)).toBe("locked");
+    expect(cancelRefusal(trade(), true, 1)).toBe("locked");
   });
 
   test("a lagging indexer holds cancelling, after the lock and the end", () => {
-    expect(cancelRefusal(trade(), true)).toBe("indexer_behind");
-    expect(cancelRefusal(trade({ verifiedLegs: 1 }), true)).toBe("locked");
-    expect(cancelRefusal(trade({ status: "cancelled" }), true)).toBe("trade_ended");
+    expect(cancelRefusal(trade(), true, 0)).toBe("indexer_behind");
+    expect(cancelRefusal(trade({ verifiedLegs: 1 }), true, 0)).toBe("locked");
+    expect(cancelRefusal(trade({ status: "cancelled" }), true, 0)).toBe("trade_ended");
   });
 
   test("feedback only on a completed trade, for 14 days", () => {

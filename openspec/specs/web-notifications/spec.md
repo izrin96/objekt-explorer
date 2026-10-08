@@ -9,9 +9,10 @@ In-app notifications on `apps/web`: what a signed-in user is told, how they see 
 A signed-in visitor SHALL see a bell in the frame with a dot while any notification is unread, and none at zero; the bell's label carries the count, and the popover's header shows it as "N unread". Activating the bell SHALL open a popover that lists the user's notifications newest first, 20 at a time with a control to load more. Each notification shows its text, how long ago it happened, and whether it is unread. It leads with an icon tile whose icon and colour say what happened:
 - a transfer verified, a trade completed, or an offer accepted: a green check;
 - a stall reminder: an amber clock;
+- a wrong copy sent in a trade: an amber warning sign;
 - an offer or trade cancelled, failed or expired: a red cross;
 - an offer received or countered: an indigo arrow;
-- an offer declined or withdrawn: a neutral arrow;
+- an offer declined or withdrawn, or a wrong copy declined: a neutral arrow;
 - a want-list alert: amber, the want colour; a reverse-direction alert: teal, the have colour (see `web-lists`);
 - a sanction notice: a red shield.
 
@@ -40,6 +41,14 @@ The colour SHALL never be the only cue: the text names the event, and the icon d
 #### Scenario: Kinds at a glance
 - **WHEN** the popover lists a verified transfer, a reminder and a cancelled offer
 - **THEN** they lead with a green check, an amber clock and a red cross, each beside its own text
+
+#### Scenario: Wrong copy sent
+- **WHEN** the giver in T-1042 sends #1207 where the trade asks for #1203
+- **THEN** both parties get a notification leading with an amber warning sign that names T-1042 and both serials, linking to the trade page
+
+#### Scenario: Wrong copy declined
+- **WHEN** the receiver declines that copy
+- **THEN** the giver gets a notification leading with a neutral arrow that says it was declined, linking to the trade page
 
 ### Requirement: Bell links to its settings
 The bell's popover SHALL offer a Notification settings link opening `/account/notifications`.

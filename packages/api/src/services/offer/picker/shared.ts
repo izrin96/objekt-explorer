@@ -2,6 +2,7 @@ import { toIndexedArtist } from "@repo/cosmo/types/common";
 import { db } from "@repo/db";
 import { collections } from "@repo/db/indexer/schema";
 import { listEntries, lists, offer, offerItem } from "@repo/db/schema";
+import { isSerialEstimated, shownSerial } from "@repo/lib/serial";
 import { and, eq, gt, inArray, sql } from "drizzle-orm";
 
 import type { itemFlags } from "../../../lib/offer-rules";
@@ -19,7 +20,8 @@ export function toCandidate(
   return {
     collectionSlug: objekt.slug,
     objektId: objekt.id,
-    serial: objekt.serial,
+    serial: shownSerial(objekt.serial),
+    serialEstimated: isSerialEstimated(objekt.mintedAt),
     ...flags,
     listSlug,
     copies: null,

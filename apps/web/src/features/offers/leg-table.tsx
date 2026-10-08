@@ -2,14 +2,17 @@ import { ArrowRightIcon, CheckIcon, ClockIcon, XIcon } from "@phosphor-icons/rea
 import type { TradeView } from "@repo/api/schemas/offer";
 import { truncateAddress } from "@repo/lib/address";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
+import { Fragment } from "react";
 
 import { CopyButton } from "@/components/shared/copy-button";
+import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import { agoLabel } from "./format";
 import { ItemLabel } from "./item-label";
 import { OfferThumb } from "./offer-item";
 import { StatusBadge } from "./status-badge";
+import { InPlaceOf, WrongCopies } from "./wrong-copy";
 
 type Leg = TradeView["legs"][number];
 
@@ -43,36 +46,49 @@ export function LegTable({
       </thead>
       <tbody className="divide-y">
         {trade.legs.map((leg) => (
-          <tr
-            key={leg.id}
-            className="max-sm:grid max-sm:grid-cols-[minmax(0,1fr)_auto] max-sm:gap-x-3 max-sm:gap-y-1 max-sm:py-3"
-          >
-            <td className="py-3 pe-3 max-sm:p-0">
-              <span className="flex items-center gap-3">
-                <OfferThumb
-                  slug={leg.collectionSlug}
-                  collection={collections[leg.collectionSlug]}
-                  onOpen={onOpen}
-                  className="w-10"
-                />
-                <span className="min-w-0 font-medium break-words">
-                  <ItemLabel item={leg} collections={collections} />
+          <Fragment key={leg.id}>
+            <tr
+              className={cn(
+                "max-sm:grid max-sm:grid-cols-[minmax(0,1fr)_auto] max-sm:gap-x-3 max-sm:gap-y-1 max-sm:py-3",
+                // its wrong copies sit under it, in the same group
+                leg.substitutes.length > 0 && "border-b-0",
+              )}
+            >
+              <td className="py-3 pe-3 max-sm:p-0">
+                <span className="flex items-center gap-3">
+                  <OfferThumb
+                    slug={leg.collectionSlug}
+                    collection={collections[leg.collectionSlug]}
+                    onOpen={onOpen}
+                    className="w-10"
+                  />
+                  <span className="min-w-0 font-medium break-words">
+                    <ItemLabel item={leg} collections={collections} />
+                    <InPlaceOf leg={leg} />
+                  </span>
                 </span>
-              </span>
-            </td>
-            {/* under both below `sm`, so a long name and the Waiting chip don't squeeze it */}
-            <td className="py-3 pe-3 max-sm:col-span-2 max-sm:p-0 max-sm:ps-13">
-              <span className="text-muted-foreground flex items-center gap-1.5 font-mono text-xs">
-                <span>{leg.fromYou ? m.offer_you() : name}</span>
-                <ArrowRightIcon aria-hidden className="size-3 shrink-0" />
-                <span className="sr-only">{m.offer_trade_to()}</span>
-                <span>{leg.fromYou ? name : m.offer_you()}</span>
-              </span>
-            </td>
-            <td className="py-3 text-end max-sm:col-start-2 max-sm:row-start-1 max-sm:max-w-40 max-sm:p-0">
-              <LegState leg={leg} seenUntil={trade.seenUntil} hydrated={hydrated} />
-            </td>
-          </tr>
+              </td>
+              {/* under both below `sm`, so a long name and the Waiting chip don't squeeze it */}
+              <td className="py-3 pe-3 max-sm:col-span-2 max-sm:p-0 max-sm:ps-13">
+                <span className="text-muted-foreground flex items-center gap-1.5 font-mono text-xs">
+                  <span>{leg.fromYou ? m.offer_you() : name}</span>
+                  <ArrowRightIcon aria-hidden className="size-3 shrink-0" />
+                  <span className="sr-only">{m.offer_trade_to()}</span>
+                  <span>{leg.fromYou ? name : m.offer_you()}</span>
+                </span>
+              </td>
+              <td className="py-3 text-end max-sm:col-start-2 max-sm:row-start-1 max-sm:max-w-40 max-sm:p-0">
+                <LegState leg={leg} seenUntil={trade.seenUntil} hydrated={hydrated} />
+              </td>
+            </tr>
+            {leg.substitutes.length > 0 ? (
+              <tr className="max-sm:block">
+                <td colSpan={3} className="pb-3 max-sm:block">
+                  <WrongCopies leg={leg} trade={trade} name={name} hydrated={hydrated} />
+                </td>
+              </tr>
+            ) : null}
+          </Fragment>
         ))}
       </tbody>
     </table>

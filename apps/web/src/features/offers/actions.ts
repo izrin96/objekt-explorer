@@ -10,9 +10,9 @@ import { invalidateOfferLists } from "./queries";
 import { offerRefusalOf, offerRefusalText, refusedKeys } from "./refusal";
 
 /**
- * Accept, decline, withdraw and cancel. Each refreshes the thread and the lists itself, so they
- * work while the socket is down. A refusal also refreshes: it usually means the state moved on.
- * `named` words the objekts a refusal names.
+ * Accept, decline, withdraw and cancel, and a wrong copy's accept and decline. Each refreshes
+ * the thread and the lists itself, so they work while the socket is down. A refusal also
+ * refreshes: it usually means the state moved on. `named` words the objekts a refusal names.
  */
 export function useOfferActions(
   conversationId: number,
@@ -48,5 +48,7 @@ export function useOfferActions(
     decline: useMutation(orpc.offer.decline.mutationOptions(options)),
     withdraw: useMutation(orpc.offer.withdraw.mutationOptions(options)),
     cancelTrade: useMutation(orpc.offer.cancelTrade.mutationOptions(options)),
+    acceptSubstitute: useMutation(orpc.offer.acceptSubstitute.mutationOptions(options)),
+    declineSubstitute: useMutation(orpc.offer.declineSubstitute.mutationOptions(options)),
   };
 }

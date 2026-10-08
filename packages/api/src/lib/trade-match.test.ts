@@ -2,13 +2,18 @@ import { describe, expect, test } from "bun:test";
 
 import {
   batchMatters,
+  copyWindowStart,
   expiredOutcome,
   type LegResult,
   type MatchLeg,
   type MatchTransfer,
-  matchLegs,
+  matchLegs as matchAll,
+  nearMisses,
   tradeOutcome,
+  transferKey,
 } from "./trade-match";
+
+const matchLegs = (...args: Parameters<typeof matchAll>) => matchAll(...args).results;
 
 const GIVER = "0xgiver";
 const GIVER_2 = "0xgiver2";
@@ -24,6 +29,7 @@ const leg = (overrides: Partial<MatchLeg> = {}): MatchLeg => ({
   objektId: "1203",
   collectionId: COLLECTION,
   windowStart: START,
+  copyWindowStart: copyWindowStart(ACCEPTED),
   acceptedAt: ACCEPTED,
   giver: new Set([GIVER, GIVER_2]),
   receiver: new Set([RECEIVER]),
@@ -39,11 +45,14 @@ const transfer = (overrides: Partial<MatchTransfer> = {}): MatchTransfer => {
     to: RECEIVER,
     timestamp: `2026-10-02T00:00:${String(seq % 60).padStart(2, "0")}.000Z`,
     hash: `0xhash${seq}`,
+    tokenId: overrides.objektId ?? "1203",
     objektId: "1203",
     collectionId: COLLECTION,
     ...overrides,
   };
 };
+const minutesBeforeAccept = (minutes: number) =>
+  new Date(new Date(ACCEPTED).getTime() - minutes * 60 * 1000).toISOString();
 
 describe("matchLegs: a specific objekt", () => {
   test("verifies on the transfer from giver to receiver", () => {
@@ -161,15 +170,92 @@ describe("matchLegs: any copy", () => {
     expect(results.get(2)).toMatchObject({ kind: "verified", transferId: t.id });
     expect(results.get(1)).toEqual({ kind: "pending" });
   });
+
+  test("counts copies from 10 minutes before the accept", () => {
+    const early = transfer({ objektId: "7", timestamp: minutesBeforeAccept(11) });
+    expect(matchLegs([anyCopy(1)], [early]).get(1)).toEqual({ kind: "pending" });
+    const justBefore = transfer({ objektId: "8", timestamp: minutesBeforeAccept(9) });
+    expect(matchLegs([anyCopy(1)], [early, justBefore]).get(1)).toMatchObject({
+      kind: "verified",
+      transferId: justBefore.id,
+    });
+  });
+
+  test("the trade accepted first takes a copy both could use", () => {
+    const later = leg({ id: 1, objektId: null, acceptedAt: "2026-10-01T13:00:00.000Z" });
+    const first = leg({ id: 2, objektId: null });
+    const t = transfer({ objektId: "9" });
+    const results = matchLegs([later, first], [t]);
+    expect(results.get(2)).toMatchObject({ kind: "verified", transferId: t.id });
+    expect(results.get(1)).toEqual({ kind: "pending" });
+  });
+
+  test("records the transfer's token, not the leg's", () => {
+    const t = transfer({ objektId: null, tokenId: "42" });
+    expect(matchLegs([anyCopy(1)], [t]).get(1)).toMatchObject({ objektId: "42" });
+  });
 });
 
 describe("matchLegs: used transfers", () => {
   test("a transfer already used by another leg is skipped", () => {
     const t = transfer({ objektId: "5" });
     const anyCopy = leg({ objektId: null });
-    expect(matchLegs([anyCopy], [t], new Set([t.id])).get(1)).toEqual({ kind: "pending" });
+    const used = new Set([transferKey(t)]);
+    expect(matchLegs([anyCopy], [t], used).get(1)).toEqual({ kind: "pending" });
     const specific = leg({ objektId: "5" });
-    expect(matchLegs([specific], [t], new Set([t.id])).get(1)).toEqual({ kind: "pending" });
+    expect(matchLegs([specific], [t], used).get(1)).toEqual({ kind: "pending" });
+  });
+
+  test("still used after a re-index gives the transfer a new id", () => {
+    const t = transfer({ objektId: "6" });
+    const reindexed = { ...t, id: "019d0000-0000-7000-8000-000000000000" };
+    expect(
+      matchLegs([leg({ objektId: null })], [reindexed], new Set([transferKey(t)])).get(1),
+    ).toEqual({
+      kind: "pending",
+    });
+  });
+});
+
+describe("nearMisses", () => {
+  const misses = (legs: MatchLeg[], transfers: MatchTransfer[]) =>
+    nearMisses(legs, transfers, matchAll(legs, transfers));
+
+  test("a different copy from giver to receiver is reported", () => {
+    const wrong = transfer({ objektId: "1207" });
+    expect(misses([leg()], [wrong])).toEqual([
+      { legId: 1, txHash: wrong.hash, objektId: "1207", at: wrong.timestamp },
+    ]);
+  });
+
+  test("the leg's own token is not", () => {
+    expect(misses([leg()], [transfer()])).toEqual([]);
+  });
+
+  test("nor is a transfer that verified another leg", () => {
+    const t = transfer({ objektId: "1207" });
+    expect(misses([leg({ id: 1 }), leg({ id: 2, objektId: "1207" })], [t])).toEqual([]);
+    expect(misses([leg({ id: 1 }), leg({ id: 2, objektId: null })], [t])).toEqual([]);
+  });
+
+  test("nor a move before 10 minutes ahead of the accept", () => {
+    expect(
+      misses([leg()], [transfer({ objektId: "1207", timestamp: minutesBeforeAccept(11) })]),
+    ).toEqual([]);
+  });
+
+  test("nor a move between the giver's own addresses", () => {
+    expect(misses([leg()], [transfer({ objektId: "1207", to: GIVER_2 })])).toEqual([]);
+  });
+
+  test("an any-copy leg reports none", () => {
+    const pending = {
+      results: new Map([[1, { kind: "pending" } as const]]),
+      taken: new Set<string>(),
+    };
+    expect(
+      nearMisses([leg({ objektId: null })], [transfer({ objektId: "1207" })], pending),
+    ).toEqual([]);
   });
 });
 
@@ -179,25 +265,33 @@ describe("tradeOutcome", () => {
   const p: LegResult = { kind: "pending" };
 
   test("completes when every open leg verifies", () => {
-    expect(tradeOutcome([v, v], 0)).toEqual({ status: "completed" });
-    expect(tradeOutcome([v], 1)).toEqual({ status: "completed" });
+    expect(tradeOutcome([v, v], 0, 0)).toEqual({ status: "completed" });
+    expect(tradeOutcome([v], 1, 0)).toEqual({ status: "completed" });
   });
 
   test("stays in progress while a leg waits", () => {
-    expect(tradeOutcome([v, p], 0)).toEqual({ status: "in_progress" });
+    expect(tradeOutcome([v, p], 0, 0)).toEqual({ status: "in_progress" });
   });
 
   test("a break before any verified leg cancels; after one, fails", () => {
-    expect(tradeOutcome([b, p], 0)).toEqual({ status: "cancelled", reason: "token_moved" });
-    expect(tradeOutcome([b], 1)).toEqual({ status: "failed" });
-    expect(tradeOutcome([b, v], 0)).toEqual({ status: "failed" });
+    expect(tradeOutcome([b, p], 0, 0)).toEqual({ status: "cancelled", reason: "token_moved" });
+    expect(tradeOutcome([b], 1, 0)).toEqual({ status: "failed" });
+    expect(tradeOutcome([b, v], 0, 0)).toEqual({ status: "failed" });
+  });
+
+  test("a break while the receiver holds a wrong copy fails", () => {
+    expect(tradeOutcome([b, p], 0, 1)).toEqual({ status: "failed" });
   });
 });
 
 describe("expiredOutcome", () => {
   test("fails once a leg verified, else cancels", () => {
-    expect(expiredOutcome(0)).toBe("cancelled");
-    expect(expiredOutcome(1)).toBe("failed");
+    expect(expiredOutcome(0, 0)).toBe("cancelled");
+    expect(expiredOutcome(1, 0)).toBe("failed");
+  });
+
+  test("a held wrong copy fails it too", () => {
+    expect(expiredOutcome(0, 1)).toBe("failed");
   });
 });
 

@@ -52,4 +52,13 @@ export const relations = defineRelations(schema, (r) => ({
       to: r.userAddress.address,
     }),
   },
+  tradeLeg: {
+    substitutes: r.many.tradeSubstitute(),
+  },
+  tradeSubstitute: {
+    leg: r.one.tradeLeg({
+      from: r.tradeSubstitute.tradeLegId,
+      to: r.tradeLeg.id,
+    }),
+  },
 }));

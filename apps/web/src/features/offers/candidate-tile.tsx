@@ -3,7 +3,7 @@ import type { CandidateItem } from "@repo/api/schemas/offer";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 
 import { ObjektCard } from "@/features/objekt/objekt-card";
-import { CollectionLabel } from "@/features/objekt/objekt-label";
+import { CollectionLabel, SerialNo } from "@/features/objekt/objekt-label";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
@@ -27,11 +27,11 @@ export function CandidateTile({
   // focusable while unavailable, so the reason under it is read with it
   const unavailable = blocked !== null || (full && !selected);
   const detail =
-    item.objektId === null
-      ? m.offer_any_copy_count({ count: item.copies ?? 0 })
-      : item.serial !== null
-        ? `#${item.serial}`
-        : null;
+    item.objektId === null ? (
+      m.offer_any_copy_count({ count: item.copies ?? 0 })
+    ) : item.serial !== null ? (
+      <SerialNo serial={item.serial} estimated={item.serialEstimated} />
+    ) : null;
 
   return (
     <button

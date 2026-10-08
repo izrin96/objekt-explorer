@@ -1,6 +1,7 @@
 import { expiredOutcome } from "@repo/api/lib/trade-match";
 import { TRADE_EXPIRE_DAYS } from "@repo/api/schemas/offer";
 import { partyNames, writeNotes } from "@repo/api/services/offer/notes";
+import { heldCopies } from "@repo/api/services/trade-verify";
 import { db } from "@repo/db";
 import { offer, trade, tradeLeg } from "@repo/db/schema";
 import { and, eq, lte, sql } from "drizzle-orm";
@@ -53,7 +54,7 @@ export async function expireStalls(seenUntil: string | null): Promise<Publish[]>
         verified: legs.filter((leg) => leg.verifiedAt !== null).length,
         total: legs.length,
       };
-      const status = expiredOutcome(progress.verified);
+      const status = expiredOutcome(progress.verified, await heldCopies(tx, id));
 
       await tx
         .update(trade)

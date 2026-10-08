@@ -14,6 +14,7 @@ export function counterRequest(
     collectionSlug: item.collectionSlug,
     objektId: item.objektId,
     serial: item.serial,
+    serialEstimated: item.serialEstimated,
     listSlug: item.listSlug,
     flags: null,
     kept,

@@ -39,9 +39,12 @@ const REFUSAL_STATUS: Record<OfferRefusal, ConstructorParameters<typeof ORPCErro
   trade_ended: "CONFLICT",
   locked: "CONFLICT",
   indexer_behind: "CONFLICT",
+  substitute_closed: "CONFLICT",
+  substitute_taken: "CONFLICT",
   not_completed: "CONFLICT",
   rating_closed: "CONFLICT",
   not_allowed: "FORBIDDEN",
+  not_receiver: "FORBIDDEN",
   trade_blocked: "FORBIDDEN",
   no_address: "FORBIDDEN",
   not_accepting: "FORBIDDEN",
@@ -95,6 +98,7 @@ export type IndexedObjekt = {
   owner: string;
   transferable: boolean;
   serial: number;
+  mintedAt: string;
   slug: string;
   receivedAt: string;
 };
@@ -104,6 +108,7 @@ export const objektColumns = {
   owner: objekts.owner,
   transferable: objekts.transferable,
   serial: objekts.serial,
+  mintedAt: objekts.mintedAt,
   slug: collections.slug,
   receivedAt: objekts.receivedAt,
 };

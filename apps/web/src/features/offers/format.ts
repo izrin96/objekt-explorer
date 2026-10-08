@@ -4,6 +4,7 @@ import {
   type OfferItemView,
   type OfferPayload,
   type OfferView,
+  type ShownSerial,
   type TopupView,
   type TradePayload,
   type TradeView,
@@ -23,14 +24,22 @@ export function itemName(item: Pick<OfferItemView, "collectionSlug">, collection
   return collectionName(item.collectionSlug, collections[item.collectionSlug]);
 }
 
-/** "SeoYeon A204Z #537", or "SeoYeon A204Z (any copy)" */
+/** "#1207", "~#1207" when estimated, as plain text */
+export function serialText(shown: ShownSerial) {
+  if (shown.serial === null) return m.offer_serial_unnumbered();
+  return `${shown.estimated ? "~" : ""}#${shown.serial}`;
+}
+
+/** "SeoYeon A204Z #537", "SeoYeon A204Z ~#537" when estimated, or "SeoYeon A204Z (any copy)" */
 export function itemLabel(
-  item: Pick<OfferItemView, "collectionSlug" | "objektId" | "serial">,
+  item: Pick<OfferItemView, "collectionSlug" | "objektId" | "serial"> &
+    Partial<Pick<OfferItemView, "serialEstimated">>,
   collections: Collections,
 ) {
   const name = itemName(item, collections);
   if (item.objektId === null) return m.offer_item_any({ name });
-  return item.serial === null ? name : `${name} #${item.serial}`;
+  if (item.serial === null) return name;
+  return `${name} ${serialText({ serial: item.serial, estimated: item.serialEstimated ?? false })}`;
 }
 
 function topupAmount(topup: Pick<TopupView, "amount" | "currency">) {
@@ -167,6 +176,11 @@ export function agoLabel(iso: string) {
 
 export function tradeNotificationText(payload: TradePayload) {
   const params = { partner: payload.partner.name, trade: tradeNo(payload.tradeId) };
+  // always set on the wrong-copy events
+  const copy = {
+    sent: payload.copy ? serialText(payload.copy.sent) : "",
+    asked: payload.copy ? serialText(payload.copy.asked) : "",
+  };
   switch (payload.event) {
     case "leg_verified":
       return m.notification_trade_leg_verified({ ...params, ...payload.progress });
@@ -184,5 +198,9 @@ export function tradeNotificationText(payload: TradePayload) {
         : m.notification_trade_failed(params);
     case "reminder":
       return m.notification_trade_reminder(params);
+    case "wrong_copy":
+      return m.notification_trade_wrong_copy({ ...params, ...copy });
+    case "wrong_copy_declined":
+      return m.notification_trade_wrong_copy_declined({ ...params, ...copy });
   }
 }

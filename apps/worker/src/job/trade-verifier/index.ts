@@ -1,13 +1,21 @@
-import { batchMatters, type LegResult, tradeOutcome } from "@repo/api/lib/trade-match";
-import { type TradePayload, VERIFIER_LAST_KEY } from "@repo/api/schemas/offer";
+import { batchMatters, type LegResult, type NearMiss } from "@repo/api/lib/trade-match";
+import { VERIFIER_LAST_KEY } from "@repo/api/schemas/offer";
+import type { Tx } from "@repo/api/services/offer/core";
 import { partyNames, writeNotes } from "@repo/api/services/offer/notes";
-import { type LegRow, loadOpenLegs, matchOpenLegs } from "@repo/api/services/trade-verify";
+import {
+  finishSettle,
+  type LegRow,
+  loadOpenLegs,
+  matchOpenLegs,
+  shownSerials,
+  wrongCopyNote,
+} from "@repo/api/services/trade-verify";
 import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { collections } from "@repo/db/indexer/schema";
-import { trade, tradeLeg } from "@repo/db/schema";
+import { trade, tradeLeg, tradeSubstitute } from "@repo/db/schema";
 import { RedisClient } from "bun";
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 
 import { unique } from "../../lib/array";
 import { isUniqueViolation } from "../../lib/pg-error";
@@ -65,19 +73,23 @@ async function verifyRun() {
   const started = Date.now();
   const seen = await readIndexerHead();
   const legs = await loadOpenLegs();
-  const touched = { trades: 0, verified: 0, ended: 0 };
+  const touched = { trades: 0, verified: 0, ended: 0, wrongCopies: 0 };
   const publishes: Publish[] = [];
 
   if (legs.length > 0) {
-    const results = await matchOpenLegs(legs);
+    const { results, nearMisses } = await matchOpenLegs(legs);
+    const tradeOf = new Map(legs.map((leg) => [leg.id, leg.trade_id]));
+    const missesOf = Map.groupBy(await unrecorded(nearMisses), (miss) => tradeOf.get(miss.legId));
     const byTrade = Map.groupBy(legs, (leg) => leg.trade_id);
     for (const [tradeId, tradeLegs] of byTrade) {
       const decided = tradeLegs.filter((leg) => results.get(leg.id)?.kind !== "pending");
-      if (decided.length === 0) continue;
-      const outcome = await settleTrade(tradeId, tradeLegs, results);
+      const misses = missesOf.get(tradeId) ?? [];
+      if (decided.length === 0 && misses.length === 0) continue;
+      const outcome = await settleTrade(tradeId, tradeLegs, results, misses);
       if (!outcome) continue;
       touched.trades += 1;
       touched.verified += outcome.verified;
+      touched.wrongCopies += outcome.wrongCopies;
       if (outcome.ended) touched.ended += 1;
       publishes.push(outcome.publish);
     }
@@ -98,15 +110,24 @@ async function verifyRun() {
     ? `indexer ${Math.round((started - new Date(seen.seenUntil).getTime()) / 1000)}s behind`
     : "indexer head unknown";
   console.log(
-    `[Trade Verifier] ${lag}; ${legs.length} open legs; ${touched.verified} verified across ${touched.trades} trades, ${touched.ended} ended; ${upkeep.expired} offers expired, ${upkeep.moved} cancelled; ${expired.length} trades expired; ${Date.now() - started}ms`,
+    `[Trade Verifier] ${lag}; ${legs.length} open legs; ${touched.verified} verified, ${touched.wrongCopies} wrong copies across ${touched.trades} trades, ${touched.ended} ended; ${upkeep.expired} offers expired, ${upkeep.moved} cancelled; ${expired.length} trades expired; ${Date.now() - started}ms`,
   );
 }
 
 /** One transaction per trade, under its row lock, so a cancel and a verification never cross. */
-async function settleTrade(tradeId: number, legs: LegRow[], results: Map<number, LegResult>) {
+async function settleTrade(
+  tradeId: number,
+  legs: LegRow[],
+  results: Map<number, LegResult>,
+  misses: NearMiss[],
+) {
   const first = legs[0]!;
   const parties = [first.user_a, first.user_b];
   const name = await partyNames(parties);
+  const askedOf = new Map(legs.map((leg) => [leg.id, leg.objekt_id ?? ""]));
+  const serialOf = await shownSerials(
+    misses.flatMap((miss) => [miss.objektId, askedOf.get(miss.legId) ?? ""]),
+  );
 
   return db.transaction(async (tx) => {
     const [locked] = await tx
@@ -155,52 +176,96 @@ async function settleTrade(tradeId: number, legs: LegRow[], results: Map<number,
       applied.push(recorded ? result : { kind: "pending" });
     }
 
-    const outcome = tradeOutcome(applied, alreadyVerified);
-    if (outcome.status !== "in_progress") {
-      await tx
-        .update(trade)
-        .set({
-          status: outcome.status,
-          endedAt: sql`now()`,
-          cancelReason: outcome.status === "cancelled" ? outcome.reason : null,
-        })
-        .where(eq(trade.id, tradeId));
-      await tx
-        .update(tradeLeg)
-        .set({ open: false })
-        .where(and(eq(tradeLeg.tradeId, tradeId), eq(tradeLeg.open, true)));
-    }
-    if (verified === 0 && outcome.status === "in_progress") return null;
-
-    const event: TradePayload["event"] =
-      outcome.status === "in_progress" ? "leg_verified" : outcome.status;
+    const settled = {
+      tradeId,
+      offerId: first.offer_id,
+      conversationId: first.conversation_id,
+      userA: first.user_a,
+      userB: first.user_b,
+    };
+    // recorded before the outcome, so a leg breaking in this run sees the copy as held
+    const added = await recordWrongCopies(tx, misses, openIds);
     const progress = { verified: alreadyVerified + verified, total: state.length };
-    const notified = await writeNotes(
+    const copyNotified = await writeNotes(
       tx,
-      parties.map((userId) => ({
-        type: "trade" as const,
-        userId,
-        payload: {
-          tradeId,
-          offerId: first.offer_id,
-          conversationId: first.conversation_id,
-          event,
-          reason: outcome.status === "cancelled" ? outcome.reason : null,
-          progress,
-          partner: name(userId === first.user_a ? first.user_b : first.user_a),
-        },
-      })),
+      added.flatMap((row) =>
+        parties.map((userId) =>
+          wrongCopyNote(
+            settled,
+            "wrong_copy",
+            { userId, partner: name(userId === first.user_a ? first.user_b : first.user_a) },
+            progress,
+            { asked: serialOf(askedOf.get(row.legId) ?? ""), sent: serialOf(row.objektId) },
+          ),
+        ),
+      ),
     );
+
+    const { ended, notified, reputations } = await finishSettle(
+      tx,
+      settled,
+      applied,
+      { alreadyVerified, verified, total: state.length },
+      name,
+    );
+
+    if (verified === 0 && !ended && added.length === 0) return null;
     return {
       verified,
-      ended: outcome.status !== "in_progress",
+      ended,
+      wrongCopies: added.length,
       publish: {
-        notified,
+        notified: [...notified, ...copyNotified],
         conversations: [{ id: first.conversation_id, userIds: parties }],
-        reputations: outcome.status === "completed" ? parties : [],
+        reputations,
       },
     };
   });
+}
+
+/** Drops the wrong copies already recorded against their leg, so their trade isn't settled again. */
+async function unrecorded(misses: NearMiss[]) {
+  if (misses.length === 0) return misses;
+  const rows = await db
+    .select({
+      legId: tradeSubstitute.tradeLegId,
+      txHash: tradeSubstitute.txHash,
+      objektId: tradeSubstitute.objektId,
+    })
+    .from(tradeSubstitute)
+    .where(inArray(tradeSubstitute.tradeLegId, unique(misses.map((miss) => miss.legId))));
+  const key = (row: { legId: number; txHash: string; objektId: string }) =>
+    `${row.legId}:${row.txHash}:${row.objektId}`;
+  const recorded = new Set(rows.map(key));
+  return misses.filter((miss) => !recorded.has(key(miss)));
+}
+
+/**
+ * Under the trade's row lock: the copies for its open legs, less any whose transfer verified a
+ * leg since the match read it. A copy already recorded is skipped, so each is noted once.
+ */
+async function recordWrongCopies(tx: Tx, misses: NearMiss[], openIds: ReadonlySet<number>) {
+  const waiting = misses.filter((miss) => openIds.has(miss.legId));
+  if (waiting.length === 0) return [];
+  const spent = await tx
+    .select({ txHash: tradeLeg.txHash, objektId: tradeLeg.verifiedObjektId })
+    .from(tradeLeg)
+    .where(inArray(tradeLeg.txHash, unique(waiting.map((miss) => miss.txHash))));
+  const spentKeys = new Set(spent.map((row) => `${row.txHash}:${row.objektId}`));
+  const fresh = waiting.filter((miss) => !spentKeys.has(`${miss.txHash}:${miss.objektId}`));
+  if (fresh.length === 0) return [];
+  return tx
+    .insert(tradeSubstitute)
+    .values(
+      fresh.map((miss) => ({
+        tradeLegId: miss.legId,
+        txHash: miss.txHash,
+        objektId: miss.objektId,
+        transferredAt: miss.at,
+      })),
+    )
+    .onConflictDoNothing()
+    .returning({ legId: tradeSubstitute.tradeLegId, objektId: tradeSubstitute.objektId });
 }
 
 async function refreshWatch(legs: LegRow[], offerObjekts: string[]) {
@@ -218,16 +283,15 @@ async function refreshWatch(legs: LegRow[], offerObjekts: string[]) {
     );
   const stillOpen = new Set(open.map((row) => row.id));
   const openLegs = legs.filter((leg) => stillOpen.has(leg.id));
-  const anySlugs = unique(
-    openLegs.filter((leg) => leg.objekt_id === null).map((leg) => leg.collection_slug),
-  );
+  // every leg's collection: any-copy legs take a copy, and specific legs spot a wrong one
+  const slugs = unique(openLegs.map((leg) => leg.collection_slug));
   const uuids =
-    anySlugs.length === 0
+    slugs.length === 0
       ? []
       : await indexer
           .select({ id: collections.id })
           .from(collections)
-          .where(inArray(collections.slug, anySlugs));
+          .where(inArray(collections.slug, slugs));
   watch.objekts = new Set([
     ...openLegs.flatMap((leg) => (leg.objekt_id ? [leg.objekt_id] : [])),
     ...offerObjekts,

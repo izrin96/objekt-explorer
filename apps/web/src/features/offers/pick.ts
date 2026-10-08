@@ -13,6 +13,8 @@ export type OfferPick = {
   /** null asks for any copy */
   objektId: string | null;
   serial: number | null;
+  /** unknown on a market row's prefill, which carries no mint time: the builder reads the candidate's */
+  serialEstimated?: boolean;
   listSlug: string | null;
   /** null when the pick did not come from candidates, as in a counter's prefill */
   flags: Pick<CandidateItem, "transferable" | "reserved" | "inOpenOffer" | "copies"> | null;
@@ -33,6 +35,7 @@ export function toPick(item: CandidateItem): OfferPick {
     collectionSlug: item.collectionSlug,
     objektId: item.objektId,
     serial: item.serial,
+    serialEstimated: item.serialEstimated,
     listSlug: item.listSlug,
     flags: {
       transferable: item.transferable,

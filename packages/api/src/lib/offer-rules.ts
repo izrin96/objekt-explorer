@@ -268,12 +268,17 @@ export function canReport(trade: TradeState, now: Date) {
 }
 
 /**
- * Either party may cancel until the first leg verifies, and not while the indexer is behind:
- * a party could otherwise cancel right after receiving, before the transfer is read.
+ * Either party may cancel until the first leg verifies or the receiver holds a wrong copy
+ * they haven't accepted (`heldCopies`), and not while the indexer is behind: a party could
+ * otherwise cancel right after receiving, before the transfer is read.
  */
-export function cancelRefusal(trade: TradeState, indexerBehind: boolean): OfferRefusal | null {
+export function cancelRefusal(
+  trade: TradeState,
+  indexerBehind: boolean,
+  heldCopies: number,
+): OfferRefusal | null {
   if (trade.status !== "in_progress") return "trade_ended";
-  if (trade.verifiedLegs > 0) return "locked";
+  if (trade.verifiedLegs > 0 || heldCopies > 0) return "locked";
   return indexerBehind ? "indexer_behind" : null;
 }
 
