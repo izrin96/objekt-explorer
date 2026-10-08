@@ -408,6 +408,20 @@
   }
 }
 
+/*
+ * Unlayered, so it beats the popup's utilities. `Skeleton` pins its shimmer to the viewport
+ * (`background-attachment: fixed`), which any transform on an ancestor breaks into one sweep
+ * per card; an open dialog keeps a no-op `scale` and `will-change`, so they go while it rests.
+ */
+[data-slot="dialog-popup"]:not(
+  [data-starting-style],
+  [data-ending-style],
+  [data-nested-dialog-open]
+) {
+  scale: none;
+  will-change: auto;
+}
+
 @layer components {
   .calendar-button {
     @apply text-foreground not-in-data-selected:hover:bg-accent relative flex size-(--cell-size) items-center justify-center rounded-lg text-base disabled:pointer-events-none disabled:opacity-64 sm:text-sm [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='opacity-'])]:opacity-80 [&_svg:not([class*='size-'])]:size-4.5 sm:[&_svg:not([class*='size-'])]:size-4;
