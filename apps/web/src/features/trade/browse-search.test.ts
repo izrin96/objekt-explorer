@@ -2,36 +2,24 @@ import { describe, expect, test } from "bun:test";
 
 import { browseSearchSchema, toBrowseInput } from "./browse-search";
 
-const artists = [{ artistMembers: [{ name: "SeoYeon" }] }];
-
 describe("toBrowseInput", () => {
   test("scopes to the selected artists", () => {
-    const input = toBrowseInput(browseSearchSchema.parse({}), artists, ["tripleS"]);
+    const input = toBrowseInput(browseSearchSchema.parse({}), ["tripleS"]);
     expect(input.artist).toEqual(["tripleS"]);
   });
 
   test("a collection link ignores the scope", () => {
     const search = browseSearchSchema.parse({ slug: "atom01-seoyeon-204z" });
-    expect(toBrowseInput(search, artists, ["tripleS"]).artist).toEqual([]);
-  });
-
-  test("an explicit artist still applies with a collection link", () => {
-    const search = browseSearchSchema.parse({ slug: "atom01-seoyeon-204z", artist: "artms" });
-    expect(toBrowseInput(search, artists, ["tripleS"]).artist).toEqual(["artms"]);
+    expect(toBrowseInput(search, ["tripleS"]).artist).toEqual([]);
   });
 
   test("Only matches", () => {
     // the URL's `?matches=1` arrives as a string, a patch as the number
     for (const matches of ["1", 1]) {
       const on = browseSearchSchema.parse({ matches });
-      expect(toBrowseInput(on, artists, []).matches).toBe(true);
+      expect(toBrowseInput(on, []).matches).toBe(true);
     }
-    expect(toBrowseInput(browseSearchSchema.parse({}), artists, []).matches).toBeUndefined();
-  });
-
-  test("folds members onto Cosmo's spelling", () => {
-    const search = browseSearchSchema.parse({ member: "seoyeon" });
-    expect(toBrowseInput(search, artists, []).member).toEqual(["SeoYeon"]);
+    expect(toBrowseInput(browseSearchSchema.parse({}), []).matches).toBeUndefined();
   });
 });
 
@@ -42,5 +30,9 @@ describe("browseSearchSchema", () => {
     expect(browseSearchSchema.parse({ matches: "yes" })).toMatchObject({ matches: undefined });
     // an old link's `match` is dropped
     expect(browseSearchSchema.parse({ match: "they_have" })).not.toHaveProperty("match");
+  });
+
+  test("an old link's facets are dropped", () => {
+    expect(browseSearchSchema.parse({ member: "seoyeon", class: "First" })).toEqual({});
   });
 });

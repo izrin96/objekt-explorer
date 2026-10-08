@@ -14,18 +14,16 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsList, TabsTab } from "@/components/ui/tabs";
-import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import { useSelectedArtists } from "@/features/artist/use-selected-artists";
-import { canReset } from "@/features/filters/search-schema";
 import { ObjektDrawer } from "@/features/objekt/drawer";
 import { collectionName } from "@/features/objekt/objekt-label";
 import { useCurrentUser, useUserLists } from "@/features/user/hooks";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
-import { BrowseFilters } from "./browse-filters";
 import { BrowsePost, BrowsePostSkeleton } from "./browse-post";
 import { type BrowseSearch, toBrowseInput } from "./browse-search";
+import { CollectionChip } from "./collection-chip";
 import { LoadError } from "./load-error";
 import { MatchHelp } from "./match-help";
 import { MyPosts } from "./my-posts";
@@ -47,12 +45,8 @@ export function BrowseView({ search }: { search: BrowseSearch }) {
     canBeOnTrade(list.listTypeNew, list.isProfileBind),
   );
   const onlyMatches = canMatch && search.matches === 1;
-  const { artists } = useCosmoArtist();
   const { data: selected } = useSelectedArtists();
-  const input = useMemo(
-    () => toBrowseInput(search, artists, selected),
-    [search, artists, selected],
-  );
+  const input = useMemo(() => toBrowseInput(search, selected), [search, selected]);
   const query = useInfiniteQuery(browseOptions(input));
   // For you's own read, so a post's link only promises a row For you shows
   const mutual = useQuery({
@@ -83,7 +77,7 @@ export function BrowseView({ search }: { search: BrowseSearch }) {
     });
 
   const type: PostType = search.type ?? "all";
-  const filtering = canReset(search) || search.type !== undefined || search.slug !== undefined;
+  const filtering = search.type !== undefined || search.slug !== undefined;
   const reset = () => void navigate({ search: {}, replace: true, resetScroll: false });
   const posts = useMemo(() => query.data?.pages.flatMap((page) => page.posts) ?? [], [query.data]);
   const collections = useMemo(
@@ -147,12 +141,10 @@ export function BrowseView({ search }: { search: BrowseSearch }) {
         ) : null}
       </div>
 
-      <BrowseFilters
+      <CollectionChip
         search={search}
         slugName={search.slug ? collectionName(search.slug, collections[search.slug]) : undefined}
-        filtering={filtering}
         onClearSlug={() => setSearch({ slug: undefined })}
-        onReset={reset}
       />
 
       {query.isPending ? (
@@ -256,7 +248,7 @@ export function BrowsePending() {
       </div>
       <div className="flex flex-wrap gap-2">
         <Skeleton className="h-9 w-48 rounded-lg" />
-        <Skeleton className="h-9 w-72 max-w-full rounded-lg" />
+        <Skeleton className="h-6 w-36 rounded-lg" />
       </div>
       <BrowseFeedSkeleton />
     </>

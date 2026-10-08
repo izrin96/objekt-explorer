@@ -12,11 +12,11 @@ export const Route = createFileRoute("/(container)/trade/")({
   validateSearch: browseSearchSchema,
   loaderDeps: ({ search }) => search,
   loader: async ({ context: { queryClient }, deps, cause }) => {
-    const [artists, selected] = await Promise.all([
-      queryClient.query({ ...orpc.config.getArtists.queryOptions(), staleTime: "static" }),
-      queryClient.query({ ...orpc.config.getSelectedArtists.queryOptions(), staleTime: "static" }),
-    ]);
-    const options = browseOptions(toBrowseInput(deps, artists, selected));
+    const selected = await queryClient.query({
+      ...orpc.config.getSelectedArtists.queryOptions(),
+      staleTime: "static",
+    });
+    const options = browseOptions(toBrowseInput(deps, selected));
     // a filter change keeps the current posts on screen while the next ones load
     if (cause === "stay") {
       void queryClient.infiniteQuery(options).catch(() => undefined);
