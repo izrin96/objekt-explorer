@@ -1,23 +1,19 @@
-import {
-  DiscordLogoIcon,
-  EnvelopeSimpleIcon,
-  UserPlusIcon,
-  XLogoIcon,
-} from "@phosphor-icons/react";
 import { parseBanNotice } from "@repo/api/schemas/moderation";
 import { useMutation } from "@tanstack/react-query";
-import type React from "react";
+import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import * as z from "zod";
 
+import { MessageMarkup } from "@/components/shared/message-markup";
 import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Form } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { toastManager } from "@/components/ui/toast";
+import { AuthDivider, AuthHeader, authLinkClass } from "@/features/auth/auth-shell";
 import { PasswordInput } from "@/features/auth/password-input";
 import { useAuthSuccess } from "@/features/auth/redirect";
-import type { AuthState } from "@/features/auth/sign-in";
+import { SocialSignIn } from "@/features/auth/social-sign-in";
 import { authClient } from "@/lib/auth-client";
 import { type FieldErrors, zodErrors } from "@/lib/form";
 import { m } from "@/paraglide/messages";
@@ -55,11 +51,9 @@ function bannedError(message: string | undefined) {
 }
 
 export function SignInForm({
-  setState,
   redirect,
   notice,
 }: {
-  setState: (state: AuthState) => void;
   redirect?: string;
   /** a refusal the OAuth callback sent back, already worded */
   notice?: string | null;
@@ -82,10 +76,7 @@ export function SignInForm({
 
   return (
     <>
-      <div className="flex flex-col">
-        <h1 className="font-display text-xl font-semibold">{m.auth_sign_in_title()}</h1>
-        <span className="text-muted-foreground text-sm">{m.auth_sign_in_description()}</span>
-      </div>
+      <AuthHeader title={m.auth_sign_in_title()} description={m.auth_sign_in_description()} />
 
       {notice ? (
         <p
@@ -95,6 +86,10 @@ export function SignInForm({
           {notice}
         </p>
       ) : null}
+
+      <SocialSignIn redirect={redirect} />
+
+      <AuthDivider label={m.auth_sign_in_or_continue()} />
 
       <Form
         errors={errors}
@@ -118,11 +113,7 @@ export function SignInForm({
 
         <Field name="password" className="gap-1.5">
           <FieldLabel>{m.auth_sign_in_password_label()}</FieldLabel>
-          <PasswordInput
-            autoComplete="current-password"
-            aria-required
-            placeholder={m.auth_sign_in_password_placeholder()}
-          />
+          <PasswordInput autoComplete="current-password" aria-required />
           <FieldError />
         </Field>
 
@@ -139,68 +130,27 @@ export function SignInForm({
         )}
       </Form>
 
-      <div className="flex flex-col gap-2">
-        <Button variant="outline" onClick={() => setState("forgot-password")}>
-          <EnvelopeSimpleIcon size={18} weight="light" />
+      <div className="text-muted-foreground flex flex-col items-center gap-1.5 text-sm">
+        <Link
+          to="/login"
+          search={{ redirect, mode: "forgot-password" }}
+          className="hover:text-foreground underline-offset-4 hover:underline"
+        >
           {m.auth_sign_in_forgot_password()}
-        </Button>
-        <Button variant="outline" onClick={() => setState("sign-up")}>
-          <UserPlusIcon size={18} weight="light" />
-          {m.auth_sign_in_create_account()}
-        </Button>
-      </div>
-
-      {/* the divider's label masks the rule with the surface behind it, which
-          inside this card is `bg-card`, not `bg-background` */}
-      <div className="relative flex items-center justify-center text-sm">
-        <div className="absolute inset-0 flex items-center">
-          <div className="bg-border h-px w-full shrink-0" />
-        </div>
-        <span className="bg-card text-muted-foreground relative px-3">
-          {m.auth_sign_in_or_continue()}
-        </span>
-      </div>
-
-      <div className="flex flex-col gap-2">
-        <SocialButton provider="discord" label={m.auth_sign_in_sign_in_discord()}>
-          <DiscordLogoIcon size={18} weight="light" />
-        </SocialButton>
-        <SocialButton provider="twitter" label={m.auth_sign_in_sign_in_twitter()}>
-          <XLogoIcon size={18} weight="light" />
-        </SocialButton>
+        </Link>
+        <p>
+          <MessageMarkup
+            parts={m.auth_sign_in_new_here.parts()}
+            markup={{
+              link: (children) => (
+                <Link to="/login" search={{ redirect, mode: "sign-up" }} className={authLinkClass}>
+                  {children}
+                </Link>
+              ),
+            }}
+          />
+        </p>
       </div>
     </>
-  );
-}
-
-function SocialButton({
-  provider,
-  label,
-  children,
-}: {
-  provider: "discord" | "twitter";
-  label: string;
-  children: React.ReactNode;
-}) {
-  const mutation = useMutation({
-    mutationFn: async () => {
-      // a ban surfaces at the callback, after the redirect; `/login` reads it from the URL
-      const result = await authClient.signIn.social({ provider, errorCallbackURL: "/login" });
-      if (result.error) throw new Error(result.error.message);
-      return result.data;
-    },
-    onError: (error) => {
-      toastManager.add({
-        type: "error",
-        title: m.auth_sign_in_error({ message: error.message }),
-      });
-    },
-  });
-
-  return (
-    <Button variant="outline" loading={mutation.isPending} onClick={() => mutation.mutate()}>
-      {children}
-      {label}
-    </Button>
   );
 }

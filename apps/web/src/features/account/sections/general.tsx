@@ -143,7 +143,7 @@ function ChangeEmailForm({ email }: { email: string }) {
 
   const mutation = useMutation({
     mutationFn: async (newEmail: string) => {
-      const result = await authClient.changeEmail({ newEmail });
+      const result = await authClient.changeEmail({ newEmail, callbackURL: "/auth/verified" });
       if (result.error) throw new Error(result.error.message);
       return result.data;
     },

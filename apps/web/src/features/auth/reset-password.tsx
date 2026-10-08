@@ -1,21 +1,25 @@
 import { useMutation } from "@tanstack/react-query";
-import { useRouter } from "@tanstack/react-router";
+import { Link, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
 import * as z from "zod";
 
 import { Button } from "@/components/ui/button";
-import { Field, FieldError, FieldLabel } from "@/components/ui/field";
+import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field";
 import { Form } from "@/components/ui/form";
 import { toastManager } from "@/components/ui/toast";
-import { AuthShell } from "@/features/auth/auth-shell";
+import { AuthHeader, AuthShell } from "@/features/auth/auth-shell";
 import { PasswordInput } from "@/features/auth/password-input";
+import { MIN_PASSWORD } from "@/features/auth/sign-up-form";
 import { authClient } from "@/lib/auth-client";
 import { type FieldErrors, zodErrors } from "@/lib/form";
 import { m } from "@/paraglide/messages";
 
 function schema() {
   return z.object({
-    password: z.string().min(1, m.auth_reset_password_password_required()),
+    password: z
+      .string()
+      .min(1, { message: m.auth_reset_password_password_required(), abort: true })
+      .min(MIN_PASSWORD, m.common_validation_password_length()),
   });
 }
 
@@ -37,7 +41,10 @@ export function ResetPassword({ token }: { token: string }) {
 
   return (
     <AuthShell>
-      <h1 className="font-display text-xl font-semibold">{m.auth_reset_password_title()}</h1>
+      <AuthHeader
+        title={m.auth_reset_password_title()}
+        description={m.auth_reset_password_description()}
+      />
 
       <Form
         errors={errors}
@@ -50,11 +57,8 @@ export function ResetPassword({ token }: { token: string }) {
       >
         <Field name="password" className="gap-1.5">
           <FieldLabel>{m.auth_reset_password_password_label()}</FieldLabel>
-          <PasswordInput
-            autoComplete="new-password"
-            aria-required
-            placeholder={m.auth_reset_password_password_placeholder()}
-          />
+          <PasswordInput autoComplete="new-password" aria-required />
+          <FieldDescription>{m.auth_sign_up_password_description()}</FieldDescription>
           <FieldError />
         </Field>
 
@@ -68,6 +72,20 @@ export function ResetPassword({ token }: { token: string }) {
           </p>
         )}
       </Form>
+    </AuthShell>
+  );
+}
+
+export function ResetPasswordExpired() {
+  return (
+    <AuthShell>
+      <AuthHeader
+        title={m.auth_reset_password_expired_title()}
+        description={m.auth_reset_password_expired_description()}
+      />
+      <Button render={<Link to="/login" search={{ mode: "forgot-password" }} />}>
+        {m.auth_send_new_link()}
+      </Button>
     </AuthShell>
   );
 }

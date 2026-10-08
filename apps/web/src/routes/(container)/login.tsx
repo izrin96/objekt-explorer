@@ -11,6 +11,8 @@ import { m } from "@/paraglide/messages";
 export const Route = createFileRoute("/(container)/login")({
   validateSearch: z.object({
     redirect: z.string().optional().catch(undefined),
+    // a search param, not a child route, so `redirect` rides along between modes
+    mode: z.enum(["sign-up", "forgot-password"]).optional().catch(undefined),
     // set by Better Auth when an OAuth sign-in is refused at its callback
     error: z.string().optional().catch(undefined),
     error_description: z.string().optional().catch(undefined),
@@ -19,12 +21,20 @@ export const Route = createFileRoute("/(container)/login")({
     const user = await queryClient.query({ ...currentUserOptions, staleTime: "static" });
     if (user) throw routerRedirect({ to: "/" });
   },
-  head: () => generateMetadata({ title: m.page_titles_login() }),
+  head: ({ match: { search } }) =>
+    generateMetadata({
+      title:
+        search.mode === "sign-up"
+          ? m.auth_sign_up_title()
+          : search.mode === "forgot-password"
+            ? m.auth_forgot_password_title()
+            : m.page_titles_login(),
+    }),
   component: LoginPage,
 });
 
 function LoginPage() {
-  const { redirect, error, error_description: description } = Route.useSearch();
+  const { redirect, mode, error, error_description: description } = Route.useSearch();
   const navigate = Route.useNavigate();
   // read once, then dropped from the URL, so a reload or a copied link does not repeat it
   const [notice] = useState(() =>
@@ -39,5 +49,5 @@ function LoginPage() {
     if (error !== undefined) void navigate({ search: { redirect }, replace: true });
   }, [error, redirect, navigate]);
 
-  return <SignIn redirect={redirect} notice={notice} />;
+  return <SignIn mode={mode} redirect={redirect} notice={notice} />;
 }
