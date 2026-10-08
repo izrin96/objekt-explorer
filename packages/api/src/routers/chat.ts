@@ -38,6 +38,7 @@ import {
   findMembership,
   parseCard,
   prepareStart,
+  publishActivityChanged,
   publishChatChanged,
   refuse,
   resolveCard,
@@ -435,7 +436,10 @@ export const chatRouter = {
       const { changed } = await updateMember(id, session.user.id, (state) =>
         state.request ? { type: "accept" } : null,
       );
-      if (changed) await publishChatChanged([session.user.id], id);
+      if (!changed) return;
+      // accepting lets the sender's thread show this account's Seen and typing
+      const { partnerId } = await findMembership(id, session.user.id);
+      await publishChatChanged([session.user.id, partnerId], id);
     }),
 
   /** Archives a request for the recipient only; the sender is never told. */
@@ -485,5 +489,9 @@ export const chatRouter = {
 
   setSettings: authed
     .input(setSettingsInputSchema)
-    .handler(({ input, context: { session } }) => saveSettings(session.user.id, input)),
+    .handler(async ({ input, context: { session } }) => {
+      const saved = await saveSettings(session.user.id, input);
+      if (input.showActivity !== undefined) await publishActivityChanged(session.user.id);
+      return saved;
+    }),
 };

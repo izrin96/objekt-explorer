@@ -16,7 +16,7 @@ import {
 } from "@repo/db/schema";
 import { bumpTradeVersion } from "@repo/lib/server/list-touch";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
-import { and, eq, gt, inArray, or, sql } from "drizzle-orm";
+import { and, desc, eq, gt, inArray, isNotNull, or, sql } from "drizzle-orm";
 
 import {
   type MemberEvent,
@@ -580,6 +580,28 @@ export async function publishChatChanged(userIds: string[], conversationId: numb
   await Promise.all(
     unique(userIds).map((userId) =>
       publishNotify(userId, { type: "chat_changed", conversationId }),
+    ),
+  );
+}
+
+const ACTIVITY_PUBLISH_LIMIT = 200;
+
+/** Tells the partners of the user's latest conversations that what the user shows them changed. */
+export async function publishActivityChanged(userId: string) {
+  const rows = await db
+    .select({ id: conversation.id, userLow: conversation.userLow, userHigh: conversation.userHigh })
+    .from(conversation)
+    .where(
+      and(
+        or(eq(conversation.userLow, userId), eq(conversation.userHigh, userId)),
+        isNotNull(conversation.lastMessageId),
+      ),
+    )
+    .orderBy(desc(conversation.lastMessageAt))
+    .limit(ACTIVITY_PUBLISH_LIMIT);
+  await Promise.all(
+    rows.map((row) =>
+      publishChatChanged([row.userLow === userId ? row.userHigh : row.userLow], row.id),
     ),
   );
 }

@@ -38,7 +38,7 @@ import { ConversationMenu } from "./conversation-menu";
 import { dayLabel, messageTime, mutedLabel, untilLabel } from "./format";
 import { MessageActions } from "./message-actions";
 import { ObjektCardMessage } from "./objekt-card-message";
-import { fetchNewer, invalidateChatLists, threadOptions } from "./queries";
+import { fetchNewer, invalidateChatLists, resyncThread, threadOptions } from "./queries";
 import {
   canUnsend,
   latestOfferId,
@@ -56,6 +56,7 @@ const STICK_PX = 96;
 const CATCH_UP_MS = 10_000;
 
 export function Thread({ id }: { id: number }) {
+  const queryClient = useQueryClient();
   const query = useInfiniteQuery(threadOptions(id));
   useCatchUp(id);
 
@@ -88,7 +89,8 @@ export function Thread({ id }: { id: number }) {
         has: query.hasNextPage,
         loading: query.isFetchingNextPage,
         failed: query.isFetchNextPageError,
-        load: () => query.fetchNextPage(),
+        // the page replaces the ones it started from, so what changed meanwhile is read again
+        load: () => query.fetchNextPage().then(() => resyncThread(queryClient, id)),
       }}
     />
   );

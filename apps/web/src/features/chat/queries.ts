@@ -71,6 +71,15 @@ export async function fetchNewer(queryClient: QueryClient, id: number) {
   await refreshOffers(queryClient, id);
 }
 
+/**
+ * After an older page loads, which replaces the pages it started from: what arrived or was
+ * unsent meanwhile is read again.
+ */
+export async function resyncThread(queryClient: QueryClient, id: number) {
+  await fetchNewer(queryClient, id);
+  await syncUnsent(queryClient, id);
+}
+
 async function refreshOffers(queryClient: QueryClient, id: number) {
   const { queryKey } = threadOptions(id);
   const data = queryClient.getQueryData<ThreadData>(queryKey);
@@ -83,20 +92,32 @@ async function refreshOffers(queryClient: QueryClient, id: number) {
 
 async function appendNewer(queryClient: QueryClient, id: number) {
   const { queryKey } = threadOptions(id);
+  // a nudge during the first load is not lost: that page may have been read before it
+  const loading = queryClient.getQueryCache().find({ queryKey });
+  if (loading?.state.fetchStatus === "fetching") await loading.promise?.catch(() => undefined);
   for (;;) {
     const data = queryClient.getQueryData<ThreadData>(queryKey);
     if (!data) return;
     const result = await client.chat.thread({ id, after: newestId(data) }).catch(() => null);
     if (!result) return;
     queryClient.setQueryData<ThreadData>(queryKey, (old) =>
-      old ? appendToThread(old, result) : old,
+      old ? withUnsent(id, appendToThread(old, result)) : old,
     );
     if (!result.hasMore) return;
   }
 }
 
+/** Unsends heard on the socket, so a response read before one cannot show its message again. */
+const unsentHeard = new Map<number, Set<number>>();
+
+const withUnsent = (id: number, data: ThreadData) => {
+  const heard = unsentHeard.get(id);
+  return heard ? markUnsent(data, heard) : data;
+};
+
 /** One message was unsent: it blanks wherever its thread is cached. */
 export function applyUnsent(queryClient: QueryClient, id: number, messageId: number) {
+  unsentHeard.set(id, (unsentHeard.get(id) ?? new Set()).add(messageId));
   queryClient.setQueryData<ThreadData>(threadOptions(id).queryKey, (old) =>
     old ? markUnsent(old, new Set([messageId])) : old,
   );
@@ -107,16 +128,16 @@ export function applyUnsent(queryClient: QueryClient, id: number, messageId: num
  * unsent, so the newest page of each cached thread holds them.
  */
 export function syncUnsentEverywhere(queryClient: QueryClient) {
-  return Promise.all(
-    cachedThreadIds(queryClient).map(async (id) => {
-      const page = await client.chat.thread({ id }).catch(() => null);
-      if (!page) return;
-      const ids = unsentIds(page);
-      if (ids.size === 0) return;
-      queryClient.setQueryData<ThreadData>(threadOptions(id).queryKey, (old) =>
-        old ? markUnsent(old, ids) : old,
-      );
-    }),
+  return Promise.all(cachedThreadIds(queryClient).map((id) => syncUnsent(queryClient, id)));
+}
+
+async function syncUnsent(queryClient: QueryClient, id: number) {
+  const page = await client.chat.thread({ id }).catch(() => null);
+  if (!page) return;
+  const ids = unsentIds(page);
+  if (ids.size === 0) return;
+  queryClient.setQueryData<ThreadData>(threadOptions(id).queryKey, (old) =>
+    old ? markUnsent(old, ids) : old,
   );
 }
 
