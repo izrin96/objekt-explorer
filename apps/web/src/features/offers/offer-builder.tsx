@@ -262,10 +262,7 @@ function BuilderForm({
     (theirs.data?.items ?? []).filter(
       (item) => item.listSlug === request.focusList && blockedReason(item) === null,
     ),
-    {
-      first: (item) => wanted.has(item.collectionSlug),
-      added: (item) => holds(get, item),
-    },
+    (item) => wanted.has(item.collectionSlug),
   );
   // the first page's have-list objekts lead it and recur among its items
   const mineOnWant = new Map(
@@ -276,10 +273,7 @@ function BuilderForm({
   );
   const giveFocus = shortcutItems(
     [...mineOnWant.values()].filter((item) => blockedReason(item) === null),
-    {
-      first: (item) => item.listSlug !== null,
-      added: (item) => holds(giveShown, item),
-    },
+    (item) => item.listSlug !== null,
   );
 
   const noteLength = Array.from(note.trim()).length;
@@ -347,11 +341,18 @@ function BuilderForm({
 
   const sides = { give: [give, setGive], get: [get, setGet] } as const;
 
-  const addFocused = (side: OfferSide, item: CandidateItem) => {
+  const shown = { give: giveShown, get };
+
+  const toggleFocused = (side: OfferSide, item: CandidateItem) => {
+    const held = shown[side].find((pick) => pick.key === pickKey(item));
+    // a resolved copy is held under the any-copy ask it stands in for
+    const key = held ? (held.replaces ?? held.key) : null;
     sides[side][1]((current) =>
-      holds(current, item) || current.length >= OFFER_SIDE_LIMIT
-        ? current
-        : [...current, toPick(item)],
+      key !== null
+        ? current.filter((pick) => pick.key !== key)
+        : holds(current, item) || current.length >= OFFER_SIDE_LIMIT
+          ? current
+          : [...current, toPick(item)],
     );
   };
   const shortcuts = {
@@ -407,7 +408,8 @@ function BuilderForm({
                     items={shortcut.items}
                     collections={collections}
                     full={shortcut.full}
-                    onAdd={(item) => addFocused(side, item)}
+                    isSelected={(item) => holds(shown[side], item)}
+                    onToggle={(item) => toggleFocused(side, item)}
                   />
                 ) : null}
               </SideColumn>
@@ -583,6 +585,7 @@ function SideColumn({
 }) {
   const headingId = useId();
   return (
+    // every control sits above the picks, so a growing list never moves one under the pointer
     <section aria-labelledby={headingId} className="flex min-w-0 flex-col gap-2">
       <h3 id={headingId} className="flex items-baseline gap-2 text-sm font-medium">
         {side === "give" ? m.offer_side_give() : m.offer_side_get()}
@@ -590,6 +593,11 @@ function SideColumn({
           {m.offer_side_count({ count: picks.length, max: OFFER_SIDE_LIMIT })}
         </span>
       </h3>
+      <Button variant="outline" size="sm" className="self-start" onClick={onAdd}>
+        <PlusIcon />
+        {side === "give" ? m.offer_add_mine() : m.offer_add_theirs({ name })}
+      </Button>
+      {children}
       {picks.length > 0 ? (
         <ul className="flex flex-col gap-1.5">
           {picks.map((pick) => {
@@ -654,11 +662,6 @@ function SideColumn({
           {side === "give" ? m.offer_side_give_empty() : m.offer_side_get_empty()}
         </p>
       )}
-      {children}
-      <Button variant="outline" size="sm" className="self-start" onClick={onAdd}>
-        <PlusIcon />
-        {side === "give" ? m.offer_add_mine() : m.offer_add_theirs({ name })}
-      </Button>
     </section>
   );
 }
@@ -668,13 +671,15 @@ function FocusStrip({
   items,
   collections,
   full,
-  onAdd,
+  isSelected,
+  onToggle,
 }: {
   label: string;
   items: CandidateItem[];
   collections: Collections;
   full: boolean;
-  onAdd: (item: CandidateItem) => void;
+  isSelected: (item: CandidateItem) => boolean;
+  onToggle: (item: CandidateItem) => void;
 }) {
   return (
     <div className="flex flex-col gap-2">
@@ -685,9 +690,9 @@ function FocusStrip({
             <CandidateTile
               item={item}
               collection={collections[item.collectionSlug]}
-              selected={false}
+              selected={isSelected(item)}
               full={full}
-              onToggle={() => onAdd(item)}
+              onToggle={() => onToggle(item)}
             />
           </li>
         ))}
