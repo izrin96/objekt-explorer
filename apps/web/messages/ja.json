@@ -1017,6 +1017,7 @@
   "chat_attach_no_objekts": "このプロフィールにObjektはありません",
   "chat_attach_no_lists": "リストがまだありません",
   "chat_attach_list_empty": "このリストは空です",
+  "chat_attach_no_match": "この絞り込みに合うものはありません",
   "chat_attach_remove": "添付したObjektを外す",
   "chat_refused_no_address": "メッセージを送るにはCosmoプロフィールを連携してください",
   "chat_refused_self": "自分にはメッセージを送れません",

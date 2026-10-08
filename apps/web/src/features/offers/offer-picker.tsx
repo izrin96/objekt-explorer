@@ -1,12 +1,10 @@
 import { ArrowClockwiseIcon, CardsThreeIcon, CheckIcon, WarningIcon } from "@phosphor-icons/react";
 import { type CandidateItem, OFFER_SIDE_LIMIT } from "@repo/api/schemas/offer";
-import type { ValidObjekt } from "@repo/lib/types/objekt";
+import type { GridObjekt, ValidObjekt } from "@repo/lib/types/objekt";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useId, useState } from "react";
-import { VList } from "virtua";
 
 import { EmptyState } from "@/components/shared/empty-state";
-import { InfiniteSentinel } from "@/components/shared/infinite-sentinel";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -19,13 +17,19 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { useScopedFacets } from "@/features/filters/facets";
-import { SingleSelect } from "@/features/filters/single-select";
+import { searchMatcher } from "@/features/filters/filter-utils";
+import {
+  NO_PICKER_FILTERS,
+  PickerFilterBar,
+  pickerFiltered,
+} from "@/features/filters/picker-filter-bar";
 import { ObjektCard } from "@/features/objekt/objekt-card";
 import { CollectionLabel } from "@/features/objekt/objekt-label";
+import { mapObjektWithTag } from "@/features/objekt/objekt-utils";
 import { PhotocardSkeleton } from "@/features/objekt/photocard-skeleton";
+import { VirtualCardGrid } from "@/features/objekt/virtual-card-grid";
 import { useUserLists } from "@/features/user/hooks";
-import { useElementSize } from "@/hooks/use-element-size";
+import { useLoadAllPages } from "@/hooks/use-load-all-pages";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
@@ -184,78 +188,83 @@ type GridProps = {
   onToggle: (item: CandidateItem, collections: Collections) => void;
 };
 
-const ALL = "all";
+type Filters = PickerFilters & { search: string };
 
-/** Member, season and class, plus the side's own "only what matches" switch. */
-function PickerFilterBar({
-  filters,
+const NO_FILTERS: Filters = { ...NO_PICKER_FILTERS, matchOnly: false };
+
+const narrowed = (filters: Filters) => filters.matchOnly || pickerFiltered(filters);
+
+/** The side's own "only what matches" switch, after the shared filters. */
+function MatchSwitch({
+  checked,
   onChange,
-  matchLabel,
+  label,
 }: {
-  filters: PickerFilters;
-  onChange: (next: PickerFilters) => void;
-  matchLabel: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+  label: string;
 }) {
-  const { facets } = useScopedFacets();
-  const switchId = useId();
-  const select = (key: "member" | "season" | "class", label: string, values: readonly string[]) => (
-    <SingleSelect
-      label={label}
-      options={[
-        { value: ALL, label: m.filter_all() },
-        ...values.map((value) => ({ value, label: value })),
-      ]}
-      value={filters[key][0] ?? ALL}
-      defaultValue={ALL}
-      onChange={(value) => onChange({ ...filters, [key]: value === ALL ? [] : [value] })}
-    />
-  );
-
+  const id = useId();
   return (
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-      {select("member", m.filter_member(), facets.members)}
-      {select("season", m.filter_season(), facets.seasons)}
-      {select("class", m.filter_class(), facets.classes)}
-      <span className="flex items-center gap-2">
-        <Switch
-          id={switchId}
-          checked={filters.matchOnly}
-          onCheckedChange={(matchOnly) => onChange({ ...filters, matchOnly })}
-        />
-        <Label htmlFor={switchId} className="text-sm">
-          {matchLabel}
-        </Label>
-      </span>
-    </div>
+    <span className="flex items-center gap-2">
+      <Switch id={id} checked={checked} onCheckedChange={onChange} />
+      <Label htmlFor={id} className="text-sm">
+        {label}
+      </Label>
+    </span>
   );
 }
 
-const narrowed = (filters: PickerFilters) =>
-  filters.matchOnly || filters.member.length + filters.season.length + filters.class.length > 0;
-
-const NO_FILTERS: PickerFilters = { member: [], season: [], class: [], matchOnly: false };
+/**
+ * The quick search over loaded candidates; the facets narrow on the server, but the search
+ * reads collection tags the endpoint does not carry, so the caller pages everything in.
+ */
+function candidateMatcher(search: string, collections: Collections) {
+  const matches = searchMatcher(search);
+  if (!matches) return null;
+  const tagged = new Map<string, GridObjekt>();
+  return (item: CandidateItem) => {
+    const collection = collections[item.collectionSlug];
+    if (!collection) return false;
+    let objekt = tagged.get(item.collectionSlug);
+    if (!objekt) {
+      objekt = mapObjektWithTag(collection);
+      tagged.set(item.collectionSlug, objekt);
+    }
+    // a serial term only reads an objekt that has one
+    return matches(item.serial === null ? objekt : { ...objekt, serial: item.serial });
+  };
+}
 
 function MineGrid({ to, ...grid }: GridProps) {
   const [filters, setFilters] = useState(NO_FILTERS);
   const query = useInfiniteQuery(myCandidatesOptions(to, filters));
+  useLoadAllPages(filters.search.trim().length > 0, query);
 
   const pages = query.data?.pages ?? [];
   const collections: Collections = Object.assign({}, ...pages.map((page) => page.collections));
-  const suggested = pages[0]?.suggested ?? [];
+  const match = candidateMatcher(filters.search, collections);
+  const allSuggested = pages[0]?.suggested ?? [];
+  const suggested = match ? allSuggested.filter(match) : allSuggested;
   const items = pages.flatMap((page) => page.items);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">
-      <PickerFilterBar
-        filters={filters}
-        onChange={setFilters}
-        matchLabel={m.offer_picker_only_they_want()}
-      />
+      <PickerFilterBar filters={filters} onChange={setFilters}>
+        <MatchSwitch
+          checked={filters.matchOnly}
+          onChange={(matchOnly) => setFilters({ ...filters, matchOnly })}
+          label={m.offer_picker_only_they_want()}
+        />
+      </PickerFilterBar>
       <CandidateGrid
         {...grid}
         sections={[
           { title: m.offer_picker_suggested(), items: suggested },
-          { title: suggested.length > 0 ? m.offer_picker_all_mine() : null, items },
+          {
+            title: suggested.length > 0 ? m.offer_picker_all_mine() : null,
+            items: match ? items.filter(match) : items,
+          },
         ]}
         collections={collections}
         pending={query.isPending}
@@ -278,28 +287,32 @@ function MineGrid({ to, ...grid }: GridProps) {
 
 function TheirsGrid({ to, name, ...grid }: GridProps & { name: string }) {
   const wantsSomething = useUserLists().some((list) => list.listTypeNew === "want");
-  const [chosen, setFilters] = useState<
-    Omit<PickerFilters, "matchOnly"> & { matchOnly: boolean | null }
-  >({ ...NO_FILTERS, matchOnly: null });
+  const [chosen, setFilters] = useState<Omit<Filters, "matchOnly"> & { matchOnly: boolean | null }>(
+    { ...NO_FILTERS, matchOnly: null },
+  );
   // until the sender flips it, the switch is on when they keep a want list, once their lists load
   const filters = { ...chosen, matchOnly: chosen.matchOnly ?? wantsSomething };
   const query = useInfiniteQuery(theirPickerOptions(to, filters));
+  useLoadAllPages(filters.search.trim().length > 0, query);
 
   const pages = query.data?.pages ?? [];
   const collections: Collections = Object.assign({}, ...pages.map((page) => page.collections));
+  const match = candidateMatcher(filters.search, collections);
   const items = pages.flatMap((page) => page.items);
   const listed = pages[0]?.listed ?? true;
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">
-      <PickerFilterBar
-        filters={filters}
-        onChange={setFilters}
-        matchLabel={m.offer_picker_only_i_want()}
-      />
+      <PickerFilterBar filters={filters} onChange={setFilters}>
+        <MatchSwitch
+          checked={filters.matchOnly}
+          onChange={(matchOnly) => setFilters({ ...filters, matchOnly })}
+          label={m.offer_picker_only_i_want()}
+        />
+      </PickerFilterBar>
       <CandidateGrid
         {...grid}
-        sections={[{ title: null, items }]}
+        sections={[{ title: null, items: match ? items.filter(match) : items }]}
         collections={collections}
         pending={query.isPending}
         error={query.isError && items.length === 0 ? loadError(query.error, query.refetch) : null}
@@ -336,14 +349,6 @@ function loadError(error: unknown, refetch: () => Promise<unknown>) {
   };
 }
 
-type Row =
-  | { type: "title"; key: string; title: string }
-  | { type: "row"; key: string; items: CandidateItem[] }
-  | { type: "more"; key: string };
-
-/** Card width the grid aims for; the column count follows the dialog's width. */
-const CELL_PX = 112;
-
 function CandidateGrid({
   sections,
   collections,
@@ -365,9 +370,6 @@ function CandidateGrid({
   full: boolean;
   onToggle: (item: CandidateItem, collections: Collections) => void;
 }) {
-  const [ref, { width }] = useElementSize<HTMLDivElement>();
-  const columns = Math.max(3, Math.floor(width / CELL_PX));
-
   if (pending) {
     return (
       <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
@@ -399,65 +401,28 @@ function CandidateGrid({
       />
     );
   }
-  if (sections.every((section) => section.items.length === 0)) {
+  // a search still paging in has nothing to show yet, not nothing at all
+  if (sections.every((section) => section.items.length === 0) && !more?.has) {
     return (
       <EmptyState icon={CardsThreeIcon} bordered={false} title={empty.title} hint={empty.hint} />
     );
   }
 
-  const rows: Row[] = [];
-  for (const [index, section] of sections.entries()) {
-    if (section.items.length === 0) continue;
-    if (section.title) rows.push({ type: "title", key: `t${index}`, title: section.title });
-    for (let i = 0; i < section.items.length; i += columns) {
-      rows.push({ type: "row", key: `r${index}:${i}`, items: section.items.slice(i, i + columns) });
-    }
-  }
-  if (more?.has) rows.push({ type: "more", key: "more" });
-
   return (
-    <div ref={ref} className="min-h-0 flex-1">
-      {width > 0 ? (
-        <VList data={rows} style={{ height: "100%" }} className="overscroll-contain">
-          {(row) =>
-            row.type === "title" ? (
-              <h4 key={row.key} className="pt-1 pb-2 text-sm font-medium">
-                {row.title}
-              </h4>
-            ) : row.type === "more" && more ? (
-              <InfiniteSentinel
-                key={row.key}
-                label={m.infinite_query_load_more_aria()}
-                hasNextPage={more.has}
-                isFetchingNextPage={more.loading}
-                isError={more.failed}
-                fetchNextPage={more.load}
-              />
-            ) : row.type === "row" ? (
-              <ul
-                key={row.key}
-                className="grid gap-2 pb-3"
-                style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
-              >
-                {row.items.map((item) => (
-                  <li key={pickKey(item)} className="min-w-0">
-                    <CandidateTile
-                      item={item}
-                      collection={collections[item.collectionSlug]}
-                      selected={isSelected(item)}
-                      full={full}
-                      onToggle={() => onToggle(item, collections)}
-                    />
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <div key={row.key} />
-            )
-          }
-        </VList>
-      ) : null}
-    </div>
+    <VirtualCardGrid
+      sections={sections}
+      getKey={pickKey}
+      more={more}
+      renderItem={(item) => (
+        <CandidateTile
+          item={item}
+          collection={collections[item.collectionSlug]}
+          selected={isSelected(item)}
+          full={full}
+          onToggle={() => onToggle(item, collections)}
+        />
+      )}
+    />
   );
 }
 

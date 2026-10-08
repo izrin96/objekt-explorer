@@ -95,8 +95,12 @@ function getSortDate(obj: GridObjekt) {
       : new Date(obj.createdAt).getTime();
 }
 
-export function filterObjekts<T extends GridObjekt>(filters: FilterSearch, objekts: T[]): T[] {
-  const queries = (filters.search ?? "")
+/**
+ * The quick search as a predicate, or null when it is blank: comma-separated groups match
+ * if any does, a group's space-separated terms all have to, and `!` negates a term.
+ */
+export function searchMatcher(search: string | undefined) {
+  const queries = (search ?? "")
     .toLowerCase()
     .split(",")
     .map((group) =>
@@ -107,6 +111,17 @@ export function filterObjekts<T extends GridObjekt>(filters: FilterSearch, objek
         .filter(Boolean),
     )
     .filter((group) => group.length > 0);
+  if (queries.length === 0) return null;
+  return (objekt: GridObjekt) =>
+    queries.some((group) =>
+      group.every((term) =>
+        term.startsWith("!") ? !searchFilter(term.slice(1), objekt) : searchFilter(term, objekt),
+      ),
+    );
+}
+
+export function filterObjekts<T extends GridObjekt>(filters: FilterSearch, objekts: T[]): T[] {
+  const matchesSearch = searchMatcher(filters.search);
 
   let targetColor: chroma.Color | null = null;
   if (filters.color) {
@@ -168,14 +183,7 @@ export function filterObjekts<T extends GridObjekt>(filters: FilterSearch, objek
       if (filters.floor_max !== undefined && a.floorPrice > filters.floor_max) return false;
     }
 
-    if (queries.length > 0) {
-      const matchesQuery = queries.some((group) =>
-        group.every((term) =>
-          term.startsWith("!") ? !searchFilter(term.slice(1), a) : searchFilter(term, a),
-        ),
-      );
-      if (!matchesQuery) return false;
-    }
+    if (matchesSearch && !matchesSearch(a)) return false;
 
     if (targetColor) {
       try {

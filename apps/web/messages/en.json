@@ -1017,6 +1017,7 @@
   "chat_attach_no_objekts": "No objekts on this profile",
   "chat_attach_no_lists": "You have no lists yet",
   "chat_attach_list_empty": "This list is empty",
+  "chat_attach_no_match": "Nothing matches these filters",
   "chat_attach_remove": "Remove attached objekt",
   "chat_refused_no_address": "Link a Cosmo profile to send messages",
   "chat_refused_self": "You can't message yourself",
