@@ -1,10 +1,9 @@
 import { i18n } from "@better-auth/i18n";
 import { db } from "@repo/db";
 import * as authSchema from "@repo/db/auth-schema";
-import { userAddress } from "@repo/db/schema";
 import { getRequestHeaders, setResponseHeader } from "@tanstack/react-start/server";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { getOAuthState } from "better-auth/api";
+import { createAuthMiddleware, getOAuthState, getSessionFromCtx } from "better-auth/api";
 import { betterAuth } from "better-auth/minimal";
 import { admin } from "better-auth/plugins/admin";
 import { username } from "better-auth/plugins/username";
@@ -14,8 +13,15 @@ import { SITE_NAME } from "../constants";
 import { serverEnv } from "../env";
 import { ac, roles } from "../permissions";
 import { banNoticeMessage } from "../schemas/moderation";
+import { deleteRefusal, refusalError } from "./account-delete";
 import { betterAuthLocale } from "./auth-locale";
 import { sendDeleteAccountVerification, sendResetPassword, sendVerificationEmail } from "./mail";
+
+// loaded on use, as it reaches back to this module through the socket publisher
+const anonymize = async (userId: string) => {
+  const { anonymizeUser } = await import("./account-anonymize");
+  await anonymizeUser(userId);
+};
 
 export const auth = betterAuth({
   appName: SITE_NAME,
@@ -117,13 +123,10 @@ export const auth = betterAuth({
       sendDeleteAccountVerification: async ({ user, url }) => {
         await sendDeleteAccountVerification(user.email, url);
       },
-      afterDelete: async (user) => {
-        await db
-          .update(userAddress)
-          .set({
-            userId: null,
-          })
-          .where(eq(userAddress.userId, user.id));
+      // before Better Auth removes the sessions and logins, so a refusal or failure leaves the
+      // account whole; it checks for a trade again, in the same transaction as the scrub
+      beforeDelete: async (user) => {
+        await anonymize(user.id);
       },
     },
     changeEmail: {
@@ -139,7 +142,37 @@ export const auth = betterAuth({
   session: {
     freshAge: 0,
   },
+  hooks: {
+    // before the confirmation email, which Better Auth sends before `beforeDelete` runs, and
+    // before the link's callback spends its token
+    before: createAuthMiddleware(async (ctx) => {
+      if (ctx.path !== "/delete-user" && ctx.path !== "/delete-user/callback") return;
+      const session = await getSessionFromCtx(ctx);
+      const refusal = session && (await deleteRefusal(session.user.id));
+      if (!refusal) return;
+      // the link is opened in a browser: back to the account page, not a JSON error
+      if (ctx.path === "/delete-user/callback") {
+        throw ctx.redirect(`/account/danger?refused=${refusal}`);
+      }
+      throw refusalError(refusal);
+    }),
+  },
   databaseHooks: {
+    user: {
+      delete: {
+        // the row stays, scrubbed: returning false skips the delete, and Better Auth still ends
+        // the sessions and unlinks the logins. `beforeDelete` scrubbed it already, except on an
+        // admin's removal, which skips that hook
+        before: async (user) => {
+          const [row] = await db
+            .select({ deletedAt: authSchema.user.deletedAt })
+            .from(authSchema.user)
+            .where(eq(authSchema.user.id, user.id));
+          if (!row?.deletedAt) await anonymize(user.id);
+          return false;
+        },
+      },
+    },
     account: {
       create: {
         after: async (account) => {

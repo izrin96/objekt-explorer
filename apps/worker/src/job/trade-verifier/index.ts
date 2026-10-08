@@ -15,6 +15,7 @@ import { redis } from "../../lib/redis";
 import { withRedisLock } from "../../lib/redis-lock";
 import { type Publish, publishAll } from "../../lib/trade-publish";
 import { offerUpkeep } from "./offer-upkeep";
+import { expireStalls } from "./trade-expiry";
 import { remindStalls } from "./trade-reminders";
 
 const LOCK_KEY = "trade-verifier:lock";
@@ -82,6 +83,8 @@ async function verifyRun() {
 
   const upkeep = await offerUpkeep();
   publishes.push(...upkeep.publishes);
+  const expired = await expireStalls();
+  publishes.push(...expired);
   publishes.push(...(await remindStalls()));
   // before publishing, so a page that refetches on the event reads this run's time
   await redis.set(VERIFIER_LAST_KEY, new Date().toISOString());
@@ -89,7 +92,7 @@ async function verifyRun() {
 
   await refreshWatch(legs, upkeep.watchedObjekts);
   console.log(
-    `[Trade Verifier] ${legs.length} open legs; ${touched.verified} verified across ${touched.trades} trades, ${touched.ended} ended; ${upkeep.expired} offers expired, ${upkeep.moved} cancelled; ${Date.now() - started}ms`,
+    `[Trade Verifier] ${legs.length} open legs; ${touched.verified} verified across ${touched.trades} trades, ${touched.ended} ended; ${upkeep.expired} offers expired, ${upkeep.moved} cancelled; ${expired.length} trades expired; ${Date.now() - started}ms`,
   );
 }
 

@@ -5,7 +5,7 @@ import {
   LockSimpleIcon,
   WarningIcon,
 } from "@phosphor-icons/react";
-import type { TradeView as Trade } from "@repo/api/schemas/offer";
+import { TRADE_EXPIRE_DAYS, type TradeView as Trade } from "@repo/api/schemas/offer";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useHydrated } from "@tanstack/react-router";
@@ -58,6 +58,22 @@ export function TradeView({ id }: { id: number }) {
   return <TradeDetail trade={query.data.trade} collections={query.data.collections} />;
 }
 
+function endedText(trade: Trade, name: string) {
+  if (trade.status === "failed") {
+    return trade.cancelReason === "expired"
+      ? m.offer_trade_failed_expired_desc({ days: TRADE_EXPIRE_DAYS })
+      : m.offer_trade_failed_desc();
+  }
+  if (trade.status !== "cancelled") return null;
+  if (trade.cancelReason === "token_moved") return m.offer_trade_cancelled_moved();
+  if (trade.cancelReason === "expired") {
+    return m.offer_trade_cancelled_expired({ days: TRADE_EXPIRE_DAYS });
+  }
+  return trade.cancelledByYou
+    ? m.offer_trade_cancelled_by_you()
+    : m.offer_trade_cancelled_by_them({ name });
+}
+
 function TradeDetail({ trade, collections }: { trade: Trade; collections: Collections }) {
   const name = trade.partner.identity.name;
   const hydrated = useHydrated();
@@ -73,16 +89,7 @@ function TradeDetail({ trade, collections }: { trade: Trade; collections: Collec
     },
   });
 
-  const ended =
-    trade.status === "cancelled"
-      ? trade.cancelReason === "token_moved"
-        ? m.offer_trade_cancelled_moved()
-        : trade.cancelledByYou
-          ? m.offer_trade_cancelled_by_you()
-          : m.offer_trade_cancelled_by_them({ name })
-      : trade.status === "failed"
-        ? m.offer_trade_failed_desc()
-        : null;
+  const ended = endedText(trade, name);
 
   const inProgress = trade.status === "in_progress";
   const completed = trade.status === "completed";

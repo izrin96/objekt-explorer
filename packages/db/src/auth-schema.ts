@@ -20,6 +20,8 @@ export const user = pgTable("user", {
   twitter: text("twitter"),
   showSocial: boolean("show_social").notNull().default(false),
   removeImage: boolean("remove_image").notNull().default(false),
+  // a deleted account keeps its row, scrubbed, so its trades and ratings stay in others' history
+  deletedAt: timestamp("deleted_at"),
   // admin plugin
   role: text("role"),
   banned: boolean("banned").default(false),

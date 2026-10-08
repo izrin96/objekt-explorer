@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 
 import {
   batchMatters,
+  expiredOutcome,
   type LegResult,
   type MatchLeg,
   type MatchTransfer,
@@ -190,6 +191,13 @@ describe("tradeOutcome", () => {
     expect(tradeOutcome([b, p], 0)).toEqual({ status: "cancelled", reason: "token_moved" });
     expect(tradeOutcome([b], 1)).toEqual({ status: "failed" });
     expect(tradeOutcome([b, v], 0)).toEqual({ status: "failed" });
+  });
+});
+
+describe("expiredOutcome", () => {
+  test("fails once a leg verified, else cancels", () => {
+    expect(expiredOutcome(0)).toBe("cancelled");
+    expect(expiredOutcome(1)).toBe("failed");
   });
 });
 

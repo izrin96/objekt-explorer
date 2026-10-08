@@ -12,6 +12,8 @@ export const CANDIDATE_PAGE_SIZE = 200;
 export const HISTORY_PAGE_SIZE = 20;
 export const REMIND_AFTER_HOURS = 72;
 export const REPORT_AFTER_DAYS = 7;
+/** A trade still in progress this long after accept ends: failed with a verified leg, else cancelled. */
+export const TRADE_EXPIRE_DAYS = 14;
 export const RATE_WINDOW_DAYS = 14;
 
 export const TRADE_RATINGS = ["positive", "neutral", "negative"] as const;
@@ -28,13 +30,20 @@ export const OFFER_STATUSES = [
 ] as const;
 export type OfferStatus = (typeof OFFER_STATUSES)[number];
 
-const OFFER_CANCEL_REASONS = ["reserved", "blocked", "sanction", "token_moved"] as const;
+const OFFER_CANCEL_REASONS = [
+  "reserved",
+  "blocked",
+  "sanction",
+  "token_moved",
+  "account_deleted",
+] as const;
 export type OfferCancelReason = (typeof OFFER_CANCEL_REASONS)[number];
 
 const TRADE_STATUSES = ["in_progress", "completed", "cancelled", "failed"] as const;
 export type TradeStatus = (typeof TRADE_STATUSES)[number];
 
-const TRADE_CANCEL_REASONS = ["party", "token_moved"] as const;
+/** Set on a cancelled trade; `expired` also on a failed one. */
+const TRADE_CANCEL_REASONS = ["party", "token_moved", "expired"] as const;
 export type TradeCancelReason = (typeof TRADE_CANCEL_REASONS)[number];
 
 const OFFER_ACTIONS = ["accept", "decline", "counter", "withdraw"] as const;
@@ -327,7 +336,10 @@ export type OfferPayload = z.infer<typeof offerPayloadSchema>;
 
 const TRADE_EVENTS = ["leg_verified", "completed", "cancelled", "failed", "reminder"] as const;
 
-/** Data only. `reason` is set on `cancelled`: the other party cancelled, or an objekt left the wallet. */
+/**
+ * Data only. `reason` is set on `cancelled`: the other party cancelled, an objekt left the wallet,
+ * or the trade expired; and on `failed` when it expired.
+ */
 export const tradePayloadSchema = z.object({
   tradeId: z.number(),
   offerId: z.number(),

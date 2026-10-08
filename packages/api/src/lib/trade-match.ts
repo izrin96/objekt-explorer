@@ -139,6 +139,11 @@ export function tradeOutcome(results: LegResult[], alreadyVerified: number): Tra
     : { status: "in_progress" };
 }
 
+/** A trade past `TRADE_EXPIRE_DAYS` ends as a broken one does: failed once a leg verified, else cancelled. */
+export function expiredOutcome(verifiedLegs: number) {
+  return verifiedLegs > 0 ? ("failed" as const) : ("cancelled" as const);
+}
+
 type WatchSet = { objekts: ReadonlySet<string>; collections: ReadonlySet<string> };
 
 /** One transfer as the indexer publishes it on `transfers`: Subsquid entities, nested. */

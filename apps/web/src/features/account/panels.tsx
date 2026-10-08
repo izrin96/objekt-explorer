@@ -1,3 +1,4 @@
+import type { DeleteRefusal } from "@repo/api/schemas/user";
 import { useQuery } from "@tanstack/react-query";
 
 import { AccountSection } from "@/features/account/account-nav";
@@ -67,10 +68,10 @@ export function PasswordPanel() {
   );
 }
 
-export function DangerPanel() {
+export function DangerPanel({ refused }: { refused: DeleteRefusal | null }) {
   return (
     <AccountSection title={m.auth_account_danger_zone()}>
-      <DangerSection />
+      <DangerSection refused={refused} />
     </AccountSection>
   );
 }

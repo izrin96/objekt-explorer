@@ -315,7 +315,7 @@ export const offer = pgTable(
       .notNull()
       .default("open"),
     cancelReason: text("cancel_reason").$type<
-      "reserved" | "blocked" | "sanction" | "token_moved"
+      "reserved" | "blocked" | "sanction" | "token_moved" | "account_deleted"
     >(),
     topupAmount: numeric("topup_amount", { precision: 12, scale: 2 }),
     topupCurrency: varchar("topup_currency", { length: 10 }),
@@ -346,7 +346,7 @@ export const offer = pgTable(
     ),
     check(
       "offer_cancel_reason",
-      sql`${t.cancelReason} IN ('reserved', 'blocked', 'sanction', 'token_moved')`,
+      sql`${t.cancelReason} IN ('reserved', 'blocked', 'sanction', 'token_moved', 'account_deleted')`,
     ),
     check("offer_topup_payer", sql`${t.topupPayer} IN ('from', 'to')`),
     check(
@@ -406,7 +406,8 @@ export const trade = pgTable(
       .defaultNow(),
     endedAt: timestamp("ended_at", { mode: "string", withTimezone: true }),
     cancelledBy: text("cancelled_by").references(() => user.id, { onDelete: "cascade" }),
-    cancelReason: text("cancel_reason").$type<"party" | "token_moved">(),
+    // `expired` also ends a failed trade
+    cancelReason: text("cancel_reason").$type<"party" | "token_moved" | "expired">(),
     remindedAt: timestamp("reminded_at", { mode: "string", withTimezone: true }),
   },
   (t) => [
@@ -414,7 +415,7 @@ export const trade = pgTable(
     index("trade_user_a_idx").on(t.userA, t.acceptedAt.desc()),
     index("trade_user_b_idx").on(t.userB, t.acceptedAt.desc()),
     check("trade_status", sql`${t.status} IN ('in_progress', 'completed', 'cancelled', 'failed')`),
-    check("trade_cancel_reason", sql`${t.cancelReason} IN ('party', 'token_moved')`),
+    check("trade_cancel_reason", sql`${t.cancelReason} IN ('party', 'token_moved', 'expired')`),
   ],
 );
 

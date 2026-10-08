@@ -1,4 +1,5 @@
 import {
+  TRADE_EXPIRE_DAYS,
   type MineRow,
   type OfferItemView,
   type OfferPayload,
@@ -88,6 +89,8 @@ export function cancelReasonText(reason: OfferView["cancelReason"] | "party") {
       return m.offer_cancel_token_moved();
     case "sanction":
       return m.offer_cancel_sanction();
+    case "account_deleted":
+      return m.offer_cancel_account_deleted();
     case "party":
       return m.offer_cancel_party();
     // a block reads like any other cancel, so the blocked side can't tell
@@ -172,9 +175,13 @@ export function tradeNotificationText(payload: TradePayload) {
     case "cancelled":
       return payload.reason === "party"
         ? m.notification_offer_trade_cancelled(params)
-        : m.notification_trade_cancelled_moved(params);
+        : payload.reason === "expired"
+          ? m.notification_trade_cancelled_expired({ ...params, days: TRADE_EXPIRE_DAYS })
+          : m.notification_trade_cancelled_moved(params);
     case "failed":
-      return m.notification_trade_failed(params);
+      return payload.reason === "expired"
+        ? m.notification_trade_failed_expired({ ...params, days: TRADE_EXPIRE_DAYS })
+        : m.notification_trade_failed(params);
     case "reminder":
       return m.notification_trade_reminder(params);
   }
