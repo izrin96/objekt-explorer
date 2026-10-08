@@ -9,18 +9,7 @@ import { unique } from "../../../lib/unique";
 import { type CollectionFilters } from "../../../schemas/common/filters";
 import type { CandidateItem } from "../../../schemas/offer";
 import { fetchCollectionsBySlug } from "../../list";
-import type { AllowedEntry, IndexedObjekt } from "../core";
-
-type GetItem = { collectionSlug: string; objektId?: string; listSlug?: string };
-
-/** The entry a get item comes from: its own token, else a collection entry; the named list first. */
-export function matchEntry(item: GetItem, entries: AllowedEntry[]) {
-  const fits = (entry: AllowedEntry) =>
-    entry.collectionSlug === item.collectionSlug &&
-    (entry.objektId === null || (item.objektId !== undefined && entry.objektId === item.objektId));
-  const candidates = entries.filter(fits);
-  return candidates.find((entry) => entry.listSlug === item.listSlug) ?? candidates[0] ?? null;
-}
+import type { IndexedObjekt } from "../core";
 
 export function toCandidate(
   objekt: IndexedObjekt,

@@ -4,8 +4,10 @@ import { and, eq, gt, inArray, ne, sql } from "drizzle-orm";
 
 import {
   type ActorLimits,
+  anyCopyScope,
   createEffect,
   effectiveStatus,
+  matchEntry,
   validateShape,
 } from "../../lib/offer-rules";
 import { scanMessage } from "../../lib/scam-patterns";
@@ -33,7 +35,7 @@ import {
 } from "./core";
 import { type ItemRow, checkItems } from "./items";
 import { partyNames, writeNotes } from "./notes";
-import { counteredGives, matchEntry } from "./picker/shared";
+import { counteredGives } from "./picker/shared";
 import {
   type OfferRow,
   findOffer,
@@ -103,6 +105,7 @@ export async function createOffer(
     giverId: (side) => (side === "give" ? me : partnerId),
     holders: (side) => (side === "give" ? myAddresses : addresses.get(partnerId)!),
     copyHolders: (side) => (side === "give" ? myAddresses : addresses.get(partnerId)!),
+    getScope: anyCopyScope(entries),
   });
 
   const specificIds = items.flatMap((item) => (item.objektId ? [item.objektId] : []));

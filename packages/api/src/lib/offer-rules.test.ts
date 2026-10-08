@@ -4,6 +4,7 @@ import { OFFER_SIDE_LIMIT } from "../schemas/offer";
 import {
   actionRefusal,
   allowedActions,
+  anyCopyScope,
   anyCopyShortfall,
   cancelRefusal,
   canReport,
@@ -15,7 +16,10 @@ import {
   effectiveStatus,
   firstItemRefusal,
   giveNarrowing,
+  inAnyCopyScope,
   itemFlags,
+  type ListEntryRef,
+  matchEntry,
   itemStillHeld,
   itemVerdict,
   type OfferState,
@@ -428,5 +432,53 @@ describe("giveNarrowing", () => {
     ]) {
       expect(giveNarrowing("rin", null, { list: other, slugs: ["a"] })).toEqual([]);
     }
+  });
+});
+
+describe("matchEntry", () => {
+  const entry = (overrides: Partial<ListEntryRef>): ListEntryRef => ({
+    listSlug: "have",
+    collectionSlug: "divine01-jiwoo-312z",
+    objektId: null,
+    hideSerial: false,
+    ...overrides,
+  });
+  const specific = { collectionSlug: "divine01-jiwoo-312z", objektId: "5745609" };
+  const anyCopy = { collectionSlug: "divine01-jiwoo-312z" };
+
+  test("a visible entry matches its own token, and a collection entry matches any copy or token", () => {
+    expect(matchEntry(specific, [entry({ objektId: "5745609" })])).not.toBeNull();
+    expect(matchEntry(specific, [entry({})])).not.toBeNull();
+    expect(matchEntry(anyCopy, [entry({})])).not.toBeNull();
+    expect(matchEntry(anyCopy, [entry({ objektId: "5745609" })])).toBeNull();
+  });
+
+  test("a hidden-serial entry never matches a specific token", () => {
+    expect(matchEntry(specific, [entry({ objektId: "5745609", hideSerial: true })])).toBeNull();
+    expect(matchEntry(specific, [entry({ hideSerial: true })])).toBeNull();
+  });
+
+  test("a hidden-serial entry stands for any copy, token entry or not", () => {
+    expect(matchEntry(anyCopy, [entry({ objektId: "5745609", hideSerial: true })])).not.toBeNull();
+    expect(matchEntry(anyCopy, [entry({ hideSerial: true })])).not.toBeNull();
+  });
+
+  test("a specific token still matches through a visible list when a hidden one also names it", () => {
+    const hidden = entry({ objektId: "5745609", hideSerial: true, listSlug: "hidden" });
+    const visible = entry({ objektId: "5745609", listSlug: "shown" });
+    expect(matchEntry({ ...specific, listSlug: "hidden" }, [hidden, visible])).toBe(visible);
+  });
+
+  test("any-copy scope: a collection entry opens every copy, hidden token entries only theirs", () => {
+    const slug = "divine01-jiwoo-312z";
+    const hidden = (objektId: string) => entry({ objektId, hideSerial: true });
+    const scoped = anyCopyScope([hidden("1"), hidden("2"), entry({ objektId: "3" })]);
+    expect(scoped.get(slug)).toEqual(new Set(["1", "2"]));
+    expect(inAnyCopyScope(scoped, { id: "1", slug })).toBe(true);
+    expect(inAnyCopyScope(scoped, { id: "3", slug })).toBe(false);
+    const open = anyCopyScope([hidden("1"), entry({ listSlug: "sale" })]);
+    expect(open.get(slug)).toBeNull();
+    expect(inAnyCopyScope(open, { id: "9", slug })).toBe(true);
+    expect(inAnyCopyScope(open, { id: "9", slug: "other" })).toBe(true);
   });
 });

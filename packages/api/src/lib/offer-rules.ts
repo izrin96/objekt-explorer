@@ -4,6 +4,7 @@ import {
   type OfferRefusal,
   type OfferSide,
   type OfferStatus,
+  type GetItemInput,
   OFFER_SIDE_LIMIT,
   RATE_WINDOW_DAYS,
   REPORT_AFTER_DAYS,
@@ -316,3 +317,44 @@ export function giveNarrowing(
   const kept = new Set(partnerWants);
   return named.filter((slug) => kept.has(slug));
 }
+
+export type ListEntryRef = {
+  listSlug: string;
+  collectionSlug: string;
+  objektId: string | null;
+  hideSerial: boolean;
+};
+
+/** The token an entry offers by serial: none on a list that hides serials, which offers any copy. */
+export const entryObjektId = (entry: ListEntryRef) => (entry.hideSerial ? null : entry.objektId);
+
+/** The entry a get item comes from: its own token, else a collection entry; the named list first. */
+export function matchEntry<E extends ListEntryRef>(item: GetItemInput, entries: E[]): E | null {
+  const fits = (entry: E) =>
+    entry.collectionSlug === item.collectionSlug &&
+    (item.objektId === undefined
+      ? entryObjektId(entry) === null
+      : !entry.hideSerial && (entry.objektId === null || entry.objektId === item.objektId));
+  const candidates = entries.filter(fits);
+  return candidates.find((entry) => entry.listSlug === item.listSlug) ?? candidates[0] ?? null;
+}
+
+/**
+ * The copies an any-copy ask may draw on, per collection: null for every copy, when an entry
+ * covers the collection; else only the tokens that hidden-serial entries name, still held.
+ */
+export function anyCopyScope(entries: ListEntryRef[]) {
+  const scope = new Map<string, Set<string> | null>();
+  for (const { collectionSlug: slug, objektId, hideSerial } of entries) {
+    if (scope.get(slug) === null) continue;
+    if (objektId === null) scope.set(slug, null);
+    else if (hideSerial) scope.set(slug, new Set([...(scope.get(slug) ?? []), objektId]));
+  }
+  return scope;
+}
+
+/** Whether a copy counts toward an any-copy ask under `scope`. */
+export const inAnyCopyScope = (
+  scope: ReadonlyMap<string, ReadonlySet<string> | null>,
+  copy: { id: string; slug: string },
+) => !scope.get(copy.slug) || scope.get(copy.slug)!.has(copy.id);

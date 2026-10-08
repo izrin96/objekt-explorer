@@ -2,7 +2,7 @@ import { indexer } from "@repo/db/indexer";
 import { collections } from "@repo/db/indexer/schema";
 import { and, inArray } from "drizzle-orm";
 
-import { itemFlags } from "../../../lib/offer-rules";
+import { anyCopyScope, entryObjektId, inAnyCopyScope, itemFlags } from "../../../lib/offer-rules";
 import { unique } from "../../../lib/unique";
 import type { CollectionFilters } from "../../../schemas/common/filters";
 import {
@@ -45,10 +45,13 @@ async function resolveTheirItems(me: string, addressed: Addressed) {
   const keptIds = [...(kept?.objekts.keys() ?? [])];
   const theirs = linked.get(partnerId) ?? new Set<string>();
   const addresses = [...theirs];
-  const anySlugs = unique(entries.flatMap((e) => (e.objektId === null ? [e.collectionSlug] : [])));
+  const anySlugs = unique(
+    entries.flatMap((e) => (entryObjektId(e) === null ? [e.collectionSlug] : [])),
+  );
+  const scope = anyCopyScope(entries);
 
   const [tokens, copies, promised] = await Promise.all([
-    fetchObjekts([...entries.flatMap((e) => (e.objektId ? [e.objektId] : [])), ...keptIds]),
+    fetchObjekts([...entries.flatMap((e) => entryObjektId(e) ?? []), ...keptIds]),
     fetchCopies(anySlugs, addresses),
     openAnyCopyLegs([{ userId: partnerId, slugs: anySlugs }]),
   ]);
@@ -60,8 +63,9 @@ async function resolveTheirItems(me: string, addressed: Addressed) {
   const items: CandidateItem[] = [];
   const seen = new Set<string>();
   for (const entry of entries) {
-    if (entry.objektId !== null) {
-      const objekt = tokens.get(entry.objektId);
+    const objektId = entryObjektId(entry);
+    if (objektId !== null) {
+      const objekt = tokens.get(objektId);
       if (!objekt || !theirs.has(objekt.owner) || objekt.slug !== entry.collectionSlug) continue;
       if (seen.has(objekt.id)) continue;
       seen.add(objekt.id);
@@ -70,7 +74,7 @@ async function resolveTheirItems(me: string, addressed: Addressed) {
     }
     const held = copies.filter((o) => o.slug === entry.collectionSlug);
     const spare =
-      held.filter((o) => o.transferable && !reserved.has(o.id)).length -
+      held.filter((o) => o.transferable && !reserved.has(o.id) && inAnyCopyScope(scope, o)).length -
       (promised.get(copyKey(partnerId, entry.collectionSlug)) ?? 0);
     const anyKey = `any:${entry.collectionSlug}`;
     if (spare > 0 && !seen.has(anyKey)) {
@@ -86,6 +90,7 @@ async function resolveTheirItems(me: string, addressed: Addressed) {
         copies: spare,
       });
     }
+    if (entry.hideSerial) continue;
     for (const objekt of held) {
       if (seen.has(objekt.id) || !theirs.has(objekt.owner)) continue;
       seen.add(objekt.id);

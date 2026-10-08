@@ -140,6 +140,7 @@ export const createOfferInputSchema = addressedSchema
     { message: "duplicate_objekt" },
   );
 export type CreateOfferInput = z.infer<typeof createOfferInputSchema>;
+export type GetItemInput = z.infer<typeof getItemInputSchema>;
 
 export const offerIdInputSchema = z.object({ offerId: idSchema });
 export const OFFER_VIEWS_LIMIT = 50;

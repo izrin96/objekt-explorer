@@ -3,7 +3,12 @@ import { indexer } from "@repo/db/indexer";
 import { transfers } from "@repo/db/indexer/schema";
 import { and, gte, inArray } from "drizzle-orm";
 
-import { anyCopyShortfall, firstItemRefusal, itemVerdict } from "../../lib/offer-rules";
+import {
+  anyCopyShortfall,
+  firstItemRefusal,
+  inAnyCopyScope,
+  itemVerdict,
+} from "../../lib/offer-rules";
 import { unique } from "../../lib/unique";
 import {
   type Tx,
@@ -29,6 +34,8 @@ type ItemParties = {
    * was made counts as held, so an early sender doesn't sink their own trade.
    */
   sent?: { since: string; receivers: (side: Side) => ReadonlySet<string> };
+  /** Send only: the copies a get side's any-copy asks may draw on (see `anyCopyScope`) */
+  getScope?: ReadonlyMap<string, ReadonlySet<string> | null>;
 };
 
 /** Specific objekts that went from the side's giver to its receiver at or after `since`. */
@@ -113,6 +120,7 @@ export async function checkItems(
     const available = new Map<string, number>();
     for (const copy of copies[i]!) {
       if (!copy.transferable || reserved.has(copy.id) || named.has(copy.id)) continue;
+      if (side === "get" && parties.getScope && !inAnyCopyScope(parties.getScope, copy)) continue;
       available.set(copy.slug, (available.get(copy.slug) ?? 0) + 1);
     }
     return { side, giverId: parties.giverId(side), available };

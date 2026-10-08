@@ -14,7 +14,7 @@ import {
 import { and, eq, gt, inArray, isNull, or, sql } from "drizzle-orm";
 
 import { pairKey, startVerdict } from "../../lib/chat-rules";
-import { safetyRefusal } from "../../lib/offer-rules";
+import { type ListEntryRef, safetyRefusal } from "../../lib/offer-rules";
 import { addressesByUser } from "../../lib/trade-rank";
 import { unique } from "../../lib/unique";
 import { type ChatRefusal, type ChatTarget } from "../../schemas/chat";
@@ -256,12 +256,7 @@ export async function resolveAddressed(
   };
 }
 
-export type AllowedEntry = {
-  listId: number;
-  listSlug: string;
-  collectionSlug: string;
-  objektId: string | null;
-};
+export type AllowedEntry = ListEntryRef & { listId: number };
 
 /** The partner's entries the sender may ask for: those on their bound have and sale lists. */
 export async function allowedEntries(
@@ -269,12 +264,12 @@ export async function allowedEntries(
   slugs?: string[],
 ): Promise<AllowedEntry[]> {
   const allowed = await db
-    .select({ id: lists.id, slug: lists.slug })
+    .select({ id: lists.id, slug: lists.slug, hideSerial: lists.hideSerial })
     .from(lists)
     .where(and(eq(lists.userId, addressed.partnerId), offersOnTrade));
   if (allowed.length === 0 || slugs?.length === 0) return [];
 
-  const slugOf = new Map(allowed.map((list) => [list.id, list.slug]));
+  const listOf = new Map(allowed.map((list) => [list.id, list]));
   const rows = await db
     .select({
       listId: listEntries.listId,
@@ -284,21 +279,23 @@ export async function allowedEntries(
     .from(listEntries)
     .where(
       and(
-        inArray(listEntries.listId, [...slugOf.keys()]),
+        inArray(listEntries.listId, [...listOf.keys()]),
         slugs ? inArray(listEntries.collectionSlug, unique(slugs)) : undefined,
       ),
     )
     .orderBy(listEntries.listId, listEntries.id);
-  return rows.flatMap((row) =>
-    row.collectionSlug === null
+  return rows.flatMap((row) => {
+    const list = listOf.get(row.listId)!;
+    return row.collectionSlug === null
       ? []
       : [
           {
             listId: row.listId,
-            listSlug: slugOf.get(row.listId)!,
+            listSlug: list.slug,
             collectionSlug: row.collectionSlug,
             objektId: row.objektId,
+            hideSerial: list.hideSerial,
           },
-        ],
-  );
+        ];
+  });
 }
