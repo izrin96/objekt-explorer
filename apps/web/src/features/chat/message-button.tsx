@@ -6,6 +6,7 @@ import { useLocation, useNavigate } from "@tanstack/react-router";
 import { Button, type ButtonProps } from "@/components/ui/button";
 import { toastManager } from "@/components/ui/toast";
 import { useCurrentUser } from "@/features/user/hooks";
+import { addActionToast } from "@/lib/action-toast";
 import { orpc } from "@/lib/orpc";
 import { m } from "@/paraglide/messages";
 import { putDraftCard } from "@/stores/chat-draft";
@@ -80,7 +81,10 @@ export function useStartConversation() {
       },
       onError: (error) => {
         const refusal = refusalOf(error);
-        if (refusal?.reason === "no_address") return void offerLink();
+        if (refusal?.reason === "no_address") {
+          offerLink();
+          return;
+        }
         toastManager.add({
           type: "error",
           title: refusal ? refusalText(refusal) : m.chat_start_error(),
@@ -106,17 +110,13 @@ export function useStartGate() {
   const navigate = useNavigate();
   const href = useLocation({ select: (location) => location.href });
 
-  const offerLink = () =>
-    toastManager.add({
-      type: "info",
-      title: m.chat_refused_no_address(),
+  const offerLink = () => {
+    addActionToast(
       // it carries the only way forward, so it stays until dismissed
-      timeout: 0,
-      actionProps: {
-        children: m.link_link_cosmo(),
-        onClick: () => void navigate({ to: "/account/profiles" }),
-      },
-    });
+      { type: "info", title: m.chat_refused_no_address(), timeout: 0 },
+      { label: m.link_link_cosmo(), onClick: () => void navigate({ to: "/account/profiles" }) },
+    );
+  };
 
   const gate = () => {
     if (!current) {

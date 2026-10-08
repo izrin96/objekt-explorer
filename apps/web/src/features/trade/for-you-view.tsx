@@ -10,11 +10,11 @@ import { PendingStatus } from "@/components/router/pending";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { toastManager } from "@/components/ui/toast";
 import { SingleSelect } from "@/features/filters/single-select";
 import { LIST_TYPE_LABEL } from "@/features/list/list-type-badge";
 import { ObjektDrawer } from "@/features/objekt/drawer";
 import { useUserLists } from "@/features/user/hooks";
+import { addActionToast } from "@/lib/action-toast";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
@@ -221,14 +221,13 @@ function ForYouResults({
       { userId: partner.userId },
       {
         onSuccess: () =>
-          toastManager.add({
-            type: "success",
-            title: m.trade_hide_success({ name: partner.identity.name }),
-            actionProps: {
-              children: m.common_actions_undo(),
+          addActionToast(
+            { type: "success", title: m.trade_hide_success({ name: partner.identity.name }) },
+            {
+              label: m.common_actions_undo(),
               onClick: () => unhide.mutate({ userId: partner.userId }),
             },
-          }),
+          ),
       },
     );
 

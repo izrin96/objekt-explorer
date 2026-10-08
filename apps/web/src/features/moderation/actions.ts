@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toastManager } from "@/components/ui/toast";
 import { LIST_QUERY_KEY } from "@/features/list/queries";
 import { PROFILE_PAGE_KEY } from "@/features/profile/queries";
+import { addActionToast } from "@/lib/action-toast";
 import { orpc } from "@/lib/orpc";
 import { errorReason } from "@/lib/orpc-error";
 import { relativeTime } from "@/lib/time";
@@ -69,14 +70,10 @@ export function useBlock() {
         // after the confirm dialog has closed and handed focus back to a trigger that may
         // be in the row React is about to drop
         setTimeout(keepFocus, FOCUS_SETTLE_MS);
-        toastManager.add({
-          type: "success",
-          title: m.mod_block_success({ name }),
-          actionProps: {
-            children: m.common_actions_undo(),
-            onClick: () => unblock.mutate({ userId }),
-          },
-        });
+        addActionToast(
+          { type: "success", title: m.mod_block_success({ name }) },
+          { label: m.common_actions_undo(), onClick: () => unblock.mutate({ userId }) },
+        );
       },
       // the options-level onError already said so
       () => undefined,
@@ -100,19 +97,15 @@ export function useReport({ onDone }: { onDone: () => void }) {
     orpc.moderation.report.mutationOptions({
       onSuccess: (_data, { alsoBlock, userId }) => {
         if (alsoBlock) void invalidate();
-        toastManager.add(
-          alsoBlock
-            ? {
-                type: "success",
-                title: m.mod_report_success_blocked(),
-                // the report stays; only the block can be taken back
-                actionProps: {
-                  children: m.mod_unblock(),
-                  onClick: () => unblock.mutate({ userId }),
-                },
-              }
-            : { type: "success", title: m.mod_report_success() },
-        );
+        if (alsoBlock) {
+          // the report stays; only the block can be taken back
+          addActionToast(
+            { type: "success", title: m.mod_report_success_blocked() },
+            { label: m.mod_unblock(), onClick: () => unblock.mutate({ userId }) },
+          );
+        } else {
+          toastManager.add({ type: "success", title: m.mod_report_success() });
+        }
         onDone();
       },
     }),
