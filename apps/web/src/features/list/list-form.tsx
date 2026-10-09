@@ -30,16 +30,16 @@ const LIST_TYPES: ListTypeNew[] = ["general", "have", "want", "sale"];
 
 const MATCH_WITH = [
   {
-    value: "sales",
-    matchSale: true,
-    label: m.list_create_match_sales_label,
-    description: m.list_create_match_sales_desc,
-  },
-  {
     value: "trades",
     matchSale: false,
     label: m.list_create_match_trades_label,
     description: m.list_create_match_trades_desc,
+  },
+  {
+    value: "sales",
+    matchSale: true,
+    label: m.list_create_match_sales_label,
+    description: m.list_create_match_sales_desc,
   },
 ] as const;
 
@@ -74,7 +74,7 @@ export const EMPTY_DRAFT: ListDraft = {
   profileAddress: null,
   isProfileBind: false,
   discoverable: false,
-  matchSale: true,
+  matchSale: false,
   gridColumns: null,
   hideSerial: false,
   regenerateSlug: false,
