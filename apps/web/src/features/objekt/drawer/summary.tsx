@@ -1,7 +1,6 @@
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 
 import { ApolloIcon } from "@/components/shared/apollo-icon";
-import { WavbaseIcon } from "@/components/shared/wavbase-icon";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatTimestamp } from "@/lib/time";
@@ -59,23 +58,6 @@ export function ObjektSummary({ objekt, artistName }: { objekt: ValidObjekt; art
           <ApolloIcon className="size-4" />
           {m.objekt_view_in_apollo()}
         </Button>
-        {/* WAVBase only covers tripleS */}
-        {objekt.artist.toLowerCase() === "triples" && (
-          <Button
-            variant="outline"
-            size="sm"
-            render={
-              <a
-                href={`https://wavbase.app/objekts/${objekt.slug}`}
-                target="_blank"
-                rel="noreferrer"
-              />
-            }
-          >
-            <WavbaseIcon className="size-4" />
-            {m.objekt_view_in_wavbase()}
-          </Button>
-        )}
       </div>
     </div>
   );
