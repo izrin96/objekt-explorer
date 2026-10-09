@@ -49,14 +49,6 @@ export function MatchedLists({ match }: { match: NonNullable<BrowsePostData["mat
           </ul>
         </section>
       ))}
-      <div className="border-t pt-2">
-        <Link
-          to="/list"
-          className="text-muted-foreground hover:text-foreground text-xs underline-offset-2 hover:underline"
-        >
-          {m.nav_manage_list()}
-        </Link>
-      </div>
     </div>
   );
 }
