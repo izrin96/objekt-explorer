@@ -76,11 +76,12 @@ export function useObjektLink<T extends GridObjekt>(
   }, [navigate, router]);
 
   // replace: a serial is a view of the drawer, not a place to go back to;
+  // `undefined` drops it when the serials tab is left;
   // `state: true` keeps the flag `close` reads
   const changeSerial = useCallback(
-    (value: number) => {
+    (value: number | undefined) => {
       // an emptied serial field reports 0
-      if (value < 1) return;
+      if (value !== undefined && value < 1) return;
       void navigate({
         replace: true,
         resetScroll: false,

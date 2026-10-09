@@ -56,7 +56,7 @@ type Props = {
   /** a linked serial: the sheet opens on its trade history */
   serial?: number;
   /** every serial the user moves to, so a surface can put it on the URL */
-  onSerialChange?: (serial: number) => void;
+  onSerialChange?: (serial: number | undefined) => void;
 };
 
 export function ObjektDrawer({
@@ -130,7 +130,7 @@ function DrawerBody({
 }: {
   objekt: ValidObjekt;
   initialSerial?: number;
-  onSerialChange?: (serial: number) => void;
+  onSerialChange?: (serial: number | undefined) => void;
   tab: DrawerTab;
   onTabChange: (tab: DrawerTab) => void;
   owned?: OwnedGridObjekt[];
@@ -148,6 +148,17 @@ function DrawerBody({
   const changeSerial = (value: number) => {
     setSerial(value);
     onSerialChange?.(value);
+  };
+  // the serial is only in the URL while the serials tab is showing
+  const changeTab = (next: DrawerTab) => {
+    if (next !== tab && onSerialChange) {
+      if (tab === "serials") onSerialChange(undefined);
+      else if (next === "serials") {
+        const value = serial ?? serials.data?.serials[0];
+        if (value !== undefined) onSerialChange(value);
+      }
+    }
+    onTabChange(next);
   };
 
   const metadata = useQuery(collectionMetadataOptions(objekt.slug));
@@ -237,7 +248,7 @@ function DrawerBody({
           <ObjektSummary objekt={objekt} artistName={artistName} />
         </div>
 
-        <Tabs value={tab} onValueChange={(value) => onTabChange(value as DrawerTab)}>
+        <Tabs value={tab} onValueChange={(value) => changeTab(value as DrawerTab)}>
           {/* five tabs outrun a phone-width sheet, so the strip scrolls and the
               sheet does not; the scroll area's root sets its own `position`,
               so the sticky wrapper stays outside it */}
