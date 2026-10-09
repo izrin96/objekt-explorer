@@ -1,7 +1,8 @@
 import type { Collection, Objekt, Transfer } from "@repo/db/indexer/schema";
 import { mapOwnedObjekt } from "@repo/lib/server/objekt";
+import { createSubscriber } from "@repo/lib/server/redis-subscriber";
 import { fetchPublicNicknames } from "@repo/lib/server/user";
-import { RedisClient, type ServerWebSocket } from "bun";
+import type { ServerWebSocket } from "bun";
 
 import { serverEnv } from "./env";
 import {
@@ -10,9 +11,7 @@ import {
   activityClientMessageSchema,
 } from "./schemas/activity";
 
-const pubsub = new RedisClient(serverEnv.REDIS_URL, {
-  connectionTimeout: 5000,
-});
+const pubsub = createSubscriber(serverEnv.REDIS_URL, "ActivityWS");
 
 const clients = new Set<ServerWebSocket<unknown>>();
 

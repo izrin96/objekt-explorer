@@ -2,7 +2,8 @@ import { RedisClient } from "bun";
 
 import { serverEnv } from "../env";
 
-export const redis = new RedisClient(serverEnv.REDIS_URL);
+// Bun gives up after 10 reconnect attempts (about 30s) and stays down for good; this is its maximum
+export const redis = new RedisClient(serverEnv.REDIS_URL, { maxRetries: 4294967295 });
 
 export async function getCache<T>(
   key: string,

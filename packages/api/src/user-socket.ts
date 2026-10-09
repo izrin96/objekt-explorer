@@ -1,4 +1,5 @@
-import { RedisClient, type ServerWebSocket } from "bun";
+import { createSubscriber } from "@repo/lib/server/redis-subscriber";
+import type { ServerWebSocket } from "bun";
 
 import { websocketHandlers as activityHandlers } from "./activity";
 import { serverEnv } from "./env";
@@ -15,7 +16,7 @@ export type SocketData = { kind: "activity" } | { kind: "user"; userId: string }
 type UserSocket = ServerWebSocket<Extract<SocketData, { kind: "user" }>>;
 
 // a subscribed client can run no other command, so publishing goes through `redis`
-const subscriber = new RedisClient(serverEnv.REDIS_URL, { connectionTimeout: 5000 });
+const subscriber = createSubscriber(serverEnv.REDIS_URL, "UserWS");
 
 const sockets = new Map<string, Set<UserSocket>>();
 const CHANGED = JSON.stringify({ type: "notifications_changed" } satisfies UserSocketMessage);
@@ -100,7 +101,7 @@ const userHandlers = {
     set.delete(ws);
     if (set.size > 0) return;
     sockets.delete(userId);
-    subscriber.unsubscribe(notifyChannel(userId), relay).catch(logError("unsubscribe"));
+    subscriber.unsubscribe(notifyChannel(userId)).catch(logError("unsubscribe"));
   },
 };
 

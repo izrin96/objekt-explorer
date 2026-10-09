@@ -14,7 +14,7 @@ import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { collections } from "@repo/db/indexer/schema";
 import { trade, tradeLeg, tradeSubstitute } from "@repo/db/schema";
-import { RedisClient } from "bun";
+import { createSubscriber } from "@repo/lib/server/redis-subscriber";
 import { and, eq, inArray } from "drizzle-orm";
 
 import { unique } from "../../lib/array";
@@ -304,7 +304,7 @@ async function refreshWatch(legs: LegRow[], offerObjekts: string[]) {
  * makes a run sooner; the cron's rescan of the transfer table is what never misses.
  */
 export async function watchTransfers(onError: (error: unknown) => void) {
-  const subscriber = new RedisClient(process.env.REDIS_URL, { connectionTimeout: 5000 });
+  const subscriber = createSubscriber(process.env.REDIS_URL, "Trade Verifier");
   let timer: ReturnType<typeof setTimeout> | null = null;
   await subscriber.subscribe("transfers", (message) => {
     if (timer !== null || !batchMatters(message, watch)) return;
