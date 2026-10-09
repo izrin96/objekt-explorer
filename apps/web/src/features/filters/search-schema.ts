@@ -104,6 +104,15 @@ type FilterKey = keyof FilterSearch;
 
 const FILTER_KEYS = Object.keys(filterSearchSchema.shape) as FilterKey[];
 
+/** The filters alone, without the other parameters a route shares the URL with. */
+export function pickFilters(search: Record<string, unknown>): FilterSearch {
+  const filters: Record<string, unknown> = {};
+  for (const key of FILTER_KEYS) {
+    if (search[key] !== undefined) filters[key] = search[key];
+  }
+  return filters as FilterSearch;
+}
+
 /** No filter set: also the patch `useResetFilters` writes, minus `at`. */
 export const defaultFilters: FilterSearch = Object.fromEntries(
   FILTER_KEYS.map((key) => [key, undefined]),

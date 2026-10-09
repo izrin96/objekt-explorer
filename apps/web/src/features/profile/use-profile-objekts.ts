@@ -135,11 +135,12 @@ export function useProfileObjekts() {
         : [];
 
     const filtered: GridObjekt[] = [...owned, ...missing];
-    return { filtered, ownedSlugs };
+    return { filtered, ownedSlugs, allOwned: withMarks };
   }, [deferredFilters, objekts, pins, locks, collections.data]);
 
   return {
     ...derived,
+    catalogue: collections.data,
     filters: deferredFilters,
     rarityMap,
     hasNextPage,

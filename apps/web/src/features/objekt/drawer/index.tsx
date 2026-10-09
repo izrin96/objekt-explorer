@@ -53,6 +53,10 @@ type Props = {
   onToggleSelect?: (objekt: ValidObjekt) => void;
   /** the items only; the sheet supplies the trigger and the popup */
   menu?: ReactNode;
+  /** a linked serial: the sheet opens on its trade history */
+  serial?: number;
+  /** every serial the user moves to, so a surface can put it on the URL */
+  onSerialChange?: (serial: number) => void;
 };
 
 export function ObjektDrawer({
@@ -64,11 +68,22 @@ export function ObjektDrawer({
   selected = false,
   onToggleSelect,
   menu,
+  serial,
+  onSerialChange,
 }: Props) {
   const showOwned = owned !== undefined;
   // the body unmounts on close, so the chosen tab is held here instead: one
   // mount per page, so reopening keeps it and navigating away resets it
   const [tab, setTab] = useState<DrawerTab>(showOwned ? "owned" : defaultTab);
+
+  // a linked serial switches to its tab once per objekt opened, so the user
+  // can still leave it, and browsing serials does not pull them back
+  const openId = objekt?.id ?? null;
+  const [seenId, setSeenId] = useState<string | null>(null);
+  if (openId !== seenId) {
+    setSeenId(openId);
+    if (openId !== null && serial !== undefined) setTab("serials");
+  }
 
   return (
     <Drawer
@@ -85,6 +100,8 @@ export function ObjektDrawer({
           <DrawerBody
             key={objekt.id}
             objekt={objekt}
+            initialSerial={serial}
+            onSerialChange={onSerialChange}
             tab={tab}
             onTabChange={setTab}
             owned={owned}
@@ -101,6 +118,8 @@ export function ObjektDrawer({
 
 function DrawerBody({
   objekt,
+  initialSerial,
+  onSerialChange,
   tab,
   onTabChange,
   owned: ownedCopies,
@@ -110,6 +129,8 @@ function DrawerBody({
   menu,
 }: {
   objekt: ValidObjekt;
+  initialSerial?: number;
+  onSerialChange?: (serial: number) => void;
   tab: DrawerTab;
   onTabChange: (tab: DrawerTab) => void;
   owned?: OwnedGridObjekt[];
@@ -121,7 +142,13 @@ function DrawerBody({
   const owned = isObjektOwned(objekt);
   const ownSerial = owned ? objekt.serial : null;
   const { getArtist } = useCosmoArtist();
-  const [serial, setSerial] = useState<number | null>(ownSerial);
+  // the URL only seeds the serial: a surface writing it back on every change
+  // would otherwise remount the body or fight the number field mid-typing
+  const [serial, setSerial] = useState<number | null>(initialSerial ?? ownSerial);
+  const changeSerial = (value: number) => {
+    setSerial(value);
+    onSerialChange?.(value);
+  };
 
   const metadata = useQuery(collectionMetadataOptions(objekt.slug));
   const serials = useQuery(serialListOptions(objekt.slug));
@@ -249,7 +276,7 @@ function DrawerBody({
                 objekts={ownedCopies}
                 menu={ownedMenu}
                 onOpenSerial={(value) => {
-                  setSerial(value);
+                  changeSerial(value);
                   onTabChange("serials");
                 }}
               />
@@ -263,7 +290,7 @@ function DrawerBody({
               metadata={metadata}
               physical={objekt.onOffline === "offline"}
               loading={serials.isPending}
-              onSerialChange={setSerial}
+              onSerialChange={changeSerial}
             >
               <Timeline serial={selected} query={transfers} />
             </SerialsPanel>
@@ -272,7 +299,7 @@ function DrawerBody({
             <MarketPanel
               slug={objekt.slug}
               onOpenSerial={(value) => {
-                setSerial(value);
+                changeSerial(value);
                 onTabChange("serials");
               }}
             />

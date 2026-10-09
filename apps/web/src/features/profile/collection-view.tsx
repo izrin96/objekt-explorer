@@ -1,7 +1,7 @@
 import { arrayMove } from "@dnd-kit/sortable";
 import { CaretDownIcon, CaretUpIcon } from "@phosphor-icons/react";
 import type { GridObjekt } from "@repo/lib/types/objekt";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 
 import { countMarkup, MessageMarkup } from "@/components/shared/message-markup";
 import { MenuItem, MenuSeparator } from "@/components/ui/menu";
@@ -15,6 +15,7 @@ import { AddToListProvider } from "@/features/list/add-to-list-dialog";
 import { AddToListAction, AddToListMenuItem } from "@/features/list/add-to-list-menu-item";
 import { ObjektDrawer } from "@/features/objekt/drawer";
 import type { OwnedRowMenu } from "@/features/objekt/drawer/owned";
+import { useObjektLink } from "@/features/objekt/drawer/use-objekt-link";
 import { ObjektCard } from "@/features/objekt/objekt-card";
 import { ObjektCardMenu } from "@/features/objekt/objekt-card-menu";
 import { copiesIn, isObjektOwned, ownedCopiesOf } from "@/features/objekt/objekt-utils";
@@ -45,10 +46,11 @@ export function CollectionView() {
   const selected = useSelection((s) => s.ids);
   const selecting = useSelection(selectIsSelecting);
   const toggleSelect = useSelection((s) => s.toggle);
-  const [active, setActive] = useState<GridObjekt | null>(null);
 
   const {
     filtered,
+    allOwned,
+    catalogue,
     filters,
     rarityMap,
     hasNextPage,
@@ -65,6 +67,13 @@ export function CollectionView() {
   );
 
   useClearSelectionOnNavigate();
+
+  // copies the filters hide still open from a link, and the catalogue covers
+  // a collection the profile does not hold
+  const { active, open, close } = useObjektLink<GridObjekt>(
+    [objekts, allOwned, catalogue ?? []],
+    !isPending && !hasNextPage,
+  );
 
   // a fresh array each render would re-run the facet parity effect forever
   const extras = useMemo<ExtraFacet[]>(
@@ -143,7 +152,7 @@ export function CollectionView() {
           onToggleSelect={showActions ? (item) => toggleSelect(item.id) : undefined}
           // a pin's long press lifts it for reordering; the Select button selects
           longPressSelect={!sortable}
-          onOpen={setActive}
+          onOpen={open}
           pin={owned?.isPin === true}
           lock={owned?.isLocked === true}
           faded={owned === null && objekt.copies === undefined}
@@ -155,7 +164,7 @@ export function CollectionView() {
         </ObjektCard>
       );
     },
-    [objektMenuItems, selected, showActions, toggleSelect, grouped],
+    [objektMenuItems, selected, showActions, toggleSelect, grouped, open],
   );
 
   const renderItem = useCallback(
@@ -286,7 +295,7 @@ export function CollectionView() {
 
       <ObjektDrawer
         objekt={active}
-        onClose={() => setActive(null)}
+        onClose={close}
         // Spin is counted per collection, so it has no tokens to list
         owned={isSpinAddress(address) ? undefined : ownedCopies}
         ownedMenu={showActions ? ownedMenu : undefined}
