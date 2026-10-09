@@ -411,7 +411,8 @@
 /*
  * Unlayered, so it beats the popup's utilities. `Skeleton` pins its shimmer to the viewport
  * (`background-attachment: fixed`), which any transform on an ancestor breaks into one sweep
- * per card; an open dialog keeps a no-op `scale` and `will-change`, so they go while it rests.
+ * per card; an open dialog keeps a no-op `scale` and `will-change`, and an open drawer a zero-offset `transform`,
+ * so they go while it rests.
  */
 [data-slot="dialog-popup"]:not(
   [data-starting-style],
@@ -419,6 +420,15 @@
   [data-nested-dialog-open]
 ) {
   scale: none;
+  will-change: auto;
+}
+
+[data-slot="drawer-popup"]:not(
+  [data-starting-style],
+  [data-ending-style],
+  [data-nested-drawer-open]
+) {
+  transform: none;
   will-change: auto;
 }
 
