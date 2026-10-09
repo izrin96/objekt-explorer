@@ -7,6 +7,7 @@ import { populateRarity } from "./job/populate-rarity";
 import { populateSerial, populateSerialOffline } from "./job/populate-serial";
 import { processCollectionImages } from "./job/process-collection-images";
 import { refreshAccessToken } from "./job/refresh-access-token";
+import { relayTransfers } from "./job/transfers-relay";
 import { updateCurrencyRates } from "./job/update-currency-rates";
 import { verifyBatchBoundaries } from "./job/verify-batch-boundaries";
 
@@ -24,37 +25,65 @@ function safeRun(name: string, fn: () => Promise<void> | void) {
   };
 }
 
+// A staging worker shares the production indexer database, so it must not write to it or
+// consume the outbox the production worker drains. Unset means true.
+const indexerWrites = process.env.WORKER_INDEXER_WRITES !== "false";
+// The Cosmo refresh token rotates on every refresh, so two workers holding the same token (a
+// staging app database cloned from production) would invalidate each other's.
+const tokenRefresh = process.env.WORKER_TOKEN_REFRESH !== "false";
+if (!indexerWrites) console.log("[worker] WORKER_INDEXER_WRITES=false: indexer write jobs off");
+if (!tokenRefresh) console.log("[worker] WORKER_TOKEN_REFRESH=false: Cosmo token refresh off");
+
 // refresh the Cosmo access token proactively so the website never races
 // to refresh it. Runs on startup (in case the worker just started and the
 // token is already expired) and every 2 minutes thereafter.
-await safeRun("refreshAccessToken", refreshAccessToken)();
-crons.push(cron("*/2 * * * *", safeRun("refreshAccessToken", refreshAccessToken)));
+if (tokenRefresh) {
+  await safeRun("refreshAccessToken", refreshAccessToken)();
+  crons.push(cron("*/2 * * * *", safeRun("refreshAccessToken", refreshAccessToken)));
+}
 
-// refetch metadata for empty-collection
-// todo: rework, don't store into collection
-const runFixEmptyCollection = safeRun("fixEmptyCollection", () =>
-  fixEmptyCollection({
-    version: 3,
-  }),
-);
-await runFixEmptyCollection();
-crons.push(cron("0 * * * *", runFixEmptyCollection));
+if (indexerWrites) {
+  // refetch metadata for empty-collection
+  // todo: rework, don't store into collection
+  const runFixEmptyCollection = safeRun("fixEmptyCollection", () =>
+    fixEmptyCollection({
+      version: 3,
+    }),
+  );
+  await runFixEmptyCollection();
+  crons.push(cron("0 * * * *", runFixEmptyCollection));
 
-// populate missing serials for online objekts
-await safeRun("populateSerial", populateSerial)();
-crons.push(cron("*/5 * * * *", safeRun("populateSerial", populateSerial)));
+  // populate missing serials for online objekts
+  await safeRun("populateSerial", populateSerial)();
+  crons.push(cron("*/5 * * * *", safeRun("populateSerial", populateSerial)));
 
-// populate missing serials for offline objekts
-await safeRun("populateSerialOffline", populateSerialOffline)();
-crons.push(cron("*/5 * * * *", safeRun("populateSerialOffline", populateSerialOffline)));
+  // populate missing serials for offline objekts
+  await safeRun("populateSerialOffline", populateSerialOffline)();
+  crons.push(cron("*/5 * * * *", safeRun("populateSerialOffline", populateSerialOffline)));
 
-// cosmo-spin transferable update
-await safeRun("updateTransferableCosmoSpin", updateTransferableCosmoSpin)();
-crons.push(cron("0 * * * *", safeRun("updateTransferableCosmoSpin", updateTransferableCosmoSpin)));
+  // cosmo-spin transferable update
+  await safeRun("updateTransferableCosmoSpin", updateTransferableCosmoSpin)();
+  crons.push(
+    cron("0 * * * *", safeRun("updateTransferableCosmoSpin", updateTransferableCosmoSpin)),
+  );
 
-// drain outbox events from indexer (handles pins, locked objekts, and list entries)
-await safeRun("drainOutbox", drainOutbox)();
-crons.push(cron("*/2 * * * *", safeRun("drainOutbox", drainOutbox)));
+  // drain outbox events from indexer (handles pins, locked objekts, and list entries)
+  await safeRun("drainOutbox", drainOutbox)();
+  crons.push(cron("*/2 * * * *", safeRun("drainOutbox", drainOutbox)));
+
+  // weekly boundary-drift check for un-anchored offline serial batches
+  // (no startup run: cheap but not needed on every deploy/restart)
+  crons.push(
+    cron(
+      "0 3 * * 1",
+      safeRun("verifyBatchBoundaries", () => verifyBatchBoundaries()),
+    ),
+  );
+
+  // process collection images - download, convert to WebP, upload to S3
+  await safeRun("processCollectionImages", processCollectionImages)();
+  crons.push(cron("*/10 * * * *", safeRun("processCollectionImages", processCollectionImages)));
+}
 
 // weekly safety-net full scan for stale entries the outbox drain missed
 // (no startup run: full scan is heavy, drain handles the common case)
@@ -68,24 +97,21 @@ crons.push(cron("0 * * * *", safeRun("populateRarity", populateRarity)));
 await safeRun("updateCurrencyRates", updateCurrencyRates)();
 crons.push(cron("0 1 * * *", safeRun("updateCurrencyRates", updateCurrencyRates)));
 
-// weekly boundary-drift check for un-anchored offline serial batches
-// (no startup run: cheap but not needed on every deploy/restart)
-crons.push(
-  cron(
-    "0 3 * * 1",
-    safeRun("verifyBatchBoundaries", () => verifyBatchBoundaries()),
-  ),
-);
-
-// process collection images - download, convert to WebP, upload to S3
-await safeRun("processCollectionImages", processCollectionImages)();
-crons.push(cron("*/10 * * * *", safeRun("processCollectionImages", processCollectionImages)));
+// staging only: the indexer publishes `transfers` to production's Valkey alone
+const transfersRelayFrom = process.env.TRANSFERS_RELAY_FROM;
+const stopTransfersRelay = transfersRelayFrom
+  ? await relayTransfers(transfersRelayFrom).catch((error: unknown) => {
+      console.error("[Transfers Relay] Failed to subscribe to transfers:", error);
+      return null;
+    })
+  : null;
 
 async function shutdown(signal: NodeJS.Signals) {
   console.log(`[shutdown] Received ${signal}, stopping cron jobs...`);
   for (const cron of crons) {
     cron.stop();
   }
+  stopTransfersRelay?.();
   console.log("[shutdown] All cron jobs stopped");
   process.exit(0);
 }
