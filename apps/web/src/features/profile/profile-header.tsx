@@ -4,7 +4,6 @@ import type { PublicProfile } from "@repo/api/schemas/profile";
 import { ApolloIcon } from "@/components/shared/apollo-icon";
 import { CopyButton } from "@/components/shared/copy-button";
 import { SocialBadge } from "@/components/shared/social-badge";
-import { WavbaseIcon } from "@/components/shared/wavbase-icon";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -121,28 +120,6 @@ export function ProfileHeader({ profile }: { profile: PublicProfile }) {
               <ApolloIcon className="size-4" />
             </TooltipTrigger>
             <TooltipPopup>{m.profile_header_view_in_apollo()}</TooltipPopup>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger
-              render={
-                <Button
-                  variant="outline"
-                  size="icon-sm"
-                  aria-label={m.profile_header_view_in_wavbase()}
-                  render={
-                    <a
-                      href={`https://wavbase.app/collectors/${profile.nickname ?? profile.address}`}
-                      target="_blank"
-                      rel="noreferrer"
-                    />
-                  }
-                />
-              }
-            >
-              <WavbaseIcon className="size-4" />
-            </TooltipTrigger>
-            <TooltipPopup>{m.profile_header_view_in_wavbase()}</TooltipPopup>
           </Tooltip>
 
           {isProfileAuthed && (
