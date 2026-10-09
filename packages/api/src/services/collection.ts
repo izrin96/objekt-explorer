@@ -13,7 +13,7 @@ import type {
   SerialTransfersOutput,
   SerialsOutput,
 } from "../schemas/collections";
-import { getSession } from "./auth";
+import { getSession } from "./session";
 import { getCollectionColumns } from "./objekt";
 import { redis } from "./redis";
 

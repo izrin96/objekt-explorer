@@ -1,7 +1,6 @@
 import { i18n } from "@better-auth/i18n";
 import { db } from "@repo/db";
 import * as authSchema from "@repo/db/auth-schema";
-import { getRequestHeaders, setResponseHeader } from "@tanstack/react-start/server";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { createAuthMiddleware, getOAuthState, getSessionFromCtx } from "better-auth/api";
 import { betterAuth } from "better-auth/minimal";
@@ -256,22 +255,4 @@ export async function refreshProviderProfile(account: {
 function getProviderUsername(providerId: string, info: { data?: unknown } | null | undefined) {
   const data = info?.data as { username?: string; data?: { username?: string } } | undefined;
   return providerId === "discord" ? data?.username : data?.data?.username;
-}
-
-export async function getSession() {
-  const session = await auth.api.getSession({
-    headers: getRequestHeaders(),
-    returnHeaders: true,
-  });
-
-  if (!session.response) {
-    return null;
-  }
-
-  const cookies = session.headers.getSetCookie();
-  if (cookies.length) {
-    setResponseHeader("Set-Cookie", cookies);
-  }
-
-  return session.response;
 }

@@ -1,6 +1,6 @@
 import { db } from "@repo/db";
 
-import { getSession } from "./auth";
+import { getSession } from "./session";
 
 /** a private profile shows only to the account that linked the address */
 export function isProfileHidden(
