@@ -1,7 +1,7 @@
 import { MagnifyingGlassIcon } from "@phosphor-icons/react";
 import type { GridObjekt } from "@repo/lib/types/objekt";
 import { createFileRoute } from "@tanstack/react-router";
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 
 import { EmptyState } from "@/components/shared/empty-state";
 import { countMarkup, MessageMarkup } from "@/components/shared/message-markup";
@@ -15,6 +15,8 @@ import { useResetFilters } from "@/features/filters/use-filters";
 import { AddToListProvider } from "@/features/list/add-to-list-dialog";
 import { AddToListAction, AddToListMenuItem } from "@/features/list/add-to-list-menu-item";
 import { ObjektDrawer } from "@/features/objekt/drawer";
+import { objektSearchSchema } from "@/features/objekt/drawer/search-schema";
+import { useObjektLink } from "@/features/objekt/drawer/use-objekt-link";
 import { ObjektCard } from "@/features/objekt/objekt-card";
 import { ObjektCardMenu } from "@/features/objekt/objekt-card-menu";
 import { ObjektVirtualGrid } from "@/features/objekt/objekt-virtual-grid";
@@ -26,18 +28,23 @@ import { m } from "@/paraglide/messages";
 import { useClearSelectionOnNavigate, useSelection } from "@/stores/selection";
 
 export const Route = createFileRoute("/(container)/")({
-  validateSearch: filterSearchSchema,
+  // the homepage lists collections, which carry no token to link
+  validateSearch: filterSearchSchema.extend(objektSearchSchema.omit({ id: true }).shape),
   component: HomePage,
 });
 
 function HomePage() {
   const { data: user } = useCurrentUser();
   const { facets, groups } = useScopedFacets();
-  const { filtered, filters, rarityMap, isPending } = useCollectionObjekts();
+  const { objekts, filtered, filters, rarityMap, isPending } = useCollectionObjekts();
   const reset = useResetFilters();
   const ids = useSelection((s) => s.ids);
   const toggle = useSelection((s) => s.toggle);
-  const [active, setActive] = useState<GridObjekt | null>(null);
+  // the full list, so a link opens even a collection the filters hide
+  const { active, serial, open, close, changeSerial } = useObjektLink<GridObjekt>(
+    [objekts ?? []],
+    objekts !== undefined,
+  );
 
   useClearSelectionOnNavigate();
 
@@ -50,7 +57,7 @@ function HomePage() {
           objekt={objekt}
           selected={ids.has(objekt.id)}
           onToggleSelect={user ? (value) => toggle(value.id) : undefined}
-          onOpen={setActive}
+          onOpen={open}
           qty={item.length > 1 ? item.length : undefined}
           priority={rowIndex < 2}
         >
@@ -62,7 +69,7 @@ function HomePage() {
         </ObjektCard>
       );
     },
-    [ids, toggle, user],
+    [ids, toggle, user, open],
   );
 
   return (
@@ -113,7 +120,9 @@ function HomePage() {
       )}
       <ObjektDrawer
         objekt={active}
-        onClose={() => setActive(null)}
+        serial={serial}
+        onSerialChange={changeSerial}
+        onClose={close}
         selected={active !== null && ids.has(active.id)}
         onToggleSelect={user ? (value) => toggle(value.id) : undefined}
         menu={user && active ? <AddToListMenuItem objekts={[active]} /> : undefined}

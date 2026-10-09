@@ -22,6 +22,7 @@ export function useCollectionObjekts() {
   );
 
   return {
+    objekts: query.data,
     filtered,
     filters: deferredFilters,
     rarityMap,

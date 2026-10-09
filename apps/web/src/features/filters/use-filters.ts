@@ -3,7 +3,12 @@ import { useCallback, useMemo } from "react";
 
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 
-import { defaultFilters, filterSearchSchema, type FilterSearch } from "./search-schema";
+import {
+  defaultFilters,
+  filterSearchSchema,
+  type FilterSearch,
+  pickFilters,
+} from "./search-schema";
 
 export type FilterPatch = Partial<FilterSearch>;
 
@@ -16,9 +21,13 @@ export function useFilters<T>(select: (filters: FilterSearch) => T): T;
 export function useFilters<T>(select?: (filters: FilterSearch) => T): FilterSearch | T {
   return useSearch({
     strict: false,
+    // the drawer's params share the URL; this keeps the filters the same
+    // object when only those change, so the grid does not refilter
+    structuralSharing: true,
+    // the cast only because a generic `T` cannot prove it is plain data
     select: (search) => {
-      const filters = search as FilterSearch;
-      return select ? select(filters) : filters;
+      const filters = pickFilters(search);
+      return (select ? select(filters) : filters) as FilterSearch;
     },
   }) as FilterSearch | T;
 }

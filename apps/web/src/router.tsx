@@ -45,4 +45,9 @@ declare module "@tanstack/react-router" {
   interface Register {
     router: ReturnType<typeof getRouter>;
   }
+
+  interface HistoryState {
+    /** on the entry opening an objekt drawer pushed, so closing it can go back */
+    objektDrawer?: boolean;
+  }
 }
