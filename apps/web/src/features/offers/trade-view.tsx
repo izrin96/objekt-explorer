@@ -69,6 +69,9 @@ function endedText(trade: Trade, name: string) {
   }
   if (trade.status !== "cancelled") return null;
   if (trade.cancelReason === "token_moved") return m.offer_trade_cancelled_moved();
+  if (trade.cancelReason === "not_transferable") {
+    return m.offer_trade_cancelled_not_transferable();
+  }
   if (trade.cancelReason === "expired") {
     return m.offer_trade_cancelled_expired({ days: TRADE_EXPIRE_DAYS });
   }

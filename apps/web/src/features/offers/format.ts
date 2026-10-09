@@ -96,6 +96,8 @@ export function cancelReasonText(reason: OfferView["cancelReason"] | "party") {
       return m.offer_cancel_reserved();
     case "token_moved":
       return m.offer_cancel_token_moved();
+    case "not_transferable":
+      return m.offer_cancel_not_transferable();
     case "sanction":
       return m.offer_cancel_sanction();
     case "account_deleted":
@@ -191,13 +193,17 @@ export function tradeNotificationText(payload: TradePayload) {
         ? m.notification_offer_trade_cancelled(params)
         : payload.reason === "expired"
           ? m.notification_trade_cancelled_expired({ ...params, days: TRADE_EXPIRE_DAYS })
-          : m.notification_trade_cancelled_moved(params);
+          : payload.reason === "not_transferable"
+            ? m.notification_trade_cancelled_not_transferable(params)
+            : m.notification_trade_cancelled_moved(params);
     case "failed":
       return payload.reason === "expired"
         ? m.notification_trade_failed_expired({ ...params, days: TRADE_EXPIRE_DAYS })
         : m.notification_trade_failed(params);
     case "reminder":
       return m.notification_trade_reminder(params);
+    case "stuck":
+      return m.notification_trade_stuck(params);
     case "wrong_copy":
       return m.notification_trade_wrong_copy({ ...params, ...copy });
     case "wrong_copy_declined":

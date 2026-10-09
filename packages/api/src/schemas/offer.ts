@@ -36,6 +36,7 @@ const OFFER_CANCEL_REASONS = [
   "sanction",
   "token_moved",
   "account_deleted",
+  "not_transferable",
 ] as const;
 export type OfferCancelReason = (typeof OFFER_CANCEL_REASONS)[number];
 
@@ -47,7 +48,7 @@ export const HELD_COPY_STATUSES = ["pending", "declined"] as const;
 export type HeldCopyStatus = (typeof HELD_COPY_STATUSES)[number];
 
 /** Set on a cancelled trade; `expired` also on a failed one. */
-const TRADE_CANCEL_REASONS = ["party", "token_moved", "expired"] as const;
+const TRADE_CANCEL_REASONS = ["party", "token_moved", "expired", "not_transferable"] as const;
 export type TradeCancelReason = (typeof TRADE_CANCEL_REASONS)[number];
 
 const OFFER_ACTIONS = ["accept", "decline", "counter", "withdraw"] as const;
@@ -270,6 +271,8 @@ const tradeLegViewSchema = z.object({
   open: z.boolean(),
   /** closed: the trade ended before this leg verified */
   state: z.enum(["waiting", "verified", "closed"]),
+  /** waiting, but the indexer reads the objekt as non-transferable */
+  stuck: z.boolean(),
   verifiedAt: z.string().nullable(),
   txHash: z.string().nullable(),
   verifiedObjektId: z.string().nullable(),
@@ -375,6 +378,7 @@ const TRADE_EVENTS = [
   "reminder",
   "wrong_copy",
   "wrong_copy_declined",
+  "stuck",
 ] as const;
 
 /** A serial as trade surfaces show it: null before it's numbered, `estimated` after Cosmo's cutoff. */
@@ -382,8 +386,8 @@ const shownSerialSchema = z.object({ serial: z.number().nullable(), estimated: z
 export type ShownSerial = z.infer<typeof shownSerialSchema>;
 
 /**
- * Data only. `reason` is set on `cancelled`: the other party cancelled, an objekt left the wallet,
- * or the trade expired; and on `failed` when it expired. `copy` is set on the wrong-copy events.
+ * Data only. `reason` is set on `cancelled`: the other party cancelled, an objekt left the wallet
+ * or can no longer be transferred, or the trade expired; and on `failed` when it expired. `copy` is set on the wrong-copy events.
  */
 export const tradePayloadSchema = z.object({
   tradeId: z.number(),

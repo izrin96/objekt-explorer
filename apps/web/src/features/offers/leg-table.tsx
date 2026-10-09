@@ -1,4 +1,4 @@
-import { ArrowRightIcon, CheckIcon, ClockIcon, XIcon } from "@phosphor-icons/react";
+import { ArrowRightIcon, CheckIcon, ClockIcon, WarningIcon, XIcon } from "@phosphor-icons/react";
 import type { TradeView } from "@repo/api/schemas/offer";
 import { truncateAddress } from "@repo/lib/address";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
@@ -137,6 +137,12 @@ function LegState({
           <ClockIcon weight="bold" aria-hidden />
           {m.offer_leg_waiting()}
         </StatusBadge>
+        {leg.stuck ? (
+          <span className="text-warning-foreground flex items-center gap-1 text-pretty">
+            <WarningIcon aria-hidden weight="fill" className="size-3.5 shrink-0" />
+            {m.offer_leg_stuck()}
+          </span>
+        ) : null}
         {seenUntil && hydrated ? (
           <time dateTime={seenUntil} className="text-muted-foreground">
             {m.offer_leg_seen({ time: agoLabel(seenUntil) })}

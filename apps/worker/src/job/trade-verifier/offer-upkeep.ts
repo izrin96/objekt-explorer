@@ -20,7 +20,10 @@ const offerRef = {
   toUserId: offer.toUserId,
 };
 
-/** Writes `expired`, and cancels offers whose specific objekt left its side's wallets. */
+/**
+ * Writes `expired`, and cancels offers whose specific objekt left its side's wallets or can no
+ * longer be transferred.
+ */
 export async function offerUpkeep() {
   const expiring = await db
     .select(offerRef)
@@ -81,11 +84,12 @@ export async function offerUpkeep() {
   const watchedObjekts = unique(items.map((item) => item.objektId));
   const owners = await chunkMap(watchedObjekts, OWNER_BATCH, (ids) =>
     indexer
-      .select({ id: objekts.id, owner: objekts.owner })
+      .select({ id: objekts.id, owner: objekts.owner, transferable: objekts.transferable })
       .from(objekts)
       .where(inArray(objekts.id, ids)),
   );
   const ownerOf = new Map(owners.map((row) => [row.id, row.owner.toLowerCase()]));
+  const untransferable = new Set(owners.flatMap((row) => (row.transferable ? [] : [row.id])));
   const sent = await sentToReceivers(
     items.filter((item) => {
       const owner = ownerOf.get(item.objektId);
@@ -98,24 +102,38 @@ export async function offerUpkeep() {
       .map((item) => item.offerId),
   );
 
-  let moved = 0;
-  if (movedIds.length > 0) {
-    const publish = await db.transaction(async (tx) => {
-      const rows = await tx
-        .update(offer)
-        .set({ status: "cancelled", cancelReason: "token_moved", respondedAt: sql`now()` })
-        .where(and(inArray(offer.id, movedIds), eq(offer.status, "open")))
-        .returning(offerRef);
-      moved = rows.length;
-      const name = await partyNames(rows.flatMap((o) => [o.fromUserId, o.toUserId]));
-      return toPublish(
-        rows,
-        await writeNotes(tx, offerNotes(rows, "cancelled", "token_moved", name)),
-      );
-    });
-    publishes.push(publish);
-  }
-  return { publishes, expired, moved, watchedObjekts };
+  const movedSet = new Set(movedIds);
+  const stuckIds = unique(
+    items
+      .filter((item) => untransferable.has(item.objektId) && !movedSet.has(item.offerId))
+      .map((item) => item.offerId),
+  );
+
+  const movedRun = await cancelOffers(movedIds, "token_moved");
+  const stuckRun = await cancelOffers(stuckIds, "not_transferable");
+  publishes.push(...movedRun.publishes, ...stuckRun.publishes);
+  return {
+    publishes,
+    expired,
+    moved: movedRun.cancelled + stuckRun.cancelled,
+    watchedObjekts,
+  };
+}
+
+async function cancelOffers(ids: number[], reason: "token_moved" | "not_transferable") {
+  if (ids.length === 0) return { publishes: [], cancelled: 0 };
+  let cancelled = 0;
+  const publish = await db.transaction(async (tx) => {
+    const rows = await tx
+      .update(offer)
+      .set({ status: "cancelled", cancelReason: reason, respondedAt: sql`now()` })
+      .where(and(inArray(offer.id, ids), eq(offer.status, "open")))
+      .returning(offerRef);
+    cancelled = rows.length;
+    const name = await partyNames(rows.flatMap((o) => [o.fromUserId, o.toUserId]));
+    return toPublish(rows, await writeNotes(tx, offerNotes(rows, "cancelled", reason, name)));
+  });
+  return { publishes: [publish], cancelled };
 }
 
 /** Transfers into the receivers' wallets since the earliest of these offers, for `itemStillHeld`. */

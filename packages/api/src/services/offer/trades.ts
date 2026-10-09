@@ -291,6 +291,7 @@ export async function fetchTrade(me: string, tradeId: number) {
         fromYou: leg.fromUserId === me,
         open: leg.open,
         state: leg.verifiedAt !== null ? "verified" : leg.open ? "waiting" : "closed",
+        stuck: leg.open && leg.untransferableAt !== null,
         verifiedAt: iso(leg.verifiedAt),
         txHash: leg.txHash,
         verifiedObjektId: leg.verifiedObjektId,

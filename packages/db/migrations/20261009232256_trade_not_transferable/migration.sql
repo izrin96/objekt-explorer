@@ -1,0 +1,3 @@
+ALTER TABLE "trade_leg" ADD COLUMN "untransferable_at" timestamp with time zone;--> statement-breakpoint
+ALTER TABLE "offer" DROP CONSTRAINT "offer_cancel_reason", ADD CONSTRAINT "offer_cancel_reason" CHECK ("cancel_reason" IN ('reserved', 'blocked', 'sanction', 'token_moved', 'account_deleted', 'not_transferable'));--> statement-breakpoint
+ALTER TABLE "trade" DROP CONSTRAINT "trade_cancel_reason", ADD CONSTRAINT "trade_cancel_reason" CHECK ("cancel_reason" IN ('party', 'token_moved', 'expired', 'not_transferable'));

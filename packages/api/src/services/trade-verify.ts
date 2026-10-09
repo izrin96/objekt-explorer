@@ -2,6 +2,7 @@ import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts, transfers } from "@repo/db/indexer/schema";
 import { trade, tradeLeg, tradeSubstitute } from "@repo/db/schema";
+import { chunkMap } from "@repo/lib";
 import { isSerialEstimated, shownSerial } from "@repo/lib/serial";
 import { and, eq, gte, inArray, isNotNull, sql } from "drizzle-orm";
 
@@ -35,6 +36,7 @@ export type LegRow = {
   to_current: string[];
   collection_slug: string;
   objekt_id: string | null;
+  untransferable_at: string | null;
   window_start: string;
   accepted_at: string;
 };
@@ -50,7 +52,8 @@ export async function loadOpenLegs(giverIds?: string[]): Promise<LegRow[]> {
       l.from_user_id, l.to_user_id, l.from_addresses, l.to_addresses,
       ARRAY(SELECT lower(a.address) FROM user_address a WHERE a.user_id = l.from_user_id) AS from_current,
       ARRAY(SELECT lower(a.address) FROM user_address a WHERE a.user_id = l.to_user_id) AS to_current,
-      l.collection_slug, l.objekt_id, o.created_at::text AS window_start,
+      l.collection_slug, l.objekt_id, l.untransferable_at::text AS untransferable_at,
+      o.created_at::text AS window_start,
       t.accepted_at::text AS accepted_at
     FROM trade_leg l
     JOIN trade t ON t.id = l.trade_id
@@ -178,7 +181,9 @@ export async function finishSettle(
   name: (userId: string) => { userId: string; name: string },
 ) {
   const { tradeId, userA, userB } = settled;
-  const held = applied.some((r) => r.kind === "broken") ? await heldCopies(tx, tradeId) : 0;
+  const held = applied.some((r) => r.kind === "broken" || r.kind === "stuck")
+    ? await heldCopies(tx, tradeId)
+    : 0;
   const outcome = tradeOutcome(applied, counts.alreadyVerified, held);
   const ended = outcome.status !== "in_progress";
   if (ended) {
@@ -245,6 +250,19 @@ export function wrongCopyNote(
       copy,
     },
   };
+}
+
+const TRANSFERABLE_BATCH = 500;
+
+/** Whether the indexer reads each objekt as transferable; an unknown id is left out. */
+export async function readTransferable(ids: string[]) {
+  const rows = await chunkMap(unique(ids), TRANSFERABLE_BATCH, (batch) =>
+    indexer
+      .select({ id: objekts.id, transferable: objekts.transferable })
+      .from(objekts)
+      .where(inArray(objekts.id, batch)),
+  );
+  return new Map(rows.map((row) => [row.id, row.transferable]));
 }
 
 /** Serials as the trade page shows them, for a wrong copy's notes. */

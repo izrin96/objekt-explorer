@@ -9,6 +9,7 @@ import {
   type MatchTransfer,
   matchLegs as matchAll,
   nearMisses,
+  stuckChange,
   tradeOutcome,
   transferKey,
 } from "./trade-match";
@@ -281,6 +282,43 @@ describe("tradeOutcome", () => {
 
   test("a break while the receiver holds a wrong copy fails", () => {
     expect(tradeOutcome([b, p], 0, 1)).toEqual({ status: "failed" });
+  });
+
+  const s: LegResult = { kind: "stuck" };
+
+  test("a stuck leg before anything was sent cancels", () => {
+    expect(tradeOutcome([s, p], 0, 0)).toEqual({
+      status: "cancelled",
+      reason: "not_transferable",
+    });
+  });
+
+  test("a stuck leg after something was sent waits", () => {
+    expect(tradeOutcome([s], 1, 0)).toEqual({ status: "in_progress" });
+    expect(tradeOutcome([s, v], 0, 0)).toEqual({ status: "in_progress" });
+    expect(tradeOutcome([s, p], 0, 1)).toEqual({ status: "in_progress" });
+  });
+
+  test("a break outranks a stuck leg", () => {
+    expect(tradeOutcome([b, s], 0, 0)).toEqual({ status: "cancelled", reason: "token_moved" });
+    expect(tradeOutcome([b, s], 1, 0)).toEqual({ status: "failed" });
+  });
+});
+
+describe("stuckChange", () => {
+  test("marks a non-transferable objekt once", () => {
+    expect(stuckChange(false, null)).toBe("stuck");
+    expect(stuckChange(false, START)).toBeNull();
+  });
+
+  test("clears once it reads transferable again", () => {
+    expect(stuckChange(true, START)).toBe("clear");
+    expect(stuckChange(true, null)).toBeNull();
+  });
+
+  test("an objekt the indexer doesn't know changes nothing", () => {
+    expect(stuckChange(undefined, null)).toBeNull();
+    expect(stuckChange(undefined, START)).toBeNull();
   });
 });
 

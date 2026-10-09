@@ -46,7 +46,9 @@ export const transferKey = (t: { hash: string; tokenId: string }) => `${t.hash}:
 export type LegResult =
   | { kind: "verified"; transferId: string; txHash: string; objektId: string; at: string }
   | { kind: "broken"; transferId: string }
-  | { kind: "pending" };
+  | { kind: "pending" }
+  /** pending, while the indexer reads its objekt as non-transferable */
+  | { kind: "stuck" };
 
 const time = (at: string) => new Date(at).getTime();
 
@@ -183,13 +185,14 @@ function lower(addresses: ReadonlySet<string>) {
 type TradeOutcome =
   | { status: "in_progress" }
   | { status: "completed" }
-  | { status: "cancelled"; reason: "token_moved" }
+  | { status: "cancelled"; reason: "token_moved" | "not_transferable" }
   | { status: "failed" };
 
 /**
  * A trade's state after a run. `alreadyVerified` counts legs verified by earlier runs;
  * `results` cover the legs still open. A wrong copy the receiver holds (`heldCopies`) counts
- * as a transfer made, so a break after one fails the trade.
+ * as a transfer made, so a break after one fails the trade. A stuck leg cancels the trade only
+ * while nothing was sent; after that the trade waits, and expires as any other.
  */
 export function tradeOutcome(
   results: LegResult[],
@@ -197,14 +200,30 @@ export function tradeOutcome(
   heldCopies: number,
 ): TradeOutcome {
   const verifiedNow = results.filter((r) => r.kind === "verified").length;
+  const sent = alreadyVerified + verifiedNow + heldCopies > 0;
   if (results.some((r) => r.kind === "broken")) {
-    return alreadyVerified + verifiedNow + heldCopies > 0
-      ? { status: "failed" }
-      : { status: "cancelled", reason: "token_moved" };
+    return sent ? { status: "failed" } : { status: "cancelled", reason: "token_moved" };
+  }
+  if (!sent && results.some((r) => r.kind === "stuck")) {
+    return { status: "cancelled", reason: "not_transferable" };
   }
   return results.every((r) => r.kind === "verified")
     ? { status: "completed" }
     : { status: "in_progress" };
+}
+
+/**
+ * What a run writes to a specific open leg's `untransferable_at`: `stuck` sets it (and tells
+ * both parties) when the indexer first reads the objekt as non-transferable, `clear` drops it
+ * once it reads transferable again. An objekt the indexer doesn't know changes nothing.
+ */
+export function stuckChange(
+  transferable: boolean | undefined,
+  untransferableAt: string | null,
+): "stuck" | "clear" | null {
+  if (transferable === false && untransferableAt === null) return "stuck";
+  if (transferable === true && untransferableAt !== null) return "clear";
+  return null;
 }
 
 /**

@@ -317,7 +317,7 @@ export const offer = pgTable(
       .notNull()
       .default("open"),
     cancelReason: text("cancel_reason").$type<
-      "reserved" | "blocked" | "sanction" | "token_moved" | "account_deleted"
+      "reserved" | "blocked" | "sanction" | "token_moved" | "account_deleted" | "not_transferable"
     >(),
     topupAmount: numeric("topup_amount", { precision: 12, scale: 2 }),
     topupCurrency: varchar("topup_currency", { length: 10 }),
@@ -348,7 +348,7 @@ export const offer = pgTable(
     ),
     check(
       "offer_cancel_reason",
-      sql`${t.cancelReason} IN ('reserved', 'blocked', 'sanction', 'token_moved', 'account_deleted')`,
+      sql`${t.cancelReason} IN ('reserved', 'blocked', 'sanction', 'token_moved', 'account_deleted', 'not_transferable')`,
     ),
     check("offer_topup_payer", sql`${t.topupPayer} IN ('from', 'to')`),
     check(
@@ -409,7 +409,9 @@ export const trade = pgTable(
     endedAt: timestamp("ended_at", { mode: "string", withTimezone: true }),
     cancelledBy: text("cancelled_by").references(() => user.id, { onDelete: "cascade" }),
     // `expired` also ends a failed trade
-    cancelReason: text("cancel_reason").$type<"party" | "token_moved" | "expired">(),
+    cancelReason: text("cancel_reason").$type<
+      "party" | "token_moved" | "expired" | "not_transferable"
+    >(),
     remindedAt: timestamp("reminded_at", { mode: "string", withTimezone: true }),
   },
   (t) => [
@@ -417,7 +419,10 @@ export const trade = pgTable(
     index("trade_user_a_idx").on(t.userA, t.acceptedAt.desc()),
     index("trade_user_b_idx").on(t.userB, t.acceptedAt.desc()),
     check("trade_status", sql`${t.status} IN ('in_progress', 'completed', 'cancelled', 'failed')`),
-    check("trade_cancel_reason", sql`${t.cancelReason} IN ('party', 'token_moved', 'expired')`),
+    check(
+      "trade_cancel_reason",
+      sql`${t.cancelReason} IN ('party', 'token_moved', 'expired', 'not_transferable')`,
+    ),
   ],
 );
 
@@ -441,6 +446,8 @@ export const tradeLeg = pgTable(
     objektId: varchar("objekt_id", { length: 255 }),
     open: boolean("open").notNull().default(true),
     verifiedAt: timestamp("verified_at", { mode: "string", withTimezone: true }),
+    // set while the indexer reads the objekt as non-transferable, after something was sent
+    untransferableAt: timestamp("untransferable_at", { mode: "string", withTimezone: true }),
     txHash: text("tx_hash"),
     verifiedObjektId: varchar("verified_objekt_id", { length: 255 }),
     // the indexer's transfer row, kept for debugging; a re-index gives it a new id, so nothing reads it

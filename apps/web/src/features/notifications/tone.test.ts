@@ -14,6 +14,7 @@ describe("notificationTone", () => {
 
   test("a stall reminder is an amber clock", () => {
     expect(notificationTone(trade("reminder"))).toEqual({ icon: "clock", tone: "warning" });
+    expect(notificationTone(trade("stuck"))).toEqual({ icon: "clock", tone: "warning" });
   });
 
   test("a wrong copy sent is an amber warning sign, and declined stays neutral", () => {
