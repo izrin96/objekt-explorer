@@ -140,8 +140,30 @@ export async function createOffer(
         .from(offer)
         .where(and(eq(offer.conversationId, conversationId), eq(offer.status, "open")));
       let open: OfferRow | null = current ?? null;
+      const expiredNotes: Parameters<typeof writeNotes>[1] = [];
       if (open && effectiveStatus(open, now) === "expired") {
-        await tx.update(offer).set({ status: "expired" }).where(eq(offer.id, open.id));
+        await tx
+          .update(offer)
+          .set({ status: "expired", respondedAt: sql`now()` })
+          .where(eq(offer.id, open.id));
+        const { id, fromUserId, toUserId } = open;
+        for (const [userId, other] of [
+          [fromUserId, toUserId],
+          [toUserId, fromUserId],
+        ] as const) {
+          expiredNotes.push({
+            type: "offer",
+            userId,
+            payload: {
+              offerId: id,
+              conversationId,
+              tradeId: null,
+              event: "expired",
+              reason: null,
+              partner: name(other),
+            },
+          });
+        }
         open = null;
       }
       const effect = createEffect(open, me);
@@ -205,6 +227,7 @@ export async function createOffer(
       await appendMessage(tx, conversationId, me, null, null, caution, offerId);
 
       const notified = await writeNotes(tx, [
+        ...expiredNotes,
         {
           type: "offer",
           userId: partnerId,
