@@ -6,6 +6,7 @@ export const clientEnv = createEnv({
     VITE_UMAMI_WEBSITE_ID: z.string().min(1).optional(),
     VITE_ACTIVITY_WEBSOCKET_URL: z.string().optional(),
     VITE_USER_WEBSOCKET_URL: z.string().optional(),
+    VITE_CENTRIFUGO_URL: z.string().optional(),
     VITE_LIVE_API_KEY: z.string().min(1),
   },
   clientPrefix: "VITE_",

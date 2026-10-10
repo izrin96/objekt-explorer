@@ -1,5 +1,6 @@
 import { cron, type CronJob } from "bun";
 
+import { relayActivity } from "./job/activity-relay";
 import { fixEmptyCollection } from "./job/collection";
 import { updateTransferableCosmoSpin } from "./job/cosmo-spin";
 import { cleanupStaleEntries, drainOutbox } from "./job/drain";
@@ -127,6 +128,15 @@ const stopTransfersRelay = transfersRelayFrom
     })
   : null;
 
+// the live /activity feed; skipped when there is no Centrifugo to publish to
+const stopActivityRelay =
+  process.env.CENTRIFUGO_URL && process.env.CENTRIFUGO_API_KEY
+    ? await relayActivity().catch((error: unknown) => {
+        console.error("[Activity Relay] Failed to subscribe to transfers:", error);
+        return null;
+      })
+    : null;
+
 async function shutdown(signal: NodeJS.Signals) {
   console.log(`[shutdown] Received ${signal}, stopping cron jobs...`);
   for (const cron of crons) {
@@ -134,6 +144,7 @@ async function shutdown(signal: NodeJS.Signals) {
   }
   stopTransferWatch?.();
   stopTransfersRelay?.();
+  stopActivityRelay?.();
   console.log("[shutdown] All cron jobs stopped");
   process.exit(0);
 }

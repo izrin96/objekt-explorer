@@ -1,7 +1,4 @@
-import type { Collection, Objekt, Transfer } from "@repo/db/indexer/schema";
-import { mapOwnedObjekt } from "@repo/lib/server/objekt";
 import { createSubscriber } from "@repo/lib/server/redis-subscriber";
-import { fetchPublicNicknames } from "@repo/lib/server/user";
 import type { ServerWebSocket } from "bun";
 
 import { serverEnv } from "./env";
@@ -10,6 +7,7 @@ import {
   type ActivityMessage,
   activityClientMessageSchema,
 } from "./schemas/activity";
+import { enrichTransfers, type TransferData } from "./services/activity-batch";
 
 const pubsub = createSubscriber(serverEnv.REDIS_URL, "ActivityWS");
 
@@ -17,11 +15,6 @@ const clients = new Set<ServerWebSocket<unknown>>();
 
 const transferHistory: ActivityItem[] = [];
 const MAX_HISTORY_SIZE = 50;
-
-type TransferData = Transfer & {
-  collection: Collection;
-  objekt: Objekt;
-};
 
 export async function startActivityWebSocket(): Promise<void> {
   try {
@@ -31,25 +24,7 @@ export async function startActivityWebSocket(): Promise<void> {
       try {
         const transfers = JSON.parse(message) as TransferData[];
 
-        const nicknameOf = await fetchPublicNicknames(transfers.flatMap((a) => [a.from, a.to]));
-
-        const transferBatch: ActivityItem[] = [];
-
-        for (const transfer of transfers) {
-          if (transfer.collection.slug === "empty-collection") continue;
-
-          const { objekt, collection, ...rest } = transfer;
-          const transferEvent = {
-            nickname: {
-              from: nicknameOf(transfer.from),
-              to: nicknameOf(transfer.to),
-            },
-            transfer: rest,
-            objekt: mapOwnedObjekt(objekt, collection),
-          };
-
-          transferBatch.push(transferEvent);
-        }
+        const transferBatch = await enrichTransfers(transfers);
 
         transferHistory.unshift(...transferBatch);
         if (transferHistory.length > MAX_HISTORY_SIZE) {

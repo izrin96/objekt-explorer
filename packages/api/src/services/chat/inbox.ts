@@ -97,15 +97,11 @@ export async function fetchPartners(userIds: string[]) {
 }
 
 /**
- * Newest activity first. A conversation with no message yet is listed only for the one
- * who started it, so an empty request never reaches the recipient.
+ * The viewer's rows of the conversations `scope` picks, newest activity first. A conversation
+ * with no message yet is listed only for the one who started it, so an empty request never
+ * reaches the recipient.
  */
-export async function listConversations(
-  me: string,
-  { box, cursor, q }: z.infer<typeof listConversationsInputSchema>,
-) {
-  const now = new Date();
-  const patterns = q === undefined ? null : searchPatterns(q);
+async function selectConversationRows(me: string, scope: ReturnType<typeof sql>, limit: number) {
   const result = await db.execute<ConversationListRow>(sql`
     SELECT page.*, ctx.card AS context_card
     FROM (
@@ -129,12 +125,10 @@ export async function listConversations(
     JOIN conversation c ON c.id = m.conversation_id
     LEFT JOIN message msg ON msg.id = c.last_message_id
     WHERE m.user_id = ${me}
-      AND ${visibleIn(box, me)}
       AND (c.last_message_id IS NOT NULL OR c.created_by = ${me})
-      ${patterns ? matchesSearch(me, patterns) : sql``}
-      ${cursor ? sql`AND (coalesce(c.last_message_at, c.created_at), c.id) < (${cursor.at}::timestamptz, ${cursor.id})` : sql``}
+      ${scope}
     ORDER BY coalesce(c.last_message_at, c.created_at) DESC, c.id DESC
-    LIMIT ${CONVERSATION_PAGE_SIZE + 1}
+    LIMIT ${limit}
     ) page
     -- after the LIMIT, so only the page's rows look; a card further back than the recent
     -- messages isn't worth walking a long text-only history for
@@ -150,8 +144,11 @@ export async function listConversations(
     ) ctx ON true
     ORDER BY page.active_at::timestamptz DESC, page.id DESC
   `);
+  return result.rows;
+}
 
-  const page = result.rows.slice(0, CONVERSATION_PAGE_SIZE);
+async function toConversationRows(me: string, page: ConversationListRow[]) {
+  const now = new Date();
   const contexts = page.map((row) => parseCard(row.context_card));
   const [partners, { view, collections }] = await Promise.all([
     fetchPartners(page.map((row) => row.partner_id)),
@@ -188,16 +185,50 @@ export async function listConversations(
       },
     ];
   });
+  return { items, collections };
+}
+
+export async function listConversations(
+  me: string,
+  { box, cursor, q }: z.infer<typeof listConversationsInputSchema>,
+) {
+  const patterns = q === undefined ? null : searchPatterns(q);
+  const rows = await selectConversationRows(
+    me,
+    sql`AND ${visibleIn(box, me)}
+      ${patterns ? matchesSearch(me, patterns) : sql``}
+      ${cursor ? sql`AND (coalesce(c.last_message_at, c.created_at), c.id) < (${cursor.at}::timestamptz, ${cursor.id})` : sql``}`,
+    CONVERSATION_PAGE_SIZE + 1,
+  );
+  const page = rows.slice(0, CONVERSATION_PAGE_SIZE);
+  const { items, collections } = await toConversationRows(me, page);
 
   const lastRow = page.at(-1);
   return {
     items,
     collections,
     nextCursor:
-      result.rows.length > CONVERSATION_PAGE_SIZE && lastRow
+      rows.length > CONVERSATION_PAGE_SIZE && lastRow
         ? { at: lastRow.active_at, id: lastRow.id }
         : null,
   };
+}
+
+/**
+ * The row the list shows the viewer for one conversation, in whichever box it sits; null
+ * when none of their boxes lists it. `collections` draws its context card.
+ */
+export async function loadConversationRow(me: string, id: number) {
+  const [row] = await selectConversationRows(
+    me,
+    sql`AND c.id = ${id}
+      AND (${visibleIn("inbox", me)} OR ${visibleIn("requests", me)} OR ${visibleIn("archived", me)})`,
+    1,
+  );
+  if (!row) return null;
+  const { items, collections } = await toConversationRows(me, [row]);
+  const item = items[0];
+  return item ? { row: item, collections } : null;
 }
 
 /**

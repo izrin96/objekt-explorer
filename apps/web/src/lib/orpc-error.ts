@@ -12,3 +12,6 @@ export function errorReason(error: unknown) {
     retryAt: typeof data?.retryAt === "string" ? data.retryAt : null,
   };
 }
+
+export const isUnauthorized = (error: unknown) =>
+  error instanceof ORPCError && error.code === "UNAUTHORIZED";

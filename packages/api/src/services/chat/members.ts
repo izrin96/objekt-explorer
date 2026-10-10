@@ -86,7 +86,8 @@ export async function appendMessage(
         : { type: "incoming", opensWithContent };
     await writeMember(tx, conversationId, userId, nextMemberState(state, event, now));
   }
-  return inserted;
+  // read under the row lock, so it is the message this one follows
+  return { ...inserted, previousMessageId: locked?.lastMessageId ?? null };
 }
 
 /** The conversation's two ids when `userId` is one of them; NOT_FOUND otherwise. */

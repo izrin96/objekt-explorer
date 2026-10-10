@@ -3,6 +3,7 @@ import type { ServerWebSocket } from "bun";
 
 import { websocketHandlers as activityHandlers } from "./activity";
 import { serverEnv } from "./env";
+import { publishUser } from "./realtime";
 import {
   NOTIFY_PREFIX,
   notifyChannel,
@@ -56,12 +57,20 @@ function relay(message: string, channel: string) {
   }
 }
 
-/** Tells the user's open tabs to refetch, through Valkey so a socket in any process hears it. */
-export async function publishNotify(
+/** Valkey only: what tabs opened before the real-time server listen to. */
+export async function publishLegacyNotify(
   userId: string,
   message: UserSocketMessage = { type: "notifications_changed" },
 ) {
   await redis.publish(notifyChannel(userId), JSON.stringify(message)).catch(logError("publish"));
+}
+
+/** Tells the user's open tabs to refetch: on the real-time server, and on Valkey for older tabs. */
+export async function publishNotify(
+  userId: string,
+  message: UserSocketMessage = { type: "notifications_changed" },
+) {
+  await Promise.all([publishLegacyNotify(userId, message), publishUser(userId, message)]);
 }
 
 /** Closes the user's open sockets in every process, after their sessions were deleted. */

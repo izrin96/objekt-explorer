@@ -9,6 +9,9 @@ export default defineConfig(({ command }) => {
   return {
     server: {
       port: 3200,
+      proxy: {
+        "/connection": { target: "http://localhost:8000", ws: true },
+      },
     },
     build: {
       chunkSizeWarningLimit: 1600,

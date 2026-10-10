@@ -4,6 +4,7 @@ import { notification, report, userSanction } from "@repo/db/schema";
 import { and, eq, sql } from "drizzle-orm";
 
 import { sanctionEnd } from "../lib/sanctions";
+import { disconnectUser } from "../realtime";
 import {
   type ActInput,
   isStaffRole,
@@ -96,8 +97,9 @@ export async function applyModAction(me: string, isAdmin: boolean, input: ActInp
   if (input.action === "trade_block" || input.action === "ban") {
     await bumpSafetyVersions([input.userId]);
   }
-  if (input.action === "ban") await publishSessionRevoked(input.userId);
-  else if (input.action !== "dismiss") await publishNotify(input.userId);
+  if (input.action === "ban") {
+    await Promise.all([publishSessionRevoked(input.userId), disconnectUser(input.userId)]);
+  } else if (input.action !== "dismiss") await publishNotify(input.userId);
   if (result.cancelled) await publishCancelled(result.cancelled);
   return { sanctionId: result.sanctionId, resolvedReports: result.resolvedReports };
 }

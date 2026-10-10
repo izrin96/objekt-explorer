@@ -1,11 +1,19 @@
-import type { ChatBox, ConversationCursor } from "@repo/api/schemas/chat";
+import { CHAT_BOXES, type ChatBox, type ConversationCursor } from "@repo/api/schemas/chat";
 import { OFFER_VIEWS_LIMIT } from "@repo/api/schemas/offer";
-import type { QueryClient } from "@tanstack/react-query";
+import { hashKey, type QueryClient } from "@tanstack/react-query";
 
 import { client, orpc } from "@/lib/orpc";
 import { isNotFound } from "@/lib/orpc-error";
 import { pollUnlessLive } from "@/stores/user-socket";
 
+import {
+  appendLiveMessage,
+  boxOf,
+  type ChatMessageEvent,
+  type ConversationsData,
+  dropConversation,
+  placeConversation,
+} from "./live-message";
 import {
   appendToThread,
   liveOfferIds,
@@ -60,6 +68,45 @@ const chatListKeys = [
 
 export function invalidateChatLists(queryClient: QueryClient) {
   return Promise.all(chatListKeys.map((queryKey) => queryClient.invalidateQueries({ queryKey })));
+}
+
+const unfilteredLists = new Set(
+  CHAT_BOXES.map((box) => hashKey(conversationsOptions(box).queryKey)),
+);
+
+/**
+ * A message arrived with its content: it joins the cached thread (which reads again if it
+ * missed one before this), its row heads the box it
+ * belongs in, and the badges take the server's counts, so nothing is requested. A searched
+ * list cannot be patched (it matches by name and card), so it reads again if it is open.
+ */
+export function applyChatMessage(queryClient: QueryClient, event: ChatMessageEvent) {
+  const held = queryClient.getQueryData<ThreadData>(threadOptions(event.conversationId).queryKey);
+  const live = held ? appendLiveMessage(held, event) : null;
+  if (live?.kind === "appended") {
+    queryClient.setQueryData<ThreadData>(
+      threadOptions(event.conversationId).queryKey,
+      withUnsent(event.conversationId, live.data),
+    );
+  } else if (live?.kind === "gap") {
+    // the missed message and this one come back together
+    void fetchNewer(queryClient, event.conversationId);
+  }
+  const home = boxOf(event.conversation);
+  for (const box of CHAT_BOXES) {
+    queryClient.setQueryData<ConversationsData>(conversationsOptions(box).queryKey, (old) => {
+      if (!old) return old;
+      return box === home
+        ? placeConversation(old, event.conversation, event.collections)
+        : dropConversation(old, event.conversationId);
+    });
+  }
+  queryClient.setQueryData(orpc.chat.unreadCount.queryKey(), event.unread);
+  queryClient.setQueryData(orpc.chat.requestCount.queryKey(), event.requests);
+  void queryClient.invalidateQueries({
+    queryKey: orpc.chat.list.key(),
+    predicate: (query) => !unfilteredLists.has(hashKey(query.queryKey)),
+  });
 }
 
 /**

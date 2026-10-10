@@ -11,9 +11,10 @@ import {
   TYPING_GUARD_MS,
   UNSEND_WINDOW_MINUTES,
 } from "../../schemas/chat";
-import { publishNotify } from "../../user-socket";
+import { publishLegacyNotify, publishNotify } from "../../user-socket";
 import { redis } from "../redis";
 import { hydrateCards, resolveCard, toChatMessages } from "./cards";
+import { publishChatMessage } from "./live";
 import { appendMessage, findMembership } from "./members";
 import { publishChatChanged } from "./notify";
 import { checkMessageRate } from "./rate";
@@ -80,13 +81,19 @@ export async function sendMessage(me: string, input: z.infer<typeof sendInputSch
     await release();
     throw error;
   });
-  await publishChatChanged([me, partnerId], input.conversationId);
-
-  const { messages, collections } = await toChatMessages(
-    [{ ...sent, senderId: me, body, caution }],
-    me,
+  const row = { ...sent, senderId: me, body, caution };
+  const own = await toChatMessages([row], me);
+  // tabs open before the real-time server hear the nudge on Valkey; the rest get the message
+  // itself, not awaited so a slow real-time server never slows the send (it logs its own failures)
+  void publishChatMessage(input.conversationId, sent.previousMessageId, row, [me, partnerId], {
+    [me]: own,
+  });
+  await Promise.all(
+    [me, partnerId].map((userId) =>
+      publishLegacyNotify(userId, { type: "chat_changed", conversationId: input.conversationId }),
+    ),
   );
-  return { message: messages[0]!, collections };
+  return { message: own.messages[0]!, collections: own.collections };
 }
 
 /** Tells the partner the caller is typing, when both show activity and the caller may send. */

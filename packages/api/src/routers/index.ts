@@ -21,6 +21,7 @@ import { objektsRouter } from "./objekts";
 import { offerRouter } from "./offer";
 import { pinsRouter } from "./pins";
 import { profileRouter } from "./profile";
+import { realtimeRouter } from "./realtime";
 import { statusRouter } from "./status";
 import { tradeRouter } from "./trade";
 import { transfersRouter } from "./transfers";
@@ -47,6 +48,7 @@ export const router = {
   chat: chatRouter,
   moderation: moderationRouter,
   offer: offerRouter,
+  realtime: realtimeRouter,
 };
 
 /** What `/api/v1` serves and documents; everything else stays RPC-only. */

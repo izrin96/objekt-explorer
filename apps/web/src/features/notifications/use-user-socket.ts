@@ -1,9 +1,11 @@
-import { userSocketMessageSchema } from "@repo/api/schemas/notification";
+import { SESSION_REVOKED_CODE, realtimeEventSchema } from "@repo/api/schemas/realtime";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
+import { disconnectedCodes } from "centrifuge";
 import { useEffect } from "react";
 
 import {
+  applyChatMessage,
   applyUnsent,
   fetchNewer,
   fetchNewerEverywhere,
@@ -12,108 +14,93 @@ import {
 } from "@/features/chat/queries";
 import { invalidateOfferLists } from "@/features/offers/queries";
 import { currentUserOptions } from "@/features/user/queries";
-import { clientEnv } from "@/lib/env/client";
+import { acquireRealtime, realtime } from "@/lib/realtime";
 import { showTyping } from "@/stores/chat-typing";
 import { useUserSocketLive } from "@/stores/user-socket";
 
 import { notificationKeys } from "./queries";
 
-/** `SESSION_REVOKED_CLOSE_CODE` in `@repo/api/user-socket`, a server-only module */
-const SESSION_REVOKED = 4001;
-const RECONNECT_BASE = 1000;
-const RECONNECT_MAX = 30_000;
-
-function socketUrl(): string {
-  const configured = clientEnv.VITE_USER_WEBSOCKET_URL;
-  if (configured) return configured;
-  return `${location.protocol === "https:" ? "wss:" : "ws:"}//${location.host}/ws/me`;
-}
-
 /**
- * The per-user nudge channel: it only says "refetch", so every open also refetches
- * whatever changed while it was down. `useUserSocketLive` says whether it is open.
+ * The per-user channel on the tab's one connection. Events carry what changed, a chat message
+ * its content, so a tab refetches only when it cannot be sure it heard everything: on its first
+ * connect, or after a drop longer than the server keeps events. `useUserSocketLive` says
+ * whether it is subscribed.
  */
 export function useUserSocket() {
   const queryClient = useQueryClient();
   const router = useRouter();
 
   useEffect(() => {
-    const url = socketUrl();
+    const connection = realtime();
     const refetchNotifications = () => {
       for (const queryKey of notificationKeys) void queryClient.invalidateQueries({ queryKey });
     };
-
-    let socket: WebSocket | undefined;
-    let retry: ReturnType<typeof setTimeout> | undefined;
-    let attempt = 0;
-    let disposed = false;
-
-    const connect = () => {
-      socket = new WebSocket(url);
-
-      socket.addEventListener("open", () => {
-        attempt = 0;
-        useUserSocketLive.setState({ live: true });
-        refetchNotifications();
-        void invalidateChatLists(queryClient);
-        void invalidateOfferLists(queryClient);
-        void fetchNewerEverywhere(queryClient);
-        void syncUnsentEverywhere(queryClient);
-      });
-
-      socket.addEventListener("message", (event: MessageEvent<string>) => {
-        let parsed: unknown;
-        try {
-          parsed = JSON.parse(event.data);
-        } catch {
-          return;
-        }
-        const message = userSocketMessageSchema.safeParse(parsed);
-        if (!message.success) return;
-        switch (message.data.type) {
-          case "notifications_changed":
-            refetchNotifications();
-            // a moderator's mute arrives only as a notification; open threads swap the
-            // message box for the mute notice from the conversation state this returns
-            void fetchNewerEverywhere(queryClient);
-            break;
-          case "chat_changed":
-            void invalidateChatLists(queryClient);
-            void invalidateOfferLists(queryClient);
-            void fetchNewer(queryClient, message.data.conversationId);
-            break;
-          case "chat_typing":
-            showTyping(message.data.conversationId);
-            break;
-          case "chat_unsent":
-            applyUnsent(queryClient, message.data.conversationId, message.data.messageId);
-            void invalidateChatLists(queryClient);
-            break;
-        }
-      });
-
-      socket.addEventListener("close", (event) => {
-        if (disposed) return;
-        useUserSocketLive.setState({ live: false });
-        // a ban ended every session: a retry would only be refused, so the tab signs out instead
-        if (event.code === SESSION_REVOKED) {
-          void queryClient
-            .invalidateQueries({ queryKey: currentUserOptions.queryKey })
-            .then(() => router.invalidate());
-          return;
-        }
-        const delay = Math.min(RECONNECT_BASE * 2 ** attempt, RECONNECT_MAX);
-        attempt += 1;
-        retry = setTimeout(connect, delay);
-      });
+    const refetchAll = () => {
+      refetchNotifications();
+      void invalidateChatLists(queryClient);
+      void invalidateOfferLists(queryClient);
+      void fetchNewerEverywhere(queryClient);
+      void syncUnsentEverywhere(queryClient);
     };
 
-    connect();
+    const onSubscribed = (ctx: { wasRecovering: boolean; recovered: boolean }) => {
+      useUserSocketLive.setState({ live: true });
+      // a gap the server replayed arrives as publications; anything else may have missed events
+      if (!(ctx.wasRecovering && ctx.recovered)) refetchAll();
+    };
+
+    const onPublication = (ctx: { data: unknown }) => {
+      const event = realtimeEventSchema.safeParse(ctx.data);
+      if (!event.success) return;
+      switch (event.data.type) {
+        case "notifications_changed":
+          refetchNotifications();
+          // a moderator's mute arrives only as a notification; open threads swap the
+          // message box for the mute notice from the conversation state this returns
+          void fetchNewerEverywhere(queryClient);
+          break;
+        case "chat_message":
+          applyChatMessage(queryClient, event.data);
+          break;
+        case "chat_changed":
+          void invalidateChatLists(queryClient);
+          void invalidateOfferLists(queryClient);
+          void fetchNewer(queryClient, event.data.conversationId);
+          break;
+        case "chat_typing":
+          showTyping(event.data.conversationId);
+          break;
+        case "chat_unsent":
+          applyUnsent(queryClient, event.data.conversationId, event.data.messageId);
+          void invalidateChatLists(queryClient);
+          break;
+      }
+    };
+
+    const onDown = () => useUserSocketLive.setState({ live: false });
+
+    const onDisconnected = (ctx: { code: number }) => {
+      onDown();
+      // a ban, or a refused renewal, ended every session: a retry would only be refused, so
+      // the tab signs out instead
+      if (ctx.code !== SESSION_REVOKED_CODE && ctx.code !== disconnectedCodes.unauthorized) return;
+      void queryClient
+        .invalidateQueries({ queryKey: currentUserOptions.queryKey })
+        .then(() => router.invalidate());
+    };
+
+    connection.on("subscribed", onSubscribed);
+    connection.on("publication", onPublication);
+    connection.on("connecting", onDown);
+    connection.on("disconnected", onDisconnected);
+    const release = acquireRealtime({ signedIn: true });
 
     return () => {
-      disposed = true;
-      clearTimeout(retry);
-      socket?.close();
+      connection.removeListener("subscribed", onSubscribed);
+      connection.removeListener("publication", onPublication);
+      connection.removeListener("connecting", onDown);
+      connection.removeListener("disconnected", onDisconnected);
+      release();
       useUserSocketLive.setState({ live: false });
     };
   }, [queryClient, router]);

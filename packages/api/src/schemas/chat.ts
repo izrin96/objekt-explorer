@@ -187,7 +187,7 @@ const cardViewSchema = z.object({
 });
 export type CardView = z.infer<typeof cardViewSchema>;
 
-const chatMessageSchema = z.object({
+export const chatMessageSchema = z.object({
   id: z.number(),
   mine: z.boolean(),
   body: z.string().nullable(),
@@ -218,7 +218,7 @@ export function unsentMessage(message: Pick<ChatMessage, "id" | "mine" | "create
 /** `until` is null for "always". */
 const muteStateSchema = z.object({ until: z.string().nullable() }).nullable();
 
-const conversationRowSchema = z.object({
+export const conversationRowSchema = z.object({
   id: z.number(),
   partner: chatPartnerSchema,
   last: z
