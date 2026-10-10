@@ -1,6 +1,6 @@
 import type { GridObjekt } from "@repo/lib/types/objekt";
-import { useNavigate, useRouter, useSearch } from "@tanstack/react-router";
-import { useCallback, useRef } from "react";
+import { useNavigate, useSearch } from "@tanstack/react-router";
+import { useCallback } from "react";
 
 import { type ObjektSearch, tokenIdOf } from "./search-schema";
 
@@ -26,7 +26,6 @@ export function useObjektLink<T extends GridObjekt>(
   ready: boolean,
 ) {
   const navigate = useNavigate();
-  const router = useRouter();
   const { slug, id, serial } = useSearch({
     strict: false,
     structuralSharing: true,
@@ -35,10 +34,6 @@ export function useObjektLink<T extends GridObjekt>(
       return { slug: link.slug, id: link.id, serial: link.serial };
     },
   });
-  // the location a pending `back()` leaves, so a second close before the
-  // popstate lands does not step back off the page
-  const leaving = useRef<unknown>(null);
-
   const linked = slug !== undefined || id !== undefined;
   const active = linked && ready ? resolveLink(sources, { slug, id }) : null;
 
@@ -46,13 +41,13 @@ export function useObjektLink<T extends GridObjekt>(
     (objekt: T) => {
       const token = tokenIdOf(objekt);
       void navigate({
+        replace: true,
         search: ((prev: ObjektSearch) => ({
           ...prev,
           slug: token === undefined ? objekt.slug : undefined,
           id: token,
           serial: undefined,
         })) as never,
-        state: { objektDrawer: true },
         resetScroll: false,
       });
     },
@@ -60,24 +55,15 @@ export function useObjektLink<T extends GridObjekt>(
   );
 
   const close = useCallback(() => {
-    const location = router.latestLocation;
-    if (leaving.current === location) return;
-    // back over the entry opening pushed, so Back cannot reopen the drawer
-    if (location.state.objektDrawer === true) {
-      leaving.current = location;
-      router.history.back();
-      return;
-    }
     void navigate({
       replace: true,
       resetScroll: false,
       search: (({ slug: _slug, id: _id, serial: _serial, ...rest }: ObjektSearch) => rest) as never,
     });
-  }, [navigate, router]);
+  }, [navigate]);
 
   // replace: a serial is a view of the drawer, not a place to go back to;
-  // `undefined` drops it when the serials tab is left;
-  // `state: true` keeps the flag `close` reads
+  // `undefined` drops it when the serials tab is left
   const changeSerial = useCallback(
     (value: number | undefined) => {
       // an emptied serial field reports 0
@@ -85,7 +71,6 @@ export function useObjektLink<T extends GridObjekt>(
       void navigate({
         replace: true,
         resetScroll: false,
-        state: true,
         search: ((prev: ObjektSearch) => ({ ...prev, serial: value })) as never,
       });
     },
