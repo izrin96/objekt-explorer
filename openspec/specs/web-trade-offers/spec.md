@@ -98,7 +98,7 @@ Each pickable objekt SHALL show its flags (not transferable, reserved, in anothe
 
 Each picker SHALL narrow by member, season and class, and SHALL load more as it scrolls, 200 objekts at a time, so a long list does not land at once. Each SHALL also offer a matching switch:
 - You give: "Only what they want", off by default, keeps collections on the partner's discoverable want lists.
-- You get: "Only what I want", on by default when the sender keeps a want list, keeps collections on the sender's want lists.
+- You get: "Only what I want", off by default, keeps collections on the sender's want lists.
 
 An empty You get picker SHALL say why: the partner lists nothing the sender may ask for; nothing matches the filters; or the partner no longer holds anything they listed. The first reason SHALL win over the filters.
 
@@ -109,6 +109,10 @@ An empty You get picker SHALL say why: the partner lists nothing the sender may 
 #### Scenario: Phone width
 - **WHEN** the builder is open at 390 px
 - **THEN** the two sides stack vertically, and the page doesn't scroll sideways
+
+#### Scenario: Switches start off
+- **WHEN** a sender with a want list opens the builder
+- **THEN** both "Only what they want" and "Only what I want" are off, and You get's picker lists every entry the sender may ask for
 
 ### Requirement: Hidden serials stay hidden in offers
 When an entry on the recipient's list comes from a list that hides serial numbers, the offer builder's You get picker SHALL offer it only as "any copy" of its collection. Neither that entry nor the recipient's other copies of the collection SHALL be shown or pickable by serial through that entry.
@@ -199,3 +203,22 @@ Sending an offer SHALL count toward the chat message limit. A first offer to som
 #### Scenario: Too many open offers
 - **WHEN** a user with 20 open sent offers sends another
 - **THEN** it is refused with "You have too many open offers. Withdraw one first."
+
+### Requirement: Objekt data in monospace
+On Trade pages, in offer cards in chat and in the offer builder, objekt data SHALL be set in the monospace font with tabular figures:
+- O and T numbers;
+- serials, with any "~" estimate mark;
+- the "n/m" share of verified transfers;
+- top-up amounts;
+- the numbers in a reputation line (see `web-verified-trades`);
+- counts shown as numbers beside a label, such as a section's "(N)".
+
+Names of people, lists, collections and members, and sentences around these values, SHALL stay in the body font.
+
+#### Scenario: My trades row
+- **WHEN** the user sees an in-progress trade row with one of two transfers verified
+- **THEN** "T-1042" and "1/2" are monospace, and the partner's name and the summary are not
+
+#### Scenario: Reputation line
+- **WHEN** a reputation line reads "31 verified · 100% · since Mar 2025"
+- **THEN** "31" and "100%" are monospace and the words are not
