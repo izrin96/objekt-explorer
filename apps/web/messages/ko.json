@@ -778,6 +778,7 @@
   "progress_best_member": "최고 진행 멤버",
   "progress_closest_title": "완성에 가장 가까움",
   "progress_to_go": "{#b}{count}{/b} 남음",
+  "progress_closest_empty": "이 필터에서 진행 중인 멤버가 없어요.",
   "progress_empty_title": "측정할 항목 없음",
   "progress_empty_hint": "현재 필터에서 범위에 드는 컬렉션이 없어 표시할 달성도가 없습니다.",
   "progress_class_complete": "{class} 완성.",

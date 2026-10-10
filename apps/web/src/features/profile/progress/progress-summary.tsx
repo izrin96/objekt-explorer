@@ -15,7 +15,7 @@ function Panel({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
-/** the overall meter beside the three members closest to complete */
+/** the overall meter beside the three started members closest to complete */
 export function ProgressSummary({
   totals,
   best,
@@ -61,6 +61,9 @@ export function ProgressSummary({
         )}
       </Panel>
       <Panel title={m.progress_closest_title()}>
+        {closest.length === 0 && (
+          <p className="text-muted-foreground text-sm">{m.progress_closest_empty()}</p>
+        )}
         <ul className="flex flex-col gap-0.5">
           {closest.map((row) => (
             <li key={row.member}>

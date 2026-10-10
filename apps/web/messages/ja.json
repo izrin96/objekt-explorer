@@ -778,6 +778,7 @@
   "progress_best_member": "達成率トップ",
   "progress_closest_title": "コンプリート間近",
   "progress_to_go": "残り{#b}{count}{/b}",
+  "progress_closest_empty": "このフィルターで進行中のメンバーはいません。",
   "progress_empty_title": "集計対象がありません",
   "progress_empty_hint": "現在のフィルターでは対象のコレクションがないため、達成状況を表示できません。",
   "progress_class_complete": "{class}コンプリート！",
