@@ -52,7 +52,12 @@ export function useProgressStats(
   // a bar, but it is neither the best nor the closest to done
   const measured = rows.filter((row) => row.total > 0);
   const best = measured.toSorted((a, b) => b.pct - a.pct || b.total - a.total)[0];
-  const closest = measured.toSorted((a, b) => a.total - a.owned - (b.total - b.owned)).slice(0, 3);
+  // ranked by share, not copies to go, so a member with a small catalogue the
+  // profile never started on cannot top the list
+  const closest = measured
+    .filter((row) => row.owned > 0 && row.owned < row.total)
+    .toSorted((a, b) => b.pct - a.pct || a.total - a.owned - (b.total - b.owned))
+    .slice(0, 3);
 
   return { ownedBySlug, rows, sections, totals, measured, best, closest };
 }

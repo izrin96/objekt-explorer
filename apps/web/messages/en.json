@@ -845,6 +845,7 @@
   "progress_best_member": "Best member",
   "progress_closest_title": "Closest to complete",
   "progress_to_go": "{#b}{count}{/b} to go",
+  "progress_closest_empty": "No member in progress under these filters.",
   "progress_empty_title": "Nothing to measure",
   "progress_empty_hint": "No collection is in scope under the current filters, so there is no completion to show.",
   "progress_class_complete": "{class} complete.",
