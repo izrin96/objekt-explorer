@@ -20,7 +20,6 @@ export type OwnedByFilters = z.infer<typeof ownedByFiltersSchema>;
 export const ownedByOutputSchema = z.object({
   nextCursor: receivedAtCursorSchema.optional(),
   objekts: z.array(ownedObjektSchema),
-  total: z.number().optional(),
 });
 export type OwnedByOutput = z.infer<typeof ownedByOutputSchema>;
 
