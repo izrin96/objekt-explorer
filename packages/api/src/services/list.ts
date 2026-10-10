@@ -221,6 +221,7 @@ export async function fetchList(
     hideSerial: result.hideSerial,
     gridColumns: result.gridColumns,
     discoverable: result.discoverable,
+    matchSale: result.matchSale,
     bumpedAt: result.bumpedAt,
     user: result.user ? toPublicUser(result.user) : null,
     profile: result.userAddress ? toPartialProfile(result.userAddress) : null,
@@ -267,6 +268,7 @@ export async function fetchOwnedLists(
       profileAddress: true,
       currency: true,
       discoverable: true,
+      matchSale: true,
       bumpedAt: true,
     },
     where: {

@@ -55,6 +55,7 @@ const baseListSchema = z.object({
   gridColumns: z.number().nullish(),
   description: z.string().nullish(),
   discoverable: z.boolean().nullish(),
+  matchSale: z.boolean().nullish(),
   bumpedAt: z.string().nullish(),
   user: publicUserSchema.nullish(),
   profile: publicProfileSchema.nullish(),

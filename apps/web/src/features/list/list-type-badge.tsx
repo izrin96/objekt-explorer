@@ -39,3 +39,9 @@ export function ListTypeBadge({
     </Badge>
   );
 }
+
+/** A want list's Open to setting; null for other lists, or a response without it. */
+export function openToLabel(list: { listTypeNew: ListTypeNew; matchSale?: boolean | null }) {
+  if (list.listTypeNew !== "want" || list.matchSale == null) return null;
+  return list.matchSale ? m.list_create_match_sales_label() : m.list_create_match_trades_label();
+}

@@ -27,7 +27,7 @@ import { m } from "@/paraglide/messages";
 import { DeleteListDialog } from "./delete-list-dialog";
 import { EditListDialog } from "./edit-list-dialog";
 import { getListLinkOption } from "./list-link";
-import { ListTypeBadge } from "./list-type-badge";
+import { ListTypeBadge, openToLabel } from "./list-type-badge";
 import { useCopyListLink } from "./share-list-button";
 import { useIsListOwner } from "./use-list-owned";
 
@@ -53,6 +53,7 @@ export function ListCard({
   const copyLink = useCopyListLink(list);
   const linked = list.linkedList;
   const chipAddress = showProfile ? list.profileAddress : null;
+  const openTo = openToLabel(list);
 
   return (
     <div className={previewCardClass}>
@@ -75,6 +76,7 @@ export function ListCard({
               </Badge>
             ) : null}
             <ObjektPreviewCount preview={preview} />
+            {openTo ? <span>· {openTo}</span> : null}
             {list.listTypeNew === "sale" && list.currency ? (
               <span className="font-mono">· {list.currency}</span>
             ) : null}

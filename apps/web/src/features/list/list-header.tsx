@@ -34,7 +34,7 @@ import { EditListDialog } from "./edit-list-dialog";
 import { ExportListDialog } from "./export-list-dialog";
 import { getListLinkOption } from "./list-link";
 import { useListTarget } from "./list-provider";
-import { ListTypeBadge } from "./list-type-badge";
+import { ListTypeBadge, openToLabel } from "./list-type-badge";
 import { ShareListButton } from "./share-list-button";
 import { useListOwned } from "./use-list-owned";
 
@@ -58,6 +58,7 @@ export function ListHeader() {
     have: sides.haveListIds.length > 0,
     want: sides.wantListIds.length > 0,
   });
+  const openTo = openToLabel(list);
   const swappable = (list.listTypeNew === "have" || list.listTypeNew === "want") && linked;
 
   return (
@@ -77,6 +78,7 @@ export function ListHeader() {
               </Badge>
             ) : null}
             {list.listTypeNew !== "general" ? <ListTypeBadge type={list.listTypeNew} /> : null}
+            {openTo ? <span className="text-muted-foreground text-xs">{openTo}</span> : null}
             {list.discoverable && canBeOnTrade(list.listTypeNew, list.isProfileBind) ? (
               <Badge variant="outline" size="sm" render={<Link to="/trade" />}>
                 <ArrowsLeftRightIcon aria-hidden />
