@@ -39,7 +39,7 @@ An API client building a per-collection view of a collector needs three details 
 ## Impact
 
 - **`packages/api`**:
-  - `services/owned.ts`: `countHeld` aggregates `min(serial)` and `min(received_at)` and looks up the lowest-serial token; the Redis key moves to a new version so cached rows without the fields are not served.
+  - `services/owned.ts`: `countHeld` aggregates `min(serial)` and `min(received_at)` and looks up the lowest-serial token; only COSMO Spin's result stays cached, under a new Redis key version so cached rows without the fields are not served; other owners are no longer cached.
   - `schemas/common/objekt.ts`: `heldObjektSchema` gains the three fields.
   - `schemas/transfers.ts`: `order` on the filters schema, defaulting to `desc`.
   - `services/transfers.ts`: direction-aware cursor comparison, `ORDER BY` and merge of the from/to result sets.
