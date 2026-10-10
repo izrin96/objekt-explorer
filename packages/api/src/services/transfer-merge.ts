@@ -1,4 +1,6 @@
-export type TransferOrder = "desc" | "asc";
+import type { AddressTransfersFilters } from "../schemas/transfers";
+
+type TransferOrder = AddressTransfersFilters["order"];
 
 /** Merge two arrays sorted by (timestamp, id) in `order`, deduplicate, return the first `limit` */
 export function mergeSortedTransfers<T extends { transfer: { id: string; timestamp: string } }>(

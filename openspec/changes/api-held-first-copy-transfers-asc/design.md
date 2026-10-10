@@ -1,9 +1,9 @@
 ## Context
 
-`fetchHeldObjekts` (`packages/api/src/services/owned.ts`) serves held-by from a five-minute
-Redis entry per owner, `held-by:${addr}`, built by `countHeld`: a CTE groups the owner's
-`objekt` rows by `collection_id` with `count()`, then joins `collection`. It exists for
-owners too large to list token by token. COSMO Spin holds millions of copies across every
+`fetchHeldObjekts` (`packages/api/src/services/owned.ts`) builds held-by with `countHeld`: a
+CTE groups the owner's `objekt` rows by `collection_id` with `count()`, then joins
+`collection`. It exists for owners too large to list token by token. Only COSMO Spin's
+result is cached, in a five-minute Redis entry; every other owner runs the query per request. COSMO Spin holds millions of copies across every
 collection, so whatever is added must stay a single grouped pass.
 
 `fetchAddressTransfers` (`services/transfers.ts`) pages 150 rows by a `(timestamp, id)`
@@ -27,7 +27,7 @@ then loads the rows. Indexes `idx_transfer_from_ts_id` and `idx_transfer_to_ts_i
 **Aggregate in the existing group, then look up one token per collection.**
 The `held` CTE adds `min(serial) as min_serial` and `min(received_at) as first_received_at`
 to its `count()`. They ride the same hash aggregate, so the scan is unchanged. The token ID
-comes from a `LEFT JOIN LATERAL (SELECT id FROM objekt WHERE collection_id = held.collection_id
+comes from a `JOIN LATERAL (SELECT id FROM objekt WHERE collection_id = held.collection_id
 AND serial = held.min_serial AND owner = addr ORDER BY id LIMIT 1)`, one probe of
 `idx_objekt_collection_serial` per collection. `(collection_id, serial)` has no unique
 constraint, so the `ORDER BY id LIMIT 1` makes a duplicate deterministic.
@@ -39,9 +39,11 @@ constraint, so the `ORDER BY id LIMIT 1` makes a duplicate deterministic.
 `firstReceivedAt` is normalised with `new Date(...).toISOString()`, as `mapOwnedObjekt`
 does for `receivedAt`, so every surface returns the same ISO format.
 
-**Version the cache key.** The key becomes `held-by:v2:${addr}`. Otherwise, for five
-minutes after deploy, cached rows without the new fields fail the output schema or reach
-clients without them. Old keys expire on their own.
+**Cache Spin only, and version its key.** Spin's grouped pass takes seconds over millions of
+rows, so it keeps the cache; the key becomes `held-by:v2:${addr}` so that, for five minutes
+after deploy, cached rows without the new fields are not served. Other owners are far smaller
+(0.4-0.7 s uncached for owners holding 6k-13k copies) and skip the cache. The artist filter
+still runs after the query.
 
 **Types.** `HeldFields` (`packages/lib/src/types/objekt.ts`) gains `minSerial: number`,
 `minSerialTokenId: string`, `firstReceivedAt: string`, and `heldObjektSchema` extends to
@@ -67,6 +69,9 @@ arrive with no change.
 
 ## Risks / Trade-offs
 
+- [Uncached held-by for non-Spin owners is a query per request, open to unauthenticated
+  callers] → About 0.5 s for large collectors, served by `idx_objekt_owner_collection_id`.
+  Add a short TTL cache if API traffic makes it hurt.
 - [Spin's held-by pass gets a lateral probe per collection] → It is one indexed lookup per
   collection, thousands in all, against a scan of millions. Compare `EXPLAIN ANALYZE` of the
   old and new statement for Spin before merging.
