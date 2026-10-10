@@ -16,7 +16,16 @@ A signed-in visitor SHALL see a bell in the frame with a dot while any notificat
 - a want-list alert: amber, the want colour; a reverse-direction alert: teal, the have colour (see `web-lists`);
 - a sanction notice: a red shield.
 
-The colour SHALL never be the only cue: the text names the event, and the icon differs by kind. The popover SHALL offer Mark all read. Activating a notification SHALL mark it read and navigate to its target. A signed-out visitor SHALL see no bell.
+The colour SHALL never be the only cue: the text names the event, and the icon differs by kind. The popover SHALL offer Mark all read.
+
+**Tabs.** Under the header, the popover SHALL offer three tabs:
+- All: every notification;
+- Trades: offer and trade notifications;
+- Want list: want-list and reverse-direction alerts.
+
+All is selected each time the popover opens. Each tab lists its own notifications newest first, 20 at a time, filtered by the server. The unread count, the bell's dot and Mark all read SHALL stay account-wide whatever tab is shown. An empty tab SHALL say it has nothing of its kind. A request for notifications that names no tab SHALL be treated as All.
+
+**Phones.** Below `sm`, the bell SHALL open the same contents as a full-screen sheet, with the title, the unread count, Mark all read and a close control in its header, then the tabs and the list. Closing it, or activating a notification, SHALL return focus to the bell or navigate to the notification's target. From `sm` up, it stays a popover. Activating a notification SHALL mark it read and navigate to its target. A signed-out visitor SHALL see no bell.
 
 #### Scenario: Unread count
 - **WHEN** a signed-in user has 12 unread notifications
@@ -49,6 +58,18 @@ The colour SHALL never be the only cue: the text names the event, and the icon d
 #### Scenario: Wrong copy declined
 - **WHEN** the receiver declines that copy
 - **THEN** the giver gets a notification leading with a neutral arrow that says it was declined, linking to the trade page
+
+#### Scenario: Trades tab
+- **WHEN** the user has a want-list alert, a countered offer and a verified transfer, and selects Trades
+- **THEN** only the countered offer and the verified transfer are listed
+
+#### Scenario: Mark all read from a tab
+- **WHEN** the user selects Want list and activates Mark all read
+- **THEN** every notification on every tab is read, and the bell shows no dot
+
+#### Scenario: Phone sheet
+- **WHEN** a signed-in user taps the bell at 390 px
+- **THEN** the notifications open full screen with All, Trades and Want list tabs, and the close control returns to the page
 
 ### Requirement: Bell links to its settings
 The bell's popover SHALL offer a Notification settings link opening `/account/notifications`.
@@ -105,7 +126,7 @@ Turning a type off SHALL stop new notifications of that type. Notifications alre
 - **THEN** no notification is created, and the trade page still shows the leg Verified
 
 ### Requirement: Want-list alerts
-For each of a user's want lists, whether or not it is on Trade, the system SHALL notify the user when an entry for a collection on that want list is newly added to another account's discoverable sale or have list bound to a Cosmo profile. It SHALL also notify when such a list becomes discoverable. The alert SHALL arrive within 10 minutes, including when entries are committed out of order. Alerts SHALL be grouped as one unread notification per want list per day. While that notification is unread, further matches SHALL update its count and the latest objekts instead of creating new ones. Its target SHALL be `/trade/for-you?list=<want-list-slug>`. A given want list, source list and collection SHALL alert at most once, even if the entry is removed and added again.
+For each of a user's want lists, whether or not it is on Trade, the system SHALL notify the user when an entry for a collection on that want list is newly added to another account's discoverable have list bound to a Cosmo profile, or to such a sale list when the want list is open to Trade or buy (see `web-lists`). It SHALL also notify when such a list becomes discoverable. The alert SHALL arrive within 10 minutes, including when entries are committed out of order. Alerts SHALL be grouped as one unread notification per want list per day. While that notification is unread, further matches SHALL update its count and the latest objekts instead of creating new ones. Its target SHALL be `/trade/for-you?list=<want-list-slug>`. A given want list, source list and collection SHALL alert at most once, even if the entry is removed and added again.
 
 No alert SHALL be created for:
 - the user's own lists;
@@ -114,7 +135,7 @@ No alert SHALL be created for:
 - a collection the user already owns a copy of.
 
 #### Scenario: New sale listing matches a want list
-- **WHEN** another account adds SeoYeon 204Z to a sale list shown on the Market, and SeoYeon 204Z is on the user's want list "Binary hunt"
+- **WHEN** another account adds SeoYeon 204Z to a sale list shown on the Market, and SeoYeon 204Z is on the user's want list "Binary hunt", which is open to Trade or buy
 - **THEN** within 10 minutes the user has an unread notification for "Binary hunt" naming that objekt and seller, linking to `/trade/for-you?list=<slug>`
 
 #### Scenario: Grouped while unread
@@ -129,12 +150,20 @@ No alert SHALL be created for:
 - **WHEN** a matching objekt is listed but the user already owns a copy of that collection
 - **THEN** no alert is created
 
+#### Scenario: Sale listing and a Trade only want list
+- **WHEN** another account adds SeoYeon 204Z to a sale list shown on the Market, and SeoYeon 204Z is on the user's want list "Binary hunt", which is open to Trade only
+- **THEN** no alert is created for that entry
+
 ### Requirement: Reverse-direction alerts
-When the user has "Someone wants what you have" turned on, the system SHALL notify them when another account adds, to a discoverable want list, a collection that is on one of the user's have or sale lists bound to a Cosmo profile. The same grouping, once-only, timing and exclusion rules as want-list alerts SHALL apply, grouped per the user's list. The target SHALL be `/trade/for-you?list=<that-list-slug>`.
+When the user has "Someone wants what you have" turned on, the system SHALL notify them when another account adds, to a discoverable want list, a collection that is on one of the user's have lists bound to a Cosmo profile, or on such a sale list when that want list is open to Trade or buy (see `web-lists`). The same grouping, once-only, timing and exclusion rules as want-list alerts SHALL apply, grouped per the user's list. The target SHALL be `/trade/for-you?list=<that-list-slug>`.
 
 #### Scenario: Off by default
 - **WHEN** a user has never changed the setting and someone wants a collection on their have list
 - **THEN** no notification is created
+
+#### Scenario: Trade only want list and the user's sale list
+- **WHEN** the user has the setting on, and another account adds to a want list open to Trade only a collection that is only on the user's sale list
+- **THEN** no alert is created
 
 ### Requirement: Retention
 Read notifications SHALL be removed 90 days after they were created. Unread notifications SHALL be kept.
