@@ -1,10 +1,8 @@
 name: Docker CI/CD
 
+# Temporarily disabled: images are built on the VPS. Restore the push and
+# pull_request triggers (branches: ["main"]) to re-enable CI.
 on:
-  push:
-    branches: ["main"]
-  pull_request:
-    branches: ["main"]
   workflow_dispatch:
     branches: ["main"]
     inputs:
