@@ -59,8 +59,8 @@ web-activity
 
 Gap between live messages (task 4.5), local stack with a second pair of test users: with the recipient's thread open, an in-order send appended with no `chat.thread` request (only the reader's own mark-read and list echo followed), and the first message of a conversation appended to an empty thread. With one message inserted in the local database and never published, the next send's event carried the real `previousMessageId`; the tab did not append it, fetched through `chat.thread`, and showed both messages in order.
 
-## 6. Removal (after the client has been live for a day; needs the user's go-ahead)
+## 6. Removal (the user chose to remove the old sockets right after the staging deploy, without the day's wait)
 
-- [ ] 6.1 Remove the `/ws` and `/ws/me` upgrades and websocket handlers from `apps/web/server.ts`, delete `apps/web/dev-websocket.ts`, the `dev:ws` script, `VITE_ACTIVITY_WEBSOCKET_URL` and `VITE_USER_WEBSOCKET_URL`; verify by grep that nothing references them; lint + typecheck + build pass for `web`
-- [ ] 6.2 Delete `packages/api/src/user-socket.ts` and `packages/api/src/activity.ts`, the Valkey publishes added beside Centrifugo in §3 (but keep the reputation cache delete in `trade-publish.ts`, which is cache invalidation, not a nudge), `notifyChannel`/`NOTIFY_PREFIX` and `userSocketMessageSchema`; verify by grep and `bun run knip` that none remain; lint + typecheck + build pass for `@repo/api`, `worker` and `web`
-- [ ] 6.3 Update `AGENTS.md` (real-time row, embedded WebSocket server wording, Docker services) and `.env.example`; verify both describe Centrifugo and no longer mention the embedded server
+- [x] 6.1 Remove the `/ws` and `/ws/me` upgrades and websocket handlers from `apps/web/server.ts`, delete `apps/web/dev-websocket.ts`, the `dev:ws` script, `VITE_ACTIVITY_WEBSOCKET_URL` and `VITE_USER_WEBSOCKET_URL`; verify by grep that nothing references them; lint + typecheck + build pass for `web`
+- [x] 6.2 Delete `packages/api/src/user-socket.ts` and `packages/api/src/activity.ts`, the Valkey publishes added beside Centrifugo in §3 (but keep the reputation cache delete in `trade-publish.ts`, which is cache invalidation, not a nudge), `notifyChannel`/`NOTIFY_PREFIX` and `userSocketMessageSchema`; verify by grep and `bun run knip` that none remain; lint + typecheck + build pass for `@repo/api`, `worker` and `web`
+- [x] 6.3 Update `AGENTS.md` (real-time row, embedded WebSocket server wording, Docker services) and `.env.example`; verify both describe Centrifugo and no longer mention the embedded server
