@@ -2,13 +2,14 @@ import { UsersIcon } from "@phosphor-icons/react";
 import type { TradeFilter } from "@repo/api/schemas/trade";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
+import { Link, useHydrated } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 
 import { EmptyState } from "@/components/shared/empty-state";
 import { Button } from "@/components/ui/button";
 import { ObjektDrawer } from "@/features/objekt/drawer";
 import { MonoMessage } from "@/features/offers/mono";
+import { useMinuteClock } from "@/hooks/use-minute-clock";
 import { addActionToast } from "@/lib/action-toast";
 import { relativeTime } from "@/lib/time";
 import { cn } from "@/lib/utils";
@@ -41,15 +42,21 @@ export function ForYouResults({
   const unhide = useUnhidePartner();
   const [active, setActive] = useState<ValidObjekt | null>(null);
   const [hiddenOpen, setHiddenOpen] = useState(false);
-  const [now] = useState(Date.now);
+  // the times are relative to the viewer's clock, so they wait for hydration
+  const hydrated = useHydrated();
+  const clock = useMinuteClock();
+  const now = hydrated ? clock : undefined;
   const loaded = query.data !== undefined;
   // rows start open unless idle; this holds the ones the user (or a link) flipped
   const [toggled, setToggled] = useState<ReadonlySet<string>>(new Set());
   const [opened, setOpened] = useState<string>();
   const target = partner ? query.data?.partners.find((item) => item.userId === partner) : undefined;
-  if (partner && target?.idle && opened !== partner) {
+  if (partner && target && opened !== partner) {
     setOpened(partner);
-    setToggled(new Set(toggled).add(partner));
+    const next = new Set(toggled);
+    if (target.idle) next.add(partner);
+    else next.delete(partner);
+    setToggled(next);
   }
   const toggle = (userId: string) => {
     const next = new Set(toggled);
@@ -122,10 +129,12 @@ export function ForYouResults({
               values={[partners.length]}
               text={([count]) => m.trade_partner_count({ count: count! })}
             />
-            <time dateTime={checkedAt} suppressHydrationWarning className="font-mono text-xs">
-              {m.trade_checked_at({
-                time: relativeTime(Math.min(Date.parse(checkedAt), now), now),
-              })}
+            <time dateTime={checkedAt} className="font-mono text-xs">
+              {now !== undefined
+                ? m.trade_checked_at({
+                    time: relativeTime(Math.min(Date.parse(checkedAt), now), now),
+                  })
+                : null}
             </time>
           </p>
           <div className="flex flex-col gap-3">

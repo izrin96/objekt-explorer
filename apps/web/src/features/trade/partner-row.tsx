@@ -51,7 +51,8 @@ export function PartnerRow({
 }: {
   id: string;
   partner: TradePartner;
-  now: number;
+  /** undefined until hydration */
+  now: number | undefined;
   collections: TradeCollections;
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -89,12 +90,13 @@ export function PartnerRow({
               <>
                 <time
                   dateTime={partner.updatedAt}
-                  suppressHydrationWarning
-                  className="text-muted-foreground block font-mono text-xs"
+                  className="text-muted-foreground block min-h-4 font-mono text-xs"
                 >
-                  {m.trade_partner_updated({
-                    time: relativeTime(Math.min(Date.parse(partner.updatedAt), now), now),
-                  })}
+                  {now !== undefined
+                    ? m.trade_partner_updated({
+                        time: relativeTime(Math.min(Date.parse(partner.updatedAt), now), now),
+                      })
+                    : null}
                 </time>
                 {also.length > 0 ? (
                   <span className="text-muted-foreground block text-xs break-words">

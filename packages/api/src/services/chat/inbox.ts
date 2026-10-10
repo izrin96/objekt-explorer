@@ -60,6 +60,9 @@ type ConversationListRow = {
   context_card: unknown;
 };
 
+/** How many of a conversation's newest messages the row's context card is looked for in. */
+const CONTEXT_SCAN = 200;
+
 /** The id of the newest message the other member sent and did not unsend: unread is measured by it. */
 const lastIncoming = (me: string) => sql`(
   SELECT max(u.id) FROM message u
@@ -92,6 +95,8 @@ export async function listConversations(
 ) {
   const now = new Date();
   const result = await db.execute<ConversationListRow>(sql`
+    SELECT page.*, ctx.card AS context_card
+    FROM (
     SELECT
       c.id,
       ${partnerOf(me)} AS partner_id,
@@ -107,23 +112,30 @@ export async function listConversations(
       msg.offer_id,
       msg.unsent_at IS NOT NULL AS unsent,
       msg.created_at::text AS created_at,
-      ${lastIncoming(me)} AS incoming_id,
-      ctx.card AS context_card
+      ${lastIncoming(me)} AS incoming_id
     FROM conversation_member m
     JOIN conversation c ON c.id = m.conversation_id
     LEFT JOIN message msg ON msg.id = c.last_message_id
-    LEFT JOIN LATERAL (
-      SELECT x.card FROM message x
-      WHERE x.conversation_id = c.id AND x.card IS NOT NULL AND x.unsent_at IS NULL
-      ORDER BY x.id DESC
-      LIMIT 1
-    ) ctx ON true
     WHERE m.user_id = ${me}
       AND ${visibleIn(box, me)}
       AND (c.last_message_id IS NOT NULL OR c.created_by = ${me})
       ${cursor ? sql`AND (coalesce(c.last_message_at, c.created_at), c.id) < (${cursor.at}::timestamptz, ${cursor.id})` : sql``}
     ORDER BY coalesce(c.last_message_at, c.created_at) DESC, c.id DESC
     LIMIT ${CONVERSATION_PAGE_SIZE + 1}
+    ) page
+    -- after the LIMIT, so only the page's rows look; a card further back than the recent
+    -- messages isn't worth walking a long text-only history for
+    LEFT JOIN LATERAL (
+      SELECT x.card FROM (
+        SELECT card, unsent_at FROM message
+        WHERE conversation_id = page.id
+        ORDER BY id DESC
+        LIMIT ${CONTEXT_SCAN}
+      ) x
+      WHERE x.card IS NOT NULL AND x.unsent_at IS NULL
+      LIMIT 1
+    ) ctx ON true
+    ORDER BY page.active_at::timestamptz DESC, page.id DESC
   `);
 
   const page = result.rows.slice(0, CONVERSATION_PAGE_SIZE);

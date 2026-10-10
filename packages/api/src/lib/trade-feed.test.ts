@@ -54,9 +54,9 @@ describe("pairPosts", () => {
     expect(posts[0]).toMatchObject({ tag: "wtt", have: spares, want: null });
   });
 
-  test("a want list alone is WTB, a sale list WTS", () => {
+  test("a want list alone that also matches sales is WTB, a sale list WTS", () => {
     const tags = pairPosts([
-      list({ id: 2, listTypeNew: "want", linkedListId: 1 }),
+      list({ id: 2, listTypeNew: "want", linkedListId: 1, matchSale: true }),
       list({ id: 3, listTypeNew: "sale" }),
     ]).map((post) => post.tag);
     expect(tags).toEqual(["wtb", "wts"]);

@@ -43,7 +43,9 @@ export function MessageItem({
   return (
     <li
       className={cn(
-        "flex max-w-[85%] flex-col gap-1",
+        // an offer card takes the thread's width on a phone; text stays at 85%
+        "flex flex-col gap-1",
+        offerCard ? "max-w-full" : "max-w-[85%]",
         mine ? "items-end self-end" : "items-start self-start",
         showTime && "mb-2",
       )}

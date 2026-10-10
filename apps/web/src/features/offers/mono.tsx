@@ -11,7 +11,7 @@ export function Mono({ className, ...props }: ComponentProps<"span">) {
   return <span className={cn("font-mono tabular-nums", className)} {...props} />;
 }
 
-const SLOT = "";
+const SLOT = "\uE000";
 
 /**
  * A message with only `values` in mono, so each locale keeps its own word order around them.
