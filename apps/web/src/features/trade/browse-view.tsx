@@ -195,28 +195,33 @@ export function BrowseView({ search }: { search: BrowseSearch }) {
           className={cn(query.isPlaceholderData && "opacity-60")}
         >
           {/* the server draws the first posts, so a full load is not blank until hydration;
-              virtua renders `ssrCount` items whether or not the data has that many */}
+              until the first scroll, virtua keeps rendering the mount's `ssrCount` items even
+              after a filter leaves fewer, so a row past the end comes in undefined */}
           <WindowVirtualizer
             data={rows}
             ssrCount={Math.min(Math.ceil(SSR_POSTS / POSTS_PER_ROW), rows.length)}
           >
-            {(row: (typeof rows)[number]) => (
-              <div key={row[0]?.id} className={ROW_GAP}>
-                <div className={ROW_GRID}>
-                  {row.map((post) => (
-                    <BrowsePost
-                      key={post.id}
-                      post={post}
-                      own={post.userId === user?.user.id}
-                      mutual={mutualIds.has(post.userId)}
-                      collections={collections}
-                      now={now}
-                      onOpen={setActive}
-                    />
-                  ))}
+            {(row: (typeof rows)[number] | undefined) =>
+              row ? (
+                <div key={row[0]?.id} className={ROW_GAP}>
+                  <div className={ROW_GRID}>
+                    {row.map((post) => (
+                      <BrowsePost
+                        key={post.id}
+                        post={post}
+                        own={post.userId === user?.user.id}
+                        mutual={mutualIds.has(post.userId)}
+                        collections={collections}
+                        now={now}
+                        onOpen={setActive}
+                      />
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              ) : (
+                <div />
+              )
+            }
           </WindowVirtualizer>
 
           {query.isFetchNextPageError ? (
