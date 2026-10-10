@@ -44,6 +44,7 @@ function parseParams(
     on_offline: params.getAll("on_offline"),
     collection: params.getAll("collection"),
     at: params.get("at") ?? undefined,
+    order: params.get("order") ?? undefined,
     cursor,
   });
 

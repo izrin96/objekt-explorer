@@ -4,11 +4,25 @@ import { collections, objekts, transfers } from "@repo/db/indexer/schema";
 import { Addresses } from "@repo/lib";
 import { mapOwnedObjekt, mapTransfer } from "@repo/lib/server/objekt";
 import { fetchPublicNicknames } from "@repo/lib/server/user";
-import { type SQL, and, arrayOverlaps, desc, eq, inArray, lt, lte, ne, or } from "drizzle-orm";
+import {
+  type SQL,
+  and,
+  arrayOverlaps,
+  asc,
+  desc,
+  eq,
+  gt,
+  inArray,
+  lt,
+  lte,
+  ne,
+  or,
+} from "drizzle-orm";
 
 import type { AddressTransfersOutput, AddressTransfersFilters } from "../schemas/transfers";
 import { getCollectionColumns } from "./objekt";
 import { isAddressHiddenFromCaller } from "./privacy";
+import { mergeSortedTransfers } from "./transfer-merge";
 
 const PER_PAGE = 150;
 
@@ -90,11 +104,14 @@ function getTypeFilters(type: AddressTransfersFilters["type"], addr: string): SQ
 
 async function fetchTransfers(query: AddressTransfersFilters, addr: string) {
   const typeFilters = getTypeFilters(query.type, addr);
+  const { order } = query;
+  const past = order === "desc" ? lt : gt;
+  const sortBy = order === "desc" ? desc : asc;
   const cursorFilter = query.cursor
     ? [
         or(
-          lt(transfers.timestamp, query.cursor.timestamp),
-          and(eq(transfers.timestamp, query.cursor.timestamp), lt(transfers.id, query.cursor.id)),
+          past(transfers.timestamp, query.cursor.timestamp),
+          and(eq(transfers.timestamp, query.cursor.timestamp), past(transfers.id, query.cursor.id)),
         ),
       ]
     : [];
@@ -127,7 +144,7 @@ async function fetchTransfers(query: AddressTransfersFilters, addr: string) {
             inArray(transfers.collectionId, collectionSubquery),
           ),
         )
-        .orderBy(desc(transfers.timestamp), desc(transfers.id))
+        .orderBy(sortBy(transfers.timestamp), sortBy(transfers.id))
         .limit(PER_PAGE + 1);
 
     let ids: { transfer: { id: string; timestamp: string } }[];
@@ -137,7 +154,7 @@ async function fetchTransfers(query: AddressTransfersFilters, addr: string) {
         getIds(eq(transfers.from, addr)),
         getIds(eq(transfers.to, addr)),
       ]);
-      ids = mergeSortedTransfers(fromIds, toIds, PER_PAGE + 1);
+      ids = mergeSortedTransfers(fromIds, toIds, PER_PAGE + 1, order);
     } else {
       ids = await getIds(...typeFilters);
     }
@@ -155,7 +172,7 @@ async function fetchTransfers(query: AddressTransfersFilters, addr: string) {
           ids.map((t) => t.transfer.id),
         ),
       )
-      .orderBy(desc(transfers.timestamp), desc(transfers.id));
+      .orderBy(sortBy(transfers.timestamp), sortBy(transfers.id));
   }
 
   // No collection filters — planner can use partial indexes directly
@@ -168,7 +185,7 @@ async function fetchTransfers(query: AddressTransfersFilters, addr: string) {
       .innerJoin(objekts, eq(transfers.objektId, objekts.id))
       .innerJoin(collections, eq(transfers.collectionId, collections.id))
       .where(and(...addressFilters, baseWhere))
-      .orderBy(desc(transfers.timestamp), desc(transfers.id))
+      .orderBy(sortBy(transfers.timestamp), sortBy(transfers.id))
       .limit(PER_PAGE + 1);
 
   if (query.type === "all") {
@@ -176,45 +193,8 @@ async function fetchTransfers(query: AddressTransfersFilters, addr: string) {
       queryFn(eq(transfers.from, addr)),
       queryFn(eq(transfers.to, addr)),
     ]);
-    return mergeSortedTransfers(fromResults, toResults, PER_PAGE + 1);
+    return mergeSortedTransfers(fromResults, toResults, PER_PAGE + 1, order);
   }
 
   return queryFn(...typeFilters);
-}
-
-/** Merge two arrays sorted by (timestamp DESC, id DESC), deduplicate, return top `limit` */
-function mergeSortedTransfers<T extends { transfer: { id: string; timestamp: string } }>(
-  a: T[],
-  b: T[],
-  limit: number,
-): T[] {
-  const result: T[] = [];
-  let i = 0;
-  let j = 0;
-
-  while (result.length < limit && (i < a.length || j < b.length)) {
-    const aVal = a[i];
-    const bVal = b[j];
-
-    let next: T;
-    if (j >= b.length) {
-      next = a[i++]!;
-    } else if (i >= a.length) {
-      next = b[j++]!;
-    } else if (
-      aVal!.transfer.timestamp > bVal!.transfer.timestamp ||
-      (aVal!.transfer.timestamp === bVal!.transfer.timestamp &&
-        aVal!.transfer.id >= bVal!.transfer.id)
-    ) {
-      next = a[i++]!;
-    } else {
-      next = b[j++]!;
-    }
-
-    if (result.at(-1)?.transfer.id !== next.transfer.id) {
-      result.push(next);
-    }
-  }
-
-  return result;
 }
