@@ -16,7 +16,6 @@ const HELP = {
       m.trade_match_help_they_have,
       m.trade_match_help_you_have,
       m.trade_match_help_mutual,
-      m.trade_match_help_trades_only,
       m.trade_match_help_show,
       m.trade_match_help_compare,
       m.trade_match_help_owned,
