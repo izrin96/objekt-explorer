@@ -13,7 +13,7 @@ import { useUserLists } from "@/features/user/hooks";
 import { m } from "@/paraglide/messages";
 
 import { ALL_LISTS, COMPARE, MATCHES, SIDE, type TradeList } from "./for-you-compare";
-import { CardsSkeleton, ForYouResults } from "./for-you-results";
+import { RowsSkeleton, ForYouResults } from "./for-you-results";
 import { MatchHelp } from "./match-help";
 import type { ForYouSearch } from "./search-schema";
 
@@ -161,7 +161,7 @@ export function ForYouPending() {
         <Skeleton className="h-8 w-32 rounded-md" />
         <Skeleton className="h-8 w-32 rounded-md" />
       </div>
-      <CardsSkeleton />
+      <RowsSkeleton />
     </>
   );
 }

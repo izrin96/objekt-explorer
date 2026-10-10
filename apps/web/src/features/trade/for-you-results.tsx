@@ -13,14 +13,13 @@ import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import { useHidePartner, useUnhidePartner } from "./actions";
-import { BrowsePostSkeleton } from "./browse-post";
 import { HiddenPartnersDialog } from "./hidden-partners-dialog";
 import { LoadError } from "./load-error";
 import { NotShown } from "./not-shown";
-import { PartnerCard, type TradePartner } from "./partner-card";
+import { PartnerRow, PartnerRowSkeleton, type TradePartner } from "./partner-row";
 import { forYouOptions } from "./queries";
 
-const partnerCardId = (userId: string) => `partner-${userId}`;
+const partnerRowId = (userId: string) => `partner-${userId}`;
 const HIGHLIGHT_MS = 2000;
 
 export function ForYouResults({
@@ -31,7 +30,7 @@ export function ForYouResults({
 }: {
   filter: TradeFilter;
   list: string | undefined;
-  /** scrolled to and highlighted once the cards are in */
+  /** scrolled to and highlighted once the rows are in */
   partner: string | undefined;
   onShowAll: () => void;
 }) {
@@ -41,17 +40,30 @@ export function ForYouResults({
   const [active, setActive] = useState<ValidObjekt | null>(null);
   const [hiddenOpen, setHiddenOpen] = useState(false);
   const loaded = query.data !== undefined;
+  // rows start open unless idle; this holds the ones the user (or a link) flipped
+  const [toggled, setToggled] = useState<ReadonlySet<string>>(new Set());
+  const [opened, setOpened] = useState<string>();
+  const target = partner ? query.data?.partners.find((item) => item.userId === partner) : undefined;
+  if (partner && target?.idle && opened !== partner) {
+    setOpened(partner);
+    setToggled(new Set(toggled).add(partner));
+  }
+  const toggle = (userId: string) => {
+    const next = new Set(toggled);
+    if (!next.delete(userId)) next.add(userId);
+    setToggled(next);
+  };
 
   useEffect(() => {
     if (!partner || !loaded) return;
-    const card = document.getElementById(partnerCardId(partner));
-    if (!card) return;
-    card.scrollIntoView({ block: "start" });
-    card.dataset.highlight = "";
-    const timer = setTimeout(() => delete card.dataset.highlight, HIGHLIGHT_MS);
+    const row = document.getElementById(partnerRowId(partner));
+    if (!row) return;
+    row.scrollIntoView({ block: "start" });
+    row.dataset.highlight = "";
+    const timer = setTimeout(() => delete row.dataset.highlight, HIGHLIGHT_MS);
     return () => {
       clearTimeout(timer);
-      delete card.dataset.highlight;
+      delete row.dataset.highlight;
     };
   }, [partner, loaded]);
 
@@ -70,7 +82,7 @@ export function ForYouResults({
       },
     );
 
-  if (query.isPending) return <CardsSkeleton />;
+  if (query.isPending) return <RowsSkeleton />;
 
   if (query.isError) {
     return <LoadError onRetry={() => void query.refetch()} />;
@@ -105,13 +117,15 @@ export function ForYouResults({
           <p className="text-muted-foreground text-sm tabular-nums">
             {m.trade_partner_count({ count: partners.length })}
           </p>
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-3">
             {partners.map((item) => (
-              <PartnerCard
+              <PartnerRow
                 key={item.userId}
-                id={partnerCardId(item.userId)}
+                id={partnerRowId(item.userId)}
                 partner={item}
                 collections={collections}
+                open={!item.idle !== toggled.has(item.userId)}
+                onOpenChange={() => toggle(item.userId)}
                 onOpen={setActive}
                 onHide={onHide}
               />
@@ -128,12 +142,12 @@ export function ForYouResults({
   );
 }
 
-export function CardsSkeleton() {
+export function RowsSkeleton() {
   return (
-    <div className="flex flex-col gap-4">
-      <BrowsePostSkeleton />
-      <BrowsePostSkeleton />
-      <BrowsePostSkeleton />
+    <div className="flex flex-col gap-3">
+      <PartnerRowSkeleton />
+      <PartnerRowSkeleton />
+      <PartnerRowSkeleton />
     </div>
   );
 }
