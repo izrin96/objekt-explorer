@@ -38,4 +38,7 @@ export const ownedObjektSchema = indexedObjektSchema.extend({
 
 export const heldObjektSchema = indexedObjektSchema.extend({
   copies: z.number().int(),
+  minSerial: z.number().int(),
+  minSerialTokenId: z.string(),
+  firstReceivedAt: z.string(),
 }) satisfies z.ZodType<HeldObjekt>;

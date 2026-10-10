@@ -70,6 +70,12 @@ export type MarketFields = {
 export type HeldFields = {
   /** copies held, standing in for the tokens of an owner too large to list one by one (COSMO Spin) */
   copies: number;
+  /** lowest serial held in the collection */
+  minSerial: number;
+  /** token ID of that copy */
+  minSerialTokenId: string;
+  /** ISO time the oldest still-held copy arrived */
+  firstReceivedAt: string;
 };
 
 /** the profile owner's marks, set on the client */

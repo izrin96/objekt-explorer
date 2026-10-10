@@ -28,6 +28,7 @@ export const addressTransfersFiltersSchema = z.object({
   type: transferTypeSchema.default("all"),
   ...collectionFiltersSchema.shape,
   at: checkpointSchema.optional(),
+  order: z.enum(["desc", "asc"]).default("desc"),
   cursor: timestampCursorSchema.optional(),
 });
 export type AddressTransfersFilters = z.infer<typeof addressTransfersFiltersSchema>;

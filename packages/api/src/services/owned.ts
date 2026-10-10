@@ -4,7 +4,7 @@ import { collections, objekts, transfers } from "@repo/db/indexer/schema";
 import { Addresses } from "@repo/lib";
 import { mapOwnedObjekt, overrideCollection } from "@repo/lib/server/objekt";
 import type { HeldObjekt } from "@repo/lib/types/objekt";
-import { and, count, desc, eq, getColumns, inArray, lt, lte, ne, or } from "drizzle-orm";
+import { and, asc, count, desc, eq, getColumns, inArray, lt, lte, ne, or, sql } from "drizzle-orm";
 
 import type { HeldByOutput, OwnedByFilters, OwnedByOutput } from "../schemas/objekts";
 import { getCollectionColumns } from "./objekt";
@@ -176,26 +176,59 @@ const CACHE_TTL = 60 * 5;
 /**
  * Held copies counted per collection, for an owner too large to list token by
  * token (COSMO Spin holds millions). Copies are grouped before the join, so
- * only one row per collection meets the collection table.
+ * only one row per collection meets the collection table; the lowest-serial
+ * token is one indexed probe per collection, not a sort of every token.
  */
 async function countHeld(addr: string): Promise<HeldObjekt[]> {
   const held = indexer.$with("held").as(
     indexer
-      .select({ collectionId: objekts.collectionId, copies: count().as("copies") })
+      .select({
+        collectionId: objekts.collectionId,
+        copies: count().as("copies"),
+        minSerial: sql<number>`min(${objekts.serial})`.as("min_serial"),
+        firstReceivedAt: sql<string | Date>`min(${objekts.receivedAt})`.as("first_received_at"),
+      })
       .from(objekts)
       .where(eq(objekts.owner, addr))
       .groupBy(objekts.collectionId),
   );
 
+  // (collection_id, serial) is not unique, so the lowest ID makes a tie deterministic
+  const first = indexer
+    .select({ id: objekts.id })
+    .from(objekts)
+    .where(
+      and(
+        eq(objekts.collectionId, held.collectionId),
+        eq(objekts.serial, held.minSerial),
+        eq(objekts.owner, addr),
+      ),
+    )
+    .orderBy(asc(objekts.id))
+    .limit(1)
+    .as("first");
+
   const results = await indexer
     .with(held)
-    .select({ collection: getCollectionColumns(), copies: held.copies })
+    .select({
+      collection: getCollectionColumns(),
+      copies: held.copies,
+      minSerial: held.minSerial,
+      firstReceivedAt: held.firstReceivedAt,
+      minSerialTokenId: first.id,
+    })
     .from(held)
     .innerJoin(collections, eq(collections.id, held.collectionId))
+    .innerJoinLateral(first, sql`true`)
     .where(ne(collections.slug, "empty-collection"));
 
   return results.map((row): HeldObjekt =>
-    Object.assign(overrideCollection(row.collection), { copies: row.copies }),
+    Object.assign(overrideCollection(row.collection), {
+      copies: row.copies,
+      minSerial: row.minSerial,
+      minSerialTokenId: row.minSerialTokenId,
+      firstReceivedAt: new Date(row.firstReceivedAt).toISOString(),
+    }),
   );
 }
 
@@ -209,8 +242,11 @@ export async function fetchHeldObjekts(
     return { collections: [] };
   }
 
-  // one entry per owner, whatever the artist scope, so every visitor shares it
-  const all = await getCache(`held-by:${addr}`, CACHE_TTL, () => countHeld(addr));
+  // only Spin's pass is slow enough to cache; one entry whatever the artist scope
+  const all =
+    addr === Addresses.SPIN
+      ? await getCache(`held-by:v2:${addr}`, CACHE_TTL, () => countHeld(addr))
+      : await countHeld(addr);
   const artists = artist?.map((a) => a.toLowerCase());
 
   return {
