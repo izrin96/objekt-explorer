@@ -1,5 +1,4 @@
 import { publishUsers } from "@repo/api/realtime";
-import { notifyChannel } from "@repo/api/schemas/notification";
 import { takesPartInTrade } from "@repo/api/services/trade-lists";
 import { db } from "@repo/db";
 import { lists } from "@repo/db/schema";
@@ -105,10 +104,7 @@ export async function sendWantAlerts() {
   const alerts = pairs.length === 0 ? [] : selectAlerts(await loadContext(pairs));
   const notified = alerts.length === 0 ? [] : await recordAlerts(alerts, new Date(nowMs));
 
-  await Promise.all([
-    ...notified.map((userId) => redis.publish(notifyChannel(userId), "1")),
-    publishUsers(notified, { type: "notifications_changed" }),
-  ]);
+  await publishUsers(notified, { type: "notifications_changed" });
 
   const unfinished = new Set(pending.filter((id) => !resume.done.includes(id)));
   await saveProgress(nextCursor, {

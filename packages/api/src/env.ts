@@ -32,8 +32,6 @@ export const serverEnv = createEnv({
     // client
     VITE_UMAMI_SCRIPT_URL: z.string().min(1).optional(),
     VITE_UMAMI_WEBSITE_ID: z.string().min(1).optional(),
-    VITE_ACTIVITY_WEBSOCKET_URL: z.string().optional(),
-    VITE_USER_WEBSOCKET_URL: z.string().optional(),
     VITE_CENTRIFUGO_URL: z.string().optional(),
     VITE_LIVE_API_KEY: z.string().min(1),
   },

@@ -2,9 +2,8 @@ import { db } from "@repo/db";
 import { conversation } from "@repo/db/schema";
 import { and, desc, eq, isNotNull, or } from "drizzle-orm";
 
-import { publishBatch } from "../../realtime";
+import { publishBatch, publishNotify } from "../../realtime";
 import type { RealtimeEvent } from "../../schemas/realtime";
-import { publishLegacyNotify, publishNotify } from "../../user-socket";
 
 export async function publishChatChanged(userIds: string[], conversationId: number) {
   await Promise.all(
@@ -29,19 +28,10 @@ export async function publishActivityChanged(userId: string) {
     )
     .orderBy(desc(conversation.lastMessageAt))
     .limit(ACTIVITY_PUBLISH_LIMIT);
-  const partners = rows.map((row) => ({
-    userId: row.userLow === userId ? row.userHigh : row.userLow,
-    conversationId: row.id,
-  }));
-  await Promise.all([
-    ...partners.map(({ userId: partnerId, conversationId }) =>
-      publishLegacyNotify(partnerId, { type: "chat_changed", conversationId }),
-    ),
-    publishBatch(
-      partners.map(({ userId: partnerId, conversationId }) => ({
-        userId: partnerId,
-        event: { type: "chat_changed", conversationId } satisfies RealtimeEvent,
-      })),
-    ),
-  ]);
+  await publishBatch(
+    rows.map((row) => ({
+      userId: row.userLow === userId ? row.userHigh : row.userLow,
+      event: { type: "chat_changed", conversationId: row.id } satisfies RealtimeEvent,
+    })),
+  );
 }

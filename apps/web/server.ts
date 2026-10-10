@@ -68,14 +68,6 @@ import path from "node:path";
 import { Readable, pipeline } from "node:stream";
 import { constants, createGzip } from "node:zlib";
 
-import { closeWebSocketConnections, startActivityWebSocket } from "@repo/api/activity";
-import {
-  authorizeUserSocket,
-  closeUserSockets,
-  type SocketData,
-  socketHandlers,
-} from "@repo/api/user-socket";
-
 // Configuration
 const SERVER_PORT = Number(process.env.PORT ?? 3000);
 const CLIENT_DIRECTORY = "./dist/client";
@@ -548,30 +540,12 @@ async function initializeServer() {
   // Build static routes with intelligent preloading
   const { routes: staticRoutes } = await initializeStaticRoutes(CLIENT_DIRECTORY);
 
-  // Start activity WebSocket pub/sub listener
-  void startActivityWebSocket();
-
   // Create Bun server
-  const server = Bun.serve<SocketData>({
+  const server = Bun.serve({
     port: SERVER_PORT,
 
-    async fetch(req, server) {
+    async fetch(req) {
       const url = new URL(req.url);
-
-      // WebSocket upgrade for activity feed: a public, read-only broadcast with
-      // no session behind it, so any origin may subscribe
-      if (url.pathname === "/ws") {
-        const upgraded = server.upgrade(req, { data: { kind: "activity" } });
-        if (upgraded) return undefined;
-        return new Response("Upgrade failed", { status: 500 });
-      }
-
-      if (url.pathname === "/ws/me") {
-        const userId = await authorizeUserSocket(req);
-        if (userId instanceof Response) return userId;
-        if (server.upgrade(req, { data: { kind: "user", userId } })) return undefined;
-        return new Response("Upgrade failed", { status: 500 });
-      }
 
       // Serve preloaded or on-demand static assets
       const staticHandler = staticRoutes[url.pathname];
@@ -591,8 +565,6 @@ async function initializeServer() {
       }
     },
 
-    websocket: socketHandlers,
-
     // Global error handler
     error(error) {
       log.error(`Uncaught server error: ${error instanceof Error ? error.message : String(error)}`);
@@ -605,8 +577,6 @@ async function initializeServer() {
   // Graceful shutdown
   async function shutdown(signal: string) {
     log.info(`Received ${signal}, shutting down gracefully...`);
-    closeWebSocketConnections();
-    closeUserSockets();
     await server.stop();
     process.exit(0);
   }

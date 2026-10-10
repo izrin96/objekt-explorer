@@ -1,5 +1,5 @@
 import { publishBatch, publishUsers } from "@repo/api/realtime";
-import { notifyChannel, type UserSocketMessage } from "@repo/api/schemas/notification";
+import type { RealtimeEvent } from "@repo/api/schemas/realtime";
 import { reputationKey } from "@repo/api/schemas/reputation";
 
 import { unique } from "./array";
@@ -14,24 +14,20 @@ export type Publish = {
 };
 
 export async function publishAll(publishes: Publish[]) {
-  const changed = JSON.stringify({ type: "notifications_changed" } satisfies UserSocketMessage);
   const sends: Promise<unknown>[] = [];
+  // cache invalidation, not a nudge: the reputation line reads again on its next request
   const reputations = unique(publishes.flatMap((p) => p.reputations ?? []));
   if (reputations.length > 0) sends.push(redis.send("DEL", reputations.map(reputationKey)));
-  const notified = unique(publishes.flatMap((p) => p.notified));
-  for (const userId of notified) {
-    sends.push(redis.publish(notifyChannel(userId), changed));
-  }
-  sends.push(publishUsers(notified, { type: "notifications_changed" }));
+  sends.push(
+    publishUsers(unique(publishes.flatMap((p) => p.notified)), { type: "notifications_changed" }),
+  );
   const seen = new Set<string>();
-  const chats: { userId: string; event: UserSocketMessage }[] = [];
+  const chats: { userId: string; event: RealtimeEvent }[] = [];
   for (const { id, userIds } of publishes.flatMap((p) => p.conversations)) {
     for (const userId of userIds) {
       if (seen.has(`${id}:${userId}`)) continue;
       seen.add(`${id}:${userId}`);
-      const message = { type: "chat_changed", conversationId: id } satisfies UserSocketMessage;
-      chats.push({ userId, event: message });
-      sends.push(redis.publish(notifyChannel(userId), JSON.stringify(message)));
+      chats.push({ userId, event: { type: "chat_changed", conversationId: id } });
     }
   }
   sends.push(publishBatch(chats));

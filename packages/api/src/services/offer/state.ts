@@ -5,8 +5,8 @@ import { and, eq, or, sql } from "drizzle-orm";
 
 import { type ActorLimits, actionRefusal } from "../../lib/offer-rules";
 import { unique } from "../../lib/unique";
+import { publishNotify } from "../../realtime";
 import type { OfferAction, OfferStatus } from "../../schemas/offer";
-import { publishNotify } from "../../user-socket";
 import { publishChatChanged } from "../chat";
 import { type Tx, refuseOffer } from "./core";
 

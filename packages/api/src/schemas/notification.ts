@@ -18,9 +18,6 @@ export const NOTIFICATION_PAGE_SIZE = 20;
 export const RETENTION_DAYS = 90;
 export const LATEST_LIMIT = 3;
 
-export const NOTIFY_PREFIX = "notify:";
-export const notifyChannel = (userId: string) => `${NOTIFY_PREFIX}${userId}`;
-
 const notificationTypeSchema = z.enum(NOTIFICATION_TYPES);
 
 const listRefSchema = z.object({ id: z.number(), slug: z.string(), name: z.string() });
@@ -92,15 +89,3 @@ export const setPrefInputSchema = z.object({
   type: notificationTypeSchema,
   enabled: z.boolean(),
 });
-
-export const userSocketMessageSchema = z.discriminatedUnion("type", [
-  z.object({ type: z.literal("notifications_changed") }),
-  z.object({ type: z.literal("chat_changed"), conversationId: z.number().int() }),
-  z.object({ type: z.literal("chat_typing"), conversationId: z.number().int() }),
-  z.object({
-    type: z.literal("chat_unsent"),
-    conversationId: z.number().int(),
-    messageId: z.number().int(),
-  }),
-]);
-export type UserSocketMessage = z.infer<typeof userSocketMessageSchema>;

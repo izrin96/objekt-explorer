@@ -5,13 +5,13 @@ import type * as z from "zod";
 
 import { sendVerdict } from "../../lib/chat-rules";
 import { scanMessage } from "../../lib/scam-patterns";
+import { publishNotify } from "../../realtime";
 import {
   type sendInputSchema,
   type startInputSchema,
   TYPING_GUARD_MS,
   UNSEND_WINDOW_MINUTES,
 } from "../../schemas/chat";
-import { publishLegacyNotify, publishNotify } from "../../user-socket";
 import { redis } from "../redis";
 import { hydrateCards, resolveCard, toChatMessages } from "./cards";
 import { publishChatMessage } from "./live";
@@ -83,16 +83,10 @@ export async function sendMessage(me: string, input: z.infer<typeof sendInputSch
   });
   const row = { ...sent, senderId: me, body, caution };
   const own = await toChatMessages([row], me);
-  // tabs open before the real-time server hear the nudge on Valkey; the rest get the message
-  // itself, not awaited so a slow real-time server never slows the send (it logs its own failures)
+  // not awaited, so a slow real-time server never slows the send; it logs its own failures
   void publishChatMessage(input.conversationId, sent.previousMessageId, row, [me, partnerId], {
     [me]: own,
   });
-  await Promise.all(
-    [me, partnerId].map((userId) =>
-      publishLegacyNotify(userId, { type: "chat_changed", conversationId: input.conversationId }),
-    ),
-  );
   return { message: own.messages[0]!, collections: own.collections };
 }
 

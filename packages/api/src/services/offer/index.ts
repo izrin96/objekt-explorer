@@ -11,9 +11,9 @@ import {
   validateShape,
 } from "../../lib/offer-rules";
 import { scanMessage } from "../../lib/scam-patterns";
+import { publishNotify } from "../../realtime";
 import { type FlagCategory } from "../../schemas/chat";
 import { type CreateOfferInput, OPEN_OFFER_LIMIT } from "../../schemas/offer";
-import { publishNotify } from "../../user-socket";
 import {
   appendMessage,
   chatSafety,

@@ -60,6 +60,14 @@ export function publishUser(userId: string, event: RealtimeEvent) {
   return call(publishRequest(userId, event));
 }
 
+/** Tells the user's open tabs what changed; with no event, that their notifications did. */
+export function publishNotify(
+  userId: string,
+  event: RealtimeEvent = { type: "notifications_changed" },
+) {
+  return publishUser(userId, event);
+}
+
 /** The same event to several users in one call. */
 export function publishUsers(userIds: string[], event: RealtimeEvent) {
   if (userIds.length === 0) return Promise.resolve();

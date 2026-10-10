@@ -3,6 +3,7 @@ import { notification, notificationPref } from "@repo/db/schema";
 import { and, eq, inArray, isNull, sql } from "drizzle-orm";
 
 import { authed } from "../orpc";
+import { publishNotify } from "../realtime";
 import {
   listNotificationsInputSchema,
   markReadInputSchema,
@@ -13,7 +14,6 @@ import {
   notificationPrefs,
   unreadNotificationCount,
 } from "../services/notifications";
-import { publishNotify } from "../user-socket";
 
 export const notificationsRouter = {
   list: authed
