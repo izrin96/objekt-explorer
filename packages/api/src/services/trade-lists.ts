@@ -19,12 +19,17 @@ const column = (alias: string | undefined, name: string) =>
 export const offersOnTradeSql = (alias?: string) =>
   sql`(${column(alias, "list_type_new")} IN ('have', 'sale') AND ${column(alias, "is_profile_bind")})`;
 
+/** A want list takes sales unless it is linked to a have list, which makes it trades only. */
+export const wantTakesSalesSql = (alias: string) =>
+  sql`(${column(alias, "linked_list_id")} IS NULL)`;
+
 /**
  * Whether a have or sale list's entry can match a want list's: a sale list only matches a want
- * list that takes sales. `want` names a row with a `match_sale` column.
+ * list that takes sales. `takesSales` is that want list's {@link wantTakesSalesSql}, or a column
+ * carrying it.
  */
-export const offerMatchesWantSql = (offer: string, want: string) =>
-  sql`(${column(offer, "list_type_new")} = 'have' OR ${column(want, "match_sale")})`;
+export const offerMatchesWantSql = (offer: string, takesSales: SQL) =>
+  sql`(${column(offer, "list_type_new")} = 'have' OR ${takesSales})`;
 
 /** {@link takesPartInTrade} over a raw `lists` row, aliased or not. */
 export const takesPartInTradeSql = (alias?: string) =>

@@ -10,6 +10,7 @@ import {
   nextBumpAt,
   pairPosts,
   previewSide,
+  takesSales,
   type TradeList,
   tradeableEntries,
   untradeableKey,
@@ -22,7 +23,6 @@ const daysAgo = (d: number) => hoursAgo(d * 24);
 const list = (over: Partial<TradeList> & Pick<TradeList, "id" | "listTypeNew">): TradeList => ({
   userId: "u1",
   linkedListId: null,
-  matchSale: true,
   bumpedAt: daysAgo(1),
   updatedAt: daysAgo(1),
   ...over,
@@ -54,16 +54,16 @@ describe("pairPosts", () => {
     expect(posts[0]).toMatchObject({ tag: "wtt", have: spares, want: null });
   });
 
-  test("a want list alone that also matches sales is WTB, a sale list WTS", () => {
+  test("a want list alone with no link is WTB, a sale list WTS", () => {
     const tags = pairPosts([
-      list({ id: 2, listTypeNew: "want", linkedListId: 1, matchSale: true }),
+      list({ id: 2, listTypeNew: "want" }),
       list({ id: 3, listTypeNew: "sale" }),
     ]).map((post) => post.tag);
     expect(tags).toEqual(["wtb", "wts"]);
   });
 
-  test("a want list alone that matches trades only is WTT", () => {
-    const [post] = pairPosts([list({ id: 2, listTypeNew: "want", matchSale: false })]);
+  test("a want list alone that is linked to a have list is WTT", () => {
+    const [post] = pairPosts([list({ id: 2, listTypeNew: "want", linkedListId: 1 })]);
     expect(post).toMatchObject({ tag: "wtt", have: null });
   });
 
@@ -74,6 +74,13 @@ describe("pairPosts", () => {
     ]);
     expect(post?.bumpedAt).toBe(daysAgo(2));
     expect(post?.updatedAt).toBe(hoursAgo(1));
+  });
+});
+
+describe("takesSales", () => {
+  test("a want list takes sales only while it has no link", () => {
+    expect(takesSales({ linkedListId: null })).toBe(true);
+    expect(takesSales({ linkedListId: 4 })).toBe(false);
   });
 });
 
@@ -228,7 +235,7 @@ describe("assemblePost", () => {
   test("a want list that trades only matches the viewer's have lists, not their sale lists", () => {
     const [tradeOnlyPair] = pairPosts([
       list({ id: 1, listTypeNew: "have", linkedListId: 2 }),
-      list({ id: 2, listTypeNew: "want", matchSale: false }),
+      list({ id: 2, listTypeNew: "want", linkedListId: 1 }),
     ]);
     const post = assemblePost(tradeOnlyPair!, of, tradeOnly, NO_FILTER);
     expect(post?.match).toEqual({ youHave: 2, youWant: 1, haveListIds: [7], wantListIds: [9] });
