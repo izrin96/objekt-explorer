@@ -1461,5 +1461,8 @@
   "chat_settings_chat_as": "表示するプロフィール",
   "chat_settings_chat_as_desc": "メッセージ、オファー、トレードで相手に表示されるCosmoプロフィールです。",
   "chat_settings_open": "メッセージ設定",
-  "notification_settings_link": "通知設定"
+  "notification_settings_link": "通知設定",
+  "trade_tab_with_count": "{label}、{count}",
+  "trade_checked_at": "所有状況の確認：{time}",
+  "trade_partner_updated": "{time}に更新"
 }

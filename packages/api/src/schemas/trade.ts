@@ -45,6 +45,13 @@ export const forYouInputSchema = z.object({
 
 export const listMatchCountInputSchema = z.object({ slug: z.string() });
 
+export const tabCountsInputSchema = z.object({});
+
+export const tabCountsOutputSchema = z.object({
+  forYou: z.number().int(),
+  mine: z.number().int(),
+});
+
 export const tradePartnerInputSchema = z.object({ userId: z.string().min(1) });
 
 const POST_TYPES = ["all", "wtt", "wtb", "wts"] as const;

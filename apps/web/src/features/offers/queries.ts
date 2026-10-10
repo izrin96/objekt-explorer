@@ -112,9 +112,13 @@ export const tradeOptions = (tradeId: number, live = true) =>
     retry: (count, error) => !isNotFound(error) && count < 2,
   });
 
-const offerListKeys = [orpc.offer.mine.key(), orpc.offer.trade.key()] as const;
+const offerListKeys = [
+  orpc.offer.mine.key(),
+  orpc.offer.trade.key(),
+  orpc.trade.tabCounts.key(),
+] as const;
 
-/** My trades and trade pages; candidates are left alone, an open builder keeps its picks. */
+/** My trades, trade pages and the tab counts; candidates are left alone, an open builder keeps its picks. */
 export function invalidateOfferLists(queryClient: QueryClient) {
   return Promise.all(offerListKeys.map((queryKey) => queryClient.invalidateQueries({ queryKey })));
 }

@@ -42,16 +42,8 @@ export function itemLabel(
   return `${name} ${serialText({ serial: item.serial, estimated: item.serialEstimated ?? false })}`;
 }
 
-function topupAmount(topup: Pick<TopupView, "amount" | "currency">) {
+export function topupAmount(topup: Pick<TopupView, "amount" | "currency">) {
   return formatCurrency(Number(topup.amount), topup.currency);
-}
-
-/** Always says the money is outside the site: nothing here can verify it. */
-export function topupText(topup: TopupView) {
-  const amount = topupAmount(topup);
-  return topup.payer === "you"
-    ? m.offer_topup_you_pay({ amount })
-    : m.offer_topup_they_pay({ amount });
 }
 
 /** One line for both sides: "HyeRin A301Z + 1,000 KRW ⇄ SeoYeon A204Z". */

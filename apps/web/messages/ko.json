@@ -1461,5 +1461,8 @@
   "chat_settings_chat_as": "표시할 프로필",
   "chat_settings_chat_as_desc": "메시지, 오퍼, 트레이드에서 상대에게 보이는 Cosmo 프로필입니다.",
   "chat_settings_open": "메시지 설정",
-  "notification_settings_link": "알림 설정"
+  "notification_settings_link": "알림 설정",
+  "trade_tab_with_count": "{label}, {count}",
+  "trade_checked_at": "보유 확인: {time}",
+  "trade_partner_updated": "{time} 업데이트"
 }

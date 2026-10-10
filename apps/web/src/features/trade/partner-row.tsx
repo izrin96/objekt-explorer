@@ -12,6 +12,7 @@ import { Popover, PopoverPopup, PopoverTitle, PopoverTrigger } from "@/component
 import { Skeleton } from "@/components/ui/skeleton";
 import { getListLinkOption } from "@/features/list/list-link";
 import { displayNickname } from "@/lib/address";
+import { relativeTime } from "@/lib/time";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
@@ -41,6 +42,7 @@ const DROPPED_LIMIT = 4;
 export function PartnerRow({
   id,
   partner,
+  now,
   collections,
   open,
   onOpenChange,
@@ -49,6 +51,7 @@ export function PartnerRow({
 }: {
   id: string;
   partner: TradePartner;
+  now: number;
   collections: TradeCollections;
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -83,11 +86,22 @@ export function PartnerRow({
             className="min-w-0 flex-1"
             person={partner}
             note={
-              also.length > 0 ? (
-                <span className="text-muted-foreground block text-xs break-words">
-                  {m.trade_also({ names: also.join(", ") })}
-                </span>
-              ) : null
+              <>
+                <time
+                  dateTime={partner.updatedAt}
+                  suppressHydrationWarning
+                  className="text-muted-foreground block font-mono text-xs"
+                >
+                  {m.trade_partner_updated({
+                    time: relativeTime(Math.min(Date.parse(partner.updatedAt), now), now),
+                  })}
+                </time>
+                {also.length > 0 ? (
+                  <span className="text-muted-foreground block text-xs break-words">
+                    {m.trade_also({ names: also.join(", ") })}
+                  </span>
+                ) : null}
+              </>
             }
             end={
               <>

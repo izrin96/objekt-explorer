@@ -15,10 +15,10 @@ import {
   itemLabel,
   offerNo,
   offerStatusText,
-  topupText,
   tradeNo,
   tradeStatusText,
 } from "./format";
+import { Mono, Progress, TopupText } from "./mono";
 import { OfferSideList } from "./offer-side-list";
 import { type Collections, pickKey } from "./pick";
 
@@ -59,7 +59,7 @@ export function OfferBody({
       <header className="flex items-start justify-between gap-2">
         <p className="flex min-w-0 flex-col">
           <span className="text-sm font-medium break-words">{title}</span>
-          <span className="text-muted-foreground text-xs tabular-nums">{offerNo(offer.id)}</span>
+          <Mono className="text-muted-foreground text-xs">{offerNo(offer.id)}</Mono>
         </p>
         <Badge variant={open && !offer.mine ? "secondary" : "outline"} className="shrink-0">
           {offerStatusText(offer)}
@@ -82,7 +82,7 @@ export function OfferBody({
       {offer.topup ? (
         <p className="text-warning-foreground flex items-start gap-1.5 text-xs text-pretty">
           <WarningIcon aria-hidden weight="fill" className="mt-px size-3.5 shrink-0" />
-          {topupText(offer.topup)}
+          <TopupText topup={offer.topup} />
         </p>
       ) : null}
 
@@ -106,13 +106,13 @@ export function OfferBody({
           className="hover:bg-secondary/60 focus-visible:ring-ring flex items-center justify-between gap-2 rounded-md border px-2.5 py-1.5 text-sm outline-none focus-visible:ring-2"
         >
           <span>
-            <span className="font-medium tabular-nums">{tradeNo(offer.tradeId)}</span>
+            <Mono className="font-medium">{tradeNo(offer.tradeId)}</Mono>
             {offer.tradeStatus ? (
               <span className="text-muted-foreground"> · {tradeStatusText(offer.tradeStatus)}</span>
             ) : null}
             {offer.tradeProgress ? (
               <span className="text-muted-foreground block text-xs">
-                {m.offer_progress(offer.tradeProgress)}
+                <Progress {...offer.tradeProgress} />
               </span>
             ) : null}
           </span>

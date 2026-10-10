@@ -13,6 +13,8 @@ import {
   fullestFilter,
   listMatchCountInputSchema,
   setShowOnTradeInputSchema,
+  tabCountsInputSchema,
+  tabCountsOutputSchema,
   tradePartnerInputSchema,
 } from "../schemas/trade";
 import { toPublicUser } from "../services/profile";
@@ -30,6 +32,7 @@ import {
   withMessageable,
   withReputation,
 } from "../services/trade-matches";
+import { tabCounts } from "../services/trade-tabs";
 
 export const tradeRouter = {
   /** Public; viewer fields are present only with a session. */
@@ -77,6 +80,12 @@ export const tradeRouter = {
       const result = await getTradeMatches(session.user.id, sides, filter);
       return result.partners.length;
     }),
+
+  /** The Trade tab badges: partners under Everyone, and offers to answer plus trades in progress. */
+  tabCounts: authed
+    .input(tabCountsInputSchema)
+    .output(tabCountsOutputSchema)
+    .handler(async ({ context: { session } }) => tabCounts(session.user.id)),
 
   /**
    * Only a partner with a list For you or Browse can show is hidden; any other id gets the

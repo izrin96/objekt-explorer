@@ -4,6 +4,8 @@ import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
 
+import { Mono, MonoMessage } from "./mono";
+
 /** `since` is `YYYY-MM`; read in UTC, so the server and the browser print the same month. */
 function sinceLabel(since: string) {
   const [year, month] = since.split("-").map(Number);
@@ -35,11 +37,14 @@ export function TrustLine({
         m.trust_none()
       ) : (
         <>
-          {m.trust_verified({ count: reputation.verified.toLocaleString(getLocale()) })}
+          <MonoMessage
+            values={[reputation.verified.toLocaleString(getLocale())]}
+            text={([count]) => m.trust_verified({ count: count! })}
+          />
           {reputation.positive !== null ? (
             <>
               {" · "}
-              <span aria-hidden>{`${reputation.positive}%`}</span>
+              <Mono aria-hidden>{`${reputation.positive}%`}</Mono>
               <span className="sr-only">{m.trust_positive({ percent: reputation.positive })}</span>
             </>
           ) : null}

@@ -353,6 +353,16 @@ type HistoryRow = {
 
 const GROUP_LIMIT = 100;
 
+/** Open offers still inside their window, sent or received. */
+export const openOffersWhere = (me: string) =>
+  and(offersOf(me), eq(offer.status, "open"), gt(offer.expiresAt, sql`now()`));
+
+/** Open offers waiting on `me` to answer. */
+export const needsYouWhere = (me: string) => and(openOffersWhere(me), eq(offer.toUserId, me));
+
+export const inProgressWhere = (me: string) =>
+  and(or(eq(trade.userA, me), eq(trade.userB, me)), eq(trade.status, "in_progress"));
+
 async function fetchProgress(tradeIds: number[]): Promise<Map<number, Progress>> {
   if (tradeIds.length === 0) return new Map();
   const rows = await db
@@ -376,7 +386,7 @@ export async function fetchMine(me: string, cursor: HistoryCursor | undefined) {
             at: sql<string>`${offer.createdAt}::text`,
           })
           .from(offer)
-          .where(and(offersOf(me), eq(offer.status, "open"), gt(offer.expiresAt, sql`now()`)))
+          .where(openOffersWhere(me))
           .orderBy(desc(offer.createdAt))
           .limit(GROUP_LIMIT * 2),
         db
@@ -386,7 +396,7 @@ export async function fetchMine(me: string, cursor: HistoryCursor | undefined) {
             at: sql<string>`${trade.acceptedAt}::text`,
           })
           .from(trade)
-          .where(and(or(eq(trade.userA, me), eq(trade.userB, me)), eq(trade.status, "in_progress")))
+          .where(inProgressWhere(me))
           .orderBy(desc(trade.acceptedAt))
           .limit(GROUP_LIMIT),
       ]);

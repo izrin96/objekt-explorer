@@ -16,6 +16,9 @@ export const forYouOptions = (filter: TradeFilter, list: string | undefined) =>
 export const listMatchCountOptions = (slug: string) =>
   orpc.trade.listMatchCount.queryOptions({ input: { slug }, staleTime: 0 });
 
+export const tabCountsOptions = (enabled: boolean) =>
+  orpc.trade.tabCounts.queryOptions({ input: {}, enabled, staleTime: 60_000 });
+
 export const hiddenPartnersOptions = (enabled: boolean) =>
   orpc.trade.hiddenPartners.queryOptions({ staleTime: 0, enabled });
 

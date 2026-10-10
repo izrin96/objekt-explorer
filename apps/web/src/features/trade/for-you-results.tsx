@@ -8,7 +8,9 @@ import { useEffect, useState } from "react";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Button } from "@/components/ui/button";
 import { ObjektDrawer } from "@/features/objekt/drawer";
+import { MonoMessage } from "@/features/offers/mono";
 import { addActionToast } from "@/lib/action-toast";
+import { relativeTime } from "@/lib/time";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
@@ -39,6 +41,7 @@ export function ForYouResults({
   const unhide = useUnhidePartner();
   const [active, setActive] = useState<ValidObjekt | null>(null);
   const [hiddenOpen, setHiddenOpen] = useState(false);
+  const [now] = useState(Date.now);
   const loaded = query.data !== undefined;
   // rows start open unless idle; this holds the ones the user (or a link) flipped
   const [toggled, setToggled] = useState<ReadonlySet<string>>(new Set());
@@ -88,7 +91,7 @@ export function ForYouResults({
     return <LoadError onRetry={() => void query.refetch()} />;
   }
 
-  const { partners, collections, notShown } = query.data;
+  const { partners, collections, notShown, checkedAt } = query.data;
 
   return (
     <div
@@ -114,8 +117,16 @@ export function ForYouResults({
         />
       ) : (
         <>
-          <p className="text-muted-foreground text-sm tabular-nums">
-            {m.trade_partner_count({ count: partners.length })}
+          <p className="text-muted-foreground flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 text-sm tabular-nums">
+            <MonoMessage
+              values={[partners.length]}
+              text={([count]) => m.trade_partner_count({ count: count! })}
+            />
+            <time dateTime={checkedAt} suppressHydrationWarning className="font-mono text-xs">
+              {m.trade_checked_at({
+                time: relativeTime(Math.min(Date.parse(checkedAt), now), now),
+              })}
+            </time>
           </p>
           <div className="flex flex-col gap-3">
             {partners.map((item) => (
@@ -123,6 +134,7 @@ export function ForYouResults({
                 key={item.userId}
                 id={partnerRowId(item.userId)}
                 partner={item}
+                now={now}
                 collections={collections}
                 open={!item.idle !== toggled.has(item.userId)}
                 onOpenChange={() => toggle(item.userId)}

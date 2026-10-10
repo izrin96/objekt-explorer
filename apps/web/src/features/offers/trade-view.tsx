@@ -28,8 +28,9 @@ import { useUserSocketLive } from "@/stores/user-socket";
 import { CancelTrade } from "./cancel-trade";
 import { EstimatedSerialNote } from "./estimated-serial-note";
 import { FirstSender } from "./first-sender";
-import { offerNo, topupText, tradeNo, tradeStatusText } from "./format";
+import { offerNo, tradeNo, tradeStatusText } from "./format";
 import { LegTable } from "./leg-table";
+import { Mono, MonoMessage, Progress, TopupText } from "./mono";
 import type { Collections } from "./pick";
 import { tradeOptions } from "./queries";
 import { StatusBadge, statusTone } from "./status-badge";
@@ -121,8 +122,12 @@ function TradeDetail({ trade, collections }: { trade: Trade; collections: Collec
           <div className="flex min-w-0 flex-1 flex-col">
             <h2 className="text-base font-semibold break-words">{m.offer_trade_with({ name })}</h2>
             <TrustLine reputation={trade.partner.reputation} />
-            <p className="text-muted-foreground text-xs tabular-nums">
-              {tradeNo(trade.id)} · {m.offer_trade_from_offer({ offer: offerNo(trade.offerId) })}
+            <p className="text-muted-foreground text-xs">
+              <Mono>{tradeNo(trade.id)}</Mono> ·{" "}
+              <MonoMessage
+                values={[offerNo(trade.offerId)]}
+                text={([offer]) => m.offer_trade_from_offer({ offer: offer! })}
+              />
             </p>
           </div>
           <StatusBadge tone={statusTone(trade.status)} className="shrink-0">
@@ -152,8 +157,8 @@ function TradeDetail({ trade, collections }: { trade: Trade; collections: Collec
             <h3 id={legsId} className="text-sm font-medium">
               {m.offer_trade_legs()}
             </h3>
-            <p className="text-muted-foreground text-sm tabular-nums" aria-live="polite">
-              {m.offer_progress(trade.progress)}
+            <p className="text-muted-foreground text-sm" aria-live="polite">
+              <Progress {...trade.progress} />
             </p>
           </div>
           {behind ? (
@@ -188,7 +193,7 @@ function TradeDetail({ trade, collections }: { trade: Trade; collections: Collec
         {trade.topup ? (
           <p className="text-warning-foreground flex items-start gap-1.5 text-sm text-pretty">
             <WarningIcon aria-hidden weight="fill" className="mt-0.5 size-4 shrink-0" />
-            {topupText(trade.topup)}
+            <TopupText topup={trade.topup} />
           </p>
         ) : null}
 

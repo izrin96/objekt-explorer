@@ -15,6 +15,7 @@ import { relativeTime } from "@/lib/time";
 import { m } from "@/paraglide/messages";
 
 import { mineStatusText, offerNo, offerSummary, tradeNo } from "./format";
+import { Mono } from "./mono";
 import { ProgressRing } from "./progress-ring";
 import { mineOptions } from "./queries";
 import { StatusBadge, statusTone } from "./status-badge";
@@ -160,9 +161,9 @@ function MineRowLink({
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span className="flex min-w-0 flex-wrap items-baseline gap-x-2">
           <span className="min-w-0 font-medium break-words">{name}</span>
-          <span className="text-muted-foreground text-xs tabular-nums">
+          <Mono className="text-muted-foreground text-xs">
             {row.kind === "trade" ? tradeNo(row.id) : offerNo(row.id)}
-          </span>
+          </Mono>
           {/* the server's clock, so the server and browser renders agree */}
           <time dateTime={row.at} className="text-muted-foreground text-xs">
             {relativeTime(new Date(row.at).getTime(), now)}

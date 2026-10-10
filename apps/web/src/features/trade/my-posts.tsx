@@ -6,6 +6,7 @@ import { Link, useHydrated } from "@tanstack/react-router";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { MonoMessage } from "@/features/offers/mono";
 import { relativeTime } from "@/lib/time";
 import { m } from "@/paraglide/messages";
 import { useSettings } from "@/stores/settings";
@@ -60,7 +61,10 @@ export function MyPosts() {
               ·
             </span>
             <span className="text-muted-foreground tabular-nums">
-              {m.trade_my_posts_listed({ count: summary.listed })}
+              <MonoMessage
+                values={[summary.listed]}
+                text={([count]) => m.trade_my_posts_listed({ count: count! })}
+              />
             </span>
             {summary.idle > 0 ? (
               <>
@@ -68,7 +72,10 @@ export function MyPosts() {
                   ·
                 </span>
                 <Badge variant="outline" size="sm" className="tabular-nums">
-                  {m.trade_my_posts_idle({ count: summary.idle })}
+                  <MonoMessage
+                    values={[summary.idle]}
+                    text={([count]) => m.trade_my_posts_idle({ count: count! })}
+                  />
                 </Badge>
               </>
             ) : null}
@@ -78,7 +85,10 @@ export function MyPosts() {
                   ·
                 </span>
                 <span className="text-muted-foreground tabular-nums">
-                  {m.trade_my_posts_ready({ count: summary.ready })}
+                  <MonoMessage
+                    values={[summary.ready]}
+                    text={([count]) => m.trade_my_posts_ready({ count: count! })}
+                  />
                 </span>
               </>
             ) : null}

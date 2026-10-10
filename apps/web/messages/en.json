@@ -1461,5 +1461,8 @@
   "chat_settings_chat_as": "Chat as",
   "chat_settings_chat_as_desc": "The Cosmo profile people see you as in messages, offers and trades.",
   "chat_settings_open": "Message settings",
-  "notification_settings_link": "Notification settings"
+  "notification_settings_link": "Notification settings",
+  "trade_tab_with_count": "{label}, {count}",
+  "trade_checked_at": "Ownership checked {time}",
+  "trade_partner_updated": "updated {time}"
 }
