@@ -62,6 +62,11 @@ describe("pairPosts", () => {
     expect(tags).toEqual(["wtb", "wts"]);
   });
 
+  test("a want list alone that matches trades only is WTT", () => {
+    const [post] = pairPosts([list({ id: 2, listTypeNew: "want", matchSale: false })]);
+    expect(post).toMatchObject({ tag: "wtt", have: null });
+  });
+
   test("a pair's bump and change times are the latest of its lists", () => {
     const [post] = pairPosts([
       list({ id: 1, listTypeNew: "have", linkedListId: 2, bumpedAt: daysAgo(3) }),

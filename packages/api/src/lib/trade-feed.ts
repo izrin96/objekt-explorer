@@ -40,9 +40,14 @@ export function latest(...times: (string | null)[]): string | null {
   return best;
 }
 
-function postTag(post: { have: unknown; want: unknown; sale: unknown }): PostTag {
+function postTag(post: {
+  have: unknown;
+  want: { matchSale: boolean } | null;
+  sale: unknown;
+}): PostTag {
   if (post.sale) return "wts";
-  return post.have ? "wtt" : "wtb";
+  // a want list set to match trades only is after a trade, not a purchase
+  return post.have || !post.want?.matchSale ? "wtt" : "wtb";
 }
 
 function toPost<L extends TradeList>(anchor: L, partner: L | null): Post<L> {

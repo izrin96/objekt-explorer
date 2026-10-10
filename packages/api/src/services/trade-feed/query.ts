@@ -3,12 +3,16 @@ import { type SQL, sql } from "drizzle-orm";
 
 import { FEED_FETCH_SIZE, type PostTag } from "../../lib/trade-feed";
 import { IDLE_DAYS } from "../../lib/trade-rank";
-import type { ListTypeNew } from "../../schemas/list";
 import type { FeedCursor, PostType } from "../../schemas/trade";
 import { notBlockedEither, notTradeSanctioned } from "../safety";
 import { takesPartInTradeSql } from "../trade-lists";
 
-const TAG_TYPE: Record<PostTag, ListTypeNew> = { wtt: "have", wtb: "want", wts: "sale" };
+/** As `postTag` tags a post: a want list alone that matches trades only is WTT, not WTB. */
+const TAG_WHERE: Record<PostTag, SQL> = {
+  wtt: sql`(posts.type = 'have' OR (posts.type = 'want' AND NOT posts.match_sale))`,
+  wtb: sql`(posts.type = 'want' AND posts.match_sale)`,
+  wts: sql`posts.type = 'sale'`,
+};
 
 /**
  * Posts on Trade: each list on Trade, with a want list folded into the have list that links
@@ -25,6 +29,7 @@ export const postsCte = sql`
       a.id,
       a.user_id,
       a.list_type_new AS type,
+      a.match_sale,
       p.id AS partner_id,
       -- milliseconds, so the ISO cursor names a row exactly; a post never bumped sorts by its
       -- last change
@@ -103,7 +108,7 @@ export async function fetchFeedRows(query: Stage1): Promise<FeedRow[]> {
       WHERE h.user_id = ${query.viewerId} AND h.hidden_user_id = posts.user_id
     )`);
   }
-  if (query.type !== "all") where.push(sql`posts.type = ${TAG_TYPE[query.type]}`);
+  if (query.type !== "all") where.push(TAG_WHERE[query.type]);
   if (query.slugs) where.push(hasEntryIn(sql`posts.id, posts.partner_id`, query.slugs));
   if (query.slug !== null) where.push(hasEntryIn(sql`posts.id, posts.partner_id`, [query.slug]));
   if (query.matches) where.push(matchesIndex(query.matches));
