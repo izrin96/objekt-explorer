@@ -28,9 +28,9 @@ export const chatUnreadOptions = (live: boolean) =>
 export const requestCountOptions = () =>
   orpc.chat.requestCount.queryOptions({ staleTime: 0, refetchOnWindowFocus: true });
 
-export const conversationsOptions = (box: ChatBox) =>
+export const conversationsOptions = (box: ChatBox, q?: string) =>
   orpc.chat.list.infiniteOptions({
-    input: (cursor: ConversationCursor | undefined) => ({ box, cursor }),
+    input: (cursor: ConversationCursor | undefined) => ({ box, q, cursor }),
     initialPageParam: undefined as ConversationCursor | undefined,
     getNextPageParam: (page) => page.nextCursor ?? undefined,
     staleTime: 0,

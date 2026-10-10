@@ -140,6 +140,7 @@ function DrawerBody({
   menu?: ReactNode;
 }) {
   const owned = isObjektOwned(objekt);
+  const [barSlot, setBarSlot] = useState<HTMLElement | null>(null);
   const ownSerial = owned ? objekt.serial : null;
   const { getArtist } = useCosmoArtist();
   // the URL only seeds the serial: a surface writing it back on every change
@@ -309,6 +310,7 @@ function DrawerBody({
           <TabsPanel value="market">
             <MarketPanel
               slug={objekt.slug}
+              barSlot={barSlot}
               onOpenSerial={(value) => {
                 changeSerial(value);
                 onTabChange("serials");
@@ -327,6 +329,8 @@ function DrawerBody({
           </TabsPanel>
         </Tabs>
       </DrawerPanel>
+      {/* the Market tab's phone bar, outside the scroll so it stays at the bottom */}
+      <div ref={setBarSlot} />
     </>
   );
 }

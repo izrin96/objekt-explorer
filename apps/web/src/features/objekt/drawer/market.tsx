@@ -12,6 +12,7 @@ import { truncateAddress } from "@repo/lib/address";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { InView } from "react-intersection-observer";
 
 import { EmptyState } from "@/components/shared/empty-state";
@@ -40,9 +41,12 @@ import { type Stat, StatRow } from "./stat-row";
 export function MarketPanel({
   slug,
   onOpenSerial,
+  barSlot,
 }: {
   slug: string;
   onOpenSerial: (serial: number) => void;
+  /** where the phone bar is drawn: outside the drawer's scroll, so it stays at the bottom */
+  barSlot: HTMLElement | null;
 }) {
   const [sort, setSort] = useState<SortState<SortBy>>({ key: "createdAt", dir: "desc" });
   const { currency, formatUsd } = useCurrency();
@@ -98,6 +102,7 @@ export function MarketPanel({
   const isMine = (item: MarketListing) =>
     myListSlugs.has(item.list.slug) ||
     myAddresses.some((address) => isSameAddress(address, item.list.profile?.address));
+  const barItem = items.find((item) => item.messageable && !isMine(item));
 
   return (
     <div className="flex flex-col gap-4">
@@ -189,6 +194,9 @@ export function MarketPanel({
         </div>
       )}
       {builder.element}
+      {barItem && barSlot
+        ? createPortal(<ListingBar item={barItem} slug={slug} actions={actions} />, barSlot)
+        : null}
     </div>
   );
 }
@@ -227,6 +235,71 @@ function OnTradeLine({ slug }: { slug: string }) {
   );
 }
 
+/** Cosmo gives an unnamed profile its own address as the nickname. */
+function sellerOf(item: MarketListing) {
+  const address = item.list.profile?.address ?? null;
+  const rawNickname = item.list.profile?.nickname ?? null;
+  const nickname = isSameAddress(rawNickname, address) ? null : rawNickname;
+  const name = nickname ?? (address ? truncateAddress(address.toLowerCase()) : undefined);
+  return { address, nickname, name };
+}
+
+const offerRequest = (item: MarketListing, slug: string): OfferRequest => ({
+  to: { target: { kind: "list", slug: item.list.slug } },
+  name: sellerOf(item).name ?? m.objekt_market_seller(),
+  prefill: {
+    get: [
+      {
+        key: item.objektId ?? anyKey(slug),
+        collectionSlug: slug,
+        objektId: item.objektId,
+        serial: item.serial,
+        listSlug: item.list.slug,
+        flags: null,
+      },
+    ],
+  },
+});
+
+/** Below `sm` a row's menu is two taps deep, so the first listing the viewer can message is pinned. */
+function ListingBar({
+  item,
+  slug,
+  actions,
+}: {
+  item: MarketListing;
+  slug: string;
+  actions: RowActions;
+}) {
+  const { price, currency: listed } = item;
+  const priced = !item.isQyop && price !== null && listed !== null;
+  const line = [
+    item.isQyop ? m.objekt_qyop() : priced ? formatCurrency(price, listed) : "—",
+    item.serial === null ? null : `#${item.serial}`,
+    sellerOf(item).name ?? m.objekt_market_seller(),
+  ].filter((part) => part !== null);
+
+  return (
+    <div
+      role="group"
+      aria-label={m.objekt_market_bar_aria()}
+      className="bg-popover flex flex-col gap-2 border-t px-6 pt-3 pb-[calc(env(safe-area-inset-bottom,0px)+--spacing(3))] sm:hidden"
+    >
+      <p className="truncate font-mono text-sm tabular-nums">{line.join(" · ")}</p>
+      <div className="grid grid-cols-2 gap-2">
+        <Button variant="outline" onClick={() => actions.message(item)}>
+          <ChatCircleIcon />
+          {m.chat_message()}
+        </Button>
+        <Button onClick={() => actions.offer(offerRequest(item, slug))}>
+          <HandshakeIcon />
+          {m.offer_make()}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 /** The app's one timestamp; a phone-width drawer keeps the day and leaves the time to `title`. */
 function ListingTime({ date }: { date: Date }) {
   const full = formatTimestamp(date);
@@ -259,13 +332,9 @@ function MarketRow({
   onOpenSerial: (serial: number) => void;
   actions: RowActions;
 }) {
-  const address = item.list.profile?.address ?? null;
-  const rawNickname = item.list.profile?.nickname ?? null;
-  // Cosmo gives an unnamed profile its own address as the nickname
-  const nickname = isSameAddress(rawNickname, address) ? null : rawNickname;
+  const { address, nickname, name: sellerName } = sellerOf(item);
   const { price, currency: listed, usdPrice } = item;
   const priced = !item.isQyop && price !== null && listed !== null;
-  const sellerName = nickname ?? (address ? truncateAddress(address.toLowerCase()) : undefined);
 
   return (
     <tr className="border-t">
@@ -344,26 +413,7 @@ function MarketRow({
                 <ChatCircleIcon />
                 {m.chat_message()}
               </MenuItem>
-              <MenuItem
-                onClick={() =>
-                  actions.offer({
-                    to: { target: { kind: "list", slug: item.list.slug } },
-                    name: sellerName ?? m.objekt_market_seller(),
-                    prefill: {
-                      get: [
-                        {
-                          key: item.objektId ?? anyKey(slug),
-                          collectionSlug: slug,
-                          objektId: item.objektId,
-                          serial: item.serial,
-                          listSlug: item.list.slug,
-                          flags: null,
-                        },
-                      ],
-                    },
-                  })
-                }
-              >
+              <MenuItem onClick={() => actions.offer(offerRequest(item, slug))}>
                 <HandshakeIcon />
                 {m.offer_make()}
               </MenuItem>

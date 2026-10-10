@@ -3,6 +3,7 @@ import {
   ArrowClockwiseIcon,
   BellSlashIcon,
   ChatsCircleIcon,
+  MagnifyingGlassIcon,
   TrayIcon,
   WarningIcon,
 } from "@phosphor-icons/react";
@@ -35,8 +36,8 @@ const EMPTY = {
   archived: { icon: ArchiveIcon, title: m.chat_empty_archived, hint: m.chat_empty_archived_hint },
 } as const;
 
-export function ConversationList({ box }: { box: ChatBox }) {
-  const query = useInfiniteQuery(conversationsOptions(box));
+export function ConversationList({ box, q }: { box: ChatBox; q: string | undefined }) {
+  const query = useInfiniteQuery(conversationsOptions(box, q));
   const now = useMinuteClock();
 
   if (query.isPending) return <ConversationListSkeleton />;
@@ -59,6 +60,25 @@ export function ConversationList({ box }: { box: ChatBox }) {
 
   const rows = query.data.pages.flatMap((page) => page.items);
   const collections = Object.assign({}, ...query.data.pages.map((page) => page.collections));
+  if (rows.length === 0 && q !== undefined) {
+    return (
+      <EmptyState
+        icon={MagnifyingGlassIcon}
+        bordered={false}
+        title={m.chat_empty_search({ query: q })}
+        hint={m.chat_empty_search_hint()}
+        action={
+          <Button
+            variant="outline"
+            size="sm"
+            render={<Link to="." search={(prev) => ({ ...prev, q: undefined })} replace />}
+          >
+            {m.chat_search_clear()}
+          </Button>
+        }
+      />
+    );
+  }
   if (rows.length === 0) {
     const empty = EMPTY[box];
     return (

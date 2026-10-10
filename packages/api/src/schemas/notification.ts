@@ -70,7 +70,17 @@ export type Notification = z.infer<typeof notificationSchema>;
 const notificationCursorSchema = z.object({ at: z.string(), id: z.number().int() });
 export type NotificationCursor = z.infer<typeof notificationCursorSchema>;
 
+export const NOTIFICATION_KINDS = ["all", "trades", "alerts"] as const;
+export type NotificationKind = (typeof NOTIFICATION_KINDS)[number];
+
+/** The types each bell tab lists; `all` also lists sanction notices. */
+export const KIND_TYPES: Record<Exclude<NotificationKind, "all">, readonly NotificationType[]> = {
+  trades: ["offer", "trade"],
+  alerts: ["want_match", "have_wanted"],
+};
+
 export const listNotificationsInputSchema = z.object({
+  kind: z.enum(NOTIFICATION_KINDS).default("all"),
   cursor: notificationCursorSchema.optional(),
 });
 

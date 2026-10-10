@@ -5,6 +5,7 @@ import type * as z from "zod";
 
 import { iso } from "../lib/time";
 import {
+  KIND_TYPES,
   type listNotificationsInputSchema,
   LISTED_NOTIFICATION_TYPES,
   NOTIFICATION_DEFAULTS,
@@ -18,7 +19,7 @@ import { fetchCollectionsBySlug } from "./list";
 
 export async function listNotifications(
   userId: string,
-  { cursor }: z.infer<typeof listNotificationsInputSchema>,
+  { kind, cursor }: z.infer<typeof listNotificationsInputSchema>,
 ) {
   const rows = await db
     .select()
@@ -26,6 +27,7 @@ export async function listNotifications(
     .where(
       and(
         eq(notification.userId, userId),
+        kind === "all" ? undefined : inArray(notification.type, [...KIND_TYPES[kind]]),
         // the weekly prune may not have reached a read notification past retention yet
         or(
           isNull(notification.readAt),

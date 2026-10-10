@@ -1,4 +1,4 @@
-import type { NotificationCursor } from "@repo/api/schemas/notification";
+import type { NotificationCursor, NotificationKind } from "@repo/api/schemas/notification";
 
 import { orpc } from "@/lib/orpc";
 import { pollUnlessLive } from "@/stores/user-socket";
@@ -11,9 +11,9 @@ export const unreadCountOptions = (live: boolean) =>
     refetchInterval: pollUnlessLive(live),
   });
 
-export const notificationsOptions = () =>
+export const notificationsOptions = (kind: NotificationKind = "all") =>
   orpc.notifications.list.infiniteOptions({
-    input: (cursor: NotificationCursor | undefined) => ({ cursor }),
+    input: (cursor: NotificationCursor | undefined) => ({ kind, cursor }),
     initialPageParam: undefined,
     getNextPageParam: (page) => page.nextCursor ?? undefined,
     staleTime: 0,

@@ -113,8 +113,11 @@ export const sendInputSchema = z
 const conversationCursorSchema = z.object({ at: z.string(), id: z.number().int() });
 export type ConversationCursor = z.infer<typeof conversationCursorSchema>;
 
+export const SEARCH_MAX_LENGTH = 50;
+
 export const listConversationsInputSchema = z.object({
   box: z.enum(CHAT_BOXES).default("inbox"),
+  q: z.string().trim().min(1).max(SEARCH_MAX_LENGTH).optional(),
   cursor: conversationCursorSchema.optional(),
 });
 

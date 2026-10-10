@@ -16,6 +16,17 @@ import { type AddressRef, type PartnerIdentity } from "./trade-rank";
 
 const MINUTE_MS = 60 * 1000;
 
+const escapeLike = (text: string) => text.replace(/[\\%_]/g, "\\$&");
+
+/** `name` matches display names and nicknames; `slug` matches collection slugs, so "SeoYeon 204Z" finds `seoyeon-204z`. */
+export function searchPatterns(query: string) {
+  const text = query.trim();
+  return {
+    name: `%${escapeLike(text)}%`,
+    slug: `%${escapeLike(text.toLowerCase().replace(/\s+/g, "-"))}%`,
+  };
+}
+
 /** Ordered by code point, as the `conversation_pair_ordered` check compares them. */
 export function pairKey(a: string, b: string) {
   return a < b ? { userLow: a, userHigh: b } : { userLow: b, userHigh: a };

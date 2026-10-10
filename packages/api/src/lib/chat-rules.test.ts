@@ -13,6 +13,7 @@ import {
   pairKey,
   rateDecision,
   rowUnread,
+  searchPatterns,
   slidingWindow,
   sendVerdict,
   type StartFacts,
@@ -303,5 +304,25 @@ describe("Seen and typing", () => {
 
   test("hidden while the shown member has not accepted the request", () => {
     expect(showsActivityTo({ ...on, shownRequest: true })).toBe(false);
+  });
+});
+
+describe("searchPatterns", () => {
+  test("wraps the query for a substring match", () => {
+    expect(searchPatterns("rin")).toEqual({ name: "%rin%", slug: "%rin%" });
+  });
+
+  test("turns runs of spaces into a hyphen for the slug only", () => {
+    expect(searchPatterns("SeoYeon  204Z")).toEqual({
+      name: "%SeoYeon  204Z%",
+      slug: "%seoyeon-204z%",
+    });
+  });
+
+  test("escapes LIKE wildcards and the escape character", () => {
+    expect(searchPatterns("100%_a\\b")).toEqual({
+      name: "%100\\%\\_a\\\\b%",
+      slug: "%100\\%\\_a\\\\b%",
+    });
   });
 });

@@ -4,7 +4,7 @@ import { conversationMember, message } from "@repo/db/schema";
 import { and, asc, desc, eq, gt, lt, sql } from "drizzle-orm";
 import type * as z from "zod";
 
-import { isMuted, rowUnread } from "../../lib/chat-rules";
+import { isMuted, rowUnread, searchPatterns } from "../../lib/chat-rules";
 import { HOUR_MS } from "../../lib/time";
 import {
   CONVERSATION_PAGE_SIZE,
@@ -40,6 +40,17 @@ const visibleIn = (box: ChatBox, me: string) =>
   box === "archived"
     ? BOX_WHERE[box]
     : sql`${BOX_WHERE[box]} AND ${notBlockedBy(me, partnerOf(me))}`;
+
+/** Names and sent cards only; message text is never searched. */
+const matchesSearch = (me: string, { name, slug }: ReturnType<typeof searchPatterns>) => sql`AND (
+  EXISTS (SELECT 1 FROM "user" u WHERE u.id = ${partnerOf(me)} AND u.name ILIKE ${name})
+  OR EXISTS (SELECT 1 FROM user_address a WHERE a.user_id = ${partnerOf(me)} AND a.nickname ILIKE ${name})
+  OR EXISTS (
+    SELECT 1 FROM message x
+    WHERE x.conversation_id = c.id AND x.card IS NOT NULL AND x.unsent_at IS NULL
+      AND x.card->>'collectionSlug' ILIKE ${slug}
+  )
+)`;
 
 type ConversationListRow = {
   id: number;
@@ -91,9 +102,10 @@ export async function fetchPartners(userIds: string[]) {
  */
 export async function listConversations(
   me: string,
-  { box, cursor }: z.infer<typeof listConversationsInputSchema>,
+  { box, cursor, q }: z.infer<typeof listConversationsInputSchema>,
 ) {
   const now = new Date();
+  const patterns = q === undefined ? null : searchPatterns(q);
   const result = await db.execute<ConversationListRow>(sql`
     SELECT page.*, ctx.card AS context_card
     FROM (
@@ -119,6 +131,7 @@ export async function listConversations(
     WHERE m.user_id = ${me}
       AND ${visibleIn(box, me)}
       AND (c.last_message_id IS NOT NULL OR c.created_by = ${me})
+      ${patterns ? matchesSearch(me, patterns) : sql``}
       ${cursor ? sql`AND (coalesce(c.last_message_at, c.created_at), c.id) < (${cursor.at}::timestamptz, ${cursor.id})` : sql``}
     ORDER BY coalesce(c.last_message_at, c.created_at) DESC, c.id DESC
     LIMIT ${CONVERSATION_PAGE_SIZE + 1}

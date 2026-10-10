@@ -13,7 +13,11 @@ const LABEL: Record<ChatBox, () => string> = {
   archived: m.chat_box_archived,
 };
 
-const boxSearch = (box: ChatBox) => ({ box: box === "inbox" ? undefined : box });
+/** Keeps `q`: a search carries across folders. */
+const boxSearch = (box: ChatBox) => (prev: { q?: string }) => ({
+  ...prev,
+  box: box === "inbox" ? undefined : box,
+});
 
 /** Each folder is a real link; arrow keys move the selection, so they navigate too. */
 export function BoxTabs({ box }: { box: ChatBox }) {
