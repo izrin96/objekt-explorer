@@ -5,6 +5,7 @@ import { and, desc, eq, gt, inArray, or, sql } from "drizzle-orm";
 
 import { isBehind, parseIndexerSeen } from "../../lib/indexer-seen";
 import {
+  atFault,
   cancelRefusal,
   canReport,
   firstSender,
@@ -140,12 +141,21 @@ export async function cancelTrade(me: string, tradeId: number) {
   );
 }
 
-/** Feedback on a completed trade, changeable for 14 days; only totals are ever shown. */
+/** Feedback on a completed trade, or a failed one from the party who delivered, changeable for 14 days; only totals are ever shown. */
 export async function rateTrade(me: string, tradeId: number, rating: TradeRating) {
   const row = await findTrade(tradeId, me);
   const safety = await chatSafety(me, row.partnerId);
   if (safety.tradeBlocked) refuseOffer("trade_blocked");
-  const refusal = rateRefusal({ ...row, verifiedLegs: 0 }, new Date());
+  const legs = await db
+    .select({ fromUserId: tradeLeg.fromUserId, verifiedAt: tradeLeg.verifiedAt })
+    .from(tradeLeg)
+    .where(eq(tradeLeg.tradeId, tradeId));
+  const refusal = rateRefusal(
+    { ...row, verifiedLegs: 0 },
+    new Date(),
+    me,
+    atFault(legs, row.userA, row.userB),
+  );
   if (refusal) refuseOffer(refusal);
 
   await db
@@ -252,6 +262,7 @@ export async function fetchTrade(me: string, tradeId: number) {
   const party = (id: string): TradeParty => ({
     userId: id,
     verified: reputations.get(id)?.verified ?? 0,
+    unfinished: reputations.get(id)?.unfinished ?? 0,
     createdAt: createdAt.get(id) ?? new Date(0),
   });
   const first =
@@ -323,9 +334,9 @@ export async function fetchTrade(me: string, tradeId: number) {
     indexerBehind: behind,
     canReport: canReport(state, now),
     rating: feedback?.rating ?? null,
-    canRate: rateRefusal(state, now) === null,
+    canRate: rateRefusal(state, now, me, atFault(legs, row.userA, row.userB)) === null,
     rateUntil:
-      row.status === "completed" && row.endedAt
+      (row.status === "completed" || row.status === "failed") && row.endedAt
         ? new Date(new Date(row.endedAt).getTime() + RATE_WINDOW_MS).toISOString()
         : null,
     lastCheckedAt: lastChecked,

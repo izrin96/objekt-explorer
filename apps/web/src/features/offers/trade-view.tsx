@@ -102,7 +102,11 @@ function TradeDetail({ trade, collections }: { trade: Trade; collections: Collec
   const completed = trade.status === "completed";
   const firstSender = inProgress ? trade.firstSender : null;
   const behind = trade.indexerBehind;
-  const aside = inProgress || completed;
+  // a failed trade has one only for the party who delivered, who can rate the other
+  const aside =
+    inProgress ||
+    completed ||
+    (trade.status === "failed" && (trade.canRate || trade.rating !== null));
 
   return (
     <article

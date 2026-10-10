@@ -6,6 +6,7 @@ import {
   allowedActions,
   anyCopyScope,
   anyCopyShortfall,
+  atFault,
   cancelRefusal,
   canReport,
   firstSender,
@@ -289,9 +290,10 @@ describe("offerSummary", () => {
 });
 
 describe("firstSender", () => {
-  const party = (userId: string, verified: number, createdAt: string) => ({
+  const party = (userId: string, verified: number, createdAt: string, unfinished = 0) => ({
     userId,
     verified,
+    unfinished,
     createdAt,
   });
 
@@ -309,6 +311,62 @@ describe("firstSender", () => {
     expect(firstSender(newer, older)).toBe("newer");
     const twin = party("twin", 3, "2024-01-01T00:00:00Z");
     expect(firstSender(older, twin)).toBe("twin");
+  });
+
+  test("more unfinished trades sends first, even with more verified trades", () => {
+    const binary = party("binary", 31, "2024-01-01T00:00:00Z", 1);
+    const user = party("user", 2, "2023-01-01T00:00:00Z");
+    expect(firstSender(binary, user)).toBe("binary");
+    expect(firstSender(user, binary)).toBe("binary");
+    const worse = party("worse", 40, "2022-01-01T00:00:00Z", 2);
+    expect(firstSender(binary, worse)).toBe("worse");
+  });
+
+  test("a tie in unfinished falls through to verified trades", () => {
+    const binary = party("binary", 31, "2024-01-01T00:00:00Z", 1);
+    const user = party("user", 2, "2023-01-01T00:00:00Z", 1);
+    expect(firstSender(binary, user)).toBe("user");
+  });
+});
+
+describe("atFault", () => {
+  const leg = (fromUserId: string, verified: boolean, untransferableAt: string | null = null) => ({
+    fromUserId,
+    verifiedAt: verified ? "2026-10-05T00:00:00Z" : null,
+    untransferableAt,
+  });
+
+  test("the party who still owed, when the other delivered", () => {
+    expect(atFault([leg(ME, true), leg(RIN, false)], ME, RIN)).toBe(RIN);
+    expect(atFault([leg(ME, false), leg(RIN, true)], ME, RIN)).toBe(ME);
+  });
+
+  test("one unsent leg of several is enough", () => {
+    const legs = [leg(RIN, true), leg(RIN, false), leg(ME, true)];
+    expect(atFault(legs, ME, RIN)).toBe(RIN);
+  });
+
+  test("nobody when both still owed", () => {
+    expect(atFault([leg(ME, false), leg(RIN, false)], ME, RIN)).toBeNull();
+    expect(atFault([leg(ME, true), leg(ME, false), leg(RIN, false)], ME, RIN)).toBeNull();
+  });
+
+  test("nobody when both delivered", () => {
+    expect(atFault([leg(ME, true), leg(RIN, true)], ME, RIN)).toBeNull();
+  });
+
+  test("a party with no legs delivered, so the other is at fault", () => {
+    expect(atFault([leg(RIN, false)], ME, RIN)).toBe(RIN);
+    expect(atFault([leg(RIN, true), leg(RIN, false)], ME, RIN)).toBe(RIN);
+  });
+
+  test("a cash buyer is never at fault", () => {
+    expect(atFault([leg(RIN, true)], ME, RIN)).toBeNull();
+  });
+
+  test("a stuck leg is still owed", () => {
+    const stuck = leg(RIN, false, "2026-10-06T00:00:00Z");
+    expect(atFault([leg(ME, true), stuck], ME, RIN)).toBe(RIN);
   });
 });
 
@@ -346,32 +404,66 @@ describe("trade rules", () => {
     expect(cancelRefusal(trade({ status: "cancelled" }), true, 0)).toBe("trade_ended");
   });
 
-  test("feedback only on a completed trade, for 14 days", () => {
-    expect(rateRefusal(trade(), NOW)).toBe("not_completed");
+  test("feedback on a completed trade, for 14 days", () => {
+    expect(rateRefusal(trade(), NOW, ME, null)).toBe("not_completed");
     const ended = (days: number) => new Date(NOW.getTime() - days * DAY).toISOString();
-    expect(rateRefusal(trade({ status: "completed", endedAt: ended(13) }), NOW)).toBeNull();
-    expect(rateRefusal(trade({ status: "completed", endedAt: ended(15) }), NOW)).toBe(
+    expect(
+      rateRefusal(trade({ status: "completed", endedAt: ended(13) }), NOW, ME, null),
+    ).toBeNull();
+    expect(rateRefusal(trade({ status: "completed", endedAt: ended(15) }), NOW, ME, null)).toBe(
       "rating_closed",
     );
+  });
+
+  test("a failed trade takes feedback only from the party who delivered, for 14 days", () => {
+    const ended = (days: number) => new Date(NOW.getTime() - days * DAY).toISOString();
+    const failed = (days: number) => trade({ status: "failed", endedAt: ended(days) });
+    expect(rateRefusal(failed(13), NOW, ME, RIN)).toBeNull();
+    expect(rateRefusal(failed(15), NOW, ME, RIN)).toBe("rating_closed");
+    expect(rateRefusal(failed(1), NOW, RIN, RIN)).toBe("not_completed");
+  });
+
+  test("a failed trade with nobody at fault takes no feedback", () => {
+    const failed = trade({ status: "failed", endedAt: NOW.toISOString() });
+    expect(rateRefusal(failed, NOW, ME, null)).toBe("not_completed");
+  });
+
+  test("cancelled and in-progress trades take no feedback", () => {
+    const endedAt = NOW.toISOString();
+    expect(rateRefusal(trade({ status: "cancelled", endedAt }), NOW, ME, RIN)).toBe(
+      "not_completed",
+    );
+    expect(rateRefusal(trade(), NOW, ME, RIN)).toBe("not_completed");
   });
 });
 
 describe("toReputation", () => {
   test("the positive share leaves neutral out and rounds", () => {
-    expect(toReputation({ verified: 31, positive: 31, negative: 0, since: "2025-03" })).toEqual({
+    expect(
+      toReputation({
+        verified: 31,
+        unfinished: 2,
+        positive: 31,
+        negative: 0,
+        since: "2025-03",
+      }),
+    ).toEqual({
       verified: 31,
+      unfinished: 2,
       positive: 100,
       since: "2025-03",
     });
-    expect(toReputation({ verified: 3, positive: 2, negative: 1, since: "2025-03" }).positive).toBe(
-      67,
-    );
+    expect(
+      toReputation({ verified: 3, unfinished: 0, positive: 2, negative: 1, since: "2025-03" })
+        .positive,
+    ).toBe(67);
   });
 
   test("no share until a positive or negative rating", () => {
-    expect(toReputation({ verified: 2, positive: 0, negative: 0, since: "2025-03" }).positive).toBe(
-      null,
-    );
+    expect(
+      toReputation({ verified: 2, unfinished: 0, positive: 0, negative: 0, since: "2025-03" })
+        .positive,
+    ).toBe(null);
   });
 });
 

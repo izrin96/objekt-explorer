@@ -46,6 +46,10 @@ export function Feedback({
     }),
   );
   const value = rate.isPending ? rate.variables.rating : trade.rating;
+  const title =
+    trade.status === "failed"
+      ? m.offer_rating_title_failed({ name })
+      : m.offer_rating_title({ name });
 
   return (
     <section
@@ -56,12 +60,10 @@ export function Feedback({
       )}
     >
       <h3 id={headingId} className="text-sm font-medium">
-        {trade.status === "in_progress"
-          ? m.offer_rating_pending_title()
-          : m.offer_rating_title({ name })}
+        {trade.status === "in_progress" ? m.offer_rating_pending_title() : title}
       </h3>
       <SegmentedChoice
-        label={m.offer_rating_title({ name })}
+        label={title}
         options={TRADE_RATINGS.map((rating) => ({ value: rating, label: RATING_LABEL[rating]() }))}
         value={value}
         disabled={!trade.canRate}

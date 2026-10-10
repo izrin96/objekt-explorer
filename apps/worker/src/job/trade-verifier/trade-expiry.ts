@@ -83,7 +83,11 @@ export async function expireStalls(seenUntil: string | null): Promise<Publish[]>
           },
         })),
       );
-      return { notified, conversations: [{ id: conversationId, userIds: parties }] };
+      return {
+        notified,
+        conversations: [{ id: conversationId, userIds: parties }],
+        reputations: status === "failed" ? parties : [],
+      };
     });
     if (publish) publishes.push(publish);
   }

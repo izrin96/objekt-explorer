@@ -237,13 +237,19 @@ export function itemStillHeld(
   );
 }
 
-export type TradeParty = { userId: string; verified: number; createdAt: string | Date };
+export type TradeParty = {
+  userId: string;
+  verified: number;
+  unfinished: number;
+  createdAt: string | Date;
+};
 
 /**
- * Who should send first: fewer verified trades, then the newer account, then `b` (the
- * offer's recipient). A suggestion only; nothing enforces it.
+ * Who should send first: more unfinished trades, then fewer verified trades, then the newer
+ * account, then `b` (the offer's recipient). A suggestion only; nothing enforces it.
  */
 export function firstSender(a: TradeParty, b: TradeParty): string {
+  if (a.unfinished !== b.unfinished) return a.unfinished > b.unfinished ? a.userId : b.userId;
   if (a.verified !== b.verified) return a.verified < b.verified ? a.userId : b.userId;
   const aCreated = new Date(a.createdAt).getTime();
   const bCreated = new Date(b.createdAt).getTime();
@@ -282,20 +288,53 @@ export function cancelRefusal(
   return indexerBehind ? "indexer_behind" : null;
 }
 
-/** Only a completed trade takes feedback, until 14 days after it ended. */
-export function rateRefusal(trade: TradeState, now: Date): OfferRefusal | null {
-  if (trade.status !== "completed" || trade.endedAt === null) return "not_completed";
+type LegOwed = { fromUserId: string; verifiedAt: string | Date | null };
+
+/**
+ * The party at fault in a failed trade: the one who still owed a transfer while the other
+ * had delivered every leg they gave. A party giving no legs owed nothing the site can see.
+ * A leg stuck as non-transferable is still owed. Null when both or neither still owed.
+ */
+export function atFault(legs: LegOwed[], userA: string, userB: string): string | null {
+  const owes = (userId: string) =>
+    legs.some((leg) => leg.fromUserId === userId && leg.verifiedAt === null);
+  const aOwes = owes(userA);
+  if (aOwes === owes(userB)) return null;
+  return aOwes ? userA : userB;
+}
+
+/**
+ * A completed trade takes feedback from both parties; a failed one only from the party who
+ * delivered, so not from `faultyUser`. Either way until 14 days after it ended.
+ */
+export function rateRefusal(
+  trade: TradeState,
+  now: Date,
+  viewerId: string,
+  faultyUser: string | null,
+): OfferRefusal | null {
+  const rateable =
+    trade.status === "completed" ||
+    (trade.status === "failed" && faultyUser !== null && faultyUser !== viewerId);
+  if (!rateable || trade.endedAt === null) return "not_completed";
   const closes = new Date(trade.endedAt).getTime() + RATE_WINDOW_DAYS * DAY_MS;
   return now.getTime() > closes ? "rating_closed" : null;
 }
 
-type RatingCounts = { verified: number; positive: number; negative: number; since: string };
+type RatingCounts = {
+  verified: number;
+  unfinished: number;
+  positive: number;
+  negative: number;
+  since: string;
+};
 
 /** Neutral ratings count toward neither side of the share. */
 export function toReputation(counts: RatingCounts) {
   const rated = counts.positive + counts.negative;
   return {
     verified: counts.verified,
+    unfinished: counts.unfinished,
     positive: rated === 0 ? null : Math.round((100 * counts.positive) / rated),
     since: counts.since,
   };

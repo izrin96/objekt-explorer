@@ -223,8 +223,9 @@ export async function finishSettle(
   return {
     ended,
     notified,
-    // a completed trade changes both parties' cached reputation
-    reputations: outcome.status === "completed" ? [userA, userB] : [],
+    // a completed or failed trade changes both parties' cached reputation
+    reputations:
+      outcome.status === "completed" || outcome.status === "failed" ? [userA, userB] : [],
   };
 }
 
