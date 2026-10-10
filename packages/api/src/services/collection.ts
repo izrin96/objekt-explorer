@@ -13,13 +13,13 @@ import type {
   SerialTransfersOutput,
   SerialsOutput,
 } from "../schemas/collections";
-import { getSession } from "./auth";
 import { getCollectionColumns } from "./objekt";
 import { redis } from "./redis";
+import { getSession } from "./session";
 
-export type CollectionListQuery = { artist: ValidArtist[]; at?: string };
+type CollectionListQuery = { artist: ValidArtist[]; at?: string };
 
-export type CollectionList =
+type CollectionList =
   | { notModified: true; lastModifiedMs: number }
   | { notModified: false; lastModifiedMs: number; result: CollectionListOutput };
 

@@ -27,8 +27,9 @@ context: |
   create accounts or data without the user's explicit approval for that specific action.
   Mutation flows are verified up to the request boundary (validation, the request that would
   be sent) and recorded as "read-only verified"; read paths are exercised for real.
-  There is no test framework: `bun run lint`, `bun run typecheck` and `bun run build` are the
-  checks. Never git commit, push or run DB migrations without explicit approval.
+  The checks are `bun run lint`, `bun run typecheck`, `bun run test` and `bun run build`;
+  tests cover pure modules only (see AGENTS.md). Never git commit, push or run DB migrations
+  without explicit approval.
 
 rules:
   proposal:

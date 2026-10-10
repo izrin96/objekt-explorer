@@ -4,7 +4,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { Select, SelectItem, SelectPopup, SelectPrimitive } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
-type SingleOption<T extends string> = { value: T; label: string };
+type SingleOption<T extends string> = { value: T; label: string; disabled?: boolean };
 
 type SingleSelectProps<T extends string> = {
   label: string;
@@ -52,7 +52,7 @@ export function SingleSelect<T extends string>({
       </SelectPrimitive.Trigger>
       <SelectPopup alignItemWithTrigger={false} className="min-w-40">
         {options.map((o) => (
-          <SelectItem key={o.value} value={o.value}>
+          <SelectItem key={o.value} value={o.value} disabled={o.disabled}>
             {o.label}
           </SelectItem>
         ))}

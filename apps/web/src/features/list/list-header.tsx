@@ -8,16 +8,24 @@ import {
   TrashIcon,
   UsersIcon,
 } from "@phosphor-icons/react";
+import { canBeOnTrade, pickedSides, tradeSideOf } from "@repo/api/schemas/list";
+import { fullestFilter } from "@repo/api/schemas/trade";
+import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 
+import { PendingStatus } from "@/components/router/pending";
 import { SocialBadge } from "@/components/shared/social-badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Menu, MenuItem, MenuPopup, MenuSeparator, MenuTrigger } from "@/components/ui/menu";
+import { Skeleton } from "@/components/ui/skeleton";
+import { MessageButton } from "@/features/chat/message-button";
 import { CompareDialog } from "@/features/compare/compare-dialog";
+import { SkeletonGrid } from "@/features/objekt/skeleton-grid";
 import { ProfileLink } from "@/features/profile/profile-hover-card";
+import { listMatchCountOptions } from "@/features/trade/queries";
 import { displayNickname } from "@/lib/address";
 import { m } from "@/paraglide/messages";
 
@@ -26,21 +34,31 @@ import { EditListDialog } from "./edit-list-dialog";
 import { ExportListDialog } from "./export-list-dialog";
 import { getListLinkOption } from "./list-link";
 import { useListTarget } from "./list-provider";
-import { ListTypeBadge } from "./list-type-badge";
+import { ListTypeBadge, openToLabel } from "./list-type-badge";
 import { ShareListButton } from "./share-list-button";
-import { TradeMatchesDialog, useCanTradeMatch } from "./trade-matches";
 import { useListOwned } from "./use-list-owned";
 
 export function ListHeader() {
   const list = useListTarget();
   const isOwner = useListOwned();
-  const canTradeMatch = useCanTradeMatch();
+  const side = tradeSideOf(list.listTypeNew);
+  const canTradeMatch = isOwner && (side === "want" || (side === "have" && list.isProfileBind));
   const [compareOpen, setCompareOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
-  const [tradeOpen, setTradeOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const linked = list.linkedList;
+  const self = { id: list.id, listTypeNew: list.listTypeNew, linkedListId: linked?.id ?? null };
+  const linkedOnTrade =
+    linked && canBeOnTrade(linked.listTypeNew, linked.isProfileBind)
+      ? [{ id: linked.id, listTypeNew: linked.listTypeNew, linkedListId: list.id }]
+      : [];
+  const sides = pickedSides(self, [self, ...linkedOnTrade]);
+  const match = fullestFilter({
+    have: sides.haveListIds.length > 0,
+    want: sides.wantListIds.length > 0,
+  });
+  const openTo = openToLabel(list);
   const swappable = (list.listTypeNew === "have" || list.listTypeNew === "want") && linked;
 
   return (
@@ -60,6 +78,13 @@ export function ListHeader() {
               </Badge>
             ) : null}
             {list.listTypeNew !== "general" ? <ListTypeBadge type={list.listTypeNew} /> : null}
+            {openTo ? <span className="text-muted-foreground text-xs">{openTo}</span> : null}
+            {list.discoverable && canBeOnTrade(list.listTypeNew, list.isProfileBind) ? (
+              <Badge variant="outline" size="sm" render={<Link to="/trade" />}>
+                <ArrowsLeftRightIcon aria-hidden />
+                {m.list_on_trade()}
+              </Badge>
+            ) : null}
             {list.listTypeNew === "sale" && list.currency ? (
               <span className="text-muted-foreground font-mono text-xs">({list.currency})</span>
             ) : null}
@@ -104,6 +129,10 @@ export function ListHeader() {
               {list.listTypeNew === "have" ? m.list_swap_to_want() : m.list_swap_to_have()}
             </Button>
           ) : null}
+          {canTradeMatch ? <TradeMatchesLink slug={list.slug} match={match} /> : null}
+          {list.messageable && !isOwner ? (
+            <MessageButton target={{ kind: "list", slug: list.slug }} />
+          ) : null}
           <ShareListButton list={list} />
           <Menu>
             <MenuTrigger
@@ -122,12 +151,6 @@ export function ListHeader() {
                 <DownloadSimpleIcon />
                 {m.common_actions_export()}
               </MenuItem>
-              {canTradeMatch ? (
-                <MenuItem onClick={() => setTradeOpen(true)}>
-                  <UsersIcon />
-                  {m.list_trade_matches_title()}
-                </MenuItem>
-              ) : null}
               {isOwner ? (
                 <>
                   <MenuSeparator />
@@ -160,7 +183,6 @@ export function ListHeader() {
         onOpenChange={setCompareOpen}
       />
       <ExportListDialog slug={list.slug} open={exportOpen} onOpenChange={setExportOpen} />
-      <TradeMatchesDialog open={tradeOpen} onOpenChange={setTradeOpen} />
       {isOwner ? (
         <>
           <EditListDialog
@@ -179,5 +201,55 @@ export function ListHeader() {
         </>
       ) : null}
     </div>
+  );
+}
+
+/** The count is the partners For you shows for this list in `match`, its fullest view. */
+function TradeMatchesLink({
+  slug,
+  match,
+}: {
+  slug: string;
+  match: ReturnType<typeof fullestFilter>;
+}) {
+  const { data: count } = useQuery(listMatchCountOptions(slug));
+
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      aria-label={count === undefined ? undefined : m.trade_matches_link_label({ count })}
+      render={<Link to="/trade/for-you" search={{ list: slug, match }} />}
+    >
+      <UsersIcon />
+      {m.nav_trade_matches()}
+      {count === undefined ? null : (
+        <Badge variant="secondary" size="sm" className="font-mono tabular-nums">
+          {count}
+        </Badge>
+      )}
+    </Button>
+  );
+}
+
+/** A list page while it loads: the header's shape over the objekt grid. */
+export function ListPageSkeleton() {
+  return (
+    <>
+      <PendingStatus />
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="flex flex-col gap-2">
+          <Skeleton className="h-7 w-56 max-w-full" />
+          <Skeleton className="h-4 w-36" />
+          <Skeleton className="h-6 w-44" />
+        </div>
+        <div className="flex gap-1.5">
+          <Skeleton className="h-8 w-24 rounded-md" />
+          <Skeleton className="size-8 rounded-md" />
+        </div>
+      </div>
+      <Skeleton className="h-9 w-full max-w-xl rounded-lg" />
+      <SkeletonGrid />
+    </>
   );
 }

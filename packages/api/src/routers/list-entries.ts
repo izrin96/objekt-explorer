@@ -21,6 +21,7 @@ import {
   fetchListWithEntries,
   fetchProfileLists,
   findOwnedList,
+  touchList,
 } from "../services/list";
 
 export const listEntriesRouter = {
@@ -100,6 +101,8 @@ export const listEntriesRouter = {
         .delete(listEntries)
         .where(and(inArray(listEntries.id, entryIds), eq(listEntries.listId, list.id)))
         .returning({ id: listEntries.id });
+
+      if (rows.length > 0) await touchList([list.id]);
 
       return { removed: rows.length };
     },

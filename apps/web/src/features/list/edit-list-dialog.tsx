@@ -91,9 +91,9 @@ function toDraft(list: StoredList): ListDraft {
     profileAddress: list.profileAddress,
     isProfileBind: list.isProfileBind,
     discoverable: list.discoverable ?? false,
+    matchSale: list.matchSale,
     gridColumns: list.gridColumns,
     hideSerial: list.hideSerial,
-    hideUser: list.hideUser,
     regenerateSlug: false,
   };
 }

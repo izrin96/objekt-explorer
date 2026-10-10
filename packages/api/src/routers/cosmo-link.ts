@@ -184,7 +184,6 @@ export const cosmoLinkRouter = {
             cosmoId: data.cosmoId,
             linkedAt: sql`'now'`,
             userId: session.user.id,
-            hideUser: false,
           },
         ])
         .onConflictDoUpdate({
@@ -194,7 +193,6 @@ export const cosmoLinkRouter = {
             cosmoId: data.cosmoId,
             linkedAt: sql`'now'`,
             userId: session.user.id,
-            hideUser: false,
           },
           where: sql`${userAddress.userId} IS NULL`,
         })

@@ -37,6 +37,8 @@
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
 
+  --color-chat-mine: var(--chat-mine);
+
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
 
@@ -63,6 +65,12 @@
 
   --color-info: var(--info);
   --color-info-foreground: var(--info-foreground);
+
+  /* list types and trade progress: ink on an 8% (light) or 16% (dark) tint, as Badge tints */
+  --color-type-have: var(--type-have);
+  --color-type-want: var(--type-want);
+  --color-type-sale: var(--type-sale);
+  --color-progress: var(--progress);
 
   /* Transfer-event categories. Not feedback: an objekt being spun is not an
      error, so these are their own hues rather than borrowed status tokens. */
@@ -159,6 +167,7 @@
   --foreground: oklch(0.205 0.006 285.911);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.205 0.006 285.911);
+  --chat-mine: oklch(0.92 0.004 286);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.205 0.006 285.911);
   --primary: oklch(0.225 0.006 285.902);
@@ -191,6 +200,15 @@
   --warning-foreground: oklch(0.52 0.106 85);
   --destructive: oklch(0.58 0.232 17.585);
   --destructive-foreground: oklch(0.52 0.208 17.585);
+  /*
+   * List types (have teal, want amber, sale rose) and in-progress indigo, kept
+   * off success's green so green means verified. Each is ink for its own tint
+   * and clears 4.5:1 on it.
+   */
+  --type-have: oklch(0.5 0.1 182);
+  --type-want: oklch(0.53 0.12 65);
+  --type-sale: oklch(0.52 0.17 355);
+  --progress: oklch(0.5 0.2 277);
   /*
    * The three transfer events, as solid dots rather than tints. One L per
    * theme so no event outweighs another. A dot is a solid mark with nothing
@@ -250,6 +268,7 @@
   --foreground: oklch(0.965 0.002 284.795);
   --card: oklch(0.178 0.004 285.886);
   --card-foreground: oklch(0.965 0.002 284.795);
+  --chat-mine: oklch(0.32 0.008 286);
   --popover: oklch(0.19 0.004 285.877);
   --popover-foreground: oklch(0.965 0.002 284.795);
   --primary: oklch(0.965 0.002 284.795);
@@ -273,6 +292,11 @@
   --warning-foreground: oklch(0.905 0.177 98.111);
   --destructive: oklch(0.586 0.234 17.585);
   --destructive-foreground: oklch(0.712 0.18 17.585);
+  /* lighter than accent-solid, which fails 4.5:1 as text on the dark card */
+  --type-have: oklch(0.8 0.12 182);
+  --type-want: oklch(0.84 0.135 78);
+  --type-sale: oklch(0.78 0.14 352);
+  --progress: oklch(0.78 0.14 277);
   /* same hues and the same 80% of max, lifted to the one L a near-black page
      needs; indigo is the hue that decides it, since its gamut thins fastest */
   --event-mint: oklch(0.72 0.157 131);
@@ -386,6 +410,30 @@
       scroll-behavior: auto !important;
     }
   }
+}
+
+/*
+ * Unlayered, so it beats the popup's utilities. `Skeleton` pins its shimmer to the viewport
+ * (`background-attachment: fixed`), which any transform on an ancestor breaks into one sweep
+ * per card; an open dialog keeps a no-op `scale` and `will-change`, and an open drawer a zero-offset `transform`,
+ * so they go while it rests.
+ */
+[data-slot="dialog-popup"]:not(
+  [data-starting-style],
+  [data-ending-style],
+  [data-nested-dialog-open]
+) {
+  scale: none;
+  will-change: auto;
+}
+
+[data-slot="drawer-popup"]:not(
+  [data-starting-style],
+  [data-ending-style],
+  [data-nested-drawer-open]
+) {
+  transform: none;
+  will-change: auto;
 }
 
 @layer components {

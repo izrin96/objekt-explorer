@@ -123,3 +123,48 @@ export function FilterSearchField() {
     </InputGroup>
   );
 }
+
+/** The same grammar for a picker in a dialog, whose filters live in its own state, not the URL. */
+export function PickerSearchField({ onCommit }: { onCommit: (value: string) => void }) {
+  const [draft, setDraft] = useState("");
+  const ref = useRef<HTMLInputElement>(null);
+  const commit = useDebouncedCallback(onCommit, 250);
+
+  return (
+    <InputGroup className="min-w-48 flex-1">
+      <InputGroupInput
+        ref={ref}
+        size="sm"
+        type="search"
+        aria-label={m.common_search_aria()}
+        placeholder={m.filter_quick_search()}
+        value={draft}
+        onChange={(event) => {
+          setDraft(event.target.value);
+          commit(event.target.value);
+        }}
+      />
+      <InputGroupAddon>
+        <MagnifyingGlassIcon />
+      </InputGroupAddon>
+      <InputGroupAddon align="inline-end">
+        {draft.length === 0 ? (
+          <SearchHelp />
+        ) : (
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            aria-label={m.filter_search_clear_aria()}
+            onClick={() => {
+              setDraft("");
+              commit("");
+              ref.current?.focus();
+            }}
+          >
+            <XIcon />
+          </Button>
+        )}
+      </InputGroupAddon>
+    </InputGroup>
+  );
+}

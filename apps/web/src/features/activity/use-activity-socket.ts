@@ -1,28 +1,21 @@
-import {
-  type ActivityClientMessage,
-  type ActivityMessage,
-  activityMessageSchema,
-} from "@repo/api/schemas/activity";
+import { type ActivityMessage, activityItemSchema } from "@repo/api/schemas/activity";
+import { ACTIVITY_CHANNEL } from "@repo/api/schemas/realtime";
 import { useEffect, useRef } from "react";
 
-import { clientEnv } from "@/lib/env/client";
+import { acquireRealtime, realtime } from "@/lib/realtime";
 
-const RECONNECT_BASE = 1000;
-const RECONNECT_MAX = 30_000;
-
-function socketUrl(): string {
-  const configured = clientEnv.VITE_ACTIVITY_WEBSOCKET_URL;
-  if (configured) return configured;
-  return `${location.protocol === "https:" ? "wss:" : "ws:"}//${location.host}/ws`;
-}
+/** How many recent rows the channel keeps, and so the most a new page can start from. */
+const HISTORY_LIMIT = 50;
+/** Rows published one per message that land within this window are one batch, as the feed highlights one. */
+const BATCH_MS = 100;
 
 /**
- * The feed's live half: `VITE_ACTIVITY_WEBSOCKET_URL` when set, else the
- * same-origin `/ws` that `server.ts` serves.
+ * The feed's live half: the public `activity:feed` channel on the tab's one connection, with no
+ * session needed. The channel's history seeds a new page, and a short drop replays what was
+ * missed; rows already shown are skipped by transfer id downstream.
  *
- * `onMessage` is held in a ref: it closes over the current filters and changes
- * on every navigation, and reopening the socket for that would lose the
- * backlog the server replays on connect.
+ * `onMessage` is held in a ref: it closes over the current filters and changes on every
+ * navigation, and resubscribing for that would seed the page again.
  */
 export function useActivitySocket({
   enabled,
@@ -39,48 +32,49 @@ export function useActivitySocket({
 
   useEffect(() => {
     if (!enabled) return;
-    const url = socketUrl();
+    const connection = realtime();
+    const subscription =
+      connection.getSubscription(ACTIVITY_CHANNEL) ?? connection.newSubscription(ACTIVITY_CHANNEL);
 
-    let socket: WebSocket | undefined;
-    let retry: ReturnType<typeof setTimeout> | undefined;
-    let attempt = 0;
-    let disposed = false;
+    // rows arrive oldest first, one per publication, and the feed draws a batch newest first
+    let pending: ActivityMessage["data"] = [];
+    let flush: ReturnType<typeof setTimeout> | undefined;
+    subscription.on("publication", (ctx) => {
+      const item = activityItemSchema.safeParse(ctx.data);
+      if (!item.success) return;
+      pending.push(item.data);
+      flush ??= setTimeout(() => {
+        const data = pending.toReversed();
+        pending = [];
+        flush = undefined;
+        handler.current({ type: "transfer", data });
+      }, BATCH_MS);
+    });
 
-    const connect = () => {
-      socket = new WebSocket(url);
+    // the history is newest first, the order a batch is drawn in
+    subscription.on("subscribed", (ctx) => {
+      if (ctx.wasRecovering && ctx.recovered) return;
+      subscription
+        .history({ limit: HISTORY_LIMIT, reverse: true })
+        .then(({ publications }) => {
+          const data = publications.flatMap((publication) => {
+            const item = activityItemSchema.safeParse(publication.data);
+            return item.success ? [item.data] : [];
+          });
+          if (data.length > 0) handler.current({ type: "history", data });
+        })
+        .catch(() => undefined);
+    });
 
-      socket.addEventListener("open", () => {
-        attempt = 0;
-        // the server answers with the last batch it published, which fills the
-        // gap between the page request and the socket being ready
-        socket?.send(JSON.stringify({ type: "request_history" } satisfies ActivityClientMessage));
-      });
-
-      socket.addEventListener("message", (event: MessageEvent<string>) => {
-        let parsed: unknown;
-        try {
-          parsed = JSON.parse(event.data);
-        } catch {
-          return;
-        }
-        const message = activityMessageSchema.safeParse(parsed);
-        if (message.success) handler.current(message.data);
-      });
-
-      socket.addEventListener("close", () => {
-        if (disposed) return;
-        const delay = Math.min(RECONNECT_BASE * 2 ** attempt, RECONNECT_MAX);
-        attempt += 1;
-        retry = setTimeout(connect, delay);
-      });
-    };
-
-    connect();
+    subscription.subscribe();
+    const release = acquireRealtime({ signedIn: false });
 
     return () => {
-      disposed = true;
-      clearTimeout(retry);
-      socket?.close();
+      clearTimeout(flush);
+      release();
+      subscription.removeAllListeners();
+      subscription.unsubscribe();
+      connection.removeSubscription(subscription);
     };
   }, [enabled]);
 }

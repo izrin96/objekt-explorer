@@ -25,9 +25,13 @@ RUN --mount=type=secret,id=VITE_UMAMI_SCRIPT_URL \
     bun run --filter web build:prod
 
 # Compile server.ts into a standalone binary
-# (builder stage has the full source from turbo prune)
+# (builder stage has the full source from turbo prune).
+# auth.ts loads account-anonymize on use; bundling it pulls @tanstack/react-start, whose
+# virtual entries only Vite resolves. The socket server never deletes accounts, and the
+# Vite server bundle that handles /api/auth carries its own copy
 RUN bun build ./apps/web/server.ts \
   --compile \
+  --external '*/account-anonymize' \
   --outfile /app/server \
   --target bun \
   --minify

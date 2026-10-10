@@ -1,11 +1,15 @@
-import type { ListTypeNew, PublicList } from "@repo/api/schemas/list";
+import { InfoIcon } from "@phosphor-icons/react";
+import { canBeOnTrade, type ListTypeNew, type PublicList } from "@repo/api/schemas/list";
+import { Link } from "@tanstack/react-router";
 import slugify from "slugify";
 import * as z from "zod";
 
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Radio, RadioGroup } from "@/components/ui/radio-group";
 import {
   Select,
   SelectItem,
@@ -16,7 +20,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { displayNickname, isSameAddress } from "@/lib/address";
-import { SITE_NAME, getBaseURL } from "@/lib/utils";
+import { getBaseURL } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import { LIST_TYPE_LABEL } from "./list-type-badge";
@@ -26,6 +30,21 @@ const NONE = "__none__";
 const CURRENCY_RE = /^[A-Za-z]{3}$/;
 
 const LIST_TYPES: ListTypeNew[] = ["general", "have", "want", "sale"];
+
+const MATCH_WITH = [
+  {
+    value: "trades",
+    matchSale: false,
+    label: m.list_create_match_trades_label,
+    description: m.list_create_match_trades_desc,
+  },
+  {
+    value: "sales",
+    matchSale: true,
+    label: m.list_create_match_sales_label,
+    description: m.list_create_match_sales_desc,
+  },
+] as const;
 
 const LIST_TYPE_DESC: Record<ListTypeNew, () => string> = {
   general: m.list_create_general_list_desc,
@@ -43,9 +62,9 @@ export type ListDraft = {
   profileAddress: string | null;
   isProfileBind: boolean;
   discoverable: boolean;
+  matchSale: boolean;
   gridColumns: number | null;
   hideSerial: boolean;
-  hideUser: boolean;
   regenerateSlug: boolean;
 };
 
@@ -58,9 +77,9 @@ export const EMPTY_DRAFT: ListDraft = {
   profileAddress: null,
   isProfileBind: false,
   discoverable: false,
+  matchSale: false,
   gridColumns: null,
   hideSerial: false,
-  hideUser: false,
   regenerateSlug: false,
 };
 
@@ -108,9 +127,9 @@ export function toCreateInput(draft: ListDraft) {
     linkedListId: ["have", "want"].includes(draft.listTypeNew) ? draft.linkedListId : null,
     profileAddress: draft.profileAddress,
     isProfileBind,
-    discoverable: draft.discoverable,
+    discoverable: draft.listTypeNew !== "general" && draft.discoverable,
+    matchSale: draft.listTypeNew !== "want" || draft.matchSale,
     hideSerial: draft.hideSerial,
-    hideUser: draft.hideUser,
   };
 }
 
@@ -146,7 +165,7 @@ export function ListForm({ idPrefix, value, onChange, lists, profiles, mode, url
   const linkable = lists.filter((list) =>
     value.listTypeNew === "have" ? list.listTypeNew === "want" : list.listTypeNew === "have",
   );
-  const discoverableDisabled = value.listTypeNew !== "want" && !value.isProfileBind;
+  const discoverableDisabled = !canBeOnTrade(value.listTypeNew, value.isProfileBind);
 
   return (
     <div className="flex flex-col gap-4">
@@ -272,6 +291,25 @@ export function ListForm({ idPrefix, value, onChange, lists, profiles, mode, url
         </div>
       ) : null}
 
+      {/* binding is set only here, and without it a have or sale list never goes on Trade */}
+      {bindable && !isEdit && (profiles.length === 0 || !value.isProfileBind) ? (
+        <Alert>
+          <InfoIcon aria-hidden />
+          <AlertDescription>
+            {profiles.length === 0 ? (
+              <>
+                {m.list_create_bind_note_link()}{" "}
+                <Link to="/link/connect" className="font-medium underline underline-offset-2">
+                  {m.link_link_cosmo()}
+                </Link>
+              </>
+            ) : (
+              m.list_create_bind_note_off()
+            )}
+          </AlertDescription>
+        </Alert>
+      ) : null}
+
       <Field name="profileAddress" className="min-w-0 gap-1.5">
         <FieldLabel htmlFor={id("profile")}>
           {value.isProfileBind
@@ -335,23 +373,48 @@ export function ListForm({ idPrefix, value, onChange, lists, profiles, mode, url
 
       {value.listTypeNew !== "general" ? (
         <SwitchRow
-          id={id("discoverable")}
+          id={id("show-on-trade")}
           label={
-            isSale ? m.list_create_discoverable_sale_label() : m.list_create_discoverable_label()
+            isSale ? m.list_create_discoverable_sale_label() : m.list_create_show_on_trade_label()
           }
           description={
             discoverableDisabled
               ? m.list_create_requires_bind_desc()
-              : value.listTypeNew === "want"
-                ? m.list_create_discoverable_want_desc()
-                : isSale
-                  ? m.list_create_discoverable_sale_desc()
-                  : m.list_create_discoverable_have_desc()
+              : isSale
+                ? m.list_create_on_market_desc()
+                : m.list_create_on_trade_desc()
           }
-          checked={value.discoverable}
+          checked={value.discoverable && !discoverableDisabled}
           disabled={discoverableDisabled}
           onCheckedChange={(checked) => set({ discoverable: checked })}
         />
+      ) : null}
+
+      {value.listTypeNew === "want" ? (
+        <div className="flex min-w-0 flex-col gap-1.5">
+          <Label render={<span />} id={id("match-with")}>
+            {m.list_create_match_with_label()}
+          </Label>
+          <RadioGroup
+            aria-labelledby={id("match-with")}
+            value={value.matchSale ? "sales" : "trades"}
+            onValueChange={(next) => {
+              const picked = MATCH_WITH.find((option) => option.value === next);
+              if (picked) set({ matchSale: picked.matchSale });
+            }}
+            className="gap-2.5"
+          >
+            {MATCH_WITH.map((option) => (
+              <Field key={option.value} className="w-full flex-row items-start gap-2.5">
+                <Radio value={option.value} className="mt-0.5" />
+                <FieldLabel className="flex-col items-start gap-0.5 font-normal">
+                  <span className="text-sm font-medium">{option.label()}</span>
+                  <FieldDescription render={<span />}>{option.description()}</FieldDescription>
+                </FieldLabel>
+              </Field>
+            ))}
+          </RadioGroup>
+        </div>
       ) : null}
 
       {/* a serial only exists on an entry the bound profile owns */}
@@ -370,14 +433,6 @@ export function ListForm({ idPrefix, value, onChange, lists, profiles, mode, url
         />
       ) : null}
 
-      <SwitchRow
-        id={id("hide-user")}
-        label={m.list_create_hide_user_label()}
-        description={m.list_create_hide_user_desc({ siteName: SITE_NAME })}
-        checked={value.hideUser}
-        onCheckedChange={(checked) => set({ hideUser: checked })}
-      />
-
       {isEdit && url ? (
         <div className="flex min-w-0 flex-col gap-2">
           <div className="flex min-w-0 flex-col gap-1.5">
@@ -390,7 +445,7 @@ export function ListForm({ idPrefix, value, onChange, lists, profiles, mode, url
                 id={id("url")}
                 readOnly
                 unstyled
-                className="grow px-3 text-sm"
+                className="grow text-sm"
                 value={
                   value.regenerateSlug
                     ? slugify(value.name, { lower: true, strict: true }) || url.fallbackSlug

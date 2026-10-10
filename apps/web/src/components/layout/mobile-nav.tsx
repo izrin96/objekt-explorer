@@ -2,7 +2,7 @@ import { CubeIcon, ListIcon, NoteIcon, SignInIcon } from "@phosphor-icons/react"
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 
-import type { NavLink } from "@/components/layout/app-nav";
+import { type NavLink, useAlsoActive } from "@/components/layout/app-nav";
 import { ChangelogDialog, NewDot, useChangelogNew } from "@/components/layout/changelog";
 import { SystemStatus } from "@/components/layout/system-status";
 import { UserAvatar, useSignInSearch } from "@/components/layout/user-menu";
@@ -22,12 +22,13 @@ import { SITE_NAME } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 /**
- * Below `md` the nav links live here instead: a left Sheet holding the same
+ * Below `lg` the nav links live here instead: a left Sheet holding the same
  * links plus the changelog, which the bar has no room for. Each Link closes
  * the sheet on click — Base UI's Dialog has no router awareness.
  */
 export function MobileNav({ links }: { links: readonly NavLink[] }) {
   const [open, setOpen] = useState(false);
+  const alsoActive = useAlsoActive();
   const [changelogOpen, setChangelogOpen] = useState(false);
   const changelog = useChangelogNew();
   const { data: user } = useCurrentUser();
@@ -42,7 +43,7 @@ export function MobileNav({ links }: { links: readonly NavLink[] }) {
               variant="ghost"
               size="icon"
               aria-label={m.nav_open_menu()}
-              className="-ml-1.5 md:hidden"
+              className="-ml-1.5 lg:hidden"
             />
           }
         >
@@ -64,6 +65,7 @@ export function MobileNav({ links }: { links: readonly NavLink[] }) {
                 key={l.key}
                 to={l.to}
                 activeOptions={{ exact: l.exact }}
+                data-status={alsoActive(l) ? "active" : undefined}
                 onClick={() => setOpen(false)}
                 className="text-muted-foreground hover:text-foreground data-[status=active]:bg-secondary data-[status=active]:text-foreground rounded-lg px-3 py-2 text-sm font-medium"
               >
@@ -86,7 +88,7 @@ export function MobileNav({ links }: { links: readonly NavLink[] }) {
               {changelog.isNew ? <NewDot placement="inline" /> : null}
             </button>
 
-            {/* the nav's status button has nowhere to sit below `md`, so it lands here */}
+            {/* the nav's status button has nowhere to sit below `lg`, so it lands here */}
             <SystemStatus label={m.nav_system_status()} className="mt-1.5 justify-start" />
 
             <Separator className="mt-auto" />

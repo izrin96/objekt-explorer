@@ -12,3 +12,4 @@ export const collectionFiltersSchema = z.object({
   on_offline: queryArray(z.enum(validOnlineTypes)).default([]),
   collection: queryArray(z.string()).default([]),
 });
+export type CollectionFilters = z.infer<typeof collectionFiltersSchema>;

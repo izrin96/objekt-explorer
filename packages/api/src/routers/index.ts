@@ -6,6 +6,7 @@ import type {
 } from "@orpc/server";
 
 import { activityRouter } from "./activity";
+import { chatRouter } from "./chat";
 import { collectionsRouter } from "./collections";
 import { compareRouter } from "./compare";
 import { configRouter } from "./config";
@@ -14,10 +15,15 @@ import { listRouter } from "./list";
 import { liveRouter } from "./live";
 import { lockedObjektsRouter } from "./locked-objekts";
 import { marketRouter } from "./market";
+import { moderationRouter } from "./moderation";
+import { notificationsRouter } from "./notifications";
 import { objektsRouter } from "./objekts";
+import { offerRouter } from "./offer";
 import { pinsRouter } from "./pins";
 import { profileRouter } from "./profile";
+import { realtimeRouter } from "./realtime";
 import { statusRouter } from "./status";
+import { tradeRouter } from "./trade";
 import { transfersRouter } from "./transfers";
 import { userRouter } from "./user";
 
@@ -37,6 +43,12 @@ export const router = {
   objekts: objektsRouter,
   transfers: transfersRouter,
   live: liveRouter,
+  trade: tradeRouter,
+  notifications: notificationsRouter,
+  chat: chatRouter,
+  moderation: moderationRouter,
+  offer: offerRouter,
+  realtime: realtimeRouter,
 };
 
 /** What `/api/v1` serves and documents; everything else stays RPC-only. */
@@ -47,7 +59,13 @@ export const openApiRouter = {
   transfers: transfersRouter,
   user: { search: userRouter.search },
   live: liveRouter,
-  market: marketRouter,
+  // `listingsForViewer` is the site's own read
+  market: {
+    summary: marketRouter.summary,
+    marketListings: marketRouter.marketListings,
+    rates: marketRouter.rates,
+    stats: marketRouter.stats,
+  },
   profiles: {
     preview: profileRouter.preview,
     pins: pinsRouter.list,

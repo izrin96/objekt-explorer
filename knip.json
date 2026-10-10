@@ -29,6 +29,10 @@
       "entry": ["src/**/*.ts"],
       "project": ["src/**/*.ts"]
     },
+    "packages/email": {
+      "entry": ["src/templates/*.tsx"],
+      "project": ["src/**/*.{ts,tsx}"]
+    },
     "packages/cosmo": {
       "entry": ["src/**/*.ts"],
       "project": ["src/**/*.ts"]

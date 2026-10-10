@@ -21,12 +21,6 @@ export const activityMessageSchema = z.object({
 });
 export type ActivityMessage = z.infer<typeof activityMessageSchema>;
 
-/** what a client may send the activity socket */
-export const activityClientMessageSchema = z.object({
-  type: z.literal("request_history"),
-});
-export type ActivityClientMessage = z.infer<typeof activityClientMessageSchema>;
-
 export const activityFeedOutputSchema = z.object({
   items: z.array(activityItemSchema.extend({ objekt: ownedObjektSchema })),
   nextCursor: timestampCursorSchema.optional(),

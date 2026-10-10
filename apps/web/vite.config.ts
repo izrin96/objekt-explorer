@@ -9,6 +9,9 @@ export default defineConfig(({ command }) => {
   return {
     server: {
       port: 3200,
+      proxy: {
+        "/connection": { target: "http://localhost:8000", ws: true },
+      },
     },
     build: {
       chunkSizeWarningLimit: 1600,
@@ -39,6 +42,9 @@ export default defineConfig(({ command }) => {
     },
     optimizeDeps: {
       exclude: ["bun"],
+      // found late through server-function files; listing them up front stops a mid-session
+      // re-bundle that leaves open tabs importing renamed chunks
+      include: ["drizzle-orm", "drizzle-orm/node-postgres", "drizzle-orm/pg-core"],
     },
     resolve: {
       tsconfigPaths: true,

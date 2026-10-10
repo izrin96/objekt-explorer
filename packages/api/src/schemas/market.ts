@@ -1,16 +1,16 @@
 import * as z from "zod";
 
-export const sortBySchema = z.enum(["price", "createdAt"]);
+const sortBySchema = z.enum(["price", "createdAt"]);
 export type SortBy = z.infer<typeof sortBySchema>;
 
-export const sortDirSchema = z.enum(["asc", "desc"]);
+const sortDirSchema = z.enum(["asc", "desc"]);
 export type SortDir = z.infer<typeof sortDirSchema>;
 
 /**
  * Minimal list info for constructing {@link getListLinkOption}.
  * Only includes the fields `getListLinkOption` reads.
  */
-export const marketListInfoSchema = z.object({
+const marketListInfoSchema = z.object({
   slug: z.string(),
   profileSlug: z.string().nullable(),
   profile: z
@@ -21,7 +21,7 @@ export const marketListInfoSchema = z.object({
     .nullable(),
 });
 
-export const marketListingSchema = z.object({
+const marketListingSchema = z.object({
   id: z.number(),
   price: z.number().nullable(),
   isQyop: z.boolean(),
@@ -31,12 +31,19 @@ export const marketListingSchema = z.object({
   usdPrice: z.number().nullable(),
   serial: z.number().nullable(),
   transferable: z.boolean().nullable(),
+  /** null when the list hides serials */
+  objektId: z.string().nullable(),
   list: marketListInfoSchema,
 });
 
 export type MarketListing = z.infer<typeof marketListingSchema>;
 
-export const marketSummaryEntrySchema = z.object({
+/** The site's own read: whether the list's owner accepts a message started from this row. */
+const viewerMarketListingSchema = marketListingSchema.extend({ messageable: z.boolean() });
+
+export type ViewerMarketListing = z.infer<typeof viewerMarketListingSchema>;
+
+const marketSummaryEntrySchema = z.object({
   slug: z.string(),
   count: z.number(),
   /** cheapest listing in USD — null when every listing is QYOP or unpriced */
@@ -68,7 +75,11 @@ export const marketListingsOutputSchema = z.object({
   nextOffset: z.number().optional(),
 });
 
-export type MarketListingsOutput = z.infer<typeof marketListingsOutputSchema>;
+export const viewerMarketListingsOutputSchema = marketListingsOutputSchema.extend({
+  items: z.array(viewerMarketListingSchema),
+});
+
+export type ViewerMarketListingsOutput = z.infer<typeof viewerMarketListingsOutputSchema>;
 
 export const marketListingsInputSchema = z.object({
   collectionSlug: z.string(),
@@ -77,3 +88,5 @@ export const marketListingsInputSchema = z.object({
   offset: z.coerce.number<number>().int().min(0).default(0),
   limit: z.coerce.number<number>().int().min(1).max(100).default(20),
 });
+
+export type MarketListingsInput = z.output<typeof marketListingsInputSchema>;

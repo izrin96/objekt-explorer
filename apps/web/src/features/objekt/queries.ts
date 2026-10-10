@@ -50,7 +50,7 @@ export const transfersOptions = (slug: string, serial: number | null) =>
   });
 
 export const marketListingsOptions = (slug: string, sortBy: SortBy, sortDir: SortDir) =>
-  orpc.market.marketListings.infiniteOptions({
+  orpc.market.listingsForViewer.infiniteOptions({
     input: (offset: number) => ({ collectionSlug: slug, sortBy, sortDir, offset, limit: 20 }),
     initialPageParam: 0,
     getNextPageParam: (page) => page.nextOffset,

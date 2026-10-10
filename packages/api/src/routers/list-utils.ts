@@ -16,6 +16,7 @@ import {
   fetchListWithEntries,
   fetchPartialOwnedListCollections,
   findOwnedList,
+  touchList,
 } from "../services/list";
 import { escapeCSV } from "../services/utils";
 
@@ -53,6 +54,7 @@ export const listUtils = {
           ) AS v(id, price, is_qyop, has_note, note)
           WHERE ${listEntries.id} = v.id AND ${listEntries.listId} = ${list.id}
         `);
+      await touchList([list.id]);
     },
   ),
 

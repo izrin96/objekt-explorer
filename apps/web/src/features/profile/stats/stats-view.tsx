@@ -124,7 +124,7 @@ function StatsCard({
   children: React.ReactNode;
 }) {
   return (
-    <Card className="bg-popover">
+    <Card>
       <CardHeader className="gap-1 p-4 pb-0">
         <CardTitle className="font-display text-base">{title}</CardTitle>
         <CardDescription>{description}</CardDescription>

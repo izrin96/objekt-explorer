@@ -1,4 +1,6 @@
+import type { JWTPayload } from "jose";
 import { decodeJwt } from "jose/jwt/decode";
+import { SignJWT } from "jose/jwt/sign";
 
 /**
  * Returns true if the JWT is well-formed and its `exp` claim is in the
@@ -20,4 +22,11 @@ export function readExpiry(token: string): number | null {
   } catch {
     return null;
   }
+}
+
+/** An HS256 token over `claims`, as Centrifugo verifies it with the shared secret. */
+export function signHs256(claims: JWTPayload, secret: string): Promise<string> {
+  return new SignJWT(claims)
+    .setProtectedHeader({ alg: "HS256", typ: "JWT" })
+    .sign(new TextEncoder().encode(secret));
 }

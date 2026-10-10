@@ -7,10 +7,11 @@ import { overrideCollection } from "@repo/lib/server/objekt";
 import { and, countDistinct, desc, eq, inArray, isNotNull, ne, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 
+import { nicknamesByAddress } from "../lib/trade-rank";
 import { getCollectionColumns } from "./objekt";
 import { toPublicUser } from "./profile";
 
-export type TradeMode = "have-to-want" | "want-to-have" | "both";
+type TradeMode = "have-to-want" | "want-to-have" | "both";
 
 const PARTNER_LIMIT = 50;
 
@@ -63,7 +64,7 @@ export async function findTradePartners(list: List, mode: TradeMode | undefined,
 }
 
 /** discoverable lists of the opposite type that share a collection with mine */
-export async function fetchSingleDirectionPartners(
+async function fetchSingleDirectionPartners(
   anchorType: "have" | "want",
   anchorListId: number,
   userId: string,
@@ -134,7 +135,7 @@ export async function fetchSingleDirectionPartners(
  * shares a collection with my want list, and their want list with my have list.
  * The partner list reported is the one matching my anchor list.
  */
-export async function fetchPairedPartners(
+async function fetchPairedPartners(
   anchorType: "have" | "want",
   anchorListId: number,
   pairedListId: number,
@@ -285,7 +286,7 @@ export async function fetchPairedPartners(
   }));
 }
 
-export type PartnerRow = {
+type PartnerRow = {
   userId: string;
   listId: number;
   listSlug: string;
@@ -296,7 +297,7 @@ export type PartnerRow = {
   iHaveTheyWant: string[];
 };
 
-export async function buildTradePartnersResponse(
+async function buildTradePartnersResponse(
   partners: PartnerRow[],
   sortField: "theyHaveIWant" | "iHaveTheyWant",
 ) {
@@ -323,13 +324,7 @@ export async function buildTradePartnersResponse(
     collectionRows.map((c) => [c.slug, overrideCollection(c)]),
   );
 
-  // address → nickname map (hiding respected, addresses normalized to lowercase)
-  const addrNickMap = new Map<string, string>();
-  for (const addr of userAddrs) {
-    if (addr.nickname && !addr.hideNickname) {
-      addrNickMap.set(addr.address.toLowerCase(), addr.nickname);
-    }
-  }
+  const addrNickMap = nicknamesByAddress(userAddrs);
 
   const order: string[] = [];
   const matchesByUser = new Map<string, PartnerRow[]>();

@@ -1,15 +1,19 @@
 import { cron, type CronJob } from "bun";
 
+import { relayActivity } from "./job/activity-relay";
 import { fixEmptyCollection } from "./job/collection";
 import { updateTransferableCosmoSpin } from "./job/cosmo-spin";
 import { cleanupStaleEntries, drainOutbox } from "./job/drain";
 import { populateRarity } from "./job/populate-rarity";
 import { populateSerial, populateSerialOffline } from "./job/populate-serial";
 import { processCollectionImages } from "./job/process-collection-images";
+import { pruneNotifications } from "./job/prune-notifications";
 import { refreshAccessToken } from "./job/refresh-access-token";
+import { runTradeVerifier, watchTransfers } from "./job/trade-verifier";
 import { relayTransfers } from "./job/transfers-relay";
 import { updateCurrencyRates } from "./job/update-currency-rates";
 import { verifyBatchBoundaries } from "./job/verify-batch-boundaries";
+import { sendWantAlerts } from "./job/want-alerts";
 
 const crons: CronJob[] = [];
 
@@ -97,6 +101,24 @@ crons.push(cron("0 * * * *", safeRun("populateRarity", populateRarity)));
 await safeRun("updateCurrencyRates", updateCurrencyRates)();
 crons.push(cron("0 1 * * *", safeRun("updateCurrencyRates", updateCurrencyRates)));
 
+// want-list alerts; the first run only sets the cursor
+await safeRun("sendWantAlerts", sendWantAlerts)();
+crons.push(cron("*/5 * * * *", safeRun("sendWantAlerts", sendWantAlerts)));
+
+// no startup run: retention is not urgent
+crons.push(cron("0 5 * * 1", safeRun("pruneNotifications", pruneNotifications)));
+
+// verifies trade legs from indexer transfers and keeps offers current; the rescan is the
+// source of truth, and the `transfers` subscription only makes a run sooner
+await safeRun("runTradeVerifier", runTradeVerifier)();
+crons.push(cron("*/2 * * * *", safeRun("runTradeVerifier", runTradeVerifier)));
+const stopTransferWatch = await watchTransfers((error) =>
+  console.error("[runTradeVerifier] Job failed:", error),
+).catch((error: unknown) => {
+  console.error("[runTradeVerifier] Failed to subscribe to transfers:", error);
+  return null;
+});
+
 // staging only: the indexer publishes `transfers` to production's Valkey alone
 const transfersRelayFrom = process.env.TRANSFERS_RELAY_FROM;
 const stopTransfersRelay = transfersRelayFrom
@@ -106,12 +128,23 @@ const stopTransfersRelay = transfersRelayFrom
     })
   : null;
 
+// the live /activity feed; skipped when there is no Centrifugo to publish to
+const stopActivityRelay =
+  process.env.CENTRIFUGO_URL && process.env.CENTRIFUGO_API_KEY
+    ? await relayActivity().catch((error: unknown) => {
+        console.error("[Activity Relay] Failed to subscribe to transfers:", error);
+        return null;
+      })
+    : null;
+
 async function shutdown(signal: NodeJS.Signals) {
   console.log(`[shutdown] Received ${signal}, stopping cron jobs...`);
   for (const cron of crons) {
     cron.stop();
   }
+  stopTransferWatch?.();
   stopTransfersRelay?.();
+  stopActivityRelay?.();
   console.log("[shutdown] All cron jobs stopped");
   process.exit(0);
 }

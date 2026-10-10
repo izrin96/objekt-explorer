@@ -3,6 +3,7 @@ import * as z from "zod";
 
 import { MAX_FILE_SIZE } from "../constants";
 import { addressSchema } from "./common/address";
+import { reputationSchema } from "./reputation";
 
 export const publicUserSchema = z.object({
   name: z.string().nullable(),
@@ -24,6 +25,12 @@ export const publicProfileSchema = baseProfileSchema.extend({
   gridColumns: z.number().nullish(),
   user: publicUserSchema.nullish(),
   verified: z.boolean().nullish(),
+  /** whether the profile offers Message to this viewer; set only by the profile page's read */
+  messageable: z.boolean().nullish(),
+  /** the owner's account id, set by the profile page's read only when `user` is shown */
+  userId: z.string().optional(),
+  /** the owner's reputation, set with `userId` only */
+  reputation: reputationSchema.optional(),
 });
 export type PublicProfile = z.infer<typeof publicProfileSchema>;
 
@@ -37,7 +44,6 @@ export type ProfilePreview = z.infer<typeof profilePreviewOutputSchema>;
 export function makeEditProfileInputSchema(bannerUrlPrefix: string) {
   return z.object({
     address: addressSchema,
-    hideUser: z.boolean(),
     bannerImgUrl: z
       .url()
       .max(512)

@@ -1,0 +1,1 @@
+ALTER TABLE "lists" ADD COLUMN "match_sale" boolean DEFAULT true NOT NULL;

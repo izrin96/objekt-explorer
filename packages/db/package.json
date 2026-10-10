@@ -13,12 +13,12 @@
     "typecheck": "tsc --noEmit",
     "format": "oxfmt .",
     "db:generate": "drizzle-kit generate",
-    "db:push": "bun run --env-file=../../.env drizzle-kit push",
-    "db:migrate": "bun run --env-file=../../.env drizzle-kit migrate",
-    "db:studio": "bun run --env-file=../../.env drizzle-kit studio",
-    "db:studio:indexer": "bun run --env-file=../../.env drizzle-kit studio --config drizzle-indexer.config.ts",
-    "db:pull:indexer": "bun run --env-file=../../.env drizzle-kit pull --config drizzle-indexer.config.ts",
-    "db:migrate:indexer": "bun run --env-file=../../.env drizzle-kit migrate --config drizzle-indexer.config.ts"
+    "db:push": "bun run --env-file=../../.env --env-file=../../.env.local drizzle-kit push",
+    "db:migrate": "bun run --env-file=../../.env --env-file=../../.env.local drizzle-kit migrate",
+    "db:studio": "bun run --env-file=../../.env --env-file=../../.env.local drizzle-kit studio",
+    "db:studio:indexer": "bun run --env-file=../../.env --env-file=../../.env.local drizzle-kit studio --config drizzle-indexer.config.ts",
+    "db:pull:indexer": "bun run --env-file=../../.env --env-file=../../.env.local drizzle-kit pull --config drizzle-indexer.config.ts",
+    "db:migrate:indexer": "bun run --env-file=../../.env --env-file=../../.env.local drizzle-kit migrate --config drizzle-indexer.config.ts"
   },
   "dependencies": {
     "@repo/cosmo": "workspace:*",

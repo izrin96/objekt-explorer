@@ -1,0 +1,37 @@
+## MODIFIED Requirements
+
+### Requirement: Notification bell and popover
+A signed-in visitor SHALL see a bell in the frame with a dot while any notification is unread, and none at zero; the bell's label carries the count, and the popover's header shows it as "N unread". Activating the bell SHALL open a popover that lists the user's notifications newest first, 20 at a time with a control to load more. Each notification shows its text, how long ago it happened, and whether it is unread. It leads with an icon tile whose icon and colour say what happened:
+- a transfer verified, a trade completed, or an offer accepted: a green check;
+- a stall reminder: an amber clock;
+- an offer or trade cancelled, failed or expired: a red cross;
+- an offer received or countered: an indigo arrow;
+- an offer declined or withdrawn: a neutral arrow;
+- a want-list alert: amber, the want colour; a reverse-direction alert: teal, the have colour (see `web-lists`);
+- a sanction notice: a red shield.
+
+The colour SHALL never be the only cue: the text names the event, and the icon differs by kind. The popover SHALL offer Mark all read. Activating a notification SHALL mark it read and navigate to its target. A signed-out visitor SHALL see no bell.
+
+#### Scenario: Unread count
+- **WHEN** a signed-in user has 12 unread notifications
+- **THEN** the bell shows a dot, the popover's header reads "12 unread", and it lists the newest 20 with the 12 unread ones marked
+
+#### Scenario: Open a notification
+- **WHEN** the user activates an unread want-list alert in the popover
+- **THEN** it is shown as read, the bell's count drops by one, and the browser is at the alert's target
+
+#### Scenario: Mark all read
+- **WHEN** the user activates Mark all read
+- **THEN** no notification is unread and the bell shows no number
+
+#### Scenario: Signed out
+- **WHEN** a visitor without a session loads any page
+- **THEN** no bell is rendered, and no notification request or per-user connection is made
+
+#### Scenario: Language follows the viewer
+- **WHEN** a want-list alert is created while the user browses in English, and they then switch the site to 한국어
+- **THEN** the same notification reads in Korean
+
+#### Scenario: Kinds at a glance
+- **WHEN** the popover lists a verified transfer, a reminder and a cancelled offer
+- **THEN** they lead with a green check, an amber clock and a red cross, each beside its own text

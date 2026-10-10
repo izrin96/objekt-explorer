@@ -7,6 +7,7 @@ import { fetchPublicNicknames } from "@repo/lib/server/user";
 import { type SQL, and, arrayOverlaps, desc, eq, inArray, lt, ne, or } from "drizzle-orm";
 
 import type { ActivityFeedInput, ActivityFeedOutput } from "../schemas/activity";
+import type { CollectionFilters } from "../schemas/common/filters";
 import { getCollectionColumns } from "./objekt";
 
 const PAGE_SIZE = 300;
@@ -42,7 +43,7 @@ export async function fetchActivityPage(query: ActivityFeedInput): Promise<Activ
   return { items, nextCursor };
 }
 
-function getCollectionFilters(query: ActivityFeedInput): SQL[] {
+export function getCollectionFilters(query: CollectionFilters): SQL[] {
   const filters: SQL[] = [];
   if (query.artist.length)
     filters.push(inArray(collections.artist, query.artist.map(toIndexedArtist)));

@@ -5,12 +5,15 @@ import {
   InfoIcon,
   LinkIcon,
   PlusIcon,
+  ShieldCheckIcon,
   SignInIcon,
   SignOutIcon,
   UserIcon,
+  UsersIcon,
   XLogoIcon,
 } from "@phosphor-icons/react";
 import type { Icon } from "@phosphor-icons/react";
+import { isStaffRole } from "@repo/api/schemas/moderation";
 import type { User } from "@repo/api/services/auth";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link, useLocation } from "@tanstack/react-router";
@@ -31,7 +34,6 @@ import {
   MenuTrigger,
 } from "@/components/ui/menu";
 import { toastManager } from "@/components/ui/toast";
-import { AccountDialog } from "@/features/account/account-dialog";
 import { DiscordFormatDialog } from "@/features/discord/discord-format-dialog";
 import { CreateListDialog } from "@/features/list/create-list-dialog";
 import { getListLinkOption } from "@/features/list/list-link";
@@ -64,7 +66,6 @@ export function useSignInSearch(): { redirect: string | undefined } {
 
 export function UserMenu({ user }: { user: User }) {
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [accountOpen, setAccountOpen] = useState(false);
   const [createListOpen, setCreateListOpen] = useState(false);
   const [discordOpen, setDiscordOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
@@ -118,7 +119,12 @@ export function UserMenu({ user }: { user: User }) {
 
           <MyCosmoSubmenu />
 
-          <MenuItem onClick={() => setAccountOpen(true)}>
+          <MenuItem render={<Link to="/trade/for-you" />}>
+            <UsersIcon />
+            {m.trade_tab_for_you()}
+          </MenuItem>
+
+          <MenuItem render={<Link to="/account" />}>
             <UserIcon />
             {m.nav_account()}
           </MenuItem>
@@ -127,6 +133,13 @@ export function UserMenu({ user }: { user: User }) {
             <GearIcon />
             {m.nav_setting()}
           </MenuItem>
+
+          {isStaffRole(user.role) && (
+            <MenuItem render={<Link to="/mod/reports" />}>
+              <ShieldCheckIcon />
+              {m.nav_mod_reports()}
+            </MenuItem>
+          )}
 
           <MenuSeparator />
 
@@ -144,7 +157,6 @@ export function UserMenu({ user }: { user: User }) {
         </MenuPopup>
       </Menu>
       <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
-      <AccountDialog open={accountOpen} onOpenChange={setAccountOpen} />
       <CreateListDialog open={createListOpen} onOpenChange={setCreateListOpen} />
       <DiscordFormatDialog open={discordOpen} onOpenChange={setDiscordOpen} />
       <AboutDialog open={aboutOpen} onOpenChange={setAboutOpen} />
@@ -191,7 +203,7 @@ function MyCosmoSubmenu() {
 
         <MenuSeparator />
 
-        <MenuItem render={<Link to="/link" />}>
+        <MenuItem render={<Link to="/account/profiles" />}>
           <LinkIcon />
           {m.nav_manage_cosmo_link()}
         </MenuItem>

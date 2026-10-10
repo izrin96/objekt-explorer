@@ -49,9 +49,13 @@ type ObjektCardProps<T extends ValidObjekt> = {
   image?: "thumbnail" | "front";
   /** load eagerly — the first rows are above the fold */
   priority?: boolean;
+  /** read with the card's own name, for state its artwork shows */
+  description?: string;
   /** extra controls, rendered after the check in the top-right block */
   children?: ReactNode;
   className?: string;
+  /** e.g. `text-xs`, where a thumbnail grid would otherwise set the caption below it */
+  captionClassName?: string;
 };
 
 /**
@@ -104,8 +108,10 @@ export function ObjektCard<T extends ValidObjekt>({
   hideSerial = false,
   image = "thumbnail",
   priority = false,
+  description,
   children,
   className,
+  captionClassName,
 }: ObjektCardProps<T>) {
   const hideLabelSetting = useSettings((s) => s.hideLabel);
   const selecting = useSelection(selectIsSelecting);
@@ -180,6 +186,7 @@ export function ObjektCard<T extends ValidObjekt>({
           hideSerial={serialHidden}
           priority={priority}
         />
+        {description !== undefined && <span className="sr-only">{description}</span>}
 
         {(pin || lock) && (
           /* paints over the band and the image by DOM order, under the `z-10`
@@ -248,7 +255,12 @@ export function ObjektCard<T extends ValidObjekt>({
                collection number, so nothing is truncated away on a narrow card.
                The card is an `@container`: the type steps down on card width,
                near 144px, rather than on viewport. */
-            <p className="text-xxs text-center leading-tight text-balance @[9rem]:text-xs">
+            <p
+              className={cn(
+                "text-xxs text-center leading-tight text-balance @[9rem]:text-xs",
+                captionClassName,
+              )}
+            >
               <span className="font-medium">{objekt.member}</span>{" "}
               <span className="font-medium whitespace-nowrap">{shortNo}</span>
               {serial !== undefined && (
@@ -276,6 +288,7 @@ export function ObjektCard<T extends ValidObjekt>({
                     onClick={() => onPriceClick(objekt)}
                     className={cn(
                       priceClass,
+                      captionClassName,
                       "focus-visible:ring-ring cursor-pointer rounded-xs underline-offset-2 outline-none hover:underline focus-visible:ring-2",
                       priceMuted ? "text-muted-foreground" : "text-foreground",
                     )}
@@ -286,6 +299,7 @@ export function ObjektCard<T extends ValidObjekt>({
                   <span
                     className={cn(
                       priceClass,
+                      captionClassName,
                       priceMuted ? "text-muted-foreground" : "text-foreground",
                     )}
                   >
@@ -295,7 +309,9 @@ export function ObjektCard<T extends ValidObjekt>({
                 {note ? <ObjektNote note={note} /> : null}
               </div>
               {priceConverted !== undefined && (
-                <span className={cn(priceClass, "text-muted-foreground font-normal")}>
+                <span
+                  className={cn(priceClass, captionClassName, "text-muted-foreground font-normal")}
+                >
                   ≈{priceConverted}
                 </span>
               )}

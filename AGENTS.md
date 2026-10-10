@@ -6,17 +6,18 @@
 
 ## Monorepo Structure
 
-| Path                | Name             | Purpose                                                                                      |
-| ------------------- | ---------------- | -------------------------------------------------------------------------------------------- |
-| `apps/web`          | `web`            | Main frontend (TanStack React Start + Vite, Base UI) with embedded WebSocket activity server |
-| `apps/worker`       | `worker`         | Background job worker (`Bun.cron`)                                                           |
-| `apps/indexer`      | `indexer`        | NFT metadata indexer (Subsquid)                                                              |
-| `packages/api`      | `@repo/api`      | ORPC routers and services                                                                    |
-| `packages/db`       | `@repo/db`       | Database schema (Drizzle ORM + PostgreSQL)                                                   |
-| `packages/lib`      | `@repo/lib`      | Shared utilities                                                                             |
-| `packages/cosmo`    | `@repo/cosmo`    | Cosmo SDK                                                                                    |
-| `packages/lint`     | `@repo/lint`     | Shared oxlint config                                                                         |
-| `packages/tsconfig` | `@repo/tsconfig` | Shared TypeScript configs                                                                    |
+| Path                | Name             | Purpose                                                                   |
+| ------------------- | ---------------- | ------------------------------------------------------------------------- |
+| `apps/web`          | `web`            | Main frontend (TanStack React Start + Vite, Base UI)                      |
+| `apps/worker`       | `worker`         | Background job worker (`Bun.cron`)                                        |
+| `apps/indexer`      | `indexer`        | NFT metadata indexer (Subsquid)                                           |
+| `packages/api`      | `@repo/api`      | ORPC routers and services                                                 |
+| `packages/db`       | `@repo/db`       | Database schema (Drizzle ORM + PostgreSQL)                                |
+| `packages/lib`      | `@repo/lib`      | Shared utilities                                                          |
+| `packages/cosmo`    | `@repo/cosmo`    | Cosmo SDK                                                                 |
+| `packages/email`    | `@repo/email`    | Auth email templates (jsx-email), rendered to HTML and plain text for SES |
+| `packages/lint`     | `@repo/lint`     | Shared oxlint config                                                      |
+| `packages/tsconfig` | `@repo/tsconfig` | Shared TypeScript configs                                                 |
 
 **Workspace manager:** Bun workspaces + Turbo. Package names match directory names (e.g. filter with `--filter=web`).
 
@@ -30,7 +31,7 @@
 | Database    | PostgreSQL 18, Drizzle ORM                           |
 | Auth        | Better Auth                                          |
 | State       | React Query (server), Zustand (client)               |
-| Real-time   | WebSockets, Valkey pub-sub                           |
+| Real-time   | Centrifugo (self-hosted), centrifuge-js              |
 | i18n        | Inlang (Paraglide)                                   |
 | Lint/Format | oxlint, oxfmt                                        |
 | Jobs        | `Bun.cron`                                           |
@@ -113,11 +114,12 @@ Every package extends the shared oxlint baseline from its own config file (`oxli
 
 ## Environment
 
-A single root `.env`, copied from `.env.example`, is shared by every app — package scripts load it with `--env-file=../../.env`. Key variables:
+A single root `.env`, copied from `.env.example`, is shared by every app. Package scripts load `--env-file=../../.env --env-file=../../.env.local`: an optional, gitignored root `.env.local` overrides it per variable, so a `DATABASE_URL` there keeps the dev servers and `db:*` scripts on a local database instead of production. Key variables:
 
 - `DATABASE_URL` — main PostgreSQL connection
 - `INDEXER_DATABASE_URL` — indexer PostgreSQL connection
-- `REDIS_URL` — Valkey (Redis-compatible) connection
+- `REDIS_URL` — Valkey (Redis-compatible) connection: caches, rate limits, and the indexer's `transfers` channel
+- `CENTRIFUGO_URL`, `CENTRIFUGO_API_KEY`, `CENTRIFUGO_TOKEN_SECRET` — the real-time server: web and the worker publish through its server API, and browsers connect at `/connection` on the site's origin with a token from `realtime.token`. Locally these live in `.env.local`; never point a local Centrifugo at the Valkey in the root `.env`
 - `BETTER_AUTH_SECRET` — auth encryption key
 - `SITE_URL` — public origin, read at runtime: Better Auth's base URL and the only origin it accepts; the client uses the page's own origin, so no build bakes a domain in
 - `COSMO_KEY` — encrypted API key for Cosmo SDK
@@ -128,7 +130,7 @@ Full list in `.env.example`.
 
 ## Docker
 
-`docker-compose.yml` provides the full stack: web (port 3000, built from `apps/web/Dockerfile`), worker, indexer processor, two PostgreSQL instances each behind pgbouncer, and Valkey. S3 storage and mail are external services configured through `.env`.
+`docker-compose.yml` provides the full stack: web (port 3000, built from `apps/web/Dockerfile`), worker, indexer processor, two PostgreSQL instances each behind pgbouncer, Valkey, and Centrifugo (`centrifugo/config.json`; reachable only on the Docker network, with `/connection` routed to it by the reverse proxy, see `design/realtime-centrifugo-deploy.md`). Locally, `docker compose --env-file .env --env-file .env.local up -d centrifugo` also applies `docker-compose.override.yml`, which publishes it on `127.0.0.1:8000` for the dev server's `/connection` proxy. S3 storage and mail are external services configured through `.env`.
 
 ## CI/CD
 

@@ -12,7 +12,9 @@
     "lint": "oxlint --type-aware",
     "lint:fix": "oxlint --type-aware --fix",
     "typecheck": "tsc --noEmit",
-    "format": "oxfmt ."
+    "test": "bun test",
+    "format": "oxfmt .",
+    "set-role": "bun run --env-file=../../.env --env-file=../../.env.local scripts/set-role.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "catalog:",
@@ -23,6 +25,7 @@
     "@orpc/zod": "^1.15.4",
     "@repo/cosmo": "workspace:*",
     "@repo/db": "workspace:*",
+    "@repo/email": "workspace:*",
     "@repo/lib": "workspace:*",
     "@t3-oss/env-core": "^0.13.11",
     "better-auth": "^1.7.7",

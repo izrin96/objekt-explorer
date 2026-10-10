@@ -2,6 +2,9 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { Outlet, createFileRoute } from "@tanstack/react-router";
 
 import { PageMain } from "@/components/layout/page-main";
+import { PendingStatus } from "@/components/router/pending";
+import { Skeleton } from "@/components/ui/skeleton";
+import { SkeletonGrid } from "@/features/objekt/skeleton-grid";
 import { PrivateProfileGuard } from "@/features/profile/profile-guard";
 import { ProfileHeader } from "@/features/profile/profile-header";
 import { ProfileNotFound } from "@/features/profile/profile-not-found";
@@ -17,6 +20,7 @@ export const Route = createFileRoute("/@{$nickname}")({
     queryClient.query({ ...profileQuery({ nickname: params.nickname }), staleTime: "static" }),
   notFoundComponent: ProfileNotFound,
   component: ProfileLayout,
+  pendingComponent: ProfilePending,
 });
 
 function ProfileLayout() {
@@ -59,5 +63,35 @@ function ProfileSummary() {
         { value: summary.locks.toLocaleString(), label: m.profile_stats_locked() },
       ]}
     />
+  );
+}
+
+/** The profile loading: header, stats and tabs in shape, over the objekt grid. */
+function ProfilePending() {
+  return (
+    <PageMain>
+      <PendingStatus />
+      <div className="flex items-end gap-3.5">
+        <Skeleton className="size-16 shrink-0 rounded-full" />
+        <div className="flex flex-col gap-2">
+          <Skeleton className="h-6 w-40" />
+          <Skeleton className="h-3 w-32" />
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border md:grid-cols-4">
+        {[0, 1, 2, 3].map((cell) => (
+          <div key={cell} className="flex flex-col gap-2 px-3.5 py-3">
+            <Skeleton className="h-6 w-16" />
+            <Skeleton className="h-3 w-20" />
+          </div>
+        ))}
+      </div>
+      <div className="flex gap-4 border-b pb-3">
+        {[0, 1, 2, 3, 4].map((tab) => (
+          <Skeleton key={tab} className="h-4 w-16" />
+        ))}
+      </div>
+      <SkeletonGrid />
+    </PageMain>
   );
 }

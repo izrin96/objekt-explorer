@@ -1,0 +1,1 @@
+ALTER TABLE "message_pref" ADD COLUMN "chat_as" citext;

@@ -8,7 +8,7 @@ import { and, asc, count, countDistinct, eq, inArray, ne } from "drizzle-orm";
 import { getCache } from "./redis";
 import { classOrder } from "./utils";
 
-export async function fetchUniqueCollections() {
+async function fetchUniqueCollections() {
   const result = await indexer
     .selectDistinct({
       collectionNo: collections.collectionNo,
@@ -19,7 +19,7 @@ export async function fetchUniqueCollections() {
   return result.map((a) => a.collectionNo);
 }
 
-export async function fetchSeasonMap() {
+async function fetchSeasonMap() {
   const result = await indexer
     .selectDistinct({
       artist: collections.artist,
@@ -73,7 +73,7 @@ export async function fetchSeasonMap() {
   });
 }
 
-export async function fetchClassMap() {
+async function fetchClassMap() {
   const result = await indexer
     .selectDistinct({
       artist: collections.artist,

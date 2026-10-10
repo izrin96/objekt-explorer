@@ -1,26 +1,31 @@
 import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { objekts } from "@repo/db/indexer/schema";
-import { listEntries, lists, userAddress } from "@repo/db/schema";
+import { listEntries, lists, messagePref, userAddress } from "@repo/db/schema";
 import { CURRENCY_ALIASES, normalizeCurrency } from "@repo/lib/currency";
 import { and, asc, desc, eq, inArray, isNotNull, sql } from "drizzle-orm";
 
-import { pub } from "../orpc";
+import { isMessageable, toMessagePref } from "../lib/chat-rules";
+import { optionalAuthed, pub } from "../orpc";
 import { collectionSlugInputSchema } from "../schemas/common/collection";
 import { documented, errorResponses } from "../schemas/common/documented";
 import {
-  type MarketListing,
-  type MarketListingsOutput,
+  type MarketListingsInput,
   type MarketStatsOutput,
   type MarketSummaryEntry,
   currencyRatesOutputSchema,
   marketListingsInputSchema,
   marketListingsOutputSchema,
+  type ViewerMarketListing,
+  type ViewerMarketListingsOutput,
+  viewerMarketListingsOutputSchema,
   marketStatsOutputSchema,
   marketSummaryOutputSchema,
 } from "../schemas/market";
 import { getUsdRates } from "../services/currency-rates";
 import { getCache } from "../services/redis";
+import { notBlockedEither, notTradeSanctioned } from "../services/safety";
+import { marketVersion } from "../services/safety-cache";
 
 const SUMMARY_TTL = 60;
 
@@ -65,6 +70,7 @@ function listingsWhere(collectionSlug: string) {
     eq(listEntries.collectionSlug, collectionSlug),
     eq(lists.listTypeNew, "sale"),
     eq(lists.discoverable, true),
+    notTradeSanctioned(sql`${lists.userId}`),
   );
 }
 
@@ -90,11 +96,104 @@ async function fetchMarketSummary(): Promise<MarketSummaryEntry[]> {
         eq(lists.listTypeNew, "sale"),
         eq(lists.discoverable, true),
         isNotNull(listEntries.collectionSlug),
+        notTradeSanctioned(sql`${lists.userId}`),
       ),
     )
     .groupBy(listEntries.collectionSlug);
 
   return rows;
+}
+
+/**
+ * One collection's listings. With a viewer, `messageable` is false for a seller either of
+ * them blocked; the public route drops the field.
+ */
+async function findListings(input: MarketListingsInput, viewerId: string | null) {
+  const rates = await getUsdRates();
+
+  const where = listingsWhere(input.collectionSlug);
+
+  const baseQuery = () =>
+    db
+      .select({
+        id: listEntries.id,
+        price: listEntries.price,
+        isQyop: listEntries.isQyop,
+        note: listEntries.note,
+        createdAt: listEntries.createdAt,
+        objektId: listEntries.objektId,
+        hideSerial: lists.hideSerial,
+        currency: lists.currency,
+        slug: lists.slug,
+        profileSlug: lists.profileSlug,
+        profileAddress: lists.profileAddress,
+        ownerNickname: userAddress.nickname,
+        messageAllow: messagePref.allow,
+        blocked: viewerId
+          ? sql<boolean>`NOT ${notBlockedEither(viewerId, sql`${lists.userId}`)}`
+          : sql<boolean>`false`,
+      })
+      .from(listEntries)
+      .innerJoin(lists, eq(listEntries.listId, lists.id))
+      .leftJoin(userAddress, eq(lists.profileAddress, userAddress.address))
+      .leftJoin(messagePref, eq(messagePref.userId, lists.userId))
+      .where(where);
+
+  const dir = input.sortDir === "desc" ? desc : asc;
+
+  const paginatedRows =
+    input.sortBy === "price"
+      ? await baseQuery()
+          .orderBy(
+            sql`CASE WHEN ${listEntries.isQyop} THEN 1 WHEN ${listEntries.price} IS NULL THEN 2 ELSE 0 END`,
+            dir(usdPriceExpr(rates)),
+          )
+          .offset(input.offset)
+          .limit(input.limit + 1)
+      : await baseQuery()
+          .orderBy(dir(listEntries.createdAt))
+          .offset(input.offset)
+          .limit(input.limit + 1);
+
+  const hasMore = paginatedRows.length > input.limit;
+  const rows = hasMore ? paginatedRows.slice(0, input.limit) : paginatedRows;
+  const nextOffset = hasMore ? input.offset + rows.length : undefined;
+
+  const objektIds = rows.map((r) => r.objektId).filter((id): id is string => id !== null);
+  const objektMap = await fetchObjektMap(objektIds);
+
+  const items = rows.map((row) => {
+    const objekt = row.objektId ? objektMap.get(row.objektId) : null;
+    const nickname = row.ownerNickname || null;
+    const currency = row.currency ? normalizeCurrency(row.currency) : null;
+    const rate = currency ? (rates[currency] ?? 1) : 1;
+    const usdPrice = row.price !== null ? row.price * rate : null;
+
+    return {
+      id: row.id,
+      price: row.price,
+      isQyop: row.isQyop,
+      note: row.note,
+      createdAt: row.createdAt,
+      currency,
+      usdPrice,
+      list: {
+        slug: row.slug,
+        profileSlug: row.profileSlug,
+        profile: row.profileAddress ? { nickname, address: row.profileAddress } : null,
+      },
+      serial: row.hideSerial ? null : (objekt?.serial ?? null),
+      objektId: row.hideSerial ? null : row.objektId,
+      messageable: !row.blocked && isMessageable(toMessagePref({ allow: row.messageAllow })),
+      transferable: row.hideSerial ? null : (objekt?.transferable ?? null),
+    } satisfies ViewerMarketListing;
+  });
+
+  return {
+    items,
+    hasMore,
+    nextOffset,
+  } satisfies ViewerMarketListingsOutput;
 }
 
 export const marketRouter = {
@@ -108,7 +207,8 @@ export const marketRouter = {
     .output(documented(marketSummaryOutputSchema))
     .handler(async () => {
       try {
-        return await getCache("market:summary", SUMMARY_TTL, fetchMarketSummary);
+        const version = await marketVersion();
+        return await getCache(`market:summary:${version}`, SUMMARY_TTL, fetchMarketSummary);
       } catch {
         console.warn("[market] Redis unavailable, falling back to direct DB query");
         return fetchMarketSummary();
@@ -126,86 +226,16 @@ export const marketRouter = {
     .input(marketListingsInputSchema)
     .output(documented(marketListingsOutputSchema))
     .handler(async ({ input }) => {
-      const rates = await getUsdRates();
-
-      const where = listingsWhere(input.collectionSlug);
-
-      const baseQuery = () =>
-        db
-          .select({
-            id: listEntries.id,
-            price: listEntries.price,
-            isQyop: listEntries.isQyop,
-            note: listEntries.note,
-            createdAt: listEntries.createdAt,
-            objektId: listEntries.objektId,
-            hideSerial: lists.hideSerial,
-            currency: lists.currency,
-            slug: lists.slug,
-            profileSlug: lists.profileSlug,
-            profileAddress: lists.profileAddress,
-            ownerNickname: userAddress.nickname,
-            ownerHideNickname: userAddress.hideNickname,
-          })
-          .from(listEntries)
-          .innerJoin(lists, eq(listEntries.listId, lists.id))
-          .leftJoin(userAddress, eq(lists.profileAddress, userAddress.address))
-          .where(where);
-
-      const dir = input.sortDir === "desc" ? desc : asc;
-
-      const paginatedRows =
-        input.sortBy === "price"
-          ? await baseQuery()
-              .orderBy(
-                sql`CASE WHEN ${listEntries.isQyop} THEN 1 WHEN ${listEntries.price} IS NULL THEN 2 ELSE 0 END`,
-                dir(usdPriceExpr(rates)),
-              )
-              .offset(input.offset)
-              .limit(input.limit + 1)
-          : await baseQuery()
-              .orderBy(dir(listEntries.createdAt))
-              .offset(input.offset)
-              .limit(input.limit + 1);
-
-      const hasMore = paginatedRows.length > input.limit;
-      const rows = hasMore ? paginatedRows.slice(0, input.limit) : paginatedRows;
-      const nextOffset = hasMore ? input.offset + rows.length : undefined;
-
-      const objektIds = rows.map((r) => r.objektId).filter((id): id is string => id !== null);
-      const objektMap = await fetchObjektMap(objektIds);
-
-      const items = rows.map((row) => {
-        const objekt = row.objektId ? objektMap.get(row.objektId) : null;
-        const nickname = row.ownerHideNickname || !row.ownerNickname ? null : row.ownerNickname;
-        const currency = row.currency ? normalizeCurrency(row.currency) : null;
-        const rate = currency ? (rates[currency] ?? 1) : 1;
-        const usdPrice = row.price !== null ? row.price * rate : null;
-
-        return {
-          id: row.id,
-          price: row.price,
-          isQyop: row.isQyop,
-          note: row.note,
-          createdAt: row.createdAt,
-          currency,
-          usdPrice,
-          list: {
-            slug: row.slug,
-            profileSlug: row.profileSlug,
-            profile: row.profileAddress ? { nickname, address: row.profileAddress } : null,
-          },
-          serial: row.hideSerial ? null : (objekt?.serial ?? null),
-          transferable: row.hideSerial ? null : (objekt?.transferable ?? null),
-        } satisfies MarketListing;
-      });
-
-      return {
-        items,
-        hasMore,
-        nextOffset,
-      } satisfies MarketListingsOutput;
+      const page = await findListings(input, null);
+      // output validation does not strip keys, and the public API never had this one
+      return { ...page, items: page.items.map(({ messageable: _, ...item }) => item) };
     }),
+
+  /** The same listings for the site, with whether each seller can be messaged. */
+  listingsForViewer: optionalAuthed
+    .input(marketListingsInputSchema)
+    .output(viewerMarketListingsOutputSchema)
+    .handler(({ input, context: { session } }) => findListings(input, session?.user.id ?? null)),
 
   rates: pub
     .route({

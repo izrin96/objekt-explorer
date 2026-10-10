@@ -2,6 +2,7 @@ import { ORPCError } from "@orpc/server";
 import { db } from "@repo/db";
 import { lists } from "@repo/db/schema";
 import { normalizeCurrency } from "@repo/lib/currency";
+import { bumpTradeVersion } from "@repo/lib/server/list-touch";
 import { and, eq, ne } from "drizzle-orm";
 import { nanoid } from "nanoid";
 
@@ -15,12 +16,16 @@ import {
 } from "../schemas/list";
 import {
   checkLinkedList,
+  createdBumpedAt,
   fetchList,
   generateProfileSlug,
   findOwnedList,
   resolveDiscoverable,
+  touchList,
+  tradeColumns,
 } from "../services/list";
 import { assertProfileOwned } from "../services/profile";
+import { redis } from "../services/redis";
 
 export const listCrud = {
   find: authed
@@ -90,6 +95,12 @@ export const listCrud = {
       if (profileCheck.status === "rejected") throw profileCheck.reason;
       if (linkedCheck.status === "rejected") throw linkedCheck.reason;
 
+      const discoverable = resolveDiscoverable(
+        input.listTypeNew,
+        isProfileBind,
+        input.discoverable,
+      );
+
       const slug = nanoid(9);
       let profileSlug: string | null = null;
       if (input.profileAddress) {
@@ -100,7 +111,7 @@ export const listCrud = {
         );
       }
 
-      await db.transaction(async (tx) => {
+      const touched = await db.transaction(async (tx) => {
         const [inserted] = await tx
           .insert(lists)
           .values({
@@ -108,7 +119,6 @@ export const listCrud = {
             userId: user.id,
             slug,
             profileSlug,
-            hideUser: input.hideUser,
             listTypeNew: input.listTypeNew,
             isProfileBind,
             hideSerial:
@@ -122,33 +132,43 @@ export const listCrud = {
               input.listTypeNew === "sale" && input.currency
                 ? normalizeCurrency(input.currency)
                 : null,
-            discoverable: resolveDiscoverable(input.listTypeNew, isProfileBind, input.discoverable),
+            discoverable,
+            matchSale: input.listTypeNew === "want" ? input.matchSale : true,
+            bumpedAt: discoverable
+              ? createdBumpedAt(linkedListId, input.listTypeNew, user.id)
+              : null,
           })
           .returning({ insertedId: lists.id });
 
+        if (!inserted) return [];
+        const changed = [inserted.insertedId];
+
         // Bidirectional link: clear any existing reverse link on target, then set new one
-        if (linkedListId !== null && inserted) {
-          await tx
+        if (linkedListId !== null) {
+          const unlinked = await tx
             .update(lists)
             .set({ linkedListId: null })
-            .where(and(eq(lists.linkedListId, linkedListId), ne(lists.id, inserted.insertedId)));
+            .where(and(eq(lists.linkedListId, linkedListId), ne(lists.id, inserted.insertedId)))
+            .returning({ id: lists.id });
+          changed.push(linkedListId, ...unlinked.map((row) => row.id));
 
           await tx
             .update(lists)
             .set({ linkedListId: inserted.insertedId })
             .where(eq(lists.id, linkedListId));
 
-          // Sync discoverable to paired list so both mode works out of the box,
-          // under the partner's own rule
           const partner = linkedCheck.value;
           if (
             partner &&
-            resolveDiscoverable(partner.listTypeNew, partner.isProfileBind, input.discoverable)
+            resolveDiscoverable(partner.listTypeNew, partner.isProfileBind, discoverable)
           ) {
-            await tx.update(lists).set({ discoverable: true }).where(eq(lists.id, linkedListId));
+            await tx.update(lists).set(tradeColumns(true)).where(eq(lists.id, linkedListId));
           }
         }
+
+        return changed;
       });
+      await touchList(touched);
     },
   ),
 
@@ -206,12 +226,17 @@ export const listCrud = {
           : await generateProfileSlug(input.name, list.slug, address, list.id);
       }
 
-      await db.transaction(async (tx) => {
+      const discoverable = resolveDiscoverable(
+        list.listTypeNew,
+        list.isProfileBind,
+        input.discoverable,
+      );
+
+      const touched = await db.transaction(async (tx) => {
         await tx
           .update(lists)
           .set({
             name: input.name,
-            hideUser: input.hideUser,
             gridColumns: input.gridColumns,
             profileAddress: list.isProfileBind
               ? undefined
@@ -229,13 +254,12 @@ export const listCrud = {
                 ? input.hideSerial
                 : false,
             linkedListId,
-            discoverable: resolveDiscoverable(
-              list.listTypeNew,
-              list.isProfileBind,
-              input.discoverable,
-            ),
+            matchSale: list.listTypeNew === "want" ? input.matchSale : undefined,
+            ...tradeColumns(discoverable, linkedListId),
           })
           .where(eq(lists.id, list.id));
+
+        const changed = [list.id];
 
         // Bidirectional link: update reverse links
         if (linkedListId !== list.linkedListId) {
@@ -245,35 +269,38 @@ export const listCrud = {
               .update(lists)
               .set({ linkedListId: null })
               .where(eq(lists.id, list.linkedListId));
+            changed.push(list.linkedListId);
           }
 
           // Set new reverse link, clearing any existing partner on the target
           if (linkedListId !== null) {
-            await tx
+            const unlinked = await tx
               .update(lists)
               .set({ linkedListId: null })
-              .where(and(eq(lists.linkedListId, linkedListId), ne(lists.id, list.id)));
+              .where(and(eq(lists.linkedListId, linkedListId), ne(lists.id, list.id)))
+              .returning({ id: lists.id });
 
             await tx.update(lists).set({ linkedListId: list.id }).where(eq(lists.id, linkedListId));
+            changed.push(linkedListId, ...unlinked.map((row) => row.id));
           }
         }
 
-        // Sync discoverable to paired list so both mode works out of the box,
-        // under the partner's own rule
+        // a new link brings the partner onto Trade; a save that keeps the link leaves the
+        // partner's own choice alone
         const partner = linkedCheck.value;
-        if (linkedListId !== null && partner) {
-          await tx
-            .update(lists)
-            .set({
-              discoverable: resolveDiscoverable(
-                partner.listTypeNew,
-                partner.isProfileBind,
-                input.discoverable,
-              ),
-            })
-            .where(eq(lists.id, linkedListId));
+        if (
+          linkedListId !== null &&
+          linkedListId !== list.linkedListId &&
+          partner &&
+          resolveDiscoverable(partner.listTypeNew, partner.isProfileBind, discoverable)
+        ) {
+          await tx.update(lists).set(tradeColumns(true)).where(eq(lists.id, linkedListId));
+          changed.push(linkedListId);
         }
+
+        return changed;
       });
+      await touchList(touched);
     },
   ),
 
@@ -287,6 +314,7 @@ export const listCrud = {
       const list = await findOwnedList(slug, user.id);
 
       await db.delete(lists).where(eq(lists.id, list.id));
+      await bumpTradeVersion(redis, [user.id]);
     },
   ),
 };

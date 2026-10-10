@@ -3,22 +3,33 @@ import { toIndexedArtist, type ValidArtist } from "@repo/cosmo/types/common";
 import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
-import { listEntries, lists } from "@repo/db/schema";
+import { listEntries, lists, messagePref } from "@repo/db/schema";
 import type { List, ListEntry, UserAddress } from "@repo/db/schema";
 import { chunkMap } from "@repo/lib";
+import { touchListWith } from "@repo/lib/server/list-touch";
 import { mapOwnedObjekt, overrideCollection } from "@repo/lib/server/objekt";
 import type { ListEntryFields, ListObjekt } from "@repo/lib/types/objekt";
-import { and, eq, inArray, isNotNull, ne } from "drizzle-orm";
+import { type SQL, and, eq, inArray, isNotNull, ne, sql } from "drizzle-orm";
 import slugify from "slugify";
 
 import { OBJEKT_PREVIEW_SIZE } from "../constants";
-import type { AddSource, ListPreview, ListTypeNew, PublicList } from "../schemas/list";
+import { isMessageable, toMessagePref } from "../lib/chat-rules";
+import { BUMP_COOLDOWN_HOURS } from "../lib/trade-feed";
+import {
+  type AddSource,
+  canBeOnTrade,
+  type ListPreview,
+  type ListTypeNew,
+  type PublicList,
+} from "../schemas/list";
+import { isBlockedEither } from "./moderation";
 import { getCollectionColumns, getPartialCollectionColumns } from "./objekt";
 import { isProfileHidden } from "./privacy";
 import { toPublicUser } from "./profile";
+import { redis } from "./redis";
 import { TOKEN_CHUNK_SIZE } from "./utils";
 
-export interface ListEntryTransformConfig {
+interface ListEntryTransformConfig {
   artists?: ValidArtist[];
   hideSerial?: boolean;
 }
@@ -210,7 +221,9 @@ export async function fetchList(
     hideSerial: result.hideSerial,
     gridColumns: result.gridColumns,
     discoverable: result.discoverable,
-    user: result.hideUser || !result.user ? null : toPublicUser(result.user),
+    matchSale: result.matchSale,
+    bumpedAt: result.bumpedAt,
+    user: result.user ? toPublicUser(result.user) : null,
     profile: result.userAddress ? toPartialProfile(result.userAddress) : null,
     description: result.description,
     linkedList: result.linkedList
@@ -222,6 +235,21 @@ export async function fetchList(
         }
       : null,
   };
+}
+
+/** Whether the list page offers Message to the viewer: never on their own list, nor a blocked pair. */
+export async function isListMessageable(listId: number, viewerId: string | undefined) {
+  const [row] = await db
+    .select({
+      userId: lists.userId,
+      allow: messagePref.allow,
+    })
+    .from(lists)
+    .leftJoin(messagePref, eq(messagePref.userId, lists.userId))
+    .where(eq(lists.id, listId));
+  if (!row || row.userId === viewerId) return false;
+  if (viewerId && (await isBlockedEither(viewerId, row.userId))) return false;
+  return isMessageable(toMessagePref(row));
 }
 
 export async function fetchOwnedLists(
@@ -239,6 +267,9 @@ export async function fetchOwnedLists(
       profileSlug: true,
       profileAddress: true,
       currency: true,
+      discoverable: true,
+      matchSale: true,
+      bumpedAt: true,
     },
     where: {
       [column]: identifier,
@@ -367,15 +398,66 @@ export async function fetchListPreviews(slugs: string[]): Promise<ListPreview[]>
   }));
 }
 
-/** Want is discoverable on request; have and sale only while bound to a profile, since matching reads that profile's holdings. */
 export function resolveDiscoverable(
   type: ListTypeNew,
   isProfileBind: boolean,
   requested: boolean,
 ): boolean {
-  if (type === "want") return requested;
-  if (type === "have" || type === "sale") return isProfileBind && requested;
-  return false;
+  return requested && canBeOnTrade(type, isProfileBind);
+}
+
+const bumpCutoff = sql`now() - make_interval(hours => ${BUMP_COOLDOWN_HOURS})`;
+
+/**
+ * The bump time of the list linked to this one when that list is on Trade, so the two form
+ * one post. `link` is the linked list id, or `lists.linked_list_id` of the row being updated.
+ */
+function partnerBumpedAt(link: SQL | number | null, type: SQL | ListTypeNew, userId: SQL | string) {
+  if (link === null) return sql`NULL::timestamptz`;
+  return sql`(
+    SELECT p.bumped_at FROM lists p
+    WHERE p.id = ${link} AND p.discoverable AND p.user_id = ${userId}
+      AND p.list_type_new IN ('have', 'want') AND p.list_type_new <> ${type}
+  )`;
+}
+
+/**
+ * The bump time of a list turning Show on Trade on. It counts as a bump only once the post,
+ * this list with its linked partner on Trade, is past the bump cooldown; within it the post
+ * keeps its bump time, so turning Show on Trade off and on cannot stand in for Bump.
+ */
+function turnOnBumpedAt(own: SQL, partner: SQL) {
+  return sql`CASE
+    WHEN ${own} > ${bumpCutoff} THEN ${own}
+    WHEN ${partner} > ${bumpCutoff} THEN ${partner}
+    ELSE now()
+  END`;
+}
+
+/** `bumpedAt` for a list created with Show on Trade on. */
+export function createdBumpedAt(linkedListId: number | null, type: ListTypeNew, userId: string) {
+  return turnOnBumpedAt(sql`NULL::timestamptz`, partnerBumpedAt(linkedListId, type, userId));
+}
+
+/**
+ * The columns that put a list on or off Trade: turning it on from off counts as a bump. `link` is
+ * the linked list id the write leaves in place (null for none); omitted, the stored one.
+ */
+export function tradeColumns(on: boolean, link?: number | null) {
+  if (!on) return { discoverable: false };
+  // raw names: inside the partner subquery a rendered column could bind to `p`
+  const partner = partnerBumpedAt(
+    link === undefined ? sql`lists.linked_list_id` : link,
+    sql`lists.list_type_new`,
+    sql`lists.user_id`,
+  );
+  return {
+    discoverable: true,
+    bumpedAt: sql<string | null>`CASE
+      WHEN lists.discoverable THEN lists.bumped_at
+      ELSE ${turnOnBumpedAt(sql`lists.bumped_at`, partner)}
+    END`,
+  };
 }
 
 export async function checkLinkedList(type: ListTypeNew, linkedListId: number, userId: string) {
@@ -440,6 +522,11 @@ export async function generateProfileSlug(
   }
 
   return slug;
+}
+
+/** Every list or entry write calls this once committed, so idle ranking and the cached trade matches stay right. */
+export function touchList(listIds: number[]) {
+  return touchListWith(redis, listIds);
 }
 
 type AddableList = Pick<List, "id" | "isProfileBind" | "profileAddress">;
@@ -518,6 +605,7 @@ export async function addEntries(
               .returning(),
           ),
         );
+  if (rows.length > 0) await touchList([list.id]);
   return { rows, skipped: from.slugs.length - rows.length };
 }
 
@@ -543,7 +631,7 @@ async function resolveEntryTokens(slug: string, entryIds: number[]) {
 
 async function insertTokens(listId: number, tokens: { id: string; slug: string }[]) {
   if (tokens.length === 0) return [];
-  return db.transaction((tx) =>
+  const inserted = await db.transaction((tx) =>
     chunkMap(tokens, TOKEN_CHUNK_SIZE, (batch) =>
       tx
         .insert(listEntries)
@@ -552,6 +640,8 @@ async function insertTokens(listId: number, tokens: { id: string; slug: string }
         .returning(),
     ),
   );
+  if (inserted.length > 0) await touchList([listId]);
+  return inserted;
 }
 
 export async function findOwnedList(slug: string, userId: string) {

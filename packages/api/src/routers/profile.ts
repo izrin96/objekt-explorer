@@ -107,7 +107,6 @@ async function fetchOwnedProfile(address: string, userId: string, messages: ApiM
     columns: {
       nickname: true,
       address: true,
-      hideUser: true,
       bannerImgUrl: true,
       bannerImgType: true,
       privateSerial: true,

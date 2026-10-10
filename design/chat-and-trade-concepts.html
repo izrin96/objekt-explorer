@@ -1,0 +1,2197 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Chat, notifications &amp; trades — concepts</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400..700&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400..700&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:wght@300..800&display=swap" />
+    <style>
+      :root {
+        --doc: oklch(0.128 0.004 286);
+        --bg: oklch(0.158 0.004 285.898);
+        --card: oklch(0.178 0.004 285.886);
+        --popover: oklch(0.198 0.004 285.877);
+        --fg: oklch(0.965 0.002 284.795);
+        --muted: oklch(0.72 0.012 286);
+        --subtle: oklch(0.56 0.012 286);
+        --border: oklch(1 0 0 / 8%);
+        --border-strong: oklch(1 0 0 / 14%);
+        --secondary: oklch(1 0 0 / 5%);
+        --secondary-hover: oklch(1 0 0 / 9%);
+        --primary: oklch(0.965 0.002 284.795);
+        --primary-fg: oklch(0.18 0.005 285.906);
+        --accent: oklch(0.673 0.182 276.935);
+        --accent-bg: oklch(0.585 0.233 277.117 / 0.14);
+        --success: oklch(0.8 0.15 140);
+        --warning: oklch(0.86 0.13 85);
+        --destructive: oklch(0.72 0.17 18);
+        --info: oklch(0.78 0.11 237);
+        --atom: #ffdd00;
+        --binary: #75fb4c;
+        --cream: #ff7477;
+        --divine: #b400ff;
+        --ever: #33ecfd;
+        --sans: "Google Sans Flex", "Instrument Sans", ui-sans-serif, system-ui, sans-serif;
+        --display: "Instrument Sans", var(--sans);
+        --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+        --r: 8px;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: var(--doc);
+        color: var(--fg);
+        font-family: var(--sans);
+        font-size: 15px;
+        line-height: 1.5;
+        -webkit-font-smoothing: antialiased;
+      }
+      .mono { font-family: var(--mono); font-feature-settings: "zero"; }
+      .muted { color: var(--muted); }
+      .subtle { color: var(--subtle); }
+      .wrap { max-width: 1360px; margin: 0 auto; padding: 56px 32px 96px; }
+      @media (max-width: 640px) { .wrap { padding: 32px 16px 64px; } }
+
+      /* ---------- document chrome ---------- */
+      header.doc h1 {
+        font-family: var(--display);
+        font-size: clamp(34px, 5vw, 56px);
+        line-height: 1.02;
+        letter-spacing: -0.03em;
+        font-weight: 600;
+        margin: 12px 0 16px;
+        max-width: 18ch;
+      }
+      .eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--subtle); }
+      header.doc p.lede { font-size: 18px; color: var(--muted); max-width: 62ch; margin: 0; }
+      section.s { margin-top: 112px; }
+      section.s > .head { display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: 8px 24px; margin-bottom: 32px; max-width: 920px; }
+      section.s > .head .num { font-family: var(--mono); color: var(--subtle); font-size: 13px; padding-top: 10px; }
+      section.s > .head h2 { font-family: var(--display); font-size: 30px; letter-spacing: -0.02em; font-weight: 600; margin: 0; line-height: 1.15; }
+      section.s > .head p { grid-column: 2; margin: 0; color: var(--muted); max-width: 64ch; }
+      @media (max-width: 640px) { section.s > .head { grid-template-columns: 1fr; } section.s > .head p { grid-column: 1; } }
+
+      .split { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 40px; align-items: start; }
+      @media (max-width: 1180px) { .split { grid-template-columns: minmax(0, 1fr); } }
+      .scroll { overflow-x: auto; padding-bottom: 6px; }
+
+      aside.notes { font-size: 14px; color: var(--muted); display: grid; gap: 20px; }
+      aside.notes h3 { font-size: 12px; font-family: var(--mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--subtle); margin: 0 0 6px; font-weight: 500; }
+      aside.notes p, aside.notes ul { margin: 0; }
+      aside.notes ul { padding-left: 18px; display: grid; gap: 6px; }
+      aside.notes strong { color: var(--fg); font-weight: 600; }
+      .lean { border-left: 2px solid var(--accent); padding: 2px 0 2px 12px; }
+      .lean b { color: var(--accent); font-weight: 600; font-size: 12px; font-family: var(--mono); letter-spacing: 0.04em; text-transform: uppercase; display: block; margin-bottom: 2px; }
+
+      .caption { font-size: 13px; color: var(--subtle); margin-top: 10px; }
+      .caption .mono { color: var(--muted); }
+
+      /* ---------- icons ---------- */
+      .i { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; vertical-align: -3px; }
+      .i.sm { width: 14px; height: 14px; }
+      .i.xs { width: 12px; height: 12px; vertical-align: -2px; }
+
+      /* ---------- app frame ---------- */
+      .frame { background: var(--bg); border: 1px solid var(--border-strong); border-radius: 14px; overflow: hidden; box-shadow: 0 30px 80px -40px rgb(0 0 0 / 0.8); }
+      .appnav { display: flex; align-items: center; gap: 22px; height: 52px; padding: 0 18px; border-bottom: 1px solid var(--border); font-size: 14px; }
+      .appnav .brand { font-family: var(--display); font-weight: 650; letter-spacing: -0.01em; }
+      .appnav .links { display: flex; gap: 18px; color: var(--muted); }
+      .appnav .links .on { color: var(--fg); }
+      .appnav .right { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+      .iconbtn { position: relative; width: 32px; height: 32px; display: inline-grid; place-items: center; border-radius: 8px; color: var(--muted); }
+      .iconbtn.on { background: var(--secondary-hover); color: var(--fg); }
+      .badge-dot { position: absolute; top: 3px; right: 2px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 99px; background: var(--accent); color: white; font: 600 10px/16px var(--mono); text-align: center; }
+
+      .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 32px; padding: 0 12px; border-radius: 8px; font: 500 13px var(--sans); border: 1px solid var(--border-strong); background: var(--secondary); color: var(--fg); white-space: nowrap; }
+      .btn.primary { background: var(--primary); color: var(--primary-fg); border-color: transparent; }
+      .btn.ghost { background: transparent; border-color: transparent; color: var(--muted); }
+      .btn.danger { color: var(--destructive); }
+      .btn.sm { height: 26px; padding: 0 9px; font-size: 12px; border-radius: 7px; }
+      .btn.block { width: 100%; }
+      .chip { display: inline-flex; align-items: center; gap: 5px; height: 22px; padding: 0 8px; border-radius: 6px; font-size: 12px; background: var(--secondary); color: var(--muted); white-space: nowrap; }
+      .chip.ok { color: var(--success); background: oklch(0.8 0.15 140 / 0.1); }
+      .chip.warn { color: var(--warning); background: oklch(0.86 0.13 85 / 0.1); }
+      .chip.bad { color: var(--destructive); background: oklch(0.72 0.17 18 / 0.12); }
+      .chip.acc { color: var(--accent); background: var(--accent-bg); }
+      .chip.info { color: var(--info); background: oklch(0.78 0.11 237 / 0.1); }
+
+      .avatar { width: 32px; height: 32px; border-radius: 99px; display: inline-grid; place-items: center; font: 600 13px var(--display); color: oklch(0.2 0.02 var(--h, 280)); background: oklch(0.82 0.08 var(--h, 280)); flex: none; }
+      .avatar.sm { width: 24px; height: 24px; font-size: 11px; }
+      .avatar.lg { width: 40px; height: 40px; font-size: 15px; }
+
+      /* ---------- objekt photocard (abstract) ---------- */
+      .pc {
+        --band: var(--atom);
+        --ink: #15171c;
+        position: relative;
+        aspect-ratio: 1083 / 1673;
+        border-radius: 5.4cqi;
+        overflow: hidden;
+        container-type: inline-size;
+        background:
+          radial-gradient(38% 26% at 42% 40%, oklch(0.93 0.03 var(--h, 30) / 0.55), transparent 72%),
+          radial-gradient(60% 34% at 44% 86%, oklch(0.5 0.07 var(--h, 30) / 0.9), transparent 70%),
+          radial-gradient(120% 70% at 20% 10%, oklch(0.82 0.07 var(--h, 30)), transparent 60%),
+          linear-gradient(165deg, oklch(0.6 0.09 var(--h, 30)), oklch(0.3 0.05 calc(var(--h, 30) + 40)));
+        flex: none;
+      }
+      .pc { border-radius: 6% / 3.9%; }
+      .pc::after { content: ""; position: absolute; inset: 0 0 0 auto; width: 13%; background: var(--band); }
+      .pc > span {
+        position: absolute; z-index: 1; right: 0; top: 0; bottom: 0; width: 13%;
+        writing-mode: vertical-rl; display: flex; align-items: center; justify-content: flex-start; padding-top: 8cqi;
+        font: 700 6.2cqi/1 var(--mono); letter-spacing: 0.02em; color: var(--ink); text-transform: uppercase; overflow: hidden; white-space: nowrap;
+      }
+      .pc.divine { --band: var(--divine); --ink: #fff; }
+      .pc.binary { --band: var(--binary); }
+      .pc.cream { --band: var(--cream); }
+      .pc.ever { --band: var(--ever); }
+      .pc.dim { filter: grayscale(0.85) brightness(0.55); }
+      .pc.w24 { width: 24px; } .pc.w28 { width: 28px; } .pc.w36 { width: 36px; } .pc.w48 { width: 48px; } .pc.w64 { width: 64px; } .pc.w80 { width: 80px; } .pc.w96 { width: 96px; } .pc.w150 { width: 150px; } .pc.w170 { width: 170px; }
+      .pc.w24 > span, .pc.w28 > span, .pc.w36 > span { font-size: 0; }
+
+      .obj-meta { font-family: var(--mono); font-size: 12px; line-height: 1.35; }
+      .obj-meta .n { color: var(--fg); }
+      .obj-meta .s { color: var(--subtle); }
+
+      /* ---------- 00 flow ---------- */
+      .flow { display: grid; grid-template-columns: repeat(7, minmax(120px, 1fr)); gap: 0; margin-top: 48px; min-width: 980px; }
+      .flow .step { position: relative; padding: 16px 18px 16px 0; }
+      .flow .step::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 2px; background: var(--border-strong); }
+      .flow .step.hot::before { background: var(--accent); }
+      .flow .step .k { font-family: var(--mono); font-size: 11px; color: var(--subtle); }
+      .flow .step .t { font-family: var(--display); font-weight: 600; font-size: 16px; margin: 4px 0 4px; }
+      .flow .step .d { font-size: 13px; color: var(--muted); line-height: 1.4; }
+      .flow .step .tag { margin-top: 8px; }
+
+      /* ---------- 01 entry points ---------- */
+      .entry-grid { display: grid; grid-template-columns: 240px 240px minmax(380px, 1fr); gap: 16px; min-width: 940px; }
+      .panel { background: var(--bg); border: 1px solid var(--border-strong); border-radius: 12px; padding: 16px; position: relative; }
+      .panel .lbl { font-family: var(--mono); font-size: 11px; color: var(--subtle); letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 12px; display: flex; justify-content: space-between; }
+      .listing { display: grid; gap: 10px; }
+      .listing .row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+      .price { font-family: var(--mono); font-weight: 600; font-size: 15px; }
+      .seller { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+      .menu { background: var(--popover); border: 1px solid var(--border-strong); border-radius: 10px; padding: 4px; box-shadow: 0 16px 40px -12px rgb(0 0 0 / 0.7); font-size: 13px; min-width: 200px; }
+      .menu .it { display: flex; align-items: center; gap: 9px; padding: 7px 9px; border-radius: 6px; color: var(--fg); }
+      .menu .it.hl { background: var(--secondary-hover); }
+      .menu .it .i { color: var(--muted); }
+      .menu .it.danger, .menu .it.danger .i { color: var(--destructive); }
+      .menu .sep { height: 1px; background: var(--border); margin: 4px 0; }
+      .menu .it kbd, .menu .it .r { margin-left: auto; font-family: var(--mono); font-size: 11px; color: var(--subtle); }
+      .hover-card { position: relative; }
+      .hover-card .menu { position: absolute; left: 70px; top: 54px; z-index: 3; }
+      .hover-card .kebab { position: absolute; right: 18%; top: 6px; width: 26px; height: 26px; border-radius: 7px; background: rgb(0 0 0 / 0.55); display: grid; place-items: center; color: white; z-index: 2; }
+
+      .match { display: grid; gap: 12px; }
+      .match-row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 12px; border: 1px solid var(--border); border-radius: 10px; }
+      .match-row.on { border-color: var(--border-strong); background: var(--secondary); }
+      .match-row .who { font-size: 14px; font-weight: 500; }
+      .match-row .what { font-size: 12px; color: var(--muted); margin-top: 2px; }
+      .match-row .thumbs { display: flex; gap: 4px; margin-top: 8px; }
+      .match-row .acts { display: flex; gap: 6px; }
+
+
+      /* ---------- 02 trade page ---------- */
+      table.compare { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 640px; }
+      table.compare th { text-align: left; font: 500 11px var(--mono); color: var(--subtle); text-transform: uppercase; letter-spacing: 0.05em; padding: 8px 12px; border-bottom: 1px solid var(--border-strong); }
+      table.compare td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+      table.compare td:first-child { color: var(--subtle); font-size: 13px; width: 140px; }
+      table.compare td.new { color: var(--fg); }
+      .tp { padding: 22px 24px 24px; }
+      .tp-head { display: flex; align-items: flex-end; gap: 16px; margin-bottom: 16px; }
+      .tp-head h3 { margin: 0; font-family: var(--display); font-size: 28px; font-weight: 600; letter-spacing: -0.02em; line-height: 1; }
+      .tp-head p { margin: 6px 0 0; color: var(--muted); font-size: 13px; }
+      .tp-head .btn { margin-left: auto; }
+      .utabs { display: flex; gap: 22px; border-bottom: 1px solid var(--border); font-size: 14px; margin-bottom: 14px; }
+      .utabs span { padding: 8px 0 10px; color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px; }
+      .utabs span.on { color: var(--fg); border-bottom-color: var(--fg); }
+      .utabs .ct { font: 11px var(--mono); color: var(--subtle); margin-left: 5px; }
+      .fbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 14px; }
+      .fbar .seg { font-size: 12px; padding: 3px; border-radius: 9px; }
+      .fbar .seg span { padding: 4px 10px; border-radius: 7px; }
+      .fchip { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 11px; border-radius: 8px; border: 1px solid var(--border-strong); font-size: 13px; color: var(--muted); }
+      .fchip.on { color: var(--fg); border-color: var(--fg); background: var(--secondary-hover); }
+      .fbar .right { margin-left: auto; }
+      .ownpost { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border: 1px dashed var(--border-strong); border-radius: 10px; font-size: 13px; margin-bottom: 14px; color: var(--muted); }
+      .ownpost b { color: var(--fg); font-weight: 500; }
+      .ownpost .btn { margin-left: auto; }
+      .posts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+      .post { border: 1px solid var(--border-strong); border-radius: 12px; padding: 14px; background: var(--card); display: grid; gap: 10px; }
+      .post .top { display: flex; align-items: center; gap: 10px; }
+      .post .top .nm { font-size: 14px; font-weight: 500; }
+      .post .top .rep { font: 11px var(--mono); color: var(--subtle); }
+      .post .top .types { margin-left: auto; display: flex; gap: 4px; }
+      .post .lname { font-size: 12px; color: var(--muted); }
+      .strip { display: grid; grid-template-columns: 44px minmax(0, 1fr); align-items: center; gap: 8px; }
+      .strip .k { font: 500 10px var(--mono); color: var(--subtle); letter-spacing: 0.06em; }
+      .strip .th { display: flex; gap: 6px; align-items: flex-end; }
+      .strip .more { font: 11px var(--mono); color: var(--subtle); padding-left: 2px; }
+      .strip .pr { display: grid; gap: 3px; justify-items: center; font: 9px var(--mono); color: var(--muted); }
+      .pc.hit { outline: 2px solid var(--accent); outline-offset: 2px; }
+      .post .mline { display: flex; align-items: center; gap: 8px; font: 12px var(--mono); color: var(--accent); }
+      .post .mline .unread { flex: none; }
+      .post .acts { display: flex; gap: 6px; align-items: center; }
+      .post .acts .when { font: 11px var(--mono); color: var(--subtle); margin-right: auto; }
+      .feedfoot { margin-top: 14px; font: 12px var(--mono); color: var(--subtle); }
+      .prow { border-top: 1px solid var(--border); padding: 14px 0; }
+      .prow .hdr { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto auto; gap: 12px; align-items: center; }
+      .prow .hdr .nm { font-size: 14px; font-weight: 500; }
+      .prow .hdr .rep { font: 11px var(--mono); color: var(--subtle); }
+      .prow .hdr .meta { font: 11px var(--mono); color: var(--subtle); text-align: right; }
+      .mscore { display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 9px; border-radius: 7px; font: 500 12px var(--mono); background: var(--accent-bg); color: var(--accent); }
+      .mscore.one { background: var(--secondary); color: var(--muted); }
+      .prow.idle { opacity: 0.55; }
+      .pbody { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 14px 0 0 44px; }
+      .pbody h5 { margin: 0 0 8px; font: 500 11px var(--mono); color: var(--subtle); text-transform: uppercase; letter-spacing: 0.05em; }
+      .pbody .th { display: flex; gap: 8px; flex-wrap: wrap; }
+      .pbody .it { display: grid; gap: 3px; width: 60px; font: 9px/1.25 var(--mono); color: var(--subtle); }
+      .pbody .it.gone { color: var(--destructive); }
+      .pbody .it.gone .pc { filter: grayscale(1) brightness(0.45); }
+      .pbody .it.gone .pc::before { content: ""; position: absolute; z-index: 2; left: -10%; right: -10%; top: 50%; height: 2px; background: var(--destructive); transform: rotate(-56deg); }
+      .pacts { display: flex; gap: 6px; justify-content: flex-end; margin-top: 12px; align-items: center; }
+      .pacts .hint { margin-right: auto; margin-left: 44px; font-size: 12px; color: var(--subtle); }
+      .fy-sum { font: 12px var(--mono); color: var(--muted); margin-bottom: 4px; display: flex; flex-wrap: wrap; gap: 6px 14px; }
+      .fy-sum b { color: var(--fg); font-weight: 500; }
+      .excl { margin-top: 4px; padding: 10px 12px; border-radius: 10px; background: var(--secondary); font-size: 12px; color: var(--muted); display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+      .excl .btn { margin-left: auto; }
+      .lhead { border: 1px solid var(--border); border-radius: 10px; padding: 14px; display: grid; gap: 10px; }
+      .lhead .t { display: flex; align-items: center; gap: 8px; font-family: var(--display); font-weight: 600; font-size: 18px; }
+      .lhead .b { display: flex; gap: 6px; flex-wrap: wrap; }
+      .lhead .btn.hl { border-color: var(--accent); color: var(--fg); box-shadow: 0 0 0 3px var(--accent-bg); }
+      .trio { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; min-width: 1100px; }
+      .srow2 { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; gap: 10px; align-items: center; padding: 9px 0; border-top: 1px solid var(--border); font-size: 13px; }
+      .srow2 .mono { font-size: 12px; }
+      .linkrow { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--muted); }
+      .linkrow .btn { margin-left: auto; }
+      .grp { font: 500 11px var(--mono); color: var(--subtle); text-transform: uppercase; letter-spacing: 0.05em; margin: 14px 0 4px; }
+      .grp:first-of-type { margin-top: 0; }
+      .trow { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 9px 0; border-top: 1px solid var(--border); font-size: 13px; }
+      .trow .s { font: 11px var(--mono); color: var(--subtle); }
+
+      /* ---------- 03 inbox ---------- */
+      .inbox { display: grid; grid-template-columns: 300px minmax(0, 1fr); height: 880px; }
+      .convs { border-right: 1px solid var(--border); display: flex; flex-direction: column; min-height: 0; }
+      .convs .top { padding: 16px 16px 10px; }
+      .convs .top h4 { margin: 0 0 12px; font-family: var(--display); font-size: 18px; font-weight: 600; }
+      .tabs { display: flex; gap: 2px; padding: 3px; background: var(--secondary); border-radius: 9px; font-size: 13px; }
+      .tabs span { flex: 1; text-align: center; padding: 5px 8px; border-radius: 7px; color: var(--muted); }
+      .tabs span.on { background: var(--popover); color: var(--fg); box-shadow: 0 1px 2px rgb(0 0 0 / 0.4); }
+      .tabs .ct { font-family: var(--mono); font-size: 11px; color: var(--subtle); margin-left: 4px; }
+      .search { margin: 10px 0 0; height: 32px; border: 1px solid var(--border-strong); border-radius: 8px; display: flex; align-items: center; gap: 8px; padding: 0 10px; color: var(--subtle); font-size: 13px; }
+      .conv { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; padding: 11px 16px; align-items: center; border-left: 2px solid transparent; }
+      .conv.on { background: var(--secondary); border-left-color: var(--fg); }
+      .conv .nm { font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 6px; }
+      .conv .last { font-size: 13px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .conv .meta { display: grid; justify-items: end; gap: 6px; font: 11px var(--mono); color: var(--subtle); }
+      .unread { width: 8px; height: 8px; border-radius: 99px; background: var(--accent); }
+      .conv.read .last { color: var(--subtle); }
+      .conv .ctx { display: flex; align-items: center; gap: 6px; margin-top: 3px; }
+
+      .thread { display: flex; flex-direction: column; min-height: 0; }
+      .th-head { display: flex; align-items: center; gap: 12px; padding: 12px 18px; border-bottom: 1px solid var(--border); }
+      .th-head .nm { font-weight: 600; font-size: 15px; display: flex; gap: 8px; align-items: center; }
+      .th-head .rep { font: 12px var(--mono); color: var(--muted); }
+      .th-head .acts { margin-left: auto; display: flex; gap: 6px; align-items: center; }
+      .msgs { flex: 1; padding: 20px 22px; display: flex; flex-direction: column; justify-content: flex-end; gap: 10px; overflow: hidden; }
+      .day { align-self: center; font: 11px var(--mono); color: var(--subtle); padding: 6px 0; }
+      .sys { align-self: center; max-width: 520px; width: 100%; border: 1px dashed var(--border-strong); border-radius: 12px; padding: 12px; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: center; font-size: 13px; }
+      .sys .t { color: var(--muted); font-size: 12px; }
+      .bub { max-width: 420px; padding: 9px 13px; border-radius: 16px; font-size: 14px; line-height: 1.45; }
+      .bub.them { align-self: flex-start; background: var(--card); border: 1px solid var(--border); border-bottom-left-radius: 5px; }
+      .bub.me { align-self: flex-end; background: oklch(0.32 0.008 286); border-bottom-right-radius: 5px; }
+      .stamp { font: 11px var(--mono); color: var(--subtle); }
+      .stamp.r { align-self: flex-end; }
+
+      .offer { width: 460px; border: 1px solid var(--border-strong); border-radius: 14px; background: var(--card); overflow: hidden; }
+      .offer.me { align-self: flex-end; }
+      .offer.them { align-self: flex-start; }
+      .offer .oh { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-bottom: 1px solid var(--border); font-size: 13px; }
+      .offer .oh .id { font-family: var(--mono); color: var(--subtle); font-size: 12px; }
+      .offer .oh .chip { margin-left: auto; }
+      .offer .ob { display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; padding: 14px; align-items: start; }
+      .offer .side h5 { margin: 0 0 8px; font: 500 11px var(--mono); color: var(--subtle); text-transform: uppercase; letter-spacing: 0.05em; }
+      .offer .items { display: flex; gap: 8px; flex-wrap: wrap; }
+      .offer .item { display: grid; gap: 4px; width: 64px; }
+      .offer .item .obj-meta { font-size: 10px; }
+      .offer .swap { align-self: center; color: var(--subtle); }
+      .offer .money { margin-top: 8px; font: 12px var(--mono); display: flex; align-items: center; gap: 6px; color: var(--warning); }
+      .offer .of { display: flex; gap: 8px; padding: 10px 14px; border-top: 1px solid var(--border); align-items: center; }
+      .offer .of .note { font-size: 12px; color: var(--subtle); margin-right: auto; display: flex; gap: 6px; align-items: center; }
+      .offer.collapsed { opacity: 0.55; }
+      .offer.collapsed .ob { padding: 10px 14px; }
+
+      .safety { align-self: flex-start; font-size: 12px; color: var(--muted); display: flex; gap: 8px; align-items: flex-start; max-width: 460px; padding: 8px 12px; border-radius: 10px; background: oklch(0.86 0.13 85 / 0.07); border: 1px solid oklch(0.86 0.13 85 / 0.18); }
+      .safety .i { color: var(--warning); margin-top: 1px; }
+
+      .composer { border-top: 1px solid var(--border); padding: 12px 16px; display: flex; gap: 8px; align-items: center; }
+      .composer .input { flex: 1; height: 38px; border: 1px solid var(--border-strong); border-radius: 10px; padding: 0 12px; display: flex; align-items: center; color: var(--subtle); font-size: 14px; }
+      .typing { font: 12px var(--mono); color: var(--subtle); padding: 0 22px 6px; }
+
+      /* ---------- phones ---------- */
+      .phones { display: flex; gap: 28px; min-width: 1000px; }
+      .phone { width: 310px; height: 640px; border-radius: 40px; border: 1px solid var(--border-strong); background: var(--bg); padding: 10px; flex: none; box-shadow: 0 30px 80px -40px rgb(0 0 0 / 0.9); }
+      .phone .scr { height: 100%; border-radius: 31px; overflow: hidden; display: flex; flex-direction: column; background: var(--bg); position: relative; border: 1px solid var(--border); }
+      .phone .status { height: 34px; display: flex; justify-content: space-between; align-items: center; padding: 0 22px; font: 600 12px var(--sans); }
+      .phone .ph-head { display: flex; align-items: center; gap: 10px; padding: 6px 14px 10px; border-bottom: 1px solid var(--border); }
+      .phone .ph-body { flex: 1; overflow: hidden; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+      .phone .bub { max-width: 230px; font-size: 13px; }
+      .phone .ph-foot { border-top: 1px solid var(--border); padding: 10px 12px 18px; display: flex; gap: 8px; align-items: center; }
+      .phone .offer { width: 100%; }
+      .phone .offer .ob { grid-template-columns: 1fr; gap: 8px; }
+      .phone .offer .swap { justify-self: center; transform: rotate(90deg); }
+      .drawer-bg { position: absolute; inset: 0; background: rgb(0 0 0 / 0.55); }
+      .drawer { position: absolute; left: 0; right: 0; bottom: 0; background: var(--popover); border-radius: 22px 22px 0 0; border-top: 1px solid var(--border-strong); padding: 10px 16px 18px; display: grid; gap: 12px; }
+      .drawer .grab { width: 36px; height: 4px; border-radius: 9px; background: var(--border-strong); justify-self: center; }
+      .kv { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; font-size: 12px; }
+      .kv dt { color: var(--subtle); font-family: var(--mono); }
+      .kv dd { margin: 0; font-family: var(--mono); text-align: right; }
+
+      /* ---------- 03 notifications ---------- */
+      .notif-stage { position: relative; height: 580px; min-width: 940px; }
+      .notif-stage .dimmed { position: absolute; inset: 52px 0 0 0; padding: 24px; display: grid; grid-template-columns: repeat(6, 1fr); gap: 16px; opacity: 0.22; }
+      .pop { position: absolute; right: 70px; top: 46px; width: 400px; z-index: 4; }
+      .pop .menu { padding: 0; min-width: 0; }
+      .pop .ph { display: flex; align-items: center; padding: 12px 14px 8px; gap: 8px; }
+      .pop .ph h4 { margin: 0; font-family: var(--display); font-size: 16px; }
+      .pop .ph .btn { margin-left: auto; }
+      .pop .tabs { margin: 0 12px 6px; }
+      .ntf { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; gap: 10px; padding: 10px 14px; align-items: start; border-top: 1px solid var(--border); font-size: 13px; }
+      .ntf .ic { width: 34px; height: 34px; border-radius: 9px; background: var(--secondary); display: grid; place-items: center; color: var(--muted); }
+      .ntf .ic.acc { color: var(--accent); background: var(--accent-bg); }
+      .ntf .ic.ok { color: var(--success); background: oklch(0.8 0.15 140 / 0.1); }
+      .ntf .ic.warn { color: var(--warning); background: oklch(0.86 0.13 85 / 0.1); }
+      .ntf .tx { line-height: 1.4; }
+      .ntf .tx b { font-weight: 600; }
+      .ntf .tm { font: 11px var(--mono); color: var(--subtle); margin-top: 3px; }
+      .ntf .rt { display: grid; justify-items: end; gap: 6px; }
+      .ntf.read { opacity: 0.6; }
+      .pop .pf { border-top: 1px solid var(--border); padding: 8px 14px; font-size: 12px; color: var(--muted); display: flex; justify-content: space-between; }
+
+      table.prefs { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 560px; }
+      table.prefs th { text-align: left; font: 500 11px var(--mono); color: var(--subtle); text-transform: uppercase; letter-spacing: 0.05em; padding: 8px 10px; border-bottom: 1px solid var(--border-strong); }
+      table.prefs td { padding: 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+      table.prefs td.c, table.prefs th.c { text-align: center; }
+      table.prefs td .d { font-size: 12px; color: var(--subtle); }
+      .sw { display: inline-block; width: 30px; height: 18px; border-radius: 99px; background: var(--secondary-hover); position: relative; vertical-align: middle; }
+      .sw::after { content: ""; position: absolute; width: 14px; height: 14px; border-radius: 99px; top: 2px; left: 2px; background: var(--subtle); }
+      .sw.on { background: var(--primary); }
+      .sw.on::after { left: 14px; background: var(--primary-fg); }
+      .sw.na { opacity: 0.3; }
+
+      /* ---------- 04 trade builder ---------- */
+      .dialog-stage { padding: 32px; display: grid; place-items: center; background: rgb(0 0 0 / 0.35); min-width: 940px; }
+      .dialog { width: 860px; background: var(--popover); border: 1px solid var(--border-strong); border-radius: 16px; box-shadow: 0 40px 100px -30px rgb(0 0 0 / 0.9); }
+      .dialog .dh { padding: 18px 20px 6px; display: flex; align-items: center; gap: 10px; }
+      .dialog .dh h4 { margin: 0; font-family: var(--display); font-size: 19px; font-weight: 600; }
+      .dialog .dh .x { margin-left: auto; }
+      .dialog .sub { padding: 0 20px 14px; font-size: 13px; color: var(--muted); }
+      .suggest { margin: 0 20px 16px; padding: 12px 14px; border-radius: 12px; background: var(--accent-bg); display: flex; gap: 12px; align-items: center; font-size: 13px; }
+      .suggest .i { color: var(--accent); }
+      .suggest .btn { margin-left: auto; }
+      .cols { display: grid; grid-template-columns: 1fr 40px 1fr; padding: 0 20px; gap: 0; }
+      .col { border: 1px solid var(--border-strong); border-radius: 12px; padding: 14px; background: var(--bg); }
+      .col h5 { margin: 0 0 4px; font-size: 14px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
+      .col .from { font: 11px var(--mono); color: var(--subtle); margin-bottom: 12px; }
+      .pick { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 8px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 8px; }
+      .pick.bad { border-style: dashed; }
+      .pick .why { font-size: 11px; margin-top: 4px; }
+      .seg { display: inline-flex; padding: 2px; background: var(--secondary); border-radius: 7px; font-size: 11px; }
+      .seg span { padding: 2px 7px; border-radius: 5px; color: var(--subtle); }
+      .seg span.on { background: var(--popover); color: var(--fg); }
+      .addrow { display: flex; align-items: center; justify-content: center; gap: 6px; height: 40px; border: 1px dashed var(--border-strong); border-radius: 10px; color: var(--muted); font-size: 13px; }
+      .mid { display: grid; place-items: center; color: var(--subtle); }
+      .extra { margin: 14px 20px 0; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+      .field { border: 1px solid var(--border-strong); border-radius: 10px; padding: 10px 12px; font-size: 13px; }
+      .field label { display: block; font: 11px var(--mono); color: var(--subtle); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+      .dialog .df { padding: 16px 20px; margin-top: 16px; border-top: 1px solid var(--border); display: flex; gap: 10px; align-items: center; }
+      .dialog .df .fine { font-size: 12px; color: var(--subtle); margin-right: auto; max-width: 52ch; }
+
+      /* ---------- 05 trade tracker ---------- */
+      .tracker { display: grid; grid-template-columns: minmax(0, 1fr) 300px; }
+      .tracker .main { padding: 22px 24px; border-right: 1px solid var(--border); }
+      .tracker .side { padding: 22px 20px; display: grid; gap: 18px; align-content: start; }
+      .t-title { display: flex; align-items: baseline; gap: 12px; margin-bottom: 18px; }
+      .t-title h4 { margin: 0; font-family: var(--display); font-size: 22px; font-weight: 600; }
+      .stepper { display: grid; grid-template-columns: repeat(4, 1fr); margin-bottom: 24px; }
+      .stepper .st { padding-top: 12px; border-top: 2px solid var(--border-strong); font-size: 13px; padding-right: 8px; }
+      .stepper .st.done { border-top-color: var(--success); }
+      .stepper .st.now { border-top-color: var(--accent); }
+      .stepper .st .k { font: 11px var(--mono); color: var(--subtle); display: block; }
+      .stepper .st.now .k { color: var(--accent); }
+      table.legs { width: 100%; border-collapse: collapse; font-size: 13px; }
+      table.legs th { text-align: left; font: 500 11px var(--mono); color: var(--subtle); text-transform: uppercase; letter-spacing: 0.05em; padding: 8px 10px; border-bottom: 1px solid var(--border-strong); }
+      table.legs td { padding: 12px 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+      .objcell { display: flex; gap: 10px; align-items: center; }
+      .dir { font: 12px var(--mono); color: var(--muted); display: flex; gap: 6px; align-items: center; }
+      .txh { font: 11px var(--mono); color: var(--subtle); margin-top: 4px; }
+      .callout { border: 1px solid var(--border-strong); border-radius: 12px; padding: 14px; font-size: 13px; color: var(--muted); }
+      .callout h5 { margin: 0 0 6px; color: var(--fg); font-size: 13px; font-weight: 600; display: flex; gap: 8px; align-items: center; }
+      .callout.acc { border-color: oklch(0.673 0.182 276.935 / 0.4); background: var(--accent-bg); }
+      .rep-big { display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: center; }
+      .rep-big .n { font: 600 28px var(--mono); line-height: 1; }
+      .fb { display: flex; gap: 8px; margin-top: 10px; }
+
+      /* ---------- 06 moderation ---------- */
+      .mod-user { display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 20px; min-width: 900px; }
+      .report { padding: 18px; }
+      .radio { display: flex; gap: 10px; align-items: flex-start; padding: 8px 10px; border-radius: 8px; font-size: 13px; }
+      .radio.on { background: var(--secondary); }
+      .radio .o { width: 16px; height: 16px; border-radius: 99px; border: 1.5px solid var(--border-strong); flex: none; margin-top: 2px; }
+      .radio.on .o { border: 5px solid var(--fg); }
+      .radio .d { font-size: 12px; color: var(--subtle); }
+      .check { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; padding: 8px 10px; }
+      .check .b { width: 16px; height: 16px; border-radius: 4px; border: 1.5px solid var(--border-strong); flex: none; margin-top: 2px; display: grid; place-items: center; }
+      .check.on .b { background: var(--fg); border-color: var(--fg); color: var(--primary-fg); }
+      .check .d { font-size: 12px; color: var(--subtle); }
+
+      .console { display: grid; grid-template-columns: 300px minmax(0, 1fr) 300px; height: 720px; }
+      .console > div { min-height: 0; overflow: hidden; }
+      .queue { border-right: 1px solid var(--border); }
+      .queue .top { padding: 14px 16px; display: flex; align-items: center; gap: 8px; }
+      .queue .top h4 { margin: 0; font-family: var(--display); font-size: 16px; }
+      .qi { padding: 12px 16px; border-top: 1px solid var(--border); display: grid; gap: 6px; font-size: 13px; border-left: 2px solid transparent; }
+      .qi.on { background: var(--secondary); border-left-color: var(--fg); }
+      .qi .r1 { display: flex; justify-content: space-between; align-items: center; }
+      .qi .r2 { display: flex; gap: 6px; flex-wrap: wrap; }
+      .qi .ex { color: var(--muted); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .case { padding: 18px 22px; display: flex; flex-direction: column; gap: 10px; }
+      .case h4 { margin: 0; font-family: var(--display); font-size: 18px; display: flex; gap: 10px; align-items: center; }
+      .case .scope { font-size: 12px; color: var(--subtle); display: flex; gap: 6px; align-items: center; }
+      .excerpt { border: 1px solid var(--border); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 8px; background: oklch(0 0 0 / 0.15); }
+      .excerpt .bub { max-width: 380px; font-size: 13px; }
+      .excerpt .bub.flag { outline: 1.5px solid var(--destructive); outline-offset: 2px; }
+      .flagnote { font: 11px var(--mono); color: var(--destructive); display: flex; gap: 6px; align-items: center; }
+      .actions { border-left: 1px solid var(--border); padding: 18px; display: grid; gap: 16px; align-content: start; }
+      .facts { display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; font-size: 13px; }
+      .facts dt { color: var(--muted); }
+      .facts dd { margin: 0; font-family: var(--mono); text-align: right; }
+      .facts dd.bad { color: var(--destructive); }
+      .facts dd.warn { color: var(--warning); }
+      .act-grid { display: grid; gap: 6px; }
+      .act { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; padding: 9px 10px; border-radius: 9px; border: 1px solid var(--border); font-size: 13px; }
+      .act.on { border-color: var(--fg); background: var(--secondary); }
+      .act .d { font-size: 11px; color: var(--subtle); }
+      .audit { font: 11px/1.6 var(--mono); color: var(--subtle); }
+
+      .ladder { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; min-width: 860px; }
+      .rung { border: 1px solid var(--border-strong); border-radius: 12px; padding: 14px; background: var(--bg); position: relative; }
+      .rung .k { font: 11px var(--mono); color: var(--subtle); }
+      .rung h5 { margin: 4px 0 8px; font-size: 15px; font-weight: 600; font-family: var(--display); }
+      .rung ul { margin: 0; padding-left: 16px; font-size: 12px; color: var(--muted); display: grid; gap: 3px; }
+      .rung .sev { position: absolute; top: 0; left: 14px; right: 14px; height: 2px; border-radius: 2px; }
+
+      .sanctioned { border-top: 1px solid var(--border); padding: 14px 16px; display: flex; gap: 12px; align-items: center; background: oklch(0.72 0.17 18 / 0.06); }
+      .sanctioned .i { color: var(--destructive); }
+      .sanctioned .t { font-size: 13px; }
+      .sanctioned .t .s { font-size: 12px; color: var(--subtle); }
+
+      /* ---------- 07 settings ---------- */
+      .settings { padding: 24px; display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 28px; }
+      .snav { display: grid; gap: 2px; font-size: 14px; align-content: start; }
+      .snav span { padding: 7px 10px; border-radius: 7px; color: var(--muted); }
+      .snav span.on { background: var(--secondary); color: var(--fg); }
+      .sgroup { border: 1px solid var(--border); border-radius: 12px; margin-bottom: 16px; }
+      .sgroup .sh { padding: 14px 16px 4px; font-weight: 600; font-size: 14px; }
+      .sgroup .sd { padding: 0 16px 10px; font-size: 13px; color: var(--muted); }
+      .srow { display: flex; gap: 16px; align-items: center; justify-content: space-between; padding: 12px 16px; border-top: 1px solid var(--border); font-size: 13px; }
+      .srow .d { font-size: 12px; color: var(--subtle); margin-top: 2px; max-width: 60ch; }
+
+      /* ---------- 08 architecture ---------- */
+      .arch { min-width: 980px; }
+      .arch svg text { font-family: var(--mono); fill: var(--muted); font-size: 12px; }
+      .arch svg .ttl { font-family: var(--display); fill: var(--fg); font-size: 14px; font-weight: 600; }
+      .arch svg .box { fill: var(--bg); stroke: var(--border-strong); }
+      .arch svg .box.new { stroke: var(--accent); stroke-dasharray: 4 3; }
+      .arch svg .ln { stroke: var(--subtle); stroke-width: 1.5; fill: none; }
+      .arch svg .ln.new { stroke: var(--accent); }
+      .legend { display: flex; gap: 18px; font-size: 12px; color: var(--subtle); margin-top: 8px; }
+      .legend i { display: inline-block; width: 18px; height: 0; border-top: 1.5px solid var(--subtle); vertical-align: middle; margin-right: 6px; }
+      .legend i.new { border-top: 1.5px dashed var(--accent); }
+
+      /* ---------- 10 decisions ---------- */
+      #vote-status { font-size: 13px; color: var(--subtle); margin-bottom: 8px; }
+      .dgroup { margin-top: 48px; }
+      .dgroup > h3 { font: 500 12px var(--mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--subtle); margin: 0 0 4px; }
+      .dec { padding: 24px 0; border-top: 1px solid var(--border); }
+      .dec .dh { display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: 0 16px; margin-bottom: 14px; }
+      .dec .q { font-family: var(--mono); color: var(--subtle); font-size: 13px; padding-top: 3px; }
+      .dec h4 { margin: 0 0 4px; font-size: 17px; font-weight: 600; }
+      .dec .dh p { margin: 0; font-size: 13px; color: var(--muted); max-width: 72ch; }
+      .dec .dh .ref { font-family: var(--mono); color: var(--subtle); margin-left: 6px; font-size: 12px; }
+      .optgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 12px; margin-left: 64px; }
+      @media (max-width: 640px) { .optgrid { margin-left: 0; } .dec .dh { grid-template-columns: 1fr; } }
+      .optcard { display: grid; grid-template-rows: auto auto 1fr auto; gap: 10px; padding: 12px; border: 1px solid var(--border-strong); border-radius: 14px; background: var(--card); }
+      .optcard.picked { border-color: var(--fg); box-shadow: 0 0 0 1px var(--fg); }
+      .optcard .ot { display: flex; align-items: baseline; gap: 8px; font-weight: 600; font-size: 14px; }
+      .optcard .ot .lean-tag { margin-left: auto; font: 10px var(--mono); color: var(--accent); text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap; }
+      .optcard .pc-list { display: grid; gap: 3px; font-size: 12px; color: var(--muted); align-content: start; }
+      .optcard .pc-list span { display: grid; grid-template-columns: 14px 1fr; }
+      .optcard .pc-list b { font: 600 12px var(--mono); }
+      .optcard .pc-list .pro b { color: var(--success); }
+      .optcard .pc-list .con b { color: var(--destructive); }
+      .optcard .ofoot { display: flex; align-items: center; gap: 8px; }
+      .optcard .ofoot .cnt { font: 11px var(--mono); color: var(--subtle); }
+      .pick { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 11px; border-radius: 8px; border: 1px solid var(--border-strong); background: var(--secondary); color: var(--fg); font: 500 12px var(--sans); cursor: pointer; }
+      .pick:hover { background: var(--secondary-hover); }
+      .pick[aria-pressed="true"] { background: var(--primary); color: var(--primary-fg); border-color: transparent; }
+      .pick:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+      .voters { font-size: 12px; color: var(--subtle); margin: 10px 0 0 64px; min-height: 1em; }
+
+      .viz { height: 150px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg); padding: 10px; display: flex; flex-direction: column; gap: 6px; overflow: hidden; font-size: 11px; line-height: 1.3; }
+      .viz .pc.w16 { width: 16px; } .viz .pc.w20 { width: 20px; }
+      .viz .pc.w16 > span, .viz .pc.w20 > span, .viz .pc.w24 > span { font-size: 0; }
+      .vrow { display: flex; align-items: center; gap: 6px; min-width: 0; }
+      .vsplit { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; flex: 1; min-height: 0; }
+      .vbox { border: 1px solid var(--border-strong); border-radius: 7px; padding: 6px 8px; background: var(--card); display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+      .vbox.vinner { background: var(--popover); }
+      .vbox.vpop { flex-direction: row; align-items: center; gap: 6px; box-shadow: 0 8px 20px -10px rgb(0 0 0 / 0.8); }
+      .vbox.vacc-box { flex-direction: row; align-items: center; gap: 6px; background: var(--accent-bg); border-color: oklch(0.673 0.182 276.935 / 0.4); }
+      .vt { font: 9.5px var(--mono); color: var(--subtle); letter-spacing: 0.03em; }
+      .vmono { font: 10px var(--mono); color: var(--muted); white-space: nowrap; }
+      .vline { height: 5px; border-radius: 3px; background: var(--secondary-hover); }
+      .vline.vhide { background: repeating-linear-gradient(90deg, var(--secondary-hover) 0 6px, transparent 6px 9px); }
+      .vbtn { align-self: flex-start; display: inline-flex; align-items: center; gap: 4px; height: 20px; padding: 0 7px; border-radius: 5px; border: 1px solid var(--border-strong); font-size: 10px; white-space: nowrap; }
+      .vbtn.p { background: var(--primary); color: var(--primary-fg); border-color: transparent; }
+      .vbtn.hl { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-bg); }
+      .vdim { opacity: 0.4; }
+      .vseg { align-self: flex-start; display: inline-flex; background: var(--secondary); border-radius: 6px; padding: 2px; font-size: 9.5px; }
+      .vseg i { font-style: normal; padding: 1px 6px; border-radius: 4px; color: var(--subtle); white-space: nowrap; }
+      .vseg i.on { background: var(--popover); color: var(--fg); }
+      .vgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+      .vcell { display: grid; gap: 2px; justify-items: start; font: 9px var(--mono); color: var(--muted); white-space: nowrap; }
+      .vpost, .vconv, .vleg { display: flex; align-items: center; gap: 5px; padding: 4px 6px; border: 1px solid var(--border); border-radius: 6px; min-width: 0; white-space: nowrap; }
+      .vconv.on { background: var(--secondary); border-color: var(--border-strong); }
+      .vconv > div:not(.pc) { min-width: 0; flex: 1; display: grid; gap: 3px; }
+      .vleg { justify-content: space-between; }
+      .vgone { opacity: 0.4; text-decoration: line-through; }
+      .vdot { width: 12px; height: 12px; border-radius: 99px; background: oklch(0.82 0.08 var(--h, 280)); flex: none; }
+      .vscore { font: 500 10px var(--mono); color: var(--accent); background: var(--accent-bg); padding: 1px 6px; border-radius: 4px; }
+      .vchip { display: inline-flex; align-items: center; gap: 3px; font: 9.5px var(--mono); padding: 1px 6px; border-radius: 4px; background: var(--secondary); color: var(--muted); white-space: nowrap; align-self: flex-start; }
+      .vchip.warn { color: var(--warning); background: oklch(0.86 0.13 85 / 0.1); }
+      .vchip.bad { color: var(--destructive); background: oklch(0.72 0.17 18 / 0.12); }
+      .vok { color: var(--success); } .vacc { color: var(--accent); } .vmute2 { color: var(--subtle); }
+      .vwarn { color: var(--warning); } .vbad { color: var(--destructive); }
+      .vplace { display: flex; align-items: center; gap: 7px; font-size: 11px; }
+      .vplace.off { color: var(--subtle); text-decoration: line-through; text-decoration-color: var(--border-strong); }
+      .varrow { display: grid; place-items: center; color: var(--subtle); }
+      .voffer { display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; align-items: center; border: 1px solid var(--border-strong); border-radius: 8px; padding: 8px; background: var(--card); }
+      .voffer > div:not(.varrow) { display: grid; gap: 5px; justify-items: start; }
+      .vchat { gap: 4px; }
+      .vbub { align-self: flex-start; padding: 3px 8px; border-radius: 8px; background: var(--secondary-hover); font-size: 10px; white-space: nowrap; }
+      .vbub.me { align-self: flex-end; background: oklch(0.32 0.008 286); }
+      .vbub.flag { outline: 1px solid var(--destructive); }
+      .vsteps { display: grid; gap: 5px; }
+      .vstep { display: flex; align-items: center; gap: 8px; padding: 4px 6px; border-radius: 6px; color: var(--subtle); font-size: 11px; }
+      .vstep b { font: 600 10px var(--mono); width: 16px; height: 16px; border-radius: 99px; display: grid; place-items: center; background: var(--secondary-hover); color: var(--muted); }
+      .vstep.on { background: var(--accent-bg); color: var(--fg); }
+      .vstep.on b { background: var(--accent); color: white; }
+    </style>
+  </head>
+  <body class="dark">
+    <svg width="0" height="0" style="position: absolute" aria-hidden="true">
+      <symbol id="i-msg" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" /></symbol>
+      <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></symbol>
+      <symbol id="i-bell-off" viewBox="0 0 24 24"><path d="M8.7 3A6 6 0 0 1 18 8a21.3 21.3 0 0 0 .6 5" /><path d="M17 17H3s3-2 3-9a4.67 4.67 0 0 1 .3-1.7" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /><path d="m2 2 20 20" /></symbol>
+      <symbol id="i-send" viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4Z" /><path d="M22 2 11 13" /></symbol>
+      <symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14M12 5v14" /></symbol>
+      <symbol id="i-swap" viewBox="0 0 24 24"><path d="M8 3 4 7l4 4" /><path d="M4 7h16" /><path d="m16 21 4-4-4-4" /><path d="M20 17H4" /></symbol>
+      <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" /><path d="m9 12 2 2 4-4" /></symbol>
+      <symbol id="i-flag" viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" /><path d="M4 22v-7" /></symbol>
+      <symbol id="i-more" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1" /><circle cx="12" cy="12" r="1" /><circle cx="19" cy="12" r="1" /></symbol>
+      <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5" /></symbol>
+      <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12" /></symbol>
+      <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></symbol>
+      <symbol id="i-layers" viewBox="0 0 24 24"><path d="m12 2 10 5-10 5L2 7z" /><path d="m2 17 10 5 10-5" /><path d="m2 12 10 5 10-5" /></symbol>
+      <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" /></symbol>
+      <symbol id="i-ban" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><path d="m4.9 4.9 14.2 14.2" /></symbol>
+      <symbol id="i-archive" viewBox="0 0 24 24"><rect width="20" height="5" x="2" y="3" rx="1" /><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8" /><path d="M10 12h4" /></symbol>
+      <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /></symbol>
+      <symbol id="i-left" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6" /></symbol>
+      <symbol id="i-right" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6" /></symbol>
+      <symbol id="i-alert" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" /><path d="M12 9v4" /><path d="M12 17h.01" /></symbol>
+      <symbol id="i-tag" viewBox="0 0 24 24"><path d="M12.6 2.6A2 2 0 0 0 11.2 2H4a2 2 0 0 0-2 2v7.2a2 2 0 0 0 .6 1.4l8.7 8.7a2.4 2.4 0 0 0 3.4 0l6.6-6.6a2.4 2.4 0 0 0 0-3.4z" /><circle cx="7.5" cy="7.5" r="1" /></symbol>
+      <symbol id="i-down" viewBox="0 0 24 24"><path d="m22 17-8.5-8.5-5 5L2 7" /><path d="M16 17h6v-6" /></symbol>
+      <symbol id="i-sparkle" viewBox="0 0 24 24"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M5.6 18.4l2.8-2.8M15.6 8.4l2.8-2.8" /></symbol>
+      <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></symbol>
+      <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></symbol>
+      <symbol id="i-reply" viewBox="0 0 24 24"><path d="M9 17 4 12l5-5" /><path d="M20 18v-2a4 4 0 0 0-4-4H4" /></symbol>
+    </svg>
+
+    <main class="wrap">
+      <header class="doc">
+        <div class="eyebrow">Objekt Explorer · concept · Oct 2026</div>
+        <h1>Chat, notifications and verified trades</h1>
+        <p class="lede">
+          Mockups for discussion, drawn in the app's own look: monochrome chrome, with class-colour stripes as the only colour. Nothing here is built.
+          Every screen has the open decisions beside it, and there's a vote at the bottom.
+        </p>
+
+        <div class="scroll">
+          <div class="flow" role="list" aria-label="End-to-end flow">
+            <div class="step" role="listitem"><div class="k">01</div><div class="t">Listing</div><div class="d">A Market sale listing, a Trade post, or a match</div></div>
+            <div class="step hot" role="listitem"><div class="k">02</div><div class="t">Chat</div><div class="d">One thread per pair of users, with the objekt attached as a card</div><div class="tag"><span class="chip acc">new</span></div></div>
+            <div class="step hot" role="listitem"><div class="k">03</div><div class="t">Offer</div><div class="d">Specific tokens on each side, countered right in the chat</div><div class="tag"><span class="chip acc">new</span></div></div>
+            <div class="step hot" role="listitem"><div class="k">04</div><div class="t">Accepted</div><div class="d">The objekts are reserved; the offer cancels itself if one leaves the wallet</div><div class="tag"><span class="chip acc">new</span></div></div>
+            <div class="step" role="listitem"><div class="k">05</div><div class="t">Transfer in Cosmo</div><div class="d">Users send in the Cosmo app as they do today</div></div>
+            <div class="step hot" role="listitem"><div class="k">06</div><div class="t">Verified</div><div class="d">The indexer sees each transfer and ticks off that leg</div><div class="tag"><span class="chip ok">the unlock</span></div></div>
+            <div class="step hot" role="listitem"><div class="k">07</div><div class="t">Reputation</div><div class="d">Feedback is allowed only on verified trades, so it can't be faked</div><div class="tag"><span class="chip acc">new</span></div></div>
+          </div>
+        </div>
+      </header>
+
+      <!-- ============ 01 ENTRY POINTS ============ -->
+      <section class="s" id="entry">
+        <div class="head">
+          <div class="num">01</div>
+          <h2>Where “Message” lives</h2>
+          <p>Put it where the buyer's interest is, on the objekt, and not only on the list. Each entry point starts the chat with the context already attached.</p>
+        </div>
+        <div class="split">
+          <div class="scroll">
+            <div class="entry-grid">
+              <div class="panel">
+                <div class="lbl"><span>A · Market drawer</span><span>/market</span></div>
+                <div class="listing">
+                  <div class="pc w150" style="--h: 20; margin: 0 auto"><span>SeoYeon 204Z</span></div>
+                  <div class="row">
+                    <div class="obj-meta"><div class="n">SeoYeon · Atom01 204Z</div><div class="s">#537 · First Class</div></div>
+                    <div class="price">6,000<span class="subtle" style="font-size: 11px"> KRW</span></div>
+                  </div>
+                  <div class="seller"><span class="avatar sm" style="--h: 30">R</span><span>rin.trades</span><span class="chip ok" style="margin-left: auto"><svg class="i xs"><use href="#i-shield" /></svg>31</span></div>
+                  <div class="row" style="gap: 6px">
+                    <span class="btn sm block"><svg class="i sm"><use href="#i-msg" /></svg>Message</span>
+                    <span class="btn sm primary block"><svg class="i sm"><use href="#i-swap" /></svg>Make offer</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="panel hover-card">
+                <div class="lbl"><span>B · List entry menu</span><span>/list/:slug</span></div>
+                <div style="display: flex; gap: 8px">
+                  <div style="position: relative">
+                    <div class="pc w96" style="--h: 140"><span>HyeRin 301Z</span></div>
+                    <div class="kebab"><svg class="i sm"><use href="#i-more" /></svg></div>
+                  </div>
+                  <div class="pc w96 cream" style="--h: 350; opacity: 0.4"><span>JiWoo 108Z</span></div>
+                </div>
+                <div class="menu" style="left: 60px; top: 100px">
+                  <div class="it"><svg class="i"><use href="#i-plus" /></svg>Add to list…</div>
+                  <div class="it"><svg class="i"><use href="#i-tag" /></svg>Set price</div>
+                  <div class="sep"></div>
+                  <div class="it hl"><svg class="i"><use href="#i-msg" /></svg>Message seller about this</div>
+                  <div class="it"><svg class="i"><use href="#i-swap" /></svg>Make offer</div>
+                </div>
+                <div style="height: 150px"></div>
+                <div class="caption">Shown only on <span class="mono">sale</span> and <span class="mono">have</span> lists, and only when the list doesn't hide its owner.</div>
+              </div>
+
+              <div class="panel">
+                <div class="lbl"><span>C · Trade › For you</span><span>/trade</span></div>
+                <div class="match">
+                  <div class="match-row on">
+                    <span class="avatar" style="--h: 30">R</span>
+                    <div>
+                      <div class="who">rin.trades <span class="chip ok" style="margin-left: 4px"><svg class="i xs"><use href="#i-shield" /></svg>31 verified</span></div>
+                      <div class="what mono">has 4 you want · wants 2 you have</div>
+                      <div class="thumbs">
+                        <div class="pc w28" style="--h: 20"><span></span></div>
+                        <div class="pc w28 ever" style="--h: 200"><span></span></div>
+                        <div class="pc w28" style="--h: 60"><span></span></div>
+                        <div class="pc w28 divine" style="--h: 300"><span></span></div>
+                        <span class="subtle" style="align-self: center; padding: 0 4px">⇄</span>
+                        <div class="pc w28 binary" style="--h: 140"><span></span></div>
+                        <div class="pc w28 cream" style="--h: 350"><span></span></div>
+                      </div>
+                    </div>
+                    <div class="acts">
+                      <span class="btn sm"><svg class="i sm"><use href="#i-msg" /></svg></span>
+                      <span class="btn sm primary">Propose this trade</span>
+                    </div>
+                  </div>
+                  <div class="match-row">
+                    <span class="avatar" style="--h: 200">N</span>
+                    <div><div class="who">nakyoung.cards</div><div class="what mono">has 2 you want · wants 1 you have</div></div>
+                    <div class="acts"><span class="btn sm"><svg class="i sm"><use href="#i-msg" /></svg></span><span class="btn sm">Propose</span></div>
+                  </div>
+                  <div class="match-row">
+                    <span class="avatar" style="--h: 120">B</span>
+                    <div><div class="who">binary.bin</div><div class="what mono">has 1 you want</div></div>
+                    <div class="acts"><span class="btn sm"><svg class="i sm"><use href="#i-msg" /></svg></span><span class="btn sm">Propose</span></div>
+                  </div>
+                </div>
+                <div class="caption">“Propose this trade” opens the offer builder (§05) already filled with the overlap.</div>
+              </div>
+            </div>
+          </div>
+          <aside class="notes">
+            <div>
+              <h3>Also</h3>
+              <ul>
+                <li>Every <strong>Trade post</strong> (§02) has Message and Propose.</li>
+                <li>The <strong>profile header</strong> gets “Message” for general contact.</li>
+                <li>On mobile the <strong>objekt drawer</strong> gets a sticky “Message / Offer” bar (§03, middle phone).</li>
+                <li>The <strong>list header</strong> gets one too, but it's the least useful spot: it carries no objekt.</li>
+              </ul>
+            </div>
+            <div class="lean"><b>Lean</b>Market listing + Trade posts + matches + profile. The list header is optional.</div>
+            <div>
+              <h3>Privacy catch</h3>
+              <p>A list with <span class="mono">hideUser</span> on would reveal its owner the moment someone chats. Either hide the button there, or let the seller opt in per list (see §08).</p>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <!-- ============ 02 MARKET + TRADE ============ -->
+      <section class="s" id="trade">
+        <div class="head">
+          <div class="num">02</div>
+          <h2>Market and Trade: two pages, two jobs</h2>
+          <p>Market stays the collection grid for selling: one card per collection, priced by its floor. Trade is a new page of posts by people: one post per list, for swaps, wants and, as a filter, sales. Both read the same lists.</p>
+        </div>
+
+        <div class="scroll" style="margin-bottom: 40px">
+          <table class="compare">
+            <thead><tr><th></th><th>Market <span class="chip" style="height: 18px; font-size: 10px; margin-left: 4px">exists</span></th><th>Trade <span class="chip acc" style="height: 18px; font-size: 10px; margin-left: 4px">new</span></th></tr></thead>
+            <tbody>
+              <tr><td>One item is</td><td>a collection</td><td class="new">a person's list, or a linked have + want pair</td></tr>
+              <tr><td>Shows</td><td>sale lists only</td><td class="new">have and want lists, plus sale lists as a WTS filter</td></tr>
+              <tr><td>Sorted by</td><td class="mono" style="font-size: 13px">floor · listedAt · supply</td><td class="new mono" style="font-size: 13px">updated · best match</td></tr>
+              <tr><td>Answers</td><td>“What does this collection cost?”</td><td class="new">“Who's trading right now, and do they have what I need?”</td></tr>
+              <tr><td>Replaces</td><td>—</td><td class="new">WTS / WTT / WTB posts on Discord and Twitter, and the matches tucked under each list</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="split">
+          <div class="scroll">
+            <div class="frame" style="min-width: 940px">
+              <div class="appnav">
+                <span class="brand">Objekt Explorer</span>
+                <span class="links"><span>Collections</span><span>Market</span><span class="on">Trade</span><span>Activity</span><span>Lists</span></span>
+                <span class="right">
+                  <span class="iconbtn"><svg class="i"><use href="#i-search" /></svg></span>
+                  <span class="iconbtn"><svg class="i"><use href="#i-bell" /></svg><span class="badge-dot">3</span></span>
+                  <span class="iconbtn"><svg class="i"><use href="#i-msg" /></svg><span class="badge-dot">1</span></span>
+                  <span class="avatar sm" style="--h: 330; margin-left: 6px">M</span>
+                </span>
+              </div>
+              <div class="tp">
+                <div class="tp-head">
+                  <div>
+                    <h3>Trade</h3>
+                    <p>Posts from people swapping, buying and selling. Ownership is live, so nothing here has already gone.</p>
+                  </div>
+                  <span class="btn"><svg class="i sm"><use href="#i-plus" /></svg>Post a list</span>
+                </div>
+                <div class="utabs"><span class="on">Browse</span><span>For you<span class="ct">4</span></span><span>My trades<span class="ct">2</span></span></div>
+                <div class="fbar">
+                  <span class="seg"><span class="on">All</span><span>WTT</span><span>WTB</span><span>WTS</span></span>
+                  <span class="fchip on"><svg class="i sm"><use href="#i-check" /></svg>They want something I own</span>
+                  <span class="fchip">Member</span>
+                  <span class="fchip">Season</span>
+                  <span class="fchip">Class</span>
+                  <span class="fchip right">Recently updated</span>
+                </div>
+                <div class="ownpost">
+                  <svg class="i sm"><use href="#i-eye" /></svg>
+                  <span>Your post: <b>Spares</b> (Have) + <b>Binary hunt</b> (Want) · visible on Trade · bumped 26h ago</span>
+                  <span class="btn sm">Bump</span>
+                </div>
+                <div class="posts">
+                  <div class="post">
+                    <div class="top">
+                      <span class="avatar sm" style="--h: 30">R</span>
+                      <div><div class="nm">rin.trades</div><div class="rep">31 verified · 100%</div></div>
+                      <div class="types"><span class="chip">WTT</span></div>
+                    </div>
+                    <div class="lname">“Atom01 spares ⇄ Binary wants”</div>
+                    <div class="strip"><span class="k">HAVE</span><div class="th"><div class="pc w36 hit" style="--h: 20"><span></span></div><div class="pc w36 ever hit" style="--h: 200"><span></span></div><div class="pc w36" style="--h: 60"><span></span></div><div class="pc w36 divine" style="--h: 300"><span></span></div><div class="pc w36 cream" style="--h: 10"><span></span></div><span class="more">+12</span></div></div>
+                    <div class="strip"><span class="k">WANT</span><div class="th"><div class="pc w36 binary hit" style="--h: 140"><span></span></div><div class="pc w36 cream hit" style="--h: 350"><span></span></div><div class="pc w36 binary" style="--h: 100"><span></span></div><span class="more">+5</span></div></div>
+                    <div class="mline"><span class="unread"></span>they want 2 you own · they have 2 you want</div>
+                    <div class="acts"><span class="when">updated 2h ago</span><span class="btn sm"><svg class="i sm"><use href="#i-msg" /></svg></span><span class="btn sm primary">Propose trade</span></div>
+                  </div>
+
+                  <div class="post">
+                    <div class="top">
+                      <span class="avatar sm" style="--h: 80">K</span>
+                      <div><div class="nm">kaede.k</div><div class="rep">8 verified · 100%</div></div>
+                      <div class="types"><span class="chip">WTB</span></div>
+                    </div>
+                    <div class="lname">“Buying Binary01 First Class”</div>
+                    <div class="strip"><span class="k">WANT</span><div class="th">
+                      <div class="pr"><div class="pc w36 binary hit" style="--h: 140"><span></span></div>≤5,000</div>
+                      <div class="pr"><div class="pc w36 binary" style="--h: 100"><span></span></div>≤4,000</div>
+                      <div class="pr"><div class="pc w36 binary" style="--h: 170"><span></span></div>≤4,000</div>
+                      <div class="pr"><div class="pc w36 binary" style="--h: 120"><span></span></div>any</div>
+                      <span class="more">+2</span></div></div>
+                    <div class="strip"><span class="k">PAYS</span><div class="mono" style="font-size: 12px; color: var(--muted)">KRW · up to the price shown, per objekt</div></div>
+                    <div class="mline"><span class="unread"></span>they want 1 you own · up to 5,000 KRW</div>
+                    <div class="acts"><span class="when">updated 5h ago</span><span class="btn sm"><svg class="i sm"><use href="#i-msg" /></svg></span><span class="btn sm primary">Offer to sell</span></div>
+                  </div>
+
+                  <div class="post">
+                    <div class="top">
+                      <span class="avatar sm" style="--h: 200">N</span>
+                      <div><div class="nm">nakyoung.cards</div><div class="rep">14 verified · 93%</div></div>
+                      <div class="types"><span class="chip">WTS</span><span class="chip">WTT</span></div>
+                    </div>
+                    <div class="lname">“Selling or trading, Ever01 duplicates”</div>
+                    <div class="strip"><span class="k">HAVE</span><div class="th">
+                      <div class="pr"><div class="pc w36 ever" style="--h: 200"><span></span></div>3,500</div>
+                      <div class="pr"><div class="pc w36 ever hit" style="--h: 230"><span></span></div>4,000</div>
+                      <div class="pr"><div class="pc w36 ever" style="--h: 260"><span></span></div>trade</div>
+                      <div class="pr"><div class="pc w36 ever" style="--h: 180"><span></span></div>3,000</div>
+                      <span class="more">+2</span></div></div>
+                    <div class="strip"><span class="k">WANT</span><div class="th"><div class="pc w36 hit" style="--h: 40"><span></span></div><div class="pc w36 divine" style="--h: 320"><span></span></div><div class="pc w36" style="--h: 70"><span></span></div></div></div>
+                    <div class="mline"><span class="unread"></span>they want 1 you own · they have 1 you want</div>
+                    <div class="acts"><span class="when">bumped 1d ago</span><span class="btn sm"><svg class="i sm"><use href="#i-msg" /></svg></span><span class="btn sm primary">Propose trade</span></div>
+                  </div>
+
+                  <div class="post">
+                    <div class="top">
+                      <span class="avatar sm" style="--h: 120">B</span>
+                      <div><div class="nm">binary.bin</div><div class="rep">31 verified · 97%</div></div>
+                      <div class="types"><span class="chip">WTT</span></div>
+                    </div>
+                    <div class="lname">“Divine hunt, open to offers”</div>
+                    <div class="strip"><span class="k">HAVE</span><div class="th"><div class="pc w36 cream" style="--h: 330"><span></span></div><div class="pc w36 cream" style="--h: 300"><span></span></div><div class="pc w36" style="--h: 50"><span></span></div><div class="pc w36 binary" style="--h: 110"><span></span></div><span class="more">+5</span></div></div>
+                    <div class="strip"><span class="k">WANT</span><div class="th"><div class="pc w36 divine hit" style="--h: 300"><span></span></div><div class="pc w36 divine" style="--h: 280"><span></span></div><div class="pc w36 divine" style="--h: 310"><span></span></div><div class="pc w36 divine" style="--h: 290"><span></span></div><span class="more">+8</span></div></div>
+                    <div class="mline"><span class="unread"></span>they want 1 you own · you want none of theirs</div>
+                    <div class="acts"><span class="when">updated 3d ago</span><span class="btn sm"><svg class="i sm"><use href="#i-msg" /></svg></span><span class="btn sm">Make offer</span></div>
+                  </div>
+                </div>
+                <div class="feedfoot">24 of 312 posts match · objekts with a ring are the ones that match you</div>
+              </div>
+            </div>
+          </div>
+          <aside class="notes">
+            <div>
+              <h3>A post is a list</h3>
+              <p>One card per list, or per linked have + want pair. A 200-entry have list is <strong>one</strong> post, not 200 rows. Member and season filters keep posts that <em>contain</em> a match.</p>
+            </div>
+            <div class="lean"><b>Lean</b>“They want something I own” is on by default for signed-in users. It turns the board into a to-do list.</div>
+            <div>
+              <h3>Freshness</h3>
+              <p><span class="mono">lists</span> has no <span class="mono">updatedAt</span>. Add one that changes when entries change, plus a <strong>Bump</strong> limited to once every 24h. A post idle for 30 days drops off until bumped.</p>
+            </div>
+            <div>
+              <h3>Consent</h3>
+              <p>A new per-list <strong>Show on Trade</strong> toggle, off for existing lists. <span class="mono">discoverable</span> keeps its current meaning: findable by matching.</p>
+            </div>
+            <div>
+              <h3>Stale entries</h3>
+              <p>A have entry whose token has left the owner's wallet is hidden from the post.</p>
+            </div>
+            <div>
+              <h3>WTB prices</h3>
+              <p>Want lists need a <span class="mono">currency</span> to carry a top price. Only sale lists have one today.</p>
+            </div>
+          </aside>
+        </div>
+
+        <h3 class="eyebrow" style="margin: 56px 0 16px">Trade › For you · trade matches across all your lists</h3>
+        <div class="split">
+          <div class="scroll">
+            <div class="frame" style="min-width: 940px">
+              <div class="appnav">
+                <span class="brand">Objekt Explorer</span>
+                <span class="links"><span>Collections</span><span>Market</span><span class="on">Trade</span><span>Activity</span><span>Lists</span></span>
+                <span class="right">
+                  <span class="iconbtn"><svg class="i"><use href="#i-bell" /></svg><span class="badge-dot">3</span></span>
+                  <span class="iconbtn"><svg class="i"><use href="#i-msg" /></svg><span class="badge-dot">1</span></span>
+                  <span class="avatar sm" style="--h: 330; margin-left: 6px">M</span>
+                </span>
+              </div>
+              <div class="tp">
+                <div class="utabs"><span>Browse</span><span class="on">For you<span class="ct">4</span></span><span>My trades<span class="ct">2</span></span></div>
+                <div class="fbar">
+                  <span class="seg"><span>All</span><span class="on">Mutual only</span><span>They have what I want</span><span>They want what I have</span></span>
+                  <span class="fchip">From list: All lists</span>
+                  <span class="fchip right">Best match</span>
+                </div>
+                <div class="fy-sum">
+                  <span>Matched across <b>3 lists</b>: Spares (Have) · Ever dupes (Have) · Binary hunt (Want)</span>
+                  <span>Ownership checked 2m ago</span>
+                </div>
+
+                <div class="prow">
+                  <div class="hdr">
+                    <span class="avatar" style="--h: 30">R</span>
+                    <div><div class="nm">rin.trades</div><div class="rep">31 verified · 100% · updated 2h ago</div></div>
+                    <span class="mscore" title="mutual score: the smaller of the two sides">mutual 2 · 4 ⇄ 2</span>
+                    <span class="meta">2 lists</span>
+                    <svg class="i muted" style="transform: rotate(90deg)"><use href="#i-right" /></svg>
+                  </div>
+                  <div class="pbody">
+                    <div>
+                      <h5>They have, you want (4)</h5>
+                      <div class="th">
+                        <div class="it"><div class="pc w48 binary hit" style="--h: 140"><span></span></div>HyeRin 301Z</div>
+                        <div class="it"><div class="pc w48 cream hit" style="--h: 350"><span></span></div>JiWoo 108Z</div>
+                        <div class="it"><div class="pc w48 binary hit" style="--h: 100"><span></span></div>Kotone 302Z</div>
+                        <div class="it"><div class="pc w48 divine hit" style="--h: 300"><span></span></div>Kaede 322Z</div>
+                        <div class="it gone"><div class="pc w48" style="--h: 50"><span></span></div>Mayu 203Z<br />no longer owned</div>
+                      </div>
+                    </div>
+                    <div>
+                      <h5>You have, they want (2)</h5>
+                      <div class="th">
+                        <div class="it"><div class="pc w48 hit" style="--h: 20"><span></span></div>SeoYeon 204Z<br />from Spares</div>
+                        <div class="it"><div class="pc w48 ever hit" style="--h: 200"><span></span></div>Nien 205Z<br />from Ever dupes</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="pacts">
+                    <span class="hint">Mayu 203Z is still on their have list, but the indexer shows they no longer own it, so it isn't counted.</span>
+                    <span class="btn sm ghost">Hide partner</span>
+                    <span class="btn sm"><svg class="i sm"><use href="#i-msg" /></svg>Message</span>
+                    <span class="btn sm primary"><svg class="i sm"><use href="#i-swap" /></svg>Propose 2 ⇄ 2</span>
+                  </div>
+                </div>
+
+                <div class="prow">
+                  <div class="hdr">
+                    <span class="avatar" style="--h: 200">N</span>
+                    <div><div class="nm">nakyoung.cards</div><div class="rep">14 verified · 93% · bumped 1d ago</div></div>
+                    <span class="mscore">mutual 1 · 1 ⇄ 3</span>
+                    <span class="meta">1 list</span>
+                    <svg class="i muted"><use href="#i-right" /></svg>
+                  </div>
+                </div>
+
+                <div class="prow">
+                  <div class="hdr">
+                    <span class="avatar" style="--h: 260">S</span>
+                    <div><div class="nm">seoah_fan</div><div class="rep">5 verified · 100% · updated 6d ago</div></div>
+                    <span class="mscore">mutual 1 · 2 ⇄ 1</span>
+                    <span class="meta">1 list</span>
+                    <svg class="i muted"><use href="#i-right" /></svg>
+                  </div>
+                </div>
+
+                <div class="prow idle">
+                  <div class="hdr">
+                    <span class="avatar" style="--h: 160">J</span>
+                    <div><div class="nm">jinsoul.blue</div><div class="rep">0 verified · idle 24 days</div></div>
+                    <span class="mscore">mutual 3 · 3 ⇄ 5</span>
+                    <span class="meta">ranked last: idle</span>
+                    <svg class="i muted"><use href="#i-right" /></svg>
+                  </div>
+                </div>
+
+                <div class="excl">
+                  <svg class="i sm"><use href="#i-eye" /></svg>
+                  <span>Not shown: <b class="mono" style="color: var(--fg)">binary.bin</b> (9 ⇄ 0, not mutual) · 3 matches on objekts their owners no longer hold · 1 hidden partner · 2 blocked users</span>
+                  <span class="btn sm ghost">Show</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <aside class="notes">
+            <div>
+              <h3>Today → proposed</h3>
+              <ul>
+                <li>A dialog per list → <strong>one page for all your lists</strong>.</li>
+                <li>Have / Want / Both tabs and an info table → <strong>both directions always shown</strong>; filters replace the modes.</li>
+                <li>“Both” needs linked lists on each side → <strong>mutual is worked out from all their lists</strong>, so linking is optional.</li>
+                <li>Ranked by one direction → ranked by <span class="mono">min(a, b)</span>, then <span class="mono">a + b</span>.</li>
+                <li>Entries on the list → <strong>entries that are still owned</strong>, checked in the indexer.</li>
+                <li>Discord / Twitter badges → <strong>Message</strong> and a pre-filled <strong>Propose</strong>.</li>
+              </ul>
+            </div>
+            <div class="lean"><b>Lean</b>Default to “Mutual only”. Under today's ranking, binary.bin (9 they have, 0 they want) would come first, even though they want nothing of yours.</div>
+            <div>
+              <h3>Query</h3>
+              <p>The same CTEs as <span class="mono">services/trade.ts</span>, with “my collections” taken from all your have or want lists instead of one. Cache each user's result in Valkey for a few minutes before precomputing anything.</p>
+            </div>
+            <div>
+              <h3>Ships before chat</h3>
+              <p>Message and Propose can show “coming soon”, or link to Discord / Twitter as today, until chat and offers exist.</p>
+            </div>
+          </aside>
+        </div>
+
+        <h3 class="eyebrow" style="margin: 56px 0 16px">Around the Trade page</h3>
+        <div class="scroll">
+          <div class="trio">
+            <div class="panel">
+              <div class="lbl"><span>Market · objekt drawer</span><span>/market</span></div>
+              <div style="display: flex; gap: 12px; align-items: center">
+                <div class="pc w48" style="--h: 20"><span></span></div>
+                <div><div style="font-weight: 600">SeoYeon · Atom01 204Z</div><div class="mono subtle" style="font-size: 12px">floor 6,000 KRW · 3 listed</div></div>
+              </div>
+              <div class="tabs" style="margin: 14px 0 6px"><span>Info</span><span class="on">Market</span><span>Owners</span></div>
+              <div class="srow2"><span class="avatar sm" style="--h: 30">R</span><span>rin.trades</span><span class="mono subtle">#537</span><span class="mono">6,000</span></div>
+              <div class="srow2"><span class="avatar sm" style="--h: 200">N</span><span>nakyoung.cards</span><span class="mono subtle">#1120</span><span class="mono">6,500</span></div>
+              <div class="srow2"><span class="avatar sm" style="--h: 260">S</span><span>seoah_fan</span><span class="mono subtle">#88</span><span class="mono subtle">QYOP</span></div>
+              <div class="linkrow"><span>On Trade: <b style="color: var(--fg)">5</b> posts have it · <b style="color: var(--fg)">7</b> want it</span><span class="btn sm">View on Trade<svg class="i xs"><use href="#i-arrow" /></svg></span></div>
+              <div class="caption">Market stays about selling. The link opens <span class="mono">/trade?collection=…</span>, so this isn't a dead end.</div>
+            </div>
+
+            <div class="panel">
+              <div class="lbl"><span>List page header</span><span>/list/:slug</span></div>
+              <div class="lhead">
+                <div class="t">Spares <span class="chip">Have</span><span class="chip ok" style="font-family: var(--sans)">on Trade</span></div>
+                <div class="mono subtle" style="font-size: 12px">24 objekts · linked to Binary hunt (Want)</div>
+                <div class="b">
+                  <span class="btn sm">Share</span>
+                  <span class="btn sm">Edit</span>
+                  <span class="btn sm hl"><svg class="i sm"><use href="#i-swap" /></svg>Trade matches <span class="mono subtle">3</span></span>
+                </div>
+              </div>
+              <div class="linkrow" style="border-top: 0; padding-top: 4px"><svg class="i sm"><use href="#i-arrow" /></svg><span>Opens <span class="mono">/trade/for-you?list=spares</span></span></div>
+              <div class="caption">The same button as today, now a shortcut into For you filtered to this list. The count shows mutual partners, so you can see there are matches without clicking. One view to maintain instead of two.</div>
+            </div>
+
+            <div class="panel">
+              <div class="lbl"><span>Trade › My trades</span><span>/trade/mine</span></div>
+              <div class="grp">Needs you</div>
+              <div class="trow"><svg class="i sm" style="color: var(--accent)"><use href="#i-swap" /></svg><div>Counter from rin.trades<div class="s">O-882 · HyeRin 301Z + 1,000 KRW ⇄ SeoYeon 204Z</div></div><span class="chip acc">your turn</span></div>
+              <div class="grp">Waiting on them</div>
+              <div class="trow"><svg class="i sm muted"><use href="#i-clock" /></svg><div>Offer to nakyoung.cards<div class="s">O-874 · expires in 5d</div></div><span class="chip">sent</span></div>
+              <div class="grp">In progress</div>
+              <div class="trow"><svg class="i sm" style="color: var(--success)"><use href="#i-shield" /></svg><div>Trade with binary.bin<div class="s">T-1042 · 1 of 2 transfers verified</div></div><span class="chip ok">1/2</span></div>
+              <div class="grp">History</div>
+              <div class="trow"><svg class="i sm muted"><use href="#i-check" /></svg><div>12 completed<div class="s">100% positive feedback</div></div><span class="btn sm ghost">View</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ 03 INBOX ============ -->
+      <section class="s" id="inbox">
+        <div class="head">
+          <div class="num">03</div>
+          <h2>Inbox and conversation</h2>
+          <p>One conversation per pair of users. Objekts, offers and transfer events show up inside it as cards, so a bundle deal stays in one thread.</p>
+        </div>
+        <div class="split">
+          <div class="scroll">
+            <div class="frame" style="min-width: 940px">
+              <div class="appnav">
+                <span class="brand">Objekt Explorer</span>
+                <span class="links"><span>Collections</span><span>Market</span><span>Trade</span><span>Activity</span><span>Lists</span></span>
+                <span class="right">
+                  <span class="iconbtn"><svg class="i"><use href="#i-search" /></svg></span>
+                  <span class="iconbtn"><svg class="i"><use href="#i-bell" /></svg><span class="badge-dot">3</span></span>
+                  <span class="iconbtn on"><svg class="i"><use href="#i-msg" /></svg><span class="badge-dot">1</span></span>
+                  <span class="avatar sm" style="--h: 330; margin-left: 6px">M</span>
+                </span>
+              </div>
+              <div class="inbox">
+                <div class="convs">
+                  <div class="top">
+                    <h4>Messages</h4>
+                    <div class="tabs"><span class="on">Inbox<span class="ct">4</span></span><span>Requests<span class="ct">1</span></span><span>Archived</span></div>
+                    <div class="search"><svg class="i sm"><use href="#i-search" /></svg>Search people or objekts</div>
+                  </div>
+                  <div class="conv on">
+                    <span class="avatar" style="--h: 30">R</span>
+                    <div style="min-width: 0">
+                      <div class="nm">rin.trades</div>
+                      <div class="last">Countered: HyeRin 301Z + 1,000 KRW</div>
+                      <div class="ctx"><div class="pc w24" style="--h: 20"><span></span></div><span class="mono subtle" style="font-size: 11px">SeoYeon 204Z #537</span></div>
+                    </div>
+                    <div class="meta">2m<span class="unread"></span></div>
+                  </div>
+                  <div class="conv read">
+                    <span class="avatar" style="--h: 200">N</span>
+                    <div style="min-width: 0"><div class="nm">nakyoung.cards</div><div class="last">sure, I can hold it until tonight</div></div>
+                    <div class="meta">1h</div>
+                  </div>
+                  <div class="conv read">
+                    <span class="avatar" style="--h: 120">B</span>
+                    <div style="min-width: 0">
+                      <div class="nm">binary.bin <svg class="i xs subtle"><use href="#i-bell-off" /></svg></div>
+                      <div class="last">Trade T-1042 · 1 of 2 transfers verified</div>
+                    </div>
+                    <div class="meta">Yest.</div>
+                  </div>
+                  <div class="conv read">
+                    <span class="avatar" style="--h: 260">S</span>
+                    <div style="min-width: 0"><div class="nm">seoah_fan</div><div class="last">You: thanks! sent ✓</div></div>
+                    <div class="meta">Oct 2</div>
+                  </div>
+                </div>
+
+                <div class="thread">
+                  <div class="th-head">
+                    <span class="avatar lg" style="--h: 30">R</span>
+                    <div>
+                      <div class="nm">rin.trades <span class="chip ok"><svg class="i xs"><use href="#i-shield" /></svg>Cosmo address linked</span></div>
+                      <div class="rep">31 verified trades · 100% positive · since Mar 2025</div>
+                    </div>
+                    <div class="acts">
+                      <span class="btn sm ghost">View profile</span>
+                      <span class="iconbtn"><svg class="i"><use href="#i-more" /></svg></span>
+                    </div>
+                  </div>
+                  <div class="msgs">
+                    <div class="day">Today</div>
+                    <div class="sys">
+                      <div class="pc w48" style="--h: 20"><span>SeoYeon</span></div>
+                      <div>
+                        <div class="t">Started from rin.trades's <b>Selling</b> list</div>
+                        <div class="obj-meta" style="margin-top: 4px"><div class="n">SeoYeon · Atom01 204Z #537</div><div class="s">6,000 KRW · transferable</div></div>
+                      </div>
+                      <span class="btn sm ghost">Open</span>
+                    </div>
+                    <div class="bub me">hi! is the SeoYeon 204Z still available? would you take a trade instead of KRW?</div>
+                    <div class="bub them">yes still have it 🙂 I'm hunting HyeRin binary 301Z or JiWoo 108Z, got either?</div>
+
+                    <div class="offer me collapsed">
+                      <div class="oh"><svg class="i sm"><use href="#i-swap" /></svg>Your offer <span class="id">O-881</span><span class="chip">countered</span></div>
+                      <div class="ob" style="display: block; font: 12px var(--mono); color: var(--muted)">JiWoo 108Z #88 → SeoYeon 204Z #537</div>
+                    </div>
+
+                    <div class="offer them">
+                      <div class="oh"><svg class="i sm"><use href="#i-swap" /></svg>Counter-offer from rin.trades <span class="id">O-882</span><span class="chip acc">waiting for you</span></div>
+                      <div class="ob">
+                        <div class="side">
+                          <h5>You give</h5>
+                          <div class="items">
+                            <div class="item"><div class="pc w64 binary" style="--h: 140"><span>HyeRin 301Z</span></div><div class="obj-meta"><div class="n">HyeRin 301Z</div><div class="s">#1203</div></div></div>
+                          </div>
+                          <div class="money"><svg class="i xs"><use href="#i-alert" /></svg>+ 1,000 KRW · outside, not verified</div>
+                        </div>
+                        <div class="swap"><svg class="i"><use href="#i-swap" /></svg></div>
+                        <div class="side">
+                          <h5>You get</h5>
+                          <div class="items">
+                            <div class="item"><div class="pc w64" style="--h: 20"><span>SeoYeon 204Z</span></div><div class="obj-meta"><div class="n">SeoYeon 204Z</div><div class="s">#537</div></div></div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="of">
+                        <span class="note"><svg class="i xs"><use href="#i-clock" /></svg>expires in 6d 23h</span>
+                        <span class="btn sm ghost">Decline</span>
+                        <span class="btn sm">Counter</span>
+                        <span class="btn sm primary">Accept</span>
+                      </div>
+                    </div>
+                    <div class="safety"><svg class="i sm"><use href="#i-alert" /></svg><span>The 1,000 KRW is paid outside Objekt Explorer. We can verify the objekt transfers, never payments.</span></div>
+                  </div>
+                  <div class="typing">rin.trades is typing…</div>
+                  <div class="composer">
+                    <span class="btn ghost"><svg class="i"><use href="#i-layers" /></svg>Attach objekt</span>
+                    <span class="btn ghost"><svg class="i"><use href="#i-swap" /></svg>Offer</span>
+                    <div class="input">Message rin.trades…</div>
+                    <span class="btn primary"><svg class="i"><use href="#i-send" /></svg></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <aside class="notes">
+            <div>
+              <h3>What's on screen</h3>
+              <ul>
+                <li><strong>Trust line</strong> in the header: verified-trade count, rating and account age, all from data you already have or will record.</li>
+                <li><strong>Requests</strong> tab: a cold DM with no listing attached waits there until accepted.</li>
+                <li>An <strong>offer is a message kind</strong>, so its history (offer, counter, accept) reads in order. Earlier versions collapse.</li>
+                <li><strong>Money top-ups</strong> show in warning colour and always carry a “not verified” note.</li>
+                <li>Mute shows as a bell-off icon in the conversation list.</li>
+              </ul>
+            </div>
+            <div class="lean"><b>Lean</b>One thread per user pair. A per-listing thread splits a bundle trade across several chats.</div>
+            <div>
+              <h3>Realtime</h3>
+              <p>Messages are sent through oRPC and pushed over a new authenticated <span class="mono">/ws/me</span> socket. Typing and read receipts can come in a later phase.</p>
+            </div>
+          </aside>
+        </div>
+
+        <h3 class="eyebrow" style="margin: 56px 0 16px">Mobile</h3>
+        <div class="scroll">
+          <div class="phones">
+            <div class="phone">
+              <div class="scr">
+                <div class="status"><span class="mono">9:41</span><span class="mono">5G</span></div>
+                <div class="ph-head">
+                  <svg class="i"><use href="#i-left" /></svg>
+                  <span class="avatar sm" style="--h: 30">R</span>
+                  <div style="min-width: 0"><div style="font-size: 14px; font-weight: 600">rin.trades</div><div class="mono subtle" style="font-size: 10px">31 verified · 100%</div></div>
+                  <svg class="i" style="margin-left: auto"><use href="#i-more" /></svg>
+                </div>
+                <div class="ph-body">
+                  <div class="bub them">yes still have it 🙂 got HyeRin 301Z?</div>
+                  <div class="offer them">
+                    <div class="oh"><svg class="i sm"><use href="#i-swap" /></svg>Counter <span class="chip acc">your turn</span></div>
+                    <div class="ob">
+                      <div class="side" style="display: flex; gap: 10px; align-items: center"><div class="pc w36 binary" style="--h: 140"><span></span></div><div class="obj-meta"><div class="s">YOU GIVE</div><div class="n">HyeRin 301Z #1203</div><div style="color: var(--warning)">+1,000 KRW</div></div></div>
+                      <div class="side" style="display: flex; gap: 10px; align-items: center"><div class="pc w36" style="--h: 20"><span></span></div><div class="obj-meta"><div class="s">YOU GET</div><div class="n">SeoYeon 204Z #537</div></div></div>
+                    </div>
+                    <div class="of"><span class="btn sm ghost">Decline</span><span class="btn sm">Counter</span><span class="btn sm primary" style="margin-left: auto">Accept</span></div>
+                  </div>
+                  <div class="bub me">deal! accepting now</div>
+                </div>
+                <div class="ph-foot">
+                  <svg class="i muted"><use href="#i-plus" /></svg>
+                  <div class="composer" style="border: 0; padding: 0; flex: 1"><div class="input" style="height: 34px; font-size: 13px">Message…</div></div>
+                  <span class="btn primary sm" style="height: 34px"><svg class="i sm"><use href="#i-send" /></svg></span>
+                </div>
+              </div>
+            </div>
+
+            <div class="phone">
+              <div class="scr">
+                <div class="status"><span class="mono">9:41</span><span class="mono">5G</span></div>
+                <div style="padding: 12px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; opacity: 0.9">
+                  <div class="pc" style="--h: 20"><span>SeoYeon</span></div>
+                  <div class="pc binary" style="--h: 140"><span>HyeRin</span></div>
+                  <div class="pc cream" style="--h: 350"><span>JiWoo</span></div>
+                  <div class="pc ever" style="--h: 200"><span>Nien</span></div>
+                  <div class="pc divine" style="--h: 300"><span>Kaede</span></div>
+                  <div class="pc" style="--h: 60"><span>YooYeon</span></div>
+                </div>
+                <div class="drawer-bg"></div>
+                <div class="drawer">
+                  <div class="grab"></div>
+                  <div style="display: flex; gap: 12px">
+                    <div class="pc w80" style="--h: 20"><span>SeoYeon 204Z</span></div>
+                    <div style="flex: 1">
+                      <div style="font-weight: 600; font-size: 15px">SeoYeon 204Z</div>
+                      <div class="mono subtle" style="font-size: 11px">Atom01 · First · #537</div>
+                      <dl class="kv" style="margin: 10px 0 0">
+                        <dt>Price</dt><dd>6,000 KRW</dd>
+                        <dt>Seller</dt><dd>rin.trades</dd>
+                        <dt>Trades</dt><dd style="color: var(--success)">31 verified</dd>
+                      </dl>
+                    </div>
+                  </div>
+                  <div style="display: flex; gap: 8px">
+                    <span class="btn block"><svg class="i sm"><use href="#i-msg" /></svg>Message</span>
+                    <span class="btn primary block"><svg class="i sm"><use href="#i-swap" /></svg>Make offer</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="phone">
+              <div class="scr">
+                <div class="status"><span class="mono">9:41</span><span class="mono">5G</span></div>
+                <div class="ph-head"><span style="font-family: var(--display); font-weight: 600; font-size: 18px">Notifications</span><span class="btn sm ghost" style="margin-left: auto">Read all</span></div>
+                <div class="ph-body" style="padding: 0; gap: 0">
+                  <div class="ntf"><span class="ic acc"><svg class="i"><use href="#i-sparkle" /></svg></span><div class="tx"><b>Want-list match</b> · HyeRin 301Z listed by nakyoung.cards<div class="tm">now</div></div><span class="unread"></span></div>
+                  <div class="ntf"><span class="ic"><svg class="i"><use href="#i-swap" /></svg></span><div class="tx"><b>rin.trades</b> countered your offer<div class="tm">2m</div></div><span class="unread"></span></div>
+                  <div class="ntf"><span class="ic ok"><svg class="i"><use href="#i-check" /></svg></span><div class="tx">Transfer verified · <b>T-1042</b> 1 of 2<div class="tm">4m</div></div><span class="unread"></span></div>
+                  <div class="ntf read"><span class="ic warn"><svg class="i"><use href="#i-down" /></svg></span><div class="tx">Price drop · <b>Nien 205Z</b> now 3,500 KRW<div class="tm">3h</div></div><span></span></div>
+                  <div class="ntf read"><span class="ic"><svg class="i"><use href="#i-msg" /></svg></span><div class="tx"><b>3 messages</b> from seoah_fan<div class="tm">Oct 2</div></div><span></span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="caption">Left: the chat thread. Middle: “Message / Make offer” in the existing objekt drawer. Right: the full-screen notification list.</p>
+      </section>
+
+      <!-- ============ 03 NOTIFICATIONS ============ -->
+      <section class="s" id="notifications">
+        <div class="head">
+          <div class="num">04</div>
+          <h2>Notifications</h2>
+          <p>A bell next to Messages. The most valuable alert isn't a chat message: it's “an objekt on your want list was just listed”, which the matching logic can already work out.</p>
+        </div>
+        <div class="split">
+          <div class="scroll">
+            <div class="frame notif-stage">
+              <div class="appnav">
+                <span class="brand">Objekt Explorer</span>
+                <span class="links"><span>Collections</span><span class="on">Market</span><span>Trade</span><span>Activity</span><span>Lists</span></span>
+                <span class="right">
+                  <span class="iconbtn"><svg class="i"><use href="#i-search" /></svg></span>
+                  <span class="iconbtn on"><svg class="i"><use href="#i-bell" /></svg><span class="badge-dot">3</span></span>
+                  <span class="iconbtn"><svg class="i"><use href="#i-msg" /></svg><span class="badge-dot">1</span></span>
+                  <span class="avatar sm" style="--h: 330; margin-left: 6px">M</span>
+                </span>
+              </div>
+              <div class="dimmed">
+                <div class="pc" style="--h: 20"><span>SeoYeon</span></div><div class="pc binary" style="--h: 140"><span>HyeRin</span></div><div class="pc cream" style="--h: 350"><span>JiWoo</span></div><div class="pc ever" style="--h: 200"><span>Nien</span></div><div class="pc divine" style="--h: 300"><span>Kaede</span></div><div class="pc" style="--h: 60"><span>YooYeon</span></div>
+              </div>
+              <div class="pop">
+                <div class="menu">
+                  <div class="ph"><h4>Notifications</h4><span class="btn sm ghost">Mark all read</span></div>
+                  <div class="tabs"><span class="on">All</span><span>Trades</span><span>Want list</span></div>
+                  <div class="ntf">
+                    <span class="ic acc"><svg class="i"><use href="#i-sparkle" /></svg></span>
+                    <div class="tx"><b>On your want list:</b> HyeRin 301Z was listed by nakyoung.cards for <span class="mono">4,500 KRW</span><div class="tm">just now · Want list “Binary hunt”</div></div>
+                    <div class="rt"><div class="pc w28 binary" style="--h: 140"><span></span></div><span class="unread"></span></div>
+                  </div>
+                  <div class="ntf">
+                    <span class="ic"><svg class="i"><use href="#i-swap" /></svg></span>
+                    <div class="tx"><b>rin.trades</b> countered your offer <span class="mono subtle">O-881</span><div class="tm">2m</div></div>
+                    <div class="rt"><span class="unread"></span></div>
+                  </div>
+                  <div class="ntf">
+                    <span class="ic ok"><svg class="i"><use href="#i-check" /></svg></span>
+                    <div class="tx">Transfer verified: binary.bin received <b>HyeRin 301Z #1203</b>. Trade <span class="mono">T-1042</span> is 1 of 2 done.<div class="tm">4m</div></div>
+                    <div class="rt"><span class="unread"></span></div>
+                  </div>
+                  <div class="ntf read">
+                    <span class="ic warn"><svg class="i"><use href="#i-down" /></svg></span>
+                    <div class="tx">Price drop on <b>Nien 205Z</b>: <span class="mono">4,000 → 3,500 KRW</span><div class="tm">3h</div></div>
+                    <div class="rt"><div class="pc w28 ever" style="--h: 200"><span></span></div></div>
+                  </div>
+                  <div class="ntf read">
+                    <span class="ic"><svg class="i"><use href="#i-msg" /></svg></span>
+                    <div class="tx"><b>3 new messages</b> from seoah_fan<div class="tm">Oct 2 · grouped</div></div>
+                    <div class="rt"></div>
+                  </div>
+                  <div class="pf"><span>Notification settings</span><span class="mono">see all</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <aside class="notes">
+            <div>
+              <h3>Rules</h3>
+              <ul>
+                <li>Chat messages <strong>don't create a notification each</strong>. They group per conversation, and the unread count comes from <span class="mono">lastReadMessageId</span>.</li>
+                <li>Everything is pushed live over the same <span class="mono">/ws/me</span> socket.</li>
+                <li>Email is a <strong>digest</strong> (worker <span class="mono">Bun.cron</span>), never one email per message.</li>
+              </ul>
+            </div>
+            <div class="lean"><b>Lean</b>Want-list matches ship first. They work even before chat exists and are the strongest reason to come back.</div>
+          </aside>
+        </div>
+
+        <div class="split" style="margin-top: 32px">
+          <div class="scroll">
+            <div class="frame" style="padding: 18px 20px">
+              <div style="font-weight: 600; margin-bottom: 4px">Settings · Notifications</div>
+              <div class="muted" style="font-size: 13px; margin-bottom: 12px">Choose where each kind of alert reaches you.</div>
+              <table class="prefs">
+                <thead><tr><th>Event</th><th class="c">In app</th><th class="c">Email digest</th><th class="c">Push <span class="chip" style="height: 18px; font-size: 10px">later</span></th></tr></thead>
+                <tbody>
+                  <tr><td>New messages<div class="d">Grouped per conversation</div></td><td class="c"><span class="sw on"></span></td><td class="c"><span class="sw on"></span></td><td class="c"><span class="sw na"></span></td></tr>
+                  <tr><td>Offers and counters</td><td class="c"><span class="sw on"></span></td><td class="c"><span class="sw on"></span></td><td class="c"><span class="sw na"></span></td></tr>
+                  <tr><td>Transfers verified</td><td class="c"><span class="sw on"></span></td><td class="c"><span class="sw"></span></td><td class="c"><span class="sw na"></span></td></tr>
+                  <tr><td>Want-list matches<div class="d">Only lists you mark “alert me”</div></td><td class="c"><span class="sw on"></span></td><td class="c"><span class="sw on"></span></td><td class="c"><span class="sw na"></span></td></tr>
+                  <tr><td>Price drops on wanted objekts</td><td class="c"><span class="sw on"></span></td><td class="c"><span class="sw"></span></td><td class="c"><span class="sw na"></span></td></tr>
+                  <tr><td>Moderation notices<div class="d">Can't be turned off</div></td><td class="c"><span class="sw on" style="opacity: 0.5"></span></td><td class="c"><span class="sw on" style="opacity: 0.5"></span></td><td class="c"><span class="sw na"></span></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <aside class="notes">
+            <div><h3>Schema</h3><p class="mono" style="font-size: 12px; line-height: 1.7">notification(id, userId, type, payload jsonb, groupKey, readAt, createdAt)<br />notification_pref(userId, type, inApp, email, push)</p></div>
+          </aside>
+        </div>
+      </section>
+
+      <!-- ============ 04 OFFER BUILDER ============ -->
+      <section class="s" id="offer">
+        <div class="head">
+          <div class="num">05</div>
+          <h2>Offer builder</h2>
+          <p>Specific tokens from your linked wallets on one side, their tokens or “any copy” on the other. Anything that can't be traded is caught before the offer is sent.</p>
+        </div>
+        <div class="split">
+          <div class="scroll">
+            <div class="frame dialog-stage">
+              <div class="dialog">
+                <div class="dh"><span class="avatar sm" style="--h: 30">R</span><h4>New offer to rin.trades</h4><span class="iconbtn x"><svg class="i"><use href="#i-x" /></svg></span></div>
+                <div class="sub">Both sides are checked against current on-chain ownership.</div>
+                <div class="suggest">
+                  <svg class="i"><use href="#i-sparkle" /></svg>
+                  <span><b>From your trade matches:</b> rin.trades has 4 objekts on your want list, and you have 2 on theirs.</span>
+                  <span class="btn sm">Use suggestion</span>
+                </div>
+                <div class="cols">
+                  <div class="col">
+                    <h5>You give <span class="mono subtle" style="font-size: 12px; font-weight: 400">2 objekts</span></h5>
+                    <div class="from">from 0x7a3…e91 · 0x3b1…9c1</div>
+                    <div class="pick">
+                      <div class="pc w36 binary" style="--h: 140"><span></span></div>
+                      <div class="obj-meta"><div class="n">HyeRin · Binary01 301Z</div><div class="s">#1203 · on their want list</div></div>
+                      <svg class="i sm muted"><use href="#i-x" /></svg>
+                    </div>
+                    <div class="pick">
+                      <div class="pc w36 cream" style="--h: 350"><span></span></div>
+                      <div class="obj-meta"><div class="n">JiWoo · Cream01 108Z</div><div class="s">#88</div><div class="why" style="color: var(--warning)">Also in open offer O-874 to nakyoung.cards</div></div>
+                      <svg class="i sm muted"><use href="#i-x" /></svg>
+                    </div>
+                    <div class="pick bad">
+                      <div class="pc w36 divine dim" style="--h: 300"><span></span></div>
+                      <div class="obj-meta"><div class="n subtle">Kaede · Divine01 322Z</div><div class="s">#14</div><div class="why" style="color: var(--destructive)">Not transferable, can't be offered</div></div>
+                      <span></span>
+                    </div>
+                    <div class="addrow"><svg class="i sm"><use href="#i-plus" /></svg>Add from your collection</div>
+                  </div>
+                  <div class="mid"><svg class="i"><use href="#i-swap" /></svg></div>
+                  <div class="col">
+                    <h5>You get <span class="mono subtle" style="font-size: 12px; font-weight: 400">2 objekts</span></h5>
+                    <div class="from">from rin.trades · Selling, Have</div>
+                    <div class="pick">
+                      <div class="pc w36" style="--h: 20"><span></span></div>
+                      <div class="obj-meta"><div class="n">SeoYeon · Atom01 204Z</div><div class="s">#537 · listed 6,000 KRW</div></div>
+                      <div class="seg"><span class="on">#537</span><span>any</span></div>
+                    </div>
+                    <div class="pick">
+                      <div class="pc w36 ever" style="--h: 200"><span></span></div>
+                      <div class="obj-meta"><div class="n">Nien · Ever01 205Z</div><div class="s">they own 3 copies</div></div>
+                      <div class="seg"><span>#64</span><span class="on">any</span></div>
+                    </div>
+                    <div class="addrow"><svg class="i sm"><use href="#i-plus" /></svg>Add from their lists</div>
+                  </div>
+                </div>
+                <div class="extra">
+                  <div class="field"><label>Top-up (optional)</label><span class="muted">None</span> <span class="subtle" style="font-size: 12px">· paid outside, never verified</span></div>
+                  <div class="field"><label>Note</label><span class="subtle">Can send tonight after 9pm KST</span></div>
+                </div>
+                <div class="df">
+                  <span class="fine">The offer expires in 7 days. If an objekt in it leaves either wallet, it cancels itself and you both get a notification.</span>
+                  <span class="btn ghost">Cancel</span>
+                  <span class="btn primary"><svg class="i sm"><use href="#i-send" /></svg>Send offer</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <aside class="notes">
+            <div>
+              <h3>Checks</h3>
+              <ul>
+                <li><strong>Ownership:</strong> each given token belongs to one of your <span class="mono">userAddress</span> rows, checked in the indexer.</li>
+                <li><strong><span class="mono">transferable</span></strong> must be true.</li>
+                <li><strong>Double-offering</strong> is a warning, not a block: the first offer accepted wins, and the rest cancel.</li>
+                <li><strong>“Any copy”</strong> matches a want entry by collection, not by token.</li>
+              </ul>
+            </div>
+            <div class="lean"><b>Lean</b>Allow money top-ups, but always mark them as not verified. Many real trades are “objekt + a little cash”.</div>
+          </aside>
+        </div>
+      </section>
+
+      <!-- ============ 05 TRADE TRACKER ============ -->
+      <section class="s" id="tracker">
+        <div class="head">
+          <div class="num">06</div>
+          <h2>Trade tracker: verified on-chain</h2>
+          <p>After an offer is accepted, the worker watches the transfer stream. Each leg ticks itself off when the token moves from the right wallet to the right wallet. Nobody has to press “I sent it”.</p>
+        </div>
+        <div class="split">
+          <div class="scroll">
+            <div class="frame" style="min-width: 940px">
+              <div class="tracker">
+                <div class="main">
+                  <div class="t-title"><h4>Trade with binary.bin</h4><span class="mono subtle">T-1042</span><span class="chip acc" style="margin-left: auto">in progress</span></div>
+                  <div class="stepper">
+                    <div class="st done"><span class="k">Oct 5 · 21:02</span>Proposed</div>
+                    <div class="st done"><span class="k">Oct 5 · 21:40</span>Accepted</div>
+                    <div class="st now"><span class="k">1 of 2</span>Transfers</div>
+                    <div class="st"><span class="k">—</span>Complete</div>
+                  </div>
+                  <table class="legs">
+                    <thead><tr><th>Objekt</th><th>Direction</th><th>Status</th></tr></thead>
+                    <tbody>
+                      <tr>
+                        <td><div class="objcell"><div class="pc w36 binary" style="--h: 140"><span></span></div><div class="obj-meta"><div class="n">HyeRin 301Z</div><div class="s">#1203</div></div></div></td>
+                        <td><div class="dir">you <svg class="i xs"><use href="#i-arrow" /></svg> binary.bin</div></td>
+                        <td><span class="chip ok"><svg class="i xs"><use href="#i-check" /></svg>Verified</span><div class="txh">tx 0x8f2c…a21e · 4m ago</div></td>
+                      </tr>
+                      <tr>
+                        <td><div class="objcell"><div class="pc w36 ever" style="--h: 200"><span></span></div><div class="obj-meta"><div class="n">Nien 205Z</div><div class="s">any copy</div></div></div></td>
+                        <td><div class="dir">binary.bin <svg class="i xs"><use href="#i-arrow" /></svg> you</div></td>
+                        <td><span class="chip"><svg class="i xs"><use href="#i-clock" /></svg>Waiting for transfer</span><div class="txh">watching 0x7a3…e91, 0x3b1…9c1</div></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  <div style="display: flex; gap: 8px; margin-top: 18px">
+                    <span class="btn sm"><svg class="i sm"><use href="#i-msg" /></svg>Open chat</span>
+                    <span class="btn sm ghost"><svg class="i sm"><use href="#i-flag" /></svg>Report a problem</span>
+                    <span class="btn sm ghost" style="margin-left: auto; color: var(--subtle)">Cancelling is locked after the first verified transfer</span>
+                  </div>
+                </div>
+                <div class="side">
+                  <div class="callout acc">
+                    <h5><svg class="i sm" style="color: var(--accent)"><use href="#i-shield" /></svg>Who sends first?</h5>
+                    binary.bin has <b class="mono" style="color: var(--fg)">31</b> verified trades and you have <b class="mono" style="color: var(--fg)">2</b>. We suggested <b style="color: var(--fg)">you</b> send first. You did, so it's their turn.
+                  </div>
+                  <div class="callout">
+                    <h5>After both legs verify</h5>
+                    <div class="rep-big"><span class="n">+1</span><span>Each side can leave feedback, and it counts toward both profiles' verified-trade score.</span></div>
+                    <div class="fb"><span class="btn sm">Positive</span><span class="btn sm">Neutral</span><span class="btn sm">Negative</span></div>
+                  </div>
+                  <div class="callout">
+                    <h5>If it stalls</h5>
+                    After 72h with one leg open, both sides are reminded. After 7 days, “Report a problem” opens a case for moderators with the trade attached.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <aside class="notes">
+            <div>
+              <h3>How verification works</h3>
+              <ul>
+                <li>The indexer already publishes <span class="mono">transfers</span> on Valkey.</li>
+                <li>A <strong>worker</strong> subscriber (not the web instances, which would each run it again) matches transfers against open legs by <span class="mono">objekt_id</span>, or by collection for “any copy”.</li>
+                <li>A matched leg stores the tx hash. The last leg completes the trade.</li>
+              </ul>
+            </div>
+            <div class="lean"><b>Lean</b>Suggest that the newer trader sends first, shown to both sides, but don't enforce it.</div>
+            <div><h3>Out of scope</h3><p>Escrow, or holding any money or objekts. The site only records the agreement and verifies the result.</p></div>
+          </aside>
+        </div>
+      </section>
+
+      <!-- ============ 06 MODERATION ============ -->
+      <section class="s" id="moderation">
+        <div class="head">
+          <div class="num">07</div>
+          <h2>Moderation</h2>
+          <p>Tools for users to protect themselves, and a console for moderators. Ship them together with chat, not after the first scam.</p>
+        </div>
+
+        <h3 class="eyebrow" style="margin: 0 0 16px">User side · thread menu and report</h3>
+        <div class="split">
+          <div class="scroll">
+            <div class="mod-user">
+              <div>
+                <div class="menu" style="width: 260px">
+                  <div class="it"><svg class="i"><use href="#i-bell-off" /></svg>Mute notifications<span class="r">8h · 1w · ∞</span></div>
+                  <div class="it"><svg class="i"><use href="#i-archive" /></svg>Archive conversation</div>
+                  <div class="sep"></div>
+                  <div class="it danger"><svg class="i"><use href="#i-ban" /></svg>Block spam.seller22</div>
+                  <div class="it hl danger"><svg class="i"><use href="#i-flag" /></svg>Report…</div>
+                </div>
+                <div class="callout" style="margin-top: 16px; width: 260px">
+                  <h5><svg class="i sm"><use href="#i-ban" /></svg>Blocking</h5>
+                  They can't message you or send you offers, and open offers between you are cancelled. They aren't told. You can still see their public lists.
+                </div>
+              </div>
+              <div class="dialog" style="width: 100%; max-width: 560px">
+                <div class="dh"><h4>Report spam.seller22</h4><span class="iconbtn x"><svg class="i"><use href="#i-x" /></svg></span></div>
+                <div class="report">
+                  <div class="radio on"><span class="o"></span><div>Scam or fake offer<div class="d">Asking you to send first or pay outside, or fake proof</div></div></div>
+                  <div class="radio"><span class="o"></span><div>Harassment</div></div>
+                  <div class="radio"><span class="o"></span><div>Spam</div></div>
+                  <div class="radio"><span class="o"></span><div>Pretending to be someone else</div></div>
+                  <div class="radio"><span class="o"></span><div>Something else</div></div>
+                  <div style="height: 8px"></div>
+                  <div class="check on"><span class="b"><svg class="i xs"><use href="#i-check" /></svg></span><div>Share the last 20 messages with moderators<div class="d">Moderators can't read your chats otherwise. Only these messages are shared.</div></div></div>
+                  <div class="check on"><span class="b"><svg class="i xs"><use href="#i-check" /></svg></span><div>Also block spam.seller22</div></div>
+                </div>
+                <div class="df"><span class="fine">Moderators review reports within about a day.</span><span class="btn ghost">Cancel</span><span class="btn primary">Send report</span></div>
+              </div>
+            </div>
+          </div>
+          <aside class="notes">
+            <div class="lean"><b>Lean</b>Moderators see only the excerpt a reporter chooses to share. No moderator can browse inboxes.</div>
+            <div><h3>Spam brakes</h3><ul><li>A <strong>linked Cosmo address is required</strong> to start a chat or send an offer.</li><li>Limit new conversations per day, lower for accounts under 7 days old.</li><li>Auto-<strong>flag</strong> phrases like “send first” or outside payment links for review. Flag them, don't block them.</li></ul></div>
+          </aside>
+        </div>
+
+        <h3 class="eyebrow" style="margin: 56px 0 16px">Moderator console · /mod/reports</h3>
+        <div class="scroll">
+          <div class="frame" style="min-width: 1100px">
+            <div class="console">
+              <div class="queue">
+                <div class="top"><h4>Reports</h4><span class="chip">open 7</span><span class="chip" style="margin-left: auto">Flags 3</span></div>
+                <div class="qi on">
+                  <div class="r1"><b>spam.seller22</b><span class="mono subtle" style="font-size: 11px">12m</span></div>
+                  <div class="r2"><span class="chip bad">Scam ×3</span><span class="chip warn">auto-flag</span></div>
+                  <div class="ex">“send first pls, I have 200+ trades on twitter”</div>
+                </div>
+                <div class="qi">
+                  <div class="r1"><b>yyn_shop</b><span class="mono subtle" style="font-size: 11px">2h</span></div>
+                  <div class="r2"><span class="chip">Spam ×1</span></div>
+                  <div class="ex">“check my list!!! cheapest atom02 …”</div>
+                </div>
+                <div class="qi">
+                  <div class="r1"><b>trade T-0998</b><span class="mono subtle" style="font-size: 11px">1d</span></div>
+                  <div class="r2"><span class="chip info">Stalled trade</span></div>
+                  <div class="ex">One leg open for 8 days · reported by kaede.k</div>
+                </div>
+                <div class="qi">
+                  <div class="r1"><b>jinsoul.blue</b><span class="mono subtle" style="font-size: 11px">2d</span></div>
+                  <div class="r2"><span class="chip">Harassment ×1</span></div>
+                  <div class="ex">Shared excerpt: 6 messages</div>
+                </div>
+              </div>
+              <div class="case">
+                <h4>spam.seller22 <span class="chip bad">3 reports</span></h4>
+                <div class="scope"><svg class="i xs"><use href="#i-eye" /></svg>You can see only the messages reporters shared (3 excerpts, 20 messages each at most)</div>
+                <div class="excerpt">
+                  <div class="mono subtle" style="font-size: 11px">Excerpt from mei_collects · Oct 6 13:41</div>
+                  <div class="bub them">hi! saw your want list, I have HyeRin 301Z</div>
+                  <div class="bub me">oh nice! can we trade on here so it's verified?</div>
+                  <div class="bub them flag">send first pls, I have 200+ trades on twitter, pay 2000 KRW to wise first</div>
+                  <div class="flagnote"><svg class="i xs"><use href="#i-flag" /></svg>auto-flag · send first + outside payment</div>
+                </div>
+                <div class="excerpt">
+                  <div class="mono subtle" style="font-size: 11px">Excerpt from kotone.cards · Oct 6 13:10</div>
+                  <div class="bub them flag">send first pls, I have 200+ trades on twitter</div>
+                </div>
+              </div>
+              <div class="actions">
+                <dl class="facts">
+                  <dt>Account age</dt><dd class="warn">2 days</dd>
+                  <dt>Linked addresses</dt><dd>1 (2 days)</dd>
+                  <dt>Verified trades</dt><dd>0</dd>
+                  <dt>Chats opened · 24h</dt><dd class="bad">38 (cap hit)</dd>
+                  <dt>Past sanctions</dt><dd>none</dd>
+                </dl>
+                <div class="act-grid">
+                  <div class="act"><svg class="i sm"><use href="#i-check" /></svg><div>Dismiss</div></div>
+                  <div class="act"><svg class="i sm"><use href="#i-alert" /></svg><div>Warn<div class="d">Notice only</div></div></div>
+                  <div class="act on"><svg class="i sm"><use href="#i-bell-off" /></svg><div>Mute in chat<div class="d">Can't send messages</div></div><span class="seg"><span>1d</span><span class="on">7d</span><span>30d</span></span></div>
+                  <div class="act"><svg class="i sm"><use href="#i-swap" /></svg><div>Block from trading<div class="d">No offers, lists hidden from market</div></div></div>
+                  <div class="act" style="color: var(--destructive)"><svg class="i sm"><use href="#i-ban" /></svg><div>Ban<div class="d">Signed out, can't sign in</div></div></div>
+                </div>
+                <div class="field"><label>Reason · shown to user</label>Asking traders to send first and pay outside the site</div>
+                <span class="btn primary block">Apply 7-day chat mute</span>
+                <div class="audit">
+                  Oct 6 14:02 · mod.hana · chat_mute 7d → spam.seller22<br />
+                  Oct 4 09:13 · mod.izr · dismissed report on yyn_shop
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="split" style="margin-top: 32px">
+          <div class="scroll">
+            <div class="ladder">
+              <div class="rung"><span class="sev" style="background: var(--subtle)"></span><div class="k">level 1</div><h5>Warn</h5><ul><li>A notice in the bell and by email</li><li>Recorded in their history</li></ul></div>
+              <div class="rung"><span class="sev" style="background: var(--warning)"></span><div class="k">level 2</div><h5>Chat mute</h5><ul><li>Can't send messages or offers</li><li>Can still finish trades already accepted</li><li>Expires on its own</li></ul></div>
+              <div class="rung"><span class="sev" style="background: oklch(0.75 0.15 50)"></span><div class="k">level 3</div><h5>Trade block</h5><ul><li>Lists hidden from market and matches</li><li>Open offers cancelled</li></ul></div>
+              <div class="rung"><span class="sev" style="background: var(--destructive)"></span><div class="k">level 4</div><h5>Ban</h5><ul><li>Better Auth <span class="mono">banned</span> + <span class="mono">banExpires</span></li><li>Sessions revoked</li></ul></div>
+            </div>
+            <div class="frame" style="margin-top: 20px; max-width: 640px">
+              <div class="sanctioned">
+                <svg class="i"><use href="#i-bell-off" /></svg>
+                <div class="t">You can't send messages until <span class="mono">Oct 13</span><div class="s">Reason: asking traders to send first and pay outside the site. Trades you've already accepted still go through.</div></div>
+                <span class="btn sm" style="margin-left: auto">Appeal</span>
+              </div>
+            </div>
+            <p class="caption">What a muted user sees in place of the message box.</p>
+          </div>
+          <aside class="notes">
+            <div><h3>Data</h3><p class="mono" style="font-size: 12px; line-height: 1.7">user.role (admin plugin)<br />user_sanction(userId, type, reason, expiresAt, issuedBy, revokedAt)<br />report(id, reporterId, targetUserId, reason, excerpt jsonb, status)<br />user_block(blockerId, blockedId)<br />mod_audit(actorId, action, target, at)</p></div>
+          </aside>
+        </div>
+      </section>
+
+      <!-- ============ 07 SETTINGS ============ -->
+      <section class="s" id="settings">
+        <div class="head">
+          <div class="num">08</div>
+          <h2>Privacy settings</h2>
+          <p>Each user decides who can reach them. This also settles the hidden-list question per user rather than for everyone.</p>
+        </div>
+        <div class="scroll">
+          <div class="frame" style="min-width: 900px">
+            <div class="settings">
+              <div class="snav"><span>Profile</span><span>Addresses</span><span class="on">Messages &amp; trades</span><span>Notifications</span><span>Blocked users</span></div>
+              <div>
+                <div class="sgroup">
+                  <div class="sh">Who can message you</div>
+                  <div class="sd">Applies to new conversations. Existing ones stay open.</div>
+                  <div style="padding: 0 6px 8px">
+                    <div class="radio on"><span class="o"></span><div>Anyone with a linked Cosmo address<div class="d">Messages started without a listing go to Requests</div></div></div>
+                    <div class="radio"><span class="o"></span><div>Only people I've traded with<div class="d">Verified trades only</div></div></div>
+                    <div class="radio"><span class="o"></span><div>Nobody<div class="d">The Message button is hidden on your lists and profile</div></div></div>
+                  </div>
+                </div>
+                <div class="sgroup">
+                  <div class="srow"><div>Allow messages on lists that hide my identity<div class="d">When on, buyers can message you from a hidden list, and starting a chat shows them your username.</div></div><span class="sw"></span></div>
+                  <div class="srow"><div>Accept offers without a chat first<div class="d">When off, an offer always opens as a message request.</div></div><span class="sw on"></span></div>
+                  <div class="srow"><div>Show new have and want lists on Trade<div class="d">The default for new lists. Each list can still change it in its own settings.</div></div><span class="sw"></span></div>
+                  <div class="srow"><div>Show my verified-trade count on my profile</div><span class="sw on"></span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ 08 ARCHITECTURE ============ -->
+      <section class="s" id="arch">
+        <div class="head">
+          <div class="num">09</div>
+          <h2>Under the hood</h2>
+          <p>Postgres is the source of truth. The socket only nudges. A reconnecting tab asks oRPC for anything newer than its last id.</p>
+        </div>
+        <div class="scroll">
+          <div class="arch">
+            <svg viewBox="0 0 1100 360" width="100%" role="img" aria-label="Architecture: browser, web server, Valkey, worker, indexer and Postgres">
+              <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="oklch(0.56 0.012 286)" /></marker><marker id="ahn" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="oklch(0.673 0.182 276.935)" /></marker></defs>
+
+              <rect class="box" x="20" y="120" width="190" height="110" rx="12" />
+              <text class="ttl" x="40" y="152">Browser</text>
+              <text x="40" y="176">React Query cache</text>
+              <text x="40" y="196">badge counts</text>
+
+              <rect class="box" x="330" y="40" width="250" height="110" rx="12" />
+              <text class="ttl" x="350" y="72">oRPC  /rpc</text>
+              <text x="350" y="96">chat.send · offer.create</text>
+              <text x="350" y="116">rate limit · sanctions</text>
+              <text x="350" y="136">block check</text>
+
+              <rect class="box new" x="330" y="210" width="250" height="110" rx="12" />
+              <text class="ttl" x="350" y="242">WS  /ws/me</text>
+              <text x="350" y="266">session cookie + Origin</text>
+              <text x="350" y="286">ws.data.userId</text>
+              <text x="350" y="306">push only</text>
+
+              <rect class="box" x="700" y="40" width="170" height="110" rx="12" />
+              <text class="ttl" x="720" y="72">Postgres</text>
+              <text x="720" y="96">conversation</text>
+              <text x="720" y="116">message · offer</text>
+              <text x="720" y="136">notification</text>
+
+              <rect class="box" x="700" y="210" width="170" height="110" rx="12" />
+              <text class="ttl" x="720" y="242">Valkey</text>
+              <text x="720" y="266">user:{id}</text>
+              <text x="720" y="286">transfers</text>
+              <text x="720" y="306">rate buckets</text>
+
+              <rect class="box new" x="930" y="120" width="150" height="110" rx="12" />
+              <text class="ttl" x="950" y="152">Worker</text>
+              <text x="950" y="176">trade verifier</text>
+              <text x="950" y="196">digest cron</text>
+              <text x="950" y="216">want alerts</text>
+
+              <path class="ln" d="M210 160 C 270 160, 270 95, 330 95" marker-end="url(#ah)" />
+              <text x="232" y="118">send</text>
+              <path class="ln new" d="M330 265 C 270 265, 270 200, 210 200" marker-end="url(#ahn)" />
+              <text x="232" y="250" style="fill: oklch(0.673 0.182 276.935)">push</text>
+              <path class="ln" d="M580 85 L 700 85" marker-end="url(#ah)" />
+              <text x="608" y="76">1 insert</text>
+              <path class="ln" d="M580 125 C 640 125, 640 250, 700 250" marker-end="url(#ah)" />
+              <text x="660" y="165">2 publish</text>
+              <path class="ln new" d="M700 280 L 580 280" marker-end="url(#ahn)" />
+              <text x="604" y="300" style="fill: oklch(0.673 0.182 276.935)">subscribe</text>
+              <path class="ln" d="M870 280 C 900 280, 900 210, 930 200" marker-end="url(#ah)" />
+              <text x="878" y="320">transfers</text>
+              <path class="ln new" d="M930 150 C 900 150, 900 100, 870 100" marker-end="url(#ahn)" />
+              <text x="930" y="105" style="fill: oklch(0.673 0.182 276.935)">mark leg verified</text>
+            </svg>
+            <div class="legend"><span><i></i>exists today</span><span><i class="new"></i>new</span></div>
+          </div>
+        </div>
+        <div class="split" style="margin-top: 24px">
+          <div class="notes" style="font-size: 14px; color: var(--muted); display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px">
+            <div><h3 class="eyebrow" style="margin: 0 0 6px">Security</h3>The new socket uses the session cookie, so it <strong style="color: var(--fg)">must check Origin against SITE_URL</strong>. Without that, any site could open it as the user (cross-site WebSocket hijacking). The public <span class="mono">/ws</span> can stay open as it is.</div>
+            <div><h3 class="eyebrow" style="margin: 0 0 6px">Why not send over WS</h3>Sending through oRPC keeps validation, auth and rate limits in one place, matches the read-only <span class="mono">/ws</span> pattern you already have, and works when the socket is down.</div>
+            <div><h3 class="eyebrow" style="margin: 0 0 6px">Multi-instance</h3>Each web instance subscribes to <span class="mono">user:{id}</span> only for the sockets it holds. With exactly one instance, this step can wait.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ 09 DECISIONS ============ -->
+      <section class="s" id="decisions">
+        <div class="head">
+          <div class="num">10</div>
+          <h2>Decisions to make</h2>
+          <p>Each question shows what every option would look like. Pick one per question. Votes are shared with everyone who opens this page, and you can change yours any time.</p>
+        </div>
+        <div id="vote-status" role="status"></div>
+        <div class="dgroup">
+          <h3>Market and Trade</h3>
+          <div class="dec" data-d="market-scope">
+            <div class="dh"><div class="q">Q1</div><div><h4>Market and Trade</h4><p>Keep Market as the collection grid for selling, and put swaps and wants on a new Trade page?<span class="ref">§02</span></p></div></div>
+            <div class="optgrid">
+              <div class="optcard" data-o="split">
+                <div class="ot">Two pages<span class="lean-tag">lean</span></div>
+                <div class="viz" aria-hidden="true"><div class="vsplit"><div class="vbox"><span class="vt">MARKET</span><div class="vgrid"><div class="vcell"><div class="pc w20 " style="--h: 20"><span></span></div>6,000</div><div class="vcell"><div class="pc w20 binary" style="--h: 140"><span></span></div>4,500</div><div class="vcell"><div class="pc w20 ever" style="--h: 200"><span></span></div>3,500</div><div class="vcell"><div class="pc w20 cream" style="--h: 350"><span></span></div>5,000</div></div></div><div class="vbox"><span class="vt">TRADE</span><div class="vpost"><span class="vdot" style="--h: 30"></span><div class="pc w16 " style="--h: 20"><span></span></div><div class="pc w16 binary" style="--h: 140"><span></span></div><div class="pc w16 ever" style="--h: 200"><span></span></div><span class="vt" style="margin-left:auto">WTT</span></div><div class="vpost"><span class="vdot" style="--h: 80"></span><div class="pc w16 " style="--h: 60"><span></span></div><div class="pc w16 binary" style="--h: 100"><span></span></div><div class="pc w16 ever" style="--h: 230"><span></span></div><span class="vt" style="margin-left:auto">WTB</span></div><div class="vpost"><span class="vdot" style="--h: 200"></span><div class="pc w16 " style="--h: 40"><span></span></div><div class="pc w16 binary" style="--h: 170"><span></span></div><div class="pc w16 ever" style="--h: 260"><span></span></div><span class="vt" style="margin-left:auto">WTT</span></div></div></div></div>
+                <div class="pc-list"><span class="pro"><b>+</b>Market keeps one meaning: price by collection.</span><span class="con"><b>−</b>Someone who'd buy or swap checks two pages.</span></div>
+                <div class="ofoot"><span class="cnt"></span><button type="button" class="pick" aria-pressed="false" aria-label="Pick “Two pages” for Market and Trade">Pick this</button></div>
+              </div>
+              <div class="optcard" data-o="merged">
+                <div class="ot">Modes inside Market</div>
+                <div class="viz" aria-hidden="true"><div class="vbox" style="flex:1"><div class="vrow"><span class="vt">MARKET</span><span class="vseg"><i class="on">Sale</i><i>Wanted</i><i>Trade</i></span></div><div class="vgrid"><div class="vcell"><div class="pc w20 " style="--h: 20"><span></span></div>6,000</div><div class="vcell"><div class="pc w20 binary" style="--h: 140"><span></span></div>bid 5k</div><div class="vcell"><div class="pc w20 ever" style="--h: 200"><span></span></div>4 swap</div><div class="vcell"><div class="pc w20 cream" style="--h: 350"><span></span></div>7 want</div></div></div></div>
+                <div class="pc-list"><span class="pro"><b>+</b>Everything about a collection on one page.</span><span class="con"><b>−</b>“Price” means floor, top bid or nothing, depending on the mode.</span></div>
+                <div class="ofoot"><span class="cnt"></span><button type="button" class="pick" aria-pressed="false" aria-label="Pick “Modes inside Market” for Market and Trade">Pick this</button></div>
+              </div>
+            </div>
+            <div class="voters"></div>
+          </div>
+          <div class="dec" data-d="post-unit">
+            <div class="dh"><div class="q">Q2</div><div><h4>What one Trade post is</h4><p>A 200-entry have list could be one card or 200 rows.<span class="ref">§02</span></p></div></div>
+            <div class="optgrid">
+              <div class="optcard" data-o="list">
+                <div class="ot">One post per list<span class="lean-tag">lean</span></div>
+                <div class="viz" aria-hidden="true"><div class="vbox"><div class="vrow"><span class="vdot" style="--h: 30"></span><span>rin.trades</span><span class="vt" style="margin-left:auto">WTT</span></div><div class="vrow"><span class="vt">HAVE</span><div class="pc w16 " style="--h: 20"><span></span></div><div class="pc w16 ever" style="--h: 200"><span></span></div><div class="pc w16 " style="--h: 60"><span></span></div><div class="pc w16 divine" style="--h: 300"><span></span></div><div class="pc w16 cream" style="--h: 10"><span></span></div><span class="vt">+195</span></div><div class="vrow"><span class="vt">WANT</span><div class="pc w16 binary" style="--h: 140"><span></span></div><div class="pc w16 cream" style="--h: 350"><span></span></div><div class="pc w16 binary" style="--h: 100"><span></span></div><span class="vt">+5</span></div></div><span class="vt">1 card in the feed</span></div>
+                <div class="pc-list"><span class="pro"><b>+</b>A big list is one card, so the feed stays readable.</span><span class="con"><b>−</b>Finding one objekt needs a “contains” filter.</span></div>
+                <div class="ofoot"><span class="cnt"></span><button type="button" class="pick" aria-pressed="false" aria-label="Pick “One post per list” for What one Trade post is">Pick this</button></div>
+              </div>
+              <div class="optcard" data-o="entry">
+                <div class="ot">One row per objekt</div>
+                <div class="viz" aria-hidden="true"><div class="vpost"><span class="vdot" style="--h: 30"></span><span>rin.trades</span><div class="pc w16 " style="--h: 20"><span></span></div><span class="vt" style="margin-left:auto">1 of 200</span></div><div class="vpost"><span class="vdot" style="--h: 30"></span><span>rin.trades</span><div class="pc w16 ever" style="--h: 200"><span></span></div><span class="vt" style="margin-left:auto">2 of 200</span></div><div class="vpost"><span class="vdot" style="--h: 30"></span><span>rin.trades</span><div class="pc w16 " style="--h: 60"><span></span></div><span class="vt" style="margin-left:auto">3 of 200</span></div><div class="vpost"><span class="vdot" style="--h: 30"></span><span>rin.trades</span><div class="pc w16 divine" style="--h: 300"><span></span></div><span class="vt" style="margin-left:auto">4 of 200</span></div><span class="vt">… 196 more rows from rin.trades</span></div>
+                <div class="pc-list"><span class="pro"><b>+</b>Easy to sort and filter per objekt.</span><span class="con"><b>−</b>One big list floods the feed and buries everyone else.</span></div>
+                <div class="ofoot"><span class="cnt"></span><button type="button" class="pick" aria-pressed="false" aria-label="Pick “One row per objekt” for What one Trade post is">Pick this</button></div>
+              </div>
+            </div>
+            <div class="voters"></div>
+          </div>
+          <div class="dec" data-d="wts">
+            <div class="dh"><div class="q">Q3</div><div><h4>Sales on the Trade page</h4><p>“Selling or trading” is a common kind of post.<span class="ref">§02</span></p></div></div>
+            <div class="optgrid">
+              <div class="optcard" data-o="filter">
+                <div class="ot">Include them, as a WTS filter<span class="lean-tag">lean</span></div>
+                <div class="viz" aria-hidden="true"><span class="vseg"><i class="on">All</i><i>WTT</i><i>WTB</i><i>WTS</i></span><div class="vpost"><span class="vdot" style="--h: 200"></span><span>nakyoung.cards</span><div class="pc w16 ever" style="--h: 200"><span></span></div><span class="vmono" style="margin-left:auto">3,500 · or trade</span></div><div class="vpost"><span class="vdot" style="--h: 30"></span><span>rin.trades</span><div class="pc w16 " style="--h: 20"><span></span></div><span class="vmono" style="margin-left:auto">6,000</span></div><span class="vt">Market still shows the same prices, by collection</span></div>
+                <div class="pc-list"><span class="pro"><b>+</b>Sell-or-swap posts show both, in one place.</span><span class="con"><b>−</b>Sales appear on two pages.</span></div>
+                <div class="ofoot"><span class="cnt"></span><button type="button" class="pick" aria-pressed="false" aria-label="Pick “Include them, as a WTS filter” for Sales on the Trade page">Pick this</button></div>
+              </div>
+              <div class="optcard" data-o="no">
+                <div class="ot">Swaps and wants only</div>
+                <div class="viz" aria-hidden="true"><span class="vseg"><i class="on">All</i><i>WTT</i><i>WTB</i></span><div class="vpost"><span class="vdot" style="--h: 200"></span><span>nakyoung.cards</span><div class="pc w16 ever" style="--h: 200"><span></span></div><span class="vmono" style="margin-left:auto">trade only</span></div><div class="vbox vdim"><span class="vt">WANT TO SELL? → MARKET</span></div></div>
+                <div class="pc-list"><span class="pro"><b>+</b>Trade stays purely about swaps and wants.</span><span class="con"><b>−</b>A seller open to swaps has to post on both pages.</span></div>
+                <div class="ofoot"><span class="cnt"></span><button type="button" class="pick" aria-pressed="false" aria-label="Pick “Swaps and wants only” for Sales on the Trade page">Pick this</button></div>
+              </div>
+            </div>
+            <div class="voters"></div>
+          </div>
+          <div class="dec" data-d="trade-consent">
+            <div class="dh"><div class="q">Q4</div><div><h4>Existing discoverable have and want lists</h4><p>Their owners agreed to being found by matching, not to a public board.<span class="ref">§02</span></p></div></div>
+            <div class="optgrid">
+              <div class="optcard" data-o="optin">
+                <div class="ot">Hidden until the owner opts in<span class="lean-tag">lean</span></div>
+                <div class="viz" aria-hidden="true"><div class="vbox"><div class="vrow"><span>Show on Trade</span><span class="sw" style="margin-left:auto"></span></div><span class="vt">existing lists start hidden</span></div><div class="vbox"><div class="vrow"><span class="vt">TRADE AT LAUNCH</span><span class="vmono" style="margin-left:auto">12 posts</span></div></div></div>
+                <div class="pc-list"><span class="pro"><b>+</b>Nobody shows up somewhere they didn't agree to.</span><span class="con"><b>−</b>The board starts small.</span></div>
+                <div class="ofoot"><span class="cnt"></span><button type="button" class="pick" aria-pressed="false" aria-label="Pick “Hidden until the owner opts in” for Existing discoverable have and want lists">Pick this</button></div>
+              </div>
+              <div class="optcard" data-o="auto">
+                <div class="ot">Shown automatically</div>
+                <div class="viz" aria-hidden="true"><div class="vbox"><div class="vrow"><svg class="i xs vacc"><use href="#i-bell" /></svg><span>Your list “Spares” is now on Trade</span></div><div class="vrow"><span class="vt">Show on Trade</span><span class="sw on" style="margin-left:auto"></span></div></div><div class="vbox"><div class="vrow"><span class="vt">TRADE AT LAUNCH</span><span class="vmono" style="margin-left:auto">400+ posts</span></div></div></div>
+                <div class="pc-list"><span class="pro"><b>+</b>A full board on day one.</span><span class="con"><b>−</b>Lists made “findable for matching” turn into public posts.</span></div>
+                <div class="ofoot"><span class="cnt"></span><button type="button" class="pick" aria-pressed="false" aria-label="Pick “Shown automatically” for Existing discoverable have and want lists">Pick this</button></div>
+              </div>
+            </div>
+            <div class="voters"></div>
+          </div>
+          <div class="dec" data-d="fresh">
+            <div class="dh"><div class="q">Q5</div><div><h4>Keeping the feed fresh</h4><p>The lists table has no updatedAt today.<span class="ref">§02</span></p></div></div>
+            <div class="optgrid">
+              <div class="optcard" data-o="bump">
+                <div class="ot">updatedAt + Bump + idle cut-off<span class="lean-tag">lean</span></div>
+                <div class="viz" aria-hidden="true"><div class="vpost"><span class="vdot" style="--h: 30"></span><span>rin.trades</span><span class="vt" style="margin-left:auto">updated 2h</span></div><div class="vpost"><span class="vdot" style="--h: 330"></span><span>you</span><span class="vt" style="margin-left:auto">bumped 26h</span><span class="vbtn">Bump</span></div><div class="vpost vgone"><span class="vdot" style="--h: 160"></span><span>jinsoul.blue</span><span class="vt" style="margin-left:auto">idle 31d · hidden</span></div></div>
+                <div class="pc-list"><span class="pro"><b>+</b>The top of the feed is people active right now.</span><span class="con"><b>−</b>Needs a new column and a limit on bumps.</span></div>
+                <div class="ofoot"><span class="cnt"></span><button type="button" class="pick" aria-pressed="false" aria-label="Pick “updatedAt + Bump + idle cut-off” for Keeping the feed fresh">Pick this</button></div>
+              </div>
+              <div class="optcard" data-o="edit">
+                <div class="ot">Sort by last edit only</div>
+                <div class="viz" aria-hidden="true"><div class="vpost"><span class="vdot" style="--h: 30"></span><span>rin.trades</span><span class="vt" style="margin-left:auto">edited 2h</span></div><div class="vpost"><span class="vdot" style="--h: 200"></span><span>nakyoung.cards</span><span class="vt" style="margin-left:auto">edited 3w</span></div><div class="vpost"><span class="vdot" style="--h: 160"></span><span>jinsoul.blue</span><span class="vt vwarn" style="margin-left:auto">edited 1y · still listed</span></div></div>
+                <div class="pc-list"><span class="pro"><b>+</b>No new concept for users to learn.</span><span class="con"><b>−</b>Year-old lists stay in the feed.</span></div>
+                <div class="ofoot"><span class="cnt"></span><button type="button" class="pick" aria-pressed="false" aria-label="Pick “Sort by last edit only” for Keeping the feed fresh">Pick this</button></div>
+              </div>
+            </div>
+            <div class="voters"></div>
+          </div>
+          <div class="dec" data-d="matches-home">
+            <div class="dh"><div class="q">Q6</div><div><h4>Where trade matches live</h4><p>Today they're a dialog on each list page, for one list at a time.<span class="ref">§02</span></p></div></div>
+            <div class="optgrid">
+              <div class="optcard" data-o="foryou">
+                <div class="ot">In For you; the list button links there<span class="lean-tag">lean</span></div>
+                <div class="viz" aria-hidden="true"><div class="vrow" style="flex:1;align-items:stretch"><div class="vbox" style="flex:1"><span class="vt">LIST · SPARES</span><span class="vbtn hl">Trade matches 3</span></div><div class="varrow"><svg class="i xs "><use href="#i-arrow" /></svg></div><div class="vbox" style="flex:1.3"><span class="vt">TRADE › FOR YOU</span><div class="vline" style="width:90%"></div><div class="vline" style="width:70%"></div><div class="vline" style="width:80%"></div><span class="vt">all lists</span></div></div></div>
+                <div class="pc-list"><span class="pro"><b>+</b>All lists at once, and one view to maintain.</span><span class="con"><b>−</b>The dialog people know becomes a link.</span></div>
+                <div class="ofoot"><span class="cnt"></span><button type="button" class="pick" aria-pressed="false" aria-label="Pick “In For you; the list button links there” for Where trade matches live">Pick this</button></div>
+              </div>
+              <div class="optcard" data-o="both">
+                <div class="ot">Keep the dialog and add For you</div>
+                <div class="viz" aria-hidden="true"><div class="vrow" style="flex:1;align-items:stretch"><div class="vbox" style="flex:1"><span class="vt">LIST</span><span class="vbtn">Trade matches</span><div class="vbox vinner"><span class="vt">DIALOG · this list</span></div></div><div class="vbox" style="flex:1"><span class="vt">TRADE › FOR YOU</span><div class="vline" style="width:80%"></div><div class="vline" style="width:60%"></div><span class="vt">all lists</span></div></div><span class="vt">two match views to keep in sync</span></div>
+                <div class="pc-list"><span class="pro"><b>+</b>Nothing familiar goes away.</span><span class="con"><b>−</b>Two match views to build and keep in sync.</span></div>
+                <div class="ofoot"><span class="cnt"></span><button type="button" class="pick" aria-pressed="false" aria-label="Pick “Keep the dialog and add For you” for Where trade matches live">Pick this</button></div>
+              </div>
+              <div class="optcard" data-o="keep">
+                <div class="ot">Keep the dialog as it is</div>
+                <div class="viz" aria-hidden="true"><div class="vbox" style="flex:1"><span class="vt">LIST · SPARES</span><span class="vbtn">Trade matches</span><div class="vbox vinner"><span class="vt">DIALOG</span><span class="vseg"><i class="on">Have</i><i>Want</i><i>Both</i></span><span class="vt">this list only</span></div></div></div>
+                <div class="pc-list"><span class="pro"><b>+</b>No work.</span><span class="con"><b>−</b>Matches stay one list at a time and easy to miss.</span></div>
+                <div class="ofoot"><span class="cnt"></span><button type="button" class="pick" aria-pressed="false" aria-label="Pick “Keep the dialog as it is” for Where trade matches live">Pick this</button></div>
+              </div>
+            </div>
+            <div class="voters"></div>
+          </div>
+          <div class="dec" data-d="match-modes">
+            <div class="dh"><div class="q">Q7</div><div><h4>Have / Want / Both modes</h4><p>Today “Both” needs linked lists on each side.<span class="ref">§02</span></p></div></div>
+            <div class="optgrid">
+              <div class="optcard" data-o="mutual">
+                <div class="ot">Both directions always, mutual first<span class="lean-tag">lean</span></div>
+                <div class="viz" aria-hidden="true"><span class="vseg"><i class="on">Mutual only</i><i>They have</i><i>They want</i></span><div class="vpost"><span class="vdot" style="--h: 30"></span><span>rin.trades</span><span class="vscore" style="margin-left:auto">4 ⇄ 2</span></div><div class="vpost"><span class="vdot" style="--h: 200"></span><span>nakyoung.cards</span><span class="vscore" style="margin-left:auto">1 ⇄ 3</span></div><span class="vt">binary.bin 9 ⇄ 0 → not mutual, filtered</span></div>
+                <div class="pc-list"><span class="pro"><b>+</b>Real two-way trades rank first, with no info table needed.</span><span class="con"><b>−</b>People lose the “Both” tab they know.</span></div>
+                <div class="ofoot"><span class="cnt"></span><button type="button" class="pick" aria-pressed="false" aria-label="Pick “Both directions always, mutual first” for Have / Want / Both modes">Pick this</button></div>
+              </div>
+              <div class="optcard" data-o="tabs">
+                <div class="ot">Keep the three tabs</div>
+                <div class="viz" aria-hidden="true"><div class="vrow"><span class="vseg"><i class="on">Have</i><i>Want</i><i>Both</i></span><svg class="i xs vmute2"><use href="#i-eye" /></svg><span class="vt">info table</span></div><div class="vpost"><span class="vdot" style="--h: 120"></span><span>binary.bin</span><span class="vmono" style="margin-left:auto">they have 9</span></div><div class="vpost"><span class="vdot" style="--h: 30"></span><span>rin.trades</span><span class="vmono" style="margin-left:auto">they have 4</span></div><span class="vt">“Both” needs linked lists</span></div>
+                <div class="pc-list"><span class="pro"><b>+</b>Familiar to current users.</span><span class="con"><b>−</b>One-way ranking puts 9 ⇄ 0 above a real 2 ⇄ 2.</span></div>
+                <div class="ofoot"><span class="cnt"></span><button type="button" class="pick" aria-pressed="false" aria-label="Pick “Keep the three tabs” for Have / Want / Both modes">Pick this</button></div>
+              </div>
+            </div>
+            <div class="voters"></div>
+          </div>
+        </div>
+        <div class="dgroup">
+          <h3>Chat</h3>
+          <div class="dec" data-d="thread">
+            <div class="dh"><div class="q">Q8</div><div><h4>Thread model</h4><p>Does a chat belong to a pair of users, or to one listing?<span class="ref">§03</span></p></div></div>
+            <div class="optgrid">
+              <div class="optcard" data-o="pair">
+                <div class="ot">One per user pair<span class="lean-tag">lean</span></div>
+                <div class="viz" aria-hidden="true"><div class="vconv on"><span class="vdot" style="--h: 30"></span><div><div>rin.trades</div><div class="vrow"><div class="pc w16 " style="--h: 20"><span></span></div><div class="pc w16 binary" style="--h: 140"><span></span></div><div class="pc w16 ever" style="--h: 200"><span></span></div><span class="vt">3 objekts</span></div></div></div><div class="vconv"><span class="vdot" style="--h: 200"></span><div><div>nakyoung.cards</div><div class="vline" style="width:80px"></div></div></div><span class="vt">1 chat for the whole deal</span></div>
+                <div class="pc-list"><span class="pro"><b>+</b>A bundle deal stays in one place.</span><span class="con"><b>−</b>Long chats rely on the objekt cards for context.</span></div>
+                <div class="ofoot"><span class="cnt"></span><button type="button" class="pick" aria-pressed="false" aria-label="Pick “One per user pair” for Thread model">Pick this</button></div>
+              </div>
+              <div class="optcard" data-o="listing">
+                <div class="ot">One per listing</div>
+                <div class="viz" aria-hidden="true"><div class="vconv"><span class="vdot" style="--h: 30"></span><div><div>rin.trades · <span class="vmono">SeoYeon 204Z</span></div></div><div class="pc w16 " style="--h: 20"><span></span></div></div><div class="vconv"><span class="vdot" style="--h: 30"></span><div><div>rin.trades · <span class="vmono">HyeRin 301Z</span></div></div><div class="pc w16 binary" style="--h: 140"><span></span></div></div><div class="vconv"><span class="vdot" style="--h: 30"></span><div><div>rin.trades · <span class="vmono">Nien 205Z</span></div></div><div class="pc w16 ever" style="--h: 200"><span></span></div></div><span class="vt">3 chats with the same person</span></div>
+                <div class="pc-list"><span class="pro"><b>+</b>Each chat is about exactly one objekt.</span><span class="con"><b>−</b>A three-objekt deal spreads over three chats.</span></div>
+                <div class="ofoot"><span class="cnt"></span><button type="button" class="pick" aria-pressed="false" aria-label="Pick “One per listing” for Thread model">Pick this</button></div>
+              </div>
+            </div>
+            <div class="voters"></div>
+          </div>
+          <div class="dec" data-d="entry">
+            <div class="dh"><div class="q">Q9</div><div><h4>Where the Message button lives</h4><p>Which surfaces get a Message button.<span class="ref">§01</span></p></div></div>
+            <div class="optgrid">
+              <div class="optcard" data-o="listing">
+                <div class="ot">Objekt surfaces + profile<span class="lean-tag">lean</span></div>
+                <div class="viz" aria-hidden="true"><div class="vplace"><svg class="i xs vok"><use href="#i-check" /></svg><span>Market drawer</span></div><div class="vplace"><svg class="i xs vok"><use href="#i-check" /></svg><span>Trade post</span></div><div class="vplace"><svg class="i xs vok"><use href="#i-check" /></svg><span>For you</span></div><div class="vplace"><svg class="i xs vok"><use href="#i-check" /></svg><span>Profile</span></div><div class="vplace off"><svg class="i xs vmute2"><use href="#i-x" /></svg><span>List header</span></div></div>
+                <div class="pc-list"><span class="pro"><b>+</b>Every chat starts with an objekt attached.</span><span class="con"><b>−</b>The list header has no button.</span></div>
+                <div class="ofoot"><span class="cnt"></span><button type="button" class="pick" aria-pressed="false" aria-label="Pick “Objekt surfaces + profile” for Where the Message button lives">Pick this</button></div>
+              </div>
+              <div class="optcard" data-o="header">
+                <div class="ot">List header only</div>
+                <div class="viz" aria-hidden="true"><div class="vplace off"><svg class="i xs vmute2"><use href="#i-x" /></svg><span>Market drawer</span></div><div class="vplace off"><svg class="i xs vmute2"><use href="#i-x" /></svg><span>Trade post</span></div><div class="vplace off"><svg class="i xs vmute2"><use href="#i-x" /></svg><span>For you</span></div><div class="vplace off"><svg class="i xs vmute2"><use href="#i-x" /></svg><span>Profile</span></div><div class="vplace"><svg class="i xs vok"><use href="#i-check" /></svg><span>List header</span></div></div>
+                <div class="pc-list"><span class="pro"><b>+</b>One place to build.</span><span class="con"><b>−</b>No objekt context, and missing from Market and Trade.</span></div>
+                <div class="ofoot"><span class="cnt"></span><button type="button" class="pick" aria-pressed="false" aria-label="Pick “List header only” for Where the Message button lives">Pick this</button></div>
+              </div>
+              <div class="optcard" data-o="all">
+                <div class="ot">Everywhere</div>
+                <div class="viz" aria-hidden="true"><div class="vplace"><svg class="i xs vok"><use href="#i-check" /></svg><span>Market drawer</span></div><div class="vplace"><svg class="i xs vok"><use href="#i-check" /></svg><span>Trade post</span></div><div class="vplace"><svg class="i xs vok"><use href="#i-check" /></svg><span>For you</span></div><div class="vplace"><svg class="i xs vok"><use href="#i-check" /></svg><span>Profile</span></div><div class="vplace"><svg class="i xs vok"><use href="#i-check" /></svg><span>List header</span></div></div>
+                <div class="pc-list"><span class="pro"><b>+</b>Reachable from anywhere.</span><span class="con"><b>−</b>Chats from the header start without context.</span></div>
+                <div class="ofoot"><span class="cnt"></span><button type="button" class="pick" aria-pressed="false" aria-label="Pick “Everywhere” for Where the Message button lives">Pick this</button></div>
+              </div>
+            </div>
+            <div class="voters"></div>
+          </div>
+          <div class="dec" data-d="gate">
+            <div class="dh"><div class="q">Q10</div><div><h4>Who can start a chat</h4><p>A linked Cosmo address is the strongest cheap brake on spam accounts.<span class="ref">§07</span></p></div></div>
+            <div class="optgrid">
+              <div class="optcard" data-o="address">
+                <div class="ot">Linked Cosmo address required<span class="lean-tag">lean</span></div>
+                <div class="viz" aria-hidden="true"><span class="vbtn"><svg class="i xs "><use href="#i-msg" /></svg>Message</span><div class="vbox vpop"><svg class="i xs vacc"><use href="#i-link" /></svg><span>Link a Cosmo address to start chatting</span><span class="vbtn p" style="margin-left:auto">Link</span></div><span class="vt">already linked? the chat opens as usual</span></div>
+                <div class="pc-list"><span class="pro"><b>+</b>A spam account has to link a wallet first.</span><span class="con"><b>−</b>New users must link before they can ask anything.</span></div>
+                <div class="ofoot"><span class="cnt"></span><button type="button" class="pick" aria-pressed="false" aria-label="Pick “Linked Cosmo address required” for Who can start a chat">Pick this</button></div>
+              </div>
+              <div class="optcard" data-o="any">
+                <div class="ot">Any signed-in user</div>
+                <div class="viz" aria-hidden="true"><span class="vbtn"><svg class="i xs "><use href="#i-msg" /></svg>Message</span><div class="vbox"><div class="vbub">hi, is this still available?</div></div><span class="vt">an email signup is enough</span></div>
+                <div class="pc-list"><span class="pro"><b>+</b>No friction for newcomers.</span><span class="con"><b>−</b>Throwaway accounts can spam.</span></div>
+                <div class="ofoot"><span class="cnt"></span><button type="button" class="pick" aria-pressed="false" aria-label="Pick “Any signed-in user” for Who can start a chat">Pick this</button></div>
+              </div>
+            </div>
+            <div class="voters"></div>
+          </div>
+          <div class="dec" data-d="hidden">
+            <div class="dh"><div class="q">Q11</div><div><h4>Lists that hide the owner</h4><p>Chatting reveals the seller's username.<span class="ref">§01, §08</span></p></div></div>
+            <div class="optgrid">
+              <div class="optcard" data-o="optin">
+                <div class="ot">The seller opts in<span class="lean-tag">lean</span></div>
+                <div class="viz" aria-hidden="true"><div class="vbox"><div class="vrow"><svg class="i xs vmute2"><use href="#i-eye" /></svg><span>Owner hidden</span><div class="pc w16 " style="--h: 20"><span></span></div></div><span class="vbtn"><svg class="i xs "><use href="#i-msg" /></svg>Message</span><span class="vt">shown because this seller allowed it</span></div></div>
+                <div class="pc-list"><span class="pro"><b>+</b>Each seller decides for their own account.</span><span class="con"><b>−</b>One more setting to explain.</span></div>
+                <div class="ofoot"><span class="cnt"></span><button type="button" class="pick" aria-pressed="false" aria-label="Pick “The seller opts in” for Lists that hide the owner">Pick this</button></div>
+              </div>
+              <div class="optcard" data-o="never">
+                <div class="ot">Never allow chat</div>
+                <div class="viz" aria-hidden="true"><div class="vbox"><div class="vrow"><svg class="i xs vmute2"><use href="#i-eye" /></svg><span>Owner hidden</span><div class="pc w16 " style="--h: 20"><span></span></div></div><span class="vbtn vdim">no Message button</span></div></div>
+                <div class="pc-list"><span class="pro"><b>+</b>Hidden stays hidden.</span><span class="con"><b>−</b>Hidden sellers can't be reached at all.</span></div>
+                <div class="ofoot"><span class="cnt"></span><button type="button" class="pick" aria-pressed="false" aria-label="Pick “Never allow chat” for Lists that hide the owner">Pick this</button></div>
+              </div>
+              <div class="optcard" data-o="always">
+                <div class="ot">Always allow</div>
+                <div class="viz" aria-hidden="true"><div class="vbox"><div class="vrow"><svg class="i xs vmute2"><use href="#i-eye" /></svg><span>Owner hidden</span><div class="pc w16 " style="--h: 20"><span></span></div></div><span class="vbtn"><svg class="i xs "><use href="#i-msg" /></svg>Message</span><span class="vt vbad">first message reveals the username</span></div></div>
+                <div class="pc-list"><span class="pro"><b>+</b>Every list is reachable.</span><span class="con"><b>−</b>Breaks what “hide user” promised.</span></div>
+                <div class="ofoot"><span class="cnt"></span><button type="button" class="pick" aria-pressed="false" aria-label="Pick “Always allow” for Lists that hide the owner">Pick this</button></div>
+              </div>
+            </div>
+            <div class="voters"></div>
+          </div>
+        </div>
+        <div class="dgroup">
+          <h3>Offers and verified trades</h3>
+          <div class="dec" data-d="money">
+            <div class="dh"><div class="q">Q12</div><div><h4>Money in offers</h4><p>Payments can never be verified, only objekt transfers.<span class="ref">§05</span></p></div></div>
+            <div class="optgrid">
+              <div class="optcard" data-o="topup">
+                <div class="ot">Allow top-ups, marked as not verified<span class="lean-tag">lean</span></div>
+                <div class="viz" aria-hidden="true"><div class="voffer"><div><span class="vt">YOU GIVE</span><div class="vrow"><div class="pc w24 binary" style="--h: 140"><span></span></div></div><span class="vchip warn">+1,000 KRW · not verified</span></div><div class="varrow"><svg class="i xs "><use href="#i-swap" /></svg></div><div><span class="vt">YOU GET</span><div class="vrow"><div class="pc w24 " style="--h: 20"><span></span></div></div></div></div></div>
+                <div class="pc-list"><span class="pro"><b>+</b>Matches real “objekt + a little cash” deals.</span><span class="con"><b>−</b>Part of the deal can't be verified.</span></div>
+                <div class="ofoot"><span class="cnt"></span><button type="button" class="pick" aria-pressed="false" aria-label="Pick “Allow top-ups, marked as not verified” for Money in offers">Pick this</button></div>
+              </div>
+              <div class="optcard" data-o="objekts">
+                <div class="ot">Objekts only</div>
+                <div class="viz" aria-hidden="true"><div class="voffer"><div><span class="vt">YOU GIVE</span><div class="vrow"><div class="pc w24 binary" style="--h: 140"><span></span></div><div class="pc w24 cream" style="--h: 350"><span></span></div></div></div><div class="varrow"><svg class="i xs "><use href="#i-swap" /></svg></div><div><span class="vt">YOU GET</span><div class="vrow"><div class="pc w24 " style="--h: 20"><span></span></div></div></div></div><span class="vt">cash talk moves to chat, untracked</span></div>
+                <div class="pc-list"><span class="pro"><b>+</b>Everything in an offer can be verified.</span><span class="con"><b>−</b>Cash top-ups happen anyway, just off the record.</span></div>
+                <div class="ofoot"><span class="cnt"></span><button type="button" class="pick" aria-pressed="false" aria-label="Pick “Objekts only” for Money in offers">Pick this</button></div>
+              </div>
+            </div>
+            <div class="voters"></div>
+          </div>
+          <div class="dec" data-d="first">
+            <div class="dh"><div class="q">Q13</div><div><h4>Who sends first</h4><p>Who goes first once both sides accept.<span class="ref">§06</span></p></div></div>
+            <div class="optgrid">
+              <div class="optcard" data-o="newer">
+                <div class="ot">Suggest the newer trader goes first<span class="lean-tag">lean</span></div>
+                <div class="viz" aria-hidden="true"><div class="vbox vacc-box"><svg class="i xs vacc"><use href="#i-shield" /></svg><span>Suggested: <b>you</b> send first · 2 vs 31 trades</span></div><div class="vleg"><span class="vmono">you → binary.bin</span><span class="vchip">send now</span></div><div class="vleg"><span class="vmono">binary.bin → you</span><span class="vchip">after yours</span></div></div>
+                <div class="pc-list"><span class="pro"><b>+</b>The first risk sits with the side that has less history.</span><span class="con"><b>−</b>Newer traders may feel distrusted.</span></div>
+                <div class="ofoot"><span class="cnt"></span><button type="button" class="pick" aria-pressed="false" aria-label="Pick “Suggest the newer trader goes first” for Who sends first">Pick this</button></div>
+              </div>
+              <div class="optcard" data-o="none">
+                <div class="ot">No suggestion</div>
+                <div class="viz" aria-hidden="true"><div class="vleg"><span class="vmono">you → binary.bin</span><span class="vchip">waiting</span></div><div class="vleg"><span class="vmono">binary.bin → you</span><span class="vchip">waiting</span></div><span class="vt">each waits for the other</span></div>
+                <div class="pc-list"><span class="pro"><b>+</b>Neutral.</span><span class="con"><b>−</b>Trades stall while both sides wait.</span></div>
+                <div class="ofoot"><span class="cnt"></span><button type="button" class="pick" aria-pressed="false" aria-label="Pick “No suggestion” for Who sends first">Pick this</button></div>
+              </div>
+              <div class="optcard" data-o="enforce">
+                <div class="ot">Enforce the order</div>
+                <div class="viz" aria-hidden="true"><div class="vleg"><span class="vmono">you → binary.bin</span><span class="vchip">send now</span></div><div class="vleg"><span class="vmono">binary.bin → you</span><span class="vchip bad"><svg class="i xs "><use href="#i-ban" /></svg> locked</span></div><span class="vt">their side unlocks once yours is verified</span></div>
+                <div class="pc-list"><span class="pro"><b>+</b>The order is clear.</span><span class="con"><b>−</b>Blocks friends who agreed to a different order.</span></div>
+                <div class="ofoot"><span class="cnt"></span><button type="button" class="pick" aria-pressed="false" aria-label="Pick “Enforce the order” for Who sends first">Pick this</button></div>
+              </div>
+            </div>
+            <div class="voters"></div>
+          </div>
+        </div>
+        <div class="dgroup">
+          <h3>Moderation</h3>
+          <div class="dec" data-d="modread">
+            <div class="dh"><div class="q">Q14</div><div><h4>What moderators can read</h4><p>Privacy against the effort of investigating.<span class="ref">§07</span></p></div></div>
+            <div class="optgrid">
+              <div class="optcard" data-o="excerpt">
+                <div class="ot">Only what reporters share<span class="lean-tag">lean</span></div>
+                <div class="viz" aria-hidden="true"><div class="vbox vchat"><div class="vline vhide" style="width:70%"></div><div class="vline vhide" style="width:50%"></div><div class="vline vhide" style="width:60%"></div><span class="vt">17 messages not shared</span><div class="vbub flag">send first pls…</div><div class="vbub">pay 2000 KRW to wise first</div></div></div>
+                <div class="pc-list"><span class="pro"><b>+</b>Inboxes stay private.</span><span class="con"><b>−</b>A reporter can share a misleading slice.</span></div>
+                <div class="ofoot"><span class="cnt"></span><button type="button" class="pick" aria-pressed="false" aria-label="Pick “Only what reporters share” for What moderators can read">Pick this</button></div>
+              </div>
+              <div class="optcard" data-o="full">
+                <div class="ot">The full chat once reported</div>
+                <div class="viz" aria-hidden="true"><div class="vbox vchat"><div class="vbub">hi! saw your want list</div><div class="vbub me">oh nice, trade on here?</div><div class="vbub">sure, how about…</div><div class="vbub flag">send first pls…</div><span class="vt">all 20 messages visible</span></div></div>
+                <div class="pc-list"><span class="pro"><b>+</b>Moderators see the full context.</span><span class="con"><b>−</b>Any report opens the whole chat history.</span></div>
+                <div class="ofoot"><span class="cnt"></span><button type="button" class="pick" aria-pressed="false" aria-label="Pick “The full chat once reported” for What moderators can read">Pick this</button></div>
+              </div>
+            </div>
+            <div class="voters"></div>
+          </div>
+        </div>
+        <div class="dgroup">
+          <h3>Order</h3>
+          <div class="dec" data-d="first-ship">
+            <div class="dh"><div class="q">Q15</div><div><h4>What ships first</h4><p>Each phase works on its own.</p></div></div>
+            <div class="optgrid">
+              <div class="optcard" data-o="notif">
+                <div class="ot">Notifications + want alerts<span class="lean-tag">lean</span></div>
+                <div class="viz" aria-hidden="true"><div class="vsteps"><div class="vstep on"><b>1</b>Notifications + want alerts</div><div class="vstep"><b>2</b>Trade page</div><div class="vstep"><b>3</b>Chat + moderation</div><div class="vstep"><b>4</b>Offers + verification</div></div></div>
+                <div class="pc-list"><span class="pro"><b>+</b>Brings people back without needing chat.</span><span class="con"><b>−</b>Little that's visibly new at first.</span></div>
+                <div class="ofoot"><span class="cnt"></span><button type="button" class="pick" aria-pressed="false" aria-label="Pick “Notifications + want alerts” for What ships first">Pick this</button></div>
+              </div>
+              <div class="optcard" data-o="board">
+                <div class="ot">Trade page</div>
+                <div class="viz" aria-hidden="true"><div class="vsteps"><div class="vstep on"><b>1</b>Trade page</div><div class="vstep"><b>2</b>Notifications + want alerts</div><div class="vstep"><b>3</b>Chat + moderation</div><div class="vstep"><b>4</b>Offers + verification</div></div></div>
+                <div class="pc-list"><span class="pro"><b>+</b>A visible new page built on existing lists.</span><span class="con"><b>−</b>Contact still goes through Discord or Twitter.</span></div>
+                <div class="ofoot"><span class="cnt"></span><button type="button" class="pick" aria-pressed="false" aria-label="Pick “Trade page” for What ships first">Pick this</button></div>
+              </div>
+              <div class="optcard" data-o="chat">
+                <div class="ot">Chat + moderation</div>
+                <div class="viz" aria-hidden="true"><div class="vsteps"><div class="vstep on"><b>1</b>Chat + moderation</div><div class="vstep"><b>2</b>Notifications + want alerts</div><div class="vstep"><b>3</b>Trade page</div><div class="vstep"><b>4</b>Offers + verification</div></div></div>
+                <div class="pc-list"><span class="pro"><b>+</b>The biggest thing users ask for.</span><span class="con"><b>−</b>Moderation has to ship with it.</span></div>
+                <div class="ofoot"><span class="cnt"></span><button type="button" class="pick" aria-pressed="false" aria-label="Pick “Chat + moderation” for What ships first">Pick this</button></div>
+              </div>
+              <div class="optcard" data-o="trade">
+                <div class="ot">Offers + verification</div>
+                <div class="viz" aria-hidden="true"><div class="vsteps"><div class="vstep on"><b>1</b>Offers + verification</div><div class="vstep"><b>2</b>Notifications + want alerts</div><div class="vstep"><b>3</b>Trade page</div><div class="vstep"><b>4</b>Chat + moderation</div></div></div>
+                <div class="pc-list"><span class="pro"><b>+</b>Verified trades start building reputation.</span><span class="con"><b>−</b>Negotiating still needs chat.</span></div>
+                <div class="ofoot"><span class="cnt"></span><button type="button" class="pick" aria-pressed="false" aria-label="Pick “Offers + verification” for What ships first">Pick this</button></div>
+              </div>
+            </div>
+            <div class="voters"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      (function () {
+        var KEY = "chat-trade-votes";
+        var store = window.superset && window.superset.storage;
+        var ready = false;
+        var mine = {};
+        var records = [];
+        var status = document.getElementById("vote-status");
+        var decs = Array.prototype.slice.call(document.querySelectorAll(".dec[data-d]"));
+
+        function others() {
+          var me = store && store.viewer && store.viewer.userId;
+          return records.filter(function (r) { return r.userId !== me; });
+        }
+
+        function render() {
+          var rest = others();
+          decs.forEach(function (dec) {
+            var d = dec.getAttribute("data-d");
+            var names = [];
+            dec.querySelectorAll(".optcard").forEach(function (card) {
+              var o = card.getAttribute("data-o");
+              var label = card.querySelector(".ot").firstChild.textContent;
+              var voters = rest.filter(function (r) { return r.value && r.value[d] === o; });
+              voters.forEach(function (r) { names.push(r.name + " → " + label); });
+              var count = voters.length + (mine[d] === o ? 1 : 0);
+              var picked = mine[d] === o;
+              card.classList.toggle("picked", picked);
+              var btn = card.querySelector(".pick");
+              btn.setAttribute("aria-pressed", picked ? "true" : "false");
+              btn.textContent = picked ? "Picked ✓" : "Pick this";
+              card.querySelector(".cnt").textContent = count ? count + (count === 1 ? " vote" : " votes") : "";
+            });
+            dec.querySelector(".voters").textContent = names.join(" · ");
+          });
+        }
+
+        function vote(d, o) {
+          if (mine[d] === o) delete mine[d];
+          else mine[d] = o;
+          render();
+          if (!ready) return;
+          store.set(KEY, mine).catch(function (e) {
+            status.textContent = e && e.code === "revoked" ? "Your access to this page changed, so votes can't be saved." : "Couldn't save your vote (" + ((e && e.code) || "error") + ").";
+          });
+        }
+
+        decs.forEach(function (dec) {
+          var d = dec.getAttribute("data-d");
+          dec.querySelectorAll(".optcard").forEach(function (card) {
+            var o = card.getAttribute("data-o");
+            card.querySelector(".pick").addEventListener("click", function () { vote(d, o); });
+          });
+        });
+
+        render();
+        if (!store) {
+          status.textContent = "Votes are saved when this page is opened in Superset while signed in.";
+          return;
+        }
+        Promise.resolve(store.ready).then(function (ok) {
+          ready = !!ok && store.writable !== false;
+          if (!ok) {
+            status.textContent = "Sign in to save votes.";
+            return;
+          }
+          return Promise.all([store.get(KEY), store.getAll(KEY)]).then(function (res) {
+            mine = res[0] || {};
+            records = res[1] || [];
+            render();
+            store.subscribe(KEY, function (r) { records = r || []; render(); });
+          });
+        }).catch(function () {
+          status.textContent = "Couldn't load shared votes.";
+        });
+      })();
+    </script>
+  </body>
+</html>

@@ -1,9 +1,10 @@
 import { ORPCError, os } from "@orpc/server";
 import { getRequestHeaders, setResponseHeader } from "@tanstack/react-start/server";
 
+import { isStaffRole, roleList } from "./schemas/moderation";
 import { auth } from "./services/auth";
 
-export type ApiErrorKey =
+type ApiErrorKey =
   | "compare_source_list_not_found"
   | "compare_target_profile_not_found"
   | "compare_target_list_not_found"
@@ -69,3 +70,10 @@ export const pub = base;
 export const authed = pub.use(requiredAuthMiddleware);
 
 export const optionalAuthed = pub.use(optionalAuthMiddleware);
+
+/** NOT_FOUND for everyone else, so the console's existence is not confirmed. */
+export const moderator = authed.use(async ({ next, context }) => {
+  const { role } = context.session.user;
+  if (!isStaffRole(role)) throw new ORPCError("NOT_FOUND");
+  return next({ context: { ...context, isAdmin: roleList(role).includes("admin") } });
+});

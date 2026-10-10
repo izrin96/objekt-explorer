@@ -7,14 +7,15 @@ find a user, see who they are signed in as, scope the site to artists and read s
 ## Requirements
 
 ### Requirement: Primary navigation with active state
-The frame SHALL offer links to Objekts (`/`), Market, Activity and Lists on every page, mark
-the link of the current page as active (exact match for `/`), and on viewports below the
-`md` breakpoint SHALL move those links into a side sheet opened from a menu button that
-closes when a link is followed.
+The frame SHALL offer links to Objekts (`/`), Market, Trade (`/trade`), Activity and Lists on every page, in that order. It SHALL mark the link of the current page as active: an exact match for `/`, and for Trade any path under `/trade`. On viewports below the `lg` breakpoint it SHALL move those links into a side sheet, so the search field keeps its width, opened from a menu button, and the sheet SHALL close when a link is followed.
 
 #### Scenario: Active link on desktop
 - **WHEN** the user is on `/market` at 1280 px
-- **THEN** the Market link is rendered in the active style and the other three are not
+- **THEN** the Market link is rendered in the active style and the other links are not
+
+#### Scenario: Trade stays active under For you
+- **WHEN** the user is on `/trade/for-you` at 1280 px
+- **THEN** the Trade link is rendered in the active style
 
 #### Scenario: Sheet closes on navigation
 - **WHEN** the user opens the sheet at 390 px and taps Activity
@@ -85,17 +86,46 @@ language SHALL set the locale cookie and re-render the page in that language.
 - **THEN** the frame's strings are Korean and a reload keeps them Korean
 
 ### Requirement: Account menu reaches Cosmo and account settings
-The account menu SHALL include a My Cosmo item opening `/link` and an Account item opening
-the account dialog.
+The account menu SHALL include a Profiles item whose manage entry opens `/account/profiles`, and an Account item opening
+`/account`. The primary nav's Profiles link SHALL open `/account/profiles` and SHALL show as current on any `/account/profiles` or `/link` route.
 
-#### Scenario: My Cosmo
-- **WHEN** a signed-in user picks My Cosmo
-- **THEN** the URL is `/link`
+#### Scenario: Profiles
+- **WHEN** a signed-in user picks Profiles's manage entry
+- **THEN** the URL is `/account/profiles`
+
+#### Scenario: Account
+- **WHEN** a signed-in user picks Account
+- **THEN** the URL is `/account` and the General section is open
 
 ### Requirement: Account menu reaches lists
-The account menu SHALL include a My lists submenu listing the user's lists by name and
+The account menu SHALL include a Lists submenu listing the user's lists by name and
 type, with Create list, Discord format and All lists actions.
 
 #### Scenario: Open a list from the menu
-- **WHEN** a signed-in user picks a list in My lists
+- **WHEN** a signed-in user picks a list in Lists
 - **THEN** the URL is that list's address
+
+### Requirement: Account menu reaches For you
+The account menu SHALL include a For you item opening `/trade/for-you`.
+
+#### Scenario: From the menu
+- **WHEN** the user opens the account menu and activates For you
+- **THEN** the browser is at `/trade/for-you`
+
+### Requirement: Notification bell in the frame
+When a session exists, the frame SHALL show the notification bell (see `web-notifications`) next to the account area on desktop. Below the `lg` breakpoint, it SHALL show the bell in the top bar, outside the navigation sheet, so it is reachable without opening the sheet.
+
+#### Scenario: Mobile
+- **WHEN** a signed-in user loads any page at 390 px
+- **THEN** the bell is visible in the top bar and opens the notification popover without opening the sheet
+
+### Requirement: Messages icon in the frame
+When a session exists, the frame SHALL show a Messages icon with its unread badge (see `web-chat`) beside the notification bell. Below the `lg` breakpoint, it SHALL sit in the top bar beside the bell, outside the navigation sheet.
+
+#### Scenario: Mobile
+- **WHEN** a signed-in user loads any page at 390 px
+- **THEN** the Messages icon is visible in the top bar and opens `/messages` without opening the sheet
+
+#### Scenario: Signed out
+- **WHEN** a visitor without a session loads any page
+- **THEN** no Messages icon is shown

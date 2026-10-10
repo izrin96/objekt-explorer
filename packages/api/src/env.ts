@@ -21,6 +21,10 @@ export const serverEnv = createEnv({
     SES_MAIL_FROM: z.string().min(1),
     BYPASS_LIVE_KEY: z.string().min(1).optional(),
     REDIS_URL: z.string().min(1),
+    // optional so the site starts without the real-time server; the token procedure refuses without it
+    CENTRIFUGO_URL: z.url().optional(),
+    CENTRIFUGO_API_KEY: z.string().min(1).optional(),
+    CENTRIFUGO_TOKEN_SECRET: z.string().min(1).optional(),
     COSMO_KEY: z.string().min(1),
     // the public origin Better Auth signs in on and the only one it accepts;
     // required, or Better Auth would take it from the request's own Host
@@ -28,7 +32,7 @@ export const serverEnv = createEnv({
     // client
     VITE_UMAMI_SCRIPT_URL: z.string().min(1).optional(),
     VITE_UMAMI_WEBSITE_ID: z.string().min(1).optional(),
-    VITE_ACTIVITY_WEBSOCKET_URL: z.string().optional(),
+    VITE_CENTRIFUGO_URL: z.string().optional(),
     VITE_LIVE_API_KEY: z.string().min(1),
   },
   runtimeEnv: process.env,

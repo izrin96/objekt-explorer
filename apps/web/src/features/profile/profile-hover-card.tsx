@@ -1,4 +1,5 @@
 import { LockSimpleIcon } from "@phosphor-icons/react";
+import { truncateAddress } from "@repo/lib/address";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { type ReactNode, useEffect, useRef } from "react";
@@ -7,7 +8,7 @@ import { CursorCard, cursorCardDelays } from "@/components/shared/cursor-card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TooltipPrimitive } from "@/components/ui/tooltip";
-import { displayNickname, nicknameParam, truncateAddress } from "@/lib/address";
+import { displayNickname, nicknameParam } from "@/lib/address";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -55,6 +56,7 @@ export function ProfileCell({
   nickname,
   className,
   linkClassName,
+  title,
   before,
   after,
   children,
@@ -63,6 +65,8 @@ export function ProfileCell({
   nickname: string | null | undefined;
   className?: string;
   linkClassName?: string;
+  /** the full name, where the cell truncates it */
+  title?: string;
   /** content ahead of the name, inside the hover area */
   before?: ReactNode;
   /** content after the name, inside the hover area */
@@ -77,7 +81,12 @@ export function ProfileCell({
       render={<span className={className} />}
     >
       {before}
-      <Link to="/@{$nickname}" params={profileParams(address, nickname)} className={linkClassName}>
+      <Link
+        to="/@{$nickname}"
+        params={profileParams(address, nickname)}
+        title={title}
+        className={linkClassName}
+      >
         {children}
       </Link>
       {after}

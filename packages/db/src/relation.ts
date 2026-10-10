@@ -14,6 +14,10 @@ export const relations = defineRelations(schema, (r) => ({
   },
   user: {
     userAddresses: r.many.userAddress(),
+    messagePref: r.one.messagePref({
+      from: r.user.id,
+      to: r.messagePref.userId,
+    }),
   },
   lists: {
     entries: r.many.listEntries(),
@@ -46,6 +50,15 @@ export const relations = defineRelations(schema, (r) => ({
     userAddress: r.one.userAddress({
       from: r.lockedObjekts.address,
       to: r.userAddress.address,
+    }),
+  },
+  tradeLeg: {
+    substitutes: r.many.tradeSubstitute(),
+  },
+  tradeSubstitute: {
+    leg: r.one.tradeLeg({
+      from: r.tradeSubstitute.tradeLegId,
+      to: r.tradeLeg.id,
     }),
   },
 }));
