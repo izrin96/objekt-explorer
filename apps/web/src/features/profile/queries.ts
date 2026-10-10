@@ -25,7 +25,6 @@ export const ownedCollectionOptions = (address: string, filters?: OwnedByFilters
       client.objekts.ownedBy({ ...filters, address, cursor: pageParam }).then((result) => ({
         objekts: result.objekts.map(mapObjektWithTag),
         nextCursor: result.nextCursor,
-        total: result.total,
       })),
     initialPageParam: undefined as OwnedByOutput["nextCursor"],
     getNextPageParam: (lastPage) => lastPage.nextCursor,

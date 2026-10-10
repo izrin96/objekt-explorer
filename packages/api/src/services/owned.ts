@@ -12,7 +12,6 @@ import { isAddressHiddenFromCaller } from "./privacy";
 import { getCache } from "./redis";
 
 const PER_PAGE = 8000;
-const ENABLE_COUNT = false;
 
 function buildCollectionFilters(query: OwnedByFilters) {
   if (!query.artist?.length) return [];
@@ -52,7 +51,6 @@ export async function fetchOwnedObjekts(
   }
 
   const collectionFilters = buildCollectionFilters(query);
-  const isFirstPage = !query.cursor;
 
   if (query.at) {
     const latest = indexer.$with("latest").as(
@@ -95,33 +93,14 @@ export async function fetchOwnedObjekts(
       .orderBy(...ORDER_BY)
       .limit(PER_PAGE + 1);
 
-    const countQuery =
-      ENABLE_COUNT && isFirstPage
-        ? indexer
-            .with(latest)
-            .select({ count: count() })
-            .from(latest)
-            .innerJoin(objekts, eq(latest.objektId, objekts.id))
-            .innerJoin(collections, eq(collections.id, objekts.collectionId))
-            .where(
-              and(
-                eq(latest.to, addr),
-                ne(collections.slug, "empty-collection"),
-                ...collectionFilters,
-              ),
-            )
-        : null;
-
-    const [results, countResult] = await Promise.all([mainQuery, countQuery]);
+    const results = await mainQuery;
 
     const hasNext = results.length > PER_PAGE;
     const nextCursor = hasNext ? cursorAfter(results[PER_PAGE - 1]!) : undefined;
-    const total = countResult ? (countResult[0]?.count ?? 0) : undefined;
 
     return {
       nextCursor,
       objekts: results.slice(0, PER_PAGE).map((a) => mapOwnedObjekt(a.objekt, a.collection)),
-      total,
     };
   }
 
@@ -143,23 +122,7 @@ export async function fetchOwnedObjekts(
     .orderBy(...ORDER_BY)
     .limit(PER_PAGE + 1);
 
-  const countQuery =
-    ENABLE_COUNT && isFirstPage
-      ? indexer
-          .select({ count: count() })
-          .from(objekts)
-          .innerJoin(collections, eq(objekts.collectionId, collections.id))
-          .where(
-            and(
-              eq(objekts.owner, addr),
-              ne(collections.slug, "empty-collection"),
-              ...collectionFilters,
-            ),
-          )
-      : null;
-
-  const [results, countResult] = await Promise.all([mainQuery, countQuery]);
-  const total = countResult ? (countResult[0]?.count ?? 0) : undefined;
+  const results = await mainQuery;
 
   const hasNext = results.length > PER_PAGE;
   const nextCursor = hasNext ? cursorAfter(results[PER_PAGE - 1]!) : undefined;
@@ -167,7 +130,6 @@ export async function fetchOwnedObjekts(
   return {
     nextCursor,
     objekts: results.slice(0, PER_PAGE).map((a) => mapOwnedObjekt(a.objekt, a.collection)),
-    total,
   };
 }
 
