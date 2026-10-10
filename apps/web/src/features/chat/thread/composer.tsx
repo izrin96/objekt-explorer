@@ -170,26 +170,28 @@ export function Composer({
         </div>
       ) : null}
 
-      <div className="flex items-end gap-2">
+      <div className="@container flex items-end gap-2">
         <Button
           variant="ghost"
-          size="icon"
+          size="sm"
           aria-label={m.chat_attach_title()}
           title={m.chat_attach_title()}
           onClick={() => setAttachOpen(true)}
           className="shrink-0"
         >
           <CardsThreeIcon />
+          <span className="hidden @lg:inline">{m.chat_attach_title()}</span>
         </Button>
         <Button
           variant="ghost"
-          size="icon"
+          size="sm"
           aria-label={m.offer_composer()}
           title={m.offer_composer()}
           onClick={onOffer}
           className="shrink-0"
         >
           <HandshakeIcon />
+          <span className="hidden @lg:inline">{m.offer_composer()}</span>
         </Button>
         <Textarea
           ref={textarea}

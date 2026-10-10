@@ -230,6 +230,7 @@ const conversationRowSchema = z.object({
     })
     /** null only on the starter's row of a conversation with no message yet */
     .nullable(),
+  context: cardViewSchema.nullable(),
   unread: z.boolean(),
   request: z.boolean(),
   archived: z.boolean(),

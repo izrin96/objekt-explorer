@@ -27,14 +27,13 @@ import { useMinuteClock } from "@/hooks/use-minute-clock";
 import { m } from "@/paraglide/messages";
 import { clearTyping, useChatTyping } from "@/stores/chat-typing";
 
+import { runPosition } from "./bubble-run";
 import { Composer } from "./composer";
 import { MessageItem } from "./message-item";
 import { BlockedNotice, MuteNotice, RequestBar } from "./thread-banners";
 import { ThreadHeader } from "./thread-header";
 import { useCatchUp, useMarkRead, useMuteEnd } from "./thread-hooks";
 
-/** Within this, consecutive messages from one side share one time stamp. */
-const GROUP_MS = 5 * 60_000;
 /** How close to the bottom still counts as reading the newest message. */
 const STICK_PX = 96;
 
@@ -194,11 +193,7 @@ function ThreadView({
                 const newDay =
                   hydrated &&
                   (!previous || dayLabel(previous.createdAt) !== dayLabel(message.createdAt));
-                const showTime =
-                  !next ||
-                  next.mine !== message.mine ||
-                  new Date(next.createdAt).getTime() - new Date(message.createdAt).getTime() >
-                    GROUP_MS;
+                const position = runPosition(previous, message, next);
                 return (
                   <Fragment key={message.id}>
                     {newDay ? (
@@ -228,7 +223,7 @@ function ThreadView({
                           />
                         ) : null
                       }
-                      showTime={showTime}
+                      position={position}
                       seen={message.id === seenId}
                       hydrated={hydrated}
                       now={now}

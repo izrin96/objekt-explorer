@@ -8,6 +8,8 @@ import { canUnsend } from "@/features/chat/thread-cache";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
+import { Bubble } from "./bubble";
+import type { RunPosition } from "./bubble-run";
 import { MessageActions } from "./message-actions";
 import { ObjektCardMessage } from "./objekt-card-message";
 
@@ -17,7 +19,7 @@ export function MessageItem({
   name,
   collection,
   offerCard,
-  showTime,
+  position,
   seen,
   hydrated,
   now,
@@ -28,8 +30,7 @@ export function MessageItem({
   name: string;
   collection: ValidObjekt | undefined;
   offerCard: ReactNode;
-  /** the last of a run from one side shows its time; the others keep it for screen readers */
-  showTime: boolean;
+  position: RunPosition;
   /** the latest of the viewer's messages the partner has read */
   seen: boolean;
   hydrated: boolean;
@@ -37,10 +38,12 @@ export function MessageItem({
   onOpen: (objekt: ValidObjekt) => void;
 }) {
   const { mine } = message;
+  // the last of a run from one side shows its time; the others keep it for screen readers
+  const showTime = position === "single" || position === "last";
   return (
     <li
       className={cn(
-        "flex max-w-[85%] flex-col gap-1 sm:max-w-md",
+        "flex max-w-[85%] flex-col gap-1",
         mine ? "items-end self-end" : "items-start self-start",
         showTime && "mb-2",
       )}
@@ -48,9 +51,9 @@ export function MessageItem({
       <span className="sr-only">{mine ? m.chat_sender_you() : m.chat_sender_name({ name })}</span>
       {offerCard}
       {message.unsent ? (
-        <p className="text-muted-foreground rounded-2xl border border-dashed px-3 py-2 text-sm italic">
+        <Bubble mine={mine} position={position} unsent>
           {m.chat_unsent()}
-        </p>
+        </Bubble>
       ) : (
         <div className="group flex max-w-full items-center gap-1">
           {/* the clock is the viewer's, so the window is read once the client renders */}
@@ -62,14 +65,9 @@ export function MessageItem({
               <ObjektCardMessage card={message.card} collection={collection} onOpen={onOpen} />
             ) : null}
             {message.body ? (
-              <p
-                className={cn(
-                  "rounded-2xl px-3 py-2 text-sm wrap-anywhere whitespace-pre-wrap",
-                  mine ? "bg-foreground text-background" : "bg-secondary text-foreground",
-                )}
-              >
+              <Bubble mine={mine} position={position}>
                 {message.body}
-              </p>
+              </Bubble>
             ) : null}
           </div>
         </div>

@@ -37,6 +37,8 @@
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
 
+  --color-chat-mine: var(--chat-mine);
+
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
 
@@ -165,6 +167,7 @@
   --foreground: oklch(0.205 0.006 285.911);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.205 0.006 285.911);
+  --chat-mine: oklch(0.92 0.004 286);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.205 0.006 285.911);
   --primary: oklch(0.225 0.006 285.902);
@@ -265,6 +268,7 @@
   --foreground: oklch(0.965 0.002 284.795);
   --card: oklch(0.178 0.004 285.886);
   --card-foreground: oklch(0.965 0.002 284.795);
+  --chat-mine: oklch(0.32 0.008 286);
   --popover: oklch(0.19 0.004 285.877);
   --popover-foreground: oklch(0.965 0.002 284.795);
   --primary: oklch(0.965 0.002 284.795);

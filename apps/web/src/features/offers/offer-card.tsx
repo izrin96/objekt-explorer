@@ -33,7 +33,7 @@ export function OfferCard({
 }) {
   if (!collapsed) {
     return (
-      <div className="bg-background w-80 max-w-full rounded-lg border">
+      <div className="bg-card @container w-115 max-w-full rounded-lg border">
         <OfferBody
           offer={offer}
           name={name}
@@ -47,7 +47,7 @@ export function OfferCard({
   }
 
   return (
-    <Collapsible className="bg-background w-80 max-w-full rounded-lg border">
+    <Collapsible className="bg-card @container w-115 max-w-full rounded-lg border">
       <CollapsibleTrigger className="group focus-visible:ring-ring flex w-full items-center gap-2 rounded-lg px-3 py-2 text-start text-sm outline-none focus-visible:ring-2">
         <CaretRightIcon
           aria-hidden

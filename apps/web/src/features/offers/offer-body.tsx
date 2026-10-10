@@ -1,4 +1,4 @@
-import { CaretRightIcon, WarningIcon } from "@phosphor-icons/react";
+import { ArrowsLeftRightIcon, CaretRightIcon, WarningIcon } from "@phosphor-icons/react";
 import type { OfferView } from "@repo/api/schemas/offer";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { Link } from "@tanstack/react-router";
@@ -66,18 +66,24 @@ export function OfferBody({
         </Badge>
       </header>
 
-      <OfferSideList
-        label={m.offer_side_give()}
-        items={offer.give}
-        collections={collections}
-        onOpen={onOpen}
-      />
-      <OfferSideList
-        label={m.offer_side_get()}
-        items={offer.get}
-        collections={collections}
-        onOpen={onOpen}
-      />
+      <div className="grid gap-3 @md:grid-cols-[1fr_auto_1fr]">
+        <OfferSideList
+          label={m.offer_side_give()}
+          items={offer.give}
+          collections={collections}
+          onOpen={onOpen}
+        />
+        <ArrowsLeftRightIcon
+          aria-hidden
+          className="text-muted-foreground mt-6 hidden size-4 @md:block"
+        />
+        <OfferSideList
+          label={m.offer_side_get()}
+          items={offer.get}
+          collections={collections}
+          onOpen={onOpen}
+        />
+      </div>
 
       {offer.topup ? (
         <p className="text-warning-foreground flex items-start gap-1.5 text-xs text-pretty">
@@ -120,50 +126,58 @@ export function OfferBody({
         </Link>
       ) : null}
 
-      {open && hydrated ? (
-        <p className="text-muted-foreground text-xs">{expiresLabel(offer.expiresAt)}</p>
-      ) : null}
-
-      {offer.actions.length > 0 ? (
-        <div className="flex flex-wrap justify-end gap-2">
-          {offer.actions.includes("withdraw") ? (
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={busy}
-              loading={actions.withdraw.isPending}
-              onClick={() => actions.withdraw.mutate({ offerId: offer.id })}
-            >
-              {m.offer_withdraw()}
-            </Button>
+      {(open && hydrated) || offer.actions.length > 0 ? (
+        <footer className="flex flex-wrap items-center justify-between gap-2">
+          {open && hydrated ? (
+            <p className="text-muted-foreground text-xs">{expiresLabel(offer.expiresAt)}</p>
           ) : null}
-          {offer.actions.includes("decline") ? (
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={busy}
-              loading={actions.decline.isPending}
-              onClick={() => actions.decline.mutate({ offerId: offer.id })}
-            >
-              {m.offer_decline()}
-            </Button>
+          {offer.actions.length > 0 ? (
+            <div className="ms-auto flex flex-wrap justify-end gap-2">
+              {offer.actions.includes("withdraw") ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={busy}
+                  loading={actions.withdraw.isPending}
+                  onClick={() => actions.withdraw.mutate({ offerId: offer.id })}
+                >
+                  {m.offer_withdraw()}
+                </Button>
+              ) : null}
+              {offer.actions.includes("decline") ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={busy}
+                  loading={actions.decline.isPending}
+                  onClick={() => actions.decline.mutate({ offerId: offer.id })}
+                >
+                  {m.offer_decline()}
+                </Button>
+              ) : null}
+              {offer.actions.includes("counter") ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={busy}
+                  onClick={() => onCounter(offer)}
+                >
+                  {m.offer_counter()}
+                </Button>
+              ) : null}
+              {offer.actions.includes("accept") ? (
+                <Button
+                  size="sm"
+                  disabled={busy}
+                  loading={actions.accept.isPending}
+                  onClick={() => actions.accept.mutate({ offerId: offer.id })}
+                >
+                  {m.offer_accept()}
+                </Button>
+              ) : null}
+            </div>
           ) : null}
-          {offer.actions.includes("counter") ? (
-            <Button variant="outline" size="sm" disabled={busy} onClick={() => onCounter(offer)}>
-              {m.offer_counter()}
-            </Button>
-          ) : null}
-          {offer.actions.includes("accept") ? (
-            <Button
-              size="sm"
-              disabled={busy}
-              loading={actions.accept.isPending}
-              onClick={() => actions.accept.mutate({ offerId: offer.id })}
-            >
-              {m.offer_accept()}
-            </Button>
-          ) : null}
-        </div>
+        </footer>
       ) : null}
     </div>
   );

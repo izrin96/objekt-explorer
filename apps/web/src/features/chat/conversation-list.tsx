@@ -7,6 +7,7 @@ import {
   WarningIcon,
 } from "@phosphor-icons/react";
 import type { ChatBox, ConversationRow } from "@repo/api/schemas/chat";
+import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { Link, useHydrated } from "@tanstack/react-router";
 
@@ -16,7 +17,9 @@ import { InfiniteSentinel } from "@/components/shared/infinite-sentinel";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { collectionName } from "@/features/objekt/objekt-label";
 import { offerNo } from "@/features/offers/format";
+import { OfferThumb } from "@/features/offers/offer-item";
 import { useMinuteClock } from "@/hooks/use-minute-clock";
 import { relativeTime } from "@/lib/time";
 import { cn } from "@/lib/utils";
@@ -55,6 +58,7 @@ export function ConversationList({ box }: { box: ChatBox }) {
   }
 
   const rows = query.data.pages.flatMap((page) => page.items);
+  const collections = Object.assign({}, ...query.data.pages.map((page) => page.collections));
   if (rows.length === 0) {
     const empty = EMPTY[box];
     return (
@@ -66,7 +70,7 @@ export function ConversationList({ box }: { box: ChatBox }) {
     <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
       <ul className="flex flex-col p-2">
         {rows.map((row) => (
-          <ConversationItem key={row.id} row={row} now={now} />
+          <ConversationItem key={row.id} row={row} collections={collections} now={now} />
         ))}
       </ul>
       <InfiniteSentinel
@@ -91,8 +95,17 @@ function preview(last: ConversationRow["last"]) {
   return last.mine ? m.chat_preview_mine({ text }) : text;
 }
 
-function ConversationItem({ row, now }: { row: ConversationRow; now: number }) {
-  const { partner, last, unread, muted } = row;
+function ConversationItem({
+  row,
+  collections,
+  now,
+}: {
+  row: ConversationRow;
+  collections: Record<string, ValidObjekt>;
+  now: number;
+}) {
+  const { partner, last, context, unread, muted } = row;
+  const contextCollection = context ? collections[context.collectionSlug] : undefined;
   const name = partner.identity.name;
   const hydrated = useHydrated();
   // the exact end of a mute is in the viewer's time zone, which the server render does not know
@@ -112,7 +125,7 @@ function ConversationItem({ row, now }: { row: ConversationRow; now: number }) {
           {partner.user.image ? <AvatarImage src={partner.user.image} alt="" /> : null}
           <AvatarFallback>{name.slice(0, 1).toUpperCase()}</AvatarFallback>
         </Avatar>
-        <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
           <span className="flex min-w-0 items-baseline gap-2">
             <span
               className={cn(
@@ -154,7 +167,24 @@ function ConversationItem({ row, now }: { row: ConversationRow; now: number }) {
               </span>
             ) : null}
           </span>
-        </span>
+          {context ? (
+            <div className="mt-1 flex min-w-0 items-center gap-2">
+              <div aria-hidden className="flex">
+                <OfferThumb
+                  slug={context.collectionSlug}
+                  collection={contextCollection}
+                  className="w-7"
+                />
+              </div>
+              <span className="text-muted-foreground min-w-0 truncate font-mono text-xs">
+                {collectionName(context.collectionSlug, contextCollection)}
+                {context.serial !== null
+                  ? ` ${m.chat_card_serial({ serial: context.serial })}`
+                  : ""}
+              </span>
+            </div>
+          ) : null}
+        </div>
       </Link>
       <ConversationMenu
         conversation={row}

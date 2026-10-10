@@ -20,7 +20,7 @@ import { loadIdentities } from "../identities";
 import { toPublicUser } from "../profile";
 import { reputationOf } from "../reputation";
 import { notBlockedBy } from "../safety";
-import { parseCard, toChatMessages } from "./cards";
+import { hydrateCards, parseCard, toChatMessages } from "./cards";
 import { findMembership, updateMember } from "./members";
 import { publishChatChanged } from "./notify";
 import { chatSafety } from "./safety";
@@ -57,6 +57,7 @@ type ConversationListRow = {
   unsent: boolean | null;
   created_at: string | null;
   incoming_id: string | null;
+  context_card: unknown;
 };
 
 /** The id of the newest message the other member sent and did not unsend: unread is measured by it. */
@@ -106,10 +107,17 @@ export async function listConversations(
       msg.offer_id,
       msg.unsent_at IS NOT NULL AS unsent,
       msg.created_at::text AS created_at,
-      ${lastIncoming(me)} AS incoming_id
+      ${lastIncoming(me)} AS incoming_id,
+      ctx.card AS context_card
     FROM conversation_member m
     JOIN conversation c ON c.id = m.conversation_id
     LEFT JOIN message msg ON msg.id = c.last_message_id
+    LEFT JOIN LATERAL (
+      SELECT x.card FROM message x
+      WHERE x.conversation_id = c.id AND x.card IS NOT NULL AND x.unsent_at IS NULL
+      ORDER BY x.id DESC
+      LIMIT 1
+    ) ctx ON true
     WHERE m.user_id = ${me}
       AND ${visibleIn(box, me)}
       AND (c.last_message_id IS NOT NULL OR c.created_by = ${me})
@@ -119,8 +127,12 @@ export async function listConversations(
   `);
 
   const page = result.rows.slice(0, CONVERSATION_PAGE_SIZE);
-  const partners = await fetchPartners(page.map((row) => row.partner_id));
-  const items = page.flatMap((row): ConversationRow[] => {
+  const contexts = page.map((row) => parseCard(row.context_card));
+  const [partners, { view, collections }] = await Promise.all([
+    fetchPartners(page.map((row) => row.partner_id)),
+    hydrateCards(contexts.filter((card) => card !== null)),
+  ]);
+  const items = page.flatMap((row, i): ConversationRow[] => {
     const partner = partners.get(row.partner_id);
     if (!partner) return [];
     const last =
@@ -143,6 +155,7 @@ export async function listConversations(
           createdAt: new Date(last.createdAt).toISOString(),
           unsent: row.unsent === true,
         },
+        context: contexts[i] ? view(contexts[i]) : null,
         unread: rowUnread({ request: row.request, lastReadMessageId: lastRead }, incoming, me),
         request: row.request,
         archived: row.archived_at !== null,
@@ -154,6 +167,7 @@ export async function listConversations(
   const lastRow = page.at(-1);
   return {
     items,
+    collections,
     nextCursor:
       result.rows.length > CONVERSATION_PAGE_SIZE && lastRow
         ? { at: lastRow.active_at, id: lastRow.id }
