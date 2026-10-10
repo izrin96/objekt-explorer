@@ -20,13 +20,21 @@ export function Signals({ data }: { data: Account }) {
         {m.mod_signals()}
       </h2>
       <StatRow
-        className="grid-cols-2 sm:grid-cols-4"
+        className="grid-cols-2 sm:grid-cols-3 xl:grid-cols-2 xl:*:border-s-0 xl:*:ps-0"
         stats={[
           {
             label: m.mod_signal_joined(),
             value: hydrated ? formatTimestamp(new Date(data.account.createdAt)).slice(0, 10) : "",
           },
           { label: m.mod_signal_starts(), value: data.startsLast24h.toLocaleString() },
+          {
+            label: m.mod_signal_verified(),
+            value: (data.reputation?.verified ?? 0).toLocaleString(),
+          },
+          {
+            label: m.mod_signal_unfinished(),
+            value: (data.reputation?.unfinished ?? 0).toLocaleString(),
+          },
           ...FLAG_CATEGORIES.map((category) => ({
             label: FLAG_LABEL[category](),
             value: data.flags[category].toLocaleString(),

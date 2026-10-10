@@ -7,7 +7,7 @@ import {
 import { FLAG_CATEGORIES } from "@repo/api/schemas/chat";
 import { REPORT_REASONS } from "@repo/api/schemas/moderation";
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
+import { Link, useParams } from "@tanstack/react-router";
 
 import { EmptyState } from "@/components/shared/empty-state";
 import { RowsSkeleton } from "@/components/shared/rows-skeleton";
@@ -23,6 +23,7 @@ import { When } from "./when";
 /** Open reports grouped by the reported account, newest report first. */
 export function ModQueue() {
   const query = useQuery(queueOptions());
+  const openId = useParams({ strict: false, select: (params) => params.userId });
 
   if (query.isPending) return <ModQueueSkeleton />;
 
@@ -57,12 +58,14 @@ export function ModQueue() {
         const name = row.identity.name;
         const reasons = REPORT_REASONS.filter((reason) => row.reasons[reason] > 0);
         const flags = FLAG_CATEGORIES.filter((category) => row.flags[category] > 0);
+        const current = row.userId === openId;
         return (
           <li key={row.userId}>
             <Link
               to="/mod/reports/$userId"
               params={{ userId: row.userId }}
-              className="hover:bg-secondary/60 focus-visible:ring-ring flex items-center gap-3 px-4 py-3 outline-none focus-visible:ring-2 focus-visible:ring-inset"
+              aria-current={current ? "page" : undefined}
+              className="hover:bg-secondary/60 focus-visible:ring-ring aria-[current=page]:bg-secondary flex items-center gap-3 px-4 py-3 outline-none focus-visible:ring-2 focus-visible:ring-inset"
             >
               <Avatar className="size-9 shrink-0">
                 {row.user.image ? <AvatarImage src={row.user.image} alt="" /> : null}
@@ -74,6 +77,11 @@ export function ModQueue() {
                   <span className="text-muted-foreground text-sm tabular-nums">
                     {m.mod_queue_open({ count: row.openReports })}
                   </span>
+                  {row.sharedExcerpts > 0 ? (
+                    <span className="text-muted-foreground text-sm tabular-nums">
+                      {m.mod_queue_shared({ count: row.sharedExcerpts })}
+                    </span>
+                  ) : null}
                 </span>
                 <span className="flex flex-wrap gap-1.5">
                   {reasons.map((reason) => (
@@ -93,7 +101,7 @@ export function ModQueue() {
               </span>
               <When
                 iso={row.latestAt}
-                className="text-muted-foreground shrink-0 font-mono text-xs tabular-nums max-sm:hidden"
+                className="text-muted-foreground shrink-0 font-mono text-xs tabular-nums max-sm:hidden xl:hidden"
               />
               <CaretRightIcon aria-hidden className="text-muted-foreground size-4 shrink-0" />
             </Link>

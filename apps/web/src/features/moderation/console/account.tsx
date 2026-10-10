@@ -5,7 +5,6 @@ import { Link } from "@tanstack/react-router";
 
 import { PendingStatus } from "@/components/router/pending";
 import { EmptyState } from "@/components/shared/empty-state";
-import { PageHeader } from "@/components/shared/page-header";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -23,23 +22,40 @@ import { Sanctions } from "./sanctions";
 import { Signals } from "./signals";
 import { AttachedTrades } from "./trades";
 
-export function ModAccount({ userId, viewerIsAdmin }: { userId: string; viewerIsAdmin: boolean }) {
+const accountFrame =
+  "flex flex-col gap-6 xl:col-span-2 xl:grid xl:grid-cols-subgrid xl:items-start";
+
+// below `lg` a pane's children join one column, ordered by `order-*`: signals, reports, actions,
+// sanctions, audit. From `lg` each pane is its own column.
+const pane = "contents xl:flex xl:min-w-0 xl:flex-col xl:gap-6";
+
+export function ModAccount({
+  userId,
+  selectedReport,
+  viewerIsAdmin,
+}: {
+  userId: string;
+  selectedReport: number | undefined;
+  viewerIsAdmin: boolean;
+}) {
   const query = useQuery(accountOptions(userId));
 
   if (query.isPending) return <ModAccountSkeleton />;
 
   if (query.isError) {
     return (
-      <EmptyState
-        icon={WarningIcon}
-        title={m.common_error_loading_data()}
-        action={
-          <Button variant="outline" size="sm" onClick={() => void query.refetch()}>
-            <ArrowClockwiseIcon />
-            {m.common_error_retry()}
-          </Button>
-        }
-      />
+      <div className="xl:col-span-2">
+        <EmptyState
+          icon={WarningIcon}
+          title={m.common_error_loading_data()}
+          action={
+            <Button variant="outline" size="sm" onClick={() => void query.refetch()}>
+              <ArrowClockwiseIcon />
+              {m.common_error_retry()}
+            </Button>
+          }
+        />
+      </div>
     );
   }
 
@@ -49,64 +65,78 @@ export function ModAccount({ userId, viewerIsAdmin }: { userId: string; viewerIs
   const staff = isStaffRole(account.role);
 
   return (
-    <>
-      <Button
-        variant="ghost"
-        size="sm"
-        className="-ms-2 self-start"
-        render={<Link to="/mod/reports" />}
-      >
-        <ArrowLeftIcon />
-        {m.mod_back_to_queue()}
-      </Button>
+    <div className={accountFrame}>
+      <div className={pane}>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="-ms-2 self-start xl:hidden"
+          render={<Link to="/mod/reports" />}
+        >
+          <ArrowLeftIcon />
+          {m.mod_back_to_queue()}
+        </Button>
 
-      <div className="flex items-center gap-3">
-        <Avatar className="size-12 shrink-0">
-          {account.user.image ? <AvatarImage src={account.user.image} alt="" /> : null}
-          <AvatarFallback>{name.slice(0, 1).toUpperCase()}</AvatarFallback>
-        </Avatar>
-        <div className="flex min-w-0 flex-col gap-1">
-          <PageHeader title={name} />
-          <div className="flex flex-wrap items-center gap-1.5">
-            {roleList(account.role)
-              .filter((role) => role !== "user")
-              .map((role) => (
-                <Badge key={role} variant="outline" size="sm">
-                  {roleLabel(role)}
+        <div className="flex items-center gap-3">
+          <Avatar className="size-12 shrink-0">
+            {account.user.image ? <AvatarImage src={account.user.image} alt="" /> : null}
+            <AvatarFallback>{name.slice(0, 1).toUpperCase()}</AvatarFallback>
+          </Avatar>
+          <div className="flex min-w-0 flex-col gap-1">
+            <h2 className="font-display text-xl font-semibold tracking-tight text-balance">
+              {name}
+            </h2>
+            <div className="flex flex-wrap items-center gap-1.5">
+              {roleList(account.role)
+                .filter((role) => role !== "user")
+                .map((role) => (
+                  <Badge key={role} variant="outline" size="sm">
+                    {roleLabel(role)}
+                  </Badge>
+                ))}
+              {account.banned ? (
+                <Badge variant="destructive" size="sm">
+                  {m.mod_banned()}
                 </Badge>
-              ))}
-            {account.banned ? (
-              <Badge variant="destructive" size="sm">
-                {m.mod_banned()}
-              </Badge>
-            ) : null}
-            {account.identity.address ? (
-              <ProfileLink
-                address={account.identity.address}
-                nickname={account.identity.nickname}
-                className="text-sm underline-offset-2 hover:underline"
-              >
-                {m.mod_view_profile()}
-              </ProfileLink>
-            ) : null}
+              ) : null}
+              {account.identity.address ? (
+                <ProfileLink
+                  address={account.identity.address}
+                  nickname={account.identity.nickname}
+                  className="text-sm underline-offset-2 hover:underline"
+                >
+                  {m.mod_view_profile()}
+                </ProfileLink>
+              ) : null}
+            </div>
           </div>
         </div>
-      </div>
 
-      <Signals data={data} />
-
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_--spacing(96)]">
-        <div className="flex min-w-0 flex-col gap-6">
-          <Reports reports={data.reports} collections={data.tradeCollections} targetName={name} />
-          <AttachedTrades
-            trades={data.trades}
+        <div className="order-2 min-w-0">
+          <Reports
+            reports={data.reports}
             collections={data.tradeCollections}
             targetName={name}
+            userId={userId}
+            selectedReport={selectedReport}
           />
-          <Sanctions sanctions={data.sanctions} staffTarget={staff && !viewerIsAdmin} />
-          <Audit audit={data.audit} />
         </div>
-        <aside className="flex min-w-0 flex-col gap-6">
+        {data.trades.length > 0 ? (
+          <div className="order-2 min-w-0">
+            <AttachedTrades
+              trades={data.trades}
+              collections={data.tradeCollections}
+              targetName={name}
+            />
+          </div>
+        ) : null}
+      </div>
+
+      <div className={pane}>
+        <div className="order-1 min-w-0">
+          <Signals data={data} />
+        </div>
+        <div className="order-3 flex min-w-0 flex-col gap-6">
           {staff && !viewerIsAdmin ? (
             <p className="text-muted-foreground rounded-lg border border-dashed p-4 text-sm text-pretty">
               {m.mod_staff_target()}
@@ -117,16 +147,22 @@ export function ModAccount({ userId, viewerIsAdmin }: { userId: string; viewerIs
           {viewerIsAdmin && !roleList(account.role).includes("admin") ? (
             <RoleControl userId={account.userId} name={name} isModerator={staff} />
           ) : null}
-        </aside>
+        </div>
+        <div className="order-4 min-w-0">
+          <Sanctions sanctions={data.sanctions} staffTarget={staff && !viewerIsAdmin} />
+        </div>
+        <div className="order-5 min-w-0">
+          <Audit audit={data.audit} />
+        </div>
       </div>
-    </>
+    </div>
   );
 }
 
 /** Also the route's pending view. */
 export function ModAccountSkeleton() {
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 xl:col-span-2">
       <PendingStatus />
       <Skeleton className="h-10 w-1/2" />
       <Skeleton className="h-24 rounded-lg" />

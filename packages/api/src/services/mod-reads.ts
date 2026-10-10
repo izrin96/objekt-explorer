@@ -11,11 +11,13 @@ import {
 } from "@repo/db/schema";
 import { and, desc, eq, gt, inArray, sql } from "drizzle-orm";
 
+import { flagExcerpt } from "../lib/excerpt-flags";
 import { iso } from "../lib/time";
 import { FLAG_CATEGORIES, type FlagCategory } from "../schemas/chat";
 import { excerptEntrySchema, REPORT_REASONS, type ReportReason } from "../schemas/moderation";
 import { fetchPartners, hydrateCards } from "./chat";
 import { findAccount, sanctionColumns } from "./moderation";
+import { reputationOf } from "./reputation";
 
 const PAGE_LIMIT = 100;
 
@@ -104,6 +106,7 @@ export async function reportQueue() {
       userId: report.targetUserId,
       open: sql<number>`count(*)::int`,
       latestAt: sql<string>`max(${report.createdAt})::text`,
+      shared: sql<number>`count(*) FILTER (WHERE ${report.excerpt} IS NOT NULL)::int`,
     })
     .from(report)
     .where(eq(report.status, "open"))
@@ -134,6 +137,7 @@ export async function reportQueue() {
       {
         ...partner,
         openReports: group.open,
+        sharedExcerpts: group.shared,
         latestAt: iso(group.latestAt)!,
         reasons: countBy<ReportReason>(
           REPORT_REASONS,
@@ -150,62 +154,64 @@ export async function reportQueue() {
 
 export async function accountDossier(userId: string) {
   const account = await findAccount(userId);
-  const [partners, addresses, [starts], flags, reports, sanctions, auditRows] = await Promise.all([
-    fetchPartners([userId]),
-    db
-      .select({
-        address: userAddress.address,
-        nickname: userAddress.nickname,
-        linkedAt: userAddress.linkedAt,
-      })
-      .from(userAddress)
-      .where(eq(userAddress.userId, userId)),
-    db
-      .select({ count: sql<number>`count(*)::int` })
-      .from(conversation)
-      .where(
-        and(
-          eq(conversation.createdBy, userId),
-          gt(conversation.createdAt, sql`now() - interval '24 hours'`),
+  const [partners, addresses, [starts], flags, reports, sanctions, auditRows, reputations] =
+    await Promise.all([
+      fetchPartners([userId]),
+      db
+        .select({
+          address: userAddress.address,
+          nickname: userAddress.nickname,
+          linkedAt: userAddress.linkedAt,
+        })
+        .from(userAddress)
+        .where(eq(userAddress.userId, userId)),
+      db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(conversation)
+        .where(
+          and(
+            eq(conversation.createdBy, userId),
+            gt(conversation.createdAt, sql`now() - interval '24 hours'`),
+          ),
         ),
-      ),
-    flagCounts([userId]),
-    db
-      .select({
-        id: report.id,
-        reporterId: report.reporterId,
-        reason: report.reason,
-        note: report.note,
-        excerpt: report.excerpt,
-        status: report.status,
-        conversationId: report.conversationId,
-        tradeId: report.tradeId,
-        createdAt: report.createdAt,
-        resolvedAt: report.resolvedAt,
-      })
-      .from(report)
-      .where(eq(report.targetUserId, userId))
-      .orderBy(desc(report.createdAt))
-      .limit(PAGE_LIMIT),
-    db
-      .select(sanctionColumns)
-      .from(userSanction)
-      .where(eq(userSanction.userId, userId))
-      .orderBy(desc(userSanction.createdAt)),
-    db
-      .select({
-        id: modAudit.id,
-        actorId: modAudit.actorId,
-        action: modAudit.action,
-        reportIds: modAudit.reportIds,
-        detail: modAudit.detail,
-        createdAt: modAudit.createdAt,
-      })
-      .from(modAudit)
-      .where(eq(modAudit.targetUserId, userId))
-      .orderBy(desc(modAudit.createdAt))
-      .limit(PAGE_LIMIT),
-  ]);
+      flagCounts([userId]),
+      db
+        .select({
+          id: report.id,
+          reporterId: report.reporterId,
+          reason: report.reason,
+          note: report.note,
+          excerpt: report.excerpt,
+          status: report.status,
+          conversationId: report.conversationId,
+          tradeId: report.tradeId,
+          createdAt: report.createdAt,
+          resolvedAt: report.resolvedAt,
+        })
+        .from(report)
+        .where(eq(report.targetUserId, userId))
+        .orderBy(desc(report.createdAt))
+        .limit(PAGE_LIMIT),
+      db
+        .select(sanctionColumns)
+        .from(userSanction)
+        .where(eq(userSanction.userId, userId))
+        .orderBy(desc(userSanction.createdAt)),
+      db
+        .select({
+          id: modAudit.id,
+          actorId: modAudit.actorId,
+          action: modAudit.action,
+          reportIds: modAudit.reportIds,
+          detail: modAudit.detail,
+          createdAt: modAudit.createdAt,
+        })
+        .from(modAudit)
+        .where(eq(modAudit.targetUserId, userId))
+        .orderBy(desc(modAudit.createdAt))
+        .limit(PAGE_LIMIT),
+      reputationOf([userId]),
+    ]);
 
   const attached = await attachedTrades(
     userId,
@@ -234,6 +240,7 @@ export async function accountDossier(userId: string) {
       linkedAt: iso(a.linkedAt),
     })),
     startsLast24h: starts?.count ?? 0,
+    reputation: reputations.get(userId) ?? null,
     flags: countBy<FlagCategory>(
       FLAG_CATEGORIES,
       flags.map((row) => ({ key: row.key, count: row.count })),
@@ -248,7 +255,7 @@ export async function accountDossier(userId: string) {
         status: r.status,
         fromConversation: r.conversationId !== null,
         tradeId: r.tradeId,
-        excerpt: excerpt.success ? excerpt.data : null,
+        excerpt: excerpt.success ? flagExcerpt(excerpt.data) : null,
         createdAt: iso(r.createdAt)!,
         resolvedAt: iso(r.resolvedAt),
       };

@@ -1,35 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { PageHeader } from "@/components/shared/page-header";
-import { queueOptions } from "@/features/moderation/console/queries";
-import { ModQueue, ModQueueSkeleton } from "@/features/moderation/console/queue";
 import { generateMetadata } from "@/lib/meta";
 import { m } from "@/paraglide/messages";
 
 export const Route = createFileRoute("/(container)/mod/reports/")({
-  loader: async ({ context: { queryClient } }) => {
-    // a failed read leaves the queue to show its error and retry, not the page to fail
-    await queryClient.query({ ...queueOptions(), staleTime: "static" }).catch(() => undefined);
-  },
   head: () => generateMetadata({ title: m.page_titles_mod_reports() }),
-  component: QueuePage,
-  pendingComponent: QueuePending,
+  component: PickAccount,
 });
 
-function QueuePage() {
+// below `lg` the queue is the whole page, so the prompt has nothing to point at
+function PickAccount() {
   return (
-    <>
-      <PageHeader title={m.mod_queue_title()} description={m.mod_queue_description()} />
-      <ModQueue />
-    </>
-  );
-}
-
-function QueuePending() {
-  return (
-    <>
-      <PageHeader title={m.mod_queue_title()} description={m.mod_queue_description()} />
-      <ModQueueSkeleton />
-    </>
+    <p className="text-muted-foreground rounded-lg border border-dashed p-6 text-center text-sm text-pretty max-xl:hidden xl:col-span-2">
+      {m.mod_pick_account()}
+    </p>
   );
 }
