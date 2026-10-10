@@ -1,7 +1,10 @@
+import { InfoIcon } from "@phosphor-icons/react";
 import { canBeOnTrade, type ListTypeNew, type PublicList } from "@repo/api/schemas/list";
+import { Link } from "@tanstack/react-router";
 import slugify from "slugify";
 import * as z from "zod";
 
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -286,6 +289,25 @@ export function ListForm({ idPrefix, value, onChange, lists, profiles, mode, url
             {m.list_create_link_list_desc()}
           </span>
         </div>
+      ) : null}
+
+      {/* binding is set only here, and without it a have or sale list never goes on Trade */}
+      {bindable && !isEdit && (profiles.length === 0 || !value.isProfileBind) ? (
+        <Alert>
+          <InfoIcon aria-hidden />
+          <AlertDescription>
+            {profiles.length === 0 ? (
+              <>
+                {m.list_create_bind_note_link()}{" "}
+                <Link to="/link/connect" className="font-medium underline underline-offset-2">
+                  {m.link_link_cosmo()}
+                </Link>
+              </>
+            ) : (
+              m.list_create_bind_note_off()
+            )}
+          </AlertDescription>
+        </Alert>
       ) : null}
 
       <Field name="profileAddress" className="min-w-0 gap-1.5">
