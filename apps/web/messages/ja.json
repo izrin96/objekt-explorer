@@ -182,7 +182,7 @@
   "trade_compare_want_link_off": "希望：{list}のみ。紐付いた所持リストはプロフィールに紐付けるまで交換に出ないため、このリストのObjektを持つ人を表示します。",
   "trade_match_help_aria": "マッチの仕組み",
   "trade_match_help_title": "「あなたへ」のマッチの仕組み",
-  "trade_match_help_mutual": "相互：1対1の交換がおよそ何件できるかを表します。",
+  "trade_match_help_mutual": "相互：2つの件数のうち小さいほう。販売リストも数えるため、目安です。",
   "trade_match_help_show": "表示：全員、相互、または片方向。双方向でマッチする人が先、30日間リストの変更がない人は最後に表示されます。",
   "trade_match_help_compare": "比較するリスト：そのリストと紐付いたリストだけを比較します。紐付けのないリストは片方向だけです。",
   "trade_match_help_owned": "所持中で転送できるObjektだけを数えます。非表示・ブロックした人は表示されません。",

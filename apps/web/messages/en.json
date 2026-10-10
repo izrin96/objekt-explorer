@@ -182,7 +182,7 @@
   "trade_compare_want_link_off": "What you want: {list} only. Its linked have list isn't on Trade until it's bound to a profile, so this shows who has what's on it.",
   "trade_match_help_aria": "How matching works",
   "trade_match_help_title": "How For you matches",
-  "trade_match_help_mutual": "Mutual: roughly how many one-for-one trades you could make.",
+  "trade_match_help_mutual": "Mutual: the smaller of the two counts. Sale listings count too, so treat it as a rough guide.",
   "trade_match_help_show": "Show: everyone, mutual, or one way. People matching both ways come first; people with no list changes in 30 days go last.",
   "trade_match_help_compare": "Compare with: one list plus its linked list. A list with no link compares one way.",
   "trade_match_help_owned": "Only owned, transferable objekts count. Hidden and blocked people aren't shown.",
