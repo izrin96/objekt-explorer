@@ -82,7 +82,7 @@ export async function fetchViewer(userId: string): Promise<Viewer> {
       .selectDistinct({
         listId: listEntries.listId,
         slug: listEntries.collectionSlug,
-        linkedListId: lists.linkedListId,
+        matchSale: lists.matchSale,
       })
       .from(listEntries)
       .innerJoin(lists, eq(lists.id, listEntries.listId))
@@ -102,9 +102,7 @@ export async function fetchViewer(userId: string): Promise<Viewer> {
   }
   const have = new Map(haveIndex);
   const saleIds = new Set(saleLists.map((list) => list.id));
-  const tradeOnlyIds = new Set(
-    wantRows.flatMap((row) => (row.linkedListId === null ? [] : [row.listId])),
-  );
+  const tradeOnlyIds = new Set(wantRows.flatMap((row) => (row.matchSale ? [] : [row.listId])));
   return {
     have,
     want,

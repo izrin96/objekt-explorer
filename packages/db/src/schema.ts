@@ -90,6 +90,8 @@ export const lists = pgTable(
     description: text("description"),
     currency: varchar("currency", { length: 10 }),
     discoverable: boolean("discoverable").notNull().default(false),
+    /** a want list's matches include sale lists; off, it matches have lists only */
+    matchSale: boolean("match_sale").notNull().default(true),
     updatedAt: timestamp("updated_at", { mode: "string", withTimezone: true })
       .notNull()
       .defaultNow(),

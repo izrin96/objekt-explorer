@@ -4,7 +4,7 @@ import { sql } from "drizzle-orm";
 import { CANDIDATE_LIMIT, type Candidate } from "../../lib/trade-rank";
 import type { TradeFilter } from "../../schemas/trade";
 import { notBlockedEither, notTradeSanctioned } from "../safety";
-import { offerMatchesWantSql, takesPartInTradeSql, wantTakesSalesSql } from "../trade-lists";
+import { offerMatchesWantSql, takesPartInTradeSql } from "../trade-lists";
 
 const HAVING: Record<TradeFilter, ReturnType<typeof sql>> = {
   all: sql``,
@@ -38,7 +38,7 @@ export async function fetchTradeCandidates(
 ): Promise<Candidate[]> {
   const result = await db.execute<CandidateRow>(sql`
     WITH my_want AS (
-      SELECT e.collection_slug, bool_or(${wantTakesSalesSql("l")}) AS takes_sales
+      SELECT e.collection_slug, bool_or(l.match_sale) AS match_sale
       FROM list_entries e
       JOIN lists l ON l.id = e.list_id
       WHERE e.list_id = ANY(${sql.param(sides.wantListIds)}::int[]) AND e.collection_slug IS NOT NULL
@@ -52,8 +52,7 @@ export async function fetchTradeCandidates(
       GROUP BY e.collection_slug
     ),
     partner_lists AS (
-      SELECT l.id, l.user_id, l.list_type_new, ${wantTakesSalesSql("l")} AS takes_sales, l.updated_at
-      FROM lists l
+      SELECT l.id, l.user_id, l.list_type_new, l.match_sale, l.updated_at FROM lists l
       WHERE l.discoverable
         AND ${takesPartInTradeSql("l")}
         AND l.user_id <> ${userId}
@@ -65,18 +64,18 @@ export async function fetchTradeCandidates(
         AND ${notTradeSanctioned(sql`l.user_id`)}
     ),
     matched AS (
-      SELECT p.user_id, p.id AS list_id, p.updated_at, p.takes_sales, true AS they_have,
+      SELECT p.user_id, p.id AS list_id, p.updated_at, p.match_sale, true AS they_have,
         e.collection_slug, e.objekt_id
       FROM partner_lists p
       JOIN list_entries e ON e.list_id = p.id
       JOIN my_want w ON w.collection_slug = e.collection_slug
-      WHERE p.list_type_new IN ('have', 'sale') AND ${offerMatchesWantSql("p", sql`w.takes_sales`)}
+      WHERE p.list_type_new IN ('have', 'sale') AND ${offerMatchesWantSql("p", "w")}
       UNION ALL
-      SELECT p.user_id, p.id, p.updated_at, p.takes_sales, false, e.collection_slug, NULL
+      SELECT p.user_id, p.id, p.updated_at, p.match_sale, false, e.collection_slug, NULL
       FROM partner_lists p
       JOIN list_entries e ON e.list_id = p.id
       JOIN my_have h ON h.collection_slug = e.collection_slug
-      WHERE p.list_type_new = 'want' AND (p.takes_sales OR h.on_have)
+      WHERE p.list_type_new = 'want' AND (p.match_sale OR h.on_have)
     ),
     grouped AS (
       SELECT
@@ -88,7 +87,7 @@ export async function fetchTradeCandidates(
           '[]'
         ) AS they_have,
         coalesce(
-          json_agg(DISTINCT jsonb_build_array(list_id, collection_slug, takes_sales))
+          json_agg(DISTINCT jsonb_build_array(list_id, collection_slug, match_sale))
             FILTER (WHERE NOT they_have),
           '[]'
         ) AS they_want,
@@ -109,6 +108,6 @@ export async function fetchTradeCandidates(
       Object.entries(row.list_updated_at).map(([id, at]) => [id, new Date(at).toISOString()]),
     ),
     theyHave: row.they_have.map(([listId, slug, objektId]) => ({ listId, slug, objektId })),
-    theyWant: row.they_want.map(([listId, slug, takesSales]) => ({ listId, slug, takesSales })),
+    theyWant: row.they_want.map(([listId, slug, matchSale]) => ({ listId, slug, matchSale })),
   }));
 }

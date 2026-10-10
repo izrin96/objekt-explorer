@@ -133,6 +133,7 @@ export const listCrud = {
                 ? normalizeCurrency(input.currency)
                 : null,
             discoverable,
+            matchSale: input.listTypeNew === "want" ? input.matchSale : true,
             bumpedAt: discoverable
               ? createdBumpedAt(linkedListId, input.listTypeNew, user.id)
               : null,
@@ -253,6 +254,7 @@ export const listCrud = {
                 ? input.hideSerial
                 : false,
             linkedListId,
+            matchSale: list.listTypeNew === "want" ? input.matchSale : undefined,
             ...tradeColumns(discoverable, linkedListId),
           })
           .where(eq(lists.id, list.id));

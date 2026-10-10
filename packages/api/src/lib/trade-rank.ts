@@ -111,7 +111,7 @@ export type Candidate = {
   /** their have and sale entries on collections I want */
   theyHave: OwnedEntry[];
   /** their want entries on collections I have, with whether the want list takes sales */
-  theyWant: { listId: number; slug: string; takesSales: boolean }[];
+  theyWant: { listId: number; slug: string; matchSale: boolean }[];
 };
 
 type Recounted = {
@@ -154,7 +154,7 @@ export function recount(
 
   for (const [slug, entries] of groupBySlug(candidate.theyWant)) {
     const judged = entries.flatMap((entry) => {
-      const mine = (entry.takesSales ? myHaves.all : myHaves.trade).get(slug);
+      const mine = (entry.matchSale ? myHaves.all : myHaves.trade).get(slug);
       return mine ? [{ listId: entry.listId, mine }] : [];
     });
     if (judged.length === 0) continue;

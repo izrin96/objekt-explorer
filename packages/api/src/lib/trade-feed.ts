@@ -15,6 +15,8 @@ export type TradeList = {
   userId: string;
   listTypeNew: ListTypeNew;
   linkedListId: number | null;
+  /** a want list's: whether sale lists match it */
+  matchSale: boolean;
   bumpedAt: string | null;
   updatedAt: string;
 };
@@ -38,18 +40,14 @@ export function latest(...times: (string | null)[]): string | null {
   return best;
 }
 
-/** A want list linked to a have list matches trades only; one with no link also takes sales. */
-export function takesSales(list: { linkedListId: number | null }) {
-  return list.linkedListId === null;
-}
-
 function postTag(post: {
   have: unknown;
-  want: { linkedListId: number | null } | null;
+  want: { matchSale: boolean } | null;
   sale: unknown;
 }): PostTag {
   if (post.sale) return "wts";
-  return post.have || (post.want && !takesSales(post.want)) ? "wtt" : "wtb";
+  // a want list set to match trades only is after a trade, not a purchase
+  return post.have || !post.want?.matchSale ? "wtt" : "wtb";
 }
 
 function toPost<L extends TradeList>(anchor: L, partner: L | null): Post<L> {
@@ -187,7 +185,7 @@ export function matchesViewer(match: { youHave: number; youWant: number } | unde
 /**
  * The viewer's have and sale lists (still-owned entries only) and want lists, by collection.
  * A sale list and a want list match only when the want list takes sales, so `tradeHave` drops
- * the sale lists and `saleWant` the want lists linked to a have list.
+ * the sale lists and `saleWant` the want lists that match trades only.
  */
 export type Viewer = {
   have: SlugIndex;
@@ -200,7 +198,7 @@ export type Viewer = {
 function indexFor(role: "have" | "want" | "sale", list: TradeList, viewer: Viewer) {
   if (role === "have") return viewer.want;
   if (role === "sale") return viewer.saleWant;
-  return takesSales(list) ? viewer.have : viewer.tradeHave;
+  return list.matchSale ? viewer.have : viewer.tradeHave;
 }
 
 type PostFilter = {

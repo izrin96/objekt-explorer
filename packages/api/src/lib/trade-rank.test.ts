@@ -137,13 +137,13 @@ describe("ownership", () => {
       userId: "A",
       listUpdatedAt: { 1: RECENT, 2: RECENT },
       theyHave: aHave.map((slug, i) => ({ listId: 1, slug, objektId: `a-${i}` })),
-      theyWant: aWant.map((slug) => ({ listId: 2, slug, takesSales: true })),
+      theyWant: aWant.map((slug) => ({ listId: 2, slug, matchSale: true })),
     };
     const b: Candidate = {
       userId: "B",
       listUpdatedAt: { 3: RECENT, 4: RECENT },
       theyHave: bHave.map((slug) => ({ listId: 3, slug, objektId: null })),
-      theyWant: bWant.map((slug) => ({ listId: 4, slug, takesSales: true })),
+      theyWant: bWant.map((slug) => ({ listId: 4, slug, matchSale: true })),
     };
 
     const owned = { objekts: ownedTokens, copies };
@@ -165,7 +165,7 @@ describe("ownership", () => {
       userId: "P",
       listUpdatedAt: { 5: RECENT },
       theyHave: [],
-      theyWant: [{ listId: 5, slug: "mine", takesSales: true }],
+      theyWant: [{ listId: 5, slug: "mine", matchSale: true }],
     };
     const result = recount(candidate, theirs, holdings, new Map(), { all: judged, trade: judged });
     expect(result.iHaveTheyWant).toEqual([]);
@@ -199,12 +199,12 @@ describe("recount details", () => {
     );
 
   test("my sale list answers a want list that takes sales", () => {
-    const result = wantedBy([{ listId: 8, slug: "x", takesSales: true }]);
+    const result = wantedBy([{ listId: 8, slug: "x", matchSale: true }]);
     expect(result.iHaveTheyWant).toEqual([{ slug: "x", myListIds: [2], partnerListIds: [8] }]);
   });
 
   test("a want list that matches trades only is judged on my have lists alone", () => {
-    const result = wantedBy([{ listId: 8, slug: "x", takesSales: false }]);
+    const result = wantedBy([{ listId: 8, slug: "x", matchSale: false }]);
     expect(result.iHaveTheyWant).toEqual([]);
     expect(result.dropped).toEqual([
       { slug: "x", direction: "iHaveTheyWant", reason: "not_owned" },
@@ -213,8 +213,8 @@ describe("recount details", () => {
 
   test("of two want lists on a collection, only the one my side answers is credited", () => {
     const result = wantedBy([
-      { listId: 8, slug: "x", takesSales: false },
-      { listId: 9, slug: "x", takesSales: true },
+      { listId: 8, slug: "x", matchSale: false },
+      { listId: 9, slug: "x", matchSale: true },
     ]);
     expect(result.iHaveTheyWant).toEqual([{ slug: "x", myListIds: [2], partnerListIds: [9] }]);
     expect(result.dropped).toEqual([]);
@@ -403,8 +403,8 @@ describe("matchSides", () => {
         listUpdatedAt: { 7: RECENT, 8: RECENT },
         theyHave: [{ listId: 7, slug: "binary", objektId: "t1" }],
         theyWant: [
-          { listId: 8, slug: "on-spares", takesSales: true },
-          { listId: 8, slug: "on-dupes", takesSales: true },
+          { listId: 8, slug: "on-spares", matchSale: true },
+          { listId: 8, slug: "on-dupes", matchSale: true },
         ],
       },
       new Set(["0xp"]),

@@ -4,19 +4,13 @@
 `/trade` SHALL list one post per list whose owner turned its Show on Trade switch on (Show on Market on a sale list; see `web-lists`). A have or sale list SHALL appear only while it is bound to a Cosmo profile; a want list needs no profile. A have list and the want list linked to it SHALL form one post when both are on Trade. When only one of the pair is on Trade, the post SHALL hold only that list. The page SHALL be open to signed-out visitors.
 
 Each post SHALL be tagged:
-- WTT for a have list, alone or paired with its want list, and for a want list on its own that is linked to one of its owner's have lists;
-- WTB for a want list on its own with no link;
+- WTT for a have list, alone or paired with its want list, and for a want list on its own open to Trade only;
+- WTB for a want list on its own open to Trade or buy;
 - WTS for a sale list.
 
-The tag SHALL follow the lists alone; no list setting changes it (see `web-lists`).
-
 #### Scenario: Trades-only want list
-- **WHEN** want list "binary hunt" is on Trade and linked to have list "spares", which is not on Trade
-- **THEN** its post holds only the Want side, is tagged WTT and is listed under WTT, not WTB
-
-#### Scenario: Unlinked want list
-- **WHEN** a want list with no link is on Trade
-- **THEN** its post is tagged WTB and listed under WTB
+- **WHEN** a want list on its own is open to Trade only, whether or not it is linked to a have list that is off Trade
+- **THEN** its post is tagged WTT and listed under WTT, not WTB
 
 Each post SHALL show:
 - the owner, headed the way For you heads a partner (the Cosmo nickname of the list's bound address whatever its Hide Cosmo ID setting, the shortened address when it has none, and the account's display name only for a list bound to no address; see `web-cosmo-link`), with the avatar;

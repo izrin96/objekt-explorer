@@ -5,12 +5,12 @@ import { FEED_FETCH_SIZE, type PostTag } from "../../lib/trade-feed";
 import { IDLE_DAYS } from "../../lib/trade-rank";
 import type { FeedCursor, PostType } from "../../schemas/trade";
 import { notBlockedEither, notTradeSanctioned } from "../safety";
-import { takesPartInTradeSql, wantTakesSalesSql } from "../trade-lists";
+import { takesPartInTradeSql } from "../trade-lists";
 
-/** As `postTag` tags a post: a want list alone that is linked to a have list is WTT, not WTB. */
+/** As `postTag` tags a post: a want list alone that matches trades only is WTT, not WTB. */
 const TAG_WHERE: Record<PostTag, SQL> = {
-  wtt: sql`(posts.type = 'have' OR (posts.type = 'want' AND posts.linked_list_id IS NOT NULL))`,
-  wtb: sql`(posts.type = 'want' AND posts.linked_list_id IS NULL)`,
+  wtt: sql`(posts.type = 'have' OR (posts.type = 'want' AND NOT posts.match_sale))`,
+  wtb: sql`(posts.type = 'want' AND posts.match_sale)`,
   wts: sql`posts.type = 'sale'`,
 };
 
@@ -20,7 +20,7 @@ const TAG_WHERE: Record<PostTag, SQL> = {
  */
 export const postsCte = sql`
   on_trade AS (
-    SELECT id, user_id, list_type_new, linked_list_id, bumped_at, updated_at, created_at
+    SELECT id, user_id, list_type_new, linked_list_id, match_sale, bumped_at, updated_at, created_at
     FROM lists
     WHERE discoverable AND ${takesPartInTradeSql()}
   ),
@@ -29,7 +29,7 @@ export const postsCte = sql`
       a.id,
       a.user_id,
       a.list_type_new AS type,
-      a.linked_list_id,
+      a.match_sale,
       p.id AS partner_id,
       -- milliseconds, so the ISO cursor names a row exactly; a post never bumped sorts by its
       -- last change
@@ -72,7 +72,7 @@ const matchesIndex = (index: MatchIndex) =>
         (t.list_type_new = 'have' AND e.collection_slug = ANY(${sql.param(index.want)}::text[]))
         OR (t.list_type_new = 'sale' AND e.collection_slug = ANY(${sql.param(index.saleWant)}::text[]))
         OR (t.list_type_new = 'want' AND e.collection_slug = ANY(
-          CASE WHEN ${wantTakesSalesSql("t")} THEN ${sql.param(index.have)}::text[] ELSE ${sql.param(index.tradeHave)}::text[] END
+          CASE WHEN t.match_sale THEN ${sql.param(index.have)}::text[] ELSE ${sql.param(index.tradeHave)}::text[] END
         ))
       )
   )`;
