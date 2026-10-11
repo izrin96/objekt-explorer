@@ -47,16 +47,13 @@ export function ForYouResults({
   const clock = useMinuteClock();
   const now = hydrated ? clock : undefined;
   const loaded = query.data !== undefined;
-  // rows start open unless idle; this holds the ones the user (or a link) flipped
+  // rows start closed; this holds the ones the user (or a link) opened
   const [toggled, setToggled] = useState<ReadonlySet<string>>(new Set());
   const [opened, setOpened] = useState<string>();
   const target = partner ? query.data?.partners.find((item) => item.userId === partner) : undefined;
   if (partner && target && opened !== partner) {
     setOpened(partner);
-    const next = new Set(toggled);
-    if (target.idle) next.add(partner);
-    else next.delete(partner);
-    setToggled(next);
+    setToggled(new Set(toggled).add(partner));
   }
   const toggle = (userId: string) => {
     const next = new Set(toggled);
@@ -145,7 +142,7 @@ export function ForYouResults({
                 partner={item}
                 now={now}
                 collections={collections}
-                open={!item.idle !== toggled.has(item.userId)}
+                open={toggled.has(item.userId)}
                 onOpenChange={() => toggle(item.userId)}
                 onOpen={setActive}
                 onHide={onHide}

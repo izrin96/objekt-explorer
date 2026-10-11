@@ -1,5 +1,5 @@
 import type { ListTypeNew } from "../schemas/list";
-import { PREVIEW_LIMIT, type PostType } from "../schemas/trade";
+import { PREVIEW_LIMIT, SOLO_PREVIEW_LIMIT, type PostType } from "../schemas/trade";
 import { HOUR_MS } from "./time";
 import { isIdle } from "./trade-rank";
 
@@ -140,11 +140,15 @@ type PreviewItem = {
   ringed?: true;
 };
 
-export function previewSide(entries: FeedEntry[], ringed: SlugIndex | null) {
+export function previewSide(
+  entries: FeedEntry[],
+  ringed: SlugIndex | null,
+  limit: number = PREVIEW_LIMIT,
+) {
   const isRinged = (entry: FeedEntry) => ringed?.has(entry.slug) ?? false;
   const items = entries
     .toSorted((a, b) => Number(isRinged(b)) - Number(isRinged(a)) || b.id - a.id)
-    .slice(0, PREVIEW_LIMIT)
+    .slice(0, limit)
     .map((entry): PreviewItem =>
       isRinged(entry)
         ? {
@@ -156,7 +160,7 @@ export function previewSide(entries: FeedEntry[], ringed: SlugIndex | null) {
           }
         : { entryId: entry.id, slug: entry.slug, price: entry.price, isQyop: entry.isQyop },
     );
-  return { items, more: Math.max(0, entries.length - PREVIEW_LIMIT) };
+  return { items, more: Math.max(0, entries.length - limit) };
 }
 
 /** A collection slug to the viewer's lists that have it on. */
@@ -229,8 +233,13 @@ export function assemblePost<L extends TradeList>(
   if (filter.slugs && !all.some((entry) => filter.slugs!.has(entry.slug))) return null;
   if (filter.slug !== null && !all.some((entry) => entry.slug === filter.slug)) return null;
 
+  const limit = roles.length === 1 ? SOLO_PREVIEW_LIMIT : PREVIEW_LIMIT;
   const sides = roles.map(({ role, list, entries }) => {
-    const { items, more } = previewSide(entries, viewer ? indexFor(role, list, viewer) : null);
+    const { items, more } = previewSide(
+      entries,
+      viewer ? indexFor(role, list, viewer) : null,
+      limit,
+    );
     return { role, list, items, more };
   });
 

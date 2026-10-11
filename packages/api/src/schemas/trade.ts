@@ -11,6 +11,9 @@ export const CARD_LIMIT = 50;
 /** objekts drawn per side of a trade card; with the +N tile, one row at 1280 px */
 export const PREVIEW_LIMIT = 11;
 
+/** a Browse post with one side gives it the whole row: enough to fill it at the 2xl container */
+export const SOLO_PREVIEW_LIMIT = 20;
+
 const DEFAULT_TRADE_FILTER = "all" satisfies TradeFilter;
 
 /** Whether `filter` can show anything for these sides: a one-way view needs its own side. */

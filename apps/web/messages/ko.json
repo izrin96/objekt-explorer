@@ -932,6 +932,7 @@
   "trade_tag_wtb_desc": "구매 희망",
   "trade_tag_wts_desc": "판매 희망",
   "trade_more_count": "외 {count}개",
+  "trade_strip_none": "없음",
   "trade_bumped_at": "{time} 끌어올림",
   "trade_updated_at": "{time} 업데이트",
   "trade_match_they_have": "내가 원하는 {count}개를 상대가 보유",

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { PREVIEW_LIMIT } from "../schemas/trade";
+import { PREVIEW_LIMIT, SOLO_PREVIEW_LIMIT } from "../schemas/trade";
 import {
   assemblePost,
   comparePosts,
@@ -197,6 +197,17 @@ describe("assemblePost", () => {
 
   test("signed out has no match", () => {
     expect(assemblePost(pair!, of, null, NO_FILTER)?.match).toBeUndefined();
+  });
+
+  test("a one-sided post sends more of its side than a pair sends of each", () => {
+    const many = (base: number) =>
+      Array.from({ length: 30 }, (_, i) => entry(base + i, `s${base + i}`));
+    const [solo] = pairPosts([list({ id: 3, listTypeNew: "sale" })]);
+    const soloSide = assemblePost(solo!, () => many(100), null, NO_FILTER)?.sides[0];
+    expect(soloSide?.items).toHaveLength(SOLO_PREVIEW_LIMIT);
+    expect(soloSide?.more).toBe(30 - SOLO_PREVIEW_LIMIT);
+    const sides = assemblePost(pair!, (id) => many(id * 100), null, NO_FILTER)?.sides;
+    expect(sides?.map((side) => side.items.length)).toEqual([PREVIEW_LIMIT, PREVIEW_LIMIT]);
   });
 
   test("filters keep posts with a shown collection", () => {

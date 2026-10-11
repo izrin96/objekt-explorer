@@ -20,8 +20,11 @@ import { ListRoleBadge } from "./list-role-badge";
 import { MATCH_TONE, MatchChip } from "./match-chip";
 import { MatchColumn, MatchObjekt } from "./match-grid";
 import { MatchedLists } from "./matched-lists";
+import { PostStrip, STRIP_MORE, StripMore } from "./post-side";
+import { TILE } from "./thumb-grid";
 import { TradeActions, type TradeContact } from "./trade-actions";
 import { TradeHeader } from "./trade-header";
+import { TradeRow, TradeSides } from "./trade-row";
 
 export type TradePartner = Outputs["trade"]["forYou"]["partners"][number];
 export type TradeCollections = Record<string, ValidObjekt | undefined>;
@@ -76,15 +79,13 @@ export function PartnerRow({
   const shownDropped = dropped.some((items) => items.length > 0);
 
   return (
-    <article
-      id={id}
-      // `data-highlight` is set for a moment when a Browse link lands here
-      className="data-highlight:ring-ring bg-card scroll-mt-20 rounded-lg border p-4 transition-shadow duration-700 data-highlight:ring-2 motion-reduce:transition-none"
-    >
-      <Collapsible open={open} onOpenChange={onOpenChange}>
-        <div className="flex items-start gap-1">
+    <Collapsible open={open} onOpenChange={onOpenChange}>
+      <TradeRow
+        id={id}
+        // `data-highlight` is set for a moment when a Browse link lands here
+        className="data-highlight:ring-ring scroll-mt-20 transition-shadow duration-700 data-highlight:ring-2 motion-reduce:transition-none"
+        byline={
           <TradeHeader
-            className="min-w-0 flex-1"
             person={partner}
             note={
               <>
@@ -105,160 +106,189 @@ export function PartnerRow({
                 ) : null}
               </>
             }
-            end={
-              <>
-                <MatchChip
-                  theyHave={match.youWant}
-                  youHave={match.youHave}
-                  popover={<MatchedLists match={match} />}
-                />
-                <Popover>
-                  <PopoverTrigger
-                    render={<Button variant="ghost" size="xs" className="font-mono" />}
-                  >
-                    {m.trade_lists_count({ count: partner.lists.length })}
-                  </PopoverTrigger>
-                  <PopoverPopup align="start" className="w-72">
-                    <div className="flex flex-col gap-3">
-                      <PopoverTitle className="text-sm">
-                        {m.trade_partner_lists_title()}
-                      </PopoverTitle>
-                      <ul className="flex flex-col gap-1.5 text-sm">
-                        {partner.lists.map((list) => (
-                          <li key={list.id} className="flex min-w-0 items-center gap-2">
-                            <ListRoleBadge type={list.listTypeNew} />
-                            <Link
-                              {...getListLinkOption({
-                                slug: list.slug,
-                                profileSlug: list.profileSlug,
-                                profileAddress: list.profileAddress,
-                                profile: list.profileAddress
-                                  ? { address: list.profileAddress, nickname: list.profileNickname }
-                                  : null,
-                              })}
-                              className="min-w-0 break-words underline-offset-2 hover:underline"
-                            >
-                              {list.name}
-                            </Link>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </PopoverPopup>
-                </Popover>
-                {partner.idle ? (
-                  <Badge variant="outline" size="sm">
-                    {m.trade_idle()}
-                  </Badge>
-                ) : null}
-              </>
-            }
           />
-          <CollapsibleTrigger
-            className="group shrink-0"
-            render={
-              <Button
-                variant="outline"
-                size="icon-sm"
-                aria-label={m.trade_row_toggle({ name: identity.name })}
-              />
-            }
-          >
-            <CaretDownIcon
-              aria-hidden
-              className="transition-transform group-data-panel-open:rotate-180"
+        }
+        below={
+          <div className="flex flex-wrap items-center gap-2">
+            <MatchChip
+              theyHave={match.youWant}
+              youHave={match.youHave}
+              popover={<MatchedLists match={match} />}
             />
-          </CollapsibleTrigger>
-        </div>
-
-        <CollapsiblePanel className="-mx-1 -mb-1 px-1 pb-1">
-          <div className="flex flex-col gap-4 pt-4 sm:ps-12">
-            <div className="grid gap-4 sm:grid-cols-2">
-              {DIRECTIONS.map((direction, index) =>
-                partner[direction.key].length > 0 || (dropped[index]?.length ?? 0) > 0 ? (
-                  <section key={direction.key} className="flex min-w-0 flex-col gap-2">
-                    <h3 className={cn("font-mono text-xs uppercase tabular-nums", direction.tone)}>
-                      {direction.section({ count: partner[direction.key].length })}
-                    </h3>
-                    <MatchColumn
-                      count={partner[direction.key].length}
-                      dropped={dropped[index]?.map((item) => (
-                        <MatchObjekt
-                          key={item.slug}
-                          slug={item.slug}
-                          collection={collections[item.slug]}
-                          reason={REASON[item.reason]()}
-                          onOpen={onOpen}
-                        />
-                      ))}
-                    >
-                      {partner[direction.key].slice(0, PREVIEW_LIMIT).map((item) => (
-                        <MatchObjekt
-                          key={item.slug}
-                          slug={item.slug}
-                          collection={collections[item.slug]}
-                          onOpen={onOpen}
-                        />
-                      ))}
-                    </MatchColumn>
-                  </section>
-                ) : null,
-              )}
-            </div>
-
-            <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-              <div className="text-muted-foreground flex min-w-0 flex-1 flex-col gap-1 text-xs text-pretty">
-                {partner.idle ? <p>{m.trade_idle_hint()}</p> : null}
-                {shownDropped ? <p>{m.trade_not_counted_hint()}</p> : null}
+            <Popover>
+              <PopoverTrigger render={<Button variant="ghost" size="xs" className="font-mono" />}>
+                {m.trade_lists_count({ count: partner.lists.length })}
+              </PopoverTrigger>
+              <PopoverPopup align="start" className="w-72">
+                <div className="flex flex-col gap-3">
+                  <PopoverTitle className="text-sm">{m.trade_partner_lists_title()}</PopoverTitle>
+                  <ul className="flex flex-col gap-1.5 text-sm">
+                    {partner.lists.map((list) => (
+                      <li key={list.id} className="flex min-w-0 items-center gap-2">
+                        <ListRoleBadge type={list.listTypeNew} />
+                        <Link
+                          {...getListLinkOption({
+                            slug: list.slug,
+                            profileSlug: list.profileSlug,
+                            profileAddress: list.profileAddress,
+                            profile: list.profileAddress
+                              ? { address: list.profileAddress, nickname: list.profileNickname }
+                              : null,
+                          })}
+                          className="min-w-0 break-words underline-offset-2 hover:underline"
+                        >
+                          {list.name}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </PopoverPopup>
+            </Popover>
+            {partner.idle ? (
+              <Badge variant="outline" size="sm">
+                {m.trade_idle()}
+              </Badge>
+            ) : null}
+          </div>
+        }
+        sides={
+          <TradeSides
+            strips={DIRECTIONS.map((direction) => (
+              <PostStrip
+                key={direction.key}
+                label={direction.section({ count: partner[direction.key].length })}
+                tone={direction.tone}
+                items={partner[direction.key].map((item) => ({ key: item.slug, slug: item.slug }))}
+                collections={collections}
+                onOpen={onOpen}
+                more={(count) => (
+                  <button
+                    type="button"
+                    onClick={() => onOpenChange(true)}
+                    className={cn(TILE, STRIP_MORE, "w-full cursor-pointer")}
+                  >
+                    <StripMore count={count} />
+                  </button>
+                )}
+              />
+            ))}
+          />
+        }
+        actions={
+          <>
+            <TradeActions contact={contact} name={identity.name} compact />
+            <CollapsibleTrigger
+              className="group shrink-0"
+              render={
+                <Button
+                  variant="outline"
+                  size="icon-sm"
+                  aria-label={m.trade_row_toggle({ name: identity.name })}
+                />
+              }
+            >
+              <CaretDownIcon
+                aria-hidden
+                className="transition-transform group-data-panel-open:rotate-180"
+              />
+            </CollapsibleTrigger>
+          </>
+        }
+        panel={
+          <CollapsiblePanel className="col-span-full -mx-1 -mb-1 px-1 pb-1">
+            <div className="flex flex-col gap-4 border-t pt-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                {DIRECTIONS.map((direction, index) =>
+                  partner[direction.key].length > 0 || (dropped[index]?.length ?? 0) > 0 ? (
+                    <section key={direction.key} className="flex min-w-0 flex-col gap-2">
+                      <h3
+                        className={cn("font-mono text-xs uppercase tabular-nums", direction.tone)}
+                      >
+                        {direction.section({ count: partner[direction.key].length })}
+                      </h3>
+                      <MatchColumn
+                        count={partner[direction.key].length}
+                        dropped={dropped[index]?.map((item) => (
+                          <MatchObjekt
+                            key={item.slug}
+                            slug={item.slug}
+                            collection={collections[item.slug]}
+                            reason={REASON[item.reason]()}
+                            onOpen={onOpen}
+                          />
+                        ))}
+                      >
+                        {partner[direction.key].slice(0, PREVIEW_LIMIT).map((item) => (
+                          <MatchObjekt
+                            key={item.slug}
+                            slug={item.slug}
+                            collection={collections[item.slug]}
+                            onOpen={onOpen}
+                          />
+                        ))}
+                      </MatchColumn>
+                    </section>
+                  ) : null,
+                )}
               </div>
-              <div className="flex flex-wrap items-center gap-2">
+
+              <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+                <div className="text-muted-foreground flex min-w-0 flex-1 flex-col gap-1 text-xs text-pretty">
+                  {partner.idle ? <p>{m.trade_idle_hint()}</p> : null}
+                  {shownDropped ? <p>{m.trade_not_counted_hint()}</p> : null}
+                </div>
                 <Button variant="ghost" size="sm" onClick={() => onHide(partner)}>
                   <EyeSlashIcon />
                   {m.trade_hide_partner()}
                 </Button>
-                <TradeActions contact={contact} name={identity.name} />
               </div>
             </div>
-          </div>
-        </CollapsiblePanel>
-      </Collapsible>
-    </article>
+          </CollapsiblePanel>
+        }
+      />
+    </Collapsible>
   );
 }
 
-/** A row's shape (byline and chip, two columns of thumbnails, footer), so the list lands in place. */
+/** A row's shape (byline, two strips, chip, actions), so the list lands in place. */
 export function PartnerRowSkeleton() {
   return (
-    <div className="bg-card flex flex-col gap-4 rounded-lg border p-4">
-      <div className="flex items-start gap-3">
-        <Skeleton className="size-9 shrink-0 rounded-full" />
-        <div className="flex flex-1 flex-col gap-2 pt-0.5">
-          <Skeleton className="h-4 w-32" />
-          <Skeleton className="h-3 w-44" />
-        </div>
-        <Skeleton className="h-6 w-28 rounded-md max-sm:hidden" />
-        <Skeleton className="size-8 shrink-0 rounded-md" />
-      </div>
-      <div className="grid gap-4 sm:grid-cols-2 sm:ps-12">
-        {Array.from({ length: 2 }).map((_, column) => (
-          <div key={column} className="flex flex-col gap-2">
-            <Skeleton className="h-3 w-36" />
-            <div className="flex gap-2">
-              {Array.from({ length: 4 }).map((_, index) => (
-                <Skeleton
-                  key={index}
-                  className="aspect-photocard rounded-photocard w-12 shrink-0"
-                />
-              ))}
-            </div>
+    <TradeRow
+      byline={
+        <div className="flex items-start gap-3">
+          <Skeleton className="size-9 shrink-0 rounded-full" />
+          <div className="flex flex-1 flex-col gap-2 pt-0.5">
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-3 w-24" />
           </div>
-        ))}
-      </div>
-      <div className="flex justify-end gap-2">
-        <Skeleton className="h-8 w-24 rounded-md" />
-        <Skeleton className="h-8 w-28 rounded-md" />
-      </div>
-    </div>
+        </div>
+      }
+      below={<Skeleton className="h-6 w-28 rounded-md" />}
+      sides={
+        <TradeSides
+          strips={[0, 1].map((column) => (
+            <div key={column} className="flex flex-col gap-1">
+              <Skeleton className="h-3 w-36" />
+              <div className="flex gap-x-1.5">
+                {Array.from({ length: 4 }).map((_, index) => (
+                  <Skeleton
+                    key={index}
+                    className="aspect-photocard rounded-photocard w-14 shrink-0"
+                  />
+                ))}
+              </div>
+            </div>
+          ))}
+        />
+      }
+      actions={
+        <>
+          <Skeleton className="h-8 w-28 rounded-md" />
+          <Skeleton className="size-8 shrink-0 rounded-md" />
+        </>
+      }
+    />
   );
 }
 

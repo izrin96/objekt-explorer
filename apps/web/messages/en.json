@@ -932,6 +932,7 @@
   "trade_tag_wtb_desc": "Want to buy",
   "trade_tag_wts_desc": "Want to sell",
   "trade_more_count": "{count} more",
+  "trade_strip_none": "none",
   "trade_bumped_at": "Bumped {time}",
   "trade_updated_at": "Updated {time}",
   "trade_match_they_have": "They have {count} you want",

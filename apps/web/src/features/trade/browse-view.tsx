@@ -35,11 +35,8 @@ type PostType = NonNullable<BrowseSearch["type"]> | "all";
 
 const TYPES: PostType[] = ["all", "wtt", "wtb", "wts"];
 
-/** `virtua` measures each row of posts; the gap rides on the item so it is part of the measurement */
-const ROW_GAP = "pb-4";
-/** two posts to a row from `lg` up, stacked inside the same virtual item below it */
-const ROW_GRID = "grid items-stretch gap-4 lg:grid-cols-2";
-const POSTS_PER_ROW = 2;
+/** `virtua` measures each post; the gap rides on the item so it is part of the measurement */
+const ROW_GAP = "pb-3";
 const SSR_POSTS = 4;
 
 export function BrowseView({ search }: { search: BrowseSearch }) {
@@ -83,12 +80,6 @@ export function BrowseView({ search }: { search: BrowseSearch }) {
   const filtering = search.type !== undefined || search.slug !== undefined;
   const reset = () => void navigate({ search: {}, replace: true, resetScroll: false });
   const posts = useMemo(() => query.data?.pages.flatMap((page) => page.posts) ?? [], [query.data]);
-  const rows = useMemo(() => {
-    const out: (typeof posts)[] = [];
-    for (let i = 0; i < posts.length; i += POSTS_PER_ROW)
-      out.push(posts.slice(i, i + POSTS_PER_ROW));
-    return out;
-  }, [posts]);
   const collections = useMemo(
     () => Object.assign({}, ...(query.data?.pages.map((page) => page.collections) ?? [])),
     [query.data],
@@ -197,26 +188,18 @@ export function BrowseView({ search }: { search: BrowseSearch }) {
           {/* the server draws the first posts, so a full load is not blank until hydration;
               until the first scroll, virtua keeps rendering the mount's `ssrCount` items even
               after a filter leaves fewer, so a row past the end comes in undefined */}
-          <WindowVirtualizer
-            data={rows}
-            ssrCount={Math.min(Math.ceil(SSR_POSTS / POSTS_PER_ROW), rows.length)}
-          >
-            {(row: (typeof rows)[number] | undefined) =>
-              row ? (
-                <div key={row[0]?.id} className={ROW_GAP}>
-                  <div className={ROW_GRID}>
-                    {row.map((post) => (
-                      <BrowsePost
-                        key={post.id}
-                        post={post}
-                        own={post.userId === user?.user.id}
-                        mutual={mutualIds.has(post.userId)}
-                        collections={collections}
-                        now={now}
-                        onOpen={setActive}
-                      />
-                    ))}
-                  </div>
+          <WindowVirtualizer data={posts} ssrCount={Math.min(SSR_POSTS, posts.length)}>
+            {(post: (typeof posts)[number] | undefined) =>
+              post ? (
+                <div key={post.id} className={ROW_GAP}>
+                  <BrowsePost
+                    post={post}
+                    own={post.userId === user?.user.id}
+                    mutual={mutualIds.has(post.userId)}
+                    collections={collections}
+                    now={now}
+                    onOpen={setActive}
+                  />
                 </div>
               ) : (
                 <div />
@@ -279,7 +262,7 @@ export function BrowsePending() {
 
 function BrowseFeedSkeleton() {
   return (
-    <div className={ROW_GRID}>
+    <div className="flex flex-col gap-3">
       {Array.from({ length: SSR_POSTS }).map((_, index) => (
         <BrowsePostSkeleton key={index} />
       ))}
