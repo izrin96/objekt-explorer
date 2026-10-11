@@ -60,6 +60,7 @@ export function PostStrip({
   collections,
   onOpen,
   more,
+  othersLink,
 }: {
   label: ReactNode;
   tone: string;
@@ -69,16 +70,19 @@ export function PostStrip({
   collections: Readonly<Record<string, ValidObjekt | undefined>>;
   onOpen: (objekt: ValidObjekt) => void;
   more: (count: number) => ReactNode;
+  /** after the thumbnails and the "+N" tile: the objekts a filter left out */
+  othersLink?: ReactNode;
 }) {
   const [ref, { width }] = useElementSize<HTMLUListElement>();
+  const [linkRef, { width: linkWidth }] = useElementSize<HTMLLIElement>();
   const total = items.length + hidden;
-  const shown = items.slice(0, fitCount(width, total, FIT));
+  const shown = items.slice(0, fitCount(width, total, { ...FIT, reserve: linkWidth }));
   const rest = total - shown.length;
 
   return (
     <section className="flex min-w-0 flex-col gap-1">
       <h3 className={cn("font-mono text-xs uppercase tabular-nums", tone)}>{label}</h3>
-      {total === 0 ? (
+      {total === 0 && !othersLink ? (
         <p className="text-muted-foreground text-sm">{m.trade_strip_none()}</p>
       ) : (
         /* padding gives the ring room */
@@ -110,6 +114,11 @@ export function PostStrip({
             );
           })}
           {rest > 0 ? <li className="@container w-14 shrink-0">{more(rest)}</li> : null}
+          {othersLink ? (
+            <li ref={linkRef} className="shrink-0 self-center">
+              {othersLink}
+            </li>
+          ) : null}
         </ul>
       )}
     </section>
@@ -134,9 +143,12 @@ export function SideStrip({
     return item.price !== null && currency ? formatCurrency(item.price, currency) : undefined;
   };
 
+  const shown = side.items.length + side.more;
+  const figure = side.others > 0 ? m.trade_strip_of({ shown, total: shown + side.others }) : shown;
+
   return (
     <PostStrip
-      label={`${LIST_TYPE_LABEL[side.role]()} ${side.items.length + side.more}`}
+      label={`${LIST_TYPE_LABEL[side.role]()} ${figure}`}
       tone={TONE_INK[LIST_TYPE_TONE[side.role]]}
       items={side.items.map((item) => ({
         key: item.entryId,
@@ -153,6 +165,16 @@ export function SideStrip({
           <StripMore count={count} />
         </Link>
       )}
+      othersLink={
+        side.others > 0 ? (
+          <Link
+            {...getListLinkOption(list)}
+            className="text-muted-foreground hover:text-foreground text-xs whitespace-nowrap tabular-nums underline-offset-2 outline-none hover:underline focus-visible:ring-2"
+          >
+            {m.trade_strip_others({ count: side.others })}
+          </Link>
+        ) : undefined
+      }
     />
   );
 }

@@ -36,7 +36,7 @@ const entry = (id: number, slug: string, objektId: string | null = null): FeedEn
   isQyop: false,
 });
 
-const NO_FILTER = { slugs: null, slug: null } as const;
+const NO_FILTER = { slugs: null, slug: null, onlyMatches: false } as const;
 
 describe("pairPosts", () => {
   test("linked pair is one post", () => {
@@ -210,12 +210,73 @@ describe("assemblePost", () => {
     expect(sides?.map((side) => side.items.length)).toEqual([PREVIEW_LIMIT, PREVIEW_LIMIT]);
   });
 
-  test("filters keep posts with a shown collection", () => {
-    expect(assemblePost(pair!, of, null, { ...NO_FILTER, slug: "offer-a" })).not.toBeNull();
+  const sideOf = (post: ReturnType<typeof assemblePost>, role: string) =>
+    post?.sides.find((side) => side.role === role);
+
+  test("an unfiltered side has no others", () => {
+    const post = assemblePost(pair!, of, null, NO_FILTER);
+    expect(post?.sides.map((side) => side.others)).toEqual([0, 0]);
+  });
+
+  test("a facet narrows each side and counts the rest as others", () => {
+    const post = assemblePost(pair!, of, null, {
+      ...NO_FILTER,
+      slugs: new Set(["offer-a", "want-b", "want-c"]),
+    });
+    expect(sideOf(post, "have")?.items.map((item) => item.slug)).toEqual(["offer-a"]);
+    expect(sideOf(post, "have")?.others).toBe(1);
+    expect(sideOf(post, "want")?.items.map((item) => item.slug)).toEqual(["want-c", "want-b"]);
+    expect(sideOf(post, "want")?.others).toBe(1);
+  });
+
+  test("a slug narrows each side to that collection", () => {
+    const post = assemblePost(pair!, of, null, { ...NO_FILTER, slug: "offer-a" });
+    expect(sideOf(post, "have")?.items.map((item) => item.slug)).toEqual(["offer-a"]);
+    expect(sideOf(post, "have")?.others).toBe(1);
+    expect(sideOf(post, "want")).toMatchObject({ items: [], more: 0, others: 3 });
     expect(assemblePost(pair!, of, null, { ...NO_FILTER, slug: "other" })).toBeNull();
-    expect(
-      assemblePost(pair!, of, null, { ...NO_FILTER, slugs: new Set(["want-b"]) }),
-    ).not.toBeNull();
+  });
+
+  test("only matches shows ringed objekts alone", () => {
+    const post = assemblePost(pair!, of, viewer, { ...NO_FILTER, onlyMatches: true });
+    const have = sideOf(post, "have");
+    expect(have?.items.map((item) => item.slug)).toEqual(["offer-b"]);
+    expect(have?.items.every((item) => item.ringed)).toBe(true);
+    expect(have?.others).toBe(1);
+    const wanted = sideOf(post, "want");
+    expect(wanted?.items.map((item) => item.slug)).toEqual(["want-c", "want-a"]);
+    expect(wanted?.items.every((item) => item.ringed)).toBe(true);
+    expect(wanted?.others).toBe(1);
+  });
+
+  test("only matches combines with a facet", () => {
+    const post = assemblePost(pair!, of, viewer, {
+      slugs: new Set(["want-a", "want-b"]),
+      slug: null,
+      onlyMatches: true,
+    });
+    expect(sideOf(post, "want")?.items.map((item) => item.slug)).toEqual(["want-a"]);
+    expect(sideOf(post, "want")?.others).toBe(2);
+    expect(sideOf(post, "have")).toMatchObject({ items: [], others: 2 });
+  });
+
+  test("a one-way match keeps the empty side", () => {
+    const oneWay = { ...viewer, want: nothing, saleWant: nothing };
+    const post = assemblePost(pair!, of, oneWay, { ...NO_FILTER, onlyMatches: true });
+    expect(sideOf(post, "have")).toMatchObject({ items: [], more: 0, others: 2 });
+    expect(sideOf(post, "want")?.items).toHaveLength(2);
+  });
+
+  test("a post with nothing related on any side is dropped", () => {
+    const filter = { ...NO_FILTER, slugs: new Set(["elsewhere"]) };
+    expect(assemblePost(pair!, of, null, filter)).toBeNull();
+    const none = { have: nothing, want: nothing, tradeHave: nothing, saleWant: nothing };
+    expect(assemblePost(pair!, of, none, { ...NO_FILTER, onlyMatches: true })).toBeNull();
+  });
+
+  test("narrowing leaves the match counts on the whole post", () => {
+    const post = assemblePost(pair!, of, viewer, { ...NO_FILTER, slugs: new Set(["want-a"]) });
+    expect(post?.match).toEqual({ youHave: 2, youWant: 1, haveListIds: [7, 8], wantListIds: [9] });
   });
 
   // list 8 is the viewer's sale list, list 9 a want list that matches trades only

@@ -1,4 +1,5 @@
 import { ORPCError } from "@orpc/server";
+import { validArtists } from "@repo/cosmo/types/common";
 import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { collections } from "@repo/db/indexer/schema";
@@ -50,9 +51,13 @@ const TRADE_TYPES = ["have", "want", "sale"] as const satisfies ListTypeNew[];
 const isTradeType = (type: ListTypeNew): type is (typeof TRADE_TYPES)[number] =>
   (TRADE_TYPES as readonly ListTypeNew[]).includes(type);
 
-/** The shared collection filters as slugs, resolved in the indexer; null when none is set. */
+/**
+ * The shared collection filters as slugs, resolved in the indexer; null when none is set. An
+ * artist filter naming every artist leaves no collection out, so it is not one.
+ */
 async function resolveFilterSlugs(filters: BrowseFilters): Promise<string[] | null> {
-  const predicates = getCollectionFilters(filters);
+  const coversEveryArtist = validArtists.every((artist) => filters.artist.includes(artist));
+  const predicates = getCollectionFilters(coversEveryArtist ? { ...filters, artist: [] } : filters);
   if (predicates.length === 0) return null;
   const rows = await indexer
     .select({ slug: collections.slug })
@@ -127,6 +132,7 @@ export async function browseFeed(
   const filter = {
     slugs: slugs ? new Set(slugs) : null,
     slug: input.slug ?? null,
+    onlyMatches,
   };
 
   const membersOf = (row: FeedRow) =>
@@ -175,6 +181,7 @@ export async function browseFeed(
           list: toListLink(side.list, nicknameOf),
           items: side.items,
           more: side.more,
+          others: side.others,
         })),
         match: assembled.match,
         messageable: isMessageable(toMessagePref({ allow: row.message_allow })),

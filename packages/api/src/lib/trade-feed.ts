@@ -206,16 +206,19 @@ function indexFor(role: "have" | "want" | "sale", list: TradeList, viewer: Viewe
 }
 
 type PostFilter = {
-  /** keep posts with a shown objekt from one of these collections */
+  /** collections that pass the facet filters; null when they leave none out */
   slugs: ReadonlySet<string> | null;
-  /** keep posts with this collection on any side */
+  /** the only collection to show, from a drawer link */
   slug: string | null;
+  /** show only objekts that match the viewer */
+  onlyMatches: boolean;
 };
 
 /**
  * A post's sides from its lists' shown entries (have and sale already narrowed to what the
- * owner can trade), with the viewer's rings and counts. Null when nothing is left to show
- * or the post fails `filter`.
+ * owner can trade), with the viewer's rings and counts. Each side shows only the entries that
+ * pass `filter` and counts the rest as `others`. Null when nothing is left to show or no side
+ * has an entry that passes.
  */
 export function assemblePost<L extends TradeList>(
   post: Post<L>,
@@ -228,20 +231,20 @@ export function assemblePost<L extends TradeList>(
     return list ? [{ role, list, entries: entriesOf(list.id) }] : [];
   });
 
-  const all = roles.flatMap((side) => side.entries);
-  if (all.length === 0) return null;
-  if (filter.slugs && !all.some((entry) => filter.slugs!.has(entry.slug))) return null;
-  if (filter.slug !== null && !all.some((entry) => entry.slug === filter.slug)) return null;
+  if (roles.every(({ entries }) => entries.length === 0)) return null;
 
   const limit = roles.length === 1 ? SOLO_PREVIEW_LIMIT : PREVIEW_LIMIT;
   const sides = roles.map(({ role, list, entries }) => {
-    const { items, more } = previewSide(
-      entries,
-      viewer ? indexFor(role, list, viewer) : null,
-      limit,
-    );
-    return { role, list, items, more };
+    const index = viewer ? indexFor(role, list, viewer) : null;
+    const isRelated = (entry: FeedEntry) =>
+      (filter.slugs === null || filter.slugs.has(entry.slug)) &&
+      (filter.slug === null || entry.slug === filter.slug) &&
+      (!filter.onlyMatches || (index?.has(entry.slug) ?? false));
+    const related = entries.filter(isRelated);
+    const { items, more } = previewSide(related, index, limit);
+    return { role, list, items, more, others: entries.length - related.length };
   });
+  if (sides.every((side) => side.items.length + side.more === 0)) return null;
 
   if (!viewer) return { sides, match: undefined };
   const matched = roles.map(({ role, list, entries }) => ({

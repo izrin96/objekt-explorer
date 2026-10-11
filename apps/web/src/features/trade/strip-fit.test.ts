@@ -29,4 +29,15 @@ describe("fitCount", () => {
   test("a strip too narrow for one thumbnail draws none", () => {
     expect(fitCount(40, 5, OPTIONS)).toBe(0);
   });
+
+  test("leaves room for a trailing link", () => {
+    // 100px link and a gap: 6 slots become 4, so 3 thumbnails and the tile
+    const reserve = 100;
+    expect(fitCount(6 * 56 + 5 * 6 + reserve + 6, 27, { ...OPTIONS, reserve })).toBe(5);
+    expect(fitCount(6 * 56 + 5 * 6, 27, { ...OPTIONS, reserve })).toBe(3);
+  });
+
+  test("an unmeasured strip ignores the link", () => {
+    expect(fitCount(0, 27, { ...OPTIONS, reserve: 100 })).toBe(4);
+  });
 });

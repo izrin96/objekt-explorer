@@ -9,7 +9,7 @@ import { useFilters, useSetFilters } from "./use-filters";
 /** `all` is the absence of `on_offline`, spelled as a value the select can hold */
 const ALL_TYPES = "all";
 
-export function OnlineFilter({ className }: { className?: string }) {
+export function OnlineFilter({ className, label }: { className?: string; label?: string }) {
   const onOffline = useFilters((f) => f.on_offline);
   const setFilters = useSetFilters();
   // built per render, not at module load: a message read at module scope is
@@ -21,7 +21,7 @@ export function OnlineFilter({ className }: { className?: string }) {
 
   return (
     <SingleSelect
-      label={m.filter_type()}
+      label={label ?? m.filter_type()}
       options={options}
       value={onOffline?.[0] ?? ALL_TYPES}
       defaultValue={ALL_TYPES}
