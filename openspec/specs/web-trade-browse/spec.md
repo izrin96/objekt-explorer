@@ -20,7 +20,7 @@ Each post SHALL be tagged:
 Each post SHALL show:
 - the owner, headed the way For you heads a partner (the Cosmo nickname of the list's bound address whatever its Hide Cosmo ID setting, the shortened address when it has none, and the account's display name only for a list bound to no address; see `web-cosmo-link`), with the avatar;
 - the tag, and each list's name and description;
-- up to 11 objekts per side, with the number of further objekts;
+- up to 11 objekts per side on a post with two sides, and up to 20 on a post with one side, with the number of further objekts;
 - on a WTS post, each objekt's price in the list's currency, or QYOP;
 - when the post was last bumped, or last changed if that is later.
 
@@ -49,6 +49,10 @@ Each list in a post SHALL link to its list page.
 #### Scenario: Long-untouched before launch
 - **WHEN** a want list was discoverable before Browse launched and was last changed 60 days before launch
 - **THEN** at launch it is idle and not listed on `/trade` until its owner bumps or changes it, and For you still matches it
+
+#### Scenario: One side gets more
+- **WHEN** a WTS post's sale list holds 30 objekts, and a WTT pair's have and want lists hold 30 each
+- **THEN** the WTS post sends 20 objekts and a count of 10 more, and the pair sends 11 per side and a count of 19 more on each
 
 ### Requirement: Only what is still owned
 A have or sale entry SHALL be left out of a post when its owner can no longer trade it, by the same rule For you uses:
@@ -335,16 +339,22 @@ A post on Browse and a partner on For you (see `web-trade-for-you`) SHALL be bui
   - Its numbers SHALL be monospace.
   - Its accessible name SHALL spell out both counts and the mutual score in words.
   - It SHALL open the popover of matched lists.
+- **Strip**: a monospace role label in its list type's colour, with the number of objekts on that side, over one line of thumbnails 3.5rem wide. A strip SHALL never wrap: it shows as many thumbnails as fit its width, and when some don't fit, the last place holds a "+N" tile counting every objekt not shown. On Browse the tile links to the list; on For you it opens the row. Sale prices show as a monospace caption under each thumbnail.
 - **Actions**: Message, then Make offer as the primary button. An account that doesn't take messages from the viewer shows "Not taking messages" in their place.
 
-**A Browse post** SHALL be a bordered card on the card surface:
-- the header, with the post's type tags at its end;
-- the list name, and its description clamped to one line;
-- one strip per side. A strip is a monospace role label in the list type's colour (HAVE, SALE or WANT), then at most 10 thumbnails 2.5rem wide, wrapping onto further rows when the card is narrow, then a "+N" tile for the rest. Sale prices show as a monospace caption under each thumbnail;
-- the match chip and any See in For you link;
-- a footer with the updated or bumped time in monospace, an icon-only Message with an accessible name, and Make offer.
+**A Browse post** SHALL be a bordered card on the card surface, one post to a row at every width, laid out in one line where it fits:
+- a byline column: the header, the post's type tags, and the updated or bumped time in monospace;
+- the sides, taking the remaining width:
+  - a WTT post with both lists: the HAVE strip and the WANT strip side by side, sharing the width equally, with a ⇄ mark between them;
+  - a post with one side (WTS, WTB, or half a pair): that one strip across the whole width;
 
-From `lg` up, posts SHALL sit two to a row, with the cards in a row sharing a height. Below `lg` there is one per row.
+  Side-by-side strips SHALL be top-aligned, so their labels sit on one line whatever each strip holds (prices, "none").
+- the actions: Make offer and an icon-only Message with an accessible name;
+- under the sides, one line holding the list name (linking to the list), the description, the match chip and any See in For you link. The line SHALL be truncated with an ellipsis when it doesn't fit, and the full description SHALL stay available to assistive technology.
+
+Where the feed is too narrow for that line, the post SHALL stack: the byline, then each strip at full width with the ⇄ mark between them turned to point down, then the list line, then the actions. The strips SHALL still not wrap.
+
+Every row SHALL have the same layout whatever the number of objekts, so posts in the feed differ in height only by their number of sides when stacked.
 
 **A For you partner** is a row, laid out in `web-trade-for-you`.
 
@@ -358,15 +368,31 @@ From `lg` up, posts SHALL sit two to a row, with the cards in a row sharing a he
 
 #### Scenario: Desktop grid
 - **WHEN** the viewer opens `/trade` at 1280 px with 10 posts loaded
-- **THEN** the posts sit in 5 rows of 2, and the feed keeps loading more as it scrolls
+- **THEN** the posts sit in 10 rows, one each, and the feed keeps loading more as it scrolls
+
+#### Scenario: Pair side by side
+- **WHEN** a WTT post holds a have list and its linked want list, at 1280 px
+- **THEN** the HAVE strip and the WANT strip sit side by side in the same row, with ⇄ between them, their labels on one line, and the actions at the row's end
 
 #### Scenario: One row at desktop width
-- **WHEN** a post's have side holds 20 objekts and the viewer's window is 1280 px wide
-- **THEN** its HAVE strip shows 10 thumbnails and a "+10" tile, wrapping to a second row where they don't fit one
+- **WHEN** a post's have side holds 27 objekts and its HAVE strip has room for 6 thumbnails
+- **THEN** the strip shows 5 thumbnails and a "+22" tile on one line, and the label reads HAVE 27
+
+#### Scenario: Short side
+- **WHEN** a post's want side holds 2 objekts
+- **THEN** its WANT strip shows both thumbnails and no "+N" tile, and the row is as tall as a row with a full strip
+
+#### Scenario: Resize
+- **WHEN** the viewer widens the window so a strip has room for 3 more thumbnails
+- **THEN** the strip shows 3 more and the "+N" count drops by 3
+
+#### Scenario: WTS post
+- **WHEN** a WTS post's sale list holds 19 objekts
+- **THEN** one SALE strip runs across the sides' width, each thumbnail captioned with its price or QYOP
 
 #### Scenario: Phone width
 - **WHEN** Browse is shown at 390 px
-- **THEN** posts sit one per row, each strip wraps within the card, and the page doesn't scroll sideways
+- **THEN** each post stacks byline, HAVE strip, ⇄ pointing down, WANT strip, list line and actions, each strip stays one line ending in "+N", and the page doesn't scroll sideways
 
 ### Requirement: Trade colours
 Trade cards on Browse and For you SHALL colour their type marks and direction headings (see `web-lists` List type colours):
