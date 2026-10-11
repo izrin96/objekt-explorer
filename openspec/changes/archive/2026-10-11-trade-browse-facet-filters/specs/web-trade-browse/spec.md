@@ -4,7 +4,7 @@
 The feed SHALL offer these filters, each kept in the URL:
 - Type: All, WTT, WTB or WTS (`type`). All is the default.
 - Artist (`artist`): a row of toggles, All then each artist in the app's artist picker selection, before the other filters. All clears it. More than one artist MAY be on. The row SHALL be hidden when the selection holds one artist.
-- Member (`member`), season (`season`), class (`class`), online/offline (`on_offline`) and collection number (`collection`), with the same controls, filter sheet, active chips and Reset as the other collection pages, and the same parameter names and values.
+- Member (`member`), season (`season`), class (`class`), online/offline (`on_offline`) and collection number (`collection`), with the same controls, filter sheet, active chips and Reset as the other collection pages, and the same parameter names and values. Because the post-type tabs sit right under them, the online/offline filter and its chip SHALL be labelled Format on Browse, not Type.
 - One collection (`slug`, a collection slug): keep posts with that collection on any side.
 - Only matches (`matches=1`), a switch beside the Type tabs, off by default. On, it keeps only posts with at least one match to the viewer, counted the way the match chip counts (see Matches to the signed-in viewer).
 
