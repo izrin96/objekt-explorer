@@ -1,0 +1,855 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Trade Feedback Mockups</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400..700&family=JetBrains+Mono:wght@400..700&display=swap" />
+<style>
+  /* Layout: a long review document; each section = heading + notes beside one or more app frames drawn in the app's own dark look. */
+  :root {
+    color-scheme: dark;
+    --doc: oklch(0.128 0.004 286);
+    --bg: oklch(0.158 0.004 285.898);
+    --card: oklch(0.178 0.004 285.886);
+    --popover: oklch(0.205 0.004 285.877);
+    --fg: oklch(0.965 0.002 284.795);
+    --muted: oklch(0.72 0.012 286);
+    --subtle: oklch(0.56 0.012 286);
+    --border: oklch(1 0 0 / 8%);
+    --border-strong: oklch(1 0 0 / 14%);
+    --secondary: oklch(1 0 0 / 5%);
+    --secondary-hover: oklch(1 0 0 / 9%);
+    --primary: oklch(0.965 0.002 284.795);
+    --primary-fg: oklch(0.18 0.005 285.906);
+    --accent: oklch(0.673 0.182 276.935);
+    --accent-bg: oklch(0.585 0.233 277.117 / 0.14);
+    --have: oklch(0.8 0.12 182);
+    --want: oklch(0.84 0.135 78);
+    --sale: oklch(0.78 0.14 352);
+    --success: oklch(0.8 0.15 145);
+    --warning: oklch(0.86 0.13 85);
+    --destructive: oklch(0.72 0.17 18);
+    --atom: #ffdd00;
+    --binary: #75fb4c;
+    --cream: #ff7477;
+    --divine: #b400ff;
+    --ever: #33ecfd;
+    --sans: "Instrument Sans", ui-sans-serif, system-ui, sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--doc); color: var(--fg); font: 15px/1.5 var(--sans); -webkit-font-smoothing: antialiased; }
+  .mono { font-family: var(--mono); font-feature-settings: "zero"; }
+  .muted { color: var(--muted); }
+  .subtle { color: var(--subtle); }
+  .wrap { max-width: 1320px; margin: 0 auto; padding: 56px 32px 96px; }
+  @media (max-width: 640px) { .wrap { padding: 32px 16px 64px; } }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* document chrome */
+  .eyebrow { font: 12px var(--mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--subtle); }
+  header.doc h1 { font-size: clamp(32px, 5vw, 50px); line-height: 1.04; letter-spacing: -0.03em; font-weight: 600; margin: 12px 0 14px; text-wrap: balance; }
+  header.doc p { font-size: 17px; color: var(--muted); max-width: 64ch; margin: 0; }
+  .triage { margin-top: 36px; border-top: 1px solid var(--border-strong); }
+  .triage a { display: grid; grid-template-columns: 96px minmax(0, 1fr) auto; gap: 16px; align-items: baseline; padding: 12px 0; border-bottom: 1px solid var(--border); color: inherit; text-decoration: none; }
+  .triage a:hover .q { text-decoration: underline; text-underline-offset: 3px; }
+  .triage .call { font: 500 11px var(--mono); text-transform: uppercase; letter-spacing: 0.05em; }
+  .call.now { color: var(--success); } .call.next { color: var(--accent); } .call.later { color: var(--warning); } .call.skip { color: var(--subtle); }
+  .triage .who { font: 11px var(--mono); color: var(--subtle); }
+  @media (max-width: 640px) { .triage a { grid-template-columns: 1fr; gap: 2px; } }
+
+  section.s { margin-top: 104px; }
+  section.s > .head { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 6px 20px; margin-bottom: 28px; max-width: 900px; }
+  section.s > .head .num { font: 13px var(--mono); color: var(--subtle); padding-top: 9px; }
+  section.s > .head h2 { font-size: 28px; letter-spacing: -0.02em; font-weight: 600; margin: 0; line-height: 1.2; text-wrap: balance; }
+  section.s > .head p { grid-column: 2; margin: 0; color: var(--muted); max-width: 66ch; }
+  @media (max-width: 640px) { section.s > .head { grid-template-columns: 1fr; } section.s > .head p { grid-column: 1; } }
+
+  .split { display: grid; grid-template-columns: minmax(0, 1fr) 290px; gap: 36px; align-items: start; }
+  @media (max-width: 1140px) { .split { grid-template-columns: minmax(0, 1fr); } }
+  .stack { display: grid; gap: 28px; min-width: 0; }
+  .label { font: 500 11px var(--mono); text-transform: uppercase; letter-spacing: 0.06em; color: var(--subtle); margin: 0 0 10px; display: flex; gap: 8px; align-items: center; }
+  .label .tag { padding: 1px 7px; border-radius: 4px; background: var(--secondary); color: var(--muted); }
+  .label .tag.new { background: var(--accent-bg); color: var(--accent); }
+
+  aside.notes { font-size: 14px; color: var(--muted); display: grid; gap: 18px; }
+  aside.notes h3 { font: 500 12px var(--mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--subtle); margin: 0 0 6px; }
+  aside.notes p, aside.notes ul { margin: 0; }
+  aside.notes ul { padding-left: 18px; display: grid; gap: 6px; }
+  aside.notes strong { color: var(--fg); font-weight: 600; }
+  .ask { border-left: 2px solid var(--accent); padding: 2px 0 2px 12px; }
+  .ask b { color: var(--accent); font: 600 11px var(--mono); letter-spacing: 0.05em; text-transform: uppercase; display: block; margin-bottom: 2px; }
+
+  /* icons */
+  .i { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+  .i.sm { width: 14px; height: 14px; }
+
+  /* app frame */
+  .frame { background: var(--bg); border: 1px solid var(--border-strong); border-radius: 14px; overflow: hidden; box-shadow: 0 30px 80px -40px rgb(0 0 0 / 0.8); min-width: 0; }
+  .frame .in { padding: 18px; display: grid; gap: 14px; }
+  .phone { max-width: 390px; }
+  .appbar { display: flex; align-items: center; gap: 12px; padding: 14px 18px 0; flex-wrap: wrap; }
+  .appbar h4 { margin: 0; font-size: 20px; font-weight: 600; letter-spacing: -0.01em; }
+  .tabs { display: inline-flex; gap: 2px; padding: 3px; border-radius: 9px; background: var(--secondary); font-size: 13px; flex-wrap: wrap; }
+  .tabs span { padding: 4px 10px; border-radius: 7px; color: var(--muted); white-space: nowrap; }
+  .tabs span.on { background: var(--popover); color: var(--fg); box-shadow: 0 1px 2px rgb(0 0 0 / 0.4); }
+  .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 30px; padding: 0 11px; border-radius: 8px; font: 500 13px var(--sans); border: 1px solid var(--border-strong); background: var(--secondary); color: var(--fg); white-space: nowrap; }
+  .btn.primary { background: var(--primary); color: var(--primary-fg); border-color: transparent; }
+  .btn.ghost { background: transparent; border-color: transparent; color: var(--muted); }
+  .btn.sm { height: 26px; padding: 0 9px; font-size: 12px; border-radius: 7px; }
+  .btn.icon { width: 30px; padding: 0; }
+  .btn.dashed { border-style: dashed; color: var(--muted); background: transparent; }
+  .switch { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500; }
+  .switch i { width: 30px; height: 18px; border-radius: 99px; background: var(--secondary-hover); position: relative; }
+  .switch i::after { content: ""; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 99px; background: var(--muted); }
+  .switch.on i { background: var(--fg); }
+  .switch.on i::after { left: 14px; background: var(--bg); }
+  .chip { display: inline-flex; align-items: center; gap: 5px; height: 22px; padding: 0 8px; border-radius: 6px; font-size: 12px; background: var(--secondary); color: var(--muted); white-space: nowrap; }
+  .chip.x::after { content: "×"; margin-left: 2px; color: var(--subtle); }
+  .tagb { display: inline-flex; align-items: center; height: 20px; padding: 0 6px; border-radius: 5px; font: 600 10.5px var(--mono); letter-spacing: 0.03em; border: 1px solid var(--border-strong); color: var(--muted); }
+  .seg { display: inline-flex; border: 1px solid var(--border-strong); border-radius: 8px; overflow: hidden; font-size: 13px; }
+  .seg span { padding: 4px 11px; color: var(--muted); border-left: 1px solid var(--border); white-space: nowrap; }
+  .seg span:first-child { border-left: 0; }
+  .seg span.on { background: var(--fg); color: var(--primary-fg); }
+  .drop { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 10px; border-radius: 8px; border: 1px solid var(--border-strong); font-size: 13px; color: var(--muted); white-space: nowrap; }
+  .drop b { color: var(--fg); font-weight: 500; }
+  .drop.set { border-color: var(--fg); color: var(--fg); }
+
+  .avatar { width: 34px; height: 34px; border-radius: 99px; display: inline-grid; place-items: center; font: 600 13px var(--sans); color: oklch(0.2 0.02 var(--h, 280)); background: oklch(0.82 0.08 var(--h, 280)); flex: none; }
+  .avatar.sm { width: 26px; height: 26px; font-size: 11px; }
+  .avatar.lg { width: 44px; height: 44px; font-size: 16px; }
+
+  /* photocard placeholder: abstract art + class stripe, the only saturated colour */
+  .pc { --band: var(--atom); position: relative; display: block; width: var(--w, 56px); aspect-ratio: 1083 / 1673; border-radius: 6% / 3.9%; overflow: hidden; flex: none;
+    background: radial-gradient(40% 26% at 42% 40%, oklch(0.92 0.03 var(--h, 30) / 0.55), transparent 72%), radial-gradient(60% 34% at 44% 86%, oklch(0.48 0.07 var(--h, 30) / 0.9), transparent 70%), linear-gradient(165deg, oklch(0.62 0.09 var(--h, 30)), oklch(0.3 0.05 calc(var(--h, 30) + 40))); }
+  .pc::after { content: ""; position: absolute; inset: 0 0 0 auto; width: 13%; background: var(--band); }
+  .pc.binary { --band: var(--binary); } .pc.cream { --band: var(--cream); } .pc.divine { --band: var(--divine); } .pc.ever { --band: var(--ever); }
+  .pc.ring { outline: 2px solid var(--fg); outline-offset: 2px; }
+  .cell { display: grid; gap: 3px; justify-items: start; flex: none; }
+  .cell .price { font: 10.5px var(--mono); color: var(--muted); white-space: nowrap; }
+  .more { display: grid; place-items: center; width: var(--w, 56px); aspect-ratio: 1083 / 1673; border-radius: 6% / 3.9%; background: var(--secondary-hover); color: var(--muted); font: 500 12px var(--mono); flex: none; }
+
+  .strip { display: flex; gap: 6px; align-items: flex-start; min-width: 0; }
+  .strip.fit { flex-wrap: nowrap; overflow: hidden; padding: 3px; margin: -3px; }
+  .strip.wrap { flex-wrap: wrap; row-gap: 8px; }
+  .others { align-self: center; font: 12px var(--mono); color: var(--subtle); white-space: nowrap; padding-left: 4px; text-decoration: underline; text-decoration-color: var(--border-strong); text-underline-offset: 3px; flex: none; }
+
+  .tone-have { color: var(--have); } .tone-want { color: var(--want); } .tone-sale { color: var(--sale); }
+  .role { font: 500 11px var(--mono); text-transform: uppercase; letter-spacing: 0.04em; }
+
+  /* TODAY: the current two-up Browse card */
+  .old-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: stretch; }
+  @media (max-width: 760px) { .old-grid { grid-template-columns: 1fr; } }
+  .old { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+  .byline { display: flex; gap: 10px; align-items: flex-start; min-width: 0; }
+  .byline .who { display: grid; gap: 1px; min-width: 0; flex: 1; }
+  .byline .name { font-weight: 600; font-size: 14px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .trust { font: 11.5px var(--mono); color: var(--muted); }
+  .old .listname { font-size: 13px; font-weight: 500; }
+  .old .listname span { display: block; font-weight: 400; color: var(--muted); }
+  .old .side { display: grid; grid-template-columns: 2.6rem minmax(0, 1fr); gap: 8px; }
+  .old .side .role { padding-top: 16px; }
+  .old footer { margin-top: auto; display: flex; justify-content: space-between; align-items: center; padding-top: 4px; }
+  .when { font: 11.5px var(--mono); color: var(--subtle); }
+  .empty-hint { outline: 1px dashed oklch(0.72 0.17 18 / 0.55); outline-offset: -1px; border-radius: 6px; position: relative; }
+  .empty-hint::after { content: attr(data-hint); position: absolute; right: 8px; bottom: 6px; font: 10.5px var(--mono); color: var(--destructive); }
+
+  /* PROPOSED: one post per line */
+  .feed { container-type: inline-size; display: grid; gap: 10px; min-width: 0; }
+  .post { display: grid; grid-template-columns: 13rem minmax(0, 1fr) auto; gap: 18px; align-items: center; padding: 14px 16px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; min-width: 0; }
+  .post .meta { display: grid; gap: 6px; min-width: 0; }
+  .post .meta .row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
+  .sides { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 14px; align-items: center; min-width: 0; }
+  .sides.one { grid-template-columns: minmax(0, 1fr); }
+  .side { display: grid; gap: 6px; min-width: 0; }
+  .side .hd { display: flex; gap: 8px; align-items: baseline; min-width: 0; }
+  .side .hd .count { font: 11px var(--mono); color: var(--subtle); }
+  .swapper { color: var(--subtle); display: grid; place-items: center; }
+  .post .listline { grid-column: 2; font-size: 12.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: -8px; }
+  .post .listline b { color: var(--fg); font-weight: 500; }
+  .post .act { display: flex; flex-direction: column; gap: 6px; align-items: stretch; }
+  .match { display: inline-flex; gap: 6px; align-items: center; font: 11.5px var(--mono); }
+  .match .a { color: var(--have); } .match .b { color: var(--want); }
+  .active-dot { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; white-space: nowrap; }
+  .active-dot::before { content: ""; width: 7px; height: 7px; border-radius: 99px; background: var(--subtle); }
+  .active-dot.on { color: var(--success); }
+  .active-dot.on::before { background: var(--success); box-shadow: 0 0 0 3px oklch(0.8 0.15 145 / 0.18); }
+  @container (max-width: 720px) {
+    .post { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+    .sides { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+    .swapper { justify-content: start; padding-left: 4px; }
+    .swapper .i { transform: rotate(90deg); }
+    .post .listline { grid-column: 1; margin-top: -4px; }
+    .post .act { flex-direction: row; }
+    .post .act .btn { flex: 1; }
+  }
+
+  /* For you row */
+  .prow { display: grid; grid-template-columns: 13rem minmax(0, 1fr) auto; gap: 18px; align-items: center; padding: 14px 16px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; min-width: 0; }
+  .prow .act { display: flex; gap: 6px; align-items: center; }
+  .prow .detail { grid-column: 1 / -1; border-top: 1px solid var(--border); padding-top: 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .prow .detail .dropped { display: flex; gap: 8px; align-items: center; margin-top: 8px; font-size: 12px; color: var(--subtle); }
+  .prow .detail .dropped .pc { filter: grayscale(0.9) brightness(0.55); }
+  .prow .foot { grid-column: 1 / -1; display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; font-size: 12px; color: var(--subtle); align-items: center; }
+  @container (max-width: 720px) {
+    .prow { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+    .prow .detail { grid-template-columns: 1fr; }
+  }
+
+  /* active hours */
+  .settings { padding: 20px; display: grid; gap: 14px; }
+  .sgroup { border: 1px solid var(--border); border-radius: 12px; }
+  .sgroup .sh { padding: 14px 16px 2px; font-weight: 600; font-size: 14px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  .sgroup .sd { padding: 0 16px 12px; font-size: 13px; color: var(--muted); max-width: 62ch; }
+  .srow { display: flex; gap: 14px; align-items: center; justify-content: space-between; padding: 12px 16px; border-top: 1px solid var(--border); font-size: 13px; flex-wrap: wrap; }
+  .srow .d { font-size: 12px; color: var(--subtle); margin-top: 2px; }
+  .range { display: inline-flex; align-items: center; gap: 6px; font: 13px var(--mono); }
+  .range span { padding: 4px 8px; border-radius: 7px; border: 1px solid var(--border-strong); }
+  .day24 { display: grid; gap: 6px; }
+  .day24 .bar { position: relative; height: 22px; border-radius: 6px; background: var(--secondary); overflow: hidden; }
+  .day24 .bar i { position: absolute; top: 0; bottom: 0; background: oklch(0.8 0.15 145 / 0.35); border-left: 2px solid var(--success); }
+  .day24 .bar .nowline { position: absolute; top: -2px; bottom: -2px; width: 2px; background: var(--fg); }
+  .day24 .ticks { display: flex; justify-content: space-between; font: 10.5px var(--mono); color: var(--subtle); }
+  .pop { background: var(--popover); border: 1px solid var(--border-strong); border-radius: 12px; padding: 14px; display: grid; gap: 12px; box-shadow: 0 18px 40px -16px rgb(0 0 0 / 0.8); max-width: 360px; }
+  .pop .t { font-size: 13px; }
+  .pop .t b { font-weight: 600; }
+  .surfaces { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+  .mini { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; display: grid; gap: 8px; }
+  .mini .cap { font: 10.5px var(--mono); color: var(--subtle); text-transform: uppercase; letter-spacing: 0.05em; }
+
+  /* group order */
+  .go { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 20px; padding: 20px; }
+  @media (max-width: 900px) { .go { grid-template-columns: minmax(0, 1fr); } }
+  .go h4 { margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.01em; }
+  .banner { display: flex; gap: 10px; align-items: center; padding: 10px 12px; border-radius: 10px; font-size: 13px; background: oklch(0.86 0.13 85 / 0.1); color: var(--warning); border: 1px solid oklch(0.86 0.13 85 / 0.3); }
+  .stages { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+  .stages div { border-top: 2px solid var(--border-strong); padding-top: 6px; font-size: 12px; color: var(--subtle); }
+  .stages div b { display: block; font: 10.5px var(--mono); }
+  .stages .done { border-color: var(--success); color: var(--muted); }
+  .stages .now { border-color: var(--accent); color: var(--fg); }
+  .stages .now b { color: var(--accent); }
+  @media (max-width: 520px) { .stages { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  .tbl { overflow-x: auto; }
+  table.slots { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 520px; }
+  table.slots th { text-align: left; font: 500 10.5px var(--mono); color: var(--subtle); text-transform: uppercase; letter-spacing: 0.05em; padding: 8px; border-bottom: 1px solid var(--border-strong); }
+  table.slots td { padding: 10px 8px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  table.slots td.n { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+  .objcell { display: flex; gap: 10px; align-items: center; }
+  .kind { font: 10.5px var(--mono); color: var(--subtle); }
+  .status { font: 11px var(--mono); padding: 2px 7px; border-radius: 5px; background: var(--secondary); color: var(--muted); white-space: nowrap; }
+  .status.ok { color: var(--success); background: oklch(0.8 0.15 145 / 0.1); }
+  .status.wait { color: var(--warning); background: oklch(0.86 0.13 85 / 0.1); }
+  .status.bad { color: var(--destructive); background: oklch(0.72 0.17 18 / 0.12); }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 14px; display: grid; gap: 10px; }
+  .card h5 { margin: 0; font-size: 13px; font-weight: 600; }
+  .facts { display: grid; grid-template-columns: 1fr auto; gap: 5px 12px; font-size: 13px; margin: 0; }
+  .facts dt { color: var(--muted); }
+  .facts dd { margin: 0; font-family: var(--mono); text-align: right; font-variant-numeric: tabular-nums; }
+  .facts dd.warn { color: var(--warning); }
+  .gombadge { font: 600 10px var(--mono); padding: 1px 6px; border-radius: 4px; background: var(--accent-bg); color: var(--accent); letter-spacing: 0.04em; }
+  .updates { display: grid; gap: 0; }
+  .upd { display: grid; grid-template-columns: 74px minmax(0, 1fr); gap: 12px; padding: 10px 0; border-top: 1px solid var(--border); font-size: 13px; }
+  .upd .d { font: 11px var(--mono); color: var(--subtle); padding-top: 2px; }
+  .upd p { margin: 0; color: var(--muted); }
+  .upd b { color: var(--fg); font-weight: 600; }
+
+  /* decisions */
+  .decs { display: grid; gap: 0; max-width: 900px; }
+  .dec { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 4px 20px; padding: 18px 0; border-top: 1px solid var(--border); }
+  .dec .q { font: 13px var(--mono); color: var(--subtle); }
+  .dec h4 { margin: 0; font-size: 16px; font-weight: 600; }
+  .dec p { grid-column: 2; margin: 0; font-size: 14px; color: var(--muted); }
+  .dec p b { color: var(--fg); font-weight: 600; }
+  @media (max-width: 640px) { .dec { grid-template-columns: 1fr; } .dec p { grid-column: 1; } }
+</style>
+
+  </head>
+  <body class="dark">
+<svg width="0" height="0" style="position: absolute" aria-hidden="true">
+  <symbol id="i-swap" viewBox="0 0 24 24"><path d="M8 3 4 7l4 4" /><path d="M4 7h16" /><path d="m16 21 4-4-4-4" /><path d="M20 17H4" /></symbol>
+  <symbol id="i-msg" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" /></symbol>
+  <symbol id="i-more" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1" /><circle cx="12" cy="12" r="1" /><circle cx="19" cy="12" r="1" /></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6" /></symbol>
+  <symbol id="i-up" viewBox="0 0 24 24"><path d="m18 15-6-6-6 6" /></symbol>
+  <symbol id="i-filter" viewBox="0 0 24 24"><path d="M3 6h18M7 12h10M10 18h4" /></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" /></symbol>
+  <symbol id="i-cards" viewBox="0 0 24 24"><rect x="3" y="6" width="12" height="15" rx="2" /><path d="M8 3h11a2 2 0 0 1 2 2v13" /></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" /><path d="M12 9v4" /><path d="M12 17h.01" /></symbol>
+  <symbol id="i-eyeoff" viewBox="0 0 24 24"><path d="m2 2 20 20" /><path d="M6.7 6.7A10.8 10.8 0 0 0 2 12s3 7 10 7a9.7 9.7 0 0 0 5.3-1.5" /><path d="M10.6 5.1A10 10 0 0 1 12 5c7 0 10 7 10 7a13 13 0 0 1-1.7 2.7" /></symbol>
+</svg>
+
+<main class="wrap">
+  <header class="doc">
+    <div class="eyebrow">Objekt Explorer · Trade · round 1 feedback · Oct 2026</div>
+    <h1>Trade feedback, drawn before it's built</h1>
+    <p>
+      What users and you said about Browse and For you, what each point turns into, and how it would look. Same app look as today. Nothing here is built;
+      the written version is <span class="mono">design/trade-feedback-2026-10.md</span>, and group orders have their own plan in <span class="mono">design/group-orders.md</span>.
+    </p>
+    <nav class="triage" aria-label="Feedback and what happens to it">
+      <a href="#browse"><span class="call now">Do now</span><span class="q">“One straight line of announce, not split in two”</span><span class="who">users</span></a>
+      <a href="#browse"><span class="call now">Do now</span><span class="q">Cards in Browse and For you have too much empty space</span><span class="who">you</span></a>
+      <a href="#filters"><span class="call now">Do now</span><span class="q">“Split the market between idntt / ARTMS / tripleS”</span><span class="who">users</span></a>
+      <a href="#foryou"><span class="call now">Do now</span><span class="q">For you rows use the same one-line layout</span><span class="who">follows from the above</span></a>
+      <a href="#active"><span class="call next">Do next</span><span class="q">“A layer of timezone to show if you are active at the hour”</span><span class="who">users</span></a>
+      <a href="#go"><span class="call later">Later</span><span class="q">Group orders (GO / GOM)</span><span class="who">users</span></a>
+      <a href="#decisions"><span class="call skip">Skip for now</span><span class="q">Let people organise the display · Sell unscanned objekts</span><span class="who">users</span></a>
+    </nav>
+  </header>
+
+  <!-- ============ 01 BROWSE ============ -->
+  <section class="s" id="browse">
+    <div class="head">
+      <div class="num">01</div>
+      <h2>One post per line</h2>
+      <p>Today two posts share a row, each stacking HAVE over WANT with 40 px thumbnails. Short lists leave the half-width card mostly empty, and a long one makes its neighbour just as tall. The proposal reads like an announcement: who, what they have, what they want, Message.</p>
+    </div>
+    <div class="split">
+      <div class="stack">
+        <div>
+          <p class="label">Today <span class="tag">lg and up</span></p>
+          <div class="frame">
+            <div class="in">
+              <div class="old-grid">
+                <article class="old">
+                  <div class="byline">
+                    <span class="avatar" style="--h: 20">K</span>
+                    <div class="who"><span class="name">kimlynn <span class="tagb">WTT</span></span><span class="trust">14 verified · 100% · since Mar 2025</span></div>
+                  </div>
+                  <div class="listname">Atom02 dupes <span>Mostly SeoYeon and HyeRin, ask for others</span></div>
+                  <div class="side"><span class="role tone-have">Have</span><div class="strip wrap" data-n="3" data-seed="2" data-w="40"></div></div>
+                  <div class="side empty-hint" data-hint="empty"><span class="role tone-want">Want</span><div class="strip wrap" data-n="2" data-seed="9" data-w="40" data-ring="0"></div></div>
+                  <footer><span class="when">bumped 2 hours ago</span><span class="btn sm"><svg class="i sm"><use href="#i-msg" /></svg>Message</span></footer>
+                </article>
+                <article class="old">
+                  <div class="byline">
+                    <span class="avatar" style="--h: 150">J</span>
+                    <div class="who"><span class="name">jiwoo.cosmo <span class="tagb">WTT</span></span><span class="trust">3 verified · 100% · since Jul 2026</span></div>
+                  </div>
+                  <div class="listname">Binary01 haves <span>All tradeable, no QYOP</span></div>
+                  <div class="side"><span class="role tone-have">Have</span><div class="strip wrap" data-n="27" data-seed="4" data-w="40" data-cap="10"></div></div>
+                  <div class="side"><span class="role tone-want">Want</span><div class="strip wrap" data-n="14" data-seed="11" data-w="40" data-cap="10" data-ring="2,5"></div></div>
+                  <footer><span class="when">bumped 5 hours ago</span><span class="btn sm"><svg class="i sm"><use href="#i-msg" /></svg>Message</span></footer>
+                </article>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <p class="label">Proposed <span class="tag new">one per line</span></p>
+          <div class="frame">
+            <div class="appbar">
+              <h4>Trade</h4>
+              <div class="tabs"><span class="on">Browse</span><span>For you</span><span>My trades</span></div>
+            </div>
+            <div class="in">
+              <div class="toolbar">
+                <div class="tabs"><span class="on">All</span><span>WTT</span><span>WTB</span><span>WTS</span></div>
+                <span class="switch"><i></i>Only matches</span>
+                <span class="btn sm" style="margin-left: auto"><svg class="i sm"><use href="#i-cards" /></svg>Post a list</span>
+              </div>
+              <div class="feed">
+                <article class="post">
+                  <div class="meta">
+                    <div class="byline"><span class="avatar" style="--h: 20">K</span><div class="who"><span class="name">kimlynn <span class="tagb">WTT</span></span><span class="trust">14 verified · 100%</span></div></div>
+                    <div class="row"><span class="active-dot on">Active now</span><span class="when">· 2h ago</span></div>
+                  </div>
+                  <div class="sides">
+                    <div class="side"><div class="hd"><span class="role tone-have">Have</span><span class="count">3</span></div><div class="strip fit" data-n="3" data-seed="2"></div></div>
+                    <div class="swapper"><svg class="i"><use href="#i-swap" /></svg></div>
+                    <div class="side"><div class="hd"><span class="role tone-want">Want</span><span class="count">2</span></div><div class="strip fit" data-n="2" data-seed="9" data-ring="0"></div></div>
+                  </div>
+                  <div class="act"><span class="btn sm"><svg class="i sm"><use href="#i-msg" /></svg>Message</span><span class="btn sm ghost"><svg class="i sm"><use href="#i-more" /></svg></span></div>
+                  <div class="listline"><b>Atom02 dupes</b> · Mostly SeoYeon and HyeRin, ask for others · <span class="match"><span class="b">1 you want</span></span></div>
+                </article>
+
+                <article class="post">
+                  <div class="meta">
+                    <div class="byline"><span class="avatar" style="--h: 150">J</span><div class="who"><span class="name">jiwoo.cosmo <span class="tagb">WTT</span></span><span class="trust">3 verified · 100%</span></div></div>
+                    <div class="row"><span class="active-dot">Active in 6 h</span><span class="when">· 5h ago</span></div>
+                  </div>
+                  <div class="sides">
+                    <div class="side"><div class="hd"><span class="role tone-have">Have</span><span class="count">27</span></div><div class="strip fit" data-n="27" data-seed="4"></div></div>
+                    <div class="swapper"><svg class="i"><use href="#i-swap" /></svg></div>
+                    <div class="side"><div class="hd"><span class="role tone-want">Want</span><span class="count">14</span></div><div class="strip fit" data-n="14" data-seed="11" data-ring="2,5"></div></div>
+                  </div>
+                  <div class="act"><span class="btn sm"><svg class="i sm"><use href="#i-msg" /></svg>Message</span><span class="btn sm ghost"><svg class="i sm"><use href="#i-more" /></svg></span></div>
+                  <div class="listline"><b>Binary01 haves</b> · All tradeable, no QYOP · <span class="match"><span class="b">2 you want</span> · <span class="a">4 they want</span> · Mutual · <u>See in For you</u></span></div>
+                </article>
+
+                <article class="post">
+                  <div class="meta">
+                    <div class="byline"><span class="avatar" style="--h: 330">M</span><div class="who"><span class="name">moonseller <span class="tagb">WTS</span></span><span class="trust">41 verified · 98%</span></div></div>
+                    <div class="row"><span class="active-dot on">Active now</span><span class="when">· 1d ago</span></div>
+                  </div>
+                  <div class="sides one">
+                    <div class="side"><div class="hd"><span class="role tone-sale">Sale</span><span class="count">19 · MYR</span></div><div class="strip fit" data-n="19" data-seed="21" data-price="RM12,RM15,RM9,QYOP,RM40,RM12,RM18,RM22,RM12,RM10,QYOP,RM15"></div></div>
+                  </div>
+                  <div class="act"><span class="btn sm"><svg class="i sm"><use href="#i-msg" /></svg>Message</span><span class="btn sm ghost"><svg class="i sm"><use href="#i-more" /></svg></span></div>
+                  <div class="listline"><b>Clearing Ever01</b> · Shipping from KL, Cosmo transfer only</div>
+                </article>
+
+                <article class="post">
+                  <div class="meta">
+                    <div class="byline"><span class="avatar" style="--h: 240">S</span><div class="who"><span class="name">soda <span class="tagb">WTB</span></span><span class="trust">No trades yet</span></div></div>
+                    <div class="row"><span class="when">3d ago</span></div>
+                  </div>
+                  <div class="sides one">
+                    <div class="side"><div class="hd"><span class="role tone-want">Want</span><span class="count">6</span></div><div class="strip fit" data-n="6" data-seed="31" data-ring="1"></div></div>
+                  </div>
+                  <div class="act"><span class="btn sm"><svg class="i sm"><use href="#i-msg" /></svg>Message</span><span class="btn sm ghost"><svg class="i sm"><use href="#i-more" /></svg></span></div>
+                  <div class="listline"><b>Divine01 Kaede</b> · <span class="match"><span class="a">1 they want</span></span></div>
+                </article>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <p class="label">Proposed, phone <span class="tag">stacks, strips stay one line</span></p>
+          <div class="frame phone">
+            <div class="in">
+              <div class="feed">
+                <article class="post">
+                  <div class="meta">
+                    <div class="byline"><span class="avatar" style="--h: 150">J</span><div class="who"><span class="name">jiwoo.cosmo <span class="tagb">WTT</span></span><span class="trust">3 verified · 100%</span></div></div>
+                    <div class="row"><span class="active-dot">Active in 6 h</span><span class="when">· 5h ago</span></div>
+                  </div>
+                  <div class="sides">
+                    <div class="side"><div class="hd"><span class="role tone-have">Have</span><span class="count">27</span></div><div class="strip fit" data-n="27" data-seed="4" data-w="48"></div></div>
+                    <div class="swapper"><svg class="i"><use href="#i-swap" /></svg></div>
+                    <div class="side"><div class="hd"><span class="role tone-want">Want</span><span class="count">14</span></div><div class="strip fit" data-n="14" data-seed="11" data-ring="2,5" data-w="48"></div></div>
+                  </div>
+                  <div class="listline"><b>Binary01 haves</b> · All tradeable, no QYOP</div>
+                  <div class="act"><span class="btn sm"><svg class="i sm"><use href="#i-msg" /></svg>Message</span><span class="btn sm ghost"><svg class="i sm"><use href="#i-more" /></svg></span></div>
+                </article>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <aside class="notes">
+        <div>
+          <h3>What changes</h3>
+          <ul>
+            <li>One post per row, full width. No more two-up grid, so no row is stretched by its neighbour.</li>
+            <li>HAVE <strong>⇄</strong> WANT side by side for a trade pair; WTS shows one SALE strip with prices; WTB one WANT strip.</li>
+            <li>Thumbnails go from 40 to 56 px and never wrap. A strip shows what fits its width and ends in <span class="mono">+N</span>. Resize the window to see it.</li>
+            <li>List name, description and match counts become one muted line under the strips.</li>
+            <li>The byline column carries trust, active hours (section 04) and when it was bumped.</li>
+          </ul>
+        </div>
+        <div>
+          <h3>Code</h3>
+          <p><span class="mono">browse-post.tsx</span>, <span class="mono">post-side.tsx</span> (fit instead of <span class="mono">STRIP_LIMIT</span>), and <span class="mono">browse-view.tsx</span> loses the <span class="mono">POSTS_PER_ROW</span> chunking: one post per virtual item.</p>
+        </div>
+        <div class="ask"><b>Your call</b>Keep each post as a bordered card (shown), or drop the border and split rows with a rule for a denser feed?</div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ============ 02 FILTERS ============ -->
+  <section class="s" id="filters">
+    <div class="head">
+      <div class="num">02</div>
+      <h2>Filters back on Browse, and they narrow the post too</h2>
+      <p>The facet filters were removed in <span class="mono">845a2cc7</span> because posts mix artists and members: a filter kept a post if any one objekt matched, then showed all of them. This time a filter also trims each post down to the objekts that match, with a link to the rest.</p>
+    </div>
+    <div class="split">
+      <div class="stack">
+        <div>
+          <p class="label">Filter bar <span class="tag new">artist first</span></p>
+          <div class="frame">
+            <div class="in">
+              <div class="toolbar">
+                <div class="seg" role="group" aria-label="Artist"><span>All</span><span class="on">tripleS</span><span>ARTMS</span><span>idntt</span></div>
+                <span class="drop set"><b>Member</b> SeoYeon</span>
+                <span class="drop"><b>Season</b> Any</span>
+                <span class="drop"><b>Class</b> Any</span>
+                <span class="drop"><b>Online</b> Any</span>
+                <span class="btn sm ghost">Reset</span>
+              </div>
+              <div class="toolbar">
+                <div class="tabs"><span class="on">All</span><span>WTT</span><span>WTB</span><span>WTS</span></div>
+                <span class="switch"><i></i>Only matches</span>
+                <span class="switch on"><i></i>Active now</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <p class="label">The same post, unfiltered and filtered to SeoYeon</p>
+          <div class="frame">
+            <div class="in">
+              <div class="feed">
+                <article class="post">
+                  <div class="meta">
+                    <div class="byline"><span class="avatar" style="--h: 150">J</span><div class="who"><span class="name">jiwoo.cosmo <span class="tagb">WTT</span></span><span class="trust">3 verified · 100%</span></div></div>
+                    <div class="row subtle">No filter</div>
+                  </div>
+                  <div class="sides">
+                    <div class="side"><div class="hd"><span class="role tone-have">Have</span><span class="count">27</span></div><div class="strip fit" data-n="27" data-seed="4"></div></div>
+                    <div class="swapper"><svg class="i"><use href="#i-swap" /></svg></div>
+                    <div class="side"><div class="hd"><span class="role tone-want">Want</span><span class="count">14</span></div><div class="strip fit" data-n="14" data-seed="11"></div></div>
+                  </div>
+                  <div class="act"><span class="btn sm"><svg class="i sm"><use href="#i-msg" /></svg>Message</span></div>
+                </article>
+                <article class="post">
+                  <div class="meta">
+                    <div class="byline"><span class="avatar" style="--h: 150">J</span><div class="who"><span class="name">jiwoo.cosmo <span class="tagb">WTT</span></span><span class="trust">3 verified · 100%</span></div></div>
+                    <div class="row"><span class="chip">SeoYeon</span></div>
+                  </div>
+                  <div class="sides">
+                    <div class="side"><div class="hd"><span class="role tone-have">Have</span><span class="count">4 of 27</span></div><div class="strip fit" data-n="4" data-seed="40" data-others="23"></div></div>
+                    <div class="swapper"><svg class="i"><use href="#i-swap" /></svg></div>
+                    <div class="side"><div class="hd"><span class="role tone-want">Want</span><span class="count">1 of 14</span></div><div class="strip fit" data-n="1" data-seed="44" data-others="13"></div></div>
+                  </div>
+                  <div class="act"><span class="btn sm"><svg class="i sm"><use href="#i-msg" /></svg>Message</span></div>
+                </article>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <aside class="notes">
+        <div>
+          <h3>What changes</h3>
+          <ul>
+            <li><strong>Artist</strong> becomes a segmented control at the front, answering “split the market”. It writes the same selected-artists state as the header picker, so the two never disagree.</li>
+            <li>Member, season, class and online/offline come back through the shared filter bar and sheet.</li>
+            <li>With any filter set, each strip shows only matching objekts, then <span class="mono">+23 others</span> linking to the full list.</li>
+            <li>A post with nothing matching on any side is left out, as the server already does.</li>
+          </ul>
+        </div>
+        <div>
+          <h3>Code</h3>
+          <p>Server input already takes the facets (<span class="mono">browseFiltersSchema</span>). <span class="mono">fetchPostEntries</span> in <span class="mono">trade-feed/</span> takes the filter's slug set, returns matching entries first, and counts the others.</p>
+        </div>
+        <div class="ask"><b>Your call</b>Does the match chip count the whole post (proposed) or only what the filter shows?</div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ============ 03 FOR YOU ============ -->
+  <section class="s" id="foryou">
+    <div class="head">
+      <div class="num">03</div>
+      <h2>For you uses the same line</h2>
+      <p>A partner row today is a header with a collapsible panel of two columns. Collapsed it says almost nothing; open it is tall. The proposal shows the first strip of each direction in the row itself, and the panel only adds the full grids, the objekts not counted, and Hide.</p>
+    </div>
+    <div class="split">
+      <div class="frame">
+        <div class="appbar">
+          <h4>Trade</h4>
+          <div class="tabs"><span>Browse</span><span class="on">For you</span><span>My trades</span></div>
+        </div>
+        <div class="in">
+          <div class="toolbar"><div class="tabs"><span class="on">All</span><span>Mutual</span><span>They want</span><span>They have</span></div></div>
+          <div class="feed">
+            <article class="prow">
+              <div class="meta" style="display: grid; gap: 6px">
+                <div class="byline"><span class="avatar" style="--h: 60">H</span><div class="who"><span class="name">hyerinbot</span><span class="trust">22 verified · 100%</span></div></div>
+                <div class="row" style="display: flex; gap: 6px; font-size: 12px; color: var(--muted)"><span class="active-dot on">Active now</span><span class="when">· 2 lists</span></div>
+              </div>
+              <div class="sides">
+                <div class="side"><div class="hd"><span class="role tone-have">They have</span><span class="count">5</span></div><div class="strip fit" data-n="5" data-seed="51"></div></div>
+                <div class="swapper"><svg class="i"><use href="#i-swap" /></svg></div>
+                <div class="side"><div class="hd"><span class="role tone-want">You have</span><span class="count">3</span></div><div class="strip fit" data-n="3" data-seed="57"></div></div>
+              </div>
+              <div class="act"><span class="btn sm primary">Propose</span><span class="btn sm icon" aria-label="Message"><svg class="i sm"><use href="#i-msg" /></svg></span><span class="btn sm icon" aria-label="Collapse"><svg class="i sm"><use href="#i-up" /></svg></span></div>
+              <div class="detail">
+                <div class="side"><div class="hd"><span class="role tone-have">They have, you want</span><span class="count">5</span></div><div class="strip wrap" data-n="5" data-seed="51"></div></div>
+                <div class="side"><div class="hd"><span class="role tone-want">You have, they want</span><span class="count">3</span></div><div class="strip wrap" data-n="3" data-seed="57"></div>
+                  <div class="dropped"><span class="pc" style="--w: 32px; --h: 200"></span>1 not counted: no longer in your wallet</div></div>
+              </div>
+              <div class="foot"><span>Updated 4 hours ago</span><span class="btn sm ghost"><svg class="i sm"><use href="#i-eyeoff" /></svg>Hide hyerinbot</span></div>
+            </article>
+            <article class="prow">
+              <div class="meta" style="display: grid; gap: 6px">
+                <div class="byline"><span class="avatar" style="--h: 150">J</span><div class="who"><span class="name">jiwoo.cosmo</span><span class="trust">3 verified · 100%</span></div></div>
+                <div class="row" style="display: flex; gap: 6px; font-size: 12px; color: var(--muted)"><span class="active-dot">Active in 6 h</span><span class="when">· 1 list</span></div>
+              </div>
+              <div class="sides">
+                <div class="side"><div class="hd"><span class="role tone-have">They have</span><span class="count">2</span></div><div class="strip fit" data-n="2" data-seed="61"></div></div>
+                <div class="swapper"><svg class="i"><use href="#i-swap" /></svg></div>
+                <div class="side"><div class="hd"><span class="role tone-want">You have</span><span class="count">4</span></div><div class="strip fit" data-n="4" data-seed="66"></div></div>
+              </div>
+              <div class="act"><span class="btn sm primary">Propose</span><span class="btn sm icon" aria-label="Message"><svg class="i sm"><use href="#i-msg" /></svg></span><span class="btn sm icon" aria-label="Expand"><svg class="i sm"><use href="#i-down" /></svg></span></div>
+            </article>
+            <article class="prow">
+              <div class="meta" style="display: grid; gap: 6px">
+                <div class="byline"><span class="avatar" style="--h: 300">Y</span><div class="who"><span class="name">yoonseo_ <span class="tagb">Idle</span></span><span class="trust">8 verified · 100%</span></div></div>
+                <div class="row" style="display: flex; gap: 6px; font-size: 12px; color: var(--muted)"><span class="when">no list changes in 41 days</span></div>
+              </div>
+              <div class="sides">
+                <div class="side"><div class="hd"><span class="role tone-have">They have</span><span class="count">1</span></div><div class="strip fit" data-n="1" data-seed="71"></div></div>
+                <div class="swapper"><svg class="i"><use href="#i-swap" /></svg></div>
+                <div class="side"><div class="hd"><span class="role tone-want">You have</span><span class="count">0</span></div><div class="strip fit" data-n="0"></div></div>
+              </div>
+              <div class="act"><span class="btn sm">Propose</span><span class="btn sm icon" aria-label="Message"><svg class="i sm"><use href="#i-msg" /></svg></span><span class="btn sm icon" aria-label="Expand"><svg class="i sm"><use href="#i-down" /></svg></span></div>
+            </article>
+          </div>
+        </div>
+      </div>
+      <aside class="notes">
+        <div>
+          <h3>What changes</h3>
+          <ul>
+            <li>Same columns as Browse: who, theirs ⇄ yours, actions. Both tabs read alike.</li>
+            <li>Rows show the useful part when collapsed, so idle partners no longer collapse to a bare name.</li>
+            <li>Expanding adds the full grids, the objekts not counted and why, and Hide.</li>
+            <li>Propose and Message move into the row; the lists popover folds into the “2 lists” text.</li>
+          </ul>
+        </div>
+        <div>
+          <h3>Code</h3>
+          <p><span class="mono">partner-row.tsx</span> only; the API shape stays.</p>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ============ 04 ACTIVE HOURS ============ -->
+  <section class="s" id="active">
+    <div class="head">
+      <div class="num">04</div>
+      <h2>Active hours</h2>
+      <p>Users want to know whether someone will answer now. A trader can set the hours they're usually around, in their own timezone; everyone else sees those hours in theirs.</p>
+    </div>
+    <div class="split">
+      <div class="stack">
+        <div>
+          <p class="label">Account › Trade <span class="tag new">opt-in</span></p>
+          <div class="frame">
+            <div class="settings">
+              <div class="sgroup">
+                <div class="sh">Active hours <span class="switch on"><i></i></span></div>
+                <div class="sd">Shown on your posts, For you and chat as “Active now” or when you'll be back, in each viewer's own time. Your timezone itself isn't shown.</div>
+                <div class="srow"><div>Timezone<div class="d">Detected from this browser</div></div><span class="drop"><b>Asia/Kuala_Lumpur</b> GMT+8</span></div>
+                <div class="srow"><div>Usually active<div class="d">Up to two ranges a day</div></div><div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center"><span class="range"><span>12:00</span>–<span>14:00</span></span><span class="range"><span>20:00</span>–<span>01:00</span></span></div></div>
+                <div class="srow"><div>Weekends differ</div><span class="switch"><i></i></span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <p class="label">Where it shows <span class="tag">viewer in London, 13:10</span></p>
+          <div class="surfaces">
+            <div class="mini">
+              <span class="cap">Browse / For you byline</span>
+              <div class="byline"><span class="avatar sm" style="--h: 20">K</span><div class="who"><span class="name">kimlynn</span><span class="active-dot on">Active now</span></div></div>
+              <div class="byline"><span class="avatar sm" style="--h: 150">J</span><div class="who"><span class="name">jiwoo.cosmo</span><span class="active-dot">Active in 6 h</span></div></div>
+            </div>
+            <div class="pop">
+              <div class="t"><b>jiwoo.cosmo</b> is usually active <span class="mono">19:00–21:00</span> and <span class="mono">23:00–02:00</span> your time.</div>
+              <div class="day24">
+                <div class="bar" aria-hidden="true">
+                  <i style="left: 0; width: 8.33%"></i>
+                  <i style="left: 79.17%; width: 8.33%"></i>
+                  <i style="left: 95.83%; width: 4.17%"></i>
+                  <span class="nowline" style="left: 54.8%"></span>
+                </div>
+                <div class="ticks"><span>00</span><span>06</span><span>12</span><span>18</span><span>24</span></div>
+              </div>
+              <div class="t subtle" style="font-size: 12px">Their day, laid over yours. The white line is now.</div>
+            </div>
+            <div class="mini">
+              <span class="cap">Chat header</span>
+              <div class="byline"><span class="avatar sm" style="--h: 150">J</span><div class="who"><span class="name">jiwoo.cosmo</span><span class="trust">Usually active 19:00–02:00 your time</span></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <aside class="notes">
+        <div>
+          <h3>How it works</h3>
+          <ul>
+            <li>Stored as an IANA zone plus ranges in minutes, so daylight saving is handled.</li>
+            <li>Off by default. A timezone narrows where someone lives, so viewers only ever see converted times.</li>
+            <li>Browse gets an <strong>Active now</strong> toggle next to Only matches.</li>
+          </ul>
+        </div>
+        <div>
+          <h3>Alternative</h3>
+          <p>Centrifugo already has a personal channel per user, so presence could show “Online now” with no setting. It only covers this minute and says nothing to someone browsing at 3 am, so it's an addition, not a replacement.</p>
+        </div>
+        <div class="ask"><b>Your call</b>Ship declared hours alone first, or together with live “Online now”?</div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ============ 05 GROUP ORDERS ============ -->
+  <section class="s" id="go">
+    <div class="head">
+      <div class="num">05</div>
+      <h2>Group orders, one screen</h2>
+      <p>Low priority, so only the order page a participant sees, to check the plan holds together. Stages, slots, payment and delivery marks, the GOM's track record, and updates with the overdue rule. The full plan and its open questions are in <span class="mono">design/group-orders.md</span>.</p>
+    </div>
+    <div class="frame">
+      <div class="go">
+        <div class="stack" style="gap: 18px">
+          <div style="display: grid; gap: 8px">
+            <div class="byline"><span class="avatar" style="--h: 90">A</span><div class="who"><span class="name">aurora.go <span class="gombadge">GOM</span></span><span class="trust">12 orders completed · 96% on time</span></div></div>
+            <h4>ARTMS Moonlight merch + Atom03 digital</h4>
+            <div class="muted" style="font-size: 13px">Ships to MY, SG, ID · fees included · bank transfer, Wise, Touch 'n Go</div>
+          </div>
+          <div class="banner"><svg class="i"><use href="#i-alert" /></svg>Update overdue: last update 16 days ago. Updates are due every 14 days while an order is Ordered or Delivering.</div>
+          <div class="stages" aria-label="Order stage">
+            <div class="done"><b>01</b>Open</div>
+            <div class="done"><b>02</b>Closed</div>
+            <div class="now"><b>03</b>Ordered</div>
+            <div><b>04</b>Delivering</div>
+            <div><b>05</b>Completed</div>
+          </div>
+          <div class="tbl">
+            <table class="slots">
+              <thead><tr><th>Your slots</th><th>Price</th><th>Payment</th><th>Delivery</th></tr></thead>
+              <tbody>
+                <tr><td><div class="objcell"><span class="pc divine" style="--w: 32px; --h: 280"></span><div>HeeJin Atom03 301Z<div class="kind">digital objekt</div></div></div></td><td class="n">RM 38</td><td><span class="status ok">received by GOM</span></td><td><span class="status">checked on chain</span></td></tr>
+                <tr><td><div class="objcell"><span class="pc ever" style="--w: 32px; --h: 200"></span><div>Moonlight photocard set<div class="kind">merch</div></div></div></td><td class="n">RM 65</td><td><span class="status ok">received by GOM</span></td><td><span class="status wait">not shipped</span></td></tr>
+                <tr><td><div class="objcell"><span style="width: 32px; display: grid; place-items: center" class="subtle mono">+</span><div>Shipping, round 2<div class="kind">opens when parcels are ready</div></div></div></td><td class="n">—</td><td><span class="status">not open</span></td><td></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div>
+            <p class="label">Updates</p>
+            <div class="updates">
+              <div class="upd"><span class="d">Sep 25</span><p><b>Items ordered from the official store.</b> Store says 6–8 weeks.</p></div>
+              <div class="upd"><span class="d">Sep 12</span><p><b>Expected delivery moved to Dec 15.</b> Reason: the store pushed the release by 3 weeks. Everyone was notified.</p></div>
+            </div>
+          </div>
+        </div>
+        <div class="stack" style="gap: 14px">
+          <div class="card">
+            <h5>Dates</h5>
+            <dl class="facts">
+              <dt>Sign-ups closed</dt><dd>Sep 01</dd>
+              <dt>Payment due</dt><dd>Sep 08</dd>
+              <dt>Expected delivery</dt><dd class="warn">Dec 15</dd>
+            </dl>
+          </div>
+          <div class="card">
+            <h5>aurora.go as GOM</h5>
+            <dl class="facts">
+              <dt>Completed orders</dt><dd>12</dd>
+              <dt>Delivered on time</dt><dd>96%</dd>
+              <dt>Updates on time</dt><dd class="warn">88%</dd>
+              <dt>Delays announced early</dt><dd>5 of 5</dd>
+              <dt>Ratings</dt><dd>100%</dd>
+            </dl>
+          </div>
+          <div class="card">
+            <h5>Talk</h5>
+            <span class="btn sm"><svg class="i sm"><use href="#i-msg" /></svg>Announcements · 3</span>
+            <span class="btn sm"><svg class="i sm"><use href="#i-msg" /></svg>Message aurora.go</span>
+            <span class="subtle" style="font-size: 12px">“Not received” opens after Dec 15.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ DECISIONS ============ -->
+  <section class="s" id="decisions">
+    <div class="head">
+      <div class="num">—</div>
+      <h2>Decisions for you</h2>
+      <p>Each one changes what gets built. The proposed answer is in bold.</p>
+    </div>
+    <div class="decs">
+      <div class="dec"><span class="q">D1</span><h4>Browse row style</h4><p><b>Bordered card per post</b>, or borderless rows split by a rule for more density.</p></div>
+      <div class="dec"><span class="q">D2</span><h4>Match chip under a filter</h4><p><b>Counts the whole post</b>, or only what the filter shows.</p></div>
+      <div class="dec"><span class="q">D3</span><h4>One-sided filter results</h4><p>A post whose WANT side has nothing matching still shows, <b>with “0 matching · 8 others”</b>, or the empty side hides.</p></div>
+      <div class="dec"><span class="q">D4</span><h4>Active hours scope</h4><p><b>Declared hours first</b>, live “Online now” later; or both at once.</p></div>
+      <div class="dec"><span class="q">D5</span><h4>Organise the display</h4><p><b>Skip</b> until the one-line layout ships; a comfortable/compact toggle is the cheapest version if it comes back.</p></div>
+      <div class="dec"><span class="q">D6</span><h4>Unscanned objekts</h4><p><b>Skip</b> on Trade: they have no token, so nothing can be verified. Handle as “physical objekt” inside group orders.</p></div>
+      <div class="dec"><span class="q">D7</span><h4>Order of work</h4><p><b>01 + 03 (web only) → 02 (web + feed query) → 04 (migration) → group orders</b> as their own OpenSpec changes.</p></div>
+    </div>
+  </section>
+</main>
+
+<script>
+  (function () {
+    const BANDS = ["", "binary", "cream", "divine", "ever"];
+    const rand = (seed) => () => ((seed = (seed * 9301 + 49297) % 233280) / 233280);
+
+    function thumb(r, w, ring, price) {
+      const cell = document.createElement("span");
+      cell.className = "cell";
+      const pc = document.createElement("span");
+      pc.className = "pc " + BANDS[Math.floor(r() * BANDS.length)] + (ring ? " ring" : "");
+      pc.style.setProperty("--h", String(Math.floor(r() * 360)));
+      pc.style.setProperty("--w", w + "px");
+      cell.append(pc);
+      if (price) {
+        const p = document.createElement("span");
+        p.className = "price";
+        p.textContent = price;
+        cell.append(p);
+      }
+      return cell;
+    }
+
+    function moreTile(n, w) {
+      const m = document.createElement("span");
+      m.className = "more";
+      m.style.setProperty("--w", w + "px");
+      m.textContent = "+" + n;
+      return m;
+    }
+
+    function render(strip) {
+      const n = Number(strip.dataset.n || 0);
+      const w = Number(strip.dataset.w || 56);
+      const seed = Number(strip.dataset.seed || 1);
+      const rings = (strip.dataset.ring || "").split(",").filter(Boolean).map(Number);
+      const prices = (strip.dataset.price || "").split(",").filter(Boolean);
+      const others = Number(strip.dataset.others || 0);
+      const cap = Number(strip.dataset.cap || 0);
+      const gap = 6;
+      let shown = n;
+      if (strip.classList.contains("fit")) {
+        const reserve = others ? 92 : 0;
+        const fits = Math.max(1, Math.floor((strip.clientWidth - reserve + gap) / (w + gap)));
+        if (n > fits) shown = fits - 1;
+      } else if (cap && n > cap) {
+        shown = cap;
+      }
+      const r = rand(seed);
+      const items = [];
+      for (let i = 0; i < shown; i++) items.push(thumb(r, w, rings.includes(i), prices[i % (prices.length || 1)]));
+      if (shown < n) items.push(moreTile(n - shown, w));
+      if (n === 0) {
+        const none = document.createElement("span");
+        none.className = "others";
+        none.style.textDecoration = "none";
+        none.textContent = "none yet";
+        items.push(none);
+      }
+      if (others) {
+        const o = document.createElement("span");
+        o.className = "others";
+        o.textContent = "+" + others + " others";
+        items.push(o);
+      }
+      strip.replaceChildren(...items);
+    }
+
+    const strips = document.querySelectorAll(".strip");
+    strips.forEach(render);
+    if ("ResizeObserver" in window) {
+      const ro = new ResizeObserver((entries) => {
+        for (const e of entries) if (e.target.classList.contains("fit")) render(e.target);
+      });
+      strips.forEach((s) => ro.observe(s));
+    }
+  })();
+</script>
+  </body>
+</html>
