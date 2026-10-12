@@ -18,3 +18,10 @@ export const compareInputSchema = z.discriminatedUnion("targetType", [
 ]);
 
 export type CompareInput = z.infer<typeof compareInputSchema>;
+
+/** `data.reason` on a refused compare. */
+export const COMPARE_REFUSALS = [
+  "compare_source_list_not_found",
+  "compare_target_profile_not_found",
+  "compare_target_list_not_found",
+] as const;

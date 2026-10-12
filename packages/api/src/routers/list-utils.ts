@@ -4,6 +4,7 @@ import { listEntries } from "@repo/db/schema";
 import { sql } from "drizzle-orm";
 import * as z from "zod";
 
+import { refuse } from "../lib/refuse";
 import { authed, pub } from "../orpc";
 import { errorResponses } from "../schemas/common/documented";
 import {
@@ -34,9 +35,7 @@ export const listUtils = {
 
       // Only sale lists can set prices
       if (list.listTypeNew !== "sale") {
-        throw new ORPCError("BAD_REQUEST", {
-          message: "Only sale lists can set prices",
-        });
+        refuse("BAD_REQUEST", "list_prices_sale_only", "Only sale lists can set prices");
       }
 
       // one statement for the whole batch; an omitted note keeps the stored one

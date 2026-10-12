@@ -19,3 +19,13 @@ export const generateCodeInputSchema = z.object({
   nickname: z.string().min(1).max(24),
   artistId: artistSchema,
 });
+
+/** `data.reason` on a refused Cosmo link step. */
+export const COSMO_LINK_REFUSALS = [
+  "cosmo_link_already_linked_self",
+  "cosmo_link_already_linked_other",
+  "cosmo_link_rate_limit",
+  "cosmo_link_verification_expired",
+  "cosmo_link_profile_mismatch",
+  "cosmo_link_code_not_found",
+] as const;

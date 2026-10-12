@@ -1,4 +1,3 @@
-import { ORPCError } from "@orpc/server";
 import { db } from "@repo/db";
 import { conversationMember, messagePref, userAddress } from "@repo/db/schema";
 import { and, eq, inArray } from "drizzle-orm";
@@ -6,6 +5,7 @@ import { and, eq, inArray } from "drizzle-orm";
 import { type MessagePref, showsActivityTo, toMessagePref } from "../../lib/chat-rules";
 import { MESSAGE_PREF_DEFAULTS, type MessageSettings } from "../../schemas/chat";
 import { loadIdentities } from "../identities";
+import { refuse } from "./refuse";
 
 export async function fetchPref(userId: string): Promise<MessagePref> {
   const [row] = await db
@@ -87,7 +87,7 @@ export async function saveSettings(userId: string, input: Partial<MessageSetting
         userAddress,
         and(eq(userAddress.address, chatAs), eq(userAddress.userId, userId)),
       );
-      if (linked === 0) throw new ORPCError("BAD_REQUEST", { message: "Not your profile" });
+      if (linked === 0) refuse("not_own_profile");
     }
     set.chatAs = chatAs;
   }

@@ -1,9 +1,10 @@
-import { ORPCError } from "@orpc/server";
 import { db } from "@repo/db";
 import { user as userSchema } from "@repo/db/auth-schema";
 import { getRequestHeaders } from "@tanstack/react-start/server";
 import { eq } from "drizzle-orm";
+import * as z from "zod";
 
+import { refuse } from "../lib/refuse";
 import { authed, pub } from "../orpc";
 import { documented, errorResponses } from "../schemas/common/documented";
 import {
@@ -33,23 +34,31 @@ export const userRouter = {
     .handler(async ({ input: { query }, context }) => {
       if (query.length < 1) return searchUsers(query);
       if (query.length > MAX_USER_SEARCH_LENGTH) {
-        throw new ORPCError("BAD_REQUEST", { message: "Query too long" });
+        refuse("BAD_REQUEST", "user_query_too_long", "Query too long");
       }
       if (await isIpRateLimited("user-search", context.headers ?? getRequestHeaders())) {
-        throw new ORPCError("TOO_MANY_REQUESTS");
+        refuse(
+          "TOO_MANY_REQUESTS",
+          "user_search_rate_limit",
+          "Too many searches, try again shortly",
+        );
       }
       return searchUsers(query);
     }),
 
   refreshProfile: authed
     // typed, so the client can send the user back through the provider for a fresh token
-    .errors({ REAUTH_REQUIRED: { status: 400 } })
+    .errors({
+      REAUTH_REQUIRED: {
+        status: 400,
+        data: z.object({ reason: z.literal("user_failed_get_info"), provider: z.string() }),
+      },
+    })
     .input(providerIdSchema)
     .handler(
       async ({
         input: providerId,
         context: {
-          messages,
           session: { user },
         },
         errors,
@@ -66,15 +75,16 @@ export const userRouter = {
         });
 
         if (!account)
-          throw new ORPCError("BAD_REQUEST", {
-            message: messages.user_not_linked_provider(),
-          });
+          refuse(
+            "BAD_REQUEST",
+            "user_not_linked_provider",
+            "Account is not linked to this social provider",
+          );
 
         if (!(await refreshProviderProfile(account)))
           throw errors.REAUTH_REQUIRED({
-            message: messages.user_failed_get_info({
-              provider: providersMap[providerId].label,
-            }),
+            message: "Failed to get info, sign in with the provider and try again",
+            data: { reason: "user_failed_get_info", provider: providersMap[providerId].label },
           });
       },
     ),

@@ -64,3 +64,6 @@ export const presignedPostInputSchema = z.object({
   mimeType: z.string().refine((val) => new Set<string>(acceptedFileMimeTypes).has(val)),
   fileSize: z.number().int().min(1).max(MAX_FILE_SIZE),
 });
+
+/** `data.reason` on a profile read or edit the signed-in user doesn't own. */
+export const PROFILE_REFUSALS = ["profile_not_linked", "profile_not_found"] as const;

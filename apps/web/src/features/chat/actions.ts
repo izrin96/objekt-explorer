@@ -15,8 +15,14 @@ export function useConversationActions(id: number) {
   const queryClient = useQueryClient();
   const options = {
     onSuccess: () => Promise.all([invalidateChatLists(queryClient), fetchNewer(queryClient, id)]),
-    onError: (error: Error) =>
-      toastManager.add({ type: "error", title: m.chat_action_error(), description: error.message }),
+    onError: (error: Error) => {
+      const refusal = refusalOf(error);
+      toastManager.add({
+        type: "error",
+        title: m.chat_action_error(),
+        description: refusal ? refusalText(refusal) : undefined,
+      });
+    },
   };
 
   return {

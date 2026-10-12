@@ -200,3 +200,14 @@ export const generateDiscordFormatInputSchema = z.object({
   haveListSlug: z.string().optional(),
   wantListSlug: z.string().optional(),
 });
+
+/** `data.reason` on a refused list create or edit, price update or entry copy. */
+export const LIST_REFUSALS = [
+  "list_linked_not_found",
+  "list_have_links_want",
+  "list_want_links_have",
+  "list_collections_required",
+  "list_currency_required",
+  "list_profile_required",
+  "list_prices_sale_only",
+] as const;

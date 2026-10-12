@@ -30,6 +30,7 @@ import { getListLinkOption } from "@/features/list/list-link";
 import { LIST_TYPE_LABEL } from "@/features/list/list-type-badge";
 import { useUserLists } from "@/features/user/hooks";
 import { orpc } from "@/lib/orpc";
+import { refusalText } from "@/lib/refusal";
 import { getBaseURL } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
@@ -95,11 +96,11 @@ export function DiscordFormatDialog({
 
   const generate = useMutation(
     orpc.list.generateDiscordFormat.mutationOptions({
-      onError: ({ message }) => {
+      onError: (error) => {
         toastManager.add({
           type: "error",
           title: m.generate_discord_error(),
-          description: message,
+          description: refusalText(error),
         });
       },
     }),

@@ -1,8 +1,8 @@
-import { ORPCError } from "@orpc/server";
 import { db } from "@repo/db";
 import { isAddress } from "@repo/lib";
 import type { ListObjekt } from "@repo/lib/types/objekt";
 
+import { refuse } from "../lib/refuse";
 import { authed, optionalAuthed } from "../orpc";
 import { addressInputSchema } from "../schemas/common/address";
 import { compareInputSchema } from "../schemas/compare";
@@ -13,14 +13,12 @@ import { isProfileHidden } from "../services/privacy";
 export const compareRouter = {
   compare: optionalAuthed
     .input(compareInputSchema)
-    .handler(async ({ context: { messages, session }, input }) => {
+    .handler(async ({ context: { session }, input }) => {
       async function buildSourceEntries(): Promise<ListObjekt[]> {
         const sourceList = await fetchListWithEntries(input.sourceId);
 
         if (!sourceList)
-          throw new ORPCError("NOT_FOUND", {
-            message: messages.compare_source_list_not_found(),
-          });
+          refuse("NOT_FOUND", "compare_source_list_not_found", "Source list not found");
 
         return buildListEntries(sourceList.entries, sourceList.isProfileBind, {
           artists: input.artist,
@@ -45,9 +43,7 @@ export const compareRouter = {
           // a hidden profile reads as a missing one: an empty set would pass
           // for a real result, and a distinct error would confirm it exists
           if (!targetProfile || isProfileHidden(targetProfile, session?.user.id))
-            throw new ORPCError("NOT_FOUND", {
-              message: messages.compare_target_profile_not_found(),
-            });
+            refuse("NOT_FOUND", "compare_target_profile_not_found", "Target profile not found");
 
           return fetchHeldSlugs(targetProfile.address);
         }
@@ -55,9 +51,7 @@ export const compareRouter = {
         const targetSlugs = await fetchListSlugs(input.targetListId);
 
         if (!targetSlugs)
-          throw new ORPCError("NOT_FOUND", {
-            message: messages.compare_target_list_not_found(),
-          });
+          refuse("NOT_FOUND", "compare_target_list_not_found", "Target list not found");
 
         return targetSlugs;
       }
@@ -76,16 +70,14 @@ export const compareRouter = {
   /** The market's compare: live rather than `heldBy`'s cached count, so a purchase shows at once. */
   heldSlugs: authed
     .input(addressInputSchema)
-    .handler(async ({ context: { messages, session }, input: { address } }) => {
+    .handler(async ({ context: { session }, input: { address } }) => {
       const profile = await db.query.userAddress.findFirst({
         columns: { address: true },
         where: { address, userId: session.user.id },
       });
 
       if (!profile)
-        throw new ORPCError("NOT_FOUND", {
-          message: messages.compare_target_profile_not_found(),
-        });
+        refuse("NOT_FOUND", "compare_target_profile_not_found", "Target profile not found");
 
       return { slugs: [...(await fetchHeldSlugs(profile.address))] };
     }),

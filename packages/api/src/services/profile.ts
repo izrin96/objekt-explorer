@@ -1,4 +1,3 @@
-import { ORPCError } from "@orpc/server";
 import { fetchByNickname } from "@repo/cosmo/server/user";
 import { db } from "@repo/db";
 import { type UserAddress, userAddress } from "@repo/db/schema";
@@ -8,8 +7,8 @@ import { and, eq, sql } from "drizzle-orm";
 import type { FetchError } from "ofetch";
 
 import { isMessageable, toMessagePref } from "../lib/chat-rules";
+import { refuse } from "../lib/refuse";
 import { HOUR_MS } from "../lib/time";
-import type { ApiMessages } from "../orpc";
 import type { ProfilePreview, PublicProfile, PublicUser } from "../schemas/profile";
 import type { User } from "./auth";
 import { isBlockedEither } from "./moderation";
@@ -19,16 +18,14 @@ import { getCache } from "./redis";
 import { reputationOf } from "./reputation";
 
 /** the signed-in user has linked this Cosmo address */
-export async function assertProfileOwned(address: string, userId: string, messages: ApiMessages) {
+export async function assertProfileOwned(address: string, userId: string) {
   const count = await db.$count(
     userAddress,
     and(eq(userAddress.address, address), eq(userAddress.userId, userId)),
   );
 
   if (count < 1) {
-    throw new ORPCError("FORBIDDEN", {
-      message: messages.profile_not_linked(),
-    });
+    refuse("FORBIDDEN", "profile_not_linked", "This Cosmo is not linked with your account");
   }
 }
 

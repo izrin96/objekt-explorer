@@ -10,6 +10,10 @@ import { errorReason } from "@/lib/orpc-error";
 import { relativeTime } from "@/lib/time";
 import { m } from "@/paraglide/messages";
 
+function blockErrorText(error: unknown) {
+  return errorReason(error).reason === "self" ? m.mod_error_self() : undefined;
+}
+
 /** A block reaches chat lists, Trade, For you, Market rows' Message, profiles and list pages. */
 function useBlockInvalidation() {
   const queryClient = useQueryClient();
@@ -31,8 +35,12 @@ export function useUnblock() {
   return useMutation(
     orpc.moderation.unblock.mutationOptions({
       onSuccess: () => invalidate(),
-      onError: ({ message }) =>
-        toastManager.add({ type: "error", title: m.mod_unblock_error(), description: message }),
+      onError: (error) =>
+        toastManager.add({
+          type: "error",
+          title: m.mod_unblock_error(),
+          description: blockErrorText(error),
+        }),
     }),
   );
 }
@@ -58,8 +66,12 @@ export function useBlock() {
   const mutation = useMutation(
     orpc.moderation.block.mutationOptions({
       onSuccess: () => invalidate(),
-      onError: ({ message }) =>
-        toastManager.add({ type: "error", title: m.mod_block_error(), description: message }),
+      onError: (error) =>
+        toastManager.add({
+          type: "error",
+          title: m.mod_block_error(),
+          description: blockErrorText(error),
+        }),
     }),
   );
   // mutateAsync, not per-call callbacks: the blocked row unmounts once the lists refetch,

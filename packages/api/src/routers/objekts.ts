@@ -1,5 +1,4 @@
-import { ORPCError } from "@orpc/server";
-
+import { refuse } from "../lib/refuse";
 import { pub } from "../orpc";
 import { documented, errorResponses } from "../schemas/common/documented";
 import {
@@ -23,9 +22,11 @@ export const objektsRouter = {
     .output(documented(ownedByOutputSchema))
     .handler(({ input: { address, ...query } }) => {
       if (isCheckpointUnavailable(address, query)) {
-        throw new ORPCError("BAD_REQUEST", {
-          message: "Checkpoint is unavailable for COSMO Spin",
-        });
+        refuse(
+          "BAD_REQUEST",
+          "objekt_checkpoint_unavailable",
+          "Checkpoint is unavailable for COSMO Spin",
+        );
       }
       return fetchOwnedObjekts(address, query);
     }),

@@ -1,4 +1,3 @@
-import { ORPCError } from "@orpc/server";
 import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { collections } from "@repo/db/indexer/schema";
@@ -7,6 +6,7 @@ import { overrideCollection } from "@repo/lib/server/objekt";
 import { and, countDistinct, desc, eq, inArray, isNotNull, ne, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 
+import { refuse } from "../lib/refuse";
 import { nicknamesByAddress } from "../lib/trade-rank";
 import { getCollectionColumns } from "./objekt";
 import { toPublicUser } from "./profile";
@@ -22,28 +22,32 @@ const PARTNER_LIMIT = 50;
  */
 export async function findTradePartners(list: List, mode: TradeMode | undefined, userId: string) {
   if (list.listTypeNew !== "have" && list.listTypeNew !== "want") {
-    throw new ORPCError("BAD_REQUEST", {
-      message: "List must be a have or want list",
-    });
+    refuse("BAD_REQUEST", "trade_mode_list_type", "List must be a have or want list");
   }
 
   // defaults to the natural direction for the list type
   const effectiveMode = mode ?? (list.listTypeNew === "have" ? "have-to-want" : "want-to-have");
 
   if (effectiveMode === "both" && !list.linkedListId) {
-    throw new ORPCError("BAD_REQUEST", {
-      message: "Both mode requires a paired have+want list",
-    });
+    refuse(
+      "BAD_REQUEST",
+      "trade_mode_both_needs_pair",
+      "Both mode requires a paired have+want list",
+    );
   }
   if (effectiveMode === "have-to-want" && list.listTypeNew !== "have") {
-    throw new ORPCError("BAD_REQUEST", {
-      message: "'have-to-want' mode requires the slug to be a have list",
-    });
+    refuse(
+      "BAD_REQUEST",
+      "trade_mode_have_to_want",
+      "'have-to-want' mode requires the slug to be a have list",
+    );
   }
   if (effectiveMode === "want-to-have" && list.listTypeNew !== "want") {
-    throw new ORPCError("BAD_REQUEST", {
-      message: "'want-to-have' mode requires the slug to be a want list",
-    });
+    refuse(
+      "BAD_REQUEST",
+      "trade_mode_want_to_have",
+      "'want-to-have' mode requires the slug to be a want list",
+    );
   }
 
   if (effectiveMode === "both") {

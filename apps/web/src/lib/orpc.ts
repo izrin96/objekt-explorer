@@ -8,8 +8,6 @@ import { router } from "@repo/api";
 import { createIsomorphicFn } from "@tanstack/react-start";
 import { getRequestHeaders } from "@tanstack/react-start/server";
 
-import { apiMessages } from "./api-messages";
-
 const getORPCClient = createIsomorphicFn()
   .client((): RouterClient<typeof router> => {
     const link = new RPCLink({
@@ -31,7 +29,6 @@ const getORPCClient = createIsomorphicFn()
     createRouterClient(router, {
       context: async () => ({
         headers: getRequestHeaders(),
-        messages: apiMessages,
       }),
     }),
   );

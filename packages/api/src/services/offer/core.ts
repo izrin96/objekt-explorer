@@ -253,7 +253,9 @@ export async function resolveAddressed(
     rate: { ok: true },
   });
   if (!verdict.ok)
-    refuseOffer(verdict.reason as Exclude<ChatRefusal, "invalid_card" | "unsend_closed">);
+    refuseOffer(
+      verdict.reason as Exclude<ChatRefusal, "invalid_card" | "unsend_closed" | "not_own_profile">,
+    );
   return {
     partnerId,
     conversationId: existing?.id ?? null,

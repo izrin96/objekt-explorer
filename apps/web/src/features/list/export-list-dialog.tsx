@@ -13,6 +13,7 @@ import {
 import { toastManager } from "@/components/ui/toast";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import { orpc } from "@/lib/orpc";
+import { refusalText } from "@/lib/refusal";
 import { m } from "@/paraglide/messages";
 
 export function ExportListDialog({
@@ -36,8 +37,12 @@ export function ExportListDialog({
         URL.revokeObjectURL(url);
         onOpenChange(false);
       },
-      onError: ({ message }) => {
-        toastManager.add({ type: "error", title: m.common_export_error(), description: message });
+      onError: (error) => {
+        toastManager.add({
+          type: "error",
+          title: m.common_export_error(),
+          description: refusalText(error),
+        });
       },
     }),
   );

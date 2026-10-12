@@ -29,6 +29,7 @@ import { PROFILE_PAGE_KEY } from "@/features/profile/queries";
 import { currentUserOptions } from "@/features/user/queries";
 import { UserRowBody, UserSearchEmpty, useUserSearch } from "@/features/user/user-search";
 import { orpc } from "@/lib/orpc";
+import { refusalText } from "@/lib/refusal";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
@@ -308,7 +309,7 @@ function NicknameStep({
         )}
       </Autocomplete>
 
-      {check.isError && <StepError message={check.error.message} />}
+      {check.isError && <StepError message={refusalText(check.error)} />}
     </div>
   );
 }
@@ -352,7 +353,7 @@ function ArtistStep({
         ))}
       </div>
 
-      {generate.isError && <StepError message={generate.error.message} />}
+      {generate.isError && <StepError message={refusalText(generate.error)} />}
     </div>
   );
 }
@@ -407,7 +408,7 @@ function VerifyStep({
         >
           {m.link_new_code()}
         </Button>
-        {renew.isError && <StepError message={renew.error.message} />}
+        {renew.isError && <StepError message={refusalText(renew.error)} />}
       </div>
     );
   }
@@ -429,9 +430,7 @@ function VerifyStep({
         <Countdown expiresInMs={code.expiresInMs} onExpire={() => setExpired(true)} />
       </div>
 
-      {verify.isError && (
-        <StepError message={verify.error.message || m.link_verification_failed()} />
-      )}
+      {verify.isError && <StepError message={refusalText(verify.error)} />}
     </div>
   );
 }

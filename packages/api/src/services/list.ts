@@ -14,6 +14,7 @@ import slugify from "slugify";
 
 import { OBJEKT_PREVIEW_SIZE } from "../constants";
 import { isMessageable, toMessagePref } from "../lib/chat-rules";
+import { refuse } from "../lib/refuse";
 import { BUMP_COOLDOWN_HOURS } from "../lib/trade-feed";
 import {
   type AddSource,
@@ -473,21 +474,15 @@ export async function checkLinkedList(type: ListTypeNew, linkedListId: number, u
   });
 
   if (!linkedList) {
-    throw new ORPCError("BAD_REQUEST", {
-      message: "Linked list not found",
-    });
+    refuse("BAD_REQUEST", "list_linked_not_found", "Linked list not found");
   }
 
   // have can only link to want, want can only link to have
   if (type === "have" && linkedList.listTypeNew !== "want") {
-    throw new ORPCError("BAD_REQUEST", {
-      message: "Have lists can only link to Want lists",
-    });
+    refuse("BAD_REQUEST", "list_have_links_want", "Have lists can only link to Want lists");
   }
   if (type === "want" && linkedList.listTypeNew !== "have") {
-    throw new ORPCError("BAD_REQUEST", {
-      message: "Want lists can only link to Have lists",
-    });
+    refuse("BAD_REQUEST", "list_want_links_have", "Want lists can only link to Have lists");
   }
   return linkedList;
 }
@@ -579,9 +574,11 @@ export async function addEntries(
   }
 
   if (from.type !== "collections") {
-    throw new ORPCError("BAD_REQUEST", {
-      message: "Collections required for non-profile-bound lists",
-    });
+    refuse(
+      "BAD_REQUEST",
+      "list_collections_required",
+      "Collections required for non-profile-bound lists",
+    );
   }
 
   let slugs = from.slugs;

@@ -31,6 +31,7 @@ import { PROFILE_PAGE_KEY } from "@/features/profile/queries";
 import { currentUserOptions } from "@/features/user/queries";
 import { displayNickname, nicknameParam } from "@/lib/address";
 import { orpc } from "@/lib/orpc";
+import { refusalText } from "@/lib/refusal";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
@@ -59,8 +60,12 @@ export function LinkedCard({
           queryClient.invalidateQueries({ queryKey: PROFILE_PAGE_KEY }),
         ]);
       },
-      onError: ({ message }) => {
-        toastManager.add({ type: "error", title: m.link_unlink_error(), description: message });
+      onError: (error) => {
+        toastManager.add({
+          type: "error",
+          title: m.link_unlink_error(),
+          description: refusalText(error),
+        });
       },
     }),
   );

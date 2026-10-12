@@ -26,8 +26,8 @@ export const pinsRouter = {
 
   batchPin: authed
     .input(addressTokenIdsInputSchema)
-    .handler(async ({ input: { address, tokenIds }, context: { messages, session } }) => {
-      await assertProfileOwned(address, session.user.id, messages);
+    .handler(async ({ input: { address, tokenIds }, context: { session } }) => {
+      await assertProfileOwned(address, session.user.id);
 
       if (tokenIds.length === 0) return;
 
@@ -58,8 +58,8 @@ export const pinsRouter = {
 
   batchUnpin: authed
     .input(addressTokenIdsInputSchema)
-    .handler(async ({ input: { address, tokenIds }, context: { messages, session } }) => {
-      await assertProfileOwned(address, session.user.id, messages);
+    .handler(async ({ input: { address, tokenIds }, context: { session } }) => {
+      await assertProfileOwned(address, session.user.id);
 
       if (tokenIds.length === 0) return;
 
@@ -68,8 +68,8 @@ export const pinsRouter = {
 
   movePin: authed
     .input(movePinInputSchema)
-    .handler(async ({ input: { address, tokenId, direction }, context: { messages, session } }) => {
-      await assertProfileOwned(address, session.user.id, messages);
+    .handler(async ({ input: { address, tokenId, direction }, context: { session } }) => {
+      await assertProfileOwned(address, session.user.id);
 
       const validPins = await getValidPins(address);
 
@@ -104,8 +104,8 @@ export const pinsRouter = {
 
   reorderPins: authed
     .input(addressTokenIdsInputSchema)
-    .handler(async ({ input: { address, tokenIds }, context: { messages, session } }) => {
-      await assertProfileOwned(address, session.user.id, messages);
+    .handler(async ({ input: { address, tokenIds }, context: { session } }) => {
+      await assertProfileOwned(address, session.user.id);
 
       const validPins = await getValidPins(address);
 

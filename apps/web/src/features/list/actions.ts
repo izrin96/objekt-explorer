@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toastManager } from "@/components/ui/toast";
 import { currentUserOptions } from "@/features/user/queries";
 import { orpc } from "@/lib/orpc";
+import { refusalText } from "@/lib/refusal";
 import { m } from "@/paraglide/messages";
 
 import { LIST_QUERY_KEY } from "./queries";
@@ -44,8 +45,12 @@ export function useCreateList() {
         toastManager.add({ type: "success", title: m.list_create_success() });
         await invalidate();
       },
-      onError: ({ message }) => {
-        toastManager.add({ type: "error", title: m.list_create_error(), description: message });
+      onError: (error) => {
+        toastManager.add({
+          type: "error",
+          title: m.list_create_error(),
+          description: refusalText(error),
+        });
       },
     }),
   );
@@ -60,8 +65,12 @@ export function useEditList() {
         toastManager.add({ type: "success", title: m.list_edit_success() });
         await invalidate(slug);
       },
-      onError: ({ message }) => {
-        toastManager.add({ type: "error", title: m.list_edit_error(), description: message });
+      onError: (error) => {
+        toastManager.add({
+          type: "error",
+          title: m.list_edit_error(),
+          description: refusalText(error),
+        });
       },
     }),
   );
@@ -76,8 +85,12 @@ export function useDeleteList() {
         toastManager.add({ type: "success", title: m.list_delete_success() });
         await invalidate(slug);
       },
-      onError: ({ message }) => {
-        toastManager.add({ type: "error", title: m.list_delete_error(), description: message });
+      onError: (error) => {
+        toastManager.add({
+          type: "error",
+          title: m.list_delete_error(),
+          description: refusalText(error),
+        });
       },
     }),
   );
@@ -92,11 +105,11 @@ export function useAddToList() {
       onSuccess: async (_result, { slug }) => {
         await invalidate(slug);
       },
-      onError: ({ message }) => {
+      onError: (error) => {
         toastManager.add({
           type: "error",
           title: m.actions_add_to_list_error(),
-          description: message,
+          description: refusalText(error),
         });
       },
     }),
@@ -117,11 +130,11 @@ export function useRemoveObjektsFromList() {
         });
         await invalidate(slug);
       },
-      onError: ({ message }) => {
+      onError: (error) => {
         toastManager.add({
           type: "error",
           title: m.actions_remove_from_list_error(),
-          description: message,
+          description: refusalText(error),
         });
       },
     }),
@@ -137,11 +150,11 @@ export function useUpdateEntryPrices() {
         toastManager.add({ type: "success", title: m.list_manage_objekt_set_price_success() });
         await invalidate(slug);
       },
-      onError: ({ message }) => {
+      onError: (error) => {
         toastManager.add({
           type: "error",
           title: m.list_manage_objekt_set_price_error(),
-          description: message,
+          description: refusalText(error),
         });
       },
     }),

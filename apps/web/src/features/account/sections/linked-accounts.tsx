@@ -18,6 +18,7 @@ import { ACCOUNTS_QUERY_KEY, type LinkedAccount } from "@/features/account/queri
 import { currentUserOptions } from "@/features/user/queries";
 import { authClient } from "@/lib/auth-client";
 import { orpc } from "@/lib/orpc";
+import { refusalText } from "@/lib/refusal";
 import { m } from "@/paraglide/messages";
 
 const PROVIDER_ICON: Record<ProviderId, React.ReactElement> = {
@@ -89,7 +90,7 @@ function LinkedRow({
         }
         toastManager.add({
           type: "error",
-          title: m.auth_account_link_accounts_profile_update_error({ message: error.message }),
+          title: m.auth_account_link_accounts_profile_update_error({ message: refusalText(error) }),
         });
       },
     }),

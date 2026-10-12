@@ -6,6 +6,7 @@ import { bumpTradeVersion } from "@repo/lib/server/list-touch";
 import { and, eq, ne } from "drizzle-orm";
 import { nanoid } from "nanoid";
 
+import { refuse } from "../lib/refuse";
 import { authed, pub } from "../orpc";
 import { documented } from "../schemas/common/documented";
 import {
@@ -57,7 +58,6 @@ export const listCrud = {
     async ({
       input,
       context: {
-        messages,
         session: { user },
       },
     }) => {
@@ -69,24 +69,22 @@ export const listCrud = {
 
       // Validate: sale lists require currency
       if (input.listTypeNew === "sale" && !input.currency) {
-        throw new ORPCError("BAD_REQUEST", {
-          message: "Currency is required for sale lists",
-        });
+        refuse("BAD_REQUEST", "list_currency_required", "Currency is required for sale lists");
       }
 
       // Validate: profile binding requires profile address
       if (isProfileBind && !input.profileAddress) {
-        throw new ORPCError("BAD_REQUEST", {
-          message: "Profile address is required for profile-bound lists",
-        });
+        refuse(
+          "BAD_REQUEST",
+          "list_profile_required",
+          "Profile address is required for profile-bound lists",
+        );
       }
 
       // Validate profile ownership and linked list ownership + type compatibility.
       // allSettled keeps the profile error taking precedence over the linked one.
       const [profileCheck, linkedCheck] = await Promise.allSettled([
-        input.profileAddress
-          ? assertProfileOwned(input.profileAddress, user.id, messages)
-          : undefined,
+        input.profileAddress ? assertProfileOwned(input.profileAddress, user.id) : undefined,
         linkedListId !== null
           ? checkLinkedList(input.listTypeNew, linkedListId, user.id)
           : undefined,
@@ -176,7 +174,6 @@ export const listCrud = {
     async ({
       input,
       context: {
-        messages,
         session: { user },
       },
     }) => {
@@ -186,9 +183,7 @@ export const listCrud = {
 
       // Validate currency for sale lists
       if (list.listTypeNew === "sale" && !input.currency) {
-        throw new ORPCError("BAD_REQUEST", {
-          message: "Currency is required for sale lists",
-        });
+        refuse("BAD_REQUEST", "list_currency_required", "Currency is required for sale lists");
       }
 
       // Validate profile ownership (skipped when isProfileBind — address changes are
@@ -196,7 +191,7 @@ export const listCrud = {
       // allSettled keeps the profile error taking precedence over the linked one.
       const [profileCheck, linkedCheck] = await Promise.allSettled([
         input.profileAddress && !list.isProfileBind
-          ? assertProfileOwned(input.profileAddress, user.id, messages)
+          ? assertProfileOwned(input.profileAddress, user.id)
           : undefined,
         linkedListId !== null
           ? checkLinkedList(list.listTypeNew, linkedListId, user.id)

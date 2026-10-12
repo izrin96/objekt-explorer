@@ -4,7 +4,6 @@ import { BatchHandlerPlugin } from "@orpc/server/plugins";
 import { router } from "@repo/api";
 import { createFileRoute } from "@tanstack/react-router";
 
-import { apiMessages } from "@/lib/api-messages";
 import { logORPCError } from "@/lib/server/orpc-error-log";
 
 const handler = new RPCHandler(router, {
@@ -20,7 +19,6 @@ export const Route = createFileRoute("/rpc/$")({
           prefix: "/rpc",
           context: {
             headers: request.headers,
-            messages: apiMessages,
           },
         });
 

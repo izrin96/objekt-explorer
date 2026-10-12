@@ -30,6 +30,7 @@ import { SkeletonGrid } from "@/features/objekt/skeleton-grid";
 import { useCollectionRarity } from "@/features/objekt/use-collection-rarity";
 import { useCurrency } from "@/features/settings/use-currency";
 import { useCurrentUser } from "@/features/user/hooks";
+import { refusalText } from "@/lib/refusal";
 import { m } from "@/paraglide/messages";
 import { useClearSelectionOnNavigate, useSelection } from "@/stores/selection";
 
@@ -213,7 +214,11 @@ function ListEntries() {
 
   if (compare !== null && compareQuery.isError) {
     return (
-      <CompareBanner compare={compare} onClear={clearCompare} error={compareQuery.error.message} />
+      <CompareBanner
+        compare={compare}
+        onClear={clearCompare}
+        error={refusalText(compareQuery.error)}
+      />
     );
   }
 

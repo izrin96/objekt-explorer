@@ -5,6 +5,7 @@ import { isComparing } from "@/features/compare/search-schema";
 import { useCompareSearch } from "@/features/compare/use-compare";
 import { useUserProfiles } from "@/features/user/hooks";
 import { orpc } from "@/lib/orpc";
+import { refusalText } from "@/lib/refusal";
 
 const toSlugSet = (data: { slugs: string[] }) => new Set(data.slugs);
 
@@ -37,6 +38,6 @@ export function useMarketCompare() {
     activeAddress: profile?.address,
     ownedSlugs: heldQuery.data,
     isPending: profile !== undefined && heldQuery.isPending,
-    error: heldQuery.error?.message,
+    error: heldQuery.error ? refusalText(heldQuery.error) : undefined,
   };
 }

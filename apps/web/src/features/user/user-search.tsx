@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDebouncedCallback } from "@/hooks/use-debounced-callback";
 import { client } from "@/lib/orpc";
+import { refusalText } from "@/lib/refusal";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
@@ -31,8 +32,8 @@ export function useUserSearch(initialQuery = "") {
     retry: false,
   });
 
-  // a rate limit is an answer, not a blank list: show what the server said
-  const serverError = error instanceof ORPCError ? error.message : null;
+  // a rate limit is an answer, not a blank list
+  const serverError = error instanceof ORPCError ? refusalText(error) : null;
 
   // the debounce wait counts as searching too, or the empty state flashes
   // "no users match" against every keystroke before the request even starts

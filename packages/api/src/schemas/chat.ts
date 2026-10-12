@@ -32,6 +32,7 @@ export const CHAT_REFUSALS = [
   "invalid_card",
   "muted",
   "unsend_closed",
+  "not_own_profile",
 ] as const;
 export type ChatRefusal = (typeof CHAT_REFUSALS)[number];
 

@@ -4,7 +4,8 @@ import { userAddress } from "@repo/db/schema";
 import { type acceptedFileMimeTypes, mimeTypeToExtension } from "@repo/lib/media";
 import { and, eq, sql } from "drizzle-orm";
 
-import { type ApiMessages, authed, optionalAuthed } from "../orpc";
+import { refuse } from "../lib/refuse";
+import { authed, optionalAuthed } from "../orpc";
 import { addressOrBareInputSchema, addressSchema } from "../schemas/common/address";
 import { documented, errorResponses } from "../schemas/common/documented";
 import {
@@ -36,17 +37,15 @@ export const profileRouter = {
       fetchProfilePreview(input.address, session?.user),
     ),
 
-  find: authed
-    .input(addressSchema)
-    .handler(async ({ input: address, context: { messages, session } }) => {
-      const profile = await fetchOwnedProfile(address, session.user.id, messages);
-      return profile;
-    }),
+  find: authed.input(addressSchema).handler(async ({ input: address, context: { session } }) => {
+    const profile = await fetchOwnedProfile(address, session.user.id);
+    return profile;
+  }),
 
   edit: authed
     .input(makeEditProfileInputSchema(`${S3_PUBLIC_URL}/profile-banner/`))
-    .handler(async ({ input: { address, ...rest }, context: { messages, session } }) => {
-      const profile = await fetchOwnedProfile(address, session.user.id, messages);
+    .handler(async ({ input: { address, ...rest }, context: { session } }) => {
+      const profile = await fetchOwnedProfile(address, session.user.id);
 
       // `getPresignedPost` names every upload after its address, so a banner
       // URL outside that prefix is another profile's file. Older uploads kept
@@ -82,8 +81,8 @@ export const profileRouter = {
 
   getPresignedPost: authed
     .input(presignedPostInputSchema)
-    .handler(async ({ input: { address, mimeType, fileSize }, context: { messages, session } }) => {
-      await assertProfileOwned(address, session.user.id, messages);
+    .handler(async ({ input: { address, mimeType, fileSize }, context: { session } }) => {
+      await assertProfileOwned(address, session.user.id);
 
       const ext = mimeTypeToExtension[mimeType as (typeof acceptedFileMimeTypes)[number]];
       const key = `${address.toLowerCase()}-${Date.now()}.${ext}`;
@@ -102,7 +101,7 @@ export const profileRouter = {
     }),
 };
 
-async function fetchOwnedProfile(address: string, userId: string, messages: ApiMessages) {
+async function fetchOwnedProfile(address: string, userId: string) {
   const profile = await db.query.userAddress.findFirst({
     columns: {
       nickname: true,
@@ -122,9 +121,7 @@ async function fetchOwnedProfile(address: string, userId: string, messages: ApiM
   });
 
   if (!profile) {
-    throw new ORPCError("NOT_FOUND", {
-      message: messages.profile_not_found(),
-    });
+    refuse("NOT_FOUND", "profile_not_found", "Profile not found or not linked with this account");
   }
 
   return profile;

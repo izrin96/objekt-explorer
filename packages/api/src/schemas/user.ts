@@ -69,3 +69,11 @@ export const userSearchOutputSchema = z.object({
 /** Why an account can't be deleted yet: a sanction would end with it, or a trade would lose a party. */
 export const DELETE_REFUSALS = ["sanctioned", "trade_in_progress"] as const;
 export type DeleteRefusal = (typeof DELETE_REFUSALS)[number];
+
+/** `data.reason` on a refused user search or provider refresh; `user_failed_get_info` also carries `data.provider`. */
+export const USER_REFUSALS = [
+  "user_query_too_long",
+  "user_search_rate_limit",
+  "user_not_linked_provider",
+  "user_failed_get_info",
+] as const;

@@ -37,6 +37,7 @@ import { PROFILE_PAGE_KEY } from "@/features/profile/queries";
 import { currentUserOptions } from "@/features/user/queries";
 import { displayNickname } from "@/lib/address";
 import { client, orpc } from "@/lib/orpc";
+import { refusalText } from "@/lib/refusal";
 import { m } from "@/paraglide/messages";
 
 type Profile = Awaited<ReturnType<typeof client.profile.find>>;
@@ -122,7 +123,7 @@ export function EditCosmoDialog({
           <>
             <DialogPanel>
               {error ? (
-                <p className="text-destructive-foreground text-sm">{error.message}</p>
+                <p className="text-destructive-foreground text-sm">{refusalText(error)}</p>
               ) : (
                 <div className="flex justify-center py-6">
                   <Spinner className="size-5" />
@@ -205,8 +206,12 @@ function EditForm({
         queryClient.invalidateQueries({ queryKey: orpc.cosmoLink.linkedPreviews.key() }),
       ]);
     },
-    onError: ({ message }) => {
-      toastManager.add({ type: "error", title: m.profile_edit_error(), description: message });
+    onError: (error) => {
+      toastManager.add({
+        type: "error",
+        title: m.profile_edit_error(),
+        description: refusalText(error),
+      });
     },
   });
 

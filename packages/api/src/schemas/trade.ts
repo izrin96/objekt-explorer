@@ -82,3 +82,11 @@ export const setShowOnTradeInputSchema = z.object({ slug: z.string(), on: z.bool
 export const bumpInputSchema = z.object({ slug: z.string() });
 
 export const collectionPostCountsInputSchema = z.object({ slug: z.string() });
+
+/** `data.reason` on a trade partner search the list or mode can't serve. */
+export const TRADE_MODE_REFUSALS = [
+  "trade_mode_list_type",
+  "trade_mode_both_needs_pair",
+  "trade_mode_have_to_want",
+  "trade_mode_want_to_have",
+] as const;
