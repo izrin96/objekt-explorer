@@ -1,24 +1,19 @@
-import { CaretDownIcon, EyeSlashIcon } from "@phosphor-icons/react";
+import { EyeSlashIcon } from "@phosphor-icons/react";
 import type { Outputs } from "@repo/api";
-import type { Dropped } from "@repo/api/lib/trade-rank";
-import { PREVIEW_LIMIT } from "@repo/api/schemas/trade";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
-import { Link } from "@tanstack/react-router";
 
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Popover, PopoverPopup, PopoverTitle, PopoverTrigger } from "@/components/ui/popover";
+import { MenuItem } from "@/components/ui/menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getListLinkOption } from "@/features/list/list-link";
+import { SafetyMenu } from "@/features/moderation/safety-menu";
 import { displayNickname } from "@/lib/address";
 import { relativeTime } from "@/lib/time";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
-import { ListRoleBadge } from "./list-role-badge";
+import { ListsPopover } from "./lists-popover";
 import { MATCH_TONE, MatchChip } from "./match-chip";
-import { MatchColumn, MatchObjekt } from "./match-grid";
 import { MatchedLists } from "./matched-lists";
 import { PostStrip, STRIP_MORE, StripMore } from "./post-side";
 import { TILE } from "./thumb-grid";
@@ -35,20 +30,11 @@ const DIRECTIONS = [
   { key: "iHaveTheyWant", section: m.trade_section_you_have, tone: MATCH_TONE.youHave },
 ] as const;
 
-const REASON: Record<Dropped["reason"], () => string> = {
-  not_owned: m.trade_reason_not_owned,
-  not_transferable: m.trade_reason_not_transferable,
-};
-
-const DROPPED_LIMIT = 4;
-
 export function PartnerRow({
   id,
   partner,
   now,
   collections,
-  open,
-  onOpenChange,
   onOpen,
   onHide,
 }: {
@@ -57,8 +43,6 @@ export function PartnerRow({
   /** undefined until hydration */
   now: number | undefined;
   collections: TradeCollections;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
   onOpen: (objekt: ValidObjekt) => void;
   onHide: (partner: TradePartner) => void;
 }) {
@@ -73,181 +57,101 @@ export function PartnerRow({
         offer: { suggestFor: partner.userId },
       }
     : { kind: "closed" };
-  const dropped = DIRECTIONS.map((direction) =>
-    partner.dropped.filter((item) => item.direction === direction.key).slice(0, DROPPED_LIMIT),
-  );
-  const shownDropped = dropped.some((items) => items.length > 0);
 
   return (
-    <Collapsible open={open} onOpenChange={onOpenChange}>
-      <TradeRow
-        id={id}
-        // `data-highlight` is set for a moment when a Browse link lands here
-        className="data-highlight:ring-ring scroll-mt-20 transition-shadow duration-700 data-highlight:ring-2 motion-reduce:transition-none"
-        byline={
-          <TradeHeader
-            person={partner}
-            note={
-              <>
-                <time
-                  dateTime={partner.updatedAt}
-                  className="text-muted-foreground block min-h-4 font-mono text-xs"
-                >
-                  {now !== undefined
-                    ? m.trade_partner_updated({
-                        time: relativeTime(Math.min(Date.parse(partner.updatedAt), now), now),
-                      })
-                    : null}
-                </time>
-                {also.length > 0 ? (
-                  <span className="text-muted-foreground block text-xs break-words">
-                    {m.trade_also({ names: also.join(", ") })}
-                  </span>
-                ) : null}
-              </>
+    <TradeRow
+      id={id}
+      // `data-highlight` is set for a moment when a Browse link lands here
+      className="data-highlight:ring-ring scroll-mt-20 transition-shadow duration-700 data-highlight:ring-2 motion-reduce:transition-none"
+      byline={
+        <TradeHeader
+          person={partner}
+          note={
+            <>
+              <time
+                dateTime={partner.updatedAt}
+                className="text-muted-foreground block min-h-4 font-mono text-xs"
+              >
+                {now !== undefined
+                  ? m.trade_partner_updated({
+                      time: relativeTime(Math.min(Date.parse(partner.updatedAt), now), now),
+                    })
+                  : null}
+              </time>
+              {also.length > 0 ? (
+                <span className="text-muted-foreground block text-xs break-words">
+                  {m.trade_also({ names: also.join(", ") })}
+                </span>
+              ) : null}
+            </>
+          }
+        />
+      }
+      below={
+        <div className="flex flex-wrap items-center gap-2">
+          <MatchChip
+            theyHave={match.youWant}
+            youHave={match.youHave}
+            popover={<MatchedLists match={match} />}
+          />
+          <ListsPopover
+            lists={partner.lists.map((list) => ({
+              id: list.id,
+              name: list.name,
+              type: list.listTypeNew,
+              link: getListLinkOption({
+                slug: list.slug,
+                profileSlug: list.profileSlug,
+                profileAddress: list.profileAddress,
+                profile: list.profileAddress
+                  ? { address: list.profileAddress, nickname: list.profileNickname }
+                  : null,
+              }),
+            }))}
+          />
+          {partner.idle ? (
+            <Badge variant="outline" size="sm">
+              {m.trade_idle()}
+            </Badge>
+          ) : null}
+        </div>
+      }
+      sides={
+        <TradeSides
+          strips={DIRECTIONS.map((direction) => (
+            <PostStrip
+              key={direction.key}
+              label={direction.section({ count: partner[direction.key].length })}
+              tone={direction.tone}
+              items={partner[direction.key].map((item) => ({ key: item.slug, slug: item.slug }))}
+              collections={collections}
+              onOpen={onOpen}
+              more={(count) => (
+                <div className={cn(TILE, STRIP_MORE, "w-full")}>
+                  <StripMore count={count} />
+                </div>
+              )}
+            />
+          ))}
+        />
+      }
+      actions={
+        <>
+          <TradeActions contact={contact} name={identity.name} compact />
+          <SafetyMenu
+            userId={partner.userId}
+            name={identity.name}
+            report
+            extraItems={
+              <MenuItem onClick={() => onHide(partner)}>
+                <EyeSlashIcon />
+                {m.trade_hide_partner()}
+              </MenuItem>
             }
           />
-        }
-        below={
-          <div className="flex flex-wrap items-center gap-2">
-            <MatchChip
-              theyHave={match.youWant}
-              youHave={match.youHave}
-              popover={<MatchedLists match={match} />}
-            />
-            <Popover>
-              <PopoverTrigger render={<Button variant="ghost" size="xs" className="font-mono" />}>
-                {m.trade_lists_count({ count: partner.lists.length })}
-              </PopoverTrigger>
-              <PopoverPopup align="start" className="w-72">
-                <div className="flex flex-col gap-3">
-                  <PopoverTitle className="text-sm">{m.trade_partner_lists_title()}</PopoverTitle>
-                  <ul className="flex flex-col gap-1.5 text-sm">
-                    {partner.lists.map((list) => (
-                      <li key={list.id} className="flex min-w-0 items-center gap-2">
-                        <ListRoleBadge type={list.listTypeNew} />
-                        <Link
-                          {...getListLinkOption({
-                            slug: list.slug,
-                            profileSlug: list.profileSlug,
-                            profileAddress: list.profileAddress,
-                            profile: list.profileAddress
-                              ? { address: list.profileAddress, nickname: list.profileNickname }
-                              : null,
-                          })}
-                          className="min-w-0 break-words underline-offset-2 hover:underline"
-                        >
-                          {list.name}
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </PopoverPopup>
-            </Popover>
-            {partner.idle ? (
-              <Badge variant="outline" size="sm">
-                {m.trade_idle()}
-              </Badge>
-            ) : null}
-          </div>
-        }
-        sides={
-          <TradeSides
-            strips={DIRECTIONS.map((direction) => (
-              <PostStrip
-                key={direction.key}
-                label={direction.section({ count: partner[direction.key].length })}
-                tone={direction.tone}
-                items={partner[direction.key].map((item) => ({ key: item.slug, slug: item.slug }))}
-                collections={collections}
-                onOpen={onOpen}
-                more={(count) => (
-                  <button
-                    type="button"
-                    onClick={() => onOpenChange(true)}
-                    className={cn(TILE, STRIP_MORE, "w-full cursor-pointer")}
-                  >
-                    <StripMore count={count} />
-                  </button>
-                )}
-              />
-            ))}
-          />
-        }
-        actions={
-          <>
-            <TradeActions contact={contact} name={identity.name} compact />
-            <CollapsibleTrigger
-              className="group shrink-0"
-              render={
-                <Button
-                  variant="outline"
-                  size="icon-sm"
-                  aria-label={m.trade_row_toggle({ name: identity.name })}
-                />
-              }
-            >
-              <CaretDownIcon
-                aria-hidden
-                className="transition-transform group-data-panel-open:rotate-180"
-              />
-            </CollapsibleTrigger>
-          </>
-        }
-        panel={
-          <CollapsiblePanel className="col-span-full -mx-1 -mb-1 px-1 pb-1">
-            <div className="flex flex-col gap-4 border-t pt-4">
-              <div className="grid gap-4 sm:grid-cols-2">
-                {DIRECTIONS.map((direction, index) =>
-                  partner[direction.key].length > 0 || (dropped[index]?.length ?? 0) > 0 ? (
-                    <section key={direction.key} className="flex min-w-0 flex-col gap-2">
-                      <h3
-                        className={cn("font-mono text-xs uppercase tabular-nums", direction.tone)}
-                      >
-                        {direction.section({ count: partner[direction.key].length })}
-                      </h3>
-                      <MatchColumn
-                        count={partner[direction.key].length}
-                        dropped={dropped[index]?.map((item) => (
-                          <MatchObjekt
-                            key={item.slug}
-                            slug={item.slug}
-                            collection={collections[item.slug]}
-                            reason={REASON[item.reason]()}
-                            onOpen={onOpen}
-                          />
-                        ))}
-                      >
-                        {partner[direction.key].slice(0, PREVIEW_LIMIT).map((item) => (
-                          <MatchObjekt
-                            key={item.slug}
-                            slug={item.slug}
-                            collection={collections[item.slug]}
-                            onOpen={onOpen}
-                          />
-                        ))}
-                      </MatchColumn>
-                    </section>
-                  ) : null,
-                )}
-              </div>
-
-              <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-                <div className="text-muted-foreground flex min-w-0 flex-1 flex-col gap-1 text-xs text-pretty">
-                  {partner.idle ? <p>{m.trade_idle_hint()}</p> : null}
-                  {shownDropped ? <p>{m.trade_not_counted_hint()}</p> : null}
-                </div>
-                <Button variant="ghost" size="sm" onClick={() => onHide(partner)}>
-                  <EyeSlashIcon />
-                  {m.trade_hide_partner()}
-                </Button>
-              </div>
-            </div>
-          </CollapsiblePanel>
-        }
-      />
-    </Collapsible>
+        </>
+      }
+    />
   );
 }
 

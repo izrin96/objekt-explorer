@@ -3,9 +3,11 @@ import { Link } from "@tanstack/react-router";
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { getListLinkOption } from "@/features/list/list-link";
+import { SafetyMenu } from "@/features/moderation/safety-menu";
 import { relativeTime } from "@/lib/time";
 import { m } from "@/paraglide/messages";
 
+import { ListsPopover } from "./lists-popover";
 import { MatchChip } from "./match-chip";
 import { MatchedLists } from "./matched-lists";
 import { SideStrip } from "./post-side";
@@ -41,7 +43,6 @@ export function BrowsePost({
   // the post's own list (the have list of a pair), with the first collection it shows
   const anchor = post.sides.find((side) => side.list.id === post.id);
   const firstShown = anchor?.items[0]?.slug;
-  const named = (anchor ?? post.sides[0])?.list;
   const contact: TradeContact = own
     ? { kind: "own" }
     : post.messageable && anchor
@@ -81,45 +82,39 @@ export function BrowsePost({
           ))}
         />
       }
-      actions={own ? null : <TradeActions contact={contact} name={post.identity.name} compact />}
+      actions={
+        <>
+          {own ? null : <TradeActions contact={contact} name={post.identity.name} compact />}
+          <SafetyMenu userId={post.userId} name={post.identity.name} report />
+        </>
+      }
       below={
-        named || showChip ? (
-          <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-            {named ? (
-              <div className="flex min-w-40 flex-1 items-baseline gap-2">
-                <Link
-                  {...getListLinkOption(named)}
-                  className="max-w-1/2 shrink-0 truncate font-medium underline-offset-2 hover:underline"
-                >
-                  {named.name}
-                </Link>
-                {named.description ? (
-                  <p title={named.description} className="text-muted-foreground min-w-0 truncate">
-                    {named.description}
-                  </p>
-                ) : null}
-              </div>
-            ) : null}
-            {showChip ? (
-              <div className="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-1 text-xs">
-                <MatchChip
-                  theyHave={match?.youWant ?? 0}
-                  youHave={match?.youHave ?? 0}
-                  popover={match ? <MatchedLists match={match} /> : null}
-                />
-                {mutual ? (
-                  <Link
-                    to="/trade/for-you"
-                    search={{ match: "mutual", partner: post.userId }}
-                    className="font-medium underline underline-offset-2"
-                  >
-                    {m.trade_browse_mutual_link()}
-                  </Link>
-                ) : null}
-              </div>
-            ) : null}
-          </div>
-        ) : null
+        <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+          {showChip ? (
+            <MatchChip
+              theyHave={match?.youWant ?? 0}
+              youHave={match?.youHave ?? 0}
+              popover={match ? <MatchedLists match={match} /> : null}
+            />
+          ) : null}
+          <ListsPopover
+            lists={post.sides.map((side) => ({
+              id: side.list.id,
+              name: side.list.name,
+              type: side.role,
+              link: getListLinkOption(side.list),
+            }))}
+          />
+          {mutual ? (
+            <Link
+              to="/trade/for-you"
+              search={{ match: "mutual", partner: post.userId }}
+              className="font-medium underline underline-offset-2"
+            >
+              {m.trade_browse_mutual_link()}
+            </Link>
+          ) : null}
+        </div>
       }
     />
   );

@@ -228,6 +228,7 @@ async function computeTradeMatches(userId: string, sides: Sides, filter: TradeFi
             slug: lists.slug,
             name: lists.name,
             listTypeNew: lists.listTypeNew,
+            matchSale: lists.matchSale,
             profileAddress: lists.profileAddress,
             profileSlug: lists.profileSlug,
           })
@@ -251,6 +252,7 @@ async function computeTradeMatches(userId: string, sides: Sides, filter: TradeFi
         slug: list.slug,
         name: list.name,
         listTypeNew: list.listTypeNew,
+        matchSale: list.matchSale,
         profileAddress: list.profileAddress,
         profileSlug: list.profileSlug,
         profileNickname: list.profileAddress

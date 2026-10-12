@@ -2,7 +2,6 @@ import type { ComponentProps, ReactNode } from "react";
 
 import { SocialBadge } from "@/components/shared/social-badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { SafetyMenu } from "@/features/moderation/safety-menu";
 import { TrustLine } from "@/features/offers/trust-line";
 import { ProfileLink } from "@/features/profile/profile-hover-card";
 import { cn } from "@/lib/utils";
@@ -15,8 +14,7 @@ export type TradePerson = {
 };
 
 /**
- * Who a post or a partner row belongs to. `end` sits before the ⋯ menu: tags on Browse, the
- * chip and lists on For you. Below `sm` it takes a row of its own under the name.
+ * Who a post or a partner row belongs to. `end` sits at the end of the line. Below `sm` it takes a row of its own under the name.
  */
 export function TradeHeader({
   person,
@@ -64,12 +62,6 @@ export function TradeHeader({
           {end}
         </div>
       ) : null}
-      <SafetyMenu
-        userId={person.userId}
-        name={identity.name}
-        report
-        className="shrink-0 sm:-ms-1"
-      />
     </div>
   );
 }
