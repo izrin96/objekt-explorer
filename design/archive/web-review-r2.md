@@ -2,9 +2,9 @@
 
 Date: 2026-09-22. Reviewed at `157b09c7` (+ FIX6 working tree). Three read-only Opus reviewers, website `:3000` vs web `:3200`, 1280×900 and 390×844, dark and light. Full tables with `file:line` on both sides:
 
-- `design/review-r2-browse.md` — home, market, activity, drawer, lists, compare (BR-n)
-- `design/review-r2-profile.md` — profile pages, auth, account, settings, link, live (PR-n)
-- `design/review-r2-shell.md` — shell, meta, i18n, server layer, deploy (SH-n)
+- `design/archive/review-r2-browse.md` — home, market, activity, drawer, lists, compare (BR-n)
+- `design/archive/review-r2-profile.md` — profile pages, auth, account, settings, link, live (PR-n)
+- `design/archive/review-r2-shell.md` — shell, meta, i18n, server layer, deploy (SH-n)
 
 Raw counts: P1 7 · P2 23 · P3 46. After de-duplication and removing decisions the user already took, the actionable list is below.
 

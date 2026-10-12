@@ -1,6 +1,6 @@
 ## Why
 
-`design/web-migration-plan.md` replaces `apps/website` with a new TanStack Start app,
+`design/archive/web-migration-plan.md` replaces `apps/website` with a new TanStack Start app,
 `apps/web`, built from the `apps/lab` prototype. Every later slice (shell, objekt grid,
 profile, lists, auth) needs the same foundation: the app package, the Vite and Start
 configuration, the lab's token sheet and Base UI component kit, routing with React Query

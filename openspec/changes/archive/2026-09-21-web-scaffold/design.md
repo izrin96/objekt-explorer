@@ -16,7 +16,7 @@ reproduce its behaviour under SSR.
 - Every copied lab file is byte-identical except for import paths and the `lab:` → `web:`
   storage-key rename, so later registry updates and lab diffs stay mechanical.
 - The lab's dev tooling (overflow guard, `data-overflow-guard`, `data-scroll-x`) lands as a
-  set, per port note 4 of `design/lab-code-review.md`.
+  set, per port note 4 of `design/archive/lab-code-review.md`.
 
 **Non-Goals:**
 

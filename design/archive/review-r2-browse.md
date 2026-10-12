@@ -12,7 +12,7 @@ Reference: `apps/website` at the same commit.
 | Themes | dark and light (web's theme is the `web:settings` store, not `prefers-color-scheme`; toggled via the store and restored afterwards) |
 | Browser | `browser-use` CLI, two owned CDP targets (`Target.createTarget`), every read after an explicit `switch_tab` |
 | Skills invoked | `better-interface` (→ `better-accessibility`, `better-layout`, `better-writing`, `better-typography`, `better-colors`, `better-ui`), `code-review`, `router-core`, `start-core` |
-| Docs read first | `AGENTS.md`, `design/web-review.md`, `design/web-migration-plan.md` §5, `openspec/specs/web-{objekt-browser,market,activity,lists,compare}/spec.md`, `git log 340b1222..HEAD -- apps/web` |
+| Docs read first | `AGENTS.md`, `design/archive/web-review.md`, `design/archive/web-migration-plan.md` §5, `openspec/specs/web-{objekt-browser,market,activity,lists,compare}/spec.md`, `git log 340b1222..HEAD -- apps/web` |
 
 **Signed-in surfaces were compared live, not from source.** Contrary to round 1's caveat, the
 browser profile resolves the `better-auth.session_token` cookie on **both** origins in this session:

@@ -1,6 +1,6 @@
 ## 1. Read before editing
 
-- [x] 1.1 Invoke the `start-core`, `router-core`, `tanstack-start-best-practices`, `turborepo` and `baseline-ui` skills, then read this change's `design.md`, `apps/website/{vite.config.ts,tsconfig.json,oxlint.config.ts,package.json}`, `apps/website/src/{router.tsx,client.tsx,server.ts,routes/__root.tsx}`, `apps/lab/{index.html,src/routes/root.tsx,src/store/settings.ts,src/lib/utils.ts}` and port notes 4 and 7 in `design/lab-code-review.md`; verify by noting the inline theme script from `apps/lab/index.html` and the website's `head()` links list in your working notes.
+- [x] 1.1 Invoke the `start-core`, `router-core`, `tanstack-start-best-practices`, `turborepo` and `baseline-ui` skills, then read this change's `design.md`, `apps/website/{vite.config.ts,tsconfig.json,oxlint.config.ts,package.json}`, `apps/website/src/{router.tsx,client.tsx,server.ts,routes/__root.tsx}`, `apps/lab/{index.html,src/routes/root.tsx,src/store/settings.ts,src/lib/utils.ts}` and port notes 4 and 7 in `design/archive/lab-code-review.md`; verify by noting the inline theme script from `apps/lab/index.html` and the website's `head()` links list in your working notes.
 
 ## 2. Package and toolchain
 

@@ -36,7 +36,7 @@ through every service — touches `getSession` and its six callers plus `privacy
 large diff for a package whose only consumers are Start apps; (b) an adapter singleton the
 app configures at boot — a new indirection with a start-up ordering hazard. Both can be
 introduced later if a non-Start consumer ever appears; neither is needed now. This revises
-the line in `design/web-migration-plan.md` § 1 that said the package must not depend on Start.
+the line in `design/archive/web-migration-plan.md` § 1 that said the package must not depend on Start.
 
 **2. Localised error strings are injected, not compiled, in the package.**
 `@repo/api` exports `type ApiMessages = { [K in ApiErrorKey]: (...) => string }` covering the

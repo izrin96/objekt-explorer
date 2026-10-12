@@ -4,7 +4,7 @@
 | --- | --- |
 | Date | 2026-09-22 |
 | Commit reviewed | `157b09c7` (both apps, branch `web/main`) |
-| Round-1 baseline re-checked against | `design/web-review.md`, commits `340b1222..157b09c7` |
+| Round-1 baseline re-checked against | `design/archive/web-review.md`, commits `340b1222..157b09c7` |
 | Reference | `apps/website` on `http://localhost:3000` (signed out) |
 | Under review | `apps/web` on `http://localhost:3200` (signed in as the smoke account) |
 | Viewports | 1280×900 and 390×844, via `Emulation.setDeviceMetricsOverride` on my own CDP targets |

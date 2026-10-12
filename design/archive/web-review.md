@@ -182,7 +182,7 @@ One note, not a failure: `apps/web/src/features/filters/member-colors.ts:68-70` 
 
 ## Code review
 
-Axes: repo standards (`AGENTS.md`, `openspec/config.yaml` § `apps/web` rules) and spec (`design/web-migration-plan.md` C2–C7).
+Axes: repo standards (`AGENTS.md`, `openspec/config.yaml` § `apps/web` rules) and spec (`design/archive/web-migration-plan.md` C2–C7).
 
 `bun run lint --filter=web` → **0 warnings, 0 errors** across 239 files. `bun run typecheck` was not re-run (no source was edited).
 

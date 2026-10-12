@@ -55,7 +55,7 @@ all three at once; results from `orpc.compare.compare` (`sourceId = list slug`,
 `targetType`, `mode`, `targetProfile` or `targetListId`), rendered by `ListView` in place
 of entries while `isComparing`. The lab's client-side `performComparison` is not ported.
 Owner actions stay visible while comparing (website behaviour; user decision in
-`design/web-migration-plan.md` § 5).
+`design/archive/web-migration-plan.md` § 5).
 
 **7. Discord format.** `format.ts` = website `discord-format-utils.ts` (pure); the dialog
 is the website's options (group by none / season / season-first, default / compact style)

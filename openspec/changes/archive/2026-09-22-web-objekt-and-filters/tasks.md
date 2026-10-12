@@ -1,6 +1,6 @@
 ## 1. Read before editing
 
-- [x] 1.1 Invoke `vercel-react-best-practices`, `vercel-composition-patterns`, `tanstack-router-best-practices`, `baseline-ui`, `better-accessibility`; read this change's `design.md` and spec, `openspec/config.yaml`, port notes 2–5 in `design/lab-code-review.md`, the lab and website files under "Surfaces covered" in `proposal.md`, and `packages/lib/src/types/objekt.ts`; verify by writing the lab→website key map from design decision 2 and the field list of `IndexedObjekt` in your notes.
+- [x] 1.1 Invoke `vercel-react-best-practices`, `vercel-composition-patterns`, `tanstack-router-best-practices`, `baseline-ui`, `better-accessibility`; read this change's `design.md` and spec, `openspec/config.yaml`, port notes 2–5 in `design/archive/lab-code-review.md`, the lab and website files under "Surfaces covered" in `proposal.md`, and `packages/lib/src/types/objekt.ts`; verify by writing the lab→website key map from design decision 2 and the field list of `IndexedObjekt` in your notes.
 
 ## 2. Filter contract
 

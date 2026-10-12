@@ -21,6 +21,8 @@
 
 **Workspace manager:** Bun workspaces + Turbo. Package names match directory names (e.g. filter with `--filter=web`).
 
+`apps/web`, `apps/worker`, `apps/indexer`, `packages/api` and `packages/db` each carry an `AGENTS.md` with the conventions and traps of that package (a `CLAUDE.md` beside it imports it). Read it before changing code there.
+
 ## Tech Stack
 
 | Category    | Technology                                           |
@@ -72,7 +74,7 @@ The checks are `lint`, `typecheck` and `test`; `bun run check` runs all three, a
 
 `apps/web/src/components/ui/*` are vendored registry copies; `apps/web/src/components/ui/README.md` lists the only local edits and how to update them.
 
-Skills live once under `.agents/skills/<name>` (agent-neutral) with `.claude/skills/<name>` a relative symlink to them, pinned in `skills-lock.json`, all committed so a worktree or a Superset workspace carries them. Third-party skills are advice, not authority: where one contradicts this file or `design/lab-code-review.md`, the project document wins. Invoke the one for the layer being touched:
+Skills live once under `.agents/skills/<name>` (agent-neutral) with `.claude/skills/<name>` a relative symlink to them, pinned in `skills-lock.json`, all committed so a worktree or a Superset workspace carries them. Third-party skills are advice, not authority: where one contradicts this file or a package `AGENTS.md`, the project document wins. Invoke the one for the layer being touched:
 
 | Layer or task                             | Skills                                                                                        |
 | ----------------------------------------- | --------------------------------------------------------------------------------------------- |

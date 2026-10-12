@@ -1,6 +1,6 @@
 ## Why
 
-`apps/web` (the Base UI rewrite, see `design/web-migration-plan.md`) needs the same ORPC
+`apps/web` (the Base UI rewrite, see `design/archive/web-migration-plan.md`) needs the same ORPC
 routers, Better Auth configuration, database services and activity WebSocket server that
 `apps/website` runs today. They live under `apps/website/src/lib`, so a second app could only
 reach them by copying. Moving them into a workspace package first means both apps run one
