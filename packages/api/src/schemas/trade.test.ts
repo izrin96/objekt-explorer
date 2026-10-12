@@ -1,6 +1,15 @@
 import { describe, expect, test } from "bun:test";
 
-import { browseInputSchema, filterFits, fullestFilter } from "./trade";
+import {
+  browseInputSchema,
+  filterFits,
+  forYouInputSchema,
+  fullestFilter,
+  listMatchCountInputSchema,
+  mutualCountInputSchema,
+  personInputSchema,
+  tabCountsInputSchema,
+} from "./trade";
 
 describe("browse cursor", () => {
   test("takes the ISO time the feed emits", () => {
@@ -48,5 +57,41 @@ describe("fullestFilter", () => {
     expect(fullestFilter(both)).toBe("mutual");
     expect(fullestFilter(haveOnly)).toBe("they_want");
     expect(fullestFilter(wantOnly)).toBe("they_have");
+  });
+});
+
+describe("inputs an open tab still sends", () => {
+  test("browse with Only matches on, or without it", () => {
+    const cursor = { bumpedAt: "2026-10-07T09:12:30.123Z", id: 12 };
+    const on = browseInputSchema.parse({
+      type: "wtt",
+      slug: "atom01-seoyeon-204z",
+      matches: true,
+      cursor,
+    });
+    expect(on.matches).toBe(true);
+    expect(on.match).toBeUndefined();
+    expect(on.list).toBeUndefined();
+    expect(on.cursor).toEqual(cursor);
+    expect(browseInputSchema.parse({}).matches).toBeUndefined();
+  });
+
+  test("the unchanged procedures' inputs", () => {
+    expect(forYouInputSchema.parse({}).filter).toBe("all");
+    expect(forYouInputSchema.parse({ filter: "mutual", list: "spares" }).list).toBe("spares");
+    expect(tabCountsInputSchema.parse({})).toEqual({ forYou: true });
+    expect(tabCountsInputSchema.parse({ forYou: false })).toEqual({ forYou: false });
+    expect(listMatchCountInputSchema.parse({ slug: "spares" })).toEqual({ slug: "spares" });
+  });
+
+  test("the new fields are optional", () => {
+    const rank = { mutual: 2, sum: 5, at: 1760000000000, userId: "u1" };
+    const cursor = { bumpedAt: "2026-10-07T09:12:30.123Z", id: 12, rank };
+    expect(
+      browseInputSchema.parse({ match: "mutual", list: "spares", cursor }).cursor?.rank,
+    ).toEqual(rank);
+    expect(browseInputSchema.safeParse({ match: "sometimes" }).success).toBe(false);
+    expect(personInputSchema.parse({ userId: "u1" }).list).toBeUndefined();
+    expect(mutualCountInputSchema.parse({})).toEqual({});
   });
 });

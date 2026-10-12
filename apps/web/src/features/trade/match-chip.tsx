@@ -17,7 +17,7 @@ export const MATCH_TONE = {
 
 const CHIP = "inline-flex h-6 items-center rounded-md border px-2 font-mono text-xs tabular-nums";
 
-/** A person's counts in words, the same on both tabs: mutual is `mutualOf`, trades only. */
+/** A person's counts in words, the same on both tabs: mutual is `mutualOf`. */
 export function MatchChip({ counts, popover }: { counts: MatchCounts; popover?: ReactNode }) {
   const { theyHave, youHave } = counts;
   if (theyHave === 0 && youHave === 0) return null;

@@ -10,7 +10,6 @@ import { tabCountsOptions } from "./queries";
 
 const ITEMS = [
   { label: m.trade_tab_browse, to: "/trade" },
-  { label: m.trade_tab_for_you, to: "/trade/for-you", count: "forYou" },
   { label: m.trade_tab_mine, to: "/trade/mine", count: "mine" },
 ] as const;
 

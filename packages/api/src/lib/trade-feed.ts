@@ -1,5 +1,10 @@
 import type { ListTypeNew } from "../schemas/list";
-import { PREVIEW_LIMIT, SOLO_PREVIEW_LIMIT, type PostType } from "../schemas/trade";
+import {
+  type BrowseMatchMode,
+  PREVIEW_LIMIT,
+  SOLO_PREVIEW_LIMIT,
+  type PostType,
+} from "../schemas/trade";
 import { HOUR_MS } from "./time";
 import { isIdle } from "./trade-rank";
 
@@ -46,7 +51,7 @@ function postTag(post: {
   sale: unknown;
 }): PostTag {
   if (post.sale) return "wts";
-  // a want list set to match trades only is after a trade, not a purchase
+  // a want list set to match swaps only is after a swap, not a purchase
   return post.have || !post.want?.matchSale ? "wtt" : "wtb";
 }
 
@@ -189,7 +194,7 @@ export function matchesViewer(match: { youHave: number; youWant: number } | unde
 /**
  * The viewer's have and sale lists (still-owned entries only) and want lists, by collection.
  * A sale list and a want list match only when the want list takes sales, so `tradeHave` drops
- * the sale lists and `saleWant` the want lists that match trades only.
+ * the sale lists and `saleWant` the want lists that match swaps only.
  */
 export type Viewer = {
   have: SlugIndex;
@@ -197,6 +202,71 @@ export type Viewer = {
   tradeHave: SlugIndex;
   saleWant: SlugIndex;
 };
+
+/** The mode a Browse input asks for; an older tab's `matches` reads as Any, and none is Off. */
+export function browseMode({
+  match,
+  matches,
+}: {
+  match?: BrowseMatchMode;
+  matches?: boolean;
+}): BrowseMatchMode {
+  return match ?? (matches ? "any" : "off");
+}
+
+/** `index` keeping only the lists `keep` passes, and only the collections left on one. */
+export function narrowIndex(index: SlugIndex, keep: (listId: number) => boolean) {
+  const narrowed = new Map<string, number[]>();
+  for (const [slug, listIds] of index) {
+    const kept = listIds.filter(keep);
+    if (kept.length > 0) narrowed.set(slug, kept);
+  }
+  return narrowed;
+}
+
+/** The viewer's slugs by the post side they match. */
+export type MatchIndex = {
+  want: string[];
+  saleWant: string[];
+  have: string[];
+  tradeHave: string[];
+};
+
+export function matchIndexOf(viewer: Viewer): MatchIndex {
+  return {
+    want: [...viewer.want.keys()],
+    saleWant: [...viewer.saleWant.keys()],
+    have: [...viewer.have.keys()],
+    tradeHave: [...viewer.tradeHave.keys()],
+  };
+}
+
+/**
+ * Which owners the `(bumped_at, id)` cursor holds back: everyone when the owners aren't
+ * grouped, only the cursor's own person when they resume, and no one when that person dropped
+ * out of the ranking, since everyone listed then has not been shown yet.
+ */
+export function cursorScope(owners: { resume: boolean } | null): "all" | "first" | "none" {
+  if (owners === null) return "all";
+  return owners.resume ? "first" : "none";
+}
+
+/** The viewer as Compare with sees it: only the compared have and sale lists, and want lists. */
+export function narrowViewer(
+  viewer: Viewer,
+  sides: { haveListIds: readonly number[]; wantListIds: readonly number[] },
+): Viewer {
+  const haveIds = new Set(sides.haveListIds);
+  const wantIds = new Set(sides.wantListIds);
+  const keepHave = (id: number) => haveIds.has(id);
+  const keepWant = (id: number) => wantIds.has(id);
+  return {
+    have: narrowIndex(viewer.have, keepHave),
+    tradeHave: narrowIndex(viewer.tradeHave, keepHave),
+    want: narrowIndex(viewer.want, keepWant),
+    saleWant: narrowIndex(viewer.saleWant, keepWant),
+  };
+}
 
 /** What a post's side is matched and ringed against: the viewer's lists it can match. */
 function indexFor(role: "have" | "want" | "sale", list: TradeList, viewer: Viewer) {

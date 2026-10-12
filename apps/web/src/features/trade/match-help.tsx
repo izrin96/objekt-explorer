@@ -13,69 +13,88 @@ type Table = {
   rows: { key: string; cells: (() => ReactNode)[] }[];
 };
 
-/** Browse explains its post tags; For you counts by the same rules, so it shows only the lists. */
-const TAG_TABLE: Table = {
-  columns: [
-    m.trade_browse_help_tags_tag,
-    m.trade_browse_help_tags_list,
-    m.trade_browse_help_tags_matches,
-  ],
-  rows: [
-    {
-      key: "wts",
-      cells: [
-        () => <TagBadge tag="wts" />,
-        m.trade_browse_help_wts_list,
-        m.trade_browse_help_wts_matches,
-      ],
-    },
-    {
-      key: "wtt",
-      cells: [
-        () => <TagBadge tag="wtt" />,
-        m.trade_browse_help_wtt_list,
-        m.trade_browse_help_wtt_matches,
-      ],
-    },
-    {
-      key: "wtb",
-      cells: [
-        () => <TagBadge tag="wtb" />,
-        m.trade_browse_help_wtb_list,
-        m.trade_browse_help_wtb_matches,
-      ],
-    },
-  ],
-};
+type Section = { heading: () => string; table: Table };
 
-const RULE_TABLE: Table = {
-  columns: [m.trade_match_help_rules_list, m.trade_match_help_rules_matches],
-  rows: [
-    {
-      key: "have",
-      cells: [m.trade_match_help_rules_have_list, m.trade_match_help_rules_have_matches],
-    },
-    { key: "sale", cells: [m.trade_browse_help_wts_list, m.trade_browse_help_wts_matches] },
-  ],
-};
+const yes = () => <span className="text-success-foreground">{m.trade_help_yes()}</span>;
+const no = () => <span className="text-muted-foreground">{m.trade_help_no()}</span>;
 
-const HELP = {
-  forYou: {
-    title: m.trade_match_help_title,
-    table: RULE_TABLE,
-    lines: [
-      m.trade_match_help_mutual,
-      m.trade_match_help_show,
-      m.trade_match_help_compare,
-      m.trade_match_help_owned,
-    ],
+const SECTIONS: Section[] = [
+  {
+    heading: m.trade_help_tags_heading,
+    table: {
+      columns: [
+        m.trade_browse_help_tags_tag,
+        m.trade_browse_help_tags_list,
+        m.trade_browse_help_tags_matches,
+      ],
+      rows: [
+        {
+          key: "wts",
+          cells: [
+            () => <TagBadge tag="wts" />,
+            m.trade_browse_help_wts_list,
+            m.trade_browse_help_wts_matches,
+          ],
+        },
+        {
+          key: "wtt",
+          cells: [
+            () => <TagBadge tag="wtt" />,
+            m.trade_browse_help_wtt_list,
+            m.trade_browse_help_wtt_matches,
+          ],
+        },
+        {
+          key: "wtb",
+          cells: [
+            () => <TagBadge tag="wtb" />,
+            m.trade_browse_help_wtb_list,
+            m.trade_browse_help_wtb_matches,
+          ],
+        },
+      ],
+    },
   },
-  browse: {
-    title: m.trade_browse_help_title,
-    table: TAG_TABLE,
-    lines: [m.trade_match_help_mutual, m.trade_browse_help_only_matches, m.trade_match_help_owned],
+  {
+    heading: m.trade_matches_label,
+    table: {
+      columns: [m.trade_matches_label, m.trade_help_modes_shows],
+      rows: [
+        { key: "off", cells: [m.trade_matches_off, m.trade_help_off] },
+        { key: "any", cells: [m.trade_matches_any, m.trade_help_any] },
+        { key: "mutual", cells: [m.trade_matches_mutual, m.trade_help_mutual] },
+      ],
+    },
   },
-};
+  {
+    heading: m.trade_help_mutual_heading,
+    table: {
+      columns: [m.trade_browse_help_tags_list, m.trade_help_your_want, m.trade_help_counts],
+      rows: [
+        {
+          key: "have",
+          cells: [m.trade_match_help_rules_have_list, m.trade_help_any_setting, yes],
+        },
+        {
+          key: "sale-buying",
+          cells: [m.trade_browse_help_wts_list, m.list_create_match_sales_label, yes],
+        },
+        {
+          key: "sale-swaps",
+          cells: [m.trade_browse_help_wts_list, m.list_create_match_trades_label, no],
+        },
+      ],
+    },
+  },
+];
+
+const TITLE = m.trade_browse_help_title;
+const LINES = [
+  m.trade_help_both_ways,
+  m.trade_help_unlinked,
+  m.trade_match_help_compare,
+  m.trade_match_help_owned,
+];
 
 function HelpTable({ table }: { table: Table }) {
   const last = table.columns.length - 1;
@@ -116,9 +135,8 @@ function HelpTable({ table }: { table: Table }) {
   );
 }
 
-/** How a view finds a match, beside the controls that change it. */
-export function MatchHelp({ view }: { view: keyof typeof HELP }) {
-  const { title, table, lines } = HELP[view];
+/** How a post matches, beside the controls that change it. */
+export function MatchHelp() {
   return (
     <Popover>
       <PopoverTrigger
@@ -126,12 +144,19 @@ export function MatchHelp({ view }: { view: keyof typeof HELP }) {
       >
         <QuestionMarkIcon />
       </PopoverTrigger>
-      <PopoverPopup align="start" className="max-w-sm text-sm">
-        <div className="flex flex-col gap-2">
-          <PopoverTitle className="text-sm">{title()}</PopoverTitle>
-          <HelpTable table={table} />
+      <PopoverPopup align="start" className="max-w-md text-sm">
+        <div className="flex flex-col gap-3">
+          <PopoverTitle className="text-sm">{TITLE()}</PopoverTitle>
+          {SECTIONS.map((section) => (
+            <section key={section.heading()} className="flex flex-col gap-1">
+              <h3 className="text-muted-foreground font-mono text-xs uppercase">
+                {section.heading()}
+              </h3>
+              <HelpTable table={section.table} />
+            </section>
+          ))}
           <ul className="list-outside list-disc space-y-1 ps-4 leading-5 text-pretty">
-            {lines.map((line, index) => (
+            {LINES.map((line, index) => (
               <li key={index}>{line()}</li>
             ))}
           </ul>

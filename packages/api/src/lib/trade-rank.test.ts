@@ -8,8 +8,13 @@ import {
   groupBySlug,
   type Holdings,
   matchSides,
+  mutualOrder,
+  mutualPeople,
+  mutualRankOf,
   type MyList,
+  type MyWant,
   PARTNER_LIMIT,
+  peopleAfter,
   rankPartners,
   recount,
   toPartnerIdentity,
@@ -73,21 +78,24 @@ describe("rankPartners", () => {
     ]);
   });
 
-  test("Mutual only drops a sale-only partner, and the one-way views keep it", () => {
+  test("Mutual only keeps a partner whose matches are sale lists, and so do the one-way views", () => {
     const sale = partner("S", 3, 2, RECENT, false);
-    const trade = partner("T", 1, 1);
-    expect(order(rankPartners([sale, trade], "mutual", NOW).map((r) => r.partner))).toEqual(["T"]);
+    const swap = partner("T", 1, 1);
+    expect(order(rankPartners([sale, swap], "mutual", NOW).map((r) => r.partner))).toEqual([
+      "S",
+      "T",
+    ]);
     expect(order(rankPartners([sale], "they_have", NOW).map((r) => r.partner))).toEqual(["S"]);
     expect(order(rankPartners([sale], "they_want", NOW).map((r) => r.partner))).toEqual(["S"]);
   });
 
-  test("trades-only 1 ⇄ 1 ranks above sale 3 ⇄ 2", () => {
+  test("sale 3 ⇄ 2 ranks above swap 1 ⇄ 1", () => {
     const ranked = rankPartners(
-      [partner("sale", 3, 2, RECENT, false), partner("trade", 1, 1)],
+      [partner("swap", 1, 1), partner("sale", 3, 2, RECENT, false)],
       "all",
       NOW,
     );
-    expect(order(ranked.map((r) => r.partner))).toEqual(["trade", "sale"]);
+    expect(order(ranked.map((r) => r.partner))).toEqual(["sale", "swap"]);
   });
 
   test("cuts to the partner limit", () => {
@@ -132,19 +140,19 @@ describe("ownership", () => {
     const ownedTokens = new Map<string, { owner: string; transferable: boolean }>();
     const copies = new Map<string, boolean>();
     const myHaves = new Map<string, { verdict: "ok"; listIds: number[] }>();
-    const myWants = new Map<string, number[]>();
+    const myWants = new Map<string, MyWant[]>();
 
     // A: 5 ⇄ 5 on the lists, of which 1 they have is still held
     const aHave = fiveWay("a-h");
     aHave.forEach((slug, i) => {
-      myWants.set(slug, [10]);
+      myWants.set(slug, [{ listId: 10, matchSale: true }]);
       ownedTokens.set(`a-${i}`, { owner: i === 0 ? "0xa" : "0xelsewhere", transferable: true });
     });
     const aWant = fiveWay("a-w");
     // B: 3 ⇄ 3, all held
     const bHave = slugs("b-h", 3);
     bHave.forEach((slug) => {
-      myWants.set(slug, [10]);
+      myWants.set(slug, [{ listId: 10, matchSale: true }]);
       copies.set(copyKey("0xb", slug), true);
     });
     const bWant = slugs("b-w", 3);
@@ -233,6 +241,30 @@ describe("recount details", () => {
     ]);
   });
 
+  test("my sale list makes a person mutual only through a want list that takes buying", () => {
+    const mutualFor = (matchSale: boolean) =>
+      rankPartners(
+        [
+          recount(
+            {
+              userId: "P",
+              listUpdatedAt: { 7: RECENT, 8: RECENT },
+              theyHave: [{ listId: 7, slug: "y", objektId: "kept", sale: true }],
+              theyWant: [{ listId: 8, slug: "x", matchSale }],
+            },
+            new Set(["0xp"]),
+            holdings,
+            new Map([["y", [{ listId: 3, matchSale: true }]]]),
+            myHaves,
+          ),
+        ],
+        "mutual",
+        NOW,
+      ).length;
+    expect(mutualFor(true)).toBe(1);
+    expect(mutualFor(false)).toBe(0);
+  });
+
   test("of two want lists on a collection, only the one my side answers is credited", () => {
     const result = wantedBy([
       { listId: 8, slug: "x", matchSale: false },
@@ -242,6 +274,61 @@ describe("recount details", () => {
       { slug: "x", myListIds: [2], partnerListIds: [9], trade: false },
     ]);
     expect(result.dropped).toEqual([]);
+  });
+
+  describe("which lists the chip names", () => {
+    const wants = new Map([
+      [
+        "x",
+        [
+          { listId: 3, matchSale: false },
+          { listId: 4, matchSale: true },
+        ],
+      ],
+    ]);
+    const theyHave = (sale: boolean) =>
+      recount(
+        {
+          userId: "P",
+          listUpdatedAt: { 7: RECENT },
+          theyHave: [{ listId: 7, slug: "x", objektId: "kept", sale }],
+          theyWant: [],
+        },
+        new Set(["0xp"]),
+        holdings,
+        wants,
+        { all: new Map(), trade: new Map() },
+      ).theyHaveIWant.map((match) => match.myListIds);
+
+    test("their have list is answered by every want list of mine holding it", () => {
+      expect(theyHave(false)).toEqual([[3, 4]]);
+    });
+
+    test("their sale list is answered only by my want lists open to buying", () => {
+      expect(theyHave(true)).toEqual([[4]]);
+    });
+
+    test("their want list that swaps only is answered by my have lists, not my sale lists", () => {
+      const mine = {
+        all: new Map([["x", { verdict: "ok" as const, listIds: [1, 2] }]]),
+        trade: new Map([["x", { verdict: "ok" as const, listIds: [1] }]]),
+      };
+      const answers = (matchSale: boolean) =>
+        recount(
+          {
+            userId: "P",
+            listUpdatedAt: { 8: RECENT },
+            theyHave: [],
+            theyWant: [{ listId: 8, slug: "x", matchSale }],
+          },
+          new Set(["0xp"]),
+          holdings,
+          new Map(),
+          mine,
+        ).iHaveTheyWant.map((match) => match.myListIds);
+      expect(answers(false)).toEqual([[1]]);
+      expect(answers(true)).toEqual([[1, 2]]);
+    });
   });
 
   describe("trade flag", () => {
@@ -255,7 +342,7 @@ describe("recount details", () => {
         },
         new Set(["0xp"]),
         holdings,
-        new Map([["x", [9]]]),
+        new Map([["x", [{ listId: 9, matchSale: true }]]]),
         { all: new Map(), trade: new Map() },
       ).theyHaveIWant.map((match) => match.trade);
 
@@ -318,8 +405,8 @@ describe("recount details", () => {
       new Set(["0xp"]),
       holdings,
       new Map([
-        ["a", [9]],
-        ["b", [9]],
+        ["a", [{ listId: 9, matchSale: true }]],
+        ["b", [{ listId: 9, matchSale: true }]],
       ]),
       { all: new Map(), trade: new Map() },
     );
@@ -493,12 +580,81 @@ describe("matchSides", () => {
       },
       new Set(["0xp"]),
       holdings,
-      new Map([["binary", [3]]]),
+      new Map([["binary", [{ listId: 3, matchSale: true }]]]),
       { all: myHaves, trade: myHaves },
     );
 
     expect(result.iHaveTheyWant.map((m) => m.slug)).toEqual(["on-spares"]);
     expect(result.theyHaveIWant.map((m) => m.myListIds)).toEqual([[3]]);
     expect(rankPartners([result], "mutual", NOW)).toHaveLength(1);
+  });
+});
+
+describe("mutualOrder", () => {
+  const person = (userId: string, theyHave: number, youHave: number, updatedAt = RECENT) => ({
+    userId,
+    updatedAt,
+    counts: { theyHave, youHave, tradeTheyHave: theyHave, tradeYouHave: youHave },
+  });
+
+  test("mutual, then sum, then last change, then id, with no idle tier", () => {
+    const ordered = mutualOrder([
+      person("z", 2, 2),
+      person("idle", 3, 3, IDLE),
+      person("a", 2, 2),
+      person("sum", 2, 5),
+      person("new", 2, 2, "2026-10-05T12:00:00Z"),
+    ]);
+    expect(order(ordered)).toEqual(["idle", "sum", "new", "a", "z"]);
+  });
+});
+
+describe("mutualPeople", () => {
+  const person = (userId: string, theyHave: number, youHave: number, updatedAt = RECENT) => ({
+    userId,
+    updatedAt,
+    counts: { theyHave, youHave, tradeTheyHave: theyHave, tradeYouHave: youHave },
+  });
+
+  test("keeps every mutual person past the 50 cap, in Mutual order", () => {
+    const many = Array.from({ length: PARTNER_LIMIT + 10 }, (_, i) => person(`p${i}`, 1, 1));
+    const people = mutualPeople([person("top", 3, 3), ...many]);
+    expect(people).toHaveLength(PARTNER_LIMIT + 11);
+    expect(people[0]!.userId).toBe("top");
+  });
+
+  test("an idle person takes no place from an active one", () => {
+    const people = mutualPeople([person("active", 1, 1), person("idle", 4, 4, IDLE)]);
+    expect(order(people)).toEqual(["idle", "active"]);
+  });
+
+  test("drops anyone who is not mutual", () => {
+    expect(order(mutualPeople([person("one-way", 5, 0), person("both", 1, 1)]))).toEqual(["both"]);
+  });
+});
+
+describe("peopleAfter", () => {
+  const person = (userId: string, mutual: number, updatedAt = RECENT) => ({
+    userId,
+    updatedAt,
+    counts: { theyHave: mutual, youHave: mutual, tradeTheyHave: mutual, tradeYouHave: mutual },
+  });
+  const ordered = mutualOrder([person("A", 5), person("B", 4), person("C", 3), person("D", 2)]);
+
+  test("starts at the cursor's person and keeps everyone after", () => {
+    const rank = mutualRankOf(person("B", 4));
+    expect(order(peopleAfter(ordered, rank))).toEqual(["B", "C", "D"]);
+  });
+
+  test("a person who moved up is only the cursor's person", () => {
+    const rank = mutualRankOf(person("C", 3));
+    const moved = mutualOrder([person("A", 5), person("C", 6), person("B", 4), person("D", 2)]);
+    expect(order(peopleAfter(moved, rank))).toEqual(["C", "D"]);
+    expect(order(peopleAfter(moved, mutualRankOf(person("B", 4))))).toEqual(["B", "D"]);
+  });
+
+  test("a cursor person who left the ranking continues with those after the tuple", () => {
+    const rank = mutualRankOf(person("X", 3, "2026-10-04T00:00:00Z"));
+    expect(order(peopleAfter(ordered, rank))).toEqual(["D"]);
   });
 });

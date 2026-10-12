@@ -3,16 +3,20 @@ import { describe, expect, test } from "bun:test";
 import { PREVIEW_LIMIT, SOLO_PREVIEW_LIMIT } from "../schemas/trade";
 import {
   assemblePost,
+  browseMode,
   comparePosts,
+  cursorScope,
   type FeedEntry,
   isPostIdle,
   matchesViewer,
+  narrowViewer,
   nextBumpAt,
   pairPosts,
   previewSide,
   type TradeList,
   tradeableEntries,
   untradeableKey,
+  type Viewer,
 } from "./trade-feed";
 
 const NOW = new Date("2026-10-07T12:00:00Z");
@@ -323,5 +327,62 @@ describe("matchesViewer", () => {
 
   test("signed out has no match", () => {
     expect(matchesViewer(undefined)).toBe(false);
+  });
+});
+
+describe("browseMode", () => {
+  test("absent is off, matches is any, and match wins", () => {
+    expect(browseMode({})).toBe("off");
+    expect(browseMode({ matches: false })).toBe("off");
+    expect(browseMode({ matches: true })).toBe("any");
+    expect(browseMode({ match: "mutual", matches: true })).toBe("mutual");
+    expect(browseMode({ match: "off", matches: true })).toBe("off");
+  });
+});
+
+describe("narrowViewer", () => {
+  const viewer: Viewer = {
+    have: new Map([
+      ["a", [1, 2]],
+      ["b", [3]],
+    ]),
+    tradeHave: new Map([["a", [1]]]),
+    want: new Map([
+      ["c", [10]],
+      ["d", [11]],
+    ]),
+    saleWant: new Map([["c", [10]]]),
+  };
+
+  test("a pair keeps both directions", () => {
+    const narrowed = narrowViewer(viewer, { haveListIds: [1], wantListIds: [10] });
+    expect([...narrowed.have]).toEqual([["a", [1]]]);
+    expect([...narrowed.tradeHave]).toEqual([["a", [1]]]);
+    expect([...narrowed.want]).toEqual([["c", [10]]]);
+    expect([...narrowed.saleWant]).toEqual([["c", [10]]]);
+  });
+
+  test("a lone have list empties want", () => {
+    const narrowed = narrowViewer(viewer, { haveListIds: [1], wantListIds: [] });
+    expect(narrowed.want.size).toBe(0);
+    expect(narrowed.saleWant.size).toBe(0);
+    expect(narrowed.have.size).toBe(1);
+  });
+
+  test("a sale list keeps only its own have entries", () => {
+    const narrowed = narrowViewer(viewer, { haveListIds: [2], wantListIds: [] });
+    expect([...narrowed.have]).toEqual([["a", [2]]]);
+    expect(narrowed.tradeHave.size).toBe(0);
+  });
+});
+
+describe("cursorScope", () => {
+  test("holds back everyone without grouped owners, the resumed person when grouped", () => {
+    expect(cursorScope(null)).toBe("all");
+    expect(cursorScope({ resume: true })).toBe("first");
+  });
+
+  test("holds back no one when the cursor's person left the ranking", () => {
+    expect(cursorScope({ resume: false })).toBe("none");
   });
 });

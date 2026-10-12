@@ -12,6 +12,8 @@ import {
   forYouInputSchema,
   fullestFilter,
   listMatchCountInputSchema,
+  mutualCountInputSchema,
+  personInputSchema,
   setShowOnTradeInputSchema,
   tabCountsInputSchema,
   tabCountsOutputSchema,
@@ -28,10 +30,12 @@ import {
 } from "../services/trade-feed";
 import {
   getTradeMatches,
+  personDetail,
   resolveTradeSides,
   withMessageable,
   withReputation,
 } from "../services/trade-matches";
+import { mutualCount } from "../services/trade-matches/mutual";
 import { tabCounts } from "../services/trade-tabs";
 
 export const tradeRouter = {
@@ -67,7 +71,21 @@ export const tradeRouter = {
       );
     }),
 
-  /** The list header's count: the partners its Matches link opens on, from the same cache entry For you reads. */
+  /** One person's matches, for the Browse person sheet. */
+  person: authed
+    .input(personInputSchema)
+    .handler(async ({ input: { userId, list }, context: { session } }) =>
+      personDetail(session.user.id, userId, list),
+    ),
+
+  /** "Mutual N" on Browse, and the list header's count. */
+  mutualCount: authed
+    .input(mutualCountInputSchema)
+    .handler(async ({ input: { list }, context: { session } }) =>
+      mutualCount(session.user.id, list),
+    ),
+
+  /** Kept for tabs loaded before the merge; the list header reads `mutualCount`. */
   listMatchCount: authed
     .input(listMatchCountInputSchema)
     .handler(async ({ input: { slug }, context: { session } }) => {
@@ -81,11 +99,16 @@ export const tradeRouter = {
       return result.partners.length;
     }),
 
-  /** The Trade tab badges: partners under Everyone, and offers to answer plus trades in progress. */
+  /**
+   * The Trade tab badges: offers to answer plus trades in progress as `mine`. `forYou` is For you's
+   * partner count, computed only for tabs loaded before the merge; `forYou: false` returns 0.
+   */
   tabCounts: authed
     .input(tabCountsInputSchema)
     .output(tabCountsOutputSchema)
-    .handler(async ({ context: { session } }) => tabCounts(session.user.id)),
+    .handler(async ({ input: { forYou }, context: { session } }) =>
+      tabCounts(session.user.id, forYou),
+    ),
 
   /**
    * Only a partner with a list For you or Browse can show is hidden; any other id gets the

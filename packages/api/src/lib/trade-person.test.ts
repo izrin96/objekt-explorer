@@ -37,14 +37,19 @@ describe("matchCounts", () => {
 });
 
 describe("mutual", () => {
-  test("1 ⇄ 2 in trades is 1, though the totals are 3 ⇄ 2", () => {
-    expect(mutualOf({ theyHave: 3, youHave: 2, tradeTheyHave: 1, tradeYouHave: 2 })).toBe(1);
+  test("the smaller of the two counts, sale lists included", () => {
+    expect(mutualOf({ theyHave: 3, youHave: 2, tradeTheyHave: 1, tradeYouHave: 2 })).toBe(2);
   });
 
-  test("a sale-only partner is not mutual, one trade each way is", () => {
+  test("a sale list answered by a buying want list counts toward mutual", () => {
     const sale = { theyHave: 3, youHave: 2, tradeTheyHave: 0, tradeYouHave: 0 };
-    expect(countsFit("mutual", sale)).toBe(false);
-    expect(countsFit("mutual", { ...sale, tradeTheyHave: 1, tradeYouHave: 1 })).toBe(true);
+    expect(countsFit("mutual", sale)).toBe(true);
+  });
+
+  test("a direction with no count, a sale list against a swaps-only want list, is not mutual", () => {
+    const swapsOnly = { theyHave: 0, youHave: 2, tradeTheyHave: 0, tradeYouHave: 2 };
+    expect(mutualOf(swapsOnly)).toBe(0);
+    expect(countsFit("mutual", swapsOnly)).toBe(false);
   });
 
   test("the one-way fits still count sale matches", () => {

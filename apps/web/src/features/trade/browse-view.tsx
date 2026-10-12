@@ -1,18 +1,15 @@
 import { ArrowClockwiseIcon, CardsThreeIcon } from "@phosphor-icons/react";
-import { canBeOnTrade } from "@repo/api/schemas/list";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
-import { Link, useNavigate } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { Link, useNavigate, useRouter } from "@tanstack/react-router";
+import { useMemo, useRef, useState } from "react";
 import { WindowVirtualizer } from "virtua";
 
 import { PendingStatus } from "@/components/router/pending";
 import { EmptyState } from "@/components/shared/empty-state";
 import { InfiniteSentinel } from "@/components/shared/infinite-sentinel";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsList, TabsTab } from "@/components/ui/tabs";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import { useSelectedArtists } from "@/features/artist/use-selected-artists";
@@ -24,12 +21,15 @@ import { m } from "@/paraglide/messages";
 
 import { BrowseFilters } from "./browse-filters";
 import { BrowsePost, BrowsePostSkeleton } from "./browse-post";
-import { type BrowseSearch, toBrowseInput } from "./browse-search";
+import { type BrowseSearch, canMatchOf, matchModeOf, toBrowseInput } from "./browse-search";
+import { comparedList, tradeListsOf } from "./compare-with";
+import { HiddenPartnersDialog } from "./hidden-partners-dialog";
 import { LoadError } from "./load-error";
-import { MatchHelp } from "./match-help";
+import { MatchingControls } from "./matching-controls";
 import { MyPosts } from "./my-posts";
+import { PersonSheet } from "./person-sheet";
 import { PostListDialog } from "./post-list-dialog";
-import { browseOptions, forYouOptions, hiddenPartnersOptions } from "./queries";
+import { browseOptions, hiddenPartnersOptions } from "./queries";
 import { TagLabel } from "./tag-label";
 
 type PostType = NonNullable<BrowseSearch["type"]> | "all";
@@ -44,28 +44,18 @@ const SSR_POSTS = 4;
 
 export function BrowseView({ search }: { search: BrowseSearch }) {
   const { data: user } = useCurrentUser();
-  const canMatch = useUserLists().some((list) =>
-    canBeOnTrade(list.listTypeNew, list.isProfileBind),
-  );
-  const onlyMatches = canMatch && search.matches === 1;
+  const userLists = useUserLists();
+  const canMatch = canMatchOf(userLists);
+  const mode = matchModeOf(search, canMatch);
+  const tradeLists = useMemo(() => tradeListsOf(userLists), [userLists]);
   const { artists } = useCosmoArtist();
   const { data: selected } = useSelectedArtists();
   const input = useMemo(
-    () => toBrowseInput(search, artists, selected),
-    [search, artists, selected],
+    () => toBrowseInput(search, artists, selected, canMatch),
+    [search, artists, selected, canMatch],
   );
   const query = useInfiniteQuery(browseOptions(input));
-  // For you's own read, so a post's link only promises a row For you shows
-  const mutual = useQuery({
-    ...forYouOptions("mutual", undefined),
-    staleTime: 60_000,
-    enabled: Boolean(user),
-  });
   const hidden = useQuery(hiddenPartnersOptions(Boolean(user)));
-  const mutualIds = useMemo(
-    () => new Set(mutual.data?.partners.map((p) => p.userId)),
-    [mutual.data],
-  );
   const navigate = useNavigate({ from: "/trade/" });
   // the drawer's On Trade link lands on this same page; the new slug closes the drawer
   const [opened, setOpened] = useState<{ objekt: ValidObjekt; slug?: string } | null>(null);
@@ -73,6 +63,10 @@ export function BrowseView({ search }: { search: BrowseSearch }) {
   const setActive = (objekt: ValidObjekt | null) =>
     setOpened(objekt ? { objekt, slug: search.slug } : null);
   const [postOpen, setPostOpen] = useState(false);
+  const [hiddenOpen, setHiddenOpen] = useState(false);
+  const router = useRouter();
+  // whether the open sheet pushed its own history entry, so closing can go back to the feed
+  const pushedPerson = useRef(false);
   // one clock per page load, so every post's "3 hours ago" agrees
   const [now] = useState(Date.now);
 
@@ -83,13 +77,41 @@ export function BrowseView({ search }: { search: BrowseSearch }) {
       resetScroll: false,
     });
 
+  const openPerson = (userId: string) => {
+    pushedPerson.current = true;
+    void navigate({
+      search: (prev) => ({ ...prev, person: userId }),
+      resetScroll: false,
+    });
+  };
+  const closePerson = () => {
+    if (pushedPerson.current) {
+      pushedPerson.current = false;
+      router.history.back();
+      return;
+    }
+    void navigate({
+      search: (prev) => ({ ...prev, person: undefined }),
+      replace: true,
+      resetScroll: false,
+    });
+  };
+
   const type: PostType = search.type ?? "all";
   const filtering =
     search.type !== undefined ||
     search.slug !== undefined ||
     FACETS.some((key) => (search[key]?.length ?? 0) > 0);
   const reset = () => void navigate({ search: {}, replace: true, resetScroll: false });
-  const posts = useMemo(() => query.data?.pages.flatMap((page) => page.posts) ?? [], [query.data]);
+  // a person who moved between two Mutual pages can come back once more: first place wins
+  const posts = useMemo(() => {
+    const seen = new Set<number>();
+    return (query.data?.pages.flatMap((page) => page.posts) ?? []).filter((post) => {
+      if (seen.has(post.id)) return false;
+      seen.add(post.id);
+      return true;
+    });
+  }, [query.data]);
   const collections = useMemo(
     () => Object.assign({}, ...(query.data?.pages.map((page) => page.collections) ?? [])),
     [query.data],
@@ -146,16 +168,12 @@ export function BrowseView({ search }: { search: BrowseSearch }) {
           </TabsList>
         </Tabs>
         {canMatch ? (
-          <div className="flex items-center gap-1">
-            <Label className="cursor-pointer gap-2 text-sm font-medium">
-              <Switch
-                checked={onlyMatches}
-                onCheckedChange={(on) => setSearch({ matches: on ? 1 : undefined })}
-              />
-              {m.trade_only_matches()}
-            </Label>
-            <MatchHelp view="browse" />
-          </div>
+          <MatchingControls
+            mode={mode}
+            list={search.list}
+            tradeLists={tradeLists}
+            onChange={(patch) => setSearch({ match: mode, ...patch, matches: undefined })}
+          />
         ) : user ? (
           <div className="text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
             <p className="text-pretty">{m.trade_browse_matches_need_list()}</p>
@@ -166,13 +184,13 @@ export function BrowseView({ search }: { search: BrowseSearch }) {
         ) : (
           <p className="text-muted-foreground text-sm text-pretty">
             {m.trade_browse_matches_sign_in()}{" "}
-            <Link
-              to="/login"
-              search={{ redirect: "/trade" }}
-              className="text-foreground underline underline-offset-2"
+            <Button
+              variant="link"
+              className="h-auto p-0 text-sm underline underline-offset-2"
+              render={<Link to="/login" search={{ redirect: "/trade" }} />}
             >
               {m.nav_sign_in()}
-            </Link>
+            </Button>
           </p>
         )}
       </div>
@@ -184,13 +202,28 @@ export function BrowseView({ search }: { search: BrowseSearch }) {
         </>
       ) : query.isError && posts.length === 0 ? (
         <LoadError onRetry={() => void query.refetch()} />
-      ) : posts.length === 0 && !query.hasNextPage && onlyMatches ? (
+      ) : posts.length === 0 && !query.hasNextPage && mode === "mutual" ? (
+        <EmptyState
+          icon={CardsThreeIcon}
+          title={m.trade_browse_no_mutual_title()}
+          hint={m.trade_browse_no_mutual_hint()}
+          action={
+            <Button variant="outline" size="sm" onClick={() => setSearch({ match: "any" })}>
+              {m.trade_browse_show_any()}
+            </Button>
+          }
+        />
+      ) : posts.length === 0 && !query.hasNextPage && mode === "any" ? (
         <EmptyState
           icon={CardsThreeIcon}
           title={m.trade_browse_no_matches_title()}
           hint={m.trade_browse_no_matches_hint()}
           action={
-            <Button variant="outline" size="sm" onClick={() => setSearch({ matches: undefined })}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setSearch({ match: "off", matches: undefined })}
+            >
               {m.trade_browse_show_all_posts()}
             </Button>
           }
@@ -225,10 +258,10 @@ export function BrowseView({ search }: { search: BrowseSearch }) {
                   <BrowsePost
                     post={post}
                     own={post.userId === user?.user.id}
-                    forYouMutual={mutualIds.has(post.userId)}
                     collections={collections}
                     now={now}
                     onOpen={setActive}
+                    onOpenPerson={openPerson}
                   />
                 </div>
               ) : (
@@ -260,14 +293,27 @@ export function BrowseView({ search }: { search: BrowseSearch }) {
       {hidden.data && hidden.data.length > 0 && query.isSuccess && !query.hasNextPage ? (
         <p className="text-muted-foreground text-center text-sm text-pretty">
           {m.trade_browse_hidden_note()}{" "}
-          <Link to="/account/hidden" className="text-foreground underline-offset-2 hover:underline">
+          <Button variant="link" className="h-auto p-0 text-sm" onClick={() => setHiddenOpen(true)}>
             {m.trade_hidden_partners()}
-          </Link>
+          </Button>
         </p>
       ) : null}
 
       <ObjektDrawer objekt={active} onClose={() => setActive(null)} />
       {user ? <PostListDialog open={postOpen} onOpenChange={setPostOpen} /> : null}
+      {user ? <HiddenPartnersDialog open={hiddenOpen} onOpenChange={setHiddenOpen} /> : null}
+      {user && search.person ? (
+        <PersonSheet
+          key={search.person}
+          userId={search.person}
+          list={
+            mode === "off"
+              ? undefined
+              : comparedList(search.list, tradeLists, mode === "mutual")?.slug
+          }
+          onClose={closePerson}
+        />
+      ) : null}
     </>
   );
 }

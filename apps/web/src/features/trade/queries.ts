@@ -1,23 +1,19 @@
-import type { FeedCursor, TradeFilter } from "@repo/api/schemas/trade";
+import type { FeedCursor } from "@repo/api/schemas/trade";
 import { keepPreviousData } from "@tanstack/react-query";
 
 import { orpc } from "@/lib/orpc";
 
 import type { BrowseInput } from "./browse-search";
 
-export const forYouOptions = (filter: TradeFilter, list: string | undefined) =>
-  orpc.trade.forYou.queryOptions({
-    input: { filter, list },
-    // the server's cache already allows partners' edits the spec's full five minutes
-    staleTime: 0,
-    placeholderData: keepPreviousData,
-  });
+/** "Mutual N" and the list header's count; the server keeps it for a minute. */
+export const mutualCountOptions = (list: string | undefined) =>
+  orpc.trade.mutualCount.queryOptions({ input: { list }, staleTime: 60_000 });
 
-export const listMatchCountOptions = (slug: string) =>
-  orpc.trade.listMatchCount.queryOptions({ input: { slug }, staleTime: 0 });
+export const personOptions = (userId: string, list: string | undefined) =>
+  orpc.trade.person.queryOptions({ input: { userId, list }, staleTime: 0 });
 
 export const tabCountsOptions = (enabled: boolean) =>
-  orpc.trade.tabCounts.queryOptions({ input: {}, enabled, staleTime: 60_000 });
+  orpc.trade.tabCounts.queryOptions({ input: { forYou: false }, enabled, staleTime: 60_000 });
 
 export const hiddenPartnersOptions = (enabled: boolean) =>
   orpc.trade.hiddenPartners.queryOptions({ staleTime: 0, enabled });

@@ -1,10 +1,11 @@
 import { ORPCError } from "@orpc/client";
-import type { TradeMatches } from "@repo/api/services/trade-matches/index";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import type { Outputs } from "@repo/api";
+import { type InfiniteData, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { toastManager } from "@/components/ui/toast";
 import { LIST_QUERY_KEY } from "@/features/list/queries";
 import { currentUserOptions } from "@/features/user/queries";
+import { addActionToast } from "@/lib/action-toast";
 import { orpc } from "@/lib/orpc";
 import { errorReason } from "@/lib/orpc-error";
 import { relativeTime } from "@/lib/time";
@@ -15,23 +16,24 @@ function useTradeInvalidation() {
   return () => queryClient.invalidateQueries({ queryKey: orpc.trade.key() });
 }
 
-export function useHidePartner() {
+type BrowsePage = Outputs["trade"]["browse"];
+
+/** The page minus one person's posts, keeping every other field it carries. */
+function without(page: BrowsePage, userId: string): BrowsePage {
+  return { ...page, posts: page.posts.filter((post) => post.userId !== userId) };
+}
+
+function useHidePartner() {
   const queryClient = useQueryClient();
   const invalidate = useTradeInvalidation();
 
   return useMutation(
     orpc.trade.hidePartner.mutationOptions({
       onMutate: async ({ userId }) => {
-        const key = orpc.trade.forYou.key();
+        const key = orpc.trade.browse.key();
         await queryClient.cancelQueries({ queryKey: key });
-        queryClient.setQueriesData<TradeMatches>({ queryKey: key }, (data) =>
-          data
-            ? {
-                ...data,
-                partners: data.partners.filter((partner) => partner.userId !== userId),
-                notShown: { ...data.notShown, hidden: data.notShown.hidden + 1 },
-              }
-            : data,
+        queryClient.setQueriesData<InfiniteData<BrowsePage>>({ queryKey: key }, (data) =>
+          data ? { ...data, pages: data.pages.map((page) => without(page, userId)) } : data,
         );
       },
       onSettled: () => invalidate(),
@@ -40,6 +42,26 @@ export function useHidePartner() {
       },
     }),
   );
+}
+
+/** Hide with a toast offering Undo, as every Hide in the app does. */
+export function useHideWithUndo() {
+  const hide = useHidePartner();
+  const unhide = useUnhidePartner();
+
+  return (userId: string, name: string, onHidden?: () => void) =>
+    hide.mutate(
+      { userId },
+      {
+        onSuccess: () => {
+          addActionToast(
+            { type: "success", title: m.trade_hide_success({ name }) },
+            { label: m.common_actions_undo(), onClick: () => unhide.mutate({ userId }) },
+          );
+          onHidden?.();
+        },
+      },
+    );
 }
 
 export function useUnhidePartner() {

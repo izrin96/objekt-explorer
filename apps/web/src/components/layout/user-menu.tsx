@@ -119,9 +119,9 @@ export function UserMenu({ user }: { user: User }) {
 
           <MyCosmoSubmenu />
 
-          <MenuItem render={<Link to="/trade/for-you" />}>
+          <MenuItem render={<Link to="/trade" search={{ match: "mutual" }} />}>
             <UsersIcon />
-            {m.trade_tab_for_you()}
+            {m.trade_matches_menu()}
           </MenuItem>
 
           <MenuItem render={<Link to="/account" />}>

@@ -25,7 +25,7 @@ import { MessageButton } from "@/features/chat/message-button";
 import { CompareDialog } from "@/features/compare/compare-dialog";
 import { SkeletonGrid } from "@/features/objekt/skeleton-grid";
 import { ProfileLink } from "@/features/profile/profile-hover-card";
-import { listMatchCountOptions } from "@/features/trade/queries";
+import { mutualCountOptions } from "@/features/trade/queries";
 import { displayNickname } from "@/lib/address";
 import { m } from "@/paraglide/messages";
 
@@ -204,7 +204,7 @@ export function ListHeader() {
   );
 }
 
-/** The count is the partners For you shows for this list in `match`, its fullest view. */
+/** Both-way lists open on Mutual and show its count; a lone list opens on Any, which has none. */
 function TradeMatchesLink({
   slug,
   match,
@@ -212,20 +212,22 @@ function TradeMatchesLink({
   slug: string;
   match: ReturnType<typeof fullestFilter>;
 }) {
-  const { data: count } = useQuery(listMatchCountOptions(slug));
+  const mutual = match === "mutual";
+  const { data: count } = useQuery({ ...mutualCountOptions(slug), enabled: mutual });
+  const shown = mutual ? count : undefined;
 
   return (
     <Button
       variant="outline"
       size="sm"
-      aria-label={count === undefined ? undefined : m.trade_matches_link_label({ count })}
-      render={<Link to="/trade/for-you" search={{ list: slug, match }} />}
+      aria-label={shown === undefined ? undefined : m.trade_matches_link_label({ count: shown })}
+      render={<Link to="/trade" search={{ match: mutual ? "mutual" : "any", list: slug }} />}
     >
       <UsersIcon />
       {m.nav_trade_matches()}
-      {count === undefined ? null : (
+      {shown === undefined ? null : (
         <Badge variant="secondary" size="sm" className="font-mono tabular-nums">
-          {count}
+          {shown}
         </Badge>
       )}
     </Button>

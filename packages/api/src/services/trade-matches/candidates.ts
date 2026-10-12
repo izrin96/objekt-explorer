@@ -8,14 +8,14 @@ import { offerMatchesWantSql, takesPartInTradeSql } from "../trade-lists";
 
 const HAVING: Record<TradeFilter, ReturnType<typeof sql>> = {
   all: sql``,
-  mutual: sql`HAVING count(*) FILTER (WHERE they_have AND trade) > 0 AND count(*) FILTER (WHERE NOT they_have AND trade) > 0`,
+  mutual: sql`HAVING count(*) FILTER (WHERE they_have) > 0 AND count(*) FILTER (WHERE NOT they_have) > 0`,
   they_have: sql`HAVING count(*) FILTER (WHERE they_have) > 0`,
   they_want: sql`HAVING count(*) FILTER (WHERE NOT they_have) > 0`,
 };
 
 const ORDER: Record<TradeFilter, ReturnType<typeof sql>> = {
-  all: sql`least(a_t, b_t) DESC, a + b DESC`,
-  mutual: sql`least(a_t, b_t) DESC, a + b DESC`,
+  all: sql`least(a, b) DESC, a + b DESC`,
+  mutual: sql`least(a, b) DESC, a + b DESC`,
   they_have: sql`a DESC`,
   they_want: sql`b DESC`,
 };
@@ -84,8 +84,6 @@ export async function fetchTradeCandidates(
         user_id,
         count(DISTINCT collection_slug) FILTER (WHERE they_have) AS a,
         count(DISTINCT collection_slug) FILTER (WHERE NOT they_have) AS b,
-        count(DISTINCT collection_slug) FILTER (WHERE they_have AND trade) AS a_t,
-        count(DISTINCT collection_slug) FILTER (WHERE NOT they_have AND trade) AS b_t,
         coalesce(
           json_agg(json_build_array(list_id, collection_slug, objekt_id, NOT trade)) FILTER (WHERE they_have),
           '[]'

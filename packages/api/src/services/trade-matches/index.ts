@@ -9,7 +9,7 @@ import {
 } from "@repo/db/schema";
 import { tradeVersionKey } from "@repo/lib/server/list-touch";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
-import { and, eq, inArray, or } from "drizzle-orm";
+import { and, eq, inArray, or, sql } from "drizzle-orm";
 
 import { isMessageable, toMessagePref } from "../../lib/chat-rules";
 import { matchCounts } from "../../lib/trade-person";
@@ -19,6 +19,7 @@ import {
   groupBySlug,
   matchSides,
   type MyHaves,
+  type MyWant,
   type OwnedEntry,
   rankPartners,
   recount,
@@ -32,12 +33,13 @@ import { fetchCollectionsBySlug } from "../list";
 import { toPublicUser } from "../profile";
 import { getCache, redis } from "../redis";
 import { reputationOf } from "../reputation";
+import { notBlockedEither, notTradeSanctioned } from "../safety";
 import { marketVersion } from "../safety-cache";
 import { takesPartInTrade } from "../trade-lists";
 import { fetchTradeCandidates } from "./candidates";
 import { fetchAddresses, fetchHoldings } from "./holdings";
 
-type Sides = ReturnType<typeof matchSides>;
+export type Sides = ReturnType<typeof matchSides>;
 
 /**
  * The user's bound have and sale lists and their want lists, narrowed by `slug` when it names
@@ -61,15 +63,38 @@ export async function resolveTradeSides(
   return matchSides(myLists, named?.id ?? null, filter);
 }
 
-const CACHE_TTL_SECONDS = 300;
+/**
+ * The sides Compare with names, or all of the user's lists. Mutual needs both directions, so a
+ * list that compares one way reads as all lists there.
+ */
+export async function resolveCompareSides(
+  userId: string,
+  slug: string | undefined,
+  mutual: boolean,
+): Promise<Sides> {
+  const sides = await resolveTradeSides(userId, slug, "all");
+  const bothWays = sides.haveListIds.length > 0 && sides.wantListIds.length > 0;
+  return mutual && !bothWays && sides.listId !== null
+    ? resolveTradeSides(userId, undefined, "all")
+    : sides;
+}
 
-export async function getTradeMatches(userId: string, sides: Sides, filter: TradeFilter) {
+/** What a viewer's trade caches depend on: their own list version and the market's. */
+export async function tradeCacheScope(userId: string) {
   const [version, market] = await Promise.all([
     redis.get(tradeVersionKey(userId)).then((v) => v ?? "0"),
     marketVersion(),
   ]);
+  return `${version}:${market}`;
+}
+
+const CACHE_TTL_SECONDS = 300;
+const PERSON_TTL_SECONDS = 60;
+
+export async function getTradeMatches(userId: string, sides: Sides, filter: TradeFilter) {
+  const scope = await tradeCacheScope(userId);
   return getCache(
-    `trade:foryou:2:${userId}:${version}:${market}:${filter}:${sides.listId ?? "all"}`,
+    `trade:foryou:4:${userId}:${scope}:${filter}:${sides.listId ?? "all"}`,
     CACHE_TTL_SECONDS,
     () => computeTradeMatches(userId, sides, filter),
   );
@@ -78,7 +103,9 @@ export async function getTradeMatches(userId: string, sides: Sides, filter: Trad
 export type TradeMatches = Awaited<ReturnType<typeof computeTradeMatches>>;
 
 /** Read past the matches cache, so a partner's Messages setting applies on the next load. */
-export async function withMessageable(matches: TradeMatches) {
+export async function withMessageable<M extends { partners: TradeMatches["partners"] }>(
+  matches: M,
+) {
   const ids = matches.partners.map((partner) => partner.userId);
   const prefs =
     ids.length === 0
@@ -102,7 +129,7 @@ export async function withMessageable(matches: TradeMatches) {
 }
 
 /** Read past the matches cache, which outlives a reputation change. */
-export async function withReputation(matches: Awaited<ReturnType<typeof withMessageable>>) {
+export async function withReputation<M extends { partners: TradeMatches["partners"] }>(matches: M) {
   const reputations = await reputationOf(matches.partners.map((partner) => partner.userId));
   return {
     ...matches,
@@ -137,6 +164,7 @@ export async function recountPartners(
             slug: listEntries.collectionSlug,
             objektId: listEntries.objektId,
             listTypeNew: lists.listTypeNew,
+            matchSale: lists.matchSale,
           })
           .from(listEntries)
           .innerJoin(lists, eq(lists.id, listEntries.listId))
@@ -161,14 +189,17 @@ export async function recountPartners(
   const haveIds = new Set(sides.haveListIds);
   const myHaveEntries: OwnedEntry[] = [];
   const mySaleListIds = new Set<number>();
-  const myWants = new Map<string, number[]>();
+  const myWants = new Map<string, MyWant[]>();
   for (const entry of myEntries) {
     if (entry.slug === null) continue;
     if (haveIds.has(entry.listId)) {
       myHaveEntries.push({ listId: entry.listId, slug: entry.slug, objektId: entry.objektId });
       if (entry.listTypeNew === "sale") mySaleListIds.add(entry.listId);
     } else {
-      myWants.set(entry.slug, unique([...(myWants.get(entry.slug) ?? []), entry.listId]));
+      const held = myWants.get(entry.slug) ?? [];
+      if (!held.some((want) => want.listId === entry.listId)) {
+        myWants.set(entry.slug, [...held, { listId: entry.listId, matchSale: entry.matchSale }]);
+      }
     }
   }
 
@@ -216,7 +247,23 @@ async function computeTradeMatches(userId: string, sides: Sides, filter: TradeFi
     db.$count(userBlock, eq(userBlock.blockerId, userId)),
   ]);
   const ranked = rankPartners(recounted, filter, now);
+  const { partners, collections } = await hydratePartners(ranked, addressRows);
 
+  return {
+    checkedAt: now.toISOString(),
+    partners,
+    notShown: { ...countDropped(recounted), hidden, blocked },
+    collections,
+  };
+}
+
+type Ranked = ReturnType<
+  typeof rankPartners<Awaited<ReturnType<typeof recountPartners>>["recounted"][number]>
+>;
+type AddressRows = Awaited<ReturnType<typeof recountPartners>>["addressRows"];
+
+/** Users, partner lists, drawn collections and identity for ranked partners. */
+async function hydratePartners(ranked: Ranked, addressRows: AddressRows) {
   const rankedIds = ranked.map((r) => r.partner.userId);
   const partnerListIds = unique(
     ranked.flatMap(({ partner }) =>
@@ -299,13 +346,66 @@ async function computeTradeMatches(userId: string, sides: Sides, filter: TradeFi
   });
 
   return {
-    checkedAt: now.toISOString(),
     partners,
-    notShown: { ...countDropped(recounted), hidden, blocked },
     collections: Object.fromEntries(collectionRows.map((c) => [c.slug, c])) as Record<
       string,
       ValidObjekt
     >,
+  };
+}
+
+/**
+ * One person's matches with the viewer, by the same rules as For you, however far down the
+ * ranking they would sit. Hidden, blocked and sanctioned people fall out of the candidates.
+ */
+export async function personDetail(userId: string, personId: string, list: string | undefined) {
+  const sides = await resolveCompareSides(userId, list, false);
+  const scope = await tradeCacheScope(userId);
+  const detail = await getCache(
+    `trade:person:3:${userId}:${scope}:${sides.listId ?? "all"}:${personId}`,
+    PERSON_TTL_SECONDS,
+    async () => {
+      const now = new Date();
+      if (sides.haveListIds.length === 0 && sides.wantListIds.length === 0) {
+        return { checkedAt: now.toISOString(), partners: [], collections: {} };
+      }
+      const { recounted, addressRows } = await recountPartners(userId, sides, "all", [personId]);
+      const hydrated = await hydratePartners(rankPartners(recounted, "all", now), addressRows);
+      return { checkedAt: now.toISOString(), ...hydrated };
+    },
+  );
+  const { partners, collections, checkedAt } = await withReputation(await withMessageable(detail));
+  const partner = partners[0] ?? null;
+  return {
+    partner,
+    header: partner ? null : await personHeader(userId, personId),
+    collections,
+    checkedAt,
+  };
+}
+
+/**
+ * Who a person with no matches is, for the sheet's title and header. An account either side
+ * has blocked, or with a trade sanction, gets none: the sheet then says only that nothing matches.
+ */
+async function personHeader(viewerId: string, personId: string) {
+  const [account] = await db
+    .select()
+    .from(user)
+    .where(
+      and(
+        eq(user.id, personId),
+        notBlockedEither(viewerId, sql`${user.id}`),
+        notTradeSanctioned(sql`${user.id}`),
+      ),
+    );
+  if (!account) return null;
+  const reputations = await reputationOf([personId]);
+  return {
+    userId: account.id,
+    user: toPublicUser(account),
+    identity: toPartnerIdentity(account.name, [], []),
+    reputation: reputations.get(personId) ?? null,
   };
 }
 

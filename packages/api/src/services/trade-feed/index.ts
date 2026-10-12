@@ -11,21 +11,31 @@ import { isMessageable, toMessagePref } from "../../lib/chat-rules";
 import { iso } from "../../lib/time";
 import {
   assemblePost,
+  browseMode,
   BUMP_COOLDOWN_HOURS,
   comparePosts,
   FEED_FETCH_SIZE,
   FEED_PAGE_SIZE,
   isPostIdle,
   latest,
+  matchIndexOf,
   matchesViewer,
+  narrowViewer,
   nextBumpAt,
   pairPosts,
   untradeableKey,
+  type Viewer,
 } from "../../lib/trade-feed";
-import { toPartnerIdentity, addressesByUser, nicknamesByAddress } from "../../lib/trade-rank";
+import {
+  addressesByUser,
+  mutualRankOf,
+  nicknamesByAddress,
+  peopleAfter,
+  toPartnerIdentity,
+} from "../../lib/trade-rank";
 import { unique } from "../../lib/unique";
 import type { ListTypeNew } from "../../schemas/list";
-import type { BrowseFilters, FeedCursor } from "../../schemas/trade";
+import type { BrowseFilters, FeedCursor, MutualRank } from "../../schemas/trade";
 import { getCollectionFilters } from "../activity-feed";
 import {
   fetchCollectionsBySlug,
@@ -40,7 +50,9 @@ import { reputationOf } from "../reputation";
 import { notTradeSanctioned } from "../safety";
 import { marketVersion } from "../safety-cache";
 import { takesPartInTrade } from "../trade-lists";
+import { resolveCompareSides, type Sides } from "../trade-matches";
 import { fetchAddresses } from "../trade-matches/holdings";
+import { getMutualPeople } from "../trade-matches/mutual";
 import { type PersonMatch, personMatches } from "../trade-matches/person";
 import { type FeedList, feedListColumns, fetchPostEntries, fetchUntradeable } from "./entries";
 import { type FeedRow, fetchFeedRows, listedPost, postsCte } from "./query";
@@ -85,33 +97,48 @@ export async function browseFeed(
   viewerId: string | null,
   input: BrowseFilters & { cursor?: FeedCursor },
 ) {
+  const mode = browseMode(input);
   const [viewer, slugs, takesPart] = await Promise.all([
     viewerId === null ? null : fetchViewer(viewerId),
     resolveFilterSlugs(input),
-    viewerId !== null && input.matches === true ? hasTradeList(viewerId) : false,
+    viewerId !== null && mode !== "off" ? hasTradeList(viewerId) : false,
   ]);
 
   const empty = { posts: [], nextCursor: undefined, collections: {} };
   if (slugs?.length === 0) return empty;
 
-  // the switch shows on the same test, so a stale `matches=1` from a viewer with no list on
+  // the control shows on the same test, so a stale `match` from a viewer with no list on
   // Trade lists every post; a list that matches nothing yet empties the feed
-  const onlyMatches = takesPart && viewer !== null;
-  if (onlyMatches && viewer!.have.size === 0 && viewer!.want.size === 0) return empty;
+  let match: { userId: string; sides: Sides; compared: Viewer } | null = null;
+  if (takesPart && viewer !== null && viewerId !== null) {
+    const sides = await resolveCompareSides(viewerId, input.list, mode === "mutual");
+    const compared = narrowViewer(viewer, sides);
+    if (compared.have.size === 0 && compared.want.size === 0) return empty;
+    match = { userId: viewerId, sides, compared };
+  }
+
+  let owners: { ids: string[]; resume: boolean } | null = null;
+  let rankOf = new Map<string, MutualRank>();
+  if (match && mode === "mutual") {
+    const ordered = await getMutualPeople(match.userId, match.sides);
+    rankOf = new Map(ordered.map((partner) => [partner.userId, mutualRankOf(partner)]));
+    const cursorRank = input.cursor?.rank;
+    const people = cursorRank ? peopleAfter(ordered, cursorRank) : ordered;
+    const [first] = people;
+    if (!first) return empty;
+    owners = {
+      ids: people.map((partner) => partner.userId),
+      resume: cursorRank !== undefined && first.userId === cursorRank.userId,
+    };
+  }
 
   const rows = await fetchFeedRows({
     viewerId,
     type: input.type,
     slugs,
     slug: input.slug ?? null,
-    matches: onlyMatches
-      ? {
-          want: [...viewer!.want.keys()],
-          saleWant: [...viewer!.saleWant.keys()],
-          have: [...viewer!.have.keys()],
-          tradeHave: [...viewer!.tradeHave.keys()],
-        }
-      : null,
+    matches: match ? matchIndexOf(match.compared) : null,
+    owners,
     cursor: input.cursor,
   });
   if (rows.length === 0) return empty;
@@ -125,7 +152,9 @@ export async function browseFeed(
     db.select().from(user).where(inArray(user.id, ownerIds)),
     fetchAddresses(ownerIds),
     reputationOf(ownerIds),
-    viewerId === null ? new Map<string, PersonMatch>() : personMatches(viewerId, ownerIds),
+    viewerId === null
+      ? new Map<string, PersonMatch>()
+      : personMatches(viewerId, ownerIds, match?.sides),
   ]);
   const addressesOf = addressesByUser(addressRows);
   const userMap = new Map(users.map((u) => [u.id, u]));
@@ -134,7 +163,7 @@ export async function browseFeed(
   const filter = {
     slugs: slugs ? new Set(slugs) : null,
     slug: input.slug ?? null,
-    onlyMatches,
+    onlyMatches: match !== null,
   };
 
   const membersOf = (row: FeedRow) =>
@@ -160,10 +189,15 @@ export async function browseFeed(
       const account = userMap.get(post?.anchor.userId ?? "");
       if (!post || !account) continue;
 
-      const assembled = assemblePost(post, (id) => entriesOf.get(id) ?? [], viewer, filter);
+      const assembled = assemblePost(
+        post,
+        (id) => entriesOf.get(id) ?? [],
+        match?.compared ?? viewer,
+        filter,
+      );
       if (!assembled) continue;
       // SQL can't see that an owner sold the only matching objekt
-      if (onlyMatches && !matchesViewer(assembled.match)) continue;
+      if (match && !matchesViewer(assembled.match)) continue;
 
       posts.push({
         id: post.anchor.id,
@@ -200,7 +234,10 @@ export async function browseFeed(
   const hasMore = examined < rows.length || rows.length === FEED_FETCH_SIZE;
   return {
     posts,
-    nextCursor: hasMore && last ? { bumpedAt: iso(last.cursor_at)!, id: last.id } : undefined,
+    nextCursor:
+      hasMore && last
+        ? { bumpedAt: iso(last.cursor_at)!, id: last.id, rank: rankOf.get(last.user_id) }
+        : undefined,
     collections: Object.fromEntries(collectionRows.map((c) => [c.slug, c])) as Record<
       string,
       ValidObjekt

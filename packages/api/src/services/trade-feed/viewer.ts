@@ -3,7 +3,7 @@ import { listEntries, lists } from "@repo/db/schema";
 import { tradeVersionKey } from "@repo/lib/server/list-touch";
 import { and, eq, isNotNull } from "drizzle-orm";
 
-import type { Viewer } from "../../lib/trade-feed";
+import { narrowIndex, type Viewer } from "../../lib/trade-feed";
 import { addressesByUser, collectionVerdict, groupBySlug } from "../../lib/trade-rank";
 import { unique } from "../../lib/unique";
 import { getCache, redis } from "../redis";
@@ -58,16 +58,6 @@ export async function hasTradeList(userId: string) {
   return row !== undefined;
 }
 
-/** `index` keeping only the lists `keep` passes, and only the collections left on one. */
-function narrow(index: Map<string, number[]>, keep: (listId: number) => boolean) {
-  const narrowed = new Map<string, number[]>();
-  for (const [slug, listIds] of index) {
-    const kept = listIds.filter(keep);
-    if (kept.length > 0) narrowed.set(slug, kept);
-  }
-  return narrowed;
-}
-
 export async function fetchViewer(userId: string): Promise<Viewer> {
   const version = (await redis.get(tradeVersionKey(userId))) ?? "0";
   const [haveIndex, saleLists, wantRows] = await Promise.all([
@@ -106,7 +96,7 @@ export async function fetchViewer(userId: string): Promise<Viewer> {
   return {
     have,
     want,
-    tradeHave: narrow(have, (id) => !saleIds.has(id)),
-    saleWant: narrow(want, (id) => !tradeOnlyIds.has(id)),
+    tradeHave: narrowIndex(have, (id) => !saleIds.has(id)),
+    saleWant: narrowIndex(want, (id) => !tradeOnlyIds.has(id)),
   };
 }

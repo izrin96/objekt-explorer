@@ -31,8 +31,9 @@ export function filterFits(filter: TradeFilter, sides: { have: boolean; want: bo
 }
 
 /**
- * A person's counts against the viewer's lists, in collections. `trade*` leave out sale lists,
- * which count one way only.
+ * A person's counts against the viewer's lists, in collections. A sale list counts only against a
+ * want list open to buying. `trade*` leave sale lists out altogether and are no longer read; open
+ * tabs may still.
  */
 export type MatchCounts = {
   theyHave: number;
@@ -41,12 +42,12 @@ export type MatchCounts = {
   tradeYouHave: number;
 };
 
-/** The mutual score: trades only, so a sale listing never makes a person mutual. */
+/** The mutual score: the smaller of the two counts, sale lists included where buying can answer them. */
 export function mutualOf(counts: MatchCounts) {
-  return Math.min(counts.tradeTheyHave, counts.tradeYouHave);
+  return Math.min(counts.theyHave, counts.youHave);
 }
 
-/** Whether `filter` keeps a person with these counts: Mutual on trades only, the one-way views on all. */
+/** Whether `filter` keeps a person with these counts: Mutual on the smaller count, the one-way views on each. */
 export function countsFit(filter: TradeFilter, counts: MatchCounts) {
   if (filter === "mutual") return mutualOf(counts) > 0;
   return filterFits(filter, { have: counts.youHave > 0, want: counts.theyHave > 0 });
@@ -70,7 +71,8 @@ export const forYouInputSchema = z.object({
 
 export const listMatchCountInputSchema = z.object({ slug: z.string() });
 
-export const tabCountsInputSchema = z.object({});
+/** `forYou: false` skips the For you count, which only tabs loaded before the merge read. */
+export const tabCountsInputSchema = z.object({ forYou: z.boolean().default(true) });
 
 export const tabCountsOutputSchema = z.object({
   forYou: z.number().int(),
@@ -82,22 +84,46 @@ export const tradePartnerInputSchema = z.object({ userId: z.string().min(1) });
 const POST_TYPES = ["all", "wtt", "wtb", "wts"] as const;
 export type PostType = (typeof POST_TYPES)[number];
 
+export const BROWSE_MATCH_MODES = ["off", "any", "mutual"] as const;
+export type BrowseMatchMode = (typeof BROWSE_MATCH_MODES)[number];
+
 const browseFiltersSchema = collectionFiltersSchema.extend({
   type: z.enum(POST_TYPES).default("all"),
   slug: z.string().optional(),
+  /** an older tab's Only matches switch; `match` wins when both are sent */
   matches: z.boolean().optional(),
+  match: z.enum(BROWSE_MATCH_MODES).optional(),
+  /** Compare with: a list slug, read while matching is on */
+  list: z.string().min(1).optional(),
 });
 export type BrowseFilters = z.infer<typeof browseFiltersSchema>;
+
+/** The last person's place in the Mutual ranking, so the next page continues by key, not offset. */
+const mutualRankSchema = z.object({
+  mutual: z.number().int(),
+  sum: z.number().int(),
+  at: z.number(),
+  userId: z.string().min(1),
+});
+export type MutualRank = z.infer<typeof mutualRankSchema>;
 
 const feedCursorSchema = z.object({
   bumpedAt: z.iso.datetime({ offset: true }),
   id: z.number().int(),
+  rank: mutualRankSchema.optional(),
 });
 export type FeedCursor = z.infer<typeof feedCursorSchema>;
 
 export const browseInputSchema = browseFiltersSchema.extend({
   cursor: feedCursorSchema.optional(),
 });
+
+export const personInputSchema = z.object({
+  userId: z.string().min(1),
+  list: z.string().min(1).optional(),
+});
+
+export const mutualCountInputSchema = z.object({ list: z.string().min(1).optional() });
 
 export const setShowOnTradeInputSchema = z.object({ slug: z.string(), on: z.boolean() });
 

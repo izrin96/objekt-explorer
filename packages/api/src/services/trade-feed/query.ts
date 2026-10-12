@@ -1,13 +1,13 @@
 import { db } from "@repo/db";
 import { type SQL, sql } from "drizzle-orm";
 
-import { FEED_FETCH_SIZE, type PostTag } from "../../lib/trade-feed";
+import { cursorScope, FEED_FETCH_SIZE, type MatchIndex, type PostTag } from "../../lib/trade-feed";
 import { IDLE_DAYS } from "../../lib/trade-rank";
-import type { FeedCursor, PostType } from "../../schemas/trade";
+import type { PostType } from "../../schemas/trade";
 import { notBlockedEither, notTradeSanctioned } from "../safety";
 import { takesPartInTradeSql } from "../trade-lists";
 
-/** As `postTag` tags a post: a want list alone that matches trades only is WTT, not WTB. */
+/** As `postTag` tags a post: a want list alone that matches swaps only is WTT, not WTB. */
 const TAG_WHERE: Record<PostTag, SQL> = {
   wtt: sql`(posts.type = 'have' OR (posts.type = 'want' AND NOT posts.match_sale))`,
   wtb: sql`(posts.type = 'want' AND posts.match_sale)`,
@@ -77,12 +77,10 @@ const matchesIndex = (index: MatchIndex) =>
       )
   )`;
 
-/** The viewer's slugs as `Viewer` holds them, by which side of a post they match. */
-type MatchIndex = { want: string[]; saleWant: string[]; have: string[]; tradeHave: string[] };
-
 export type FeedRow = {
   id: number;
   partner_id: number | null;
+  user_id: string;
   cursor_at: string;
   message_allow: string | null;
 };
@@ -92,13 +90,15 @@ type Stage1 = {
   type: PostType;
   slugs: string[] | null;
   slug: string | null;
-  /** the viewer's slugs by the post side they match, when Only matches is on */
+  /** the viewer's slugs by the post side they match, when matching is on */
   matches: MatchIndex | null;
-  cursor: FeedCursor | undefined;
+  /** Mutual: only these owners, best first, grouped; `resume` is the cursor's owner, first in `ids` */
+  owners: { ids: string[]; resume: boolean } | null;
+  cursor: { bumpedAt: string; id: number } | undefined;
 };
 
-/** Stage 1: which posts make the page, in order. Uncached; it reads only the partial index's rows. */
-export async function fetchFeedRows(query: Stage1): Promise<FeedRow[]> {
+/** The predicates every feed read shares: listed, visible to the viewer, and the filters. */
+export function feedWhere(query: Omit<Stage1, "owners" | "cursor">): SQL[] {
   const where: SQL[] = [listedPost, notTradeSanctioned(sql`posts.user_id`)];
   if (query.viewerId !== null) {
     where.push(sql`posts.user_id <> ${query.viewerId}`);
@@ -112,10 +112,18 @@ export async function fetchFeedRows(query: Stage1): Promise<FeedRow[]> {
   if (query.slugs) where.push(hasEntryIn(sql`posts.id, posts.partner_id`, query.slugs));
   if (query.slug !== null) where.push(hasEntryIn(sql`posts.id, posts.partner_id`, [query.slug]));
   if (query.matches) where.push(matchesIndex(query.matches));
-  if (query.cursor) {
-    where.push(
-      sql`(posts.bumped_at, posts.id) < (${query.cursor.bumpedAt}::timestamptz, ${query.cursor.id})`,
-    );
+  return where;
+}
+
+/** Stage 1: which posts make the page, in order. Uncached; it reads only the partial index's rows. */
+export async function fetchFeedRows(query: Stage1): Promise<FeedRow[]> {
+  const where = feedWhere(query);
+  const { owners, cursor } = query;
+  if (owners) where.push(sql`posts.user_id = ANY(${sql.param(owners.ids)}::text[])`);
+  const scope = cursorScope(owners);
+  if (cursor && scope !== "none") {
+    const after = sql`(posts.bumped_at, posts.id) < (${cursor.bumpedAt}::timestamptz, ${cursor.id})`;
+    where.push(scope === "first" ? sql`(posts.user_id <> ${owners!.ids[0]} OR ${after})` : after);
   }
 
   const result = await db.execute<FeedRow>(sql`
@@ -123,13 +131,29 @@ export async function fetchFeedRows(query: Stage1): Promise<FeedRow[]> {
     SELECT
       posts.id,
       posts.partner_id,
+      posts.user_id,
       posts.bumped_at::text AS cursor_at,
       mp.allow AS message_allow
     FROM posts
     LEFT JOIN message_pref mp ON mp.user_id = posts.user_id
     WHERE ${sql.join(where, sql` AND `)}
-    ORDER BY posts.bumped_at DESC, posts.id DESC
+    ORDER BY ${owners ? sql`array_position(${sql.param(owners.ids)}::text[], posts.user_id), ` : sql``}posts.bumped_at DESC, posts.id DESC
     LIMIT ${FEED_FETCH_SIZE}
   `);
   return result.rows;
+}
+
+/** How many of `ownerIds` have at least one post the stage-1 predicates keep. */
+export async function countFeedOwners(
+  query: Omit<Stage1, "owners" | "cursor">,
+  ownerIds: string[],
+): Promise<number> {
+  if (ownerIds.length === 0) return 0;
+  const where = [...feedWhere(query), sql`posts.user_id = ANY(${sql.param(ownerIds)}::text[])`];
+  const result = await db.execute<{ n: number }>(sql`
+    WITH ${postsCte}
+    SELECT count(DISTINCT posts.user_id)::int AS n FROM posts
+    WHERE ${sql.join(where, sql` AND `)}
+  `);
+  return result.rows[0]?.n ?? 0;
 }

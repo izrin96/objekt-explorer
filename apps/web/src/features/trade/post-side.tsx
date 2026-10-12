@@ -27,10 +27,10 @@ const RING = "ring-foreground ring-offset-card ring-2 ring-offset-2";
 const CARD_RING =
   "*:first:after:pointer-events-none *:first:after:absolute *:first:after:inset-0 *:first:after:rounded-photocard *:first:after:border-2 *:first:after:border-foreground *:first:after:shadow-[inset_0_0_0_2px_var(--color-card)]";
 
-export const STRIP_MORE =
+const STRIP_MORE =
   "hover:text-foreground focus-visible:ring-ring text-xs tabular-nums outline-none focus-visible:ring-2";
 
-export type StripItem = {
+type StripItem = {
   key: string | number;
   slug: string;
   ringed?: boolean;
@@ -39,7 +39,7 @@ export type StripItem = {
 };
 
 /** The "+N" tile's face; the caller wraps it in the link or button that goes somewhere. */
-export function StripMore({ count }: { count: number }) {
+function StripMore({ count }: { count: number }) {
   return (
     <>
       <span aria-hidden>+{count}</span>
@@ -52,7 +52,7 @@ export function StripMore({ count }: { count: number }) {
  * One side of a post or a partner: a label over one line of thumbnails. It draws as many as
  * fit its width and ends in a "+N" tile for the rest, so it never wraps.
  */
-export function PostStrip({
+function PostStrip({
   label,
   tone,
   items,
@@ -145,11 +145,33 @@ export function SideStrip({
 
   const shown = side.items.length + side.more;
   const figure = side.others > 0 ? m.trade_strip_of({ shown, total: shown + side.others }) : shown;
+  const label = LIST_TYPE_LABEL[side.role]();
+  const tone = TONE_INK[LIST_TYPE_TONE[side.role]];
+
+  // nothing on this side survives the narrowing: one line, so the pair still reads as a pair
+  if (shown === 0 && side.others > 0) {
+    return (
+      <section className="flex min-w-0 flex-col gap-1">
+        <h3 className={cn("font-mono text-xs uppercase tabular-nums", tone)}>
+          {label} {side.others}
+          <span className="text-muted-foreground normal-case">
+            {" · "}
+            <Link
+              {...getListLinkOption(list)}
+              className="hover:text-foreground focus-visible:ring-ring rounded-sm underline-offset-2 outline-none hover:underline focus-visible:ring-2"
+            >
+              {m.trade_strip_none_match()}
+            </Link>
+          </span>
+        </h3>
+      </section>
+    );
+  }
 
   return (
     <PostStrip
-      label={`${LIST_TYPE_LABEL[side.role]()} ${figure}`}
-      tone={TONE_INK[LIST_TYPE_TONE[side.role]]}
+      label={`${label} ${figure}`}
+      tone={tone}
       items={side.items.map((item) => ({
         key: item.entryId,
         slug: item.slug,

@@ -1,7 +1,13 @@
 import { realNickname, truncateAddress } from "@repo/lib/address";
 
 import { type ListTypeNew, pickedSides, tradeSideOf } from "../schemas/list";
-import { countsFit, mutualOf, type TradeFilter } from "../schemas/trade";
+import {
+  countsFit,
+  type MatchCounts,
+  type MutualRank,
+  mutualOf,
+  type TradeFilter,
+} from "../schemas/trade";
 import { DAY_MS } from "./time";
 import { matchCounts } from "./trade-person";
 
@@ -98,7 +104,7 @@ export function groupBySlug<T extends { slug: string }>(entries: T[]): Map<strin
   return groups;
 }
 
-/** `trade` is false when only a sale list makes the match, which never counts toward mutual */
+/** `trade` is false when only a sale list makes the match, so it is no swap */
 export type Match = {
   slug: string;
   myListIds: number[];
@@ -129,6 +135,9 @@ type Recounted = {
   dropped: Dropped[];
 };
 
+/** One of my want lists holding a collection, and whether it is open to buying. */
+export type MyWant = { listId: number; matchSale: boolean };
+
 type Judged = ReturnType<typeof collectionVerdict>;
 
 /** My have side, already judged: over my have and sale lists, and over my have lists alone. */
@@ -136,14 +145,15 @@ export type MyHaves = { all: ReadonlyMap<string, Judged>; trade: ReadonlyMap<str
 
 /**
  * The candidate's matches after the ownership check. `myWants` maps a collection to
- * my want lists holding it. A partner's want list that matches trades only is judged
- * against `myHaves.trade`, so my sale lists never answer it.
+ * my want lists holding it. A partner's want list that matches swaps only is judged
+ * against `myHaves.trade`, so my sale lists never answer it, and a partner's sale list
+ * is answered only by my want lists open to buying.
  */
 export function recount(
   candidate: Candidate,
   partnerAddresses: ReadonlySet<string>,
   holdings: Holdings,
-  myWants: ReadonlyMap<string, number[]>,
+  myWants: ReadonlyMap<string, MyWant[]>,
   myHaves: MyHaves,
 ): Recounted {
   const theyHaveIWant: Match[] = [];
@@ -159,9 +169,12 @@ export function recount(
           partnerAddresses,
           holdings,
         ).verdict === "ok";
+      const mine = myWants.get(slug) ?? [];
       theyHaveIWant.push({
         slug,
-        myListIds: myWants.get(slug) ?? [],
+        myListIds: (trade ? mine : mine.filter((want) => want.matchSale)).map(
+          (want) => want.listId,
+        ),
         partnerListIds: listIds,
         trade,
       });
@@ -219,7 +232,7 @@ type Rankable = {
   updatedAt: string;
 };
 
-/** Active before idle, then the mutual score (trades only), the sum, and the most recent change. */
+/** Active before idle, then the mutual score, the sum, and the most recent change. */
 export function rankPartners<T extends Rankable>(partners: T[], filter: TradeFilter, now: Date) {
   return partners
     .flatMap((p) => {
@@ -242,6 +255,54 @@ export function rankPartners<T extends Rankable>(partners: T[], filter: TradeFil
     )
     .slice(0, PARTNER_LIMIT)
     .map(({ partner, idle }) => ({ partner, idle }));
+}
+
+type MutualRanked = { userId: string; updatedAt: string; counts: MatchCounts };
+
+/** A person's place in the Mutual ranking: score, sum, last change, then id for a total order. */
+export function mutualRankOf(partner: MutualRanked): MutualRank {
+  return {
+    mutual: mutualOf(partner.counts),
+    sum: partner.counts.theyHave + partner.counts.youHave,
+    at: new Date(partner.updatedAt).getTime(),
+    userId: partner.userId,
+  };
+}
+
+function compareRanks(a: MutualRank, b: MutualRank) {
+  return (
+    b.mutual - a.mutual ||
+    b.sum - a.sum ||
+    b.at - a.at ||
+    (a.userId < b.userId ? -1 : a.userId > b.userId ? 1 : 0)
+  );
+}
+
+/** Browse's Mutual order: For you's ranking without its idle tier, since idle posts aren't listed. */
+export function mutualOrder<T extends MutualRanked>(partners: T[]): T[] {
+  return partners.toSorted((a, b) => compareRanks(mutualRankOf(a), mutualRankOf(b)));
+}
+
+/**
+ * Everyone who is Mutual with the viewer, in Mutual order. There is no `PARTNER_LIMIT` slice
+ * and no idle tier: the set is bounded by `CANDIDATE_LIMIT`, and an idle person's posts are
+ * never listed anyway.
+ */
+export function mutualPeople<T extends MutualRanked>(partners: T[]): T[] {
+  return mutualOrder(partners.filter((partner) => mutualOf(partner.counts) > 0));
+}
+
+/**
+ * Where the next Mutual page continues: the cursor's person first, whose later posts are still
+ * to come, then everyone who sorts after the cursor's tuple. A person who moved up since is
+ * only returned as the cursor's person.
+ */
+export function peopleAfter<T extends MutualRanked>(ordered: T[], rank: MutualRank): T[] {
+  const current = ordered.find((partner) => partner.userId === rank.userId);
+  const after = ordered.filter(
+    (partner) => partner.userId !== rank.userId && compareRanks(mutualRankOf(partner), rank) > 0,
+  );
+  return current ? [current, ...after] : after;
 }
 
 export type NotShown = { notOwned: number; notTransferable: number };
