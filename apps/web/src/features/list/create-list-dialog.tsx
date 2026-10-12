@@ -23,14 +23,17 @@ import { EMPTY_DRAFT, type ListDraft, ListForm, listDraftSchema, toCreateInput }
 export function CreateListDialog({
   open,
   onOpenChange,
+  initial = EMPTY_DRAFT,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** The draft it opens with, and goes back to on close. */
+  initial?: ListDraft;
 }) {
   const lists = useUserLists();
   const profiles = useUserProfiles();
   const create = useCreateList();
-  const [draft, setDraft] = useState<ListDraft>(EMPTY_DRAFT);
+  const [draft, setDraft] = useState<ListDraft>(initial);
   const [errors, setErrors] = useState<FieldErrors>({});
 
   return (
@@ -39,7 +42,7 @@ export function CreateListDialog({
       onOpenChange={(next) => {
         // reset on close too: the dialog keeps its state while the toast animates out
         if (!next) {
-          setDraft(EMPTY_DRAFT);
+          setDraft(initial);
           setErrors({});
         }
         onOpenChange(next);
