@@ -74,21 +74,21 @@ The checks are `lint`, `typecheck` and `test`; `bun run check` runs all three, a
 
 Skills live once under `.agents/skills/<name>` (agent-neutral) with `.claude/skills/<name>` a relative symlink to them, pinned in `skills-lock.json`, all committed so a worktree or a Superset workspace carries them. Third-party skills are advice, not authority: where one contradicts this file or `design/lab-code-review.md`, the project document wins. Invoke the one for the layer being touched:
 
-| Layer or task                             | Skills                                                                                       |
-| ----------------------------------------- | -------------------------------------------------------------------------------------------- |
-| Routes, loaders, `validateSearch`         | `router-core`, `tanstack-router-best-practices`                                              |
-| Server functions, SSR, entry points       | `start-core`, `tanstack-start-best-practices`                                                |
-| React components                          | `vercel-react-best-practices`, `vercel-composition-patterns`                                 |
-| Better Auth server and client             | `better-auth-best-practices`                                                                 |
-| Drizzle schema, raw SQL, indexes          | `supabase-postgres-best-practices` (Postgres anywhere)                                       |
-| Reviewing or polishing a screen or flow   | `better-interface`, which loads the six `better-*` domain skills itself                      |
-| One UI domain, or a targeted fix          | that domain's `better-*` skill alone; `fixing-accessibility` or `web-design-guidelines`      |
-| Writing new UI code                       | `baseline-ui`                                                                                |
-| Colour tokens, contrast, light/dark tints | `oklch-skill`                                                                                |
-| Something broken, slow or throwing        | `diagnosing-bugs` first                                                                      |
-| Reviewing a branch or a change            | `code-review`                                                                                |
-| A merge conflict                          | `resolving-merge-conflicts` (`routeTree.gen.ts`, `paraglide/` are regenerated, never merged) |
-| Editing this file, a skill or `openspec/` | `writing-for-agents`                                                                         |
+| Layer or task                             | Skills                                                                                        |
+| ----------------------------------------- | --------------------------------------------------------------------------------------------- |
+| Routes, loaders, `validateSearch`         | `router-core`, `tanstack-router-best-practices`                                               |
+| Server functions, SSR, entry points       | `start-core`, `tanstack-start-best-practices`                                                 |
+| React components                          | `vercel-react-best-practices`, `vercel-composition-patterns`                                  |
+| Better Auth server and client             | `better-auth-best-practices`                                                                  |
+| Drizzle schema, raw SQL, indexes          | `supabase-postgres-best-practices` (Postgres anywhere)                                        |
+| Reviewing or polishing a screen or flow   | `better-interface`, which loads the six `better-*` domain skills itself                       |
+| One UI domain, or a targeted fix          | that domain's `better-*` skill alone; `fixing-accessibility` for a one-file accessibility fix |
+| Writing new UI code                       | `baseline-ui`                                                                                 |
+| Colour tokens, contrast, light/dark tints | `oklch-skill`                                                                                 |
+| Something broken, slow or throwing        | `mattpocock-skills:diagnosing-bugs` first                                                     |
+| Reviewing a branch or a change            | `mattpocock-skills:code-review`                                                               |
+| A merge conflict                          | `resolving-merge-conflicts` (`routeTree.gen.ts`, `paraglide/` are regenerated, never merged)  |
+| Editing this file, a skill or `openspec/` | `writing-for-agents`                                                                          |
 
 `better-interface` loads `better-accessibility`, `better-layout`, `better-writing`, `better-typography`, `better-colors` and `better-ui` itself, so invoke it on its own; it reports without editing unless you also ask for the fixes. `better-accessibility` owns the accessibility rules the review applies, and `fixing-accessibility` stays the one-file fixer.
 

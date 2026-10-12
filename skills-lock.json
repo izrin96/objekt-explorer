@@ -55,18 +55,6 @@
       "skillPath": "skills/better-writing/SKILL.md",
       "computedHash": "225768480d8ba9cf6d00bb728d2a34dfb430d2134e25fc02dcedbba086b3bc5f"
     },
-    "code-review": {
-      "source": "mattpocock/skills",
-      "sourceType": "github",
-      "skillPath": "skills/engineering/code-review/SKILL.md",
-      "computedHash": "caa9a086baaf9e0f7cd71f64edfa83da6821c05e826b083221f3d02e3d6a1905"
-    },
-    "diagnosing-bugs": {
-      "source": "mattpocock/skills",
-      "sourceType": "github",
-      "skillPath": "skills/engineering/diagnosing-bugs/SKILL.md",
-      "computedHash": "37b5e9c624513551da790b52864dc8c84bff996a6d03a380cc6facdcc0a88354"
-    },
     "fixing-accessibility": {
       "source": "ibelick/ui-skills",
       "sourceType": "github",
@@ -132,12 +120,6 @@
       "sourceType": "github",
       "skillPath": "skills/react-best-practices/SKILL.md",
       "computedHash": "ca7b0c0c6e5f2750043f7f0cd72d16ac4e2abc48f9b5500d047a4b77a2506212"
-    },
-    "web-design-guidelines": {
-      "source": "vercel-labs/agent-skills",
-      "sourceType": "github",
-      "skillPath": "skills/web-design-guidelines/SKILL.md",
-      "computedHash": "f3bc47f890f42a44db1007ab390709ec368e4b8c089baee6b0007182236ac474"
     },
     "writing-for-agents": {
       "source": "mattpocock/skills",
