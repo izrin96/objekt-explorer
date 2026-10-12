@@ -13,9 +13,13 @@ The frame SHALL offer links to Objekts (`/`), Market, Trade (`/trade`), Activity
 - **WHEN** the user is on `/market` at 1280 px
 - **THEN** the Market link is rendered in the active style and the other links are not
 
-#### Scenario: Trade stays active under For you
-- **WHEN** the user is on `/trade/for-you` at 1280 px
+#### Scenario: Trade stays active under My trades
+- **WHEN** the user is on `/trade/mine` at 1280 px
 - **THEN** the Trade link is rendered in the active style
+
+#### Scenario: Trade stays active under For you
+- **WHEN** the user opens `/trade/for-you` at 1280 px
+- **THEN** the browser is redirected to `/trade` and the Trade link is rendered in the active style
 
 #### Scenario: Sheet closes on navigation
 - **WHEN** the user opens the sheet at 390 px and taps Activity
@@ -105,13 +109,6 @@ type, with Create list, Discord format and All lists actions.
 - **WHEN** a signed-in user picks a list in Lists
 - **THEN** the URL is that list's address
 
-### Requirement: Account menu reaches For you
-The account menu SHALL include a For you item opening `/trade/for-you`.
-
-#### Scenario: From the menu
-- **WHEN** the user opens the account menu and activates For you
-- **THEN** the browser is at `/trade/for-you`
-
 ### Requirement: Notification bell in the frame
 When a session exists, the frame SHALL show the notification bell (see `web-notifications`) next to the account area on desktop. Below the `lg` breakpoint, it SHALL show the bell in the top bar, outside the navigation sheet, so it is reachable without opening the sheet.
 
@@ -129,3 +126,10 @@ When a session exists, the frame SHALL show a Messages icon with its unread badg
 #### Scenario: Signed out
 - **WHEN** a visitor without a session loads any page
 - **THEN** no Messages icon is shown
+
+### Requirement: Account menu reaches trade matches
+The account menu SHALL include a Trade matches item opening `/trade?match=mutual`, Browse with Matches on Mutual (see `web-trade-browse`).
+
+#### Scenario: From the menu
+- **WHEN** the user opens the account menu and activates Trade matches
+- **THEN** the browser is at `/trade?match=mutual`

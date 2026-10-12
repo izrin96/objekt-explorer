@@ -66,7 +66,7 @@ Start only after `trade-person-level-matches` (change 1) is committed and archiv
 ## 5. Verify
 
 - [x] 5.1 Run `bun run check`, `bun run build --filter=web` and `bun run knip`, with no new unused exports, files or messages. All pass.
-- [ ] 5.2 Browser check of `/trade` at 1280 px and 390 px, light and dark, signed in with the smoke-test account and signed out. It is read-only: open the menus, the sheets and the dialogs, and never activate Hide, Unhide, Message or Make offer. Record each of these:
+- [x] 5.2 Browser check of `/trade` at 1280 px and 390 px, light and dark, signed in with the smoke-test account and signed out. It is read-only: open the menus, the sheets and the dialogs, and never activate Hide, Unhide, Message or Make offer. Record each of these:
   - the default reads Any;
   - Off, Any and Mutual each list what the spec says, and Mutual groups people in rank order;
   - Mutual N matches the people listed;
@@ -81,6 +81,7 @@ Start only after `trade-person-level-matches` (change 1) is committed and archiv
   - notification, Find matches and account-menu links;
   - the tabs reading Browse | My trades;
   - no sideways scroll at 390 px.
+  - Checked 2026-10-13 on localhost:3200, read-only (Hide, Message, Make offer left unclicked), 1560 px and 390 px, dark and light, signed in and signed out: the default reads Any; Off, Any and Mutual each select, and Mutual 1 lists the one mutual person; Compare with under Mutual disables lone lists and keeps the want 3 + have 3 pair; the compared-lists line shows; the phone Matching sheet holds Matches, Compare with and the line; All matches opens the person sheet in the URL with the same chip and Ownership checked, and Back closes it; the post menu reads Hide · Block · Report; the account menu has Trade matches -> /trade?match=mutual; the notification link goes to /trade?match=any&list=…; a lone list's Find matches goes to /trade?list=…&match=any with no count; /trade/for-you?match=they_want&list=x&partner=y -> /trade?list=x&match=any&person=y; tabs read Browse | My trades; no sideways scroll at 390 px; signed out shows the sign-in line and no Matches control. Not seen: struck objekts (none in the data), the footer Hidden people note (nobody hidden), a paired list's Find matches count.
 
 ## 6. AGENTS.md
 
