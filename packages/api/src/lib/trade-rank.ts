@@ -1,8 +1,9 @@
 import { realNickname, truncateAddress } from "@repo/lib/address";
 
 import { type ListTypeNew, pickedSides, tradeSideOf } from "../schemas/list";
-import { filterFits, type TradeFilter } from "../schemas/trade";
+import { countsFit, mutualOf, type TradeFilter } from "../schemas/trade";
 import { DAY_MS } from "./time";
+import { matchCounts } from "./trade-person";
 
 export const PARTNER_LIMIT = 50;
 export const CANDIDATE_LIMIT = 200;
@@ -97,7 +98,13 @@ export function groupBySlug<T extends { slug: string }>(entries: T[]): Map<strin
   return groups;
 }
 
-export type Match = { slug: string; myListIds: number[]; partnerListIds: number[] };
+/** `trade` is false when only a sale list makes the match, which never counts toward mutual */
+export type Match = {
+  slug: string;
+  myListIds: number[];
+  partnerListIds: number[];
+  trade: boolean;
+};
 export type Dropped = {
   slug: string;
   direction: "theyHaveIWant" | "iHaveTheyWant";
@@ -109,7 +116,7 @@ export type Candidate = {
   /** each matched list's last change, keyed by list id */
   listUpdatedAt: Record<string, string>;
   /** their have and sale entries on collections I want */
-  theyHave: OwnedEntry[];
+  theyHave: (OwnedEntry & { sale: boolean })[];
   /** their want entries on collections I have, with whether the want list takes sales */
   theyWant: { listId: number; slug: string; matchSale: boolean }[];
 };
@@ -146,7 +153,18 @@ export function recount(
   for (const [slug, entries] of groupBySlug(candidate.theyHave)) {
     const { verdict, listIds } = collectionVerdict(entries, partnerAddresses, holdings);
     if (verdict === "ok") {
-      theyHaveIWant.push({ slug, myListIds: myWants.get(slug) ?? [], partnerListIds: listIds });
+      const trade =
+        collectionVerdict(
+          entries.filter((entry) => !entry.sale),
+          partnerAddresses,
+          holdings,
+        ).verdict === "ok";
+      theyHaveIWant.push({
+        slug,
+        myListIds: myWants.get(slug) ?? [],
+        partnerListIds: listIds,
+        trade,
+      });
     } else {
       dropped.push({ slug, direction: "theyHaveIWant", reason: verdict });
     }
@@ -164,6 +182,7 @@ export function recount(
         slug,
         myListIds: [...new Set(ok.flatMap(({ mine }) => mine.listIds))],
         partnerListIds: [...new Set(ok.map(({ listId }) => listId))],
+        trade: myHaves.trade.get(slug)?.verdict === "ok",
       });
     } else {
       dropped.push({ slug, direction: "iHaveTheyWant", reason: bestDrop(judged) });
@@ -194,27 +213,32 @@ export function isIdle(updatedAt: string, now: Date) {
   return now.getTime() - new Date(updatedAt).getTime() >= IDLE_DAYS * DAY_MS;
 }
 
-type Rankable = { theyHaveIWant: unknown[]; iHaveTheyWant: unknown[]; updatedAt: string };
+type Rankable = {
+  theyHaveIWant: { slug: string; trade: boolean; myListIds: number[] }[];
+  iHaveTheyWant: { slug: string; trade: boolean; myListIds: number[] }[];
+  updatedAt: string;
+};
 
-/** Active before idle, then the mutual score, the sum, and the most recent change. */
+/** Active before idle, then the mutual score (trades only), the sum, and the most recent change. */
 export function rankPartners<T extends Rankable>(partners: T[], filter: TradeFilter, now: Date) {
   return partners
-    .filter((p) =>
-      filterFits(filter, { have: p.iHaveTheyWant.length > 0, want: p.theyHaveIWant.length > 0 }),
-    )
-    .map((p) => ({
-      partner: p,
-      idle: isIdle(p.updatedAt, now),
-      a: p.theyHaveIWant.length,
-      b: p.iHaveTheyWant.length,
-      at: new Date(p.updatedAt).getTime(),
-    }))
+    .flatMap((p) => {
+      const counts = matchCounts(p);
+      return countsFit(filter, counts)
+        ? [
+            {
+              partner: p,
+              idle: isIdle(p.updatedAt, now),
+              mutual: mutualOf(counts),
+              sum: counts.theyHave + counts.youHave,
+              at: new Date(p.updatedAt).getTime(),
+            },
+          ]
+        : [];
+    })
     .toSorted(
       (x, y) =>
-        Number(x.idle) - Number(y.idle) ||
-        Math.min(y.a, y.b) - Math.min(x.a, x.b) ||
-        y.a + y.b - (x.a + x.b) ||
-        y.at - x.at,
+        Number(x.idle) - Number(y.idle) || y.mutual - x.mutual || y.sum - x.sum || y.at - x.at,
     )
     .slice(0, PARTNER_LIMIT)
     .map(({ partner, idle }) => ({ partner, idle }));

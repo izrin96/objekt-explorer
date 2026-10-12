@@ -41,6 +41,7 @@ import { notTradeSanctioned } from "../safety";
 import { marketVersion } from "../safety-cache";
 import { takesPartInTrade } from "../trade-lists";
 import { fetchAddresses } from "../trade-matches/holdings";
+import { type PersonMatch, personMatches } from "../trade-matches/person";
 import { type FeedList, feedListColumns, fetchPostEntries, fetchUntradeable } from "./entries";
 import { type FeedRow, fetchFeedRows, listedPost, postsCte } from "./query";
 import { fetchViewer, hasTradeList } from "./viewer";
@@ -120,10 +121,11 @@ export async function browseFeed(
   const listById = new Map(feedLists.map((list) => [list.id, list]));
   const ownerIds = unique(feedLists.map((list) => list.userId));
 
-  const [users, addressRows, reputations] = await Promise.all([
+  const [users, addressRows, reputations, persons] = await Promise.all([
     db.select().from(user).where(inArray(user.id, ownerIds)),
     fetchAddresses(ownerIds),
     reputationOf(ownerIds),
+    viewerId === null ? new Map<string, PersonMatch>() : personMatches(viewerId, ownerIds),
   ]);
   const addressesOf = addressesByUser(addressRows);
   const userMap = new Map(users.map((u) => [u.id, u]));
@@ -184,6 +186,7 @@ export async function browseFeed(
           others: side.others,
         })),
         match: assembled.match,
+        person: persons.get(account.id),
         messageable: isMessageable(toMessagePref({ allow: row.message_allow })),
       });
     }

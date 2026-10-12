@@ -156,7 +156,25 @@ export function BrowseView({ search }: { search: BrowseSearch }) {
             </Label>
             <MatchHelp view="browse" />
           </div>
-        ) : null}
+        ) : user ? (
+          <div className="text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+            <p className="text-pretty">{m.trade_browse_matches_need_list()}</p>
+            <Button variant="outline" size="sm" onClick={() => setPostOpen(true)}>
+              {m.trade_post_a_list()}
+            </Button>
+          </div>
+        ) : (
+          <p className="text-muted-foreground text-sm text-pretty">
+            {m.trade_browse_matches_sign_in()}{" "}
+            <Link
+              to="/login"
+              search={{ redirect: "/trade" }}
+              className="text-foreground underline underline-offset-2"
+            >
+              {m.nav_sign_in()}
+            </Link>
+          </p>
+        )}
       </div>
 
       {query.isPending ? (
@@ -207,7 +225,7 @@ export function BrowseView({ search }: { search: BrowseSearch }) {
                   <BrowsePost
                     post={post}
                     own={post.userId === user?.user.id}
-                    mutual={mutualIds.has(post.userId)}
+                    forYouMutual={mutualIds.has(post.userId)}
                     collections={collections}
                     now={now}
                     onOpen={setActive}

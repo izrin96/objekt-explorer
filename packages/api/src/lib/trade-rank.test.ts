@@ -21,11 +21,14 @@ const IDLE = "2026-08-01T00:00:00Z";
 
 const slugs = (prefix: string, n: number) => Array.from({ length: n }, (_, i) => `${prefix}-${i}`);
 
-const partner = (userId: string, a: number, b: number, updatedAt = RECENT) => ({
+const matches = (prefix: string, n: number, trade = true) =>
+  slugs(prefix, n).map((slug) => ({ slug, trade, myListIds: [], partnerListIds: [] }));
+
+const partner = (userId: string, a: number, b: number, updatedAt = RECENT, trade = true) => ({
   userId,
   updatedAt,
-  theyHaveIWant: slugs("h", a),
-  iHaveTheyWant: slugs("w", b),
+  theyHaveIWant: matches("h", a, trade),
+  iHaveTheyWant: matches("w", b, trade),
 });
 
 const order = (partners: { userId: string }[]) => partners.map((p) => p.userId);
@@ -68,6 +71,23 @@ describe("rankPartners", () => {
       "B",
       "C",
     ]);
+  });
+
+  test("Mutual only drops a sale-only partner, and the one-way views keep it", () => {
+    const sale = partner("S", 3, 2, RECENT, false);
+    const trade = partner("T", 1, 1);
+    expect(order(rankPartners([sale, trade], "mutual", NOW).map((r) => r.partner))).toEqual(["T"]);
+    expect(order(rankPartners([sale], "they_have", NOW).map((r) => r.partner))).toEqual(["S"]);
+    expect(order(rankPartners([sale], "they_want", NOW).map((r) => r.partner))).toEqual(["S"]);
+  });
+
+  test("trades-only 1 ⇄ 1 ranks above sale 3 ⇄ 2", () => {
+    const ranked = rankPartners(
+      [partner("sale", 3, 2, RECENT, false), partner("trade", 1, 1)],
+      "all",
+      NOW,
+    );
+    expect(order(ranked.map((r) => r.partner))).toEqual(["trade", "sale"]);
   });
 
   test("cuts to the partner limit", () => {
@@ -136,13 +156,13 @@ describe("ownership", () => {
     const a: Candidate = {
       userId: "A",
       listUpdatedAt: { 1: RECENT, 2: RECENT },
-      theyHave: aHave.map((slug, i) => ({ listId: 1, slug, objektId: `a-${i}` })),
+      theyHave: aHave.map((slug, i) => ({ listId: 1, slug, objektId: `a-${i}`, sale: false })),
       theyWant: aWant.map((slug) => ({ listId: 2, slug, matchSale: true })),
     };
     const b: Candidate = {
       userId: "B",
       listUpdatedAt: { 3: RECENT, 4: RECENT },
-      theyHave: bHave.map((slug) => ({ listId: 3, slug, objektId: null })),
+      theyHave: bHave.map((slug) => ({ listId: 3, slug, objektId: null, sale: false })),
       theyWant: bWant.map((slug) => ({ listId: 4, slug, matchSale: true })),
     };
 
@@ -200,7 +220,9 @@ describe("recount details", () => {
 
   test("my sale list answers a want list that takes sales", () => {
     const result = wantedBy([{ listId: 8, slug: "x", matchSale: true }]);
-    expect(result.iHaveTheyWant).toEqual([{ slug: "x", myListIds: [2], partnerListIds: [8] }]);
+    expect(result.iHaveTheyWant).toEqual([
+      { slug: "x", myListIds: [2], partnerListIds: [8], trade: false },
+    ]);
   });
 
   test("a want list that matches trades only is judged on my have lists alone", () => {
@@ -216,8 +238,70 @@ describe("recount details", () => {
       { listId: 8, slug: "x", matchSale: false },
       { listId: 9, slug: "x", matchSale: true },
     ]);
-    expect(result.iHaveTheyWant).toEqual([{ slug: "x", myListIds: [2], partnerListIds: [9] }]);
+    expect(result.iHaveTheyWant).toEqual([
+      { slug: "x", myListIds: [2], partnerListIds: [9], trade: false },
+    ]);
     expect(result.dropped).toEqual([]);
+  });
+
+  describe("trade flag", () => {
+    const tradeOf = (theyHave: { listId: number; objektId: string; sale: boolean }[]) =>
+      recount(
+        {
+          userId: "P",
+          listUpdatedAt: { 1: RECENT, 2: RECENT },
+          theyHave: theyHave.map((entry) => ({ ...entry, slug: "x" })),
+          theyWant: [],
+        },
+        new Set(["0xp"]),
+        holdings,
+        new Map([["x", [9]]]),
+        { all: new Map(), trade: new Map() },
+      ).theyHaveIWant.map((match) => match.trade);
+
+    test("a have-list match is trade, a sale-only match isn't", () => {
+      expect(tradeOf([{ listId: 1, objektId: "kept", sale: false }])).toEqual([true]);
+      expect(tradeOf([{ listId: 2, objektId: "kept", sale: true }])).toEqual([false]);
+    });
+
+    test("a collection on an owned have entry and a sale entry is trade", () => {
+      expect(
+        tradeOf([
+          { listId: 1, objektId: "kept", sale: false },
+          { listId: 2, objektId: "kept", sale: true },
+        ]),
+      ).toEqual([true]);
+    });
+
+    test("a have entry no longer owned leaves the sale entry to count alone, not as trade", () => {
+      expect(
+        tradeOf([
+          { listId: 1, objektId: "sold", sale: false },
+          { listId: 2, objektId: "kept", sale: true },
+        ]),
+      ).toEqual([false]);
+    });
+
+    test("my have list answering their want is trade, my sale list alone isn't", () => {
+      const answer = (trade: boolean) =>
+        recount(
+          {
+            userId: "P",
+            listUpdatedAt: { 8: RECENT },
+            theyHave: [],
+            theyWant: [{ listId: 8, slug: "x", matchSale: true }],
+          },
+          new Set(["0xp"]),
+          holdings,
+          new Map(),
+          {
+            all: new Map([["x", { verdict: "ok" as const, listIds: [2] }]]),
+            trade: trade ? new Map([["x", { verdict: "ok" as const, listIds: [1] }]]) : new Map(),
+          },
+        ).iHaveTheyWant.map((match) => match.trade);
+      expect(answer(true)).toEqual([true]);
+      expect(answer(false)).toEqual([false]);
+    });
   });
 
   test("idle is judged on the lists still contributing a match", () => {
@@ -226,8 +310,8 @@ describe("recount details", () => {
         userId: "P",
         listUpdatedAt: { 1: IDLE, 2: RECENT },
         theyHave: [
-          { listId: 1, slug: "a", objektId: "kept" },
-          { listId: 2, slug: "b", objektId: "sold" },
+          { listId: 1, slug: "a", objektId: "kept", sale: false },
+          { listId: 2, slug: "b", objektId: "sold", sale: false },
         ],
         theyWant: [],
       },
@@ -401,7 +485,7 @@ describe("matchSides", () => {
       {
         userId: "P",
         listUpdatedAt: { 7: RECENT, 8: RECENT },
-        theyHave: [{ listId: 7, slug: "binary", objektId: "t1" }],
+        theyHave: [{ listId: 7, slug: "binary", objektId: "t1", sale: false }],
         theyWant: [
           { listId: 8, slug: "on-spares", matchSale: true },
           { listId: 8, slug: "on-dupes", matchSale: true },

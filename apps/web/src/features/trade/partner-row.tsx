@@ -89,11 +89,7 @@ export function PartnerRow({
       }
       below={
         <div className="flex flex-wrap items-center gap-2">
-          <MatchChip
-            theyHave={match.youWant}
-            youHave={match.youHave}
-            popover={<MatchedLists match={match} />}
-          />
+          <MatchChip counts={match.counts} popover={<MatchedLists {...match} />} />
           <ListsPopover
             lists={partner.lists.map((list) => ({
               id: list.id,
@@ -196,14 +192,13 @@ export function PartnerRowSkeleton() {
   );
 }
 
-/** Browse's match shape, so both tabs open the same Matched with your lists popover. */
+/** The same shape Browse's `person` has, so both tabs open the same Matched with your lists popover. */
 function matchedLists(partner: TradePartner) {
   const listIdsOf = (matches: TradePartner["theyHaveIWant"]) => [
     ...new Set(matches.flatMap((match) => match.myListIds)),
   ];
   return {
-    youWant: partner.theyHaveIWant.length,
-    youHave: partner.iHaveTheyWant.length,
+    counts: partner.counts,
     wantListIds: listIdsOf(partner.theyHaveIWant),
     haveListIds: listIdsOf(partner.iHaveTheyWant),
   };

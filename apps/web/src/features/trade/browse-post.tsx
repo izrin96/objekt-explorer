@@ -1,3 +1,4 @@
+import { mutualOf } from "@repo/api/schemas/trade";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { Link } from "@tanstack/react-router";
 
@@ -25,19 +26,19 @@ export function BrowsePost({
   own,
   collections,
   now,
-  mutual = false,
+  forYouMutual = false,
   onOpen,
 }: {
   post: BrowsePostData;
   /** the viewer's own post: no Message, and no note saying so */
   own: boolean;
   /** the owner is a Mutual only partner in the viewer's For you */
-  mutual?: boolean;
+  forYouMutual?: boolean;
   collections: Readonly<Record<string, ValidObjekt | undefined>>;
   now: number;
   onOpen: (objekt: ValidObjekt) => void;
 }) {
-  const { match } = post;
+  const { person } = post;
   const { changed, time } = postTime(post);
   const when = relativeTime(new Date(time).getTime(), now);
   // the post's own list (the have list of a pair), with the first collection it shows
@@ -52,8 +53,9 @@ export function BrowsePost({
           card: firstShown ? { collectionSlug: firstShown, listSlug: anchor.list.slug } : undefined,
         }
       : { kind: "closed" };
-  const counted = (match?.youWant ?? 0) > 0 || (match?.youHave ?? 0) > 0;
-  const showChip = counted || mutual;
+  // the link needs both, so it never promises a row For you doesn't list, or contradicts the chip
+  const showForYou = forYouMutual && person !== undefined && mutualOf(person.counts) > 0;
+  const wantOnly = post.tag === "wtt" && post.sides.every((side) => side.role === "want");
 
   return (
     <TradeRow
@@ -63,6 +65,9 @@ export function BrowsePost({
           note={
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
               <TagBadge tag={post.tag} />
+              {wantOnly ? (
+                <span className="text-muted-foreground text-xs">{m.trade_wtt_trades_only()}</span>
+              ) : null}
               {/* relative to the render: the server's minute and the browser's can differ */}
               <time
                 dateTime={time}
@@ -90,12 +95,8 @@ export function BrowsePost({
       }
       below={
         <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-xs">
-          {showChip ? (
-            <MatchChip
-              theyHave={match?.youWant ?? 0}
-              youHave={match?.youHave ?? 0}
-              popover={match ? <MatchedLists match={match} /> : null}
-            />
+          {person ? (
+            <MatchChip counts={person.counts} popover={<MatchedLists {...person} />} />
           ) : null}
           <ListsPopover
             lists={post.sides.map((side) => ({
@@ -105,7 +106,7 @@ export function BrowsePost({
               link: getListLinkOption(side.list),
             }))}
           />
-          {mutual ? (
+          {showForYou ? (
             <Link
               to="/trade/for-you"
               search={{ match: "mutual", partner: post.userId }}

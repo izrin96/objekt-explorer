@@ -12,6 +12,7 @@ import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { and, eq, inArray, or } from "drizzle-orm";
 
 import { isMessageable, toMessagePref } from "../../lib/chat-rules";
+import { matchCounts } from "../../lib/trade-person";
 import {
   collectionVerdict,
   countDropped,
@@ -68,7 +69,7 @@ export async function getTradeMatches(userId: string, sides: Sides, filter: Trad
     marketVersion(),
   ]);
   return getCache(
-    `trade:foryou:${userId}:${version}:${market}:${filter}:${sides.listId ?? "all"}`,
+    `trade:foryou:2:${userId}:${version}:${market}:${filter}:${sides.listId ?? "all"}`,
     CACHE_TTL_SECONDS,
     () => computeTradeMatches(userId, sides, filter),
   );
@@ -111,14 +112,17 @@ export async function withReputation(matches: Awaited<ReturnType<typeof withMess
   };
 }
 
-async function computeTradeMatches(userId: string, sides: Sides, filter: TradeFilter) {
-  const now = new Date();
-  const [candidates, hidden, blocked] = await Promise.all([
-    fetchTradeCandidates(userId, sides, filter),
-    db.$count(hiddenTradePartner, eq(hiddenTradePartner.userId, userId)),
-    // only the user's own blocks: counting who blocked them would tell them
-    db.$count(userBlock, eq(userBlock.blockerId, userId)),
-  ]);
+/**
+ * The sides' candidates after the ownership check. `ownerIds` narrows them to those accounts,
+ * so Browse can count the owners on one page.
+ */
+export async function recountPartners(
+  userId: string,
+  sides: Sides,
+  filter: TradeFilter,
+  ownerIds?: string[],
+) {
+  const candidates = await fetchTradeCandidates(userId, sides, filter, ownerIds);
 
   const theyHaveSlugs = unique(candidates.flatMap((c) => c.theyHave.map((e) => e.slug)));
   const theyWantSlugs = unique(candidates.flatMap((c) => c.theyWant.map((e) => e.slug)));
@@ -195,9 +199,22 @@ async function computeTradeMatches(userId: string, sides: Sides, filter: TradeFi
     trade: judge(myHaveEntries.filter((entry) => !mySaleListIds.has(entry.listId))),
   };
 
-  const recounted = candidates.map((c) =>
-    recount(c, addressesOf.get(c.userId) ?? none, holdings, myWants, myHaves),
-  );
+  return {
+    recounted: candidates.map((c) =>
+      recount(c, addressesOf.get(c.userId) ?? none, holdings, myWants, myHaves),
+    ),
+    addressRows,
+  };
+}
+
+async function computeTradeMatches(userId: string, sides: Sides, filter: TradeFilter) {
+  const now = new Date();
+  const [{ recounted, addressRows }, hidden, blocked] = await Promise.all([
+    recountPartners(userId, sides, filter),
+    db.$count(hiddenTradePartner, eq(hiddenTradePartner.userId, userId)),
+    // only the user's own blocks: counting who blocked them would tell them
+    db.$count(userBlock, eq(userBlock.blockerId, userId)),
+  ]);
   const ranked = rankPartners(recounted, filter, now);
 
   const rankedIds = ranked.map((r) => r.partner.userId);
@@ -272,6 +289,7 @@ async function computeTradeMatches(userId: string, sides: Sides, filter: TradeFi
         ),
         idle,
         updatedAt: partner.updatedAt,
+        counts: matchCounts(partner),
         lists: ownLists.toSorted((a, b) => b.matches - a.matches),
         theyHaveIWant: partner.theyHaveIWant.toSorted(bySlug),
         iHaveTheyWant: partner.iHaveTheyWant.toSorted(bySlug),

@@ -9,18 +9,22 @@ import { ListRoleBadge } from "./list-role-badge";
 import type { BrowsePostData } from "./post-types";
 
 /** The viewer's lists behind each count, in the match line's order. A sale list can feed You have. */
-export function MatchedLists({ match }: { match: NonNullable<BrowsePostData["match"]> }) {
+export function MatchedLists({
+  counts,
+  haveListIds,
+  wantListIds,
+}: NonNullable<BrowsePostData["person"]>) {
   const lists = useUserLists();
   const groups = [
     {
       key: "want",
-      ids: match.wantListIds,
-      count: m.trade_match_they_have({ count: match.youWant }),
+      ids: wantListIds,
+      count: m.trade_match_they_have({ count: counts.theyHave }),
     },
     {
       key: "have",
-      ids: match.haveListIds,
-      count: m.trade_match_you_have({ count: match.youHave }),
+      ids: haveListIds,
+      count: m.trade_match_you_have({ count: counts.youHave }),
     },
   ];
   const rows = groups.flatMap((group) => {

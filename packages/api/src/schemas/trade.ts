@@ -30,6 +30,28 @@ export function filterFits(filter: TradeFilter, sides: { have: boolean; want: bo
   }
 }
 
+/**
+ * A person's counts against the viewer's lists, in collections. `trade*` leave out sale lists,
+ * which count one way only.
+ */
+export type MatchCounts = {
+  theyHave: number;
+  youHave: number;
+  tradeTheyHave: number;
+  tradeYouHave: number;
+};
+
+/** The mutual score: trades only, so a sale listing never makes a person mutual. */
+export function mutualOf(counts: MatchCounts) {
+  return Math.min(counts.tradeTheyHave, counts.tradeYouHave);
+}
+
+/** Whether `filter` keeps a person with these counts: Mutual on trades only, the one-way views on all. */
+export function countsFit(filter: TradeFilter, counts: MatchCounts) {
+  if (filter === "mutual") return mutualOf(counts) > 0;
+  return filterFits(filter, { have: counts.youHave > 0, want: counts.theyHave > 0 });
+}
+
 /** The view a list's Matches link opens: Mutual when it compares both ways, else its own way. */
 export function fullestFilter(sides: {
   have: boolean;

@@ -12,6 +12,10 @@ When `/api/v1` needs a different shape (a path parameter wants `{ address }`), c
 
 A refusal the web app can show goes through `refuse(status, reason, message, data?)` (`src/lib/refuse.ts`): `reason` is a domain-prefixed code (`list_have_links_want`) from a `*_REFUSALS` tuple in `src/schemas/`, and `message` is an English sentence that the web app never renders; it serves tabs opened before a deploy and `/api/v1` callers. Chat, offer and moderation keep their own helpers with bare codes. A procedure that must keep an error code for old tabs to branch on declares it with `.errors()` and a `data: z.object({ reason })` schema. The web app translates the code through `refusalText` or the domain's own formatter, never `error.message`; a new code needs an `api_errors_*` string in `en`, `ko` and `ja`.
 
+## Trade matching
+
+Mutual is `mutualOf` in `schemas/trade.ts`: the smaller of the two trade counts, so sale lists count one way and never toward it. Ranking, Mutual only and the web chip all read it. Browse's per-person chip reads For you's pipeline through `personMatches` (`services/trade-matches/person.ts`, over `recountPartners`), so a change to the matching rules lands in one place. The For you cache key carries a version (`trade:foryou:2:`); bump it when the cached value changes shape.
+
 ## Objekt shapes
 
 `mapOwnedObjekt` and `overrideCollection` live in `@repo/lib/server/objekt`. Run any `ValidObjekt` through `overrideCollection`: it applies the colour and band-image overrides by slug. An `OwnedObjekt` at runtime:

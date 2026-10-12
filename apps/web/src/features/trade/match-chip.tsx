@@ -1,3 +1,4 @@
+import { type MatchCounts, mutualOf } from "@repo/api/schemas/trade";
 import type { ReactNode } from "react";
 
 import { Popover, PopoverPopup, PopoverTrigger } from "@/components/ui/popover";
@@ -16,41 +17,21 @@ export const MATCH_TONE = {
 
 const CHIP = "inline-flex h-6 items-center rounded-md border px-2 font-mono text-xs tabular-nums";
 
-/**
- * A partner's counts in one order on both tabs. Mutual is derived here, so Browse and For you
- * can't disagree on it.
- */
-export function MatchChip({
-  theyHave,
-  youHave,
-  popover,
-}: {
-  theyHave: number;
-  youHave: number;
-  popover?: ReactNode;
-}) {
+/** A person's counts in words, the same on both tabs: mutual is `mutualOf`, trades only. */
+export function MatchChip({ counts, popover }: { counts: MatchCounts; popover?: ReactNode }) {
+  const { theyHave, youHave } = counts;
   if (theyHave === 0 && youHave === 0) return null;
-  const mutual = Math.min(theyHave, youHave);
+  const mutual = mutualOf(counts);
   const tone =
     mutual > 0 ? toneChip("progress") : "bg-secondary text-muted-foreground border-transparent";
-  const text =
+  const content =
     mutual > 0
       ? m.trade_chip_mutual({ mutual, theyHave, youHave })
-      : m.trade_chip_counts({ theyHave, youHave });
-  const content = (
-    <>
-      <span aria-hidden>{text}</span>
-      <span className="sr-only">
-        {[
-          theyHave > 0 ? m.trade_match_they_have({ count: theyHave }) : null,
-          youHave > 0 ? m.trade_match_you_have({ count: youHave }) : null,
-          mutual > 0 ? m.trade_match_mutual({ count: mutual }) : null,
-        ]
-          .filter((part) => part !== null)
-          .join(", ")}
-      </span>
-    </>
-  );
+      : theyHave > 0 && youHave > 0
+        ? m.trade_chip_both({ theyHave, youHave })
+        : theyHave > 0
+          ? m.trade_match_they_have({ count: theyHave })
+          : m.trade_match_you_have({ count: youHave });
 
   if (!popover) return <span className={cn(CHIP, tone)}>{content}</span>;
   return (
