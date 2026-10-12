@@ -4,6 +4,7 @@ import type { ValidObjekt } from "@repo/lib/types/objekt";
 
 import { ObjektCard } from "@/features/objekt/objekt-card";
 import { CollectionLabel, SerialNo } from "@/features/objekt/objekt-label";
+import { activateOnKey } from "@/lib/a11y";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
@@ -33,15 +34,20 @@ export function CandidateTile({
       <SerialNo serial={item.serial} estimated={item.serialEstimated} />
     ) : null;
 
+  const activate = () => {
+    if (!unavailable) onToggle();
+  };
+
+  // not a `<button>`: WebKit collapses the card's `aspect-ratio` box inside one
   return (
-    <button
-      type="button"
+    <div
+      role="button"
+      tabIndex={0}
       aria-pressed={selected}
       aria-disabled={unavailable || undefined}
-      onClick={() => {
-        if (!unavailable) onToggle();
-      }}
-      className="group/tile focus-visible:ring-ring flex w-full flex-col gap-1 rounded-md text-start outline-none focus-visible:ring-2 aria-disabled:cursor-not-allowed"
+      onClick={activate}
+      onKeyDown={(event) => activateOnKey(event, activate)}
+      className="group/tile focus-visible:ring-ring flex w-full cursor-pointer flex-col gap-1 rounded-md text-start outline-none focus-visible:ring-2 aria-disabled:cursor-not-allowed"
     >
       {/* a container, so the selection ring's photocard radius measures the tile, not the page */}
       <span className="@container relative block">
@@ -78,6 +84,6 @@ export function CandidateTile({
           </span>
         ) : null}
       </span>
-    </button>
+    </div>
   );
 }
