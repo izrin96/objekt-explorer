@@ -114,26 +114,29 @@ function Controls(props: MatchingProps) {
         </TabsList>
       </Tabs>
 
-      {mode !== "off" ? (
-        <SingleSelect
-          label={m.trade_list_label()}
-          options={[
-            { value: ALL_LISTS, label: COMPARE.allLabel() },
-            ...tradeLists.map((item) => ({
-              value: item.slug,
-              label: m.trade_list_option({
-                name: item.name,
-                type: LIST_TYPE_LABEL[item.listTypeNew](),
-              }),
-              disabled: !canCompare(item, tradeLists, mutual),
-            })),
-          ]}
-          value={selected?.slug ?? ALL_LISTS}
-          defaultValue={ALL_LISTS}
-          onChange={setList}
-        />
-      ) : null}
-      <MatchHelp />
+      {/* one row, so the sheet's column layout doesn't strand the help button */}
+      <div className="flex items-center gap-1">
+        {mode !== "off" ? (
+          <SingleSelect
+            label={m.trade_list_label()}
+            options={[
+              { value: ALL_LISTS, label: COMPARE.allLabel() },
+              ...tradeLists.map((item) => ({
+                value: item.slug,
+                label: m.trade_list_option({
+                  name: item.name,
+                  type: LIST_TYPE_LABEL[item.listTypeNew](),
+                }),
+                disabled: !canCompare(item, tradeLists, mutual),
+              })),
+            ]}
+            value={selected?.slug ?? ALL_LISTS}
+            defaultValue={ALL_LISTS}
+            onChange={setList}
+          />
+        ) : null}
+        <MatchHelp />
+      </div>
     </>
   );
 }
