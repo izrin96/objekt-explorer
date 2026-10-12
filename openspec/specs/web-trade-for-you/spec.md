@@ -38,9 +38,11 @@ The account-wide trade match view on `apps/web` at `/trade/for-you`: who the use
 
 ### Requirement: Both directions and mutual-first ranking
 Each partner SHALL be shown as a row in the list, built from the Trade card parts (see `web-trade-browse`). Each row SHALL sit on the card surface in a bordered box, with a gap between rows, so it reads apart from the page background. Rows SHALL be ordered by:
-1. the smaller of the two counts (the mutual score), highest first;
-2. then the sum of both counts;
+1. the mutual score, highest first. It counts trades only: the smaller of the collections on the partner's have lists that are on the user's want lists, and the collections on the user's bound have lists, still tradeable, that the partner's want lists ask for. Sale lists, the partner's or the user's, SHALL never count toward it, though they count toward the two direction counts as before;
+2. then the sum of both direction counts;
 3. then the partner's most recently updated matched list.
+
+The row's match chip SHALL show the two direction counts and this mutual score, worded as the Trade card defines (see `web-trade-browse`), and SHALL read the same as the chip on that partner's Browse posts.
 
 **Row line.** Laid out in one line where it fits, as a Browse post is:
 - a byline column: the header (avatar, name with socials, reputation line, ⋯), the "updated" time and any "also" names;
@@ -59,13 +61,19 @@ A direction with nothing counted SHALL still hold its place, reading its label w
 - Objekts left out by the ownership rule, following the counted ones in their direction's column, at most 4 of them. Each is greyed, struck through in the destructive colour, and captioned with its reason ("no longer owned", "not transferable"). They SHALL not count toward N, the strips or the chip.
 - A footer: when any not-counted objekt is shown, one line saying they are on the partner's or the user's list but aren't counted, and why; the idle hint for an idle partner; and Hide partner as a ghost button.
 
+The help beside the Show control SHALL describe the mutual score as counting trades only, with sale listings counting one way.
+
 #### Scenario: Mutual beats one-sided
-- **WHEN** partner A has 9 the user wants and wants 0 of the user's, and partner B has 2 and wants 2
+- **WHEN** partner A has 9 the user wants and wants 0 of the user's, and partner B has 2 on a have list and wants 2 on the user's bound have list
 - **THEN** under All, B is listed above A
 
+#### Scenario: Sale listings don't make a partner mutual
+- **WHEN** partner C's sale list holds 3 collections on the user's want list (open to Trade or buy) and C's want list asks for 2 on the user's bound have list, and partner D has 1 on a have list and wants 1 on the user's bound have list
+- **THEN** under All, D is listed above C, D's chip reads "Mutual 1 · they have 1 · you have 1", and C's chip reads "They have 3 you want · you have 2 they want" on a neutral surface
+
 #### Scenario: Matches without opening
-- **WHEN** the user opens For you, and rin.trades (active) has 14 objekts the user wants and wants 2 of the user's, and the "They have" strip has room for 6 thumbnails
-- **THEN** rin.trades's row is closed, its chip under the strips reads `mutual 2 · 14 ⇄ 2`, and its line shows 5 thumbnails and a "+9" tile under "They have, you want 14" beside both thumbnails under "You have, they want 2"
+- **WHEN** the user opens For you, and rin.trades (active) has 14 objekts on have lists that the user wants and wants 2 of the user's bound have list, and the "They have" strip has room for 6 thumbnails
+- **THEN** rin.trades's row is closed, its chip under the strips reads "Mutual 2 · they have 14 · you have 2", and its line shows 5 thumbnails and a "+9" tile under "They have, you want 14" beside both thumbnails under "You have, they want 2"
 
 #### Scenario: Open a row
 - **WHEN** the user activates the chevron on rin.trades's row
@@ -77,7 +85,7 @@ A direction with nothing counted SHALL still hold its place, reading its label w
 
 #### Scenario: One direction empty
 - **WHEN** jinsoul.blue has 3 objekts the user wants and wants none of the user's
-- **THEN** the row's line shows the "They have, you want 3" strip beside "You have, they want 0" reading "none"
+- **THEN** the row's line shows the "They have, you want 3" strip beside "You have, they want 0" reading "none", and the chip reads "They have 3 you want"
 
 #### Scenario: Idle row
 - **WHEN** jinsoul.blue is idle
@@ -92,7 +100,7 @@ A direction with nothing counted SHALL still hold its place, reading its label w
 - **THEN** each row stacks its byline, the two strips and the actions, each strip stays one line, an open row's columns stack, and the page doesn't scroll sideways
 
 ### Requirement: Filters
-The view SHALL offer a Show control: Everyone, Mutual only, They want what I have, and They have what I want. Everyone is the default. Mutual only keeps partners with both counts above zero. The view SHALL also offer a Compare with control naming one of the user's have, sale or want lists, each option tagged with its list type. The named list replaces the user's side only in its own direction:
+The view SHALL offer a Show control: Everyone, Mutual only, They want what I have, and They have what I want. Everyone is the default. Mutual only keeps partners whose mutual score (trades only, see Both directions and mutual-first ranking) is above zero; a partner matched both ways only through sale lists SHALL not be kept. The one-way views keep counting sale lists. The view SHALL also offer a Compare with control naming one of the user's have, sale or want lists, each option tagged with its list type. The named list replaces the user's side only in its own direction:
 - for a have or sale list, "they want what I have" counts only that list's entries;
 - for a want list, "they have what I want" counts only that list's entries.
 
@@ -106,12 +114,16 @@ The filters SHALL live in the URL (`match`, `list`), beside `partner`, which onl
 - **WHEN** the user opens `/trade/for-you` with no parameters
 - **THEN** Everyone is selected, and every partner is listed, mutual ones first
 
+#### Scenario: Sale-only partner under Mutual only
+- **WHEN** partner C matches the user both ways, but every collection C has that the user wants is on C's sale list
+- **THEN** C is listed under Everyone and They have what I want, and not under Mutual only
+
 #### Scenario: One-way Show offers one kind of list
 - **WHEN** the user selects They want what I have
 - **THEN** Compare with offers only their have lists, under "All my have lists", and a selected want list resets to it
 
 #### Scenario: One have list, still mutual
-- **WHEN** the user filters to have list "spares", and a partner wants a collection on Spares and has a collection on the user's want list "binary hunt"
+- **WHEN** the user filters to have list "spares", and a partner wants a collection on Spares and has a collection on their have list that is on the user's want list "binary hunt"
 - **THEN** the partner is listed under Mutual only, and "they want what I have" counts only the Spares entries
 
 #### Scenario: Foreign list slug
