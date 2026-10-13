@@ -33,7 +33,12 @@ export function CreateListDialog({
   const lists = useUserLists();
   const profiles = useUserProfiles();
   const create = useCreateList();
-  const [draft, setDraft] = useState<ListDraft>(initial);
+  // the profile defaults to the first one, for every list type; none is fine
+  const opening: ListDraft = {
+    ...initial,
+    profileAddress: initial.profileAddress ?? profiles[0]?.address ?? null,
+  };
+  const [draft, setDraft] = useState<ListDraft>(opening);
   const [errors, setErrors] = useState<FieldErrors>({});
 
   return (
@@ -42,7 +47,7 @@ export function CreateListDialog({
       onOpenChange={(next) => {
         // reset on close too: the dialog keeps its state while the toast animates out
         if (!next) {
-          setDraft(initial);
+          setDraft(opening);
           setErrors({});
         }
         onOpenChange(next);
