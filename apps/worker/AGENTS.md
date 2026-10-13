@@ -11,3 +11,5 @@ Serials of objekts minted offline come from `populateSerialOffline` (`job/popula
 - Discovery only sees minted tokens, so `refineBatches` fills reserved gaps and snaps lengths to whole blocks. Gap tokens come from the indexer database, not the Cosmo API.
 - v1 serials are ground truth: an objekt minted before `V1_CUTOFF_MS` anchors its batch exactly. Batches with no such anchor (all of Summer26) are estimates.
 - `objektNo` from the authenticated Cosmo API is visible only to the objekt's owner, so it is no general source of truth.
+- Manual anchors are ground truth like v1 serials: reported `(tokenId, serial)` pairs in `collection.serial_anchors` that pin the batch their token sits in (v1 wins on the same token). Every serial write must pass them, and `computeOfflineSerials` / `computeOfflineSerialUpdates` take them as a required argument so a missed caller fails to type-check; only the holdout measurement in `refine-serial-batches.ts` passes `[]`, on purpose.
+- Add, remove or list anchors with `script/serial-anchor.ts`; `add` and `remove` are a dry run until `APPLY=1`.
