@@ -54,10 +54,11 @@ export const GRID_COLUMNS_MOBILE = 3;
 
 /**
  * A `redirect` search value is only followed when it is a same-origin path:
- * `//evil.example` is a protocol-relative URL the browser resolves off-site.
+ * `//evil.example` and `/\evil.example` are protocol-relative URLs the browser
+ * resolves off-site.
  */
 export function isSafeRedirect(value: string): boolean {
-  return /^\/(?!\/)/.test(value);
+  return /^\/(?![/\\])/.test(value);
 }
 
 /** the column counts `profile.edit` accepts */

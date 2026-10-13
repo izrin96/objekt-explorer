@@ -198,6 +198,8 @@ export function ColorPicker({
           if (event.buttons > 0) onFieldPointer(event);
         }}
         onPointerUp={() => setDragging(false)}
+        onPointerCancel={() => setDragging(false)}
+        onLostPointerCapture={() => setDragging(false)}
       >
         <Thumb
           dragging={dragging}

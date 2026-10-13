@@ -222,11 +222,11 @@ export function ObjektCard<T extends ValidObjekt>({
         </div>
 
         {(onToggleSelect || children) && (
-          /* A flush row in the corner, the mirror of the pin/lock tag: the
-               card's own radius clips the outer corner and `rounded-bl` curves
-               the inner one, so both corners of the card are cut the same way.
-               A pill inset from the corner would waste it and leave too small a
-               target to hit. */
+          /* A flush row in the corner, the mirror of the pin/lock tag:
+             `rounded-tr` follows the card's own corner and `rounded-bl` curves
+             the inner one, so both corners of the card are cut the same way.
+             A pill inset from the corner would waste it and leave too small a
+             target to hit. */
           <div
             className={cn(
               "rounded-bl-photocard rounded-tr-photocard absolute top-0 right-0 z-10 flex items-center overflow-hidden",
