@@ -9,11 +9,21 @@ import { useSettings } from "@/stores/settings";
 /** The rate table changes slowly and the server caches it for an hour too. */
 const RATES_STALE_TIME = 1000 * 60 * 60;
 
+/** keyed by locale and currency; a code the runtime rejects is never stored */
+const currencyFormats = new Map<string, Intl.NumberFormat>();
+
 /** An amount in the currency it was set in — a seller's own price, not the viewer's. */
 export function formatCurrency(amount: number, code: string): string {
   const currency = normalizeCurrency(code);
+  const locale = getLocale();
+  const key = `${locale}|${currency}`;
   try {
-    return new Intl.NumberFormat(getLocale(), { style: "currency", currency }).format(amount);
+    let formatter = currencyFormats.get(key);
+    if (formatter === undefined) {
+      formatter = new Intl.NumberFormat(locale, { style: "currency", currency });
+      currencyFormats.set(key, formatter);
+    }
+    return formatter.format(amount);
   } catch {
     return `${amount.toLocaleString()} ${currency}`;
   }

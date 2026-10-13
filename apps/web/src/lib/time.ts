@@ -31,6 +31,17 @@ const UNITS: [Intl.RelativeTimeFormatUnit, number][] = [
   ["minute", 60],
 ];
 
+const relativeFormats = new Map<string, Intl.RelativeTimeFormat>();
+
+function relativeFormat(locale: string) {
+  let formatter = relativeFormats.get(locale);
+  if (formatter === undefined) {
+    formatter = new Intl.RelativeTimeFormat(locale, { numeric: "auto" });
+    relativeFormats.set(locale, formatter);
+  }
+  return formatter;
+}
+
 /** `largest` caps the unit, for a wait that should read "in 23 hours", not "tomorrow" */
 export function relativeTime(
   at: number,
@@ -38,7 +49,7 @@ export function relativeTime(
   largest: Intl.RelativeTimeFormatUnit = "year",
 ) {
   const seconds = Math.round((at - now) / 1000);
-  const formatter = new Intl.RelativeTimeFormat(getLocale(), { numeric: "auto" });
+  const formatter = relativeFormat(getLocale());
   const units = UNITS.slice(UNITS.findIndex(([unit]) => unit === largest));
   for (const [unit, size] of units) {
     if (Math.abs(seconds) >= size) return formatter.format(Math.round(seconds / size), unit);

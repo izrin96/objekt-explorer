@@ -11,19 +11,46 @@ export function mutedLabel(muted: NonNullable<ConversationRow["muted"]>) {
   return m.chat_muted_until({ time: untilLabel(muted.until) });
 }
 
+const untilFormats = new Map<string, Intl.DateTimeFormat>();
+const timeFormats = new Map<string, Intl.DateTimeFormat>();
+const dayFormats = new Map<string, Intl.DateTimeFormat>();
+const secondFormats = new Map<string, Intl.RelativeTimeFormat>();
+
+function cached<T>(cache: Map<string, T>, locale: string, build: () => T): T {
+  let formatter = cache.get(locale);
+  if (formatter === undefined) {
+    formatter = build();
+    cache.set(locale, formatter);
+  }
+  return formatter;
+}
+
 /** A date and time in the viewer's zone, for an end that may be days away. */
 export function untilLabel(iso: string) {
-  return new Intl.DateTimeFormat(getLocale(), { dateStyle: "medium", timeStyle: "short" }).format(
-    new Date(iso),
-  );
+  const locale = getLocale();
+  return cached(
+    untilFormats,
+    locale,
+    () => new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }),
+  ).format(new Date(iso));
 }
 
 export function messageTime(iso: string) {
-  return new Intl.DateTimeFormat(getLocale(), { timeStyle: "short" }).format(new Date(iso));
+  const locale = getLocale();
+  return cached(
+    timeFormats,
+    locale,
+    () => new Intl.DateTimeFormat(locale, { timeStyle: "short" }),
+  ).format(new Date(iso));
 }
 
 export function dayLabel(iso: string) {
-  return new Intl.DateTimeFormat(getLocale(), { dateStyle: "medium" }).format(new Date(iso));
+  const locale = getLocale();
+  return cached(
+    dayFormats,
+    locale,
+    () => new Intl.DateTimeFormat(locale, { dateStyle: "medium" }),
+  ).format(new Date(iso));
 }
 
 export function refusalOf(error: unknown) {
@@ -38,9 +65,14 @@ export function refusalText(refusal: { reason: ChatRefusal; retryAt: string | nu
   const at = refusal.retryAt ? new Date(refusal.retryAt).getTime() : now;
   // the message limit resets within the minute, which `relativeTime` would call "now"
   const seconds = Math.ceil((at - now) / 1000);
+  const locale = getLocale();
   const wait =
     seconds > 0 && seconds < 60
-      ? new Intl.RelativeTimeFormat(getLocale(), { numeric: "auto" }).format(seconds, "second")
+      ? cached(
+          secondFormats,
+          locale,
+          () => new Intl.RelativeTimeFormat(locale, { numeric: "auto" }),
+        ).format(seconds, "second")
       : relativeTime(at, now, "hour");
   switch (refusal.reason) {
     case "no_address":
