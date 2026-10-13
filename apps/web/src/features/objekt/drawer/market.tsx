@@ -1,6 +1,7 @@
 import {
   CaretDownIcon,
   CaretRightIcon,
+  CaretUpIcon,
   ChatCircleIcon,
   DotsThreeIcon,
   HandshakeIcon,
@@ -8,10 +9,11 @@ import {
   StorefrontIcon,
 } from "@phosphor-icons/react";
 import type { MarketListing, SortBy } from "@repo/api/schemas/market";
+import { floorChange, rangeStart, utcDate } from "@repo/api/schemas/price-history";
 import { truncateAddress } from "@repo/lib/address";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { createPortal } from "react-dom";
 import { InView } from "react-intersection-observer";
 
@@ -22,6 +24,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { useStartConversation, useStartGate } from "@/features/chat/message-button";
 import { getListLinkOption } from "@/features/list/list-link";
+import { formatUtcDay } from "@/features/market/format-utc-day";
+import { PriceDelta } from "@/features/market/price-delta";
+import { toRows } from "@/features/market/price-history-rows";
+import { PriceSparkline } from "@/features/market/price-sparkline";
 import { type OfferRequest, useOfferBuilder } from "@/features/offers/offer-builder";
 import { anyKey } from "@/features/offers/pick";
 import { ProfileCell } from "@/features/profile/profile-hover-card";
@@ -34,9 +40,16 @@ import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import { ObjektNote } from "../objekt-note";
-import { marketListingsOptions, marketStatsOptions } from "../queries";
+import { marketListingsOptions, marketStatsOptions, priceHistoryOptions } from "../queries";
 import { SortableHeader, type SortState } from "./sortable-header";
 import { type Stat, StatRow } from "./stat-row";
+
+// recharts is large and only the History toggle needs it
+const PriceHistoryChart = lazy(() =>
+  import("@/features/market/price-history-chart").then((mod) => ({
+    default: mod.PriceHistoryChart,
+  })),
+);
 
 export function MarketPanel({
   slug,
@@ -52,6 +65,9 @@ export function MarketPanel({
   const { currency, formatUsd } = useCurrency();
 
   const stats = useQuery(marketStatsOptions(slug));
+  const history = useQuery(priceHistoryOptions(slug, "30d"));
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [now] = useState(() => new Date());
   // one of each for the whole table, rather than a dialog per row
   const builder = useOfferBuilder();
   const { gate } = useStartGate();
@@ -76,14 +92,24 @@ export function MarketPanel({
           { key, dir: key === "price" ? "asc" : "desc" },
     );
 
+  const liveFloor = stats.data?.floorPrice ?? null;
+  const points = history.data?.points ?? [];
+  const tracking = history.data?.tracking ?? null;
+  const change =
+    points.length >= 2 && points[0] ? floorChange(points[0].floorUsd, liveFloor) : null;
+  const sparkline =
+    points.length >= 2
+      ? toRows(points, rangeStart("30d", now), utcDate(now), (usd) => usd).map((row) => row.floor)
+      : null;
+
+  const price = (usd: number | null | undefined) =>
+    stats.data ? (usd == null ? "—" : formatUsd(usd)) : null;
+
   const figures: Stat[] = [
     {
       label: m.objekt_market_floor(),
-      value: stats.data
-        ? stats.data.floorPrice === null
-          ? "—"
-          : formatUsd(stats.data.floorPrice)
-        : null,
+      value: price(liveFloor),
+      detail: change === null ? undefined : <PriceDelta change={change} />,
     },
     {
       label: m.objekt_market_listings(),
@@ -93,6 +119,8 @@ export function MarketPanel({
       label: m.objekt_market_sellers(),
       value: stats.data ? stats.data.sellers.toLocaleString() : null,
     },
+    { label: m.objekt_market_median(), value: price(stats.data?.medianPrice) },
+    { label: m.objekt_market_highest(), value: price(stats.data?.maxPrice) },
   ];
 
   const items = listings.data?.pages.flatMap((page) => page.items) ?? [];
@@ -106,7 +134,36 @@ export function MarketPanel({
 
   return (
     <div className="flex flex-col gap-4">
-      <StatRow stats={figures} className="grid-cols-3" />
+      <StatRow stats={figures} className="grid-cols-3 sm:grid-cols-5" />
+      {tracking && (
+        <div className="flex flex-col gap-3">
+          <div className="text-muted-foreground flex items-center justify-between gap-3 text-xs">
+            {sparkline ? (
+              <PriceSparkline values={sparkline} />
+            ) : tracking.snapshots === 1 ? (
+              <span>
+                {m.objekt_market_tracking_started({ date: formatUtcDay(tracking.since) })}
+              </span>
+            ) : (
+              <span />
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              aria-expanded={historyOpen}
+              onClick={() => setHistoryOpen((open) => !open)}
+            >
+              {historyOpen ? <CaretUpIcon /> : <CaretDownIcon />}
+              {m.objekt_market_history()}
+            </Button>
+          </div>
+          {historyOpen && (
+            <Suspense fallback={<Skeleton className="h-56 rounded-lg" />}>
+              <PriceHistoryChart slug={slug} since={tracking.since} liveFloor={liveFloor} />
+            </Suspense>
+          )}
+        </div>
+      )}
       <OnTradeLine slug={slug} />
 
       {listings.isPending ? (

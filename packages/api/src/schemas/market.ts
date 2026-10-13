@@ -1,5 +1,7 @@
 import * as z from "zod";
 
+import { PRICE_HISTORY_RANGES } from "./price-history";
+
 const sortBySchema = z.enum(["price", "createdAt"]);
 export type SortBy = z.infer<typeof sortBySchema>;
 
@@ -64,6 +66,10 @@ export const marketStatsOutputSchema = z.object({
   total: z.number(),
   /** cheapest listing in USD — null when every listing is QYOP or unpriced */
   floorPrice: z.number().nullable(),
+  /** middle priced listing in USD — null when every listing is QYOP or unpriced */
+  medianPrice: z.number().nullable(),
+  /** dearest listing in USD — null when every listing is QYOP or unpriced */
+  maxPrice: z.number().nullable(),
   sellers: z.number(),
 });
 
@@ -90,3 +96,24 @@ export const marketListingsInputSchema = z.object({
 });
 
 export type MarketListingsInput = z.output<typeof marketListingsInputSchema>;
+
+export const priceHistoryInputSchema = z.object({
+  collectionSlug: z.string(),
+  range: z.enum(PRICE_HISTORY_RANGES).default("30d"),
+});
+
+export const priceHistoryOutputSchema = z.object({
+  /** ascending by date, one per UTC day the collection had a priced listing */
+  points: z.array(
+    z.object({
+      date: z.string(),
+      floorUsd: z.number(),
+      medianUsd: z.number(),
+      listingCount: z.number(),
+    }),
+  ),
+  /** the collection's first recorded date and how many days are recorded; null with none */
+  tracking: z.object({ since: z.string(), snapshots: z.number() }).nullable(),
+});
+
+export type PriceHistoryOutput = z.infer<typeof priceHistoryOutputSchema>;

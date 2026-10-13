@@ -1,3 +1,4 @@
+import { SNAPSHOT_CRON } from "@repo/api/schemas/price-history";
 import { cron, type CronJob } from "bun";
 
 import { relayActivity } from "./job/activity-relay";
@@ -9,6 +10,7 @@ import { populateSerial, populateSerialOffline } from "./job/populate-serial";
 import { processCollectionImages } from "./job/process-collection-images";
 import { pruneNotifications } from "./job/prune-notifications";
 import { refreshAccessToken } from "./job/refresh-access-token";
+import { snapshotPriceHistory } from "./job/snapshot-price-history";
 import { runTradeVerifier, watchTransfers } from "./job/trade-verifier";
 import { relayTransfers } from "./job/transfers-relay";
 import { updateCurrencyRates } from "./job/update-currency-rates";
@@ -100,6 +102,15 @@ crons.push(cron("0 * * * *", safeRun("populateRarity", populateRarity)));
 // update currency exchange rates daily at 1 AM
 await safeRun("updateCurrencyRates", updateCurrencyRates)();
 crons.push(cron("0 1 * * *", safeRun("updateCurrencyRates", updateCurrencyRates)));
+
+// today's per-collection floor and median; reads and writes the app database only
+await safeRun("snapshotPriceHistory", () => snapshotPriceHistory())();
+crons.push(
+  cron(
+    SNAPSHOT_CRON,
+    safeRun("snapshotPriceHistory", () => snapshotPriceHistory()),
+  ),
+);
 
 // want-list alerts; the first run only sets the cursor
 await safeRun("sendWantAlerts", sendWantAlerts)();
