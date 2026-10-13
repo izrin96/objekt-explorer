@@ -145,24 +145,31 @@ async function processCollection(collectionId: string) {
   console.log(`[populateSerial] Collection ${collectionId}: Updated ${updates.length} objekts`);
 }
 
+export type IndexerTransaction = Parameters<Parameters<typeof indexer.transaction>[0]>[0];
+
 /**
  * Write serial updates in chunks inside one transaction, using a CASE-per-id
  * expression so each chunk is a single UPDATE statement.
  */
-export async function writeSerialUpdates(updates: { id: string; newSerial: number }[]) {
-  await indexer.transaction(async (tx) => {
+export async function writeSerialUpdates(
+  updates: { id: string; newSerial: number }[],
+  tx?: IndexerTransaction,
+) {
+  const run = async (db: IndexerTransaction) => {
     for (let i = 0; i < updates.length; i += DB_BATCH_SIZE) {
       const batch = updates.slice(i, i + DB_BATCH_SIZE);
       const ids = batch.map((u) => u.id);
       const caseExpr = batch
         .map((u) => sql`WHEN ${u.id} THEN ${u.newSerial}`)
         .reduce((acc, curr) => sql`${acc} ${curr}`, sql``);
-      await tx
+      await db
         .update(objekts)
         .set({ serial: sql`(CASE id ${caseExpr} END)::int` })
         .where(inArray(objekts.id, ids));
     }
-  });
+  };
+  if (tx) await run(tx);
+  else await indexer.transaction(run);
 }
 
 const BATCH_SIZE = 20;
@@ -466,6 +473,7 @@ async function processCollectionOffline(collectionId: string) {
       collectionId: collections.collectionId,
       season: collections.season,
       serialBatches: collections.serialBatches,
+      serialAnchors: collections.serialAnchors,
     })
     .from(collections)
     .where(eq(collections.id, collectionId))
@@ -528,10 +536,11 @@ async function processCollectionOffline(collectionId: string) {
   }
 
   // Recompute the serial of every objekt from the batch ranges (anchored on
-  // pre-cutoff v1 serials) and update any that differ. This heals objekts whose
-  // serial was written before a new/intermediate batch was discovered (which
-  // shifts every later serial), not just newly-minted serial=0 objekts.
-  const updates = computeOfflineSerialUpdates(allObjekts, batches);
+  // pre-cutoff v1 serials and manual anchors) and update any that differ. This
+  // heals objekts whose serial was written before a new/intermediate batch was
+  // discovered (which shifts every later serial), not just newly-minted
+  // serial=0 objekts.
+  const updates = computeOfflineSerialUpdates(allObjekts, batches, collection.serialAnchors ?? []);
 
   if (updates.length === 0) {
     console.log(`[populateSerialOffline] Collection ${collectionId}: No valid updates`);

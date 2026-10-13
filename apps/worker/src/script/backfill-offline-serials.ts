@@ -22,7 +22,7 @@ import { and, asc, eq, inArray, isNull, lte, ne, or, sql } from "drizzle-orm";
 
 import { discoverBatches } from "@/job/populate-serial";
 import { preAssignedCollections as excludeCollections } from "@/lib/serial-constants";
-import { computeOfflineSerials, V1_CUTOFF_MS } from "@/lib/serial-math";
+import { computeOfflineSerials, type ManualAnchor, V1_CUTOFF_MS } from "@/lib/serial-math";
 
 const CONCURRENCY = 5;
 const DB_BATCH_SIZE = 500;
@@ -36,6 +36,7 @@ const targets = await indexer
     id: collections.id,
     slug: collections.slug,
     cid: collections.collectionId,
+    anchors: collections.serialAnchors,
   })
   .from(collections)
   .innerJoin(objekts, eq(objekts.collectionId, collections.id))
@@ -57,7 +58,12 @@ let totalUpdated = 0;
 let touchedCollections = 0;
 const failed: string[] = [];
 
-async function processOne(t: { id: string; slug: string; cid: string }) {
+async function processOne(t: {
+  id: string;
+  slug: string;
+  cid: string;
+  anchors: ManualAnchor[] | null;
+}) {
   const allObjekts = await indexer
     .select({ id: objekts.id, serial: objekts.serial, mintedAt: objekts.mintedAt })
     .from(objekts)
@@ -87,7 +93,7 @@ async function processOne(t: { id: string; slug: string; cid: string }) {
     return;
   }
 
-  const computed = computeOfflineSerials(allObjekts, batches, V1_CUTOFF_MS);
+  const computed = computeOfflineSerials(allObjekts, batches, V1_CUTOFF_MS, t.anchors ?? []);
   const byId = new Map(allObjekts.map((o) => [o.id, o] as const));
 
   const updates: { id: string; newSerial: number }[] = [];

@@ -57,6 +57,8 @@ export function computeOnlineSerials(
   return { updates };
 }
 
+export type ManualAnchor = { tokenId: number; serial: number };
+
 /**
  * Recompute offline serials from batch ranges and diff against stored values.
  * Pre-cutoff v1 serials are authoritative and never produce an update.
@@ -64,8 +66,9 @@ export function computeOnlineSerials(
 export function computeOfflineSerialUpdates(
   rows: { id: string; serial: number; mintedAt: string }[],
   batches: { start: number; end: number }[],
+  manualAnchors: ManualAnchor[],
 ): { id: string; newSerial: number }[] {
-  const computed = computeOfflineSerials(rows, batches, V1_CUTOFF_MS);
+  const computed = computeOfflineSerials(rows, batches, V1_CUTOFF_MS, manualAnchors);
   const byId = new Map(rows.map((o) => [o.id, o] as const));
   const updates: { id: string; newSerial: number }[] = [];
   for (const { id, serial } of computed) {
@@ -98,11 +101,15 @@ export function computeOfflineSerialUpdates(
  * serial start chained from the previous batch — approximate, since it trusts
  * the discovered range sizes, but it inherits the true (anchored) numbering of
  * earlier batches instead of accumulating error from the very first batch.
+ *
+ * `manualAnchors` (reported serials) join the v1 anchors of the batch they fall
+ * in; on the same token the v1 serial wins.
  */
 export function computeOfflineSerials(
   objekts: { id: string; serial: number; mintedAt: string }[],
   batches: { start: number; end: number }[],
   cutoffMs: number,
+  manualAnchors: ManualAnchor[],
 ): { id: string; serial: number }[] {
   const batchIndexOf = (tid: number) => batches.findIndex((b) => tid >= b.start && tid <= b.end);
 
@@ -114,6 +121,12 @@ export function computeOfflineSerials(
       const tid = parseInt(o.id);
       const bi = batchIndexOf(tid);
       if (bi !== -1) anchors[bi]!.push({ tid, serial: o.serial });
+    }
+  }
+  for (const m of manualAnchors) {
+    const bi = batchIndexOf(m.tokenId);
+    if (bi !== -1 && !anchors[bi]!.some((a) => a.tid === m.tokenId)) {
+      anchors[bi]!.push({ tid: m.tokenId, serial: m.serial });
     }
   }
   for (const list of anchors) list.sort((a, b) => a.tid - b.tid);
@@ -164,6 +177,48 @@ export function computeOfflineSerials(
     if (serial > 0) result.push({ id: o.id, serial });
   }
   return result;
+}
+
+/**
+ * Why a reported serial cannot be stored as a manual anchor, or null when it can.
+ * `rows` are every objekt of the collection; `stored` are its other anchors,
+ * which the new one is judged together with.
+ */
+export function checkManualAnchor(
+  rows: { id: string; serial: number; mintedAt: string }[],
+  batches: { start: number; end: number }[],
+  anchor: ManualAnchor,
+  stored: ManualAnchor[],
+): string | null {
+  if (!Number.isInteger(anchor.serial) || anchor.serial < 1) {
+    return `serial ${anchor.serial} is below 1`;
+  }
+  const row = rows.find((o) => parseInt(o.id) === anchor.tokenId);
+  if (!row) return `token ${anchor.tokenId} not found in the collection`;
+  if (Date.parse(row.mintedAt) < V1_CUTOFF_MS) {
+    return `token ${anchor.tokenId} was minted before the v1 cutoff; its v1 serial is already authoritative`;
+  }
+  if (batches.length === 0) return "the collection has no stored batches yet";
+  const batch = batches.find((b) => anchor.tokenId >= b.start && anchor.tokenId <= b.end);
+  if (!batch) return `token ${anchor.tokenId} is outside every stored batch`;
+
+  const inBatch = rows.filter((o) => {
+    const tid = parseInt(o.id);
+    return tid >= batch.start && tid <= batch.end;
+  });
+  const others = stored.filter((a) => a.tokenId !== anchor.tokenId);
+  const before = new Set(
+    computeOfflineSerials(inBatch, [batch], V1_CUTOFF_MS, others).map((c) => c.id),
+  );
+  const after = new Set(
+    computeOfflineSerials(inBatch, [batch], V1_CUTOFF_MS, [...others, anchor]).map((c) => c.id),
+  );
+  for (const o of inBatch) {
+    if (after.has(o.id) || !before.has(o.id)) continue;
+    const tid = parseInt(o.id);
+    return `token ${tid} would get serial ${anchor.serial + (tid - anchor.tokenId)}, below 1`;
+  }
+  return null;
 }
 
 // From Atom02 on, Modhaus reserves offline batches in whole 100-token blocks,

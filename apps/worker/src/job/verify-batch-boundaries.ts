@@ -1,9 +1,9 @@
 /**
  * Boundary drift verifier for un-anchored offline batches.
  *
- * Anchored batches (with a pre-cutoff v1 objekt) are shielded — their serials
- * come from the v1 anchor regardless of the stored range, so a drifted boundary
- * is harmless. Un-anchored batches (reserved entirely after the v1 cutoff) have
+ * Anchored batches (with a pre-cutoff v1 objekt or a manual anchor) are
+ * shielded — their serials come from the anchor regardless of the stored range,
+ * so a drifted boundary is harmless. Un-anchored batches (reserved entirely after the v1 cutoff) have
  * no ground truth, so a boundary that was guessed from an unminted (404) token
  * which later minted as *foreign* would silently shift their serials.
  *
@@ -37,7 +37,7 @@ import {
   writeSerialUpdates,
 } from "@/job/populate-serial";
 import { preAssignedCollections as excludeCollections } from "@/lib/serial-constants";
-import { computeOfflineSerialUpdates, V1_CUTOFF_MS } from "@/lib/serial-math";
+import { computeOfflineSerialUpdates, type ManualAnchor, V1_CUTOFF_MS } from "@/lib/serial-math";
 
 const CONCURRENCY = 5;
 
@@ -65,6 +65,7 @@ export async function verifyBatchBoundaries(dryRun = false) {
       cid: collections.collectionId,
       season: collections.season,
       batches: collections.serialBatches,
+      anchors: collections.serialAnchors,
     })
     .from(collections)
     .where(
@@ -91,6 +92,7 @@ export async function verifyBatchBoundaries(dryRun = false) {
     cid: string;
     season: string;
     batches: Batch[] | null;
+    anchors: ManualAnchor[] | null;
   }) {
     const batches = t.batches ?? [];
     if (batches.length === 0) return;
@@ -103,7 +105,9 @@ export async function verifyBatchBoundaries(dryRun = false) {
 
     if (rows.length === 0) return;
 
+    const manualAnchors = t.anchors ?? [];
     const isAnchored = (b: Batch) =>
+      manualAnchors.some((a) => a.tokenId >= b.start && a.tokenId <= b.end) ||
       rows.some((o) => {
         const tid = parseInt(o.id);
         return (
@@ -111,7 +115,7 @@ export async function verifyBatchBoundaries(dryRun = false) {
         );
       });
 
-    // only un-anchored batches are at risk (anchored ones are shielded by v1)
+    // only un-anchored batches are at risk (anchored ones are shielded)
     const atRisk = batches.filter((b) => !isAnchored(b));
     if (atRisk.length === 0) return;
 
@@ -201,7 +205,7 @@ export async function verifyBatchBoundaries(dryRun = false) {
 
     await indexer.update(collections).set({ serialBatches: fresh }).where(eq(collections.id, t.id));
 
-    const updates = computeOfflineSerialUpdates(rows, fresh);
+    const updates = computeOfflineSerialUpdates(rows, fresh, manualAnchors);
 
     if (updates.length > 0) {
       await writeSerialUpdates(updates);

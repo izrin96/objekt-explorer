@@ -47,6 +47,11 @@ export const collections = pgTable(
     imageSyncHash: varchar("image_sync_hash", { length: 32 }),
     // ordered reserved tokenId ranges per offline batch (ascending, foreign gaps between)
     serialBatches: jsonb("serial_batches").$type<{ start: number; end: number }[]>(),
+    // reported (tokenId, serial) pairs that pin a batch like a v1 serial does
+    serialAnchors:
+      jsonb("serial_anchors").$type<
+        { tokenId: number; serial: number; note: string; addedAt: string }[]
+      >(),
   },
   (table) => [
     index("IDX_429351eac26f87942861266e48").using("btree", table.onOffline.asc().nullsLast()),
