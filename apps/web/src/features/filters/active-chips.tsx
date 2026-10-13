@@ -7,7 +7,13 @@ import { useCurrency } from "@/features/settings/use-currency";
 import { cn, scrollXOnlyClass } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
-import { EDITION_LABEL, GROUP_BY_LABEL, ONLINE_TYPE_LABEL, SORT_LABEL } from "./labels";
+import {
+  EDITION_LABEL,
+  GROUP_BY_LABEL,
+  LISTED_WINDOW_LABEL,
+  ONLINE_TYPE_LABEL,
+  SORT_LABEL,
+} from "./labels";
 import { useMemberColor } from "./member-colors";
 import type { FilterSearch } from "./search-schema";
 import { useCanonicalFilters, type FilterPatch } from "./use-filters";
@@ -30,12 +36,18 @@ function without<T>(values: readonly T[], value: T): T[] | undefined {
   return next.length > 0 ? next : undefined;
 }
 
-export function useActiveChips(): ActiveChip[] {
+/** `listed` filters only the market grid, so other surfaces don't chip a stray `?listed=` */
+export function useActiveChips({ listed = false }: { listed?: boolean } = {}): ActiveChip[] {
   const filters = useCanonicalFilters();
   const memberColor = useMemberColor();
   const { formatUsd } = useCurrency();
   const { getArtist } = useCosmoArtist();
-  return buildChips(filters, memberColor, formatUsd, (id) => getArtist(id)?.title ?? id);
+  return buildChips(
+    listed ? filters : { ...filters, listed: undefined },
+    memberColor,
+    formatUsd,
+    (id) => getArtist(id)?.title ?? id,
+  );
 }
 
 function buildChips(
@@ -152,6 +164,16 @@ function buildChips(
       name: m.filter_floor_price(),
       value: floor,
       remove: { floor_min: undefined, floor_max: undefined },
+    });
+  }
+  if (filters.listed !== undefined) {
+    const windowLabel = LISTED_WINDOW_LABEL[filters.listed]();
+    chips.push({
+      key: "listed",
+      label: `${m.filter_listed()}: ${windowLabel}`,
+      name: m.filter_listed(),
+      value: windowLabel,
+      remove: { listed: undefined },
     });
   }
   if (filters.search !== undefined) {

@@ -9,6 +9,8 @@ import {
 } from "@repo/cosmo/types/common";
 import * as z from "zod";
 
+import { LISTED_WINDOWS } from "./listed-window";
+
 /**
  * Both URL spellings have to parse: the comma-joined `?member=a,b` a shared
  * link carries, and the repeated `?member=a&member=b`. No facet value contains
@@ -86,6 +88,7 @@ export const filterSearchSchema = z.object({
   missing: flag(),
   floor_min: num(),
   floor_max: num(),
+  listed: z.enum(LISTED_WINDOWS).optional().catch(undefined),
   sort: z.enum(validCustomSorts).optional().catch(undefined),
   sort_dir: z.enum(validSortDirection).optional().catch(undefined),
   group_by: z.enum(validGroupBy).optional().catch(undefined),

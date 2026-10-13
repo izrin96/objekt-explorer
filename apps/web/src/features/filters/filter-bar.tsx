@@ -278,7 +278,7 @@ export function FilterBar({
   const setFilters = useSetFilters();
   const sharedReset = useResetFilters();
   const reset = onReset ?? sharedReset;
-  const chips = useActiveChips();
+  const chips = useActiveChips({ listed: extras.some((item) => item.key === "listed") });
   const [sheet] = useState(() => SheetPrimitive.createHandle());
   const longTailActive = longTailCount(filters, longTail);
   const nothingToReset = resetDisabled ?? !canReset(filters);

@@ -3,6 +3,7 @@ import chroma from "chroma-js";
 
 import { isObjektOwned } from "@/features/objekt/objekt-utils";
 
+import { isListedWithin } from "./listed-window";
 import {
   DEFAULT_COLOR_SENSITIVITY,
   DEFAULT_SORT,
@@ -120,7 +121,15 @@ export function searchMatcher(search: string | undefined) {
     );
 }
 
-export function filterObjekts<T extends GridObjekt>(filters: FilterSearch, objekts: T[]): T[] {
+function currentUnixSeconds() {
+  return Math.floor(Date.now() / 1000);
+}
+
+export function filterObjekts<T extends GridObjekt>(
+  filters: FilterSearch,
+  objekts: T[],
+  nowSec: number = currentUnixSeconds(),
+): T[] {
   const matchesSearch = searchMatcher(filters.search);
 
   let targetColor: chroma.Color | null = null;
@@ -181,6 +190,15 @@ export function filterObjekts<T extends GridObjekt>(filters: FilterSearch, objek
       if (a.floorPrice === null || a.floorPrice === undefined) return false;
       if (filters.floor_min !== undefined && a.floorPrice < filters.floor_min) return false;
       if (filters.floor_max !== undefined && a.floorPrice > filters.floor_max) return false;
+    }
+
+    // only market rows carry a listing time; elsewhere a stray `listed` filters nothing
+    if (
+      filters.listed !== undefined &&
+      a.listedAt !== undefined &&
+      !isListedWithin(a.listedAt, filters.listed, nowSec)
+    ) {
+      return false;
     }
 
     if (matchesSearch && !matchesSearch(a)) return false;
@@ -292,12 +310,30 @@ export function sortObjekts<T extends GridObjekt>(
       return sortDir === "asc" ? listedA - listedB : listedB - listedA;
     });
   } else if (sort === "supply") {
-    objekts = objekts.toSorted((a, b) => {
-      const countA = a.listingCount ?? 0;
-      const countB = b.listingCount ?? 0;
-      return sortDir === "asc" ? countA - countB : countB - countA;
-    });
+    objekts = objekts.toSorted(compareSupply(sortDir));
   }
 
   return objekts;
+}
+
+type SupplyRow = Pick<GridObjekt, "slug" | "listingCount" | "floorPrice" | "listedAt">;
+
+/** ties keep one order whichever way the count runs, so flipping the arrow doesn't reshuffle them */
+export function compareSupply(dir: "asc" | "desc") {
+  return (a: SupplyRow, b: SupplyRow): number => {
+    const countA = a.listingCount ?? 0;
+    const countB = b.listingCount ?? 0;
+    if (countA !== countB) return dir === "asc" ? countA - countB : countB - countA;
+    const floorA = a.floorPrice ?? null;
+    const floorB = b.floorPrice ?? null;
+    if (floorA !== floorB) {
+      if (floorA === null) return 1;
+      if (floorB === null) return -1;
+      return floorA - floorB;
+    }
+    const listedA = a.listedAt ?? 0;
+    const listedB = b.listedAt ?? 0;
+    if (listedA !== listedB) return listedB - listedA;
+    return a.slug < b.slug ? -1 : a.slug > b.slug ? 1 : 0;
+  };
 }

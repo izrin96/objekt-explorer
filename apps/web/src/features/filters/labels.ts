@@ -7,6 +7,8 @@ import type {
 
 import { m } from "@/paraglide/messages";
 
+import type { ListedWindow } from "./listed-window";
+
 /** the website's `getEditionStr`; the ordinals are product terms, not prose */
 export const EDITION_LABEL: Record<ValidEdition, string> = { 1: "1st", 2: "2nd", 3: "3rd" };
 
@@ -50,4 +52,10 @@ export const GROUP_BY_LABEL: Record<ValidGroupBy, () => string> = {
   member: m.filter_group_by_member,
   season: m.filter_group_by_season,
   seasonCollectionNo: m.filter_group_by_season_collection_no,
+};
+
+export const LISTED_WINDOW_LABEL: Record<ListedWindow, () => string> = {
+  "24h": m.filter_listed_24h,
+  "7d": m.filter_listed_7d,
+  "30d": m.filter_listed_30d,
 };
