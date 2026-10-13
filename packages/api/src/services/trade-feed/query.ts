@@ -101,7 +101,6 @@ type Stage1 = {
 export function feedWhere(query: Omit<Stage1, "owners" | "cursor">): SQL[] {
   const where: SQL[] = [listedPost, notTradeSanctioned(sql`posts.user_id`)];
   if (query.viewerId !== null) {
-    where.push(sql`posts.user_id <> ${query.viewerId}`);
     where.push(notBlockedEither(query.viewerId, sql`posts.user_id`));
     where.push(sql`NOT EXISTS (
       SELECT 1 FROM hidden_trade_partner h
