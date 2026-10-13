@@ -98,7 +98,7 @@ Install a new one with `npx skills@latest add <owner/repo> -s <skill> -a claude-
 
 Specs use OpenSpec: `/opsx:propose` → review the change under `openspec/changes/` → `/opsx:apply` → `/opsx:archive`. `openspec/config.yaml` carries the project context every change is written against. The `openspec-*` skills and `opsx` commands under `.claude/` are `openspec init --tools claude` output — regenerate them, never edit or symlink them.
 
-Superset workspaces are git worktrees; `.superset/setup.sh` copies the root `.env` from the main checkout and runs `bun install`, and `run` starts the web dev server.
+Superset workspaces are git worktrees; `.superset/setup.sh` copies the root `.env` from the main checkout and runs `bun install`, and `run` starts the web dev server. Any other git worktree (a Herdr one included) gets neither until `./.superset/setup.sh` runs in it; the script assumes nothing about Superset.
 
 ## Code Style
 
