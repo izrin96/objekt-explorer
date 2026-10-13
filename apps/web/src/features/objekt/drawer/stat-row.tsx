@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
@@ -6,7 +8,7 @@ export type Stat = {
   /** null while loading */
   value: string | null;
   /** a quieter figure on the value's line; it wraps under the value only when the column is too narrow */
-  detail?: string;
+  detail?: ReactNode;
 };
 
 /**

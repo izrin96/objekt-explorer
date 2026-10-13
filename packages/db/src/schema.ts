@@ -5,6 +5,7 @@ import {
   bigserial,
   boolean,
   check,
+  date,
   index,
   integer,
   jsonb,
@@ -705,6 +706,22 @@ export const currencyRates = pgTable("currency_rates", {
   rate: real("rate").notNull(),
   updatedAt: timestamp("updated_at", { mode: "string", withTimezone: true }).notNull().defaultNow(),
 });
+
+export const collectionPriceHistory = pgTable(
+  "collection_price_history",
+  {
+    collectionSlug: varchar("collection_slug", { length: 255 }).notNull(),
+    date: date("date", { mode: "string" }).notNull(),
+    floorUsd: real("floor_usd").notNull(),
+    medianUsd: real("median_usd").notNull(),
+    listingCount: integer("listing_count").notNull(),
+    pricedCount: integer("priced_count").notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.collectionSlug, t.date] }),
+    index("collection_price_history_date_idx").on(t.date),
+  ],
+);
 
 export type AccessToken = typeof accessToken.$inferSelect;
 export type UserAddress = typeof userAddress.$inferSelect;
