@@ -217,6 +217,7 @@ export async function browseFeed(
           list: toListLink(side.list, nicknameOf),
           items: side.items,
           more: side.more,
+          copyCount: side.copyCount,
           others: side.others,
         })),
         match: assembled.match,

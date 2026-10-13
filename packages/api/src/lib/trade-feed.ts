@@ -138,34 +138,74 @@ export function tradeableEntries(
 }
 
 type PreviewItem = {
+  /** the newest copy's */
   entryId: number;
   slug: string;
+  qty: number;
+  /** the lowest set price; null when no copy has one */
   price: number | null;
+  /** no copy has a price and at least one is QYOP */
   isQyop: boolean;
+  /** other copies cost more or are QYOP, so `price` is where they start */
+  priceFrom?: true;
   ringed?: true;
 };
 
+/** One stack per collection, with its newest copy. */
+function stackEntries(entries: FeedEntry[]) {
+  const stacks = new Map<string, { newest: FeedEntry; copies: FeedEntry[] }>();
+  for (const entry of entries) {
+    const stack = stacks.get(entry.slug);
+    if (!stack) stacks.set(entry.slug, { newest: entry, copies: [entry] });
+    else {
+      stack.copies.push(entry);
+      if (entry.id > stack.newest.id) stack.newest = entry;
+    }
+  }
+  return [...stacks.values()];
+}
+
+/** A copy without a price says nothing about the others, so it never makes a "from". */
+function stackPrice(copies: FeedEntry[]) {
+  const prices = copies.flatMap((copy) => (copy.isQyop || copy.price === null ? [] : copy.price));
+  const anyQyop = copies.some((copy) => copy.isQyop);
+  if (prices.length === 0) return { price: null, isQyop: anyQyop, priceFrom: false };
+  const price = prices.reduce((low, next) => Math.min(low, next));
+  return { price, isQyop: false, priceFrom: anyQyop || prices.some((other) => other !== price) };
+}
+
+/**
+ * A side's preview: copies of a collection stack into one item, ringed first, then newest.
+ * `more` counts the collections past `limit`, `copyCount` every entry.
+ */
 export function previewSide(
   entries: FeedEntry[],
   ringed: SlugIndex | null,
   limit: number = PREVIEW_LIMIT,
 ) {
-  const isRinged = (entry: FeedEntry) => ringed?.has(entry.slug) ?? false;
-  const items = entries
-    .toSorted((a, b) => Number(isRinged(b)) - Number(isRinged(a)) || b.id - a.id)
+  const isRinged = (slug: string) => ringed?.has(slug) ?? false;
+  const stacks = stackEntries(entries);
+  const items = stacks
+    .toSorted(
+      (a, b) =>
+        Number(isRinged(b.newest.slug)) - Number(isRinged(a.newest.slug)) ||
+        b.newest.id - a.newest.id,
+    )
     .slice(0, limit)
-    .map((entry): PreviewItem =>
-      isRinged(entry)
-        ? {
-            entryId: entry.id,
-            slug: entry.slug,
-            price: entry.price,
-            isQyop: entry.isQyop,
-            ringed: true,
-          }
-        : { entryId: entry.id, slug: entry.slug, price: entry.price, isQyop: entry.isQyop },
-    );
-  return { items, more: Math.max(0, entries.length - limit) };
+    .map(({ newest, copies }): PreviewItem => {
+      const { price, isQyop, priceFrom } = stackPrice(copies);
+      const item: PreviewItem = {
+        entryId: newest.id,
+        slug: newest.slug,
+        qty: copies.length,
+        price,
+        isQyop,
+      };
+      if (priceFrom) item.priceFrom = true;
+      if (isRinged(newest.slug)) item.ringed = true;
+      return item;
+    });
+  return { items, more: Math.max(0, stacks.length - limit), copyCount: entries.length };
 }
 
 /** A collection slug to the viewer's lists that have it on. */
@@ -311,8 +351,8 @@ export function assemblePost<L extends TradeList>(
       (filter.slug === null || entry.slug === filter.slug) &&
       (!filter.onlyMatches || (index?.has(entry.slug) ?? false));
     const related = entries.filter(isRelated);
-    const { items, more } = previewSide(related, index, limit);
-    return { role, list, items, more, others: entries.length - related.length };
+    const { items, more, copyCount } = previewSide(related, index, limit);
+    return { role, list, items, more, copyCount, others: entries.length - related.length };
   });
   if (sides.every((side) => side.items.length + side.more === 0)) return null;
 

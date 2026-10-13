@@ -27,12 +27,17 @@ const RING = "ring-foreground ring-offset-card ring-2 ring-offset-2";
 const CARD_RING =
   "*:first:after:pointer-events-none *:first:after:absolute *:first:after:inset-0 *:first:after:rounded-photocard *:first:after:border-2 *:first:after:border-foreground *:first:after:shadow-[inset_0_0_0_2px_var(--color-card)]";
 
+/** `ObjektCard`'s own count scales with the card, too small to read at `w-14` */
+const STACK_COUNT =
+  "pointer-events-none absolute top-1 left-1 rounded-full bg-[rgba(10,12,16,.82)] px-1 font-mono text-xxs leading-4 font-semibold text-white tabular-nums";
+
 const STRIP_MORE =
   "hover:text-foreground focus-visible:ring-ring text-xs tabular-nums outline-none focus-visible:ring-2";
 
 type StripItem = {
   key: string | number;
   slug: string;
+  qty?: number;
   ringed?: boolean;
   price?: string;
   priceMuted?: boolean;
@@ -89,9 +94,18 @@ function PostStrip({
         <ul ref={ref} className="-m-1 flex flex-nowrap items-start gap-x-1.5 overflow-hidden p-1">
           {shown.map((item) => {
             const collection = collections[item.slug];
+            const qty = item.qty ?? 1;
+            const stacked = qty > 1;
+            const description = stacked
+              ? item.ringed
+                ? m.trade_stack_copies_ring({ count: qty })
+                : m.trade_stack_copies({ count: qty })
+              : item.ringed
+                ? m.trade_match_ring()
+                : undefined;
             return (
               /* a container, so the slug tile's radius matches the cards' */
-              <li key={item.key} className="@container w-14 shrink-0">
+              <li key={item.key} className="@container relative w-14 shrink-0">
                 {collection ? (
                   <ObjektCard
                     objekt={collection}
@@ -102,14 +116,19 @@ function PostStrip({
                     price={item.price}
                     priceMuted={item.priceMuted}
                     className={item.ringed ? CARD_RING : undefined}
-                    description={item.ringed ? m.trade_match_ring() : undefined}
+                    description={description}
                   />
                 ) : (
                   <SlugTile className={cn("text-xxs p-0.5", item.ringed && RING)}>
                     {item.slug}
-                    {item.ringed ? <span className="sr-only">{m.trade_match_ring()}</span> : null}
+                    {description ? <span className="sr-only">{description}</span> : null}
                   </SlugTile>
                 )}
+                {stacked ? (
+                  <span aria-hidden className={STACK_COUNT}>
+                    {qty}
+                  </span>
+                ) : null}
               </li>
             );
           })}
@@ -140,10 +159,13 @@ export function SideStrip({
   const priceOf = (item: PostSideData["items"][number]) => {
     if (side.role !== "sale") return undefined;
     if (item.isQyop) return m.objekt_qyop();
-    return item.price !== null && currency ? formatCurrency(item.price, currency) : undefined;
+    if (item.price === null || !currency) return undefined;
+    const price = formatCurrency(item.price, currency);
+    return item.priceFrom ? m.trade_price_from({ price }) : price;
   };
 
-  const shown = side.items.length + side.more;
+  // copies, not thumbnails: a stacked thumbnail holds several
+  const shown = side.copyCount;
   const figure = side.others > 0 ? m.trade_strip_of({ shown, total: shown + side.others }) : shown;
   const label = LIST_TYPE_LABEL[side.role]();
   const tone = TONE_INK[LIST_TYPE_TONE[side.role]];
@@ -175,6 +197,7 @@ export function SideStrip({
       items={side.items.map((item) => ({
         key: item.entryId,
         slug: item.slug,
+        qty: item.qty,
         ringed: item.ringed,
         price: priceOf(item),
         priceMuted: item.isQyop,
