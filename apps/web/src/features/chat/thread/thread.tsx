@@ -8,6 +8,7 @@ import { Fragment, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { PendingStatus } from "@/components/router/pending";
 import { EmptyState } from "@/components/shared/empty-state";
 import { InfiniteSentinel } from "@/components/shared/infinite-sentinel";
+import { WidgetBoundary } from "@/components/shared/widget-boundary";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { dayLabel } from "@/features/chat/format";
@@ -201,34 +202,36 @@ function ThreadView({
                         {dayLabel(message.createdAt)}
                       </li>
                     ) : null}
-                    <MessageItem
-                      conversationId={id}
-                      message={message}
-                      name={name}
-                      collection={
-                        message.card ? collections[message.card.collectionSlug] : undefined
-                      }
-                      offerCard={
-                        message.offer ? (
-                          <OfferCard
-                            offer={message.offer}
-                            name={name}
-                            collections={collections}
-                            collapsed={message.offer.id !== latestOffer}
-                            hydrated={hydrated}
-                            onCounter={(offer) =>
-                              builder.open(counterRequest(offer, name, collections))
-                            }
-                            onOpen={setActive}
-                          />
-                        ) : null
-                      }
-                      position={position}
-                      seen={message.id === seenId}
-                      hydrated={hydrated}
-                      now={now}
-                      onOpen={setActive}
-                    />
+                    <WidgetBoundary as="li" resetKey={message}>
+                      <MessageItem
+                        conversationId={id}
+                        message={message}
+                        name={name}
+                        collection={
+                          message.card ? collections[message.card.collectionSlug] : undefined
+                        }
+                        offerCard={
+                          message.offer ? (
+                            <OfferCard
+                              offer={message.offer}
+                              name={name}
+                              collections={collections}
+                              collapsed={message.offer.id !== latestOffer}
+                              hydrated={hydrated}
+                              onCounter={(offer) =>
+                                builder.open(counterRequest(offer, name, collections))
+                              }
+                              onOpen={setActive}
+                            />
+                          ) : null
+                        }
+                        position={position}
+                        seen={message.id === seenId}
+                        hydrated={hydrated}
+                        now={now}
+                        onOpen={setActive}
+                      />
+                    </WidgetBoundary>
                   </Fragment>
                 );
               })}

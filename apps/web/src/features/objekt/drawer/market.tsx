@@ -18,6 +18,7 @@ import { createPortal } from "react-dom";
 import { InView } from "react-intersection-observer";
 
 import { EmptyState } from "@/components/shared/empty-state";
+import { WidgetBoundary } from "@/components/shared/widget-boundary";
 import { Button } from "@/components/ui/button";
 import { Menu, MenuItem, MenuPopup, MenuSeparator, MenuTrigger } from "@/components/ui/menu";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -158,9 +159,11 @@ export function MarketPanel({
             </Button>
           </div>
           {historyOpen && (
-            <Suspense fallback={<Skeleton className="h-56 rounded-lg" />}>
-              <PriceHistoryChart slug={slug} since={tracking.since} liveFloor={liveFloor} />
-            </Suspense>
+            <WidgetBoundary resetKey={slug} className="h-56">
+              <Suspense fallback={<Skeleton className="h-56 rounded-lg" />}>
+                <PriceHistoryChart slug={slug} since={tracking.since} liveFloor={liveFloor} />
+              </Suspense>
+            </WidgetBoundary>
           )}
         </div>
       )}

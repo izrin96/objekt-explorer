@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { Pie, PieChart } from "recharts";
 
 import { EmptyState } from "@/components/shared/empty-state";
+import { WidgetBoundary } from "@/components/shared/widget-boundary";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -197,19 +198,25 @@ export function StatsView() {
             title={m.stats_breakdown_member_title()}
             description={m.stats_breakdown_member_description()}
           >
-            <BreakdownPie data={byMember} label={m.stats_breakdown_member_title()} />
+            <WidgetBoundary>
+              <BreakdownPie data={byMember} label={m.stats_breakdown_member_title()} />
+            </WidgetBoundary>
           </StatsCard>
           <StatsCard
             title={m.stats_breakdown_season_title()}
             description={m.stats_breakdown_season_description()}
           >
-            <BreakdownPie data={bySeason} label={m.stats_breakdown_season_title()} />
+            <WidgetBoundary>
+              <BreakdownPie data={bySeason} label={m.stats_breakdown_season_title()} />
+            </WidgetBoundary>
           </StatsCard>
           <StatsCard
             title={m.stats_member_progress_title()}
             description={m.stats_member_progress_description()}
           >
-            <MemberProgressChart rows={progress} />
+            <WidgetBoundary>
+              <MemberProgressChart rows={progress} />
+            </WidgetBoundary>
           </StatsCard>
         </div>
       )}
