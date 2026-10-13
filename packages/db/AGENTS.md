@@ -13,6 +13,10 @@ The root `.env` is production for both databases. `.env.local` points `DATABASE_
 
 Pending migrations run before the new code is live, so each one must work with the code still running from `main`: **expand, deploy, then contract**. Add a column, deploy the code that uses it, and drop the old column in a later migration once nothing live reads it. Drizzle v1 runs every migration folder whose name is not recorded, in any order, without a hash check, so a migration written after a column already left `schema.ts` needs `drizzle-kit generate --custom` (a plain generate finds no diff). Make such drops `IF EXISTS`, since a local database may already lack the column.
 
+## Link history
+
+`address_link_event` is append-only and has no foreign key on `user_id` or `actor_id`: an event outlives its account. `user_address` stays the authority for the current holder. The backfill has two gaps: links made between its migration and the deploy, and past holders who never traded (only trade snapshots name them). `holdersOf` adds the current holder to cover the first.
+
 ## Indexer data
 
 - `transfer` is the complete ownership history. A mint has `from` = the null address; a spin has `to` = the spin address.

@@ -277,11 +277,11 @@ It SHALL show as one line, for example "31 verified · 2 unfinished · 100% · s
 - **THEN** their line reads "31 verified · 2 unfinished · …", with the positive share and month
 
 #### Scenario: Same wallet, new account
-- **WHEN** rin.trades has 1 unfinished trade, deletes the account, and links the same Cosmo wallet to a new account
+- **WHEN** rin.trades has 1 unfinished trade, deletes the account, and 7 days later links the same Cosmo wallet to a new account
 - **THEN** the new account's line reads "No verified trades · 1 unfinished"
 
 #### Scenario: Good history stays behind
-- **WHEN** an account with 31 completed trades unlinks a wallet, and another account links it
+- **WHEN** an account with 31 completed trades unlinks a wallet, and another account links it once the 7-day wait is over
 - **THEN** the other account's verified count doesn't change
 
 #### Scenario: Stuck objekt
@@ -291,6 +291,10 @@ It SHALL show as one line, for example "31 verified · 2 unfinished · 100% · s
 #### Scenario: Both still owed
 - **WHEN** a trade fails while both parties still owed at least one transfer
 - **THEN** neither party's unfinished count changes
+
+#### Scenario: Staff move
+- **WHEN** an admin moves the wallet rin.trades failed to deliver from in T-1042 from rin.trades to rin.trades2
+- **THEN** rin.trades2's line counts T-1042 as unfinished and none of rin.trades's verified trades, and rin.trades's line still counts T-1042
 
 ### Requirement: Objekts that can no longer be transferred
 Within 3 minutes of the indexer recording that a specific objekt became non-transferable:

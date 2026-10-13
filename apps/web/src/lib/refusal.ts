@@ -8,6 +8,7 @@ import { TRADE_MODE_REFUSALS } from "@repo/api/schemas/trade";
 import { USER_REFUSALS } from "@repo/api/schemas/user";
 
 import { errorReason } from "@/lib/orpc-error";
+import { formatTimestamp } from "@/lib/time";
 import { m } from "@/paraglide/messages";
 
 const REFUSALS: readonly string[] = [
@@ -68,6 +69,20 @@ export function refusalText(error: unknown) {
       return m.api_errors_cosmo_link_profile_mismatch();
     case "cosmo_link_code_not_found":
       return m.api_errors_cosmo_link_code_not_found();
+    case "cosmo_link_address_restricted":
+      return m.api_errors_cosmo_link_address_restricted();
+    case "cosmo_link_cooldown": {
+      const retryAt = retryAtOf(error);
+      return retryAt
+        ? m.api_errors_cosmo_link_cooldown_date({
+            date: formatTimestamp(retryAt),
+          })
+        : m.api_errors_cosmo_link_cooldown();
+    }
+    case "cosmo_link_unlink_sanctioned":
+      return m.api_errors_cosmo_link_unlink_sanctioned();
+    case "cosmo_link_unlink_in_trade":
+      return m.api_errors_cosmo_link_unlink_in_trade();
     case "profile_not_linked":
       return m.api_errors_profile_not_linked();
     case "profile_not_found":
@@ -88,4 +103,10 @@ export function refusalText(error: unknown) {
 function providerOf(error: unknown) {
   const data = (error as { data?: { provider?: unknown } }).data;
   return typeof data?.provider === "string" ? data.provider : "";
+}
+
+function retryAtOf(error: unknown) {
+  const data = (error as { data?: { retryAt?: unknown } }).data;
+  const date = typeof data?.retryAt === "string" ? new Date(data.retryAt) : null;
+  return date && !Number.isNaN(date.getTime()) ? date : null;
 }

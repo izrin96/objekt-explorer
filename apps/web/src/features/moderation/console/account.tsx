@@ -15,6 +15,7 @@ import { m } from "@/paraglide/messages";
 
 import { ActForm } from "./act-form";
 import { Audit } from "./audit";
+import { LinkHistory } from "./link-history";
 import { accountOptions } from "./queries";
 import { Reports } from "./reports";
 import { RoleControl } from "./role-control";
@@ -133,8 +134,9 @@ export function ModAccount({
       </div>
 
       <div className={pane}>
-        <div className="order-1 min-w-0">
-          <Signals data={data} />
+        <div className="order-1 flex min-w-0 flex-col gap-6">
+          <Signals data={data} viewerIsAdmin={viewerIsAdmin} />
+          <LinkHistory userId={userId} history={data.linkHistory} />
         </div>
         <div className="order-3 flex min-w-0 flex-col gap-6">
           {staff && !viewerIsAdmin ? (

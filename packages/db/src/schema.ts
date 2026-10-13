@@ -605,6 +605,37 @@ export const report = pgTable(
   ],
 );
 
+export const addressLinkEvent = pgTable(
+  "address_link_event",
+  {
+    id: bigserial("id", { mode: "number" }).primaryKey(),
+    address: citext("address", { length: 42 }).notNull(),
+    // no foreign keys on userId and actorId: an event outlives its account
+    userId: text("user_id").notNull(),
+    event: text("event").$type<"linked" | "unlinked">().notNull(),
+    reason: text("reason")
+      .$type<"verified" | "user" | "account_deleted" | "staff_move" | "staff_unlink" | "backfill">()
+      .notNull(),
+    actorId: text("actor_id"),
+    createdAt: timestamp("created_at", { mode: "string", withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index("address_link_event_address_idx").on(t.address, t.createdAt.desc()),
+    index("address_link_event_user_idx").on(t.userId, t.createdAt.desc()),
+    check("address_link_event_event", sql`${t.event} IN ('linked', 'unlinked')`),
+    check(
+      "address_link_event_reason",
+      sql`${t.reason} IN ('verified', 'user', 'account_deleted', 'staff_move', 'staff_unlink', 'backfill')`,
+    ),
+    check(
+      "address_link_event_actor",
+      sql`(${t.reason} IN ('staff_move', 'staff_unlink')) = (${t.actorId} IS NOT NULL)`,
+    ),
+  ],
+);
+
 export const messageFlag = pgTable(
   "message_flag",
   {
@@ -657,7 +688,17 @@ export const modAudit = pgTable(
     id: serial("id").primaryKey(),
     actorId: text("actor_id").references(() => user.id, { onDelete: "set null" }),
     action: text("action")
-      .$type<"dismiss" | "warn" | "chat_mute" | "trade_block" | "ban" | "revoke" | "set_role">()
+      .$type<
+        | "dismiss"
+        | "warn"
+        | "chat_mute"
+        | "trade_block"
+        | "ban"
+        | "revoke"
+        | "set_role"
+        | "address_move"
+        | "address_unlink"
+      >()
       .notNull(),
     targetUserId: text("target_user_id").references(() => user.id, { onDelete: "set null" }),
     reportIds: integer("report_ids").array(),

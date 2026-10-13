@@ -4,6 +4,7 @@ import { and, eq, gt, inArray, ne, sql } from "drizzle-orm";
 
 import { unique } from "../../lib/unique";
 import { chatSafety } from "../chat";
+import { lockAddresses, lockUsersShared } from "../cosmo-link";
 import { cancelledColumns, cancelledNotes } from "./cancel";
 import { linkedAddresses, refuseOffer, refuseUnsafe } from "./core";
 import { type Side, checkItems, refuseCopyShortfall } from "./items";
@@ -30,6 +31,9 @@ function reservedConflict(error: unknown): string[] | null {
   }
   return null;
 }
+
+const sameSet = (a: ReadonlySet<string>, b: ReadonlySet<string>) =>
+  a.size === b.size && [...a].every((item) => b.has(item));
 
 export async function acceptOffer(me: string, offerId: number) {
   const now = new Date();
@@ -70,6 +74,17 @@ export async function acceptOffer(me: string, offerId: number) {
   const name = await partyNames([row.fromUserId, row.toUserId]);
 
   const result = await db.transaction(async (tx) => {
+    // the link lock order, before the conversation lock: an unlink can't land between the
+    // read above and the legs' address snapshot
+    await lockUsersShared(tx, [row.fromUserId, row.toUserId]);
+    await lockAddresses(tx, [...fromAddresses, ...toAddresses]);
+    const locked = await linkedAddresses([row.fromUserId, row.toUserId], tx);
+    if (
+      !sameSet(locked.get(row.fromUserId)!, fromAddresses) ||
+      !sameSet(locked.get(row.toUserId)!, toAddresses)
+    ) {
+      refuseOffer("links_changed");
+    }
     await lockConversation(tx, row.conversationId);
     const [fresh] = await tx.select(offerRowColumns).from(offer).where(eq(offer.id, offerId));
     refuseAction(fresh!, me, "accept", now);

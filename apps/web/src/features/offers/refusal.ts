@@ -67,6 +67,8 @@ export function offerRefusalText(refusal: OfferRefusalInfo, named: string) {
       return m.offer_refused_not_completed();
     case "rating_closed":
       return m.offer_refused_rating_closed();
+    case "links_changed":
+      return m.offer_refused_links_changed();
     case "no_address":
     case "self":
     case "not_accepting":

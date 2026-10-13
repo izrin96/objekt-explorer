@@ -1,6 +1,7 @@
 import * as z from "zod";
 
 import { messageLength, storedCardSchema } from "./chat";
+import { addressSchema } from "./common/address";
 import { OFFER_STATUSES } from "./offer";
 
 export { FLAG_CATEGORIES, type FlagCategory } from "./chat";
@@ -14,7 +15,13 @@ export type SanctionType = (typeof SANCTION_TYPES)[number];
 export const MOD_ACTIONS = ["dismiss", ...SANCTION_TYPES] as const;
 export type ModAction = (typeof MOD_ACTIONS)[number];
 
-export const AUDIT_ACTIONS = [...MOD_ACTIONS, "revoke", "set_role"] as const;
+export const AUDIT_ACTIONS = [
+  ...MOD_ACTIONS,
+  "revoke",
+  "set_role",
+  "address_move",
+  "address_unlink",
+] as const;
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];
 
 export const MUTE_DAYS = [1, 7, 30] as const;
@@ -86,6 +93,24 @@ export const setRoleInputSchema = z.object({
   role: z.enum(["user", "moderator"]),
 });
 export type SetRoleInput = z.infer<typeof setRoleInputSchema>;
+
+export const addressHistoryInputSchema = z.object({ address: addressSchema });
+export type AddressHistoryInput = z.infer<typeof addressHistoryInputSchema>;
+
+export const moveAddressInputSchema = z.object({
+  address: addressSchema,
+  fromUserId: z.string().min(1),
+  toUserId: z.string().min(1),
+  reason: modReasonSchema,
+});
+export type MoveAddressInput = z.infer<typeof moveAddressInputSchema>;
+
+export const unlinkAddressInputSchema = z.object({
+  address: addressSchema,
+  userId: z.string().min(1),
+  reason: modReasonSchema,
+});
+export type UnlinkAddressInput = z.infer<typeof unlinkAddressInputSchema>;
 
 const excerptOfferItemSchema = z.object({
   collectionSlug: z.string(),

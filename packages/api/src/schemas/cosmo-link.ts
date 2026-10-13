@@ -28,4 +28,8 @@ export const COSMO_LINK_REFUSALS = [
   "cosmo_link_verification_expired",
   "cosmo_link_profile_mismatch",
   "cosmo_link_code_not_found",
+  "cosmo_link_address_restricted",
+  "cosmo_link_cooldown",
+  "cosmo_link_unlink_sanctioned",
+  "cosmo_link_unlink_in_trade",
 ] as const;

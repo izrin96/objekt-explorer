@@ -14,6 +14,10 @@ const MODERATION_REFUSALS = [
   "staff_target",
   "not_active",
   "not_reportable",
+  "address_sanctioned",
+  "address_in_trade",
+  "address_changed",
+  "same_account",
 ] as const;
 type ModerationRefusal = (typeof MODERATION_REFUSALS)[number];
 
@@ -27,6 +31,10 @@ export function refuseModeration(reason: ModerationRefusal, retryAt?: Date): nev
     case "self":
     case "not_active":
     case "not_reportable":
+    case "address_sanctioned":
+    case "address_in_trade":
+    case "address_changed":
+    case "same_account":
       throw new ORPCError("BAD_REQUEST", { data });
   }
 }
@@ -39,7 +47,7 @@ export function refuseModeration(reason: ModerationRefusal, retryAt?: Date): nev
  */
 export async function syncBan(tx: Tx, userId: string, options: { revokeSessions: boolean }) {
   // a ban and a revoke for one user each read the bans in force; the row lock orders them
-  await tx.execute(sql`SELECT 1 FROM "user" WHERE id = ${userId} FOR UPDATE`);
+  await tx.execute(sql`SELECT 1 FROM "user" WHERE id = ${userId} FOR NO KEY UPDATE`);
   const bans = await tx
     .select({ reason: userSanction.reason, expiresAt: userSanction.expiresAt })
     .from(userSanction)

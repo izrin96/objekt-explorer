@@ -43,6 +43,7 @@ const REFUSAL_STATUS: Record<OfferRefusal, ConstructorParameters<typeof ORPCErro
   substitute_taken: "CONFLICT",
   not_completed: "CONFLICT",
   rating_closed: "CONFLICT",
+  links_changed: "CONFLICT",
   not_allowed: "FORBIDDEN",
   not_receiver: "FORBIDDEN",
   trade_blocked: "FORBIDDEN",
@@ -80,11 +81,11 @@ export function refuseUnsafe(kind: "send" | "accept" | "respond", safety: Safety
 }
 
 /** Each user's linked addresses, lowercase. */
-export async function linkedAddresses(userIds: string[]) {
+export async function linkedAddresses(userIds: string[], executor: Pick<typeof db, "select"> = db) {
   const rows =
     userIds.length === 0
       ? []
-      : await db
+      : await executor
           .select({ userId: userAddress.userId, address: userAddress.address })
           .from(userAddress)
           .where(inArray(userAddress.userId, unique(userIds)));

@@ -62,6 +62,7 @@ import { Route as ApiTransfersAddressRouteImport } from './routes/api/transfers.
 import { Route as ApiUserSearchRouteImport } from './routes/api/user.search'
 import { Route as ApiV1SplatRouteImport } from './routes/api/v1.$'
 import { Route as containerAtChar123nicknameChar125ListSlugRouteImport } from './routes/(container)/@{$nickname}_/list.$slug'
+import { Route as containerModAddressesAddressRouteImport } from './routes/(container)/mod/addresses/$address'
 import { Route as containerModReportsIndexRouteImport } from './routes/(container)/mod/reports/index'
 import { Route as containerModReportsUserIdRouteImport } from './routes/(container)/mod/reports/$userId'
 import { Route as containerTradeMineIndexRouteImport } from './routes/(container)/trade/mine/index'
@@ -349,6 +350,12 @@ const containerAtChar123nicknameChar125ListSlugRoute =
     path: '/@{$nickname}/list/$slug',
     getParentRoute: () => containerRouteRoute,
   } as any)
+const containerModAddressesAddressRoute =
+  containerModAddressesAddressRouteImport.update({
+    id: '/mod/addresses/$address',
+    path: '/mod/addresses/$address',
+    getParentRoute: () => containerRouteRoute,
+  } as any)
 const containerModReportsIndexRoute =
   containerModReportsIndexRouteImport.update({
     id: '/',
@@ -455,6 +462,7 @@ export interface FileRoutesByFullPath {
   '/messages/': typeof containerMessagesIndexRoute
   '/trade/': typeof containerTradeIndexRoute
   '/@{$nickname}/list/$slug': typeof containerAtChar123nicknameChar125ListSlugRoute
+  '/mod/addresses/$address': typeof containerModAddressesAddressRoute
   '/mod/reports/$userId': typeof containerModReportsUserIdRoute
   '/trade/mine/$tradeId': typeof containerTradeMineTradeIdRoute
   '/api/objekts/held-by/$address': typeof ApiObjektsHeldByAddressRoute
@@ -512,6 +520,7 @@ export interface FileRoutesByTo {
   '/messages': typeof containerMessagesIndexRoute
   '/trade': typeof containerTradeIndexRoute
   '/@{$nickname}/list/$slug': typeof containerAtChar123nicknameChar125ListSlugRoute
+  '/mod/addresses/$address': typeof containerModAddressesAddressRoute
   '/mod/reports/$userId': typeof containerModReportsUserIdRoute
   '/trade/mine/$tradeId': typeof containerTradeMineTradeIdRoute
   '/api/objekts/held-by/$address': typeof ApiObjektsHeldByAddressRoute
@@ -577,6 +586,7 @@ export interface FileRoutesById {
   '/(container)/messages/': typeof containerMessagesIndexRoute
   '/(container)/trade/': typeof containerTradeIndexRoute
   '/(container)/@{$nickname}_/list/$slug': typeof containerAtChar123nicknameChar125ListSlugRoute
+  '/(container)/mod/addresses/$address': typeof containerModAddressesAddressRoute
   '/(container)/mod/reports/$userId': typeof containerModReportsUserIdRoute
   '/(container)/trade/mine/$tradeId': typeof containerTradeMineTradeIdRoute
   '/api/objekts/held-by/$address': typeof ApiObjektsHeldByAddressRoute
@@ -642,6 +652,7 @@ export interface FileRouteTypes {
     | '/messages/'
     | '/trade/'
     | '/@{$nickname}/list/$slug'
+    | '/mod/addresses/$address'
     | '/mod/reports/$userId'
     | '/trade/mine/$tradeId'
     | '/api/objekts/held-by/$address'
@@ -699,6 +710,7 @@ export interface FileRouteTypes {
     | '/messages'
     | '/trade'
     | '/@{$nickname}/list/$slug'
+    | '/mod/addresses/$address'
     | '/mod/reports/$userId'
     | '/trade/mine/$tradeId'
     | '/api/objekts/held-by/$address'
@@ -763,6 +775,7 @@ export interface FileRouteTypes {
     | '/(container)/messages/'
     | '/(container)/trade/'
     | '/(container)/@{$nickname}_/list/$slug'
+    | '/(container)/mod/addresses/$address'
     | '/(container)/mod/reports/$userId'
     | '/(container)/trade/mine/$tradeId'
     | '/api/objekts/held-by/$address'
@@ -1169,6 +1182,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof containerAtChar123nicknameChar125ListSlugRouteImport
       parentRoute: typeof containerRouteRoute
     }
+    '/(container)/mod/addresses/$address': {
+      id: '/(container)/mod/addresses/$address'
+      path: '/mod/addresses/$address'
+      fullPath: '/mod/addresses/$address'
+      preLoaderRoute: typeof containerModAddressesAddressRouteImport
+      parentRoute: typeof containerRouteRoute
+    }
     '/(container)/mod/reports/': {
       id: '/(container)/mod/reports/'
       path: '/'
@@ -1345,6 +1365,7 @@ interface containerRouteRouteChildren {
   containerListIndexRoute: typeof containerListIndexRoute
   containerLiveIndexRoute: typeof containerLiveIndexRoute
   containerAtChar123nicknameChar125ListSlugRoute: typeof containerAtChar123nicknameChar125ListSlugRoute
+  containerModAddressesAddressRoute: typeof containerModAddressesAddressRoute
 }
 
 const containerRouteRouteChildren: containerRouteRouteChildren = {
@@ -1367,6 +1388,7 @@ const containerRouteRouteChildren: containerRouteRouteChildren = {
   containerLiveIndexRoute: containerLiveIndexRoute,
   containerAtChar123nicknameChar125ListSlugRoute:
     containerAtChar123nicknameChar125ListSlugRoute,
+  containerModAddressesAddressRoute: containerModAddressesAddressRoute,
 }
 
 const containerRouteRouteWithChildren = containerRouteRoute._addFileChildren(

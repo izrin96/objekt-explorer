@@ -35,6 +35,12 @@ export async function applyModAction(me: string, isAdmin: boolean, input: ActInp
   const end = sanctionEnd(input.action, input.days, now);
 
   const result = await db.transaction(async (tx) => {
+    // first, before the sanction insert, whose foreign-key check takes only KEY SHARE and so
+    // would not wait for a linker holding this row FOR SHARE; NO KEY UPDATE lets an accept's
+    // notification insert for this user through while it holds an offer row this cancels
+    if (input.action === "trade_block" || input.action === "ban") {
+      await tx.execute(sql`SELECT 1 FROM "user" WHERE id = ${input.userId} FOR NO KEY UPDATE`);
+    }
     const sanctionId =
       input.action === "dismiss"
         ? null

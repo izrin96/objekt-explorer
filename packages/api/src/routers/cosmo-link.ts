@@ -4,7 +4,7 @@ import { fetchUserProfile } from "@repo/cosmo/server/user";
 import type { ValidArtist } from "@repo/cosmo/types/common";
 import { db } from "@repo/db";
 import { userAddress } from "@repo/db/schema";
-import { and, eq, inArray, isNotNull, sql } from "drizzle-orm";
+import { and, eq, inArray, isNotNull } from "drizzle-orm";
 import * as z from "zod";
 
 import { serverEnv } from "../env";
@@ -16,6 +16,7 @@ import {
   type LinkedPreview,
   linkedPreviewsInputSchema,
 } from "../schemas/cosmo-link";
+import { linkVerified, unlink } from "../services/cosmo-link";
 import { fetchOwnerCounts } from "../services/objekt";
 import { redis } from "../services/redis";
 import { getAccessToken } from "../services/token";
@@ -92,12 +93,7 @@ export const cosmoLinkRouter = {
   removeLink: authed
     .input(addressSchema)
     .handler(async ({ input: address, context: { session } }) => {
-      await db
-        .update(userAddress)
-        .set({
-          userId: null,
-        })
-        .where(and(eq(userAddress.userId, session.user.id), eq(userAddress.address, address)));
+      await unlink(session.user.id, address);
     }),
 
   // generate verification code for a specific artist profile
@@ -190,36 +186,11 @@ export const cosmoLinkRouter = {
         );
       }
 
-      const [linked] = await db
-        .insert(userAddress)
-        .values([
-          {
-            address: data.address,
-            nickname: data.nickname,
-            cosmoId: data.cosmoId,
-            linkedAt: sql`'now'`,
-            userId: session.user.id,
-          },
-        ])
-        .onConflictDoUpdate({
-          target: userAddress.address,
-          set: {
-            nickname: data.nickname,
-            cosmoId: data.cosmoId,
-            linkedAt: sql`'now'`,
-            userId: session.user.id,
-          },
-          where: sql`${userAddress.userId} IS NULL`,
-        })
-        .returning({ linkedUserId: userAddress.userId });
-
-      if (!linked || linked.linkedUserId !== session.user.id) {
-        refuse(
-          "BAD_REQUEST",
-          "cosmo_link_already_linked_other",
-          "This Cosmo ID is already linked to another account",
-        );
-      }
+      await linkVerified(session.user.id, {
+        address: data.address,
+        nickname: data.nickname,
+        cosmoId: data.cosmoId,
+      });
 
       await redis.del(redisKey);
 

@@ -84,6 +84,7 @@ export const OFFER_REFUSALS = [
   "not_completed",
   "rating_closed",
   "no_address",
+  "links_changed",
   "self",
   "not_accepting",
   "start_limit",

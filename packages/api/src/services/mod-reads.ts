@@ -1,5 +1,6 @@
 import { db } from "@repo/db";
 import {
+  addressLinkEvent,
   conversation,
   messageFlag,
   modAudit,
@@ -9,13 +10,15 @@ import {
   userAddress,
   userSanction,
 } from "@repo/db/schema";
-import { and, desc, eq, gt, inArray, sql } from "drizzle-orm";
+import { and, desc, eq, gt, inArray, ne, or, sql } from "drizzle-orm";
 
 import { flagExcerpt } from "../lib/excerpt-flags";
 import { iso } from "../lib/time";
 import { FLAG_CATEGORIES, type FlagCategory } from "../schemas/chat";
 import { excerptEntrySchema, REPORT_REASONS, type ReportReason } from "../schemas/moderation";
 import { fetchPartners, hydrateCards } from "./chat";
+import { sanctionedAmong } from "./cosmo-link";
+import { linkEventsWhere } from "./mod-links";
 import { findAccount, sanctionColumns } from "./moderation";
 import { reputationOf } from "./reputation";
 
@@ -152,6 +155,21 @@ export async function reportQueue() {
   });
 }
 
+/** The other accounts that ever held an address in the history, each with its active trade block or ban, if any. */
+async function sharedHoldersOf(userId: string, addresses: string[]) {
+  if (addresses.length === 0) return [];
+  const rows = await db
+    .selectDistinct({ userId: addressLinkEvent.userId })
+    .from(addressLinkEvent)
+    .where(and(inArray(addressLinkEvent.address, addresses), ne(addressLinkEvent.userId, userId)));
+  const ids = rows.map((row) => row.userId);
+  const [people, sanctioned] = await Promise.all([fetchPartners(ids), sanctionedAmong(db, ids)]);
+  return ids.map((id) => {
+    const person = people.get(id) ?? { userId: id, user: null, identity: null };
+    return Object.assign({}, person, { sanctioned: sanctioned.get(id) ?? null });
+  });
+}
+
 export async function accountDossier(userId: string) {
   const account = await findAccount(userId);
   const [partners, addresses, [starts], flags, reports, sanctions, auditRows, reputations] =
@@ -213,6 +231,27 @@ export async function accountDossier(userId: string) {
       reputationOf([userId]),
     ]);
 
+  // every event on an address this account held, so the history shows who held it before
+  const held = db
+    .select({ address: addressLinkEvent.address })
+    .from(addressLinkEvent)
+    .where(eq(addressLinkEvent.userId, userId));
+  const linkHistory = await linkEventsWhere(
+    or(
+      inArray(addressLinkEvent.address, held),
+      ...(addresses.length > 0
+        ? [
+            inArray(
+              addressLinkEvent.address,
+              addresses.map((row) => row.address),
+            ),
+          ]
+        : []),
+    )!,
+  );
+  const sharedHolders = await sharedHoldersOf(userId, [
+    ...new Set(linkHistory.map((event) => event.address)),
+  ]);
   const attached = await attachedTrades(
     userId,
     reports.flatMap((r) => (r.status === "open" && r.tradeId !== null ? [r.tradeId] : [])),
@@ -239,6 +278,8 @@ export async function accountDossier(userId: string) {
       nickname: a.nickname,
       linkedAt: iso(a.linkedAt),
     })),
+    linkHistory,
+    sharedHolders,
     startsLast24h: starts?.count ?? 0,
     reputation: reputations.get(userId) ?? null,
     flags: countBy<FlagCategory>(

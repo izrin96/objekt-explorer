@@ -55,6 +55,8 @@ const AUDIT_LABEL: Record<AuditAction, () => string> = {
   ...ACTION_LABEL,
   revoke: m.mod_audit_revoke,
   set_role: m.mod_audit_set_role,
+  address_move: m.mod_audit_address_move,
+  address_unlink: m.mod_audit_address_unlink,
 };
 
 /** An action a newer server records shows as stored. */

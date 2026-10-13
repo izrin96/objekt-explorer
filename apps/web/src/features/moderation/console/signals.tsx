@@ -1,16 +1,19 @@
 import { FLAG_CATEGORIES } from "@repo/api/schemas/chat";
-import { useHydrated } from "@tanstack/react-router";
+import { Link, useHydrated } from "@tanstack/react-router";
 
+import { Badge } from "@/components/ui/badge";
 import { FLAG_LABEL, SANCTION_LABEL } from "@/features/moderation/labels";
 import { StatRow } from "@/features/objekt/drawer/stat-row";
 import { displayNickname } from "@/lib/address";
 import { formatTimestamp } from "@/lib/time";
 import { m } from "@/paraglide/messages";
 
-import { type Account, sectionTitle } from "./shared";
+import { MoveAddressButton } from "./move-address-dialog";
+import { type Account, personName, sectionTitle } from "./shared";
+import { UnlinkAddressButton } from "./unlink-address-dialog";
 import { When } from "./when";
 
-export function Signals({ data }: { data: Account }) {
+export function Signals({ data, viewerIsAdmin }: { data: Account; viewerIsAdmin: boolean }) {
   // the viewer's zone, as every other time on the page; empty until hydrated
   const hydrated = useHydrated();
   const active = data.sanctions.filter((sanction) => sanction.active);
@@ -58,10 +61,46 @@ export function Signals({ data }: { data: Account }) {
                     <When iso={address.linkedAt} className="font-mono tabular-nums" />
                   </span>
                 ) : null}
+                <Link
+                  to="/mod/addresses/$address"
+                  params={{ address: address.address }}
+                  className="text-muted-foreground text-xs underline-offset-2 hover:underline"
+                >
+                  {m.mod_signal_address_history()}
+                </Link>
+                {viewerIsAdmin ? (
+                  <span className="flex gap-1">
+                    <MoveAddressButton address={address.address} userId={data.account.userId} />
+                    <UnlinkAddressButton address={address.address} userId={data.account.userId} />
+                  </span>
+                ) : null}
               </li>
             ))}
           </ul>
         )}
+        {data.sharedHolders.length > 0 ? (
+          <div className="mt-1 flex flex-col gap-0.5">
+            <span className="text-muted-foreground text-xs">{m.mod_signal_held_by()}</span>
+            <ul className="flex flex-col gap-0.5">
+              {data.sharedHolders.map((holder) => (
+                <li key={holder.userId} className="flex flex-wrap items-center gap-x-2">
+                  <Link
+                    to="/mod/reports/$userId"
+                    params={{ userId: holder.userId }}
+                    className="font-medium underline-offset-2 hover:underline"
+                  >
+                    {personName(holder)}
+                  </Link>
+                  {holder.sanctioned ? (
+                    <Badge variant="destructive" size="sm">
+                      {SANCTION_LABEL[holder.sanctioned]()}
+                    </Badge>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
         <span className="text-muted-foreground mt-1 text-xs">
           {active.length > 0
             ? m.mod_signal_active({
