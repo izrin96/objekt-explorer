@@ -2,6 +2,8 @@
 
 `Bun.cron` jobs registered in `src/index.ts` (`job/`), plus one-off maintenance scripts in `src/script/`. Scripts run against the production `.env`, and only some are dry runs by default (`APPLY=1` to write), so read a script before running it. Pure logic goes in `src/lib/` beside its test (`serial-math.ts` is the model).
 
+From `@repo/api`, import only modules whose import chain stays clear of `env.ts`. `env.ts` validates the web app's whole `serverEnv` (Discord, S3, SES and more) as it loads, and the worker container has none of those, so the worker dies on start. `services/redis` imports it, and so does every module that imports `services/redis`, such as `services/currency-rates`. Before importing an `@repo/api` service, follow its imports. Read such tables directly with `db`, as `update-currency-rates` and `snapshot-price-history` do.
+
 ## Offline serials
 
 Serials of objekts minted offline come from `populateSerialOffline` (`job/populate-serial.ts`), checked weekly by `job/verify-batch-boundaries.ts`. The model:
