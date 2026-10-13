@@ -42,6 +42,7 @@ const targets = await indexer
     slug: collections.slug,
     season: collections.season,
     batches: collections.serialBatches,
+    anchors: collections.serialAnchors,
   })
   .from(collections)
   .where(
@@ -88,11 +89,13 @@ function seasonStats(season: string) {
   return s;
 }
 
-// serials chained from the ranges alone (cutoff 0 = no objekt counts as an
-// anchor), scored against the real v1 serial of every pre-cutoff objekt
+// serials chained from the ranges alone (cutoff 0 and no manual anchors: no
+// ground truth), scored against the real v1 serial of every pre-cutoff objekt
 function holdoutExact(rows: Row[], batches: Batch[]) {
   const truth = rows.filter((o) => o.serial > 0 && Date.parse(o.mintedAt) < V1_CUTOFF_MS);
-  const chained = new Map(computeOfflineSerials(truth, batches, 0).map((c) => [c.id, c.serial]));
+  const chained = new Map(
+    computeOfflineSerials(truth, batches, 0, []).map((c) => [c.id, c.serial]),
+  );
   return {
     total: truth.length,
     exact: truth.filter((o) => chained.get(o.id) === o.serial).length,
@@ -125,7 +128,7 @@ async function processOne(t: (typeof targets)[number]) {
     (b) => storedEnds.has(b.end) && !storedKeys.has(`${b.start}-${b.end}`),
   ).length;
 
-  const updates = computeOfflineSerialUpdates(rows, refined);
+  const updates = computeOfflineSerialUpdates(rows, refined, t.anchors ?? []);
 
   const before = holdoutExact(rows, stored);
   const after = holdoutExact(rows, refined);
