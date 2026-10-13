@@ -32,6 +32,7 @@ export function useActivitySocket({
 
   useEffect(() => {
     if (!enabled) return;
+    let active = true;
     const connection = realtime();
     const subscription =
       connection.getSubscription(ACTIVITY_CHANNEL) ?? connection.newSubscription(ACTIVITY_CHANNEL);
@@ -57,6 +58,7 @@ export function useActivitySocket({
       subscription
         .history({ limit: HISTORY_LIMIT, reverse: true })
         .then(({ publications }) => {
+          if (!active) return;
           const data = publications.flatMap((publication) => {
             const item = activityItemSchema.safeParse(publication.data);
             return item.success ? [item.data] : [];
@@ -70,6 +72,7 @@ export function useActivitySocket({
     const release = acquireRealtime({ signedIn: false });
 
     return () => {
+      active = false;
       clearTimeout(flush);
       release();
       subscription.removeAllListeners();
