@@ -6,6 +6,7 @@ import {
   computeOfflineSerials,
   computeOfflineSerialUpdates,
   computeOnlineSerials,
+  discoveryBoundaries,
   mayHoldReservedBlocks,
   snapBatchLengths,
   V1_CUTOFF_MS,
@@ -286,8 +287,36 @@ describe("claimGapBlocks", () => {
     expect(claimGapBlocks({ start: 1001, end: 1201 }, [1001], new Set([1001]))).toEqual([]);
   });
 
+  test("a separator that never minted keeps the claim off it once it is known", () => {
+    // 8719134 was assigned to another collection but never minted, so the indexer
+    // only has 8718933; passing it as a separator claims the two blocks before it
+    expect(claimGapBlocks({ start: 8718933, end: 8719134 }, [8718933], none)).toEqual([
+      { start: 8718935, end: 8719134 },
+    ]);
+    expect(claimGapBlocks({ start: 8718933, end: 8719134 }, [8718933, 8719134], none)).toEqual([
+      { start: 8718934, end: 8719133 },
+    ]);
+  });
+
   test("claims nothing when the runs are not whole blocks", () => {
     expect(claimGapBlocks({ start: 1, end: 250 }, [120], none)).toEqual([]);
+  });
+});
+
+describe("discoveryBoundaries", () => {
+  test("returns the foreign tokens on both sides of each gap", () => {
+    const batches = [
+      { start: 8717533, end: 8718932 },
+      { start: 8719135, end: 8719834 },
+      { start: 8719836, end: 8720335 },
+    ];
+    expect(discoveryBoundaries(batches).toSorted((a, b) => a - b)).toEqual([
+      8718933, 8719134, 8719835,
+    ]);
+  });
+
+  test("has none for a single batch", () => {
+    expect(discoveryBoundaries([{ start: 1, end: 100 }])).toEqual([]);
   });
 });
 

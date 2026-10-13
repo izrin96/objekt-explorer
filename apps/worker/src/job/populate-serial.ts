@@ -366,8 +366,16 @@ export function tokenIdRange(start: number, end: number) {
  * the block as the collection's own, and never as foreign. User-reported
  * Summer26 serials agree, including one 6,213-token gap. If a foreign token
  * mints inside a claimed block later, verifyBatchBoundaries rediscovers.
+ *
+ * `knownForeign` are tokens the Cosmo API attributes to another collection. A
+ * token id can be assigned and never minted on chain, so the indexer misses it
+ * and only this list keeps it out of a claimed block.
  */
-async function fillReservedGaps(batches: Batch[], presentTokenIds: number[]): Promise<Batch[]> {
+async function fillReservedGaps(
+  batches: Batch[],
+  presentTokenIds: number[],
+  knownForeign: number[],
+): Promise<Batch[]> {
   const present = new Set(presentTokenIds);
   const result: Batch[] = [];
 
@@ -384,13 +392,9 @@ async function fillReservedGaps(batches: Batch[], presentTokenIds: number[]): Pr
       .select({ id: objekts.id })
       .from(objekts)
       .where(tokenIdRange(gap.start, gap.end));
-    result.push(
-      ...claimGapBlocks(
-        gap,
-        minted.map((o) => parseInt(o.id)),
-        present,
-      ),
-    );
+    const separators = new Set(minted.map((o) => parseInt(o.id)));
+    for (const t of knownForeign) if (t >= gap.start && t <= gap.end) separators.add(t);
+    result.push(...claimGapBlocks(gap, [...separators], present));
   }
 
   return result;
@@ -404,9 +408,13 @@ export async function refineBatches(
   season: string,
   batches: Batch[],
   presentTokenIds: number[],
+  knownForeign: number[] = [],
 ): Promise<Batch[]> {
   if (preBlockSeasons.includes(season)) return batches;
-  return snapBatchLengths(await fillReservedGaps(batches, presentTokenIds), presentTokenIds);
+  return snapBatchLengths(
+    await fillReservedGaps(batches, presentTokenIds, knownForeign),
+    presentTokenIds,
+  );
 }
 
 export async function populateSerialOffline() {

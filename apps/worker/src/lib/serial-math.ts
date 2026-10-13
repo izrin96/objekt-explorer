@@ -240,6 +240,19 @@ const MAX_RESERVED_GAP = 20000;
 
 export type Batch = { start: number; end: number };
 
+/**
+ * The foreign tokens that ended discovery between consecutive discovered
+ * batches. Only valid on fresh discoverBatches output, not on refined ranges.
+ */
+export function discoveryBoundaries(batches: Batch[]): number[] {
+  const foreign = new Set<number>();
+  for (let i = 0; i + 1 < batches.length; i++) {
+    foreign.add(batches[i]!.end + 1);
+    foreign.add(batches[i + 1]!.start - 1);
+  }
+  return [...foreign];
+}
+
 /** a gap too short for one block, or too long to have been validated, is never claimed */
 export function mayHoldReservedBlocks(gap: Batch): boolean {
   const length = gap.end - gap.start + 1;
