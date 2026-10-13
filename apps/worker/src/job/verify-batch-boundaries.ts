@@ -37,7 +37,12 @@ import {
   writeSerialUpdates,
 } from "@/job/populate-serial";
 import { preAssignedCollections as excludeCollections } from "@/lib/serial-constants";
-import { computeOfflineSerialUpdates, type ManualAnchor, V1_CUTOFF_MS } from "@/lib/serial-math";
+import {
+  computeOfflineSerialUpdates,
+  discoveryBoundaries,
+  type ManualAnchor,
+  V1_CUTOFF_MS,
+} from "@/lib/serial-math";
 
 const CONCURRENCY = 5;
 
@@ -84,6 +89,7 @@ export async function verifyBatchBoundaries(dryRun = false) {
 
   let drifted = 0;
   let fixed = 0;
+  let unchanged = 0;
   const failed: string[] = [];
 
   async function processOne(t: {
@@ -139,6 +145,8 @@ export async function verifyBatchBoundaries(dryRun = false) {
       .limit(1);
     if (foreignInside) reasons.push(`foreign token ${foreignInside.id} inside a stored range`);
 
+    const knownForeign: number[] = [];
+
     try {
       for (const b of atRisk) {
         const isFrontier = b === frontier;
@@ -165,6 +173,17 @@ export async function verifyBatchBoundaries(dryRun = false) {
             : probe(afterOursTid, targetSlug),
           beforeOursTid === null ? Promise.resolve(null) : probe(beforeOursTid, targetSlug),
         ]);
+        const probed = [
+          [b.end, endTok],
+          [b.end + 1, endNext],
+          [b.start, startTok],
+          [b.start - 1, startPrev],
+          [afterOursTid, afterOurs],
+          [beforeOursTid, beforeOurs],
+        ] as const;
+        for (const [tid, result] of probed) {
+          if (result === "foreign" && tid !== null && tid >= 1) knownForeign.push(tid);
+        }
         if (endTok === "foreign") reasons.push(`end ${b.end} is foreign (too big)`);
         if (endNext === "ours") reasons.push(`end+1 ${b.end + 1} is ours (too small)`);
         if (startTok === "foreign") reasons.push(`start ${b.start} is foreign`);
@@ -200,8 +219,20 @@ export async function verifyBatchBoundaries(dryRun = false) {
       failed.push(t.slug);
       return;
     }
-    fresh = await refineBatches(t.season, fresh, tokenIds);
+    fresh = await refineBatches(t.season, fresh, tokenIds, [
+      ...knownForeign,
+      ...discoveryBoundaries(fresh),
+    ]);
     if (fresh.length === 0) return;
+
+    const same =
+      fresh.length === batches.length &&
+      fresh.every((b, i) => b.start === batches[i]!.start && b.end === batches[i]!.end);
+    if (same) {
+      unchanged++;
+      console.log(`[verify] ${t.slug}: rediscovery gave back the stored batches, nothing written`);
+      return;
+    }
 
     await indexer.update(collections).set({ serialBatches: fresh }).where(eq(collections.id, t.id));
 
@@ -222,7 +253,9 @@ export async function verifyBatchBoundaries(dryRun = false) {
   });
 
   console.log(
-    `[verify] Done. ${drifted} drifted, ${dryRun ? "would fix" : "fixed"} ${fixed}.` +
+    `[verify] Done. ${drifted} drifted, ${dryRun ? "would fix" : "fixed"} ${fixed}` +
+      (unchanged ? `, ${unchanged} unchanged after rediscovery` : "") +
+      "." +
       (failed.length ? ` Failed (API): ${failed.length} — ${failed.join(", ")}` : ""),
   );
 }
