@@ -24,8 +24,29 @@ console.error = (...args: Array<unknown>) => {
   logError(...args);
 };
 
+/** framing, sniffing and referrer rules; a `script-src` policy needs nonces and comes separately */
+const SECURITY_HEADERS = {
+  "Content-Security-Policy": "frame-ancestors 'none'; base-uri 'self'; object-src 'none'",
+  "X-Frame-Options": "DENY",
+  "X-Content-Type-Options": "nosniff",
+  "Referrer-Policy": "strict-origin-when-cross-origin",
+} as const;
+
+// copied into a new response: a redirect's headers are immutable
+function withSecurityHeaders(response: Response): Response {
+  const headers = new Headers(response.headers);
+  for (const [name, value] of Object.entries(SECURITY_HEADERS)) {
+    if (!headers.has(name)) headers.set(name, value);
+  }
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+}
+
 export default {
-  fetch(request: Request) {
-    return paraglideMiddleware(request, () => handler.fetch(request));
+  async fetch(request: Request) {
+    return withSecurityHeaders(await paraglideMiddleware(request, () => handler.fetch(request)));
   },
 };
