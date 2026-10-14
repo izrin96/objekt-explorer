@@ -83,7 +83,7 @@ A list's page SHALL offer Message in its header, so a list reached from a shared
 ### Requirement: Requests
 A conversation whose first message carries no objekt card SHALL appear in the recipient's Requests, not their Inbox, until they reply or accept. The recipient is whoever did not send the first message, whoever opened the conversation. Request conversations SHALL not count as unread. Declining a request SHALL archive it for the recipient without telling the sender. A conversation whose first message carries a card SHALL go straight to the Inbox.
 
-A conversation with no message yet SHALL be shown only to a member who opened it with Message: a member who did not SHALL get the not-found surface for it, and every request about it from that member (thread, mark read, accept, decline, archive, mute) SHALL be refused as not found.
+A conversation with no message yet SHALL be shown only to a member who opened it with Message: a member who did not SHALL get the not-found surface for it, and every request about it from that member (thread, mark read, accept, decline, archive, mute) SHALL be refused as not found. No conversation list SHALL show a conversation with no message yet, for either member: it joins the opener's list with its first message or offer, so a Message click that sends nothing leaves nothing in their Inbox.
 
 The request bar SHALL say that declining moves the conversation to Archived without telling the sender, that it comes back if they write again, and that Block stops them.
 
@@ -106,6 +106,10 @@ The request bar SHALL say that declining moves the conversation to Archived with
 #### Scenario: Empty conversation by id
 - **WHEN** kaede.k opens `/messages/<id>` for a conversation rin.trades opened with her but has not written in
 - **THEN** the not-found surface is shown
+
+#### Scenario: Message without writing
+- **WHEN** rin.trades activates Message on kaede.k's profile, sends nothing and goes back to `/messages`
+- **THEN** no conversation with kaede.k is listed; activating Message again opens the same empty thread
 
 ### Requirement: Inbox, Requests and Archived
 `/messages` SHALL list the signed-in user's conversations under Inbox, Requests and Archived, newest activity first. Each row SHALL show:

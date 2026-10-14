@@ -21,7 +21,7 @@ import { toPublicUser } from "../profile";
 import { reputationOf } from "../reputation";
 import { notBlockedBy } from "../safety";
 import { hydrateCards, parseCard, toChatMessages } from "./cards";
-import { findMembership, updateMember, visibleToMember } from "./members";
+import { findMembership, updateMember } from "./members";
 import { publishChatChanged } from "./notify";
 import { chatSafety } from "./safety";
 import { activityBetween } from "./settings";
@@ -102,8 +102,7 @@ export async function fetchPartners(userIds: string[]) {
 
 /**
  * The viewer's rows of the conversations `scope` picks, newest activity first. A conversation
- * with no message yet is listed only for a member who opened it with Message, so an empty
- * conversation never reaches the other side.
+ * joins the list with its first message, so a Message click that sends nothing lists nothing.
  */
 async function selectConversationRows(me: string, scope: ReturnType<typeof sql>, limit: number) {
   const result = await db.execute<ConversationListRow>(sql`
@@ -129,7 +128,7 @@ async function selectConversationRows(me: string, scope: ReturnType<typeof sql>,
     JOIN conversation c ON c.id = m.conversation_id
     LEFT JOIN message msg ON msg.id = c.last_message_id
     WHERE m.user_id = ${me}
-      AND ${visibleToMember(me, { conversation: "c", member: "m" })}
+      AND c.last_message_id IS NOT NULL
       ${scope}
     ORDER BY coalesce(c.last_message_at, c.created_at) DESC, c.id DESC
     LIMIT ${limit}

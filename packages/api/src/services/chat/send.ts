@@ -17,7 +17,6 @@ import { redis } from "../redis";
 import { hydrateCards, resolveCard, toChatMessages } from "./cards";
 import { publishChatMessage } from "./live";
 import { appendMessage, findMembership, findSentMessage } from "./members";
-import { publishChatChanged } from "./notify";
 import { checkMessageRate } from "./rate";
 import { refuse } from "./refuse";
 import { chatSafety } from "./safety";
@@ -64,13 +63,10 @@ export async function startConversation(
     return { ...(await ensureConversation(tx, ctx, existingId)), card };
   });
 
-  // only the opener lists an empty conversation, so only the opener hears of it
-  if (result.created) await publishChatChanged([me], result.id);
-  if (!input.card || !result.card) return { id: result.id, created: result.created, card: null };
+  if (!input.card || !result.card) return { id: result.id, card: null };
   const { view, collections } = await hydrateCards([result.card], me);
   return {
     id: result.id,
-    created: result.created,
     card: { input: input.card, view: view(result.card), collections },
   };
 }

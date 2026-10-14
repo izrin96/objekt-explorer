@@ -1,6 +1,6 @@
 import { ChatCircleIcon } from "@phosphor-icons/react";
 import type { CardInput, ChatTarget } from "@repo/api/schemas/chat";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { useLocation, useNavigate } from "@tanstack/react-router";
 
 import { Button, type ButtonProps } from "@/components/ui/button";
@@ -12,7 +12,6 @@ import { m } from "@/paraglide/messages";
 import { putDraftCard } from "@/stores/chat-draft";
 
 import { refusalOf, refusalText } from "./format";
-import { invalidateChatLists } from "./queries";
 
 /**
  * Opens the conversation with the target's account, with `card` attached to send. The
@@ -60,7 +59,6 @@ export function MessageButton({
 
 /** Opens the conversation with the target's account, for a button or a menu item. */
 export function useStartConversation() {
-  const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { gate, offerLink } = useStartGate();
 
@@ -76,7 +74,6 @@ export function useStartConversation() {
             listType: card.view.list?.listTypeNew,
           });
         }
-        void invalidateChatLists(queryClient);
         void navigate({ to: "/messages/$id", params: { id: String(id) } });
       },
       onError: (error) => {
