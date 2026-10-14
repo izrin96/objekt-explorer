@@ -11,7 +11,7 @@ import { TrustLine } from "@/features/offers/trust-line";
 import { ProfileLink } from "@/features/profile/profile-hover-card";
 import { m } from "@/paraglide/messages";
 
-export function ThreadBackButton() {
+function ThreadBackButton() {
   return (
     <Button
       variant="ghost"

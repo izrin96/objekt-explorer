@@ -24,7 +24,6 @@ import { BrowsePost, BrowsePostSkeleton } from "./browse-post";
 import {
   type FeedSearch,
   type Surface,
-  canMatchOf,
   forYouFallback,
   matchModeOf,
   postTypeOf,
@@ -52,7 +51,6 @@ const SSR_POSTS = 4;
 export function BrowseView({ surface, search }: { surface: Surface; search: FeedSearch }) {
   const { data: user } = useCurrentUser();
   const userLists = useUserLists();
-  const canMatch = canMatchOf(userLists);
   const forYou = surface === "forYou";
   const mode = forYou ? matchModeOf(search) : "off";
   const tradeLists = useMemo(() => tradeListsOf(userLists), [userLists]);
@@ -196,14 +194,7 @@ export function BrowseView({ surface, search }: { surface: Surface; search: Feed
         ) : (
           postType
         )}
-        {forYou || canMatch ? null : user ? (
-          <div className="text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-            <p className="text-pretty">{m.trade_browse_matches_need_list()}</p>
-            <Button variant="outline" size="sm" onClick={() => setPostOpen(true)}>
-              {m.trade_post_a_list()}
-            </Button>
-          </div>
-        ) : (
+        {user ? null : (
           <p className="text-muted-foreground text-sm text-pretty">
             {m.trade_browse_matches_sign_in()}{" "}
             <Button

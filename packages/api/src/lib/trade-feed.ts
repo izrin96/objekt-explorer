@@ -117,8 +117,6 @@ export type FeedEntry = {
   id: number;
   slug: string;
   objektId: string | null;
-  price: number | null;
-  isQyop: boolean;
 };
 
 /** Names a have or sale entry in the set of entries their owner can no longer trade. */
@@ -142,12 +140,6 @@ type PreviewItem = {
   entryId: number;
   slug: string;
   qty: number;
-  /** the lowest set price; null when no copy has one */
-  price: number | null;
-  /** no copy has a price and at least one is QYOP */
-  isQyop: boolean;
-  /** other copies cost more or are QYOP, so `price` is where they start */
-  priceFrom?: true;
   ringed?: true;
 };
 
@@ -163,15 +155,6 @@ function stackEntries(entries: FeedEntry[]) {
     }
   }
   return [...stacks.values()];
-}
-
-/** A copy without a price says nothing about the others, so it never makes a "from". */
-function stackPrice(copies: FeedEntry[]) {
-  const prices = copies.flatMap((copy) => (copy.isQyop || copy.price === null ? [] : copy.price));
-  const anyQyop = copies.some((copy) => copy.isQyop);
-  if (prices.length === 0) return { price: null, isQyop: anyQyop, priceFrom: false };
-  const price = prices.reduce((low, next) => Math.min(low, next));
-  return { price, isQyop: false, priceFrom: anyQyop || prices.some((other) => other !== price) };
 }
 
 /**
@@ -193,15 +176,7 @@ export function previewSide(
     )
     .slice(0, limit)
     .map(({ newest, copies }): PreviewItem => {
-      const { price, isQyop, priceFrom } = stackPrice(copies);
-      const item: PreviewItem = {
-        entryId: newest.id,
-        slug: newest.slug,
-        qty: copies.length,
-        price,
-        isQyop,
-      };
-      if (priceFrom) item.priceFrom = true;
+      const item: PreviewItem = { entryId: newest.id, slug: newest.slug, qty: copies.length };
       if (isRinged(newest.slug)) item.ringed = true;
       return item;
     });

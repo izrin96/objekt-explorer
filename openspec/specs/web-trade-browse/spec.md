@@ -90,7 +90,7 @@ A post SHALL be idle when 30 days have passed since its last bump and since the 
 The feed SHALL offer these filters, each kept in the URL:
 - Post type: All, WTT, WTB or WTS (`type`), in one Post type menu (see Matches and Compare with). All is the default.
 - Artist (`artist`): a row of toggles, All then each artist in the app's artist picker selection, before the other filters. All clears it. More than one artist MAY be on. The row SHALL be hidden when the selection holds one artist.
-- Member (`member`), season (`season`), class (`class`), online/offline (`on_offline`) and collection number (`collection`), with the same controls, filter sheet, active chips and Reset as the other collection pages, and the same parameter names and values. Because the Post type menu sits beside them, the online/offline filter and its chip SHALL be labelled Format on Browse, not Type.
+- Member (`member`), season (`season`), class (`class`), online/offline (`on_offline`) and collection number (`collection`), with the same controls, filter sheet, active chips and Reset as the other collection pages, and the same parameter names and values. The online/offline filter and its chip SHALL be labelled Type, as on every other page, even beside the Post type menu.
 - One collection (`slug`, a collection slug): keep posts with that collection on any side.
 - On For you only, Mutual only (`match`) and Compare with (`list`), beside the Post type menu (see Matches and Compare with). Under Any and Mutual, only posts holding at least one objekt that matches the viewer are kept: the objekts the rings mark (see Narrowing). Each post is judged on its own lists, not on the owner's other lists.
 
@@ -210,9 +210,8 @@ Every post by one owner SHALL show the same counts. They SHALL be the counts tha
 Matching SHALL use the viewer's have lists bound to a Cosmo profile, not everything their wallet holds, so an objekt the viewer keeps off their have lists never counts as offered. A post whose chip shows SHALL also carry an All matches control after the chip, which opens the owner's person sheet.
 
 **Matches prompt.** Browse has no Matches control. Beside its Post type menu:
-- a signed-in viewer with no want list and no have or sale list bound to a Cosmo profile SHALL see one line saying For you's matches need such a list, with a Post a list control that opens the Post a list dialog (see Your posts and Post a list);
 - a signed-out visitor SHALL see one line inviting them to sign in to see which posts match their lists, with a Sign in link to `/login?redirect=/trade/for-you`;
-- a viewer who can match SHALL see no line there.
+- a signed-in viewer SHALL see no line there, whether or not they have a list that can match.
 
 Browse SHALL list the viewer's own posts, so they can see where a bump put them. For you SHALL never list them. Posts by people the viewer hid SHALL be left out of both (see `web-trade-for-you` Hide a partner).
 
@@ -266,7 +265,7 @@ Browse SHALL list the viewer's own posts, so they can see where a bump put them.
 
 #### Scenario: No list that can match
 - **WHEN** a signed-in viewer whose only list is a have list not bound to a Cosmo profile opens `/trade`
-- **THEN** a line beside the Post type menu says matches need a want list, or a have or sale list bound to a Cosmo profile, and its Post a list control opens the Post a list dialog
+- **THEN** no line shows beside the Post type menu, and the For you tab is hidden
 
 #### Scenario: Hidden partner
 - **WHEN** the viewer hid rin.trades

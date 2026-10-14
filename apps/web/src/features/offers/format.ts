@@ -25,7 +25,7 @@ export function itemName(item: Pick<OfferItemView, "collectionSlug">, collection
 }
 
 /** "#1207", "~#1207" when estimated, as plain text */
-export function serialText(shown: ShownSerial) {
+function serialText(shown: ShownSerial) {
   if (shown.serial === null) return m.offer_serial_unnumbered();
   return `${shown.estimated ? "~" : ""}#${shown.serial}`;
 }

@@ -156,8 +156,6 @@ export async function fetchPostEntries(
       id: listEntries.id,
       slug: listEntries.collectionSlug,
       objektId: listEntries.objektId,
-      price: listEntries.price,
-      isQyop: listEntries.isQyop,
     })
     .from(listEntries)
     .where(
@@ -177,8 +175,6 @@ export async function fetchPostEntries(
       id: row.id,
       slug: row.slug!,
       objektId: row.objektId,
-      price: row.price,
-      isQyop: row.isQyop,
     });
     byList.set(row.listId, entries);
   }

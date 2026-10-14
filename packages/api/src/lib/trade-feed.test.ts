@@ -36,8 +36,6 @@ const entry = (id: number, slug: string, objektId: string | null = null): FeedEn
   id,
   slug,
   objektId,
-  price: null,
-  isQyop: false,
 });
 
 const NO_FILTER = { slugs: null, slug: null, onlyMatches: false } as const;
@@ -181,50 +179,6 @@ describe("previewSide", () => {
     expect(items.filter((item) => item.slug === "a")).toHaveLength(1);
     expect(more).toBe(1);
     expect(copyCount).toBe(PREVIEW_LIMIT + 3);
-  });
-
-  const priced = (id: number, price: number | null, isQyop = false): FeedEntry => ({
-    ...entry(id, "a"),
-    price,
-    isQyop,
-  });
-  const stackOf = (entries: FeedEntry[]) => previewSide(entries, null).items[0]!;
-
-  test("copies at one price show it exactly", () => {
-    const item = stackOf([priced(1, 5), priced(2, 5)]);
-    expect(item).toMatchObject({ qty: 2, price: 5, isQyop: false });
-    expect("priceFrom" in item).toBe(false);
-  });
-
-  test("copies at different prices start from the lowest", () => {
-    expect(stackOf([priced(1, 8), priced(2, 5)])).toMatchObject({
-      price: 5,
-      priceFrom: true,
-    });
-  });
-
-  test("QYOP beside a price starts from the price; all QYOP stays QYOP", () => {
-    expect(stackOf([priced(1, null, true), priced(2, 7)])).toMatchObject({
-      price: 7,
-      isQyop: false,
-      priceFrom: true,
-    });
-    const qyop = stackOf([priced(1, null, true), priced(2, null, true)]);
-    expect(qyop).toMatchObject({ price: null, isQyop: true });
-    expect("priceFrom" in qyop).toBe(false);
-  });
-
-  test("a copy without a price leaves the others' price as it is", () => {
-    const item = stackOf([priced(1, 5), priced(2, null)]);
-    expect(item).toMatchObject({ price: 5, isQyop: false });
-    expect("priceFrom" in item).toBe(false);
-  });
-
-  test("QYOP beside a copy without a price stays QYOP", () => {
-    expect(stackOf([priced(1, null, true), priced(2, null)])).toMatchObject({
-      price: null,
-      isQyop: true,
-    });
   });
 });
 
