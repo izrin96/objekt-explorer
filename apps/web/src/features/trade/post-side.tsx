@@ -5,7 +5,6 @@ import type { ReactNode } from "react";
 import { getListLinkOption } from "@/features/list/list-link";
 import { LIST_TYPE_LABEL, LIST_TYPE_TONE } from "@/features/list/list-type-badge";
 import { ObjektCard } from "@/features/objekt/objekt-card";
-import { formatCurrency } from "@/features/settings/use-currency";
 import { useElementSize } from "@/hooks/use-element-size";
 import { TONE_INK } from "@/lib/tone";
 import { cn } from "@/lib/utils";
@@ -39,8 +38,6 @@ type StripItem = {
   slug: string;
   qty?: number;
   ringed?: boolean;
-  price?: string;
-  priceMuted?: boolean;
 };
 
 /** The "+N" tile's face; the caller wraps it in the link or button that goes somewhere. */
@@ -110,11 +107,8 @@ function PostStrip({
                   <ObjektCard
                     objekt={collection}
                     image="thumbnail"
-                    label="number"
+                    hideLabel
                     onOpen={() => onOpen(collection)}
-                    captionClassName="font-mono"
-                    price={item.price}
-                    priceMuted={item.priceMuted}
                     className={item.ringed ? CARD_RING : undefined}
                     description={description}
                   />
@@ -144,7 +138,7 @@ function PostStrip({
   );
 }
 
-/** A Browse post's side: its list's role and count, its sale prices, its ringed matches. */
+/** A Browse post's side: its list's role and count, its ringed matches. */
 export function SideStrip({
   side,
   collections,
@@ -155,15 +149,6 @@ export function SideStrip({
   onOpen: (objekt: ValidObjekt) => void;
 }) {
   const { list } = side;
-  const currency = side.role === "sale" ? list.currency : null;
-  const priceOf = (item: PostSideData["items"][number]) => {
-    if (side.role !== "sale") return undefined;
-    if (item.isQyop) return m.objekt_qyop();
-    if (item.price === null || !currency) return undefined;
-    const price = formatCurrency(item.price, currency);
-    return item.priceFrom ? m.trade_price_from({ price }) : price;
-  };
-
   // copies, not thumbnails: a stacked thumbnail holds several
   const shown = side.copyCount;
   const figure = side.others > 0 ? m.trade_strip_of({ shown, total: shown + side.others }) : shown;
@@ -199,8 +184,6 @@ export function SideStrip({
         slug: item.slug,
         qty: item.qty,
         ringed: item.ringed,
-        price: priceOf(item),
-        priceMuted: item.isQyop,
       }))}
       hidden={side.more}
       collections={collections}

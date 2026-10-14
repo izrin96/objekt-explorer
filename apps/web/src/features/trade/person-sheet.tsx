@@ -313,13 +313,7 @@ function Thumb({
     return <div className={cn(TILE, "text-xxs p-0.5 text-center break-all")}>{slug}</div>;
   }
   return (
-    <ObjektCard
-      objekt={collection}
-      image="thumbnail"
-      hideLabel={false}
-      onOpen={() => onOpen(collection)}
-      captionClassName="font-mono text-xxs line-clamp-2"
-    />
+    <ObjektCard objekt={collection} image="thumbnail" hideLabel onOpen={() => onOpen(collection)} />
   );
 }
 
