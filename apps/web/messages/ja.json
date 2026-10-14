@@ -332,6 +332,7 @@
   "objekt_market_empty": "出品はありません",
   "objekt_market_empty_hint": "現在このObjektを出品している人はいません",
   "objekt_market_floor": "最安値",
+  "objekt_market_floor_trend": "最安値の推移",
   "objekt_market_listings": "出品",
   "objekt_market_sellers": "出品者",
   "objekt_market_seller": "出品者",

@@ -32,7 +32,7 @@ export function PriceSparkline({ values }: { values: (number | null)[] }) {
       viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
       preserveAspectRatio="none"
       aria-hidden
-      className={"h-6 w-30 overflow-visible"}
+      className="h-6 w-30 min-w-0 overflow-visible"
     >
       <path
         d={sparklinePath(values, WIDTH, HEIGHT)}

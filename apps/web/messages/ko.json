@@ -332,6 +332,7 @@
   "objekt_market_empty": "판매 중인 매물이 없습니다",
   "objekt_market_empty_hint": "지금 이 오브젝트를 판매하는 사람이 없습니다",
   "objekt_market_floor": "최저가",
+  "objekt_market_floor_trend": "최저가 추이",
   "objekt_market_listings": "매물",
   "objekt_market_sellers": "판매자",
   "objekt_market_seller": "판매자",

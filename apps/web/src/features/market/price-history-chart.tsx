@@ -13,6 +13,8 @@ import { Area, Bar, ComposedChart, Line, XAxis, YAxis } from "recharts";
 import {
   type ChartConfig,
   ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
@@ -75,26 +77,27 @@ export function PriceHistoryChart({
 
   return (
     <div className="flex flex-col gap-3">
-      <ToggleGroup
-        variant="outline"
-        size="sm"
-        aria-label={m.objekt_market_history()}
-        value={[range]}
-        onValueChange={([next]) => {
-          if (next !== undefined && isRange(next)) setPicked(next);
-        }}
-      >
-        {PRICE_HISTORY_RANGES.map((value) => (
-          <ToggleGroupItem
-            key={value}
-            value={value}
-            disabled={locked && value !== "all"}
-            className="text-muted-foreground data-pressed:text-foreground h-7 sm:h-6 sm:text-xs"
-          >
-            {RANGE_LABEL[value]()}
-          </ToggleGroupItem>
-        ))}
-      </ToggleGroup>
+      {!locked && (
+        <ToggleGroup
+          variant="outline"
+          size="sm"
+          aria-label={m.objekt_market_history()}
+          value={[range]}
+          onValueChange={([next]) => {
+            if (next !== undefined && isRange(next)) setPicked(next);
+          }}
+        >
+          {PRICE_HISTORY_RANGES.map((value) => (
+            <ToggleGroupItem
+              key={value}
+              value={value}
+              className="text-muted-foreground data-pressed:text-foreground h-7 sm:h-6 sm:text-xs"
+            >
+              {RANGE_LABEL[value]()}
+            </ToggleGroupItem>
+          ))}
+        </ToggleGroup>
+      )}
 
       {history.isPending ? (
         <Skeleton className="h-56 rounded-lg" />
@@ -113,7 +116,9 @@ export function PriceHistoryChart({
               width={56}
               tickLine={false}
               axisLine={false}
-              domain={["auto", "auto"]}
+              domain={[0, "auto"]}
+              // a flat series tops out on its highest tick; room above keeps the line off the edge
+              padding={{ top: 12 }}
               tickFormatter={(value: number) =>
                 new Intl.NumberFormat(getLocale(), {
                   style: "currency",
@@ -129,6 +134,7 @@ export function PriceHistoryChart({
               hide
               domain={[0, (max: number) => max * 4]}
             />
+            <ChartLegend content={<ChartLegendContent />} />
             <ChartTooltip
               content={
                 <ChartTooltipContent

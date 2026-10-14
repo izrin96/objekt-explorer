@@ -332,6 +332,7 @@
   "objekt_market_empty": "No active listings",
   "objekt_market_empty_hint": "Nobody is selling this objekt right now",
   "objekt_market_floor": "Floor",
+  "objekt_market_floor_trend": "Floor trend",
   "objekt_market_listings": "Listings",
   "objekt_market_sellers": "Sellers",
   "objekt_market_seller": "Seller",

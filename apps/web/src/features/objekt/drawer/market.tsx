@@ -9,11 +9,11 @@ import {
   StorefrontIcon,
 } from "@phosphor-icons/react";
 import type { MarketListing, SortBy } from "@repo/api/schemas/market";
-import { floorChange, rangeStart, utcDate } from "@repo/api/schemas/price-history";
+import { floorChange, utcDate } from "@repo/api/schemas/price-history";
 import { truncateAddress } from "@repo/lib/address";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense, useId, useState } from "react";
 import { createPortal } from "react-dom";
 import { InView } from "react-intersection-observer";
 
@@ -45,6 +45,8 @@ import { marketListingsOptions, marketStatsOptions, priceHistoryOptions } from "
 import { SortableHeader, type SortState } from "./sortable-header";
 import { type Stat, StatRow } from "./stat-row";
 
+const TREND_MIN_RECORDS = 7;
+
 // recharts is large and only the History toggle needs it
 const PriceHistoryChart = lazy(() =>
   import("@/features/market/price-history-chart").then((mod) => ({
@@ -68,6 +70,7 @@ export function MarketPanel({
   const stats = useQuery(marketStatsOptions(slug));
   const history = useQuery(priceHistoryOptions(slug, "30d"));
   const [historyOpen, setHistoryOpen] = useState(false);
+  const chartId = useId();
   const [now] = useState(() => new Date());
   // one of each for the whole table, rather than a dialog per row
   const builder = useOfferBuilder();
@@ -96,12 +99,11 @@ export function MarketPanel({
   const liveFloor = stats.data?.floorPrice ?? null;
   const points = history.data?.points ?? [];
   const tracking = history.data?.tracking ?? null;
-  const change =
-    points.length >= 2 && points[0] ? floorChange(points[0].floorUsd, liveFloor) : null;
-  const sparkline =
-    points.length >= 2
-      ? toRows(points, rangeStart("30d", now), utcDate(now), (usd) => usd).map((row) => row.floor)
-      : null;
+  const trending = points.length >= TREND_MIN_RECORDS;
+  const change = trending && points[0] ? floorChange(points[0].floorUsd, liveFloor) : null;
+  const sparkline = trending
+    ? toRows(points, null, utcDate(now), (usd) => usd).map((row) => row.floor)
+    : null;
 
   const price = (usd: number | null | undefined) =>
     stats.data ? (usd == null ? "—" : formatUsd(usd)) : null;
@@ -138,33 +140,42 @@ export function MarketPanel({
       <StatRow stats={figures} className="grid-cols-3 sm:grid-cols-5" />
       {tracking && (
         <div className="flex flex-col gap-3">
-          <div className="text-muted-foreground flex items-center justify-between gap-3 text-xs">
-            {sparkline ? (
-              <PriceSparkline values={sparkline} />
-            ) : tracking.snapshots === 1 ? (
-              <span>
-                {m.objekt_market_tracking_started({ date: formatUtcDay(tracking.since) })}
-              </span>
+          <button
+            type="button"
+            aria-expanded={historyOpen}
+            aria-controls={chartId}
+            onClick={() => setHistoryOpen((open) => !open)}
+            className="hover:bg-secondary/60 focus-visible:ring-ring flex cursor-pointer items-center justify-between gap-3 rounded-lg border px-3 py-2 text-left text-sm outline-none focus-visible:ring-2"
+          >
+            <span className="shrink-0">{m.objekt_market_history()}</span>
+            <span className="text-muted-foreground flex min-w-0 flex-1 items-center justify-end gap-2 text-xs">
+              {sparkline ? (
+                <>
+                  {m.objekt_market_floor_trend()}
+                  <PriceSparkline values={sparkline} />
+                </>
+              ) : tracking.snapshots === 1 && tracking.since === utcDate(now) ? (
+                m.objekt_market_tracking_started({ date: formatUtcDay(tracking.since) })
+              ) : (
+                m.objekt_market_tracking_since({ date: formatUtcDay(tracking.since) })
+              )}
+            </span>
+            {historyOpen ? (
+              <CaretUpIcon className="text-muted-foreground size-4 shrink-0" aria-hidden />
             ) : (
-              <span />
+              <CaretDownIcon className="text-muted-foreground size-4 shrink-0" aria-hidden />
             )}
-            <Button
-              variant="outline"
-              size="sm"
-              aria-expanded={historyOpen}
-              onClick={() => setHistoryOpen((open) => !open)}
-            >
-              {historyOpen ? <CaretUpIcon /> : <CaretDownIcon />}
-              {m.objekt_market_history()}
-            </Button>
+          </button>
+          {/* mounted while closed so the toggle's aria-controls always has a target */}
+          <div id={chartId} hidden={!historyOpen}>
+            {historyOpen && (
+              <WidgetBoundary resetKey={slug} className="h-56">
+                <Suspense fallback={<Skeleton className="h-56 rounded-lg" />}>
+                  <PriceHistoryChart slug={slug} since={tracking.since} liveFloor={liveFloor} />
+                </Suspense>
+              </WidgetBoundary>
+            )}
           </div>
-          {historyOpen && (
-            <WidgetBoundary resetKey={slug} className="h-56">
-              <Suspense fallback={<Skeleton className="h-56 rounded-lg" />}>
-                <PriceHistoryChart slug={slug} since={tracking.since} liveFloor={liveFloor} />
-              </Suspense>
-            </WidgetBoundary>
-          )}
         </div>
       )}
       <OnTradeLine slug={slug} />
