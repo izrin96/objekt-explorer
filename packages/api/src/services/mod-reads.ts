@@ -272,6 +272,7 @@ export async function accountDossier(userId: string) {
       banned: account.banned ?? false,
       banReason: account.banReason ?? null,
       banExpires: account.banExpires?.toISOString() ?? null,
+      deletedAt: account.deletedAt?.toISOString() ?? null,
     },
     addresses: addresses.map((a) => ({
       address: a.address.toLowerCase(),

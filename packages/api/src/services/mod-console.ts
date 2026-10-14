@@ -1,6 +1,6 @@
 import { ORPCError } from "@orpc/server";
 import { db } from "@repo/db";
-import { notification, report, userSanction } from "@repo/db/schema";
+import { notification, report, user, userSanction } from "@repo/db/schema";
 import { and, eq, sql } from "drizzle-orm";
 
 import { sanctionEnd } from "../lib/sanctions";
@@ -36,10 +36,16 @@ export async function applyModAction(me: string, isAdmin: boolean, input: ActInp
 
   const result = await db.transaction(async (tx) => {
     // first, before the sanction insert, whose foreign-key check takes only KEY SHARE and so
-    // would not wait for a linker holding this row FOR SHARE; NO KEY UPDATE lets an accept's
-    // notification insert for this user through while it holds an offer row this cancels
-    if (input.action === "trade_block" || input.action === "ban") {
+    // would not wait for a linker holding this row FOR SHARE, nor for a deletion's scrub; NO KEY
+    // UPDATE lets an accept's notification insert for this user through while it holds an offer
+    // row this cancels
+    if (input.action !== "dismiss") {
       await tx.execute(sql`SELECT 1 FROM "user" WHERE id = ${input.userId} FOR NO KEY UPDATE`);
+      const [current] = await tx
+        .select({ deletedAt: user.deletedAt })
+        .from(user)
+        .where(eq(user.id, input.userId));
+      if (current?.deletedAt) refuseModeration("deleted_target");
     }
     const sanctionId =
       input.action === "dismiss"

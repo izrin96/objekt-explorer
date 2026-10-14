@@ -6,7 +6,7 @@ import type { LIST_REFUSALS } from "../schemas/list";
 import type { OBJEKT_REFUSALS } from "../schemas/objekts";
 import type { PROFILE_REFUSALS } from "../schemas/profile";
 import type { TRADE_MODE_REFUSALS } from "../schemas/trade";
-import type { USER_REFUSALS } from "../schemas/user";
+import type { DELETE_REFUSALS, USER_REFUSALS } from "../schemas/user";
 
 export type Refusal =
   | (typeof LIST_REFUSALS)[number]
@@ -15,6 +15,7 @@ export type Refusal =
   | (typeof COSMO_LINK_REFUSALS)[number]
   | (typeof PROFILE_REFUSALS)[number]
   | (typeof USER_REFUSALS)[number]
+  | (typeof DELETE_REFUSALS)[number]
   | (typeof OBJEKT_REFUSALS)[number];
 
 /** `message` is English and never shown by the web app; it serves old tabs and `/api/v1` callers. */

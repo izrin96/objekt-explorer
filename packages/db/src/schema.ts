@@ -698,6 +698,7 @@ export const modAudit = pgTable(
         | "set_role"
         | "address_move"
         | "address_unlink"
+        | "account_deleted"
       >()
       .notNull(),
     targetUserId: text("target_user_id").references(() => user.id, { onDelete: "set null" }),

@@ -9,7 +9,7 @@ export { FLAG_CATEGORIES, type FlagCategory } from "./chat";
 export const REPORT_REASONS = ["scam", "harassment", "spam", "impersonation", "other"] as const;
 export type ReportReason = (typeof REPORT_REASONS)[number];
 
-const SANCTION_TYPES = ["warn", "chat_mute", "trade_block", "ban"] as const;
+export const SANCTION_TYPES = ["warn", "chat_mute", "trade_block", "ban"] as const;
 export type SanctionType = (typeof SANCTION_TYPES)[number];
 
 export const MOD_ACTIONS = ["dismiss", ...SANCTION_TYPES] as const;
@@ -21,6 +21,7 @@ export const AUDIT_ACTIONS = [
   "set_role",
   "address_move",
   "address_unlink",
+  "account_deleted",
 ] as const;
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];
 

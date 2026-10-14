@@ -22,6 +22,7 @@ import { RoleControl } from "./role-control";
 import { Sanctions } from "./sanctions";
 import { Signals } from "./signals";
 import { AttachedTrades } from "./trades";
+import { When } from "./when";
 
 const accountFrame =
   "flex flex-col gap-6 xl:col-span-2 xl:grid xl:grid-cols-subgrid xl:items-start";
@@ -95,6 +96,12 @@ export function ModAccount({
                     {roleLabel(role)}
                   </Badge>
                 ))}
+              {account.deletedAt ? (
+                <Badge variant="outline" size="sm">
+                  {m.mod_account_deleted()}
+                  <When iso={account.deletedAt} className="text-muted-foreground tabular-nums" />
+                </Badge>
+              ) : null}
               {account.banned ? (
                 <Badge variant="destructive" size="sm">
                   {m.mod_banned()}
@@ -144,7 +151,7 @@ export function ModAccount({
               {m.mod_staff_target()}
             </p>
           ) : (
-            <ActForm userId={account.userId} name={name} />
+            <ActForm userId={account.userId} name={name} deleted={account.deletedAt !== null} />
           )}
           {viewerIsAdmin && !roleList(account.role).includes("admin") ? (
             <RoleControl userId={account.userId} name={name} isModerator={staff} />

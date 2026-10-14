@@ -1,13 +1,19 @@
+import { ORPCError } from "@orpc/server";
 import { db } from "@repo/db";
 import { user as userSchema } from "@repo/db/auth-schema";
+import { offer } from "@repo/db/schema";
 import { getRequestHeaders } from "@tanstack/react-start/server";
-import { eq } from "drizzle-orm";
+import { generateRandomString } from "better-auth/crypto";
+import { eq, sql } from "drizzle-orm";
 import * as z from "zod";
 
+import { deletionBlockers, deletionStep, refusalOf } from "../lib/account-deletion";
 import { refuse } from "../lib/refuse";
 import { authed, pub } from "../orpc";
 import { documented, errorResponses } from "../schemas/common/documented";
 import {
+  deletionCheckOutputSchema,
+  deletionTokenOutputSchema,
   MAX_USER_SEARCH_LENGTH,
   providerIdSchema,
   providersMap,
@@ -15,10 +21,36 @@ import {
   userSearchInputSchema,
   userSearchOutputSchema,
 } from "../schemas/user";
-import { refreshProviderProfile } from "../services/auth";
+import { deletionState } from "../services/account-delete";
+import { auth, refreshProviderProfile } from "../services/auth";
+import { loadIdentities } from "../services/identities";
+import { offersOf, openOffersWhere } from "../services/offer/cancel";
 import { isIpRateLimited } from "../services/redis";
 import { getCurrentUser } from "../services/user";
 import { searchUsers } from "../services/user-search";
+
+const DELETION_TOKEN_MINUTES = 5;
+
+async function deletionCheck(session: {
+  user: { id: string; email: string };
+  session: { createdAt: Date };
+}) {
+  const userId = session.user.id;
+  const now = new Date();
+  const [state, [open]] = await Promise.all([
+    deletionState(db, userId),
+    db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(offer)
+      .where(openOffersWhere(offersOf(userId))),
+  ]);
+  const blockers = deletionBlockers({ ...state, now });
+  return {
+    blockers,
+    openOffers: open?.count ?? 0,
+    step: deletionStep(session.user.email, session.session.createdAt, now),
+  };
+}
 
 export const userRouter = {
   search: pub
@@ -90,6 +122,52 @@ export const userRouter = {
     ),
 
   currentUser: pub.handler(getCurrentUser),
+
+  deletionCheck: authed.output(deletionCheckOutputSchema).handler(async ({ context }) => {
+    const check = await deletionCheck(context.session);
+    const identities = await loadIdentities(
+      check.blockers.flatMap((b) => (b.kind === "trade" ? [b.partnerId] : [])),
+    );
+    return {
+      ...check,
+      blockers: check.blockers.map((b) =>
+        b.kind === "trade"
+          ? {
+              kind: b.kind,
+              tradeId: b.tradeId,
+              partner: {
+                userId: b.partnerId,
+                name: identities.get(b.partnerId)?.identity.name ?? "",
+              },
+              cancelLocked: b.cancelLocked,
+              endsBy: b.endsBy.toISOString(),
+            }
+          : { kind: b.kind, type: b.type, until: b.until?.toISOString() ?? null },
+      ),
+    };
+  }),
+
+  /**
+   * Delete now, for an account no email can reach: a Better Auth deletion token, minted as
+   * `/delete-user` mints the emailed one, which `deleteUser({ token })` spends.
+   */
+  deletionToken: authed.output(deletionTokenOutputSchema).handler(async ({ context }) => {
+    const { blockers, step } = await deletionCheck(context.session);
+    const refusal = refusalOf(blockers);
+    if (refusal) refuse("BAD_REQUEST", refusal, "Finish what blocks deletion first");
+    if (step === "sign-in-again") {
+      refuse("BAD_REQUEST", "sign_in_again", "Sign in again to delete without an email");
+    }
+    if (step === "send-email") throw new ORPCError("FORBIDDEN");
+    const token = generateRandomString(32, "0-9", "a-z");
+    const { internalAdapter } = await auth.$context;
+    await internalAdapter.createVerificationValue({
+      value: context.session.user.id,
+      identifier: `delete-account-${token}`,
+      expiresAt: new Date(Date.now() + DELETION_TOKEN_MINUTES * 60 * 1000),
+    });
+    return { token };
+  }),
 
   updateAccount: authed
     .input(updateAccountInputSchema)

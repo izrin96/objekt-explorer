@@ -18,6 +18,7 @@ const MODERATION_REFUSALS = [
   "address_in_trade",
   "address_changed",
   "same_account",
+  "deleted_target",
 ] as const;
 type ModerationRefusal = (typeof MODERATION_REFUSALS)[number];
 
@@ -35,6 +36,7 @@ export function refuseModeration(reason: ModerationRefusal, retryAt?: Date): nev
     case "address_in_trade":
     case "address_changed":
     case "same_account":
+    case "deleted_target":
       throw new ORPCError("BAD_REQUEST", { data });
   }
 }

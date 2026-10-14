@@ -48,10 +48,11 @@ export async function recordLinkEvents(tx: Tx, rows: LinkEventRow[]) {
 /** Step 1 of the lock order: `"user"` rows by id, `FOR SHARE` to read sanctions. */
 export async function lockUsersShared(tx: Tx, ids: string[]) {
   const sorted = [...new Set(ids)].sort(byValue);
-  if (sorted.length === 0) return;
-  await tx.execute(
-    sql`SELECT 1 FROM "user" WHERE id IN (${sql.join(sorted, sql`, `)}) ORDER BY id FOR SHARE`,
+  if (sorted.length === 0) return [];
+  const result = await tx.execute<{ id: string; deleted_at: string | null }>(
+    sql`SELECT id, deleted_at FROM "user" WHERE id IN (${sql.join(sorted, sql`, `)}) ORDER BY id FOR SHARE`,
   );
+  return result.rows;
 }
 
 /** Step 2 of the lock order: one advisory lock per address, in address order. */

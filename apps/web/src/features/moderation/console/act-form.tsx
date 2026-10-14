@@ -59,10 +59,23 @@ function errorText(error: unknown) {
   const { reason } = errorReason(error);
   if (reason === "staff_target") return m.mod_staff_target();
   if (reason === "self") return m.mod_error_self();
+  if (reason === "deleted_target") return m.mod_deleted_target();
   return m.mod_act_error();
 }
 
-export function ActForm({ userId, name }: { userId: string; name: string }) {
+/** A deleted account keeps its reports to dismiss, and takes no sanction. */
+const DELETED_ACTIONS: readonly ModAction[] = ["dismiss"];
+
+export function ActForm({
+  userId,
+  name,
+  deleted,
+}: {
+  userId: string;
+  name: string;
+  deleted: boolean;
+}) {
+  const actions = deleted ? DELETED_ACTIONS : MOD_ACTIONS;
   const queryClient = useQueryClient();
   const [action, setAction] = useState<ModAction | null>(null);
   const [muteDays, setMuteDays] = useState<number>(7);
@@ -137,12 +150,12 @@ export function ActForm({ userId, name }: { userId: string; name: string }) {
         aria-describedby={missing.action ? ids.actionError : undefined}
         value={action}
         onValueChange={(next) => {
-          const picked = MOD_ACTIONS.find((value) => value === next);
+          const picked = actions.find((value) => value === next);
           if (picked) setAction(picked);
         }}
         className="gap-2.5"
       >
-        {MOD_ACTIONS.map((value) => (
+        {actions.map((value) => (
           <Field key={value} className="w-full flex-row items-start gap-2.5">
             <Radio value={value} className="mt-0.5" />
             <FieldLabel className="flex-col items-start gap-0.5 font-normal">
@@ -154,6 +167,9 @@ export function ActForm({ userId, name }: { userId: string; name: string }) {
           </Field>
         ))}
       </RadioGroup>
+      {deleted ? (
+        <p className="text-muted-foreground text-xs text-pretty">{m.mod_deleted_target()}</p>
+      ) : null}
       {missing.action ? (
         <p id={ids.actionError} className="text-destructive-foreground text-xs">
           {m.mod_act_pick_action()}

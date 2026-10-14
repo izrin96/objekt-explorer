@@ -40,6 +40,10 @@ export const cancelledColumns = {
   toUserId: offer.toUserId,
 };
 
+/** Open offers matching `where`: what `cancelOpenOffers` would cancel. */
+export const openOffersWhere = (where: ReturnType<typeof and>) =>
+  and(eq(offer.status, "open"), gt(offer.expiresAt, sql`now()`), where);
+
 /**
  * Cancels every open offer matching `where` with `reason`, notifying both parties of each,
  * inside the caller's transaction; the caller publishes the result after commit.
@@ -52,7 +56,7 @@ export async function cancelOpenOffers(
   const cancelled = await tx
     .update(offer)
     .set({ status: "cancelled", cancelReason: reason, respondedAt: sql`now()` })
-    .where(and(eq(offer.status, "open"), gt(offer.expiresAt, sql`now()`), where))
+    .where(openOffersWhere(where))
     .returning(cancelledColumns);
   if (cancelled.length === 0) return { conversations: [], notified: [] };
   const name = await partyNames(cancelled.flatMap((o) => [o.fromUserId, o.toUserId]));

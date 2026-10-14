@@ -27,6 +27,7 @@ import { getUsdRates } from "../currency-rates";
 import { activeSanctionWhere } from "../safety";
 import {
   linkedAddresses,
+  lockParties,
   openOfferHolders,
   refuseOffer,
   refuseUnsafe,
@@ -124,6 +125,7 @@ export async function createOffer(
 
   const result = await db
     .transaction(async (tx) => {
+      await lockParties(tx, [me, partnerId]);
       let conversationId: number;
       let created = false;
       if (startCtx) {

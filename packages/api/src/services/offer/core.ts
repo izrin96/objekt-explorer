@@ -20,6 +20,7 @@ import { unique } from "../../lib/unique";
 import { type ChatRefusal, type ChatTarget } from "../../schemas/chat";
 import { type OfferRefusal } from "../../schemas/offer";
 import { type chatSafety, findMembership, prepareStart, type StartContext } from "../chat";
+import { lockUsersShared } from "../cosmo-link";
 import { offersOnTrade } from "../trade-lists";
 
 export type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
@@ -66,6 +67,15 @@ export function refuseOffer(reason: OfferRefusal, detail: RefusalDetail = {}): n
       ...(detail.collectionSlugs?.length ? { collectionSlugs: detail.collectionSlugs } : {}),
     },
   });
+}
+
+/**
+ * Both parties' user rows `FOR SHARE`, which waits out a deletion's scrub; a deleted party is
+ * refused as a block is, so nothing attaches to the account after its offers were cancelled.
+ */
+export async function lockParties(tx: Tx, ids: string[]) {
+  const rows = await lockUsersShared(tx, ids);
+  if (rows.some((row) => row.deleted_at !== null)) refuseOffer("not_accepting");
 }
 
 export function refuseUnsafe(kind: "send" | "accept" | "respond", safety: Safety) {

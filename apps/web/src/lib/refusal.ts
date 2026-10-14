@@ -5,7 +5,7 @@ import { LIST_REFUSALS } from "@repo/api/schemas/list";
 import { OBJEKT_REFUSALS } from "@repo/api/schemas/objekts";
 import { PROFILE_REFUSALS } from "@repo/api/schemas/profile";
 import { TRADE_MODE_REFUSALS } from "@repo/api/schemas/trade";
-import { USER_REFUSALS } from "@repo/api/schemas/user";
+import { DELETE_REFUSALS, type DeleteRefusal, USER_REFUSALS } from "@repo/api/schemas/user";
 
 import { errorReason } from "@/lib/orpc-error";
 import { formatTimestamp } from "@/lib/time";
@@ -19,6 +19,7 @@ const REFUSALS: readonly string[] = [
   ...PROFILE_REFUSALS,
   ...USER_REFUSALS,
   ...OBJEKT_REFUSALS,
+  ...DELETE_REFUSALS,
 ];
 
 const isRefusal = (code: string | null): code is Refusal =>
@@ -97,6 +98,25 @@ export function refusalText(error: unknown) {
       return m.api_errors_user_failed_get_info({ provider: providerOf(error) });
     case "objekt_checkpoint_unavailable":
       return m.api_errors_objekt_checkpoint_unavailable();
+    case "sanctioned":
+    case "trade_in_progress":
+    case "email_undeliverable":
+    case "sign_in_again":
+      return deleteRefusalText(reason);
+  }
+}
+
+/** Also Better Auth's deletion refusals, whose `error.code` is the same code. */
+export function deleteRefusalText(refusal: DeleteRefusal) {
+  switch (refusal) {
+    case "sanctioned":
+      return m.auth_account_delete_sanctioned();
+    case "trade_in_progress":
+      return m.auth_account_delete_trade_in_progress();
+    case "email_undeliverable":
+      return m.auth_account_delete_email_undeliverable();
+    case "sign_in_again":
+      return m.auth_account_delete_sign_in_again_refused();
   }
 }
 
