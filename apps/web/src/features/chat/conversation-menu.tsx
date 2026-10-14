@@ -51,7 +51,7 @@ export function ConversationMenu({
   className?: string;
 }) {
   const { id, request, archived, muted, partner, blockedByMe = false } = conversation;
-  const actions = useConversationActions(id);
+  const actions = useConversationActions(id, request);
   const unblock = useUnblock();
   const safety = useSafetyDialogs({ userId: partner.userId, name, conversationId: id });
 
@@ -109,9 +109,9 @@ export function ConversationMenu({
             <>
               <MenuSeparator />
               {archived ? (
-                <MenuItem onClick={() => actions.unarchive.mutate({ id })}>
+                <MenuItem onClick={() => actions.restore.mutate({ id })}>
                   <TrayArrowUpIcon />
-                  {m.chat_unarchive()}
+                  {request ? m.chat_unarchive_request() : m.chat_unarchive()}
                 </MenuItem>
               ) : (
                 <MenuItem onClick={() => actions.archive.mutate({ id })}>

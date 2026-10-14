@@ -1,7 +1,15 @@
 export { afterBlockChange, chatSafety } from "./safety";
 export { appendMessage, findMembership, updateMember } from "./members";
 export { checkMessageRate } from "./rate";
-export { checkStart, ensureConversation, prepareStart, type StartContext } from "./start";
+export {
+  checkStart,
+  ensureConversation,
+  lockStarts,
+  openFirst,
+  prepareFirst,
+  prepareStart,
+  type StartContext,
+} from "./start";
 export { hydrateCards, parseCard, resolveCard, toChatMessages } from "./cards";
 export { publishActivityChanged, publishChatChanged } from "./notify";
 export { refuse } from "./refuse";

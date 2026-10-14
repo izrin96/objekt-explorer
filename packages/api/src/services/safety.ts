@@ -1,3 +1,4 @@
+import { db } from "@repo/db";
 import { userSanction } from "@repo/db/schema";
 import { and, gt, isNull, ne, or, type SQL, sql } from "drizzle-orm";
 
@@ -30,6 +31,20 @@ export const activeSanctionWhere = and(
   isNull(userSanction.revokedAt),
   or(isNull(userSanction.expiresAt), gt(userSanction.expiresAt, sql`now()`)),
 )!;
+
+/** The account is under an active ban, which reads as accepting no messages. */
+export function banned(user: UserRef) {
+  return sql`EXISTS (
+    SELECT 1 FROM ${userSanction}
+    WHERE ${userSanction.userId} = ${ref(user)} AND ${userSanction.type} = 'ban'
+      AND ${activeSanctionWhere}
+  )`;
+}
+
+export async function isBanned(userId: string) {
+  const result = await db.execute<{ banned: boolean }>(sql`SELECT ${banned(userId)} AS banned`);
+  return result.rows[0]?.banned ?? false;
+}
 
 /** An active trade block or ban: the account takes no part in offers, trades or any feed of lists. */
 export function notTradeSanctioned(user: UserRef) {

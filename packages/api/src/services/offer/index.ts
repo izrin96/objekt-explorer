@@ -21,6 +21,9 @@ import {
   checkStart,
   ensureConversation,
   hydrateCards,
+  lockStarts,
+  openFirst,
+  prepareFirst,
   publishChatChanged,
 } from "../chat";
 import { getUsdRates } from "../currency-rates";
@@ -65,6 +68,9 @@ export async function createOffer(
   const addressed = await resolveAddressed(me, meCreatedAt, input);
   const { partnerId } = addressed;
   const startCtx = addressed.start;
+  // the offer is the conversation's first message when it is empty, and then the start
+  const firstCtx =
+    startCtx ?? (addressed.empty ? await prepareFirst(me, meCreatedAt, partnerId) : null);
   const [safety, addresses] = await Promise.all([
     startCtx ? startCtx.safety : chatSafety(me, partnerId),
     linkedAddresses([me, partnerId]),
@@ -133,6 +139,8 @@ export async function createOffer(
         ({ id: conversationId, created } = await ensureConversation(tx, startCtx, existingId));
       } else {
         conversationId = addressed.conversationId!;
+        // the start lock comes before the row lock, as everywhere else
+        if (firstCtx) await lockStarts(tx, me);
       }
       await lockConversation(tx, conversationId);
       await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext('offer_open'), hashtext(${me}))`);
@@ -226,7 +234,11 @@ export async function createOffer(
           listId,
         })),
       ]);
-      await appendMessage(tx, conversationId, me, null, null, caution, offerId);
+      await appendMessage(tx, conversationId, me, {
+        caution,
+        offerId,
+        first: firstCtx ? () => openFirst(tx, firstCtx, conversationId) : undefined,
+      });
 
       const notified = await writeNotes(tx, [
         ...expiredNotes,
@@ -333,7 +345,7 @@ export async function offerViews(me: string, ids: number[]) {
   const mine = [...found.values()].filter(
     (row) => row.from_user_id === me || row.to_user_id === me,
   );
-  const { serial, collections } = await hydrateCards(offerItemCards(mine));
+  const { serial, collections } = await hydrateCards(offerItemCards(mine), me);
   const now = new Date();
   return {
     offers: mine.map((row) => toOfferView(row, me, now, limits, serial)),

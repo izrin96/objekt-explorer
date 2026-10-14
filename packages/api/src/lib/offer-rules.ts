@@ -14,6 +14,11 @@ import {
 } from "../schemas/offer";
 import { DAY_MS } from "./time";
 
+/** A block never reaches the API as the cause of a cancellation. */
+export function shownCancelReason<R extends string>(reason: R | null) {
+  return reason === "blocked" ? null : reason;
+}
+
 type OfferParties = { fromUserId: string; toUserId: string };
 export type OfferState = OfferParties & { status: OfferStatus; expiresAt: string | Date };
 

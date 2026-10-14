@@ -4,6 +4,7 @@ import type { OfferView } from "@repo/api/schemas/offer";
 
 import {
   appendToThread,
+  catchUpDelay,
   latestOfferId,
   canUnsend,
   liveOfferIds,
@@ -241,5 +242,13 @@ describe("seenMessageId", () => {
   test("nothing read, or nothing of mine read", () => {
     expect(seenMessageId(messages, null)).toBeNull();
     expect(seenMessageId(messages.slice(1, 2), 2)).toBeNull();
+  });
+});
+
+describe("catchUpDelay", () => {
+  test("doubles from one second and stops at thirty", () => {
+    expect([0, 1, 2, 3, 4, 5, 6, 20].map(catchUpDelay)).toEqual([
+      1000, 2000, 4000, 8000, 16_000, 30_000, 30_000, 30_000,
+    ]);
   });
 });

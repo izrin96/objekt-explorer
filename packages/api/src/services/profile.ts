@@ -16,6 +16,7 @@ import { fetchOwnerSummary } from "./objekt";
 import { isProfileHidden } from "./privacy";
 import { getCache } from "./redis";
 import { reputationOf } from "./reputation";
+import { isBanned } from "./safety";
 
 /** the signed-in user has linked this Cosmo address */
 export async function assertProfileOwned(address: string, userId: string) {
@@ -91,10 +92,13 @@ async function toProfilePage(profile: UserAddress, user: ProfileUser | null, cur
     return { ...publicProfile, messageable: false };
   }
   // a blocked pair sees no button at all, as with Nobody, rather than a refusal
-  const blocked = currentUser ? await isBlockedEither(currentUser.id, user.id) : false;
+  const [blocked, banned] = await Promise.all([
+    currentUser ? isBlockedEither(currentUser.id, user.id) : false,
+    isBanned(user.id),
+  ]);
   return {
     ...publicProfile,
-    messageable: !blocked && isMessageable(toMessagePref(user.messagePref)),
+    messageable: !blocked && !banned && isMessageable(toMessagePref(user.messagePref)),
   };
 }
 

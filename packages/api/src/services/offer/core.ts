@@ -13,11 +13,11 @@ import {
 } from "@repo/db/schema";
 import { and, eq, gt, inArray, isNull, or, sql } from "drizzle-orm";
 
-import { pairKey, startVerdict } from "../../lib/chat-rules";
+import { holdsMessage, pairKey, startFactsOf, startVerdict } from "../../lib/chat-rules";
 import { type ListEntryRef, safetyRefusal } from "../../lib/offer-rules";
 import { addressesByUser } from "../../lib/trade-rank";
 import { unique } from "../../lib/unique";
-import { type ChatRefusal, type ChatTarget } from "../../schemas/chat";
+import { type ChatTarget } from "../../schemas/chat";
 import { type OfferRefusal } from "../../schemas/offer";
 import { type chatSafety, findMembership, prepareStart, type StartContext } from "../chat";
 import { lockUsersShared } from "../cosmo-link";
@@ -225,6 +225,8 @@ export async function openOfferHolders(ids: string[]) {
 export type Addressed = {
   partnerId: string;
   conversationId: number | null;
+  /** the conversation holds no message yet, so the offer is its first and its start */
+  empty: boolean;
   /** set for a `target`: what a start needs, read once */
   start: StartContext | null;
 };
@@ -240,8 +242,13 @@ export async function resolveAddressed(
   input: { conversationId?: number; target?: ChatTarget },
 ): Promise<Addressed> {
   if (input.conversationId !== undefined) {
-    const { partnerId } = await findMembership(input.conversationId, me);
-    return { partnerId, conversationId: input.conversationId, start: null };
+    const { partnerId, lastMessageId } = await findMembership(input.conversationId, me);
+    return {
+      partnerId,
+      conversationId: input.conversationId,
+      empty: !holdsMessage(lastMessageId),
+      start: null,
+    };
   }
   const target = input.target!;
   const start = await prepareStart(me, meCreatedAt, target, new Date());
@@ -249,27 +256,18 @@ export async function resolveAddressed(
   if (partnerId === me) refuseOffer("self");
   const { userLow, userHigh } = pairKey(me, partnerId);
   const [existing] = await db
-    .select({ id: conversation.id })
+    .select({ id: conversation.id, lastMessageId: conversation.lastMessageId })
     .from(conversation)
     .where(and(eq(conversation.userLow, userLow), eq(conversation.userHigh, userHigh)));
-  const verdict = startVerdict({
-    senderId: me,
-    recipientId: partnerId,
-    senderHasAddress: start.senderHasAddress,
-    pref: start.pref,
-    blocked: start.safety.blocked,
-    senderMuted: start.safety.mute !== null,
-    existing: existing !== undefined,
-    // counted when the conversation is created, not on a read
-    rate: { ok: true },
-  });
-  if (!verdict.ok)
-    refuseOffer(
-      verdict.reason as Exclude<ChatRefusal, "invalid_card" | "unsend_closed" | "not_own_profile">,
-    );
+  // the rate is counted when the conversation is created, not on a read
+  const verdict = startVerdict(
+    startFactsOf(start, holdsMessage(existing?.lastMessageId), { ok: true }),
+  );
+  if (!verdict.ok) refuseOffer(verdict.reason, verdict.retryAt ? { retryAt: verdict.retryAt } : {});
   return {
     partnerId,
     conversationId: existing?.id ?? null,
+    empty: !holdsMessage(existing?.lastMessageId),
     start,
   };
 }

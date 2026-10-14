@@ -33,7 +33,9 @@ export const chatRouter = {
 
   send: authed
     .input(sendInputSchema)
-    .handler(({ input, context: { session } }) => sendMessage(session.user.id, input)),
+    .handler(({ input, context: { session } }) =>
+      sendMessage(session.user.id, new Date(session.user.createdAt), input),
+    ),
 
   typing: authed
     .input(conversationIdInputSchema)
@@ -104,8 +106,8 @@ export const chatRouter = {
   setSettings: authed
     .input(setSettingsInputSchema)
     .handler(async ({ input, context: { session } }) => {
-      const saved = await saveSettings(session.user.id, input);
-      if (input.showActivity !== undefined) await publishActivityChanged(session.user.id);
+      const { saved, activityChanged } = await saveSettings(session.user.id, input);
+      if (activityChanged) await publishActivityChanged(session.user.id);
       return saved;
     }),
 };

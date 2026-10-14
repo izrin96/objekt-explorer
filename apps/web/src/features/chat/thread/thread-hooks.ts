@@ -2,7 +2,7 @@ import type { ChatMessage } from "@repo/api/schemas/chat";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 
-import { fetchNewer, invalidateChatLists } from "@/features/chat/queries";
+import { catchUpIfBehind, fetchNewer, invalidateChatLists } from "@/features/chat/queries";
 import { orpc } from "@/lib/orpc";
 import { useUserSocketLive } from "@/stores/user-socket";
 
@@ -32,11 +32,16 @@ export function useMuteEnd(id: number, until: string | null) {
   }, [id, until, step, queryClient]);
 }
 
-/** Marks what the reader has seen, once per newer message and only while the tab is visible. */
+/**
+ * Marks what the reader has seen: once per newer message, and only while the page is visible
+ * and focused and the thread is scrolled to its newest message. Looks again when any of
+ * those becomes true.
+ */
 export function useMarkRead(
   id: number,
   newest: ChatMessage | undefined,
   lastReadMessageId: number | null,
+  atBottom: boolean,
 ) {
   const queryClient = useQueryClient();
   const { mutate } = useMutation(
@@ -46,9 +51,9 @@ export function useMarkRead(
   const upTo = newest && !newest.mine ? newest.id : 0;
 
   useEffect(() => {
-    if (upTo <= Math.max(marked.current, lastReadMessageId ?? 0)) return;
+    if (!atBottom || upTo <= Math.max(marked.current, lastReadMessageId ?? 0)) return;
     const mark = () => {
-      if (document.hidden || upTo <= marked.current) return;
+      if (document.hidden || !document.hasFocus() || upTo <= marked.current) return;
       const previous = marked.current;
       // held while in flight so it is not sent twice; a failure lets the next look retry
       marked.current = upTo;
@@ -63,8 +68,12 @@ export function useMarkRead(
     };
     mark();
     document.addEventListener("visibilitychange", mark);
-    return () => document.removeEventListener("visibilitychange", mark);
-  }, [id, upTo, lastReadMessageId, mutate]);
+    window.addEventListener("focus", mark);
+    return () => {
+      document.removeEventListener("visibilitychange", mark);
+      window.removeEventListener("focus", mark);
+    };
+  }, [id, upTo, lastReadMessageId, atBottom, mutate]);
 }
 
 /**
@@ -80,6 +89,7 @@ export function useCatchUp(id: number) {
       if (document.hidden) return;
       void fetchNewer(queryClient, id).catch(() => undefined);
     };
+    catchUpIfBehind(queryClient, id);
     document.addEventListener("visibilitychange", catchUp);
     const timer = live ? undefined : setInterval(catchUp, CATCH_UP_MS);
     return () => {

@@ -1,7 +1,7 @@
 import { MagnifyingGlassIcon, XIcon } from "@phosphor-icons/react";
 import { SEARCH_MAX_LENGTH } from "@repo/api/schemas/chat";
 import { useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
@@ -31,15 +31,19 @@ export function ConversationSearch({ q }: { q: string | undefined }) {
     void navigate({ to: ".", search: (prev) => ({ ...prev, q: next }), replace: true });
   }, 250);
 
+  const input = useRef<HTMLInputElement>(null);
+
   const clear = () => {
     setDraft("");
     commit("");
+    input.current?.focus();
   };
 
   return (
     <div className="shrink-0 border-b p-2">
       <InputGroup>
         <InputGroupInput
+          ref={input}
           size="sm"
           type="search"
           aria-label={m.chat_search_label()}

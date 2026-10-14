@@ -29,6 +29,14 @@ export function MuteNotice({
   );
 }
 
+export function PartnerDeletedNotice() {
+  return (
+    <div role="status" className="bg-secondary/60 border-t px-4 py-3">
+      <p className="text-sm text-pretty">{m.chat_partner_deleted()}</p>
+    </div>
+  );
+}
+
 export function BlockedNotice({ userId, name }: { userId: string; name: string }) {
   const unblock = useUnblock();
   return (
@@ -47,7 +55,7 @@ export function BlockedNotice({ userId, name }: { userId: string; name: string }
 }
 
 export function RequestBar({ id, name }: { id: number; name: string }) {
-  const actions = useConversationActions(id);
+  const actions = useConversationActions(id, true);
   return (
     <div className="bg-secondary/60 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-t px-4 py-3">
       <p className="text-sm text-pretty">{m.chat_request_hint({ name })}</p>

@@ -33,6 +33,7 @@ export const CHAT_REFUSALS = [
   "muted",
   "unsend_closed",
   "not_own_profile",
+  "settings_limit",
 ] as const;
 export type ChatRefusal = (typeof CHAT_REFUSALS)[number];
 
@@ -53,11 +54,23 @@ export type ChatBox = (typeof CHAT_BOXES)[number];
 /** Code points, as Postgres `char_length` counts them. */
 export const messageLength = (body: string) => Array.from(body).length;
 
-const messageBodySchema = z
+/** Format characters, Braille blank, Hangul fillers and whitespace render as nothing. */
+const BLANK_RENDERING = /[\p{Cf}\u2800\u3164\u115F\u1160\uFFA0\s]/gu;
+
+export const messageBodySchema = z
   .string()
   .trim()
   .min(1)
+  .refine((body) => !body.includes("\0"), { message: "empty" })
+  .refine((body) => body.replace(BLANK_RENDERING, "") !== "", { message: "empty" })
   .refine((body) => messageLength(body) <= MESSAGE_MAX_LENGTH, { message: "too_long" });
+
+const slugSchema = (max: number) =>
+  z
+    .string()
+    .min(1)
+    .max(max)
+    .refine((slug) => !slug.includes("\0"));
 
 /** What `message.card` stores. */
 export const storedCardSchema = z.object({
@@ -69,14 +82,14 @@ export type StoredCard = z.infer<typeof storedCardSchema>;
 
 /** A card as the client sends it; the list is named by slug and stored by id. */
 const cardInputSchema = z.object({
-  collectionSlug: z.string().min(1).max(255),
-  objektId: z.string().min(1).max(255).optional(),
-  listSlug: z.string().min(1).max(12).optional(),
+  collectionSlug: slugSchema(255),
+  objektId: slugSchema(255).optional(),
+  listSlug: slugSchema(12).optional(),
 });
 export type CardInput = z.infer<typeof cardInputSchema>;
 
 export const chatTargetSchema = z.discriminatedUnion("kind", [
-  z.object({ kind: z.literal("list"), slug: z.string().min(1).max(12) }),
+  z.object({ kind: z.literal("list"), slug: slugSchema(12) }),
   z.object({ kind: z.literal("profile"), address: addressSchema }),
   z.object({ kind: z.literal("user"), userId: z.string().min(1) }),
 ]);
@@ -105,13 +118,20 @@ export const sendInputSchema = z
     conversationId: idSchema,
     body: messageBodySchema.optional(),
     card: cardInputSchema.optional(),
+    /** one per composed message, so a retry after an unknown outcome never posts twice */
+    clientId: z.uuid().optional(),
   })
   .refine((input) => input.body !== undefined || input.card !== undefined, {
     message: "empty",
   });
 
 /** The last row of the previous page; `at` is its last activity (`last_message_at`, else `created_at`) exactly as the database wrote it. */
-const conversationCursorSchema = z.object({ at: z.string(), id: z.number().int() });
+const conversationCursorSchema = z.object({
+  at: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?(?:[+-]\d{2}(?::\d{2})?)?$/),
+  id: z.number().int(),
+});
 export type ConversationCursor = z.infer<typeof conversationCursorSchema>;
 
 export const SEARCH_MAX_LENGTH = 50;

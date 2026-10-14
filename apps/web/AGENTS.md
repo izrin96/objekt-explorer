@@ -13,6 +13,10 @@ TanStack Start app on Base UI (the cnippet registry). `src/components/ui/*` are 
 - **Lists.** Where a list lives and who owns it key off its profile **address**; `isProfileBind` only decides whether it shows on that profile (`features/list/list-link.ts`).
 - **Overflow guard.** `lib/dev-overflow-guard.ts` reports horizontal overflow in dev. Declare every deliberate horizontal scroller with `data-scroll-x`, or the guard reports it.
 
+## Chat draft
+
+`stores/chat-draft.ts` keeps, per conversation id and in memory only, the card a Message button hands over and the unsent `body` with the `clientId` of the send being composed. The composer reads it through selectors. A failed send restores its text in the send mutation's `onError`, not the per-call one, because that one is lost when the thread unmounts. The same `clientId` goes with every retry so the server posts the message once; editing the text starts a new one.
+
 ## Verifying against production
 
 The dev server talks to production unless `.env.local` overrides it, and the account in `SMOKE_TEST1_*` is the user's own: sign in and read, never write. A `window.fetch` shim cannot hold a write back, because `lib/orpc.ts` captures `fetch` when it builds its `RPCLink`. Verify a mutation up to the request boundary (its input and the request it would send) and leave the control unclicked.

@@ -85,6 +85,8 @@ export function refusalText(refusal: { reason: ChatRefusal; retryAt: string | nu
       return m.chat_refused_start_limit({ time: wait });
     case "message_limit":
       return m.chat_refused_message_limit({ time: wait });
+    case "settings_limit":
+      return m.chat_refused_settings_limit({ time: wait });
     case "invalid_card":
       return m.chat_refused_invalid_card();
     case "unsend_closed":

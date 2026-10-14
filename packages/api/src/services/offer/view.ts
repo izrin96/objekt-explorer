@@ -6,6 +6,7 @@ import {
   allowedActions,
   effectiveStatus,
   offerSummary,
+  shownCancelReason,
   topupPayer,
 } from "../../lib/offer-rules";
 import { iso } from "../../lib/time";
@@ -126,7 +127,7 @@ export function toOfferView(
     conversationId: row.conversation_id,
     mine,
     status: effectiveStatus(state, now),
-    cancelReason: row.cancel_reason,
+    cancelReason: shownCancelReason(row.cancel_reason),
     ...itemViews(row, viewerId, serialOf),
     topup: topupView(row, mine),
     note: row.note,

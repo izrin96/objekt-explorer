@@ -2,13 +2,17 @@ import { describe, expect, test } from "bun:test";
 
 import {
   boxOf,
+  cardAllowed,
   cardListAllowed,
   chatIdentity,
   countsTowardBadge,
+  hidesSerials,
+  holdsMessage,
   isMessageable,
   isUnread,
   type MemberState,
   messageRateDecision,
+  muteEnd,
   nextMemberState,
   pairKey,
   rateDecision,
@@ -18,6 +22,7 @@ import {
   sendVerdict,
   type StartFacts,
   showsActivityTo,
+  startFactsOf,
   startMembers,
   startVerdict,
   visibleBox,
@@ -86,7 +91,11 @@ describe("blocks and mutes", () => {
   });
 
   test("a muted sender can neither start nor send", () => {
-    expect(startVerdict(facts({ senderMuted: true }))).toEqual({ ok: false, reason: "muted" });
+    expect(startVerdict(facts({ senderMuted: true }))).toEqual({
+      ok: false,
+      reason: "muted",
+      retryAt: undefined,
+    });
     expect(sendVerdict({ blocked: true, senderMuted: true })).toEqual({
       ok: false,
       reason: "muted",
@@ -94,7 +103,16 @@ describe("blocks and mutes", () => {
     expect(sendVerdict({ blocked: false, senderMuted: false })).toEqual({ ok: true });
   });
 
-  test("a reopen without a card is allowed, as with Nobody", () => {
+  test("a muted start says when the mute ends", () => {
+    const muteUntil = new Date("2026-10-13T00:00:00Z");
+    expect(startVerdict(facts({ senderMuted: true, muteUntil }))).toEqual({
+      ok: false,
+      reason: "muted",
+      retryAt: muteUntil,
+    });
+  });
+
+  test("a reopen of a conversation holding a message is allowed, as with Nobody", () => {
     expect(startVerdict(facts({ blocked: true, existing: true }))).toEqual({ ok: true });
   });
 
@@ -112,24 +130,40 @@ describe("requests", () => {
   test("cold message goes to Requests and does not count", () => {
     const { sender, recipient } = startMembers();
     expect(boxOf(sender)).toBe("inbox");
-    expect(boxOf(recipient)).toBe("requests");
+    expect(boxOf(recipient)).toBe("inbox");
+    const opened = nextMemberState(recipient, { type: "incoming", first: true }, NOW_ISO);
+    expect(boxOf(opened)).toBe("requests");
     expect(isUnread({ id: 1, senderId: "alice" }, "kaede", null)).toBe(true);
-    expect(countsTowardBadge(recipient, { id: 1, senderId: "alice" }, "kaede", NOW)).toBe(false);
+    expect(countsTowardBadge(opened, { id: 1, senderId: "alice" }, "kaede", NOW)).toBe(false);
   });
 
   test("a first message with a card or an offer goes straight to the Inbox", () => {
     const { recipient } = startMembers();
     const opened = nextMemberState(
       recipient,
-      { type: "incoming", opensWithContent: true },
+      { type: "incoming", first: true, opensWithContent: true },
       NOW_ISO,
     );
     expect(boxOf(opened)).toBe("inbox");
   });
 
+  test("the opener receives a card-less first message as a request", () => {
+    const { sender } = startMembers();
+    const opened = nextMemberState(sender, { type: "incoming", first: true }, NOW_ISO);
+    expect(boxOf(opened)).toBe("requests");
+  });
+
+  test("a later message leaves the box alone", () => {
+    const { recipient } = startMembers();
+    const requested = nextMemberState(recipient, { type: "incoming", first: true }, NOW_ISO);
+    expect(boxOf(nextMemberState(requested, { type: "incoming" }, NOW_ISO))).toBe("requests");
+  });
+
   test("a first message without one stays a request", () => {
     const { recipient } = startMembers();
-    expect(boxOf(nextMemberState(recipient, { type: "incoming" }, NOW_ISO))).toBe("requests");
+    expect(boxOf(nextMemberState(recipient, { type: "incoming", first: true }, NOW_ISO))).toBe(
+      "requests",
+    );
   });
 
   test("accept by reply", () => {
@@ -140,7 +174,12 @@ describe("requests", () => {
   });
 
   test("decline archives and stays a request", () => {
-    const declined = nextMemberState(startMembers().recipient, { type: "decline" }, NOW_ISO);
+    const requested = nextMemberState(
+      startMembers().recipient,
+      { type: "incoming", first: true },
+      NOW_ISO,
+    );
+    const declined = nextMemberState(requested, { type: "decline" }, NOW_ISO);
     expect(boxOf(declined)).toBe("archived");
     expect(declined.request).toBe(true);
   });
@@ -324,5 +363,159 @@ describe("searchPatterns", () => {
       name: "%100\\%\\_a\\\\b%",
       slug: "%100\\%\\_a\\\\b%",
     });
+  });
+});
+
+describe("cardAllowed", () => {
+  const sender = "0xsender";
+  const partner = "0xpartner";
+  const members = [sender, partner];
+
+  test("an owned-picker objekt held by the sender", () => {
+    expect(
+      cardAllowed({ entries: null, objektId: "1", holder: sender, memberAddresses: members }),
+    ).toBe(true);
+  });
+
+  test("a list-picker or Trade post collection with an entry for it", () => {
+    expect(
+      cardAllowed({ entries: [{ objektId: null }], holder: null, memberAddresses: members }),
+    ).toBe(true);
+  });
+
+  test("a person-sheet collection alone", () => {
+    expect(cardAllowed({ entries: null, holder: null, memberAddresses: members })).toBe(true);
+  });
+
+  test("a Market drawer objekt held by the seller", () => {
+    expect(
+      cardAllowed({
+        entries: [{ objektId: "537" }],
+        objektId: "537",
+        holder: partner.toUpperCase(),
+        memberAddresses: members,
+      }),
+    ).toBe(true);
+  });
+
+  test("a sold objekt now held by a third account", () => {
+    expect(
+      cardAllowed({
+        entries: [{ objektId: "537" }],
+        objektId: "537",
+        holder: "0xthird",
+        memberAddresses: members,
+      }),
+    ).toBe(false);
+  });
+
+  test("a hide-serial list answers for the collection, not for a copy", () => {
+    const probe = { entries: [{ objektId: "537" }], objektId: "1", memberAddresses: members };
+    expect(cardAllowed({ ...probe, holder: sender })).toBe(false);
+    expect(cardAllowed({ ...probe, collectionOnly: true, holder: sender })).toBe(true);
+    expect(cardAllowed({ ...probe, collectionOnly: true, holder: "0xthird" })).toBe(false);
+  });
+
+  test("a removed entry", () => {
+    expect(cardAllowed({ entries: [], holder: null, memberAddresses: members })).toBe(false);
+  });
+
+  test("an objekt the list does not hold", () => {
+    expect(
+      cardAllowed({
+        entries: [{ objektId: "2" }],
+        objektId: "1",
+        holder: sender,
+        memberAddresses: members,
+      }),
+    ).toBe(false);
+  });
+
+  test("an any-copy entry accepts a held objekt", () => {
+    expect(
+      cardAllowed({
+        entries: [{ objektId: null }],
+        objektId: "1",
+        holder: sender,
+        memberAddresses: members,
+      }),
+    ).toBe(true);
+  });
+
+  test("an objekt nobody in the conversation holds", () => {
+    expect(
+      cardAllowed({ entries: null, objektId: "1", holder: null, memberAddresses: members }),
+    ).toBe(false);
+  });
+});
+
+describe("startFactsOf", () => {
+  const ctx = {
+    senderId: "alice",
+    recipientId: "rin",
+    senderHasAddress: true,
+    pref: { allow: "anyone" as const },
+    safety: { blocked: false, mute: null },
+  };
+
+  test("reads the block and the mute off the safety", () => {
+    const end = new Date("2026-10-08T00:00:00Z");
+    const muted = startFactsOf(
+      { ...ctx, safety: { blocked: true, mute: { until: end.toISOString() } } },
+      false,
+      { ok: true },
+    );
+    expect(muted.blocked).toBe(true);
+    expect(muted.senderMuted).toBe(true);
+    expect(muted.muteUntil).toEqual(end);
+  });
+
+  test("a mute with no end date, or none, has no muteUntil", () => {
+    expect(
+      startFactsOf({ ...ctx, safety: { blocked: false, mute: { until: null } } }, false, {
+        ok: true,
+      }),
+    ).toMatchObject({ senderMuted: true, muteUntil: undefined });
+    expect(startFactsOf(ctx, false, { ok: true })).toMatchObject({
+      senderMuted: false,
+      muteUntil: undefined,
+    });
+  });
+
+  test("carries the existing flag and the rate through", () => {
+    const rate = { ok: false as const, retryAt: NOW };
+    expect(startFactsOf(ctx, true, rate)).toMatchObject({ existing: true, rate });
+  });
+});
+
+describe("muteEnd", () => {
+  test("is the end date, or undefined", () => {
+    expect(muteEnd({ until: NOW_ISO })).toEqual(NOW);
+    expect(muteEnd({ until: null })).toBeUndefined();
+    expect(muteEnd(null)).toBeUndefined();
+  });
+});
+
+describe("holdsMessage", () => {
+  test("a conversation holds a message once its last message id is set", () => {
+    expect(holdsMessage(7)).toBe(true);
+    expect(holdsMessage(null)).toBe(false);
+    expect(holdsMessage(undefined)).toBe(false);
+  });
+});
+
+describe("hidesSerials", () => {
+  const list = { hideSerial: true, ownerId: "alice" };
+
+  test("hides from everyone but the owner", () => {
+    expect(hidesSerials(list, "rin")).toBe(true);
+    expect(hidesSerials(list, null)).toBe(true);
+    expect(hidesSerials(list, "alice")).toBe(false);
+  });
+
+  test("a list that shows serials, or no list, hides nothing", () => {
+    expect(hidesSerials({ ...list, hideSerial: false }, "rin")).toBe(false);
+    expect(hidesSerials(null, "rin")).toBe(false);
+    expect(hidesSerials(undefined, "rin")).toBe(false);
   });
 });

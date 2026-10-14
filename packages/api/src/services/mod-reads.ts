@@ -72,6 +72,7 @@ async function attachedTrades(userId: string, tradeIds: number[]) {
         ? { collectionSlug: leg.collectionSlug }
         : { collectionSlug: leg.collectionSlug, objektId: leg.objektId },
     ),
+    null,
   );
   return {
     trades: rows.map((t) => ({
@@ -188,8 +189,8 @@ export async function accountDossier(userId: string) {
         .from(conversation)
         .where(
           and(
-            eq(conversation.createdBy, userId),
-            gt(conversation.createdAt, sql`now() - interval '24 hours'`),
+            eq(conversation.startedBy, userId),
+            gt(conversation.startedAt, sql`now() - interval '24 hours'`),
           ),
         ),
       flagCounts([userId]),

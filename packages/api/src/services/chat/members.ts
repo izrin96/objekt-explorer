@@ -1,10 +1,11 @@
 import { ORPCError } from "@orpc/server";
 import { db } from "@repo/db";
 import { conversation, conversationMember, message, messageFlag } from "@repo/db/schema";
-import { and, eq, or } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 
 import { type MemberEvent, type MemberState, nextMemberState } from "../../lib/chat-rules";
-import type { FlagCategory, StoredCard } from "../../schemas/chat";
+import { type FlagCategory, parseCaution, type StoredCard } from "../../schemas/chat";
+import { parseCard } from "./cards";
 
 export type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
@@ -28,25 +29,70 @@ async function writeMember(tx: Tx, conversationId: number, userId: string, state
     );
 }
 
+type AppendInput = {
+  body?: string | null;
+  card?: StoredCard | null;
+  caution?: FlagCategory[];
+  offerId?: number | null;
+  /** makes a retry of the same send return the stored message instead of posting twice */
+  clientId?: string;
+  /** runs under the row lock when the conversation holds no message yet; a throw aborts the send */
+  first?: () => Promise<void>;
+};
+
+/**
+ * The sender's message stored under `clientId`, read back as a send result. A `clientId` that
+ * belongs to another conversation is refused: it names a message that is not this send's.
+ */
+export async function findSentMessage(
+  senderId: string,
+  clientId: string,
+  conversationId: number,
+  executor: Pick<typeof db, "select"> = db,
+) {
+  const [row] = await executor
+    .select({
+      id: message.id,
+      conversationId: message.conversationId,
+      createdAt: message.createdAt,
+      body: message.body,
+      card: message.card,
+      caution: message.caution,
+      unsentAt: message.unsentAt,
+    })
+    .from(message)
+    .where(and(eq(message.senderId, senderId), eq(message.clientId, clientId)));
+  if (!row) return undefined;
+  if (row.conversationId !== conversationId) throw new ORPCError("BAD_REQUEST");
+  return { ...row, card: parseCard(row.card), caution: parseCaution(row.caution) };
+}
+
 /**
  * Inserts a message under the conversation's row lock, so ids grow in commit order within
- * a conversation and a client reading `after` its newest id never skips one.
+ * a conversation and a client reading `after` its newest id never skips one. A `clientId`
+ * already stored for the sender returns that message with `duplicate` set and changes nothing.
  */
 export async function appendMessage(
   tx: Tx,
   conversationId: number,
   senderId: string,
-  body: string | null,
-  card: StoredCard | null,
-  caution: FlagCategory[] = [],
-  offerId: number | null = null,
+  {
+    body = null,
+    card = null,
+    caution = [],
+    offerId = null,
+    clientId,
+    first: openFirst,
+  }: AppendInput,
 ) {
   const [locked] = await tx
     .select({ lastMessageId: conversation.lastMessageId })
     .from(conversation)
     .where(eq(conversation.id, conversationId))
     .for("update");
-  const opensWithContent = locked?.lastMessageId === null && (card !== null || offerId !== null);
+  const first = locked?.lastMessageId === null;
+  const opensWithContent = first && (card !== null || offerId !== null);
+  if (first) await openFirst?.();
 
   const [inserted] = await tx
     .insert(message)
@@ -57,9 +103,17 @@ export async function appendMessage(
       card,
       offerId,
       caution: caution.length ? caution : null,
+      clientId: clientId ?? null,
     })
+    .onConflictDoNothing()
     .returning({ id: message.id, createdAt: message.createdAt });
-  if (!inserted) throw new Error("message insert returned no row");
+  if (!inserted) {
+    const stored = clientId
+      ? await findSentMessage(senderId, clientId, conversationId, tx)
+      : undefined;
+    if (!stored) throw new Error("message insert returned no row");
+    return { ...stored, previousMessageId: null, duplicate: true as const };
+  }
 
   if (caution.length > 0) {
     await tx
@@ -83,14 +137,34 @@ export async function appendMessage(
     const event: MemberEvent =
       userId === senderId
         ? { type: "send", messageId: inserted.id }
-        : { type: "incoming", opensWithContent };
+        : { type: "incoming", first, opensWithContent };
     await writeMember(tx, conversationId, userId, nextMemberState(state, event, now));
   }
   // read under the row lock, so it is the message this one follows
-  return { ...inserted, previousMessageId: locked?.lastMessageId ?? null };
+  return {
+    ...inserted,
+    body,
+    card,
+    caution: caution.length ? caution : null,
+    previousMessageId: locked?.lastMessageId ?? null,
+    duplicate: false as const,
+  };
 }
 
-/** The conversation's two ids when `userId` is one of them; NOT_FOUND otherwise. */
+/**
+ * A conversation with no message yet belongs to the member who opened it, and to no one else.
+ * `as` names the table aliases when it is read from raw SQL rather than through Drizzle.
+ */
+export function visibleToMember(userId: string, as?: { conversation: string; member: string }) {
+  const lastMessageId = as
+    ? sql.raw(`${as.conversation}.last_message_id`)
+    : conversation.lastMessageId;
+  const createdBy = as ? sql.raw(`${as.conversation}.created_by`) : conversation.createdBy;
+  const openedAt = as ? sql.raw(`${as.member}.opened_at`) : conversationMember.openedAt;
+  return sql`(${lastMessageId} IS NOT NULL OR ${createdBy} = ${userId} OR ${openedAt} IS NOT NULL)`;
+}
+
+/** The conversation's two ids when `userId` is a member who can see it; NOT_FOUND otherwise. */
 export async function findMembership(conversationId: number, userId: string) {
   const [row] = await db
     .select({
@@ -99,12 +173,14 @@ export async function findMembership(conversationId: number, userId: string) {
       lastMessageId: conversation.lastMessageId,
     })
     .from(conversation)
-    .where(
+    .innerJoin(
+      conversationMember,
       and(
-        eq(conversation.id, conversationId),
-        or(eq(conversation.userLow, userId), eq(conversation.userHigh, userId)),
+        eq(conversationMember.conversationId, conversation.id),
+        eq(conversationMember.userId, userId),
       ),
-    );
+    )
+    .where(and(eq(conversation.id, conversationId), visibleToMember(userId)));
   if (!row) throw new ORPCError("NOT_FOUND");
   return { ...row, partnerId: row.userLow === userId ? row.userHigh : row.userLow };
 }
@@ -124,6 +200,7 @@ export async function updateMember(
         and(
           eq(conversationMember.conversationId, conversationId),
           eq(conversationMember.userId, userId),
+          visibleToMember(userId),
         ),
       )
       .for("update", { of: conversationMember });

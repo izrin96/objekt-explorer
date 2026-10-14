@@ -231,12 +231,16 @@ export const conversation = pgTable(
     createdAt: timestamp("created_at", { mode: "string", withTimezone: true })
       .notNull()
       .defaultNow(),
+    // null until the first message or offer, which is the conversation's start
+    startedBy: text("started_by"),
+    startedAt: timestamp("started_at", { mode: "string", withTimezone: true }),
     lastMessageId: bigint("last_message_id", { mode: "number" }),
     lastMessageAt: timestamp("last_message_at", { mode: "string", withTimezone: true }),
   },
   (t) => [
     uniqueIndex("conversation_pair_uniq").on(t.userLow, t.userHigh),
     index("conversation_user_high_idx").on(t.userHigh),
+    index("conversation_started_by_at_idx").on(t.startedBy, t.startedAt),
     // ids are mixed-case and the database collation is not byte order, so `pairKey` sorts by code point
     check("conversation_pair_ordered", sql`${t.userLow} COLLATE "C" < ${t.userHigh}`),
     check("conversation_created_by_member", sql`${t.createdBy} IN (${t.userLow}, ${t.userHigh})`),
@@ -256,6 +260,7 @@ export const conversationMember = pgTable(
     archivedAt: timestamp("archived_at", { mode: "string", withTimezone: true }),
     mutedUntil: timestamp("muted_until", { mode: "string", withTimezone: true }),
     lastReadMessageId: bigint("last_read_message_id", { mode: "number" }),
+    openedAt: timestamp("opened_at", { mode: "string", withTimezone: true }),
   },
   (t) => [
     primaryKey({ columns: [t.conversationId, t.userId] }),
@@ -281,9 +286,13 @@ export const message = pgTable(
       .defaultNow(),
     // the content stays, so a report can still show what was unsent
     unsentAt: timestamp("unsent_at", { mode: "string", withTimezone: true }),
+    clientId: uuid("client_id"),
   },
   (t) => [
     index("message_conversation_id_idx").on(t.conversationId, t.id.desc()),
+    uniqueIndex("message_sender_client_uniq")
+      .on(t.senderId, t.clientId)
+      .where(sql`client_id IS NOT NULL`),
     index("message_offer_id_idx")
       .on(t.offerId)
       .where(sql`offer_id IS NOT NULL`),

@@ -11,6 +11,29 @@ import { TrustLine } from "@/features/offers/trust-line";
 import { ProfileLink } from "@/features/profile/profile-hover-card";
 import { m } from "@/paraglide/messages";
 
+export function ThreadBackButton() {
+  return (
+    <Button
+      variant="ghost"
+      size="icon-sm"
+      className="-ms-1 shrink-0 md:hidden"
+      aria-label={m.chat_back()}
+      render={<Link to="/messages" search={(prev) => prev} />}
+    >
+      <ArrowLeftIcon />
+    </Button>
+  );
+}
+
+/** Below `md` the list is a separate screen, so a thread that has no header yet still leads back. */
+export function ThreadBackBar() {
+  return (
+    <div className="flex shrink-0 items-center border-b px-3 py-2.5 md:hidden">
+      <ThreadBackButton />
+    </div>
+  );
+}
+
 export function ThreadHeader({
   conversation,
   headingRef,
@@ -24,15 +47,7 @@ export function ThreadHeader({
   const name = partner.identity.name;
   return (
     <header className="flex items-center gap-3 border-b px-3 py-2.5 md:px-4">
-      <Button
-        variant="ghost"
-        size="icon-sm"
-        className="-ms-1 shrink-0 md:hidden"
-        aria-label={m.chat_back()}
-        render={<Link to="/messages" search={(prev) => prev} />}
-      >
-        <ArrowLeftIcon />
-      </Button>
+      <ThreadBackButton />
       <Avatar className="size-9 shrink-0">
         {partner.user.image ? <AvatarImage src={partner.user.image} alt="" /> : null}
         <AvatarFallback>{name.slice(0, 1).toUpperCase()}</AvatarFallback>

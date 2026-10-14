@@ -132,3 +132,10 @@ export function unsentIds(page: Pick<ThreadPage, "messages">) {
 export function latestOfferId(messages: ThreadPage["messages"]) {
   return messages.findLast((message) => message.offer)?.offer?.id ?? null;
 }
+
+const CATCH_UP_FIRST_MS = 1000;
+const CATCH_UP_MAX_MS = 30_000;
+
+export function catchUpDelay(attempt: number) {
+  return Math.min(CATCH_UP_FIRST_MS * 2 ** attempt, CATCH_UP_MAX_MS);
+}

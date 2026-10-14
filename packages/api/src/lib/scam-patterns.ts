@@ -27,7 +27,8 @@ const PATTERNS: Record<FlagCategory, RegExp[]> = {
 };
 
 export function scanMessage(body: string): FlagCategory[] {
+  const text = body.normalize("NFKC").replace(/\p{Cf}/gu, "");
   return (Object.keys(PATTERNS) as FlagCategory[]).filter((category) =>
-    PATTERNS[category].some((pattern) => pattern.test(body)),
+    PATTERNS[category].some((pattern) => pattern.test(text)),
   );
 }

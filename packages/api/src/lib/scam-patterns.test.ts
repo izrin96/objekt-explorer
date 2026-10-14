@@ -64,3 +64,13 @@ describe("false-positive guards", () => {
     expect(scanMessage(body)).toEqual([]);
   });
 });
+
+describe("disguises", () => {
+  test.each(["pay\u200Bpal", "ｐａｙｐａｌ", "send\u200B first pls"])("%j", (body) => {
+    expect(scanMessage(body).length).toBeGreaterThan(0);
+  });
+
+  test("a clean message is unchanged", () => {
+    expect(scanMessage("happy to trade 204Z for 205Z")).toEqual([]);
+  });
+});

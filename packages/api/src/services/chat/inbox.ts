@@ -21,7 +21,7 @@ import { toPublicUser } from "../profile";
 import { reputationOf } from "../reputation";
 import { notBlockedBy } from "../safety";
 import { hydrateCards, parseCard, toChatMessages } from "./cards";
-import { findMembership, updateMember } from "./members";
+import { findMembership, updateMember, visibleToMember } from "./members";
 import { publishChatChanged } from "./notify";
 import { chatSafety } from "./safety";
 import { activityBetween } from "./settings";
@@ -35,11 +35,15 @@ const BOX_WHERE: Record<ChatBox, ReturnType<typeof sql>> = {
 const partnerOf = (me: string) =>
   sql`CASE WHEN c.user_low = ${me} THEN c.user_high ELSE c.user_low END`;
 
-/** Mirrors `visibleBox`, over member `m` of conversation `c`. */
-const visibleIn = (box: ChatBox, me: string) =>
-  box === "archived"
-    ? BOX_WHERE[box]
-    : sql`${BOX_WHERE[box]} AND ${notBlockedBy(me, partnerOf(me))}`;
+const partnerDeleted = (me: string) =>
+  sql`EXISTS (SELECT 1 FROM "user" d WHERE d.id = ${partnerOf(me)} AND d.deleted_at IS NOT NULL)`;
+
+/** Mirrors `visibleBox`, over member `m` of conversation `c`; a deleted account's request is no request. */
+function visibleIn(box: ChatBox, me: string) {
+  if (box === "archived") return BOX_WHERE[box];
+  const unblocked = sql`${BOX_WHERE[box]} AND ${notBlockedBy(me, partnerOf(me))}`;
+  return box === "requests" ? sql`${unblocked} AND NOT ${partnerDeleted(me)}` : unblocked;
+}
 
 /** Names and sent cards only; message text is never searched. */
 const matchesSearch = (me: string, { name, slug }: ReturnType<typeof searchPatterns>) => sql`AND (
@@ -98,8 +102,8 @@ export async function fetchPartners(userIds: string[]) {
 
 /**
  * The viewer's rows of the conversations `scope` picks, newest activity first. A conversation
- * with no message yet is listed only for the one who started it, so an empty request never
- * reaches the recipient.
+ * with no message yet is listed only for a member who opened it with Message, so an empty
+ * conversation never reaches the other side.
  */
 async function selectConversationRows(me: string, scope: ReturnType<typeof sql>, limit: number) {
   const result = await db.execute<ConversationListRow>(sql`
@@ -125,7 +129,7 @@ async function selectConversationRows(me: string, scope: ReturnType<typeof sql>,
     JOIN conversation c ON c.id = m.conversation_id
     LEFT JOIN message msg ON msg.id = c.last_message_id
     WHERE m.user_id = ${me}
-      AND (c.last_message_id IS NOT NULL OR c.created_by = ${me})
+      AND ${visibleToMember(me, { conversation: "c", member: "m" })}
       ${scope}
     ORDER BY coalesce(c.last_message_at, c.created_at) DESC, c.id DESC
     LIMIT ${limit}
@@ -152,7 +156,10 @@ async function toConversationRows(me: string, page: ConversationListRow[]) {
   const contexts = page.map((row) => parseCard(row.context_card));
   const [partners, { view, collections }] = await Promise.all([
     fetchPartners(page.map((row) => row.partner_id)),
-    hydrateCards(contexts.filter((card) => card !== null)),
+    hydrateCards(
+      contexts.filter((card) => card !== null),
+      me,
+    ),
   ]);
   const items = page.flatMap((row, i): ConversationRow[] => {
     const partner = partners.get(row.partner_id);
@@ -240,7 +247,7 @@ export async function loadThread(me: string, input: z.infer<typeof threadInputSc
   const now = new Date();
 
   const forward = input.after !== undefined;
-  const [rows, [member], partners] = await Promise.all([
+  const [rows, [member], partners, safety, reputations] = await Promise.all([
     db
       .select({
         id: message.id,
@@ -274,12 +281,10 @@ export async function loadThread(me: string, input: z.infer<typeof threadInputSc
         and(eq(conversationMember.conversationId, input.id), eq(conversationMember.userId, me)),
       ),
     fetchPartners([partnerId]),
-  ]);
-  const [safety, reputations, activity] = await Promise.all([
     chatSafety(me, partnerId),
     reputationOf([partnerId]),
-    activityBetween(input.id, me, partnerId),
   ]);
+  const activity = await activityBetween(input.id, me, partnerId, safety.blockedEitherWay);
   const partner = partners.get(partnerId);
   if (!member || !partner) throw new ORPCError("NOT_FOUND");
 
@@ -303,6 +308,8 @@ export async function loadThread(me: string, input: z.infer<typeof threadInputSc
       sendBlocked: safety.mute,
       /** whether the viewer blocked this account; never whether they were blocked */
       blockedByMe: safety.blockedByMe,
+      /** the account was deleted: the thread stays readable and nothing more can be sent */
+      partnerDeleted: safety.partnerDeleted,
     },
     messages,
     hasMore: rows.length > THREAD_PAGE_SIZE,

@@ -1,4 +1,9 @@
-import { ArrowClockwiseIcon, ChatsCircleIcon, WarningIcon } from "@phosphor-icons/react";
+import {
+  ArrowClockwiseIcon,
+  ArrowDownIcon,
+  ChatsCircleIcon,
+  WarningIcon,
+} from "@phosphor-icons/react";
 import type { ChatMessage } from "@repo/api/schemas/chat";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
@@ -31,8 +36,8 @@ import { clearTyping, useChatTyping } from "@/stores/chat-typing";
 import { runPosition } from "./bubble-run";
 import { Composer } from "./composer";
 import { MessageItem } from "./message-item";
-import { BlockedNotice, MuteNotice, RequestBar } from "./thread-banners";
-import { ThreadHeader } from "./thread-header";
+import { BlockedNotice, MuteNotice, PartnerDeletedNotice, RequestBar } from "./thread-banners";
+import { ThreadBackBar, ThreadHeader } from "./thread-header";
 import { useCatchUp, useMarkRead, useMuteEnd } from "./thread-hooks";
 
 /** How close to the bottom still counts as reading the newest message. */
@@ -47,18 +52,21 @@ export function Thread({ id }: { id: number }) {
 
   if (query.isError) {
     return (
-      <EmptyState
-        icon={WarningIcon}
-        bordered={false}
-        title={m.common_error_loading_data()}
-        className="flex-1"
-        action={
-          <Button variant="outline" size="sm" onClick={() => void query.refetch()}>
-            <ArrowClockwiseIcon />
-            {m.common_error_retry()}
-          </Button>
-        }
-      />
+      <div className="flex min-h-0 flex-1 flex-col">
+        <ThreadBackBar />
+        <EmptyState
+          icon={WarningIcon}
+          bordered={false}
+          title={m.common_error_loading_data()}
+          className="flex-1"
+          action={
+            <Button variant="outline" size="sm" onClick={() => void query.refetch()}>
+              <ArrowClockwiseIcon />
+              {m.common_error_retry()}
+            </Button>
+          }
+        />
+      </div>
     );
   }
 
@@ -95,6 +103,7 @@ function ThreadView({
   const scroller = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState<ValidObjekt | null>(null);
   const stick = useRef(true);
+  const [atBottom, setAtBottom] = useState(true);
   const heightBeforeOlder = useRef<number | null>(null);
   const heading = useRef<HTMLHeadingElement>(null);
   const hydrated = useHydrated();
@@ -104,6 +113,9 @@ function ThreadView({
   const seenId = seenMessageId(messages, conversation.partnerReadMessageId);
   const typing = useChatTyping((state) => id in state.typing);
   const newestIncoming = messages.findLast((message) => !message.mine)?.id;
+  // the newest message of theirs the reader had in view when last at the bottom
+  const [seenIncoming, setSeenIncoming] = useState(newestIncoming ?? 0);
+  const hasNew = !atBottom && newestIncoming !== undefined && newestIncoming > seenIncoming;
 
   // their message has landed, so whatever they were typing is no longer pending
   useEffect(() => {
@@ -145,7 +157,7 @@ function ThreadView({
     return () => observer.disconnect();
   }, []);
 
-  useMarkRead(id, newest, conversation.lastReadMessageId);
+  useMarkRead(id, newest, conversation.lastReadMessageId, atBottom);
   useMuteEnd(id, conversation.sendBlocked?.until ?? null);
 
   return (
@@ -156,10 +168,14 @@ function ThreadView({
         ref={scroller}
         role="log"
         aria-label={m.chat_thread_label({ name })}
+        aria-busy={olderPage.loading || undefined}
         tabIndex={0}
         onScroll={(event) => {
           const el = event.currentTarget;
-          stick.current = el.scrollHeight - el.scrollTop - el.clientHeight < STICK_PX;
+          const near = el.scrollHeight - el.scrollTop - el.clientHeight < STICK_PX;
+          stick.current = near;
+          setAtBottom(near);
+          if (near && newestIncoming !== undefined) setSeenIncoming(newestIncoming);
         }}
         className="focus-visible:ring-ring relative min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-4 outline-none focus-visible:ring-2 focus-visible:ring-inset md:px-4"
       >
@@ -244,8 +260,28 @@ function ThreadView({
         </div>
       </div>
 
-      {conversation.request && !conversation.archived ? <RequestBar id={id} name={name} /> : null}
-      {conversation.sendBlocked ? (
+      {hasNew ? (
+        <div className="relative">
+          <Button
+            variant="secondary"
+            size="sm"
+            className="absolute -top-12 left-1/2 -translate-x-1/2 shadow-md"
+            onClick={() => {
+              const el = scroller.current;
+              if (el) el.scrollTop = el.scrollHeight;
+            }}
+          >
+            <ArrowDownIcon />
+            {m.chat_new_messages()}
+          </Button>
+        </div>
+      ) : null}
+      {conversation.request && !conversation.archived && !conversation.partnerDeleted ? (
+        <RequestBar id={id} name={name} />
+      ) : null}
+      {conversation.partnerDeleted ? (
+        <PartnerDeletedNotice />
+      ) : conversation.sendBlocked ? (
         <MuteNotice notice={conversation.sendBlocked} hydrated={hydrated} />
       ) : conversation.blockedByMe ? (
         <BlockedNotice userId={partner.userId} name={name} />
@@ -267,11 +303,14 @@ function ThreadView({
 /** Also the route's pending view, in the thread pane. */
 export function ThreadSkeleton() {
   return (
-    <div className="flex flex-1 flex-col gap-3 p-4">
-      <PendingStatus />
-      <Skeleton className="h-10 w-1/2" />
-      <Skeleton className="ms-auto h-10 w-2/3" />
-      <Skeleton className="h-10 w-1/3" />
+    <div className="flex min-h-0 flex-1 flex-col">
+      <ThreadBackBar />
+      <div className="flex flex-1 flex-col gap-3 p-4">
+        <PendingStatus />
+        <Skeleton className="h-10 w-1/2" />
+        <Skeleton className="ms-auto h-10 w-2/3" />
+        <Skeleton className="h-10 w-1/3" />
+      </div>
     </div>
   );
 }

@@ -28,6 +28,7 @@ import { getCollectionColumns, getPartialCollectionColumns } from "./objekt";
 import { isProfileHidden } from "./privacy";
 import { toPublicUser } from "./profile";
 import { redis } from "./redis";
+import { isBanned } from "./safety";
 import { TOKEN_CHUNK_SIZE } from "./utils";
 
 interface ListEntryTransformConfig {
@@ -250,6 +251,7 @@ export async function isListMessageable(listId: number, viewerId: string | undef
     .where(eq(lists.id, listId));
   if (!row || row.userId === viewerId) return false;
   if (viewerId && (await isBlockedEither(viewerId, row.userId))) return false;
+  if (await isBanned(row.userId)) return false;
   return isMessageable(toMessagePref(row));
 }
 

@@ -6,10 +6,16 @@ import { and, eq, sql } from "drizzle-orm";
 import { pairKey } from "../../lib/chat-rules";
 import { effectiveSanction } from "../../lib/sanctions";
 import { redis } from "../redis";
-import { activeSanctionWhere, notBlockedBy, notBlockedEither, notTradeSanctioned } from "../safety";
+import {
+  activeSanctionWhere,
+  banned,
+  notBlockedBy,
+  notBlockedEither,
+  notTradeSanctioned,
+} from "../safety";
 import { publishChatChanged } from "./notify";
 
-/** Blocks between the pair, and the user's own chat mute in force. A deleted partner reads as a block. */
+/** Blocks between the pair, and the user's own chat mute in force. A deleted or banned partner reads as a block. */
 export async function chatSafety(userId: string, partnerId: string) {
   const [blocks, mutes] = await Promise.all([
     db.execute<{
@@ -18,11 +24,13 @@ export async function chatSafety(userId: string, partnerId: string) {
       trade_blocked: boolean;
       partner_trade_blocked: boolean;
       partner_deleted: boolean;
+      partner_banned: boolean;
     }>(sql`
       SELECT NOT ${notBlockedEither(userId, partnerId)} AS blocked,
         EXISTS (
           SELECT 1 FROM ${user} WHERE ${user.id} = ${partnerId} AND ${user.deletedAt} IS NOT NULL
         ) AS partner_deleted,
+        ${banned(partnerId)} AS partner_banned,
         NOT ${notBlockedBy(userId, partnerId)} AS blocked_by_me,
         NOT ${notTradeSanctioned(userId)} AS trade_blocked,
         NOT ${notTradeSanctioned(partnerId)} AS partner_trade_blocked
@@ -40,7 +48,11 @@ export async function chatSafety(userId: string, partnerId: string) {
   ]);
   const [row] = blocks.rows;
   return {
-    blocked: (row?.blocked ?? false) || (row?.partner_deleted ?? false),
+    blocked:
+      (row?.blocked ?? false) || (row?.partner_deleted ?? false) || (row?.partner_banned ?? false),
+    partnerDeleted: row?.partner_deleted ?? false,
+    /** a block either way, apart from a deleted or banned partner */
+    blockedEitherWay: row?.blocked ?? false,
     blockedByMe: row?.blocked_by_me ?? false,
     mute: effectiveSanction(mutes),
     tradeBlocked: row?.trade_blocked ?? false,

@@ -1,12 +1,16 @@
+import { ArrowClockwiseIcon, WarningIcon } from "@phosphor-icons/react";
 import { MESSAGE_ALLOW, type MessageAllow } from "@repo/api/schemas/chat";
 import { truncateAddress } from "@repo/lib/address";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import { EmptyState } from "@/components/shared/empty-state";
+import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Label } from "@/components/ui/label";
 import { Radio, RadioGroup } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
 import { toastManager } from "@/components/ui/toast";
+import { refusalOf, refusalText } from "@/features/chat/format";
 import { chatSettingsOptions } from "@/features/chat/queries";
 import { useUserProfiles } from "@/features/user/hooks";
 import { displayNickname } from "@/lib/address";
@@ -34,9 +38,13 @@ export function MessagesSection() {
         queryClient.setQueryData(queryKey, (old) => (old ? { ...old, ...input } : old));
         return { previous };
       },
-      onError: (_error, _input, context) => {
+      onError: (error, _input, context) => {
         queryClient.setQueryData(queryKey, context?.previous);
-        toastManager.add({ type: "error", title: m.chat_settings_error() });
+        const refusal = refusalOf(error);
+        toastManager.add({
+          type: "error",
+          title: refusal ? refusalText(refusal) : m.chat_settings_error(),
+        });
       },
       // open threads read Seen from the conversation, so they read it again under the new switch
       onSuccess: (_, input) =>
@@ -46,6 +54,22 @@ export function MessagesSection() {
       onSettled: () => queryClient.invalidateQueries({ queryKey }),
     }),
   );
+
+  if (settings.isError) {
+    return (
+      <EmptyState
+        icon={WarningIcon}
+        bordered={false}
+        title={m.common_error_loading_data()}
+        action={
+          <Button variant="outline" size="sm" onClick={() => void settings.refetch()}>
+            <ArrowClockwiseIcon />
+            {m.common_error_retry()}
+          </Button>
+        }
+      />
+    );
+  }
 
   return (
     <div className="flex flex-col gap-6">

@@ -9,8 +9,9 @@ import {
 } from "@phosphor-icons/react";
 import type { ChatBox, ConversationRow } from "@repo/api/schemas/chat";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, type UseInfiniteQueryResult, useQuery } from "@tanstack/react-query";
 import { Link, useHydrated } from "@tanstack/react-router";
+import { type FocusEvent, type RefObject, useEffect, useRef } from "react";
 
 import { PendingStatus } from "@/components/router/pending";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -28,7 +29,8 @@ import { m } from "@/paraglide/messages";
 
 import { ConversationMenu } from "./conversation-menu";
 import { mutedLabel } from "./format";
-import { conversationsOptions } from "./queries";
+import type { ConversationsData } from "./live-message";
+import { conversationsOptions, requestCountOptions } from "./queries";
 
 const EMPTY = {
   inbox: { icon: ChatsCircleIcon, title: m.chat_empty_inbox, hint: m.chat_empty_inbox_hint },
@@ -39,7 +41,47 @@ const EMPTY = {
 export function ConversationList({ box, q }: { box: ChatBox; q: string | undefined }) {
   const query = useInfiniteQuery(conversationsOptions(box, q));
   const now = useMinuteClock();
+  const region = useRef<HTMLDivElement>(null);
+  const rows = query.data?.pages.flatMap((page) => page.items) ?? [];
+  const onFocus = useFocusAfterLeave(region, rows);
 
+  // one node for every state, so a change of its text is announced rather than a new node
+  // appearing with its text already in it; the previous query's results are not read as the new one's
+  const announcement =
+    q === undefined || !query.isSuccess || query.isPlaceholderData
+      ? null
+      : rows.length === 0
+        ? m.chat_search_none()
+        : m.chat_search_results({ count: query.hasNextPage ? `${rows.length}+` : rows.length });
+
+  return (
+    <div
+      ref={region}
+      tabIndex={-1}
+      onFocus={onFocus}
+      className="flex min-h-0 flex-1 flex-col outline-none"
+    >
+      <p role="status" className="sr-only">
+        {announcement}
+      </p>
+      <ConversationListBody query={query} rows={rows} box={box} q={q} now={now} />
+    </div>
+  );
+}
+
+function ConversationListBody({
+  query,
+  rows,
+  box,
+  q,
+  now,
+}: {
+  query: UseInfiniteQueryResult<ConversationsData>;
+  rows: ConversationRow[];
+  box: ChatBox;
+  q: string | undefined;
+  now: number;
+}) {
   if (query.isPending) return <ConversationListSkeleton />;
 
   if (query.isError) {
@@ -58,7 +100,6 @@ export function ConversationList({ box, q }: { box: ChatBox; q: string | undefin
     );
   }
 
-  const rows = query.data.pages.flatMap((page) => page.items);
   const collections = Object.assign({}, ...query.data.pages.map((page) => page.collections));
   if (rows.length === 0 && q !== undefined) {
     return (
@@ -82,7 +123,13 @@ export function ConversationList({ box, q }: { box: ChatBox; q: string | undefin
   if (rows.length === 0) {
     const empty = EMPTY[box];
     return (
-      <EmptyState icon={empty.icon} bordered={false} title={empty.title()} hint={empty.hint()} />
+      <EmptyState
+        icon={empty.icon}
+        bordered={false}
+        title={empty.title()}
+        hint={empty.hint()}
+        action={box === "inbox" ? <WaitingRequests /> : undefined}
+      />
     );
   }
 
@@ -102,6 +149,54 @@ export function ConversationList({ box, q }: { box: ChatBox; q: string | undefin
       />
     </div>
   );
+}
+
+/** The empty Inbox points at the requests waiting, which never reach the Inbox or its badge. */
+function WaitingRequests() {
+  const { data: count } = useQuery(requestCountOptions());
+  if (!count) return null;
+  return (
+    <div className="flex flex-col items-center gap-2">
+      <p className="text-sm">{m.chat_empty_inbox_requests({ count })}</p>
+      <Button
+        variant="outline"
+        size="sm"
+        render={<Link to="/messages" search={(prev) => ({ ...prev, box: "requests" })} />}
+      >
+        {m.chat_empty_inbox_requests_link()}
+      </Button>
+    </div>
+  );
+}
+
+/**
+ * When the row that held focus leaves the list (archived, declined, accepted), focus moves to
+ * the row now in its place, or the last one, or the list when none is left. `onFocus` goes on
+ * the list's region.
+ */
+function useFocusAfterLeave(region: RefObject<HTMLDivElement | null>, rows: ConversationRow[]) {
+  const held = useRef<{ id: number; index: number } | null>(null);
+  const ids = rows.map((row) => row.id);
+
+  useEffect(() => {
+    const previous = held.current;
+    if (!previous || ids.includes(previous.id)) return;
+    held.current = null;
+    // focus already went somewhere on purpose, as a dialog does
+    if (document.activeElement && document.activeElement !== document.body) return;
+    const next = ids[Math.min(previous.index, ids.length - 1)];
+    const target =
+      next === undefined
+        ? region.current
+        : region.current?.querySelector<HTMLElement>(`[data-conversation-link="${next}"]`);
+    target?.focus();
+  }, [ids.join(","), region]);
+
+  return (event: FocusEvent<HTMLElement>) => {
+    const row = (event.target as HTMLElement).closest<HTMLElement>("[data-conversation-row]");
+    const id = Number(row?.dataset.conversationRow);
+    held.current = row ? { id, index: ids.indexOf(id) } : null;
+  };
 }
 
 function preview(last: ConversationRow["last"]) {
@@ -132,7 +227,7 @@ function ConversationItem({
   const mutedText = muted ? (hydrated ? mutedLabel(muted) : m.chat_muted_always()) : null;
 
   return (
-    <li className="relative">
+    <li data-conversation-row={row.id} className="relative">
       {/* the menu sits beside the link, not in it: a button inside a link is not allowed */}
       <Link
         to="/messages/$id"

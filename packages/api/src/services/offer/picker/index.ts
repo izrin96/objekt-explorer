@@ -2,7 +2,7 @@ import { db } from "@repo/db";
 import { conversation, listEntries, lists } from "@repo/db/schema";
 import { and, eq, inArray } from "drizzle-orm";
 
-import { pairKey } from "../../../lib/chat-rules";
+import { holdsMessage, pairKey } from "../../../lib/chat-rules";
 import { itemFlags } from "../../../lib/offer-rules";
 import { unique } from "../../../lib/unique";
 import { type ChatTarget } from "../../../schemas/chat";
@@ -81,7 +81,7 @@ export async function suggestOffer(me: string, partnerId: string) {
         ),
       ),
     db
-      .select({ id: conversation.id })
+      .select({ id: conversation.id, lastMessageId: conversation.lastMessageId })
       .from(conversation)
       .where(and(eq(conversation.userLow, userLow), eq(conversation.userHigh, userHigh))),
   ]);
@@ -94,11 +94,13 @@ export async function suggestOffer(me: string, partnerId: string) {
   const theyWant = new Set(
     partnerWants.flatMap((w) => (w.collectionSlug ? [w.collectionSlug] : [])),
   );
-  // with no conversation yet, someone who accepts no messages is not read at all
-  if (!existing[0] && (await fetchPref(partnerId)).allow === "nobody") return empty;
+  // until the first message, someone who accepts no messages is not read at all
+  const held = holdsMessage(existing[0]?.lastMessageId);
+  if (!held && (await fetchPref(partnerId)).allow === "nobody") return empty;
   const addressed: Addressed = {
     partnerId,
     conversationId: existing[0]?.id ?? null,
+    empty: !held,
     start: null,
   };
 

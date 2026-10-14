@@ -10,6 +10,7 @@ import {
   canReport,
   firstSender,
   rateRefusal,
+  shownCancelReason,
   type TradeParty,
 } from "../../lib/offer-rules";
 import { DAY_MS, iso } from "../../lib/time";
@@ -238,22 +239,25 @@ export async function fetchTrade(me: string, tradeId: number) {
   const partner = partners.get(partnerId);
   if (!partner) throw new ORPCError("NOT_FOUND");
   const slugOf = new Map(legs.map((leg) => [leg.id, leg.collectionSlug]));
-  const { serial: serialOf, collections } = await hydrateCards([
-    ...legs.map((leg) =>
-      leg.objektId === null
-        ? { collectionSlug: leg.collectionSlug }
-        : { collectionSlug: leg.collectionSlug, objektId: leg.objektId },
-    ),
-    ...legs.flatMap((leg) =>
-      leg.verifiedObjektId === null
-        ? []
-        : [{ collectionSlug: leg.collectionSlug, objektId: leg.verifiedObjektId }],
-    ),
-    ...substitutes.map((sub) => ({
-      collectionSlug: slugOf.get(sub.legId)!,
-      objektId: sub.objektId,
-    })),
-  ]);
+  const { serial: serialOf, collections } = await hydrateCards(
+    [
+      ...legs.map((leg) =>
+        leg.objektId === null
+          ? { collectionSlug: leg.collectionSlug }
+          : { collectionSlug: leg.collectionSlug, objektId: leg.objektId },
+      ),
+      ...legs.flatMap((leg) =>
+        leg.verifiedObjektId === null
+          ? []
+          : [{ collectionSlug: leg.collectionSlug, objektId: leg.verifiedObjektId }],
+      ),
+      ...substitutes.map((sub) => ({
+        collectionSlug: slugOf.get(sub.legId)!,
+        objektId: sub.objektId,
+      })),
+    ],
+    me,
+  );
   const held = substitutes.length;
 
   const verified = legs.filter((leg) => leg.verifiedAt !== null).length;
@@ -439,7 +443,7 @@ export async function fetchMine(me: string, cursor: HistoryCursor | undefined) {
     id: row.id,
     offerId: row.offer_id,
     status: row.status,
-    cancelReason: row.cancel_reason,
+    cancelReason: shownCancelReason(row.cancel_reason),
     at: row.at,
   }));
   const openOffers = groups?.[0] ?? [];
@@ -477,7 +481,7 @@ export async function fetchMine(me: string, cursor: HistoryCursor | undefined) {
     fetchPartners(
       [...offers.values()].map((o) => (o.from_user_id === me ? o.to_user_id : o.from_user_id)),
     ),
-    hydrateCards(offerItemCards(offers.values())),
+    hydrateCards(offerItemCards(offers.values()), me),
   ]);
   const toRow = (entry: MineEntry): MineRow[] => {
     const source = offers.get(entry.offerId);

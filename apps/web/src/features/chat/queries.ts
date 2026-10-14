@@ -16,6 +16,7 @@ import {
 } from "./live-message";
 import {
   appendToThread,
+  catchUpDelay,
   liveOfferIds,
   markUnsent,
   newestId,
@@ -42,6 +43,10 @@ export const conversationsOptions = (box: ChatBox, q?: string) =>
     initialPageParam: undefined as ConversationCursor | undefined,
     getNextPageParam: (page) => page.nextCursor ?? undefined,
     staleTime: 0,
+    meta: { box },
+    // typing a search keeps the list on screen until the new results arrive; another box does not
+    placeholderData: (previous, previousQuery) =>
+      previousQuery?.meta?.box === box ? previous : undefined,
   });
 
 /**
@@ -88,8 +93,9 @@ export function applyChatMessage(queryClient: QueryClient, event: ChatMessageEve
       threadOptions(event.conversationId).queryKey,
       withUnsent(event.conversationId, live.data),
     );
-  } else if (live?.kind === "gap") {
-    // the missed message and this one come back together
+  } else if (live?.kind === "gap" || (!held && threadLoading(queryClient, event.conversationId))) {
+    // the missed message and this one come back together; or the first page was read before
+    // this message existed, and nothing else would bring it
     void fetchNewer(queryClient, event.conversationId);
   }
   const home = boxOf(event.conversation);
@@ -107,6 +113,14 @@ export function applyChatMessage(queryClient: QueryClient, event: ChatMessageEve
     queryKey: orpc.chat.list.key(),
     predicate: (query) => !unfilteredLists.has(hashKey(query.queryKey)),
   });
+}
+
+const threadQuery = (queryClient: QueryClient, id: number) =>
+  queryClient.getQueryCache().find({ queryKey: threadOptions(id).queryKey });
+
+function threadLoading(queryClient: QueryClient, id: number) {
+  const query = threadQuery(queryClient, id);
+  return query !== undefined && query.state.data === undefined;
 }
 
 /**
@@ -137,20 +151,78 @@ async function refreshOffers(queryClient: QueryClient, id: number) {
   queryClient.setQueryData<ThreadData>(queryKey, (old) => (old ? patchOffers(old, views) : old));
 }
 
-async function appendNewer(queryClient: QueryClient, id: number) {
+/** Threads whose catch-up is failing and being retried, so a second failure does not start another loop. */
+const retrying = new Set<number>();
+
+const waitToRetry = (ms: number) =>
+  new Promise<void>((resolve) => {
+    const done = () => {
+      clearTimeout(timer);
+      window.removeEventListener("online", done);
+      resolve();
+    };
+    const timer = setTimeout(done, ms);
+    window.addEventListener("online", done);
+  });
+
+/**
+ * Appends what the thread is missing; false when a fetch failed. Callers wait for this, so a
+ * failure must not be waited out here: a send or an action stays pending until it returns.
+ */
+async function pullNewer(queryClient: QueryClient, id: number) {
   const { queryKey } = threadOptions(id);
-  // a nudge during the first load is not lost: that page may have been read before it
-  const loading = queryClient.getQueryCache().find({ queryKey });
-  if (loading?.state.fetchStatus === "fetching") await loading.promise?.catch(() => undefined);
   for (;;) {
     const data = queryClient.getQueryData<ThreadData>(queryKey);
-    if (!data) return;
+    if (!data) {
+      behind.delete(id);
+      return true;
+    }
     const result = await client.chat.thread({ id, after: newestId(data) }).catch(() => null);
-    if (!result) return;
+    if (!result) return false;
     queryClient.setQueryData<ThreadData>(queryKey, (old) =>
       old ? withUnsent(id, appendToThread(old, result)) : old,
     );
-    if (!result.hasMore) return;
+    if (!result.hasMore) {
+      behind.delete(id);
+      return true;
+    }
+  }
+}
+
+const isShown = (queryClient: QueryClient, id: number) =>
+  (threadQuery(queryClient, id)?.getObserversCount() ?? 0) > 0;
+
+/** Threads whose catch-up failed while nothing showed them, so showing one again reads what it missed. */
+const behind = new Set<number>();
+
+/** Called when a thread is shown: reads what a failed catch-up left behind. */
+export function catchUpIfBehind(queryClient: QueryClient, id: number) {
+  if (behind.has(id)) void fetchNewer(queryClient, id).catch(() => undefined);
+}
+
+/** Retries in the background, with backoff and when the browser comes online, while the thread is shown. */
+async function retryNewer(queryClient: QueryClient, id: number) {
+  if (retrying.has(id)) return;
+  retrying.add(id);
+  try {
+    for (let attempt = 0; isShown(queryClient, id); attempt++) {
+      await waitToRetry(catchUpDelay(attempt));
+      if (!isShown(queryClient, id)) break;
+      if (await pullNewer(queryClient, id)) return;
+    }
+    behind.add(id);
+  } finally {
+    retrying.delete(id);
+  }
+}
+
+async function appendNewer(queryClient: QueryClient, id: number) {
+  // a nudge during the first load is not lost: that page may have been read before it
+  const loading = threadQuery(queryClient, id);
+  if (loading?.state.fetchStatus === "fetching") await loading.promise?.catch(() => undefined);
+  if (!(await pullNewer(queryClient, id))) {
+    if (isShown(queryClient, id)) void retryNewer(queryClient, id);
+    else behind.add(id);
   }
 }
 
@@ -165,6 +237,8 @@ const withUnsent = (id: number, data: ThreadData) => {
 /** One message was unsent: it blanks wherever its thread is cached. */
 export function applyUnsent(queryClient: QueryClient, id: number, messageId: number) {
   unsentHeard.set(id, (unsentHeard.get(id) ?? new Set()).add(messageId));
+  // the first page may have been read before the unsend; it is marked once it has loaded
+  if (threadLoading(queryClient, id)) void fetchNewer(queryClient, id);
   queryClient.setQueryData<ThreadData>(threadOptions(id).queryKey, (old) =>
     old ? markUnsent(old, new Set([messageId])) : old,
   );

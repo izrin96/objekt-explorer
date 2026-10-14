@@ -3,6 +3,7 @@ import { notification, notificationPref } from "@repo/db/schema";
 import { and, desc, eq, gt, inArray, isNull, or, sql } from "drizzle-orm";
 import type * as z from "zod";
 
+import { shownCancelReason } from "../lib/offer-rules";
 import { iso } from "../lib/time";
 import {
   KIND_TYPES,
@@ -15,6 +16,7 @@ import {
   notificationSchema,
   RETENTION_DAYS,
 } from "../schemas/notification";
+import { loadIdentities } from "./identities";
 import { fetchCollectionsBySlug } from "./list";
 
 export async function listNotifications(
@@ -44,7 +46,7 @@ export async function listNotifications(
   const page = rows.slice(0, NOTIFICATION_PAGE_SIZE);
   const last = page.at(-1);
   // a type this server does not know yet is dropped, not an error
-  const items = page.flatMap((row) => {
+  const parsedItems = page.flatMap((row) => {
     const parsed = notificationSchema.safeParse({
       id: row.id,
       type: row.type,
@@ -54,6 +56,25 @@ export async function listNotifications(
     });
     return parsed.success ? [parsed.data] : [];
   });
+  // a partner is named as their account is now, so a deleted one reads "Deleted account"
+  const identities = await loadIdentities(
+    parsedItems.flatMap((item) =>
+      item.type === "offer" || item.type === "trade" ? [item.payload.partner.userId] : [],
+    ),
+  );
+  const shown = (item: (typeof parsedItems)[number]) => {
+    if (item.type !== "offer" && item.type !== "trade") return item;
+    const name =
+      identities.get(item.payload.partner.userId)?.identity.name ?? item.payload.partner.name;
+    const partner = { ...item.payload.partner, name };
+    return item.type === "offer"
+      ? {
+          ...item,
+          payload: { ...item.payload, partner, reason: shownCancelReason(item.payload.reason) },
+        }
+      : { ...item, payload: { ...item.payload, partner } };
+  };
+  const items = parsedItems.map(shown);
 
   const collections = await fetchCollectionsBySlug(
     items.flatMap((item) =>

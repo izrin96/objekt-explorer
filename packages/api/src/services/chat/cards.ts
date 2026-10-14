@@ -6,7 +6,7 @@ import { isSerialEstimated, shownSerial } from "@repo/lib/serial";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { and, eq, inArray } from "drizzle-orm";
 
-import { cardListAllowed } from "../../lib/chat-rules";
+import { cardAllowed, cardListAllowed, hidesSerials } from "../../lib/chat-rules";
 import type { ActorLimits } from "../../lib/offer-rules";
 import { unique } from "../../lib/unique";
 import {
@@ -25,7 +25,11 @@ import { refuse } from "./refuse";
 
 type CardContext = { senderId: string; partnerId: string };
 
-/** An objekt only of the card's collection, and a list by `cardListAllowed`. */
+/**
+ * An objekt only of the card's collection, and a list by `cardListAllowed`. A list must hold
+ * the collection (and the objekt, unless it lists any copy), and a named objekt must be held by
+ * the sender or the partner (`cardAllowed`).
+ */
 export async function resolveCard(input: CardInput, context: CardContext): Promise<StoredCard> {
   const [list, collection, objekt] = await Promise.all([
     input.listSlug === undefined
@@ -34,6 +38,7 @@ export async function resolveCard(input: CardInput, context: CardContext): Promi
           .select({
             id: lists.id,
             ownerId: lists.userId,
+            hideSerial: lists.hideSerial,
           })
           .from(lists)
           .where(eq(lists.slug, input.listSlug))
@@ -46,7 +51,7 @@ export async function resolveCard(input: CardInput, context: CardContext): Promi
     input.objektId === undefined
       ? undefined
       : indexer
-          .select({ collectionId: objekts.collectionId })
+          .select({ collectionId: objekts.collectionId, owner: objekts.owner })
           .from(objekts)
           .where(eq(objekts.id, input.objektId))
           .then((rows) => rows[0] ?? null),
@@ -57,6 +62,38 @@ export async function resolveCard(input: CardInput, context: CardContext): Promi
     refuse("invalid_card");
   }
   if (objekt && objekt.collectionId !== collection.id) refuse("invalid_card");
+
+  const [entries, memberAddresses] = await Promise.all([
+    list
+      ? db
+          .select({ objektId: listEntries.objektId })
+          .from(listEntries)
+          .where(
+            and(
+              eq(listEntries.listId, list.id),
+              eq(listEntries.collectionSlug, input.collectionSlug),
+            ),
+          )
+      : null,
+    objekt
+      ? db
+          .select({ address: userAddress.address })
+          .from(userAddress)
+          .where(inArray(userAddress.userId, [context.senderId, context.partnerId]))
+          .then((rows) => rows.map((row) => row.address))
+      : [],
+  ]);
+  if (
+    !cardAllowed({
+      entries,
+      collectionOnly: hidesSerials(list, context.senderId),
+      objektId: input.objektId,
+      holder: objekt?.owner ?? null,
+      memberAddresses,
+    })
+  ) {
+    refuse("invalid_card");
+  }
 
   return {
     collectionSlug: input.collectionSlug,
@@ -71,8 +108,11 @@ export function parseCard(value: unknown): StoredCard | null {
   return parsed.success ? parsed.data : null;
 }
 
-/** Read live, so a card follows its list's name and price and drops a deleted list. */
-export async function hydrateCards(cards: StoredCard[]) {
+/**
+ * Read live, so a card follows its list's name and price and drops a deleted list. A list that
+ * hides serials shows its objekt's id and serial, and prices it by collection, only to its owner.
+ */
+export async function hydrateCards(cards: StoredCard[], viewerId: string | null) {
   const listIds = unique(cards.flatMap((card) => (card.listId === undefined ? [] : [card.listId])));
   const objektIds = unique(
     cards.flatMap((card) => (card.objektId === undefined ? [] : [card.objektId])),
@@ -85,6 +125,8 @@ export async function hydrateCards(cards: StoredCard[]) {
       : db
           .select({
             id: lists.id,
+            ownerId: lists.userId,
+            hideSerial: lists.hideSerial,
             slug: lists.slug,
             name: lists.name,
             listTypeNew: lists.listTypeNew,
@@ -130,19 +172,23 @@ export async function hydrateCards(cards: StoredCard[]) {
 
   const view = (card: StoredCard): CardView => {
     const list = card.listId === undefined ? undefined : listById.get(card.listId);
+    const hidden = hidesSerials(list, viewerId);
     const entry =
       list?.listTypeNew === "sale"
         ? entryRows.find(
             (e) =>
               e.listId === list.id &&
               e.slug === card.collectionSlug &&
-              (card.objektId === undefined || e.objektId === card.objektId),
+              (hidden || card.objektId === undefined || e.objektId === card.objektId),
           )
         : undefined;
     return {
       collectionSlug: card.collectionSlug,
-      objektId: card.objektId ?? null,
-      serial: card.objektId === undefined ? null : (serialOf.get(card.objektId)?.serial ?? null),
+      objektId: hidden ? null : (card.objektId ?? null),
+      serial:
+        hidden || card.objektId === undefined
+          ? null
+          : (serialOf.get(card.objektId)?.serial ?? null),
       list: list
         ? {
             id: list.id,
@@ -202,10 +248,13 @@ export async function toChatMessages(
     view,
     serial,
     collections: collectionMap,
-  } = await hydrateCards([
-    ...cards.filter((card): card is StoredCard => card !== null),
-    ...offerItemCards(offers.values()),
-  ]);
+  } = await hydrateCards(
+    [
+      ...cards.filter((card): card is StoredCard => card !== null),
+      ...offerItemCards(offers.values()),
+    ],
+    viewerId,
+  );
   const now = new Date();
   const messages: ChatMessage[] = rows.map((row, i) => {
     const card = cards[i] ?? null;

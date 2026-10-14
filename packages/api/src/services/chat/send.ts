@@ -1,9 +1,10 @@
+import { ORPCError } from "@orpc/server";
 import { db } from "@repo/db";
 import { message } from "@repo/db/schema";
 import { and, eq, gt, isNull, sql } from "drizzle-orm";
 import type * as z from "zod";
 
-import { sendVerdict } from "../../lib/chat-rules";
+import { holdsMessage, muteEnd, sendVerdict } from "../../lib/chat-rules";
 import { scanMessage } from "../../lib/scam-patterns";
 import { publishNotify } from "../../realtime";
 import {
@@ -15,20 +16,26 @@ import {
 import { redis } from "../redis";
 import { hydrateCards, resolveCard, toChatMessages } from "./cards";
 import { publishChatMessage } from "./live";
-import { appendMessage, findMembership } from "./members";
+import { appendMessage, findMembership, findSentMessage } from "./members";
 import { publishChatChanged } from "./notify";
 import { checkMessageRate } from "./rate";
 import { refuse } from "./refuse";
 import { chatSafety } from "./safety";
 import { activityBetween } from "./settings";
-import { checkStart, ensureConversation, prepareStart } from "./start";
+import {
+  checkStart,
+  ensureConversation,
+  hasLinkedAddress,
+  lockStarts,
+  openFirst,
+  prepareFirst,
+  prepareStart,
+} from "./start";
 
 /** A blocked send reads exactly like a recipient who accepts no messages. */
 function refuseSend(safety: { blocked: boolean; mute: { until: string | null } | null }) {
   const verdict = sendVerdict({ blocked: safety.blocked, senderMuted: safety.mute !== null });
-  if (!verdict.ok) {
-    refuse(verdict.reason, safety.mute?.until ? new Date(safety.mute.until) : undefined);
-  }
+  if (!verdict.ok) refuse(verdict.reason, muteEnd(safety.mute));
 }
 
 /**
@@ -40,7 +47,13 @@ export async function startConversation(
   createdAt: Date,
   input: z.infer<typeof startInputSchema>,
 ) {
-  const ctx = await prepareStart(me, createdAt, input.to, new Date());
+  const ctx = await prepareStart(me, createdAt, input.to, new Date()).catch((error: unknown) => {
+    // a Message button on a list that was deleted since the page loaded
+    if (input.to.kind === "list" && error instanceof ORPCError && error.code === "NOT_FOUND") {
+      refuse("invalid_card");
+    }
+    throw error;
+  });
 
   const result = await db.transaction(async (tx) => {
     const existingId = await checkStart(tx, ctx);
@@ -54,7 +67,7 @@ export async function startConversation(
   // only the opener lists an empty conversation, so only the opener hears of it
   if (result.created) await publishChatChanged([me], result.id);
   if (!input.card || !result.card) return { id: result.id, created: result.created, card: null };
-  const { view, collections } = await hydrateCards([result.card]);
+  const { view, collections } = await hydrateCards([result.card], me);
   return {
     id: result.id,
     created: result.created,
@@ -62,39 +75,70 @@ export async function startConversation(
   };
 }
 
-export async function sendMessage(me: string, input: z.infer<typeof sendInputSchema>) {
+const sendResult = (own: Awaited<ReturnType<typeof toChatMessages>>) => ({
+  message: own.messages[0]!,
+  collections: own.collections,
+});
+
+export async function sendMessage(
+  me: string,
+  createdAt: Date,
+  input: z.infer<typeof sendInputSchema>,
+) {
   const now = new Date();
-  const { partnerId } = await findMembership(input.conversationId, me);
-  refuseSend(await chatSafety(me, partnerId));
+  const { partnerId, lastMessageId } = await findMembership(input.conversationId, me);
+  // a retry of a send that landed returns it, whatever has changed since: nothing is counted or published
+  const stored = input.clientId
+    ? await findSentMessage(me, input.clientId, input.conversationId)
+    : undefined;
+  if (stored) return sendResult(await toChatMessages([{ ...stored, senderId: me }], me));
+
+  const [safety, hasAddress] = await Promise.all([chatSafety(me, partnerId), hasLinkedAddress(me)]);
+  if (!hasAddress) refuse("no_address");
+  refuseSend(safety);
   const release = await checkMessageRate(me, now);
   const body = input.body ?? null;
   const caution = body === null ? [] : scanMessage(body);
 
   const sent = await (async () => {
     const card = input.card ? await resolveCard(input.card, { senderId: me, partnerId }) : null;
-    const row = await db.transaction((tx) =>
-      appendMessage(tx, input.conversationId, me, body, card, caution),
-    );
-    return { ...row, card };
+    // the first message is the conversation's start; the start lock comes before the row lock
+    const first = holdsMessage(lastMessageId)
+      ? null
+      : await prepareFirst(me, createdAt, partnerId, now);
+    return db.transaction(async (tx) => {
+      if (first) await lockStarts(tx, me);
+      return appendMessage(tx, input.conversationId, me, {
+        body,
+        card,
+        caution,
+        clientId: input.clientId,
+        first: first ? () => openFirst(tx, first, input.conversationId) : undefined,
+      });
+    });
   })().catch(async (error: unknown) => {
     // a send refused after it was counted must not count
     await release();
     throw error;
   });
-  const row = { ...sent, senderId: me, body, caution };
+  const row = { ...sent, senderId: me };
   const own = await toChatMessages([row], me);
-  // not awaited, so a slow real-time server never slows the send; it logs its own failures
-  void publishChatMessage(input.conversationId, sent.previousMessageId, row, [me, partnerId], {
-    [me]: own,
-  });
-  return { message: own.messages[0]!, collections: own.collections };
+  if (sent.duplicate) {
+    await release();
+  } else {
+    // not awaited, so a slow real-time server never slows the send; it logs its own failures
+    void publishChatMessage(input.conversationId, sent.previousMessageId, row, [me, partnerId], {
+      [me]: own,
+    });
+  }
+  return sendResult(own);
 }
 
 /** Tells the partner the caller is typing, when both show activity and the caller may send. */
 export async function notifyTyping(me: string, conversationId: number) {
   const { partnerId, lastMessageId } = await findMembership(conversationId, me);
   // the conversation reaches the partner only with its first message
-  if (lastMessageId === null) return;
+  if (!holdsMessage(lastMessageId)) return;
   // one ping per user and conversation gets through per interval, however often it is sent
   const first = await redis.send("SET", [
     `chat:typing:${me}:${conversationId}`,
@@ -104,11 +148,10 @@ export async function notifyTyping(me: string, conversationId: number) {
     String(TYPING_GUARD_MS),
   ]);
   if (first === null) return;
-  const [safety, activity] = await Promise.all([
-    chatSafety(me, partnerId),
-    activityBetween(conversationId, me, partnerId),
-  ]);
-  if (!activity.toPartner || safety.blocked || safety.mute !== null) return;
+  const safety = await chatSafety(me, partnerId);
+  if (safety.blocked || safety.mute !== null) return;
+  const activity = await activityBetween(conversationId, me, partnerId, safety.blockedEitherWay);
+  if (!activity.toPartner) return;
   await publishNotify(partnerId, { type: "chat_typing", conversationId });
 }
 

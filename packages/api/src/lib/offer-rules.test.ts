@@ -26,6 +26,7 @@ import {
   type OfferState,
   offerSummary,
   safetyRefusal,
+  shownCancelReason,
   topupAmount,
   topupPayer,
   validateShape,
@@ -577,5 +578,16 @@ describe("matchEntry", () => {
     expect(open.get(slug)).toBeNull();
     expect(inAnyCopyScope(open, { id: "9", slug })).toBe(true);
     expect(inAnyCopyScope(open, { id: "9", slug: "other" })).toBe(true);
+  });
+});
+
+describe("shownCancelReason", () => {
+  test("a block is never shown as a cause", () => {
+    expect(shownCancelReason("blocked")).toBeNull();
+  });
+
+  test("any other cause, or none, is kept", () => {
+    expect(shownCancelReason("reserved")).toBe("reserved");
+    expect(shownCancelReason(null)).toBeNull();
   });
 });

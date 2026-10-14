@@ -1,12 +1,14 @@
 import { ORPCError } from "@orpc/server";
 import { db } from "@repo/db";
 import { conversation, conversationMember, lists, user, userAddress } from "@repo/db/schema";
-import { and, eq, gt, or, sql } from "drizzle-orm";
+import { and, eq, gt, isNull, sql } from "drizzle-orm";
 
 import {
   type MessagePref,
+  holdsMessage,
   pairKey,
   rateDecision,
+  startFactsOf,
   startMembers,
   startVerdict,
 } from "../../lib/chat-rules";
@@ -44,29 +46,26 @@ async function resolveTarget(target: ChatTarget): Promise<{ recipientId: string 
   }
 }
 
-async function hasLinkedAddress(userId: string) {
+export async function hasLinkedAddress(userId: string) {
   return (await db.$count(userAddress, eq(userAddress.userId, userId))) > 0;
 }
 
-/** Taken inside the start transaction, so a user's parallel starts are counted one at a time. */
-async function lockStarts(tx: Tx, userId: string) {
+/**
+ * Taken inside the start transaction, so a user's parallel starts are counted one at a time.
+ * Every path takes it before the conversation row lock, never after.
+ */
+export async function lockStarts(tx: Tx, userId: string) {
   await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext('chat_start'), hashtext(${userId}))`);
 }
 
-/** The times of the user's new conversations in the start window. */
+/** The times the user's conversations were started, by their first message or offer, in the start window. */
 async function recentStarts(tx: Tx, userId: string, now: Date): Promise<number[]> {
   const since = new Date(now.getTime() - START_WINDOW_HOURS * HOUR_MS).toISOString();
   const rows = await tx
-    .select({ createdAt: conversation.createdAt })
+    .select({ startedAt: conversation.startedAt })
     .from(conversation)
-    .where(
-      and(
-        or(eq(conversation.userLow, userId), eq(conversation.userHigh, userId)),
-        eq(conversation.createdBy, userId),
-        gt(conversation.createdAt, since),
-      ),
-    );
-  return rows.map((row) => new Date(row.createdAt).getTime());
+    .where(and(eq(conversation.startedBy, userId), gt(conversation.startedAt, since)));
+  return rows.flatMap((row) => (row.startedAt === null ? [] : [new Date(row.startedAt).getTime()]));
 }
 
 export type StartContext = {
@@ -87,6 +86,16 @@ export async function prepareStart(
   now: Date,
 ): Promise<StartContext> {
   const { recipientId } = await resolveTarget(target);
+  return prepareFirst(senderId, senderCreatedAt, recipientId, now);
+}
+
+/** The same reads for a conversation that already exists, ahead of its first message. */
+export async function prepareFirst(
+  senderId: string,
+  senderCreatedAt: Date,
+  recipientId: string,
+  now = new Date(),
+): Promise<StartContext> {
   const [senderHasAddress, pref, safety] = await Promise.all([
     hasLinkedAddress(senderId),
     fetchPref(recipientId),
@@ -103,45 +112,69 @@ export async function prepareStart(
   };
 }
 
-/**
- * Under the sender's start lock: refuses a start `startVerdict` refuses, and returns the
- * pair's existing conversation, if any.
- */
-export async function checkStart(tx: Tx, ctx: StartContext): Promise<number | undefined> {
+/** Refuses what `startVerdict` refuses; `existing` is a conversation that holds a message. Counts no start. */
+async function refuseStart(tx: Tx, ctx: StartContext, existing: boolean) {
   const { senderId, recipientId, now } = ctx;
-  await lockStarts(tx, senderId);
-  const { userLow, userHigh } = pairKey(senderId, recipientId);
-  const [existing] = await tx
-    .select({ id: conversation.id })
-    .from(conversation)
-    .where(and(eq(conversation.userLow, userLow), eq(conversation.userHigh, userHigh)));
   const rate =
     existing || senderId === recipientId
       ? ({ ok: true } as const)
       : rateDecision(await recentStarts(tx, senderId, now), ctx.senderCreatedAt, now);
-
-  const verdict = startVerdict({
-    senderId,
-    recipientId,
-    senderHasAddress: ctx.senderHasAddress,
-    pref: ctx.pref,
-    blocked: ctx.safety.blocked,
-    senderMuted: ctx.safety.mute !== null,
-    existing: existing !== undefined,
-    rate,
-  });
+  const verdict = startVerdict(startFactsOf(ctx, existing, rate));
   if (!verdict.ok) refuse(verdict.reason, verdict.retryAt);
+}
+
+/**
+ * Under the sender's start lock: refuses a start `startVerdict` refuses, and returns the
+ * pair's existing conversation, if any. An existing one that holds no message yet is checked
+ * like a new one.
+ */
+export async function checkStart(tx: Tx, ctx: StartContext): Promise<number | undefined> {
+  const { senderId, recipientId } = ctx;
+  await lockStarts(tx, senderId);
+  const { userLow, userHigh } = pairKey(senderId, recipientId);
+  const [existing] = await tx
+    .select({ id: conversation.id, lastMessageId: conversation.lastMessageId })
+    .from(conversation)
+    .where(and(eq(conversation.userLow, userLow), eq(conversation.userHigh, userHigh)));
+  await refuseStart(tx, ctx, holdsMessage(existing?.lastMessageId));
   return existing?.id;
 }
 
-/** Creates the conversation when `existingId` is undefined; its first message decides Requests. */
+/**
+ * Runs under the conversation's row lock when its first message is appended, after the
+ * caller took `lockStarts`: the start checks apply again, and the message becomes the start.
+ */
+export async function openFirst(tx: Tx, ctx: StartContext, conversationId: number) {
+  await refuseStart(tx, { ...ctx, now: new Date() }, false);
+  await tx
+    .update(conversation)
+    .set({ startedBy: ctx.senderId, startedAt: sql`now()` })
+    .where(eq(conversation.id, conversationId));
+}
+
+/** Creates the conversation when `existingId` is undefined, and marks it opened by the sender. */
 export async function ensureConversation(
   tx: Tx,
   ctx: StartContext,
   existingId: number | undefined,
 ): Promise<{ id: number; created: boolean }> {
-  if (existingId !== undefined) return { id: existingId, created: false };
   const { senderId, recipientId } = ctx;
+  const openedAt = ctx.now.toISOString();
+  const markOpened = (conversationId: number) =>
+    tx
+      .update(conversationMember)
+      .set({ openedAt })
+      .where(
+        and(
+          eq(conversationMember.conversationId, conversationId),
+          eq(conversationMember.userId, senderId),
+          isNull(conversationMember.openedAt),
+        ),
+      );
+  if (existingId !== undefined) {
+    await markOpened(existingId);
+    return { id: existingId, created: false };
+  }
   const { userLow, userHigh } = pairKey(senderId, recipientId);
   const [row] = await tx
     .insert(conversation)
@@ -151,7 +184,7 @@ export async function ensureConversation(
   if (row) {
     const members = startMembers();
     await tx.insert(conversationMember).values([
-      { conversationId: row.id, userId: senderId, ...members.sender },
+      { conversationId: row.id, userId: senderId, openedAt, ...members.sender },
       { conversationId: row.id, userId: recipientId, ...members.recipient },
     ]);
     return { id: row.id, created: true };
@@ -162,5 +195,6 @@ export async function ensureConversation(
     .from(conversation)
     .where(and(eq(conversation.userLow, userLow), eq(conversation.userHigh, userHigh)));
   if (!raced) throw new ORPCError("CONFLICT");
+  await markOpened(raced.id);
   return { id: raced.id, created: false };
 }

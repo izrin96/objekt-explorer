@@ -8,11 +8,20 @@ import { Textarea } from "@/components/ui/textarea";
 import { AttachObjektDialog } from "@/features/chat/attach/attach-objekt-dialog";
 import type { Attachment } from "@/features/chat/attachment";
 import { refusalOf, refusalText } from "@/features/chat/format";
+import { useStartGate } from "@/features/chat/message-button";
 import { fetchNewer, invalidateChatLists } from "@/features/chat/queries";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
-import { dropDraftCard, useChatDraft } from "@/stores/chat-draft";
+import {
+  dropDraftCard,
+  dropDraftSendId,
+  putDraftCard,
+  restoreDraft,
+  setDraftBody,
+  beginSend,
+  useChatDraft,
+} from "@/stores/chat-draft";
 
 import { AttachmentChip } from "./composer-attachment";
 import { firstLineSuggestions } from "./suggestions";
@@ -20,6 +29,9 @@ import { useTypingPing } from "./use-typing-ping";
 
 /** The counter shows from here, so it never sits there for an ordinary message. */
 const COUNTER_FROM = MESSAGE_MAX_LENGTH - 200;
+
+/** The card of each send in flight, by send id, for a failure to put back after the thread unmounted. */
+const sentCards = new Map<string, Attachment>();
 
 export function Composer({
   conversationId,
@@ -36,7 +48,8 @@ export function Composer({
   onOffer: () => void;
 }) {
   const queryClient = useQueryClient();
-  const [body, setBody] = useState("");
+  const { offerLink } = useStartGate();
+  const body = useChatDraft((state) => state.drafts[conversationId]?.body ?? "");
   // a card handed over by a Message button is attached, then forgotten; also while this thread
   // is already open, as from the objekt drawer's Market tab
   const handed = useChatDraft((state) => state.cards[conversationId]);
@@ -79,6 +92,8 @@ export function Composer({
 
   const send = useMutation(
     orpc.chat.send.mutationOptions({
+      // offline, a send fails at once and puts the text back, rather than waiting for a connection
+      networkMode: "always",
       // reads everything after the newest message held rather than appending the sent one:
       // a reply that landed just before it, whose nudge is still on the way, would otherwise
       // sit below the new newest id and never be fetched
@@ -89,34 +104,53 @@ export function Composer({
           invalidateChatLists(queryClient),
         ]);
       },
+      // here rather than per call, so a send that fails after the user left still restores
+      onError: (_error, { conversationId: id, body: sentBody, clientId }) => {
+        if (clientId === undefined) return;
+        restoreDraft(id, { body: sentBody ?? "", clientId });
+        const card = sentCards.get(clientId);
+        if (card) putDraftCard(id, { ...card }, true);
+      },
+      onSettled: (_data, _error, { clientId }) => {
+        if (clientId !== undefined) sentCards.delete(clientId);
+      },
     }),
   );
 
   const submit = (event?: FormEvent) => {
     event?.preventDefault();
     if (empty || over > 0 || send.isPending || blockedUntil !== null) return;
-    const sentBody = body;
     const sentAttachment = attachment;
-    // cleared at once so typing can go on; a refusal puts it back
-    setBody("");
+    // cleared at once so typing can go on; a failure puts it back
+    const { body: sentBody, clientId } = beginSend(conversationId, body);
+    if (sentAttachment) sentCards.set(clientId, sentAttachment);
     setAttachment(null);
     setError(null);
+    textarea.current?.focus();
     send.mutate(
       {
         conversationId,
         body: sentBody.trim() === "" ? undefined : sentBody,
         card: sentAttachment?.input,
+        clientId,
       },
       {
         onError: (failure) => {
-          // anything typed since stays, after the text that failed
-          setBody((current) => (current === "" ? sentBody : `${sentBody}\n${current}`));
-          setAttachment((current) => current ?? sentAttachment);
           const refusal = refusalOf(failure);
+          if (refusal?.reason === "no_address") {
+            offerLink();
+            return;
+          }
           if (refusal?.reason === "message_limit" && refusal.retryAt) {
             setBlockedUntil(new Date(refusal.retryAt).getTime());
           }
-          setError(refusal ? refusalText(refusal) : m.chat_send_error());
+          setError(
+            refusal
+              ? refusalText(refusal)
+              : navigator.onLine
+                ? m.chat_send_error()
+                : m.chat_send_offline(),
+          );
         },
       },
     );
@@ -144,7 +178,14 @@ export function Composer({
   return (
     <form onSubmit={submit} className="flex flex-col gap-2 border-t p-3">
       {attachment ? (
-        <AttachmentChip attachment={attachment} onRemove={() => setAttachment(null)} />
+        <AttachmentChip
+          attachment={attachment}
+          onRemove={() => {
+            setAttachment(null);
+            dropDraftSendId(conversationId);
+            textarea.current?.focus();
+          }}
+        />
       ) : null}
 
       {conversationEmpty && body === "" ? (
@@ -160,7 +201,7 @@ export function Composer({
               size="xs"
               className="rounded-full before:rounded-full"
               onClick={() => {
-                setBody(suggestion());
+                setDraftBody(conversationId, suggestion());
                 textarea.current?.focus();
               }}
             >
@@ -197,7 +238,7 @@ export function Composer({
           ref={textarea}
           value={body}
           onChange={(event) => {
-            setBody(event.target.value);
+            setDraftBody(conversationId, event.target.value);
             pingTyping(event.target.value);
           }}
           onKeyDown={onKeyDown}
@@ -214,6 +255,8 @@ export function Composer({
           aria-label={m.chat_send()}
           disabled={empty || over > 0 || blockedUntil !== null}
           loading={send.isPending}
+          // keeps focus, and a phone's keyboard, in the message box
+          onPointerDown={(event) => event.preventDefault()}
           className="shrink-0"
         >
           <PaperPlaneRightIcon />
@@ -245,7 +288,14 @@ export function Composer({
         </p>
       ) : null}
 
-      <AttachObjektDialog open={attachOpen} onOpenChange={setAttachOpen} onPick={setAttachment} />
+      <AttachObjektDialog
+        open={attachOpen}
+        onOpenChange={setAttachOpen}
+        onPick={(picked) => {
+          setAttachment(picked);
+          dropDraftSendId(conversationId);
+        }}
+      />
     </form>
   );
 }

@@ -7,6 +7,7 @@ export function refuse(reason: ChatRefusal, retryAt?: Date): never {
   switch (reason) {
     case "start_limit":
     case "message_limit":
+    case "settings_limit":
       throw new ORPCError("TOO_MANY_REQUESTS", { data });
     case "self":
     case "invalid_card":
