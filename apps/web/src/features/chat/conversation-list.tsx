@@ -200,8 +200,6 @@ function useFocusAfterLeave(region: RefObject<HTMLDivElement | null>, rows: Conv
 }
 
 function preview(last: ConversationRow["last"]) {
-  // the starter's row of a conversation nobody has written in yet
-  if (!last) return m.chat_preview_empty();
   if (last.unsent) return m.chat_unsent();
   const text =
     last.body ??
@@ -250,15 +248,13 @@ function ConversationItem({
             >
               {name}
             </span>
-            {last ? (
-              <time
-                dateTime={last.createdAt}
-                className="text-muted-foreground shrink-0 text-xs tabular-nums"
-                suppressHydrationWarning
-              >
-                {relativeTime(new Date(last.createdAt).getTime(), now)}
-              </time>
-            ) : null}
+            <time
+              dateTime={last.createdAt}
+              className="text-muted-foreground shrink-0 text-xs tabular-nums"
+              suppressHydrationWarning
+            >
+              {relativeTime(new Date(last.createdAt).getTime(), now)}
+            </time>
           </span>
           <span className="flex min-w-0 items-center gap-1.5">
             <span

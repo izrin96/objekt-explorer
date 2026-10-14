@@ -162,11 +162,10 @@ async function toConversationRows(me: string, page: ConversationListRow[]) {
   ]);
   const items = page.flatMap((row, i): ConversationRow[] => {
     const partner = partners.get(row.partner_id);
-    if (!partner) return [];
-    const last =
-      row.message_id === null || row.sender_id === null || row.created_at === null
-        ? null
-        : { id: Number(row.message_id), senderId: row.sender_id, createdAt: row.created_at };
+    if (!partner || row.message_id === null || row.sender_id === null || row.created_at === null) {
+      return [];
+    }
+    const last = { id: Number(row.message_id), senderId: row.sender_id, createdAt: row.created_at };
     const lastRead = row.last_read_message_id === null ? null : Number(row.last_read_message_id);
     const incoming =
       row.incoming_id === null ? null : { id: Number(row.incoming_id), senderId: row.partner_id };
@@ -174,7 +173,7 @@ async function toConversationRows(me: string, page: ConversationListRow[]) {
       {
         id: row.id,
         partner,
-        last: last && {
+        last: {
           id: last.id,
           mine: last.senderId === me,
           body: row.unsent ? null : row.body,

@@ -242,18 +242,15 @@ const muteStateSchema = z.object({ until: z.string().nullable() }).nullable();
 export const conversationRowSchema = z.object({
   id: z.number(),
   partner: chatPartnerSchema,
-  last: z
-    .object({
-      id: z.number(),
-      mine: z.boolean(),
-      body: z.string().nullable(),
-      card: storedCardSchema.nullable(),
-      offerId: z.number().nullable(),
-      createdAt: z.string(),
-      unsent: z.boolean(),
-    })
-    /** null only on the starter's row of a conversation with no message yet */
-    .nullable(),
+  last: z.object({
+    id: z.number(),
+    mine: z.boolean(),
+    body: z.string().nullable(),
+    card: storedCardSchema.nullable(),
+    offerId: z.number().nullable(),
+    createdAt: z.string(),
+    unsent: z.boolean(),
+  }),
   context: cardViewSchema.nullable(),
   unread: z.boolean(),
   request: z.boolean(),

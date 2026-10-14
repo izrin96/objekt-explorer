@@ -45,4 +45,8 @@ declare module "@tanstack/react-router" {
   interface Register {
     router: ReturnType<typeof getRouter>;
   }
+  interface HistoryState {
+    /** the thread was opened by a Message button, so its back button returns to that page */
+    fromMessage?: boolean;
+  }
 }

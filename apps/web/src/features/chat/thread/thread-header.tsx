@@ -1,5 +1,5 @@
 import { ArrowLeftIcon, BellSlashIcon } from "@phosphor-icons/react";
-import { Link } from "@tanstack/react-router";
+import { Link, useLocation, useRouter } from "@tanstack/react-router";
 import type { Ref } from "react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -12,11 +12,23 @@ import { ProfileLink } from "@/features/profile/profile-hover-card";
 import { m } from "@/paraglide/messages";
 
 function ThreadBackButton() {
+  const router = useRouter();
+  const fromMessage = useLocation({ select: (location) => location.state.fromMessage === true });
+  const props = {
+    variant: "ghost",
+    size: "icon-sm",
+    className: "-ms-1 shrink-0 md:hidden",
+  } as const;
+  if (fromMessage) {
+    return (
+      <Button {...props} aria-label={m.chat_back_previous()} onClick={() => router.history.back()}>
+        <ArrowLeftIcon />
+      </Button>
+    );
+  }
   return (
     <Button
-      variant="ghost"
-      size="icon-sm"
-      className="-ms-1 shrink-0 md:hidden"
+      {...props}
       aria-label={m.chat_back()}
       render={<Link to="/messages" search={(prev) => prev} />}
     >

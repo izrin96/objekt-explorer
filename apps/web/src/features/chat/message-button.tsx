@@ -74,7 +74,11 @@ export function useStartConversation() {
             listType: card.view.list?.listTypeNew,
           });
         }
-        void navigate({ to: "/messages/$id", params: { id: String(id) } });
+        void navigate({
+          to: "/messages/$id",
+          params: { id: String(id) },
+          state: (prev) => ({ ...prev, fromMessage: true }),
+        });
       },
       onError: (error) => {
         const refusal = refusalOf(error);
