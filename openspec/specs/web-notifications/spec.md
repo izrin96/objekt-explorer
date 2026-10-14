@@ -134,7 +134,7 @@ Turning a type off SHALL stop new notifications of that type. Notifications alre
 - **THEN** no notification is created, and the trade page still shows the leg Verified
 
 ### Requirement: Want-list alerts
-For each of a user's want lists, whether or not it is on Trade, the system SHALL notify the user when an entry for a collection on that want list is newly added to another account's discoverable have list bound to a Cosmo profile, or to such a sale list when the want list is open to swaps or buying (see `web-lists`). It SHALL also notify when such a list becomes discoverable. The alert SHALL arrive within 10 minutes, including when entries are committed out of order. Alerts SHALL be grouped as one unread notification per want list per day. While that notification is unread, further matches SHALL update its count and the latest objekts instead of creating new ones. Its target SHALL be `/trade?match=any&list=<want-list-slug>`: Browse with Matches on Any and Compare with naming that want list (see `web-trade-browse`). A given want list, source list and collection SHALL alert at most once, even if the entry is removed and added again.
+For each of a user's want lists, whether or not it is on Trade, the system SHALL notify the user when an entry for a collection on that want list is newly added to another account's discoverable have list bound to a Cosmo profile, or to such a sale list when the want list is open to swaps or buying (see `web-lists`). It SHALL also notify when such a list becomes discoverable. The alert SHALL arrive within 10 minutes, including when entries are committed out of order. Alerts SHALL be grouped as one unread notification per want list per day. While that notification is unread, further matches SHALL update its count and the latest objekts instead of creating new ones. Its target SHALL be `/trade/for-you?match=any&list=<want-list-slug>`: For you with Matches on Any and Compare with naming that want list (see `web-trade-browse`). A given want list, source list and collection SHALL alert at most once, even if the entry is removed and added again.
 
 No alert SHALL be created for:
 - the user's own lists;
@@ -144,7 +144,7 @@ No alert SHALL be created for:
 
 #### Scenario: New sale listing matches a want list
 - **WHEN** another account adds SeoYeon 204Z to a sale list shown on the Market, and SeoYeon 204Z is on the user's want list "Binary hunt", which is open to swaps or buying
-- **THEN** within 10 minutes the user has an unread notification for "Binary hunt" naming that objekt and seller, linking to `/trade?match=any&list=<slug>`
+- **THEN** within 10 minutes the user has an unread notification for "Binary hunt" naming that objekt and seller, linking to `/trade/for-you?match=any&list=<slug>`
 
 #### Scenario: Grouped while unread
 - **WHEN** three more matches for "Binary hunt" arrive the same day before the user opens the first notification
@@ -163,7 +163,7 @@ No alert SHALL be created for:
 - **THEN** no alert is created for that entry
 
 ### Requirement: Reverse-direction alerts
-When the user has "Someone wants what you have" turned on, the system SHALL notify them when another account adds, to a discoverable want list, a collection that is on one of the user's have lists bound to a Cosmo profile, or on such a sale list when that want list is open to swaps or buying (see `web-lists`). The same grouping, once-only, timing and exclusion rules as want-list alerts SHALL apply, grouped per the user's list. The target SHALL be `/trade?match=any&list=<that-list-slug>`.
+When the user has "Someone wants what you have" turned on, the system SHALL notify them when another account adds, to a discoverable want list, a collection that is on one of the user's have lists bound to a Cosmo profile, or on such a sale list when that want list is open to swaps or buying (see `web-lists`). The same grouping, once-only, timing and exclusion rules as want-list alerts SHALL apply, grouped per the user's list. The target SHALL be `/trade/for-you?match=any&list=<that-list-slug>`.
 
 #### Scenario: Off by default
 - **WHEN** a user has never changed the setting and someone wants a collection on their have list
@@ -175,7 +175,7 @@ When the user has "Someone wants what you have" turned on, the system SHALL noti
 
 #### Scenario: Opening the alert
 - **WHEN** the user opens a reverse-direction alert for have list "spares"
-- **THEN** the browser is at `/trade?match=any&list=spares`
+- **THEN** the browser is at `/trade/for-you?match=any&list=spares`
 
 ### Requirement: Retention
 Read notifications SHALL be removed 90 days after they were created. Unread notifications SHALL be kept.

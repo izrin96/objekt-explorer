@@ -128,8 +128,8 @@ When a session exists, the frame SHALL show a Messages icon with its unread badg
 - **THEN** no Messages icon is shown
 
 ### Requirement: Account menu reaches trade matches
-The account menu SHALL include a Trade matches item opening `/trade?match=mutual`, Browse with Matches on Mutual (see `web-trade-browse`).
+The account menu SHALL include a Trade matches item opening `/trade/for-you?match=mutual`, For you with Matches on Mutual (see `web-trade-browse`).
 
 #### Scenario: From the menu
 - **WHEN** the user opens the account menu and activates Trade matches
-- **THEN** the browser is at `/trade?match=mutual`
+- **THEN** the browser is at `/trade/for-you?match=mutual`
