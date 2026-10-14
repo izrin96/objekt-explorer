@@ -25,6 +25,7 @@
 - [x] 5.1 Run `bun run check` and `bun run knip` (no new unused exports). All pass.
 - [ ] 5.2 Read-only check against production: dry runs of `add` for an unknown token, a pre-cutoff token and an online-collection token each refuse with their reason; `list` on a collection with no anchors prints nothing to add. Record the outputs.
   - Left to the user (production).
+  - Skipped at archive (2026-10-15): the user has anchored serials with the tool in production and is satisfied it works.
 
 ## 6. AGENTS.md
 
