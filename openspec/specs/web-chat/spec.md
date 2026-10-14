@@ -83,7 +83,7 @@ A list's page SHALL offer Message in its header, so a list reached from a shared
 ### Requirement: Requests
 A conversation whose first message carries no objekt card SHALL appear in the recipient's Requests, not their Inbox, until they reply or accept. The recipient is whoever did not send the first message, whoever opened the conversation. Request conversations SHALL not count as unread. Declining a request SHALL archive it for the recipient without telling the sender. A conversation whose first message carries a card SHALL go straight to the Inbox.
 
-A conversation with no message yet SHALL be shown only to a member who opened it with Message: a member who did not SHALL get the not-found surface for it, and every request about it from that member (thread, mark read, accept, decline, archive, mute) SHALL be refused as not found. No conversation list SHALL show a conversation with no message yet, for either member: it joins the opener's list with its first message or offer, so a Message click that sends nothing leaves nothing in their Inbox. While the opener has such a thread open, their Inbox (with no search) SHALL show it at the top as a "New message" row, until the conversation's own row replaces it or they leave the thread.
+A conversation with no message yet SHALL be shown only to a member who opened it with Message: a member who did not SHALL get the not-found surface for it, and every request about it from that member (thread, mark read, accept, decline, archive, mute) SHALL be refused as not found. No conversation list SHALL show a conversation with no message yet as a row of its own, for either member: it joins the opener's list with its first message or offer, so a Message click that sends nothing leaves nothing in their Inbox. The one exception is the thread the opener has open: their Inbox (with no search) SHALL show it at the top as a "New message" row, until the conversation's own row replaces it, they leave the thread, or they archive it.
 
 The request bar SHALL say that declining moves the conversation to Archived without telling the sender, that it comes back if they write again, and that Block stops them.
 
@@ -112,8 +112,8 @@ The request bar SHALL say that declining moves the conversation to Archived with
 - **THEN** no conversation with kaede.k is listed; activating Message again opens the same empty thread
 
 #### Scenario: Writing the first message
-- **WHEN** rin.trades activates Message on kaede.k's profile on a wide screen
-- **THEN** the Inbox shows a "New message" row for kaede.k at the top, marked as the open one, and after the first send the conversation's own row takes its place
+- **WHEN** rin.trades activates Message on kaede.k's profile, with the list beside the thread
+- **THEN** the Inbox shows a "New message" row for kaede.k at the top, marked as the open one, and after the first send the conversation's own row takes its place; archiving the conversation later brings no "New message" row back
 
 ### Requirement: Inbox, Requests and Archived
 `/messages` SHALL list the signed-in user's conversations under Inbox, Requests and Archived, newest activity first. Each row SHALL show:

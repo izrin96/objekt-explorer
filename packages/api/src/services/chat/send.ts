@@ -66,7 +66,10 @@ export async function startConversation(
   });
 
   // the conversation is open whatever this read does; the client loads the thread itself on null
-  const thread = loadThread(me, { id: result.id }).catch(() => null);
+  const thread = loadThread(me, { id: result.id }).catch((error: unknown) => {
+    console.warn(`[chat] start ${result.id}: thread read failed`, error);
+    return null;
+  });
   if (!input.card || !result.card) return { id: result.id, card: null, thread: await thread };
   const [{ view, collections }, page] = await Promise.all([
     hydrateCards([result.card], me),

@@ -151,17 +151,9 @@ export async function appendMessage(
   };
 }
 
-/**
- * A conversation with no message yet belongs to the member who opened it, and to no one else.
- * `as` names the table aliases when it is read from raw SQL rather than through Drizzle.
- */
-export function visibleToMember(userId: string, as?: { conversation: string; member: string }) {
-  const lastMessageId = as
-    ? sql.raw(`${as.conversation}.last_message_id`)
-    : conversation.lastMessageId;
-  const createdBy = as ? sql.raw(`${as.conversation}.created_by`) : conversation.createdBy;
-  const openedAt = as ? sql.raw(`${as.member}.opened_at`) : conversationMember.openedAt;
-  return sql`(${lastMessageId} IS NOT NULL OR ${createdBy} = ${userId} OR ${openedAt} IS NOT NULL)`;
+/** A conversation with no message yet belongs to the member who opened it, and to no one else. */
+export function visibleToMember(userId: string) {
+  return sql`(${conversation.lastMessageId} IS NOT NULL OR ${conversation.createdBy} = ${userId} OR ${conversationMember.openedAt} IS NOT NULL)`;
 }
 
 /** The conversation's two ids when `userId` is a member who can see it; NOT_FOUND otherwise. */

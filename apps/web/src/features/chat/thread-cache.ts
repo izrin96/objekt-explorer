@@ -9,6 +9,11 @@ type Incoming = Pick<ThreadPage, "messages" | "collections"> & {
   conversation?: ThreadPage["conversation"];
 };
 
+/** A thread's cache holding only its newest page, as the first read leaves it. */
+export function seedThread(page: ThreadPage): ThreadData {
+  return { pages: [page], pageParams: [undefined] };
+}
+
 /** Who the thread is with, read from its newest page. */
 export function threadPartner(data: ThreadData) {
   return data.pages[0]?.conversation.partner;

@@ -1,5 +1,5 @@
 import { ArrowLeftIcon, BellSlashIcon } from "@phosphor-icons/react";
-import { Link, useLocation, useRouter } from "@tanstack/react-router";
+import { Link, useHydrated, useLocation, useRouter } from "@tanstack/react-router";
 import type { Ref } from "react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -13,7 +13,10 @@ import { m } from "@/paraglide/messages";
 
 function ThreadBackButton() {
   const router = useRouter();
-  const fromMessage = useLocation({ select: (location) => location.state.fromMessage === true });
+  const hydrated = useHydrated();
+  const marked = useLocation({ select: (location) => location.state.fromMessage === true });
+  // history state never reaches the server render, so the first paint is always the list link
+  const fromMessage = hydrated && marked;
   const props = {
     variant: "ghost",
     size: "icon-sm",

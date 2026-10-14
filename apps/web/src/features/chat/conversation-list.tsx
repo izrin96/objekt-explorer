@@ -35,10 +35,11 @@ import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import { ConversationMenu } from "./conversation-menu";
+import { nextDraftId, showsDraft } from "./draft-row";
 import { mutedLabel } from "./format";
 import type { ConversationsData } from "./live-message";
 import { conversationsOptions, requestCountOptions, threadOptions } from "./queries";
-import { newestId, threadPartner } from "./thread-cache";
+import { newestId } from "./thread-cache";
 
 const EMPTY = {
   inbox: { icon: ChatsCircleIcon, title: m.chat_empty_inbox, hint: m.chat_empty_inbox_hint },
@@ -165,20 +166,24 @@ type Draft = { id: number; partner: ConversationRow["partner"] };
 
 /**
  * The open thread while nothing is written in it yet: no list holds it until its first
- * message, so the Inbox shows it at the top until its real row arrives.
+ * message, so the Inbox shows it at the top until its real row arrives (`draft-row.ts`).
  */
 function useDraftThread(rows: ConversationRow[], box: ChatBox, q: string | undefined) {
   const openId = useParams({ strict: false, select: (params) => params.id });
-  const id = openId === undefined ? 0 : Number(openId);
-  // reads the thread pane's query, never fetches it
-  const { data } = useInfiniteQuery({ ...threadOptions(id), enabled: false });
-  // remembered past the first send, so the row stays until the list's own row replaces it
+  const id = openId === undefined ? null : Number(openId);
+  // reads the thread pane's query, never fetches it; no conversation has id 0
+  const { data } = useInfiniteQuery({ ...threadOptions(id ?? 0), enabled: false });
+  const conversation = data?.pages[0]?.conversation;
+  const open =
+    id !== null && data && conversation
+      ? { id, empty: newestId(data) === 0, archived: conversation.archived }
+      : null;
+  const listed = rows.map((row) => row.id);
   const [draftId, setDraftId] = useState<number | null>(null);
-  if (data && newestId(data) === 0 && draftId !== id) setDraftId(id);
-  const partner = data ? threadPartner(data) : undefined;
-  if (box !== "inbox" || q !== undefined || id !== draftId || !partner) return null;
-  if (rows.some((row) => row.id === id)) return null;
-  return { id, partner } satisfies Draft;
+  const next = nextDraftId(draftId, open, listed);
+  if (next !== draftId) setDraftId(next);
+  if (!open || !conversation || !showsDraft(next, open, listed, box, q)) return null;
+  return { id: open.id, partner: conversation.partner } satisfies Draft;
 }
 
 function DraftRow({ draft }: { draft: Draft }) {

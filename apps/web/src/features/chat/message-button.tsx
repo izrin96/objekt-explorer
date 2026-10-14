@@ -13,6 +13,7 @@ import { putDraftCard } from "@/stores/chat-draft";
 
 import { refusalOf, refusalText } from "./format";
 import { fetchNewer, threadOptions } from "./queries";
+import { seedThread } from "./thread-cache";
 
 /**
  * Opens the conversation with the target's account, with `card` attached to send. The
@@ -79,14 +80,14 @@ export function useStartConversation() {
         // an open thread's cache may hold older pages and live messages; only a new one is seeded
         const { queryKey } = threadOptions(id);
         if (thread && !queryClient.getQueryData(queryKey)) {
-          queryClient.setQueryData(queryKey, { pages: [thread], pageParams: [undefined] });
+          queryClient.setQueryData(queryKey, seedThread(thread));
           // a message that landed after the server read it has no cache to reach yet
           void fetchNewer(queryClient, id).catch(() => undefined);
         }
         void navigate({
           to: "/messages/$id",
           params: { id: String(id) },
-          state: (prev) => ({ ...prev, fromMessage: true }),
+          state: { fromMessage: true },
         });
       },
       onError: (error) => {
