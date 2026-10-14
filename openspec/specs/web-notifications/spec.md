@@ -134,7 +134,7 @@ Turning a type off SHALL stop new notifications of that type. Notifications alre
 - **THEN** no notification is created, and the trade page still shows the leg Verified
 
 ### Requirement: Want-list alerts
-For each of a user's want lists, whether or not it is on Trade, the system SHALL notify the user when an entry for a collection on that want list is newly added to another account's discoverable have list bound to a Cosmo profile, or to such a sale list when the want list is open to swaps or buying (see `web-lists`). It SHALL also notify when such a list becomes discoverable. The alert SHALL arrive within 10 minutes, including when entries are committed out of order. Alerts SHALL be grouped as one unread notification per want list per day. While that notification is unread, further matches SHALL update its count and the latest objekts instead of creating new ones. Its target SHALL be `/trade/for-you?match=any&list=<want-list-slug>`: For you with Matches on Any and Compare with naming that want list (see `web-trade-browse`). A given want list, source list and collection SHALL alert at most once, even if the entry is removed and added again.
+For each of a user's want lists, whether or not it is on Trade, the system SHALL notify the user when an entry for a collection on that want list is newly added to another account's discoverable have list bound to a Cosmo profile, or to such a sale list when the want list is open to swaps or buying (see `web-lists`). It SHALL also notify when such a list becomes discoverable. The alert SHALL arrive within 10 minutes, including when entries are committed out of order. An entry SHALL still alert when its save commits up to 10 minutes after it began. A stop of the alert job SHALL delay alerts, not drop them: once the job runs again, every entry added in the meantime SHALL alert, each at most once. Losing the cache server SHALL neither skip nor repeat an alert. Alerts SHALL be grouped as one unread notification per want list per day. While that notification is unread, further matches SHALL update its count and the latest objekts instead of creating new ones. Its target SHALL be `/trade/for-you?match=any&list=<want-list-slug>`: For you with Matches on Any and Compare with naming that want list (see `web-trade-browse`). A given want list, source list and collection SHALL alert at most once, even if the entry is removed and added again.
 
 No alert SHALL be created for:
 - the user's own lists;
@@ -161,6 +161,18 @@ No alert SHALL be created for:
 #### Scenario: Sale listing and a Trade only want list
 - **WHEN** another account adds SeoYeon 204Z to a sale list shown on the Market, and SeoYeon 204Z is on the user's want list "Binary hunt", which is open to swaps only
 - **THEN** no alert is created for that entry
+
+#### Scenario: Late commit
+- **WHEN** another account's save of SeoYeon 204Z to a matching have list takes 8 minutes to commit, and an alert run passes in the meantime
+- **THEN** the user still gets an alert for it, within 10 minutes of the commit
+
+#### Scenario: Alert job down for an hour
+- **WHEN** the alert job is stopped for an hour while matching entries are added, and then starts again
+- **THEN** every one of those entries alerts as the job catches up, and none alerts twice
+
+#### Scenario: Cache server lost
+- **WHEN** the cache server is flushed or recreated between two alert runs
+- **THEN** the next run carries on from where the last one stopped: no entry added in between is skipped and none alerts twice
 
 ### Requirement: Reverse-direction alerts
 When the user has "Someone wants what you have" turned on, the system SHALL notify them when another account adds, to a discoverable want list, a collection that is on one of the user's have lists bound to a Cosmo profile, or on such a sale list when that want list is open to swaps or buying (see `web-lists`). The same grouping, once-only, timing and exclusion rules as want-list alerts SHALL apply, grouped per the user's list. The target SHALL be `/trade/for-you?match=any&list=<that-list-slug>`.
