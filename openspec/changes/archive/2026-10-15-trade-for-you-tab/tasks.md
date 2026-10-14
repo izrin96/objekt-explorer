@@ -60,7 +60,7 @@
 
 ## 5. Check
 
-- [ ] 5.1 Run `bun run check` and `bun run build --filter=web` from the root. Then, with the dev server running, walk through these in the browser, and record each as passed or failed:
+- [x] 5.1 Run `bun run check` and `bun run build --filter=web` from the root. Then, with the dev server running, walk through these in the browser, and record each as passed or failed:
   - Browse as signed out;
   - Browse as a viewer without a list;
   - Browse as a viewer with a list (own post listed, no matching controls);
@@ -70,5 +70,6 @@
   - the "Mutual only N" count on the switch, with All my lists and with a named list;
   - the controls row and the two-line strips at 390 px and at desktop width, with no horizontal scroll and no clipped third line.
   - Not run before archiving (2026-10-15): `bun run check` and the web build pass, but no dev server was up, so the browser walkthrough is still owed.
+  - Walked through 2026-10-15 on a local dev server against the local database, all passed: Browse signed out (no For you tab, sign-in line); Browse as a viewer without a list (no For you tab, and `/trade/for-you` lands on `/trade` with the filters and `person` kept); Browse as a viewer with a list (own post listed with no chip or Make offer, no matching controls); For you with Mutual only off and on, and with Compare with naming a list (`list=` in the URL); Mutual only reads WTT with All, WTB and WTS disabled, lists only WTT posts, and `type=wts` leaves Reset disabled; every redirect in task 2, signed in and signed out; "Mutual only 1" on the switch with All my lists and with a named list; the controls row and strips at 390 px and 1280 px with no horizontal scroll and no clipped strip. The no-list line was removed afterwards at the user's request (see the `web-trade-browse` spec).
 - [x] 5.2 Update `apps/web/AGENTS.md` if it describes the Browse Matches modes or the For you redirect. Otherwise state in this task that no package's `AGENTS.md` conventions changed.
   - Checked: `apps/web/AGENTS.md` does not describe the Matches modes or the For you redirect, so no `AGENTS.md` changed.
