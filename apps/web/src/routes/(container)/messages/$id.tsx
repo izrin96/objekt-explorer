@@ -4,6 +4,7 @@ import { Link, createFileRoute, notFound } from "@tanstack/react-router";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Button } from "@/components/ui/button";
 import { threadOptions } from "@/features/chat/queries";
+import { threadPartner } from "@/features/chat/thread-cache";
 import { Thread, ThreadSkeleton } from "@/features/chat/thread/thread";
 import { generateMetadata } from "@/lib/meta";
 import { isNotFound } from "@/lib/orpc-error";
@@ -14,14 +15,19 @@ export const Route = createFileRoute("/(container)/messages/$id")({
     const id = Number(params.id);
     if (!Number.isSafeInteger(id) || id <= 0) throw notFound();
     // a failed read other than not-a-member leaves the thread to show its error and retry
-    await queryClient
+    const thread = await queryClient
       .infiniteQuery({ ...threadOptions(id), staleTime: "static" })
       .catch((error: unknown) => {
         if (isNotFound(error)) throw notFound();
       });
-    return { id };
+    return { id, name: thread && threadPartner(thread)?.identity.name };
   },
-  head: () => generateMetadata({ title: m.page_titles_messages() }),
+  head: ({ loaderData }) =>
+    generateMetadata({
+      title: loaderData?.name
+        ? m.page_titles_messages_thread({ name: loaderData.name })
+        : m.page_titles_messages(),
+    }),
   notFoundComponent: ThreadNotFound,
   pendingComponent: ThreadSkeleton,
   component: ThreadPage,

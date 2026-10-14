@@ -83,7 +83,7 @@ A list's page SHALL offer Message in its header, so a list reached from a shared
 ### Requirement: Requests
 A conversation whose first message carries no objekt card SHALL appear in the recipient's Requests, not their Inbox, until they reply or accept. The recipient is whoever did not send the first message, whoever opened the conversation. Request conversations SHALL not count as unread. Declining a request SHALL archive it for the recipient without telling the sender. A conversation whose first message carries a card SHALL go straight to the Inbox.
 
-A conversation with no message yet SHALL be shown only to a member who opened it with Message: a member who did not SHALL get the not-found surface for it, and every request about it from that member (thread, mark read, accept, decline, archive, mute) SHALL be refused as not found. No conversation list SHALL show a conversation with no message yet, for either member: it joins the opener's list with its first message or offer, so a Message click that sends nothing leaves nothing in their Inbox.
+A conversation with no message yet SHALL be shown only to a member who opened it with Message: a member who did not SHALL get the not-found surface for it, and every request about it from that member (thread, mark read, accept, decline, archive, mute) SHALL be refused as not found. No conversation list SHALL show a conversation with no message yet, for either member: it joins the opener's list with its first message or offer, so a Message click that sends nothing leaves nothing in their Inbox. While the opener has such a thread open, their Inbox (with no search) SHALL show it at the top as a "New message" row, until the conversation's own row replaces it or they leave the thread.
 
 The request bar SHALL say that declining moves the conversation to Archived without telling the sender, that it comes back if they write again, and that Block stops them.
 
@@ -110,6 +110,10 @@ The request bar SHALL say that declining moves the conversation to Archived with
 #### Scenario: Message without writing
 - **WHEN** rin.trades activates Message on kaede.k's profile, sends nothing and goes back to `/messages`
 - **THEN** no conversation with kaede.k is listed; activating Message again opens the same empty thread
+
+#### Scenario: Writing the first message
+- **WHEN** rin.trades activates Message on kaede.k's profile on a wide screen
+- **THEN** the Inbox shows a "New message" row for kaede.k at the top, marked as the open one, and after the first send the conversation's own row takes its place
 
 ### Requirement: Inbox, Requests and Archived
 `/messages` SHALL list the signed-in user's conversations under Inbox, Requests and Archived, newest activity first. Each row SHALL show:
@@ -171,7 +175,7 @@ When the Inbox is empty and requests are waiting, the empty state SHALL say how 
 - the messages;
 - a message box with Attach objekt.
 
-Attach objekt SHALL let the user pick an objekt from their own collection or a collection from their lists. On viewports below `md`, the list and the thread SHALL be separate screens with a back control; the back control SHALL also be there while the thread loads and when it fails to load. A conversation the user is not part of SHALL show the not-found surface.
+Attach objekt SHALL let the user pick an objekt from their own collection or a collection from their lists. On viewports below `md`, the list and the thread SHALL be separate screens with a back control; the back control SHALL also be there while the thread loads and when it fails to load. The back control of a thread opened by a Message button SHALL return to the page Message was used on, and SHALL be named "Go back"; otherwise it SHALL lead to the list. The page title SHALL name the other account ("{name} · Messages"). A conversation the user is not part of SHALL show the not-found surface.
 
 **Read state.** A message SHALL be marked read only once the user can see it: the page is visible and focused, and the thread is scrolled to the newest message. While the user is scrolled up, newer messages SHALL show a "New messages" control that scrolls to them, and reaching the newest message marks them read.
 
@@ -188,6 +192,10 @@ Attach objekt SHALL let the user pick an objekt from their own collection or a c
 #### Scenario: Load fails on a phone
 - **WHEN** a conversation fails to load at 390 px
 - **THEN** the screen offers Retry and a back control to the list
+
+#### Scenario: Back from Message on a phone
+- **WHEN** a user at 390 px activates Message on rin.trades's list and then uses the back control in the thread
+- **THEN** they return to rin.trades's list, not to `/messages`
 
 #### Scenario: Reading history
 - **WHEN** the user is scrolled up reading older messages and the partner sends a message

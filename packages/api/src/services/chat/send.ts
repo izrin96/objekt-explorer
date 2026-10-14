@@ -15,6 +15,7 @@ import {
 } from "../../schemas/chat";
 import { redis } from "../redis";
 import { hydrateCards, resolveCard, toChatMessages } from "./cards";
+import { loadThread } from "./inbox";
 import { publishChatMessage } from "./live";
 import { appendMessage, findMembership, findSentMessage } from "./members";
 import { checkMessageRate } from "./rate";
@@ -39,7 +40,8 @@ function refuseSend(safety: { blocked: boolean; mute: { until: string | null } |
 
 /**
  * Opens the conversation with the target's account, creating it when there is none. A card is
- * checked as sending would check it and handed back to attach, never sent from here.
+ * checked as sending would check it and handed back to attach, never sent from here. The
+ * thread's newest page comes back too, so the client opens it without a second request.
  */
 export async function startConversation(
   me: string,
@@ -63,11 +65,17 @@ export async function startConversation(
     return { ...(await ensureConversation(tx, ctx, existingId)), card };
   });
 
-  if (!input.card || !result.card) return { id: result.id, card: null };
-  const { view, collections } = await hydrateCards([result.card], me);
+  // the conversation is open whatever this read does; the client loads the thread itself on null
+  const thread = loadThread(me, { id: result.id }).catch(() => null);
+  if (!input.card || !result.card) return { id: result.id, card: null, thread: await thread };
+  const [{ view, collections }, page] = await Promise.all([
+    hydrateCards([result.card], me),
+    thread,
+  ]);
   return {
     id: result.id,
     card: { input: input.card, view: view(result.card), collections },
+    thread: page,
   };
 }
 

@@ -1,6 +1,6 @@
 import { ChatCircleIcon } from "@phosphor-icons/react";
 import type { CardInput, ChatTarget } from "@repo/api/schemas/chat";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation, useNavigate } from "@tanstack/react-router";
 
 import { Button, type ButtonProps } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import { m } from "@/paraglide/messages";
 import { putDraftCard } from "@/stores/chat-draft";
 
 import { refusalOf, refusalText } from "./format";
+import { fetchNewer, threadOptions } from "./queries";
 
 /**
  * Opens the conversation with the target's account, with `card` attached to send. The
@@ -59,12 +60,13 @@ export function MessageButton({
 
 /** Opens the conversation with the target's account, for a button or a menu item. */
 export function useStartConversation() {
+  const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { gate, offerLink } = useStartGate();
 
   const mutation = useMutation(
     orpc.chat.start.mutationOptions({
-      onSuccess: ({ id, card }) => {
+      onSuccess: ({ id, card, thread }) => {
         const objekt = card?.collections[card.input.collectionSlug];
         if (card && objekt) {
           putDraftCard(id, {
@@ -73,6 +75,13 @@ export function useStartConversation() {
             listName: card.view.list?.name ?? null,
             listType: card.view.list?.listTypeNew,
           });
+        }
+        // an open thread's cache may hold older pages and live messages; only a new one is seeded
+        const { queryKey } = threadOptions(id);
+        if (thread && !queryClient.getQueryData(queryKey)) {
+          queryClient.setQueryData(queryKey, { pages: [thread], pageParams: [undefined] });
+          // a message that landed after the server read it has no cache to reach yet
+          void fetchNewer(queryClient, id).catch(() => undefined);
         }
         void navigate({
           to: "/messages/$id",

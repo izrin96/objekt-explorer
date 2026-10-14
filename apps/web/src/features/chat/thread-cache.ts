@@ -9,6 +9,11 @@ type Incoming = Pick<ThreadPage, "messages" | "collections"> & {
   conversation?: ThreadPage["conversation"];
 };
 
+/** Who the thread is with, read from its newest page. */
+export function threadPartner(data: ThreadData) {
+  return data.pages[0]?.conversation.partner;
+}
+
 /** Page 0 is the newest; each later page is older. */
 export function threadMessages(data: ThreadData) {
   return data.pages.toReversed().flatMap((page) => page.messages);

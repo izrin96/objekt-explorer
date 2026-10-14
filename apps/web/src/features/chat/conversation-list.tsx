@@ -10,8 +10,15 @@ import {
 import type { ChatBox, ConversationRow } from "@repo/api/schemas/chat";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useInfiniteQuery, type UseInfiniteQueryResult, useQuery } from "@tanstack/react-query";
-import { Link, useHydrated } from "@tanstack/react-router";
-import { type FocusEvent, type RefObject, useEffect, useRef } from "react";
+import { Link, useHydrated, useParams } from "@tanstack/react-router";
+import {
+  type FocusEvent,
+  type ReactNode,
+  type RefObject,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
 import { PendingStatus } from "@/components/router/pending";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -30,7 +37,8 @@ import { m } from "@/paraglide/messages";
 import { ConversationMenu } from "./conversation-menu";
 import { mutedLabel } from "./format";
 import type { ConversationsData } from "./live-message";
-import { conversationsOptions, requestCountOptions } from "./queries";
+import { conversationsOptions, requestCountOptions, threadOptions } from "./queries";
+import { newestId, threadPartner } from "./thread-cache";
 
 const EMPTY = {
   inbox: { icon: ChatsCircleIcon, title: m.chat_empty_inbox, hint: m.chat_empty_inbox_hint },
@@ -82,6 +90,7 @@ function ConversationListBody({
   q: string | undefined;
   now: number;
 }) {
+  const draft = useDraftThread(rows, box, q);
   if (query.isPending) return <ConversationListSkeleton />;
 
   if (query.isError) {
@@ -120,7 +129,7 @@ function ConversationListBody({
       />
     );
   }
-  if (rows.length === 0) {
+  if (rows.length === 0 && !draft) {
     const empty = EMPTY[box];
     return (
       <EmptyState
@@ -136,6 +145,7 @@ function ConversationListBody({
   return (
     <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
       <ul className="flex flex-col p-2">
+        {draft ? <DraftRow draft={draft} /> : null}
         {rows.map((row) => (
           <ConversationItem key={row.id} row={row} collections={collections} now={now} />
         ))}
@@ -148,6 +158,71 @@ function ConversationListBody({
         fetchNextPage={() => void query.fetchNextPage()}
       />
     </div>
+  );
+}
+
+type Draft = { id: number; partner: ConversationRow["partner"] };
+
+/**
+ * The open thread while nothing is written in it yet: no list holds it until its first
+ * message, so the Inbox shows it at the top until its real row arrives.
+ */
+function useDraftThread(rows: ConversationRow[], box: ChatBox, q: string | undefined) {
+  const openId = useParams({ strict: false, select: (params) => params.id });
+  const id = openId === undefined ? 0 : Number(openId);
+  // reads the thread pane's query, never fetches it
+  const { data } = useInfiniteQuery({ ...threadOptions(id), enabled: false });
+  // remembered past the first send, so the row stays until the list's own row replaces it
+  const [draftId, setDraftId] = useState<number | null>(null);
+  if (data && newestId(data) === 0 && draftId !== id) setDraftId(id);
+  const partner = data ? threadPartner(data) : undefined;
+  if (box !== "inbox" || q !== undefined || id !== draftId || !partner) return null;
+  if (rows.some((row) => row.id === id)) return null;
+  return { id, partner } satisfies Draft;
+}
+
+function DraftRow({ draft }: { draft: Draft }) {
+  return (
+    <li data-conversation-row={draft.id}>
+      <RowLink id={draft.id} partner={draft.partner} className="pe-2">
+        <span className="truncate text-sm font-medium">{draft.partner.identity.name}</span>
+        <span className="text-muted-foreground truncate text-sm italic">
+          {m.chat_preview_draft()}
+        </span>
+      </RowLink>
+    </li>
+  );
+}
+
+function RowLink({
+  id,
+  partner,
+  className,
+  children,
+}: {
+  id: number;
+  partner: ConversationRow["partner"];
+  className?: string;
+  children: ReactNode;
+}) {
+  const name = partner.identity.name;
+  return (
+    <Link
+      to="/messages/$id"
+      params={{ id: String(id) }}
+      search={(prev) => prev}
+      data-conversation-link={id}
+      className={cn(
+        "hover:bg-secondary/60 focus-visible:ring-ring data-[status=active]:bg-secondary flex items-center gap-3 rounded-lg py-2.5 ps-2 outline-none focus-visible:ring-2",
+        className,
+      )}
+    >
+      <Avatar className="size-10 shrink-0">
+        {partner.user.image ? <AvatarImage src={partner.user.image} alt="" /> : null}
+        <AvatarFallback>{name.slice(0, 1).toUpperCase()}</AvatarFallback>
+      </Avatar>
+      <div className="flex min-w-0 flex-1 flex-col gap-0.5">{children}</div>
+    </Link>
   );
 }
 
@@ -227,76 +302,62 @@ function ConversationItem({
   return (
     <li data-conversation-row={row.id} className="relative">
       {/* the menu sits beside the link, not in it: a button inside a link is not allowed */}
-      <Link
-        to="/messages/$id"
-        params={{ id: String(row.id) }}
-        search={(prev) => prev}
-        data-conversation-link={row.id}
-        className="hover:bg-secondary/60 focus-visible:ring-ring data-[status=active]:bg-secondary flex items-center gap-3 rounded-lg py-2.5 ps-2 pe-11 outline-none focus-visible:ring-2"
-      >
-        <Avatar className="size-10 shrink-0">
-          {partner.user.image ? <AvatarImage src={partner.user.image} alt="" /> : null}
-          <AvatarFallback>{name.slice(0, 1).toUpperCase()}</AvatarFallback>
-        </Avatar>
-        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <span className="flex min-w-0 items-baseline gap-2">
-            <span
-              className={cn(
-                "min-w-0 flex-1 truncate text-sm",
-                unread ? "font-semibold" : "font-medium",
-              )}
-            >
-              {name}
-            </span>
-            <time
-              dateTime={last.createdAt}
-              className="text-muted-foreground shrink-0 text-xs tabular-nums"
-              suppressHydrationWarning
-            >
-              {relativeTime(new Date(last.createdAt).getTime(), now)}
-            </time>
+      <RowLink id={row.id} partner={partner} className="pe-11">
+        <span className="flex min-w-0 items-baseline gap-2">
+          <span
+            className={cn(
+              "min-w-0 flex-1 truncate text-sm",
+              unread ? "font-semibold" : "font-medium",
+            )}
+          >
+            {name}
           </span>
-          <span className="flex min-w-0 items-center gap-1.5">
-            <span
-              className={cn(
-                "min-w-0 flex-1 truncate text-sm",
-                unread ? "text-foreground" : "text-muted-foreground",
-              )}
-            >
-              {preview(last)}
-            </span>
-            {mutedText ? (
-              <span className="text-muted-foreground shrink-0" title={mutedText}>
-                <BellSlashIcon className="size-3.5" aria-hidden />
-                <span className="sr-only">{mutedText}</span>
-              </span>
-            ) : null}
-            {unread ? (
-              <span className="flex size-2 shrink-0">
-                <span className="bg-foreground size-full rounded-full" />
-                <span className="sr-only">{m.chat_unread()}</span>
-              </span>
-            ) : null}
+          <time
+            dateTime={last.createdAt}
+            className="text-muted-foreground shrink-0 text-xs tabular-nums"
+            suppressHydrationWarning
+          >
+            {relativeTime(new Date(last.createdAt).getTime(), now)}
+          </time>
+        </span>
+        <span className="flex min-w-0 items-center gap-1.5">
+          <span
+            className={cn(
+              "min-w-0 flex-1 truncate text-sm",
+              unread ? "text-foreground" : "text-muted-foreground",
+            )}
+          >
+            {preview(last)}
           </span>
-          {context ? (
-            <div className="mt-1 flex min-w-0 items-center gap-2">
-              <div aria-hidden className="flex">
-                <OfferThumb
-                  slug={context.collectionSlug}
-                  collection={contextCollection}
-                  className="w-7"
-                />
-              </div>
-              <span className="text-muted-foreground min-w-0 truncate font-mono text-xs">
-                {collectionName(context.collectionSlug, contextCollection)}
-                {context.serial !== null
-                  ? ` ${m.chat_card_serial({ serial: context.serial })}`
-                  : ""}
-              </span>
-            </div>
+          {mutedText ? (
+            <span className="text-muted-foreground shrink-0" title={mutedText}>
+              <BellSlashIcon className="size-3.5" aria-hidden />
+              <span className="sr-only">{mutedText}</span>
+            </span>
           ) : null}
-        </div>
-      </Link>
+          {unread ? (
+            <span className="flex size-2 shrink-0">
+              <span className="bg-foreground size-full rounded-full" />
+              <span className="sr-only">{m.chat_unread()}</span>
+            </span>
+          ) : null}
+        </span>
+        {context ? (
+          <div className="mt-1 flex min-w-0 items-center gap-2">
+            <div aria-hidden className="flex">
+              <OfferThumb
+                slug={context.collectionSlug}
+                collection={contextCollection}
+                className="w-7"
+              />
+            </div>
+            <span className="text-muted-foreground min-w-0 truncate font-mono text-xs">
+              {collectionName(context.collectionSlug, contextCollection)}
+              {context.serial !== null ? ` ${m.chat_card_serial({ serial: context.serial })}` : ""}
+            </span>
+          </div>
+        ) : null}
+      </RowLink>
       <ConversationMenu
         conversation={row}
         name={name}
