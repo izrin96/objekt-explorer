@@ -14,6 +14,8 @@ A signed-in user SHALL be able to block another account from a conversation's me
 
 Feeds and alerts SHALL apply the block in both directions: the blocker's posts, matches and want-list alerts also leave the blocked account's views. Either account can still open the other's public profile and lists.
 
+No response to either account SHALL say that a block caused something: an offer cancelled by a block SHALL carry no cancel reason in any offer, trade or notification response, to either party.
+
 #### Scenario: Blocked sender
 - **WHEN** kaede.k blocks spam.seller22 and spam.seller22 then sends a message in their conversation
 - **THEN** the send is refused with the generic reason, and kaede.k receives nothing
@@ -21,6 +23,10 @@ Feeds and alerts SHALL apply the block in both directions: the blocker's posts, 
 #### Scenario: Feeds
 - **WHEN** kaede.k blocks rin.trades
 - **THEN** rin.trades's posts no longer appear for kaede.k and rin.trades does not match kaede.k, and kaede.k's no longer appear for rin.trades
+
+#### Scenario: Offer cancelled by a block
+- **WHEN** kaede.k blocks spam.seller22 while O-882 between them is open, and spam.seller22 reads O-882 and its notification through the API
+- **THEN** O-882 is Cancelled, and neither response carries a reason naming the block
 
 ### Requirement: Blocked users
 The Blocked users section of the account page (`/account/blocked`) SHALL list every account the user blocked, headed by its Chat as profile (see `web-chat`), with Unblock. Unblocking SHALL restore messaging and feeds. A conversation that existed before SHALL return with its history.
@@ -55,11 +61,15 @@ A shared excerpt SHALL be a copy of every message of that conversation at the ti
 - **THEN** the moderator sees that message's text in the excerpt, marked as unsent
 
 ### Requirement: Scam-phrase caution
-A received message matching a scam pattern SHALL show the recipient an inline caution under the message. The patterns cover asking the other side to send first, and payment outside the site (payment links and app names). The sender SHALL see nothing. Each match SHALL record a flag on the sender with its category and time, without the message text. Flags SHALL never block or hide a message.
+A received message matching a scam pattern SHALL show the recipient an inline caution under the message. The patterns cover asking the other side to send first, and payment outside the site (payment links and app names). Matching SHALL see through disguises that do not change how the text reads: invisible format characters (such as zero-width spaces) are ignored, and full-width and other compatibility forms match their plain letters. The message SHALL be stored and shown as sent. The sender SHALL see nothing. Each match SHALL record a flag on the sender with its category and time, without the message text. Flags SHALL never block or hide a message.
 
 #### Scenario: Send first
 - **WHEN** a recipient gets "send first pls, pay to wise"
 - **THEN** the message is shown with the caution, and moderators see one "send first" and one "outside payment" flag on the sender, without the text
+
+#### Scenario: Disguised app name
+- **WHEN** a recipient gets "pay by pay​pal" with a zero-width space, or "ｐａｙｐａｌ" in full-width letters
+- **THEN** the message is shown as sent, with the outside-payment caution, and the flag is recorded
 
 ### Requirement: Moderator console
 `/mod/reports` and `/mod/addresses/$address` SHALL be reachable only by accounts with the moderator or admin role. Anyone else SHALL get the not-found surface. The account menu SHALL link to it for staff only. It SHALL list open reports grouped by reported account, newest first. Each row SHALL show:
@@ -249,3 +259,26 @@ A move SHALL take effect at once, without the 7-day wait. A staff unlink SHALL s
 #### Scenario: Moderator sees no Move
 - **WHEN** a moderator who isn't an admin opens an account with a linked address
 - **THEN** the address shows no Move or Unlink, and a move request from them is refused
+
+### Requirement: Deleted accounts keep their evidence
+On the moderator console's account page, a deleted account SHALL show a Deleted chip with when it was deleted. The page SHALL keep showing:
+- the reports filed against and by it;
+- its sanctions and audit entries;
+- its trades;
+- the Cosmo wallets it had linked, with when each was linked and unlinked, read from the address link history.
+
+Deleting one's own account SHALL add an "Account deleted" audit entry, by the account itself, naming the reports still open against it.
+
+Its open reports SHALL stay open. A moderator SHALL be able to Dismiss them. Warn, chat mute, trade block and ban SHALL NOT be offered for a deleted account, and the server SHALL refuse them. A user SHALL still be able to report a deleted account.
+
+#### Scenario: Deleted after being reported
+- **WHEN** spam.seller22 has 2 open reports and deletes the account
+- **THEN** the console shows spam.seller22's page with the Deleted chip, both reports still open, an "Account deleted" audit entry by the account naming them, and the wallets it had linked with their link and unlink times
+
+#### Scenario: Dismiss only
+- **WHEN** a moderator opens a deleted account's page
+- **THEN** only Dismiss is offered, and a sanction sent for the account anyway is refused
+
+#### Scenario: Report a deleted account
+- **WHEN** kaede.k reports the deleted partner of failed trade T-1042 through Report a problem
+- **THEN** the report is filed and appears in the queue with T-1042 attached
