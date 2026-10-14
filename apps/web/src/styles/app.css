@@ -430,7 +430,8 @@
 [data-slot="drawer-popup"]:not(
   [data-starting-style],
   [data-ending-style],
-  [data-nested-drawer-open]
+  [data-nested-drawer-open],
+  [data-swiping]
 ) {
   transform: none;
   will-change: auto;
