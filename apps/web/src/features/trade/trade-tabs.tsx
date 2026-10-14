@@ -3,15 +3,15 @@ import { Link, useLocation, useNavigate, useRouter } from "@tanstack/react-route
 import { useEffect } from "react";
 
 import { Tabs, TabsList, TabsTab } from "@/components/ui/tabs";
-import { useCurrentUser } from "@/features/user/hooks";
+import { useCurrentUser, useUserLists } from "@/features/user/hooks";
 import { m } from "@/paraglide/messages";
 
+import { canMatchOf } from "./browse-search";
 import { tabCountsOptions } from "./queries";
 
-const ITEMS = [
-  { label: m.trade_tab_browse, to: "/trade" },
-  { label: m.trade_tab_mine, to: "/trade/mine", count: "mine" },
-] as const;
+const BROWSE = { label: m.trade_tab_browse, to: "/trade" } as const;
+const FOR_YOU = { label: m.trade_tab_for_you, to: "/trade/for-you" } as const;
+const MINE = { label: m.trade_tab_mine, to: "/trade/mine", count: "mine" } as const;
 
 const COUNT_CAP = 99;
 
@@ -23,15 +23,17 @@ export function TradeTabs() {
   const queryClient = useQueryClient();
   const { data: currentUser } = useCurrentUser();
   const signedIn = currentUser != null;
+  const canMatch = canMatchOf(useUserLists());
   const { data: counts } = useQuery(tabCountsOptions(signedIn));
-  const paths = ITEMS.map((item) => router.buildLocation({ to: item.to }).pathname);
+  const items = canMatch ? [BROWSE, FOR_YOU, MINE] : [BROWSE, MINE];
+  const paths = items.map((item) => router.buildLocation({ to: item.to }).pathname);
   // a trade page under My trades marks My trades
   const current =
     paths.findLast((path) => pathname === path || pathname.startsWith(`${path}/`)) ?? pathname;
 
   // the tab bar outlives each tab, so moving between tabs asks again; a fresh count is kept
   useEffect(() => {
-    if (signedIn) void queryClient.prefetchQuery(tabCountsOptions(true));
+    if (signedIn) void queryClient.query(tabCountsOptions(true)).catch(() => undefined);
   }, [queryClient, signedIn, current]);
 
   return (
@@ -49,8 +51,8 @@ export function TradeTabs() {
         aria-label={m.trade_tabs_label()}
         className="text-muted-foreground w-full justify-start gap-0.5 border-b py-0 *:data-[slot=tabs-tab]:hover:bg-transparent"
       >
-        {ITEMS.map((item, i) => {
-          const count = "count" in item ? (counts?.[item.count] ?? 0) : 0;
+        {items.map((item, i) => {
+          const count = item === MINE ? (counts?.mine ?? 0) : 0;
           const shown = count > COUNT_CAP ? `${COUNT_CAP}+` : String(count);
           return (
             <TabsTab

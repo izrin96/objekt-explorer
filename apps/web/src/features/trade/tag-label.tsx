@@ -13,8 +13,13 @@ const TAG_LABEL: Record<PostTag, { short: () => string; long: () => string }> = 
   wts: { short: m.trade_tag_wts, long: m.trade_tag_wts_desc },
 };
 
+/** A tag in plain text, for a menu option: "WTT · Want to trade". */
+export function tagText(tag: PostTag) {
+  return `${TAG_LABEL[tag].short()} · ${TAG_LABEL[tag].long()}`;
+}
+
 /** The short tag stays visible; the spelled-out one is read and shown on hover. */
-export function TagLabel({ tag }: { tag: PostTag }) {
+function TagLabel({ tag }: { tag: PostTag }) {
   return (
     <>
       <abbr aria-hidden title={TAG_LABEL[tag].long()} className="no-underline">

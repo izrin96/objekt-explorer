@@ -8,11 +8,11 @@ export type TradeFilter = (typeof TRADE_FILTERS)[number];
 /** a partner can match on hundreds of collections; past this many per side they are counted, not drawn */
 export const CARD_LIMIT = 50;
 
-/** objekts drawn per side of a trade card; with the +N tile, one row at 1280 px */
-export const PREVIEW_LIMIT = 11;
+/** objekts sent per side of a Browse post: enough to fill two lines of thumbnails at the widest layout */
+export const PREVIEW_LIMIT = 22;
 
-/** a Browse post with one side gives it the whole row: enough to fill it at the 2xl container */
-export const SOLO_PREVIEW_LIMIT = 20;
+/** the same for a one-sided post, whose side takes the whole middle column */
+export const SOLO_PREVIEW_LIMIT = 46;
 
 const DEFAULT_TRADE_FILTER = "all" satisfies TradeFilter;
 

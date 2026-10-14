@@ -1,11 +1,14 @@
 import { describe, expect, test } from "bun:test";
 
 import {
+  browseRedirect,
   browseSearchSchema,
   canMatchOf,
+  forYouFallback,
+  forYouNormalise,
   forYouSearchSchema,
-  forYouToBrowse,
   matchModeOf,
+  postTypeOf,
   toBrowseInput,
 } from "./browse-search";
 
@@ -15,74 +18,63 @@ const parse = (input: Record<string, unknown>) => browseSearchSchema.parse(input
 
 describe("toBrowseInput", () => {
   test("scopes to the selected artists", () => {
-    const input = toBrowseInput(parse({}), artists, ["tripleS"], true);
+    const input = toBrowseInput(parse({}), artists, ["tripleS"], "forYou");
     expect(input.artist).toEqual(["tripleS"]);
   });
 
   test("a collection link ignores the scope", () => {
     const search = parse({ slug: "atom01-seoyeon-204z" });
-    expect(toBrowseInput(search, artists, ["tripleS"], true).artist).toEqual([]);
+    expect(toBrowseInput(search, artists, ["tripleS"], "forYou").artist).toEqual([]);
   });
 
   test("an artist inside the selection narrows it", () => {
     const search = parse({ artist: "artms" });
-    expect(toBrowseInput(search, artists, ["tripleS", "artms"], true).artist).toEqual(["artms"]);
+    expect(toBrowseInput(search, artists, ["tripleS", "artms"], "forYou").artist).toEqual([
+      "artms",
+    ]);
   });
 
   test("an artist outside the selection is dropped", () => {
     const search = parse({ artist: ["artms", "idntt"] });
-    expect(toBrowseInput(search, artists, ["tripleS", "artms"], true).artist).toEqual(["artms"]);
+    expect(toBrowseInput(search, artists, ["tripleS", "artms"], "forYou").artist).toEqual([
+      "artms",
+    ]);
     const only = parse({ artist: "idntt" });
-    expect(toBrowseInput(only, artists, ["tripleS"], true).artist).toEqual(["tripleS"]);
+    expect(toBrowseInput(only, artists, ["tripleS"], "forYou").artist).toEqual(["tripleS"]);
   });
 
   test("a collection link ignores the artist parameter too", () => {
     const search = parse({ slug: "atom01-seoyeon-204z", artist: "artms" });
-    expect(toBrowseInput(search, artists, ["tripleS", "artms"], true).artist).toEqual([]);
+    expect(toBrowseInput(search, artists, ["tripleS", "artms"], "forYou").artist).toEqual([]);
   });
 
   test("sends the mode and Compare with, and no longer sends matches", () => {
-    const input = toBrowseInput(parse({ match: "mutual", list: "spares" }), artists, [], true);
+    const input = toBrowseInput(parse({ match: "mutual", list: "spares" }), artists, [], "forYou");
     expect(input).toMatchObject({ match: "mutual", list: "spares" });
     expect(input).not.toHaveProperty("matches");
   });
 
-  test("list is dropped under Off", () => {
-    const input = toBrowseInput(parse({ match: "off", list: "spares" }), artists, [], true);
+  test("Browse is always Off, and drops Compare with", () => {
+    const input = toBrowseInput(parse({ match: "mutual", list: "spares" }), artists, [], "browse");
     expect(input).toMatchObject({ match: "off", list: undefined });
+  });
+
+  test("For you defaults to Any", () => {
+    expect(toBrowseInput(parse({}), artists, [], "forYou").match).toBe("any");
   });
 
   test("folds members onto Cosmo's spelling", () => {
     const search = parse({ member: "seoyeon" });
-    expect(toBrowseInput(search, artists, [], true).member).toEqual(["SeoYeon"]);
+    expect(toBrowseInput(search, artists, [], "forYou").member).toEqual(["SeoYeon"]);
   });
 });
 
 describe("matchModeOf", () => {
-  test("the default is Any", () => {
-    expect(matchModeOf(parse({}), true)).toBe("any");
-  });
-
-  test("a slug link defaults to Off, unless it says otherwise", () => {
-    expect(matchModeOf(parse({ slug: "atom01-seoyeon-204z" }), true)).toBe("off");
-    expect(matchModeOf(parse({ slug: "atom01-seoyeon-204z", match: "any" }), true)).toBe("any");
-  });
-
-  test("an old matches=1 reads as Any, and match wins", () => {
-    for (const matches of ["1", 1]) {
-      expect(matchModeOf(parse({ matches, slug: "atom01-seoyeon-204z" }), true)).toBe("any");
-    }
-    expect(matchModeOf(parse({ matches: "1", match: "off" }), true)).toBe("off");
-  });
-
-  test("without a list that can match it is Off", () => {
-    expect(matchModeOf(parse({ match: "mutual" }), false)).toBe("off");
-    expect(matchModeOf(parse({ matches: "1" }), false)).toBe("off");
-  });
-
-  test("a value that does not parse is ignored", () => {
-    expect(matchModeOf(parse({ match: "they_have" }), true)).toBe("any");
-    expect(matchModeOf(parse({ match: "they_have", slug: "x" }), true)).toBe("off");
+  test("Any unless the URL says Mutual", () => {
+    expect(matchModeOf({})).toBe("any");
+    expect(matchModeOf({ match: "mutual" })).toBe("mutual");
+    expect(matchModeOf({ match: "they_have" })).toBe("any");
+    expect(matchModeOf({ match: "off" })).toBe("any");
   });
 });
 
@@ -108,22 +100,112 @@ describe("browseSearchSchema", () => {
   });
 });
 
-describe("forYouToBrowse", () => {
-  const map = (input: Record<string, unknown>) => forYouToBrowse(forYouSearchSchema.parse(input));
+describe("browseRedirect", () => {
+  const go = (input: Record<string, unknown>) => browseRedirect(parse(input));
 
-  test("mutual stays Mutual and everything else becomes Any", () => {
-    expect(map({ match: "mutual" }).match).toBe("mutual");
-    expect(map({ match: "they_have" }).match).toBe("any");
-    expect(map({ match: "they_want" }).match).toBe("any");
-    expect(map({}).match).toBe("any");
-    expect(map({ match: "bogus" }).match).toBe("any");
+  test("Old Browse link: match=mutual goes to For you with list, person and filters", () => {
+    expect(go({ match: "mutual", list: "spares", person: "u1", member: "SeoYeon" })).toEqual({
+      to: "/trade/for-you",
+      search: { match: "mutual", list: "spares", person: "u1", member: ["SeoYeon"] },
+    });
   });
 
-  test("list is kept and partner becomes person", () => {
-    expect(map({ list: "spares", partner: "u1" })).toEqual({
+  test("match=any goes to For you", () => {
+    expect(go({ match: "any" })).toMatchObject({ to: "/trade/for-you", search: { match: "any" } });
+  });
+
+  test("Old Only matches link: matches=1 becomes match=any", () => {
+    expect(go({ matches: "1" })).toMatchObject({ to: "/trade/for-you", search: { match: "any" } });
+    expect(go({ matches: 1, list: "spares" })).toMatchObject({
+      to: "/trade/for-you",
+      search: { match: "any", list: "spares" },
+    });
+  });
+
+  test("Old Off link drops match and list and stays on Browse", () => {
+    const target = go({ match: "off", list: "spares", type: "wts" });
+    expect(target).toEqual({ to: "/trade", search: { type: "wts" } });
+  });
+
+  test("match wins over matches", () => {
+    expect(go({ matches: "1", match: "off" })?.to).toBe("/trade");
+    expect(go({ matches: "1", match: "mutual" })).toMatchObject({
+      search: { match: "mutual" },
+    });
+  });
+
+  test("a stray list is dropped", () => {
+    expect(go({ list: "spares", slug: "atom01-seoyeon-204z" })).toEqual({
+      to: "/trade",
+      search: { slug: "atom01-seoyeon-204z" },
+    });
+  });
+
+  test("a clean Browse link, or one with an unparsable match, stays", () => {
+    expect(go({})).toBeNull();
+    expect(go({ type: "wtb", person: "u1" })).toBeNull();
+    expect(go({ match: "they_have" })).toBeNull();
+  });
+});
+
+describe("forYouNormalise", () => {
+  const norm = (input: Record<string, unknown>) => forYouNormalise(forYouSearchSchema.parse(input));
+
+  test("One-way view: they_* become Any and the list is kept", () => {
+    expect(norm({ match: "they_want", list: "spares" })).toMatchObject({
       match: "any",
       list: "spares",
+    });
+    expect(norm({ match: "they_have" })).toMatchObject({ match: "any" });
+  });
+
+  test("Partner link: partner becomes person", () => {
+    expect(norm({ match: "mutual", partner: "u1" })).toMatchObject({
+      match: "mutual",
       person: "u1",
     });
+    expect(norm({ match: "mutual", partner: "u1" })).not.toHaveProperty("partner");
+  });
+
+  test("person wins over partner", () => {
+    expect(norm({ person: "u2", partner: "u1" })).toMatchObject({ person: "u2" });
+  });
+
+  test("a current link, an empty one and an unparsable match need nothing", () => {
+    expect(norm({})).toBeNull();
+    expect(norm({ match: "any", list: "spares" })).toBeNull();
+    expect(norm({ match: "mutual", person: "u1" })).toBeNull();
+    expect(norm({ match: "bogus" })).toBeNull();
+  });
+});
+
+describe("forYouFallback", () => {
+  test("keeps the filters and the person sheet, and drops matching state", () => {
+    const search = forYouSearchSchema.parse({
+      match: "mutual",
+      list: "spares",
+      person: "u1",
+      member: "SeoYeon",
+      type: "wts",
+    });
+    expect(forYouFallback(search)).toEqual({ member: ["SeoYeon"], type: "wts", person: "u1" });
+    expect(forYouFallback(forYouSearchSchema.parse({ partner: "u2" }))).toEqual({ person: "u2" });
+  });
+});
+
+describe("postTypeOf", () => {
+  test("Browse and Any keep every type", () => {
+    expect(postTypeOf({ type: "wts" }, "browse")).toBe("wts");
+    expect(postTypeOf({ type: "wtb", match: "any" }, "forYou")).toBe("wtb");
+  });
+
+  test("Mutual lists WTT posts only, whatever the type", () => {
+    expect(postTypeOf({ match: "mutual" }, "forYou")).toBe("wtt");
+    expect(postTypeOf({ type: "wtb", match: "mutual" }, "forYou")).toBe("wtt");
+    expect(postTypeOf({ type: "wts", match: "mutual" }, "forYou")).toBe("wtt");
+  });
+
+  test("Mutual on Browse never applies", () => {
+    expect(postTypeOf({ type: "wts", match: "mutual" }, "browse")).toBe("wts");
   });
 });

@@ -210,7 +210,7 @@ export function NotificationItem({
 
   return (
     <Link
-      to="/trade"
+      to="/trade/for-you"
       search={{ match: "any", list: notification.payload.list.slug }}
       onClick={onOpen}
       className="hover:bg-accent focus-visible:bg-accent focus-visible:ring-ring flex items-start gap-3 px-4 py-2.5 outline-none focus-visible:ring-2 focus-visible:ring-inset"

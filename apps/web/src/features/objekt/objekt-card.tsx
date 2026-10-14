@@ -40,6 +40,8 @@ type ObjektCardProps<T extends ValidObjekt> = {
   note?: string | null;
   /** overrides the hide-label setting; the drawer's big card always hides it */
   hideLabel?: boolean;
+  /** "number" shows only the collection number, whatever the hide-label setting, for a thumbnail too narrow for more */
+  label?: "full" | "number";
   /** the collection can no longer be minted, so no total counts it */
   unobtainable?: boolean;
   /** the profile does not hold this collection; dimmed, never desaturated */
@@ -103,6 +105,7 @@ export function ObjektCard<T extends ValidObjekt>({
   onPriceClick,
   note,
   hideLabel,
+  label = "full",
   unobtainable = false,
   faded = false,
   hideSerial = false,
@@ -117,7 +120,7 @@ export function ObjektCard<T extends ValidObjekt>({
   const selecting = useSelection(selectIsSelecting);
   const order = use(SelectionOrderContext);
 
-  const labelHidden = hideLabel ?? hideLabelSetting;
+  const labelHidden = label === "number" ? false : (hideLabel ?? hideLabelSetting);
   const openable = onOpen !== undefined;
   const selectMode = onToggleSelect !== undefined && selecting;
   const shortNo = getCollectionShortNo(objekt);
@@ -268,7 +271,11 @@ export function ObjektCard<T extends ValidObjekt>({
                 captionClassName,
               )}
             >
-              <span className="font-medium">{objekt.member}</span>{" "}
+              {label === "full" && (
+                <>
+                  <span className="font-medium">{objekt.member}</span>{" "}
+                </>
+              )}
               <span className="font-medium whitespace-nowrap">{shortNo}</span>
               {serial !== undefined && (
                 <>

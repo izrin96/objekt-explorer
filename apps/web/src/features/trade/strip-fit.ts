@@ -1,8 +1,8 @@
 /**
- * How many of `total` thumbnails a one-line strip `width` px wide draws. When they all fit,
- * all of them; otherwise one place is kept back for the "+N" tile. `reserve` is the width of a
- * trailing link, and the gap before it, that the thumbnails must leave room for. An unmeasured
- * strip (width 0, the server render) draws `fallback`.
+ * How many of `total` thumbnails a strip `width` px wide draws on up to `lines` lines. When
+ * they all fit, all of them; otherwise one place is kept back for the "+N" tile. `reserve` is
+ * the width of a trailing link, and the gap before it, that the last line must leave room
+ * for. An unmeasured strip (width 0, the server render) draws `fallback`.
  */
 export function fitCount(
   width: number,
@@ -12,11 +12,13 @@ export function fitCount(
     gap,
     fallback,
     reserve = 0,
-  }: { thumb: number; gap: number; fallback: number; reserve?: number },
+    lines = 1,
+  }: { thumb: number; gap: number; fallback: number; reserve?: number; lines?: number },
 ) {
   if (width <= 0) return Math.min(fallback, total);
-  const usable = reserve > 0 ? width - reserve - gap : width;
-  const slots = Math.floor((usable + gap) / (thumb + gap));
+  const perLine = (room: number) => Math.max(Math.floor((room + gap) / (thumb + gap)), 0);
+  const lastRoom = reserve > 0 ? width - reserve - gap : width;
+  const slots = perLine(width) * (lines - 1) + perLine(lastRoom);
   if (slots >= total) return total;
   return Math.max(slots - 1, 0);
 }

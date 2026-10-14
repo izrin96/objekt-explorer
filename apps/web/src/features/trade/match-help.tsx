@@ -56,17 +56,6 @@ const SECTIONS: Section[] = [
     },
   },
   {
-    heading: m.trade_matches_label,
-    table: {
-      columns: [m.trade_matches_label, m.trade_help_modes_shows],
-      rows: [
-        { key: "off", cells: [m.trade_matches_off, m.trade_help_off] },
-        { key: "any", cells: [m.trade_matches_any, m.trade_help_any] },
-        { key: "mutual", cells: [m.trade_matches_mutual, m.trade_help_mutual] },
-      ],
-    },
-  },
-  {
     heading: m.trade_help_mutual_heading,
     table: {
       columns: [m.trade_browse_help_tags_list, m.trade_help_your_want, m.trade_help_counts],
@@ -88,9 +77,11 @@ const SECTIONS: Section[] = [
   },
 ];
 
-const TITLE = m.trade_browse_help_title;
+const TITLE = m.trade_match_help_aria;
 const LINES = [
+  m.trade_help_any,
   m.trade_help_both_ways,
+  m.trade_help_mutual_score,
   m.trade_help_unlinked,
   m.trade_match_help_compare,
   m.trade_match_help_owned,

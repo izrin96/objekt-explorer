@@ -26,8 +26,14 @@ export function TradeRow({
   className?: string;
 }) {
   return (
-    <article id={id} className={cn("bg-card @container rounded-lg border", className)}>
-      <div className="grid gap-x-4 gap-y-3 p-4 @3xl:grid-cols-[13rem_minmax(0,1fr)_auto]">
+    <article
+      id={id}
+      className={cn(
+        "hover:bg-secondary/40 @container border-b motion-safe:transition-colors motion-safe:duration-150",
+        className,
+      )}
+    >
+      <div className="grid gap-x-4 gap-y-3 px-4 py-3.5 @3xl:grid-cols-[13rem_minmax(0,1fr)_auto]">
         <div className="min-w-0 @3xl:row-span-2">{byline}</div>
         <div className="min-w-0 @3xl:col-start-2">{sides}</div>
         {below ? <div className="min-w-0 @3xl:col-start-2 @3xl:row-start-2">{below}</div> : null}

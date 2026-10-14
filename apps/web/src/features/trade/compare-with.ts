@@ -62,7 +62,6 @@ export function comparedList(
 
 export const COMPARE = {
   allLabel: m.trade_list_all,
-  all: m.trade_compare_all,
   /** A named list compares with the list it links to, or one way without one. */
   one: (list: TradeList, paired: TradeList | undefined) => {
     const isHave = tradeSideOf(list.listTypeNew) === "have";

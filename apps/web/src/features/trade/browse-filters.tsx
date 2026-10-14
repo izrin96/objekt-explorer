@@ -18,7 +18,7 @@ import { ResetButton } from "@/features/filters/reset-button";
 import { useCanonicalFilters, useSetFilters } from "@/features/filters/use-filters";
 import { m } from "@/paraglide/messages";
 
-import type { BrowseSearch } from "./browse-search";
+import type { FeedSearch } from "./browse-search";
 
 /** the Type filter sits right after Class */
 const BEFORE_TYPE = FACET_KEYS.slice(0, FACET_KEYS.indexOf("class") + 1);
@@ -31,7 +31,7 @@ export function BrowseFilters({
   onClearSlug,
   onReset,
 }: {
-  search: BrowseSearch;
+  search: FeedSearch;
   slugName: string | undefined;
   filtering: boolean;
   onClearSlug: () => void;

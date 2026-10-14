@@ -15,8 +15,8 @@ import type { PostSideData } from "./post-types";
 import { fitCount } from "./strip-fit";
 import { SlugTile, TILE } from "./thumb-grid";
 
-/** `w-14` and `gap-1.5`, in px */
-const FIT = { thumb: 56, gap: 6, fallback: 4 };
+/** `w-10` and `gap-1.5`, in px; a side wraps onto a second line, never a third */
+const FIT = { thumb: 40, gap: 6, fallback: 4, lines: 2 };
 
 /** monochrome on purpose: the class stripes stay the only colour in the grid */
 const RING = "ring-foreground ring-offset-card ring-2 ring-offset-2";
@@ -27,9 +27,9 @@ const RING = "ring-foreground ring-offset-card ring-2 ring-offset-2";
 const CARD_RING =
   "*:first:after:pointer-events-none *:first:after:absolute *:first:after:inset-0 *:first:after:rounded-photocard *:first:after:border-2 *:first:after:border-foreground *:first:after:shadow-[inset_0_0_0_2px_var(--color-card)]";
 
-/** `ObjektCard`'s own count scales with the card, too small to read at `w-14` */
+/** `ObjektCard`'s own count scales with the card, too small to read at `w-10` */
 const STACK_COUNT =
-  "pointer-events-none absolute top-1 left-1 rounded-full bg-[rgba(10,12,16,.82)] px-1 font-mono text-xxs leading-4 font-semibold text-white tabular-nums";
+  "pointer-events-none absolute top-0.5 left-0.5 rounded-full bg-[rgba(10,12,16,.82)] px-1 font-mono text-xxs leading-4 font-semibold text-white tabular-nums";
 
 const STRIP_MORE =
   "hover:text-foreground focus-visible:ring-ring text-xs tabular-nums outline-none focus-visible:ring-2";
@@ -54,8 +54,8 @@ function StripMore({ count }: { count: number }) {
 }
 
 /**
- * One side of a post or a partner: a label over one line of thumbnails. It draws as many as
- * fit its width and ends in a "+N" tile for the rest, so it never wraps.
+ * One side of a post or a partner: a label over up to two lines of thumbnails. It draws as many as
+ * fit its width and ends in a "+N" tile for the rest, so it never wraps a third line.
  */
 function PostStrip({
   label,
@@ -91,7 +91,7 @@ function PostStrip({
         <p className="text-muted-foreground text-sm">{m.trade_strip_none()}</p>
       ) : (
         /* padding gives the ring room */
-        <ul ref={ref} className="-m-1 flex flex-nowrap items-start gap-x-1.5 overflow-hidden p-1">
+        <ul ref={ref} className="-m-1 flex flex-wrap items-start gap-1.5 overflow-hidden p-1">
           {shown.map((item) => {
             const collection = collections[item.slug];
             const qty = item.qty ?? 1;
@@ -105,12 +105,12 @@ function PostStrip({
                 : undefined;
             return (
               /* a container, so the slug tile's radius matches the cards' */
-              <li key={item.key} className="@container relative w-14 shrink-0">
+              <li key={item.key} className="@container relative w-10 shrink-0">
                 {collection ? (
                   <ObjektCard
                     objekt={collection}
                     image="thumbnail"
-                    hideLabel
+                    label="number"
                     onOpen={() => onOpen(collection)}
                     captionClassName="font-mono"
                     price={item.price}
@@ -132,7 +132,7 @@ function PostStrip({
               </li>
             );
           })}
-          {rest > 0 ? <li className="@container w-14 shrink-0">{more(rest)}</li> : null}
+          {rest > 0 ? <li className="@container w-10 shrink-0">{more(rest)}</li> : null}
           {othersLink ? (
             <li ref={linkRef} className="shrink-0 self-center">
               {othersLink}

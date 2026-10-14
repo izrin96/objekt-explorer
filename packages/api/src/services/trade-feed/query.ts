@@ -110,7 +110,11 @@ export function feedWhere(query: Omit<Stage1, "owners" | "cursor">): SQL[] {
   if (query.type !== "all") where.push(TAG_WHERE[query.type]);
   if (query.slugs) where.push(hasEntryIn(sql`posts.id, posts.partner_id`, query.slugs));
   if (query.slug !== null) where.push(hasEntryIn(sql`posts.id, posts.partner_id`, [query.slug]));
-  if (query.matches) where.push(matchesIndex(query.matches));
+  if (query.matches) {
+    where.push(matchesIndex(query.matches));
+    // the viewer's own posts show on the plain feed, so they can see a bump land, but never as a match
+    if (query.viewerId !== null) where.push(sql`posts.user_id <> ${query.viewerId}`);
+  }
   return where;
 }
 

@@ -134,7 +134,8 @@ export async function browseFeed(
 
   const rows = await fetchFeedRows({
     viewerId,
-    type: input.type,
+    // Mutual is a swap between two people, so it lists WTT posts whatever the client asks
+    type: mode === "mutual" ? "wtt" : input.type,
     slugs,
     slug: input.slug ?? null,
     matches: match ? matchIndexOf(match.compared) : null,

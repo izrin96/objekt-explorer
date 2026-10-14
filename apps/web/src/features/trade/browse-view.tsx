@@ -10,9 +10,9 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { InfiniteSentinel } from "@/components/shared/infinite-sentinel";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsList, TabsTab } from "@/components/ui/tabs";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import { useSelectedArtists } from "@/features/artist/use-selected-artists";
+import { SingleSelect } from "@/features/filters/single-select";
 import { ObjektDrawer } from "@/features/objekt/drawer";
 import { collectionName } from "@/features/objekt/objekt-label";
 import { useCurrentUser, useUserLists } from "@/features/user/hooks";
@@ -21,7 +21,15 @@ import { m } from "@/paraglide/messages";
 
 import { BrowseFilters } from "./browse-filters";
 import { BrowsePost, BrowsePostSkeleton } from "./browse-post";
-import { type BrowseSearch, canMatchOf, matchModeOf, toBrowseInput } from "./browse-search";
+import {
+  type FeedSearch,
+  type Surface,
+  canMatchOf,
+  forYouFallback,
+  matchModeOf,
+  postTypeOf,
+  toBrowseInput,
+} from "./browse-search";
 import { comparedList, tradeListsOf } from "./compare-with";
 import { HiddenPartnersDialog } from "./hidden-partners-dialog";
 import { LoadError } from "./load-error";
@@ -30,33 +38,33 @@ import { MyPosts } from "./my-posts";
 import { PersonSheet } from "./person-sheet";
 import { PostListDialog } from "./post-list-dialog";
 import { browseOptions, hiddenPartnersOptions } from "./queries";
-import { TagLabel } from "./tag-label";
+import { tagText } from "./tag-label";
 
-type PostType = NonNullable<BrowseSearch["type"]> | "all";
+type PostType = NonNullable<FeedSearch["type"]> | "all";
 
 const FACETS = ["artist", "member", "season", "class", "on_offline", "collection"] as const;
 
 const TYPES: PostType[] = ["all", "wtt", "wtb", "wts"];
 
-/** `virtua` measures each post; the gap rides on the item so it is part of the measurement */
-const ROW_GAP = "pb-3";
+/** posts the server draws, and the skeleton's count */
 const SSR_POSTS = 4;
 
-export function BrowseView({ search }: { search: BrowseSearch }) {
+export function BrowseView({ surface, search }: { surface: Surface; search: FeedSearch }) {
   const { data: user } = useCurrentUser();
   const userLists = useUserLists();
   const canMatch = canMatchOf(userLists);
-  const mode = matchModeOf(search, canMatch);
+  const forYou = surface === "forYou";
+  const mode = forYou ? matchModeOf(search) : "off";
   const tradeLists = useMemo(() => tradeListsOf(userLists), [userLists]);
   const { artists } = useCosmoArtist();
   const { data: selected } = useSelectedArtists();
   const input = useMemo(
-    () => toBrowseInput(search, artists, selected, canMatch),
-    [search, artists, selected, canMatch],
+    () => toBrowseInput(search, artists, selected, surface),
+    [search, artists, selected, surface],
   );
   const query = useInfiniteQuery(browseOptions(input));
   const hidden = useQuery(hiddenPartnersOptions(Boolean(user)));
-  const navigate = useNavigate({ from: "/trade/" });
+  const navigate = useNavigate();
   // the drawer's On Trade link lands on this same page; the new slug closes the drawer
   const [opened, setOpened] = useState<{ objekt: ValidObjekt; slug?: string } | null>(null);
   const active = opened && opened.slug === search.slug ? opened.objekt : null;
@@ -70,19 +78,24 @@ export function BrowseView({ search }: { search: BrowseSearch }) {
   // one clock per page load, so every post's "3 hours ago" agrees
   const [now] = useState(Date.now);
 
-  const setSearch = (patch: Partial<BrowseSearch>) =>
+  // the two routes have their own search types; the view reads both through `FeedSearch`
+  const go = (
+    next: FeedSearch | ((prev: FeedSearch) => FeedSearch),
+    options: { replace?: boolean } = {},
+  ) =>
     void navigate({
-      search: (prev) => ({ ...prev, ...patch }),
-      replace: true,
+      to: forYou ? "/trade/for-you" : "/trade",
+      search: next as never,
       resetScroll: false,
+      ...options,
     });
+
+  const setSearch = (patch: Partial<FeedSearch>) =>
+    go((prev) => ({ ...prev, ...patch }), { replace: true });
 
   const openPerson = (userId: string) => {
     pushedPerson.current = true;
-    void navigate({
-      search: (prev) => ({ ...prev, person: userId }),
-      resetScroll: false,
-    });
+    go((prev) => ({ ...prev, person: userId }));
   };
   const closePerson = () => {
     if (pushedPerson.current) {
@@ -90,19 +103,33 @@ export function BrowseView({ search }: { search: BrowseSearch }) {
       router.history.back();
       return;
     }
-    void navigate({
-      search: (prev) => ({ ...prev, person: undefined }),
-      replace: true,
-      resetScroll: false,
-    });
+    go((prev) => ({ ...prev, person: undefined }), { replace: true });
   };
 
-  const type: PostType = search.type ?? "all";
+  const type = postTypeOf(search, surface);
+  const mutual = forYou && mode === "mutual";
+  // a menu, not tabs, so the options Mutual disables never move the controls beside it
+  const postType = (
+    <SingleSelect
+      label={m.trade_type_label()}
+      options={TYPES.map((item) => ({
+        value: item,
+        label: item === "all" ? m.trade_filter_all() : tagText(item),
+        disabled: mutual && item !== "wtt",
+      }))}
+      value={type}
+      defaultValue="all"
+      onChange={(next) => setSearch({ type: next === "all" ? undefined : next })}
+    />
+  );
+  // Mutual fixes the type to WTT, so a leftover `type` is not a filter to reset
   const filtering =
-    search.type !== undefined ||
+    (!mutual && search.type !== undefined) ||
     search.slug !== undefined ||
     FACETS.some((key) => (search[key]?.length ?? 0) > 0);
-  const reset = () => void navigate({ search: {}, replace: true, resetScroll: false });
+  // the matching choice isn't a filter: For you keeps it
+  const reset = () =>
+    go(forYou ? { match: search.match, list: search.list } : {}, { replace: true });
   // a person who moved between two Mutual pages can come back once more: first place wins
   const posts = useMemo(() => {
     const seen = new Set<number>();
@@ -138,7 +165,7 @@ export function BrowseView({ search }: { search: BrowseSearch }) {
         )}
       </div>
 
-      {user ? <MyPosts /> : null}
+      {user && !forYou ? <MyPosts /> : null}
 
       <BrowseFilters
         search={search}
@@ -149,32 +176,27 @@ export function BrowseView({ search }: { search: BrowseSearch }) {
       />
 
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-        <Tabs
-          value={type}
-          onValueChange={(value) => {
-            const next = TYPES.find((item) => item === value);
-            if (next && next !== type) setSearch({ type: next === "all" ? undefined : next });
-          }}
-          /* a longer locale can outgrow a phone: the strip scrolls, the page does not */
-          data-scroll-x
-          className="max-w-full [scrollbar-width:none] overflow-x-auto"
-        >
-          <TabsList aria-label={m.trade_type_label()} className="w-max">
-            {TYPES.map((item) => (
-              <TabsTab key={item} value={item}>
-                {item === "all" ? m.trade_filter_all() : <TagLabel tag={item} />}
-              </TabsTab>
-            ))}
-          </TabsList>
-        </Tabs>
-        {canMatch ? (
+        {forYou ? (
           <MatchingControls
-            mode={mode}
+            mode={matchModeOf(search)}
             list={search.list}
             tradeLists={tradeLists}
-            onChange={(patch) => setSearch({ match: mode, ...patch, matches: undefined })}
-          />
-        ) : user ? (
+            onChange={(patch) => {
+              const next = { ...search, match: mode, ...patch };
+              // Mutual fixes the type to WTT, so a type picked under Any is dropped rather than kept
+              setSearch({
+                ...patch,
+                match: next.match,
+                type: next.match === "mutual" ? undefined : next.type,
+              });
+            }}
+          >
+            {postType}
+          </MatchingControls>
+        ) : (
+          postType
+        )}
+        {forYou || canMatch ? null : user ? (
           <div className="text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
             <p className="text-pretty">{m.trade_browse_matches_need_list()}</p>
             <Button variant="outline" size="sm" onClick={() => setPostOpen(true)}>
@@ -187,7 +209,7 @@ export function BrowseView({ search }: { search: BrowseSearch }) {
             <Button
               variant="link"
               className="h-auto p-0 text-sm underline underline-offset-2"
-              render={<Link to="/login" search={{ redirect: "/trade" }} />}
+              render={<Link to="/login" search={{ redirect: "/trade/for-you" }} />}
             >
               {m.nav_sign_in()}
             </Button>
@@ -202,7 +224,7 @@ export function BrowseView({ search }: { search: BrowseSearch }) {
         </>
       ) : query.isError && posts.length === 0 ? (
         <LoadError onRetry={() => void query.refetch()} />
-      ) : posts.length === 0 && !query.hasNextPage && mode === "mutual" ? (
+      ) : posts.length === 0 && !query.hasNextPage && mutual ? (
         <EmptyState
           icon={CardsThreeIcon}
           title={m.trade_browse_no_mutual_title()}
@@ -222,7 +244,7 @@ export function BrowseView({ search }: { search: BrowseSearch }) {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setSearch({ match: "off", matches: undefined })}
+              render={<Link to="/trade" search={forYouFallback(search)} />}
             >
               {m.trade_browse_show_all_posts()}
             </Button>
@@ -246,7 +268,7 @@ export function BrowseView({ search }: { search: BrowseSearch }) {
           role="region"
           aria-label={m.trade_posts_label()}
           aria-busy={query.isPlaceholderData}
-          className={cn(query.isPlaceholderData && "opacity-60")}
+          className={cn("border-t", query.isPlaceholderData && "opacity-60")}
         >
           {/* the server draws the first posts, so a full load is not blank until hydration;
               until the first scroll, virtua keeps rendering the mount's `ssrCount` items even
@@ -254,7 +276,7 @@ export function BrowseView({ search }: { search: BrowseSearch }) {
           <WindowVirtualizer data={posts} ssrCount={Math.min(SSR_POSTS, posts.length)}>
             {(post: (typeof posts)[number] | undefined) =>
               post ? (
-                <div key={post.id} className={ROW_GAP}>
+                <div key={post.id}>
                   <BrowsePost
                     post={post}
                     own={post.userId === user?.user.id}
@@ -306,11 +328,7 @@ export function BrowseView({ search }: { search: BrowseSearch }) {
         <PersonSheet
           key={search.person}
           userId={search.person}
-          list={
-            mode === "off"
-              ? undefined
-              : comparedList(search.list, tradeLists, mode === "mutual")?.slug
-          }
+          list={forYou ? comparedList(search.list, tradeLists, mutual)?.slug : undefined}
           onClose={closePerson}
         />
       ) : null}
@@ -338,7 +356,7 @@ export function BrowsePending() {
 
 function BrowseFeedSkeleton() {
   return (
-    <div className="flex flex-col gap-3">
+    <div className="border-t">
       {Array.from({ length: SSR_POSTS }).map((_, index) => (
         <BrowsePostSkeleton key={index} />
       ))}

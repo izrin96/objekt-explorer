@@ -32,15 +32,15 @@ export async function getMutualPeople(userId: string, sides: Sides) {
 }
 
 /**
- * "Mutual N": the Mutual people for the compared lists who have a post Browse would list,
- * whatever Type, artist or collection filter the viewer set. It reads the people Mutual reads.
+ * "Mutual N": the Mutual people for the compared lists who have a WTT post Mutual would list,
+ * whatever artist or collection filter the viewer set. It reads the people Mutual reads.
  */
 export async function mutualCount(userId: string, list: string | undefined) {
   const sides = await resolveCompareSides(userId, list, true);
   if (sides.haveListIds.length === 0 || sides.wantListIds.length === 0) return 0;
   const scope = await tradeCacheScope(userId);
   return getCache(
-    `trade:mutual-count:2:${userId}:${scope}:${sides.listId ?? "all"}`,
+    `trade:mutual-count:3:${userId}:${scope}:${sides.listId ?? "all"}`,
     COUNT_TTL_SECONDS,
     async () => {
       const [mutual, viewer] = await Promise.all([
@@ -51,7 +51,8 @@ export async function mutualCount(userId: string, list: string | undefined) {
       return countFeedOwners(
         {
           viewerId: userId,
-          type: "all",
+          // Mutual lists WTT posts only, so a person with only WTB or WTS posts isn't counted
+          type: "wtt",
           slugs: null,
           slug: null,
           matches: matchIndexOf(narrowViewer(viewer, sides)),

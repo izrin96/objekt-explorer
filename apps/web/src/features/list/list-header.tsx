@@ -221,7 +221,9 @@ function TradeMatchesLink({
       variant="outline"
       size="sm"
       aria-label={shown === undefined ? undefined : m.trade_matches_link_label({ count: shown })}
-      render={<Link to="/trade" search={{ match: mutual ? "mutual" : "any", list: slug }} />}
+      render={
+        <Link to="/trade/for-you" search={{ match: mutual ? "mutual" : "any", list: slug }} />
+      }
     >
       <UsersIcon />
       {m.nav_trade_matches()}

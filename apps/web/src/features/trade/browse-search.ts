@@ -5,11 +5,17 @@ import * as z from "zod";
 
 import { filterSearchSchema } from "@/features/filters/search-schema";
 
-/** `all` is the absence of `type` */
-export const browseSearchSchema = filterSearchSchema.extend({
+/** What both Trade surfaces take: the filters, the post type and the person sheet. */
+const feedSearchSchema = filterSearchSchema.extend({
+  /** `all` is the absence of `type` */
   type: z.enum(["wtt", "wtb", "wts"]).optional().catch(undefined),
   slug: z.string().min(1).optional().catch(undefined),
-  /** An older link's Only matches; `match` wins when both are present */
+  /** the person sheet to open */
+  person: z.string().min(1).optional().catch(undefined),
+});
+
+export const browseSearchSchema = feedSearchSchema.extend({
+  /** read only to redirect to For you; `match` wins when both are present */
   matches: z
     .preprocess((value) => (value === "1" ? 1 : value), z.literal(1))
     .optional()
@@ -17,28 +23,61 @@ export const browseSearchSchema = filterSearchSchema.extend({
   match: z.enum(BROWSE_MATCH_MODES).optional().catch(undefined),
   /** Compare with: a list slug */
   list: z.string().min(1).optional().catch(undefined),
-  /** the person sheet to open */
-  person: z.string().min(1).optional().catch(undefined),
 });
 
 export type BrowseSearch = z.infer<typeof browseSearchSchema>;
 
-/** The parameters of the old For you address, as its links carried them. */
-export const forYouSearchSchema = z.object({
-  match: z.enum(["mutual", "they_want", "they_have"]).optional().catch(undefined),
+/** For you: Browse's filters, Mutual only (`match`), Compare with (`list`). */
+export const forYouSearchSchema = feedSearchSchema.extend({
+  /** `they_*` read as Any */
+  match: z.enum(["any", "mutual", "they_have", "they_want"]).optional().catch(undefined),
   list: z.string().min(1).optional().catch(undefined),
+  /** read as `person` */
   partner: z.string().min(1).optional().catch(undefined),
 });
 
 export type ForYouSearch = z.infer<typeof forYouSearchSchema>;
 
-/** Mutual stays Mutual and every other view becomes Any; the one-way views are gone. */
-export function forYouToBrowse(search: ForYouSearch): BrowseSearch {
+/** Where an old `/trade` link belongs, or `null` when it is already in its place. */
+export type BrowseRedirect =
+  | { to: "/trade/for-you"; search: Omit<ForYouSearch, "partner"> }
+  | { to: "/trade"; search: Omit<BrowseSearch, "match" | "matches" | "list"> };
+
+/**
+ * Matching lives on For you: `match=any|mutual` and `matches=1` go there, `match=off` and a
+ * stray `list` are dropped. `match` wins over `matches`.
+ */
+export function browseRedirect(search: BrowseSearch): BrowseRedirect | null {
+  const { match, matches, list, ...rest } = search;
+  if (match === "off") return { to: "/trade", search: rest };
+  if (match === "any" || match === "mutual") {
+    return { to: "/trade/for-you", search: { ...rest, match, list } };
+  }
+  if (matches === 1) return { to: "/trade/for-you", search: { ...rest, match: "any", list } };
+  if (list !== undefined) return { to: "/trade", search: rest };
+  return null;
+}
+
+/** Maps `they_*` to Any and `partner` to `person`, or `null` when there is nothing to map. */
+export function forYouNormalise(search: ForYouSearch): Omit<ForYouSearch, "partner"> | null {
+  const { partner, ...rest } = search;
+  const oneWay = rest.match === "they_have" || rest.match === "they_want";
+  if (partner === undefined && !oneWay) return null;
   return {
-    match: search.match === "mutual" ? "mutual" : "any",
-    list: search.list,
-    person: search.partner,
+    ...rest,
+    match: oneWay ? "any" : rest.match,
+    person: rest.person ?? partner,
   };
+}
+
+/** For you's address for a viewer who can't use it: the filters, with no matching state. */
+export function forYouFallback(
+  search: FeedSearch & { partner?: string },
+): Omit<BrowseSearch, "match" | "matches" | "list"> {
+  // a person sheet opens on Browse too, so a shared link keeps it
+  const { match, list, partner, ...rest } = search;
+  const person = rest.person ?? partner;
+  return person === undefined ? rest : { ...rest, person };
 }
 
 /** Whether the viewer has a list that takes part in Trade, and so can match. */
@@ -46,17 +85,24 @@ export function canMatchOf(lists: readonly { listTypeNew: ListTypeNew; isProfile
   return lists.some((list) => canBeOnTrade(list.listTypeNew, list.isProfileBind));
 }
 
-/**
- * The Matches option in force. Without a list that can match it is Off. A link to one
- * collection defaults to Off, so it lists every post the drawer's count promised; otherwise
- * the default is Any.
- */
-export function matchModeOf(search: BrowseSearch, canMatch: boolean): BrowseMatchMode {
-  if (!canMatch) return "off";
-  if (search.match) return search.match;
-  if (search.matches === 1) return "any";
-  return search.slug ? "off" : "any";
+/** For you's Matches option: Any unless the URL says Mutual. */
+export function matchModeOf(search: { match?: string }): "any" | "mutual" {
+  return search.match === "mutual" ? "mutual" : "any";
 }
+
+/**
+ * The Type in force. Mutual is a swap between two people, and a WTB or WTS post is one-way
+ * money, so Mutual lists WTT posts only, whatever `type` says.
+ */
+export function postTypeOf(search: FeedSearch, surface: Surface): PostType {
+  const mutual = surface === "forYou" && matchModeOf(search) === "mutual";
+  return mutual ? "wtt" : (search.type ?? "all");
+}
+
+export type Surface = "browse" | "forYou";
+
+/** What both surfaces read: Browse's schema is a wider `match`, For you's a narrower one. */
+export type FeedSearch = Omit<BrowseSearch, "match" | "matches"> & { match?: string };
 
 type Artist = { artistMembers: { name: string }[] };
 
@@ -66,23 +112,23 @@ type Artist = { artistMembers: { name: string }[] };
  * unless the URL names one collection. An `artist` outside the selection is ignored.
  */
 export function toBrowseInput(
-  search: BrowseSearch,
+  search: FeedSearch,
   artists: readonly Artist[],
   selectedArtistIds: readonly ValidArtist[],
-  canMatch: boolean,
+  surface: Surface,
 ) {
   const memberName = new Map(
     artists.flatMap((artist) =>
       artist.artistMembers.map((member) => [member.name.toLowerCase(), member.name] as const),
     ),
   );
-  const type: PostType = search.type ?? "all";
+  const type = postTypeOf(search, surface);
   // the drawer counts posts for a collection across every artist, so its link must too
   const chosen = search.slug
     ? []
     : (search.artist ?? []).filter((id) => selectedArtistIds.includes(id));
   const artist = search.slug ? [] : chosen.length > 0 ? chosen : [...selectedArtistIds];
-  const match = matchModeOf(search, canMatch);
+  const match: BrowseMatchMode = surface === "browse" ? "off" : matchModeOf(search);
 
   return {
     type,

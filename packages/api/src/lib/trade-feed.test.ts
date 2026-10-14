@@ -150,10 +150,14 @@ describe("ownership", () => {
 
 describe("previewSide", () => {
   test("ringed first, then newest, with the rest counted", () => {
-    const entries = Array.from({ length: 14 }, (_, i) => entry(i + 1, `s${i + 1}`));
+    const total = PREVIEW_LIMIT + 3;
+    const entries = Array.from({ length: total }, (_, i) => entry(i + 1, `s${i + 1}`));
     const { items, more } = previewSide(entries, new Map([["s2", [1]]]));
     expect(items).toHaveLength(PREVIEW_LIMIT);
-    expect(items.map((item) => item.entryId)).toEqual([2, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5]);
+    expect(items.map((item) => item.entryId)).toEqual([
+      2,
+      ...Array.from({ length: PREVIEW_LIMIT - 1 }, (_, i) => total - i),
+    ]);
     expect(items[0]?.ringed).toBe(true);
     expect("ringed" in items[1]!).toBe(false);
     expect(more).toBe(3);
@@ -169,14 +173,14 @@ describe("previewSide", () => {
       entry(1, "a"),
       entry(5, "a"),
       entry(3, "a"),
-      ...Array.from({ length: 12 }, (_, i) => entry(10 + i, `s${i}`)),
+      ...Array.from({ length: PREVIEW_LIMIT }, (_, i) => entry(10 + i, `s${i}`)),
     ];
     const { items, more, copyCount } = previewSide(entries, new Map([["a", [1]]]));
     expect(items[0]).toMatchObject({ entryId: 5, slug: "a", qty: 3, ringed: true });
     expect(items).toHaveLength(PREVIEW_LIMIT);
     expect(items.filter((item) => item.slug === "a")).toHaveLength(1);
-    expect(more).toBe(13 - PREVIEW_LIMIT);
-    expect(copyCount).toBe(15);
+    expect(more).toBe(1);
+    expect(copyCount).toBe(PREVIEW_LIMIT + 3);
   });
 
   const priced = (id: number, price: number | null, isQyop = false): FeedEntry => ({
@@ -264,11 +268,11 @@ describe("assemblePost", () => {
 
   test("a one-sided post sends more of its side than a pair sends of each", () => {
     const many = (base: number) =>
-      Array.from({ length: 30 }, (_, i) => entry(base + i, `s${base + i}`));
+      Array.from({ length: SOLO_PREVIEW_LIMIT + 5 }, (_, i) => entry(base + i, `s${base + i}`));
     const [solo] = pairPosts([list({ id: 3, listTypeNew: "sale" })]);
     const soloSide = assemblePost(solo!, () => many(100), null, NO_FILTER)?.sides[0];
     expect(soloSide?.items).toHaveLength(SOLO_PREVIEW_LIMIT);
-    expect(soloSide?.more).toBe(30 - SOLO_PREVIEW_LIMIT);
+    expect(soloSide?.more).toBe(5);
     const sides = assemblePost(pair!, (id) => many(id * 100), null, NO_FILTER)?.sides;
     expect(sides?.map((side) => side.items.length)).toEqual([PREVIEW_LIMIT, PREVIEW_LIMIT]);
   });

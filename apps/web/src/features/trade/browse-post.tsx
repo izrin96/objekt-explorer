@@ -155,7 +155,7 @@ export function BrowsePostSkeleton() {
                 {Array.from({ length: 4 }).map((_, index) => (
                   <Skeleton
                     key={index}
-                    className="aspect-photocard rounded-photocard w-14 shrink-0"
+                    className="aspect-photocard rounded-photocard w-10 shrink-0"
                   />
                 ))}
               </div>
