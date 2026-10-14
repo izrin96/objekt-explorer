@@ -9,7 +9,9 @@ import {
   inAnyCopyScope,
   itemVerdict,
 } from "../../lib/offer-rules";
+import { transferKey } from "../../lib/trade-match";
 import { unique } from "../../lib/unique";
+import { usedTransfers } from "../trade-verify";
 import {
   type Tx,
   copyKey,
@@ -31,15 +33,19 @@ type ItemParties = {
   copyHolders: (side: Side) => ReadonlySet<string>;
   /**
    * Accept only: a specific objekt the giver already sent to the receiver after the offer
-   * was made counts as held, so an early sender doesn't sink their own trade.
+   * was made counts as held, so an early sender doesn't sink their own trade. A transfer
+   * that already verified another trade's leg doesn't, since it can't verify this one.
    */
   sent?: { since: string; receivers: (side: Side) => ReadonlySet<string> };
   /** Send only: the copies a get side's any-copy asks may draw on (see `anyCopyScope`) */
   getScope?: ReadonlyMap<string, ReadonlySet<string> | null>;
 };
 
-/** Specific objekts that went from the side's giver to its receiver at or after `since`. */
-async function sentEarly(items: ItemRow[], parties: ItemParties) {
+/**
+ * Specific objekts that went from the side's giver to its receiver at or after `since`, in a
+ * transfer no trade leg has recorded yet.
+ */
+async function sentEarly(items: ItemRow[], parties: ItemParties, tx: Tx | typeof db) {
   const sent = new Set<string>();
   if (!parties.sent || items.length === 0) return sent;
   const { since, receivers } = parties.sent;
@@ -50,7 +56,7 @@ async function sentEarly(items: ItemRow[], parties: ItemParties) {
       const to = [...receivers(side)];
       if (ids.length === 0 || from.length === 0 || to.length === 0) return Promise.resolve([]);
       return indexer
-        .select({ objektId: transfers.objektId })
+        .select({ objektId: transfers.objektId, hash: transfers.hash, tokenId: transfers.tokenId })
         .from(transfers)
         .where(
           and(
@@ -62,7 +68,14 @@ async function sentEarly(items: ItemRow[], parties: ItemParties) {
         );
     }),
   );
-  for (const row of rows.flat()) if (row.objektId) sent.add(row.objektId);
+  const found = rows.flat();
+  const used = await usedTransfers(
+    tx,
+    found.map((row) => row.hash),
+  );
+  for (const row of found) {
+    if (row.objektId && !used.has(transferKey(row))) sent.add(row.objektId);
+  }
   return sent;
 }
 
@@ -99,7 +112,7 @@ export async function checkItems(
     const owner = found.get(item.objektId!)?.owner;
     return owner !== undefined && parties.sent?.receivers(item.side).has(owner);
   });
-  const early = await sentEarly(elsewhere, parties);
+  const early = await sentEarly(elsewhere, parties, tx);
 
   const refusal = firstItemRefusal(
     specific.map((item) => {

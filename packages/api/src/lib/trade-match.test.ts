@@ -80,6 +80,7 @@ describe("matchLegs: a specific objekt", () => {
     expect(matchLegs([leg()], [late, sold]).get(1)).toEqual({
       kind: "broken",
       transferId: sold.id,
+      at: sold.timestamp,
     });
   });
 
@@ -132,17 +133,26 @@ describe("matchLegs: moves before the accept", () => {
   test("sold before the accept and never back breaks the leg, though the accept missed it", () => {
     // the indexer lagged the accept, so the accept still saw the objekt with the giver
     const sold = transfer({ to: THIRD, timestamp: BEFORE_ACCEPT(6) });
-    expect(matchLegs([leg()], [sold]).get(1)).toEqual({ kind: "broken", transferId: sold.id });
+    expect(matchLegs([leg()], [sold]).get(1)).toEqual({
+      kind: "broken",
+      transferId: sold.id,
+      at: sold.timestamp,
+    });
     const resold = transfer({ from: THIRD, to: "0xfourth", timestamp: BEFORE_ACCEPT(7) });
     expect(matchLegs([leg()], [sold, resold]).get(1)).toEqual({
       kind: "broken",
       transferId: sold.id,
+      at: sold.timestamp,
     });
   });
 
   test("the same move after the accept breaks the leg", () => {
     const sold = transfer({ to: THIRD });
-    expect(matchLegs([leg()], [sold]).get(1)).toEqual({ kind: "broken", transferId: sold.id });
+    expect(matchLegs([leg()], [sold]).get(1)).toEqual({
+      kind: "broken",
+      transferId: sold.id,
+      at: sold.timestamp,
+    });
   });
 });
 
@@ -249,6 +259,21 @@ describe("nearMisses", () => {
     expect(misses([leg()], [transfer({ objektId: "1207", to: GIVER_2 })])).toEqual([]);
   });
 
+  test("a copy sent before the break is reported, so the break fails the trade", () => {
+    const wrong = transfer({ objektId: "1207", timestamp: "2026-10-02T00:01:00.000Z" });
+    const sold = transfer({ to: THIRD, timestamp: "2026-10-02T00:02:00.000Z" });
+    expect(matchLegs([leg()], [wrong, sold]).get(1)?.kind).toBe("broken");
+    expect(misses([leg()], [wrong, sold])).toEqual([
+      { legId: 1, txHash: wrong.hash, objektId: "1207", at: wrong.timestamp },
+    ]);
+  });
+
+  test("nor a copy sent after the objekt left", () => {
+    const sold = transfer({ to: THIRD, timestamp: "2026-10-02T00:01:00.000Z" });
+    const wrong = transfer({ objektId: "1207", timestamp: "2026-10-02T00:02:00.000Z" });
+    expect(misses([leg()], [sold, wrong])).toEqual([]);
+  });
+
   test("an any-copy leg reports none", () => {
     const pending = {
       results: new Map([[1, { kind: "pending" } as const]]),
@@ -262,7 +287,7 @@ describe("nearMisses", () => {
 
 describe("tradeOutcome", () => {
   const v: LegResult = { kind: "verified", transferId: "t", txHash: "h", objektId: "1", at: START };
-  const b: LegResult = { kind: "broken", transferId: "t" };
+  const b: LegResult = { kind: "broken", transferId: "t", at: START };
   const p: LegResult = { kind: "pending" };
 
   test("completes when every open leg verifies", () => {

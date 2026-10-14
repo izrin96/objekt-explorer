@@ -26,7 +26,10 @@ import {
   type OfferState,
   offerSummary,
   safetyRefusal,
+  owingParties,
   shownCancelReason,
+  substituteRefusal,
+  suggestFirstSender,
   topupAmount,
   topupPayer,
   validateShape,
@@ -327,6 +330,83 @@ describe("firstSender", () => {
     const binary = party("binary", 31, "2024-01-01T00:00:00Z", 1);
     const user = party("user", 2, "2023-01-01T00:00:00Z", 1);
     expect(firstSender(binary, user)).toBe("user");
+  });
+});
+
+describe("suggestFirstSender", () => {
+  const row = { userA: ME, userB: RIN };
+  const parties = new Map([
+    [ME, { userId: ME, verified: 31, unfinished: 0, createdAt: "2024-01-01T00:00:00Z" }],
+    [RIN, { userId: RIN, verified: 2, unfinished: 0, createdAt: "2024-01-01T00:00:00Z" }],
+  ]);
+  const leg = (fromUserId: string, verified = false) => ({
+    fromUserId,
+    verifiedAt: verified ? "2026-10-05T00:00:00Z" : null,
+  });
+
+  test("with both giving, by firstSender", () => {
+    expect(suggestFirstSender(row, [leg(ME), leg(RIN)], parties)).toEqual({
+      userId: RIN,
+      sent: false,
+    });
+  });
+
+  test("with one giver, that party, whatever their record", () => {
+    expect(suggestFirstSender(row, [leg(ME)], parties)).toEqual({ userId: ME, sent: false });
+  });
+
+  test("sent once every leg they give is verified", () => {
+    expect(suggestFirstSender(row, [leg(ME), leg(RIN, true), leg(RIN)], parties)?.sent).toBe(false);
+    expect(suggestFirstSender(row, [leg(ME), leg(RIN, true)], parties)).toEqual({
+      userId: RIN,
+      sent: true,
+    });
+  });
+
+  test("none without legs", () => {
+    expect(suggestFirstSender(row, [], parties)).toBeNull();
+  });
+});
+
+describe("owingParties", () => {
+  test("each party still giving an open leg, once", () => {
+    const legs = [
+      { fromUserId: ME, open: true },
+      { fromUserId: ME, open: true },
+      { fromUserId: RIN, open: false },
+    ];
+    expect(owingParties(legs)).toEqual([ME]);
+  });
+
+  test("nobody once every leg is closed", () => {
+    expect(owingParties([{ fromUserId: ME, open: false }])).toEqual([]);
+  });
+});
+
+describe("substituteRefusal", () => {
+  const pending = { open: true, status: "pending" as const };
+
+  test("a pending copy on a waiting leg of a trade in progress can be decided", () => {
+    expect(substituteRefusal("in_progress", pending)).toBeNull();
+  });
+
+  test("not once the trade ended, or if it's gone", () => {
+    expect(substituteRefusal("completed", pending)).toBe("trade_ended");
+    expect(substituteRefusal("failed", pending)).toBe("trade_ended");
+    expect(substituteRefusal(null, pending)).toBe("trade_ended");
+  });
+
+  test("not once the leg closed, the copy was decided, or it's gone", () => {
+    expect(substituteRefusal("in_progress", { open: false, status: "pending" })).toBe(
+      "substitute_closed",
+    );
+    expect(substituteRefusal("in_progress", { open: true, status: "declined" })).toBe(
+      "substitute_closed",
+    );
+    expect(substituteRefusal("in_progress", { open: true, status: "accepted" })).toBe(
+      "substitute_closed",
+    );
+    expect(substituteRefusal("in_progress", null)).toBe("substitute_closed");
   });
 });
 

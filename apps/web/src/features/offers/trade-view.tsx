@@ -242,7 +242,15 @@ function TradeDetail({ trade, collections }: { trade: Trade; collections: Collec
 
       {aside ? (
         <aside className="flex flex-col gap-3 border-t p-4 sm:p-6 lg:border-s lg:border-t-0">
-          {firstSender ? <FirstSender sender={firstSender} name={name} /> : null}
+          {firstSender ? (
+            <FirstSender
+              sender={firstSender}
+              name={name}
+              bothGive={
+                trade.legs.some((leg) => leg.fromYou) && trade.legs.some((leg) => !leg.fromYou)
+              }
+            />
+          ) : null}
           <Feedback trade={trade} name={name} hydrated={hydrated} />
           {inProgress ? (
             <section className="flex flex-col gap-1 rounded-lg border p-3 text-sm">

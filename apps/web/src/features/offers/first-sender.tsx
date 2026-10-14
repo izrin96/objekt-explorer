@@ -5,13 +5,18 @@ import { TONE_EDGE, TONE_FILL, TONE_INK } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
-/** A suggestion shown the same way to both sides; nothing enforces it. */
+/**
+ * A suggestion shown the same way to both sides; nothing enforces it. The rules behind it only
+ * apply when both sides give objekts; with one giver, that side is simply the one who sends.
+ */
 export function FirstSender({
   sender,
   name,
+  bothGive,
 }: {
   sender: NonNullable<Trade["firstSender"]>;
   name: string;
+  bothGive: boolean;
 }) {
   const headline = sender.you ? m.offer_first_you() : m.offer_first_them({ name });
   const follow = sender.sent
@@ -39,7 +44,9 @@ export function FirstSender({
         {headline}
         {follow ? <> {follow}</> : null}
       </p>
-      <p className="text-muted-foreground text-xs text-pretty">{m.offer_first_hint()}</p>
+      {bothGive ? (
+        <p className="text-muted-foreground text-xs text-pretty">{m.offer_first_hint()}</p>
+      ) : null}
     </section>
   );
 }

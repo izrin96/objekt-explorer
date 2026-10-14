@@ -8,11 +8,13 @@ import {
   OFFER_SIDE_LIMIT,
   RATE_WINDOW_DAYS,
   REPORT_AFTER_DAYS,
+  type SubstituteStatus,
   TOPUP_MAX,
   type TopupInput,
   type TradeStatus,
 } from "../schemas/offer";
 import { DAY_MS } from "./time";
+import { unique } from "./unique";
 
 /** A block never reaches the API as the cause of a cancellation. */
 export function shownCancelReason<R extends string>(reason: R | null) {
@@ -262,6 +264,25 @@ export function firstSender(a: TradeParty, b: TradeParty): string {
   return b.userId;
 }
 
+/**
+ * The suggested first sender among the parties who give a leg: with both giving, by
+ * `firstSender`; `sent` when every leg they give is verified.
+ */
+export function suggestFirstSender(
+  row: { userA: string; userB: string },
+  legs: { fromUserId: string; verifiedAt: string | null }[],
+  parties: Map<string, TradeParty>,
+) {
+  const givers = [row.userA, row.userB].filter((id) => legs.some((leg) => leg.fromUserId === id));
+  if (givers.length === 0) return null;
+  const userId =
+    givers.length === 1
+      ? givers[0]!
+      : firstSender(parties.get(row.userA)!, parties.get(row.userB)!);
+  const theirs = legs.filter((leg) => leg.fromUserId === userId);
+  return { userId, sent: theirs.every((leg) => leg.verifiedAt !== null) };
+}
+
 export type TradeState = {
   status: TradeStatus;
   acceptedAt: string | Date;
@@ -291,6 +312,23 @@ export function cancelRefusal(
   if (trade.status !== "in_progress") return "trade_ended";
   if (trade.verifiedLegs > 0 || heldCopies > 0) return "locked";
   return indexerBehind ? "indexer_behind" : null;
+}
+
+/** The parties a stall reminder goes to: each one still giving an open leg. */
+export function owingParties(legs: { fromUserId: string; open: boolean }[]) {
+  return unique(legs.filter((leg) => leg.open).map((leg) => leg.fromUserId));
+}
+
+/**
+ * A wrong copy is decided only while its trade is in progress, its leg waits, and the copy is
+ * still pending. Null for a row that's gone.
+ */
+export function substituteRefusal(
+  tradeStatus: TradeStatus | null,
+  copy: { open: boolean; status: SubstituteStatus } | null,
+): OfferRefusal | null {
+  if (tradeStatus !== "in_progress") return "trade_ended";
+  return copy?.open && copy.status === "pending" ? null : "substitute_closed";
 }
 
 type LegOwed = { fromUserId: string; verifiedAt: string | Date | null };

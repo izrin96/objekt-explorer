@@ -45,7 +45,8 @@ export const transferKey = (t: { hash: string; tokenId: string }) => `${t.hash}:
 
 export type LegResult =
   | { kind: "verified"; transferId: string; txHash: string; objektId: string; at: string }
-  | { kind: "broken"; transferId: string }
+  /** `at` is when the objekt left */
+  | { kind: "broken"; transferId: string; at: string }
   | { kind: "pending" }
   /** pending, while the indexer reads its objekt as non-transferable */
   | { kind: "stuck" };
@@ -55,6 +56,12 @@ const time = (at: string) => new Date(at).getTime();
 function byTime(a: MatchTransfer, b: MatchTransfer) {
   return time(a.timestamp) - time(b.timestamp) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
 }
+
+const broken = (transfer: MatchTransfer): LegResult => ({
+  kind: "broken",
+  transferId: transfer.id,
+  at: transfer.timestamp,
+});
 
 const verified = (transfer: MatchTransfer): LegResult => ({
   kind: "verified",
@@ -112,10 +119,10 @@ export function matchLegs(
           if (giver.has(t.from)) away = t;
           continue;
         }
-        result = { kind: "broken", transferId: (away ?? t).id };
+        result = broken(away ?? t);
         break;
       }
-      if (result.kind === "pending" && away) result = { kind: "broken", transferId: away.id };
+      if (result.kind === "pending" && away) result = broken(away);
       if (result.kind === "verified") {
         taken.add(transferKey({ hash: result.txHash, tokenId: result.objektId }));
       }
@@ -142,9 +149,10 @@ type Matched = { results: Map<number, LegResult>; taken: ReadonlySet<string> };
 export type NearMiss = { legId: number; txHash: string; objektId: string; at: string };
 
 /**
- * The wrong copies for the specific legs `matchLegs` left pending, counted as any-copy legs
- * count. A transfer it took verifies a leg, so it's never one; one transfer may still be a
- * near miss for several legs, which their receivers decide one at a time.
+ * The wrong copies for the specific legs `matchLegs` left pending or broken, counted as any-copy
+ * legs count. A broken leg's copy counts only if it came before the break, so the trade fails
+ * rather than cancels. A transfer it took verifies a leg, so it's never one; one transfer may
+ * still be a near miss for several legs, which their receivers decide one at a time.
  */
 export function nearMisses(
   legs: MatchLeg[],
@@ -153,10 +161,14 @@ export function nearMisses(
 ): NearMiss[] {
   const misses: NearMiss[] = [];
   for (const leg of legs) {
-    if (leg.objektId === null || results.get(leg.id)?.kind !== "pending") continue;
+    const result = results.get(leg.id);
+    if (leg.objektId === null || (result?.kind !== "pending" && result?.kind !== "broken")) {
+      continue;
+    }
     const giver = lower(leg.giver);
     const receiver = lower(leg.receiver);
     const start = time(leg.copyWindowStart);
+    const end = result.kind === "broken" ? time(result.at) : Infinity;
     const seen = new Set<string>();
     for (const t of transfers) {
       const key = transferKey(t);
@@ -164,6 +176,7 @@ export function nearMisses(
         t.collectionId !== leg.collectionId ||
         t.tokenId === leg.objektId ||
         time(t.timestamp) < start ||
+        time(t.timestamp) >= end ||
         taken.has(key) ||
         seen.has(key) ||
         !giver.has(t.from.toLowerCase()) ||

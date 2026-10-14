@@ -43,8 +43,12 @@ export type OfferCancelReason = (typeof OFFER_CANCEL_REASONS)[number];
 const TRADE_STATUSES = ["in_progress", "completed", "cancelled", "failed"] as const;
 export type TradeStatus = (typeof TRADE_STATUSES)[number];
 
+/** `trade_substitute.status`, as `packages/db` types it */
+export const SUBSTITUTE_STATUSES = ["pending", "accepted", "declined"] as const;
+export type SubstituteStatus = (typeof SUBSTITUTE_STATUSES)[number];
+
 /** A wrong copy before its receiver: still to decide, or turned down. An accepted one verified its leg. */
-export const HELD_COPY_STATUSES = ["pending", "declined"] as const;
+export const HELD_COPY_STATUSES = ["pending", "declined"] as const satisfies SubstituteStatus[];
 export type HeldCopyStatus = (typeof HELD_COPY_STATUSES)[number];
 
 /** Set on a cancelled trade; `expired` also on a failed one. */

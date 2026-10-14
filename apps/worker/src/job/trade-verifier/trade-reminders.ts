@@ -1,10 +1,10 @@
+import { owingParties } from "@repo/api/lib/offer-rules";
 import { REMIND_AFTER_HOURS } from "@repo/api/schemas/offer";
 import { writeNotes, partyNames } from "@repo/api/services/offer/notes";
 import { db } from "@repo/db";
 import { offer, trade, tradeLeg } from "@repo/db/schema";
 import { and, eq, isNull, lte, sql } from "drizzle-orm";
 
-import { unique } from "../../lib/array";
 import type { Publish } from "../../lib/trade-publish";
 
 const REMIND_AFTER = sql`make_interval(hours => ${REMIND_AFTER_HOURS})`;
@@ -52,7 +52,7 @@ export async function remindStalls(seenUntil: string | null): Promise<Publish[]>
           .from(offer)
           .where(eq(offer.id, row.offerId)),
       ]);
-      const owing = unique(legs.filter((leg) => leg.open).map((leg) => leg.fromUserId));
+      const owing = owingParties(legs);
       const name = await partyNames([row.userA, row.userB]);
       const progress = {
         verified: legs.filter((leg) => leg.verifiedAt !== null).length,

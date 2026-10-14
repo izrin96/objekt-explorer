@@ -8,9 +8,9 @@ import {
   atFault,
   cancelRefusal,
   canReport,
-  firstSender,
   rateRefusal,
   shownCancelReason,
+  suggestFirstSender,
   type TradeParty,
 } from "../../lib/offer-rules";
 import { DAY_MS, iso } from "../../lib/time";
@@ -171,25 +171,6 @@ export async function rateTrade(me: string, tradeId: number, rating: TradeRating
 }
 
 const RATE_WINDOW_MS = RATE_WINDOW_DAYS * DAY_MS;
-
-/**
- * The suggested first sender among the parties who give a leg: with both giving, by
- * `firstSender`; `sent` when every leg they give is verified.
- */
-function suggestFirstSender(
-  row: { userA: string; userB: string },
-  legs: { fromUserId: string; verifiedAt: string | null }[],
-  parties: Map<string, TradeParty>,
-) {
-  const givers = [row.userA, row.userB].filter((id) => legs.some((leg) => leg.fromUserId === id));
-  if (givers.length === 0) return null;
-  const userId =
-    givers.length === 1
-      ? givers[0]!
-      : firstSender(parties.get(row.userA)!, parties.get(row.userB)!);
-  const theirs = legs.filter((leg) => leg.fromUserId === userId);
-  return { userId, sent: theirs.every((leg) => leg.verifiedAt !== null) };
-}
 
 export async function fetchTrade(me: string, tradeId: number) {
   const now = new Date();

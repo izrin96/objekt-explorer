@@ -3,6 +3,7 @@ import { db } from "@repo/db";
 import { offer, trade, tradeLeg, tradeSubstitute } from "@repo/db/schema";
 import { and, eq, or, sql } from "drizzle-orm";
 
+import { substituteRefusal } from "../../lib/offer-rules";
 import type { LegResult } from "../../lib/trade-match";
 import type { TradeStatus } from "../../schemas/offer";
 import { forgetReputation } from "../reputation";
@@ -51,20 +52,20 @@ async function findSubstitute(substituteId: number, me: string) {
 
 type Found = Awaited<ReturnType<typeof findSubstitute>>;
 
-/** Under the trade's row lock, the lock the verifier settles under: the trade, leg and copy still open. */
+/** Under the trade's row lock, the lock the verifier settles under: see `substituteRefusal`. */
 async function lockOpen(tx: Tx, found: Found, substituteId: number) {
   const [locked] = await tx
     .select({ status: sql<TradeStatus>`${trade.status}` })
     .from(trade)
     .where(eq(trade.id, found.tradeId))
     .for("update");
-  if (locked?.status !== "in_progress") refuseOffer("trade_ended");
   const [state] = await tx
     .select({ open: tradeLeg.open, status: tradeSubstitute.status })
     .from(tradeSubstitute)
     .innerJoin(tradeLeg, eq(tradeLeg.id, tradeSubstitute.tradeLegId))
     .where(eq(tradeSubstitute.id, substituteId));
-  if (!state?.open || state.status !== "pending") refuseOffer("substitute_closed");
+  const refusal = substituteRefusal(locked?.status ?? null, state ?? null);
+  if (refusal) refuseOffer(refusal);
 }
 
 export async function acceptSubstitute(me: string, substituteId: number) {

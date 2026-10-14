@@ -73,6 +73,18 @@ A move away shortly before the accept counts too when the objekt never came back
 - **WHEN** the giver sent a wrong copy that the receiver declined, then sends the asked-for objekt to a third account
 - **THEN** the trade shows Failed, and Report a problem is offered at once
 
+#### Scenario: Wrong copy and sale seen together
+- **WHEN** the giver sends a wrong copy of #1203, then sells #1203 to a third account, and the verifier reads both in one check
+- **THEN** the trade shows Failed, as if the copy had been read first
+
+#### Scenario: Copy of the sold objekt sent after the sale
+- **WHEN** the giver sells #1203 to a third account, then sends another copy of its collection, and the verifier reads both in one check
+- **THEN** that copy is not held for #1203's leg, and with nothing else sent the trade shows Cancelled
+
+#### Scenario: Wrong copy on another leg after the sale
+- **WHEN** the giver sells the objekt of one leg, then sends a wrong copy for another leg they owe, and the verifier reads both in one check
+- **THEN** the trade shows Failed: the receiver holds that copy, and Report a problem covers it
+
 ### Requirement: Wrong copy sent
 While a specific-objekt leg of an in-progress trade is waiting, the system SHALL record a **wrong copy** for it when the indexer records a transfer that:
 - moves an objekt of the leg's collection, other than the leg's own objekt;

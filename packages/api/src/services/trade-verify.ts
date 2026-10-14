@@ -81,7 +81,6 @@ export async function matchOpenLegs(legs: LegRow[]) {
           .from(collections)
           .where(inArray(collections.slug, unique(legs.map((leg) => leg.collection_slug))));
   const uuidOf = new Map(collectionRows.map((row) => [row.slug, row.id]));
-
   const matchLegsInput: MatchLeg[] = legs.map((leg) => ({
     id: leg.id,
     objektId: leg.objekt_id,
@@ -135,28 +134,33 @@ export async function matchOpenLegs(legs: LegRow[]) {
   const candidates: MatchTransfer[] = [
     ...new Map([...specific, ...copies].map((t) => [t.id, t])).values(),
   ];
-  const usedRows =
-    candidates.length === 0
-      ? []
-      : await db
-          .select({ hash: tradeLeg.txHash, tokenId: tradeLeg.verifiedObjektId })
-          .from(tradeLeg)
-          .where(
-            and(
-              inArray(tradeLeg.txHash, unique(candidates.map((t) => t.hash))),
-              isNotNull(tradeLeg.verifiedObjektId),
-            ),
-          );
-  const used = new Set(
-    usedRows.flatMap((row) =>
-      row.hash && row.tokenId ? [transferKey({ hash: row.hash, tokenId: row.tokenId })] : [],
-    ),
+  const used = await usedTransfers(
+    db,
+    candidates.map((t) => t.hash),
   );
   const matched = matchLegs(matchLegsInput, candidates, used);
   return {
     results: matched.results,
     nearMisses: nearMisses(matchLegsInput, candidates, matched),
   };
+}
+
+/** The `transferKey`s among these transaction hashes that already verified a leg. */
+export async function usedTransfers(q: Tx | typeof db, hashes: string[]) {
+  const rows =
+    hashes.length === 0
+      ? []
+      : await q
+          .select({ hash: tradeLeg.txHash, tokenId: tradeLeg.verifiedObjektId })
+          .from(tradeLeg)
+          .where(
+            and(inArray(tradeLeg.txHash, unique(hashes)), isNotNull(tradeLeg.verifiedObjektId)),
+          );
+  return new Set(
+    rows.flatMap((row) =>
+      row.hash && row.tokenId ? [transferKey({ hash: row.hash, tokenId: row.tokenId })] : [],
+    ),
+  );
 }
 
 export type SettledTrade = {
