@@ -216,6 +216,13 @@ export const wantAlertSent = pgTable(
   (t) => [primaryKey({ columns: [t.wantListId, t.sourceListId, t.collectionSlug] })],
 );
 
+export const workerProgress = pgTable("worker_progress", {
+  name: text("name").primaryKey(),
+  cursor: bigint("cursor", { mode: "number" }).notNull(),
+  state: jsonb("state").notNull(),
+  updatedAt: timestamp("updated_at", { mode: "string", withTimezone: true }).notNull().defaultNow(),
+});
+
 export const conversation = pgTable(
   "conversation",
   {

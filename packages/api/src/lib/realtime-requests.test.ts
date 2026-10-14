@@ -13,11 +13,14 @@ import {
 
 const changed: RealtimeEvent = { type: "notifications_changed" };
 
+const KEY = expect.stringMatching(/^[0-9a-f-]{36}$/);
+const BATCH_KEY = expect.stringMatching(/^[0-9a-f-]{36}:\d+$/);
+
 describe("requests", () => {
   test("a user's events go to their own channel", () => {
     expect(publishRequest("u1", changed)).toEqual({
       path: "/api/publish",
-      body: { channel: "user:#u1", data: changed },
+      body: { channel: "user:#u1", data: changed, idempotency_key: KEY },
     });
   });
 
@@ -25,6 +28,7 @@ describe("requests", () => {
     expect(broadcastRequest(["u1", "u2", "u1"], changed).body).toEqual({
       channels: ["user:#u1", "user:#u2"],
       data: changed,
+      idempotency_key: KEY,
     });
   });
 
@@ -39,8 +43,8 @@ describe("requests", () => {
       path: "/api/batch",
       body: {
         commands: [
-          { publish: { channel: "user:#u1", data: changed } },
-          { publish: { channel: "user:#u2", data: other } },
+          { publish: { channel: "user:#u1", data: changed, idempotency_key: BATCH_KEY } },
+          { publish: { channel: "user:#u2", data: other, idempotency_key: BATCH_KEY } },
         ],
       },
     });
@@ -51,10 +55,25 @@ describe("requests", () => {
     const { body } = activityRequest(rows);
     expect(body).toEqual({
       commands: [
-        { publish: { channel: "activity:feed", data: rows[0] } },
-        { publish: { channel: "activity:feed", data: rows[1] } },
+        { publish: { channel: "activity:feed", data: rows[0], idempotency_key: BATCH_KEY } },
+        { publish: { channel: "activity:feed", data: rows[1], idempotency_key: BATCH_KEY } },
       ],
     });
+  });
+
+  test("every publication has a key, and a batch's keys differ", () => {
+    const keys = (body: unknown) =>
+      (body as { commands: { publish: { idempotency_key: string } }[] }).commands.map(
+        (command) => command.publish.idempotency_key,
+      );
+    const rows = [{ transfer: { id: "a" } }, { transfer: { id: "b" } }] as ActivityItem[];
+    expect(new Set(keys(activityRequest(rows).body)).size).toBe(2);
+    const events = [
+      { userId: "u1", event: changed },
+      { userId: "u1", event: changed },
+    ];
+    expect(new Set(keys(batchRequest(events).body)).size).toBe(2);
+    expect(publishRequest("u1", changed).body).not.toEqual(publishRequest("u1", changed).body);
   });
 
   test("a ban disconnects with the code the client does not reconnect after", () => {

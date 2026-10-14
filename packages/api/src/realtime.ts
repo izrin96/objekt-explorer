@@ -28,13 +28,8 @@ function target() {
   return null;
 }
 
-/**
- * Failures are logged and dropped: a lost event is recovered by the tab's next refetch, and a
- * publish must never fail a write that already committed.
- */
-async function call({ path, body }: ApiRequest) {
-  const api = target();
-  if (!api) return;
+/** One attempt; true when it is worth repeating (a thrown error, a timeout or a 5xx). */
+async function attempt(api: { url: string; key: string }, { path, body }: ApiRequest) {
   try {
     const response = await fetch(`${api.url}${path}`, {
       method: "POST",
@@ -44,16 +39,29 @@ async function call({ path, body }: ApiRequest) {
     });
     if (!response.ok) {
       console.error(`[Realtime] ${path} answered ${response.status}`);
-      return;
+      return response.status >= 500;
     }
     const error = firstApiError(await response.json());
     if (error) console.error(`[Realtime] ${path} refused: ${error.code} ${error.message}`);
+    return false;
   } catch (error) {
     console.error(
       `[Realtime] Failed to call ${path}:`,
       error instanceof Error ? error.message : String(error),
     );
+    return true;
   }
+}
+
+/**
+ * Retried once on a network error, a timeout or a 5xx, with the same body, so the publication
+ * keys make a repeat harmless. Failures are then logged and dropped: a lost event is recovered by
+ * the tab's next refetch, and a publish must never fail a write that already committed.
+ */
+async function call(request: ApiRequest) {
+  const api = target();
+  if (!api) return;
+  if (await attempt(api, request)) await attempt(api, request);
 }
 
 export function publishUser(userId: string, event: RealtimeEvent) {

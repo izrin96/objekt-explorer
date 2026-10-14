@@ -13,33 +13,59 @@ export type ApiRequest = { path: string; body: unknown };
 
 type UserEvent = { userId: string; event: RealtimeEvent };
 
-const publish = (channel: string, data: unknown) => ({ publish: { channel, data } });
+/**
+ * Centrifugo drops a repeated key on the same channel for 5 minutes, so the retry of a
+ * request delivers once. A batch can put several publications on one channel, so each
+ * command's key carries its index.
+ */
+const publish = (channel: string, data: unknown, key: string) => ({
+  publish: { channel, data, idempotency_key: key },
+});
 
 export function publishRequest(userId: string, event: RealtimeEvent): ApiRequest {
-  return { path: "/api/publish", body: { channel: userChannel(userId), data: event } };
+  return {
+    path: "/api/publish",
+    body: {
+      channel: userChannel(userId),
+      data: event,
+      idempotency_key: crypto.randomUUID(),
+    },
+  };
 }
 
 /** One event to many users; each channel keeps its own history. */
 export function broadcastRequest(userIds: string[], event: RealtimeEvent): ApiRequest {
   return {
     path: "/api/broadcast",
-    body: { channels: unique(userIds).map(userChannel), data: event },
+    body: {
+      channels: unique(userIds).map(userChannel),
+      data: event,
+      idempotency_key: crypto.randomUUID(),
+    },
   };
 }
 
 /** Events that differ per user, sent in one call and applied in order. */
 export function batchRequest(items: UserEvent[]): ApiRequest {
+  const id = crypto.randomUUID();
   return {
     path: "/api/batch",
-    body: { commands: items.map(({ userId, event }) => publish(userChannel(userId), event)) },
+    body: {
+      commands: items.map(({ userId, event }, index) =>
+        publish(userChannel(userId), event, `${id}:${index}`),
+      ),
+    },
   };
 }
 
 /** One publication per row, so the channel's history of 50 is the last 50 rows. */
 export function activityRequest(items: ActivityItem[]): ApiRequest {
+  const id = crypto.randomUUID();
   return {
     path: "/api/batch",
-    body: { commands: items.map((item) => publish(ACTIVITY_CHANNEL, item)) },
+    body: {
+      commands: items.map((item, index) => publish(ACTIVITY_CHANNEL, item, `${id}:${index}`)),
+    },
   };
 }
 

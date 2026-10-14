@@ -4,18 +4,14 @@ import { db } from "@repo/db";
 import { lists } from "@repo/db/schema";
 import { and, eq, sql } from "drizzle-orm";
 
-import { redis } from "../../lib/redis";
 import { listProgress, selectAlerts } from "../../lib/want-alert-match";
-import { parseState, type State } from "../../lib/want-alert-state";
+import { keepMarks, overlapFloor, type State } from "../../lib/want-alert-state";
 import { loadContext } from "./context";
 import { type Pair, fetchPairs, takeWhole } from "./pairs";
-import { recordAlerts } from "./record";
+import { loadProgress } from "./progress";
+import { recordRun } from "./record";
 
-const CURSOR_KEY = "alerts:cursor";
-const STATE_KEY = "alerts:state";
 const BATCH_SIZE = 5000;
-const OVERLAP_MS = 10 * 60 * 1000;
-const MARK_LIMIT = 12;
 // pairs one run takes from new entries and newly discoverable lists; the rest wait a run
 const PAIR_LIMIT = 10_000;
 
@@ -33,28 +29,29 @@ export async function sendWantAlerts() {
     .from(lists)
     .where(and(eq(lists.discoverable, true), takesPartInTrade));
 
-  const [storedCursor, storedState] = await Promise.all([
-    redis.get(CURSOR_KEY),
-    redis.get(STATE_KEY),
-  ]);
+  const progress = await loadProgress(maxId);
+  if (progress.kind === "unreadable") {
+    console.error("[Want Alerts] Stored progress unreadable; leaving it as it is");
+    return;
+  }
 
   // the first run only marks where to start, so nothing already listed is announced
-  if (storedCursor === null || storedState === null) {
-    await saveProgress(maxId, {
-      discoverable: discoverable.map((list) => list.id),
-      marks: [[nowMs, maxId]],
+  if (progress.kind === "first") {
+    await recordRun([], new Date(nowMs), {
+      cursor: maxId,
+      state: { discoverable: discoverable.map((list) => list.id), marks: [[nowMs, maxId]] },
+      first: true,
     });
-    console.log(`[Want Alerts] Cursor set to ${maxId}`);
+    const why = {
+      none: "no Valkey seed",
+      unparsable: "Valkey seed unparsable",
+      "above max id": "Valkey seed above this database's max id, so not ours",
+    }[progress.seed];
+    console.log(`[Want Alerts] Cursor set to ${maxId} (${why})`);
     return;
   }
 
-  const cursor = Number(storedCursor);
-  const state = parseState(storedState);
-  if (!Number.isInteger(cursor) || state === null) {
-    await redis.del(CURSOR_KEY);
-    console.error("[Want Alerts] Stored progress unreadable; the next run starts over");
-    return;
-  }
+  const { cursor, state } = progress;
 
   const {
     rows: [batch],
@@ -64,10 +61,7 @@ export async function sendWantAlerts() {
     ) b
   `);
   const batchEnd = batch?.last_id ?? cursor;
-  const floor = Math.min(
-    cursor,
-    state.marks.findLast(([at]) => at <= nowMs - OVERLAP_MS)?.[1] ?? state.marks[0]?.[1] ?? cursor,
-  );
+  const floor = overlapFloor(state.marks, cursor);
 
   const known = new Set(state.discoverable);
   // the previous run's set, not `updated_at`: that is only touched after the edit commits
@@ -102,23 +96,22 @@ export async function sendWantAlerts() {
     (a, b) => b.entryId - a.entryId,
   );
   const alerts = pairs.length === 0 ? [] : selectAlerts(await loadContext(pairs));
-  const notified = alerts.length === 0 ? [] : await recordAlerts(alerts, new Date(nowMs));
+  const unfinished = new Set(pending.filter((id) => !resume.done.includes(id)));
+  const next: State = {
+    discoverable: discoverable.map((list) => list.id).filter((id) => !unfinished.has(id)),
+    marks: keepMarks(state.marks, [nowMs, maxId]),
+    progress: [...resume.progress],
+  };
+  const notified = await recordRun(alerts, new Date(nowMs), {
+    cursor: nextCursor,
+    state: next,
+    first: false,
+  });
 
   await publishUsers(notified, { type: "notifications_changed" });
 
-  const unfinished = new Set(pending.filter((id) => !resume.done.includes(id)));
-  await saveProgress(nextCursor, {
-    discoverable: discoverable.map((list) => list.id).filter((id) => !unfinished.has(id)),
-    marks: [...state.marks, [nowMs, maxId] as [number, number]].slice(-MARK_LIMIT),
-    progress: [...resume.progress],
-  });
-
+  const sinceLast = Math.round((nowMs - (state.marks.at(-1)?.[0] ?? nowMs)) / 60_000);
   console.log(
-    `[Want Alerts] ${pairs.length} pairs, ${alerts.length} alerts, ${notified.length} users notified; cursor ${cursor} → ${nextCursor}; ${unfinished.size} lists to resume`,
+    `[Want Alerts] ${progress.kind === "seed" ? "Seeded from Valkey; " : ""}${pairs.length} pairs, ${alerts.length} alerts, ${notified.length} users notified; cursor ${cursor} → ${nextCursor}; behind ${maxId - nextCursor}; since last run ${sinceLast} min; ${unfinished.size} lists to resume`,
   );
-}
-
-async function saveProgress(cursor: number, state: State) {
-  await redis.set(STATE_KEY, JSON.stringify(state));
-  await redis.set(CURSOR_KEY, String(cursor));
 }
