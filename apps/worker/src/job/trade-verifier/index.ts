@@ -2,11 +2,12 @@ import {
   batchMatters,
   copyRescue,
   firstPending,
+  giversOf,
   type LegResult,
   type NearMiss,
   stuckChange,
 } from "@repo/api/lib/trade-match";
-import { VERIFIER_LAST_KEY } from "@repo/api/schemas/offer";
+import { VERIFIER_LAST_KEY, VERIFIER_NUDGE_CHANNEL } from "@repo/api/schemas/offer";
 import type { Tx } from "@repo/api/services/offer/core";
 import { partyNames, writeNotes } from "@repo/api/services/offer/notes";
 import {
@@ -45,42 +46,56 @@ const LOCK_REFRESH_MS = 60 * 1000;
 const DEBOUNCE_MS = 5000;
 
 /** What the `transfers` subscription listens for; refreshed at the end of every run. */
-const watch = { objekts: new Set<string>(), collections: new Set<string>() };
+const watch = {
+  objekts: new Set<string>(),
+  collections: new Map<string, Set<string>>(),
+};
+
+type Trigger = "schedule" | "transfers" | "accept";
 
 let running = false;
-let again = false;
+let queued: Trigger | null = null;
+/** `transfers` batches since the last logged run, and how many of them woke the verifier. */
+const fastPath = { batches: 0, woke: 0 };
 
 /**
  * Single-flight in this process, and across replicas through a Valkey lock: pgbouncer runs in
  * transaction mode, so a session advisory lock would not stay on one server connection. A run
  * asked for while one is going runs once more after it.
  */
-export async function runTradeVerifier() {
+export async function runTradeVerifier(trigger: Trigger = "schedule") {
   if (running) {
-    again = true;
+    queued = trigger;
     return;
   }
   running = true;
   try {
-    do {
-      again = false;
-      await runLocked();
-    } while (again);
+    let next: Trigger | null = trigger;
+    while (next !== null) {
+      queued = null;
+      try {
+        await runLocked(next);
+      } catch (error) {
+        if (queued === null) throw error;
+        console.error("[Trade Verifier] Run failed; running the queued one:", error);
+      }
+      next = queued;
+    }
   } finally {
     running = false;
   }
 }
 
-async function runLocked() {
+async function runLocked(trigger: Trigger) {
   const ran = await withRedisLock(
     LOCK_KEY,
     { ttlMs: LOCK_TTL_MS, refreshMs: LOCK_REFRESH_MS, label: "Trade Verifier" },
-    verifyRun,
+    () => verifyRun(trigger),
   );
-  if (!ran) console.log("[Trade Verifier] Another replica is running; skipped");
+  if (!ran) console.log(`[Trade Verifier] ${trigger}; another replica is running; skipped`);
 }
 
-async function verifyRun() {
+async function verifyRun(trigger: Trigger) {
   const started = Date.now();
   const seen = await readIndexerHead();
   const legs = await loadOpenLegs();
@@ -140,8 +155,11 @@ async function verifyRun() {
   const lag = seen
     ? `indexer ${Math.round((started - new Date(seen.seenUntil).getTime()) / 1000)}s behind`
     : "indexer head unknown";
+  const woke = `${fastPath.woke} of ${fastPath.batches} transfer batches woke it`;
+  fastPath.batches = 0;
+  fastPath.woke = 0;
   console.log(
-    `[Trade Verifier] ${lag}; ${legs.length} open legs; ${touched.verified} verified, ${touched.wrongCopies} wrong copies, ${touched.stuck} stuck across ${touched.trades} trades, ${touched.ended} ended; ${upkeep.expired} offers expired, ${upkeep.moved} cancelled; ${expired.length} trades expired; ${Date.now() - started}ms`,
+    `[Trade Verifier] ${trigger}; ${woke}; ${lag}; ${legs.length} open legs; ${touched.verified} verified, ${touched.wrongCopies} wrong copies, ${touched.stuck} stuck across ${touched.trades} trades, ${touched.ended} ended; ${upkeep.expired} offers expired, ${upkeep.moved} cancelled; ${expired.length} trades expired; ${Date.now() - started}ms`,
   );
 }
 
@@ -441,29 +459,43 @@ async function refreshWatch(legs: LegRow[], offerObjekts: string[]) {
     slugs.length === 0
       ? []
       : await indexer
-          .select({ id: collections.id })
+          .select({ id: collections.id, slug: collections.slug })
           .from(collections)
           .where(inArray(collections.slug, slugs));
+  const uuidOf = new Map(uuids.map((row) => [row.slug, row.id]));
+  const giversByCollection = new Map<string, Set<string>>();
+  for (const leg of openLegs) {
+    const id = uuidOf.get(leg.collection_slug);
+    if (id === undefined) continue;
+    giversByCollection.set(id, giversOf(leg).union(giversByCollection.get(id) ?? new Set()));
+  }
   watch.objekts = new Set([
     ...openLegs.flatMap((leg) => (leg.objekt_id ? [leg.objekt_id] : [])),
     ...offerObjekts,
   ]);
-  watch.collections = new Set(uuids.map((row) => row.id));
+  watch.collections = giversByCollection;
 }
 
 /**
- * Subscribes to the indexer's `transfers` channel. Pub/sub can drop messages, so it only
- * makes a run sooner; the cron's rescan of the transfer table is what never misses.
+ * Subscribes to the indexer's `transfers` channel and to the accept nudge. Pub/sub can drop
+ * messages, so both only make a run sooner; the cron's rescan of the transfer table is what
+ * never misses.
  */
-export async function watchTransfers(onError: (error: unknown) => void) {
+export async function watchVerifierTriggers(onError: (error: unknown) => void) {
   const subscriber = createSubscriber(process.env.REDIS_URL, "Trade Verifier");
   let timer: ReturnType<typeof setTimeout> | null = null;
   await subscriber.subscribe("transfers", (message) => {
+    fastPath.batches += 1;
     if (timer !== null || !batchMatters(message, watch)) return;
+    fastPath.woke += 1;
     timer = setTimeout(() => {
       timer = null;
-      runTradeVerifier().catch(onError);
+      runTradeVerifier("transfers").catch(onError);
     }, DEBOUNCE_MS);
+  });
+  // an accepted trade's legs join the watch now, not at the next scheduled run
+  await subscriber.subscribe(VERIFIER_NUDGE_CHANNEL, () => {
+    runTradeVerifier("accept").catch(onError);
   });
   return () => {
     if (timer !== null) clearTimeout(timer);

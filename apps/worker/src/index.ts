@@ -11,7 +11,7 @@ import { processCollectionImages } from "./job/process-collection-images";
 import { pruneNotifications } from "./job/prune-notifications";
 import { refreshAccessToken } from "./job/refresh-access-token";
 import { snapshotPriceHistory } from "./job/snapshot-price-history";
-import { runTradeVerifier, watchTransfers } from "./job/trade-verifier";
+import { runTradeVerifier, watchVerifierTriggers } from "./job/trade-verifier";
 import { relayTransfers } from "./job/transfers-relay";
 import { updateCurrencyRates } from "./job/update-currency-rates";
 import { verifyBatchBoundaries } from "./job/verify-batch-boundaries";
@@ -120,13 +120,13 @@ crons.push(cron("*/5 * * * *", safeRun("sendWantAlerts", sendWantAlerts)));
 crons.push(cron("0 5 * * 1", safeRun("pruneNotifications", pruneNotifications)));
 
 // verifies trade legs from indexer transfers and keeps offers current; the rescan is the
-// source of truth, and the `transfers` subscription only makes a run sooner
+// source of truth, and the `transfers` and accept subscriptions only make a run sooner
 await safeRun("runTradeVerifier", runTradeVerifier)();
 crons.push(cron("*/2 * * * *", safeRun("runTradeVerifier", runTradeVerifier)));
-const stopTransferWatch = await watchTransfers((error) =>
+const stopVerifierTriggers = await watchVerifierTriggers((error) =>
   console.error("[runTradeVerifier] Job failed:", error),
 ).catch((error: unknown) => {
-  console.error("[runTradeVerifier] Failed to subscribe to transfers:", error);
+  console.error("[runTradeVerifier] Failed to subscribe:", error);
   return null;
 });
 
@@ -153,7 +153,7 @@ async function shutdown(signal: NodeJS.Signals) {
   for (const cron of crons) {
     cron.stop();
   }
-  stopTransferWatch?.();
+  stopVerifierTriggers?.();
   stopTransfersRelay?.();
   stopActivityRelay?.();
   console.log("[shutdown] All cron jobs stopped");

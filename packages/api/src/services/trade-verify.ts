@@ -4,10 +4,13 @@ import { collections, objekts, transfers } from "@repo/db/indexer/schema";
 import { trade, tradeLeg, tradeSubstitute } from "@repo/db/schema";
 import { chunkMap } from "@repo/lib";
 import { isSerialEstimated, shownSerial } from "@repo/lib/serial";
-import { and, eq, gte, inArray, isNotNull, sql } from "drizzle-orm";
+import { and, eq, gte, inArray, isNotNull, or, sql } from "drizzle-orm";
 
 import {
+  addressSet,
+  copyReads,
   copyWindowStart,
+  giversOf,
   type LegResult,
   legVerifiedNoted,
   type MatchLeg,
@@ -65,8 +68,7 @@ export async function loadOpenLegs(giverIds?: string[]): Promise<LegRow[]> {
   return result.rows;
 }
 
-const addressSet = (snapshot: string[], current: string[]) =>
-  new Set([...snapshot, ...current].map((address) => address.toLowerCase()));
+const COPY_READ_BATCH = 100;
 
 /**
  * Every open leg is matched in one pass, so a transfer is spent on one leg across trades.
@@ -89,18 +91,11 @@ export async function matchOpenLegs(legs: LegRow[]) {
     windowStart: leg.window_start,
     copyWindowStart: copyWindowStart(leg.accepted_at),
     acceptedAt: leg.accepted_at,
-    giver: addressSet(leg.from_addresses, leg.from_current),
+    giver: giversOf(leg),
     receiver: addressSet(leg.to_addresses, leg.to_current),
   }));
-  const since = new Date(
-    Math.min(...legs.map((leg) => new Date(leg.window_start).getTime())),
-  ).toISOString();
-
-  const specificIds = unique(legs.flatMap((leg) => (leg.objekt_id ? [leg.objekt_id] : [])));
-  const copyUuids = unique(legs.flatMap((leg) => uuidOf.get(leg.collection_slug) ?? []));
-  const givers = unique(
-    legs.flatMap((leg) => Array.from(addressSet(leg.from_addresses, leg.from_current))),
-  );
+  const specificLegs = matchLegsInput.filter((leg) => leg.objektId !== null);
+  const specificIds = unique(specificLegs.map((leg) => leg.objektId!));
   const columns = {
     id: transfers.id,
     from: transfers.from,
@@ -117,19 +112,33 @@ export async function matchOpenLegs(legs: LegRow[]) {
       : indexer
           .select(columns)
           .from(transfers)
-          .where(and(inArray(transfers.objektId, specificIds), gte(transfers.timestamp, since))),
-    copyUuids.length === 0 || givers.length === 0
-      ? []
-      : indexer
-          .select(columns)
-          .from(transfers)
           .where(
             and(
-              inArray(transfers.collectionId, copyUuids),
-              inArray(transfers.from, givers),
-              gte(transfers.timestamp, since),
+              inArray(transfers.objektId, specificIds),
+              gte(
+                transfers.timestamp,
+                new Date(
+                  Math.min(...specificLegs.map((leg) => Date.parse(leg.windowStart))),
+                ).toISOString(),
+              ),
             ),
           ),
+    chunkMap(copyReads(matchLegsInput), COPY_READ_BATCH, (reads) =>
+      indexer
+        .select(columns)
+        .from(transfers)
+        .where(
+          or(
+            ...reads.map((read) =>
+              and(
+                eq(transfers.collectionId, read.collectionId),
+                inArray(transfers.from, read.givers),
+                gte(transfers.timestamp, read.since),
+              ),
+            ),
+          ),
+        ),
+    ),
   ]);
   // a specific leg's own token is in both reads
   const candidates: MatchTransfer[] = [

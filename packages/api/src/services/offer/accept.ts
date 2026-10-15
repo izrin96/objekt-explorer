@@ -3,8 +3,10 @@ import { offer, offerItem, trade, tradeLeg } from "@repo/db/schema";
 import { and, eq, gt, inArray, ne, sql } from "drizzle-orm";
 
 import { unique } from "../../lib/unique";
+import { VERIFIER_NUDGE_CHANNEL } from "../../schemas/offer";
 import { chatSafety } from "../chat";
 import { lockAddresses } from "../cosmo-link";
+import { redis } from "../redis";
 import { cancelledColumns, cancelledNotes } from "./cancel";
 import { linkedAddresses, lockParties, refuseOffer, refuseUnsafe } from "./core";
 import { type Side, checkItems, refuseCopyShortfall } from "./items";
@@ -202,5 +204,10 @@ export async function acceptOffer(me: string, offerId: number) {
     ],
     result.notified,
   );
+  // not awaited: the client retries forever, so a Valkey outage would hang the accept; the
+  // 2-minute rescan still verifies the legs if this is lost
+  void redis
+    .publish(VERIFIER_NUDGE_CHANNEL, String(result.tradeId))
+    .catch((error: unknown) => console.error("[acceptOffer] Failed to nudge the verifier:", error));
   return { tradeId: result.tradeId };
 }

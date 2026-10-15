@@ -43,6 +43,33 @@ const COPY_WINDOW_MARGIN_MS = 10 * 60 * 1000;
 export const copyWindowStart = (acceptedAt: string) =>
   new Date(new Date(acceptedAt).getTime() - COPY_WINDOW_MARGIN_MS).toISOString();
 
+export const addressSet = (snapshot: string[], current: string[]) =>
+  new Set([...snapshot, ...current].map((address) => address.toLowerCase()));
+
+/** The addresses a transfer may come from to verify this leg, lowercased. */
+export const giversOf = (leg: { from_addresses: string[]; from_current: string[] }) =>
+  addressSet(leg.from_addresses, leg.from_current);
+
+export type CopyRead = { collectionId: string; givers: string[]; since: string };
+
+/**
+ * The copy reads the open legs need, each from its own leg's copy window, so one old trade
+ * doesn't widen every read. Legs with the same collection and givers share one read.
+ */
+export function copyReads(legs: MatchLeg[]): CopyRead[] {
+  const reads = new Map<string, CopyRead>();
+  for (const leg of legs) {
+    const givers = [...leg.giver].toSorted();
+    if (leg.collectionId === null || givers.length === 0) continue;
+    const key = `${leg.collectionId}|${givers.join(",")}`;
+    const seen = reads.get(key);
+    if (seen === undefined || Date.parse(leg.copyWindowStart) < Date.parse(seen.since)) {
+      reads.set(key, { collectionId: leg.collectionId, givers, since: leg.copyWindowStart });
+    }
+  }
+  return [...reads.values()];
+}
+
 /** A transfer's identity across re-indexes: one transaction moves a token at most once. */
 export const transferKey = (t: { hash: string; tokenId: string }) => `${t.hash}:${t.tokenId}`;
 
@@ -315,10 +342,19 @@ export function legVerifiedNoted(verified: number, autoAccepted: number) {
   return verified > autoAccepted;
 }
 
-type WatchSet = { objekts: ReadonlySet<string>; collections: ReadonlySet<string> };
+/**
+ * `collections` maps a collection id to the lowercased addresses giving a copy of it: a copy
+ * from anyone else can't verify a leg or count as a wrong copy, and busy collections would
+ * otherwise wake the verifier on nearly every batch.
+ */
+type WatchSet = {
+  objekts: ReadonlySet<string>;
+  collections: ReadonlyMap<string, ReadonlySet<string>>;
+};
 
 /** One transfer as the indexer publishes it on `transfers`: Subsquid entities, nested. */
 type PublishedTransfer = {
+  from?: string | null;
   tokenId?: string | null;
   objekt?: { id?: string | null } | null;
   collection?: { id?: string | null } | null;
@@ -335,10 +371,10 @@ export function batchMatters(message: string, watch: WatchSet) {
   if (!Array.isArray(batch)) return false;
   return (batch as PublishedTransfer[]).some((t) => {
     const objektId = t?.objekt?.id ?? t?.tokenId;
-    const collectionId = t?.collection?.id;
+    const givers = t?.collection?.id == null ? undefined : watch.collections.get(t.collection.id);
     return (
       (objektId != null && watch.objekts.has(objektId)) ||
-      (collectionId != null && watch.collections.has(collectionId))
+      (givers !== undefined && t?.from != null && givers.has(t.from.toLowerCase()))
     );
   });
 }

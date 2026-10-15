@@ -5,10 +5,12 @@ import {
   copyDue,
   copyReminderDue,
   copyRescue,
+  copyReads,
   copyWindowStart,
   dueCopy,
   expiredOutcome,
   firstPending,
+  giversOf,
   legVerifiedNoted,
   type LegResult,
   type MatchLeg,
@@ -485,13 +487,16 @@ describe("legVerifiedNoted", () => {
 });
 
 describe("batchMatters", () => {
-  const watch = { objekts: new Set(["16396147"]), collections: new Set([COLLECTION]) };
+  const watch = {
+    objekts: new Set(["16396147"]),
+    collections: new Map([[COLLECTION, new Set([GIVER, GIVER_2])]]),
+  };
   // the indexer publishes Subsquid entities: ids nested, and no flat objektId/collectionId
-  const published = (objektId: string, collectionId: string) =>
+  const published = (objektId: string, collectionId: string, from = GIVER) =>
     JSON.stringify([
       {
         id: "019c219a-22c1-720c-8e65-a487b8f0399a",
-        from: GIVER,
+        from,
         to: RECEIVER,
         timestamp: "2025-11-09T12:47:10.000Z",
         tokenId: objektId,
@@ -505,8 +510,21 @@ describe("batchMatters", () => {
     expect(batchMatters(published("16396147", "other-collection"), watch)).toBe(true);
   });
 
-  test("matches a watched collection", () => {
+  test("matches a watched collection sent by one of its givers, in any case", () => {
     expect(batchMatters(published("1", COLLECTION), watch)).toBe(true);
+    expect(batchMatters(published("1", COLLECTION, GIVER.toUpperCase()), watch)).toBe(true);
+  });
+
+  test("matches any of a collection's givers", () => {
+    expect(batchMatters(published("1", COLLECTION, GIVER_2), watch)).toBe(true);
+  });
+
+  test("ignores a watched collection sent by anyone else", () => {
+    expect(batchMatters(published("1", COLLECTION, THIRD), watch)).toBe(false);
+  });
+
+  test("a watched objekt matches whoever sends it", () => {
+    expect(batchMatters(published("16396147", COLLECTION, THIRD), watch)).toBe(true);
   });
 
   test("falls back to tokenId when the objekt isn't nested", () => {
@@ -518,5 +536,41 @@ describe("batchMatters", () => {
     expect(batchMatters(published("1", "other-collection"), watch)).toBe(false);
     expect(batchMatters("not json", watch)).toBe(false);
     expect(batchMatters("{}", watch)).toBe(false);
+  });
+});
+
+describe("giversOf", () => {
+  test("joins the snapshot and current links, lowercased and once each", () => {
+    const givers = giversOf({ from_addresses: ["0xAbC", GIVER], from_current: ["0xabc"] });
+    expect([...givers].toSorted()).toEqual(["0xabc", GIVER]);
+  });
+});
+
+describe("copyReads", () => {
+  const OTHER = "c0ffee00-0000-0000-0000-000000000002";
+
+  test("each read starts at its own leg's copy window", () => {
+    const old = leg({ id: 1, copyWindowStart: minutesBeforeAccept(60 * 24 * 30) });
+    const fresh = leg({ id: 2, collectionId: OTHER, giver: new Set([GIVER]) });
+    expect(copyReads([old, fresh])).toEqual([
+      { collectionId: COLLECTION, givers: [GIVER, GIVER_2], since: old.copyWindowStart },
+      { collectionId: OTHER, givers: [GIVER], since: fresh.copyWindowStart },
+    ]);
+  });
+
+  test("legs with the same collection and givers share the earliest window", () => {
+    const later = leg({ id: 1, giver: new Set([GIVER_2, GIVER]) });
+    const earlier = leg({ id: 2, copyWindowStart: minutesBeforeAccept(60) });
+    expect(copyReads([later, earlier])).toEqual([
+      { collectionId: COLLECTION, givers: [GIVER, GIVER_2], since: earlier.copyWindowStart },
+    ]);
+  });
+
+  test("the same collection with other givers is its own read", () => {
+    expect(copyReads([leg({ id: 1 }), leg({ id: 2, giver: new Set([THIRD]) })])).toHaveLength(2);
+  });
+
+  test("skips a leg with no known collection or no givers", () => {
+    expect(copyReads([leg({ collectionId: null }), leg({ giver: new Set() })])).toEqual([]);
   });
 });

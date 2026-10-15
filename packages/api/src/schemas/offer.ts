@@ -425,6 +425,9 @@ export type TradePayload = z.infer<typeof tradePayloadSchema>;
 /** ISO time of the verifier's last finished run. */
 export const VERIFIER_LAST_KEY = "trade-verifier:last";
 
+/** Valkey channel an accept publishes on, so the verifier watches the new legs at once. */
+export const VERIFIER_NUDGE_CHANNEL = "trade-verifier:nudge";
+
 /** How far the indexer has read: the newest recorded block's time, and when the worker read it. */
 export const indexerSeenSchema = z.object({ seenUntil: z.string(), readAt: z.string() });
 export type IndexerSeen = z.infer<typeof indexerSeenSchema>;
