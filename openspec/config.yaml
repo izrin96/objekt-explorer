@@ -1,7 +1,7 @@
 schema: spec-driven
 
 context: |
-  Objekt Explorer — Bun 1.4 + Turbo monorepo. Read AGENTS.md first; it is the authority on
+  Objekt Tracker — Bun 1.4 + Turbo monorepo. Read AGENTS.md first; it is the authority on
   structure, commands and code style (oxlint + oxfmt, TS strict, `import * as z from "zod"`,
   no class/enum, theme spacing over arbitrary values, catalog: for shared deps).
   Frontend: TanStack React Start + Vite + React 19 + Tailwind v4, ORPC + Zod, React Query,

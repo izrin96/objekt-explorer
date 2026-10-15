@@ -2,7 +2,7 @@
 
 ## Project
 
-**Objekt Explorer** — web app for exploring digital collectibles (Objekts) from Cosmo, a K-pop blockchain app by Modhaus Inc.
+**Objekt Tracker** — web app for exploring digital collectibles (Objekts) from Cosmo, a K-pop blockchain app by Modhaus Inc.
 
 ## Monorepo Structure
 

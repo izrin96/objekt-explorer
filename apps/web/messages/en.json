@@ -1464,7 +1464,7 @@
   "offer_topup_payer_them": "{name} pays",
   "offer_topup_you_pay": "+ {amount} paid by you · paid outside, not verified",
   "offer_topup_they_pay": "+ {amount} paid by them · paid outside, not verified",
-  "offer_topup_unverified": "Paid outside Objekt Explorer, not verified. We can check objekt transfers, never payments.",
+  "offer_topup_unverified": "Paid outside Objekt Tracker, not verified. We can check objekt transfers, never payments.",
   "offer_trade_with": "Trade with {name}",
   "offer_trade_from_offer": "from offer {offer}",
   "offer_trade_proposed": "Proposed",

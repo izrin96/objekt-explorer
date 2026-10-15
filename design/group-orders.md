@@ -1,6 +1,6 @@
 # Group orders (GO / GOM)
 
-Plan for group orders on Objekt Explorer, from user feedback (Oct 2026). Low priority, nothing built. The mockup is the last section of `design/trade-feedback-mockup.html`.
+Plan for group orders on Objekt Tracker, from user feedback (Oct 2026). Low priority, nothing built. The mockup is the last section of `design/trade-feedback-mockup.html`.
 
 A group order (GO) is run by a Group Order Manager (GOM) who buys items in bulk for participants and delivers them: digital objekts by wallet transfer, physical objekts and merch by post. The site never handles money or addresses; it tracks who signed up, who paid, and what was delivered, and keeps the GOM accountable over orders that can run for months.
 

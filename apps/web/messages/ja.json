@@ -1464,7 +1464,7 @@
   "offer_topup_payer_them": "{name}さんが払う",
   "offer_topup_you_pay": "+ {amount}（あなたが支払い）· サイト外での支払い、未確認",
   "offer_topup_they_pay": "+ {amount}（相手が支払い）· サイト外での支払い、未確認",
-  "offer_topup_unverified": "Objekt Explorerの外で支払われ、確認されません。確認できるのはObjektの送付だけで、支払いは確認できません。",
+  "offer_topup_unverified": "Objekt Trackerの外で支払われ、確認されません。確認できるのはObjektの送付だけで、支払いは確認できません。",
   "offer_trade_with": "{name}さんとの取引",
   "offer_trade_from_offer": "オファー {offer} から",
   "offer_trade_proposed": "提案",

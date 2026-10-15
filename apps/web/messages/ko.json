@@ -1464,7 +1464,7 @@
   "offer_topup_payer_them": "{name}님이 지불",
   "offer_topup_you_pay": "+ {amount} (내가 지불) · 외부 결제, 확인 안 됨",
   "offer_topup_they_pay": "+ {amount} (상대방 지불) · 외부 결제, 확인 안 됨",
-  "offer_topup_unverified": "Objekt Explorer 밖에서 결제되며 확인되지 않습니다. 오브젝트 전송만 확인할 수 있고 결제는 확인할 수 없습니다.",
+  "offer_topup_unverified": "Objekt Tracker 밖에서 결제되며 확인되지 않습니다. 오브젝트 전송만 확인할 수 있고 결제는 확인할 수 없습니다.",
   "offer_trade_with": "{name}님과의 거래",
   "offer_trade_from_offer": "제안 {offer}에서",
   "offer_trade_proposed": "제안",
