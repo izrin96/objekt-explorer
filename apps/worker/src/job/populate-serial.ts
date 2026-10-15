@@ -5,6 +5,7 @@ import { slugifyObjekt, chunk } from "@repo/lib";
 import { and, eq, gte, between, ne, notInArray, inArray, or, lte, sql } from "drizzle-orm";
 import { FetchError } from "ofetch";
 
+import { heartbeat, log, type Logger } from "@/lib/log";
 import {
   preAssignedCollections as excludeCollections,
   preBlockSeasons,
@@ -24,6 +25,20 @@ const DB_BATCH_SIZE = 500;
 
 // objekts minted within this window are left for a later run
 const MINT_DELAY_MS = 120 * 1000;
+
+const onlineLog = log("serial-online");
+const onlineBeat = heartbeat(onlineLog);
+const offlineLog = log("serial-offline");
+const offlineBeat = heartbeat(offlineLog);
+
+/** One line for a run that wrote serials, from each collection's count of objekts updated. */
+function logWritten(logger: Logger, counts: number[]) {
+  const written = counts.filter((count) => count > 0);
+  if (written.length === 0) return;
+  logger.info(
+    `Updated ${written.reduce((a, b) => a + b, 0)} objekts in ${written.length} collections`,
+  );
+}
 
 // ===========================================================================
 // Online objekt serial numbering
@@ -59,18 +74,14 @@ export async function populateSerial() {
       ),
     );
 
-  if (collectionDiscover.length === 0) {
-    console.log("[populateSerial] No collections with zero serials found");
-    return;
-  }
-
-  console.log(`[populateSerial] Found ${collectionDiscover.length} collections with zero serials`);
-
+  onlineBeat.count("runs");
+  onlineBeat.count("collections checked", collectionDiscover.length);
+  const updated: number[] = [];
   await chunk(collectionDiscover, COLLECTION_CONCURRENCY, async (batch) => {
-    await Promise.all(batch.map(({ id }) => processCollection(id)));
+    updated.push(...(await Promise.all(batch.map(({ id }) => processCollection(id)))));
   });
-
-  console.log("[populateSerial] Done");
+  logWritten(onlineLog, updated);
+  onlineBeat.flush();
 }
 
 /**
@@ -82,7 +93,7 @@ export async function populateSerial() {
  *    inversions from out-of-order indexing. Pre-cutoff serials are trusted and
  *    never changed; an intentional head serial 0 is preserved.
  */
-async function processCollection(collectionId: string) {
+async function processCollection(collectionId: string): Promise<number> {
   const allObjekts = await indexer
     .select({ id: objekts.id, serial: objekts.serial, mintedAt: objekts.mintedAt })
     .from(objekts)
@@ -94,9 +105,7 @@ async function processCollection(collectionId: string) {
       ),
     );
 
-  if (allObjekts.length === 0) {
-    return;
-  }
+  if (allObjekts.length === 0) return 0;
 
   const sorted = allObjekts.toSorted((a, b) => parseInt(a.id) - parseInt(b.id));
 
@@ -113,14 +122,15 @@ async function processCollection(collectionId: string) {
       .where(eq(collections.id, collectionId))
       .limit(1);
 
-    if (!collection) return;
+    if (!collection) return 0;
 
     const firstTokenId = parseInt(sorted[0]!.id);
     const baseTokenId = await findBoundaryTokenId(collection.collectionId, firstTokenId, -1);
 
     if (baseTokenId !== firstTokenId) {
-      console.log(`[populateSerial] Collection ${collectionId}: Pre-assigned, skipping`);
-      return;
+      onlineBeat.count("pre-assigned skipped");
+      onlineLog.debug(`${collectionId}: pre-assigned, skipping`);
+      return 0;
     }
   }
 
@@ -135,14 +145,12 @@ async function processCollection(collectionId: string) {
   const headSkip = !isNew && sorted[0]!.serial === 0;
   const { updates } = computeOnlineSerials(sorted, V1_CUTOFF_MS, headSkip);
 
-  if (updates.length === 0) {
-    console.log(`[populateSerial] Collection ${collectionId}: No updates needed`);
-    return;
-  }
+  if (updates.length === 0) return 0;
 
   await writeSerialUpdates(updates);
-
-  console.log(`[populateSerial] Collection ${collectionId}: Updated ${updates.length} objekts`);
+  onlineBeat.count("objekts updated", updates.length);
+  onlineLog.debug(`${collectionId}: updated ${updates.length} objekts`);
+  return updates.length;
 }
 
 export type IndexerTransaction = Parameters<Parameters<typeof indexer.transaction>[0]>[0];
@@ -433,21 +441,25 @@ export async function populateSerialOffline() {
       ),
     );
 
-  if (affectedCollections.length === 0) {
-    console.log("[populateSerialOffline] No collections with zero serials found");
-    return;
-  }
-
-  console.log(
-    `[populateSerialOffline] Found ${affectedCollections.length} collections with zero serials`,
-  );
-
+  offlineBeat.count("runs");
+  offlineBeat.count("collections checked", affectedCollections.length);
+  const outcomes: OfflineOutcome[] = [];
   await chunk(affectedCollections, COLLECTION_CONCURRENCY, async (batch) => {
-    await Promise.all(batch.map(({ id }) => processCollectionOffline(id)));
+    outcomes.push(...(await Promise.all(batch.map(({ id }) => processCollectionOffline(id)))));
   });
-
-  console.log("[populateSerialOffline] Done");
+  logWritten(
+    offlineLog,
+    outcomes.filter((outcome) => typeof outcome === "number"),
+  );
+  const apiErrors = outcomes.filter((outcome) => outcome === "api error").length;
+  if (apiErrors > 0) {
+    offlineLog.warn(`Cosmo API failed for ${apiErrors} collections; they retry next run`);
+  }
+  offlineBeat.flush();
 }
+
+/** Objekts updated, or why nothing was written. */
+type OfflineOutcome = number | "skipped" | "api error";
 
 /**
  * Populate serials for one offline collection:
@@ -458,7 +470,7 @@ export async function populateSerialOffline() {
  *     write the ones that changed (heals serials shifted by a newly-discovered
  *     batch). Pre-cutoff v1 serials are never overwritten.
  */
-async function processCollectionOffline(collectionId: string) {
+async function processCollectionOffline(collectionId: string): Promise<OfflineOutcome> {
   const allObjekts = await indexer
     .select({ id: objekts.id, serial: objekts.serial, mintedAt: objekts.mintedAt })
     .from(objekts)
@@ -472,9 +484,7 @@ async function processCollectionOffline(collectionId: string) {
 
   const zeroObjekts = allObjekts.filter((o) => o.serial === 0);
 
-  if (zeroObjekts.length === 0) {
-    return;
-  }
+  if (zeroObjekts.length === 0) return "skipped";
 
   const [collection] = await indexer
     .select({
@@ -488,8 +498,8 @@ async function processCollectionOffline(collectionId: string) {
     .limit(1);
 
   if (!collection) {
-    console.log(`[populateSerialOffline] Collection ${collectionId}: Not found`);
-    return;
+    offlineLog.debug(`${collectionId}: not found`);
+    return "skipped";
   }
 
   const presentTokenIds = allObjekts.map((o) => parseInt(o.id));
@@ -526,15 +536,16 @@ async function processCollectionOffline(collectionId: string) {
         batches = await discoverBatches(collection.collectionId, presentTokenIds);
       }
     } catch {
-      console.log(`[populateSerialOffline] Collection ${collectionId}: API error, skipping`);
-      return;
+      offlineLog.debug(`${collectionId}: Cosmo API error, skipping`);
+      return "api error";
     }
 
     batches = await refineBatches(collection.season, batches, presentTokenIds);
 
     if (batches.length === 0) {
-      console.log(`[populateSerialOffline] Collection ${collectionId}: No batches discovered`);
-      return;
+      offlineBeat.count("no batches discovered");
+      offlineLog.debug(`${collectionId}: no batches discovered`);
+      return "skipped";
     }
 
     await indexer
@@ -550,14 +561,10 @@ async function processCollectionOffline(collectionId: string) {
   // serial=0 objekts.
   const updates = computeOfflineSerialUpdates(allObjekts, batches, collection.serialAnchors ?? []);
 
-  if (updates.length === 0) {
-    console.log(`[populateSerialOffline] Collection ${collectionId}: No valid updates`);
-    return;
-  }
+  if (updates.length === 0) return "skipped";
 
   await writeSerialUpdates(updates);
-
-  console.log(
-    `[populateSerialOffline] Collection ${collectionId}: Updated ${updates.length} objekts`,
-  );
+  offlineBeat.count("objekts updated", updates.length);
+  offlineLog.debug(`${collectionId}: updated ${updates.length} objekts`);
+  return updates.length;
 }

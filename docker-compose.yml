@@ -19,6 +19,7 @@ services:
       - COSMO_KEY
       - CENTRIFUGO_URL=http://centrifugo:8000
       - CENTRIFUGO_API_KEY
+      - WORKER_LOG_LEVEL
     healthcheck:
       test: test ! -f /tmp/drain
       interval: 5s

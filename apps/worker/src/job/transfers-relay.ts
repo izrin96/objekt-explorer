@@ -1,6 +1,9 @@
 import { createSubscriber } from "@repo/lib/server/redis-subscriber";
 
+import { log } from "../lib/log";
 import { redis } from "../lib/redis";
+
+const relayLog = log("transfers-relay");
 
 /**
  * Republishes the indexer's `transfers` channel from another Valkey (production's) onto this
@@ -15,7 +18,7 @@ export async function relayTransfers(sourceUrl: string) {
   await subscriber.subscribe("transfers", (message) => {
     redis
       .publish("transfers", message)
-      .catch((error: unknown) => console.error("[Transfers Relay] Failed to publish:", error));
+      .catch((error: unknown) => relayLog.error("Failed to publish:", error));
   });
   return () => subscriber.close();
 }

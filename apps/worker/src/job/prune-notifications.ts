@@ -3,7 +3,10 @@ import { db } from "@repo/db";
 import { notification, wantAlertSent } from "@repo/db/schema";
 import { and, isNotNull, lt, or, sql } from "drizzle-orm";
 
+import { log } from "../lib/log";
+
 const cutoff = sql`now() - make_interval(days => ${RETENTION_DAYS})`;
+const pruneLog = log("prune-notifications");
 
 export async function pruneNotifications() {
   const notifications = await db
@@ -22,7 +25,8 @@ export async function pruneNotifications() {
     )
     .returning({ wantListId: wantAlertSent.wantListId });
 
-  console.log(
-    `[Prune Notifications] Deleted ${notifications.length} read notifications, ${sent.length} sent alert keys`,
+  if (notifications.length + sent.length === 0) return;
+  pruneLog.info(
+    `Deleted ${notifications.length} read notifications, ${sent.length} sent alert keys`,
   );
 }

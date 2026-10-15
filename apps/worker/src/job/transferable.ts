@@ -3,7 +3,10 @@ import { collections, objekts } from "@repo/db/indexer/schema";
 import { chunk } from "@repo/lib";
 import { and, eq, inArray } from "drizzle-orm";
 
+import { log } from "@/lib/log";
 import { safeFetchMetadataV1 } from "@/lib/metadata-utils";
+
+const transferableLog = log("fix-transferable");
 
 export async function fixTransferable() {
   // get all basic and first class objekt
@@ -25,8 +28,8 @@ export async function fixTransferable() {
 }
 
 async function processBatch(batch: { id: string }[], batchNumber: number, totalBatches: number) {
-  console.log(
-    `[fix transferable] Processing batch ${batchNumber}/${totalBatches} (${batch.length} objekts)`,
+  transferableLog.debug(
+    `Processing batch ${batchNumber}/${totalBatches} (${batch.length} objekts)`,
   );
 
   // fetch metadata for all objekts in batch
@@ -49,7 +52,7 @@ async function processBatch(batch: { id: string }[], batchNumber: number, totalB
     }));
 
   if (updates.length === 0) {
-    console.log(`[fix transferable] Batch ${batchNumber}/${totalBatches}: No updates needed`);
+    transferableLog.debug(`Batch ${batchNumber}/${totalBatches}: no updates needed`);
     return;
   }
 
@@ -65,7 +68,5 @@ async function processBatch(batch: { id: string }[], batchNumber: number, totalB
     }
   });
 
-  console.log(
-    `[fix transferable] Batch ${batchNumber}/${totalBatches}: Updated ${updates.length} objekts`,
-  );
+  transferableLog.info(`Batch ${batchNumber}/${totalBatches}: updated ${updates.length} objekts`);
 }

@@ -2,9 +2,11 @@ import { db } from "@repo/db";
 import { currencyRates } from "@repo/db/schema";
 import { ofetch } from "ofetch";
 
+import { log } from "../lib/log";
 import { redis } from "../lib/redis";
 
 const FRANKFURTER_URL = "https://api.frankfurter.dev/v2/rates?base=USD";
+const ratesLog = log("rates");
 
 interface FrankfurterItem {
   date: string;
@@ -14,13 +16,13 @@ interface FrankfurterItem {
 }
 
 export async function updateCurrencyRates() {
-  console.log("[rates] Fetching from Frankfurter");
+  ratesLog.debug("Fetching from Frankfurter");
 
   let data: FrankfurterItem[];
   try {
     data = await ofetch<FrankfurterItem[]>(FRANKFURTER_URL);
   } catch (err) {
-    console.error("[rates] Fetch failed:", err);
+    ratesLog.warn("Fetch failed; retrying at the next run:", err);
     return;
   }
 
@@ -44,5 +46,5 @@ export async function updateCurrencyRates() {
   // Invalidate Redis cache so the server picks up fresh rates immediately.
   await redis.del("currency-rates");
 
-  console.log("[rates] Updated:", data.length, "currencies");
+  ratesLog.info("Updated:", data.length, "currencies");
 }

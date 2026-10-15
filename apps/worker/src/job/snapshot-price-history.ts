@@ -4,8 +4,11 @@ import { db } from "@repo/db";
 import { collectionPriceHistory, currencyRates } from "@repo/db/schema";
 import { and, eq, sql } from "drizzle-orm";
 
+import { log } from "../lib/log";
+
 // 6 parameters a row, far below Postgres's 65,535
 const CHUNK = 1000;
+const priceLog = log("price-history");
 
 // not getUsdRates: services/currency-rates loads the web app's serverEnv through services/redis
 async function readUsdRates(): Promise<Record<string, number>> {
@@ -18,13 +21,13 @@ async function readUsdRates(): Promise<Record<string, number>> {
 export async function snapshotPriceHistory(rates?: Record<string, number>) {
   const usdRates = rates ?? (await readUsdRates());
   if (Object.keys(usdRates).length === 0) {
-    console.warn("[price-history] No currency rates, skipping snapshot");
+    priceLog.warn("No currency rates, skipping snapshot");
     return;
   }
 
   const date = utcDate(new Date());
 
-  await db.transaction(async (tx) => {
+  const written = await db.transaction(async (tx) => {
     const snapshot = await fetchPriceSnapshot(tx, usdRates);
 
     for (let i = 0; i < snapshot.length; i += CHUNK) {
@@ -61,7 +64,8 @@ export async function snapshotPriceHistory(rates?: Record<string, number>) {
           sql`${collectionPriceHistory.collectionSlug} <> ALL(${sql.param(slugs)}::varchar[])`,
         ),
       );
+    return snapshot.length;
   });
 
-  console.log("[price-history] Snapshot", date);
+  priceLog.info(`Snapshot ${date}: ${written} collections`);
 }

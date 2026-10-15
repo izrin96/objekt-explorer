@@ -3,7 +3,10 @@ import { INDEXER_SEEN_KEY, type IndexerSeen } from "@repo/api/schemas/offer";
 import { indexer } from "@repo/db/indexer";
 import { sql } from "drizzle-orm";
 
+import { log } from "../../lib/log";
 import { redis } from "../../lib/redis";
+
+const verifierLog = log("verifier");
 
 const RPC_TIMEOUT_MS = 10_000;
 
@@ -47,7 +50,7 @@ export async function readIndexerHead(): Promise<IndexerSeen | null> {
     await redis.set(INDEXER_SEEN_KEY, JSON.stringify(seen));
     return seen;
   } catch (error) {
-    console.warn(`[Trade Verifier] Could not read the indexer head: ${String(error)}`);
+    verifierLog.warn(`Could not read the indexer head: ${String(error)}`);
     return parseIndexerSeen(await redis.get(INDEXER_SEEN_KEY));
   }
 }

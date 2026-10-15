@@ -4,6 +4,7 @@ import { db } from "@repo/db";
 import { lists } from "@repo/db/schema";
 import { and, eq, sql } from "drizzle-orm";
 
+import { heartbeat, log } from "../../lib/log";
 import { listProgress, selectAlerts } from "../../lib/want-alert-match";
 import { keepMarks, overlapFloor, type State } from "../../lib/want-alert-state";
 import { loadContext } from "./context";
@@ -14,6 +15,9 @@ import { recordRun } from "./record";
 const BATCH_SIZE = 5000;
 // pairs one run takes from new entries and newly discoverable lists; the rest wait a run
 const PAIR_LIMIT = 10_000;
+
+const alertsLog = log("want-alerts");
+const alertsBeat = heartbeat(alertsLog);
 
 export async function sendWantAlerts() {
   const {
@@ -31,7 +35,7 @@ export async function sendWantAlerts() {
 
   const progress = await loadProgress(maxId);
   if (progress.kind === "unreadable") {
-    console.error("[Want Alerts] Stored progress unreadable; leaving it as it is");
+    alertsLog.error("Stored progress unreadable; leaving it as it is");
     return;
   }
 
@@ -47,7 +51,7 @@ export async function sendWantAlerts() {
       unparsable: "Valkey seed unparsable",
       "above max id": "Valkey seed above this database's max id, so not ours",
     }[progress.seed];
-    console.log(`[Want Alerts] Cursor set to ${maxId} (${why})`);
+    alertsLog.info(`Cursor set to ${maxId} (${why})`);
     return;
   }
 
@@ -111,7 +115,15 @@ export async function sendWantAlerts() {
   await publishUsers(notified, { type: "notifications_changed" });
 
   const sinceLast = Math.round((nowMs - (state.marks.at(-1)?.[0] ?? nowMs)) / 60_000);
-  console.log(
-    `[Want Alerts] ${progress.kind === "seed" ? "Seeded from Valkey; " : ""}${pairs.length} pairs, ${alerts.length} alerts, ${notified.length} users notified; cursor ${cursor} → ${nextCursor}; behind ${maxId - nextCursor}; since last run ${sinceLast} min; ${unfinished.size} lists to resume`,
-  );
+  alertsBeat.count("runs");
+  alertsBeat.count("pairs", pairs.length);
+  alertsBeat.count("alerts", alerts.length);
+  alertsBeat.max("most behind", maxId - nextCursor);
+  // a run that sent nothing is counted in the hourly line only
+  if (alerts.length > 0 || progress.kind === "seed") {
+    alertsLog.info(
+      `${progress.kind === "seed" ? "Seeded from Valkey; " : ""}${pairs.length} pairs, ${alerts.length} alerts, ${notified.length} users notified; cursor ${cursor} → ${nextCursor}; behind ${maxId - nextCursor}; since last run ${sinceLast} min; ${unfinished.size} lists to resume`,
+    );
+  }
+  alertsBeat.flush();
 }

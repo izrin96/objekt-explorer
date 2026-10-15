@@ -5,15 +5,17 @@ import { collections, objekts, transfers } from "@repo/db/indexer/schema";
 import { addr, chunk, slugifyObjekt } from "@repo/lib";
 import { eq, inArray, sql } from "drizzle-orm";
 
+import { log } from "@/lib/log";
 import { safeFetchMetadataV1, safeFetchMetadataV3 } from "@/lib/metadata-utils";
 
 const BATCH_SIZE = 50;
+const fixLog = log("fix-collection");
 
 export async function fixEmptyCollection({ version }: { version: MetadataVersion }) {
   try {
     await fixStaleTransfers();
   } catch (error) {
-    console.error(`[fix empty collection] Stale transfer fix failed:`, error);
+    fixLog.error("Stale transfer fix failed:", error);
   }
 
   const objektsResults = await indexer
@@ -25,19 +27,28 @@ export async function fixEmptyCollection({ version }: { version: MetadataVersion
     .innerJoin(collections, eq(objekts.collectionId, collections.id))
     .where(eq(collections.slug, "empty-collection"));
 
-  console.log(`[fix empty collection] Found ${objektsResults.length} objekts to fix`);
+  fixLog.debug(`${objektsResults.length} objekts to fix`);
 
   const totalBatches = Math.ceil(objektsResults.length / BATCH_SIZE);
   let batchNumber = 0;
+  let updated = 0;
+  let missing = 0;
 
   await chunk(objektsResults, BATCH_SIZE, async (batch) => {
     batchNumber++;
     try {
-      await processMetadataBatch(batch, batchNumber, totalBatches, version);
+      const result = await processMetadataBatch(batch, batchNumber, totalBatches, version);
+      updated += result.updated;
+      missing += result.missing;
     } catch (error) {
-      console.error(`[fix empty collection] Batch ${batchNumber}/${totalBatches} failed:`, error);
+      fixLog.error(`Batch ${batchNumber}/${totalBatches} failed:`, error);
     }
   });
+
+  if (updated > 0)
+    fixLog.info(`Moved ${updated} of ${objektsResults.length} objekts to their collection`);
+  if (missing > 0)
+    fixLog.warn(`Cosmo returned no metadata for ${missing} objekts; they retry next run`);
 }
 
 /**
@@ -56,7 +67,7 @@ async function fixStaleTransfers() {
       and oc.slug <> 'empty-collection'
   `);
 
-  console.log(`[fix empty collection] Fixed ${result.rowCount ?? 0} stale transfers`);
+  if (result.rowCount) fixLog.info(`Fixed ${result.rowCount} stale transfers`);
 }
 
 async function processMetadataBatch(
@@ -64,10 +75,8 @@ async function processMetadataBatch(
   batchNumber: number,
   totalBatches: number,
   version: MetadataVersion,
-) {
-  console.log(
-    `[fix empty collection] Processing batch ${batchNumber}/${totalBatches} (${batch.length} objekts)`,
-  );
+): Promise<{ updated: number; missing: number }> {
+  fixLog.debug(`Processing batch ${batchNumber}/${totalBatches} (${batch.length} objekts)`);
 
   const metadataResults = await Promise.all(
     batch.map(async (objekt) => ({
@@ -89,11 +98,11 @@ async function processMetadataBatch(
   const collectionMetadataUpdates: Map<string, CosmoObjektMetadataV1> = new Map();
   const slugMintedAt = new Map<string, string>();
 
+  let missing = 0;
   for (const result of metadataResults) {
     if (!result.metadata) {
-      console.log(
-        `[fix empty collection] Failed to fetch metadata for token ID ${result.objektId}`,
-      );
+      missing++;
+      fixLog.debug(`No metadata for token ID ${result.objektId}`);
       continue;
     }
 
@@ -145,7 +154,7 @@ async function processMetadataBatch(
     await indexer.insert(collections).values(newCollections).onConflictDoNothing({
       target: collections.slug,
     });
-    console.log(`[fix empty collection] Created ${newCollections.length} missing collections`);
+    fixLog.info(`Created ${newCollections.length} missing collections`);
 
     // re-select for canonical ids (conflict means indexer created it concurrently with a different id)
     const createdRecords = await indexer
@@ -160,7 +169,7 @@ async function processMetadataBatch(
   for (const [objektId, slug] of collectionSlugMap) {
     const collectionId = slugToCollectionId.get(slug);
     if (!collectionId) {
-      console.log(`[fix empty collection] Collection not yet exist for token ID ${objektId}`);
+      fixLog.debug(`No collection yet for token ID ${objektId}`);
       continue;
     }
 
@@ -176,8 +185,8 @@ async function processMetadataBatch(
   }
 
   if (updates.length === 0) {
-    console.log(`[fix empty collection] Batch ${batchNumber}/${totalBatches}: No updates needed`);
-    return;
+    fixLog.debug(`Batch ${batchNumber}/${totalBatches}: no updates needed`);
+    return { updated: 0, missing };
   }
 
   await indexer.transaction(async (tx) => {
@@ -207,7 +216,6 @@ async function processMetadataBatch(
     }
   });
 
-  console.log(
-    `[fix empty collection] Batch ${batchNumber}/${totalBatches}: Updated ${updates.length} objekts`,
-  );
+  fixLog.debug(`Batch ${batchNumber}/${totalBatches}: updated ${updates.length} objekts`);
+  return { updated: updates.length, missing };
 }

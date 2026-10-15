@@ -29,6 +29,7 @@ import { createSubscriber } from "@repo/lib/server/redis-subscriber";
 import { and, eq, inArray, isNull, sql } from "drizzle-orm";
 
 import { unique } from "../../lib/array";
+import { heartbeat, log } from "../../lib/log";
 import { isUniqueViolation } from "../../lib/pg-error";
 import { redis } from "../../lib/redis";
 import { withRedisLock } from "../../lib/redis-lock";
@@ -55,8 +56,8 @@ type Trigger = "schedule" | "transfers" | "accept";
 
 let running = false;
 let queued: Trigger | null = null;
-/** `transfers` batches since the last logged run, and how many of them woke the verifier. */
-const fastPath = { batches: 0, woke: 0 };
+const verifierLog = log("verifier");
+const verifierBeat = heartbeat(verifierLog);
 
 /**
  * Single-flight in this process, and across replicas through a Valkey lock: pgbouncer runs in
@@ -77,7 +78,7 @@ export async function runTradeVerifier(trigger: Trigger = "schedule") {
         await runLocked(next);
       } catch (error) {
         if (queued === null) throw error;
-        console.error("[Trade Verifier] Run failed; running the queued one:", error);
+        verifierLog.error("Run failed; running the queued one:", error);
       }
       next = queued;
     }
@@ -89,10 +90,14 @@ export async function runTradeVerifier(trigger: Trigger = "schedule") {
 async function runLocked(trigger: Trigger) {
   const ran = await withRedisLock(
     LOCK_KEY,
-    { ttlMs: LOCK_TTL_MS, refreshMs: LOCK_REFRESH_MS, label: "Trade Verifier" },
+    { ttlMs: LOCK_TTL_MS, refreshMs: LOCK_REFRESH_MS, label: "verifier" },
     () => verifyRun(trigger),
   );
-  if (!ran) console.log(`[Trade Verifier] ${trigger}; another replica is running; skipped`);
+  if (!ran) {
+    verifierBeat.count("skipped, another replica running");
+    verifierLog.debug(`${trigger}: another replica is running; skipped`);
+    verifierBeat.flush();
+  }
 }
 
 async function verifyRun(trigger: Trigger) {
@@ -152,15 +157,27 @@ async function verifyRun(trigger: Trigger) {
   await publishAll(publishes);
 
   await refreshWatch(legs, upkeep.watchedObjekts);
-  const lag = seen
-    ? `indexer ${Math.round((started - new Date(seen.seenUntil).getTime()) / 1000)}s behind`
-    : "indexer head unknown";
-  const woke = `${fastPath.woke} of ${fastPath.batches} transfer batches woke it`;
-  fastPath.batches = 0;
-  fastPath.woke = 0;
-  console.log(
-    `[Trade Verifier] ${trigger}; ${woke}; ${lag}; ${legs.length} open legs; ${touched.verified} verified, ${touched.wrongCopies} wrong copies, ${touched.stuck} stuck across ${touched.trades} trades, ${touched.ended} ended; ${upkeep.expired} offers expired, ${upkeep.moved} cancelled; ${expired.length} trades expired; ${Date.now() - started}ms`,
-  );
+  const ms = Date.now() - started;
+  verifierBeat.count(`${trigger} runs`);
+  verifierBeat.count("verified", touched.verified);
+  verifierBeat.count("wrong copies", touched.wrongCopies);
+  verifierBeat.count("trades ended", touched.ended + expired.length);
+  verifierBeat.count("offers expired or cancelled", upkeep.expired + upkeep.moved);
+  verifierBeat.max("most open legs", legs.length);
+  verifierBeat.max("slowest (ms)", ms);
+  if (seen) {
+    verifierBeat.max(
+      "most indexer lag (s)",
+      Math.round((started - new Date(seen.seenUntil).getTime()) / 1000),
+    );
+  }
+  // a run that changed nothing is counted in the hourly line only
+  if (publishes.length > 0) {
+    verifierLog.info(
+      `${trigger}: ${legs.length} open legs; ${touched.verified} verified, ${touched.wrongCopies} wrong copies, ${touched.stuck} stuck across ${touched.trades} trades, ${touched.ended} ended; ${upkeep.expired} offers expired, ${upkeep.moved} cancelled; ${expired.length} trades expired; ${ms}ms`,
+    );
+  }
+  verifierBeat.flush();
 }
 
 /** One transaction per trade, under its row lock, so a cancel and a verification never cross. */
@@ -485,9 +502,9 @@ export async function watchVerifierTriggers(onError: (error: unknown) => void) {
   const subscriber = createSubscriber(process.env.REDIS_URL, "Trade Verifier");
   let timer: ReturnType<typeof setTimeout> | null = null;
   await subscriber.subscribe("transfers", (message) => {
-    fastPath.batches += 1;
+    verifierBeat.count("transfer batches");
     if (timer !== null || !batchMatters(message, watch)) return;
-    fastPath.woke += 1;
+    verifierBeat.count("batches that woke it");
     timer = setTimeout(() => {
       timer = null;
       runTradeVerifier("transfers").catch(onError);

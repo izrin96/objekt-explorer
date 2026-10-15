@@ -4,6 +4,14 @@
 
 From `@repo/api`, import only modules whose import chain stays clear of `env.ts`. `env.ts` validates the web app's whole `serverEnv` (Discord, S3, SES and more) as it loads, and the worker container has none of those, so the worker dies on start. `services/redis` imports it, and so does every module that imports `services/redis`, such as `services/currency-rates`. Before importing an `@repo/api` service, follow its imports. Read such tables directly with `db`, as `update-currency-rates` and `snapshot-price-history` do.
 
+## One run at a time
+
+Register every cron job through `safeRun(tag, job)` in `src/index.ts`, with the job's kebab-case log tag: it runs the job under the Valkey lock `worker:lock:<tag>`, so a second worker, or a slow run overlapping its next tick, skips. A shutdown frees the locks of jobs still running. The trade verifier takes its own lock and passes `{ lock: false }`. A long-lived subscription that must run on one worker only goes through `whileLeader` (`src/lib/redis-lock.ts`), as the activity relay does.
+
+## Logging
+
+Jobs log only through `log(tag)` (`src/lib/log.ts`). A run that changed something logs one `info` summary; a run that changed nothing stays silent. Per-item lines go to `debug`, shown only with `WORKER_LOG_LEVEL=debug`. A job running every few minutes adds its counts to a `heartbeat`, which logs one line an hour. Drift and failures that retry on their own are `warn`, one line per run with a count; a failed job, or a failure only a person can fix (an expired Cosmo refresh token), is `error`. `src/script/` prints to the console, since its output is the point.
+
 ## Offline serials
 
 Serials of objekts minted offline come from `populateSerialOffline` (`job/populate-serial.ts`), checked weekly by `job/verify-batch-boundaries.ts`. The model:

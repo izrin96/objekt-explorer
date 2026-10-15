@@ -3,6 +3,10 @@ import { objekts } from "@repo/db/indexer/schema";
 import { Addresses } from "@repo/lib";
 import { and, eq, inArray } from "drizzle-orm";
 
+import { log } from "../lib/log";
+
+const spinLog = log("cosmo-spin");
+
 export async function updateTransferableCosmoSpin() {
   // get all objekt sent to cosmo-spin and transferable = true
   const spinObjekts = await indexer
@@ -35,7 +39,7 @@ export async function updateTransferableCosmoSpin() {
     await Promise.all(batches);
   }
 
-  console.log(
-    `[fix cosmo-spin transferable] Update transferable status for ${spinObjekts.length} objekts. Reason: cosmo-spin`,
-  );
+  if (spinObjekts.length > 0) {
+    spinLog.info(`Marked ${spinObjekts.length} objekts sent to cosmo-spin non-transferable`);
+  }
 }
