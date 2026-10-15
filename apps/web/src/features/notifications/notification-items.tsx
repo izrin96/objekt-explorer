@@ -230,7 +230,7 @@ export function NotificationItem({
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span
           className={cn(
-            "text-sm text-pretty",
+            "text-sm text-pretty break-words",
             unread ? "text-foreground" : "text-muted-foreground",
           )}
         >

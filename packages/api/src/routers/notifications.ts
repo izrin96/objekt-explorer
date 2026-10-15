@@ -5,7 +5,9 @@ import { and, eq, inArray, isNull, sql } from "drizzle-orm";
 import { authed } from "../orpc";
 import { publishNotify } from "../realtime";
 import {
+  KIND_TYPES,
   listNotificationsInputSchema,
+  markAllReadInputSchema,
   markReadInputSchema,
   setPrefInputSchema,
 } from "../schemas/notification";
@@ -41,14 +43,23 @@ export const notificationsRouter = {
       if (updated.length > 0) await publishNotify(session.user.id);
     }),
 
-  markAllRead: authed.handler(async ({ context: { session } }) => {
-    const updated = await db
-      .update(notification)
-      .set({ readAt: sql`now()` })
-      .where(and(eq(notification.userId, session.user.id), isNull(notification.readAt)))
-      .returning({ id: notification.id });
-    if (updated.length > 0) await publishNotify(session.user.id);
-  }),
+  /** Only the open tab's kind, so Mark all read on Trades leaves list alerts unread. */
+  markAllRead: authed
+    .input(markAllReadInputSchema)
+    .handler(async ({ input: { kind }, context: { session } }) => {
+      const updated = await db
+        .update(notification)
+        .set({ readAt: sql`now()` })
+        .where(
+          and(
+            eq(notification.userId, session.user.id),
+            isNull(notification.readAt),
+            kind === "all" ? undefined : inArray(notification.type, [...KIND_TYPES[kind]]),
+          ),
+        )
+        .returning({ id: notification.id });
+      if (updated.length > 0) await publishNotify(session.user.id);
+    }),
 
   prefs: authed.handler(({ context: { session } }) => notificationPrefs(session.user.id)),
 

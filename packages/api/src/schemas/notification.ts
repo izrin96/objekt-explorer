@@ -81,6 +81,10 @@ export const listNotificationsInputSchema = z.object({
   cursor: notificationCursorSchema.optional(),
 });
 
+export const markAllReadInputSchema = z.object({
+  kind: z.enum(NOTIFICATION_KINDS).default("all"),
+});
+
 export const markReadInputSchema = z.object({
   ids: z.number().int().positive().array().min(1).max(100),
 });

@@ -96,7 +96,7 @@ export function NotificationPanel({
               size="sm"
               disabled={unread === 0}
               loading={markAllRead.isPending}
-              onClick={() => markAllRead.mutate(undefined)}
+              onClick={() => markAllRead.mutate({ kind })}
             >
               <ChecksIcon />
               {m.notification_mark_all_read()}
