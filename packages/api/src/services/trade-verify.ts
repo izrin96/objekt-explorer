@@ -9,6 +9,7 @@ import { and, eq, gte, inArray, isNotNull, sql } from "drizzle-orm";
 import {
   copyWindowStart,
   type LegResult,
+  legVerifiedNoted,
   type MatchLeg,
   type MatchTransfer,
   matchLegs,
@@ -181,7 +182,8 @@ export async function finishSettle(
   tx: Tx,
   settled: SettledTrade,
   applied: LegResult[],
-  counts: { alreadyVerified: number; verified: number; total: number },
+  /** `autoAccepted`: how many of `verified` were wrong copies accepted automatically */
+  counts: { alreadyVerified: number; verified: number; total: number; autoAccepted?: number },
   name: (userId: string) => { userId: string; name: string },
 ) {
   const { tradeId, userA, userB } = settled;
@@ -204,7 +206,9 @@ export async function finishSettle(
       .set({ open: false })
       .where(and(eq(tradeLeg.tradeId, tradeId), eq(tradeLeg.open, true)));
   }
-  if (counts.verified === 0 && !ended) return { ended, notified: [], reputations: [] };
+  if (!ended && !legVerifiedNoted(counts.verified, counts.autoAccepted ?? 0)) {
+    return { ended, notified: [], reputations: [] };
+  }
 
   const event: TradePayload["event"] = ended ? outcome.status : "leg_verified";
   const progress = { verified: counts.alreadyVerified + counts.verified, total: counts.total };
@@ -233,13 +237,17 @@ export async function finishSettle(
   };
 }
 
-/** A wrong copy's note: `wrong_copy` goes to both parties, `wrong_copy_declined` to the giver. */
+/**
+ * A wrong copy's note: `wrong_copy` and `wrong_copy_auto_accepted` go to both parties,
+ * `wrong_copy_declined` to the giver, `wrong_copy_due` to the receiver.
+ */
 export function wrongCopyNote(
   settled: SettledTrade,
-  event: "wrong_copy" | "wrong_copy_declined",
+  event: "wrong_copy" | "wrong_copy_declined" | "wrong_copy_due" | "wrong_copy_auto_accepted",
   to: { userId: string; partner: { userId: string; name: string } },
   progress: { verified: number; total: number },
   copy: NonNullable<TradePayload["copy"]>,
+  acceptBy?: string | null,
 ) {
   return {
     type: "trade" as const,
@@ -253,8 +261,90 @@ export function wrongCopyNote(
       progress,
       partner: to.partner,
       copy,
+      ...(acceptBy ? { acceptBy: new Date(acceptBy).toISOString() } : {}),
     },
   };
+}
+
+/** Another leg already verified with this transfer. */
+function transferTaken(error: unknown) {
+  let cause: unknown = error;
+  while (cause instanceof Error) {
+    const pg = cause as Error & { code?: string; constraint?: string };
+    if (pg.code === "23505" && pg.constraint === "trade_leg_transfer_uniq") return true;
+    cause = cause.cause;
+  }
+  return false;
+}
+
+export type AcceptedCopy = {
+  id: number;
+  legId: number;
+  txHash: string;
+  objektId: string;
+  transferredAt: string;
+};
+
+/**
+ * Under the trade's row lock, on a copy the caller found pending on an open leg: verifies the
+ * leg with the copy's transfer as the verifier records a leg, and marks the copy accepted. The
+ * receiver's Accept and the worker's deadline, expiry and break all accept here. Null when
+ * another leg already took the transfer (the unique index refuses it); nothing is written then.
+ */
+export async function acceptCopy(
+  tx: Tx,
+  copy: AcceptedCopy,
+  { auto }: { auto: boolean },
+): Promise<LegResult | null> {
+  const recorded = await tx
+    .transaction(async (savepoint) => {
+      await savepoint
+        .update(tradeLeg)
+        .set({
+          open: false,
+          verifiedAt: copy.transferredAt,
+          txHash: copy.txHash,
+          verifiedObjektId: copy.objektId,
+        })
+        .where(eq(tradeLeg.id, copy.legId));
+      return true;
+    })
+    .catch((error: unknown) => {
+      if (transferTaken(error)) return false;
+      throw error;
+    });
+  if (!recorded) return null;
+  await tx
+    .update(tradeSubstitute)
+    .set({ status: "accepted", decidedAt: sql`now()`, autoAccepted: auto })
+    .where(eq(tradeSubstitute.id, copy.id));
+  return {
+    kind: "verified",
+    transferId: "",
+    txHash: copy.txHash,
+    objektId: copy.objektId,
+    at: copy.transferredAt,
+  };
+}
+
+/** The held copies on these legs whose transfer verified no leg, earliest first. */
+export async function legCopies(tx: Tx, legIds: number[]) {
+  if (legIds.length === 0) return [];
+  return tx
+    .select({
+      id: tradeSubstitute.id,
+      legId: tradeSubstitute.tradeLegId,
+      txHash: tradeSubstitute.txHash,
+      objektId: tradeSubstitute.objektId,
+      transferredAt: tradeSubstitute.transferredAt,
+      at: tradeSubstitute.transferredAt,
+      status: tradeSubstitute.status,
+      acceptBy: tradeSubstitute.acceptBy,
+      remindedAt: tradeSubstitute.remindedAt,
+    })
+    .from(tradeSubstitute)
+    .where(and(inArray(tradeSubstitute.tradeLegId, legIds), heldCopyWhere))
+    .orderBy(tradeSubstitute.transferredAt, tradeSubstitute.id);
 }
 
 const TRANSFERABLE_BATCH = 500;
@@ -305,4 +395,21 @@ export async function heldCopies(q: Tx | typeof db, tradeId: number) {
     .innerJoin(tradeLeg, eq(tradeLeg.id, tradeSubstitute.tradeLegId))
     .where(and(eq(tradeLeg.tradeId, tradeId), heldCopyWhere));
   return row?.count ?? 0;
+}
+
+/** The legs of these trades verified through a wrong copy accepted automatically. */
+export async function autoAcceptedLegs(tradeIds: number[]) {
+  if (tradeIds.length === 0) return new Set<number>();
+  const rows = await db
+    .select({ legId: tradeSubstitute.tradeLegId })
+    .from(tradeSubstitute)
+    .innerJoin(tradeLeg, eq(tradeLeg.id, tradeSubstitute.tradeLegId))
+    .where(
+      and(
+        inArray(tradeLeg.tradeId, tradeIds),
+        eq(tradeSubstitute.status, "accepted"),
+        eq(tradeSubstitute.autoAccepted, true),
+      ),
+    );
+  return new Set(rows.map((row) => row.legId));
 }

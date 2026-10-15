@@ -7,7 +7,7 @@ import { m } from "@/paraglide/messages";
 /** stands in for the name, so each locale keeps its own word order around it */
 const SLOT = "";
 
-/** `itemLabel` as markup: "SeoYeon A204Z #537", or "SeoYeon A204Z (any copy)". The moderation console passes no `serialEstimated`. */
+/** `itemLabel` as markup: "SeoYeon A204Z #537", or "SeoYeon A204Z (any copy)". */
 export function ItemLabel({
   item,
   collections,

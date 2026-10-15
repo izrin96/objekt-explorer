@@ -39,7 +39,10 @@ export function notificationTone(notification: ToneInput): Toned {
           return DONE;
         case "reminder":
         case "stuck":
+        case "wrong_copy_due":
           return { icon: "clock", tone: "warning" };
+        case "wrong_copy_auto_accepted":
+          return DONE;
         case "wrong_copy":
           return { icon: "warning", tone: "warning" };
         case "wrong_copy_declined":

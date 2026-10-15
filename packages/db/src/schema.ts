@@ -506,6 +506,10 @@ export const tradeSubstitute = pgTable(
       .notNull()
       .default("pending"),
     decidedAt: timestamp("decided_at", { mode: "string", withTimezone: true }),
+    // when a pending copy counts as accepted; null until the worker first sees the copy
+    acceptBy: timestamp("accept_by", { mode: "string", withTimezone: true }),
+    remindedAt: timestamp("reminded_at", { mode: "string", withTimezone: true }),
+    autoAccepted: boolean("auto_accepted").notNull().default(false),
     createdAt: timestamp("created_at", { mode: "string", withTimezone: true })
       .notNull()
       .defaultNow(),

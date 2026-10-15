@@ -25,6 +25,17 @@ describe("notificationTone", () => {
     });
   });
 
+  test("a wrong copy due tomorrow is an amber clock", () => {
+    expect(notificationTone(trade("wrong_copy_due"))).toEqual({ icon: "clock", tone: "warning" });
+  });
+
+  test("a wrong copy accepted automatically is a green check", () => {
+    expect(notificationTone(trade("wrong_copy_auto_accepted"))).toEqual({
+      icon: "check",
+      tone: "success",
+    });
+  });
+
   test("cancelled, failed and expired are a red cross", () => {
     for (const n of [trade("cancelled"), trade("failed"), offer("cancelled"), offer("expired")]) {
       expect(notificationTone(n)).toEqual({ icon: "cross", tone: "destructive" });

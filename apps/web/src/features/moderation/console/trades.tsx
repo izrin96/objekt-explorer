@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-import { tradeNo, tradeStatusText } from "@/features/offers/format";
+import { serialText, tradeNo, tradeStatusText } from "@/features/offers/format";
 import { ItemLabel } from "@/features/offers/item-label";
 import { m } from "@/paraglide/messages";
 
@@ -58,6 +58,18 @@ export function AttachedTrades({
                             : m.offer_leg_closed()}
                       </Badge>
                     </span>
+                    {leg.state === "verified" && leg.verifiedSerial !== null ? (
+                      <span className="text-muted-foreground text-xs">
+                        {m.offer_leg_in_place_of({
+                          sent: serialText({
+                            serial: leg.verifiedSerial,
+                            estimated: leg.verifiedSerialEstimated,
+                          }),
+                          asked: serialText({ serial: leg.serial, estimated: leg.serialEstimated }),
+                        })}
+                        {leg.autoAccepted ? <> · {m.offer_leg_auto_accepted()}</> : null}
+                      </span>
+                    ) : null}
                     {leg.txHash ? (
                       <span className="text-muted-foreground flex flex-wrap items-baseline gap-x-2 text-xs">
                         <span className="font-mono break-all">{leg.txHash}</span>

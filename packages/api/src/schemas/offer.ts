@@ -15,6 +15,10 @@ export const REPORT_AFTER_DAYS = 7;
 /** A trade still in progress this long after accept ends: failed with a verified leg, else cancelled. */
 export const TRADE_EXPIRE_DAYS = 14;
 export const RATE_WINDOW_DAYS = 14;
+/** A pending wrong copy counts as accepted this long after it was recorded. */
+export const COPY_ACCEPT_HOURS = 72;
+/** The receiver is reminded this long before a wrong copy counts as accepted. */
+export const COPY_REMIND_HOURS = 24;
 
 export const TRADE_RATINGS = ["positive", "neutral", "negative"] as const;
 export type TradeRating = (typeof TRADE_RATINGS)[number];
@@ -294,8 +298,15 @@ const tradeLegViewSchema = z.object({
       txHash: z.string(),
       at: z.string(),
       status: z.enum(HELD_COPY_STATUSES),
+      /**
+       * ISO time this copy counts as accepted, on its leg's earliest pending copy only; optional
+       * so payloads from before the field still validate
+       */
+      acceptBy: z.string().nullable().optional(),
     })
     .array(),
+  /** verified through a wrong copy accepted automatically */
+  autoAccepted: z.boolean().optional(),
 });
 
 const tradeViewSchema = z.object({
@@ -384,6 +395,8 @@ const TRADE_EVENTS = [
   "wrong_copy",
   "wrong_copy_declined",
   "stuck",
+  "wrong_copy_due",
+  "wrong_copy_auto_accepted",
 ] as const;
 
 /** A serial as trade surfaces show it: null before it's numbered, `estimated` after Cosmo's cutoff. */
@@ -404,6 +417,8 @@ export const tradePayloadSchema = z.object({
   progress: progressSchema,
   partner: z.object({ userId: z.string(), name: z.string() }),
   copy: z.object({ asked: shownSerialSchema, sent: shownSerialSchema }).optional(),
+  /** ISO time the copy counts as accepted, on `wrong_copy` and `wrong_copy_due` */
+  acceptBy: z.string().optional(),
 });
 export type TradePayload = z.infer<typeof tradePayloadSchema>;
 

@@ -21,6 +21,7 @@ import { sanctionedAmong } from "./cosmo-link";
 import { linkEventsWhere } from "./mod-links";
 import { findAccount, sanctionColumns } from "./moderation";
 import { reputationOf } from "./reputation";
+import { autoAcceptedLegs } from "./trade-verify";
 
 const PAGE_LIMIT = 100;
 
@@ -50,7 +51,7 @@ async function flagCounts(userIds: string[]) {
 async function attachedTrades(userId: string, tradeIds: number[]) {
   const ids = [...new Set(tradeIds)];
   if (ids.length === 0) return { trades: [], collections: {} };
-  const [rows, legs] = await Promise.all([
+  const [rows, legs, autoLegs] = await Promise.all([
     db
       .select({
         id: trade.id,
@@ -65,13 +66,21 @@ async function attachedTrades(userId: string, tradeIds: number[]) {
       .where(inArray(trade.id, ids))
       .orderBy(desc(trade.acceptedAt)),
     db.select().from(tradeLeg).where(inArray(tradeLeg.tradeId, ids)).orderBy(tradeLeg.id),
+    autoAcceptedLegs(ids),
   ]);
   const { serial, collections } = await hydrateCards(
-    legs.map((leg) =>
-      leg.objektId === null
-        ? { collectionSlug: leg.collectionSlug }
-        : { collectionSlug: leg.collectionSlug, objektId: leg.objektId },
-    ),
+    [
+      ...legs.map((leg) =>
+        leg.objektId === null
+          ? { collectionSlug: leg.collectionSlug }
+          : { collectionSlug: leg.collectionSlug, objektId: leg.objektId },
+      ),
+      ...legs.flatMap((leg) =>
+        leg.verifiedObjektId === null
+          ? []
+          : [{ collectionSlug: leg.collectionSlug, objektId: leg.verifiedObjektId }],
+      ),
+    ],
     null,
   );
   return {
@@ -84,21 +93,34 @@ async function attachedTrades(userId: string, tradeIds: number[]) {
       otherId: t.userA === userId ? t.userB : t.userA,
       legs: legs
         .filter((leg) => leg.tradeId === t.id)
-        .map((leg) => ({
-          id: leg.id,
-          collectionSlug: leg.collectionSlug,
-          objektId: leg.objektId,
-          serial: leg.objektId === null ? null : serial(leg.objektId).serial,
-          /** the reported account gives this leg */
-          fromTarget: leg.fromUserId === userId,
-          state: (leg.verifiedAt !== null ? "verified" : leg.open ? "waiting" : "closed") as
-            | "verified"
-            | "waiting"
-            | "closed",
-          verifiedAt: iso(leg.verifiedAt),
-          txHash: leg.txHash,
-          verifiedObjektId: leg.verifiedObjektId,
-        })),
+        .map((leg) => {
+          const swapped =
+            leg.objektId !== null &&
+            leg.verifiedObjektId !== null &&
+            leg.verifiedObjektId !== leg.objektId
+              ? serial(leg.verifiedObjektId)
+              : null;
+          return {
+            id: leg.id,
+            collectionSlug: leg.collectionSlug,
+            objektId: leg.objektId,
+            serial: leg.objektId === null ? null : serial(leg.objektId).serial,
+            serialEstimated: leg.objektId === null ? false : serial(leg.objektId).estimated,
+            /** the reported account gives this leg */
+            fromTarget: leg.fromUserId === userId,
+            state: (leg.verifiedAt !== null ? "verified" : leg.open ? "waiting" : "closed") as
+              | "verified"
+              | "waiting"
+              | "closed",
+            verifiedAt: iso(leg.verifiedAt),
+            txHash: leg.txHash,
+            verifiedObjektId: leg.verifiedObjektId,
+            /** set when the leg verified through a wrong copy */
+            verifiedSerial: swapped?.serial ?? null,
+            verifiedSerialEstimated: swapped?.estimated ?? false,
+            autoAccepted: autoLegs.has(leg.id),
+          };
+        }),
     })),
     collections,
   };

@@ -1,3 +1,6 @@
+import { COPY_REMIND_HOURS } from "../schemas/offer";
+import { HOUR_MS } from "./time";
+
 /**
  * An open leg as the verifier matches it. `objektId` null is any copy of `collectionId`.
  * The address sets are lowercase: the leg's snapshot plus the party's current links.
@@ -245,6 +248,71 @@ export function stuckChange(
  */
 export function expiredOutcome(verifiedLegs: number, heldCopies: number) {
   return verifiedLegs > 0 || heldCopies > 0 ? ("failed" as const) : ("cancelled" as const);
+}
+
+/**
+ * A pending wrong copy counts as accepted once the indexer has read past its `acceptBy`, so a
+ * right copy sent before the deadline but read late still verifies the leg first.
+ */
+export function copyDue(acceptBy: string | null, seenUntil: string | null) {
+  return acceptBy !== null && seenUntil !== null && time(acceptBy) <= time(seenUntil);
+}
+
+/** The receiver's one reminder, `COPY_REMIND_HOURS` before the copy is due, while it isn't yet. */
+export function copyReminderDue(
+  acceptBy: string | null,
+  seenUntil: string | null,
+  remindedAt: string | null,
+) {
+  if (acceptBy === null || seenUntil === null || remindedAt !== null) return false;
+  if (copyDue(acceptBy, seenUntil)) return false;
+  return time(acceptBy) - COPY_REMIND_HOURS * HOUR_MS <= time(seenUntil);
+}
+
+type HeldCopy = { id: number; status: string; at: string };
+
+/**
+ * The copy a leg accepts when it must close without its own objekt: the earliest pending one,
+ * sent before `before` when given. A declined copy is never accepted. Callers pass only copies
+ * whose transfer verified no leg.
+ */
+export function firstPending<C extends HeldCopy>(copies: C[], before?: string): C | null {
+  const limit = before === undefined ? Infinity : time(before);
+  return (
+    copies
+      .filter((copy) => copy.status === "pending" && time(copy.at) < limit)
+      .toSorted((a, b) => time(a.at) - time(b.at) || a.id - b.id)[0] ?? null
+  );
+}
+
+/** A broken leg holding a pending copy sent before the break accepts it instead of breaking. */
+export function copyRescue<C extends HeldCopy>(result: LegResult, copies: C[]): C | null {
+  return result.kind === "broken" ? firstPending(copies, result.at) : null;
+}
+
+type DatedCopy = HeldCopy & { acceptBy: string | null };
+
+/** The copy a leg accepts at its deadline: the earliest pending one, once its own is due. */
+export function dueCopy<C extends DatedCopy>(copies: C[], seenUntil: string | null): C | null {
+  const first = firstPending(copies);
+  return first && copyDue(first.acceptBy, seenUntil) ? first : null;
+}
+
+/** The copy whose receiver is reminded: the earliest pending one, as only it can be accepted. */
+export function reminderCopy<C extends DatedCopy & { remindedAt: string | null }>(
+  copies: C[],
+  seenUntil: string | null,
+): C | null {
+  const first = firstPending(copies);
+  return first && copyReminderDue(first.acceptBy, seenUntil, first.remindedAt) ? first : null;
+}
+
+/**
+ * Whether a settle notes `leg_verified`: an auto-accepted copy carries its own note, so only a
+ * leg verified otherwise in the same settle does.
+ */
+export function legVerifiedNoted(verified: number, autoAccepted: number) {
+  return verified > autoAccepted;
 }
 
 type WatchSet = { objekts: ReadonlySet<string>; collections: ReadonlySet<string> };

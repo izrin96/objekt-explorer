@@ -1,5 +1,7 @@
 import {
   batchMatters,
+  copyRescue,
+  firstPending,
   type LegResult,
   type NearMiss,
   stuckChange,
@@ -10,6 +12,7 @@ import { partyNames, writeNotes } from "@repo/api/services/offer/notes";
 import {
   finishSettle,
   type LegRow,
+  legCopies,
   type SettledTrade,
   loadOpenLegs,
   matchOpenLegs,
@@ -29,6 +32,7 @@ import { isUniqueViolation } from "../../lib/pg-error";
 import { redis } from "../../lib/redis";
 import { withRedisLock } from "../../lib/redis-lock";
 import { type Publish, publishAll } from "../../lib/trade-publish";
+import { ACCEPT_BY_FROM_NOW, acceptPicked, type Name, settleCopyDeadlines } from "./copy-deadlines";
 import { readIndexerHead } from "./indexer-head";
 import { offerUpkeep } from "./offer-upkeep";
 import { expireStalls } from "./trade-expiry";
@@ -123,6 +127,8 @@ async function verifyRun() {
   const upkeep = await offerUpkeep();
   publishes.push(...upkeep.publishes);
   const seenUntil = seen?.seenUntil ?? null;
+  const copied = await settleCopyDeadlines(seenUntil);
+  publishes.push(...copied);
   const expired = await expireStalls(seenUntil);
   publishes.push(...expired);
   publishes.push(...(await remindStalls(seenUntil)));
@@ -175,14 +181,14 @@ async function settleTrade(
     const openIds = new Set(state.filter((leg) => leg.open).map((leg) => leg.id));
     const alreadyVerified = state.filter((leg) => leg.verifiedAt !== null).length;
 
-    const applied: LegResult[] = [];
+    const applied = new Map<number, LegResult>();
     const waiting: LegRow[] = [];
     let verified = 0;
     for (const leg of legs) {
       if (!openIds.has(leg.id)) continue;
       const result = results.get(leg.id) ?? { kind: "pending" };
       if (result.kind !== "verified") {
-        applied.push(result);
+        applied.set(leg.id, result);
         waiting.push(leg);
         continue;
       }
@@ -206,7 +212,7 @@ async function settleTrade(
           throw error;
         });
       if (recorded) verified += 1;
-      applied.push(recorded ? result : { kind: "pending" });
+      applied.set(leg.id, recorded ? result : { kind: "pending" });
       if (!recorded) waiting.push(leg);
     }
 
@@ -220,6 +226,15 @@ async function settleTrade(
     // recorded before the outcome, so a leg breaking in this run sees the copy as held
     const added = await recordWrongCopies(tx, misses, openIds);
     const progress = { verified: alreadyVerified + verified, total: state.length };
+    // only a leg's earliest pending copy can be accepted, so only its note names a date
+    const firstOf = new Map(
+      [
+        ...Map.groupBy(
+          await legCopies(tx, unique(added.map((row) => row.legId))),
+          (copy) => copy.legId,
+        ),
+      ].map(([legId, copies]) => [legId, firstPending(copies)?.id]),
+    );
     const copyNotified = await writeNotes(
       tx,
       added.flatMap((row) =>
@@ -230,22 +245,29 @@ async function settleTrade(
             { userId, partner: name(userId === first.user_a ? first.user_b : first.user_a) },
             progress,
             { asked: serialOf(askedOf.get(row.legId) ?? ""), sent: serialOf(row.objektId) },
+            firstOf.get(row.legId) === row.id ? row.acceptBy : null,
           ),
         ),
       ),
     );
 
+    // a leg broken with a pending copy sent before the break accepts that copy instead
+    const rescued = await rescueBroken(tx, settled, applied, askedOf, progress, name);
+    verified += rescued.accepted.length;
+    const rescuedIds = new Set(rescued.accepted);
+    const stillWaiting = waiting.filter((leg) => !rescuedIds.has(leg.id));
+
     const { ended, notified, reputations } = await finishSettle(
       tx,
       settled,
-      applied,
-      { alreadyVerified, verified, total: state.length },
+      [...applied.values()],
+      { alreadyVerified, verified, total: state.length, autoAccepted: rescued.accepted.length },
       name,
     );
 
     const stuck = ended
       ? { notified: [], marked: 0, cleared: 0 }
-      : await recordStuck(tx, settled, waiting, state, transferable, progress, name);
+      : await recordStuck(tx, settled, stillWaiting, state, transferable, progress, name);
 
     if (verified === 0 && !ended && added.length === 0 && stuck.marked + stuck.cleared === 0) {
       return null;
@@ -256,12 +278,41 @@ async function settleTrade(
       wrongCopies: added.length,
       stuck: stuck.marked,
       publish: {
-        notified: [...notified, ...copyNotified, ...stuck.notified],
+        notified: [...notified, ...copyNotified, ...rescued.notified, ...stuck.notified],
         conversations: [{ id: first.conversation_id, userIds: parties }],
         reputations,
       },
     };
   });
+}
+
+/**
+ * Under the trade's row lock, after `recordWrongCopies`: each broken leg holding a pending copy
+ * sent before the break accepts its earliest one, replacing its entry in `applied`.
+ */
+async function rescueBroken(
+  tx: Tx,
+  settled: SettledTrade,
+  applied: Map<number, LegResult>,
+  askedOf: ReadonlyMap<number, string>,
+  progress: { verified: number; total: number },
+  name: Name,
+) {
+  const broken = [...applied].flatMap(([legId, result]) =>
+    result.kind === "broken" ? [legId] : [],
+  );
+  if (broken.length === 0) return { accepted: [], notified: [] };
+  const rescued = await acceptPicked(
+    tx,
+    settled,
+    broken,
+    (legId, copies) => copyRescue(applied.get(legId)!, copies),
+    askedOf,
+    progress,
+    name,
+  );
+  for (const [legId, result] of rescued.results) applied.set(legId, result);
+  return rescued;
 }
 
 /**
@@ -357,10 +408,16 @@ async function recordWrongCopies(tx: Tx, misses: NearMiss[], openIds: ReadonlySe
         txHash: miss.txHash,
         objektId: miss.objektId,
         transferredAt: miss.at,
+        acceptBy: ACCEPT_BY_FROM_NOW,
       })),
     )
     .onConflictDoNothing()
-    .returning({ legId: tradeSubstitute.tradeLegId, objektId: tradeSubstitute.objektId });
+    .returning({
+      id: tradeSubstitute.id,
+      legId: tradeSubstitute.tradeLegId,
+      objektId: tradeSubstitute.objektId,
+      acceptBy: tradeSubstitute.acceptBy,
+    });
 }
 
 async function refreshWatch(legs: LegRow[], offerObjekts: string[]) {

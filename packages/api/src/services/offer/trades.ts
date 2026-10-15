@@ -14,6 +14,7 @@ import {
   type TradeParty,
 } from "../../lib/offer-rules";
 import { DAY_MS, iso } from "../../lib/time";
+import { firstPending } from "../../lib/trade-match";
 import {
   HISTORY_PAGE_SIZE,
   type HistoryCursor,
@@ -31,7 +32,13 @@ import {
 import { chatSafety, fetchPartners, hydrateCards } from "../chat";
 import { redis } from "../redis";
 import { forgetReputation, reputationOf } from "../reputation";
-import { heldCopies, heldCopyWhere, loadOpenLegs, matchOpenLegs } from "../trade-verify";
+import {
+  autoAcceptedLegs,
+  heldCopies,
+  heldCopyWhere,
+  loadOpenLegs,
+  matchOpenLegs,
+} from "../trade-verify";
 import { offersOf } from "./cancel";
 import { type Tx, refuseOffer } from "./core";
 import { partyNames, writeNotes } from "./notes";
@@ -181,6 +188,7 @@ export async function fetchTrade(me: string, tradeId: number) {
     offers,
     legs,
     substitutes,
+    autoLegs,
     partners,
     reputations,
     accounts,
@@ -198,11 +206,13 @@ export async function fetchTrade(me: string, tradeId: number) {
         txHash: tradeSubstitute.txHash,
         at: tradeSubstitute.transferredAt,
         status: sql<HeldCopyStatus>`${tradeSubstitute.status}`,
+        acceptBy: tradeSubstitute.acceptBy,
       })
       .from(tradeSubstitute)
       .innerJoin(tradeLeg, eq(tradeLeg.id, tradeSubstitute.tradeLegId))
       .where(and(eq(tradeLeg.tradeId, tradeId), heldCopyWhere))
-      .orderBy(tradeSubstitute.transferredAt),
+      .orderBy(tradeSubstitute.transferredAt, tradeSubstitute.id),
+    autoAcceptedLegs([tradeId]),
     fetchPartners([partnerId]),
     reputationOf([row.userA, row.userB]),
     db
@@ -278,6 +288,9 @@ export async function fetchTrade(me: string, tradeId: number) {
         leg.verifiedObjektId !== leg.objektId
           ? serialOf(leg.verifiedObjektId)
           : null;
+      const subs = leg.open ? substitutes.filter((sub) => sub.legId === leg.id) : [];
+      // only the earliest pending copy can be accepted, so only it shows a date
+      const due = firstPending(subs);
       return {
         id: leg.id,
         collectionSlug: leg.collectionSlug,
@@ -293,22 +306,20 @@ export async function fetchTrade(me: string, tradeId: number) {
         verifiedObjektId: leg.verifiedObjektId,
         verifiedSerial: swapped?.serial ?? null,
         verifiedSerialEstimated: swapped?.estimated ?? false,
-        substitutes: leg.open
-          ? substitutes
-              .filter((sub) => sub.legId === leg.id)
-              .map((sub) => {
-                const sent = serialOf(sub.objektId);
-                return {
-                  id: sub.id,
-                  objektId: sub.objektId,
-                  serial: sent.serial,
-                  serialEstimated: sent.estimated,
-                  txHash: sub.txHash,
-                  at: iso(sub.at)!,
-                  status: sub.status,
-                };
-              })
-          : [],
+        autoAccepted: autoLegs.has(leg.id),
+        substitutes: subs.map((sub) => {
+          const sent = serialOf(sub.objektId);
+          return {
+            id: sub.id,
+            objektId: sub.objektId,
+            serial: sent.serial,
+            serialEstimated: sent.estimated,
+            txHash: sub.txHash,
+            at: iso(sub.at)!,
+            status: sub.status,
+            acceptBy: sub === due ? iso(sub.acceptBy) : null,
+          };
+        }),
       };
     }),
     progress: { verified, total: legs.length },

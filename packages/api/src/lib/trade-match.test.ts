@@ -2,11 +2,18 @@ import { describe, expect, test } from "bun:test";
 
 import {
   batchMatters,
+  copyDue,
+  copyReminderDue,
+  copyRescue,
   copyWindowStart,
+  dueCopy,
   expiredOutcome,
+  firstPending,
+  legVerifiedNoted,
   type LegResult,
   type MatchLeg,
   type MatchTransfer,
+  reminderCopy,
   matchLegs as matchAll,
   nearMisses,
   stuckChange,
@@ -355,6 +362,125 @@ describe("expiredOutcome", () => {
 
   test("a held wrong copy fails it too", () => {
     expect(expiredOutcome(0, 1)).toBe("failed");
+  });
+});
+
+describe("copyDue", () => {
+  const due = "2026-10-05T00:00:00.000Z";
+
+  test("due exactly at the deadline", () => {
+    expect(copyDue(due, due)).toBe(true);
+    expect(copyDue(due, "2026-10-05T00:00:01.000Z")).toBe(true);
+  });
+
+  test("not before it", () => {
+    expect(copyDue(due, "2026-10-04T23:59:59.000Z")).toBe(false);
+  });
+
+  test("not while the indexer's reading trails it, or with no reading or deadline", () => {
+    // the clock is past the deadline, but the indexer has read only up to two hours before it
+    expect(copyDue(due, "2026-10-04T22:00:00.000Z")).toBe(false);
+    expect(copyDue(due, null)).toBe(false);
+    expect(copyDue(null, due)).toBe(false);
+  });
+});
+
+describe("copyReminderDue", () => {
+  const due = "2026-10-05T00:00:00.000Z";
+
+  test("24 hours before the deadline, once", () => {
+    expect(copyReminderDue(due, "2026-10-04T00:00:00.000Z", null)).toBe(true);
+    expect(copyReminderDue(due, "2026-10-04T12:00:00.000Z", null)).toBe(true);
+    expect(copyReminderDue(due, "2026-10-04T12:00:00.000Z", "2026-10-04T00:00:00.000Z")).toBe(
+      false,
+    );
+  });
+
+  test("not earlier, and not once the copy is due", () => {
+    expect(copyReminderDue(due, "2026-10-03T23:59:59.000Z", null)).toBe(false);
+    expect(copyReminderDue(due, due, null)).toBe(false);
+    expect(copyReminderDue(due, null, null)).toBe(false);
+  });
+});
+
+describe("copyRescue", () => {
+  const copy = (id: number, at: string, status = "pending") => ({ id, at, status });
+  const broken: LegResult = { kind: "broken", transferId: "t9", at: "2026-10-03T00:00:00.000Z" };
+
+  test("a broken leg is rescued by a pending copy sent before the break", () => {
+    const sent = copy(1, "2026-10-02T00:00:00.000Z");
+    expect(copyRescue(broken, [sent])).toBe(sent);
+  });
+
+  test("not by a declined copy", () => {
+    expect(copyRescue(broken, [copy(1, "2026-10-02T00:00:00.000Z", "declined")])).toBeNull();
+  });
+
+  test("not by a copy sent after the break", () => {
+    expect(copyRescue(broken, [copy(1, "2026-10-03T00:00:01.000Z")])).toBeNull();
+  });
+
+  test("a leg that didn't break takes nothing", () => {
+    expect(copyRescue({ kind: "pending" }, [copy(1, "2026-10-02T00:00:00.000Z")])).toBeNull();
+  });
+
+  test("the earliest pending copy wins", () => {
+    const first = copy(2, "2026-10-01T00:00:00.000Z");
+    const copies = [copy(1, "2026-10-02T00:00:00.000Z"), first];
+    expect(copyRescue(broken, copies)).toBe(first);
+    expect(firstPending(copies)).toBe(first);
+    expect(firstPending([copy(3, "2026-10-01T00:00:00.000Z", "declined")])).toBeNull();
+  });
+});
+
+describe("dueCopy and reminderCopy", () => {
+  const copy = (id: number, at: string, acceptBy: string | null, status = "pending") => ({
+    id,
+    at,
+    acceptBy,
+    status,
+    remindedAt: null as string | null,
+  });
+  const early = copy(1, "2026-10-01T00:00:00.000Z", "2026-10-06T00:00:00.000Z");
+  const late = copy(2, "2026-10-02T00:00:00.000Z", "2026-10-05T00:00:00.000Z");
+
+  test("the leg's deadline is its earliest sent copy's, not any copy's", () => {
+    expect(dueCopy([early, late], "2026-10-05T12:00:00.000Z")).toBeNull();
+    expect(dueCopy([early, late], "2026-10-06T00:00:00.000Z")).toBe(early);
+  });
+
+  test("only the earliest sent copy is reminded", () => {
+    expect(reminderCopy([early, late], "2026-10-04T12:00:00.000Z")).toBeNull();
+    expect(reminderCopy([early, late], "2026-10-05T00:00:00.000Z")).toBe(early);
+    expect(
+      reminderCopy(
+        [{ ...early, remindedAt: "2026-10-05T00:00:00.000Z" }, late],
+        "2026-10-05T01:00:00.000Z",
+      ),
+    ).toBeNull();
+  });
+
+  test("a declined earliest copy hands the leg to the next", () => {
+    const declined = { ...early, status: "declined" };
+    expect(dueCopy([declined, late], "2026-10-05T00:00:00.000Z")).toBe(late);
+  });
+
+  test("a copy with no deadline yet is not due", () => {
+    expect(
+      dueCopy([copy(3, "2026-10-01T00:00:00.000Z", null)], "2026-10-09T00:00:00.000Z"),
+    ).toBeNull();
+  });
+});
+
+describe("legVerifiedNoted", () => {
+  test("noted when a leg verified other than by an auto-accepted copy", () => {
+    expect(legVerifiedNoted(1, 0)).toBe(true);
+    expect(legVerifiedNoted(2, 1)).toBe(true);
+  });
+
+  test("not when every leg verified now was auto-accepted, or none was", () => {
+    expect(legVerifiedNoted(1, 1)).toBe(false);
+    expect(legVerifiedNoted(0, 0)).toBe(false);
   });
 });
 

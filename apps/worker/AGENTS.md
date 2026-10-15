@@ -20,6 +20,10 @@ Serials of objekts minted offline come from `populateSerialOffline` (`job/popula
 
 `job/snapshot-price-history.ts` runs hourly at minute 5 and on startup. It writes only today's UTC rows of `collection_price_history`, never touches a past day, and skips the run when the rate table is empty. It reads and writes the app database only, so it runs outside `if (indexerWrites)`.
 
+## Trade verifier
+
+A wrong copy's deadline, like expiry and stall reminders, is due against `seenUntil`, never the clock, so an asked-for objekt sent before the deadline but read late still verifies the leg first. Every automatic accept (deadline, expiry, break) goes through `acceptPicked` in `copy-deadlines.ts`, so the notes and progress stay the same whichever path accepts. A pending copy with a null `accept_by` gets its deadline from the worker the first time it sees the copy, not from the migration, so a copy recorded before the deploy still gets its full window after it.
+
 ## Want alerts
 
 `job/want-alerts` keeps its progress (cursor and state) in the `worker_progress` row `want-alerts`, saved in the same transaction as the alerts (`recordRun`), on every run. A worker reads and writes progress only in the database it alerts on, so a local worker can never move production's cursor. Valkey's `alerts:cursor` and `alerts:state` are only a one-time seed, read when the row is missing and used only if no id in them is above this database's `max(id)`; the worker never writes or deletes them. Unreadable progress stalls the job with an error and never starts over.

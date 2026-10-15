@@ -14,6 +14,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { untilLabel } from "@/features/chat/format";
 import { SerialNo } from "@/features/objekt/objekt-label";
 import { m } from "@/paraglide/messages";
 
@@ -49,7 +50,7 @@ function Serial({ serial, estimated }: { serial: number | null; estimated: boole
   );
 }
 
-/** "#1207 in place of #1203", under a leg verified with a wrong copy the receiver accepted. */
+/** "#1207 in place of #1203", under a leg verified with a wrong copy, by Accept or automatically. */
 export function InPlaceOf({ leg }: { leg: Leg }) {
   if (leg.state !== "verified" || leg.objektId === null || leg.verifiedObjektId === leg.objektId) {
     return null;
@@ -60,6 +61,7 @@ export function InPlaceOf({ leg }: { leg: Leg }) {
         sent: <Serial serial={leg.verifiedSerial} estimated={leg.verifiedSerialEstimated} />,
         asked: <Serial serial={leg.serial} estimated={leg.serialEstimated} />,
       })}
+      {leg.autoAccepted ? <> · {m.offer_leg_auto_accepted()}</> : null}
     </span>
   );
 }
@@ -113,18 +115,32 @@ export function WrongCopies({
               ) : leg.fromYou ? (
                 <p className="text-muted-foreground text-xs text-pretty">
                   {rich(m.offer_wrong_copy_giver_hint, { name, asked })}
+                  {/* in the viewer's time zone, so it waits for the client */}
+                  {sub.acceptBy && hydrated ? (
+                    <>
+                      {" "}
+                      {m.offer_wrong_copy_accept_by_giver({ name, date: untilLabel(sub.acceptBy) })}
+                    </>
+                  ) : null}
                 </p>
               ) : (
-                <div className="flex flex-wrap gap-2">
-                  <AcceptCopy sub={sub} leg={leg} actions={actions} />
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    loading={actions.declineSubstitute.isPending}
-                    onClick={() => actions.declineSubstitute.mutate({ substituteId: sub.id })}
-                  >
-                    {m.offer_wrong_copy_decline()}
-                  </Button>
+                <div className="flex flex-col gap-2">
+                  {sub.acceptBy && hydrated ? (
+                    <p className="text-muted-foreground text-xs text-pretty">
+                      {m.offer_wrong_copy_accept_by({ date: untilLabel(sub.acceptBy) })}
+                    </p>
+                  ) : null}
+                  <div className="flex flex-wrap gap-2">
+                    <AcceptCopy sub={sub} leg={leg} actions={actions} />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      loading={actions.declineSubstitute.isPending}
+                      onClick={() => actions.declineSubstitute.mutate({ substituteId: sub.id })}
+                    >
+                      {m.offer_wrong_copy_decline()}
+                    </Button>
+                  </div>
                 </div>
               )}
             </div>

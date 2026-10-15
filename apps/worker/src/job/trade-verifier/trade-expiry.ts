@@ -1,19 +1,21 @@
-import { expiredOutcome } from "@repo/api/lib/trade-match";
+import { expiredOutcome, firstPending } from "@repo/api/lib/trade-match";
 import { TRADE_EXPIRE_DAYS } from "@repo/api/schemas/offer";
 import { partyNames, writeNotes } from "@repo/api/services/offer/notes";
-import { heldCopies } from "@repo/api/services/trade-verify";
+import { finishSettle, heldCopies } from "@repo/api/services/trade-verify";
 import { db } from "@repo/db";
 import { offer, trade, tradeLeg } from "@repo/db/schema";
 import { and, eq, lte, sql } from "drizzle-orm";
 
 import type { Publish } from "../../lib/trade-publish";
+import { acceptPicked, readLegs } from "./copy-deadlines";
 
 const EXPIRE_AFTER = sql`make_interval(days => ${TRADE_EXPIRE_DAYS})`;
 
 /**
  * Ends every trade still in progress `TRADE_EXPIRE_DAYS` after accept, releasing its reserved
- * objekts. Runs after the run's own verification, so a transfer that just landed completes first.
- * Due against `seenUntil`, not the clock, so a lagging indexer can't expire a trade whose
+ * objekts. Each waiting leg first accepts its earliest pending wrong copy, and a trade whose
+ * legs all verify then completes. Runs after the run's own verification, so a transfer that
+ * just landed completes first. Due against `seenUntil`, not the clock, so a lagging indexer can't expire a trade whose
  * transfer it hasn't read yet; with no reading, nothing expires.
  */
 export async function expireStalls(seenUntil: string | null): Promise<Publish[]> {
@@ -46,14 +48,31 @@ export async function expireStalls(seenUntil: string | null): Promise<Publish[]>
       if (row?.status !== "in_progress") return null;
       const { offerId, userA, userB, conversationId } = row;
 
-      const legs = await tx
-        .select({ verifiedAt: tradeLeg.verifiedAt })
-        .from(tradeLeg)
-        .where(eq(tradeLeg.tradeId, id));
+      const parties = [userA, userB];
+      const name = await partyNames(parties);
+      const settled = { tradeId: id, offerId, conversationId, userA, userB };
+      const { open, askedOf, progress: before } = await readLegs(tx, id);
+      const accepted = await acceptPicked(
+        tx,
+        settled,
+        open.map((leg) => leg.id),
+        (_, copies) => firstPending(copies),
+        askedOf,
+        before,
+        name,
+      );
       const progress = {
-        verified: legs.filter((leg) => leg.verifiedAt !== null).length,
-        total: legs.length,
+        verified: before.verified + accepted.accepted.length,
+        total: before.total,
       };
+      if (progress.verified === progress.total) {
+        const finished = await finishSettle(tx, settled, accepted.applied, accepted.counts, name);
+        return {
+          notified: [...accepted.notified, ...finished.notified],
+          conversations: [{ id: conversationId, userIds: parties }],
+          reputations: finished.reputations,
+        };
+      }
       const status = expiredOutcome(progress.verified, await heldCopies(tx, id));
 
       await tx
@@ -65,8 +84,6 @@ export async function expireStalls(seenUntil: string | null): Promise<Publish[]>
         .set({ open: false })
         .where(and(eq(tradeLeg.tradeId, id), eq(tradeLeg.open, true)));
 
-      const parties = [userA, userB];
-      const name = await partyNames(parties);
       const notified = await writeNotes(
         tx,
         parties.map((userId) => ({
@@ -84,7 +101,7 @@ export async function expireStalls(seenUntil: string | null): Promise<Publish[]>
         })),
       );
       return {
-        notified,
+        notified: [...accepted.notified, ...notified],
         conversations: [{ id: conversationId, userIds: parties }],
         reputations: status === "failed" ? parties : [],
       };

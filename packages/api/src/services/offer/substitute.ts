@@ -4,24 +4,12 @@ import { offer, trade, tradeLeg, tradeSubstitute } from "@repo/db/schema";
 import { and, eq, or, sql } from "drizzle-orm";
 
 import { substituteRefusal } from "../../lib/offer-rules";
-import type { LegResult } from "../../lib/trade-match";
 import type { TradeStatus } from "../../schemas/offer";
 import { forgetReputation } from "../reputation";
-import { finishSettle, shownSerials, wrongCopyNote } from "../trade-verify";
+import { acceptCopy, finishSettle, shownSerials, wrongCopyNote } from "../trade-verify";
 import { refuseOffer, type Tx } from "./core";
 import { partyNames, writeNotes } from "./notes";
 import { publishTouched } from "./state";
-
-/** Another leg already verified with this transfer. */
-function transferTaken(error: unknown) {
-  let cause: unknown = error;
-  while (cause instanceof Error) {
-    const pg = cause as Error & { code?: string; constraint?: string };
-    if (pg.code === "23505" && pg.constraint === "trade_leg_transfer_uniq") return true;
-    cause = cause.cause;
-  }
-  return false;
-}
 
 /** NOT_FOUND unless the viewer is a party to the substitute's trade. */
 async function findSubstitute(substituteId: number, me: string) {
@@ -80,35 +68,19 @@ export async function acceptSubstitute(me: string, substituteId: number) {
       .from(tradeLeg)
       .where(eq(tradeLeg.tradeId, found.tradeId));
 
-    // recorded as the verifier records a leg; the unique index refuses a transfer another leg took
-    await tx
-      .transaction((savepoint) =>
-        savepoint
-          .update(tradeLeg)
-          .set({
-            open: false,
-            verifiedAt: found.transferredAt,
-            txHash: found.txHash,
-            verifiedObjektId: found.objektId,
-          })
-          .where(eq(tradeLeg.id, found.legId)),
-      )
-      .catch((error: unknown) => {
-        if (transferTaken(error)) refuseOffer("substitute_taken");
-        throw error;
-      });
-    await tx
-      .update(tradeSubstitute)
-      .set({ status: "accepted", decidedAt: sql`now()` })
-      .where(eq(tradeSubstitute.id, substituteId));
+    const verified = await acceptCopy(
+      tx,
+      {
+        id: substituteId,
+        legId: found.legId,
+        txHash: found.txHash,
+        objektId: found.objektId,
+        transferredAt: found.transferredAt,
+      },
+      { auto: false },
+    );
+    if (!verified) refuseOffer("substitute_taken");
 
-    const verified: LegResult = {
-      kind: "verified",
-      transferId: "",
-      txHash: found.txHash,
-      objektId: found.objektId,
-      at: found.transferredAt,
-    };
     return finishSettle(
       tx,
       found,

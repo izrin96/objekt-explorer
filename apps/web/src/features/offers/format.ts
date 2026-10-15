@@ -10,6 +10,7 @@ import {
   type TradeView,
 } from "@repo/api/schemas/offer";
 
+import { untilLabel } from "@/features/chat/format";
 import { collectionName } from "@/features/objekt/objekt-label";
 import { formatCurrency } from "@/features/settings/use-currency";
 import { relativeTime } from "@/lib/time";
@@ -25,7 +26,7 @@ export function itemName(item: Pick<OfferItemView, "collectionSlug">, collection
 }
 
 /** "#1207", "~#1207" when estimated, as plain text */
-function serialText(shown: ShownSerial) {
+export function serialText(shown: ShownSerial) {
   if (shown.serial === null) return m.offer_serial_unnumbered();
   return `${shown.estimated ? "~" : ""}#${shown.serial}`;
 }
@@ -197,8 +198,24 @@ export function tradeNotificationText(payload: TradePayload) {
     case "stuck":
       return m.notification_trade_stuck(params);
     case "wrong_copy":
-      return m.notification_trade_wrong_copy({ ...params, ...copy });
+      return payload.acceptBy
+        ? m.notification_trade_wrong_copy_until({
+            ...params,
+            ...copy,
+            date: untilLabel(payload.acceptBy),
+          })
+        : m.notification_trade_wrong_copy({ ...params, ...copy });
     case "wrong_copy_declined":
       return m.notification_trade_wrong_copy_declined({ ...params, ...copy });
+    case "wrong_copy_due":
+      return payload.acceptBy
+        ? m.notification_trade_wrong_copy_due({
+            ...params,
+            ...copy,
+            date: untilLabel(payload.acceptBy),
+          })
+        : m.notification_trade_wrong_copy_due_soon({ ...params, ...copy });
+    case "wrong_copy_auto_accepted":
+      return m.notification_trade_wrong_copy_auto_accepted({ ...params, ...copy });
   }
 }
