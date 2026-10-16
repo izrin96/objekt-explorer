@@ -33,9 +33,16 @@ export const chatUnreadOptions = (live: boolean) =>
     refetchInterval: pollUnlessLive(live),
   });
 
-/** Requests never reach the badge, so the Requests tab carries their count. */
+/** Requests add no number to the badge, so the Requests tab carries their count. */
 export const requestCountOptions = () =>
   orpc.chat.requestCount.queryOptions({ staleTime: 0, refetchOnWindowFocus: true });
+
+export const requestsUnseenOptions = (live: boolean) =>
+  orpc.chat.requestsUnseen.queryOptions({
+    staleTime: 0,
+    refetchOnWindowFocus: true,
+    refetchInterval: pollUnlessLive(live),
+  });
 
 export const conversationsOptions = (box: ChatBox, q?: string) =>
   orpc.chat.list.infiniteOptions({
@@ -69,6 +76,7 @@ const chatListKeys = [
   orpc.chat.list.key(),
   orpc.chat.unreadCount.key(),
   orpc.chat.requestCount.key(),
+  orpc.chat.requestsUnseen.key(),
 ] as const;
 
 export function invalidateChatLists(queryClient: QueryClient) {
@@ -109,6 +117,7 @@ export function applyChatMessage(queryClient: QueryClient, event: ChatMessageEve
   }
   queryClient.setQueryData(orpc.chat.unreadCount.queryKey(), event.unread);
   queryClient.setQueryData(orpc.chat.requestCount.queryKey(), event.requests);
+  queryClient.setQueryData(orpc.chat.requestsUnseen.queryKey(), event.requestsUnseen);
   void queryClient.invalidateQueries({
     queryKey: orpc.chat.list.key(),
     predicate: (query) => !unfilteredLists.has(hashKey(query.queryKey)),

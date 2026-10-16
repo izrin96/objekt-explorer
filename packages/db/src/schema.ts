@@ -561,6 +561,7 @@ export const messagePref = pgTable(
     allow: text("allow").$type<"anyone" | "nobody">().notNull().default("anyone"),
     chatAs: citext("chat_as", { length: 42 }),
     showActivity: boolean("show_activity").notNull().default(true),
+    requestsSeenMessageId: bigint("requests_seen_message_id", { mode: "number" }),
   },
   (t) => [check("message_pref_allow", sql`${t.allow} IN ('anyone', 'nobody')`)],
 );

@@ -34,6 +34,7 @@ export const realtimeEventSchema = z.discriminatedUnion("type", [
     /** the viewer's badge counts after this message */
     unread: z.number().int(),
     requests: z.number().int(),
+    requestsUnseen: z.boolean().default(false),
   }),
 ]);
 export type RealtimeEvent = z.infer<typeof realtimeEventSchema>;

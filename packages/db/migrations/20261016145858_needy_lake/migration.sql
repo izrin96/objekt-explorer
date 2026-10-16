@@ -1,0 +1,1 @@
+ALTER TABLE "message_pref" ADD COLUMN "requests_seen_message_id" bigint;

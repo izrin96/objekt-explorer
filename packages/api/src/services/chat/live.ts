@@ -1,7 +1,12 @@
 import { publishBatch } from "../../realtime";
 import type { RealtimeEvent } from "../../schemas/realtime";
 import { toChatMessages } from "./cards";
-import { loadConversationRow, requestConversationCount, unreadConversationCount } from "./inbox";
+import {
+  hasUnseenRequests,
+  loadConversationRow,
+  requestConversationCount,
+  unreadConversationCount,
+} from "./inbox";
 
 type SentRow = Parameters<typeof toChatMessages>[0][number];
 type Viewed = Awaited<ReturnType<typeof toChatMessages>>;
@@ -20,11 +25,12 @@ export async function buildChatMessages(
 ) {
   return Promise.all(
     memberIds.map(async (userId) => {
-      const [viewed, loaded, unread, requests] = await Promise.all([
+      const [viewed, loaded, unread, requests, requestsUnseen] = await Promise.all([
         known[userId] ?? toChatMessages([row], userId),
         loadConversationRow(userId, conversationId),
         unreadConversationCount(userId),
         requestConversationCount(userId),
+        hasUnseenRequests(userId),
       ]);
       const message = viewed.messages[0];
       const event: RealtimeEvent =
@@ -38,6 +44,7 @@ export async function buildChatMessages(
               conversation: loaded.row,
               unread,
               requests,
+              requestsUnseen,
             }
           : { type: "chat_changed", conversationId };
       return { userId, event };

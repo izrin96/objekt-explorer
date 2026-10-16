@@ -388,3 +388,36 @@ export async function requestConversationCount(me: string) {
   `);
   return result.rows[0]?.count ?? 0;
 }
+
+export async function hasUnseenRequests(me: string) {
+  const result = await db.execute<{ unseen: boolean }>(sql`
+    SELECT EXISTS (
+      SELECT 1
+      FROM conversation_member m
+      JOIN conversation c ON c.id = m.conversation_id
+      WHERE m.user_id = ${me}
+        AND ${visibleIn("requests", me)}
+        AND ${lastIncoming(me)} > coalesce(
+          (SELECT p.requests_seen_message_id FROM message_pref p WHERE p.user_id = ${me}), 0)
+    ) AS unseen
+  `);
+  return result.rows[0]?.unseen ?? false;
+}
+
+/** The newest id is read in the same statement as the write, so a request arriving meanwhile stays unseen. */
+export async function seeRequests(me: string) {
+  await db.execute(sql`
+    INSERT INTO message_pref (user_id, requests_seen_message_id)
+    SELECT ${me}, max(incoming.id)
+    FROM (
+      SELECT ${lastIncoming(me)} AS id
+      FROM conversation_member m
+      JOIN conversation c ON c.id = m.conversation_id
+      WHERE m.user_id = ${me} AND ${visibleIn("requests", me)}
+    ) incoming
+    HAVING max(incoming.id) IS NOT NULL
+    ON CONFLICT (user_id) DO UPDATE
+    SET requests_seen_message_id = greatest(
+      coalesce(message_pref.requests_seen_message_id, 0), excluded.requests_seen_message_id)
+  `);
+}

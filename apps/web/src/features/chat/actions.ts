@@ -1,12 +1,14 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 
 import { toastManager } from "@/components/ui/toast";
 import { addActionToast } from "@/lib/action-toast";
 import { orpc } from "@/lib/orpc";
 import { m } from "@/paraglide/messages";
+import { useUserSocketLive } from "@/stores/user-socket";
 
 import { refusalOf, refusalText } from "./format";
-import { applyUnsent, fetchNewer, invalidateChatLists } from "./queries";
+import { applyUnsent, fetchNewer, invalidateChatLists, requestsUnseenOptions } from "./queries";
 
 /**
  * Archive, mute, accept and decline. Each refreshes the lists and the open thread's state
@@ -94,4 +96,31 @@ export function useUnsendMessage(id: number) {
       },
     }),
   );
+}
+
+export function useRequestsUnseen() {
+  const live = useUserSocketLive((state) => state.live);
+  const { data = false } = useQuery(requestsUnseenOptions(live));
+  return data;
+}
+
+/** While `open`, requests are marked seen, including one that arrives meanwhile. */
+export function useSeeRequests(open: boolean) {
+  const queryClient = useQueryClient();
+  const unseen = useRequestsUnseen();
+  const { mutate, status } = useMutation(
+    orpc.chat.seeRequests.mutationOptions({
+      // a request that arrived while this was in flight is past the marker: the refetch shows it
+      onSuccess: () => {
+        queryClient.setQueryData(orpc.chat.requestsUnseen.queryKey(), false);
+        return queryClient.invalidateQueries({ queryKey: orpc.chat.requestsUnseen.key() });
+      },
+    }),
+  );
+  // a failed mark stays failed, or the effect would retry it in a loop
+  const shouldSee = open && unseen && (status === "idle" || status === "success");
+
+  useEffect(() => {
+    if (shouldSee) mutate();
+  }, [shouldSee, mutate]);
 }

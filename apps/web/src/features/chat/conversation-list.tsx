@@ -35,6 +35,7 @@ import { relativeTime } from "@/lib/time";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
+import { useSeeRequests } from "./actions";
 import { ConversationMenu } from "./conversation-menu";
 import { nextDraftId, showsDraft } from "./draft-row";
 import { mutedLabel } from "./format";
@@ -49,6 +50,7 @@ const EMPTY = {
 } as const;
 
 export function ConversationList({ box, q }: { box: ChatBox; q: string | undefined }) {
+  useSeeRequests(box === "requests" && !q);
   const query = useInfiniteQuery(conversationsOptions(box, q));
   const now = useMinuteClock();
   const region = useRef<HTMLDivElement>(null);

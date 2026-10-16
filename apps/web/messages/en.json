@@ -1066,6 +1066,8 @@
   "chat_empty_search_hint": "Names and objekt cards are searched, not message text.",
   "chat_icon_label": "Messages",
   "chat_icon_label_unread": "Messages, {count} unread",
+  "chat_icon_label_requests": "Messages, new message requests",
+  "chat_icon_label_unread_requests": "Messages, {count} unread, new message requests",
   "chat_message": "Message",
   "chat_message_name": "Message {name}",
   "chat_start_error": "Couldn't open the conversation",

@@ -1066,6 +1066,8 @@
   "chat_empty_search_hint": "検索の対象は名前とObjektカードで、メッセージ本文は含まれません。",
   "chat_icon_label": "メッセージ",
   "chat_icon_label_unread": "メッセージ、未読 {count} 件",
+  "chat_icon_label_requests": "メッセージ、新しいメッセージリクエストあり",
+  "chat_icon_label_unread_requests": "メッセージ、未読 {count} 件、新しいメッセージリクエストあり",
   "chat_message": "メッセージ",
   "chat_message_name": "{name}にメッセージ",
   "chat_start_error": "会話を開けませんでした",

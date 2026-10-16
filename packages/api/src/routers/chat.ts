@@ -14,9 +14,11 @@ import {
   acceptConversation,
   listConversations,
   loadThread,
+  hasUnseenRequests,
   markConversationRead,
   muteConversation,
   requestConversationCount,
+  seeRequests,
   unreadConversationCount,
 } from "../services/chat/inbox";
 import { updateMember } from "../services/chat/members";
@@ -100,6 +102,12 @@ export const chatRouter = {
   requestCount: authed.handler(({ context: { session } }) =>
     requestConversationCount(session.user.id),
   ),
+
+  requestsUnseen: authed.handler(({ context: { session } }) => hasUnseenRequests(session.user.id)),
+
+  seeRequests: authed.handler(async ({ context: { session } }) => {
+    await seeRequests(session.user.id);
+  }),
 
   settings: authed.handler(async ({ context: { session } }) => fetchSettings(session.user.id)),
 

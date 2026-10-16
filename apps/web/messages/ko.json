@@ -1066,6 +1066,8 @@
   "chat_empty_search_hint": "이름과 오브젝트 카드만 검색하며 메시지 내용은 검색하지 않습니다.",
   "chat_icon_label": "메시지",
   "chat_icon_label_unread": "메시지, 읽지 않음 {count}개",
+  "chat_icon_label_requests": "메시지, 새 메시지 요청 있음",
+  "chat_icon_label_unread_requests": "메시지, 읽지 않음 {count}개, 새 메시지 요청 있음",
   "chat_message": "메시지",
   "chat_message_name": "{name}에게 메시지",
   "chat_start_error": "대화를 열지 못했습니다",
