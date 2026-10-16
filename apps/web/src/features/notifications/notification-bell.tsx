@@ -64,7 +64,7 @@ export function NotificationBell() {
         initialFocus={popupRef}
         align="end"
         padding="none"
-        className="w-[min(--spacing(96),calc(100vw-(--spacing(6))))]"
+        className="w-[min(--spacing(100),calc(100vw-(--spacing(6))))]"
       >
         <NotificationPanel unread={unread} onNavigate={() => setOpen(false)} />
       </PopoverPopup>

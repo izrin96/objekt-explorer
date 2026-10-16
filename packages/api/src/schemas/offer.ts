@@ -398,6 +398,13 @@ const OFFER_EVENTS = [
   "expired",
 ] as const;
 
+/** `image` is never stored: the list read fills it from the partner's account as it is now. */
+const notePartnerSchema = z.object({
+  userId: z.string(),
+  name: z.string(),
+  image: z.string().nullable().optional(),
+});
+
 /** Data only: the client words it. `reason` is set on `cancelled`; `party` is kept only for rows written before trade notifications existed. */
 export const offerPayloadSchema = z.object({
   offerId: z.number(),
@@ -405,7 +412,7 @@ export const offerPayloadSchema = z.object({
   tradeId: z.number().nullable(),
   event: z.enum(OFFER_EVENTS),
   reason: z.enum([...OFFER_CANCEL_REASONS, "party"]).nullable(),
-  partner: z.object({ userId: z.string(), name: z.string() }),
+  partner: notePartnerSchema,
   /** up to three collections of the offer, what the reader gets first; absent on rows written before it existed */
   objekts: z.string().array().max(NOTE_OBJEKTS).optional(),
 });
@@ -440,7 +447,7 @@ export const tradePayloadSchema = z.object({
   reason: z.enum(TRADE_CANCEL_REASONS).nullable(),
   /** legs verified of all legs, when the row was written */
   progress: progressSchema,
-  partner: z.object({ userId: z.string(), name: z.string() }),
+  partner: notePartnerSchema,
   copy: z.object({ asked: shownSerialSchema, sent: shownSerialSchema }).optional(),
   /** ISO time the copy counts as accepted, on `wrong_copy` and `wrong_copy_due` */
   acceptBy: z.string().optional(),

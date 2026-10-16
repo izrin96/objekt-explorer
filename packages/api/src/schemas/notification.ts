@@ -54,14 +54,35 @@ export type SanctionPayload = z.infer<typeof sanctionPayloadSchema>;
 /** Every type the bell lists; `NOTIFICATION_TYPES` are only the ones with a preference. */
 export const LISTED_NOTIFICATION_TYPES = [...NOTIFICATION_TYPES, "sanction"] as const;
 
+/** How many of a group's earlier notifications a row carries. */
+export const EARLIER_LIMIT = 10;
+
+const offerNoteSchema = z.object({
+  ...rowFields,
+  type: z.literal("offer"),
+  payload: offerPayloadSchema,
+});
+const tradeNoteSchema = z.object({
+  ...rowFields,
+  type: z.literal("trade"),
+  payload: tradePayloadSchema,
+});
+
+/** A trade's or conversation's notifications show as one row: the newest, with the rest under it. */
+const groupFields = <T extends z.ZodTypeAny>(note: T) => ({
+  updates: z.number().int().positive().optional(),
+  earlier: note.array().max(EARLIER_LIMIT).optional(),
+});
+
 export const notificationSchema = z.discriminatedUnion("type", [
   z.object({ ...rowFields, type: z.literal("want_match"), payload: alertPayloadSchema }),
   z.object({ ...rowFields, type: z.literal("have_wanted"), payload: alertPayloadSchema }),
   z.object({ ...rowFields, type: z.literal("sanction"), payload: sanctionPayloadSchema }),
-  z.object({ ...rowFields, type: z.literal("offer"), payload: offerPayloadSchema }),
-  z.object({ ...rowFields, type: z.literal("trade"), payload: tradePayloadSchema }),
+  offerNoteSchema.extend(groupFields(offerNoteSchema)),
+  tradeNoteSchema.extend(groupFields(tradeNoteSchema)),
 ]);
 export type Notification = z.infer<typeof notificationSchema>;
+export type NoteEvent = z.infer<typeof offerNoteSchema> | z.infer<typeof tradeNoteSchema>;
 
 /** The last row of the previous page; `at` is its `created_at` exactly as the database wrote it. */
 const notificationCursorSchema = z.object({ at: z.string(), id: z.number().int() });

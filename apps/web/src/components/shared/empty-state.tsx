@@ -5,13 +5,15 @@ import { cn } from "@/lib/utils";
 
 /**
  * `bordered` draws the dashed box a page-level empty region wants; a panel with
- * a border of its own passes false so the state is not framed twice.
+ * a border of its own passes false so the state is not framed twice. `preview`
+ * stands in for the icon with an example of what will show up.
  */
 export function EmptyState({
   icon: Glyph,
   title,
   hint,
   action,
+  preview,
   bordered = true,
   className,
 }: {
@@ -19,6 +21,7 @@ export function EmptyState({
   title: string;
   hint?: string;
   action?: ReactNode;
+  preview?: ReactNode;
   bordered?: boolean;
   className?: string;
 }) {
@@ -30,7 +33,9 @@ export function EmptyState({
         className,
       )}
     >
-      <Glyph size={40} weight="light" className="text-muted-foreground mb-1" aria-hidden />
+      {preview ?? (
+        <Glyph size={40} weight="light" className="text-muted-foreground mb-1" aria-hidden />
+      )}
       <p className="font-display text-base font-semibold">{title}</p>
       {hint !== undefined && <p className="text-muted-foreground max-w-80 text-sm">{hint}</p>}
       {action !== undefined && <div className="mt-2.5">{action}</div>}

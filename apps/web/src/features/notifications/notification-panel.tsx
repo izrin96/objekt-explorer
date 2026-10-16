@@ -11,7 +11,7 @@ import {
   NOTIFICATION_KINDS,
   type NotificationKind,
 } from "@repo/api/schemas/notification";
-import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 
@@ -25,8 +25,9 @@ import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
-import { type Collections, NotificationItem, OfferItem, SanctionItem } from "./notification-items";
-import { notificationKeys, notificationsOptions } from "./queries";
+import { type Collections, NotificationRow, type RowVariant } from "./notification-items";
+import { notificationKeys, notificationPrefsOptions, notificationsOptions } from "./queries";
+import { type Section, SECTIONS, sectionOf } from "./sections";
 
 const TAB_LABEL: Record<NotificationKind, () => string> = {
   all: m.notification_tab_all,
@@ -34,9 +35,32 @@ const TAB_LABEL: Record<NotificationKind, () => string> = {
   alerts: m.notification_tab_alerts,
 };
 
+const SECTION_LABEL: Record<Section, () => string> = {
+  "needs-you": m.notification_section_needs_you,
+  today: m.notification_section_today,
+  week: m.notification_section_week,
+  earlier: m.notification_section_earlier,
+};
+
 const EMPTY = {
-  trades: { title: m.notification_empty_trades, hint: m.notification_empty_trades_hint },
-  alerts: { title: m.notification_empty_alerts, hint: m.notification_empty_alerts_hint },
+  all: {
+    title: m.notification_empty,
+    hint: m.notification_empty_hint,
+    action: m.notification_go_to_lists,
+    to: "/list",
+  },
+  trades: {
+    title: m.notification_empty_trades,
+    hint: m.notification_empty_trades_hint,
+    action: m.notification_go_to_trades,
+    to: "/trade",
+  },
+  alerts: {
+    title: m.notification_empty_alerts,
+    hint: m.notification_empty_alerts_hint,
+    action: m.notification_make_want_list,
+    to: "/list",
+  },
 } as const;
 
 /** The same contents in the bell's popover and, below `sm`, its full-height sheet. */
@@ -47,11 +71,12 @@ export function NotificationPanel({
 }: {
   unread: number;
   onNavigate: () => void;
-  variant?: "popover" | "sheet";
+  variant?: RowVariant;
 }) {
   const queryClient = useQueryClient();
   const [kind, setKind] = useState<NotificationKind>("all");
   const query = useInfiniteQuery(notificationsOptions(kind));
+  const { data: prefs } = useQuery(notificationPrefsOptions());
   // the panel mounts on open, so times read relative to that moment
   const [now] = useState(Date.now);
 
@@ -63,34 +88,50 @@ export function NotificationPanel({
   );
   const markRead = useMutation(orpc.notifications.markRead.mutationOptions({ onSettled: refetch }));
 
-  const readIfUnread = (item: Notification) => {
-    if (item.readAt === null) markRead.mutate({ ids: [item.id] });
-  };
-
   const items = query.data?.pages.flatMap((page) => page.items) ?? [];
   const empty = query.isSuccess && items.length === 0;
   const collections: Collections = Object.assign(
     {},
     ...(query.data?.pages.map((page) => page.collections) ?? []),
   );
+  const tradeNotes = prefs?.trade ?? true;
+  const sections = Map.groupBy(items, (item) => sectionOf(item, tradeNotes, now));
+  const sheet = variant === "sheet";
+
+  // a moderator notice leads nowhere, so opening it only marks it read
+  const openRow = (item: Notification) => {
+    if (item.readAt === null) markRead.mutate({ ids: [item.id] });
+    if (item.type !== "sanction") onNavigate();
+  };
 
   return (
-    <div className={cn("flex flex-col", variant === "sheet" ? "min-h-0 flex-1" : "max-h-128")}>
+    <div className={cn("flex flex-col", sheet ? "min-h-0 flex-1" : "max-h-128")}>
       <div className="flex items-center justify-between gap-2 border-b py-2 ps-4 pe-2">
         <div className="flex min-w-0 items-baseline gap-2">
-          {variant === "sheet" ? (
+          {sheet ? (
             <SheetTitle className="font-display text-base">{m.notification_title()}</SheetTitle>
           ) : (
             <PopoverTitle className="font-display text-base">{m.notification_title()}</PopoverTitle>
           )}
           {unread > 0 ? (
-            <span className="text-muted-foreground text-xs tabular-nums">
-              {m.notification_unread_count({ count: unread })}
+            <span className="text-muted-foreground font-mono text-xs tabular-nums">
+              {m.notification_new_count({ count: unread })}
             </span>
           ) : null}
         </div>
-        <div className="flex shrink-0 items-center gap-1">
-          {empty && kind === "all" ? null : (
+        <div className="flex shrink-0 items-center gap-0.5">
+          {empty && kind === "all" ? null : sheet ? (
+            <Button
+              variant="ghost"
+              size="icon-lg"
+              aria-label={m.notification_mark_all_read()}
+              disabled={unread === 0}
+              loading={markAllRead.isPending}
+              onClick={() => markAllRead.mutate({ kind })}
+            >
+              <ChecksIcon />
+            </Button>
+          ) : (
             <Button
               variant="ghost"
               size="sm"
@@ -102,9 +143,18 @@ export function NotificationPanel({
               {m.notification_mark_all_read()}
             </Button>
           )}
-          {variant === "sheet" ? (
+          <Button
+            variant="ghost"
+            size={sheet ? "icon-lg" : "icon-sm"}
+            aria-label={m.notification_settings_link()}
+            render={<Link to="/account/notifications" />}
+            onClick={onNavigate}
+          >
+            <GearIcon />
+          </Button>
+          {sheet ? (
             <SheetClose
-              render={<Button variant="ghost" size="icon" aria-label={m.common_modal_close()} />}
+              render={<Button variant="ghost" size="icon-lg" aria-label={m.common_modal_close()} />}
             >
               <XIcon />
             </SheetClose>
@@ -150,60 +200,60 @@ export function NotificationPanel({
                 </Button>
               }
             />
-          ) : empty && kind !== "all" ? (
+          ) : empty ? (
             <EmptyState
               icon={BellIcon}
               bordered={false}
               title={EMPTY[kind].title()}
               hint={EMPTY[kind].hint()}
-            />
-          ) : empty ? (
-            <EmptyState
-              icon={BellIcon}
-              bordered={false}
-              title={m.notification_empty()}
-              hint={m.notification_empty_hint()}
+              preview={<ExampleRow framed={kind === "alerts"} />}
               action={
                 <Button
                   variant="outline"
                   size="sm"
-                  render={<Link to="/list" />}
+                  render={<Link to={EMPTY[kind].to} />}
                   onClick={onNavigate}
                 >
-                  {m.notification_go_to_lists()}
+                  {EMPTY[kind].action()}
                 </Button>
               }
             />
           ) : (
-            <ul className="flex flex-col py-1">
-              {items.map((item) => (
-                <li key={item.id}>
-                  {item.type === "sanction" ? (
-                    <SanctionItem notification={item} now={now} onRead={() => readIfUnread(item)} />
-                  ) : item.type === "offer" || item.type === "trade" ? (
-                    <OfferItem
-                      notification={item}
-                      collections={collections}
-                      now={now}
-                      onOpen={() => {
-                        readIfUnread(item);
-                        onNavigate();
-                      }}
-                    />
-                  ) : item.type === "want_match" || item.type === "have_wanted" ? (
-                    <NotificationItem
-                      notification={item}
-                      collections={collections}
-                      now={now}
-                      onOpen={() => {
-                        readIfUnread(item);
-                        onNavigate();
-                      }}
-                    />
-                  ) : null}
-                </li>
-              ))}
-            </ul>
+            <>
+              {kind === "all" && unread === 0 ? (
+                <p className="text-muted-foreground flex items-center gap-2 border-b px-5 py-2.5 text-sm">
+                  <ChecksIcon aria-hidden className="size-4" />
+                  {m.notification_caught_up()}
+                </p>
+              ) : null}
+              {SECTIONS.map((section) => {
+                const rows = sections.get(section);
+                if (!rows) return null;
+                return (
+                  <section key={section} aria-labelledby={`notification-section-${section}`}>
+                    <h3
+                      id={`notification-section-${section}`}
+                      className="text-muted-foreground px-5 pt-3 pb-1 text-xs font-medium tracking-wide uppercase"
+                    >
+                      {SECTION_LABEL[section]()}
+                    </h3>
+                    <ul className="flex flex-col">
+                      {rows.map((item) => (
+                        <li key={item.id}>
+                          <NotificationRow
+                            notification={item}
+                            collections={collections}
+                            now={now}
+                            variant={variant}
+                            onOpen={() => openRow(item)}
+                          />
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                );
+              })}
+            </>
           )}
 
           {query.hasNextPage ? (
@@ -220,17 +270,35 @@ export function NotificationPanel({
           ) : null}
         </TabsPanel>
       </Tabs>
-      <div className="flex justify-end border-t px-2 py-1.5">
-        <Button
-          variant="ghost"
-          size="sm"
-          render={<Link to="/account/notifications" />}
-          onClick={onNavigate}
-        >
-          <GearIcon />
-          {m.notification_settings_link()}
-        </Button>
-      </div>
+    </div>
+  );
+}
+
+/** A dimmed row of the kind a tab would list, drawn as shapes so it reads as an example. */
+function ExampleRow({ framed }: { framed: boolean }) {
+  return (
+    <div
+      aria-hidden
+      className="mb-3 flex w-full max-w-72 items-start gap-3 rounded-lg border border-dashed p-3 opacity-60"
+    >
+      <span className="relative h-12 w-11 shrink-0">
+        <span
+          className={cn(
+            "bg-muted absolute start-2.5 top-0 h-10 w-7 rounded-sm opacity-50",
+            framed && "outline-type-want outline-1 outline-offset-1",
+          )}
+        />
+        <span
+          className={cn(
+            "bg-muted absolute start-0 top-1 h-10 w-7 rounded-sm",
+            framed && "outline-type-want outline-1 outline-offset-1",
+          )}
+        />
+      </span>
+      <span className="flex flex-1 flex-col gap-1.5 pt-1">
+        <span className="bg-muted h-3 w-4/5 rounded" />
+        <span className="bg-muted h-2.5 w-1/2 rounded" />
+      </span>
     </div>
   );
 }

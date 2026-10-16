@@ -129,8 +129,8 @@ export function mineStatusText(row: MineRow) {
   });
 }
 
-export function offerNotificationText(payload: OfferPayload) {
-  const params = { partner: payload.partner.name, offer: offerNo(payload.offerId) };
+export function offerNotificationText(payload: OfferPayload, partner = payload.partner.name) {
+  const params = { partner };
   switch (payload.event) {
     case "received":
       return m.notification_offer_received(params);
@@ -146,10 +146,7 @@ export function offerNotificationText(payload: OfferPayload) {
       return m.notification_offer_expired(params);
     case "cancelled": {
       if (payload.reason === "party" && payload.tradeId !== null) {
-        return m.notification_offer_trade_cancelled({
-          partner: payload.partner.name,
-          trade: tradeNo(payload.tradeId),
-        });
+        return m.notification_offer_trade_cancelled(params);
       }
       const why = cancelReasonText(payload.reason);
       return why
@@ -169,8 +166,8 @@ export function agoLabel(iso: string) {
   return relativeTime(new Date(iso).getTime(), Date.now());
 }
 
-export function tradeNotificationText(payload: TradePayload) {
-  const params = { partner: payload.partner.name, trade: tradeNo(payload.tradeId) };
+export function tradeNotificationText(payload: TradePayload, partner = payload.partner.name) {
+  const params = { partner };
   // always set on the wrong-copy events
   const copy = {
     sent: payload.copy ? serialText(payload.copy.sent) : "",
@@ -178,7 +175,7 @@ export function tradeNotificationText(payload: TradePayload) {
   };
   switch (payload.event) {
     case "leg_verified":
-      return m.notification_trade_leg_verified({ ...params, ...payload.progress });
+      return m.notification_trade_leg_verified(params);
     case "completed":
       return m.notification_trade_completed(params);
     case "cancelled":
