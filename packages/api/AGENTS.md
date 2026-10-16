@@ -42,6 +42,10 @@ A message holds an objekt card or a post card (a Trade post, by its list). An ob
 
 `resolveCard` accepts a post card for a list the partner owns that is shown on Trade and not trade-sanctioned. With `withMatch` it saves the match from `personDetail`: the owner's collections on the sender's wants, then the sender's on the owner's, each as a count and the first three slugs in the person sheet's order. The client only asks. `fetchPostCards` (`services/trade-feed/`) reads the post live: either half of a have and want pair names the post that holds it now, a list gone or off Trade reads as removed, and a saved match stays as saved. Post cards and matches name collections, never serials.
 
+## Offer get sources
+
+A get item comes from the partner's lists while they have any (`partnerHasLists`), and `createOffer` checks nothing else. With none, the get side may draw on what the partner holds at visible addresses (profile not private): a specific objekt only at one that shows serials, any copy only at one that hides them, counted there, the same set the picker offers. `refusedCollectionAsks` (`services/offer/collection.ts`) checks this at send, with `collectionAskAllowed` as the pure rule; the `theirs-collection` candidates side (`theirCollectionPage`) refuses `not_listed` for a partner who has lists, so a stale tab can't bypass them. A collection item keeps `list_id` null, as a kept counter item does.
+
 ## Notification objekts
 
 `writeNotes` (`services/offer/notes.ts`) fills `objekts` on every offer and trade note, in one read of the offers' creators and items, ordered by `noteObjekts` (`schemas/offer.ts`): what the reader gets first, three at most. A row written before it has none and the bell keeps its tile. `listNotifications` loads `collections` for `payload.objekts` as well as an alert's `latest`. The worker reaches it through `writeNotes`, and cards and payloads are `jsonb`: `apps/worker` and `packages/db` conventions are unchanged.

@@ -28,6 +28,7 @@ import {
 } from "../chat";
 import { getUsdRates } from "../currency-rates";
 import { activeSanctionWhere } from "../safety";
+import { refusedCollectionAsks } from "./collection";
 import {
   linkedAddresses,
   lockParties,
@@ -36,6 +37,8 @@ import {
   refuseUnsafe,
   resolveAddressed,
   allowedEntries,
+  collectionAddresses,
+  partnerHasLists,
 } from "./core";
 import { type ItemRow, checkItems } from "./items";
 import { partyNames, writeNotes } from "./notes";
@@ -79,21 +82,39 @@ export async function createOffer(
   if (myAddresses.size === 0) refuseOffer("no_address");
   refuseUnsafe("send", safety);
 
-  const [entries, kept] = await Promise.all([
+  const [entries, kept, hasLists] = await Promise.all([
     allowedEntries(
       addressed,
       input.get.map((item) => item.collectionSlug),
     ),
     counteredGives(addressed.conversationId, me),
+    partnerHasLists(partnerId),
   ]);
   const getRows = input.get.map((item) => {
     const entry = matchEntry(item, entries);
     if (entry) return { item, listId: entry.listId, kept: false };
     const keeps =
       item.objektId !== undefined && kept?.objekts.get(item.objektId) === item.collectionSlug;
-    if (!keeps) refuseOffer("not_listed", item.objektId ? { objektIds: [item.objektId] } : {});
-    return { item, listId: null, kept: true };
+    if (!keeps && hasLists) {
+      refuseOffer("not_listed", item.objektId ? { objektIds: [item.objektId] } : {});
+    }
+    return { item, listId: null, kept: keeps };
   });
+  const collectionAddrs = hasLists ? null : await collectionAddresses(partnerId);
+  if (collectionAddrs) {
+    const refused = await refusedCollectionAsks(
+      getRows.filter((row) => !row.kept).map((row) => row.item),
+      collectionAddrs,
+    );
+    if (refused.length > 0) {
+      refuseOffer("not_listed", {
+        objektIds: refused.flatMap((item) => (item.objektId ? [item.objektId] : [])),
+        collectionSlugs: refused.flatMap((item) =>
+          item.objektId === undefined ? [item.collectionSlug] : [],
+        ),
+      });
+    }
+  }
   const keptIds = new Set(getRows.flatMap((row) => (row.kept ? [row.item.objektId!] : [])));
 
   const items: ItemRow[] = [
@@ -108,11 +129,24 @@ export async function createOffer(
       objektId: item.objektId ?? null,
     })),
   ];
+  const partnerAddresses = addresses.get(partnerId)!;
   await checkItems(items, {
     giverId: (side) => (side === "give" ? me : partnerId),
-    holders: (side) => (side === "give" ? myAddresses : addresses.get(partnerId)!),
-    copyHolders: (side) => (side === "give" ? myAddresses : addresses.get(partnerId)!),
-    getScope: anyCopyScope(entries),
+    // a kept objekt was the partner's own offer, so it may sit anywhere they hold it
+    holders: (side) => {
+      if (side === "give") return myAddresses;
+      return collectionAddrs && keptIds.size === 0
+        ? new Set(collectionAddrs.serials)
+        : partnerAddresses;
+    },
+    // any copy from a collection is counted where serials are hidden, as the picker counts it
+    copyHolders: (side) =>
+      side === "give"
+        ? myAddresses
+        : collectionAddrs
+          ? new Set(collectionAddrs.hidden)
+          : partnerAddresses,
+    getScope: collectionAddrs ? undefined : anyCopyScope(entries),
   });
 
   const specificIds = items.flatMap((item) => (item.objektId ? [item.objektId] : []));

@@ -1,16 +1,21 @@
 import { toIndexedArtist } from "@repo/cosmo/types/common";
 import { db } from "@repo/db";
-import { collections } from "@repo/db/indexer/schema";
+import { indexer } from "@repo/db/indexer";
+import { collections, objekts } from "@repo/db/indexer/schema";
 import { listEntries, lists, offer, offerItem } from "@repo/db/schema";
 import { isSerialEstimated, shownSerial } from "@repo/lib/serial";
-import { and, eq, gt, inArray, sql } from "drizzle-orm";
+import { type SQL, and, desc, eq, gt, inArray, lt, ne, or, sql } from "drizzle-orm";
 
 import type { itemFlags } from "../../../lib/offer-rules";
 import { unique } from "../../../lib/unique";
 import { type CollectionFilters } from "../../../schemas/common/filters";
-import type { CandidateItem } from "../../../schemas/offer";
+import {
+  CANDIDATE_PAGE_SIZE,
+  type CandidateCursor,
+  type CandidateItem,
+} from "../../../schemas/offer";
 import { fetchCollectionsBySlug } from "../../list";
-import type { IndexedObjekt } from "../core";
+import { type IndexedObjekt, lowerOwner, objektColumns } from "../core";
 
 export function toCandidate(
   objekt: IndexedObjekt,
@@ -104,4 +109,61 @@ export async function wantListOf(slug: string) {
     .from(listEntries)
     .where(eq(listEntries.listId, list.id));
   return { list, slugs: rows.flatMap((row) => (row.slug ? [row.slug] : [])) };
+}
+
+type OwnedNarrowing = {
+  filters?: Partial<CollectionFilters>;
+  slugs?: readonly string[] | null;
+  where?: SQL;
+};
+
+/** What the addresses hold, narrowed; the callers add ordering and limits. */
+export function ownedQuery(
+  addresses: string[],
+  { filters, slugs, where }: OwnedNarrowing,
+  extra?: SQL,
+) {
+  return indexer
+    .select(objektColumns)
+    .from(objekts)
+    .innerJoin(collections, eq(collections.id, objekts.collectionId))
+    .where(
+      and(
+        inArray(objekts.owner, addresses),
+        ne(collections.slug, "empty-collection"),
+        ...collectionWhere(filters),
+        slugs ? inArray(collections.slug, [...slugs]) : undefined,
+        where,
+        extra,
+      ),
+    );
+}
+
+/** The addresses' objekts, newest received first, one page after `cursor`. */
+export async function ownedPage(
+  addresses: string[],
+  cursor: CandidateCursor | undefined,
+  narrowing: OwnedNarrowing,
+) {
+  const rows = await ownedQuery(
+    addresses,
+    narrowing,
+    cursor
+      ? or(
+          lt(objekts.receivedAt, cursor.receivedAt),
+          and(eq(objekts.receivedAt, cursor.receivedAt), lt(objekts.id, cursor.id)),
+        )
+      : undefined,
+  )
+    .orderBy(desc(objekts.receivedAt), desc(objekts.id))
+    .limit(CANDIDATE_PAGE_SIZE + 1);
+  const page = rows.slice(0, CANDIDATE_PAGE_SIZE).map(lowerOwner);
+  const last = page.at(-1);
+  return {
+    page,
+    nextCursor:
+      rows.length > CANDIDATE_PAGE_SIZE && last
+        ? { receivedAt: new Date(last.receivedAt).toISOString(), id: last.id }
+        : null,
+  };
 }

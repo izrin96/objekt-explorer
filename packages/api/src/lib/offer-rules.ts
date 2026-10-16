@@ -457,3 +457,20 @@ export const inAnyCopyScope = (
   scope: ReadonlyMap<string, ReadonlySet<string> | null>,
   copy: { id: string; slug: string },
 ) => !scope.get(copy.slug) || scope.get(copy.slug)!.has(copy.id);
+
+export type AddressFacts = { visible: boolean; showsSerials: boolean };
+
+/** An address row as the sender may see it: private profiles are hidden from them, private serials stay unnamed. */
+export const addressFacts = (address: {
+  privateProfile: boolean;
+  privateSerial: boolean;
+}): AddressFacts => ({ visible: !address.privateProfile, showsSerials: !address.privateSerial });
+
+/**
+ * Whether a get item may be asked for from the partner's collection. `heldAt` is the facts of
+ * the addresses holding it (a specific objekt has one). A specific objekt must sit at a visible
+ * address that shows serials; an address that hides them offers only any copy.
+ */
+export function collectionAskAllowed(specific: boolean, heldAt: readonly AddressFacts[]) {
+  return heldAt.some((at) => at.visible && at.showsSerials === specific);
+}

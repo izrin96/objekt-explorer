@@ -5,6 +5,7 @@ import { type ReactNode, useId } from "react";
 import { Button } from "@/components/ui/button";
 import { CollectionLabel } from "@/features/objekt/objekt-label";
 import { itemLabel, offerNo } from "@/features/offers/format";
+import { type GetSource, addLabel } from "@/features/offers/get-source";
 import { OfferThumb } from "@/features/offers/offer-item";
 import type { Collections, OfferPick, OfferSide } from "@/features/offers/pick";
 import { cn } from "@/lib/utils";
@@ -19,6 +20,7 @@ export function SideColumn({
   estimatedOf,
   reasonOf,
   refused,
+  source,
   onAdd,
   onRemove,
   children,
@@ -31,6 +33,8 @@ export function SideColumn({
   estimatedOf: (pick: OfferPick) => boolean;
   reasonOf: (pick: OfferPick) => string | null;
   refused: ReadonlySet<string>;
+  /** You get's source; unknown while the partner's lists load */
+  source: GetSource | undefined;
   onAdd: () => void;
   onRemove: (key: string) => void;
   children?: ReactNode;
@@ -45,9 +49,15 @@ export function SideColumn({
           {m.offer_side_count({ count: picks.length, max: OFFER_SIDE_LIMIT })}
         </span>
       </h3>
-      <Button variant="outline" size="sm" className="self-start" onClick={onAdd}>
+      <Button
+        variant="outline"
+        size="sm"
+        className="self-start"
+        disabled={side === "get" && source === undefined}
+        onClick={onAdd}
+      >
         <PlusIcon />
-        {side === "give" ? m.offer_add_mine() : m.offer_add_theirs({ name })}
+        {addLabel(side, source ?? "lists", name)}
       </Button>
       {children}
       {picks.length > 0 ? (

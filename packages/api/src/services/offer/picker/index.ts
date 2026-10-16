@@ -6,7 +6,12 @@ import { holdsMessage, pairKey } from "../../../lib/chat-rules";
 import { itemFlags } from "../../../lib/offer-rules";
 import { unique } from "../../../lib/unique";
 import { type ChatTarget } from "../../../schemas/chat";
-import { type CandidateItem, OFFER_SIDE_LIMIT, type PickerNarrowing } from "../../../schemas/offer";
+import {
+  type CandidateCursor,
+  type CandidateItem,
+  OFFER_SIDE_LIMIT,
+  type PickerNarrowing,
+} from "../../../schemas/offer";
 import { chatSafety, fetchPref } from "../../chat";
 import { resolveTradeSides } from "../../trade-matches";
 import {
@@ -22,7 +27,19 @@ import {
 } from "../core";
 import { mineCandidates } from "./mine";
 import { collectionsOf, toCandidate } from "./shared";
-import { theirCandidates, theirPickerPage } from "./theirs";
+import { theirCandidates, theirCollectionPage, theirPickerPage } from "./theirs";
+
+type CandidatesPage = {
+  items: CandidateItem[];
+  suggested: CandidateItem[];
+  nextCursor: CandidateCursor | null;
+  nextOffset: number | null;
+  listed: boolean;
+  /** theirs: false when the partner has no list to ask through; read as true when absent */
+  partnerLists?: boolean;
+  wanted: string[];
+  collections: Awaited<ReturnType<typeof collectionsOf>>;
+};
 
 export async function offerCandidates(
   me: string,
@@ -30,19 +47,22 @@ export async function offerCandidates(
   input: {
     conversationId?: number;
     target?: ChatTarget;
-    side: "mine" | "theirs";
-    cursor?: { receivedAt: string; id: string };
+    side: "mine" | "theirs" | "theirs-collection";
+    cursor?: CandidateCursor;
     offset?: number;
   } & PickerNarrowing,
-) {
+): Promise<CandidatesPage> {
   const addressed = await resolveAddressed(me, meCreatedAt, input);
   // however the partner was named: the start verdict lets an existing conversation through
   // whatever the blocks
-  if (input.side === "theirs") {
+  if (input.side !== "mine") {
     const safety = addressed.start?.safety ?? (await chatSafety(me, addressed.partnerId));
     if (safety.blocked || safety.partnerTradeBlocked) refuseOffer("not_accepting");
   }
   if (input.side === "mine") return mineCandidates(me, addressed, input.cursor, input);
+  if (input.side === "theirs-collection") {
+    return theirCollectionPage(me, addressed, input.cursor, input);
+  }
   // without an offset the whole list comes back, as the builder checks picks against it
   return input.offset === undefined
     ? theirCandidates(me, addressed)

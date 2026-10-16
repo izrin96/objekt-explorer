@@ -1,12 +1,15 @@
 import { db } from "@repo/db";
-import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
 import { listEntries, lists } from "@repo/db/schema";
-import { and, desc, eq, inArray, lt, ne, or } from "drizzle-orm";
+import { and, eq, inArray, or } from "drizzle-orm";
 
 import { giveNarrowing, itemFlags } from "../../../lib/offer-rules";
 import { unique } from "../../../lib/unique";
-import { CANDIDATE_PAGE_SIZE, type PickerNarrowing } from "../../../schemas/offer";
+import {
+  CANDIDATE_PAGE_SIZE,
+  type CandidateCursor,
+  type PickerNarrowing,
+} from "../../../schemas/offer";
 import { offersOnTrade } from "../../trade-lists";
 import {
   type Addressed,
@@ -14,19 +17,47 @@ import {
   fetchCopies,
   fetchObjekts,
   linkedAddresses,
-  lowerOwner,
-  objektColumns,
   openOfferHolders,
+  refuseOffer,
   reservedIds,
 } from "../core";
-import { collectionWhere, collectionsOf, toCandidate, wantListOf, wantSlugsOf } from "./shared";
+import { collectionsOf, ownedPage, toCandidate, wantListOf, wantSlugsOf } from "./shared";
+
+/** The condition keeping what one of the sender's own have, sale or general lists names; null when it names nothing. */
+async function listWhere(me: string, slug: string) {
+  const [list] = await db
+    .select({ id: lists.id })
+    .from(lists)
+    .where(
+      and(
+        eq(lists.slug, slug),
+        eq(lists.userId, me),
+        inArray(lists.listTypeNew, ["have", "sale", "general"]),
+      ),
+    );
+  if (!list) refuseOffer("not_allowed");
+  const entries = await db
+    .select({ objektId: listEntries.objektId, collectionSlug: listEntries.collectionSlug })
+    .from(listEntries)
+    .where(eq(listEntries.listId, list.id));
+  const ids = entries.flatMap((e) => (e.objektId ? [e.objektId] : []));
+  const slugs = entries.flatMap((e) =>
+    e.objektId === null && e.collectionSlug ? [e.collectionSlug] : [],
+  );
+  return (
+    or(
+      ids.length > 0 ? inArray(objekts.id, ids) : undefined,
+      slugs.length > 0 ? inArray(collections.slug, slugs) : undefined,
+    ) ?? null
+  );
+}
 
 /** The sender's own objekts, newest received first; on the first page, their have-list objekts too. */
 export async function mineCandidates(
   me: string,
   addressed: Addressed,
-  cursor: { receivedAt: string; id: string } | undefined,
-  { filters, matchOnly, wantList }: PickerNarrowing,
+  cursor: CandidateCursor | undefined,
+  { filters, matchOnly, wantList, fromList }: PickerNarrowing,
 ) {
   const empty = {
     items: [],
@@ -37,37 +68,19 @@ export async function mineCandidates(
     wanted: [],
     collections: {},
   };
-  const [linked, partnerWants, named] = await Promise.all([
+  const [linked, partnerWants, named, fromWhere] = await Promise.all([
     linkedAddresses([me]),
     matchOnly ? wantSlugsOf(addressed.partnerId, true) : null,
     wantList === undefined ? null : wantListOf(wantList),
+    fromList === undefined ? undefined : listWhere(me, fromList),
   ]);
   const keptSlugs = giveNarrowing(addressed.partnerId, partnerWants, named);
   const addresses = [...(linked.get(me) ?? [])];
-  if (addresses.length === 0 || keptSlugs?.length === 0) return empty;
+  if (addresses.length === 0 || keptSlugs?.length === 0 || fromWhere === null) return empty;
 
-  const [rows, haveEntries] = await Promise.all([
-    indexer
-      .select(objektColumns)
-      .from(objekts)
-      .innerJoin(collections, eq(collections.id, objekts.collectionId))
-      .where(
-        and(
-          inArray(objekts.owner, addresses),
-          ne(collections.slug, "empty-collection"),
-          ...collectionWhere(filters),
-          keptSlugs ? inArray(collections.slug, keptSlugs) : undefined,
-          cursor
-            ? or(
-                lt(objekts.receivedAt, cursor.receivedAt),
-                and(eq(objekts.receivedAt, cursor.receivedAt), lt(objekts.id, cursor.id)),
-              )
-            : undefined,
-        ),
-      )
-      .orderBy(desc(objekts.receivedAt), desc(objekts.id))
-      .limit(CANDIDATE_PAGE_SIZE + 1),
-    cursor
+  const [{ page, nextCursor }, haveEntries] = await Promise.all([
+    ownedPage(addresses, cursor, { filters, slugs: keptSlugs, where: fromWhere }),
+    cursor || fromList !== undefined
       ? []
       : db
           .select({
@@ -81,7 +94,6 @@ export async function mineCandidates(
           .orderBy(listEntries.id),
   ]);
 
-  const page = rows.slice(0, CANDIDATE_PAGE_SIZE).map(lowerOwner);
   const mine = new Set(addresses);
   const [haveTokens, haveCopies] = await Promise.all([
     fetchObjekts(haveEntries.flatMap((e) => (e.objektId ? [e.objektId] : []))),
@@ -115,7 +127,6 @@ export async function mineCandidates(
     itemFlags(objekt, reserved, holders, addressed.conversationId);
   const suggestionOf = new Map(suggestedList.map((s) => [s.objekt.id, s.listSlug]));
 
-  const last = page.at(-1);
   return {
     items: page.map((objekt) =>
       toCandidate(objekt, flags(objekt), suggestionOf.get(objekt.id) ?? null),
@@ -123,10 +134,7 @@ export async function mineCandidates(
     suggested: suggestedList.map(({ objekt, listSlug }) =>
       toCandidate(objekt, flags(objekt), listSlug),
     ),
-    nextCursor:
-      rows.length > CANDIDATE_PAGE_SIZE && last
-        ? { receivedAt: new Date(last.receivedAt).toISOString(), id: last.id }
-        : null,
+    nextCursor,
     nextOffset: null,
     listed: true,
     wanted: [],

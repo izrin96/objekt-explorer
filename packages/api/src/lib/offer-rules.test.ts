@@ -6,6 +6,7 @@ import {
   allowedActions,
   anyCopyScope,
   anyCopyShortfall,
+  collectionAskAllowed,
   specificCopyShortfall,
   atFault,
   cancelRefusal,
@@ -667,6 +668,35 @@ describe("matchEntry", () => {
     expect(open.get(slug)).toBeNull();
     expect(inAnyCopyScope(open, { id: "9", slug })).toBe(true);
     expect(inAnyCopyScope(open, { id: "9", slug: "other" })).toBe(true);
+  });
+});
+
+describe("collection asks", () => {
+  const open = { visible: true, showsSerials: true };
+  const hiddenSerials = { visible: true, showsSerials: false };
+  const private_ = { visible: false, showsSerials: true };
+
+  test("an objekt held at a visible address that shows serials can be asked for by serial", () => {
+    expect(collectionAskAllowed(true, [open])).toBe(true);
+  });
+
+  test("nothing at a private address can be asked for", () => {
+    expect(collectionAskAllowed(true, [private_])).toBe(false);
+    expect(collectionAskAllowed(false, [{ visible: false, showsSerials: false }])).toBe(false);
+    expect(collectionAskAllowed(false, [])).toBe(false);
+  });
+
+  test("a hidden-serial address allows any copy but not a specific objekt", () => {
+    expect(collectionAskAllowed(true, [hiddenSerials])).toBe(false);
+    expect(collectionAskAllowed(false, [hiddenSerials])).toBe(true);
+  });
+
+  test("a serial-showing address is asked for by serial, not as any copy", () => {
+    expect(collectionAskAllowed(false, [open])).toBe(false);
+  });
+
+  test("any copy needs one hidden-serial address among those holding it", () => {
+    expect(collectionAskAllowed(false, [private_, open, hiddenSerials])).toBe(true);
   });
 });
 

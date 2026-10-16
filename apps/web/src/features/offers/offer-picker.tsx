@@ -1,7 +1,7 @@
 import { type CandidateItem, OFFER_SIDE_LIMIT } from "@repo/api/schemas/offer";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { useId, useState } from "react";
+import { type ReactNode, useId, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -20,15 +20,20 @@ import {
   PickerFilterBar,
   pickerFiltered,
 } from "@/features/filters/picker-filter-bar";
+import { SingleSelect } from "@/features/filters/single-select";
+import { LIST_TYPE_LABEL } from "@/features/list/list-type-badge";
+import { useUserLists } from "@/features/user/hooks";
 import { useLoadAllPages } from "@/hooks/use-load-all-pages";
 import { m } from "@/paraglide/messages";
 
 import { CandidateGrid, candidateMatcher, pagedGridProps } from "./candidate-grid";
+import { type GetSource, addLabel, pickerDescription } from "./get-source";
 import { type Collections, type OfferPick, type OfferSide, pickKey, toPick } from "./pick";
 import {
   myCandidatesOptions,
   type OfferAddress,
   type PickerFilters,
+  theirCollectionOptions,
   theirPickerOptions,
 } from "./queries";
 
@@ -38,6 +43,7 @@ export function OfferPicker({
   side,
   to,
   name,
+  source,
   picked,
   onDone,
 }: {
@@ -46,13 +52,21 @@ export function OfferPicker({
   side: OfferSide;
   to: OfferAddress;
   name: string;
+  source: GetSource;
   picked: OfferPick[];
   onDone: (picks: OfferPick[], collections: Collections) => void;
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogPopup className="h-[min(48rem,calc(100dvh-(--spacing(8))))] max-w-3xl max-sm:h-[calc(100dvh-(--spacing(12)))]">
-        <PickerBody side={side} to={to} name={name} picked={picked} onDone={onDone} />
+        <PickerBody
+          side={side}
+          to={to}
+          name={name}
+          source={source}
+          picked={picked}
+          onDone={onDone}
+        />
       </DialogPopup>
     </Dialog>
   );
@@ -62,12 +76,14 @@ function PickerBody({
   side,
   to,
   name,
+  source,
   picked,
   onDone,
 }: {
   side: OfferSide;
   to: OfferAddress;
   name: string;
+  source: GetSource;
   picked: OfferPick[];
   onDone: (picks: OfferPick[], collections: Collections) => void;
 }) {
@@ -96,16 +112,14 @@ function PickerBody({
   return (
     <>
       <DialogHeader>
-        <DialogTitle className="font-display">
-          {side === "give" ? m.offer_add_mine() : m.offer_add_theirs({ name })}
-        </DialogTitle>
-        <DialogDescription>
-          {side === "give" ? m.offer_picker_mine_desc() : m.offer_picker_theirs_desc({ name })}
-        </DialogDescription>
+        <DialogTitle className="font-display">{addLabel(side, source, name)}</DialogTitle>
+        <DialogDescription>{pickerDescription(side, source, name)}</DialogDescription>
       </DialogHeader>
       <div className="flex min-h-0 flex-1 flex-col px-6 pb-4">
         {side === "give" ? (
           <MineGrid to={to} {...grid} />
+        ) : source === "collection" ? (
+          <TheirCollectionGrid to={to} name={name} {...grid} />
         ) : (
           <TheirsGrid to={to} name={name} {...grid} />
         )}
@@ -161,11 +175,32 @@ function MatchSwitch({
   );
 }
 
-function MineGrid({ to, ...grid }: GridProps) {
-  const [filters, setFilters] = useState(NO_FILTERS);
-  const query = useInfiniteQuery(myCandidatesOptions(to, filters));
-  useLoadAllPages(filters.search.trim().length > 0, query);
+const ALL_OBJEKTS = "all";
 
+type Pages = { items: CandidateItem[]; suggested: CandidateItem[]; collections: Collections };
+
+/** The filter bar and the grid over one candidates query; each picker supplies its query and wording. */
+function PickerGrid({
+  query,
+  filters,
+  onFilters,
+  leading,
+  matchLabel,
+  suggestedTitle,
+  allTitle,
+  empty,
+  ...grid
+}: Omit<GridProps, "to"> & {
+  query: Parameters<typeof pagedGridProps>[0] & { data?: { pages: Pages[] } };
+  filters: Filters;
+  onFilters: (filters: Filters) => void;
+  leading?: ReactNode;
+  matchLabel: string;
+  suggestedTitle?: string;
+  allTitle?: string;
+  empty: { title: string; hint?: string };
+}) {
+  useLoadAllPages(filters.search.trim().length > 0, query);
   const pages = query.data?.pages ?? [];
   const collections: Collections = Object.assign({}, ...pages.map((page) => page.collections));
   const match = candidateMatcher(filters.search, collections);
@@ -175,74 +210,124 @@ function MineGrid({ to, ...grid }: GridProps) {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">
-      <PickerFilterBar filters={filters} onChange={setFilters}>
+      <PickerFilterBar filters={filters} onChange={onFilters} leading={leading}>
         <MatchSwitch
           checked={filters.matchOnly}
-          onChange={(matchOnly) => setFilters({ ...filters, matchOnly })}
-          label={m.offer_picker_only_they_want()}
+          onChange={(matchOnly) => onFilters({ ...filters, matchOnly })}
+          label={matchLabel}
         />
       </PickerFilterBar>
       <CandidateGrid
         {...grid}
-        {...pagedGridProps(query, items.length)}
+        {...pagedGridProps(query, items.length + allSuggested.length)}
         sections={[
-          { title: m.offer_picker_suggested(), items: suggested },
+          { title: suggestedTitle ?? null, items: suggested },
           {
-            title: suggested.length > 0 ? m.offer_picker_all_mine() : null,
+            title: suggested.length > 0 ? (allTitle ?? null) : null,
             items: match ? items.filter(match) : items,
           },
         ]}
         collections={collections}
-        empty={
-          narrowed(filters)
-            ? { title: m.offer_picker_filtered() }
-            : { title: m.offer_picker_mine_empty() }
-        }
+        empty={empty}
       />
     </div>
+  );
+}
+
+function MineGrid({ to, ...grid }: GridProps) {
+  const [filters, setFilters] = useState(NO_FILTERS);
+  const [from, setFrom] = useState(ALL_OBJEKTS);
+  const lists = useUserLists().filter((list) => list.listTypeNew !== "want");
+  const fromList = lists.some((list) => list.slug === from) ? from : undefined;
+  const query = useInfiniteQuery(myCandidatesOptions(to, filters, fromList));
+
+  return (
+    <PickerGrid
+      {...grid}
+      query={query}
+      filters={filters}
+      onFilters={setFilters}
+      leading={
+        lists.length > 0 ? (
+          <SingleSelect
+            label={m.offer_picker_from()}
+            options={[
+              { value: ALL_OBJEKTS, label: m.offer_picker_from_all() },
+              ...lists.map((list) => ({
+                value: list.slug,
+                label: m.offer_picker_from_list({
+                  name: list.name,
+                  type: LIST_TYPE_LABEL[list.listTypeNew](),
+                }),
+              })),
+            ]}
+            value={fromList ?? ALL_OBJEKTS}
+            defaultValue={ALL_OBJEKTS}
+            onChange={setFrom}
+          />
+        ) : null
+      }
+      matchLabel={m.offer_picker_only_they_want()}
+      suggestedTitle={m.offer_picker_suggested()}
+      allTitle={m.offer_picker_all_mine()}
+      empty={
+        narrowed(filters)
+          ? { title: m.offer_picker_filtered() }
+          : fromList
+            ? { title: m.offer_picker_from_empty() }
+            : { title: m.offer_picker_mine_empty() }
+      }
+    />
   );
 }
 
 function TheirsGrid({ to, name, ...grid }: GridProps & { name: string }) {
   const [filters, setFilters] = useState(NO_FILTERS);
   const query = useInfiniteQuery(theirPickerOptions(to, filters));
-  useLoadAllPages(filters.search.trim().length > 0, query);
-
-  const pages = query.data?.pages ?? [];
-  const collections: Collections = Object.assign({}, ...pages.map((page) => page.collections));
-  const match = candidateMatcher(filters.search, collections);
-  const items = pages.flatMap((page) => page.items);
-  const listed = pages[0]?.listed ?? true;
+  const listed = query.data?.pages[0]?.listed ?? true;
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-3">
-      <PickerFilterBar filters={filters} onChange={setFilters}>
-        <MatchSwitch
-          checked={filters.matchOnly}
-          onChange={(matchOnly) => setFilters({ ...filters, matchOnly })}
-          label={m.offer_picker_only_i_want()}
-        />
-      </PickerFilterBar>
-      <CandidateGrid
-        {...grid}
-        {...pagedGridProps(query, items.length)}
-        sections={[{ title: null, items: match ? items.filter(match) : items }]}
-        collections={collections}
-        empty={
-          // nothing listed is the reason whatever the filters
-          !listed
-            ? {
-                title: m.offer_picker_theirs_none_listed({ name }),
-                hint: m.offer_picker_theirs_none_listed_hint(),
+    <PickerGrid
+      {...grid}
+      query={query}
+      filters={filters}
+      onFilters={setFilters}
+      matchLabel={m.offer_picker_only_i_want()}
+      empty={
+        // nothing listed is the reason whatever the filters
+        !listed
+          ? {
+              title: m.offer_picker_theirs_none_listed({ name }),
+              hint: m.offer_picker_theirs_none_listed_hint(),
+            }
+          : narrowed(filters)
+            ? { title: m.offer_picker_filtered() }
+            : {
+                title: m.offer_picker_theirs_none_held({ name }),
+                hint: m.offer_picker_theirs_none_held_hint(),
               }
-            : narrowed(filters)
-              ? { title: m.offer_picker_filtered() }
-              : {
-                  title: m.offer_picker_theirs_none_held({ name }),
-                  hint: m.offer_picker_theirs_none_held_hint(),
-                }
-        }
-      />
-    </div>
+      }
+    />
+  );
+}
+
+function TheirCollectionGrid({ to, name, ...grid }: GridProps & { name: string }) {
+  const [filters, setFilters] = useState(NO_FILTERS);
+  const query = useInfiniteQuery(theirCollectionOptions(to, filters));
+
+  return (
+    <PickerGrid
+      {...grid}
+      query={query}
+      filters={filters}
+      onFilters={setFilters}
+      matchLabel={m.offer_picker_only_i_want()}
+      suggestedTitle={m.offer_picker_any_copy_section()}
+      empty={
+        narrowed(filters)
+          ? { title: m.offer_picker_filtered() }
+          : { title: m.offer_picker_theirs_collection_empty({ name }) }
+      }
+    />
   );
 }
