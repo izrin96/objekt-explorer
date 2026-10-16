@@ -16,6 +16,13 @@ A signed-in visitor SHALL see a bell in the frame with a dot while any notificat
 - a want-list alert: amber, the want colour; a reverse-direction alert: teal, the have colour (see `web-lists`);
 - a sanction notice: a red shield.
 
+**Objekts in place of the tile.** Where a notification names objekts whose collections the bell has loaded, it SHALL lead with them instead of the tile, in the same slot, so the text column does not move:
+- a want-list or reverse-direction alert with one match: that objekt, framed in its want or have colour;
+- such an alert with two or three or more matches: the newest two or three objekts as an offset stack, the front one in full and the ones behind it faded, each framed in its colour;
+- an offer or trade notification: up to three of the offer's objekts as an offset stack, what the reader gets first and then what they give, with the event's icon and colour from the list above as a small badge on the stack.
+
+The count in the text SHALL still give the total, which can be higher than three. A notification with no objekts, including one written before this rule, one whose collections have not loaded, and every sanction notice, SHALL keep the tile.
+
 The colour SHALL never be the only cue: the text names the event, and the icon differs by kind. The popover SHALL offer Mark all read.
 
 **Tabs.** Under the header, the popover SHALL offer three tabs:
@@ -48,16 +55,32 @@ All is selected each time the popover opens. Each tab lists its own notification
 - **THEN** the same notification reads in Korean
 
 #### Scenario: Kinds at a glance
-- **WHEN** the popover lists a verified transfer, a reminder and a cancelled offer
+- **WHEN** the popover lists a verified transfer, a reminder and a cancelled offer, written before objekts were stored
 - **THEN** they lead with a green check, an amber clock and a red cross, each beside its own text
+
+#### Scenario: Several matches
+- **WHEN** a want-list alert says 5 matches for "Specials I need", and the bell has loaded the newest three collections
+- **THEN** it leads with those three as an offset stack framed in the want colour, and the text still says 5
+
+#### Scenario: One match
+- **WHEN** a want-list alert names one match
+- **THEN** it leads with that single objekt, not a stack
+
+#### Scenario: Offer received
+- **WHEN** mina sends the user an offer of JiWoo 110A and Kaede 112A for their SeoYeon 204Z
+- **THEN** the user's notification leads with JiWoo 110A, Kaede 112A and SeoYeon 204Z stacked, with an indigo arrow badge
+
+#### Scenario: Moderator notice
+- **WHEN** the user receives a warning from moderators
+- **THEN** it leads with the red shield tile
 
 #### Scenario: Wrong copy sent
 - **WHEN** the giver in T-1042 sends #1207 where the trade asks for #1203
-- **THEN** both parties get a notification leading with an amber warning sign that names T-1042 and both serials, linking to the trade page
+- **THEN** both parties get a notification badged with an amber warning sign that names T-1042 and both serials, linking to the trade page
 
 #### Scenario: Wrong copy declined
 - **WHEN** the receiver declines that copy
-- **THEN** the giver gets a notification leading with a neutral arrow that says it was declined, linking to the trade page
+- **THEN** the giver gets a notification badged with a neutral arrow that says it was declined, linking to the trade page
 
 #### Scenario: Trades tab
 - **WHEN** the user has a want-list alert, a countered offer and a verified transfer, and selects Trades
