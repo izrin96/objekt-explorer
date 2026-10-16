@@ -1,4 +1,0 @@
-{
-  "setup": ["./.superset/setup.sh"],
-  "run": ["bun run dev --filter=web"]
-}

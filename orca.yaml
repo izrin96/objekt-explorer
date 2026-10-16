@@ -1,0 +1,4 @@
+# What Orca runs in a fresh worktree before an agent starts. Agents and schedules are configured in
+# the Orca app, not here.
+scripts:
+  setup: ./scripts/setup-worktree.sh

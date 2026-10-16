@@ -26,7 +26,9 @@
       "Bash(openspec:*)",
       "Bash(bun test:*)",
       "Bash(bun run test)",
-      "Bash(bun run test:*)"
+      "Bash(bun run test:*)",
+      "Bash(bunx lefthook:*)",
+      "Bash(./scripts/setup-worktree.sh)"
     ],
     "ask": ["Bash(git commit:*)", "Bash(git push:*)"]
   },
@@ -49,6 +51,17 @@
             "type": "command",
             "command": "bun \"$CLAUDE_PROJECT_DIR/.claude/hooks/check-changed.ts\"",
             "timeout": 180
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|MultiEdit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun \"$CLAUDE_PROJECT_DIR/.claude/hooks/format.ts\""
           }
         ]
       }
