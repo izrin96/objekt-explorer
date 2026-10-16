@@ -34,8 +34,27 @@ function bucketOf(copies: number): HolderBucketKey {
   return "10+";
 }
 
+// the Redis entry can be ~1 MB of JSON, so a short per-process memo skips parsing it on every page
+const MEMO_TTL_MS = 15_000;
+const MEMO_MAX = 16;
+const memo = new Map<string, { expiresAt: number; ranking: Promise<Ranking> }>();
+
 /** Viewer-independent, so one cache entry serves every page and every viewer. */
 function fetchRanking(slug: string): Promise<Ranking> {
+  const hit = memo.get(slug);
+  if (hit && hit.expiresAt > Date.now()) return hit.ranking;
+
+  const ranking = loadRanking(slug);
+  memo.delete(slug);
+  memo.set(slug, { expiresAt: Date.now() + MEMO_TTL_MS, ranking });
+  if (memo.size > MEMO_MAX) memo.delete(memo.keys().next().value!);
+  void ranking.catch(() => {
+    if (memo.get(slug)?.ranking === ranking) memo.delete(slug);
+  });
+  return ranking;
+}
+
+function loadRanking(slug: string): Promise<Ranking> {
   return getCache(`holders:${slug}`, RANKING_TTL, async () => {
     const rows = await indexer
       .select({

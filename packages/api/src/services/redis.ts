@@ -5,11 +5,18 @@ import { serverEnv } from "../env";
 // Bun gives up after 10 reconnect attempts (about 30s) and stays down for good; this is its maximum
 export const redis = new RedisClient(serverEnv.REDIS_URL, { maxRetries: 4294967295 });
 
-export async function getCache<T>(
-  key: string,
-  ttl: number,
-  callback: () => Promise<T>,
-): Promise<T> {
+const inflight = new Map<string, Promise<unknown>>();
+
+/** Concurrent misses for a key share one computation, so a cold entry costs one callback. */
+export function getCache<T>(key: string, ttl: number, callback: () => Promise<T>): Promise<T> {
+  const running = inflight.get(key) as Promise<T> | undefined;
+  if (running) return running;
+  const pending = loadCache(key, ttl, callback).finally(() => inflight.delete(key));
+  inflight.set(key, pending);
+  return pending;
+}
+
+async function loadCache<T>(key: string, ttl: number, callback: () => Promise<T>): Promise<T> {
   const cachedData = await redis.get(key);
 
   if (cachedData) {

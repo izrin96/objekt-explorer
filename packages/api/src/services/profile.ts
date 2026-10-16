@@ -14,7 +14,7 @@ import type { User } from "./auth";
 import { isBlockedEither } from "./moderation";
 import { fetchOwnerSummary } from "./objekt";
 import { isProfileHidden } from "./privacy";
-import { getCache } from "./redis";
+import { getCache, redis } from "./redis";
 import { reputationOf } from "./reputation";
 import { isBanned } from "./safety";
 
@@ -212,8 +212,13 @@ export async function fetchUserByIdentifier(
   // the user was just cached and still is not found, so Cosmo is not asked again
   if (retried) return undefined;
 
+  // a nickname Cosmo does not know is remembered, so random /@nickname visits do not each reach it
+  const notFoundKey = `profile:nickname-missing:${identifier.toLowerCase()}`;
+  if (await redis.get(notFoundKey)) return undefined;
+
   const user = await safeFetchByNickname(identifier);
   if (!user) {
+    if (user === null) await redis.set(notFoundKey, "1", "EX", 60);
     return undefined;
   }
 

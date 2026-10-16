@@ -5,6 +5,7 @@ import { Addresses } from "@repo/lib";
 import { mapOwnedObjekt, overrideCollection } from "@repo/lib/server/objekt";
 import type { HeldObjekt } from "@repo/lib/types/objekt";
 import { and, asc, count, desc, eq, getColumns, inArray, lt, lte, ne, or, sql } from "drizzle-orm";
+import type { AnyPgColumn } from "drizzle-orm/pg-core";
 
 import type { HeldByOutput, OwnedByFilters, OwnedByOutput } from "../schemas/objekts";
 import { getCollectionColumns } from "./objekt";
@@ -18,11 +19,11 @@ function buildCollectionFilters(query: OwnedByFilters) {
   return [inArray(collections.artist, query.artist.map(toIndexedArtist))];
 }
 
-function cursorWhere(query: OwnedByFilters) {
+function cursorWhere(query: OwnedByFilters, receivedAt: AnyPgColumn) {
   if (!query.cursor) return undefined;
   return or(
-    lt(objekts.receivedAt, query.cursor.receivedAt),
-    and(eq(objekts.receivedAt, query.cursor.receivedAt), lt(objekts.id, query.cursor.id)),
+    lt(receivedAt, query.cursor.receivedAt),
+    and(eq(receivedAt, query.cursor.receivedAt), lt(objekts.id, query.cursor.id)),
   );
 }
 
@@ -33,7 +34,7 @@ function cursorAfter(lastResult: { objekt: { receivedAt: Date | string; id: stri
   };
 }
 
-const ORDER_BY = [desc(objekts.receivedAt), desc(objekts.id)];
+const orderBy = (receivedAt: AnyPgColumn) => [desc(receivedAt), desc(objekts.id)];
 
 /** Spin's past state means replaying millions of transfers, so it has no checkpoint. */
 export function isCheckpointUnavailable(address: string, query: OwnedByFilters): boolean {
@@ -87,10 +88,10 @@ export async function fetchOwnedObjekts(
           eq(latest.to, addr),
           ne(collections.slug, "empty-collection"),
           ...collectionFilters,
-          cursorWhere(query),
+          cursorWhere(query, latest.timestamp),
         ),
       )
-      .orderBy(...ORDER_BY)
+      .orderBy(...orderBy(latest.timestamp))
       .limit(PER_PAGE + 1);
 
     const results = await mainQuery;
@@ -116,10 +117,10 @@ export async function fetchOwnedObjekts(
         eq(objekts.owner, addr),
         ne(collections.slug, "empty-collection"),
         ...collectionFilters,
-        cursorWhere(query),
+        cursorWhere(query, objekts.receivedAt),
       ),
     )
-    .orderBy(...ORDER_BY)
+    .orderBy(...orderBy(objekts.receivedAt))
     .limit(PER_PAGE + 1);
 
   const results = await mainQuery;

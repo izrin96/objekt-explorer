@@ -149,6 +149,18 @@ export const cosmoLinkRouter = {
     })
     .input(addressSchema)
     .handler(async ({ input: address, context: { session }, errors }) => {
+      // each check calls Cosmo with the shared token: max 10 per user per 30s
+      const rateLimitKey = `cosmo-verify-status-rate:${session.user.id}`;
+      const attempts = await redis.incr(rateLimitKey);
+      await redis.send("EXPIRE", [rateLimitKey, "30", "NX"]);
+      if (attempts > 10) {
+        refuse(
+          "TOO_MANY_REQUESTS",
+          "cosmo_link_rate_limit",
+          "Too many attempts, try again shortly",
+        );
+      }
+
       const redisKey = `cosmo-verify:${session.user.id}:${address}`;
       const raw = await redis.get(redisKey);
       if (!raw) {
