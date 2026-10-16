@@ -35,9 +35,14 @@ const LIST_TYPES: ListTypeNew[] = ["general", "have", "want", "sale"];
 
 const OPEN_TO_ORDER: OpenTo[] = ["swaps", "both", "buying"];
 
+const isListType = (value: unknown): value is ListTypeNew =>
+  LIST_TYPES.some((type) => type === value);
+const isOpenTo = (value: unknown): value is OpenTo =>
+  OPEN_TO_ORDER.some((openTo) => openTo === value);
+
 const MATCH_WITH: Record<OpenTo, { label: () => string; description: () => string }> = {
-  swaps: { label: OPEN_TO_LABEL.swaps, description: m.list_create_match_trades_desc },
-  both: { label: OPEN_TO_LABEL.both, description: m.list_create_match_sales_desc },
+  swaps: { label: OPEN_TO_LABEL.swaps, description: m.list_create_match_swaps_desc },
+  both: { label: OPEN_TO_LABEL.both, description: m.list_create_match_both_desc },
   buying: { label: OPEN_TO_LABEL.buying, description: m.list_create_match_buying_desc },
 };
 
@@ -123,8 +128,8 @@ export function toCreateInput(draft: ListDraft) {
     profileAddress: draft.profileAddress,
     isProfileBind,
     discoverable: draft.listTypeNew !== "general" && draft.discoverable,
-    matchSale: draft.listTypeNew !== "want" || draft.matchSale,
-    matchHave: draft.listTypeNew !== "want" || draft.matchHave,
+    matchSale: draft.matchSale,
+    matchHave: draft.matchHave,
     hideSerial: draft.hideSerial,
   };
 }
@@ -195,7 +200,9 @@ export function ListForm({ idPrefix, value, onChange, lists, profiles, mode, url
             aria-labelledby={id("type")}
             aria-describedby={id("type-desc")}
             value={value.listTypeNew}
-            onValueChange={(next) => changeType(next as ListTypeNew)}
+            onValueChange={(next) => {
+              if (isListType(next)) changeType(next);
+            }}
             className="grid grid-cols-4 gap-1 rounded-lg border p-1"
           >
             {LIST_TYPES.map((type) => (
@@ -391,7 +398,9 @@ export function ListForm({ idPrefix, value, onChange, lists, profiles, mode, url
           <RadioGroup
             aria-labelledby={id("match-with")}
             value={openToOf(value)}
-            onValueChange={(next) => set(flagsOf(next as OpenTo))}
+            onValueChange={(next) => {
+              if (isOpenTo(next)) set(flagsOf(next));
+            }}
             className="gap-2.5"
           >
             {OPEN_TO_ORDER.map((openTo) => (

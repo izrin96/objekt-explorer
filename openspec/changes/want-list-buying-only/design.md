@@ -75,7 +75,7 @@ Today a want list's Open to choice is one column, `lists.match_sale boolean NOT 
   - Saved untouched, it sends `matchSale: true` and no `matchHave`, so the list stays Buying only.
   - Switched to Swaps only, it sends `matchSale: false`, and the server restores `matchHave`.
 - Outputs keep `matchSale` and add `matchHave` (nullish), on list rows and on partner lists.
-- A Browse post gains an optional `buyingOnly` flag, defaulting to false, for the byline note.
+- A Browse post gains a `buyingOnly` flag, always present; open tabs ignore it, for the byline note.
 - Alternative: an `openTo` enum input. It is nicer for the form, but it adds a second vocabulary to map against the columns. Rejected. The form maps its three radios to the two booleans in one table, as `MATCH_WITH` does now.
 
 **Buying only linked to a have list: allowed, and the pair stays WTT.**

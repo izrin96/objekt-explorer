@@ -1,7 +1,7 @@
 import { realNickname, truncateAddress } from "@repo/lib/address";
 
 import { type ListTypeNew, pickedSides, tradeSideOf } from "../schemas/list";
-import { type OpenToFlags, openToOf } from "../schemas/open-to";
+import { type OpenToFlags, pickByOpenTo } from "../schemas/open-to";
 import {
   countsFit,
   type MatchCounts,
@@ -118,6 +118,9 @@ export type Dropped = {
   reason: DropReason;
 };
 
+/** One of their want entries, with what its want list is open to. */
+export type TheyWant = { listId: number; slug: string } & OpenToFlags;
+
 export type Candidate = {
   userId: string;
   /** each matched list's last change, keyed by list id */
@@ -125,7 +128,7 @@ export type Candidate = {
   /** their have and sale entries on collections I want */
   theyHave: (OwnedEntry & { sale: boolean })[];
   /** their want entries on collections I have, with what the want list is open to */
-  theyWant: ({ listId: number; slug: string } & OpenToFlags)[];
+  theyWant: TheyWant[];
 };
 
 type Recounted = {
@@ -206,10 +209,10 @@ export function recount(
     });
   }
 
+  const havesByOpenTo = { buying: myHaves.sale, both: myHaves.all, swaps: myHaves.trade };
   for (const [slug, entries] of groupBySlug(candidate.theyWant)) {
     const judged = entries.flatMap((entry) => {
-      const side = { buying: myHaves.sale, both: myHaves.all, swaps: myHaves.trade };
-      const mine = side[openToOf(entry)].get(slug);
+      const mine = pickByOpenTo(entry, havesByOpenTo).get(slug);
       return mine ? [{ listId: entry.listId, mine, swaps: entry.matchHave }] : [];
     });
     if (judged.length === 0) continue;

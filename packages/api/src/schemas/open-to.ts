@@ -18,6 +18,11 @@ export function openToOf({ matchSale, matchHave }: OpenToFlags): OpenTo {
   return matchSale ? "both" : "swaps";
 }
 
+/** Reads one value per Open to, whichever way the list's flags are held. */
+export function pickByOpenTo<T>(flags: OpenToFlags, byOpenTo: Record<OpenTo, T>): T {
+  return byOpenTo[openToOf(flags)];
+}
+
 export function flagsOf(openTo: OpenTo): OpenToFlags {
   return { ...FLAGS[openTo] };
 }

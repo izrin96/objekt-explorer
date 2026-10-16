@@ -70,7 +70,7 @@ const SECTIONS: Section[] = [
         },
         {
           key: "sale-buying",
-          cells: [m.trade_browse_help_wts_list, m.list_create_match_sales_label, yes],
+          cells: [m.trade_browse_help_wts_list, m.list_create_match_both_label, yes],
         },
         {
           key: "sale-buying-only",
@@ -78,7 +78,7 @@ const SECTIONS: Section[] = [
         },
         {
           key: "sale-swaps",
-          cells: [m.trade_browse_help_wts_list, m.list_create_match_trades_label, no],
+          cells: [m.trade_browse_help_wts_list, m.list_create_match_swaps_label, no],
         },
       ],
     },

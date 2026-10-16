@@ -1,5 +1,5 @@
 import type { ListTypeNew } from "../schemas/list";
-import { type OpenToFlags, openToOf } from "../schemas/open-to";
+import { type OpenToFlags, openToOf, pickByOpenTo } from "../schemas/open-to";
 import {
   type BrowseMatchMode,
   PREVIEW_LIMIT,
@@ -298,8 +298,11 @@ export function narrowViewer(
 function indexFor(role: "have" | "want" | "sale", list: TradeList, viewer: Viewer) {
   if (role === "have") return viewer.tradeWant;
   if (role === "sale") return viewer.saleWant;
-  const wantSide = { buying: viewer.saleHave, both: viewer.have, swaps: viewer.tradeHave };
-  return wantSide[openToOf(list)];
+  return pickByOpenTo(list, {
+    buying: viewer.saleHave,
+    both: viewer.have,
+    swaps: viewer.tradeHave,
+  });
 }
 
 type PostFilter = {

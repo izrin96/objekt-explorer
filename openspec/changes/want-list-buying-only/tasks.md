@@ -62,7 +62,7 @@
   - `trade-feed/query.ts`:
     - `postsCte` selects `match_have`;
     - `matchesIndex` uses `tradeWant` for have entries and a three-arm `CASE` for want entries.
-  - The post output gains an optional `buyingOnly` (default false) for a WTB post whose want list has `matchHave` false.
+  - The post output gains a `buyingOnly` flag, always present (open tabs ignore it) for a WTB post whose want list has `matchHave` false.
 
   Add `trade-feed.test.ts` cases:
   - a lone Buying only want is tagged `wtb`;

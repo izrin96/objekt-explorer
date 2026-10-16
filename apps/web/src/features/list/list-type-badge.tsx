@@ -42,8 +42,8 @@ export function ListTypeBadge({
 }
 
 export const OPEN_TO_LABEL: Record<OpenTo, () => string> = {
-  swaps: m.list_create_match_trades_label,
-  both: m.list_create_match_sales_label,
+  swaps: m.list_create_match_swaps_label,
+  both: m.list_create_match_both_label,
   buying: m.list_create_match_buying_label,
 };
 

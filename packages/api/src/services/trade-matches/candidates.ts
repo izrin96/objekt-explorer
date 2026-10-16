@@ -1,8 +1,7 @@
 import { db } from "@repo/db";
 import { sql } from "drizzle-orm";
 
-import { CANDIDATE_LIMIT, type Candidate } from "../../lib/trade-rank";
-import type { OpenToFlags } from "../../schemas/open-to";
+import { CANDIDATE_LIMIT, type Candidate, type TheyWant } from "../../lib/trade-rank";
 import type { TradeFilter } from "../../schemas/trade";
 import { notBlockedEither, notTradeSanctioned } from "../safety";
 import { offerMatchesWantSql, takesPartInTradeSql } from "../trade-lists";
@@ -24,8 +23,8 @@ const ORDER: Record<TradeFilter, ReturnType<typeof sql>> = {
 type CandidateRow = {
   user_id: string;
   list_updated_at: Record<string, string>;
-  they_have: [number, string, string | null, boolean][];
-  they_want: ({ listId: number; slug: string } & OpenToFlags)[];
+  they_have: Candidate["theyHave"];
+  they_want: TheyWant[];
 };
 
 /**
@@ -87,7 +86,9 @@ export async function fetchTradeCandidates(
         count(DISTINCT collection_slug) FILTER (WHERE they_have) AS a,
         count(DISTINCT collection_slug) FILTER (WHERE NOT they_have) AS b,
         coalesce(
-          json_agg(json_build_array(list_id, collection_slug, objekt_id, NOT trade)) FILTER (WHERE they_have),
+          json_agg(json_build_object(
+            'listId', list_id, 'slug', collection_slug, 'objektId', objekt_id, 'sale', NOT trade
+          )) FILTER (WHERE they_have),
           '[]'
         ) AS they_have,
         coalesce(
@@ -113,12 +114,7 @@ export async function fetchTradeCandidates(
     listUpdatedAt: Object.fromEntries(
       Object.entries(row.list_updated_at).map(([id, at]) => [id, new Date(at).toISOString()]),
     ),
-    theyHave: row.they_have.map(([listId, slug, objektId, sale]) => ({
-      listId,
-      slug,
-      objektId,
-      sale,
-    })),
+    theyHave: row.they_have,
     theyWant: row.they_want,
   }));
 }
