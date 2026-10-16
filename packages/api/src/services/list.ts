@@ -504,6 +504,7 @@ export async function generateProfileSlug(
   listSlug: string,
   profileAddress: string,
   excludeListId?: number,
+  executor: Tx | typeof db = db,
 ): Promise<string> {
   // profile_slug is varchar(100); leave room for the "-<counter>" suffix
   const baseSlug = slugify(name, { lower: true, strict: true }).slice(0, 90).replace(/-+$/, "");
@@ -511,7 +512,7 @@ export async function generateProfileSlug(
   let counter = 2;
 
   while (true) {
-    const existing = await db
+    const existing = await executor
       .select({ id: lists.id })
       .from(lists)
       .where(
@@ -539,8 +540,8 @@ export function touchList(listIds: number[]) {
 export type NewList = z.infer<typeof createListInputSchema> & { gridColumns?: number | null };
 
 /**
- * Validates a new list and settles its slug and partner, before any transaction opens: these
- * reads use the pool, and a transaction waiting on them would hold a connection while it waits.
+ * Validates a new list and settles its partner, before any transaction opens: these reads use
+ * the pool, and a transaction waiting on them would hold a connection while it waits.
  */
 export async function prepareList(input: NewList, userId: string) {
   const isProfileBind = ["have", "sale"].includes(input.listTypeNew) ? input.isProfileBind : false;
@@ -571,16 +572,10 @@ export async function prepareList(input: NewList, userId: string) {
   if (profileCheck.status === "rejected") throw profileCheck.reason;
   if (linkedCheck.status === "rejected") throw linkedCheck.reason;
 
-  const slug = nanoid(9);
-  const profileSlug = input.profileAddress
-    ? await generateProfileSlug(input.name, slug, input.profileAddress.toLowerCase())
-    : null;
-
   return {
     input,
     userId,
-    slug,
-    profileSlug,
+    slug: nanoid(9),
     isProfileBind,
     linkedListId,
     partner: linkedCheck.value,
@@ -592,8 +587,12 @@ export type PreparedList = Awaited<ReturnType<typeof prepareList>>;
 
 /** The one place a list row is created. Returns the ids to `touchList` once the transaction commits. */
 export async function writeList(tx: Tx, prepared: PreparedList) {
-  const { input, userId, slug, profileSlug, isProfileBind, linkedListId, partner, discoverable } =
-    prepared;
+  const { input, userId, slug, isProfileBind, linkedListId, partner, discoverable } = prepared;
+  // picked on the transaction's own connection, right before the insert, so a copy's slow
+  // holdings read cannot widen the window in which two lists pick the same profile slug
+  const profileSlug = input.profileAddress
+    ? await generateProfileSlug(input.name, slug, input.profileAddress.toLowerCase(), undefined, tx)
+    : null;
 
   const [inserted] = await tx
     .insert(lists)
