@@ -102,6 +102,7 @@ Skills live once under `.agents/skills/<name>` (agent-neutral) with `.claude/ski
 | Branches, commit messages, splitting work           | `git-workflow-and-versioning`                                                                 |
 | Recording a decision or its reasoning               | `documentation-and-adrs`                                                                      |
 | Passing work to another agent or session            | `handoff`                                                                                     |
+| Parallel work across agents or worktrees            | `orchestration` to supervise Orca workers; `orca-cli` to hand off a whole worktree            |
 | A merge conflict                                    | `resolving-merge-conflicts` (`routeTree.gen.ts`, `paraglide/` are regenerated, never merged)  |
 | Editing this file, a skill, an agent or `openspec/` | `writing-for-agents`                                                                          |
 
