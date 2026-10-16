@@ -1,7 +1,7 @@
 import { ORPCError } from "@orpc/client";
 import type { ChatTarget } from "@repo/api/schemas/chat";
 import type { CollectionFilters } from "@repo/api/schemas/common/filters";
-import type { HistoryCursor, PickerNarrowing } from "@repo/api/schemas/offer";
+import type { CandidateCursor, HistoryCursor, PickerNarrowing } from "@repo/api/schemas/offer";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import type { QueryClient } from "@tanstack/react-query";
 
@@ -16,11 +16,21 @@ const retryUnlessRefused = (count: number, error: unknown) =>
   !(error instanceof ORPCError && error.status < 500) && count < 2;
 
 /** What the picker narrows a side to; empty arrays mean no filter. */
-export type PickerFilters = Pick<CollectionFilters, "member" | "season" | "class"> &
+export type PickerFilters = Pick<
+  CollectionFilters,
+  "artist" | "member" | "season" | "class" | "on_offline" | "collection"
+> &
   Required<Pick<PickerNarrowing, "matchOnly">>;
 
 const toInput = (filters: PickerFilters): PickerNarrowing => ({
-  filters: { member: filters.member, season: filters.season, class: filters.class },
+  filters: {
+    artist: filters.artist,
+    member: filters.member,
+    season: filters.season,
+    class: filters.class,
+    on_offline: filters.on_offline,
+    collection: filters.collection,
+  },
   matchOnly: filters.matchOnly,
 });
 
@@ -47,19 +57,32 @@ export const theirPickerOptions = (to: OfferAddress, filters: PickerFilters) =>
     retry: retryUnlessRefused,
   });
 
-export const myCandidatesOptions = (to: OfferAddress, filters: PickerFilters) =>
+const cursorOptions = (
+  side: "mine" | "theirs-collection",
+  to: OfferAddress,
+  filters: PickerFilters,
+  fromList?: string,
+) =>
   orpc.offer.candidates.infiniteOptions({
-    input: (cursor: { receivedAt: string; id: string } | undefined) => ({
+    input: (cursor: CandidateCursor | undefined) => ({
       ...to,
-      side: "mine" as const,
+      side,
       cursor,
+      fromList,
       ...toInput(filters),
     }),
-    initialPageParam: undefined as { receivedAt: string; id: string } | undefined,
+    initialPageParam: undefined as CandidateCursor | undefined,
     getNextPageParam: (page) => page.nextCursor ?? undefined,
     staleTime: 30_000,
     retry: retryUnlessRefused,
   });
+
+export const myCandidatesOptions = (to: OfferAddress, filters: PickerFilters, fromList?: string) =>
+  cursorOptions("mine", to, filters, fromList);
+
+/** What a partner with no lists holds at addresses they show. */
+export const theirCollectionOptions = (to: OfferAddress, filters: PickerFilters) =>
+  cursorOptions("theirs-collection", to, filters);
 
 /** The viewer's copies of one collection, to stand in for a counter's any-copy ask. */
 export const myCopyOptions = (to: OfferAddress, collection: ValidObjekt | undefined) =>

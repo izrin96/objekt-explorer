@@ -170,6 +170,7 @@ export const substituteIdInputSchema = z.object({ substituteId: idSchema });
 export const suggestInputSchema = z.object({ partnerId: z.string().min(1) });
 
 const candidateCursorSchema = z.object({ receivedAt: z.string(), id: z.string() });
+export type CandidateCursor = z.infer<typeof candidateCursorSchema>;
 
 /** How the offer picker narrows a side. */
 const pickerNarrowingSchema = z.object({
@@ -178,12 +179,15 @@ const pickerNarrowingSchema = z.object({
   matchOnly: z.boolean().optional(),
   /** mine: only collections on this want list of the partner's */
   wantList: z.string().min(1).max(12).optional(),
+  /** mine: only what one of the sender's own have, sale or general lists names */
+  fromList: z.string().min(1).max(12).optional(),
 });
 export type PickerNarrowing = z.infer<typeof pickerNarrowingSchema>;
 
 export const candidatesInputSchema = addressedSchema
   .extend({
-    side: z.enum(["mine", "theirs"]),
+    side: z.enum(["mine", "theirs", "theirs-collection"]),
+    /** mine and theirs-collection: where the next page starts */
     cursor: candidateCursorSchema.optional(),
     /** theirs: where the next page starts in the resolved list */
     offset: z.number().int().min(0).optional(),

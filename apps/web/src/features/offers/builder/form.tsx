@@ -16,6 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { fetchNewer, invalidateChatLists } from "@/features/chat/queries";
 import { EstimatedSerialNote } from "@/features/offers/estimated-serial-note";
 import { itemLabel, itemName } from "@/features/offers/format";
+import { type GetSource } from "@/features/offers/get-source";
 import { OfferPicker } from "@/features/offers/offer-picker";
 import {
   blockedReason,
@@ -81,6 +82,12 @@ export function BuilderForm({
 
   const theirs = useQuery(theirCandidatesOptions(to));
   const mineWanted = useQuery(myWantListOptions(to, request.focusWantList));
+  // unknown until the partner's lists have loaded; an error leaves it on lists, which refuse alone
+  const source: GetSource | undefined = theirs.isPending
+    ? undefined
+    : theirs.data?.partnerLists === false
+      ? "collection"
+      : "lists";
   const theirFlags = new Map((theirs.data?.items ?? []).map((item) => [pickKey(item), item]));
   const collections: Collections = {
     ...theirs.data?.collections,
@@ -120,8 +127,15 @@ export function BuilderForm({
     if (side === "give" && pick.objektId === null) {
       return m.offer_flag_pick_copy({ name: itemName(pick, collections) });
     }
-    // only what their lists offer can be asked for, bar what the countered offer gave
-    if (side === "get" && theirs.data && !pick.kept && !theirFlags.has(pick.key)) {
+    // only what their lists offer can be asked for, bar what the countered offer gave; with no
+    // lists, the collection picker's picks are checked when the offer is sent
+    if (
+      side === "get" &&
+      theirs.data &&
+      source === "lists" &&
+      !pick.kept &&
+      !theirFlags.has(pick.key)
+    ) {
       return m.offer_flag_not_listed();
     }
     return blockedReason(flagsOf(pick));
@@ -255,6 +269,7 @@ export function BuilderForm({
                 estimatedOf={estimatedOf}
                 reasonOf={(pick) => reasonOf(side, pick)}
                 refused={refused}
+                source={source}
                 onAdd={() => setPicking(side)}
                 onRemove={(key) => setPicks(picks.filter((pick) => pick.key !== key))}
               >
@@ -373,6 +388,7 @@ export function BuilderForm({
           side={picking}
           to={to}
           name={name}
+          source={source ?? "lists"}
           picked={sides[picking][0]}
           onDone={(picks, found) => {
             sides[picking][1](picks);

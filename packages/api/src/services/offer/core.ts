@@ -14,7 +14,12 @@ import {
 import { and, eq, gt, inArray, isNull, or, sql } from "drizzle-orm";
 
 import { holdsMessage, pairKey, startFactsOf, startVerdict } from "../../lib/chat-rules";
-import { type ListEntryRef, safetyRefusal } from "../../lib/offer-rules";
+import {
+  type AddressFacts,
+  type ListEntryRef,
+  addressFacts,
+  safetyRefusal,
+} from "../../lib/offer-rules";
 import { addressesByUser } from "../../lib/trade-rank";
 import { unique } from "../../lib/unique";
 import { type ChatTarget } from "../../schemas/chat";
@@ -314,4 +319,51 @@ export async function allowedEntries(
           },
         ];
   });
+}
+
+/** Whether the partner has a list the sender must ask through. */
+export async function partnerHasLists(partnerId: string) {
+  const rows = await db
+    .select({ id: lists.id })
+    .from(lists)
+    .where(and(eq(lists.userId, partnerId), offersOnTrade))
+    .limit(1);
+  return rows.length > 0;
+}
+
+/**
+ * The partner's linked addresses, lowercase. `shown` holds the ones the sender may read (profile
+ * not private); `serials` and `hidden` split those by whether they show serials.
+ */
+export type CollectionAddresses = {
+  all: string[];
+  shown: Map<string, AddressFacts>;
+  serials: string[];
+  hidden: string[];
+};
+
+export async function collectionAddresses(partnerId: string): Promise<CollectionAddresses> {
+  const rows = await db
+    .select({
+      address: userAddress.address,
+      privateProfile: userAddress.privateProfile,
+      privateSerial: userAddress.privateSerial,
+    })
+    .from(userAddress)
+    .where(eq(userAddress.userId, partnerId));
+  const shown = new Map<string, AddressFacts>();
+  for (const row of rows) {
+    const facts = addressFacts(row);
+    if (facts.visible) shown.set(row.address.toLowerCase(), facts);
+  }
+  const split = (showsSerials: boolean) =>
+    [...shown]
+      .filter(([, facts]) => facts.showsSerials === showsSerials)
+      .map(([address]) => address);
+  return {
+    all: rows.map((row) => row.address.toLowerCase()),
+    shown,
+    serials: split(true),
+    hidden: split(false),
+  };
 }
