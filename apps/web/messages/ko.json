@@ -952,7 +952,7 @@
   "trade_tab_browse": "둘러보기",
   "trade_tab_for_you": "추천",
   "trade_browse_description": "거래에 올린 보유·희망·판매 목록을 최근에 끌어올린 순으로 보여줍니다.",
-  "trade_for_you_description": "내 목록과 맞는 게시물을 잘 맞는 순서로 보여줍니다.",
+  "trade_for_you_description": "내 목록과 맞는 게시물을 잘 맞는 순으로 보여줍니다.",
   "trade_section_mutual": "상호",
   "trade_section_one_way": "단방향",
   "trade_type_label": "게시물 종류",
@@ -967,7 +967,7 @@
   "trade_stack_copies_ring": "{count}장, 내 목록에 있음",
   "trade_strip_none": "없음",
   "trade_strip_none_match": "일치 없음",
-  "trade_strip_you_want": "{role} {count} · 내가 원함",
+  "trade_strip_you_want": "{role} {count} · 내 희망",
   "trade_strip_you_have": "{role} {count} · 내가 보유",
   "trade_strip_total": "전체 {total}개",
   "trade_strip_none_you_have": "내가 보유한 것 없음",
@@ -978,7 +978,7 @@
   "trade_match_you_have": "상대가 원하는 {count}개 보유",
   "trade_chip_mutual": "상호 {mutual} · 상대 보유 {theyHave} · 내 보유 {youHave}",
   "trade_chip_both": "내가 원하는 {theyHave}개를 상대가 보유 · 상대가 원하는 {youHave}개 보유",
-  "trade_lists_count": "리스트 {count}개",
+  "trade_lists_count": "목록 {count}개",
   "trade_hide_partner": "숨기기",
   "trade_you_tag": "나",
   "trade_partner_lists_title": "상대의 일치한 리스트",
@@ -1677,5 +1677,5 @@
   "notification_action_matches": "매치 보기",
   "notification_caught_up": "모든 알림을 확인했습니다",
   "notification_go_to_trades": "거래 둘러보기",
-  "notification_make_want_list": "원해요 목록 만들기"
+  "notification_make_want_list": "희망 목록 만들기"
 }
