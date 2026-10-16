@@ -49,7 +49,7 @@ A leg SHALL verify within 3 minutes of the indexer recording its transfer, even 
 - **THEN** the transfer that already verified the first leg doesn't verify the second
 
 ### Requirement: Broken trades
-If a reserved objekt in an in-progress trade moves to anyone other than the receiver:
+If a reserved objekt in an in-progress trade moves to anyone other than the receiver, and its leg holds no pending wrong copy (see Wrong copy sent, which accepts that copy instead):
 - with no leg verified yet and no received wrong copy held (see Wrong copy sent), the trade SHALL be Cancelled with the reason "an objekt left the wallet";
 - with a leg already verified, or a received wrong copy held, the trade SHALL be marked Failed.
 
@@ -75,7 +75,7 @@ A move away shortly before the accept counts too when the objekt never came back
 
 #### Scenario: Wrong copy and sale seen together
 - **WHEN** the giver sends a wrong copy of #1203, then sells #1203 to a third account, and the verifier reads both in one check
-- **THEN** the trade shows Failed, as if the copy had been read first
+- **THEN** the copy is accepted automatically, as if it had been read first, and the trade carries on
 
 #### Scenario: Copy of the sold objekt sent after the sale
 - **WHEN** the giver sells #1203 to a third account, then sends another copy of its collection, and the verifier reads both in one check
@@ -84,6 +84,10 @@ A move away shortly before the accept counts too when the objekt never came back
 #### Scenario: Wrong copy on another leg after the sale
 - **WHEN** the giver sells the objekt of one leg, then sends a wrong copy for another leg they owe, and the verifier reads both in one check
 - **THEN** the trade shows Failed: the receiver holds that copy, and Report a problem covers it
+
+#### Scenario: Sold while a wrong copy is pending
+- **WHEN** the trade asks for HyeRin 301Z #537, a wrong copy #542 is pending, and the giver then sells #537 to a third account
+- **THEN** #542 is accepted automatically, the leg shows Verified "#542 in place of #537", and the trade carries on
 
 ### Requirement: Wrong copy sent
 While a specific-objekt leg of an in-progress trade is waiting, the system SHALL record a **wrong copy** for it when the indexer records a transfer that:
@@ -100,12 +104,23 @@ On the trade page, under the leg, the system SHALL name both serials, the wrong 
 
 Only the receiver SHALL be able to accept or decline, and only while the trade is in progress and the leg is waiting. A refused request SHALL leave the trade unchanged. A leg verified through an accepted wrong copy SHALL show the serial that was received, with the asked-for serial beside it.
 
+A pending wrong copy SHALL count as accepted, with nobody pressing Accept, at the first of:
+- **its deadline**, 72 hours after it was recorded;
+- **the trade's expiry**, `TRADE_EXPIRE_DAYS` after accept;
+- **its leg breaking**: the asked-for objekt leaving the giver (see Broken trades).
+
+Each of these SHALL wait until the indexer has read the chain past it (see Indexer delay), so an asked-for objekt sent in time verifies the leg first. Accepting it SHALL verify the leg exactly as Accept does, and mark the leg as accepted automatically. Of several pending copies on one leg, the earliest sent SHALL be accepted. A copy whose transfer has verified another leg SHALL no longer be offered or accepted. Moving the copy on from the receiver's wallet SHALL not stop it.
+
+The receiver SHALL see when the copy counts as accepted ("Counts as accepted on Oct 18 unless you decline"), and the giver that it will be. Decline SHALL stay possible until then, and a declined copy SHALL never be accepted.
+
 A trade with a received wrong copy that is still waiting on the receiver, or was declined, SHALL be treated as one where a transfer was made:
 - Cancel SHALL be replaced by the locked note, as after a verified transfer.
-- If it is still in progress `TRADE_EXPIRE_DAYS` after accept, it SHALL end Failed, not Cancelled, so Report a problem is offered.
-- If a leg breaks (see Broken trades), it SHALL end Failed, not Cancelled.
+- With a declined copy, if it is still in progress `TRADE_EXPIRE_DAYS` after accept, it SHALL end Failed, not Cancelled, so Report a problem is offered.
+- With a declined copy, if a leg breaks (see Broken trades), it SHALL end Failed, not Cancelled.
 
 A wrong copy SHALL stop being offered once its leg closes: the asked-for objekt verified, another wrong copy was accepted, or the trade ended.
+
+A copy that was already pending when this rule shipped SHALL have its 72 hours counted from then.
 
 #### Scenario: Our serial was off
 - **WHEN** the trade asks for HyeRin 301Z #1203, and the giver sends the copy Cosmo shows as #1203, which our index has as #1207
@@ -130,6 +145,26 @@ A wrong copy SHALL stop being offered once its leg closes: the asked-for objekt 
 #### Scenario: Expires holding a wrong copy
 - **WHEN** a trade with a declined wrong copy and no verified leg reaches its expiry
 - **THEN** it ends Failed, both parties are notified, and Report a problem is offered
+
+#### Scenario: No answer
+- **WHEN** a wrong copy #1207 has waited on the receiver for 72 hours, and the indexer has read past that time
+- **THEN** within 3 minutes the leg shows Verified "#1207 in place of #1203", marked accepted automatically, and the trade completes if it was the last leg
+
+#### Scenario: Deadline while the indexer is behind
+- **WHEN** a wrong copy's 72 hours pass while the indexer is 2 hours behind, and the giver sent the asked-for objekt an hour before the deadline
+- **THEN** once the indexer catches up the leg verifies with the asked-for objekt, and the wrong copy is no longer offered
+
+#### Scenario: Expiry first
+- **WHEN** a wrong copy is recorded on day 13, and the trade reaches its 14-day expiry with that copy still pending
+- **THEN** the copy is accepted then, and the trade ends as its legs decide instead of Failed for the copy
+
+#### Scenario: Several copies
+- **WHEN** a leg holds pending copies #1207 and #1209, sent in that order, and the deadline passes
+- **THEN** #1207 is accepted, and #1209 is no longer offered
+
+#### Scenario: Declined stays declined
+- **WHEN** the receiver declined a wrong copy, and 72 hours pass
+- **THEN** the leg keeps waiting for its own objekt
 
 ### Requirement: Offer upkeep
 An open offer SHALL be marked Expired, and both parties notified, within 3 minutes of its 7-day expiry. An open offer whose specific objekt has left its owner's linked addresses SHALL be Cancelled with the reason "an objekt left the wallet", and both parties notified.
