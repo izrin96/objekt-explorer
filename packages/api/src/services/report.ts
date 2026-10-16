@@ -7,6 +7,7 @@ import { and, desc, eq, inArray, or, sql } from "drizzle-orm";
 
 import { canReport } from "../lib/offer-rules";
 import { reportRetryAt, shapeExcerpt, shapeExcerptOffer } from "../lib/sanctions";
+import { cardKinds } from "../schemas/chat";
 import type { ReportInput } from "../schemas/moderation";
 import { afterBlockChange, findMembership, parseCard } from "./chat";
 import { findAccount, refuseModeration } from "./moderation";
@@ -133,15 +134,19 @@ export async function fileReport(me: string, input: ReportInput) {
         note: input.note || null,
         excerpt: shared
           ? shapeExcerpt(
-              shared.map((m) => ({
-                id: m.id,
-                senderId: m.senderId,
-                body: m.body,
-                card: parseCard(m.card),
-                unsent: m.unsentAt !== null,
-                offer: (m.offerId === null ? undefined : offers?.get(m.offerId)) ?? null,
-                createdAt: m.createdAt,
-              })),
+              shared.map((m) => {
+                const card = cardKinds(parseCard(m.card));
+                return {
+                  id: m.id,
+                  senderId: m.senderId,
+                  body: m.body,
+                  card: card.objekt,
+                  post: card.post ? { listId: card.post.listId } : null,
+                  unsent: m.unsentAt !== null,
+                  offer: (m.offerId === null ? undefined : offers?.get(m.offerId)) ?? null,
+                  createdAt: m.createdAt,
+                };
+              }),
               input.userId,
             )
           : null,

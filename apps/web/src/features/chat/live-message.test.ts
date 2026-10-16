@@ -17,6 +17,7 @@ const message = (id: number) => ({
   mine: false,
   body: `m${id}`,
   card: null,
+  post: null,
   caution: null,
   createdAt: new Date(id * 1000).toISOString(),
   unsent: false,

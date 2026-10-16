@@ -29,6 +29,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { collectionName } from "@/features/objekt/objekt-label";
 import { offerNo } from "@/features/offers/format";
 import { OfferThumb } from "@/features/offers/offer-item";
+import { TagBadge } from "@/features/trade/tag-label";
 import { useMinuteClock } from "@/hooks/use-minute-clock";
 import { relativeTime } from "@/lib/time";
 import { cn } from "@/lib/utils";
@@ -284,7 +285,7 @@ function preview(last: ConversationRow["last"]) {
   const text =
     last.body ??
     (last.offerId !== null ? m.chat_preview_offer({ offer: offerNo(last.offerId) }) : null) ??
-    m.chat_preview_card();
+    (last.post ? m.chat_preview_post() : m.chat_preview_card());
   return last.mine ? m.chat_preview_mine({ text }) : text;
 }
 
@@ -297,7 +298,7 @@ function ConversationItem({
   collections: Record<string, ValidObjekt>;
   now: number;
 }) {
-  const { partner, last, context, unread, muted } = row;
+  const { partner, last, context, contextPost, unread, muted } = row;
   const contextCollection = context ? collections[context.collectionSlug] : undefined;
   const name = partner.identity.name;
   const hydrated = useHydrated();
@@ -360,6 +361,21 @@ function ConversationItem({
               {collectionName(context.collectionSlug, contextCollection)}
               {context.serial !== null ? ` ${m.chat_card_serial({ serial: context.serial })}` : ""}
             </span>
+          </div>
+        ) : contextPost ? (
+          <div className="mt-1 flex min-w-0 items-center gap-2">
+            {contextPost.post ? (
+              <>
+                <TagBadge tag={contextPost.post.tag} />
+                <span className="text-muted-foreground min-w-0 truncate font-mono text-xs">
+                  {m.chat_post_title({ name: contextPost.post.owner.name })}
+                </span>
+              </>
+            ) : (
+              <span className="text-muted-foreground min-w-0 truncate font-mono text-xs">
+                {m.chat_post_removed()}
+              </span>
+            )}
           </div>
         ) : null}
       </RowLink>

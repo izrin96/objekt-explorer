@@ -226,6 +226,7 @@ function ThreadView({
                         collection={
                           message.card ? collections[message.card.collectionSlug] : undefined
                         }
+                        collections={collections}
                         offerCard={
                           message.offer ? (
                             <OfferCard
@@ -292,6 +293,7 @@ function ThreadView({
           empty={messages.length === 0}
           onSent={() => (stick.current = true)}
           onOffer={() => builder.open({ to: { conversationId: id }, name })}
+          onOpen={setActive}
         />
       )}
       <ObjektDrawer objekt={active} onClose={() => setActive(null)} />

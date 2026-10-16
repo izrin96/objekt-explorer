@@ -11,7 +11,7 @@ import {
 } from "../../lib/offer-rules";
 import { iso } from "../../lib/time";
 import { unique } from "../../lib/unique";
-import { parseCaution, type StoredCard } from "../../schemas/chat";
+import { parseCaution, type StoredObjektCard } from "../../schemas/chat";
 import type {
   OfferCancelReason,
   OfferStatus,
@@ -72,7 +72,7 @@ export async function fetchOffers(offerIds: number[]): Promise<Map<number, Hydra
 }
 
 /** Each item as a card, so `hydrateCards` reads serials and collections with the thread's own cards. */
-export function offerItemCards(offers: Iterable<HydratedOffer>): StoredCard[] {
+export function offerItemCards(offers: Iterable<HydratedOffer>): StoredObjektCard[] {
   return [...offers].flatMap((o) =>
     o.items.map(([, collectionSlug, objektId]) =>
       objektId === null ? { collectionSlug } : { collectionSlug, objektId },

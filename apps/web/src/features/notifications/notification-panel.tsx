@@ -183,6 +183,7 @@ export function NotificationPanel({
                   ) : item.type === "offer" || item.type === "trade" ? (
                     <OfferItem
                       notification={item}
+                      collections={collections}
                       now={now}
                       onOpen={() => {
                         readIfUnread(item);

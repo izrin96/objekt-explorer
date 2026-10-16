@@ -1,5 +1,5 @@
-import { CaretRightIcon } from "@phosphor-icons/react";
-import type { OfferView } from "@repo/api/schemas/offer";
+import { ArrowsLeftRightIcon, CaretRightIcon } from "@phosphor-icons/react";
+import type { OfferItemView, OfferView } from "@repo/api/schemas/offer";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 
 import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -7,6 +7,7 @@ import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "@/components/
 import { offerNo, offerStatusText, offerSummary } from "./format";
 import { Mono } from "./mono";
 import { OfferBody } from "./offer-body";
+import { OfferThumb } from "./offer-item";
 import type { Collections } from "./pick";
 
 /**
@@ -62,6 +63,7 @@ export function OfferCard({
             {offerSummary(offer, collections)}
           </span>
         </span>
+        <ThumbStrip give={offer.give} get={offer.get} collections={collections} />
       </CollapsibleTrigger>
       <CollapsiblePanel>
         <div className="border-t">
@@ -76,5 +78,44 @@ export function OfferCard({
         </div>
       </CollapsiblePanel>
     </Collapsible>
+  );
+}
+
+/** Up to three of each side, so an older offer is recognisable without opening it. */
+const THUMBS_PER_SIDE = 3;
+
+function ThumbStrip({
+  give,
+  get,
+  collections,
+}: {
+  give: OfferItemView[];
+  get: OfferItemView[];
+  collections: Collections;
+}) {
+  const side = (items: OfferItemView[]) => (
+    <span className="flex items-center gap-1">
+      {items.slice(0, THUMBS_PER_SIDE).map((item, i) => (
+        <OfferThumb
+          key={i}
+          slug={item.collectionSlug}
+          collection={collections[item.collectionSlug]}
+          className="w-6"
+        />
+      ))}
+      {items.length > THUMBS_PER_SIDE ? (
+        <span className="text-muted-foreground font-mono text-xs tabular-nums">
+          +{items.length - THUMBS_PER_SIDE}
+        </span>
+      ) : null}
+    </span>
+  );
+  return (
+    // the summary beside it already says all of this
+    <span aria-hidden className="flex shrink-0 items-center gap-1.5">
+      {side(give)}
+      <ArrowsLeftRightIcon className="text-muted-foreground size-3.5" />
+      {side(get)}
+    </span>
   );
 }

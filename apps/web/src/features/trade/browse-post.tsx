@@ -44,16 +44,17 @@ export function BrowsePost({
   const hide = useHideWithUndo();
   const { changed, time } = postTime(post);
   const when = relativeTime(new Date(time).getTime(), now);
-  // the post's own list (the have list of a pair), with the first collection it shows
+  // the post's own list: the have list of a pair
   const anchor = post.sides.find((side) => side.list.id === post.id);
-  const firstShown = anchor?.items[0]?.slug;
+  // the server saves the match, by the same rules as the chip; this only asks for it
+  const withMatch = !!person && (person.counts.theyHave > 0 || person.counts.youHave > 0);
   const contact: TradeContact = own
     ? { kind: "own" }
     : post.messageable && anchor
       ? {
           kind: "open",
           target: { kind: "list", slug: anchor.list.slug },
-          card: firstShown ? { collectionSlug: firstShown, listSlug: anchor.list.slug } : undefined,
+          card: { kind: "post", listSlug: anchor.list.slug, withMatch },
         }
       : { kind: "closed" };
   const wantOnly = post.tag === "wtt" && post.sides.every((side) => side.role === "want");

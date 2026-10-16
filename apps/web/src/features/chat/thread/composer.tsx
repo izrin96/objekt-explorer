@@ -1,5 +1,6 @@
 import { CardsThreeIcon, HandshakeIcon, PaperPlaneRightIcon } from "@phosphor-icons/react";
 import { MESSAGE_MAX_LENGTH, messageLength } from "@repo/api/schemas/chat";
+import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { type FormEvent, type KeyboardEvent, useEffect, useId, useRef, useState } from "react";
 
@@ -39,6 +40,7 @@ export function Composer({
   empty: conversationEmpty,
   onSent,
   onOffer,
+  onOpen,
 }: {
   conversationId: number;
   name: string;
@@ -46,6 +48,7 @@ export function Composer({
   empty: boolean;
   onSent: () => void;
   onOffer: () => void;
+  onOpen: (objekt: ValidObjekt) => void;
 }) {
   const queryClient = useQueryClient();
   const { offerLink } = useStartGate();
@@ -60,6 +63,10 @@ export function Composer({
     setAttachment(handed);
   }
   const [attachOpen, setAttachOpen] = useState(false);
+  const detach = () => {
+    setAttachment(null);
+    dropDraftSendId(conversationId);
+  };
   const [error, setError] = useState<string | null>(null);
   // over the per-minute limit the server names when it takes messages again
   const [blockedUntil, setBlockedUntil] = useState<number | null>(null);
@@ -180,10 +187,14 @@ export function Composer({
       {attachment ? (
         <AttachmentChip
           attachment={attachment}
+          onOpen={onOpen}
           onRemove={() => {
-            setAttachment(null);
-            dropDraftSendId(conversationId);
+            detach();
             textarea.current?.focus();
+          }}
+          onPickObjekts={() => {
+            detach();
+            setAttachOpen(true);
           }}
         />
       ) : null}
@@ -194,7 +205,7 @@ export function Composer({
           aria-label={m.chat_suggestions_label()}
           className="flex flex-wrap gap-1.5"
         >
-          {firstLineSuggestions(attachment?.listType).map((suggestion) => (
+          {firstLineSuggestions(attachment).map((suggestion) => (
             <Button
               key={suggestion()}
               variant="outline"

@@ -14,7 +14,7 @@ import {
   UNSEND_WINDOW_MINUTES,
 } from "../../schemas/chat";
 import { redis } from "../redis";
-import { hydrateCards, resolveCard, toChatMessages } from "./cards";
+import { hydrateCards, hydratePostCards, resolveCard, toChatMessages } from "./cards";
 import { loadThread } from "./inbox";
 import { publishChatMessage } from "./live";
 import { appendMessage, findMembership, findSentMessage } from "./members";
@@ -70,14 +70,29 @@ export async function startConversation(
     console.warn(`[chat] start ${result.id}: thread read failed`, error);
     return null;
   });
-  if (!input.card || !result.card) return { id: result.id, card: null, thread: await thread };
+  const { card } = result;
+  if (!card) return { id: result.id, card: null, postCard: null, thread: await thread };
+  // an objekt card keeps its `card` field, which a tab loaded before post cards reads
+  if (card.kind === "post") {
+    const [{ view, collections }, page] = await Promise.all([
+      hydratePostCards([card.stored], me),
+      thread,
+    ]);
+    return {
+      id: result.id,
+      card: null,
+      postCard: { input: card.input, view: view(card.stored), collections },
+      thread: page,
+    };
+  }
   const [{ view, collections }, page] = await Promise.all([
-    hydrateCards([result.card], me),
+    hydrateCards([card.stored], me),
     thread,
   ]);
   return {
     id: result.id,
-    card: { input: input.card, view: view(result.card), collections },
+    card: { input: card.input, view: view(card.stored), collections },
+    postCard: null,
     thread: page,
   };
 }
@@ -108,7 +123,9 @@ export async function sendMessage(
   const caution = body === null ? [] : scanMessage(body);
 
   const sent = await (async () => {
-    const card = input.card ? await resolveCard(input.card, { senderId: me, partnerId }) : null;
+    const card = input.card
+      ? (await resolveCard(input.card, { senderId: me, partnerId })).stored
+      : null;
     // the first message is the conversation's start; the start lock comes before the row lock
     const first = holdsMessage(lastMessageId)
       ? null

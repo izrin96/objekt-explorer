@@ -13,6 +13,8 @@ import {
   type listConversationsInputSchema,
   MUTE_HOURS,
   type muteInputSchema,
+  cardKinds,
+  splitCards,
   THREAD_PAGE_SIZE,
   type threadInputSchema,
 } from "../../schemas/chat";
@@ -20,7 +22,7 @@ import { loadIdentities } from "../identities";
 import { toPublicUser } from "../profile";
 import { reputationOf } from "../reputation";
 import { notBlockedBy } from "../safety";
-import { hydrateCards, parseCard, toChatMessages } from "./cards";
+import { hydrateCards, hydratePostCards, parseCard, toChatMessages } from "./cards";
 import { findMembership, updateMember } from "./members";
 import { publishChatChanged } from "./notify";
 import { chatSafety } from "./safety";
@@ -153,18 +155,20 @@ async function selectConversationRows(me: string, scope: ReturnType<typeof sql>,
 async function toConversationRows(me: string, page: ConversationListRow[]) {
   const now = new Date();
   const contexts = page.map((row) => parseCard(row.context_card));
-  const [partners, { view, collections }] = await Promise.all([
+  const split = splitCards(contexts);
+  const [partners, objekts, posts] = await Promise.all([
     fetchPartners(page.map((row) => row.partner_id)),
-    hydrateCards(
-      contexts.filter((card) => card !== null),
-      me,
-    ),
+    hydrateCards(split.objekts, me),
+    hydratePostCards(split.posts, me),
   ]);
+  const collections = { ...objekts.collections, ...posts.collections };
   const items = page.flatMap((row, i): ConversationRow[] => {
     const partner = partners.get(row.partner_id);
     if (!partner || row.message_id === null || row.sender_id === null || row.created_at === null) {
       return [];
     }
+    const context = cardKinds(contexts[i] ?? null);
+    const lastCard = cardKinds(row.unsent ? null : parseCard(row.card));
     const last = { id: Number(row.message_id), senderId: row.sender_id, createdAt: row.created_at };
     const lastRead = row.last_read_message_id === null ? null : Number(row.last_read_message_id);
     const incoming =
@@ -177,12 +181,14 @@ async function toConversationRows(me: string, page: ConversationListRow[]) {
           id: last.id,
           mine: last.senderId === me,
           body: row.unsent ? null : row.body,
-          card: row.unsent ? null : parseCard(row.card),
+          card: lastCard.objekt,
+          post: lastCard.post !== null,
           offerId: row.offer_id,
           createdAt: new Date(last.createdAt).toISOString(),
           unsent: row.unsent === true,
         },
-        context: contexts[i] ? view(contexts[i]) : null,
+        context: context.objekt ? objekts.view(context.objekt) : null,
+        contextPost: context.post ? posts.view(context.post) : null,
         unread: rowUnread({ request: row.request, lastReadMessageId: lastRead }, incoming, me),
         request: row.request,
         archived: row.archived_at !== null,

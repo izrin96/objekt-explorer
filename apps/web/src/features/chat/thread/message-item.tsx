@@ -12,12 +12,14 @@ import { Bubble } from "./bubble";
 import type { RunPosition } from "./bubble-run";
 import { MessageActions } from "./message-actions";
 import { ObjektCardMessage } from "./objekt-card-message";
+import { PostCardMessage } from "./post-card-message";
 
 export function MessageItem({
   conversationId,
   message,
   name,
   collection,
+  collections,
   offerCard,
   position,
   seen,
@@ -29,6 +31,7 @@ export function MessageItem({
   message: ChatMessage;
   name: string;
   collection: ValidObjekt | undefined;
+  collections: Readonly<Record<string, ValidObjekt | undefined>>;
   offerCard: ReactNode;
   position: RunPosition;
   /** the latest of the viewer's messages the partner has read */
@@ -65,6 +68,14 @@ export function MessageItem({
           <div className={cn("flex min-w-0 flex-col gap-1", mine ? "items-end" : "items-start")}>
             {message.card ? (
               <ObjektCardMessage card={message.card} collection={collection} onOpen={onOpen} />
+            ) : null}
+            {message.post ? (
+              <PostCardMessage
+                view={message.post}
+                mine={mine}
+                collections={collections}
+                onOpen={onOpen}
+              />
             ) : null}
             {message.body ? (
               <Bubble mine={mine} position={position}>

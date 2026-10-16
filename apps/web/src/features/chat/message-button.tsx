@@ -67,14 +67,23 @@ export function useStartConversation() {
 
   const mutation = useMutation(
     orpc.chat.start.mutationOptions({
-      onSuccess: ({ id, card, thread }) => {
+      onSuccess: ({ id, card, postCard, thread }) => {
         const objekt = card?.collections[card.input.collectionSlug];
         if (card && objekt) {
           putDraftCard(id, {
+            kind: "objekt",
             input: card.input,
             objekt,
             listName: card.view.list?.name ?? null,
             listType: card.view.list?.listTypeNew,
+          });
+        }
+        if (postCard) {
+          putDraftCard(id, {
+            kind: "post",
+            input: postCard.input,
+            view: postCard.view,
+            collections: postCard.collections,
           });
         }
         // an open thread's cache may hold older pages and live messages; only a new one is seeded

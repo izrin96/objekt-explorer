@@ -21,6 +21,7 @@ import { TONE_FILL, TONE_INK, type Tone } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
+import { notificationSlugs, stackSlugs } from "./stack";
 import { type NotificationIcon, notificationTone } from "./tone";
 
 export type Collections = Outputs["notifications"]["list"]["collections"];
@@ -42,19 +43,108 @@ const TONE_FRAME: Partial<Record<Tone, string>> = {
   have: "outline-type-have",
 };
 
+/** Every leading mark sits in this slot, so the text beside it does not move between kinds. */
+const SLOT = "flex h-12 w-10 shrink-0 justify-center";
+
 function ToneTile({ notification }: { notification: Notification }) {
   const { icon, tone } = notificationTone(notification);
   const Glyph = TONE_ICON[icon];
   return (
-    <span
-      className={cn(
-        "grid h-10 w-7 shrink-0 place-items-center rounded",
-        TONE_FILL[tone],
-        TONE_INK[tone],
-      )}
-    >
-      <Glyph aria-hidden weight="bold" className="size-4" />
+    <span className={SLOT}>
+      <span
+        className={cn("grid h-10 w-7 place-items-center rounded", TONE_FILL[tone], TONE_INK[tone])}
+      >
+        <Glyph aria-hidden weight="bold" className="size-4" />
+      </span>
     </span>
+  );
+}
+
+/** Where each objekt of a stack sits, counted from the front one. */
+const DECK = [
+  "start-0 top-1",
+  "start-1.25 top-0.5 opacity-80",
+  "start-2.5 top-0 opacity-50",
+] as const;
+
+/**
+ * Up to three objekts in the leading slot: the first in full at the front, the ones behind it
+ * offset and faded. `frame` rings each in its list type's colour; `badge` is the event's own
+ * icon, kept small over the stack so an offer's objekts do not lose what happened to it.
+ */
+function NotificationStack({
+  slugs,
+  collections,
+  frame,
+  badge,
+}: {
+  slugs: readonly string[];
+  collections: Collections;
+  frame?: string;
+  badge?: Pick<ReturnType<typeof notificationTone>, "icon" | "tone">;
+}) {
+  const Glyph = badge ? TONE_ICON[badge.icon] : null;
+  return (
+    <span className={cn(SLOT, "relative")}>
+      <span className="relative block h-12 w-10">
+        {/* the front one last, so it paints over the rest */}
+        {slugs
+          .map((slug, depth) => ({ slug, depth }))
+          .toReversed()
+          .map(({ slug, depth }) => (
+            <img
+              key={depth}
+              src={collections[slug]?.thumbnailImage}
+              alt=""
+              className={cn(
+                "aspect-photocard absolute w-7 rounded-sm object-cover",
+                DECK[depth],
+                // the frame is its list type's colour; an offer's objekts have none
+                frame && ["outline-offset-1", slugs.length > 1 ? "outline-1" : "outline-2", frame],
+              )}
+            />
+          ))}
+        {badge && Glyph ? (
+          <span className="bg-popover ring-popover absolute start-4.5 top-7.5 z-10 rounded-full ring-2">
+            <span
+              className={cn(
+                "grid size-4.5 place-items-center rounded-full",
+                TONE_FILL[badge.tone],
+                TONE_INK[badge.tone],
+              )}
+            >
+              <Glyph aria-hidden weight="bold" className="size-2.5" />
+            </span>
+          </span>
+        ) : null}
+      </span>
+    </span>
+  );
+}
+
+/** The objekts a notification leads with, or the tone tile when none of its collections has loaded. */
+function NotificationLead({
+  notification,
+  collections,
+  frame,
+  badge = false,
+}: {
+  notification: Notification;
+  collections: Collections;
+  frame?: string;
+  badge?: boolean;
+}) {
+  const slugs = stackSlugs(notificationSlugs(notification), (slug) =>
+    Boolean(collections[slug]?.thumbnailImage),
+  );
+  if (slugs.length === 0) return <ToneTile notification={notification} />;
+  return (
+    <NotificationStack
+      slugs={slugs}
+      collections={collections}
+      frame={frame}
+      badge={badge ? notificationTone(notification) : undefined}
+    />
   );
 }
 
@@ -137,10 +227,12 @@ export function SanctionItem({
 /** Offers and trades: to the trade once there is one, else to the conversation. */
 export function OfferItem({
   notification,
+  collections,
   now,
   onOpen,
 }: {
   notification: OfferNotification;
+  collections: Collections;
   now: number;
   onOpen: () => void;
 }) {
@@ -150,7 +242,7 @@ export function OfferItem({
     "hover:bg-accent focus-visible:bg-accent focus-visible:ring-ring flex items-start gap-3 px-4 py-2.5 outline-none focus-visible:ring-2 focus-visible:ring-inset";
   const body = (
     <>
-      <ToneTile notification={notification} />
+      <NotificationLead notification={notification} collections={collections} badge />
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span
           className={cn(
@@ -204,8 +296,6 @@ export function NotificationItem({
   // an older tab skips a type a newer server sends
   if (text === null) return null;
 
-  const latest = notification.payload.latest[0];
-  const thumbnail = latest ? collections[latest.collectionSlug]?.thumbnailImage : undefined;
   const unread = notification.readAt === null;
 
   return (
@@ -215,18 +305,11 @@ export function NotificationItem({
       onClick={onOpen}
       className="hover:bg-accent focus-visible:bg-accent focus-visible:ring-ring flex items-start gap-3 px-4 py-2.5 outline-none focus-visible:ring-2 focus-visible:ring-inset"
     >
-      {thumbnail ? (
-        <img
-          src={thumbnail}
-          alt=""
-          className={cn(
-            "h-10 w-7 shrink-0 rounded object-cover outline-2 outline-offset-1",
-            TONE_FRAME[notificationTone(notification).tone],
-          )}
-        />
-      ) : (
-        <ToneTile notification={notification} />
-      )}
+      <NotificationLead
+        notification={notification}
+        collections={collections}
+        frame={TONE_FRAME[notificationTone(notification).tone]}
+      />
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span
           className={cn(

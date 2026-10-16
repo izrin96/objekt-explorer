@@ -365,6 +365,25 @@ const mineRowSchema = z.object({
 });
 export type MineRow = z.infer<typeof mineRowSchema>;
 
+export const NOTE_OBJEKTS = 3;
+
+/**
+ * The offer's collections as the reader sees them: what they get first, then what they give,
+ * each once, three at most. `side` is the offer creator's: the creator gets the `get` side, the
+ * other party the `give` side. `items` come in the offer's own order.
+ */
+export function noteObjekts(
+  items: readonly { side: OfferSide; collectionSlug: string }[],
+  readerId: string,
+  fromUserId: string,
+): string[] {
+  const gets: OfferSide = readerId === fromUserId ? "get" : "give";
+  const slugsOf = (side: OfferSide) =>
+    items.filter((item) => item.side === side).map((item) => item.collectionSlug);
+  const other: OfferSide = gets === "get" ? "give" : "get";
+  return [...new Set([...slugsOf(gets), ...slugsOf(other)])].slice(0, NOTE_OBJEKTS);
+}
+
 const OFFER_EVENTS = [
   "received",
   "countered",
@@ -383,6 +402,8 @@ export const offerPayloadSchema = z.object({
   event: z.enum(OFFER_EVENTS),
   reason: z.enum([...OFFER_CANCEL_REASONS, "party"]).nullable(),
   partner: z.object({ userId: z.string(), name: z.string() }),
+  /** up to three collections of the offer, what the reader gets first; absent on rows written before it existed */
+  objekts: z.string().array().max(NOTE_OBJEKTS).optional(),
 });
 export type OfferPayload = z.infer<typeof offerPayloadSchema>;
 
@@ -419,6 +440,8 @@ export const tradePayloadSchema = z.object({
   copy: z.object({ asked: shownSerialSchema, sent: shownSerialSchema }).optional(),
   /** ISO time the copy counts as accepted, on `wrong_copy` and `wrong_copy_due` */
   acceptBy: z.string().optional(),
+  /** as on an offer note: up to three collections, what the reader gets first */
+  objekts: z.string().array().max(NOTE_OBJEKTS).optional(),
 });
 export type TradePayload = z.infer<typeof tradePayloadSchema>;
 

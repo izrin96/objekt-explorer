@@ -3,6 +3,7 @@ import * as z from "zod";
 import { addressSchema } from "./common/address";
 import type { OfferView } from "./offer";
 import { publicUserSchema } from "./profile";
+import { POST_TYPES } from "./trade";
 
 export const MESSAGE_MAX_LENGTH = 2000;
 export const THREAD_PAGE_SIZE = 50;
@@ -13,6 +14,8 @@ export const NEW_ACCOUNT_START_LIMIT = 5;
 export const NEW_ACCOUNT_DAYS = 7;
 export const START_WINDOW_HOURS = 24;
 export const MESSAGE_LIMIT_PER_MINUTE = 30;
+
+export const MATCH_SLUGS = 3;
 
 export const MUTE_HOURS = { "8h": 8, "1w": 7 * 24 } as const;
 
@@ -72,21 +75,77 @@ const slugSchema = (max: number) =>
     .max(max)
     .refine((slug) => !slug.includes("\0"));
 
-/** What `message.card` stores. */
-export const storedCardSchema = z.object({
+/** An objekt card as `message.card` stores it: no `kind`, so search by `card->>'collectionSlug'` works. */
+export const storedObjektCardSchema = z.object({
   collectionSlug: z.string(),
   objektId: z.string().optional(),
   listId: z.number().int().optional(),
 });
+export type StoredObjektCard = z.infer<typeof storedObjektCardSchema>;
+
+/** One direction of a saved match: the count of collections, and the first three by slug. */
+const matchSideSchema = z.object({
+  count: z.number().int().nonnegative(),
+  slugs: z.string().array().max(MATCH_SLUGS),
+});
+
+/** The overlap saved when a post card is sent; `ownerHas` is the owner's objekts on the sender's wants. */
+export const storedMatchSchema = z.object({
+  ownerHas: matchSideSchema,
+  senderHas: matchSideSchema,
+});
+export type StoredMatch = z.infer<typeof storedMatchSchema>;
+
+const storedPostCardSchema = z.object({
+  kind: z.literal("post"),
+  listId: z.number().int(),
+  match: storedMatchSchema.optional(),
+});
+export type StoredPostCard = z.infer<typeof storedPostCardSchema>;
+
+/**
+ * What `message.card` can hold. Only `parseCard` and the writers of `message.card` use it: every
+ * output an open tab reads keeps the objekt-only schema, which reads a post card as no card.
+ */
+export const storedCardSchema = z.union([storedPostCardSchema, storedObjektCardSchema]);
 export type StoredCard = z.infer<typeof storedCardSchema>;
 
-/** A card as the client sends it; the list is named by slug and stored by id. */
-const cardInputSchema = z.object({
+export const isPostCard = (card: StoredCard): card is StoredPostCard => "kind" in card;
+
+/** A card as its two kinds, so the objekt-only fields an open tab reads never get a post card. */
+export function cardKinds(card: StoredCard | null) {
+  if (card === null) return { objekt: null, post: null };
+  return isPostCard(card) ? { objekt: null, post: card } : { objekt: card, post: null };
+}
+
+export function splitCards(cards: (StoredCard | null)[]) {
+  const kinds = cards.map(cardKinds);
+  return {
+    objekts: kinds.flatMap((kind) => (kind.objekt ? [kind.objekt] : [])),
+    posts: kinds.flatMap((kind) => (kind.post ? [kind.post] : [])),
+  };
+}
+
+const objektCardInputSchema = z.object({
+  kind: z.literal("objekt").optional(),
   collectionSlug: slugSchema(255),
   objektId: slugSchema(255).optional(),
   listSlug: slugSchema(12).optional(),
 });
+export type ObjektCardInput = z.infer<typeof objektCardInputSchema>;
+
+const postCardInputSchema = z.object({
+  kind: z.literal("post"),
+  listSlug: slugSchema(12),
+  withMatch: z.boolean().optional(),
+});
+export type PostCardInput = z.infer<typeof postCardInputSchema>;
+
+/** A card as the client sends it; the list is named by slug and stored by id. */
+const cardInputSchema = z.union([postCardInputSchema, objektCardInputSchema]);
 export type CardInput = z.infer<typeof cardInputSchema>;
+
+export const isPostInput = (input: CardInput): input is PostCardInput => input.kind === "post";
 
 export const chatTargetSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("list"), slug: slugSchema(12) }),
@@ -208,11 +267,48 @@ const cardViewSchema = z.object({
 });
 export type CardView = z.infer<typeof cardViewSchema>;
 
+const postSideViewSchema = z.object({
+  /** up to six collections of the side, newest first */
+  slugs: z.string().array(),
+  /** collections past `slugs` */
+  more: z.number(),
+});
+
+/** A Trade post as the thread draws it, read live; `post` is null once the post is gone. */
+export const postCardViewSchema = z.object({
+  listId: z.number(),
+  post: z
+    .object({
+      tag: z.enum(POST_TYPES).exclude(["all"]),
+      owner: z.object({ userId: z.string(), name: z.string() }),
+      /** the post's own list, which the card links to */
+      list: z.object({
+        id: z.number(),
+        slug: z.string(),
+        name: z.string(),
+        profileSlug: z.string().nullable(),
+        profile: z.object({ address: z.string(), nickname: z.string().nullable() }).nullable(),
+      }),
+      /** the have or sale list's side; null for a want-only post */
+      has: postSideViewSchema.nullable(),
+      wants: postSideViewSchema.nullable(),
+      /** a sale post with no want list: the range of its non-QYOP prices */
+      price: z.object({ min: z.number(), max: z.number(), currency: z.string() }).nullable(),
+    })
+    .nullable(),
+  /** what was saved when the card was sent; shown even when the post is gone */
+  match: storedMatchSchema.nullable(),
+});
+export type PostCardView = z.infer<typeof postCardViewSchema>;
+
 export const chatMessageSchema = z.object({
   id: z.number(),
   mine: z.boolean(),
   body: z.string().nullable(),
+  /** objekt cards only: a tab loaded before post cards reads this field */
   card: cardViewSchema.nullable(),
+  /** a post card; an older tab ignores it, and an event from a server that predates it reads as none */
+  post: postCardViewSchema.nullable().default(null),
   createdAt: z.string(),
   /** scam-phrase categories, only on messages the viewer received */
   caution: z.enum(FLAG_CATEGORIES).array().nullable(),
@@ -230,6 +326,7 @@ export function unsentMessage(message: Pick<ChatMessage, "id" | "mine" | "create
     createdAt: message.createdAt,
     body: null,
     card: null,
+    post: null,
     caution: null,
     unsent: true,
     offer: null,
@@ -246,12 +343,16 @@ export const conversationRowSchema = z.object({
     id: z.number(),
     mine: z.boolean(),
     body: z.string().nullable(),
-    card: storedCardSchema.nullable(),
+    card: storedObjektCardSchema.nullable(),
+    /** the last message is a post card, which `card` cannot carry */
+    post: z.boolean().default(false),
     offerId: z.number().nullable(),
     createdAt: z.string(),
     unsent: z.boolean(),
   }),
   context: cardViewSchema.nullable(),
+  /** the newest card is a post card, which `context` cannot carry */
+  contextPost: postCardViewSchema.nullable().default(null),
   unread: z.boolean(),
   request: z.boolean(),
   archived: z.boolean(),

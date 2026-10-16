@@ -17,6 +17,7 @@ const chatMessage = {
     mine: false,
     body: "hello",
     card: null,
+    post: null,
     createdAt: "2026-10-11T00:00:00.000Z",
     caution: ["outside_payment"],
     unsent: false,
@@ -31,11 +32,13 @@ const chatMessage = {
       mine: false,
       body: "hello",
       card: null,
+      post: false,
       offerId: null,
       createdAt: "2026-10-11T00:00:00.000Z",
       unsent: false,
     },
     context: null,
+    contextPost: null,
     unread: true,
     request: false,
     archived: false,
@@ -77,6 +80,21 @@ describe("realtimeEventSchema", () => {
     );
     const { previousMessageId: _previous, ...without } = chatMessage;
     expect(realtimeEventSchema.safeParse(without).success).toBe(false);
+  });
+
+  test("an event from a server that predates post cards reads as none", () => {
+    const { post: _post, ...message } = chatMessage.message;
+    const { post: _last, ...last } = chatMessage.conversation.last;
+    const { contextPost: _context, ...conversation } = chatMessage.conversation;
+    const parsed = realtimeEventSchema.parse({
+      ...chatMessage,
+      message,
+      conversation: { ...conversation, last },
+    });
+    if (parsed.type !== "chat_message") throw new Error("not a chat message");
+    expect(parsed.message.post).toBeNull();
+    expect(parsed.conversation.last.post).toBe(false);
+    expect(parsed.conversation.contextPost).toBeNull();
   });
 
   test("an unknown type is rejected", () => {

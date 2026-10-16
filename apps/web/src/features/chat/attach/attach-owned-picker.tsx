@@ -110,6 +110,7 @@ function OwnedGrid({
           description={m.chat_attach_title()}
           onOpen={() =>
             onPick({
+              kind: "objekt",
               input: {
                 collectionSlug: objekt.slug,
                 objektId: isObjektOwned(objekt) ? objekt.id : undefined,

@@ -97,6 +97,7 @@ function ListGrid({
           description={m.chat_attach_title()}
           onOpen={() =>
             onPick({
+              kind: "objekt",
               input: { collectionSlug: objekt.slug, listSlug: slug },
               objekt,
               listName: name,

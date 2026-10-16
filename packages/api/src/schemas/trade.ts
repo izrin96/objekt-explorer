@@ -81,7 +81,7 @@ export const tabCountsOutputSchema = z.object({
 
 export const tradePartnerInputSchema = z.object({ userId: z.string().min(1) });
 
-const POST_TYPES = ["all", "wtt", "wtb", "wts"] as const;
+export const POST_TYPES = ["all", "wtt", "wtb", "wts"] as const;
 export type PostType = (typeof POST_TYPES)[number];
 
 export const BROWSE_MATCH_MODES = ["off", "any", "mutual"] as const;

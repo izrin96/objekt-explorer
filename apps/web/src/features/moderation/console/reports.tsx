@@ -167,6 +167,9 @@ function Excerpt({
                     {m.mod_excerpt_card({ slug: entry.card.collectionSlug })}
                   </p>
                 ) : null}
+                {entry.post ? (
+                  <p className="text-muted-foreground font-mono text-xs">{m.mod_excerpt_post()}</p>
+                ) : null}
                 {entry.offer ? (
                   <ExcerptOfferView
                     offer={entry.offer}

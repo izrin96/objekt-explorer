@@ -77,11 +77,13 @@ export async function listNotifications(
   const items = parsedItems.map(shown);
 
   const collections = await fetchCollectionsBySlug(
-    items.flatMap((item) =>
-      item.type === "want_match" || item.type === "have_wanted"
-        ? item.payload.latest.map((match) => match.collectionSlug)
-        : [],
-    ),
+    items.flatMap((item) => {
+      if (item.type === "want_match" || item.type === "have_wanted") {
+        return item.payload.latest.map((match) => match.collectionSlug);
+      }
+      // rows written before an offer or trade named its objekts have none
+      return item.type === "offer" || item.type === "trade" ? (item.payload.objekts ?? []) : [];
+    }),
     [],
   );
 

@@ -17,6 +17,8 @@ TanStack Start app on Base UI (the cnippet registry). `src/components/ui/*` are 
 
 `stores/chat-draft.ts` keeps, per conversation id and in memory only, the card a Message button hands over and the unsent `body` with the `clientId` of the send being composed. The composer reads it through selectors. A failed send restores its text in the send mutation's `onError`, not the per-call one, because that one is lost when the thread unmounts. The same `clientId` goes with every retry so the server posts the message once; editing the text starts a new one.
 
+The card is an `Attachment` (`features/chat/attachment.ts`) of two kinds: an objekt card (`kind: "objekt"`, drawn as a chip) and a Trade post card (`kind: "post"`, drawn by `thread/post-card-message.tsx`, the component the thread uses). Only Browse's Message attaches a post card; its `withMatch` asks the server for the match, and the first-line suggestion follows `view.match`, the match the server saved.
+
 ## Verifying against production
 
 The dev server talks to production unless `.env.local` overrides it, and the account in `SMOKE_TEST1_*` is the user's own: sign in and read, never write. A `window.fetch` shim cannot hold a write back, because `lib/orpc.ts` captures `fetch` when it builds its `RPCLink`. Verify a mutation up to the request boundary (its input and the request it would send) and leave the control unclicked.
