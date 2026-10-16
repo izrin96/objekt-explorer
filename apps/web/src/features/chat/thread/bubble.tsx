@@ -25,7 +25,7 @@ export function Bubble({
         unsent
           ? "text-muted-foreground border-dashed italic"
           : mine
-            ? "bg-chat-mine text-foreground border-transparent"
+            ? "bg-foreground text-background border-transparent"
             : "bg-card text-card-foreground",
       )}
     >
