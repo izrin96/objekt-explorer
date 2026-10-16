@@ -183,6 +183,18 @@ export function anyCopyShortfall(
     .map(([slug]) => slug);
 }
 
+/**
+ * Slugs where the giver's open any-copy legs already claim more copies than they hold beyond
+ * the specific objekts named: a named copy would be promised twice. `left` is the unreserved
+ * copies the giver holds, without the named ones, minus those legs.
+ */
+export function specificCopyShortfall(
+  slugs: readonly string[],
+  left: ReadonlyMap<string, number>,
+): string[] {
+  return slugs.filter((slug) => (left.get(slug) ?? 0) < 0);
+}
+
 /** The first refusal among item verdicts, in the order a user fixes them, with the objekts it names. */
 export function firstItemRefusal(
   verdicts: { objektId: string; verdict: ItemVerdict }[],

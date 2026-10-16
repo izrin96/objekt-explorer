@@ -8,6 +8,7 @@ import {
   firstItemRefusal,
   inAnyCopyScope,
   itemVerdict,
+  specificCopyShortfall,
 } from "../../lib/offer-rules";
 import { transferKey } from "../../lib/trade-match";
 import { unique } from "../../lib/unique";
@@ -79,12 +80,19 @@ async function sentEarly(items: ItemRow[], parties: ItemParties, tx: Tx | typeof
   return sent;
 }
 
-type CopyNeed = { side: Side; giverId: string; available: Map<string, number> };
+type CopyNeed = {
+  side: Side;
+  giverId: string;
+  available: Map<string, number>;
+  /** collections the side names a specific objekt in, which open any-copy legs must leave a copy for */
+  specificSlugs: string[];
+};
 
 /**
  * Specific objekts must sit with the side that gives them, transferable and unreserved;
  * any-copy items need as many such copies, beyond the ones named and the ones already
- * promised to open any-copy legs, as the offer asks for. Returns the copies counted before
+ * promised to open any-copy legs, as the offer asks for, and a named copy must not be one
+ * those legs already count on. Returns the copies counted before
  * the promised ones, so accept can recheck those under its lock.
  */
 export async function checkItems(
@@ -96,23 +104,29 @@ export async function checkItems(
   const anyCopy = items.filter((item) => item.objektId === null);
   const slugsOf = (side: Side) =>
     unique(anyCopy.filter((item) => item.side === side).map((item) => item.collectionSlug));
-  const [found, copies] = await Promise.all([
-    fetchObjekts(specific.map((item) => item.objektId!)),
-    Promise.all(
-      (["give", "get"] as const).map((side) =>
-        fetchCopies(slugsOf(side), [...parties.copyHolders(side)]),
-      ),
-    ),
-  ]);
-  const reserved = await reservedIds(
-    [...specific.map((item) => item.objektId!), ...copies.flat().map((o) => o.id)],
-    tx,
-  );
+  const found = await fetchObjekts(specific.map((item) => item.objektId!));
   const elsewhere = specific.filter((item) => {
     const owner = found.get(item.objektId!)?.owner;
     return owner !== undefined && parties.sent?.receivers(item.side).has(owner);
   });
   const early = await sentEarly(elsewhere, parties, tx);
+  const specificSlugsOf = (side: Side) =>
+    unique(
+      specific
+        .filter((item) => item.side === side && !early.has(item.objektId!))
+        .map((item) => item.collectionSlug),
+    );
+  const copies = await Promise.all(
+    (["give", "get"] as const).map((side) =>
+      fetchCopies(unique([...slugsOf(side), ...specificSlugsOf(side)]), [
+        ...parties.copyHolders(side),
+      ]),
+    ),
+  );
+  const reserved = await reservedIds(
+    [...specific.map((item) => item.objektId!), ...copies.flat().map((o) => o.id)],
+    tx,
+  );
 
   const refusal = firstItemRefusal(
     specific.map((item) => {
@@ -133,10 +147,22 @@ export async function checkItems(
     const available = new Map<string, number>();
     for (const copy of copies[i]!) {
       if (!copy.transferable || reserved.has(copy.id) || named.has(copy.id)) continue;
-      if (side === "get" && parties.getScope && !inAnyCopyScope(parties.getScope, copy)) continue;
+      if (
+        side === "get" &&
+        parties.getScope &&
+        slugsOf(side).includes(copy.slug) &&
+        !inAnyCopyScope(parties.getScope, copy)
+      ) {
+        continue;
+      }
       available.set(copy.slug, (available.get(copy.slug) ?? 0) + 1);
     }
-    return { side, giverId: parties.giverId(side), available };
+    return {
+      side,
+      giverId: parties.giverId(side),
+      available,
+      specificSlugs: specificSlugsOf(side),
+    };
   });
   await refuseCopyShortfall(anyCopy, needs, tx);
   return needs;
@@ -147,25 +173,30 @@ export async function refuseCopyShortfall(
   needs: CopyNeed[],
   tx: Tx | typeof db,
 ) {
-  if (anyCopy.length === 0) return;
+  const slugsOf = (need: CopyNeed) =>
+    unique([
+      ...anyCopy.filter((i) => i.side === need.side).map((i) => i.collectionSlug),
+      ...need.specificSlugs,
+    ]);
+  if (needs.every((need) => slugsOf(need).length === 0)) return;
   const promised = await openAnyCopyLegs(
-    needs.map((need) => ({
-      userId: need.giverId,
-      slugs: unique(anyCopy.filter((i) => i.side === need.side).map((i) => i.collectionSlug)),
-    })),
+    needs.map((need) => ({ userId: need.giverId, slugs: slugsOf(need) })),
     tx,
   );
   const short = needs.flatMap((need) => {
     const left = new Map(
-      [...need.available].map(([slug, n]) => [
+      slugsOf(need).map((slug) => [
         slug,
-        n - (promised.get(copyKey(need.giverId, slug)) ?? 0),
+        (need.available.get(slug) ?? 0) - (promised.get(copyKey(need.giverId, slug)) ?? 0),
       ]),
     );
-    return anyCopyShortfall(
-      anyCopy.filter((item) => item.side === need.side),
-      left,
-    );
+    return [
+      ...anyCopyShortfall(
+        anyCopy.filter((item) => item.side === need.side),
+        left,
+      ),
+      ...specificCopyShortfall(need.specificSlugs, left),
+    ];
   });
   if (short.length > 0) refuseOffer("not_owned", { collectionSlugs: unique(short) });
 }

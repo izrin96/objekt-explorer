@@ -6,6 +6,7 @@ import {
   allowedActions,
   anyCopyScope,
   anyCopyShortfall,
+  specificCopyShortfall,
   atFault,
   cancelRefusal,
   canReport,
@@ -244,6 +245,14 @@ describe("item checks", () => {
       reserved: true,
       inOpenOffer: [],
     });
+  });
+
+  test("a named copy is refused when open any-copy legs already count on the giver's copies", () => {
+    // B holds X and a spare of "c", with one any-copy leg open: the spare covers it
+    expect(specificCopyShortfall(["c"], new Map([["c", 0]]))).toEqual([]);
+    // B holds only X, and an open any-copy leg counts on it: naming X again promises it twice
+    expect(specificCopyShortfall(["c"], new Map([["c", -1]]))).toEqual(["c"]);
+    expect(specificCopyShortfall(["c"], new Map())).toEqual([]);
   });
 
   test("any copy needs as many spare copies as asked for", () => {

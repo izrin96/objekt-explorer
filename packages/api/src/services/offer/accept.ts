@@ -92,10 +92,9 @@ export async function acceptOffer(me: string, offerId: number) {
     refuseAction(fresh!, me, "accept", now);
 
     // any-copy legs reserve no token, so a giver's copies are counted under a lock per giver,
-    // taken in id order
-    const givers = unique(
-      anyCopy.map((item) => (item.side === "give" ? row.fromUserId : row.toUserId)),
-    ).toSorted();
+    // taken in id order; a specific item is counted against those legs too, so every giver
+    // takes it
+    const givers = unique([row.fromUserId, row.toUserId]).toSorted();
     for (const giverId of givers) {
       await tx.execute(
         sql`SELECT pg_advisory_xact_lock(hashtext('any_copy'), hashtext(${giverId}))`,
