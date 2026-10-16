@@ -15,6 +15,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toastManager } from "@/components/ui/toast";
 import { DeletionBlockers } from "@/features/account/deletion-blockers";
 import { deletionCheckOptions } from "@/features/account/queries";
+import { forgetSession } from "@/features/auth/forget-session";
 import { authClient } from "@/lib/auth-client";
 import { client } from "@/lib/orpc";
 import { deleteRefusalText, refusalText } from "@/lib/refusal";
@@ -44,7 +45,7 @@ export function DangerSection({ refused }: { refused: DeleteRefusal | null }) {
     mutationFn: async (step: DeletionStep) => {
       if (step === "sign-in-again") {
         await authClient.signOut();
-        await queryClient.invalidateQueries();
+        await forgetSession(queryClient);
         await navigate({ to: "/login", search: { redirect: "/account/danger" } });
       } else {
         await requestDeletion(step);
@@ -55,7 +56,7 @@ export function DangerSection({ refused }: { refused: DeleteRefusal | null }) {
       if (step === "send-email") {
         toastManager.add({ type: "success", title: m.auth_account_verification_email_sent() });
       } else if (step === "delete") {
-        await queryClient.invalidateQueries();
+        await forgetSession(queryClient);
         await navigate({ to: "/" });
       }
     },

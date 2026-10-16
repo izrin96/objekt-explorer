@@ -4,6 +4,8 @@ import { useCallback } from "react";
 
 import { isSafeRedirect } from "@/lib/utils";
 
+import { forgetSession } from "./forget-session";
+
 /**
  * Where a successful sign-in or sign-up lands. `redirect` is a built href, not
  * one of the registered paths, so it goes through `history.push` rather than
@@ -14,8 +16,9 @@ export function useAuthSuccess(redirect: string | undefined) {
   const queryClient = useQueryClient();
 
   return useCallback(async () => {
-    // every read can depend on the viewer (a list's Message, For you), as sign-out assumes too
-    await queryClient.invalidateQueries();
+    // every read can depend on the viewer (a list's Message, For you), and a tab whose session
+    // ended elsewhere may still hold the last account's data
+    await forgetSession(queryClient);
     if (redirect !== undefined && isSafeRedirect(redirect)) router.history.push(redirect);
     else await router.navigate({ to: "/" });
   }, [queryClient, redirect, router]);

@@ -34,6 +34,7 @@ import {
   MenuTrigger,
 } from "@/components/ui/menu";
 import { toastManager } from "@/components/ui/toast";
+import { forgetSession } from "@/features/auth/forget-session";
 import { DiscordFormatDialog } from "@/features/discord/discord-format-dialog";
 import { CreateListDialog } from "@/features/list/create-list-dialog";
 import { getListLinkOption } from "@/features/list/list-link";
@@ -73,7 +74,7 @@ export function UserMenu({ user }: { user: User }) {
 
   const signOut = async () => {
     await authClient.signOut();
-    await queryClient.invalidateQueries();
+    await forgetSession(queryClient);
     toastManager.add({ type: "info", title: m.nav_sign_out_success() });
   };
 

@@ -27,6 +27,11 @@ export function emptyFeed(key: ActivityParams): LiveFeed {
 /** live rows kept above the first page before the feed starts again from a fresh one */
 export const LIVE_CAP = 500;
 
+/** counts the queue too: a pointer resting on the table must not let it grow without end */
+export function exceedsCap(feed: LiveFeed, incoming: number): boolean {
+  return feed.rows.length + feed.queued.length + incoming > LIVE_CAP;
+}
+
 export function getEventKind(from: string, to: string): EventKind {
   if (from === Addresses.NULL) return "mint";
   if (to === Addresses.SPIN) return "spin";
@@ -49,7 +54,11 @@ export function matchesFilters(
     !artist.some((a) => a.toLowerCase() === item.objekt.artist.toLowerCase())
   )
     return false;
-  if (filters.member !== undefined && !filters.member.includes(item.objekt.member)) return false;
+  if (
+    filters.member !== undefined &&
+    !filters.member.some((name) => item.objekt.members.includes(name))
+  )
+    return false;
   if (filters.season !== undefined && !filters.season.includes(item.objekt.season)) return false;
   if (filters.class !== undefined && !filters.class.includes(item.objekt.class)) return false;
   if (filters.on_offline !== undefined && !filters.on_offline.includes(item.objekt.onOffline))

@@ -1,7 +1,7 @@
-import { useCallback, useSyncExternalStore } from "react";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
+import { useMediaQuery } from "@/hooks/use-media-query";
 import { GRID_COLUMNS, GRID_COLUMNS_MOBILE, GRID_COLUMNS_TABLET } from "@/lib/utils";
 
 import { legacyState, seededStorage } from "./legacy-storage";
@@ -29,25 +29,6 @@ export const useColumnStore = create<ColumnState>()(
     { name: "web:columns", storage: seededStorage(seedColumns) },
   ),
 );
-
-function useMediaQuery(query: string): boolean {
-  const subscribe = useCallback(
-    (onChange: () => void) => {
-      const media = window.matchMedia(query);
-      media.addEventListener("change", onChange);
-      return () => media.removeEventListener("change", onChange);
-    },
-    [query],
-  );
-
-  return useSyncExternalStore(
-    subscribe,
-    () => window.matchMedia(query).matches,
-    // the server has no viewport; rendering the widest default and narrowing on
-    // hydration is what the website does
-    () => true,
-  );
-}
 
 /** The count follows the viewport until the user picks one; a pick then holds at every width. */
 export function useColumns(): number {

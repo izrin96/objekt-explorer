@@ -8,7 +8,7 @@ import type { useCanonicalFilters } from "@/features/filters/use-filters";
 import {
   addToFeed,
   emptyFeed,
-  LIVE_CAP,
+  exceedsCap,
   type LiveFeed,
   matchesFilters,
   mergeRows,
@@ -80,7 +80,7 @@ export function useLiveActivity(type: ActivityType, filters: Filters) {
 
       // a tab left open would grow without end; trimming the oldest live rows
       // would open a gap above the first page, so start again from a fresh one
-      if (!held && live.rows.length + fresh.length > LIVE_CAP) {
+      if (exceedsCap(live, fresh.length)) {
         setFeed(emptyFeed(params));
         queryClient.setQueryData(options.queryKey, (data) =>
           data ? { pages: data.pages.slice(0, 1), pageParams: data.pageParams.slice(0, 1) } : data,
@@ -93,7 +93,7 @@ export function useLiveActivity(type: ActivityType, filters: Filters) {
 
       setFeed((prev) => addToFeed(prev, params, fresh, firstPage, held));
     },
-    [loaded, type, artist, filters, live.rows.length, pages, params, queryClient, options.queryKey],
+    [loaded, type, artist, filters, live, pages, params, queryClient, options.queryKey],
   );
 
   useActivitySocket({ enabled: connected, onMessage });

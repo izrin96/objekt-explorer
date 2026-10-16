@@ -6,7 +6,9 @@ import { Addresses } from "@repo/lib";
 import {
   addToFeed,
   emptyFeed,
+  exceedsCap,
   getEventKind,
+  LIVE_CAP,
   matchesFilters,
   mergeRows,
   releaseQueued,
@@ -36,6 +38,7 @@ function item(
     objekt: {
       artist: "tripleS",
       member: "JiWoo",
+      members: ["JiWoo"],
       season: "Divine01",
       class: "Double",
       onOffline: "online",
@@ -75,10 +78,30 @@ describe("matchesFilters", () => {
     const row = item("1");
     expect(matchesFilters(row, "all", [], { member: ["JiWoo"] })).toBe(true);
     expect(matchesFilters(row, "all", [], { member: ["Kaede"] })).toBe(false);
+    expect(matchesFilters(row, "all", [], { member: ["Kaede", "JiWoo"] })).toBe(true);
     expect(matchesFilters(row, "all", [], { season: ["Atom01"] })).toBe(false);
     expect(matchesFilters(row, "all", [], { class: ["First"] })).toBe(false);
     expect(matchesFilters(row, "all", [], { on_offline: ["offline"] })).toBe(false);
     expect(matchesFilters(row, "all", [], { collection: ["101Z"] })).toBe(false);
+  });
+});
+
+describe("matchesFilters on a unit objekt", () => {
+  test("matches when any of its members is selected, like the server's overlap", () => {
+    const unit = item("1", { member: "Unit", members: ["JiWoo", "Kaede"] });
+    expect(matchesFilters(unit, "all", [], { member: ["Kaede"] })).toBe(true);
+    expect(matchesFilters(unit, "all", [], { member: ["Nien"] })).toBe(false);
+  });
+});
+
+describe("exceedsCap", () => {
+  const rows = Array.from({ length: LIVE_CAP - 1 }, (_, i) => item(`r${i}`));
+
+  test("counts shown, queued and incoming rows together", () => {
+    const feed = { ...emptyFeed(KEY), rows };
+    expect(exceedsCap(feed, 1)).toBe(false);
+    expect(exceedsCap(feed, 2)).toBe(true);
+    expect(exceedsCap({ ...feed, rows: rows.slice(0, 10), queued: rows.slice(10) }, 2)).toBe(true);
   });
 });
 
