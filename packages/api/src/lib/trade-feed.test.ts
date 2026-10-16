@@ -27,6 +27,7 @@ const list = (over: Partial<TradeList> & Pick<TradeList, "id" | "listTypeNew">):
   userId: "u1",
   linkedListId: null,
   matchSale: true,
+  matchHave: true,
   bumpedAt: daysAgo(1),
   updatedAt: daysAgo(1),
   ...over,
@@ -67,6 +68,22 @@ describe("pairPosts", () => {
   test("a want list alone that matches trades only is WTT", () => {
     const [post] = pairPosts([list({ id: 2, listTypeNew: "want", matchSale: false })]);
     expect(post).toMatchObject({ tag: "wtt", have: null });
+  });
+
+  test("a want list alone that is Buying only is WTB and notes it", () => {
+    const [post] = pairPosts([list({ id: 2, listTypeNew: "want", matchHave: false })]);
+    expect(post).toMatchObject({ tag: "wtb", buyingOnly: true });
+    const [open] = pairPosts([list({ id: 3, listTypeNew: "want" })]);
+    expect(open).toMatchObject({ tag: "wtb", buyingOnly: false });
+  });
+
+  test("a have list linked to a Buying only want list is one WTT post", () => {
+    const posts = pairPosts([
+      list({ id: 1, listTypeNew: "have", linkedListId: 2 }),
+      list({ id: 2, listTypeNew: "want", linkedListId: 1, matchHave: false }),
+    ]);
+    expect(posts).toHaveLength(1);
+    expect(posts[0]).toMatchObject({ tag: "wtt", buyingOnly: false });
   });
 
   test("a pair's bump and change times are the latest of its lists", () => {
@@ -197,8 +214,15 @@ describe("assemblePost", () => {
     ["want-c", [7, 8]],
   ]);
   const want = new Map([["offer-b", [9]]]);
-  const viewer = { have, want, tradeHave: have, saleWant: want };
   const nothing = new Map<string, number[]>();
+  const viewer = {
+    have,
+    want,
+    tradeHave: have,
+    saleHave: nothing,
+    tradeWant: want,
+    saleWant: want,
+  };
 
   test("counts, rings and the viewer's lists they came from", () => {
     const post = assemblePost(pair!, of, viewer, NO_FILTER);
@@ -211,7 +235,14 @@ describe("assemblePost", () => {
   });
 
   test("nothing listed counts nothing", () => {
-    const empty = { have: nothing, want: nothing, tradeHave: nothing, saleWant: nothing };
+    const empty = {
+      have: nothing,
+      want: nothing,
+      tradeHave: nothing,
+      saleHave: nothing,
+      tradeWant: nothing,
+      saleWant: nothing,
+    };
     const post = assemblePost(pair!, of, empty, NO_FILTER);
     expect(post?.match).toEqual({ youHave: 0, youWant: 0, haveListIds: [], wantListIds: [] });
   });
@@ -282,7 +313,7 @@ describe("assemblePost", () => {
   });
 
   test("a one-way match keeps the empty side", () => {
-    const oneWay = { ...viewer, want: nothing, saleWant: nothing };
+    const oneWay = { ...viewer, want: nothing, tradeWant: nothing, saleWant: nothing };
     const post = assemblePost(pair!, of, oneWay, { ...NO_FILTER, onlyMatches: true });
     expect(sideOf(post, "have")).toMatchObject({ items: [], more: 0, others: 2 });
     expect(sideOf(post, "want")?.items).toHaveLength(2);
@@ -291,7 +322,14 @@ describe("assemblePost", () => {
   test("a post with nothing related on any side is dropped", () => {
     const filter = { ...NO_FILTER, slugs: new Set(["elsewhere"]) };
     expect(assemblePost(pair!, of, null, filter)).toBeNull();
-    const none = { have: nothing, want: nothing, tradeHave: nothing, saleWant: nothing };
+    const none = {
+      have: nothing,
+      want: nothing,
+      tradeHave: nothing,
+      saleHave: nothing,
+      tradeWant: nothing,
+      saleWant: nothing,
+    };
     expect(assemblePost(pair!, of, none, { ...NO_FILTER, onlyMatches: true })).toBeNull();
   });
 
@@ -308,6 +346,8 @@ describe("assemblePost", () => {
       ["want-a", [7]],
       ["want-c", [7]],
     ]),
+    saleHave: new Map([["want-c", [8]]]),
+    tradeWant: want,
     saleWant: nothing,
   };
 
@@ -325,6 +365,67 @@ describe("assemblePost", () => {
     ]);
     const post = assemblePost(tradeOnlyPair!, of, tradeOnly, NO_FILTER);
     expect(post?.match).toEqual({ youHave: 2, youWant: 1, haveListIds: [7], wantListIds: [9] });
+  });
+});
+
+describe("Buying only rings", () => {
+  const entries = [entry(1, "a"), entry(2, "b")];
+  const none = new Map<string, number[]>();
+  // list 7 is the viewer's have list, 8 their sale list, 9 their swaps-only want list,
+  // 10 their Buying only want list
+  const viewer: Viewer = {
+    have: new Map([
+      ["a", [7]],
+      ["b", [8]],
+    ]),
+    tradeHave: new Map([["a", [7]]]),
+    saleHave: new Map([["b", [8]]]),
+    want: new Map([
+      ["a", [9]],
+      ["b", [10]],
+    ]),
+    tradeWant: new Map([["a", [9]]]),
+    saleWant: new Map([["b", [10]]]),
+  };
+  const ringed = (post: ReturnType<typeof pairPosts>[number]) =>
+    assemblePost(post, () => entries, viewer, NO_FILTER)?.sides[0]?.items.filter(
+      (item) => item.ringed,
+    );
+
+  test("a have post rings only against my want lists open to swaps", () => {
+    const [post] = pairPosts([list({ id: 1, listTypeNew: "have" })]);
+    expect(ringed(post!)?.map((item) => item.slug)).toEqual(["a"]);
+  });
+
+  test("a Buying only want post rings only against my sale lists", () => {
+    const [post] = pairPosts([list({ id: 2, listTypeNew: "want", matchHave: false })]);
+    expect(ringed(post!)?.map((item) => item.slug)).toEqual(["b"]);
+  });
+
+  test("a swaps-only want post rings only against my have lists", () => {
+    const [post] = pairPosts([list({ id: 2, listTypeNew: "want", matchSale: false })]);
+    expect(ringed(post!)?.map((item) => item.slug)).toEqual(["a"]);
+  });
+
+  test("a want post open to both rings against my have and sale lists", () => {
+    const [post] = pairPosts([list({ id: 2, listTypeNew: "want" })]);
+    expect(ringed(post!)?.map((item) => item.slug)).toEqual(["b", "a"]);
+  });
+
+  test("a sale post rings only against my want lists open to buying", () => {
+    const [post] = pairPosts([list({ id: 3, listTypeNew: "sale" })]);
+    expect(ringed(post!)?.map((item) => item.slug)).toEqual(["b"]);
+  });
+
+  test("a viewer with only a Buying only want list matches no have post", () => {
+    const [post] = pairPosts([list({ id: 1, listTypeNew: "have" })]);
+    const buyer: Viewer = { ...viewer, tradeWant: none };
+    expect(assemblePost(post!, () => entries, buyer, NO_FILTER)?.match).toEqual({
+      youHave: 0,
+      youWant: 0,
+      haveListIds: [],
+      wantListIds: [],
+    });
   });
 });
 
@@ -364,10 +465,15 @@ describe("narrowViewer", () => {
       ["b", [3]],
     ]),
     tradeHave: new Map([["a", [1]]]),
+    saleHave: new Map([
+      ["a", [2]],
+      ["b", [3]],
+    ]),
     want: new Map([
       ["c", [10]],
       ["d", [11]],
     ]),
+    tradeWant: new Map([["d", [11]]]),
     saleWant: new Map([["c", [10]]]),
   };
 
@@ -377,6 +483,8 @@ describe("narrowViewer", () => {
     expect([...narrowed.tradeHave]).toEqual([["a", [1]]]);
     expect([...narrowed.want]).toEqual([["c", [10]]]);
     expect([...narrowed.saleWant]).toEqual([["c", [10]]]);
+    expect(narrowed.tradeWant.size).toBe(0);
+    expect(narrowed.saleHave.size).toBe(0);
   });
 
   test("a lone have list empties want", () => {
@@ -390,6 +498,7 @@ describe("narrowViewer", () => {
     const narrowed = narrowViewer(viewer, { haveListIds: [2], wantListIds: [] });
     expect([...narrowed.have]).toEqual([["a", [2]]]);
     expect(narrowed.tradeHave.size).toBe(0);
+    expect([...narrowed.saleHave]).toEqual([["a", [2]]]);
   });
 });
 

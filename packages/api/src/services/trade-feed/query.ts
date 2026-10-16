@@ -20,7 +20,7 @@ const TAG_WHERE: Record<PostTag, SQL> = {
  */
 export const postsCte = sql`
   on_trade AS (
-    SELECT id, user_id, list_type_new, linked_list_id, match_sale, bumped_at, updated_at, created_at
+    SELECT id, user_id, list_type_new, linked_list_id, match_sale, match_have, bumped_at, updated_at, created_at
     FROM lists
     WHERE discoverable AND ${takesPartInTradeSql()}
   ),
@@ -30,6 +30,7 @@ export const postsCte = sql`
       a.user_id,
       a.list_type_new AS type,
       a.match_sale,
+      a.match_have,
       p.id AS partner_id,
       -- milliseconds, so the ISO cursor names a row exactly; a post never bumped sorts by its
       -- last change
@@ -69,10 +70,15 @@ const matchesIndex = (index: MatchIndex) =>
     JOIN on_trade t ON t.id = e.list_id
     WHERE e.list_id IN (posts.id, posts.partner_id)
       AND (
-        (t.list_type_new = 'have' AND e.collection_slug = ANY(${sql.param(index.want)}::text[]))
+        (t.list_type_new = 'have' AND e.collection_slug = ANY(${sql.param(index.tradeWant)}::text[]))
         OR (t.list_type_new = 'sale' AND e.collection_slug = ANY(${sql.param(index.saleWant)}::text[]))
         OR (t.list_type_new = 'want' AND e.collection_slug = ANY(
-          CASE WHEN t.match_sale THEN ${sql.param(index.have)}::text[] ELSE ${sql.param(index.tradeHave)}::text[] END
+          -- the SQL twin of openToOf (schemas/open-to.ts)
+          CASE
+            WHEN NOT t.match_have THEN ${sql.param(index.saleHave)}::text[]
+            WHEN t.match_sale THEN ${sql.param(index.have)}::text[]
+            ELSE ${sql.param(index.tradeHave)}::text[]
+          END
         ))
       )
   )`;

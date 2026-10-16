@@ -1,5 +1,6 @@
 import { InfoIcon } from "@phosphor-icons/react";
 import { canBeOnTrade, type ListTypeNew, type PublicList } from "@repo/api/schemas/list";
+import { flagsOf, type OpenTo, type OpenToFlags, openToOf } from "@repo/api/schemas/open-to";
 import { Link } from "@tanstack/react-router";
 import slugify from "slugify";
 import * as z from "zod";
@@ -9,7 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Radio, RadioGroup } from "@/components/ui/radio-group";
+import { Radio, RadioGroup, RadioPrimitive } from "@/components/ui/radio-group";
 import {
   Select,
   SelectItem,
@@ -20,10 +21,11 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { displayNickname, isSameAddress } from "@/lib/address";
-import { getBaseURL } from "@/lib/utils";
+import { toneChip } from "@/lib/tone";
+import { cn, getBaseURL } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
-import { LIST_TYPE_LABEL } from "./list-type-badge";
+import { LIST_TYPE_LABEL, LIST_TYPE_TONE, ListTypeBadge, OPEN_TO_LABEL } from "./list-type-badge";
 
 /** `Select` has no value for "cleared", so the empty choice carries its own. */
 const NONE = "__none__";
@@ -31,20 +33,13 @@ const CURRENCY_RE = /^[A-Za-z]{3}$/;
 
 const LIST_TYPES: ListTypeNew[] = ["general", "have", "want", "sale"];
 
-const MATCH_WITH = [
-  {
-    value: "trades",
-    matchSale: false,
-    label: m.list_create_match_trades_label,
-    description: m.list_create_match_trades_desc,
-  },
-  {
-    value: "sales",
-    matchSale: true,
-    label: m.list_create_match_sales_label,
-    description: m.list_create_match_sales_desc,
-  },
-] as const;
+const OPEN_TO_ORDER: OpenTo[] = ["swaps", "both", "buying"];
+
+const MATCH_WITH: Record<OpenTo, { label: () => string; description: () => string }> = {
+  swaps: { label: OPEN_TO_LABEL.swaps, description: m.list_create_match_trades_desc },
+  both: { label: OPEN_TO_LABEL.both, description: m.list_create_match_sales_desc },
+  buying: { label: OPEN_TO_LABEL.buying, description: m.list_create_match_buying_desc },
+};
 
 const LIST_TYPE_DESC: Record<ListTypeNew, () => string> = {
   general: m.list_create_general_list_desc,
@@ -53,7 +48,7 @@ const LIST_TYPE_DESC: Record<ListTypeNew, () => string> = {
   want: m.list_create_want_list_desc,
 };
 
-export type ListDraft = {
+export type ListDraft = OpenToFlags & {
   name: string;
   description: string;
   listTypeNew: ListTypeNew;
@@ -62,7 +57,6 @@ export type ListDraft = {
   profileAddress: string | null;
   isProfileBind: boolean;
   discoverable: boolean;
-  matchSale: boolean;
   gridColumns: number | null;
   hideSerial: boolean;
   regenerateSlug: boolean;
@@ -78,6 +72,7 @@ export const EMPTY_DRAFT: ListDraft = {
   isProfileBind: false,
   discoverable: false,
   matchSale: false,
+  matchHave: true,
   gridColumns: null,
   hideSerial: false,
   regenerateSlug: false,
@@ -129,6 +124,7 @@ export function toCreateInput(draft: ListDraft) {
     isProfileBind,
     discoverable: draft.listTypeNew !== "general" && draft.discoverable,
     matchSale: draft.listTypeNew !== "want" || draft.matchSale,
+    matchHave: draft.listTypeNew !== "want" || draft.matchHave,
     hideSerial: draft.hideSerial,
   };
 }
@@ -167,8 +163,51 @@ export function ListForm({ idPrefix, value, onChange, lists, profiles, mode, url
   );
   const discoverableDisabled = !canBeOnTrade(value.listTypeNew, value.isProfileBind);
 
+  const changeType = (next: ListTypeNew | null) => {
+    const listTypeNew = next ?? "general";
+    const nextBindable = listTypeNew === "have" || listTypeNew === "sale";
+    // entering have or sale binds by default, to the chosen profile or else
+    // the first; moving between the two keeps what the user set
+    const entering = nextBindable && !bindable;
+    const profileAddress = entering
+      ? (value.profileAddress ?? profiles[0]?.address ?? null)
+      : value.profileAddress;
+    set({
+      listTypeNew,
+      linkedListId: null,
+      profileAddress,
+      isProfileBind: nextBindable && profileAddress !== null && (entering || value.isProfileBind),
+    });
+  };
+
   return (
     <div className="flex flex-col gap-4">
+      <div className="flex min-w-0 flex-col gap-1.5">
+        <Label render={<span />} id={id("type")}>
+          {m.list_create_list_type_label()}
+        </Label>
+        {isEdit ? (
+          <div>
+            <ListTypeBadge type={value.listTypeNew} size="lg" />
+          </div>
+        ) : (
+          <RadioGroup
+            aria-labelledby={id("type")}
+            aria-describedby={id("type-desc")}
+            value={value.listTypeNew}
+            onValueChange={(next) => changeType(next as ListTypeNew)}
+            className="grid grid-cols-4 gap-1 rounded-lg border p-1"
+          >
+            {LIST_TYPES.map((type) => (
+              <TypeSegment key={type} type={type} selected={value.listTypeNew === type} />
+            ))}
+          </RadioGroup>
+        )}
+        <span id={id("type-desc")} className="text-muted-foreground text-xs text-pretty">
+          {LIST_TYPE_DESC[value.listTypeNew]()}
+        </span>
+      </div>
+
       <Field name="name" className="min-w-0 gap-1.5">
         <FieldLabel htmlFor={id("name")}>{m.list_create_name_label()}</FieldLabel>
         <Input
@@ -194,68 +233,22 @@ export function ListForm({ idPrefix, value, onChange, lists, profiles, mode, url
         />
       </Field>
 
-      {/* minmax(0,…) on both tracks, or the currency column is sized by the
-          type trigger's intrinsic width and the row overflows the dialog */}
-      <div
-        className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-3 data-currency:grid-cols-[minmax(0,1fr)_minmax(0,6.5rem)]"
-        data-currency={isSale || undefined}
-      >
-        <div className="flex min-w-0 flex-col gap-1.5">
-          <Label htmlFor={id("type")}>{m.list_create_list_type_label()}</Label>
-          <Select
-            value={value.listTypeNew}
-            disabled={isEdit}
-            onValueChange={(next: ListTypeNew | null) => {
-              const listTypeNew = next ?? "general";
-              const nextBindable = listTypeNew === "have" || listTypeNew === "sale";
-              // entering have or sale binds by default, to the chosen profile or else
-              // the first; moving between the two keeps what the user set
-              const entering = nextBindable && !bindable;
-              const profileAddress = entering
-                ? (value.profileAddress ?? profiles[0]?.address ?? null)
-                : value.profileAddress;
-              set({
-                listTypeNew,
-                linkedListId: null,
-                profileAddress,
-                isProfileBind:
-                  nextBindable && profileAddress !== null && (entering || value.isProfileBind),
-              });
-            }}
-          >
-            <SelectTrigger id={id("type")} className="min-w-0">
-              <SelectValue>{(type: ListTypeNew) => LIST_TYPE_LABEL[type]()}</SelectValue>
-            </SelectTrigger>
-            <SelectPopup>
-              {LIST_TYPES.map((type) => (
-                <SelectItem key={type} value={type}>
-                  {LIST_TYPE_LABEL[type]()}
-                </SelectItem>
-              ))}
-            </SelectPopup>
-          </Select>
-          <span className="text-muted-foreground text-xs text-pretty">
-            {LIST_TYPE_DESC[value.listTypeNew]()}
-          </span>
-        </div>
-
-        {isSale ? (
-          <Field name="currency" className="min-w-0 gap-1.5">
-            <FieldLabel htmlFor={id("currency")}>{m.list_create_currency_label()}</FieldLabel>
-            <Input
-              id={id("currency")}
-              aria-required
-              maxLength={3}
-              placeholder="USD"
-              className="min-w-0 uppercase"
-              value={value.currency}
-              onChange={(event) => set({ currency: event.target.value.toUpperCase() })}
-            />
-            <FieldDescription>{m.list_create_currency_desc()}</FieldDescription>
-            <FieldError />
-          </Field>
-        ) : null}
-      </div>
+      {isSale ? (
+        <Field name="currency" className="min-w-0 gap-1.5">
+          <FieldLabel htmlFor={id("currency")}>{m.list_create_currency_label()}</FieldLabel>
+          <Input
+            id={id("currency")}
+            aria-required
+            maxLength={3}
+            placeholder="USD"
+            className="min-w-0 uppercase"
+            value={value.currency}
+            onChange={(event) => set({ currency: event.target.value.toUpperCase() })}
+          />
+          <FieldDescription>{m.list_create_currency_desc()}</FieldDescription>
+          <FieldError />
+        </Field>
+      ) : null}
 
       {isPaired ? (
         <div className="flex min-w-0 flex-col gap-1.5">
@@ -397,19 +390,18 @@ export function ListForm({ idPrefix, value, onChange, lists, profiles, mode, url
           </Label>
           <RadioGroup
             aria-labelledby={id("match-with")}
-            value={value.matchSale ? "sales" : "trades"}
-            onValueChange={(next) => {
-              const picked = MATCH_WITH.find((option) => option.value === next);
-              if (picked) set({ matchSale: picked.matchSale });
-            }}
+            value={openToOf(value)}
+            onValueChange={(next) => set(flagsOf(next as OpenTo))}
             className="gap-2.5"
           >
-            {MATCH_WITH.map((option) => (
-              <Field key={option.value} className="w-full flex-row items-start gap-2.5">
-                <Radio value={option.value} className="mt-0.5" />
+            {OPEN_TO_ORDER.map((openTo) => (
+              <Field key={openTo} className="w-full flex-row items-start gap-2.5">
+                <Radio value={openTo} className="mt-0.5" />
                 <FieldLabel className="flex-col items-start gap-0.5 font-normal">
-                  <span className="text-sm font-medium">{option.label()}</span>
-                  <FieldDescription render={<span />}>{option.description()}</FieldDescription>
+                  <span className="text-sm font-medium">{MATCH_WITH[openTo].label()}</span>
+                  <FieldDescription render={<span />}>
+                    {MATCH_WITH[openTo].description()}
+                  </FieldDescription>
                 </FieldLabel>
               </Field>
             ))}
@@ -474,6 +466,25 @@ export function ListForm({ idPrefix, value, onChange, lists, profiles, mode, url
         </div>
       ) : null}
     </div>
+  );
+}
+
+function TypeSegment({ type, selected }: { type: ListTypeNew; selected: boolean }) {
+  const tone = LIST_TYPE_TONE[type];
+  return (
+    <RadioPrimitive.Root
+      value={type}
+      className={cn(
+        "focus-visible:ring-ring focus-visible:ring-offset-background flex min-w-0 cursor-pointer items-center justify-center rounded-md border px-2 py-1.5 text-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-offset-1",
+        selected
+          ? tone === "neutral"
+            ? "border-border bg-muted text-foreground"
+            : toneChip(tone)
+          : "text-muted-foreground hover:text-foreground border-transparent",
+      )}
+    >
+      <span className="truncate">{LIST_TYPE_LABEL[type]()}</span>
+    </RadioPrimitive.Root>
   );
 }
 

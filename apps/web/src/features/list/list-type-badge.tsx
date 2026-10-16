@@ -1,4 +1,5 @@
 import type { ListTypeNew } from "@repo/api/schemas/list";
+import { type OpenTo, openToOf } from "@repo/api/schemas/open-to";
 
 import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { type Tone, toneChip } from "@/lib/tone";
@@ -40,8 +41,20 @@ export function ListTypeBadge({
   );
 }
 
+export const OPEN_TO_LABEL: Record<OpenTo, () => string> = {
+  swaps: m.list_create_match_trades_label,
+  both: m.list_create_match_sales_label,
+  buying: m.list_create_match_buying_label,
+};
+
 /** A want list's Open to setting; null for other lists, or a response without it. */
-export function openToLabel(list: { listTypeNew: ListTypeNew; matchSale?: boolean | null }) {
+export function openToLabel(list: {
+  listTypeNew: ListTypeNew;
+  matchSale?: boolean | null;
+  matchHave?: boolean | null;
+}) {
   if (list.listTypeNew !== "want" || list.matchSale == null) return null;
-  return list.matchSale ? m.list_create_match_sales_label() : m.list_create_match_trades_label();
+  return OPEN_TO_LABEL[
+    openToOf({ matchSale: list.matchSale, matchHave: list.matchHave ?? true })
+  ]();
 }

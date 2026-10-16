@@ -1,6 +1,7 @@
 import { realNickname, truncateAddress } from "@repo/lib/address";
 
 import { type ListTypeNew, pickedSides, tradeSideOf } from "../schemas/list";
+import { type OpenToFlags, openToOf } from "../schemas/open-to";
 import {
   countsFit,
   type MatchCounts,
@@ -123,8 +124,8 @@ export type Candidate = {
   listUpdatedAt: Record<string, string>;
   /** their have and sale entries on collections I want */
   theyHave: (OwnedEntry & { sale: boolean })[];
-  /** their want entries on collections I have, with whether the want list takes sales */
-  theyWant: { listId: number; slug: string; matchSale: boolean }[];
+  /** their want entries on collections I have, with what the want list is open to */
+  theyWant: ({ listId: number; slug: string } & OpenToFlags)[];
 };
 
 type Recounted = {
@@ -135,19 +136,24 @@ type Recounted = {
   dropped: Dropped[];
 };
 
-/** One of my want lists holding a collection, and whether it is open to buying. */
-export type MyWant = { listId: number; matchSale: boolean };
+/** One of my want lists holding a collection, and whether it is open to buying and to swaps. */
+export type MyWant = { listId: number } & OpenToFlags;
 
 type Judged = ReturnType<typeof collectionVerdict>;
 
-/** My have side, already judged: over my have and sale lists, and over my have lists alone. */
-export type MyHaves = { all: ReadonlyMap<string, Judged>; trade: ReadonlyMap<string, Judged> };
+/** My have side, already judged: over my have and sale lists, over my have lists alone, and over my sale lists alone. */
+export type MyHaves = {
+  all: ReadonlyMap<string, Judged>;
+  trade: ReadonlyMap<string, Judged>;
+  sale: ReadonlyMap<string, Judged>;
+};
 
 /**
  * The candidate's matches after the ownership check. `myWants` maps a collection to
- * my want lists holding it. A partner's want list that matches swaps only is judged
- * against `myHaves.trade`, so my sale lists never answer it, and a partner's sale list
- * is answered only by my want lists open to buying.
+ * my want lists holding it. A partner's want list is judged against `myHaves.trade` when it
+ * is open to swaps only, `myHaves.sale` when it is open to buying only and `myHaves.all`
+ * otherwise. A partner's have list is answered only by my want lists open to swaps, and a
+ * partner's sale list only by my want lists open to buying.
  */
 export function recount(
   candidate: Candidate,
@@ -161,32 +167,50 @@ export function recount(
   const dropped: Dropped[] = [];
 
   for (const [slug, entries] of groupBySlug(candidate.theyHave)) {
-    const { verdict, listIds } = collectionVerdict(entries, partnerAddresses, holdings);
-    if (verdict === "ok") {
-      const trade =
-        collectionVerdict(
-          entries.filter((entry) => !entry.sale),
-          partnerAddresses,
-          holdings,
-        ).verdict === "ok";
-      const mine = myWants.get(slug) ?? [];
-      theyHaveIWant.push({
-        slug,
-        myListIds: (trade ? mine : mine.filter((want) => want.matchSale)).map(
-          (want) => want.listId,
-        ),
-        partnerListIds: listIds,
-        trade,
-      });
-    } else {
+    const { verdict } = collectionVerdict(entries, partnerAddresses, holdings);
+    if (verdict !== "ok") {
       dropped.push({ slug, direction: "theyHaveIWant", reason: verdict });
+      continue;
     }
+    const judgeOffers = (sale: boolean) =>
+      collectionVerdict(
+        entries.filter((entry) => entry.sale === sale),
+        partnerAddresses,
+        holdings,
+      );
+    const haves = judgeOffers(false);
+    const sales = judgeOffers(true);
+    const mine = myWants.get(slug) ?? [];
+    const takesSwaps = mine.some((want) => want.matchHave);
+    const takesBuying = mine.some((want) => want.matchSale);
+    const swaps = takesSwaps && haves.verdict === "ok";
+    const buys = takesBuying && sales.verdict === "ok";
+    if (!swaps && !buys) {
+      // the collection passed as a whole, but not the part my wants take
+      const relevant = [
+        ...(takesSwaps ? [haves.verdict] : []),
+        ...(takesBuying ? [sales.verdict] : []),
+      ];
+      if (relevant.length > 0) {
+        dropped.push({ slug, direction: "theyHaveIWant", reason: bestDrop(relevant) });
+      }
+      continue;
+    }
+    theyHaveIWant.push({
+      slug,
+      myListIds: mine
+        .filter((want) => (swaps && want.matchHave) || (buys && want.matchSale))
+        .map((want) => want.listId),
+      partnerListIds: [...(swaps ? haves.listIds : []), ...(buys ? sales.listIds : [])],
+      trade: swaps,
+    });
   }
 
   for (const [slug, entries] of groupBySlug(candidate.theyWant)) {
     const judged = entries.flatMap((entry) => {
-      const mine = (entry.matchSale ? myHaves.all : myHaves.trade).get(slug);
-      return mine ? [{ listId: entry.listId, mine }] : [];
+      const side = { buying: myHaves.sale, both: myHaves.all, swaps: myHaves.trade };
+      const mine = side[openToOf(entry)].get(slug);
+      return mine ? [{ listId: entry.listId, mine, swaps: entry.matchHave }] : [];
     });
     if (judged.length === 0) continue;
     const ok = judged.filter(({ mine }) => mine.verdict === "ok");
@@ -195,10 +219,14 @@ export function recount(
         slug,
         myListIds: [...new Set(ok.flatMap(({ mine }) => mine.listIds))],
         partnerListIds: [...new Set(ok.map(({ listId }) => listId))],
-        trade: myHaves.trade.get(slug)?.verdict === "ok",
+        trade: ok.some(({ swaps }) => swaps) && myHaves.trade.get(slug)?.verdict === "ok",
       });
     } else {
-      dropped.push({ slug, direction: "iHaveTheyWant", reason: bestDrop(judged) });
+      dropped.push({
+        slug,
+        direction: "iHaveTheyWant",
+        reason: bestDrop(judged.map(({ mine }) => mine.verdict)),
+      });
     }
   }
 
@@ -216,10 +244,8 @@ export function recount(
   return { userId: candidate.userId, updatedAt, theyHaveIWant, iHaveTheyWant, dropped };
 }
 
-function bestDrop(judged: { mine: Judged }[]): DropReason {
-  return judged.some(({ mine }) => mine.verdict === "not_transferable")
-    ? "not_transferable"
-    : "not_owned";
+function bestDrop(verdicts: Verdict[]): DropReason {
+  return verdicts.includes("not_transferable") ? "not_transferable" : "not_owned";
 }
 
 export function isIdle(updatedAt: string, now: Date) {

@@ -93,6 +93,8 @@ export const lists = pgTable(
     discoverable: boolean("discoverable").notNull().default(false),
     /** a want list's matches include sale lists; off, it matches have lists only */
     matchSale: boolean("match_sale").notNull().default(true),
+    /** a want list's matches include have lists; off with matchSale on, it is Buying only */
+    matchHave: boolean("match_have").notNull().default(true),
     updatedAt: timestamp("updated_at", { mode: "string", withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -116,6 +118,7 @@ export const lists = pgTable(
     index("lists_trade_feed_idx")
       .on(t.bumpedAt.desc(), t.id)
       .where(sql`discoverable`),
+    check("lists_open_to_something", sql`${t.matchSale} OR ${t.matchHave}`),
   ],
 );
 

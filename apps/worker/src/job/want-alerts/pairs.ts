@@ -38,7 +38,7 @@ export async function fetchPairs(where: SQL, order: Order, limit: number | null)
   const result = await db.execute<PairRow>(sql`
     WITH cand AS (
       SELECT e.id, e.list_id, e.collection_slug AS slug, e.objekt_id, l.list_type_new,
-        l.match_sale, l.user_id
+        l.match_sale, l.match_have, l.user_id
       FROM list_entries e
       JOIN lists l ON l.id = e.list_id
       WHERE l.discoverable

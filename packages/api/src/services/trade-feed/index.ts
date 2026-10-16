@@ -207,6 +207,7 @@ export async function browseFeed(
       posts.push({
         id: post.anchor.id,
         tag: post.tag,
+        buyingOnly: post.buyingOnly,
         userId: account.id,
         user: toPublicUser(account),
         reputation: reputations.get(account.id) ?? null,

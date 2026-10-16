@@ -94,7 +94,7 @@ const PERSON_TTL_SECONDS = 60;
 export async function getTradeMatches(userId: string, sides: Sides, filter: TradeFilter) {
   const scope = await tradeCacheScope(userId);
   return getCache(
-    `trade:foryou:4:${userId}:${scope}:${filter}:${sides.listId ?? "all"}`,
+    `trade:foryou:5:${userId}:${scope}:${filter}:${sides.listId ?? "all"}`,
     CACHE_TTL_SECONDS,
     () => computeTradeMatches(userId, sides, filter),
   );
@@ -165,6 +165,7 @@ export async function recountPartners(
             objektId: listEntries.objektId,
             listTypeNew: lists.listTypeNew,
             matchSale: lists.matchSale,
+            matchHave: lists.matchHave,
           })
           .from(listEntries)
           .innerJoin(lists, eq(lists.id, listEntries.listId))
@@ -198,7 +199,10 @@ export async function recountPartners(
     } else {
       const held = myWants.get(entry.slug) ?? [];
       if (!held.some((want) => want.listId === entry.listId)) {
-        myWants.set(entry.slug, [...held, { listId: entry.listId, matchSale: entry.matchSale }]);
+        myWants.set(entry.slug, [
+          ...held,
+          { listId: entry.listId, matchSale: entry.matchSale, matchHave: entry.matchHave },
+        ]);
       }
     }
   }
@@ -228,6 +232,7 @@ export async function recountPartners(
   const myHaves: MyHaves = {
     all: judge(myHaveEntries),
     trade: judge(myHaveEntries.filter((entry) => !mySaleListIds.has(entry.listId))),
+    sale: judge(myHaveEntries.filter((entry) => mySaleListIds.has(entry.listId))),
   };
 
   return {
@@ -293,6 +298,7 @@ async function hydratePartners(ranked: Ranked, addressRows: AddressRows) {
             name: lists.name,
             listTypeNew: lists.listTypeNew,
             matchSale: lists.matchSale,
+            matchHave: lists.matchHave,
             profileAddress: lists.profileAddress,
             profileSlug: lists.profileSlug,
           })
@@ -317,6 +323,7 @@ async function hydratePartners(ranked: Ranked, addressRows: AddressRows) {
         name: list.name,
         listTypeNew: list.listTypeNew,
         matchSale: list.matchSale,
+        matchHave: list.matchHave,
         profileAddress: list.profileAddress,
         profileSlug: list.profileSlug,
         profileNickname: list.profileAddress
@@ -362,7 +369,7 @@ export async function personDetail(userId: string, personId: string, list: strin
   const sides = await resolveCompareSides(userId, list, false);
   const scope = await tradeCacheScope(userId);
   const detail = await getCache(
-    `trade:person:3:${userId}:${scope}:${sides.listId ?? "all"}:${personId}`,
+    `trade:person:4:${userId}:${scope}:${sides.listId ?? "all"}:${personId}`,
     PERSON_TTL_SECONDS,
     async () => {
       const now = new Date();

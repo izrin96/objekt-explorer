@@ -70,6 +70,9 @@ export function BrowsePost({
               {wantOnly ? (
                 <span className="text-muted-foreground text-xs">{m.trade_wtt_swaps_only()}</span>
               ) : null}
+              {post.buyingOnly ? (
+                <span className="text-muted-foreground text-xs">{m.trade_wtb_buying_only()}</span>
+              ) : null}
               {/* relative to the render: the server's minute and the browser's can differ */}
               <time
                 dateTime={time}

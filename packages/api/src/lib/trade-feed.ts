@@ -1,4 +1,5 @@
 import type { ListTypeNew } from "../schemas/list";
+import { type OpenToFlags, openToOf } from "../schemas/open-to";
 import {
   type BrowseMatchMode,
   PREVIEW_LIMIT,
@@ -15,13 +16,11 @@ export const BUMP_COOLDOWN_HOURS = 24;
 
 export type PostTag = Exclude<PostType, "all">;
 
-export type TradeList = {
+export type TradeList = OpenToFlags & {
   id: number;
   userId: string;
   listTypeNew: ListTypeNew;
   linkedListId: number | null;
-  /** a want list's: whether sale lists match it */
-  matchSale: boolean;
   bumpedAt: string | null;
   updatedAt: string;
 };
@@ -33,6 +32,8 @@ export type Post<L extends TradeList> = {
   want: L | null;
   sale: L | null;
   tag: PostTag;
+  /** a want list alone that matches sale lists only: a WTB post that is not open to swaps */
+  buyingOnly: boolean;
   bumpedAt: string | null;
   updatedAt: string;
 };
@@ -60,12 +61,14 @@ function toPost<L extends TradeList>(anchor: L, partner: L | null): Post<L> {
   const want = anchor.listTypeNew === "want" ? anchor : partner;
   const sale = anchor.listTypeNew === "sale" ? anchor : null;
   const members = partner ? [anchor, partner] : [anchor];
+  const tag = postTag({ have, want, sale });
   return {
     anchor,
     have,
     want,
     sale,
-    tag: postTag({ have, want, sale }),
+    tag,
+    buyingOnly: tag === "wtb" && want !== null && openToOf(want) === "buying",
     bumpedAt: latest(...members.map((list) => list.bumpedAt)),
     updatedAt: latest(...members.map((list) => list.updatedAt)) ?? anchor.updatedAt,
   };
@@ -208,13 +211,17 @@ export function matchesViewer(match: { youHave: number; youWant: number } | unde
 
 /**
  * The viewer's have and sale lists (still-owned entries only) and want lists, by collection.
- * A sale list and a want list match only when the want list takes sales, so `tradeHave` drops
- * the sale lists and `saleWant` the want lists that match swaps only.
+ * A have list matches a want list only when the want list takes swaps, and a sale list only
+ * when it takes buying. So `tradeHave` drops the sale lists, `saleHave` keeps only them,
+ * `tradeWant` drops the want lists that match buying only, and `saleWant` the want lists that
+ * match swaps only.
  */
 export type Viewer = {
   have: SlugIndex;
   want: SlugIndex;
   tradeHave: SlugIndex;
+  saleHave: SlugIndex;
+  tradeWant: SlugIndex;
   saleWant: SlugIndex;
 };
 
@@ -241,18 +248,20 @@ export function narrowIndex(index: SlugIndex, keep: (listId: number) => boolean)
 
 /** The viewer's slugs by the post side they match. */
 export type MatchIndex = {
-  want: string[];
+  tradeWant: string[];
   saleWant: string[];
   have: string[];
   tradeHave: string[];
+  saleHave: string[];
 };
 
 export function matchIndexOf(viewer: Viewer): MatchIndex {
   return {
-    want: [...viewer.want.keys()],
+    tradeWant: [...viewer.tradeWant.keys()],
     saleWant: [...viewer.saleWant.keys()],
     have: [...viewer.have.keys()],
     tradeHave: [...viewer.tradeHave.keys()],
+    saleHave: [...viewer.saleHave.keys()],
   };
 }
 
@@ -278,16 +287,19 @@ export function narrowViewer(
   return {
     have: narrowIndex(viewer.have, keepHave),
     tradeHave: narrowIndex(viewer.tradeHave, keepHave),
+    saleHave: narrowIndex(viewer.saleHave, keepHave),
     want: narrowIndex(viewer.want, keepWant),
+    tradeWant: narrowIndex(viewer.tradeWant, keepWant),
     saleWant: narrowIndex(viewer.saleWant, keepWant),
   };
 }
 
 /** What a post's side is matched and ringed against: the viewer's lists it can match. */
 function indexFor(role: "have" | "want" | "sale", list: TradeList, viewer: Viewer) {
-  if (role === "have") return viewer.want;
+  if (role === "have") return viewer.tradeWant;
   if (role === "sale") return viewer.saleWant;
-  return list.matchSale ? viewer.have : viewer.tradeHave;
+  const wantSide = { buying: viewer.saleHave, both: viewer.have, swaps: viewer.tradeHave };
+  return wantSide[openToOf(list)];
 }
 
 type PostFilter = {

@@ -61,12 +61,20 @@ const SECTIONS: Section[] = [
       columns: [m.trade_browse_help_tags_list, m.trade_help_your_want, m.trade_help_counts],
       rows: [
         {
-          key: "have",
-          cells: [m.trade_match_help_rules_have_list, m.trade_help_any_setting, yes],
+          key: "have-swaps",
+          cells: [m.trade_match_help_rules_have_list, m.trade_help_swaps_settings, yes],
+        },
+        {
+          key: "have-buying-only",
+          cells: [m.trade_match_help_rules_have_list, m.list_create_match_buying_label, no],
         },
         {
           key: "sale-buying",
           cells: [m.trade_browse_help_wts_list, m.list_create_match_sales_label, yes],
+        },
+        {
+          key: "sale-buying-only",
+          cells: [m.trade_browse_help_wts_list, m.list_create_match_buying_label, yes],
         },
         {
           key: "sale-swaps",

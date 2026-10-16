@@ -93,6 +93,7 @@ function toDraft(list: StoredList): ListDraft {
     isProfileBind: list.isProfileBind,
     discoverable: list.discoverable ?? false,
     matchSale: list.matchSale,
+    matchHave: list.matchHave,
     gridColumns: list.gridColumns,
     hideSerial: list.hideSerial,
     regenerateSlug: false,

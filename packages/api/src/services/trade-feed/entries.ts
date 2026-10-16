@@ -19,6 +19,7 @@ export const feedListColumns = {
   listTypeNew: lists.listTypeNew,
   linkedListId: lists.linkedListId,
   matchSale: lists.matchSale,
+  matchHave: lists.matchHave,
   currency: lists.currency,
   isProfileBind: lists.isProfileBind,
   profileAddress: lists.profileAddress,
@@ -36,6 +37,7 @@ export type FeedList = {
   listTypeNew: ListTypeNew;
   linkedListId: number | null;
   matchSale: boolean;
+  matchHave: boolean;
   currency: string | null;
   isProfileBind: boolean;
   profileAddress: string | null;

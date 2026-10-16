@@ -15,6 +15,7 @@ import {
   findPublicOutputSchema,
   listSlugInputSchema,
 } from "../schemas/list";
+import { resolveOpenTo } from "../schemas/open-to";
 import {
   checkLinkedList,
   createdBumpedAt,
@@ -131,7 +132,7 @@ export const listCrud = {
                 ? normalizeCurrency(input.currency)
                 : null,
             discoverable,
-            matchSale: input.listTypeNew === "want" ? input.matchSale : true,
+            ...resolveOpenTo(input.listTypeNew, input),
             bumpedAt: discoverable
               ? createdBumpedAt(linkedListId, input.listTypeNew, user.id)
               : null,
@@ -249,7 +250,7 @@ export const listCrud = {
                 ? input.hideSerial
                 : false,
             linkedListId,
-            matchSale: list.listTypeNew === "want" ? input.matchSale : undefined,
+            ...(list.listTypeNew === "want" ? resolveOpenTo(list.listTypeNew, input, list) : {}),
             ...tradeColumns(discoverable, linkedListId),
           })
           .where(eq(lists.id, list.id));

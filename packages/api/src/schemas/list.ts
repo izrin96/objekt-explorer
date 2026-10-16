@@ -56,6 +56,7 @@ const baseListSchema = z.object({
   description: z.string().nullish(),
   discoverable: z.boolean().nullish(),
   matchSale: z.boolean().nullish(),
+  matchHave: z.boolean().nullish(),
   bumpedAt: z.string().nullish(),
   user: publicUserSchema.nullish(),
   profile: publicProfileSchema.nullish(),
@@ -138,6 +139,7 @@ export const createListInputSchema = z.object({
   currency: z.string().max(10).nullable(),
   discoverable: z.boolean().default(false),
   matchSale: z.boolean().default(false),
+  matchHave: z.boolean().default(true),
 });
 
 export const editListInputSchema = z.object({
@@ -152,6 +154,7 @@ export const editListInputSchema = z.object({
   discoverable: z.boolean(),
   // optional: a tab opened before the switch existed leaves the list's setting alone
   matchSale: z.boolean().optional(),
+  matchHave: z.boolean().optional(),
   regenerateSlug: z.boolean().default(false),
 });
 

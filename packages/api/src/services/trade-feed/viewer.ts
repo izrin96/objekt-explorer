@@ -73,6 +73,7 @@ export async function fetchViewer(userId: string): Promise<Viewer> {
         listId: listEntries.listId,
         slug: listEntries.collectionSlug,
         matchSale: lists.matchSale,
+        matchHave: lists.matchHave,
       })
       .from(listEntries)
       .innerJoin(lists, eq(lists.id, listEntries.listId))
@@ -92,11 +93,14 @@ export async function fetchViewer(userId: string): Promise<Viewer> {
   }
   const have = new Map(haveIndex);
   const saleIds = new Set(saleLists.map((list) => list.id));
-  const tradeOnlyIds = new Set(wantRows.flatMap((row) => (row.matchSale ? [] : [row.listId])));
+  const noSaleIds = new Set(wantRows.flatMap((row) => (row.matchSale ? [] : [row.listId])));
+  const noHaveIds = new Set(wantRows.flatMap((row) => (row.matchHave ? [] : [row.listId])));
   return {
     have,
     want,
     tradeHave: narrowIndex(have, (id) => !saleIds.has(id)),
-    saleWant: narrowIndex(want, (id) => !tradeOnlyIds.has(id)),
+    saleHave: narrowIndex(have, (id) => saleIds.has(id)),
+    tradeWant: narrowIndex(want, (id) => !noHaveIds.has(id)),
+    saleWant: narrowIndex(want, (id) => !noSaleIds.has(id)),
   };
 }
