@@ -2,6 +2,7 @@ import { InfoIcon } from "@phosphor-icons/react";
 import { canBeOnTrade, type ListTypeNew, type PublicList } from "@repo/api/schemas/list";
 import { flagsOf, type OpenTo, type OpenToFlags, openToOf } from "@repo/api/schemas/open-to";
 import { Link } from "@tanstack/react-router";
+import type { ReactNode } from "react";
 import slugify from "slugify";
 import * as z from "zod";
 
@@ -151,11 +152,22 @@ type ListFormProps = {
   mode: "create" | "edit";
   /** the profile-scoped address a bound list lives at; only edit has one to show */
   url?: ListUrl;
+  /** one line under the binding switch, for a note about what the form's current choices do */
+  notice?: ReactNode;
 };
 
 export type ListUrl = { nickname: string; profileSlug: string; fallbackSlug: string };
 
-export function ListForm({ idPrefix, value, onChange, lists, profiles, mode, url }: ListFormProps) {
+export function ListForm({
+  idPrefix,
+  value,
+  onChange,
+  lists,
+  profiles,
+  mode,
+  url,
+  notice,
+}: ListFormProps) {
   const id = (field: string) => `${idPrefix}-${field}`;
   const set = (patch: Partial<ListDraft>) => onChange({ ...value, ...patch });
 
@@ -213,6 +225,11 @@ export function ListForm({ idPrefix, value, onChange, lists, profiles, mode, url
         <span id={id("type-desc")} className="text-muted-foreground text-xs text-pretty">
           {LIST_TYPE_DESC[value.listTypeNew]()}
         </span>
+        {isEdit ? (
+          <span className="text-muted-foreground text-xs text-pretty">
+            {m.list_edit_type_locked_hint()}
+          </span>
+        ) : null}
       </div>
 
       <Field name="name" className="min-w-0 gap-1.5">
@@ -370,6 +387,8 @@ export function ListForm({ idPrefix, value, onChange, lists, profiles, mode, url
           onCheckedChange={(checked) => set({ isProfileBind: checked })}
         />
       ) : null}
+
+      {notice}
 
       {value.listTypeNew !== "general" ? (
         <SwitchRow

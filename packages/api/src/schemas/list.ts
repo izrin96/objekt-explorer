@@ -142,6 +142,25 @@ export const createListInputSchema = z.object({
   matchHave: z.boolean().default(true),
 });
 
+export const copyListInputSchema = createListInputSchema.extend({ sourceSlug: z.string() });
+
+export const copyPreviewInputSchema = z.object({
+  sourceSlug: z.string(),
+  listTypeNew: listTypeNewSchema,
+  isProfileBind: z.boolean(),
+  profileAddress: addressSchema.nullable(),
+});
+
+/** Collections where entries are carried as collections, copies where each entry is one copy. */
+const copyCountsSchema = z.object({
+  carried: z.number(),
+  leftOut: z.number(),
+  unit: z.enum(["collections", "copies"]),
+});
+
+export const copyPreviewOutputSchema = copyCountsSchema;
+export const copyListOutputSchema = copyCountsSchema.extend({ slug: z.string() });
+
 export const editListInputSchema = z.object({
   slug: z.string(),
   name: z.string().min(1).max(256),

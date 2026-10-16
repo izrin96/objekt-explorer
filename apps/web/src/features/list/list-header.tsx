@@ -1,6 +1,7 @@
 import {
   ArrowsLeftRightIcon,
   CheckIcon,
+  CopyIcon,
   DotsThreeIcon,
   DownloadSimpleIcon,
   MagnifyingGlassIcon,
@@ -29,6 +30,7 @@ import { mutualCountOptions } from "@/features/trade/queries";
 import { displayNickname } from "@/lib/address";
 import { m } from "@/paraglide/messages";
 
+import { CopyListDialog } from "./copy-list-dialog";
 import { DeleteListDialog } from "./delete-list-dialog";
 import { EditListDialog } from "./edit-list-dialog";
 import { ExportListDialog } from "./export-list-dialog";
@@ -46,6 +48,7 @@ export function ListHeader() {
   const [compareOpen, setCompareOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  const [copyOpen, setCopyOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const linked = list.linkedList;
   const self = { id: list.id, listTypeNew: list.listTypeNew, linkedListId: linked?.id ?? null };
@@ -158,6 +161,10 @@ export function ListHeader() {
                     <PencilSimpleIcon />
                     {m.list_card_edit()}
                   </MenuItem>
+                  <MenuItem onClick={() => setCopyOpen(true)}>
+                    <CopyIcon />
+                    {m.list_copy_action()}
+                  </MenuItem>
                   <MenuItem variant="destructive" onClick={() => setDeleteOpen(true)}>
                     <TrashIcon />
                     {m.list_card_delete()}
@@ -191,6 +198,7 @@ export function ListHeader() {
             onOpenChange={setEditOpen}
             redirectOnSave
           />
+          <CopyListDialog slug={list.slug} open={copyOpen} onOpenChange={setCopyOpen} />
           <DeleteListDialog
             slug={list.slug}
             name={list.name}

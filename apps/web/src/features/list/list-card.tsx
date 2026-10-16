@@ -1,5 +1,6 @@
 import {
   CheckIcon,
+  CopyIcon,
   DotsThreeIcon,
   LinkIcon,
   LinkSimpleIcon,
@@ -24,6 +25,7 @@ import { ProfileLink } from "@/features/profile/profile-hover-card";
 import { displayNickname } from "@/lib/address";
 import { m } from "@/paraglide/messages";
 
+import { CopyListDialog } from "./copy-list-dialog";
 import { DeleteListDialog } from "./delete-list-dialog";
 import { EditListDialog } from "./edit-list-dialog";
 import { getListLinkOption } from "./list-link";
@@ -48,6 +50,7 @@ export function ListCard({
   showProfile?: boolean;
 }) {
   const [editOpen, setEditOpen] = useState(false);
+  const [copyOpen, setCopyOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const owned = useIsListOwner(list.slug);
   const copyLink = useCopyListLink(list);
@@ -133,6 +136,10 @@ export function ListCard({
                   <PencilSimpleIcon />
                   {m.list_card_edit()}
                 </MenuItem>
+                <MenuItem onClick={() => setCopyOpen(true)}>
+                  <CopyIcon />
+                  {m.list_copy_action()}
+                </MenuItem>
                 <MenuSeparator />
                 <MenuItem variant="destructive" onClick={() => setDeleteOpen(true)}>
                   <TrashIcon />
@@ -147,6 +154,7 @@ export function ListCard({
       {owned ? (
         <>
           <EditListDialog slug={list.slug} open={editOpen} onOpenChange={setEditOpen} />
+          <CopyListDialog slug={list.slug} open={copyOpen} onOpenChange={setCopyOpen} />
           <DeleteListDialog
             slug={list.slug}
             name={list.name}

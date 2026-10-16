@@ -4,12 +4,15 @@ import { lists } from "@repo/db/schema";
 import { normalizeCurrency } from "@repo/lib/currency";
 import { bumpTradeVersion } from "@repo/lib/server/list-touch";
 import { and, eq, ne } from "drizzle-orm";
-import { nanoid } from "nanoid";
 
 import { refuse } from "../lib/refuse";
 import { authed, pub } from "../orpc";
 import { documented } from "../schemas/common/documented";
 import {
+  copyListInputSchema,
+  copyListOutputSchema,
+  copyPreviewInputSchema,
+  copyPreviewOutputSchema,
   createListInputSchema,
   editListInputSchema,
   findPublicOutputSchema,
@@ -18,13 +21,16 @@ import {
 import { resolveOpenTo } from "../schemas/open-to";
 import {
   checkLinkedList,
-  createdBumpedAt,
   fetchList,
-  generateProfileSlug,
   findOwnedList,
+  generateProfileSlug,
+  insertCopyRows,
+  planCopy,
+  prepareList,
   resolveDiscoverable,
   touchList,
   tradeColumns,
+  writeList,
 } from "../services/list";
 import { assertProfileOwned } from "../services/profile";
 import { redis } from "../services/redis";
@@ -62,114 +68,52 @@ export const listCrud = {
         session: { user },
       },
     }) => {
-      const isProfileBind = ["have", "sale"].includes(input.listTypeNew)
-        ? input.isProfileBind
-        : false;
-
-      const linkedListId = ["have", "want"].includes(input.listTypeNew) ? input.linkedListId : null;
-
-      // Validate: sale lists require currency
-      if (input.listTypeNew === "sale" && !input.currency) {
-        refuse("BAD_REQUEST", "list_currency_required", "Currency is required for sale lists");
-      }
-
-      // Validate: profile binding requires profile address
-      if (isProfileBind && !input.profileAddress) {
-        refuse(
-          "BAD_REQUEST",
-          "list_profile_required",
-          "Profile address is required for profile-bound lists",
-        );
-      }
-
-      // Validate profile ownership and linked list ownership + type compatibility.
-      // allSettled keeps the profile error taking precedence over the linked one.
-      const [profileCheck, linkedCheck] = await Promise.allSettled([
-        input.profileAddress ? assertProfileOwned(input.profileAddress, user.id) : undefined,
-        linkedListId !== null
-          ? checkLinkedList(input.listTypeNew, linkedListId, user.id)
-          : undefined,
-      ]);
-
-      if (profileCheck.status === "rejected") throw profileCheck.reason;
-      if (linkedCheck.status === "rejected") throw linkedCheck.reason;
-
-      const discoverable = resolveDiscoverable(
-        input.listTypeNew,
-        isProfileBind,
-        input.discoverable,
-      );
-
-      const slug = nanoid(9);
-      let profileSlug: string | null = null;
-      if (input.profileAddress) {
-        profileSlug = await generateProfileSlug(
-          input.name,
-          slug,
-          input.profileAddress.toLowerCase(),
-        );
-      }
-
-      const touched = await db.transaction(async (tx) => {
-        const [inserted] = await tx
-          .insert(lists)
-          .values({
-            name: input.name,
-            userId: user.id,
-            slug,
-            profileSlug,
-            listTypeNew: input.listTypeNew,
-            isProfileBind,
-            hideSerial:
-              ["sale", "have"].includes(input.listTypeNew) && isProfileBind
-                ? input.hideSerial
-                : false,
-            linkedListId,
-            profileAddress: input.profileAddress ? input.profileAddress.toLowerCase() : null,
-            description: input.description,
-            currency:
-              input.listTypeNew === "sale" && input.currency
-                ? normalizeCurrency(input.currency)
-                : null,
-            discoverable,
-            ...resolveOpenTo(input.listTypeNew, input),
-            bumpedAt: discoverable
-              ? createdBumpedAt(linkedListId, input.listTypeNew, user.id)
-              : null,
-          })
-          .returning({ insertedId: lists.id });
-
-        if (!inserted) return [];
-        const changed = [inserted.insertedId];
-
-        // Bidirectional link: clear any existing reverse link on target, then set new one
-        if (linkedListId !== null) {
-          const unlinked = await tx
-            .update(lists)
-            .set({ linkedListId: null })
-            .where(and(eq(lists.linkedListId, linkedListId), ne(lists.id, inserted.insertedId)))
-            .returning({ id: lists.id });
-          changed.push(linkedListId, ...unlinked.map((row) => row.id));
-
-          await tx
-            .update(lists)
-            .set({ linkedListId: inserted.insertedId })
-            .where(eq(lists.id, linkedListId));
-
-          const partner = linkedCheck.value;
-          if (
-            partner &&
-            resolveDiscoverable(partner.listTypeNew, partner.isProfileBind, discoverable)
-          ) {
-            await tx.update(lists).set(tradeColumns(true)).where(eq(lists.id, linkedListId));
-          }
-        }
-
-        return changed;
-      });
-      await touchList(touched);
+      const prepared = await prepareList(input, user.id);
+      const { changed } = await db.transaction((tx) => writeList(tx, prepared));
+      await touchList(changed);
     },
   ),
+
+  copy: authed
+    .input(copyListInputSchema)
+    .output(copyListOutputSchema)
+    .handler(
+      async ({
+        input: { sourceSlug, ...input },
+        context: {
+          session: { user },
+        },
+      }) => {
+        const source = await findOwnedList(sourceSlug, user.id);
+        const prepared = await prepareList({ ...input, gridColumns: source.gridColumns }, user.id);
+        const { rows, carried, leftOut, unit } = await planCopy(source, input, user.id);
+
+        const { slug, changed } = await db.transaction(async (tx) => {
+          const created = await writeList(tx, prepared);
+          await insertCopyRows(tx, created.id, rows);
+          return created;
+        });
+        await touchList(changed);
+
+        return { slug, carried, leftOut, unit };
+      },
+    ),
+
+  copyPreview: authed
+    .input(copyPreviewInputSchema)
+    .output(copyPreviewOutputSchema)
+    .handler(
+      async ({
+        input: { sourceSlug, ...target },
+        context: {
+          session: { user },
+        },
+      }) => {
+        const source = await findOwnedList(sourceSlug, user.id);
+        const { carried, leftOut, unit } = await planCopy(source, target, user.id);
+        return { carried, leftOut, unit };
+      },
+    ),
 
   edit: authed.input(editListInputSchema).handler(
     async ({

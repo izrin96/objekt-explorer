@@ -6,27 +6,35 @@ import { collections, objekts } from "@repo/db/indexer/schema";
 import { listEntries, lists, messagePref } from "@repo/db/schema";
 import type { List, ListEntry, UserAddress } from "@repo/db/schema";
 import { chunkMap } from "@repo/lib";
+import { normalizeCurrency } from "@repo/lib/currency";
 import { touchListWith } from "@repo/lib/server/list-touch";
 import { mapOwnedObjekt, overrideCollection } from "@repo/lib/server/objekt";
 import type { ListEntryFields, ListObjekt } from "@repo/lib/types/objekt";
 import { type SQL, and, eq, inArray, isNotNull, ne, sql } from "drizzle-orm";
+import { nanoid } from "nanoid";
 import slugify from "slugify";
+import type * as z from "zod";
 
 import { OBJEKT_PREVIEW_SIZE } from "../constants";
 import { isMessageable, toMessagePref } from "../lib/chat-rules";
+import { buildCopyRows, type CopyRow, type OwnedCopy } from "../lib/list-copy";
 import { refuse } from "../lib/refuse";
 import { BUMP_COOLDOWN_HOURS } from "../lib/trade-feed";
 import {
   type AddSource,
   canBeOnTrade,
+  type copyPreviewInputSchema,
+  type createListInputSchema,
   type ListPreview,
   type ListTypeNew,
   type PublicList,
 } from "../schemas/list";
-import { isBlockedEither } from "./moderation";
+import { carriesPrices, copyMode, copyUnit, needsHoldings } from "../schemas/list-copy";
+import { resolveOpenTo } from "../schemas/open-to";
+import { isBlockedEither, type Tx } from "./moderation";
 import { getCollectionColumns, getPartialCollectionColumns } from "./objekt";
 import { isProfileHidden } from "./privacy";
-import { toPublicUser } from "./profile";
+import { assertProfileOwned, toPublicUser } from "./profile";
 import { redis } from "./redis";
 import { isBanned } from "./safety";
 import { TOKEN_CHUNK_SIZE } from "./utils";
@@ -526,6 +534,196 @@ export async function generateProfileSlug(
 /** Every list or entry write calls this once committed, so idle ranking and the cached trade matches stay right. */
 export function touchList(listIds: number[]) {
   return touchListWith(redis, listIds);
+}
+
+export type NewList = z.infer<typeof createListInputSchema> & { gridColumns?: number | null };
+
+/**
+ * Validates a new list and settles its slug and partner, before any transaction opens: these
+ * reads use the pool, and a transaction waiting on them would hold a connection while it waits.
+ */
+export async function prepareList(input: NewList, userId: string) {
+  const isProfileBind = ["have", "sale"].includes(input.listTypeNew) ? input.isProfileBind : false;
+
+  const linkedListId = ["have", "want"].includes(input.listTypeNew) ? input.linkedListId : null;
+
+  // Validate: sale lists require currency
+  if (input.listTypeNew === "sale" && !input.currency) {
+    refuse("BAD_REQUEST", "list_currency_required", "Currency is required for sale lists");
+  }
+
+  // Validate: profile binding requires profile address
+  if (isProfileBind && !input.profileAddress) {
+    refuse(
+      "BAD_REQUEST",
+      "list_profile_required",
+      "Profile address is required for profile-bound lists",
+    );
+  }
+
+  // Validate profile ownership and linked list ownership + type compatibility.
+  // allSettled keeps the profile error taking precedence over the linked one.
+  const [profileCheck, linkedCheck] = await Promise.allSettled([
+    input.profileAddress ? assertProfileOwned(input.profileAddress, userId) : undefined,
+    linkedListId !== null ? checkLinkedList(input.listTypeNew, linkedListId, userId) : undefined,
+  ]);
+
+  if (profileCheck.status === "rejected") throw profileCheck.reason;
+  if (linkedCheck.status === "rejected") throw linkedCheck.reason;
+
+  const slug = nanoid(9);
+  const profileSlug = input.profileAddress
+    ? await generateProfileSlug(input.name, slug, input.profileAddress.toLowerCase())
+    : null;
+
+  return {
+    input,
+    userId,
+    slug,
+    profileSlug,
+    isProfileBind,
+    linkedListId,
+    partner: linkedCheck.value,
+    discoverable: resolveDiscoverable(input.listTypeNew, isProfileBind, input.discoverable),
+  };
+}
+
+export type PreparedList = Awaited<ReturnType<typeof prepareList>>;
+
+/** The one place a list row is created. Returns the ids to `touchList` once the transaction commits. */
+export async function writeList(tx: Tx, prepared: PreparedList) {
+  const { input, userId, slug, profileSlug, isProfileBind, linkedListId, partner, discoverable } =
+    prepared;
+
+  const [inserted] = await tx
+    .insert(lists)
+    .values({
+      name: input.name,
+      userId,
+      slug,
+      profileSlug,
+      listTypeNew: input.listTypeNew,
+      isProfileBind,
+      hideSerial:
+        ["sale", "have"].includes(input.listTypeNew) && isProfileBind ? input.hideSerial : false,
+      gridColumns: input.gridColumns,
+      linkedListId,
+      profileAddress: input.profileAddress ? input.profileAddress.toLowerCase() : null,
+      description: input.description,
+      currency:
+        input.listTypeNew === "sale" && input.currency ? normalizeCurrency(input.currency) : null,
+      discoverable,
+      ...resolveOpenTo(input.listTypeNew, input),
+      bumpedAt: discoverable ? createdBumpedAt(linkedListId, input.listTypeNew, userId) : null,
+    })
+    .returning({ id: lists.id });
+
+  if (!inserted) throw new ORPCError("INTERNAL_SERVER_ERROR");
+  const changed = [inserted.id];
+
+  // Bidirectional link: clear any existing reverse link on target, then set new one
+  if (linkedListId !== null) {
+    const unlinked = await tx
+      .update(lists)
+      .set({ linkedListId: null })
+      .where(and(eq(lists.linkedListId, linkedListId), ne(lists.id, inserted.id)))
+      .returning({ id: lists.id });
+    changed.push(linkedListId, ...unlinked.map((row) => row.id));
+
+    await tx.update(lists).set({ linkedListId: inserted.id }).where(eq(lists.id, linkedListId));
+
+    if (partner && resolveDiscoverable(partner.listTypeNew, partner.isProfileBind, discoverable)) {
+      await tx.update(lists).set(tradeColumns(true)).where(eq(lists.id, linkedListId));
+    }
+  }
+
+  return { id: inserted.id, slug, changed };
+}
+
+type CopyTarget = Pick<
+  z.infer<typeof copyPreviewInputSchema>,
+  "listTypeNew" | "isProfileBind" | "profileAddress"
+>;
+
+/**
+ * What a copy of `source` would hold under `target`'s binding, read but not written.
+ * A bound target's profile is checked before its holdings are read.
+ */
+export async function planCopy(source: List, target: CopyTarget, userId: string) {
+  const isProfileBind = ["have", "sale"].includes(target.listTypeNew) && target.isProfileBind;
+  const binding = { ...target, isProfileBind };
+  const mode = copyMode(source, binding);
+
+  const entries = await db
+    .select({
+      collectionSlug: listEntries.collectionSlug,
+      objektId: listEntries.objektId,
+      price: listEntries.price,
+      isQyop: listEntries.isQyop,
+      note: listEntries.note,
+    })
+    .from(listEntries)
+    .where(eq(listEntries.listId, source.id))
+    .orderBy(listEntries.id);
+
+  let owned: ReadonlySet<string> | ReadonlyMap<string, OwnedCopy[]> = new Set<string>();
+  if (needsHoldings(mode)) {
+    if (!target.profileAddress) {
+      refuse(
+        "BAD_REQUEST",
+        "list_profile_required",
+        "Profile address is required for profile-bound lists",
+      );
+    }
+    await assertProfileOwned(target.profileAddress, userId);
+    const owner = target.profileAddress.toLowerCase();
+
+    if (mode === "tokens") {
+      const ids = Array.from(new Set(entries.flatMap((entry) => entry.objektId ?? [])));
+      const found = await chunkMap(ids, TOKEN_CHUNK_SIZE, (batch) =>
+        indexer
+          .select({ id: objekts.id })
+          .from(objekts)
+          .where(and(inArray(objekts.id, batch), eq(objekts.owner, owner))),
+      );
+      owned = new Set(found.map((row) => row.id));
+    } else {
+      const slugs = Array.from(new Set(entries.flatMap((entry) => entry.collectionSlug ?? [])));
+      const copies = await chunkMap(slugs, TOKEN_CHUNK_SIZE, (batch) =>
+        indexer
+          .select({ id: objekts.id, slug: collections.slug, serial: objekts.serial })
+          .from(objekts)
+          .innerJoin(collections, eq(collections.id, objekts.collectionId))
+          .where(and(inArray(collections.slug, batch), eq(objekts.owner, owner))),
+      );
+      const bySlug = new Map<string, OwnedCopy[]>();
+      for (const copy of copies) {
+        const held = bySlug.get(copy.slug);
+        if (held) held.push(copy);
+        else bySlug.set(copy.slug, [copy]);
+      }
+      owned = bySlug;
+    }
+  }
+
+  const plan = buildCopyRows(
+    mode,
+    entries,
+    owned,
+    carriesPrices(source.listTypeNew, target.listTypeNew),
+  );
+  return { ...plan, unit: copyUnit(mode) };
+}
+
+/** Inserts planned rows into a list in chunks. */
+export async function insertCopyRows(tx: Tx, listId: number, rows: CopyRow[]) {
+  for (let i = 0; i < rows.length; i += TOKEN_CHUNK_SIZE) {
+    await tx
+      .insert(listEntries)
+      // oxlint-disable-next-line oxc/no-map-spread
+      .values(rows.slice(i, i + TOKEN_CHUNK_SIZE).map((row) => ({ listId, ...row })))
+      .onConflictDoNothing();
+  }
 }
 
 type AddableList = Pick<List, "id" | "isProfileBind" | "profileAddress">;
