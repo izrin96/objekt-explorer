@@ -53,12 +53,17 @@ const tokenRefresh = process.env.WORKER_TOKEN_REFRESH !== "false";
 if (!indexerWrites) workerLog.info("WORKER_INDEXER_WRITES=false: indexer write jobs off");
 if (!tokenRefresh) workerLog.info("WORKER_TOKEN_REFRESH=false: Cosmo token refresh off");
 
+// Crons and signal handlers are registered before any first run, so a slow startup run never
+// delays a schedule or a SIGTERM. Only the access-token run is awaited: the other first runs read
+// that token.
+const startupRuns: Array<() => Promise<void>> = [];
+
 // refresh the Cosmo access token proactively so the website never races
 // to refresh it. Runs on startup (in case the worker just started and the
 // token is already expired) and every 2 minutes thereafter.
+const runAccessToken = safeRun("access-token", refreshAccessToken);
 if (tokenRefresh) {
-  await safeRun("access-token", refreshAccessToken)();
-  crons.push(cron("*/2 * * * *", safeRun("access-token", refreshAccessToken)));
+  crons.push(cron("*/2 * * * *", runAccessToken));
 }
 
 if (indexerWrites) {
@@ -69,37 +74,44 @@ if (indexerWrites) {
       version: 3,
     }),
   );
-  await runFixEmptyCollection();
+  startupRuns.push(runFixEmptyCollection);
   crons.push(cron("0 * * * *", runFixEmptyCollection));
 
   // populate missing serials for online objekts
-  await safeRun("serial-online", populateSerial)();
-  crons.push(cron("*/5 * * * *", safeRun("serial-online", populateSerial)));
+  const runSerialOnline = safeRun("serial-online", populateSerial);
+  startupRuns.push(runSerialOnline);
+  crons.push(cron("*/5 * * * *", runSerialOnline));
 
   // populate missing serials for offline objekts
-  await safeRun("serial-offline", populateSerialOffline)();
-  crons.push(cron("*/5 * * * *", safeRun("serial-offline", populateSerialOffline)));
+  const runSerialOffline = safeRun("serial-offline", populateSerialOffline);
+  startupRuns.push(runSerialOffline);
+  crons.push(cron("*/5 * * * *", runSerialOffline));
 
   // cosmo-spin transferable update
-  await safeRun("cosmo-spin", updateTransferableCosmoSpin)();
-  crons.push(cron("0 * * * *", safeRun("cosmo-spin", updateTransferableCosmoSpin)));
+  const runCosmoSpin = safeRun("cosmo-spin", updateTransferableCosmoSpin);
+  startupRuns.push(runCosmoSpin);
+  crons.push(cron("0 * * * *", runCosmoSpin));
 
   // drain outbox events from indexer (handles pins, locked objekts, and list entries)
-  await safeRun("drain", drainOutbox)();
-  crons.push(cron("*/2 * * * *", safeRun("drain", drainOutbox)));
+  const runDrain = safeRun("drain", drainOutbox);
+  startupRuns.push(runDrain);
+  crons.push(cron("*/2 * * * *", runDrain));
 
   // weekly boundary-drift check for un-anchored offline serial batches
-  // (no startup run: cheap but not needed on every deploy/restart)
+  // (no startup run: cheap but not needed on every deploy/restart). It rewrites the same serials
+  // as populateSerialOffline, so it takes that job's lock, off that job's 5-minute grid so the
+  // two don't race for it in the same minute.
   crons.push(
     cron(
-      "0 3 * * 1",
-      safeRun("verify-batches", () => verifyBatchBoundaries()),
+      "2 3 * * 1",
+      safeRun("serial-offline", () => verifyBatchBoundaries()),
     ),
   );
 
   // process collection images - download, convert to WebP, upload to S3
-  await safeRun("images", processCollectionImages)();
-  crons.push(cron("*/10 * * * *", safeRun("images", processCollectionImages)));
+  const runImages = safeRun("images", processCollectionImages);
+  startupRuns.push(runImages);
+  crons.push(cron("*/10 * * * *", runImages));
 }
 
 // weekly safety-net full scan for stale entries the outbox drain missed
@@ -107,52 +119,38 @@ if (indexerWrites) {
 crons.push(cron("0 4 * * 1", safeRun("cleanup", cleanupStaleEntries)));
 
 // cache collection rarity list
-await safeRun("rarity", populateRarity)();
-crons.push(cron("0 * * * *", safeRun("rarity", populateRarity)));
+const runRarity = safeRun("rarity", populateRarity);
+startupRuns.push(runRarity);
+crons.push(cron("0 * * * *", runRarity));
 
 // update currency exchange rates daily at 1 AM
-await safeRun("rates", updateCurrencyRates)();
-crons.push(cron("0 1 * * *", safeRun("rates", updateCurrencyRates)));
+const runRates = safeRun("rates", updateCurrencyRates);
+startupRuns.push(runRates);
+crons.push(cron("0 1 * * *", runRates));
 
 // today's per-collection floor and median; reads and writes the app database only
-await safeRun("price-history", () => snapshotPriceHistory())();
-crons.push(
-  cron(
-    SNAPSHOT_CRON,
-    safeRun("price-history", () => snapshotPriceHistory()),
-  ),
-);
+const runPriceHistory = safeRun("price-history", () => snapshotPriceHistory());
+startupRuns.push(runPriceHistory);
+crons.push(cron(SNAPSHOT_CRON, runPriceHistory));
 
 // want-list alerts; the first run only sets the cursor
-await safeRun("want-alerts", sendWantAlerts)();
-crons.push(cron("*/5 * * * *", safeRun("want-alerts", sendWantAlerts)));
+const runWantAlerts = safeRun("want-alerts", sendWantAlerts);
+startupRuns.push(runWantAlerts);
+crons.push(cron("*/5 * * * *", runWantAlerts));
 
 // no startup run: retention is not urgent
 crons.push(cron("0 5 * * 1", safeRun("prune-notifications", pruneNotifications)));
 
 // verifies trade legs from indexer transfers and keeps offers current; the rescan is the
 // source of truth, and the `transfers` and accept subscriptions only make a run sooner
-await safeRun("verifier", runTradeVerifier, { lock: false })();
-crons.push(cron("*/2 * * * *", safeRun("verifier", runTradeVerifier, { lock: false })));
-const stopVerifierTriggers = await watchVerifierTriggers((error) =>
-  verifierLog.error("Job failed:", error),
-).catch((error: unknown) => {
-  verifierLog.error("Failed to subscribe:", error);
-  return null;
-});
+const runVerifier = safeRun("verifier", runTradeVerifier, { lock: false });
+startupRuns.push(runVerifier);
+crons.push(cron("*/2 * * * *", runVerifier));
 
-// staging only: the indexer publishes `transfers` to production's Valkey alone
-const transfersRelayFrom = process.env.TRANSFERS_RELAY_FROM;
-const stopTransfersRelay = transfersRelayFrom
-  ? await relayTransfers(transfersRelayFrom).catch((error: unknown) => {
-      transfersRelayLog.error("Failed to subscribe:", error);
-      return null;
-    })
-  : null;
-
-// the live /activity feed; skipped when there is no Centrifugo to publish to
-const stopActivityRelay =
-  process.env.CENTRIFUGO_URL && process.env.CENTRIFUGO_API_KEY ? await relayActivity() : null;
+// assigned below, once the subscriptions are up; a signal before that finds them null
+let stopVerifierTriggers: (() => void) | null = null;
+let stopTransfersRelay: (() => void) | null = null;
+let stopActivityRelay: (() => Promise<void> | void) | null = null;
 
 async function shutdown(signal: NodeJS.Signals) {
   workerLog.info(`Received ${signal}, stopping cron jobs`);
@@ -170,3 +168,27 @@ async function shutdown(signal: NodeJS.Signals) {
 
 process.on("SIGTERM", () => shutdown("SIGTERM"));
 process.on("SIGINT", () => shutdown("SIGINT"));
+
+if (tokenRefresh) await runAccessToken();
+
+for (const run of startupRuns) void run();
+
+stopVerifierTriggers = await watchVerifierTriggers((error) =>
+  verifierLog.error("Job failed:", error),
+).catch((error: unknown) => {
+  verifierLog.error("Failed to subscribe:", error);
+  return null;
+});
+
+// staging only: the indexer publishes `transfers` to production's Valkey alone
+const transfersRelayFrom = process.env.TRANSFERS_RELAY_FROM;
+stopTransfersRelay = transfersRelayFrom
+  ? await relayTransfers(transfersRelayFrom).catch((error: unknown) => {
+      transfersRelayLog.error("Failed to subscribe:", error);
+      return null;
+    })
+  : null;
+
+// the live /activity feed; skipped when there is no Centrifugo to publish to
+stopActivityRelay =
+  process.env.CENTRIFUGO_URL && process.env.CENTRIFUGO_API_KEY ? await relayActivity() : null;

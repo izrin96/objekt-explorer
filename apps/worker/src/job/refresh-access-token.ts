@@ -10,6 +10,7 @@ import { log } from "../lib/log";
 // runs at least once before the token actually expires.
 const REFRESH_LEAD_TIME_SECONDS = 5 * 60;
 const tokenLog = log("access-token");
+const SAVE_ATTEMPTS = 4;
 
 export async function refreshAccessToken() {
   const result = await db.query.accessToken.findFirst();
@@ -37,15 +38,33 @@ export async function refreshAccessToken() {
     return;
   }
 
+  let newTokens: Awaited<ReturnType<typeof refreshV3>>;
   try {
-    const newTokens = await refreshV3(result.refreshToken, key);
-    await db.update(accessToken).set({
-      accessToken: newTokens.accessToken,
-      refreshToken: newTokens.refreshToken,
-    });
-
-    tokenLog.info("refreshed, new exp:", readExpiry(newTokens.accessToken));
+    newTokens = await refreshV3(result.refreshToken, key);
   } catch (err) {
     tokenLog.warn("refresh failed; retrying at the next run:", err);
+    return;
   }
+
+  // Cosmo rotated the refresh token, so the old one is dead: the write must not be lost.
+  for (let attempt = 1; ; attempt++) {
+    try {
+      await db.update(accessToken).set({
+        accessToken: newTokens.accessToken,
+        refreshToken: newTokens.refreshToken,
+      });
+      break;
+    } catch (err) {
+      if (attempt === SAVE_ATTEMPTS) {
+        tokenLog.error(
+          "refreshed but could not save the new tokens; manual re-auth required:",
+          err,
+        );
+        return;
+      }
+      await Bun.sleep(attempt * 500);
+    }
+  }
+
+  tokenLog.info("refreshed, new exp:", readExpiry(newTokens.accessToken));
 }

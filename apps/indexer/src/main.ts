@@ -131,8 +131,9 @@ processor.run(db, async (ctx) => {
       }
     });
 
-    // publish transfers to redis for websocket broadcast
-    if (transferBatchAll.length > 0) {
+    // publish transfers to redis for websocket broadcast; skipped while catching up so history
+    // neither floods the live feed nor builds a multi-megabyte message
+    if (ctx.isHead && transferBatchAll.length > 0) {
       publish("transfers", JSON.stringify(transferBatchAll)).catch((error) =>
         ctx.log.warn(`Failed to publish transfers to Redis: ${error}`),
       );
