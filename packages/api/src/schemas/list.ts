@@ -180,11 +180,6 @@ export const removeObjektsFromListInputSchema = z.object({
   entryIds: z.number().int().positive().array().max(50000),
 });
 
-export const findTradePartnersInputSchema = z.object({
-  slug: z.string(),
-  mode: z.enum(["have-to-want", "want-to-have", "both"]).optional(),
-});
-
 export const updateEntryPricesInputSchema = z.object({
   slug: z.string(),
   updates: z
