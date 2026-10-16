@@ -1,6 +1,5 @@
 import { matchIndexOf, narrowViewer } from "../../lib/trade-feed";
-import { matchCounts } from "../../lib/trade-person";
-import { mutualPeople } from "../../lib/trade-rank";
+import { mutualPeople, toRanked } from "../../lib/trade-rank";
 import { getCache } from "../redis";
 import { countFeedOwners } from "../trade-feed/query";
 import { fetchViewer } from "../trade-feed/viewer";
@@ -20,13 +19,7 @@ export async function getMutualPeople(userId: string, sides: Sides) {
     PEOPLE_TTL_SECONDS,
     async () => {
       const { recounted } = await recountPartners(userId, sides, "mutual");
-      return mutualPeople(
-        recounted.map((partner) => ({
-          userId: partner.userId,
-          updatedAt: partner.updatedAt,
-          counts: matchCounts(partner),
-        })),
-      );
+      return mutualPeople(recounted.map(toRanked));
     },
   );
 }

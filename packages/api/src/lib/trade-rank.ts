@@ -7,6 +7,7 @@ import {
   type MatchCounts,
   type MutualRank,
   mutualOf,
+  type OneWayRank,
   type TradeFilter,
 } from "../schemas/trade";
 import { DAY_MS } from "./time";
@@ -286,21 +287,36 @@ export function rankPartners<T extends Rankable>(partners: T[], filter: TradeFil
     .map(({ partner, idle }) => ({ partner, idle }));
 }
 
-type MutualRanked = { userId: string; updatedAt: string; counts: MatchCounts };
+type Ranked = { userId: string; updatedAt: string; counts: MatchCounts };
 
-/** A person's place in the Mutual ranking: score, sum, last change, then id for a total order. */
-export function mutualRankOf(partner: MutualRanked): MutualRank {
+/** One recounted partner as the ranking reads it. */
+export function toRanked(partner: {
+  userId: string;
+  updatedAt: string;
+  theyHaveIWant: Parameters<typeof matchCounts>[0]["theyHaveIWant"];
+  iHaveTheyWant: Parameters<typeof matchCounts>[0]["iHaveTheyWant"];
+}): Ranked {
+  return { userId: partner.userId, updatedAt: partner.updatedAt, counts: matchCounts(partner) };
+}
+
+/** A person's place in For you's One way ranking: the sum of both counts, last change, then id for a total order. */
+export function oneWayRankOf(partner: Ranked): OneWayRank {
   return {
-    mutual: mutualOf(partner.counts),
     sum: partner.counts.theyHave + partner.counts.youHave,
     at: new Date(partner.updatedAt).getTime(),
     userId: partner.userId,
   };
 }
 
-function compareRanks(a: MutualRank, b: MutualRank) {
+/** A person's place in the Mutual ranking: the score first, then the One way tuple. */
+export function mutualRankOf(partner: Ranked): MutualRank {
+  return { mutual: mutualOf(partner.counts), ...oneWayRankOf(partner) };
+}
+
+/** Best first; a rank with no `mutual` term is a One way rank. */
+function compareRanks(a: OneWayRank & { mutual?: number }, b: OneWayRank & { mutual?: number }) {
   return (
-    b.mutual - a.mutual ||
+    (b.mutual ?? 0) - (a.mutual ?? 0) ||
     b.sum - a.sum ||
     b.at - a.at ||
     (a.userId < b.userId ? -1 : a.userId > b.userId ? 1 : 0)
@@ -308,7 +324,7 @@ function compareRanks(a: MutualRank, b: MutualRank) {
 }
 
 /** Browse's Mutual order: For you's ranking without its idle tier, since idle posts aren't listed. */
-export function mutualOrder<T extends MutualRanked>(partners: T[]): T[] {
+export function mutualOrder<T extends Ranked>(partners: T[]): T[] {
   return partners.toSorted((a, b) => compareRanks(mutualRankOf(a), mutualRankOf(b)));
 }
 
@@ -317,19 +333,34 @@ export function mutualOrder<T extends MutualRanked>(partners: T[]): T[] {
  * and no idle tier: the set is bounded by `CANDIDATE_LIMIT`, and an idle person's posts are
  * never listed anyway.
  */
-export function mutualPeople<T extends MutualRanked>(partners: T[]): T[] {
+export function mutualPeople<T extends Ranked>(partners: T[]): T[] {
   return mutualOrder(partners.filter((partner) => mutualOf(partner.counts) > 0));
 }
 
 /**
- * Where the next Mutual page continues: the cursor's person first, whose later posts are still
- * to come, then everyone who sorts after the cursor's tuple. A person who moved up since is
- * only returned as the cursor's person.
+ * Everyone who matches the viewer in either direction, most matches first, with no idle tier
+ * and no slice, for the same reasons as {@link mutualPeople}.
  */
-export function peopleAfter<T extends MutualRanked>(ordered: T[], rank: MutualRank): T[] {
+export function oneWayPeople<T extends Ranked>(partners: T[]): T[] {
+  return partners
+    .filter((partner) => partner.counts.theyHave + partner.counts.youHave > 0)
+    .toSorted((a, b) => compareRanks(oneWayRankOf(a), oneWayRankOf(b)));
+}
+
+/**
+ * Where the next page of either ranking continues: the cursor's person first, whose later
+ * posts are still to come, then everyone who sorts after the cursor's tuple. A person who moved
+ * up since is only returned as the cursor's person. A rank with a `mutual` term is read as a
+ * Mutual rank.
+ */
+export function peopleAfter<T extends Ranked>(
+  ordered: T[],
+  rank: OneWayRank & { mutual?: number },
+): T[] {
+  const rankOf = rank.mutual === undefined ? oneWayRankOf : mutualRankOf;
   const current = ordered.find((partner) => partner.userId === rank.userId);
   const after = ordered.filter(
-    (partner) => partner.userId !== rank.userId && compareRanks(mutualRankOf(partner), rank) > 0,
+    (partner) => partner.userId !== rank.userId && compareRanks(rankOf(partner), rank) > 0,
   );
   return current ? [current, ...after] : after;
 }

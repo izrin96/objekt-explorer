@@ -14,6 +14,8 @@ import {
   type MyHaves,
   type MyList,
   type MyWant,
+  oneWayPeople,
+  oneWayRankOf,
   PARTNER_LIMIT,
   peopleAfter,
   rankPartners,
@@ -795,5 +797,73 @@ describe("peopleAfter", () => {
   test("a cursor person who left the ranking continues with those after the tuple", () => {
     const rank = mutualRankOf(person("X", 3, "2026-10-04T00:00:00Z"));
     expect(order(peopleAfter(ordered, rank))).toEqual(["D"]);
+  });
+});
+
+describe("oneWayPeople", () => {
+  const person = (userId: string, theyHave: number, youHave: number, updatedAt = RECENT) => ({
+    userId,
+    updatedAt,
+    counts: { theyHave, youHave, tradeTheyHave: theyHave, tradeYouHave: youHave },
+  });
+
+  test("most matches first, whichever way they run", () => {
+    const people = oneWayPeople([person("one", 1, 0), person("seven", 7, 0), person("both", 2, 3)]);
+    expect(order(people)).toEqual(["seven", "both", "one"]);
+  });
+
+  test("a mutual person ranks by the sum, not the mutual score", () => {
+    expect(order(oneWayPeople([person("mutual", 2, 2), person("lots", 6, 0)]))).toEqual([
+      "lots",
+      "mutual",
+    ]);
+  });
+
+  test("ties fall to the most recent change, then the id", () => {
+    const people = oneWayPeople([
+      person("b", 2, 0),
+      person("old", 2, 0, "2026-09-20T00:00:00Z"),
+      person("a", 2, 0),
+    ]);
+    expect(order(people)).toEqual(["a", "b", "old"]);
+  });
+
+  test("drops anyone with no match, and keeps an idle person in place", () => {
+    const people = oneWayPeople([person("none", 0, 0), person("idle", 3, 0, IDLE)]);
+    expect(order(people)).toEqual(["idle"]);
+  });
+
+  test("keeps everyone past the 50 cap", () => {
+    const many = Array.from({ length: PARTNER_LIMIT + 10 }, (_, i) => person(`p${i}`, 1, 0));
+    expect(oneWayPeople(many)).toHaveLength(PARTNER_LIMIT + 10);
+  });
+});
+
+describe("peopleAfter", () => {
+  const person = (userId: string, sum: number, updatedAt = RECENT) => ({
+    userId,
+    updatedAt,
+    counts: { theyHave: sum, youHave: 0, tradeTheyHave: sum, tradeYouHave: 0 },
+  });
+  const ordered = oneWayPeople([person("A", 5), person("B", 4), person("C", 3), person("D", 2)]);
+
+  test("starts at the cursor's person and keeps everyone after", () => {
+    expect(order(peopleAfter(ordered, oneWayRankOf(person("B", 4))))).toEqual(["B", "C", "D"]);
+  });
+
+  test("a person who moved up is only the cursor's person", () => {
+    const moved = oneWayPeople([person("A", 5), person("C", 8), person("B", 4), person("D", 2)]);
+    expect(order(peopleAfter(moved, oneWayRankOf(person("C", 3))))).toEqual(["C", "D"]);
+    expect(order(peopleAfter(moved, oneWayRankOf(person("B", 4))))).toEqual(["B", "D"]);
+  });
+
+  test("a cursor person who left the ranking continues with those after the tuple", () => {
+    const rank = oneWayRankOf(person("X", 3, "2026-10-04T00:00:00Z"));
+    expect(order(peopleAfter(ordered, rank))).toEqual(["D"]);
+  });
+
+  test("a person with the cursor's tuple but another id sorts by id", () => {
+    const tied = oneWayPeople([person("a", 2), person("b", 2), person("c", 2)]);
+    expect(order(peopleAfter(tied, oneWayRankOf(person("b", 2))))).toEqual(["b", "c"]);
   });
 });

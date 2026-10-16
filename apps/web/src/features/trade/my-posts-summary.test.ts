@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { summarizePosts } from "./my-posts-summary";
+import { readyState, summarizePosts } from "./my-posts-summary";
 
 const LATER = "2026-10-09T00:00:00.000Z";
 const post = (listed: boolean, bumpable: boolean) => ({
@@ -37,5 +37,25 @@ describe("summarizePosts", () => {
       ready: 2,
       shownByDefault: true,
     });
+  });
+});
+
+describe("readyState", () => {
+  test("all eight bumpable, one of them idle, reads all", () => {
+    const posts = [...Array.from({ length: 7 }, () => post(true, true)), post(false, true)];
+    expect(readyState(posts)).toBe("all");
+    expect(summarizePosts(posts)).toEqual({ listed: 7, idle: 1, ready: 8, shownByDefault: true });
+  });
+
+  test("some bumpable reads a number", () => {
+    expect(readyState([post(true, true), post(true, false)])).toBe("some");
+  });
+
+  test("none bumpable reads nothing", () => {
+    expect(readyState([post(true, false), post(true, false), post(true, false)])).toBe("none");
+  });
+
+  test("no posts read nothing", () => {
+    expect(readyState([])).toBe("none");
   });
 });

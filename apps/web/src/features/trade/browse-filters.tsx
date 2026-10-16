@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { type ReactNode, useMemo } from "react";
 
 import { ActiveChips, type ActiveChip, useActiveChips } from "@/features/filters/active-chips";
 import {
@@ -11,7 +11,6 @@ import {
   useFacetParity,
 } from "@/features/filters/facet-controls";
 import { useScopedFacets } from "@/features/filters/facets";
-import { QuickFilters } from "@/features/filters/filter-bar";
 import { FilterSheet } from "@/features/filters/filter-sheet";
 import { OnlineFilter } from "@/features/filters/online-filter";
 import { ResetButton } from "@/features/filters/reset-button";
@@ -30,12 +29,20 @@ export function BrowseFilters({
   filtering,
   onClearSlug,
   onReset,
+  postType,
+  matching,
+  comparedLine,
 }: {
   search: FeedSearch;
   slugName: string | undefined;
   filtering: boolean;
   onClearSlug: () => void;
   onReset: () => void;
+  /** the Post type menu: last on the facet row, after Reset */
+  postType: ReactNode;
+  /** after a divider; below `md` they sit beside the Filters button */
+  matching?: ReactNode;
+  comparedLine?: ReactNode;
 }) {
   const { facets, groups } = useScopedFacets();
   const filters = useCanonicalFilters();
@@ -82,18 +89,23 @@ export function BrowseFilters({
 
   return (
     <>
-      <div className="flex flex-wrap items-center gap-2">
-        <QuickFilters>
-          <FilterSheet
-            facets={facets}
-            groups={groups}
-            values={values}
-            onChange={setFacet}
-            keys={FACET_KEYS}
-            extras={extras}
-            onReset={onReset}
-            resetDisabled={nothingToReset}
-          />
+      {/* below `md` every facet is in the sheet and the controls scroll sideways within the row */}
+      <div
+        data-scroll-x
+        className="flex items-center gap-2 max-md:overflow-x-auto max-md:*:flex-none md:flex-wrap"
+      >
+        <FilterSheet
+          facets={facets}
+          groups={groups}
+          values={values}
+          onChange={setFacet}
+          keys={FACET_KEYS}
+          extras={extras}
+          foldAll
+          onReset={onReset}
+          resetDisabled={nothingToReset}
+        />
+        <div className="contents max-md:hidden">
           <FacetControls
             surface="inline"
             facets={facets}
@@ -101,8 +113,9 @@ export function BrowseFilters({
             values={values}
             onChange={setFacet}
             keys={BEFORE_TYPE}
+            foldAll
           />
-          <ExtraFacetControls surface="inline" extras={extras} />
+          <ExtraFacetControls surface="inline" extras={extras} foldAll />
           <FacetControls
             surface="inline"
             facets={facets}
@@ -110,10 +123,20 @@ export function BrowseFilters({
             values={values}
             onChange={setFacet}
             keys={AFTER_TYPE}
+            foldAll
           />
           <ResetButton onReset={onReset} disabled={nothingToReset} />
-        </QuickFilters>
+        </div>
+        <div className="max-md:order-2 md:order-1">{postType}</div>
+        {matching ? (
+          <>
+            <span aria-hidden className="bg-border h-5 w-px max-md:hidden md:order-2" />
+            {matching}
+          </>
+        ) : null}
       </div>
+
+      {comparedLine}
 
       <ActiveChips
         chips={[...slugChip, ...chips]}

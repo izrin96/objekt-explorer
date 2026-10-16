@@ -15,7 +15,8 @@ export const MATCH_TONE = {
   youHave: cn(TONE_INK.have, "decoration-type-have/55"),
 };
 
-const CHIP = "inline-flex h-6 items-center rounded-md border px-2 font-mono text-xs tabular-nums";
+const CHIP =
+  "inline-flex h-6 max-w-full min-w-0 items-center rounded-md border px-2 font-mono text-xs tabular-nums";
 
 /** A person's counts in words, the same on both tabs: mutual is `mutualOf`. */
 export function MatchChip({ counts, popover }: { counts: MatchCounts; popover?: ReactNode }) {
@@ -33,7 +34,13 @@ export function MatchChip({ counts, popover }: { counts: MatchCounts; popover?: 
           ? m.trade_match_they_have({ count: theyHave })
           : m.trade_match_you_have({ count: youHave });
 
-  if (!popover) return <span className={cn(CHIP, tone)}>{content}</span>;
+  if (!popover) {
+    return (
+      <span className={cn(CHIP, tone)}>
+        <span className="truncate">{content}</span>
+      </span>
+    );
+  }
   return (
     <Popover>
       <PopoverTrigger
@@ -43,7 +50,7 @@ export function MatchChip({ counts, popover }: { counts: MatchCounts; popover?: 
           "focus-visible:ring-ring cursor-pointer outline-none focus-visible:ring-2",
         )}
       >
-        {content}
+        <span className="truncate">{content}</span>
       </PopoverTrigger>
       <PopoverPopup align="start" className="w-72">
         {popover}

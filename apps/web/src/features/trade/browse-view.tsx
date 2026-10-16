@@ -20,7 +20,7 @@ import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import { BrowseFilters } from "./browse-filters";
-import { BrowsePost, BrowsePostSkeleton } from "./browse-post";
+import { BrowsePost, type BrowsePostData, BrowsePostSkeleton } from "./browse-post";
 import {
   type FeedSearch,
   type Surface,
@@ -32,7 +32,7 @@ import {
 import { comparedList, tradeListsOf } from "./compare-with";
 import { HiddenPartnersDialog } from "./hidden-partners-dialog";
 import { LoadError } from "./load-error";
-import { MatchingControls } from "./matching-controls";
+import { ComparedLine, MatchingControls } from "./matching-controls";
 import { MyPosts } from "./my-posts";
 import { PersonSheet } from "./person-sheet";
 import { PostListDialog } from "./post-list-dialog";
@@ -40,6 +40,10 @@ import { browseOptions, hiddenPartnersOptions } from "./queries";
 import { tagText } from "./tag-label";
 
 type PostType = NonNullable<FeedSearch["type"]> | "all";
+
+type FeedRow =
+  | { heading: "mutual" | "oneWay"; post?: undefined }
+  | { post: BrowsePostData; heading?: undefined };
 
 const FACETS = ["artist", "member", "season", "class", "on_offline", "collection"] as const;
 
@@ -137,6 +141,17 @@ export function BrowseView({ surface, search }: { surface: Surface; search: Feed
       return true;
     });
   }, [query.data]);
+  // under Any a heading opens each run of posts from the same section; Browse and Mutual only have none
+  const rows = useMemo(() => {
+    const out: FeedRow[] = [];
+    let section: string | undefined;
+    for (const post of posts) {
+      if (post.section && post.section !== section) out.push({ heading: post.section });
+      section = post.section;
+      out.push({ post });
+    }
+    return out;
+  }, [posts]);
   const collections = useMemo(
     () => Object.assign({}, ...(query.data?.pages.map((page) => page.collections) ?? [])),
     [query.data],
@@ -145,7 +160,9 @@ export function BrowseView({ surface, search }: { surface: Surface; search: Feed
   return (
     <>
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-        <p className="text-muted-foreground text-sm text-pretty">{m.trade_browse_description()}</p>
+        <p className="text-muted-foreground text-sm text-pretty max-md:hidden">
+          {forYou ? m.trade_for_you_description() : m.trade_browse_description()}
+        </p>
         {user ? (
           <Button variant="outline" size="sm" onClick={() => setPostOpen(true)}>
             <CardsThreeIcon />
@@ -171,42 +188,44 @@ export function BrowseView({ surface, search }: { surface: Surface; search: Feed
         filtering={filtering}
         onClearSlug={() => setSearch({ slug: undefined })}
         onReset={reset}
+        postType={postType}
+        matching={
+          forYou ? (
+            <MatchingControls
+              mode={matchModeOf(search)}
+              list={search.list}
+              tradeLists={tradeLists}
+              onChange={(patch) => {
+                const next = { ...search, match: mode, ...patch };
+                // Mutual fixes the type to WTT, so a type picked under Any is dropped rather than kept
+                setSearch({
+                  ...patch,
+                  match: next.match,
+                  type: next.match === "mutual" ? undefined : next.type,
+                });
+              }}
+            />
+          ) : undefined
+        }
+        comparedLine={
+          forYou ? (
+            <ComparedLine mode={matchModeOf(search)} list={search.list} tradeLists={tradeLists} />
+          ) : undefined
+        }
       />
 
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-        {forYou ? (
-          <MatchingControls
-            mode={matchModeOf(search)}
-            list={search.list}
-            tradeLists={tradeLists}
-            onChange={(patch) => {
-              const next = { ...search, match: mode, ...patch };
-              // Mutual fixes the type to WTT, so a type picked under Any is dropped rather than kept
-              setSearch({
-                ...patch,
-                match: next.match,
-                type: next.match === "mutual" ? undefined : next.type,
-              });
-            }}
+      {user ? null : (
+        <p className="text-muted-foreground text-sm text-pretty">
+          {m.trade_browse_matches_sign_in()}{" "}
+          <Button
+            variant="link"
+            className="h-auto p-0 text-sm underline underline-offset-2"
+            render={<Link to="/login" search={{ redirect: "/trade/for-you" }} />}
           >
-            {postType}
-          </MatchingControls>
-        ) : (
-          postType
-        )}
-        {user ? null : (
-          <p className="text-muted-foreground text-sm text-pretty">
-            {m.trade_browse_matches_sign_in()}{" "}
-            <Button
-              variant="link"
-              className="h-auto p-0 text-sm underline underline-offset-2"
-              render={<Link to="/login" search={{ redirect: "/trade/for-you" }} />}
-            >
-              {m.nav_sign_in()}
-            </Button>
-          </p>
-        )}
-      </div>
+            {m.nav_sign_in()}
+          </Button>
+        </p>
+      )}
 
       {query.isPending ? (
         <>
@@ -264,13 +283,21 @@ export function BrowseView({ surface, search }: { surface: Surface; search: Feed
           {/* the server draws the first posts, so a full load is not blank until hydration;
               until the first scroll, virtua keeps rendering the mount's `ssrCount` items even
               after a filter leaves fewer, so a row past the end comes in undefined */}
-          <WindowVirtualizer data={posts} ssrCount={Math.min(SSR_POSTS, posts.length)}>
-            {(post: (typeof posts)[number] | undefined) =>
-              post ? (
-                <div key={post.id}>
+          <WindowVirtualizer data={rows} ssrCount={Math.min(SSR_POSTS, rows.length)}>
+            {(row: FeedRow | undefined) =>
+              row?.heading ? (
+                <h2
+                  key={row.heading}
+                  className="text-muted-foreground border-b px-4 pt-4 pb-2 text-xs font-medium tracking-wide uppercase"
+                >
+                  {row.heading === "mutual" ? m.trade_section_mutual() : m.trade_section_one_way()}
+                </h2>
+              ) : row ? (
+                <div key={row.post.id}>
                   <BrowsePost
-                    post={post}
-                    own={post.userId === user?.user.id}
+                    post={row.post}
+                    surface={surface}
+                    own={row.post.userId === user?.user.id}
                     collections={collections}
                     now={now}
                     onOpen={setActive}

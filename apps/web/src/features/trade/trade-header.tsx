@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { TrustLine } from "@/features/offers/trust-line";
 import { ProfileLink } from "@/features/profile/profile-hover-card";
 import { cn } from "@/lib/utils";
+import { m } from "@/paraglide/messages";
 
 export type TradePerson = {
   userId: string;
@@ -13,25 +14,30 @@ export type TradePerson = {
   reputation: ComponentProps<typeof TrustLine>["reputation"];
 };
 
-/**
- * Who a post or a partner row belongs to. `end` sits at the end of the line. Below `sm` it takes a row of its own under the name.
- */
 export function TradeHeader({
   person,
+  socials,
+  you = false,
   note,
+  phoneLine,
   end,
   className,
 }: {
   person: TradePerson;
+  /** which of the owner's badges show: a post keeps to Discord, the person sheet shows both */
+  socials: "discord" | "all";
+  you?: boolean;
   /** under the reputation line */
   note?: ReactNode;
+  /** in a narrow card, one truncated monospace line in place of the reputation line and `note` */
+  phoneLine?: ReactNode;
   end?: ReactNode;
   className?: string;
 }) {
   const { identity, user } = person;
 
   return (
-    <div className={cn("flex flex-wrap items-start gap-x-3 gap-y-2", className)}>
+    <div className={cn("flex items-start gap-x-3", className)}>
       <Avatar className="size-9 shrink-0">
         {user.image ? <AvatarImage src={user.image} alt="" /> : null}
         <AvatarFallback>{identity.name.slice(0, 1).toUpperCase()}</AvatarFallback>
@@ -51,17 +57,27 @@ export function TradeHeader({
               identity.name
             )}
           </h2>
+          {you ? (
+            <span className="bg-secondary text-muted-foreground rounded-sm px-1.5 text-xs">
+              {m.trade_you_tag()}
+            </span>
+          ) : null}
           {user.discord ? <SocialBadge platform="discord" username={user.discord} /> : null}
-          {user.twitter ? <SocialBadge platform="twitter" username={user.twitter} /> : null}
+          {socials === "all" && user.twitter ? (
+            <SocialBadge platform="twitter" username={user.twitter} />
+          ) : null}
         </div>
-        <TrustLine reputation={person.reputation} />
-        {note}
+        <div className={cn("flex min-w-0 flex-col gap-0.5", phoneLine && "@max-3xl:hidden")}>
+          <TrustLine reputation={person.reputation} className="truncate" />
+          {note}
+        </div>
+        {phoneLine ? (
+          <p className="text-muted-foreground truncate font-mono text-xs @3xl:hidden">
+            {phoneLine}
+          </p>
+        ) : null}
       </div>
-      {end ? (
-        <div className="flex shrink-0 flex-wrap items-center gap-2 max-sm:order-last max-sm:w-full max-sm:ps-12">
-          {end}
-        </div>
-      ) : null}
+      {end ? <div className="flex shrink-0 items-center gap-2">{end}</div> : null}
     </div>
   );
 }

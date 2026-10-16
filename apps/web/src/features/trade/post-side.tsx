@@ -10,12 +10,13 @@ import { TONE_INK } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
+import type { Surface } from "./browse-search";
 import type { PostSideData } from "./post-types";
 import { fitCount } from "./strip-fit";
 import { SlugTile, TILE } from "./thumb-grid";
 
-/** `w-10` and `gap-1.5`, in px; a side wraps onto a second line, never a third */
-const FIT = { thumb: 40, gap: 6, fallback: 4, lines: 2 };
+/** `w-10` and `gap-1.5`, in px */
+const FIT = { thumb: 40, gap: 6, fallback: 4, lines: 1 };
 
 /** monochrome on purpose: the class stripes stay the only colour in the grid */
 const RING = "ring-foreground ring-offset-card ring-2 ring-offset-2";
@@ -88,7 +89,7 @@ function PostStrip({
         <p className="text-muted-foreground text-sm">{m.trade_strip_none()}</p>
       ) : (
         /* padding gives the ring room */
-        <ul ref={ref} className="-m-1 flex flex-wrap items-start gap-1.5 overflow-hidden p-1">
+        <ul ref={ref} className="-m-1 flex items-start gap-1.5 overflow-hidden p-1">
           {shown.map((item) => {
             const collection = collections[item.slug];
             const qty = item.qty ?? 1;
@@ -138,47 +139,85 @@ function PostStrip({
   );
 }
 
-/** A Browse post's side: its list's role and count, its ringed matches. */
+/** A side none of whose objekts survive the narrowing: it shows as one line, not a strip. */
+export function isEmptySide(side: PostSideData) {
+  return side.copyCount === 0 && side.others > 0;
+}
+
+/** A side's wording: its label, and on For you who its objekts are for. */
+function sideWording(side: PostSideData, surface: Surface) {
+  const role = LIST_TYPE_LABEL[side.role]();
+  if (surface === "browse") {
+    return { role, label: (count: number) => `${role} ${count}`, none: m.trade_strip_none_match() };
+  }
+  const wanted = side.role === "want";
+  return {
+    role,
+    label: (count: number) =>
+      wanted ? m.trade_strip_you_have({ role, count }) : m.trade_strip_you_want({ role, count }),
+    none: wanted ? m.trade_strip_none_you_have() : m.trade_strip_none_you_want(),
+  };
+}
+
+const SIDE_LINK =
+  "focus-visible:ring-ring rounded-sm underline-offset-2 outline-none hover:underline focus-visible:ring-2";
+
+/** A side with nothing related, under the post's other strip: its role and total, then why. */
+export function EmptySide({ side, surface }: { side: PostSideData; surface: Surface }) {
+  const { role, none } = sideWording(side, surface);
+  return (
+    <Link
+      {...getListLinkOption(side.list)}
+      className={cn(
+        "text-muted-foreground hover:text-foreground w-fit font-mono text-xs uppercase tabular-nums",
+        SIDE_LINK,
+      )}
+    >
+      {role} {side.others}
+      <span className="normal-case">
+        {" · "}
+        {none}
+      </span>
+    </Link>
+  );
+}
+
+/**
+ * A Browse post's side: its list's role and count, its ringed matches. A post holding one list
+ * makes the label the link to it, since it has no Lists control.
+ */
 export function SideStrip({
   side,
+  surface,
+  narrowed,
+  labelLink,
   collections,
   onOpen,
 }: {
   side: PostSideData;
+  surface: Surface;
+  /** a filter or matching left objekts out, so the side says how many it holds */
+  narrowed: boolean;
+  labelLink: boolean;
   collections: Readonly<Record<string, ValidObjekt | undefined>>;
   onOpen: (objekt: ValidObjekt) => void;
 }) {
   const { list } = side;
-  // copies, not thumbnails: a stacked thumbnail holds several
-  const shown = side.copyCount;
-  const figure = side.others > 0 ? m.trade_strip_of({ shown, total: shown + side.others }) : shown;
-  const label = LIST_TYPE_LABEL[side.role]();
-  const tone = TONE_INK[LIST_TYPE_TONE[side.role]];
-
-  // nothing on this side survives the narrowing: one line, so the pair still reads as a pair
-  if (shown === 0 && side.others > 0) {
-    return (
-      <section className="flex min-w-0 flex-col gap-1">
-        <h3 className={cn("font-mono text-xs uppercase tabular-nums", tone)}>
-          {label} {side.others}
-          <span className="text-muted-foreground normal-case">
-            {" · "}
-            <Link
-              {...getListLinkOption(list)}
-              className="hover:text-foreground focus-visible:ring-ring rounded-sm underline-offset-2 outline-none hover:underline focus-visible:ring-2"
-            >
-              {m.trade_strip_none_match()}
-            </Link>
-          </span>
-        </h3>
-      </section>
-    );
-  }
+  const label = sideWording(side, surface).label(side.copyCount);
+  const total = side.copyCount + side.others;
+  const text = labelLink ? (
+    <Link {...getListLinkOption(list)} className={SIDE_LINK}>
+      {label}
+      <span className="sr-only">: {list.name}</span>
+    </Link>
+  ) : (
+    label
+  );
 
   return (
     <PostStrip
-      label={`${label} ${figure}`}
-      tone={tone}
+      label={text}
+      tone={TONE_INK[LIST_TYPE_TONE[side.role]]}
       items={side.items.map((item) => ({
         key: item.entryId,
         slug: item.slug,
@@ -194,12 +233,15 @@ export function SideStrip({
         </Link>
       )}
       othersLink={
-        side.others > 0 ? (
+        narrowed && total > 0 ? (
           <Link
             {...getListLinkOption(list)}
-            className="text-muted-foreground hover:text-foreground text-xs whitespace-nowrap tabular-nums underline-offset-2 outline-none hover:underline focus-visible:ring-2"
+            className={cn(
+              "text-muted-foreground hover:text-foreground text-xs whitespace-nowrap tabular-nums",
+              SIDE_LINK,
+            )}
           >
-            {m.trade_strip_others({ count: side.others })}
+            {m.trade_strip_total({ total })}
           </Link>
         ) : undefined
       }

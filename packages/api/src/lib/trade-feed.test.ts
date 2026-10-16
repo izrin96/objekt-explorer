@@ -7,11 +7,18 @@ import {
   comparePosts,
   cursorScope,
   type FeedEntry,
+  type FeedPhase,
+  feedPlan,
+  fillPage,
+  isSectioned,
   isPostIdle,
   matchesViewer,
+  mergeSeen,
   narrowViewer,
   nextBumpAt,
   pairPosts,
+  phaseAfter,
+  phaseScope,
   previewSide,
   type TradeList,
   tradeableEntries,
@@ -510,5 +517,243 @@ describe("cursorScope", () => {
 
   test("holds back no one when the cursor's person left the ranking", () => {
     expect(cursorScope({ resume: false })).toBe("none");
+  });
+});
+
+describe("feedPlan", () => {
+  const rank = { mutual: 1, sum: 2, at: 0, userId: "u" };
+  const cursor = { bumpedAt: "2026-10-07T09:12:30.123Z", id: 12 };
+
+  test("Browse reads the plain bump order and Mutual only its own phase", () => {
+    expect(feedPlan("off", "all")).toEqual({ phases: ["bump"], mutualOwned: false });
+    expect(feedPlan("mutual", "wtt", { rank })).toEqual({ phases: ["mutual"], mutualOwned: false });
+  });
+
+  test("Any reads Mutual, One way people, then the tail", () => {
+    for (const type of ["all", "wtt"] as const) {
+      expect(feedPlan("any", type)).toEqual({
+        phases: ["mutual", "oneWay", "tail"],
+        mutualOwned: true,
+      });
+    }
+  });
+
+  test("WTB and WTS skip the Mutual phase", () => {
+    for (const type of ["wtb", "wts"] as const) {
+      expect(feedPlan("any", type)).toEqual({ phases: ["oneWay", "tail"], mutualOwned: false });
+    }
+  });
+
+  test("a cursor resumes in the phase it names", () => {
+    expect(feedPlan("any", "all", { phase: "oneWay" }).phases).toEqual(["oneWay", "tail"]);
+    expect(feedPlan("any", "all", { phase: "tail" }).phases).toEqual(["tail"]);
+    expect(feedPlan("any", "all", { phase: "mutual", rank }).phases).toEqual([
+      "mutual",
+      "oneWay",
+      "tail",
+    ]);
+  });
+
+  test("a phase the type skips resumes at the next one", () => {
+    expect(feedPlan("any", "wts", { phase: "mutual" }).phases).toEqual(["oneWay", "tail"]);
+  });
+
+  test("an older Any cursor, with no phase and no rank, continues the plain bump order", () => {
+    expect(feedPlan("any", "all", cursor)).toEqual({ phases: ["bump"], mutualOwned: false });
+  });
+
+  test("an older Mutual cursor, with a rank and no phase, continues Mutual", () => {
+    expect(feedPlan("mutual", "wtt", { rank }).phases).toEqual(["mutual"]);
+    expect(feedPlan("any", "all", { rank }).phases).toEqual(["mutual", "oneWay", "tail"]);
+  });
+});
+
+describe("isSectioned", () => {
+  test("only Any's phases carry sections", () => {
+    expect(isSectioned(["mutual", "oneWay", "tail"])).toBe(true);
+    expect(isSectioned(["tail"])).toBe(true);
+    expect(isSectioned(["bump"])).toBe(false);
+    expect(isSectioned(["mutual"])).toBe(false);
+  });
+});
+
+describe("phaseAfter", () => {
+  test("a phase that runs dry hands the page to the next, and the last ends it", () => {
+    const phases = feedPlan("any", "all").phases;
+    expect(phaseAfter(phases, "mutual")).toBe("oneWay");
+    expect(phaseAfter(phases, "oneWay")).toBe("tail");
+    expect(phaseAfter(phases, "tail")).toBeNull();
+  });
+
+  test("with no Mutual phase, One way is first and Mutual hands off to nothing", () => {
+    const phases = feedPlan("any", "wtb").phases;
+    expect(phaseAfter(phases, "oneWay")).toBe("tail");
+    expect(phaseAfter(["mutual"], "mutual")).toBeNull();
+  });
+});
+
+describe("phaseScope", () => {
+  const plan = feedPlan("any", "all");
+  const seen = { mutual: ["m1", "m2"], oneWay: ["o1", "o2", "m1", "m2"] };
+
+  test("Mutual leaves nothing out", () => {
+    expect(phaseScope("mutual", plan, seen)).toEqual({
+      excludeWttOf: undefined,
+      excludeOwners: undefined,
+    });
+  });
+
+  test("One way leaves out a Mutual person's WTT posts, the tail also every One way person", () => {
+    expect(phaseScope("oneWay", plan, seen)).toEqual({
+      excludeWttOf: ["m1", "m2"],
+      excludeOwners: undefined,
+    });
+    expect(phaseScope("tail", plan, seen)).toEqual({
+      excludeWttOf: ["m1", "m2"],
+      excludeOwners: seen.oneWay,
+    });
+  });
+
+  test("WTB and WTS have no Mutual posts to leave out", () => {
+    expect(phaseScope("oneWay", feedPlan("any", "wtb"), seen).excludeWttOf).toBeUndefined();
+  });
+
+  test("the plain bump order leaves nothing out", () => {
+    expect(phaseScope("bump", feedPlan("off", "all"), seen)).toEqual({
+      excludeWttOf: undefined,
+      excludeOwners: undefined,
+    });
+  });
+});
+
+describe("a person's place changes between loads", () => {
+  /** the posts of each person: p1 and p2 each have one WTT post */
+  const wttPosts = new Map([
+    ["p1", 101],
+    ["p2", 102],
+    ["p3", 103],
+  ]);
+  const listed = (
+    phase: FeedPhase,
+    plan: ReturnType<typeof feedPlan>,
+    now: string[],
+    snapshot?: string[],
+  ) => {
+    const seen = mergeSeen(snapshot ? { mutual: snapshot, oneWay: [] } : undefined, {
+      mutual: now,
+      oneWay: [],
+    });
+    const { excludeWttOf = [] } = phaseScope(phase, plan, seen);
+    return [...wttPosts].filter(([person]) => !excludeWttOf.includes(person)).map(([, id]) => id);
+  };
+
+  test("a person who leaves Mutual keeps their shown WTT post out of One way", () => {
+    const plan = feedPlan("any", "all", { phase: "oneWay" });
+    // load 1 showed p1 and p2 as Mutual; by load 2 only p2 still is
+    const withSnapshot = listed("oneWay", plan, ["p2"], ["p1", "p2"]);
+    expect(withSnapshot).toEqual([103]);
+    // with no snapshot (expired), the current ranking alone stands
+    expect(listed("oneWay", plan, ["p2"])).toEqual([101, 103]);
+  });
+
+  test("a person who joins Mutual has no WTT post under One way or the tail", () => {
+    const plan = feedPlan("any", "all", { phase: "tail" });
+    expect(listed("tail", plan, ["p1", "p3"], ["p1"])).toEqual([102]);
+  });
+
+  test("the merged set is the union, once each", () => {
+    expect(
+      mergeSeen({ mutual: ["a", "b"], oneWay: ["c"] }, { mutual: ["b", "d"], oneWay: ["c", "e"] }),
+    ).toEqual({ mutual: ["a", "b", "d"], oneWay: ["c", "e"] });
+  });
+});
+
+describe("fillPage", () => {
+  const ids = (from: number, n: number) => Array.from({ length: n }, (_, i) => ({ id: from + i }));
+
+  /** each phase's posts in order; a read takes up to `need` from where the phase stopped */
+  function world(phases: Partial<Record<FeedPhase, { id: number }[]>>) {
+    const taken = { mutual: 0, oneWay: 0, tail: 0, bump: 0 };
+    return async (phase: FeedPhase, need: number) => {
+      const all = phases[phase] ?? [];
+      const posts = all.slice(taken[phase], taken[phase] + need);
+      taken[phase] += posts.length;
+      return { posts, dry: taken[phase] >= all.length, last: posts.at(-1)?.id };
+    };
+  }
+
+  test("a phase that runs dry mid-page hands the rest to the next", async () => {
+    const page = await fillPage(
+      ["mutual", "oneWay", "tail"],
+      24,
+      world({ mutual: ids(1, 10), oneWay: ids(100, 40) }),
+    );
+    expect(page.posts).toHaveLength(24);
+    expect(page.posts.slice(0, 10).every((post) => post.phase === "mutual")).toBe(true);
+    expect(page.posts.slice(10).every((post) => post.phase === "oneWay")).toBe(true);
+    expect(page.next).toEqual({ phase: "oneWay", last: 113 });
+  });
+
+  test("a page that fills exactly as a phase runs dry still continues into the next", async () => {
+    const page = await fillPage(
+      ["mutual", "oneWay", "tail"],
+      24,
+      world({ mutual: ids(1, 24), oneWay: ids(100, 5) }),
+    );
+    expect(page.posts).toHaveLength(24);
+    expect(page.next).toEqual({ phase: "mutual", last: 24 });
+  });
+
+  test("a phase that ran dry empty is skipped", async () => {
+    const page = await fillPage(["mutual", "oneWay", "tail"], 24, world({ tail: ids(500, 30) }));
+    expect(page.posts.map((post) => post.phase)).toEqual(Array(24).fill("tail"));
+    expect(page.next).toEqual({ phase: "tail", last: 523 });
+  });
+
+  test("the last phase running dry ends the feed", async () => {
+    const page = await fillPage(
+      ["mutual", "oneWay", "tail"],
+      24,
+      world({ mutual: ids(1, 3), oneWay: ids(100, 2), tail: ids(500, 4) }),
+    );
+    expect(page.posts).toHaveLength(9);
+    expect(page.next).toBeUndefined();
+  });
+
+  test("a full page ending as the last phase runs dry has no cursor", async () => {
+    const page = await fillPage(["tail"], 24, world({ tail: ids(1, 24) }));
+    expect(page.posts).toHaveLength(24);
+    expect(page.next).toBeUndefined();
+  });
+
+  test("a short phase that is not dry stops the page where it is", async () => {
+    const short = async () => ({ posts: ids(1, 5), dry: false, last: 5 });
+    const page = await fillPage(["oneWay", "tail"], 24, short);
+    expect(page.posts).toHaveLength(5);
+    expect(page.next).toEqual({ phase: "oneWay", last: 5 });
+  });
+
+  test("lists no post twice across phases", async () => {
+    const page = await fillPage(
+      ["mutual", "oneWay", "tail"],
+      24,
+      world({ mutual: ids(1, 3), oneWay: [...ids(2, 3), ...ids(10, 2)], tail: ids(3, 4) }),
+    );
+    const listed = page.posts.map((post) => post.id);
+    expect(new Set(listed).size).toBe(listed.length);
+    expect(page.posts.find((post) => post.id === 2)?.phase).toBe("mutual");
+  });
+
+  test("asks each phase only for what the page still needs", async () => {
+    const needs: [FeedPhase, number][] = [];
+    const read = world({ mutual: ids(1, 10), oneWay: ids(100, 40) });
+    await fillPage(["mutual", "oneWay", "tail"], 24, async (phase, need) => {
+      needs.push([phase, need]);
+      return read(phase, need);
+    });
+    expect(needs).toEqual([
+      ["mutual", 24],
+      ["oneWay", 14],
+    ]);
   });
 });

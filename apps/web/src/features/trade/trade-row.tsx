@@ -16,6 +16,7 @@ export function TradeRow({
   panel,
   id,
   className,
+  belowClassName,
 }: {
   byline: ReactNode;
   sides: ReactNode;
@@ -24,6 +25,7 @@ export function TradeRow({
   panel?: ReactNode;
   id?: string;
   className?: string;
+  belowClassName?: string;
 }) {
   return (
     <article
@@ -33,10 +35,14 @@ export function TradeRow({
         className,
       )}
     >
-      <div className="grid gap-x-4 gap-y-3 px-4 py-3.5 @3xl:grid-cols-[13rem_minmax(0,1fr)_auto]">
+      <div className="grid gap-x-4 gap-y-3 px-4 py-3.5 @3xl:grid-cols-[16rem_minmax(0,1fr)_auto]">
         <div className="min-w-0 @3xl:row-span-2">{byline}</div>
         <div className="min-w-0 @3xl:col-start-2">{sides}</div>
-        {below ? <div className="min-w-0 @3xl:col-start-2 @3xl:row-start-2">{below}</div> : null}
+        {below ? (
+          <div className={cn("min-w-0 @3xl:col-start-2 @3xl:row-start-2", belowClassName)}>
+            {below}
+          </div>
+        ) : null}
         {actions ? (
           <div className="flex flex-wrap items-center gap-2 @3xl:col-start-3 @3xl:row-start-1 @3xl:self-start">
             {actions}

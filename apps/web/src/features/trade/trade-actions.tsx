@@ -21,10 +21,13 @@ export function TradeActions({
   contact,
   name,
   compact = false,
+  offerClassName,
 }: {
   contact: TradeContact;
   name: string;
   compact?: boolean;
+  /** e.g. `flex-1`, where Make offer fills the row */
+  offerClassName?: string;
 }) {
   if (contact.kind === "own") return null;
   if (contact.kind === "closed") {
@@ -36,6 +39,7 @@ export function TradeActions({
       <MessageButton target={contact.target} card={contact.card} name={name} iconOnly={compact} />
       <MakeOfferButton
         variant="default"
+        className={offerClassName}
         request={{ to: { target: contact.target }, name, ...contact.offer }}
       />
     </>

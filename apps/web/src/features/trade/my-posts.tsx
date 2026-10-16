@@ -13,7 +13,7 @@ import { useSettings } from "@/stores/settings";
 
 import { useBumpPost } from "./actions";
 import { ListRoleBadge } from "./list-role-badge";
-import { summarizePosts } from "./my-posts-summary";
+import { readyState, summarizePosts } from "./my-posts-summary";
 import { postTime } from "./post-time";
 import { myPostsOptions } from "./queries";
 
@@ -42,6 +42,7 @@ export function MyPosts() {
   if (query.data.length === 0) return null;
 
   const summary = summarizePosts(query.data);
+  const ready = readyState(query.data);
   // the server cannot read the saved choice, so the default holds until hydration
   const open = hydrated ? (saved ?? summary.shownByDefault) : summary.shownByDefault;
 
@@ -79,16 +80,20 @@ export function MyPosts() {
                 </Badge>
               </>
             ) : null}
-            {summary.ready > 0 ? (
+            {ready !== "none" ? (
               <>
                 <span aria-hidden className="text-muted-foreground">
                   ·
                 </span>
                 <span className="text-muted-foreground tabular-nums">
-                  <MonoMessage
-                    values={[summary.ready]}
-                    text={([count]) => m.trade_my_posts_ready({ count: count! })}
-                  />
+                  {ready === "all" ? (
+                    m.trade_my_posts_all_ready()
+                  ) : (
+                    <MonoMessage
+                      values={[summary.ready]}
+                      text={([count]) => m.trade_my_posts_ready({ count: count! })}
+                    />
+                  )}
                 </span>
               </>
             ) : null}

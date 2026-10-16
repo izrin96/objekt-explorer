@@ -93,7 +93,7 @@ export function PersonSheet({
           />
         ) : (
           <SheetPanel className="flex flex-col gap-4">
-            {header ? <TradeHeader person={header} /> : null}
+            {header ? <TradeHeader person={header} socials="all" /> : null}
             <p className="text-muted-foreground text-sm text-pretty">
               {m.trade_person_no_matches()}
             </p>
@@ -140,6 +140,7 @@ function PersonBody({
       <SheetPanel className="flex flex-col gap-5">
         <TradeHeader
           person={partner}
+          socials="all"
           end={
             <SafetyMenu
               userId={partner.userId}

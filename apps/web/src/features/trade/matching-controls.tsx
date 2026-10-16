@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { type ReactNode, useId } from "react";
+import { useId } from "react";
 
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -28,14 +28,9 @@ type MatchingProps = {
   list: string | undefined;
   tradeLists: readonly TradeList[];
   onChange: (patch: { match?: Mode; list?: string | undefined }) => void;
-  /** the Post type menu, between the switch and Compare with */
-  children?: ReactNode;
 };
 
-/**
- * Mutual only, Compare with and the help, on one row that wraps on a phone. The switch counts
- * the people Mutual would list for the compared lists, so the number only ever means mutual.
- */
+/** The switch counts the people Mutual would list for the compared lists, so its number only ever means mutual. */
 export function MatchingControls(props: MatchingProps) {
   const { mode, list, tradeLists, onChange } = props;
   const id = useId();
@@ -55,56 +50,62 @@ export function MatchingControls(props: MatchingProps) {
   };
 
   return (
-    <div className="flex flex-col gap-1">
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-        <span className="flex items-center gap-2">
-          <Switch id={id} checked={mutual} onCheckedChange={setMutual} />
-          <Label
-            htmlFor={id}
-            className="text-sm"
-            aria-label={
-              count > 0
-                ? m.trade_tab_with_count({ label: m.trade_mutual_only(), count: shown })
-                : undefined
-            }
-          >
-            {m.trade_mutual_only()}
-            {count > 0 ? (
-              <span aria-hidden className="text-muted-foreground font-mono text-xs tabular-nums">
-                {shown}
-              </span>
-            ) : null}
-          </Label>
-        </span>
+    <>
+      <span className="flex items-center gap-2 max-md:order-1 md:order-3">
+        <Switch id={id} checked={mutual} onCheckedChange={setMutual} />
+        <Label
+          htmlFor={id}
+          className="text-sm whitespace-nowrap"
+          aria-label={
+            count > 0
+              ? m.trade_tab_with_count({ label: m.trade_mutual_only(), count: shown })
+              : undefined
+          }
+        >
+          {m.trade_mutual_only()}
+          {count > 0 ? (
+            <span aria-hidden className="text-muted-foreground font-mono text-xs tabular-nums">
+              {shown}
+            </span>
+          ) : null}
+        </Label>
+      </span>
 
-        {props.children}
+      <span className="flex items-center gap-1 max-md:order-3 md:order-4">
+        <SingleSelect
+          label={m.trade_list_label()}
+          options={[
+            { value: ALL_LISTS, label: COMPARE.allLabel() },
+            ...tradeLists.map((item) => ({
+              value: item.slug,
+              label: m.trade_list_option({
+                name: item.name,
+                type: LIST_TYPE_LABEL[item.listTypeNew](),
+              }),
+              disabled: !canCompare(item, tradeLists, mutual),
+            })),
+          ]}
+          value={selected?.slug ?? ALL_LISTS}
+          defaultValue={ALL_LISTS}
+          onChange={(value) => onChange({ list: value === ALL_LISTS ? undefined : value })}
+        />
+        <MatchHelp />
+      </span>
+    </>
+  );
+}
 
-        <span className="flex items-center gap-1">
-          <SingleSelect
-            label={m.trade_list_label()}
-            options={[
-              { value: ALL_LISTS, label: COMPARE.allLabel() },
-              ...tradeLists.map((item) => ({
-                value: item.slug,
-                label: m.trade_list_option({
-                  name: item.name,
-                  type: LIST_TYPE_LABEL[item.listTypeNew](),
-                }),
-                disabled: !canCompare(item, tradeLists, mutual),
-              })),
-            ]}
-            value={selected?.slug ?? ALL_LISTS}
-            defaultValue={ALL_LISTS}
-            onChange={(value) => onChange({ list: value === ALL_LISTS ? undefined : value })}
-          />
-          <MatchHelp />
-        </span>
-      </div>
-      {selected ? (
-        <p className="text-muted-foreground text-xs text-pretty">
-          {COMPARE.one(selected, pickOf(selected, tradeLists).paired)}
-        </p>
-      ) : null}
-    </div>
+/** What Compare with compares, under the controls; nothing while it is All my lists. */
+export function ComparedLine({
+  mode,
+  list,
+  tradeLists,
+}: Pick<MatchingProps, "mode" | "list" | "tradeLists">) {
+  const selected = comparedList(list, tradeLists, mode === "mutual");
+  if (!selected) return null;
+  return (
+    <p className="text-muted-foreground text-xs text-pretty">
+      {COMPARE.one(selected, pickOf(selected, tradeLists).paired)}
+    </p>
   );
 }

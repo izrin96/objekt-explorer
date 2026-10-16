@@ -98,19 +98,33 @@ const browseFiltersSchema = collectionFiltersSchema.extend({
 });
 export type BrowseFilters = z.infer<typeof browseFiltersSchema>;
 
-/** The last person's place in the Mutual ranking, so the next page continues by key, not offset. */
-const mutualRankSchema = z.object({
-  mutual: z.number().int(),
+/** The last person's place in For you's One way ranking: the sum of both counts, last change, then id. */
+const oneWayRankSchema = z.object({
   sum: z.number().int(),
   at: z.number(),
   userId: z.string().min(1),
 });
+export type OneWayRank = z.infer<typeof oneWayRankSchema>;
+
+/** The Mutual ranking puts the mutual score before the One way tuple. */
+const mutualRankSchema = oneWayRankSchema.extend({ mutual: z.number().int() });
 export type MutualRank = z.infer<typeof mutualRankSchema>;
 
+/** Any's feed reads Mutual people, then One way people, then everyone else by bump. */
+const FEED_PHASES = ["mutual", "oneWay", "tail"] as const;
+
+/**
+ * `phase`, `oneWay` and `scope` are optional so a cursor an open tab holds still parses: with
+ * no `phase`, a `rank` reads as Mutual and anything else as the plain bump order. `scope`
+ * names the server's snapshot of the people earlier phases showed.
+ */
 const feedCursorSchema = z.object({
   bumpedAt: z.iso.datetime({ offset: true }),
   id: z.number().int(),
   rank: mutualRankSchema.optional(),
+  phase: z.enum(FEED_PHASES).optional(),
+  oneWay: oneWayRankSchema.optional(),
+  scope: z.string().min(1).max(64).optional(),
 });
 export type FeedCursor = z.infer<typeof feedCursorSchema>;
 

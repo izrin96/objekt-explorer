@@ -12,6 +12,38 @@ import {
 } from "./trade";
 
 describe("browse cursor", () => {
+  test("an older tab's cursors parse to the same data", () => {
+    const bump = { bumpedAt: "2026-10-07T09:12:30.123Z", id: 12 };
+    const mutual = { ...bump, rank: { mutual: 2, sum: 5, at: 1760000000000, userId: "u1" } };
+    for (const cursor of [bump, mutual]) {
+      const parsed = browseInputSchema.parse({ cursor }).cursor;
+      expect(parsed).toEqual(cursor);
+      expect(parsed?.phase).toBeUndefined();
+      expect(parsed?.oneWay).toBeUndefined();
+    }
+  });
+
+  test("takes a phase and a One way rank", () => {
+    const cursor = {
+      bumpedAt: "2026-10-07T09:12:30.123Z",
+      id: 12,
+      phase: "oneWay" as const,
+      oneWay: { sum: 7, at: 1760000000000, userId: "u1" },
+      scope: "0a1b2c3d4e5f",
+    };
+    expect(browseInputSchema.parse({ cursor }).cursor).toEqual(cursor);
+  });
+
+  test("refuses a phase it does not know and a One way rank without its person", () => {
+    const base = { bumpedAt: "2026-10-07T09:12:30.123Z", id: 12 };
+    expect(browseInputSchema.safeParse({ cursor: { ...base, phase: "later" } }).success).toBe(
+      false,
+    );
+    expect(
+      browseInputSchema.safeParse({ cursor: { ...base, oneWay: { sum: 1, at: 0 } } }).success,
+    ).toBe(false);
+  });
+
   test("takes the ISO time the feed emits", () => {
     const cursor = { bumpedAt: "2026-10-07T09:12:30.123Z", id: 12 };
     expect(browseInputSchema.parse({ cursor }).cursor).toEqual(cursor);

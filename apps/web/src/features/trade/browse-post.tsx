@@ -1,4 +1,5 @@
 import { EyeSlashIcon } from "@phosphor-icons/react";
+import { mutualOf } from "@repo/api/schemas/trade";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 
 import { Button } from "@/components/ui/button";
@@ -6,14 +7,16 @@ import { MenuItem } from "@/components/ui/menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getListLinkOption } from "@/features/list/list-link";
 import { SafetyMenu } from "@/features/moderation/safety-menu";
+import { TrustLine } from "@/features/offers/trust-line";
 import { relativeTime } from "@/lib/time";
 import { m } from "@/paraglide/messages";
 
 import { useHideWithUndo } from "./actions";
+import type { Surface } from "./browse-search";
 import { ListsPopover } from "./lists-popover";
 import { MatchChip } from "./match-chip";
 import { MatchedLists } from "./matched-lists";
-import { SideStrip } from "./post-side";
+import { EmptySide, isEmptySide, SideStrip } from "./post-side";
 import { postTime } from "./post-time";
 import type { BrowsePostData } from "./post-types";
 import { TagBadge } from "./tag-label";
@@ -25,6 +28,7 @@ export type { BrowsePostData } from "./post-types";
 
 export function BrowsePost({
   post,
+  surface,
   own,
   collections,
   now,
@@ -32,6 +36,7 @@ export function BrowsePost({
   onOpenPerson,
 }: {
   post: BrowsePostData;
+  surface: Surface;
   /** the viewer's own post: no Message, and no note saying so */
   own: boolean;
   collections: Readonly<Record<string, ValidObjekt | undefined>>;
@@ -58,81 +63,140 @@ export function BrowsePost({
         }
       : { kind: "closed" };
   const wantOnly = post.tag === "wtt" && post.sides.every((side) => side.role === "want");
+  // on For you the chip is for mutual posts; a one-way post's strip labels carry the count
+  const showChip = !!person && (surface === "browse" || mutualOf(person.counts) > 0);
+  const twoLists = post.sides.length === 2;
+  const allMatches = person ? (
+    <Button
+      variant="outline"
+      size="xs"
+      className="font-mono text-xs"
+      onClick={() => onOpenPerson(post.userId)}
+    >
+      {m.trade_all_matches()}
+    </Button>
+  ) : null;
+  const notes = (
+    <>
+      {wantOnly ? (
+        <span className="text-muted-foreground text-xs">{m.trade_wtt_swaps_only()}</span>
+      ) : null}
+      {post.buyingOnly ? (
+        <span className="text-muted-foreground text-xs">{m.trade_wtb_buying_only()}</span>
+      ) : null}
+    </>
+  );
+  // relative to the render: the server's minute and the browser's can differ
+  const timeTag = (
+    <time
+      dateTime={time}
+      suppressHydrationWarning
+      className="text-muted-foreground font-mono text-xs"
+    >
+      {changed ? m.trade_updated_at({ time: when }) : m.trade_bumped_at({ time: when })}
+    </time>
+  );
 
   return (
     <TradeRow
       byline={
         <TradeHeader
           person={post}
+          socials="discord"
+          you={own}
+          end={
+            <SafetyMenu
+              userId={post.userId}
+              name={post.identity.name}
+              report
+              extraItems={
+                <MenuItem onClick={() => hide(post.userId, post.identity.name)}>
+                  <EyeSlashIcon />
+                  {m.trade_hide_partner()}
+                </MenuItem>
+              }
+            />
+          }
           note={
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
               <TagBadge tag={post.tag} />
-              {wantOnly ? (
-                <span className="text-muted-foreground text-xs">{m.trade_wtt_swaps_only()}</span>
-              ) : null}
-              {post.buyingOnly ? (
-                <span className="text-muted-foreground text-xs">{m.trade_wtb_buying_only()}</span>
-              ) : null}
-              {/* relative to the render: the server's minute and the browser's can differ */}
-              <time
-                dateTime={time}
-                suppressHydrationWarning
-                className="text-muted-foreground font-mono text-xs"
-              >
-                {changed ? m.trade_updated_at({ time: when }) : m.trade_bumped_at({ time: when })}
-              </time>
+              {notes}
+              {timeTag}
             </div>
+          }
+          phoneLine={
+            <>
+              <TagBadge tag={post.tag} />
+              {" · "}
+              {post.reputation ? (
+                <>
+                  <TrustLine reputation={post.reputation} className="inline" />
+                  {" · "}
+                </>
+              ) : null}
+              {timeTag}
+              {wantOnly || post.buyingOnly ? <> · {notes}</> : null}
+            </>
           }
         />
       }
       sides={
-        <TradeSides
-          strips={post.sides.map((side) => (
-            <SideStrip key={side.list.id} side={side} collections={collections} onOpen={onOpen} />
+        <div className="flex min-w-0 flex-col gap-2">
+          <TradeSides
+            strips={post.sides
+              .filter((side) => !isEmptySide(side))
+              .map((side) => (
+                <SideStrip
+                  key={side.list.id}
+                  side={side}
+                  surface={surface}
+                  narrowed={post.narrowed}
+                  labelLink={post.sides.length === 1}
+                  collections={collections}
+                  onOpen={onOpen}
+                />
+              ))}
+          />
+          {post.sides.filter(isEmptySide).map((side) => (
+            <EmptySide key={side.list.id} side={side} surface={surface} />
           ))}
-        />
-      }
-      actions={
-        <>
-          {own ? null : <TradeActions contact={contact} name={post.identity.name} compact />}
-          <SafetyMenu
-            userId={post.userId}
-            name={post.identity.name}
-            report
-            extraItems={
-              <MenuItem onClick={() => hide(post.userId, post.identity.name)}>
-                <EyeSlashIcon />
-                {m.trade_hide_partner()}
-              </MenuItem>
-            }
-          />
-        </>
-      }
-      below={
-        <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-xs">
-          {person ? (
-            <MatchChip counts={person.counts} popover={<MatchedLists {...person} />} />
-          ) : null}
-          <ListsPopover
-            lists={post.sides.map((side) => ({
-              id: side.list.id,
-              name: side.list.name,
-              type: side.role,
-              link: getListLinkOption(side.list),
-            }))}
-          />
-          {person ? (
-            <Button
-              variant="ghost"
-              size="xs"
-              className="font-medium"
-              onClick={() => onOpenPerson(post.userId)}
-            >
-              {m.trade_all_matches()}
-            </Button>
-          ) : null}
         </div>
       }
+      actions={
+        own ? undefined : (
+          <>
+            <TradeActions
+              contact={contact}
+              name={post.identity.name}
+              compact
+              offerClassName="@max-3xl:flex-1"
+            />
+            <span className="contents @3xl:hidden">{allMatches}</span>
+          </>
+        )
+      }
+      below={
+        twoLists || showChip || person ? (
+          <div className="flex min-w-0 items-center gap-2 text-xs">
+            {twoLists ? (
+              <ListsPopover
+                lists={post.sides.map((side) => ({
+                  id: side.list.id,
+                  name: side.list.name,
+                  description: side.list.description,
+                  type: side.role,
+                  link: getListLinkOption(side.list),
+                }))}
+              />
+            ) : null}
+            {showChip && person ? (
+              <MatchChip counts={person.counts} popover={<MatchedLists {...person} />} />
+            ) : null}
+            <span className="contents @max-3xl:hidden">{allMatches}</span>
+          </div>
+        ) : undefined
+      }
+      belowClassName={twoLists || showChip ? undefined : "@max-3xl:hidden"}
     />
   );
 }

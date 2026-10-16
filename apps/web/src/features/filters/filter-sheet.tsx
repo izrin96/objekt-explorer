@@ -22,6 +22,7 @@ import {
   ExtraFacetControls,
   FACET_KEYS,
   FacetControls,
+  foldsBelowMd,
   NO_EXTRAS,
   QUICK_FACET_KEYS,
   useDeclaredFacets,
@@ -42,6 +43,8 @@ type FilterSheetProps = {
   /** the long-tail fields, plus toolbar controls this surface hides below `md` */
   children?: ReactNode;
   extraCount?: number;
+  /** the toolbar keeps no facet below `md`, so the badge counts every active one */
+  foldAll?: boolean;
   onReset?: () => void;
   resetDisabled?: boolean;
   /**
@@ -90,6 +93,7 @@ export function FilterSheet({
   extras = NO_EXTRAS,
   children,
   extraCount = 0,
+  foldAll = false,
   onReset,
   resetDisabled = false,
   handle,
@@ -101,10 +105,15 @@ export function FilterSheet({
   // the badge counts only what the toolbar hides below `md`
   const count =
     keys.reduce(
-      (sum, key) => sum + (!QUICK_FACET_KEYS.includes(key) && values[key].length > 0 ? 1 : 0),
+      (sum, key) =>
+        sum +
+        (foldsBelowMd(QUICK_FACET_KEYS.includes(key), foldAll) && values[key].length > 0 ? 1 : 0),
       0,
     ) +
-    extras.reduce((sum, extra) => sum + (!extra.quick && extra.active ? 1 : 0), 0) +
+    extras.reduce(
+      (sum, extra) => sum + (foldsBelowMd(!!extra.quick, foldAll) && extra.active ? 1 : 0),
+      0,
+    ) +
     extraCount;
 
   return (

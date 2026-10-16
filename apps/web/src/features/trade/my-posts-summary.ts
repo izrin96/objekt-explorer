@@ -11,3 +11,10 @@ export function summarizePosts(posts: readonly PostState[]) {
     shownByDefault: idle > 0,
   };
 }
+
+/** How the row words the posts that can be bumped now: a number, "all", or nothing. */
+export function readyState(posts: readonly PostState[]): "none" | "some" | "all" {
+  const { ready } = summarizePosts(posts);
+  if (ready === 0) return "none";
+  return ready === posts.length ? "all" : "some";
+}
