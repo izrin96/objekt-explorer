@@ -6,7 +6,7 @@ import { APIError, createAuthMiddleware, getOAuthState, getSessionFromCtx } from
 import { betterAuth } from "better-auth/minimal";
 import { admin } from "better-auth/plugins/admin";
 import { username } from "better-auth/plugins/username";
-import { eq } from "drizzle-orm";
+import { and, eq, ne } from "drizzle-orm";
 
 import { SITE_NAME } from "../constants";
 import { serverEnv } from "../env";
@@ -50,6 +50,7 @@ export const auth = betterAuth({
     enabled: true,
     autoSignIn: true,
     requireEmailVerification: false,
+    revokeSessionsOnPasswordReset: true,
     sendResetPassword: async ({ user, url }) => {
       await sendResetPassword(user.email, url);
     },
@@ -207,11 +208,25 @@ export const auth = betterAuth({
             accessToken: account.accessToken ?? undefined,
           });
 
+          // only the first social link turns showSocial on, so a later link
+          // does not undo a user's choice to hide it
+          const [other] = await db
+            .select({ id: authSchema.account.id })
+            .from(authSchema.account)
+            .where(
+              and(
+                eq(authSchema.account.userId, account.userId),
+                ne(authSchema.account.providerId, "credential"),
+                ne(authSchema.account.id, account.id),
+              ),
+            )
+            .limit(1);
+
           await db
             .update(authSchema.user)
             .set({
               [account.providerId]: getProviderUsername(account.providerId, info),
-              showSocial: true,
+              ...(other ? {} : { showSocial: true }),
             })
             .where(eq(authSchema.user.id, account.userId));
         },

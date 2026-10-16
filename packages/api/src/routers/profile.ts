@@ -4,6 +4,7 @@ import { userAddress } from "@repo/db/schema";
 import { type acceptedFileMimeTypes, mimeTypeToExtension } from "@repo/lib/media";
 import { and, eq, sql } from "drizzle-orm";
 
+import { ownBannerKey } from "../lib/banner-key";
 import { refuse } from "../lib/refuse";
 import { authed, optionalAuthed } from "../orpc";
 import { addressOrBareInputSchema, addressSchema } from "../schemas/common/address";
@@ -47,12 +48,7 @@ export const profileRouter = {
     .handler(async ({ input: { address, ...rest }, context: { session } }) => {
       const profile = await fetchOwnedProfile(address, session.user.id);
 
-      // `getPresignedPost` names every upload after its address, so a banner
-      // URL outside that prefix is another profile's file. Older uploads kept
-      // the checksummed address, hence the case-insensitive match.
-      const ownPrefix = `${S3_PUBLIC_URL}/profile-banner/${address}-`.toLowerCase();
-      const isOwnBanner = (url: string) => url.toLowerCase().startsWith(ownPrefix);
-      if (rest.bannerImgUrl && !isOwnBanner(rest.bannerImgUrl)) {
+      if (rest.bannerImgUrl && !ownBannerKey(rest.bannerImgUrl, S3_PUBLIC_URL, address)) {
         throw new ORPCError("BAD_REQUEST");
       }
 
@@ -66,16 +62,11 @@ export const profileRouter = {
 
       // Delete the old banner only once the row no longer points at it, so a
       // failed update cannot leave a dangling URL
-      if (
-        profile.bannerImgUrl &&
-        isOwnBanner(profile.bannerImgUrl) &&
-        rest.bannerImgUrl !== undefined &&
-        rest.bannerImgUrl !== profile.bannerImgUrl
-      ) {
-        const fileName = profile.bannerImgUrl.split("/").pop();
-        if (fileName) {
-          await deleteFileFromBucket(S3_BUCKET, `profile-banner/${fileName}`);
-        }
+      const oldKey = profile.bannerImgUrl
+        ? ownBannerKey(profile.bannerImgUrl, S3_PUBLIC_URL, address)
+        : null;
+      if (oldKey && rest.bannerImgUrl !== undefined && rest.bannerImgUrl !== profile.bannerImgUrl) {
+        await deleteFileFromBucket(S3_BUCKET, oldKey);
       }
     }),
 

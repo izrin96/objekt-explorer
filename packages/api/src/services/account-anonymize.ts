@@ -11,10 +11,12 @@ import {
 import { eq, sql } from "drizzle-orm";
 
 import { deletionBlockers, refusalOf } from "../lib/account-deletion";
+import { ownBannerKey } from "../lib/banner-key";
 import { deletionState, refusalError } from "./account-delete";
 import { lockAddresses, recordLinkEvents } from "./cosmo-link";
 import { audit, openReportsOf } from "./moderation";
 import { cancelOpenOffers, offersOf, publishCancelled } from "./offer/cancel";
+import { deleteFileFromBucket, S3_BUCKET, S3_PUBLIC_URL } from "./s3";
 
 const DELETED_ACCOUNT_NAME = "Deleted account";
 
@@ -28,7 +30,7 @@ const DELETED_ACCOUNT_NAME = "Deleted account";
  * `self` is refused on a sanction and writes the `account_deleted` audit entry.
  */
 export async function anonymizeUser(userId: string, { self }: { self: boolean }) {
-  const cancelled = await db.transaction(async (tx) => {
+  const { cancelled, banners } = await db.transaction(async (tx) => {
     // the user row before any offer row, as accept takes it; an accept racing this either
     // commits its trade before the check below or then finds its offer gone
     await tx.execute(sql`SELECT 1 FROM "user" WHERE id = ${userId} FOR NO KEY UPDATE`);
@@ -64,7 +66,7 @@ export async function anonymizeUser(userId: string, { self }: { self: boolean })
       })
       .where(eq(user.id, userId));
     const held = await tx
-      .select({ address: userAddress.address })
+      .select({ address: userAddress.address, bannerImgUrl: userAddress.bannerImgUrl })
       .from(userAddress)
       .where(eq(userAddress.userId, userId));
     await lockAddresses(
@@ -73,7 +75,7 @@ export async function anonymizeUser(userId: string, { self }: { self: boolean })
     );
     const unlinked = await tx
       .update(userAddress)
-      .set({ userId: null })
+      .set({ userId: null, bannerImgUrl: null, bannerImgType: null })
       .where(eq(userAddress.userId, userId))
       .returning({ address: userAddress.address });
     await recordLinkEvents(
@@ -89,7 +91,18 @@ export async function anonymizeUser(userId: string, { self }: { self: boolean })
     await tx.delete(notification).where(eq(notification.userId, userId));
     await tx.delete(notificationPref).where(eq(notificationPref.userId, userId));
     await tx.delete(messagePref).where(eq(messagePref.userId, userId));
-    return result;
+    return { cancelled: result, banners: held };
   });
   await publishCancelled(cancelled);
+
+  // after the commit, so a failed delete cannot undo the scrub; the rows no longer name the files
+  for (const { address, bannerImgUrl } of banners) {
+    const key = bannerImgUrl && ownBannerKey(bannerImgUrl, S3_PUBLIC_URL, address);
+    if (!key) continue;
+    try {
+      await deleteFileFromBucket(S3_BUCKET, key);
+    } catch (error) {
+      console.error("Failed to delete banner of deleted account:", key, error);
+    }
+  }
 }

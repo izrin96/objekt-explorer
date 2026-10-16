@@ -123,6 +123,7 @@ async function findListings(input: MarketListingsInput, viewerId: string | null)
         profileSlug: lists.profileSlug,
         profileAddress: lists.profileAddress,
         ownerNickname: userAddress.nickname,
+        hideNickname: userAddress.hideNickname,
         messageAllow: messagePref.allow,
         blocked: viewerId
           ? sql<boolean>`NOT ${notBlockedEither(viewerId, sql`${lists.userId}`)}`
@@ -142,11 +143,12 @@ async function findListings(input: MarketListingsInput, viewerId: string | null)
           .orderBy(
             sql`CASE WHEN ${listEntries.isQyop} THEN 1 WHEN ${listEntries.price} IS NULL THEN 2 ELSE 0 END`,
             dir(usdPriceExpr(rates)),
+            dir(listEntries.id),
           )
           .offset(input.offset)
           .limit(input.limit + 1)
       : await baseQuery()
-          .orderBy(dir(listEntries.createdAt))
+          .orderBy(dir(listEntries.createdAt), dir(listEntries.id))
           .offset(input.offset)
           .limit(input.limit + 1);
 
@@ -159,7 +161,7 @@ async function findListings(input: MarketListingsInput, viewerId: string | null)
 
   const items = rows.map((row) => {
     const objekt = row.objektId ? objektMap.get(row.objektId) : null;
-    const nickname = row.ownerNickname || null;
+    const nickname = row.hideNickname ? null : row.ownerNickname || null;
     const currency = row.currency ? normalizeCurrency(row.currency) : null;
     const rate = currency ? (rates[currency] ?? 1) : 1;
     const usdPrice = row.price !== null ? row.price * rate : null;

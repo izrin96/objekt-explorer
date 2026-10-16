@@ -171,13 +171,14 @@ export async function fetchSerialTransfers(
     where: { address: result.owner },
     columns: {
       privateSerial: true,
+      privateProfile: true,
     },
     orderBy: {
       id: "desc",
     },
   });
 
-  const isPrivate = owner?.privateSerial ?? false;
+  const isPrivate = (owner?.privateSerial || owner?.privateProfile) ?? false;
 
   if (!session && isPrivate) return { hide: true, transfers: [] };
 
