@@ -3,7 +3,7 @@
 ### Requirement: Offers name objekts on both sides
 An offer SHALL be sent inside a conversation from one account to the other. It has two sides:
 - **You give**: specific objekts owned by one of the sender's linked addresses.
-- **You get**: specific objekts, or "any copy" of a collection. Each comes from an entry on one of the recipient's have or sale lists bound to a Cosmo profile, at any of the recipient's linked addresses. When the recipient has no have or sale list bound to a Cosmo profile and shown on Trade, each MAY instead come from what the recipient holds at a linked address whose profile is not private to the sender (their collection). This is checked when the offer is sent: once the recipient has such a list, only its entries can be asked for.
+- **You get**: specific objekts, or "any copy" of a collection. Each comes from an entry on one of the recipient's have or sale lists bound to a Cosmo profile, at any of the recipient's linked addresses. When the recipient has no have or sale list bound to a Cosmo profile and shown on Trade, each MAY instead come from what the recipient holds at a linked address whose profile is not private to the sender (their collection): a specific objekt from an address that shows serials, any copy from one that hides them. This is checked when the offer is sent: once the recipient has such a list, only its entries can be asked for.
 
 A counter-offer MAY also ask for any objekt the recipient listed under You give in the offer it counters, since the recipient already offered it.
 

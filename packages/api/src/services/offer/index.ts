@@ -139,13 +139,9 @@ export async function createOffer(
         ? new Set(collectionAddrs.serials)
         : partnerAddresses;
     },
+    copyHolders: (side) => (side === "give" ? myAddresses : partnerAddresses),
     // any copy from a collection is counted where serials are hidden, as the picker counts it
-    copyHolders: (side) =>
-      side === "give"
-        ? myAddresses
-        : collectionAddrs
-          ? new Set(collectionAddrs.hidden)
-          : partnerAddresses,
+    getCopyHolders: collectionAddrs ? new Set(collectionAddrs.hidden) : undefined,
     getScope: collectionAddrs ? undefined : anyCopyScope(entries),
   });
 

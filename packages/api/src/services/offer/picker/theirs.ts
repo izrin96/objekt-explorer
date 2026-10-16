@@ -259,10 +259,12 @@ export async function theirCollectionPage(
     cursor || myWants?.length === 0
       ? []
       : hiddenSerialItems(partnerId, addresses.hidden, narrowing, myWants),
-    cursor ? [] : keptItems(me, addressed, addresses.all, narrowing),
+    keptItems(me, addressed, addresses.all, narrowing),
   ]);
-  const shown = new Set(page.map((o) => o.id));
-  const objekts = [...kept.filter((o) => !shown.has(o.id)), ...page];
+  // kept objekts lead the first page, so later pages leave them out
+  const keptIds = new Set(kept.map((o) => o.id));
+  const rest = page.filter((o) => !keptIds.has(o.id));
+  const objekts = cursor ? rest : [...kept, ...rest];
   const ids = objekts.map((o) => o.id);
   const [reserved, holders] = await Promise.all([reservedIds(ids), openOfferHolders(ids)]);
   return {

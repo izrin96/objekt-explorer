@@ -40,6 +40,11 @@ type ItemParties = {
   sent?: { since: string; receivers: (side: Side) => ReadonlySet<string> };
   /** Send only: the copies a get side's any-copy asks may draw on (see `anyCopyScope`) */
   getScope?: ReadonlyMap<string, ReadonlySet<string> | null>;
+  /**
+   * Send only: where a get side's any-copy asks are counted, when narrower than `copyHolders`.
+   * Open any-copy legs may draw on every copy, so a named objekt is still checked against all.
+   */
+  getCopyHolders?: ReadonlySet<string>;
 };
 
 /**
@@ -84,6 +89,8 @@ type CopyNeed = {
   side: Side;
   giverId: string;
   available: Map<string, number>;
+  /** like `available`, but counted over every copy holder: what open legs may draw on */
+  held: Map<string, number>;
   /** collections the side names a specific objekt in, which open any-copy legs must leave a copy for */
   specificSlugs: string[];
 };
@@ -145,22 +152,20 @@ export async function checkItems(
   const named = new Set(specific.map((item) => item.objektId!));
   const needs = (["give", "get"] as const).map((side, i): CopyNeed => {
     const available = new Map<string, number>();
+    const held = new Map<string, number>();
     for (const copy of copies[i]!) {
       if (!copy.transferable || reserved.has(copy.id) || named.has(copy.id)) continue;
-      if (
-        side === "get" &&
-        parties.getScope &&
-        slugsOf(side).includes(copy.slug) &&
-        !inAnyCopyScope(parties.getScope, copy)
-      ) {
-        continue;
-      }
+      const asked = side === "get" && slugsOf(side).includes(copy.slug);
+      if (asked && parties.getScope && !inAnyCopyScope(parties.getScope, copy)) continue;
+      held.set(copy.slug, (held.get(copy.slug) ?? 0) + 1);
+      if (asked && parties.getCopyHolders && !parties.getCopyHolders.has(copy.owner)) continue;
       available.set(copy.slug, (available.get(copy.slug) ?? 0) + 1);
     }
     return {
       side,
       giverId: parties.giverId(side),
       available,
+      held,
       specificSlugs: specificSlugsOf(side),
     };
   });
@@ -184,18 +189,19 @@ export async function refuseCopyShortfall(
     tx,
   );
   const short = needs.flatMap((need) => {
-    const left = new Map(
-      slugsOf(need).map((slug) => [
-        slug,
-        (need.available.get(slug) ?? 0) - (promised.get(copyKey(need.giverId, slug)) ?? 0),
-      ]),
-    );
+    const leftOf = (counts: ReadonlyMap<string, number>) =>
+      new Map(
+        slugsOf(need).map((slug) => [
+          slug,
+          (counts.get(slug) ?? 0) - (promised.get(copyKey(need.giverId, slug)) ?? 0),
+        ]),
+      );
     return [
       ...anyCopyShortfall(
         anyCopy.filter((item) => item.side === need.side),
-        left,
+        leftOf(need.available),
       ),
-      ...specificCopyShortfall(need.specificSlugs, left),
+      ...specificCopyShortfall(need.specificSlugs, leftOf(need.held)),
     ];
   });
   if (short.length > 0) refuseOffer("not_owned", { collectionSlugs: unique(short) });
