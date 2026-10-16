@@ -6,7 +6,7 @@ The account-wide trade match view on `apps/web` at `/trade/for-you`: who the use
 ## Requirements
 
 ### Requirement: Account-wide matches
-Trade SHALL match the signed-in user, one person at a time, against the other accounts whose discoverable have, sale or want lists overlap the user's have, sale and want lists. This drives Browse's match chips, Any, Mutual, Mutual N and the person sheet (see `web-trade-browse`). A sale list counts as a have list, except against a want list open to swaps only, which it never matches (see `web-lists`). The user's own lists count whether or not they are discoverable. Matching SHALL use the user's have and sale lists, never everything their wallet holds: owning an objekt does not mean it is up for trade. A have or sale list SHALL take part only while it is bound to one of its owner's Cosmo profiles, since Trade checks that profile's holdings. Want lists always take part. The user's own account SHALL never be matched.
+Trade SHALL match the signed-in user, one person at a time, against the other accounts whose discoverable have, sale or want lists overlap the user's have, sale and want lists. This drives Browse's match chips, Any, Mutual, Mutual N and the person sheet (see `web-trade-browse`). A have list counts only against a want list open to swaps, and a sale list only against a want list open to buying: a want list open to swaps only never matches a sale list, and one set to buying only never matches a have list (see `web-lists`). The user's own lists count whether or not they are discoverable. Matching SHALL use the user's have and sale lists, never everything their wallet holds: owning an objekt does not mean it is up for trade. A have or sale list SHALL take part only while it is bound to one of its owner's Cosmo profiles, since Trade checks that profile's holdings. Want lists always take part. The user's own account SHALL never be matched.
 
 #### Scenario: Matches across lists
 - **WHEN** a user has two have lists and one want list, and a person's discoverable lists overlap two of them
@@ -19,6 +19,10 @@ Trade SHALL match the signed-in user, one person at a time, against the other ac
 #### Scenario: Unbound have list
 - **WHEN** the user's only have list is not bound to a Cosmo profile, and a person wants a collection on it
 - **THEN** that collection does not count toward the person, and Compare with does not offer the list
+
+#### Scenario: Buying-only want list in the person sheet
+- **WHEN** the user's only want list is set to Buying only, and a person's have list and sale list each hold a different collection on it
+- **THEN** the person's sheet counts only the sale list's collection under what they have that the user wants
 
 #### Scenario: No lists
 - **WHEN** a signed-in user with no want list and no bound have list opens `/trade`

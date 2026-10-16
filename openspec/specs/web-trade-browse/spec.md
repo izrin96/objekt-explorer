@@ -9,13 +9,21 @@ The public Trade Browse feed on `apps/web` at `/trade`: posts by people who put 
 `/trade` SHALL list one post per list whose owner turned its Show on Trade switch on (Show on Market on a sale list; see `web-lists`). A have or sale list SHALL appear only while it is bound to a Cosmo profile; a want list needs no profile. A have list and the want list linked to it SHALL form one post when both are on Trade. When only one of the pair is on Trade, the post SHALL hold only that list. The page SHALL be open to signed-out visitors.
 
 Each post SHALL be tagged:
-- WTT for a have list, alone or paired with its want list, and for a want list on its own open to swaps only;
-- WTB for a want list on its own open to swaps or buying;
+- WTT for a have list, alone or paired with its want list, whatever that want list's Open to choice, and for a want list on its own open to swaps only;
+- WTB for a want list on its own open to swaps or buying, or set to buying only;
 - WTS for a sale list.
 
 #### Scenario: Trades-only want list
 - **WHEN** a want list on its own is open to swaps only, whether or not it is linked to a have list that is off Trade
 - **THEN** its post is tagged WTT and listed under WTT, not WTB
+
+#### Scenario: Buying-only want list
+- **WHEN** a want list on its own is set to Buying only
+- **THEN** its post is tagged WTB and listed under WTB
+
+#### Scenario: Have list linked to a buying-only want list
+- **WHEN** have list "spares" is on Trade and linked to want list "store hunt", which is set to Buying only and on Trade
+- **THEN** the feed shows one WTT post holding both sides, and the Want side matches sale lists only
 
 Each post SHALL show:
 - the owner, headed the way For you heads a partner (the Cosmo nickname of the list's bound address whatever its Hide Cosmo ID setting, the shortened address when it has none, and the account's display name only for a list bound to no address; see `web-cosmo-link`), with the avatar;
@@ -201,9 +209,9 @@ A filter value that does not parse SHALL be ignored.
 
 ### Requirement: Matches to the signed-in viewer
 For a signed-in viewer, every post on Browse and on For you SHALL show its owner's counts. They are taken across all of the owner's lists that matching reads (their discoverable have, sale and want lists, listed or idle), with the rules and ownership check of `web-trade-for-you`. They are counted against the viewer's lists, or, on For you, against the lists Compare with names:
-- "They have N you want": collections on the owner's have or sale lists that are on one of the viewer's want lists that can take them. A sale list counts only against a want list open to swaps or buying.
-- "You have N they want": collections on the owner's want lists that are on one of the viewer's have or sale lists that is bound to a Cosmo profile and still tradeable by the viewer. A sale list counts only for a want list open to swaps or buying.
-- The mutual score: the smaller of the two counts above. A sale list, the owner's or the viewer's, counts toward it exactly as it counts toward its own count: only against a want list open to swaps or buying. A want list set to swaps only never counts a sale list toward either direction, so it never makes a person mutual through one.
+- "They have N you want": collections on the owner's have or sale lists that are on one of the viewer's want lists that can take them. A have list counts only against a want list open to swaps (Swaps only, or Swaps or buying); a sale list counts only against a want list open to buying (Swaps or buying, or Buying only).
+- "You have N they want": collections on the owner's want lists that are on one of the viewer's have or sale lists that is bound to a Cosmo profile and still tradeable by the viewer. A have list counts only for a want list open to swaps; a sale list counts only for a want list open to buying.
+- The mutual score: the smaller of the two counts above. A have or sale list, the owner's or the viewer's, counts toward it exactly as it counts toward its own count. A want list set to swaps only never counts a sale list toward either direction, and a want list set to buying only never counts a have list, so neither makes a person mutual through one.
 
 Every post by one owner SHALL show the same counts. They SHALL be the counts that person's sheet shows for the same Compare with choice (see `web-trade-for-you` Person sheet), apart from the sheet's caching delay. The counts show in the card's match chip (see Trade card). Matched objekts SHALL be marked with a ring, judged on the post's own objekts. The chip SHALL open a popover naming the viewer's lists the counts came from, each linking to its list: the want lists for the first count, and the have and sale lists for the second.
 
@@ -246,6 +254,10 @@ Browse SHALL list the viewer's own posts, so they can see where a bump put them.
 #### Scenario: The viewer's sale list against their want list
 - **WHEN** the viewer's sale list holds a collection that rin.trades's want list asks for, and rin.trades has a have list holding a collection the viewer wants
 - **THEN** rin.trades is Mutual when that want list is open to swaps or buying, and is not when it is open to swaps only
+
+#### Scenario: A buying-only want list ignores have lists
+- **WHEN** rin.trades's have list holds 2 collections on the viewer's want list, which is set to Buying only, and rin.trades has no sale list
+- **THEN** rin.trades's posts count "They have 0 you want", ring none of those objekts, and rin.trades is not listed under Mutual
 
 #### Scenario: Mutual partner
 - **WHEN** the viewer activates All matches on one of rin.trades's posts
@@ -653,3 +665,18 @@ The help beside the controls SHALL describe the mutual score as the smaller of t
 #### Scenario: Phone
 - **WHEN** the viewer opens `/trade/for-you?match=mutual&list=spares` at 390 px
 - **THEN** the Mutual only switch (on), Compare with naming spares and the help wrap within the screen width, with the compared-lists line under them and no horizontal scroll
+
+### Requirement: Buying only note
+A WTB post whose want list is set to Buying only SHALL show a short muted note beside its tag, "Buying only, not swapping", in the byline, the way a want-only WTT post shows "Swaps only, not buying". A WTB post whose want list is open to swaps or buying SHALL show no note. The Browse help's tag table SHALL describe WTB as a want list open to swaps or buying, or set to buying only, and its "What counts toward Mutual" table SHALL show that a have list counts against a want list open to swaps only or to swaps or buying and not against one set to buying only, and that a sale list counts against a want list open to swaps or buying or set to buying only and not against one open to swaps only.
+
+#### Scenario: Buying-only post
+- **WHEN** a want list on its own is set to Buying only and on Trade
+- **THEN** its post shows the WTB tag with "Buying only, not swapping" beside it, and one WANT strip
+
+#### Scenario: Swaps or buying post
+- **WHEN** a want list on its own is open to swaps or buying and on Trade
+- **THEN** its post shows the WTB tag and no note
+
+#### Scenario: Help table
+- **WHEN** the viewer opens the matching help on Browse
+- **THEN** the Mutual table shows a have list counting against Swaps only and Swaps or buying but not Buying only, and a sale list counting against Swaps or buying and Buying only but not Swaps only
