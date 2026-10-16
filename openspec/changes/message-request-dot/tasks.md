@@ -3,7 +3,7 @@
 ## 1. Schema
 
 - [x] 1.1 Add nullable `requestsSeenMessageId` (`requests_seen_message_id`, bigint, number mode) to `messagePref` in `packages/db/src/schema.ts`, run `bun run --filter=@repo/db db:generate`, and check that the new migration only adds that column. Lint and typecheck pass for `@repo/db`.
-- [ ] 1.2 With approval, apply the migration to the local database (`.env.local`) and confirm the column exists. Staging and prod wait for the deploy step.
+- [x] 1.2 With approval, apply the migration to the local database (`.env.local`) and confirm the column exists. Staging and prod wait for the deploy step.
 
 ## 2. API
 
