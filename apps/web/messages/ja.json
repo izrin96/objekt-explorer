@@ -259,7 +259,7 @@
   "list_copy_success_collections": "リストをコピーしました。引き継ぎ: {carried} · 除外: {leftOut}（コレクション）",
   "list_copy_success_copies": "リストをコピーしました。引き継ぎ: {carried} · 除外: {leftOut}（枚）",
   "list_copy_error": "リストのコピーに失敗しました",
-  "list_edit_type_locked_hint": "リストの種類は作成後に変更できません。変更するには、リストのメニューから「新しいリストとしてコピー」を使ってください。",
+  "list_edit_type_locked_hint": "リストの種類とプロフィールへの紐付けは作成後に変更できません。別の種類や紐付けのリストを作るには、リストのメニューから「新しいリストとしてコピー」を使ってください。",
   "list_edit_url_label": "リストURL",
   "list_edit_regenerate_slug_label": "新しい名前からURLを再生成",
   "list_edit_regenerate_slug_desc": "このリストへの既存のリンクは無効になります。",

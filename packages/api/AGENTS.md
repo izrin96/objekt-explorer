@@ -14,7 +14,7 @@ A refusal the web app can show goes through `refuse(status, reason, message, dat
 
 ## Lists
 
-`writeList` (`services/list.ts`) is the one place a list row is created: `list.create` and `list.copy` both run `prepareList` first, outside any transaction (validation, slug and partner reads use the pool, so a transaction waiting on them would hold a connection), then `writeList` inside theirs. It returns the ids to `touchList` after commit. A copy's entries come from `planCopy` over the pure `lib/list-copy.ts`; it checks that the caller owns the target profile before it reads that profile's holdings from the indexer, so `list.copyPreview` cannot read another user's holdings. `copyMode`, `needsHoldings`, `carriesPrices` and `copyUnit` live in `schemas/list-copy.ts` because the web dialog imports them: it asks `copyPreview` for a count whenever the mode is not `rows`.
+`writeList` (`services/list.ts`) is the one place a list row is created: `list.create` and `list.copy` both run `prepareList` first, outside any transaction (validation and partner reads use the pool, so a transaction waiting on them would hold a connection), then `writeList` inside theirs, which picks the profile slug on the transaction's own connection right before the insert. It returns the ids to `touchList` after commit. A copy's entries come from `planCopy` over the pure `lib/list-copy.ts`; it checks that the caller owns the target profile before it reads that profile's holdings from the indexer, so `list.copyPreview` cannot read another user's holdings. `copyMode`, `needsHoldings`, `carriesPrices` and `copyUnit` live in `schemas/list-copy.ts` because the web dialog imports them: it asks `copyPreview` for a count whenever the mode is not `rows`.
 
 ## Cosmo links
 

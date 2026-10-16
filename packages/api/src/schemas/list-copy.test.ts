@@ -36,8 +36,8 @@ describe("copyMode", () => {
 });
 
 describe("copyUnit", () => {
-  test("copies for rows and tokens, collections otherwise", () => {
-    expect(copyUnit("rows")).toBe("copies");
+  test("copies for tokens, collections otherwise", () => {
+    expect(copyUnit("rows")).toBe("collections");
     expect(copyUnit("tokens")).toBe("copies");
     expect(copyUnit("distinct-collections")).toBe("collections");
     expect(copyUnit("expand")).toBe("collections");

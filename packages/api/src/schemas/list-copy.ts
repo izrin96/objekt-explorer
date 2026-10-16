@@ -28,5 +28,6 @@ export function carriesPrices(source: ListTypeNew, target: ListTypeNew) {
 }
 
 export function copyUnit(mode: CopyMode) {
-  return mode === "rows" || mode === "tokens" ? ("copies" as const) : ("collections" as const);
+  // only a bound source's rows are copies; an unbound one's rows are collections
+  return mode === "tokens" ? ("copies" as const) : ("collections" as const);
 }

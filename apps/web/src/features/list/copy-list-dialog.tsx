@@ -100,11 +100,11 @@ function CopyListForm({ list, onDone }: { list: StoredList; onDone: () => void }
 
   const { listTypeNew, isProfileBind, profileAddress } = toCreateInput(draft);
   // only a copy that keeps rows one to one needs no count
-  const counted = copyMode(list, { listTypeNew, isProfileBind, profileAddress }) !== "rows";
+  const needsPreview = copyMode(list, { listTypeNew, isProfileBind, profileAddress }) !== "rows";
   const { data: preview } = useQuery(
     orpc.list.copyPreview.queryOptions({
       input: { sourceSlug: list.slug, listTypeNew, isProfileBind, profileAddress },
-      enabled: counted,
+      enabled: needsPreview,
       // the source's entries and the profile's holdings change without invalidating this
       staleTime: 0,
     }),
@@ -134,7 +134,7 @@ function CopyListForm({ list, onDone }: { list: StoredList; onDone: () => void }
           lists={lists}
           profiles={profiles}
           notice={
-            counted && preview ? (
+            needsPreview && preview ? (
               <p role="status" className="text-muted-foreground text-xs text-pretty">
                 {(preview.unit === "copies"
                   ? m.list_copy_hint_copies

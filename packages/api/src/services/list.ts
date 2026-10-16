@@ -588,8 +588,8 @@ export type PreparedList = Awaited<ReturnType<typeof prepareList>>;
 /** The one place a list row is created. Returns the ids to `touchList` once the transaction commits. */
 export async function writeList(tx: Tx, prepared: PreparedList) {
   const { input, userId, slug, isProfileBind, linkedListId, partner, discoverable } = prepared;
-  // picked on the transaction's own connection, right before the insert, so a copy's slow
-  // holdings read cannot widen the window in which two lists pick the same profile slug
+  // picked right before the insert, on the transaction's own connection, so the gap in which
+  // two lists can pick the same profile slug stays as short as the insert itself
   const profileSlug = input.profileAddress
     ? await generateProfileSlug(input.name, slug, input.profileAddress.toLowerCase(), undefined, tx)
     : null;
