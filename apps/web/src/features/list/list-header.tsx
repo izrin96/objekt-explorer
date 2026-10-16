@@ -4,6 +4,7 @@ import {
   CopyIcon,
   DotsThreeIcon,
   DownloadSimpleIcon,
+  HashIcon,
   MagnifyingGlassIcon,
   PencilSimpleIcon,
   TrashIcon,
@@ -28,6 +29,7 @@ import { SkeletonGrid } from "@/features/objekt/skeleton-grid";
 import { ProfileLink } from "@/features/profile/profile-hover-card";
 import { mutualCountOptions } from "@/features/trade/queries";
 import { displayNickname } from "@/lib/address";
+import { copyWithToast } from "@/lib/clipboard";
 import { m } from "@/paraglide/messages";
 
 import { CopyListDialog } from "./copy-list-dialog";
@@ -153,6 +155,18 @@ export function ListHeader() {
               <MenuItem onClick={() => setExportOpen(true)}>
                 <DownloadSimpleIcon />
                 {m.common_actions_export()}
+              </MenuItem>
+              {/* a profile-scoped link does not show the ID another list's compare takes */}
+              <MenuItem
+                onClick={() =>
+                  void copyWithToast(list.slug, {
+                    title: m.list_copy_id_copied(),
+                    description: list.slug,
+                  })
+                }
+              >
+                <HashIcon />
+                {m.list_copy_id()}
               </MenuItem>
               {isOwner ? (
                 <>

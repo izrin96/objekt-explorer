@@ -3,7 +3,7 @@ import type { PublicList } from "@repo/api/schemas/list";
 import { useRouter } from "@tanstack/react-router";
 
 import { Button } from "@/components/ui/button";
-import { toastManager } from "@/components/ui/toast";
+import { copyWithToast } from "@/lib/clipboard";
 import { getBaseURL } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
@@ -18,12 +18,7 @@ export function useCopyListLink(list: ShareableList) {
   return async () => {
     const { href } = router.buildLocation(getListLinkOption(list));
     const url = new URL(href, getBaseURL()).toString();
-    try {
-      await navigator.clipboard.writeText(url);
-      toastManager.add({ type: "success", title: m.list_share_copied(), description: url });
-    } catch {
-      toastManager.add({ type: "error", title: m.common_copy_blocked(), description: url });
-    }
+    await copyWithToast(url, { title: m.list_share_copied(), description: url });
   };
 }
 
