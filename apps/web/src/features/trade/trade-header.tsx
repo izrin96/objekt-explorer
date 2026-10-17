@@ -20,6 +20,7 @@ export function TradeHeader({
   you = false,
   note,
   phoneLine,
+  wrapTrust = false,
   end,
   className,
 }: {
@@ -29,8 +30,10 @@ export function TradeHeader({
   you?: boolean;
   /** under the reputation line */
   note?: ReactNode;
-  /** in a narrow card, one truncated monospace line in place of the reputation line and `note` */
+  /** in a narrow card, one monospace line that wraps between its parts in place of the reputation line and `note` */
   phoneLine?: ReactNode;
+  /** let the reputation line wrap instead of truncating */
+  wrapTrust?: boolean;
   end?: ReactNode;
   className?: string;
 }) {
@@ -68,13 +71,14 @@ export function TradeHeader({
           ) : null}
         </div>
         <div className={cn("flex min-w-0 flex-col gap-0.5", phoneLine && "@max-3xl:hidden")}>
-          <TrustLine reputation={person.reputation} className="truncate" />
+          <TrustLine
+            reputation={person.reputation}
+            className={wrapTrust ? undefined : "truncate"}
+          />
           {note}
         </div>
         {phoneLine ? (
-          <p className="text-muted-foreground truncate font-mono text-xs @3xl:hidden">
-            {phoneLine}
-          </p>
+          <p className="text-muted-foreground font-mono text-xs @3xl:hidden">{phoneLine}</p>
         ) : null}
       </div>
       {end ? <div className="flex shrink-0 items-center gap-2">{end}</div> : null}
