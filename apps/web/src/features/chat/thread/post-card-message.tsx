@@ -3,9 +3,10 @@ import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 
+import { formatPostPrices } from "@/features/chat/format";
 import { getListLinkOption } from "@/features/list/list-link";
+import { LIST_TYPE_LABEL } from "@/features/list/list-type-badge";
 import { OfferThumb } from "@/features/offers/offer-item";
-import { formatCurrency } from "@/features/settings/use-currency";
 import { TagBadge } from "@/features/trade/tag-label";
 import { TONE_INK } from "@/lib/tone";
 import { cn } from "@/lib/utils";
@@ -52,13 +53,13 @@ export function PostCardMessage({
         <>
           <MatchRow
             side={match.ownerHas}
-            label={mine ? m.chat_match_theirs : m.chat_match_yours}
+            label={mine ? m.trade_match_they_have : m.trade_match_you_have}
             collections={collections}
             onOpen={onOpen}
           />
           <MatchRow
             side={match.senderHas}
-            label={mine ? m.chat_match_yours : m.chat_match_theirs}
+            label={mine ? m.trade_match_you_have : m.trade_match_they_have}
             collections={collections}
             onOpen={onOpen}
           />
@@ -67,30 +68,16 @@ export function PostCardMessage({
         <>
           {post.has ? (
             <Strip
-              label={m.chat_post_has()}
-              tone={post.tag === "wts" ? "sale" : "have"}
+              role={post.tag === "wts" ? "sale" : "have"}
               side={post.has}
               collections={collections}
               onOpen={onOpen}
             />
           ) : null}
           {post.wants ? (
-            <Strip
-              label={m.chat_post_wants()}
-              tone="want"
-              side={post.wants}
-              collections={collections}
-              onOpen={onOpen}
-            />
+            <Strip role="want" side={post.wants} collections={collections} onOpen={onOpen} />
           ) : post.price ? (
-            <p className="font-mono font-semibold tabular-nums">
-              {post.price.min === post.price.max
-                ? formatCurrency(post.price.min, post.price.currency)
-                : m.chat_post_price({
-                    min: formatCurrency(post.price.min, post.price.currency),
-                    max: formatCurrency(post.price.max, post.price.currency),
-                  })}
-            </p>
+            <PostPrice price={post.price} />
           ) : null}
         </>
       ) : null}
@@ -129,21 +116,21 @@ function Thumbs({
 }
 
 function Strip({
-  label,
-  tone,
-  side: { slugs, more },
+  role,
+  side: { slugs, more, copyCount },
   collections,
   onOpen,
 }: {
-  label: string;
-  tone: "have" | "want" | "sale";
+  role: "have" | "want" | "sale";
   side: PostSide;
   collections: Collections;
   onOpen: (objekt: ValidObjekt) => void;
 }) {
   return (
     <section className="flex min-w-0 flex-col gap-1">
-      <h3 className={cn("font-mono text-xs uppercase", TONE_INK[tone])}>{label}</h3>
+      <h3 className={cn("font-mono text-xs uppercase tabular-nums", TONE_INK[role])}>
+        {LIST_TYPE_LABEL[role]()} {copyCount ?? slugs.length + more}
+      </h3>
       {slugs.length === 0 ? (
         <p className="text-muted-foreground text-xs">{m.trade_strip_none()}</p>
       ) : (
@@ -185,5 +172,14 @@ function MatchRow({
         <Thumbs slugs={slugs} collections={collections} onOpen={onOpen} className="w-10 shrink-0" />
       </ul>
     </section>
+  );
+}
+
+function PostPrice({ price }: { price: NonNullable<NonNullable<PostCardView["post"]>["price"]> }) {
+  const { min, max } = formatPostPrices(price.min, price.max, price.currency);
+  return (
+    <p className="font-mono font-semibold tabular-nums">
+      {price.min === price.max ? min : m.chat_post_price({ min, max })}
+    </p>
   );
 }

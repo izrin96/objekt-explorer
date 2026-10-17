@@ -1,6 +1,8 @@
 import type { ChatRefusal, ConversationRow } from "@repo/api/schemas/chat";
 import { CHAT_REFUSALS } from "@repo/api/schemas/chat";
+import { normalizeCurrency } from "@repo/lib/currency";
 
+import { formatCurrency } from "@/features/settings/use-currency";
 import { errorReason } from "@/lib/orpc-error";
 import { relativeTime } from "@/lib/time";
 import { m } from "@/paraglide/messages";
@@ -97,5 +99,29 @@ export function refusalText(refusal: { reason: ChatRefusal; retryAt: string | nu
       return refusal.retryAt
         ? m.chat_refused_muted({ time: untilLabel(refusal.retryAt) })
         : m.chat_refused_muted_always();
+  }
+}
+
+const wholeFormats = new Map<string, Intl.NumberFormat>();
+
+/**
+ * A post's price range in its own currency. Cents are dropped only when both ends are whole, so
+ * the two format alike.
+ */
+export function formatPostPrices(min: number, max: number, code: string) {
+  const exact = { min: formatCurrency(min, code), max: formatCurrency(max, code) };
+  if (!Number.isInteger(min) || !Number.isInteger(max)) return exact;
+  const currency = normalizeCurrency(code);
+  const locale = getLocale();
+  try {
+    const format = cached(
+      wholeFormats,
+      `${locale}|${currency}`,
+      () =>
+        new Intl.NumberFormat(locale, { style: "currency", currency, maximumFractionDigits: 0 }),
+    );
+    return { min: format.format(min), max: format.format(max) };
+  } catch {
+    return exact;
   }
 }

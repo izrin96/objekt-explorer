@@ -16,6 +16,7 @@ import { InfiniteSentinel } from "@/components/shared/infinite-sentinel";
 import { WidgetBoundary } from "@/components/shared/widget-boundary";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import type { Attachment } from "@/features/chat/attachment";
 import { dayLabel } from "@/features/chat/format";
 import { resyncThread, threadOptions } from "@/features/chat/queries";
 import {
@@ -31,6 +32,7 @@ import { useOfferBuilder } from "@/features/offers/offer-builder";
 import { OfferCard } from "@/features/offers/offer-card";
 import { useMinuteClock } from "@/hooks/use-minute-clock";
 import { m } from "@/paraglide/messages";
+import { dropDraftCard, useChatDraft } from "@/stores/chat-draft";
 import { clearTyping, useChatTyping } from "@/stores/chat-typing";
 
 import { runPosition } from "./bubble-run";
@@ -103,6 +105,18 @@ function ThreadView({
   const scroller = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState<ValidObjekt | null>(null);
   const stick = useRef(true);
+  // a card handed over by a Message button is attached, then forgotten; also while this thread
+  // is already open, as from the objekt drawer's Market tab
+  const handed = useChatDraft((state) => state.cards[id]);
+  const [attachment, setAttachment] = useState<Attachment | null>(handed ?? null);
+  const [taken, setTaken] = useState(handed);
+  if (handed && handed !== taken) {
+    setTaken(handed);
+    setAttachment(handed);
+  }
+  useEffect(() => {
+    if (handed) dropDraftCard(id);
+  }, [handed, id]);
   const [atBottom, setAtBottom] = useState(true);
   const heightBeforeOlder = useRef<number | null>(null);
   const heading = useRef<HTMLHeadingElement>(null);
@@ -199,7 +213,7 @@ function ThreadView({
               icon={ChatsCircleIcon}
               bordered={false}
               title={m.chat_thread_empty({ name })}
-              hint={m.chat_thread_empty_hint()}
+              hint={attachment ? m.chat_thread_empty_card() : m.chat_thread_empty_hint()}
             />
           ) : (
             <ol className="flex flex-col gap-1">
@@ -291,6 +305,8 @@ function ThreadView({
           conversationId={id}
           name={name}
           empty={messages.length === 0}
+          attachment={attachment}
+          setAttachment={setAttachment}
           onSent={() => (stick.current = true)}
           onOffer={() => builder.open({ to: { conversationId: id }, name })}
           onOpen={setActive}

@@ -1,5 +1,6 @@
 import { MagnifyingGlassIcon, XIcon } from "@phosphor-icons/react";
-import { SEARCH_MAX_LENGTH } from "@repo/api/schemas/chat";
+import { type ChatBox, SEARCH_MAX_LENGTH } from "@repo/api/schemas/chat";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useRef, useState } from "react";
 
@@ -8,8 +9,10 @@ import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/in
 import { useDebouncedCallback } from "@/hooks/use-debounced-callback";
 import { m } from "@/paraglide/messages";
 
+import { conversationsOptions } from "./queries";
+
 /** The field holds its own text and writes `q` to the URL on a debounce; the server filters. */
-export function ConversationSearch({ q }: { q: string | undefined }) {
+export function ConversationSearch({ box, q }: { box: ChatBox; q: string | undefined }) {
   const navigate = useNavigate();
   const [draft, setDraft] = useState(q ?? "");
   const [seen, setSeen] = useState(q);
@@ -32,6 +35,17 @@ export function ConversationSearch({ q }: { q: string | undefined }) {
   }, 250);
 
   const input = useRef<HTMLInputElement>(null);
+  const [focused, setFocused] = useState(false);
+  // the list is already loading this query; an empty Requests or Archived box has nothing to
+  // search, but the field stays while it is in use, so clearing a search never drops focus
+  const { data, isSuccess, isPlaceholderData } = useInfiniteQuery(conversationsOptions(box, q));
+  const nothingToSearch =
+    box !== "inbox" &&
+    q === undefined &&
+    isSuccess &&
+    !isPlaceholderData &&
+    data.pages[0]?.items.length === 0;
+  if (nothingToSearch && !focused && draft === "") return null;
 
   const clear = () => {
     setDraft("");
@@ -50,6 +64,8 @@ export function ConversationSearch({ q }: { q: string | undefined }) {
           placeholder={m.chat_search_label()}
           maxLength={SEARCH_MAX_LENGTH}
           value={draft}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
           onChange={(event) => {
             setDraft(event.target.value);
             commit(event.target.value);

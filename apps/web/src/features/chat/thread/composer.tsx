@@ -15,7 +15,6 @@ import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 import {
-  dropDraftCard,
   dropDraftSendId,
   putDraftCard,
   restoreDraft,
@@ -38,6 +37,8 @@ export function Composer({
   conversationId,
   name,
   empty: conversationEmpty,
+  attachment,
+  setAttachment,
   onSent,
   onOffer,
   onOpen,
@@ -46,6 +47,9 @@ export function Composer({
   name: string;
   /** the conversation has no message yet, so first lines are offered */
   empty: boolean;
+  /** held by the thread, which words its empty state differently while a card is attached */
+  attachment: Attachment | null;
+  setAttachment: (attachment: Attachment | null) => void;
   onSent: () => void;
   onOffer: () => void;
   onOpen: (objekt: ValidObjekt) => void;
@@ -55,13 +59,6 @@ export function Composer({
   const body = useChatDraft((state) => state.drafts[conversationId]?.body ?? "");
   // a card handed over by a Message button is attached, then forgotten; also while this thread
   // is already open, as from the objekt drawer's Market tab
-  const handed = useChatDraft((state) => state.cards[conversationId]);
-  const [attachment, setAttachment] = useState<Attachment | null>(handed ?? null);
-  const [taken, setTaken] = useState(handed);
-  if (handed && handed !== taken) {
-    setTaken(handed);
-    setAttachment(handed);
-  }
   const [attachOpen, setAttachOpen] = useState(false);
   const detach = () => {
     setAttachment(null);
@@ -72,10 +69,6 @@ export function Composer({
   const [blockedUntil, setBlockedUntil] = useState<number | null>(null);
   const counterId = useId();
   const errorId = useId();
-
-  useEffect(() => {
-    if (handed) dropDraftCard(conversationId);
-  }, [handed, conversationId]);
 
   useEffect(() => {
     if (blockedUntil === null) return;
