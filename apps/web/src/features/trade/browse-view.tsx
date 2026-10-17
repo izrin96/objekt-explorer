@@ -134,10 +134,12 @@ export function BrowseView({ surface, search }: { surface: Surface; search: Feed
     />
   );
   // Mutual fixes the type to WTT, so a leftover `type` is not a filter to reset
-  const filtering =
-    (!mutual && search.type !== undefined) ||
-    search.slug !== undefined ||
-    FACETS.some((key) => (search[key]?.length ?? 0) > 0);
+  const collectionFiltering =
+    search.slug !== undefined || FACETS.some((key) => (search[key]?.length ?? 0) > 0);
+  const filtering = (!mutual && search.type !== undefined) || collectionFiltering;
+  const comparedName = forYou
+    ? comparedList(search.list, tradeLists, scopeOf(mode, type))?.name
+    : undefined;
   // the matching choice isn't a filter: For you keeps it
   const reset = () =>
     go(forYou ? { match: search.match, list: search.list } : {}, { replace: true });
@@ -249,10 +251,25 @@ export function BrowseView({ surface, search }: { surface: Surface; search: Feed
         </>
       ) : query.isError && posts.length === 0 ? (
         <LoadError onRetry={() => void query.refetch()} />
+      ) : posts.length === 0 && !query.hasNextPage && forYou && collectionFiltering ? (
+        <EmptyState
+          icon={CardsThreeIcon}
+          title={m.trade_browse_no_filter_title()}
+          hint={m.trade_browse_empty_hint()}
+          action={
+            <Button variant="outline" size="sm" onClick={reset}>
+              {m.filter_reset_filter()}
+            </Button>
+          }
+        />
       ) : posts.length === 0 && !query.hasNextPage && mutual ? (
         <EmptyState
           icon={CardsThreeIcon}
-          title={m.trade_browse_no_mutual_title()}
+          title={
+            comparedName
+              ? m.trade_browse_no_mutual_list_title({ list: comparedName })
+              : m.trade_browse_no_mutual_title()
+          }
           hint={m.trade_browse_no_mutual_hint()}
           action={
             <Button variant="outline" size="sm" onClick={() => setSearch({ match: "any" })}>
@@ -263,7 +280,11 @@ export function BrowseView({ surface, search }: { surface: Surface; search: Feed
       ) : posts.length === 0 && !query.hasNextPage && mode === "any" ? (
         <EmptyState
           icon={CardsThreeIcon}
-          title={m.trade_browse_no_matches_title()}
+          title={
+            comparedName
+              ? m.trade_browse_no_matches_list_title({ list: comparedName })
+              : m.trade_browse_no_matches_title()
+          }
           hint={m.trade_browse_no_matches_hint()}
           action={
             <Button

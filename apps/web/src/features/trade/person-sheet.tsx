@@ -32,7 +32,6 @@ import { m } from "@/paraglide/messages";
 
 import { useHideWithUndo } from "./actions";
 import { LoadError } from "./load-error";
-import { MATCH_TONE } from "./match-chip";
 import { type ListGroup, groupByList } from "./person-groups";
 import { personOptions } from "./queries";
 import { TILE } from "./thumb-grid";
@@ -43,8 +42,18 @@ type Person = NonNullable<Outputs["trade"]["person"]["partner"]>;
 type Collections = Readonly<Record<string, ValidObjekt | undefined>>;
 
 const DIRECTIONS = [
-  { key: "theyHaveIWant", label: m.trade_strip_you_want, none: m.trade_strip_none_you_want },
-  { key: "iHaveTheyWant", label: m.trade_strip_you_have, none: m.trade_strip_none_you_have },
+  {
+    key: "theyHaveIWant",
+    label: m.trade_strip_you_want,
+    side: m.trade_summary_they_have,
+    none: m.trade_person_none_they_have,
+  },
+  {
+    key: "iHaveTheyWant",
+    label: m.trade_strip_you_have,
+    side: m.trade_summary_you_have,
+    none: m.trade_person_none_you_have,
+  },
 ] as const;
 
 /** Thumbnails a phone shows before "+N": two rows of five, the last place being the tile. */
@@ -205,6 +214,7 @@ function PersonBody({
           <Section
             key={direction.key}
             label={direction.label}
+            side={direction.side()}
             none={direction.none()}
             sectionRef={sections[direction.key]}
             groups={groupByList(partner[direction.key], partner.lists)}
@@ -232,6 +242,50 @@ function PersonBody({
   );
 }
 
+const CELL = "flex min-w-0 flex-col items-start gap-0.5 rounded-md border px-3 py-2 text-start";
+const QUIET = "bg-secondary border-transparent";
+const NUMBER = "font-mono text-lg leading-none tabular-nums";
+const LABEL = "text-muted-foreground text-xs";
+
+/** A one-way count: a button to its section, a plain cell while it is 0 since there is none to jump to. */
+function JumpCell({
+  count,
+  aria,
+  label,
+  onClick,
+}: {
+  count: number;
+  aria: string;
+  label: string;
+  onClick: () => void;
+}) {
+  const body = (
+    <>
+      <span className="sr-only">{aria}</span>
+      <span aria-hidden className={cn(NUMBER, "text-foreground")}>
+        {count}
+      </span>
+      <span aria-hidden className={LABEL}>
+        {label}
+      </span>
+    </>
+  );
+  if (count === 0) return <div className={cn(CELL, QUIET)}>{body}</div>;
+  return (
+    <button
+      type="button"
+      className={cn(
+        CELL,
+        QUIET,
+        "focus-visible:ring-ring cursor-pointer outline-none focus-visible:ring-2",
+      )}
+      onClick={onClick}
+    >
+      {body}
+    </button>
+  );
+}
+
 /** The counts the post's chip reads, as three cells; A and B jump to their section. */
 function PersonSummary({
   counts,
@@ -241,57 +295,31 @@ function PersonSummary({
   onJump: (key: (typeof DIRECTIONS)[number]["key"]) => void;
 }) {
   const mutual = mutualOf(counts);
-  const cell = "flex min-w-0 flex-col items-start gap-0.5 rounded-md border px-3 py-2 text-start";
-  const quiet = "bg-secondary border-transparent";
-  const number = "font-mono text-lg leading-none tabular-nums";
-  const label = "text-muted-foreground text-xs";
   return (
     <div className="grid grid-cols-3 gap-2">
       <div
-        className={cn(cell, mutual > 0 ? toneChip("progress") : cn(quiet, "text-muted-foreground"))}
+        className={cn(CELL, mutual > 0 ? toneChip("progress") : cn(QUIET, "text-muted-foreground"))}
       >
         <span className="sr-only">{m.trade_summary_mutual_aria({ count: mutual })}</span>
-        <span aria-hidden className={number}>
+        <span aria-hidden className={NUMBER}>
           {mutual}
         </span>
-        <span aria-hidden className={mutual > 0 ? undefined : label}>
+        <span aria-hidden className={mutual > 0 ? undefined : LABEL}>
           {m.trade_summary_mutual()}
         </span>
       </div>
-      <button
-        type="button"
-        className={cn(
-          cell,
-          quiet,
-          "focus-visible:ring-ring cursor-pointer outline-none focus-visible:ring-2",
-        )}
+      <JumpCell
+        count={counts.theyHave}
+        aria={m.trade_match_they_have({ count: counts.theyHave })}
+        label={m.trade_summary_they_have()}
         onClick={() => onJump("theyHaveIWant")}
-      >
-        <span className="sr-only">{m.trade_match_they_have({ count: counts.theyHave })}</span>
-        <span aria-hidden className={cn(number, MATCH_TONE.theyHave)}>
-          {counts.theyHave}
-        </span>
-        <span aria-hidden className={label}>
-          {m.trade_summary_you_want()}
-        </span>
-      </button>
-      <button
-        type="button"
-        className={cn(
-          cell,
-          quiet,
-          "focus-visible:ring-ring cursor-pointer outline-none focus-visible:ring-2",
-        )}
+      />
+      <JumpCell
+        count={counts.youHave}
+        aria={m.trade_match_you_have({ count: counts.youHave })}
+        label={m.trade_summary_you_have()}
         onClick={() => onJump("iHaveTheyWant")}
-      >
-        <span className="sr-only">{m.trade_match_you_have({ count: counts.youHave })}</span>
-        <span aria-hidden className={cn(number, MATCH_TONE.youHave)}>
-          {counts.youHave}
-        </span>
-        <span aria-hidden className={label}>
-          {m.trade_summary_they_want()}
-        </span>
-      </button>
+      />
     </div>
   );
 }
@@ -305,6 +333,7 @@ type PersonList = Person["lists"][number];
  */
 function Section({
   label,
+  side,
   none,
   sectionRef,
   groups,
@@ -314,6 +343,8 @@ function Section({
   onOpen,
 }: {
   label: (values: { role: string; count: number }) => string;
+  /** which side the objekts are on, as the summary says it */
+  side: string;
   none: string;
   sectionRef: RefObject<HTMLElement | null>;
   groups: ListGroup<PersonList>[];
@@ -344,7 +375,9 @@ function Section({
       className="flex min-w-0 scroll-mt-2 flex-col gap-4 outline-none"
     >
       {total === 0 && out.length === 0 ? (
-        <p className="text-muted-foreground font-mono text-xs">{none}</p>
+        <p className="text-muted-foreground font-mono text-xs">
+          <span className="uppercase">{side}</span> · {none}
+        </p>
       ) : null}
       {visible.map((group, index) => (
         <div key={group.list?.id ?? "other"} className="flex flex-col gap-1.5">

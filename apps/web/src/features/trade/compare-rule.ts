@@ -67,23 +67,35 @@ function openToIn(list: TradeList | undefined) {
   return openToOf(list);
 }
 
+/** Why a list can't be picked: Mutual needs both ways, or the Post type has nothing for it. */
+export type CompareRefusal = "oneWay" | "wtb" | "wts" | "wtt";
+
 /**
  * What Compare with names. Mutual needs both directions, so a one-way list cannot be picked
  * there. A WTB post is a want list matched against the viewer's have and sale lists, so it needs
  * a have side; a WTS post is a sale list matched against want lists open to buying. A WTT post
  * holds a have list, matched against want lists open to swaps, so a selection needs a have side
- * or a want list open to swaps (a lone Buying only want list matches no WTT post).
+ * or a want list open to swaps (a lone Buying only want list matches no WTT post). Null when the
+ * list can be picked, else the first rule it fails.
  */
-export function canCompare(list: TradeList, tradeLists: readonly TradeList[], scope: Scope) {
+export function compareRefusal(
+  list: TradeList,
+  tradeLists: readonly TradeList[],
+  scope: Scope,
+): CompareRefusal | null {
   const { ways, paired } = pickOf(list, tradeLists);
-  if (scope.mutual && !(ways.have && ways.want)) return false;
+  if (scope.mutual && !(ways.have && ways.want)) return "oneWay";
   const openTo = [list, paired].map(openToIn);
-  if (scope.type === "wtb") return ways.have;
-  if (scope.type === "wts") return openTo.some((to) => to === "buying" || to === "both");
+  if (scope.type === "wtb") return ways.have ? null : "wtb";
+  if (scope.type === "wts")
+    return openTo.some((to) => to === "buying" || to === "both") ? null : "wts";
   if (scope.type === "wtt")
-    return ways.have || openTo.some((to) => to === "swaps" || to === "both");
-  return true;
+    return ways.have || openTo.some((to) => to === "swaps" || to === "both") ? null : "wtt";
+  return null;
 }
+
+export const canCompare = (list: TradeList, tradeLists: readonly TradeList[], scope: Scope) =>
+  compareRefusal(list, tradeLists, scope) === null;
 
 /** The list Compare with names; a slug that is not mine, or that Mutual or the Post type can't use, reads as All my lists. */
 export function comparedList(

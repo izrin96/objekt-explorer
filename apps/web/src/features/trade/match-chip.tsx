@@ -2,18 +2,9 @@ import { type MatchCounts, mutualOf } from "@repo/api/schemas/trade";
 import type { ReactNode } from "react";
 
 import { Popover, PopoverPopup, PopoverTrigger } from "@/components/ui/popover";
-import { TONE_INK, toneChip } from "@/lib/tone";
+import { toneChip } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
-
-/**
- * They have fills one of the viewer's want lists, so it takes the want colour; you have comes
- * off a have list.
- */
-export const MATCH_TONE = {
-  theyHave: cn(TONE_INK.want, "decoration-type-want/55"),
-  youHave: cn(TONE_INK.have, "decoration-type-have/55"),
-};
 
 const CHIP =
   "inline-flex h-6 max-w-full min-w-0 items-center rounded-md border px-2 font-mono text-xs tabular-nums";

@@ -12,7 +12,7 @@ import { m } from "@/paraglide/messages";
 
 import type { Surface } from "./browse-search";
 import type { PostSideData } from "./post-types";
-import { fitCount } from "./strip-fit";
+import { fitCount, hiddenCopies } from "./strip-fit";
 import { SlugTile, TILE } from "./thumb-grid";
 
 /** `w-10` and `gap-1.5`, in px */
@@ -60,6 +60,7 @@ function PostStrip({
   tone,
   items,
   hidden = 0,
+  copies,
   collections,
   onOpen,
   more,
@@ -68,8 +69,10 @@ function PostStrip({
   label: ReactNode;
   tone: string;
   items: readonly StripItem[];
-  /** objekts the caller has not sent, past `items` */
+  /** collections the caller has not sent, past `items`: they take a tile each, until "+N" */
   hidden?: number;
+  /** every copy the side holds: "+N" counts the ones no drawn tile covers, as the label does */
+  copies: number;
   collections: Readonly<Record<string, ValidObjekt | undefined>>;
   onOpen: (objekt: ValidObjekt) => void;
   more: (count: number) => ReactNode;
@@ -78,70 +81,67 @@ function PostStrip({
 }) {
   const [ref, { width }] = useElementSize<HTMLUListElement>();
   const [linkRef, { width: linkWidth }] = useElementSize<HTMLLIElement>();
-  const total = items.length + hidden;
-  const shown = items.slice(0, fitCount(width, total, { ...FIT, reserve: linkWidth }));
-  const rest = total - shown.length;
+  // a hidden collection draws as the "+N" tile, so it counts as one more place
+  const places = items.length + (hidden > 0 ? 1 : 0);
+  const shown = items.slice(0, fitCount(width, places, { ...FIT, reserve: linkWidth }));
+  const rest = hiddenCopies(copies, shown);
 
   return (
     <section className="flex min-w-0 flex-col gap-1">
       <h3 className={cn("font-mono text-xs uppercase tabular-nums", tone)}>{label}</h3>
-      {total === 0 && !othersLink ? (
-        <p className="text-muted-foreground text-sm">{m.trade_strip_none()}</p>
-      ) : (
-        /* padding gives the ring room */
-        <ul ref={ref} className="-m-1 flex items-start gap-1.5 overflow-hidden p-1">
-          {shown.map((item) => {
-            const collection = collections[item.slug];
-            const qty = item.qty ?? 1;
-            const stacked = qty > 1;
-            const description = stacked
-              ? item.ringed
-                ? m.trade_stack_copies_ring({ count: qty })
-                : m.trade_stack_copies({ count: qty })
-              : item.ringed
-                ? m.trade_match_ring()
-                : undefined;
-            return (
-              /* a container, so the slug tile's radius matches the cards' */
-              <li key={item.key} className="@container relative w-10 shrink-0">
-                {collection ? (
-                  <ObjektCard
-                    objekt={collection}
-                    image="thumbnail"
-                    hideLabel
-                    onOpen={() => onOpen(collection)}
-                    className={item.ringed ? CARD_RING : undefined}
-                    description={description}
-                  />
-                ) : (
-                  <SlugTile className={cn("text-xxs p-0.5", item.ringed && RING)}>
-                    {item.slug}
-                    {description ? <span className="sr-only">{description}</span> : null}
-                  </SlugTile>
-                )}
-                {stacked ? (
-                  <span aria-hidden className={STACK_COUNT}>
-                    {qty}
-                  </span>
-                ) : null}
-              </li>
-            );
-          })}
-          {rest > 0 ? <li className="@container w-10 shrink-0">{more(rest)}</li> : null}
-          {othersLink ? (
-            <li ref={linkRef} className="shrink-0 self-center">
-              {othersLink}
+      {/* padding gives the ring room */}
+      <ul ref={ref} className="-m-1 flex items-start gap-1.5 overflow-hidden p-1">
+        {shown.map((item) => {
+          const collection = collections[item.slug];
+          const qty = item.qty ?? 1;
+          const stacked = qty > 1;
+          const description = stacked
+            ? item.ringed
+              ? m.trade_stack_copies_ring({ count: qty })
+              : m.trade_stack_copies({ count: qty })
+            : item.ringed
+              ? m.trade_match_ring()
+              : undefined;
+          return (
+            /* a container, so the slug tile's radius matches the cards' */
+            <li key={item.key} className="@container relative w-10 shrink-0">
+              {collection ? (
+                <ObjektCard
+                  objekt={collection}
+                  image="thumbnail"
+                  hideLabel
+                  onOpen={() => onOpen(collection)}
+                  className={item.ringed ? CARD_RING : undefined}
+                  description={description}
+                />
+              ) : (
+                <SlugTile className={cn("text-xxs p-0.5", item.ringed && RING)}>
+                  {item.slug}
+                  {description ? <span className="sr-only">{description}</span> : null}
+                </SlugTile>
+              )}
+              {stacked ? (
+                <span aria-hidden className={STACK_COUNT}>
+                  {qty}
+                </span>
+              ) : null}
             </li>
-          ) : null}
-        </ul>
-      )}
+          );
+        })}
+        {rest > 0 ? <li className="@container w-10 shrink-0">{more(rest)}</li> : null}
+        {othersLink ? (
+          <li ref={linkRef} className="shrink-0 self-center">
+            {othersLink}
+          </li>
+        ) : null}
+      </ul>
     </section>
   );
 }
 
-/** A side none of whose objekts survive the narrowing: it shows as one line, not a strip. */
+/** A side with no objekts, narrowed out or never listed: it shows as one line, not a strip. */
 export function isEmptySide(side: PostSideData) {
-  return side.copyCount === 0 && side.others > 0;
+  return side.copyCount === 0;
 }
 
 /** A side's wording: its label, and on For you who its objekts are for. */
@@ -164,7 +164,8 @@ const SIDE_LINK =
 
 /** A side with nothing related, under the post's other strip: its role and total, then why. */
 export function EmptySide({ side, surface }: { side: PostSideData; surface: Surface }) {
-  const { role, none } = sideWording(side, surface);
+  const wording = sideWording(side, surface);
+  const none = side.others > 0 ? wording.none : m.trade_strip_none_listed();
   return (
     <Link
       {...getListLinkOption(side.list)}
@@ -173,7 +174,7 @@ export function EmptySide({ side, surface }: { side: PostSideData; surface: Surf
         SIDE_LINK,
       )}
     >
-      {role} {side.others}
+      {wording.role} {side.others}
       <span className="normal-case">
         {" · "}
         {none}
@@ -201,9 +202,17 @@ export function SideStrip({
   const label = sideWording(side, surface).label(side.copyCount);
   const total = side.copyCount + side.others;
   const text = (
-    <Link {...getListLinkOption(list)} className={SIDE_LINK}>
-      {label}
-      <span className="sr-only">: {list.name}</span>
+    <Link
+      {...getListLinkOption(list)}
+      title={list.description ? `${list.name}\n${list.description}` : list.name}
+      className={cn(SIDE_LINK, "flex w-fit max-w-full min-w-0 items-baseline gap-1.5")}
+    >
+      <span className="shrink-0">{label}</span>
+      <span aria-hidden className="text-muted-foreground shrink-0">
+        ·
+      </span>
+      <span className="text-muted-foreground min-w-0 truncate normal-case">{list.name}</span>
+      {list.description ? <span className="sr-only">. {list.description}</span> : null}
     </Link>
   );
 
@@ -218,6 +227,7 @@ export function SideStrip({
         ringed: item.ringed,
       }))}
       hidden={side.more}
+      copies={side.copyCount}
       collections={collections}
       onOpen={onOpen}
       more={(count) => (

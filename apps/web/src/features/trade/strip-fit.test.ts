@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { fitCount } from "./strip-fit";
+import { fitCount, hiddenCopies } from "./strip-fit";
 
 const OPTIONS = { thumb: 40, gap: 6, fallback: 4 };
 
@@ -71,5 +71,20 @@ describe("fitCount", () => {
     test("an unmeasured strip still draws the fallback", () => {
       expect(fitCount(0, 27, two)).toBe(4);
     });
+  });
+});
+
+describe("hiddenCopies", () => {
+  test("counts the copies no drawn tile covers", () => {
+    // 238 copies in 164 collections, 21 tiles drawn holding 40: the label's unit
+    expect(hiddenCopies(238, [{ qty: 30 }, { qty: 10 }])).toBe(198);
+  });
+
+  test("a tile without a qty is one copy", () => {
+    expect(hiddenCopies(5, [{}, {}, { qty: 2 }])).toBe(1);
+  });
+
+  test("nothing left when every tile is drawn", () => {
+    expect(hiddenCopies(3, [{ qty: 2 }, { qty: 1 }])).toBe(0);
   });
 });

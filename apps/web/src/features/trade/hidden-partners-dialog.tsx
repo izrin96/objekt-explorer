@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Fragment } from "react";
 
 import { EmptyState } from "@/components/shared/empty-state";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { PersonAvatar } from "@/components/shared/person-avatar";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -87,10 +87,7 @@ export function HiddenPartnersList({ enabled }: { enabled: boolean }) {
         const name = partner.user.name ?? "?";
         return (
           <li key={partner.userId} className="flex items-center gap-3 px-3 py-2">
-            <Avatar className="size-8 shrink-0">
-              {partner.user.image ? <AvatarImage src={partner.user.image} alt="" /> : null}
-              <AvatarFallback>{name.slice(0, 1).toUpperCase()}</AvatarFallback>
-            </Avatar>
+            <PersonAvatar name={name} image={partner.user.image} className="size-8 shrink-0" />
             <span className="flex min-w-0 flex-1 flex-col">
               <span className="text-sm font-medium break-words">{name}</span>
               {/* only the profiles their discoverable lists show */}

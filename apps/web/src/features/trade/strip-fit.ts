@@ -22,3 +22,8 @@ export function fitCount(
   if (slots >= total) return total;
   return Math.max(slots - 1, 0);
 }
+
+/** The copies no drawn tile stands for: what a strip's "+N" counts, in the label's unit. */
+export function hiddenCopies(copies: number, shown: readonly { qty?: number }[]) {
+  return Math.max(copies - shown.reduce((sum, item) => sum + (item.qty ?? 1), 0), 0);
+}

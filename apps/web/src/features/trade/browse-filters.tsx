@@ -97,6 +97,7 @@ export function BrowseFilters({
           onChange={setFacet}
           keys={FACET_KEYS}
           extras={extras}
+          foldAll
           onReset={onReset}
           resetDisabled={nothingToReset}
         />
@@ -108,8 +109,9 @@ export function BrowseFilters({
             values={values}
             onChange={setFacet}
             keys={BEFORE_TYPE}
+            foldAll
           />
-          <ExtraFacetControls surface="inline" extras={extras} />
+          <ExtraFacetControls surface="inline" extras={extras} foldAll />
           <FacetControls
             surface="inline"
             facets={facets}
@@ -117,6 +119,7 @@ export function BrowseFilters({
             values={values}
             onChange={setFacet}
             keys={AFTER_TYPE}
+            foldAll
           />
           <ResetButton onReset={onReset} disabled={nothingToReset} />
         </div>
