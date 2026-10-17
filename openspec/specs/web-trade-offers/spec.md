@@ -10,6 +10,8 @@ An offer SHALL be sent inside a conversation from one account to the other. It h
 - **You give**: specific objekts owned by one of the sender's linked addresses.
 - **You get**: specific objekts, or "any copy" of a collection. Each comes from an entry on one of the recipient's have or sale lists bound to a Cosmo profile, at any of the recipient's linked addresses. When the recipient has no have or sale list bound to a Cosmo profile and shown on Trade, each MAY instead come from what the recipient holds at a linked address whose profile is not private to the sender (their collection): a specific objekt from an address that shows serials, any copy from one that hides them. This is checked when the offer is sent: once the recipient has such a list, only its entries can be asked for.
 
+An offer addressed to one of the recipient's lists, as Make offer on a Trade post (see `web-trade-browse`) and on a Market listing are, SHALL ask only for entries on that list when it is a have or sale list bound to a Cosmo profile and shown on Trade. Such an offer never draws on the recipient's other lists or on their collection. An offer addressed to any other list, such as a want list, follows the rule above. So do offers made inside a conversation, including one that began with an offer from a post.
+
 A counter-offer MAY also ask for any objekt the recipient listed under You give in the offer it counters, since the recipient already offered it.
 
 An offer SHALL hold at least one objekt, and at most 50 on each side. On the offer card, a side longer than 6 SHALL show the first 6 and a control to show the rest. Either side may be empty. An offer MAY carry:
@@ -43,6 +45,22 @@ An offer SHALL hold at least one objekt, and at most 50 on each side. On the off
 #### Scenario: Counter keeps their objekt
 - **WHEN** rin.trades offers HyeRin 301Z #1203, which is on none of their lists, and the user counters, keeping it under You get and adding a top-up
 - **THEN** the counter is sent
+
+#### Scenario: Post offer asks from another list
+- **WHEN** a user makes an offer from rin.trades's post for the have list "doubles", asking for SeoYeon 204Z #537, which is only on rin.trades's sale list "spares"
+- **THEN** the offer is refused as unlisted, naming SeoYeon 204Z #537, and nothing is sent
+
+#### Scenario: Post offer from a want list
+- **WHEN** a user makes an offer from rin.trades's WTB post, whose list is a want list, asking for SeoYeon 204Z #537 from rin.trades's sale list "spares"
+- **THEN** the offer is sent, as from a conversation
+
+#### Scenario: Want-only post with no lists to ask from
+- **WHEN** a user makes an offer from rin.trades's WTT post that has only a want list, rin.trades has no have or sale list on Trade, and the user asks for an objekt rin.trades holds at a linked address with a public profile
+- **THEN** the offer is sent, as an ask from rin.trades's collection
+
+#### Scenario: Conversation after a post offer
+- **WHEN** a user's offer from rin.trades's post for "doubles" opened their conversation, and rin.trades counters from the conversation
+- **THEN** the counter may ask for entries on any of the user's have and sale lists on Trade, as in any conversation
 
 ### Requirement: Checks before sending
 Before an offer is sent, each specific objekt SHALL be checked against current on-chain ownership:
@@ -106,6 +124,8 @@ The builder SHALL open as a dialog, and as a full-height sheet on a phone. It sh
 - You get, with an Add picker over the allowed list entries, labelled "Add from {name}'s lists"; or, when the partner has no have or sale list bound to a Cosmo profile and on Trade, an Add picker over their collection, labelled "Add from {name}'s collection", listing what they hold at linked addresses whose profile is not private to the sender, newest received first;
 - the top-up and the note.
 
+Opened for one of the partner's have or sale lists on Trade (from a Trade post or a Market listing), You get's Add picker SHALL list only that list's entries, labelled "Add from {name}'s list", with the same empty-picker reasons as over lists. Opened for any other list, such as a WTB post's want list, You get SHALL work as from a conversation.
+
 Each pickable objekt SHALL show its flags (not transferable, reserved, in another open offer). Send SHALL stay disabled until the offer holds at least one objekt.
 
 Each picker SHALL narrow by artist, member, season, class, online or offline, and collection number, where picking an artist limits the member choices to that artist's members, and SHALL load more as it scrolls, 200 objekts at a time, so a long list does not land at once. Each SHALL also offer a matching switch:
@@ -127,6 +147,22 @@ An empty You get picker over lists SHALL say why: the partner lists nothing the 
 #### Scenario: Partner with a list
 - **WHEN** the partner has one bound have list on Trade
 - **THEN** You get's button reads "Add from {name}'s lists", and its picker shows only that list's entries
+
+#### Scenario: From a post
+- **WHEN** rin.trades has the have list "doubles" and the sale list "spares" on Trade, and the sender opens the builder from rin.trades's post for "doubles"
+- **THEN** You get's button reads "Add from rin.trades's list", and its picker shows only the entries of "doubles"
+
+#### Scenario: From a WTB post
+- **WHEN** the sender opens the builder from rin.trades's WTB post, and rin.trades has "doubles" and "spares" on Trade
+- **THEN** You get's button reads "Add from rin.trades's lists", and its picker shows the entries of both lists
+
+#### Scenario: From a Market listing
+- **WHEN** the sender chooses Make offer on rin.trades's listing in an objekt's Market tab, which comes from the sale list "spares"
+- **THEN** the builder opens with that objekt under You get, and You get's picker shows only the entries of "spares"
+
+#### Scenario: From a conversation
+- **WHEN** the sender opens the builder from their conversation with rin.trades, who has "doubles" and "spares" on Trade
+- **THEN** You get's button reads "Add from rin.trades's lists", and its picker shows the entries of both lists
 
 #### Scenario: From one of my lists
 - **WHEN** the sender picks their sale list "doubles" under From, and holds 4 of its 6 entries

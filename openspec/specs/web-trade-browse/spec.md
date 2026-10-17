@@ -430,7 +430,7 @@ The drawer's On Trade counts SHALL leave out trade-blocked and banned accounts. 
 - **THEN** no viewer sees rin.trades's posts on `/trade`
 
 ### Requirement: Make offer on a post
-Each post that shows Message SHALL also offer Make offer. It opens the offer builder for the post's owner, with the post's have or sale list, if it has one, available on the You get side.
+Each post that shows Message SHALL also offer Make offer. It opens the offer builder for the post's owner, addressed to the post's own list: the have list of a pair, or the post's only list. When that list is a have or sale list, You get SHALL ask only from it; a want-only post's You get works as from a conversation (see `web-trade-offers`).
 
 The builder SHALL lay out shortcuts from the post, each one tap to add, without pre-filling the offer:
 - under You get, when the post has a have or sale side: its entries the viewer may ask for, those in collections on the viewer's want lists first, then the rest in list order;
@@ -439,8 +439,8 @@ The builder SHALL lay out shortcuts from the post, each one tap to add, without 
 Each shortcut SHALL show at most 8 objekts. An objekt added to the offer SHALL leave its shortcut, and the next one SHALL take its place. A shortcut with nothing to show SHALL not be rendered.
 
 #### Scenario: From a WTT post
-- **WHEN** a user activates Make offer on rin.trades's post
-- **THEN** the builder opens addressed to rin.trades, listing that post's have entries under You get
+- **WHEN** a user activates Make offer on rin.trades's post for the have list "doubles", and rin.trades also has the sale list "spares" on Trade
+- **THEN** the builder opens addressed to rin.trades, and You get's picker lists the entries of "doubles" only
 
 #### Scenario: Matches first
 - **WHEN** rin.trades's have list holds 20 entries and its 15th is SeoYeon 204Z, which is on the viewer's want list
@@ -452,7 +452,7 @@ Each shortcut SHALL show at most 8 objekts. An objekt added to the offer SHALL l
 
 #### Scenario: WTB post
 - **WHEN** a user activates Make offer on a WTB post wanting HaSeul 302Z, and holds a copy of it
-- **THEN** that copy is shown under You give, and nothing is shown under You get from the post
+- **THEN** that copy is shown under You give, and nothing is shown under You get from the post, while You get's picker still asks from the owner's have and sale lists, or their collection when they have none
 
 #### Scenario: Nothing to give
 - **WHEN** the viewer holds nothing the post's want list asks for
