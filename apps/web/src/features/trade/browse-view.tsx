@@ -15,6 +15,7 @@ import { useSelectedArtists } from "@/features/artist/use-selected-artists";
 import { SingleSelect } from "@/features/filters/single-select";
 import { ObjektDrawer } from "@/features/objekt/drawer";
 import { collectionName } from "@/features/objekt/objekt-label";
+import { OfferBuilderProvider } from "@/features/offers/offer-builder";
 import { useCurrentUser, useUserLists } from "@/features/user/hooks";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -166,7 +167,7 @@ export function BrowseView({ surface, search }: { surface: Surface; search: Feed
   ) as Record<string, ValidObjekt | undefined>;
 
   return (
-    <>
+    <OfferBuilderProvider>
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
         <p className="text-muted-foreground text-sm text-pretty max-md:hidden">
           {forYou ? m.trade_for_you_description() : m.trade_browse_description()}
@@ -371,7 +372,7 @@ export function BrowseView({ surface, search }: { surface: Surface; search: Feed
           onClose={closePerson}
         />
       ) : null}
-    </>
+    </OfferBuilderProvider>
   );
 }
 

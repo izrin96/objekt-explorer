@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { createContext, type ReactNode, use, useCallback, useState } from "react";
 
 import { Dialog, DialogPopup } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -14,10 +14,13 @@ export type { OfferRequest } from "./builder/types";
 
 function OfferBuilder({
   request,
+  session,
   open,
   onOpenChange,
 }: {
   request: OfferRequest | null;
+  /** counts the openings, so each one starts a fresh form */
+  session: number;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
@@ -26,7 +29,9 @@ function OfferBuilder({
       {/* below `sm` the sheet sits in an auto-height grid row, so `h-full` would shrink to its
           content: its height is set outright, under the viewport's top inset */}
       <DialogPopup className="max-w-3xl max-sm:h-[calc(100dvh-(--spacing(12)))]">
-        {request ? <BuilderLoader request={request} onDone={() => onOpenChange(false)} /> : null}
+        {request ? (
+          <BuilderLoader key={session} request={request} onDone={() => onOpenChange(false)} />
+        ) : null}
       </DialogPopup>
     </Dialog>
   );
@@ -35,14 +40,40 @@ function OfferBuilder({
 /** One builder per surface; `open` replaces whatever it was last opened with. */
 export function useOfferBuilder() {
   const [request, setRequest] = useState<OfferRequest | null>(null);
+  const [session, setSession] = useState(0);
   const [open, setOpen] = useState(false);
+  const openWith = useCallback((next: OfferRequest) => {
+    setRequest(next);
+    setSession((n) => n + 1);
+    setOpen(true);
+  }, []);
   return {
-    open: (next: OfferRequest) => {
-      setRequest(next);
-      setOpen(true);
-    },
-    element: <OfferBuilder request={request} open={open} onOpenChange={setOpen} />,
+    open: openWith,
+    element: (
+      <OfferBuilder request={request} session={session} open={open} onOpenChange={setOpen} />
+    ),
   };
+}
+
+const SharedBuilder = createContext<((request: OfferRequest) => void) | null>(null);
+
+/**
+ * One builder above a virtualised list: a row unmounts with its dialog and draft otherwise.
+ * `MakeOfferButton` opens this one when it sits under it.
+ */
+export function OfferBuilderProvider({ children }: { children: ReactNode }) {
+  const builder = useOfferBuilder();
+  return (
+    <SharedBuilder value={builder.open}>
+      {children}
+      {builder.element}
+    </SharedBuilder>
+  );
+}
+
+/** The provider's opener, or `null` where there is none. */
+export function useSharedOfferBuilder() {
+  return use(SharedBuilder);
 }
 
 function BuilderLoader({ request, onDone }: { request: OfferRequest; onDone: () => void }) {
