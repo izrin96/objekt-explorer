@@ -84,7 +84,9 @@ Verification is read-only. Use the dev server against the database `.env.local` 
 
 ## 6. Check and document
 
-- [ ] 6.1 Run `bun run check` and `bun run build --filter=web`. Walk `/trade/mine/$tradeId` read-only at 1280 px and 390 px, in light and dark, for an in-progress, a completed, a failed and a cancelled trade where the account has them, and record which scenarios passed live and which only on fixtures.
+- [x] 6.1 Run `bun run check` and `bun run build --filter=web`. Walk `/trade/mine/$tradeId` read-only at 1280 px and 390 px, in light and dark, for an in-progress, a completed, a failed and a cancelled trade where the account has them, and record which scenarios passed live and which only on fixtures.
+  - Passed live, light and dark, at 1440 px and 390 px on local trades: their turn with the indexer behind (T-88), completed (T-80), failed with rating (T-85), cancelled because an objekt moved (T-82).
+  - Passed only on fixtures: your turn, a different copy you decide, stuck, and an address-only partner. A different copy they decide is covered by unit tests only.
 - [x] 6.2 Update `apps/web/AGENTS.md` if the change alters its conventions: add one line saying the trade page's state lives in the pure `next-step.ts` and `trade-clock.ts`, beside their tests, and that a new banner state starts there. Otherwise state in this task that none changed. `packages/api`, `apps/worker` and `packages/db` are untouched, so their `AGENTS.md` files are unchanged.
 
 ## Workflow follow-up
