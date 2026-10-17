@@ -1,6 +1,8 @@
+import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { collections } from "@repo/db/indexer/schema";
-import { and, inArray } from "drizzle-orm";
+import { lists } from "@repo/db/schema";
+import { and, eq, inArray } from "drizzle-orm";
 
 import { anyCopyScope, entryObjektId, inAnyCopyScope, itemFlags } from "../../../lib/offer-rules";
 import { unique } from "../../../lib/unique";
@@ -9,8 +11,10 @@ import {
   CANDIDATE_PAGE_SIZE,
   type CandidateCursor,
   type CandidateItem,
+  type PartnerList,
   type PickerNarrowing,
 } from "../../../schemas/offer";
+import { offersOnTrade } from "../../trade-lists";
 import {
   type Addressed,
   type IndexedObjekt,
@@ -49,12 +53,12 @@ async function filterSlugs(slugs: string[], filters: Partial<CollectionFilters>)
 }
 
 /** The allowed list entries resolved against the partner's current wallet. */
-async function resolveTheirItems(me: string, addressed: Addressed) {
+async function resolveTheirItems(me: string, addressed: Addressed, fromList?: string) {
   const { partnerId } = addressed;
   const [entries, linked, kept, hasLists] = await Promise.all([
-    allowedEntries(addressed),
+    allowedEntries(addressed, undefined, fromList),
     linkedAddresses([partnerId]),
-    keptGives(addressed, me),
+    fromList ? null : keptGives(addressed, me),
     partnerHasLists(partnerId),
   ]);
   const keptIds = [...(kept?.objekts.keys() ?? [])];
@@ -126,6 +130,19 @@ async function resolveTheirItems(me: string, addressed: Addressed) {
   return { items, listed: entries.length > 0 || keptIds.length > 0, partnerLists: hasLists };
 }
 
+/** Empty for a scoped offer, which shows its one list only. */
+export async function partnerListChoices(addressed: Addressed): Promise<PartnerList[]> {
+  if (addressed.onlyList !== null) return [];
+  const rows = await db
+    .select({ slug: lists.slug, name: lists.name, type: lists.listTypeNew })
+    .from(lists)
+    .where(and(eq(lists.userId, addressed.partnerId), offersOnTrade))
+    .orderBy(lists.id);
+  return rows.flatMap((row) =>
+    row.type === "have" || row.type === "sale" ? [{ ...row, type: row.type }] : [],
+  );
+}
+
 /**
  * Every item the sender may ask for, for the builder to check picks against and for suggestions;
  * `wanted` names those on the sender's want lists.
@@ -156,9 +173,9 @@ export async function theirPickerPage(
   me: string,
   addressed: Addressed,
   offset: number,
-  { filters, matchOnly }: PickerNarrowing,
+  { filters, matchOnly, fromList }: PickerNarrowing,
 ) {
-  const { items, listed, partnerLists } = await resolveTheirItems(me, addressed);
+  const { items, listed, partnerLists } = await resolveTheirItems(me, addressed, fromList);
   let shown = items;
   if (matchOnly) {
     const wanted = new Set(await wantSlugsOf(me, false));

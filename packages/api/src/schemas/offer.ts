@@ -179,7 +179,7 @@ const pickerNarrowingSchema = z.object({
   matchOnly: z.boolean().optional(),
   /** mine: only collections on this want list of the partner's */
   wantList: z.string().min(1).max(12).optional(),
-  /** mine: only what one of the sender's own have, sale or general lists names */
+  /** mine: only what one of the sender's own have, sale or general lists names; theirs: only one of the partner's have or sale lists on Trade, ignored when the offer is scoped */
   fromList: z.string().min(1).max(12).optional(),
 });
 export type PickerNarrowing = z.infer<typeof pickerNarrowingSchema>;
@@ -223,6 +223,9 @@ const candidateItemSchema = z.object({
   copies: z.number().nullable(),
 });
 export type CandidateItem = z.infer<typeof candidateItemSchema>;
+
+/** One of the partner's have or sale lists on Trade, as the You get picker's From choice names it. */
+export type PartnerList = { slug: string; name: string; type: "have" | "sale" };
 
 const progressSchema = z.object({ verified: z.number(), total: z.number() });
 export type Progress = z.infer<typeof progressSchema>;

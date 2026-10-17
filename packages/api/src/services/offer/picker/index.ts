@@ -10,6 +10,7 @@ import {
   type CandidateCursor,
   type CandidateItem,
   OFFER_SIDE_LIMIT,
+  type PartnerList,
   type PickerNarrowing,
 } from "../../../schemas/offer";
 import { chatSafety, fetchPref } from "../../chat";
@@ -27,7 +28,12 @@ import {
 } from "../core";
 import { mineCandidates } from "./mine";
 import { collectionsOf, toCandidate } from "./shared";
-import { theirCandidates, theirCollectionPage, theirPickerPage } from "./theirs";
+import {
+  partnerListChoices,
+  theirCandidates,
+  theirCollectionPage,
+  theirPickerPage,
+} from "./theirs";
 
 type CandidatesPage = {
   items: CandidateItem[];
@@ -39,6 +45,8 @@ type CandidatesPage = {
   partnerLists?: boolean;
   /** theirs: the offer asks from one have or sale list only; absent reads as false */
   scopedList?: boolean;
+  /** theirs, whole list only: the From choice's lists */
+  lists?: PartnerList[];
   wanted: string[];
   collections: Awaited<ReturnType<typeof collectionsOf>>;
 };
@@ -66,9 +74,12 @@ export async function offerCandidates(
     return theirCollectionPage(me, addressed, input.cursor, input);
   }
   // without an offset the whole list comes back, as the builder checks picks against it
-  return input.offset === undefined
-    ? theirCandidates(me, addressed)
-    : theirPickerPage(me, addressed, input.offset, input);
+  if (input.offset !== undefined) return theirPickerPage(me, addressed, input.offset, input);
+  const [page, lists] = await Promise.all([
+    theirCandidates(me, addressed),
+    partnerListChoices(addressed),
+  ]);
+  return { ...page, lists };
 }
 
 export async function suggestOffer(me: string, partnerId: string) {

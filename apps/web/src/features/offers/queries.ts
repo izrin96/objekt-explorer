@@ -43,12 +43,13 @@ export const theirCandidatesOptions = (to: OfferAddress) =>
   });
 
 /** The picker's view: resolved whole on the server, then paged, so a long list does not land at once. */
-export const theirPickerOptions = (to: OfferAddress, filters: PickerFilters) =>
+export const theirPickerOptions = (to: OfferAddress, filters: PickerFilters, fromList?: string) =>
   orpc.offer.candidates.infiniteOptions({
     input: (offset: number) => ({
       ...to,
       side: "theirs" as const,
       offset,
+      fromList,
       ...toInput(filters),
     }),
     initialPageParam: 0,

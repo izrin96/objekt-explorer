@@ -295,7 +295,10 @@ export type AllowedEntry = ListEntryRef & { listId: number };
 export async function allowedEntries(
   addressed: Addressed,
   slugs?: string[],
+  fromList?: string,
 ): Promise<AllowedEntry[]> {
+  // the scope wins over the picker's From choice
+  const only = addressed.onlyList ?? fromList;
   const allowed = await db
     .select({ id: lists.id, slug: lists.slug, hideSerial: lists.hideSerial })
     .from(lists)
@@ -303,7 +306,7 @@ export async function allowedEntries(
       and(
         eq(lists.userId, addressed.partnerId),
         offersOnTrade,
-        addressed.onlyList === null ? undefined : eq(lists.slug, addressed.onlyList),
+        only === undefined ? undefined : eq(lists.slug, only),
       ),
     );
   if (allowed.length === 0 || slugs?.length === 0) return [];

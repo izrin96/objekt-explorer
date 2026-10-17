@@ -1,4 +1,5 @@
-import { type CandidateItem, OFFER_SIDE_LIMIT } from "@repo/api/schemas/offer";
+import type { ListTypeNew } from "@repo/api/schemas/list";
+import { type CandidateItem, OFFER_SIDE_LIMIT, type PartnerList } from "@repo/api/schemas/offer";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { type ReactNode, useId, useState } from "react";
@@ -44,6 +45,7 @@ export function OfferPicker({
   to,
   name,
   source,
+  theirLists,
   picked,
   onDone,
 }: {
@@ -53,6 +55,7 @@ export function OfferPicker({
   to: OfferAddress;
   name: string;
   source: GetSource;
+  theirLists: PartnerList[];
   picked: OfferPick[];
   onDone: (picks: OfferPick[], collections: Collections) => void;
 }) {
@@ -64,6 +67,7 @@ export function OfferPicker({
           to={to}
           name={name}
           source={source}
+          theirLists={theirLists}
           picked={picked}
           onDone={onDone}
         />
@@ -77,6 +81,7 @@ function PickerBody({
   to,
   name,
   source,
+  theirLists,
   picked,
   onDone,
 }: {
@@ -84,6 +89,7 @@ function PickerBody({
   to: OfferAddress;
   name: string;
   source: GetSource;
+  theirLists: PartnerList[];
   picked: OfferPick[];
   onDone: (picks: OfferPick[], collections: Collections) => void;
 }) {
@@ -121,7 +127,7 @@ function PickerBody({
         ) : source === "collection" ? (
           <TheirCollectionGrid to={to} name={name} {...grid} />
         ) : (
-          <TheirsGrid to={to} name={name} {...grid} />
+          <TheirsGrid to={to} name={name} lists={theirLists} {...grid} />
         )}
       </div>
       <DialogFooter className="sm:items-center">
@@ -175,7 +181,44 @@ function MatchSwitch({
   );
 }
 
-const ALL_OBJEKTS = "all";
+const ALL = "all";
+
+type FromChoice = { slug: string; name: string; type: ListTypeNew };
+
+/** A picked list that has since left `lists` reads as All again. */
+function useFromList(lists: readonly FromChoice[]) {
+  const [from, setFrom] = useState(ALL);
+  const fromList = lists.some((list) => list.slug === from) ? from : undefined;
+  return [fromList, setFrom] as const;
+}
+
+function FromSelect({
+  lists,
+  allLabel,
+  value,
+  onChange,
+}: {
+  lists: readonly FromChoice[];
+  allLabel: string;
+  value: string | undefined;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <SingleSelect
+      label={m.offer_picker_from()}
+      options={[
+        { value: ALL, label: allLabel },
+        ...lists.map((list) => ({
+          value: list.slug,
+          label: m.offer_picker_from_list({ name: list.name, type: LIST_TYPE_LABEL[list.type]() }),
+        })),
+      ]}
+      value={value ?? ALL}
+      defaultValue={ALL}
+      onChange={onChange}
+    />
+  );
+}
 
 type Pages = { items: CandidateItem[]; suggested: CandidateItem[]; collections: Collections };
 
@@ -236,9 +279,12 @@ function PickerGrid({
 
 function MineGrid({ to, ...grid }: GridProps) {
   const [filters, setFilters] = useState(NO_FILTERS);
-  const [from, setFrom] = useState(ALL_OBJEKTS);
-  const lists = useUserLists().filter((list) => list.listTypeNew !== "want");
-  const fromList = lists.some((list) => list.slug === from) ? from : undefined;
+  const lists = useUserLists().flatMap((list) =>
+    list.listTypeNew === "want"
+      ? []
+      : [{ slug: list.slug, name: list.name, type: list.listTypeNew }],
+  );
+  const [fromList, setFrom] = useFromList(lists);
   const query = useInfiniteQuery(myCandidatesOptions(to, filters, fromList));
 
   return (
@@ -249,20 +295,10 @@ function MineGrid({ to, ...grid }: GridProps) {
       onFilters={setFilters}
       leading={
         lists.length > 0 ? (
-          <SingleSelect
-            label={m.offer_picker_from()}
-            options={[
-              { value: ALL_OBJEKTS, label: m.offer_picker_from_all() },
-              ...lists.map((list) => ({
-                value: list.slug,
-                label: m.offer_picker_from_list({
-                  name: list.name,
-                  type: LIST_TYPE_LABEL[list.listTypeNew](),
-                }),
-              })),
-            ]}
-            value={fromList ?? ALL_OBJEKTS}
-            defaultValue={ALL_OBJEKTS}
+          <FromSelect
+            lists={lists}
+            allLabel={m.offer_picker_from_all()}
+            value={fromList}
             onChange={setFrom}
           />
         ) : null
@@ -281,9 +317,37 @@ function MineGrid({ to, ...grid }: GridProps) {
   );
 }
 
-function TheirsGrid({ to, name, ...grid }: GridProps & { name: string }) {
+/** Nothing listed is the reason whatever the filters, except under a picked list. */
+function theirsEmpty(
+  name: string,
+  listed: boolean,
+  filtered: boolean,
+  fromList: string | undefined,
+) {
+  if (!listed && !fromList) {
+    return {
+      title: m.offer_picker_theirs_none_listed({ name }),
+      hint: m.offer_picker_theirs_none_listed_hint(),
+    };
+  }
+  if (filtered) return { title: m.offer_picker_filtered() };
+  if (fromList) return { title: m.offer_picker_theirs_from_empty() };
+  return {
+    title: m.offer_picker_theirs_none_held({ name }),
+    hint: m.offer_picker_theirs_none_held_hint(),
+  };
+}
+
+function TheirsGrid({
+  to,
+  name,
+  lists,
+  ...grid
+}: GridProps & { name: string; lists: PartnerList[] }) {
   const [filters, setFilters] = useState(NO_FILTERS);
-  const query = useInfiniteQuery(theirPickerOptions(to, filters));
+  // a scoped offer gets no lists, and one list is the same as All
+  const [fromList, setFrom] = useFromList(lists);
+  const query = useInfiniteQuery(theirPickerOptions(to, filters, fromList));
   const listed = query.data?.pages[0]?.listed ?? true;
 
   return (
@@ -292,21 +356,18 @@ function TheirsGrid({ to, name, ...grid }: GridProps & { name: string }) {
       query={query}
       filters={filters}
       onFilters={setFilters}
-      matchLabel={m.offer_picker_only_i_want()}
-      empty={
-        // nothing listed is the reason whatever the filters
-        !listed
-          ? {
-              title: m.offer_picker_theirs_none_listed({ name }),
-              hint: m.offer_picker_theirs_none_listed_hint(),
-            }
-          : narrowed(filters)
-            ? { title: m.offer_picker_filtered() }
-            : {
-                title: m.offer_picker_theirs_none_held({ name }),
-                hint: m.offer_picker_theirs_none_held_hint(),
-              }
+      leading={
+        lists.length > 1 ? (
+          <FromSelect
+            lists={lists}
+            allLabel={m.offer_picker_from_all_theirs()}
+            value={fromList}
+            onChange={setFrom}
+          />
+        ) : null
       }
+      matchLabel={m.offer_picker_only_i_want()}
+      empty={theirsEmpty(name, listed, narrowed(filters), fromList)}
     />
   );
 }

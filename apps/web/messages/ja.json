@@ -1467,6 +1467,8 @@
   "offer_picker_from_all": "すべてのObjekt",
   "offer_picker_from_list": "{name} · {type}",
   "offer_picker_from_empty": "このリストのObjektは所持していません",
+  "offer_picker_from_all_theirs": "相手のすべてのリスト",
+  "offer_picker_theirs_from_empty": "このリストに利用できるものはありません",
   "offer_picker_any_copy_section": "シリアル非公開: どのコピーでも",
   "offer_refused_empty": "Objektを1つ以上追加してください。",
   "offer_refused_expired": "このオファーは期限切れです。",

@@ -1467,6 +1467,8 @@
   "offer_picker_from_all": "내 모든 오브젝트",
   "offer_picker_from_list": "{name} · {type}",
   "offer_picker_from_empty": "이 목록의 오브젝트를 보유하고 있지 않습니다",
+  "offer_picker_from_all_theirs": "상대의 모든 목록",
+  "offer_picker_theirs_from_empty": "이 목록에서 이용 가능한 항목이 없습니다",
   "offer_picker_any_copy_section": "시리얼 비공개: 아무 사본",
   "offer_refused_empty": "오브젝트를 하나 이상 추가하세요.",
   "offer_refused_expired": "이 제안은 만료되었습니다.",

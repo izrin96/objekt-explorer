@@ -1467,6 +1467,8 @@
   "offer_picker_from_all": "All your objekts",
   "offer_picker_from_list": "{name} · {type}",
   "offer_picker_from_empty": "You hold none of this list's objekts",
+  "offer_picker_from_all_theirs": "All their lists",
+  "offer_picker_theirs_from_empty": "Nothing on this list is available",
   "offer_picker_any_copy_section": "Serials hidden: any copy",
   "offer_refused_empty": "Add at least one objekt.",
   "offer_refused_expired": "This offer has expired.",

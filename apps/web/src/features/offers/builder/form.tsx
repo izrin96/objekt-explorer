@@ -385,6 +385,7 @@ export function BuilderForm({
           to={to}
           name={name}
           source={source ?? "lists"}
+          theirLists={theirs.data?.lists ?? []}
           picked={sides[picking][0]}
           onDone={(picks, found) => {
             sides[picking][1](picks);
