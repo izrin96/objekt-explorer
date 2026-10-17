@@ -15,7 +15,7 @@ import {
   type CandidateItem,
 } from "../../../schemas/offer";
 import { fetchCollectionsBySlug } from "../../list";
-import { type IndexedObjekt, lowerOwner, objektColumns } from "../core";
+import { type Addressed, type IndexedObjekt, lowerOwner, objektColumns } from "../core";
 
 export function toCandidate(
   objekt: IndexedObjekt,
@@ -56,6 +56,10 @@ export function collectionWhere(filters: Partial<CollectionFilters> | undefined)
  * The specific objekts the open offer sent to `me` in this conversation gives. A counter may
  * keep them on its get side: the partner put them up, so they need no list.
  */
+/** A scoped offer asks from its one list only, so it keeps nothing from a countered offer. */
+export const keptGives = (addressed: Addressed, me: string) =>
+  addressed.onlyList === null ? counteredGives(addressed.conversationId, me) : null;
+
 export async function counteredGives(conversationId: number | null, me: string) {
   if (conversationId === null) return null;
   const rows = await db

@@ -16,7 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { fetchNewer, invalidateChatLists } from "@/features/chat/queries";
 import { EstimatedSerialNote } from "@/features/offers/estimated-serial-note";
 import { itemLabel, itemName } from "@/features/offers/format";
-import { type GetSource } from "@/features/offers/get-source";
+import { type GetSource, sourceOf } from "@/features/offers/get-source";
 import { OfferPicker } from "@/features/offers/offer-picker";
 import {
   blockedReason,
@@ -83,11 +83,7 @@ export function BuilderForm({
   const theirs = useQuery(theirCandidatesOptions(to));
   const mineWanted = useQuery(myWantListOptions(to, request.focusWantList));
   // unknown until the partner's lists have loaded; an error leaves it on lists, which refuse alone
-  const source: GetSource | undefined = theirs.isPending
-    ? undefined
-    : theirs.data?.partnerLists === false
-      ? "collection"
-      : "lists";
+  const source: GetSource | undefined = theirs.isPending ? undefined : sourceOf(theirs.data ?? {});
   const theirFlags = new Map((theirs.data?.items ?? []).map((item) => [pickKey(item), item]));
   const collections: Collections = {
     ...theirs.data?.collections,
@@ -132,7 +128,7 @@ export function BuilderForm({
     if (
       side === "get" &&
       theirs.data &&
-      source === "lists" &&
+      source !== "collection" &&
       !pick.kept &&
       !theirFlags.has(pick.key)
     ) {

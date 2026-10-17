@@ -31,6 +31,7 @@ import {
   collectionWhere,
   collectionsOf,
   counteredGives,
+  keptGives,
   ownedPage,
   ownedQuery,
   toCandidate,
@@ -53,7 +54,7 @@ async function resolveTheirItems(me: string, addressed: Addressed) {
   const [entries, linked, kept, hasLists] = await Promise.all([
     allowedEntries(addressed),
     linkedAddresses([partnerId]),
-    counteredGives(addressed.conversationId, me),
+    keptGives(addressed, me),
     partnerHasLists(partnerId),
   ]);
   const keptIds = [...(kept?.objekts.keys() ?? [])];
@@ -142,6 +143,7 @@ export async function theirCandidates(me: string, addressed: Addressed, myWants?
     nextOffset: null,
     listed,
     partnerLists,
+    scopedList: addressed.onlyList !== null,
     wanted: unique(
       items.flatMap((item) => (want.has(item.collectionSlug) ? [item.collectionSlug] : [])),
     ),
@@ -175,6 +177,7 @@ export async function theirPickerPage(
     nextOffset: end < shown.length ? end : null,
     listed,
     partnerLists,
+    scopedList: addressed.onlyList !== null,
     wanted: [],
     collections: await collectionsOf(slice.map((item) => item.collectionSlug)),
   };
@@ -246,7 +249,9 @@ export async function theirCollectionPage(
   narrowing: PickerNarrowing,
 ) {
   const { partnerId } = addressed;
-  if (await partnerHasLists(partnerId)) refuseOffer("not_listed");
+  if (addressed.onlyList !== null || (await partnerHasLists(partnerId))) {
+    refuseOffer("not_listed");
+  }
   const [addresses, myWants] = await Promise.all([
     collectionAddresses(partnerId),
     narrowing.matchOnly ? wantSlugsOf(me, false) : null,

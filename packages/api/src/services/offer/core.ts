@@ -234,6 +234,8 @@ export type Addressed = {
   empty: boolean;
   /** set for a `target`: what a start needs, read once */
   start: StartContext | null;
+  /** a have or sale list target on Trade: the offer asks from this list only */
+  onlyList: string | null;
 };
 
 /**
@@ -253,6 +255,7 @@ export async function resolveAddressed(
       conversationId: input.conversationId,
       empty: !holdsMessage(lastMessageId),
       start: null,
+      onlyList: null,
     };
   }
   const target = input.target!;
@@ -269,11 +272,20 @@ export async function resolveAddressed(
     startFactsOf(start, holdsMessage(existing?.lastMessageId), { ok: true }),
   );
   if (!verdict.ok) refuseOffer(verdict.reason, verdict.retryAt ? { retryAt: verdict.retryAt } : {});
+  let onlyList: string | null = null;
+  if (target.kind === "list") {
+    const [scoped] = await db
+      .select({ slug: lists.slug })
+      .from(lists)
+      .where(and(eq(lists.slug, target.slug), eq(lists.userId, partnerId), offersOnTrade));
+    onlyList = scoped?.slug ?? null;
+  }
   return {
     partnerId,
     conversationId: existing?.id ?? null,
     empty: !holdsMessage(existing?.lastMessageId),
     start,
+    onlyList,
   };
 }
 
@@ -287,7 +299,13 @@ export async function allowedEntries(
   const allowed = await db
     .select({ id: lists.id, slug: lists.slug, hideSerial: lists.hideSerial })
     .from(lists)
-    .where(and(eq(lists.userId, addressed.partnerId), offersOnTrade));
+    .where(
+      and(
+        eq(lists.userId, addressed.partnerId),
+        offersOnTrade,
+        addressed.onlyList === null ? undefined : eq(lists.slug, addressed.onlyList),
+      ),
+    );
   if (allowed.length === 0 || slugs?.length === 0) return [];
 
   const listOf = new Map(allowed.map((list) => [list.id, list]));
