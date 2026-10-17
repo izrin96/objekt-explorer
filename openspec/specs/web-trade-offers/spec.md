@@ -134,6 +134,8 @@ Each picker SHALL narrow by artist, member, season, class, online or offline, an
 
 You give's picker SHALL offer a **From** choice: All your objekts, the default, which shows the have and sale list entries first as above; or one of the sender's have, sale or general lists, which shows only the objekts on that list the sender still holds at a linked address, with no separate list-first section. The filters and the matching switch apply on top of From.
 
+You get's picker over lists SHALL offer a **From** choice when the offer is not scoped to one list and the partner has more than one have or sale list on Trade: All their lists, the default; or one of those lists, named with its type, which shows only that list's entries the sender may ask for. The filters and the matching switch apply on top of From. From changes only what the picker shows, not what may be sent. With a list picked, an empty picker SHALL say that nothing matches the filters, or else that nothing on that list is available.
+
 An empty You get picker over lists SHALL say why: the partner lists nothing the sender may ask for; nothing matches the filters; or the partner no longer holds anything they listed. The first reason SHALL win over the filters. An empty picker over their collection SHALL say the partner holds nothing the sender can ask for, or that nothing matches the filters.
 
 #### Scenario: Partner lists nothing
@@ -167,6 +169,22 @@ An empty You get picker over lists SHALL say why: the partner lists nothing the 
 #### Scenario: From one of my lists
 - **WHEN** the sender picks their sale list "doubles" under From, and holds 4 of its 6 entries
 - **THEN** the picker shows those 4 objekts only
+
+#### Scenario: From one of their lists
+- **WHEN** the sender, in their conversation with rin.trades, opens You get's picker and picks rin.trades's sale list "spares" under From
+- **THEN** the picker shows only the entries of "spares" the sender may ask for
+
+#### Scenario: Their From hidden when scoped
+- **WHEN** the sender opens You get's picker from rin.trades's post for the have list "doubles"
+- **THEN** the picker offers no From choice, and shows only the entries of "doubles"
+
+#### Scenario: Their From hidden for one list
+- **WHEN** rin.trades has exactly one have or sale list on Trade
+- **THEN** You get's picker offers no From choice
+
+#### Scenario: Their From hidden over a collection
+- **WHEN** rin.trades has no have or sale list on Trade, and the sender opens You get's picker
+- **THEN** the collection picker offers no From choice
 
 #### Scenario: Artist narrows members
 - **WHEN** the sender picks ARTMS under Artist
