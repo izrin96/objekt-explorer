@@ -91,7 +91,9 @@ export function SideColumn({
                   </span>
                   {pick.objektId === null && flags?.copies != null ? (
                     <span className="text-muted-foreground text-xs">
-                      {m.offer_any_copy_count({ count: flags.copies })}
+                      {side === "get"
+                        ? m.offer_any_copy_ask_count({ count: flags.copies })
+                        : m.offer_any_copy_count({ count: flags.copies })}
                     </span>
                   ) : null}
                   {blocked ? (

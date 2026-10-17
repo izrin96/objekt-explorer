@@ -45,6 +45,7 @@ export function Feedback({ trade, name }: { trade: Trade; name: string }) {
       {trade.status === "failed" ? <p className="text-xs text-pretty">{title}</p> : null}
       <SegmentedChoice
         label={title}
+        variant="outline"
         options={TRADE_RATINGS.map((rating) => ({ value: rating, label: RATING_LABEL[rating]() }))}
         value={value}
         className="grid w-full max-w-sm grid-cols-3 *:px-1"

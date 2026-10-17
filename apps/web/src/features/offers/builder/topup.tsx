@@ -21,26 +21,32 @@ export function Topup({
   onToggle,
   amount,
   onAmount,
+  onAmountBlur,
   currency,
   onCurrency,
   payer,
   onPayer,
+  error,
   name,
 }: {
   on: boolean;
   onToggle: (on: boolean) => void;
   amount: number | null;
   onAmount: (amount: number | null) => void;
+  onAmountBlur: () => void;
   currency: string;
   onCurrency: (currency: string) => void;
   payer: TopupPayer;
   onPayer: (payer: TopupPayer) => void;
+  /** why the amount can't be sent, shown under it */
+  error: string | null;
   name: string;
 }) {
   const { codes } = useCurrency();
   const amountId = useId();
   const currencyId = useId();
   const headingId = useId();
+  const errorId = useId();
   // the chosen code stays selectable before the rates answer
   const options = codes.includes(currency) ? codes : [...codes, currency].toSorted();
 
@@ -75,9 +81,19 @@ export function Topup({
             format={{ maximumFractionDigits: 2 }}
           >
             <NumberFieldGroup>
-              <NumberFieldInput className="text-start tabular-nums" />
+              <NumberFieldInput
+                className="text-start tabular-nums"
+                aria-invalid={error !== null || undefined}
+                aria-describedby={error !== null ? errorId : undefined}
+                onBlur={onAmountBlur}
+              />
             </NumberFieldGroup>
           </NumberField>
+          {error !== null ? (
+            <p id={errorId} className="text-destructive-foreground text-xs text-pretty">
+              {error}
+            </p>
+          ) : null}
         </div>
         <div className="flex min-w-0 flex-col gap-1.5">
           <Label htmlFor={currencyId}>{m.offer_topup_currency()}</Label>

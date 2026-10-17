@@ -20,6 +20,9 @@ export type Deadline =
   | { kind: "endsHeld" }
   | { kind: "decide"; at: string }
   | { kind: "copyLeft"; at: string }
+  /** rateable and not yet rated */
+  | { kind: "rateBy"; at: string }
+  /** rated, and still changeable */
   | { kind: "rateUntil"; at: string }
   | { kind: "ended"; at: string | null };
 
@@ -118,9 +121,9 @@ function copyDeadline(copy: Copy, fallback: Deadline, kind: "decide" | "copyLeft
   return copy.acceptBy ? { kind, at: copy.acceptBy } : fallback;
 }
 
-function endedDeadline(trade: Trade, rated: boolean): Deadline {
-  return rated && trade.rateUntil
-    ? { kind: "rateUntil", at: trade.rateUntil }
+function endedDeadline(trade: Trade): Deadline {
+  return trade.canRate && trade.rateUntil
+    ? { kind: trade.rating === null ? "rateBy" : "rateUntil", at: trade.rateUntil }
     : { kind: "ended", at: trade.endedAt };
 }
 
@@ -131,7 +134,7 @@ export function nextStep(trade: Trade, now: number): NextStep {
     return {
       kind,
       canRate: trade.canRate,
-      deadline: endedDeadline(trade, trade.canRate),
+      deadline: endedDeadline(trade),
     };
   }
   if (kind === "failed") {
@@ -139,7 +142,7 @@ export function nextStep(trade: Trade, now: number): NextStep {
       kind,
       canReport: trade.canReport,
       canRate: trade.canRate,
-      deadline: endedDeadline(trade, trade.canRate),
+      deadline: endedDeadline(trade),
     };
   }
   if (kind === "cancelled") return { kind, deadline: { kind: "ended", at: trade.endedAt } };

@@ -11,6 +11,7 @@ export function SegmentedChoice<T extends string>({
   value,
   onChange,
   disabled = false,
+  variant = "muted",
   className,
 }: {
   label: string;
@@ -18,6 +19,8 @@ export function SegmentedChoice<T extends string>({
   value: T | null;
   onChange: (value: T) => void;
   disabled?: boolean;
+  /** `outline` keeps full-contrast edges for a tinted surface, where the muted track reads as disabled */
+  variant?: "muted" | "outline";
   className?: string;
 }) {
   return (
@@ -30,7 +33,9 @@ export function SegmentedChoice<T extends string>({
         if (picked) onChange(picked.value);
       }}
       className={cn(
-        "bg-muted text-muted-foreground/72 flex w-fit items-center gap-x-0.5 rounded-lg p-0.5",
+        "flex w-fit items-center",
+        variant === "muted" && "bg-muted text-muted-foreground/72 gap-x-0.5 rounded-lg p-0.5",
+        variant === "outline" && "gap-2",
         className,
       )}
     >
@@ -38,7 +43,13 @@ export function SegmentedChoice<T extends string>({
         <RadioPrimitive.Root
           key={option.value}
           value={option.value}
-          className="hover:text-muted-foreground focus-visible:ring-ring data-checked:bg-background data-checked:text-foreground dark:data-checked:bg-input flex h-9 cursor-pointer items-center justify-center rounded-md px-2.5 text-base font-medium whitespace-nowrap transition-[color,background-color] outline-none focus-visible:ring-2 data-checked:shadow-sm/5 data-disabled:cursor-not-allowed data-disabled:opacity-64 sm:h-8 sm:text-sm"
+          className={cn(
+            "focus-visible:ring-ring flex h-9 cursor-pointer items-center justify-center px-2.5 text-base font-medium whitespace-nowrap transition-[color,background-color] outline-none focus-visible:ring-2 data-disabled:cursor-not-allowed data-disabled:opacity-64 sm:h-8 sm:text-sm",
+            variant === "muted" &&
+              "hover:text-muted-foreground data-checked:bg-background data-checked:text-foreground dark:data-checked:bg-input rounded-md data-checked:shadow-sm/5",
+            variant === "outline" &&
+              "border-foreground/60 bg-background text-foreground hover:bg-secondary data-checked:border-foreground data-checked:bg-foreground data-checked:text-background rounded-lg border",
+          )}
         >
           {option.label}
         </RadioPrimitive.Root>

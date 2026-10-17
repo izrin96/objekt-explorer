@@ -1,6 +1,7 @@
 import { ArrowClockwiseIcon, CardsThreeIcon, WarningIcon } from "@phosphor-icons/react";
 import type { CandidateItem } from "@repo/api/schemas/offer";
 import type { GridObjekt } from "@repo/lib/types/objekt";
+import type { ReactNode } from "react";
 
 import { EmptyState } from "@/components/shared/empty-state";
 import { Button } from "@/components/ui/button";
@@ -58,7 +59,7 @@ export function CandidateGrid({
   collections: Collections;
   pending: boolean;
   error: { retry: () => void; text: string | null } | null;
-  empty: { title: string; hint?: string };
+  empty: { title: string; hint?: string; action?: ReactNode };
   more?: { has: boolean; loading: boolean; failed: boolean; load: () => void };
   isSelected: (item: CandidateItem) => boolean;
   full: boolean;
@@ -98,7 +99,13 @@ export function CandidateGrid({
   // a search still paging in has nothing to show yet, not nothing at all
   if (sections.every((section) => section.items.length === 0) && !more?.has) {
     return (
-      <EmptyState icon={CardsThreeIcon} bordered={false} title={empty.title} hint={empty.hint} />
+      <EmptyState
+        icon={CardsThreeIcon}
+        bordered={false}
+        title={empty.title}
+        hint={empty.hint}
+        action={empty.action}
+      />
     );
   }
 

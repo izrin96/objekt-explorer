@@ -19,6 +19,7 @@ import { getLocale } from "@/paraglide/runtime";
 
 import { timeLeft } from "./next-step";
 import type { Collections } from "./pick";
+import { statusTone } from "./status-badge";
 
 export const offerNo = (id: number) => `O-${id}`;
 export const tradeNo = (id: number) => `T-${id}`;
@@ -83,6 +84,25 @@ export function offerStatusText(
     case "cancelled":
       return m.offer_status_cancelled();
   }
+}
+
+/**
+ * The collapsed offer line's status: an accepted offer that became a trade reads as the trade's
+ * state, in the colours My trades gives it.
+ */
+export function offerLine(
+  offer: Pick<OfferView, "status" | "mine" | "cancelReason" | "tradeId" | "tradeStatus">,
+) {
+  if (offer.status === "accepted" && offer.tradeId !== null && offer.tradeStatus) {
+    return {
+      text: m.offer_status_accepted_trade({
+        trade: tradeNo(offer.tradeId),
+        status: tradeStatusText(offer.tradeStatus).toLocaleLowerCase(getLocale()),
+      }),
+      tone: statusTone(offer.tradeStatus),
+    };
+  }
+  return { text: offerStatusText(offer), tone: "neutral" as const };
 }
 
 export function cancelReasonText(reason: OfferView["cancelReason"] | "party") {
