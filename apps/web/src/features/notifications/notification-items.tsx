@@ -25,7 +25,7 @@ import {
   tradeNo,
   tradeNotificationText,
 } from "@/features/offers/format";
-import { relativeTime } from "@/lib/time";
+import { formatTimestamp, relativeTime } from "@/lib/time";
 import type { Tone } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -175,6 +175,7 @@ function ItemTime({ createdAt, now }: { createdAt: string; now: number }) {
   return (
     <time
       dateTime={createdAt}
+      title={formatTimestamp(new Date(createdAt))}
       className="text-muted-foreground shrink-0 pt-0.5 font-mono text-xs whitespace-nowrap"
     >
       {relativeTime(new Date(createdAt).getTime(), now)}
@@ -377,6 +378,9 @@ function SanctionItem({ notification, now, onOpen, variant }: RowProps<SanctionN
   );
 }
 
+const sameSlugs = (a: readonly string[] = [], b: readonly string[] = []) =>
+  a.length === b.length && a.every((slug, at) => slug === b[at]);
+
 function eventText(note: NoteEvent, partner: string) {
   return note.type === "trade"
     ? tradeNotificationText(note.payload, partner)
@@ -464,8 +468,14 @@ function OfferItem({
             <ol className="border-s ps-3 pt-1">
               {earlier.map((note) => (
                 <li key={note.id} className="flex items-start justify-between gap-3 py-1.5">
-                  <span className="text-muted-foreground text-xs text-pretty">
-                    {eventText(note, note.payload.partner.name)}
+                  <span className="flex min-w-0 flex-col gap-0.5">
+                    <span className="text-muted-foreground text-xs text-pretty">
+                      {eventText(note, note.payload.partner.name)}
+                    </span>
+                    {sameSlugs(note.payload.objekts, payload.objekts) ? null : (
+                      <ObjektLine slugs={note.payload.objekts ?? []} collections={collections} />
+                    )}
+                    {note.type === "trade" ? <Progress {...note.payload.progress} /> : null}
                   </span>
                   <ItemTime createdAt={note.createdAt} now={now} />
                 </li>

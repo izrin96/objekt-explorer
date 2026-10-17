@@ -327,52 +327,66 @@ export function ListForm({
         </Alert>
       ) : null}
 
-      <Field name="profileAddress" className="min-w-0 gap-1.5">
-        <FieldLabel htmlFor={id("profile")}>
-          {value.isProfileBind
-            ? m.list_create_profile_tracked_label()
-            : m.list_create_profile_display_label()}
-        </FieldLabel>
-        <Select
-          value={value.profileAddress ?? NONE}
-          isItemEqualToValue={(item, next) => item === next || isSameAddress(item, next)}
-          disabled={isEdit && value.isProfileBind}
-          onValueChange={(next: string | null) => {
-            const profileAddress = next === null || next === NONE ? null : next;
-            set({
-              profileAddress,
-              isProfileBind: profileAddress === null ? false : value.isProfileBind,
-            });
-          }}
-        >
-          <SelectTrigger id={id("profile")} className="min-w-0">
-            <SelectValue placeholder={m.list_create_profile_placeholder()}>
-              {(next: string) =>
-                next === NONE
-                  ? m.common_form_none()
-                  : displayNickname(
-                      next,
-                      profiles.find((profile) => isSameAddress(profile.address, next))?.nickname,
-                    )
-              }
-            </SelectValue>
-          </SelectTrigger>
-          <SelectPopup>
-            <SelectItem value={NONE}>{m.common_form_none()}</SelectItem>
-            {profiles.map((profile) => (
-              <SelectItem key={profile.address} value={profile.address}>
-                {displayNickname(profile.address, profile.nickname)}
-              </SelectItem>
-            ))}
-          </SelectPopup>
-        </Select>
-        <FieldDescription>
-          {value.isProfileBind
-            ? m.list_create_profile_desc()
-            : m.list_create_display_profile_desc()}
-        </FieldDescription>
-        <FieldError />
-      </Field>
+      {isEdit && value.isProfileBind ? (
+        <div className="flex flex-col gap-1.5">
+          <span className="text-sm font-medium">{m.list_create_profile_tracked_label()}</span>
+          <span className="text-sm">
+            {value.profileAddress
+              ? displayNickname(
+                  value.profileAddress,
+                  profiles.find((profile) => isSameAddress(profile.address, value.profileAddress))
+                    ?.nickname,
+                )
+              : m.common_form_none()}
+          </span>
+        </div>
+      ) : (
+        <Field name="profileAddress" className="min-w-0 gap-1.5">
+          <FieldLabel htmlFor={id("profile")}>
+            {value.isProfileBind
+              ? m.list_create_profile_tracked_label()
+              : m.list_create_profile_display_label()}
+          </FieldLabel>
+          <Select
+            value={value.profileAddress ?? NONE}
+            isItemEqualToValue={(item, next) => item === next || isSameAddress(item, next)}
+            onValueChange={(next: string | null) => {
+              const profileAddress = next === null || next === NONE ? null : next;
+              set({
+                profileAddress,
+                isProfileBind: profileAddress === null ? false : value.isProfileBind,
+              });
+            }}
+          >
+            <SelectTrigger id={id("profile")} className="min-w-0">
+              <SelectValue placeholder={m.list_create_profile_placeholder()}>
+                {(next: string) =>
+                  next === NONE
+                    ? m.common_form_none()
+                    : displayNickname(
+                        next,
+                        profiles.find((profile) => isSameAddress(profile.address, next))?.nickname,
+                      )
+                }
+              </SelectValue>
+            </SelectTrigger>
+            <SelectPopup>
+              <SelectItem value={NONE}>{m.common_form_none()}</SelectItem>
+              {profiles.map((profile) => (
+                <SelectItem key={profile.address} value={profile.address}>
+                  {displayNickname(profile.address, profile.nickname)}
+                </SelectItem>
+              ))}
+            </SelectPopup>
+          </Select>
+          <FieldDescription>
+            {value.isProfileBind
+              ? m.list_create_profile_desc()
+              : m.list_create_display_profile_desc()}
+          </FieldDescription>
+          <FieldError />
+        </Field>
+      )}
 
       {/* shown locked in edit: it is the reason the switches below are off */}
       {bindable ? (

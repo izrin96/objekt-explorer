@@ -2,6 +2,7 @@ import type { NotificationType } from "@repo/api/schemas/notification";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { toastManager } from "@/components/ui/toast";
 import { notificationPrefsOptions } from "@/features/notifications/queries";
@@ -66,13 +67,17 @@ export function NotificationsSection() {
             <span className="text-sm font-medium">{row.label()}</span>
             <span className="text-muted-foreground text-xs text-pretty">{row.description()}</span>
           </span>
-          <Switch
-            id={`account-notify-${row.type}`}
-            className="mt-0.5 shrink-0"
-            checked={prefs.data?.[row.type] ?? false}
-            disabled={!prefs.data}
-            onCheckedChange={(enabled) => mutation.mutate({ type: row.type, enabled })}
-          />
+          {prefs.isPending ? (
+            <Skeleton className="mt-0.5 h-5.5 w-9.5 shrink-0 rounded-full sm:h-4.5 sm:w-7.5" />
+          ) : (
+            <Switch
+              id={`account-notify-${row.type}`}
+              className="mt-0.5 shrink-0"
+              checked={prefs.data?.[row.type] ?? false}
+              disabled={!prefs.data}
+              onCheckedChange={(enabled) => mutation.mutate({ type: row.type, enabled })}
+            />
+          )}
         </Label>
       ))}
     </div>

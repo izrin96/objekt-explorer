@@ -23,7 +23,7 @@ import { refusalText } from "@/lib/refusal";
 import { m } from "@/paraglide/messages";
 
 import { useCopyList } from "./actions";
-import { type ListDraft, ListForm, listDraftSchema, toCreateInput } from "./list-form";
+import { EMPTY_DRAFT, type ListDraft, ListForm, listDraftSchema, toCreateInput } from "./list-form";
 import { listFindOptions } from "./queries";
 
 type StoredList = Awaited<ReturnType<typeof client.list.find>>;
@@ -83,8 +83,8 @@ function toCopyDraft(list: StoredList): ListDraft {
     profileAddress: list.profileAddress,
     isProfileBind: list.isProfileBind,
     discoverable: false,
-    matchSale: list.matchSale,
-    matchHave: list.matchHave,
+    matchSale: list.listTypeNew === "want" ? list.matchSale : EMPTY_DRAFT.matchSale,
+    matchHave: list.listTypeNew === "want" ? list.matchHave : EMPTY_DRAFT.matchHave,
     gridColumns: list.gridColumns,
     hideSerial: list.hideSerial,
     regenerateSlug: false,

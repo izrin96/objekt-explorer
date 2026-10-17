@@ -1,7 +1,9 @@
+import { CheckIcon } from "@phosphor-icons/react";
 import type { ListTypeNew } from "@repo/api/schemas/list";
 import { type OpenTo, openToOf } from "@repo/api/schemas/open-to";
 
 import { Badge, type BadgeProps } from "@/components/ui/badge";
+import { Tooltip, TooltipPopup, TooltipTrigger } from "@/components/ui/tooltip";
 import { type Tone, toneChip } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -57,4 +59,20 @@ export function openToLabel(list: {
   return OPEN_TO_LABEL[
     openToOf({ matchSale: list.matchSale, matchHave: list.matchHave ?? true })
   ]();
+}
+
+export function ListBoundBadge() {
+  return (
+    <Tooltip>
+      <TooltipTrigger
+        render={
+          <Badge variant="outline" size="sm" render={<button type="button" />}>
+            <CheckIcon weight="bold" aria-hidden />
+            {m.list_bound_badge()}
+          </Badge>
+        }
+      />
+      <TooltipPopup>{m.list_bound_hint()}</TooltipPopup>
+    </Tooltip>
+  );
 }
