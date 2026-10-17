@@ -7,8 +7,8 @@ import { useId } from "react";
 
 import { EmptyState } from "@/components/shared/empty-state";
 import { InfiniteSentinel } from "@/components/shared/infinite-sentinel";
+import { PersonAvatar } from "@/components/shared/person-avatar";
 import { RowsSkeleton } from "@/components/shared/rows-skeleton";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { relativeTime } from "@/lib/time";
@@ -154,10 +154,12 @@ function MineRowLink({
   const name = partner.identity.name;
   const body = (
     <>
-      <Avatar className="size-9 shrink-0">
-        {partner.user.image ? <AvatarImage src={partner.user.image} alt="" /> : null}
-        <AvatarFallback>{name.slice(0, 1).toUpperCase()}</AvatarFallback>
-      </Avatar>
+      <PersonAvatar
+        name={name}
+        image={partner.user.image}
+        address={partner.identity.address}
+        className="size-9 shrink-0"
+      />
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span className="flex min-w-0 flex-wrap items-baseline gap-x-2">
           <span className="min-w-0 font-medium break-words">{name}</span>

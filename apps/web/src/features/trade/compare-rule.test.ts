@@ -1,6 +1,12 @@
 import { describe, expect, test } from "bun:test";
 
-import { canCompare, comparedList, type TradeList, tradeListsOf } from "./compare-rule";
+import {
+  canCompare,
+  compareRefusal,
+  comparedList,
+  type TradeList,
+  tradeListsOf,
+} from "./compare-rule";
 
 const list = (id: number, slug: string, listTypeNew: TradeList["listTypeNew"], rest = {}) => ({
   id,
@@ -94,6 +100,24 @@ describe("canCompare", () => {
   test("a want list whose pair is off Trade compares alone", () => {
     const only = [list(9, "want", "want", { linkedListId: 10, matchHave: true })];
     expect(canCompare(only[0]!, only, { mutual: false, type: "wtb" })).toBe(false);
+  });
+});
+
+describe("compareRefusal", () => {
+  test("names the rule a disabled list fails", () => {
+    expect(compareRefusal(have, lists, { mutual: true, type: "wtt" })).toBe("oneWay");
+    expect(compareRefusal(swapsWant, lists, { mutual: false, type: "wtb" })).toBe("wtb");
+    expect(compareRefusal(have, lists, { mutual: false, type: "wts" })).toBe("wts");
+    expect(compareRefusal(buyingOnlyWant, lists, { mutual: false, type: "wtt" })).toBe("wtt");
+  });
+
+  test("Mutual's rule comes before the type's", () => {
+    expect(compareRefusal(buyingOnlyWant, lists, { mutual: true, type: "wtt" })).toBe("oneWay");
+  });
+
+  test("a usable list has none", () => {
+    expect(compareRefusal(sale, lists, { mutual: false, type: "wtb" })).toBeNull();
+    expect(compareRefusal(have, lists, { mutual: false, type: "all" })).toBeNull();
   });
 });
 

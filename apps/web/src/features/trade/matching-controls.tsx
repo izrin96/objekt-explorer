@@ -6,14 +6,29 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { SingleSelect } from "@/features/filters/single-select";
 import { LIST_TYPE_LABEL } from "@/features/list/list-type-badge";
+import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
-import { canCompare, comparedList, pickOf, scopeOf, type TradeList } from "./compare-rule";
+import {
+  type CompareRefusal,
+  compareRefusal,
+  comparedList,
+  pickOf,
+  scopeOf,
+  type TradeList,
+} from "./compare-rule";
 import { ALL_LISTS, COMPARE } from "./compare-with";
 import { MatchHelp } from "./match-help";
 import { mutualCountOptions } from "./queries";
 
 const COUNT_CAP = 99;
+
+const REFUSAL_TEXT: Record<CompareRefusal, () => string> = {
+  oneWay: m.trade_compare_why_one_way,
+  wtb: m.trade_compare_why_wtb,
+  wts: m.trade_compare_why_wts,
+  wtt: m.trade_compare_why_wtt,
+};
 
 type Mode = "any" | "mutual";
 
@@ -27,10 +42,49 @@ type MatchingProps = {
   onChange: (patch: { match?: Mode; list?: string | undefined }) => void;
 };
 
+function MutualSwitch({
+  id,
+  checked,
+  onChange,
+  count,
+  shown,
+  className,
+}: {
+  id: string;
+  checked: boolean;
+  onChange: (on: boolean) => void;
+  count: number;
+  shown: string;
+  className: string;
+}) {
+  return (
+    <span className={cn("flex items-center gap-2", className)}>
+      <Switch id={id} checked={checked} onCheckedChange={onChange} />
+      <Label
+        htmlFor={id}
+        className="text-sm whitespace-nowrap"
+        aria-label={
+          count > 0
+            ? m.trade_tab_with_count({ label: m.trade_mutual_only(), count: shown })
+            : undefined
+        }
+      >
+        {m.trade_mutual_only()}
+        {count > 0 ? (
+          <span aria-hidden className="text-muted-foreground font-mono text-xs tabular-nums">
+            {shown}
+          </span>
+        ) : null}
+      </Label>
+    </span>
+  );
+}
+
 /** The switch counts the people Mutual would list for the compared lists, so its number only ever means mutual. */
 export function MatchingControls(props: MatchingProps) {
   const { mode, urlType, list, tradeLists, onChange } = props;
-  const id = useId();
+  const phoneId = useId();
+  const wideId = useId();
   const mutual = mode === "mutual";
   const scope = scopeOf(mode, urlType);
   const selected = comparedList(list, tradeLists, scope);
@@ -48,46 +102,49 @@ export function MatchingControls(props: MatchingProps) {
 
   return (
     <>
-      <span className="flex items-center gap-2 max-md:order-1 md:order-4 md:ml-auto">
-        <Switch id={id} checked={mutual} onCheckedChange={setMutual} />
-        <Label
-          htmlFor={id}
-          className="text-sm whitespace-nowrap"
-          aria-label={
-            count > 0
-              ? m.trade_tab_with_count({ label: m.trade_mutual_only(), count: shown })
-              : undefined
-          }
-        >
-          {m.trade_mutual_only()}
-          {count > 0 ? (
-            <span aria-hidden className="text-muted-foreground font-mono text-xs tabular-nums">
-              {shown}
-            </span>
-          ) : null}
-        </Label>
-      </span>
-
+      {/* the switch leads on phones and follows Compare with from `md`, in the DOM too, so Tab follows what is drawn */}
+      <MutualSwitch
+        id={phoneId}
+        checked={mutual}
+        onChange={setMutual}
+        count={count}
+        shown={shown}
+        className="max-md:order-1 md:hidden"
+      />
       <span className="order-3 flex items-center gap-1">
         <SingleSelect
           label={m.trade_list_label()}
           options={[
             { value: ALL_LISTS, label: COMPARE.allLabel() },
-            ...tradeLists.map((item) => ({
-              value: item.slug,
-              label: m.trade_list_option({
-                name: item.name,
-                type: LIST_TYPE_LABEL[item.listTypeNew](),
-              }),
-              disabled: !canCompare(item, tradeLists, scope),
-            })),
+            ...tradeLists.map((item) => {
+              const refusal = compareRefusal(item, tradeLists, scope);
+              return {
+                value: item.slug,
+                label: m.trade_list_option({
+                  name: item.name,
+                  type: LIST_TYPE_LABEL[item.listTypeNew](),
+                }),
+                disabled: refusal !== null,
+                hint: refusal ? REFUSAL_TEXT[refusal]() : undefined,
+              };
+            }),
           ]}
           value={selected?.slug ?? ALL_LISTS}
           defaultValue={ALL_LISTS}
+          showValue
           onChange={(value) => onChange({ list: value === ALL_LISTS ? undefined : value })}
         />
         <MatchHelp />
       </span>
+
+      <MutualSwitch
+        id={wideId}
+        checked={mutual}
+        onChange={setMutual}
+        count={count}
+        shown={shown}
+        className="max-md:hidden md:order-4 md:ml-auto"
+      />
     </>
   );
 }

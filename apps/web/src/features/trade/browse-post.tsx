@@ -24,6 +24,16 @@ import { TradeRow, TradeSides } from "./trade-row";
 
 export type { BrowsePostData } from "./post-types";
 
+/**
+ * A segment of the phone byline. Its "·" sits in the padding the line's negative margin pulls
+ * out of the clipped container, so a segment that starts a line hides its own separator.
+ */
+const PHONE_SEGMENT =
+  "relative ps-3 whitespace-nowrap before:absolute before:start-1 before:content-['·']";
+
+/** The reputation line may be long in ko and ja, so it wraps within its segment. */
+const PHONE_WRAPPING_SEGMENT = PHONE_SEGMENT.replace("whitespace-nowrap", "min-w-0");
+
 export function BrowsePost({
   post,
   surface,
@@ -122,27 +132,18 @@ export function BrowsePost({
             </div>
           }
           phoneLine={
-            <>
-              <span className="whitespace-nowrap">
+            <span className="-ms-3 flex flex-wrap items-center gap-y-0.5">
+              <span className={PHONE_SEGMENT}>
                 <TagBadge tag={post.tag} />
-                {" · "}
-              </span>{" "}
+              </span>
               {post.reputation ? (
-                <>
-                  <span className="whitespace-nowrap">
-                    <TrustLine reputation={post.reputation} variant="compact" className="inline" />
-                    {" · "}
-                  </span>{" "}
-                </>
+                <span className={PHONE_WRAPPING_SEGMENT}>
+                  <TrustLine reputation={post.reputation} variant="compact" className="inline" />
+                </span>
               ) : null}
-              <span className="whitespace-nowrap">{timeTag}</span>
-              {wantOnly || post.buyingOnly ? (
-                <>
-                  {" · "}
-                  <span className="whitespace-nowrap">{notes}</span>
-                </>
-              ) : null}
-            </>
+              <span className={PHONE_SEGMENT}>{timeTag}</span>
+              {wantOnly || post.buyingOnly ? <span className={PHONE_SEGMENT}>{notes}</span> : null}
+            </span>
           }
         />
       }

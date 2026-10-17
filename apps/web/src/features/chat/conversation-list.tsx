@@ -23,7 +23,7 @@ import {
 import { PendingStatus } from "@/components/router/pending";
 import { EmptyState } from "@/components/shared/empty-state";
 import { InfiniteSentinel } from "@/components/shared/infinite-sentinel";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { PersonAvatar } from "@/components/shared/person-avatar";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { collectionName } from "@/features/objekt/objekt-label";
@@ -225,10 +225,12 @@ function RowLink({
         className,
       )}
     >
-      <Avatar className="size-10 shrink-0">
-        {partner.user.image ? <AvatarImage src={partner.user.image} alt="" /> : null}
-        <AvatarFallback>{name.slice(0, 1).toUpperCase()}</AvatarFallback>
-      </Avatar>
+      <PersonAvatar
+        name={name}
+        image={partner.user.image}
+        address={partner.identity.address}
+        className="size-10 shrink-0"
+      />
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">{children}</div>
     </Link>
   );

@@ -1,7 +1,7 @@
 import type { ComponentProps, ReactNode } from "react";
 
+import { PersonAvatar } from "@/components/shared/person-avatar";
 import { SocialBadge } from "@/components/shared/social-badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { TrustLine } from "@/features/offers/trust-line";
 import { ProfileLink } from "@/features/profile/profile-hover-card";
 import { cn } from "@/lib/utils";
@@ -41,10 +41,12 @@ export function TradeHeader({
 
   return (
     <div className={cn("flex items-start gap-x-3", className)}>
-      <Avatar className="size-9 shrink-0">
-        {user.image ? <AvatarImage src={user.image} alt="" /> : null}
-        <AvatarFallback>{identity.name.slice(0, 1).toUpperCase()}</AvatarFallback>
-      </Avatar>
+      <PersonAvatar
+        name={identity.name}
+        image={user.image}
+        address={identity.address}
+        className="size-9 shrink-0"
+      />
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
           <h2 className="min-w-0 text-base leading-snug font-semibold break-words">
@@ -78,7 +80,9 @@ export function TradeHeader({
           {note}
         </div>
         {phoneLine ? (
-          <p className="text-muted-foreground font-mono text-xs @3xl:hidden">{phoneLine}</p>
+          <p className="text-muted-foreground overflow-x-clip font-mono text-xs @3xl:hidden">
+            {phoneLine}
+          </p>
         ) : null}
       </div>
       {end ? <div className="flex shrink-0 items-center gap-2">{end}</div> : null}

@@ -2,7 +2,7 @@ import { ArrowLeftIcon, BellSlashIcon } from "@phosphor-icons/react";
 import { Link, useHydrated, useLocation, useRouter } from "@tanstack/react-router";
 import type { Ref } from "react";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { PersonAvatar } from "@/components/shared/person-avatar";
 import { Button } from "@/components/ui/button";
 import { ConversationMenu } from "@/features/chat/conversation-menu";
 import { mutedLabel } from "@/features/chat/format";
@@ -63,10 +63,12 @@ export function ThreadHeader({
   return (
     <header className="flex items-center gap-3 border-b px-3 py-2.5 md:px-4">
       <ThreadBackButton />
-      <Avatar className="size-9 shrink-0">
-        {partner.user.image ? <AvatarImage src={partner.user.image} alt="" /> : null}
-        <AvatarFallback>{name.slice(0, 1).toUpperCase()}</AvatarFallback>
-      </Avatar>
+      <PersonAvatar
+        name={name}
+        image={partner.user.image}
+        address={partner.identity.address}
+        className="size-9 shrink-0"
+      />
       <div className="flex min-w-0 flex-1 flex-col">
         <h2
           ref={headingRef}
@@ -85,7 +87,7 @@ export function ThreadHeader({
             name
           )}
         </h2>
-        <TrustLine reputation={partner.reputation} className="truncate" />
+        <TrustLine reputation={partner.reputation} />
         {muted ? (
           <p className="text-muted-foreground flex items-center gap-1 text-xs">
             <BellSlashIcon aria-hidden className="size-3.5 shrink-0" />
