@@ -11,61 +11,111 @@ import {
   postTypeOf,
   toBrowseInput,
 } from "./browse-search";
+import { tradeListsOf } from "./compare-rule";
 
 const artists = [{ artistMembers: [{ name: "SeoYeon" }] }];
+
+const lists = tradeListsOf([
+  {
+    id: 1,
+    slug: "spares",
+    name: "Spares",
+    listTypeNew: "have",
+    isProfileBind: true,
+    linkedList: { id: 2 },
+  },
+  {
+    id: 2,
+    slug: "binary-hunt",
+    name: "Binary hunt",
+    listTypeNew: "want",
+    isProfileBind: false,
+    linkedList: { id: 1 },
+  },
+  { id: 3, slug: "lone-want", name: "Lone want", listTypeNew: "want", isProfileBind: false },
+]);
 
 const parse = (input: Record<string, unknown>) => browseSearchSchema.parse(input);
 
 describe("toBrowseInput", () => {
   test("scopes to the selected artists", () => {
-    const input = toBrowseInput(parse({}), artists, ["tripleS"], "forYou");
+    const input = toBrowseInput(parse({}), artists, ["tripleS"], "forYou", lists);
     expect(input.artist).toEqual(["tripleS"]);
   });
 
   test("a collection link ignores the scope", () => {
     const search = parse({ slug: "atom01-seoyeon-204z" });
-    expect(toBrowseInput(search, artists, ["tripleS"], "forYou").artist).toEqual([]);
+    expect(toBrowseInput(search, artists, ["tripleS"], "forYou", lists).artist).toEqual([]);
   });
 
   test("an artist inside the selection narrows it", () => {
     const search = parse({ artist: "artms" });
-    expect(toBrowseInput(search, artists, ["tripleS", "artms"], "forYou").artist).toEqual([
+    expect(toBrowseInput(search, artists, ["tripleS", "artms"], "forYou", lists).artist).toEqual([
       "artms",
     ]);
   });
 
   test("an artist outside the selection is dropped", () => {
     const search = parse({ artist: ["artms", "idntt"] });
-    expect(toBrowseInput(search, artists, ["tripleS", "artms"], "forYou").artist).toEqual([
+    expect(toBrowseInput(search, artists, ["tripleS", "artms"], "forYou", lists).artist).toEqual([
       "artms",
     ]);
     const only = parse({ artist: "idntt" });
-    expect(toBrowseInput(only, artists, ["tripleS"], "forYou").artist).toEqual(["tripleS"]);
+    expect(toBrowseInput(only, artists, ["tripleS"], "forYou", lists).artist).toEqual(["tripleS"]);
   });
 
   test("a collection link ignores the artist parameter too", () => {
     const search = parse({ slug: "atom01-seoyeon-204z", artist: "artms" });
-    expect(toBrowseInput(search, artists, ["tripleS", "artms"], "forYou").artist).toEqual([]);
+    expect(toBrowseInput(search, artists, ["tripleS", "artms"], "forYou", lists).artist).toEqual(
+      [],
+    );
   });
 
   test("sends the mode and Compare with, and no longer sends matches", () => {
-    const input = toBrowseInput(parse({ match: "mutual", list: "spares" }), artists, [], "forYou");
+    const input = toBrowseInput(
+      parse({ match: "mutual", list: "spares" }),
+      artists,
+      [],
+      "forYou",
+      lists,
+    );
     expect(input).toMatchObject({ match: "mutual", list: "spares" });
     expect(input).not.toHaveProperty("matches");
   });
 
+  test("a list the Post type can't use is not sent", () => {
+    const send = (input: Record<string, unknown>) =>
+      toBrowseInput(parse(input), artists, [], "forYou", lists).list;
+    expect(send({ type: "wtb", list: "lone-want" })).toBeUndefined();
+    expect(send({ type: "wts", list: "spares" })).toBeUndefined();
+    expect(send({ type: "wtb", list: "spares" })).toBe("spares");
+    expect(send({ list: "lone-want" })).toBe("lone-want");
+  });
+
+  test("a list that is not the viewer's is not sent", () => {
+    expect(
+      toBrowseInput(parse({ list: "other" }), artists, [], "forYou", lists).list,
+    ).toBeUndefined();
+  });
+
   test("Browse is always Off, and drops Compare with", () => {
-    const input = toBrowseInput(parse({ match: "mutual", list: "spares" }), artists, [], "browse");
+    const input = toBrowseInput(
+      parse({ match: "mutual", list: "spares" }),
+      artists,
+      [],
+      "browse",
+      lists,
+    );
     expect(input).toMatchObject({ match: "off", list: undefined });
   });
 
   test("For you defaults to Any", () => {
-    expect(toBrowseInput(parse({}), artists, [], "forYou").match).toBe("any");
+    expect(toBrowseInput(parse({}), artists, [], "forYou", lists).match).toBe("any");
   });
 
   test("folds members onto Cosmo's spelling", () => {
     const search = parse({ member: "seoyeon" });
-    expect(toBrowseInput(search, artists, [], "forYou").member).toEqual(["SeoYeon"]);
+    expect(toBrowseInput(search, artists, [], "forYou", lists).member).toEqual(["SeoYeon"]);
   });
 });
 

@@ -29,7 +29,7 @@ import {
   postTypeOf,
   toBrowseInput,
 } from "./browse-search";
-import { comparedList, tradeListsOf } from "./compare-with";
+import { comparedList, scopeOf, tradeListsOf } from "./compare-rule";
 import { HiddenPartnersDialog } from "./hidden-partners-dialog";
 import { LoadError } from "./load-error";
 import { ComparedLine, MatchingControls } from "./matching-controls";
@@ -61,8 +61,8 @@ export function BrowseView({ surface, search }: { surface: Surface; search: Feed
   const { artists } = useCosmoArtist();
   const { data: selected } = useSelectedArtists();
   const input = useMemo(
-    () => toBrowseInput(search, artists, selected, surface),
-    [search, artists, selected, surface],
+    () => toBrowseInput(search, artists, selected, surface, tradeLists),
+    [search, artists, selected, surface, tradeLists],
   );
   const query = useInfiniteQuery(browseOptions(input));
   const hidden = useQuery(hiddenPartnersOptions(Boolean(user)));
@@ -121,7 +121,14 @@ export function BrowseView({ surface, search }: { surface: Surface; search: Feed
       }))}
       value={type}
       defaultValue="all"
-      onChange={(next) => setSearch({ type: next === "all" ? undefined : next })}
+      onChange={(next) => {
+        const picked = next === "all" ? undefined : next;
+        // a list the new type can't use is reset, so the URL never carries a dead choice
+        setSearch({
+          type: picked,
+          list: comparedList(search.list, tradeLists, scopeOf(mode, next))?.slug,
+        });
+      }}
     />
   );
   // Mutual fixes the type to WTT, so a leftover `type` is not a filter to reset
@@ -193,6 +200,7 @@ export function BrowseView({ surface, search }: { surface: Surface; search: Feed
           forYou ? (
             <MatchingControls
               mode={matchModeOf(search)}
+              urlType={search.type ?? "all"}
               list={search.list}
               tradeLists={tradeLists}
               onChange={(patch) => {
@@ -209,7 +217,12 @@ export function BrowseView({ surface, search }: { surface: Surface; search: Feed
         }
         comparedLine={
           forYou ? (
-            <ComparedLine mode={matchModeOf(search)} list={search.list} tradeLists={tradeLists} />
+            <ComparedLine
+              mode={matchModeOf(search)}
+              urlType={search.type ?? "all"}
+              list={search.list}
+              tradeLists={tradeLists}
+            />
           ) : undefined
         }
       />
@@ -346,7 +359,9 @@ export function BrowseView({ surface, search }: { surface: Surface; search: Feed
         <PersonSheet
           key={search.person}
           userId={search.person}
-          list={forYou ? comparedList(search.list, tradeLists, mutual)?.slug : undefined}
+          list={
+            forYou ? comparedList(search.list, tradeLists, scopeOf(mode, type))?.slug : undefined
+          }
           onClose={closePerson}
         />
       ) : null}

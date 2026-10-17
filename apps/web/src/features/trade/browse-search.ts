@@ -5,6 +5,8 @@ import * as z from "zod";
 
 import { filterSearchSchema } from "@/features/filters/search-schema";
 
+import { comparedList, scopeOf, type TradeList } from "./compare-rule";
+
 /** What both Trade surfaces take: the filters, the post type and the person sheet. */
 const feedSearchSchema = filterSearchSchema.extend({
   /** `all` is the absence of `type` */
@@ -109,13 +111,15 @@ type Artist = { artistMembers: { name: string }[] };
 /**
  * One function for the loader and the view, so both build the same query key: the URL's
  * facets with members in Cosmo's spelling, scoped to the selected artists as Activity is
- * unless the URL names one collection. An `artist` outside the selection is ignored.
+ * unless the URL names one collection. An `artist` outside the selection is ignored. A `list`
+ * that is not one of the viewer's `tradeLists`, or that the type can't use, is not sent.
  */
 export function toBrowseInput(
   search: FeedSearch,
   artists: readonly Artist[],
   selectedArtistIds: readonly ValidArtist[],
   surface: Surface,
+  tradeLists: readonly TradeList[],
 ) {
   const memberName = new Map(
     artists.flatMap((artist) =>
@@ -129,12 +133,13 @@ export function toBrowseInput(
     : (search.artist ?? []).filter((id) => selectedArtistIds.includes(id));
   const artist = search.slug ? [] : chosen.length > 0 ? chosen : [...selectedArtistIds];
   const match: BrowseMatchMode = surface === "browse" ? "off" : matchModeOf(search);
+  const list = comparedList(search.list, tradeLists, scopeOf(match, type))?.slug;
 
   return {
     type,
     slug: search.slug,
     match,
-    list: match === "off" ? undefined : search.list,
+    list: match === "off" ? undefined : list,
     artist,
     member: (search.member ?? []).map((name) => memberName.get(name.toLowerCase()) ?? name),
     season: search.season ?? [],

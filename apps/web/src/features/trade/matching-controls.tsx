@@ -1,3 +1,4 @@
+import type { PostType } from "@repo/api/schemas/trade";
 import { useQuery } from "@tanstack/react-query";
 import { useId } from "react";
 
@@ -7,14 +8,8 @@ import { SingleSelect } from "@/features/filters/single-select";
 import { LIST_TYPE_LABEL } from "@/features/list/list-type-badge";
 import { m } from "@/paraglide/messages";
 
-import {
-  ALL_LISTS,
-  canCompare,
-  COMPARE,
-  comparedList,
-  pickOf,
-  type TradeList,
-} from "./compare-with";
+import { canCompare, comparedList, pickOf, scopeOf, type TradeList } from "./compare-rule";
+import { ALL_LISTS, COMPARE } from "./compare-with";
 import { MatchHelp } from "./match-help";
 import { mutualCountOptions } from "./queries";
 
@@ -24,6 +19,8 @@ type Mode = "any" | "mutual";
 
 type MatchingProps = {
   mode: Mode;
+  /** the URL's `type`, or All: Mutual overrides it with WTT, and it applies again once Mutual is off */
+  urlType: PostType;
   /** the URL's `list`, which may not be one the viewer can compare */
   list: string | undefined;
   tradeLists: readonly TradeList[];
@@ -32,26 +29,26 @@ type MatchingProps = {
 
 /** The switch counts the people Mutual would list for the compared lists, so its number only ever means mutual. */
 export function MatchingControls(props: MatchingProps) {
-  const { mode, list, tradeLists, onChange } = props;
+  const { mode, urlType, list, tradeLists, onChange } = props;
   const id = useId();
   const mutual = mode === "mutual";
-  const selected = comparedList(list, tradeLists, mutual);
-  // a one-way list falls back to All my lists under Mutual, so its count does too
+  const scope = scopeOf(mode, urlType);
+  const selected = comparedList(list, tradeLists, scope);
+  // a one-way list falls back to All my lists under Mutual, so its count does too; Mutual is
+  // WTT only, so the Post type never changes it
   const { data: count = 0 } = useQuery(
-    mutualCountOptions(comparedList(list, tradeLists, true)?.slug),
+    mutualCountOptions(comparedList(list, tradeLists, scopeOf("mutual", urlType))?.slug),
   );
   const shown = count > COUNT_CAP ? `${COUNT_CAP}+` : String(count);
 
   const setMutual = (on: boolean) => {
     const next: Mode = on ? "mutual" : "any";
-    // a list the new option can't use is reset, so the URL never carries a dead choice
-    const keep = list !== undefined && comparedList(list, tradeLists, on) !== undefined;
-    onChange({ match: next, list: keep ? list : undefined });
+    onChange({ match: next, list: comparedList(list, tradeLists, scopeOf(next, urlType))?.slug });
   };
 
   return (
     <>
-      <span className="flex items-center gap-2 max-md:order-1 md:order-3">
+      <span className="flex items-center gap-2 max-md:order-1 md:order-4 md:ml-auto">
         <Switch id={id} checked={mutual} onCheckedChange={setMutual} />
         <Label
           htmlFor={id}
@@ -71,7 +68,7 @@ export function MatchingControls(props: MatchingProps) {
         </Label>
       </span>
 
-      <span className="flex items-center gap-1 max-md:order-3 md:order-4">
+      <span className="order-3 flex items-center gap-1">
         <SingleSelect
           label={m.trade_list_label()}
           options={[
@@ -82,7 +79,7 @@ export function MatchingControls(props: MatchingProps) {
                 name: item.name,
                 type: LIST_TYPE_LABEL[item.listTypeNew](),
               }),
-              disabled: !canCompare(item, tradeLists, mutual),
+              disabled: !canCompare(item, tradeLists, scope),
             })),
           ]}
           value={selected?.slug ?? ALL_LISTS}
@@ -98,10 +95,11 @@ export function MatchingControls(props: MatchingProps) {
 /** What Compare with compares, under the controls; nothing while it is All my lists. */
 export function ComparedLine({
   mode,
+  urlType,
   list,
   tradeLists,
-}: Pick<MatchingProps, "mode" | "list" | "tradeLists">) {
-  const selected = comparedList(list, tradeLists, mode === "mutual");
+}: Pick<MatchingProps, "mode" | "urlType" | "list" | "tradeLists">) {
+  const selected = comparedList(list, tradeLists, scopeOf(mode, urlType));
   if (!selected) return null;
   return (
     <p className="text-muted-foreground text-xs text-pretty">

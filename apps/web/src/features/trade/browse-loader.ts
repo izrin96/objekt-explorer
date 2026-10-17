@@ -4,6 +4,7 @@ import { currentUserOptions } from "@/features/user/queries";
 import { orpc } from "@/lib/orpc";
 
 import { type FeedSearch, type Surface, toBrowseInput } from "./browse-search";
+import { tradeListsOf } from "./compare-rule";
 import { browseOptions, myPostsOptions } from "./queries";
 
 /**
@@ -26,7 +27,9 @@ export async function loadBrowse({
     queryClient.query({ ...orpc.config.getSelectedArtists.queryOptions(), staleTime: "static" }),
     queryClient.query({ ...currentUserOptions, staleTime: "static" }),
   ]);
-  const options = browseOptions(toBrowseInput(search, artists, selected, surface));
+  const options = browseOptions(
+    toBrowseInput(search, artists, selected, surface, tradeListsOf(user?.lists ?? [])),
+  );
   // a filter change keeps the current posts on screen while the next ones load
   if (cause === "stay") {
     void queryClient.infiniteQuery(options).catch(() => undefined);
