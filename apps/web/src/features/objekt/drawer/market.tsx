@@ -14,7 +14,6 @@ import { truncateAddress } from "@repo/lib/address";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { lazy, Suspense, useId, useState } from "react";
-import { createPortal } from "react-dom";
 import { InView } from "react-intersection-observer";
 
 import { EmptyState } from "@/components/shared/empty-state";
@@ -57,12 +56,9 @@ const PriceHistoryChart = lazy(() =>
 export function MarketPanel({
   slug,
   onOpenSerial,
-  barSlot,
 }: {
   slug: string;
   onOpenSerial: (serial: number) => void;
-  /** where the phone bar is drawn: outside the drawer's scroll, so it stays at the bottom */
-  barSlot: HTMLElement | null;
 }) {
   const [sort, setSort] = useState<SortState<SortBy>>({ key: "createdAt", dir: "desc" });
   const { currency, formatUsd } = useCurrency();
@@ -133,7 +129,6 @@ export function MarketPanel({
   const isMine = (item: MarketListing) =>
     myListSlugs.has(item.list.slug) ||
     myAddresses.some((address) => isSameAddress(address, item.list.profile?.address));
-  const barItem = items.find((item) => item.messageable && !isMine(item));
 
   return (
     <div className="flex flex-col gap-4">
@@ -265,9 +260,6 @@ export function MarketPanel({
         </div>
       )}
       {builder.element}
-      {barItem && barSlot
-        ? createPortal(<ListingBar item={barItem} slug={slug} actions={actions} />, barSlot)
-        : null}
     </div>
   );
 }
@@ -331,45 +323,6 @@ const offerRequest = (item: MarketListing, slug: string): OfferRequest => ({
     ],
   },
 });
-
-/** Below `sm` a row's menu is two taps deep, so the first listing the viewer can message is pinned. */
-function ListingBar({
-  item,
-  slug,
-  actions,
-}: {
-  item: MarketListing;
-  slug: string;
-  actions: RowActions;
-}) {
-  const { price, currency: listed } = item;
-  const priced = !item.isQyop && price !== null && listed !== null;
-  const line = [
-    item.isQyop ? m.objekt_qyop() : priced ? formatCurrency(price, listed) : "—",
-    item.serial === null ? null : `#${item.serial}`,
-    sellerOf(item).name ?? m.objekt_market_seller(),
-  ].filter((part) => part !== null);
-
-  return (
-    <div
-      role="group"
-      aria-label={m.objekt_market_bar_aria()}
-      className="bg-popover flex flex-col gap-2 border-t px-6 pt-3 pb-[calc(env(safe-area-inset-bottom,0px)+--spacing(3))] sm:hidden"
-    >
-      <p className="truncate font-mono text-sm tabular-nums">{line.join(" · ")}</p>
-      <div className="grid grid-cols-2 gap-2">
-        <Button variant="outline" onClick={() => actions.message(item)}>
-          <ChatCircleIcon />
-          {m.chat_message()}
-        </Button>
-        <Button onClick={() => actions.offer(offerRequest(item, slug))}>
-          <HandshakeIcon />
-          {m.offer_make()}
-        </Button>
-      </div>
-    </div>
-  );
-}
 
 /** The app's one timestamp; a phone-width drawer keeps the day and leaves the time to `title`. */
 function ListingTime({ date }: { date: Date }) {
