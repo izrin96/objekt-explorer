@@ -304,7 +304,7 @@ function PersonSummary({
         <span aria-hidden className={NUMBER}>
           {mutual}
         </span>
-        <span aria-hidden className={mutual > 0 ? undefined : LABEL}>
+        <span aria-hidden className={mutual > 0 ? "text-xs" : LABEL}>
           {m.trade_summary_mutual()}
         </span>
       </div>
