@@ -40,7 +40,7 @@ export function BrowseFilters({
   onReset: () => void;
   /** the Post type menu: last on the facet row, after Reset */
   postType: ReactNode;
-  /** after a divider; below `md` they sit beside the Filters button */
+  /** after a divider; below `md` they wrap in after Reset */
   matching?: ReactNode;
   comparedLine?: ReactNode;
 }) {
@@ -89,11 +89,7 @@ export function BrowseFilters({
 
   return (
     <>
-      {/* below `md` every facet is in the sheet and the controls scroll sideways within the row */}
-      <div
-        data-scroll-x
-        className="flex items-center gap-2 max-md:overflow-x-auto max-md:*:flex-none md:flex-wrap"
-      >
+      <div className="flex flex-wrap items-center gap-2">
         <FilterSheet
           facets={facets}
           groups={groups}
@@ -101,11 +97,10 @@ export function BrowseFilters({
           onChange={setFacet}
           keys={FACET_KEYS}
           extras={extras}
-          foldAll
           onReset={onReset}
           resetDisabled={nothingToReset}
         />
-        <div className="contents max-md:hidden">
+        <div className="contents">
           <FacetControls
             surface="inline"
             facets={facets}
@@ -113,9 +108,8 @@ export function BrowseFilters({
             values={values}
             onChange={setFacet}
             keys={BEFORE_TYPE}
-            foldAll
           />
-          <ExtraFacetControls surface="inline" extras={extras} foldAll />
+          <ExtraFacetControls surface="inline" extras={extras} />
           <FacetControls
             surface="inline"
             facets={facets}
@@ -123,7 +117,6 @@ export function BrowseFilters({
             values={values}
             onChange={setFacet}
             keys={AFTER_TYPE}
-            foldAll
           />
           <ResetButton onReset={onReset} disabled={nothingToReset} />
         </div>
