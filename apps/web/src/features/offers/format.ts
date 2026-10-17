@@ -15,7 +15,9 @@ import { collectionName } from "@/features/objekt/objekt-label";
 import { formatCurrency } from "@/features/settings/use-currency";
 import { relativeTime } from "@/lib/time";
 import { m } from "@/paraglide/messages";
+import { getLocale } from "@/paraglide/runtime";
 
+import { timeLeft } from "./next-step";
 import type { Collections } from "./pick";
 
 export const offerNo = (id: number) => `O-${id}`;
@@ -215,4 +217,21 @@ export function tradeNotificationText(payload: TradePayload, partner = payload.p
     case "wrong_copy_auto_accepted":
       return m.notification_trade_wrong_copy_auto_accepted({ ...params, ...copy });
   }
+}
+
+/** "Oct 22", in the viewer's zone, so it waits for the client. */
+export function shortDate(iso: string) {
+  return new Intl.DateTimeFormat(getLocale(), { month: "short", day: "numeric" }).format(
+    new Date(iso),
+  );
+}
+
+/** "5 days" or "3 hours" until `iso`; reads the clock here, outside any component body. */
+export function leftLabel(iso: string) {
+  const { unit, value } = timeLeft(iso, Date.now());
+  return new Intl.NumberFormat(getLocale(), {
+    style: "unit",
+    unit,
+    unitDisplay: "long",
+  }).format(value);
 }

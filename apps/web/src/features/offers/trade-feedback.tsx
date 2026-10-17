@@ -1,11 +1,8 @@
 import { type TradeView as Trade, TRADE_RATINGS, type TradeRating } from "@repo/api/schemas/offer";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useId, useState } from "react";
+import { useState } from "react";
 
-import { untilLabel } from "@/features/chat/format";
 import { orpc } from "@/lib/orpc";
-import { TONE_EDGE, TONE_FILL } from "@/lib/tone";
-import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import { invalidateOfferLists } from "./queries";
@@ -18,17 +15,9 @@ const RATING_LABEL: Record<TradeRating, () => string> = {
   negative: m.offer_rating_negative,
 };
 
-export function Feedback({
-  trade,
-  name,
-  hydrated,
-}: {
-  trade: Trade;
-  name: string;
-  hydrated: boolean;
-}) {
+/** The rating control and its error line, inside the completed and failed banners. */
+export function Feedback({ trade, name }: { trade: Trade; name: string }) {
   const queryClient = useQueryClient();
-  const headingId = useId();
   const [error, setError] = useState<string | null>(null);
   const rate = useMutation(
     orpc.offer.rate.mutationOptions({
@@ -52,39 +41,20 @@ export function Feedback({
       : m.offer_rating_title({ name });
 
   return (
-    <section
-      aria-labelledby={headingId}
-      className={cn(
-        "flex flex-col gap-2 rounded-lg border p-3",
-        trade.canRate && [TONE_EDGE.success, TONE_FILL.success],
-      )}
-    >
-      <h3 id={headingId} className="text-sm font-medium">
-        {trade.status === "in_progress" ? m.offer_rating_pending_title() : title}
-      </h3>
+    <div className="flex flex-col gap-1.5">
+      {trade.status === "failed" ? <p className="text-xs text-pretty">{title}</p> : null}
       <SegmentedChoice
         label={title}
         options={TRADE_RATINGS.map((rating) => ({ value: rating, label: RATING_LABEL[rating]() }))}
         value={value}
-        disabled={!trade.canRate}
-        className="grid w-full grid-cols-3 *:px-1"
+        className="grid w-full max-w-sm grid-cols-3 *:px-1"
         onChange={(rating) => {
           if (rating !== value) rate.mutate({ tradeId: trade.id, rating });
         }}
       />
-      <p className="text-muted-foreground text-xs text-pretty">
-        {trade.status === "in_progress"
-          ? m.offer_rating_pending()
-          : trade.canRate && trade.rateUntil && hydrated
-            ? m.offer_rating_until({ time: untilLabel(trade.rateUntil) })
-            : !trade.canRate
-              ? m.offer_rating_closed()
-              : null}{" "}
-        {m.offer_rating_private()}
-      </p>
       <p role="alert" className="text-destructive-foreground text-xs empty:hidden">
         {error}
       </p>
-    </section>
+    </div>
   );
 }

@@ -1,4 +1,4 @@
-import { HandshakeIcon } from "@phosphor-icons/react";
+import { ArrowLeftIcon, HandshakeIcon } from "@phosphor-icons/react";
 import { Link, createFileRoute, notFound } from "@tanstack/react-router";
 
 import { EmptyState } from "@/components/shared/empty-state";
@@ -28,13 +28,39 @@ export const Route = createFileRoute("/(container)/trade/mine/$tradeId")({
         : m.page_titles_trade_mine(),
     }),
   notFoundComponent: TradeNotFound,
-  pendingComponent: TradeViewSkeleton,
+  pendingComponent: TradePending,
   component: TradePage,
 });
 
 function TradePage() {
   const { id } = Route.useLoaderData();
-  return <TradeView key={id} id={id} />;
+  return (
+    <div className="flex flex-col gap-3">
+      <BackLink />
+      <TradeView key={id} id={id} />
+    </div>
+  );
+}
+
+function BackLink() {
+  return (
+    <Link
+      to="/trade/mine"
+      className="text-muted-foreground hover:text-foreground flex w-fit items-center gap-1.5 text-sm"
+    >
+      <ArrowLeftIcon aria-hidden className="size-4" />
+      {m.page_titles_trade_mine()}
+    </Link>
+  );
+}
+
+function TradePending() {
+  return (
+    <div className="flex flex-col gap-3">
+      <BackLink />
+      <TradeViewSkeleton />
+    </div>
+  );
 }
 
 function TradeNotFound() {

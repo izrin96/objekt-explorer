@@ -1,4 +1,3 @@
-import { WarningIcon } from "@phosphor-icons/react";
 import type { TradeView } from "@repo/api/schemas/offer";
 import { truncateAddress } from "@repo/lib/address";
 import { Fragment, type ReactNode, useState } from "react";
@@ -14,11 +13,10 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { untilLabel } from "@/features/chat/format";
 import { SerialNo } from "@/features/objekt/objekt-label";
 import { m } from "@/paraglide/messages";
 
-import { useOfferActions } from "./actions";
+import type { useOfferActions } from "./actions";
 import { agoLabel } from "./format";
 import { StatusBadge } from "./status-badge";
 
@@ -26,7 +24,7 @@ type Leg = TradeView["legs"][number];
 type Substitute = Leg["substitutes"][number];
 
 /** A message with markup in its slots; private-use stand-ins keep each locale's word order. */
-function rich<K extends string>(
+export function rich<K extends string>(
   format: (params: Record<K, string>) => string,
   nodes: Record<K, ReactNode>,
 ) {
@@ -42,7 +40,7 @@ function rich<K extends string>(
     });
 }
 
-function Serial({ serial, estimated }: { serial: number | null; estimated: boolean }) {
+export function Serial({ serial, estimated }: { serial: number | null; estimated: boolean }) {
   return serial === null ? (
     m.offer_serial_unnumbered()
   ) : (
@@ -66,92 +64,43 @@ export function InPlaceOf({ leg }: { leg: Leg }) {
   );
 }
 
-/** The wrong copies before a waiting leg's receiver, who alone may accept or decline them. */
-export function WrongCopies({
-  leg,
-  trade,
-  name,
-  hydrated,
-}: {
-  leg: Leg;
-  trade: TradeView;
-  name: string;
-  hydrated: boolean;
-}) {
-  const actions = useOfferActions(trade.conversationId, () => "");
-  const asked = <Serial serial={leg.serial} estimated={leg.serialEstimated} />;
+/** One line per copy held on a leg's card; deciding on it is the banner's job. */
+export function HeldCopies({ leg, hydrated }: { leg: Leg; hydrated: boolean }) {
+  if (leg.substitutes.length === 0) return null;
   return (
-    <ul className="flex flex-col gap-2">
-      {leg.substitutes.map((sub) => {
-        const sent = <Serial serial={sub.serial} estimated={sub.serialEstimated} />;
-        return (
-          <li
-            key={sub.id}
-            className="border-warning/32 bg-warning/4 flex flex-col gap-2 rounded-xl border px-3.5 py-3 text-sm"
-          >
-            <p className="flex items-start gap-2 text-pretty">
-              <WarningIcon aria-hidden className="text-warning mt-0.5 size-4 shrink-0" />
-              <span>
-                {leg.fromYou
-                  ? rich(m.offer_wrong_copy_you_sent, { sent, asked })
-                  : rich(m.offer_wrong_copy_they_sent, { name, sent, asked })}
-              </span>
-            </p>
-            <p className="text-muted-foreground flex flex-wrap items-center gap-x-1 ps-6 text-xs">
-              <span className="font-mono" title={sub.txHash}>
-                {truncateAddress(sub.txHash)}
-              </span>
-              <CopyButton
-                text={sub.txHash}
-                label={m.offer_copy_hash()}
-                toastTitle={m.offer_hash_copied()}
-              />
-              {/* relative to the viewer's clock, so it waits for the client */}
-              {hydrated ? <time dateTime={sub.at}>{agoLabel(sub.at)}</time> : null}
-            </p>
-            <div className="ps-6">
-              {sub.status === "declined" ? (
-                <StatusBadge tone="neutral">{m.offer_wrong_copy_declined()}</StatusBadge>
-              ) : leg.fromYou ? (
-                <p className="text-muted-foreground text-xs text-pretty">
-                  {rich(m.offer_wrong_copy_giver_hint, { name, asked })}
-                  {/* in the viewer's time zone, so it waits for the client */}
-                  {sub.acceptBy && hydrated ? (
-                    <>
-                      {" "}
-                      {m.offer_wrong_copy_accept_by_giver({ name, date: untilLabel(sub.acceptBy) })}
-                    </>
-                  ) : null}
-                </p>
-              ) : (
-                <div className="flex flex-col gap-2">
-                  {sub.acceptBy && hydrated ? (
-                    <p className="text-muted-foreground text-xs text-pretty">
-                      {m.offer_wrong_copy_accept_by({ date: untilLabel(sub.acceptBy) })}
-                    </p>
-                  ) : null}
-                  <div className="flex flex-wrap gap-2">
-                    <AcceptCopy sub={sub} leg={leg} actions={actions} />
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      loading={actions.declineSubstitute.isPending}
-                      onClick={() => actions.declineSubstitute.mutate({ substituteId: sub.id })}
-                    >
-                      {m.offer_wrong_copy_decline()}
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </li>
-        );
-      })}
+    <ul className="flex flex-col gap-1">
+      {leg.substitutes.map((sub) => (
+        <li key={sub.id} className="text-muted-foreground flex flex-col gap-0.5 text-xs">
+          <span className="text-foreground flex flex-wrap items-center gap-x-2 gap-y-1">
+            <span>
+              {rich(m.offer_leg_copy_sent, {
+                sent: <Serial serial={sub.serial} estimated={sub.serialEstimated} />,
+              })}
+            </span>
+            {sub.status === "declined" ? (
+              <StatusBadge tone="neutral">{m.offer_wrong_copy_declined()}</StatusBadge>
+            ) : null}
+          </span>
+          <span className="flex flex-wrap items-center gap-x-1">
+            <span className="font-mono" title={sub.txHash}>
+              {truncateAddress(sub.txHash)}
+            </span>
+            <CopyButton
+              text={sub.txHash}
+              label={m.offer_copy_hash()}
+              toastTitle={m.offer_hash_copied()}
+            />
+            {/* relative to the viewer's clock, so it waits for the client */}
+            {hydrated ? <time dateTime={sub.at}>{agoLabel(sub.at)}</time> : null}
+          </span>
+        </li>
+      ))}
     </ul>
   );
 }
 
-function AcceptCopy({
+/** Accept and its confirmation, for the copy the banner shows. */
+export function AcceptCopy({
   sub,
   leg,
   actions,

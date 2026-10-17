@@ -1,5 +1,4 @@
 import type { TradeView as Trade } from "@repo/api/schemas/offer";
-import { useState } from "react";
 
 import {
   AlertDialog,
@@ -17,8 +16,18 @@ import { useOfferActions } from "./actions";
 import { itemLabel, tradeNo } from "./format";
 import { type Collections, pickKey } from "./pick";
 
-export function CancelTrade({ trade, collections }: { trade: Trade; collections: Collections }) {
-  const [open, setOpen] = useState(false);
+/** The confirmation only: the menu and the banner each open it. */
+export function CancelTrade({
+  trade,
+  collections,
+  open,
+  onOpenChange,
+}: {
+  trade: Trade;
+  collections: Collections;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
   const actions = useOfferActions(trade.conversationId, (keys) =>
     trade.legs
       .filter((leg) => keys.has(pickKey(leg)))
@@ -28,10 +37,7 @@ export function CancelTrade({ trade, collections }: { trade: Trade; collections:
 
   return (
     <>
-      <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
-        {m.offer_trade_cancel()}
-      </Button>
-      <AlertDialog open={open} onOpenChange={setOpen}>
+      <AlertDialog open={open} onOpenChange={onOpenChange}>
         <AlertDialogPopup>
           <AlertDialogHeader>
             <AlertDialogTitle>
@@ -51,7 +57,7 @@ export function CancelTrade({ trade, collections }: { trade: Trade; collections:
               onClick={() =>
                 actions.cancelTrade.mutate(
                   { tradeId: trade.id },
-                  { onSettled: () => setOpen(false) },
+                  { onSettled: () => onOpenChange(false) },
                 )
               }
             >

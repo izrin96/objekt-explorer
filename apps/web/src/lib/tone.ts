@@ -46,16 +46,16 @@ export const TONE_EDGE: Record<Tone, string> = {
   neutral: "border-border",
 };
 
-/** A solid mark, such as a step's top bar. */
-export const TONE_BAR: Record<Tone, string> = {
-  have: "border-type-have",
-  want: "border-type-want",
-  sale: "border-type-sale",
-  progress: "border-progress",
-  success: "border-success",
-  warning: "border-warning",
-  destructive: "border-destructive",
-  neutral: "border-border",
+/** A solid fill, such as a step's segment or the banner's icon tile (text on it is `text-white`). */
+export const TONE_SOLID: Record<Tone, string> = {
+  have: "bg-type-have",
+  want: "bg-type-want",
+  sale: "bg-type-sale",
+  progress: "bg-progress",
+  success: "bg-success",
+  warning: "bg-warning",
+  destructive: "bg-destructive",
+  neutral: "bg-muted-foreground",
 };
 
 /** Neutral is no colour at all: the chip keeps its own outline. */
