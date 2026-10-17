@@ -1,7 +1,7 @@
 import { ArrowClockwiseIcon, CardsThreeIcon } from "@phosphor-icons/react";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
-import { Link, useNavigate, useRouter } from "@tanstack/react-router";
+import { Link, useHydrated, useNavigate, useRouter } from "@tanstack/react-router";
 import { useMemo, useRef, useState } from "react";
 import { WindowVirtualizer } from "virtua";
 
@@ -54,6 +54,7 @@ const SSR_POSTS = 4;
 
 export function BrowseView({ surface, search }: { surface: Surface; search: FeedSearch }) {
   const { data: user } = useCurrentUser();
+  const hydrated = useHydrated();
   const userLists = useUserLists();
   const forYou = surface === "forYou";
   const mode = forYou ? matchModeOf(search) : "off";
@@ -293,10 +294,15 @@ export function BrowseView({ surface, search }: { surface: Surface; search: Feed
           aria-busy={query.isPlaceholderData}
           className={cn("border-t", query.isPlaceholderData && "opacity-60")}
         >
-          {/* the server draws the first posts, so a full load is not blank until hydration;
-              until the first scroll, virtua keeps rendering the mount's `ssrCount` items even
-              after a filter leaves fewer, so a row past the end comes in undefined */}
-          <WindowVirtualizer data={rows} ssrCount={Math.min(SSR_POSTS, rows.length)}>
+          {/* the server draws the first posts, so a full load is not blank until hydration.
+              virtua then keeps drawing only `ssrCount` rows until the first scroll, so the list
+              remounts without it once hydrated: otherwise For you's headings take two of the
+              four rows and the feed looks like it ends after two posts */}
+          <WindowVirtualizer
+            key={hydrated ? "live" : "ssr"}
+            data={rows}
+            ssrCount={hydrated ? undefined : Math.min(SSR_POSTS, rows.length)}
+          >
             {(row: FeedRow | undefined) =>
               row?.heading ? (
                 <h2

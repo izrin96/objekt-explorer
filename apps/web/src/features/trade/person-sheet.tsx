@@ -138,10 +138,10 @@ function PersonBody({
   const clock = useMinuteClock();
   const now = hydrated ? clock : undefined;
   const also = identity.also.map((ref) => displayNickname(ref.address, ref.nickname));
-  const sections = {
-    theyHaveIWant: useRef<HTMLElement>(null),
-    iHaveTheyWant: useRef<HTMLElement>(null),
-  };
+  // hooks stay top-level: inside an object literal the React Compiler can cache them away
+  const theyHaveRef = useRef<HTMLElement>(null);
+  const youHaveRef = useRef<HTMLElement>(null);
+  const sections = { theyHaveIWant: theyHaveRef, iHaveTheyWant: youHaveRef };
   const contact: TradeContact = partner.messageable
     ? {
         kind: "open",
