@@ -272,6 +272,8 @@ const postSideViewSchema = z.object({
   slugs: z.string().array(),
   /** collections past `slugs` */
   more: z.number(),
+  /** every entry of the side, as Browse counts it; a tab loaded before it reads the collections */
+  copyCount: z.number().optional(),
 });
 
 /** A Trade post as the thread draws it, read live; `post` is null once the post is gone. */

@@ -471,8 +471,12 @@ export async function fetchPostCards(
 
   const side = (list: FeedList | null) => {
     if (!list) return null;
-    const { items, more } = previewSide(entriesOf.get(list.id) ?? [], null, POST_CARD_LIMIT);
-    return { slugs: items.map((item) => item.slug), more };
+    const { items, more, copyCount } = previewSide(
+      entriesOf.get(list.id) ?? [],
+      null,
+      POST_CARD_LIMIT,
+    );
+    return { slugs: items.map((item) => item.slug), more, copyCount };
   };
 
   for (const { id, post } of found) {

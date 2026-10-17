@@ -115,7 +115,7 @@ function MessagesFrame({
           className={cn("flex min-h-0 min-w-0 flex-col md:border-r", threadOpen && "max-md:hidden")}
         >
           <BoxTabs box={box} />
-          <ConversationSearch q={q} />
+          <ConversationSearch box={box} q={q} />
           {list}
         </aside>
         <section className={cn("flex min-h-0 min-w-0 flex-col", !threadOpen && "max-md:hidden")}>
