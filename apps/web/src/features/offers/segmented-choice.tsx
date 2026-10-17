@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 import { RadioGroupPrimitive, RadioPrimitive } from "@/components/ui/radio-group";
 import { cn } from "@/lib/utils";
 
@@ -15,7 +17,7 @@ export function SegmentedChoice<T extends string>({
   className,
 }: {
   label: string;
-  options: readonly { value: T; label: string }[];
+  options: readonly { value: T; label: string; icon?: ReactNode }[];
   value: T | null;
   onChange: (value: T) => void;
   disabled?: boolean;
@@ -48,9 +50,10 @@ export function SegmentedChoice<T extends string>({
             variant === "muted" &&
               "hover:text-muted-foreground data-checked:bg-background data-checked:text-foreground dark:data-checked:bg-input rounded-md data-checked:shadow-sm/5",
             variant === "outline" &&
-              "border-foreground/60 bg-background text-foreground hover:bg-secondary data-checked:border-foreground data-checked:bg-foreground data-checked:text-background rounded-lg border",
+              "border-foreground/40 text-foreground hover:bg-foreground/6 data-checked:border-foreground data-checked:bg-foreground data-checked:text-background gap-1.5 rounded-lg border bg-transparent [&_svg]:size-4 [&_svg]:shrink-0",
           )}
         >
+          {option.icon}
           {option.label}
         </RadioPrimitive.Root>
       ))}

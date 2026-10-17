@@ -46,7 +46,7 @@ export const TONE_EDGE: Record<Tone, string> = {
   neutral: "border-border",
 };
 
-/** A solid fill, such as a step's segment or the banner's icon tile (text on it is `text-white`). */
+/** A solid fill for a mark with no text on it, such as a step's segment: white fails on the light dark-theme tones. */
 export const TONE_SOLID: Record<Tone, string> = {
   have: "bg-type-have",
   want: "bg-type-want",

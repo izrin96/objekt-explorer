@@ -14,7 +14,7 @@ import { useId, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
 import { untilLabel } from "@/features/chat/format";
-import { TONE_EDGE, TONE_FILL, TONE_INK, TONE_SOLID, type Tone } from "@/lib/tone";
+import { TONE_EDGE, TONE_FILL, TONE_INK, type Tone } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
@@ -229,11 +229,12 @@ export function NextStepBanner({
       <span
         aria-hidden
         className={cn(
-          "grid size-10 shrink-0 place-items-center rounded-lg text-white",
-          TONE_SOLID[tone],
+          "grid size-10 shrink-0 place-items-center rounded-full",
+          TONE_FILL[tone],
+          TONE_INK[tone],
         )}
       >
-        <StepIcon weight="fill" className="size-5" />
+        <StepIcon weight="bold" className="size-5" />
       </span>
       <div className="flex min-w-0 flex-1 basis-56 flex-col gap-1">
         <h3 id={titleId} className="text-sm font-semibold text-pretty wrap-anywhere">
