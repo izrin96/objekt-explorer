@@ -8,8 +8,7 @@ import { useState } from "react";
 import { PendingStatus } from "@/components/router/pending";
 import { CopyButton } from "@/components/shared/copy-button";
 import { EmptyState } from "@/components/shared/empty-state";
-import { Identicon } from "@/components/shared/identicon";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { PersonAvatar } from "@/components/shared/person-avatar";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSafetyDialogs } from "@/features/moderation/safety-dialogs";
@@ -87,16 +86,12 @@ function TradeDetail({ trade, collections }: { trade: Trade; collections: Collec
     <article className="bg-card grid grid-cols-1 rounded-xl border lg:grid-cols-[minmax(0,1fr)_20rem]">
       <div className="flex min-w-0 flex-col gap-6 p-4 sm:p-6">
         <header className="flex items-center gap-3">
-          {!trade.partner.user.image && address ? (
-            <Identicon address={address} className="rounded-full" />
-          ) : (
-            <Avatar className="size-10 shrink-0">
-              {trade.partner.user.image ? (
-                <AvatarImage src={trade.partner.user.image} alt="" />
-              ) : null}
-              <AvatarFallback>{name.slice(0, 1).toUpperCase()}</AvatarFallback>
-            </Avatar>
-          )}
+          <PersonAvatar
+            name={name}
+            image={trade.partner.user.image}
+            address={address}
+            className="size-10 shrink-0"
+          />
           <div className="flex min-w-0 flex-1 flex-col">
             <div className="flex min-w-0 items-center gap-1">
               <h2 className="truncate font-mono text-base font-semibold" title={name}>

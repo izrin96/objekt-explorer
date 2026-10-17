@@ -15,7 +15,7 @@ import type { NoteEvent, Notification } from "@repo/api/schemas/notification";
 import { Link, linkOptions } from "@tanstack/react-router";
 import { type ReactNode, useState } from "react";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { PersonAvatar } from "@/components/shared/person-avatar";
 import { Button } from "@/components/ui/button";
 import { untilLabel } from "@/features/chat/format";
 import { collectionName } from "@/features/objekt/objekt-label";
@@ -86,12 +86,7 @@ function Badge({ icon }: { icon: NotificationIcon }) {
 }
 
 function PartnerFace({ partner, className }: { partner: Partner; className?: string }) {
-  return (
-    <Avatar className={className}>
-      {partner.image ? <AvatarImage src={partner.image} alt="" /> : null}
-      <AvatarFallback>{partner.name.slice(0, 1).toUpperCase()}</AvatarFallback>
-    </Avatar>
-  );
+  return <PersonAvatar name={partner.name} image={partner.image} className={className} />;
 }
 
 function ToneTile({ icon }: { icon: NotificationIcon }) {
