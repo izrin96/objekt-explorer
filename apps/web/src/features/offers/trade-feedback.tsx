@@ -50,23 +50,26 @@ export function Feedback({ trade, name }: { trade: Trade; name: string }) {
   return (
     <div className="flex flex-col gap-1.5">
       {trade.status === "failed" ? <p className="text-xs text-pretty">{title}</p> : null}
-      <SegmentedChoice
-        label={title}
-        variant="outline"
-        options={TRADE_RATINGS.map((rating) => {
-          const RatingIcon = RATING_ICON[rating];
-          return {
-            value: rating,
-            label: RATING_LABEL[rating](),
-            icon: <RatingIcon aria-hidden weight={rating === value ? "fill" : "regular"} />,
-          };
-        })}
-        value={value}
-        className="grid w-full max-w-sm grid-cols-3 *:px-1"
-        onChange={(rating) => {
-          if (rating !== value) rate.mutate({ tradeId: trade.id, rating });
-        }}
-      />
+      <div className="@container">
+        <SegmentedChoice
+          label={title}
+          variant="outline"
+          options={TRADE_RATINGS.map((rating) => {
+            const RatingIcon = RATING_ICON[rating];
+            return {
+              value: rating,
+              label: RATING_LABEL[rating](),
+              icon: <RatingIcon aria-hidden weight={rating === value ? "fill" : "regular"} />,
+            };
+          })}
+          value={value}
+          // icon above label only where the row is too narrow for both side by side
+          className="grid w-full max-w-sm grid-cols-3 gap-1.5 *:h-auto *:flex-col *:gap-1 *:px-1 *:py-2 *:text-sm *:whitespace-normal @[17.5rem]:*:h-8 @[17.5rem]:*:flex-row @[17.5rem]:*:gap-1.5 @[17.5rem]:*:py-0 @[17.5rem]:*:whitespace-nowrap"
+          onChange={(rating) => {
+            if (rating !== value) rate.mutate({ tradeId: trade.id, rating });
+          }}
+        />
+      </div>
       <p role="alert" className="text-destructive-foreground text-xs empty:hidden">
         {error}
       </p>

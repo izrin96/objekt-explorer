@@ -263,7 +263,6 @@ export function NextStepBanner({
             )}
           </p>
         ))}
-        {view.extra ? <div className="mt-1">{view.extra}</div> : null}
       </div>
       {deadline || view.actions ? (
         <div className="flex flex-col items-end gap-2 max-sm:w-full max-sm:flex-row max-sm:flex-wrap max-sm:items-center max-sm:justify-between">
@@ -275,6 +274,8 @@ export function NextStepBanner({
           ) : null}
         </div>
       ) : null}
+      {/* its own row, so on a phone it takes the width the icon's indent would cost */}
+      {view.extra ? <div className="w-full sm:ps-14">{view.extra}</div> : null}
     </section>
   );
 }
