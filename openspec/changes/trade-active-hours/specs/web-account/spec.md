@@ -8,6 +8,7 @@ A signed-in user's account settings SHALL live on the `/account` page, one route
 - `/account/messages`: Messages (see `web-chat`);
 - `/account/trade`: Trade, holding Active hours (see `web-active-hours`);
 - `/account/blocked`: Blocked users (see `web-moderation`);
+- `/account/hidden`: Hidden people (see `web-trade-for-you` Hide a partner);
 - `/account/sign-in`: Discord and Twitter;
 - `/account/password`: shown only when the account has a password;
 - `/account/danger`: Delete account.

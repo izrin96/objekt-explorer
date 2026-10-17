@@ -2,7 +2,7 @@
 
 ## Purpose
 The `/account` page on `apps/web`: everything a signed-in user can change about their site
-account, with its linked Cosmo profiles, notification, message and block settings each in its own section.
+account, with its linked Cosmo profiles, notification, message, block and hidden-people settings each in its own section.
 
 ## Requirements
 
@@ -13,6 +13,7 @@ A signed-in user's account settings SHALL live on the `/account` page, one route
 - `/account/notifications`: Notifications (see `web-notifications`);
 - `/account/messages`: Messages (see `web-chat`);
 - `/account/blocked`: Blocked users (see `web-moderation`);
+- `/account/hidden`: Hidden people (see `web-trade-for-you` Hide a partner);
 - `/account/sign-in`: Discord and Twitter;
 - `/account/password`: shown only when the account has a password;
 - `/account/danger`: Delete account.

@@ -8,8 +8,8 @@ its trades, collection progress and statistics.
 
 ### Requirement: Profile layout and privacy
 `/@<nickname>` SHALL resolve a nickname or address to a profile, show its banner, identity,
-linked socials when the owner allows, four summary counts and tabs for Collection, Trades,
-Progress, Statistics and Lists. A private profile SHALL show only the private guard to
+linked socials when the owner allows, four summary counts and tabs for Collection, Activity
+History (at `/@<nickname>/trades`), Progress, Statistics and Lists. A private profile SHALL show only the private guard to
 anyone but its owner. The owner SHALL see an Edit action opening the profile edit dialog.
 An unknown nickname SHALL show the not-found surface.
 
@@ -43,14 +43,14 @@ and lock mark, and keep the date across filter changes until cleared.
 - **THEN** pins no longer lead the grid, cards carry no pin or lock marks, and selecting cards offers no actions
 
 ### Requirement: Trades, progress and statistics
-The Trades tab SHALL list the profile's transfers by type (all, mint, received, sent, spin)
+The Activity History tab SHALL list the profile's transfers by type (all, mint, received, sent, spin)
 with paging and hide them entirely when the owner hides transfers. The Progress tab SHALL
 show per member and season how many of each class are owned versus total, excluding the
 Welcome and Zero classes, with a chart per member. The Statistics tab SHALL chart the owned
 collection by member and by season.
 
 #### Scenario: Hidden transfers
-- **WHEN** the owner hides transfers and a visitor opens Trades
+- **WHEN** the owner hides transfers and a visitor opens Activity History
 - **THEN** the tab shows the hidden notice and no rows
 
 #### Scenario: Progress excludes Welcome

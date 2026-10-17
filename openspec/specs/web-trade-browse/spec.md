@@ -127,8 +127,10 @@ Posts SHALL be shown whole, with no "of N", when none of these is active: every 
 The match chip SHALL count the post's owner (see Matches to the signed-in viewer), whatever is shown and whatever filter is active. Rings SHALL mark matched objekts among those shown, so under Any or Mutual every shown objekt is ringed.
 
 The posts left out SHALL be left out by the server, so every page of the feed holds up to a full page of posts. The order is newest bump first on Browse, as Mutual order defines under Mutual, and as the Mutual and One way sections define under Any (see Matches and Compare with). The filters SHALL combine. When no post is listed:
-- under Any, the feed SHALL say that no posts match the viewer's lists and offer to show all posts on Browse, keeping the filters;
-- under Mutual, it SHALL say that no one matches the viewer both ways and offer to switch to Any;
+- on For you with a collection filter or `slug` set, under Any or Mutual, it SHALL say that no posts match the filters and offer Reset, which keeps `match` and `list`;
+- otherwise under Any, the feed SHALL say that no posts match the viewer's lists and offer to show all posts on Browse, keeping the filters;
+- otherwise under Mutual, it SHALL say that no one matches the viewer both ways and offer to switch to Any;
+- under Any and Mutual, while Compare with names a list, the message SHALL name it ("No posts match spares", "No one matches spares both ways");
 - with other filters set, it SHALL offer Reset.
 
 A filter value that does not parse SHALL be ignored.
@@ -432,31 +434,15 @@ The drawer's On Trade counts SHALL leave out trade-blocked and banned accounts. 
 ### Requirement: Make offer on a post
 Each post that shows Message SHALL also offer Make offer. It opens the offer builder for the post's owner, addressed to the post's own list: the have list of a pair, or the post's only list. When that list is a have or sale list, You get SHALL ask only from it; a want-only post's You get works as from a conversation (see `web-trade-offers`).
 
-The builder SHALL lay out shortcuts from the post, each one tap to add, without pre-filling the offer:
-- under You get, when the post has a have or sale side: its entries the viewer may ask for, those in collections on the viewer's want lists first, then the rest in list order;
-- under You give, when the post has a want side (a WTB post, or the want list of a WTT pair): objekts the viewer holds that are transferable and not reserved, in collections on that want list, those on the viewer's have and sale lists bound to a Cosmo profile first.
-
-Each shortcut SHALL show at most 8 objekts. An objekt added to the offer SHALL leave its shortcut, and the next one SHALL take its place. A shortcut with nothing to show SHALL not be rendered.
+The builder SHALL open empty: the post SHALL hand it no shortcuts and no prefill, and Add SHALL open the full picker.
 
 #### Scenario: From a WTT post
 - **WHEN** a user activates Make offer on rin.trades's post for the have list "doubles", and rin.trades also has the sale list "spares" on Trade
 - **THEN** the builder opens addressed to rin.trades, and You get's picker lists the entries of "doubles" only
 
-#### Scenario: Matches first
-- **WHEN** rin.trades's have list holds 20 entries and its 15th is SeoYeon 204Z, which is on the viewer's want list
-- **THEN** SeoYeon 204Z is the first objekt under You get
-
-#### Scenario: Refill
-- **WHEN** the viewer adds an objekt from the You get shortcut of a post with 12 entries
-- **THEN** that objekt leaves the shortcut and the 9th entry joins it, so it still shows 8
-
 #### Scenario: WTB post
 - **WHEN** a user activates Make offer on a WTB post wanting HaSeul 302Z, and holds a copy of it
-- **THEN** that copy is shown under You give, and nothing is shown under You get from the post, while You get's picker still asks from the owner's have and sale lists, or their collection when they have none
-
-#### Scenario: Nothing to give
-- **WHEN** the viewer holds nothing the post's want list asks for
-- **THEN** no shortcut is shown under You give
+- **THEN** the builder opens with nothing under You give or You get, You give's picker lists the copy, and You get's picker asks from the owner's have and sale lists, or their collection when they have none
 
 ### Requirement: Owner reputation on posts
 Each post SHALL show its owner's reputation line (see `web-verified-trades`) beside the owner's name.
@@ -466,13 +452,13 @@ Each post SHALL show its owner's reputation line (see `web-verified-trades`) bes
 - **THEN** the byline shows nakyoung.cards's verified count and positive share
 
 ### Requirement: Trade card
-A post on Browse and a person sheet (see `web-trade-for-you`) SHALL be built from the same parts, in the same order:
+A post on Browse and a person sheet (see `web-trade-for-you`) SHALL be built from the same header and actions, in the same order. A post carries the match chip and its strips; the person sheet carries its summary and sections in their place (see `web-trade-for-you` Person sheet):
 - **Header**:
   - the avatar;
   - the name, linking to the profile, with the Discord badge the owner chose to show. The Twitter badge the owner chose to show SHALL sit in the person sheet only, so a Browse or For you post's byline keeps to one line of badges;
   - the reputation line (see `web-verified-trades`);
   - the ⋯ menu, holding Hide, Block and Report for a signed-in viewer who is not the owner.
-- **Match chip**, for a signed-in viewer with at least one count above zero. On For you, a post SHALL show it only when M is above zero: on a one-way post the strip labels carry the count (see Filters, Narrowing), and All matches still opens the person sheet with both counts. With A the "They have" count, B the "You have" count and M the mutual score (see Matches to the signed-in viewer):
+- **Match chip**, on a post, for a signed-in viewer with at least one count above zero. On For you, a post SHALL show it only when M is above zero: on a one-way post the strip labels carry the count (see Filters, Narrowing), and All matches still opens the person sheet with both counts. With A the "They have" count, B the "You have" count and M the mutual score (see Matches to the signed-in viewer):
   - only A above zero: it reads "They have A you want";
   - only B above zero: it reads "You have B they want";
   - both above zero and M zero: it reads "They have A you want · you have B they want";
@@ -481,8 +467,8 @@ A post on Browse and a person sheet (see `web-trade-for-you`) SHALL be built fro
   - Its numbers SHALL be monospace.
   - Its visible words SHALL be its accessible name.
   - It SHALL open the popover of matched lists.
-  - A post and the sheet SHALL word and colour the chip the same way from the same counts.
-- **Strip**: a monospace role label in its list type's colour, with the number of objekts on that side, over one line of thumbnails 3.5rem wide. A strip SHALL never wrap: it shows as many thumbnails as fit its width, and when some don't fit, the last place holds a "+N" tile counting every objekt not shown. On Browse the tile links to the list. Sale prices show as a monospace caption under each thumbnail.
+  - The person sheet's summary SHALL show the same A, B and M as the chip, with the same mutual colour.
+- **Strip**: a monospace role label in its list type's colour, with the number of copies on that side, then " · " and the list's name, muted and truncated to one line, over one line of thumbnails 2.5rem wide with no caption. The label SHALL link to the list page, carrying the list's name and description in its title, and the description SHALL also be available to assistive technology. A strip SHALL never wrap: it shows as many thumbnails as fit its width, and when some don't fit, the last place holds a "+N" tile counting the copies not shown, in the same unit as the label. On Browse the tile links to the list.
 - **Actions**: Message, then Make offer as the primary button. An account that doesn't take messages from the viewer shows "Not taking messages" in their place.
 
 **A Browse post** SHALL be a bordered card on the card surface, one post to a row at every width, laid out in one line where it fits:
@@ -490,15 +476,20 @@ A post on Browse and a person sheet (see `web-trade-for-you`) SHALL be built fro
 - the sides, taking the remaining width:
   - a WTT post with both lists: the HAVE strip and the WANT strip side by side, sharing the width equally, with a ⇄ mark between them. When narrowing leaves one side with no related objekt, that side is the muted line Filters describes, under the other strip, which takes the whole width, with no ⇄ mark;
   - a post with one side (WTS, WTB, or half a pair): that one strip across the whole width;
+  - a side whose list has no entries: the muted line Filters describes, reading "nothing listed" ("HAVE 0 · nothing listed"), whether or not a filter is active, under the other strip, with no ⇄ mark;
 
-  Side-by-side strips SHALL be top-aligned, so their labels sit on one line whatever each strip holds (prices, "none").
+  Side-by-side strips SHALL be top-aligned, so their labels sit on one line whatever each strip holds.
 - the actions: Make offer and an icon-only Message with an accessible name;
-- under the sides, one line holding the Lists control, the match chip and the All matches control, the last two styled as small outline buttons in the same type. A post holding two lists SHALL show the Lists control, reading "2 lists" and opening both lists, each with its name and description and linking to its list page. A post holding one list SHALL show no Lists control: its strip's role label SHALL link to the list page instead, with the list's name in its accessible name. The line SHALL be truncated with an ellipsis when it doesn't fit, and each list's full description SHALL stay available to assistive technology.
+- under the sides, one line holding the match chip and the All matches control, styled as small outline buttons in the same type. Each strip's role label links to its own list (see Strip), so a post holding two lists needs no separate control for them.
 
 Below `md`, the post SHALL stack:
-- a header: the avatar, the name, and under it one monospace line with the tag, the reputation line and the time, with the ⋯ menu at its end;
+- a header: the avatar, the name, and under it one monospace line with the tag, the compact reputation and the time, with the ⋯ menu at its end. The compact reputation is:
+  - for an account with no completed and no unfinished trades, a small muted "New" tag in place of "No verified trades yet";
+  - otherwise the reputation line (see `web-verified-trades`) without its "since <month>" part: the verified count, the unfinished count when above 0, and the positive share when there is one ("No verified trades · 1 unfinished" for an account with only unfinished ones).
+
+  The line SHALL wrap onto a second line when it doesn't fit, breaking between its parts (tag, reputation, time, note) and never inside one, and SHALL never be cut off. No line SHALL end on a " · " separator: a part that starts a line drops its own. Its visible words SHALL be its accessible text, and the full reputation line stays in the person sheet, on the profile and in chat;
 - each strip at full width, with the ⇄ mark between two strips turned to point down;
-- the list line;
+- the match chip, when it shows;
 - the actions in one row: the icon-only Message, Make offer filling the remaining width, and All matches when the post has it.
 
 The strips SHALL still not wrap.
@@ -509,7 +500,7 @@ Every row SHALL have the same layout whatever the number of objekts, so posts in
 
 #### Scenario: Same partner on both tabs
 - **WHEN** the viewer sees rin.trades's post on Browse and opens rin.trades's person sheet
-- **THEN** both show the name, reputation line and ⋯ in the same order, and both chips read "Mutual 2 · they have 4 · you have 2"
+- **THEN** both show the name, reputation line and ⋯ in the same order, the post's chip reads "Mutual 2 · they have 4 · you have 2", and the sheet's summary reads Mutual 2, 4 they have and 2 you have, its Mutual cell on the same mutual colour
 
 #### Scenario: Chip without a mutual score
 - **WHEN** a post's owner has 3 collections the viewer wants and wants none of the viewer's
@@ -541,7 +532,7 @@ Every row SHALL have the same layout whatever the number of objekts, so posts in
 
 #### Scenario: One row at desktop width
 - **WHEN** a post's have side holds 27 objekts and its HAVE strip has room for 6 thumbnails
-- **THEN** the strip shows 5 thumbnails and a "+22" tile on one line, and the label reads HAVE 27
+- **THEN** the strip shows 5 thumbnails and a "+22" tile on one line, and the label reads HAVE 27 followed by the list's name
 
 #### Scenario: Short side
 - **WHEN** a post's want side holds 2 objekts
@@ -553,11 +544,23 @@ Every row SHALL have the same layout whatever the number of objekts, so posts in
 
 #### Scenario: WTS post
 - **WHEN** a WTS post's sale list holds 19 objekts
-- **THEN** one SALE strip runs across the sides' width, each thumbnail captioned with its price or QYOP
+- **THEN** one SALE strip runs across the sides' width, its thumbnails showing only their art, with no price caption
 
 #### Scenario: Phone width
 - **WHEN** Browse is shown at 390 px
-- **THEN** each post stacks its header, HAVE strip, ⇄ pointing down, WANT strip, list line and actions, Make offer fills the actions row, each strip stays one line ending in "+N", and the page doesn't scroll sideways
+- **THEN** each post stacks its header, HAVE strip, ⇄ pointing down, WANT strip, match chip and actions, Make offer fills the actions row, each strip stays one line ending in "+N", and the page doesn't scroll sideways
+
+#### Scenario: New account on a phone
+- **WHEN** at 390 px a WTT post's owner has no completed and no unfinished trades, and the post was updated 2 days ago
+- **THEN** its phone line reads WTT, a "New" tag and "Updated 2d ago", with nothing cut off
+
+#### Scenario: Established account on a phone
+- **WHEN** at 390 px a post's owner has 5 verified trades, 50% positive, since March 2025
+- **THEN** its phone line reads WTT, "5 verified · 50%" and the time, without "since Mar 2025", and the person sheet still shows "since Mar 2025"
+
+#### Scenario: Long line wraps on a phone
+- **WHEN** at 390 px a WTT post's owner has 5 verified trades, 50% positive, and the post was bumped last week
+- **THEN** its phone line reads "WTT · 5 verified · 50%" and, on a second line, "Bumped last week" with no separator before it, and nothing is cut off
 
 #### Scenario: Own post on Browse
 - **WHEN** the viewer's have list "spares" is on Trade and they open `/trade`
@@ -565,11 +568,11 @@ Every row SHALL have the same layout whatever the number of objekts, so posts in
 
 #### Scenario: One list
 - **WHEN** a WTS post holds one sale list "duplicates"
-- **THEN** its line shows no Lists control, and its SALE label links to the "duplicates" list page
+- **THEN** its SALE label reads "SALE <copies> · duplicates" and links to the "duplicates" list page
 
 #### Scenario: Two lists
 - **WHEN** a WTT post holds have list "spares" and want list "binary hunt"
-- **THEN** its line shows "2 lists", opening both, each linking to its list page
+- **THEN** its HAVE label names and links to "spares", its WANT label names and links to "binary hunt", and the line under the sides shows no "2 lists" control
 
 #### Scenario: Twitter in the sheet
 - **WHEN** rin.trades shows both Discord and Twitter, and the viewer sees their post and opens their sheet
@@ -584,11 +587,9 @@ Every row SHALL have the same layout whatever the number of objekts, so posts in
 - **THEN** the post shows the indigo chip "Mutual 2 · they have 14 · you have 2" before All matches
 
 ### Requirement: Trade colours
-Trade cards on Browse and in the person sheet SHALL colour their type marks and direction headings (see `web-lists` List type colours):
-- post tags, list badges and strip role labels take their list type's colour;
-- in the person sheet, the "They have, you want" heading is amber, the want colour, since it fills one of the viewer's want lists;
-- the "You have, they want" heading is teal, the have colour, since it comes off one of the viewer's have lists;
-- the match chip is indigo when it has a mutual score and neutral otherwise.
+Trade cards on Browse and in the person sheet SHALL colour their type marks (see `web-lists` List type colours):
+- post tags, list badges, strip role labels and the person sheet's group labels take their list type's colour;
+- the match chip, and the person sheet's Mutual cell, are indigo when there is a mutual score and neutral otherwise; the sheet's other summary numbers stay neutral.
 
 Cards, sheets, buttons, avatars and backgrounds SHALL stay neutral, apart from the destructive strike on an objekt that isn't counted (see `web-trade-for-you` Person sheet).
 
@@ -597,11 +598,11 @@ Cards, sheets, buttons, avatars and backgrounds SHALL stay neutral, apart from t
 - **THEN** its WTS tag and SALE label are rose, and its chip reads "They have 3 you want" on a neutral surface
 
 #### Scenario: Mutual partner
-- **WHEN** a person sheet's chip reads "Mutual 2 · they have 14 · you have 2"
-- **THEN** the chip is indigo, "They have, you want (14)" is amber and "You have, they want (2)" is teal
+- **WHEN** rin.trades's post chip reads "Mutual 2 · they have 14 · you have 2", and the viewer opens their sheet, where the 14 come from have list "spares" and the 2 go to their want list "binary hunt"
+- **THEN** the chip and the sheet's Mutual cell are indigo, the 14 and the 2 are neutral, the group label "HAVE 14 you want" is teal and "WANT 2 you have" is amber
 
 ### Requirement: Matches and Compare with
-For you (`/trade/for-you`) SHALL list the same posts as Browse, in the same cards and with the same Post type menu and facets, narrowed by matching. It SHALL carry a Mutual only switch after the Post type menu. Off is Any, the default; on is Mutual:
+For you (`/trade/for-you`) SHALL list the same posts as Browse, in the same cards and with the same Post type menu and facets, narrowed by matching. It SHALL carry a Mutual only switch (see Layout for where it sits). Off is Any, the default; on is Mutual:
 - **Any**: only posts holding at least one objekt that matches the viewer are kept, judged on each post's own lists (see Filters), listed in two sections (see Any order).
 - **Mutual**: only the posts of people whose mutual score is above zero, as the person's chip computes it (see Matches to the signed-in viewer). Of those people's posts, only those holding a match are kept, as under Any.
 
@@ -637,7 +638,15 @@ Each section SHALL open with a heading, Mutual or One way, with no count, over i
 **Compare with.** For you SHALL always show a Compare with control. It offers All my lists and each of the viewer's have, sale and want lists that take part in Trade, each option tagged with its list type. It SHALL live in the URL as `list`, a list slug.
 - A named list SHALL compare together with its linked list, both ways.
 - A list with no link (a sale list, or a have or want list whose linked list doesn't take part) SHALL compare one way. It SHALL be offered under Any and disabled under Mutual, and switching to Mutual while it is selected SHALL reset Compare with to All my lists.
-- A `list` that is not one of the viewer's lists that take part, or that the current option can't use, SHALL read as All my lists.
+- A disabled option SHALL carry a short muted reason: "Compares one way" for a one-way list under Mutual, and "Can't match WTB posts", "Can't match WTS posts" or "Can't match WTT posts" for a list the Post type can't use.
+- A list that the picked Post type can never match SHALL be offered disabled, as Mutual disables one-way lists, and the Post type menu SHALL never disable an option because of the picked list:
+  - **All**: every list can be offered;
+  - **WTT**: under WTT, the viewer's have or sale list matches through the post's want side, while the viewer's want list (open to swaps) matches the post's have side; so a selection with no have or sale list and no want list open to swaps (Swaps only, or Swaps or buying) is disabled. That is a lone Buying only want list, which a pair with a have list passes through its have half;
+  - **WTB**: a WTB post is the poster's want list, matched against the viewer's have and sale lists, so a selection with no have or sale list (a lone want list) is disabled;
+  - **WTS**: a WTS post is a sale list, matched against the viewer's want lists open to buying, so a selection with no want list open to buying (Swaps or buying, or Buying only) (a lone have list, a sale list, a lone Swaps only want list, or a have and want pair whose want list is Swaps only) is disabled;
+  - **Mutual**: as above, and it fixes the type to WTT.
+- Changing the Post type to one that can't use the selected list SHALL reset Compare with to All my lists, as turning on Mutual does. Turning Mutual only off SHALL check the kept list against the URL's `type`, which applies again, and reset Compare with to All my lists when that type can't use it.
+- A `list` that is not one of the viewer's lists that take part, or that the current option or Post type can't use, SHALL read as All my lists: in the menu, the compared-lists line, the person sheet and the feed request, which SHALL not send it. The URL is left as it is until the next change.
 - The compared lists SHALL replace the viewer's lists everywhere matching shows on For you: the chips and their popovers, the rings, Any and Mutual.
 - While Compare with names a list, one line under the controls SHALL say what is compared: the named list with its linked list, or the named list alone and which way it compares. With All my lists, no line SHALL show.
 
@@ -648,7 +657,7 @@ The help beside the controls SHALL describe the mutual score as the smaller of t
 - `/trade?match=off` SHALL drop `match` and `list` and stay on Browse;
 - on a viewer who can't use For you, the redirected address then sends them on as Who sees it says.
 
-**Layout.** From `md` up, the Mutual only switch, Compare with and the help SHALL follow the Post type menu on the facet row, after a divider, and wrap with that row. Below `md`, the Filters button, the Mutual only switch, the Post type menu, Compare with and the help SHALL sit in one row that scrolls sideways within itself, so the page doesn't. The compared-lists line SHALL sit under the row. There SHALL be no separate Matching button or sheet. A change SHALL apply at once.
+**Layout.** From `md` up, Compare with and the help SHALL follow the Post type menu on the facet row, after a divider, and the Mutual only switch SHALL come last, at the very right of the row after the help, staying last when the row wraps. Below `md`, the Filters button, Reset, the Mutual only switch, the Post type menu, Compare with and the help SHALL sit in that order in one row that wraps onto further lines when it doesn't fit, so the page doesn't scroll sideways. The Mutual only switch SHALL come after Compare with and the help in the DOM from `md` up, so keyboard order follows the visual order. The compared-lists line SHALL sit under the row. There SHALL be no separate Matching button or sheet. A change SHALL apply at once.
 
 #### Scenario: Default is Any
 - **WHEN** a signed-in viewer with want list "binary hunt" opens `/trade/for-you` with no parameters
@@ -698,6 +707,38 @@ The help beside the controls SHALL describe the mutual score as the smaller of t
 - **WHEN** under Any the viewer picks sale list "duplicates" and then turns on Mutual only
 - **THEN** Compare with resets to All my lists, and "duplicates" is offered disabled
 
+#### Scenario: WTB disables a lone want list
+- **WHEN** on For you the viewer picks Post type WTB, and has want list "binary hunt" with no link and have list "spares"
+- **THEN** Compare with offers "binary hunt" disabled with the reason "Can't match WTB posts", and "spares" enabled
+
+#### Scenario: WTT disables a lone Buying only want list
+- **WHEN** on For you the viewer picks Post type WTT, and has a Buying only want list "bulk buys" with no link, and a have list "spares" paired with a Buying only want list
+- **THEN** Compare with offers "bulk buys" disabled and "spares" enabled
+
+#### Scenario: WTS disables lists that can't match
+- **WHEN** on For you the viewer picks Post type WTS, and has a lone have list, a sale list, a lone Swaps only want list and a have and want pair whose want list is Swaps only
+- **THEN** Compare with offers all four disabled, and a want list open to buying, alone or in a pair, enabled
+
+#### Scenario: Switching to WTB resets a lone want list
+- **WHEN** under Any the viewer has picked a lone want list "binary hunt" and then picks Post type WTB
+- **THEN** Compare with resets to All my lists and the URL no longer carries `list`
+
+#### Scenario: Post type never disables for the list
+- **WHEN** the viewer has picked a lone want list
+- **THEN** every Post type option is still offered, and picking WTB resets Compare with
+
+#### Scenario: Old link with a list the type can't use
+- **WHEN** the viewer opens `/trade/for-you?type=wtb&list=binary-hunt` and "binary-hunt" is a lone want list
+- **THEN** Compare with reads All my lists, no compared-lists line shows, and the feed is requested without that list
+
+#### Scenario: Mutual count ignores Post type
+- **WHEN** the viewer has picked WTB and a have list
+- **THEN** the Mutual only count is the one for that list, as under All
+
+#### Scenario: Mutual only switch last
+- **WHEN** the viewer opens For you at 1280 px
+- **THEN** the Mutual only switch is the rightmost control on the row, after Compare with and the help, with the divider between Post type and Compare with
+
 #### Scenario: Mutual count
 - **WHEN** 4 people match the viewer mutually with all lists compared
 - **THEN** the switch reads "Mutual only 4", the tab reads "For you", and a screen reader announces the count
@@ -720,7 +761,7 @@ The help beside the controls SHALL describe the mutual score as the smaller of t
 
 #### Scenario: Phone
 - **WHEN** the viewer opens `/trade/for-you?match=mutual&list=spares` at 390 px
-- **THEN** the Filters button, the Mutual only switch (on), the Post type menu, Compare with naming spares and the help sit in one row that scrolls sideways on its own, with the compared-lists line under it, and the page doesn't scroll sideways
+- **THEN** the Filters button, Reset, the Mutual only switch (on), the Post type menu, Compare with naming spares and the help wrap across the row's lines, no collection filter shows on the row, the compared-lists line sits under it, and the page doesn't scroll sideways
 
 #### Scenario: Two sections under Any
 - **WHEN** the viewer opens `/trade/for-you`, rin.trades is mutual with one WTT post and one WTS post, and sodalove matches them one way

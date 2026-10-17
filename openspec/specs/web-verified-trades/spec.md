@@ -469,7 +469,7 @@ An ended trade SHALL show completed, failed or cancelled.
 The banner's deadline SHALL read:
 - while in progress, the time left until the trade's expiry and its date, as "Ends in 5 days, Oct 22";
 - for a different copy, the time left until it counts as accepted;
-- on an ended trade that can be rated, the date until which the rating can change;
+- on an ended trade that can be rated, "Rate by <date>" until the viewer has rated, then the date until which the rating can change;
 - otherwise, when the trade ended.
 
 Past the expiry while the indexer is behind, it SHALL say the trade ends once the chain is caught up, never a negative count.
@@ -487,7 +487,7 @@ Past the expiry while the indexer is behind, it SHALL say the trade ends once th
 - **THEN** the receiver's deadline reads "2 days left to decide"
 
 ### Requirement: You give and You get
-The trade page SHALL show the legs in two columns, You give and You get, or You gave and You got once ended. Each objekt SHALL be a plain card with:
+The trade page SHALL show the legs in two columns, You give and You get; on an ended trade, a side that moved reads You gave or You got. Each objekt SHALL be a plain card with:
 - its art;
 - the member;
 - the collection code with the serial, or "any copy";
@@ -515,6 +515,10 @@ A verified card SHALL show its transaction hash with a copy button. The art SHAL
 #### Scenario: Ended
 - **WHEN** the user opens a completed trade
 - **THEN** the columns read You gave and You got
+
+#### Scenario: Cancelled before anything moved
+- **WHEN** the user opens a trade cancelled before any leg verified
+- **THEN** the columns still read You give and You get, since a side counts as moved only once one of its legs verified, or its top-up on a completed trade
 
 ### Requirement: The trade's clock
 While a trade is in progress, a panel titled "This trade's clock" SHALL list this trade's dated events, in time order:

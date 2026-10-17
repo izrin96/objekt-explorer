@@ -97,11 +97,9 @@ Matching SHALL reflect the user's own list changes on the next load. Other accou
 - within 1 minute in the person sheet;
 - on the next load in the chips.
 
-The person sheet SHALL say how fresh it is:
-- "Ownership checked <time ago>": the moment its matches were worked out;
-- "updated <time ago>": the most recent change to any of the person's matched lists or their entries.
+The person sheet SHALL say how fresh it is with "updated <time ago>": the most recent change to any of the person's matched lists or their entries. It SHALL not show when the matches were worked out.
 
-Both times SHALL be relative, rendered by the browser, and in monospace. Each SHALL carry its full date and time as its machine-readable value.
+The time SHALL be relative, rendered by the browser, and in monospace. It SHALL carry its full date and time as its machine-readable value.
 
 #### Scenario: Own edit
 - **WHEN** the user adds a collection to their want list and returns to Browse
@@ -110,10 +108,6 @@ Both times SHALL be relative, rendered by the browser, and in monospace. Each SH
 #### Scenario: One way order catches up
 - **WHEN** sodalove adds 6 collections the user wants to their have list, and the user reloads For you 5 minutes later
 - **THEN** sodalove's posts have moved up in One way by their new count
-
-#### Scenario: Checked time
-- **WHEN** a person sheet's matches were worked out 30 seconds before the user opens it
-- **THEN** it reads "Ownership checked" with a time under a minute ago
 
 #### Scenario: Partner updated
 - **WHEN** rin.trades last changed one of their matched lists 2 hours ago
@@ -155,29 +149,50 @@ The person sheet SHALL show the person's reputation line (see `web-verified-trad
 A signed-in viewer SHALL be able to open a person sheet from a post's All matches control (see `web-trade-browse`). The sheet shows everything that person matches with the viewer's lists, or with the lists Compare with names while Matches is on. It SHALL live in the URL as `person=<their user id>` on `/trade`. Closing it, or going back, SHALL remove the parameter and leave the feed where it was. For a signed-out visitor, `person` SHALL be ignored.
 
 The sheet SHALL hold, in order:
-- **Header**: the Trade card header (avatar, name with socials, reputation line, ⋯ with Hide, Block and Report), then "updated <time ago>" for the most recent change to any of their matched lists, then any "also" names (see Partner identity).
-- **Match chip**: the same counts, words and colour as the person's posts show.
-- **"They have, you want (N)" and "You have, they want (N)"**:
-  - Two columns, side by side from `sm` up and stacked below. Each shows its counted objekts as 3rem-wide thumbnails, each with a monospace caption of at most two lines naming the collection.
-  - A column SHALL show at most 50 counted objekts, then a "+N" tile for the rest.
-  - A column with nothing counted SHALL read 0 and "none".
+- **Header**: the Trade card header (avatar, name with socials, reputation line, ⋯ with Hide, Block and Report). It is the sheet's visible title: the person's name SHALL show once. In the sheet the reputation line SHALL wrap rather than truncate. Under it, one monospace line SHALL read "updated <time ago>" (the most recent change to any of their matched lists). Any "also" names follow (see Partner identity).
+- **Summary**: three equal cells in one row, in place of the match chip, from the same counts the person's chip uses (see Matches to the signed-in viewer):
+  - "Mutual" with M, on the mutual colour when M is above zero and on a neutral surface otherwise;
+  - "they have" with A, the "They have" count;
+  - "you have" with B, the "You have" count.
+
+  Numbers SHALL be monospace, and A and B SHALL be in the neutral foreground colour, so they don't compete with the group labels' list type colours. The A and B cells SHALL move focus and scroll to their section; a cell reading 0 SHALL be static, not a button. Each cell's accessible name SHALL be its full meaning ("Mutual 2", "They have 14 you want", "You have 2 they want").
+- **Two sections, what they have that the viewer wants, then what the viewer has that they want**, one under the other, each at the sheet's full width, at every width, with no section heading:
+  - The section's counted objekts grouped by the person's list they came from, in the order of the person's matched lists (most matches first). Each group is labelled as a post's strip is: a monospace role label in the list type's colour with the group's count and who it is for ("HAVE 10 you want", "SALE 4 you want", "WANT 2 you have"), then the list's name linking to its list page. An objekt on more than one of their lists SHALL show once, under the first. When the section draws on one list, it has one group.
+  - Thumbnails SHALL be 3rem wide and fill the row, each with a monospace caption of at most two lines: the member, then the collection number.
+  - A section SHALL show at most 50 counted objekts, then a "+N" tile for the rest.
+  - Below `md`, a section holding more than two rows SHALL show its first two rows, the last place holding a "+N" tile. Activating the tile SHALL show the rest of the section in place, up to the 50 above.
+  - A section with nothing counted SHALL be one muted monospace line naming its side and that there is none: "THEY HAVE · none you want" or "YOU HAVE · none they want".
   - Activating a thumbnail SHALL open the objekt drawer.
-- **Not counted**: the objekts left out by the ownership rule (see Current ownership), after the counted ones in their direction's column. Each is greyed, struck through in the destructive colour, and captioned with its reason ("no longer owned", "not transferable"). When any is shown, one line SHALL say they are on their list or the viewer's but aren't counted, and why.
-- **Their matched lists**: each with its list type, the number of collections it matched, and a link to its list page.
-- "Ownership checked <time ago>": when these matches were worked out.
-- **Actions**: Message and Make offer, or "Not taking messages" in their place (see Message a partner and Make offer to a partner).
+- **Not counted**: the objekts left out by the ownership rule (see Current ownership), after the groups in their direction's section. Each is greyed, struck through in the destructive colour, and captioned with its reason ("no longer owned", "not transferable"). When any is shown, one line SHALL say they are on their list or the viewer's but aren't counted, and why.
+- **Actions**: Message and Make offer, or "Not taking messages" in their place (see Message a partner and Make offer to a partner). Below `md`, Message and Make offer SHALL share the footer's width equally.
 
-From `md` up, the sheet SHALL open from the inline end of the window. Below `md`, it SHALL open from the bottom, at full width, and scroll on its own. Its title SHALL be the person's name.
+The sheet SHALL show no separate list of their matched lists, and no "ownership checked" time.
 
-A person who no longer matches the viewer SHALL get a sheet with their header and one line saying they have no matches with the viewer's lists. That covers people the viewer hid, or whose matching lists left Trade. The sheet SHALL not say why. For an account that either side has blocked, or that has a trade sanction, the sheet SHALL show the one line without the header, titled with the generic person title.
+From `md` up, the sheet SHALL open from the inline end of the window. Below `md`, it SHALL open from the bottom, at full width, and scroll on its own. Its accessible title SHALL be the person's name.
 
 #### Scenario: Open from a post
 - **WHEN** the viewer activates All matches on rin.trades's post, and rin.trades has 14 collections the viewer wants and wants 2 of the viewer's
-- **THEN** the sheet opens titled with rin.trades's name, the URL carries `person=<rin.trades's id>`, and it shows "They have, you want (14)" with all 14 captioned thumbnails beside "You have, they want (2)"
+- **THEN** the sheet opens with rin.trades's name shown once, the URL carries `person=<rin.trades's id>`, the summary reads Mutual 2, 14 they have and 2 you have, and the groups of what they have show all 14 captioned thumbnails above the groups of what the viewer has, with 2
+
+#### Scenario: Captions
+- **WHEN** the viewer opens a sheet whose section of what they have holds SeoYeon 201Z
+- **THEN** its thumbnail is captioned "SeoYeon" over "201Z" in monospace
+
+#### Scenario: Grouped by list
+- **WHEN** rin.trades's have list "spares" holds 10 collections the viewer wants and their sale list "selling" holds 4 others
+- **THEN** the section of what they have shows a group labelled "HAVE 10 you want" and "spares" with 10 thumbnails, then one labelled "SALE 4 you want" and "selling" with 4, each list name linking to its list page
+
+#### Scenario: Summary jumps to a section
+- **WHEN** the viewer activates the "you have" cell
+- **THEN** the sheet scrolls to the section of what the viewer has, and focus moves to that section
+
+#### Scenario: One-way sheet
+- **WHEN** rin.trades has 3 collections the viewer wants and wants none of the viewer's
+- **THEN** the "you have" cell reads 0 and is not a button, and the second section is one muted line, "YOU HAVE · none they want"
 
 #### Scenario: Not counted
 - **WHEN** Mayu 203Z is on rin.trades's have list, but the indexer shows rin.trades no longer owns it, and the viewer opens rin.trades's sheet
-- **THEN** Mayu 203Z shows struck through after the counted objekts in "They have, you want", captioned "no longer owned", it isn't in the count or the chip, and a line explains it
+- **THEN** Mayu 203Z shows struck through after the groups of what they have, captioned "no longer owned", it isn't in the count or the summary, and a line explains it
 
 #### Scenario: Back closes the sheet
 - **WHEN** the viewer opens a sheet from the 30th post and presses the browser's back button
@@ -196,8 +211,12 @@ A person who no longer matches the viewer SHALL get a sheet with their header an
 - **THEN** the sheet shows that person's header and says they have no matches with the viewer's lists
 
 #### Scenario: Phone
-- **WHEN** the viewer opens a sheet at 390 px
-- **THEN** it rises from the bottom at full width, its two columns stack, and the page doesn't scroll sideways
+- **WHEN** the viewer opens a sheet at 390 px, and the section of what they have holds 14 objekts
+- **THEN** it rises from the bottom at full width, the reputation line wraps instead of truncating, the section shows two rows with a "+N" tile in the last place, Message and Make offer each take half the footer, and the page doesn't scroll sideways
+
+#### Scenario: Show the rest on a phone
+- **WHEN** the viewer at 390 px activates the "+N" tile in the section of what they have
+- **THEN** the rest of the section's objekts show in place, and the tile is gone
 
 ### Requirement: Old For you address
 `/trade/for-you` is the For you tab (see `web-trade-browse` Matches and Compare with). It SHALL also accept the parameters of For you links from before the merge into Browse, mapping them in place:

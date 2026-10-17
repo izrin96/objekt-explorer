@@ -136,7 +136,7 @@ You give's picker SHALL offer a **From** choice: All your objekts, the default, 
 
 You get's picker over lists SHALL offer a **From** choice when the offer is not scoped to one list and the partner has more than one have or sale list on Trade: All their lists, the default; or one of those lists, named with its type, which shows only that list's entries the sender may ask for. The filters and the matching switch apply on top of From. From changes only what the picker shows, not what may be sent. With a list picked, an empty picker SHALL say that nothing matches the filters, or else that nothing on that list is available.
 
-An empty You get picker over lists SHALL say why: the partner lists nothing the sender may ask for; nothing matches the filters; or the partner no longer holds anything they listed. The first reason SHALL win over the filters. An empty picker over their collection SHALL say the partner holds nothing the sender can ask for, or that nothing matches the filters.
+An empty You get picker over lists SHALL say why: the partner lists nothing the sender may ask for; nothing matches the filters; or the partner no longer holds anything they listed. The first reason SHALL win over the filters. An empty picker over their collection SHALL say the partner holds nothing the sender can ask for, or that nothing matches the filters. In either picker, when the matching switch is on and no other filter is set, "nothing matches the filters" SHALL instead say that nothing held is on the other side's want lists ("rin.trades holds nothing on your want lists" in You get, "You hold nothing on rin.trades's want lists" in You give) and offer Turn off for the switch.
 
 #### Scenario: Partner lists nothing
 - **WHEN** the partner has only want lists and the sender opens You get's picker with "Only what I want" on
@@ -207,17 +207,17 @@ When an entry on the recipient's list comes from a list that hides serial number
 
 A request asking for a specific objekt SHALL be refused unless that objekt is reachable through an entry on a list that shows serials, or it was under You give in the offer being countered, or it comes from the recipient's collection (see Offers name objekts on both sides) at an address that does not hide serials. A copy listed only on hidden-serial lists can still be asked for as any copy.
 
-Asking for any copy through hidden-serial entries that name specific objekts SHALL draw only on those objekts, while the recipient still holds them, transferable and unreserved. The picker's "N held" and the most copies a request may ask for SHALL count only those. An entry for the whole collection, on any list, opens every copy the recipient holds.
+Asking for any copy through hidden-serial entries that name specific objekts SHALL draw only on those objekts, while the recipient still holds them, transferable and unreserved. The picker's "N you can ask for" and the most copies a request may ask for SHALL count only those. An entry for the whole collection, on any list, opens every copy the recipient holds.
 
 When the You get picker lists the recipient's collection, objekts at an address that hides serials SHALL be offered only as "any copy" of their collection, counting the copies held there, never by serial.
 
 #### Scenario: Collection at a hidden-serial address
 - **WHEN** rin.trades has no list on Trade and holds three SeoYeon 204Z at a linked address that hides serials
-- **THEN** the collection picker shows SeoYeon 204Z as "Any copy · 3 held", with no serials, and a request for #537 by its objekt id is refused as unlisted
+- **THEN** the collection picker shows SeoYeon 204Z as "Any copy · 3 you can ask for", with no serials, and a request for #537 by its objekt id is refused as unlisted
 
 #### Scenario: Hidden list in the picker
 - **WHEN** rin.trades's have list hides serials and lists SeoYeon 204Z #537, and the user opens You get
-- **THEN** the picker shows SeoYeon 204Z as "Any copy · 1 held", with no serial and no specific copies
+- **THEN** the picker shows SeoYeon 204Z as "Any copy · 1 you can ask for", with no serial and no specific copies
 
 #### Scenario: Same collection on a visible list
 - **WHEN** rin.trades also lists SeoYeon 204Z on a sale list that shows serials
@@ -225,7 +225,7 @@ When the You get picker lists the recipient's collection, objekts at an address 
 
 #### Scenario: Listed one, holds three
 - **WHEN** rin.trades's hidden-serial list names one SeoYeon 204Z, and rin.trades holds three spare copies, none listed elsewhere
-- **THEN** the picker shows "Any copy · 1 held", and a request for two copies is refused
+- **THEN** the picker shows "Any copy · 1 you can ask for", and a request for two copies is refused
 
 #### Scenario: Listed token gone
 - **WHEN** the only SeoYeon 204Z a hidden-serial list names has left rin.trades's wallet

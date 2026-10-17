@@ -229,7 +229,7 @@ The list page header and the list card SHALL name a want list's choice.
 ### Requirement: Copy as new list
 The owner's menu on a list card and in the list header SHALL offer Copy as new list. It SHALL open the create form filled in from the source list:
 - the name with a copy suffix;
-- description, profile, currency, Open to, columns and hide serial.
+- description, profile, currency, Open to (from a want list only), columns and hide serial.
 
 Type and profile binding SHALL be editable. The linked list SHALL start empty and Show on Trade off. Saving SHALL create a new list, open it, and leave the source unchanged. Other visitors SHALL not see the action.
 
@@ -244,6 +244,10 @@ Type and profile binding SHALL be editable. The linked list SHALL start empty an
 #### Scenario: Visitor
 - **WHEN** a signed-in user opens the menu on someone else's list
 - **THEN** no Copy as new list item is shown
+
+#### Scenario: Open to from another type
+- **WHEN** the owner copies a sale list and picks Want
+- **THEN** Open to starts at Swaps only, as Create does
 
 ### Requirement: Copied entries
 A copy SHALL carry the source's entries in their order, converted to the new list's binding:

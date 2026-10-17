@@ -21,11 +21,11 @@ The thread SHALL render an objekt card as a live objekt card with the collection
 
 The thread SHALL render a post card, read live from the post, with:
 - the post's tag (WTT, WTS and the rest, as Browse shows them) and its owner's name;
-- a Has strip with up to six objekts of the post's have or sale list and the count of the rest;
-- for a post with a want list, a Wants strip the same way; for a sale post with no want list, its price range in place of the Wants strip;
+- a strip with up to six objekts of the post's have or sale list and the count of the rest, labelled as Browse labels it: its role ("HAVE", or "SALE" on a sale post) and its number of copies, in the list type's colour;
+- for a post with a want list, a WANT strip the same way; for a sale post with no want list, its price range in place of the WANT strip, with whole amounts shown without decimals;
 - a link to the post: for the sender, it opens the owner's person sheet on Trade; for the owner, it opens their own list.
 
-A post card with a match SHALL show, in place of the strips, the two directions between the sender and the post's owner: first the count and up to three objekts of the owner's that are on the sender's wants, then the count and up to three objekts of the sender's that are on the owner's wants. Each direction SHALL be labelled from the viewer's side, as offer cards are: "N of yours they want" and "N of theirs you want", so the sender and the owner each read the card correctly. A direction with no matches SHALL be left out. The match SHALL show what was saved when the card was sent, even after either side's lists change, and SHALL still link to the post.
+A post card with a match SHALL show, in place of the strips, the two directions between the sender and the post's owner: first the count and up to three objekts of the owner's that are on the sender's wants, then the count and up to three objekts of the sender's that are on the owner's wants. Each direction SHALL be labelled from the viewer's side, in the match chip's wording on Browse: "They have N you want" and "You have N they want", so the sender and the owner each read the card correctly. A direction with no matches SHALL be left out. The match SHALL show what was saved when the card was sent, even after either side's lists change, and SHALL still link to the post.
 
 A post card whose post no longer exists, or whose list is no longer posted on Trade, SHALL say "Post removed" and keep any saved match. A card whose kind the client does not know SHALL be skipped and the message's text still shown. Messages SHALL show their time and be ordered oldest to newest.
 
@@ -35,7 +35,7 @@ A post card whose post no longer exists, or whose list is no longer posted on Tr
 
 #### Scenario: Post card
 - **WHEN** a user sends a post card for mina's WTT post, whose have list holds 24 collections and whose want list holds 12
-- **THEN** both users see a card with the WTT tag, six objekts of the have list and "+18", six objekts of the want list and "+6", and a link to the post
+- **THEN** both users see a card with the WTT tag, a teal "HAVE 24" strip with six objekts and "+18", an amber "WANT 12" strip with six objekts and "+6", and a link to the post
 
 #### Scenario: Open post
 - **WHEN** kaede.k activates the link on the post card she sent mina, and mina activates the same link
@@ -43,11 +43,11 @@ A post card whose post no longer exists, or whose list is no longer posted on Tr
 
 #### Scenario: Sale post
 - **WHEN** a user sends a post card for rin.trades's WTS post priced from 4,000 to 9,000 KRW, with no want list
-- **THEN** the card shows the Has strip and "4,000–9,000 KRW" where the Wants strip would be
+- **THEN** the card shows a rose SALE strip with its copy count, and "4,000–9,000 KRW" where the WANT strip would be
 
 #### Scenario: Match card
 - **WHEN** kaede.k, who wants 2 of mina's objekts and has 3 that mina wants, sends a match card for mina's post
-- **THEN** kaede.k sees "2 of theirs you want" with two of mina's objekts, then "3 of yours they want" with three of hers; mina sees the same objekts as "2 of yours they want", then "3 of theirs you want"; both see a link to the post
+- **THEN** kaede.k sees "They have 2 you want" with two of mina's objekts, then "You have 3 they want" with three of hers; mina sees the same objekts as "You have 2 they want", then "They have 3 you want"; both see a link to the post
 
 #### Scenario: Saved match
 - **WHEN** mina later removes one of the matched collections from her want list
@@ -123,7 +123,7 @@ The request bar SHALL say that declining moves the conversation to Archived with
 
 #### Scenario: Cold message
 - **WHEN** a user messages kaede.k from her profile with no card
-- **THEN** the conversation appears under Requests for kaede.k, and her Messages badge does not change
+- **THEN** the conversation appears under Requests for kaede.k, and her Messages icon shows its dot but its label counts no more unread conversations
 
 #### Scenario: Accept
 - **WHEN** kaede.k replies to the request
@@ -157,7 +157,7 @@ The request bar SHALL say that declining moves the conversation to Archived with
 - an unread mark;
 - a muted mark when muted.
 
-**Search.** Above the list, a search field SHALL filter the box being shown. A conversation matches when the query appears, ignoring case, in:
+**Search.** Above the list, a search field SHALL filter the box being shown. On an empty Requests or Archived box with no query, the field SHALL be hidden while it is not in use. A conversation matches when the query appears, ignoring case, in:
 - the other account's shown name or the Cosmo nickname of any of its linked addresses;
 - the collection of any objekt card sent in the conversation and not unsent. "SeoYeon 204Z" and "seoyeon-204z" both match SeoYeon 204Z.
 
@@ -283,11 +283,31 @@ Sending SHALL work while the live connection is down. While the browser is offli
 - **THEN** the send fails at once, the text stays in the box, and the box says the message was not sent
 
 ### Requirement: Unread badge
-When a session exists, the frame SHALL show a Messages icon linking to `/messages`, with a dot while any Inbox conversation holds unread messages, as the bell does. The icon's label carries the number of such conversations. Muted conversations and requests SHALL not count.
+When a session exists, the frame SHALL show a Messages icon linking to `/messages`, with a dot while any Inbox conversation holds unread messages, as the bell does. The icon's label carries the number of such conversations. Muted conversations and requests SHALL not count. The dot SHALL also show while a request holds a message that arrived after the user last opened the Requests tab; then the label SHALL say that new message requests are waiting.
 
 #### Scenario: Muted does not count
 - **WHEN** the user has 2 unread conversations and mutes one of them
 - **THEN** the dot stays and the icon's label counts 1 unread conversation
+
+#### Scenario: A new request sets the dot
+- **WHEN** the user has no unread Inbox conversations and rin.trades sends them a message with no card
+- **THEN** the Messages icon shows its dot without a reload, and its label says new message requests are waiting and counts no unread conversations
+
+#### Scenario: Opening Requests clears the dot
+- **WHEN** the dot shows only because of a request, and the user opens the Requests tab
+- **THEN** the dot goes, though the request stays under Requests with its count on the tab
+
+#### Scenario: A request arriving while Requests is open
+- **WHEN** the user has the Requests tab open and a new request arrives
+- **THEN** it joins the list and the Messages icon shows no dot for it
+
+#### Scenario: A later message in a waiting request
+- **WHEN** the user opened the Requests tab, left it, and the sender of a waiting request writes again
+- **THEN** the dot shows again
+
+#### Scenario: Seen on another device
+- **WHEN** the user opens the Requests tab on their phone
+- **THEN** the dot is gone on their laptop the next time that tab reads the badge
 
 ### Requirement: Mute
 The user SHALL be able to mute a conversation for 8 hours, 1 week or until unmuted. A muted conversation SHALL still receive messages, SHALL not count toward the badge, and SHALL show a muted mark. Muting SHALL be private to the user who muted.
@@ -507,18 +527,25 @@ While a conversation has no messages and the user can send, the message box SHAL
 - an objekt card from a sale list: asking whether it is still for sale;
 - an objekt card from a have list: asking whether they would trade it;
 - an objekt card from a want list: offering it;
-- a post card with a match: "Hi! We match on a few. Want to swap?";
-- a post card without a match: "Hi! Saw your post. Open to a swap?".
+- a post card for a WTS post: "Hi! Is this still for sale?", whatever match it carries;
+- a post card for a WTB post: when the sender has some of what the owner wants, "Hi! I have one you're after. Interested?" (or "some", for more than one); otherwise "Hi! Saw your post. Still looking?";
+- a post card for a WTT post matching both ways: "Hi! We match on a few. Want to swap?";
+- a post card for a WTT post matching one way: "Hi! You have one I'm after. Open to an offer?" when the owner has what the sender wants, or "Hi! I have one you're after. Interested?" the other way (each with "some" for more than one);
+- a post card for a WTT post without a match: "Hi! Saw your post. Open to a swap?".
 
-A post card SHALL never offer the objekt card suggestions. Without a card the suggestions SHALL be general.
+A post card SHALL never offer the have or want objekt card suggestions. Without a card the suggestions SHALL be general.
 
 #### Scenario: Sale card
 - **WHEN** a user opens a new conversation from a Market listing
 - **THEN** the message box offers "Hi! Is this still for sale?", and tapping it fills the box without sending
 
 #### Scenario: Post card from Browse
-- **WHEN** a user opens a new conversation from Message on a Browse post they have no matches with
+- **WHEN** a user opens a new conversation from Message on a Browse WTT post they have no matches with
 - **THEN** the message box offers "Hi! Saw your post. Open to a swap?" and not "Hi! Would you trade this one?"
+
+#### Scenario: Post card for a sale post
+- **WHEN** a user opens a new conversation from Message on a WTS post
+- **THEN** the message box offers "Hi! Is this still for sale?" and not "Hi! Saw your post. Open to a swap?"
 
 #### Scenario: Not after the first message
 - **WHEN** the conversation has any message
@@ -549,7 +576,7 @@ The thread SHALL show "Seen" under the user's latest message the other person ha
 
 ### Requirement: Message bubbles
 The thread SHALL draw each text message as a bubble whose look depends on whose message it is:
-- the viewer's own message: a neutral mid-gray fill with the normal foreground text colour, in light and dark. It SHALL never use the inverted foreground-on-background colours;
+- the viewer's own message: the inverted colours, the foreground colour as its fill with the background colour as its text, in light and dark;
 - the partner's message: the card surface with a 1 px border.
 
 Both SHALL use normal-weight body text at the thread's text size. That text SHALL keep at least 4.5:1 contrast against the bubble in both themes.
@@ -564,11 +591,11 @@ An unsent message SHALL keep its dashed, transparent "Message unsent" look with 
 
 #### Scenario: Own message in dark
 - **WHEN** a user in the dark theme sends "Still available?"
-- **THEN** the bubble is mid-gray with light text, not white with dark text
+- **THEN** the bubble is light with dark text
 
 #### Scenario: Own message in light
 - **WHEN** the same user switches to the light theme
-- **THEN** the bubble is a light gray with dark text, not black with white text
+- **THEN** the bubble is dark with light text
 
 #### Scenario: Partner's message
 - **WHEN** the partner's message is shown

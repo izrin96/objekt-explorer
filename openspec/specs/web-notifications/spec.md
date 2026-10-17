@@ -42,7 +42,7 @@ The glyph SHALL never be the only cue: the headline names the event. The popover
 - This week: anything else from the last 7 days;
 - Earlier: the rest.
 
-**One row per trade and per conversation.** All of one trade's notifications, read or not, SHALL show as one row, led by the newest. So SHALL all of one conversation's offer notifications. When the row holds more than one, it SHALL say "N updates", and activating that SHALL list up to 10 of the earlier ones under it, newest first, each with its own headline and time, without leaving the popover. The row is unread while its newest notification is. List alerts and sanction notices SHALL not be grouped this way.
+**One row per trade and per conversation.** All of one trade's notifications, read or not, SHALL show as one row, led by the newest. So SHALL all of one conversation's offer notifications. When the row holds more than one, it SHALL say "N updates", and activating that SHALL list up to 10 of the earlier ones under it, newest first, each with its own headline and time, and its objekts when they differ from the row's, without leaving the popover. The row is unread while its newest notification is. List alerts and sanction notices SHALL not be grouped this way.
 
 **Tabs.** Under the header, the popover SHALL offer three tabs:
 - All: every notification;
