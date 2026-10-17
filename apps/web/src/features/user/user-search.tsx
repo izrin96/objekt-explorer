@@ -7,7 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 
 import { EmptyState } from "@/components/shared/empty-state";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { PersonAvatar } from "@/components/shared/person-avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDebouncedCallback } from "@/hooks/use-debounced-callback";
 import { client } from "@/lib/orpc";
@@ -58,12 +58,7 @@ export function useUserSearch(initialQuery = "") {
 }
 
 function UserAvatar({ image, label }: { image: string | undefined; label: string }) {
-  return (
-    <Avatar className="size-6.5 flex-none">
-      {image && <AvatarImage src={image} alt="" />}
-      <AvatarFallback>{label.slice(0, 1).toUpperCase()}</AvatarFallback>
-    </Avatar>
-  );
+  return <PersonAvatar name={label} image={image} className="size-6.5 flex-none" />;
 }
 
 /** avatar, nickname and short address in a 6.5 leading slot */

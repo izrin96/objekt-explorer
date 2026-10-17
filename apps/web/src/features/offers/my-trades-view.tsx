@@ -154,12 +154,7 @@ function MineRowLink({
   const name = partner.identity.name;
   const body = (
     <>
-      <PersonAvatar
-        name={name}
-        image={partner.user.image}
-        address={partner.identity.address}
-        className="size-9 shrink-0"
-      />
+      <PersonAvatar name={name} image={partner.user.image} className="size-9 shrink-0" />
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span className="flex min-w-0 flex-wrap items-baseline gap-x-2">
           <span className="min-w-0 font-medium break-words">{name}</span>

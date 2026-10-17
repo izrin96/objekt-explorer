@@ -5,7 +5,7 @@ import { Link } from "@tanstack/react-router";
 import { type ReactNode, useEffect, useRef } from "react";
 
 import { CursorCard, cursorCardDelays } from "@/components/shared/cursor-card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { PersonAvatar } from "@/components/shared/person-avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TooltipPrimitive } from "@/components/ui/tooltip";
 import { displayNickname, nicknameParam } from "@/lib/address";
@@ -137,12 +137,11 @@ function CardBody({ address, nickname }: Payload) {
       )}
 
       <div className="flex items-center gap-3 p-3">
-        <Avatar className="size-10 shrink-0">
-          {data?.user?.image && <AvatarImage src={data.user.image} alt="" />}
-          <AvatarFallback className="text-sm font-semibold">
-            {name.charAt(0).toUpperCase()}
-          </AvatarFallback>
-        </Avatar>
+        <PersonAvatar
+          name={name}
+          image={data?.user?.image}
+          className="size-10 shrink-0 text-sm font-semibold"
+        />
 
         <div className="flex min-w-0 flex-col gap-0.5">
           <span

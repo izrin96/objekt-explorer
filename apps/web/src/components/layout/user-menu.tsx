@@ -20,7 +20,7 @@ import { Link, useLocation } from "@tanstack/react-router";
 import { useState } from "react";
 
 import { AboutDialog } from "@/components/layout/about";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { PersonAvatar } from "@/components/shared/person-avatar";
 import { Button } from "@/components/ui/button";
 import {
   Menu,
@@ -47,12 +47,7 @@ import { authClient } from "@/lib/auth-client";
 import { m } from "@/paraglide/messages";
 
 export function UserAvatar({ user, className }: { user: User; className?: string }) {
-  return (
-    <Avatar className={className}>
-      {user.image && <AvatarImage src={user.image} alt="" />}
-      <AvatarFallback>{user.name.slice(0, 1).toUpperCase()}</AvatarFallback>
-    </Avatar>
-  );
+  return <PersonAvatar name={user.name} image={user.image} className={className} />;
 }
 
 /**

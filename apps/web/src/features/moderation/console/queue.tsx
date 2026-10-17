@@ -10,8 +10,8 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "@tanstack/react-router";
 
 import { EmptyState } from "@/components/shared/empty-state";
+import { PersonAvatar } from "@/components/shared/person-avatar";
 import { RowsSkeleton } from "@/components/shared/rows-skeleton";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { FLAG_LABEL, REASON_LABEL } from "@/features/moderation/labels";
@@ -67,10 +67,7 @@ export function ModQueue() {
               aria-current={current ? "page" : undefined}
               className="hover:bg-secondary/60 focus-visible:ring-ring aria-[current=page]:bg-secondary flex items-center gap-3 px-4 py-3 outline-none focus-visible:ring-2 focus-visible:ring-inset"
             >
-              <Avatar className="size-9 shrink-0">
-                {row.user.image ? <AvatarImage src={row.user.image} alt="" /> : null}
-                <AvatarFallback>{name.slice(0, 1).toUpperCase()}</AvatarFallback>
-              </Avatar>
+              <PersonAvatar name={name} image={row.user.image} className="size-9 shrink-0" />
               <span className="flex min-w-0 flex-1 flex-col gap-1">
                 <span className="flex min-w-0 flex-wrap items-baseline gap-x-2">
                   <span className="min-w-0 font-semibold break-words">{name}</span>

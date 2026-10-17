@@ -63,12 +63,7 @@ export function ThreadHeader({
   return (
     <header className="flex items-center gap-3 border-b px-3 py-2.5 md:px-4">
       <ThreadBackButton />
-      <PersonAvatar
-        name={name}
-        image={partner.user.image}
-        address={partner.identity.address}
-        className="size-9 shrink-0"
-      />
+      <PersonAvatar name={name} image={partner.user.image} className="size-9 shrink-0" />
       <div className="flex min-w-0 flex-1 flex-col">
         <h2
           ref={headingRef}

@@ -86,12 +86,7 @@ function TradeDetail({ trade, collections }: { trade: Trade; collections: Collec
     <article className="bg-card grid grid-cols-1 rounded-xl border lg:grid-cols-[minmax(0,1fr)_20rem]">
       <div className="flex min-w-0 flex-col gap-6 p-4 sm:p-6">
         <header className="flex items-center gap-3">
-          <PersonAvatar
-            name={name}
-            image={trade.partner.user.image}
-            address={address}
-            className="size-10 shrink-0"
-          />
+          <PersonAvatar name={name} image={trade.partner.user.image} className="size-10 shrink-0" />
           <div className="flex min-w-0 flex-1 flex-col">
             <div className="flex min-w-0 items-center gap-1">
               <h2 className="truncate font-mono text-base font-semibold" title={name}>

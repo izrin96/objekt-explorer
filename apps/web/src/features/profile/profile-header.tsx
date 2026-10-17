@@ -4,8 +4,8 @@ import { truncateAddress } from "@repo/lib/address";
 
 import { ApolloIcon } from "@/components/shared/apollo-icon";
 import { CopyButton } from "@/components/shared/copy-button";
+import { PersonAvatar } from "@/components/shared/person-avatar";
 import { SocialBadge } from "@/components/shared/social-badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "@/components/ui/tooltip";
@@ -34,12 +34,11 @@ export function ProfileHeader({ profile }: { profile: PublicProfile }) {
 
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="flex min-w-0 items-end gap-3.5">
-          <Avatar className="border-background size-16 border-3">
-            {profile.user?.image && <AvatarImage src={profile.user.image} alt="" />}
-            <AvatarFallback className="text-base font-semibold">
-              {nickname.charAt(0).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
+          <PersonAvatar
+            name={nickname}
+            image={profile.user?.image}
+            className="border-background size-16 border-3 text-base font-semibold"
+          />
           <div className="min-w-0">
             {/* the badge sits beside the heading, not inside it: in the
                 heading it joins the accessible name as "<nickname> Verified" */}

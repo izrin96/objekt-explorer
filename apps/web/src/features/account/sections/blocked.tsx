@@ -3,8 +3,8 @@ import type { Outputs } from "@repo/api";
 import { useQuery } from "@tanstack/react-query";
 
 import { EmptyState } from "@/components/shared/empty-state";
+import { PersonAvatar } from "@/components/shared/person-avatar";
 import { SocialBadge } from "@/components/shared/social-badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useUnblock } from "@/features/moderation/actions";
@@ -106,10 +106,11 @@ function BlockedUsersList({
     <ul className="flex flex-col divide-y rounded-lg border">
       {rows.map((row) => (
         <li key={row.userId} className="flex items-center gap-3 px-3 py-2.5">
-          <Avatar className="size-8 shrink-0">
-            {row.user.image ? <AvatarImage src={row.user.image} alt="" /> : null}
-            <AvatarFallback>{row.identity.name.slice(0, 1).toUpperCase()}</AvatarFallback>
-          </Avatar>
+          <PersonAvatar
+            name={row.identity.name}
+            image={row.user.image}
+            className="size-8 shrink-0"
+          />
           <BlockedIdentity row={row} />
           <Button
             variant="outline"

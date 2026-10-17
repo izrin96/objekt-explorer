@@ -16,8 +16,8 @@ import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 
 import { PendingStatus } from "@/components/router/pending";
+import { PersonAvatar } from "@/components/shared/person-avatar";
 import { SocialBadge } from "@/components/shared/social-badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Menu, MenuItem, MenuPopup, MenuSeparator, MenuTrigger } from "@/components/ui/menu";
@@ -102,10 +102,11 @@ export function ListHeader() {
 
           {list.user ? (
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-              <Avatar className="size-6">
-                {list.user.image ? <AvatarImage src={list.user.image} alt="" /> : null}
-                <AvatarFallback>{(list.user.name ?? "?").slice(0, 1).toUpperCase()}</AvatarFallback>
-              </Avatar>
+              <PersonAvatar
+                name={list.user.name ?? ""}
+                image={list.user.image}
+                className="size-6"
+              />
               {list.user.name ? <SocialBadge platform="cosmo" username={list.user.name} /> : null}
               {list.user.discord ? (
                 <SocialBadge platform="discord" username={list.user.discord} />

@@ -41,12 +41,7 @@ export function TradeHeader({
 
   return (
     <div className={cn("flex items-start gap-x-3", className)}>
-      <PersonAvatar
-        name={identity.name}
-        image={user.image}
-        address={identity.address}
-        className="size-9 shrink-0"
-      />
+      <PersonAvatar name={identity.name} image={user.image} className="size-9 shrink-0" />
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
           <h2 className="min-w-0 text-base leading-snug font-semibold break-words">

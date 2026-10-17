@@ -4,7 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import * as z from "zod";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { PersonAvatar } from "@/components/shared/person-avatar";
 import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field";
 import { Form } from "@/components/ui/form";
@@ -103,10 +103,11 @@ function ProfileForm({ user }: { user: User }) {
       <div className="flex flex-col gap-2">
         <span className="text-sm font-medium">{m.auth_account_remove_profile_picture()}</span>
         <div className="flex items-center gap-3">
-          <Avatar className={removePic ? "size-14 opacity-40" : "size-14"}>
-            {user.image && !removePic && <AvatarImage src={user.image} alt="" />}
-            <AvatarFallback>{user.name.slice(0, 1).toUpperCase()}</AvatarFallback>
-          </Avatar>
+          <PersonAvatar
+            name={user.name}
+            image={removePic ? null : user.image}
+            className={removePic ? "size-14 opacity-40" : "size-14"}
+          />
           {removePic ? (
             <Button variant="outline" size="sm" onClick={() => setRemovePic(false)}>
               <ArrowCounterClockwiseIcon />

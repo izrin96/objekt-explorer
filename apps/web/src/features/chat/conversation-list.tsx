@@ -225,12 +225,7 @@ function RowLink({
         className,
       )}
     >
-      <PersonAvatar
-        name={name}
-        image={partner.user.image}
-        address={partner.identity.address}
-        className="size-10 shrink-0"
-      />
+      <PersonAvatar name={name} image={partner.user.image} className="size-10 shrink-0" />
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">{children}</div>
     </Link>
   );

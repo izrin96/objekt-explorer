@@ -5,7 +5,7 @@ import { Link } from "@tanstack/react-router";
 
 import { PendingStatus } from "@/components/router/pending";
 import { EmptyState } from "@/components/shared/empty-state";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { PersonAvatar } from "@/components/shared/person-avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -80,10 +80,7 @@ export function ModAccount({
         </Button>
 
         <div className="flex items-center gap-3">
-          <Avatar className="size-12 shrink-0">
-            {account.user.image ? <AvatarImage src={account.user.image} alt="" /> : null}
-            <AvatarFallback>{name.slice(0, 1).toUpperCase()}</AvatarFallback>
-          </Avatar>
+          <PersonAvatar name={name} image={account.user.image} className="size-12 shrink-0" />
           <div className="flex min-w-0 flex-col gap-1">
             <h2 className="font-display text-xl font-semibold tracking-tight text-balance">
               {name}
