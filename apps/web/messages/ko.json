@@ -258,6 +258,8 @@
   "list_copy_success_copies": "목록을 복사했습니다. 가져옴: {carried} · 제외: {leftOut} (오브젝트)",
   "list_copy_error": "목록 복사 오류",
   "list_edit_type_locked_hint": "목록 유형과 프로필 연결은 만든 뒤에 바꿀 수 없습니다. 다른 유형이나 연결의 목록을 만들려면 목록 메뉴의 ‘새 목록으로 복사’를 사용하세요.",
+  "list_bound_badge": "연결됨",
+  "list_bound_hint": "프로필에 연결됨: 항목은 프로필의 보유 오브젝트를 따라가며, 오브젝트가 프로필을 떠나면 목록에서도 빠집니다.",
   "list_edit_url_label": "목록 URL",
   "list_edit_regenerate_slug_label": "새 이름으로 URL 다시 생성",
   "list_edit_regenerate_slug_desc": "이 목록의 기존 링크는 더 이상 작동하지 않습니다.",

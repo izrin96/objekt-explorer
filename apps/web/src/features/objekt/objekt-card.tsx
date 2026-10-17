@@ -15,9 +15,9 @@ import { ObjektNote } from "./objekt-note";
 import { getCollectionShortNo, isObjektOwned } from "./objekt-utils";
 import { SelectionOrderContext } from "./selection-order";
 
-// wraps rather than truncates: a clipped price reads as a different price
+// wraps rather than truncates, and only at a space: a clipped price reads as a different price
 const priceClass =
-  "text-xxs text-center leading-tight font-semibold text-balance tabular-nums wrap-anywhere @[9rem]:text-xs";
+  "text-xxs text-center leading-tight font-semibold text-balance tabular-nums @[9rem]:text-xs";
 
 type ObjektCardProps<T extends ValidObjekt> = {
   objekt: T;
@@ -280,7 +280,7 @@ export function ObjektCard<T extends ValidObjekt>({
 
           {price !== undefined && (
             <div className="flex min-w-0 flex-col items-center">
-              <div className="flex min-w-0 items-center justify-center gap-1">
+              <div className="flex min-w-0 flex-wrap items-center justify-center gap-x-1">
                 {onPriceClick ? (
                   <button
                     type="button"

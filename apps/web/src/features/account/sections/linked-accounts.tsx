@@ -15,6 +15,7 @@ import { AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { toastManager } from "@/components/ui/toast";
 import { ACCOUNTS_QUERY_KEY, type LinkedAccount } from "@/features/account/queries";
+import { useCurrentUser } from "@/features/user/hooks";
 import { currentUserOptions } from "@/features/user/queries";
 import { authClient } from "@/lib/auth-client";
 import { orpc } from "@/lib/orpc";
@@ -30,6 +31,7 @@ const providers = Object.values(providersMap);
 
 export function LinkedAccountsSection({ accounts }: { accounts: LinkedAccount[] }) {
   const linked = accounts.filter((a) => a.providerId !== "credential");
+  const { data } = useCurrentUser();
 
   return (
     <div className="flex flex-col gap-3">
@@ -40,7 +42,8 @@ export function LinkedAccountsSection({ accounts }: { accounts: LinkedAccount[] 
             key={provider.id}
             provider={provider}
             accountId={account.id}
-            handle={account.accountId}
+            accountNumber={account.accountId}
+            username={data?.user[provider.id] ?? null}
           />
         ) : (
           <UnlinkedRow key={provider.id} provider={provider} />
@@ -64,11 +67,13 @@ function useInvalidateAccount() {
 function LinkedRow({
   provider,
   accountId,
-  handle,
+  accountNumber,
+  username,
 }: {
   provider: Provider;
   accountId: string;
-  handle: string;
+  accountNumber: string;
+  username: string | null;
 }) {
   const invalidate = useInvalidateAccount();
   // the server pulls the profile when the re-link lands
@@ -124,7 +129,10 @@ function LinkedRow({
       <span className="flex min-w-0 items-center gap-2 text-sm">
         {PROVIDER_ICON[provider.id]}
         {provider.label}
-        <span className="text-muted-foreground truncate font-mono text-xs">{handle}</span>
+        {username ? (
+          <span className="truncate">{provider.id === "twitter" ? `@${username}` : username}</span>
+        ) : null}
+        <span className="text-muted-foreground truncate font-mono text-xs">{accountNumber}</span>
       </span>
       <div className="flex gap-1.5">
         {/* the mutation overwrites the stored name and avatar from the

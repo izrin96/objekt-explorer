@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Label } from "@/components/ui/label";
 import { Radio, RadioGroup } from "@/components/ui/radio-group";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { toastManager } from "@/components/ui/toast";
 import { refusalOf, refusalText } from "@/features/chat/format";
@@ -116,13 +117,17 @@ export function MessagesSection() {
             {m.chat_settings_activity_desc()}
           </span>
         </span>
-        <Switch
-          id="account-messages-activity"
-          className="mt-0.5 shrink-0"
-          checked={settings.data?.showActivity ?? true}
-          disabled={!settings.data}
-          onCheckedChange={(showActivity) => mutation.mutate({ showActivity })}
-        />
+        {settings.isPending ? (
+          <Skeleton className="mt-0.5 h-5.5 w-9.5 shrink-0 rounded-full sm:h-4.5 sm:w-7.5" />
+        ) : (
+          <Switch
+            id="account-messages-activity"
+            className="mt-0.5 shrink-0"
+            checked={settings.data?.showActivity ?? true}
+            disabled={!settings.data}
+            onCheckedChange={(showActivity) => mutation.mutate({ showActivity })}
+          />
+        )}
       </Label>
 
       {profiles.length > 0 ? (

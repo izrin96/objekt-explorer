@@ -1,6 +1,5 @@
 import {
   ArrowsLeftRightIcon,
-  CheckIcon,
   CopyIcon,
   DotsThreeIcon,
   DownloadSimpleIcon,
@@ -38,7 +37,7 @@ import { EditListDialog } from "./edit-list-dialog";
 import { ExportListDialog } from "./export-list-dialog";
 import { getListLinkOption } from "./list-link";
 import { useListTarget } from "./list-provider";
-import { ListTypeBadge, openToLabel } from "./list-type-badge";
+import { ListBoundBadge, ListTypeBadge, openToLabel } from "./list-type-badge";
 import { ShareListButton } from "./share-list-button";
 import { useListOwned } from "./use-list-owned";
 
@@ -76,12 +75,7 @@ export function ListHeader() {
             <h1 className="font-display text-xl font-semibold tracking-tight text-balance">
               {list.name}
             </h1>
-            {list.isProfileBind ? (
-              <Badge variant="outline" size="sm">
-                <CheckIcon weight="bold" aria-hidden />
-                {m.profile_header_verified()}
-              </Badge>
-            ) : null}
+            {list.isProfileBind ? <ListBoundBadge /> : null}
             {list.listTypeNew !== "general" ? <ListTypeBadge type={list.listTypeNew} /> : null}
             {openTo ? <span className="text-muted-foreground text-xs">{openTo}</span> : null}
             {list.discoverable && canBeOnTrade(list.listTypeNew, list.isProfileBind) ? (

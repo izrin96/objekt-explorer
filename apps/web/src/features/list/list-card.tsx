@@ -1,5 +1,4 @@
 import {
-  CheckIcon,
   CopyIcon,
   DotsThreeIcon,
   LinkIcon,
@@ -12,7 +11,6 @@ import type { ListPreview, PublicList } from "@repo/api/schemas/list";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Menu, MenuItem, MenuPopup, MenuSeparator, MenuTrigger } from "@/components/ui/menu";
 import {
@@ -29,7 +27,7 @@ import { CopyListDialog } from "./copy-list-dialog";
 import { DeleteListDialog } from "./delete-list-dialog";
 import { EditListDialog } from "./edit-list-dialog";
 import { getListLinkOption } from "./list-link";
-import { ListTypeBadge, openToLabel } from "./list-type-badge";
+import { ListBoundBadge, ListTypeBadge, openToLabel } from "./list-type-badge";
 import { useCopyListLink } from "./share-list-button";
 import { useIsListOwner } from "./use-list-owned";
 
@@ -72,12 +70,7 @@ export function ListCard({
 
           <div className="text-muted-foreground flex flex-wrap items-center gap-1.5 text-xs">
             <ListTypeBadge type={list.listTypeNew} />
-            {list.isProfileBind ? (
-              <Badge variant="outline" size="sm">
-                <CheckIcon weight="bold" aria-hidden />
-                {m.profile_header_verified()}
-              </Badge>
-            ) : null}
+            {list.isProfileBind ? <ListBoundBadge /> : null}
             <ObjektPreviewCount preview={preview} />
             {openTo ? <span>· {openTo}</span> : null}
             {list.listTypeNew === "sale" && list.currency ? (
