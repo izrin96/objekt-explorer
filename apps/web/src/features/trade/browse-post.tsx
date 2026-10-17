@@ -126,16 +126,25 @@ export function BrowsePost({
           }
           phoneLine={
             <>
-              <TagBadge tag={post.tag} />
-              {" · "}
+              <span className="whitespace-nowrap">
+                <TagBadge tag={post.tag} />
+                {" · "}
+              </span>{" "}
               {post.reputation ? (
                 <>
-                  <TrustLine reputation={post.reputation} className="inline" />
-                  {" · "}
+                  <span className="whitespace-nowrap">
+                    <TrustLine reputation={post.reputation} variant="compact" className="inline" />
+                    {" · "}
+                  </span>{" "}
                 </>
               ) : null}
-              {timeTag}
-              {wantOnly || post.buyingOnly ? <> · {notes}</> : null}
+              <span className="whitespace-nowrap">{timeTag}</span>
+              {wantOnly || post.buyingOnly ? (
+                <>
+                  {" · "}
+                  <span className="whitespace-nowrap">{notes}</span>
+                </>
+              ) : null}
             </>
           }
         />

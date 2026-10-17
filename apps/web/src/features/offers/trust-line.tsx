@@ -21,16 +21,29 @@ function sinceLabel(since: string) {
  * "31 verified · 2 unfinished · 100% · since Mar 2025": completed trades, failed ones where the
  * account didn't send its part (only when above 0), the positive share of rated ones and the
  * account's month. Only where the account is already named; null renders nothing.
+ * `compact` is for a narrow line: a bare "New" tag when there is nothing to report, and no month.
  */
 export function TrustLine({
   reputation,
+  variant = "full",
   className,
 }: {
   reputation: Reputation | null | undefined;
+  variant?: "full" | "compact";
   className?: string;
 }) {
   if (!reputation) return null;
   const { unfinished } = reputation;
+  if (variant === "compact" && reputation.verified === 0 && unfinished === 0) {
+    return (
+      <span
+        className={cn("bg-secondary text-muted-foreground rounded-sm px-1.5 text-xs", className)}
+      >
+        <span aria-hidden>{m.trust_new()}</span>
+        <span className="sr-only">{m.trust_new_aria()}</span>
+      </span>
+    );
+  }
   const count = unfinished.toLocaleString(getLocale());
   const hint = m.trust_unfinished_hint();
   return (
@@ -68,8 +81,12 @@ export function TrustLine({
               <span className="sr-only">{m.trust_positive({ percent: reputation.positive })}</span>
             </>
           ) : null}
-          {" · "}
-          {m.trust_since({ month: sinceLabel(reputation.since) })}
+          {variant === "full" ? (
+            <>
+              {" · "}
+              {m.trust_since({ month: sinceLabel(reputation.since) })}
+            </>
+          ) : null}
         </>
       )}
     </span>
