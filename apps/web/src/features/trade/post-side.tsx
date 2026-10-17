@@ -182,15 +182,11 @@ export function EmptySide({ side, surface }: { side: PostSideData; surface: Surf
   );
 }
 
-/**
- * A Browse post's side: its list's role and count, its ringed matches. A post holding one list
- * makes the label the link to it, since it has no Lists control.
- */
+/** A Browse post's side: its list's role and count, its ringed matches; the label links to the list. */
 export function SideStrip({
   side,
   surface,
   narrowed,
-  labelLink,
   collections,
   onOpen,
 }: {
@@ -198,20 +194,17 @@ export function SideStrip({
   surface: Surface;
   /** a filter or matching left objekts out, so the side says how many it holds */
   narrowed: boolean;
-  labelLink: boolean;
   collections: Readonly<Record<string, ValidObjekt | undefined>>;
   onOpen: (objekt: ValidObjekt) => void;
 }) {
   const { list } = side;
   const label = sideWording(side, surface).label(side.copyCount);
   const total = side.copyCount + side.others;
-  const text = labelLink ? (
+  const text = (
     <Link {...getListLinkOption(list)} className={SIDE_LINK}>
       {label}
       <span className="sr-only">: {list.name}</span>
     </Link>
-  ) : (
-    label
   );
 
   return (

@@ -5,7 +5,6 @@ import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { Button } from "@/components/ui/button";
 import { MenuItem } from "@/components/ui/menu";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getListLinkOption } from "@/features/list/list-link";
 import { SafetyMenu } from "@/features/moderation/safety-menu";
 import { TrustLine } from "@/features/offers/trust-line";
 import { relativeTime } from "@/lib/time";
@@ -13,7 +12,6 @@ import { m } from "@/paraglide/messages";
 
 import { useHideWithUndo } from "./actions";
 import type { Surface } from "./browse-search";
-import { ListsPopover } from "./lists-popover";
 import { MatchChip } from "./match-chip";
 import { MatchedLists } from "./matched-lists";
 import { EmptySide, isEmptySide, SideStrip } from "./post-side";
@@ -65,7 +63,6 @@ export function BrowsePost({
   const wantOnly = post.tag === "wtt" && post.sides.every((side) => side.role === "want");
   // on For you the chip is for mutual posts; a one-way post's strip labels carry the count
   const showChip = !!person && (surface === "browse" || mutualOf(person.counts) > 0);
-  const twoLists = post.sides.length === 2;
   const allMatches = person ? (
     <Button
       variant="outline"
@@ -160,7 +157,6 @@ export function BrowsePost({
                   side={side}
                   surface={surface}
                   narrowed={post.narrowed}
-                  labelLink={post.sides.length === 1}
                   collections={collections}
                   onOpen={onOpen}
                 />
@@ -185,19 +181,8 @@ export function BrowsePost({
         )
       }
       below={
-        twoLists || showChip || person ? (
+        showChip || person ? (
           <div className="flex min-w-0 items-center gap-2 text-xs">
-            {twoLists ? (
-              <ListsPopover
-                lists={post.sides.map((side) => ({
-                  id: side.list.id,
-                  name: side.list.name,
-                  description: side.list.description,
-                  type: side.role,
-                  link: getListLinkOption(side.list),
-                }))}
-              />
-            ) : null}
             {showChip && person ? (
               <MatchChip counts={person.counts} popover={<MatchedLists {...person} />} />
             ) : null}
@@ -205,7 +190,7 @@ export function BrowsePost({
           </div>
         ) : undefined
       }
-      belowClassName={twoLists || showChip ? undefined : "@max-3xl:hidden"}
+      belowClassName={showChip ? undefined : "@max-3xl:hidden"}
     />
   );
 }

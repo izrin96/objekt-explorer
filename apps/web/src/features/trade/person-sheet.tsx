@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getListLinkOption } from "@/features/list/list-link";
+import { LIST_TYPE_LABEL, LIST_TYPE_TONE } from "@/features/list/list-type-badge";
 import { SafetyMenu } from "@/features/moderation/safety-menu";
 import { ObjektDrawer } from "@/features/objekt/drawer";
 import { ObjektCard } from "@/features/objekt/objekt-card";
@@ -25,12 +26,11 @@ import { useMediaQuery } from "@/hooks/use-media-query";
 import { useMinuteClock } from "@/hooks/use-minute-clock";
 import { displayNickname } from "@/lib/address";
 import { relativeTime } from "@/lib/time";
-import { toneChip } from "@/lib/tone";
+import { TONE_INK, toneChip } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import { useHideWithUndo } from "./actions";
-import { ListRoleBadge } from "./list-role-badge";
 import { LoadError } from "./load-error";
 import { MATCH_TONE } from "./match-chip";
 import { type ListGroup, groupByList } from "./person-groups";
@@ -43,25 +43,14 @@ type Person = NonNullable<Outputs["trade"]["person"]["partner"]>;
 type Collections = Readonly<Record<string, ValidObjekt | undefined>>;
 
 const DIRECTIONS = [
-  {
-    key: "theyHaveIWant",
-    section: m.trade_section_they_have,
-    groupLabel: m.trade_group_from,
-    tone: MATCH_TONE.theyHave,
-  },
-  {
-    key: "iHaveTheyWant",
-    section: m.trade_section_you_have,
-    groupLabel: m.trade_group_for,
-    tone: MATCH_TONE.youHave,
-  },
+  { key: "theyHaveIWant", label: m.trade_strip_you_want, none: m.trade_strip_none_you_want },
+  { key: "iHaveTheyWant", label: m.trade_strip_you_have, none: m.trade_strip_none_you_have },
 ] as const;
 
 /** Thumbnails a phone shows before "+N": two rows of five, the last place being the tile. */
 const PHONE_PLACES = 10;
 
 const GRID = "grid grid-cols-5 gap-x-1.5 gap-y-2 md:grid-cols-[repeat(auto-fill,minmax(3rem,1fr))]";
-const SLOT = "\uE000";
 
 /** `md`, where the sheet moves from the bottom to the inline end */
 const WIDE = "(min-width: 48rem)";
@@ -107,7 +96,6 @@ export function PersonSheet({
           <PersonBody
             partner={partner}
             collections={query.data.collections}
-            checkedAt={query.data.checkedAt}
             wide={wide}
             onOpen={setActive}
             onHidden={onClose}
@@ -133,14 +121,12 @@ export function PersonSheet({
 function PersonBody({
   partner,
   collections,
-  checkedAt,
   wide,
   onOpen,
   onHidden,
 }: {
   partner: Person;
   collections: Collections;
-  checkedAt: string;
   wide: boolean;
   onOpen: (objekt: ValidObjekt) => void;
   onHidden: () => void;
@@ -152,9 +138,9 @@ function PersonBody({
   const clock = useMinuteClock();
   const now = hydrated ? clock : undefined;
   const also = identity.also.map((ref) => displayNickname(ref.address, ref.nickname));
-  const headings = {
-    theyHaveIWant: useRef<HTMLHeadingElement>(null),
-    iHaveTheyWant: useRef<HTMLHeadingElement>(null),
+  const sections = {
+    theyHaveIWant: useRef<HTMLElement>(null),
+    iHaveTheyWant: useRef<HTMLElement>(null),
   };
   const contact: TradeContact = partner.messageable
     ? {
@@ -189,19 +175,11 @@ function PersonBody({
             <>
               <span className="text-muted-foreground block min-h-4 font-mono text-xs">
                 {now !== undefined ? (
-                  <>
-                    <time dateTime={partner.updatedAt}>
-                      {m.trade_partner_updated({
-                        time: relativeTime(Math.min(Date.parse(partner.updatedAt), now), now),
-                      })}
-                    </time>
-                    {" · "}
-                    <time dateTime={checkedAt}>
-                      {m.trade_checked_at({
-                        time: relativeTime(Math.min(Date.parse(checkedAt), now), now),
-                      })}
-                    </time>
-                  </>
+                  <time dateTime={partner.updatedAt}>
+                    {m.trade_partner_updated({
+                      time: relativeTime(Math.min(Date.parse(partner.updatedAt), now), now),
+                    })}
+                  </time>
                 ) : null}
               </span>
               {also.length > 0 ? (
@@ -217,19 +195,18 @@ function PersonBody({
         <PersonSummary
           counts={partner.counts}
           onJump={(key) => {
-            const heading = headings[key].current;
-            heading?.focus({ preventScroll: true });
-            heading?.scrollIntoView({ block: "start" });
+            const section = sections[key].current;
+            section?.focus({ preventScroll: true });
+            section?.scrollIntoView({ block: "start" });
           }}
         />
 
         {DIRECTIONS.map((direction) => (
           <Section
             key={direction.key}
-            label={direction.section({ count: partner[direction.key].length })}
-            tone={direction.tone}
-            headingRef={headings[direction.key]}
-            groupLabel={direction.groupLabel}
+            label={direction.label}
+            none={direction.none()}
+            sectionRef={sections[direction.key]}
             groups={groupByList(partner[direction.key], partner.lists)}
             dropped={partner.dropped.filter((item) => item.direction === direction.key)}
             collections={collections}
@@ -322,24 +299,23 @@ function PersonSummary({
 type PersonList = Person["lists"][number];
 
 /**
- * One direction: the counted objekts grouped by the person's list, then the ones the ownership
- * rule left out. Below `md` a section past two rows folds to nine thumbnails and a "+N" button.
+ * One direction: the counted objekts grouped by the person's list, each group labelled as a
+ * post's strip is ("HAVE 3 you want"), then the ones the ownership rule left out. Below `md` a
+ * section past two rows folds to nine thumbnails and a "+N" button.
  */
 function Section({
   label,
-  tone,
-  headingRef,
-  groupLabel,
+  none,
+  sectionRef,
   groups,
   dropped,
   collections,
   wide,
   onOpen,
 }: {
-  label: string;
-  tone: string;
-  headingRef: RefObject<HTMLHeadingElement | null>;
-  groupLabel: (values: { list: string }) => string;
+  label: (values: { role: string; count: number }) => string;
+  none: string;
+  sectionRef: RefObject<HTMLElement | null>;
   groups: ListGroup<PersonList>[];
   dropped: Person["dropped"];
   collections: Collections;
@@ -350,32 +326,29 @@ function Section({
   const total = groups.reduce((sum, group) => sum + group.slugs.length, 0);
   const folded = !wide && !expanded && total > PHONE_PLACES;
   const cap = folded ? PHONE_PLACES - 1 : CARD_LIMIT;
-  const visible: ListGroup<PersonList>[] = [];
+  const visible: (ListGroup<PersonList> & { count: number })[] = [];
   let shown = 0;
   for (const group of groups) {
     const slugs = group.slugs.slice(0, cap - shown);
     if (slugs.length === 0) break;
-    visible.push({ list: group.list, slugs });
+    visible.push({ list: group.list, slugs, count: group.slugs.length });
     shown += slugs.length;
   }
   const rest = total - shown;
   const out = dropped.slice(0, CARD_LIMIT);
 
   return (
-    <section className="flex min-w-0 flex-col gap-2">
-      <h3
-        ref={headingRef}
-        tabIndex={-1}
-        className={cn("scroll-mt-2 font-mono text-xs uppercase tabular-nums outline-none", tone)}
-      >
-        {label}
-      </h3>
+    <section
+      ref={sectionRef}
+      tabIndex={-1}
+      className="flex min-w-0 scroll-mt-2 flex-col gap-4 outline-none"
+    >
       {total === 0 && out.length === 0 ? (
-        <p className="text-muted-foreground text-sm">{m.trade_strip_none()}</p>
+        <p className="text-muted-foreground font-mono text-xs">{none}</p>
       ) : null}
       {visible.map((group, index) => (
         <div key={group.list?.id ?? "other"} className="flex flex-col gap-1.5">
-          {group.list ? <GroupHeading list={group.list} groupLabel={groupLabel} /> : null}
+          {group.list ? <GroupHeading list={group.list} label={label} count={group.count} /> : null}
           <ul className={GRID}>
             {group.slugs.map((slug) => (
               <li key={slug} className="@container min-w-0">
@@ -429,36 +402,40 @@ function Section({
   );
 }
 
-/** "from <list>" / "for <list>", with the name as a link wherever the locale puts it. */
+/** A group's strip label in its list type's colour, then the list's name linking to it. */
 function GroupHeading({
   list,
-  groupLabel,
+  label,
+  count,
 }: {
   list: PersonList;
-  groupLabel: (values: { list: string }) => string;
+  label: (values: { role: string; count: number }) => string;
+  count: number;
 }) {
-  const [before, after] = groupLabel({ list: SLOT }).split(SLOT);
   return (
-    <div className="flex min-w-0 items-start gap-2 text-sm">
-      <ListRoleBadge type={list.listTypeNew} />
-      <span className="min-w-0 break-words">
-        {before}
-        <Link
-          {...getListLinkOption({
-            slug: list.slug,
-            profileSlug: list.profileSlug,
-            profileAddress: list.profileAddress,
-            profile: list.profileAddress
-              ? { address: list.profileAddress, nickname: list.profileNickname }
-              : null,
-          })}
-          className="underline-offset-2 hover:underline"
-        >
-          {list.name}
-        </Link>
-        {after}
+    <h3 className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-0.5">
+      <span
+        className={cn(
+          "font-mono text-xs uppercase tabular-nums",
+          TONE_INK[LIST_TYPE_TONE[list.listTypeNew]],
+        )}
+      >
+        {label({ role: LIST_TYPE_LABEL[list.listTypeNew](), count })}
       </span>
-    </div>
+      <Link
+        {...getListLinkOption({
+          slug: list.slug,
+          profileSlug: list.profileSlug,
+          profileAddress: list.profileAddress,
+          profile: list.profileAddress
+            ? { address: list.profileAddress, nickname: list.profileNickname }
+            : null,
+        })}
+        className="min-w-0 text-sm break-words underline-offset-2 hover:underline"
+      >
+        {list.name}
+      </Link>
+    </h3>
   );
 }
 
