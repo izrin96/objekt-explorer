@@ -123,7 +123,7 @@ function PickerBody({
       </DialogHeader>
       <div className="flex min-h-0 flex-1 flex-col px-6 pb-4">
         {side === "give" ? (
-          <MineGrid to={to} {...grid} />
+          <MineGrid to={to} name={name} {...grid} />
         ) : source === "collection" ? (
           <TheirCollectionGrid to={to} name={name} {...grid} />
         ) : (
@@ -159,6 +159,32 @@ type Filters = PickerFilters & { search: string };
 const NO_FILTERS: Filters = { ...NO_PICKER_FILTERS, matchOnly: false };
 
 const narrowed = (filters: Filters) => filters.matchOnly || pickerFiltered(filters);
+
+/**
+ * Nothing left: the match switch alone says what it kept out, with the way to turn it off;
+ * other filters get the plain wording.
+ */
+function narrowedEmpty(
+  filters: Filters,
+  onFilters: (filters: Filters) => void,
+  matchTitle: string,
+) {
+  if (filters.matchOnly && !pickerFiltered(filters)) {
+    return {
+      title: matchTitle,
+      action: (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => onFilters({ ...filters, matchOnly: false })}
+        >
+          {m.offer_picker_match_off()}
+        </Button>
+      ),
+    };
+  }
+  return { title: m.offer_picker_filtered() };
+}
 
 /** The side's own "only what matches" switch, after the shared filters. */
 function MatchSwitch({
@@ -277,7 +303,7 @@ function PickerGrid({
   );
 }
 
-function MineGrid({ to, ...grid }: GridProps) {
+function MineGrid({ to, name, ...grid }: GridProps & { name: string }) {
   const [filters, setFilters] = useState(NO_FILTERS);
   const lists = useUserLists().flatMap((list) =>
     list.listTypeNew === "want"
@@ -308,7 +334,7 @@ function MineGrid({ to, ...grid }: GridProps) {
       allTitle={m.offer_picker_all_mine()}
       empty={
         narrowed(filters)
-          ? { title: m.offer_picker_filtered() }
+          ? narrowedEmpty(filters, setFilters, m.offer_picker_mine_none_wanted({ name }))
           : fromList
             ? { title: m.offer_picker_from_empty() }
             : { title: m.offer_picker_mine_empty() }
@@ -321,7 +347,8 @@ function MineGrid({ to, ...grid }: GridProps) {
 function theirsEmpty(
   name: string,
   listed: boolean,
-  filtered: boolean,
+  filters: Filters,
+  onFilters: (filters: Filters) => void,
   fromList: string | undefined,
 ) {
   if (!listed && !fromList) {
@@ -330,7 +357,9 @@ function theirsEmpty(
       hint: m.offer_picker_theirs_none_listed_hint(),
     };
   }
-  if (filtered) return { title: m.offer_picker_filtered() };
+  if (narrowed(filters)) {
+    return narrowedEmpty(filters, onFilters, m.offer_picker_theirs_none_wanted({ name }));
+  }
   if (fromList) return { title: m.offer_picker_theirs_from_empty() };
   return {
     title: m.offer_picker_theirs_none_held({ name }),
@@ -367,7 +396,7 @@ function TheirsGrid({
         ) : null
       }
       matchLabel={m.offer_picker_only_i_want()}
-      empty={theirsEmpty(name, listed, narrowed(filters), fromList)}
+      empty={theirsEmpty(name, listed, filters, setFilters, fromList)}
     />
   );
 }
@@ -386,7 +415,7 @@ function TheirCollectionGrid({ to, name, ...grid }: GridProps & { name: string }
       suggestedTitle={m.offer_picker_any_copy_section()}
       empty={
         narrowed(filters)
-          ? { title: m.offer_picker_filtered() }
+          ? narrowedEmpty(filters, setFilters, m.offer_picker_theirs_none_wanted({ name }))
           : { title: m.offer_picker_theirs_collection_empty({ name }) }
       }
     />

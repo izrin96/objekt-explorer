@@ -1,8 +1,19 @@
 import { useQuery } from "@tanstack/react-query";
-import { createContext, type ReactNode, use, useCallback, useState } from "react";
+import { createContext, type ReactNode, use, useCallback, useRef, useState } from "react";
 
+import {
+  AlertDialog,
+  AlertDialogClose,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogPopup,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
 import { Dialog, DialogPopup } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { m } from "@/paraglide/messages";
 
 import { BuilderForm } from "./builder/form";
 import { BuilderHeader } from "./builder/header";
@@ -24,14 +35,47 @@ function OfferBuilder({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  // the open form's "does the draft hold anything"; absent while it loads or is refused
+  const draft = useRef<(() => boolean) | null>(null);
+  const setDraft = useCallback((holds: (() => boolean) | null) => {
+    draft.current = holds;
+  }, []);
+  const [confirming, setConfirming] = useState(false);
+  const close = () => {
+    setConfirming(false);
+    onOpenChange(false);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        if (!next && draft.current?.()) setConfirming(true);
+        else onOpenChange(next);
+      }}
+    >
       {/* below `sm` the sheet sits in an auto-height grid row, so `h-full` would shrink to its
           content: its height is set outright, under the viewport's top inset */}
       <DialogPopup className="max-w-3xl max-sm:h-[calc(100dvh-(--spacing(12)))]">
         {request ? (
-          <BuilderLoader key={session} request={request} onDone={() => onOpenChange(false)} />
+          <BuilderLoader key={session} request={request} onDraft={setDraft} onDone={close} />
         ) : null}
+        <AlertDialog open={confirming} onOpenChange={setConfirming}>
+          <AlertDialogPopup>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{m.offer_discard_title()}</AlertDialogTitle>
+              <AlertDialogDescription>{m.offer_discard_desc()}</AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogClose render={<Button variant="outline" />}>
+                {m.offer_discard_keep()}
+              </AlertDialogClose>
+              <Button variant="destructive" onClick={close}>
+                {m.offer_discard_confirm()}
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogPopup>
+        </AlertDialog>
       </DialogPopup>
     </Dialog>
   );
@@ -76,7 +120,15 @@ export function useSharedOfferBuilder() {
   return use(SharedBuilder);
 }
 
-function BuilderLoader({ request, onDone }: { request: OfferRequest; onDone: () => void }) {
+function BuilderLoader({
+  request,
+  onDraft,
+  onDone,
+}: {
+  request: OfferRequest;
+  onDraft: (holds: (() => boolean) | null) => void;
+  onDone: () => void;
+}) {
   const suggest = useQuery({
     ...suggestOptions(request.suggestFor ?? ""),
     enabled: request.suggestFor !== undefined,
@@ -107,6 +159,7 @@ function BuilderLoader({ request, onDone }: { request: OfferRequest; onDone: () 
       request={request}
       prefill={prefill}
       suggestFailed={suggest.isError}
+      onDraft={onDraft}
       onDone={onDone}
     />
   );

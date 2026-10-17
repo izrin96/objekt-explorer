@@ -3,11 +3,12 @@ import {
   type CandidateItem,
   OFFER_NOTE_MAX_LENGTH,
   OFFER_SIDE_LIMIT,
+  TOPUP_MAX,
   type TopupPayer,
 } from "@repo/api/schemas/offer";
 import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { useId, useState } from "react";
+import { useEffect, useId, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { DialogClose, DialogFooter, DialogPanel } from "@/components/ui/dialog";
@@ -38,6 +39,7 @@ import { useCurrency } from "@/features/settings/use-currency";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
+import { getLocale } from "@/paraglide/runtime";
 
 import { FocusStrip, FocusStripSkeleton } from "./focus-strip";
 import { BuilderHeader } from "./header";
@@ -53,11 +55,14 @@ export function BuilderForm({
   request,
   prefill,
   suggestFailed,
+  onDraft,
   onDone,
 }: {
   request: OfferRequest;
   prefill: OfferPrefill | undefined;
   suggestFailed: boolean;
+  /** hands over whether the draft holds anything, so closing it can ask first */
+  onDraft: (holds: (() => boolean) | null) => void;
   onDone: () => void;
 }) {
   const { to, name } = request;
@@ -72,6 +77,8 @@ export function BuilderForm({
   const [amount, setAmount] = useState<number | null>(prefill?.topup?.amount ?? null);
   const [currency, setCurrency] = useState(prefill?.topup?.currency ?? preferred);
   const [payer, setPayer] = useState<TopupPayer>(prefill?.topup?.payer ?? "from");
+  // the amount's error waits for a first edit, a blur or a send attempt
+  const [topupTouched, setTopupTouched] = useState(false);
   const [note, setNote] = useState(prefill?.note ?? "");
   const [picking, setPicking] = useState<OfferSide | null>(null);
   const [error, setError] = useState<{ text: string; remove: boolean; link: boolean } | null>(null);
@@ -161,9 +168,15 @@ export function BuilderForm({
     giveShown.some((pick) => reasonOf("give", pick) !== null) ||
     get.some((pick) => reasonOf("get", pick) !== null);
   const overLimit = giveShown.length > OFFER_SIDE_LIMIT || get.length > OFFER_SIDE_LIMIT;
-  const topupValid = !topupOn || (amount !== null && amount > 0 && currency !== "");
+  const topupError = !topupOn
+    ? null
+    : amount === null || amount <= 0
+      ? m.offer_topup_amount_required()
+      : amount > TOPUP_MAX
+        ? m.offer_topup_amount_max({ max: TOPUP_MAX.toLocaleString(getLocale()) })
+        : null;
+  const topupValid = topupError === null && (!topupOn || currency !== "");
   const empty = give.length + get.length === 0;
-
   const create = useMutation(
     orpc.offer.create.mutationOptions({
       onSuccess: async ({ conversationId }) => {
@@ -197,7 +210,28 @@ export function BuilderForm({
     }),
   );
 
+  // what closing would lose: changes to the prefill, nothing while the send is on its way, and
+  // an open top-up with no amount holds nothing
+  const sameKeys = (picks: OfferPick[], from: OfferPick[] = []) =>
+    picks.length === from.length && picks.every((pick, i) => pick.key === from[i]?.key);
+  const holdsDraft =
+    !create.isPending &&
+    (!sameKeys(give, prefill?.give) ||
+      !sameKeys(get, prefill?.get) ||
+      (topupOn &&
+        amount !== null &&
+        (amount !== prefill?.topup?.amount ||
+          currency !== prefill.topup.currency ||
+          payer !== prefill.topup.payer)) ||
+      note.trim() !== (prefill?.note ?? "").trim());
+
+  useEffect(() => {
+    onDraft(() => holdsDraft);
+    return () => onDraft(null);
+  }, [onDraft, holdsDraft]);
+
   const send = () => {
+    if (topupError !== null) setTopupTouched(true);
     if (empty || blocked || overLimit || !topupValid || noteLength > OFFER_NOTE_MAX_LENGTH) return;
     setError(null);
     setRefused(new Set());
@@ -293,13 +327,21 @@ export function BuilderForm({
 
         <Topup
           on={topupOn}
-          onToggle={setTopupOn}
+          onToggle={(on) => {
+            setTopupOn(on);
+            setTopupTouched(false);
+          }}
           amount={amount}
-          onAmount={setAmount}
+          onAmount={(next) => {
+            setAmount(next);
+            setTopupTouched(true);
+          }}
+          onAmountBlur={() => setTopupTouched(true)}
           currency={currency}
           onCurrency={setCurrency}
           payer={payer}
           onPayer={setPayer}
+          error={topupTouched ? topupError : null}
           name={name}
         />
 
@@ -360,13 +402,22 @@ export function BuilderForm({
               ? m.offer_refused_too_many({ max: OFFER_SIDE_LIMIT })
               : blocked
                 ? m.offer_builder_blocked_hint()
-                : m.offer_builder_expiry()}
+                : topupError
+                  ? topupError
+                  : m.offer_builder_expiry()}
         </p>
         <DialogClose render={<Button variant="outline" />}>{m.common_modal_cancel()}</DialogClose>
         <Button
           disabled={
-            empty || blocked || overLimit || !topupValid || noteLength > OFFER_NOTE_MAX_LENGTH
+            empty ||
+            blocked ||
+            overLimit ||
+            (!topupValid && topupError === null) ||
+            noteLength > OFFER_NOTE_MAX_LENGTH
           }
+          // a topup's reason stays clickable, so a send attempt shows it at the field
+          aria-disabled={topupError !== null || undefined}
+          className="aria-disabled:opacity-64"
           loading={create.isPending}
           aria-describedby={error ? `${hintId} ${errorId}` : hintId}
           onClick={send}

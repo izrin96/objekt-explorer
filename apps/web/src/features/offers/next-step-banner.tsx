@@ -68,6 +68,8 @@ function deadlineText(deadline: Deadline) {
       return m.offer_next_decide_left({ left: leftLabel(deadline.at) });
     case "copyLeft":
       return m.offer_next_left({ left: leftLabel(deadline.at) });
+    case "rateBy":
+      return m.offer_next_rate_by({ date: shortDate(deadline.at) });
     case "rateUntil":
       return m.offer_next_rate_until({ date: shortDate(deadline.at) });
     case "ended":

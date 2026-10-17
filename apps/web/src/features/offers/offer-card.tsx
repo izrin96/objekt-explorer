@@ -3,8 +3,10 @@ import type { OfferItemView, OfferView } from "@repo/api/schemas/offer";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 
 import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { TONE_INK } from "@/lib/tone";
+import { cn } from "@/lib/utils";
 
-import { offerNo, offerStatusText, offerSummary } from "./format";
+import { offerLine, offerNo, offerSummary } from "./format";
 import { Mono } from "./mono";
 import { OfferBody } from "./offer-body";
 import { OfferThumb } from "./offer-item";
@@ -32,6 +34,8 @@ export function OfferCard({
   onCounter: (offer: OfferView) => void;
   onOpen: (objekt: ValidObjekt) => void;
 }) {
+  const line = offerLine(offer);
+
   if (!collapsed) {
     return (
       <div className="bg-card @container w-115 max-w-full rounded-lg border">
@@ -57,7 +61,7 @@ export function OfferCard({
         <span className="flex min-w-0 flex-1 flex-col">
           <span className="flex items-baseline gap-2">
             <Mono className="text-xs font-medium">{offerNo(offer.id)}</Mono>
-            <span className="text-muted-foreground text-xs">{offerStatusText(offer)}</span>
+            <span className={cn("text-xs", TONE_INK[line.tone])}>{line.text}</span>
           </span>
           <span className="text-muted-foreground truncate text-xs">
             {offerSummary(offer, collections)}

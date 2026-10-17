@@ -23,16 +23,23 @@ export function TradeLegs({
 }) {
   const ended = trade.status !== "in_progress";
   const topupIn = trade.topup ? (trade.topup.payer === "you" ? "give" : "get") : null;
+  // past tense once that side moved something; a top-up only moves with a completed trade
+  const moved = (key: "give" | "get", legs: TradeView["legs"]) =>
+    ended &&
+    (legs.some((leg) => leg.state === "verified") ||
+      (topupIn === key && trade.status === "completed"));
+  const giveLegs = trade.legs.filter((leg) => leg.fromYou);
+  const getLegs = trade.legs.filter((leg) => !leg.fromYou);
   const sides = [
     {
       key: "give",
-      title: ended ? m.offer_trade_you_gave() : m.offer_side_give(),
-      legs: trade.legs.filter((leg) => leg.fromYou),
+      title: moved("give", giveLegs) ? m.offer_trade_you_gave() : m.offer_side_give(),
+      legs: giveLegs,
     },
     {
       key: "get",
-      title: ended ? m.offer_trade_you_got() : m.offer_side_get(),
-      legs: trade.legs.filter((leg) => !leg.fromYou),
+      title: moved("get", getLegs) ? m.offer_trade_you_got() : m.offer_side_get(),
+      legs: getLegs,
     },
   ];
 

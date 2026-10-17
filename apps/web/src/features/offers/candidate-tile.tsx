@@ -29,7 +29,7 @@ export function CandidateTile({
   const unavailable = blocked !== null || (full && !selected);
   const detail =
     item.objektId === null ? (
-      m.offer_any_copy_count({ count: item.copies ?? 0 })
+      m.offer_any_copy_ask_count({ count: item.copies ?? 0 })
     ) : item.serial !== null ? (
       <SerialNo serial={item.serial} estimated={item.serialEstimated} />
     ) : null;

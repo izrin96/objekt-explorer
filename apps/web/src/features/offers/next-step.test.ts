@@ -21,8 +21,21 @@ describe("nextStep, ended", () => {
     expect(s).toMatchObject({
       kind: "completed",
       canRate: true,
-      deadline: { kind: "rateUntil", at: "2026-10-30T00:00:00.000Z" },
+      deadline: { kind: "rateBy", at: "2026-10-30T00:00:00.000Z" },
     });
+  });
+
+  test("completed, rated", () => {
+    const s = step(
+      trade({
+        status: "completed",
+        legs: [verified(), verified({ fromYou: false })],
+        canRate: true,
+        rating: "positive",
+        rateUntil: "2026-10-30T00:00:00.000Z",
+      }),
+    );
+    expect(s).toMatchObject({ deadline: { kind: "rateUntil", at: "2026-10-30T00:00:00.000Z" } });
   });
 
   test("completed, window closed", () => {
@@ -46,7 +59,7 @@ describe("nextStep, ended", () => {
       kind: "failed",
       canRate: true,
       canReport: true,
-      deadline: { kind: "rateUntil" },
+      deadline: { kind: "rateBy" },
     });
     expect(step(trade(base))).toMatchObject({
       kind: "failed",
