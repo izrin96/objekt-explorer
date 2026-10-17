@@ -1,4 +1,4 @@
-import { canBeOnTrade, pickedSides } from "@repo/api/schemas/list";
+import { canBeOnTrade, pickedSides, tradeSideOf } from "@repo/api/schemas/list";
 import { openToOf } from "@repo/api/schemas/open-to";
 import type { PostType } from "@repo/api/schemas/trade";
 
@@ -72,11 +72,12 @@ export type CompareRefusal = "oneWay" | "wtb" | "wts" | "wtt";
 
 /**
  * What Compare with names. Mutual needs both directions, so a one-way list cannot be picked
- * there. A WTB post is a want list matched against the viewer's have and sale lists, so it needs
- * a have side; a WTS post is a sale list matched against want lists open to buying. A WTT post
- * holds a have list, matched against want lists open to swaps, so a selection needs a have side
- * or a want list open to swaps (a lone Buying only want list matches no WTT post). Null when the
- * list can be picked, else the first rule it fails.
+ * there. A WTB post is a want list matched against the viewer's have and sale lists, and a WTS
+ * post is a sale list matched against want lists open to buying: each uses one side, so only a
+ * list on that side is offered, not its linked partner, which would compare the same pair under
+ * a misleading type. A WTT post holds a have list, matched against want lists open to swaps, so a
+ * selection needs a have side or a want list open to swaps (a lone Buying only want list matches
+ * no WTT post). Null when the list can be picked, else the first rule it fails.
  */
 export function compareRefusal(
   list: TradeList,
@@ -86,9 +87,8 @@ export function compareRefusal(
   const { ways, paired } = pickOf(list, tradeLists);
   if (scope.mutual && !(ways.have && ways.want)) return "oneWay";
   const openTo = [list, paired].map(openToIn);
-  if (scope.type === "wtb") return ways.have ? null : "wtb";
-  if (scope.type === "wts")
-    return openTo.some((to) => to === "buying" || to === "both") ? null : "wts";
+  if (scope.type === "wtb") return tradeSideOf(list.listTypeNew) === "have" ? null : "wtb";
+  if (scope.type === "wts") return openTo[0] === "buying" || openTo[0] === "both" ? null : "wts";
   if (scope.type === "wtt")
     return ways.have || openTo.some((to) => to === "swaps" || to === "both") ? null : "wtt";
   return null;

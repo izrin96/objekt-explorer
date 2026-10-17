@@ -62,26 +62,21 @@ describe("canCompare", () => {
     expect(usable("wtt")).toContain("bo-pair-want");
   });
 
-  test("WTB needs a have side: a lone want list is disabled", () => {
+  test("WTB offers have and sale lists only: a want list is disabled, even one linked to a have list", () => {
     expect(usable("wtb")).toEqual([
       "have-alone",
       "sale",
       "pair-have",
-      "pair-swaps-want",
       "buy-pair-have",
-      "buy-pair-want",
       "bo-pair-have",
-      "bo-pair-want",
     ]);
   });
 
-  test("WTS needs a want list open to buying", () => {
+  test("WTS offers want lists open to buying only: a have list is disabled, even one linked to such a want list", () => {
     expect(usable("wts")).toEqual([
       "buying-want",
       "buying-only-want",
-      "buy-pair-have",
       "buy-pair-want",
-      "bo-pair-have",
       "bo-pair-want",
     ]);
   });

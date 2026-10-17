@@ -642,8 +642,8 @@ Each section SHALL open with a heading, Mutual or One way, with no count, over i
 - A list that the picked Post type can never match SHALL be offered disabled, as Mutual disables one-way lists, and the Post type menu SHALL never disable an option because of the picked list:
   - **All**: every list can be offered;
   - **WTT**: under WTT, the viewer's have or sale list matches through the post's want side, while the viewer's want list (open to swaps) matches the post's have side; so a selection with no have or sale list and no want list open to swaps (Swaps only, or Swaps or buying) is disabled. That is a lone Buying only want list, which a pair with a have list passes through its have half;
-  - **WTB**: a WTB post is the poster's want list, matched against the viewer's have and sale lists, so a selection with no have or sale list (a lone want list) is disabled;
-  - **WTS**: a WTS post is a sale list, matched against the viewer's want lists open to buying, so a selection with no want list open to buying (Swaps or buying, or Buying only) (a lone have list, a sale list, a lone Swaps only want list, or a have and want pair whose want list is Swaps only) is disabled;
+  - **WTB**: a WTB post is the poster's want list, matched against the viewer's have and sale lists, so only a have or sale list SHALL be offered. A want list SHALL be disabled, even one linked to a have list: picking it would compare the same pair as picking its have list, under a type it can't match;
+  - **WTS**: a WTS post is a sale list, matched against the viewer's want lists open to buying, so only a want list open to buying (Swaps or buying, or Buying only) SHALL be offered. A have list, a sale list and a Swaps only want list SHALL be disabled, a have list even when it is linked to a want list open to buying;
   - **Mutual**: as above, and it fixes the type to WTT.
 - Changing the Post type to one that can't use the selected list SHALL reset Compare with to All my lists, as turning on Mutual does. Turning Mutual only off SHALL check the kept list against the URL's `type`, which applies again, and reset Compare with to All my lists when that type can't use it.
 - A `list` that is not one of the viewer's lists that take part, or that the current option or Post type can't use, SHALL read as All my lists: in the menu, the compared-lists line, the person sheet and the feed request, which SHALL not send it. The URL is left as it is until the next change.
@@ -718,6 +718,10 @@ The help beside the controls SHALL describe the mutual score as the smaller of t
 #### Scenario: WTS disables lists that can't match
 - **WHEN** on For you the viewer picks Post type WTS, and has a lone have list, a sale list, a lone Swaps only want list and a have and want pair whose want list is Swaps only
 - **THEN** Compare with offers all four disabled, and a want list open to buying, alone or in a pair, enabled
+
+#### Scenario: WTS disables the have half of a buying pair
+- **WHEN** on For you the viewer picks Post type WTS, and has have list "spares" linked to want list "store hunt", set to Swaps or buying
+- **THEN** Compare with offers "store hunt" enabled and "spares" disabled with the reason "Can't match WTS posts"
 
 #### Scenario: Switching to WTB resets a lone want list
 - **WHEN** under Any the viewer has picked a lone want list "binary hunt" and then picks Post type WTB
