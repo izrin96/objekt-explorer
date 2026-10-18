@@ -69,6 +69,8 @@ export async function isIpRateLimited(scope: string, headers: Headers): Promise<
   return attempts > IP_RATE_LIMIT;
 }
 
+const USER_LIMIT_TIMEOUT_MS = 250;
+
 /**
  * A per-user fixed-window limit; counts this call, so a refused call still uses up the window.
  * Fails open when Redis is down: these limits guard against abuse, and the safe actions behind
@@ -80,8 +82,19 @@ export async function userRateLimited(
   max: number,
   windowSeconds: number,
 ): Promise<boolean> {
+  // the client queues commands while disconnected and retries forever, so an outage would
+  // hang the call rather than throw: skip it when down, and give up after a short wait
+  if (!redis.connected) return false;
   try {
-    return (await rateLimit(`${scope}:rl:user:${userId}`, windowSeconds)) > max;
+    const attempts = await Promise.race([
+      rateLimit(`${scope}:rl:user:${userId}`, windowSeconds),
+      new Promise<null>((resolve) => setTimeout(resolve, USER_LIMIT_TIMEOUT_MS, null)),
+    ]);
+    if (attempts === null) {
+      console.warn(`[rate-limit] ${scope} timed out, letting the call through`);
+      return false;
+    }
+    return attempts > max;
   } catch (error) {
     console.warn(`[rate-limit] ${scope} unavailable, letting the call through:`, error);
     return false;

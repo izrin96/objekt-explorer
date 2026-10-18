@@ -108,7 +108,6 @@ export async function fileReport(me: string, input: ReportInput) {
       and(eq(report.reporterId, me), gt(report.createdAt, sql`now() - interval '24 hours'`)),
     );
     if (filed >= REPORTS_PER_DAY) refuseModeration("daily_limit");
-    if (input.alsoBlock) await lockUsersForWrite(tx, [me, input.userId]);
 
     const shared =
       input.share && input.conversationId !== undefined
@@ -166,6 +165,8 @@ export async function fileReport(me: string, input: ReportInput) {
       .returning({ id: report.id });
     let cancelled: CancelResult | null = null;
     if (input.alsoBlock) {
+      // only now, so the excerpt reads above don't hold up both users' offers and links
+      await lockUsersForWrite(tx, [me, input.userId]);
       await tx
         .insert(userBlock)
         .values({ blockerId: me, blockedId: input.userId })
