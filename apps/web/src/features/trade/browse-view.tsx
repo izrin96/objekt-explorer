@@ -17,6 +17,7 @@ import { ObjektDrawer } from "@/features/objekt/drawer";
 import { collectionName } from "@/features/objekt/objekt-label";
 import { OfferBuilderProvider } from "@/features/offers/offer-builder";
 import { useCurrentUser, useUserLists } from "@/features/user/hooks";
+import { useWindowVirtualizerRestore } from "@/lib/use-window-virtualizer-restore";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
@@ -167,6 +168,10 @@ export function BrowseView({ surface, search }: { surface: Surface; search: Feed
     () => Object.assign({}, ...(query.data?.pages.map((page) => page.collections) ?? [])),
     [query.data],
   ) as Record<string, ValidObjekt | undefined>;
+  const { ref: virtualizerRef, cache: virtualizerCache } = useWindowVirtualizerRestore({
+    count: rows.length,
+    enabled: hydrated && rows.length > 0,
+  });
 
   return (
     <OfferBuilderProvider>
@@ -322,6 +327,8 @@ export function BrowseView({ surface, search }: { surface: Surface; search: Feed
               four rows and the feed looks like it ends after two posts */}
           <WindowVirtualizer
             key={hydrated ? "live" : "ssr"}
+            ref={virtualizerRef}
+            cache={virtualizerCache}
             data={rows}
             ssrCount={hydrated ? undefined : Math.min(SSR_POSTS, rows.length)}
           >

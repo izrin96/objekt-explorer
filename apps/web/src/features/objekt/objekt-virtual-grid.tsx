@@ -8,6 +8,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import { useFilterData } from "@/features/filters/filter-data-provider";
 import type { FilterSearch } from "@/features/filters/search-schema";
+import { useWindowVirtualizerRestore } from "@/lib/use-window-virtualizer-restore";
 import { useColumns } from "@/stores/columns";
 
 import { buildVirtualData } from "./build-virtual-data";
@@ -79,11 +80,17 @@ export function ObjektVirtualGrid<T extends GridObjekt>({
     [data],
   );
 
+  const { ref: virtualizerRef, cache: virtualizerCache } = useWindowVirtualizerRestore({
+    count: data.length,
+    layoutKey: columns,
+    enabled: data.length > 0,
+  });
+
   return (
     <SelectionOrderContext value={order}>
       {/* `key`: every row's height changes with the column count, and virtua
           keeps the measurements it already took */}
-      <WindowVirtualizer key={columns} data={data}>
+      <WindowVirtualizer key={columns} ref={virtualizerRef} cache={virtualizerCache} data={data}>
         {(item) =>
           item.type === "label" ? (
             <div className="font-display pt-3 pb-3 text-base font-semibold">{item.title}</div>
