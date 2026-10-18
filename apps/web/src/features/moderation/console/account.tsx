@@ -1,5 +1,5 @@
 import { ArrowClockwiseIcon, ArrowLeftIcon, WarningIcon } from "@phosphor-icons/react";
-import { isStaffRole, roleList } from "@repo/api/schemas/moderation";
+import { isStaffRole, roleList, staffTargetRefused } from "@repo/api/schemas/moderation";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 
@@ -143,19 +143,27 @@ export function ModAccount({
           <LinkHistory userId={userId} history={data.linkHistory} />
         </div>
         <div className="order-3 flex min-w-0 flex-col gap-6">
-          {staff && !viewerIsAdmin ? (
+          {staffTargetRefused(account.role, viewerIsAdmin, "dismiss") ? (
             <p className="text-muted-foreground rounded-lg border border-dashed p-4 text-sm text-pretty">
               {m.mod_staff_target()}
             </p>
           ) : (
-            <ActForm userId={account.userId} name={name} deleted={account.deletedAt !== null} />
+            <ActForm
+              userId={account.userId}
+              name={name}
+              deleted={account.deletedAt !== null}
+              adminTarget={staffTargetRefused(account.role, viewerIsAdmin, "sanction")}
+            />
           )}
           {viewerIsAdmin && !roleList(account.role).includes("admin") ? (
             <RoleControl userId={account.userId} name={name} isModerator={staff} />
           ) : null}
         </div>
         <div className="order-4 min-w-0">
-          <Sanctions sanctions={data.sanctions} staffTarget={staff && !viewerIsAdmin} />
+          <Sanctions
+            sanctions={data.sanctions}
+            staffTarget={staffTargetRefused(account.role, viewerIsAdmin, "revoke")}
+          />
         </div>
         <div className="order-5 min-w-0">
           <Audit audit={data.audit} />

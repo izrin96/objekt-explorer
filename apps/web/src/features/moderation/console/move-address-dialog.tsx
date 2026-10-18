@@ -34,6 +34,8 @@ function moveErrorText(error: unknown) {
       return m.mod_address_changed();
     case "same_account":
       return m.mod_same_account();
+    case "deleted_target":
+      return m.mod_move_deleted_target();
     default:
       return m.mod_act_error();
   }

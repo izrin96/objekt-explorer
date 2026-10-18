@@ -79,7 +79,11 @@ async function relink(
 
   await db.transaction(async (tx) => {
     const ids = toUserId === undefined ? [fromUserId] : [fromUserId, toUserId];
-    await lockUsersShared(tx, ids);
+    const locked = await lockUsersShared(tx, ids);
+    // a scrubbed account takes no address: it holds nothing, and the link would outlive it
+    if (toUserId !== undefined && locked.some((row) => row.id === toUserId && row.deleted_at)) {
+      refuseModeration("deleted_target");
+    }
     await lockAddresses(tx, [address]);
     const [current] = await tx
       .select({ address: userAddress.address, userId: userAddress.userId })

@@ -26,6 +26,7 @@ import { type ChatTarget } from "../../schemas/chat";
 import { type OfferRefusal } from "../../schemas/offer";
 import { type chatSafety, findMembership, prepareStart, type StartContext } from "../chat";
 import { lockUsersShared } from "../cosmo-link";
+import { notBlockedEither, notTradeSanctioned } from "../safety";
 import { offersOnTrade } from "../trade-lists";
 
 export type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
@@ -93,6 +94,38 @@ export function refuseUnsafe(kind: "send" | "accept" | "respond", safety: Safety
   if (reason === null) return;
   const until = reason === "muted" ? safety.mute?.until : null;
   refuseOffer(reason, until ? { retryAt: new Date(until) } : {});
+}
+
+/**
+ * `refuseUnsafe` again inside the transaction, after `lockParties`: a block or trade block that
+ * committed after the pre-transaction read is applied. A sanction write locks the user row, so
+ * it either committed before the share lock or waits behind this transaction. A mute is not
+ * re-read: it only refuses a send, and one landing in this window is the same race a message
+ * sent a moment earlier would win.
+ */
+export async function refuseUnsafeIn(
+  tx: Tx,
+  kind: "send" | "accept",
+  me: string,
+  partnerId: string,
+) {
+  const { rows } = await tx.execute<{
+    blocked: boolean;
+    trade_blocked: boolean;
+    partner_trade_blocked: boolean;
+  }>(sql`
+    SELECT NOT ${notBlockedEither(me, partnerId)} AS blocked,
+      NOT ${notTradeSanctioned(me)} AS trade_blocked,
+      NOT ${notTradeSanctioned(partnerId)} AS partner_trade_blocked
+  `);
+  const row = rows[0];
+  const reason = safetyRefusal(kind, {
+    blocked: row?.blocked ?? false,
+    muted: false,
+    tradeBlocked: row?.trade_blocked ?? false,
+    partnerTradeBlocked: row?.partner_trade_blocked ?? false,
+  });
+  if (reason !== null) refuseOffer(reason);
 }
 
 /** Each user's linked addresses, lowercase. */

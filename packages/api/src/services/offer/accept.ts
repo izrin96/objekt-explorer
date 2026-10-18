@@ -8,7 +8,7 @@ import { chatSafety } from "../chat";
 import { lockAddresses } from "../cosmo-link";
 import { redis } from "../redis";
 import { cancelledColumns, cancelledNotes } from "./cancel";
-import { linkedAddresses, lockParties, refuseOffer, refuseUnsafe } from "./core";
+import { linkedAddresses, lockParties, refuseOffer, refuseUnsafe, refuseUnsafeIn } from "./core";
 import { type Side, checkItems, refuseCopyShortfall } from "./items";
 import { partyNames, writeNotes } from "./notes";
 import {
@@ -79,6 +79,7 @@ export async function acceptOffer(me: string, offerId: number) {
     // the link lock order, before the conversation lock: an unlink can't land between the
     // read above and the legs' address snapshot
     await lockParties(tx, [row.fromUserId, row.toUserId]);
+    await refuseUnsafeIn(tx, "accept", me, partnerId);
     await lockAddresses(tx, [...fromAddresses, ...toAddresses]);
     const locked = await linkedAddresses([row.fromUserId, row.toUserId], tx);
     if (
@@ -149,7 +150,12 @@ export async function acceptOffer(me: string, offerId: number) {
       .where(and(eq(offer.id, offerId), eq(offer.status, "open"), gt(offer.expiresAt, sql`now()`)))
       .returning({ id: offer.id });
     if (accepted.length === 0) {
-      refuseOffer(new Date(fresh!.expiresAt) <= new Date() ? "expired" : "not_open");
+      // the database's clock, as the update used, so skew can't mislabel the refusal
+      const [why] = await tx
+        .select({ open: sql<boolean>`${offer.status} = 'open'` })
+        .from(offer)
+        .where(eq(offer.id, offerId));
+      refuseOffer(why?.open ? "expired" : "not_open");
     }
 
     const specificIds = items.flatMap((item) => (item.objektId ? [item.objektId] : []));

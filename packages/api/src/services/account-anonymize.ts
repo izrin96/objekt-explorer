@@ -12,6 +12,7 @@ import { eq, sql } from "drizzle-orm";
 
 import { deletionBlockers, refusalOf } from "../lib/account-deletion";
 import { ownBannerKey } from "../lib/banner-key";
+import { disconnectUser } from "../realtime";
 import { deletionState, refusalError } from "./account-delete";
 import { lockAddresses, recordLinkEvents } from "./cosmo-link";
 import { audit, openReportsOf } from "./moderation";
@@ -94,6 +95,8 @@ export async function anonymizeUser(userId: string, { self }: { self: boolean })
     return { cancelled: result, banners: held };
   });
   await publishCancelled(cancelled);
+  // the scrub committed; an open tab's connection would keep receiving its events
+  await disconnectUser(userId);
 
   // after the commit, so a failed delete cannot undo the scrub; the rows no longer name the files
   for (const { address, bannerImgUrl } of banners) {

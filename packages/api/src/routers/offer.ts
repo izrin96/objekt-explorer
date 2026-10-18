@@ -15,14 +15,19 @@ import { acceptOffer } from "../services/offer/accept";
 import { offerCandidates, suggestOffer } from "../services/offer/picker";
 import { acceptSubstitute, declineSubstitute } from "../services/offer/substitute";
 import { cancelTrade, fetchMine, fetchTrade, rateTrade } from "../services/offer/trades";
+import { refuseOverUserLimit } from "../services/redis";
+
+/** The picker pages and the suggestion share one budget: a minute of fast scrolling stays well under it. */
+const limitPicker = (userId: string) => refuseOverUserLimit("offer-picker", userId, 120, 60);
 
 export const offerRouter = {
   /** What the builder can pick: `mine` paged from the sender's wallet, `theirs` from the partner's allowed lists. */
   candidates: authed
     .input(candidatesInputSchema)
-    .handler(async ({ input, context: { session } }) =>
-      offerCandidates(session.user.id, new Date(session.user.createdAt), input),
-    ),
+    .handler(async ({ input, context: { session } }) => {
+      await limitPicker(session.user.id);
+      return offerCandidates(session.user.id, new Date(session.user.createdAt), input);
+    }),
 
   /** Counters the open offer sent to the caller, or replaces the caller's own. */
   create: authed
@@ -56,9 +61,10 @@ export const offerRouter = {
 
   suggest: authed
     .input(suggestInputSchema)
-    .handler(async ({ input: { partnerId }, context: { session } }) =>
-      suggestOffer(session.user.id, partnerId),
-    ),
+    .handler(async ({ input: { partnerId }, context: { session } }) => {
+      await limitPicker(session.user.id);
+      return suggestOffer(session.user.id, partnerId);
+    }),
 
   mine: authed
     .input(mineInputSchema)

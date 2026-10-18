@@ -3,13 +3,14 @@ import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { objekts } from "@repo/db/indexer/schema";
 import { message, report, trade, userBlock } from "@repo/db/schema";
-import { and, desc, eq, inArray, or, sql } from "drizzle-orm";
+import { and, desc, eq, gt, inArray, or, sql } from "drizzle-orm";
 
 import { canReport } from "../lib/offer-rules";
 import { reportRetryAt, shapeExcerpt, shapeExcerptOffer } from "../lib/sanctions";
 import { cardKinds } from "../schemas/chat";
 import type { ReportInput } from "../schemas/moderation";
 import { afterBlockChange, findMembership, parseCard } from "./chat";
+import { lockUsersForWrite } from "./cosmo-link";
 import { findAccount, refuseModeration } from "./moderation";
 import {
   type CancelResult,
@@ -18,6 +19,9 @@ import {
   publishCancelled,
 } from "./offer/cancel";
 import { fetchOffers } from "./offer/view";
+
+const EXCERPT_MESSAGE_LIMIT = 200;
+const REPORTS_PER_DAY = 20;
 
 /** The offers behind shared messages, as they stand now, so the report keeps what was offered. */
 async function excerptOffers(offerIds: number[], targetUserId: string, now: Date) {
@@ -98,6 +102,13 @@ export async function fileReport(me: string, input: ReportInput) {
       .limit(1);
     const retryAt = reportRetryAt(last?.createdAt ?? null, new Date());
     if (retryAt) refuseModeration("report_limit", retryAt);
+    // counted under the lock, from the rows, so a refused report never uses up the window
+    const filed = await tx.$count(
+      report,
+      and(eq(report.reporterId, me), gt(report.createdAt, sql`now() - interval '24 hours'`)),
+    );
+    if (filed >= REPORTS_PER_DAY) refuseModeration("daily_limit");
+    if (input.alsoBlock) await lockUsersForWrite(tx, [me, input.userId]);
 
     const shared =
       input.share && input.conversationId !== undefined
@@ -114,6 +125,7 @@ export async function fileReport(me: string, input: ReportInput) {
             .from(message)
             .where(eq(message.conversationId, input.conversationId))
             .orderBy(desc(message.id))
+            .limit(EXCERPT_MESSAGE_LIMIT)
         : null;
     const offers = shared
       ? await excerptOffers(

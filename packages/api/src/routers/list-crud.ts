@@ -33,7 +33,10 @@ import {
   writeList,
 } from "../services/list";
 import { assertProfileOwned } from "../services/profile";
-import { redis } from "../services/redis";
+import { redis, refuseOverUserLimit } from "../services/redis";
+
+/** `list.create` and `list.copy` share one budget; each one inserts a list and its rows. */
+const limitListWrites = (userId: string) => refuseOverUserLimit("list-create", userId, 30, 3600);
 
 export const listCrud = {
   find: authed
@@ -68,6 +71,7 @@ export const listCrud = {
         session: { user },
       },
     }) => {
+      await limitListWrites(user.id);
       const prepared = await prepareList(input, user.id);
       const { changed } = await db.transaction((tx) => writeList(tx, prepared));
       await touchList(changed);
@@ -84,6 +88,7 @@ export const listCrud = {
           session: { user },
         },
       }) => {
+        await limitListWrites(user.id);
         const source = await findOwnedList(sourceSlug, user.id);
         const prepared = await prepareList({ ...input, gridColumns: source.gridColumns }, user.id);
         const { rows, carried, leftOut, unit } = await planCopy(source, input, user.id);

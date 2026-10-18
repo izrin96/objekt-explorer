@@ -43,6 +43,7 @@ import { notBlockedEither } from "../services/safety";
 import { marketVersion } from "../services/safety-cache";
 
 const SUMMARY_TTL = 60;
+const EMPTY_HISTORY_TTL = 60;
 
 async function fetchPriceHistory(
   collectionSlug: string,
@@ -282,10 +283,13 @@ export const marketRouter = {
     .handler(async ({ input }) => {
       const now = new Date();
       const load = () => fetchPriceHistory(input.collectionSlug, input.range, now);
+      const key = `market:history:${input.collectionSlug}:${input.range}`;
       try {
+        // nothing recorded yet (or an unknown slug) is kept briefly, so a made-up slug holds a key
+        // for a minute at most while a real collection picks up its first snapshot soon
         return await getCache(
-          `market:history:${input.collectionSlug}:${input.range}`,
-          historyCacheSeconds(now),
+          key,
+          (history) => (history.tracking === null ? EMPTY_HISTORY_TTL : historyCacheSeconds(now)),
           load,
         );
       } catch {

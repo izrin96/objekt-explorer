@@ -35,6 +35,7 @@ import {
   openOfferHolders,
   refuseOffer,
   refuseUnsafe,
+  refuseUnsafeIn,
   resolveAddressed,
   allowedEntries,
   collectionAddresses,
@@ -162,6 +163,7 @@ export async function createOffer(
   const result = await db
     .transaction(async (tx) => {
       await lockParties(tx, [me, partnerId]);
+      await refuseUnsafeIn(tx, "send", me, partnerId);
       let conversationId: number;
       let created = false;
       if (startCtx) {

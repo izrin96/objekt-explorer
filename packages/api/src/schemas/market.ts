@@ -98,7 +98,7 @@ export const marketListingsInputSchema = z.object({
 export type MarketListingsInput = z.output<typeof marketListingsInputSchema>;
 
 export const priceHistoryInputSchema = z.object({
-  collectionSlug: z.string(),
+  collectionSlug: z.string().max(255),
   range: z.enum(PRICE_HISTORY_RANGES).default("30d"),
 });
 

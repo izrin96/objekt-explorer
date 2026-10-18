@@ -55,6 +55,18 @@ export async function lockUsersShared(tx: Tx, ids: string[]) {
   return result.rows;
 }
 
+/**
+ * Step 1 for a writer that must wait out every reader holding the rows `FOR SHARE` (a block,
+ * as a sanction write): `FOR NO KEY UPDATE`, which still lets a notification insert's `KEY SHARE` through.
+ */
+export async function lockUsersForWrite(tx: Tx, ids: string[]) {
+  const sorted = [...new Set(ids)].sort(byValue);
+  if (sorted.length === 0) return;
+  await tx.execute(
+    sql`SELECT id FROM "user" WHERE id IN (${sql.join(sorted, sql`, `)}) ORDER BY id FOR NO KEY UPDATE`,
+  );
+}
+
 /** Step 2 of the lock order: one advisory lock per address, in address order. */
 export async function lockAddresses(tx: Tx, addresses: string[]) {
   const sorted = [...new Set(addresses.map((address) => address.toLowerCase()))].sort(byValue);

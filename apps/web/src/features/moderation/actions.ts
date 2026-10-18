@@ -11,7 +11,9 @@ import { relativeTime } from "@/lib/time";
 import { m } from "@/paraglide/messages";
 
 function blockErrorText(error: unknown) {
-  return errorReason(error).reason === "self" ? m.mod_error_self() : undefined;
+  const { reason } = errorReason(error);
+  if (reason === "daily_limit") return m.mod_error_daily_limit();
+  return reason === "self" ? m.mod_error_self() : undefined;
 }
 
 /** A block reaches chat lists, Trade, For you, Market rows' Message, profiles and list pages. */
@@ -97,6 +99,7 @@ export function useBlock() {
 export function reportRefusal(error: unknown) {
   const { reason, retryAt } = errorReason(error);
   if (reason === "not_reportable") return m.mod_report_not_reportable({ days: REPORT_AFTER_DAYS });
+  if (reason === "daily_limit") return m.mod_error_daily_limit();
   if (reason !== "report_limit") return null;
   const at = retryAt ? new Date(retryAt).getTime() : Date.now();
   return m.mod_report_limit({ time: relativeTime(at, Date.now(), "hour") });

@@ -7,10 +7,10 @@ import { sanctionEnd } from "../lib/sanctions";
 import { disconnectUser, publishNotify } from "../realtime";
 import {
   type ActInput,
-  isStaffRole,
   type RevokeInput,
   roleList,
   type SetRoleInput,
+  staffTargetRefused,
 } from "../schemas/moderation";
 import type { SanctionPayload } from "../schemas/notification";
 import {
@@ -29,7 +29,8 @@ import { bumpSafetyVersions } from "./safety-cache";
 export async function applyModAction(me: string, isAdmin: boolean, input: ActInput) {
   if (input.userId === me) refuseModeration("self");
   const target = await findAccount(input.userId);
-  if (isStaffRole(target.role) && !isAdmin) refuseModeration("staff_target");
+  const kind = input.action === "dismiss" ? "dismiss" : "sanction";
+  if (staffTargetRefused(target.role, isAdmin, kind)) refuseModeration("staff_target");
 
   const now = new Date();
   const end = sanctionEnd(input.action, input.days, now);
@@ -121,7 +122,7 @@ export async function revokeSanction(me: string, isAdmin: boolean, input: Revoke
     .where(and(eq(userSanction.id, input.sanctionId), activeSanctionWhere));
   if (!sanction) refuseModeration("not_active");
   const target = await findAccount(sanction.userId);
-  if (isStaffRole(target.role) && !isAdmin) refuseModeration("staff_target");
+  if (staffTargetRefused(target.role, isAdmin, "revoke")) refuseModeration("staff_target");
 
   await db.transaction(async (tx) => {
     await tx

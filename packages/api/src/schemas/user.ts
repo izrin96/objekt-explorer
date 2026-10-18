@@ -115,6 +115,7 @@ export const deletionTokenOutputSchema = z.object({ token: z.string() });
 export const USER_REFUSALS = [
   "user_query_too_long",
   "user_search_rate_limit",
+  "user_rate_limit",
   "user_not_linked_provider",
   "user_failed_get_info",
 ] as const;

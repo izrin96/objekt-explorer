@@ -63,19 +63,22 @@ function errorText(error: unknown) {
   return m.mod_act_error();
 }
 
-/** A deleted account keeps its reports to dismiss, and takes no sanction. */
+/** A deleted account or an admin keeps its reports to dismiss, and takes no sanction. */
 const DELETED_ACTIONS: readonly ModAction[] = ["dismiss"];
 
 export function ActForm({
   userId,
   name,
   deleted,
+  adminTarget,
 }: {
   userId: string;
   name: string;
   deleted: boolean;
+  /** An admin takes no sanction, so only Dismiss is open. */
+  adminTarget: boolean;
 }) {
-  const actions = deleted ? DELETED_ACTIONS : MOD_ACTIONS;
+  const actions = deleted || adminTarget ? DELETED_ACTIONS : MOD_ACTIONS;
   const queryClient = useQueryClient();
   const [action, setAction] = useState<ModAction | null>(null);
   const [muteDays, setMuteDays] = useState<number>(7);
@@ -169,6 +172,8 @@ export function ActForm({
       </RadioGroup>
       {deleted ? (
         <p className="text-muted-foreground text-xs text-pretty">{m.mod_deleted_target()}</p>
+      ) : adminTarget ? (
+        <p className="text-muted-foreground text-xs text-pretty">{m.mod_admin_target()}</p>
       ) : null}
       {missing.action ? (
         <p id={ids.actionError} className="text-destructive-foreground text-xs">

@@ -11,6 +11,7 @@ import { activeSanctionWhere, notBlockedEither } from "./safety";
 const MODERATION_REFUSALS = [
   "self",
   "report_limit",
+  "daily_limit",
   "staff_target",
   "not_active",
   "not_reportable",
@@ -26,6 +27,7 @@ export function refuseModeration(reason: ModerationRefusal, retryAt?: Date): nev
   const data = retryAt ? { reason, retryAt: retryAt.toISOString() } : { reason };
   switch (reason) {
     case "report_limit":
+    case "daily_limit":
       throw new ORPCError("TOO_MANY_REQUESTS", { data });
     case "staff_target":
       throw new ORPCError("FORBIDDEN", { data });

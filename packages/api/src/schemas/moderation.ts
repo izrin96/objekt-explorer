@@ -40,6 +40,21 @@ export const roleList = (role: string | null | undefined) =>
 export const isStaffRole = (role: string | null | undefined) =>
   roleList(role).some((r) => (STAFF_ROLES as readonly string[]).includes(r));
 
+/**
+ * Whether a viewer may not act on a staff account. A moderator never may; an admin may, except
+ * that nobody sanctions an admin. Dismissing a report and revoking stay open to an admin, so a
+ * report against an admin can be closed and a sanction never gets stuck.
+ */
+export const staffTargetRefused = (
+  targetRole: string | null | undefined,
+  viewerIsAdmin: boolean,
+  action: "sanction" | "dismiss" | "revoke",
+) => {
+  if (!isStaffRole(targetRole)) return false;
+  if (!viewerIsAdmin) return true;
+  return action === "sanction" && roleList(targetRole).includes("admin");
+};
+
 export const userIdInputSchema = z.object({ userId: z.string().min(1) });
 
 export const reportInputSchema = z.object({

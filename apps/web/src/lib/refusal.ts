@@ -25,6 +25,9 @@ const REFUSALS: readonly string[] = [
 const isRefusal = (code: string | null): code is Refusal =>
   code !== null && REFUSALS.includes(code);
 
+/** Whether `refusalText` has a worded message for this error, not just the unknown fallback. */
+export const isRefusalError = (error: unknown) => isRefusal(errorReason(error).reason);
+
 /** The user's-locale text for a refused oRPC call; never the server's `message`. */
 export function refusalText(error: unknown) {
   const { reason } = errorReason(error);
@@ -92,6 +95,8 @@ export function refusalText(error: unknown) {
       return m.api_errors_user_query_too_long();
     case "user_search_rate_limit":
       return m.api_errors_user_search_rate_limit();
+    case "user_rate_limit":
+      return m.api_errors_user_rate_limit();
     case "user_not_linked_provider":
       return m.api_errors_user_not_linked_provider();
     case "user_failed_get_info":

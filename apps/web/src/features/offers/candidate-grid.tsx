@@ -9,6 +9,7 @@ import { searchMatcher } from "@/features/filters/filter-utils";
 import { mapObjektWithTag } from "@/features/objekt/objekt-utils";
 import { PhotocardSkeleton } from "@/features/objekt/photocard-skeleton";
 import { VirtualCardGrid } from "@/features/objekt/virtual-card-grid";
+import { isRefusalError, refusalText } from "@/lib/refusal";
 import { m } from "@/paraglide/messages";
 
 import { CandidateTile } from "./candidate-tile";
@@ -40,7 +41,12 @@ function loadError(error: unknown, refetch: () => Promise<unknown>) {
   const refusal = offerRefusalOf(error);
   return {
     retry: () => void refetch(),
-    text: refusal ? (offerRefusalText(refusal, m.offer_refused_some()) ?? null) : null,
+    // a refusal outside the offer domain, such as the picker's rate limit, has its own text
+    text: refusal
+      ? (offerRefusalText(refusal, m.offer_refused_some()) ?? null)
+      : isRefusalError(error)
+        ? refusalText(error)
+        : null,
   };
 }
 
