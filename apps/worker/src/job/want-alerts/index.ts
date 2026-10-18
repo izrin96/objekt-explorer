@@ -33,7 +33,7 @@ export async function sendWantAlerts() {
     .from(lists)
     .where(and(eq(lists.discoverable, true), takesPartInTrade));
 
-  const progress = await loadProgress(maxId);
+  const progress = await loadProgress();
   if (progress.kind === "unreadable") {
     alertsLog.error("Stored progress unreadable; leaving it as it is");
     return;
@@ -46,12 +46,7 @@ export async function sendWantAlerts() {
       state: { discoverable: discoverable.map((list) => list.id), marks: [[nowMs, maxId]] },
       first: true,
     });
-    const why = {
-      none: "no Valkey seed",
-      unparsable: "Valkey seed unparsable",
-      "above max id": "Valkey seed above this database's max id, so not ours",
-    }[progress.seed];
-    alertsLog.info(`Cursor set to ${maxId} (${why})`);
+    alertsLog.info(`Cursor set to ${maxId} (first run)`);
     return;
   }
 
@@ -120,9 +115,9 @@ export async function sendWantAlerts() {
   alertsBeat.count("alerts", alerts.length);
   alertsBeat.max("most behind", maxId - nextCursor);
   // a run that sent nothing is counted in the hourly line only
-  if (alerts.length > 0 || progress.kind === "seed") {
+  if (alerts.length > 0) {
     alertsLog.info(
-      `${progress.kind === "seed" ? "Seeded from Valkey; " : ""}${pairs.length} pairs, ${alerts.length} alerts, ${notified.length} users notified; cursor ${cursor} → ${nextCursor}; behind ${maxId - nextCursor}; since last run ${sinceLast} min; ${unfinished.size} lists to resume`,
+      `${pairs.length} pairs, ${alerts.length} alerts, ${notified.length} users notified; cursor ${cursor} → ${nextCursor}; behind ${maxId - nextCursor}; since last run ${sinceLast} min; ${unfinished.size} lists to resume`,
     );
   }
   alertsBeat.flush();

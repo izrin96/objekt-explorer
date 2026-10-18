@@ -34,6 +34,6 @@ A wrong copy's deadline, like expiry and stall reminders, is due against `seenUn
 
 ## Want alerts
 
-`job/want-alerts` keeps its progress (cursor and state) in the `worker_progress` row `want-alerts`, saved in the same transaction as the alerts (`recordRun`), on every run. A worker reads and writes progress only in the database it alerts on, so a local worker can never move production's cursor. Valkey's `alerts:cursor` and `alerts:state` are only a one-time seed, read when the row is missing and used only if no id in them is above this database's `max(id)`; the worker never writes or deletes them. Unreadable progress stalls the job with an error and never starts over.
+`job/want-alerts` keeps its progress (cursor and state) in the `worker_progress` row `want-alerts`, saved in the same transaction as the alerts (`recordRun`), on every run. A worker reads and writes progress only in the database it alerts on, so a local worker can never move production's cursor. A missing row is a first run: it sets the cursor to `max(id)` and announces nothing already listed. Unreadable progress stalls the job with an error and never starts over.
 
 The floor (`overlapFloor`) anchors on the previous run: the newest mark at or before the newest mark's time minus 10 minutes, so a gap between runs never shortens the late-commit window. `keepMarks` keeps marks by age with one-minute spacing and never cuts the anchor; a count cap would drop it in a crash loop.
