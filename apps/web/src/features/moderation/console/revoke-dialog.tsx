@@ -23,6 +23,7 @@ import { m } from "@/paraglide/messages";
 function revokeErrorText(error: unknown) {
   const { reason } = errorReason(error);
   if (reason === "staff_target") return m.mod_staff_target();
+  if (reason === "self") return m.mod_error_self();
   return m.mod_act_error();
 }
 

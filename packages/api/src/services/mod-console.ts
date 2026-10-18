@@ -121,6 +121,8 @@ export async function revokeSanction(me: string, isAdmin: boolean, input: Revoke
     .from(userSanction)
     .where(and(eq(userSanction.id, input.sanctionId), activeSanctionWhere));
   if (!sanction) refuseModeration("not_active");
+  // a sanction from before the viewer was staff is still theirs to live with
+  if (sanction.userId === me) refuseModeration("self");
   const target = await findAccount(sanction.userId);
   if (staffTargetRefused(target.role, isAdmin, "revoke")) refuseModeration("staff_target");
 
