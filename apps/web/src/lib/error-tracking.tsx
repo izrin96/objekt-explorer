@@ -4,10 +4,10 @@ import {
   scrubBreadcrumb,
   scrubEvent,
 } from "@repo/lib/error-scrub";
-import type * as SentryReact from "@sentry/react";
 import type { ErrorInfo } from "react";
 
 import { isFromServer } from "@/lib/orpc-error";
+import type * as SentryClient from "@/lib/sentry-client";
 
 export type ErrorTrackingConfig = {
   dsn: string;
@@ -16,7 +16,7 @@ export type ErrorTrackingConfig = {
 };
 
 // a type only: the SDK itself is imported on demand
-type Sdk = typeof SentryReact;
+type Sdk = typeof SentryClient;
 
 /** Same-origin route that forwards envelopes to GlitchTip, which browsers cannot reach. */
 const TUNNEL = "/api/errors";
@@ -78,7 +78,7 @@ export function initClientErrorTracking() {
     window.removeEventListener("unhandledrejection", onRejection);
   };
 
-  sdk = import("@sentry/react")
+  sdk = import("@/lib/sentry-client")
     .then((Sentry) => {
       Sentry.init({
         dsn,

@@ -93,6 +93,18 @@ export default defineConfig(({ command }) => {
       tailwindcss(),
       tanstackStart({
         srcDirectory: "src",
+        router: {
+          // the plugin splits only component, errorComponent and notFoundComponent by default, so
+          // a route's pendingComponent pulled its whole import chain into the entry chunk
+          codeSplittingOptions: {
+            defaultBehavior: [
+              ["component"],
+              ["pendingComponent"],
+              ["errorComponent"],
+              ["notFoundComponent"],
+            ],
+          },
+        },
         importProtection: {
           // workspace packages resolve outside the vite root, so their importers
           // are matched by absolute path

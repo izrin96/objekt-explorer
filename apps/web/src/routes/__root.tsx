@@ -1,4 +1,4 @@
-import instrumentSansLatin from "@fontsource-variable/instrument-sans/files/instrument-sans-latin-wght-normal.woff2?url";
+import googleSansFlexLatin from "@fontsource-variable/google-sans-flex/files/google-sans-flex-latin-wght-normal.woff2?url";
 import { type QueryClient, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   HeadContent,
@@ -105,17 +105,6 @@ export const Route = createRootRouteWithContext<RouterContext>()({
     return {
       meta,
       links: [
-        { rel: "preconnect", href: "https://imagedelivery.net" },
-        { rel: "preconnect", href: "https://resources.cosmo.fans" },
-        { rel: "preconnect", href: "https://static.cosmo.fans" },
-        { rel: "preconnect", href: "https://media.objekt.top" },
-        {
-          rel: "preload",
-          href: instrumentSansLatin,
-          as: "font",
-          type: "font/woff2",
-          crossOrigin: "anonymous",
-        },
         {
           rel: "stylesheet",
           href: appCss,
@@ -195,6 +184,19 @@ function RootDocument({ children }: { children: ReactNode }) {
   return (
     <html lang={getLocale()} dir="ltr" suppressHydrationWarning>
       <head>
+        {/* before HeadContent, whose ~170 modulepreloads would otherwise come first */}
+        <link rel="preconnect" href="https://imagedelivery.net" />
+        <link rel="preconnect" href="https://resources.cosmo.fans" />
+        <link rel="preconnect" href="https://static.cosmo.fans" />
+        <link rel="preconnect" href="https://media.objekt.top" />
+        {/* the body font; Instrument Sans only sets titles in dialogs and on the auth pages */}
+        <link
+          rel="preload"
+          href={googleSansFlexLatin}
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
+        />
         <script dangerouslySetInnerHTML={{ __html: applySettingsScript }} />
         <ErrorTrackingMeta config={errorTracking} />
         <HeadContent />
