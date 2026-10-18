@@ -175,6 +175,42 @@ describe("matchLegs: moves before the accept", () => {
     expect(matchLegs([leg()], [early, out, home]).get(1)).toEqual({ kind: "pending" });
   });
 
+  test("returned to another giver wallet and sold before the accept breaks the leg", () => {
+    const early = transfer({ timestamp: BEFORE_ACCEPT(18) });
+    const back = transfer({ from: RECEIVER, to: GIVER_2, timestamp: BEFORE_ACCEPT(19) });
+    const sold = transfer({ from: GIVER_2, to: THIRD, timestamp: BEFORE_ACCEPT(20) });
+    expect(
+      matchLegs([leg({ giver: new Set([GIVER, GIVER_2]) })], [early, back, sold]).get(1),
+    ).toMatchObject({ kind: "broken", transferId: sold.id });
+  });
+
+  test("sent, returned and sent again credits the last send", () => {
+    const first = transfer({ timestamp: BEFORE_ACCEPT(21) });
+    const back = transfer({ from: RECEIVER, to: GIVER, timestamp: BEFORE_ACCEPT(22) });
+    const again = transfer({ timestamp: BEFORE_ACCEPT(23) });
+    expect(matchLegs([leg()], [first, back, again]).get(1)).toMatchObject({
+      kind: "verified",
+      transferId: again.id,
+    });
+  });
+
+  test("a giver wallet move in the same block as the send leaves it verified, in either order", () => {
+    const at = BEFORE_ACCEPT(24);
+    const giverLeg = leg({ giver: new Set([GIVER, GIVER_2]) });
+    // ties sort by id, so the two ids decide which comes first
+    for (const [consolidateId, sendId] of [
+      ["a", "z"],
+      ["z", "a"],
+    ]) {
+      const consolidate = transfer({ id: consolidateId, from: GIVER_2, to: GIVER, timestamp: at });
+      const send = transfer({ id: sendId, timestamp: at });
+      expect(matchLegs([giverLeg], [consolidate, send]).get(1)).toMatchObject({
+        kind: "verified",
+        transferId: sendId,
+      });
+    }
+  });
+
   test("a receiver passing the objekt on after the accept still leaves the early send verified", () => {
     const early = transfer({ timestamp: BEFORE_ACCEPT(10) });
     const onward = transfer({ from: RECEIVER, to: THIRD });

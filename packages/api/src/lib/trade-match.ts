@@ -102,9 +102,10 @@ const verified = (transfer: MatchTransfer): LegResult => ({
 });
 
 /**
- * Whether the token sent early by `sorted[i]` was back with the giver at the accept: its last
- * move before the accept landed on a giver address. A move between the receiver's own wallets,
- * or on to someone else, leaves the send counted.
+ * Whether the token sent early by `sorted[i]` came back to the giver before the accept,
+ * following it hop by hop from the receiver: each later move counts only if it leaves the
+ * address that holds it then. A move between the receiver's own wallets, or on to someone else,
+ * leaves the send counted; moves elsewhere in the same block can't reorder the chain.
  */
 function backWithGiver(
   sorted: MatchTransfer[],
@@ -114,8 +115,14 @@ function backWithGiver(
 ) {
   const sent = sorted[i]!;
   if (time(sent.timestamp) >= accepted) return false;
-  const last = sorted.findLast((t) => t.objektId === sent.objektId && time(t.timestamp) < accepted);
-  return last !== undefined && last !== sent && giver.has(last.to);
+  let holder = sent.to;
+  for (const t of sorted.slice(i + 1)) {
+    if (time(t.timestamp) >= accepted) break;
+    if (t.objektId !== sent.objektId || t.from !== holder) continue;
+    holder = t.to;
+    if (giver.has(holder)) return true;
+  }
+  return false;
 }
 
 /**
