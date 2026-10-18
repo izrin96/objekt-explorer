@@ -30,6 +30,7 @@ import {
   VERIFIER_LAST_KEY,
 } from "../../schemas/offer";
 import { chatSafety, fetchPartners, hydrateCards } from "../chat";
+import { indexerCaughtUp } from "../indexer-catch-up";
 import { redis } from "../redis";
 import { forgetReputation, reputationOf } from "../reputation";
 import {
@@ -85,7 +86,9 @@ const readIndexerSeen = async () => parseIndexerSeen(await redis.get(INDEXER_SEE
 export async function cancelTrade(me: string, tradeId: number) {
   const row = await findTrade(tradeId, me);
   const { partnerId } = row;
-  const behind = isBehind(await readIndexerSeen(), Date.now());
+  // the indexer trails the chain by seconds, so a send just made would not lock the trade yet:
+  // wait until it has read every block mined before this cancel
+  const behind = isBehind(await readIndexerSeen(), Date.now()) || !(await indexerCaughtUp());
   // a transfer the verifier hasn't run on yet locks the trade too, a wrong copy included, or a
   // party could send nothing back and cancel right after receiving
   // matched with the parties' other trades, as the verifier matches them, so a transfer

@@ -25,6 +25,8 @@ export const serverEnv = createEnv({
     CENTRIFUGO_URL: z.url().optional(),
     CENTRIFUGO_API_KEY: z.string().min(1).optional(),
     CENTRIFUGO_TOKEN_SECRET: z.string().min(1).optional(),
+    // optional so the site starts without it; a trade cancel refuses as indexer_behind without it
+    INDEXER_RPC_ENDPOINT: z.url().optional(),
     COSMO_KEY: z.string().min(1),
     // the public origin Better Auth signs in on and the only one it accepts;
     // required, or Better Auth would take it from the request's own Host
