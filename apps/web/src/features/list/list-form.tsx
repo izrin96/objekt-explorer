@@ -310,7 +310,7 @@ export function ListForm({
 
       {/* binding is set only here, and without it a have or sale list never goes on Trade */}
       {bindable && !isEdit && (profiles.length === 0 || !value.isProfileBind) ? (
-        <Alert>
+        <Alert variant="warning">
           <InfoIcon aria-hidden />
           <AlertDescription>
             {profiles.length === 0 ? (
