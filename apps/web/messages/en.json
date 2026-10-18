@@ -1652,6 +1652,7 @@
   "offer_clock_reminder": "Reminder to whoever still owes",
   "offer_clock_report": "Report a problem opens",
   "offer_clock_today": "Today",
+  "offer_clock_ends_completed": "Ends as completed if still unfinished: the wrong copies you hold are accepted",
   "offer_clock_ends_failed": "Ends as failed if still unfinished",
   "offer_clock_ends_cancelled": "Ends as cancelled if still unfinished",
   "offer_clock_rate": "Rate the trade",

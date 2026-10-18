@@ -42,9 +42,11 @@ function label(row: ClockRow, name: string, collections: Collections) {
     case "today":
       return m.offer_clock_today();
     case "ends":
-      return row.outcome === "failed"
-        ? m.offer_clock_ends_failed()
-        : m.offer_clock_ends_cancelled();
+      return row.outcome === "completed"
+        ? m.offer_clock_ends_completed()
+        : row.outcome === "failed"
+          ? m.offer_clock_ends_failed()
+          : m.offer_clock_ends_cancelled();
     case "rate":
       return m.offer_clock_rate();
   }

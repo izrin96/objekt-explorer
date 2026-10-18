@@ -100,7 +100,7 @@ export async function acceptOffer(me: string, offerId: number) {
         sql`SELECT pg_advisory_xact_lock(hashtext('any_copy'), hashtext(${giverId}))`,
       );
     }
-    await refuseCopyShortfall(anyCopy, copyNeeds, tx);
+    await refuseCopyShortfall(anyCopy, copyNeeds, tx, true);
 
     const [created] = await tx
       .insert(trade)
@@ -145,7 +145,8 @@ export async function acceptOffer(me: string, offerId: number) {
     const accepted = await tx
       .update(offer)
       .set({ status: "accepted", respondedAt: sql`now()` })
-      .where(and(eq(offer.id, offerId), eq(offer.status, "open")))
+      // the clock read before the indexer reads may be seconds old by now
+      .where(and(eq(offer.id, offerId), eq(offer.status, "open"), gt(offer.expiresAt, sql`now()`)))
       .returning({ id: offer.id });
     if (accepted.length === 0) refuseOffer("not_open");
 

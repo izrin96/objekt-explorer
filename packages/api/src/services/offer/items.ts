@@ -93,6 +93,8 @@ type CopyNeed = {
   held: Map<string, number>;
   /** collections the side names a specific objekt in, which open any-copy legs must leave a copy for */
   specificSlugs: string[];
+  /** the copies behind `held`, so accept can drop the ones another accept reserved since */
+  counted: { id: string; slug: string; available: boolean }[];
 };
 
 /**
@@ -151,33 +153,68 @@ export async function checkItems(
 
   const named = new Set(specific.map((item) => item.objektId!));
   const needs = (["give", "get"] as const).map((side, i): CopyNeed => {
-    const available = new Map<string, number>();
-    const held = new Map<string, number>();
+    const counted: CopyNeed["counted"] = [];
     for (const copy of copies[i]!) {
       if (!copy.transferable || reserved.has(copy.id) || named.has(copy.id)) continue;
       const asked = side === "get" && slugsOf(side).includes(copy.slug);
       if (asked && parties.getScope && !inAnyCopyScope(parties.getScope, copy)) continue;
-      held.set(copy.slug, (held.get(copy.slug) ?? 0) + 1);
-      if (asked && parties.getCopyHolders && !parties.getCopyHolders.has(copy.owner)) continue;
-      available.set(copy.slug, (available.get(copy.slug) ?? 0) + 1);
+      const available = !(
+        asked &&
+        parties.getCopyHolders &&
+        !parties.getCopyHolders.has(copy.owner)
+      );
+      counted.push({ id: copy.id, slug: copy.slug, available });
     }
+    const { available, held } = countCopies(counted);
     return {
       side,
       giverId: parties.giverId(side),
       available,
       held,
       specificSlugs: specificSlugsOf(side),
+      counted,
     };
   });
   await refuseCopyShortfall(anyCopy, needs, tx);
   return needs;
 }
 
+function countCopies(counted: CopyNeed["counted"]) {
+  const available = new Map<string, number>();
+  const held = new Map<string, number>();
+  for (const copy of counted) {
+    held.set(copy.slug, (held.get(copy.slug) ?? 0) + 1);
+    if (copy.available) available.set(copy.slug, (available.get(copy.slug) ?? 0) + 1);
+  }
+  return { available, held };
+}
+
+/**
+ * Under the givers' any-copy locks, `recheck` first drops the counted copies that an accept
+ * committed since reserved by name, which the open any-copy legs alone would miss.
+ */
 export async function refuseCopyShortfall(
   anyCopy: ItemRow[],
-  needs: CopyNeed[],
+  counted: CopyNeed[],
   tx: Tx | typeof db,
+  recheck = false,
 ) {
+  const reservedSince = recheck
+    ? await reservedIds(
+        counted.flatMap((need) => need.counted.map((copy) => copy.id)),
+        tx,
+      )
+    : new Set<string>();
+  const needs =
+    reservedSince.size === 0
+      ? counted
+      : counted.map((need) =>
+          Object.assign(
+            {},
+            need,
+            countCopies(need.counted.filter((copy) => !reservedSince.has(copy.id))),
+          ),
+        );
   const slugsOf = (need: CopyNeed) =>
     unique([
       ...anyCopy.filter((i) => i.side === need.side).map((i) => i.collectionSlug),

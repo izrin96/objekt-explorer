@@ -1652,6 +1652,7 @@
   "offer_clock_reminder": "未送付の側にリマインダー",
   "offer_clock_report": "問題の報告が可能に",
   "offer_clock_today": "今日",
+  "offer_clock_ends_completed": "未完了なら受け取った別のコピーが承認され、完了として終了",
   "offer_clock_ends_failed": "未完了なら失敗として終了",
   "offer_clock_ends_cancelled": "未完了ならキャンセルとして終了",
   "offer_clock_rate": "取引を評価",

@@ -66,8 +66,17 @@ describe("expiryOutcome", () => {
     expect(expiryOutcome(trade({ legs: [verified(), leg({ fromYou: false })] }))).toBe("failed");
   });
 
-  test("a pending copy fails it", () => {
-    expect(expiryOutcome(trade({ legs: [leg({ substitutes: [copy()] })] }))).toBe("failed");
+  test("a pending copy on every waiting leg completes it", () => {
+    expect(expiryOutcome(trade({ legs: [leg({ substitutes: [copy()] })] }))).toBe("completed");
+    expect(
+      expiryOutcome(trade({ legs: [verified(), leg({ fromYou: false, substitutes: [copy()] })] })),
+    ).toBe("completed");
+  });
+
+  test("a pending copy with another leg still waiting fails it", () => {
+    expect(
+      expiryOutcome(trade({ legs: [leg({ substitutes: [copy()] }), leg({ fromYou: false })] })),
+    ).toBe("failed");
   });
 
   test("a declined copy fails it", () => {

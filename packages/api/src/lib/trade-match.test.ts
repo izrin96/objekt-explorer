@@ -139,6 +139,26 @@ describe("matchLegs: moves before the accept", () => {
     expect(matchLegs([leg()], [early]).get(1)).toMatchObject({ kind: "verified" });
   });
 
+  test("a send the receiver returned before the accept doesn't verify; the next send does", () => {
+    const early = transfer({ timestamp: BEFORE_ACCEPT(8) });
+    const returned = transfer({ from: RECEIVER, to: GIVER, timestamp: BEFORE_ACCEPT(9) });
+    expect(matchLegs([leg()], [early, returned]).get(1)).toEqual({ kind: "pending" });
+    const sent = transfer();
+    expect(matchLegs([leg()], [early, returned, sent]).get(1)).toMatchObject({
+      kind: "verified",
+      transferId: sent.id,
+    });
+  });
+
+  test("a receiver passing the objekt on after the accept still leaves the early send verified", () => {
+    const early = transfer({ timestamp: BEFORE_ACCEPT(10) });
+    const onward = transfer({ from: RECEIVER, to: THIRD });
+    expect(matchLegs([leg()], [early, onward]).get(1)).toMatchObject({
+      kind: "verified",
+      transferId: early.id,
+    });
+  });
+
   test("sold before the accept and never back breaks the leg, though the accept missed it", () => {
     // the indexer lagged the accept, so the accept still saw the objekt with the giver
     const sold = transfer({ to: THIRD, timestamp: BEFORE_ACCEPT(6) });

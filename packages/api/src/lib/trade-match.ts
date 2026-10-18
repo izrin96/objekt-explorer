@@ -101,6 +101,22 @@ const verified = (transfer: MatchTransfer): LegResult => ({
   at: transfer.timestamp,
 });
 
+/** Whether the token `sorted[i]` moved left its receiver again before the accept. */
+function sentBack(
+  sorted: MatchTransfer[],
+  i: number,
+  receiver: ReadonlySet<string>,
+  accepted: number,
+) {
+  const sent = sorted[i]!;
+  if (time(sent.timestamp) >= accepted) return false;
+  return sorted
+    .slice(i + 1)
+    .some(
+      (t) => t.objektId === sent.objektId && receiver.has(t.from) && time(t.timestamp) < accepted,
+    );
+}
+
 /**
  * Decides each leg from the transfers. `used` holds the `transferKey`s already recorded on a
  * leg, so one transfer verifies at most one leg anywhere. Specific legs go first: their
@@ -135,15 +151,19 @@ export function matchLegs(
       let result: LegResult = { kind: "pending" };
       // the move that took the token from the giver before the accept, while it stays away
       let away: MatchTransfer | null = null;
-      for (const t of sorted) {
+      for (const [i, t] of sorted.entries()) {
         if (t.objektId !== leg.objektId || !inWindow(t)) continue;
         if (giver.has(t.to)) {
           away = null;
           continue;
         }
         if (giver.has(t.from) && receiver.has(t.to)) {
-          result = verified(t);
-          break;
+          // an early send counts only while the receiver still holds it at the accept
+          if (!sentBack(sorted, i, receiver, accepted)) {
+            result = verified(t);
+            break;
+          }
+          continue;
         }
         if (time(t.timestamp) < accepted) {
           if (giver.has(t.from)) away = t;

@@ -1652,6 +1652,7 @@
   "offer_clock_reminder": "아직 보낼 것이 남은 쪽에 알림",
   "offer_clock_report": "문제 신고 가능",
   "offer_clock_today": "오늘",
+  "offer_clock_ends_completed": "끝나지 않으면 받은 다른 사본이 수락되어 완료로 종료",
   "offer_clock_ends_failed": "끝나지 않으면 실패로 종료",
   "offer_clock_ends_cancelled": "끝나지 않으면 취소로 종료",
   "offer_clock_rate": "거래 평가",

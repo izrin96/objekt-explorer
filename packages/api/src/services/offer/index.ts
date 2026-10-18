@@ -178,7 +178,10 @@ export async function createOffer(
       const [current] = await tx
         .select(offerRowColumns)
         .from(offer)
-        .where(and(eq(offer.conversationId, conversationId), eq(offer.status, "open")));
+        .where(and(eq(offer.conversationId, conversationId), eq(offer.status, "open")))
+        // a block or another trade's accept cancels offers without this conversation's lock;
+        // the row lock waits for it and re-reads the status, so a counter never overwrites it
+        .for("update");
       let open: OfferRow | null = current ?? null;
       const expiredNotes: Parameters<typeof writeNotes>[1] = [];
       if (open && effectiveStatus(open, now) === "expired") {

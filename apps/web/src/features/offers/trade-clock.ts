@@ -18,7 +18,7 @@ export type ClockRow =
   | { kind: "reminder"; at: string; when: ClockWhen }
   | { kind: "report"; at: string; when: ClockWhen }
   | { kind: "today"; at: string; when: "today" }
-  | { kind: "ends"; at: string; when: ClockWhen; outcome: "failed" | "cancelled" }
+  | { kind: "ends"; at: string; when: ClockWhen; outcome: "completed" | "failed" | "cancelled" }
   /** undated, always last */
   | { kind: "rate"; at: null; when: "future" };
 
@@ -34,8 +34,19 @@ const ORDER: ClockRow["kind"][] = [
   "rate",
 ];
 
-/** What an unfinished trade ends as at its expiry: a verified leg or a held copy makes it failed. */
+/**
+ * What an unfinished trade ends as at its expiry. The worker first accepts each waiting leg's
+ * pending wrong copy, so a copy on every waiting leg completes it; otherwise a verified leg or a
+ * held copy makes it failed.
+ */
 export function expiryOutcome(trade: Pick<Trade, "progress" | "legs">) {
+  const waiting = trade.legs.filter((leg) => leg.state === "waiting");
+  if (
+    waiting.length > 0 &&
+    waiting.every((leg) => leg.substitutes.some((copy) => copy.status === "pending"))
+  ) {
+    return "completed" as const;
+  }
   return trade.progress.verified > 0 || trade.legs.some((leg) => leg.substitutes.length > 0)
     ? ("failed" as const)
     : ("cancelled" as const);
