@@ -55,14 +55,17 @@ async function filterSlugs(slugs: string[], filters: Partial<CollectionFilters>)
 /** The allowed list entries resolved against the partner's current wallet. */
 async function resolveTheirItems(me: string, addressed: Addressed, fromList?: string) {
   const { partnerId } = addressed;
-  const [entries, linked, kept, hasLists] = await Promise.all([
+  const [entries, linked, kept, hasLists, visible] = await Promise.all([
     allowedEntries(addressed, undefined, fromList),
     linkedAddresses([partnerId]),
     fromList ? null : keptGives(addressed, me),
     partnerHasLists(partnerId),
+    collectionAddresses(partnerId),
   ]);
   const keptIds = [...(kept?.objekts.keys() ?? [])];
   const theirs = linked.get(partnerId) ?? new Set<string>();
+  // a collection entry names copies one by one only where the partner shows serials publicly
+  const showsSerials = new Set(visible.serials);
   const addresses = [...theirs];
   const anySlugs = unique(
     entries.flatMap((e) => (entryObjektId(e) === null ? [e.collectionSlug] : [])),
@@ -112,7 +115,7 @@ async function resolveTheirItems(me: string, addressed: Addressed, fromList?: st
     }
     if (entry.hideSerial) continue;
     for (const objekt of held) {
-      if (seen.has(objekt.id) || !theirs.has(objekt.owner)) continue;
+      if (seen.has(objekt.id) || !showsSerials.has(objekt.owner)) continue;
       seen.add(objekt.id);
       items.push(toCandidate(objekt, flags(objekt), entry.listSlug));
     }

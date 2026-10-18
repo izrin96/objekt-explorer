@@ -31,6 +31,7 @@ import {
 import type { ShownSerial } from "../../schemas/offer";
 import { fetchCollectionsBySlug } from "../list";
 import { fetchOffers, offerItemCards, toOfferView } from "../offer/view";
+import { isProfileHidden } from "../privacy";
 import { notTradeSanctioned } from "../safety";
 import { fetchPostCards } from "../trade-feed";
 import { takesPartInTrade } from "../trade-lists";
@@ -130,7 +131,7 @@ async function resolveObjektCard(
   }
   if (objekt && objekt.collectionId !== collection.id) refuse("invalid_card");
 
-  const [entries, memberAddresses] = await Promise.all([
+  const [entries, addressRows] = await Promise.all([
     list
       ? db
           .select({ objektId: listEntries.objektId })
@@ -144,12 +145,23 @@ async function resolveObjektCard(
       : null,
     objekt
       ? db
-          .select({ address: userAddress.address })
+          .select({
+            address: userAddress.address,
+            userId: userAddress.userId,
+            privateProfile: userAddress.privateProfile,
+          })
           .from(userAddress)
           .where(inArray(userAddress.userId, [context.senderId, context.partnerId]))
-          .then((rows) => rows.map((row) => row.address))
       : [],
   ]);
+  // the partner's private addresses count only for an objekt their own list names, or a card
+  // would test who holds what
+  const listedObjekt =
+    list?.ownerId === context.partnerId &&
+    (entries?.some((entry) => entry.objektId === input.objektId) ?? false);
+  const memberAddresses = addressRows.flatMap((row) =>
+    listedObjekt || !isProfileHidden(row, context.senderId) ? [row.address] : [],
+  );
   if (
     !cardAllowed({
       entries,

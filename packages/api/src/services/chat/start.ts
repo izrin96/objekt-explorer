@@ -14,13 +14,17 @@ import {
 } from "../../lib/chat-rules";
 import { HOUR_MS } from "../../lib/time";
 import { type ChatTarget, START_WINDOW_HOURS } from "../../schemas/chat";
+import { isProfileHidden } from "../privacy";
 import type { Tx } from "./members";
 import { refuse } from "./refuse";
 import { chatSafety } from "./safety";
 import { fetchPref } from "./settings";
 
 /** The account behind a Message target. */
-async function resolveTarget(target: ChatTarget): Promise<{ recipientId: string }> {
+async function resolveTarget(
+  target: ChatTarget,
+  senderId: string,
+): Promise<{ recipientId: string }> {
   switch (target.kind) {
     case "list": {
       const [row] = await db
@@ -32,10 +36,11 @@ async function resolveTarget(target: ChatTarget): Promise<{ recipientId: string 
     }
     case "profile": {
       const [row] = await db
-        .select({ userId: userAddress.userId })
+        .select({ userId: userAddress.userId, privateProfile: userAddress.privateProfile })
         .from(userAddress)
         .where(eq(userAddress.address, target.address.toLowerCase()));
-      if (!row?.userId) throw new ORPCError("NOT_FOUND");
+      // a private profile must not answer who owns it
+      if (!row?.userId || isProfileHidden(row, senderId)) throw new ORPCError("NOT_FOUND");
       return { recipientId: row.userId };
     }
     case "user": {
@@ -85,7 +90,7 @@ export async function prepareStart(
   target: ChatTarget,
   now: Date,
 ): Promise<StartContext> {
-  const { recipientId } = await resolveTarget(target);
+  const { recipientId } = await resolveTarget(target, senderId);
   return prepareFirst(senderId, senderCreatedAt, recipientId, now);
 }
 
