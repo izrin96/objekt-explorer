@@ -12,6 +12,11 @@
       "dependsOn": ["^build"],
       "outputs": ["dist/**"]
     },
+    "web#build": {
+      "dependsOn": ["^build"],
+      "env": ["SENTRY_AUTH_TOKEN", "SENTRY_URL", "SENTRY_ORG", "SENTRY_PROJECT", "SENTRY_RELEASE"],
+      "outputs": ["dist/**"]
+    },
     "start": {
       "cache": false,
       "persistent": true

@@ -1,11 +1,40 @@
 import { paraglideVitePlugin } from "@inlang/paraglide-js";
 import babel from "@rolldown/plugin-babel";
+import { sentryVitePlugin } from "@sentry/vite-plugin";
 import tailwindcss from "@tailwindcss/vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import viteReact, { reactCompilerPreset } from "@vitejs/plugin-react";
-import { defineConfig } from "vite";
+import { type Plugin, defineConfig } from "vite";
+
+/**
+ * Uploads the client's source maps to GlitchTip and deletes them, since `server.ts` serves all of
+ * `dist/client`. Off unless every variable is set, so a build without them is unchanged.
+ */
+function sourceMapUpload() {
+  const { SENTRY_AUTH_TOKEN, SENTRY_URL, SENTRY_ORG, SENTRY_PROJECT, SENTRY_RELEASE } = process.env;
+  if (!SENTRY_AUTH_TOKEN || !SENTRY_URL || !SENTRY_ORG || !SENTRY_PROJECT || !SENTRY_RELEASE) {
+    return null;
+  }
+  const plugins = sentryVitePlugin({
+    url: SENTRY_URL,
+    authToken: SENTRY_AUTH_TOKEN,
+    org: SENTRY_ORG,
+    project: SENTRY_PROJECT,
+    // the server reads SENTRY_RELEASE at runtime and hands it to the browser; GlitchTip has no
+    // repository integration to set commits on
+    release: { name: SENTRY_RELEASE, inject: false, setCommits: false, deploy: false },
+    sourcemaps: { filesToDeleteAfterUpload: ["./dist/client/**/*.map"] },
+    // otherwise it reports its own usage to sentry.io
+    telemetry: false,
+  });
+  for (const plugin of plugins) {
+    (plugin as Plugin).applyToEnvironment = (environment) => environment.name === "client";
+  }
+  return plugins;
+}
 
 export default defineConfig(({ command }) => {
+  const uploadPlugins = command === "build" ? sourceMapUpload() : null;
   return {
     server: {
       port: 3200,
@@ -35,6 +64,10 @@ export default defineConfig(({ command }) => {
         },
         external: ["bun"],
       },
+    },
+    environments: {
+      // "hidden": no sourceMappingURL in the shipped files; written only to be uploaded
+      client: { build: { sourcemap: uploadPlugins ? "hidden" : false } },
     },
     ssr: {
       noExternal: command === "build" ? true : undefined,
@@ -86,6 +119,7 @@ export default defineConfig(({ command }) => {
       }),
       viteReact(),
       babel({ presets: [reactCompilerPreset()] }),
+      uploadPlugins,
     ],
   };
 });

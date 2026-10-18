@@ -19,6 +19,7 @@
     "@repo/cosmo": "workspace:*",
     "@repo/db": "workspace:*",
     "@repo/lib": "workspace:*",
+    "@sentry/bun": "catalog:",
     "drizzle-orm": "catalog:",
     "ofetch": "catalog:"
   },

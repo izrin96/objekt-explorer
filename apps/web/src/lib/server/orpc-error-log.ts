@@ -1,9 +1,14 @@
 import { ORPCError, ValidationError } from "@orpc/server";
 import type { StandardHandlerInterceptorOptions } from "@orpc/server/standard";
 
+import { captureServerError } from "./error-tracking";
+
 type HandlerRequest = StandardHandlerInterceptorOptions<object>["request"];
 
-/** Logs a failed procedure call with enough of the request to reproduce it. */
+/**
+ * Logs a failed procedure call with enough of the request to reproduce it, and reports an
+ * unexpected one (a 5xx, never a refusal or bad input) to error tracking.
+ */
 export function logORPCError(error: unknown, request: HandlerRequest) {
   const where = `${request.method} ${request.url.pathname}`;
   const ua = request.headers["user-agent"];
@@ -24,8 +29,11 @@ export function logORPCError(error: unknown, request: HandlerRequest) {
       input: error.cause.data,
       ua,
     });
+    // input is a 400 and skipped; output validation is a 500, a bug in the procedure
+    captureServerError(error, { procedure: request.url.pathname });
     return;
   }
 
   console.error("ORPC error:", where, error, error instanceof ORPCError ? error.cause : "");
+  captureServerError(error, { procedure: request.url.pathname });
 }

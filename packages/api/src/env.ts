@@ -31,6 +31,11 @@ export const serverEnv = createEnv({
     // the public origin Better Auth signs in on and the only one it accepts;
     // required, or Better Auth would take it from the request's own Host
     SITE_URL: z.url(),
+    // GlitchTip; unset turns error tracking off. The browser gets the DSN at runtime and
+    // sends through /api/errors, never to the DSN's host
+    SENTRY_DSN: z.url().optional(),
+    SENTRY_ENVIRONMENT: z.string().min(1).optional(),
+    SENTRY_RELEASE: z.string().min(1).optional(),
     // client
     VITE_UMAMI_SCRIPT_URL: z.string().min(1).optional(),
     VITE_UMAMI_WEBSITE_ID: z.string().min(1).optional(),

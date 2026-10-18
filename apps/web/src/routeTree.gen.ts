@@ -27,6 +27,7 @@ import { Route as AtChar123nicknameChar125StatsRouteImport } from './routes/@{$n
 import { Route as AtChar123nicknameChar125TradesRouteImport } from './routes/@{$nickname}/trades'
 import { Route as ApiActivityRouteImport } from './routes/api/activity'
 import { Route as ApiCollectionRouteImport } from './routes/api/collection'
+import { Route as ApiErrorsRouteImport } from './routes/api/errors'
 import { Route as ApiHealthcheckRouteImport } from './routes/api/healthcheck'
 import { Route as ApiLiveSessionsRouteImport } from './routes/api/live-sessions'
 import { Route as ApiOpenAppRouteImport } from './routes/api/open-app'
@@ -167,6 +168,11 @@ const ApiActivityRoute = ApiActivityRouteImport.update({
 const ApiCollectionRoute = ApiCollectionRouteImport.update({
   id: '/api/collection',
   path: '/api/collection',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiErrorsRoute = ApiErrorsRouteImport.update({
+  id: '/api/errors',
+  path: '/api/errors',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiHealthcheckRoute = ApiHealthcheckRouteImport.update({
@@ -425,6 +431,7 @@ export interface FileRoutesByFullPath {
   '/@{$nickname}/trades': typeof AtChar123nicknameChar125TradesRoute
   '/api/activity': typeof ApiActivityRoute
   '/api/collection': typeof ApiCollectionRoute
+  '/api/errors': typeof ApiErrorsRoute
   '/api/healthcheck': typeof ApiHealthcheckRoute
   '/api/live-sessions': typeof ApiLiveSessionsRoute
   '/api/open-app': typeof ApiOpenAppRoute
@@ -485,6 +492,7 @@ export interface FileRoutesByTo {
   '/@{$nickname}/trades': typeof AtChar123nicknameChar125TradesRoute
   '/api/activity': typeof ApiActivityRoute
   '/api/collection': typeof ApiCollectionRoute
+  '/api/errors': typeof ApiErrorsRoute
   '/api/healthcheck': typeof ApiHealthcheckRoute
   '/api/live-sessions': typeof ApiLiveSessionsRoute
   '/api/open-app': typeof ApiOpenAppRoute
@@ -549,6 +557,7 @@ export interface FileRoutesById {
   '/@{$nickname}/trades': typeof AtChar123nicknameChar125TradesRoute
   '/api/activity': typeof ApiActivityRoute
   '/api/collection': typeof ApiCollectionRoute
+  '/api/errors': typeof ApiErrorsRoute
   '/api/healthcheck': typeof ApiHealthcheckRoute
   '/api/live-sessions': typeof ApiLiveSessionsRoute
   '/api/open-app': typeof ApiOpenAppRoute
@@ -615,6 +624,7 @@ export interface FileRouteTypes {
     | '/@{$nickname}/trades'
     | '/api/activity'
     | '/api/collection'
+    | '/api/errors'
     | '/api/healthcheck'
     | '/api/live-sessions'
     | '/api/open-app'
@@ -675,6 +685,7 @@ export interface FileRouteTypes {
     | '/@{$nickname}/trades'
     | '/api/activity'
     | '/api/collection'
+    | '/api/errors'
     | '/api/healthcheck'
     | '/api/live-sessions'
     | '/api/open-app'
@@ -738,6 +749,7 @@ export interface FileRouteTypes {
     | '/@{$nickname}/trades'
     | '/api/activity'
     | '/api/collection'
+    | '/api/errors'
     | '/api/healthcheck'
     | '/api/live-sessions'
     | '/api/open-app'
@@ -792,6 +804,7 @@ export interface RootRouteChildren {
   AtChar123nicknameChar125RouteRoute: typeof AtChar123nicknameChar125RouteRouteWithChildren
   ApiActivityRoute: typeof ApiActivityRoute
   ApiCollectionRoute: typeof ApiCollectionRoute
+  ApiErrorsRoute: typeof ApiErrorsRoute
   ApiHealthcheckRoute: typeof ApiHealthcheckRoute
   ApiLiveSessionsRoute: typeof ApiLiveSessionsRoute
   ApiOpenAppRoute: typeof ApiOpenAppRoute
@@ -935,6 +948,13 @@ declare module '@tanstack/react-router' {
       path: '/api/collection'
       fullPath: '/api/collection'
       preLoaderRoute: typeof ApiCollectionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/errors': {
+      id: '/api/errors'
+      path: '/api/errors'
+      fullPath: '/api/errors'
+      preLoaderRoute: typeof ApiErrorsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/healthcheck': {
@@ -1426,6 +1446,7 @@ const rootRouteChildren: RootRouteChildren = {
     AtChar123nicknameChar125RouteRouteWithChildren,
   ApiActivityRoute: ApiActivityRoute,
   ApiCollectionRoute: ApiCollectionRoute,
+  ApiErrorsRoute: ApiErrorsRoute,
   ApiHealthcheckRoute: ApiHealthcheckRoute,
   ApiLiveSessionsRoute: ApiLiveSessionsRoute,
   ApiOpenAppRoute: ApiOpenAppRoute,
@@ -1448,10 +1469,11 @@ export const routeTree = rootRouteImport
   ._addFileTypes<FileRouteTypes>()
 
 import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
+import type { startInstance } from './start.ts'
 declare module '@tanstack/react-start' {
   interface Register {
     ssr: true
     router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
   }
 }

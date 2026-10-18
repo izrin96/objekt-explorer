@@ -4,6 +4,7 @@ import { CatchBoundary } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
+import { reportError } from "@/lib/error-tracking";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
@@ -26,6 +27,7 @@ export function WidgetBoundary({
   return (
     <CatchBoundary
       getResetKey={() => resetKey}
+      onCatch={reportError}
       errorComponent={({ reset }) => <WidgetError as={as} className={className} onRetry={reset} />}
     >
       {children}

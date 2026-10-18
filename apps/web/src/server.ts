@@ -1,6 +1,17 @@
 import handler from "@tanstack/react-start/server-entry";
 
+import {
+  captureServerError,
+  flushErrorTracking,
+  initServerErrorTracking,
+} from "./lib/server/error-tracking";
 import { paraglideMiddleware } from "./paraglide/server.js";
+
+initServerErrorTracking();
+
+function isUnhandled(value: unknown): value is Error {
+  return value instanceof Error && (value as { unhandled?: boolean }).unhandled === true;
+}
 
 /**
  * When a client disconnects mid-request, Start rethrows the request's
@@ -11,16 +22,20 @@ import { paraglideMiddleware } from "./paraglide/server.js";
  *
  * @see https://github.com/TanStack/router/issues/7991
  */
-function isClientDisconnect(value: unknown): boolean {
-  if (!(value instanceof Error)) return false;
-  if ((value as { unhandled?: boolean }).unhandled !== true) return false;
+function isClientDisconnect(value: Error): boolean {
   const { cause } = value;
   return cause instanceof DOMException && cause.name === "AbortError";
 }
 
+// h3 logs each error a server route or SSR left unhandled here, once, so this sink is also
+// where they are reported
 const logError = console.error.bind(console);
 console.error = (...args: Array<unknown>) => {
-  if (args.length === 1 && isClientDisconnect(args[0])) return;
+  const [only] = args;
+  if (args.length === 1 && isUnhandled(only)) {
+    if (isClientDisconnect(only)) return;
+    captureServerError(only.cause instanceof Error ? only.cause : only);
+  }
   logError(...args);
 };
 
@@ -49,4 +64,6 @@ export default {
   async fetch(request: Request) {
     return withSecurityHeaders(await paraglideMiddleware(request, () => handler.fetch(request)));
   },
+  // for the production server's shutdown, which loads this bundle
+  flush: flushErrorTracking,
 };

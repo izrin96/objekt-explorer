@@ -12,6 +12,26 @@ const threshold = LEVELS[levelFrom(process.env.WORKER_LOG_LEVEL)];
 
 export type Logger = ReturnType<typeof log>;
 
+type ErrorSink = (tag: string, args: unknown[]) => void;
+let errorSink: ErrorSink | null = null;
+
+/** Where every `error` line also goes, set once at startup (error tracking); none in tests. */
+export function setErrorSink(sink: ErrorSink | null) {
+  errorSink = sink;
+}
+
+/**
+ * An `error` line as one report: the first `Error` it logs, and its text parts as the message.
+ * Other values are left out, since they can carry anything a job held.
+ */
+export function errorReport(args: readonly unknown[]) {
+  const error = args.find((arg) => arg instanceof Error);
+  const message = args
+    .filter((arg) => typeof arg === "string" || typeof arg === "number")
+    .join(" ");
+  return { error, message };
+}
+
 /** Logs under one `[tag]`; `debug` lines show only with `WORKER_LOG_LEVEL=debug`. */
 export function log(tag: string) {
   const prefix = `[${tag}]`;
@@ -25,7 +45,10 @@ export function log(tag: string) {
     warn: (...args: unknown[]) => {
       if (threshold <= LEVELS.warn) console.warn(prefix, ...args);
     },
-    error: (...args: unknown[]) => console.error(prefix, ...args),
+    error: (...args: unknown[]) => {
+      console.error(prefix, ...args);
+      errorSink?.(tag, args);
+    },
   };
 }
 

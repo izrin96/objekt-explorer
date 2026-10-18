@@ -69,26 +69,33 @@ export async function isIpRateLimited(scope: string, headers: Headers): Promise<
   return attempts > IP_RATE_LIMIT;
 }
 
-const USER_LIMIT_TIMEOUT_MS = 250;
+const FAIL_OPEN_TIMEOUT_MS = 250;
 
 /**
- * A per-user fixed-window limit; counts this call, so a refused call still uses up the window.
- * Fails open when Redis is down: these limits guard against abuse, and the safe actions behind
- * them (a block, a picker read) must not stop with it.
+ * A fixed-window limit on `key`; counts this call, so a refused call still uses up the window.
+ * Fails open when Redis is down: these limits guard against abuse, and the actions behind them
+ * must not stop with it.
  */
-export async function userRateLimited(
-  scope: string,
-  userId: string,
-  max: number,
-  windowSeconds: number,
-): Promise<boolean> {
+let connecting: Promise<void> | undefined;
+
+async function rateLimitedFailOpen(scope: string, key: string, max: number, windowSeconds: number) {
   // the client queues commands while disconnected and retries forever, so an outage would
-  // hang the call rather than throw: skip it when down, and give up after a short wait
-  if (!redis.connected) return false;
+  // hang the call rather than throw: skip it when down, and give up after a short wait. It also
+  // connects only on its first command, so a skipped call starts that connection
+  if (!redis.connected) {
+    // one attempt at a time, so an outage doesn't pile up a pending promise per call
+    connecting ??= redis
+      .connect()
+      .catch(() => undefined)
+      .finally(() => {
+        connecting = undefined;
+      });
+    return false;
+  }
   try {
     const attempts = await Promise.race([
-      rateLimit(`${scope}:rl:user:${userId}`, windowSeconds),
-      new Promise<null>((resolve) => setTimeout(resolve, USER_LIMIT_TIMEOUT_MS, null)),
+      rateLimit(key, windowSeconds),
+      new Promise<null>((resolve) => setTimeout(resolve, FAIL_OPEN_TIMEOUT_MS, null)),
     ]);
     if (attempts === null) {
       console.warn(`[rate-limit] ${scope} timed out, letting the call through`);
@@ -99,6 +106,17 @@ export async function userRateLimited(
     console.warn(`[rate-limit] ${scope} unavailable, letting the call through:`, error);
     return false;
   }
+}
+
+/** A per-user limit, failing open (`rateLimitedFailOpen`). */
+export function userRateLimited(scope: string, userId: string, max: number, windowSeconds: number) {
+  return rateLimitedFailOpen(scope, `${scope}:rl:user:${userId}`, max, windowSeconds);
+}
+
+/** A per-IP limit, failing open (`rateLimitedFailOpen`); the address as `isIpRateLimited` reads it. */
+export function ipRateLimited(scope: string, headers: Headers, max: number, windowSeconds: number) {
+  const ip = headers.get("x-real-ip")?.trim() || "unknown";
+  return rateLimitedFailOpen(scope, `${scope}:rl:ip:${ip}`, max, windowSeconds);
 }
 
 /** `userRateLimited`, refusing with the shared `user_rate_limit` code. */

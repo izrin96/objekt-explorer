@@ -20,6 +20,9 @@ services:
       - CENTRIFUGO_URL=http://centrifugo:8000
       - CENTRIFUGO_API_KEY
       - WORKER_LOG_LEVEL
+      - WORKER_SENTRY_DSN
+      - SENTRY_ENVIRONMENT
+      - SENTRY_RELEASE
     healthcheck:
       test: test ! -f /tmp/drain
       interval: 5s
@@ -103,6 +106,13 @@ services:
         - VITE_UMAMI_SCRIPT_URL
         - VITE_UMAMI_WEBSITE_ID
         - VITE_LIVE_API_KEY
+        - SENTRY_AUTH_TOKEN
+      # source map upload; the build skips it unless these and SENTRY_AUTH_TOKEN are all set
+      args:
+        SENTRY_URL: ${SENTRY_URL:-}
+        SENTRY_ORG: ${SENTRY_ORG:-}
+        SENTRY_PROJECT: ${SENTRY_PROJECT:-}
+        SENTRY_RELEASE: ${SENTRY_RELEASE:-}
     environment:
       - VITE_UMAMI_SCRIPT_URL
       - VITE_UMAMI_WEBSITE_ID
@@ -131,6 +141,9 @@ services:
       - CENTRIFUGO_URL=http://centrifugo:8000
       - CENTRIFUGO_API_KEY
       - CENTRIFUGO_TOKEN_SECRET
+      - SENTRY_DSN
+      - SENTRY_ENVIRONMENT
+      - SENTRY_RELEASE
     healthcheck:
       test: test ! -f /tmp/drain && curl -f http://localhost:3000/api/healthcheck
       interval: 5s
@@ -158,6 +171,75 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
+
+  # error tracking (GlitchTip, Sentry-compatible), started only with `--profile glitchtip`.
+  # GlitchTip 6 runs one process that serves the UI and API and runs its task worker; it refuses a
+  # separate worker role. Browsers never reach it: the web app forwards their reports through
+  # /api/errors. The UI is on 127.0.0.1 only
+  glitchtip:
+    profiles: [glitchtip]
+    restart: always
+    image: glitchtip/glitchtip:6
+    depends_on:
+      glitchtip-db-init:
+        condition: service_completed_successfully
+      valkey:
+        condition: service_started
+    ports:
+      - "127.0.0.1:8001:8000"
+    environment:
+      # its own role and database; straight to postgres, since pgbouncer serves only `main` and its
+      # transaction pooling would break the advisory lock GlitchTip's startup migration takes
+      - DATABASE_URL=postgresql://glitchtip:${GLITCHTIP_DB_PASSWORD:-}@postgres:5432/glitchtip
+      # its own database index; the app and the indexer use 0. It shares Valkey's memory and CPU
+      - VALKEY_URL=redis://valkey:6379/1
+      - SECRET_KEY=${GLITCHTIP_SECRET_KEY:-}
+      - GLITCHTIP_DOMAIN=${GLITCHTIP_DOMAIN:-http://localhost:8001}
+      - EMAIL_URL=${GLITCHTIP_EMAIL_URL:-consolemail://}
+      - DEFAULT_FROM_EMAIL=${GLITCHTIP_FROM_EMAIL:-glitchtip@localhost}
+      # accounts come from `manage.py createsuperuser` and invitations, never self sign-up
+      - ENABLE_USER_REGISTRATION=False
+      - ENABLE_ADMIN=False
+      - ENABLE_OPENAPI=False
+      - GLITCHTIP_ENABLE_MCP=False
+      - GLITCHTIP_ENABLE_UPTIME=False
+      - GLITCHTIP_ENABLE_LOGS=False
+    volumes:
+      - glitchtip-uploads:/code/uploads
+
+  # Creates GlitchTip's role and database in the shared postgres, idempotently; initdb never reruns
+  # on an existing volume. It also checks the two secrets: a `${VAR:?}` would fail every compose
+  # command, with or without this profile, so the check lives here and stops GlitchTip from starting.
+  # The app connects as the superuser `postgres`, which CONNECT privileges do not bind, so revoking
+  # PUBLIC's CONNECT on `main` keeps the glitchtip role out of the app's data.
+  glitchtip-db-init:
+    profiles: [glitchtip]
+    image: postgres:18
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - PGHOST=postgres
+      - PGUSER=postgres
+      - PGPASSWORD=postgres
+      - PGDATABASE=main
+      - GLITCHTIP_SECRET_KEY=${GLITCHTIP_SECRET_KEY:-}
+      - GLITCHTIP_DB_PASSWORD=${GLITCHTIP_DB_PASSWORD:-}
+    command:
+      - sh
+      - -ec
+      - |
+        [ -n "$$GLITCHTIP_SECRET_KEY" ] || { echo "GLITCHTIP_SECRET_KEY is not set" >&2; exit 1; }
+        [ -n "$$GLITCHTIP_DB_PASSWORD" ] || { echo "GLITCHTIP_DB_PASSWORD is not set" >&2; exit 1; }
+        psql -v ON_ERROR_STOP=1 -v pw="$$GLITCHTIP_DB_PASSWORD" <<'SQL'
+        SELECT 'CREATE ROLE glitchtip' WHERE NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'glitchtip')\gexec
+        ALTER ROLE glitchtip WITH LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE PASSWORD :'pw';
+        SELECT 'CREATE DATABASE glitchtip OWNER glitchtip' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'glitchtip')\gexec
+        ALTER DATABASE glitchtip OWNER TO glitchtip;
+        REVOKE CONNECT ON DATABASE glitchtip FROM PUBLIC;
+        REVOKE CONNECT ON DATABASE main FROM PUBLIC;
+        SQL
 
   # postgres database for web
   postgres:
@@ -208,6 +290,7 @@ services:
 volumes:
   postgres-data:
   postgres-indexer-data:
+  glitchtip-uploads:
 
 secrets:
   VITE_UMAMI_SCRIPT_URL:
@@ -216,3 +299,6 @@ secrets:
     environment: VITE_UMAMI_WEBSITE_ID
   VITE_LIVE_API_KEY:
     environment: VITE_LIVE_API_KEY
+  # GlitchTip token for the source map upload; optional
+  SENTRY_AUTH_TOKEN:
+    environment: SENTRY_AUTH_TOKEN

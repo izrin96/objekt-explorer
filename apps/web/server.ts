@@ -525,11 +525,14 @@ async function initializeServer() {
   log.header("Starting Production Server");
 
   // Load TanStack Start server handler
-  let handler: { fetch: (request: Request) => Response | Promise<Response> };
+  // `flush` sends queued error reports (src/server.ts)
+  type Handler = {
+    fetch: (request: Request) => Response | Promise<Response>;
+    flush?: () => Promise<void>;
+  };
+  let handler: Handler;
   try {
-    const serverModule = (await import(SERVER_ENTRY_POINT)) as {
-      default: { fetch: (request: Request) => Response | Promise<Response> };
-    };
+    const serverModule = (await import(SERVER_ENTRY_POINT)) as { default: Handler };
     handler = serverModule.default;
     log.success("TanStack Start application handler initialized");
   } catch (error) {
@@ -578,6 +581,7 @@ async function initializeServer() {
   async function shutdown(signal: string) {
     log.info(`Received ${signal}, shutting down gracefully...`);
     await server.stop();
+    await handler.flush?.();
     process.exit(0);
   }
 

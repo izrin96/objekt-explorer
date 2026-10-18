@@ -1,6 +1,7 @@
 import { SNAPSHOT_CRON } from "@repo/api/schemas/price-history";
 import { cron, type CronJob } from "bun";
 
+import { flushErrorTracking } from "./instrument";
 import { relayActivity } from "./job/activity-relay";
 import { fixEmptyCollection } from "./job/collection";
 import { updateTransferableCosmoSpin } from "./job/cosmo-spin";
@@ -163,6 +164,7 @@ async function shutdown(signal: NodeJS.Signals) {
   // a job still running dies with the process; its lock would otherwise block the next worker
   await releaseHeldLocks();
   workerLog.info("All cron jobs stopped");
+  await flushErrorTracking();
   process.exit(0);
 }
 

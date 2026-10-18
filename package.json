@@ -15,7 +15,10 @@
       "pg": "^8.23.1",
       "slugify": "^1.6.9",
       "react": "^19.3.0",
-      "react-dom": "^19.3.0"
+      "react-dom": "^19.3.0",
+      "@sentry/bun": "11.8.0",
+      "@sentry/core": "11.8.0",
+      "@sentry/react": "11.8.0"
     },
     "catalogs": {
       "dev": {
@@ -25,7 +28,8 @@
         "typescript": "^7.0.2",
         "@types/pg": "^8.23.1",
         "@types/react": "^19.3.0",
-        "@types/react-dom": "^19.3.0"
+        "@types/react-dom": "^19.3.0",
+        "@sentry/vite-plugin": "11.8.0"
       }
     }
   },

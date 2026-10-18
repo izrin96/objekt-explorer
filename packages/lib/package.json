@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@repo/db": "workspace:*",
+    "@sentry/core": "catalog:",
     "drizzle-orm": "catalog:",
     "jose": "^6.2.12"
   },

@@ -16,12 +16,19 @@ COPY --from=pruner /app/out/json/ .
 COPY --from=pruner /app/patches ./patches
 RUN --mount=type=cache,target=/root/.bun/install/cache bun install --frozen-lockfile
 COPY --from=pruner /app/out/full/ .
+# source map upload: off unless all five are set; only the token is a secret
+ARG SENTRY_URL=""
+ARG SENTRY_ORG=""
+ARG SENTRY_PROJECT=""
+ARG SENTRY_RELEASE=""
 RUN --mount=type=secret,id=VITE_UMAMI_SCRIPT_URL \
     --mount=type=secret,id=VITE_UMAMI_WEBSITE_ID \
     --mount=type=secret,id=VITE_LIVE_API_KEY \
+    --mount=type=secret,id=SENTRY_AUTH_TOKEN \
     export VITE_UMAMI_SCRIPT_URL=$(cat /run/secrets/VITE_UMAMI_SCRIPT_URL) && \
     export VITE_UMAMI_WEBSITE_ID=$(cat /run/secrets/VITE_UMAMI_WEBSITE_ID) && \
     export VITE_LIVE_API_KEY=$(cat /run/secrets/VITE_LIVE_API_KEY) && \
+    export SENTRY_AUTH_TOKEN=$(cat /run/secrets/SENTRY_AUTH_TOKEN 2>/dev/null) && \
     bun run --filter web build:prod
 
 # Compile server.ts into a standalone binary
