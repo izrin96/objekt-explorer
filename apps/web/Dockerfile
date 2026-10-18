@@ -16,7 +16,7 @@ COPY --from=pruner /app/out/json/ .
 COPY --from=pruner /app/patches ./patches
 RUN --mount=type=cache,target=/root/.bun/install/cache bun install --frozen-lockfile
 COPY --from=pruner /app/out/full/ .
-# source map upload: off unless all five are set; only the token is a secret
+# source map upload: off unless the token, org, project and release are set; only the token is a secret
 ARG SENTRY_URL=""
 ARG SENTRY_ORG=""
 ARG SENTRY_PROJECT=""

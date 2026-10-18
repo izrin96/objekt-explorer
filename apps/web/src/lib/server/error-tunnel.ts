@@ -31,7 +31,7 @@ function parseJson(bytes: Uint8Array): unknown {
 }
 
 /**
- * Where to forward an envelope: GlitchTip's envelope endpoint for the configured DSN, and only
+ * Where to forward an envelope: Sentry's envelope endpoint for the configured DSN, and only
  * when the envelope's own header names that same host, project and key. The target always comes
  * from the configured DSN, never from the envelope.
  */

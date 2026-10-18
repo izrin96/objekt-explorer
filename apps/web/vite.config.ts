@@ -7,21 +7,21 @@ import viteReact, { reactCompilerPreset } from "@vitejs/plugin-react";
 import { type Plugin, defineConfig } from "vite";
 
 /**
- * Uploads the client's source maps to GlitchTip and deletes them, since `server.ts` serves all of
- * `dist/client`. Off unless every variable is set, so a build without them is unchanged.
+ * Uploads the client's source maps to Sentry and deletes them, since `server.ts` serves all of
+ * `dist/client`. Off unless the token, org, project and release are set, so a build without them
+ * is unchanged.
  */
 function sourceMapUpload() {
   const { SENTRY_AUTH_TOKEN, SENTRY_URL, SENTRY_ORG, SENTRY_PROJECT, SENTRY_RELEASE } = process.env;
-  if (!SENTRY_AUTH_TOKEN || !SENTRY_URL || !SENTRY_ORG || !SENTRY_PROJECT || !SENTRY_RELEASE) {
-    return null;
-  }
+  if (!SENTRY_AUTH_TOKEN || !SENTRY_ORG || !SENTRY_PROJECT || !SENTRY_RELEASE) return null;
   const plugins = sentryVitePlugin({
-    url: SENTRY_URL,
+    // unset is sentry.io
+    url: SENTRY_URL || undefined,
     authToken: SENTRY_AUTH_TOKEN,
     org: SENTRY_ORG,
     project: SENTRY_PROJECT,
-    // the server reads SENTRY_RELEASE at runtime and hands it to the browser; GlitchTip has no
-    // repository integration to set commits on
+    // the server reads SENTRY_RELEASE at runtime and hands it to the browser; the Docker build has
+    // no .git to read commits from
     release: { name: SENTRY_RELEASE, inject: false, setCommits: false, deploy: false },
     sourcemaps: { filesToDeleteAfterUpload: ["./dist/client/**/*.map"] },
     // otherwise it reports its own usage to sentry.io

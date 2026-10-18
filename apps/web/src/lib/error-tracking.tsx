@@ -18,7 +18,7 @@ export type ErrorTrackingConfig = {
 // a type only: the SDK itself is imported on demand
 type Sdk = typeof SentryClient;
 
-/** Same-origin route that forwards envelopes to GlitchTip, which browsers cannot reach. */
+/** Same-origin route that forwards envelopes to Sentry, whose own host ad blockers drop. */
 const TUNNEL = "/api/errors";
 
 /** The root document writes the runtime config into these, for the client to read before hydrating. */

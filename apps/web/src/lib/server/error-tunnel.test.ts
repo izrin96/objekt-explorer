@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 
 import { envelopeTarget, keepEventItems, parseDsn, readCapped } from "./error-tunnel";
 
-const DSN = "http://abc123@glitchtip:8000/2";
+const DSN = "https://abc123@o1.ingest.sentry.io/2";
 const bytes = (text: string) => new TextEncoder().encode(text);
 const envelope = (header: unknown) =>
   bytes(`${JSON.stringify(header)}\n{"type":"event"}\n{"message":"x"}`);
@@ -10,15 +10,15 @@ const envelope = (header: unknown) =>
 describe("parseDsn", () => {
   test("reads origin, key and project", () => {
     expect(parseDsn(DSN)).toEqual({
-      origin: "http://glitchtip:8000",
+      origin: "https://o1.ingest.sentry.io",
       publicKey: "abc123",
       projectId: "2",
     });
   });
 
   test("refuses a DSN without a key or a numeric project", () => {
-    expect(parseDsn("http://glitchtip:8000/2")).toBeNull();
-    expect(parseDsn("http://abc@glitchtip:8000/x")).toBeNull();
+    expect(parseDsn("https://o1.ingest.sentry.io/2")).toBeNull();
+    expect(parseDsn("https://abc@o1.ingest.sentry.io/x")).toBeNull();
     expect(parseDsn("not a url")).toBeNull();
     expect(parseDsn(undefined)).toBeNull();
   });
@@ -27,15 +27,21 @@ describe("parseDsn", () => {
 describe("envelopeTarget", () => {
   test("forwards an envelope for the configured DSN to its envelope endpoint", () => {
     expect(envelopeTarget(envelope({ dsn: DSN, event_id: "e" }), DSN)).toBe(
-      "http://glitchtip:8000/api/2/envelope/?sentry_key=abc123",
+      "https://o1.ingest.sentry.io/api/2/envelope/?sentry_key=abc123",
     );
   });
 
   test("refuses another host, project or key", () => {
     expect(envelopeTarget(envelope({ dsn: "http://abc123@evil.test/2" }), DSN)).toBeNull();
-    expect(envelopeTarget(envelope({ dsn: "http://abc123@glitchtip:8000/3" }), DSN)).toBeNull();
-    expect(envelopeTarget(envelope({ dsn: "http://other@glitchtip:8000/2" }), DSN)).toBeNull();
-    expect(envelopeTarget(envelope({ dsn: "https://abc123@glitchtip:8000/2" }), DSN)).toBeNull();
+    expect(
+      envelopeTarget(envelope({ dsn: "https://abc123@o1.ingest.sentry.io/3" }), DSN),
+    ).toBeNull();
+    expect(
+      envelopeTarget(envelope({ dsn: "https://other@o1.ingest.sentry.io/2" }), DSN),
+    ).toBeNull();
+    expect(
+      envelopeTarget(envelope({ dsn: "http://abc123@o1.ingest.sentry.io/2" }), DSN),
+    ).toBeNull();
   });
 
   test("refuses an envelope without a DSN or a JSON header", () => {
@@ -45,7 +51,7 @@ describe("envelopeTarget", () => {
   });
 
   test("refuses everything when the configured DSN is unusable", () => {
-    expect(envelopeTarget(envelope({ dsn: DSN }), "http://glitchtip:8000/2")).toBeNull();
+    expect(envelopeTarget(envelope({ dsn: DSN }), "https://o1.ingest.sentry.io/2")).toBeNull();
   });
 });
 
