@@ -34,6 +34,15 @@ const ORDER: ClockRow["kind"][] = [
   "rate",
 ];
 
+/** The copy the worker accepts on a leg at expiry: its earliest pending one. */
+function firstPendingCopy(copies: Copy[]) {
+  return (
+    copies
+      .filter((copy) => copy.status === "pending")
+      .toSorted((a, b) => Date.parse(a.at) - Date.parse(b.at) || a.id - b.id)[0] ?? null
+  );
+}
+
 /**
  * What an unfinished trade ends as at its expiry. The worker first accepts each waiting leg's
  * pending wrong copy, so a copy on every waiting leg completes it; otherwise a verified leg or a
@@ -41,10 +50,10 @@ const ORDER: ClockRow["kind"][] = [
  */
 export function expiryOutcome(trade: Pick<Trade, "progress" | "legs">) {
   const waiting = trade.legs.filter((leg) => leg.state === "waiting");
-  if (
-    waiting.length > 0 &&
-    waiting.every((leg) => leg.substitutes.some((copy) => copy.status === "pending"))
-  ) {
+  const picked = waiting.map((leg) => firstPendingCopy(leg.substitutes));
+  // one transfer pending on two legs settles only the first, so the trade fails
+  const keys = new Set(picked.map((copy) => copy && `${copy.txHash}:${copy.objektId}`));
+  if (waiting.length > 0 && !keys.has(null) && keys.size === waiting.length) {
     return "completed" as const;
   }
   return trade.progress.verified > 0 || trade.legs.some((leg) => leg.substitutes.length > 0)

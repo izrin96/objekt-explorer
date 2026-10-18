@@ -101,20 +101,21 @@ const verified = (transfer: MatchTransfer): LegResult => ({
   at: transfer.timestamp,
 });
 
-/** Whether the token `sorted[i]` moved left its receiver again before the accept. */
-function sentBack(
+/**
+ * Whether the token sent early by `sorted[i]` was back with the giver at the accept: its last
+ * move before the accept landed on a giver address. A move between the receiver's own wallets,
+ * or on to someone else, leaves the send counted.
+ */
+function backWithGiver(
   sorted: MatchTransfer[],
   i: number,
-  receiver: ReadonlySet<string>,
+  giver: ReadonlySet<string>,
   accepted: number,
 ) {
   const sent = sorted[i]!;
   if (time(sent.timestamp) >= accepted) return false;
-  return sorted
-    .slice(i + 1)
-    .some(
-      (t) => t.objektId === sent.objektId && receiver.has(t.from) && time(t.timestamp) < accepted,
-    );
+  const last = sorted.findLast((t) => t.objektId === sent.objektId && time(t.timestamp) < accepted);
+  return last !== undefined && last !== sent && giver.has(last.to);
 }
 
 /**
@@ -158,8 +159,8 @@ export function matchLegs(
           continue;
         }
         if (giver.has(t.from) && receiver.has(t.to)) {
-          // an early send counts only while the receiver still holds it at the accept
-          if (!sentBack(sorted, i, receiver, accepted)) {
+          // an early send the giver had back by the accept is not a delivery
+          if (!backWithGiver(sorted, i, giver, accepted)) {
             result = verified(t);
             break;
           }

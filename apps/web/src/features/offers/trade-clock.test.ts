@@ -73,6 +73,17 @@ describe("expiryOutcome", () => {
     ).toBe("completed");
   });
 
+  test("one transfer pending on two legs fails it", () => {
+    const shared = copy();
+    expect(
+      expiryOutcome(
+        trade({
+          legs: [leg({ substitutes: [shared] }), leg({ substitutes: [{ ...shared, id: 99 }] })],
+        }),
+      ),
+    ).toBe("failed");
+  });
+
   test("a pending copy with another leg still waiting fails it", () => {
     expect(
       expiryOutcome(trade({ legs: [leg({ substitutes: [copy()] }), leg({ fromYou: false })] })),

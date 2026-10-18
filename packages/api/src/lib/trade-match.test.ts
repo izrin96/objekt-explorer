@@ -29,6 +29,7 @@ const GIVER = "0xgiver";
 const GIVER_2 = "0xgiver2";
 const RECEIVER = "0xreceiver";
 const THIRD = "0xthird";
+const RECEIVER_2 = "0xreceiver2";
 const COLLECTION = "c0ffee00-0000-0000-0000-000000000001";
 const START = "2026-10-01T00:00:00.000Z";
 const ACCEPTED = "2026-10-01T12:00:00.000Z";
@@ -148,6 +149,30 @@ describe("matchLegs: moves before the accept", () => {
       kind: "verified",
       transferId: sent.id,
     });
+  });
+
+  test("an early send moved between the receiver's own wallets still verifies", () => {
+    const early = transfer({ timestamp: BEFORE_ACCEPT(11) });
+    const own = transfer({ from: RECEIVER, to: RECEIVER_2, timestamp: BEFORE_ACCEPT(12) });
+    expect(
+      matchLegs([leg({ receiver: new Set([RECEIVER, RECEIVER_2]) })], [early, own]).get(1),
+    ).toMatchObject({ kind: "verified", transferId: early.id });
+  });
+
+  test("an early send passed on before the accept still verifies: the giver delivered", () => {
+    const early = transfer({ timestamp: BEFORE_ACCEPT(13) });
+    const onward = transfer({ from: RECEIVER, to: THIRD, timestamp: BEFORE_ACCEPT(14) });
+    expect(matchLegs([leg()], [early, onward]).get(1)).toMatchObject({
+      kind: "verified",
+      transferId: early.id,
+    });
+  });
+
+  test("an early send routed back to the giver through another wallet doesn't verify", () => {
+    const early = transfer({ timestamp: BEFORE_ACCEPT(15) });
+    const out = transfer({ from: RECEIVER, to: THIRD, timestamp: BEFORE_ACCEPT(16) });
+    const home = transfer({ from: THIRD, to: GIVER, timestamp: BEFORE_ACCEPT(17) });
+    expect(matchLegs([leg()], [early, out, home]).get(1)).toEqual({ kind: "pending" });
   });
 
   test("a receiver passing the objekt on after the accept still leaves the early send verified", () => {

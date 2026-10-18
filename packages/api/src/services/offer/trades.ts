@@ -86,22 +86,27 @@ const readIndexerSeen = async () => parseIndexerSeen(await redis.get(INDEXER_SEE
 export async function cancelTrade(me: string, tradeId: number) {
   const row = await findTrade(tradeId, me);
   const { partnerId } = row;
-  // the indexer trails the chain by seconds, so a send just made would not lock the trade yet:
-  // wait until it has read every block mined before this cancel
-  const behind = isBehind(await readIndexerSeen(), Date.now()) || !(await indexerCaughtUp());
+  if (row.status !== "in_progress") refuseOffer("trade_ended");
   // a transfer the verifier hasn't run on yet locks the trade too, a wrong copy included, or a
   // party could send nothing back and cancel right after receiving
   // matched with the parties' other trades, as the verifier matches them, so a transfer
   // another trade's leg takes doesn't lock this one
-  const legs = await loadOpenLegs([me, partnerId]);
-  const ours = new Set(legs.filter((leg) => leg.trade_id === tradeId).map((leg) => leg.id));
-  if (ours.size > 0) {
+  const refuseIfSent = async () => {
+    const legs = await loadOpenLegs([me, partnerId]);
+    const ours = new Set(legs.filter((leg) => leg.trade_id === tradeId).map((leg) => leg.id));
+    if (ours.size === 0) return;
     const { results, nearMisses } = await matchOpenLegs(legs);
     const locked =
       [...ours].some((id) => results.get(id)?.kind === "verified") ||
       nearMisses.some((miss) => ours.has(miss.legId));
     if (locked) refuseOffer("locked");
-  }
+  };
+  // checked once before the wait, so a trade already locked refuses at once
+  await refuseIfSent();
+  // the indexer trails the chain by seconds, so a send just made would not lock the trade yet:
+  // wait until it has read every block mined before this cancel, then check again
+  const behind = isBehind(await readIndexerSeen(), Date.now()) || !(await indexerCaughtUp());
+  if (!behind) await refuseIfSent();
   const name = await partyNames([me]);
 
   const notified = await db.transaction(async (tx) => {

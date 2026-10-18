@@ -148,7 +148,9 @@ export async function acceptOffer(me: string, offerId: number) {
       // the clock read before the indexer reads may be seconds old by now
       .where(and(eq(offer.id, offerId), eq(offer.status, "open"), gt(offer.expiresAt, sql`now()`)))
       .returning({ id: offer.id });
-    if (accepted.length === 0) refuseOffer("not_open");
+    if (accepted.length === 0) {
+      refuseOffer(new Date(fresh!.expiresAt) <= new Date() ? "expired" : "not_open");
+    }
 
     const specificIds = items.flatMap((item) => (item.objektId ? [item.objektId] : []));
     const cancelled =
