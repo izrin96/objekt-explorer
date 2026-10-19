@@ -348,6 +348,28 @@ export function peopleScope(phase: FeedPhase, seen: SeenPeople, lead?: string): 
 /** What one phase gave a page: its posts, whether it has none left, and where it stopped. */
 export type PhaseRead<P, C> = { posts: P[]; dry: boolean; last: C | undefined };
 
+/** stage-2 reads one request of `trade.people` may make past each phase's first */
+export const EXTRA_PEOPLE_READS = 3;
+
+/**
+ * The stage-2 reads a request has left, so a run of people whose posts all emptied (sold out)
+ * cannot turn one page into an unbounded string of recounts. A phase's first read always runs,
+ * so a phase entered by handoff can still say where it stopped; each later read spends one.
+ */
+export function readBudget(extra: number) {
+  let left = extra;
+  return {
+    allow(first: boolean) {
+      if (first) return true;
+      if (left <= 0) return false;
+      left -= 1;
+      return true;
+    },
+  };
+}
+
+export type ReadBudget = ReturnType<typeof readBudget>;
+
 /**
  * Fills a page of `size` items (posts, or people) from `phases` in order. A phase that runs dry
  * before the page is full hands the rest to the next, in the same call, and an item one phase

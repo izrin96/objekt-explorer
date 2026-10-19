@@ -1,5 +1,5 @@
 import { matchIndexOf, narrowViewer } from "../../lib/trade-feed";
-import { mutualPeople, toRanked } from "../../lib/trade-rank";
+import { FEED_CANDIDATE_LIMIT, mutualPeople, toRanked } from "../../lib/trade-rank";
 import { getCache } from "../redis";
 import { countFeedOwners } from "../trade-feed/query";
 import { fetchViewer } from "../trade-feed/viewer";
@@ -9,16 +9,19 @@ const COUNT_TTL_SECONDS = 60;
 const PEOPLE_TTL_SECONDS = 300;
 
 /**
- * Every Mutual person for the compared sides, best first, past For you's 50-person cap: the
- * ids and ranks Browse's Mutual feed and "Mutual N" read. Cached like For you's matches.
+ * The Mutual people for the compared sides, best first, up to `FEED_CANDIDATE_LIMIT` rather
+ * than For you's 50: the ids and ranks Browse's Mutual feed and "Mutual N" read. Cached like
+ * For you's matches.
  */
 export async function getMutualPeople(userId: string, sides: Sides) {
   const scope = await tradeCacheScope(userId);
   return getCache(
-    `trade:mutual-people:4:${userId}:${scope}:${sides.listId ?? "all"}`,
+    `trade:mutual-people:5:${userId}:${scope}:${sides.listId ?? "all"}`,
     PEOPLE_TTL_SECONDS,
     async () => {
-      const { recounted } = await recountPartners(userId, sides, "mutual");
+      const { recounted } = await recountPartners(userId, sides, "mutual", {
+        limit: FEED_CANDIDATE_LIMIT,
+      });
       return mutualPeople(recounted.map(toRanked));
     },
   );

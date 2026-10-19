@@ -36,7 +36,7 @@ import { reputationOf } from "../reputation";
 import { notBlockedEither, notTradeSanctioned } from "../safety";
 import { marketVersion } from "../safety-cache";
 import { takesPartInTrade } from "../trade-lists";
-import { fetchTradeCandidates } from "./candidates";
+import { type CandidateOptions, fetchTradeCandidates } from "./candidates";
 import { fetchAddresses, fetchHoldings } from "./holdings";
 
 export type Sides = ReturnType<typeof matchSides>;
@@ -147,9 +147,9 @@ export async function recountPartners(
   userId: string,
   sides: Sides,
   filter: TradeFilter,
-  ownerIds?: string[],
+  options?: CandidateOptions,
 ) {
-  const candidates = await fetchTradeCandidates(userId, sides, filter, ownerIds);
+  const candidates = await fetchTradeCandidates(userId, sides, filter, options);
 
   const theyHaveSlugs = unique(candidates.flatMap((c) => c.theyHave.map((e) => e.slug)));
   const theyWantSlugs = unique(candidates.flatMap((c) => c.theyWant.map((e) => e.slug)));
@@ -376,7 +376,9 @@ export async function personDetail(userId: string, personId: string, list: strin
       if (sides.haveListIds.length === 0 && sides.wantListIds.length === 0) {
         return { checkedAt: now.toISOString(), partners: [], collections: {} };
       }
-      const { recounted, addressRows } = await recountPartners(userId, sides, "all", [personId]);
+      const { recounted, addressRows } = await recountPartners(userId, sides, "all", {
+        ownerIds: [personId],
+      });
       const hydrated = await hydratePartners(rankPartners(recounted, "all", now), addressRows);
       return { checkedAt: now.toISOString(), ...hydrated };
     },

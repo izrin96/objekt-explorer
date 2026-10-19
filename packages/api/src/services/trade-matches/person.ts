@@ -16,7 +16,7 @@ export async function personMatches(
   const sides = compared ?? (await resolveTradeSides(viewerId, undefined, "all"));
   if (sides.haveListIds.length === 0 && sides.wantListIds.length === 0)
     return new Map<string, PersonMatch>();
-  const { recounted } = await recountPartners(viewerId, sides, "all", ownerIds);
+  const { recounted } = await recountPartners(viewerId, sides, "all", { ownerIds });
   return new Map(
     recounted.flatMap((partner) => {
       const counts = matchCounts(partner);

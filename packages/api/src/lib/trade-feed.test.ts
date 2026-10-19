@@ -10,6 +10,7 @@ import {
   type FeedPhase,
   feedPlan,
   fillPage,
+  readBudget,
   isSectioned,
   isPostIdle,
   matchesViewer,
@@ -810,5 +811,25 @@ describe("fillPage", () => {
       ["mutual", 24],
       ["oneWay", 14],
     ]);
+  });
+});
+
+describe("readBudget", () => {
+  test("a phase's first read always runs, later ones spend the budget", () => {
+    const reads = readBudget(2);
+    expect(reads.allow(false)).toBe(true);
+    expect(reads.allow(false)).toBe(true);
+    expect(reads.allow(false)).toBe(false);
+    expect(reads.allow(true)).toBe(true);
+  });
+
+  test("a capped phase that kept nobody still hands on its cursor", async () => {
+    const page = await fillPage(
+      ["oneWay", "tail"],
+      12,
+      async () => ({ posts: [] as { id: string }[], dry: false, last: "emptied" }),
+      (item) => item.id,
+    );
+    expect(page).toEqual({ posts: [], next: { phase: "oneWay", last: "emptied" } });
   });
 });

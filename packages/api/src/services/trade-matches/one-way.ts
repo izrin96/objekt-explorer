@@ -1,4 +1,4 @@
-import { oneWayPeople, toRanked } from "../../lib/trade-rank";
+import { FEED_CANDIDATE_LIMIT, oneWayPeople, toRanked } from "../../lib/trade-rank";
 import { getCache } from "../redis";
 import { recountPartners, type Sides, tradeCacheScope } from "./index";
 
@@ -12,10 +12,13 @@ const PEOPLE_TTL_SECONDS = 300;
 export async function getOneWayPeople(userId: string, sides: Sides) {
   const scope = await tradeCacheScope(userId);
   return getCache(
-    `trade:oneway-people:2:${userId}:${scope}:${sides.listId ?? "all"}`,
+    `trade:oneway-people:3:${userId}:${scope}:${sides.listId ?? "all"}`,
     PEOPLE_TTL_SECONDS,
     async () => {
-      const { recounted } = await recountPartners(userId, sides, "all");
+      const { recounted } = await recountPartners(userId, sides, "all", {
+        limit: FEED_CANDIDATE_LIMIT,
+        order: "sum",
+      });
       return oneWayPeople(recounted.map(toRanked));
     },
   );

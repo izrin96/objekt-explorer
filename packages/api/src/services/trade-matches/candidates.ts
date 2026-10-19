@@ -14,11 +14,20 @@ const HAVING: Record<TradeFilter, ReturnType<typeof sql>> = {
   they_want: sql`HAVING count(*) FILTER (WHERE NOT they_have) > 0`,
 };
 
-const ORDER: Record<TradeFilter, ReturnType<typeof sql>> = {
+const ORDER: Record<TradeFilter | "sum", ReturnType<typeof sql>> = {
   all: sql`least(a, b) DESC, a + b DESC`,
   mutual: sql`least(a, b) DESC, a + b DESC`,
   they_have: sql`a DESC`,
   they_want: sql`b DESC`,
+  // One way's ranking (`oneWayRankOf`), so the cut keeps the people it ranks first
+  sum: sql`a + b DESC`,
+};
+
+export type CandidateOptions = {
+  ownerIds?: string[];
+  limit?: number;
+  /** the ranking the cut keeps the top of; the filter's own by default */
+  order?: TradeFilter | "sum";
 };
 
 type CandidateRow = {
@@ -36,7 +45,7 @@ export async function fetchTradeCandidates(
   userId: string,
   sides: { haveListIds: number[]; wantListIds: number[] },
   filter: TradeFilter,
-  ownerIds?: string[],
+  { ownerIds, limit = CANDIDATE_LIMIT, order = filter }: CandidateOptions = {},
 ): Promise<Candidate[]> {
   const result = await db.execute<CandidateRow>(sql`
     WITH ${postsCte},
@@ -109,8 +118,8 @@ export async function fetchTradeCandidates(
       ${HAVING[filter]}
     )
     SELECT user_id, list_updated_at, they_have, they_want FROM grouped
-    ORDER BY ${ORDER[filter]}, updated_at DESC, user_id
-    LIMIT ${CANDIDATE_LIMIT}
+    ORDER BY ${ORDER[order]}, updated_at DESC, user_id
+    LIMIT ${limit}
   `);
 
   return result.rows.map((row) => ({

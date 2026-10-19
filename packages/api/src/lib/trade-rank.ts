@@ -15,6 +15,8 @@ import { matchCounts } from "./trade-person";
 
 export const PARTNER_LIMIT = 50;
 export const CANDIDATE_LIMIT = 200;
+/** the candidates For you's Mutual and One way rankings read, cut by their own order */
+export const FEED_CANDIDATE_LIMIT = 1000;
 export const IDLE_DAYS = 30;
 
 export type MyList = { id: number; listTypeNew: ListTypeNew; linkedListId: number | null };
@@ -330,7 +332,7 @@ export function mutualOrder<T extends Ranked>(partners: T[]): T[] {
 
 /**
  * Everyone who is Mutual with the viewer, in Mutual order. There is no `PARTNER_LIMIT` slice
- * and no idle tier: the set is bounded by `CANDIDATE_LIMIT`, and an idle person's posts are
+ * and no idle tier: the set is bounded by `FEED_CANDIDATE_LIMIT`, and an idle person's posts are
  * never listed anyway.
  */
 export function mutualPeople<T extends Ranked>(partners: T[]): T[] {
