@@ -1,3 +1,4 @@
+import { ORPCError } from "@orpc/client";
 import type { PeopleCursor } from "@repo/api/schemas/trade";
 import { keepPreviousData } from "@tanstack/react-query";
 
@@ -18,6 +19,10 @@ export const hiddenPartnersOptions = (enabled: boolean) =>
 /** a fresh document always refetches; this only spares the request right after hydration */
 const BROWSE_STALE_MS = 30_000;
 
+/** a refusal (the feed's rate limit) answers the same on every try, and each try counts */
+const retryUnlessRefused = (count: number, error: unknown) =>
+  !(error instanceof ORPCError && error.status < 500) && count < 2;
+
 export const peopleOptions = (input: BrowseInput) =>
   orpc.trade.people.infiniteOptions({
     input: (cursor: PeopleCursor | undefined) => ({ ...input, cursor }),
@@ -25,6 +30,7 @@ export const peopleOptions = (input: BrowseInput) =>
     getNextPageParam: (page) => page.nextCursor,
     staleTime: BROWSE_STALE_MS,
     placeholderData: keepPreviousData,
+    retry: retryUnlessRefused,
   });
 
 export const myPostsOptions = () => orpc.trade.myPosts.queryOptions({ staleTime: 0 });

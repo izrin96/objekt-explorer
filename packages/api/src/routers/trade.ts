@@ -2,8 +2,10 @@ import { ORPCError } from "@orpc/server";
 import { db } from "@repo/db";
 import { hiddenTradePartner, lists, user, userAddress } from "@repo/db/schema";
 import { bumpTradeVersion } from "@repo/lib/server/list-touch";
+import { getRequestHeaders } from "@tanstack/react-start/server";
 import { and, desc, eq, inArray } from "drizzle-orm";
 
+import { refuse } from "../lib/refuse";
 import { authed, optionalAuthed, pub } from "../orpc";
 import {
   browseInputSchema,
@@ -20,7 +22,7 @@ import {
   tradePartnerInputSchema,
 } from "../schemas/trade";
 import { toPublicUser } from "../services/profile";
-import { redis } from "../services/redis";
+import { ipRateLimited, redis, userRateLimited } from "../services/redis";
 import {
   browseFeed,
   peopleFeed,
@@ -39,20 +41,30 @@ import {
 import { mutualCount } from "../services/trade-matches/mutual";
 import { tabCounts } from "../services/trade-tabs";
 
+/**
+ * A feed page is public and runs several heavy reads, so each viewer gets a budget: by account
+ * when signed in, else by IP, more generous since a shared address carries many visitors.
+ */
+async function limitFeed(userId: string | undefined, headers: Headers | undefined) {
+  const limited = userId
+    ? await userRateLimited("trade-feed", userId, 60, 60)
+    : await ipRateLimited("trade-feed", headers ?? getRequestHeaders(), 120, 60);
+  if (limited)
+    refuse("TOO_MANY_REQUESTS", "user_rate_limit", "Too many requests, try again shortly");
+}
+
 export const tradeRouter = {
   /** Public; viewer fields are present only with a session. */
-  browse: optionalAuthed
-    .input(browseInputSchema)
-    .handler(async ({ input, context: { session } }) =>
-      browseFeed(session?.user.id ?? null, input),
-    ),
+  browse: optionalAuthed.input(browseInputSchema).handler(async ({ input, context }) => {
+    await limitFeed(context.session?.user.id, context.headers);
+    return browseFeed(context.session?.user.id ?? null, input);
+  }),
 
   /** Public like `browse`: the feed as people, 12 a page, each with all of their posts. */
-  people: optionalAuthed
-    .input(peopleInputSchema)
-    .handler(async ({ input, context: { session } }) =>
-      peopleFeed(session?.user.id ?? null, input),
-    ),
+  people: optionalAuthed.input(peopleInputSchema).handler(async ({ input, context }) => {
+    await limitFeed(context.session?.user.id, context.headers);
+    return peopleFeed(context.session?.user.id ?? null, input);
+  }),
 
   bump: authed.handler(async ({ context: { session } }) => bumpPerson(session.user.id)),
 
