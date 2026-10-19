@@ -42,6 +42,8 @@ import {
 } from "../../lib/trade-feed";
 import {
   addressesByUser,
+  afterPerson,
+  inSeenOrder,
   mutualRankOf,
   nicknamesByAddress,
   oneWayRankOf,
@@ -50,6 +52,7 @@ import {
 } from "../../lib/trade-rank";
 import { unique } from "../../lib/unique";
 import type { PostCardView } from "../../schemas/chat";
+import type { CollectionFilters } from "../../schemas/common/filters";
 import type { ListTypeNew } from "../../schemas/list";
 import {
   type BrowseFilters,
@@ -94,6 +97,9 @@ import { fetchViewer, hasTradeList } from "./viewer";
 
 const COUNTS_TTL_SECONDS = 60;
 
+/** a new collection reaches a filtered feed within this */
+const FILTER_SLUGS_TTL_SECONDS = 300;
+
 const POST_CARD_LIMIT = 6;
 
 const TRADE_TYPES = ["have", "want", "sale"] as const satisfies ListTypeNew[];
@@ -106,13 +112,28 @@ const isTradeType = (type: ListTypeNew): type is (typeof TRADE_TYPES)[number] =>
  */
 async function resolveFilterSlugs(filters: BrowseFilters): Promise<string[] | null> {
   const coversEveryArtist = validArtists.every((artist) => filters.artist.includes(artist));
-  const predicates = getCollectionFilters(coversEveryArtist ? { ...filters, artist: [] } : filters);
+  const facets: CollectionFilters = {
+    artist: coversEveryArtist ? [] : filters.artist,
+    member: filters.member,
+    season: filters.season,
+    class: filters.class,
+    on_offline: filters.on_offline,
+    collection: filters.collection,
+  };
+  const predicates = getCollectionFilters(facets);
   if (predicates.length === 0) return null;
-  const rows = await indexer
-    .select({ slug: collections.slug })
-    .from(collections)
-    .where(and(ne(collections.slug, "empty-collection"), ...predicates));
-  return rows.map((row) => row.slug);
+  // every page of a filtered feed asks again, and an artist alone can mean thousands of slugs
+  const sorted = Object.values(facets).map((values) =>
+    values.toSorted((a, b) => a.localeCompare(b)),
+  );
+  const key = new Bun.CryptoHasher("sha1").update(JSON.stringify(sorted)).digest("hex");
+  return getCache(`trade:filter-slugs:1:${key}`, FILTER_SLUGS_TTL_SECONDS, async () => {
+    const rows = await indexer
+      .select({ slug: collections.slug })
+      .from(collections)
+      .where(and(ne(collections.slug, "empty-collection"), ...predicates));
+    return rows.map((row) => row.slug);
+  });
 }
 
 function toListLink(list: FeedList, nicknameOf: ReadonlyMap<string, string | null>) {
@@ -397,8 +418,10 @@ export async function browseFeed(
   );
   const collectionRows = await fetchCollectionsBySlug(drawn, []);
 
+  // Mutual only keeps a snapshot too, for its order across pages
+  const byRank = plan.phases.includes("mutual") || plan.phases.includes("oneWay");
   let scope: string | undefined;
-  if (sectioned && page.next && viewerId !== null) {
+  if (byRank && page.next && viewerId !== null) {
     scope = scopeToken(seen);
     if (scope !== input.cursor?.scope) await saveScope(viewerId, scope, seen);
   }
@@ -414,9 +437,8 @@ export async function browseFeed(
     })),
     nextCursor: page.next && {
       ...page.next.last,
-      ...(sectioned
-        ? { phase: page.next.phase === "bump" ? undefined : page.next.phase, scope }
-        : {}),
+      ...(sectioned ? { phase: page.next.phase === "bump" ? undefined : page.next.phase } : {}),
+      ...(scope ? { scope } : {}),
     },
     collections: Object.fromEntries(collectionRows.map((c) => [c.slug, c])) as Record<
       string,
@@ -539,13 +561,18 @@ async function readPeoplePhase(
 
   const spec = RANKED_PHASES[phase];
   const skip = new Set(exclude);
-  const ordered = spec.people(ctx).filter((person) => !skip.has(person.userId));
+  // the rankings refresh between pages, so a page keeps the order the earlier pages saw
+  const ordered = inSeenOrder(spec.people(ctx), ctx.seen[phase]).filter(
+    (person) => !skip.has(person.userId),
+  );
   const rankOf = new Map(ordered.map((person) => [person.userId, spec.rankOf(person)]));
   const resumed = spec.resumeAt(cursor);
-  // a person is listed whole, so the cursor's own person is behind it
-  const remaining = (resumed ? peopleAfter(ordered, resumed) : ordered).filter(
-    (person) => person.userId !== resumed?.userId,
-  );
+  // a person is listed whole, so the cursor's own person is behind it; one who left the
+  // ranking since is found by rank instead
+  const remaining = resumed
+    ? (afterPerson(ordered, resumed.userId) ??
+      peopleAfter(ordered, resumed).filter((person) => person.userId !== resumed.userId))
+    : ordered;
   // the Mutual people were checked for a kept WTT post; One way's are checked here, once
   const kept =
     phase === "mutual"
@@ -660,8 +687,10 @@ export async function peopleFeed(viewerId: string | null, input: PeopleInput) {
   );
   const collectionRows = await fetchCollectionsBySlug(drawn, []);
 
+  // Mutual only keeps a snapshot too, for its order across pages
+  const byRank = plan.phases.includes("mutual") || plan.phases.includes("oneWay");
   let scope: string | undefined;
-  if (sectioned && page.next && viewerId !== null) {
+  if (byRank && page.next && viewerId !== null) {
     scope = scopeToken(seen);
     if (scope !== input.cursor?.scope) await saveScope(viewerId, scope, seen);
   }
@@ -670,9 +699,8 @@ export async function peopleFeed(viewerId: string | null, input: PeopleInput) {
     people,
     nextCursor: page.next && {
       ...page.next.last,
-      ...(sectioned
-        ? { phase: page.next.phase === "bump" ? undefined : page.next.phase, scope }
-        : {}),
+      ...(sectioned ? { phase: page.next.phase === "bump" ? undefined : page.next.phase } : {}),
+      ...(scope ? { scope } : {}),
       lead,
     },
     collections: Object.fromEntries(collectionRows.map((c) => [c.slug, c])) as Record<

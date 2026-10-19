@@ -6,7 +6,7 @@ import { and, inArray, isNotNull, sql } from "drizzle-orm";
 import { type FeedEntry, tradeableEntries, untradeableKey } from "../../lib/trade-feed";
 import { unique } from "../../lib/unique";
 import type { ListTypeNew } from "../../schemas/list";
-import { redis } from "../redis";
+import { redis, redisFailOpen } from "../redis";
 
 const POST_TTL_SECONDS = 60;
 
@@ -138,7 +138,9 @@ export async function fetchPostEntries(
   addressesOf: ReadonlyMap<string, ReadonlySet<string>>,
 ): Promise<Map<number, FeedEntry[]>> {
   const result = new Map<number, FeedEntry[]>();
-  const cached = await Promise.all(feedLists.map((list) => redis.get(postKey(list))));
+  const cached = await Promise.all(
+    feedLists.map((list) => redisFailOpen("trade post", () => redis.get(postKey(list)))),
+  );
 
   const misses = feedLists.filter((list, i) => {
     const hit = cached[i];
@@ -200,7 +202,9 @@ export async function fetchPostEntries(
       const shown =
         list.listTypeNew === "want" ? entries : tradeableEntries(entries, list.userId, untradeable);
       result.set(list.id, shown);
-      return redis.set(postKey(list), JSON.stringify(shown), "EX", POST_TTL_SECONDS);
+      return redisFailOpen("trade post", () =>
+        redis.set(postKey(list), JSON.stringify(shown), "EX", POST_TTL_SECONDS),
+      );
     }),
   );
   return result;

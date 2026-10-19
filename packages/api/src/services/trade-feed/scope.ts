@@ -1,5 +1,5 @@
 import type { SeenPeople } from "../../lib/trade-feed";
-import { redis } from "../redis";
+import { redis, redisFailOpen } from "../redis";
 
 const SCOPE_TTL_SECONDS = 3600;
 
@@ -13,18 +13,17 @@ export function scopeToken(seen: SeenPeople) {
 
 /** A snapshot that has expired or can't be read reads as none: the current rankings stand alone. */
 export async function loadScope(viewerId: string, token: string): Promise<SeenPeople | undefined> {
+  const stored = await redisFailOpen("trade scope", () => redis.get(keyOf(viewerId, token)));
   try {
-    const stored = await redis.get(keyOf(viewerId, token));
     return stored ? (JSON.parse(stored) as SeenPeople) : undefined;
   } catch {
     return undefined;
   }
 }
 
+/** the cursor still works without its snapshot, so a failed save is let go */
 export async function saveScope(viewerId: string, token: string, seen: SeenPeople) {
-  try {
-    await redis.set(keyOf(viewerId, token), JSON.stringify(seen), "EX", SCOPE_TTL_SECONDS);
-  } catch {
-    // the cursor still works without its snapshot
-  }
+  await redisFailOpen("trade scope", () =>
+    redis.set(keyOf(viewerId, token), JSON.stringify(seen), "EX", SCOPE_TTL_SECONDS),
+  );
 }

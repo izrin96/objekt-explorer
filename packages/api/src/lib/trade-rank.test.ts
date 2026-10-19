@@ -1,12 +1,14 @@
 import { describe, expect, test } from "bun:test";
 
 import {
+  afterPerson,
   type Candidate,
   copyKey,
   countDropped,
   entryVerdict,
   groupBySlug,
   type Holdings,
+  inSeenOrder,
   matchSides,
   mutualOrder,
   mutualPeople,
@@ -865,5 +867,25 @@ describe("peopleAfter", () => {
   test("a person with the cursor's tuple but another id sorts by id", () => {
     const tied = oneWayPeople([person("a", 2), person("b", 2), person("c", 2)]);
     expect(order(peopleAfter(tied, oneWayRankOf(person("b", 2))))).toEqual(["b", "c"]);
+  });
+});
+
+describe("paging a ranking that refreshed", () => {
+  const people = (...ids: string[]) => ids.map((userId) => ({ userId }));
+
+  test("the order earlier pages saw wins, newcomers last, leavers dropped", () => {
+    // b moved above a, c left, d joined
+    const now = people("b", "a", "d");
+    expect(inSeenOrder(now, ["a", "b", "c", "d"])).toEqual(people("a", "b", "d"));
+  });
+
+  test("a person who moved up past the cursor is still to come", () => {
+    // the first page ended at a; b has since moved above a
+    const ordered = inSeenOrder(people("b", "a", "d"), ["a", "b", "d"]);
+    expect(afterPerson(ordered, "a")).toEqual(people("b", "d"));
+  });
+
+  test("a cursor person who left the ranking is not found", () => {
+    expect(afterPerson(people("a", "b"), "c")).toBeNull();
   });
 });

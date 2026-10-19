@@ -31,7 +31,7 @@ import { unique } from "../../lib/unique";
 import { CARD_LIMIT, type TradeFilter } from "../../schemas/trade";
 import { fetchCollectionsBySlug } from "../list";
 import { toPublicUser } from "../profile";
-import { getCache, redis } from "../redis";
+import { getCache, redis, redisFailOpen } from "../redis";
 import { reputationOf } from "../reputation";
 import { notBlockedEither, notTradeSanctioned } from "../safety";
 import { marketVersion } from "../safety-cache";
@@ -82,7 +82,7 @@ export async function resolveCompareSides(
 /** What a viewer's trade caches depend on: their own list version and the market's. */
 export async function tradeCacheScope(userId: string) {
   const [version, market] = await Promise.all([
-    redis.get(tradeVersionKey(userId)).then((v) => v ?? "0"),
+    redisFailOpen("trade version", () => redis.get(tradeVersionKey(userId))).then((v) => v ?? "0"),
     marketVersion(),
   ]);
   return `${version}:${market}`;

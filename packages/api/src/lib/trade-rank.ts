@@ -367,6 +367,28 @@ export function peopleAfter<T extends Ranked>(
   return current ? [current, ...after] : after;
 }
 
+/**
+ * A ranking in the order earlier pages saw it: `seen` (the cursor's snapshot, then anyone new)
+ * sets the order, so a person who moved up since stays where they were and is still listed, and
+ * one who moved down is not listed twice. Anyone who left the ranking is dropped.
+ */
+export function inSeenOrder<T extends { userId: string }>(
+  ranked: T[],
+  seen: readonly string[],
+): T[] {
+  const byId = new Map(ranked.map((partner) => [partner.userId, partner]));
+  return seen.flatMap((id) => byId.get(id) ?? []);
+}
+
+/** The people after `userId` in `ordered`, or null when `userId` is not in it. */
+export function afterPerson<T extends { userId: string }>(
+  ordered: T[],
+  userId: string,
+): T[] | null {
+  const at = ordered.findIndex((partner) => partner.userId === userId);
+  return at === -1 ? null : ordered.slice(at + 1);
+}
+
 export type NotShown = { notOwned: number; notTransferable: number };
 
 /** One drop per owner and collection: the user's own sold objekt counts once, however many partners want it. */

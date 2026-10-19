@@ -20,24 +20,27 @@ export function getCache<T>(key: string, ttl: Ttl<T>, callback: () => Promise<T>
   return pending;
 }
 
+/** A cache, so a Redis outage only costs the hit: the callback runs and its value is not kept. */
 async function loadCache<T>(key: string, ttl: Ttl<T>, callback: () => Promise<T>): Promise<T> {
-  const cachedData = await redis.get(key);
+  const cachedData = await redisFailOpen("cache", () => redis.get(key));
 
   if (cachedData) {
     try {
       return JSON.parse(cachedData) as T;
     } catch {
       // corrupted cache entry — drop it and fall through to refresh
-      await redis.del(key);
+      await redisFailOpen("cache", () => redis.del(key));
     }
   }
 
   const freshData = await callback();
-  await redis.set(
-    key,
-    JSON.stringify(freshData),
-    "EX",
-    typeof ttl === "function" ? ttl(freshData) : ttl,
+  await redisFailOpen("cache", () =>
+    redis.set(
+      key,
+      JSON.stringify(freshData),
+      "EX",
+      typeof ttl === "function" ? ttl(freshData) : ttl,
+    ),
   );
   return freshData;
 }
@@ -70,18 +73,20 @@ export async function isIpRateLimited(scope: string, headers: Headers): Promise<
 }
 
 const FAIL_OPEN_TIMEOUT_MS = 250;
+const TIMED_OUT = Symbol("timed out");
 
-/**
- * A fixed-window limit on `key`; counts this call, so a refused call still uses up the window.
- * Fails open when Redis is down: these limits guard against abuse, and the actions behind them
- * must not stop with it.
- */
 let connecting: Promise<void> | undefined;
 
-async function rateLimitedFailOpen(scope: string, key: string, max: number, windowSeconds: number) {
-  // the client queues commands while disconnected and retries forever, so an outage would
-  // hang the call rather than throw: skip it when down, and give up after a short wait. It also
-  // connects only on its first command, so a skipped call starts that connection
+/**
+ * `command`'s result, or null when Redis is down, slow or failing, for a read whose caller can
+ * do without it. The client queues commands while disconnected and retries forever, so an
+ * outage would hang the call rather than throw: skip it when down, and give up after a short
+ * wait. It also connects only on its first command, so a skipped call starts that connection.
+ */
+export async function redisFailOpen<T>(
+  scope: string,
+  command: () => Promise<T>,
+): Promise<T | null> {
   if (!redis.connected) {
     // one attempt at a time, so an outage doesn't pile up a pending promise per call
     connecting ??= redis
@@ -90,22 +95,34 @@ async function rateLimitedFailOpen(scope: string, key: string, max: number, wind
       .finally(() => {
         connecting = undefined;
       });
-    return false;
+    return null;
   }
   try {
-    const attempts = await Promise.race([
-      rateLimit(key, windowSeconds),
-      new Promise<null>((resolve) => setTimeout(resolve, FAIL_OPEN_TIMEOUT_MS, null)),
+    const result = await Promise.race([
+      command(),
+      new Promise<typeof TIMED_OUT>((resolve) =>
+        setTimeout(resolve, FAIL_OPEN_TIMEOUT_MS, TIMED_OUT),
+      ),
     ]);
-    if (attempts === null) {
-      console.warn(`[rate-limit] ${scope} timed out, letting the call through`);
-      return false;
+    if (result === TIMED_OUT) {
+      console.warn(`[redis] ${scope} timed out, going without it`);
+      return null;
     }
-    return attempts > max;
+    return result;
   } catch (error) {
-    console.warn(`[rate-limit] ${scope} unavailable, letting the call through:`, error);
-    return false;
+    console.warn(`[redis] ${scope} unavailable, going without it:`, error);
+    return null;
   }
+}
+
+/**
+ * A fixed-window limit on `key`; counts this call, so a refused call still uses up the window.
+ * Fails open when Redis is down: these limits guard against abuse, and the actions behind them
+ * must not stop with it.
+ */
+async function rateLimitedFailOpen(scope: string, key: string, max: number, windowSeconds: number) {
+  const attempts = await redisFailOpen(`rate-limit ${scope}`, () => rateLimit(key, windowSeconds));
+  return attempts !== null && attempts > max;
 }
 
 /** A per-user limit, failing open (`rateLimitedFailOpen`). */

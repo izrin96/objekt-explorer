@@ -6,7 +6,7 @@ import { and, eq, isNotNull } from "drizzle-orm";
 import { narrowIndex, type Viewer } from "../../lib/trade-feed";
 import { addressesByUser, collectionVerdict, groupBySlug } from "../../lib/trade-rank";
 import { unique } from "../../lib/unique";
-import { getCache, redis } from "../redis";
+import { getCache, redis, redisFailOpen } from "../redis";
 import { offersOnTrade, takesPartInTrade } from "../trade-lists";
 import { fetchAddresses, fetchHoldings } from "../trade-matches/holdings";
 
@@ -59,7 +59,8 @@ export async function hasTradeList(userId: string) {
 }
 
 export async function fetchViewer(userId: string): Promise<Viewer> {
-  const version = (await redis.get(tradeVersionKey(userId))) ?? "0";
+  const version =
+    (await redisFailOpen("trade version", () => redis.get(tradeVersionKey(userId)))) ?? "0";
   const [haveIndex, saleLists, wantRows] = await Promise.all([
     getCache(`trade:have-lists:${userId}:${version}`, HAVE_TTL_SECONDS, () =>
       computeHaveIndex(userId),
