@@ -24,14 +24,11 @@ RUN bun run build --filter=worker
 
 # Production image - copy only the bundle
 FROM base AS runner
-
-# Install curl for healthchecks
-RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
-
 WORKDIR /app
 ENV NODE_ENV=production
 
 # Only the bundled output is needed - bun build bundles all deps
 COPY --from=installer /app/apps/worker/dist ./apps/worker/dist
 
+USER bun
 CMD ["bun", "apps/worker/dist/index.js"]
