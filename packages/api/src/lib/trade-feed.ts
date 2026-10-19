@@ -371,6 +371,37 @@ export function readBudget(extra: number) {
 export type ReadBudget = ReturnType<typeof readBudget>;
 
 /**
+ * One phase's stage-2 reads: `fetch` the next rows for the room left, `load` the people whose
+ * posts survive, until `need` are kept, the rows run out or the budget does. `examined` is the
+ * last row read, kept or emptied, so the next page starts past a run of sold-out people;
+ * `dry` only when the rows ran out, never because the budget did.
+ */
+export async function readBatches<R, K>({
+  need,
+  budget,
+  fetch,
+  load,
+}: {
+  need: number;
+  budget: ReadBudget;
+  fetch: (limit: number) => Promise<{ rows: R[]; exhausted: boolean }>;
+  load: (rows: R[]) => Promise<K[]>;
+}): Promise<{ taken: K[]; examined: R | undefined; dry: boolean }> {
+  const taken: K[] = [];
+  let examined: R | undefined;
+  let exhausted = false;
+  let first = true;
+  while (taken.length < need && !exhausted && budget.allow(first)) {
+    first = false;
+    const { rows, exhausted: done } = await fetch(need - taken.length);
+    exhausted = done;
+    taken.push(...(await load(rows)));
+    examined = rows.at(-1) ?? examined;
+  }
+  return { taken, examined, dry: exhausted };
+}
+
+/**
  * Fills a page of `size` items (posts, or people) from `phases` in order. A phase that runs dry
  * before the page is full hands the rest to the next, in the same call, and an item one phase
  * already gave, by `keyOf`, is not taken again.

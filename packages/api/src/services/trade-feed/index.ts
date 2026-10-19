@@ -34,6 +34,7 @@ import {
   type PhaseRead,
   phaseScope,
   previewSide,
+  readBatches,
   readBudget,
   type ReadBudget,
   type SeenPeople,
@@ -42,12 +43,11 @@ import {
 } from "../../lib/trade-feed";
 import {
   addressesByUser,
-  afterPerson,
-  inSeenOrder,
   mutualRankOf,
   nicknamesByAddress,
   oneWayRankOf,
   peopleAfter,
+  resumeRanking,
   toPartnerIdentity,
 } from "../../lib/trade-rank";
 import { unique } from "../../lib/unique";
@@ -472,6 +472,8 @@ type PeopleContext = LoadContext &
     /** the `person` whose row leads the feed, left out of every phase */
     lead: string | undefined;
     reads: ReadBudget;
+    /** the cursor's snapshot of the rankings, when one loaded */
+    snapshot: SeenPeople | undefined;
   };
 
 /** The listed people's rows, in `ids` order; a person whose posts all emptied is left out. */
@@ -533,46 +535,37 @@ async function readPeoplePhase(
   const exclude = peopleScope(phase, ctx.seen, ctx.lead);
   // each read asks only for the room left, so no loaded row is thrown away; a person whose
   // posts all emptied in stage 2 is made up by the next read
-  const taken: Loaded[] = [];
+  const load = (ids: string[]) => loadPeople(ctx, query, ids);
 
   if (phase === "bump" || phase === "tail") {
     let after = cursor && { bumpedAt: cursor.bumpedAt, userId: cursor.userId };
-    // the last person read, kept or emptied: the next page starts past them either way
-    let examined: { bumpedAt: string; userId: string } | undefined;
-    let exhausted = false;
-    while (taken.length < need && !exhausted && ctx.reads.allow(examined === undefined)) {
-      const limit = need - taken.length;
-      const found = await fetchBumpPeople(query, { limit, cursor: after, excludeOwners: exclude });
-      exhausted = found.length < limit;
-      const loaded = await loadPeople(
-        ctx,
-        query,
-        found.map((row) => row.user_id),
-      );
-      taken.push(...loaded);
-      const lastFound = found.at(-1);
-      if (lastFound) {
-        after = { bumpedAt: iso(lastFound.cursor_at)!, userId: lastFound.user_id };
-        examined = after;
-      }
-    }
-    return { posts: taken, dry: exhausted, last: examined };
+    const read = await readBatches({
+      need,
+      budget: ctx.reads,
+      fetch: async (limit) => {
+        const found = await fetchBumpPeople(query, {
+          limit,
+          cursor: after,
+          excludeOwners: exclude,
+        });
+        const rows = found.map((row) => ({ bumpedAt: iso(row.cursor_at)!, userId: row.user_id }));
+        after = rows.at(-1) ?? after;
+        return { rows, exhausted: found.length < limit };
+      },
+      load: (rows) => load(rows.map((row) => row.userId)),
+    });
+    return { posts: read.taken, dry: read.dry, last: read.examined };
   }
 
   const spec = RANKED_PHASES[phase];
   const skip = new Set(exclude);
-  // the rankings refresh between pages, so a page keeps the order the earlier pages saw
-  const ordered = inSeenOrder(spec.people(ctx), ctx.seen[phase]).filter(
-    (person) => !skip.has(person.userId),
-  );
-  const rankOf = new Map(ordered.map((person) => [person.userId, spec.rankOf(person)]));
-  const resumed = spec.resumeAt(cursor);
-  // a person is listed whole, so the cursor's own person is behind it; one who left the
-  // ranking since is found by rank instead
-  const remaining = resumed
-    ? (afterPerson(ordered, resumed.userId) ??
-      peopleAfter(ordered, resumed).filter((person) => person.userId !== resumed.userId))
-    : ordered;
+  const rankOf = new Map(spec.people(ctx).map((person) => [person.userId, spec.rankOf(person)]));
+  // the rankings refresh between pages, so a page goes on in the order earlier pages saw
+  const remaining = resumeRanking(
+    spec.people(ctx),
+    ctx.snapshot ? ctx.seen[phase] : undefined,
+    spec.resumeAt(cursor),
+  ).filter((person) => !skip.has(person.userId));
   // the Mutual people were checked for a kept WTT post; One way's are checked here, once
   const kept =
     phase === "mutual"
@@ -584,29 +577,27 @@ async function readPeoplePhase(
   const eligible = remaining.filter((person) => !kept || kept.has(person.userId));
 
   let index = 0;
-  while (taken.length < need && index < eligible.length && ctx.reads.allow(index === 0)) {
-    const batch = eligible.slice(index, index + need - taken.length);
-    index += batch.length;
-    const loaded = await loadPeople(
-      ctx,
-      query,
-      batch.map((person) => person.userId),
-    );
-    taken.push(...loaded);
-  }
-  const lastTaken = taken.at(-1);
-  // the last person read, kept or emptied: the next page resumes past them either way
-  const examined = index > 0 ? eligible[index - 1] : undefined;
+  const read = await readBatches({
+    need,
+    budget: ctx.reads,
+    fetch: async (limit) => {
+      const rows = eligible.slice(index, index + limit);
+      index += rows.length;
+      return { rows, exhausted: index >= eligible.length };
+    },
+    load: (rows) => load(rows.map((person) => person.userId)),
+  });
+  const lastTaken = read.taken.at(-1);
   return {
-    posts: taken,
-    dry: index >= eligible.length,
-    last: examined && {
+    posts: read.taken,
+    dry: read.dry,
+    last: read.examined && {
       // only a bump read reads `bumpedAt`, and `feedPlan` never hands it a ranked cursor
       bumpedAt: lastTaken
         ? iso(lastTaken.newest)!
         : (cursor?.bumpedAt ?? new Date(0).toISOString()),
-      userId: examined.userId,
-      ...rankOf.get(examined.userId),
+      userId: read.examined.userId,
+      ...rankOf.get(read.examined.userId),
     },
   };
 }
@@ -654,6 +645,7 @@ export async function peopleFeed(viewerId: string | null, input: PeopleInput) {
     seen,
     lead,
     reads: readBudget(EXTRA_PEOPLE_READS),
+    snapshot,
   };
 
   // a person the feed would not list, or that Mutual only does not, has no row to lead with

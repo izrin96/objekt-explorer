@@ -97,22 +97,36 @@ export async function redisFailOpen<T>(
       });
     return null;
   }
+  let timer: ReturnType<typeof setTimeout> | undefined;
   try {
     const result = await Promise.race([
       command(),
-      new Promise<typeof TIMED_OUT>((resolve) =>
-        setTimeout(resolve, FAIL_OPEN_TIMEOUT_MS, TIMED_OUT),
-      ),
+      new Promise<typeof TIMED_OUT>((resolve) => {
+        timer = setTimeout(resolve, FAIL_OPEN_TIMEOUT_MS, TIMED_OUT);
+      }),
     ]);
     if (result === TIMED_OUT) {
-      console.warn(`[redis] ${scope} timed out, going without it`);
+      warnOnce(scope, `[redis] ${scope} timed out, going without it`);
       return null;
     }
     return result;
   } catch (error) {
-    console.warn(`[redis] ${scope} unavailable, going without it:`, error);
+    warnOnce(scope, `[redis] ${scope} unavailable, going without it:`, error);
     return null;
+  } finally {
+    clearTimeout(timer);
   }
+}
+
+const WARN_EVERY_MS = 60_000;
+const warnedAt = new Map<string, number>();
+
+/** One warning a minute per scope: a slow Redis would otherwise log once per list per request. */
+function warnOnce(scope: string, ...message: unknown[]) {
+  const now = Date.now();
+  if (now - (warnedAt.get(scope) ?? 0) < WARN_EVERY_MS) return;
+  warnedAt.set(scope, now);
+  console.warn(...message);
 }
 
 /**

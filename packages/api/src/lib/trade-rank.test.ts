@@ -1,7 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
 import {
-  afterPerson,
   type Candidate,
   copyKey,
   countDropped,
@@ -22,6 +21,7 @@ import {
   peopleAfter,
   rankPartners,
   recount,
+  resumeRanking,
   toPartnerIdentity,
   toRanked,
 } from "./trade-rank";
@@ -886,6 +886,13 @@ describe("peopleAfter", () => {
 
 describe("paging a ranking that refreshed", () => {
   const people = (...ids: string[]) => ids.map((userId) => ({ userId }));
+  /** a Mutual-ranked person whose score is `n` both ways */
+  const ranked = (userId: string, n: number) => ({
+    userId,
+    updatedAt: RECENT,
+    counts: { theyHave: n, youHave: n, tradeTheyHave: n, tradeYouHave: n },
+  });
+  const ids = (list: { userId: string }[]) => list.map((p) => p.userId);
 
   test("the order earlier pages saw wins, newcomers last, leavers dropped", () => {
     // b moved above a, c left, d joined
@@ -893,13 +900,35 @@ describe("paging a ranking that refreshed", () => {
     expect(inSeenOrder(now, ["a", "b", "c", "d"])).toEqual(people("a", "b", "d"));
   });
 
-  test("a person who moved up past the cursor is still to come", () => {
+  test("with a snapshot, a person who moved up past the cursor is still to come", () => {
     // the first page ended at a; b has since moved above a
-    const ordered = inSeenOrder(people("b", "a", "d"), ["a", "b", "d"]);
-    expect(afterPerson(ordered, "a")).toEqual(people("b", "d"));
+    const now = [ranked("b", 5), ranked("a", 4), ranked("d", 1)];
+    const cursor = mutualRankOf(ranked("a", 4));
+    expect(ids(resumeRanking(now, ["a", "b", "d"], cursor))).toEqual(["b", "d"]);
   });
 
-  test("a cursor person who left the ranking is not found", () => {
-    expect(afterPerson(people("a", "b"), "c")).toBeNull();
+  test("with a snapshot, a cursor person who left the ranking resumes at their place", () => {
+    const now = [ranked("a", 5), ranked("b", 4), ranked("d", 1)];
+    const cursor = mutualRankOf(ranked("c", 3));
+    expect(ids(resumeRanking(now, ["a", "b", "c", "d"], cursor))).toEqual(["d"]);
+  });
+
+  test("without a snapshot, a cursor person who dropped to last doesn't hide those between", () => {
+    // page 1 ended at c, ranked 3rd; c has since dropped to last
+    const now = [ranked("a", 5), ranked("b", 4), ranked("d", 2), ranked("e", 1), ranked("c", 0)];
+    const cursor = mutualRankOf(ranked("c", 3));
+    expect(ids(resumeRanking(now, undefined, cursor))).toEqual(["d", "e"]);
+  });
+
+  test("a snapshot that doesn't hold the cursor person goes by rank", () => {
+    const now = [ranked("a", 5), ranked("d", 2)];
+    const cursor = mutualRankOf(ranked("c", 3));
+    expect(ids(resumeRanking(now, ["a", "d"], cursor))).toEqual(["d"]);
+  });
+
+  test("no cursor starts at the top", () => {
+    const now = [ranked("b", 5), ranked("a", 4)];
+    expect(ids(resumeRanking(now, undefined, undefined))).toEqual(["b", "a"]);
+    expect(ids(resumeRanking(now, ["a", "b"], undefined))).toEqual(["a", "b"]);
   });
 });

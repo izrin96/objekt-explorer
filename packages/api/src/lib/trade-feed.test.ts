@@ -10,6 +10,7 @@ import {
   type FeedPhase,
   feedPlan,
   fillPage,
+  readBatches,
   readBudget,
   isSectioned,
   isPostIdle,
@@ -831,5 +832,51 @@ describe("readBudget", () => {
       (item) => item.id,
     );
     expect(page).toEqual({ posts: [], next: { phase: "oneWay", last: "emptied" } });
+  });
+});
+
+describe("readBatches", () => {
+  /** rows 1..n in order; `kept` decides who survives stage 2 */
+  const source = (n: number, kept: (row: number) => boolean) => {
+    let at = 0;
+    return {
+      fetch: async (limit: number) => {
+        const rows = Array.from({ length: Math.min(limit, n - at) }, (_, i) => at + i + 1);
+        at += rows.length;
+        return { rows, exhausted: at >= n };
+      },
+      load: async (rows: number[]) => rows.filter(kept),
+    };
+  };
+
+  test("a first batch that all emptied still moves past it", async () => {
+    const read = await readBatches({ need: 3, budget: readBudget(0), ...source(10, () => false) });
+    expect(read).toEqual({ taken: [], examined: 3, dry: false });
+  });
+
+  test("the budget stops a run of sold-out rows without calling the phase dry", async () => {
+    const read = await readBatches({
+      need: 2,
+      budget: readBudget(2),
+      ...source(20, (row) => row > 15),
+    });
+    // three reads of two rows each, all emptied
+    expect(read).toEqual({ taken: [], examined: 6, dry: false });
+  });
+
+  test("a phase entered by handoff gets its first read on a spent budget", async () => {
+    const budget = readBudget(0);
+    expect(budget.allow(false)).toBe(false);
+    const read = await readBatches({ need: 2, budget, ...source(5, () => true) });
+    expect(read).toEqual({ taken: [1, 2], examined: 2, dry: false });
+  });
+
+  test("rows running out is dry, and keeps what it found", async () => {
+    const read = await readBatches({
+      need: 4,
+      budget: readBudget(3),
+      ...source(3, (row) => row !== 2),
+    });
+    expect(read).toEqual({ taken: [1, 3], examined: 3, dry: true });
   });
 });

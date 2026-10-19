@@ -380,13 +380,24 @@ export function inSeenOrder<T extends { userId: string }>(
   return seen.flatMap((id) => byId.get(id) ?? []);
 }
 
-/** The people after `userId` in `ordered`, or null when `userId` is not in it. */
-export function afterPerson<T extends { userId: string }>(
-  ordered: T[],
-  userId: string,
-): T[] | null {
-  const at = ordered.findIndex((partner) => partner.userId === userId);
-  return at === -1 ? null : ordered.slice(at + 1);
+/**
+ * Where a ranking that refreshed between pages goes on, past the cursor's person. With a
+ * snapshot (`seen`: the order earlier pages saw, then newcomers) that holds that person, it goes
+ * by their place there, so a person who moved up since is still to come and one who moved down
+ * is not listed twice. Without one (expired, unread, or an open tab's cursor) it goes by rank.
+ */
+export function resumeRanking<T extends Ranked>(
+  ranked: T[],
+  seen: readonly string[] | undefined,
+  resumed: (OneWayRank & { mutual?: number }) | undefined,
+): T[] {
+  if (!resumed) return seen ? inSeenOrder(ranked, seen) : ranked;
+  const at = seen ? seen.indexOf(resumed.userId) : -1;
+  if (seen && at !== -1) {
+    const later = new Set(seen.slice(at + 1));
+    return inSeenOrder(ranked, seen).filter((partner) => later.has(partner.userId));
+  }
+  return peopleAfter(ranked, resumed).filter((partner) => partner.userId !== resumed.userId);
 }
 
 export type NotShown = { notOwned: number; notTransferable: number };
