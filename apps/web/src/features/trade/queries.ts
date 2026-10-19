@@ -1,4 +1,4 @@
-import type { FeedCursor } from "@repo/api/schemas/trade";
+import type { PeopleCursor } from "@repo/api/schemas/trade";
 import { keepPreviousData } from "@tanstack/react-query";
 
 import { orpc } from "@/lib/orpc";
@@ -9,9 +9,6 @@ import type { BrowseInput } from "./browse-search";
 export const mutualCountOptions = (list: string | undefined) =>
   orpc.trade.mutualCount.queryOptions({ input: { list }, staleTime: 60_000 });
 
-export const personOptions = (userId: string, list: string | undefined) =>
-  orpc.trade.person.queryOptions({ input: { userId, list }, staleTime: 0 });
-
 export const tabCountsOptions = (enabled: boolean) =>
   orpc.trade.tabCounts.queryOptions({ input: { forYou: false }, enabled, staleTime: 60_000 });
 
@@ -21,10 +18,10 @@ export const hiddenPartnersOptions = (enabled: boolean) =>
 /** a fresh document always refetches; this only spares the request right after hydration */
 const BROWSE_STALE_MS = 30_000;
 
-export const browseOptions = (input: BrowseInput) =>
-  orpc.trade.browse.infiniteOptions({
-    input: (cursor: FeedCursor | undefined) => ({ ...input, cursor }),
-    initialPageParam: undefined as FeedCursor | undefined,
+export const peopleOptions = (input: BrowseInput) =>
+  orpc.trade.people.infiniteOptions({
+    input: (cursor: PeopleCursor | undefined) => ({ ...input, cursor }),
+    initialPageParam: undefined as PeopleCursor | undefined,
     getNextPageParam: (page) => page.nextCursor,
     staleTime: BROWSE_STALE_MS,
     placeholderData: keepPreviousData,

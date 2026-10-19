@@ -5,7 +5,7 @@ import { orpc } from "@/lib/orpc";
 
 import { type FeedSearch, type Surface, toBrowseInput } from "./browse-search";
 import { tradeListsOf } from "./compare-rule";
-import { browseOptions, myPostsOptions } from "./queries";
+import { peopleOptions, myPostsOptions } from "./queries";
 
 /**
  * The loader of both Trade surfaces, so the loader and `BrowseView` build the same query key.
@@ -27,7 +27,7 @@ export async function loadBrowse({
     queryClient.query({ ...orpc.config.getSelectedArtists.queryOptions(), staleTime: "static" }),
     queryClient.query({ ...currentUserOptions, staleTime: "static" }),
   ]);
-  const options = browseOptions(
+  const options = peopleOptions(
     toBrowseInput(search, artists, selected, surface, tradeListsOf(user?.lists ?? [])),
   );
   // a filter change keeps the current posts on screen while the next ones load

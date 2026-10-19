@@ -18,7 +18,7 @@ TanStack Start app on Base UI (the cnippet registry). `src/components/ui/*` are 
 
 `stores/chat-draft.ts` keeps, per conversation id and in memory only, the card a Message button hands over and the unsent `body` with the `clientId` of the send being composed. The composer reads it through selectors. A failed send restores its text in the send mutation's `onError`, not the per-call one, because that one is lost when the thread unmounts. The same `clientId` goes with every retry so the server posts the message once; editing the text starts a new one.
 
-The card is an `Attachment` (`features/chat/attachment.ts`) of two kinds: an objekt card (`kind: "objekt"`, drawn as a chip) and a Trade post card (`kind: "post"`, drawn by `thread/post-card-message.tsx`, the component the thread uses). Only Browse's Message attaches a post card; its `withMatch` asks the server for the match, and the first-line suggestion follows `view.match`, the match the server saved.
+The card is an `Attachment` (`features/chat/attachment.ts`) of two kinds: an objekt card (`kind: "objekt"`, drawn as a chip) and a Trade post card (`kind: "post"`, drawn by `thread/post-card-message.tsx`, the component the thread uses). Only a Trade row's Message (Browse and For you, one row per person, addressed to the row's lead post) attaches a post card; its `withMatch` asks the server for the match, and the first-line suggestion follows `view.match`, the match the server saved.
 
 ## Verifying against production
 

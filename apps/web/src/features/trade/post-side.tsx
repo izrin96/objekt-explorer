@@ -142,17 +142,13 @@ export function isEmptySide(side: PostSideData) {
   return side.copyCount === 0;
 }
 
-/** A side's wording: its label, and on For you who its objekts are for. */
+/** A side's role, and why none of its objekts show: on For you who they would be for. */
 function sideWording(side: PostSideData, surface: Surface) {
   const role = LIST_TYPE_LABEL[side.role]();
-  if (surface === "browse") {
-    return { role, label: (count: number) => `${role} ${count}`, none: m.trade_strip_none_match() };
-  }
+  if (surface === "browse") return { role, none: m.trade_strip_none_match() };
   const wanted = side.role === "want";
   return {
     role,
-    label: (count: number) =>
-      wanted ? m.trade_strip_you_have({ role, count }) : m.trade_strip_you_want({ role, count }),
     none: wanted ? m.trade_strip_none_you_have() : m.trade_strip_none_you_want(),
   };
 }
@@ -181,23 +177,24 @@ export function EmptySide({ side, surface }: { side: PostSideData; surface: Surf
   );
 }
 
-/** A Browse post's side: its list's role and count, its ringed matches; the label links to the list. */
+/** A person's list: its role and name, its own count, its ringed matches; the label links to the list. */
 export function SideStrip({
   side,
-  surface,
+  count,
   narrowed,
   collections,
   onOpen,
 }: {
   side: PostSideData;
-  surface: Surface;
+  /** the collections of this list that match the viewer: "14 you want", "2 you have" */
+  count: number;
   /** a filter or matching left objekts out, so the side says how many it holds */
   narrowed: boolean;
   collections: Readonly<Record<string, ValidObjekt | undefined>>;
   onOpen: (objekt: ValidObjekt) => void;
 }) {
   const { list } = side;
-  const label = sideWording(side, surface).label(side.copyCount);
+  const role = LIST_TYPE_LABEL[side.role]();
   const total = side.copyCount + side.others;
   const text = (
     <Link
@@ -205,12 +202,22 @@ export function SideStrip({
       title={list.description ? `${list.name}\n${list.description}` : list.name}
       className={cn(SIDE_LINK, "flex w-fit max-w-full min-w-0 items-baseline gap-1.5")}
     >
-      <span className="shrink-0">{label}</span>
+      {/* the match chip carries the list's number, so a second one would only compete with it */}
+      <span className="shrink-0">
+        {narrowed && count === 0 ? `${role} ${side.copyCount}` : role}
+      </span>
       <span aria-hidden className="text-muted-foreground shrink-0">
         ·
       </span>
-      <span className="text-muted-foreground min-w-0 truncate normal-case">{list.name}</span>
+      <span className="text-foreground min-w-0 truncate normal-case">{list.name}</span>
       {list.description ? <span className="sr-only">. {list.description}</span> : null}
+      {count > 0 ? (
+        <span className="bg-success/10 text-success-foreground shrink-0 rounded px-1.5 normal-case">
+          {side.role === "want"
+            ? m.trade_list_count_you_have({ count })
+            : m.trade_list_count_you_want({ count })}
+        </span>
+      ) : null}
     </Link>
   );
 

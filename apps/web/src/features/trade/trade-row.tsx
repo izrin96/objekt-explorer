@@ -1,59 +1,6 @@
 import { ArrowsLeftRightIcon } from "@phosphor-icons/react";
 import type { ReactNode } from "react";
 
-import { cn } from "@/lib/utils";
-
-/**
- * One line where the card is wide enough (byline, sides, actions, with `below` under the
- * sides), stacked in that order where it is not. The card is the container, so the layout
- * follows the feed's width rather than the viewport's. `panel` spans the full width.
- */
-export function TradeRow({
-  byline,
-  sides,
-  actions,
-  below,
-  panel,
-  id,
-  className,
-  belowClassName,
-}: {
-  byline: ReactNode;
-  sides: ReactNode;
-  actions?: ReactNode;
-  below?: ReactNode;
-  panel?: ReactNode;
-  id?: string;
-  className?: string;
-  belowClassName?: string;
-}) {
-  return (
-    <article
-      id={id}
-      className={cn(
-        "hover:bg-secondary/40 @container border-b motion-safe:transition-colors motion-safe:duration-150",
-        className,
-      )}
-    >
-      <div className="grid gap-x-4 gap-y-3 px-4 py-3.5 @3xl:grid-cols-[16rem_minmax(0,1fr)_auto]">
-        <div className="min-w-0 @3xl:row-span-2">{byline}</div>
-        <div className="min-w-0 @3xl:col-start-2">{sides}</div>
-        {below ? (
-          <div className={cn("min-w-0 @3xl:col-start-2 @3xl:row-start-2", belowClassName)}>
-            {below}
-          </div>
-        ) : null}
-        {actions ? (
-          <div className="flex flex-wrap items-center gap-2 @3xl:col-start-3 @3xl:row-start-1 @3xl:self-start">
-            {actions}
-          </div>
-        ) : null}
-        {panel}
-      </div>
-    </article>
-  );
-}
-
 /** One strip across the whole width, or two sharing it with a ⇄ between them. */
 export function TradeSides({ strips }: { strips: readonly ReactNode[] }) {
   const [first, second] = strips;

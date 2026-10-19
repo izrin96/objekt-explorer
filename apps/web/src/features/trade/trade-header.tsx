@@ -16,24 +16,15 @@ export type TradePerson = {
 
 export function TradeHeader({
   person,
-  socials,
   you = false,
   note,
-  phoneLine,
-  wrapTrust = false,
   end,
   className,
 }: {
   person: TradePerson;
-  /** which of the owner's badges show: a post keeps to Discord, the person sheet shows both */
-  socials: "discord" | "all";
   you?: boolean;
   /** under the reputation line */
   note?: ReactNode;
-  /** in a narrow card, one monospace line that wraps between its parts in place of the reputation line and `note` */
-  phoneLine?: ReactNode;
-  /** let the reputation line wrap instead of truncating */
-  wrapTrust?: boolean;
   end?: ReactNode;
   className?: string;
 }) {
@@ -63,22 +54,12 @@ export function TradeHeader({
             </span>
           ) : null}
           {user.discord ? <SocialBadge platform="discord" username={user.discord} /> : null}
-          {socials === "all" && user.twitter ? (
-            <SocialBadge platform="twitter" username={user.twitter} />
-          ) : null}
         </div>
-        <div className={cn("flex min-w-0 flex-col gap-0.5", phoneLine && "@max-3xl:hidden")}>
-          <TrustLine
-            reputation={person.reputation}
-            className={wrapTrust ? undefined : "truncate"}
-          />
+        <div className="flex min-w-0 flex-col gap-0.5">
+          {/* one line with an ellipsis where the card is wide, wrapping between words on a phone */}
+          <TrustLine reputation={person.reputation} className="@3xl:truncate" />
           {note}
         </div>
-        {phoneLine ? (
-          <p className="text-muted-foreground overflow-x-clip font-mono text-xs @3xl:hidden">
-            {phoneLine}
-          </p>
-        ) : null}
       </div>
       {end ? <div className="flex shrink-0 items-center gap-2">{end}</div> : null}
     </div>

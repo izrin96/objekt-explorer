@@ -7,12 +7,12 @@ import { filterSearchSchema } from "@/features/filters/search-schema";
 
 import { comparedList, scopeOf, type TradeList } from "./compare-rule";
 
-/** What both Trade surfaces take: the filters, the post type and the person sheet. */
+/** What both Trade surfaces take: the filters, the post type and the person who leads. */
 const feedSearchSchema = filterSearchSchema.extend({
   /** `all` is the absence of `type` */
   type: z.enum(["wtt", "wtb", "wts"]).optional().catch(undefined),
   slug: z.string().min(1).optional().catch(undefined),
-  /** the person sheet to open */
+  /** the person whose row leads the feed */
   person: z.string().min(1).optional().catch(undefined),
 });
 
@@ -76,7 +76,7 @@ export function forYouNormalise(search: ForYouSearch): Omit<ForYouSearch, "partn
 export function forYouFallback(
   search: FeedSearch & { partner?: string },
 ): Omit<BrowseSearch, "match" | "matches" | "list"> {
-  // a person sheet opens on Browse too, so a shared link keeps it
+  // a person leads Browse too, so a shared link keeps it
   const { match, list, partner, ...rest } = search;
   const person = rest.person ?? partner;
   return person === undefined ? rest : { ...rest, person };
@@ -138,6 +138,7 @@ export function toBrowseInput(
   return {
     type,
     slug: search.slug,
+    person: search.person,
     match,
     list: match === "off" ? undefined : list,
     artist,

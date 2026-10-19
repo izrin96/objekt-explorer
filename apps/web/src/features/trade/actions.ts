@@ -16,11 +16,11 @@ function useTradeInvalidation() {
   return () => queryClient.invalidateQueries({ queryKey: orpc.trade.key() });
 }
 
-type BrowsePage = Outputs["trade"]["browse"];
+type PeoplePage = Outputs["trade"]["people"];
 
-/** The page minus one person's posts, keeping every other field it carries. */
-function without(page: BrowsePage, userId: string): BrowsePage {
-  return { ...page, posts: page.posts.filter((post) => post.userId !== userId) };
+/** The page minus one person's row, keeping every other field it carries. */
+function without(page: PeoplePage, userId: string): PeoplePage {
+  return { ...page, people: page.people.filter((person) => person.userId !== userId) };
 }
 
 function useHidePartner() {
@@ -30,9 +30,9 @@ function useHidePartner() {
   return useMutation(
     orpc.trade.hidePartner.mutationOptions({
       onMutate: async ({ userId }) => {
-        const key = orpc.trade.browse.key();
+        const key = orpc.trade.people.key();
         await queryClient.cancelQueries({ queryKey: key });
-        queryClient.setQueriesData<InfiniteData<BrowsePage>>({ queryKey: key }, (data) =>
+        queryClient.setQueriesData<InfiniteData<PeoplePage>>({ queryKey: key }, (data) =>
           data ? { ...data, pages: data.pages.map((page) => without(page, userId)) } : data,
         );
       },
