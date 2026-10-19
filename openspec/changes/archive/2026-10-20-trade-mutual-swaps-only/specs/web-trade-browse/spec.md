@@ -108,7 +108,7 @@ For you (`/trade/for-you`) SHALL list the same people as Browse, in the same row
 2. then the sum of both counts;
 3. then the most recent change to any of the person's matched lists.
 
-Each person SHALL be one row holding their kept posts (see Trade card). Every Mutual person SHALL be listed, with no cap beyond the 1000 candidates matching reads, and idle posts SHALL not be listed (see Order and idle posts). The feed SHALL load 12 people at a time and continue after the last person it showed. When the ranking is worked out again between two loads, a person already shown SHALL not be listed again, and a person not yet shown SHALL still be listed.
+Each person SHALL be one row holding their kept posts (see Trade card). Every Mutual person SHALL be listed, with no cap beyond the 1000 candidates matching reads, and idle posts SHALL not be listed (see Order and idle posts). The feed SHALL load 12 people at a time and continue after the last person it showed. When the ranking is worked out again between two loads, a person already shown SHALL not be listed again, and a person who only moved within the ranking since SHALL still be listed, at the place earlier loads saw them. A person who leaves Mutual between two loads MAY go unlisted until the feed is opened again.
 
 **Any order.** Under Any the feed SHALL list two sections, in this order:
 1. **Mutual**: exactly the people Mutual lists for the same filters and Compare with choice, in Mutual order. Each row SHALL hold all of the person's kept posts, in the Trade card's order. A person Mutual ranks who has no kept WTT post SHALL be listed under One way instead. With WTB or WTS picked in the Post type menu there is no Mutual section, since Mutual lists WTT posts only.

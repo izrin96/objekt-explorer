@@ -236,7 +236,7 @@ A filter value that does not parse SHALL be ignored.
 For a signed-in viewer, each person's row on Browse and on For you SHALL show that person's counts. They are taken across all of the person's listed have, sale and want lists (on Trade, not idle), with the rules and ownership check of `web-trade-for-you`. They are counted against the viewer's lists, or, on For you, against the lists Compare with names:
 - "They have N you want": collections on the person's have or sale lists that are on one of the viewer's want lists that can take them. A have list counts only against a want list open to swaps (Swaps only, or Swaps or buying); a sale list counts only against a want list open to buying (Swaps or buying, or Buying only).
 - "You have N they want": collections on the person's want lists that are on one of the viewer's have or sale lists that is bound to a Cosmo profile and still tradeable by the viewer. A have list counts only for a want list open to swaps; a sale list counts only for a want list open to buying.
-- The mutual score: the smaller of the two counts above. A have or sale list, the person's or the viewer's, counts toward it exactly as it counts toward its own count. A want list set to swaps only never counts a sale list toward either direction, and a want list set to buying only never counts a have list, so neither makes a person mutual through one.
+- The mutual score: what the person and the viewer can swap, the smaller of two swap counts. One is the collections on the person's have lists that are on one of the viewer's want lists open to swaps (Swaps only, or Swaps or buying); the other is the collections on the person's want lists open to swaps that are on one of the viewer's have lists bound to a Cosmo profile and still tradeable by the viewer. A sale list, the person's or the viewer's, SHALL never count toward the mutual score, though it counts toward the two counts above: a sale is not a swap, so a person matched only through sale lists is one way. A want list set to buying only never counts toward it either.
 
 The counts show once, in the row's header sentence (see Trade card). Each list in the row SHALL also show its own count, by the same rules, taken on that list alone: on a have or sale list the collections the viewer wants ("14 you want"), on a want list the collections the viewer has ("2 you have"). Matched objekts SHALL be marked with a ring, judged on the list's own objekts. There SHALL be no match chip, no popover of matched lists and no All matches control.
 
@@ -274,9 +274,9 @@ Browse SHALL list the viewer's own row, so they can see where a bump put them, w
 - **WHEN** rin.trades has a have list holding 1 collection the viewer wants and a separate want list asking for 2 collections on the viewer's bound have lists, none of these on sale lists
 - **THEN** rin.trades's one row reads "You can swap 1", the have list reads "1 you want" and the want list "2 you have"
 
-#### Scenario: A sale list and a buying want list make a person mutual
+#### Scenario: A sale list never makes a person mutual
 - **WHEN** jinsoul.blue's sale list holds 3 collections on the viewer's want lists (open to swaps or buying), jinsoul.blue has no have list, and their want list asks for 1 collection on the viewer's bound have list
-- **THEN** jinsoul.blue's row reads "You can swap 1", and jinsoul.blue is listed under Mutual
+- **THEN** jinsoul.blue's row reads "You have 1 they want", the sale list reads "3 you want", and jinsoul.blue is listed under One way, not Mutual
 
 #### Scenario: Sale listings aren't mutual
 - **WHEN** jinsoul.blue's sale list holds 3 collections on the viewer's want list, which is open to swaps only, and their want list asks for 1 collection on the viewer's bound have list
@@ -284,7 +284,7 @@ Browse SHALL list the viewer's own row, so they can see where a bump put them, w
 
 #### Scenario: The viewer's sale list against their want list
 - **WHEN** the viewer's sale list holds a collection that rin.trades's want list asks for, and rin.trades has a have list holding a collection the viewer wants
-- **THEN** rin.trades is Mutual when that want list is open to swaps or buying, and is not when it is open to swaps only
+- **THEN** rin.trades is not Mutual through it, whatever that want list is open to; when it is open to buying, the collection counts in rin.trades's "You have N they want"
 
 #### Scenario: A buying-only want list ignores have lists
 - **WHEN** rin.trades's have list holds 2 collections on the viewer's want list, which is set to Buying only, and rin.trades has no sale list
@@ -317,6 +317,10 @@ Browse SHALL list the viewer's own row, so they can see where a bump put them, w
 #### Scenario: Hidden partner
 - **WHEN** the viewer hid rin.trades
 - **THEN** rin.trades's row is not listed on Browse or For you for that viewer
+
+#### Scenario: A have list and a want list both ways make a swap
+- **WHEN** rin.trades's have list holds 2 collections on the viewer's want list open to swaps or buying, rin.trades's want list (open to swaps) asks for 3 collections on the viewer's bound have list, and rin.trades's sale list holds 4 more collections the viewer wants
+- **THEN** rin.trades's row reads "You can swap 2", and rin.trades is listed under Mutual
 
 ### Requirement: Bump
 A person with posts on Trade SHALL be able to bump once every 24 hours. A bump SHALL bump every one of their posts on Trade at once: it moves their row to the top of Browse and brings back every idle post. A bump within 24 hours of the person's last bump, counting a list turned on as a bump (see Order and idle posts) and lists since taken off Trade, SHALL be refused, and the control SHALL show when the next bump is allowed. Only the signed-in person SHALL be able to bump their own posts.
@@ -632,11 +636,11 @@ For you (`/trade/for-you`) SHALL list the same people as Browse, in the same row
 2. then the sum of both counts;
 3. then the most recent change to any of the person's matched lists.
 
-Each person SHALL be one row holding their kept posts (see Trade card). Every Mutual person SHALL be listed, with no cap beyond the 200 candidates matching reads, and idle posts SHALL not be listed (see Order and idle posts). The feed SHALL load 12 people at a time and continue after the last person it showed. When the ranking is worked out again between two loads, a person already shown SHALL not be listed again.
+Each person SHALL be one row holding their kept posts (see Trade card). Every Mutual person SHALL be listed, with no cap beyond the 1000 candidates matching reads, and idle posts SHALL not be listed (see Order and idle posts). The feed SHALL load 12 people at a time and continue after the last person it showed. When the ranking is worked out again between two loads, a person already shown SHALL not be listed again, and a person who only moved within the ranking since SHALL still be listed, at the place earlier loads saw them. A person who leaves Mutual between two loads MAY go unlisted until the feed is opened again.
 
 **Any order.** Under Any the feed SHALL list two sections, in this order:
 1. **Mutual**: exactly the people Mutual lists for the same filters and Compare with choice, in Mutual order. Each row SHALL hold all of the person's kept posts, in the Trade card's order. A person Mutual ranks who has no kept WTT post SHALL be listed under One way instead. With WTB or WTS picked in the Post type menu there is no Mutual section, since Mutual lists WTT posts only.
-2. **One way**: every other person Any keeps. People SHALL be listed most matches first, by the sum of both counts and then the most recent change to any of their matched lists, among the people matching ranks (at most its 200 candidates). After them comes anyone else Any keeps, by their newest bump. A person SHALL be listed in one section only.
+2. **One way**: every other person Any keeps. People SHALL be listed most matches first, by the sum of both counts and then the most recent change to any of their matched lists, among the people matching ranks (at most its 1000 candidates). After them comes anyone else Any keeps, by their newest bump. A person SHALL be listed in one section only.
 
 Each section SHALL open with a heading, Mutual or One way, with no count, over its first row. A section with no people SHALL have no heading. Under Mutual only there SHALL be no section heading. The feed SHALL load 12 people at a time across the sections, continuing after the last person it showed, and SHALL not list a person twice when the ranking is worked out again between two loads. The empty states of Filters are unchanged.
 
@@ -663,7 +667,7 @@ Each section SHALL open with a heading, Mutual or One way, with no count, over i
 - The compared lists SHALL replace the viewer's lists everywhere matching shows on For you: the header sentences, the list counts, the rings, Any and Mutual.
 - While Compare with names a list, one line under the controls SHALL say what is compared: the named list with its linked list, or the named list alone and which way it compares. With All my lists, no line SHALL show.
 
-The help beside the controls SHALL describe the mutual score as the smaller of the two counts, where a sale list counts only against a want list open to buying, and describe Compare with as one list plus its linked list, a list with no link comparing one way.
+The help beside the controls SHALL describe the mutual score as what the two people can swap, the smaller of the two swap counts, with sale lists never counting toward it, and describe Compare with as one list plus its linked list, a list with no link comparing one way.
 
 **Old Browse links.** `/trade` SHALL no longer take `match` or `list`:
 - `/trade?match=any`, `/trade?match=mutual` or `/trade?matches=1` SHALL redirect to `/trade/for-you` with the same option (`matches=1` becomes `match=any`), keeping `list`, `person` and the filters;
@@ -698,7 +702,7 @@ The help beside the controls SHALL describe the mutual score as the smaller of t
 
 #### Scenario: Sale-only person under Mutual
 - **WHEN** jinsoul.blue matches the viewer both ways only through sale lists, against want lists open to swaps or buying
-- **THEN** jinsoul.blue is listed under Any, and under Mutual with their WTT posts
+- **THEN** jinsoul.blue is listed under Any in the One way section, is not listed under Mutual only, and is not counted in Mutual N
 
 #### Scenario: Sale-only person against a swaps-only want list
 - **WHEN** jinsoul.blue's only match in one direction is a sale list against a want list open to swaps only
@@ -805,7 +809,7 @@ The help beside the controls SHALL describe the mutual score as the smaller of t
 - **THEN** the feed lists the Mutual people with no section heading
 
 ### Requirement: Buying only note
-A WTB post whose want list is set to Buying only SHALL show a short muted note beside its tag, "Buying only, not swapping", in its person's row, the way a want-only WTT post shows "Swaps only, not buying". A WTB post whose want list is open to swaps or buying SHALL show no note. The Browse help's tag table SHALL describe WTB as a want list open to swaps or buying, or set to buying only, and its "What counts toward Mutual" table SHALL show that a have list counts against a want list open to swaps only or to swaps or buying and not against one set to buying only, and that a sale list counts against a want list open to swaps or buying or set to buying only and not against one open to swaps only.
+A WTB post whose want list is set to Buying only SHALL show a short muted note beside its tag, "Buying only, not swapping", in its person's row, the way a want-only WTT post shows "Swaps only, not buying". A WTB post whose want list is open to swaps or buying SHALL show no note. The Browse help's tag table SHALL describe WTB as a want list open to swaps or buying, or set to buying only, and its "What counts toward Mutual" section SHALL show that a have list counts against a want list open to swaps only or to swaps or buying and not against one set to buying only, and that a sale list never counts toward Mutual.
 
 #### Scenario: Buying-only post
 - **WHEN** a want list on its own is set to Buying only and on Trade
@@ -817,4 +821,4 @@ A WTB post whose want list is set to Buying only SHALL show a short muted note b
 
 #### Scenario: Help table
 - **WHEN** the viewer opens the matching help on Browse
-- **THEN** the Mutual table shows a have list counting against Swaps only and Swaps or buying but not Buying only, and a sale list counting against Swaps or buying and Buying only but not Swaps only
+- **THEN** the Mutual section shows a have list counting against Swaps only and Swaps or buying but not Buying only, and says a sale list never counts toward Mutual

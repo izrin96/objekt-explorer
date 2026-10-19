@@ -10,7 +10,7 @@ Mutual says "You can swap N" and Mutual only lists WTT posts only (since 2026-10
 - The one-way counts ("They have N you want", "You have N they want"), the per-list counts and the rings are unchanged: sale lists keep counting there, so a person matched only through sale lists reads "You have N they want" (or "They have N you want") and is listed under One way.
 - Everything that reads the mutual score follows: the header sentence, Mutual only, Mutual order, the Mutual section under Any, Mutual N, and the list header's Find matches count.
 - The help popover's "What counts toward Mutual" table shrinks to the swap rows and says sale lists never count toward Mutual.
-- Spec catch-up from `8ec9482c` and `5ce50573`: matching ranks up to 1000 candidates, not 200, and a person not yet shown when the ranking is worked out again is still listed.
+- Spec catch-up from `8ec9482c` and `5ce50573`: matching ranks up to 1000 candidates, not 200, and a person who only moved within a ranking between loads is still listed.
 
 Routes: `/trade/for-you` (Mutual only, Any's sections, Mutual N), `/trade` (header sentences), and the list header's Find matches on `/@{nickname}/{list}`.
 

@@ -17,6 +17,6 @@
 
 ## 3. Verify and document
 
-- [ ] 3.1 Read-only check in the running app on For you: a sale-only match sits under One way, "You can swap N" rows sit under Mutual, and Mutual only N matches the Mutual only list (read-only verified, no writes)
+- [x] 3.1 Read-only check in the running app on For you: a sale-only match sits under One way, "You can swap N" rows sit under Mutual, and Mutual only N matches the Mutual only list (read-only verified, no writes)
 - [x] 3.2 Update `packages/api/AGENTS.md` Trade matching: Mutual is the smaller of the swap counts (`tradeTheyHave`, `tradeYouHave`), sale lists never count toward it, the candidate prefilter uses `a_t`/`b_t`, and the new cache key versions; drop the line that says nothing reads the `trade*` counts. `apps/web/AGENTS.md` and the root `AGENTS.md` need no change
-- [ ] 3.3 After archive, rename the scenario "A sale list and a buying want list make a person mutual" in `openspec/specs/web-trade-browse/spec.md` to "A sale list never makes a person mutual": a MODIFIED block can't drop or rename a scenario, so this change keeps the old title over the new behaviour
+- [x] 3.3 After archive, rename the scenario "A sale list and a buying want list make a person mutual" in `openspec/specs/web-trade-browse/spec.md` to "A sale list never makes a person mutual": a MODIFIED block can't drop or rename a scenario, so this change keeps the old title over the new behaviour
