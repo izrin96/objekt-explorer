@@ -54,6 +54,7 @@ export function TradeHeader({
             </span>
           ) : null}
           {user.discord ? <SocialBadge platform="discord" username={user.discord} /> : null}
+          {user.twitter ? <SocialBadge platform="twitter" username={user.twitter} /> : null}
         </div>
         <div className="flex min-w-0 flex-col gap-0.5">
           {/* one line with an ellipsis where the card is wide, wrapping between words on a phone */}

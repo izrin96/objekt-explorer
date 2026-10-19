@@ -478,7 +478,7 @@ Each post SHALL show its owner's reputation line (see `web-verified-trades`) bes
 Each person in the feed SHALL be one row, a bordered card on the card surface, one row to a line at every width. A row holds:
 - **Header**:
   - the avatar;
-  - the name, headed as For you heads a partner (see `web-trade-for-you` Partner identity), linking to the profile, with the Discord badge the person chose to show. On Browse, the viewer's own row SHALL carry a muted "You" tag after the name;
+  - the name, headed as For you heads a partner (see `web-trade-for-you` Partner identity), linking to the profile, with the Discord and X badges the person chose to show, wrapping onto the next line when they don't fit. On Browse, the viewer's own row SHALL carry a muted "You" tag after the name;
   - the reputation line (see `web-verified-trades`), on one line, truncated with an ellipsis when it doesn't fit, its full text available to assistive technology;
   - for a signed-in viewer on another person's row, the header sentence, from the counts in Matches to the signed-in viewer, with A the "They have" count, B the "You have" count and M the mutual score: "You can swap M" when M is above zero, else "You have B they want" when B is above zero, else "They have A you want" when A is above zero. With no count above zero the row SHALL show no sentence, so a row without one reads as no match. Its number SHALL be in monospace and stand out from the words, and its visible words SHALL be its accessible text;
   - one muted monospace line: the number of the person's kept lists ("3 lists") and when their newest post was last bumped, or last changed if that is later;
@@ -589,7 +589,7 @@ From `@3xl` of the feed's width, the actions SHALL sit at the header's end and t
 
 #### Scenario: Twitter in the sheet
 - **WHEN** rin.trades shows both Discord and Twitter
-- **THEN** their row's header shows the Discord badge only, and their profile shows both
+- **THEN** their row's header shows both badges after the name, as their profile does
 
 #### Scenario: One-way post on For you
 - **WHEN** on For you a person has 3 collections the viewer wants on have list "spares" and wants none of the viewer's
