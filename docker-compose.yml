@@ -103,12 +103,12 @@ services:
       context: .
       dockerfile: ./apps/web/Dockerfile
       secrets:
-        - VITE_UMAMI_SCRIPT_URL
-        - VITE_UMAMI_WEBSITE_ID
-        - VITE_LIVE_API_KEY
         - SENTRY_AUTH_TOKEN
-      # source map upload; the build skips it unless the last three and SENTRY_AUTH_TOKEN are set
       args:
+        VITE_UMAMI_SCRIPT_URL: ${VITE_UMAMI_SCRIPT_URL:-}
+        VITE_UMAMI_WEBSITE_ID: ${VITE_UMAMI_WEBSITE_ID:-}
+        VITE_LIVE_API_KEY: ${VITE_LIVE_API_KEY:-}
+        # source map upload; the build skips it unless the last three and SENTRY_AUTH_TOKEN are set
         SENTRY_URL: ${SENTRY_URL:-}
         SENTRY_ORG: ${SENTRY_ORG:-}
         SENTRY_PROJECT: ${SENTRY_PROJECT:-}
@@ -145,7 +145,7 @@ services:
       - SENTRY_ENVIRONMENT
       - SENTRY_RELEASE
     healthcheck:
-      test: test ! -f /tmp/drain && curl -f http://localhost:3000/api/healthcheck
+      test: 'test ! -f /tmp/drain && bun -e "process.exit((await fetch(''http://localhost:3000/api/healthcheck'')).ok ? 0 : 1)"'
       interval: 5s
       retries: 1
 
@@ -223,12 +223,6 @@ volumes:
   postgres-indexer-data:
 
 secrets:
-  VITE_UMAMI_SCRIPT_URL:
-    environment: VITE_UMAMI_SCRIPT_URL
-  VITE_UMAMI_WEBSITE_ID:
-    environment: VITE_UMAMI_WEBSITE_ID
-  VITE_LIVE_API_KEY:
-    environment: VITE_LIVE_API_KEY
   # Sentry token for the source map upload; optional
   SENTRY_AUTH_TOKEN:
     environment: SENTRY_AUTH_TOKEN
