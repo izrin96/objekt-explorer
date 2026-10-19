@@ -974,7 +974,6 @@
   "trade_match_they_have": "自分の希望を相手が {count} 件所持",
   "trade_match_you_have": "相手の希望を {count} 件所持",
   "trade_person_swap": "{count} 件交換できます",
-  "trade_person_no_match": "まだ一致するものはありません",
   "trade_person_lists": "リスト {count} 件",
   "trade_person_lists_one": "リスト 1 件",
   "trade_person_more_lists": "ほか {count} 件のリスト",

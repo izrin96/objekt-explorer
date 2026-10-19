@@ -974,7 +974,6 @@
   "trade_match_they_have": "They have {count} you want",
   "trade_match_you_have": "You have {count} they want",
   "trade_person_swap": "You can swap {count}",
-  "trade_person_no_match": "No match with you yet",
   "trade_person_lists": "{count} lists",
   "trade_person_lists_one": "1 list",
   "trade_person_more_lists": "+{count} more lists",

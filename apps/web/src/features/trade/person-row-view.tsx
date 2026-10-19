@@ -47,7 +47,7 @@ function WithNumber({
   );
 }
 
-function Sentence({ sentence }: { sentence: HeaderSentence }) {
+function Sentence({ sentence }: { sentence: Exclude<HeaderSentence, { kind: "none" }> }) {
   switch (sentence.kind) {
     case "swap":
       return (
@@ -65,8 +65,6 @@ function Sentence({ sentence }: { sentence: HeaderSentence }) {
       return (
         <WithNumber render={(count) => m.trade_match_they_have({ count })} count={sentence.count} />
       );
-    case "none":
-      return <span className="text-muted-foreground">{m.trade_person_no_match()}</span>;
   }
 }
 
@@ -162,6 +160,8 @@ export function PersonRow({
   onOpen: (objekt: ValidObjekt) => void;
 }) {
   const hide = useHideWithUndo();
+  // no match says nothing: a row without a sentence already reads as one
+  const sentence = own || !signedIn ? null : headerSentence(person.counts);
   const posts = orderPosts(person.posts);
   const lead = leadPost(person.posts);
   const all = led || expanded;
@@ -228,11 +228,11 @@ export function PersonRow({
           }
           note={
             <div className="flex flex-col gap-0.5">
-              {own || !signedIn ? null : (
+              {sentence && sentence.kind !== "none" ? (
                 <span className="text-sm">
-                  <Sentence sentence={headerSentence(counts)} />
+                  <Sentence sentence={sentence} />
                 </span>
-              )}
+              ) : null}
               <span className="text-muted-foreground font-mono text-xs">
                 {lists} ·{" "}
                 <time dateTime={newest.time} suppressHydrationWarning>

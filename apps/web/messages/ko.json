@@ -974,7 +974,6 @@
   "trade_match_they_have": "내가 원하는 {count}개를 상대가 보유",
   "trade_match_you_have": "상대가 원하는 {count}개 보유",
   "trade_person_swap": "{count}개 교환 가능",
-  "trade_person_no_match": "아직 일치하는 항목이 없어요",
   "trade_person_lists": "목록 {count}개",
   "trade_person_lists_one": "목록 1개",
   "trade_person_more_lists": "목록 {count}개 더 보기",

@@ -480,7 +480,7 @@ Each person in the feed SHALL be one row, a bordered card on the card surface, o
   - the avatar;
   - the name, headed as For you heads a partner (see `web-trade-for-you` Partner identity), linking to the profile, with the Discord badge the person chose to show. On Browse, the viewer's own row SHALL carry a muted "You" tag after the name;
   - the reputation line (see `web-verified-trades`), on one line, truncated with an ellipsis when it doesn't fit, its full text available to assistive technology;
-  - for a signed-in viewer on another person's row, the header sentence, from the counts in Matches to the signed-in viewer, with A the "They have" count, B the "You have" count and M the mutual score: "You can swap M" when M is above zero, else "You have B they want" when B is above zero, else "They have A you want" when A is above zero, else "No match with you yet" in the muted colour. Its number SHALL be in monospace and stand out from the words, and its visible words SHALL be its accessible text;
+  - for a signed-in viewer on another person's row, the header sentence, from the counts in Matches to the signed-in viewer, with A the "They have" count, B the "You have" count and M the mutual score: "You can swap M" when M is above zero, else "You have B they want" when B is above zero, else "They have A you want" when A is above zero. With no count above zero the row SHALL show no sentence, so a row without one reads as no match. Its number SHALL be in monospace and stand out from the words, and its visible words SHALL be its accessible text;
   - one muted monospace line: the number of the person's kept lists ("3 lists") and when their newest post was last bumped, or last changed if that is later;
   - the ⋯ menu, holding Hide, Block and Report for a signed-in viewer who is not the person.
 - **Actions**: Message, then Make offer as the primary button, both for the row's lead post (see Message a post's owner and Make offer on a post). An account that doesn't take messages from the viewer shows "Not taking messages" in their place. The viewer's own row has no actions.
@@ -517,7 +517,7 @@ From `@3xl` of the feed's width, the actions SHALL sit at the header's end and t
 
 #### Scenario: No match
 - **WHEN** a signed-in viewer sees mira's row, whose lists match nothing of the viewer's
-- **THEN** the header reads "No match with you yet" in the muted colour, and no strip shows a count
+- **THEN** the header shows no match sentence, only the list count and time, and no strip shows a count
 
 #### Scenario: Want-only WTT post
 - **WHEN** a want list on its own is open to swaps only and on Trade
