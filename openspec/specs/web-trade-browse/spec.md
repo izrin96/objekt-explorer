@@ -78,7 +78,7 @@ The side's further-objekts count SHALL exclude entries left out this way. A post
 - **THEN** the post is not listed
 
 ### Requirement: Order and idle posts
-The feed SHALL list people, one row each. On Browse, people SHALL be ordered by the newest bump among their listed posts, newest first. On For you, Mutual orders people best match first and Any lists its Mutual and One way sections in their own order (see Matches and Compare with). Within a row, posts SHALL be ordered as Trade card says. Turning Show on Trade on SHALL count as a bump, unless the post was bumped in the last 24 hours, so neither switching it off and on nor posting the second list of a pair skips the bump limit. Editing a list or its entries SHALL not move its post.
+The feed SHALL list people, one row each. On Browse, people SHALL be ordered by the newest bump among their listed posts, newest first. On For you, Mutual orders people best match first and Any lists its Mutual and One way sections in their own order (see Matches and Compare with). Within a row, posts SHALL be ordered as Trade card says. Turning Show on Trade on SHALL count as a bump of that list, unless its owner bumped in the last 24 hours, in which case the list takes that bump's time, so neither switching a list off and on nor posting a new list skips the bump limit. Editing a list or its entries SHALL not move its post.
 
 A post SHALL be idle when 30 days have passed since its last bump and since the last change to any of its lists or their entries. An idle post SHALL not be listed until it is bumped or changed, under every option, and its lists SHALL not count toward its owner's matches (see Matches to the signed-in viewer). A person with no listed post SHALL not be listed. The feed SHALL load more people as the viewer scrolls, 12 at a time, each row holding all of that person's posts the feed keeps.
 
@@ -255,7 +255,7 @@ Browse SHALL list the viewer's own row, so they can see where a bump put them, w
 - **THEN** every person with a listed post is listed, with header sentences, list counts and rings, and no Matches or Compare with control shows
 
 #### Scenario: Own post on Browse
-- **WHEN** the viewer bumps their have list "spares" and opens `/trade`
+- **WHEN** the viewer bumps and opens `/trade`
 - **THEN** their row is listed at the top of Browse with no header sentence, and it is not listed on `/trade/for-you`
 
 #### Scenario: Held but not on a have list
@@ -319,30 +319,33 @@ Browse SHALL list the viewer's own row, so they can see where a bump put them, w
 - **THEN** rin.trades's row is not listed on Browse or For you for that viewer
 
 ### Requirement: Bump
-The owner of a post on Trade SHALL be able to bump it once every 24 hours. A bump moves the post to the top of the feed, and brings back an idle post. Bumping a paired post SHALL bump both of its lists. A bump within 24 hours of the post's last bump SHALL be refused, and the control SHALL show when the next bump is allowed. Only the owner SHALL be able to bump.
+A person with posts on Trade SHALL be able to bump once every 24 hours. A bump SHALL bump every one of their posts on Trade at once: it moves their row to the top of Browse and brings back every idle post. A bump within 24 hours of the person's last bump, counting a list turned on as a bump (see Order and idle posts) and lists since taken off Trade, SHALL be refused, and the control SHALL show when the next bump is allowed. Only the signed-in person SHALL be able to bump their own posts.
 
-#### Scenario: Bump moves the post up
-- **WHEN** the owner bumps a post last bumped 26 hours ago
-- **THEN** other viewers see it first on `/trade` on their next load, and the Bump control shows the next bump in 24 hours
+#### Scenario: Bump moves the row up
+- **WHEN** the owner, last bumped 26 hours ago, bumps
+- **THEN** other viewers see their row first on `/trade` on their next load, and the Bump control shows the next bump in 24 hours
+
+#### Scenario: Bump brings back every idle post
+- **WHEN** the owner has three posts, two of them idle, and bumps
+- **THEN** all three posts are listed, each bumped just now
 
 #### Scenario: Too soon
-- **WHEN** the owner tries to bump a post bumped 3 hours ago
-- **THEN** the bump is refused and the post keeps its place
+- **WHEN** the owner, last bumped 3 hours ago, tries to bump
+- **THEN** the bump is refused and their row keeps its place
 
 #### Scenario: Off and on again
-- **WHEN** the owner turns Show on Trade off and back on for a list bumped 3 hours ago
-- **THEN** the post keeps the bump time from 3 hours ago
+- **WHEN** the owner turns Show on Trade off and back on for a list, having bumped 3 hours ago
+- **THEN** the list keeps the bump time from 3 hours ago
 
-#### Scenario: Second half of a pair
-- **WHEN** have list "spares" is on Trade, bumped 3 hours ago, and the owner turns Show on Trade on for its linked want list
-- **THEN** the paired post keeps the bump time from 3 hours ago
+#### Scenario: New list within a day of a bump
+- **WHEN** the owner bumped 3 hours ago and turns Show on Trade on for want list "binary hunt"
+- **THEN** the list takes the bump time from 3 hours ago, and the owner's row keeps its place
 
 ### Requirement: Your posts and Post a list
-A signed-in viewer's own posts SHALL be summarised above the feed in one row: the title Your posts, how many of them are listed, how many are idle, and how many can be bumped now, with a control that shows or hides the posts. An idle post counts as one that can be bumped, since a bump brings it back. When every post can be bumped, the row SHALL read "all ready to bump" in place of the number, and when none can, it SHALL leave that part out. Shown, each entry SHALL show:
+A signed-in viewer's own posts SHALL be summarised above the feed in one row: the title Your posts, how many of them are listed, how many are idle, when the next bump is allowed while it is not, the one Bump control (see Bump), disabled until then, and a control that shows or hides the posts. Shown, each entry SHALL show:
 - the lists in the post;
 - whether the post is listed or idle;
-- when it was last bumped;
-- a Bump control.
+- when it was last bumped.
 
 With no choice saved in this browser, the posts SHALL start shown when any of them is idle, and hidden otherwise. Showing or hiding them SHALL be remembered in this browser, and that choice SHALL win over the default. A viewer with no posts SHALL see neither the row nor the posts.
 
@@ -351,16 +354,12 @@ A Post a list control SHALL open a dialog listing the viewer's have, want and sa
 A have or sale list not filed under a Cosmo profile cannot be on Trade, so its switch SHALL be disabled and say why. A signed-out visitor activating Post a list SHALL be sent to `/login?redirect=/trade`.
 
 #### Scenario: Summary of six posts
-- **WHEN** the viewer has six posts, one idle, and two can be bumped now
-- **THEN** the row reads Your posts with 5 listed, 1 idle and 2 ready to bump
+- **WHEN** the viewer has six posts, one idle, and last bumped 2 days ago
+- **THEN** the row reads Your posts with 5 listed and 1 idle, and its Bump control is enabled
 
-#### Scenario: Every post ready
-- **WHEN** the viewer has eight posts, seven listed and one idle, and all eight can be bumped now
-- **THEN** the row reads Your posts with 7 listed, 1 idle and all ready to bump
-
-#### Scenario: None ready
-- **WHEN** the viewer bumped all three of their posts an hour ago
-- **THEN** the row reads Your posts with 3 listed, and nothing about bumping
+#### Scenario: Bumped within the day
+- **WHEN** the viewer has three posts and bumped an hour ago
+- **THEN** the row reads Your posts with 3 listed and the next bump in 23 hours, and its Bump control is disabled
 
 #### Scenario: Starts hidden when nothing is idle
 - **WHEN** none of the viewer's posts is idle and they have never shown or hidden them

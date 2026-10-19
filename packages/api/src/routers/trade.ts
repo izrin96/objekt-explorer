@@ -8,7 +8,6 @@ import { authed, optionalAuthed, pub } from "../orpc";
 import {
   browseInputSchema,
   peopleInputSchema,
-  bumpInputSchema,
   collectionPostCountsInputSchema,
   forYouInputSchema,
   fullestFilter,
@@ -25,7 +24,7 @@ import { redis } from "../services/redis";
 import {
   browseFeed,
   peopleFeed,
-  bumpPost,
+  bumpPerson,
   collectionPostCounts,
   fetchMyPosts,
   setShowOnTrade,
@@ -55,9 +54,7 @@ export const tradeRouter = {
       peopleFeed(session?.user.id ?? null, input),
     ),
 
-  bump: authed
-    .input(bumpInputSchema)
-    .handler(async ({ input: { slug }, context: { session } }) => bumpPost(session.user.id, slug)),
+  bump: authed.handler(async ({ context: { session } }) => bumpPerson(session.user.id)),
 
   myPosts: authed.handler(async ({ context: { session } }) => fetchMyPosts(session.user.id)),
 

@@ -69,7 +69,7 @@ import { getCache } from "../redis";
 import { reputationOf } from "../reputation";
 import { notBlockedEither, notTradeSanctioned } from "../safety";
 import { marketVersion } from "../safety-cache";
-import { takesPartInTrade } from "../trade-lists";
+import { takesPartInTrade, takesPartInTradeSql } from "../trade-lists";
 import { resolveCompareSides, type Sides } from "../trade-matches";
 import { fetchAddresses } from "../trade-matches/holdings";
 import { getMutualPeople } from "../trade-matches/mutual";
@@ -686,19 +686,22 @@ async function fetchOwnTradeLists(userId: string) {
 
 export async function fetchMyPosts(userId: string) {
   const now = new Date();
-  const posts = pairPosts(await fetchOwnTradeLists(userId)).toSorted(comparePosts);
-  return posts.map((post) => ({
-    id: post.anchor.id,
-    slug: post.anchor.slug,
-    tag: post.tag,
-    lists: [post.have, post.want, post.sale].flatMap((list) =>
-      list ? [{ slug: list.slug, name: list.name, listTypeNew: list.listTypeNew }] : [],
-    ),
-    listed: !isPostIdle(post, now),
-    bumpedAt: iso(post.bumpedAt),
-    updatedAt: iso(post.updatedAt)!,
-    nextBumpAt: nextBumpAt(post.bumpedAt, now),
-  }));
+  const [own, lastBump] = await Promise.all([fetchOwnTradeLists(userId), lastBumpOf(userId)]);
+  const posts = pairPosts(own).toSorted(comparePosts);
+  return {
+    posts: posts.map((post) => ({
+      id: post.anchor.id,
+      slug: post.anchor.slug,
+      tag: post.tag,
+      lists: [post.have, post.want, post.sale].flatMap((list) =>
+        list ? [{ slug: list.slug, name: list.name, listTypeNew: list.listTypeNew }] : [],
+      ),
+      listed: !isPostIdle(post, now),
+      bumpedAt: iso(post.bumpedAt),
+      updatedAt: iso(post.updatedAt)!,
+    })),
+    nextBumpAt: nextBumpAt(lastBump, now),
+  };
 }
 
 type PostCardPost = NonNullable<PostCardView["post"]>;
@@ -818,52 +821,41 @@ export async function fetchPostCards(
   return result;
 }
 
+async function lastBumpOf(userId: string) {
+  const [row] = await db
+    .select({ at: sql<string | null>`max(${lists.bumpedAt})::text` })
+    .from(lists)
+    .where(eq(lists.userId, userId));
+  return row?.at ?? null;
+}
+
 /**
- * One statement: the post's lists are bumped together, or not at all. The row-level
- * cooldown check is what EvalPlanQual re-reads under a concurrent bump; the NOT EXISTS
- * covers the pair partner bumped more recently.
+ * One statement: every post on Trade is bumped together, or none. The row-level cooldown check is
+ * what EvalPlanQual re-reads under a concurrent bump; the NOT EXISTS covers the person's other
+ * lists, Trade or not, bumped more recently.
  */
-export async function bumpPost(userId: string, slug: string) {
-  const result = await db.execute<{ id: number; bumped_at: string }>(sql`
-    WITH target AS (
-      SELECT id, list_type_new, linked_list_id FROM lists
-      WHERE slug = ${slug} AND user_id = ${userId} AND discoverable
-    ),
-    members AS (
-      SELECT id FROM target
-      UNION
-      SELECT l.id FROM lists l, target t
-      WHERE l.discoverable AND l.user_id = ${userId}
-        AND (
-          (t.list_type_new = 'have' AND l.list_type_new = 'want' AND l.id = t.linked_list_id)
-          OR (t.list_type_new = 'want' AND l.list_type_new = 'have' AND l.linked_list_id = t.id)
-        )
-    )
+export async function bumpPerson(userId: string) {
+  const result = await db.execute<{ bumped_at: string }>(sql`
     UPDATE lists SET bumped_at = now()
-    WHERE id IN (SELECT id FROM members)
-      AND user_id = ${userId}
+    WHERE user_id = ${userId}
       AND discoverable
+      AND ${takesPartInTradeSql()}
       AND (bumped_at IS NULL OR bumped_at <= now() - make_interval(hours => ${BUMP_COOLDOWN_HOURS}))
       AND NOT EXISTS (
         SELECT 1 FROM lists x
-        WHERE x.id IN (SELECT id FROM members)
+        WHERE x.user_id = ${userId}
           AND x.bumped_at > now() - make_interval(hours => ${BUMP_COOLDOWN_HOURS})
       )
-    RETURNING id, bumped_at::text
+    RETURNING bumped_at::text
   `);
 
   const now = new Date();
   const bumped = latest(...result.rows.map((row) => row.bumped_at));
   if (bumped !== null) return { bumpedAt: iso(bumped)!, nextBumpAt: nextBumpAt(bumped, now) };
 
-  const own = await fetchOwnTradeLists(userId);
-  const post = pairPosts(own).find((p) =>
-    [p.have, p.want, p.sale].some((list) => list?.slug === slug),
-  );
-  if (!post) throw new ORPCError("NOT_FOUND");
-  throw new ORPCError("TOO_MANY_REQUESTS", {
-    data: { nextBumpAt: nextBumpAt(post.bumpedAt, now) },
-  });
+  const next = nextBumpAt(await lastBumpOf(userId), now);
+  if (next === null) throw new ORPCError("NOT_FOUND");
+  throw new ORPCError("TOO_MANY_REQUESTS", { data: { nextBumpAt: next } });
 }
 
 type ShowOnTradeRefusal = "not_tradeable" | "needs_profile";

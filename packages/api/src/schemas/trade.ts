@@ -170,8 +170,6 @@ export const mutualCountInputSchema = z.object({ list: z.string().min(1).optiona
 
 export const setShowOnTradeInputSchema = z.object({ slug: z.string(), on: z.boolean() });
 
-export const bumpInputSchema = z.object({ slug: z.string() });
-
 export const collectionPostCountsInputSchema = z.object({ slug: z.string() });
 
 /** `data.reason` on a trade partner search the list or mode can't serve. */

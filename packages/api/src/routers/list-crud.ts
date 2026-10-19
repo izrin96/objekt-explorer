@@ -200,7 +200,7 @@ export const listCrud = {
                 : false,
             linkedListId,
             ...(list.listTypeNew === "want" ? resolveOpenTo(list.listTypeNew, input, list) : {}),
-            ...tradeColumns(discoverable, linkedListId),
+            ...tradeColumns(discoverable),
           })
           .where(eq(lists.id, list.id));
 

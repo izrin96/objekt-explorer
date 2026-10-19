@@ -422,53 +422,31 @@ export function resolveDiscoverable(
 const bumpCutoff = sql`now() - make_interval(hours => ${BUMP_COOLDOWN_HOURS})`;
 
 /**
- * The bump time of the list linked to this one when that list is on Trade, so the two form
- * one post. `link` is the linked list id, or `lists.linked_list_id` of the row being updated.
+ * A person's last bump: the latest bump of any of their lists, on Trade or not, so turning a list
+ * off and on, or posting a new one, cannot stand in for Bump.
  */
-function partnerBumpedAt(link: SQL | number | null, type: SQL | ListTypeNew, userId: SQL | string) {
-  if (link === null) return sql`NULL::timestamptz`;
-  return sql`(
-    SELECT p.bumped_at FROM lists p
-    WHERE p.id = ${link} AND p.discoverable AND p.user_id = ${userId}
-      AND p.list_type_new IN ('have', 'want') AND p.list_type_new <> ${type}
-  )`;
+function personBumpedAt(userId: SQL | string) {
+  return sql`(SELECT max(p.bumped_at) FROM lists p WHERE p.user_id = ${userId})`;
 }
 
 /**
- * The bump time of a list turning Show on Trade on. It counts as a bump only once the post,
- * this list with its linked partner on Trade, is past the bump cooldown; within it the post
- * keeps its bump time, so turning Show on Trade off and on cannot stand in for Bump.
+ * The bump time of a list turning Show on Trade on, or created with it on: a bump of its own,
+ * unless its owner bumped in the last 24 hours, in which case it takes that bump's time.
  */
-function turnOnBumpedAt(own: SQL, partner: SQL) {
-  return sql`CASE
-    WHEN ${own} > ${bumpCutoff} THEN ${own}
-    WHEN ${partner} > ${bumpCutoff} THEN ${partner}
-    ELSE now()
-  END`;
+export function turnOnBumpedAt(userId: SQL | string) {
+  const last = personBumpedAt(userId);
+  return sql`CASE WHEN ${last} > ${bumpCutoff} THEN ${last} ELSE now() END`;
 }
 
-/** `bumpedAt` for a list created with Show on Trade on. */
-export function createdBumpedAt(linkedListId: number | null, type: ListTypeNew, userId: string) {
-  return turnOnBumpedAt(sql`NULL::timestamptz`, partnerBumpedAt(linkedListId, type, userId));
-}
-
-/**
- * The columns that put a list on or off Trade: turning it on from off counts as a bump. `link` is
- * the linked list id the write leaves in place (null for none); omitted, the stored one.
- */
-export function tradeColumns(on: boolean, link?: number | null) {
+/** The columns that put a list on or off Trade: turning it on from off counts as a bump. */
+export function tradeColumns(on: boolean) {
   if (!on) return { discoverable: false };
-  // raw names: inside the partner subquery a rendered column could bind to `p`
-  const partner = partnerBumpedAt(
-    link === undefined ? sql`lists.linked_list_id` : link,
-    sql`lists.list_type_new`,
-    sql`lists.user_id`,
-  );
   return {
     discoverable: true,
+    // raw name: inside the subquery a rendered column could bind to `p`
     bumpedAt: sql<string | null>`CASE
       WHEN lists.discoverable THEN lists.bumped_at
-      ELSE ${turnOnBumpedAt(sql`lists.bumped_at`, partner)}
+      ELSE ${turnOnBumpedAt(sql`lists.user_id`)}
     END`,
   };
 }
@@ -613,7 +591,7 @@ export async function writeList(tx: Tx, prepared: PreparedList) {
         input.listTypeNew === "sale" && input.currency ? normalizeCurrency(input.currency) : null,
       discoverable,
       ...resolveOpenTo(input.listTypeNew, input),
-      bumpedAt: discoverable ? createdBumpedAt(linkedListId, input.listTypeNew, userId) : null,
+      bumpedAt: discoverable ? turnOnBumpedAt(userId) : null,
     })
     .returning({ id: lists.id });
 

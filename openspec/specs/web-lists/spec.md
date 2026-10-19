@@ -108,7 +108,7 @@ The list form SHALL offer exactly one visibility switch on a have, want or sale 
 
 With it off the list SHALL be in none of these, except that a want list still alerts its owner to matches (see `web-notifications`). The form SHALL offer no other switch for them, and the switch's description SHALL name everything it turns on.
 - Where the switch cannot be on (a have or sale list not filed under a Cosmo profile), it SHALL be disabled and say why.
-- Turning the switch on SHALL count as a bump, unless the list's post was bumped in the last 24 hours, in which case it keeps that bump time.
+- Turning the switch on SHALL count as a bump of that list, unless its owner bumped in the last 24 hours, in which case it takes that bump's time (see `web-trade-browse` Bump).
 - Linking a have list and a want list SHALL turn the switch on for the newly linked list when the saved list's switch is on and the linked list can have it on. Saving a list whose link does not change SHALL leave its linked list's switch as it is, and saving a list SHALL never turn its linked list's switch off.
 
 #### Scenario: Turn on from the form
