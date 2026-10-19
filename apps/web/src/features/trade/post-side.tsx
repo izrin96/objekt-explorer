@@ -18,14 +18,12 @@ import { SlugTile, TILE } from "./thumb-grid";
 /** `w-10` and `gap-1.5`, in px */
 const FIT = { thumb: 40, gap: 6, fallback: 4, lines: 1 };
 
-/** monochrome on purpose: the class stripes stay the only colour in the grid */
-const RING = "ring-foreground ring-offset-card ring-2 ring-offset-2";
 /**
- * Drawn inside the artwork (its first child) by a pseudo-element, so the card's own
- * focus ring, a box-shadow on the same element, still shows on a ringed card.
+ * Monochrome on purpose: the class stripes stay the only colour in the grid. An outline, so the
+ * card's own focus ring (a box-shadow) still shows on a ringed card; a 1px offset keeps two
+ * ringed neighbours `gap-1.5` apart from overlapping, and the strip's `p-1` gives the edges room.
  */
-const CARD_RING =
-  "*:first:after:pointer-events-none *:first:after:absolute *:first:after:inset-0 *:first:after:rounded-photocard *:first:after:border-2 *:first:after:border-foreground *:first:after:shadow-[inset_0_0_0_2px_var(--color-card)]";
+const RING = "rounded-photocard outline-foreground outline-2 outline-offset-1";
 
 /** `ObjektCard`'s own count scales with the card, too small to read at `w-10` */
 const STACK_COUNT =
@@ -111,7 +109,7 @@ function PostStrip({
                   image="thumbnail"
                   hideLabel
                   onOpen={() => onOpen(collection)}
-                  className={item.ringed ? CARD_RING : undefined}
+                  className={item.ringed ? RING : undefined}
                   description={description}
                 />
               ) : (
