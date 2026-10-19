@@ -70,6 +70,9 @@ export function Feedback({ trade, name }: { trade: Trade; name: string }) {
           }}
         />
       </div>
+      {trade.rating && !rate.isPending && !error ? (
+        <p className="text-muted-foreground text-xs">{m.offer_rating_saved()}</p>
+      ) : null}
       <p role="alert" className="text-destructive-foreground text-xs empty:hidden">
         {error}
       </p>

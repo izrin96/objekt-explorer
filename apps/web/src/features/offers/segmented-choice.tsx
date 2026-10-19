@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 
 /**
  * One of a few, as radios (arrow keys move and pick), drawn like the neutral segmented Tabs
- * of For you's filter: no accent fill on the picked one.
+ * of For you's filter: no accent fill on the picked one, so it never reads as a button to press.
  */
 export function SegmentedChoice<T extends string>({
   label,
@@ -50,7 +50,7 @@ export function SegmentedChoice<T extends string>({
             variant === "muted" &&
               "hover:text-muted-foreground data-checked:bg-background data-checked:text-foreground dark:data-checked:bg-input rounded-md data-checked:shadow-sm/5",
             variant === "outline" &&
-              "border-foreground/40 text-foreground hover:bg-foreground/6 data-checked:border-foreground data-checked:bg-foreground data-checked:text-background gap-1.5 rounded-lg border bg-transparent [&_svg]:size-4 [&_svg]:shrink-0",
+              "border-foreground/40 text-foreground hover:bg-foreground/6 data-checked:border-foreground data-checked:bg-foreground/12 data-checked:ring-foreground gap-1.5 rounded-lg border bg-transparent data-checked:ring-1 [&_svg]:size-4 [&_svg]:shrink-0",
           )}
         >
           {option.icon}

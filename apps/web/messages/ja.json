@@ -1617,6 +1617,7 @@
   "offer_rating_closed": "この取引の評価は締め切られました。",
   "offer_rating_private": "表示されるのは合計だけで、個別の評価は誰にも見えません。",
   "offer_rating_error": "評価を保存できませんでした。もう一度お試しください。",
+  "offer_rating_saved": "保存しました。いつでも変更できます。",
   "offer_refused_not_completed": "評価できるのは完了した取引だけです。",
   "offer_refused_rating_closed": "この取引の評価は締め切られました。",
   "offer_refused_links_changed": "このオファーの承諾中に、連携しているCosmo IDが変更されました。もう一度お試しください。",

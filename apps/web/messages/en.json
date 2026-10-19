@@ -1617,6 +1617,7 @@
   "offer_rating_closed": "Feedback for this trade has closed.",
   "offer_rating_private": "Only totals are shown; nobody sees a single rating.",
   "offer_rating_error": "Couldn't save your rating. Try again.",
+  "offer_rating_saved": "Saved. You can change it anytime.",
   "offer_refused_not_completed": "Only a completed trade can be rated.",
   "offer_refused_rating_closed": "Feedback for this trade has closed.",
   "offer_refused_links_changed": "A linked Cosmo ID changed while this offer was being accepted. Try again.",

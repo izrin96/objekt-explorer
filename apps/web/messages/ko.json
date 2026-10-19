@@ -1617,6 +1617,7 @@
   "offer_rating_closed": "이 거래의 평가는 마감되었습니다.",
   "offer_rating_private": "합계만 표시되며 개별 평가는 아무도 볼 수 없습니다.",
   "offer_rating_error": "평가를 저장할 수 없습니다. 다시 시도하세요.",
+  "offer_rating_saved": "저장됨. 언제든 바꿀 수 있습니다.",
   "offer_refused_not_completed": "완료된 거래만 평가할 수 있습니다.",
   "offer_refused_rating_closed": "이 거래의 평가는 마감되었습니다.",
   "offer_refused_links_changed": "이 제안을 수락하는 동안 연결된 Cosmo ID가 변경되었습니다. 다시 시도해 주세요.",
