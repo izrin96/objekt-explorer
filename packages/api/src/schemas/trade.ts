@@ -32,8 +32,8 @@ export function filterFits(filter: TradeFilter, sides: { have: boolean; want: bo
 
 /**
  * A person's counts against the viewer's lists, in collections. A sale list counts only against a
- * want list open to buying. `trade*` leave sale lists out altogether and are no longer read; open
- * tabs may still.
+ * want list open to buying. `trade*` are the swap counts: have lists against want lists open to
+ * swaps, sale lists left out.
  */
 export type MatchCounts = {
   theyHave: number;
@@ -42,9 +42,9 @@ export type MatchCounts = {
   tradeYouHave: number;
 };
 
-/** The mutual score: the smaller of the two counts, sale lists included where buying can answer them. */
+/** The mutual score: what the two can swap, the smaller of the swap counts. A sale is not a swap. */
 export function mutualOf(counts: MatchCounts) {
-  return Math.min(counts.theyHave, counts.youHave);
+  return Math.min(counts.tradeTheyHave, counts.tradeYouHave);
 }
 
 /** Whether `filter` keeps a person with these counts: Mutual on the smaller count, the one-way views on each. */

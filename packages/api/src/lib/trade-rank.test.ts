@@ -23,6 +23,7 @@ import {
   rankPartners,
   recount,
   toPartnerIdentity,
+  toRanked,
 } from "./trade-rank";
 
 const NOW = new Date("2026-10-06T00:00:00Z");
@@ -83,24 +84,31 @@ describe("rankPartners", () => {
     ]);
   });
 
-  test("Mutual only keeps a partner whose matches are sale lists, and so do the one-way views", () => {
+  test("Mutual only drops a partner whose matches are sale lists; the one-way views keep them", () => {
     const sale = partner("S", 3, 2, RECENT, false);
     const swap = partner("T", 1, 1);
-    expect(order(rankPartners([sale, swap], "mutual", NOW).map((r) => r.partner))).toEqual([
-      "S",
-      "T",
-    ]);
+    expect(order(rankPartners([sale, swap], "mutual", NOW).map((r) => r.partner))).toEqual(["T"]);
     expect(order(rankPartners([sale], "they_have", NOW).map((r) => r.partner))).toEqual(["S"]);
     expect(order(rankPartners([sale], "they_want", NOW).map((r) => r.partner))).toEqual(["S"]);
   });
 
-  test("sale 3 ⇄ 2 ranks above swap 1 ⇄ 1", () => {
+  test("swap 1 ⇄ 1 ranks above sale 3 ⇄ 2: a sale is not a swap", () => {
     const ranked = rankPartners(
-      [partner("swap", 1, 1), partner("sale", 3, 2, RECENT, false)],
+      [partner("sale", 3, 2, RECENT, false), partner("swap", 1, 1)],
       "all",
       NOW,
     );
-    expect(order(ranked.map((r) => r.partner))).toEqual(["sale", "swap"]);
+    expect(order(ranked.map((r) => r.partner))).toEqual(["swap", "sale"]);
+  });
+
+  test("a sale list on top of a swap does not raise the mutual score", () => {
+    const both = {
+      ...partner("B", 1, 1),
+      theyHaveIWant: [...matches("h", 1), ...matches("s", 4, false)],
+    };
+    const ranked = toRanked(both);
+    expect(ranked.counts).toMatchObject({ theyHave: 5, tradeTheyHave: 1 });
+    expect(mutualRankOf(ranked).mutual).toBe(1);
   });
 
   test("cuts to the partner limit", () => {
@@ -259,7 +267,7 @@ describe("recount details", () => {
     ]);
   });
 
-  test("my sale list makes a person mutual only through a want list that takes buying", () => {
+  test("my sale list never makes a person mutual, whatever their want list takes", () => {
     const mutualFor = (matchSale: boolean) =>
       rankPartners(
         [
@@ -279,7 +287,7 @@ describe("recount details", () => {
         "mutual",
         NOW,
       ).length;
-    expect(mutualFor(true)).toBe(1);
+    expect(mutualFor(true)).toBe(0);
     expect(mutualFor(false)).toBe(0);
   });
 
@@ -769,6 +777,12 @@ describe("mutualPeople", () => {
   test("an idle person takes no place from an active one", () => {
     const people = mutualPeople([person("active", 1, 1), person("idle", 4, 4, IDLE)]);
     expect(order(people)).toEqual(["idle", "active"]);
+  });
+
+  test("a sale-only person both ways is one way, not mutual", () => {
+    const sale = toRanked(partner("sale", 3, 2, RECENT, false));
+    expect(mutualPeople([sale])).toEqual([]);
+    expect(order(oneWayPeople([sale]))).toEqual(["sale"]);
   });
 
   test("drops anyone who is not mutual", () => {

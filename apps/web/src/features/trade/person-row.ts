@@ -1,4 +1,4 @@
-import { mutualOf } from "@repo/api/schemas/trade";
+import { type MatchCounts, mutualOf } from "@repo/api/schemas/trade";
 
 type Match = { youHave: number; youWant: number };
 
@@ -31,14 +31,13 @@ export type HeaderSentence =
   | { kind: "none" };
 
 /**
- * One sentence about the person: what they and the viewer can swap, else what the viewer has
- * that they want, else what they have that the viewer wants. `theyHave` is A, `youHave` B.
+ * One sentence about the person: what they and the viewer can swap (have lists only), else what
+ * the viewer has that they want, else what they have that the viewer wants, sales included.
+ * `theyHave` is A, `youHave` B.
  */
-export function headerSentence(
-  counts: { theyHave: number; youHave: number } | undefined,
-): HeaderSentence {
+export function headerSentence(counts: MatchCounts | undefined): HeaderSentence {
   if (!counts) return { kind: "none" };
-  const mutual = mutualOf({ ...counts, tradeTheyHave: 0, tradeYouHave: 0 });
+  const mutual = mutualOf(counts);
   if (mutual > 0) return { kind: "swap", count: mutual };
   if (counts.youHave > 0) return { kind: "youHave", count: counts.youHave };
   if (counts.theyHave > 0) return { kind: "theyHave", count: counts.theyHave };

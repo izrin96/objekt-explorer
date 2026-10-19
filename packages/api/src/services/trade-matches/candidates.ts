@@ -9,14 +9,15 @@ import { offerMatchesWantSql, takesPartInTradeSql } from "../trade-lists";
 
 const HAVING: Record<TradeFilter, ReturnType<typeof sql>> = {
   all: sql``,
-  mutual: sql`HAVING count(*) FILTER (WHERE they_have) > 0 AND count(*) FILTER (WHERE NOT they_have) > 0`,
+  // Mutual is a swap, so only the swap counts can make it
+  mutual: sql`HAVING count(*) FILTER (WHERE they_have AND trade) > 0 AND count(*) FILTER (WHERE NOT they_have AND trade) > 0`,
   they_have: sql`HAVING count(*) FILTER (WHERE they_have) > 0`,
   they_want: sql`HAVING count(*) FILTER (WHERE NOT they_have) > 0`,
 };
 
 const ORDER: Record<TradeFilter | "sum", ReturnType<typeof sql>> = {
   all: sql`least(a, b) DESC, a + b DESC`,
-  mutual: sql`least(a, b) DESC, a + b DESC`,
+  mutual: sql`least(a_t, b_t) DESC, a + b DESC`,
   they_have: sql`a DESC`,
   they_want: sql`b DESC`,
   // One way's ranking (`oneWayRankOf`), so the cut keeps the people it ranks first
@@ -87,7 +88,8 @@ export async function fetchTradeCandidates(
       JOIN my_want w ON w.collection_slug = e.collection_slug
       WHERE p.list_type_new IN ('have', 'sale') AND ${offerMatchesWantSql("p", "w")}
       UNION ALL
-      SELECT p.user_id, p.id, p.updated_at, p.match_sale, p.match_have, false, h.on_have, e.collection_slug, NULL
+      SELECT p.user_id, p.id, p.updated_at, p.match_sale, p.match_have, false,
+        p.match_have AND h.on_have, e.collection_slug, NULL
       FROM partner_lists p
       JOIN list_entries e ON e.list_id = p.id
       JOIN my_have h ON h.collection_slug = e.collection_slug
@@ -98,6 +100,8 @@ export async function fetchTradeCandidates(
         user_id,
         count(DISTINCT collection_slug) FILTER (WHERE they_have) AS a,
         count(DISTINCT collection_slug) FILTER (WHERE NOT they_have) AS b,
+        count(DISTINCT collection_slug) FILTER (WHERE they_have AND trade) AS a_t,
+        count(DISTINCT collection_slug) FILTER (WHERE NOT they_have AND trade) AS b_t,
         coalesce(
           json_agg(json_build_object(
             'listId', list_id, 'slug', collection_slug, 'objektId', objekt_id, 'sale', NOT trade

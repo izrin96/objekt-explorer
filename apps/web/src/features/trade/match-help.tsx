@@ -13,7 +13,7 @@ type Table = {
   rows: { key: string; cells: (() => ReactNode)[] }[];
 };
 
-type Section = { heading: () => string; table: Table };
+type Section = { heading: () => string; table: Table; note?: () => string };
 
 const yes = () => <span className="text-success-foreground">{m.trade_help_yes()}</span>;
 const no = () => <span className="text-muted-foreground">{m.trade_help_no()}</span>;
@@ -68,20 +68,9 @@ const SECTIONS: Section[] = [
           key: "have-buying-only",
           cells: [m.trade_match_help_rules_have_list, m.list_create_match_buying_label, no],
         },
-        {
-          key: "sale-buying",
-          cells: [m.trade_browse_help_wts_list, m.list_create_match_both_label, yes],
-        },
-        {
-          key: "sale-buying-only",
-          cells: [m.trade_browse_help_wts_list, m.list_create_match_buying_label, yes],
-        },
-        {
-          key: "sale-swaps",
-          cells: [m.trade_browse_help_wts_list, m.list_create_match_swaps_label, no],
-        },
       ],
     },
+    note: m.trade_help_mutual_no_sale,
   },
 ];
 
@@ -152,6 +141,9 @@ export function MatchHelp() {
                 {section.heading()}
               </h3>
               <HelpTable table={section.table} />
+              {section.note ? (
+                <p className="text-muted-foreground text-xs text-pretty">{section.note()}</p>
+              ) : null}
             </section>
           ))}
           <ul className="list-outside list-disc space-y-1 ps-4 leading-5 text-pretty">

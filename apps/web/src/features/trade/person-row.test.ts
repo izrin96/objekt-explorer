@@ -37,26 +37,44 @@ describe("orderPosts", () => {
 });
 
 describe("headerSentence", () => {
+  /** counts where every match is a swap */
+  const swaps = (theyHave: number, youHave: number) => ({
+    theyHave,
+    youHave,
+    tradeTheyHave: theyHave,
+    tradeYouHave: youHave,
+  });
+
   test("swap when both ways match, by the smaller count", () => {
-    expect(headerSentence({ theyHave: 4, youHave: 2 })).toEqual({ kind: "swap", count: 2 });
+    expect(headerSentence(swaps(4, 2))).toEqual({ kind: "swap", count: 2 });
   });
 
   test("you have, when only the viewer's side matches", () => {
-    expect(headerSentence({ theyHave: 0, youHave: 3 })).toEqual({ kind: "youHave", count: 3 });
-    expect(headerSentence({ theyHave: 0, youHave: 1 })).toEqual({ kind: "youHave", count: 1 });
+    expect(headerSentence(swaps(0, 3))).toEqual({ kind: "youHave", count: 3 });
+    expect(headerSentence(swaps(0, 1))).toEqual({ kind: "youHave", count: 1 });
   });
 
   test("they have, when only their side matches", () => {
-    expect(headerSentence({ theyHave: 3, youHave: 0 })).toEqual({ kind: "theyHave", count: 3 });
-    expect(headerSentence({ theyHave: 1, youHave: 0 })).toEqual({ kind: "theyHave", count: 1 });
+    expect(headerSentence(swaps(3, 0))).toEqual({ kind: "theyHave", count: 3 });
+    expect(headerSentence(swaps(1, 0))).toEqual({ kind: "theyHave", count: 1 });
   });
 
   test("one each way is a swap of one", () => {
-    expect(headerSentence({ theyHave: 1, youHave: 1 })).toEqual({ kind: "swap", count: 1 });
+    expect(headerSentence(swaps(1, 1))).toEqual({ kind: "swap", count: 1 });
+  });
+
+  test("the swap counts set the score, a sale on top doesn't raise it", () => {
+    const counts = { theyHave: 5, youHave: 2, tradeTheyHave: 1, tradeYouHave: 2 };
+    expect(headerSentence(counts)).toEqual({ kind: "swap", count: 1 });
+  });
+
+  test("a sale-only person both ways is not a swap", () => {
+    const sale = { theyHave: 3, youHave: 1, tradeTheyHave: 0, tradeYouHave: 0 };
+    expect(headerSentence(sale)).toEqual({ kind: "youHave", count: 1 });
   });
 
   test("no match", () => {
-    expect(headerSentence({ theyHave: 0, youHave: 0 })).toEqual({ kind: "none" });
+    expect(headerSentence(swaps(0, 0))).toEqual({ kind: "none" });
     expect(headerSentence(undefined)).toEqual({ kind: "none" });
   });
 });

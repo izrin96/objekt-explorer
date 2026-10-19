@@ -37,13 +37,13 @@ describe("matchCounts", () => {
 });
 
 describe("mutual", () => {
-  test("the smaller of the two counts, sale lists included", () => {
-    expect(mutualOf({ theyHave: 3, youHave: 2, tradeTheyHave: 1, tradeYouHave: 2 })).toBe(2);
+  test("the smaller of the two swap counts, sale lists left out", () => {
+    expect(mutualOf({ theyHave: 3, youHave: 2, tradeTheyHave: 1, tradeYouHave: 2 })).toBe(1);
   });
 
-  test("a sale list answered by a buying want list counts toward mutual", () => {
+  test("a sale list answered by a buying want list is not mutual", () => {
     const sale = { theyHave: 3, youHave: 2, tradeTheyHave: 0, tradeYouHave: 0 };
-    expect(countsFit("mutual", sale)).toBe(true);
+    expect(countsFit("mutual", sale)).toBe(false);
   });
 
   test("a direction with no count, a sale list against a swaps-only want list, is not mutual", () => {

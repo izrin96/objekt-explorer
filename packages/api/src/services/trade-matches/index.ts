@@ -94,7 +94,7 @@ const PERSON_TTL_SECONDS = 60;
 export async function getTradeMatches(userId: string, sides: Sides, filter: TradeFilter) {
   const scope = await tradeCacheScope(userId);
   return getCache(
-    `trade:foryou:6:${userId}:${scope}:${filter}:${sides.listId ?? "all"}`,
+    `trade:foryou:7:${userId}:${scope}:${filter}:${sides.listId ?? "all"}`,
     CACHE_TTL_SECONDS,
     () => computeTradeMatches(userId, sides, filter),
   );
