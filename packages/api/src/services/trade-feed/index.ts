@@ -687,9 +687,11 @@ async function fetchOwnTradeLists(userId: string) {
 export async function fetchMyPosts(userId: string) {
   const now = new Date();
   const [own, lastBump] = await Promise.all([fetchOwnTradeLists(userId), lastBumpOf(userId)]);
-  const posts = pairPosts(own).toSorted(comparePosts);
-  return {
-    posts: posts.map((post) => ({
+  const next = nextBumpAt(lastBump, now);
+  // a list, as open tabs read it; every post carries the person's next bump
+  return pairPosts(own)
+    .toSorted(comparePosts)
+    .map((post) => ({
       id: post.anchor.id,
       slug: post.anchor.slug,
       tag: post.tag,
@@ -699,9 +701,8 @@ export async function fetchMyPosts(userId: string) {
       listed: !isPostIdle(post, now),
       bumpedAt: iso(post.bumpedAt),
       updatedAt: iso(post.updatedAt)!,
-    })),
-    nextBumpAt: nextBumpAt(lastBump, now),
-  };
+      nextBumpAt: next,
+    }));
 }
 
 type PostCardPost = NonNullable<PostCardView["post"]>;

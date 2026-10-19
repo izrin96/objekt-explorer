@@ -40,8 +40,10 @@ export function MyPosts() {
       </div>
     );
   }
-  const { posts, nextBumpAt } = query.data;
+  const posts = query.data;
   if (posts.length === 0) return null;
+  // every post carries the same next bump: Bump is one per person
+  const nextBumpAt = posts[0]?.nextBumpAt ?? null;
 
   const summary = summarizePosts(posts);
   // the server cannot read the saved choice, so the default holds until hydration
@@ -126,7 +128,7 @@ export function MyPosts() {
   );
 }
 
-type MyPost = Outputs["trade"]["myPosts"]["posts"][number];
+type MyPost = Outputs["trade"]["myPosts"][number];
 
 function MyPostRow({ post, now }: { post: MyPost; now: number }) {
   const { changed, time } = postTime(post);
