@@ -3,10 +3,7 @@ import { currencyRates } from "@repo/db/schema";
 
 import { getCache } from "./redis";
 
-/**
- * Fetch USD exchange rates from the database, cached in Redis for 1 hour.
- * Falls back to direct DB query if Redis is unavailable.
- */
+/** USD exchange rates from the database, cached for an hour; `getCache` reads the database when Redis is down. */
 export async function getUsdRates(): Promise<Record<string, number>> {
   const fetchRates = async () => {
     const rows = await db
@@ -16,10 +13,5 @@ export async function getUsdRates(): Promise<Record<string, number>> {
     return Object.fromEntries(rows.map((r) => [r.code, r.rate]));
   };
 
-  try {
-    return await getCache("currency-rates", 3600, fetchRates);
-  } catch {
-    console.warn("[rates] Redis unavailable, falling back to direct DB query");
-    return fetchRates();
-  }
+  return getCache("currency-rates", 3600, fetchRates);
 }

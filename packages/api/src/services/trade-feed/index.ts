@@ -418,10 +418,8 @@ export async function browseFeed(
   );
   const collectionRows = await fetchCollectionsBySlug(drawn, []);
 
-  // Mutual only keeps a snapshot too, for its order across pages
-  const byRank = plan.phases.includes("mutual") || plan.phases.includes("oneWay");
   let scope: string | undefined;
-  if (byRank && page.next && viewerId !== null) {
+  if (sectioned && page.next && viewerId !== null) {
     scope = scopeToken(seen);
     if (scope !== input.cursor?.scope) await saveScope(viewerId, scope, seen);
   }
@@ -437,8 +435,9 @@ export async function browseFeed(
     })),
     nextCursor: page.next && {
       ...page.next.last,
-      ...(sectioned ? { phase: page.next.phase === "bump" ? undefined : page.next.phase } : {}),
-      ...(scope ? { scope } : {}),
+      ...(sectioned
+        ? { phase: page.next.phase === "bump" ? undefined : page.next.phase, scope }
+        : {}),
     },
     collections: Object.fromEntries(collectionRows.map((c) => [c.slug, c])) as Record<
       string,

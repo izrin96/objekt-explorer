@@ -16,7 +16,8 @@ const HAVING: Record<TradeFilter, ReturnType<typeof sql>> = {
 };
 
 const ORDER: Record<TradeFilter | "sum", ReturnType<typeof sql>> = {
-  all: sql`least(a, b) DESC, a + b DESC`,
+  // `rankPartners` ranks on the swap score first, so the cut keeps the people it ranks first
+  all: sql`least(a_t, b_t) DESC, a + b DESC`,
   mutual: sql`least(a_t, b_t) DESC, a + b DESC`,
   they_have: sql`a DESC`,
   they_want: sql`b DESC`,

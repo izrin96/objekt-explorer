@@ -20,28 +20,49 @@ export function getCache<T>(key: string, ttl: Ttl<T>, callback: () => Promise<T>
   return pending;
 }
 
-/** A cache, so a Redis outage only costs the hit: the callback runs and its value is not kept. */
+/** Values kept in process while Redis is unreachable, as JSON so no caller shares a mutable copy. */
+const LOCAL_MAX_ENTRIES = 500;
+const local = new Map<string, { json: string; until: number }>();
+
+function keepLocally(key: string, json: string, ttlSeconds: number) {
+  local.delete(key);
+  local.set(key, { json, until: Date.now() + ttlSeconds * 1000 });
+  // a Map iterates in insertion order, so the first key is the oldest
+  if (local.size > LOCAL_MAX_ENTRIES) local.delete(local.keys().next().value!);
+}
+
+function readLocally(key: string): string | null {
+  const entry = local.get(key);
+  if (!entry) return null;
+  if (entry.until > Date.now()) return entry.json;
+  local.delete(key);
+  return null;
+}
+
+/**
+ * A cache, so a Redis outage costs only the shared hit: while Redis can't be read, values are
+ * kept in this process instead, so a cached upstream call (the Cosmo API, the indexer) still runs
+ * once per TTL per process rather than once per request.
+ */
 async function loadCache<T>(key: string, ttl: Ttl<T>, callback: () => Promise<T>): Promise<T> {
-  const cachedData = await redisFailOpen("cache", () => redis.get(key));
+  const read = await redisTry("cache", () => redis.get(key));
+  const cachedData = read.ok ? read.value : readLocally(key);
 
   if (cachedData) {
     try {
       return JSON.parse(cachedData) as T;
     } catch {
       // corrupted cache entry — drop it and fall through to refresh
+      local.delete(key);
       await redisFailOpen("cache", () => redis.del(key));
     }
   }
 
   const freshData = await callback();
-  await redisFailOpen("cache", () =>
-    redis.set(
-      key,
-      JSON.stringify(freshData),
-      "EX",
-      typeof ttl === "function" ? ttl(freshData) : ttl,
-    ),
-  );
+  const json = JSON.stringify(freshData);
+  const seconds = typeof ttl === "function" ? ttl(freshData) : ttl;
+  const written = await redisTry("cache", () => redis.set(key, json, "EX", seconds));
+  if (!written.ok) keepLocally(key, json, seconds);
   return freshData;
 }
 
@@ -77,25 +98,31 @@ const TIMED_OUT = Symbol("timed out");
 
 let connecting: Promise<void> | undefined;
 
+/** One attempt at a time, so an outage doesn't pile up a pending promise per call. */
+function connect() {
+  connecting ??= redis
+    .connect()
+    .catch(() => undefined)
+    .finally(() => {
+      connecting = undefined;
+    });
+}
+
+// the client connects only on its first command, and `redisTry` skips Redis until it is
+// connected, so without this the first requests after a deploy would all miss the cache
+connect();
+
+type Outcome<T> = { ok: true; value: T } | { ok: false };
+
 /**
- * `command`'s result, or null when Redis is down, slow or failing, for a read whose caller can
- * do without it. The client queues commands while disconnected and retries forever, so an
- * outage would hang the call rather than throw: skip it when down, and give up after a short
- * wait. It also connects only on its first command, so a skipped call starts that connection.
+ * `command`'s result, or `ok: false` when Redis is down, slow or failing. The client queues
+ * commands while disconnected and retries forever, so an outage would hang the call rather than
+ * throw: skip it when down (starting a reconnect), and give up after a short wait.
  */
-export async function redisFailOpen<T>(
-  scope: string,
-  command: () => Promise<T>,
-): Promise<T | null> {
+async function redisTry<T>(scope: string, command: () => Promise<T>): Promise<Outcome<T>> {
   if (!redis.connected) {
-    // one attempt at a time, so an outage doesn't pile up a pending promise per call
-    connecting ??= redis
-      .connect()
-      .catch(() => undefined)
-      .finally(() => {
-        connecting = undefined;
-      });
-    return null;
+    connect();
+    return { ok: false };
   }
   let timer: ReturnType<typeof setTimeout> | undefined;
   try {
@@ -107,15 +134,24 @@ export async function redisFailOpen<T>(
     ]);
     if (result === TIMED_OUT) {
       warnOnce(scope, `[redis] ${scope} timed out, going without it`);
-      return null;
+      return { ok: false };
     }
-    return result;
+    return { ok: true, value: result };
   } catch (error) {
     warnOnce(scope, `[redis] ${scope} unavailable, going without it:`, error);
-    return null;
+    return { ok: false };
   } finally {
     clearTimeout(timer);
   }
+}
+
+/** `command`'s result, or null when Redis is down, slow or failing, for a read its caller can do without. */
+export async function redisFailOpen<T>(
+  scope: string,
+  command: () => Promise<T>,
+): Promise<T | null> {
+  const outcome = await redisTry(scope, command);
+  return outcome.ok ? outcome.value : null;
 }
 
 const WARN_EVERY_MS = 60_000;
