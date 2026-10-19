@@ -3,6 +3,7 @@ import { type OpenToFlags, openToOf, pickByOpenTo } from "../schemas/open-to";
 import {
   type BrowseMatchMode,
   type FeedCursor,
+  type PeopleCursor,
   PREVIEW_LIMIT,
   SOLO_PREVIEW_LIMIT,
   type PostType,
@@ -290,7 +291,7 @@ export function isSectioned(phases: readonly FeedPhase[]) {
 export function feedPlan(
   mode: BrowseMatchMode,
   type: PostType,
-  cursor?: Partial<FeedCursor>,
+  cursor?: Partial<FeedCursor> | Partial<PeopleCursor>,
 ): FeedPlan {
   if (mode === "off") return { phases: ["bump"], mutualOwned: false };
   if (mode === "mutual") return { phases: ["mutual"], mutualOwned: false };
@@ -332,31 +333,45 @@ export function phaseScope(phase: FeedPhase, plan: FeedPlan, seen: SeenPeople) {
   };
 }
 
+/**
+ * What the people feed's phases leave out so that no person is listed twice: later phases skip
+ * every Mutual person the Mutual section lists, and the tail every One way person. `lead` is the
+ * person who opened the feed, listed first.
+ */
+export function peopleScope(phase: FeedPhase, seen: SeenPeople, lead?: string): string[] {
+  const owners = new Set<string>(lead ? [lead] : []);
+  if (phase === "oneWay" || phase === "tail") for (const id of seen.mutual) owners.add(id);
+  if (phase === "tail") for (const id of seen.oneWay) owners.add(id);
+  return [...owners];
+}
+
 /** What one phase gave a page: its posts, whether it has none left, and where it stopped. */
 export type PhaseRead<P, C> = { posts: P[]; dry: boolean; last: C | undefined };
 
 /**
- * Fills a page from `phases` in order. A phase that runs dry before the page is full hands the
- * rest to the next, in the same call, and a post one phase already gave is not taken again.
+ * Fills a page of `size` items (posts, or people) from `phases` in order. A phase that runs dry
+ * before the page is full hands the rest to the next, in the same call, and an item one phase
+ * already gave, by `keyOf`, is not taken again.
  * `next` names the phase the page stopped in and where, or is undefined once nothing is left:
  * a phase that ran dry exactly as the page filled still names itself when a later one remains,
  * and the next call finds it dry and moves on.
  */
-export async function fillPage<P extends { id: number }, C>(
+export async function fillPage<P, C>(
   phases: FeedPhase[],
   size: number,
   read: (phase: FeedPhase, need: number) => Promise<PhaseRead<P, C>>,
+  keyOf: (item: P) => string | number,
 ): Promise<{
   posts: (P & { phase: FeedPhase })[];
   next: { phase: FeedPhase; last: C } | undefined;
 }> {
   const posts: (P & { phase: FeedPhase })[] = [];
-  const seen = new Set<number>();
+  const seen = new Set<string | number>();
   for (const phase of phases) {
     const got = await read(phase, size - posts.length);
     for (const post of got.posts) {
-      if (seen.has(post.id)) continue;
-      seen.add(post.id);
+      if (seen.has(keyOf(post))) continue;
+      seen.add(keyOf(post));
       posts.push({ ...post, phase });
     }
     const more = !got.dry || (posts.length >= size && phaseAfter(phases, phase) !== null);

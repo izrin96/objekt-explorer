@@ -94,7 +94,7 @@ const PERSON_TTL_SECONDS = 60;
 export async function getTradeMatches(userId: string, sides: Sides, filter: TradeFilter) {
   const scope = await tradeCacheScope(userId);
   return getCache(
-    `trade:foryou:5:${userId}:${scope}:${filter}:${sides.listId ?? "all"}`,
+    `trade:foryou:6:${userId}:${scope}:${filter}:${sides.listId ?? "all"}`,
     CACHE_TTL_SECONDS,
     () => computeTradeMatches(userId, sides, filter),
   );
@@ -369,7 +369,7 @@ export async function personDetail(userId: string, personId: string, list: strin
   const sides = await resolveCompareSides(userId, list, false);
   const scope = await tradeCacheScope(userId);
   const detail = await getCache(
-    `trade:person:4:${userId}:${scope}:${sides.listId ?? "all"}:${personId}`,
+    `trade:person:5:${userId}:${scope}:${sides.listId ?? "all"}:${personId}`,
     PERSON_TTL_SECONDS,
     async () => {
       const now = new Date();

@@ -7,6 +7,7 @@ import { and, desc, eq, inArray } from "drizzle-orm";
 import { authed, optionalAuthed, pub } from "../orpc";
 import {
   browseInputSchema,
+  peopleInputSchema,
   bumpInputSchema,
   collectionPostCountsInputSchema,
   forYouInputSchema,
@@ -23,6 +24,7 @@ import { toPublicUser } from "../services/profile";
 import { redis } from "../services/redis";
 import {
   browseFeed,
+  peopleFeed,
   bumpPost,
   collectionPostCounts,
   fetchMyPosts,
@@ -44,6 +46,13 @@ export const tradeRouter = {
     .input(browseInputSchema)
     .handler(async ({ input, context: { session } }) =>
       browseFeed(session?.user.id ?? null, input),
+    ),
+
+  /** Public like `browse`: the feed as people, 12 a page, each with all of their posts. */
+  people: optionalAuthed
+    .input(peopleInputSchema)
+    .handler(async ({ input, context: { session } }) =>
+      peopleFeed(session?.user.id ?? null, input),
     ),
 
   bump: authed

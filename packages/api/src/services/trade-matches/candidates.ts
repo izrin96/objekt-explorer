@@ -4,6 +4,7 @@ import { sql } from "drizzle-orm";
 import { CANDIDATE_LIMIT, type Candidate, type TheyWant } from "../../lib/trade-rank";
 import type { TradeFilter } from "../../schemas/trade";
 import { notBlockedEither, notTradeSanctioned } from "../safety";
+import { listedPost, postsCte } from "../trade-feed/query";
 import { offerMatchesWantSql, takesPartInTradeSql } from "../trade-lists";
 
 const HAVING: Record<TradeFilter, ReturnType<typeof sql>> = {
@@ -38,7 +39,8 @@ export async function fetchTradeCandidates(
   ownerIds?: string[],
 ): Promise<Candidate[]> {
   const result = await db.execute<CandidateRow>(sql`
-    WITH my_want AS (
+    WITH ${postsCte},
+    my_want AS (
       SELECT e.collection_slug, bool_or(l.match_sale) AS match_sale, bool_or(l.match_have) AS match_have
       FROM list_entries e
       JOIN lists l ON l.id = e.list_id
@@ -58,6 +60,8 @@ export async function fetchTradeCandidates(
       WHERE l.discoverable
         AND ${takesPartInTradeSql("l")}
         AND l.user_id <> ${userId}
+        -- an idle list does not count: a pair's lists share the pair's freshness
+        AND EXISTS (SELECT 1 FROM posts WHERE l.id IN (posts.id, posts.partner_id) AND ${listedPost})
         ${ownerIds ? sql`AND l.user_id = ANY(${sql.param(ownerIds)}::text[])` : sql``}
         AND NOT EXISTS (
           SELECT 1 FROM hidden_trade_partner h

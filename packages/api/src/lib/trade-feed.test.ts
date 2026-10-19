@@ -18,6 +18,7 @@ import {
   nextBumpAt,
   pairPosts,
   phaseAfter,
+  peopleScope,
   phaseScope,
   previewSide,
   type TradeList,
@@ -626,6 +627,24 @@ describe("phaseScope", () => {
   });
 });
 
+describe("peopleScope", () => {
+  const seen = { mutual: ["m1", "m2"], oneWay: ["o1", "m1"] };
+
+  test("Mutual leaves out only the lead person", () => {
+    expect(peopleScope("mutual", seen)).toEqual([]);
+    expect(peopleScope("mutual", seen, "p")).toEqual(["p"]);
+  });
+
+  test("One way leaves out every Mutual person, the tail also every One way person", () => {
+    expect(peopleScope("oneWay", seen, "p")).toEqual(["p", "m1", "m2"]);
+    expect(peopleScope("tail", seen)).toEqual(["m1", "m2", "o1"]);
+  });
+
+  test("the plain bump order leaves out only the lead person", () => {
+    expect(peopleScope("bump", seen, "p")).toEqual(["p"]);
+  });
+});
+
 describe("a person's place changes between loads", () => {
   /** the posts of each person: p1 and p2 each have one WTT post */
   const wttPosts = new Map([
@@ -668,7 +687,29 @@ describe("a person's place changes between loads", () => {
   });
 });
 
+describe("fillPage by person", () => {
+  const people = (from: number, n: number) =>
+    Array.from({ length: n }, (_, i) => ({ userId: `u${from + i}` }));
+
+  test("counts people, lists none twice and hands a dry phase's rest on", async () => {
+    const page = await fillPage(
+      ["mutual", "oneWay", "tail"],
+      12,
+      async (phase) =>
+        phase === "mutual"
+          ? { posts: people(1, 5), dry: true, last: "u5" }
+          : { posts: [...people(3, 2), ...people(10, 20)].slice(0, 9), dry: false, last: "x" },
+      (person) => person.userId,
+    );
+    expect(page.posts).toHaveLength(12);
+    expect(new Set(page.posts.map((person) => person.userId)).size).toBe(12);
+    expect(page.posts.find((person) => person.userId === "u3")?.phase).toBe("mutual");
+    expect(page.next?.phase).toBe("oneWay");
+  });
+});
+
 describe("fillPage", () => {
+  const byId = (post: { id: number }) => post.id;
   const ids = (from: number, n: number) => Array.from({ length: n }, (_, i) => ({ id: from + i }));
 
   /** each phase's posts in order; a read takes up to `need` from where the phase stopped */
@@ -687,6 +728,7 @@ describe("fillPage", () => {
       ["mutual", "oneWay", "tail"],
       24,
       world({ mutual: ids(1, 10), oneWay: ids(100, 40) }),
+      byId,
     );
     expect(page.posts).toHaveLength(24);
     expect(page.posts.slice(0, 10).every((post) => post.phase === "mutual")).toBe(true);
@@ -699,13 +741,19 @@ describe("fillPage", () => {
       ["mutual", "oneWay", "tail"],
       24,
       world({ mutual: ids(1, 24), oneWay: ids(100, 5) }),
+      byId,
     );
     expect(page.posts).toHaveLength(24);
     expect(page.next).toEqual({ phase: "mutual", last: 24 });
   });
 
   test("a phase that ran dry empty is skipped", async () => {
-    const page = await fillPage(["mutual", "oneWay", "tail"], 24, world({ tail: ids(500, 30) }));
+    const page = await fillPage(
+      ["mutual", "oneWay", "tail"],
+      24,
+      world({ tail: ids(500, 30) }),
+      byId,
+    );
     expect(page.posts.map((post) => post.phase)).toEqual(Array(24).fill("tail"));
     expect(page.next).toEqual({ phase: "tail", last: 523 });
   });
@@ -715,20 +763,21 @@ describe("fillPage", () => {
       ["mutual", "oneWay", "tail"],
       24,
       world({ mutual: ids(1, 3), oneWay: ids(100, 2), tail: ids(500, 4) }),
+      byId,
     );
     expect(page.posts).toHaveLength(9);
     expect(page.next).toBeUndefined();
   });
 
   test("a full page ending as the last phase runs dry has no cursor", async () => {
-    const page = await fillPage(["tail"], 24, world({ tail: ids(1, 24) }));
+    const page = await fillPage(["tail"], 24, world({ tail: ids(1, 24) }), byId);
     expect(page.posts).toHaveLength(24);
     expect(page.next).toBeUndefined();
   });
 
   test("a short phase that is not dry stops the page where it is", async () => {
     const short = async () => ({ posts: ids(1, 5), dry: false, last: 5 });
-    const page = await fillPage(["oneWay", "tail"], 24, short);
+    const page = await fillPage(["oneWay", "tail"], 24, short, byId);
     expect(page.posts).toHaveLength(5);
     expect(page.next).toEqual({ phase: "oneWay", last: 5 });
   });
@@ -738,6 +787,7 @@ describe("fillPage", () => {
       ["mutual", "oneWay", "tail"],
       24,
       world({ mutual: ids(1, 3), oneWay: [...ids(2, 3), ...ids(10, 2)], tail: ids(3, 4) }),
+      byId,
     );
     const listed = page.posts.map((post) => post.id);
     expect(new Set(listed).size).toBe(listed.length);
@@ -747,10 +797,15 @@ describe("fillPage", () => {
   test("asks each phase only for what the page still needs", async () => {
     const needs: [FeedPhase, number][] = [];
     const read = world({ mutual: ids(1, 10), oneWay: ids(100, 40) });
-    await fillPage(["mutual", "oneWay", "tail"], 24, async (phase, need) => {
-      needs.push([phase, need]);
-      return read(phase, need);
-    });
+    await fillPage(
+      ["mutual", "oneWay", "tail"],
+      24,
+      async (phase, need) => {
+        needs.push([phase, need]);
+        return read(phase, need);
+      },
+      byId,
+    );
     expect(needs).toEqual([
       ["mutual", 24],
       ["oneWay", 14],

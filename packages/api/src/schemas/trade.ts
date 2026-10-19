@@ -132,6 +132,35 @@ export const browseInputSchema = browseFiltersSchema.extend({
   cursor: feedCursorSchema.optional(),
 });
 
+/**
+ * `trade.people` pages by person: `bumpedAt` and `userId` are the last person's newest bump and
+ * id, `lead` the `person` that opened the feed, which later pages keep leaving out. The other
+ * fields are `feedCursorSchema`'s.
+ */
+const peopleCursorSchema = z.object({
+  bumpedAt: z.iso.datetime({ offset: true }),
+  userId: z.string().min(1),
+  rank: mutualRankSchema.optional(),
+  phase: z.enum(FEED_PHASES).optional(),
+  oneWay: oneWayRankSchema.optional(),
+  scope: z.string().min(1).max(64).optional(),
+  lead: z.string().min(1).optional(),
+});
+export type PeopleCursor = z.infer<typeof peopleCursorSchema>;
+
+/** `person` is a user id whose row leads the first page. */
+export const peopleInputSchema = browseFiltersSchema.extend({
+  person: z.string().min(1).optional(),
+  cursor: peopleCursorSchema.optional(),
+});
+export type PeopleInput = z.infer<typeof peopleInputSchema>;
+
+/** people a page of `trade.people` holds */
+export const PEOPLE_PAGE_SIZE = 12;
+
+/** posts a person's row holds at most, which bounds a page */
+export const PERSON_POST_LIMIT = 20;
+
 export const personInputSchema = z.object({
   userId: z.string().min(1),
   list: z.string().min(1).optional(),

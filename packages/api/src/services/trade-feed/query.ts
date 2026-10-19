@@ -3,7 +3,7 @@ import { type SQL, sql } from "drizzle-orm";
 
 import { cursorScope, FEED_FETCH_SIZE, type MatchIndex, type PostTag } from "../../lib/trade-feed";
 import { IDLE_DAYS } from "../../lib/trade-rank";
-import type { PostType } from "../../schemas/trade";
+import { PERSON_POST_LIMIT, type PostType } from "../../schemas/trade";
 import { notBlockedEither, notTradeSanctioned } from "../safety";
 import { takesPartInTradeSql } from "../trade-lists";
 
@@ -177,4 +177,83 @@ export async function countFeedOwners(query: FeedQuery, ownerIds: string[]): Pro
     WHERE ${sql.join(where, sql` AND `)}
   `);
   return result.rows[0]?.n ?? 0;
+}
+
+/** The owners to leave out, as a predicate. */
+const withoutOwners = (ids: string[] | undefined): SQL[] =>
+  ids?.length ? [sql`NOT (posts.user_id = ANY(${sql.param(ids)}::text[]))`] : [];
+
+/**
+ * People with a kept post in the plain bump order, newest first: the order of Browse and the
+ * tail. A person's place is their newest kept post; the keyset `(bump, user id)` holds back
+ * everyone up to the last person shown.
+ */
+export async function fetchBumpPeople(
+  query: FeedQuery,
+  page: {
+    limit: number;
+    cursor?: { bumpedAt: string; userId: string };
+    excludeOwners?: string[];
+  },
+): Promise<{ user_id: string; cursor_at: string }[]> {
+  const where = [...feedWhere(query), ...withoutOwners(page.excludeOwners)];
+  const { cursor } = page;
+  const result = await db.execute<{ user_id: string; cursor_at: string }>(sql`
+    WITH ${postsCte}
+    SELECT posts.user_id, max(posts.bumped_at)::text AS cursor_at
+    FROM posts
+    WHERE ${sql.join(where, sql` AND `)}
+    GROUP BY posts.user_id
+    ${
+      cursor
+        ? sql`HAVING (max(posts.bumped_at), posts.user_id) < (${cursor.bumpedAt}::timestamptz, ${cursor.userId})`
+        : sql``
+    }
+    ORDER BY max(posts.bumped_at) DESC, posts.user_id DESC
+    LIMIT ${page.limit}
+  `);
+  return result.rows;
+}
+
+/** Which of `ownerIds` have at least one post the stage-1 predicates keep. */
+export async function fetchFeedOwners(query: FeedQuery, ownerIds: string[]): Promise<Set<string>> {
+  if (ownerIds.length === 0) return new Set();
+  const where = [...feedWhere(query), sql`posts.user_id = ANY(${sql.param(ownerIds)}::text[])`];
+  const result = await db.execute<{ user_id: string }>(sql`
+    WITH ${postsCte}
+    SELECT DISTINCT posts.user_id FROM posts
+    WHERE ${sql.join(where, sql` AND `)}
+  `);
+  return new Set(result.rows.map((row) => row.user_id));
+}
+
+/**
+ * Every kept post of `ownerIds`, newest bump first within each person, at most
+ * `PERSON_POST_LIMIT` a person. The people's order is the caller's.
+ */
+export async function fetchPersonRows(query: FeedQuery, ownerIds: string[]): Promise<FeedRow[]> {
+  if (ownerIds.length === 0) return [];
+  const where = [...feedWhere(query), sql`posts.user_id = ANY(${sql.param(ownerIds)}::text[])`];
+  const result = await db.execute<FeedRow>(sql`
+    WITH ${postsCte},
+    kept AS (
+      SELECT
+        posts.id,
+        posts.partner_id,
+        posts.user_id,
+        posts.bumped_at,
+        mp.allow AS message_allow,
+        row_number() OVER (
+          PARTITION BY posts.user_id ORDER BY posts.bumped_at DESC, posts.id DESC
+        ) AS place
+      FROM posts
+      LEFT JOIN message_pref mp ON mp.user_id = posts.user_id
+      WHERE ${sql.join(where, sql` AND `)}
+    )
+    SELECT id, partner_id, user_id, bumped_at::text AS cursor_at, message_allow
+    FROM kept
+    WHERE place <= ${PERSON_POST_LIMIT}
+    ORDER BY user_id, bumped_at DESC, id DESC
+  `);
+  return result.rows;
 }

@@ -29,6 +29,7 @@ import {
   narrowViewer,
   nextBumpAt,
   pairPosts,
+  peopleScope,
   type PhaseRead,
   phaseScope,
   previewSide,
@@ -47,7 +48,14 @@ import {
 import { unique } from "../../lib/unique";
 import type { PostCardView } from "../../schemas/chat";
 import type { ListTypeNew } from "../../schemas/list";
-import type { BrowseFilters, BrowseMatchMode, FeedCursor } from "../../schemas/trade";
+import {
+  type BrowseFilters,
+  type BrowseMatchMode,
+  type FeedCursor,
+  PEOPLE_PAGE_SIZE,
+  type PeopleCursor,
+  type PeopleInput,
+} from "../../schemas/trade";
 import { getCollectionFilters } from "../activity-feed";
 import {
   fetchCollectionsBySlug,
@@ -68,7 +76,16 @@ import { getMutualPeople } from "../trade-matches/mutual";
 import { getOneWayPeople } from "../trade-matches/one-way";
 import { type PersonMatch, personMatches } from "../trade-matches/person";
 import { type FeedList, feedListColumns, fetchPostEntries, fetchUntradeable } from "./entries";
-import { type FeedRow, fetchFeedRows, listedPost, postsCte } from "./query";
+import {
+  type FeedQuery,
+  type FeedRow,
+  fetchBumpPeople,
+  fetchFeedOwners,
+  fetchFeedRows,
+  fetchPersonRows,
+  listedPost,
+  postsCte,
+} from "./query";
 import { loadScope, saveScope, scopeToken } from "./scope";
 import { fetchViewer, hasTradeList } from "./viewer";
 
@@ -129,14 +146,14 @@ type PostRank = Pick<FeedCursor, "rank" | "oneWay">;
 /** The two phases that page by a ranking of people: who is ranked, where a cursor resumes, what it keeps. */
 const RANKED_PHASES = {
   mutual: {
-    people: (ctx: FeedContext) => ctx.mutual,
+    people: (ctx: Pick<FeedContext, "mutual" | "oneWay">) => ctx.mutual,
     rankOf: (person: Ranked[number]): PostRank => ({ rank: mutualRankOf(person) }),
-    resumeAt: (cursor: FeedCursor | undefined) => cursor?.rank,
+    resumeAt: (cursor: Pick<FeedCursor, "rank"> | undefined) => cursor?.rank,
   },
   oneWay: {
-    people: (ctx: FeedContext) => ctx.oneWay,
+    people: (ctx: Pick<FeedContext, "mutual" | "oneWay">) => ctx.oneWay,
     rankOf: (person: Ranked[number]): PostRank => ({ oneWay: oneWayRankOf(person) }),
-    resumeAt: (cursor: FeedCursor | undefined) => cursor?.oneWay,
+    resumeAt: (cursor: Pick<FeedCursor, "oneWay"> | undefined) => cursor?.oneWay,
   },
 } as const;
 
@@ -148,7 +165,11 @@ async function mutualPeopleOf(match: { userId: string; sides: Sides }) {
 }
 
 /** Stage 2: the posts of `rows`, up to `need`, with the viewer's rings and counts. */
-async function loadPosts(ctx: FeedContext, rows: FeedRow[], need: number) {
+type LoadContext = Pick<FeedContext, "viewerId" | "viewer" | "match" | "slugs"> & {
+  input: Pick<BrowseFilters, "slug">;
+};
+
+async function loadPosts(ctx: LoadContext, rows: FeedRow[], need: number) {
   const { viewerId, viewer, input, match, slugs } = ctx;
   const listIds = rows.flatMap((row) => (row.partner_id ? [row.id, row.partner_id] : [row.id]));
   const feedLists = await db.select(feedListColumns).from(lists).where(inArray(lists.id, listIds));
@@ -183,6 +204,8 @@ async function loadPosts(ctx: FeedContext, rows: FeedRow[], need: number) {
   // stage 2 fills only the rows the page still needs; the over-fetched rest is read only
   // when ownership empties posts and the page comes up short
   const posts = [];
+  // each owner's lists with the matches of the posts shown, to head the person
+  const identityLists = new Map<string, { profileAddress: string | null; matches: number }[]>();
   let last: FeedRow | undefined;
   let examined = 0;
   while (posts.length < need && examined < rows.length) {
@@ -206,6 +229,11 @@ async function loadPosts(ctx: FeedContext, rows: FeedRow[], need: number) {
       if (!assembled) continue;
       // SQL can't see that an owner sold the only matching objekt
       if (match && !matchesViewer(assembled.match)) continue;
+
+      const matches = assembled.match ? assembled.match.youHave + assembled.match.youWant : 0;
+      const owned = identityLists.get(account.id) ?? [];
+      owned.push(...members.map((list) => ({ profileAddress: list.profileAddress, matches })));
+      identityLists.set(account.id, owned);
 
       posts.push({
         id: post.anchor.id,
@@ -236,7 +264,17 @@ async function loadPosts(ctx: FeedContext, rows: FeedRow[], need: number) {
       });
     }
   }
-  return { posts, last, examined };
+  const identities = new Map(
+    [...identityLists].map(([ownerId, owned]) => [
+      ownerId,
+      toPartnerIdentity(
+        userMap.get(ownerId)!.name,
+        owned,
+        addressRows.filter((a) => a.userId === ownerId),
+      ),
+    ]),
+  );
+  return { posts, last, examined, identities };
 }
 
 type PostRows = Awaited<ReturnType<typeof loadPosts>>["posts"];
@@ -289,19 +327,15 @@ async function readPhase(
   };
 }
 
-export async function browseFeed(
-  viewerId: string | null,
-  input: BrowseFilters & { cursor?: FeedCursor },
-) {
+/** The viewer's side of a feed read, or null when nothing can be listed. */
+async function resolveFeed(viewerId: string | null, input: BrowseFilters) {
   const mode = browseMode(input);
   const [viewer, slugs, takesPart] = await Promise.all([
     viewerId === null ? null : fetchViewer(viewerId),
     resolveFilterSlugs(input),
     viewerId !== null && mode !== "off" ? hasTradeList(viewerId) : false,
   ]);
-
-  const empty = { posts: [], nextCursor: undefined, collections: {} };
-  if (slugs?.length === 0) return empty;
+  if (slugs?.length === 0) return null;
 
   // the control shows on the same test, so a stale `match` from a viewer with no list on
   // Trade lists every post; a list that matches nothing yet empties the feed
@@ -309,9 +343,20 @@ export async function browseFeed(
   if (takesPart && viewer !== null && viewerId !== null) {
     const sides = await resolveCompareSides(viewerId, input.list, mode === "mutual");
     const compared = narrowViewer(viewer, sides);
-    if (compared.have.size === 0 && compared.want.size === 0) return empty;
+    if (compared.have.size === 0 && compared.want.size === 0) return null;
     match = { userId: viewerId, sides, compared };
   }
+  return { mode, viewer, slugs, match };
+}
+
+export async function browseFeed(
+  viewerId: string | null,
+  input: BrowseFilters & { cursor?: FeedCursor },
+) {
+  const empty = { posts: [], nextCursor: undefined, collections: {} };
+  const resolved = await resolveFeed(viewerId, input);
+  if (!resolved) return empty;
+  const { mode, viewer, slugs, match } = resolved;
 
   const plan = feedPlan(match ? mode : "off", input.type, input.cursor);
   const sectioned = isSectioned(plan.phases);
@@ -337,8 +382,11 @@ export async function browseFeed(
     oneWay,
     seen,
   };
-  const page = await fillPage(plan.phases, FEED_PAGE_SIZE, (phase, need) =>
-    readPhase(ctx, phase, need),
+  const page = await fillPage(
+    plan.phases,
+    FEED_PAGE_SIZE,
+    (phase, need) => readPhase(ctx, phase, need),
+    (post) => post.id,
   );
 
   const drawn = unique(
@@ -366,6 +414,261 @@ export async function browseFeed(
       ...(sectioned
         ? { phase: page.next.phase === "bump" ? undefined : page.next.phase, scope }
         : {}),
+    },
+    collections: Object.fromEntries(collectionRows.map((c) => [c.slug, c])) as Record<
+      string,
+      ValidObjekt
+    >,
+  };
+}
+
+type PersonPosts = Awaited<ReturnType<typeof loadPosts>>["posts"];
+
+/** A person's row and the newest bump among its posts, which a cursor resumes from. */
+type Loaded = {
+  person: {
+    userId: string;
+    identity: ReturnType<typeof toPartnerIdentity>;
+    user: PersonPosts[number]["user"];
+    reputation: PersonPosts[number]["reputation"];
+    messageable: boolean;
+    counts: PersonMatch["counts"] | undefined;
+    posts: Omit<
+      PersonPosts[number],
+      "userId" | "user" | "reputation" | "identity" | "person" | "messageable"
+    >[];
+  };
+  newest: string;
+};
+
+type PeopleContext = LoadContext &
+  Pick<FeedContext, "mode" | "plan" | "mutual" | "oneWay" | "seen"> & {
+    input: PeopleInput;
+    /** the `person` whose row leads the feed, left out of every phase */
+    lead: string | undefined;
+  };
+
+/** The listed people's rows, in `ids` order; a person whose posts all emptied is left out. */
+async function loadPeople(ctx: LoadContext, query: FeedQuery, ids: string[]): Promise<Loaded[]> {
+  const rows = await fetchPersonRows(query, ids);
+  const { posts, identities } = await loadPosts(ctx, rows, rows.length);
+  const atOf = new Map(rows.map((row) => [row.id, row.cursor_at]));
+  const byUser = Map.groupBy(posts, (post) => post.userId);
+  return ids.flatMap((id): Loaded[] => {
+    const group = byUser.get(id);
+    const first = group?.[0];
+    if (!group || !first) return [];
+    const newest = group.map((post) => atOf.get(post.id)!).reduce((a, b) => (b > a ? b : a));
+    return [
+      {
+        newest,
+        person: {
+          userId: id,
+          identity: identities.get(id) ?? first.identity,
+          user: first.user,
+          reputation: first.reputation,
+          messageable: first.messageable,
+          counts: first.person?.counts,
+          posts: group.map(
+            ({ userId, user, reputation, identity, person, messageable, ...post }) => post,
+          ),
+        },
+      },
+    ];
+  });
+}
+
+type PeopleLast = Pick<PeopleCursor, "bumpedAt" | "userId" | "rank" | "oneWay">;
+
+/** The stage-1 predicates of a people read; Mutual only and the Mutual section read WTT posts. */
+function feedQueryOf(
+  ctx: Pick<PeopleContext, "viewerId" | "input" | "slugs" | "match">,
+  type: FeedQuery["type"],
+): FeedQuery {
+  return {
+    viewerId: ctx.viewerId,
+    type,
+    slugs: ctx.slugs,
+    slug: ctx.input.slug ?? null,
+    matches: ctx.match ? matchIndexOf(ctx.match.compared) : null,
+  };
+}
+
+/** One phase's share of a page of people, whole rows. */
+async function readPeoplePhase(
+  ctx: PeopleContext,
+  phase: FeedPhase,
+  need: number,
+): Promise<PhaseRead<Loaded, PeopleLast>> {
+  const { input, mode, plan } = ctx;
+  const cursor = phase === plan.phases[0] ? input.cursor : undefined;
+  // Mutual is a swap between two people, so under Mutual only it lists WTT posts
+  const query = feedQueryOf(ctx, mode === "mutual" ? "wtt" : input.type);
+  const exclude = peopleScope(phase, ctx.seen, ctx.lead);
+  // each read asks only for the room left, so no loaded row is thrown away; a person whose
+  // posts all emptied in stage 2 is made up by the next read
+  const taken: Loaded[] = [];
+
+  if (phase === "bump" || phase === "tail") {
+    const bumpOf = new Map<string, string>();
+    let after = cursor && { bumpedAt: cursor.bumpedAt, userId: cursor.userId };
+    let exhausted = false;
+    while (taken.length < need && !exhausted) {
+      const limit = need - taken.length;
+      const found = await fetchBumpPeople(query, { limit, cursor: after, excludeOwners: exclude });
+      exhausted = found.length < limit;
+      for (const row of found) bumpOf.set(row.user_id, row.cursor_at);
+      const loaded = await loadPeople(
+        ctx,
+        query,
+        found.map((row) => row.user_id),
+      );
+      taken.push(...loaded);
+      const lastFound = found.at(-1);
+      if (lastFound) after = { bumpedAt: iso(lastFound.cursor_at)!, userId: lastFound.user_id };
+    }
+    const lastTaken = taken.at(-1);
+    return {
+      posts: taken,
+      dry: exhausted,
+      last: lastTaken && {
+        bumpedAt: iso(bumpOf.get(lastTaken.person.userId) ?? null)!,
+        userId: lastTaken.person.userId,
+      },
+    };
+  }
+
+  const spec = RANKED_PHASES[phase];
+  const skip = new Set(exclude);
+  const ordered = spec.people(ctx).filter((person) => !skip.has(person.userId));
+  const rankOf = new Map(ordered.map((person) => [person.userId, spec.rankOf(person)]));
+  const resumed = spec.resumeAt(cursor);
+  // a person is listed whole, so the cursor's own person is behind it
+  const remaining = (resumed ? peopleAfter(ordered, resumed) : ordered).filter(
+    (person) => person.userId !== resumed?.userId,
+  );
+  // the Mutual people were checked for a kept WTT post; One way's are checked here, once
+  const kept =
+    phase === "mutual"
+      ? null
+      : await fetchFeedOwners(
+          query,
+          remaining.map((person) => person.userId),
+        );
+  const eligible = remaining.filter((person) => !kept || kept.has(person.userId));
+
+  let index = 0;
+  while (taken.length < need && index < eligible.length) {
+    const batch = eligible.slice(index, index + need - taken.length);
+    index += batch.length;
+    const loaded = await loadPeople(
+      ctx,
+      query,
+      batch.map((person) => person.userId),
+    );
+    taken.push(...loaded);
+  }
+  const lastTaken = taken.at(-1);
+  return {
+    posts: taken,
+    dry: index >= eligible.length,
+    last: lastTaken && {
+      bumpedAt: iso(lastTaken.newest)!,
+      userId: lastTaken.person.userId,
+      ...rankOf.get(lastTaken.person.userId),
+    },
+  };
+}
+
+/**
+ * Trade as people: 12 a page, each with every post the feed keeps for them (up to
+ * `PERSON_POST_LIMIT`). The phases and their order are `browseFeed`'s; a person sits in one
+ * section, and `person` leads the first page with that person's row.
+ */
+export async function peopleFeed(viewerId: string | null, input: PeopleInput) {
+  const empty = { people: [], nextCursor: undefined, collections: {} };
+  const resolved = await resolveFeed(viewerId, input);
+  if (!resolved) return empty;
+  const { mode, viewer, slugs, match } = resolved;
+
+  const lead = input.cursor ? input.cursor.lead : input.person;
+  const plan = feedPlan(match ? mode : "off", input.type, input.cursor);
+  const sectioned = isSectioned(plan.phases);
+  const [ranked, oneWay, snapshot] = await Promise.all([
+    match && (plan.mutualOwned || plan.phases.includes("mutual")) ? mutualPeopleOf(match) : [],
+    match && sectioned ? getOneWayPeople(match.userId, match.sides) : [],
+    viewerId !== null && input.cursor?.scope ? loadScope(viewerId, input.cursor.scope) : undefined,
+  ]);
+  // only a Mutual person with a kept WTT post is in the Mutual section; the rest are One way
+  const keptWtt = await fetchFeedOwners(
+    feedQueryOf({ viewerId, input, slugs, match }, "wtt"),
+    ranked.map((person) => person.userId),
+  );
+  const mutual = ranked.filter((person) => keptWtt.has(person.userId));
+  const seen = mergeSeen(snapshot, {
+    mutual: mutual.map((person) => person.userId),
+    oneWay: oneWay.map((person) => person.userId),
+  });
+
+  const ctx: PeopleContext = {
+    viewerId,
+    viewer,
+    input,
+    mode,
+    slugs,
+    match,
+    plan,
+    mutual,
+    oneWay,
+    seen,
+    lead,
+  };
+
+  // a person the feed would not list, or that Mutual only does not, has no row to lead with
+  const led =
+    lead && !input.cursor && (mode !== "mutual" || mutual.some((person) => person.userId === lead))
+      ? (await loadPeople(ctx, feedQueryOf(ctx, mode === "mutual" ? "wtt" : input.type), [lead]))[0]
+      : undefined;
+
+  const page = await fillPage(
+    plan.phases,
+    PEOPLE_PAGE_SIZE,
+    (phase, need) => readPeoplePhase(ctx, phase, need),
+    (loaded) => loaded.person.userId,
+  );
+
+  const people = [
+    ...(led ? [{ ...led.person, section: undefined }] : []),
+    ...page.posts.map(({ phase, person }) => ({
+      ...person,
+      section: sectioned
+        ? phase === "mutual"
+          ? ("mutual" as const)
+          : ("oneWay" as const)
+        : undefined,
+    })),
+  ];
+  const drawn = unique(
+    people.flatMap((person) =>
+      person.posts.flatMap((post) => post.sides.flatMap((s) => s.items.map((i) => i.slug))),
+    ),
+  );
+  const collectionRows = await fetchCollectionsBySlug(drawn, []);
+
+  let scope: string | undefined;
+  if (sectioned && page.next && viewerId !== null) {
+    scope = scopeToken(seen);
+    if (scope !== input.cursor?.scope) await saveScope(viewerId, scope, seen);
+  }
+
+  return {
+    people,
+    nextCursor: page.next && {
+      ...page.next.last,
+      ...(sectioned
+        ? { phase: page.next.phase === "bump" ? undefined : page.next.phase, scope }
+        : {}),
+      lead,
     },
     collections: Object.fromEntries(collectionRows.map((c) => [c.slug, c])) as Record<
       string,

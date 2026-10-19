@@ -15,7 +15,7 @@ const PEOPLE_TTL_SECONDS = 300;
 export async function getMutualPeople(userId: string, sides: Sides) {
   const scope = await tradeCacheScope(userId);
   return getCache(
-    `trade:mutual-people:3:${userId}:${scope}:${sides.listId ?? "all"}`,
+    `trade:mutual-people:4:${userId}:${scope}:${sides.listId ?? "all"}`,
     PEOPLE_TTL_SECONDS,
     async () => {
       const { recounted } = await recountPartners(userId, sides, "mutual");
@@ -33,7 +33,7 @@ export async function mutualCount(userId: string, list: string | undefined) {
   if (sides.haveListIds.length === 0 || sides.wantListIds.length === 0) return 0;
   const scope = await tradeCacheScope(userId);
   return getCache(
-    `trade:mutual-count:4:${userId}:${scope}:${sides.listId ?? "all"}`,
+    `trade:mutual-count:5:${userId}:${scope}:${sides.listId ?? "all"}`,
     COUNT_TTL_SECONDS,
     async () => {
       const [mutual, viewer] = await Promise.all([
