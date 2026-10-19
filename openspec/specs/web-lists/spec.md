@@ -170,7 +170,7 @@ A want list SHALL carry an **Open to** choice, set when it is created or edited 
 - **Buying only**: it matches entries on sale lists only.
 
 Have, sale and general lists carry no choice. A have list's entry SHALL count against a want list only when that want list is open to swaps (Swaps only, or Swaps or buying). A sale list's entry SHALL count against a want list only when that want list is open to buying (Swaps or buying, or Buying only). Linking a have list and a want list SHALL NOT change what either list matches. This applies wherever Trade matches a want list against a have or sale list:
-- Browse match counts, in both directions, and the person sheet;
+- Trade match counts on Browse and For you, in both directions;
 - Matches Any and Mutual, and Mutual N;
 - want-list alerts and "Someone wants what you have" alerts.
 
@@ -192,7 +192,7 @@ The list page header and the list card SHALL name a want list's choice.
 
 #### Scenario: Buying only skips a have list
 - **WHEN** the user's want list is set to Buying only, and a partner's have list holds a collection on it
-- **THEN** that collection does not count toward the partner on Browse or in the person sheet, and no want-list alert is sent for it
+- **THEN** that collection does not count toward the partner on Browse or For you, and no want-list alert is sent for it
 
 #### Scenario: Buying only takes a sale list
 - **WHEN** the same want list holds a collection that a partner's sale list holds

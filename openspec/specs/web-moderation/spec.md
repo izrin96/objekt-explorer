@@ -6,7 +6,7 @@ Safety for chat and trading on `apps/web`. Users can block and report. Moderator
 ## Requirements
 
 ### Requirement: Block a user
-A signed-in user SHALL be able to block another account from a conversation's menu, a profile, a Trade post or a person sheet (see `web-trade-for-you`). While the block lasts:
+A signed-in user SHALL be able to block another account from a conversation's menu, a profile, or a person's row on Trade (see `web-trade-browse`). While the block lasts:
 - the blocked account SHALL not be able to start a conversation with the blocker or send messages in their conversation, and SHALL not be told why (the refusal reads the same as "this user isn't accepting messages");
 - the conversation SHALL leave the blocker's Inbox, Requests and badge;
 - the blocked account's posts SHALL leave the blocker's Trade feed and matches;
