@@ -20,10 +20,6 @@ console.log(
 );
 
 const processor = new EvmBatchProcessor()
-  .setGateway({
-    url: env.SQD_ENDPOINT,
-    apiKey: env.SQD_API_KEY,
-  })
   .setRpcEndpoint({
     url: env.RPC_ENDPOINT,
     rateLimit: env.RPC_RATE_LIMIT,
@@ -41,6 +37,13 @@ const processor = new EvmBatchProcessor()
     },
   })
   .setFinalityConfirmation(env.RPC_FINALITY);
+
+if (env.SQD_ENDPOINT) {
+  processor.setGateway({
+    url: env.SQD_ENDPOINT,
+    apiKey: env.SQD_API_KEY,
+  });
+}
 
 processor
   // objekt transfers

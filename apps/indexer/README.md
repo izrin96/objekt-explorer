@@ -10,6 +10,7 @@ Forked from [teamreflex/cosmo-web/apps/indexer](https://github.com/teamreflex/co
 
 - Runs on Bun: `tsc` compiles to CommonJS in `lib/` and `bun lib/main.js` runs it. Running `src/` directly fails, since Bun loads it as ESM and the generated models' circular decorator metadata throws
 - Patches `@subsquid/http-client` to drop `compress: true`, which makes Bun's fetch gzip request bodies the SQD gateway cannot read
+- The SQD gateway is optional: with `SQD_ENDPOINT` unset the processor ingests every block over RPC. The v2 archive is being shut down and SQD Portal has no Abstract dataset, so a resync from `START_BLOCK` runs at RPC speed
 
 ### Database
 

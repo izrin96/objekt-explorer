@@ -4,8 +4,10 @@ const envSchema = z.object({
   RPC_RATE_LIMIT: z.coerce.number().positive().default(2),
   RPC_FINALITY: z.coerce.number().positive().default(60),
   RPC_ENDPOINT: z.url(),
-  SQD_ENDPOINT: z.url(),
-  SQD_API_KEY: z.string(),
+  // optional: unset or empty reads every block from RPC_ENDPOINT. The v2 archive
+  // is being shut down and SQD Portal has no Abstract dataset.
+  SQD_ENDPOINT: z.preprocess((x) => (x === "" ? undefined : x), z.url().optional()),
+  SQD_API_KEY: z.string().optional(),
   ENABLE_OBJEKTS: z.preprocess((x) => x === "true", z.coerce.boolean()),
   ENABLE_GRAVITY: z.preprocess((x) => x === "true", z.coerce.boolean()),
   COSMO_PARALLEL_COUNT: z.coerce.number().positive().default(500),
