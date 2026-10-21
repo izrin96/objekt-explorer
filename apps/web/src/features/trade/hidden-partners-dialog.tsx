@@ -77,7 +77,14 @@ export function HiddenPartnersList({ enabled }: { enabled: boolean }) {
   }
 
   if (query.data.length === 0) {
-    return <EmptyState bordered={false} icon={EyeIcon} title={m.trade_hidden_partners_empty()} />;
+    return (
+      <EmptyState
+        bordered={false}
+        icon={EyeIcon}
+        title={m.trade_hidden_partners_empty()}
+        hint={m.trade_hidden_partners_empty_hint()}
+      />
+    );
   }
 
   return (

@@ -206,6 +206,7 @@
   "trade_hidden_partners_description": "非表示にした人は取引、マッチ通知、リストの件数に表示されません。",
   "trade_browse_hidden_note": "非表示にした人の投稿は表示されません。",
   "trade_hidden_partners_empty": "非表示の人はいません",
+  "trade_hidden_partners_empty_hint": "取引の投稿の ··· メニューで「非表示」を選ぶと、その人を非表示にできます。",
   "trade_matches_link_label": "マッチを探す：相互の相手{count}人",
   "list_create_button": "リストを作成",
   "list_no_lists_found": "リストはまだありません",

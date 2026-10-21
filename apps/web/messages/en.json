@@ -206,6 +206,7 @@
   "trade_hidden_partners_description": "People you hide don't appear in Trade, your match notifications or your lists' counts.",
   "trade_browse_hidden_note": "Posts from people you hid aren't shown.",
   "trade_hidden_partners_empty": "No one is hidden",
+  "trade_hidden_partners_empty_hint": "To hide someone, choose Hide in the ··· menu on their Trade post.",
   "trade_matches_link_label": "Find matches: {count} mutual people",
   "list_create_button": "Create list",
   "list_no_lists_found": "No lists yet",

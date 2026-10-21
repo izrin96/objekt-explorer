@@ -206,6 +206,7 @@
   "trade_hidden_partners_description": "숨긴 사람은 거래, 매칭 알림, 목록 개수에 표시되지 않습니다.",
   "trade_browse_hidden_note": "숨긴 사람의 게시물은 표시되지 않습니다.",
   "trade_hidden_partners_empty": "숨긴 사람이 없습니다",
+  "trade_hidden_partners_empty_hint": "거래 게시물의 ··· 메뉴에서 숨기기를 선택하면 그 사람을 숨길 수 있습니다.",
   "trade_matches_link_label": "매치 찾기: 상호 상대 {count}명",
   "list_create_button": "목록 만들기",
   "list_no_lists_found": "아직 목록이 없습니다",
