@@ -10,13 +10,20 @@ import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 
-import { DataTable, DataTableHead, DataTableRow } from "@/components/shared/data-table";
 import { EmptyState } from "@/components/shared/empty-state";
 import { InfiniteSentinel } from "@/components/shared/infinite-sentinel";
 import { Timestamp } from "@/components/shared/timestamp";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import type { ExtraFacet } from "@/features/filters/facet-controls";
 import { LONG_TAIL } from "@/features/filters/long-tail";
@@ -42,9 +49,6 @@ const TYPE_LABEL: Record<TransferType, () => string> = {
   sent: m.trades_filter_type_sent,
   spin: m.trades_filter_type_spin,
 };
-
-const COLUMNS = "grid-cols-[10.5rem_minmax(14rem,1.5fr)_7rem_minmax(0,1fr)]";
-const MIN_WIDTH = "min-w-168";
 
 /** the two counterparties that are Cosmo itself rather than another collector */
 function Counterparty({ row, isReceiver }: { row: TransferItem; isReceiver: boolean }) {
@@ -92,18 +96,22 @@ function TradeRow({
   const isReceiver = isSameAddress(row.transfer.to, address);
 
   return (
-    <DataTableRow className="hover:bg-secondary/50">
-      <span className="text-muted-foreground font-mono text-xs whitespace-nowrap">
+    <TableRow className="h-11 *:py-0">
+      <TableCell className="text-muted-foreground px-3.5 font-mono text-xs">
         <Timestamp date={new Date(row.transfer.timestamp)} />
-      </span>
-      <ObjektNameButton objekt={row.objekt} onOpen={onOpen} />
-      <span>
+      </TableCell>
+      <TableCell className="truncate px-3.5">
+        <ObjektNameButton objekt={row.objekt} onOpen={onOpen} />
+      </TableCell>
+      <TableCell className="px-3.5">
         <Badge variant={isReceiver ? "info" : "error"} size="sm">
           {isReceiver ? m.trades_actions_received_from() : m.trades_actions_sent_to()}
         </Badge>
-      </span>
-      <Counterparty row={row} isReceiver={isReceiver} />
-    </DataTableRow>
+      </TableCell>
+      <TableCell className="px-3.5">
+        <Counterparty row={row} isReceiver={isReceiver} />
+      </TableCell>
+    </TableRow>
   );
 }
 
@@ -206,22 +214,33 @@ export function TradesView() {
             })}
           </p>
 
-          <DataTable columns={COLUMNS} minWidth={MIN_WIDTH}>
-            <DataTableHead>
-              <span>{m.trades_table_headers_date()}</span>
-              <span>{m.trades_table_headers_objekt()}</span>
-              <span>{m.trades_table_headers_action()}</span>
-              <span>{m.trades_table_headers_user()}</span>
-            </DataTableHead>
-            {rows.map((row) => (
-              <TradeRow
-                key={row.transfer.id}
-                row={row}
-                address={profile.address}
-                onOpen={setActive}
-              />
-            ))}
-          </DataTable>
+          {/* the table's own container scrolls below its minimum width */}
+          <div data-scroll-x className="bg-card overflow-hidden rounded-lg border">
+            <Table className="min-w-168 table-fixed">
+              <TableHeader>
+                <TableRow className="bg-secondary/60 hover:bg-secondary/60 text-xs tracking-wide uppercase">
+                  <TableHead className="h-9 w-48 px-3.5">{m.trades_table_headers_date()}</TableHead>
+                  <TableHead className="h-9 w-2/5 px-3.5">
+                    {m.trades_table_headers_objekt()}
+                  </TableHead>
+                  <TableHead className="h-9 w-28 px-3.5">
+                    {m.trades_table_headers_action()}
+                  </TableHead>
+                  <TableHead className="h-9 px-3.5">{m.trades_table_headers_user()}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {rows.map((row) => (
+                  <TradeRow
+                    key={row.transfer.id}
+                    row={row}
+                    address={profile.address}
+                    onOpen={setActive}
+                  />
+                ))}
+              </TableBody>
+            </Table>
+          </div>
 
           <InfiniteSentinel
             label={m.infinite_query_load_more_aria()}

@@ -40,9 +40,15 @@ primitives involved and build from the closest one.
 - The design is monochrome chrome with class colour as the only accent: take a variant's structure
   and leave its colour and decorative motion. The `motion/` and `motion-variants/` folders rarely fit.
 
-Hand-written wrappers in `components/shared` with an upstream counterpart not yet vendored here
-(surveyed 2026-10-21; `empty-state.tsx` already sits on `empty`): `data-table.tsx` → `table` (`v-table-*`, a real `<table>` where ours is a `div` grid); the bordered
-panels (Messages, account sections) → `frame`; `features/objekt/drawer/timeline.tsx` → `timeline`.
+Tables: a static table is `table`, with an outer `bg-card rounded-lg border overflow-hidden` box
+carrying `data-scroll-x`, since `Table` wraps itself in a scroll container that takes no props
+(`features/profile/trades/trades-view.tsx`). A windowed table stays on `components/shared/data-table`
+with ARIA table roles, because `virtua` cannot window `<tr>`s (Activity). The objekt drawer's tables
+keep their raw `<table>` inside a focusable `role="region"` scroller: `Table`'s own container would
+take the scroll, and the arrow keys would stop moving it.
+
+Upstream still has a `frame` for the hand-drawn `rounded-lg border` panels (Messages, account
+sections); it changes their look, so it waits on a design call.
 
 ## Local edits
 

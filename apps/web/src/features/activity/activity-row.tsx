@@ -3,7 +3,7 @@ import { truncateAddress } from "@repo/lib/address";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { memo } from "react";
 
-import { DataTableRow } from "@/components/shared/data-table";
+import { DataTableCell, DataTableRow } from "@/components/shared/data-table";
 import { Timestamp } from "@/components/shared/timestamp";
 import { EVENT_COLOR, type EventKind } from "@/features/objekt/drawer/timeline";
 import { ObjektNameButton } from "@/features/objekt/objekt-hover-card";
@@ -61,28 +61,34 @@ export const ActivityRow = memo(function ActivityRow({
 
   return (
     <DataTableRow className={cn(isNew && "motion-safe:animate-live-animation-bg")}>
-      <span className="flex items-center gap-1.5 text-xs font-medium">
+      <DataTableCell className="gap-1.5 text-xs font-medium">
         <i className={cn("size-1.5 shrink-0 rounded-full", EVENT_COLOR[kind])} />
         {EVENT_LABEL[kind]()}
-      </span>
+      </DataTableCell>
 
-      <ObjektNameButton objekt={item.objekt} onOpen={onOpen} />
+      <DataTableCell>
+        <ObjektNameButton objekt={item.objekt} onOpen={onOpen} />
+      </DataTableCell>
 
-      {kind === "mint" ? (
-        <System label={m.activity_cosmo()} />
-      ) : (
-        <Who address={item.transfer.from} nickname={item.nickname.from} />
-      )}
+      <DataTableCell>
+        {kind === "mint" ? (
+          <System label={m.activity_cosmo()} />
+        ) : (
+          <Who address={item.transfer.from} nickname={item.nickname.from} />
+        )}
+      </DataTableCell>
 
-      {kind === "spin" ? (
-        <System label={m.activity_cosmo_spin()} />
-      ) : (
-        <Who address={item.transfer.to} nickname={item.nickname.to} />
-      )}
+      <DataTableCell>
+        {kind === "spin" ? (
+          <System label={m.activity_cosmo_spin()} />
+        ) : (
+          <Who address={item.transfer.to} nickname={item.nickname.to} />
+        )}
+      </DataTableCell>
 
-      <span className="text-muted-foreground text-right font-mono text-xs whitespace-nowrap">
+      <DataTableCell className="text-muted-foreground justify-end font-mono text-xs whitespace-nowrap">
         <Timestamp date={new Date(item.transfer.timestamp)} />
-      </span>
+      </DataTableCell>
     </DataTableRow>
   );
 });
