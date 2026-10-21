@@ -111,7 +111,7 @@ export function UserSearchEmpty({
       title={serverError !== null ? m.nav_search_user_error() : notFound.title}
       hint={serverError ?? notFound.hint}
       bordered={false}
-      className="py-8"
+      className="py-8 md:py-8"
     />
   );
 }
