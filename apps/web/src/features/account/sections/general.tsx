@@ -101,7 +101,7 @@ function ProfileForm({ user }: { user: User }) {
       </Label>
 
       <div className="flex flex-col gap-2">
-        <span className="text-sm font-medium">{m.auth_account_remove_profile_picture()}</span>
+        <span className="text-sm font-medium">{m.auth_account_profile_picture()}</span>
         <div className="flex items-center gap-3">
           <PersonAvatar
             name={user.name}
