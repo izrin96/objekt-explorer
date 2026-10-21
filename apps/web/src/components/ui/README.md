@@ -24,6 +24,26 @@ returns 403 to non-browser user agents such as Python's `urllib`), rewrite
 copy with the repo's oxfmt config, and diff. On 2026-09-23 the 27 files not listed below were
 byte-identical to upstream after that normalisation.
 
+## Variants
+
+cnippet ships about 980 usage examples beside its primitives, `v-<component>-<n>.tsx` under
+[`apps/v2/registry/default/variants`](https://github.com/cnippet-dev/ui-cnippet/tree/main/apps/v2/registry/default/variants)
+(15–30 per component: empty states, tables, toolbars, input groups with a `Kbd` hint, and so on).
+Each is also a registry item, fetchable as `https://ui.cnippet.dev/r/v-empty-1.json` with a browser
+user agent. Before composing a new pattern or a `components/shared` wrapper, read the variants of the
+primitives involved and build from the closest one.
+
+- A variant is a composition, so it lands in `features/*` or `components/shared/*`, never in this
+  folder. Add the primitives it imports with `shadcn add` as above.
+- A variant tracks the latest primitives and may use a prop or size the copies here lack: run the
+  drift check for each primitive it imports first, and update the primitive if it has moved.
+- The design is monochrome chrome with class colour as the only accent: take a variant's structure
+  and leave its colour and decorative motion. The `motion/` and `motion-variants/` folders rarely fit.
+
+Hand-written wrappers in `components/shared` with an upstream counterpart not yet vendored here
+(surveyed 2026-10-21; `empty-state.tsx` already sits on `empty`): `data-table.tsx` → `table` (`v-table-*`, a real `<table>` where ours is a `div` grid); the bordered
+panels (Messages, account sections) → `frame`; `features/objekt/drawer/timeline.tsx` → `timeline`.
+
 ## Local edits
 
 | File          | Edit                                                                                                                                                                     | Why                                                                                                                                                              |

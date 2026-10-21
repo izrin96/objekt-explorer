@@ -1,6 +1,6 @@
 # web
 
-TanStack Start app on Base UI (the cnippet registry). `src/components/ui/*` are vendored registry copies kept verbatim; `src/components/ui/README.md` lists the only local edits.
+TanStack Start app on Base UI (the cnippet registry). `src/components/ui/*` are vendored registry copies kept verbatim; `src/components/ui/README.md` lists the only local edits, and the upstream variants to check before composing a new UI pattern or a `components/shared` wrapper.
 
 ## Rules
 
