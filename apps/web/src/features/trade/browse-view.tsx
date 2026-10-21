@@ -305,7 +305,7 @@ export function BrowseView({ surface, search }: { surface: Surface; search: Feed
           role="region"
           aria-label={m.trade_posts_label()}
           aria-busy={query.isPlaceholderData}
-          className={cn("border-t", query.isPlaceholderData && "opacity-60")}
+          className={cn(query.isPlaceholderData && "opacity-60")}
         >
           {/* the server draws the first posts, so a full load is not blank until hydration.
               virtua then keeps drawing only `ssrCount` rows until the first scroll, so the list
@@ -322,7 +322,7 @@ export function BrowseView({ surface, search }: { surface: Surface; search: Feed
               row?.heading ? (
                 <h2
                   key={row.heading}
-                  className="text-muted-foreground border-b px-4 pt-4 pb-2 text-xs font-medium tracking-wide uppercase"
+                  className="text-muted-foreground px-4 pt-1 pb-2 text-xs font-medium tracking-wide uppercase"
                 >
                   {row.heading === "mutual" ? m.trade_section_mutual() : m.trade_section_one_way()}
                 </h2>
@@ -404,7 +404,7 @@ export function BrowsePending() {
 
 function BrowseFeedSkeleton() {
   return (
-    <div className="border-t">
+    <div>
       {Array.from({ length: SSR_ROWS }).map((_, index) => (
         <PersonRowSkeleton key={index} />
       ))}

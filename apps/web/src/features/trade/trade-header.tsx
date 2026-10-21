@@ -17,12 +17,15 @@ export type TradePerson = {
 export function TradeHeader({
   person,
   you = false,
+  meta,
   note,
   end,
   className,
 }: {
   person: TradePerson;
   you?: boolean;
+  /** on the reputation line, after it */
+  meta?: ReactNode;
   /** under the reputation line */
   note?: ReactNode;
   end?: ReactNode;
@@ -57,8 +60,20 @@ export function TradeHeader({
           {user.twitter ? <SocialBadge platform="twitter" username={user.twitter} /> : null}
         </div>
         <div className="flex min-w-0 flex-col gap-0.5">
-          {/* one line with an ellipsis where the card is wide, wrapping between words on a phone */}
-          <TrustLine reputation={person.reputation} className="@3xl:truncate" />
+          {/* one line where the card is wide, wrapping between words on a phone; the reputation
+              takes the ellipsis, so `meta` always shows */}
+          <span className="text-muted-foreground block text-xs tabular-nums @3xl:flex">
+            <TrustLine
+              reputation={person.reputation}
+              className="inline @3xl:block @3xl:min-w-0 @3xl:truncate"
+            />
+            {meta ? (
+              <span className="@3xl:shrink-0">
+                {person.reputation ? <span className="whitespace-pre"> · </span> : null}
+                {meta}
+              </span>
+            ) : null}
+          </span>
           {note}
         </div>
       </div>

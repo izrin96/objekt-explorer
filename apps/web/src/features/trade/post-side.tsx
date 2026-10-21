@@ -54,6 +54,7 @@ function StripMore({ count }: { count: number }) {
  * fit its width and ends in a "+N" tile for the rest, so it never wraps a third line.
  */
 function PostStrip({
+  lead,
   label,
   tone,
   items,
@@ -64,6 +65,8 @@ function PostStrip({
   more,
   othersLink,
 }: {
+  /** before the label, on its line: the post's tag */
+  lead?: ReactNode;
   label: ReactNode;
   tone: string;
   items: readonly StripItem[];
@@ -86,7 +89,15 @@ function PostStrip({
 
   return (
     <section className="flex min-w-0 flex-col gap-1">
-      <h3 className={cn("font-mono text-xs uppercase tabular-nums", tone)}>{label}</h3>
+      <h3
+        className={cn(
+          "flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 font-mono text-xs uppercase tabular-nums",
+          tone,
+        )}
+      >
+        {lead}
+        {label}
+      </h3>
       {/* padding gives the ring room */}
       <ul ref={ref} className="-m-1 flex items-start gap-1.5 overflow-hidden p-1">
         {shown.map((item) => {
@@ -179,12 +190,14 @@ export function EmptySide({ side, surface }: { side: PostSideData; surface: Surf
 
 /** A person's list: its role and name, its own count, its ringed matches; the label links to the list. */
 export function SideStrip({
+  lead,
   side,
   count,
   narrowed,
   collections,
   onOpen,
 }: {
+  lead?: ReactNode;
   side: PostSideData;
   /** the collections of this list that match the viewer: "14 you want", "2 you have" */
   count: number;
@@ -223,6 +236,7 @@ export function SideStrip({
 
   return (
     <PostStrip
+      lead={lead}
       label={text}
       tone={TONE_INK[LIST_TYPE_TONE[side.role]]}
       items={side.items.map((item) => ({

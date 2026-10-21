@@ -47,8 +47,9 @@ with ARIA table roles, because `virtua` cannot window `<tr>`s (Activity). The ob
 keep their raw `<table>` inside a focusable `role="region"` scroller: `Table`'s own container would
 take the scroll, and the arrow keys would stop moving it.
 
-Upstream still has a `frame` for the hand-drawn `rounded-lg border` panels (Messages, account
-sections); it changes their look, so it waits on a design call.
+`frame` is vendored for the Trade feed's rows (`features/trade/person-row-view.tsx`): a person is a
+`Frame`, each of their lists a `FramePanel`. The hand-drawn `rounded-lg border` panels (Messages,
+account sections) could move to it too; it changes their look, so that waits on a design call.
 
 ## Local edits
 

@@ -2,6 +2,7 @@ import { EyeSlashIcon, XIcon } from "@phosphor-icons/react";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 
 import { Button } from "@/components/ui/button";
+import { Frame, FramePanel } from "@/components/ui/frame";
 import { MenuItem } from "@/components/ui/menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SafetyMenu } from "@/features/moderation/safety-menu";
@@ -94,35 +95,39 @@ function PostBlock({
 }) {
   const shown = own ? unringed(post) : post;
   const wantOnly = post.tag === "wtt" && post.sides.every((side) => side.role === "want");
+  const strips = shown.sides.filter((side) => !isEmptySide(side));
+  const tag = (
+    <span className="flex shrink-0 flex-wrap items-center gap-x-2 gap-y-1 font-sans normal-case">
+      <TagBadge tag={post.tag} />
+      {wantOnly ? (
+        <span className="text-muted-foreground text-xs">{m.trade_wtt_swaps_only()}</span>
+      ) : null}
+      {post.buyingOnly ? (
+        <span className="text-muted-foreground text-xs">{m.trade_wtb_buying_only()}</span>
+      ) : null}
+    </span>
+  );
   return (
-    <div className="flex min-w-0 flex-col gap-2">
-      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-        <TagBadge tag={post.tag} />
-        {wantOnly ? (
-          <span className="text-muted-foreground text-xs">{m.trade_wtt_swaps_only()}</span>
-        ) : null}
-        {post.buyingOnly ? (
-          <span className="text-muted-foreground text-xs">{m.trade_wtb_buying_only()}</span>
-        ) : null}
-      </div>
+    <FramePanel className="flex min-w-0 flex-col gap-2 p-3">
+      {/* the tag leads the first strip's label; a post with no strip keeps it on a line of its own */}
+      {strips.length === 0 ? tag : null}
       <TradeSides
-        strips={shown.sides
-          .filter((side) => !isEmptySide(side))
-          .map((side) => (
-            <SideStrip
-              key={side.list.id}
-              side={side}
-              count={own ? 0 : listCount(post, side)}
-              narrowed={post.narrowed}
-              collections={collections}
-              onOpen={onOpen}
-            />
-          ))}
+        strips={strips.map((side, index) => (
+          <SideStrip
+            key={side.list.id}
+            lead={index === 0 ? tag : undefined}
+            side={side}
+            count={own ? 0 : listCount(post, side)}
+            narrowed={post.narrowed}
+            collections={collections}
+            onOpen={onOpen}
+          />
+        ))}
       />
       {shown.sides.filter(isEmptySide).map((side) => (
         <EmptySide key={side.list.id} side={side} surface={surface} />
       ))}
-    </div>
+    </FramePanel>
   );
 }
 
@@ -199,12 +204,23 @@ export function PersonRow({
   );
 
   return (
-    <article className="hover:bg-secondary/40 @container border-b motion-safe:transition-colors motion-safe:duration-150">
-      <div className="grid gap-x-4 gap-y-3 px-4 py-3.5 @3xl:grid-cols-[minmax(0,1fr)_auto]">
+    // padding, not margin, so virtua measures the gap between people with the row
+    <article className="@container pb-3">
+      <Frame className="grid gap-x-4 gap-y-3 pt-2.5 @3xl:grid-cols-[minmax(0,1fr)_auto]">
         <TradeHeader
-          className="min-w-0"
+          className="min-w-0 px-3"
           person={person}
           you={own}
+          meta={
+            <>
+              {lists} ·{" "}
+              <time dateTime={newest.time} suppressHydrationWarning>
+                {newest.changed
+                  ? m.trade_updated_at({ time: when })
+                  : m.trade_bumped_at({ time: when })}
+              </time>
+            </>
+          }
           end={
             <>
               {led ? (
@@ -227,24 +243,14 @@ export function PersonRow({
             </>
           }
           note={
-            <div className="flex flex-col gap-0.5">
-              {sentence && sentence.kind !== "none" ? (
-                <span className="text-sm">
-                  <Sentence sentence={sentence} />
-                </span>
-              ) : null}
-              <span className="text-muted-foreground font-mono text-xs">
-                {lists} ·{" "}
-                <time dateTime={newest.time} suppressHydrationWarning>
-                  {newest.changed
-                    ? m.trade_updated_at({ time: when })
-                    : m.trade_bumped_at({ time: when })}
-                </time>
+            sentence && sentence.kind !== "none" ? (
+              <span className="text-sm">
+                <Sentence sentence={sentence} />
               </span>
-            </div>
+            ) : null
           }
         />
-        <div className="flex min-w-0 flex-col gap-3 @3xl:col-span-2 @3xl:row-start-2 @3xl:ps-12">
+        <div className="flex min-w-0 flex-col gap-1 @3xl:col-span-2 @3xl:row-start-2">
           {shown.map((post) => (
             <PostBlock
               key={post.id}
@@ -258,7 +264,7 @@ export function PersonRow({
           {more > 0 ? (
             <button
               type="button"
-              className="text-muted-foreground hover:text-foreground focus-visible:ring-ring w-fit rounded-sm text-xs underline underline-offset-2 outline-none focus-visible:ring-2"
+              className="text-muted-foreground hover:text-foreground focus-visible:ring-ring mx-3 mt-1 mb-1.5 w-fit rounded-sm text-xs underline underline-offset-2 outline-none focus-visible:ring-2"
               onClick={onExpand}
             >
               {more === 1
@@ -268,11 +274,11 @@ export function PersonRow({
           ) : null}
         </div>
         {own ? null : (
-          <div className="flex items-center gap-2 @3xl:col-start-2 @3xl:row-start-1 @3xl:self-start">
+          <div className="flex items-center gap-2 px-3 pb-2 @3xl:col-start-2 @3xl:row-start-1 @3xl:self-start @3xl:pb-0">
             {actions}
           </div>
         )}
-      </div>
+      </Frame>
     </article>
   );
 }
@@ -280,16 +286,16 @@ export function PersonRow({
 /** A row's shape (header, two strips, actions), so the first page lands in place. */
 export function PersonRowSkeleton() {
   return (
-    <div className="@container border-b">
-      <div className="grid gap-x-4 gap-y-3 px-4 py-3.5 @3xl:grid-cols-[minmax(0,1fr)_auto]">
-        <div className="flex items-start gap-3">
+    <div className="@container pb-3">
+      <Frame className="grid gap-x-4 gap-y-3 pt-2.5 @3xl:grid-cols-[minmax(0,1fr)_auto]">
+        <div className="flex items-start gap-3 px-3">
           <Skeleton className="size-9 shrink-0 rounded-full" />
           <div className="flex flex-1 flex-col gap-2 pt-0.5">
             <Skeleton className="h-4 w-32" />
             <Skeleton className="h-3 w-24" />
           </div>
         </div>
-        <div className="@3xl:col-span-2 @3xl:row-start-2 @3xl:ps-12">
+        <FramePanel className="p-3 @3xl:col-span-2 @3xl:row-start-2">
           <TradeSides
             strips={[0, 1].map((side) => (
               <div key={side} className="flex flex-col gap-1">
@@ -305,9 +311,9 @@ export function PersonRowSkeleton() {
               </div>
             ))}
           />
-        </div>
-        <Skeleton className="h-8 w-28 rounded-md @3xl:col-start-2 @3xl:row-start-1" />
-      </div>
+        </FramePanel>
+        <Skeleton className="mx-3 mb-2 h-8 w-28 rounded-md @3xl:col-start-2 @3xl:row-start-1 @3xl:mb-0" />
+      </Frame>
     </div>
   );
 }
