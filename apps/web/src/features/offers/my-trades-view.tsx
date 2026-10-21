@@ -113,19 +113,19 @@ function MineSection({
   const headingId = useId();
   return (
     <section aria-labelledby={headingId} className="flex flex-col gap-2">
-      <h2 id={headingId} className="flex items-baseline gap-2 text-sm font-medium">
+      <h2 id={headingId} className="flex flex-wrap items-baseline gap-x-2 text-sm font-medium">
         {title}
         {counted ? (
           <span className="text-muted-foreground font-mono text-xs font-normal tabular-nums">
             {rows.length}
           </span>
         ) : null}
+        {/* an empty group stays one line, so the groups with rows lead */}
+        {rows.length === 0 ? (
+          <span className="text-muted-foreground font-normal">· {m.offer_mine_group_empty()}</span>
+        ) : null}
       </h2>
-      {rows.length === 0 ? (
-        <p className="text-muted-foreground rounded-lg border border-dashed px-4 py-3 text-sm">
-          {m.offer_mine_group_empty()}
-        </p>
-      ) : (
+      {rows.length === 0 ? null : (
         <ul className="flex flex-col divide-y rounded-lg border">
           {rows.map((row) => (
             <li key={`${row.kind}:${row.id}`}>
@@ -139,7 +139,7 @@ function MineSection({
 }
 
 const rowClass =
-  "hover:bg-secondary/60 focus-visible:ring-ring flex items-center gap-3 px-4 py-3 outline-none focus-visible:ring-2 focus-visible:ring-inset";
+  "hover:bg-secondary/60 focus-visible:ring-ring flex items-start gap-3 px-4 py-3 outline-none focus-visible:ring-2 focus-visible:ring-inset sm:items-center";
 
 function MineRowLink({
   row,
@@ -156,13 +156,32 @@ function MineRowLink({
     <>
       <PersonAvatar name={name} image={partner.user.image} className="size-9 shrink-0" />
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <span className="flex min-w-0 flex-wrap items-baseline gap-x-2">
-          <span className="min-w-0 font-medium break-words">{name}</span>
-          <Mono className="text-muted-foreground text-xs">
+        {/* on a phone the status shares the name's line and the number and time go under it, so
+            the summary gets the row's whole width */}
+        <span className="flex min-w-0 flex-wrap items-center gap-x-2">
+          <span className="min-w-0 font-medium max-sm:flex-1 max-sm:truncate sm:break-words">
+            {name}
+          </span>
+          <span className="order-1 ms-auto flex shrink-0 items-center gap-2 sm:order-3">
+            {row.status === "in_progress" && row.progress && row.progress.total > 0 ? (
+              <ProgressRing verified={row.progress.verified} total={row.progress.total} />
+            ) : null}
+            {row.yourTurn ? (
+              <Badge variant="secondary" className="shrink-0">
+                {mineStatusText(row)}
+              </Badge>
+            ) : (
+              <StatusBadge tone={statusTone(row.status)} className="shrink-0">
+                {mineStatusText(row)}
+              </StatusBadge>
+            )}
+          </span>
+          <span aria-hidden className="order-2 basis-full sm:hidden" />
+          <Mono className="text-muted-foreground order-3 text-xs sm:order-1">
             {row.kind === "trade" ? tradeNo(row.id) : offerNo(row.id)}
           </Mono>
           {/* the server's clock, so the server and browser renders agree */}
-          <time dateTime={row.at} className="text-muted-foreground text-xs">
+          <time dateTime={row.at} className="text-muted-foreground order-3 text-xs sm:order-1">
             {relativeTime(new Date(row.at).getTime(), now)}
           </time>
         </span>
@@ -170,18 +189,6 @@ function MineRowLink({
           {offerSummary(row, collections)}
         </span>
       </span>
-      {row.status === "in_progress" && row.progress && row.progress.total > 0 ? (
-        <ProgressRing verified={row.progress.verified} total={row.progress.total} />
-      ) : null}
-      {row.yourTurn ? (
-        <Badge variant="secondary" className="shrink-0">
-          {mineStatusText(row)}
-        </Badge>
-      ) : (
-        <StatusBadge tone={statusTone(row.status)} className="shrink-0">
-          {mineStatusText(row)}
-        </StatusBadge>
-      )}
     </>
   );
 
