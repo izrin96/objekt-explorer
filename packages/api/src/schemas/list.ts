@@ -223,6 +223,7 @@ export const LIST_REFUSALS = [
   "list_linked_not_found",
   "list_have_links_want",
   "list_want_links_have",
+  "list_pair_buying_only",
   "list_collections_required",
   "list_currency_required",
   "list_profile_required",

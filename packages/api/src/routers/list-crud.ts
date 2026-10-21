@@ -144,7 +144,12 @@ export const listCrud = {
           ? assertProfileOwned(input.profileAddress, user.id)
           : undefined,
         linkedListId !== null
-          ? checkLinkedList(list.listTypeNew, linkedListId, user.id)
+          ? checkLinkedList(
+              list.listTypeNew,
+              linkedListId,
+              user.id,
+              resolveOpenTo(list.listTypeNew, input, list),
+            )
           : undefined,
       ]);
 

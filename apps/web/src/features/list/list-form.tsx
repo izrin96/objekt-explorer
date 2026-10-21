@@ -1,6 +1,12 @@
 import { InfoIcon } from "@phosphor-icons/react";
 import { canBeOnTrade, type ListTypeNew, type PublicList } from "@repo/api/schemas/list";
-import { flagsOf, type OpenTo, type OpenToFlags, openToOf } from "@repo/api/schemas/open-to";
+import {
+  flagsOf,
+  type OpenTo,
+  type OpenToFlags,
+  openToOf,
+  pairRefusesOpenTo,
+} from "@repo/api/schemas/open-to";
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import slugify from "slugify";
@@ -84,6 +90,17 @@ export const EMPTY_DRAFT: ListDraft = {
   regenerateSlug: false,
 };
 
+/** A want list holding a link with Buying only selected: the form shows why and won't save. */
+function pairBlocked(
+  draft: OpenToFlags & { listTypeNew: ListTypeNew; linkedListId: number | null },
+) {
+  return draft.listTypeNew === "want" && draft.linkedListId !== null && pairRefusesOpenTo(draft);
+}
+
+/** A want list in the have list's link menu, read as the server reads it; a list from before Open to is open to both. */
+const refusesPair = (list: PublicList) =>
+  pairRefusesOpenTo({ matchSale: list.matchSale ?? true, matchHave: list.matchHave ?? true });
+
 /** Built per submit: the message functions read the request's locale. */
 export function listDraftSchema() {
   return z
@@ -94,8 +111,18 @@ export function listDraftSchema() {
       listTypeNew: z.enum(["general", "sale", "have", "want"]),
       profileAddress: z.string().nullable(),
       isProfileBind: z.boolean(),
+      linkedListId: z.number().nullable(),
+      matchSale: z.boolean(),
+      matchHave: z.boolean(),
     })
     .superRefine((draft, ctx) => {
+      if (pairBlocked(draft)) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["openTo"],
+          message: m.api_errors_list_pair_buying_only(),
+        });
+      }
       if (draft.listTypeNew === "sale" && !CURRENCY_RE.test(draft.currency)) {
         ctx.addIssue({
           code: "custom",
@@ -295,11 +322,23 @@ export function ListForm({
             </SelectTrigger>
             <SelectPopup>
               <SelectItem value={NONE}>{m.common_form_none()}</SelectItem>
-              {linkable.map((list) => (
-                <SelectItem key={list.id} value={String(list.id)}>
-                  <span className="truncate">{list.name}</span>
-                </SelectItem>
-              ))}
+              {linkable.map((list) => {
+                const refused = value.listTypeNew === "have" && refusesPair(list);
+                return (
+                  <SelectItem key={list.id} value={String(list.id)} disabled={refused}>
+                    {refused ? (
+                      <span className="flex min-w-0 flex-col">
+                        <span className="truncate">{list.name}</span>
+                        <span className="text-muted-foreground text-xs text-pretty">
+                          {m.list_create_pair_buying_only_hint()}
+                        </span>
+                      </span>
+                    ) : (
+                      <span className="truncate">{list.name}</span>
+                    )}
+                  </SelectItem>
+                );
+              })}
             </SelectPopup>
           </Select>
           <span className="text-muted-foreground text-xs text-pretty">
@@ -436,18 +475,32 @@ export function ListForm({
             }}
             className="gap-2.5"
           >
-            {OPEN_TO_ORDER.map((openTo) => (
-              <Field key={openTo} className="w-full flex-row items-start gap-2.5">
-                <Radio value={openTo} className="mt-0.5" />
-                <FieldLabel className="flex-col items-start gap-0.5 font-normal">
-                  <span className="text-sm font-medium">{MATCH_WITH[openTo].label()}</span>
-                  <FieldDescription render={<span />}>
-                    {MATCH_WITH[openTo].description()}
-                  </FieldDescription>
-                </FieldLabel>
-              </Field>
-            ))}
+            {OPEN_TO_ORDER.map((openTo) => {
+              const refused = value.linkedListId !== null && pairRefusesOpenTo(flagsOf(openTo));
+              return (
+                <Field
+                  key={openTo}
+                  disabled={refused}
+                  className="w-full flex-row items-start gap-2.5"
+                >
+                  <Radio value={openTo} disabled={refused} className="mt-0.5" />
+                  <FieldLabel className="flex-col items-start gap-0.5 font-normal">
+                    <span className="text-sm font-medium">{MATCH_WITH[openTo].label()}</span>
+                    <FieldDescription render={<span />}>
+                      {refused
+                        ? m.list_create_pair_buying_only_hint()
+                        : MATCH_WITH[openTo].description()}
+                    </FieldDescription>
+                  </FieldLabel>
+                </Field>
+              );
+            })}
           </RadioGroup>
+          {pairBlocked(value) ? (
+            <span role="alert" className="text-destructive text-xs text-pretty">
+              {m.api_errors_list_pair_buying_only()}
+            </span>
+          ) : null}
         </div>
       ) : null}
 

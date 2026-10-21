@@ -30,7 +30,7 @@ import {
   type PublicList,
 } from "../schemas/list";
 import { carriesPrices, copyMode, copyUnit, needsHoldings } from "../schemas/list-copy";
-import { resolveOpenTo } from "../schemas/open-to";
+import { type OpenToFlags, pairRefusesOpenTo, resolveOpenTo } from "../schemas/open-to";
 import { isBlockedEither, type Tx } from "./moderation";
 import { getCollectionColumns, getPartialCollectionColumns } from "./objekt";
 import { isProfileHidden } from "./privacy";
@@ -451,11 +451,23 @@ export function tradeColumns(on: boolean) {
   };
 }
 
-export async function checkLinkedList(type: ListTypeNew, linkedListId: number, userId: string) {
+/**
+ * The other list of a pair, checked for owner and type. A pair can't be Buying only, so the want
+ * side's Open to is checked too: `openTo` is what a want list is about to save, and a have list
+ * reads its partner's.
+ */
+export async function checkLinkedList(
+  type: ListTypeNew,
+  linkedListId: number,
+  userId: string,
+  openTo: OpenToFlags,
+) {
   const linkedList = await db.query.lists.findFirst({
     columns: {
       listTypeNew: true,
       isProfileBind: true,
+      matchSale: true,
+      matchHave: true,
     },
     where: {
       id: linkedListId,
@@ -473,6 +485,13 @@ export async function checkLinkedList(type: ListTypeNew, linkedListId: number, u
   }
   if (type === "want" && linkedList.listTypeNew !== "have") {
     refuse("BAD_REQUEST", "list_want_links_have", "Want lists can only link to Have lists");
+  }
+  if (pairRefusesOpenTo(type === "want" ? openTo : linkedList)) {
+    refuse(
+      "BAD_REQUEST",
+      "list_pair_buying_only",
+      "A want list linked to a have list can't be Buying only",
+    );
   }
   return linkedList;
 }
@@ -544,7 +563,14 @@ export async function prepareList(input: NewList, userId: string) {
   // allSettled keeps the profile error taking precedence over the linked one.
   const [profileCheck, linkedCheck] = await Promise.allSettled([
     input.profileAddress ? assertProfileOwned(input.profileAddress, userId) : undefined,
-    linkedListId !== null ? checkLinkedList(input.listTypeNew, linkedListId, userId) : undefined,
+    linkedListId !== null
+      ? checkLinkedList(
+          input.listTypeNew,
+          linkedListId,
+          userId,
+          resolveOpenTo(input.listTypeNew, input),
+        )
+      : undefined,
   ]);
 
   if (profileCheck.status === "rejected") throw profileCheck.reason;

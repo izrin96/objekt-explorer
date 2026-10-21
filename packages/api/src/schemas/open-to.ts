@@ -23,6 +23,11 @@ export function pickByOpenTo<T>(flags: OpenToFlags, byOpenTo: Record<OpenTo, T>)
   return byOpenTo[openToOf(flags)];
 }
 
+/** A want list linked to a have list is someone trading, so it must stay open to swaps: Buying only is refused. */
+export function pairRefusesOpenTo(want: OpenToFlags): boolean {
+  return !want.matchHave;
+}
+
 export function flagsOf(openTo: OpenTo): OpenToFlags {
   return { ...FLAGS[openTo] };
 }

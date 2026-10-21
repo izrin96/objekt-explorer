@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { flagsOf, openToOf, type OpenTo, resolveOpenTo } from "./open-to";
+import { flagsOf, openToOf, type OpenTo, pairRefusesOpenTo, resolveOpenTo } from "./open-to";
 
 const BUYING_ONLY = { matchSale: true, matchHave: false };
 
@@ -71,5 +71,16 @@ describe("openToOf and flagsOf", () => {
 
   test("a row open to nothing reads as buying", () => {
     expect(openToOf({ matchSale: false, matchHave: false })).toBe("buying");
+  });
+});
+
+describe("pairRefusesOpenTo", () => {
+  test("a linked want list can't be Buying only", () => {
+    expect(pairRefusesOpenTo(flagsOf("buying"))).toBe(true);
+  });
+
+  test("a linked want list open to swaps is allowed", () => {
+    expect(pairRefusesOpenTo(flagsOf("swaps"))).toBe(false);
+    expect(pairRefusesOpenTo(flagsOf("both"))).toBe(false);
   });
 });

@@ -39,6 +39,8 @@ export function refusalText(error: unknown) {
       return m.api_errors_list_have_links_want();
     case "list_want_links_have":
       return m.api_errors_list_want_links_have();
+    case "list_pair_buying_only":
+      return m.api_errors_list_pair_buying_only();
     case "list_collections_required":
       return m.api_errors_list_collections_required();
     case "list_currency_required":
