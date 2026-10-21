@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
+import { Kbd } from "@/components/ui/kbd";
 import { Popover, PopoverPopup, PopoverTrigger } from "@/components/ui/popover";
 import { useDebouncedCallback } from "@/hooks/use-debounced-callback";
 import { m } from "@/paraglide/messages";
@@ -92,6 +93,7 @@ export function FilterSearchField() {
         size="sm"
         type="search"
         aria-label={m.common_search_aria()}
+        aria-keyshortcuts="Meta+F Control+F"
         placeholder={m.filter_quick_search()}
         value={draft}
         onChange={(event) => {
@@ -104,7 +106,10 @@ export function FilterSearchField() {
       </InputGroupAddon>
       <InputGroupAddon align="inline-end">
         {draft.length === 0 ? (
-          <SearchHelp />
+          <>
+            <Kbd className="max-lg:hidden">⌘F</Kbd>
+            <SearchHelp />
+          </>
         ) : (
           <Button
             variant="ghost"
