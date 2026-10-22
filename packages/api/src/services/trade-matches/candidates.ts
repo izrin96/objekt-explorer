@@ -51,6 +51,13 @@ export async function fetchTradeCandidates(
 ): Promise<Candidate[]> {
   const result = await db.execute<CandidateRow>(sql`
     WITH ${postsCte},
+    -- the listed lists once, as a set to hash against; matching each list against
+    -- IN (posts.id, posts.partner_id) compared every list with every post
+    listed AS (
+      SELECT id FROM posts WHERE ${listedPost}
+      UNION
+      SELECT partner_id FROM posts WHERE ${listedPost} AND partner_id IS NOT NULL
+    ),
     my_want AS (
       SELECT e.collection_slug, bool_or(l.match_sale) AS match_sale, bool_or(l.match_have) AS match_have
       FROM list_entries e
@@ -72,7 +79,7 @@ export async function fetchTradeCandidates(
         AND ${takesPartInTradeSql("l")}
         AND l.user_id <> ${userId}
         -- an idle list does not count: a pair's lists share the pair's freshness
-        AND EXISTS (SELECT 1 FROM posts WHERE l.id IN (posts.id, posts.partner_id) AND ${listedPost})
+        AND l.id IN (SELECT id FROM listed)
         ${ownerIds ? sql`AND l.user_id = ANY(${sql.param(ownerIds)}::text[])` : sql``}
         AND NOT EXISTS (
           SELECT 1 FROM hidden_trade_partner h
