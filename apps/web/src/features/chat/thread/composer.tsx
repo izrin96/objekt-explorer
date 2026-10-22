@@ -216,9 +216,9 @@ export function Composer({
       ) : null}
 
       <div className="@container flex items-end gap-2">
+        {/* the same height as Send, so all three line up with a one-line message box */}
         <Button
           variant="ghost"
-          size="sm"
           aria-label={m.chat_attach_title()}
           title={m.chat_attach_title()}
           onClick={() => setAttachOpen(true)}
@@ -229,7 +229,6 @@ export function Composer({
         </Button>
         <Button
           variant="ghost"
-          size="sm"
           aria-label={m.offer_composer()}
           title={m.offer_composer()}
           onClick={onOffer}
