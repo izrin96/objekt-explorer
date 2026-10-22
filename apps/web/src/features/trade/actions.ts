@@ -49,18 +49,18 @@ export function useHideWithUndo() {
   const hide = useHidePartner();
   const unhide = useUnhidePartner();
 
+  // not `mutate`'s callbacks: hiding drops the row that calls this, and an unmounted observer skips them
   return (userId: string, name: string, onHidden?: () => void) =>
-    hide.mutate(
-      { userId },
-      {
-        onSuccess: () => {
-          addActionToast(
-            { type: "success", title: m.trade_hide_success({ name }) },
-            { label: m.common_actions_undo(), onClick: () => unhide.mutate({ userId }) },
-          );
-          onHidden?.();
-        },
+    void hide.mutateAsync({ userId }).then(
+      () => {
+        addActionToast(
+          { type: "success", title: m.trade_hide_success({ name }) },
+          { label: m.common_actions_undo(), onClick: () => unhide.mutate({ userId }) },
+        );
+        onHidden?.();
       },
+      // the mutation's own onError shows the toast
+      () => {},
     );
 }
 

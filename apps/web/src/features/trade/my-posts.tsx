@@ -29,7 +29,7 @@ export function MyPosts() {
 
   // the loader reads it first; a placeholder here would flash and vanish for viewers with no posts
   if (query.isPending) return null;
-  if (query.isError) {
+  if (query.isError && !query.data) {
     return (
       <div className="text-muted-foreground flex flex-wrap items-center justify-between gap-2 rounded-lg border border-dashed px-4 py-2.5 text-sm">
         <p>{m.trade_my_posts_error()}</p>

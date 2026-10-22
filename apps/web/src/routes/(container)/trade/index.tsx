@@ -13,8 +13,8 @@ export const Route = createFileRoute("/(container)/trade/")({
     const target = browseRedirect(search);
     if (target) throw redirect({ ...target, replace: true });
   },
-  // the sheet is not a load: opening it must not refetch the feed or scroll it to the top
-  loaderDeps: ({ search }) => ({ ...search, person: undefined }),
+  // `person` stays: it reorders the feed, so the loader must fill the key BrowseView reads
+  loaderDeps: ({ search }) => search,
   loader: ({ context: { queryClient }, deps, cause }) =>
     loadBrowse({ queryClient, search: deps, cause, surface: "browse" }),
   head: () => generateMetadata({ title: m.page_titles_trade() }),

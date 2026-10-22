@@ -27,7 +27,7 @@ export function MyTradesView() {
 
   if (query.isPending) return <MyTradesSkeleton />;
 
-  if (query.isError) {
+  if (query.isError && !query.data) {
     return (
       <EmptyState
         icon={WarningIcon}

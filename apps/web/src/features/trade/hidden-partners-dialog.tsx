@@ -60,7 +60,7 @@ export function HiddenPartnersList({ enabled }: { enabled: boolean }) {
     );
   }
 
-  if (query.isError) {
+  if (query.isError && !query.data) {
     return (
       <EmptyState
         bordered={false}

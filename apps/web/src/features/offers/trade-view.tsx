@@ -36,7 +36,7 @@ export function TradeView({ id }: { id: number }) {
 
   if (query.isPending) return <TradeViewSkeleton />;
 
-  if (query.isError) {
+  if (query.isError && !query.data) {
     return (
       <EmptyState
         icon={WarningIcon}
