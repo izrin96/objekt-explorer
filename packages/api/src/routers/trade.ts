@@ -25,12 +25,12 @@ import { toPublicUser } from "../services/profile";
 import { ipRateLimited, redis, userRateLimited } from "../services/redis";
 import {
   browseFeed,
-  peopleFeed,
   bumpPerson,
   collectionPostCounts,
   fetchMyPosts,
   setShowOnTrade,
 } from "../services/trade-feed";
+import { peopleFeed } from "../services/trade-feed/people";
 import {
   getTradeMatches,
   personDetail,
