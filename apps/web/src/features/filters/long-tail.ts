@@ -6,8 +6,6 @@ import type { FilterSearch } from "./search-schema";
  */
 export type LongTailField =
   | "collection"
-  | "transferable"
-  | "grouped"
   | "hidePin"
   | "locked"
   | "missing"
@@ -34,8 +32,6 @@ export function longTailCount(filters: FilterSearch, fields: readonly LongTailFi
   const set = (field: LongTailField, on: boolean) => Number(fields.includes(field) && on);
   return (
     set("collection", (filters.collection?.length ?? 0) > 0) +
-    set("transferable", filters.transferable === true) +
-    set("grouped", filters.grouped === true) +
     set("hidePin", filters.hidePin === true) +
     set("locked", filters.locked !== undefined) +
     set("missing", filters.missing === true || filters.unowned === true) +

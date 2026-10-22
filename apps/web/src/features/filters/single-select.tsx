@@ -1,8 +1,9 @@
 import { CaretDownIcon } from "@phosphor-icons/react";
 
-import { buttonVariants } from "@/components/ui/button";
 import { Select, SelectItem, SelectPopup, SelectPrimitive } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+
+import { toolbarTrigger } from "./toolbar-trigger";
 
 type SingleOption<T extends string> = {
   value: T;
@@ -45,11 +46,7 @@ export function SingleSelect<T extends string>({
       <SelectPrimitive.Trigger
         aria-label={label}
         data-active={active || undefined}
-        className={cn(
-          buttonVariants({ variant: "outline", size: "sm" }),
-          "data-active:border-foreground gap-1.5",
-          className,
-        )}
+        className={cn(toolbarTrigger, className)}
       >
         <span>
           {label}

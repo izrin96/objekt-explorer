@@ -9,7 +9,7 @@ import { validEdition, validOnlineTypes } from "@repo/cosmo/types/common";
 import type { ValidEdition, ValidOnlineType } from "@repo/cosmo/types/common";
 import { useId, type ReactNode } from "react";
 
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Label } from "@/components/ui/label";
@@ -24,15 +24,18 @@ import { m } from "@/paraglide/messages";
 import { ColorPicker } from "./color-picker";
 import { COLOR_SWATCHES } from "./facets";
 import { FilterCollection } from "./filter-collection";
+import { FilterToggle } from "./filter-toggle";
 import { EDITION_LABEL, ONLINE_TYPE_LABEL } from "./labels";
 import type { LongTailField } from "./long-tail";
 import { MultiSelect } from "./multi-select";
+import { ALL_TYPES, OnlineFilter } from "./online-filter";
 import {
   COLOR_SENSITIVITY_RANGE,
   DEFAULT_COLOR_SENSITIVITY,
   type FilterSearch,
 } from "./search-schema";
 import { SingleSelect } from "./single-select";
+import { toolbarTrigger } from "./toolbar-trigger";
 import { type FilterPatch, useFilters, useSetFilters } from "./use-filters";
 
 function Row({ label, children }: { label: string; children: ReactNode }) {
@@ -217,9 +220,6 @@ function LockCycle() {
   );
 }
 
-/** the absence of `on_offline`, spelled as a value so the radio group has an "All" */
-const ALL_TYPES = "all";
-
 function TypeField() {
   const onOffline = useFilters((f) => f.on_offline);
   const setFilters = useSetFilters();
@@ -311,8 +311,8 @@ function CollectionField({ options }: { options: readonly string[] }) {
 }
 
 /**
- * The on/off long-tail filters, drawn as switches in the sheet and as pressed
- * buttons on the toolbar; one list so the two read and write them alike.
+ * The on/off long-tail filters, drawn as switches in the sheet and as
+ * `FilterToggle`s on the toolbar; one list so the two read and write them alike.
  */
 const SWITCHES: readonly {
   field: LongTailField;
@@ -320,18 +320,6 @@ const SWITCHES: readonly {
   checked: (filters: FilterSearch) => boolean;
   patch: (on: boolean) => FilterPatch;
 }[] = [
-  {
-    field: "transferable",
-    label: m.filter_transferable,
-    checked: (f) => f.transferable === true,
-    patch: (on) => ({ transferable: on || undefined }),
-  },
-  {
-    field: "grouped",
-    label: m.filter_combine,
-    checked: (f) => f.grouped === true,
-    patch: (on) => ({ grouped: on || undefined }),
-  },
   {
     field: "hidePin",
     label: m.filter_disable_pin,
@@ -405,11 +393,6 @@ export function LongTailFields({
   );
 }
 
-const toolbarTrigger = cn(
-  buttonVariants({ variant: "outline", size: "sm" }),
-  "data-active:border-foreground gap-1.5",
-);
-
 function ColorPopover({ className }: { className?: string }) {
   const color = useFilters((f) => f.color);
 
@@ -430,31 +413,6 @@ function ColorPopover({ className }: { className?: string }) {
         <ColorControls />
       </PopoverPopup>
     </Popover>
-  );
-}
-
-function ToolbarSwitch({
-  label,
-  pressed,
-  onChange,
-  className,
-}: {
-  label: string;
-  pressed: boolean;
-  onChange: (value: boolean) => void;
-  className?: string;
-}) {
-  return (
-    <Button
-      variant="outline"
-      size="sm"
-      aria-pressed={pressed}
-      data-active={pressed || undefined}
-      className={cn("data-active:border-foreground", className)}
-      onClick={() => onChange(!pressed)}
-    >
-      {label}
-    </Button>
   );
 }
 
@@ -493,19 +451,7 @@ export function LongTailToolbar({
           className={className}
         />
       )}
-      <SingleSelect
-        label={m.filter_type()}
-        options={[
-          { value: ALL_TYPES, label: m.filter_all() },
-          ...validOnlineTypes.map((type) => ({ value: type, label: ONLINE_TYPE_LABEL[type]() })),
-        ]}
-        value={filters.on_offline?.[0] ?? ALL_TYPES}
-        defaultValue={ALL_TYPES}
-        onChange={(value) =>
-          setFilters({ on_offline: value === ALL_TYPES ? undefined : [value as ValidOnlineType] })
-        }
-        className={className}
-      />
+      <OnlineFilter className={className} />
       {has("edition") && (
         <MultiSelect
           label={m.filter_edition()}
@@ -537,11 +483,11 @@ export function LongTailToolbar({
         />
       )}
       {SWITCHES.filter((def) => has(def.field)).map((def) => (
-        <ToolbarSwitch
+        <FilterToggle
           key={def.field}
           label={def.label()}
           pressed={def.checked(filters)}
-          onChange={(value) => setFilters(def.patch(value))}
+          onPressedChange={(value) => setFilters(def.patch(value))}
           className={className}
         />
       ))}

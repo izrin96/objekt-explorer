@@ -3,7 +3,7 @@ import type { ValidCustomSort, ValidGroupBy, ValidSortDirection } from "@repo/co
 import { validGroupBy } from "@repo/cosmo/types/common";
 import { type ReactNode, useMemo } from "react";
 
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectItem,
@@ -34,9 +34,8 @@ import { LONG_TAIL, longTailCount, type LongTailField } from "./long-tail";
 import { LongTailFields, LongTailToolbar } from "./long-tail-fields";
 import { ResetButton } from "./reset-button";
 import { canReset, DEFAULT_SORT_DIR } from "./search-schema";
+import { toolbarTrigger } from "./toolbar-trigger";
 import { useCanonicalFilters, useFilters, useResetFilters, useSetFilters } from "./use-filters";
-
-const toolbarTrigger = cn(buttonVariants({ variant: "outline", size: "sm" }), "gap-1.5");
 
 /**
  * Picking a sort resets the direction to the one that sort is normally read
@@ -183,7 +182,6 @@ function GroupBySelect({ className, stacked = false }: { className?: string; sta
           data-active={groupBy !== undefined || undefined}
           className={cn(
             toolbarTrigger,
-            "data-active:border-foreground",
             // `flex-1`, not `w-full`: the direction button shares the row once a
             // grouping is set, and a full-width trigger pushes it past the sheet
             stacked && "min-w-0 flex-1 justify-between",

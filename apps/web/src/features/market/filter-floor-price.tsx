@@ -1,9 +1,10 @@
 import { CurrencyDollarIcon } from "@phosphor-icons/react";
 
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { NumberField, NumberFieldGroup, NumberFieldInput } from "@/components/ui/number-field";
 import { Popover, PopoverPopup, PopoverTrigger } from "@/components/ui/popover";
+import { toolbarTrigger } from "@/features/filters/toolbar-trigger";
 import { useFilters, useSetFilters } from "@/features/filters/use-filters";
 import { useCurrency } from "@/features/settings/use-currency";
 import { cn } from "@/lib/utils";
@@ -30,11 +31,7 @@ export function FloorPriceFilter({ className }: { className?: string }) {
       <PopoverTrigger
         aria-label={m.filter_floor_price()}
         data-active={active || undefined}
-        className={cn(
-          buttonVariants({ variant: "outline", size: "sm" }),
-          "data-active:border-foreground gap-1.5",
-          className,
-        )}
+        className={cn(toolbarTrigger, className)}
       >
         <CurrencyDollarIcon />
         {m.filter_floor_price()}

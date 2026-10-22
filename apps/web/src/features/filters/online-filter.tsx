@@ -7,7 +7,7 @@ import { SingleSelect } from "./single-select";
 import { useFilters, useSetFilters } from "./use-filters";
 
 /** `all` is the absence of `on_offline`, spelled as a value the select can hold */
-const ALL_TYPES = "all";
+export const ALL_TYPES = "all";
 
 export function OnlineFilter({ className }: { className?: string }) {
   const onOffline = useFilters((f) => f.on_offline);
