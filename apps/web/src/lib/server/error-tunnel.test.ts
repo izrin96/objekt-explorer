@@ -92,6 +92,13 @@ describe("keepEventItems", () => {
     expect(keepEventItems(bytes(`${head}\nnot json\n{}`))).toBeNull();
     expect(keepEventItems(bytes(`${head}\n{"type":"event","length":99}\n{}`))).toBeNull();
   });
+
+  test("is null for a negative or fractional length, which would never advance", () => {
+    // -30 is this header plus its newline, so the payload would end where the item starts
+    expect(keepEventItems(bytes(`${head}\n{"type":"event","length":-30}\n{}\n`))).toBeNull();
+    expect(keepEventItems(bytes(`${head}\n{"type":"event","length":-1}\n{}\n`))).toBeNull();
+    expect(keepEventItems(bytes(`${head}\n{"type":"event","length":0.5}\n{}\n`))).toBeNull();
+  });
 });
 
 describe("readCapped", () => {

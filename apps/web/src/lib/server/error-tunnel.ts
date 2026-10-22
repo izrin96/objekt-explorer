@@ -77,6 +77,8 @@ export function keepEventItems(envelope: Uint8Array): Buffer<ArrayBuffer> | null
     const start = itemEnd === -1 ? envelope.length : itemEnd + 1;
     let end: number;
     if (typeof length === "number") {
+      // a negative length would point back into the item, and the loop would never advance
+      if (!Number.isInteger(length) || length < 0) return null;
       end = start + length;
       if (end > envelope.length) return null;
     } else {
