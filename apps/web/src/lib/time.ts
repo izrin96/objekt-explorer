@@ -33,11 +33,12 @@ const UNITS: [Intl.RelativeTimeFormatUnit, number][] = [
 
 const relativeFormats = new Map<string, Intl.RelativeTimeFormat>();
 
-function relativeFormat(locale: string) {
-  let formatter = relativeFormats.get(locale);
+function relativeFormat(locale: string, style: Intl.RelativeTimeFormatStyle) {
+  const key = `${locale}:${style}`;
+  let formatter = relativeFormats.get(key);
   if (formatter === undefined) {
-    formatter = new Intl.RelativeTimeFormat(locale, { numeric: "auto" });
-    relativeFormats.set(locale, formatter);
+    formatter = new Intl.RelativeTimeFormat(locale, { numeric: "auto", style });
+    relativeFormats.set(key, formatter);
   }
   return formatter;
 }
@@ -47,9 +48,10 @@ export function relativeTime(
   at: number,
   now: number,
   largest: Intl.RelativeTimeFormatUnit = "year",
+  style: Intl.RelativeTimeFormatStyle = "long",
 ) {
   const seconds = Math.round((at - now) / 1000);
-  const formatter = relativeFormat(getLocale());
+  const formatter = relativeFormat(getLocale(), style);
   const units = UNITS.slice(UNITS.findIndex(([unit]) => unit === largest));
   for (const [unit, size] of units) {
     if (Math.abs(seconds) >= size) return formatter.format(Math.round(seconds / size), unit);

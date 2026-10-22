@@ -173,7 +173,8 @@ function ItemTime({ createdAt, now }: { createdAt: string; now: number }) {
       title={formatTimestamp(new Date(createdAt))}
       className="text-muted-foreground shrink-0 pt-0.5 font-mono text-xs whitespace-nowrap"
     >
-      {relativeTime(new Date(createdAt).getTime(), now)}
+      {/* narrow ("2w ago"), so the time column leaves the headline room; the title has the instant */}
+      {relativeTime(new Date(createdAt).getTime(), now, "year", "narrow")}
     </time>
   );
 }

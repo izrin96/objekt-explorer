@@ -233,11 +233,11 @@ export function NotificationPanel({
                   <section key={section} aria-labelledby={`notification-section-${section}`}>
                     <h3
                       id={`notification-section-${section}`}
-                      className="text-muted-foreground px-5 pt-3 pb-1 text-xs font-medium tracking-wide uppercase"
+                      className="text-muted-foreground bg-popover sticky top-0 z-20 border-b px-5 pt-3 pb-1.5 text-xs font-medium tracking-wide uppercase"
                     >
                       {SECTION_LABEL[section]()}
                     </h3>
-                    <ul className="flex flex-col">
+                    <ul className="flex flex-col divide-y">
                       {rows.map((item) => (
                         <li key={item.id}>
                           <NotificationRow
