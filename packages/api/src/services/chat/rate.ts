@@ -1,5 +1,5 @@
 import { MESSAGE_WINDOW_MS, messageRateDecision } from "../../lib/chat-rules";
-import { redis } from "../redis";
+import { redis, redisFailOpen } from "../redis";
 import { refuse } from "./refuse";
 
 const MESSAGE_WINDOW_SCRIPT = `
@@ -20,18 +20,22 @@ const sendTime = (member: string) => Number(member.split(":")[0]);
 export async function checkMessageRate(userId: string, now: Date): Promise<() => Promise<void>> {
   const key = `chat:msgs:${userId}`;
   const member = `${now.getTime()}:${crypto.randomUUID()}`;
-  const prior = (await redis.send("EVAL", [
-    MESSAGE_WINDOW_SCRIPT,
-    "1",
-    key,
-    String(now.getTime()),
-    String(MESSAGE_WINDOW_MS),
-    member,
-  ])) as string[];
+  // fails open, as every rate limit does: a Redis outage must not stop chat
+  const prior = (await redisFailOpen("chat rate", () =>
+    redis.send("EVAL", [
+      MESSAGE_WINDOW_SCRIPT,
+      "1",
+      key,
+      String(now.getTime()),
+      String(MESSAGE_WINDOW_MS),
+      member,
+    ]),
+  )) as string[] | null;
 
   const release = async () => {
-    await redis.send("ZREM", [key, member]);
+    await redisFailOpen("chat rate", () => redis.send("ZREM", [key, member]));
   };
+  if (prior === null) return release;
   const decision = messageRateDecision(prior.map(sendTime), now);
   if (!decision.ok) {
     await release();

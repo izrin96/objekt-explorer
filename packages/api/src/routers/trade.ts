@@ -1,7 +1,6 @@
 import { ORPCError } from "@orpc/server";
 import { db } from "@repo/db";
 import { hiddenTradePartner, lists, user, userAddress } from "@repo/db/schema";
-import { bumpTradeVersion } from "@repo/lib/server/list-touch";
 import { getRequestHeaders } from "@tanstack/react-start/server";
 import { and, desc, eq, inArray } from "drizzle-orm";
 
@@ -22,7 +21,8 @@ import {
   tradePartnerInputSchema,
 } from "../schemas/trade";
 import { toPublicUser } from "../services/profile";
-import { ipRateLimited, redis, userRateLimited } from "../services/redis";
+import { ipRateLimited, userRateLimited } from "../services/redis";
+import { bumpTradeVersions } from "../services/safety-cache";
 import {
   browseFeed,
   bumpPerson,
@@ -150,7 +150,7 @@ export const tradeRouter = {
         .insert(hiddenTradePartner)
         .values({ userId: session.user.id, hiddenUserId: userId })
         .onConflictDoNothing();
-      await bumpTradeVersion(redis, [session.user.id]);
+      await bumpTradeVersions([session.user.id]);
     }),
 
   unhidePartner: authed
@@ -164,7 +164,7 @@ export const tradeRouter = {
             eq(hiddenTradePartner.hiddenUserId, userId),
           ),
         );
-      await bumpTradeVersion(redis, [session.user.id]);
+      await bumpTradeVersions([session.user.id]);
     }),
 
   hiddenPartners: authed.handler(async ({ context: { session } }) => {

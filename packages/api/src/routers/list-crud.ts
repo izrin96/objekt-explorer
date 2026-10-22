@@ -2,7 +2,6 @@ import { ORPCError } from "@orpc/server";
 import { db } from "@repo/db";
 import { lists } from "@repo/db/schema";
 import { normalizeCurrency } from "@repo/lib/currency";
-import { bumpTradeVersion } from "@repo/lib/server/list-touch";
 import { and, eq, ne } from "drizzle-orm";
 
 import { refuse } from "../lib/refuse";
@@ -33,7 +32,8 @@ import {
   writeList,
 } from "../services/list";
 import { assertProfileOwned } from "../services/profile";
-import { redis, refuseOverUserLimit } from "../services/redis";
+import { refuseOverUserLimit } from "../services/redis";
+import { bumpTradeVersions } from "../services/safety-cache";
 
 /** `list.create` and `list.copy` share one budget; each one inserts a list and its rows. */
 const limitListWrites = (userId: string) => refuseOverUserLimit("list-create", userId, 30, 3600);
@@ -264,7 +264,7 @@ export const listCrud = {
       const list = await findOwnedList(slug, user.id);
 
       await db.delete(lists).where(eq(lists.id, list.id));
-      await bumpTradeVersion(redis, [user.id]);
+      await bumpTradeVersions([user.id]);
     },
   ),
 };

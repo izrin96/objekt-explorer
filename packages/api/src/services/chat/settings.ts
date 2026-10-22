@@ -5,7 +5,7 @@ import { and, eq, inArray, sql } from "drizzle-orm";
 import { type MessagePref, showsActivityTo, toMessagePref } from "../../lib/chat-rules";
 import { MESSAGE_PREF_DEFAULTS, type MessageSettings } from "../../schemas/chat";
 import { loadIdentities } from "../identities";
-import { redis } from "../redis";
+import { redis, redisFailOpen } from "../redis";
 import { notBlockedEither } from "../safety";
 import { refuse } from "./refuse";
 
@@ -119,9 +119,13 @@ export async function saveSettings(userId: string, input: Partial<MessageSetting
   const activityChanged = input.showActivity !== undefined && input.showActivity !== before;
   if (activityChanged) {
     const key = `chat:activity-change:${userId}`;
-    const taken = await redis.send("SET", [key, "1", "NX", "EX", String(ACTIVITY_CHANGE_SECONDS)]);
-    if (taken === null) {
-      const ttl = Number(await redis.send("PTTL", [key]));
+    // null when Redis is down: the limit fails open
+    const free = await redisFailOpen("activity change", async () => {
+      const set = await redis.send("SET", [key, "1", "NX", "EX", String(ACTIVITY_CHANGE_SECONDS)]);
+      return set !== null;
+    });
+    if (free === false) {
+      const ttl = Number(await redisFailOpen("activity change", () => redis.send("PTTL", [key])));
       refuse(
         "settings_limit",
         new Date(Date.now() + (ttl > 0 ? ttl : ACTIVITY_CHANGE_SECONDS * 1000)),

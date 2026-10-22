@@ -13,7 +13,7 @@ import {
   TYPING_GUARD_MS,
   UNSEND_WINDOW_MINUTES,
 } from "../../schemas/chat";
-import { redis } from "../redis";
+import { redis, redisFailOpen } from "../redis";
 import { hydrateCards, hydratePostCards, resolveCard, toChatMessages } from "./cards";
 import { loadThread } from "./inbox";
 import { publishChatMessage } from "./live";
@@ -164,13 +164,16 @@ export async function notifyTyping(me: string, conversationId: number) {
   // the conversation reaches the partner only with its first message
   if (!holdsMessage(lastMessageId)) return;
   // one ping per user and conversation gets through per interval, however often it is sent
-  const first = await redis.send("SET", [
-    `chat:typing:${me}:${conversationId}`,
-    "1",
-    "NX",
-    "PX",
-    String(TYPING_GUARD_MS),
-  ]);
+  // with Redis down nothing gets through: a typing ping is not worth an unguarded publish
+  const first = await redisFailOpen("chat typing", () =>
+    redis.send("SET", [
+      `chat:typing:${me}:${conversationId}`,
+      "1",
+      "NX",
+      "PX",
+      String(TYPING_GUARD_MS),
+    ]),
+  );
   if (first === null) return;
   const safety = await chatSafety(me, partnerId);
   if (safety.blocked || safety.mute !== null) return;

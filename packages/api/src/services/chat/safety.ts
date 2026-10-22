@@ -1,11 +1,9 @@
 import { db } from "@repo/db";
 import { conversation, user, userSanction } from "@repo/db/schema";
-import { bumpTradeVersion } from "@repo/lib/server/list-touch";
 import { and, eq, sql } from "drizzle-orm";
 
 import { pairKey } from "../../lib/chat-rules";
 import { effectiveSanction } from "../../lib/sanctions";
-import { redis } from "../redis";
 import {
   activeSanctionWhere,
   banned,
@@ -13,6 +11,7 @@ import {
   notBlockedEither,
   notTradeSanctioned,
 } from "../safety";
+import { bumpTradeVersions } from "../safety-cache";
 import { publishChatChanged } from "./notify";
 
 /** Blocks between the pair, and the user's own chat mute in force. A deleted or banned partner reads as a block. */
@@ -67,6 +66,6 @@ export async function afterBlockChange(blockerId: string, otherId: string) {
     .select({ id: conversation.id })
     .from(conversation)
     .where(and(eq(conversation.userLow, userLow), eq(conversation.userHigh, userHigh)));
-  await bumpTradeVersion(redis, [blockerId, otherId]);
+  await bumpTradeVersions([blockerId, otherId]);
   if (row) await publishChatChanged([blockerId], row.id);
 }

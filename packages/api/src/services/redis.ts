@@ -87,10 +87,9 @@ const IP_RATE_WINDOW_SECONDS = 60;
  * overwrites x-real-ip with the peer address; any other header arrives as the
  * client wrote it.
  */
-export async function isIpRateLimited(scope: string, headers: Headers): Promise<boolean> {
+export function isIpRateLimited(scope: string, headers: Headers): Promise<boolean> {
   const ip = headers.get("x-real-ip") ?? "unknown";
-  const attempts = await rateLimit(`${scope}:rl:${ip}`, IP_RATE_WINDOW_SECONDS);
-  return attempts > IP_RATE_LIMIT;
+  return rateLimitedFailOpen(scope, `${scope}:rl:${ip}`, IP_RATE_LIMIT, IP_RATE_WINDOW_SECONDS);
 }
 
 const FAIL_OPEN_TIMEOUT_MS = 250;
