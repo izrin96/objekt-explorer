@@ -4,6 +4,7 @@ import { PREVIEW_LIMIT, SOLO_PREVIEW_LIMIT } from "../schemas/trade";
 import {
   assemblePost,
   browseMode,
+  buildPeopleOrder,
   comparePosts,
   cursorScope,
   type FeedEntry,
@@ -14,16 +15,19 @@ import {
   readBudget,
   isSectioned,
   isPostIdle,
-  keepsScope,
   matchesViewer,
   mergeSeen,
   narrowViewer,
   nextBumpAt,
+  nextSlice,
+  type OrderEntry,
+  orderReader,
+  ordersFingerprint,
   pairPosts,
   phaseAfter,
-  peopleScope,
   phaseScope,
   previewSide,
+  resumeAt,
   type TradeList,
   tradeableEntries,
   untradeableKey,
@@ -581,17 +585,6 @@ describe("isSectioned", () => {
   });
 });
 
-describe("keepsScope", () => {
-  test("every Any page keeps the snapshot, a tail page too, and so does Mutual only", () => {
-    const tail = feedPlan("any", "all", { bumpedAt: "2026-10-01T00:00:00.000Z", phase: "tail" });
-    expect(tail.phases).toEqual(["tail"]);
-    expect(keepsScope(tail.phases)).toBe(true);
-    expect(keepsScope(feedPlan("any", "wtb").phases)).toBe(true);
-    expect(keepsScope(feedPlan("mutual", "all").phases)).toBe(true);
-    expect(keepsScope(feedPlan("off", "all").phases)).toBe(false);
-  });
-});
-
 describe("phaseAfter", () => {
   test("a phase that runs dry hands the page to the next, and the last ends it", () => {
     const phases = feedPlan("any", "all").phases;
@@ -638,24 +631,6 @@ describe("phaseScope", () => {
       excludeWttOf: undefined,
       excludeOwners: undefined,
     });
-  });
-});
-
-describe("peopleScope", () => {
-  const seen = { mutual: ["m1", "m2"], oneWay: ["o1", "m1"] };
-
-  test("Mutual leaves out only the lead person", () => {
-    expect(peopleScope("mutual", seen)).toEqual([]);
-    expect(peopleScope("mutual", seen, "p")).toEqual(["p"]);
-  });
-
-  test("One way leaves out every Mutual person, the tail also every One way person", () => {
-    expect(peopleScope("oneWay", seen, "p")).toEqual(["p", "m1", "m2"]);
-    expect(peopleScope("tail", seen)).toEqual(["m1", "m2", "o1"]);
-  });
-
-  test("the plain bump order leaves out only the lead person", () => {
-    expect(peopleScope("bump", seen, "p")).toEqual(["p"]);
   });
 });
 
@@ -890,5 +865,250 @@ describe("readBatches", () => {
       ...source(3, (row) => row !== 2),
     });
     expect(read).toEqual({ taken: [1, 3], examined: 3, dry: true });
+  });
+});
+
+const ids = (people: OrderEntry[]) => people.map((entry) => entry.id);
+const entries = (...names: string[]) => names.map((id) => ({ id }));
+
+describe("buildPeopleOrder", () => {
+  test("keeps the sections in order, each tagged", () => {
+    const { people, capped } = buildPeopleOrder(
+      [
+        { section: "mutual", people: entries("m1", "m2") },
+        { section: "oneWay", people: entries("o1") },
+        { people: entries("t1", "t2") },
+      ],
+      undefined,
+    );
+    expect(people).toEqual([
+      { id: "m1", section: "mutual" },
+      { id: "m2", section: "mutual" },
+      { id: "o1", section: "oneWay" },
+      { id: "t1" },
+      { id: "t2" },
+    ]);
+    expect(capped).toBe(false);
+  });
+
+  test("a person in two sections keeps the first place", () => {
+    const { people } = buildPeopleOrder(
+      [
+        {
+          section: "mutual",
+          people: [{ id: "a", rank: { mutual: 2, sum: 4, at: 1, userId: "a" } }],
+        },
+        { section: "oneWay", people: entries("b", "a", "c") },
+      ],
+      undefined,
+    );
+    expect(people.map((entry) => [entry.id, entry.section])).toEqual([
+      ["a", "mutual"],
+      ["b", "oneWay"],
+      ["c", "oneWay"],
+    ]);
+    expect(people[0]?.rank?.mutual).toBe(2);
+  });
+
+  test("leaves out the lead", () => {
+    const { people } = buildPeopleOrder(
+      [{ section: "oneWay", people: entries("a", "lead") }, { people: entries("lead", "b") }],
+      "lead",
+    );
+    expect(ids(people)).toEqual(["a", "b"]);
+  });
+
+  test("stops at the cap and says so", () => {
+    const sections = [
+      { section: "mutual" as const, people: entries("a", "b") },
+      { people: entries("c", "d") },
+    ];
+    const cut = buildPeopleOrder(sections, undefined, 3);
+    expect(ids(cut.people)).toEqual(["a", "b", "c"]);
+    expect(cut.capped).toBe(true);
+    expect(buildPeopleOrder(sections, undefined, 4).capped).toBe(false);
+  });
+
+  test("repeats and the lead don't count toward the cap", () => {
+    const { people, capped } = buildPeopleOrder(
+      [{ section: "mutual", people: entries("a", "lead") }, { people: entries("a", "b") }],
+      "lead",
+      2,
+    );
+    expect(ids(people)).toEqual(["a", "b"]);
+    expect(capped).toBe(false);
+  });
+});
+
+describe("nextSlice", () => {
+  const people = entries("a", "b", "c");
+
+  test("reads from the position", () => {
+    expect(ids(nextSlice(people, 1, 5))).toEqual(["b", "c"]);
+    expect(ids(nextSlice(people, 0, 2))).toEqual(["a", "b"]);
+  });
+
+  test("is empty past the end", () => {
+    expect(nextSlice(people, 3, 5)).toEqual([]);
+    expect(nextSlice(people, 7, 5)).toEqual([]);
+  });
+});
+
+describe("resumeAt", () => {
+  const order: OrderEntry[] = [
+    { id: "m1", section: "mutual" },
+    { id: "m2", section: "mutual" },
+    { id: "o1", section: "oneWay" },
+    { id: "t1" },
+    { id: "t2" },
+  ];
+
+  test("goes on after the cursor's person when they are in the order", () => {
+    expect(resumeAt(order, { userId: "o1", at: 1 })).toBe(3);
+    expect(resumeAt(order, { userId: "t2" })).toBe(5);
+  });
+
+  test("else at the cursor's position, never past the end", () => {
+    expect(resumeAt(order, { userId: "gone", at: 2 })).toBe(2);
+    expect(resumeAt(order, { userId: "gone", at: 9 })).toBe(5);
+  });
+
+  test("an open tab's cursor with only a phase starts that section", () => {
+    expect(resumeAt(order, { userId: "gone", phase: "mutual" })).toBe(0);
+    expect(resumeAt(order, { userId: "gone", phase: "oneWay" })).toBe(2);
+    expect(resumeAt(order, { userId: "gone", phase: "tail" })).toBe(3);
+  });
+
+  test("an open tab's cursor with only a rank starts at the top, where Mutual starts", () => {
+    const cursor = { userId: "gone", rank: { mutual: 1, sum: 2, at: 0, userId: "gone" } };
+    expect(resumeAt(order, cursor)).toBe(0);
+  });
+
+  test("a section with no one in it starts the next one", () => {
+    const noOneWay = order.filter((entry) => entry.section !== "oneWay");
+    expect(resumeAt(noOneWay, { userId: "gone", phase: "oneWay" })).toBe(2);
+    expect(resumeAt(entries("m1"), { userId: "gone", phase: "tail" })).toBe(0);
+    expect(resumeAt([{ id: "m1", section: "mutual" }], { userId: "gone", phase: "tail" })).toBe(1);
+  });
+
+  test("a cursor with nothing to go on starts at the top", () => {
+    expect(resumeAt(order, { userId: "gone" })).toBe(0);
+  });
+});
+
+describe("ordersFingerprint", () => {
+  const base = {
+    facets: { artist: ["tripleS", "artms"], member: [], season: ["Atom01"] },
+    type: "all" as const,
+    slug: null,
+    mode: "any" as const,
+    listId: 4,
+    lead: null,
+  };
+
+  test("is the same in any key or value order", () => {
+    const shuffled = {
+      ...base,
+      facets: { season: ["Atom01"], member: [], artist: ["artms", "tripleS"] },
+    };
+    expect(ordersFingerprint(shuffled)).toBe(ordersFingerprint(base));
+  });
+
+  test("differs when a filter, the mode, the Compare with list or the lead does", () => {
+    const fingerprint = ordersFingerprint(base);
+    for (const other of [
+      { ...base, facets: { ...base.facets, member: ["SeoYeon"] } },
+      { ...base, type: "wtt" as const },
+      { ...base, slug: "atom01-seoyeon-204z" },
+      { ...base, mode: "mutual" as const },
+      { ...base, listId: null },
+      { ...base, lead: "u1" },
+    ]) {
+      expect(ordersFingerprint(other)).not.toBe(fingerprint);
+    }
+  });
+});
+
+describe("orderReader", () => {
+  const keyset = (userId: string, minute: number) => ({
+    userId,
+    bumpedAt: new Date(Date.UTC(2026, 9, 1, 0, 60 - minute)).toISOString(),
+  });
+  /** the tail past the cap, newest first, read by keyset */
+  const past = [keyset("x1", 1), keyset("x2", 2), keyset("x3", 3)];
+  const fetchMore =
+    (calls: (string | undefined)[]) =>
+    async (after: { userId: string } | undefined, limit: number) => {
+      calls.push(after?.userId);
+      const from = after ? past.findIndex((row) => row.userId === after.userId) + 1 : 0;
+      return past.slice(from, from + limit);
+    };
+  const ids = (rows: { id: string }[]) => rows.map((row) => row.id);
+
+  test("an uncapped order reads its entries and is exhausted at its end", async () => {
+    const calls: (string | undefined)[] = [];
+    const reader = orderReader({ people: entries("a", "b", "c") }, 1, undefined, fetchMore(calls));
+    expect(await reader.fetch(1)).toEqual({ rows: [{ id: "b" }], exhausted: false });
+    expect(await reader.fetch(5)).toEqual({ rows: [{ id: "c" }], exhausted: true });
+    expect(reader.position()).toBe(3);
+    expect(await reader.fetch(5)).toEqual({ rows: [], exhausted: true });
+    expect(calls).toEqual([]);
+  });
+
+  test("at a capped order's end it goes on by keyset from `more`", async () => {
+    const calls: (string | undefined)[] = [];
+    const order = { people: entries("a", "b"), more: { after: keyset("b", 0) } };
+    const reader = orderReader(order, 0, undefined, fetchMore(calls));
+    expect(await reader.fetch(2)).toEqual({ rows: entries("a", "b"), exhausted: false });
+    const next = await reader.fetch(2);
+    expect(ids(next.rows)).toEqual(["x1", "x2"]);
+    expect(next.rows[0]?.bumpedAt).toBe(past[0]?.bumpedAt);
+    expect(next.exhausted).toBe(false);
+    expect(await reader.fetch(2)).toMatchObject({ rows: [{ id: "x3" }], exhausted: true });
+    expect(calls).toEqual(["b", "x2"]);
+    expect(reader.position()).toBe(5);
+  });
+
+  test("a capped order with no tail kept reads the tail from its top", async () => {
+    const calls: (string | undefined)[] = [];
+    const reader = orderReader({ people: entries("a"), more: {} }, 1, undefined, fetchMore(calls));
+    expect(ids((await reader.fetch(1)).rows)).toEqual(["x1"]);
+    expect(calls).toEqual([undefined]);
+  });
+
+  test("a cursor resumed at the order's end goes on from `more`, not its own person", async () => {
+    const calls: (string | undefined)[] = [];
+    const order = { people: entries("a", "b"), more: { after: keyset("b", 0) } };
+    const reader = orderReader(order, 2, keyset("x2", 2), fetchMore(calls));
+    expect(ids((await reader.fetch(1)).rows)).toEqual(["x1"]);
+    expect(calls).toEqual(["b"]);
+  });
+
+  test("a cursor already past the order goes on from the cursor's person", async () => {
+    const calls: (string | undefined)[] = [];
+    const order = { people: entries("a", "b"), more: { after: keyset("b", 0) } };
+    const reader = orderReader(order, 3, keyset("x1", 1), fetchMore(calls));
+    expect(ids((await reader.fetch(5)).rows)).toEqual(["x2", "x3"]);
+    expect(calls).toEqual(["x1"]);
+    expect(reader.position()).toBe(5);
+  });
+
+  test("one page reads past the order's end into the keyset", async () => {
+    const reader = orderReader(
+      { people: entries("a", "b"), more: { after: keyset("b", 0) } },
+      1,
+      undefined,
+      fetchMore([]),
+    );
+    const read = await readBatches({
+      need: 3,
+      budget: readBudget(3),
+      fetch: reader.fetch,
+      load: async (rows) => rows.map((row) => row.id),
+    });
+    expect(read.taken).toEqual(["b", "x1", "x2"]);
+    expect(read.examined?.id).toBe("x2");
+    expect(read.dry).toBe(false);
+    expect(reader.position()).toBe(4);
   });
 });

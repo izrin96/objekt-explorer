@@ -12,6 +12,7 @@ import { iso } from "../../lib/time";
 import {
   assemblePost,
   browseMode,
+  buildPeopleOrder,
   BUMP_COOLDOWN_HOURS,
   comparePosts,
   EXTRA_PEOPLE_READS,
@@ -23,21 +24,23 @@ import {
   fillPage,
   isPostIdle,
   isSectioned,
-  keepsScope,
   latest,
   mergeSeen,
   matchIndexOf,
   matchesViewer,
   narrowViewer,
   nextBumpAt,
+  ORDER_LIMIT,
+  orderReader,
+  ordersFingerprint,
   pairPosts,
-  peopleScope,
+  type PeopleOrder,
   type PhaseRead,
   phaseScope,
   previewSide,
   readBatches,
   readBudget,
-  type ReadBudget,
+  resumeAt,
   type SeenPeople,
   untradeableKey,
   type Viewer,
@@ -48,7 +51,6 @@ import {
   nicknamesByAddress,
   oneWayRankOf,
   peopleAfter,
-  resumeRanking,
   toPartnerIdentity,
 } from "../../lib/trade-rank";
 import { unique } from "../../lib/unique";
@@ -60,7 +62,6 @@ import {
   type BrowseMatchMode,
   type FeedCursor,
   PEOPLE_PAGE_SIZE,
-  type PeopleCursor,
   type PeopleInput,
 } from "../../schemas/trade";
 import { getCollectionFilters } from "../activity-feed";
@@ -93,7 +94,14 @@ import {
   listedPost,
   postsCte,
 } from "./query";
-import { loadScope, saveScope, scopeToken } from "./scope";
+import {
+  loadPeopleOrder,
+  loadScope,
+  orderToken,
+  savePeopleOrder,
+  saveScope,
+  scopeToken,
+} from "./scope";
 import { fetchViewer, hasTradeList } from "./viewer";
 
 const COUNTS_TTL_SECONDS = 60;
@@ -466,15 +474,7 @@ type Loaded = {
   newest: string;
 };
 
-type PeopleContext = LoadContext &
-  Pick<FeedContext, "mode" | "plan" | "mutual" | "oneWay" | "seen"> & {
-    input: PeopleInput;
-    /** the `person` whose row leads the feed, left out of every phase */
-    lead: string | undefined;
-    reads: ReadBudget;
-    /** the cursor's snapshot of the rankings, when one loaded */
-    snapshot: SeenPeople | undefined;
-  };
+type PeopleContext = LoadContext & { input: PeopleInput };
 
 /** The listed people's rows, in `ids` order; a person whose posts all emptied is left out. */
 async function loadPeople(ctx: LoadContext, query: FeedQuery, ids: string[]): Promise<Loaded[]> {
@@ -506,8 +506,6 @@ async function loadPeople(ctx: LoadContext, query: FeedQuery, ids: string[]): Pr
   });
 }
 
-type PeopleLast = Pick<PeopleCursor, "bumpedAt" | "userId" | "rank" | "oneWay">;
-
 /** The stage-1 predicates of a people read; Mutual only and the Mutual section read WTT posts. */
 function feedQueryOf(
   ctx: Pick<PeopleContext, "viewerId" | "input" | "slugs" | "match">,
@@ -522,154 +520,186 @@ function feedQueryOf(
   };
 }
 
-/** One phase's share of a page of people, whole rows. */
-async function readPeoplePhase(
+/**
+ * The whole order of people a feed opens with: Browse by newest bump, Mutual only best Mutual
+ * first, Any its Mutual section, then One way, then everyone else by bump. `mutual` is who the
+ * Mutual section holds.
+ */
+async function buildOrder(
   ctx: PeopleContext,
-  phase: FeedPhase,
-  need: number,
-): Promise<PhaseRead<Loaded, PeopleLast>> {
-  const { input, mode, plan } = ctx;
-  const cursor = phase === plan.phases[0] ? input.cursor : undefined;
-  // Mutual is a swap between two people, so under Mutual only it lists WTT posts
-  const query = feedQueryOf(ctx, mode === "mutual" ? "wtt" : input.type);
-  const exclude = peopleScope(phase, ctx.seen, ctx.lead);
-  // each read asks only for the room left, so no loaded row is thrown away; a person whose
-  // posts all emptied in stage 2 is made up by the next read
-  const load = (ids: string[]) => loadPeople(ctx, query, ids);
-
-  if (phase === "bump" || phase === "tail") {
-    let after = cursor && { bumpedAt: cursor.bumpedAt, userId: cursor.userId };
-    const read = await readBatches({
-      need,
-      budget: ctx.reads,
-      fetch: async (limit) => {
-        const found = await fetchBumpPeople(query, {
-          limit,
-          cursor: after,
-          excludeOwners: exclude,
-        });
-        const rows = found.map((row) => ({ bumpedAt: iso(row.cursor_at)!, userId: row.user_id }));
-        after = rows.at(-1) ?? after;
-        return { rows, exhausted: found.length < limit };
-      },
-      load: (rows) => load(rows.map((row) => row.userId)),
-    });
-    return { posts: read.taken, dry: read.dry, last: read.examined };
-  }
-
-  const spec = RANKED_PHASES[phase];
-  const skip = new Set(exclude);
-  const rankOf = new Map(spec.people(ctx).map((person) => [person.userId, spec.rankOf(person)]));
-  // the rankings refresh between pages, so a page goes on in the order earlier pages saw
-  const remaining = resumeRanking(
-    spec.people(ctx),
-    ctx.snapshot ? ctx.seen[phase] : undefined,
-    spec.resumeAt(cursor),
-  ).filter((person) => !skip.has(person.userId));
-  // the Mutual people were checked for a kept WTT post; One way's are checked here, once
-  const kept =
-    phase === "mutual"
-      ? null
-      : await fetchFeedOwners(
-          query,
-          remaining.map((person) => person.userId),
-        );
-  const eligible = remaining.filter((person) => !kept || kept.has(person.userId));
-
-  let index = 0;
-  const read = await readBatches({
-    need,
-    budget: ctx.reads,
-    fetch: async (limit) => {
-      const rows = eligible.slice(index, index + limit);
-      index += rows.length;
-      return { rows, exhausted: index >= eligible.length };
+  mode: BrowseMatchMode,
+  query: FeedQuery,
+  lead: string | undefined,
+): Promise<{ order: PeopleOrder; mutual: Set<string> }> {
+  const { match, input } = ctx;
+  const phases = feedPlan(mode, input.type).phases;
+  const [ranked, oneWay] = await Promise.all([
+    match && phases.includes("mutual") ? mutualPeopleOf(match) : [],
+    match && mode === "any" ? getOneWayPeople(match.userId, match.sides) : [],
+  ]);
+  // only a Mutual person with a kept WTT post is in the Mutual section; the rest are One way
+  const [keptWtt, keptOneWay] = await Promise.all([
+    fetchFeedOwners(
+      feedQueryOf(ctx, "wtt"),
+      ranked.map((person) => person.userId),
+    ),
+    fetchFeedOwners(
+      query,
+      oneWay.map((person) => person.userId),
+    ),
+  ]);
+  const mutual = ranked.filter((person) => keptWtt.has(person.userId));
+  const sections = [
+    {
+      section: "mutual" as const,
+      people: mutual.map((person) => ({ id: person.userId, rank: mutualRankOf(person) })),
     },
-    load: (rows) => load(rows.map((person) => person.userId)),
+    {
+      section: "oneWay" as const,
+      people: oneWay
+        .filter((person) => keptOneWay.has(person.userId))
+        .map((person) => ({ id: person.userId, oneWay: oneWayRankOf(person) })),
+    },
+  ];
+  const mutualIds = new Set(mutual.map((person) => person.userId));
+  const head = buildPeopleOrder(sections, lead);
+  if (mode === "mutual") return { order: { people: head.people }, mutual: mutualIds };
+
+  const room = ORDER_LIMIT - head.people.length;
+  const tail = await fetchBumpPeople(query, {
+    limit: room + 1,
+    excludeOwners: [...head.people.map((entry) => entry.id), ...(lead ? [lead] : [])],
   });
-  const lastTaken = read.taken.at(-1);
+  const atOf = new Map(tail.map((row) => [row.user_id, iso(row.cursor_at)!]));
+  const built = buildPeopleOrder(
+    [...sections, { people: tail.map((row) => ({ id: row.user_id })) }],
+    lead,
+  );
+  const last = built.people.at(-1);
+  const after =
+    last && !last.section ? { bumpedAt: atOf.get(last.id)!, userId: last.id } : undefined;
   return {
-    posts: read.taken,
-    dry: read.dry,
-    last: read.examined && {
-      // only a bump read reads `bumpedAt`, and `feedPlan` never hands it a ranked cursor
-      bumpedAt: lastTaken
-        ? iso(lastTaken.newest)!
-        : (cursor?.bumpedAt ?? new Date(0).toISOString()),
-      userId: read.examined.userId,
-      ...rankOf.get(read.examined.userId),
-    },
+    order: { people: built.people, ...(built.capped ? { more: { after } } : {}) },
+    mutual: mutualIds,
+  };
+}
+
+/** The order a page reads, where it starts, and (when built by this request) who Mutual holds. */
+type OpenedOrder = {
+  order: PeopleOrder;
+  token: string;
+  start: number;
+  built?: { mutual: Set<string> };
+};
+
+/**
+ * The cursor's stored order when it is still there and was built for these filters; otherwise
+ * a new one, which a cursor joins by `resumeAt`.
+ */
+async function openOrder(
+  ctx: PeopleContext,
+  mode: BrowseMatchMode,
+  query: FeedQuery,
+  lead: string | undefined,
+  filters: string,
+): Promise<OpenedOrder> {
+  const { viewerId, input } = ctx;
+  const { cursor } = input;
+  if (cursor?.order !== undefined && cursor.at !== undefined) {
+    const stored = await loadPeopleOrder(viewerId, cursor.order, filters);
+    if (stored) return { order: stored, token: cursor.order, start: cursor.at };
+  }
+  const { order, mutual } = await buildOrder(ctx, mode, query, lead);
+  return {
+    order,
+    token: orderToken(filters, order),
+    start: cursor ? resumeAt(order.people, cursor) : 0,
+    built: { mutual },
   };
 }
 
 /**
  * Trade as people: 12 a page, each with every post the feed keeps for them (up to
- * `PERSON_POST_LIMIT`). The phases and their order are `browseFeed`'s; a person sits in one
- * section, and `person` leads the first page with that person's row.
+ * `PERSON_POST_LIMIT`). Page 1 works out the whole order and stores it; later pages go on by
+ * position in it, so a ranking or a bump that changes mid-scroll moves no one. An order that is
+ * gone, or was built for other filters, is built again and the page goes on from the cursor's
+ * person. `person` leads the first page with that person's row.
  */
 export async function peopleFeed(viewerId: string | null, input: PeopleInput) {
   const empty = { people: [], nextCursor: undefined, collections: {} };
   const resolved = await resolveFeed(viewerId, input);
   if (!resolved) return empty;
-  const { mode, viewer, slugs, match } = resolved;
+  const { viewer, slugs, match } = resolved;
+  const mode = match ? resolved.mode : "off";
+  const { cursor } = input;
 
-  const lead = input.cursor ? input.cursor.lead : input.person;
-  const plan = feedPlan(match ? mode : "off", input.type, input.cursor);
-  const sectioned = isSectioned(plan.phases);
-  const [ranked, oneWay, snapshot] = await Promise.all([
-    match && (plan.mutualOwned || plan.phases.includes("mutual")) ? mutualPeopleOf(match) : [],
-    match && sectioned ? getOneWayPeople(match.userId, match.sides) : [],
-    viewerId !== null && input.cursor?.scope ? loadScope(viewerId, input.cursor.scope) : undefined,
-  ]);
-  // only a Mutual person with a kept WTT post is in the Mutual section; the rest are One way
-  const keptWtt = await fetchFeedOwners(
-    feedQueryOf({ viewerId, input, slugs, match }, "wtt"),
-    ranked.map((person) => person.userId),
-  );
-  const mutual = ranked.filter((person) => keptWtt.has(person.userId));
-  const seen = mergeSeen(snapshot, {
-    mutual: mutual.map((person) => person.userId),
-    oneWay: oneWay.map((person) => person.userId),
+  const lead = cursor ? cursor.lead : input.person;
+  const ctx: PeopleContext = { viewerId, viewer, input, slugs, match };
+  // Mutual is a swap between two people, so under Mutual only it lists WTT posts
+  const query = feedQueryOf(ctx, mode === "mutual" ? "wtt" : input.type);
+  const filters = ordersFingerprint({
+    facets: {
+      artist: input.artist,
+      member: input.member,
+      season: input.season,
+      class: input.class,
+      on_offline: input.on_offline,
+      collection: input.collection,
+    },
+    type: input.type,
+    slug: input.slug ?? null,
+    mode,
+    listId: match?.sides.listId ?? null,
+    lead: lead ?? null,
   });
 
-  const ctx: PeopleContext = {
-    viewerId,
-    viewer,
-    input,
-    mode,
-    slugs,
-    match,
-    plan,
-    mutual,
-    oneWay,
-    seen,
-    lead,
-    reads: readBudget(EXTRA_PEOPLE_READS),
-    snapshot,
-  };
+  const opened = await openOrder(ctx, mode, query, lead, filters);
+  const { order, token, built } = opened;
 
   // a person the feed would not list, or that Mutual only does not, has no row to lead with
   const led =
-    lead && !input.cursor && (mode !== "mutual" || mutual.some((person) => person.userId === lead))
-      ? (await loadPeople(ctx, feedQueryOf(ctx, mode === "mutual" ? "wtt" : input.type), [lead]))[0]
+    lead && !cursor && built && (mode !== "mutual" || built.mutual.has(lead))
+      ? (await loadPeople(ctx, query, [lead]))[0]
       : undefined;
 
-  const page = await fillPage(
-    plan.phases,
-    PEOPLE_PAGE_SIZE,
-    (phase, need) => readPeoplePhase(ctx, phase, need),
-    (loaded) => loaded.person.userId,
+  const ranked = order.people.flatMap((entry) => (entry.section ? [entry.id] : []));
+  const reader = orderReader(
+    order,
+    opened.start,
+    cursor && { bumpedAt: cursor.bumpedAt, userId: cursor.userId },
+    async (after, limit) => {
+      const found = await fetchBumpPeople(query, {
+        limit,
+        cursor: after,
+        excludeOwners: lead ? [...ranked, lead] : ranked,
+      });
+      return found.map((row) => ({ bumpedAt: iso(row.cursor_at)!, userId: row.user_id }));
+    },
   );
+  const read = await readBatches({
+    need: PEOPLE_PAGE_SIZE,
+    budget: readBudget(EXTRA_PEOPLE_READS),
+    fetch: reader.fetch,
+    load: (rows) =>
+      loadPeople(
+        ctx,
+        query,
+        rows.map((row) => row.id),
+      ),
+  });
+  const sectionOf = new Map(order.people.map((entry) => [entry.id, entry.section]));
 
   const people = [
     ...(led ? [{ ...led.person, section: undefined }] : []),
-    ...page.posts.map(({ phase, person }) => ({
+    ...read.taken.map(({ person }) => ({
       ...person,
-      section: sectioned
-        ? phase === "mutual"
-          ? ("mutual" as const)
-          : ("oneWay" as const)
-        : undefined,
+      // under Any everyone past the Mutual section reads as One way, the tail too
+      section:
+        mode === "any"
+          ? sectionOf.get(person.userId) === "mutual"
+            ? ("mutual" as const)
+            : ("oneWay" as const)
+          : undefined,
     })),
   ];
   const drawn = unique(
@@ -679,19 +709,25 @@ export async function peopleFeed(viewerId: string | null, input: PeopleInput) {
   );
   const collectionRows = await fetchCollectionsBySlug(drawn, []);
 
-  let scope: string | undefined;
-  if (keepsScope(plan.phases) && page.next && viewerId !== null) {
-    scope = scopeToken(seen);
-    if (scope !== input.cursor?.scope) await saveScope(viewerId, scope, seen);
-  }
+  const last = read.dry ? undefined : read.examined;
+  const lastTaken = read.taken.at(-1);
+  if (last && built) await savePeopleOrder(viewerId, token, filters, order);
 
   return {
     people,
-    nextCursor: page.next && {
-      ...page.next.last,
-      ...(sectioned ? { phase: page.next.phase === "bump" ? undefined : page.next.phase } : {}),
-      ...(scope ? { scope } : {}),
+    // `bumpedAt`, `phase` and the ranks let a cursor go on without its order, and a build
+    // that predates the order read it
+    nextCursor: last && {
+      bumpedAt:
+        last.bumpedAt ??
+        (lastTaken ? iso(lastTaken.newest)! : (cursor?.bumpedAt ?? new Date(0).toISOString())),
+      userId: last.id,
+      ...(mode === "any" ? { phase: last.section ?? ("tail" as const) } : {}),
+      ...(last.rank ? { rank: last.rank } : {}),
+      ...(last.oneWay ? { oneWay: last.oneWay } : {}),
       lead,
+      order: token,
+      at: reader.position(),
     },
     collections: Object.fromEntries(collectionRows.map((c) => [c.slug, c])) as Record<
       string,

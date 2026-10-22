@@ -134,8 +134,9 @@ export const browseInputSchema = browseFiltersSchema.extend({
 
 /**
  * `trade.people` pages by person: `bumpedAt` and `userId` are the last person's newest bump and
- * id, `lead` the `person` that opened the feed, which later pages keep leaving out. The other
- * fields are `feedCursorSchema`'s.
+ * id, `lead` the `person` that opened the feed, which later pages keep leaving out. `order`
+ * names the server's stored order of people and `at` the next place in it; a cursor without
+ * them, from an open tab, resumes from its person. The other fields are `feedCursorSchema`'s.
  */
 const peopleCursorSchema = z.object({
   bumpedAt: z.iso.datetime({ offset: true }),
@@ -145,6 +146,8 @@ const peopleCursorSchema = z.object({
   oneWay: oneWayRankSchema.optional(),
   scope: z.string().min(1).max(64).optional(),
   lead: z.string().min(1).optional(),
+  order: z.string().min(1).max(64).optional(),
+  at: z.number().int().nonnegative().optional(),
 });
 export type PeopleCursor = z.infer<typeof peopleCursorSchema>;
 

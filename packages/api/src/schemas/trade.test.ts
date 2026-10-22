@@ -7,6 +7,7 @@ import {
   fullestFilter,
   listMatchCountInputSchema,
   mutualCountInputSchema,
+  peopleInputSchema,
   personInputSchema,
   tabCountsInputSchema,
 } from "./trade";
@@ -62,6 +63,35 @@ describe("browse cursor", () => {
       browseInputSchema.safeParse({ cursor: { bumpedAt: "2026-10-07T09:12:30Z", id: 1.5 } })
         .success,
     ).toBe(false);
+  });
+});
+
+describe("people cursor", () => {
+  test("an open tab's cursor, with no order or position, parses to the same data", () => {
+    const cursor = {
+      bumpedAt: "2026-10-07T09:12:30.123Z",
+      userId: "u1",
+      phase: "oneWay" as const,
+      oneWay: { sum: 7, at: 1760000000000, userId: "u1" },
+      scope: "0a1b2c3d4e5f",
+      lead: "u9",
+    };
+    const parsed = peopleInputSchema.parse({ cursor }).cursor;
+    expect(parsed).toEqual(cursor);
+    expect(parsed?.order).toBeUndefined();
+    expect(parsed?.at).toBeUndefined();
+  });
+
+  test("takes an order and a position", () => {
+    const cursor = { bumpedAt: "2026-10-07T09:12:30.123Z", userId: "u1", order: "a1b2c3", at: 24 };
+    expect(peopleInputSchema.parse({ cursor }).cursor).toEqual(cursor);
+  });
+
+  test("refuses a negative or fractional position and an empty order", () => {
+    const base = { bumpedAt: "2026-10-07T09:12:30.123Z", userId: "u1" };
+    for (const extra of [{ at: -1 }, { at: 1.5 }, { order: "" }, { order: "x".repeat(65) }]) {
+      expect(peopleInputSchema.safeParse({ cursor: { ...base, ...extra } }).success).toBe(false);
+    }
   });
 });
 

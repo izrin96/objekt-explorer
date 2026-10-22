@@ -283,15 +283,6 @@ export function isSectioned(phases: readonly FeedPhase[]) {
 }
 
 /**
- * Whether a page's cursor keeps the scope snapshot: every Any page, a tail page included, so
- * the tail still skips people the sections showed after the rankings refresh, and Mutual only,
- * for its order.
- */
-export function keepsScope(phases: readonly FeedPhase[]) {
-  return isSectioned(phases) || phases.includes("mutual");
-}
-
-/**
  * Browse reads the plain bump order and Mutual only its own phase. Any reads Mutual, then One
  * way people, then the tail, from the phase the cursor names; Mutual lists WTT posts only, so
  * WTB and WTS skip it. An older Any cursor (no `phase`, no `rank`) continues the plain bump
@@ -340,18 +331,6 @@ export function phaseScope(phase: FeedPhase, plan: FeedPlan, seen: SeenPeople) {
     excludeWttOf: wttOf ? seen.mutual : undefined,
     excludeOwners: phase === "tail" ? seen.oneWay : undefined,
   };
-}
-
-/**
- * What the people feed's phases leave out so that no person is listed twice: later phases skip
- * every Mutual person the Mutual section lists, and the tail every One way person. `lead` is the
- * person who opened the feed, listed first.
- */
-export function peopleScope(phase: FeedPhase, seen: SeenPeople, lead?: string): string[] {
-  const owners = new Set<string>(lead ? [lead] : []);
-  if (phase === "oneWay" || phase === "tail") for (const id of seen.mutual) owners.add(id);
-  if (phase === "tail") for (const id of seen.oneWay) owners.add(id);
-  return [...owners];
 }
 
 /** What one phase gave a page: its posts, whether it has none left, and where it stopped. */
@@ -408,6 +387,134 @@ export async function readBatches<R, K>({
     examined = rows.at(-1) ?? examined;
   }
   return { taken, examined, dry: exhausted };
+}
+
+/** people a stored people order holds at most; past it the tail goes on by keyset */
+export const ORDER_LIMIT = 2000;
+
+/** Where a person sits in a people order: Mutual, One way, or (none) the tail or Browse. */
+export type OrderSection = "mutual" | "oneWay";
+
+/** One person in a people order, with the rank a cursor carries for a build that reads it. */
+export type OrderEntry = { id: string; section?: OrderSection } & Pick<
+  PeopleCursor,
+  "rank" | "oneWay"
+>;
+
+type PeopleKeyset = Pick<PeopleCursor, "bumpedAt" | "userId">;
+
+/**
+ * The order `trade.people` pages through for one opened feed. `more` is there when the tail was
+ * capped: it goes on by the bump keyset from `after`, or from the top of the tail without one.
+ */
+export type PeopleOrder = { people: OrderEntry[]; more?: { after?: PeopleKeyset } };
+
+/**
+ * One people order from its sections in order: a person keeps the first place they are given,
+ * the `lead` is left out, and no more than `limit` are kept. `capped` says whether any were cut.
+ */
+export function buildPeopleOrder(
+  sections: { section?: OrderSection; people: Omit<OrderEntry, "section">[] }[],
+  lead: string | undefined,
+  limit: number = ORDER_LIMIT,
+): { people: OrderEntry[]; capped: boolean } {
+  const seen = new Set<string>(lead ? [lead] : []);
+  const people: OrderEntry[] = [];
+  for (const { section, people: entries } of sections) {
+    for (const entry of entries) {
+      if (seen.has(entry.id)) continue;
+      if (people.length >= limit) return { people, capped: true };
+      seen.add(entry.id);
+      people.push(section ? { ...entry, section } : entry);
+    }
+  }
+  return { people, capped: false };
+}
+
+/** The next `limit` people of an order from position `at`. */
+export function nextSlice(people: readonly OrderEntry[], at: number, limit: number) {
+  return people.slice(at, at + limit);
+}
+
+const SECTION_PLACE = { mutual: 0, oneWay: 1, tail: 2 } as const;
+
+/**
+ * Where a cursor goes on in an order it was not read from (expired, another filter, or an open
+ * tab's cursor): after its person when they are in it, else at its position, else at the start of
+ * the section its `phase` names, else at the top, where Mutual starts too.
+ */
+export function resumeAt(
+  people: readonly OrderEntry[],
+  cursor: Pick<PeopleCursor, "userId" | "at" | "phase">,
+): number {
+  const found = people.findIndex((entry) => entry.id === cursor.userId);
+  if (found !== -1) return found + 1;
+  if (cursor.at !== undefined) return Math.min(cursor.at, people.length);
+  const { phase } = cursor;
+  if (phase === undefined) return 0;
+  const from = people.findIndex(
+    (entry) => SECTION_PLACE[entry.section ?? "tail"] >= SECTION_PLACE[phase],
+  );
+  return from === -1 ? people.length : from;
+}
+
+/** A place a page of people reads: an order entry, or a person past a capped order. */
+export type OrderRow = OrderEntry & { bumpedAt?: string };
+
+/**
+ * Reads an order from position `start` for `readBatches`: its entries, then, past a capped
+ * order, people by the bump keyset through `fetchMore`. That goes on from `more.after` at the
+ * order's end, or from `cursor` once an earlier page has read past it. `position` counts every
+ * person read, so it is the next page's `at`.
+ */
+export function orderReader(
+  order: PeopleOrder,
+  start: number,
+  cursor: PeopleKeyset | undefined,
+  fetchMore: (after: PeopleKeyset | undefined, limit: number) => Promise<PeopleKeyset[]>,
+) {
+  const { people, more } = order;
+  let at = start;
+  let after = start > people.length ? cursor : more?.after;
+  return {
+    position: () => at,
+    async fetch(limit: number): Promise<{ rows: OrderRow[]; exhausted: boolean }> {
+      if (at < people.length) {
+        const rows = nextSlice(people, at, limit);
+        at += rows.length;
+        return { rows, exhausted: at >= people.length && !more };
+      }
+      if (!more) return { rows: [], exhausted: true };
+      const found = await fetchMore(after, limit);
+      at += found.length;
+      after = found.at(-1) ?? after;
+      return {
+        rows: found.map((row) => ({ id: row.userId, bumpedAt: row.bumpedAt })),
+        exhausted: found.length < limit,
+      };
+    },
+  };
+}
+
+/**
+ * What a stored order was built for, so a cursor replayed with other filters, Compare with list
+ * or lead gets a new one. The same filters give the same fingerprint in any key or value order.
+ */
+export function ordersFingerprint(filters: {
+  facets: Record<string, readonly string[]>;
+  type: PostType;
+  slug: string | null;
+  mode: BrowseMatchMode;
+  listId: number | null;
+  lead: string | null;
+}) {
+  const facets = Object.entries(filters.facets)
+    .toSorted(([a], [b]) => a.localeCompare(b))
+    .map(([key, values]) => [key, values.toSorted((a, b) => a.localeCompare(b))]);
+  const { type, slug, mode, listId, lead } = filters;
+  return new Bun.CryptoHasher("sha1")
+    .update(JSON.stringify({ facets, type, slug, mode, listId, lead }))
+    .digest("hex");
 }
 
 /**
