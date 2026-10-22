@@ -283,6 +283,15 @@ export function isSectioned(phases: readonly FeedPhase[]) {
 }
 
 /**
+ * Whether a page's cursor keeps the scope snapshot: every Any page, a tail page included, so
+ * the tail still skips people the sections showed after the rankings refresh, and Mutual only,
+ * for its order.
+ */
+export function keepsScope(phases: readonly FeedPhase[]) {
+  return isSectioned(phases) || phases.includes("mutual");
+}
+
+/**
  * Browse reads the plain bump order and Mutual only its own phase. Any reads Mutual, then One
  * way people, then the tail, from the phase the cursor names; Mutual lists WTT posts only, so
  * WTB and WTS skip it. An older Any cursor (no `phase`, no `rank`) continues the plain bump

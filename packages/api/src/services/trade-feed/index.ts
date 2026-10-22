@@ -23,6 +23,7 @@ import {
   fillPage,
   isPostIdle,
   isSectioned,
+  keepsScope,
   latest,
   mergeSeen,
   matchIndexOf,
@@ -678,10 +679,8 @@ export async function peopleFeed(viewerId: string | null, input: PeopleInput) {
   );
   const collectionRows = await fetchCollectionsBySlug(drawn, []);
 
-  // Mutual only keeps a snapshot too, for its order across pages
-  const byRank = plan.phases.includes("mutual") || plan.phases.includes("oneWay");
   let scope: string | undefined;
-  if (byRank && page.next && viewerId !== null) {
+  if (keepsScope(plan.phases) && page.next && viewerId !== null) {
     scope = scopeToken(seen);
     if (scope !== input.cursor?.scope) await saveScope(viewerId, scope, seen);
   }

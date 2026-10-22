@@ -14,6 +14,7 @@ import {
   readBudget,
   isSectioned,
   isPostIdle,
+  keepsScope,
   matchesViewer,
   mergeSeen,
   narrowViewer,
@@ -577,6 +578,17 @@ describe("isSectioned", () => {
     expect(isSectioned(["tail"])).toBe(true);
     expect(isSectioned(["bump"])).toBe(false);
     expect(isSectioned(["mutual"])).toBe(false);
+  });
+});
+
+describe("keepsScope", () => {
+  test("every Any page keeps the snapshot, a tail page too, and so does Mutual only", () => {
+    const tail = feedPlan("any", "all", { bumpedAt: "2026-10-01T00:00:00.000Z", phase: "tail" });
+    expect(tail.phases).toEqual(["tail"]);
+    expect(keepsScope(tail.phases)).toBe(true);
+    expect(keepsScope(feedPlan("any", "wtb").phases)).toBe(true);
+    expect(keepsScope(feedPlan("mutual", "all").phases)).toBe(true);
+    expect(keepsScope(feedPlan("off", "all").phases)).toBe(false);
   });
 });
 
