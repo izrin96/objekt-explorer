@@ -6,7 +6,7 @@ import { useState } from "react";
 import { ChangelogButton } from "@/components/layout/changelog";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { NavSearch } from "@/components/layout/nav-search";
-import { SystemStatus, statusDotClass, useOverallStatus } from "@/components/layout/system-status";
+import { SystemStatus } from "@/components/layout/system-status";
 import { SignedOutNav, UserMenu } from "@/components/layout/user-menu";
 import { Group } from "@/components/ui/group";
 import { MessagesIcon } from "@/features/chat/messages-icon";
@@ -50,7 +50,6 @@ export function useAlsoActive() {
 export function AppNav() {
   const [searchOpen, setSearchOpen] = useState(false);
   const { data: user } = useCurrentUser();
-  const overall = useOverallStatus();
   const links = useNavLinks();
   const alsoActive = useAlsoActive();
 
@@ -66,12 +65,7 @@ export function AppNav() {
           to="/"
           className="font-display flex shrink-0 items-center gap-2 text-base font-bold tracking-tight whitespace-nowrap"
         >
-          <span
-            className={cn(
-              "bg-foreground text-background after:border-background relative grid size-6 shrink-0 place-items-center rounded-[7px] after:absolute after:-right-0.5 after:-bottom-0.5 after:size-2 after:rounded-full after:border-2",
-              statusDotClass(overall),
-            )}
-          >
+          <span className="bg-foreground text-background grid size-6 shrink-0 place-items-center rounded-[7px]">
             <CubeIcon weight="bold" className="size-3.5" />
           </span>
           {/* on a phone the search field needs the room, and between `lg` and `xl`

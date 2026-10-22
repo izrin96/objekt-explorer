@@ -72,8 +72,8 @@ SHALL apply to every page.
 - **THEN** tripleS remains selected
 
 ### Requirement: System status
-The frame SHALL show an overall status of up, partial or down derived from the indexer's
-freshness and the Cosmo API, tinting both the logo dot and a status control that opens a
+The frame SHALL show an overall status of up or down derived from the indexer's
+freshness and the Cosmo API, tinting a status control that opens a
 popover with the database and Cosmo rows, the last transfer time and a loading state.
 
 #### Scenario: Indexer behind

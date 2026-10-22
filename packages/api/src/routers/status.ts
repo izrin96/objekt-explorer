@@ -2,7 +2,6 @@ import { indexer } from "@repo/db/indexer";
 import { transfers } from "@repo/db/indexer/schema";
 import { desc } from "drizzle-orm";
 import { ofetch } from "ofetch";
-import type * as z from "zod";
 
 import { pub } from "../orpc";
 import { documented } from "../schemas/common/documented";
@@ -60,28 +59,13 @@ async function fetchDatabaseStatus() {
 }
 
 async function fetchCosmoStatus() {
-  const [v3Res, v1Res] = await Promise.allSettled([
-    ofetch("https://api.cosmo.fans/bff/v3/artists", {
-      method: "HEAD",
-      timeout: 5000,
-    }).then(() => true),
-    ofetch("https://api.cosmo.fans", {
-      method: "HEAD",
-      timeout: 5000,
-    }).then(() => true),
-  ]);
+  const up = await ofetch("https://api.cosmo.fans/bff/v3/artists", {
+    method: "HEAD",
+    timeout: 5000,
+  }).then(
+    () => true,
+    () => false,
+  );
 
-  const v3Up = v3Res.status === "fulfilled" && v3Res.value;
-  const v1Up = v1Res.status === "fulfilled" && v1Res.value;
-
-  let status: z.infer<typeof statusOutputSchema>["cosmo"]["status"];
-  if (v3Up && v1Up) {
-    status = "up";
-  } else if (v3Up && !v1Up) {
-    status = "partial";
-  } else {
-    status = "down";
-  }
-
-  return { status };
+  return { status: up ? ("up" as const) : ("down" as const) };
 }
