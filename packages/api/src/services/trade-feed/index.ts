@@ -435,7 +435,7 @@ export async function fetchMyPosts(userId: string) {
   const now = new Date();
   const [own, lastBump] = await Promise.all([fetchOwnTradeLists(userId), lastBumpOf(userId)]);
   const next = nextBumpAt(lastBump, now);
-  // a list, as open tabs read it; every post carries the person's next bump
+  // a list, as open tabs read it; every post carries the person's last and next bump
   return pairPosts(own)
     .toSorted(comparePosts)
     .map((post) => ({
@@ -448,6 +448,7 @@ export async function fetchMyPosts(userId: string) {
       listed: !isPostIdle(post, now),
       bumpedAt: iso(post.bumpedAt),
       updatedAt: iso(post.updatedAt)!,
+      lastBumpAt: iso(lastBump),
       nextBumpAt: next,
     }));
 }

@@ -42,7 +42,9 @@ export function MyPosts() {
   }
   const posts = query.data;
   if (posts.length === 0) return null;
-  // every post carries the same next bump: Bump is one per person
+  // every post carries the same last and next bump: Bump is one per person, so its time shows
+  // once here instead of on each row
+  const lastBumpAt = posts[0]?.lastBumpAt ?? null;
   const nextBumpAt = posts[0]?.nextBumpAt ?? null;
 
   const summary = summarizePosts(posts);
@@ -81,6 +83,16 @@ export function MyPosts() {
                     text={([count]) => m.trade_my_posts_idle({ count: count! })}
                   />
                 </Badge>
+              </>
+            ) : null}
+            {lastBumpAt ? (
+              <>
+                <span aria-hidden className="text-muted-foreground">
+                  ·
+                </span>
+                <time dateTime={lastBumpAt} className="text-muted-foreground tabular-nums">
+                  {m.trade_bumped_at({ time: relativeTime(new Date(lastBumpAt).getTime(), now) })}
+                </time>
               </>
             ) : null}
             {nextBumpAt ? (
@@ -161,12 +173,13 @@ function MyPostRow({ post, now }: { post: MyPost; now: number }) {
             </Badge>
           )}
         </div>
-        <p className="text-muted-foreground text-xs text-pretty">
-          <time dateTime={time}>
-            {changed ? m.trade_updated_at({ time: when }) : m.trade_bumped_at({ time: when })}
-          </time>
-          {post.listed ? null : ` · ${m.trade_post_idle_hint()}`}
-        </p>
+        {changed || !post.listed ? (
+          <p className="text-muted-foreground text-xs text-pretty">
+            {changed ? <time dateTime={time}>{m.trade_updated_at({ time: when })}</time> : null}
+            {changed && !post.listed ? " · " : null}
+            {post.listed ? null : m.trade_post_idle_hint()}
+          </p>
+        ) : null}
       </div>
     </li>
   );
