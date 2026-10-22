@@ -13,6 +13,7 @@ import type { ExtraFacet } from "@/features/filters/facet-controls";
 import { useScopedFacets } from "@/features/filters/facets";
 import { FilterBar } from "@/features/filters/filter-bar";
 import { LONG_TAIL } from "@/features/filters/long-tail";
+import { MemberChips } from "@/features/filters/member-chips";
 import { useFilters, useResetFilters } from "@/features/filters/use-filters";
 import { AddToListProvider } from "@/features/list/add-to-list-dialog";
 import { AddToListAction, AddToListMenuItem } from "@/features/list/add-to-list-menu-item";
@@ -104,6 +105,7 @@ export function MarketView() {
     <AddToListProvider>
       <PageHeader title={m.market_title()} description={m.market_description()} />
 
+      <MemberChips />
       <FilterBar
         facets={facets}
         groups={groups}

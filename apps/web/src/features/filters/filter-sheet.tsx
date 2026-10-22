@@ -10,7 +10,6 @@ import {
   SheetHeader,
   SheetPanel,
   SheetPopup,
-  type SheetPrimitive,
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
@@ -47,25 +46,11 @@ type FilterSheetProps = {
   foldAll?: boolean;
   onReset?: () => void;
   resetDisabled?: boolean;
-  /**
-   * Lets a `FilterSheetTrigger` on the `md+` toolbar open this sheet too. The
-   * toolbar shows every facet from `md`, so there the sheet holds only `children`.
-   */
-  handle?: SheetPrimitive.Handle<unknown>;
 };
 
-export function FilterSheetTrigger({
-  handle,
-  count,
-  className,
-}: {
-  handle?: SheetPrimitive.Handle<unknown>;
-  count: number;
-  className?: string;
-}) {
+function FilterSheetTrigger({ count, className }: { count: number; className?: string }) {
   return (
     <SheetTrigger
-      handle={handle}
       render={<Button variant="outline" size="sm" className={cn("gap-1.5", className)} />}
     >
       <FunnelSimpleIcon />
@@ -96,7 +81,6 @@ export function FilterSheet({
   foldAll = false,
   onReset,
   resetDisabled = false,
-  handle,
 }: FilterSheetProps) {
   const [open, setOpen] = useState(false);
   const declaredKeys = useMemo(() => [...keys, ...extras.map((e) => e.key)], [keys, extras]);
@@ -117,8 +101,8 @@ export function FilterSheet({
     extraCount;
 
   return (
-    <Sheet open={open} onOpenChange={setOpen} handle={handle}>
-      <FilterSheetTrigger handle={handle} count={count} className="md:hidden" />
+    <Sheet open={open} onOpenChange={setOpen}>
+      <FilterSheetTrigger count={count} className="md:hidden" />
       {/* `SheetPopup` renders its own backdrop, so the portal is the only way to reach it */}
       <SheetPopup
         side="right"
@@ -130,7 +114,7 @@ export function FilterSheet({
           <SheetDescription className="sr-only">{m.filter_sheet_description()}</SheetDescription>
         </SheetHeader>
         <SheetPanel className="flex flex-col gap-4">
-          <div className={cn("flex flex-col gap-4", handle && "md:hidden")}>
+          <div className="flex flex-col gap-4">
             <ExtraFacetControls surface="stacked" extras={extras} />
             <FacetControls
               surface="stacked"
