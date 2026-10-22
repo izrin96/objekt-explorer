@@ -2,6 +2,7 @@ import { InfoIcon, NoteIcon } from "@phosphor-icons/react";
 import { useHydrated } from "@tanstack/react-router";
 import { useState } from "react";
 
+import { CornerDot } from "@/components/shared/unread-badge";
 import {
   Accordion,
   AccordionItem,
@@ -19,7 +20,6 @@ import {
   DialogPopup,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 import { useChangelogStore } from "@/stores/changelog";
 
@@ -32,7 +32,7 @@ import { AboutDialog, DISCORD_INVITE } from "./about";
  */
 const CHANGELOG = [
   {
-    date: "2026-10-15",
+    date: "2026-10-23",
     items: [
       "Added a Trade page: Browse lists trade and sale posts, and For you (formerly Trade Matches) finds people to trade with across all your lists.",
       "Lists now have one Show on Trade or Show on Market switch, replacing Discoverable.",
@@ -163,24 +163,8 @@ export function useChangelogNew() {
 
 /** Not `::after` on the corner: Button spends it on the touch target. */
 export function NewDot({ placement }: { placement: "corner" | "inline" }) {
-  return (
-    <span
-      aria-hidden
-      className={cn(
-        "flex size-1.5",
-        placement === "corner" ? "absolute -top-0.5 -right-0.5" : "relative",
-      )}
-    >
-      <span className="bg-accent-solid absolute size-full rounded-full opacity-75 motion-safe:animate-ping" />
-      <span
-        className={cn(
-          "bg-accent-solid relative size-full rounded-full",
-          // separates the dot from the button's border
-          placement === "corner" && "ring-background ring-2",
-        )}
-      />
-    </span>
-  );
+  if (placement === "corner") return <CornerDot />;
+  return <span aria-hidden className="bg-accent-solid size-2 shrink-0 rounded-full" />;
 }
 
 /** The nav's entry point: an icon button that owns the dialog beside it. */

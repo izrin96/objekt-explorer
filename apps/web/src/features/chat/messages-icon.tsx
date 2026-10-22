@@ -2,7 +2,7 @@ import { ChatsCircleIcon } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 
-import { UnreadDot } from "@/components/shared/unread-dot";
+import { UnreadBadge } from "@/components/shared/unread-badge";
 import { Button } from "@/components/ui/button";
 import { m } from "@/paraglide/messages";
 import { useUserSocketLive } from "@/stores/user-socket";
@@ -32,7 +32,7 @@ export function MessagesIcon() {
       render={<Link to="/messages" />}
     >
       <ChatsCircleIcon />
-      <UnreadDot count={unread + Number(unseen)} />
+      <UnreadBadge count={unread} dot={unseen} />
     </Button>
   );
 }

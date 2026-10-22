@@ -2,7 +2,7 @@ import { BellIcon } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 
-import { UnreadDot } from "@/components/shared/unread-dot";
+import { UnreadBadge } from "@/components/shared/unread-badge";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverPopup, PopoverTrigger } from "@/components/ui/popover";
 import { Sheet, SheetPopup, SheetTrigger } from "@/components/ui/sheet";
@@ -37,7 +37,7 @@ export function NotificationBell() {
   const icon = (
     <>
       <BellIcon />
-      <UnreadDot count={unread} />
+      <UnreadBadge count={unread} />
     </>
   );
 
