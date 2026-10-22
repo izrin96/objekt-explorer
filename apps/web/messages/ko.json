@@ -1086,7 +1086,7 @@
   "chat_not_found": "이 대화를 볼 수 없습니다",
   "chat_unread": "읽지 않음",
   "chat_preview_card": "오브젝트를 보냈습니다",
-  "chat_preview_post": "거래 게시물",
+  "chat_preview_post": "거래 게시물을 공유했습니다",
   "chat_preview_draft": "새 메시지",
   "chat_preview_mine": "나: {text}",
   "chat_actions_label": "{name}님과의 대화: 더 보기",

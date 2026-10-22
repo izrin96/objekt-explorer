@@ -191,7 +191,7 @@ function useDraftThread(rows: ConversationRow[], box: ChatBox, q: string | undef
 
 function DraftRow({ draft }: { draft: Draft }) {
   return (
-    <li data-conversation-row={draft.id}>
+    <li data-conversation-row={draft.id} className={ROW_LINE}>
       <RowLink id={draft.id} partner={draft.partner} className="pe-2">
         <span className="truncate text-sm font-medium">{draft.partner.identity.name}</span>
         <span className="text-muted-foreground truncate text-sm italic">
@@ -201,6 +201,13 @@ function DraftRow({ draft }: { draft: Draft }) {
     </li>
   );
 }
+
+/**
+ * A line above every row but the first, from the text and not the avatar, so the avatars stay a
+ * column; it gives way beside the open row, whose highlight already sets it apart.
+ */
+const ROW_LINE =
+  "before:bg-border relative not-first:before:absolute not-first:before:start-15 not-first:before:end-2 not-first:before:top-0 not-first:before:h-px has-data-[status=active]:before:hidden [li:has([data-status=active])+&]:before:hidden";
 
 function RowLink({
   id,
@@ -221,7 +228,7 @@ function RowLink({
       search={(prev) => prev}
       data-conversation-link={id}
       className={cn(
-        "hover:bg-secondary/60 focus-visible:ring-ring data-[status=active]:bg-secondary flex items-center gap-3 rounded-lg py-2.5 ps-2 outline-none focus-visible:ring-2",
+        "hover:bg-secondary/60 focus-visible:ring-ring data-[status=active]:bg-secondary flex items-start gap-3 rounded-lg py-2.5 ps-2 outline-none focus-visible:ring-2",
         className,
       )}
     >
@@ -305,10 +312,11 @@ function ConversationItem({
   const mutedText = muted ? (hydrated ? mutedLabel(muted) : m.chat_muted_always()) : null;
 
   return (
-    <li data-conversation-row={row.id} className="relative">
+    <li data-conversation-row={row.id} className={ROW_LINE}>
       {/* the menu sits beside the link, not in it: a button inside a link is not allowed */}
-      <RowLink id={row.id} partner={partner} className="pe-11">
-        <span className="flex min-w-0 items-baseline gap-2">
+      <RowLink id={row.id} partner={partner} className="pe-2">
+        {/* only the name's line makes room for the menu, so the preview gets the row's width */}
+        <span className="me-8 flex min-w-0 items-baseline gap-2">
           <span
             className={cn(
               "min-w-0 flex-1 truncate text-sm",
@@ -378,11 +386,7 @@ function ConversationItem({
           </div>
         ) : null}
       </RowLink>
-      <ConversationMenu
-        conversation={row}
-        name={name}
-        className="absolute end-2 top-1/2 -translate-y-1/2"
-      />
+      <ConversationMenu conversation={row} name={name} className="absolute end-2 top-1.5" />
     </li>
   );
 }

@@ -1086,7 +1086,7 @@
   "chat_not_found": "This conversation isn't available",
   "chat_unread": "Unread",
   "chat_preview_card": "Sent an objekt",
-  "chat_preview_post": "Trade post",
+  "chat_preview_post": "Shared a trade post",
   "chat_preview_draft": "New message",
   "chat_preview_mine": "You: {text}",
   "chat_actions_label": "Conversation with {name}: more actions",

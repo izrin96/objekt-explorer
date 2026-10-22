@@ -1086,7 +1086,7 @@
   "chat_not_found": "この会話は表示できません",
   "chat_unread": "未読",
   "chat_preview_card": "Objektを送信しました",
-  "chat_preview_post": "取引の投稿",
+  "chat_preview_post": "取引の投稿を共有しました",
   "chat_preview_draft": "新しいメッセージ",
   "chat_preview_mine": "あなた: {text}",
   "chat_actions_label": "{name}との会話: その他の操作",
