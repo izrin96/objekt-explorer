@@ -105,6 +105,9 @@ export class Collection {
   @Column({ type: "jsonb", nullable: true })
   serialBatches!: { start: number; end: number }[] | null;
 
+  @Column({ type: "jsonb", nullable: true })
+  serialAnchors!: { tokenId: number; serial: number; note: string; addedAt: string }[] | null;
+
   @OneToMany(() => Transfer, (e) => e.collection)
   transfers!: Transfer[];
 

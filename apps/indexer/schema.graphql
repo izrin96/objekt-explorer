@@ -27,6 +27,7 @@ type Collection @entity {
   processedBackImage: String
   imageSyncHash: String
   serialBatches: JSON
+  serialAnchors: JSON
   transfers: [Transfer!] @derivedFrom(field: "collection")
   objekts: [Objekt!] @derivedFrom(field: "collection")
 }
