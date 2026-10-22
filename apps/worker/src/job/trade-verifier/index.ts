@@ -37,6 +37,7 @@ import { type Publish, publishAll } from "../../lib/trade-publish";
 import { ACCEPT_BY_FROM_NOW, acceptPicked, type Name, settleCopyDeadlines } from "./copy-deadlines";
 import { readIndexerHead } from "./indexer-head";
 import { offerUpkeep } from "./offer-upkeep";
+import { oneTrade } from "./one-trade";
 import { expireStalls } from "./trade-expiry";
 import { remindStalls } from "./trade-reminders";
 
@@ -133,7 +134,9 @@ async function verifyRun(trigger: Trigger) {
       });
       const misses = missesOf.get(tradeId) ?? [];
       if (decided.length === 0 && misses.length === 0) continue;
-      const outcome = await settleTrade(tradeId, tradeLegs, results, misses, transferable);
+      const outcome = await oneTrade(tradeId, () =>
+        settleTrade(tradeId, tradeLegs, results, misses, transferable),
+      );
       if (!outcome) continue;
       touched.trades += 1;
       touched.verified += outcome.verified;

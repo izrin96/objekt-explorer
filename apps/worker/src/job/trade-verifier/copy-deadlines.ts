@@ -17,6 +17,7 @@ import { offer, trade, tradeLeg, tradeSubstitute } from "@repo/db/schema";
 import { and, eq, inArray, isNull, lte, sql } from "drizzle-orm";
 
 import type { Publish } from "../../lib/trade-publish";
+import { oneTrade } from "./one-trade";
 
 export type Name = (userId: string) => { userId: string; name: string };
 type LegCopy = Awaited<ReturnType<typeof legCopies>>[number];
@@ -209,30 +210,32 @@ async function acceptDue(seenUntil: string) {
 
   const publishes: Publish[] = [];
   for (const tradeId of due) {
-    const publish = await db.transaction(async (tx) => {
-      const settled = await lockTrade(tx, tradeId);
-      if (!settled) return null;
-      const { open, askedOf, progress } = await readLegs(tx, tradeId);
-      const parties = [settled.userA, settled.userB];
-      const name = await partyNames(parties);
-      const accepted = await acceptPicked(
-        tx,
-        settled,
-        open.map((leg) => leg.id),
-        (_, copies) => dueCopy(copies, seenUntil),
-        askedOf,
-        progress,
-        name,
-      );
-      if (accepted.accepted.length === 0) return null;
+    const publish = await oneTrade(tradeId, () =>
+      db.transaction(async (tx) => {
+        const settled = await lockTrade(tx, tradeId);
+        if (!settled) return null;
+        const { open, askedOf, progress } = await readLegs(tx, tradeId);
+        const parties = [settled.userA, settled.userB];
+        const name = await partyNames(parties);
+        const accepted = await acceptPicked(
+          tx,
+          settled,
+          open.map((leg) => leg.id),
+          (_, copies) => dueCopy(copies, seenUntil),
+          askedOf,
+          progress,
+          name,
+        );
+        if (accepted.accepted.length === 0) return null;
 
-      const finished = await finishSettle(tx, settled, accepted.applied, accepted.counts, name);
-      return {
-        notified: [...accepted.notified, ...finished.notified],
-        conversations: [{ id: settled.conversationId, userIds: parties }],
-        reputations: finished.reputations,
-      };
-    });
+        const finished = await finishSettle(tx, settled, accepted.applied, accepted.counts, name);
+        return {
+          notified: [...accepted.notified, ...finished.notified],
+          conversations: [{ id: settled.conversationId, userIds: parties }],
+          reputations: finished.reputations,
+        };
+      }),
+    );
     if (publish) publishes.push(publish);
   }
   return publishes;
@@ -251,60 +254,62 @@ async function remindDue(seenUntil: string) {
 
   const publishes: Publish[] = [];
   for (const tradeId of candidates) {
-    const publish = await db.transaction(async (tx) => {
-      const settled = await lockTrade(tx, tradeId);
-      if (!settled) return null;
-      const { open, progress } = await readLegs(tx, tradeId);
-      const copiesOf = Map.groupBy(
-        await legCopies(
-          tx,
-          open.map((leg) => leg.id),
-        ),
-        (copy) => copy.legId,
-      );
-      const due = open.flatMap((leg) => {
-        const copy = reminderCopy(copiesOf.get(leg.id) ?? [], seenUntil);
-        return copy ? [{ leg, copy }] : [];
-      });
-      if (due.length === 0) return null;
+    const publish = await oneTrade(tradeId, () =>
+      db.transaction(async (tx) => {
+        const settled = await lockTrade(tx, tradeId);
+        if (!settled) return null;
+        const { open, progress } = await readLegs(tx, tradeId);
+        const copiesOf = Map.groupBy(
+          await legCopies(
+            tx,
+            open.map((leg) => leg.id),
+          ),
+          (copy) => copy.legId,
+        );
+        const due = open.flatMap((leg) => {
+          const copy = reminderCopy(copiesOf.get(leg.id) ?? [], seenUntil);
+          return copy ? [{ leg, copy }] : [];
+        });
+        if (due.length === 0) return null;
 
-      const reminded = await tx
-        .update(tradeSubstitute)
-        .set({ remindedAt: sql`now()` })
-        .where(
-          and(
-            inArray(
-              tradeSubstitute.id,
-              due.map(({ copy }) => copy.id),
+        const reminded = await tx
+          .update(tradeSubstitute)
+          .set({ remindedAt: sql`now()` })
+          .where(
+            and(
+              inArray(
+                tradeSubstitute.id,
+                due.map(({ copy }) => copy.id),
+              ),
+              isNull(tradeSubstitute.remindedAt),
+              eq(tradeSubstitute.status, "pending"),
             ),
-            isNull(tradeSubstitute.remindedAt),
-            eq(tradeSubstitute.status, "pending"),
-          ),
-        )
-        .returning({ id: tradeSubstitute.id });
-      const remindedIds = new Set(reminded.map((row) => row.id));
-      const sent = due.filter(({ copy }) => remindedIds.has(copy.id));
-      if (sent.length === 0) return null;
+          )
+          .returning({ id: tradeSubstitute.id });
+        const remindedIds = new Set(reminded.map((row) => row.id));
+        const sent = due.filter(({ copy }) => remindedIds.has(copy.id));
+        if (sent.length === 0) return null;
 
-      const [name, serialOf] = await Promise.all([
-        partyNames(sent.map(({ leg }) => leg.giverId)),
-        shownSerials(sent.flatMap(({ leg, copy }) => [copy.objektId, leg.objektId ?? ""])),
-      ]);
-      const notified = await writeNotes(
-        tx,
-        sent.map(({ leg, copy }) =>
-          wrongCopyNote(
-            settled,
-            "wrong_copy_due",
-            { userId: leg.receiverId, partner: name(leg.giverId) },
-            progress,
-            { asked: serialOf(leg.objektId ?? ""), sent: serialOf(copy.objektId) },
-            copy.acceptBy,
+        const [name, serialOf] = await Promise.all([
+          partyNames(sent.map(({ leg }) => leg.giverId)),
+          shownSerials(sent.flatMap(({ leg, copy }) => [copy.objektId, leg.objektId ?? ""])),
+        ]);
+        const notified = await writeNotes(
+          tx,
+          sent.map(({ leg, copy }) =>
+            wrongCopyNote(
+              settled,
+              "wrong_copy_due",
+              { userId: leg.receiverId, partner: name(leg.giverId) },
+              progress,
+              { asked: serialOf(leg.objektId ?? ""), sent: serialOf(copy.objektId) },
+              copy.acceptBy,
+            ),
           ),
-        ),
-      );
-      return { notified, conversations: [] };
-    });
+        );
+        return { notified, conversations: [] };
+      }),
+    );
     if (publish) publishes.push(publish);
   }
   return publishes;
