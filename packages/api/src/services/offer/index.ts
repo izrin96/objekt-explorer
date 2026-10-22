@@ -93,15 +93,29 @@ export async function createOffer(
   ]);
   const getRows = input.get.map((item) => {
     const entry = matchEntry(item, entries);
-    if (entry) return { item, listId: entry.listId, kept: false };
+    if (entry) {
+      // a token reached only through a collection entry: the picker names it only where serials show
+      const byCollection = item.objektId !== undefined && entry.objektId === null;
+      return { item, listId: entry.listId, kept: false, byCollection };
+    }
     const keeps =
       item.objektId !== undefined && kept?.objekts.get(item.objektId) === item.collectionSlug;
     if (!keeps && hasLists) {
       refuseOffer("not_listed", item.objektId ? { objektIds: [item.objektId] } : {});
     }
-    return { item, listId: null, kept: keeps };
+    return { item, listId: null, kept: keeps, byCollection: false };
   });
   const collectionAddrs = hasLists ? null : await collectionAddresses(partnerId);
+  const byCollection = getRows.filter((row) => row.byCollection).map((row) => row.item);
+  if (byCollection.length > 0) {
+    const refused = await refusedCollectionAsks(
+      byCollection,
+      collectionAddrs ?? (await collectionAddresses(partnerId)),
+    );
+    if (refused.length > 0) {
+      refuseOffer("not_listed", { objektIds: refused.map((item) => item.objektId!) });
+    }
+  }
   if (collectionAddrs) {
     const refused = await refusedCollectionAsks(
       getRows.filter((row) => !row.kept).map((row) => row.item),
