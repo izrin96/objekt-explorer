@@ -17,7 +17,7 @@ import { offer, trade, tradeLeg, tradeSubstitute } from "@repo/db/schema";
 import { and, eq, inArray, isNull, lte, sql } from "drizzle-orm";
 
 import type { Publish } from "../../lib/trade-publish";
-import { oneTrade } from "./one-trade";
+import type { RunSkips } from "./run-skips";
 
 export type Name = (userId: string) => { userId: string; name: string };
 type LegCopy = Awaited<ReturnType<typeof legCopies>>[number];
@@ -156,11 +156,14 @@ async function lockTrade(tx: Tx, tradeId: number) {
  * so a right copy read in it wins, and before expiry. Due against `seenUntil`, as expiry and
  * reminders are; with no reading, nothing is due.
  */
-export async function settleCopyDeadlines(seenUntil: string | null): Promise<Publish[]> {
+export async function settleCopyDeadlines(
+  seenUntil: string | null,
+  skips: RunSkips,
+): Promise<Publish[]> {
   await startClocks();
   if (seenUntil === null) return [];
-  const publishes = await acceptDue(seenUntil);
-  publishes.push(...(await remindDue(seenUntil)));
+  const publishes = await acceptDue(seenUntil, skips);
+  publishes.push(...(await remindDue(seenUntil, skips)));
   return publishes;
 }
 
@@ -204,13 +207,13 @@ async function tradesWithCopies(where: ReturnType<typeof and>) {
   return rows.map((row) => row.tradeId);
 }
 
-async function acceptDue(seenUntil: string) {
+async function acceptDue(seenUntil: string, skips: RunSkips) {
   // any pending copy due: a superset, as only a leg's earliest copy decides it
   const due = await tradesWithCopies(lte(tradeSubstitute.acceptBy, sql`${seenUntil}::timestamptz`));
 
   const publishes: Publish[] = [];
   for (const tradeId of due) {
-    const publish = await oneTrade(tradeId, () =>
+    const publish = await skips.step(tradeId, () =>
       db.transaction(async (tx) => {
         const settled = await lockTrade(tx, tradeId);
         if (!settled) return null;
@@ -241,7 +244,7 @@ async function acceptDue(seenUntil: string) {
   return publishes;
 }
 
-async function remindDue(seenUntil: string) {
+async function remindDue(seenUntil: string, skips: RunSkips) {
   const candidates = await tradesWithCopies(
     and(
       isNull(tradeSubstitute.remindedAt),
@@ -254,7 +257,7 @@ async function remindDue(seenUntil: string) {
 
   const publishes: Publish[] = [];
   for (const tradeId of candidates) {
-    const publish = await oneTrade(tradeId, () =>
+    const publish = await skips.step(tradeId, () =>
       db.transaction(async (tx) => {
         const settled = await lockTrade(tx, tradeId);
         if (!settled) return null;

@@ -8,7 +8,7 @@ import { and, eq, lte, sql } from "drizzle-orm";
 
 import type { Publish } from "../../lib/trade-publish";
 import { acceptPicked, readLegs } from "./copy-deadlines";
-import { oneTrade } from "./one-trade";
+import type { RunSkips } from "./run-skips";
 
 const EXPIRE_AFTER = sql`make_interval(days => ${TRADE_EXPIRE_DAYS})`;
 
@@ -19,7 +19,7 @@ const EXPIRE_AFTER = sql`make_interval(days => ${TRADE_EXPIRE_DAYS})`;
  * just landed completes first. Due against `seenUntil`, not the clock, so a lagging indexer can't expire a trade whose
  * transfer it hasn't read yet; with no reading, nothing expires.
  */
-export async function expireStalls(seenUntil: string | null): Promise<Publish[]> {
+export async function expireStalls(seenUntil: string | null, skips: RunSkips): Promise<Publish[]> {
   if (seenUntil === null) return [];
   const stalled = await db
     .select({ id: trade.id })
@@ -32,7 +32,8 @@ export async function expireStalls(seenUntil: string | null): Promise<Publish[]>
     );
   const publishes: Publish[] = [];
   for (const { id } of stalled) {
-    const publish = await oneTrade(id, () =>
+    if (skips.has(id)) continue;
+    const publish = await skips.step(id, () =>
       db.transaction(async (tx) => {
         // the lock a party's cancel and the verifier's settle take too
         const [row] = await tx

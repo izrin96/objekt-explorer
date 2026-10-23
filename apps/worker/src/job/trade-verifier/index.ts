@@ -37,7 +37,7 @@ import { type Publish, publishAll } from "../../lib/trade-publish";
 import { ACCEPT_BY_FROM_NOW, acceptPicked, type Name, settleCopyDeadlines } from "./copy-deadlines";
 import { readIndexerHead } from "./indexer-head";
 import { offerUpkeep } from "./offer-upkeep";
-import { oneTrade } from "./one-trade";
+import { runSkips } from "./run-skips";
 import { expireStalls } from "./trade-expiry";
 import { remindStalls } from "./trade-reminders";
 
@@ -107,6 +107,7 @@ async function verifyRun(trigger: Trigger) {
   const legs = await loadOpenLegs();
   const touched = { trades: 0, verified: 0, ended: 0, wrongCopies: 0, stuck: 0 };
   const publishes: Publish[] = [];
+  const skips = runSkips();
 
   if (legs.length > 0) {
     const [{ results, nearMisses }, transferableOf] = await Promise.all([
@@ -134,7 +135,7 @@ async function verifyRun(trigger: Trigger) {
       });
       const misses = missesOf.get(tradeId) ?? [];
       if (decided.length === 0 && misses.length === 0) continue;
-      const outcome = await oneTrade(tradeId, () =>
+      const outcome = await skips.step(tradeId, () =>
         settleTrade(tradeId, tradeLegs, results, misses, transferable),
       );
       if (!outcome) continue;
@@ -150,11 +151,12 @@ async function verifyRun(trigger: Trigger) {
   const upkeep = await offerUpkeep();
   publishes.push(...upkeep.publishes);
   const seenUntil = seen?.seenUntil ?? null;
-  const copied = await settleCopyDeadlines(seenUntil);
+  const copied = await settleCopyDeadlines(seenUntil, skips);
   publishes.push(...copied);
-  const expired = await expireStalls(seenUntil);
+  const expired = await expireStalls(seenUntil, skips);
   publishes.push(...expired);
-  publishes.push(...(await remindStalls(seenUntil)));
+  publishes.push(...(await remindStalls(seenUntil, skips)));
+  skips.report();
   // before publishing, so a page that refetches on the event reads this run's time
   await redis.set(VERIFIER_LAST_KEY, new Date().toISOString());
   await publishAll(publishes);

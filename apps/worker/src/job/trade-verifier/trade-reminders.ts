@@ -6,7 +6,7 @@ import { offer, trade, tradeLeg } from "@repo/db/schema";
 import { and, eq, isNull, lte, sql } from "drizzle-orm";
 
 import type { Publish } from "../../lib/trade-publish";
-import { oneTrade } from "./one-trade";
+import type { RunSkips } from "./run-skips";
 
 const REMIND_AFTER = sql`make_interval(hours => ${REMIND_AFTER_HOURS})`;
 
@@ -14,7 +14,7 @@ const REMIND_AFTER = sql`make_interval(hours => ${REMIND_AFTER_HOURS})`;
  * One reminder per trade, `REMIND_AFTER_HOURS` after accept, to each party still owing a transfer.
  * Due against `seenUntil`, as expiry is, so nobody is reminded of a transfer the indexer hasn't read.
  */
-export async function remindStalls(seenUntil: string | null): Promise<Publish[]> {
+export async function remindStalls(seenUntil: string | null, skips: RunSkips): Promise<Publish[]> {
   if (seenUntil === null) return [];
   const stalled = await db
     .select({ id: trade.id })
@@ -28,7 +28,7 @@ export async function remindStalls(seenUntil: string | null): Promise<Publish[]>
     );
   const publishes: Publish[] = [];
   for (const { id } of stalled) {
-    const publish = await oneTrade(id, () =>
+    const publish = await skips.step(id, () =>
       db.transaction(async (tx) => {
         const [row] = await tx
           .update(trade)
