@@ -26,47 +26,61 @@ export function useSafetyDialogs({
 }) {
   const [blockOpen, setBlockOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
+  // a list of rows each carries these, so a dialog mounts on its first open and stays for its
+  // close animation
+  const [blockShown, setBlockShown] = useState(false);
+  const [reportShown, setReportShown] = useState(false);
   const { block } = useBlock();
   const report = useReport({ onDone: () => setReportOpen(false) });
 
   const dialogs = (
     <>
-      <BlockDialog
-        open={blockOpen}
-        onOpenChange={setBlockOpen}
-        name={name}
-        onConfirm={() => block(userId, name)}
-      />
-      <ReportDialog
-        open={reportOpen}
-        onOpenChange={(open) => {
-          setReportOpen(open);
-          if (!open) report.reset();
-        }}
-        name={name}
-        fromConversation={conversationId !== undefined}
-        defaultReason={trade?.reason}
-        attachment={trade?.attachment}
-        pending={report.isPending}
-        error={report.error ? (reportRefusal(report.error) ?? m.mod_report_error()) : null}
-        onSubmit={(values) =>
-          report.mutate({
-            userId,
-            reason: values.reason,
-            note: values.note === "" ? undefined : values.note,
-            conversationId,
-            share: values.share,
-            alsoBlock: values.alsoBlock,
-            tradeId: trade?.id,
-          })
-        }
-      />
+      {blockShown ? (
+        <BlockDialog
+          open={blockOpen}
+          onOpenChange={setBlockOpen}
+          name={name}
+          onConfirm={() => block(userId, name)}
+        />
+      ) : null}
+      {reportShown ? (
+        <ReportDialog
+          open={reportOpen}
+          onOpenChange={(open) => {
+            setReportOpen(open);
+            if (!open) report.reset();
+          }}
+          name={name}
+          fromConversation={conversationId !== undefined}
+          defaultReason={trade?.reason}
+          attachment={trade?.attachment}
+          pending={report.isPending}
+          error={report.error ? (reportRefusal(report.error) ?? m.mod_report_error()) : null}
+          onSubmit={(values) =>
+            report.mutate({
+              userId,
+              reason: values.reason,
+              note: values.note === "" ? undefined : values.note,
+              conversationId,
+              share: values.share,
+              alsoBlock: values.alsoBlock,
+              tradeId: trade?.id,
+            })
+          }
+        />
+      ) : null}
     </>
   );
 
   return {
-    openBlock: () => setBlockOpen(true),
-    openReport: () => setReportOpen(true),
+    openBlock: () => {
+      setBlockShown(true);
+      setBlockOpen(true);
+    },
+    openReport: () => {
+      setReportShown(true);
+      setReportOpen(true);
+    },
     dialogs,
   };
 }

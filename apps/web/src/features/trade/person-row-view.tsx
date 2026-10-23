@@ -6,6 +6,7 @@ import {
   XIcon,
 } from "@phosphor-icons/react";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
+import { memo } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Frame, FramePanel } from "@/components/ui/frame";
@@ -173,7 +174,11 @@ function PostBlock({
  * One person on Browse or For you: a header that says what they and the viewer can swap, then a
  * strip per list. The header sentence counts the person, each strip its own list.
  */
-export function PersonRow({
+/**
+ * Memoized: virtua calls the feed's render function for every visible row on each scroll update,
+ * so without it every row on screen renders again while the page scrolls.
+ */
+export const PersonRow = memo(function PersonRow({
   person,
   surface,
   own,
@@ -196,7 +201,7 @@ export function PersonRow({
   led: boolean;
   /** "+N more lists" was activated; kept by the feed, since a scrolled-off row loses its state */
   expanded: boolean;
-  onExpand: () => void;
+  onExpand: (userId: string) => void;
   onClear: () => void;
   collections: Readonly<Record<string, ValidObjekt | undefined>>;
   now: number;
@@ -294,7 +299,7 @@ export function PersonRow({
             <button
               type="button"
               className="text-muted-foreground hover:text-foreground focus-visible:ring-ring mx-3 mt-1 mb-1.5 w-fit rounded-sm text-xs underline underline-offset-2 outline-none focus-visible:ring-2"
-              onClick={onExpand}
+              onClick={() => onExpand(person.userId)}
             >
               {more === 1
                 ? m.trade_person_more_lists_one()
@@ -326,7 +331,7 @@ export function PersonRow({
       </Frame>
     </article>
   );
-}
+});
 
 /** A row's shape (header, two strips, actions), so the first page lands in place. */
 export function PersonRowSkeleton() {

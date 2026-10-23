@@ -99,6 +99,8 @@ export function BrowseView({ surface, search }: { surface: Surface; search: Feed
 
   const setSearch = (patch: Partial<FeedSearch>) =>
     go((prev) => ({ ...prev, ...patch }), { replace: true });
+  const expand = (userId: string) => setExpanded((prev) => new Set(prev).add(userId));
+  const clearLead = () => setSearch({ person: undefined });
 
   const type = postTypeOf(search, surface);
   const mutual = forYou && mode === "mutual";
@@ -344,8 +346,8 @@ export function BrowseView({ surface, search }: { surface: Surface; search: Feed
                     signedIn={!!user}
                     led={row.person.userId === search.person}
                     expanded={expanded.has(row.person.userId)}
-                    onExpand={() => setExpanded((prev) => new Set(prev).add(row.person!.userId))}
-                    onClear={() => setSearch({ person: undefined })}
+                    onExpand={expand}
+                    onClear={clearLead}
                     collections={collections}
                     now={now}
                     onOpen={setActive}

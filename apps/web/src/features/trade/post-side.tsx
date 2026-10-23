@@ -1,6 +1,6 @@
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { Link } from "@tanstack/react-router";
-import type { ReactNode } from "react";
+import { type ReactNode, memo } from "react";
 
 import { getListLinkOption } from "@/features/list/list-link";
 import { LIST_TYPE_LABEL, LIST_TYPE_TONE } from "@/features/list/list-type-badge";
@@ -100,43 +100,16 @@ function PostStrip({
       </h3>
       {/* padding gives the ring room */}
       <ul ref={ref} className="-m-1 flex items-start gap-1.5 overflow-hidden p-1">
-        {shown.map((item) => {
-          const collection = collections[item.slug];
-          const qty = item.qty ?? 1;
-          const stacked = qty > 1;
-          const description = stacked
-            ? item.ringed
-              ? m.trade_stack_copies_ring({ count: qty })
-              : m.trade_stack_copies({ count: qty })
-            : item.ringed
-              ? m.trade_match_ring()
-              : undefined;
-          return (
-            /* a container, so the slug tile's radius matches the cards' */
-            <li key={item.key} className="@container relative w-10 shrink-0">
-              {collection ? (
-                <ObjektCard
-                  objekt={collection}
-                  image="thumbnail"
-                  hideLabel
-                  onOpen={() => onOpen(collection)}
-                  className={item.ringed ? RING : undefined}
-                  description={description}
-                />
-              ) : (
-                <SlugTile className={cn("text-xxs p-0.5", item.ringed && RING)}>
-                  {item.slug}
-                  {description ? <span className="sr-only">{description}</span> : null}
-                </SlugTile>
-              )}
-              {stacked ? (
-                <span aria-hidden className={STACK_COUNT}>
-                  {qty}
-                </span>
-              ) : null}
-            </li>
-          );
-        })}
+        {shown.map((item) => (
+          <StripTile
+            key={item.key}
+            slug={item.slug}
+            qty={item.qty ?? 1}
+            ringed={item.ringed ?? false}
+            collection={collections[item.slug]}
+            onOpen={onOpen}
+          />
+        ))}
         {rest > 0 ? <li className="@container w-10 shrink-0">{more(rest)}</li> : null}
         {othersLink ? (
           <li ref={linkRef} className="shrink-0 self-center">
@@ -147,6 +120,58 @@ function PostStrip({
     </section>
   );
 }
+
+/**
+ * Memoized: the strip renders again once it has measured its width, and without the memo every
+ * card it already drew would render with it.
+ */
+const StripTile = memo(function StripTile({
+  slug,
+  qty,
+  ringed,
+  collection,
+  onOpen,
+}: {
+  slug: string;
+  qty: number;
+  ringed: boolean;
+  collection: ValidObjekt | undefined;
+  onOpen: (objekt: ValidObjekt) => void;
+}) {
+  const stacked = qty > 1;
+  const description = stacked
+    ? ringed
+      ? m.trade_stack_copies_ring({ count: qty })
+      : m.trade_stack_copies({ count: qty })
+    : ringed
+      ? m.trade_match_ring()
+      : undefined;
+  return (
+    /* a container, so the slug tile's radius matches the cards' */
+    <li className="@container relative w-10 shrink-0">
+      {collection ? (
+        <ObjektCard
+          objekt={collection}
+          image="thumbnail"
+          hideLabel
+          onOpen={onOpen}
+          className={ringed ? RING : undefined}
+          description={description}
+        />
+      ) : (
+        <SlugTile className={cn("text-xxs p-0.5", ringed && RING)}>
+          {slug}
+          {description ? <span className="sr-only">{description}</span> : null}
+        </SlugTile>
+      )}
+      {stacked ? (
+        <span aria-hidden className={STACK_COUNT}>
+          {qty}
+        </span>
+      ) : null}
+    </li>
+  );
+});
 
 /** A side with no objekts, narrowed out or never listed: it shows as one line, not a strip. */
 export function isEmptySide(side: PostSideData) {
