@@ -1,7 +1,7 @@
-import type { ListTypeNew } from "./list";
+import type { ListType } from "./list";
 
 export type CopyBinding = {
-  listTypeNew: ListTypeNew;
+  listType: ListType;
   isProfileBind: boolean;
   profileAddress: string | null;
 };
@@ -23,7 +23,7 @@ export function needsHoldings(mode: CopyMode) {
 }
 
 /** Price, quote-your-own-price and note only mean something on a sale list. */
-export function carriesPrices(source: ListTypeNew, target: ListTypeNew) {
+export function carriesPrices(source: ListType, target: ListType) {
   return source === "sale" && target === "sale";
 }
 

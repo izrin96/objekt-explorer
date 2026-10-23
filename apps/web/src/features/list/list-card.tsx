@@ -69,11 +69,11 @@ export function ListCard({
           </h2>
 
           <div className="text-muted-foreground flex flex-wrap items-center gap-1.5 text-xs">
-            <ListTypeBadge type={list.listTypeNew} />
+            <ListTypeBadge type={list.listType} />
             {list.isProfileBind ? <ListBoundBadge /> : null}
             <ObjektPreviewCount preview={preview} />
             {openTo ? <span>· {openTo}</span> : null}
-            {list.listTypeNew === "sale" && list.currency ? (
+            {list.listType === "sale" && list.currency ? (
               <span className="font-mono">· {list.currency}</span>
             ) : null}
           </div>

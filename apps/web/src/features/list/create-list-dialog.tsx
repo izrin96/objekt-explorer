@@ -90,7 +90,7 @@ export function CreateListDialog({
               const input = toCreateInput(draft);
               create.mutate(input, {
                 onSuccess: ({ slug }) => {
-                  const type = input.listTypeNew;
+                  const type = input.listType;
                   if (
                     (type === "have" || type === "want") &&
                     canBeOnTrade(type, input.isProfileBind)

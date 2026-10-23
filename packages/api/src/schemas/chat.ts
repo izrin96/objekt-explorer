@@ -255,7 +255,7 @@ const cardViewSchema = z.object({
       id: z.number(),
       slug: z.string(),
       name: z.string(),
-      listTypeNew: z.enum(["general", "sale", "have", "want"]),
+      listType: z.enum(["general", "sale", "have", "want"]),
       currency: z.string().nullable(),
       profileSlug: z.string().nullable(),
       profile: z.object({ address: z.string(), nickname: z.string().nullable() }).nullable(),

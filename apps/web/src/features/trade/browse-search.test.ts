@@ -20,7 +20,7 @@ const lists = tradeListsOf([
     id: 1,
     slug: "spares",
     name: "Spares",
-    listTypeNew: "have",
+    listType: "have",
     isProfileBind: true,
     linkedList: { id: 2 },
   },
@@ -28,11 +28,11 @@ const lists = tradeListsOf([
     id: 2,
     slug: "binary-hunt",
     name: "Binary hunt",
-    listTypeNew: "want",
+    listType: "want",
     isProfileBind: false,
     linkedList: { id: 1 },
   },
-  { id: 3, slug: "lone-want", name: "Lone want", listTypeNew: "want", isProfileBind: false },
+  { id: 3, slug: "lone-want", name: "Lone want", listType: "want", isProfileBind: false },
 ]);
 
 const parse = (input: Record<string, unknown>) => browseSearchSchema.parse(input);
@@ -130,10 +130,10 @@ describe("matchModeOf", () => {
 
 describe("canMatchOf", () => {
   test("a want list, or a bound have or sale list", () => {
-    expect(canMatchOf([{ listTypeNew: "want", isProfileBind: false }])).toBe(true);
-    expect(canMatchOf([{ listTypeNew: "have", isProfileBind: true }])).toBe(true);
-    expect(canMatchOf([{ listTypeNew: "have", isProfileBind: false }])).toBe(false);
-    expect(canMatchOf([{ listTypeNew: "general", isProfileBind: true }])).toBe(false);
+    expect(canMatchOf([{ listType: "want", isProfileBind: false }])).toBe(true);
+    expect(canMatchOf([{ listType: "have", isProfileBind: true }])).toBe(true);
+    expect(canMatchOf([{ listType: "have", isProfileBind: false }])).toBe(false);
+    expect(canMatchOf([{ listType: "general", isProfileBind: true }])).toBe(false);
   });
 });
 

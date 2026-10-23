@@ -90,7 +90,7 @@ function toDraft(list: StoredList): ListDraft {
   return {
     name: list.name,
     description: list.description ?? "",
-    listTypeNew: list.listTypeNew,
+    listType: list.listType,
     currency: list.currency ?? "",
     linkedListId: list.linkedListId,
     profileAddress: list.profileAddress,

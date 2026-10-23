@@ -596,7 +596,7 @@ describe("itemStillHeld", () => {
 });
 
 describe("giveNarrowing", () => {
-  const list = { userId: "rin", listTypeNew: "want" as const, discoverable: true };
+  const list = { userId: "rin", listType: "want" as const, discoverable: true };
 
   test("no want list keeps the partner-wide narrowing", () => {
     expect(giveNarrowing("rin", null, null)).toBeNull();
@@ -615,7 +615,7 @@ describe("giveNarrowing", () => {
     for (const other of [
       { ...list, userId: "yuki" },
       { ...list, discoverable: false },
-      { ...list, listTypeNew: "have" as const },
+      { ...list, listType: "have" as const },
       null,
     ]) {
       expect(giveNarrowing("rin", null, { list: other, slugs: ["a"] })).toEqual([]);

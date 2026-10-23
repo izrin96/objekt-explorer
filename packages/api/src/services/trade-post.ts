@@ -34,7 +34,7 @@ async function lockPosterLists(tx: Tx, userId: string): Promise<PlanList[]> {
       id: lists.id,
       slug: lists.slug,
       name: lists.name,
-      listTypeNew: lists.listTypeNew,
+      listType: lists.listType,
       linkedListId: lists.linkedListId,
       discoverable: lists.discoverable,
       isProfileBind: lists.isProfileBind,
@@ -42,7 +42,7 @@ async function lockPosterLists(tx: Tx, userId: string): Promise<PlanList[]> {
       matchHave: lists.matchHave,
     })
     .from(lists)
-    .where(and(eq(lists.userId, userId), inArray(lists.listTypeNew, ["have", "want", "sale"])))
+    .where(and(eq(lists.userId, userId), inArray(lists.listType, ["have", "want", "sale"])))
     .orderBy(lists.id)
     .for("update");
 }

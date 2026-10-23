@@ -1,5 +1,5 @@
 import { InfoIcon } from "@phosphor-icons/react";
-import { canBeOnTrade, type ListTypeNew } from "@repo/api/schemas/list";
+import { canBeOnTrade, type ListType } from "@repo/api/schemas/list";
 import type { OpenToFlags } from "@repo/api/schemas/open-to";
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
@@ -32,12 +32,11 @@ import { LIST_TYPE_LABEL, LIST_TYPE_TONE, ListTypeBadge } from "./list-type-badg
 const NONE = "__none__";
 const CURRENCY_RE = /^[A-Za-z]{3}$/;
 
-const LIST_TYPES: ListTypeNew[] = ["general", "have", "want", "sale"];
+const LIST_TYPES: ListType[] = ["general", "have", "want", "sale"];
 
-const isListType = (value: unknown): value is ListTypeNew =>
-  LIST_TYPES.some((type) => type === value);
+const isListType = (value: unknown): value is ListType => LIST_TYPES.some((type) => type === value);
 
-const LIST_TYPE_DESC: Record<ListTypeNew, () => string> = {
+const LIST_TYPE_DESC: Record<ListType, () => string> = {
   general: m.list_create_general_list_desc,
   sale: m.list_create_sale_list_desc,
   have: m.list_create_have_list_desc,
@@ -47,7 +46,7 @@ const LIST_TYPE_DESC: Record<ListTypeNew, () => string> = {
 export type ListDraft = OpenToFlags & {
   name: string;
   description: string;
-  listTypeNew: ListTypeNew;
+  listType: ListType;
   currency: string;
   linkedListId: number | null;
   profileAddress: string | null;
@@ -61,7 +60,7 @@ export type ListDraft = OpenToFlags & {
 export const EMPTY_DRAFT: ListDraft = {
   name: "",
   description: "",
-  listTypeNew: "general",
+  listType: "general",
   currency: "",
   linkedListId: null,
   profileAddress: null,
@@ -81,7 +80,7 @@ export function listDraftSchema() {
       name: z.string().trim().min(1, m.common_validation_required_name()).max(256),
       description: z.string().max(5000),
       currency: z.string(),
-      listTypeNew: z.enum(["general", "sale", "have", "want"]),
+      listType: z.enum(["general", "sale", "have", "want"]),
       profileAddress: z.string().nullable(),
       isProfileBind: z.boolean(),
       linkedListId: z.number().nullable(),
@@ -89,7 +88,7 @@ export function listDraftSchema() {
       matchHave: z.boolean(),
     })
     .superRefine((draft, ctx) => {
-      if (draft.listTypeNew === "sale" && !CURRENCY_RE.test(draft.currency)) {
+      if (draft.listType === "sale" && !CURRENCY_RE.test(draft.currency)) {
         ctx.addIssue({
           code: "custom",
           path: ["currency"],
@@ -112,17 +111,17 @@ export function listDraftSchema() {
  * unpaired; the post composer puts it on Trade.
  */
 export function toCreateInput(draft: ListDraft) {
-  const isProfileBind = ["have", "sale"].includes(draft.listTypeNew) && draft.isProfileBind;
+  const isProfileBind = ["have", "sale"].includes(draft.listType) && draft.isProfileBind;
 
   return {
     name: draft.name.trim(),
     description: draft.description.trim() || null,
-    currency: draft.listTypeNew === "sale" ? draft.currency.toUpperCase() : null,
-    listTypeNew: draft.listTypeNew,
-    linkedListId: ["have", "want"].includes(draft.listTypeNew) ? draft.linkedListId : null,
+    currency: draft.listType === "sale" ? draft.currency.toUpperCase() : null,
+    listType: draft.listType,
+    linkedListId: ["have", "want"].includes(draft.listType) ? draft.linkedListId : null,
     profileAddress: draft.profileAddress,
     isProfileBind,
-    discoverable: draft.listTypeNew === "sale" && draft.discoverable,
+    discoverable: draft.listType === "sale" && draft.discoverable,
     matchSale: draft.matchSale,
     matchHave: draft.matchHave,
     hideSerial: draft.hideSerial,
@@ -135,7 +134,7 @@ export function toCreateInput(draft: ListDraft) {
  */
 export function toEditInput(slug: string, draft: ListDraft) {
   const {
-    listTypeNew: _type,
+    listType: _type,
     isProfileBind: _bind,
     linkedListId: _link,
     discoverable,
@@ -146,7 +145,7 @@ export function toEditInput(slug: string, draft: ListDraft) {
   return {
     slug,
     ...rest,
-    ...(draft.listTypeNew === "sale" ? { discoverable } : {}),
+    ...(draft.listType === "sale" ? { discoverable } : {}),
     gridColumns: draft.gridColumns,
     regenerateSlug: draft.regenerateSlug,
   };
@@ -184,14 +183,14 @@ export function ListForm({
   const set = (patch: Partial<ListDraft>) => onChange({ ...value, ...patch });
 
   const isEdit = mode === "edit";
-  const isSale = value.listTypeNew === "sale";
-  const isPaired = value.listTypeNew === "have" || value.listTypeNew === "want";
-  const bindable = value.listTypeNew === "have" || isSale;
-  const discoverableDisabled = !canBeOnTrade(value.listTypeNew, value.isProfileBind);
+  const isSale = value.listType === "sale";
+  const isPaired = value.listType === "have" || value.listType === "want";
+  const bindable = value.listType === "have" || isSale;
+  const discoverableDisabled = !canBeOnTrade(value.listType, value.isProfileBind);
 
-  const changeType = (next: ListTypeNew | null) => {
-    const listTypeNew = next ?? "general";
-    const nextBindable = listTypeNew === "have" || listTypeNew === "sale";
+  const changeType = (next: ListType | null) => {
+    const listType = next ?? "general";
+    const nextBindable = listType === "have" || listType === "sale";
     // entering have or sale binds by default, to the chosen profile or else
     // the first; moving between the two keeps what the user set
     const entering = nextBindable && !bindable;
@@ -199,7 +198,7 @@ export function ListForm({
       ? (value.profileAddress ?? profiles[0]?.address ?? null)
       : value.profileAddress;
     set({
-      listTypeNew,
+      listType,
       linkedListId: null,
       profileAddress,
       isProfileBind: nextBindable && profileAddress !== null && (entering || value.isProfileBind),
@@ -214,25 +213,25 @@ export function ListForm({
         </Label>
         {isEdit ? (
           <div>
-            <ListTypeBadge type={value.listTypeNew} size="lg" />
+            <ListTypeBadge type={value.listType} size="lg" />
           </div>
         ) : (
           <RadioGroup
             aria-labelledby={id("type")}
             aria-describedby={id("type-desc")}
-            value={value.listTypeNew}
+            value={value.listType}
             onValueChange={(next) => {
               if (isListType(next)) changeType(next);
             }}
             className="grid grid-cols-4 gap-1 rounded-lg border p-1"
           >
             {LIST_TYPES.map((type) => (
-              <TypeSegment key={type} type={type} selected={value.listTypeNew === type} />
+              <TypeSegment key={type} type={type} selected={value.listType === type} />
             ))}
           </RadioGroup>
         )}
         <span id={id("type-desc")} className="text-muted-foreground text-xs text-pretty">
-          {LIST_TYPE_DESC[value.listTypeNew]()}
+          {LIST_TYPE_DESC[value.listType]()}
         </span>
         {isEdit ? (
           <span className="text-muted-foreground text-xs text-pretty">
@@ -397,7 +396,7 @@ export function ListForm({
       {isPaired ? tradeLine : null}
 
       {/* a serial only exists on an entry the bound profile owns */}
-      {isSale || value.listTypeNew === "have" ? (
+      {isSale || value.listType === "have" ? (
         <SwitchRow
           id={id("hide-serial")}
           label={m.list_create_hide_serial_label()}
@@ -456,7 +455,7 @@ export function ListForm({
   );
 }
 
-function TypeSegment({ type, selected }: { type: ListTypeNew; selected: boolean }) {
+function TypeSegment({ type, selected }: { type: ListType; selected: boolean }) {
   const tone = LIST_TYPE_TONE[type];
   return (
     <RadioPrimitive.Root

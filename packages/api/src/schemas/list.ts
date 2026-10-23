@@ -7,37 +7,37 @@ import { indexedObjektSchema, ownedObjektSchema } from "./common/objekt";
 import type { ObjektPreview } from "./objekts";
 import { publicProfileSchema, publicUserSchema } from "./profile";
 
-const listTypeNewSchema = z.enum(["general", "sale", "have", "want"]);
-export type ListTypeNew = z.infer<typeof listTypeNewSchema>;
+const listTypeSchema = z.enum(["general", "sale", "have", "want"]);
+export type ListType = z.infer<typeof listTypeSchema>;
 
 /**
  * Whether the list's Show on Trade switch can be on: a want list any time, a have or sale list
  * only while bound to a Cosmo profile, since matching reads that profile's holdings.
  */
-export function canBeOnTrade(type: ListTypeNew, isProfileBind: boolean) {
+export function canBeOnTrade(type: ListType, isProfileBind: boolean) {
   return type === "want" || ((type === "have" || type === "sale") && isProfileBind);
 }
 
 /** Which side of a trade a list stands for: a sale list offers its objekts as a have list does. */
-export function tradeSideOf(type: ListTypeNew): "have" | "want" | null {
+export function tradeSideOf(type: ListType): "have" | "want" | null {
   if (type === "want") return "want";
   return type === "have" || type === "sale" ? "have" : null;
 }
 
-type TradeListRef = { id: number; listTypeNew: ListTypeNew; linkedListId: number | null };
+type TradeListRef = { id: number; listType: ListType; linkedListId: number | null };
 
 /**
  * The sides a list compares when it is picked on its own: its own, and the other side when it
  * links to a list in `onTrade` that stands for it. With no such link it compares one way.
  */
 export function pickedSides<L extends TradeListRef>(list: L, onTrade: readonly L[]) {
-  const own = tradeSideOf(list.listTypeNew);
+  const own = tradeSideOf(list.listType);
   const paired = onTrade.find((other) => {
-    const side = tradeSideOf(other.listTypeNew);
+    const side = tradeSideOf(other.listType);
     return other.id === list.linkedListId && side !== null && side !== own;
   });
   const ids = (side: "have" | "want") =>
-    [list, paired].flatMap((l) => (l && tradeSideOf(l.listTypeNew) === side ? [l.id] : []));
+    [list, paired].flatMap((l) => (l && tradeSideOf(l.listType) === side ? [l.id] : []));
   return { haveListIds: ids("have"), wantListIds: ids("want"), paired };
 }
 
@@ -45,7 +45,7 @@ const baseListSchema = z.object({
   id: z.number(),
   slug: z.string(),
   name: z.string(),
-  listTypeNew: listTypeNewSchema,
+  listType: listTypeSchema,
   isProfileBind: z.boolean(),
   profileSlug: z.string().nullable(),
   profileAddress: z.string().nullable(),
@@ -128,9 +128,9 @@ export const listEntriesInputSchema = listSlugInputSchema.extend({
   artist: artistsArraySchema.default([]),
 });
 
-export const createListInputSchema = z.object({
+const createListFields = z.object({
   name: z.string().min(1).max(256),
-  listTypeNew: listTypeNewSchema.default("general"),
+  listType: listTypeSchema.default("general"),
   isProfileBind: z.boolean().default(false),
   hideSerial: z.boolean().default(false),
   linkedListId: z.number().nullable(),
@@ -142,11 +142,24 @@ export const createListInputSchema = z.object({
   matchHave: z.boolean().default(true),
 });
 
-export const copyListInputSchema = createListInputSchema.extend({ sourceSlug: z.string() });
+/** Also takes the `listTypeNew` that `/rpc` clients built before the rename send, which the `general` default would otherwise swallow. */
+function withLegacyListType(value: unknown) {
+  if (typeof value !== "object" || value === null || "listType" in value) return value;
+  if (!("listTypeNew" in value)) return value;
+  const { listTypeNew, ...rest } = value;
+  return { ...rest, listType: listTypeNew };
+}
+
+export const createListInputSchema = z.preprocess(withLegacyListType, createListFields);
+
+export const copyListInputSchema = z.preprocess(
+  withLegacyListType,
+  createListFields.extend({ sourceSlug: z.string() }),
+);
 
 export const copyPreviewInputSchema = z.object({
   sourceSlug: z.string(),
-  listTypeNew: listTypeNewSchema,
+  listType: listTypeSchema,
   isProfileBind: z.boolean(),
   profileAddress: addressSchema.nullable(),
 });

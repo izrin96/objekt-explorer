@@ -1,4 +1,4 @@
-import type { ListTypeNew } from "./list";
+import type { ListType } from "./list";
 
 /** A want list's Open to as stored: whether sale lists match it, and whether have lists do. */
 export type OpenToFlags = { matchSale: boolean; matchHave: boolean };
@@ -34,7 +34,7 @@ export function flagsOf(openTo: OpenTo): OpenToFlags {
 
 /** A want list's Open to as saved. A list open to nothing would break `lists_open_to_something`, so a want list that stops matching sale lists always matches have lists. */
 export function resolveOpenTo(
-  listType: ListTypeNew,
+  listType: ListType,
   input: Partial<OpenToFlags>,
   current?: OpenToFlags,
 ): OpenToFlags {

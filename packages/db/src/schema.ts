@@ -27,7 +27,7 @@ import { citext } from "./custom-type";
 
 export { user, session, account, verification };
 
-export const listTypeEnum = pgEnum("list_type_new", ["general", "sale", "have", "want"]);
+export const listTypeEnum = pgEnum("list_type", ["general", "sale", "have", "want"]);
 
 export const accessToken = pgTable("access_token", {
   id: serial("id").primaryKey(),
@@ -80,7 +80,7 @@ export const lists = pgTable(
       .notNull()
       .defaultNow(),
     gridColumns: integer("grid_columns"),
-    listTypeNew: listTypeEnum("list_type_new").notNull().default("general"),
+    listType: listTypeEnum("list_type").notNull().default("general"),
     isProfileBind: boolean("is_profile_bind").notNull().default(false),
     hideSerial: boolean("hide_serial").notNull().default(false),
     linkedListId: integer("linked_list_id").references((): AnyPgColumn => lists.id, {
@@ -113,8 +113,8 @@ export const lists = pgTable(
       .on(t.linkedListId)
       .where(sql`linked_list_id IS NOT NULL`),
     index("lists_trade_discoverable_idx")
-      .on(t.listTypeNew)
-      .where(sql`list_type_new IN ('have', 'want') AND discoverable = true`),
+      .on(t.listType)
+      .where(sql`list_type IN ('have', 'want') AND discoverable = true`),
     index("lists_trade_feed_idx")
       .on(t.bumpedAt.desc(), t.id)
       .where(sql`discoverable`),

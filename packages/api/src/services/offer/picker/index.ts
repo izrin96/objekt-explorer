@@ -107,11 +107,7 @@ export async function suggestOffer(me: string, partnerId: string) {
       .from(listEntries)
       .innerJoin(lists, eq(lists.id, listEntries.listId))
       .where(
-        and(
-          eq(lists.userId, partnerId),
-          eq(lists.listTypeNew, "want"),
-          eq(lists.discoverable, true),
-        ),
+        and(eq(lists.userId, partnerId), eq(lists.listType, "want"), eq(lists.discoverable, true)),
       ),
     db
       .select({ id: conversation.id, lastMessageId: conversation.lastMessageId })

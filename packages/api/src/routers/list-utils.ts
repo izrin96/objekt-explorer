@@ -34,7 +34,7 @@ export const listUtils = {
       const list = await findOwnedList(slug, user.id);
 
       // Only sale lists can set prices
-      if (list.listTypeNew !== "sale") {
+      if (list.listType !== "sale") {
         refuse("BAD_REQUEST", "list_prices_sale_only", "Only sale lists can set prices");
       }
 

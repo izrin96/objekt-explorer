@@ -1,4 +1,4 @@
-import type { ListTypeNew } from "../schemas/list";
+import type { ListType } from "../schemas/list";
 import {
   type OfferAction,
   type OfferRefusal,
@@ -395,7 +395,7 @@ export function toReputation(counts: RatingCounts) {
   };
 }
 
-type WantListRef = { userId: string; listTypeNew: ListTypeNew; discoverable: boolean };
+type WantListRef = { userId: string; listType: ListType; discoverable: boolean };
 
 /**
  * The collections the give picker keeps, null for all. A named want list counts only when it
@@ -409,7 +409,7 @@ export function giveNarrowing(
   if (wantList === null) return partnerWants;
   const { list } = wantList;
   const named =
-    list && list.userId === partnerId && list.listTypeNew === "want" && list.discoverable
+    list && list.userId === partnerId && list.listType === "want" && list.discoverable
       ? [...new Set(wantList.slugs)]
       : [];
   if (partnerWants === null) return named;

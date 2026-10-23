@@ -1,4 +1,4 @@
-import { canBeOnTrade, type ListTypeNew } from "./list";
+import { canBeOnTrade, type ListType } from "./list";
 import { flagsOf, type OpenToFlags, openToOf } from "./open-to";
 import type { PostType, TradePostRefusal } from "./trade";
 
@@ -77,7 +77,7 @@ export function choiceTags(choice: Picked & { kind: PostKind; alsoPay?: boolean 
   return tagsOf({ have: choice.have, want: writes.wantFlags, sale: choice.sale });
 }
 
-type ListRef = { id: number; listTypeNew: ListTypeNew; linkedListId: number | null };
+type ListRef = { id: number; listType: ListType; linkedListId: number | null };
 
 export type PostGroup<L> = { anchor: L; have: L | null; want: L | null; sale: L | null };
 
@@ -88,19 +88,19 @@ export type PostGroup<L> = { anchor: L; have: L | null; want: L | null; sale: L 
 export function groupPosts<L extends ListRef & { userId?: string }>(lists: L[]): PostGroup<L>[] {
   const byId = new Map(lists.map((list) => [list.id, list]));
   const partnerOf = (list: L) => {
-    if (list.listTypeNew !== "have" || list.linkedListId === null) return null;
+    if (list.listType !== "have" || list.linkedListId === null) return null;
     const partner = byId.get(list.linkedListId);
-    return partner?.listTypeNew === "want" && partner.userId === list.userId ? partner : null;
+    return partner?.listType === "want" && partner.userId === list.userId ? partner : null;
   };
   const absorbed = new Set(lists.flatMap((list) => partnerOf(list)?.id ?? []));
 
   return lists
-    .filter((list) => !absorbed.has(list.id) && ["have", "want", "sale"].includes(list.listTypeNew))
+    .filter((list) => !absorbed.has(list.id) && ["have", "want", "sale"].includes(list.listType))
     .map((anchor) => ({
       anchor,
-      have: anchor.listTypeNew === "have" ? anchor : null,
-      want: anchor.listTypeNew === "want" ? anchor : partnerOf(anchor),
-      sale: anchor.listTypeNew === "sale" ? anchor : null,
+      have: anchor.listType === "have" ? anchor : null,
+      want: anchor.listType === "want" ? anchor : partnerOf(anchor),
+      sale: anchor.listType === "sale" ? anchor : null,
     }));
 }
 
@@ -117,7 +117,7 @@ export const membersOf = <L>(post: PostGroup<L>) =>
   [post.have, post.want, post.sale].filter((list): list is NonNullable<L> => list !== null);
 
 const isOnTrade = (list: PlanList) =>
-  list.discoverable && canBeOnTrade(list.listTypeNew, list.isProfileBind);
+  list.discoverable && canBeOnTrade(list.listType, list.isProfileBind);
 
 /** The poster's posts on Trade, each list in one. */
 export function postsOf(lists: PlanList[]) {
@@ -126,9 +126,9 @@ export function postsOf(lists: PlanList[]) {
 
 /** The other half of a have and want pair, when there is one. */
 export function partnerOf(lists: PlanList[], list: PlanList): PlanList | null {
-  const other = list.listTypeNew === "have" ? "want" : list.listTypeNew === "want" ? "have" : null;
+  const other = list.listType === "have" ? "want" : list.listType === "want" ? "have" : null;
   if (other === null || list.linkedListId === null) return null;
-  return lists.find((x) => x.id === list.linkedListId && x.listTypeNew === other) ?? null;
+  return lists.find((x) => x.id === list.linkedListId && x.listType === other) ?? null;
 }
 
 export function postHolding(posts: PostGroup<PlanList>[], id: number) {
@@ -196,10 +196,10 @@ export function planPost(lists: PlanList[], choice: PostChoice): PostPlan {
   if (!writes.ok) return writes;
 
   for (const { slot, list } of picked) {
-    if (list.listTypeNew !== slot) {
+    if (list.listType !== slot) {
       return { ok: false, reason: "trade_post_wrong_type", slug: list.slug };
     }
-    if (!canBeOnTrade(list.listTypeNew, list.isProfileBind)) {
+    if (!canBeOnTrade(list.listType, list.isProfileBind)) {
       return { ok: false, reason: "trade_post_needs_profile", slug: list.slug };
     }
   }
@@ -252,7 +252,7 @@ export function planPost(lists: PlanList[], choice: PostChoice): PostPlan {
     ok: true,
     on: picked.map(({ list }) => ({
       id: list.id,
-      flags: list.listTypeNew === "want" ? writes.wantFlags : null,
+      flags: list.listType === "want" ? writes.wantFlags : null,
     })),
     off: dropped.map((list) => list.id),
     link: writes.link && have && want ? [have.id, want.id] : null,
@@ -277,7 +277,7 @@ export function rowBlock(
   replaces: string | null,
   otherPicked = false,
 ): RowBlock | null {
-  if (!canBeOnTrade(list.listTypeNew, list.isProfileBind)) return { reason: "needs_profile" };
+  if (!canBeOnTrade(list.listType, list.isProfileBind)) return { reason: "needs_profile" };
   const posts = postsOf(lists);
   const blocking = (id: number) => {
     const post = postHolding(posts, id);
@@ -310,14 +310,14 @@ const EMPTY_START: ComposerStart = {
 function editStart(post: PostGroup<PlanList>, extra?: PlanList): ComposerStart {
   const { kind, alsoPay } = postKindOf(post);
   const slot = (type: "have" | "want" | "sale") =>
-    post[type]?.slug ?? (extra?.listTypeNew === type ? extra.slug : null);
+    post[type]?.slug ?? (extra?.listType === type ? extra.slug : null);
   return {
     kind: extra ? "swap" : kind,
     have: slot("have"),
     want: slot("want"),
     sale: slot("sale"),
     // a have list posted alone has no want side to read; the added want list keeps its own Open to
-    alsoPay: extra?.listTypeNew === "want" ? openToOf(extra) !== "swaps" : alsoPay,
+    alsoPay: extra?.listType === "want" ? openToOf(extra) !== "swaps" : alsoPay,
     replaces: post.anchor.slug,
   };
 }
@@ -343,7 +343,7 @@ export function startForList(lists: PlanList[], slug: string): ComposerStart {
   const partnerPost = partner ? postHolding(posts, partner.id) : null;
   if (partnerPost) return editStart(partnerPost, list);
   if (partner) {
-    const [have, want] = list.listTypeNew === "have" ? [list, partner] : [partner, list];
+    const [have, want] = list.listType === "have" ? [list, partner] : [partner, list];
     return {
       ...EMPTY_START,
       kind: "swap",
@@ -352,7 +352,7 @@ export function startForList(lists: PlanList[], slug: string): ComposerStart {
       alsoPay: openToOf(want) !== "swaps",
     };
   }
-  switch (list.listTypeNew) {
+  switch (list.listType) {
     case "have":
       return { ...EMPTY_START, kind: "swap", have: list.slug };
     case "sale":
@@ -385,7 +385,7 @@ export function tradeLineOf(lists: PlanList[], list: PlanList): TradeLine {
       membersOf(post).find((member) => member.id !== list.id) ?? partnerOf(lists, list);
     return { state: "in_post", kind, tags: tagsOf(post), alsoPay, partner };
   }
-  if (!canBeOnTrade(list.listTypeNew, list.isProfileBind)) return { state: "needs_profile" };
+  if (!canBeOnTrade(list.listType, list.isProfileBind)) return { state: "needs_profile" };
   const partner = partnerOf(lists, list);
   return partner ? { state: "paired_off", partner } : { state: "off" };
 }

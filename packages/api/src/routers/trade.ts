@@ -160,7 +160,7 @@ export const tradeRouter = {
         and(
           eq(lists.userId, userId),
           eq(lists.discoverable, true),
-          inArray(lists.listTypeNew, ["have", "sale", "want"]),
+          inArray(lists.listType, ["have", "sale", "want"]),
         ),
       );
       if (tradeLists === 0) return;
@@ -213,7 +213,7 @@ export const tradeRouter = {
                   rows.map((row) => row.user.id),
                 ),
                 eq(lists.discoverable, true),
-                inArray(lists.listTypeNew, ["have", "sale", "want"]),
+                inArray(lists.listType, ["have", "sale", "want"]),
                 eq(userAddress.userId, lists.userId),
               ),
             );

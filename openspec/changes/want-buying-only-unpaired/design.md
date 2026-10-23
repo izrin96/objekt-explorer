@@ -19,7 +19,7 @@
 
 2. **The server checks both sides of a link.**
    - `checkLinkedList` also selects the linked list's `matchSale`/`matchHave`; a have list linking to a want list for which the rule refuses gets `list_pair_buying_only`.
-   - A want list saved with a link: create checks the resolved flags (`resolveOpenTo(input)`) in `writeList`'s preparation, and edit checks `resolveOpenTo(list.listTypeNew, input, list)`, the flags it is about to save, so an edit that keeps an existing link and turns on Buying only is refused too.
+   - A want list saved with a link: create checks the resolved flags (`resolveOpenTo(input)`) in `writeList`'s preparation, and edit checks `resolveOpenTo(list.listType, input, list)`, the flags it is about to save, so an edit that keeps an existing link and turns on Buying only is refused too.
    - The checks run before the transaction, as `checkLinkedList` does today.
    - *Alternative:* a database check. Rejected: the rule spans two rows.
 

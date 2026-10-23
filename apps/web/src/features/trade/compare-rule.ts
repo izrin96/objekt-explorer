@@ -6,7 +6,7 @@ export type TradeList = {
   id: number;
   slug: string;
   name: string;
-  listTypeNew: "have" | "want" | "sale";
+  listType: "have" | "want" | "sale";
   linkedListId: number | null;
   /** a want list open to buying: Swaps or buying, or Buying only */
   matchSale: boolean;
@@ -20,7 +20,7 @@ export function tradeListsOf(
     id: number;
     slug: string;
     name: string;
-    listTypeNew: TradeList["listTypeNew"] | "general";
+    listType: TradeList["listType"] | "general";
     isProfileBind: boolean;
     linkedList?: { id: number } | null;
     matchSale?: boolean | null;
@@ -28,13 +28,13 @@ export function tradeListsOf(
   }[],
 ): TradeList[] {
   return lists.flatMap((list) =>
-    list.listTypeNew !== "general" && canBeOnTrade(list.listTypeNew, list.isProfileBind)
+    list.listType !== "general" && canBeOnTrade(list.listType, list.isProfileBind)
       ? [
           {
             id: list.id,
             slug: list.slug,
             name: list.name,
-            listTypeNew: list.listTypeNew,
+            listType: list.listType,
             linkedListId: list.linkedList?.id ?? null,
             matchSale: list.matchSale ?? false,
             matchHave: list.matchHave ?? false,
@@ -63,7 +63,7 @@ export function scopeOf(mode: string, type: PostType): Scope {
 
 /** A want list's Open to; a list with neither flag set (a nullish payload) is open to nothing, where `openToOf` would read buying. */
 function openToIn(list: TradeList | undefined) {
-  if (list?.listTypeNew !== "want" || !(list.matchSale || list.matchHave)) return undefined;
+  if (list?.listType !== "want" || !(list.matchSale || list.matchHave)) return undefined;
   return openToOf(list);
 }
 
@@ -89,7 +89,7 @@ export function compareRefusal(
   if (scope.mutual && !(ways.have && ways.want)) return "oneWay";
   const openTo = [list, paired].map(openToIn);
   if (scope.type === "wtb")
-    return tradeSideOf(list.listTypeNew) === "have" || openTo[0] === "swaps" || openTo[0] === "both"
+    return tradeSideOf(list.listType) === "have" || openTo[0] === "swaps" || openTo[0] === "both"
       ? null
       : "wtb";
   if (scope.type === "wts") return openTo[0] === "buying" || openTo[0] === "both" ? null : "wts";

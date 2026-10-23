@@ -37,7 +37,7 @@ export async function takeWhole(where: SQL, order: Order, limit: number) {
 export async function fetchPairs(where: SQL, order: Order, limit: number | null): Promise<Pair[]> {
   const result = await db.execute<PairRow>(sql`
     WITH cand AS (
-      SELECT e.id, e.list_id, e.collection_slug AS slug, e.objekt_id, l.list_type_new,
+      SELECT e.id, e.list_id, e.collection_slug AS slug, e.objekt_id, l.list_type,
         l.match_sale, l.match_have, l.user_id
       FROM list_entries e
       JOIN lists l ON l.id = e.list_id
@@ -53,15 +53,15 @@ export async function fetchPairs(where: SQL, order: Order, limit: number | null)
       FROM cand c
       JOIN list_entries w ON w.collection_slug = c.slug
       JOIN lists wl ON wl.id = w.list_id
-      WHERE c.list_type_new IN ('have', 'sale')
+      WHERE c.list_type IN ('have', 'sale')
         AND ${offerMatchesWantSql("c", "wl")}
-        AND wl.list_type_new = 'want' AND wl.user_id <> c.user_id
+        AND wl.list_type = 'want' AND wl.user_id <> c.user_id
       UNION ALL
       SELECT c.id, c.list_id, 'reverse', o.list_id, c.list_id, c.slug, o.objekt_id, ol.user_id, c.user_id
       FROM cand c
       JOIN list_entries o ON o.collection_slug = c.slug
       JOIN lists ol ON ol.id = o.list_id
-      WHERE c.list_type_new = 'want'
+      WHERE c.list_type = 'want'
         AND ${offersOnTradeSql("ol")}
         AND ${offerMatchesWantSql("ol", "c")}
         AND ol.user_id <> c.user_id

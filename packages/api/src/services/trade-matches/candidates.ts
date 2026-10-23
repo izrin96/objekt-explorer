@@ -65,15 +65,15 @@ export async function fetchTradeCandidates(
       GROUP BY e.collection_slug
     ),
     my_have AS (
-      SELECT e.collection_slug, bool_or(l.list_type_new = 'have') AS on_have,
-        bool_or(l.list_type_new = 'sale') AS on_sale
+      SELECT e.collection_slug, bool_or(l.list_type = 'have') AS on_have,
+        bool_or(l.list_type = 'sale') AS on_sale
       FROM list_entries e
       JOIN lists l ON l.id = e.list_id
       WHERE e.list_id = ANY(${sql.param(sides.haveListIds)}::int[]) AND e.collection_slug IS NOT NULL
       GROUP BY e.collection_slug
     ),
     partner_lists AS (
-      SELECT l.id, l.user_id, l.list_type_new, l.match_sale, l.match_have, l.updated_at FROM lists l
+      SELECT l.id, l.user_id, l.list_type, l.match_sale, l.match_have, l.updated_at FROM lists l
       WHERE l.discoverable
         AND ${takesPartInTradeSql("l")}
         AND l.user_id <> ${userId}
@@ -89,18 +89,18 @@ export async function fetchTradeCandidates(
     ),
     matched AS (
       SELECT p.user_id, p.id AS list_id, p.updated_at, p.match_sale, p.match_have, true AS they_have,
-        p.list_type_new = 'have' AS trade, e.collection_slug, e.objekt_id
+        p.list_type = 'have' AS trade, e.collection_slug, e.objekt_id
       FROM partner_lists p
       JOIN list_entries e ON e.list_id = p.id
       JOIN my_want w ON w.collection_slug = e.collection_slug
-      WHERE p.list_type_new IN ('have', 'sale') AND ${offerMatchesWantSql("p", "w")}
+      WHERE p.list_type IN ('have', 'sale') AND ${offerMatchesWantSql("p", "w")}
       UNION ALL
       SELECT p.user_id, p.id, p.updated_at, p.match_sale, p.match_have, false,
         p.match_have AND h.on_have, e.collection_slug, NULL
       FROM partner_lists p
       JOIN list_entries e ON e.list_id = p.id
       JOIN my_have h ON h.collection_slug = e.collection_slug
-      WHERE p.list_type_new = 'want' AND ((p.match_have AND h.on_have) OR (p.match_sale AND h.on_sale))
+      WHERE p.list_type = 'want' AND ((p.match_have AND h.on_have) OR (p.match_sale AND h.on_sale))
     ),
     grouped AS (
       SELECT

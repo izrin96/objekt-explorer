@@ -114,7 +114,7 @@ export function MatchingControls(props: MatchingProps) {
                 value: item.slug,
                 label: m.trade_list_option({
                   name: item.name,
-                  type: LIST_TYPE_LABEL[item.listTypeNew](),
+                  type: LIST_TYPE_LABEL[item.listType](),
                 }),
                 disabled: refusal !== null,
                 hint: refusal ? REFUSAL_TEXT[refusal]() : undefined,

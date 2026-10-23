@@ -68,7 +68,7 @@ export async function fetchViewer(userId: string): Promise<Viewer> {
     db
       .select({ id: lists.id })
       .from(lists)
-      .where(and(eq(lists.userId, userId), eq(lists.listTypeNew, "sale"))),
+      .where(and(eq(lists.userId, userId), eq(lists.listType, "sale"))),
     db
       .selectDistinct({
         listId: listEntries.listId,
@@ -81,7 +81,7 @@ export async function fetchViewer(userId: string): Promise<Viewer> {
       .where(
         and(
           eq(lists.userId, userId),
-          eq(lists.listTypeNew, "want"),
+          eq(lists.listType, "want"),
           isNotNull(listEntries.collectionSlug),
         ),
       ),

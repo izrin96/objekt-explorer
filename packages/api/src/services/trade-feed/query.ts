@@ -28,7 +28,7 @@ const TAG_WHERE: Record<PostTag, SQL> = {
  */
 export const postsCte = sql`
   on_trade AS (
-    SELECT id, user_id, list_type_new, linked_list_id, match_sale, match_have, bumped_at, updated_at, created_at
+    SELECT id, user_id, list_type, linked_list_id, match_sale, match_have, bumped_at, updated_at, created_at
     FROM lists
     WHERE discoverable AND ${takesPartInTradeSql()}
   ),
@@ -36,7 +36,7 @@ export const postsCte = sql`
     SELECT
       a.id,
       a.user_id,
-      a.list_type_new AS type,
+      a.list_type AS type,
       a.match_sale,
       a.match_have,
       p.id AS partner_id,
@@ -51,14 +51,14 @@ export const postsCte = sql`
       greatest(a.updated_at, p.updated_at) AS updated_at
     FROM on_trade a
     LEFT JOIN on_trade p
-      ON a.list_type_new = 'have'
+      ON a.list_type = 'have'
       AND p.id = a.linked_list_id
-      AND p.list_type_new = 'want'
+      AND p.list_type = 'want'
       AND p.user_id = a.user_id
     WHERE NOT EXISTS (
       SELECT 1 FROM on_trade h
-      WHERE a.list_type_new = 'want'
-        AND h.list_type_new = 'have'
+      WHERE a.list_type = 'want'
+        AND h.list_type = 'have'
         AND h.linked_list_id = a.id
         AND h.user_id = a.user_id
     )
@@ -80,9 +80,9 @@ const matchesIndex = (index: MatchIndex) =>
     JOIN on_trade t ON t.id = e.list_id
     WHERE e.list_id IN (posts.id, posts.partner_id)
       AND (
-        (t.list_type_new = 'have' AND e.collection_slug = ANY(${sql.param(index.tradeWant)}::text[]))
-        OR (t.list_type_new = 'sale' AND e.collection_slug = ANY(${sql.param(index.saleWant)}::text[]))
-        OR (t.list_type_new = 'want' AND e.collection_slug = ANY(
+        (t.list_type = 'have' AND e.collection_slug = ANY(${sql.param(index.tradeWant)}::text[]))
+        OR (t.list_type = 'sale' AND e.collection_slug = ANY(${sql.param(index.saleWant)}::text[]))
+        OR (t.list_type = 'want' AND e.collection_slug = ANY(
           -- the SQL twin of openToOf (schemas/open-to.ts)
           CASE
             WHEN NOT t.match_have THEN ${sql.param(index.saleHave)}::text[]

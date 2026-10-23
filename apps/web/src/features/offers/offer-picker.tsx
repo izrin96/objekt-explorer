@@ -1,4 +1,4 @@
-import type { ListTypeNew } from "@repo/api/schemas/list";
+import type { ListType } from "@repo/api/schemas/list";
 import { type CandidateItem, OFFER_SIDE_LIMIT, type PartnerList } from "@repo/api/schemas/offer";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useInfiniteQuery } from "@tanstack/react-query";
@@ -209,7 +209,7 @@ function MatchSwitch({
 
 const ALL = "all";
 
-type FromChoice = { slug: string; name: string; type: ListTypeNew };
+type FromChoice = { slug: string; name: string; type: ListType };
 
 /** A picked list that has since left `lists` reads as All again. */
 function useFromList(lists: readonly FromChoice[]) {
@@ -306,9 +306,7 @@ function PickerGrid({
 function MineGrid({ to, name, ...grid }: GridProps & { name: string }) {
   const [filters, setFilters] = useState(NO_FILTERS);
   const lists = useUserLists().flatMap((list) =>
-    list.listTypeNew === "want"
-      ? []
-      : [{ slug: list.slug, name: list.name, type: list.listTypeNew }],
+    list.listType === "want" ? [] : [{ slug: list.slug, name: list.name, type: list.listType }],
   );
   const [fromList, setFrom] = useFromList(lists);
   const query = useInfiniteQuery(myCandidatesOptions(to, filters, fromList));

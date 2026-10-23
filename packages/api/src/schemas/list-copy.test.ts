@@ -2,13 +2,13 @@ import { describe, expect, test } from "bun:test";
 
 import { type CopyBinding, copyMode, copyUnit } from "./list-copy";
 
-const bound = (type: CopyBinding["listTypeNew"], address = "0xabc"): CopyBinding => ({
-  listTypeNew: type,
+const bound = (type: CopyBinding["listType"], address = "0xabc"): CopyBinding => ({
+  listType: type,
   isProfileBind: true,
   profileAddress: address,
 });
-const unbound = (type: CopyBinding["listTypeNew"]): CopyBinding => ({
-  listTypeNew: type,
+const unbound = (type: CopyBinding["listType"]): CopyBinding => ({
+  listType: type,
   isProfileBind: false,
   profileAddress: null,
 });

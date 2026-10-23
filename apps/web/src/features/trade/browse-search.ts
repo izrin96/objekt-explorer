@@ -1,4 +1,4 @@
-import { canBeOnTrade, type ListTypeNew } from "@repo/api/schemas/list";
+import { canBeOnTrade, type ListType } from "@repo/api/schemas/list";
 import { BROWSE_MATCH_MODES, type BrowseMatchMode, type PostType } from "@repo/api/schemas/trade";
 import type { ValidArtist } from "@repo/cosmo/types/common";
 import * as z from "zod";
@@ -83,8 +83,8 @@ export function forYouFallback(
 }
 
 /** Whether the viewer has a list that takes part in Trade, and so can match. */
-export function canMatchOf(lists: readonly { listTypeNew: ListTypeNew; isProfileBind: boolean }[]) {
-  return lists.some((list) => canBeOnTrade(list.listTypeNew, list.isProfileBind));
+export function canMatchOf(lists: readonly { listType: ListType; isProfileBind: boolean }[]) {
+  return lists.some((list) => canBeOnTrade(list.listType, list.isProfileBind));
 }
 
 /** For you's Matches option: Any unless the URL says Mutual. */

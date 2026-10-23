@@ -1,5 +1,5 @@
 import { CheckIcon } from "@phosphor-icons/react";
-import type { ListTypeNew } from "@repo/api/schemas/list";
+import type { ListType } from "@repo/api/schemas/list";
 import { type OpenTo, openToOf } from "@repo/api/schemas/open-to";
 
 import { Badge, type BadgeProps } from "@/components/ui/badge";
@@ -8,14 +8,14 @@ import { type Tone, toneChip } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
-export const LIST_TYPE_LABEL: Record<ListTypeNew, () => string> = {
+export const LIST_TYPE_LABEL: Record<ListType, () => string> = {
   general: m.list_type_general,
   sale: m.list_type_sale,
   have: m.list_type_have,
   want: m.list_type_want,
 };
 
-export const LIST_TYPE_TONE: Record<ListTypeNew, Tone> = {
+export const LIST_TYPE_TONE: Record<ListType, Tone> = {
   general: "neutral",
   have: "have",
   want: "want",
@@ -27,7 +27,7 @@ export function ListTypeBadge({
   size = "sm",
   className,
 }: {
-  type: ListTypeNew;
+  type: ListType;
   size?: BadgeProps["size"];
   className?: string;
 }) {
@@ -51,11 +51,11 @@ export const OPEN_TO_LABEL: Record<OpenTo, () => string> = {
 
 /** A want list's Open to setting; null for other lists, or a response without it. */
 export function openToLabel(list: {
-  listTypeNew: ListTypeNew;
+  listType: ListType;
   matchSale?: boolean | null;
   matchHave?: boolean | null;
 }) {
-  if (list.listTypeNew !== "want" || list.matchSale == null) return null;
+  if (list.listType !== "want" || list.matchSale == null) return null;
   return OPEN_TO_LABEL[
     openToOf({ matchSale: list.matchSale, matchHave: list.matchHave ?? true })
   ]();

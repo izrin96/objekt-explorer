@@ -75,7 +75,7 @@ export function useStartConversation() {
             input: card.input,
             objekt,
             listName: card.view.list?.name ?? null,
-            listType: card.view.list?.listTypeNew,
+            listType: card.view.list?.listType,
           });
         }
         if (postCard) {

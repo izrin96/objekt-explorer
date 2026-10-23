@@ -27,7 +27,7 @@ export function usdPriceExpr(rates: Record<string, number>) {
 
 export function countedListings() {
   return and(
-    eq(lists.listTypeNew, "sale"),
+    eq(lists.listType, "sale"),
     eq(lists.discoverable, true),
     isNotNull(listEntries.collectionSlug),
     notTradeSanctioned(sql`${lists.userId}`),

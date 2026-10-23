@@ -1,11 +1,11 @@
-import type { ListTypeNew } from "@repo/api/schemas/list";
+import type { ListType } from "@repo/api/schemas/list";
 
 import type { Attachment, PostAttachment } from "@/features/chat/attachment";
 import { m } from "@/paraglide/messages";
 
 type Suggestion = () => string;
 
-const FOR_CARD: Partial<Record<ListTypeNew, Suggestion>> = {
+const FOR_CARD: Partial<Record<ListType, Suggestion>> = {
   sale: m.chat_suggest_sale,
   have: m.chat_suggest_have,
   want: m.chat_suggest_want,

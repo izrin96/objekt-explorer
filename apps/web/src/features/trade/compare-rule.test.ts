@@ -8,11 +8,11 @@ import {
   tradeListsOf,
 } from "./compare-rule";
 
-const list = (id: number, slug: string, listTypeNew: TradeList["listTypeNew"], rest = {}) => ({
+const list = (id: number, slug: string, listType: TradeList["listType"], rest = {}) => ({
   id,
   slug,
   name: slug,
-  listTypeNew,
+  listType,
   linkedListId: null,
   matchSale: false,
   matchHave: false,
@@ -134,7 +134,7 @@ describe("comparedList", () => {
 });
 
 describe("tradeListsOf", () => {
-  const base = { id: 1, slug: "w", name: "W", listTypeNew: "want" as const, isProfileBind: false };
+  const base = { id: 1, slug: "w", name: "W", listType: "want" as const, isProfileBind: false };
 
   test("a nullish matchSale or matchHave reads as off, as the server does", () => {
     const [bare] = tradeListsOf([base]);

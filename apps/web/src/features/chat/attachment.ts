@@ -1,5 +1,5 @@
 import type { ObjektCardInput, PostCardInput, PostCardView } from "@repo/api/schemas/chat";
-import type { ListTypeNew } from "@repo/api/schemas/list";
+import type { ListType } from "@repo/api/schemas/list";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 
 /** An objekt card waiting in the message box, sent with the next message. */
@@ -9,7 +9,7 @@ export type ObjektAttachment = {
   objekt: ValidObjekt;
   listName: string | null;
   /** the type of the other person's list it came from, when a Message button attached it */
-  listType?: ListTypeNew;
+  listType?: ListType;
 };
 
 /** A Trade post card waiting in the message box; `view` carries the match the server saved for it. */

@@ -1,6 +1,6 @@
 import { realNickname, truncateAddress } from "@repo/lib/address";
 
-import { type ListTypeNew, pickedSides, tradeSideOf } from "../schemas/list";
+import { type ListType, pickedSides, tradeSideOf } from "../schemas/list";
 import { type OpenToFlags, pickByOpenTo } from "../schemas/open-to";
 import {
   countsFit,
@@ -19,7 +19,7 @@ export const CANDIDATE_LIMIT = 200;
 export const FEED_CANDIDATE_LIMIT = 1000;
 export const IDLE_DAYS = 30;
 
-export type MyList = { id: number; listTypeNew: ListTypeNew; linkedListId: number | null };
+export type MyList = { id: number; listType: ListType; linkedListId: number | null };
 
 /**
  * The lists each direction matches from: every one of the user's, or a named list and the list
@@ -27,11 +27,9 @@ export type MyList = { id: number; listTypeNew: ListTypeNew; linkedListId: numbe
  * A list that is not one of the user's have, sale or want lists is ignored.
  */
 export function matchSides(myLists: MyList[], listId: number | null, filter: TradeFilter) {
-  const named = myLists.find(
-    (list) => list.id === listId && tradeSideOf(list.listTypeNew) !== null,
-  );
+  const named = myLists.find((list) => list.id === listId && tradeSideOf(list.listType) !== null);
   const ofSide = (type: "have" | "want") =>
-    myLists.filter((list) => tradeSideOf(list.listTypeNew) === type).map((list) => list.id);
+    myLists.filter((list) => tradeSideOf(list.listType) === type).map((list) => list.id);
   const sides = named
     ? pickedSides(named, myLists)
     : { haveListIds: ofSide("have"), wantListIds: ofSide("want") };

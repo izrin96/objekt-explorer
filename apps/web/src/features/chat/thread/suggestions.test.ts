@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import type { ListTypeNew } from "@repo/api/schemas/list";
+import type { ListType } from "@repo/api/schemas/list";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 
 import { m } from "@/paraglide/messages";
@@ -8,7 +8,7 @@ import { m } from "@/paraglide/messages";
 import type { Attachment, PostAttachment } from "../attachment";
 import { firstLineSuggestions } from "./suggestions";
 
-const objekt = (listType?: ListTypeNew): Attachment => ({
+const objekt = (listType?: ListType): Attachment => ({
   kind: "objekt",
   input: { collectionSlug: "seoyeon-204z" },
   objekt: {} as ValidObjekt,

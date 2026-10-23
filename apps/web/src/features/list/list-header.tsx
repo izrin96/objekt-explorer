@@ -44,7 +44,7 @@ import { useListOwned } from "./use-list-owned";
 export function ListHeader() {
   const list = useListTarget();
   const isOwner = useListOwned();
-  const side = tradeSideOf(list.listTypeNew);
+  const side = tradeSideOf(list.listType);
   const canTradeMatch = isOwner && (side === "want" || (side === "have" && list.isProfileBind));
   const [compareOpen, setCompareOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
@@ -52,10 +52,10 @@ export function ListHeader() {
   const [copyOpen, setCopyOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const linked = list.linkedList;
-  const self = { id: list.id, listTypeNew: list.listTypeNew, linkedListId: linked?.id ?? null };
+  const self = { id: list.id, listType: list.listType, linkedListId: linked?.id ?? null };
   const linkedOnTrade =
-    linked && canBeOnTrade(linked.listTypeNew, linked.isProfileBind)
-      ? [{ id: linked.id, listTypeNew: linked.listTypeNew, linkedListId: list.id }]
+    linked && canBeOnTrade(linked.listType, linked.isProfileBind)
+      ? [{ id: linked.id, listType: linked.listType, linkedListId: list.id }]
       : [];
   const sides = pickedSides(self, [self, ...linkedOnTrade]);
   const match = fullestFilter({
@@ -63,7 +63,7 @@ export function ListHeader() {
     want: sides.wantListIds.length > 0,
   });
   const openTo = openToLabel(list);
-  const swappable = (list.listTypeNew === "have" || list.listTypeNew === "want") && linked;
+  const swappable = (list.listType === "have" || list.listType === "want") && linked;
 
   return (
     <div className="flex flex-col gap-3.5">
@@ -76,15 +76,15 @@ export function ListHeader() {
               {list.name}
             </h1>
             {list.isProfileBind ? <ListBoundBadge /> : null}
-            {list.listTypeNew !== "general" ? <ListTypeBadge type={list.listTypeNew} /> : null}
+            {list.listType !== "general" ? <ListTypeBadge type={list.listType} /> : null}
             {openTo ? <span className="text-muted-foreground text-xs">{openTo}</span> : null}
-            {list.discoverable && canBeOnTrade(list.listTypeNew, list.isProfileBind) ? (
+            {list.discoverable && canBeOnTrade(list.listType, list.isProfileBind) ? (
               <Badge variant="outline" size="sm" render={<Link to="/trade" />}>
                 <ArrowsLeftRightIcon aria-hidden />
                 {m.list_on_trade()}
               </Badge>
             ) : null}
-            {list.listTypeNew === "sale" && list.currency ? (
+            {list.listType === "sale" && list.currency ? (
               <span className="text-muted-foreground font-mono text-xs">({list.currency})</span>
             ) : null}
           </div>
@@ -126,7 +126,7 @@ export function ListHeader() {
               render={<Link {...getListLinkOption(linked)} replace />}
             >
               <ArrowsLeftRightIcon />
-              {list.listTypeNew === "have" ? m.list_swap_to_want() : m.list_swap_to_have()}
+              {list.listType === "have" ? m.list_swap_to_want() : m.list_swap_to_have()}
             </Button>
           ) : null}
           {canTradeMatch ? <TradeMatchesLink slug={list.slug} match={match} /> : null}

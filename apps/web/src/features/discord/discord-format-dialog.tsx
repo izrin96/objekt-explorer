@@ -320,7 +320,7 @@ function ListPicker({
             <SelectItem key={list.slug} value={list.slug}>
               <span className="truncate">{list.name}</span>
               <span className="text-muted-foreground ml-1.5 text-xs">
-                {LIST_TYPE_LABEL[list.listTypeNew]()}
+                {LIST_TYPE_LABEL[list.listType]()}
               </span>
             </SelectItem>
           ))}

@@ -1,4 +1,4 @@
-import type { ListTypeNew } from "@repo/api/schemas/list";
+import type { ListType } from "@repo/api/schemas/list";
 
 import { Badge } from "@/components/ui/badge";
 import { toneChip } from "@/lib/tone";
@@ -32,7 +32,7 @@ function TagLabel({ tag }: { tag: PostTag }) {
 
 const TAG_TYPE = { wtt: "have", wtb: "want", wts: "sale" } as const satisfies Record<
   PostTag,
-  ListTypeNew
+  ListType
 >;
 
 export function TagBadge({ tag }: { tag: PostTag }) {

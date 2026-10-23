@@ -232,7 +232,7 @@ function AddToListDialog({
                           <span className="text-muted-foreground ml-1.5 text-xs">
                             {isDisabled(list)
                               ? m.list_manage_objekt_owned_only()
-                              : LIST_TYPE_LABEL[list.listTypeNew]()}
+                              : LIST_TYPE_LABEL[list.listType]()}
                           </span>
                         </SelectItem>
                       ))}

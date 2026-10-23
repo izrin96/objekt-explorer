@@ -137,7 +137,7 @@ async function resolveTheirItems(me: string, addressed: Addressed, fromList?: st
 export async function partnerListChoices(addressed: Addressed): Promise<PartnerList[]> {
   if (addressed.onlyList !== null) return [];
   const rows = await db
-    .select({ slug: lists.slug, name: lists.name, type: lists.listTypeNew })
+    .select({ slug: lists.slug, name: lists.name, type: lists.listType })
     .from(lists)
     .where(and(eq(lists.userId, addressed.partnerId), offersOnTrade))
     .orderBy(lists.id);

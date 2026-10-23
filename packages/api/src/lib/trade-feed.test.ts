@@ -38,7 +38,7 @@ const NOW = new Date("2026-10-07T12:00:00Z");
 const hoursAgo = (h: number) => new Date(NOW.getTime() - h * 60 * 60 * 1000).toISOString();
 const daysAgo = (d: number) => hoursAgo(d * 24);
 
-const list = (over: Partial<TradeList> & Pick<TradeList, "id" | "listTypeNew">): TradeList => ({
+const list = (over: Partial<TradeList> & Pick<TradeList, "id" | "listType">): TradeList => ({
   userId: "u1",
   linkedListId: null,
   matchSale: true,
@@ -58,15 +58,15 @@ const NO_FILTER = { slugs: null, slug: null, onlyMatches: false } as const;
 
 describe("pairPosts", () => {
   test("linked pair is one post", () => {
-    const spares = list({ id: 1, listTypeNew: "have", linkedListId: 2 });
-    const hunt = list({ id: 2, listTypeNew: "want", linkedListId: 1 });
+    const spares = list({ id: 1, listType: "have", linkedListId: 2 });
+    const hunt = list({ id: 2, listType: "want", linkedListId: 1 });
     const posts = pairPosts([hunt, spares]);
     expect(posts).toHaveLength(1);
     expect(posts[0]).toMatchObject({ tag: "wtt", anchor: spares, have: spares, want: hunt });
   });
 
   test("half a pair holds only the list on Trade", () => {
-    const spares = list({ id: 1, listTypeNew: "have", linkedListId: 2 });
+    const spares = list({ id: 1, listType: "have", linkedListId: 2 });
     const posts = pairPosts([spares]);
     expect(posts).toHaveLength(1);
     expect(posts[0]).toMatchObject({ tag: "wtt", have: spares, want: null });
@@ -74,8 +74,8 @@ describe("pairPosts", () => {
 
   test("a want list alone open to swaps or buying is WTT and WTB, a sale list WTS", () => {
     const posts = pairPosts([
-      list({ id: 2, listTypeNew: "want", linkedListId: 1, matchSale: true }),
-      list({ id: 3, listTypeNew: "sale" }),
+      list({ id: 2, listType: "want", linkedListId: 1, matchSale: true }),
+      list({ id: 3, listType: "sale" }),
     ]);
     expect(posts.map((post) => post.tags)).toEqual([["wtt", "wtb"], ["wts"]]);
     // the single tag keeps its old rule for open tabs and chat cards
@@ -83,19 +83,19 @@ describe("pairPosts", () => {
   });
 
   test("a want list alone that matches trades only is WTT", () => {
-    const [post] = pairPosts([list({ id: 2, listTypeNew: "want", matchSale: false })]);
+    const [post] = pairPosts([list({ id: 2, listType: "want", matchSale: false })]);
     expect(post).toMatchObject({ tags: ["wtt"], tag: "wtt", have: null });
   });
 
   test("a want list alone that is Buying only is WTB only", () => {
-    const [post] = pairPosts([list({ id: 2, listTypeNew: "want", matchHave: false })]);
+    const [post] = pairPosts([list({ id: 2, listType: "want", matchHave: false })]);
     expect(post).toMatchObject({ tags: ["wtb"], tag: "wtb" });
   });
 
   test("a have list linked to a Buying only want list is one WTT and WTB post", () => {
     const posts = pairPosts([
-      list({ id: 1, listTypeNew: "have", linkedListId: 2 }),
-      list({ id: 2, listTypeNew: "want", linkedListId: 1, matchHave: false }),
+      list({ id: 1, listType: "have", linkedListId: 2 }),
+      list({ id: 2, listType: "want", linkedListId: 1, matchHave: false }),
     ]);
     expect(posts).toHaveLength(1);
     expect(posts[0]).toMatchObject({ tags: ["wtt", "wtb"], tag: "wtt" });
@@ -103,16 +103,16 @@ describe("pairPosts", () => {
 
   test("a pair whose want list is open to swaps only is WTT only", () => {
     const [post] = pairPosts([
-      list({ id: 1, listTypeNew: "have", linkedListId: 2 }),
-      list({ id: 2, listTypeNew: "want", linkedListId: 1, matchSale: false }),
+      list({ id: 1, listType: "have", linkedListId: 2 }),
+      list({ id: 2, listType: "want", linkedListId: 1, matchSale: false }),
     ]);
     expect(post).toMatchObject({ tags: ["wtt"] });
   });
 
   test("a pair's bump and change times are the latest of its lists", () => {
     const [post] = pairPosts([
-      list({ id: 1, listTypeNew: "have", linkedListId: 2, bumpedAt: daysAgo(3) }),
-      list({ id: 2, listTypeNew: "want", bumpedAt: daysAgo(2), updatedAt: hoursAgo(1) }),
+      list({ id: 1, listType: "have", linkedListId: 2, bumpedAt: daysAgo(3) }),
+      list({ id: 2, listType: "want", bumpedAt: daysAgo(2), updatedAt: hoursAgo(1) }),
     ]);
     expect(post?.bumpedAt).toBe(daysAgo(2));
     expect(post?.updatedAt).toBe(hoursAgo(1));
@@ -122,8 +122,8 @@ describe("pairPosts", () => {
 describe("order and idle", () => {
   test("edit does not jump the queue", () => {
     const [edited, bumped] = pairPosts([
-      list({ id: 1, listTypeNew: "want", bumpedAt: daysAgo(3), updatedAt: hoursAgo(0) }),
-      list({ id: 2, listTypeNew: "want", bumpedAt: daysAgo(1) }),
+      list({ id: 1, listType: "want", bumpedAt: daysAgo(3), updatedAt: hoursAgo(0) }),
+      list({ id: 2, listType: "want", bumpedAt: daysAgo(1) }),
     ]);
     const order = [edited!, bumped!].toSorted(comparePosts).map((post) => post.anchor.id);
     expect(order).toEqual([2, 1]);
@@ -132,9 +132,9 @@ describe("order and idle", () => {
 
   test("a post never bumped sorts by its last change", () => {
     const posts = pairPosts([
-      list({ id: 1, listTypeNew: "want", bumpedAt: daysAgo(3) }),
-      list({ id: 2, listTypeNew: "want", bumpedAt: null, updatedAt: daysAgo(1) }),
-      list({ id: 3, listTypeNew: "want", bumpedAt: null, updatedAt: daysAgo(5) }),
+      list({ id: 1, listType: "want", bumpedAt: daysAgo(3) }),
+      list({ id: 2, listType: "want", bumpedAt: null, updatedAt: daysAgo(1) }),
+      list({ id: 3, listType: "want", bumpedAt: null, updatedAt: daysAgo(5) }),
     ]);
     expect(posts.toSorted(comparePosts).map((post) => post.anchor.id)).toEqual([2, 1, 3]);
   });
@@ -180,7 +180,7 @@ describe("ownership", () => {
   });
 
   test("nothing left", () => {
-    const [post] = pairPosts([list({ id: 1, listTypeNew: "have" })]);
+    const [post] = pairPosts([list({ id: 1, listType: "have" })]);
     const sold = tradeableEntries([entry(1, "s2", "t2")], "u1", untradeable);
     expect(assemblePost(post!, () => sold, null, NO_FILTER)).toBeNull();
   });
@@ -224,8 +224,8 @@ describe("previewSide", () => {
 
 describe("assemblePost", () => {
   const [pair] = pairPosts([
-    list({ id: 1, listTypeNew: "have", linkedListId: 2 }),
-    list({ id: 2, listTypeNew: "want" }),
+    list({ id: 1, listType: "have", linkedListId: 2 }),
+    list({ id: 2, listType: "want" }),
   ]);
   const entries: Record<number, FeedEntry[]> = {
     1: [entry(10, "offer-a"), entry(11, "offer-b")],
@@ -277,7 +277,7 @@ describe("assemblePost", () => {
   test("a one-sided post sends more of its side than a pair sends of each", () => {
     const many = (base: number) =>
       Array.from({ length: SOLO_PREVIEW_LIMIT + 5 }, (_, i) => entry(base + i, `s${base + i}`));
-    const [solo] = pairPosts([list({ id: 3, listTypeNew: "sale" })]);
+    const [solo] = pairPosts([list({ id: 3, listType: "sale" })]);
     const soloSide = assemblePost(solo!, () => many(100), null, NO_FILTER)?.sides[0];
     expect(soloSide?.items).toHaveLength(SOLO_PREVIEW_LIMIT);
     expect(soloSide?.more).toBe(5);
@@ -375,7 +375,7 @@ describe("assemblePost", () => {
   };
 
   test("a sale post does not match a want list that trades only", () => {
-    const [sale] = pairPosts([list({ id: 3, listTypeNew: "sale" })]);
+    const [sale] = pairPosts([list({ id: 3, listType: "sale" })]);
     const post = assemblePost(sale!, () => [entry(30, "offer-b")], tradeOnly, NO_FILTER);
     expect(post?.match).toEqual({ youHave: 0, youWant: 0, haveListIds: [], wantListIds: [] });
     expect(post?.sides[0]?.items.some((item) => item.ringed)).toBe(false);
@@ -383,8 +383,8 @@ describe("assemblePost", () => {
 
   test("a want list that trades only matches the viewer's have lists, not their sale lists", () => {
     const [tradeOnlyPair] = pairPosts([
-      list({ id: 1, listTypeNew: "have", linkedListId: 2 }),
-      list({ id: 2, listTypeNew: "want", matchSale: false }),
+      list({ id: 1, listType: "have", linkedListId: 2 }),
+      list({ id: 2, listType: "want", matchSale: false }),
     ]);
     const post = assemblePost(tradeOnlyPair!, of, tradeOnly, NO_FILTER);
     expect(post?.match).toEqual({ youHave: 2, youWant: 1, haveListIds: [7], wantListIds: [9] });
@@ -416,32 +416,32 @@ describe("Buying only rings", () => {
     );
 
   test("a have post rings only against my want lists open to swaps", () => {
-    const [post] = pairPosts([list({ id: 1, listTypeNew: "have" })]);
+    const [post] = pairPosts([list({ id: 1, listType: "have" })]);
     expect(ringed(post!)?.map((item) => item.slug)).toEqual(["a"]);
   });
 
   test("a Buying only want post rings only against my sale lists", () => {
-    const [post] = pairPosts([list({ id: 2, listTypeNew: "want", matchHave: false })]);
+    const [post] = pairPosts([list({ id: 2, listType: "want", matchHave: false })]);
     expect(ringed(post!)?.map((item) => item.slug)).toEqual(["b"]);
   });
 
   test("a swaps-only want post rings only against my have lists", () => {
-    const [post] = pairPosts([list({ id: 2, listTypeNew: "want", matchSale: false })]);
+    const [post] = pairPosts([list({ id: 2, listType: "want", matchSale: false })]);
     expect(ringed(post!)?.map((item) => item.slug)).toEqual(["a"]);
   });
 
   test("a want post open to both rings against my have and sale lists", () => {
-    const [post] = pairPosts([list({ id: 2, listTypeNew: "want" })]);
+    const [post] = pairPosts([list({ id: 2, listType: "want" })]);
     expect(ringed(post!)?.map((item) => item.slug)).toEqual(["b", "a"]);
   });
 
   test("a sale post rings only against my want lists open to buying", () => {
-    const [post] = pairPosts([list({ id: 3, listTypeNew: "sale" })]);
+    const [post] = pairPosts([list({ id: 3, listType: "sale" })]);
     expect(ringed(post!)?.map((item) => item.slug)).toEqual(["b"]);
   });
 
   test("a viewer with only a Buying only want list matches no have post", () => {
-    const [post] = pairPosts([list({ id: 1, listTypeNew: "have" })]);
+    const [post] = pairPosts([list({ id: 1, listType: "have" })]);
     const buyer: Viewer = { ...viewer, tradeWant: none };
     expect(assemblePost(post!, () => entries, buyer, NO_FILTER)?.match).toEqual({
       youHave: 0,

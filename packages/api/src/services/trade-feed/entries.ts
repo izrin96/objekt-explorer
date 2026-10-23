@@ -5,7 +5,7 @@ import { and, inArray, isNotNull, sql } from "drizzle-orm";
 
 import { type FeedEntry, tradeableEntries, untradeableKey } from "../../lib/trade-feed";
 import { unique } from "../../lib/unique";
-import type { ListTypeNew } from "../../schemas/list";
+import type { ListType } from "../../schemas/list";
 import { redis, redisFailOpen } from "../redis";
 
 const POST_TTL_SECONDS = 60;
@@ -16,7 +16,7 @@ export const feedListColumns = {
   slug: lists.slug,
   name: lists.name,
   description: lists.description,
-  listTypeNew: lists.listTypeNew,
+  listType: lists.listType,
   linkedListId: lists.linkedListId,
   matchSale: lists.matchSale,
   matchHave: lists.matchHave,
@@ -34,7 +34,7 @@ export type FeedList = {
   slug: string;
   name: string;
   description: string | null;
-  listTypeNew: ListTypeNew;
+  listType: ListType;
   linkedListId: number | null;
   matchSale: boolean;
   matchHave: boolean;
@@ -134,7 +134,7 @@ const postKey = (list: Pick<FeedList, "id" | "updatedAt">) =>
  * trade. Keyed by `updated_at`, so an entry edit shows at once and a sale within the TTL.
  */
 export async function fetchPostEntries(
-  feedLists: Pick<FeedList, "id" | "userId" | "listTypeNew" | "updatedAt">[],
+  feedLists: Pick<FeedList, "id" | "userId" | "listType" | "updatedAt">[],
   addressesOf: ReadonlyMap<string, ReadonlySet<string>>,
 ): Promise<Map<number, FeedEntry[]>> {
   const result = new Map<number, FeedEntry[]>();
@@ -185,7 +185,7 @@ export async function fetchPostEntries(
 
   const untradeable = await fetchUntradeable(
     misses
-      .filter((list) => list.listTypeNew !== "want")
+      .filter((list) => list.listType !== "want")
       .flatMap((list) =>
         (byList.get(list.id) ?? []).map((entry) => ({
           userId: list.userId,
@@ -200,7 +200,7 @@ export async function fetchPostEntries(
     misses.map((list) => {
       const entries = byList.get(list.id) ?? [];
       const shown =
-        list.listTypeNew === "want" ? entries : tradeableEntries(entries, list.userId, untradeable);
+        list.listType === "want" ? entries : tradeableEntries(entries, list.userId, untradeable);
       result.set(list.id, shown);
       return redisFailOpen("trade post", () =>
         redis.set(postKey(list), JSON.stringify(shown), "EX", POST_TTL_SECONDS),

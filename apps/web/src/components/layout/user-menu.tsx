@@ -231,7 +231,7 @@ function MyListsSubmenu({
           lists.map((list) => (
             <MenuItem key={list.slug} render={<Link {...getListLinkOption(list)} />}>
               <span className="truncate">{list.name}</span>
-              <ListTypeBadge type={list.listTypeNew} className="ml-auto" />
+              <ListTypeBadge type={list.listType} className="ml-auto" />
             </MenuItem>
           ))
         )}

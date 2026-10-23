@@ -209,7 +209,7 @@ export async function hydrateCards(cards: StoredObjektCard[], viewerId: string |
             hideSerial: lists.hideSerial,
             slug: lists.slug,
             name: lists.name,
-            listTypeNew: lists.listTypeNew,
+            listType: lists.listType,
             currency: lists.currency,
             profileSlug: lists.profileSlug,
             profileAddress: lists.profileAddress,
@@ -227,7 +227,7 @@ export async function hydrateCards(cards: StoredObjektCard[], viewerId: string |
     fetchCollectionsBySlug(slugs, []),
   ]);
 
-  const saleListIds = listRows.filter((l) => l.listTypeNew === "sale").map((l) => l.id);
+  const saleListIds = listRows.filter((l) => l.listType === "sale").map((l) => l.id);
   const entryRows =
     saleListIds.length === 0
       ? []
@@ -254,7 +254,7 @@ export async function hydrateCards(cards: StoredObjektCard[], viewerId: string |
     const list = card.listId === undefined ? undefined : listById.get(card.listId);
     const hidden = hidesSerials(list, viewerId);
     const entry =
-      list?.listTypeNew === "sale"
+      list?.listType === "sale"
         ? entryRows.find(
             (e) =>
               e.listId === list.id &&
@@ -274,7 +274,7 @@ export async function hydrateCards(cards: StoredObjektCard[], viewerId: string |
             id: list.id,
             slug: list.slug,
             name: list.name,
-            listTypeNew: list.listTypeNew,
+            listType: list.listType,
             currency: list.currency,
             profileSlug: list.profileSlug,
             profile: list.profileAddress

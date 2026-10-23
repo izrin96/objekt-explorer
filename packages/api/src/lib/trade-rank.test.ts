@@ -634,10 +634,10 @@ describe("toPartnerIdentity", () => {
 describe("matchSides", () => {
   // Spares (1) and Binary hunt (3) are linked; Dupes (2) is not
   const lists: MyList[] = [
-    { id: 1, listTypeNew: "have", linkedListId: 3 },
-    { id: 2, listTypeNew: "have", linkedListId: null },
-    { id: 3, listTypeNew: "want", linkedListId: 1 },
-    { id: 4, listTypeNew: "general", linkedListId: null },
+    { id: 1, listType: "have", linkedListId: 3 },
+    { id: 2, listType: "have", linkedListId: null },
+    { id: 3, listType: "want", linkedListId: 1 },
+    { id: 4, listType: "general", linkedListId: null },
   ];
 
   test("no list uses every have and want list", () => {
@@ -667,12 +667,12 @@ describe("matchSides", () => {
   });
 
   test("a link to a list not on Trade counts as none", () => {
-    const unbound: MyList[] = [{ id: 3, listTypeNew: "want", linkedListId: 1 }];
+    const unbound: MyList[] = [{ id: 3, listType: "want", linkedListId: 1 }];
     expect(matchSides(unbound, 3, "all")).toEqual({ listId: 3, haveListIds: [], wantListIds: [3] });
   });
 
   test("a sale list counts on the have side, and compares one way when named", () => {
-    const withSale: MyList[] = [...lists, { id: 5, listTypeNew: "sale", linkedListId: null }];
+    const withSale: MyList[] = [...lists, { id: 5, listType: "sale", linkedListId: null }];
     expect(matchSides(withSale, null, "all").haveListIds).toEqual([1, 2, 5]);
     expect(matchSides(withSale, 5, "all")).toEqual({
       listId: 5,

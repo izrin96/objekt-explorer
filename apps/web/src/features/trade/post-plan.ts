@@ -10,7 +10,7 @@ export function toPlanList(list: PublicList): PlanList {
     id: list.id,
     slug: list.slug,
     name: list.name,
-    listTypeNew: list.listTypeNew,
+    listType: list.listType,
     linkedListId: list.linkedList?.id ?? null,
     discoverable: list.discoverable ?? false,
     isProfileBind: list.isProfileBind,

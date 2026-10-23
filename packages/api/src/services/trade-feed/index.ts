@@ -47,7 +47,7 @@ import {
 import { unique } from "../../lib/unique";
 import type { PostCardView } from "../../schemas/chat";
 import type { CollectionFilters } from "../../schemas/common/filters";
-import type { ListTypeNew } from "../../schemas/list";
+import type { ListType } from "../../schemas/list";
 import { type BrowseFilters, type BrowseMatchMode, type FeedCursor } from "../../schemas/trade";
 import { postKindOf } from "../../schemas/trade-post";
 import { getCollectionFilters } from "../activity-feed";
@@ -81,9 +81,9 @@ const FILTER_SLUGS_TTL_SECONDS = 300;
 
 const POST_CARD_LIMIT = 6;
 
-const TRADE_TYPES = ["have", "want", "sale"] as const satisfies ListTypeNew[];
-const isTradeType = (type: ListTypeNew): type is (typeof TRADE_TYPES)[number] =>
-  (TRADE_TYPES as readonly ListTypeNew[]).includes(type);
+const TRADE_TYPES = ["have", "want", "sale"] as const satisfies ListType[];
+const isTradeType = (type: ListType): type is (typeof TRADE_TYPES)[number] =>
+  (TRADE_TYPES as readonly ListType[]).includes(type);
 
 /**
  * The shared collection filters as slugs, resolved in the indexer; null when none is set. An
@@ -122,7 +122,7 @@ function toListLink(list: FeedList, nicknameOf: ReadonlyMap<string, string | nul
     slug: list.slug,
     name: list.name,
     description: list.description,
-    listTypeNew: list.listTypeNew,
+    listType: list.listType,
     currency: list.currency,
     profileSlug: list.profileSlug,
     profile: address ? { address, nickname: nicknameOf.get(address) ?? null } : null,
@@ -452,8 +452,8 @@ export async function fetchMyPosts(userId: string) {
               {
                 slug: list.slug,
                 name: list.name,
-                listTypeNew: list.listTypeNew,
-                role: list.listTypeNew as "have" | "want" | "sale",
+                listType: list.listType,
+                role: list.listType as "have" | "want" | "sale",
               },
             ]
           : [],
@@ -510,7 +510,7 @@ export async function fetchPostCards(
     [post.have, post.want, post.sale].flatMap((list) => (list ? [list] : [])),
   );
   const ownerIds = unique(members.map((list) => list.userId));
-  const saleIds = members.filter((list) => list.listTypeNew === "sale").map((list) => list.id);
+  const saleIds = members.filter((list) => list.listType === "sale").map((list) => list.id);
   const [accounts, addressRows, priceRows] = await Promise.all([
     db.select().from(user).where(inArray(user.id, ownerIds)),
     fetchAddresses(ownerIds),
@@ -624,12 +624,12 @@ type ShowOnTradeRefusal = "not_tradeable" | "needs_profile";
 
 export async function setShowOnTrade(userId: string, slug: string, on: boolean) {
   const list = await findOwnedList(slug, userId);
-  if (!isTradeType(list.listTypeNew)) {
+  if (!isTradeType(list.listType)) {
     throw new ORPCError("BAD_REQUEST", {
       data: { reason: "not_tradeable" satisfies ShowOnTradeRefusal },
     });
   }
-  if (on && !resolveDiscoverable(list.listTypeNew, list.isProfileBind, true)) {
+  if (on && !resolveDiscoverable(list.listType, list.isProfileBind, true)) {
     throw new ORPCError("BAD_REQUEST", {
       data: { reason: "needs_profile" satisfies ShowOnTradeRefusal },
     });
@@ -651,21 +651,21 @@ export async function setShowOnTrade(userId: string, slug: string, on: boolean) 
 type CountRow = {
   post_id: number;
   user_id: string;
-  list_type_new: ListTypeNew;
+  list_type: ListType;
   objekt_id: string | null;
 };
 
 async function computePostCounts(slug: string) {
   const result = await db.execute<CountRow>(sql`
     WITH ${postsCte}
-    SELECT posts.id AS post_id, posts.user_id, t.list_type_new, e.objekt_id
+    SELECT posts.id AS post_id, posts.user_id, t.list_type, e.objekt_id
     FROM posts
     JOIN list_entries e ON e.list_id IN (posts.id, posts.partner_id)
     JOIN on_trade t ON t.id = e.list_id
     WHERE e.collection_slug = ${slug} AND ${listedPost} AND ${notTradeSanctioned(sql`posts.user_id`)}
   `);
 
-  const owned = result.rows.filter((row) => row.list_type_new !== "want");
+  const owned = result.rows.filter((row) => row.list_type !== "want");
   const refs = owned.map((row) => ({ userId: row.user_id, objektId: row.objekt_id, slug }));
   const untradeable = await fetchUntradeable(
     refs,
@@ -677,7 +677,7 @@ async function computePostCounts(slug: string) {
       .map((row) => row.post_id),
   );
   const wantPosts = new Set(
-    result.rows.filter((row) => row.list_type_new === "want").map((row) => row.post_id),
+    result.rows.filter((row) => row.list_type === "want").map((row) => row.post_id),
   );
   return { have: havePosts.size, want: wantPosts.size };
 }

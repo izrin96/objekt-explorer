@@ -77,14 +77,14 @@ function toCopyDraft(list: StoredList): ListDraft {
   return {
     name: m.list_copy_name({ name: list.name }),
     description: list.description ?? "",
-    listTypeNew: list.listTypeNew,
+    listType: list.listType,
     currency: list.currency ?? "",
     linkedListId: null,
     profileAddress: list.profileAddress,
     isProfileBind: list.isProfileBind,
     discoverable: false,
-    matchSale: list.listTypeNew === "want" ? list.matchSale : EMPTY_DRAFT.matchSale,
-    matchHave: list.listTypeNew === "want" ? list.matchHave : EMPTY_DRAFT.matchHave,
+    matchSale: list.listType === "want" ? list.matchSale : EMPTY_DRAFT.matchSale,
+    matchHave: list.listType === "want" ? list.matchHave : EMPTY_DRAFT.matchHave,
     gridColumns: list.gridColumns,
     hideSerial: list.hideSerial,
     regenerateSlug: false,
@@ -97,12 +97,12 @@ function CopyListForm({ list, onDone }: { list: StoredList; onDone: () => void }
   const [draft, setDraft] = useState<ListDraft>(() => toCopyDraft(list));
   const [errors, setErrors] = useState<FieldErrors>({});
 
-  const { listTypeNew, isProfileBind, profileAddress } = toCreateInput(draft);
+  const { listType, isProfileBind, profileAddress } = toCreateInput(draft);
   // only a copy that keeps rows one to one needs no count
-  const needsPreview = copyMode(list, { listTypeNew, isProfileBind, profileAddress }) !== "rows";
+  const needsPreview = copyMode(list, { listType, isProfileBind, profileAddress }) !== "rows";
   const { data: preview } = useQuery(
     orpc.list.copyPreview.queryOptions({
-      input: { sourceSlug: list.slug, listTypeNew, isProfileBind, profileAddress },
+      input: { sourceSlug: list.slug, listType, isProfileBind, profileAddress },
       enabled: needsPreview,
       // the source's entries and the profile's holdings change without invalidating this
       staleTime: 0,

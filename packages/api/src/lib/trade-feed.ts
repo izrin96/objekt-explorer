@@ -1,4 +1,4 @@
-import type { ListTypeNew } from "../schemas/list";
+import type { ListType } from "../schemas/list";
 import { type OpenToFlags, pickByOpenTo } from "../schemas/open-to";
 import {
   type BrowseMatchMode,
@@ -22,7 +22,7 @@ export type { PostTag };
 export type TradeList = OpenToFlags & {
   id: number;
   userId: string;
-  listTypeNew: ListTypeNew;
+  listType: ListType;
   linkedListId: number | null;
   bumpedAt: string | null;
   updatedAt: string;
@@ -53,9 +53,9 @@ export function latest(...times: (string | null)[]): string | null {
 }
 
 function toPost<L extends TradeList>(anchor: L, partner: L | null): Post<L> {
-  const have = anchor.listTypeNew === "have" ? anchor : null;
-  const want = anchor.listTypeNew === "want" ? anchor : partner;
-  const sale = anchor.listTypeNew === "sale" ? anchor : null;
+  const have = anchor.listType === "have" ? anchor : null;
+  const want = anchor.listType === "want" ? anchor : partner;
+  const sale = anchor.listType === "sale" ? anchor : null;
   const members = partner ? [anchor, partner] : [anchor];
   const tags = tagsOf({ have, want, sale });
   return {

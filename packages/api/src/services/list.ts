@@ -26,7 +26,7 @@ import {
   type copyPreviewInputSchema,
   type createListInputSchema,
   type ListPreview,
-  type ListTypeNew,
+  type ListType,
   type PublicList,
 } from "../schemas/list";
 import { carriesPrices, copyMode, copyUnit, needsHoldings } from "../schemas/list-copy";
@@ -193,7 +193,7 @@ export async function fetchList(
           id: true,
           slug: true,
           name: true,
-          listTypeNew: true,
+          listType: true,
           isProfileBind: true,
           profileSlug: true,
           profileAddress: true,
@@ -222,7 +222,7 @@ export async function fetchList(
     id: result.id,
     slug: result.slug,
     name: result.name,
-    listTypeNew: result.listTypeNew,
+    listType: result.listType,
     isProfileBind: result.isProfileBind,
     profileSlug: result.profileSlug,
     profileAddress: result.profileAddress,
@@ -274,7 +274,7 @@ export async function fetchOwnedLists(
       id: true,
       slug: true,
       name: true,
-      listTypeNew: true,
+      listType: true,
       isProfileBind: true,
       profileSlug: true,
       profileAddress: true,
@@ -301,7 +301,7 @@ export async function fetchOwnedLists(
           id: true,
           slug: true,
           name: true,
-          listTypeNew: true,
+          listType: true,
           isProfileBind: true,
           profileSlug: true,
           profileAddress: true,
@@ -325,7 +325,7 @@ export async function fetchOwnedLists(
             id: linkedList.id,
             slug: linkedList.slug,
             name: linkedList.name,
-            listTypeNew: linkedList.listTypeNew,
+            listType: linkedList.listType,
             isProfileBind: linkedList.isProfileBind,
             profileSlug: linkedList.profileSlug,
             profileAddress: linkedList.profileAddress,
@@ -412,7 +412,7 @@ export async function fetchListPreviews(slugs: string[]): Promise<ListPreview[]>
 }
 
 export function resolveDiscoverable(
-  type: ListTypeNew,
+  type: ListType,
   isProfileBind: boolean,
   requested: boolean,
 ): boolean {
@@ -457,14 +457,14 @@ export function tradeColumns(on: boolean) {
  * reads its partner's.
  */
 export async function checkLinkedList(
-  type: ListTypeNew,
+  type: ListType,
   linkedListId: number,
   userId: string,
   openTo: OpenToFlags,
 ) {
   const linkedList = await db.query.lists.findFirst({
     columns: {
-      listTypeNew: true,
+      listType: true,
       isProfileBind: true,
       matchSale: true,
       matchHave: true,
@@ -480,10 +480,10 @@ export async function checkLinkedList(
   }
 
   // have can only link to want, want can only link to have
-  if (type === "have" && linkedList.listTypeNew !== "want") {
+  if (type === "have" && linkedList.listType !== "want") {
     refuse("BAD_REQUEST", "list_have_links_want", "Have lists can only link to Want lists");
   }
-  if (type === "want" && linkedList.listTypeNew !== "have") {
+  if (type === "want" && linkedList.listType !== "have") {
     refuse("BAD_REQUEST", "list_want_links_have", "Want lists can only link to Have lists");
   }
   if (pairRefusesOpenTo(type === "want" ? openTo : linkedList)) {
@@ -541,12 +541,12 @@ export type NewList = z.infer<typeof createListInputSchema> & { gridColumns?: nu
  * the pool, and a transaction waiting on them would hold a connection while it waits.
  */
 export async function prepareList(input: NewList, userId: string) {
-  const isProfileBind = ["have", "sale"].includes(input.listTypeNew) ? input.isProfileBind : false;
+  const isProfileBind = ["have", "sale"].includes(input.listType) ? input.isProfileBind : false;
 
-  const linkedListId = ["have", "want"].includes(input.listTypeNew) ? input.linkedListId : null;
+  const linkedListId = ["have", "want"].includes(input.listType) ? input.linkedListId : null;
 
   // Validate: sale lists require currency
-  if (input.listTypeNew === "sale" && !input.currency) {
+  if (input.listType === "sale" && !input.currency) {
     refuse("BAD_REQUEST", "list_currency_required", "Currency is required for sale lists");
   }
 
@@ -564,12 +564,7 @@ export async function prepareList(input: NewList, userId: string) {
   const [profileCheck, linkedCheck] = await Promise.allSettled([
     input.profileAddress ? assertProfileOwned(input.profileAddress, userId) : undefined,
     linkedListId !== null
-      ? checkLinkedList(
-          input.listTypeNew,
-          linkedListId,
-          userId,
-          resolveOpenTo(input.listTypeNew, input),
-        )
+      ? checkLinkedList(input.listType, linkedListId, userId, resolveOpenTo(input.listType, input))
       : undefined,
   ]);
 
@@ -583,7 +578,7 @@ export async function prepareList(input: NewList, userId: string) {
     isProfileBind,
     linkedListId,
     partner: linkedCheck.value,
-    discoverable: resolveDiscoverable(input.listTypeNew, isProfileBind, input.discoverable),
+    discoverable: resolveDiscoverable(input.listType, isProfileBind, input.discoverable),
   };
 }
 
@@ -605,18 +600,18 @@ export async function writeList(tx: Tx, prepared: PreparedList) {
       userId,
       slug,
       profileSlug,
-      listTypeNew: input.listTypeNew,
+      listType: input.listType,
       isProfileBind,
       hideSerial:
-        ["sale", "have"].includes(input.listTypeNew) && isProfileBind ? input.hideSerial : false,
+        ["sale", "have"].includes(input.listType) && isProfileBind ? input.hideSerial : false,
       gridColumns: input.gridColumns,
       linkedListId,
       profileAddress: input.profileAddress ? input.profileAddress.toLowerCase() : null,
       description: input.description,
       currency:
-        input.listTypeNew === "sale" && input.currency ? normalizeCurrency(input.currency) : null,
+        input.listType === "sale" && input.currency ? normalizeCurrency(input.currency) : null,
       discoverable,
-      ...resolveOpenTo(input.listTypeNew, input),
+      ...resolveOpenTo(input.listType, input),
       bumpedAt: discoverable ? turnOnBumpedAt(userId) : null,
     })
     .returning({ id: lists.id });
@@ -635,7 +630,7 @@ export async function writeList(tx: Tx, prepared: PreparedList) {
 
     await tx.update(lists).set({ linkedListId: inserted.id }).where(eq(lists.id, linkedListId));
 
-    if (partner && resolveDiscoverable(partner.listTypeNew, partner.isProfileBind, discoverable)) {
+    if (partner && resolveDiscoverable(partner.listType, partner.isProfileBind, discoverable)) {
       await tx.update(lists).set(tradeColumns(true)).where(eq(lists.id, linkedListId));
     }
   }
@@ -645,7 +640,7 @@ export async function writeList(tx: Tx, prepared: PreparedList) {
 
 type CopyTarget = Pick<
   z.infer<typeof copyPreviewInputSchema>,
-  "listTypeNew" | "isProfileBind" | "profileAddress"
+  "listType" | "isProfileBind" | "profileAddress"
 >;
 
 /**
@@ -653,7 +648,7 @@ type CopyTarget = Pick<
  * A bound target's profile is checked before its holdings are read.
  */
 export async function planCopy(source: List, target: CopyTarget, userId: string) {
-  const isProfileBind = ["have", "sale"].includes(target.listTypeNew) && target.isProfileBind;
+  const isProfileBind = ["have", "sale"].includes(target.listType) && target.isProfileBind;
   const binding = { ...target, isProfileBind };
   const mode = copyMode(source, binding);
 
@@ -709,12 +704,7 @@ export async function planCopy(source: List, target: CopyTarget, userId: string)
     }
   }
 
-  const plan = buildCopyRows(
-    mode,
-    entries,
-    owned,
-    carriesPrices(source.listTypeNew, target.listTypeNew),
-  );
+  const plan = buildCopyRows(mode, entries, owned, carriesPrices(source.listType, target.listType));
   return { ...plan, unit: copyUnit(mode) };
 }
 

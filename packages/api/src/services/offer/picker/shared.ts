@@ -90,7 +90,7 @@ export async function wantSlugsOf(userId: string, discoverableOnly: boolean) {
     .where(
       and(
         eq(lists.userId, userId),
-        eq(lists.listTypeNew, "want"),
+        eq(lists.listType, "want"),
         discoverableOnly ? eq(lists.discoverable, true) : undefined,
       ),
     );
@@ -102,7 +102,7 @@ export async function wantListOf(slug: string) {
     .select({
       id: lists.id,
       userId: lists.userId,
-      listTypeNew: lists.listTypeNew,
+      listType: lists.listType,
       discoverable: lists.discoverable,
     })
     .from(lists)

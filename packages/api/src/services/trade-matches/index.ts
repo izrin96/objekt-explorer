@@ -54,7 +54,7 @@ export async function resolveTradeSides(
     .select({
       id: lists.id,
       slug: lists.slug,
-      listTypeNew: lists.listTypeNew,
+      listType: lists.listType,
       linkedListId: lists.linkedListId,
     })
     .from(lists)
@@ -163,7 +163,7 @@ export async function recountPartners(
             listId: listEntries.listId,
             slug: listEntries.collectionSlug,
             objektId: listEntries.objektId,
-            listTypeNew: lists.listTypeNew,
+            listType: lists.listType,
             matchSale: lists.matchSale,
             matchHave: lists.matchHave,
           })
@@ -195,7 +195,7 @@ export async function recountPartners(
     if (entry.slug === null) continue;
     if (haveIds.has(entry.listId)) {
       myHaveEntries.push({ listId: entry.listId, slug: entry.slug, objektId: entry.objektId });
-      if (entry.listTypeNew === "sale") mySaleListIds.add(entry.listId);
+      if (entry.listType === "sale") mySaleListIds.add(entry.listId);
     } else {
       const held = myWants.get(entry.slug) ?? [];
       if (!held.some((want) => want.listId === entry.listId)) {
@@ -296,7 +296,7 @@ async function hydratePartners(ranked: Ranked, addressRows: AddressRows) {
             userId: lists.userId,
             slug: lists.slug,
             name: lists.name,
-            listTypeNew: lists.listTypeNew,
+            listType: lists.listType,
             matchSale: lists.matchSale,
             matchHave: lists.matchHave,
             profileAddress: lists.profileAddress,
@@ -321,7 +321,7 @@ async function hydratePartners(ranked: Ranked, addressRows: AddressRows) {
         id: list.id,
         slug: list.slug,
         name: list.name,
-        listTypeNew: list.listTypeNew,
+        listType: list.listType,
         matchSale: list.matchSale,
         matchHave: list.matchHave,
         profileAddress: list.profileAddress,

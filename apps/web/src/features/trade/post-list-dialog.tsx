@@ -127,7 +127,7 @@ function Composer({ start, onDone }: { start: ComposerStart; onDone: () => void 
   const [step, setStep] = useState<"kind" | "lists">(start.kind ? "lists" : "kind");
   const [choice, setChoice] = useState<Choice>({ ...start, unpair: false });
   const editing = start.replaces !== null;
-  const tradeLists = lists.filter((list) => list.listTypeNew !== "general");
+  const tradeLists = lists.filter((list) => list.listType !== "general");
 
   const setKind = (kind: PostKind) => {
     const keeps = SLOTS_OF[kind];
@@ -378,7 +378,7 @@ function ListSection({
   onDone: () => void;
 }) {
   const id = useId();
-  const candidates = lists.filter((list) => list.listTypeNew === slot);
+  const candidates = lists.filter((list) => list.listType === slot);
 
   return (
     <section aria-labelledby={`${id}-heading`} className="flex flex-col gap-2">

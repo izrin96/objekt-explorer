@@ -132,14 +132,14 @@ export const listCrud = {
       const list = await findOwnedList(input.slug, user.id);
 
       const sentLink = input.linkedListId !== undefined;
-      const linkedListId = !["have", "want"].includes(list.listTypeNew)
+      const linkedListId = !["have", "want"].includes(list.listType)
         ? null
         : sentLink
           ? (input.linkedListId ?? null)
           : list.linkedListId;
 
       // Validate currency for sale lists
-      if (list.listTypeNew === "sale" && !input.currency) {
+      if (list.listType === "sale" && !input.currency) {
         refuse("BAD_REQUEST", "list_currency_required", "Currency is required for sale lists");
       }
 
@@ -154,10 +154,10 @@ export const listCrud = {
         // before the pair rule can still be edited
         linkedListId !== null && sentLink
           ? checkLinkedList(
-              list.listTypeNew,
+              list.listType,
               linkedListId,
               user.id,
-              resolveOpenTo(list.listTypeNew, input, list),
+              resolveOpenTo(list.listType, input, list),
             )
           : undefined,
       ]);
@@ -186,7 +186,7 @@ export const listCrud = {
       }
 
       const discoverable = resolveDiscoverable(
-        list.listTypeNew,
+        list.listType,
         list.isProfileBind,
         input.discoverable ?? list.discoverable,
       );
@@ -204,16 +204,14 @@ export const listCrud = {
                 : null,
             description: input.description,
             currency:
-              list.listTypeNew === "sale" && input.currency
-                ? normalizeCurrency(input.currency)
-                : null,
+              list.listType === "sale" && input.currency ? normalizeCurrency(input.currency) : null,
             profileSlug,
             hideSerial:
-              ["sale", "have"].includes(list.listTypeNew) && list.isProfileBind
+              ["sale", "have"].includes(list.listType) && list.isProfileBind
                 ? input.hideSerial
                 : false,
             linkedListId,
-            ...(list.listTypeNew === "want" ? resolveOpenTo(list.listTypeNew, input, list) : {}),
+            ...(list.listType === "want" ? resolveOpenTo(list.listType, input, list) : {}),
             ...tradeColumns(discoverable),
           })
           .where(eq(lists.id, list.id));
@@ -251,7 +249,7 @@ export const listCrud = {
           linkedListId !== null &&
           linkedListId !== list.linkedListId &&
           partner &&
-          resolveDiscoverable(partner.listTypeNew, partner.isProfileBind, discoverable)
+          resolveDiscoverable(partner.listType, partner.isProfileBind, discoverable)
         ) {
           await tx.update(lists).set(tradeColumns(true)).where(eq(lists.id, linkedListId));
           changed.push(linkedListId);

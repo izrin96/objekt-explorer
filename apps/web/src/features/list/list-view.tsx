@@ -109,7 +109,7 @@ function ListEntries() {
 
   useClearSelectionOnNavigate();
 
-  const isSale = list.listTypeNew === "sale" && list.currency !== null;
+  const isSale = list.listType === "sale" && list.currency !== null;
   const canPrice = isOwner && isSale;
   const currency = list.currency ?? "";
   const { formatConverted } = useCurrency();
@@ -125,9 +125,9 @@ function ListEntries() {
       ...(list.isProfileBind && list.hideSerial !== true ? (["serial"] as const) : []),
       "duplicate",
       "rare",
-      ...(list.listTypeNew === "sale" ? (["price"] as const) : []),
+      ...(list.listType === "sale" ? (["price"] as const) : []),
     ],
-    [list.isProfileBind, list.hideSerial, list.listTypeNew],
+    [list.isProfileBind, list.hideSerial, list.listType],
   );
 
   const dialogs = useEntryDialogs();

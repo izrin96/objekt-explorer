@@ -32,7 +32,7 @@ async function listWhere(me: string, slug: string) {
       and(
         eq(lists.slug, slug),
         eq(lists.userId, me),
-        inArray(lists.listTypeNew, ["have", "sale", "general"]),
+        inArray(lists.listType, ["have", "sale", "general"]),
       ),
     );
   if (!list) refuseOffer("not_allowed");
