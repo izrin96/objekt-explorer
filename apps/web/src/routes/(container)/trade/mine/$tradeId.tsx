@@ -1,4 +1,4 @@
-import { ArrowLeftIcon, HandshakeIcon } from "@phosphor-icons/react";
+import { HandshakeIcon } from "@phosphor-icons/react";
 import { Link, createFileRoute, notFound } from "@tanstack/react-router";
 
 import { EmptyState } from "@/components/shared/empty-state";
@@ -10,6 +10,7 @@ import { isNotFound } from "@/lib/orpc-error";
 import { m } from "@/paraglide/messages";
 
 export const Route = createFileRoute("/(container)/trade/mine/$tradeId")({
+  staticData: { tradeChrome: false },
   loader: async ({ context: { queryClient }, params }) => {
     const id = Number(params.tradeId);
     if (!Number.isSafeInteger(id) || id <= 0) throw notFound();
@@ -34,33 +35,12 @@ export const Route = createFileRoute("/(container)/trade/mine/$tradeId")({
 
 function TradePage() {
   const { id } = Route.useLoaderData();
-  return (
-    <div className="flex flex-col gap-3">
-      <BackLink />
-      <TradeView key={id} id={id} />
-    </div>
-  );
-}
-
-function BackLink() {
-  return (
-    <Link
-      to="/trade/mine"
-      className="text-muted-foreground hover:text-foreground flex w-fit items-center gap-1.5 text-sm"
-    >
-      <ArrowLeftIcon aria-hidden className="size-4" />
-      {m.page_titles_trade_mine()}
-    </Link>
-  );
+  return <TradeView key={id} id={id} />;
 }
 
 function TradePending() {
-  return (
-    <div className="flex flex-col gap-3">
-      <BackLink />
-      <TradeViewSkeleton />
-    </div>
-  );
+  const { tradeId } = Route.useParams();
+  return <TradeViewSkeleton id={Number(tradeId)} />;
 }
 
 function TradeNotFound() {

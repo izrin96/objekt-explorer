@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { nextStep, stepKind, timeLeft } from "./next-step";
+import { legChip, nextStep, sideStatus, stepKind, timeLeft } from "./next-step";
 import { ACCEPTED, DAY, HOUR, copy, leg, trade, verified } from "./trade-fixture";
 
 const NOW = new Date(ACCEPTED).getTime() + 4 * DAY;
@@ -71,6 +71,7 @@ describe("nextStep, ended", () => {
   test("cancelled", () => {
     expect(step(trade({ status: "cancelled", endedAt: "2026-10-09T00:00:00.000Z" }))).toEqual({
       kind: "cancelled",
+      primary: null,
       deadline: { kind: "ended", at: "2026-10-09T00:00:00.000Z" },
     });
   });
@@ -193,21 +194,17 @@ describe("nextStep, in progress", () => {
     expect(stepKind(trade({ legs: [leg()] }))).toBe("yourTurn");
   });
 
-  test("notes: indexer first, then own stuck, then theirs, once each", () => {
+  test("notes: own stuck, then theirs, once each; the indexer adds none", () => {
     const s = step(
       trade({
         indexerBehind: true,
         legs: [leg({ stuck: true }), leg(), leg({ fromYou: false, stuck: true })],
       }),
     );
-    expect(s.kind === "yourTurn" && s.notes.map((n) => n.kind)).toEqual([
-      "indexerBehind",
-      "ownStuck",
-      "theirStuck",
-    ]);
+    expect(s.kind === "yourTurn" && s.notes.map((n) => n.kind)).toEqual(["ownStuck", "theirStuck"]);
   });
 
-  test("the indexer note shows in every in-progress state", () => {
+  test("the indexer being behind adds no note in any in-progress state", () => {
     const behind = (legs: ReturnType<typeof leg>[]) => step(trade({ indexerBehind: true, legs }));
     for (const s of [
       behind([leg({ fromYou: false, substitutes: [copy()] })]),
@@ -215,18 +212,138 @@ describe("nextStep, in progress", () => {
       behind([leg({ substitutes: [copy()] })]),
       behind([leg({ fromYou: false })]),
     ]) {
-      expect("notes" in s && s.notes[0]).toEqual({ kind: "indexerBehind" });
+      expect("notes" in s && s.notes).toEqual([]);
     }
   });
 
   test("past 14 days: the end is held, never negative", () => {
     const late = nextStep(trade(), new Date(ENDS).getTime() + HOUR);
-    expect(late.deadline).toEqual({ kind: "endsHeld" });
+    expect(late.deadline).toEqual({ kind: "endsHeld", at: ENDS });
   });
 
   test("a copy without acceptBy falls back to the end", () => {
     const l = leg({ fromYou: false, substitutes: [copy({ acceptBy: null })] });
     expect(step(trade({ legs: [l] })).deadline).toEqual({ kind: "ends", at: ENDS });
+  });
+});
+
+describe("nextStep, primary", () => {
+  test("your turn copies the address", () => {
+    expect(step(trade()).primary).toBe("copyAddress");
+  });
+
+  test("your turn with no address to copy has no primary", () => {
+    const t = trade();
+    t.partner = { ...t.partner, identity: { ...t.partner.identity, address: null } };
+    expect(step(t)).toMatchObject({ kind: "yourTurn", primary: null });
+  });
+
+  test("a decision decides", () => {
+    expect(step(trade({ legs: [leg({ fromYou: false, substitutes: [copy()] })] })).primary).toBe(
+      "decide",
+    );
+  });
+
+  test("every other state has none", () => {
+    const ended = { legs: [verified(), verified({ fromYou: false })] };
+    for (const t of [
+      trade({ legs: [verified(), leg({ fromYou: false })] }),
+      trade({ legs: [leg({ stuck: true })] }),
+      trade({ legs: [leg({ substitutes: [copy()] }), verified({ fromYou: false })] }),
+      trade({ ...ended, status: "completed" }),
+      trade({ ...ended, status: "failed" }),
+      trade({ status: "cancelled" }),
+    ]) {
+      expect(step(t).primary).toBeNull();
+    }
+  });
+});
+
+describe("sideStatus", () => {
+  test("their turn: sent and verified, waiting on them", () => {
+    const t = trade({ legs: [verified(), leg({ fromYou: false })] });
+    expect(sideStatus(t, "give")).toBe("sentVerified");
+    expect(sideStatus(t, "get")).toBe("waitingOnThem");
+  });
+
+  test("your turn: you owe this, after you send", () => {
+    const t = trade();
+    expect(sideStatus(t, "give")).toBe("youOwe");
+    expect(sideStatus(t, "get")).toBe("afterYouSend");
+  });
+
+  test("a pending copy on either side reads different copy", () => {
+    const received = trade({ legs: [verified(), leg({ fromYou: false, substitutes: [copy()] })] });
+    expect(sideStatus(received, "get")).toBe("differentCopy");
+    const sent = trade({ legs: [leg({ substitutes: [copy()] }), leg({ fromYou: false })] });
+    expect(sideStatus(sent, "give")).toBe("differentCopy");
+    // the copy is sent, so the other side waits on them, not on you
+    expect(sideStatus(sent, "get")).toBe("waitingOnThem");
+  });
+
+  test("a declined copy is no different copy", () => {
+    const t = trade({ legs: [leg({ substitutes: [copy({ status: "declined" })] })] });
+    expect(sideStatus(t, "give")).toBe("youOwe");
+  });
+
+  test("their side verified while you still owe", () => {
+    const t = trade({ legs: [leg(), verified({ fromYou: false })] });
+    expect(sideStatus(t, "get")).toBe("verified");
+  });
+
+  test("ended: verified, or not sent", () => {
+    const done = trade({ status: "completed", legs: [verified(), verified({ fromYou: false })] });
+    expect(sideStatus(done, "give")).toBe("verified");
+    expect(sideStatus(done, "get")).toBe("verified");
+    const cancelled = trade({
+      status: "cancelled",
+      legs: [leg({ state: "closed" }), leg({ fromYou: false, state: "closed" })],
+    });
+    expect(sideStatus(cancelled, "give")).toBe("notSent");
+    expect(sideStatus(cancelled, "get")).toBe("notSent");
+    const failed = trade({
+      status: "failed",
+      legs: [verified(), leg({ fromYou: false, state: "closed" })],
+    });
+    expect(sideStatus(failed, "give")).toBe("verified");
+    expect(sideStatus(failed, "get")).toBe("notSent");
+  });
+
+  test("ended with part of a side verified says nothing of the whole", () => {
+    const t = trade({ status: "failed", legs: [verified(), leg({ state: "closed" })] });
+    expect(sideStatus(t, "give")).toBeNull();
+  });
+
+  test("a side with no objekt has no status", () => {
+    const t = trade({ legs: [leg()] });
+    expect(sideStatus(t, "get")).toBeNull();
+  });
+});
+
+describe("legChip", () => {
+  test("verified", () => {
+    expect(legChip(verified(), false)).toBe("verified");
+    expect(legChip(verified(), true)).toBe("verified");
+  });
+
+  test("a leg you owe and can send", () => {
+    expect(legChip(leg(), false)).toBe("sendThis");
+  });
+
+  test("a stuck leg you owe, or one they owe, is waiting", () => {
+    expect(legChip(leg({ stuck: true }), false)).toBe("waiting");
+    expect(legChip(leg({ fromYou: false }), false)).toBe("waiting");
+  });
+
+  test("a pending copy, either way", () => {
+    expect(legChip(leg({ substitutes: [copy()] }), false)).toBe("differentCopy");
+    expect(legChip(leg({ fromYou: false, substitutes: [copy()] }), false)).toBe("differentCopy");
+    expect(legChip(leg({ substitutes: [copy({ status: "declined" })] }), false)).toBe("sendThis");
+  });
+
+  test("not sent once the trade ended without it", () => {
+    expect(legChip(leg({ state: "closed" }), true)).toBe("notSent");
+    expect(legChip(leg(), true)).toBe("notSent");
   });
 });
 

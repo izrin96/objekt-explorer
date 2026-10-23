@@ -7,7 +7,7 @@ import { getLocale } from "@/paraglide/runtime";
 import { Mono, MonoMessage } from "./mono";
 
 /** `since` is `YYYY-MM`; read in UTC, so the server and the browser print the same month. */
-function sinceLabel(since: string) {
+export function sinceLabel(since: string) {
   const [year, month] = since.split("-").map(Number);
   if (!year || !month) return since;
   return new Intl.DateTimeFormat(getLocale(), {

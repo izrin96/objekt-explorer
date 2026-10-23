@@ -1,4 +1,4 @@
-import { Outlet, createFileRoute } from "@tanstack/react-router";
+import { Outlet, createFileRoute, useMatches } from "@tanstack/react-router";
 
 import { PageHeader } from "@/components/shared/page-header";
 import { TradeTabs } from "@/features/trade/trade-tabs";
@@ -9,10 +9,17 @@ export const Route = createFileRoute("/(container)/trade")({
 });
 
 function TradeLayout() {
+  const chrome = useMatches({
+    select: (matches) => !matches.some((match) => match.staticData.tradeChrome === false),
+  });
   return (
     <>
-      <PageHeader title={m.nav_trade()} description={m.trade_page_description()} />
-      <TradeTabs />
+      {chrome ? (
+        <>
+          <PageHeader title={m.nav_trade()} description={m.trade_page_description()} />
+          <TradeTabs />
+        </>
+      ) : null}
       <Outlet />
     </>
   );

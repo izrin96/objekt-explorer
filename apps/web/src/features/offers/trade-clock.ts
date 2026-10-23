@@ -4,33 +4,44 @@ import {
   type TradeView as Trade,
 } from "@repo/api/schemas/offer";
 
-import { bothGive, type Copy, type Leg, stepKind, tradeEnd } from "./next-step";
+import { bothGive, type Copy, type Leg, nextStep, stepKind, tradeEnd } from "./next-step";
 
 const HOUR_MS = 3_600_000;
 const DAY_MS = 24 * HOUR_MS;
 
-type ClockWhen = "past" | "today" | "future";
+/** `paused`: an expiry past due that waits for the indexer to catch up. */
+type When = "past" | "today" | "future" | "paused";
 
-export type ClockRow =
-  | { kind: "accepted"; at: string; when: ClockWhen }
-  | { kind: "sent"; at: string; when: ClockWhen; leg: Leg }
-  | { kind: "copyDue"; at: string; when: ClockWhen; leg: Leg; copy: Copy }
-  | { kind: "reminder"; at: string; when: ClockWhen }
-  | { kind: "report"; at: string; when: ClockWhen }
+type Outcome = "completed" | "failed" | "cancelled";
+
+export type TimelineRow =
+  | { kind: "proposed"; at: string; when: When }
+  | { kind: "accepted"; at: string; when: When }
+  | { kind: "sent"; at: string | null; when: When; leg: Leg; txHash: string | null }
+  | { kind: "copyArrived"; at: string; when: When; leg: Leg; copy: Copy; txHash: string }
+  | { kind: "copyDue"; at: string; when: When; leg: Leg; copy: Copy }
+  | { kind: "reminder"; at: string; when: When }
+  | { kind: "report"; at: string; when: When }
   | { kind: "today"; at: string; when: "today" }
-  | { kind: "ends"; at: string; when: ClockWhen; outcome: "completed" | "failed" | "cancelled" }
-  /** undated, always last */
-  | { kind: "rate"; at: null; when: "future" };
+  | { kind: "ends"; at: string; when: When; outcome: Outcome }
+  /** undated, always last while in progress */
+  | { kind: "rate"; at: null; when: "future" }
+  | { kind: "end"; at: string | null; when: "past"; outcome: Outcome }
+  | { kind: "rateCloses"; at: string; when: When };
 
 /** Rows at the same instant keep this order. */
-const ORDER: ClockRow["kind"][] = [
+const ORDER: TimelineRow["kind"][] = [
+  "proposed",
   "accepted",
   "sent",
+  "copyArrived",
   "copyDue",
   "reminder",
   "report",
-  "today",
   "ends",
+  "today",
+  "end",
+  "rateCloses",
   "rate",
 ];
 
@@ -62,39 +73,65 @@ export function expiryOutcome(trade: Pick<Trade, "progress" | "legs">) {
 }
 
 const iso = (ms: number) => new Date(ms).toISOString();
+const ms = (at: string | null) => (at ? new Date(at).getTime() : 0);
 
-/** The dated rows of an in-progress trade, in time order, with `now` (ms) among them. */
-export function clockRows(trade: Trade, now: number): ClockRow[] {
-  const accepted = new Date(trade.acceptedAt).getTime();
-  const when = (at: string): ClockWhen => (new Date(at).getTime() <= now ? "past" : "future");
-  const dated: Exclude<ClockRow, { kind: "rate" }>[] = [
+/**
+ * Every event of a trade in time order, with `now` (ms) among them while it is in progress, then
+ * what lies ahead; once it ended, how it ended and when rating closes.
+ */
+export function timelineRows(trade: Trade, now: number): TimelineRow[] {
+  const when = (at: string): When => (ms(at) <= now ? "past" : "future");
+  const live = trade.status === "in_progress";
+  const rows: TimelineRow[] = [
+    { kind: "proposed", at: trade.proposedAt, when: when(trade.proposedAt) },
     { kind: "accepted", at: trade.acceptedAt, when: when(trade.acceptedAt) },
   ];
   for (const leg of trade.legs) {
-    if (leg.state === "verified" && leg.verifiedAt) {
-      dated.push({ kind: "sent", at: leg.verifiedAt, when: when(leg.verifiedAt), leg });
+    if (leg.state === "verified") {
+      const at = leg.verifiedAt;
+      rows.push({ kind: "sent", at, when: at ? when(at) : "past", leg, txHash: leg.txHash });
     }
     for (const copy of leg.substitutes) {
-      if (copy.status === "pending" && copy.acceptBy) {
-        dated.push({ kind: "copyDue", at: copy.acceptBy, when: when(copy.acceptBy), leg, copy });
+      rows.push({
+        kind: "copyArrived",
+        at: copy.at,
+        when: when(copy.at),
+        leg,
+        copy,
+        txHash: copy.txHash,
+      });
+      if (live && copy.status === "pending" && copy.acceptBy) {
+        rows.push({ kind: "copyDue", at: copy.acceptBy, when: when(copy.acceptBy), leg, copy });
       }
     }
   }
-  const reminder = iso(accepted + REMIND_AFTER_HOURS * HOUR_MS);
-  const report = iso(accepted + REPORT_AFTER_DAYS * DAY_MS);
-  const ends = iso(tradeEnd(trade));
-  dated.push(
-    { kind: "reminder", at: reminder, when: when(reminder) },
-    { kind: "report", at: report, when: when(report) },
-    { kind: "today", at: iso(now), when: "today" },
-    { kind: "ends", at: ends, when: when(ends), outcome: expiryOutcome(trade) },
-  );
-  dated.sort(
-    (a, b) =>
-      new Date(a.at).getTime() - new Date(b.at).getTime() ||
-      ORDER.indexOf(a.kind) - ORDER.indexOf(b.kind),
-  );
-  return [...dated, { kind: "rate", at: null, when: "future" }];
+  if (live) {
+    const accepted = ms(trade.acceptedAt);
+    const reminder = iso(accepted + REMIND_AFTER_HOURS * HOUR_MS);
+    const report = iso(accepted + REPORT_AFTER_DAYS * DAY_MS);
+    const ends = iso(tradeEnd(trade));
+    const endsWhen = when(ends) === "past" && trade.indexerBehind ? "paused" : when(ends);
+    rows.push(
+      { kind: "reminder", at: reminder, when: when(reminder) },
+      { kind: "report", at: report, when: when(report) },
+      { kind: "today", at: iso(now), when: "today" },
+      { kind: "ends", at: ends, when: endsWhen, outcome: expiryOutcome(trade) },
+    );
+  }
+  rows.sort((a, b) => ms(a.at) - ms(b.at) || ORDER.indexOf(a.kind) - ORDER.indexOf(b.kind));
+  if (live) return [...rows, { kind: "rate", at: null, when: "future" }];
+
+  rows.push({ kind: "end", at: trade.endedAt, when: "past", outcome: trade.status as Outcome });
+  const { deadline } = nextStep(trade, now);
+  if (deadline.kind === "rateBy" || deadline.kind === "rateUntil") {
+    rows.push({ kind: "rateCloses", at: deadline.at, when: when(deadline.at) });
+  }
+  return rows;
+}
+
+/** The first row still ahead, for the folded Timeline's summary; null once nothing is. */
+export function nextRow(rows: TimelineRow[]) {
+  return rows.find((row) => row.when === "future" || row.when === "paused") ?? null;
 }
 
 /** Whether the clock carries the who-sends-first line: both give, and the banner isn't showing it. */
@@ -105,32 +142,4 @@ export function firstSenderInClock(trade: Trade) {
     bothGive(trade) &&
     stepKind(trade) !== "yourTurn"
   );
-}
-
-export type HistoryRow =
-  | { kind: "proposed"; at: string }
-  | { kind: "accepted"; at: string }
-  | { kind: "transfer"; at: string | null; leg: Leg }
-  | { kind: "end"; at: string | null; outcome: "completed" | "failed" | "cancelled" };
-
-/** An ended trade's rows: proposed, accepted, each verified transfer by time, then the end. */
-export function historyRows(trade: Trade): HistoryRow[] {
-  const transfers = trade.legs
-    .filter((leg) => leg.state === "verified")
-    .toSorted(
-      (a, b) =>
-        new Date(a.verifiedAt ?? 0).getTime() - new Date(b.verifiedAt ?? 0).getTime() ||
-        a.id - b.id,
-    )
-    .map((leg): HistoryRow => ({ kind: "transfer", at: leg.verifiedAt, leg }));
-  const end: HistoryRow[] =
-    trade.status === "in_progress"
-      ? []
-      : [{ kind: "end", at: trade.endedAt, outcome: trade.status }];
-  return [
-    { kind: "proposed", at: trade.proposedAt },
-    { kind: "accepted", at: trade.acceptedAt },
-    ...transfers,
-    ...end,
-  ];
 }

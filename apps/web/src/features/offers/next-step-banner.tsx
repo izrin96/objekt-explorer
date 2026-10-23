@@ -1,7 +1,8 @@
 import {
+  ArrowRightIcon,
   CheckIcon,
-  ClockCountdownIcon,
   ClockIcon,
+  CopyIcon,
   FlagIcon,
   MinusIcon,
   PaperPlaneTiltIcon,
@@ -10,24 +11,26 @@ import {
   XIcon,
 } from "@phosphor-icons/react";
 import { TRADE_EXPIRE_DAYS, type TradeView as Trade } from "@repo/api/schemas/offer";
+import { truncateAddress } from "@repo/lib/address";
 import { useId, type ReactNode } from "react";
 
-import { Button } from "@/components/ui/button";
+import { Button, type ButtonProps } from "@/components/ui/button";
 import { untilLabel } from "@/features/chat/format";
+import { copyWithToast } from "@/lib/clipboard";
 import { TONE_EDGE, TONE_FILL, TONE_INK, type Tone } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import { useOfferActions } from "./actions";
-import { itemLabel, leftLabel, shortDate } from "./format";
-import { type Deadline, type Leg, type NextStep, nextStep, tradeEnd } from "./next-step";
+import { itemLabel, leftLabel, shortDate, tradeStatusText } from "./format";
+import { MakeOfferButton } from "./make-offer-button";
+import { type Deadline, type Leg, type NextStep, tradeEnd } from "./next-step";
 import { OfferThumb } from "./offer-item";
 import type { Collections } from "./pick";
+import { StatusBadge } from "./status-badge";
 import { Feedback } from "./trade-feedback";
+import { TradeSteps } from "./trade-steps";
 import { AcceptCopy, Serial, rich } from "./wrong-copy";
-
-/** Reads the clock here: the compiler takes `Date.now` in a component body as a render-time call. */
-const readStep = (trade: Trade) => nextStep(trade, Date.now());
 
 const TONES: Record<NextStep["kind"], { tone: Tone; icon: Icon }> = {
   completed: { tone: "success", icon: CheckIcon },
@@ -39,6 +42,23 @@ const TONES: Record<NextStep["kind"], { tone: Tone; icon: Icon }> = {
   theyDecide: { tone: "warning", icon: WarningIcon },
   theirTurn: { tone: "progress", icon: ClockIcon },
 };
+
+function chipText(trade: Trade, step: NextStep) {
+  switch (step.kind) {
+    case "yourTurn":
+      return m.offer_chip_your_turn();
+    case "theirTurn":
+      return m.offer_chip_their_turn();
+    case "youDecide":
+      return m.offer_chip_you_decide();
+    case "theyDecide":
+      return m.offer_chip_they_decide();
+    case "stuck":
+      return m.offer_chip_stuck();
+    default:
+      return tradeStatusText(trade.status);
+  }
+}
 
 function endedText(trade: Trade, name: string) {
   if (trade.status === "failed") {
@@ -58,37 +78,63 @@ function endedText(trade: Trade, name: string) {
     : m.offer_trade_cancelled_by_them({ name });
 }
 
-function deadlineText(deadline: Deadline) {
+/** Label over value, with a note under it; reads the viewer's clock, so only once hydrated. */
+function deadlineParts(deadline: Deadline) {
   switch (deadline.kind) {
     case "ends":
-      return m.offer_next_ends({ left: leftLabel(deadline.at), date: shortDate(deadline.at) });
+      return {
+        label: m.offer_deadline_ends(),
+        value: m.offer_deadline_in({ left: leftLabel(deadline.at) }),
+        note: shortDate(deadline.at),
+      };
     case "endsHeld":
-      return m.offer_next_ends_due();
+      return {
+        label: m.offer_deadline_ends(),
+        value: m.offer_deadline_paused(),
+        note: m.offer_deadline_was({ date: shortDate(deadline.at) }),
+      };
     case "decide":
-      return m.offer_next_decide_left({ left: leftLabel(deadline.at) });
+      return {
+        label: m.offer_deadline_decide(),
+        value: m.offer_deadline_left({ left: leftLabel(deadline.at) }),
+        note: shortDate(deadline.at),
+      };
     case "copyLeft":
-      return m.offer_next_left({ left: leftLabel(deadline.at) });
+      return {
+        label: m.offer_deadline_counts(),
+        value: m.offer_deadline_in({ left: leftLabel(deadline.at) }),
+        note: shortDate(deadline.at),
+      };
     case "rateBy":
-      return m.offer_next_rate_by({ date: shortDate(deadline.at) });
+      return {
+        label: m.offer_deadline_rate_by(),
+        value: shortDate(deadline.at),
+        note: m.offer_deadline_rate_note(),
+      };
     case "rateUntil":
-      return m.offer_next_rate_until({ date: shortDate(deadline.at) });
+      return { label: m.offer_deadline_change_until(), value: shortDate(deadline.at), note: null };
     case "ended":
-      return deadline.at ? m.offer_next_ended({ date: shortDate(deadline.at) }) : null;
+      return deadline.at
+        ? { label: m.offer_deadline_ended(), value: shortDate(deadline.at), note: null }
+        : null;
   }
 }
 
 type View = {
   title: ReactNode;
   body: ReactNode;
-  /** under the body */
+  /** under the body: the address to send to, the copies to compare, the rating */
   extra?: ReactNode;
-  /** the buttons of the right column */
   actions?: ReactNode;
 };
 
-/** The one next step of a trade, with its tone, copy, deadline and action. */
+/**
+ * The trade's one status surface: its chip, title, body, deadline, the action its state names and
+ * the stepper. The phone bar carries the state's primary action, so the card hides its own there.
+ */
 export function NextStepBanner({
   trade,
+  step,
   collections,
   name,
   hydrated,
@@ -96,6 +142,7 @@ export function NextStepBanner({
   onReport,
 }: {
   trade: Trade;
+  step: NextStep;
   collections: Collections;
   name: string;
   hydrated: boolean;
@@ -103,9 +150,9 @@ export function NextStepBanner({
   onReport: () => void;
 }) {
   const titleId = useId();
-  const step = readStep(trade);
   const { tone, icon: StepIcon } = TONES[step.kind];
   const label = (leg: Leg) => itemLabel(leg, collections);
+  const address = trade.partner.identity.address;
   const reportButton = (
     <Button variant="outline" size="sm" onClick={onReport}>
       <FlagIcon />
@@ -131,25 +178,39 @@ export function NextStepBanner({
           actions: step.canReport ? reportButton : null,
         };
       case "cancelled":
-        return { title: m.offer_next_cancelled(), body: endedText(trade, name) };
+        return {
+          title: m.offer_next_cancelled(),
+          body: endedText(trade, name),
+          actions: (
+            <MakeOfferButton
+              label={m.offer_make_new()}
+              request={{ to: { conversationId: trade.conversationId }, name }}
+            />
+          ),
+        };
       case "youDecide": {
         const sent = <Serial serial={step.copy.serial} estimated={step.copy.serialEstimated} />;
         const asked = <Serial serial={step.leg.serial} estimated={step.leg.serialEstimated} />;
         return {
           title: rich(m.offer_wrong_copy_they_sent, { name, sent, asked }),
-          body: (
-            <span className="flex items-center gap-2">
-              <OfferThumb
-                slug={step.leg.collectionSlug}
-                collection={collections[step.leg.collectionSlug]}
-                className="w-9"
-              />
-              {step.copy.acceptBy && hydrated
-                ? m.offer_wrong_copy_accept_by({ date: untilLabel(step.copy.acceptBy) })
-                : null}
+          body:
+            step.copy.acceptBy && hydrated
+              ? m.offer_wrong_copy_accept_by({ date: untilLabel(step.copy.acceptBy) })
+              : null,
+          extra: (
+            <CompareCopies
+              leg={step.leg}
+              collections={collections}
+              asked={asked}
+              sent={sent}
+              itemName={label(step.leg)}
+            />
+          ),
+          actions: (
+            <span className="contents max-sm:hidden">
+              <DecideActions trade={trade} leg={step.leg} copyId={step.copy.id} />
             </span>
           ),
-          actions: <DecideActions trade={trade} leg={step.leg} copyId={step.copy.id} />,
         };
       }
       case "yourTurn": {
@@ -169,8 +230,9 @@ export function NextStepBanner({
             name,
           }),
           body: first[step.body],
+          extra: address ? <SendTo address={address} /> : null,
           actions: step.canCancel ? (
-            <Button variant="outline" size="sm" onClick={onCancel}>
+            <Button variant="ghost" size="sm" onClick={onCancel}>
               {m.offer_trade_cancel()}
             </Button>
           ) : null,
@@ -214,86 +276,194 @@ export function NextStepBanner({
   })();
 
   // the viewer's own clock, so the deadline waits for the client
-  const deadline = hydrated ? deadlineText(step.deadline) : null;
+  const deadline = hydrated ? deadlineParts(step.deadline) : null;
   const notes = "notes" in step ? step.notes : [];
 
   return (
     <section
       aria-labelledby={titleId}
       className={cn(
-        "flex flex-wrap items-start gap-x-4 gap-y-3 rounded-xl border p-4",
-        TONE_FILL[tone],
+        "overflow-hidden rounded-xl border",
+        tone === "neutral" ? "bg-card" : TONE_FILL[tone],
         TONE_EDGE[tone],
       )}
     >
-      <span
-        aria-hidden
-        className={cn(
-          "grid size-10 shrink-0 place-items-center rounded-full",
-          TONE_FILL[tone],
-          TONE_INK[tone],
-        )}
-      >
-        <StepIcon weight="bold" className="size-5" />
-      </span>
-      <div className="flex min-w-0 flex-1 basis-56 flex-col gap-1">
-        <h3 id={titleId} className="text-sm font-semibold text-pretty wrap-anywhere">
-          {view.title}
-        </h3>
-        <div className="text-sm text-pretty wrap-anywhere">{view.body}</div>
-        {notes.map((note) => (
-          <p
-            key={note.kind}
-            className="text-warning-foreground flex items-start gap-1.5 text-xs text-pretty"
+      <div className="flex flex-wrap gap-4 p-4 sm:p-5">
+        <span
+          aria-hidden
+          className={cn(
+            "grid size-11 shrink-0 place-items-center rounded-lg",
+            TONE_FILL[tone],
+            TONE_INK[tone],
+          )}
+        >
+          <StepIcon weight="bold" className="size-5.5" />
+        </span>
+        <div className="flex min-w-0 flex-1 basis-48 flex-col gap-1.5">
+          <StatusBadge tone={tone} className="self-start">
+            {chipText(trade, step)}
+          </StatusBadge>
+          <h1
+            id={titleId}
+            className="text-lg leading-snug font-semibold text-pretty wrap-anywhere sm:text-xl"
           >
-            {note.kind === "indexerBehind" ? (
-              <>
-                <ClockCountdownIcon aria-hidden className="mt-px size-3.5 shrink-0" />
-                {trade.seenUntil && hydrated
-                  ? m.offer_indexer_behind({ time: untilLabel(trade.seenUntil) })
-                  : m.offer_indexer_behind_unknown()}
-              </>
-            ) : (
-              <>
-                <WarningIcon aria-hidden weight="fill" className="mt-px size-3.5 shrink-0" />
-                {note.kind === "ownStuck"
-                  ? m.offer_next_stuck({ objekt: label(note.leg) })
-                  : m.offer_next_their_stuck({ name, objekt: label(note.leg) })}
-              </>
-            )}
-          </p>
-        ))}
-      </div>
-      {deadline || view.actions ? (
-        <div className="flex flex-col items-end gap-2 max-sm:w-full max-sm:flex-row max-sm:flex-wrap max-sm:items-center max-sm:justify-between">
-          {deadline ? (
-            <p className={cn("text-xs font-medium tabular-nums", TONE_INK[tone])}>{deadline}</p>
+            {view.title}
+          </h1>
+          {view.body ? (
+            <p className="text-muted-foreground text-sm text-pretty wrap-anywhere">{view.body}</p>
           ) : null}
-          {view.actions ? (
-            <div className="flex flex-wrap justify-end gap-2">{view.actions}</div>
-          ) : null}
+          {notes.map((note) => (
+            <p
+              key={note.kind}
+              className="text-warning-foreground flex items-start gap-1.5 text-xs text-pretty"
+            >
+              <WarningIcon aria-hidden weight="fill" className="mt-px size-3.5 shrink-0" />
+              {note.kind === "ownStuck"
+                ? m.offer_next_stuck({ objekt: label(note.leg) })
+                : m.offer_next_their_stuck({ name, objekt: label(note.leg) })}
+            </p>
+          ))}
+          {view.extra ? <div className="mt-2">{view.extra}</div> : null}
+          {view.actions ? <div className="mt-2 flex flex-wrap gap-2">{view.actions}</div> : null}
         </div>
-      ) : null}
-      {/* its own row, so on a phone it takes the width the icon's indent would cost */}
-      {view.extra ? <div className="w-full sm:ps-14">{view.extra}</div> : null}
+        {deadline ? (
+          <div className="flex min-w-36 shrink-0 flex-col gap-0.5 sm:text-end">
+            <span className="text-muted-foreground text-xs">{deadline.label}</span>
+            <span className={cn("text-xl font-semibold tabular-nums", TONE_INK[tone])}>
+              {deadline.value}
+            </span>
+            {deadline.note ? (
+              <span className="text-muted-foreground max-w-52 text-xs sm:ms-auto">
+                {deadline.note}
+              </span>
+            ) : null}
+          </div>
+        ) : null}
+      </div>
+      <TradeSteps
+        trade={trade}
+        kind={step.kind}
+        hydrated={hydrated}
+        className={cn("border-t px-4 pt-3.5 pb-4 sm:px-5", TONE_EDGE[tone])}
+      />
     </section>
   );
 }
 
-function DecideActions({ trade, leg, copyId }: { trade: Trade; leg: Leg; copyId: number }) {
+function SendTo({ address }: { address: string }) {
+  return (
+    <div className="bg-background/60 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border px-3 py-2.5">
+      <span className="text-muted-foreground text-xs">{m.offer_send_to()}</span>
+      <span
+        className="min-w-0 flex-1 basis-36 truncate font-mono text-sm font-medium"
+        title={address}
+      >
+        {truncateAddress(address)}
+      </span>
+      <CopyAddressButton address={address} className="max-sm:hidden" />
+    </div>
+  );
+}
+
+/** The your-turn primary: filled, with the same toast as the copy buttons beside names. */
+export function CopyAddressButton({
+  address,
+  size = "sm",
+  className,
+}: {
+  address: string;
+  size?: ButtonProps["size"];
+  className?: string;
+}) {
+  return (
+    <Button
+      size={size}
+      className={className}
+      onClick={() => void copyWithToast(address, { title: m.profile_header_address_copied() })}
+    >
+      <CopyIcon />
+      {m.offer_copy_address()}
+    </Button>
+  );
+}
+
+function CompareCopies({
+  leg,
+  collections,
+  asked,
+  sent,
+  itemName,
+}: {
+  leg: Leg;
+  collections: Collections;
+  asked: ReactNode;
+  sent: ReactNode;
+  itemName: string;
+}) {
+  const thumb = (className?: string) => (
+    <OfferThumb
+      slug={leg.collectionSlug}
+      collection={collections[leg.collectionSlug]}
+      className={cn("w-11", className)}
+    />
+  );
+  return (
+    <div className="flex items-center gap-3.5" aria-label={itemName} role="group">
+      <div className="flex items-center gap-2.5">
+        {thumb("opacity-55")}
+        <span className="text-muted-foreground flex flex-col text-xs">
+          {m.offer_copy_asked()}
+          <span className="text-foreground font-mono text-sm">{asked}</span>
+        </span>
+      </div>
+      <ArrowRightIcon
+        aria-hidden
+        className="text-muted-foreground size-4.5 shrink-0 rtl:rotate-180"
+      />
+      <div className="flex items-center gap-2.5">
+        {thumb()}
+        <span className="text-muted-foreground flex flex-col text-xs">
+          {m.offer_copy_sent()}
+          <span className="text-warning-foreground font-mono text-sm font-semibold">{sent}</span>
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/** Decline and Accept for the copy the card shows; the phone bar renders its own pair. */
+export function DecideActions({
+  trade,
+  leg,
+  copyId,
+  size = "sm",
+}: {
+  trade: Trade;
+  leg: Leg;
+  copyId: number;
+  size?: ButtonProps["size"];
+}) {
   const actions = useOfferActions(trade.conversationId, () => "");
   const sub = leg.substitutes.find((copy) => copy.id === copyId)!;
+  const bar = size !== "sm";
   return (
     <>
       <Button
         variant="outline"
-        size="sm"
+        size={size}
+        className={bar ? "shrink-0 px-3 text-base" : undefined}
         loading={actions.declineSubstitute.isPending}
         onClick={() => actions.declineSubstitute.mutate({ substituteId: sub.id })}
       >
         {m.offer_wrong_copy_decline()}
       </Button>
-      <AcceptCopy sub={sub} leg={leg} actions={actions} />
+      <AcceptCopy
+        sub={sub}
+        leg={leg}
+        actions={actions}
+        size={size}
+        className={bar ? "min-w-0 flex-1 px-3 text-base" : undefined}
+      />
     </>
   );
 }

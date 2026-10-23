@@ -1,26 +1,38 @@
 import { ArrowsLeftRightIcon, WarningIcon } from "@phosphor-icons/react";
 import type { TradeView } from "@repo/api/schemas/offer";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
+import { useId } from "react";
 
+import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import { EstimatedSerialNote } from "./estimated-serial-note";
 import { LegCard } from "./leg-card";
-import { TopupText } from "./mono";
+import { MonoMessage, Progress, TopupText } from "./mono";
+import { type SideStatus, sideStatus } from "./next-step";
 import type { Collections } from "./pick";
 
-/** You give and You get side by side, then the note and the estimate footnote. */
+const STATUS: Record<SideStatus, { text: () => string; ink: string }> = {
+  sentVerified: { text: m.offer_side_sent_verified, ink: "text-success-foreground" },
+  verified: { text: m.offer_leg_verified, ink: "text-success-foreground" },
+  waitingOnThem: { text: m.offer_side_waiting_them, ink: "text-warning-foreground" },
+  differentCopy: { text: m.offer_side_different, ink: "text-warning-foreground" },
+  youOwe: { text: m.offer_side_you_owe, ink: "text-progress" },
+  afterYouSend: { text: m.offer_side_after_you, ink: "text-muted-foreground" },
+  notSent: { text: m.offer_side_not_sent, ink: "text-muted-foreground" },
+};
+
+/** The exchange: You give and You get, each saying where it stands, then the note. */
 export function TradeLegs({
   trade,
   collections,
-  hydrated,
   onOpen,
 }: {
   trade: TradeView;
   collections: Collections;
-  hydrated: boolean;
   onOpen: (objekt: ValidObjekt) => void;
 }) {
+  const titleId = useId();
   const ended = trade.status !== "in_progress";
   const topupIn = trade.topup ? (trade.topup.payer === "you" ? "give" : "get") : null;
   // past tense once that side moved something; a top-up only moves with a completed trade
@@ -32,38 +44,70 @@ export function TradeLegs({
   const getLegs = trade.legs.filter((leg) => !leg.fromYou);
   const sides = [
     {
-      key: "give",
+      key: "give" as const,
       title: moved("give", giveLegs) ? m.offer_trade_you_gave() : m.offer_side_give(),
       legs: giveLegs,
     },
     {
-      key: "get",
+      key: "get" as const,
       title: moved("get", getLegs) ? m.offer_trade_you_got() : m.offer_side_get(),
       legs: getLegs,
     },
   ];
+  const toDecide = getLegs.filter(
+    (leg) => leg.state === "waiting" && leg.substitutes.some((copy) => copy.status === "pending"),
+  ).length;
 
   return (
-    <section className="flex flex-col gap-4">
-      <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
-        {sides.map((side, index) => (
-          <div key={side.key} className="contents">
-            {index === 1 ? (
-              <ArrowsLeftRightIcon
-                aria-hidden
-                className="text-muted-foreground mt-8 size-5 justify-self-center max-sm:hidden"
-              />
-            ) : null}
-            <div className="flex min-w-0 flex-col gap-2">
-              <h3 className="text-sm font-medium">{side.title}</h3>
+    <section aria-labelledby={titleId} className="bg-card rounded-xl border">
+      <header className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border-b px-4 py-3.5 sm:px-5">
+        <h2 id={titleId} className="text-sm font-semibold">
+          {m.offer_exchange_title()}
+        </h2>
+        <span className="text-muted-foreground text-xs">
+          {ended && trade.progress.verified === 0 ? (
+            m.offer_exchange_nothing_sent()
+          ) : (
+            <>
+              <Progress {...trade.progress} />
+              {toDecide > 0 && !ended ? (
+                <>
+                  {" · "}
+                  <MonoMessage
+                    values={[toDecide]}
+                    text={([count]) => m.offer_exchange_to_decide({ count: count! })}
+                  />
+                </>
+              ) : null}
+            </>
+          )}
+        </span>
+      </header>
+      <div className="relative grid sm:grid-cols-2">
+        {sides.map((side, index) => {
+          const status = sideStatus(trade, side.key);
+          return (
+            <div
+              key={side.key}
+              className={cn(
+                "flex min-w-0 flex-col gap-3.5 px-4 pt-4 pb-5 sm:px-5",
+                index === 1 && "max-sm:border-t sm:border-s",
+              )}
+            >
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="text-sm font-medium">{side.title}</h3>
+                {status ? (
+                  <span className={cn("text-xs", STATUS[status].ink)}>{STATUS[status].text()}</span>
+                ) : null}
+              </div>
               {side.legs.length > 0 || topupIn === side.key ? (
-                <ul className="flex flex-col gap-2">
+                <ul className="flex flex-col gap-4">
                   {side.legs.map((leg) => (
                     <LegCard
                       key={leg.id}
                       leg={leg}
                       collection={collections[leg.collectionSlug]}
-                      hydrated={hydrated}
+                      ended={ended}
                       onOpen={onOpen}
                     />
                   ))}
@@ -78,11 +122,17 @@ export function TradeLegs({
                 <p className="text-muted-foreground text-sm">{m.offer_side_nothing()}</p>
               )}
             </div>
-          </div>
-        ))}
+          );
+        })}
+        <span
+          aria-hidden
+          className="bg-card text-muted-foreground absolute start-1/2 top-6 -translate-x-1/2 py-1.5 max-sm:hidden rtl:translate-x-1/2"
+        >
+          <ArrowsLeftRightIcon className="size-4.5" />
+        </span>
       </div>
       {trade.note ? (
-        <blockquote className="border-border text-muted-foreground border-s-2 ps-3 text-sm wrap-anywhere whitespace-pre-wrap">
+        <blockquote className="text-muted-foreground border-t px-4 pt-3 pb-4 text-sm wrap-anywhere whitespace-pre-wrap sm:px-5">
           {trade.note}
         </blockquote>
       ) : null}
@@ -91,7 +141,9 @@ export function TradeLegs({
           leg.state === "waiting" &&
           [leg, ...leg.substitutes].some((shown) => shown.serial !== null && shown.serialEstimated),
       ) ? (
-        <EstimatedSerialNote />
+        <div className="border-t px-4 py-3 sm:px-5">
+          <EstimatedSerialNote />
+        </div>
       ) : null}
     </section>
   );

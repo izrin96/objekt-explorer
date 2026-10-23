@@ -1,8 +1,6 @@
 import type { TradeView } from "@repo/api/schemas/offer";
-import { truncateAddress } from "@repo/lib/address";
 import { Fragment, type ReactNode, useState } from "react";
 
-import { CopyButton } from "@/components/shared/copy-button";
 import {
   AlertDialog,
   AlertDialogClose,
@@ -12,13 +10,11 @@ import {
   AlertDialogPopup,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
+import { Button, type ButtonProps } from "@/components/ui/button";
 import { SerialNo } from "@/features/objekt/objekt-label";
 import { m } from "@/paraglide/messages";
 
 import type { useOfferActions } from "./actions";
-import { agoLabel } from "./format";
-import { StatusBadge } from "./status-badge";
 
 type Leg = TradeView["legs"][number];
 type Substitute = Leg["substitutes"][number];
@@ -64,58 +60,27 @@ export function InPlaceOf({ leg }: { leg: Leg }) {
   );
 }
 
-/** One line per copy held on a leg's card; deciding on it is the banner's job. */
-export function HeldCopies({ leg, hydrated }: { leg: Leg; hydrated: boolean }) {
-  if (leg.substitutes.length === 0) return null;
-  return (
-    <ul className="flex flex-col gap-1">
-      {leg.substitutes.map((sub) => (
-        <li key={sub.id} className="text-muted-foreground flex flex-col gap-0.5 text-xs">
-          <span className="text-foreground flex flex-wrap items-center gap-x-2 gap-y-1">
-            <span>
-              {rich(m.offer_leg_copy_sent, {
-                sent: <Serial serial={sub.serial} estimated={sub.serialEstimated} />,
-              })}
-            </span>
-            {sub.status === "declined" ? (
-              <StatusBadge tone="neutral">{m.offer_wrong_copy_declined()}</StatusBadge>
-            ) : null}
-          </span>
-          <span className="flex flex-wrap items-center gap-x-1">
-            <span className="font-mono" title={sub.txHash}>
-              {truncateAddress(sub.txHash)}
-            </span>
-            <CopyButton
-              text={sub.txHash}
-              label={m.offer_copy_hash()}
-              toastTitle={m.offer_hash_copied()}
-            />
-            {/* relative to the viewer's clock, so it waits for the client */}
-            {hydrated ? <time dateTime={sub.at}>{agoLabel(sub.at)}</time> : null}
-          </span>
-        </li>
-      ))}
-    </ul>
-  );
-}
-
 /** Accept and its confirmation, for the copy the banner shows. */
 export function AcceptCopy({
   sub,
   leg,
   actions,
+  size = "sm",
+  className,
 }: {
   sub: Substitute;
   leg: Leg;
   actions: ReturnType<typeof useOfferActions>;
+  size?: ButtonProps["size"];
+  className?: string;
 }) {
   const [open, setOpen] = useState(false);
   const sent = <Serial serial={sub.serial} estimated={sub.serialEstimated} />;
   const asked = <Serial serial={leg.serial} estimated={leg.serialEstimated} />;
   return (
     <>
-      <Button size="sm" onClick={() => setOpen(true)}>
-        {rich(m.offer_wrong_copy_accept, { sent })}
+      <Button size={size} className={className} onClick={() => setOpen(true)}>
+        <span className="truncate">{rich(m.offer_wrong_copy_accept, { sent })}</span>
       </Button>
       <AlertDialog open={open} onOpenChange={setOpen}>
         <AlertDialogPopup>

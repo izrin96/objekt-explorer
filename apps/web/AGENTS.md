@@ -12,7 +12,8 @@ TanStack Start app on Base UI (the cnippet registry). `src/components/ui/*` are 
 - **Tokens.** cnippet token names only. `text-*-foreground` on a feedback colour is text on a tinted chip, not on a solid fill: text on a solid fill is `text-white`, and a tint is an opacity modifier on the fill (`bg-destructive/8`), since there is no `*-subtle` token.
 - **Lists.** Where a list lives and who owns it key off its profile **address**; `isProfileBind` only decides whether it shows on that profile (`features/list/list-link.ts`).
 - **Overflow guard.** `lib/dev-overflow-guard.ts` reports horizontal overflow in dev. Declare every deliberate horizontal scroller with `data-scroll-x`, or the guard reports it.
-- **Trade page.** Its state lives in the pure `features/offers/next-step.ts` (the banner) and `trade-clock.ts` (the clock and History), beside their tests: a new banner state starts there, then `next-step-banner.tsx` maps it to copy.
+- **Trade page.** Its state lives in the pure `features/offers/next-step.ts` (the status card's state, its `primary` button, each side's status and each leg's chip) and `trade-clock.ts` (`timelineRows`, the one Timeline for every state), beside their tests: a new state starts there, then `next-step-banner.tsx` (the status card, which also holds the stepper) maps it to copy. The phone bar reads the same `primary`, so the card hides the buttons the bar carries.
+- **Section chrome.** A route under `trade/` that brings its own heading sets `staticData: { tradeChrome: false }` (declared in `router.tsx`), and `trade/route.tsx` then drops the Trade header and tabs; the trade page uses it for its breadcrumb.
 
 ## Chat draft
 

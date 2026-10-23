@@ -16,8 +16,8 @@ type HeldCopy = { leg: Leg; copy: Copy };
 /** When the banner's right column counts to, and what it counts. */
 export type Deadline =
   | { kind: "ends"; at: string }
-  /** past the expiry while it is held back; never a negative count */
-  | { kind: "endsHeld" }
+  /** past the expiry while it is held back; never a negative count. `at` is when it was due */
+  | { kind: "endsHeld"; at: string }
   | { kind: "decide"; at: string }
   | { kind: "copyLeft"; at: string }
   /** rateable and not yet rated */
@@ -27,15 +27,15 @@ export type Deadline =
   | { kind: "ended"; at: string | null };
 
 /** Small warning lines under the body, each at most once, in this order. */
-type Note =
-  | { kind: "indexerBehind" }
-  | { kind: "ownStuck"; leg: Leg }
-  | { kind: "theirStuck"; leg: Leg };
+type Note = { kind: "ownStuck"; leg: Leg } | { kind: "theirStuck"; leg: Leg };
 
 /** What the body of Your turn says about who sends first. */
 type SendBody = "send" | "firstYou" | "firstThem" | "firstThemSent";
 
-type Base = { deadline: Deadline };
+/** The state's one filled button, which the card and the phone bar share. */
+export type Primary = "copyAddress" | "decide" | null;
+
+type Base = { deadline: Deadline; primary: Primary };
 type Live = Base & { notes: Note[] };
 
 export type NextStep =
@@ -113,8 +113,8 @@ function sendBody(trade: Trade): SendBody {
 }
 
 function endsDeadline(trade: Trade, now: number): Deadline {
-  const end = tradeEnd(trade);
-  return now >= end ? { kind: "endsHeld" } : { kind: "ends", at: new Date(end).toISOString() };
+  const at = new Date(tradeEnd(trade)).toISOString();
+  return now >= tradeEnd(trade) ? { kind: "endsHeld", at } : { kind: "ends", at };
 }
 
 function copyDeadline(copy: Copy, fallback: Deadline, kind: "decide" | "copyLeft"): Deadline {
@@ -134,6 +134,7 @@ export function nextStep(trade: Trade, now: number): NextStep {
     return {
       kind,
       canRate: trade.canRate,
+      primary: null,
       deadline: endedDeadline(trade),
     };
   }
@@ -142,14 +143,16 @@ export function nextStep(trade: Trade, now: number): NextStep {
       kind,
       canReport: trade.canReport,
       canRate: trade.canRate,
+      primary: null,
       deadline: endedDeadline(trade),
     };
   }
-  if (kind === "cancelled") return { kind, deadline: { kind: "ended", at: trade.endedAt } };
+  if (kind === "cancelled") {
+    return { kind, primary: null, deadline: { kind: "ended", at: trade.endedAt } };
+  }
 
   const { owed, sendable, toDecide } = sets(trade);
   const ends = endsDeadline(trade, now);
-  const behind: Note[] = trade.indexerBehind ? [{ kind: "indexerBehind" }] : [];
   const theirStuck = trade.legs.find((leg) => !leg.fromYou && leg.state === "waiting" && leg.stuck);
   const theirStuckNote: Note[] = theirStuck ? [{ kind: "theirStuck", leg: theirStuck }] : [];
 
@@ -159,7 +162,8 @@ export function nextStep(trade: Trade, now: number): NextStep {
       return {
         kind,
         ...held,
-        notes: behind,
+        notes: [],
+        primary: "decide",
         deadline: copyDeadline(held.copy, ends, "decide"),
       };
     }
@@ -170,11 +174,8 @@ export function nextStep(trade: Trade, now: number): NextStep {
         legs: sendable,
         body: sendBody(trade),
         canCancel: trade.canCancel,
-        notes: [
-          ...behind,
-          ...(stuck ? [{ kind: "ownStuck", leg: stuck } as const] : []),
-          ...theirStuckNote,
-        ],
+        primary: trade.partner.identity.address ? "copyAddress" : null,
+        notes: [...(stuck ? [{ kind: "ownStuck", leg: stuck } as const] : []), ...theirStuckNote],
         deadline: ends,
       };
     }
@@ -182,7 +183,8 @@ export function nextStep(trade: Trade, now: number): NextStep {
       return {
         kind,
         leg: owed.find((leg) => leg.stuck)!,
-        notes: behind,
+        notes: [],
+        primary: null,
         deadline: ends,
       };
     case "theyDecide": {
@@ -190,7 +192,8 @@ export function nextStep(trade: Trade, now: number): NextStep {
       return {
         kind,
         ...held,
-        notes: behind,
+        notes: [],
+        primary: null,
         deadline: copyDeadline(held.copy, ends, "copyLeft"),
       };
     }
@@ -198,10 +201,55 @@ export function nextStep(trade: Trade, now: number): NextStep {
       return {
         kind: "theirTurn",
         canReport: trade.canReport,
-        notes: [...behind, ...theirStuckNote],
+        notes: theirStuckNote,
+        primary: null,
         deadline: ends,
       };
   }
+}
+
+/** Where one side of The exchange stands. */
+export type SideStatus =
+  | "sentVerified"
+  | "waitingOnThem"
+  | "youOwe"
+  | "afterYouSend"
+  | "differentCopy"
+  | "verified"
+  | "notSent";
+
+/**
+ * Null for a side with no objekt, and for an ended side only partly verified, where the legs'
+ * own chips say more than one word could.
+ */
+export function sideStatus(trade: Trade, side: "give" | "get"): SideStatus | null {
+  const legs = trade.legs.filter((leg) => leg.fromYou === (side === "give"));
+  if (legs.length === 0) return null;
+  const verified = legs.filter((leg) => leg.state === "verified").length;
+  if (trade.status !== "in_progress") {
+    if (verified === legs.length) return "verified";
+    return verified === 0 ? "notSent" : null;
+  }
+  const waiting = legs.filter((leg) => leg.state === "waiting");
+  if (waiting.some((leg) => pending(leg).length > 0)) return "differentCopy";
+  if (waiting.length > 0) {
+    if (side === "give") return "youOwe";
+    // a leg held on a copy already sent is no longer the viewer's to send
+    const youOwe = trade.legs.some(
+      (leg) => leg.fromYou && leg.state === "waiting" && pending(leg).length === 0,
+    );
+    return youOwe ? "afterYouSend" : "waitingOnThem";
+  }
+  return side === "give" ? "sentVerified" : "verified";
+}
+
+export type LegChip = "verified" | "waiting" | "sendThis" | "differentCopy" | "notSent";
+
+export function legChip(leg: Leg, ended: boolean): LegChip {
+  if (leg.state === "verified") return "verified";
+  if (ended || leg.state === "closed") return "notSent";
+  if (pending(leg).length > 0) return "differentCopy";
+  return leg.fromYou && !leg.stuck ? "sendThis" : "waiting";
 }
 
 /** Midnight of the instant's date in the runtime's zone, as a UTC day count, so DST can't skew it. */
