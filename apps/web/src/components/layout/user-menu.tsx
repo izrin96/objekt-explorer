@@ -20,6 +20,7 @@ import { Link, useLocation } from "@tanstack/react-router";
 import { useState } from "react";
 
 import { AboutDialog } from "@/components/layout/about";
+import { lazyDialog } from "@/components/shared/lazy-dialog";
 import { PersonAvatar } from "@/components/shared/person-avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -35,16 +36,21 @@ import {
 } from "@/components/ui/menu";
 import { toastManager } from "@/components/ui/toast";
 import { forgetSession } from "@/features/auth/forget-session";
-import { DiscordFormatDialog } from "@/features/discord/discord-format-dialog";
 import { CreateListDialog } from "@/features/list/create-list-dialog";
 import { getListLinkOption } from "@/features/list/list-link";
 import { ListTypeBadge } from "@/features/list/list-type-badge";
 import { ArtistsSubmenu } from "@/features/settings/artists-menu";
-import { SettingsDialog } from "@/features/settings/settings-dialog";
 import { useUserLists, useUserProfiles } from "@/features/user/hooks";
 import { displayNickname, nicknameParam } from "@/lib/address";
 import { authClient } from "@/lib/auth-client";
 import { m } from "@/paraglide/messages";
+
+const SettingsDialog = lazyDialog(() =>
+  import("@/features/settings/settings-dialog").then((mod) => mod.SettingsDialog),
+);
+const DiscordFormatDialog = lazyDialog(() =>
+  import("@/features/discord/discord-format-dialog").then((mod) => mod.DiscordFormatDialog),
+);
 
 export function UserAvatar({ user, className }: { user: User; className?: string }) {
   return <PersonAvatar name={user.name} image={user.image} className={className} />;

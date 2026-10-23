@@ -1,7 +1,8 @@
 import { BellIcon } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
-import { useRef, useState } from "react";
+import { Suspense, lazy, useRef, useState } from "react";
 
+import { RowsSkeleton } from "@/components/shared/rows-skeleton";
 import { UnreadBadge } from "@/components/shared/unread-badge";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverPopup, PopoverTrigger } from "@/components/ui/popover";
@@ -10,8 +11,13 @@ import { useMediaQuery } from "@/hooks/use-media-query";
 import { m } from "@/paraglide/messages";
 import { useUserSocketLive } from "@/stores/user-socket";
 
-import { NotificationPanel } from "./notification-panel";
 import { unreadCountOptions } from "./queries";
+
+// the panel and its rows load on intent, keeping them out of every page's entry chunk
+const loadPanel = () => import("./notification-panel");
+const NotificationPanel = lazy(() =>
+  loadPanel().then((mod) => ({ default: mod.NotificationPanel })),
+);
 
 /** The bell polls while the tab's user socket is down; below `sm` it opens a sheet, not a popover. */
 export function NotificationBell() {
@@ -32,6 +38,8 @@ export function NotificationBell() {
           : m.notification_bell_label()
       }
       className="relative shrink-0"
+      onPointerEnter={() => void loadPanel()}
+      onFocus={() => void loadPanel()}
     />
   );
   const icon = (
@@ -50,7 +58,9 @@ export function NotificationBell() {
           showCloseButton={false}
           className="h-[calc(100dvh-(--spacing(12)))]"
         >
-          <NotificationPanel variant="sheet" unread={unread} onNavigate={() => setOpen(false)} />
+          <Suspense fallback={<PanelFallback />}>
+            <NotificationPanel variant="sheet" unread={unread} onNavigate={() => setOpen(false)} />
+          </Suspense>
         </SheetPopup>
       </Sheet>
     );
@@ -66,8 +76,18 @@ export function NotificationBell() {
         padding="none"
         className="w-[min(--spacing(100),calc(100vw-(--spacing(6))))]"
       >
-        <NotificationPanel unread={unread} onNavigate={() => setOpen(false)} />
+        <Suspense fallback={<PanelFallback />}>
+          <NotificationPanel unread={unread} onNavigate={() => setOpen(false)} />
+        </Suspense>
       </PopoverPopup>
     </Popover>
+  );
+}
+
+function PanelFallback() {
+  return (
+    <div className="p-3">
+      <RowsSkeleton status />
+    </div>
   );
 }
