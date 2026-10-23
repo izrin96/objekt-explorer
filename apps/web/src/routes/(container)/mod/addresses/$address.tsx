@@ -3,7 +3,10 @@ import { isAddress } from "@repo/lib";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 
 import { PageHeader } from "@/components/shared/page-header";
-import { AddressHistory } from "@/features/moderation/console/address-history";
+import {
+  AddressHistory,
+  AddressHistorySkeleton,
+} from "@/features/moderation/console/address-history";
 import { addressHistoryOptions } from "@/features/moderation/console/queries";
 import { currentUserOptions } from "@/features/user/queries";
 import { generateMetadata } from "@/lib/meta";
@@ -22,6 +25,7 @@ export const Route = createFileRoute("/(container)/mod/addresses/$address")({
   },
   head: () => generateMetadata({ title: m.mod_address_title() }),
   component: AddressPage,
+  pendingComponent: AddressPending,
 });
 
 function AddressPage() {
@@ -30,6 +34,15 @@ function AddressPage() {
     <>
       <PageHeader title={m.mod_address_title()} description={m.mod_address_description()} />
       <AddressHistory address={address} />
+    </>
+  );
+}
+
+function AddressPending() {
+  return (
+    <>
+      <PageHeader title={m.mod_address_title()} description={m.mod_address_description()} />
+      <AddressHistorySkeleton />
     </>
   );
 }
