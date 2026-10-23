@@ -216,10 +216,12 @@ export async function refuseCopyShortfall(
           ),
         );
   const slugsOf = (need: CopyNeed) =>
-    unique([
-      ...anyCopy.filter((i) => i.side === need.side).map((i) => i.collectionSlug),
-      ...need.specificSlugs,
-    ]);
+    unique(
+      anyCopy
+        .filter((i) => i.side === need.side)
+        .map((i) => i.collectionSlug)
+        .concat(need.specificSlugs),
+    );
   if (needs.every((need) => slugsOf(need).length === 0)) return;
   const promised = await openAnyCopyLegs(
     needs.map((need) => ({ userId: need.giverId, slugs: slugsOf(need) })),
@@ -233,13 +235,10 @@ export async function refuseCopyShortfall(
           (counts.get(slug) ?? 0) - (promised.get(copyKey(need.giverId, slug)) ?? 0),
         ]),
       );
-    return [
-      ...anyCopyShortfall(
-        anyCopy.filter((item) => item.side === need.side),
-        leftOf(need.available),
-      ),
-      ...specificCopyShortfall(need.specificSlugs, leftOf(need.held)),
-    ];
+    return anyCopyShortfall(
+      anyCopy.filter((item) => item.side === need.side),
+      leftOf(need.available),
+    ).concat(specificCopyShortfall(need.specificSlugs, leftOf(need.held)));
   });
   if (short.length > 0) refuseOffer("not_owned", { collectionSlugs: unique(short) });
 }
