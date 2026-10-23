@@ -422,7 +422,6 @@
   "auth_verified_resend_error": "リンクを送信できませんでした。{message}",
   "auth_account_title": "アカウント",
   "auth_account_general": "一般",
-  "auth_account_change_email": "メールアドレスを変更",
   "auth_account_change_password": "パスワードを変更",
   "auth_account_name_label": "名前",
   "auth_account_name_placeholder": "名前",

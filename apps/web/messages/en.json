@@ -422,7 +422,6 @@
   "auth_verified_resend_error": "Couldn't send the link. {message}",
   "auth_account_title": "Account",
   "auth_account_general": "General",
-  "auth_account_change_email": "Change email",
   "auth_account_change_password": "Change password",
   "auth_account_name_label": "Name",
   "auth_account_name_placeholder": "Your name",

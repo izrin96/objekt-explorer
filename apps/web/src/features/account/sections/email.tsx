@@ -60,8 +60,8 @@ export function EmailSection({ email }: { email: string }) {
       </Field>
 
       <div className="flex">
-        <Button type="submit" variant="outline" loading={mutation.isPending}>
-          {m.auth_account_change_email()}
+        <Button type="submit" loading={mutation.isPending}>
+          {m.auth_account_save()}
         </Button>
       </div>
     </Form>

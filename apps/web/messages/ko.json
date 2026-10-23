@@ -422,7 +422,6 @@
   "auth_verified_resend_error": "링크를 보내지 못했습니다. {message}",
   "auth_account_title": "계정",
   "auth_account_general": "일반",
-  "auth_account_change_email": "이메일 변경",
   "auth_account_change_password": "비밀번호 변경",
   "auth_account_name_label": "이름",
   "auth_account_name_placeholder": "이름을 입력하세요",
