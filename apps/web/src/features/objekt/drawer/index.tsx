@@ -235,9 +235,7 @@ function DrawerBody({
           </div>
         )}
       </DrawerHeader>
-      {/* room under a short tab so the sheet still scrolls and a thumb can reach
-          the last row above a phone's bottom edge */}
-      <DrawerPanel className="flex flex-col gap-5 pb-64">
+      <DrawerPanel className="flex flex-col gap-5">
         {/* one column below `sm`: the card beside an attribute list whose
             labels alone are ~84px leaves the values under 100px, which is what
             pushed the drawer into sideways scrolling */}
@@ -248,7 +246,13 @@ function DrawerBody({
           <ObjektSummary objekt={objekt} artistName={artistName} />
         </div>
 
-        <Tabs value={tab} onValueChange={(value) => changeTab(value as DrawerTab)}>
+        {/* at least a screen tall, so every tab scrolls the card away to the
+            same sticky strip and switching tabs never jumps the scroll */}
+        <Tabs
+          value={tab}
+          onValueChange={(value) => changeTab(value as DrawerTab)}
+          className="min-h-dvh"
+        >
           {/* five tabs outrun a phone-width sheet, so the strip scrolls and the
               sheet does not; the scroll area's root sets its own `position`,
               so the sticky wrapper stays outside it */}
