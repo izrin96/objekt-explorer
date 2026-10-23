@@ -144,18 +144,16 @@ function QueueRow({ row, current }: { row: Row; current: boolean }) {
       >
         <PersonAvatar name={name} image={row.user.image} className="size-9 shrink-0" />
         <span className="flex min-w-0 flex-1 flex-col gap-1">
-          <span className="flex min-w-0 items-baseline gap-2">
-            <span className="min-w-0 flex-1 font-semibold break-words">{name}</span>
-            <When
-              iso={row.latestAt}
-              className="text-muted-foreground shrink-0 font-mono text-xs tabular-nums"
-            />
-          </span>
-          <span className="text-muted-foreground font-mono text-xs tabular-nums">
-            {m.mod_queue_open({ count: row.openReports })}
-            {row.sharedExcerpts > 0 ? (
-              <> · {m.mod_queue_shared({ count: row.sharedExcerpts })}</>
-            ) : null}
+          {/* the name has the line to itself: beside a full timestamp the sidebar left it a few letters */}
+          <span className="truncate font-semibold">{name}</span>
+          <span className="text-muted-foreground flex flex-wrap gap-x-1.5 font-mono text-xs tabular-nums">
+            <span>
+              {m.mod_queue_open({ count: row.openReports })}
+              {row.sharedExcerpts > 0 ? (
+                <> · {m.mod_queue_shared({ count: row.sharedExcerpts })}</>
+              ) : null}
+            </span>
+            <When iso={row.latestAt} />
           </span>
           <span className="flex flex-wrap items-center gap-1.5">
             {reason ? (
