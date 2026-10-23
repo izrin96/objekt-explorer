@@ -125,7 +125,7 @@
   "stats_member_progress_description": "メンバー別の達成状況",
   "stats_member_progress_percentage_label": "達成率",
   "home_title": "Objekt",
-  "home_description": "CosmoのすべてのObjektと、その所有者を確認できます。",
+  "home_description": "クライアントサイドのCosmo Objektエクスプローラー",
   "nav_activity": "アクティビティ",
   "nav_market": "マーケット",
   "market_title": "マーケット",
