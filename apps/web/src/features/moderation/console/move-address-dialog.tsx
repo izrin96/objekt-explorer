@@ -42,32 +42,30 @@ function moveErrorText(error: unknown) {
 }
 
 /** An admin moves an address to another account at once, for an owner who lost access. */
-export function MoveAddressButton({ address, userId }: { address: string; userId: string }) {
-  const [open, setOpen] = useState(false);
-  const short = truncateAddress(address);
+export function MoveAddressDialog({
+  address,
+  userId,
+  open,
+  onOpenChange,
+}: {
+  address: string;
+  userId: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
   return (
-    <>
-      <Button
-        variant="outline"
-        size="xs"
-        aria-label={m.mod_address_move_name({ address: short })}
-        onClick={() => setOpen(true)}
-      >
-        {m.mod_address_move()}
-      </Button>
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogPopup className="max-w-sm">
-          {open ? (
-            <MoveForm
-              address={address}
-              short={short}
-              userId={userId}
-              onDone={() => setOpen(false)}
-            />
-          ) : null}
-        </DialogPopup>
-      </Dialog>
-    </>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogPopup className="max-w-sm">
+        {open ? (
+          <MoveForm
+            address={address}
+            short={truncateAddress(address)}
+            userId={userId}
+            onDone={() => onOpenChange(false)}
+          />
+        ) : null}
+      </DialogPopup>
+    </Dialog>
   );
 }
 

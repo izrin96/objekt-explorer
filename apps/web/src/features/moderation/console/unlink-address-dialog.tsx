@@ -35,32 +35,30 @@ function unlinkErrorText(error: unknown) {
 }
 
 /** An admin unlinks an address from its account; the 7-day wait starts as for the user's own unlink. */
-export function UnlinkAddressButton({ address, userId }: { address: string; userId: string }) {
-  const [open, setOpen] = useState(false);
-  const short = truncateAddress(address);
+export function UnlinkAddressDialog({
+  address,
+  userId,
+  open,
+  onOpenChange,
+}: {
+  address: string;
+  userId: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
   return (
-    <>
-      <Button
-        variant="outline"
-        size="xs"
-        aria-label={m.mod_address_unlink_name({ address: short })}
-        onClick={() => setOpen(true)}
-      >
-        {m.mod_address_unlink()}
-      </Button>
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogPopup className="max-w-sm">
-          {open ? (
-            <UnlinkForm
-              address={address}
-              short={short}
-              userId={userId}
-              onDone={() => setOpen(false)}
-            />
-          ) : null}
-        </DialogPopup>
-      </Dialog>
-    </>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogPopup className="max-w-sm">
+        {open ? (
+          <UnlinkForm
+            address={address}
+            short={truncateAddress(address)}
+            userId={userId}
+            onDone={() => onOpenChange(false)}
+          />
+        ) : null}
+      </DialogPopup>
+    </Dialog>
   );
 }
 

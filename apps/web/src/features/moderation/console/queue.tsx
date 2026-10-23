@@ -1,29 +1,51 @@
 import {
   ArrowClockwiseIcon,
   CaretRightIcon,
+  FunnelSimpleIcon,
   ShieldCheckIcon,
   WarningIcon,
 } from "@phosphor-icons/react";
+import type { Outputs } from "@repo/api";
 import { FLAG_CATEGORIES } from "@repo/api/schemas/chat";
 import { REPORT_REASONS } from "@repo/api/schemas/moderation";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "@tanstack/react-router";
+import { useState } from "react";
 
 import { EmptyState } from "@/components/shared/empty-state";
 import { PersonAvatar } from "@/components/shared/person-avatar";
 import { RowsSkeleton } from "@/components/shared/rows-skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { FLAG_LABEL, REASON_LABEL } from "@/features/moderation/labels";
 import { m } from "@/paraglide/messages";
 
 import { queueOptions } from "./queries";
 import { When } from "./when";
 
+type Row = Outputs["moderation"]["queue"][number];
+
+const FILTERS = ["all", "shared", "flagged"] as const;
+type Filter = (typeof FILTERS)[number];
+
+const FILTER_LABEL: Record<Filter, () => string> = {
+  all: m.mod_queue_filter_all,
+  shared: m.mod_queue_filter_shared,
+  flagged: m.mod_queue_filter_flagged,
+};
+
+const MATCHES: Record<Filter, (row: Row) => boolean> = {
+  all: () => true,
+  shared: (row) => row.sharedExcerpts > 0,
+  flagged: (row) => FLAG_CATEGORIES.some((category) => row.flags[category] > 0),
+};
+
 /** Open reports grouped by the reported account, newest report first. */
 export function ModQueue() {
   const query = useQuery(queueOptions());
   const openId = useParams({ strict: false, select: (params) => params.userId });
+  const [filter, setFilter] = useState<Filter>("all");
 
   if (query.isPending) return <ModQueueSkeleton />;
 
@@ -52,60 +74,113 @@ export function ModQueue() {
     );
   }
 
+  const rows = query.data.filter(MATCHES[filter]);
+  const openReports = query.data.reduce((sum, row) => sum + row.openReports, 0);
+
   return (
-    <ul className="flex flex-col divide-y rounded-lg border">
-      {query.data.map((row) => {
-        const name = row.identity.name;
-        const reasons = REPORT_REASONS.filter((reason) => row.reasons[reason] > 0);
-        const flags = FLAG_CATEGORIES.filter((category) => row.flags[category] > 0);
-        const current = row.userId === openId;
-        return (
-          <li key={row.userId}>
-            <Link
-              to="/mod/reports/$userId"
-              params={{ userId: row.userId }}
-              aria-current={current ? "page" : undefined}
-              className="hover:bg-secondary/60 focus-visible:ring-ring aria-[current=page]:bg-secondary flex items-center gap-3 px-4 py-3 outline-none focus-visible:ring-2 focus-visible:ring-inset"
-            >
-              <PersonAvatar name={name} image={row.user.image} className="size-9 shrink-0" />
-              <span className="flex min-w-0 flex-1 flex-col gap-1">
-                <span className="flex min-w-0 flex-wrap items-baseline gap-x-2">
-                  <span className="min-w-0 font-semibold break-words">{name}</span>
-                  <span className="text-muted-foreground text-sm tabular-nums">
-                    {m.mod_queue_open({ count: row.openReports })}
-                  </span>
-                  {row.sharedExcerpts > 0 ? (
-                    <span className="text-muted-foreground text-sm tabular-nums">
-                      {m.mod_queue_shared({ count: row.sharedExcerpts })}
-                    </span>
-                  ) : null}
-                </span>
-                <span className="flex flex-wrap gap-1.5">
-                  {reasons.map((reason) => (
-                    <Badge key={reason} variant="outline" size="sm" className="tabular-nums">
-                      {REASON_LABEL[reason]()} · {row.reasons[reason]}
-                    </Badge>
-                  ))}
-                  {flags.map((category) => (
-                    <Badge key={category} variant="secondary" size="sm" className="tabular-nums">
-                      {m.mod_flag_count({
-                        label: FLAG_LABEL[category](),
-                        count: row.flags[category],
-                      })}
-                    </Badge>
-                  ))}
-                </span>
+    <div className="flex flex-col gap-3">
+      <p className="text-muted-foreground font-mono text-xs tabular-nums">
+        {m.mod_queue_summary({ reports: openReports, accounts: query.data.length })}
+      </p>
+      {/* single choice, so pressing the active filter again (an empty group) is ignored */}
+      <ToggleGroup
+        variant="outline"
+        size="sm"
+        aria-label={m.mod_queue_filter_label()}
+        value={[filter]}
+        onValueChange={([next]) => {
+          const picked = FILTERS.find((value) => value === next);
+          if (picked) setFilter(picked);
+        }}
+        className="w-full *:flex-1"
+      >
+        {FILTERS.map((value) => (
+          <ToggleGroupItem
+            key={value}
+            value={value}
+            className="text-muted-foreground data-pressed:text-foreground gap-1.5"
+          >
+            {FILTER_LABEL[value]()}
+            <span className="font-mono text-xs tabular-nums opacity-70">
+              {query.data.filter(MATCHES[value]).length}
+            </span>
+          </ToggleGroupItem>
+        ))}
+      </ToggleGroup>
+
+      {rows.length === 0 ? (
+        <EmptyState icon={FunnelSimpleIcon} title={m.mod_queue_filter_empty()} />
+      ) : (
+        <ul className="bg-card flex flex-col divide-y overflow-hidden rounded-lg border">
+          {rows.map((row) => (
+            <QueueRow key={row.userId} row={row} current={row.userId === openId} />
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+/** One reason and one flag, the most reported first; the rest are counted, not listed. */
+function QueueRow({ row, current }: { row: Row; current: boolean }) {
+  const name = row.identity.name;
+  const reasons = REPORT_REASONS.filter((reason) => row.reasons[reason] > 0).toSorted(
+    (a, b) => row.reasons[b] - row.reasons[a],
+  );
+  const flags = FLAG_CATEGORIES.filter((category) => row.flags[category] > 0).toSorted(
+    (a, b) => row.flags[b] - row.flags[a],
+  );
+  const [reason] = reasons;
+  const [flag] = flags;
+  const more = Math.max(reasons.length - 1, 0) + Math.max(flags.length - 1, 0);
+
+  return (
+    <li>
+      <Link
+        to="/mod/reports/$userId"
+        params={{ userId: row.userId }}
+        aria-current={current ? "page" : undefined}
+        className="hover:bg-secondary/60 focus-visible:ring-ring aria-[current=page]:bg-secondary flex items-start gap-3 px-4 py-3 outline-none focus-visible:ring-2 focus-visible:ring-inset"
+      >
+        <PersonAvatar name={name} image={row.user.image} className="size-9 shrink-0" />
+        <span className="flex min-w-0 flex-1 flex-col gap-1">
+          <span className="flex min-w-0 items-baseline gap-2">
+            <span className="min-w-0 flex-1 font-semibold break-words">{name}</span>
+            <When
+              iso={row.latestAt}
+              className="text-muted-foreground shrink-0 font-mono text-xs tabular-nums"
+            />
+          </span>
+          <span className="text-muted-foreground font-mono text-xs tabular-nums">
+            {m.mod_queue_open({ count: row.openReports })}
+            {row.sharedExcerpts > 0 ? (
+              <> · {m.mod_queue_shared({ count: row.sharedExcerpts })}</>
+            ) : null}
+          </span>
+          <span className="flex flex-wrap items-center gap-1.5">
+            {reason ? (
+              <Badge variant="outline" size="sm" className="tabular-nums">
+                {REASON_LABEL[reason]()} · {row.reasons[reason]}
+              </Badge>
+            ) : null}
+            {flag ? (
+              <Badge variant="warning" size="sm" className="tabular-nums">
+                {m.mod_flag_count({ label: FLAG_LABEL[flag](), count: row.flags[flag] })}
+              </Badge>
+            ) : null}
+            {more > 0 ? (
+              <span className="text-muted-foreground text-xs">
+                {m.mod_queue_more({ count: more })}
               </span>
-              <When
-                iso={row.latestAt}
-                className="text-muted-foreground shrink-0 font-mono text-xs tabular-nums max-sm:hidden xl:hidden"
-              />
-              <CaretRightIcon aria-hidden className="text-muted-foreground size-4 shrink-0" />
-            </Link>
-          </li>
-        );
-      })}
-    </ul>
+            ) : null}
+          </span>
+        </span>
+        <CaretRightIcon
+          aria-hidden
+          className="text-muted-foreground mt-2.5 size-4 shrink-0 xl:hidden"
+        />
+      </Link>
+    </li>
   );
 }
 

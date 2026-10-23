@@ -40,7 +40,10 @@ export function RoleControl({
   );
 
   return (
-    <section aria-labelledby="mod-role" className="flex flex-col gap-2 rounded-lg border p-4">
+    <section
+      aria-labelledby="mod-role"
+      className="flex flex-col gap-2 rounded-lg border border-dashed p-4"
+    >
       <h2 id="mod-role" className={sectionTitle}>
         {m.mod_role_heading()}
       </h2>
