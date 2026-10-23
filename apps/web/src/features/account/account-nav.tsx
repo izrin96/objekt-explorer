@@ -3,6 +3,7 @@ import {
   BellIcon,
   CaretRightIcon,
   ChatCircleIcon,
+  EnvelopeSimpleIcon,
   EyeSlashIcon,
   type Icon,
   KeyIcon,
@@ -22,6 +23,7 @@ import { m } from "@/paraglide/messages";
 
 const SECTIONS = [
   { to: "/account/general", label: m.auth_account_general, icon: UserIcon },
+  { to: "/account/email", label: m.auth_account_email_label, icon: EnvelopeSimpleIcon },
   { to: "/account/profiles", label: m.account_section_profiles, icon: LinkIcon },
   { to: "/account/notifications", label: m.notification_section, icon: BellIcon },
   { to: "/account/messages", label: m.chat_settings_tab, icon: ChatCircleIcon },

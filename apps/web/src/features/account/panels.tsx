@@ -5,6 +5,7 @@ import { AccountSection } from "@/features/account/account-nav";
 import { accountsOptions } from "@/features/account/queries";
 import { BlockedUsersSection } from "@/features/account/sections/blocked";
 import { DangerSection } from "@/features/account/sections/danger";
+import { EmailSection } from "@/features/account/sections/email";
 import { GeneralSection } from "@/features/account/sections/general";
 import { LinkedAccountsSection } from "@/features/account/sections/linked-accounts";
 import { MessagesSection } from "@/features/account/sections/messages";
@@ -20,6 +21,15 @@ export function GeneralPanel() {
   return (
     <AccountSection title={m.auth_account_general()}>
       {data?.user ? <GeneralSection user={data.user} /> : null}
+    </AccountSection>
+  );
+}
+
+export function EmailPanel() {
+  const { data } = useCurrentUser();
+  return (
+    <AccountSection title={m.auth_account_email_label()}>
+      {data?.user ? <EmailSection email={data.user.email} /> : null}
     </AccountSection>
   );
 }

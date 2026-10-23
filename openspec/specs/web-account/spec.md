@@ -9,6 +9,7 @@ account, with its linked Cosmo profiles, notification, message, block and hidden
 ### Requirement: Account page
 A signed-in user's account settings SHALL live on the `/account` page, one route per section:
 - `/account` and `/account/general`: General;
+- `/account/email`: Email;
 - `/account/profiles`: linked Cosmo profiles (see `web-cosmo-link`);
 - `/account/notifications`: Notifications (see `web-notifications`);
 - `/account/messages`: Messages (see `web-chat`);
@@ -38,12 +39,20 @@ From `md` up, a menu of the sections SHALL sit beside the open section and mark 
 
 ### Requirement: General settings
 The General section SHALL let the user change the display name, toggle whether linked social handles
-are shown publicly, remove the profile picture, and change the email address. Saving SHALL
+are shown publicly, and remove the profile picture. Saving SHALL
 persist through the server and refresh every place the account is shown without a reload.
 
 #### Scenario: Rename
 - **WHEN** the user saves a new name
 - **THEN** the nav menu header shows the new name without a reload
+
+### Requirement: Email
+The Email section SHALL show the account's email address and let the user change it. Changing it SHALL
+send a verification email to the new address and say so; the address changes only once that link is opened.
+
+#### Scenario: Change email
+- **WHEN** the user submits a new address
+- **THEN** a verification email is sent to it and the section says so
 
 ### Requirement: Linked providers
 The Sign-in section SHALL list Discord and Twitter with their linked state, and per provider offer

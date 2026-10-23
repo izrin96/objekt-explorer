@@ -37,6 +37,7 @@ import { Route as RpcSplatRouteImport } from './routes/rpc.$'
 import { Route as containerAccountIndexRouteImport } from './routes/(container)/account/index'
 import { Route as containerAccountBlockedRouteImport } from './routes/(container)/account/blocked'
 import { Route as containerAccountDangerRouteImport } from './routes/(container)/account/danger'
+import { Route as containerAccountEmailRouteImport } from './routes/(container)/account/email'
 import { Route as containerAccountGeneralRouteImport } from './routes/(container)/account/general'
 import { Route as containerAccountHiddenRouteImport } from './routes/(container)/account/hidden'
 import { Route as containerAccountMessagesRouteImport } from './routes/(container)/account/messages'
@@ -218,6 +219,11 @@ const containerAccountBlockedRoute = containerAccountBlockedRouteImport.update({
 const containerAccountDangerRoute = containerAccountDangerRouteImport.update({
   id: '/danger',
   path: '/danger',
+  getParentRoute: () => containerAccountRouteRoute,
+} as any)
+const containerAccountEmailRoute = containerAccountEmailRouteImport.update({
+  id: '/email',
+  path: '/email',
   getParentRoute: () => containerAccountRouteRoute,
 } as any)
 const containerAccountGeneralRoute = containerAccountGeneralRouteImport.update({
@@ -443,6 +449,7 @@ export interface FileRoutesByFullPath {
   '/trade/mine': typeof containerTradeMineRouteRouteWithChildren
   '/account/blocked': typeof containerAccountBlockedRoute
   '/account/danger': typeof containerAccountDangerRoute
+  '/account/email': typeof containerAccountEmailRoute
   '/account/general': typeof containerAccountGeneralRoute
   '/account/hidden': typeof containerAccountHiddenRoute
   '/account/messages': typeof containerAccountMessagesRoute
@@ -503,6 +510,7 @@ export interface FileRoutesByTo {
   '/@{$nickname}': typeof AtChar123nicknameChar125IndexRoute
   '/account/blocked': typeof containerAccountBlockedRoute
   '/account/danger': typeof containerAccountDangerRoute
+  '/account/email': typeof containerAccountEmailRoute
   '/account/general': typeof containerAccountGeneralRoute
   '/account/hidden': typeof containerAccountHiddenRoute
   '/account/messages': typeof containerAccountMessagesRoute
@@ -569,6 +577,7 @@ export interface FileRoutesById {
   '/(container)/trade/mine': typeof containerTradeMineRouteRouteWithChildren
   '/(container)/account/blocked': typeof containerAccountBlockedRoute
   '/(container)/account/danger': typeof containerAccountDangerRoute
+  '/(container)/account/email': typeof containerAccountEmailRoute
   '/(container)/account/general': typeof containerAccountGeneralRoute
   '/(container)/account/hidden': typeof containerAccountHiddenRoute
   '/(container)/account/messages': typeof containerAccountMessagesRoute
@@ -636,6 +645,7 @@ export interface FileRouteTypes {
     | '/trade/mine'
     | '/account/blocked'
     | '/account/danger'
+    | '/account/email'
     | '/account/general'
     | '/account/hidden'
     | '/account/messages'
@@ -696,6 +706,7 @@ export interface FileRouteTypes {
     | '/@{$nickname}'
     | '/account/blocked'
     | '/account/danger'
+    | '/account/email'
     | '/account/general'
     | '/account/hidden'
     | '/account/messages'
@@ -761,6 +772,7 @@ export interface FileRouteTypes {
     | '/(container)/trade/mine'
     | '/(container)/account/blocked'
     | '/(container)/account/danger'
+    | '/(container)/account/email'
     | '/(container)/account/general'
     | '/(container)/account/hidden'
     | '/(container)/account/messages'
@@ -1018,6 +1030,13 @@ declare module '@tanstack/react-router' {
       path: '/danger'
       fullPath: '/account/danger'
       preLoaderRoute: typeof containerAccountDangerRouteImport
+      parentRoute: typeof containerAccountRouteRoute
+    }
+    '/(container)/account/email': {
+      id: '/(container)/account/email'
+      path: '/email'
+      fullPath: '/account/email'
+      preLoaderRoute: typeof containerAccountEmailRouteImport
       parentRoute: typeof containerAccountRouteRoute
     }
     '/(container)/account/general': {
@@ -1278,6 +1297,7 @@ declare module '@tanstack/react-router' {
 interface containerAccountRouteRouteChildren {
   containerAccountBlockedRoute: typeof containerAccountBlockedRoute
   containerAccountDangerRoute: typeof containerAccountDangerRoute
+  containerAccountEmailRoute: typeof containerAccountEmailRoute
   containerAccountGeneralRoute: typeof containerAccountGeneralRoute
   containerAccountHiddenRoute: typeof containerAccountHiddenRoute
   containerAccountMessagesRoute: typeof containerAccountMessagesRoute
@@ -1291,6 +1311,7 @@ interface containerAccountRouteRouteChildren {
 const containerAccountRouteRouteChildren: containerAccountRouteRouteChildren = {
   containerAccountBlockedRoute: containerAccountBlockedRoute,
   containerAccountDangerRoute: containerAccountDangerRoute,
+  containerAccountEmailRoute: containerAccountEmailRoute,
   containerAccountGeneralRoute: containerAccountGeneralRoute,
   containerAccountHiddenRoute: containerAccountHiddenRoute,
   containerAccountMessagesRoute: containerAccountMessagesRoute,
