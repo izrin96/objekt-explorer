@@ -1,7 +1,6 @@
 import { SESSION_REVOKED_CODE, realtimeEventSchema } from "@repo/api/schemas/realtime";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
-import { disconnectedCodes } from "centrifuge";
 import { useEffect } from "react";
 
 import {
@@ -14,7 +13,7 @@ import {
 } from "@/features/chat/queries";
 import { invalidateOfferLists } from "@/features/offers/queries";
 import { currentUserOptions } from "@/features/user/queries";
-import { acquireRealtime, realtime } from "@/lib/realtime";
+import { acquireRealtime, isUnauthorizedDisconnect, realtime } from "@/lib/realtime";
 import { showTyping } from "@/stores/chat-typing";
 import { useUserSocketLive } from "@/stores/user-socket";
 
@@ -31,7 +30,6 @@ export function useUserSocket() {
   const router = useRouter();
 
   useEffect(() => {
-    const connection = realtime();
     const refetchNotifications = () => {
       for (const queryKey of notificationKeys) void queryClient.invalidateQueries({ queryKey });
     };
@@ -83,24 +81,35 @@ export function useUserSocket() {
       onDown();
       // a ban, or a refused renewal, ended every session: a retry would only be refused, so
       // the tab signs out instead
-      if (ctx.code !== SESSION_REVOKED_CODE && ctx.code !== disconnectedCodes.unauthorized) return;
+      if (ctx.code !== SESSION_REVOKED_CODE && !isUnauthorizedDisconnect(ctx.code)) return;
       void queryClient
         .invalidateQueries({ queryKey: currentUserOptions.queryKey })
         .then(() => router.invalidate());
     };
 
-    connection.on("subscribed", onSubscribed);
-    connection.on("publication", onPublication);
-    connection.on("connecting", onDown);
-    connection.on("disconnected", onDisconnected);
-    const release = acquireRealtime({ signedIn: true });
+    let active = true;
+    let detach: (() => void) | undefined;
+    realtime()
+      .then((connection) => {
+        if (!active) return;
+        connection.on("subscribed", onSubscribed);
+        connection.on("publication", onPublication);
+        connection.on("connecting", onDown);
+        connection.on("disconnected", onDisconnected);
+        const release = acquireRealtime(connection, { signedIn: true });
+        detach = () => {
+          connection.removeListener("subscribed", onSubscribed);
+          connection.removeListener("publication", onPublication);
+          connection.removeListener("connecting", onDown);
+          connection.removeListener("disconnected", onDisconnected);
+          release();
+        };
+      })
+      .catch(() => undefined);
 
     return () => {
-      connection.removeListener("subscribed", onSubscribed);
-      connection.removeListener("publication", onPublication);
-      connection.removeListener("connecting", onDown);
-      connection.removeListener("disconnected", onDisconnected);
-      release();
+      active = false;
+      detach?.();
       useUserSocketLive.setState({ live: false });
     };
   }, [queryClient, router]);

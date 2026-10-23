@@ -1,5 +1,6 @@
 import { type ActivityMessage, activityItemSchema } from "@repo/api/schemas/activity";
 import { ACTIVITY_CHANNEL } from "@repo/api/schemas/realtime";
+import type { Centrifuge } from "centrifuge";
 import { useEffect, useRef } from "react";
 
 import { acquireRealtime, realtime } from "@/lib/realtime";
@@ -33,51 +34,64 @@ export function useActivitySocket({
   useEffect(() => {
     if (!enabled) return;
     let active = true;
-    const connection = realtime();
-    const subscription =
-      connection.getSubscription(ACTIVITY_CHANNEL) ?? connection.newSubscription(ACTIVITY_CHANNEL);
-
     // rows arrive oldest first, one per publication, and the feed draws a batch newest first
     let pending: ActivityMessage["data"] = [];
     let flush: ReturnType<typeof setTimeout> | undefined;
-    subscription.on("publication", (ctx) => {
-      const item = activityItemSchema.safeParse(ctx.data);
-      if (!item.success) return;
-      pending.push(item.data);
-      flush ??= setTimeout(() => {
-        const data = pending.toReversed();
-        pending = [];
-        flush = undefined;
-        handler.current({ type: "transfer", data });
-      }, BATCH_MS);
-    });
+    let detach: (() => void) | undefined;
 
-    // the history is newest first, the order a batch is drawn in
-    subscription.on("subscribed", (ctx) => {
-      if (ctx.wasRecovering && ctx.recovered) return;
-      subscription
-        .history({ limit: HISTORY_LIMIT, reverse: true })
-        .then(({ publications }) => {
-          if (!active) return;
-          const data = publications.flatMap((publication) => {
-            const item = activityItemSchema.safeParse(publication.data);
-            return item.success ? [item.data] : [];
-          });
-          if (data.length > 0) handler.current({ type: "history", data });
-        })
-        .catch(() => undefined);
-    });
+    const attach = (connection: Centrifuge) => {
+      const subscription =
+        connection.getSubscription(ACTIVITY_CHANNEL) ??
+        connection.newSubscription(ACTIVITY_CHANNEL);
 
-    subscription.subscribe();
-    const release = acquireRealtime({ signedIn: false });
+      subscription.on("publication", (ctx) => {
+        const item = activityItemSchema.safeParse(ctx.data);
+        if (!item.success) return;
+        pending.push(item.data);
+        flush ??= setTimeout(() => {
+          const data = pending.toReversed();
+          pending = [];
+          flush = undefined;
+          handler.current({ type: "transfer", data });
+        }, BATCH_MS);
+      });
+
+      // the history is newest first, the order a batch is drawn in
+      subscription.on("subscribed", (ctx) => {
+        if (ctx.wasRecovering && ctx.recovered) return;
+        subscription
+          .history({ limit: HISTORY_LIMIT, reverse: true })
+          .then(({ publications }) => {
+            if (!active) return;
+            const data = publications.flatMap((publication) => {
+              const item = activityItemSchema.safeParse(publication.data);
+              return item.success ? [item.data] : [];
+            });
+            if (data.length > 0) handler.current({ type: "history", data });
+          })
+          .catch(() => undefined);
+      });
+
+      subscription.subscribe();
+      const release = acquireRealtime(connection, { signedIn: false });
+      detach = () => {
+        release();
+        subscription.removeAllListeners();
+        subscription.unsubscribe();
+        connection.removeSubscription(subscription);
+      };
+    };
+
+    realtime()
+      .then((connection) => {
+        if (active) attach(connection);
+      })
+      .catch(() => undefined);
 
     return () => {
       active = false;
       clearTimeout(flush);
-      release();
-      subscription.removeAllListeners();
-      subscription.unsubscribe();
-      connection.removeSubscription(subscription);
+      detach?.();
     };
   }, [enabled]);
 }
