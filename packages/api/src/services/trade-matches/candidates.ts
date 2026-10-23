@@ -51,8 +51,7 @@ export async function fetchTradeCandidates(
 ): Promise<Candidate[]> {
   const result = await db.execute<CandidateRow>(sql`
     WITH ${postsCte},
-    -- the listed lists once, as a set to hash against; matching each list against
-    -- IN (posts.id, posts.partner_id) compared every list with every post
+    -- a set, so each list is one hash lookup rather than a scan of posts
     listed AS (
       SELECT id FROM posts WHERE ${listedPost}
       UNION

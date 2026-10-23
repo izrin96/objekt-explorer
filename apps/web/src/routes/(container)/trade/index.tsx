@@ -13,7 +13,7 @@ export const Route = createFileRoute("/(container)/trade/")({
     const target = browseRedirect(search);
     if (target) throw redirect({ ...target, replace: true });
   },
-  // `person` stays: it reorders the feed, so the loader must fill the key BrowseView reads
+  // all of it, `person` too: the loader fills the key BrowseView reads
   loaderDeps: ({ search }) => search,
   loader: ({ context: { queryClient }, deps, cause }) =>
     loadBrowse({ queryClient, search: deps, cause, surface: "browse" }),
