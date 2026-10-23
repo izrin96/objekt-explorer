@@ -223,6 +223,32 @@ describe("timelineRows, ended", () => {
     });
   });
 
+  test("a transfer with no time sits right after the accept", () => {
+    const rows = timelineRows(
+      trade({
+        status: "completed",
+        endedAt: "2026-10-14T00:00:00.000Z",
+        legs: [verified({ verifiedAt: null })],
+      }),
+      NOW,
+    );
+    expect(rows.map((r) => r.kind)).toEqual(["proposed", "accepted", "sent", "end"]);
+  });
+
+  test("a copy still pending when the trade ended adds no deadline row", () => {
+    const pending = copy({ status: "pending", acceptBy: "2026-10-20T00:00:00.000Z" });
+    const rows = timelineRows(
+      trade({
+        status: "failed",
+        endedAt: "x",
+        legs: [leg({ fromYou: false, substitutes: [pending] })],
+      }),
+      NOW,
+    );
+    expect(rows.map((r) => r.kind)).not.toContain("copyDue");
+    expect(rows.map((r) => r.kind)).toContain("copyArrived");
+  });
+
   test("failed and cancelled end rows, and no clock rows", () => {
     expect(
       timelineRows(trade({ status: "failed", endedAt: "x", legs: [verified(), leg()] }), NOW).at(

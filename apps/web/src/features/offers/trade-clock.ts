@@ -118,7 +118,9 @@ export function timelineRows(trade: Trade, now: number): TimelineRow[] {
       { kind: "ends", at: ends, when: endsWhen, outcome: expiryOutcome(trade) },
     );
   }
-  rows.sort((a, b) => ms(a.at) - ms(b.at) || ORDER.indexOf(a.kind) - ORDER.indexOf(b.kind));
+  // a transfer with no time sits right after the accept
+  const sortAt = (row: TimelineRow) => ms(row.at ?? trade.acceptedAt);
+  rows.sort((a, b) => sortAt(a) - sortAt(b) || ORDER.indexOf(a.kind) - ORDER.indexOf(b.kind));
   if (live) return [...rows, { kind: "rate", at: null, when: "future" }];
 
   rows.push({ kind: "end", at: trade.endedAt, when: "past", outcome: trade.status as Outcome });

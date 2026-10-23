@@ -181,6 +181,7 @@ function TradeDetail({ trade, collections }: { trade: Trade; collections: Collec
         </aside>
       </div>
 
+      {/* -mx-5 -mb-10 undo PageMain's px-5 pb-10, so the bar spans the screen and sits flush */}
       <div className="bg-background sticky bottom-0 -mx-5 -mb-10 flex items-center gap-2 border-t px-5 pt-3 pb-[calc(env(safe-area-inset-bottom,0px)+--spacing(4))] sm:hidden">
         {step.primary === "copyAddress" && address ? (
           <CopyAddressButton address={address} size="xl" className="min-w-0 flex-1" />

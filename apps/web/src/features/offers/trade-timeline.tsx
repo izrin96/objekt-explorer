@@ -231,7 +231,7 @@ export function TradeTimeline(props: Props) {
           )}
           <CaretDownIcon
             aria-hidden
-            className="text-muted-foreground size-4 shrink-0 transition-transform in-data-panel-open:rotate-180"
+            className="text-muted-foreground size-4 shrink-0 in-data-panel-open:rotate-180 motion-safe:transition-transform"
           />
         </CollapsibleTrigger>
         <CollapsiblePanel>
