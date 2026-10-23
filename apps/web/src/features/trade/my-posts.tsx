@@ -1,4 +1,10 @@
-import { ArrowClockwiseIcon, ArrowFatLineUpIcon, CaretDownIcon } from "@phosphor-icons/react";
+import {
+  ArrowClockwiseIcon,
+  ArrowFatLineUpIcon,
+  CaretDownIcon,
+  DotsThreeIcon,
+  PlusIcon,
+} from "@phosphor-icons/react";
 import type { Outputs } from "@repo/api";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useHydrated } from "@tanstack/react-router";
@@ -6,19 +12,23 @@ import { Link, useHydrated } from "@tanstack/react-router";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Menu, MenuItem, MenuPopup, MenuTrigger } from "@/components/ui/menu";
 import { MonoMessage } from "@/features/offers/mono";
 import { relativeTime } from "@/lib/time";
 import { m } from "@/paraglide/messages";
 import { useSettings } from "@/stores/settings";
 
-import { useBumpPost } from "./actions";
-import { ListRoleBadge } from "./list-role-badge";
+import { useBumpPost, useTakeDownPost } from "./actions";
 import { summarizePosts } from "./my-posts-summary";
+import { KIND_LABEL } from "./post-list-dialog";
 import { postTime } from "./post-time";
 import { myPostsOptions } from "./queries";
+import { TagBadge } from "./tag-label";
 
-/** Hidden until the viewer has a list on Trade; Post a list sits beside the page description. */
-export function MyPosts() {
+type MyPostsProps = { onNew: () => void; onEdit: (slug: string) => void };
+
+/** The viewer's posts on Browse, one row each, with New post in the header. */
+export function MyPosts({ onNew, onEdit }: MyPostsProps) {
   const query = useQuery(myPostsOptions());
   const bump = useBumpPost();
   const saved = useSettings((s) => s.myPostsShown);
@@ -41,7 +51,27 @@ export function MyPosts() {
     );
   }
   const posts = query.data;
-  if (posts.length === 0) return null;
+  if (posts.length === 0) {
+    return (
+      <section
+        aria-labelledby="my-posts-title"
+        className="bg-card flex flex-wrap items-center justify-between gap-3 rounded-lg border border-dashed px-4 py-3"
+      >
+        <div className="flex min-w-0 flex-col gap-0.5">
+          <h2 id="my-posts-title" className="text-sm font-medium">
+            {m.trade_my_posts_empty_title()}
+          </h2>
+          <p className="text-muted-foreground text-sm text-pretty">
+            {m.trade_my_posts_empty_hint()}
+          </p>
+        </div>
+        <Button size="sm" onClick={onNew}>
+          <PlusIcon />
+          {m.trade_new_post()}
+        </Button>
+      </section>
+    );
+  }
   // every post carries the same last and next bump: Bump is one per person, so its time shows
   // once here instead of on each row
   const lastBumpAt = posts[0]?.lastBumpAt ?? null;
@@ -58,8 +88,8 @@ export function MyPosts() {
         onOpenChange={(next) => setSettings({ myPostsShown: next })}
         className="bg-card rounded-lg border"
       >
-        <div className="flex items-center justify-between gap-2 px-4 py-2.5">
-          <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+        <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5">
+          <div className="flex min-w-0 grow basis-64 flex-wrap items-center gap-x-2 gap-y-1 text-sm">
             <h2 id="my-posts-title" className="text-muted-foreground font-medium">
               {m.trade_my_posts_title()}
             </h2>
@@ -108,7 +138,11 @@ export function MyPosts() {
               </>
             ) : null}
           </div>
-          <div className="flex shrink-0 items-center gap-1">
+          <div className="flex shrink-0 flex-wrap items-center justify-end gap-1">
+            <Button size="sm" onClick={onNew}>
+              <PlusIcon />
+              {m.trade_new_post()}
+            </Button>
             <Button
               variant="outline"
               size="sm"
@@ -131,7 +165,7 @@ export function MyPosts() {
         <CollapsiblePanel>
           <ul className="flex flex-col divide-y border-t">
             {posts.map((post) => (
-              <MyPostRow key={post.id} post={post} now={now} />
+              <MyPostRow key={post.id} post={post} now={now} onEdit={onEdit} />
             ))}
           </ul>
         </CollapsiblePanel>
@@ -142,22 +176,56 @@ export function MyPosts() {
 
 type MyPost = Outputs["trade"]["myPosts"][number];
 
-function MyPostRow({ post, now }: { post: MyPost; now: number }) {
+const ROLE_LABEL = {
+  have: m.trade_role_have,
+  want: m.trade_role_want,
+  sale: m.trade_role_sale,
+} as const;
+
+function MyPostRow({
+  post,
+  now,
+  onEdit,
+}: {
+  post: MyPost;
+  now: number;
+  onEdit: (slug: string) => void;
+}) {
+  const takeDown = useTakeDownPost();
   const { changed, time } = postTime(post);
   const when = relativeTime(new Date(time).getTime(), now);
+  const option =
+    post.kind === "swap" && post.alsoPay
+      ? m.trade_post_option_also_pay()
+      : post.kind === "sell"
+        ? m.trade_post_option_market()
+        : null;
+  const details = [
+    option,
+    changed ? m.trade_updated_at({ time: when }) : null,
+    post.listed ? null : m.trade_post_idle_hint(),
+  ].filter((part) => part !== null);
 
   return (
-    <li className="px-4 py-3">
+    <li className="flex items-start justify-between gap-3 px-4 py-3">
       <div className="flex min-w-0 flex-col gap-1">
-        <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
-          {post.lists.map((list, index) => (
-            <span key={list.slug} className="flex min-w-0 items-center gap-1.5 text-sm font-medium">
-              {index > 0 ? <span className="text-muted-foreground font-normal">+</span> : null}
-              <ListRoleBadge type={list.listTypeNew} />
+        <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+          <span className="flex items-center gap-1">
+            {post.tags.map((tag) => (
+              <TagBadge key={tag} tag={tag} />
+            ))}
+          </span>
+          <span className="font-medium">{KIND_LABEL[post.kind]()}</span>
+          {post.lists.map((list) => (
+            <span key={list.slug} className="flex min-w-0 items-center gap-1.5">
+              <span aria-hidden className="text-muted-foreground">
+                ·
+              </span>
+              <span className="text-muted-foreground">{ROLE_LABEL[list.role]()}</span>
               <Link
                 to="/list/$slug"
                 params={{ slug: list.slug }}
-                className="min-w-0 break-words underline-offset-2 hover:underline"
+                className="min-w-0 font-medium break-words underline-offset-2 hover:underline"
               >
                 {list.name}
               </Link>
@@ -173,14 +241,29 @@ function MyPostRow({ post, now }: { post: MyPost; now: number }) {
             </Badge>
           )}
         </div>
-        {changed || !post.listed ? (
-          <p className="text-muted-foreground text-xs text-pretty">
-            {changed ? <time dateTime={time}>{m.trade_updated_at({ time: when })}</time> : null}
-            {changed && !post.listed ? " · " : null}
-            {post.listed ? null : m.trade_post_idle_hint()}
-          </p>
+        {details.length > 0 ? (
+          <p className="text-muted-foreground text-xs text-pretty">{details.join(" · ")}</p>
         ) : null}
       </div>
+      <Menu>
+        <MenuTrigger
+          render={
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              className="shrink-0"
+              aria-label={m.trade_post_actions()}
+              loading={takeDown.isPending}
+            />
+          }
+        >
+          <DotsThreeIcon weight="bold" />
+        </MenuTrigger>
+        <MenuPopup align="end">
+          <MenuItem onClick={() => onEdit(post.slug)}>{m.trade_composer_edit_title()}</MenuItem>
+          <MenuItem onClick={() => takeDown.takeDown(post.slug)}>{m.trade_take_off()}</MenuItem>
+        </MenuPopup>
+      </Menu>
     </li>
   );
 }

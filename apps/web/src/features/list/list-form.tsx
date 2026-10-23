@@ -1,12 +1,6 @@
 import { InfoIcon } from "@phosphor-icons/react";
-import { canBeOnTrade, type ListTypeNew, type PublicList } from "@repo/api/schemas/list";
-import {
-  flagsOf,
-  type OpenTo,
-  type OpenToFlags,
-  openToOf,
-  pairRefusesOpenTo,
-} from "@repo/api/schemas/open-to";
+import { canBeOnTrade, type ListTypeNew } from "@repo/api/schemas/list";
+import type { OpenToFlags } from "@repo/api/schemas/open-to";
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import slugify from "slugify";
@@ -17,7 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Radio, RadioGroup, RadioPrimitive } from "@/components/ui/radio-group";
+import { RadioGroup, RadioPrimitive } from "@/components/ui/radio-group";
 import {
   Select,
   SelectItem,
@@ -32,7 +26,7 @@ import { toneChip } from "@/lib/tone";
 import { cn, getBaseURL } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
-import { LIST_TYPE_LABEL, LIST_TYPE_TONE, ListTypeBadge, OPEN_TO_LABEL } from "./list-type-badge";
+import { LIST_TYPE_LABEL, LIST_TYPE_TONE, ListTypeBadge } from "./list-type-badge";
 
 /** `Select` has no value for "cleared", so the empty choice carries its own. */
 const NONE = "__none__";
@@ -40,18 +34,8 @@ const CURRENCY_RE = /^[A-Za-z]{3}$/;
 
 const LIST_TYPES: ListTypeNew[] = ["general", "have", "want", "sale"];
 
-const OPEN_TO_ORDER: OpenTo[] = ["swaps", "both", "buying"];
-
 const isListType = (value: unknown): value is ListTypeNew =>
   LIST_TYPES.some((type) => type === value);
-const isOpenTo = (value: unknown): value is OpenTo =>
-  OPEN_TO_ORDER.some((openTo) => openTo === value);
-
-const MATCH_WITH: Record<OpenTo, { label: () => string; description: () => string }> = {
-  swaps: { label: OPEN_TO_LABEL.swaps, description: m.list_create_match_swaps_desc },
-  both: { label: OPEN_TO_LABEL.both, description: m.list_create_match_both_desc },
-  buying: { label: OPEN_TO_LABEL.buying, description: m.list_create_match_buying_desc },
-};
 
 const LIST_TYPE_DESC: Record<ListTypeNew, () => string> = {
   general: m.list_create_general_list_desc,
@@ -90,17 +74,6 @@ export const EMPTY_DRAFT: ListDraft = {
   regenerateSlug: false,
 };
 
-/** A want list holding a link with Buying only selected: the form shows why and won't save. */
-function pairBlocked(
-  draft: OpenToFlags & { listTypeNew: ListTypeNew; linkedListId: number | null },
-) {
-  return draft.listTypeNew === "want" && draft.linkedListId !== null && pairRefusesOpenTo(draft);
-}
-
-/** A want list in the have list's link menu, read as the server reads it; a list from before Open to is open to both. */
-const refusesPair = (list: PublicList) =>
-  pairRefusesOpenTo({ matchSale: list.matchSale ?? true, matchHave: list.matchHave ?? true });
-
 /** Built per submit: the message functions read the request's locale. */
 export function listDraftSchema() {
   return z
@@ -116,13 +89,6 @@ export function listDraftSchema() {
       matchHave: z.boolean(),
     })
     .superRefine((draft, ctx) => {
-      if (pairBlocked(draft)) {
-        ctx.addIssue({
-          code: "custom",
-          path: ["openTo"],
-          message: m.api_errors_list_pair_buying_only(),
-        });
-      }
       if (draft.listTypeNew === "sale" && !CURRENCY_RE.test(draft.currency)) {
         ctx.addIssue({
           code: "custom",
@@ -141,8 +107,9 @@ export function listDraftSchema() {
 }
 
 /**
- * `list.create`'s input, normalised the way the router does before it writes:
- * the fields a type does not carry are dropped rather than kept stale.
+ * `list.create`'s input, normalised the way the router does before it writes: the fields a type
+ * does not carry are dropped rather than kept stale. A have or want list starts off Trade and
+ * unpaired; the post composer puts it on Trade.
  */
 export function toCreateInput(draft: ListDraft) {
   const isProfileBind = ["have", "sale"].includes(draft.listTypeNew) && draft.isProfileBind;
@@ -155,16 +122,34 @@ export function toCreateInput(draft: ListDraft) {
     linkedListId: ["have", "want"].includes(draft.listTypeNew) ? draft.linkedListId : null,
     profileAddress: draft.profileAddress,
     isProfileBind,
-    discoverable: draft.listTypeNew !== "general" && draft.discoverable,
+    discoverable: draft.listTypeNew === "sale" && draft.discoverable,
     matchSale: draft.matchSale,
     matchHave: draft.matchHave,
     hideSerial: draft.hideSerial,
   };
 }
 
+/**
+ * `list.edit`'s input. The link, Trade state and Open to of a have or want list belong to its post,
+ * so they are left out and the list keeps them; only a sale list's switch is sent.
+ */
 export function toEditInput(slug: string, draft: ListDraft) {
-  const { listTypeNew: _type, isProfileBind: _bind, ...rest } = toCreateInput(draft);
-  return { slug, ...rest, gridColumns: draft.gridColumns, regenerateSlug: draft.regenerateSlug };
+  const {
+    listTypeNew: _type,
+    isProfileBind: _bind,
+    linkedListId: _link,
+    discoverable,
+    matchSale: _sale,
+    matchHave: _have,
+    ...rest
+  } = toCreateInput(draft);
+  return {
+    slug,
+    ...rest,
+    ...(draft.listTypeNew === "sale" ? { discoverable } : {}),
+    gridColumns: draft.gridColumns,
+    regenerateSlug: draft.regenerateSlug,
+  };
 }
 
 type ListFormProps = {
@@ -172,8 +157,6 @@ type ListFormProps = {
   idPrefix: string;
   value: ListDraft;
   onChange: (next: ListDraft) => void;
-  /** the user's other lists, already free of the one being edited */
-  lists: PublicList[];
   profiles: { address: string; nickname: string | null }[];
   /** `list.edit` takes neither the type nor the binding, so edit locks both */
   mode: "create" | "edit";
@@ -181,6 +164,8 @@ type ListFormProps = {
   url?: ListUrl;
   /** one line under the binding switch, for a note about what the form's current choices do */
   notice?: ReactNode;
+  /** a have or want list's place on Trade, which the post composer sets */
+  tradeLine?: ReactNode;
 };
 
 export type ListUrl = { nickname: string; profileSlug: string; fallbackSlug: string };
@@ -189,11 +174,11 @@ export function ListForm({
   idPrefix,
   value,
   onChange,
-  lists,
   profiles,
   mode,
   url,
   notice,
+  tradeLine,
 }: ListFormProps) {
   const id = (field: string) => `${idPrefix}-${field}`;
   const set = (patch: Partial<ListDraft>) => onChange({ ...value, ...patch });
@@ -202,9 +187,6 @@ export function ListForm({
   const isSale = value.listTypeNew === "sale";
   const isPaired = value.listTypeNew === "have" || value.listTypeNew === "want";
   const bindable = value.listTypeNew === "have" || isSale;
-  const linkable = lists.filter((list) =>
-    value.listTypeNew === "have" ? list.listTypeNew === "want" : list.listTypeNew === "have",
-  );
   const discoverableDisabled = !canBeOnTrade(value.listTypeNew, value.isProfileBind);
 
   const changeType = (next: ListTypeNew | null) => {
@@ -299,52 +281,6 @@ export function ListForm({
           <FieldDescription>{m.list_create_currency_desc()}</FieldDescription>
           <FieldError />
         </Field>
-      ) : null}
-
-      {isPaired ? (
-        <div className="flex min-w-0 flex-col gap-1.5">
-          <Label htmlFor={id("linked")}>{m.list_create_link_list_label()}</Label>
-          <Select
-            value={value.linkedListId === null ? NONE : String(value.linkedListId)}
-            onValueChange={(next: string | null) =>
-              set({ linkedListId: next === null || next === NONE ? null : Number(next) })
-            }
-          >
-            <SelectTrigger id={id("linked")} className="min-w-0">
-              <SelectValue>
-                {(next: string) =>
-                  next === NONE
-                    ? m.common_form_none()
-                    : (linkable.find((list) => String(list.id) === next)?.name ??
-                      m.common_form_none())
-                }
-              </SelectValue>
-            </SelectTrigger>
-            <SelectPopup>
-              <SelectItem value={NONE}>{m.common_form_none()}</SelectItem>
-              {linkable.map((list) => {
-                const refused = value.listTypeNew === "have" && refusesPair(list);
-                return (
-                  <SelectItem key={list.id} value={String(list.id)} disabled={refused}>
-                    {refused ? (
-                      <span className="flex min-w-0 flex-col">
-                        <span className="truncate">{list.name}</span>
-                        <span className="text-muted-foreground text-xs text-pretty">
-                          {m.list_create_pair_buying_only_hint()}
-                        </span>
-                      </span>
-                    ) : (
-                      <span className="truncate">{list.name}</span>
-                    )}
-                  </SelectItem>
-                );
-              })}
-            </SelectPopup>
-          </Select>
-          <span className="text-muted-foreground text-xs text-pretty">
-            {m.list_create_link_list_desc()}
-          </span>
-        </div>
       ) : null}
 
       {/* binding is set only here, and without it a have or sale list never goes on Trade */}
@@ -443,18 +379,14 @@ export function ListForm({
 
       {notice}
 
-      {value.listTypeNew !== "general" ? (
+      {isSale ? (
         <SwitchRow
           id={id("show-on-trade")}
-          label={
-            isSale ? m.list_create_discoverable_sale_label() : m.list_create_show_on_trade_label()
-          }
+          label={m.list_create_discoverable_sale_label()}
           description={
             discoverableDisabled
               ? m.list_create_requires_bind_desc()
-              : isSale
-                ? m.list_create_on_market_desc()
-                : m.list_create_on_trade_desc()
+              : m.list_create_on_market_desc()
           }
           checked={value.discoverable && !discoverableDisabled}
           disabled={discoverableDisabled}
@@ -462,47 +394,7 @@ export function ListForm({
         />
       ) : null}
 
-      {value.listTypeNew === "want" ? (
-        <div className="flex min-w-0 flex-col gap-1.5">
-          <Label render={<span />} id={id("match-with")}>
-            {m.list_create_match_with_label()}
-          </Label>
-          <RadioGroup
-            aria-labelledby={id("match-with")}
-            value={openToOf(value)}
-            onValueChange={(next) => {
-              if (isOpenTo(next)) set(flagsOf(next));
-            }}
-            className="gap-2.5"
-          >
-            {OPEN_TO_ORDER.map((openTo) => {
-              const refused = value.linkedListId !== null && pairRefusesOpenTo(flagsOf(openTo));
-              return (
-                <Field
-                  key={openTo}
-                  disabled={refused}
-                  className="w-full flex-row items-start gap-2.5"
-                >
-                  <Radio value={openTo} disabled={refused} className="mt-0.5" />
-                  <FieldLabel className="flex-col items-start gap-0.5 font-normal">
-                    <span className="text-sm font-medium">{MATCH_WITH[openTo].label()}</span>
-                    <FieldDescription render={<span />}>
-                      {refused
-                        ? m.list_create_pair_buying_only_hint()
-                        : MATCH_WITH[openTo].description()}
-                    </FieldDescription>
-                  </FieldLabel>
-                </Field>
-              );
-            })}
-          </RadioGroup>
-          {pairBlocked(value) ? (
-            <span role="alert" className="text-destructive text-xs text-pretty">
-              {m.api_errors_list_pair_buying_only()}
-            </span>
-          ) : null}
-        </div>
-      ) : null}
+      {isPaired ? tradeLine : null}
 
       {/* a serial only exists on an entry the bound profile owns */}
       {isSale || value.listTypeNew === "have" ? (

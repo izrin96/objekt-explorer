@@ -1,4 +1,5 @@
 import { ArrowClockwiseIcon, CardsThreeIcon } from "@phosphor-icons/react";
+import { startForPost } from "@repo/api/schemas/trade-post";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { Link, useHydrated, useNavigate } from "@tanstack/react-router";
@@ -36,7 +37,8 @@ import { LoadError } from "./load-error";
 import { ComparedLine, MatchingControls } from "./matching-controls";
 import { MyPosts } from "./my-posts";
 import { PersonRow, PersonRowSkeleton } from "./person-row-view";
-import { PostListDialog } from "./post-list-dialog";
+import { NEW_POST, PostComposer, useComposer } from "./post-list-dialog";
+import { usePlanLists } from "./post-plan";
 import type { PersonData } from "./post-types";
 import { hiddenPartnersOptions, peopleOptions } from "./queries";
 import { tagText } from "./tag-label";
@@ -75,7 +77,8 @@ export function BrowseView({ surface, search }: { surface: Surface; search: Feed
   const active = opened && opened.slug === search.slug ? opened.objekt : null;
   const setActive = (objekt: ValidObjekt | null) =>
     setOpened(objekt ? { objekt, slug: search.slug } : null);
-  const [postOpen, setPostOpen] = useState(false);
+  const composer = useComposer();
+  const planLists = usePlanLists();
   const [hiddenOpen, setHiddenOpen] = useState(false);
   // a scrolled-off row loses its own state, so the feed keeps which rows showed all their lists
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(new Set());
@@ -165,24 +168,30 @@ export function BrowseView({ surface, search }: { surface: Surface; search: Feed
         <p className="text-muted-foreground text-sm text-pretty max-md:hidden">
           {forYou ? m.trade_for_you_description() : m.trade_browse_description()}
         </p>
-        {user ? (
-          <Button variant="outline" size="sm" onClick={() => setPostOpen(true)}>
+        {/* on Browse, New post lives in the Your posts row */}
+        {user && forYou ? (
+          <Button variant="outline" size="sm" onClick={() => composer.openWith(NEW_POST)}>
             <CardsThreeIcon />
-            {m.trade_post_a_list()}
+            {m.trade_new_post()}
           </Button>
-        ) : (
+        ) : user ? null : (
           <Button
             variant="outline"
             size="sm"
             render={<Link to="/login" search={{ redirect: "/trade" }} />}
           >
             <CardsThreeIcon />
-            {m.trade_post_a_list()}
+            {m.trade_new_post()}
           </Button>
         )}
       </div>
 
-      {user && !forYou ? <MyPosts /> : null}
+      {user && !forYou ? (
+        <MyPosts
+          onNew={() => composer.openWith(NEW_POST)}
+          onEdit={(slug) => composer.openWith(startForPost(planLists, slug))}
+        />
+      ) : null}
 
       <BrowseFilters
         search={search}
@@ -378,7 +387,7 @@ export function BrowseView({ surface, search }: { surface: Surface; search: Feed
       ) : null}
 
       <ObjektDrawer objekt={active} onClose={() => setActive(null)} />
-      {user ? <PostListDialog open={postOpen} onOpenChange={setPostOpen} /> : null}
+      {user ? <PostComposer {...composer.dialog} /> : null}
       {user ? <HiddenPartnersDialog open={hiddenOpen} onOpenChange={setHiddenOpen} /> : null}
     </OfferBuilderProvider>
   );

@@ -1,4 +1,10 @@
-import { EyeSlashIcon, XIcon } from "@phosphor-icons/react";
+import {
+  ArrowDownIcon,
+  ArrowsLeftRightIcon,
+  ArrowUpIcon,
+  EyeSlashIcon,
+  XIcon,
+} from "@phosphor-icons/react";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 
 import { Button } from "@/components/ui/button";
@@ -7,13 +13,13 @@ import { MenuItem } from "@/components/ui/menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SafetyMenu } from "@/features/moderation/safety-menu";
 import { relativeTime } from "@/lib/time";
-import { TONE_INK } from "@/lib/tone";
+import { TONE_FILL, TONE_INK } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import { useHideWithUndo } from "./actions";
 import type { Surface } from "./browse-search";
-import { type HeaderSentence, headerSentence, leadPost, listCount, orderPosts } from "./person-row";
+import { leadPost, listCount, type MatchBand, matchBand, orderPosts } from "./person-row";
 import { EmptySide, isEmptySide, SideStrip } from "./post-side";
 import { postTime } from "./post-time";
 import type { PersonData, PersonPostData } from "./post-types";
@@ -48,25 +54,68 @@ function WithNumber({
   );
 }
 
-function Sentence({ sentence }: { sentence: Exclude<HeaderSentence, { kind: "none" }> }) {
-  switch (sentence.kind) {
-    case "swap":
-      return (
-        <WithNumber
-          render={(count) => m.trade_person_swap({ count })}
-          count={sentence.count}
-          className={TONE_INK.progress}
-        />
-      );
-    case "youHave":
-      return (
-        <WithNumber render={(count) => m.trade_match_you_have({ count })} count={sentence.count} />
-      );
-    case "theyHave":
-      return (
-        <WithNumber render={(count) => m.trade_match_they_have({ count })} count={sentence.count} />
-      );
-  }
+/**
+ * Across the top of a person's card: what the two can swap, tinted, or that the match runs only
+ * through sale lists, then each direction's count. One way is only its count, since For you heads
+ * that section already. A direction with nothing is left out.
+ */
+function MatchBandStrip({ band, className }: { band: MatchBand; className?: string }) {
+  const swap = band.kind === "swap";
+  return (
+    <div
+      className={cn(
+        "flex flex-wrap items-center justify-between gap-x-4 gap-y-1 rounded-xl px-3 py-1.5 text-sm",
+        swap ? TONE_FILL.progress : "bg-background/60",
+        className,
+      )}
+    >
+      {band.kind === "oneWay" ? null : (
+        <span
+          className={cn(
+            "flex items-center gap-1.5 font-medium",
+            swap ? TONE_INK.progress : "text-muted-foreground",
+          )}
+        >
+          {band.kind === "swap" ? (
+            <>
+              <ArrowsLeftRightIcon aria-hidden className="size-4" />
+              <span>
+                <WithNumber render={(count) => m.trade_person_swap({ count })} count={band.swap} />
+              </span>
+            </>
+          ) : (
+            m.trade_band_no_swap()
+          )}
+        </span>
+      )}
+      <span className="text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-0.5">
+        {band.theyHave > 0 ? (
+          <span className="flex items-center gap-1">
+            <ArrowDownIcon aria-hidden className="size-3.5" />
+            <span>
+              <WithNumber
+                render={(count) => m.trade_match_they_have({ count })}
+                count={band.theyHave}
+                className="text-foreground"
+              />
+            </span>
+          </span>
+        ) : null}
+        {band.youHave > 0 ? (
+          <span className="flex items-center gap-1">
+            <ArrowUpIcon aria-hidden className="size-3.5" />
+            <span>
+              <WithNumber
+                render={(count) => m.trade_match_you_have({ count })}
+                count={band.youHave}
+                className="text-foreground"
+              />
+            </span>
+          </span>
+        ) : null}
+      </span>
+    </div>
+  );
 }
 
 /** The post as its own viewer sees it: no rings, since the viewer's row counts nothing. */
@@ -94,17 +143,12 @@ function PostBlock({
   onOpen: (objekt: ValidObjekt) => void;
 }) {
   const shown = own ? unringed(post) : post;
-  const wantOnly = post.tag === "wtt" && post.sides.every((side) => side.role === "want");
   const strips = shown.sides.filter((side) => !isEmptySide(side));
   const tag = (
-    <span className="flex shrink-0 flex-wrap items-center gap-x-2 gap-y-1 font-sans normal-case">
-      <TagBadge tag={post.tag} />
-      {wantOnly ? (
-        <span className="text-muted-foreground text-xs">{m.trade_wtt_swaps_only()}</span>
-      ) : null}
-      {post.buyingOnly ? (
-        <span className="text-muted-foreground text-xs">{m.trade_wtb_buying_only()}</span>
-      ) : null}
+    <span className="flex shrink-0 flex-wrap items-center gap-1 font-sans normal-case">
+      {post.tags.map((item) => (
+        <TagBadge key={item} tag={item} />
+      ))}
     </span>
   );
   return (
@@ -165,8 +209,8 @@ export function PersonRow({
   onOpen: (objekt: ValidObjekt) => void;
 }) {
   const hide = useHideWithUndo();
-  // no match says nothing: a row without a sentence already reads as one
-  const sentence = own || !signedIn ? null : headerSentence(person.counts);
+  // no match says nothing: a row without a band already reads as one
+  const band = own || !signedIn ? null : matchBand(person.counts);
   const posts = orderPosts(person.posts);
   const lead = leadPost(person.posts);
   const all = led || expanded;
@@ -206,7 +250,13 @@ export function PersonRow({
   return (
     // padding, not margin, so virtua measures the gap between people with the row
     <article className="@container pb-3">
-      <Frame className="grid gap-x-4 gap-y-3 pt-2.5 @3xl:grid-cols-[minmax(0,1fr)_auto]">
+      <Frame
+        className={cn(
+          "grid gap-x-4 gap-y-3 @3xl:grid-cols-[minmax(0,1fr)_auto]",
+          band ? "pt-1" : "pt-2.5",
+        )}
+      >
+        {band ? <MatchBandStrip band={band} className="@3xl:col-span-2 @3xl:row-start-1" /> : null}
         <TradeHeader
           className="min-w-0 px-3"
           person={person}
@@ -222,35 +272,20 @@ export function PersonRow({
             </>
           }
           end={
-            <>
-              {led ? (
-                <Button variant="outline" size="xs" onClick={onClear}>
-                  <XIcon />
-                  <span className="@max-3xl:sr-only">{m.trade_person_clear()}</span>
-                </Button>
-              ) : null}
-              <SafetyMenu
-                userId={person.userId}
-                name={person.identity.name}
-                report
-                extraItems={
-                  <MenuItem onClick={() => hide(person.userId, person.identity.name)}>
-                    <EyeSlashIcon />
-                    {m.trade_hide_partner()}
-                  </MenuItem>
-                }
-              />
-            </>
-          }
-          note={
-            sentence && sentence.kind !== "none" ? (
-              <span className="text-sm">
-                <Sentence sentence={sentence} />
-              </span>
+            led ? (
+              <Button variant="outline" size="xs" onClick={onClear}>
+                <XIcon />
+                <span className="@max-3xl:sr-only">{m.trade_person_clear()}</span>
+              </Button>
             ) : null
           }
         />
-        <div className="flex min-w-0 flex-col gap-1 @3xl:col-span-2 @3xl:row-start-2">
+        <div
+          className={cn(
+            "flex min-w-0 flex-col gap-1 @3xl:col-span-2",
+            band ? "@3xl:row-start-3" : "@3xl:row-start-2",
+          )}
+        >
           {shown.map((post) => (
             <PostBlock
               key={post.id}
@@ -274,7 +309,23 @@ export function PersonRow({
           ) : null}
         </div>
         {own ? null : (
-          <div className="flex items-center gap-2 px-3 pb-2 @3xl:col-start-2 @3xl:row-start-1 @3xl:self-start @3xl:pb-0">
+          <div
+            className={cn(
+              "flex items-center gap-2 px-3 pb-2 @3xl:col-start-2 @3xl:self-start @3xl:pb-0",
+              band ? "@3xl:row-start-2" : "@3xl:row-start-1",
+            )}
+          >
+            <SafetyMenu
+              userId={person.userId}
+              name={person.identity.name}
+              report
+              extraItems={
+                <MenuItem onClick={() => hide(person.userId, person.identity.name)}>
+                  <EyeSlashIcon />
+                  {m.trade_hide_partner()}
+                </MenuItem>
+              }
+            />
             {actions}
           </div>
         )}

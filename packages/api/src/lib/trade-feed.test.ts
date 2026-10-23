@@ -72,33 +72,41 @@ describe("pairPosts", () => {
     expect(posts[0]).toMatchObject({ tag: "wtt", have: spares, want: null });
   });
 
-  test("a want list alone that also matches sales is WTB, a sale list WTS", () => {
-    const tags = pairPosts([
+  test("a want list alone open to swaps or buying is WTT and WTB, a sale list WTS", () => {
+    const posts = pairPosts([
       list({ id: 2, listTypeNew: "want", linkedListId: 1, matchSale: true }),
       list({ id: 3, listTypeNew: "sale" }),
-    ]).map((post) => post.tag);
-    expect(tags).toEqual(["wtb", "wts"]);
+    ]);
+    expect(posts.map((post) => post.tags)).toEqual([["wtt", "wtb"], ["wts"]]);
+    // the single tag keeps its old rule for open tabs and chat cards
+    expect(posts.map((post) => post.tag)).toEqual(["wtb", "wts"]);
   });
 
   test("a want list alone that matches trades only is WTT", () => {
     const [post] = pairPosts([list({ id: 2, listTypeNew: "want", matchSale: false })]);
-    expect(post).toMatchObject({ tag: "wtt", have: null });
+    expect(post).toMatchObject({ tags: ["wtt"], tag: "wtt", have: null });
   });
 
-  test("a want list alone that is Buying only is WTB and notes it", () => {
+  test("a want list alone that is Buying only is WTB only", () => {
     const [post] = pairPosts([list({ id: 2, listTypeNew: "want", matchHave: false })]);
-    expect(post).toMatchObject({ tag: "wtb", buyingOnly: true });
-    const [open] = pairPosts([list({ id: 3, listTypeNew: "want" })]);
-    expect(open).toMatchObject({ tag: "wtb", buyingOnly: false });
+    expect(post).toMatchObject({ tags: ["wtb"], tag: "wtb" });
   });
 
-  test("a have list linked to a Buying only want list is one WTT post", () => {
+  test("a have list linked to a Buying only want list is one WTT and WTB post", () => {
     const posts = pairPosts([
       list({ id: 1, listTypeNew: "have", linkedListId: 2 }),
       list({ id: 2, listTypeNew: "want", linkedListId: 1, matchHave: false }),
     ]);
     expect(posts).toHaveLength(1);
-    expect(posts[0]).toMatchObject({ tag: "wtt", buyingOnly: false });
+    expect(posts[0]).toMatchObject({ tags: ["wtt", "wtb"], tag: "wtt" });
+  });
+
+  test("a pair whose want list is open to swaps only is WTT only", () => {
+    const [post] = pairPosts([
+      list({ id: 1, listTypeNew: "have", linkedListId: 2 }),
+      list({ id: 2, listTypeNew: "want", linkedListId: 1, matchSale: false }),
+    ]);
+    expect(post).toMatchObject({ tags: ["wtt"] });
   });
 
   test("a pair's bump and change times are the latest of its lists", () => {

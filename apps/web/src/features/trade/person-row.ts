@@ -26,22 +26,22 @@ export function leadPost<P extends RowPost>(posts: readonly P[]): P | undefined 
   return orderPosts(posts)[0];
 }
 
-export type HeaderSentence =
-  | { kind: "swap" | "youHave" | "theyHave"; count: number }
-  | { kind: "none" };
+export type MatchBand =
+  | { kind: "swap"; swap: number; theyHave: number; youHave: number }
+  | { kind: "noSwap" | "oneWay"; theyHave: number; youHave: number };
 
 /**
- * One sentence about the person: what they and the viewer can swap (have lists only), else what
- * the viewer has that they want, else what they have that the viewer wants, sales included.
- * `theyHave` is A, `youHave` B.
+ * The band over a person's row: what they and the viewer can swap (have lists only), else
+ * whether the match runs both ways (through sale lists, so nothing to swap) or one way. `theyHave`
+ * is A, `youHave` B. No band when nothing matches.
  */
-export function headerSentence(counts: MatchCounts | undefined): HeaderSentence {
-  if (!counts) return { kind: "none" };
-  const mutual = mutualOf(counts);
-  if (mutual > 0) return { kind: "swap", count: mutual };
-  if (counts.youHave > 0) return { kind: "youHave", count: counts.youHave };
-  if (counts.theyHave > 0) return { kind: "theyHave", count: counts.theyHave };
-  return { kind: "none" };
+export function matchBand(counts: MatchCounts | undefined): MatchBand | null {
+  if (!counts) return null;
+  const { theyHave, youHave } = counts;
+  if (theyHave === 0 && youHave === 0) return null;
+  const swap = mutualOf(counts);
+  if (swap > 0) return { kind: "swap", swap, theyHave, youHave };
+  return { kind: theyHave > 0 && youHave > 0 ? "noSwap" : "oneWay", theyHave, youHave };
 }
 
 /** A list's own count: on a want list what the viewer has, on a have or sale list what they want. */

@@ -4,7 +4,7 @@ import { COSMO_LINK_REFUSALS } from "@repo/api/schemas/cosmo-link";
 import { LIST_REFUSALS } from "@repo/api/schemas/list";
 import { OBJEKT_REFUSALS } from "@repo/api/schemas/objekts";
 import { PROFILE_REFUSALS } from "@repo/api/schemas/profile";
-import { TRADE_MODE_REFUSALS } from "@repo/api/schemas/trade";
+import { TRADE_MODE_REFUSALS, TRADE_POST_REFUSALS } from "@repo/api/schemas/trade";
 import { DELETE_REFUSALS, type DeleteRefusal, USER_REFUSALS } from "@repo/api/schemas/user";
 
 import { errorReason } from "@/lib/orpc-error";
@@ -14,6 +14,7 @@ import { m } from "@/paraglide/messages";
 const REFUSALS: readonly string[] = [
   ...LIST_REFUSALS,
   ...TRADE_MODE_REFUSALS,
+  ...TRADE_POST_REFUSALS,
   ...COMPARE_REFUSALS,
   ...COSMO_LINK_REFUSALS,
   ...PROFILE_REFUSALS,
@@ -57,6 +58,16 @@ export function refusalText(error: unknown) {
       return m.api_errors_trade_mode_have_to_want();
     case "trade_mode_want_to_have":
       return m.api_errors_trade_mode_want_to_have();
+    case "trade_post_list_in_post":
+      return m.api_errors_trade_post_list_in_post();
+    case "trade_post_list_paired":
+      return m.api_errors_trade_post_list_paired();
+    case "trade_post_needs_profile":
+      return m.api_errors_trade_post_needs_profile();
+    case "trade_post_wrong_type":
+      return m.api_errors_trade_post_wrong_type();
+    case "trade_post_empty":
+      return m.api_errors_trade_post_empty();
     case "compare_source_list_not_found":
       return m.api_errors_compare_source_list_not_found();
     case "compare_target_profile_not_found":

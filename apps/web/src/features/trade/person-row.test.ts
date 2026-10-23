@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { headerSentence, leadPost, listCount, orderPosts } from "./person-row";
+import { leadPost, listCount, matchBand, orderPosts } from "./person-row";
 
 const post = (id: number, bumpedAt: string, match?: { youHave: number; youWant: number }) => ({
   id,
@@ -36,7 +36,7 @@ describe("orderPosts", () => {
   });
 });
 
-describe("headerSentence", () => {
+describe("matchBand", () => {
   /** counts where every match is a swap */
   const swaps = (theyHave: number, youHave: number) => ({
     theyHave,
@@ -45,37 +45,32 @@ describe("headerSentence", () => {
     tradeYouHave: youHave,
   });
 
-  test("swap when both ways match, by the smaller count", () => {
-    expect(headerSentence(swaps(4, 2))).toEqual({ kind: "swap", count: 2 });
-  });
-
-  test("you have, when only the viewer's side matches", () => {
-    expect(headerSentence(swaps(0, 3))).toEqual({ kind: "youHave", count: 3 });
-    expect(headerSentence(swaps(0, 1))).toEqual({ kind: "youHave", count: 1 });
-  });
-
-  test("they have, when only their side matches", () => {
-    expect(headerSentence(swaps(3, 0))).toEqual({ kind: "theyHave", count: 3 });
-    expect(headerSentence(swaps(1, 0))).toEqual({ kind: "theyHave", count: 1 });
+  test("swap when both ways match, by the smaller count, with both counts", () => {
+    expect(matchBand(swaps(4, 2))).toEqual({ kind: "swap", swap: 2, theyHave: 4, youHave: 2 });
   });
 
   test("one each way is a swap of one", () => {
-    expect(headerSentence(swaps(1, 1))).toEqual({ kind: "swap", count: 1 });
+    expect(matchBand(swaps(1, 1))).toEqual({ kind: "swap", swap: 1, theyHave: 1, youHave: 1 });
+  });
+
+  test("one way, either direction", () => {
+    expect(matchBand(swaps(0, 3))).toEqual({ kind: "oneWay", theyHave: 0, youHave: 3 });
+    expect(matchBand(swaps(3, 0))).toEqual({ kind: "oneWay", theyHave: 3, youHave: 0 });
   });
 
   test("the swap counts set the score, a sale on top doesn't raise it", () => {
     const counts = { theyHave: 5, youHave: 2, tradeTheyHave: 1, tradeYouHave: 2 };
-    expect(headerSentence(counts)).toEqual({ kind: "swap", count: 1 });
+    expect(matchBand(counts)).toEqual({ kind: "swap", swap: 1, theyHave: 5, youHave: 2 });
   });
 
-  test("a sale-only person both ways is not a swap", () => {
+  test("both ways through sale lists is no swap", () => {
     const sale = { theyHave: 3, youHave: 1, tradeTheyHave: 0, tradeYouHave: 0 };
-    expect(headerSentence(sale)).toEqual({ kind: "youHave", count: 1 });
+    expect(matchBand(sale)).toEqual({ kind: "noSwap", theyHave: 3, youHave: 1 });
   });
 
-  test("no match", () => {
-    expect(headerSentence(swaps(0, 0))).toEqual({ kind: "none" });
-    expect(headerSentence(undefined)).toEqual({ kind: "none" });
+  test("no match, no band", () => {
+    expect(matchBand(swaps(0, 0))).toBeNull();
+    expect(matchBand(undefined)).toBeNull();
   });
 });
 

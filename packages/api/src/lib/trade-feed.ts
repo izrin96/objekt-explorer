@@ -1,5 +1,5 @@
 import type { ListTypeNew } from "../schemas/list";
-import { type OpenToFlags, openToOf, pickByOpenTo } from "../schemas/open-to";
+import { type OpenToFlags, pickByOpenTo } from "../schemas/open-to";
 import {
   type BrowseMatchMode,
   type FeedCursor,
@@ -8,6 +8,7 @@ import {
   SOLO_PREVIEW_LIMIT,
   type PostType,
 } from "../schemas/trade";
+import { groupPosts, type PostTag, tagsOf } from "../schemas/trade-post";
 import { HOUR_MS } from "./time";
 import { isIdle } from "./trade-rank";
 
@@ -16,7 +17,7 @@ export const FEED_PAGE_SIZE = 24;
 export const FEED_FETCH_SIZE = 36;
 export const BUMP_COOLDOWN_HOURS = 24;
 
-export type PostTag = Exclude<PostType, "all">;
+export type { PostTag };
 
 export type TradeList = OpenToFlags & {
   id: number;
@@ -33,9 +34,12 @@ export type Post<L extends TradeList> = {
   have: L | null;
   want: L | null;
   sale: L | null;
+  tags: PostTag[];
+  /**
+   * The one tag of the rule before tags became a set, for tabs loaded before it and chat post
+   * cards: a want list alone open to swaps or buying stays WTB here.
+   */
   tag: PostTag;
-  /** a want list alone that matches sale lists only: a WTB post that is not open to swaps */
-  buyingOnly: boolean;
   bumpedAt: string | null;
   updatedAt: string;
 };
@@ -48,29 +52,19 @@ export function latest(...times: (string | null)[]): string | null {
   return best;
 }
 
-function postTag(post: {
-  have: unknown;
-  want: { matchSale: boolean } | null;
-  sale: unknown;
-}): PostTag {
-  if (post.sale) return "wts";
-  // a want list set to match swaps only is after a swap, not a purchase
-  return post.have || !post.want?.matchSale ? "wtt" : "wtb";
-}
-
 function toPost<L extends TradeList>(anchor: L, partner: L | null): Post<L> {
   const have = anchor.listTypeNew === "have" ? anchor : null;
   const want = anchor.listTypeNew === "want" ? anchor : partner;
   const sale = anchor.listTypeNew === "sale" ? anchor : null;
   const members = partner ? [anchor, partner] : [anchor];
-  const tag = postTag({ have, want, sale });
+  const tags = tagsOf({ have, want, sale });
   return {
     anchor,
     have,
     want,
     sale,
-    tag,
-    buyingOnly: tag === "wtb" && want !== null && openToOf(want) === "buying",
+    tags,
+    tag: sale ? "wts" : have || !want?.matchSale ? "wtt" : "wtb",
     bumpedAt: latest(...members.map((list) => list.bumpedAt)),
     updatedAt: latest(...members.map((list) => list.updatedAt)) ?? anchor.updatedAt,
   };
@@ -81,17 +75,7 @@ function toPost<L extends TradeList>(anchor: L, partner: L | null): Post<L> {
  * one post when both are on Trade. `lists` holds only lists on Trade.
  */
 export function pairPosts<L extends TradeList>(lists: L[]): Post<L>[] {
-  const byId = new Map(lists.map((list) => [list.id, list]));
-  const partnerOf = (list: L) => {
-    if (list.listTypeNew !== "have" || list.linkedListId === null) return null;
-    const partner = byId.get(list.linkedListId);
-    return partner?.listTypeNew === "want" && partner.userId === list.userId ? partner : null;
-  };
-  const absorbed = new Set(lists.flatMap((list) => partnerOf(list)?.id ?? []));
-
-  return lists
-    .filter((list) => !absorbed.has(list.id) && ["have", "want", "sale"].includes(list.listTypeNew))
-    .map((list) => toPost(list, partnerOf(list)));
+  return groupPosts(lists).map((post) => toPost(post.anchor, post.have ? post.want : null));
 }
 
 type Ordered = { bumpedAt: string | null; updatedAt: string; anchor: { id: number } };

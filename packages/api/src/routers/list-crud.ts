@@ -73,8 +73,10 @@ export const listCrud = {
     }) => {
       await limitListWrites(user.id);
       const prepared = await prepareList(input, user.id);
-      const { changed } = await db.transaction((tx) => writeList(tx, prepared));
+      const { slug, changed } = await db.transaction((tx) => writeList(tx, prepared));
       await touchList(changed);
+      // the create dialog offers Post it on the new list
+      return { slug };
     },
   ),
 
@@ -129,7 +131,12 @@ export const listCrud = {
     }) => {
       const list = await findOwnedList(input.slug, user.id);
 
-      const linkedListId = ["have", "want"].includes(list.listTypeNew) ? input.linkedListId : null;
+      const sentLink = input.linkedListId !== undefined;
+      const linkedListId = !["have", "want"].includes(list.listTypeNew)
+        ? null
+        : sentLink
+          ? (input.linkedListId ?? null)
+          : list.linkedListId;
 
       // Validate currency for sale lists
       if (list.listTypeNew === "sale" && !input.currency) {
@@ -143,7 +150,9 @@ export const listCrud = {
         input.profileAddress && !list.isProfileBind
           ? assertProfileOwned(input.profileAddress, user.id)
           : undefined,
-        linkedListId !== null
+        // a save that leaves the link out changes neither the link nor Open to, so a pair saved
+        // before the pair rule can still be edited
+        linkedListId !== null && sentLink
           ? checkLinkedList(
               list.listTypeNew,
               linkedListId,
@@ -179,7 +188,7 @@ export const listCrud = {
       const discoverable = resolveDiscoverable(
         list.listTypeNew,
         list.isProfileBind,
-        input.discoverable,
+        input.discoverable ?? list.discoverable,
       );
 
       const touched = await db.transaction(async (tx) => {

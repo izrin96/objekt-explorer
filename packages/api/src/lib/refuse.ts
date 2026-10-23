@@ -5,12 +5,13 @@ import type { COSMO_LINK_REFUSALS } from "../schemas/cosmo-link";
 import type { LIST_REFUSALS } from "../schemas/list";
 import type { OBJEKT_REFUSALS } from "../schemas/objekts";
 import type { PROFILE_REFUSALS } from "../schemas/profile";
-import type { TRADE_MODE_REFUSALS } from "../schemas/trade";
+import type { TRADE_MODE_REFUSALS, TRADE_POST_REFUSALS } from "../schemas/trade";
 import type { DELETE_REFUSALS, USER_REFUSALS } from "../schemas/user";
 
 export type Refusal =
   | (typeof LIST_REFUSALS)[number]
   | (typeof TRADE_MODE_REFUSALS)[number]
+  | (typeof TRADE_POST_REFUSALS)[number]
   | (typeof COMPARE_REFUSALS)[number]
   | (typeof COSMO_LINK_REFUSALS)[number]
   | (typeof PROFILE_REFUSALS)[number]

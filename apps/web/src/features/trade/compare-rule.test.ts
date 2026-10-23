@@ -62,12 +62,16 @@ describe("canCompare", () => {
     expect(usable("wtt")).toContain("bo-pair-want");
   });
 
-  test("WTB offers have and sale lists only: a want list is disabled, even one linked to a have list", () => {
+  test("WTB offers have and sale lists and want lists open to swaps: a Buying only want list is disabled", () => {
     expect(usable("wtb")).toEqual([
       "have-alone",
       "sale",
+      "swaps-want",
+      "buying-want",
       "pair-have",
+      "pair-swaps-want",
       "buy-pair-have",
+      "buy-pair-want",
       "bo-pair-have",
     ]);
   });
@@ -94,14 +98,14 @@ describe("canCompare", () => {
 
   test("a want list whose pair is off Trade compares alone", () => {
     const only = [list(9, "want", "want", { linkedListId: 10, matchHave: true })];
-    expect(canCompare(only[0]!, only, { mutual: false, type: "wtb" })).toBe(false);
+    expect(canCompare(only[0]!, only, { mutual: false, type: "wts" })).toBe(false);
   });
 });
 
 describe("compareRefusal", () => {
   test("names the rule a disabled list fails", () => {
     expect(compareRefusal(have, lists, { mutual: true, type: "wtt" })).toBe("oneWay");
-    expect(compareRefusal(swapsWant, lists, { mutual: false, type: "wtb" })).toBe("wtb");
+    expect(compareRefusal(buyingOnlyWant, lists, { mutual: false, type: "wtb" })).toBe("wtb");
     expect(compareRefusal(have, lists, { mutual: false, type: "wts" })).toBe("wts");
     expect(compareRefusal(buyingOnlyWant, lists, { mutual: false, type: "wtt" })).toBe("wtt");
   });
@@ -118,7 +122,7 @@ describe("compareRefusal", () => {
 
 describe("comparedList", () => {
   test("a list the type can't use reads as none", () => {
-    expect(comparedList("swaps-want", lists, { mutual: false, type: "wtb" })).toBeUndefined();
+    expect(comparedList("buying-only-want", lists, { mutual: false, type: "wtb" })).toBeUndefined();
     expect(comparedList("have-alone", lists, { mutual: false, type: "wts" })).toBeUndefined();
   });
 

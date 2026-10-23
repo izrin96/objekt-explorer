@@ -169,8 +169,10 @@ export const editListInputSchema = z.object({
   description: z.string().max(5000).nullable(),
   currency: z.string().max(10).nullable(),
   hideSerial: z.boolean(),
-  linkedListId: z.number().nullable(),
-  discoverable: z.boolean(),
+  // optional: the post composer sets a have or want list's link and Trade state, so the list form
+  // leaves them out and the list keeps its own; `null` is still an unlink
+  linkedListId: z.number().nullable().optional(),
+  discoverable: z.boolean().optional(),
   // optional: a tab opened before the switch existed leaves the list's setting alone
   matchSale: z.boolean().optional(),
   matchHave: z.boolean().optional(),

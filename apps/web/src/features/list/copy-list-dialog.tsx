@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { Form } from "@/components/ui/form";
 import { Spinner } from "@/components/ui/spinner";
-import { useUserLists, useUserProfiles } from "@/features/user/hooks";
+import { useUserProfiles } from "@/features/user/hooks";
 import { type FieldErrors, zodErrors } from "@/lib/form";
 import type { client } from "@/lib/orpc";
 import { orpc } from "@/lib/orpc";
@@ -92,7 +92,6 @@ function toCopyDraft(list: StoredList): ListDraft {
 }
 
 function CopyListForm({ list, onDone }: { list: StoredList; onDone: () => void }) {
-  const lists = useUserLists();
   const profiles = useUserProfiles();
   const copy = useCopyList();
   const [draft, setDraft] = useState<ListDraft>(() => toCopyDraft(list));
@@ -131,7 +130,6 @@ function CopyListForm({ list, onDone }: { list: StoredList; onDone: () => void }
           mode="create"
           value={draft}
           onChange={setDraft}
-          lists={lists}
           profiles={profiles}
           notice={
             needsPreview && preview ? (

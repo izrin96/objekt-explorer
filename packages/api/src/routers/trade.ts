@@ -15,13 +15,15 @@ import {
   listMatchCountInputSchema,
   mutualCountInputSchema,
   personInputSchema,
+  savePostInputSchema,
   setShowOnTradeInputSchema,
   tabCountsInputSchema,
   tabCountsOutputSchema,
+  takeDownPostInputSchema,
   tradePartnerInputSchema,
 } from "../schemas/trade";
 import { toPublicUser } from "../services/profile";
-import { ipRateLimited, userRateLimited } from "../services/redis";
+import { ipRateLimited, refuseOverUserLimit, userRateLimited } from "../services/redis";
 import { bumpTradeVersions } from "../services/safety-cache";
 import {
   browseFeed,
@@ -39,6 +41,7 @@ import {
   withReputation,
 } from "../services/trade-matches";
 import { mutualCount } from "../services/trade-matches/mutual";
+import { savePost, takeDownPost } from "../services/trade-post";
 import { tabCounts } from "../services/trade-tabs";
 
 /**
@@ -52,6 +55,9 @@ async function limitFeed(userId: string | undefined, headers: Headers | undefine
   if (limited)
     refuse("TOO_MANY_REQUESTS", "user_rate_limit", "Too many requests, try again shortly");
 }
+
+// a sale list's save moves the market version, which every viewer's trade caches read
+const limitPostWrites = (userId: string) => refuseOverUserLimit("trade-post", userId, 60, 3600);
 
 export const tradeRouter = {
   /** Public; viewer fields are present only with a session. */
@@ -75,6 +81,19 @@ export const tradeRouter = {
     .handler(async ({ input: { slug, on }, context: { session } }) =>
       setShowOnTrade(session.user.id, slug, on),
     ),
+
+  /** Creates or edits a post: its lists, their link, the want list's Open to and Trade state, at once. */
+  savePost: authed.input(savePostInputSchema).handler(async ({ input, context: { session } }) => {
+    await limitPostWrites(session.user.id);
+    return savePost(session.user.id, input);
+  }),
+
+  takeDownPost: authed
+    .input(takeDownPostInputSchema)
+    .handler(async ({ input: { slug }, context: { session } }) => {
+      await limitPostWrites(session.user.id);
+      return takeDownPost(session.user.id, slug);
+    }),
 
   collectionPostCounts: pub
     .input(collectionPostCountsInputSchema)

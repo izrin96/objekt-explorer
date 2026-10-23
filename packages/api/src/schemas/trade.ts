@@ -1,6 +1,7 @@
 import * as z from "zod";
 
 import { collectionFiltersSchema } from "./common/filters";
+import { POST_KINDS } from "./trade-post";
 
 const TRADE_FILTERS = ["all", "mutual", "they_have", "they_want"] as const;
 export type TradeFilter = (typeof TRADE_FILTERS)[number];
@@ -173,6 +174,20 @@ export const mutualCountInputSchema = z.object({ list: z.string().min(1).optiona
 
 export const setShowOnTradeInputSchema = z.object({ slug: z.string(), on: z.boolean() });
 
+/** A post by what it is for and its lists, each by slug; `replaces` names the post being edited by its anchor list's slug. */
+export const savePostInputSchema = z.object({
+  kind: z.enum(POST_KINDS),
+  have: z.string().min(1).nullish(),
+  want: z.string().min(1).nullish(),
+  sale: z.string().min(1).nullish(),
+  alsoPay: z.boolean().default(false),
+  unpair: z.boolean().default(false),
+  replaces: z.string().min(1).nullish(),
+});
+
+/** Any list of the post names it. */
+export const takeDownPostInputSchema = z.object({ slug: z.string().min(1) });
+
 export const collectionPostCountsInputSchema = z.object({ slug: z.string() });
 
 /** `data.reason` on a trade partner search the list or mode can't serve. */
@@ -182,3 +197,13 @@ export const TRADE_MODE_REFUSALS = [
   "trade_mode_have_to_want",
   "trade_mode_want_to_have",
 ] as const;
+
+/** `data.reason` on a refused `trade.savePost`. */
+export const TRADE_POST_REFUSALS = [
+  "trade_post_list_in_post",
+  "trade_post_list_paired",
+  "trade_post_needs_profile",
+  "trade_post_wrong_type",
+  "trade_post_empty",
+] as const;
+export type TradePostRefusal = (typeof TRADE_POST_REFUSALS)[number];

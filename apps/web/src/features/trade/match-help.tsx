@@ -54,6 +54,7 @@ const SECTIONS: Section[] = [
         },
       ],
     },
+    note: m.trade_help_tags_note,
   },
   {
     heading: m.trade_help_mutual_heading,

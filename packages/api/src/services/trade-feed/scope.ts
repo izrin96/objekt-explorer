@@ -3,7 +3,7 @@ import { redis, redisFailOpen } from "../redis";
 
 const SCOPE_TTL_SECONDS = 3600;
 
-const keyOf = (viewerId: string, token: string) => `trade:feed-scope:1:${viewerId}:${token}`;
+const keyOf = (viewerId: string, token: string) => `trade:feed-scope:2:${viewerId}:${token}`;
 
 /** The token a set of people is stored under: the same people always give the same one. */
 export function scopeToken(seen: SeenPeople) {
@@ -31,7 +31,7 @@ export async function saveScope(viewerId: string, token: string, seen: SeenPeopl
 const ORDER_TTL_SECONDS = 3600;
 
 const orderKey = (viewerId: string | null, token: string) =>
-  `trade:people-order:1:${viewerId ?? "anon"}:${token}`;
+  `trade:people-order:2:${viewerId ?? "anon"}:${token}`;
 
 type StoredOrder = PeopleOrder & { v: 1; filters: string };
 

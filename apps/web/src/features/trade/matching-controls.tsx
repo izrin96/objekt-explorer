@@ -1,9 +1,7 @@
 import type { PostType } from "@repo/api/schemas/trade";
 import { useQuery } from "@tanstack/react-query";
-import { useId } from "react";
 
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
 import { SingleSelect } from "@/features/filters/single-select";
 import { LIST_TYPE_LABEL } from "@/features/list/list-type-badge";
 import { cn } from "@/lib/utils";
@@ -42,49 +40,51 @@ type MatchingProps = {
   onChange: (patch: { match?: Mode; list?: string | undefined }) => void;
 };
 
-function MutualSwitch({
-  id,
-  checked,
+/** A toggle button, so it reads as pressed or not and needs no label of its own beside it. */
+function MutualButton({
+  pressed,
   onChange,
   count,
   shown,
-  className,
 }: {
-  id: string;
-  checked: boolean;
+  pressed: boolean;
   onChange: (on: boolean) => void;
   count: number;
   shown: string;
-  className: string;
 }) {
   return (
-    <span className={cn("flex items-center gap-2", className)}>
-      <Switch id={id} checked={checked} onCheckedChange={onChange} />
-      <Label
-        htmlFor={id}
-        className="text-sm whitespace-nowrap"
-        aria-label={
-          count > 0
-            ? m.trade_tab_with_count({ label: m.trade_mutual_only(), count: shown })
-            : undefined
-        }
-      >
-        {m.trade_mutual_only()}
-        {count > 0 ? (
-          <span aria-hidden className="text-muted-foreground font-mono text-xs tabular-nums">
-            {shown}
-          </span>
-        ) : null}
-      </Label>
-    </span>
+    <Button
+      type="button"
+      size="sm"
+      variant={pressed ? "default" : "outline"}
+      aria-pressed={pressed}
+      className="whitespace-nowrap"
+      aria-label={
+        count > 0
+          ? m.trade_tab_with_count({ label: m.trade_mutual_only(), count: shown })
+          : undefined
+      }
+      onClick={() => onChange(!pressed)}
+    >
+      {m.trade_mutual_only()}
+      {count > 0 ? (
+        <span
+          aria-hidden
+          className={cn(
+            "font-mono text-xs tabular-nums",
+            pressed ? "opacity-72" : "text-muted-foreground",
+          )}
+        >
+          {shown}
+        </span>
+      ) : null}
+    </Button>
   );
 }
 
-/** The switch counts the people Mutual would list for the compared lists, so its number only ever means mutual. */
+/** The button counts the people Mutual would list for the compared lists, so its number only ever means mutual. */
 export function MatchingControls(props: MatchingProps) {
   const { mode, urlType, list, tradeLists, onChange } = props;
-  const phoneId = useId();
-  const wideId = useId();
   const mutual = mode === "mutual";
   const scope = scopeOf(mode, urlType);
   const selected = comparedList(list, tradeLists, scope);
@@ -100,18 +100,10 @@ export function MatchingControls(props: MatchingProps) {
     onChange({ match: next, list: comparedList(list, tradeLists, scopeOf(next, urlType))?.slug });
   };
 
+  // each control is its own item of the filter row, so the row wraps between them on phones
   return (
     <>
-      {/* the switch leads on phones and follows Compare with from `md`, in the DOM too, so Tab follows what is drawn */}
-      <MutualSwitch
-        id={phoneId}
-        checked={mutual}
-        onChange={setMutual}
-        count={count}
-        shown={shown}
-        className="max-md:order-1 md:hidden"
-      />
-      <span className="order-3 flex items-center gap-1">
+      <span className="order-3 flex">
         <SingleSelect
           label={m.trade_list_label()}
           options={[
@@ -134,17 +126,11 @@ export function MatchingControls(props: MatchingProps) {
           showValue
           onChange={(value) => onChange({ list: value === ALL_LISTS ? undefined : value })}
         />
+      </span>
+      <span className="order-3 flex items-center gap-1">
+        <MutualButton pressed={mutual} onChange={setMutual} count={count} shown={shown} />
         <MatchHelp />
       </span>
-
-      <MutualSwitch
-        id={wideId}
-        checked={mutual}
-        onChange={setMutual}
-        count={count}
-        shown={shown}
-        className="max-md:hidden md:order-4 md:ml-auto"
-      />
     </>
   );
 }

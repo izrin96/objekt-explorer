@@ -7,10 +7,18 @@ import { PERSON_POST_LIMIT, type PostType } from "../../schemas/trade";
 import { notBlockedEither, notTradeSanctioned } from "../safety";
 import { takesPartInTradeSql } from "../trade-lists";
 
-/** As `postTag` tags a post: a want list alone that matches swaps only is WTT, not WTB. */
+/**
+ * The SQL twin of `tagsOf` (schemas/trade-post.ts): WTT for a have list or a want list alone open
+ * to swaps, WTB for a want side open to buying (a want list alone, or a have list's partner on
+ * Trade), WTS for a sale list. `wtt` reads no partner column, since `excludeWttOf` negates it.
+ */
 const TAG_WHERE: Record<PostTag, SQL> = {
-  wtt: sql`(posts.type = 'have' OR (posts.type = 'want' AND NOT posts.match_sale))`,
-  wtb: sql`(posts.type = 'want' AND posts.match_sale)`,
+  wtt: sql`(posts.type = 'have' OR (posts.type = 'want' AND posts.match_have))`,
+  wtb: sql`(
+    (posts.type = 'want' AND (posts.match_sale OR NOT posts.match_have))
+    OR (posts.type = 'have' AND posts.partner_id IS NOT NULL
+      AND (coalesce(posts.partner_match_sale, false) OR NOT coalesce(posts.partner_match_have, true)))
+  )`,
   wts: sql`posts.type = 'sale'`,
 };
 
@@ -32,6 +40,8 @@ export const postsCte = sql`
       a.match_sale,
       a.match_have,
       p.id AS partner_id,
+      p.match_sale AS partner_match_sale,
+      p.match_have AS partner_match_have,
       -- milliseconds, so the ISO cursor names a row exactly; a post never bumped sorts by its
       -- last change
       date_trunc(

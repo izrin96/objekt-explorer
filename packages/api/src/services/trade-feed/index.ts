@@ -49,6 +49,7 @@ import type { PostCardView } from "../../schemas/chat";
 import type { CollectionFilters } from "../../schemas/common/filters";
 import type { ListTypeNew } from "../../schemas/list";
 import { type BrowseFilters, type BrowseMatchMode, type FeedCursor } from "../../schemas/trade";
+import { postKindOf } from "../../schemas/trade-post";
 import { getCollectionFilters } from "../activity-feed";
 import {
   fetchCollectionsBySlug,
@@ -240,7 +241,7 @@ export async function loadPosts(ctx: LoadContext, rows: FeedRow[], need: number)
       posts.push({
         id: post.anchor.id,
         tag: post.tag,
-        buyingOnly: post.buyingOnly,
+        tags: post.tags,
         narrowed,
         userId: account.id,
         user: toPublicUser(account),
@@ -442,8 +443,20 @@ export async function fetchMyPosts(userId: string) {
       id: post.anchor.id,
       slug: post.anchor.slug,
       tag: post.tag,
+      tags: post.tags,
+      kind: postKindOf(post).kind,
+      alsoPay: postKindOf(post).alsoPay,
       lists: [post.have, post.want, post.sale].flatMap((list) =>
-        list ? [{ slug: list.slug, name: list.name, listTypeNew: list.listTypeNew }] : [],
+        list
+          ? [
+              {
+                slug: list.slug,
+                name: list.name,
+                listTypeNew: list.listTypeNew,
+                role: list.listTypeNew as "have" | "want" | "sale",
+              },
+            ]
+          : [],
       ),
       listed: !isPostIdle(post, now),
       bumpedAt: iso(post.bumpedAt),
