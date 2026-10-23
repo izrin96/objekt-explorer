@@ -32,14 +32,14 @@ import { AboutDialog, DISCORD_INVITE } from "./about";
  */
 const CHANGELOG = [
   {
-    date: "2026-10-23",
+    date: "2026-10-24",
     items: [
       "Added a Trade page: Browse lists trade and sale posts, and For you (formerly Trade Matches) finds people to trade with across all your lists.",
-      "Lists now have one Show on Trade or Show on Market switch, replacing Discoverable.",
+      "Post your lists on Trade to swap, sell or buy.",
       "Added Messages and offers. Accepted trades are verified on-chain.",
       "Added notifications for offers, trades and want list matches.",
-      "Want lists now have an Open to option: Trade only, or Trade or buy.",
       "Added an Account page for all your settings.",
+      "Desktop shows every filter on the toolbar.",
       "Removed Hide User.",
     ],
   },
