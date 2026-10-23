@@ -555,6 +555,7 @@ export async function fetchPostCards(
     const address = post.anchor.profileAddress?.toLowerCase() ?? null;
     result.set(id, {
       tag: post.tag,
+      tags: post.tags,
       owner: {
         userId: account.id,
         name: toPartnerIdentity(

@@ -276,12 +276,17 @@ const postSideViewSchema = z.object({
   copyCount: z.number().optional(),
 });
 
+const postTagSchema = z.enum(POST_TYPES).exclude(["all"]);
+
 /** A Trade post as the thread draws it, read live; `post` is null once the post is gone. */
 export const postCardViewSchema = z.object({
   listId: z.number(),
   post: z
     .object({
-      tag: z.enum(POST_TYPES).exclude(["all"]),
+      /** the one tag that picks the suggested opening message */
+      tag: postTagSchema,
+      /** every tag the post lists under on Browse, as its badges */
+      tags: postTagSchema.array(),
       owner: z.object({ userId: z.string(), name: z.string() }),
       /** the post's own list, which the card links to */
       list: z.object({

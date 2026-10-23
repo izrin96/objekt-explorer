@@ -42,3 +42,14 @@ export function TagBadge({ tag }: { tag: PostTag }) {
     </Badge>
   );
 }
+
+/** A post's tags side by side, in `tagsOf` order. */
+export function TagBadges({ tags, className }: { tags: PostTag[]; className?: string }) {
+  return (
+    <span className={cn("flex shrink-0 items-center gap-1", className)}>
+      {tags.map((tag) => (
+        <TagBadge key={tag} tag={tag} />
+      ))}
+    </span>
+  );
+}

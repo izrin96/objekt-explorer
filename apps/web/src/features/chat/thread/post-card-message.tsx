@@ -7,7 +7,7 @@ import { formatPostPrices } from "@/features/chat/format";
 import { getListLinkOption } from "@/features/list/list-link";
 import { LIST_TYPE_LABEL } from "@/features/list/list-type-badge";
 import { OfferThumb } from "@/features/offers/offer-item";
-import { TagBadge } from "@/features/trade/tag-label";
+import { TagBadges } from "@/features/trade/tag-label";
 import { TONE_INK } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -40,7 +40,7 @@ export function PostCardMessage({
       {action ? <div className="absolute end-1 top-1">{action}</div> : null}
       {post ? (
         <p className={cn("flex min-w-0 items-center gap-2", action && "pe-7")}>
-          <TagBadge tag={post.tag} />
+          <TagBadges tags={post.tags} />
           <span className="min-w-0 truncate font-medium">
             {m.chat_post_title({ name: post.owner.name })}
           </span>

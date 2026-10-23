@@ -29,7 +29,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { collectionName } from "@/features/objekt/objekt-label";
 import { offerNo } from "@/features/offers/format";
 import { OfferThumb } from "@/features/offers/offer-item";
-import { TagBadge } from "@/features/trade/tag-label";
+import { TagBadges } from "@/features/trade/tag-label";
 import { useMinuteClock } from "@/hooks/use-minute-clock";
 import { relativeTime } from "@/lib/time";
 import { cn } from "@/lib/utils";
@@ -373,7 +373,7 @@ function ConversationItem({
           <div className="mt-1 flex min-w-0 items-center gap-2">
             {contextPost.post ? (
               <>
-                <TagBadge tag={contextPost.post.tag} />
+                <TagBadges tags={contextPost.post.tags} />
                 <span className="text-muted-foreground min-w-0 truncate font-mono text-xs">
                   {m.chat_post_title({ name: contextPost.post.owner.name })}
                 </span>

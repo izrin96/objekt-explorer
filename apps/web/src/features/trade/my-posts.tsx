@@ -23,7 +23,7 @@ import { summarizePosts } from "./my-posts-summary";
 import { KIND_LABEL } from "./post-list-dialog";
 import { postTime } from "./post-time";
 import { myPostsOptions } from "./queries";
-import { TagBadge } from "./tag-label";
+import { TagBadges } from "./tag-label";
 
 type MyPostsProps = { onNew: () => void; onEdit: (slug: string) => void };
 
@@ -210,11 +210,7 @@ function MyPostRow({
     <li className="flex items-start justify-between gap-3 px-4 py-3">
       <div className="flex min-w-0 flex-col gap-1">
         <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-sm">
-          <span className="flex items-center gap-1">
-            {post.tags.map((tag) => (
-              <TagBadge key={tag} tag={tag} />
-            ))}
-          </span>
+          <TagBadges tags={post.tags} />
           <span className="font-medium">{KIND_LABEL[post.kind]()}</span>
           {post.lists.map((list) => (
             <span key={list.slug} className="flex min-w-0 items-center gap-1.5">

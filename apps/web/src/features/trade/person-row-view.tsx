@@ -23,7 +23,7 @@ import { leadPost, listCount, type MatchBand, matchBand, orderPosts } from "./pe
 import { EmptySide, isEmptySide, SideStrip } from "./post-side";
 import { postTime } from "./post-time";
 import type { PersonData, PersonPostData } from "./post-types";
-import { TagBadge } from "./tag-label";
+import { TagBadges } from "./tag-label";
 import { TradeActions, type TradeContact } from "./trade-actions";
 import { TradeHeader } from "./trade-header";
 import { TradeSides } from "./trade-row";
@@ -144,13 +144,7 @@ function PostBlock({
 }) {
   const shown = own ? unringed(post) : post;
   const strips = shown.sides.filter((side) => !isEmptySide(side));
-  const tag = (
-    <span className="flex shrink-0 flex-wrap items-center gap-1 font-sans normal-case">
-      {post.tags.map((item) => (
-        <TagBadge key={item} tag={item} />
-      ))}
-    </span>
-  );
+  const tag = <TagBadges tags={post.tags} className="flex-wrap font-sans normal-case" />;
   return (
     <FramePanel className="flex min-w-0 flex-col gap-2 p-3">
       {/* the tag leads the first strip's label; a post with no strip keeps it on a line of its own */}
