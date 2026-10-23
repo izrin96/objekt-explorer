@@ -35,8 +35,8 @@ import { isBlockedEither, type Tx } from "./moderation";
 import { getCollectionColumns, getPartialCollectionColumns } from "./objekt";
 import { isProfileHidden } from "./privacy";
 import { assertProfileOwned, toPublicUser } from "./profile";
-import { redis } from "./redis";
 import { isBanned } from "./safety";
+import { versionCounter } from "./safety-cache";
 import { TOKEN_CHUNK_SIZE } from "./utils";
 
 interface ListEntryTransformConfig {
@@ -531,7 +531,7 @@ export async function generateProfileSlug(
 
 /** Every list or entry write calls this once committed, so idle ranking and the cached trade matches stay right. */
 export function touchList(listIds: number[]) {
-  return touchListWith(redis, listIds);
+  return touchListWith(versionCounter, listIds);
 }
 
 export type NewList = z.infer<typeof createListInputSchema> & { gridColumns?: number | null };
