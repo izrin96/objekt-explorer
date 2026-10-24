@@ -152,7 +152,7 @@ The feed SHALL offer these filters, each kept in the URL:
 - Artist (`artist`): a row of toggles, All then each artist in the app's artist picker selection, before the other filters. All clears it. More than one artist MAY be on. The row SHALL be hidden when the selection holds one artist.
 - Member (`member`), season (`season`), class (`class`), online/offline (`on_offline`) and collection number (`collection`), with the same controls, filter sheet, active chips and Reset as the other collection pages, and the same parameter names and values. The online/offline filter and its chip SHALL be labelled Type, as on every other page, even beside the Post type menu.
 - One collection (`slug`, a collection slug): keep posts with that collection on any side.
-- On For you only, Mutual only (`match`) and Compare with (`list`), after the Post type menu on the same row (see Matches and Compare with). Under Any and Mutual, only posts holding at least one objekt that matches the viewer are kept: the objekts the rings mark (see Narrowing). Each post is judged on its own lists, not on the owner's other lists.
+- On For you only, Can swap (`match`) and Compare with (`list`), after the Post type menu on the same row (see Matches and Compare with). Under Any and Mutual, only posts holding at least one objekt that matches the viewer are kept: the objekts the rings mark (see Narrowing). Each post is judged on its own lists, not on the owner's other lists.
 
 Below `md`, Browse and For you SHALL fold every collection filter (artist, member, season, class, Type and collection number) into the filter sheet, leaving none on the toolbar. The sheet's button SHALL read Filters, followed by the number of active collection filters when there are any. Other pages keep their own toolbar.
 
@@ -178,8 +178,8 @@ The header sentence SHALL count the person across all of their listed lists, and
 The posts left out SHALL be left out by the server, so every page of the feed holds up to a full page of people. The order is newest bump first on Browse, as Mutual order defines under Mutual, and as the Mutual and One way sections define under Any (see Matches and Compare with). The filters SHALL combine. When no post is listed:
 - on For you with a collection filter or `slug` set, under Any or Mutual, it SHALL say that no posts match the filters and offer Reset, which keeps `match` and `list`;
 - otherwise under Any, the feed SHALL say that no posts match the viewer's lists and offer to show all posts on Browse, keeping the filters;
-- otherwise under Mutual, it SHALL say that no one matches the viewer both ways and offer to switch to Any;
-- under Any and Mutual, while Compare with names a list, the message SHALL name it ("No posts match spares", "No one matches spares both ways");
+- otherwise under Mutual, it SHALL say that no one can swap with the viewer and offer to switch to Any;
+- under Any and Mutual, while Compare with names a list, the message SHALL name it ("No posts match spares", "No one can swap with you for spares");
 - with other filters set, it SHALL offer Reset.
 
 A filter value that does not parse SHALL be ignored.
@@ -242,7 +242,7 @@ A filter value that does not parse SHALL be ignored.
 
 #### Scenario: Only matches
 - **WHEN** a signed-in viewer with a want list holding SeoYeon 204Z opens `/trade?matches=1` from an older link
-- **THEN** For you opens with Mutual only off, a post whose have side holds SeoYeon 204Z stays, showing SeoYeon 204Z and not its other objekts, and a post that matches none of the viewer's lists is no longer listed
+- **THEN** For you opens with Can swap off, a post whose have side holds SeoYeon 204Z stays, showing SeoYeon 204Z and not its other objekts, and a post that matches none of the viewer's lists is no longer listed
 
 #### Scenario: Pages stay full
 - **WHEN** only 1 of every 10 posts matches the viewer and Matches is Any
@@ -258,7 +258,7 @@ A filter value that does not parse SHALL be ignored.
 
 #### Scenario: Nobody mutual
 - **WHEN** Matches is Mutual and no one matches the viewer both ways
-- **THEN** the feed says no one matches the viewer both ways, with a control that switches to Any
+- **THEN** the feed says "No one can swap with you", with a control that switches to Any
 
 #### Scenario: Nothing passes the filters
 - **WHEN** the viewer, on Browse, filters to a season no post holds
@@ -340,7 +340,7 @@ Browse SHALL list the viewer's own row, so they can see where a bump put them, w
 
 #### Scenario: Old link
 - **WHEN** the viewer opens `/trade?match=mutual` from an older link
-- **THEN** the browser is at `/trade/for-you?match=mutual` and Mutual only is on
+- **THEN** the browser is at `/trade/for-you?match=mutual` and Can swap is on
 
 #### Scenario: Signed out
 - **WHEN** a visitor without a session opens `/trade`
@@ -669,7 +669,7 @@ Rows, buttons, avatars and backgrounds SHALL stay neutral.
 - **THEN** the 2 in the sentence is indigo, the HAVE label is teal and the WANT label amber, and the chips read "14 you want" and "2 you have"
 
 ### Requirement: Matches and Compare with
-For you (`/trade/for-you`) SHALL list the same people as Browse, in the same rows and with the same Post type menu and facets, narrowed by matching. It SHALL carry a Mutual only toggle button, pressed or not (see Layout for where it sits). Not pressed is Any, the default; pressed is Mutual:
+For you (`/trade/for-you`) SHALL list the same people as Browse, in the same rows and with the same Post type menu and facets, narrowed by matching. It SHALL carry a toggle button labelled Can swap, pressed or not (see Layout for where it sits). Not pressed is Any, the default; pressed is Mutual, which the viewer sees named Can swap, never Mutual; the URL keeps `match=mutual`:
 - **Any**: only posts holding at least one objekt that matches the viewer are kept, judged on each post's own lists (see Filters), and only people with a kept post are listed, in two sections (see Any order).
 - **Mutual**: only people whose mutual score is above zero, as the person's header sentence computes it (see Matches to the signed-in viewer). Of those people's posts, only those holding a match are kept, as under Any.
 
@@ -677,7 +677,7 @@ For you (`/trade/for-you`) SHALL list the same people as Browse, in the same row
 - a signed-out visitor opening it SHALL be sent to `/login`, and back to the same For you address after signing in;
 - a signed-in viewer without such a list SHALL be sent to `/trade`, keeping the filters and `person`, and dropping `match` and `list`.
 
-**Post type menu.** On Browse and For you, the post type SHALL be one menu labelled Post type, offering All, WTT, WTB and WTS, with each tag spelled out ("WTT · Want to trade"). It replaces the Type tabs, so the controls beside it never move. Mutual is a swap between two people, and a WTB or WTS post is one-way money, so Mutual SHALL list WTT posts only: the menu SHALL read WTT with every other option disabled, a `type` in the URL or in a request SHALL be ignored, by the server as well as the page, and turning Mutual only on SHALL drop it from the URL. Who counts as Mutual is unchanged (see Matches to the signed-in viewer).
+**Post type menu.** On Browse and For you, the post type SHALL be one menu labelled Post type, offering All, WTT, WTB and WTS, with each tag spelled out ("WTT · Want to trade"). It replaces the Type tabs, so the controls beside it never move. Mutual is a swap between two people, and a WTB or WTS post is one-way money, so Mutual SHALL list WTT posts only: the menu SHALL read WTT with every other option disabled, a `type` in the URL or in a request SHALL be ignored, by the server as well as the page, and turning Can swap on SHALL drop it from the URL. Who counts as Mutual is unchanged (see Matches to the signed-in viewer).
 
 **Default and URL.** The option SHALL live in the URL as `match`, with the values `any` and `mutual`. With no `match`, or a value that does not parse, Any SHALL apply. Browse's `type`, `slug`, facet and `person` parameters SHALL carry the same meaning on For you.
 
@@ -692,11 +692,11 @@ Each person SHALL be one row holding their kept posts (see Trade card). Every Mu
 1. **Mutual**: exactly the people Mutual lists for the same filters and Compare with choice, in Mutual order. Each row SHALL hold all of the person's kept posts, in the Trade card's order. A person Mutual ranks who has no kept WTT post SHALL be listed under One way instead. With WTB or WTS picked in the Post type menu there is no Mutual section, since Mutual lists WTT posts only.
 2. **One way**: every other person Any keeps. People SHALL be listed most matches first, by the sum of both counts and then the most recent change to any of their matched lists, among the people matching ranks (at most its 1000 candidates). After them comes anyone else Any keeps, by their newest bump. A person SHALL be listed in one section only.
 
-Each section SHALL open with a heading, Mutual or One way, with no count, over its first row. A section with no people SHALL have no heading. Under Mutual only there SHALL be no section heading. The feed SHALL load 12 people at a time across the sections, continuing after the last person it showed, and SHALL not list a person twice when the ranking is worked out again between two loads. The empty states of Filters are unchanged.
+Each section SHALL open with a heading, Can swap (for Mutual) or One way, with no count, over its first row. A section with no people SHALL have no heading. Under Can swap there SHALL be no section heading. The feed SHALL load 12 people at a time across the sections, continuing after the last person it showed, and SHALL not list a person twice when the ranking is worked out again between two loads. The empty states of Filters are unchanged.
 
 **Description.** Under the tabs, For you's description SHALL read "People who match your lists, best match first." Below `md`, neither tab SHALL show its description.
 
-**Mutual N.** The Mutual only button SHALL read "Mutual only N", pressed or not, N being how many people Mutual lists for the current Compare with choice: people with at least one matching WTT post, with no artist or collection filter applied, so N stays put while the viewer filters. A one-way list, which Mutual can't use, counts as All my lists:
+**Mutual N.** The Can swap button SHALL read "Can swap N", pressed or not, N being how many people Mutual lists for the current Compare with choice: people with at least one matching WTT post, with no artist or collection filter applied, so N stays put while the viewer filters. A one-way list, which Mutual can't use, counts as All my lists:
 - a count of zero SHALL show the label with no number;
 - a count above 99 SHALL read "99+";
 - N SHALL be in monospace, and the accessible name SHALL include it;
@@ -712,7 +712,7 @@ Each section SHALL open with a heading, Mutual or One way, with no count, over i
   - **WTB**: a WTB post is the poster's want list open to buying, alone or paired with a have list (a Swap post that would also pay). The viewer's have and sale lists match its want side, and the viewer's want list open to swaps (Swaps only, or Swaps or buying) matches a pair's have side, so those SHALL be offered. A Buying only want list matches neither and SHALL be disabled;
   - **WTS**: a WTS post is a sale list, matched against the viewer's want lists open to buying, so only a want list open to buying (Swaps or buying, or Buying only) SHALL be offered. A have list, a sale list and a Swaps only want list SHALL be disabled, a have list even when it is linked to a want list open to buying;
   - **Mutual**: as above, and it fixes the type to WTT.
-- Changing the Post type to one that can't use the selected list SHALL reset Compare with to All my lists, as turning on Mutual does. Turning Mutual only off SHALL check the kept list against the URL's `type`, which applies again, and reset Compare with to All my lists when that type can't use it.
+- Changing the Post type to one that can't use the selected list SHALL reset Compare with to All my lists, as turning on Mutual does. Turning Can swap off SHALL check the kept list against the URL's `type`, which applies again, and reset Compare with to All my lists when that type can't use it.
 - A `list` that is not one of the viewer's lists that take part, or that the current option or Post type can't use, SHALL read as All my lists: in the menu, the compared-lists line and the feed request, which SHALL not send it. The URL is left as it is until the next change.
 - The compared lists SHALL replace the viewer's lists everywhere matching shows on For you: the header sentences, the list counts, the rings, Any and Mutual.
 - While Compare with names a list, one line under the controls SHALL say what is compared: the named list with its linked list, or the named list alone and which way it compares. With All my lists, no line SHALL show.
@@ -724,15 +724,15 @@ The help beside the controls SHALL describe the mutual score as what the two peo
 - `/trade?match=off` SHALL drop `match` and `list` and stay on Browse;
 - on a viewer who can't use For you, the redirected address then sends them on as Who sees it says.
 
-**Layout.** On every width, Compare with, the Mutual only button and the help SHALL follow the Post type menu in that order; from `md` up they sit on the facet row after a divider. Below `md`, the Filters button, Reset, the Post type menu, Compare with, the Mutual only button and the help SHALL sit in that order in one row that wraps onto further lines when it doesn't fit, so the page doesn't scroll sideways. The DOM order SHALL match the visual order, so keyboard order follows it. The compared-lists line SHALL sit under the row. There SHALL be no separate Matching button or sheet. A change SHALL apply at once.
+**Layout.** On every width, Compare with, the Can swap button and the help SHALL follow the Post type menu in that order; from `md` up they sit on the facet row after a divider. Below `md`, the Filters button, Reset, the Post type menu, Compare with, the Can swap button and the help SHALL sit in that order in one row that wraps onto further lines when it doesn't fit, so the page doesn't scroll sideways. The DOM order SHALL match the visual order, so keyboard order follows it. The compared-lists line SHALL sit under the row. There SHALL be no separate Matching button or sheet. A change SHALL apply at once.
 
 #### Scenario: Default is Any
 - **WHEN** a signed-in viewer with want list "binary hunt" opens `/trade/for-you` with no parameters
-- **THEN** Mutual only is off, Compare with reads All my lists with no compared-lists line under it, and only posts holding an objekt that matches the viewer's lists are listed, narrowed and ringed
+- **THEN** Can swap is off, Compare with reads All my lists with no compared-lists line under it, and only posts holding an objekt that matches the viewer's lists are listed, narrowed and ringed
 
 #### Scenario: Turn matching off
 - **WHEN** the viewer on For you wants every post
-- **THEN** For you offers only the Mutual only button, and the viewer activates the Browse tab instead
+- **THEN** For you offers only the Can swap button, and the viewer activates the Browse tab instead
 
 #### Scenario: Old Browse link
 - **WHEN** a signed-in viewer with a want list opens `/trade?match=mutual&list=spares` from an older link
@@ -747,19 +747,19 @@ The help beside the controls SHALL describe the mutual score as what the two peo
 - **THEN** the browser is at `/trade` and every post is listed
 
 #### Scenario: Mutual ranks people
-- **WHEN** the viewer turns on Mutual only, and rin.trades has a mutual score of 3 with two posts and kaede.k has a mutual score of 1 with one post bumped more recently than either
+- **WHEN** the viewer turns on Can swap, and rin.trades has a mutual score of 3 with two posts and kaede.k has a mutual score of 1 with one post bumped more recently than either
 - **THEN** the URL carries `match=mutual`, rin.trades's row is listed first holding both posts, and kaede.k's row follows
 
 #### Scenario: Sale-only person under Mutual
 - **WHEN** jinsoul.blue matches the viewer both ways only through sale lists, against want lists open to swaps or buying
-- **THEN** jinsoul.blue is listed under Any in the One way section, is not listed under Mutual only, and is not counted in Mutual N
+- **THEN** jinsoul.blue is listed under Any in the One way section, is not listed under Can swap, and is not counted in Mutual N
 
 #### Scenario: Sale-only person against a swaps-only want list
 - **WHEN** jinsoul.blue's only match in one direction is a sale list against a want list open to swaps only
 - **THEN** that direction counts 0, and jinsoul.blue's posts are listed under Any if they match the other way, and not under Mutual
 
 #### Scenario: Type under Mutual
-- **WHEN** under Any the viewer picks WTS in the Post type menu and then turns on Mutual only
+- **WHEN** under Any the viewer picks WTS in the Post type menu and then turns on Can swap
 - **THEN** the menu reads WTT with All, WTB and WTS disabled, the URL no longer carries `type`, only WTT posts are listed, and the button stays where it was
 
 #### Scenario: More under Mutual
@@ -771,7 +771,7 @@ The help beside the controls SHALL describe the mutual score as what the two peo
 - **THEN** the URL carries `list=spares`, the line reads "What you have: spares. What you want: binary hunt.", header sentences, list counts and rings count only those two lists, and the button counts the mutual people for them
 
 #### Scenario: Lone list under Mutual
-- **WHEN** under Any the viewer picks sale list "duplicates" and then turns on Mutual only
+- **WHEN** under Any the viewer picks sale list "duplicates" and then turns on Can swap
 - **THEN** Compare with resets to All my lists, and "duplicates" is offered disabled
 
 #### Scenario: WTB disables a lone want list
@@ -804,19 +804,19 @@ The help beside the controls SHALL describe the mutual score as what the two peo
 
 #### Scenario: Mutual count ignores Post type
 - **WHEN** the viewer has picked WTB and a have list
-- **THEN** the Mutual only count is the one for that list, as under All
+- **THEN** the Can swap count is the one for that list, as under All
 
 #### Scenario: Mutual only switch last
 - **WHEN** the viewer opens For you at 1280 px
-- **THEN** the Mutual only button sits right after Compare with and before the help, with the divider between Post type and Compare with
+- **THEN** the Can swap button sits right after Compare with and before the help, with the divider between Post type and Compare with
 
 #### Scenario: Mutual count
 - **WHEN** 4 people match the viewer mutually with all lists compared
-- **THEN** the button reads "Mutual only 4", the tab reads "For you", and a screen reader announces the count
+- **THEN** the button reads "Can swap 4", the tab reads "For you", and a screen reader announces the count
 
 #### Scenario: Mutual count ignores filters
-- **WHEN** the button reads "Mutual only 4", Mutual only is pressed, and the viewer filters to member SeoYeon, which only 1 of those people's matching posts holds
-- **THEN** the button still reads "Mutual only 4", and the feed lists that 1 person
+- **WHEN** the button reads "Can swap 4", Can swap is pressed, and the viewer filters to member SeoYeon, which only 1 of those people's matching posts holds
+- **THEN** the button still reads "Can swap 4", and the feed lists that 1 person
 
 #### Scenario: Foreign list slug
 - **WHEN** the URL's `list` is the slug of another account's list
@@ -832,7 +832,7 @@ The help beside the controls SHALL describe the mutual score as what the two peo
 
 #### Scenario: Phone
 - **WHEN** the viewer opens `/trade/for-you?match=mutual&list=spares` at 390 px
-- **THEN** the Filters button, Reset, the Post type menu, Compare with naming spares, the Mutual only button (pressed) and the help wrap across the row's lines, no collection filter shows on the row, the compared-lists line sits under it, and the page doesn't scroll sideways
+- **THEN** the Filters button, Reset, the Post type menu, Compare with naming spares, the Can swap button (pressed) and the help wrap across the row's lines, no collection filter shows on the row, the compared-lists line sits under it, and the page doesn't scroll sideways
 
 #### Scenario: Two sections under Any
 - **WHEN** the viewer opens `/trade/for-you`, rin.trades is mutual with one WTT post and one WTS post, and sodalove matches them one way
@@ -852,10 +852,10 @@ The help beside the controls SHALL describe the mutual score as what the two peo
 
 #### Scenario: Nobody mutual under Any
 - **WHEN** under Any no one matches the viewer both ways, and some posts match one way
-- **THEN** the feed shows no Mutual heading and opens with the One way heading
+- **THEN** the feed shows no Can swap heading and opens with the One way heading
 
 #### Scenario: Headings under Mutual only
-- **WHEN** the viewer turns on Mutual only
+- **WHEN** the viewer turns on Can swap
 - **THEN** the feed lists the Mutual people with no section heading
 
 ### Requirement: Post composer

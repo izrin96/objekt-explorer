@@ -95,7 +95,7 @@ Other visitors SHALL not see the control.
 
 #### Scenario: Count agrees with Mutual
 - **WHEN** have list "spares" has 3 mutual people, one of whom has only idle posts, and the owner views its header
-- **THEN** Find matches reads 2, and the link opens on Mutual reading "Mutual 2"
+- **THEN** Find matches reads 2, and the link opens on Mutual, its button reading "Can swap 2"
 
 #### Scenario: Lone list has no count
 - **WHEN** the owner views sale list "duplicates"
@@ -203,7 +203,7 @@ The list page header and the list card SHALL name a want list's choice.
 
 #### Scenario: Buying only takes a sale list
 - **WHEN** the same want list holds a collection that a partner's sale list holds
-- **THEN** that collection counts as "They have N you want" for that partner, and a want-list alert is sent for it
+- **THEN** that collection counts as "They have N you want" for that partner, and a want-list alert is sent for it when the user has "Someone has what you want" on Any; under Can swap no alert is sent, since a sale is not a swap (see `web-notifications`)
 
 #### Scenario: The other direction
 - **WHEN** a partner's want list is open to swaps only and the user's sale list holds a collection on it
