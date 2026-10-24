@@ -151,7 +151,7 @@ The request bar SHALL say that declining moves the conversation to Archived with
 
 ### Requirement: Inbox, Requests and Archived
 `/messages` SHALL list the signed-in user's conversations under Inbox, Requests and Archived, newest activity first. Each row SHALL show:
-- the other account, headed by the nickname of its Chat as profile, else by its display name;
+- the other account, headed by its default profile (see `web-cosmo-link`), else by its display name;
 - the latest message, a description of its card, or "Message unsent" when it was unsent;
 - its time;
 - an unread mark;
@@ -328,7 +328,7 @@ A user SHALL be able to start at most 20 new conversations per rolling 24 hours,
 - **THEN** no start is counted, and it can still send the first message in 5 of them
 
 ### Requirement: Messages settings
-The Messages section of the account page (`/account/messages`) SHALL have "Who can message you" (Anyone with a linked Cosmo address, or Nobody), Chat as, and "Show Seen and typing", on by default. Changes SHALL save at once. The `/messages` header SHALL offer a settings control opening `/account/messages`. When the settings fail to load, the section SHALL say so and offer Retry rather than leave the controls disabled.
+The Messages section of the account page (`/account/messages`) SHALL have "Who can message you" (Anyone with a linked Cosmo address, or Nobody), and "Show Seen and typing", on by default, and SHALL say which name partners see the account by ("People see you as <name>", its default profile; see `web-cosmo-link`), linking to `/account/profiles` when the account has two or more linked profiles. Changes SHALL save at once. The `/messages` header SHALL offer a settings control opening `/account/messages`. When the settings fail to load, the section SHALL say so and offer Retry rather than leave the controls disabled.
 
 Partners' open threads SHALL be told about a Show Seen and typing change only when its value actually changes. A user SHALL be able to change it at most once every 10 seconds; a faster change SHALL be refused and the UI SHALL say when to try again.
 
@@ -352,30 +352,9 @@ Partners' open threads SHALL be told about a Show Seen and typing change only wh
 - **WHEN** a request sets Show Seen and typing to the value it already has
 - **THEN** no partner is told about a change
 
-### Requirement: Chat as
-Messages settings SHALL offer Chat as when the account has at least one linked Cosmo profile. It is a choice of one of those profiles, each shown by its nickname. The chosen profile SHALL name the account wherever another account sees it as a partner: conversation rows and threads, offers and trades, offer notes in a thread, and blocked lists.
-- Without a choice, the first profile the account linked SHALL be used.
-- The chosen or default profile SHALL be shown by its nickname, or by its shortened address when Cosmo gave it none; Hide Cosmo ID does not apply here (see `web-cosmo-link`).
-- A change SHALL apply to every conversation, past ones included, on the other side's next load.
-- When the chosen profile is unlinked, the default SHALL apply again.
-- With no linked profile, the setting SHALL not be shown and the display name SHALL be used.
-- A request choosing an address not linked to the caller SHALL be refused, and the setting SHALL stay unchanged.
-
-#### Scenario: Pick a second profile
-- **WHEN** a user whose first linked profile is "rin.main" picks "rin.alt" under Chat as
-- **THEN** their partners' conversation rows and threads head them as "rin.alt"
-
-#### Scenario: Hide Cosmo ID
-- **WHEN** the user's chosen profile has Hide Cosmo ID on
-- **THEN** partners still see that profile's nickname
-
-#### Scenario: Chosen profile unlinked
-- **WHEN** the user unlinks the profile chosen under Chat as
-- **THEN** partners see them by their first linked remaining profile, and Chat as shows that one selected
-
-#### Scenario: Someone else's address
-- **WHEN** a request sets Chat as to an address linked to another account
-- **THEN** it is refused and the setting is unchanged
+#### Scenario: Name partners see
+- **WHEN** a user whose default profile is "rin.alt", one of two linked profiles, opens `/account/messages`
+- **THEN** the section reads "People see you as rin.alt" with a link to `/account/profiles`, and offers no profile picker
 
 ### Requirement: Blocks and chat mutes gate sending
 Starting a conversation or sending a message SHALL be refused when either account has blocked the other, or when the other account was deleted. The refusal reason SHALL read the same as "this user isn't accepting messages", so the blocked side cannot tell. It SHALL also be refused while the sender has an active chat mute. In that case the message box SHALL be replaced by a notice with the mute's reason and end date (see `web-moderation`), and a refused start SHALL also say when the mute ends.
@@ -650,3 +629,22 @@ The conversation list request SHALL keep accepting every input it accepts today.
 #### Scenario: Text only
 - **WHEN** a conversation holds only text messages
 - **THEN** its row shows no thumbnail
+
+### Requirement: Other profiles in a thread
+A conversation SHALL be between two accounts, headed by the other account's default profile (see `web-cosmo-link`). When that account has other linked profiles that are not private, the thread header SHALL name them after the default ("rin.main · also rin.alt"). When the user opened the conversation from a profile that is not the account's default, an empty thread SHALL say once that this profile belongs to the account it is headed by. A private profile SHALL never be named in either place.
+
+#### Scenario: Other profiles in the header
+- **WHEN** the user opens a conversation with an account whose default is "rin.main" and which also links "rin.alt"
+- **THEN** the thread header reads "rin.main · also rin.alt"
+
+#### Scenario: Started from an alt profile
+- **WHEN** the user presses Message on "rin.alt"'s profile, whose account's default is "rin.main", and has never messaged that account
+- **THEN** the thread is headed "rin.main" and the empty thread says "rin.alt is one of rin.main's profiles"
+
+#### Scenario: Existing conversation
+- **WHEN** the user presses Message on "rin.alt"'s profile and already has a conversation with that account
+- **THEN** that conversation opens, history included, headed "rin.main"
+
+#### Scenario: Private profile
+- **WHEN** the other account also links a private profile
+- **THEN** neither the header nor the empty thread names it

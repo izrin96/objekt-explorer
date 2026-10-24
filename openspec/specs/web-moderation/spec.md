@@ -29,7 +29,7 @@ No response to either account SHALL say that a block caused something: an offer 
 - **THEN** O-882 is Cancelled, and neither response carries a reason naming the block
 
 ### Requirement: Blocked users
-The Blocked users section of the account page (`/account/blocked`) SHALL list every account the user blocked, headed by its Chat as profile (see `web-chat`), with Unblock. Unblocking SHALL restore messaging and feeds. A conversation that existed before SHALL return with its history.
+The Blocked users section of the account page (`/account/blocked`) SHALL list every account the user blocked, headed by its default profile (see `web-cosmo-link`), with Unblock. Unblocking SHALL restore messaging and feeds. A conversation that existed before SHALL return with its history.
 
 #### Scenario: Unblock
 - **WHEN** the user unblocks spam.seller22
