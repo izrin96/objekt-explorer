@@ -40,6 +40,7 @@ const CHANGELOG = [
       "Added notifications for offers, trades and want list matches.",
       "Added an Account page for all your settings.",
       "Desktop shows every filter on the toolbar.",
+      "Added Default profile: choose which profile names you to others.",
       "Removed Hide User.",
     ],
   },
