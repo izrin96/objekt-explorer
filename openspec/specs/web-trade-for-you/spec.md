@@ -6,7 +6,7 @@ The account-wide trade match view on `apps/web` at `/trade/for-you`: who the use
 ## Requirements
 
 ### Requirement: Account-wide matches
-Trade SHALL match the signed-in user, one person at a time, against the other accounts whose listed have, sale or want lists (discoverable and not idle; see `web-trade-browse` Order and idle posts) overlap the user's have, sale and want lists. This drives the header sentences and list counts on Browse and For you, Any, Mutual and Mutual N (see `web-trade-browse`). An idle list SHALL not count toward its owner. A have list counts only against a want list open to swaps, and a sale list only against a want list open to buying: a want list open to swaps only never matches a sale list, and one set to buying only never matches a have list (see `web-lists`). The user's own lists count whether or not they are discoverable. Matching SHALL use the user's have and sale lists, never everything their wallet holds: owning an objekt does not mean it is up for trade. A have or sale list SHALL take part only while it is bound to one of its owner's Cosmo profiles, since Trade checks that profile's holdings. Want lists always take part. The user's own account SHALL never be matched. Want-list alerts SHALL use the same rules for which of another account's lists take part (see `web-notifications` Want-list alerts).
+Trade SHALL match the signed-in user, one person at a time, against the other accounts whose listed have, sale or want lists (discoverable and not idle; see `web-trade-browse` Order and idle posts) overlap the user's have, sale and want lists. This drives the header sentences and list counts on Browse and For you, Any, Mutual and Mutual N (see `web-trade-browse`). An idle list SHALL not count toward its owner. A have list, and a sale list open to swaps, count against a want list open to swaps, and every sale list counts against a want list open to buying: a want list open to swaps only never matches a sale list set to Sell only, and one set to buying only never matches a have list (see `web-lists`). The user's own lists count whether or not they are discoverable. Matching SHALL use the user's have and sale lists, never everything their wallet holds: owning an objekt does not mean it is up for trade. A have or sale list SHALL take part only while it is bound to one of its owner's Cosmo profiles, since Trade checks that profile's holdings. Want lists always take part. The user's own account SHALL never be matched. Want-list alerts SHALL use the same rules for which of another account's lists take part (see `web-notifications` Want-list alerts).
 
 #### Scenario: Matches across lists
 - **WHEN** a user has two have lists and one want list, and a person's discoverable lists overlap two of them
@@ -47,6 +47,10 @@ Trade SHALL match the signed-in user, one person at a time, against the other ac
 #### Scenario: Alerts follow the same lists
 - **WHEN** a person's have list holding a collection on the user's want list is left out of For you because the user hid that person
 - **THEN** a new entry on that have list creates no want-list alert for the user
+
+#### Scenario: Sell or swap counts both ways
+- **WHEN** the user's want list is open to swaps only, and a person's sale list, open to swaps, holds 2 collections on it while the person's want list asks for 1 on the user's bound have list
+- **THEN** the person's row reads "You can swap 1", and the person is listed under Can swap
 
 ### Requirement: Current ownership
 An entry on a have or sale list SHALL count toward a match only while its owner can trade it:
@@ -183,3 +187,18 @@ Unknown or unparsable values SHALL be dropped. The For you rules then apply: a s
 #### Scenario: Tab opened before the change
 - **WHEN** a tab loaded before this change is on Browse with Matches on Any after it ships
 - **THEN** its feed keeps loading the same posts until the tab is reloaded
+
+### Requirement: Matched through your rules
+On For you, when a partner's objekts match the viewer's want lists only through the viewer's rules, the row SHALL name them under its strips, one line per objekt, up to three, then how many more: the objekt, "matches your rule", the rule's label and its want list. The header sentence SHALL add how many of the swap came through rules. Objekts matched by an objekt the viewer added by hand SHALL NOT be listed.
+
+#### Scenario: Two through rules
+- **WHEN** rin.trades has Lynn CC366 and Kaede CC118, which the viewer's want list "binary hunt" wants only through its rules CC366, any member, and Cream02 FCO 3rd
+- **THEN** rin.trades's row reads "You can swap 2 · both through your rules", and under the strips "Lynn CC366 matches your rule CC366 · any member" and "Kaede CC118 matches your rule Cream02 · FCO · 3rd", each with "binary hunt"
+
+#### Scenario: Wanted by hand too
+- **WHEN** the viewer's list also holds Lynn CC366 as an objekt
+- **THEN** Lynn CC366 is not listed under the strips
+
+#### Scenario: Many through rules
+- **WHEN** a partner's sale list holds 35 objekts the viewer wants only through rules
+- **THEN** three lines show, then "32 more through your rules"
