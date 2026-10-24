@@ -1,7 +1,5 @@
 import type { AddSource, PublicList } from "@repo/api/schemas/list";
-import { collectionCode, type ListRuleInput } from "@repo/api/schemas/list-rule";
 import type { ListEntryFields, ValidObjekt } from "@repo/lib/types/objekt";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createContext, type ReactNode, use, useCallback, useMemo, useState } from "react";
 
 import { Note } from "@/components/shared/note";
@@ -29,26 +27,11 @@ import { toastManager } from "@/components/ui/toast";
 import { isObjektOwned } from "@/features/objekt/objekt-utils";
 import { useUserLists } from "@/features/user/hooks";
 import { isSameAddress } from "@/lib/address";
-import { client, orpc } from "@/lib/orpc";
-import { refusalText } from "@/lib/refusal";
 import { m } from "@/paraglide/messages";
 
 import { useAddToList } from "./actions";
 import { CreateListDialog } from "./create-list-dialog";
 import { LIST_TYPE_LABEL } from "./list-type-badge";
-import { RULE_KEYS } from "./rules/queries";
-
-/** Any member of the objekt's collection, online, with its member as prio. */
-function anyMemberRule(objekt: ValidObjekt): Extract<ListRuleInput, { kind: "collection" }> {
-  return {
-    kind: "collection",
-    artist: objekt.artist,
-    season: objekt.season,
-    collectionNo: objekt.collectionNo.replace(/[A-Z]$/, "Z"),
-    prio: [objekt.member],
-    skipOwned: true,
-  };
-}
 
 /**
  * A `combined` card stands for its whole collection, so a bound list takes
@@ -150,8 +133,6 @@ function AddToListDialog({
   const [slug, setSlug] = useState<string | null>(null);
   const [skipDups, setSkipDups] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
-  const [anyMember, setAnyMember] = useState(false);
-  const queryClient = useQueryClient();
 
   const available = useMemo(
     () =>
@@ -166,36 +147,8 @@ function AddToListDialog({
   const isDisabled = (list: PublicList) => list.isProfileBind && !bindable;
 
   const selected = available.find((list) => list.slug === slug && !isDisabled(list));
-  const single = target.objekts.length === 1 ? target.objekts[0] : undefined;
-  const rule = single && selected?.listType === "want" ? anyMemberRule(single) : null;
-  const asRule = rule !== null && anyMember;
-  const preview = useQuery(
-    orpc.list.previewRule.queryOptions({
-      input: { rule: rule! },
-      enabled: rule !== null,
-      staleTime: 30_000,
-    }),
-  );
-  const addRule = useMutation({
-    mutationFn: async (next: { slug: string; rule: ListRuleInput }) => {
-      await client.list.addRule(next);
-    },
-    onSuccess: async () => {
-      toastManager.add({ type: "success", title: m.rule_added() });
-      onOpenChange(false);
-      await Promise.all(RULE_KEYS.map((queryKey) => queryClient.invalidateQueries({ queryKey })));
-    },
-    onError: (error) => {
-      toastManager.add({ type: "error", title: m.rule_error(), description: refusalText(error) });
-    },
-  });
-
   const submit = () => {
     if (!selected) return;
-    if (asRule) {
-      addRule.mutate({ slug: selected.slug, rule });
-      return;
-    }
     const { from, dropped } = toSource(selected, target, sourceList);
 
     addToList.mutate(
@@ -232,7 +185,6 @@ function AddToListDialog({
           if (!next) {
             setSlug(null);
             setSkipDups(true);
-            setAnyMember(false);
           }
           onOpenChange(next);
         }}
@@ -287,43 +239,6 @@ function AddToListDialog({
                   </Select>
                 </div>
 
-                {rule && single ? (
-                  <div className="flex min-w-0 flex-col gap-1.5">
-                    <Label htmlFor="add-to-list-any-member" className="font-normal">
-                      <Checkbox
-                        id="add-to-list-any-member"
-                        checked={anyMember}
-                        onCheckedChange={(checked) => setAnyMember(checked)}
-                      />
-                      {m.rule_any_member_of({
-                        code: collectionCode(rule.artist, rule.season, rule.collectionNo),
-                      })}
-                    </Label>
-                    <span className="text-muted-foreground ps-6.5 text-xs text-pretty sm:ps-6">
-                      {!preview.data
-                        ? m.rule_counting()
-                        : preview.data.owned > 0
-                          ? m.rule_any_member_of_desc({
-                              member: single.member,
-                              covers: preview.data.covers,
-                              owned: preview.data.owned,
-                            })
-                          : m.rule_any_member_of_desc_none({
-                              member: single.member,
-                              covers: preview.data.covers,
-                            })}
-                    </span>
-                    {/* a physical card whose collection has no online twin describes nothing */}
-                    {asRule && preview.data?.problem ? (
-                      <span className="text-destructive-foreground ps-6.5 text-xs text-pretty sm:ps-6">
-                        {preview.data.problem === "no_collections"
-                          ? m.rule_no_collections()
-                          : m.rule_nothing_to_match()}
-                      </span>
-                    ) : null}
-                  </div>
-                ) : null}
-
                 <div className="flex min-w-0 flex-col gap-1.5">
                   <Label htmlFor="add-to-list-skip-dups" className="font-normal">
                     <Checkbox
@@ -344,12 +259,8 @@ function AddToListDialog({
             <DialogClose render={<Button variant="outline" />}>
               {m.common_modal_cancel()}
             </DialogClose>
-            <Button
-              disabled={!selected || (asRule && preview.data?.problem != null)}
-              loading={addToList.isPending || addRule.isPending}
-              onClick={submit}
-            >
-              {asRule ? m.rule_add() : m.list_manage_objekt_add_button()}
+            <Button disabled={!selected} loading={addToList.isPending} onClick={submit}>
+              {m.list_manage_objekt_add_button()}
             </Button>
           </DialogFooter>
         </DialogPopup>

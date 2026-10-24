@@ -408,16 +408,12 @@ Each rule row's menu SHALL offer See the objekts, Edit rule, Turn into objekts a
 - **WHEN** the owner turns that rule into objekts
 - **THEN** the rule is gone, the list holds its 78 objekts as objekts, and they no longer follow holdings
 
-### Requirement: Any member from Add to list
-The Add to list dialog, opened on one objekt with a want list picked, SHALL offer Any member of {collection}. Ticked, it SHALL add that rule, with the objekt's member as prio, instead of the objekt, and its button SHALL read Add rule. The option SHALL NOT show for other lists or for several objekts.
+### Requirement: Add to list adds objekts only
+The Add to list dialog SHALL add the picked objekts, never a rule, whatever list is picked. A rule SHALL be added from the want list's own page.
 
-#### Scenario: From Lynn CC366
-- **WHEN** a user opens Add to list on Lynn CC366, picks "binary hunt" and ticks Any member of CC366
-- **THEN** the list gains the rule CC366, any member, prio Lynn, not Lynn CC366 alone
-
-#### Scenario: Have list picked
-- **WHEN** the user picks have list "spares"
-- **THEN** the option does not show
+#### Scenario: Want list picked
+- **WHEN** a user opens Add to list on Lynn CC366 and picks want list "binary hunt"
+- **THEN** the dialog offers no rule option, its button reads Add, and the list gains Lynn CC366
 
 ### Requirement: Rules in exports
 Share text, export and the Discord format SHALL write each rule as one line in its own words, before the objekts: "any CC366 (prio Lynn)", "any Cream02 FCO 3rd". Copy as new list SHALL keep the rules when the copy is a want list, and drop them, with the objekts they want, when it is not.
