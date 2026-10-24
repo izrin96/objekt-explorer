@@ -125,7 +125,7 @@ A post with two tags SHALL show both, WTT first, and SHALL be listed under each 
 - **THEN** the feed shows one post tagged WTT and WTB holding both sides, listed under WTT and under WTB, and Mutual lists it as a WTT post
 
 Each post SHALL show:
-- the owner, headed the way For you heads a partner (the Cosmo nickname of the list's bound address whatever its Hide Cosmo ID setting, the shortened address when it has none, and the account's display name only for a list bound to no address; see `web-cosmo-link`), with the avatar;
+- the owner, headed the way For you heads a partner (the Cosmo nickname of the list's bound address whatever its Hide Cosmo ID setting, the shortened address when it has none, and, for a list bound to no address, the account's default profile when that profile is not private, else the account's display name; see `web-cosmo-link`), with the avatar;
 - its tags, and each list's name and description;
 - up to 11 objekts per side on a post with two sides, and up to 20 on a post with one side, with the number of further objekts;
 - on a WTS post, each objekt's price in the list's currency, or QYOP;
@@ -160,6 +160,10 @@ Each list in a post SHALL link to its list page.
 #### Scenario: One side gets more
 - **WHEN** a WTS post's sale list holds 30 objekts, and a WTT pair's have and want lists hold 30 each
 - **THEN** the WTS post sends 20 objekts and a count of 10 more, and the pair sends 11 per side and a count of 19 more on each
+
+#### Scenario: Want list with no profile
+- **WHEN** a want list filed under no profile is on Trade, and its owner's default profile is "rin.alt"
+- **THEN** its post is headed "rin.alt", the name the owner's chat partners see
 
 ### Requirement: Your posts and Post a list
 A signed-in viewer's posts SHALL be summarised above the feed in one row: the title Your posts, how many of them are listed, how many are idle, when the next bump is allowed while it is not, the one Bump control (see Bump), disabled until then, a New post control that opens the post composer, and a control that shows or hides the posts. The row SHALL show on Browse; For you and a signed-out visitor SHALL keep a New post control above the feed in its place. Shown, each entry SHALL be one post and show:

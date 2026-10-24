@@ -6,28 +6,42 @@ The public Trade Browse feed on `apps/web` at `/trade`: posts by people who put 
 ## Requirements
 
 ### Requirement: Posts from lists on Trade
-`/trade` SHALL hold one post per list whose owner turned its Show on Trade switch on (Show on Market on a sale list; see `web-lists`). A have or sale list SHALL appear only while it is bound to a Cosmo profile; a want list needs no profile. A have list and the want list linked to it SHALL form one post when both are on Trade. When only one of the pair is on Trade, the post SHALL hold only that list. The feed SHALL list each person's posts together in one row (see Trade card). The page SHALL be open to signed-out visitors.
+`/trade` SHALL hold one post per list its owner put on Trade through the post composer, or through Show on Market and Trade on a sale list (see `web-lists`). A have or sale list SHALL appear only while it is bound to a Cosmo profile; a want list needs no profile. A have list and the want list linked to it SHALL form one post when both are on Trade. When only one of the pair is on Trade, the post SHALL hold only that list. The feed SHALL list each person's posts together in one row (see Trade card). The page SHALL be open to signed-out visitors.
 
-Each post SHALL be tagged:
-- WTT for a have list, alone or paired with its want list, whatever that want list's Open to choice, and for a want list on its own open to swaps only;
-- WTB for a want list on its own open to swaps or buying, or set to buying only;
+Each post SHALL carry one or two tags:
+- WTT for a have list, alone or paired with its want list, which is open to swaps (a pair can't be Buying only, see `web-lists`), and for a want list on its own open to swaps (Swaps only, or Swaps or buying);
+- WTB for a post whose want list is open to buying: a want list on its own set to Buying only or Swaps or buying, or a pair whose want list is open to buying;
 - WTS for a sale list.
+
+A post with two tags SHALL show both, WTT first, and SHALL be listed under each in the Post type menu. Mutual SHALL count a post that carries WTT as a WTT post.
 
 #### Scenario: Trades-only want list
 - **WHEN** a want list on its own is open to swaps only, whether or not it is linked to a have list that is off Trade
-- **THEN** its post is tagged WTT and listed under WTT, not WTB
+- **THEN** its post is tagged WTT only and listed under WTT, not WTB
 
 #### Scenario: Buying-only want list
 - **WHEN** a want list on its own is set to Buying only
-- **THEN** its post is tagged WTB and listed under WTB
+- **THEN** its post is tagged WTB only and listed under WTB
+
+#### Scenario: Want list open to swaps or buying
+- **WHEN** a want list on its own is open to swaps or buying, and its owner is Mutual with the viewer
+- **THEN** its post is tagged WTT and WTB, listed under both WTT and WTB, and listed by Mutual, which listed it under neither before this change
 
 #### Scenario: Have list linked to a buying-only want list
-- **WHEN** have list "spares" is on Trade and linked to want list "store hunt", which is set to Buying only and on Trade
-- **THEN** the feed shows one WTT post holding both sides, and the Want side matches sale lists only
+- **WHEN** the user tries to pair have list "spares" with want list "store hunt", which is set to Buying only
+- **THEN** the pair is refused, so no WTT post holds a want side that matches sale lists only
+
+#### Scenario: Pair saved before the pair rule
+- **WHEN** have list "spares" is on Trade and linked to want list "store hunt", which was set to Buying only before a pair had to take swaps, and is on Trade
+- **THEN** the feed shows one post tagged WTT and WTB holding both sides, and the Want side matches sale lists only
+
+#### Scenario: Pair that would also pay
+- **WHEN** have list "spares" is on Trade and linked to want list "binary hunt", which is open to swaps or buying and on Trade
+- **THEN** the feed shows one post tagged WTT and WTB holding both sides, listed under WTT and under WTB, and Mutual lists it as a WTT post
 
 Each post SHALL show:
 - the owner, headed the way For you heads a partner (the Cosmo nickname of the list's bound address whatever its Hide Cosmo ID setting, the shortened address when it has none, and, for a list bound to no address, the account's default profile when that profile is not private, else the account's display name; see `web-cosmo-link`), with the avatar;
-- the tag, and each list's name and description;
+- its tags, and each list's name and description;
 - up to 11 objekts per side on a post with two sides, and up to 20 on a post with one side, with the number of further objekts;
 - on a WTS post, each objekt's price in the list's currency, or QYOP;
 - when the post was last bumped, or last changed if that is later.
@@ -35,7 +49,7 @@ Each post SHALL show:
 Each list in a post SHALL link to its list page.
 
 #### Scenario: Linked pair is one post
-- **WHEN** have list "spares" is linked to want list "binary hunt" and both are on Trade
+- **WHEN** have list "spares" is linked to want list "binary hunt", open to swaps only, and both are on Trade
 - **THEN** the feed shows one WTT post holding a Have side from Spares and a Want side from Binary hunt
 
 #### Scenario: Half a pair
@@ -43,11 +57,11 @@ Each list in a post SHALL link to its list page.
 - **THEN** the feed shows a WTT post with only the Have side
 
 #### Scenario: Sale list on Market
-- **WHEN** a sale list bound to a Cosmo profile has Show on Market on
+- **WHEN** a sale list bound to a Cosmo profile has Show on Market and Trade on
 - **THEN** the feed shows it as a WTS post
 
 #### Scenario: Not on Trade
-- **WHEN** a have list has Show on Trade off
+- **WHEN** a have list is in no post
 - **THEN** it does not appear on `/trade`, and For you does not match it
 
 #### Scenario: Discoverable before launch
@@ -368,16 +382,18 @@ A person with posts on Trade SHALL be able to bump once every 24 hours. A bump S
 - **THEN** the list takes the bump time from 3 hours ago, and the owner's row keeps its place
 
 ### Requirement: Your posts and Post a list
-A signed-in viewer's own posts SHALL be summarised above the feed in one row: the title Your posts, how many of them are listed, how many are idle, when the next bump is allowed while it is not, the one Bump control (see Bump), disabled until then, and a control that shows or hides the posts. Shown, each entry SHALL show:
-- the lists in the post;
-- whether the post is listed or idle;
-- when it was last bumped.
+A signed-in viewer's posts SHALL be summarised above the feed in one row: the title Your posts, how many of them are listed, how many are idle, when the next bump is allowed while it is not, the one Bump control (see Bump), disabled until then, a New post control that opens the post composer, and a control that shows or hides the posts. The row SHALL show on Browse; For you and a signed-out visitor SHALL keep a New post control above the feed in its place. Shown, each entry SHALL be one post and show:
+- its tags and kind (Swap, Sell or Buy);
+- each list with its role: Offering for a have list, Looking for for a want list, Selling for a sale list, each linking to its list page;
+- the option it carries: "Would also pay" on a Swap post that would, "Also on Market" on a Sell post;
+- whether the post is listed or idle, and when it was last changed;
+- a menu with Edit post and Take off Trade.
 
-With no choice saved in this browser, the posts SHALL start shown when any of them is idle, and hidden otherwise. Showing or hiding them SHALL be remembered in this browser, and that choice SHALL win over the default. A viewer with no posts SHALL see neither the row nor the posts.
+With no choice saved in this browser, the posts SHALL start shown when any of them is idle, and hidden otherwise. Showing or hiding them SHALL be remembered in this browser, and that choice SHALL win over the default. A viewer with no posts SHALL see the row say they have no posts on Trade, with New post. A signed-out visitor activating New post SHALL be sent to `/login?redirect=/trade`.
 
-A Post a list control SHALL open a dialog listing the viewer's have, want and sale lists, each with the same Show on Trade switch the list form offers (Show on Market on a sale list), saving at once. Turning it off SHALL also take the list out of matching, and on a sale list off Market.
-
-A have or sale list not filed under a Cosmo profile cannot be on Trade, so its switch SHALL be disabled and say why. A signed-out visitor activating Post a list SHALL be sent to `/login?redirect=/trade`.
+#### Scenario: New post on For you
+- **WHEN** a signed-in viewer opens `/trade/for-you`
+- **THEN** no Your posts row shows, and a New post control above the feed opens the composer
 
 #### Scenario: Summary of six posts
 - **WHEN** the viewer has six posts, one idle, and last bumped 2 days ago
@@ -400,19 +416,27 @@ A have or sale list not filed under a Cosmo profile cannot be on Trade, so its s
 - **THEN** the posts stay hidden, and the summary row still counts the idle post
 
 #### Scenario: Post from the dialog
-- **WHEN** the viewer turns Show on Trade on for want list "binary hunt" in the dialog
+- **WHEN** the viewer activates New post and posts want list "binary hunt" as a Buy post
 - **THEN** the list is on Trade and in matching, and appears under Your posts as bumped just now
-
-#### Scenario: Take down from the dialog
-- **WHEN** the viewer turns Show on Market off for a sale list in the dialog
-- **THEN** the list leaves `/trade`, Market and For you
 
 #### Scenario: Unbound have list
 - **WHEN** the viewer's have list is not filed under a Cosmo profile
-- **THEN** its switch in the dialog is disabled with the reason shown
+- **THEN** it shows disabled in the composer New post opens, with the reason shown
+
+#### Scenario: A Swap post entry
+- **WHEN** the viewer's Swap post holds "spares" and "binary hunt" and would also pay
+- **THEN** its entry shows WTT and WTB, Swap, Offering spares, Looking for binary hunt, and "Would also pay"
+
+#### Scenario: Take down from the dialog
+- **WHEN** the viewer chooses Take off Trade on a Sell post
+- **THEN** the sale list leaves `/trade`, Market and For you
+
+#### Scenario: No posts
+- **WHEN** a signed-in viewer has no posts
+- **THEN** the row says they have no posts on Trade and offers New post
 
 ### Requirement: Trade tabs
-`/trade`, `/trade/for-you` and `/trade/mine` SHALL share a tab bar, marking the current one. It reads Browse, For you and My trades. For you SHALL be shown only to a signed-in viewer with at least one list that takes part in Trade (a want list, or a have or sale list bound to a Cosmo profile); for anyone else the bar reads Browse and My trades. For a signed-out visitor, My trades SHALL lead to `/login?redirect=/trade/mine`. The Trade item in the primary navigation SHALL open Browse.
+`/trade`, `/trade/for-you` and `/trade/mine` SHALL share a tab bar, marking the current one. It reads Browse, For you and My trades. For you SHALL be shown only to a signed-in viewer with at least one list that takes part in Trade (a want list, or a have or sale list bound to a Cosmo profile); for anyone else the bar reads Browse and My trades. For a signed-out visitor, My trades SHALL lead to `/login?redirect=/trade/mine`. The Trade item in the primary navigation SHALL open Browse. A trade's own page, `/trade/mine/$tradeId`, SHALL show neither the Trade page title nor the tab bar; its breadcrumb leads back (see `web-verified-trades`, Trade page header).
 
 For a signed-in user, My trades SHALL carry a count after its label, in monospace: the open offers waiting on the user (Needs you) plus the trades in progress:
 - zero SHALL show nothing;
@@ -444,6 +468,10 @@ The count SHALL be read when the tab bar loads and when the user moves between T
 #### Scenario: Signed out
 - **WHEN** a signed-out visitor opens `/trade`
 - **THEN** the tabs read Browse and My trades, no tab shows a count, and no count is requested
+
+#### Scenario: A trade's own page
+- **WHEN** the user opens `/trade/mine/88`
+- **THEN** no Trade page title or tab bar shows, and the page starts with its breadcrumb
 
 ### Requirement: Freshness
 Show on Trade changes and bumps SHALL show on every viewer's next load of `/trade`. Changes to entries SHALL appear within 1 minute.
@@ -641,7 +669,7 @@ Rows, buttons, avatars and backgrounds SHALL stay neutral.
 - **THEN** the 2 in the sentence is indigo, the HAVE label is teal and the WANT label amber, and the chips read "14 you want" and "2 you have"
 
 ### Requirement: Matches and Compare with
-For you (`/trade/for-you`) SHALL list the same people as Browse, in the same rows and with the same Post type menu and facets, narrowed by matching. It SHALL carry a Mutual only switch (see Layout for where it sits). Off is Any, the default; on is Mutual:
+For you (`/trade/for-you`) SHALL list the same people as Browse, in the same rows and with the same Post type menu and facets, narrowed by matching. It SHALL carry a Mutual only toggle button, pressed or not (see Layout for where it sits). Not pressed is Any, the default; pressed is Mutual:
 - **Any**: only posts holding at least one objekt that matches the viewer are kept, judged on each post's own lists (see Filters), and only people with a kept post are listed, in two sections (see Any order).
 - **Mutual**: only people whose mutual score is above zero, as the person's header sentence computes it (see Matches to the signed-in viewer). Of those people's posts, only those holding a match are kept, as under Any.
 
@@ -668,7 +696,7 @@ Each section SHALL open with a heading, Mutual or One way, with no count, over i
 
 **Description.** Under the tabs, For you's description SHALL read "People who match your lists, best match first." Below `md`, neither tab SHALL show its description.
 
-**Mutual N.** The Mutual only switch SHALL read "Mutual only N", on or off, N being how many people Mutual lists for the current Compare with choice: people with at least one matching WTT post, with no artist or collection filter applied, so N stays put while the viewer filters. A one-way list, which Mutual can't use, counts as All my lists:
+**Mutual N.** The Mutual only button SHALL read "Mutual only N", pressed or not, N being how many people Mutual lists for the current Compare with choice: people with at least one matching WTT post, with no artist or collection filter applied, so N stays put while the viewer filters. A one-way list, which Mutual can't use, counts as All my lists:
 - a count of zero SHALL show the label with no number;
 - a count above 99 SHALL read "99+";
 - N SHALL be in monospace, and the accessible name SHALL include it;
@@ -681,7 +709,7 @@ Each section SHALL open with a heading, Mutual or One way, with no count, over i
 - A list that the picked Post type can never match SHALL be offered disabled, as Mutual disables one-way lists, and the Post type menu SHALL never disable an option because of the picked list:
   - **All**: every list can be offered;
   - **WTT**: under WTT, the viewer's have or sale list matches through the post's want side, while the viewer's want list (open to swaps) matches the post's have side; so a selection with no have or sale list and no want list open to swaps (Swaps only, or Swaps or buying) is disabled. That is a lone Buying only want list, which a pair with a have list passes through its have half;
-  - **WTB**: a WTB post is the poster's want list, matched against the viewer's have and sale lists, so only a have or sale list SHALL be offered. A want list SHALL be disabled, even one linked to a have list: picking it would compare the same pair as picking its have list, under a type it can't match;
+  - **WTB**: a WTB post is the poster's want list open to buying, alone or paired with a have list (a Swap post that would also pay). The viewer's have and sale lists match its want side, and the viewer's want list open to swaps (Swaps only, or Swaps or buying) matches a pair's have side, so those SHALL be offered. A Buying only want list matches neither and SHALL be disabled;
   - **WTS**: a WTS post is a sale list, matched against the viewer's want lists open to buying, so only a want list open to buying (Swaps or buying, or Buying only) SHALL be offered. A have list, a sale list and a Swaps only want list SHALL be disabled, a have list even when it is linked to a want list open to buying;
   - **Mutual**: as above, and it fixes the type to WTT.
 - Changing the Post type to one that can't use the selected list SHALL reset Compare with to All my lists, as turning on Mutual does. Turning Mutual only off SHALL check the kept list against the URL's `type`, which applies again, and reset Compare with to All my lists when that type can't use it.
@@ -696,7 +724,7 @@ The help beside the controls SHALL describe the mutual score as what the two peo
 - `/trade?match=off` SHALL drop `match` and `list` and stay on Browse;
 - on a viewer who can't use For you, the redirected address then sends them on as Who sees it says.
 
-**Layout.** From `md` up, Compare with and the help SHALL follow the Post type menu on the facet row, after a divider, and the Mutual only switch SHALL come last, at the very right of the row after the help, staying last when the row wraps. Below `md`, the Filters button, Reset, the Mutual only switch, the Post type menu, Compare with and the help SHALL sit in that order in one row that wraps onto further lines when it doesn't fit, so the page doesn't scroll sideways. The Mutual only switch SHALL come after Compare with and the help in the DOM from `md` up, so keyboard order follows the visual order. The compared-lists line SHALL sit under the row. There SHALL be no separate Matching button or sheet. A change SHALL apply at once.
+**Layout.** On every width, Compare with, the Mutual only button and the help SHALL follow the Post type menu in that order; from `md` up they sit on the facet row after a divider. Below `md`, the Filters button, Reset, the Post type menu, Compare with, the Mutual only button and the help SHALL sit in that order in one row that wraps onto further lines when it doesn't fit, so the page doesn't scroll sideways. The DOM order SHALL match the visual order, so keyboard order follows it. The compared-lists line SHALL sit under the row. There SHALL be no separate Matching button or sheet. A change SHALL apply at once.
 
 #### Scenario: Default is Any
 - **WHEN** a signed-in viewer with want list "binary hunt" opens `/trade/for-you` with no parameters
@@ -704,7 +732,7 @@ The help beside the controls SHALL describe the mutual score as what the two peo
 
 #### Scenario: Turn matching off
 - **WHEN** the viewer on For you wants every post
-- **THEN** For you offers only the Mutual only switch, and the viewer activates the Browse tab instead
+- **THEN** For you offers only the Mutual only button, and the viewer activates the Browse tab instead
 
 #### Scenario: Old Browse link
 - **WHEN** a signed-in viewer with a want list opens `/trade?match=mutual&list=spares` from an older link
@@ -732,7 +760,7 @@ The help beside the controls SHALL describe the mutual score as what the two peo
 
 #### Scenario: Type under Mutual
 - **WHEN** under Any the viewer picks WTS in the Post type menu and then turns on Mutual only
-- **THEN** the menu reads WTT with All, WTB and WTS disabled, the URL no longer carries `type`, only WTT posts are listed, and the switch stays where it was
+- **THEN** the menu reads WTT with All, WTB and WTS disabled, the URL no longer carries `type`, only WTT posts are listed, and the button stays where it was
 
 #### Scenario: More under Mutual
 - **WHEN** 20 people are mutual with the viewer and the viewer scrolls past the first 12 rows
@@ -740,15 +768,15 @@ The help beside the controls SHALL describe the mutual score as what the two peo
 
 #### Scenario: Compare one pair
 - **WHEN** under Mutual the viewer picks have list "spares", linked to want list "binary hunt"
-- **THEN** the URL carries `list=spares`, the line reads "What you have: spares. What you want: binary hunt.", header sentences, list counts and rings count only those two lists, and the switch counts the mutual people for them
+- **THEN** the URL carries `list=spares`, the line reads "What you have: spares. What you want: binary hunt.", header sentences, list counts and rings count only those two lists, and the button counts the mutual people for them
 
 #### Scenario: Lone list under Mutual
 - **WHEN** under Any the viewer picks sale list "duplicates" and then turns on Mutual only
 - **THEN** Compare with resets to All my lists, and "duplicates" is offered disabled
 
 #### Scenario: WTB disables a lone want list
-- **WHEN** on For you the viewer picks Post type WTB, and has want list "binary hunt" with no link and have list "spares"
-- **THEN** Compare with offers "binary hunt" disabled with the reason "Can't match WTB posts", and "spares" enabled
+- **WHEN** on For you the viewer picks Post type WTB, and has want list "bulk buys" set to Buying only with no link, want list "binary hunt" open to swaps with no link, and have list "spares"
+- **THEN** Compare with offers "bulk buys" disabled with the reason "Can't match WTB posts", and "binary hunt" and "spares" enabled
 
 #### Scenario: WTT disables a lone Buying only want list
 - **WHEN** on For you the viewer picks Post type WTT, and has a Buying only want list "bulk buys" with no link, and a have list "spares" paired with a Buying only want list
@@ -763,11 +791,11 @@ The help beside the controls SHALL describe the mutual score as what the two peo
 - **THEN** Compare with offers "store hunt" enabled and "spares" disabled with the reason "Can't match WTS posts"
 
 #### Scenario: Switching to WTB resets a lone want list
-- **WHEN** under Any the viewer has picked a lone want list "binary hunt" and then picks Post type WTB
+- **WHEN** under Any the viewer has picked a lone want list "bulk buys" set to Buying only and then picks Post type WTB
 - **THEN** Compare with resets to All my lists and the URL no longer carries `list`
 
 #### Scenario: Post type never disables for the list
-- **WHEN** the viewer has picked a lone want list
+- **WHEN** the viewer has picked a lone want list set to Buying only
 - **THEN** every Post type option is still offered, and picking WTB resets Compare with
 
 #### Scenario: Old link with a list the type can't use
@@ -780,15 +808,15 @@ The help beside the controls SHALL describe the mutual score as what the two peo
 
 #### Scenario: Mutual only switch last
 - **WHEN** the viewer opens For you at 1280 px
-- **THEN** the Mutual only switch is the rightmost control on the row, after Compare with and the help, with the divider between Post type and Compare with
+- **THEN** the Mutual only button sits right after Compare with and before the help, with the divider between Post type and Compare with
 
 #### Scenario: Mutual count
 - **WHEN** 4 people match the viewer mutually with all lists compared
-- **THEN** the switch reads "Mutual only 4", the tab reads "For you", and a screen reader announces the count
+- **THEN** the button reads "Mutual only 4", the tab reads "For you", and a screen reader announces the count
 
 #### Scenario: Mutual count ignores filters
-- **WHEN** the switch reads "Mutual only 4", Mutual only is on, and the viewer filters to member SeoYeon, which only 1 of those people's matching posts holds
-- **THEN** the switch still reads "Mutual only 4", and the feed lists that 1 person
+- **WHEN** the button reads "Mutual only 4", Mutual only is pressed, and the viewer filters to member SeoYeon, which only 1 of those people's matching posts holds
+- **THEN** the button still reads "Mutual only 4", and the feed lists that 1 person
 
 #### Scenario: Foreign list slug
 - **WHEN** the URL's `list` is the slug of another account's list
@@ -804,7 +832,7 @@ The help beside the controls SHALL describe the mutual score as what the two peo
 
 #### Scenario: Phone
 - **WHEN** the viewer opens `/trade/for-you?match=mutual&list=spares` at 390 px
-- **THEN** the Filters button, Reset, the Mutual only switch (on), the Post type menu, Compare with naming spares and the help wrap across the row's lines, no collection filter shows on the row, the compared-lists line sits under it, and the page doesn't scroll sideways
+- **THEN** the Filters button, Reset, the Post type menu, Compare with naming spares, the Mutual only button (pressed) and the help wrap across the row's lines, no collection filter shows on the row, the compared-lists line sits under it, and the page doesn't scroll sideways
 
 #### Scenario: Two sections under Any
 - **WHEN** the viewer opens `/trade/for-you`, rin.trades is mutual with one WTT post and one WTS post, and sodalove matches them one way
@@ -830,17 +858,90 @@ The help beside the controls SHALL describe the mutual score as what the two peo
 - **WHEN** the viewer turns on Mutual only
 - **THEN** the feed lists the Mutual people with no section heading
 
-### Requirement: Buying only note
-A WTB post whose want list is set to Buying only SHALL show a short muted note beside its tag, "Buying only, not swapping", in its person's row, the way a want-only WTT post shows "Swaps only, not buying". A WTB post whose want list is open to swaps or buying SHALL show no note. The Browse help's tag table SHALL describe WTB as a want list open to swaps or buying, or set to buying only, and its "What counts toward Mutual" section SHALL show that a have list counts against a want list open to swaps only or to swaps or buying and not against one set to buying only, and that a sale list never counts toward Mutual.
+### Requirement: Post composer
+New post SHALL open a composer in two steps. First the viewer picks what the post is for: Swap (WTT), Sell (WTS) or Buy (WTB). Then they pick its lists:
+- Swap: a have list, a want list, or both, and "I'd also pay for what I'm looking for", available only with a want list;
+- Sell: one sale list;
+- Buy: one want list.
 
-#### Scenario: Buying-only post
-- **WHEN** a want list on its own is set to Buying only and on Trade
-- **THEN** its post shows the WTB tag with "Buying only, not swapping" beside it, and one WANT strip
+Post SHALL stay disabled until the kind's lists are picked. Before posting, the composer SHALL show the tags the post will carry and who it matches.
 
-#### Scenario: Swaps or buying post
-- **WHEN** a want list on its own is open to swaps or buying and on Trade
-- **THEN** its post shows the WTB tag and no note
+#### Scenario: Swap with both lists
+- **WHEN** the viewer picks Swap, have list "spares" and want list "binary hunt", leaves "also pay" off and posts
+- **THEN** one WTT post holds both lists, "spares" is linked to "binary hunt", "binary hunt" is open to swaps only, and both are on Trade
+
+#### Scenario: Swap that would also pay
+- **WHEN** the viewer picks Swap, want list "binary hunt" and ticks "also pay"
+- **THEN** the composer shows WTT and WTB, says sellers with what they look for match them too, and posting saves "binary hunt" open to swaps or buying
+
+#### Scenario: Also pay needs a want list
+- **WHEN** the viewer picks Swap and only have list "spares"
+- **THEN** "also pay" is disabled and says to pick a want list first
+
+#### Scenario: Buy post
+- **WHEN** the viewer picks Buy and want list "store hunt" and posts
+- **THEN** "store hunt" is on Trade set to Buying only, and its post is tagged WTB
+
+#### Scenario: Sell post
+- **WHEN** the viewer picks Sell and sale list "binary sale" and posts
+- **THEN** "binary sale" is on Trade and on Market, tagged WTS
+
+#### Scenario: Nothing picked
+- **WHEN** the viewer picks Swap and no list
+- **THEN** Post is disabled
+
+#### Scenario: Signed out
+- **WHEN** a signed-out visitor activates New post
+- **THEN** the browser is at `/login?redirect=/trade`
+
+### Requirement: Composer list rules
+A list SHALL be in one post at a time: in the composer, a list already in another post on Trade SHALL show disabled, naming that post, and a have or sale list not bound to a Cosmo profile SHALL show disabled with the reason. Posting SHALL count as a bump of each list it puts on Trade (see Bump).
+
+#### Scenario: List in another post
+- **WHEN** want list "store hunt" is in the viewer's Buy post and they start a Swap post
+- **THEN** "store hunt" shows disabled with "In your Buy post"
+
+#### Scenario: Unbound have list
+- **WHEN** the viewer's have list is not filed under a Cosmo profile
+- **THEN** it shows disabled in the composer with the reason shown
+
+### Requirement: Unpair in the composer
+Picking a list that is paired with another list, for a post that would not keep the pair, SHALL ask the viewer to unpair them before it can be posted: they can unpair and use it, or pick another list. Picking one half of a pair for a Swap post SHALL pick the other half too.
+
+#### Scenario: Paired list for a Buy post
+- **WHEN** want list "binary hunt" is paired with have list "spares", off Trade, and the viewer picks it for a Buy post
+- **THEN** the composer says the two are paired for swaps and a Buy post doesn't swap, and Post stays disabled until the viewer unpairs them or picks another list
+
+#### Scenario: Unpair and use it
+- **WHEN** the viewer chooses Unpair and use it, then posts
+- **THEN** "spares" is no longer linked to "binary hunt", and "binary hunt" is on Trade set to Buying only
+
+#### Scenario: Paired list for a Swap post
+- **WHEN** the viewer picks Swap and want list "binary hunt", which is paired with have list "spares"
+- **THEN** "spares" is picked as well, with no prompt
+
+### Requirement: Edit and take off a post
+Edit post SHALL open the composer on the post's kind and lists. Saving SHALL apply the new choice; a list taken out of the post SHALL leave Trade, and a have list taken out of a Swap post SHALL be unlinked from its want list. Take off Trade SHALL take every list of the post off Trade and off matching, and off Market for a sale list, keeping a Swap post's link, so posting it again brings the same pair back. Deleting one list of a pair SHALL leave a one-list Swap post.
+
+#### Scenario: Take a Swap post off Trade
+- **WHEN** the viewer takes the Swap post holding "spares" and "binary hunt" off Trade
+- **THEN** both lists leave `/trade` and For you, and they stay paired
+
+#### Scenario: Post it again
+- **WHEN** the viewer later activates Post it on "binary hunt"
+- **THEN** the composer opens on Swap with "spares" and "binary hunt" picked
+
+#### Scenario: Drop the have list in Edit post
+- **WHEN** the viewer edits the Swap post, unpicks "spares" and saves
+- **THEN** "spares" leaves Trade and is no longer linked, and the post holds only "binary hunt"
+
+#### Scenario: Delete half a pair
+- **WHEN** the viewer deletes have list "spares", which is in a Swap post with "binary hunt"
+- **THEN** the post stays on Trade as a Swap post holding only "binary hunt"
+
+### Requirement: Tag help
+The Browse help's tag table SHALL describe WTT as a Swap post, WTB as a Buy post or a Swap post that would also pay, and WTS as a Sell post, and say a post can carry WTT and WTB together. Its "What counts toward Mutual" section SHALL show that a have list counts against a want list open to swaps and not against one set to buying only, and that a sale list never counts toward Mutual.
 
 #### Scenario: Help table
 - **WHEN** the viewer opens the matching help on Browse
-- **THEN** the Mutual section shows a have list counting against Swaps only and Swaps or buying but not Buying only, and says a sale list never counts toward Mutual
+- **THEN** the tag table names Swap, Buy and Sell posts, says a Swap post that would also pay carries WTT and WTB, and the Mutual section says a sale list never counts toward Mutual
