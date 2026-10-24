@@ -58,6 +58,7 @@ import {
   touchList,
   tradeColumns,
 } from "../list";
+import { fetchRulesById } from "../list-rules";
 import { toPublicUser } from "../profile";
 import { getCache } from "../redis";
 import { reputationOf } from "../reputation";
@@ -215,6 +216,12 @@ export async function loadPosts(ctx: LoadContext, rows: FeedRow[], need: number)
     const batch = rows.slice(examined, examined + need - posts.length);
     examined += batch.length;
     const entriesOf = await fetchPostEntries(batch.flatMap(membersOf), addressesOf);
+    const ruleDefs = await fetchRulesById(
+      unique([
+        ...[...entriesOf.values()].flat().flatMap((entry) => entry.ruleId ?? []),
+        ...[...(viewer?.ruleWant?.values() ?? [])].flat().map((rule) => rule.ruleId),
+      ]),
+    );
 
     for (const row of batch) {
       last = row;
@@ -260,8 +267,26 @@ export async function loadPosts(ctx: LoadContext, rows: FeedRow[], need: number)
           more: side.more,
           copyCount: side.copyCount,
           others: side.others,
+          rules: side.rules.flatMap((tile) => {
+            const rule = ruleDefs.get(tile.ruleId);
+            if (!rule) return [];
+            // signed out, there is no one to count for
+            return [
+              {
+                ...tile,
+                rule,
+                matched: viewer ? tile.matched : null,
+                matchedSlugs: viewer ? tile.matchedSlugs : [],
+              },
+            ];
+          }),
         })),
         match: assembled.match,
+        // the viewer's own rules, by the slugs they matched; For you names them under the strips
+        ruleMatches: (assembled.ruleMatches ?? []).flatMap((found) => {
+          const rule = ruleDefs.get(found.ruleId);
+          return rule ? [{ ...found, rule }] : [];
+        }),
         person: persons.get(account.id),
         messageable: isMessageable(toMessagePref({ allow: row.message_allow })),
       });
@@ -393,7 +418,11 @@ export async function browseFeed(
   );
 
   const drawn = unique(
-    page.posts.flatMap((post) => post.sides.flatMap((s) => s.items.map((i) => i.slug))),
+    page.posts.flatMap((post) =>
+      post.sides
+        .flatMap((s) => [...s.items.map((i) => i.slug), ...s.rules.flatMap((r) => r.matchedSlugs)])
+        .concat(post.ruleMatches.map((found) => found.slug)),
+    ),
   );
   const collectionRows = await fetchCollectionsBySlug(drawn, []);
 
@@ -446,7 +475,7 @@ export async function fetchMyPosts(userId: string) {
       tags: post.tags,
       kind: postKindOf(post).kind,
       alsoPay: postKindOf(post).alsoPay,
-      lists: [post.have, post.want, post.sale].flatMap((list) =>
+      lists: [post.have, post.sale, post.want].flatMap((list) =>
         list
           ? [
               {
@@ -539,8 +568,9 @@ export async function fetchPostCards(
 
   const side = (list: FeedList | null) => {
     if (!list) return null;
+    // a chat card draws objekts only; a rule's entries stay on the post
     const { items, more, copyCount } = previewSide(
-      entriesOf.get(list.id) ?? [],
+      (entriesOf.get(list.id) ?? []).filter((entry) => entry.ruleId === undefined),
       null,
       POST_CARD_LIMIT,
     );

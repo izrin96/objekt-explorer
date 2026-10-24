@@ -22,12 +22,19 @@ export const offersOnTradeSql = (alias?: string) =>
   sql`(${column(alias, "list_type")} IN ('have', 'sale') AND ${column(alias, "is_profile_bind")})`;
 
 /**
- * Whether a have or sale list's entry can match a want list's: a have list only matches a want
- * list open to swaps, a sale list only one open to buying. `want` names a row with `match_have`
+ * Whether a list's objekts can be swapped for: a have list, or a sale list that takes swaps. The
+ * SQL twin of `offersSwaps` (schemas/open-to.ts); the row needs `list_type` and `takes_swaps`.
+ */
+export const offersSwapsSql = (alias?: string) =>
+  sql`(${column(alias, "list_type")} = 'have' OR (${column(alias, "list_type")} = 'sale' AND ${column(alias, "takes_swaps")}))`;
+
+/**
+ * Whether a have or sale list's entry can match a want list's: a list offering swaps matches a
+ * want list open to swaps, a sale list one open to buying. `want` names a row with `match_have`
  * and `match_sale` columns.
  */
 export const offerMatchesWantSql = (offer: string, want: string) =>
-  sql`((${column(offer, "list_type")} = 'have' AND ${column(want, "match_have")}) OR (${column(offer, "list_type")} = 'sale' AND ${column(want, "match_sale")}))`;
+  sql`((${offersSwapsSql(offer)} AND ${column(want, "match_have")}) OR (${column(offer, "list_type")} = 'sale' AND ${column(want, "match_sale")}))`;
 
 /** {@link takesPartInTrade} over a raw `lists` row, aliased or not. */
 export const takesPartInTradeSql = (alias?: string) =>

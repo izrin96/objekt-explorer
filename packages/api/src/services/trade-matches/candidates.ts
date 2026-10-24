@@ -4,7 +4,12 @@ import { sql } from "drizzle-orm";
 import { CANDIDATE_LIMIT, type Candidate, type TheyWant } from "../../lib/trade-rank";
 import type { TradeFilter } from "../../schemas/trade";
 import { listedCte, postsCte } from "../trade-feed/query";
-import { offerMatchesWantSql, takesPartInTradeSql, tradePartnerSql } from "../trade-lists";
+import {
+  offerMatchesWantSql,
+  offersSwapsSql,
+  takesPartInTradeSql,
+  tradePartnerSql,
+} from "../trade-lists";
 
 const HAVING: Record<TradeFilter, ReturnType<typeof sql>> = {
   all: sql``,
@@ -60,7 +65,7 @@ export async function fetchTradeCandidates(
       GROUP BY e.collection_slug
     ),
     my_have AS (
-      SELECT e.collection_slug, bool_or(l.list_type = 'have') AS on_have,
+      SELECT e.collection_slug, bool_or(${offersSwapsSql("l")}) AS on_have,
         bool_or(l.list_type = 'sale') AS on_sale
       FROM list_entries e
       JOIN lists l ON l.id = e.list_id
@@ -68,7 +73,8 @@ export async function fetchTradeCandidates(
       GROUP BY e.collection_slug
     ),
     partner_lists AS (
-      SELECT l.id, l.user_id, l.list_type, l.match_sale, l.match_have, l.updated_at FROM lists l
+      SELECT l.id, l.user_id, l.list_type, l.match_sale, l.match_have, l.takes_swaps, l.updated_at
+      FROM lists l
       WHERE l.discoverable
         AND ${takesPartInTradeSql("l")}
         AND l.user_id <> ${userId}
@@ -78,15 +84,18 @@ export async function fetchTradeCandidates(
         AND ${tradePartnerSql(userId, sql`l.user_id`)}
     ),
     matched AS (
+      -- a swap when the list offers swaps and my want list takes them; a sale when it is a sale
+      -- list and my want list buys. A Sell or swap entry can be both
       SELECT p.user_id, p.id AS list_id, p.updated_at, p.match_sale, p.match_have, true AS they_have,
-        p.list_type = 'have' AS trade, e.collection_slug, e.objekt_id
+        ${offersSwapsSql("p")} AND w.match_have AS trade, p.list_type = 'sale' AND w.match_sale AS sale,
+        e.collection_slug, e.objekt_id
       FROM partner_lists p
       JOIN list_entries e ON e.list_id = p.id
       JOIN my_want w ON w.collection_slug = e.collection_slug
       WHERE p.list_type IN ('have', 'sale') AND ${offerMatchesWantSql("p", "w")}
       UNION ALL
       SELECT p.user_id, p.id, p.updated_at, p.match_sale, p.match_have, false,
-        p.match_have AND h.on_have, e.collection_slug, NULL
+        p.match_have AND h.on_have, false, e.collection_slug, NULL
       FROM partner_lists p
       JOIN list_entries e ON e.list_id = p.id
       JOIN my_have h ON h.collection_slug = e.collection_slug
@@ -101,7 +110,8 @@ export async function fetchTradeCandidates(
         count(DISTINCT collection_slug) FILTER (WHERE NOT they_have AND trade) AS b_t,
         coalesce(
           json_agg(json_build_object(
-            'listId', list_id, 'slug', collection_slug, 'objektId', objekt_id, 'sale', NOT trade
+            'listId', list_id, 'slug', collection_slug, 'objektId', objekt_id,
+            'swap', trade, 'sale', sale
           )) FILTER (WHERE they_have),
           '[]'
         ) AS they_have,

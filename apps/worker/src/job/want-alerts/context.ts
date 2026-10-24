@@ -22,6 +22,7 @@ export async function loadContext<P extends AlertPair>(pairs: P[]) {
       slug: lists.slug,
       name: lists.name,
       listType: lists.listType,
+      takesSwaps: lists.takesSwaps,
       profileAddress: lists.profileAddress,
     })
     .from(lists)
@@ -63,7 +64,8 @@ export async function loadContext<P extends AlertPair>(pairs: P[]) {
         userId: list.userId,
         slug: list.slug,
         name: list.name,
-        sale: list.listType === "sale",
+        // a Sell or swap list can swap, so Can swap asks For you about it like a have list
+        sale: list.listType === "sale" && !list.takesSwaps,
         ownerName: toPartnerIdentity(
           nameOf.get(list.userId) ?? "",
           [{ profileAddress: list.profileAddress, matches: 0 }],

@@ -6,7 +6,7 @@ import { m } from "@/paraglide/messages";
 
 import { IN_POST } from "./post-list-dialog";
 import { usePlanLists } from "./post-plan";
-import { TagBadge } from "./tag-label";
+import { TagBadges } from "./tag-label";
 
 /**
  * A have or want list's place on Trade in its edit form: the post holding it, or that it is off
@@ -23,9 +23,7 @@ export function TradeLine({ slug, onCompose }: { slug: string; onCompose: () => 
     line.state === "in_post" ? (
       <span className="flex flex-wrap items-center gap-1.5">
         {IN_POST[line.kind]()}
-        {line.tags.map((tag) => (
-          <TagBadge key={tag} tag={tag} />
-        ))}
+        <TagBadges tags={line.tags} />
       </span>
     ) : line.state === "paired_off" ? (
       `${m.trade_paired_with({ name: line.partner.name })} · ${m.trade_line_off()}`
@@ -36,7 +34,7 @@ export function TradeLine({ slug, onCompose }: { slug: string; onCompose: () => 
     line.state === "in_post"
       ? [
           line.partner ? m.trade_paired_with({ name: line.partner.name }) : null,
-          line.kind === "swap" && line.alsoPay ? m.trade_post_option_also_pay() : null,
+          line.alsoPay ? m.trade_post_option_also_pay() : null,
           line.kind === "buy" ? m.list_create_match_buying_label() : null,
         ]
           .filter((part) => part !== null)

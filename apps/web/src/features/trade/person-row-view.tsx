@@ -12,7 +12,10 @@ import { Button } from "@/components/ui/button";
 import { Frame, FramePanel } from "@/components/ui/frame";
 import { MenuItem } from "@/components/ui/menu";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ruleText } from "@/features/list/rules/words";
 import { SafetyMenu } from "@/features/moderation/safety-menu";
+import { collectionName } from "@/features/objekt/objekt-label";
+import { useUserLists } from "@/features/user/hooks";
 import { relativeTime } from "@/lib/time";
 import { TONE_FILL, TONE_INK } from "@/lib/tone";
 import { cn } from "@/lib/utils";
@@ -60,7 +63,16 @@ function WithNumber({
  * through sale lists, then each direction's count. One way is only its count, since For you heads
  * that section already. A direction with nothing is left out.
  */
-function MatchBandStrip({ band, className }: { band: MatchBand; className?: string }) {
+function MatchBandStrip({
+  band,
+  throughRules = 0,
+  className,
+}: {
+  band: MatchBand;
+  /** how many of the swap the viewer wants only through their rules */
+  throughRules?: number;
+  className?: string;
+}) {
   const swap = band.kind === "swap";
   return (
     <div
@@ -82,6 +94,16 @@ function MatchBandStrip({ band, className }: { band: MatchBand; className?: stri
               <ArrowsLeftRightIcon aria-hidden className="size-4" />
               <span>
                 <WithNumber render={(count) => m.trade_person_swap({ count })} count={band.swap} />
+                {throughRules > 0 ? (
+                  <span className="font-normal">
+                    {" · "}
+                    {throughRules < band.swap
+                      ? m.trade_through_rules({ count: throughRules })
+                      : band.swap === 2
+                        ? m.trade_through_rules_both()
+                        : m.trade_through_rules_all()}
+                  </span>
+                ) : null}
               </span>
             </>
           ) : (
@@ -126,6 +148,7 @@ function unringed(post: PersonPostData): PersonPostData {
     sides: post.sides.map((side) => ({
       ...side,
       items: side.items.map(({ ringed: _ringed, ...item }) => item),
+      rules: side.rules.map((tile) => ({ ...tile, matched: null, matchedSlugs: [] })),
     })),
   };
 }
@@ -166,7 +189,40 @@ function PostBlock({
       {shown.sides.filter(isEmptySide).map((side) => (
         <EmptySide key={side.list.id} side={side} surface={surface} />
       ))}
+      {surface === "forYou" && !own && post.ruleMatches.length > 0 ? (
+        <RuleMatchLines matches={post.ruleMatches} collections={collections} />
+      ) : null}
     </FramePanel>
+  );
+}
+
+/** lines before "N more through your rules": a big list would otherwise bury the row */
+const RULE_LINES = 3;
+
+/** For you: the poster's objekts the viewer wants only through a rule, one line each. */
+function RuleMatchLines({
+  matches,
+  collections,
+}: {
+  matches: PersonPostData["ruleMatches"];
+  collections: Readonly<Record<string, ValidObjekt | undefined>>;
+}) {
+  const lists = useUserLists();
+  const rest = matches.length - RULE_LINES;
+  return (
+    <ul className="text-muted-foreground flex flex-col gap-0.5 text-xs">
+      {matches.slice(0, RULE_LINES).map((found) => (
+        <li key={found.slug} className="min-w-0 truncate">
+          <span className="text-foreground font-mono">
+            {collectionName(found.slug, collections[found.slug])}
+          </span>{" "}
+          {m.trade_matches_your_rule()} <span className="font-mono">{ruleText(found.rule)}</span>
+          {" · "}
+          {lists.find((list) => list.id === found.listId)?.name ?? ""}
+        </li>
+      ))}
+      {rest > 0 ? <li>{m.trade_rule_lines_more({ count: rest })}</li> : null}
+    </ul>
   );
 }
 
@@ -211,6 +267,11 @@ export const PersonRow = memo(function PersonRow({
   // no match says nothing: a row without a band already reads as one
   const band = own || !signedIn ? null : matchBand(person.counts);
   const posts = orderPosts(person.posts);
+  const throughRules = new Set(
+    person.posts.flatMap((post) =>
+      post.ruleMatches.flatMap((found) => (found.swap ? [found.slug] : [])),
+    ),
+  ).size;
   const lead = leadPost(person.posts);
   const all = led || expanded;
   const shown = all ? posts : posts.slice(0, SHOWN_POSTS);
@@ -255,7 +316,13 @@ export const PersonRow = memo(function PersonRow({
           band ? "pt-1" : "pt-2.5",
         )}
       >
-        {band ? <MatchBandStrip band={band} className="@3xl:col-span-2 @3xl:row-start-1" /> : null}
+        {band ? (
+          <MatchBandStrip
+            band={band}
+            throughRules={surface === "forYou" ? throughRules : 0}
+            className="@3xl:col-span-2 @3xl:row-start-1"
+          />
+        ) : null}
         <TradeHeader
           className="min-w-0 px-3"
           person={person}

@@ -96,6 +96,8 @@ export const lists = pgTable(
     matchSale: boolean("match_sale").notNull().default(true),
     /** a want list's matches include have lists; off with matchSale on, it is Buying only */
     matchHave: boolean("match_have").notNull().default(true),
+    /** a sale list that also takes swaps (Sell or swap): it matches want lists open to swaps as a have list does */
+    takesSwaps: boolean("takes_swaps").notNull().default(false),
     updatedAt: timestamp("updated_at", { mode: "string", withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -120,6 +122,43 @@ export const lists = pgTable(
       .on(t.bumpedAt.desc(), t.id)
       .where(sql`discoverable`),
     check("lists_open_to_something", sql`${t.matchSale} OR ${t.matchHave}`),
+    check("lists_takes_swaps_sale_only", sql`NOT ${t.takesSwaps} OR ${t.listType} = 'sale'`),
+  ],
+);
+
+export const listRule = pgTable(
+  "list_rule",
+  {
+    id: serial("id").primaryKey(),
+    listId: integer("list_id")
+      .notNull()
+      .references(() => lists.id, {
+        onDelete: "cascade",
+      }),
+    /** `collection`: any member of one collection; `set`: a class, season and editions */
+    kind: text("kind").notNull().$type<"collection" | "set">(),
+    artist: text("artist").notNull(),
+    /** null is any season, for a `set` rule */
+    season: text("season"),
+    collectionNo: text("collection_no"),
+    class: text("class"),
+    /** empty is any edition */
+    editions: integer("editions").array().notNull().default([]),
+    /** empty is any member */
+    members: text("members").array().notNull().default([]),
+    /** shown beside the rule, never matched */
+    prio: text("prio").array().notNull().default([]),
+    skipOwned: boolean("skip_owned").notNull().default(true),
+    createdAt: timestamp("created_at", { mode: "string", withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { mode: "string", withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index("list_rule_list_idx").on(t.listId),
+    check("list_rule_kind_chk", sql`${t.kind} IN ('collection', 'set')`),
   ],
 );
 
@@ -134,6 +173,10 @@ export const listEntries = pgTable(
       }),
     collectionSlug: varchar("collection_slug", { length: 255 }),
     objektId: varchar("objekt_id", { length: 255 }),
+    /** set on the entries a want-list rule keeps; they follow the rule, not the owner's hand */
+    ruleId: integer("rule_id").references(() => listRule.id, {
+      onDelete: "cascade",
+    }),
     price: real("price"),
     isQyop: boolean("is_qyop").notNull().default(false),
     note: varchar("note", { length: 255 }),
@@ -145,6 +188,9 @@ export const listEntries = pgTable(
     index("list_entries_list_idx").on(t.listId),
     index("list_entries_objekt_idx").on(t.objektId),
     index("list_entries_collection_slug_idx").on(t.collectionSlug),
+    index("list_entries_rule_idx")
+      .on(t.ruleId)
+      .where(sql`rule_id IS NOT NULL`),
     uniqueIndex("list_entries_list_objekt_uniq")
       .on(t.listId, t.objektId)
       .where(sql`objekt_id IS NOT NULL`),

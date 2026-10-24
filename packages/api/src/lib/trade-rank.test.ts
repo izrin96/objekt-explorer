@@ -900,3 +900,37 @@ describe("peopleAfter", () => {
     expect(order(peopleAfter(tied, oneWayRankOf(person("b", 2))))).toEqual(["b", "c"]);
   });
 });
+
+describe("recount: a sale list that takes swaps", () => {
+  const holdings: Holdings = {
+    objekts: new Map([["kept", { owner: "0xp", transferable: true }]]),
+    copies: new Map(),
+  };
+  const theyHave = (want: { matchSale: boolean; matchHave: boolean }) =>
+    recount(
+      {
+        userId: "P",
+        listUpdatedAt: { 7: RECENT },
+        theyHave: [
+          { listId: 7, slug: "x", objektId: "kept", sale: want.matchSale, swap: want.matchHave },
+        ],
+        theyWant: [],
+      },
+      new Set(["0xp"]),
+      holdings,
+      new Map([["x", [{ listId: 3, ...want }]]]),
+      { all: new Map(), trade: new Map(), sale: new Map() },
+    ).theyHaveIWant;
+
+  test("answers a swaps-only want as a swap", () => {
+    expect(theyHave({ matchSale: false, matchHave: true })).toEqual([
+      { slug: "x", myListIds: [3], partnerListIds: [7], trade: true },
+    ]);
+  });
+
+  test("answers a swaps-or-buying want as both a swap and a sale", () => {
+    expect(theyHave({ matchSale: true, matchHave: true })).toEqual([
+      { slug: "x", myListIds: [3], partnerListIds: [7], trade: true },
+    ]);
+  });
+});

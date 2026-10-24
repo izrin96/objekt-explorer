@@ -70,6 +70,7 @@ export async function recountPartners(
             slug: listEntries.collectionSlug,
             objektId: listEntries.objektId,
             listType: lists.listType,
+            takesSwaps: lists.takesSwaps,
             matchSale: lists.matchSale,
             matchHave: lists.matchHave,
           })
@@ -96,12 +97,14 @@ export async function recountPartners(
   const haveIds = new Set(sides.haveListIds);
   const myHaveEntries: OwnedEntry[] = [];
   const mySaleListIds = new Set<number>();
+  const mySwapSaleListIds = new Set<number>();
   const myWants = new Map<string, MyWant[]>();
   for (const entry of myEntries) {
     if (entry.slug === null) continue;
     if (haveIds.has(entry.listId)) {
       myHaveEntries.push({ listId: entry.listId, slug: entry.slug, objektId: entry.objektId });
       if (entry.listType === "sale") mySaleListIds.add(entry.listId);
+      if (entry.listType === "sale" && entry.takesSwaps) mySwapSaleListIds.add(entry.listId);
     } else {
       const held = myWants.get(entry.slug) ?? [];
       if (!held.some((want) => want.listId === entry.listId)) {
@@ -137,7 +140,11 @@ export async function recountPartners(
     );
   const myHaves: MyHaves = {
     all: judge(myHaveEntries),
-    trade: judge(myHaveEntries.filter((entry) => !mySaleListIds.has(entry.listId))),
+    trade: judge(
+      myHaveEntries.filter(
+        (entry) => !mySaleListIds.has(entry.listId) || mySwapSaleListIds.has(entry.listId),
+      ),
+    ),
     sale: judge(myHaveEntries.filter((entry) => mySaleListIds.has(entry.listId))),
   };
 

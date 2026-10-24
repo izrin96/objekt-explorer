@@ -14,7 +14,7 @@ export type AlertList = {
   name: string;
   /** what a notification calls the list's owner */
   ownerName: string;
-  /** a sale list: never a swap, so never Can swap */
+  /** a sale list set to Sell only: never a swap, so never Can swap */
   sale: boolean;
 };
 

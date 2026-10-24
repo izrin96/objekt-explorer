@@ -50,6 +50,18 @@ export function refusalText(error: unknown) {
       return m.api_errors_list_profile_required();
     case "list_prices_sale_only":
       return m.api_errors_list_prices_sale_only();
+    case "list_sale_links_sell_only":
+      return m.api_errors_list_sale_links_sell_only();
+    case "list_rule_not_want":
+      return m.api_errors_list_rule_not_want();
+    case "list_rule_too_wide":
+      return m.api_errors_list_rule_too_wide();
+    case "list_rule_nothing_to_match":
+      return m.api_errors_list_rule_nothing_to_match();
+    case "list_rule_limit":
+      return m.api_errors_list_rule_limit();
+    case "list_rule_no_collections":
+      return m.api_errors_list_rule_no_collections();
     case "trade_mode_list_type":
       return m.api_errors_trade_mode_list_type();
     case "trade_mode_both_needs_pair":

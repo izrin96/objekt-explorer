@@ -33,7 +33,7 @@ import { m } from "@/paraglide/messages";
 
 import { useSavePost } from "./actions";
 import { usePlanLists } from "./post-plan";
-import { TagBadge } from "./tag-label";
+import { TagBadge, TagBadges } from "./tag-label";
 
 export const NEW_POST: ComposerStart = {
   kind: null,
@@ -41,6 +41,7 @@ export const NEW_POST: ComposerStart = {
   want: null,
   sale: null,
   alsoPay: false,
+  alsoSwap: false,
   replaces: null,
 };
 
@@ -76,7 +77,8 @@ type Slot = "have" | "want" | "sale";
 
 const SLOTS_OF: Record<PostKind, Slot[]> = {
   swap: ["have", "want"],
-  sell: ["sale"],
+  // the want list only once the sale list takes swaps: it is what the seller would swap for
+  sell: ["sale", "want"],
   buy: ["want"],
 };
 
@@ -118,6 +120,7 @@ type Choice = {
   want: string | null;
   sale: string | null;
   alsoPay: boolean;
+  alsoSwap: boolean;
   unpair: boolean;
 };
 
@@ -203,32 +206,83 @@ function Composer({ start, onDone }: { start: ComposerStart; onDone: () => void 
   }
 
   const kind = choice.kind;
+  const sellSwaps = kind === "sell" && choice.alsoSwap;
   const request = {
     kind,
     have: choice.have,
-    want: choice.want,
+    want: kind === "sell" && !choice.alsoSwap ? null : choice.want,
     sale: choice.sale,
-    alsoPay: kind === "swap" && choice.want !== null && choice.alsoPay,
+    alsoPay: (kind === "swap" || sellSwaps) && choice.want !== null && choice.alsoPay,
+    alsoSwap: kind === "sell" ? choice.alsoSwap : undefined,
     unpair: choice.unpair,
     replaces: start.replaces,
   };
+  // the half a picked list's partner fills: a want list's is the have list, or on a Sell post
+  // the sale list
+  const otherOf = (slot: Slot): Slot =>
+    slot !== "want" ? "want" : kind === "sell" ? "sale" : "have";
+  const keepsPair = kind === "swap" || sellSwaps;
   const plan = planPost(lists, request);
+  const alsoPayCheck = (
+    <OptionCheck
+      label={m.trade_composer_also_pay()}
+      hint={
+        choice.want === null
+          ? m.trade_composer_also_pay_needs_want()
+          : m.trade_composer_also_pay_hint()
+      }
+      checked={request.alsoPay}
+      disabled={choice.want === null}
+      onChange={(alsoPay) => setChoice((prev) => ({ ...prev, alsoPay }))}
+    />
+  );
 
   const pick = (slot: Slot, slug: string | null) => {
     setChoice((prev) => {
       const next = { ...prev, [slot]: slug, unpair: false };
       if (slot === "want" && slug === null) next.alsoPay = false;
-      // one half of a pair brings the other half along on a Swap post, unless that side is taken
-      const other = slot === "have" ? "want" : "have";
+      // one half of a pair brings the other along on a post that keeps it, unless that side is taken
+      const other = otherOf(slot);
       const list = lists.find((entry) => entry.slug === slug);
-      const partner =
-        list && kind === "swap" && prev[other] === null ? partnerOf(lists, list) : null;
-      if (partner && rowBlock(lists, partner, kind, start.replaces) === null) {
+      const partner = list && keepsPair && prev[other] === null ? partnerOf(lists, list) : null;
+      // a want list's partner may be a have or a sale list; only one that fits the slot comes along
+      if (
+        partner &&
+        partner.listType === other &&
+        rowBlock(lists, partner, kind, start.replaces) === null
+      ) {
         next[other] = partner.slug;
       }
       return next;
     });
   };
+
+  const renderSection = (slot: Slot) => (
+    <ListSection
+      key={slot}
+      slot={slot}
+      kind={kind}
+      optional={kind === "swap" || slot === "want"}
+      lists={lists}
+      value={choice[slot]}
+      otherPicked={keepsPair && choice[otherOf(slot)] !== null}
+      replaces={start.replaces}
+      prompt={
+        !plan.ok &&
+        plan.reason === "trade_post_list_paired" &&
+        plan.slug === choice[slot] &&
+        plan.partner
+          ? {
+              partner: lists.find((list) => list.slug === plan.partner)?.name ?? "",
+              onUnpair: () => setChoice((prev) => ({ ...prev, unpair: true })),
+              onPickAnother: () => pick(slot, null),
+            }
+          : null
+      }
+      onPick={(slug) => pick(slot, slug)}
+      onDone={onDone}
+    />
+  );
 
   return (
     <form
@@ -242,44 +296,41 @@ function Composer({ start, onDone }: { start: ComposerStart; onDone: () => void 
     >
       {header}
       <DialogPanel className="flex flex-col gap-5">
-        {SLOTS_OF[kind].map((slot) => (
-          <ListSection
-            key={slot}
-            slot={slot}
-            kind={kind}
-            optional={kind === "swap"}
-            lists={lists}
-            value={choice[slot]}
-            otherPicked={kind === "swap" && choice[slot === "have" ? "want" : "have"] !== null}
-            replaces={start.replaces}
-            prompt={
-              !plan.ok &&
-              plan.reason === "trade_post_list_paired" &&
-              plan.slug === choice[slot] &&
-              plan.partner
-                ? {
-                    partner: lists.find((list) => list.slug === plan.partner)?.name ?? "",
-                    onUnpair: () => setChoice((prev) => ({ ...prev, unpair: true })),
-                    onPickAnother: () => pick(slot, null),
-                  }
-                : null
-            }
-            onPick={(slug) => pick(slot, slug)}
-            onDone={onDone}
-          />
-        ))}
+        {SLOTS_OF[kind].filter((slot) => !(kind === "sell" && slot === "want")).map(renderSection)}
         {kind === "sell" ? (
-          <p className="text-muted-foreground -mt-3 text-xs text-pretty">
-            {m.trade_composer_sale_note()}
-          </p>
+          <>
+            <p className="text-muted-foreground -mt-3 text-xs text-pretty">
+              {m.trade_composer_sale_note()}
+            </p>
+            <OptionCheck
+              label={m.trade_composer_also_swap()}
+              hint={
+                choice.alsoSwap
+                  ? m.trade_composer_also_swap_hint()
+                  : m.trade_composer_also_swap_off_hint()
+              }
+              checked={choice.alsoSwap}
+              disabled={false}
+              onChange={(alsoSwap) =>
+                setChoice((prev) => ({
+                  ...prev,
+                  alsoSwap,
+                  want: alsoSwap ? prev.want : null,
+                  alsoPay: alsoSwap && prev.alsoPay,
+                  unpair: false,
+                }))
+              }
+            />
+            {/* what the seller would swap for, once the sale list takes swaps */}
+            {choice.alsoSwap ? (
+              <>
+                {renderSection("want")}
+                {alsoPayCheck}
+              </>
+            ) : null}
+          </>
         ) : null}
-        {kind === "swap" ? (
-          <AlsoPay
-            checked={request.alsoPay}
-            disabled={choice.want === null}
-            onChange={(alsoPay) => setChoice((prev) => ({ ...prev, alsoPay }))}
-          />
-        ) : null}
+        {kind === "swap" ? alsoPayCheck : null}
         {plan.ok ? <UnpairedNote lists={lists} plan={plan} picked={request} /> : null}
         <Preview
           kind={kind}
@@ -287,6 +338,7 @@ function Composer({ start, onDone }: { start: ComposerStart; onDone: () => void 
           want={choice.want !== null}
           sale={choice.sale !== null}
           alsoPay={request.alsoPay}
+          alsoSwap={sellSwaps}
         />
       </DialogPanel>
       <DialogFooter>
@@ -489,7 +541,9 @@ function UnpairPrompt({ id, kind, prompt }: { id: string; kind: PostKind; prompt
       <AlertDescription className="text-foreground">
         {kind === "buy"
           ? m.trade_composer_unpair_buy({ name: prompt.partner })
-          : m.trade_composer_unpair_swap({ name: prompt.partner })}
+          : kind === "sell"
+            ? m.trade_composer_unpair_sell({ name: prompt.partner })
+            : m.trade_composer_unpair_swap({ name: prompt.partner })}
         <span className="flex flex-wrap gap-2">
           <Button type="button" size="sm" onClick={prompt.onUnpair}>
             {m.trade_composer_unpair_action()}
@@ -503,11 +557,16 @@ function UnpairPrompt({ id, kind, prompt }: { id: string; kind: PostKind; prompt
   );
 }
 
-function AlsoPay({
+/** A post option under the lists: Swap's "also pay", Sell's "also open to swaps". */
+function OptionCheck({
+  label,
+  hint,
   checked,
   disabled,
   onChange,
 }: {
+  label: string;
+  hint: string;
   checked: boolean;
   disabled: boolean;
   onChange: (checked: boolean) => void;
@@ -530,9 +589,9 @@ function AlsoPay({
         aria-describedby={`${id}-hint`}
       />
       <span className="flex min-w-0 flex-col gap-0.5">
-        <span className="text-sm font-medium">{m.trade_composer_also_pay()}</span>
+        <span className="text-sm font-medium">{label}</span>
         <span id={`${id}-hint`} className="text-muted-foreground text-xs text-pretty">
-          {disabled ? m.trade_composer_also_pay_needs_want() : m.trade_composer_also_pay_hint()}
+          {hint}
         </span>
       </span>
     </Label>
@@ -570,17 +629,23 @@ function Preview({
   want,
   sale,
   alsoPay,
+  alsoSwap,
 }: {
   kind: PostKind;
   have: boolean;
   want: boolean;
   sale: boolean;
   alsoPay: boolean;
+  alsoSwap: boolean;
 }) {
-  const tags = choiceTags({ kind, have, want, sale, alsoPay });
+  const tags = choiceTags({ kind, have, want, sale, alsoPay, alsoSwap });
   const lines =
     kind === "sell"
-      ? [m.trade_composer_match_sell()]
+      ? [
+          m.trade_composer_match_sell(),
+          ...(alsoSwap ? [m.trade_composer_match_sell_swap()] : []),
+          ...(want && alsoPay ? [m.trade_composer_match_also_pay()] : []),
+        ]
       : kind === "buy"
         ? [m.trade_composer_match_buy()]
         : [
@@ -597,9 +662,7 @@ function Preview({
     <div className="bg-muted/40 flex flex-col gap-1.5 rounded-lg border px-3.5 py-3">
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-muted-foreground text-xs">{m.trade_composer_shows_as()}</span>
-        {(tags.length > 0 ? tags : [KIND_TAG[kind]]).map((tag) => (
-          <TagBadge key={tag} tag={tag} />
-        ))}
+        <TagBadges tags={tags.length > 0 ? tags : [KIND_TAG[kind]]} />
       </div>
       {/* polite, so the match line reads out as the picks change it */}
       <p aria-live="polite" className="text-sm text-pretty">

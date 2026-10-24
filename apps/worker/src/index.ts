@@ -11,6 +11,7 @@ import { populateSerial, populateSerialOffline } from "./job/populate-serial";
 import { processCollectionImages } from "./job/process-collection-images";
 import { pruneNotifications } from "./job/prune-notifications";
 import { refreshAccessToken } from "./job/refresh-access-token";
+import { refreshListRules } from "./job/refresh-list-rules";
 import { snapshotPriceHistory } from "./job/snapshot-price-history";
 import { runTradeVerifier, watchVerifierTriggers } from "./job/trade-verifier";
 import { relayTransfers } from "./job/transfers-relay";
@@ -138,6 +139,12 @@ crons.push(cron(SNAPSHOT_CRON, runPriceHistory));
 const runWantAlerts = safeRun("want-alerts", sendWantAlerts);
 startupRuns.push(runWantAlerts);
 crons.push(cron("*/5 * * * *", runWantAlerts));
+
+// keeps want-list rules current with new collections and the owners' holdings; reads the
+// indexer, writes the app database only
+const runListRules = safeRun("refresh-list-rules", refreshListRules);
+startupRuns.push(runListRules);
+crons.push(cron("*/10 * * * *", runListRules));
 
 // no startup run: retention is not urgent
 crons.push(cron("0 5 * * 1", safeRun("prune-notifications", pruneNotifications)));

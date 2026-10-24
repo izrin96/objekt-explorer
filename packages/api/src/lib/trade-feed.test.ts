@@ -32,6 +32,8 @@ import {
   tradeableEntries,
   untradeableKey,
   type Viewer,
+  ruleMatchesOf,
+  ruleTiles,
 } from "./trade-feed";
 
 const NOW = new Date("2026-10-07T12:00:00Z");
@@ -43,6 +45,7 @@ const list = (over: Partial<TradeList> & Pick<TradeList, "id" | "listType">): Tr
   linkedListId: null,
   matchSale: true,
   matchHave: true,
+  takesSwaps: false,
   bumpedAt: daysAgo(1),
   updatedAt: daysAgo(1),
   ...over,
@@ -1118,5 +1121,102 @@ describe("orderReader", () => {
     expect(read.examined?.id).toBe("x2");
     expect(read.dry).toBe(false);
     expect(reader.position()).toBe(4);
+  });
+});
+
+describe("ruleTiles", () => {
+  test("one tile per rule, oldest first, counting the viewer's matches", () => {
+    const entries = [
+      { id: 1, slug: "a", objektId: null },
+      { id: 2, slug: "b", objektId: null, ruleId: 9 },
+      { id: 3, slug: "c", objektId: null, ruleId: 4 },
+      { id: 4, slug: "d", objektId: null, ruleId: 9 },
+    ];
+    const index = new Map([
+      ["b", [1]],
+      ["d", [1]],
+      ["a", [1]],
+    ]);
+    expect(ruleTiles(entries, index)).toEqual([
+      { ruleId: 4, count: 1, matched: 0, matchedSlugs: [] },
+      { ruleId: 9, count: 2, matched: 2, matchedSlugs: ["b", "d"] },
+    ]);
+    expect(ruleTiles(entries, null)).toEqual([
+      { ruleId: 4, count: 1, matched: 0, matchedSlugs: [] },
+      { ruleId: 9, count: 2, matched: 0, matchedSlugs: [] },
+    ]);
+  });
+});
+
+describe("ruleMatchesOf", () => {
+  const entry = (id: number, slug: string) => ({ id, slug, objektId: null });
+  const ruleWant = new Map([
+    ["lynn-366", [{ ruleId: 1, listId: 10 }]],
+    ["kaede-118", [{ ruleId: 2, listId: 10 }]],
+  ]);
+
+  test("names each collection matched only through a rule, once, swap when a have list holds it", () => {
+    const index = new Map([
+      ["lynn-366", [10]],
+      ["kaede-118", [10]],
+      ["kotone-302", [10]],
+    ]);
+    expect(
+      ruleMatchesOf(
+        [
+          { role: "sale", entries: [entry(1, "lynn-366")], index },
+          { role: "have", entries: [entry(2, "lynn-366"), entry(3, "kotone-302")], index },
+        ],
+        ruleWant,
+      ),
+    ).toEqual([{ slug: "lynn-366", ruleId: 1, listId: 10, swap: true }]);
+  });
+
+  test("a side the viewer's lists can't match names nothing", () => {
+    expect(
+      ruleMatchesOf(
+        [{ role: "have", entries: [entry(1, "kaede-118")], index: new Map() }],
+        ruleWant,
+      ),
+    ).toEqual([]);
+  });
+});
+
+describe("Sell or swap posts", () => {
+  test("a sale list that takes swaps folds its want list into one WTS and WTT post", () => {
+    const sale = list({ id: 1, listType: "sale", takesSwaps: true, linkedListId: 2 });
+    const want = list({ id: 2, listType: "want", matchSale: false, linkedListId: 1 });
+    const [post, ...rest] = pairPosts([sale, want]);
+    expect(rest).toEqual([]);
+    expect(post).toMatchObject({
+      anchor: { id: 1 },
+      sale: { id: 1 },
+      want: { id: 2 },
+      tags: ["wts", "wtt"],
+    });
+  });
+
+  test("a Sell only sale list stays its own post", () => {
+    const sale = list({ id: 1, listType: "sale", linkedListId: 2 });
+    const want = list({ id: 2, listType: "want", matchSale: false, linkedListId: 1 });
+    expect(pairPosts([sale, want]).map((post) => post.tags)).toEqual([["wts"], ["wtt"]]);
+  });
+});
+
+describe("ruleMatchesOf picks the rule of the list that matched", () => {
+  test("two rules on two lists want a slug; the compared one is named", () => {
+    const ruleWant = new Map([
+      [
+        "x",
+        [
+          { ruleId: 1, listId: 10 },
+          { ruleId: 2, listId: 20 },
+        ],
+      ],
+    ]);
+    const side = { role: "have" as const, entries: [{ id: 1, slug: "x", objektId: null }] };
+    expect(ruleMatchesOf([{ ...side, index: new Map([["x", [20]]]) }], ruleWant)).toEqual([
+      { slug: "x", ruleId: 2, listId: 20, swap: true },
+    ]);
   });
 });

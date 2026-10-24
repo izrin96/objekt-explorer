@@ -66,7 +66,14 @@ const EMPTY_OPTIONS = {
  * — so any visitor can export the collection they are looking at. The owner's
  * have/want generator is `DiscordFormatDialog` in `discord-format-dialog.tsx`.
  */
-export function GenerateDiscordButton({ objekts }: { objekts: ValidObjekt[] }) {
+export function GenerateDiscordButton({
+  objekts,
+  rules,
+}: {
+  objekts: ValidObjekt[];
+  /** a want list's rule lines; they make the text a Want section and come first */
+  rules?: string[];
+}) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -75,17 +82,19 @@ export function GenerateDiscordButton({ objekts }: { objekts: ValidObjekt[] }) {
         <DiscordLogoIcon weight="fill" />
         {m.discord_format_modal_button()}
       </Button>
-      <GenerateDiscordDialog objekts={objekts} open={open} onOpenChange={setOpen} />
+      <GenerateDiscordDialog objekts={objekts} rules={rules} open={open} onOpenChange={setOpen} />
     </>
   );
 }
 
 function GenerateDiscordDialog({
   objekts,
+  rules,
   open,
   onOpenChange,
 }: {
   objekts: ValidObjekt[];
+  rules?: string[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
@@ -108,7 +117,12 @@ function GenerateDiscordDialog({
       compareArtistMember,
       compareSeason,
     });
-    setText(["## Have", "", formatted].join("\n"));
+    if (rules === undefined) {
+      setText(["## Have", "", formatted].join("\n"));
+      return;
+    }
+    const ruleLines = rules.map((rule) => (options.bullet ? `- ${rule}` : rule));
+    setText(["## Want", "", ...ruleLines, ...(objekts.length > 0 ? [formatted] : [])].join("\n"));
   };
 
   return (

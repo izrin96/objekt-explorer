@@ -10,7 +10,7 @@ import { normalizeCurrency } from "@repo/lib/currency";
 import { touchListWith } from "@repo/lib/server/list-touch";
 import { mapOwnedObjekt, overrideCollection } from "@repo/lib/server/objekt";
 import type { ListEntryFields, ListObjekt } from "@repo/lib/types/objekt";
-import { type SQL, and, eq, inArray, isNotNull, ne, sql } from "drizzle-orm";
+import { type SQL, and, eq, inArray, isNotNull, isNull, ne, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import slugify from "slugify";
 import type * as z from "zod";
@@ -158,6 +158,8 @@ export async function fetchListWithEntries(slug: string) {
   return db.query.lists.findFirst({
     with: {
       entries: {
+        // a rule's entries show as the rule, never in the grid
+        where: { ruleId: { isNull: true } },
         orderBy: { id: "asc" },
       },
     },
@@ -227,6 +229,7 @@ export async function fetchList(
     discoverable: result.discoverable,
     matchSale: result.matchSale,
     matchHave: result.matchHave,
+    takesSwaps: result.takesSwaps,
     bumpedAt: result.bumpedAt,
     user: result.user ? toPublicUser(result.user) : null,
     profile: result.userAddress ? toPartialProfile(result.userAddress) : null,
@@ -276,6 +279,7 @@ export async function fetchOwnedLists(
       discoverable: true,
       matchSale: true,
       matchHave: true,
+      takesSwaps: true,
       bumpedAt: true,
     },
     where: {
@@ -345,14 +349,18 @@ export async function fetchListPreviews(slugs: string[]): Promise<ListPreview[]>
       columns: { slug: true },
       where: { slug: { in: slugs }, isProfileBind: bound },
       extras: {
-        count: (list) => db.$count(listEntries, and(eq(listEntries.listId, list.id), shown)),
+        count: (list) =>
+          db.$count(
+            listEntries,
+            and(eq(listEntries.listId, list.id), shown, isNull(listEntries.ruleId)),
+          ),
       },
       with: {
         entries: {
           columns: { collectionSlug: true, objektId: true },
           where: bound
-            ? { objektId: { isNotNull: true } }
-            : { collectionSlug: { isNotNull: true } },
+            ? { objektId: { isNotNull: true }, ruleId: { isNull: true } }
+            : { collectionSlug: { isNotNull: true }, ruleId: { isNull: true } },
           orderBy: { id: "desc" },
           limit: OBJEKT_PREVIEW_SIZE,
         },
@@ -435,15 +443,17 @@ export function tradeColumns(on: boolean) {
 }
 
 /**
- * The other list of a pair, checked for owner and type. A pair can't be Buying only, so the want
- * side's Open to is checked too: `openTo` is what a want list is about to save, and a have list
- * reads its partner's.
+ * The other list of a pair, checked for owner and type. A want list pairs with a have list, or
+ * with a sale list that takes swaps (`takesSwaps` is the sale list's own when it is the one
+ * linking). A pair can't be Buying only, so the want side's Open to is checked too: `openTo` is
+ * what a want list is about to save, and a have or sale list reads its partner's.
  */
 export async function checkLinkedList(
   type: ListType,
   linkedListId: number,
   userId: string,
   openTo: OpenToFlags,
+  takesSwaps = false,
 ) {
   const linkedList = await db.query.lists.findFirst({
     columns: {
@@ -451,6 +461,7 @@ export async function checkLinkedList(
       isProfileBind: true,
       matchSale: true,
       matchHave: true,
+      takesSwaps: true,
     },
     where: {
       id: linkedListId,
@@ -462,12 +473,21 @@ export async function checkLinkedList(
     refuse("BAD_REQUEST", "list_linked_not_found", "Linked list not found");
   }
 
-  // have can only link to want, want can only link to have
-  if (type === "have" && linkedList.listType !== "want") {
+  // have and sale link to want; want links to have, or to a sale list that takes swaps
+  if ((type === "have" || type === "sale") && linkedList.listType !== "want") {
     refuse("BAD_REQUEST", "list_have_links_want", "Have lists can only link to Want lists");
   }
-  if (type === "want" && linkedList.listType !== "have") {
+  if (type === "want" && linkedList.listType !== "have" && linkedList.listType !== "sale") {
     refuse("BAD_REQUEST", "list_want_links_have", "Want lists can only link to Have lists");
+  }
+  const sellOnly =
+    type === "sale" ? !takesSwaps : linkedList.listType === "sale" && !linkedList.takesSwaps;
+  if (sellOnly) {
+    refuse(
+      "BAD_REQUEST",
+      "list_sale_links_sell_only",
+      "Only a sale list open to swaps can be linked to a want list",
+    );
   }
   if (pairRefusesOpenTo(type === "want" ? openTo : linkedList)) {
     refuse(
@@ -644,7 +664,8 @@ export async function planCopy(source: List, target: CopyTarget, userId: string)
       note: listEntries.note,
     })
     .from(listEntries)
-    .where(eq(listEntries.listId, source.id))
+    // a rule's entries travel as the rule (`copyRules`), or not at all
+    .where(and(eq(listEntries.listId, source.id), isNull(listEntries.ruleId)))
     .orderBy(listEntries.id);
 
   let owned: ReadonlySet<string> | ReadonlyMap<string, OwnedCopy[]> = new Set<string>();
@@ -764,7 +785,7 @@ export async function addEntries(
     const existing = await db
       .selectDistinct({ slug: listEntries.collectionSlug })
       .from(listEntries)
-      .where(eq(listEntries.listId, list.id));
+      .where(and(eq(listEntries.listId, list.id), isNull(listEntries.ruleId)));
     const existingSlugs = new Set(existing.map((entry) => entry.slug));
     slugs = Array.from(new Set(from.slugs)).filter((slug) => !existingSlugs.has(slug));
   }
@@ -842,6 +863,7 @@ export async function fetchPartialOwnedListCollections(slug: string, userId: str
           collectionSlug: true,
           objektId: true,
         },
+        where: { ruleId: { isNull: true } },
       },
     },
   });

@@ -49,12 +49,17 @@ export const OPEN_TO_LABEL: Record<OpenTo, () => string> = {
   buying: m.list_create_match_buying_label,
 };
 
-/** A want list's Open to setting; null for other lists, or a response without it. */
+/**
+ * A want list's Open to setting, or "Sell or swap" for a sale list that takes swaps; null for
+ * other lists, a Sell only sale list, or a response without the setting.
+ */
 export function openToLabel(list: {
   listType: ListType;
   matchSale?: boolean | null;
   matchHave?: boolean | null;
+  takesSwaps?: boolean | null;
 }) {
+  if (list.listType === "sale") return list.takesSwaps ? m.list_sell_or_swap() : null;
   if (list.listType !== "want" || list.matchSale == null) return null;
   return OPEN_TO_LABEL[
     openToOf({ matchSale: list.matchSale, matchHave: list.matchHave ?? true })

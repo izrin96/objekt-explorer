@@ -1,7 +1,7 @@
 import { ORPCError } from "@orpc/server";
 import { db } from "@repo/db";
 import { listEntries } from "@repo/db/schema";
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, isNull } from "drizzle-orm";
 
 import { authed, pub } from "../orpc";
 import { documented, errorResponses } from "../schemas/common/documented";
@@ -97,7 +97,13 @@ export const listEntriesRouter = {
       // an entry already gone, say removed from another tab, is not counted
       const rows = await db
         .delete(listEntries)
-        .where(and(inArray(listEntries.id, entryIds), eq(listEntries.listId, list.id)))
+        .where(
+          and(
+            inArray(listEntries.id, entryIds),
+            eq(listEntries.listId, list.id),
+            isNull(listEntries.ruleId),
+          ),
+        )
         .returning({ id: listEntries.id });
 
       if (rows.length > 0) await touchList([list.id]);

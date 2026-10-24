@@ -3,7 +3,7 @@ import { listEntries, lists } from "@repo/db/schema";
 import { tradeVersionKey } from "@repo/lib/server/list-touch";
 import { and, eq, isNotNull } from "drizzle-orm";
 
-import { narrowIndex, type Viewer } from "../../lib/trade-feed";
+import { narrowIndex, type RuleWant, type Viewer } from "../../lib/trade-feed";
 import { addressesByUser, collectionVerdict, groupBySlug } from "../../lib/trade-rank";
 import { unique } from "../../lib/unique";
 import { getCache, redis, redisFailOpen } from "../redis";
@@ -66,7 +66,7 @@ export async function fetchViewer(userId: string): Promise<Viewer> {
       computeHaveIndex(userId),
     ),
     db
-      .select({ id: lists.id })
+      .select({ id: lists.id, takesSwaps: lists.takesSwaps })
       .from(lists)
       .where(and(eq(lists.userId, userId), eq(lists.listType, "sale"))),
     db
@@ -75,6 +75,7 @@ export async function fetchViewer(userId: string): Promise<Viewer> {
         slug: listEntries.collectionSlug,
         matchSale: lists.matchSale,
         matchHave: lists.matchHave,
+        ruleId: listEntries.ruleId,
       })
       .from(listEntries)
       .innerJoin(lists, eq(lists.id, listEntries.listId))
@@ -89,19 +90,32 @@ export async function fetchViewer(userId: string): Promise<Viewer> {
   const want = new Map<string, number[]>();
   for (const row of wantRows) {
     const listIds = want.get(row.slug!);
-    if (listIds) listIds.push(row.listId);
-    else want.set(row.slug!, [row.listId]);
+    // a slug on a list both by hand and through a rule is one row per `rule_id`
+    if (!listIds) want.set(row.slug!, [row.listId]);
+    else if (!listIds.includes(row.listId)) listIds.push(row.listId);
+  }
+  // a slug wanted by hand anywhere is no rule's match
+  const byHand = new Set(wantRows.flatMap((row) => (row.ruleId === null ? [row.slug!] : [])));
+  const ruleWant = new Map<string, RuleWant[]>();
+  for (const row of wantRows) {
+    if (row.ruleId === null || byHand.has(row.slug!)) continue;
+    const rules = ruleWant.get(row.slug!) ?? [];
+    rules.push({ ruleId: row.ruleId, listId: row.listId });
+    ruleWant.set(row.slug!, rules);
   }
   const have = new Map(haveIndex);
   const saleIds = new Set(saleLists.map((list) => list.id));
+  // a sale list that takes swaps answers want lists open to swaps too
+  const swapSaleIds = new Set(saleLists.flatMap((list) => (list.takesSwaps ? [list.id] : [])));
   const noSaleIds = new Set(wantRows.flatMap((row) => (row.matchSale ? [] : [row.listId])));
   const noHaveIds = new Set(wantRows.flatMap((row) => (row.matchHave ? [] : [row.listId])));
   return {
     have,
     want,
-    tradeHave: narrowIndex(have, (id) => !saleIds.has(id)),
+    tradeHave: narrowIndex(have, (id) => !saleIds.has(id) || swapSaleIds.has(id)),
     saleHave: narrowIndex(have, (id) => saleIds.has(id)),
     tradeWant: narrowIndex(want, (id) => !noHaveIds.has(id)),
     saleWant: narrowIndex(want, (id) => !noSaleIds.has(id)),
+    ruleWant,
   };
 }

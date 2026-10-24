@@ -79,6 +79,7 @@ const SECTIONS: Section[] = [
       rows: [
         { key: "have", cells: [m.trade_match_help_rules_have_list, yes, yes, no] },
         { key: "sale", cells: [m.trade_help_sale_list, no, yes, yes] },
+        { key: "sale-swaps", cells: [m.trade_help_sale_swaps_list, yes, yes, yes] },
       ],
     },
     note: m.trade_help_both_ways,
@@ -89,6 +90,7 @@ const SECTIONS: Section[] = [
       columns: [m.trade_help_lists_label, m.trade_help_counts],
       rows: [
         { key: "swap", cells: [m.trade_help_swap_pair, yes] },
+        { key: "sale-swap", cells: [m.trade_help_sale_swap_pair, yes] },
         { key: "sale", cells: [m.trade_help_sale_any_side, no] },
         { key: "buying-only", cells: [m.trade_help_buying_only_want, no] },
       ],
@@ -103,6 +105,7 @@ const SECTIONS: Section[] = [
         { key: "compare", cells: [m.trade_list_label, m.trade_match_help_compare] },
         { key: "owned", cells: [m.trade_help_owned_label, m.trade_match_help_owned] },
         { key: "hidden", cells: [m.trade_help_hidden_label, m.trade_help_hidden] },
+        { key: "rules", cells: [m.trade_help_rules_label, m.trade_help_rules] },
       ],
     },
   },

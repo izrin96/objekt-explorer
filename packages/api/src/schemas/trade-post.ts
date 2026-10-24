@@ -1,5 +1,5 @@
 import { canBeOnTrade, type ListType } from "./list";
-import { flagsOf, type OpenToFlags, openToOf } from "./open-to";
+import { flagsOf, offersSwaps, type OpenToFlags, openToOf } from "./open-to";
 import type { PostType, TradePostRefusal } from "./trade";
 
 /**
@@ -14,12 +14,28 @@ export type PostTag = Exclude<PostType, "all">;
 export const POST_KINDS = ["swap", "sell", "buy"] as const;
 export type PostKind = (typeof POST_KINDS)[number];
 
-type PostSides = { have: unknown; want: OpenToFlags | null; sale: unknown };
+type PostSides = {
+  have: unknown;
+  want: OpenToFlags | null;
+  /** the sale list, or any truthy stand-in; an object with `takesSwaps: true` takes swaps */
+  sale: unknown;
+};
 
-/** WTT for a have list or a want list open to swaps, WTB for a want side open to buying, WTS for a sale list; WTT first. */
+const saleTakesSwaps = (sale: unknown) =>
+  typeof sale === "object" && sale !== null && "takesSwaps" in sale && sale.takesSwaps === true;
+
+/**
+ * WTT for a have list, a want list open to swaps or a sale list that takes swaps, WTB for a want
+ * side open to buying, WTS for a sale list. WTT before WTB, and a sale post leads with WTS.
+ */
 export function tagsOf(post: PostSides): PostTag[] {
-  if (post.sale) return ["wts"];
   const openTo = post.want ? openToOf(post.want) : null;
+  if (post.sale) {
+    const tags: PostTag[] = ["wts"];
+    if (saleTakesSwaps(post.sale)) tags.push("wtt");
+    if (openTo !== null && openTo !== "swaps") tags.push("wtb");
+    return tags;
+  }
   const tags: PostTag[] = [];
   if (post.have || (openTo !== null && openTo !== "buying")) tags.push("wtt");
   if (openTo !== null && openTo !== "swaps") tags.push("wtb");
@@ -30,21 +46,39 @@ export function tagsOf(post: PostSides): PostTag[] {
  * An existing post read as the composer's choice. A pair whose want list is Buying only, saved
  * before a pair had to take swaps, reads as Swap that would also pay.
  */
-export function postKindOf(post: PostSides): { kind: PostKind; alsoPay: boolean } {
-  if (post.sale) return { kind: "sell", alsoPay: false };
+export function postKindOf(post: PostSides): {
+  kind: PostKind;
+  alsoPay: boolean;
+  alsoSwap: boolean;
+} {
   const openTo = post.want ? openToOf(post.want) : null;
-  if (!post.have && openTo === "buying") return { kind: "buy", alsoPay: false };
-  return { kind: "swap", alsoPay: openTo !== null && openTo !== "swaps" };
+  if (post.sale) {
+    return {
+      kind: "sell",
+      alsoPay: openTo !== null && openTo !== "swaps",
+      alsoSwap: saleTakesSwaps(post.sale),
+    };
+  }
+  if (!post.have && openTo === "buying") return { kind: "buy", alsoPay: false, alsoSwap: false };
+  return { kind: "swap", alsoPay: openTo !== null && openTo !== "swaps", alsoSwap: false };
 }
 
 type Picked = { have: boolean; want: boolean; sale: boolean };
 
 export type ComposerWrites =
   | { ok: false; reason: Extract<TradePostRefusal, "trade_post_empty" | "trade_post_wrong_type"> }
-  | { ok: true; wantFlags: OpenToFlags | null; link: boolean };
+  | {
+      ok: true;
+      wantFlags: OpenToFlags | null;
+      link: boolean;
+      /** a Sell post's `takes_swaps`; null on the other kinds */
+      saleSwaps: boolean | null;
+    };
 
-/** Which lists a kind takes, and the Open to its want list saves. */
-export function composerWrites(choice: Picked & { kind: PostKind; alsoPay?: boolean }) {
+type ComposerChoice = Picked & { kind: PostKind; alsoPay?: boolean; alsoSwap?: boolean };
+
+/** Which lists a kind takes, and the Open to its want or sale list saves. */
+export function composerWrites(choice: ComposerChoice) {
   const { kind, have, want, sale } = choice;
   const refuse = (reason: "trade_post_empty" | "trade_post_wrong_type"): ComposerWrites => ({
     ok: false,
@@ -58,37 +92,61 @@ export function composerWrites(choice: Picked & { kind: PostKind; alsoPay?: bool
         ok: true,
         wantFlags: want ? flagsOf(choice.alsoPay ? "both" : "swaps") : null,
         link: have && want,
+        saleSwaps: null,
       } satisfies ComposerWrites;
-    case "sell":
-      if (have || want) return refuse("trade_post_wrong_type");
+    case "sell": {
+      const alsoSwap = choice.alsoSwap ?? false;
+      // a want list says what the seller would swap for, so it needs the swaps
+      if (have || (want && !alsoSwap)) return refuse("trade_post_wrong_type");
       if (!sale) return refuse("trade_post_empty");
-      return { ok: true, wantFlags: null, link: false } satisfies ComposerWrites;
+      return {
+        ok: true,
+        wantFlags: want ? flagsOf(choice.alsoPay ? "both" : "swaps") : null,
+        link: want,
+        saleSwaps: alsoSwap,
+      } satisfies ComposerWrites;
+    }
     case "buy":
       if (have || sale) return refuse("trade_post_wrong_type");
       if (!want) return refuse("trade_post_empty");
-      return { ok: true, wantFlags: flagsOf("buying"), link: false } satisfies ComposerWrites;
+      return {
+        ok: true,
+        wantFlags: flagsOf("buying"),
+        link: false,
+        saleSwaps: null,
+      } satisfies ComposerWrites;
   }
 }
 
 /** The tags a composer choice would carry, before it is posted. */
-export function choiceTags(choice: Picked & { kind: PostKind; alsoPay?: boolean }): PostTag[] {
+export function choiceTags(choice: ComposerChoice): PostTag[] {
   const writes = composerWrites(choice);
   if (!writes.ok) return [];
-  return tagsOf({ have: choice.have, want: writes.wantFlags, sale: choice.sale });
+  return tagsOf({
+    have: choice.have,
+    want: writes.wantFlags,
+    sale: choice.sale ? { takesSwaps: writes.saleSwaps } : null,
+  });
 }
 
-type ListRef = { id: number; listType: ListType; linkedListId: number | null };
+type ListRef = {
+  id: number;
+  listType: ListType;
+  linkedListId: number | null;
+  takesSwaps?: boolean | null;
+};
 
 export type PostGroup<L> = { anchor: L; have: L | null; want: L | null; sale: L | null };
 
 /**
- * One post per list in `lists`, except that a have list and the want list it links to form one
- * post when both are in `lists`. Pass only lists on Trade.
+ * One post per list in `lists`, except that a list offering swaps (a have list, or a sale list
+ * that takes swaps) and the want list it links to form one post when both are in `lists`. Pass
+ * only lists on Trade.
  */
 export function groupPosts<L extends ListRef & { userId?: string }>(lists: L[]): PostGroup<L>[] {
   const byId = new Map(lists.map((list) => [list.id, list]));
   const partnerOf = (list: L) => {
-    if (list.listType !== "have" || list.linkedListId === null) return null;
+    if (!offersSwaps(list) || list.linkedListId === null) return null;
     const partner = byId.get(list.linkedListId);
     return partner?.listType === "want" && partner.userId === list.userId ? partner : null;
   };
@@ -107,6 +165,7 @@ export function groupPosts<L extends ListRef & { userId?: string }>(lists: L[]):
 /** A list of the poster's own, as the composer and `trade.savePost` read it. */
 export type PlanList = OpenToFlags &
   ListRef & {
+    takesSwaps: boolean;
     slug: string;
     name: string;
     discoverable: boolean;
@@ -124,11 +183,11 @@ export function postsOf(lists: PlanList[]) {
   return groupPosts(lists.filter(isOnTrade));
 }
 
-/** The other half of a have and want pair, when there is one. */
+/** The other half of a pair: a want list and the have or sale list it links to. */
 export function partnerOf(lists: PlanList[], list: PlanList): PlanList | null {
-  const other = list.listType === "have" ? "want" : list.listType === "want" ? "have" : null;
-  if (other === null || list.linkedListId === null) return null;
-  return lists.find((x) => x.id === list.linkedListId && x.listType === other) ?? null;
+  if (list.linkedListId === null || list.listType === "general") return null;
+  const others: ListType[] = list.listType === "want" ? ["have", "sale"] : ["want"];
+  return lists.find((x) => x.id === list.linkedListId && others.includes(x.listType)) ?? null;
 }
 
 export function postHolding(posts: PostGroup<PlanList>[], id: number) {
@@ -141,6 +200,8 @@ export type PostChoice = {
   want?: string | null;
   sale?: string | null;
   alsoPay?: boolean;
+  /** Sell: the sale list takes swaps; left out, it keeps what the list has */
+  alsoSwap?: boolean;
   unpair?: boolean;
   /** the post being edited, by its anchor list's slug */
   replaces?: string | null;
@@ -159,9 +220,11 @@ export type PostPlan =
       ok: true;
       /** lists to put or keep on Trade, a want list with the Open to it saves */
       on: { id: number; flags: OpenToFlags | null }[];
+      /** a Sell post's sale list and whether it takes swaps */
+      saleSwaps: { id: number; takesSwaps: boolean } | null;
       /** lists the edit drops from the post, which leave Trade */
       off: number[];
-      /** a Swap pair to link, have first */
+      /** a pair to link, the have or sale list first */
       link: [number, number] | null;
       /** lists whose link to their partner is cleared, both halves listed */
       unlink: number[];
@@ -186,9 +249,12 @@ export function planPost(lists: PlanList[], choice: PostChoice): PostPlan {
     picked.push({ slot, list });
   }
 
+  const saleList = choice.sale ? bySlug.get(choice.sale) : undefined;
+  const alsoSwap = choice.alsoSwap ?? saleList?.takesSwaps ?? false;
   const writes = composerWrites({
     kind: choice.kind,
     alsoPay: choice.alsoPay,
+    alsoSwap,
     have: Boolean(choice.have),
     want: Boolean(choice.want),
     sale: Boolean(choice.sale),
@@ -227,8 +293,10 @@ export function planPost(lists: PlanList[], choice: PostChoice): PostPlan {
       unlink.push(list.id, partner.id);
       continue;
     }
-    const otherSlot = slot === "have" ? choice.want : choice.have;
-    if (choice.kind === "swap" && !otherSlot) {
+    const otherSlot = slot === "want" ? (choice.have ?? choice.sale) : choice.want;
+    // a post that keeps a pair: a Swap, or a Sell that takes swaps, with one half picked
+    const keepsPair = choice.kind === "swap" || (choice.kind === "sell" && alsoSwap);
+    if (keepsPair && !otherSlot) {
       // both halves on Trade make one post, so a partner in another post would absorb this list
       if (inOther(partner)) {
         return { ok: false, reason: "trade_post_list_in_post", slug: partner.slug };
@@ -246,7 +314,9 @@ export function planPost(lists: PlanList[], choice: PostChoice): PostPlan {
     unlink.push(list.id, partner.id);
   }
 
-  const have = picked.find(({ slot }) => slot === "have")?.list;
+  const offer =
+    picked.find(({ slot }) => slot === "have")?.list ??
+    picked.find(({ slot }) => slot === "sale")?.list;
   const want = picked.find(({ slot }) => slot === "want")?.list;
   return {
     ok: true,
@@ -254,8 +324,12 @@ export function planPost(lists: PlanList[], choice: PostChoice): PostPlan {
       id: list.id,
       flags: list.listType === "want" ? writes.wantFlags : null,
     })),
+    saleSwaps:
+      saleList && writes.saleSwaps !== null
+        ? { id: saleList.id, takesSwaps: writes.saleSwaps }
+        : null,
     off: dropped.map((list) => list.id),
-    link: writes.link && have && want ? [have.id, want.id] : null,
+    link: writes.link && offer && want ? [offer.id, want.id] : null,
     unlink,
   };
 }
@@ -283,7 +357,7 @@ export function rowBlock(
     const post = postHolding(posts, id);
     return post && post.anchor.slug !== replaces ? post : null;
   };
-  const partner = kind === "swap" && !otherPicked ? partnerOf(lists, list) : null;
+  const partner = kind !== "buy" && !otherPicked ? partnerOf(lists, list) : null;
   const post = blocking(list.id) ?? (partner ? blocking(partner.id) : null);
   if (!post) return null;
   return { reason: "in_post", kind: postKindOf(post).kind, slug: post.anchor.slug };
@@ -295,6 +369,7 @@ export type ComposerStart = {
   want: string | null;
   sale: string | null;
   alsoPay: boolean;
+  alsoSwap: boolean;
   replaces: string | null;
 };
 
@@ -304,20 +379,25 @@ const EMPTY_START: ComposerStart = {
   want: null,
   sale: null,
   alsoPay: false,
+  alsoSwap: false,
   replaces: null,
 };
 
 function editStart(post: PostGroup<PlanList>, extra?: PlanList): ComposerStart {
-  const { kind, alsoPay } = postKindOf(post);
+  const { kind, alsoPay, alsoSwap } = postKindOf(post);
+  // a sale list in the post, or the one being added, makes it a Sell that takes swaps
+  const selling = post.sale !== null || extra?.listType === "sale";
   const slot = (type: "have" | "want" | "sale") =>
     post[type]?.slug ?? (extra?.listType === type ? extra.slug : null);
   return {
-    kind: extra ? "swap" : kind,
+    // an added list joins a pair with a sale list as a Sell, any other as a Swap
+    kind: extra ? (selling ? "sell" : "swap") : kind,
     have: slot("have"),
     want: slot("want"),
     sale: slot("sale"),
-    // a have list posted alone has no want side to read; the added want list keeps its own Open to
+    // a have or sale list posted alone has no want side to read; the added want list keeps its own Open to
     alsoPay: extra?.listType === "want" ? openToOf(extra) !== "swaps" : alsoPay,
+    alsoSwap: extra && selling ? true : alsoSwap,
     replaces: post.anchor.slug,
   };
 }
@@ -343,11 +423,21 @@ export function startForList(lists: PlanList[], slug: string): ComposerStart {
   const partnerPost = partner ? postHolding(posts, partner.id) : null;
   if (partnerPost) return editStart(partnerPost, list);
   if (partner) {
-    const [have, want] = list.listType === "have" ? [list, partner] : [partner, list];
+    const [offer, want] = list.listType === "want" ? [partner, list] : [list, partner];
+    if (offer.listType === "sale") {
+      return {
+        ...EMPTY_START,
+        kind: "sell",
+        sale: offer.slug,
+        want: want.slug,
+        alsoPay: openToOf(want) !== "swaps",
+        alsoSwap: true,
+      };
+    }
     return {
       ...EMPTY_START,
       kind: "swap",
-      have: have.slug,
+      have: offer.slug,
       want: want.slug,
       alsoPay: openToOf(want) !== "swaps",
     };
@@ -356,7 +446,7 @@ export function startForList(lists: PlanList[], slug: string): ComposerStart {
     case "have":
       return { ...EMPTY_START, kind: "swap", have: list.slug };
     case "sale":
-      return { ...EMPTY_START, kind: "sell", sale: list.slug };
+      return { ...EMPTY_START, kind: "sell", sale: list.slug, alsoSwap: list.takesSwaps };
     case "want":
       return { ...EMPTY_START, want: list.slug, alsoPay: openToOf(list) === "both" };
     default:

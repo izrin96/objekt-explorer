@@ -1,0 +1,2 @@
+ALTER TABLE "lists" ADD COLUMN "takes_swaps" boolean DEFAULT false NOT NULL;--> statement-breakpoint
+ALTER TABLE "lists" ADD CONSTRAINT "lists_takes_swaps_sale_only" CHECK (NOT "takes_swaps" OR "list_type" = 'sale');

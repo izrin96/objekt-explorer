@@ -24,6 +24,7 @@ function list(patch: Partial<PlanList> & Pick<PlanList, "listType" | "slug">): P
     id: nextId++,
     name: patch.slug,
     linkedListId: null,
+    takesSwaps: false,
     discoverable: false,
     isProfileBind: patch.listType !== "want",
     ...flagsOf(patch.listType === "want" ? "swaps" : "both"),
@@ -58,7 +59,7 @@ describe("tagsOf and postKindOf", () => {
   for (const [name, post, tags, kind, alsoPay] of rows) {
     test(name, () => {
       expect(tagsOf(post)).toEqual(tags as never);
-      expect(postKindOf(post)).toEqual({ kind: kind as never, alsoPay });
+      expect(postKindOf(post)).toEqual({ kind: kind as never, alsoPay, alsoSwap: false });
     });
   }
 
@@ -77,24 +78,40 @@ describe("composerWrites", () => {
       ok: true,
       wantFlags: SWAPS,
       link: true,
+      saleSwaps: null,
     });
   });
 
   test("Swap that would also pay saves Swaps or buying, tagged WTT and WTB", () => {
     const choice = { ...none, kind: "swap" as const, want: true, alsoPay: true };
-    expect(composerWrites(choice)).toEqual({ ok: true, wantFlags: BOTH, link: false });
+    expect(composerWrites(choice)).toEqual({
+      ok: true,
+      wantFlags: BOTH,
+      link: false,
+      saleSwaps: null,
+    });
     expect(choiceTags(choice)).toEqual(["wtt", "wtb"]);
   });
 
   test("Swap with one have list: also pay has nothing to set", () => {
     const choice = { ...none, kind: "swap" as const, have: true, alsoPay: true };
-    expect(composerWrites(choice)).toEqual({ ok: true, wantFlags: null, link: false });
+    expect(composerWrites(choice)).toEqual({
+      ok: true,
+      wantFlags: null,
+      link: false,
+      saleSwaps: null,
+    });
     expect(choiceTags(choice)).toEqual(["wtt"]);
   });
 
   test("Buy saves Buying only, tagged WTB", () => {
     const choice = { ...none, kind: "buy" as const, want: true };
-    expect(composerWrites(choice)).toEqual({ ok: true, wantFlags: BUYING, link: false });
+    expect(composerWrites(choice)).toEqual({
+      ok: true,
+      wantFlags: BUYING,
+      link: false,
+      saleSwaps: null,
+    });
     expect(choiceTags(choice)).toEqual(["wtb"]);
   });
 
@@ -134,6 +151,7 @@ describe("planPost", () => {
         { id: spares.id, flags: null },
         { id: hunt.id, flags: SWAPS },
       ],
+      saleSwaps: null,
       off: [],
       link: [spares.id, hunt.id],
       unlink: [],
@@ -149,6 +167,7 @@ describe("planPost", () => {
       have: "spares",
       want: "store",
       alsoPay: true,
+      alsoSwap: false,
       replaces: "spares",
     });
     expect(plan).toMatchObject({ ok: true, on: [{}, { id: store.id, flags: BOTH }], off: [] });
@@ -194,6 +213,7 @@ describe("planPost", () => {
     expect(planPost([spares, hunt], { kind: "buy", want: "hunt", unpair: true })).toEqual({
       ok: true,
       on: [{ id: hunt.id, flags: BUYING }],
+      saleSwaps: null,
       off: [],
       link: null,
       unlink: [hunt.id, spares.id],
@@ -219,6 +239,7 @@ describe("planPost", () => {
     ).toEqual({
       ok: true,
       on: [{ id: hunt.id, flags: BOTH }],
+      saleSwaps: null,
       off: [],
       link: null,
       unlink: [],
@@ -242,6 +263,7 @@ describe("planPost", () => {
     expect(planPost([spares, hunt], { kind: "swap", want: "hunt", replaces: "spares" })).toEqual({
       ok: true,
       on: [{ id: hunt.id, flags: SWAPS }],
+      saleSwaps: null,
       off: [spares.id],
       link: null,
       unlink: [hunt.id, spares.id],
@@ -255,6 +277,7 @@ describe("planPost", () => {
     expect(planPost([spares, hunt], { kind: "buy", want: "hunt", replaces: "spares" })).toEqual({
       ok: true,
       on: [{ id: hunt.id, flags: BUYING }],
+      saleSwaps: null,
       off: [spares.id],
       link: null,
       unlink: [hunt.id, spares.id],
@@ -271,6 +294,7 @@ describe("planPost", () => {
     ).toEqual({
       ok: true,
       on: [{ id: sale.id, flags: null }],
+      saleSwaps: { id: sale.id, takesSwaps: false },
       off: [spares.id, hunt.id],
       link: null,
       unlink: [],
@@ -324,6 +348,7 @@ describe("composer rows and starts", () => {
       want: "hunt",
       sale: null,
       alsoPay: true,
+      alsoSwap: false,
       replaces: "spares",
     });
     expect(startForList([spares, hunt], "hunt")).toEqual(startForPost([spares, hunt], "spares"));
@@ -337,6 +362,7 @@ describe("composer rows and starts", () => {
       kind: "swap",
       have: "spares",
       want: "hunt",
+      alsoSwap: false,
       replaces: null,
     });
   });
@@ -349,6 +375,7 @@ describe("composer rows and starts", () => {
       kind: "swap",
       have: "spares",
       want: "hunt",
+      alsoSwap: false,
       replaces: "spares",
     });
   });
@@ -361,6 +388,7 @@ describe("composer rows and starts", () => {
       kind: "swap",
       want: "hunt",
       alsoPay: true,
+      alsoSwap: false,
       replaces: "spares",
     });
   });
@@ -397,5 +425,188 @@ describe("tradeLineOf", () => {
     expect(tradeLineOf(lists, hunt)).toEqual({ state: "paired_off", partner: spares });
     expect(tradeLineOf(lists, lone)).toEqual({ state: "off" });
     expect(tradeLineOf(lists, loose)).toEqual({ state: "needs_profile" });
+  });
+});
+
+describe("Sell or swap", () => {
+  test("a sale list that takes swaps is tagged WTS then WTT, alone or paired", () => {
+    expect(tagsOf({ have: null, want: null, sale: { takesSwaps: true } })).toEqual(["wts", "wtt"]);
+    expect(tagsOf({ have: null, want: SWAPS, sale: { takesSwaps: true } })).toEqual(["wts", "wtt"]);
+    expect(tagsOf({ have: null, want: null, sale: { takesSwaps: false } })).toEqual(["wts"]);
+    expect(postKindOf({ have: null, want: SWAPS, sale: { takesSwaps: true } })).toEqual({
+      kind: "sell",
+      alsoPay: false,
+      alsoSwap: true,
+    });
+  });
+
+  test("a want list on a Sell post needs Also open to swaps, and saves Swaps only", () => {
+    const choice = { kind: "sell" as const, have: false, want: true, sale: true };
+    expect(composerWrites(choice)).toEqual({ ok: false, reason: "trade_post_wrong_type" });
+    expect(composerWrites({ ...choice, alsoSwap: true })).toEqual({
+      ok: true,
+      wantFlags: SWAPS,
+      link: true,
+      saleSwaps: true,
+    });
+    expect(choiceTags({ ...choice, alsoSwap: true })).toEqual(["wts", "wtt"]);
+  });
+
+  test("a Sell post with a want list links the pair and turns swaps on", () => {
+    const sale = list({ slug: "binary-sale", listType: "sale" });
+    const hunt = list({ slug: "binary-hunt", listType: "want" });
+    expect(
+      planPost([sale, hunt], {
+        kind: "sell",
+        sale: "binary-sale",
+        want: "binary-hunt",
+        alsoSwap: true,
+      }),
+    ).toMatchObject({
+      ok: true,
+      link: [sale.id, hunt.id],
+      saleSwaps: { id: sale.id, takesSwaps: true },
+      on: [
+        { id: hunt.id, flags: SWAPS },
+        { id: sale.id, flags: null },
+      ],
+    });
+  });
+
+  test("an edit that leaves alsoSwap out keeps the list's own", () => {
+    const sale = list({ slug: "stock", listType: "sale", takesSwaps: true, discoverable: true });
+    expect(planPost([sale], { kind: "sell", sale: "stock", replaces: "stock" })).toMatchObject({
+      ok: true,
+      saleSwaps: { id: sale.id, takesSwaps: true },
+    });
+  });
+
+  test("unticking swaps on a paired sale list asks to unpair", () => {
+    const sale = list({ slug: "stock", listType: "sale", takesSwaps: true, discoverable: true });
+    const hunt = list({ slug: "hunt", listType: "want" });
+    pair(sale, hunt);
+    expect(
+      planPost([sale, hunt], { kind: "sell", sale: "stock", alsoSwap: false, replaces: "stock" }),
+    ).toMatchObject({
+      ok: false,
+      reason: "trade_post_list_paired",
+      slug: "stock",
+      partner: "hunt",
+    });
+    expect(
+      planPost([sale, hunt], {
+        kind: "sell",
+        sale: "stock",
+        alsoSwap: false,
+        unpair: true,
+        replaces: "stock",
+      }),
+    ).toMatchObject({ ok: true, unlink: [sale.id, hunt.id], saleSwaps: { takesSwaps: false } });
+  });
+
+  test("a one-list Sell post that takes swaps keeps its pair", () => {
+    const sale = list({ slug: "stock", listType: "sale", takesSwaps: true });
+    const hunt = list({ slug: "hunt", listType: "want" });
+    pair(sale, hunt);
+    expect(planPost([sale, hunt], { kind: "sell", sale: "stock" })).toMatchObject({
+      ok: true,
+      unlink: [],
+    });
+    expect(startForList([sale, hunt], "hunt")).toMatchObject({
+      kind: "sell",
+      sale: "stock",
+      want: "hunt",
+      alsoSwap: true,
+    });
+  });
+});
+
+describe("Sell that would also pay", () => {
+  const choice = { kind: "sell" as const, have: false, want: true, sale: true, alsoSwap: true };
+
+  test("saves the want list Swaps or buying and tags WTS, WTT, WTB", () => {
+    expect(composerWrites({ ...choice, alsoPay: true })).toEqual({
+      ok: true,
+      wantFlags: BOTH,
+      link: true,
+      saleSwaps: true,
+    });
+    expect(choiceTags({ ...choice, alsoPay: true })).toEqual(["wts", "wtt", "wtb"]);
+    expect(tagsOf({ have: null, want: BOTH, sale: { takesSwaps: true } })).toEqual([
+      "wts",
+      "wtt",
+      "wtb",
+    ]);
+  });
+
+  test("without also pay it stays WTS, WTT", () => {
+    expect(composerWrites({ ...choice, alsoPay: false })).toMatchObject({ wantFlags: SWAPS });
+    expect(choiceTags({ ...choice, alsoPay: false })).toEqual(["wts", "wtt"]);
+  });
+
+  test("also pay with no want list writes no want list", () => {
+    expect(composerWrites({ ...choice, want: false, alsoPay: true })).toEqual({
+      ok: true,
+      wantFlags: null,
+      link: false,
+      saleSwaps: true,
+    });
+    expect(choiceTags({ ...choice, want: false, alsoPay: true })).toEqual(["wts", "wtt"]);
+  });
+
+  test("an existing post reads it back", () => {
+    expect(postKindOf({ have: null, want: BOTH, sale: { takesSwaps: true } })).toEqual({
+      kind: "sell",
+      alsoPay: true,
+      alsoSwap: true,
+    });
+    const sale = list({ slug: "stock", listType: "sale", takesSwaps: true, discoverable: true });
+    const hunt = list({ slug: "hunt", listType: "want", ...BOTH, discoverable: true });
+    pair(sale, hunt);
+    expect(startForPost([sale, hunt], "stock")).toMatchObject({
+      kind: "sell",
+      want: "hunt",
+      alsoPay: true,
+      alsoSwap: true,
+    });
+    expect(
+      planPost([sale, hunt], {
+        kind: "sell",
+        sale: "stock",
+        want: "hunt",
+        alsoSwap: true,
+        alsoPay: true,
+        replaces: "stock",
+      }),
+    ).toMatchObject({ ok: true, on: [{ id: hunt.id, flags: BOTH }, { id: sale.id }] });
+  });
+});
+
+describe("Posting a sale pair from a list page", () => {
+  test("a pair off Trade opens as Sell and keeps also pay", () => {
+    const sale = list({ slug: "stock", listType: "sale", takesSwaps: true });
+    const hunt = list({ slug: "hunt", listType: "want", ...BOTH });
+    pair(sale, hunt);
+    const start = startForList([sale, hunt], "stock");
+    expect(start).toMatchObject({ kind: "sell", sale: "stock", want: "hunt", alsoPay: true });
+    expect(planPost([sale, hunt], { ...start, kind: "sell" })).toMatchObject({
+      ok: true,
+      on: [{ id: hunt.id, flags: BOTH }, { id: sale.id }],
+    });
+  });
+
+  test("a sale list joins its want list's post as a Sell", () => {
+    const sale = list({ slug: "stock", listType: "sale", takesSwaps: true });
+    const hunt = list({ slug: "hunt", listType: "want", discoverable: true });
+    pair(sale, hunt);
+    const start = startForList([sale, hunt], "stock");
+    expect(start).toMatchObject({
+      kind: "sell",
+      sale: "stock",
+      want: "hunt",
+      alsoSwap: true,
+      replaces: "hunt",
+    });
+    expect(planPost([sale, hunt], { ...start, kind: "sell" })).toMatchObject({ ok: true });
   });
 });

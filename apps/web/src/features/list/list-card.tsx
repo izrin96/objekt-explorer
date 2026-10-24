@@ -1,4 +1,5 @@
 import {
+  ArrowsLeftRightIcon,
   CopyIcon,
   DotsThreeIcon,
   LinkIcon,
@@ -7,10 +8,11 @@ import {
   ShareNetworkIcon,
   TrashIcon,
 } from "@phosphor-icons/react";
-import type { ListPreview, PublicList } from "@repo/api/schemas/list";
+import { canBeOnTrade, type ListPreview, type PublicList } from "@repo/api/schemas/list";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Menu, MenuItem, MenuPopup, MenuSeparator, MenuTrigger } from "@/components/ui/menu";
 import {
@@ -71,6 +73,17 @@ export function ListCard({
           <div className="text-muted-foreground flex flex-wrap items-center gap-1.5 text-xs">
             <ListTypeBadge type={list.listType} />
             {list.isProfileBind ? <ListBoundBadge /> : null}
+            {list.discoverable && canBeOnTrade(list.listType, list.isProfileBind) ? (
+              <Badge
+                variant="outline"
+                size="sm"
+                className="relative z-10"
+                render={<Link to="/trade" />}
+              >
+                <ArrowsLeftRightIcon aria-hidden />
+                {m.list_on_trade()}
+              </Badge>
+            ) : null}
             <ObjektPreviewCount preview={preview} />
             {openTo ? <span>· {openTo}</span> : null}
             {list.listType === "sale" && list.currency ? (

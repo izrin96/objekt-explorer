@@ -57,6 +57,8 @@ const baseListSchema = z.object({
   discoverable: z.boolean().nullish(),
   matchSale: z.boolean().nullish(),
   matchHave: z.boolean().nullish(),
+  /** a sale list open to swaps (Sell or swap) */
+  takesSwaps: z.boolean().nullish(),
   bumpedAt: z.string().nullish(),
   user: publicUserSchema.nullish(),
   profile: publicProfileSchema.nullish(),
@@ -243,4 +245,10 @@ export const LIST_REFUSALS = [
   "list_currency_required",
   "list_profile_required",
   "list_prices_sale_only",
+  "list_sale_links_sell_only",
+  "list_rule_not_want",
+  "list_rule_too_wide",
+  "list_rule_nothing_to_match",
+  "list_rule_no_collections",
+  "list_rule_limit",
 ] as const;

@@ -20,6 +20,7 @@ export const feedListColumns = {
   linkedListId: lists.linkedListId,
   matchSale: lists.matchSale,
   matchHave: lists.matchHave,
+  takesSwaps: lists.takesSwaps,
   currency: lists.currency,
   isProfileBind: lists.isProfileBind,
   profileAddress: lists.profileAddress,
@@ -38,6 +39,7 @@ export type FeedList = {
   linkedListId: number | null;
   matchSale: boolean;
   matchHave: boolean;
+  takesSwaps: boolean;
   currency: string | null;
   isProfileBind: boolean;
   profileAddress: string | null;
@@ -127,7 +129,7 @@ export async function fetchUntradeable(
 }
 
 const postKey = (list: Pick<FeedList, "id" | "updatedAt">) =>
-  `trade:post:${list.id}:${list.updatedAt}`;
+  `trade:post:2:${list.id}:${list.updatedAt}`;
 
 /**
  * Stage 2: each list's shown entries, have and sale narrowed to what the owner can still
@@ -160,6 +162,7 @@ export async function fetchPostEntries(
       id: listEntries.id,
       slug: listEntries.collectionSlug,
       objektId: listEntries.objektId,
+      ruleId: listEntries.ruleId,
     })
     .from(listEntries)
     .where(
@@ -179,6 +182,7 @@ export async function fetchPostEntries(
       id: row.id,
       slug: row.slug!,
       objektId: row.objektId,
+      ...(row.ruleId !== null && { ruleId: row.ruleId }),
     });
     byList.set(row.listId, entries);
   }

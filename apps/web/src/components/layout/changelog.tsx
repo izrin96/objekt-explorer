@@ -32,16 +32,20 @@ import { AboutDialog, DISCORD_INVITE } from "./about";
  */
 const CHANGELOG = [
   {
-    date: "2026-10-24",
+    date: "2026-10-25",
     items: [
       "Added a Trade page: Browse lists trade and sale posts, and For you (formerly Trade Matches) finds people to trade with across all your lists.",
       "Post your lists on Trade to swap, sell or buy.",
+      "Want lists choose what they take: Swaps only, Swaps or buying, or Buying only.",
+      'Want lists can hold rules, like "any member of CC366" or "Cream02 FCO 3rd".',
+      "Sale lists can take swaps too: post them as Sell, open to swaps.",
       "Added Messages and offers. Accepted trades are verified on-chain.",
       "Added notifications for offers, trades and want list matches.",
       "Added an Account page for all your settings.",
       "Desktop shows every filter on the toolbar.",
       "Added Default profile: choose which profile names you to others.",
       "Removed Hide User.",
+      "Removed profile privacy settings.",
     ],
   },
   {
@@ -54,6 +58,12 @@ const CHANGELOG = [
       "In select mode, Shift+click selects a range of objekts.",
       "The Marketplace can now show only what your profile doesn't own yet. Pick one of your profiles under Compare.",
       "The Compare dialog on a list now lets you pick one of your profiles, or choose Other profile to enter any Cosmo ID.",
+      "Rework Cosmo link flow UI.",
+      "Newly minted Welcome objekt now marked as non-transferable.",
+      "Exclude MinGyeol from overall progress chart.",
+      "Long press a pinned objekt to drag it into a new order. Long press any other objekt to select it.",
+      "Some UI improvements (move reset filter button, search user dialog, profile hover card, objekt preview on list card etc).",
+      "Improve cosmo-spin profile load.",
     ],
   },
   {

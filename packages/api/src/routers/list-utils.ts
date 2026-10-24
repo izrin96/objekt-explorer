@@ -12,6 +12,7 @@ import {
   listEntriesInputSchema,
   updateEntryPricesInputSchema,
 } from "../schemas/list";
+import { ruleLine } from "../schemas/list-rule";
 import {
   buildListEntries,
   fetchListWithEntries,
@@ -19,7 +20,14 @@ import {
   findOwnedList,
   touchList,
 } from "../services/list";
+import { fetchRuleDefs } from "../services/list-rules";
 import { escapeCSV } from "../services/utils";
+
+async function ruleLines(slug: string, userId: string) {
+  const list = await db.query.lists.findFirst({ columns: { id: true }, where: { slug, userId } });
+  if (!list) return [];
+  return ((await fetchRuleDefs([list.id])).get(list.id) ?? []).map(ruleLine);
+}
 
 export const listUtils = {
   updateEntryPrices: authed.input(updateEntryPricesInputSchema).handler(
@@ -64,12 +72,14 @@ export const listUtils = {
         session: { user },
       },
     }) => {
-      const [haveCollections, wantCollections] = await Promise.all([
+      const [haveCollections, wantCollections, wantRules] = await Promise.all([
         haveListSlug ? fetchPartialOwnedListCollections(haveListSlug, user.id) : null,
         wantListSlug ? fetchPartialOwnedListCollections(wantListSlug, user.id) : null,
+        wantListSlug ? ruleLines(wantListSlug, user.id) : [],
       ]);
 
-      return { have: haveCollections ?? [], want: wantCollections ?? [] };
+      // `wantRules` comes before the want objekts; a tab that predates it ignores it
+      return { have: haveCollections ?? [], want: wantCollections ?? [], wantRules };
     },
   ),
 
@@ -88,10 +98,13 @@ export const listUtils = {
 
       if (!result) throw new ORPCError("NOT_FOUND");
 
-      const entries = await buildListEntries(result.entries, result.isProfileBind, {
-        artists,
-        hideSerial: result.hideSerial,
-      });
+      const [entries, rules] = await Promise.all([
+        buildListEntries(result.entries, result.isProfileBind, {
+          artists,
+          hideSerial: result.hideSerial,
+        }),
+        fetchRuleDefs([result.id]),
+      ]);
 
       const headers = [
         "collection_slug",
@@ -108,10 +121,16 @@ export const listUtils = {
         "price",
         "is_qyop",
         "note",
+        "rule",
       ];
+      const blank = Array.from({ length: headers.length - 1 }, () => "");
 
       const csv = [
         headers.join(","),
+        // a want list's rules first, one row each, named in the last column
+        ...(rules.get(result.id) ?? []).map((rule) =>
+          [...blank, escapeCSV(ruleLine(rule))].join(","),
+        ),
         ...entries.map((e) =>
           [
             e.slug,
@@ -128,6 +147,7 @@ export const listUtils = {
             e.price,
             e.isQyop,
             e.note ?? "",
+            "",
           ]
             .map((v) => escapeCSV(String(v ?? "")))
             .join(","),

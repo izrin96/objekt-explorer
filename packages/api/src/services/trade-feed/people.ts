@@ -273,7 +273,14 @@ export async function peopleFeed(viewerId: string | null, input: PeopleInput) {
   ];
   const drawn = unique(
     people.flatMap((person) =>
-      person.posts.flatMap((post) => post.sides.flatMap((s) => s.items.map((i) => i.slug))),
+      person.posts.flatMap((post) =>
+        post.sides
+          .flatMap((s) => [
+            ...s.items.map((i) => i.slug),
+            ...s.rules.flatMap((r) => r.matchedSlugs),
+          ])
+          .concat(post.ruleMatches.map((found) => found.slug)),
+      ),
     ),
   );
   const collectionRows = await fetchCollectionsBySlug(drawn, []);

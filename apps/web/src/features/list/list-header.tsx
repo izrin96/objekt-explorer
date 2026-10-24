@@ -4,6 +4,7 @@ import {
   DotsThreeIcon,
   DownloadSimpleIcon,
   HashIcon,
+  ListPlusIcon,
   MagnifyingGlassIcon,
   PencilSimpleIcon,
   TrashIcon,
@@ -38,6 +39,7 @@ import { ExportListDialog } from "./export-list-dialog";
 import { getListLinkOption } from "./list-link";
 import { useListTarget } from "./list-provider";
 import { ListBoundBadge, ListTypeBadge, openToLabel } from "./list-type-badge";
+import { RuleDialog } from "./rules/rule-dialog";
 import { ShareListButton } from "./share-list-button";
 import { useListOwned } from "./use-list-owned";
 
@@ -51,6 +53,8 @@ export function ListHeader() {
   const [editOpen, setEditOpen] = useState(false);
   const [copyOpen, setCopyOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [ruleOpen, setRuleOpen] = useState(false);
+  const canAddRule = isOwner && list.listType === "want";
   const linked = list.linkedList;
   const self = { id: list.id, listType: list.listType, linkedListId: linked?.id ?? null };
   const linkedOnTrade =
@@ -130,6 +134,12 @@ export function ListHeader() {
             </Button>
           ) : null}
           {canTradeMatch ? <TradeMatchesLink slug={list.slug} match={match} /> : null}
+          {canAddRule ? (
+            <Button variant="outline" size="sm" onClick={() => setRuleOpen(true)}>
+              <ListPlusIcon />
+              {m.rule_add()}
+            </Button>
+          ) : null}
           {list.messageable && !isOwner ? (
             <MessageButton target={{ kind: "list", slug: list.slug }} />
           ) : null}
@@ -208,6 +218,14 @@ export function ListHeader() {
             redirectOnSave
           />
           <CopyListDialog slug={list.slug} open={copyOpen} onOpenChange={setCopyOpen} />
+          {canAddRule ? (
+            <RuleDialog
+              slug={list.slug}
+              listName={list.name}
+              open={ruleOpen}
+              onOpenChange={setRuleOpen}
+            />
+          ) : null}
           <DeleteListDialog
             slug={list.slug}
             name={list.name}

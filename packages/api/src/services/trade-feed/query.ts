@@ -5,30 +5,33 @@ import { cursorScope, FEED_FETCH_SIZE, type MatchIndex, type PostTag } from "../
 import { IDLE_DAYS } from "../../lib/trade-rank";
 import { PERSON_POST_LIMIT, type PostType } from "../../schemas/trade";
 import { notBlockedEither, notTradeSanctioned } from "../safety";
-import { takesPartInTradeSql } from "../trade-lists";
+import { offersSwapsSql, takesPartInTradeSql } from "../trade-lists";
 
 /**
- * The SQL twin of `tagsOf` (schemas/trade-post.ts): WTT for a have list or a want list alone open
- * to swaps, WTB for a want side open to buying (a want list alone, or a have list's partner on
- * Trade), WTS for a sale list. `wtt` reads no partner column, since `excludeWttOf` negates it.
+ * The SQL twin of `tagsOf` (schemas/trade-post.ts): WTT for a have list, a sale list that takes
+ * swaps or a want list alone open to swaps, WTB for a want side open to buying (a want list
+ * alone, or a have list's partner on Trade), WTS for a sale list. `wtt` reads no partner column,
+ * since `excludeWttOf` negates it.
  */
 const TAG_WHERE: Record<PostTag, SQL> = {
-  wtt: sql`(posts.type = 'have' OR (posts.type = 'want' AND posts.match_have))`,
+  wtt: sql`(posts.type = 'have' OR (posts.type = 'sale' AND posts.takes_swaps) OR (posts.type = 'want' AND posts.match_have))`,
   wtb: sql`(
     (posts.type = 'want' AND (posts.match_sale OR NOT posts.match_have))
-    OR (posts.type = 'have' AND posts.partner_id IS NOT NULL
+    OR (posts.type IN ('have', 'sale') AND posts.partner_id IS NOT NULL
       AND (coalesce(posts.partner_match_sale, false) OR NOT coalesce(posts.partner_match_have, true)))
   )`,
   wts: sql`posts.type = 'sale'`,
 };
 
 /**
- * Posts on Trade: each list on Trade, with a want list folded into the have list that links
- * to it when both are on Trade. A post's bump and change times are the latest of its lists.
+ * Posts on Trade: each list on Trade, with a want list folded into the list offering swaps that
+ * links to it (a have list, or a sale list that takes swaps) when both are on Trade. A post's bump
+ * and change times are the latest of its lists.
  */
 export const postsCte = sql`
   on_trade AS (
-    SELECT id, user_id, list_type, linked_list_id, match_sale, match_have, bumped_at, updated_at, created_at
+    SELECT id, user_id, list_type, linked_list_id, match_sale, match_have, takes_swaps, bumped_at,
+      updated_at, created_at
     FROM lists
     WHERE discoverable AND ${takesPartInTradeSql()}
   ),
@@ -39,6 +42,7 @@ export const postsCte = sql`
       a.list_type AS type,
       a.match_sale,
       a.match_have,
+      a.takes_swaps,
       p.id AS partner_id,
       p.match_sale AS partner_match_sale,
       p.match_have AS partner_match_have,
@@ -51,14 +55,14 @@ export const postsCte = sql`
       greatest(a.updated_at, p.updated_at) AS updated_at
     FROM on_trade a
     LEFT JOIN on_trade p
-      ON a.list_type = 'have'
+      ON ${offersSwapsSql("a")}
       AND p.id = a.linked_list_id
       AND p.list_type = 'want'
       AND p.user_id = a.user_id
     WHERE NOT EXISTS (
       SELECT 1 FROM on_trade h
       WHERE a.list_type = 'want'
-        AND h.list_type = 'have'
+        AND ${offersSwapsSql("h")}
         AND h.linked_list_id = a.id
         AND h.user_id = a.user_id
     )
@@ -89,7 +93,7 @@ const matchesIndex = (index: MatchIndex) =>
     JOIN on_trade t ON t.id = e.list_id
     WHERE e.list_id IN (posts.id, posts.partner_id)
       AND (
-        (t.list_type = 'have' AND e.collection_slug = ANY(${sql.param(index.tradeWant)}::text[]))
+        (${offersSwapsSql("t")} AND e.collection_slug = ANY(${sql.param(index.tradeWant)}::text[]))
         OR (t.list_type = 'sale' AND e.collection_slug = ANY(${sql.param(index.saleWant)}::text[]))
         OR (t.list_type = 'want' AND e.collection_slug = ANY(
           -- the SQL twin of openToOf (schemas/open-to.ts)

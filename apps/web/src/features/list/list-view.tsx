@@ -1,4 +1,5 @@
 import { CurrencyDollarIcon, MagnifyingGlassIcon, TrashIcon } from "@phosphor-icons/react";
+import { ruleLine } from "@repo/api/schemas/list-rule";
 import type { ValidCustomSort } from "@repo/cosmo/types/common";
 import type { ListObjekt } from "@repo/lib/types/objekt";
 import { useQuery } from "@tanstack/react-query";
@@ -41,6 +42,8 @@ import { formatConvertedPrice, formatPrice } from "./list-price";
 import { useListTarget } from "./list-provider";
 import { listEntriesOptions } from "./queries";
 import { RemoveFromListDialog } from "./remove-from-list-dialog";
+import { listRulesOptions } from "./rules/queries";
+import { RulesStrip } from "./rules/rules-strip";
 import { SetPriceDialog } from "./set-price-dialog";
 import { useEntryDialogs } from "./use-entry-dialogs";
 import { useListOwned } from "./use-list-owned";
@@ -54,6 +57,7 @@ export function ListView() {
       address={list.isProfileBind ? (list.profileAddress ?? undefined) : undefined}
       sourceList={list.isProfileBind && list.hideSerial === true ? list.slug : undefined}
     >
+      <RulesStrip />
       <ListEntries />
     </AddToListProvider>
   );
@@ -70,6 +74,13 @@ function ListEntries() {
   const compare = isComparing(search) ? search : null;
   const setCompare = useSetCompare();
   const clearCompare = useCallback(() => setCompare(null), [setCompare]);
+
+  const { data: rules } = useQuery({
+    ...listRulesOptions(list.slug),
+    enabled: list.listType === "want",
+  });
+  const ruleLines =
+    list.listType === "want" && rules && rules.length > 0 ? rules.map(ruleLine) : undefined;
 
   const { selectedArtistIds } = useCosmoArtist();
   const entriesQuery = useQuery({
@@ -254,7 +265,7 @@ function ListEntries() {
         sorts={sorts}
         longTail={LONG_TAIL.list}
         extras={extras}
-        actions={<GenerateDiscordButton objekts={filtered} />}
+        actions={<GenerateDiscordButton objekts={filtered} rules={ruleLines} />}
       />
 
       {compare !== null ? <CompareBanner compare={compare} onClear={clearCompare} /> : null}

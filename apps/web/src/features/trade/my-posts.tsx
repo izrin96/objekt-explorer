@@ -194,14 +194,9 @@ function MyPostRow({
   const takeDown = useTakeDownPost();
   const { changed, time } = postTime(post);
   const when = relativeTime(new Date(time).getTime(), now);
-  const option =
-    post.kind === "swap" && post.alsoPay
-      ? m.trade_post_option_also_pay()
-      : post.kind === "sell"
-        ? m.trade_post_option_market()
-        : null;
   const details = [
-    option,
+    post.kind === "sell" ? m.trade_post_option_market() : null,
+    post.alsoPay ? m.trade_post_option_also_pay() : null,
     changed ? m.trade_updated_at({ time: when }) : null,
     post.listed ? null : m.trade_post_idle_hint(),
   ].filter((part) => part !== null);

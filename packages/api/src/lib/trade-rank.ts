@@ -126,8 +126,12 @@ export type Candidate = {
   userId: string;
   /** each matched list's last change, keyed by list id */
   listUpdatedAt: Record<string, string>;
-  /** their have and sale entries on collections I want */
-  theyHave: (OwnedEntry & { sale: boolean })[];
+  /**
+   * their have and sale entries on collections I want: `swap` when my want list takes it as a
+   * swap, `sale` when it buys it. A Sell or swap entry can be both. A cached entry from before
+   * `swap` existed reads `swap` as `!sale`.
+   */
+  theyHave: (OwnedEntry & { sale: boolean; swap?: boolean })[];
   /** their want entries on collections I have, with what the want list is open to */
   theyWant: TheyWant[];
 };
@@ -145,7 +149,7 @@ export type MyWant = { listId: number } & OpenToFlags;
 
 type Judged = ReturnType<typeof collectionVerdict>;
 
-/** My have side, already judged: over my have and sale lists, over my have lists alone, and over my sale lists alone. */
+/** My have side, already judged: over my have and sale lists, over the lists offering swaps (have, and sale lists that take swaps), and over my sale lists alone. */
 export type MyHaves = {
   all: ReadonlyMap<string, Judged>;
   trade: ReadonlyMap<string, Judged>;
@@ -176,14 +180,10 @@ export function recount(
       dropped.push({ slug, direction: "theyHaveIWant", reason: verdict });
       continue;
     }
-    const judgeOffers = (sale: boolean) =>
-      collectionVerdict(
-        entries.filter((entry) => entry.sale === sale),
-        partnerAddresses,
-        holdings,
-      );
-    const haves = judgeOffers(false);
-    const sales = judgeOffers(true);
+    const judgeOffers = (keep: (entry: (typeof entries)[number]) => boolean) =>
+      collectionVerdict(entries.filter(keep), partnerAddresses, holdings);
+    const haves = judgeOffers((entry) => entry.swap ?? !entry.sale);
+    const sales = judgeOffers((entry) => entry.sale);
     const mine = myWants.get(slug) ?? [];
     const takesSwaps = mine.some((want) => want.matchHave);
     const takesBuying = mine.some((want) => want.matchSale);
@@ -205,7 +205,10 @@ export function recount(
       myListIds: mine
         .filter((want) => (swaps && want.matchHave) || (buys && want.matchSale))
         .map((want) => want.listId),
-      partnerListIds: [...(swaps ? haves.listIds : []), ...(buys ? sales.listIds : [])],
+      // a Sell or swap list is on both sides
+      partnerListIds: [
+        ...new Set([...(swaps ? haves.listIds : []), ...(buys ? sales.listIds : [])]),
+      ],
       trade: swaps,
     });
   }

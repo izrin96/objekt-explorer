@@ -16,6 +16,7 @@ export function toPlanList(list: PublicList): PlanList {
     isProfileBind: list.isProfileBind,
     matchSale: list.matchSale ?? true,
     matchHave: list.matchHave ?? true,
+    takesSwaps: list.takesSwaps ?? false,
   };
 }
 

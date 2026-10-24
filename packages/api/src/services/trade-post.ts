@@ -40,6 +40,7 @@ async function lockPosterLists(tx: Tx, userId: string): Promise<PlanList[]> {
       isProfileBind: lists.isProfileBind,
       matchSale: lists.matchSale,
       matchHave: lists.matchHave,
+      takesSwaps: lists.takesSwaps,
     })
     .from(lists)
     .where(and(eq(lists.userId, userId), inArray(lists.listType, ["have", "want", "sale"])))
@@ -75,7 +76,7 @@ export async function savePost(userId: string, choice: PostChoice) {
     }
 
     if (plan.link) {
-      const [haveId, wantId] = plan.link;
+      const [offerId, wantId] = plan.link;
       // any other list still pointing at either half loses its link, as `list.edit` does
       const stale = await tx
         .update(lists)
@@ -83,9 +84,9 @@ export async function savePost(userId: string, choice: PostChoice) {
         .where(and(mine, inArray(lists.linkedListId, plan.link), notInArray(lists.id, plan.link)))
         .returning({ id: lists.id });
       for (const row of stale) touched.add(row.id);
-      await tx.update(lists).set({ linkedListId: wantId }).where(eq(lists.id, haveId));
-      await tx.update(lists).set({ linkedListId: haveId }).where(eq(lists.id, wantId));
-      touched.add(haveId).add(wantId);
+      await tx.update(lists).set({ linkedListId: wantId }).where(eq(lists.id, offerId));
+      await tx.update(lists).set({ linkedListId: offerId }).where(eq(lists.id, wantId));
+      touched.add(offerId).add(wantId);
     }
 
     for (const { id, flags } of plan.on) {
@@ -94,6 +95,14 @@ export async function savePost(userId: string, choice: PostChoice) {
         .set({ ...tradeColumns(true), ...flags })
         .where(eq(lists.id, id));
       touched.add(id);
+    }
+
+    if (plan.saleSwaps) {
+      await tx
+        .update(lists)
+        .set({ takesSwaps: plan.saleSwaps.takesSwaps })
+        .where(eq(lists.id, plan.saleSwaps.id));
+      touched.add(plan.saleSwaps.id);
     }
 
     if (plan.off.length > 0) {
@@ -106,7 +115,7 @@ export async function savePost(userId: string, choice: PostChoice) {
   await touchList(changed);
 }
 
-/** Takes every list of the post off Trade; a Swap pair stays linked, so posting it again brings it back. */
+/** Takes every list of the post off Trade; a pair stays linked, so posting it again brings it back. */
 export async function takeDownPost(userId: string, slug: string) {
   const changed = await db.transaction(async (tx) => {
     const own = await lockPosterLists(tx, userId);

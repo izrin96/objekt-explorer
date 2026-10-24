@@ -43,3 +43,17 @@ export function resolveOpenTo(
   const matchHave = matchSale ? (input.matchHave ?? current?.matchHave ?? true) : true;
   return { matchSale, matchHave };
 }
+
+/** A sale list's Open to: Sell only, or Sell or swap (`takes_swaps`). */
+export type SaleOpenTo = "sell" | "both";
+
+export const saleOpenToOf = (list: { takesSwaps?: boolean | null }): SaleOpenTo =>
+  list.takesSwaps ? "both" : "sell";
+
+/**
+ * Whether a list's objekts can be swapped for: a have list always, a sale list when it takes
+ * swaps. The TS twin of `offersSwapsSql` (services/trade-lists.ts).
+ */
+export function offersSwaps(list: { listType: ListType; takesSwaps?: boolean | null }) {
+  return list.listType === "have" || (list.listType === "sale" && list.takesSwaps === true);
+}

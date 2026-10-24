@@ -2,8 +2,10 @@ import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { Link } from "@tanstack/react-router";
 import { type ReactNode, memo } from "react";
 
+import { Popover, PopoverPopup, PopoverTitle, PopoverTrigger } from "@/components/ui/popover";
 import { getListLinkOption } from "@/features/list/list-link";
 import { LIST_TYPE_LABEL, LIST_TYPE_TONE } from "@/features/list/list-type-badge";
+import { ruleText } from "@/features/list/rules/words";
 import { ObjektCard } from "@/features/objekt/objekt-card";
 import { useElementSize } from "@/hooks/use-element-size";
 import { TONE_INK } from "@/lib/tone";
@@ -64,6 +66,7 @@ function PostStrip({
   onOpen,
   more,
   othersLink,
+  rules,
 }: {
   /** before the label, on its line: the post's tag */
   lead?: ReactNode;
@@ -79,6 +82,8 @@ function PostStrip({
   more: (count: number) => ReactNode;
   /** after the thumbnails and the "+N" tile: the objekts a filter left out */
   othersLink?: ReactNode;
+  /** a want side's rule tiles, drawn before its objekts */
+  rules?: ReactNode;
 }) {
   const [ref, { width }] = useElementSize<HTMLUListElement>();
   const [linkRef, { width: linkWidth }] = useElementSize<HTMLLIElement>();
@@ -98,6 +103,7 @@ function PostStrip({
         {lead}
         {label}
       </h3>
+      {rules}
       {/* padding gives the ring room */}
       <ul ref={ref} className="-m-1 flex items-start gap-1.5 overflow-hidden p-1">
         {shown.map((item) => (
@@ -271,7 +277,12 @@ export function SideStrip({
         ringed: item.ringed,
       }))}
       hidden={side.more}
-      copies={side.copyCount}
+      copies={side.copyCount - side.rules.reduce((sum, tile) => sum + tile.count, 0)}
+      rules={
+        side.rules.length > 0 ? (
+          <RuleTiles tiles={side.rules} collections={collections} onOpen={onOpen} />
+        ) : undefined
+      }
       collections={collections}
       onOpen={onOpen}
       more={(count) => (
@@ -293,5 +304,114 @@ export function SideStrip({
         ) : undefined
       }
     />
+  );
+}
+
+type RuleTileData = PostSideData["rules"][number];
+
+/**
+ * A want side's rules, one tile each: RULE, the rule's name and who it takes, and for a signed-in
+ * viewer how many of its objekts they have, ringed when any. Activating a tile lists those.
+ */
+function RuleTiles({
+  tiles,
+  collections,
+  onOpen,
+}: {
+  tiles: readonly RuleTileData[];
+  collections: Readonly<Record<string, ValidObjekt | undefined>>;
+  onOpen: (objekt: ValidObjekt) => void;
+}) {
+  return (
+    <ul className="-m-1 flex flex-wrap gap-1.5 p-1">
+      {tiles.map((tile) => (
+        <li key={tile.ruleId}>
+          <RuleTile tile={tile} collections={collections} onOpen={onOpen} />
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function RuleTile({
+  tile,
+  collections,
+  onOpen,
+}: {
+  tile: RuleTileData;
+  collections: Readonly<Record<string, ValidObjekt | undefined>>;
+  onOpen: (objekt: ValidObjekt) => void;
+}) {
+  const ringed = (tile.matched ?? 0) > 0;
+  // the class colour of a collection it takes, when one is at hand; else monochrome
+  const stripe = tile.matchedSlugs
+    .map((slug) => collections[slug]?.backgroundColor)
+    .find((color) => color !== undefined);
+  const face = (
+    <>
+      <span
+        aria-hidden
+        className="bg-foreground/40 absolute inset-y-0 start-0 w-1 rounded-s-md"
+        style={stripe ? { backgroundColor: stripe } : undefined}
+      />
+      <span className="text-muted-foreground text-xxs font-mono font-semibold tracking-wide">
+        {m.trade_rule_tag()}
+      </span>
+      <span className="truncate font-mono text-xs">{ruleText(tile.rule)}</span>
+      {tile.matched !== null ? (
+        <span
+          className={cn(
+            "text-xs tabular-nums",
+            ringed ? "text-success-foreground" : "text-muted-foreground",
+          )}
+        >
+          {m.trade_list_count_you_have({ count: tile.matched })}
+        </span>
+      ) : null}
+    </>
+  );
+  const box = cn(
+    "bg-muted/48 relative flex h-14 max-w-56 min-w-28 flex-col items-start justify-center gap-0.5 rounded-md border ps-2.5 pe-2 text-start",
+    ringed && "outline-foreground outline-2 outline-offset-1",
+  );
+
+  if (!ringed) {
+    return <div className={box}>{face}</div>;
+  }
+  return (
+    <Popover>
+      <PopoverTrigger
+        className={cn(
+          box,
+          "hover:bg-muted focus-visible:ring-ring outline-none focus-visible:ring-2",
+        )}
+      >
+        {face}
+      </PopoverTrigger>
+      <PopoverPopup className="w-72">
+        <PopoverTitle className="text-sm">
+          {m.trade_rule_you_have_title({ rule: ruleText(tile.rule) })}
+        </PopoverTitle>
+        <ul className="mt-2 grid grid-cols-6 gap-1.5">
+          {tile.matchedSlugs.map((slug) => {
+            const collection = collections[slug];
+            return (
+              <li key={slug} className="@container">
+                {collection ? (
+                  <ObjektCard objekt={collection} image="thumbnail" hideLabel onOpen={onOpen} />
+                ) : (
+                  <SlugTile className="text-xxs p-0.5">{slug}</SlugTile>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+        {(tile.matched ?? 0) > tile.matchedSlugs.length ? (
+          <p className="text-muted-foreground mt-2 text-xs">
+            {m.trade_more_count({ count: (tile.matched ?? 0) - tile.matchedSlugs.length })}
+          </p>
+        ) : null}
+      </PopoverPopup>
+    </Popover>
   );
 }

@@ -31,6 +31,7 @@ import {
   tradeColumns,
   writeList,
 } from "../services/list";
+import { copyRulesTx } from "../services/list-rules";
 import { assertProfileOwned } from "../services/profile";
 import { refuseOverUserLimit } from "../services/redis";
 import { bumpTradeVersions } from "../services/safety-cache";
@@ -98,6 +99,10 @@ export const listCrud = {
         const { slug, changed } = await db.transaction(async (tx) => {
           const created = await writeList(tx, prepared);
           await insertCopyRows(tx, created.id, rows);
+          // any other copy drops the rules with the objekts they want
+          if (input.listType === "want" && source.listType === "want") {
+            await copyRulesTx(tx, source.id, created.id);
+          }
           return created;
         });
         await touchList(changed);
@@ -132,7 +137,7 @@ export const listCrud = {
       const list = await findOwnedList(input.slug, user.id);
 
       const sentLink = input.linkedListId !== undefined;
-      const linkedListId = !["have", "want"].includes(list.listType)
+      const linkedListId = !["have", "want", "sale"].includes(list.listType)
         ? null
         : sentLink
           ? (input.linkedListId ?? null)
@@ -158,6 +163,7 @@ export const listCrud = {
               linkedListId,
               user.id,
               resolveOpenTo(list.listType, input, list),
+              list.takesSwaps,
             )
           : undefined,
       ]);

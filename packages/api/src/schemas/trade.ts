@@ -181,6 +181,8 @@ export const savePostInputSchema = z.object({
   want: z.string().min(1).nullish(),
   sale: z.string().min(1).nullish(),
   alsoPay: z.boolean().default(false),
+  /** Sell: the sale list takes swaps; an open tab leaves it out, which keeps the list's own */
+  alsoSwap: z.boolean().optional(),
   unpair: z.boolean().default(false),
   replaces: z.string().min(1).nullish(),
 });
