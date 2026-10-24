@@ -63,7 +63,7 @@ export function AppNav() {
         {/* never wraps or squashes; the search field absorbs the shortfall */}
         <Link
           to="/"
-          className="font-display flex shrink-0 items-center gap-2 text-base font-bold tracking-tight whitespace-nowrap"
+          className="font-display flex shrink-0 items-center gap-2 self-stretch text-base font-bold tracking-tight whitespace-nowrap"
         >
           <span className="bg-foreground text-background grid size-6 shrink-0 place-items-center rounded-[7px]">
             <CubeIcon weight="bold" className="size-3.5" />
