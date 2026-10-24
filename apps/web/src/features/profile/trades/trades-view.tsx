@@ -1,4 +1,4 @@
-import { ArrowsLeftRightIcon, LockSimpleIcon } from "@phosphor-icons/react";
+import { ArrowsLeftRightIcon } from "@phosphor-icons/react";
 import {
   transferTypeSchema,
   type TransferItem,
@@ -158,7 +158,6 @@ export function TradesView() {
   );
 
   const rows = query.data?.pages.flatMap((page) => page.results) ?? [];
-  const hidden = query.data?.pages[0]?.hide === true;
 
   const toolbar = (
     <ProfileToolbar
@@ -173,19 +172,6 @@ export function TradesView() {
       resetDisabled={!canReset(filters) && type === "all"}
     />
   );
-
-  if (hidden) {
-    return (
-      <>
-        {toolbar}
-        <EmptyState
-          icon={LockSimpleIcon}
-          title={m.trades_history_private()}
-          hint={m.trades_history_private_hint()}
-        />
-      </>
-    );
-  }
 
   return (
     <>

@@ -40,11 +40,6 @@ type ItemParties = {
   sent?: { since: string; receivers: (side: Side) => ReadonlySet<string> };
   /** Send only: the copies a get side's any-copy asks may draw on (see `anyCopyScope`) */
   getScope?: ReadonlyMap<string, ReadonlySet<string> | null>;
-  /**
-   * Send only: where a get side's any-copy asks are counted, when narrower than `copyHolders`.
-   * Open any-copy legs may draw on every copy, so a named objekt is still checked against all.
-   */
-  getCopyHolders?: ReadonlySet<string>;
 };
 
 /**
@@ -88,13 +83,11 @@ async function sentEarly(items: ItemRow[], parties: ItemParties, tx: Tx | typeof
 type CopyNeed = {
   side: Side;
   giverId: string;
-  available: Map<string, number>;
-  /** like `available`, but counted over every copy holder: what open legs may draw on */
   held: Map<string, number>;
   /** collections the side names a specific objekt in, which open any-copy legs must leave a copy for */
   specificSlugs: string[];
   /** the copies behind `held`, so accept can drop the ones another accept reserved since */
-  counted: { id: string; slug: string; available: boolean }[];
+  counted: { id: string; slug: string }[];
 };
 
 /**
@@ -158,19 +151,12 @@ export async function checkItems(
       if (!copy.transferable || reserved.has(copy.id) || named.has(copy.id)) continue;
       const asked = side === "get" && slugsOf(side).includes(copy.slug);
       if (asked && parties.getScope && !inAnyCopyScope(parties.getScope, copy)) continue;
-      const available = !(
-        asked &&
-        parties.getCopyHolders &&
-        !parties.getCopyHolders.has(copy.owner)
-      );
-      counted.push({ id: copy.id, slug: copy.slug, available });
+      counted.push({ id: copy.id, slug: copy.slug });
     }
-    const { available, held } = countCopies(counted);
     return {
       side,
       giverId: parties.giverId(side),
-      available,
-      held,
+      held: countCopies(counted).held,
       specificSlugs: specificSlugsOf(side),
       counted,
     };
@@ -180,13 +166,9 @@ export async function checkItems(
 }
 
 function countCopies(counted: CopyNeed["counted"]) {
-  const available = new Map<string, number>();
   const held = new Map<string, number>();
-  for (const copy of counted) {
-    held.set(copy.slug, (held.get(copy.slug) ?? 0) + 1);
-    if (copy.available) available.set(copy.slug, (available.get(copy.slug) ?? 0) + 1);
-  }
-  return { available, held };
+  for (const copy of counted) held.set(copy.slug, (held.get(copy.slug) ?? 0) + 1);
+  return { held };
 }
 
 /**
@@ -237,7 +219,7 @@ export async function refuseCopyShortfall(
       );
     return anyCopyShortfall(
       anyCopy.filter((item) => item.side === need.side),
-      leftOf(need.available),
+      leftOf(need.held),
     ).concat(specificCopyShortfall(need.specificSlugs, leftOf(need.held)));
   });
   if (short.length > 0) refuseOffer("not_owned", { collectionSlugs: unique(short) });

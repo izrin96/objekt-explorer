@@ -24,7 +24,6 @@ import {
   fetchCopies,
   fetchObjekts,
   linkedAddresses,
-  lowerOwner,
   openAnyCopyLegs,
   openOfferHolders,
   partnerHasLists,
@@ -37,7 +36,6 @@ import {
   counteredGives,
   keptGives,
   ownedPage,
-  ownedQuery,
   toCandidate,
   wantSlugsOf,
 } from "./shared";
@@ -55,17 +53,14 @@ async function filterSlugs(slugs: string[], filters: Partial<CollectionFilters>)
 /** The allowed list entries resolved against the partner's current wallet. */
 async function resolveTheirItems(me: string, addressed: Addressed, fromList?: string) {
   const { partnerId } = addressed;
-  const [entries, linked, kept, hasLists, visible] = await Promise.all([
+  const [entries, linked, kept, hasLists] = await Promise.all([
     allowedEntries(addressed, undefined, fromList),
     linkedAddresses([partnerId]),
     fromList ? null : keptGives(addressed, me),
     partnerHasLists(partnerId),
-    collectionAddresses(partnerId),
   ]);
   const keptIds = [...(kept?.objekts.keys() ?? [])];
   const theirs = linked.get(partnerId) ?? new Set<string>();
-  // a collection entry names copies one by one only where the partner shows serials publicly
-  const showsSerials = new Set(visible.serials);
   const addresses = [...theirs];
   const anySlugs = unique(
     entries.flatMap((e) => (entryObjektId(e) === null ? [e.collectionSlug] : [])),
@@ -115,7 +110,7 @@ async function resolveTheirItems(me: string, addressed: Addressed, fromList?: st
     }
     if (entry.hideSerial) continue;
     for (const objekt of held) {
-      if (seen.has(objekt.id) || !showsSerials.has(objekt.owner)) continue;
+      if (seen.has(objekt.id)) continue;
       seen.add(objekt.id);
       items.push(toCandidate(objekt, flags(objekt), entry.listSlug));
     }
@@ -203,43 +198,6 @@ export async function theirPickerPage(
   };
 }
 
-/** One any-copy item per collection the partner holds at visible, serial-hiding addresses. */
-async function hiddenSerialItems(
-  partnerId: string,
-  addresses: string[],
-  { filters }: PickerNarrowing,
-  slugs: string[] | null,
-) {
-  if (addresses.length === 0) return [];
-  const rows = (await ownedQuery(addresses, { filters, slugs })).map(lowerOwner);
-  const reserved = await reservedIds(rows.map((o) => o.id));
-  const spare = new Map<string, number>();
-  for (const objekt of rows) {
-    if (objekt.transferable && !reserved.has(objekt.id)) {
-      spare.set(objekt.slug, (spare.get(objekt.slug) ?? 0) + 1);
-    }
-  }
-  const promised = await openAnyCopyLegs([{ userId: partnerId, slugs: [...spare.keys()] }]);
-  return [...spare].flatMap(([collectionSlug, held]): CandidateItem[] => {
-    const copies = held - (promised.get(copyKey(partnerId, collectionSlug)) ?? 0);
-    return copies > 0
-      ? [
-          {
-            collectionSlug,
-            objektId: null,
-            serial: null,
-            serialEstimated: false,
-            transferable: true,
-            reserved: false,
-            inOpenOffer: [],
-            listSlug: null,
-            copies,
-          },
-        ]
-      : [];
-  });
-}
-
 /** What the countered offer gave, still with the partner, whatever address it sits at. */
 async function keptItems(
   me: string,
@@ -277,14 +235,11 @@ export async function theirCollectionPage(
     narrowing.matchOnly ? wantSlugsOf(me, false) : null,
   ]);
   const none = { page: [], nextCursor: null };
-  const [{ page, nextCursor }, suggested, kept] = await Promise.all([
-    addresses.serials.length === 0 || myWants?.length === 0
+  const [{ page, nextCursor }, kept] = await Promise.all([
+    addresses.length === 0 || myWants?.length === 0
       ? none
-      : ownedPage(addresses.serials, cursor, { filters: narrowing.filters, slugs: myWants }),
-    cursor || myWants?.length === 0
-      ? []
-      : hiddenSerialItems(partnerId, addresses.hidden, narrowing, myWants),
-    keptItems(me, addressed, addresses.all, narrowing),
+      : ownedPage(addresses, cursor, { filters: narrowing.filters, slugs: myWants }),
+    keptItems(me, addressed, addresses, narrowing),
   ]);
   // kept objekts lead the first page, so later pages leave them out
   const keptIds = new Set(kept.map((o) => o.id));
@@ -296,15 +251,12 @@ export async function theirCollectionPage(
     items: objekts.map((objekt) =>
       toCandidate(objekt, itemFlags(objekt, reserved, holders, addressed.conversationId), null),
     ),
-    suggested,
+    suggested: [],
     nextCursor,
     nextOffset: null,
     listed: true,
     partnerLists: false,
     wanted: [],
-    collections: await collectionsOf([
-      ...objekts.map((o) => o.slug),
-      ...suggested.map((item) => item.collectionSlug),
-    ]),
+    collections: await collectionsOf(objekts.map((o) => o.slug)),
   };
 }

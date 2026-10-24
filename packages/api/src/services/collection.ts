@@ -1,10 +1,9 @@
 import { type ValidArtist, toIndexedArtist } from "@repo/cosmo/types/common";
-import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts, transfers } from "@repo/db/indexer/schema";
 import { Addresses } from "@repo/lib";
 import { overrideCollection } from "@repo/lib/server/objekt";
-import { fetchPublicNicknames, fetchUserProfiles } from "@repo/lib/server/user";
+import { fetchPublicNicknames } from "@repo/lib/server/user";
 import { type SQL, and, asc, count, desc, eq, inArray, lte, ne, sql } from "drizzle-orm";
 
 import type {
@@ -15,7 +14,6 @@ import type {
 } from "../schemas/collections";
 import { getCollectionColumns } from "./objekt";
 import { redis } from "./redis";
-import { getSession } from "./session";
 
 type CollectionListQuery = { artist: ValidArtist[]; at?: string };
 
@@ -139,57 +137,30 @@ export async function fetchSerialList(slug: string): Promise<SerialsOutput> {
   };
 }
 
-/** One serial's transfer history, hidden when its owner keeps serials private from the caller. */
+/** One serial's transfer history. */
 export async function fetchSerialTransfers(
   slug: string,
   serial: number,
 ): Promise<SerialTransfersOutput> {
   if (serial < 1) return { transfers: [] };
 
-  const [session, results] = await Promise.all([
-    getSession(),
-    indexer
-      .select({
-        tokenId: objekts.id,
-        id: transfers.id,
-        to: transfers.to,
-        timestamp: transfers.timestamp,
-        owner: objekts.owner,
-        transferable: objekts.transferable,
-      })
-      .from(transfers)
-      .innerJoin(objekts, eq(transfers.objektId, objekts.id))
-      .innerJoin(collections, eq(objekts.collectionId, collections.id))
-      .where(and(eq(collections.slug, slug), eq(objekts.serial, serial)))
-      .orderBy(desc(transfers.timestamp), desc(transfers.id)),
-  ]);
+  const results = await indexer
+    .select({
+      tokenId: objekts.id,
+      id: transfers.id,
+      to: transfers.to,
+      timestamp: transfers.timestamp,
+      owner: objekts.owner,
+      transferable: objekts.transferable,
+    })
+    .from(transfers)
+    .innerJoin(objekts, eq(transfers.objektId, objekts.id))
+    .innerJoin(collections, eq(objekts.collectionId, collections.id))
+    .where(and(eq(collections.slug, slug), eq(objekts.serial, serial)))
+    .orderBy(desc(transfers.timestamp), desc(transfers.id));
 
   const [result] = results;
   if (!result) return { transfers: [] };
-
-  const owner = await db.query.userAddress.findFirst({
-    where: { address: result.owner },
-    columns: {
-      privateSerial: true,
-      privateProfile: true,
-    },
-    orderBy: {
-      id: "desc",
-    },
-  });
-
-  const isPrivate = (owner?.privateSerial || owner?.privateProfile) ?? false;
-
-  if (!session && isPrivate) return { hide: true, transfers: [] };
-
-  if (session && isPrivate) {
-    const profiles = await fetchUserProfiles(session.user.id);
-    const ownerAddress = result.owner.toLowerCase();
-
-    const isProfileAuthed = profiles.some((a) => a.address.toLowerCase() === ownerAddress);
-
-    if (!isProfileAuthed) return { hide: true, transfers: [] };
-  }
 
   const nicknameOf = await fetchPublicNicknames(Array.from(new Set(results.map((r) => r.to))));
 

@@ -55,16 +55,13 @@ export type HolderBucketKey = z.infer<typeof holderBucketKeySchema>;
 const holderRowSchema = z.object({
   rank: z.number(),
   copies: z.number(),
-  /** null when the holder hides serials from this viewer */
   lowestSerial: z.number().nullable(),
-  holder: z.discriminatedUnion("kind", [
-    z.object({
-      kind: z.literal("public"),
-      address: z.string(),
-      nickname: z.string().nullable(),
-    }),
-    z.object({ kind: z.literal("private") }),
-  ]),
+  /** `kind` stays for `/api/v1` callers written when a holder could be private */
+  holder: z.object({
+    kind: z.literal("public"),
+    address: z.string(),
+    nickname: z.string().nullable(),
+  }),
   isViewer: z.boolean(),
 });
 export type HolderRow = z.infer<typeof holderRowSchema>;

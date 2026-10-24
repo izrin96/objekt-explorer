@@ -576,20 +576,13 @@ describe("recount details", () => {
 });
 
 describe("toPartnerIdentity", () => {
-  const flags = { isDefault: false, privateProfile: false };
+  const flags = { isDefault: false };
   const rin = { address: "0xRIN", nickname: "rinrin", ...flags };
   const alt = { address: "0xalt", nickname: "rin2", ...flags };
 
   test("bound nickname", () => {
     expect(
       toPartnerIdentity("rin.account", [{ profileAddress: "0xrin", matches: 3 }], [rin]),
-    ).toEqual({ name: "rinrin", address: "0xrin", nickname: "rinrin", also: [] });
-  });
-
-  test("Hide Cosmo ID does not apply to Trade", () => {
-    const hidden = { ...rin, hideNickname: true };
-    expect(
-      toPartnerIdentity("rin.account", [{ profileAddress: "0xrin", matches: 3 }], [hidden]),
     ).toEqual({ name: "rinrin", address: "0xrin", nickname: "rinrin", also: [] });
   });
 
@@ -626,16 +619,6 @@ describe("toPartnerIdentity", () => {
     expect(
       toPartnerIdentity("rin.account", [{ profileAddress: null, matches: 3 }], [alt, rin]),
     ).toEqual({ name: "rin2", address: "0xalt", nickname: "rin2", also: [] });
-  });
-
-  test("no bound address and a private default names the account", () => {
-    expect(
-      toPartnerIdentity(
-        "rin.account",
-        [{ profileAddress: null, matches: 3 }],
-        [rin, { ...alt, isDefault: true, privateProfile: true }],
-      ),
-    ).toEqual({ name: "rin.account", address: null, nickname: null, also: [] });
   });
 
   test("no profile at all names the account", () => {

@@ -150,13 +150,9 @@ export async function createOffer(
     // a kept objekt was the partner's own offer, so it may sit anywhere they hold it
     holders: (side) => {
       if (side === "give") return myAddresses;
-      return collectionAddrs && keptIds.size === 0
-        ? new Set(collectionAddrs.serials)
-        : partnerAddresses;
+      return collectionAddrs && keptIds.size === 0 ? new Set(collectionAddrs) : partnerAddresses;
     },
     copyHolders: (side) => (side === "give" ? myAddresses : partnerAddresses),
-    // any copy from a collection is counted where serials are hidden, as the picker counts it
-    getCopyHolders: collectionAddrs ? new Set(collectionAddrs.hidden) : undefined,
     getScope: collectionAddrs ? undefined : anyCopyScope(entries),
   });
 

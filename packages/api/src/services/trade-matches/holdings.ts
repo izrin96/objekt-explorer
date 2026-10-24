@@ -10,7 +10,6 @@ type AddressRow = {
   address: string;
   nickname: string | null;
   isDefault: boolean;
-  privateProfile: boolean;
 };
 
 export function fetchAddresses(userIds: string[]): Promise<AddressRow[]> {
@@ -22,7 +21,6 @@ export function fetchAddresses(userIds: string[]): Promise<AddressRow[]> {
         address: userAddress.address,
         nickname: userAddress.nickname,
         isDefault: userAddress.isDefault,
-        privateProfile: userAddress.privateProfile,
       })
       .from(userAddress)
       .where(inArray(userAddress.userId, userIds))

@@ -36,7 +36,6 @@ export async function loadContext<P extends AlertPair>(pairs: P[]) {
         address: userAddress.address,
         nickname: userAddress.nickname,
         isDefault: userAddress.isDefault,
-        privateProfile: userAddress.privateProfile,
       })
       .from(userAddress)
       .where(inArray(userAddress.userId, userIds))

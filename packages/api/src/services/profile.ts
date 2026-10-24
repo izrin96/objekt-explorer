@@ -13,7 +13,6 @@ import type { ProfilePreview, PublicProfile, PublicUser } from "../schemas/profi
 import type { User } from "./auth";
 import { isBlockedEither } from "./moderation";
 import { fetchOwnerSummary } from "./objekt";
-import { isProfileHidden } from "./privacy";
 import { getCache, redis } from "./redis";
 import { reputationOf } from "./reputation";
 import { isBanned } from "./safety";
@@ -55,23 +54,11 @@ export function toPublicUser(user: User): PublicUser {
   };
 }
 
-function toPublicProfile(
-  profile: UserAddress,
-  user: User | null,
-  currentUser?: User,
-): PublicProfile {
-  if (isProfileHidden(profile, currentUser?.id)) {
-    return {
-      isGuard: true,
-      address: profile.address,
-      nickname: profile.hideNickname ? null : profile.nickname,
-    };
-  }
-
+function toPublicProfile(profile: UserAddress, user: User | null): PublicProfile {
   return {
     verified: user !== null,
     address: profile.address,
-    nickname: profile.hideNickname ? null : profile.nickname,
+    nickname: profile.nickname,
     bannerImgType: profile.bannerImgType,
     bannerImgUrl: profile.bannerImgUrl,
     gridColumns: profile.gridColumns,
@@ -83,12 +70,12 @@ type ProfileUser = User & { messagePref: { allow: string } | null };
 
 /** The profile page's read: the public profile plus whether it offers Message to the viewer. */
 async function toProfilePage(profile: UserAddress, user: ProfileUser | null, currentUser?: User) {
-  const shown = toPublicProfile(profile, user, currentUser);
+  const shown = toPublicProfile(profile, user);
   const publicProfile =
     shown.user && user
       ? { ...shown, userId: user.id, reputation: (await reputationOf([user.id])).get(user.id) }
       : shown;
-  if (publicProfile.isGuard || !user || user.id === currentUser?.id) {
+  if (!user || user.id === currentUser?.id) {
     return { ...publicProfile, messageable: false };
   }
   // a blocked pair sees no button at all, as with Nobody, rather than a refusal
@@ -103,20 +90,17 @@ async function toProfilePage(profile: UserAddress, user: ProfileUser | null, cur
 }
 
 /** The hover card: database only, so a hover never asks Cosmo or writes a row. */
-export async function fetchProfilePreview(
-  input: string,
-  viewer: User | undefined,
-): Promise<ProfilePreview> {
+export async function fetchProfilePreview(input: string): Promise<ProfilePreview> {
   const address = input.toLowerCase();
   const row = await db.query.userAddress.findFirst({
     with: { user: true },
     where: { address },
     orderBy: { id: "desc" },
   });
-  const profile = row ? toPublicProfile(row, row.user, viewer) : { address, nickname: null };
+  const profile = row ? toPublicProfile(row, row.user) : { address, nickname: null };
 
   // Spin holds too many tokens to count on a hover
-  if (profile.isGuard || address === Addresses.SPIN) return { ...profile, counts: null };
+  if (address === Addresses.SPIN) return { ...profile, counts: null };
 
   const counts = await getCache(`profile-preview:${address}`, 300, () =>
     fetchOwnerSummary(address),

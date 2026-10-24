@@ -9,7 +9,6 @@ import type { AnyPgColumn } from "drizzle-orm/pg-core";
 
 import type { HeldByOutput, OwnedByFilters, OwnedByOutput } from "../schemas/objekts";
 import { getCollectionColumns } from "./objekt";
-import { isAddressHiddenFromCaller } from "./privacy";
 import { getCache } from "./redis";
 
 const PER_PAGE = 8000;
@@ -46,10 +45,6 @@ export async function fetchOwnedObjekts(
   query: OwnedByFilters,
 ): Promise<OwnedByOutput> {
   const addr = address.toLowerCase();
-
-  if (await isAddressHiddenFromCaller(addr)) {
-    return { objekts: [] };
-  }
 
   const collectionFilters = buildCollectionFilters(query);
 
@@ -200,10 +195,6 @@ export async function fetchHeldObjekts(
   artist: OwnedByFilters["artist"],
 ): Promise<HeldByOutput> {
   const addr = address.toLowerCase();
-
-  if (await isAddressHiddenFromCaller(addr)) {
-    return { collections: [] };
-  }
 
   // only Spin's pass is slow enough to cache; one entry whatever the artist scope
   const all =

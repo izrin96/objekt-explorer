@@ -3,7 +3,7 @@ import { db } from "@repo/db";
 import { listEntries } from "@repo/db/schema";
 import { and, eq, inArray } from "drizzle-orm";
 
-import { authed, optionalAuthed, pub } from "../orpc";
+import { authed, pub } from "../orpc";
 import { documented, errorResponses } from "../schemas/common/documented";
 import {
   addToListInputSchema,
@@ -51,7 +51,7 @@ export const listEntriesRouter = {
     .input(listPreviewsInputSchema)
     .handler(({ input: { slugs } }) => fetchListPreviews(slugs)),
 
-  profileLists: optionalAuthed
+  profileLists: pub
     .route({
       method: "GET",
       path: "/profiles/{address}/lists",
@@ -61,9 +61,7 @@ export const listEntriesRouter = {
     })
     .input(profileListsInputSchema)
     .output(documented(profileListsOutputSchema))
-    .handler(({ input, context: { session } }) =>
-      fetchProfileLists(input.address, session?.user.id),
-    ),
+    .handler(({ input }) => fetchProfileLists(input.address)),
 
   addToList: authed.input(addToListInputSchema).handler(
     async ({

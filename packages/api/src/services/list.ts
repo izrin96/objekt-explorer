@@ -33,7 +33,6 @@ import { carriesPrices, copyMode, copyUnit, needsHoldings } from "../schemas/lis
 import { type OpenToFlags, pairRefusesOpenTo, resolveOpenTo } from "../schemas/open-to";
 import { isBlockedEither, type Tx } from "./moderation";
 import { getCollectionColumns, getPartialCollectionColumns } from "./objekt";
-import { isProfileHidden } from "./privacy";
 import { assertProfileOwned, toPublicUser } from "./profile";
 import { isBanned } from "./safety";
 import { versionCounter } from "./safety-cache";
@@ -166,11 +165,8 @@ export async function fetchListWithEntries(slug: string) {
   });
 }
 
-function toPartialProfile(profile: Pick<UserAddress, "address" | "nickname" | "hideNickname">) {
-  return {
-    address: profile.address,
-    nickname: profile.hideNickname || !profile.nickname ? null : profile.nickname,
-  };
+function toPartialProfile(profile: Pick<UserAddress, "address" | "nickname">) {
+  return { address: profile.address, nickname: profile.nickname || null };
 }
 
 export async function fetchList(
@@ -184,7 +180,6 @@ export async function fetchList(
         columns: {
           address: true,
           nickname: true,
-          hideNickname: true,
         },
       },
       linkedList: {
@@ -204,7 +199,6 @@ export async function fetchList(
             columns: {
               address: true,
               nickname: true,
-              hideNickname: true,
             },
           },
         },
@@ -292,7 +286,6 @@ export async function fetchOwnedLists(
         columns: {
           address: true,
           nickname: true,
-          hideNickname: true,
         },
       },
       linkedList: {
@@ -308,7 +301,7 @@ export async function fetchOwnedLists(
           currency: true,
         },
         with: {
-          userAddress: { columns: { address: true, nickname: true, hideNickname: true } },
+          userAddress: { columns: { address: true, nickname: true } },
         },
       },
     },
@@ -337,17 +330,7 @@ export async function fetchOwnedLists(
   });
 }
 
-export async function fetchProfileLists(
-  profileAddress: string,
-  viewerId: string | undefined,
-): Promise<PublicList[]> {
-  const owner = await db.query.userAddress.findFirst({
-    columns: { privateProfile: true, userId: true },
-    where: { address: profileAddress },
-  });
-
-  if (owner && isProfileHidden(owner, viewerId)) return [];
-
+export async function fetchProfileLists(profileAddress: string): Promise<PublicList[]> {
   return fetchOwnedLists("profileAddress", profileAddress);
 }
 

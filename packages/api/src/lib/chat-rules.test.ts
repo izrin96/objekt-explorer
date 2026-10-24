@@ -283,7 +283,7 @@ describe("cardListAllowed", () => {
 });
 
 describe("chatIdentity", () => {
-  const flags = { isDefault: false, privateProfile: false };
+  const flags = { isDefault: false };
   const main = {
     address: "0xAbc0000000000000000000000000000000000001",
     nickname: "rin.main",
@@ -313,24 +313,6 @@ describe("chatIdentity", () => {
       nickname: "rin.alt",
       also: [mainRef],
     });
-  });
-
-  test("a private other profile is never named as also", () => {
-    expect(chatIdentity("Rin", [main, { ...alt, privateProfile: true }]).also).toEqual([]);
-  });
-
-  test("a private default still names the account in chat", () => {
-    expect(chatIdentity("Rin", [main, { ...alt, isDefault: true, privateProfile: true }])).toEqual({
-      name: "rin.alt",
-      address: alt.address.toLowerCase(),
-      nickname: "rin.alt",
-      also: [mainRef],
-    });
-  });
-
-  test("Hide nickname does not hide the chat name", () => {
-    const hidden = { ...main, hideNickname: true };
-    expect(chatIdentity("Rin", [hidden]).name).toBe("rin.main");
   });
 
   test("a profile with no nickname shows its shortened address and links by the full one", () => {

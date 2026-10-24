@@ -21,7 +21,6 @@ export async function loadIdentities(userIds: string[]) {
         address: userAddress.address,
         nickname: userAddress.nickname,
         isDefault: userAddress.isDefault,
-        privateProfile: userAddress.privateProfile,
       })
       .from(userAddress)
       .where(inArray(userAddress.userId, ids))

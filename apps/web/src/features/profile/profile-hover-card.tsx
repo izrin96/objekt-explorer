@@ -1,4 +1,3 @@
-import { LockSimpleIcon } from "@phosphor-icons/react";
 import { truncateAddress } from "@repo/lib/address";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
@@ -152,11 +151,6 @@ function CardBody({ address, nickname }: Payload) {
 
           {data === undefined ? (
             <Skeleton className="h-4 w-32" />
-          ) : data.isGuard ? (
-            <span className="text-muted-foreground flex items-center gap-1 text-xs">
-              <LockSimpleIcon weight="fill" aria-hidden />
-              {m.profile_profile_private()}
-            </span>
           ) : (
             data.counts && (
               <span className="text-muted-foreground truncate text-xs">

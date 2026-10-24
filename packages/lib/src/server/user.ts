@@ -8,7 +8,6 @@ async function fetchKnownAddresses(addresses: string[]) {
     .selectDistinctOn([userAddress.address], {
       address: userAddress.address,
       nickname: userAddress.nickname,
-      hideNickname: userAddress.hideNickname,
     })
     .from(userAddress)
     .where(
@@ -21,17 +20,12 @@ async function fetchKnownAddresses(addresses: string[]) {
   return result;
 }
 
-/** Looks up the nickname to show for each address, honouring the owner's `hideNickname`. */
+/** Looks up the nickname to show for each address. */
 export async function fetchPublicNicknames(
   addresses: string[],
 ): Promise<(address: string) => string | undefined> {
   const known = await fetchKnownAddresses(addresses);
-  const nicknames = new Map(
-    known.map((a) => [
-      a.address.toLowerCase(),
-      a.hideNickname ? undefined : (a.nickname ?? undefined),
-    ]),
-  );
+  const nicknames = new Map(known.map((a) => [a.address.toLowerCase(), a.nickname ?? undefined]));
   return (address) => nicknames.get(address.toLowerCase());
 }
 

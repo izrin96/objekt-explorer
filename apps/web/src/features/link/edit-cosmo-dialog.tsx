@@ -23,7 +23,6 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
-import { Switch } from "@/components/ui/switch";
 import { toastManager } from "@/components/ui/toast";
 import {
   BANNER_ACCEPT,
@@ -41,31 +40,6 @@ import { refusalText } from "@/lib/refusal";
 import { m } from "@/paraglide/messages";
 
 type Profile = Awaited<ReturnType<typeof client.profile.find>>;
-type FlagKey = "hideNickname" | "privateSerial" | "hideTransfer" | "privateProfile";
-
-const FLAGS: { key: FlagKey; label: () => string; description: () => string }[] = [
-  {
-    key: "hideNickname",
-    label: m.profile_edit_hide_nickname_label,
-    description: m.profile_edit_hide_nickname_desc,
-  },
-  {
-    key: "privateSerial",
-    label: m.profile_edit_private_serial_label,
-    description: m.profile_edit_private_serial_desc,
-  },
-  {
-    key: "hideTransfer",
-    label: m.profile_edit_hide_transfer_label,
-    description: m.profile_edit_hide_transfer_desc,
-  },
-  {
-    key: "privateProfile",
-    label: m.profile_edit_private_profile_label,
-    description: m.profile_edit_private_profile_desc,
-  },
-];
-
 const BannerCropper = lazy(() =>
   import("@/features/link/banner-cropper").then((mod) => ({ default: mod.BannerCropper })),
 );
@@ -155,13 +129,6 @@ function EditForm({
 }) {
   const queryClient = useQueryClient();
   const cropperRef = useRef<CropperRef>(null);
-  const [draft, setDraft] = useState(() => ({
-    hideNickname: profile.hideNickname ?? false,
-    privateSerial: profile.privateSerial ?? false,
-    hideTransfer: profile.hideTransfer ?? false,
-    privateProfile: profile.privateProfile ?? false,
-    gridColumns: profile.gridColumns ?? null,
-  }));
   const [picked, setPicked] = useState<{ file: File; url: string } | null>(null);
   const [removeBanner, setRemoveBanner] = useState(false);
 
@@ -193,7 +160,12 @@ function EditForm({
         bannerImgType = null;
       }
 
-      await client.profile.edit({ address, ...draft, bannerImgUrl, bannerImgType });
+      await client.profile.edit({
+        address,
+        gridColumns: profile.gridColumns ?? null,
+        bannerImgUrl,
+        bannerImgType,
+      });
     },
     onSuccess: async () => {
       clearPick();
@@ -218,28 +190,6 @@ function EditForm({
   return (
     <>
       <DialogPanel className="flex flex-col gap-4">
-        {FLAGS.map((flag) => (
-          <Label
-            key={flag.key}
-            id={`edit-cosmo-${flag.key}-label`}
-            htmlFor={`edit-cosmo-${flag.key}`}
-            className="flex items-start justify-between gap-3 font-normal"
-          >
-            <span className="flex min-w-0 flex-col gap-0.5">
-              <span className="text-sm font-medium">{flag.label()}</span>
-              <span className="text-muted-foreground text-xs text-pretty">
-                {flag.description()}
-              </span>
-            </span>
-            <Switch
-              id={`edit-cosmo-${flag.key}`}
-              className="mt-0.5 shrink-0"
-              checked={draft[flag.key]}
-              onCheckedChange={(checked) => setDraft({ ...draft, [flag.key]: checked })}
-            />
-          </Label>
-        ))}
-
         <div className="flex flex-col gap-2">
           <Label htmlFor="edit-cosmo-banner">{m.profile_edit_banner_label()}</Label>
           <div className="flex items-center gap-1.5">

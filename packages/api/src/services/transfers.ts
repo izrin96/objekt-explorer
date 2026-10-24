@@ -8,7 +8,6 @@ import { type SQL, and, asc, desc, eq, gt, inArray, lt, lte, ne, or } from "driz
 import type { AddressTransfersOutput, AddressTransfersFilters } from "../schemas/transfers";
 import { getCollectionFilters } from "./activity-feed";
 import { getCollectionColumns } from "./objekt";
-import { isAddressHiddenFromCaller } from "./privacy";
 import { mergeSortedTransfers } from "./transfer-merge";
 
 const PER_PAGE = 150;
@@ -18,10 +17,6 @@ export async function fetchAddressTransfers(
   query: AddressTransfersFilters,
 ): Promise<AddressTransfersOutput> {
   const addr = address.toLowerCase();
-
-  if (await isAddressHiddenFromCaller(addr, { checkHideTransfer: true })) {
-    return { hide: true, results: [] };
-  }
 
   const results = await fetchTransfers(query, addr);
 

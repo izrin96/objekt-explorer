@@ -384,8 +384,8 @@ export function countDropped(partners: { userId: string; dropped: Dropped[] }[])
 }
 
 export type AddressRef = { address: string; nickname: string | null };
-/** A linked profile as the naming rules read it; both flags required, so no caller can skip privacy. */
-export type LinkedProfile = AddressRef & { isDefault: boolean; privateProfile: boolean };
+/** A linked profile as the naming rules read it. */
+export type LinkedProfile = AddressRef & { isDefault: boolean };
 export type PartnerIdentity = {
   /** what to call the partner: a Cosmo nickname, a shortened address or the account name */
   name: string;
@@ -393,7 +393,7 @@ export type PartnerIdentity = {
   address: string | null;
   /** that profile's Cosmo nickname; null when it has none, so a link uses the address */
   nickname: string | null;
-  /** on Trade, the partner's other bound addresses among the matched lists; in chat, their other non-private profiles */
+  /** on Trade, the partner's other bound addresses among the matched lists; in chat, their other profiles */
   also: AddressRef[];
 };
 
@@ -417,7 +417,7 @@ export function nicknamesByAddress(rows: readonly AddressRef[]) {
 /**
  * Named by the profile of the list with the most matches: its nickname, else its shortened
  * address. When no matched list is filed under a profile, the account's default profile names
- * it unless that profile is private, since Trade is public; else the account name.
+ * it, else the account name.
  */
 export function toPartnerIdentity(
   accountName: string,
@@ -444,7 +444,7 @@ export function toPartnerIdentity(
 
   if (!bestAddress) {
     const fallback = defaultProfile(addresses);
-    if (fallback && !fallback.privateProfile) return { ...nameProfile(fallback), also: [] };
+    if (fallback) return { ...nameProfile(fallback), also: [] };
   }
 
   return {

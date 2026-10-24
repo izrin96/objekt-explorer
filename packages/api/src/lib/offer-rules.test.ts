@@ -672,31 +672,25 @@ describe("matchEntry", () => {
 });
 
 describe("collection asks", () => {
-  const open = { visible: true, showsSerials: true };
-  const hiddenSerials = { visible: true, showsSerials: false };
-  const private_ = { visible: false, showsSerials: true };
+  const addresses = new Set(["0xmain", "0xalt"]);
+  const item = { collectionSlug: "cream02-yooyeon-366z", objektId: "7" };
+  const held = (owner: string, slug = item.collectionSlug) => ({ slug, owner });
 
-  test("an objekt held at a visible address that shows serials can be asked for by serial", () => {
-    expect(collectionAskAllowed(true, [open])).toBe(true);
+  test("an objekt at any linked address can be asked for by serial", () => {
+    expect(collectionAskAllowed(item, held("0xmain"), addresses)).toBe(true);
+    expect(collectionAskAllowed(item, held("0xalt"), addresses)).toBe(true);
   });
 
-  test("nothing at a private address can be asked for", () => {
-    expect(collectionAskAllowed(true, [private_])).toBe(false);
-    expect(collectionAskAllowed(false, [{ visible: false, showsSerials: false }])).toBe(false);
-    expect(collectionAskAllowed(false, [])).toBe(false);
+  test("an objekt held elsewhere, or of another collection, cannot", () => {
+    expect(collectionAskAllowed(item, held("0xsomeone"), addresses)).toBe(false);
+    expect(collectionAskAllowed(item, held("0xmain", "other"), addresses)).toBe(false);
+    expect(collectionAskAllowed(item, undefined, addresses)).toBe(false);
   });
 
-  test("a hidden-serial address allows any copy but not a specific objekt", () => {
-    expect(collectionAskAllowed(true, [hiddenSerials])).toBe(false);
-    expect(collectionAskAllowed(false, [hiddenSerials])).toBe(true);
-  });
-
-  test("a serial-showing address is asked for by serial, not as any copy", () => {
-    expect(collectionAskAllowed(false, [open])).toBe(false);
-  });
-
-  test("any copy needs one hidden-serial address among those holding it", () => {
-    expect(collectionAskAllowed(false, [private_, open, hiddenSerials])).toBe(true);
+  test("any copy is never asked for from a collection, since every copy shows its serial", () => {
+    expect(
+      collectionAskAllowed({ collectionSlug: item.collectionSlug }, held("0xmain"), addresses),
+    ).toBe(false);
   });
 });
 

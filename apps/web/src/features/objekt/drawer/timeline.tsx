@@ -1,7 +1,6 @@
 import {
   ArrowsLeftRightIcon,
   ListMagnifyingGlassIcon,
-  LockIcon,
   QuestionMarkIcon,
   WarningIcon,
 } from "@phosphor-icons/react";
@@ -71,7 +70,6 @@ type SerialView =
   | { kind: "idle" }
   | { kind: "loading" }
   | { kind: "error" }
-  | { kind: "private" }
   | { kind: "missing" }
   | {
       kind: "found";
@@ -93,8 +91,6 @@ function resolveSerial(
   if (query.isError) return { kind: "error" };
 
   const data = query.data;
-  if (data.hide === true) return { kind: "private" };
-
   const owner = data.owner;
   // a serial that was never minted still answers 200 — with no owner and no rows
   if (!owner) return { kind: "missing" };
@@ -209,18 +205,6 @@ export function Timeline({
 
   if (view.kind === "error") {
     return <EmptyState icon={WarningIcon} title={m.common_error_loading_data()} bordered={false} />;
-  }
-
-  // a private holder gets no owner, no token id and no history — not a blank row
-  if (view.kind === "private") {
-    return (
-      <EmptyState
-        icon={LockIcon}
-        title={m.objekt_objekt_private()}
-        hint={m.objekt_serial_private_hint()}
-        bordered={false}
-      />
-    );
   }
 
   if (view.kind === "missing") {

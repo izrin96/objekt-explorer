@@ -34,9 +34,7 @@ export const profileRouter = {
     })
     .input(addressOrBareInputSchema)
     .output(documented(profilePreviewOutputSchema))
-    .handler(({ input, context: { session } }) =>
-      fetchProfilePreview(input.address, session?.user),
-    ),
+    .handler(({ input }) => fetchProfilePreview(input.address)),
 
   find: authed.input(addressSchema).handler(async ({ input: address, context: { session } }) => {
     const profile = await fetchOwnedProfile(address, session.user.id);
@@ -45,18 +43,22 @@ export const profileRouter = {
 
   edit: authed
     .input(makeEditProfileInputSchema(`${S3_PUBLIC_URL}/profile-banner/`))
-    .handler(async ({ input: { address, ...rest }, context: { session } }) => {
+    .handler(async ({ input, context: { session } }) => {
+      // the retired privacy fields in `input` are ignored
+      const { address, bannerImgUrl, bannerImgType, gridColumns } = input;
       const profile = await fetchOwnedProfile(address, session.user.id);
 
-      if (rest.bannerImgUrl && !ownBannerKey(rest.bannerImgUrl, S3_PUBLIC_URL, address)) {
+      if (bannerImgUrl && !ownBannerKey(bannerImgUrl, S3_PUBLIC_URL, address)) {
         throw new ORPCError("BAD_REQUEST");
       }
 
       await db
         .update(userAddress)
         .set({
-          ...rest,
-          bannerUpdatedAt: rest.bannerImgUrl !== undefined ? sql`'now'` : undefined,
+          bannerImgUrl,
+          bannerImgType,
+          gridColumns,
+          bannerUpdatedAt: bannerImgUrl !== undefined ? sql`'now'` : undefined,
         })
         .where(and(eq(userAddress.address, address), eq(userAddress.userId, session.user.id)));
 
@@ -65,7 +67,7 @@ export const profileRouter = {
       const oldKey = profile.bannerImgUrl
         ? ownBannerKey(profile.bannerImgUrl, S3_PUBLIC_URL, address)
         : null;
-      if (oldKey && rest.bannerImgUrl !== undefined && rest.bannerImgUrl !== profile.bannerImgUrl) {
+      if (oldKey && bannerImgUrl !== undefined && bannerImgUrl !== profile.bannerImgUrl) {
         await deleteFileFromBucket(S3_BUCKET, oldKey);
       }
     }),
@@ -99,10 +101,6 @@ async function fetchOwnedProfile(address: string, userId: string) {
       address: true,
       bannerImgUrl: true,
       bannerImgType: true,
-      privateSerial: true,
-      privateProfile: true,
-      hideNickname: true,
-      hideTransfer: true,
       gridColumns: true,
     },
     where: { address, userId },
@@ -115,5 +113,12 @@ async function fetchOwnedProfile(address: string, userId: string) {
     refuse("NOT_FOUND", "profile_not_found", "Profile not found or not linked with this account");
   }
 
-  return profile;
+  // the retired privacy settings read as off, for tabs opened before their removal
+  return {
+    ...profile,
+    privateSerial: false,
+    privateProfile: false,
+    hideNickname: false,
+    hideTransfer: false,
+  };
 }

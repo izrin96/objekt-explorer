@@ -5,7 +5,6 @@ import { PageMain } from "@/components/layout/page-main";
 import { PendingStatus } from "@/components/router/pending";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SkeletonGrid } from "@/features/objekt/skeleton-grid";
-import { PrivateProfileGuard } from "@/features/profile/profile-guard";
 import { ProfileHeader } from "@/features/profile/profile-header";
 import { ProfileNotFound } from "@/features/profile/profile-not-found";
 import { ProfileProvider } from "@/features/profile/profile-provider";
@@ -29,18 +28,14 @@ function ProfileLayout() {
 
   return (
     <PageMain>
-      {profile.isGuard === true ? (
-        <PrivateProfileGuard />
-      ) : (
-        <ProfileProvider profile={profile}>
-          <ProfileHeader key={profile.address} profile={profile} />
-          <ProfileSummary />
-          <ProfileTabs nickname={nickname} />
-          <div className="flex min-h-svh flex-col gap-4.5">
-            <Outlet />
-          </div>
-        </ProfileProvider>
-      )}
+      <ProfileProvider profile={profile}>
+        <ProfileHeader key={profile.address} profile={profile} />
+        <ProfileSummary />
+        <ProfileTabs nickname={nickname} />
+        <div className="flex min-h-svh flex-col gap-4.5">
+          <Outlet />
+        </div>
+      </ProfileProvider>
     </PageMain>
   );
 }

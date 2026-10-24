@@ -324,18 +324,14 @@ export function countsTowardBadge(
   );
 }
 
-/**
- * Named by its default profile (see {@link defaultProfile}), with its other non-private
- * profiles in link order as `also`. Hide nickname does not apply: the account picked this
- * name to be seen by.
- */
+/** Named by its default profile (see {@link defaultProfile}), with its other profiles in link order as `also`. */
 export function chatIdentity(accountName: string, addresses: LinkedProfile[]): PartnerIdentity {
   const chosen = defaultProfile(addresses);
   if (!chosen) return { name: accountName, address: null, nickname: null, also: [] };
   return {
     ...nameProfile(chosen),
     also: addresses
-      .filter((info) => info !== chosen && !info.privateProfile)
+      .filter((info) => info !== chosen)
       .map((info) => {
         const address = info.address.toLowerCase();
         return { address, nickname: realNickname(address, info.nickname) };
