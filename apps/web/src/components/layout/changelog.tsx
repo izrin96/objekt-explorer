@@ -36,9 +36,9 @@ const CHANGELOG = [
     items: [
       "Added a Trade page: Browse lists trade and sale posts, and For you (formerly Trade Matches) finds people to trade with across all your lists.",
       "Post your lists on Trade to swap, sell or buy.",
-      "Want lists choose what they take: Swaps only, Swaps or buying, or Buying only.",
+      "Want lists can be posted as Swap, as Buy, or as Swap that would also pay.",
       'Want lists can hold rules, like "any member of CC366" or "Cream02 FCO 3rd".',
-      "Sale lists can take swaps too: post them as Sell, open to swaps.",
+      "Sale lists can be posted as Sell, or as Sell that is also open to swaps.",
       "Added Messages and offers. Accepted trades are verified on-chain.",
       "Added notifications for offers, trades and want list matches.",
       "Added an Account page for all your settings.",
