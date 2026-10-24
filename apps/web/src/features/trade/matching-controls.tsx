@@ -56,9 +56,13 @@ function MutualButton({
     <Button
       type="button"
       size="sm"
-      variant={pressed ? "default" : "outline"}
+      variant="outline"
       aria-pressed={pressed}
-      className="whitespace-nowrap"
+      // pressed like FilterToggle: the outline stays, its border darkens over a tint
+      className={cn(
+        "whitespace-nowrap",
+        pressed && "border-foreground bg-input/64 text-foreground dark:bg-input",
+      )}
       aria-label={
         count > 0
           ? m.trade_tab_with_count({ label: m.trade_mutual_only(), count: shown })
@@ -68,13 +72,7 @@ function MutualButton({
     >
       {m.trade_mutual_only()}
       {count > 0 ? (
-        <span
-          aria-hidden
-          className={cn(
-            "font-mono text-xs tabular-nums",
-            pressed ? "opacity-72" : "text-muted-foreground",
-          )}
-        >
+        <span aria-hidden className="text-muted-foreground font-mono text-xs tabular-nums">
           {shown}
         </span>
       ) : null}

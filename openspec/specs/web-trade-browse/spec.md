@@ -940,8 +940,20 @@ Edit post SHALL open the composer on the post's kind and lists. Saving SHALL app
 - **THEN** the post stays on Trade as a Swap post holding only "binary hunt"
 
 ### Requirement: Tag help
-The Browse help's tag table SHALL describe WTT as a Swap post, WTB as a Buy post or a Swap post that would also pay, and WTS as a Sell post, and say a post can carry WTT and WTB together. Its "What counts toward Mutual" section SHALL show that a have list counts against a want list open to swaps and not against one set to buying only, and that a sale list never counts toward Mutual.
+The matching help (the ? beside Mutual only) SHALL be tables only, with no bulleted sentences, in four sections: Post tags, What matches your want list, What counts toward Mutual, and Good to know. A yes or no cell SHALL show a mark, with its word for screen readers.
 
-#### Scenario: Help table
-- **WHEN** the viewer opens the matching help on Browse
-- **THEN** the tag table names Swap, Buy and Sell posts, says a Swap post that would also pay carries WTT and WTB, and the Mutual section says a sale list never counts toward Mutual
+#### Scenario: Post tags
+- **WHEN** the viewer opens the matching help
+- **THEN** the tag table describes WTT as a Swap post, WTB as a Buy post or a Swap post that would also pay, and WTS as a Sell post, each with what it matches, and notes that a Swap post that would also pay carries WTT and WTB
+
+#### Scenario: Open to grid
+- **WHEN** the viewer reads What matches your want list
+- **THEN** their have list is marked for Swaps only and Swaps or buying and not for Buying only, their sale list for Swaps or buying and Buying only and not for Swaps only, and a note says it works the same the other way
+
+#### Scenario: Mutual table
+- **WHEN** the viewer reads What counts toward Mutual
+- **THEN** a have list against a want list open to swaps is marked yes, a sale list on either side and a want list set to Buying only are marked no, and a note says the score is the smaller of the two sides
+
+#### Scenario: Good to know
+- **WHEN** the viewer reads Good to know
+- **THEN** labelled rows say that all of a person's lists count together, what Compare with narrows to, that only objekts still owned and transferable count, and that hidden and blocked people never show, and no bulleted sentences follow
