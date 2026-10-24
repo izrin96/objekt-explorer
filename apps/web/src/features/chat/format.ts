@@ -93,8 +93,6 @@ export function refusalText(refusal: { reason: ChatRefusal; retryAt: string | nu
       return m.chat_refused_invalid_card();
     case "unsend_closed":
       return m.chat_refused_unsend_closed();
-    case "not_own_profile":
-      return m.chat_refused_not_own_profile();
     case "muted":
       return refusal.retryAt
         ? m.chat_refused_muted({ time: untilLabel(refusal.retryAt) })

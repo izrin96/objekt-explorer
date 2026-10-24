@@ -100,7 +100,11 @@ async function relink(
 
     await tx
       .update(userAddress)
-      .set(toUserId === undefined ? { userId: null } : { userId: toUserId, linkedAt: sql`now()` })
+      .set(
+        toUserId === undefined
+          ? { userId: null, isDefault: false }
+          : { userId: toUserId, linkedAt: sql`now()`, isDefault: false },
+      )
       .where(eq(userAddress.address, address));
     const reasonCode = toUserId === undefined ? ("staff_unlink" as const) : ("staff_move" as const);
     await recordLinkEvents(tx, [

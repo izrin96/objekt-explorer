@@ -7,7 +7,7 @@ import {
 import type { ChatMessage } from "@repo/api/schemas/chat";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
-import { useHydrated } from "@tanstack/react-router";
+import { useHydrated, useLocation } from "@tanstack/react-router";
 import { Fragment, useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { PendingStatus } from "@/components/router/pending";
@@ -31,6 +31,7 @@ import { counterRequest } from "@/features/offers/counter-request";
 import { useOfferBuilder } from "@/features/offers/offer-builder";
 import { OfferCard } from "@/features/offers/offer-card";
 import { useMinuteClock } from "@/hooks/use-minute-clock";
+import { displayNickname, isSameAddress } from "@/lib/address";
 import { m } from "@/paraglide/messages";
 import { dropDraftCard, useChatDraft } from "@/stores/chat-draft";
 import { clearTyping, useChatTyping } from "@/stores/chat-typing";
@@ -121,6 +122,12 @@ function ThreadView({
   const heightBeforeOlder = useRef<number | null>(null);
   const heading = useRef<HTMLHeadingElement>(null);
   const hydrated = useHydrated();
+  const fromProfile = useLocation({ select: (location) => location.state.fromProfile });
+  // opened from one of the partner's other profiles: say whose it is; a private one is never in `also`
+  const startedFrom =
+    hydrated && fromProfile && !isSameAddress(fromProfile, partner.identity.address)
+      ? partner.identity.also.find((ref) => isSameAddress(ref.address, fromProfile))
+      : undefined;
   const now = useMinuteClock();
   const builder = useOfferBuilder();
   const latestOffer = latestOfferId(messages);
@@ -213,7 +220,17 @@ function ThreadView({
               icon={ChatsCircleIcon}
               bordered={false}
               title={m.chat_thread_empty({ name })}
-              hint={attachment ? m.chat_thread_empty_card() : m.chat_thread_empty_hint()}
+              hint={[
+                startedFrom
+                  ? m.chat_thread_alt_profile({
+                      profile: displayNickname(startedFrom.address, startedFrom.nickname),
+                      name,
+                    })
+                  : null,
+                attachment ? m.chat_thread_empty_card() : m.chat_thread_empty_hint(),
+              ]
+                .filter(Boolean)
+                .join(" ")}
             />
           ) : (
             <ol className="flex flex-col gap-1">

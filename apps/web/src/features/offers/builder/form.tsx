@@ -15,6 +15,7 @@ import { DialogClose, DialogFooter, DialogPanel } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { fetchNewer, invalidateChatLists } from "@/features/chat/queries";
+import { SendingAs } from "@/features/link/shown-as";
 import { EstimatedSerialNote } from "@/features/offers/estimated-serial-note";
 import { itemLabel, itemName } from "@/features/offers/format";
 import { type GetSource, sourceOf } from "@/features/offers/get-source";
@@ -369,6 +370,8 @@ export function BuilderForm({
             })}
           </p>
         </div>
+
+        <SendingAs onNavigate={onDone} />
 
         <div id={errorId} role="alert" className="empty:hidden">
           {error ? (

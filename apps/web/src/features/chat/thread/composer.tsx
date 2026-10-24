@@ -11,6 +11,7 @@ import type { Attachment } from "@/features/chat/attachment";
 import { refusalOf, refusalText } from "@/features/chat/format";
 import { useStartGate } from "@/features/chat/message-button";
 import { fetchNewer, invalidateChatLists } from "@/features/chat/queries";
+import { SendingAs } from "@/features/link/shown-as";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -265,6 +266,8 @@ export function Composer({
           <PaperPlaneRightIcon />
         </Button>
       </div>
+
+      <SendingAs />
 
       {/* always in the tree, so a refusal is announced when its text arrives */}
       <p

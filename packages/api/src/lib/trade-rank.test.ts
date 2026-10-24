@@ -576,8 +576,9 @@ describe("recount details", () => {
 });
 
 describe("toPartnerIdentity", () => {
-  const rin = { address: "0xRIN", nickname: "rinrin" };
-  const alt = { address: "0xalt", nickname: "rin2" };
+  const flags = { isDefault: false, privateProfile: false };
+  const rin = { address: "0xRIN", nickname: "rinrin", ...flags };
+  const alt = { address: "0xalt", nickname: "rin2", ...flags };
 
   test("bound nickname", () => {
     expect(
@@ -599,16 +600,51 @@ describe("toPartnerIdentity", () => {
         toPartnerIdentity(
           "tester",
           [{ profileAddress: address, matches: 2 }],
-          [{ address, nickname }],
+          [{ address, nickname, ...flags }],
         ),
       ).toEqual({ name: "0x9ca6…8b0d", address, nickname: null, also: [] });
     }
   });
 
-  test("no bound address", () => {
+  test("no bound address names the only profile", () => {
     expect(toPartnerIdentity("rin.account", [{ profileAddress: null, matches: 3 }], [rin])).toEqual(
-      { name: "rin.account", address: null, nickname: null, also: [] },
+      { name: "rinrin", address: "0xrin", nickname: "rinrin", also: [] },
     );
+  });
+
+  test("no bound address names the default profile", () => {
+    expect(
+      toPartnerIdentity(
+        "rin.account",
+        [{ profileAddress: null, matches: 3 }],
+        [rin, { ...alt, isDefault: true }],
+      ),
+    ).toEqual({ name: "rin2", address: "0xalt", nickname: "rin2", also: [] });
+  });
+
+  test("no bound address and no flag names the first linked profile", () => {
+    expect(
+      toPartnerIdentity("rin.account", [{ profileAddress: null, matches: 3 }], [alt, rin]),
+    ).toEqual({ name: "rin2", address: "0xalt", nickname: "rin2", also: [] });
+  });
+
+  test("no bound address and a private default names the account", () => {
+    expect(
+      toPartnerIdentity(
+        "rin.account",
+        [{ profileAddress: null, matches: 3 }],
+        [rin, { ...alt, isDefault: true, privateProfile: true }],
+      ),
+    ).toEqual({ name: "rin.account", address: null, nickname: null, also: [] });
+  });
+
+  test("no profile at all names the account", () => {
+    expect(toPartnerIdentity("rin.account", [{ profileAddress: null, matches: 3 }], [])).toEqual({
+      name: "rin.account",
+      address: null,
+      nickname: null,
+      also: [],
+    });
   });
 
   test("two bound addresses name the best match and list the other", () => {

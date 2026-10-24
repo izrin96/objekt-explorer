@@ -1,7 +1,7 @@
 import { ArrowClockwiseIcon, WarningIcon } from "@phosphor-icons/react";
 import { MESSAGE_ALLOW, type MessageAllow } from "@repo/api/schemas/chat";
-import { truncateAddress } from "@repo/lib/address";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 
 import { EmptyState } from "@/components/shared/empty-state";
 import { Button } from "@/components/ui/button";
@@ -13,8 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { toastManager } from "@/components/ui/toast";
 import { refusalOf, refusalText } from "@/features/chat/format";
 import { chatSettingsOptions } from "@/features/chat/queries";
-import { useUserProfiles } from "@/features/user/hooks";
-import { displayNickname } from "@/lib/address";
+import { useShownAs } from "@/features/link/shown-as";
 import { orpc } from "@/lib/orpc";
 import { m } from "@/paraglide/messages";
 
@@ -28,7 +27,7 @@ export function MessagesSection() {
   const queryClient = useQueryClient();
   const options = chatSettingsOptions();
   const settings = useQuery(options);
-  const profiles = useUserProfiles();
+  const shown = useShownAs();
   const { queryKey } = options;
 
   const mutation = useMutation(
@@ -130,39 +129,27 @@ export function MessagesSection() {
         )}
       </Label>
 
-      {profiles.length > 0 ? (
-        <section aria-labelledby="account-messages-chat-as" className="flex flex-col gap-3">
-          <div className="flex flex-col gap-0.5">
-            <h3 id="account-messages-chat-as" className="text-sm font-medium text-balance">
-              {m.chat_settings_chat_as()}
-            </h3>
+      {shown ? (
+        <section aria-labelledby="account-messages-shown-as" className="flex flex-col gap-0.5">
+          <h3 id="account-messages-shown-as" className="text-sm font-medium text-balance">
+            {m.chat_settings_shown_as({ name: shown.name })}
+          </h3>
+          {shown.profileCount > 0 ? (
             <p className="text-muted-foreground text-xs text-pretty">
-              {m.chat_settings_chat_as_desc()}
+              {m.chat_settings_shown_as_desc()}
+              {shown.profileCount > 1 ? (
+                <>
+                  {" "}
+                  <Link
+                    to="/account/profiles"
+                    className="text-foreground underline underline-offset-2 hover:no-underline"
+                  >
+                    {m.chat_settings_shown_as_change()}
+                  </Link>
+                </>
+              ) : null}
             </p>
-          </div>
-          <RadioGroup
-            aria-labelledby="account-messages-chat-as"
-            value={settings.data?.chatAs ?? null}
-            disabled={!settings.data}
-            onValueChange={(next) => {
-              if (typeof next === "string") mutation.mutate({ chatAs: next });
-            }}
-            className="gap-2.5"
-          >
-            {profiles.map((profile) => (
-              <Field key={profile.address} className="w-full flex-row items-center gap-2.5">
-                <Radio value={profile.address.toLowerCase()} />
-                <FieldLabel className="min-w-0 gap-2 font-normal">
-                  <span className="truncate font-medium">
-                    {displayNickname(profile.address, profile.nickname)}
-                  </span>
-                  <span className="text-muted-foreground font-mono text-xs">
-                    {truncateAddress(profile.address)}
-                  </span>
-                </FieldLabel>
-              </Field>
-            ))}
-          </RadioGroup>
+          ) : null}
         </section>
       ) : null}
     </div>

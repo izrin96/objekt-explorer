@@ -32,6 +32,8 @@ const currentUserOutputSchema = z
     user: z.custom<User>(),
     lists: publicListSchema.array(),
     profiles: baseProfileSchema.array(),
+    /** the profile that names the account to others (see `chatIdentity`); null with none linked */
+    defaultAddress: z.string().nullish(),
   })
   .nullable();
 export type CurrentUserOutput = z.infer<typeof currentUserOutputSchema>;

@@ -16,7 +16,7 @@ import {
   type LinkedPreview,
   linkedPreviewsInputSchema,
 } from "../schemas/cosmo-link";
-import { linkVerified, unlink } from "../services/cosmo-link";
+import { linkVerified, setDefault, unlink } from "../services/cosmo-link";
 import { fetchOwnerCounts } from "../services/objekt";
 import { redis } from "../services/redis";
 import { getAccessToken } from "../services/token";
@@ -94,6 +94,13 @@ export const cosmoLinkRouter = {
     .input(addressSchema)
     .handler(async ({ input: address, context: { session } }) => {
       await unlink(session.user.id, address);
+    }),
+
+  /** The profile that names the account to other people. */
+  setDefault: authed
+    .input(z.object({ address: addressSchema }))
+    .handler(async ({ input: { address }, context: { session } }) => {
+      await setDefault(session.user.id, address);
     }),
 
   // generate verification code for a specific artist profile

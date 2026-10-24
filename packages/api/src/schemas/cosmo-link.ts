@@ -32,4 +32,5 @@ export const COSMO_LINK_REFUSALS = [
   "cosmo_link_cooldown",
   "cosmo_link_unlink_sanctioned",
   "cosmo_link_unlink_in_trade",
+  "cosmo_link_not_yours",
 ] as const;

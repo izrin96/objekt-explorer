@@ -52,5 +52,7 @@ declare module "@tanstack/react-router" {
   interface HistoryState {
     /** the thread was opened by a Message button, so its back button returns to that page */
     fromMessage?: boolean;
+    /** the profile, lowercase, whose Message button opened the thread */
+    fromProfile?: string;
   }
 }

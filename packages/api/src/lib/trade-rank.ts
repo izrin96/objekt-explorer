@@ -384,6 +384,8 @@ export function countDropped(partners: { userId: string; dropped: Dropped[] }[])
 }
 
 export type AddressRef = { address: string; nickname: string | null };
+/** A linked profile as the naming rules read it; both flags required, so no caller can skip privacy. */
+export type LinkedProfile = AddressRef & { isDefault: boolean; privateProfile: boolean };
 export type PartnerIdentity = {
   /** what to call the partner: a Cosmo nickname, a shortened address or the account name */
   name: string;
@@ -391,7 +393,7 @@ export type PartnerIdentity = {
   address: string | null;
   /** that profile's Cosmo nickname; null when it has none, so a link uses the address */
   nickname: string | null;
-  /** the partner's other bound addresses among the matched lists */
+  /** on Trade, the partner's other bound addresses among the matched lists; in chat, their other non-private profiles */
   also: AddressRef[];
 };
 
@@ -414,12 +416,13 @@ export function nicknamesByAddress(rows: readonly AddressRef[]) {
 
 /**
  * Named by the profile of the list with the most matches: its nickname, else its shortened
- * address; the account name only when no matched list is filed under a profile.
+ * address. When no matched list is filed under a profile, the account's default profile names
+ * it unless that profile is private, since Trade is public; else the account name.
  */
 export function toPartnerIdentity(
   accountName: string,
   matchedLists: { profileAddress: string | null; matches: number }[],
-  addresses: AddressRef[],
+  addresses: LinkedProfile[],
 ): PartnerIdentity {
   const nicknames = nicknamesByAddress(addresses);
   const refOf = (address: string): AddressRef => ({
@@ -439,10 +442,27 @@ export function toPartnerIdentity(
   );
   if (bestAddress) others.delete(bestAddress);
 
+  if (!bestAddress) {
+    const fallback = defaultProfile(addresses);
+    if (fallback && !fallback.privateProfile) return { ...nameProfile(fallback), also: [] };
+  }
+
   return {
     name: nickname ?? (bestAddress ? truncateAddress(bestAddress) : accountName),
     address: bestAddress,
     nickname,
     also: [...others].map(refOf),
   };
+}
+
+/** The profile the account made default while it is still linked, else its first linked one. */
+export function defaultProfile<T extends LinkedProfile>(addresses: T[]): T | undefined {
+  return addresses.find((info) => info.isDefault) ?? addresses[0];
+}
+
+/** A profile's name: its Cosmo nickname whatever Hide Cosmo ID says, else its shortened address. */
+export function nameProfile(profile: AddressRef) {
+  const address = profile.address.toLowerCase();
+  const nickname = realNickname(address, profile.nickname);
+  return { name: nickname ?? truncateAddress(address), address, nickname };
 }

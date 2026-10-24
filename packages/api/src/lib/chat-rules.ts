@@ -1,4 +1,4 @@
-import { realNickname, truncateAddress } from "@repo/lib/address";
+import { realNickname } from "@repo/lib/address";
 
 import {
   type ChatBox,
@@ -11,7 +11,12 @@ import {
   START_WINDOW_HOURS,
 } from "../schemas/chat";
 import { HOUR_MS } from "./time";
-import { type AddressRef, type PartnerIdentity } from "./trade-rank";
+import {
+  defaultProfile,
+  type LinkedProfile,
+  nameProfile,
+  type PartnerIdentity,
+} from "./trade-rank";
 
 const MINUTE_MS = 60 * 1000;
 
@@ -320,25 +325,20 @@ export function countsTowardBadge(
 }
 
 /**
- * Named by the address the account chose to chat as while it is still linked, else its first.
- * Hide nickname does not apply: the account picked this name to be seen by.
+ * Named by its default profile (see {@link defaultProfile}), with its other non-private
+ * profiles in link order as `also`. Hide nickname does not apply: the account picked this
+ * name to be seen by.
  */
-export function chatIdentity(
-  accountName: string,
-  addresses: AddressRef[],
-  chatAs: string | null = null,
-): PartnerIdentity {
-  const chosen =
-    addresses.find(
-      (info) => chatAs !== null && info.address.toLowerCase() === chatAs.toLowerCase(),
-    ) ?? addresses[0];
+export function chatIdentity(accountName: string, addresses: LinkedProfile[]): PartnerIdentity {
+  const chosen = defaultProfile(addresses);
   if (!chosen) return { name: accountName, address: null, nickname: null, also: [] };
-  const address = chosen.address.toLowerCase();
-  const nickname = realNickname(address, chosen.nickname);
   return {
-    name: nickname ?? truncateAddress(address),
-    address,
-    nickname,
-    also: [],
+    ...nameProfile(chosen),
+    also: addresses
+      .filter((info) => info !== chosen && !info.privateProfile)
+      .map((info) => {
+        const address = info.address.toLowerCase();
+        return { address, nickname: realNickname(address, info.nickname) };
+      }),
   };
 }

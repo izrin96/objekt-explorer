@@ -283,20 +283,49 @@ describe("cardListAllowed", () => {
 });
 
 describe("chatIdentity", () => {
-  const main = { address: "0xAbc0000000000000000000000000000000000001", nickname: "rin.main" };
-  const alt = { address: "0xAbc0000000000000000000000000000000000002", nickname: "rin.alt" };
+  const flags = { isDefault: false, privateProfile: false };
+  const main = {
+    address: "0xAbc0000000000000000000000000000000000001",
+    nickname: "rin.main",
+    ...flags,
+  };
+  const alt = {
+    address: "0xAbc0000000000000000000000000000000000002",
+    nickname: "rin.alt",
+    ...flags,
+  };
+  const altRef = { address: alt.address.toLowerCase(), nickname: "rin.alt" };
+  const mainRef = { address: main.address.toLowerCase(), nickname: "rin.main" };
 
-  test("without a choice, the first linked profile heads the conversation", () => {
+  test("with no default flagged, the first linked profile heads the conversation", () => {
     expect(chatIdentity("Rin", [main, alt])).toEqual({
       name: "rin.main",
       address: main.address.toLowerCase(),
       nickname: "rin.main",
-      also: [],
+      also: [altRef],
     });
   });
 
-  test("the chosen profile wins, matched without case", () => {
-    expect(chatIdentity("Rin", [main, alt], alt.address.toUpperCase()).name).toBe("rin.alt");
+  test("a flagged second profile heads it, and the first is named as also", () => {
+    expect(chatIdentity("Rin", [main, { ...alt, isDefault: true }])).toEqual({
+      name: "rin.alt",
+      address: alt.address.toLowerCase(),
+      nickname: "rin.alt",
+      also: [mainRef],
+    });
+  });
+
+  test("a private other profile is never named as also", () => {
+    expect(chatIdentity("Rin", [main, { ...alt, privateProfile: true }]).also).toEqual([]);
+  });
+
+  test("a private default still names the account in chat", () => {
+    expect(chatIdentity("Rin", [main, { ...alt, isDefault: true, privateProfile: true }])).toEqual({
+      name: "rin.alt",
+      address: alt.address.toLowerCase(),
+      nickname: "rin.alt",
+      also: [mainRef],
+    });
   });
 
   test("Hide nickname does not hide the chat name", () => {
@@ -304,13 +333,9 @@ describe("chatIdentity", () => {
     expect(chatIdentity("Rin", [hidden]).name).toBe("rin.main");
   });
 
-  test("a choice no longer linked falls back to the first", () => {
-    expect(chatIdentity("Rin", [main], alt.address).name).toBe("rin.main");
-  });
-
   test("a profile with no nickname shows its shortened address and links by the full one", () => {
     for (const nickname of [null, main.address]) {
-      expect(chatIdentity("Rin", [{ address: main.address, nickname }])).toEqual({
+      expect(chatIdentity("Rin", [{ address: main.address, nickname, ...flags }])).toEqual({
         name: "0xabc0…0001",
         address: main.address.toLowerCase(),
         nickname: null,
@@ -320,7 +345,7 @@ describe("chatIdentity", () => {
   });
 
   test("no linked profile uses the account name", () => {
-    expect(chatIdentity("Rin", [], alt.address)).toEqual({
+    expect(chatIdentity("Rin", [])).toEqual({
       name: "Rin",
       address: null,
       nickname: null,

@@ -56,12 +56,17 @@ export const userAddress = pgTable(
     cosmoId: integer("cosmo_id"),
     lastCosmoCheck: timestamp("last_cosmo_check", { mode: "string", withTimezone: true }),
     bannerUpdatedAt: timestamp("banner_updated_at", { mode: "string", withTimezone: true }),
+    isDefault: boolean("is_default").notNull().default(false),
   },
   (t) => [
     uniqueIndex("user_address_address_idx").on(t.address),
     index("user_address_nickname_idx").on(t.nickname),
     uniqueIndex("user_address_address_nickname_idx").on(t.address, t.nickname),
     index("user_address_user_id_idx").on(t.userId),
+    uniqueIndex("user_address_default_idx")
+      .on(t.userId)
+      .where(sql`is_default`),
+    check("user_address_default_linked", sql`NOT ${t.isDefault} OR ${t.userId} IS NOT NULL`),
   ],
 );
 
@@ -559,7 +564,6 @@ export const messagePref = pgTable(
       .primaryKey()
       .references(() => user.id, { onDelete: "cascade" }),
     allow: text("allow").$type<"anyone" | "nobody">().notNull().default("anyone"),
-    chatAs: citext("chat_as", { length: 42 }),
     showActivity: boolean("show_activity").notNull().default(true),
     requestsSeenMessageId: bigint("requests_seen_message_id", { mode: "number" }),
   },

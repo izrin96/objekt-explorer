@@ -6,11 +6,15 @@ import { AccountSection } from "@/features/account/account-nav";
 import { LinkedCard } from "@/features/link/linked-card";
 import { useLinkedPreviews } from "@/features/link/use-linked-previews";
 import { PreviewCardsSkeleton } from "@/features/objekt/objekt-preview-strip";
-import { useUserProfiles } from "@/features/user/hooks";
+import { useCurrentUser, useUserProfiles } from "@/features/user/hooks";
 import { m } from "@/paraglide/messages";
 
 export function LinkedProfilesPanel() {
   const profiles = useUserProfiles();
+  const { data: user } = useCurrentUser();
+  const defaultAddress = user?.defaultAddress?.toLowerCase();
+  // with one profile there is nothing to choose between
+  const choosesDefault = profiles.length > 1 && defaultAddress !== undefined;
   const getPreview = useLinkedPreviews(profiles.map((profile) => profile.address));
 
   return (
@@ -35,6 +39,9 @@ export function LinkedProfilesPanel() {
               key={profile.address}
               profile={profile}
               preview={getPreview(profile.address)}
+              isDefault={
+                choosesDefault ? profile.address.toLowerCase() === defaultAddress : undefined
+              }
             />
           ))}
         </div>

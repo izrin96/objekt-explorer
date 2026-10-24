@@ -100,6 +100,8 @@ export function refusalText(error: unknown) {
       return m.api_errors_cosmo_link_unlink_sanctioned();
     case "cosmo_link_unlink_in_trade":
       return m.api_errors_cosmo_link_unlink_in_trade();
+    case "cosmo_link_not_yours":
+      return m.api_errors_cosmo_link_not_yours();
     case "profile_not_linked":
       return m.api_errors_profile_not_linked();
     case "profile_not_found":

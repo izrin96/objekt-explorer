@@ -2,14 +2,13 @@ import {
   addressesByUser,
   copyKey,
   type Holdings,
-  nicknamesByAddress,
+  toPartnerIdentity,
 } from "@repo/api/lib/trade-rank";
 import { NOTIFICATION_TYPES } from "@repo/api/schemas/notification";
 import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { hiddenTradePartner, lists, notificationPref, user, userAddress } from "@repo/db/schema";
-import { realNickname, truncateAddress } from "@repo/lib/address";
-import { and, inArray, sql } from "drizzle-orm";
+import { and, asc, inArray, sql } from "drizzle-orm";
 
 import { unique } from "../../lib/array";
 import {
@@ -41,9 +40,13 @@ export async function loadContext(pairs: AlertPair[]) {
         userId: userAddress.userId,
         address: userAddress.address,
         nickname: userAddress.nickname,
+        isDefault: userAddress.isDefault,
+        privateProfile: userAddress.privateProfile,
       })
       .from(userAddress)
-      .where(inArray(userAddress.userId, userIds)),
+      .where(inArray(userAddress.userId, userIds))
+      // link order, so a fallback to the first linked profile matches chat
+      .orderBy(sql`${userAddress.linkedAt} ASC NULLS LAST`, asc(userAddress.id)),
     db
       .select()
       .from(notificationPref)
@@ -57,7 +60,6 @@ export async function loadContext(pairs: AlertPair[]) {
   ]);
 
   const nameOf = new Map(users.map((u) => [u.id, u.name]));
-  const nicknameOf = nicknamesByAddress(addressRows);
   const addresses = addressesByUser(addressRows);
 
   const alertLists = new Map(
@@ -68,10 +70,11 @@ export async function loadContext(pairs: AlertPair[]) {
         userId: list.userId,
         slug: list.slug,
         name: list.name,
-        ownerName: list.profileAddress
-          ? (realNickname(list.profileAddress, nicknameOf.get(list.profileAddress.toLowerCase())) ??
-            truncateAddress(list.profileAddress.toLowerCase()))
-          : (nameOf.get(list.userId) ?? ""),
+        ownerName: toPartnerIdentity(
+          nameOf.get(list.userId) ?? "",
+          [{ profileAddress: list.profileAddress, matches: 0 }],
+          addressRows.filter((row) => row.userId === list.userId),
+        ).name,
       },
     ]),
   );

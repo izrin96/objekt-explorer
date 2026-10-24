@@ -1,10 +1,9 @@
 import { db } from "@repo/db";
-import { conversationMember, messagePref, userAddress } from "@repo/db/schema";
+import { conversationMember, messagePref } from "@repo/db/schema";
 import { and, eq, inArray, sql } from "drizzle-orm";
 
 import { type MessagePref, showsActivityTo, toMessagePref } from "../../lib/chat-rules";
 import { MESSAGE_PREF_DEFAULTS, type MessageSettings } from "../../schemas/chat";
-import { loadIdentities } from "../identities";
 import { redis, redisFailOpen } from "../redis";
 import { notBlockedEither } from "../safety";
 import { refuse } from "./refuse";
@@ -30,18 +29,9 @@ export async function showsActivity(userIds: string[]) {
   return (userId: string) => !off.has(userId);
 }
 
-/** The settings as the account sees them, with Chat as resolved to what partners see. */
 export async function fetchSettings(userId: string): Promise<MessageSettings> {
-  const [pref, identities, activity] = await Promise.all([
-    fetchPref(userId),
-    loadIdentities([userId]),
-    showsActivity([userId]),
-  ]);
-  return {
-    ...pref,
-    chatAs: identities.get(userId)?.identity.address ?? null,
-    showActivity: activity(userId),
-  };
+  const [pref, activity] = await Promise.all([fetchPref(userId), showsActivity([userId])]);
+  return { ...pref, showActivity: activity(userId) };
 }
 
 async function blockedBetween(a: string, b: string) {
@@ -98,22 +88,11 @@ export async function activityBetween(
 /** One Show Seen and typing change per account in this many seconds. */
 const ACTIVITY_CHANGE_SECONDS = 10;
 
-/** Saves what the input names; Chat as must be one of the account's linked addresses. */
+/** Saves what the input names. */
 export async function saveSettings(userId: string, input: Partial<MessageSettings>) {
   const set: Partial<MessageSettings> = {};
   if (input.allow !== undefined) set.allow = input.allow;
   if (input.showActivity !== undefined) set.showActivity = input.showActivity;
-  if (input.chatAs !== undefined) {
-    const chatAs = input.chatAs?.toLowerCase() ?? null;
-    if (chatAs !== null) {
-      const linked = await db.$count(
-        userAddress,
-        and(eq(userAddress.address, chatAs), eq(userAddress.userId, userId)),
-      );
-      if (linked === 0) refuse("not_own_profile");
-    }
-    set.chatAs = chatAs;
-  }
   // after every refusal above, so a refused request never uses up the window
   const before = (await showsActivity([userId]))(userId);
   const activityChanged = input.showActivity !== undefined && input.showActivity !== before;

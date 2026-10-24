@@ -1,7 +1,7 @@
 import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { userAddress } from "@repo/db/schema";
-import { inArray, sql } from "drizzle-orm";
+import { asc, inArray, sql } from "drizzle-orm";
 
 import { type Holdings, copyKey } from "../../lib/trade-rank";
 
@@ -9,18 +9,26 @@ type AddressRow = {
   userId: string | null;
   address: string;
   nickname: string | null;
+  isDefault: boolean;
+  privateProfile: boolean;
 };
 
 export function fetchAddresses(userIds: string[]): Promise<AddressRow[]> {
   if (userIds.length === 0) return Promise.resolve([]);
-  return db
-    .select({
-      userId: userAddress.userId,
-      address: userAddress.address,
-      nickname: userAddress.nickname,
-    })
-    .from(userAddress)
-    .where(inArray(userAddress.userId, userIds));
+  return (
+    db
+      .select({
+        userId: userAddress.userId,
+        address: userAddress.address,
+        nickname: userAddress.nickname,
+        isDefault: userAddress.isDefault,
+        privateProfile: userAddress.privateProfile,
+      })
+      .from(userAddress)
+      .where(inArray(userAddress.userId, userIds))
+      // link order, so a fallback to the first linked profile matches chat
+      .orderBy(sql`${userAddress.linkedAt} ASC NULLS LAST`, asc(userAddress.id))
+  );
 }
 
 type HoldingRow = { owner: string; key: string; transferable: boolean; token: boolean };

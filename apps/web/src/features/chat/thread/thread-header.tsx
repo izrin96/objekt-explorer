@@ -9,6 +9,7 @@ import { mutedLabel } from "@/features/chat/format";
 import type { ThreadPage } from "@/features/chat/thread-cache";
 import { TrustLine } from "@/features/offers/trust-line";
 import { ProfileLink } from "@/features/profile/profile-hover-card";
+import { displayNickname } from "@/lib/address";
 import { m } from "@/paraglide/messages";
 
 function ThreadBackButton() {
@@ -60,6 +61,7 @@ export function ThreadHeader({
 }) {
   const { partner, muted } = conversation;
   const name = partner.identity.name;
+  const also = partner.identity.also.map((ref) => displayNickname(ref.address, ref.nickname));
   return (
     <header className="flex items-center gap-3 border-b px-3 py-2.5 md:px-4">
       <ThreadBackButton />
@@ -81,6 +83,12 @@ export function ThreadHeader({
           ) : (
             name
           )}
+          {also.length > 0 ? (
+            <span className="text-muted-foreground text-sm font-normal">
+              {" · "}
+              {m.trade_also({ names: also.join(", ") })}
+            </span>
+          ) : null}
         </h2>
         <TrustLine reputation={partner.reputation} />
         {muted ? (

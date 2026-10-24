@@ -35,7 +35,6 @@ export const CHAT_REFUSALS = [
   "invalid_card",
   "muted",
   "unsend_closed",
-  "not_own_profile",
   "settings_limit",
 ] as const;
 export type ChatRefusal = (typeof CHAT_REFUSALS)[number];
@@ -223,8 +222,6 @@ export const muteInputSchema = z.object({
 
 const messageSettingsSchema = z.object({
   allow: z.enum(MESSAGE_ALLOW),
-  /** the linked address that names the account in chat; null is the first linked */
-  chatAs: addressSchema.nullable(),
   /** Seen and typing, both ways: off hides the account's and shows it no one's */
   showActivity: z.boolean(),
 });

@@ -177,6 +177,7 @@ async function tryLink(userId: string, data: VerifiedLink) {
         cosmoId: data.cosmoId,
         linkedAt: sql`'now'`,
         userId,
+        isDefault: false,
       })
       .onConflictDoUpdate({
         target: userAddress.address,
@@ -185,6 +186,7 @@ async function tryLink(userId: string, data: VerifiedLink) {
           cosmoId: data.cosmoId,
           linkedAt: sql`'now'`,
           userId,
+          isDefault: false,
         },
         where: sql`${userAddress.userId} IS NULL`,
       })
@@ -203,6 +205,26 @@ export async function linkVerified(userId: string, data: VerifiedLink) {
     if ((await tryLink(userId, data)) !== RETRY) return;
   }
   alreadyLinkedOther();
+}
+
+/** Makes one of the caller's linked profiles the one that names the account to others. */
+export async function setDefault(userId: string, address: string) {
+  await db.transaction(async (tx) => {
+    await lockUsersForWrite(tx, [userId]);
+    // cleared first, so the one-default index holds without a deferred constraint
+    await tx
+      .update(userAddress)
+      .set({ isDefault: false })
+      .where(and(eq(userAddress.userId, userId), eq(userAddress.isDefault, true)));
+    const [set] = await tx
+      .update(userAddress)
+      .set({ isDefault: true })
+      .where(and(eq(userAddress.userId, userId), eq(userAddress.address, address)))
+      .returning({ address: userAddress.address });
+    if (!set) {
+      refuse("BAD_REQUEST", "cosmo_link_not_yours", "This Cosmo ID isn't linked to your account");
+    }
+  });
 }
 
 export async function unlink(userId: string, address: string) {
@@ -232,7 +254,7 @@ export async function unlink(userId: string, address: string) {
 
     const removed = await tx
       .update(userAddress)
-      .set({ userId: null })
+      .set({ userId: null, isDefault: false })
       .where(and(eq(userAddress.userId, userId), eq(userAddress.address, address)))
       .returning({ address: userAddress.address });
     await recordLinkEvents(

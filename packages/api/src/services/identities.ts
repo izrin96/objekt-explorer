@@ -1,9 +1,9 @@
 import { db } from "@repo/db";
-import { messagePref, user, userAddress } from "@repo/db/schema";
-import { asc, eq, inArray, sql } from "drizzle-orm";
+import { user, userAddress } from "@repo/db/schema";
+import { asc, inArray, sql } from "drizzle-orm";
 
 import { chatIdentity } from "../lib/chat-rules";
-import type { AddressRef, PartnerIdentity } from "../lib/trade-rank";
+import type { LinkedProfile, PartnerIdentity } from "../lib/trade-rank";
 
 /**
  * How each account is named to the people it chats and trades with. Shared by the API and
@@ -14,16 +14,14 @@ export async function loadIdentities(userIds: string[]) {
   if (ids.length === 0)
     return new Map<string, { account: typeof user.$inferSelect; identity: PartnerIdentity }>();
   const [users, addresses] = await Promise.all([
-    db
-      .select({ account: user, chatAs: messagePref.chatAs })
-      .from(user)
-      .leftJoin(messagePref, eq(messagePref.userId, user.id))
-      .where(inArray(user.id, ids)),
+    db.select().from(user).where(inArray(user.id, ids)),
     db
       .select({
         userId: userAddress.userId,
         address: userAddress.address,
         nickname: userAddress.nickname,
+        isDefault: userAddress.isDefault,
+        privateProfile: userAddress.privateProfile,
       })
       .from(userAddress)
       .where(inArray(userAddress.userId, ids))
@@ -31,15 +29,14 @@ export async function loadIdentities(userIds: string[]) {
       .orderBy(sql`${userAddress.linkedAt} ASC NULLS LAST`, asc(userAddress.id)),
   ]);
 
-  const addressesOf = new Map<string, AddressRef[]>();
-  for (const { userId, address, nickname } of addresses) {
-    if (userId)
-      addressesOf.set(userId, [...(addressesOf.get(userId) ?? []), { address, nickname }]);
+  const addressesOf = new Map<string, LinkedProfile[]>();
+  for (const { userId, ...profile } of addresses) {
+    if (userId) addressesOf.set(userId, [...(addressesOf.get(userId) ?? []), profile]);
   }
   return new Map(
-    users.map(({ account, chatAs }) => [
+    users.map((account) => [
       account.id,
-      { account, identity: chatIdentity(account.name, addressesOf.get(account.id) ?? [], chatAs) },
+      { account, identity: chatIdentity(account.name, addressesOf.get(account.id) ?? []) },
     ]),
   );
 }

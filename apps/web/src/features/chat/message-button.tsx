@@ -67,7 +67,7 @@ export function useStartConversation() {
 
   const mutation = useMutation(
     orpc.chat.start.mutationOptions({
-      onSuccess: ({ id, card, postCard, thread }) => {
+      onSuccess: ({ id, card, postCard, thread }, { to }) => {
         const objekt = card?.collections[card.input.collectionSlug];
         if (card && objekt) {
           putDraftCard(id, {
@@ -96,7 +96,10 @@ export function useStartConversation() {
         void navigate({
           to: "/messages/$id",
           params: { id: String(id) },
-          state: { fromMessage: true },
+          state: {
+            fromMessage: true,
+            fromProfile: to.kind === "profile" ? to.address.toLowerCase() : undefined,
+          },
         });
       },
       onError: (error) => {
