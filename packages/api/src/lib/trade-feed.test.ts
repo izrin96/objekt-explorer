@@ -443,6 +443,15 @@ describe("Buying only rings", () => {
     expect(ringed(post!)?.map((item) => item.slug)).toEqual(["b"]);
   });
 
+  test("a sale post open to swaps rings against all my want lists", () => {
+    const [post] = pairPosts([list({ id: 3, listType: "sale", takesSwaps: true })]);
+    expect(
+      ringed(post!)
+        ?.map((item) => item.slug)
+        .toSorted(),
+    ).toEqual(["a", "b"]);
+  });
+
   test("a viewer with only a Buying only want list matches no have post", () => {
     const [post] = pairPosts([list({ id: 1, listType: "have" })]);
     const buyer: Viewer = { ...viewer, tradeWant: none };
@@ -1218,5 +1227,29 @@ describe("ruleMatchesOf picks the rule of the list that matched", () => {
     expect(ruleMatchesOf([{ ...side, index: new Map([["x", [20]]]) }], ruleWant)).toEqual([
       { slug: "x", ruleId: 2, listId: 20, swap: true },
     ]);
+  });
+});
+
+describe("side order", () => {
+  const roles = (lists: TradeList[]) => {
+    const [post] = pairPosts(lists);
+    return assemblePost(post!, (id) => [entry(id * 10, `s${id}`)], null, NO_FILTER)?.sides.map(
+      (side) => side.role,
+    );
+  };
+
+  test("what the poster gives comes before what they want", () => {
+    expect(
+      roles([
+        list({ id: 2, listType: "want", linkedListId: 1 }),
+        list({ id: 1, listType: "have", linkedListId: 2 }),
+      ]),
+    ).toEqual(["have", "want"]);
+    expect(
+      roles([
+        list({ id: 2, listType: "want", linkedListId: 1 }),
+        list({ id: 1, listType: "sale", linkedListId: 2, takesSwaps: true }),
+      ]),
+    ).toEqual(["sale", "want"]);
   });
 });

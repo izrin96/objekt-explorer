@@ -18,6 +18,7 @@ import type * as z from "zod";
 import { OBJEKT_PREVIEW_SIZE } from "../constants";
 import { isMessageable, toMessagePref } from "../lib/chat-rules";
 import { buildCopyRows, type CopyRow, type OwnedCopy } from "../lib/list-copy";
+import { pairRefusal, type PairRefusal } from "../lib/list-pair";
 import { refuse } from "../lib/refuse";
 import { BUMP_COOLDOWN_HOURS } from "../lib/trade-feed";
 import {
@@ -30,7 +31,7 @@ import {
   type PublicList,
 } from "../schemas/list";
 import { carriesPrices, copyMode, copyUnit, needsHoldings } from "../schemas/list-copy";
-import { type OpenToFlags, pairRefusesOpenTo, resolveOpenTo } from "../schemas/open-to";
+import { type OpenToFlags, resolveOpenTo } from "../schemas/open-to";
 import { isBlockedEither, type Tx } from "./moderation";
 import { getCollectionColumns, getPartialCollectionColumns } from "./objekt";
 import { assertProfileOwned, toPublicUser } from "./profile";
@@ -442,6 +443,14 @@ export function tradeColumns(on: boolean) {
   };
 }
 
+// English for tabs opened before a deploy and `/api/v1`; the web shows `refusalText`
+const PAIR_MESSAGES: Record<PairRefusal, string> = {
+  list_have_links_want: "Have lists can only link to Want lists",
+  list_want_links_have: "Want lists can only link to Have lists",
+  list_sale_links_sell_only: "Only a sale list open to swaps can be linked to a want list",
+  list_pair_buying_only: "A want list linked to a have list can't be Buying only",
+};
+
 /**
  * The other list of a pair, checked for owner and type. A want list pairs with a have list, or
  * with a sale list that takes swaps (`takesSwaps` is the sale list's own when it is the one
@@ -473,29 +482,8 @@ export async function checkLinkedList(
     refuse("BAD_REQUEST", "list_linked_not_found", "Linked list not found");
   }
 
-  // have and sale link to want; want links to have, or to a sale list that takes swaps
-  if ((type === "have" || type === "sale") && linkedList.listType !== "want") {
-    refuse("BAD_REQUEST", "list_have_links_want", "Have lists can only link to Want lists");
-  }
-  if (type === "want" && linkedList.listType !== "have" && linkedList.listType !== "sale") {
-    refuse("BAD_REQUEST", "list_want_links_have", "Want lists can only link to Have lists");
-  }
-  const sellOnly =
-    type === "sale" ? !takesSwaps : linkedList.listType === "sale" && !linkedList.takesSwaps;
-  if (sellOnly) {
-    refuse(
-      "BAD_REQUEST",
-      "list_sale_links_sell_only",
-      "Only a sale list open to swaps can be linked to a want list",
-    );
-  }
-  if (pairRefusesOpenTo(type === "want" ? openTo : linkedList)) {
-    refuse(
-      "BAD_REQUEST",
-      "list_pair_buying_only",
-      "A want list linked to a have list can't be Buying only",
-    );
-  }
+  const reason = pairRefusal(type, { openTo, takesSwaps }, linkedList);
+  if (reason) refuse("BAD_REQUEST", reason, PAIR_MESSAGES[reason]);
   return linkedList;
 }
 

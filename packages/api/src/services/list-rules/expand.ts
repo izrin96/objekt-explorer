@@ -4,6 +4,7 @@ import { indexer } from "@repo/db/indexer";
 import { listEntries, listRule, userAddress } from "@repo/db/schema";
 import { and, eq, inArray, sql } from "drizzle-orm";
 
+import { ruleEntryDiff } from "../../lib/rule-entries";
 import {
   expandRule,
   type ListRuleDef,
@@ -117,21 +118,12 @@ export async function syncRuleEntriesTx(tx: Tx, ruleId: number, slugs: readonly 
     .from(listEntries)
     .where(eq(listEntries.ruleId, ruleId));
 
-  const wanted = new Set(slugs);
-  const have = new Set(current.map((row) => row.slug));
-  const stale = current.filter((row) => row.slug === null || !wanted.has(row.slug));
-  const missing = [...wanted].filter((slug) => !have.has(slug));
+  const { stale, missing } = ruleEntryDiff(current, slugs);
 
   if (stale.length > 0) {
-    await tx.delete(listEntries).where(
-      and(
-        eq(listEntries.ruleId, ruleId),
-        inArray(
-          listEntries.id,
-          stale.map((row) => row.id),
-        ),
-      ),
-    );
+    await tx
+      .delete(listEntries)
+      .where(and(eq(listEntries.ruleId, ruleId), inArray(listEntries.id, stale)));
   }
   if (missing.length > 0) {
     await tx
