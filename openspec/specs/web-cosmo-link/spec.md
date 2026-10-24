@@ -91,8 +91,7 @@ Before the code is found, the flow SHALL refuse only an address linked now, as b
 - **THEN** the profile is linked to kaede.k
 
 ### Requirement: Edit profile
-The edit dialog SHALL load the profile's current settings and let the user toggle hide
-nickname, private serial, hide transfers and private profile, choose a grid
+The edit dialog SHALL load the profile's current settings and offer no privacy toggles (hiding the Cosmo ID, serials, activity history or the whole profile is no longer possible), let the user choose a grid
 column count between 2 and 18 or unset, and set, replace or remove a banner. Images SHALL
 be cropped to the banner ratio before upload; videos and GIFs SHALL upload as-is; files
 over the size limit or of an unsupported type SHALL be refused before upload. Saving SHALL
@@ -106,12 +105,9 @@ persist through the server.
 - **WHEN** the user picks a file larger than the limit
 - **THEN** a message explains the limit and nothing is uploaded
 
-### Requirement: Hide Cosmo ID
-A profile's Hide Cosmo ID setting SHALL hide its Cosmo nickname in Activity, Activity History, Serial Lookup, Holders, list pages and the profile itself (its page and its hover card, wherever the card opens), showing the address instead. Everywhere else, including Trade (Browse, For you, Find trade partners, hidden partners), want alerts, Market and Messages, the profile SHALL be named by its nickname whatever the setting, the same as a profile without it. The setting's description SHALL name where it applies.
-
-#### Scenario: Hidden on the profile, shown on Trade
-- **WHEN** rinrin turns on Hide Cosmo ID and posts a list bound to that profile
-- **THEN** rinrin's profile header and Activity rows show the address, and the Trade post is headed "rinrin"
+#### Scenario: No privacy toggles
+- **WHEN** the user opens the edit dialog of a profile that had Private Profile on before this change
+- **THEN** the dialog shows the banner and grid settings only, and saving changes nothing else
 
 ### Requirement: Link history
 The system SHALL record each time a Cosmo address is linked to an account or leaves it, with the account, the time, and how:
@@ -129,7 +125,7 @@ A staff action SHALL also record the staff member. The record SHALL stay when th
 - **THEN** the history shows the first link, the unlink and the second link, in order
 
 ### Requirement: Default profile
-An account's default profile SHALL name it wherever another account sees it as a person: conversation rows and threads, offers and trades, offer notes, notifications and blocked lists. It SHALL be the profile the user made default, else the first profile the account linked, shown by its nickname or, with none, its shortened address; Hide Cosmo ID does not apply. With no linked profile the display name SHALL be used.
+An account's default profile SHALL name it wherever another account sees it as a person: conversation rows and threads, offers and trades, offer notes, notifications and blocked lists. It SHALL be the profile the user made default, else the first profile the account linked, shown by its nickname or, with none, its shortened address. With no linked profile the display name SHALL be used.
 
 #### Scenario: Make another profile default
 - **WHEN** a user with profiles "rin.main" (linked first) and "rin.alt" opens `/account/profiles` and activates Make default in the "rin.alt" card's menu
@@ -143,10 +139,6 @@ An account's default profile SHALL name it wherever another account sees it as a
 - **WHEN** the user unlinks the profile they made default
 - **THEN** partners see them by their first linked remaining profile, which now carries the Default badge
 
-#### Scenario: Hide Cosmo ID
-- **WHEN** the default profile has Hide Cosmo ID on
-- **THEN** partners still see that profile's nickname
-
 #### Scenario: Someone else's address
 - **WHEN** a request makes default an address linked to another account
 - **THEN** it is refused and the default is unchanged
@@ -154,6 +146,10 @@ An account's default profile SHALL name it wherever another account sees it as a
 #### Scenario: Past conversations
 - **WHEN** the user changes their default profile
 - **THEN** every conversation, past ones included, heads them by the new profile on the other side's next load
+
+#### Scenario: Hide Cosmo ID
+- **WHEN** the default profile had Hide Cosmo ID on before this change
+- **THEN** partners see that profile's nickname, as for any profile
 
 ### Requirement: Sending as
 For an account with two or more linked profiles, the message box of a conversation and the offer builder SHALL show a muted line naming the default profile the other person will see ("Sending as <name>"), with a Change link to `/account/profiles`. An account with one or no linked profile SHALL see no such line. A change of default SHALL show in the line on the next load of the conversation or builder.
@@ -169,3 +165,14 @@ For an account with two or more linked profiles, the message box of a conversati
 #### Scenario: One profile
 - **WHEN** a user with one linked profile opens a conversation
 - **THEN** the message box shows no Sending as line
+
+### Requirement: Removed privacy settings notice
+`/account/profiles` SHALL show a dismissible notice at the top saying the privacy settings (Hide Cosmo ID, Hide from Serial Lookup, Hide Activity History, Private Profile) were removed, because Trade needs holdings, serials and transfers visible and they are public on the blockchain anyway. Every signed-in viewer of the page SHALL see it until they dismiss it in that browser.
+
+#### Scenario: First visit after the change
+- **WHEN** a signed-in user opens `/account/profiles`
+- **THEN** the notice shows above their linked profiles
+
+#### Scenario: Dismissed
+- **WHEN** the user dismisses the notice and opens the page again in the same browser
+- **THEN** the notice does not show

@@ -631,7 +631,7 @@ The conversation list request SHALL keep accepting every input it accepts today.
 - **THEN** its row shows no thumbnail
 
 ### Requirement: Other profiles in a thread
-A conversation SHALL be between two accounts, headed by the other account's default profile (see `web-cosmo-link`). When that account has other linked profiles that are not private, the thread header SHALL name them after the default ("rin.main · also rin.alt"). When the user opened the conversation from a profile that is not the account's default, an empty thread SHALL say once that this profile belongs to the account it is headed by. A private profile SHALL never be named in either place.
+A conversation SHALL be between two accounts, headed by the other account's default profile (see `web-cosmo-link`). When that account has other linked profiles, the thread header SHALL name them after the default ("rin.main · also rin.alt"). When the user opened the conversation from a profile that is not the account's default, an empty thread SHALL say once that this profile belongs to the account it is headed by.
 
 #### Scenario: Other profiles in the header
 - **WHEN** the user opens a conversation with an account whose default is "rin.main" and which also links "rin.alt"
@@ -646,5 +646,5 @@ A conversation SHALL be between two accounts, headed by the other account's defa
 - **THEN** that conversation opens, history included, headed "rin.main"
 
 #### Scenario: Private profile
-- **WHEN** the other account also links a private profile
-- **THEN** neither the header nor the empty thread names it
+- **WHEN** the other account also links a profile that was private before this change
+- **THEN** the header names it with their other profiles

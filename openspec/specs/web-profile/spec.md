@@ -9,13 +9,12 @@ its trades, collection progress and statistics.
 ### Requirement: Profile layout and privacy
 `/@<nickname>` SHALL resolve a nickname or address to a profile, show its banner, identity,
 linked socials when the owner allows, four summary counts and tabs for Collection, Activity
-History (at `/@<nickname>/trades`), Progress, Statistics and Lists. A private profile SHALL show only the private guard to
-anyone but its owner. The owner SHALL see an Edit action opening the profile edit dialog.
+History (at `/@<nickname>/trades`), Progress, Statistics and Lists. Every profile SHALL show in full to every visitor. The owner SHALL see an Edit action opening the profile edit dialog.
 An unknown nickname SHALL show the not-found surface.
 
 #### Scenario: Private profile
-- **WHEN** a visitor who is not the owner opens a profile marked private
-- **THEN** the guard is shown and no objekt, pin or transfer is requested
+- **WHEN** a visitor opens a profile that was marked private before this change
+- **THEN** the full profile shows, with its objekts, pins and transfers
 
 ### Requirement: Owned collection with pins and locks
 The Collection tab SHALL list owned objekts with serials, loading more as the user scrolls,
@@ -44,14 +43,14 @@ and lock mark, and keep the date across filter changes until cleared.
 
 ### Requirement: Trades, progress and statistics
 The Activity History tab SHALL list the profile's transfers by type (all, mint, received, sent, spin)
-with paging and hide them entirely when the owner hides transfers. The Progress tab SHALL
+with paging, to every visitor. The Progress tab SHALL
 show per member and season how many of each class are owned versus total, excluding the
 Welcome and Zero classes, with a chart per member. The Statistics tab SHALL chart the owned
 collection by member and by season.
 
 #### Scenario: Hidden transfers
-- **WHEN** the owner hides transfers and a visitor opens Activity History
-- **THEN** the tab shows the hidden notice and no rows
+- **WHEN** a visitor opens Activity History of a profile that hid its transfers before this change
+- **THEN** the tab lists its transfers
 
 #### Scenario: Progress excludes Welcome
 - **WHEN** an address owns Welcome-class objekts

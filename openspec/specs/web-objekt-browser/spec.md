@@ -69,7 +69,7 @@ Clicking a card SHALL open a drawer with the objekt's attributes, a link to view
 Apollo, and these tabs in order: Owned, only when the viewer holds copies; Serials,
 labelled Trades; Market; Holders; and Metadata. Serials SHALL let the user step to the
 previous, next, first and last existing serial or type one, and for the chosen serial show
-loading, then either a private notice when the owner hides serials, a missing notice when
+loading, then either a missing notice when
 it has no owner, or the owner with the transfer timeline. Market SHALL show five live
 figures: Floor, Listings, Sellers, Median and Highest. Floor SHALL carry its change over 30
 days: the live floor against the first record of the last 30 days (see `web-market` Daily
@@ -84,8 +84,8 @@ Metadata SHALL show every collection field. Holders SHALL behave as the
 opened.
 
 #### Scenario: Private serial
-- **WHEN** the chosen serial belongs to an owner who hides serials and the viewer is not that owner
-- **THEN** the Serials tab shows the private notice and no owner
+- **WHEN** the chosen serial belongs to an owner who hid serials before this change
+- **THEN** the Serials tab shows the owner and the transfer timeline
 
 #### Scenario: Step to next existing serial
 - **WHEN** serial 5 does not exist and the user presses Next from serial 4

@@ -19,5 +19,5 @@ to the owner.
 - **THEN** the URL carries the three parameters and the grid shows the entries that profile does not own
 
 #### Scenario: Private target
-- **WHEN** the target profile is private and the viewer is not its owner
-- **THEN** the result is empty and the banner explains nothing could be compared
+- **WHEN** the target profile was private before this change and the viewer is not its owner
+- **THEN** the comparison runs as for any profile

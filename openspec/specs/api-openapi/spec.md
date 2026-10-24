@@ -82,27 +82,6 @@ integer in range with 400.
 - **WHEN** a client requests `GET /api/v1/market/{collectionSlug}/listings?limit=500`
 - **THEN** the response is 400
 
-### Requirement: Profile privacy on public reads
-The profile, pins, locked-objekts and holders operations SHALL apply the same privacy
-rules the app applies: a private profile reveals itself only to the signed-in account that
-linked the address. A request without that account's session SHALL get the public view.
-
-#### Scenario: Private profile's pins
-- **WHEN** an anonymous client requests `GET /api/v1/profiles/{address}/pins` for an
-  address whose profile is private
-- **THEN** the response is 200 with an empty array
-
-#### Scenario: Private profile's preview
-- **WHEN** an anonymous client requests `GET /api/v1/profiles/{address}` for an address
-  whose profile is private
-- **THEN** the response names the address and marks it guarded, with `counts` null and no
-  banner or linked user
-
-#### Scenario: Private holder
-- **WHEN** an anonymous client requests a collection's holders and one holder's profile
-  is private
-- **THEN** that row is `{ "kind": "private" }` with `lowestSerial` null
-
 ### Requirement: Explicit artist filter on list reads
 A list's entries and its export SHALL be filtered by the `artist` parameter of the request
 alone. An omitted `artist` SHALL mean every artist, and no cookie SHALL change the result.
@@ -179,15 +158,15 @@ document SHALL name them in the response schema.
 - **WHEN** a client requests `GET /api/v1/objekts/held-by/{address}?artist=artms`
 - **THEN** every row is an artms collection and each carries the three fields
 
-#### Scenario: Hidden address
-- **WHEN** an anonymous client requests held-by for an address whose profile is private
-- **THEN** the response is 200 with `collections` empty
-
 #### Scenario: Document describes the fields
 - **WHEN** a client reads the `GET /objekts/held-by/{address}` operation in
   `/api/v1/spec.json`
 - **THEN** each collection item's schema names `copies`, `minSerial`, `minSerialTokenId`
   and `firstReceivedAt`
+
+#### Scenario: Hidden address
+- **WHEN** an anonymous client requests held-by for an address whose profile was private before this change
+- **THEN** the response lists that address's collections like any other
 
 ### Requirement: Transfers sort order
 `GET /transfers/{address}` SHALL accept an `order` query parameter of `desc` or `asc`.

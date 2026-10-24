@@ -40,7 +40,7 @@ A post with two tags SHALL show both, WTT first, and SHALL be listed under each 
 - **THEN** the feed shows one post tagged WTT and WTB holding both sides, listed under WTT and under WTB, and Mutual lists it as a WTT post
 
 Each post SHALL show:
-- the owner, headed the way For you heads a partner (the Cosmo nickname of the list's bound address whatever its Hide Cosmo ID setting, the shortened address when it has none, and, for a list bound to no address, the account's default profile when that profile is not private, else the account's display name; see `web-cosmo-link`), with the avatar;
+- the owner, headed the way For you heads a partner (the Cosmo nickname of the list's bound address, the shortened address when it has none, and, for a list bound to no address, the account's default profile, else the account's display name; see `web-cosmo-link`), with the avatar;
 - its tags, and each list's name and description;
 - up to 11 objekts per side on a post with two sides, and up to 20 on a post with one side, with the number of further objekts;
 - on a WTS post, each objekt's price in the list's currency, or QYOP;

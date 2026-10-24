@@ -8,7 +8,7 @@ Offers between two accounts on `apps/web`: specific objekts (or any copy) on eac
 ### Requirement: Offers name objekts on both sides
 An offer SHALL be sent inside a conversation from one account to the other. It has two sides:
 - **You give**: specific objekts owned by one of the sender's linked addresses.
-- **You get**: specific objekts, or "any copy" of a collection. Each comes from an entry on one of the recipient's have or sale lists bound to a Cosmo profile, at any of the recipient's linked addresses. When the recipient has no have or sale list bound to a Cosmo profile and shown on Trade, each MAY instead come from what the recipient holds at a linked address whose profile is not private to the sender (their collection): a specific objekt from an address that shows serials, any copy from one that hides them. This is checked when the offer is sent: once the recipient has such a list, only its entries can be asked for.
+- **You get**: specific objekts, or "any copy" of a collection. Each comes from an entry on one of the recipient's have or sale lists bound to a Cosmo profile, at any of the recipient's linked addresses. When the recipient has no have or sale list bound to a Cosmo profile and shown on Trade, each MAY instead come from what the recipient holds at any of their linked addresses (their collection): a specific objekt or any copy. This is checked when the offer is sent: once the recipient has such a list, only its entries can be asked for.
 
 An offer addressed to one of the recipient's lists, as Make offer on a Trade post (see `web-trade-browse`) and on a Market listing are, SHALL ask only for entries on that list when it is a have or sale list bound to a Cosmo profile and shown on Trade. Such an offer never draws on the recipient's other lists or on their collection. An offer addressed to any other list, such as a want list, follows the rule above. So do offers made inside a conversation, including one that began with an offer from a post.
 
@@ -39,8 +39,8 @@ An offer SHALL hold at least one objekt, and at most 50 on each side. On the off
 - **THEN** the send is refused as unlisted, and nothing is sent
 
 #### Scenario: Private profile
-- **WHEN** rin.trades has no list on Trade and holds SeoYeon 204Z only at a linked address whose profile is private
-- **THEN** the picker does not show it, and a request for it is refused as unlisted
+- **WHEN** rin.trades has no list on Trade and holds SeoYeon 204Z only at a linked address that was private before this change
+- **THEN** the picker shows it, and a request for it is sent
 
 #### Scenario: Counter keeps their objekt
 - **WHEN** rin.trades offers HyeRin 301Z #1203, which is on none of their lists, and the user counters, keeping it under You get and adding a top-up
@@ -121,7 +121,7 @@ Of two offers holding the same objekt, the first accepted wins. Either party SHA
 ### Requirement: Offer builder
 The builder SHALL open as a dialog, and as a full-height sheet on a phone. It shows:
 - You give, with an Add picker over the sender's own objekts, entries on their bound have and sale lists first;
-- You get, with an Add picker over the allowed list entries, labelled "Add from {name}'s lists"; or, when the partner has no have or sale list bound to a Cosmo profile and on Trade, an Add picker over their collection, labelled "Add from {name}'s collection", listing what they hold at linked addresses whose profile is not private to the sender, newest received first;
+- You get, with an Add picker over the allowed list entries, labelled "Add from {name}'s lists"; or, when the partner has no have or sale list bound to a Cosmo profile and on Trade, an Add picker over their collection, labelled "Add from {name}'s collection", listing what they hold at their linked addresses, newest received first;
 - the top-up and the note.
 
 Opened for one of the partner's have or sale lists on Trade (from a Trade post or a Market listing), You get's Add picker SHALL list only that list's entries, labelled "Add from {name}'s list", with the same empty-picker reasons as over lists. Opened for any other list, such as a WTB post's want list, You get SHALL work as from a conversation.
@@ -205,15 +205,13 @@ An empty You get picker over lists SHALL say why: the partner lists nothing the 
 ### Requirement: Hidden serials stay hidden in offers
 When an entry on the recipient's list comes from a list that hides serial numbers, the offer builder's You get picker SHALL offer it only as "any copy" of its collection. Neither that entry nor the recipient's other copies of the collection SHALL be shown or pickable by serial through that entry.
 
-A request asking for a specific objekt SHALL be refused unless that objekt is reachable through an entry on a list that shows serials, or it was under You give in the offer being countered, or it comes from the recipient's collection (see Offers name objekts on both sides) at an address that does not hide serials. A copy listed only on hidden-serial lists can still be asked for as any copy.
+A request asking for a specific objekt SHALL be refused unless that objekt is reachable through an entry on a list that shows serials, or it was under You give in the offer being countered, or it comes from the recipient's collection (see Offers name objekts on both sides). A copy listed only on hidden-serial lists can still be asked for as any copy.
 
 Asking for any copy through hidden-serial entries that name specific objekts SHALL draw only on those objekts, while the recipient still holds them, transferable and unreserved. The picker's "N you can ask for" and the most copies a request may ask for SHALL count only those. An entry for the whole collection, on any list, opens every copy the recipient holds.
 
-When the You get picker lists the recipient's collection, objekts at an address that hides serials SHALL be offered only as "any copy" of their collection, counting the copies held there, never by serial.
-
 #### Scenario: Collection at a hidden-serial address
-- **WHEN** rin.trades has no list on Trade and holds three SeoYeon 204Z at a linked address that hides serials
-- **THEN** the collection picker shows SeoYeon 204Z as "Any copy · 3 you can ask for", with no serials, and a request for #537 by its objekt id is refused as unlisted
+- **WHEN** rin.trades has no list on Trade and holds three SeoYeon 204Z at a linked address that hid serials before this change
+- **THEN** the collection picker shows each copy by serial, and a request for #537 by its objekt id is sent
 
 #### Scenario: Hidden list in the picker
 - **WHEN** rin.trades's have list hides serials and lists SeoYeon 204Z #537, and the user opens You get

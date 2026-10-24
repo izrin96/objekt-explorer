@@ -84,7 +84,7 @@ When the user has hidden anyone, Browse's footer note SHALL say that their posts
 - **THEN** rin.trades is not hidden, and their row is listed again
 
 ### Requirement: Partner identity
-A partner card SHALL be headed by the Cosmo nickname of the address their best-matching list is bound to, whether or not that address has Hide Cosmo ID on (see `web-cosmo-link`). When that address has no nickname it SHALL be headed by the shortened address, and only when no matched list is bound to an address SHALL it use the account's default profile when that profile is not private, else the account's display name (see `web-cosmo-link` Default profile). Want-list alerts SHALL name a partner the same way. When the partner's matched lists are bound to more than one address, the card SHALL name the others as well. The card SHALL show the account's avatar. Its name SHALL link to the partner's profile, followed by Discord and Twitter badges when the partner has chosen to show socials.
+A partner card SHALL be headed by the Cosmo nickname of the address their best-matching list is bound to. When that address has no nickname it SHALL be headed by the shortened address, and only when no matched list is bound to an address SHALL it use the account's default profile, else the account's display name (see `web-cosmo-link` Default profile). Want-list alerts SHALL name a partner the same way. When the partner's matched lists are bound to more than one address, the card SHALL name the others as well. The card SHALL show the account's avatar. Its name SHALL link to the partner's profile, followed by Discord and Twitter badges when the partner has chosen to show socials.
 
 #### Scenario: Bound nickname
 - **WHEN** a partner's matched list is bound to the Cosmo address with nickname "rinrin"
@@ -98,13 +98,13 @@ A partner card SHALL be headed by the Cosmo nickname of the address their best-m
 - **WHEN** a partner's matched lists are bound to no address, and their default profile is "rin.alt"
 - **THEN** the card is headed "rin.alt"
 
-#### Scenario: No bound address and a private default
-- **WHEN** a partner's matched lists are bound to no address, and their default profile is private
-- **THEN** the card is headed by the account's display name
-
 #### Scenario: No profile at all
 - **WHEN** a partner has no linked Cosmo profile
 - **THEN** the card is headed by the account's display name
+
+#### Scenario: No bound address and a private default
+- **WHEN** a partner's matched lists are bound to no address, and their default profile was private before this change
+- **THEN** the card is headed by that default profile
 
 ### Requirement: Freshness
 Matching SHALL reflect the user's own list changes on the next load. Other accounts' changes SHALL appear:

@@ -56,24 +56,13 @@ When the signed-in viewer has a linked address that holds copies and that holder
 - **WHEN** the viewer's address ranks 3rd
 - **THEN** its row in the list is marked as the viewer's and no row is pinned
 
-### Requirement: Holder privacy
-The tab SHALL apply a holder address's private-profile and private-serial settings to every viewer except the account that linked that address. A holder with a private profile SHALL appear as an unlinked "Private collector" row with no address, nickname or lowest serial, since a serial looked up in the Trades tab names its owner, and SHALL still count in every figure and rank. A holder who hides their nickname SHALL appear by their shortened address to every viewer, the linking account included, as Hide Cosmo ID applies here (see `web-cosmo-link`). A holder who hides serials SHALL show no lowest serial. The response sent to the browser SHALL NOT contain the address, nickname or serial that a setting hides.
-
-#### Scenario: Private profile seen by another viewer
-- **WHEN** the third-ranked holder has a private profile and the viewer is signed out
-- **THEN** row 3 reads "Private collector", has no link and no lowest serial, and the response carries no address or serial for it
-
-#### Scenario: Private profile seen by its owner
-- **WHEN** the account that linked that address views the tab
-- **THEN** the row shows its link and lowest serial, and its nickname unless the holder hides it
-
-#### Scenario: Private serial
-- **WHEN** a holder hides serials and the viewer is not that holder
-- **THEN** the row shows the holder but no lowest serial
-
 ### Requirement: Holder data freshness
-Holder figures SHALL reflect ownership no more than five minutes old. Privacy settings SHALL take effect on the next request, regardless of how old the holder figures are.
+Holder figures SHALL reflect ownership no more than five minutes old.
 
 #### Scenario: Privacy change applies immediately
-- **WHEN** a holder turns on a private profile and another viewer reopens the tab a minute later
-- **THEN** that holder's row reads "Private collector"
+- **WHEN** a holder had a private profile before this change and another viewer opens the tab
+- **THEN** that holder's row shows its address link and lowest serial
+
+#### Scenario: New copy shows within five minutes
+- **WHEN** a holder receives another copy and a viewer reopens the tab six minutes later
+- **THEN** that holder's copy count includes it
