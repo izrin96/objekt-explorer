@@ -6,7 +6,7 @@ The account-wide trade match view on `apps/web` at `/trade/for-you`: who the use
 ## Requirements
 
 ### Requirement: Account-wide matches
-Trade SHALL match the signed-in user, one person at a time, against the other accounts whose listed have, sale or want lists (discoverable and not idle; see `web-trade-browse` Order and idle posts) overlap the user's have, sale and want lists. This drives the header sentences and list counts on Browse and For you, Any, Mutual and Mutual N (see `web-trade-browse`). An idle list SHALL not count toward its owner. A have list counts only against a want list open to swaps, and a sale list only against a want list open to buying: a want list open to swaps only never matches a sale list, and one set to buying only never matches a have list (see `web-lists`). The user's own lists count whether or not they are discoverable. Matching SHALL use the user's have and sale lists, never everything their wallet holds: owning an objekt does not mean it is up for trade. A have or sale list SHALL take part only while it is bound to one of its owner's Cosmo profiles, since Trade checks that profile's holdings. Want lists always take part. The user's own account SHALL never be matched.
+Trade SHALL match the signed-in user, one person at a time, against the other accounts whose listed have, sale or want lists (discoverable and not idle; see `web-trade-browse` Order and idle posts) overlap the user's have, sale and want lists. This drives the header sentences and list counts on Browse and For you, Any, Mutual and Mutual N (see `web-trade-browse`). An idle list SHALL not count toward its owner. A have list counts only against a want list open to swaps, and a sale list only against a want list open to buying: a want list open to swaps only never matches a sale list, and one set to buying only never matches a have list (see `web-lists`). The user's own lists count whether or not they are discoverable. Matching SHALL use the user's have and sale lists, never everything their wallet holds: owning an objekt does not mean it is up for trade. A have or sale list SHALL take part only while it is bound to one of its owner's Cosmo profiles, since Trade checks that profile's holdings. Want lists always take part. The user's own account SHALL never be matched. Want-list alerts SHALL use the same rules for which of another account's lists take part (see `web-notifications` Want-list alerts).
 
 #### Scenario: Matches across lists
 - **WHEN** a user has two have lists and one want list, and a person's discoverable lists overlap two of them
@@ -43,6 +43,10 @@ Trade SHALL match the signed-in user, one person at a time, against the other ac
 #### Scenario: Trade opens Browse
 - **WHEN** a signed-in user opens `/trade`
 - **THEN** the browser stays at `/trade` and shows the Browse feed
+
+#### Scenario: Alerts follow the same lists
+- **WHEN** a person's have list holding a collection on the user's want list is left out of For you because the user hid that person
+- **THEN** a new entry on that have list creates no want-list alert for the user
 
 ### Requirement: Current ownership
 An entry on a have or sale list SHALL count toward a match only while its owner can trade it:
