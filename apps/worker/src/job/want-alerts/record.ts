@@ -76,7 +76,12 @@ async function insertAlerts(tx: Tx, alerts: Alert[], now: Date) {
             userId: alert.userId,
             type: alert.type,
             groupKey: key,
-            payload: mergePayload(parsed?.success ? parsed.data : null, alert.list, matches),
+            payload: mergePayload(
+              parsed?.success ? parsed.data : null,
+              alert.list,
+              matches,
+              alert.mode,
+            ),
           };
         }),
       )

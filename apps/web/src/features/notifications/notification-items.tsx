@@ -500,7 +500,7 @@ function ListItem({ notification, collections, now, onOpen, variant }: RowProps<
   return (
     <Link
       to="/trade/for-you"
-      search={{ match: "any", list: notification.payload.list.slug }}
+      search={{ match: notification.payload.match ?? "any", list: notification.payload.list.slug }}
       onClick={onOpen}
       className={rowClass(unread, variant)}
     >

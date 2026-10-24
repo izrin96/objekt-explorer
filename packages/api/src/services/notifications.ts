@@ -11,6 +11,10 @@ import {
   KIND_TYPES,
   type listNotificationsInputSchema,
   LISTED_NOTIFICATION_TYPES,
+  ALERT_MATCH_DEFAULT,
+  ALERT_TYPES,
+  type AlertMatchMode,
+  type AlertType,
   NOTIFICATION_DEFAULTS,
   NOTIFICATION_PAGE_SIZE,
   NOTIFICATION_TYPES,
@@ -212,13 +216,26 @@ export function unreadNotificationCount(userId: string) {
   );
 }
 
+/** Each type on or off, and what each list alert matches; a missing row or null reads as the default. */
 export async function notificationPrefs(userId: string) {
   const rows = await db
-    .select({ type: notificationPref.type, enabled: notificationPref.enabled })
+    .select({
+      type: notificationPref.type,
+      enabled: notificationPref.enabled,
+      match: notificationPref.match,
+    })
     .from(notificationPref)
     .where(eq(notificationPref.userId, userId));
-  const stored = new Map(rows.map((row) => [row.type, row.enabled]));
-  return Object.fromEntries(
-    NOTIFICATION_TYPES.map((type) => [type, stored.get(type) ?? NOTIFICATION_DEFAULTS[type]]),
-  ) as Record<NotificationType, boolean>;
+  const stored = new Map(rows.map((row) => [row.type, row]));
+  return {
+    enabled: Object.fromEntries(
+      NOTIFICATION_TYPES.map((type) => [
+        type,
+        stored.get(type)?.enabled ?? NOTIFICATION_DEFAULTS[type],
+      ]),
+    ) as Record<NotificationType, boolean>,
+    match: Object.fromEntries(
+      ALERT_TYPES.map((type) => [type, stored.get(type)?.match ?? ALERT_MATCH_DEFAULT]),
+    ) as Record<AlertType, AlertMatchMode>,
+  };
 }

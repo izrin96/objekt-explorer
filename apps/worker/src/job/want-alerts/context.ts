@@ -21,6 +21,7 @@ export async function loadContext<P extends AlertPair>(pairs: P[]) {
       userId: lists.userId,
       slug: lists.slug,
       name: lists.name,
+      listType: lists.listType,
       profileAddress: lists.profileAddress,
     })
     .from(lists)
@@ -63,6 +64,7 @@ export async function loadContext<P extends AlertPair>(pairs: P[]) {
         userId: list.userId,
         slug: list.slug,
         name: list.name,
+        sale: list.listType === "sale",
         ownerName: toPartnerIdentity(
           nameOf.get(list.userId) ?? "",
           [{ profileAddress: list.profileAddress, matches: 0 }],
@@ -86,6 +88,11 @@ export async function loadContext<P extends AlertPair>(pairs: P[]) {
     holdings,
     prefs: new Map(
       prefRows.map((row) => [prefKey(row.userId, row.type as Alert["type"]), row.enabled]),
+    ),
+    matches: new Map(
+      prefRows.flatMap((row) =>
+        row.match === null ? [] : [[prefKey(row.userId, row.type as Alert["type"]), row.match]],
+      ),
     ),
   };
 }

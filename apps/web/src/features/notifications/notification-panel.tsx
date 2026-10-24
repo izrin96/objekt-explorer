@@ -94,7 +94,7 @@ export function NotificationPanel({
     {},
     ...(query.data?.pages.map((page) => page.collections) ?? []),
   );
-  const tradeNotes = prefs?.trade ?? true;
+  const tradeNotes = prefs?.enabled.trade ?? true;
   const sections = Map.groupBy(items, (item) => sectionOf(item, tradeNotes, now));
   const sheet = variant === "sheet";
 

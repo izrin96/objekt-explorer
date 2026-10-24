@@ -9,6 +9,7 @@ import {
   listNotificationsInputSchema,
   markAllReadInputSchema,
   markReadInputSchema,
+  setAlertMatchInputSchema,
   setPrefInputSchema,
 } from "../schemas/notification";
 import {
@@ -72,6 +73,21 @@ export const notificationsRouter = {
         .onConflictDoUpdate({
           target: [notificationPref.userId, notificationPref.type],
           set: { enabled },
+        });
+    }),
+
+  /** One statement, so a choice never leaves `enabled` and `match` half-written; Off keeps the stored match. */
+  setAlertMatch: authed
+    .input(setAlertMatchInputSchema)
+    .handler(async ({ input: { type, choice }, context: { session } }) => {
+      const enabled = choice !== "off";
+      const match = choice === "off" ? null : choice;
+      await db
+        .insert(notificationPref)
+        .values({ userId: session.user.id, type, enabled, match })
+        .onConflictDoUpdate({
+          target: [notificationPref.userId, notificationPref.type],
+          set: match === null ? { enabled } : { enabled, match },
         });
     }),
 };

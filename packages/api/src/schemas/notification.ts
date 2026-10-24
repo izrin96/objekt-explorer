@@ -8,10 +8,18 @@ export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 /** A type with no `notification_pref` row uses its default. */
 export const NOTIFICATION_DEFAULTS: Record<NotificationType, boolean> = {
   want_match: true,
-  have_wanted: false,
+  have_wanted: true,
   offer: true,
   trade: true,
 };
+
+/** The list alerts, which also pick Any or Can swap (`mutual`). */
+export const ALERT_TYPES = ["want_match", "have_wanted"] as const;
+export type AlertType = (typeof ALERT_TYPES)[number];
+export const ALERT_MATCHES = ["any", "mutual"] as const;
+export type AlertMatchMode = (typeof ALERT_MATCHES)[number];
+/** A null or missing `notification_pref.match` reads as this. */
+export const ALERT_MATCH_DEFAULT: AlertMatchMode = "mutual";
 
 export const NOTIFICATION_PAGE_SIZE = 20;
 /** Read notifications and sent-alert keys older than this are deleted. */
@@ -34,6 +42,8 @@ export const alertPayloadSchema = z.object({
   list: listRefSchema,
   count: z.number().int().positive(),
   latest: alertMatchSchema.array().max(LATEST_LIMIT),
+  /** the choice the latest match alerted under; a row from before the choice has none */
+  match: z.enum(ALERT_MATCHES).optional(),
 });
 export type AlertPayload = z.infer<typeof alertPayloadSchema>;
 
@@ -132,4 +142,9 @@ export const markReadInputSchema = z.object({
 export const setPrefInputSchema = z.object({
   type: notificationTypeSchema,
   enabled: z.boolean(),
+});
+
+export const setAlertMatchInputSchema = z.object({
+  type: z.enum(ALERT_TYPES),
+  choice: z.enum(["off", ...ALERT_MATCHES]),
 });

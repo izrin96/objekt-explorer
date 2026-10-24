@@ -33,6 +33,13 @@ describe("mergePayload", () => {
     expect(merged.latest).toEqual([match(4), match(3), match(2)]);
   });
 
+  test("the newest match's choice wins, and a missing one stays missing", () => {
+    const any = mergePayload(null, list, [match(1)], "any");
+    expect(any.match).toBe("any");
+    expect(mergePayload(any, list, [match(2)], "mutual").match).toBe("mutual");
+    expect(mergePayload(null, list, [match(1)])).not.toHaveProperty("match");
+  });
+
   test("caps a large batch at three", () => {
     const merged = mergePayload(null, list, [1, 2, 3, 4, 5].map(match));
     expect(merged.count).toBe(5);

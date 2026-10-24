@@ -7,6 +7,7 @@ import {
   nextRecheck,
   overlapFloor,
   parseState,
+  MUTUAL_RECHECK_LIMIT,
   RECHECK_LIMIT,
   RECHECK_MS,
 } from "./want-alert-state";
@@ -127,9 +128,22 @@ describe("nextRecheck", () => {
   });
 });
 
+describe("nextRecheck with its own limit", () => {
+  test("the Can swap list caps at its own, smaller limit", () => {
+    const ids = Array.from({ length: MUTUAL_RECHECK_LIMIT + 2 }, (_, i) => i);
+    const result = nextRecheck([], ids, 0, MUTUAL_RECHECK_LIMIT);
+    expect(result.dropped).toBe(2);
+    expect(result.recheck).toHaveLength(MUTUAL_RECHECK_LIMIT);
+  });
+});
+
 describe("parseState and recheck", () => {
   test("a row from before recheck still parses", () => {
     expect(parseState({ discoverable: [], marks: [] })).toEqual({ discoverable: [], marks: [] });
+  });
+
+  test("a malformed Can swap recheck is unreadable", () => {
+    expect(parseState({ discoverable: [], marks: [], mutualRecheck: [[1]] })).toBeNull();
   });
 
   test("a malformed recheck is unreadable", () => {

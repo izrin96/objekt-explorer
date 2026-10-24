@@ -7,6 +7,8 @@ import {
   type AlertList,
   type AlertPair,
   listProgress,
+  mutualKey,
+  mutualQuestions,
   prefKey,
   selectAlerts,
   wholeEntries,
@@ -24,6 +26,7 @@ const list = (id: number, userId: string, extra: Partial<AlertList> = {}): Alert
   slug: `list${id}`,
   name: `List ${id}`,
   ownerName: `${userId}-name`,
+  sale: false,
   ...extra,
 });
 
@@ -49,6 +52,15 @@ const holdings = (
   objekts: new Map(objekts.map(([id, owner, transferable]) => [id, { owner, transferable }])),
 });
 
+/** Any for both types, so the older tests read as before Can swap existed. */
+function anyFor(...users: string[]) {
+  return new Map(
+    users.flatMap((user) =>
+      (["want_match", "have_wanted"] as const).map((type) => [prefKey(user, type), "any" as const]),
+    ),
+  );
+}
+
 const input = (extra: Partial<AlertInput> = {}): AlertInput => ({
   pairs: [forward()],
   lists: new Map([SALE, WANT].map((l) => [l.id, l])),
@@ -58,6 +70,7 @@ const input = (extra: Partial<AlertInput> = {}): AlertInput => ({
   ]),
   holdings: holdings(),
   prefs: new Map(),
+  matches: anyFor(SELLER, WANTER),
   ...extra,
 });
 
@@ -72,6 +85,7 @@ describe("selectAlerts, forward", () => {
         list: { id: WANT.id, slug: WANT.slug, name: WANT.name },
         key: { wantListId: WANT.id, sourceListId: SALE.id, collectionSlug: SLUG },
         match: { collectionSlug: SLUG, partnerName: "seller-name", sourceListSlug: SALE.slug },
+        mode: "any",
       },
     ]);
   });
@@ -144,8 +158,15 @@ describe("selectAlerts, forward", () => {
 describe("selectAlerts, reverse", () => {
   const reverse = forward({ direction: "reverse" });
 
-  test("off by default", () => {
-    expect(alertsOf(input({ pairs: [reverse] }))).toEqual([]);
+  test("on by default", () => {
+    expect(alertsOf(input({ pairs: [reverse] })).map((alert) => alert.type)).toEqual([
+      "have_wanted",
+    ]);
+  });
+
+  test("off when turned off", () => {
+    const off = new Map([[prefKey(SELLER, "have_wanted"), false]]);
+    expect(alertsOf(input({ pairs: [reverse], prefs: off }))).toEqual([]);
   });
 
   test("when turned on, the have side's owner is told, grouped on their list", () => {
@@ -159,6 +180,7 @@ describe("selectAlerts, reverse", () => {
         list: { id: SALE.id, slug: SALE.slug, name: SALE.name },
         key: { wantListId: WANT.id, sourceListId: SALE.id, collectionSlug: SLUG },
         match: { collectionSlug: SLUG, partnerName: "wanter-name", sourceListSlug: WANT.slug },
+        mode: "any",
       },
     ]);
   });
@@ -168,7 +190,8 @@ describe("selectAlerts, reverse", () => {
     const both = alertsOf(input({ pairs: [reverse, forward()], prefs: on }));
     expect(both.map((alert) => alert.type).toSorted()).toEqual(["have_wanted", "want_match"]);
 
-    const forwardOnly = alertsOf(input({ pairs: [reverse, forward()] }));
+    const off = new Map([[prefKey(SELLER, "have_wanted"), false]]);
+    const forwardOnly = alertsOf(input({ pairs: [reverse, forward()], prefs: off }));
     expect(forwardOnly.map((alert) => alert.type)).toEqual(["want_match"]);
   });
 
@@ -186,6 +209,7 @@ describe("selectAlerts, unowned", () => {
     expect(selectAlerts(input({ holdings: holdings([]) }))).toEqual({
       alerts: [],
       unowned: [forward()],
+      notMutual: [],
     });
     expect(
       selectAlerts(input({ holdings: holdings([[SELLER_ADDR, SLUG, false]]) })).unowned,
@@ -200,10 +224,103 @@ describe("selectAlerts, unowned", () => {
 
   test("an alert, a pref switched off or a wanter holding a copy is never unowned", () => {
     expect(selectAlerts(input()).unowned).toEqual([]);
-    expect(selectAlerts(input({ pairs: [reverse], holdings: holdings([]) })).unowned).toEqual([]);
+    const off = new Map([[prefKey(SELLER, "have_wanted"), false]]);
+    expect(
+      selectAlerts(input({ pairs: [reverse], prefs: off, holdings: holdings([]) })).unowned,
+    ).toEqual([]);
     expect(
       selectAlerts(input({ holdings: holdings([[WANTER_ADDR, SLUG, false]]) })).unowned,
     ).toEqual([]);
+  });
+});
+
+describe("selectAlerts, Any or Can swap", () => {
+  const reverse = forward({ direction: "reverse" });
+  const mutualOnly = new Map();
+  const saleList = list(1, SELLER, { sale: true });
+
+  test("Any alerts on a one-sided match", () => {
+    const { alerts } = selectAlerts(input());
+    expect(alerts.map((alert) => alert.mode)).toEqual(["any"]);
+  });
+
+  test("a missing pref row means Can swap for both types", () => {
+    const one = input({ matches: mutualOnly });
+    expect(selectAlerts(one)).toEqual({ alerts: [], unowned: [], notMutual: [forward()] });
+    const back = input({
+      pairs: [reverse],
+      prefs: new Map(),
+      matches: mutualOnly,
+    });
+    expect(selectAlerts(back).notMutual).toEqual([reverse]);
+  });
+
+  test("Can swap alerts once the partner is mutual, and says so", () => {
+    const one = input({ matches: mutualOnly });
+    expect(mutualQuestions(one)).toEqual([
+      {
+        recipientId: WANTER,
+        list: { id: WANT.id, slug: WANT.slug },
+        partnerIds: new Set([SELLER]),
+      },
+    ]);
+    const { alerts, notMutual } = selectAlerts(one, new Set([mutualKey(WANTER, WANT.id, SELLER)]));
+    expect(alerts.map((alert) => [alert.userId, alert.mode])).toEqual([[WANTER, "mutual"]]);
+    expect(notMutual).toEqual([]);
+  });
+
+  test("a sale-list pair under Can swap is neither alerted, asked nor rechecked", () => {
+    const sale = input({
+      matches: mutualOnly,
+      lists: new Map([saleList, WANT].map((l) => [l.id, l])),
+    });
+    expect(mutualQuestions(sale)).toEqual([]);
+    expect(selectAlerts(sale, new Set([mutualKey(WANTER, WANT.id, SELLER)]))).toEqual({
+      alerts: [],
+      unowned: [],
+      notMutual: [],
+    });
+  });
+
+  test("a recipient on Any is never asked", () => {
+    expect(mutualQuestions(input())).toEqual([]);
+  });
+
+  test("mutual on another list of the recipient does not count", () => {
+    const otherWant = list(4, WANTER);
+    const one = input({ matches: mutualOnly });
+    expect(selectAlerts(one, new Set([mutualKey(WANTER, otherWant.id, SELLER)])).alerts).toEqual(
+      [],
+    );
+  });
+
+  test("a reverse pair against the recipient's own sale list under Can swap is dropped", () => {
+    const back = input({
+      pairs: [reverse],
+      matches: mutualOnly,
+      lists: new Map([saleList, WANT].map((l) => [l.id, l])),
+    });
+    expect(mutualQuestions(back)).toEqual([]);
+    expect(selectAlerts(back, new Set([mutualKey(SELLER, saleList.id, WANTER)]))).toEqual({
+      alerts: [],
+      unowned: [],
+      notMutual: [],
+    });
+  });
+
+  test("Off sends nothing and asks nothing", () => {
+    const off = input({
+      matches: mutualOnly,
+      prefs: new Map([[prefKey(WANTER, "want_match"), false]]),
+    });
+    expect(mutualQuestions(off)).toEqual([]);
+    expect(selectAlerts(off)).toEqual({ alerts: [], unowned: [], notMutual: [] });
+  });
+
+  test("an unowned pair is unowned, not not-mutual", () => {
+    const one = input({ matches: mutualOnly, holdings: holdings([]) });
+    expect(mutualQuestions(one)).toEqual([]);
+    expect(selectAlerts(one)).toEqual({ alerts: [], unowned: [forward()], notMutual: [] });
   });
 });
 

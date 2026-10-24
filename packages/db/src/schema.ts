@@ -207,8 +207,13 @@ export const notificationPref = pgTable(
       .references(() => user.id, { onDelete: "cascade" }),
     type: text("type").$type<"want_match" | "have_wanted" | "offer" | "trade">().notNull(),
     enabled: boolean("enabled").notNull(),
+    /** list alerts only: Any or Can swap; null reads as Can swap */
+    match: text("match").$type<"any" | "mutual">(),
   },
-  (t) => [primaryKey({ columns: [t.userId, t.type] })],
+  (t) => [
+    primaryKey({ columns: [t.userId, t.type] }),
+    check("notification_pref_match_chk", sql`${t.match} IN ('any', 'mutual')`),
+  ],
 );
 
 export const wantAlertSent = pgTable(

@@ -1,12 +1,26 @@
 import { publishUsers } from "@repo/api/realtime";
 import { takesPartInTrade } from "@repo/api/services/trade-lists";
+import { mutualPartnerIds } from "@repo/api/services/trade-matches/recount";
 import { db } from "@repo/db";
 import { lists } from "@repo/db/schema";
 import { and, eq, sql } from "drizzle-orm";
 
+import { chunks, unique } from "../../lib/array";
 import { heartbeat, log } from "../../lib/log";
-import { listProgress, selectAlerts } from "../../lib/want-alert-match";
-import { keepMarks, nextRecheck, overlapFloor, type State } from "../../lib/want-alert-state";
+import {
+  listProgress,
+  mutualKey,
+  type MutualQuestion,
+  mutualQuestions,
+  selectAlerts,
+} from "../../lib/want-alert-match";
+import {
+  keepMarks,
+  MUTUAL_RECHECK_LIMIT,
+  nextRecheck,
+  overlapFloor,
+  type State,
+} from "../../lib/want-alert-state";
 import { loadContext } from "./context";
 import { type Pair, fetchPairs, takeWhole } from "./pairs";
 import { loadProgress } from "./progress";
@@ -91,8 +105,10 @@ export async function sendWantAlerts() {
         );
   const resume = listProgress(pending, storedProgress, newLists.taken, newLists.complete);
 
-  // entries whose owner could not trade them yet, read again until their 24 hours are up
-  const recheckIds = (state.recheck ?? []).map(([id]) => id);
+  // entries not owned or not mutual yet, read again until their 24 hours are up
+  const recheckIds = unique(
+    [...(state.recheck ?? []), ...(state.mutualRecheck ?? [])].map(([id]) => id),
+  );
   const rechecked =
     recheckIds.length === 0
       ? []
@@ -101,17 +117,33 @@ export async function sendWantAlerts() {
   const pairs = [...overlap, ...fresh.taken, ...newLists.taken, ...rechecked].toSorted(
     (a, b) => b.entryId - a.entryId,
   );
-  const { alerts, unowned } =
-    pairs.length === 0
-      ? { alerts: [], unowned: [] as Pair[] }
-      : selectAlerts(await loadContext(pairs));
+  const context = pairs.length === 0 ? null : await loadContext(pairs);
+  const asks = context ? mutualQuestions(context) : [];
+  const { mutual, failed } = await mutualPairs(asks);
+  if (failed > 0) {
+    alertsLog.warn(`Can swap check failed for ${failed} recipients; their entries wait a run`);
+  }
+  const { alerts, unowned, notMutual } = context
+    ? selectAlerts(context, mutual)
+    : { alerts: [], unowned: [] as Pair[], notMutual: [] as Pair[] };
   const recheck = nextRecheck(
     state.recheck ?? [],
     unowned.map((pair) => pair.entryId),
     nowMs,
   );
+  const mutualRecheck = nextRecheck(
+    state.mutualRecheck ?? [],
+    notMutual.map((pair) => pair.entryId),
+    nowMs,
+    MUTUAL_RECHECK_LIMIT,
+  );
   if (recheck.dropped > 0) {
     alertsLog.warn(`Recheck list full; dropped the ${recheck.dropped} oldest entries`);
+  }
+  if (mutualRecheck.dropped > 0) {
+    alertsLog.warn(
+      `Can swap recheck list full; dropped the ${mutualRecheck.dropped} oldest entries`,
+    );
   }
   const unfinished = new Set(pending.filter((id) => !resume.done.includes(id)));
   const next: State = {
@@ -119,6 +151,7 @@ export async function sendWantAlerts() {
     marks: keepMarks(state.marks, [nowMs, maxId]),
     progress: [...resume.progress],
     recheck: recheck.recheck,
+    mutualRecheck: mutualRecheck.recheck,
   };
   const notified = await recordRun(alerts, new Date(nowMs), {
     cursor: nextCursor,
@@ -133,6 +166,7 @@ export async function sendWantAlerts() {
   alertsBeat.count("pairs", pairs.length);
   alertsBeat.count("alerts", alerts.length);
   alertsBeat.count("rechecked", recheckIds.length);
+  alertsBeat.count("mutual checks", asks.length);
   alertsBeat.max("most behind", maxId - nextCursor);
   // a run that sent nothing is counted in the hourly line only
   if (alerts.length > 0) {
@@ -141,4 +175,30 @@ export async function sendWantAlerts() {
     );
   }
   alertsBeat.flush();
+}
+
+const MUTUAL_CONCURRENCY = 4;
+
+/**
+ * For you's Mutual, read live once per Can swap recipient and alert list, as `mutualKey`s. A
+ * failed read counts as not mutual, so its entries wait in the recheck list for the next run.
+ */
+async function mutualPairs(asks: MutualQuestion[]) {
+  const mutual = new Set<string>();
+  let failed = 0;
+  for (const batch of chunks(asks, MUTUAL_CONCURRENCY)) {
+    await Promise.all(
+      batch.map(async ({ recipientId, list, partnerIds }) => {
+        try {
+          for (const partnerId of await mutualPartnerIds(recipientId, list.slug, [...partnerIds])) {
+            mutual.add(mutualKey(recipientId, list.id, partnerId));
+          }
+        } catch (error) {
+          failed++;
+          alertsLog.debug(`Can swap check failed for ${recipientId}`, error);
+        }
+      }),
+    );
+  }
+  return { mutual, failed };
 }
