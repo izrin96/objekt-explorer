@@ -88,7 +88,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
     const meta = [
       { charSet: "utf-8" },
       { title: pageTitle() },
-      { name: "description", content: m.home_description() },
+      { name: "description", content: m.home_meta_description() },
       { name: "application-name", content: SITE_NAME },
       { name: "keywords", content: KEYWORDS.join(",") },
       { name: "referrer", content: "origin-when-cross-origin" },
