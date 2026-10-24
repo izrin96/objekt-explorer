@@ -83,13 +83,13 @@ describe("toBrowseInput", () => {
     expect(input).not.toHaveProperty("matches");
   });
 
-  test("a list the Post type can't use is not sent", () => {
+  test("the Post type never drops a list, Mutual drops a one-way one", () => {
     const send = (input: Record<string, unknown>) =>
       toBrowseInput(parse(input), artists, [], "forYou", lists).list;
-    expect(send({ type: "wtb", list: "lone-want" })).toBeUndefined();
-    expect(send({ type: "wts", list: "spares" })).toBeUndefined();
-    expect(send({ type: "wtb", list: "spares" })).toBe("spares");
-    expect(send({ list: "lone-want" })).toBe("lone-want");
+    expect(send({ type: "wtb", list: "lone-want" })).toBe("lone-want");
+    expect(send({ type: "wts", list: "spares" })).toBe("spares");
+    expect(send({ match: "mutual", list: "lone-want" })).toBeUndefined();
+    expect(send({ match: "mutual", list: "spares" })).toBe("spares");
   });
 
   test("a list that is not the viewer's is not sent", () => {

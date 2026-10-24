@@ -23,9 +23,6 @@ const COUNT_CAP = 99;
 
 const REFUSAL_TEXT: Record<CompareRefusal, () => string> = {
   oneWay: m.trade_compare_why_one_way,
-  wtb: m.trade_compare_why_wtb,
-  wts: m.trade_compare_why_wts,
-  wtt: m.trade_compare_why_wtt,
 };
 
 type Mode = "any" | "mutual";
