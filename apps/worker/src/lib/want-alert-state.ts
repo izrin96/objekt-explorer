@@ -1,5 +1,7 @@
 export const OVERLAP_MS = 10 * 60 * 1000;
 export const MARK_SPACING_MS = 60 * 1000;
+export const RECHECK_MS = 24 * 60 * 60 * 1000;
+export const RECHECK_LIMIT = 20_000;
 
 /**
  * `marks` are each run's time and highest visible entry id. An id is assigned when
@@ -8,11 +10,14 @@ export const MARK_SPACING_MS = 60 * 1000;
  * `want_alert_sent` absorbs the repeats.
  * `progress` holds, for a newly discoverable list not yet read to the end, the last
  * entry id read; such a list stays out of `discoverable` until it is done.
+ * `recheck` holds entries left out only because their owner could not trade them yet, each
+ * with the time a run first left it out; they are read again until `RECHECK_MS` has passed.
  */
 export type State = {
   discoverable: number[];
   marks: [number, number][];
   progress?: [number, number][];
+  recheck?: [number, number][];
 };
 
 type Mark = [number, number];
@@ -50,7 +55,22 @@ function isMark(value: unknown): value is Mark {
 
 export function parseState(value: unknown): State | null {
   if (typeof value !== "object" || value === null) return null;
-  const { discoverable, marks } = value as Partial<State>;
+  const { discoverable, marks, recheck } = value as Partial<State>;
   if (!Array.isArray(discoverable) || !Array.isArray(marks) || !marks.every(isMark)) return null;
+  if (recheck !== undefined && !(Array.isArray(recheck) && recheck.every(isMark))) return null;
   return value as State;
+}
+
+/**
+ * The entries to read again next run: this run's `unowned`, each keeping the time it was first
+ * left out, younger than `RECHECK_MS`, at most `RECHECK_LIMIT` with the oldest dropped first.
+ */
+export function nextRecheck(previous: [number, number][], unowned: number[], nowMs: number) {
+  const firstSeen = new Map(previous);
+  const kept = [...new Set(unowned)]
+    .map((id): [number, number] => [id, firstSeen.get(id) ?? nowMs])
+    .filter(([, at]) => nowMs - at < RECHECK_MS)
+    .toSorted((a, b) => a[1] - b[1] || a[0] - b[0]);
+  const dropped = Math.max(kept.length - RECHECK_LIMIT, 0);
+  return { recheck: kept.slice(dropped), dropped };
 }

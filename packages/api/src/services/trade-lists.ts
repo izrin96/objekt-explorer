@@ -1,6 +1,8 @@
 import { lists } from "@repo/db/schema";
 import { type SQL, and, eq, inArray, or, sql } from "drizzle-orm";
 
+import { notBlockedEither, notTradeSanctioned, ref, type UserRef } from "./safety";
+
 /**
  * Which lists Trade uses. Want lists always take part; have and sale lists offer their
  * objekts only while bound to a Cosmo profile, never everything a wallet holds.
@@ -30,3 +32,15 @@ export const offerMatchesWantSql = (offer: string, want: string) =>
 /** {@link takesPartInTrade} over a raw `lists` row, aliased or not. */
 export const takesPartInTradeSql = (alias?: string) =>
   sql`(${column(alias, "list_type")} = 'want' OR ${offersOnTradeSql(alias)})`;
+
+/**
+ * Whether `viewer` sees `partner`'s lists on Trade: not hidden by the viewer, no block either
+ * way, no trade block on the partner. For you and want-list alerts both apply it.
+ */
+export const tradePartnerSql = (viewer: UserRef, partner: UserRef) =>
+  sql`(NOT EXISTS (
+      SELECT 1 FROM hidden_trade_partner h
+      WHERE h.user_id = ${ref(viewer)} AND h.hidden_user_id = ${ref(partner)}
+    )
+    AND ${notBlockedEither(viewer, partner)}
+    AND ${notTradeSanctioned(partner)})`;

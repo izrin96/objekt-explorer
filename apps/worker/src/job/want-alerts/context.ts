@@ -7,19 +7,13 @@ import {
 import { NOTIFICATION_TYPES } from "@repo/api/schemas/notification";
 import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
-import { hiddenTradePartner, lists, notificationPref, user, userAddress } from "@repo/db/schema";
+import { lists, notificationPref, user, userAddress } from "@repo/db/schema";
 import { and, asc, inArray, sql } from "drizzle-orm";
 
 import { unique } from "../../lib/array";
-import {
-  type Alert,
-  type AlertList,
-  type AlertPair,
-  hiddenKey,
-  prefKey,
-} from "../../lib/want-alert-match";
+import { type Alert, type AlertList, type AlertPair, prefKey } from "../../lib/want-alert-match";
 
-export async function loadContext(pairs: AlertPair[]) {
+export async function loadContext<P extends AlertPair>(pairs: P[]) {
   const listIds = unique(pairs.flatMap((pair) => [pair.offerListId, pair.wantListId]));
   const listRows = await db
     .select({
@@ -33,7 +27,7 @@ export async function loadContext(pairs: AlertPair[]) {
     .where(inArray(lists.id, listIds));
   const userIds = unique(listRows.map((list) => list.userId));
 
-  const [users, addressRows, prefRows, hiddenRows] = await Promise.all([
+  const [users, addressRows, prefRows] = await Promise.all([
     db.select({ id: user.id, name: user.name }).from(user).where(inArray(user.id, userIds)),
     db
       .select({
@@ -56,7 +50,6 @@ export async function loadContext(pairs: AlertPair[]) {
           inArray(notificationPref.type, [...NOTIFICATION_TYPES]),
         ),
       ),
-    db.select().from(hiddenTradePartner).where(inArray(hiddenTradePartner.userId, userIds)),
   ]);
 
   const nameOf = new Map(users.map((u) => [u.id, u.name]));
@@ -94,7 +87,6 @@ export async function loadContext(pairs: AlertPair[]) {
     prefs: new Map(
       prefRows.map((row) => [prefKey(row.userId, row.type as Alert["type"]), row.enabled]),
     ),
-    hidden: new Set(hiddenRows.map((row) => hiddenKey(row.userId, row.hiddenUserId))),
   };
 }
 

@@ -2,9 +2,9 @@ import { db } from "@repo/db";
 import { userSanction } from "@repo/db/schema";
 import { and, gt, isNull, ne, or, type SQL, sql } from "drizzle-orm";
 
-type UserRef = SQL | string;
+export type UserRef = SQL | string;
 
-const ref = (user: UserRef) => (typeof user === "string" ? sql`${user}` : user);
+export const ref = (user: UserRef) => (typeof user === "string" ? sql`${user}` : user);
 
 /** Neither account has blocked the other. */
 export function notBlockedEither(a: UserRef, b: UserRef) {

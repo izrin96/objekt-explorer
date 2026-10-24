@@ -26,17 +26,15 @@ export type AlertPair = {
   objektId: string | null;
 };
 
-export type AlertInput = {
+export type AlertInput<P extends AlertPair = AlertPair> = {
   /** newest first */
-  pairs: AlertPair[];
+  pairs: P[];
   lists: ReadonlyMap<number, AlertList>;
   /** lowercase addresses by user id */
   addresses: ReadonlyMap<string, ReadonlySet<string>>;
   holdings: Holdings;
   /** keyed by `prefKey`; a missing key takes the type's default */
   prefs: ReadonlyMap<string, boolean>;
-  /** keyed by `hiddenKey(user, hidden user)` */
-  hidden: ReadonlySet<string>;
 };
 
 export type AlertKey = { wantListId: number; sourceListId: number; collectionSlug: string };
@@ -53,13 +51,17 @@ export const alertKeyId = (key: AlertKey) =>
   `${key.wantListId}:${key.sourceListId}:${key.collectionSlug}`;
 
 export const prefKey = (userId: string, type: NotificationType) => `${userId}:${type}`;
-export const hiddenKey = (userId: string, hiddenUserId: string) => `${userId}:${hiddenUserId}`;
 
 const none: ReadonlySet<string> = new Set();
 
-/** One alert per direction, want list, offer list and collection, after every exclusion. */
-export function selectAlerts(input: AlertInput): Alert[] {
-  const groups = new Map<string, AlertPair[]>();
+/**
+ * One alert per direction, want list, offer list and collection, after every exclusion.
+ * `unowned` are the pairs left out only because the offer's owner cannot trade it yet.
+ */
+export function selectAlerts<P extends AlertPair>(
+  input: AlertInput<P>,
+): { alerts: Alert[]; unowned: P[] } {
+  const groups = new Map<string, P[]>();
   for (const pair of input.pairs) {
     const id = `${pair.direction}:${alertKeyId({
       wantListId: pair.wantListId,
@@ -72,6 +74,7 @@ export function selectAlerts(input: AlertInput): Alert[] {
   }
 
   const alerts: Alert[] = [];
+  const unowned: P[] = [];
   for (const group of groups.values()) {
     const [first] = group;
     if (!first) continue;
@@ -87,19 +90,21 @@ export function selectAlerts(input: AlertInput): Alert[] {
     if (!(input.prefs.get(prefKey(recipient.userId, type)) ?? NOTIFICATION_DEFAULTS[type])) {
       continue;
     }
-    if (input.hidden.has(hiddenKey(recipient.userId, partner.userId))) continue;
+
+    const wanterHolds = [...(input.addresses.get(want.userId) ?? none)].some((address) =>
+      input.holdings.copies.has(copyKey(address, first.slug)),
+    );
+    if (wanterHolds) continue;
 
     const { verdict } = collectionVerdict(
       group.map((pair) => ({ listId: pair.offerListId, slug: pair.slug, objektId: pair.objektId })),
       input.addresses.get(offer.userId) ?? none,
       input.holdings,
     );
-    if (verdict !== "ok") continue;
-
-    const wanterHolds = [...(input.addresses.get(want.userId) ?? none)].some((address) =>
-      input.holdings.copies.has(copyKey(address, first.slug)),
-    );
-    if (wanterHolds) continue;
+    if (verdict !== "ok") {
+      unowned.push(...group);
+      continue;
+    }
 
     alerts.push({
       type,
@@ -113,7 +118,7 @@ export function selectAlerts(input: AlertInput): Alert[] {
       },
     });
   }
-  return alerts;
+  return { alerts, unowned };
 }
 
 export type Cut<T> =

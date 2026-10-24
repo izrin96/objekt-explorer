@@ -6,7 +6,7 @@ import { and, eq, sql } from "drizzle-orm";
 
 import { heartbeat, log } from "../../lib/log";
 import { listProgress, selectAlerts } from "../../lib/want-alert-match";
-import { keepMarks, overlapFloor, type State } from "../../lib/want-alert-state";
+import { keepMarks, nextRecheck, overlapFloor, type State } from "../../lib/want-alert-state";
 import { loadContext } from "./context";
 import { type Pair, fetchPairs, takeWhole } from "./pairs";
 import { loadProgress } from "./progress";
@@ -91,15 +91,34 @@ export async function sendWantAlerts() {
         );
   const resume = listProgress(pending, storedProgress, newLists.taken, newLists.complete);
 
-  const pairs = [...overlap, ...fresh.taken, ...newLists.taken].toSorted(
+  // entries whose owner could not trade them yet, read again until their 24 hours are up
+  const recheckIds = (state.recheck ?? []).map(([id]) => id);
+  const rechecked =
+    recheckIds.length === 0
+      ? []
+      : await fetchPairs(sql`e.id = ANY(${sql.param(recheckIds)}::int[])`, "entry", null);
+
+  const pairs = [...overlap, ...fresh.taken, ...newLists.taken, ...rechecked].toSorted(
     (a, b) => b.entryId - a.entryId,
   );
-  const alerts = pairs.length === 0 ? [] : selectAlerts(await loadContext(pairs));
+  const { alerts, unowned } =
+    pairs.length === 0
+      ? { alerts: [], unowned: [] as Pair[] }
+      : selectAlerts(await loadContext(pairs));
+  const recheck = nextRecheck(
+    state.recheck ?? [],
+    unowned.map((pair) => pair.entryId),
+    nowMs,
+  );
+  if (recheck.dropped > 0) {
+    alertsLog.warn(`Recheck list full; dropped the ${recheck.dropped} oldest entries`);
+  }
   const unfinished = new Set(pending.filter((id) => !resume.done.includes(id)));
   const next: State = {
     discoverable: discoverable.map((list) => list.id).filter((id) => !unfinished.has(id)),
     marks: keepMarks(state.marks, [nowMs, maxId]),
     progress: [...resume.progress],
+    recheck: recheck.recheck,
   };
   const notified = await recordRun(alerts, new Date(nowMs), {
     cursor: nextCursor,
@@ -113,6 +132,7 @@ export async function sendWantAlerts() {
   alertsBeat.count("runs");
   alertsBeat.count("pairs", pairs.length);
   alertsBeat.count("alerts", alerts.length);
+  alertsBeat.count("rechecked", recheckIds.length);
   alertsBeat.max("most behind", maxId - nextCursor);
   // a run that sent nothing is counted in the hourly line only
   if (alerts.length > 0) {

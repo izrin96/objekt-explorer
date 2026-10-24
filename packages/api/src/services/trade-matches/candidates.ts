@@ -3,9 +3,8 @@ import { sql } from "drizzle-orm";
 
 import { CANDIDATE_LIMIT, type Candidate, type TheyWant } from "../../lib/trade-rank";
 import type { TradeFilter } from "../../schemas/trade";
-import { notBlockedEither, notTradeSanctioned } from "../safety";
-import { listedPost, postsCte } from "../trade-feed/query";
-import { offerMatchesWantSql, takesPartInTradeSql } from "../trade-lists";
+import { listedCte, postsCte } from "../trade-feed/query";
+import { offerMatchesWantSql, takesPartInTradeSql, tradePartnerSql } from "../trade-lists";
 
 const HAVING: Record<TradeFilter, ReturnType<typeof sql>> = {
   all: sql``,
@@ -52,11 +51,7 @@ export async function fetchTradeCandidates(
   const result = await db.execute<CandidateRow>(sql`
     WITH ${postsCte},
     -- a set, so each list is one hash lookup rather than a scan of posts
-    listed AS (
-      SELECT id FROM posts WHERE ${listedPost}
-      UNION
-      SELECT partner_id FROM posts WHERE ${listedPost} AND partner_id IS NOT NULL
-    ),
+    ${listedCte},
     my_want AS (
       SELECT e.collection_slug, bool_or(l.match_sale) AS match_sale, bool_or(l.match_have) AS match_have
       FROM list_entries e
@@ -80,12 +75,7 @@ export async function fetchTradeCandidates(
         -- an idle list does not count: a pair's lists share the pair's freshness
         AND l.id IN (SELECT id FROM listed)
         ${ownerIds ? sql`AND l.user_id = ANY(${sql.param(ownerIds)}::text[])` : sql``}
-        AND NOT EXISTS (
-          SELECT 1 FROM hidden_trade_partner h
-          WHERE h.user_id = ${userId} AND h.hidden_user_id = l.user_id
-        )
-        AND ${notBlockedEither(userId, sql`l.user_id`)}
-        AND ${notTradeSanctioned(sql`l.user_id`)}
+        AND ${tradePartnerSql(userId, sql`l.user_id`)}
     ),
     matched AS (
       SELECT p.user_id, p.id AS list_id, p.updated_at, p.match_sale, p.match_have, true AS they_have,

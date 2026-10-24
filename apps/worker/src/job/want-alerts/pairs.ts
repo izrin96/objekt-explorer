@@ -1,8 +1,10 @@
-import { notBlockedEither, notTradeSanctioned } from "@repo/api/services/safety";
+import { notTradeSanctioned } from "@repo/api/services/safety";
+import { listedCte, postsCte } from "@repo/api/services/trade-feed/query";
 import {
   offerMatchesWantSql,
   offersOnTradeSql,
   takesPartInTradeSql,
+  tradePartnerSql,
 } from "@repo/api/services/trade-lists";
 import { db } from "@repo/db";
 import { type SQL, sql } from "drizzle-orm";
@@ -33,16 +35,22 @@ export async function takeWhole(where: SQL, order: Order, limit: number) {
   } as const;
 }
 
-/** Unsent pairs whose new side is a discoverable list's entry matching `where`, in `order`. */
+/**
+ * Unsent pairs whose new side is an entry matching `where` on a list that is on Trade and not idle,
+ * from a partner the recipient sees on For you (`tradePartnerSql`), in `order`.
+ */
 export async function fetchPairs(where: SQL, order: Order, limit: number | null): Promise<Pair[]> {
   const result = await db.execute<PairRow>(sql`
-    WITH cand AS (
+    WITH ${postsCte},
+    ${listedCte},
+    cand AS (
       SELECT e.id, e.list_id, e.collection_slug AS slug, e.objekt_id, l.list_type,
         l.match_sale, l.match_have, l.user_id
       FROM list_entries e
       JOIN lists l ON l.id = e.list_id
       WHERE l.discoverable
         AND ${takesPartInTradeSql("l")}
+        AND l.id IN (SELECT id FROM listed)
         AND e.collection_slug IS NOT NULL
         AND ${where}
     ),
@@ -67,7 +75,11 @@ export async function fetchPairs(where: SQL, order: Order, limit: number | null)
         AND ol.user_id <> c.user_id
     )
     SELECT entry_id, list_id, direction, offer_list_id, want_list_id, slug, objekt_id FROM pairs p
-    WHERE ${notBlockedEither(sql`p.want_user_id`, sql`p.offer_user_id`)}
+    -- the new entry's owner is the partner, seen by the recipient as For you sees them
+    WHERE CASE p.direction
+        WHEN 'forward' THEN ${tradePartnerSql(sql`p.want_user_id`, sql`p.offer_user_id`)}
+        ELSE ${tradePartnerSql(sql`p.offer_user_id`, sql`p.want_user_id`)}
+      END
       AND ${notTradeSanctioned(sql`p.offer_user_id`)}
       AND ${notTradeSanctioned(sql`p.want_user_id`)}
       AND NOT EXISTS (

@@ -4,8 +4,11 @@ import {
   keepMarks,
   MARK_SPACING_MS,
   OVERLAP_MS,
+  nextRecheck,
   overlapFloor,
   parseState,
+  RECHECK_LIMIT,
+  RECHECK_MS,
 } from "./want-alert-state";
 
 const MIN = 60 * 1000;
@@ -91,5 +94,45 @@ describe("parseState", () => {
     expect(parseState({ discoverable: [], marks: [[1]] })).toBeNull();
     expect(parseState({ discoverable: [], marks: [["a", 1]] })).toBeNull();
     expect(parseState({ discoverable: [], marks: [1] })).toBeNull();
+  });
+});
+
+describe("nextRecheck", () => {
+  test("a new id starts now, and a kept one keeps its first time", () => {
+    expect(nextRecheck([[1, 100]], [1, 2], 500)).toEqual({
+      recheck: [
+        [1, 100],
+        [2, 500],
+      ],
+      dropped: 0,
+    });
+  });
+
+  test("an id no longer unowned leaves", () => {
+    expect(nextRecheck([[1, 100]], [], 500).recheck).toEqual([]);
+  });
+
+  test("an id leaves once 24 hours have passed", () => {
+    expect(nextRecheck([[1, 0]], [1], RECHECK_MS - 1).recheck).toEqual([[1, 0]]);
+    expect(nextRecheck([[1, 0]], [1], RECHECK_MS).recheck).toEqual([]);
+  });
+
+  test("past the limit the oldest are dropped", () => {
+    const previous: [number, number][] = Array.from({ length: RECHECK_LIMIT }, (_, i) => [i, i]);
+    const result = nextRecheck(previous, [...previous.map(([id]) => id), -1], RECHECK_LIMIT);
+    expect(result.dropped).toBe(1);
+    expect(result.recheck).toHaveLength(RECHECK_LIMIT);
+    expect(result.recheck[0]).toEqual([1, 1]);
+    expect(result.recheck.at(-1)).toEqual([-1, RECHECK_LIMIT]);
+  });
+});
+
+describe("parseState and recheck", () => {
+  test("a row from before recheck still parses", () => {
+    expect(parseState({ discoverable: [], marks: [] })).toEqual({ discoverable: [], marks: [] });
+  });
+
+  test("a malformed recheck is unreadable", () => {
+    expect(parseState({ discoverable: [], marks: [], recheck: [[1]] })).toBeNull();
   });
 });

@@ -67,6 +67,15 @@ export const postsCte = sql`
 
 export const listedPost = sql`greatest(posts.bumped_at, posts.updated_at) > now() - make_interval(days => ${IDLE_DAYS})`;
 
+/** The lists inside a listed post, as a set; follows {@link postsCte}. An idle list is in no post. */
+export const listedCte = sql`
+  listed AS (
+    SELECT id FROM posts WHERE ${listedPost}
+    UNION
+    SELECT partner_id FROM posts WHERE ${listedPost} AND partner_id IS NOT NULL
+  )
+`;
+
 const hasEntryIn = (listIds: SQL, slugs: string[]) =>
   sql`EXISTS (
     SELECT 1 FROM list_entries e
