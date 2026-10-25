@@ -96,22 +96,30 @@ export async function readRule(
  * Makes a rule's entries match `slugs`: inserts the missing, deletes the extra, and
  * keeps every other row and its id, so the alert cursor never reads them as new.
  * Returns whether anything changed; false too when the rule is gone.
+ *
+ * `readAt` is the rule's `updated_at` when its slugs were worked out: a rule edited since then
+ * writes nothing, so a refresh never puts back what the owner just changed.
  */
-export async function syncRuleEntries(ruleId: number, slugs: readonly string[]) {
-  return db.transaction((tx) => syncRuleEntriesTx(tx, ruleId, slugs));
+export async function syncRuleEntries(ruleId: number, slugs: readonly string[], readAt?: string) {
+  return db.transaction((tx) => syncRuleEntriesTx(tx, ruleId, slugs, readAt));
 }
 
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
 /** `syncRuleEntries` inside the caller's transaction, so a rule and its entries land together. */
-export async function syncRuleEntriesTx(tx: Tx, ruleId: number, slugs: readonly string[]) {
+export async function syncRuleEntriesTx(
+  tx: Tx,
+  ruleId: number,
+  slugs: readonly string[],
+  readAt?: string,
+) {
   // one writer per rule: a save and the worker's refresh never both insert a slug
   const [rule] = await tx
-    .select({ listId: listRule.listId })
+    .select({ listId: listRule.listId, updatedAt: listRule.updatedAt })
     .from(listRule)
     .where(eq(listRule.id, ruleId))
     .for("update");
-  if (!rule) return false;
+  if (!rule || (readAt !== undefined && rule.updatedAt !== readAt)) return false;
 
   const current = await tx
     .select({ id: listEntries.id, slug: listEntries.collectionSlug })

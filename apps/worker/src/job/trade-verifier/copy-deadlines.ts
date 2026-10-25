@@ -213,6 +213,8 @@ async function acceptDue(seenUntil: string, skips: RunSkips) {
 
   const publishes: Publish[] = [];
   for (const tradeId of due) {
+    // a trade whose settle failed this run may hold the asked-for objekt unrecorded
+    if (skips.has(tradeId)) continue;
     const publish = await skips.step(tradeId, () =>
       db.transaction(async (tx) => {
         const settled = await lockTrade(tx, tradeId);
@@ -257,6 +259,7 @@ async function remindDue(seenUntil: string, skips: RunSkips) {
 
   const publishes: Publish[] = [];
   for (const tradeId of candidates) {
+    if (skips.has(tradeId)) continue;
     const publish = await skips.step(tradeId, () =>
       db.transaction(async (tx) => {
         const settled = await lockTrade(tx, tradeId);

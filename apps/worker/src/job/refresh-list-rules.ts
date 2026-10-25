@@ -42,6 +42,7 @@ export async function refreshListRules() {
           id: listRule.id,
           listId: listRule.listId,
           userId: lists.userId,
+          updatedAt: listRule.updatedAt,
           kind: listRule.kind,
           artist: listRule.artist,
           season: listRule.season,
@@ -60,7 +61,7 @@ export async function refreshListRules() {
       if (page.length === 0) break;
       after = page.at(-1)!.id;
 
-      for (const { id, listId, userId, ...def } of page) {
+      for (const { id, listId, userId, updatedAt, ...def } of page) {
         const key = collectionsKey(def);
         if (!collections.has(key)) collections.set(key, ruleCollections(def));
         if (!addresses.has(userId)) addresses.set(userId, linkedAddresses(userId));
@@ -76,7 +77,7 @@ export async function refreshListRules() {
           tooWide += 1;
           continue;
         }
-        if (await syncRuleEntries(id, reading.slugs)) {
+        if (await syncRuleEntries(id, reading.slugs, updatedAt)) {
           changed += 1;
           changedLists.add(listId);
           changedOwners.add(userId);
