@@ -111,19 +111,25 @@ export function useProfileObjekts() {
     enabled: !hasNextPage,
   });
 
-  const derived = useMemo(() => {
-    const withMarks = deferredFilters.at
-      ? objekts
-      : objekts.map((objekt) => {
-          if (!isObjektOwned(objekt)) return objekt;
-          const pinOrder = pins.get(objekt.tokenId);
-          return Object.assign({}, objekt, {
-            isPin: pinOrder !== undefined,
-            isLocked: locks.has(objekt.tokenId),
-            pinOrder: pinOrder ?? null,
-          } satisfies PinState);
-        });
+  // apart from the filters, so a filter change doesn't copy every objekt again
+  const pastState = Boolean(deferredFilters.at);
+  const withMarks = useMemo(
+    () =>
+      pastState
+        ? objekts
+        : objekts.map((objekt) => {
+            if (!isObjektOwned(objekt)) return objekt;
+            const pinOrder = pins.get(objekt.tokenId);
+            return Object.assign({}, objekt, {
+              isPin: pinOrder !== undefined,
+              isLocked: locks.has(objekt.tokenId),
+              pinOrder: pinOrder ?? null,
+            } satisfies PinState);
+          }),
+    [pastState, objekts, pins, locks],
+  );
 
+  const derived = useMemo(() => {
     const owned = filterObjekts(deferredFilters, withMarks);
     const ownedSlugs = new Set(owned.map((objekt) => objekt.slug));
     const missing =
@@ -136,7 +142,7 @@ export function useProfileObjekts() {
 
     const filtered: GridObjekt[] = [...owned, ...missing];
     return { filtered, ownedSlugs, allOwned: withMarks };
-  }, [deferredFilters, objekts, pins, locks, collections.data]);
+  }, [deferredFilters, withMarks, collections.data]);
 
   return {
     ...derived,

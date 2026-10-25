@@ -218,6 +218,29 @@ export function filterObjekts<T extends GridObjekt>(
   });
 }
 
+// one collator for every comparison: `localeCompare` builds one per call
+const collator = new Intl.Collator();
+
+/**
+ * Each distinct value's place under `compare`, equal values sharing one: a grid holds few members,
+ * seasons and numbers, so they are compared once each rather than on every comparison.
+ */
+function ranks(values: Iterable<string>, compare: (a: string, b: string) => number) {
+  const rank = new Map<string, number>();
+  let previous: string | undefined;
+  let place = 0;
+  for (const value of [...new Set(values)].toSorted(compare)) {
+    if (previous !== undefined && compare(previous, value) !== 0) place += 1;
+    rank.set(value, place);
+    previous = value;
+  }
+  return rank;
+}
+
+/**
+ * One stable sort per mode: each comparator reads its keys most significant first, as a chain of
+ * stable sorts would by sorting the least significant key first.
+ */
 export function sortObjekts<T extends GridObjekt>(
   data: T[],
   filters: FilterSearch,
@@ -229,42 +252,51 @@ export function sortObjekts<T extends GridObjekt>(
 
   const sort = filters.sort ?? DEFAULT_SORT;
   const sortDir = filters.sort_dir ?? DEFAULT_SORT_DIR;
+  const dir = sortDir === "asc" ? 1 : -1;
 
   if (sort === "date" || sort === "rare") {
-    if (sortDir === "desc") {
-      objekts = objekts.toSorted((a, b) => getSortDate(b) - getSortDate(a));
-    } else {
-      objekts = objekts.toSorted((a, b) => getSortDate(a) - getSortDate(b));
-    }
-
-    if (sort === "rare") {
-      if (!rarityMap) return [];
-
-      objekts = objekts.toSorted((a, b) => {
-        const countA = rarityMap.get(a.slug) ?? Infinity;
-        const countB = rarityMap.get(b.slug) ?? Infinity;
-
-        if (sortDir === "asc") {
-          return countA - countB;
-        } else {
-          return countB - countA;
-        }
-      });
-    }
-  } else if (sort === "season" || sort === "collectionNo") {
-    objekts = objekts.toSorted((a, b) => compareMember(a.member, b.member));
-
-    if (sortDir === "asc") {
-      objekts = objekts.toSorted((a, b) => a.collectionNo.localeCompare(b.collectionNo));
-      if (sort === "season") {
-        objekts = objekts.toSorted((a, b) => compareSeason(a.season, b.season));
-      }
-    } else {
-      objekts = objekts.toSorted((a, b) => b.collectionNo.localeCompare(a.collectionNo));
-      if (sort === "season") {
-        objekts = objekts.toSorted((a, b) => compareSeason(b.season, a.season));
-      }
-    }
+    if (sort === "rare" && !rarityMap) return [];
+    // a date parses once per objekt, not once per comparison
+    const keyed = objekts.map((objekt) => ({
+      objekt,
+      date: getSortDate(objekt),
+      rarity: rarityMap ? (rarityMap.get(objekt.slug) ?? Infinity) : 0,
+    }));
+    keyed.sort((a, b) => {
+      if (sort === "rare" && a.rarity !== b.rarity) return dir * (a.rarity - b.rarity);
+      return dir * (a.date - b.date);
+    });
+    objekts = keyed.map((entry) => entry.objekt);
+  } else if (sort === "season" || sort === "collectionNo" || sort === "member") {
+    const member = ranks(
+      objekts.map((objekt) => objekt.member),
+      compareMember,
+    );
+    const season = ranks(
+      objekts.map((objekt) => objekt.season),
+      compareSeason,
+    );
+    const number = ranks(
+      objekts.map((objekt) => objekt.collectionNo),
+      collator.compare,
+    );
+    const keyed = objekts.map((objekt) => ({
+      objekt,
+      member: member.get(objekt.member)!,
+      season: season.get(objekt.season)!,
+      number: number.get(objekt.collectionNo)!,
+    }));
+    keyed.sort(
+      sort === "member"
+        ? // only the member follows the direction; season and number always run ascending
+          (a, b) => dir * (a.member - b.member) || a.season - b.season || a.number - b.number
+        : // the member always runs in roster order, whichever way the rest runs
+          (a, b) =>
+            (sort === "season" ? dir * (a.season - b.season) : 0) ||
+            dir * (a.number - b.number) ||
+            a.member - b.member,
+    );
+    objekts = keyed.map((entry) => entry.objekt);
   } else if (sort === "serial") {
     if (sortDir === "desc") {
       objekts = objekts.toSorted((a, b) =>
@@ -274,16 +306,6 @@ export function sortObjekts<T extends GridObjekt>(
       objekts = objekts.toSorted((a, b) =>
         isObjektOwned(a) && isObjektOwned(b) ? a.serial - b.serial : 0,
       );
-    }
-  } else if (sort === "member") {
-    objekts = objekts
-      .toSorted((a, b) => a.collectionNo.localeCompare(b.collectionNo))
-      .toSorted((a, b) => compareSeason(a.season, b.season));
-
-    if (sortDir === "asc") {
-      objekts = objekts.toSorted((a, b) => compareMember(a.member, b.member));
-    } else {
-      objekts = objekts.toSorted((a, b) => compareMember(b.member, a.member));
     }
   } else if (sort === "price") {
     objekts = objekts.toSorted((a, b) => {
