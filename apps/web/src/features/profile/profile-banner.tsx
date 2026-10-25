@@ -79,11 +79,12 @@ export function ProfileBanner({ profile }: { profile: PublicProfile }) {
         style={{ height: `${hidden ? HINT_HEIGHT : height}px` }}
       >
         {media}
-        <GradientBanner className={hidden ? "from-0% backdrop-blur-2xl" : "backdrop-blur-xl"} />
         {/* the identity block reads in `text-foreground`, so the wash pulls the
             strip toward the page rather than always darkening it — a black
-            scrim leaves near-black text on a dark banner in the light theme */}
+            scrim leaves near-black text on a dark banner in the light theme.
+            It sits under the gradient so the strip still ends on the page colour */}
         {hidden && <div className="bg-background/85 absolute inset-0 dark:bg-black/35" />}
+        <GradientBanner className={hidden ? "from-0% backdrop-blur-2xl" : "backdrop-blur-xl"} />
       </div>
 
       {/* the overlap steps with the banner's height: the gradient only fades its
