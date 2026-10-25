@@ -217,6 +217,7 @@
   "list_create_name_placeholder": "My list",
   "list_create_description_label": "Description",
   "list_create_description_placeholder": "Optional description for your list",
+  "list_currency_badge_label": "Prices in {currency}",
   "list_create_currency_label": "Currency",
   "list_create_currency_desc": "Currency for objekt prices in this list",
   "list_create_currency_invalid": "Enter a valid 3-letter currency code",
@@ -1932,7 +1933,6 @@
   "trade_composer_match_sell_swap": "WTT posts looking for these match it too.",
   "trade_composer_unpair_sell": "This list is paired with {name} for swaps. A Sell post without swaps doesn't keep the pair, so posting it unpairs them.",
   "api_errors_list_sale_links_sell_only": "Only a sale list open to swaps can be linked to a want list",
-  "list_sell_or_swap": "Sell or swap",
   "trade_help_sale_swaps_list": "Sale list, Sell or swap",
   "trade_help_sale_swap_pair": "Sale list open to swaps ↔ want list open to swaps"
 }

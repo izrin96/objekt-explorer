@@ -217,6 +217,7 @@
   "list_create_name_placeholder": "이름을 입력하세요",
   "list_create_description_label": "설명",
   "list_create_description_placeholder": "설명 (선택 사항)",
+  "list_currency_badge_label": "가격 통화: {currency}",
   "list_create_currency_label": "통화",
   "list_create_currency_desc": "이 목록의 오브젝트 가격에 사용할 통화",
   "list_create_currency_invalid": "올바른 3자리 통화 코드를 입력하세요",
@@ -1932,7 +1933,6 @@
   "trade_composer_match_sell_swap": "이 오브젝트를 찾는 WTT 게시물에도 매치됩니다.",
   "trade_composer_unpair_sell": "이 목록은 교환을 위해 {name}와(과) 연결되어 있습니다. 교환을 받지 않는 판매 게시물은 연결을 유지하지 않으므로, 올리면 연결이 해제됩니다.",
   "api_errors_list_sale_links_sell_only": "교환도 받는 판매 목록만 희망 목록과 연결할 수 있습니다",
-  "list_sell_or_swap": "판매 또는 교환",
   "trade_help_sale_swaps_list": "판매 목록 (판매 또는 교환)",
   "trade_help_sale_swap_pair": "교환도 받는 판매 목록 ↔ 교환을 받는 희망 목록"
 }

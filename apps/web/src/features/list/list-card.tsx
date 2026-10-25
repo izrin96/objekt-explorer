@@ -22,6 +22,7 @@ import {
   previewCardLinkClass,
 } from "@/features/objekt/objekt-preview-strip";
 import { ProfileLink } from "@/features/profile/profile-hover-card";
+import { TagBadges } from "@/features/trade/tag-label";
 import { displayNickname } from "@/lib/address";
 import { m } from "@/paraglide/messages";
 
@@ -29,7 +30,8 @@ import { CopyListDialog } from "./copy-list-dialog";
 import { DeleteListDialog } from "./delete-list-dialog";
 import { EditListDialog } from "./edit-list-dialog";
 import { getListLinkOption } from "./list-link";
-import { ListBoundBadge, ListTypeBadge, openToLabel } from "./list-type-badge";
+import { listPostTags } from "./list-post-tags";
+import { ListBoundBadge, ListCurrencyBadge, ListTypeBadge } from "./list-type-badge";
 import { useCopyListLink } from "./share-list-button";
 import { useIsListOwner } from "./use-list-owned";
 
@@ -56,7 +58,7 @@ export function ListCard({
   const copyLink = useCopyListLink(list);
   const linked = list.linkedList;
   const chipAddress = showProfile ? list.profileAddress : null;
-  const openTo = openToLabel(list);
+  const tags = listPostTags(list);
 
   return (
     <div className={previewCardClass}>
@@ -84,11 +86,11 @@ export function ListCard({
                 {m.list_on_trade()}
               </Badge>
             ) : null}
-            <ObjektPreviewCount preview={preview} />
-            {openTo ? <span>· {openTo}</span> : null}
+            {tags.length > 0 ? <TagBadges tags={tags} /> : null}
             {list.listType === "sale" && list.currency ? (
-              <span className="font-mono">· {list.currency}</span>
+              <ListCurrencyBadge currency={list.currency} />
             ) : null}
+            <ObjektPreviewCount preview={preview} />
           </div>
 
           {/* The chip is "which Cosmo owns this list", so it keys off the address;

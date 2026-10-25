@@ -28,6 +28,7 @@ import { CompareDialog } from "@/features/compare/compare-dialog";
 import { SkeletonGrid } from "@/features/objekt/skeleton-grid";
 import { ProfileLink } from "@/features/profile/profile-hover-card";
 import { mutualCountOptions } from "@/features/trade/queries";
+import { TagBadges } from "@/features/trade/tag-label";
 import { displayNickname } from "@/lib/address";
 import { copyWithToast } from "@/lib/clipboard";
 import { m } from "@/paraglide/messages";
@@ -37,8 +38,9 @@ import { DeleteListDialog } from "./delete-list-dialog";
 import { EditListDialog } from "./edit-list-dialog";
 import { ExportListDialog } from "./export-list-dialog";
 import { getListLinkOption } from "./list-link";
+import { listPostTags } from "./list-post-tags";
 import { useListTarget } from "./list-provider";
-import { ListBoundBadge, ListTypeBadge, openToLabel } from "./list-type-badge";
+import { ListBoundBadge, ListCurrencyBadge, ListTypeBadge } from "./list-type-badge";
 import { RuleDialog } from "./rules/rule-dialog";
 import { ShareListButton } from "./share-list-button";
 import { useListOwned } from "./use-list-owned";
@@ -66,7 +68,7 @@ export function ListHeader() {
     have: sides.haveListIds.length > 0,
     want: sides.wantListIds.length > 0,
   });
-  const openTo = openToLabel(list);
+  const tags = listPostTags(list);
   const swappable = (list.listType === "have" || list.listType === "want") && linked;
 
   return (
@@ -81,15 +83,15 @@ export function ListHeader() {
             </h1>
             {list.isProfileBind ? <ListBoundBadge /> : null}
             {list.listType !== "general" ? <ListTypeBadge type={list.listType} /> : null}
-            {openTo ? <span className="text-muted-foreground text-xs">{openTo}</span> : null}
             {list.discoverable && canBeOnTrade(list.listType, list.isProfileBind) ? (
               <Badge variant="outline" size="sm" render={<Link to="/trade" />}>
                 <ArrowsLeftRightIcon aria-hidden />
                 {m.list_on_trade()}
               </Badge>
             ) : null}
+            {tags.length > 0 ? <TagBadges tags={tags} /> : null}
             {list.listType === "sale" && list.currency ? (
-              <span className="text-muted-foreground font-mono text-xs">({list.currency})</span>
+              <ListCurrencyBadge currency={list.currency} />
             ) : null}
           </div>
 

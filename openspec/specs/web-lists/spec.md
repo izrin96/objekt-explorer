@@ -145,11 +145,19 @@ Off Trade the list SHALL be in none of these, except that a want list still aler
 - **THEN** the save succeeds and the list is on Trade
 
 ### Requirement: On Trade mark in the list header
-A list header SHALL mark a list that is on Trade with an On Trade badge, for every visitor. The badge SHALL link to `/trade`.
+A list header SHALL mark a list that is on Trade with an On Trade badge, for every visitor. The badge SHALL link to `/trade`. After it, the header and the list's card on `/list` SHALL show the tags of the post the list is in, as Trade tags it (see `web-trade-browse`): its linked list joins the post when that list is on Trade too. A list off Trade SHALL show no tags, and no list SHALL name its Open to in words, since the post sets it.
 
 #### Scenario: Visitor sees the mark
 - **WHEN** a signed-out visitor opens a have list that is on Trade
 - **THEN** the header shows the On Trade badge
+
+#### Scenario: Either half of a Swap pair
+- **WHEN** have list "spares" and want list "binary hunt", open to swaps or buying, are on Trade as one Swap post
+- **THEN** both headers show On Trade, WTT and WTB
+
+#### Scenario: Off Trade
+- **WHEN** a want list set to Buying only is not on Trade
+- **THEN** its header and card show no tag and no Open to
 
 ### Requirement: List type colours
 Each list type SHALL have one colour, used wherever the app names that type: list badges on list pages, list cards and the account menu, and post tags and list badges on Trade.
@@ -226,8 +234,8 @@ The list page header and the list card SHALL name a want list's choice.
 - **THEN** the list is saved as Swaps only
 
 #### Scenario: Choice shown on the list
-- **WHEN** a user opens a want list set to Buying only
-- **THEN** its header and its card on `/list` read "Buying only"
+- **WHEN** a user opens a want list on Trade set to Buying only
+- **THEN** its header and its card on `/list` show the WTB tag beside On Trade, and no "Buying only" text
 
 #### Scenario: Not a want list
 - **WHEN** a user creates a have list
@@ -454,15 +462,15 @@ Share text, export and the Discord format SHALL write each rule as one line in i
 - **THEN** the Want part starts with "any CC366 (prio YooYeon, NaKyoung)" and "any Cream02 FCO 3rd", then the objekts, and no line per rule objekt
 
 ### Requirement: Sale list Open to
-A sale list SHALL carry an **Open to** choice, set by its post, not by the list form: **Sell only**, the default for every new and existing sale list, or **Sell or swap**, which also matches want lists open to swaps, counting toward Can swap and alerts like a have list (see Want list match option). Prices and Market SHALL be unchanged. An update that leaves the choice out SHALL keep it. Have lists SHALL have no such choice. The header and list card SHALL name Sell or swap.
+A sale list SHALL carry an **Open to** choice, set by its post, not by the list form: **Sell only**, the default for every new and existing sale list, or **Sell or swap**, which also matches want lists open to swaps, counting toward Can swap and alerts like a have list (see Want list match option). Prices and Market SHALL be unchanged. An update that leaves the choice out SHALL keep it. Have lists SHALL have no such choice.
 
 #### Scenario: Existing sale list
 - **WHEN** a sale list made before this change is opened
-- **THEN** it is Sell only, matches only want lists open to buying, and its header shows no Open to
+- **THEN** it is Sell only, matches only want lists open to buying, and its header shows no WTT tag
 
 #### Scenario: Sell or swap
 - **WHEN** the owner posts sale list "binary sale" as a Sell post with "Also open to swaps"
-- **THEN** "binary sale" is open to swaps, its header and card read "Sell or swap", and it is still on Market at its prices
+- **THEN** "binary sale" is open to swaps, its header and card show WTS and WTT, and it is still on Market at its prices
 
 #### Scenario: Have list
 - **WHEN** a user opens the post composer with a have list

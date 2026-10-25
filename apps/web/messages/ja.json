@@ -217,6 +217,7 @@
   "list_create_name_placeholder": "マイリスト",
   "list_create_description_label": "説明",
   "list_create_description_placeholder": "リストの説明（任意）",
+  "list_currency_badge_label": "価格の通貨：{currency}",
   "list_create_currency_label": "通貨",
   "list_create_currency_desc": "このリストのObjekt価格に使用する通貨",
   "list_create_currency_invalid": "有効な3文字の通貨コードを入力してください",
@@ -1932,7 +1933,6 @@
   "trade_composer_match_sell_swap": "これを探しているWTT投稿にもマッチします。",
   "trade_composer_unpair_sell": "このリストは交換のため{name}とペアになっています。交換なしの販売投稿ではペアを保てないため、投稿するとペアが解除されます。",
   "api_errors_list_sale_links_sell_only": "交換も受け付ける販売リストだけが希望リストとリンクできます",
-  "list_sell_or_swap": "販売または交換",
   "trade_help_sale_swaps_list": "販売リスト（販売または交換）",
   "trade_help_sale_swap_pair": "交換も受け付ける販売リスト ↔ 交換を受け付ける希望リスト"
 }

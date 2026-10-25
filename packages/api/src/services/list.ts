@@ -196,6 +196,11 @@ export async function fetchList(
           profileSlug: true,
           profileAddress: true,
           currency: true,
+          // what the header's post tags read
+          discoverable: true,
+          matchSale: true,
+          matchHave: true,
+          takesSwaps: true,
         },
         with: {
           userAddress: {
@@ -304,6 +309,11 @@ export async function fetchOwnedLists(
           profileSlug: true,
           profileAddress: true,
           currency: true,
+          // what the header's post tags read
+          discoverable: true,
+          matchSale: true,
+          matchHave: true,
+          takesSwaps: true,
         },
         with: {
           userAddress: { columns: { address: true, nickname: true } },
@@ -328,6 +338,10 @@ export async function fetchOwnedLists(
             profileSlug: linkedList.profileSlug,
             profileAddress: linkedList.profileAddress,
             currency: linkedList.currency,
+            discoverable: linkedList.discoverable,
+            matchSale: linkedList.matchSale,
+            matchHave: linkedList.matchHave,
+            takesSwaps: linkedList.takesSwaps,
             profile: linkedList.userAddress ? toPartialProfile(linkedList.userAddress) : null,
           }
         : null,

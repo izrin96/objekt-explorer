@@ -1,6 +1,5 @@
-import { CheckIcon } from "@phosphor-icons/react";
+import { CheckIcon, CoinsIcon } from "@phosphor-icons/react";
 import type { ListType } from "@repo/api/schemas/list";
-import { type OpenTo, openToOf } from "@repo/api/schemas/open-to";
 
 import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "@/components/ui/tooltip";
@@ -43,29 +42,6 @@ export function ListTypeBadge({
   );
 }
 
-export const OPEN_TO_LABEL: Record<OpenTo, () => string> = {
-  swaps: m.list_create_match_swaps_label,
-  both: m.list_create_match_both_label,
-  buying: m.list_create_match_buying_label,
-};
-
-/**
- * A want list's Open to setting, or "Sell or swap" for a sale list that takes swaps; null for
- * other lists, a Sell only sale list, or a response without the setting.
- */
-export function openToLabel(list: {
-  listType: ListType;
-  matchSale?: boolean | null;
-  matchHave?: boolean | null;
-  takesSwaps?: boolean | null;
-}) {
-  if (list.listType === "sale") return list.takesSwaps ? m.list_sell_or_swap() : null;
-  if (list.listType !== "want" || list.matchSale == null) return null;
-  return OPEN_TO_LABEL[
-    openToOf({ matchSale: list.matchSale, matchHave: list.matchHave ?? true })
-  ]();
-}
-
 export function ListBoundBadge() {
   return (
     <Tooltip>
@@ -79,5 +55,17 @@ export function ListBoundBadge() {
       />
       <TooltipPopup>{m.list_bound_hint()}</TooltipPopup>
     </Tooltip>
+  );
+}
+
+/** A sale list's currency, the one its prices are in. */
+export function ListCurrencyBadge({ currency }: { currency: string }) {
+  const label = m.list_currency_badge_label({ currency });
+  return (
+    <Badge variant="outline" size="sm" className="font-mono" title={label}>
+      <CoinsIcon aria-hidden />
+      <span aria-hidden>{currency}</span>
+      <span className="sr-only">{label}</span>
+    </Badge>
   );
 }
