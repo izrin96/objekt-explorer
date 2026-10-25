@@ -2,6 +2,8 @@ import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { Link } from "@tanstack/react-router";
 import { type ReactNode, memo, useState } from "react";
 
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 import { Popover, PopoverPopup, PopoverTitle, PopoverTrigger } from "@/components/ui/popover";
 import { getListLinkOption } from "@/features/list/list-link";
 import { LIST_TYPE_LABEL, LIST_TYPE_TONE } from "@/features/list/list-type-badge";
@@ -387,20 +389,11 @@ function RuleTile({
   onOpen: (objekt: ValidObjekt) => void;
 }) {
   const ringed = (tile.matched ?? 0) > 0;
-  // the class colour of a collection it takes, when one is at hand; else monochrome
-  const stripe = tile.matchedSlugs
-    .map((slug) => collections[slug]?.backgroundColor)
-    .find((color) => color !== undefined);
   const face = (
     <>
-      <span
-        aria-hidden
-        className="bg-foreground/40 absolute inset-y-0 start-0 w-1 rounded-s-md"
-        style={stripe ? { backgroundColor: stripe } : undefined}
-      />
-      <span className="text-muted-foreground text-xxs font-mono font-semibold tracking-wide">
+      <Badge variant="outline" size="sm" className="tracking-wide">
         {m.trade_rule_tag()}
-      </span>
+      </Badge>
       {/* w-full: a column's items size to their text, so truncate needs the tile's width to stop at */}
       <span className="w-full truncate text-xs" title={ruleText(tile.rule)}>
         {ruleText(tile.rule)}
@@ -418,23 +411,24 @@ function RuleTile({
     </>
   );
   const box = cn(
-    "bg-muted/48 relative flex h-14 max-w-56 min-w-28 flex-col items-start justify-center gap-0.5 rounded-md border ps-2.5 pe-2 text-start",
+    "min-h-14 max-w-56 min-w-28 items-start justify-center gap-1 rounded-lg px-2.5 py-1.5 text-start before:rounded-[calc(var(--radius-lg)-1px)]",
     ringed && "outline-foreground outline-2 outline-offset-1",
   );
 
   if (!ringed) {
-    return <div className={box}>{face}</div>;
+    return <Card className={box}>{face}</Card>;
   }
   return (
     <Popover>
-      <PopoverTrigger
+      <Card
+        render={<PopoverTrigger />}
         className={cn(
           box,
-          "hover:bg-muted focus-visible:ring-ring outline-none focus-visible:ring-2",
+          "hover:bg-accent/50 focus-visible:ring-ring outline-none focus-visible:ring-2",
         )}
       >
         {face}
-      </PopoverTrigger>
+      </Card>
       <PopoverPopup className="w-72">
         <PopoverTitle className="text-sm">
           {m.trade_rule_you_have_title({ rule: ruleText(tile.rule) })}

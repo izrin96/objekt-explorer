@@ -18,6 +18,7 @@ export function TradeHeader({
   person,
   you = false,
   meta,
+  badge,
   note,
   end,
   className,
@@ -26,6 +27,8 @@ export function TradeHeader({
   you?: boolean;
   /** on the reputation line, after it */
   meta?: ReactNode;
+  /** after the name */
+  badge?: ReactNode;
   /** under the reputation line */
   note?: ReactNode;
   end?: ReactNode;
@@ -51,6 +54,7 @@ export function TradeHeader({
               identity.name
             )}
           </h2>
+          {badge}
           {you ? (
             <span className="bg-secondary text-muted-foreground rounded-sm px-1.5 text-xs">
               {m.trade_you_tag()}

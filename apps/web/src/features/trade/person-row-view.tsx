@@ -8,13 +8,14 @@ import {
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { memo } from "react";
 
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Frame, FramePanel } from "@/components/ui/frame";
 import { MenuItem } from "@/components/ui/menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SafetyMenu } from "@/features/moderation/safety-menu";
 import { relativeTime } from "@/lib/time";
-import { TONE_FILL, TONE_INK } from "@/lib/tone";
+import { toneChip } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
@@ -63,85 +64,76 @@ function WithNumber({
 }
 
 /**
- * Across the top of a person's card: what the two can swap, tinted, or that the match runs only
- * through sale lists, then each direction's count. One way is only its count, since For you heads
- * that section already. A direction with nothing is left out.
+ * Beside a person's name: what the two can swap, tinted, with how much of it runs through the
+ * viewer's rules, or that the match runs only through sale lists. One way has no chip, since For you
+ * heads that section already.
  */
-function MatchBandStrip({
-  band,
-  throughRules = 0,
-  className,
-}: {
-  band: MatchBand;
-  /** how many of the swap the viewer wants only through their rules */
-  throughRules?: number;
-  className?: string;
-}) {
-  const swap = band.kind === "swap";
+function MatchChip({ band, throughRules = 0 }: { band: MatchBand; throughRules?: number }) {
+  if (band.kind !== "swap") {
+    if (band.kind === "oneWay") return null;
+    return (
+      <Badge variant="secondary" className="text-muted-foreground">
+        {m.trade_band_no_swap()}
+      </Badge>
+    );
+  }
   return (
-    <div
+    <Badge
+      variant="outline"
+      // the rules note makes it long, so it may wrap on a phone rather than overflow
       className={cn(
-        "flex flex-wrap items-center justify-between gap-x-4 gap-y-1 rounded-xl px-3 py-1.5 text-sm",
-        swap ? TONE_FILL.progress : "bg-background/60",
-        className,
+        toneChip("progress"),
+        "gap-1.5",
+        throughRules > 0 && "h-auto py-0.5 text-start whitespace-normal",
       )}
     >
-      {band.kind === "oneWay" ? null : (
-        <span
-          className={cn(
-            "flex items-center gap-1.5 font-medium",
-            swap ? TONE_INK.progress : "text-muted-foreground",
-          )}
-        >
-          {band.kind === "swap" ? (
-            <>
-              <ArrowsLeftRightIcon aria-hidden className="size-4" />
-              <span>
-                <WithNumber render={(count) => m.trade_person_swap({ count })} count={band.swap} />
-                {throughRules > 0 ? (
-                  <span className="font-normal">
-                    {" · "}
-                    {throughRules < band.swap
-                      ? m.trade_through_rules({ count: throughRules })
-                      : band.swap === 2
-                        ? m.trade_through_rules_both()
-                        : m.trade_through_rules_all()}
-                  </span>
-                ) : null}
-              </span>
-            </>
-          ) : (
-            m.trade_band_no_swap()
-          )}
-        </span>
-      )}
-      <span className="text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-0.5">
-        {band.theyHave > 0 ? (
-          <span className="flex items-center gap-1">
-            <ArrowDownIcon aria-hidden className="size-3.5" />
-            <span>
-              <WithNumber
-                render={(count) => m.trade_match_they_have({ count })}
-                count={band.theyHave}
-                className="text-foreground"
-              />
-            </span>
-          </span>
-        ) : null}
-        {band.youHave > 0 ? (
-          <span className="flex items-center gap-1">
-            <ArrowUpIcon aria-hidden className="size-3.5" />
-            <span>
-              <WithNumber
-                render={(count) => m.trade_match_you_have({ count })}
-                count={band.youHave}
-                className="text-foreground"
-              />
-            </span>
+      <ArrowsLeftRightIcon aria-hidden />
+      <span>
+        <WithNumber render={(count) => m.trade_person_swap({ count })} count={band.swap} />
+        {throughRules > 0 ? (
+          <span className="font-normal">
+            {" · "}
+            {throughRules < band.swap
+              ? m.trade_through_rules({ count: throughRules })
+              : band.swap === 2
+                ? m.trade_through_rules_both()
+                : m.trade_through_rules_all()}
           </span>
         ) : null}
       </span>
-    </div>
+    </Badge>
+  );
+}
+
+/** Under a person's name: each direction's count. */
+function MatchCounts({ band }: { band: MatchBand }) {
+  return (
+    <span className="text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs">
+      {band.theyHave > 0 ? (
+        <span className="flex items-center gap-1">
+          <ArrowDownIcon aria-hidden className="size-3" />
+          <span>
+            <WithNumber
+              render={(count) => m.trade_match_they_have({ count })}
+              count={band.theyHave}
+              className="text-foreground"
+            />
+          </span>
+        </span>
+      ) : null}
+      {band.youHave > 0 ? (
+        <span className="flex items-center gap-1">
+          <ArrowUpIcon aria-hidden className="size-3" />
+          <span>
+            <WithNumber
+              render={(count) => m.trade_match_you_have({ count })}
+              count={band.youHave}
+              className="text-foreground"
+            />
+          </span>
+        </span>
+      ) : null}
+    </span>
   );
 }
 
@@ -238,7 +230,7 @@ export const PersonRow = memo(function PersonRow({
   onOpen: (objekt: ValidObjekt) => void;
 }) {
   const hide = useHideWithUndo();
-  // no match says nothing: a row without a band already reads as one
+  // no match says nothing: a row without a chip or counts already reads as one
   const band = own || !signedIn ? null : matchBand(person.counts);
   const posts = orderPosts(person.posts);
   const throughRules = new Set(
@@ -284,23 +276,17 @@ export const PersonRow = memo(function PersonRow({
   return (
     // padding, not margin, so virtua measures the gap between people with the row
     <article className="@container pb-3">
-      <Frame
-        className={cn(
-          "grid gap-x-4 gap-y-3 @3xl:grid-cols-[minmax(0,1fr)_auto]",
-          band ? "pt-1" : "pt-2.5",
-        )}
-      >
-        {band ? (
-          <MatchBandStrip
-            band={band}
-            throughRules={surface === "forYou" ? throughRules : 0}
-            className="@3xl:col-span-2 @3xl:row-start-1"
-          />
-        ) : null}
+      <Frame className="grid gap-x-4 gap-y-3 pt-2.5 @3xl:grid-cols-[minmax(0,1fr)_auto]">
         <TradeHeader
-          className="min-w-0 px-3"
+          className="min-w-0 px-3 @3xl:row-start-1"
           person={person}
           you={own}
+          badge={
+            band ? (
+              <MatchChip band={band} throughRules={surface === "forYou" ? throughRules : 0} />
+            ) : undefined
+          }
+          note={band ? <MatchCounts band={band} /> : undefined}
           meta={
             <>
               {lists} ·{" "}
@@ -320,12 +306,7 @@ export const PersonRow = memo(function PersonRow({
             ) : null
           }
         />
-        <div
-          className={cn(
-            "flex min-w-0 flex-col gap-1 @3xl:col-span-2",
-            band ? "@3xl:row-start-3" : "@3xl:row-start-2",
-          )}
-        >
+        <div className="flex min-w-0 flex-col gap-1 @3xl:col-span-2 @3xl:row-start-2">
           {shown.map((post) => (
             <PostBlock
               key={post.id}
@@ -349,12 +330,7 @@ export const PersonRow = memo(function PersonRow({
           ) : null}
         </div>
         {own ? null : (
-          <div
-            className={cn(
-              "flex items-center gap-2 px-3 pb-2 @3xl:col-start-2 @3xl:self-start @3xl:pb-0",
-              band ? "@3xl:row-start-2" : "@3xl:row-start-1",
-            )}
-          >
+          <div className="flex items-center gap-2 px-3 pb-2 @3xl:col-start-2 @3xl:row-start-1 @3xl:self-start @3xl:pb-0">
             <SafetyMenu
               userId={person.userId}
               name={person.identity.name}
