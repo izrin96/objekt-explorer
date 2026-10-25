@@ -12,10 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Frame, FramePanel } from "@/components/ui/frame";
 import { MenuItem } from "@/components/ui/menu";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ruleText } from "@/features/list/rules/words";
 import { SafetyMenu } from "@/features/moderation/safety-menu";
-import { collectionName } from "@/features/objekt/objekt-label";
-import { useUserLists } from "@/features/user/hooks";
 import { relativeTime } from "@/lib/time";
 import { TONE_FILL, TONE_INK } from "@/lib/tone";
 import { cn } from "@/lib/utils";
@@ -23,7 +20,14 @@ import { m } from "@/paraglide/messages";
 
 import { useHideWithUndo } from "./actions";
 import type { Surface } from "./browse-search";
-import { leadPost, listCount, type MatchBand, matchBand, orderPosts } from "./person-row";
+import {
+  leadPost,
+  listCount,
+  type MatchBand,
+  matchBand,
+  matchedListIds,
+  orderPosts,
+} from "./person-row";
 import { EmptySide, isEmptySide, SideStrip } from "./post-side";
 import { postTime } from "./post-time";
 import type { PersonData, PersonPostData } from "./post-types";
@@ -180,6 +184,9 @@ function PostBlock({
             lead={index === 0 ? tag : undefined}
             side={side}
             count={own ? 0 : listCount(post, side)}
+            matchedListIds={own ? [] : matchedListIds(post, side)}
+            // rules are on the viewer's want lists, so only a side the viewer wants from has them
+            ruleMatches={own || side.role === "want" ? undefined : post.ruleMatches}
             narrowed={post.narrowed}
             collections={collections}
             onOpen={onOpen}
@@ -189,40 +196,7 @@ function PostBlock({
       {shown.sides.filter(isEmptySide).map((side) => (
         <EmptySide key={side.list.id} side={side} surface={surface} />
       ))}
-      {surface === "forYou" && !own && post.ruleMatches.length > 0 ? (
-        <RuleMatchLines matches={post.ruleMatches} collections={collections} />
-      ) : null}
     </FramePanel>
-  );
-}
-
-/** lines before "N more through your rules": a big list would otherwise bury the row */
-const RULE_LINES = 3;
-
-/** For you: the poster's objekts the viewer wants only through a rule, one line each. */
-function RuleMatchLines({
-  matches,
-  collections,
-}: {
-  matches: PersonPostData["ruleMatches"];
-  collections: Readonly<Record<string, ValidObjekt | undefined>>;
-}) {
-  const lists = useUserLists();
-  const rest = matches.length - RULE_LINES;
-  return (
-    <ul className="text-muted-foreground flex flex-col gap-0.5 text-xs">
-      {matches.slice(0, RULE_LINES).map((found) => (
-        <li key={found.slug} className="min-w-0 truncate">
-          <span className="text-foreground font-mono">
-            {collectionName(found.slug, collections[found.slug])}
-          </span>{" "}
-          {m.trade_matches_your_rule()} <span className="font-mono">{ruleText(found.rule)}</span>
-          {" · "}
-          {lists.find((list) => list.id === found.listId)?.name ?? ""}
-        </li>
-      ))}
-      {rest > 0 ? <li>{m.trade_rule_lines_more({ count: rest })}</li> : null}
-    </ul>
   );
 }
 

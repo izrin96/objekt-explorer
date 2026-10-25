@@ -1,6 +1,13 @@
 import { type MatchCounts, mutualOf } from "@repo/api/schemas/trade";
 
-type Match = { youHave: number; youWant: number };
+type Match = {
+  youHave: number;
+  youWant: number;
+  /** the viewer's have and sale lists holding what the post's want side wants */
+  haveListIds?: readonly number[];
+  /** the viewer's want lists wanting what the post's have or sale side holds */
+  wantListIds?: readonly number[];
+};
 
 type RowPost = {
   id: number;
@@ -48,4 +55,28 @@ export function matchBand(counts: MatchCounts | undefined): MatchBand | null {
 export function listCount(post: RowPost, side: { role: "have" | "want" | "sale" }) {
   if (!post.match) return 0;
   return side.role === "want" ? post.match.youHave : post.match.youWant;
+}
+
+/** The viewer's lists behind a list's own count: the ones `listCount` counted against. */
+export function matchedListIds(post: RowPost, side: { role: "have" | "want" | "sale" }) {
+  if (!post.match) return [];
+  return (side.role === "want" ? post.match.haveListIds : post.match.wantListIds) ?? [];
+}
+
+/**
+ * A matched list's rules, for "Matched with your lists": each rule of that list the post matched
+ * through, with how many of its collections, in the order they were found.
+ */
+export function ruleCountsOf<R extends { listId: number; ruleId: number }>(
+  matches: readonly R[],
+  listId: number,
+) {
+  const counts = new Map<number, { match: R; count: number }>();
+  for (const match of matches) {
+    if (match.listId !== listId) continue;
+    const seen = counts.get(match.ruleId);
+    if (seen) seen.count += 1;
+    else counts.set(match.ruleId, { match, count: 1 });
+  }
+  return [...counts.values()];
 }

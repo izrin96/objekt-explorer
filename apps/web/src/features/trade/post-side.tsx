@@ -1,6 +1,6 @@
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { Link } from "@tanstack/react-router";
-import { type ReactNode, memo } from "react";
+import { type ReactNode, memo, useState } from "react";
 
 import { Popover, PopoverPopup, PopoverTitle, PopoverTrigger } from "@/components/ui/popover";
 import { getListLinkOption } from "@/features/list/list-link";
@@ -13,19 +13,14 @@ import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import type { Surface } from "./browse-search";
-import type { PostSideData } from "./post-types";
+import { MatchedListsChip } from "./matched-lists";
+import type { PersonPostData, PostSideData } from "./post-types";
+import { SideItemsDialog } from "./side-items-dialog";
 import { fitCount, hiddenCopies } from "./strip-fit";
-import { SlugTile, TILE } from "./thumb-grid";
+import { RING, SlugTile, TILE } from "./thumb-grid";
 
 /** `w-10` and `gap-1.5`, in px */
 const FIT = { thumb: 40, gap: 6, fallback: 4, lines: 1 };
-
-/**
- * Monochrome on purpose: the class stripes stay the only colour in the grid. An outline, so the
- * card's own focus ring (a box-shadow) still shows on a ringed card; a 1px offset keeps two
- * ringed neighbours `gap-1.5` apart from overlapping, and the strip's `p-1` gives the edges room.
- */
-const RING = "rounded-photocard outline-foreground outline-2 outline-offset-1";
 
 /** `ObjektCard`'s own count scales with the card, too small to read at `w-10` */
 const STACK_COUNT =
@@ -224,6 +219,8 @@ export function SideStrip({
   lead,
   side,
   count,
+  matchedListIds = [],
+  ruleMatches,
   narrowed,
   collections,
   onOpen,
@@ -232,6 +229,10 @@ export function SideStrip({
   side: PostSideData;
   /** the collections of this list that match the viewer: "14 you want", "2 you have" */
   count: number;
+  /** the viewer's lists that count was taken against, which the count opens */
+  matchedListIds?: readonly number[];
+  /** what the count matched only through the viewer's rules, named under their lists */
+  ruleMatches?: PersonPostData["ruleMatches"];
   /** a filter or matching left objekts out, so the side says how many it holds */
   narrowed: boolean;
   collections: Readonly<Record<string, ValidObjekt | undefined>>;
@@ -240,70 +241,113 @@ export function SideStrip({
   const { list } = side;
   const role = LIST_TYPE_LABEL[side.role]();
   const total = side.copyCount + side.others;
+  const [allOpen, setAllOpen] = useState(false);
+  // the dialog mounts on its first open only: a feed holds many strips, and most are never opened
+  const [allMounted, setAllMounted] = useState(false);
+  const openAll = () => {
+    setAllMounted(true);
+    setAllOpen(true);
+  };
   const text = (
-    <Link
-      {...getListLinkOption(list)}
-      title={list.description ? `${list.name}\n${list.description}` : list.name}
-      className={cn(SIDE_LINK, "flex w-fit max-w-full min-w-0 items-baseline gap-1.5")}
-    >
-      {/* the match chip carries the list's number, so a second one would only compete with it */}
-      <span className="shrink-0">
-        {narrowed && count === 0 ? `${role} ${side.copyCount}` : role}
-      </span>
-      <span aria-hidden className="text-muted-foreground shrink-0">
-        ·
-      </span>
-      <span className="text-foreground min-w-0 truncate normal-case">{list.name}</span>
-      {list.description ? <span className="sr-only">. {list.description}</span> : null}
+    <>
+      <Link
+        {...getListLinkOption(list)}
+        title={list.description ? `${list.name}\n${list.description}` : list.name}
+        className={cn(SIDE_LINK, "flex w-fit max-w-full min-w-0 items-baseline gap-1.5")}
+      >
+        {/* the match chip carries the list's number, so a second one would only compete with it */}
+        <span className="shrink-0">
+          {narrowed && count === 0 ? `${role} ${side.copyCount}` : role}
+        </span>
+        <span aria-hidden className="text-muted-foreground shrink-0">
+          ·
+        </span>
+        <span className="text-foreground min-w-0 truncate normal-case">{list.name}</span>
+        {list.description ? <span className="sr-only">. {list.description}</span> : null}
+      </Link>
+      {/* beside the link, not in it: it opens the viewer's lists behind it */}
       {count > 0 ? (
-        <span className="bg-success/10 text-success-foreground shrink-0 rounded px-1.5 normal-case">
+        <MatchedListsChip
+          listIds={matchedListIds}
+          ruleMatches={ruleMatches}
+          className="bg-success/10 text-success-foreground shrink-0 rounded px-1.5 normal-case"
+        >
           {side.role === "want"
             ? m.trade_list_count_you_have({ count })
             : m.trade_list_count_you_want({ count })}
-        </span>
+        </MatchedListsChip>
       ) : null}
-    </Link>
+    </>
   );
 
   return (
-    <PostStrip
-      lead={lead}
-      label={text}
-      tone={TONE_INK[LIST_TYPE_TONE[side.role]]}
-      items={side.items.map((item) => ({
-        key: item.entryId,
-        slug: item.slug,
-        qty: item.qty,
-        ringed: item.ringed,
-      }))}
-      hidden={side.more}
-      copies={side.copyCount - side.rules.reduce((sum, tile) => sum + tile.count, 0)}
-      rules={
-        side.rules.length > 0 ? (
-          <RuleTiles tiles={side.rules} collections={collections} onOpen={onOpen} />
-        ) : undefined
-      }
-      collections={collections}
-      onOpen={onOpen}
-      more={(count) => (
-        <Link {...getListLinkOption(list)} className={cn(TILE, STRIP_MORE)}>
-          <StripMore count={count} />
-        </Link>
-      )}
-      othersLink={
-        narrowed && total > 0 ? (
-          <Link
-            {...getListLinkOption(list)}
-            className={cn(
-              "text-muted-foreground hover:text-foreground text-xs whitespace-nowrap tabular-nums",
-              SIDE_LINK,
-            )}
+    <>
+      <PostStrip
+        lead={lead}
+        label={text}
+        tone={TONE_INK[LIST_TYPE_TONE[side.role]]}
+        items={side.items.map((item) => ({
+          key: item.entryId,
+          slug: item.slug,
+          qty: item.qty,
+          ringed: item.ringed,
+        }))}
+        hidden={side.more}
+        copies={side.copyCount - side.rules.reduce((sum, tile) => sum + tile.count, 0)}
+        rules={
+          side.rules.length > 0 ? (
+            <RuleTiles tiles={side.rules} collections={collections} onOpen={onOpen} />
+          ) : undefined
+        }
+        collections={collections}
+        onOpen={onOpen}
+        // the rest of the list in a dialog, so a phone that fits few tiles can still see them all
+        more={(count) => (
+          <button
+            type="button"
+            className={cn(TILE, STRIP_MORE, "w-full cursor-pointer")}
+            onClick={openAll}
           >
-            {m.trade_strip_total({ total })}
-          </Link>
-        ) : undefined
-      }
-    />
+            <StripMore count={count} />
+          </button>
+        )}
+        othersLink={
+          narrowed && total > 0 ? (
+            <Link
+              {...getListLinkOption(list)}
+              className={cn(
+                "text-muted-foreground hover:text-foreground text-xs whitespace-nowrap tabular-nums",
+                SIDE_LINK,
+              )}
+            >
+              {m.trade_strip_total({ total })}
+            </Link>
+          ) : undefined
+        }
+      />
+      {allMounted ? (
+        <SideItemsDialog
+          side={side}
+          narrowed={narrowed}
+          open={allOpen}
+          onOpenChange={setAllOpen}
+          onOpen={onOpen}
+          rules={
+            side.rules.length > 0 ? (
+              // the objekt view is a modal of its own, so the dialog gives way to it
+              <RuleTiles
+                tiles={side.rules}
+                collections={collections}
+                onOpen={(objekt) => {
+                  setAllOpen(false);
+                  onOpen(objekt);
+                }}
+              />
+            ) : undefined
+          }
+        />
+      ) : null}
+    </>
   );
 }
 
@@ -357,7 +401,10 @@ function RuleTile({
       <span className="text-muted-foreground text-xxs font-mono font-semibold tracking-wide">
         {m.trade_rule_tag()}
       </span>
-      <span className="truncate font-mono text-xs">{ruleText(tile.rule)}</span>
+      {/* w-full: a column's items size to their text, so truncate needs the tile's width to stop at */}
+      <span className="w-full truncate text-xs" title={ruleText(tile.rule)}>
+        {ruleText(tile.rule)}
+      </span>
       {tile.matched !== null ? (
         <span
           className={cn(

@@ -41,6 +41,7 @@ import { NEW_POST, PostComposer, useComposer } from "./post-list-dialog";
 import { usePlanLists } from "./post-plan";
 import type { PersonData } from "./post-types";
 import { hiddenPartnersOptions, peopleOptions } from "./queries";
+import { SideCompareContext } from "./side-items-dialog";
 import { tagText } from "./tag-label";
 
 type PostType = NonNullable<FeedSearch["type"]> | "all";
@@ -70,6 +71,11 @@ export function BrowseView({ surface, search }: { surface: Surface; search: Feed
     [search, artists, selected, surface, tradeLists],
   );
   const query = useInfiniteQuery(peopleOptions(input));
+  // the "+N" dialogs ring what the strips ring
+  const sideCompare = useMemo(
+    () => ({ list: input.list, mutual: input.match === "mutual" }),
+    [input.list, input.match],
+  );
   const hidden = useQuery(hiddenPartnersOptions(Boolean(user)));
   const navigate = useNavigate();
   // the drawer's On Trade link lands on this same page; the new slug closes the drawer
@@ -322,42 +328,46 @@ export function BrowseView({ surface, search }: { surface: Surface; search: Feed
               virtua then keeps drawing only `ssrCount` rows until the first scroll, so the list
               remounts without it once hydrated: otherwise For you's headings take two of the
               four rows and the feed looks like it ends after two posts */}
-          <WindowVirtualizer
-            key={hydrated ? "live" : "ssr"}
-            ref={virtualizerRef}
-            cache={virtualizerCache}
-            data={rows}
-            ssrCount={hydrated ? undefined : Math.min(SSR_ROWS, rows.length)}
-          >
-            {(row: FeedRow | undefined) =>
-              row?.heading ? (
-                <h2
-                  key={row.heading}
-                  className="text-muted-foreground px-4 pt-1 pb-2 text-xs font-medium tracking-wide uppercase"
-                >
-                  {row.heading === "mutual" ? m.trade_section_mutual() : m.trade_section_one_way()}
-                </h2>
-              ) : row ? (
-                <div key={row.person.userId}>
-                  <PersonRow
-                    person={row.person}
-                    surface={surface}
-                    own={row.person.userId === user?.user.id}
-                    signedIn={!!user}
-                    led={row.person.userId === search.person}
-                    expanded={expanded.has(row.person.userId)}
-                    onExpand={expand}
-                    onClear={clearLead}
-                    collections={collections}
-                    now={now}
-                    onOpen={setActive}
-                  />
-                </div>
-              ) : (
-                <div />
-              )
-            }
-          </WindowVirtualizer>
+          <SideCompareContext value={sideCompare}>
+            <WindowVirtualizer
+              key={hydrated ? "live" : "ssr"}
+              ref={virtualizerRef}
+              cache={virtualizerCache}
+              data={rows}
+              ssrCount={hydrated ? undefined : Math.min(SSR_ROWS, rows.length)}
+            >
+              {(row: FeedRow | undefined) =>
+                row?.heading ? (
+                  <h2
+                    key={row.heading}
+                    className="text-muted-foreground px-4 pt-1 pb-2 text-xs font-medium tracking-wide uppercase"
+                  >
+                    {row.heading === "mutual"
+                      ? m.trade_section_mutual()
+                      : m.trade_section_one_way()}
+                  </h2>
+                ) : row ? (
+                  <div key={row.person.userId}>
+                    <PersonRow
+                      person={row.person}
+                      surface={surface}
+                      own={row.person.userId === user?.user.id}
+                      signedIn={!!user}
+                      led={row.person.userId === search.person}
+                      expanded={expanded.has(row.person.userId)}
+                      onExpand={expand}
+                      onClear={clearLead}
+                      collections={collections}
+                      now={now}
+                      onOpen={setActive}
+                    />
+                  </div>
+                ) : (
+                  <div />
+                )
+              }
+            </WindowVirtualizer>
+          </SideCompareContext>
 
           {query.isFetchNextPageError ? (
             <div className="flex justify-center py-4">

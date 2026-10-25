@@ -37,3 +37,16 @@ export const myPostsOptions = () => orpc.trade.myPosts.queryOptions({ staleTime:
 
 export const collectionPostCountsOptions = (slug: string) =>
   orpc.trade.collectionPostCounts.queryOptions({ input: { slug }, staleTime: 60_000 });
+
+/** One post side's every objekt, for its "+N" dialog; `compare` is For you's Compare with. */
+export const sideItemsOptions = (
+  listId: number,
+  compare: { list?: string; mutual: boolean },
+  enabled: boolean,
+) =>
+  orpc.trade.sideItems.queryOptions({
+    input: { listId, list: compare.list, mutual: compare.mutual || undefined },
+    enabled,
+    staleTime: BROWSE_STALE_MS,
+    retry: retryUnlessRefused,
+  });

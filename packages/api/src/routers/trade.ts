@@ -17,6 +17,7 @@ import {
   personInputSchema,
   savePostInputSchema,
   setShowOnTradeInputSchema,
+  sideItemsInputSchema,
   tabCountsInputSchema,
   tabCountsOutputSchema,
   takeDownPostInputSchema,
@@ -30,6 +31,7 @@ import {
   bumpPerson,
   collectionPostCounts,
   fetchMyPosts,
+  fetchSideItems,
   setShowOnTrade,
 } from "../services/trade-feed";
 import { peopleFeed } from "../services/trade-feed/people";
@@ -70,6 +72,12 @@ export const tradeRouter = {
   people: optionalAuthed.input(peopleInputSchema).handler(async ({ input, context }) => {
     await limitFeed(context.session?.user.id, context.headers);
     return peopleFeed(context.session?.user.id ?? null, input);
+  }),
+
+  /** Public like `people`: every objekt of one post side, for its "+N" dialog. */
+  sideItems: optionalAuthed.input(sideItemsInputSchema).handler(async ({ input, context }) => {
+    await limitFeed(context.session?.user.id, context.headers);
+    return fetchSideItems(context.session?.user.id ?? null, input);
   }),
 
   bump: authed.handler(async ({ context: { session } }) => bumpPerson(session.user.id)),

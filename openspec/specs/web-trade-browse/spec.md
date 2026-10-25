@@ -561,7 +561,9 @@ Each person in the feed SHALL be one row, a bordered card on the card surface, o
   - a side with no related objekt or no entries: the muted line Filters describes, under the other strip, with no ⇄ mark.
 - **More lists**: the row SHALL show its first 2 posts. When it holds more, a "+N more lists" control SHALL follow them and show the rest in place, after which it is gone. A row led by `person` shows every post.
 
-**Strip**: a monospace role label in its list type's colour, then " · " and the list's name, truncated to one line, then the list's own count when above zero ("14 you want", "2 you have"), on a tinted chip in monospace; under a narrowing filter the label reads as Filters says. The label SHALL link to the list page, carrying the list's name and description in its title, and the description SHALL also be available to assistive technology. Under it, one line of thumbnails 2.5rem wide with no caption, ringed objekts first. A strip SHALL never wrap: it shows as many thumbnails as fit its width, and when some don't fit, the last place holds a "+N" tile counting the copies not shown, linking to the list.
+**Strip**: a monospace role label in its list type's colour, then " · " and the list's name, truncated to one line, then the list's own count when above zero ("14 you want", "2 you have"), on a tinted chip in monospace; under a narrowing filter the label reads as Filters says. The label SHALL link to the list page, carrying the list's name and description in its title, and the description SHALL also be available to assistive technology. The count SHALL sit beside the link, not in it, and activating it SHALL open a popover, "Matched with your lists", naming each of the viewer's lists that count was taken against, with its type and a link to it: on a want list the viewer's have and sale lists, on a have or sale list the viewer's want lists, as Compare with narrows them. Under a want list, it SHALL also name each rule the match went through, "via rule" with the rule's label and how many collections, on Browse as on For you (see Matched through your rules). Under it, one line of thumbnails 2.5rem wide with no caption, ringed objekts first. A strip SHALL never wrap: it shows as many thumbnails as fit its width, and when some don't fit, the last place holds a "+N" tile counting the copies not shown.
+
+**All of a list.** Activating a strip's "+N" tile SHALL open a dialog of that one list, never of the person's other posts: a bottom sheet below `sm`, a centred dialog from `sm` up. Its title is the list's name and its description the list's type. It SHALL list the list's objekts, copies of a collection stacked into one card with their count, those that match the viewer ringed as the strip rings them and first, then newest; a rule's objekts stay on its tile. When any match, two tabs SHALL lead it, "N you want" (on a want list "N you have") and "All N", counting collections, with the matching tab open first; otherwise it shows the list alone. Past 300 collections the rest are counted, "N more on the list page". The rings follow For you's Compare with, the owner's own list rings nothing, and a signed-out visitor sees no rings or tabs. A want side's rules SHALL lead the dialog as the strip's RULE tiles, since its objekt counts leave them out. When the feed's filters or matching narrowed the strip, the dialog SHALL still show the whole list of objekts and say that those aren't filtered; the RULE tiles keep the strip's counts. The objekts SHALL load only when the dialog opens. Activating an objekt SHALL close the dialog and open the objekt view. The footer SHALL offer Open list, which goes to the list page, and Close.
 
 From `@3xl` of the feed's width, the actions SHALL sit at the header's end and the posts SHALL be indented to start under the name. Narrower, the row SHALL stack: the header, each strip at full width with the ⇄ mark turned to point down, "+N more lists", then the actions in one row, Make offer filling the remaining width. The strips SHALL still not wrap, and the page SHALL not scroll sideways. Every row SHALL have the same layout whatever the number of objekts.
 
@@ -624,6 +626,18 @@ From `@3xl` of the feed's width, the actions SHALL sit at the header's end and t
 #### Scenario: Resize
 - **WHEN** the viewer widens the window so a strip has room for 3 more thumbnails
 - **THEN** the strip shows 3 more and the "+N" count drops by 3
+
+#### Scenario: Which of my lists matched
+- **WHEN** a person's HAVE strip reads "2 you want", matched through the viewer's want lists "binary hunt" and "store hunt"
+- **THEN** activating "2 you want" opens a popover titled "Matched with your lists" naming both, each tagged Want and linking to its list
+
+#### Scenario: See all of a list
+- **WHEN** at 390 px a person's HAVE strip holds 24 collections, 14 of them on the viewer's want lists, and shows 4 thumbnails then "+20"
+- **THEN** activating "+20" opens a bottom sheet titled with that list's name, with tabs "14 you want", open first and all 14 ringed, and "All 24"
+
+#### Scenario: Nothing matches
+- **WHEN** the viewer opens a strip's "+N" on a list none of whose objekts match them
+- **THEN** the dialog shows the list's objekts with no tabs and no rings
 
 #### Scenario: WTS post
 - **WHEN** a person's WTS post's sale list holds 19 objekts

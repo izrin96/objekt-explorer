@@ -10,6 +10,7 @@ import {
   type FeedEntry,
   type FeedPhase,
   feedPlan,
+  fullSide,
   fillPage,
   readBatches,
   readBudget,
@@ -1251,5 +1252,60 @@ describe("side order", () => {
         list({ id: 1, listType: "sale", linkedListId: 2, takesSwaps: true }),
       ]),
     ).toEqual(["sale", "want"]);
+  });
+});
+
+describe("fullSide", () => {
+  const none = new Map<string, number[]>();
+  // the viewer wants "a" and "c" on swaps-only want list 9, and "d" on Buying only list 10
+  const viewer: Viewer = {
+    have: none,
+    tradeHave: none,
+    saleHave: none,
+    want: new Map([
+      ["a", [9]],
+      ["c", [9]],
+      ["d", [10]],
+    ]),
+    tradeWant: new Map([
+      ["a", [9]],
+      ["c", [9]],
+    ]),
+    saleWant: new Map([["d", [10]]]),
+  };
+  const entries = [entry(1, "a"), entry(2, "b"), entry(3, "c"), entry(4, "c"), entry(5, "d")];
+  const slugs = (side: ReturnType<typeof fullSide>) => side.items.map((item) => item.slug);
+
+  test("lists every collection, ringed ones first, copies stacked", () => {
+    const side = fullSide("have", list({ id: 1, listType: "have" }), entries, viewer);
+    expect(slugs(side)).toEqual(["c", "a", "d", "b"]);
+    expect(side.items.filter((item) => item.ringed).map((item) => item.slug)).toEqual(["c", "a"]);
+    expect(side.items[0]).toMatchObject({ slug: "c", qty: 2 });
+    expect(side).toMatchObject({ matched: 2, more: 0, copyCount: 5 });
+  });
+
+  test("rings by the side's role: a sale list that takes swaps rings every want list", () => {
+    expect(fullSide("sale", list({ id: 1, listType: "sale" }), entries, viewer).matched).toBe(1);
+    expect(
+      fullSide("sale", list({ id: 1, listType: "sale", takesSwaps: true }), entries, viewer)
+        .matched,
+    ).toBe(3);
+  });
+
+  test("counts past the limit, and every match however many are drawn", () => {
+    const side = fullSide("have", list({ id: 1, listType: "have" }), entries, viewer, 1);
+    expect(slugs(side)).toEqual(["c"]);
+    expect(side).toMatchObject({ more: 3, matched: 2 });
+  });
+
+  test("leaves a rule's entries to its tile, and rings nothing signed out", () => {
+    const side = fullSide(
+      "want",
+      list({ id: 1, listType: "want" }),
+      [entry(1, "a"), { ...entry(2, "b"), ruleId: 5 }],
+      null,
+    );
+    expect(slugs(side)).toEqual(["a"]);
+    expect(side.matched).toBe(0);
   });
 });

@@ -1,6 +1,13 @@
 import { describe, expect, test } from "bun:test";
 
-import { leadPost, listCount, matchBand, orderPosts } from "./person-row";
+import {
+  leadPost,
+  listCount,
+  matchBand,
+  matchedListIds,
+  orderPosts,
+  ruleCountsOf,
+} from "./person-row";
 
 const post = (id: number, bumpedAt: string, match?: { youHave: number; youWant: number }) => ({
   id,
@@ -88,5 +95,38 @@ describe("listCount", () => {
 
   test("no match, no count", () => {
     expect(listCount(post(2, "2026-10-01T00:00:00Z"), { role: "want" })).toBe(0);
+  });
+});
+
+describe("matchedListIds", () => {
+  const matched = {
+    ...post(1, "2026-10-01T00:00:00Z", { youHave: 2, youWant: 14 }),
+    match: { youHave: 2, youWant: 14, haveListIds: [7, 8], wantListIds: [9] },
+  };
+
+  test("a want list names the viewer's have and sale lists, a have or sale list their want lists", () => {
+    expect(matchedListIds(matched, { role: "want" })).toEqual([7, 8]);
+    expect(matchedListIds(matched, { role: "have" })).toEqual([9]);
+    expect(matchedListIds(matched, { role: "sale" })).toEqual([9]);
+  });
+
+  test("no match, no lists", () => {
+    expect(matchedListIds(post(2, "2026-10-01T00:00:00Z"), { role: "want" })).toEqual([]);
+  });
+});
+
+describe("ruleCountsOf", () => {
+  const found = (slug: string, listId: number, ruleId: number) => ({ slug, listId, ruleId });
+  const matches = [found("a", 9, 1), found("b", 9, 2), found("c", 9, 1), found("d", 7, 3)];
+
+  test("counts each rule of one list, in the order found", () => {
+    expect(ruleCountsOf(matches, 9).map(({ match, count }) => [match.ruleId, count])).toEqual([
+      [1, 2],
+      [2, 1],
+    ]);
+  });
+
+  test("a list matched by hand alone has no rule lines", () => {
+    expect(ruleCountsOf(matches, 8)).toEqual([]);
   });
 });

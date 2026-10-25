@@ -20,6 +20,7 @@ import {
   type FeedPlan,
   feedPlan,
   fillPage,
+  fullSide,
   isPostIdle,
   isSectioned,
   latest,
@@ -48,7 +49,12 @@ import { unique } from "../../lib/unique";
 import type { PostCardView } from "../../schemas/chat";
 import type { CollectionFilters } from "../../schemas/common/filters";
 import type { ListType } from "../../schemas/list";
-import { type BrowseFilters, type BrowseMatchMode, type FeedCursor } from "../../schemas/trade";
+import {
+  type BrowseFilters,
+  type BrowseMatchMode,
+  type FeedCursor,
+  type SideItemsInput,
+} from "../../schemas/trade";
 import { postKindOf } from "../../schemas/trade-post";
 import { getCollectionFilters } from "../activity-feed";
 import {
@@ -612,6 +618,63 @@ export async function fetchPostCards(
     });
   }
   return result;
+}
+
+/** A list on Trade the viewer may see: not gone, off Trade, sanctioned or blocked either way. */
+async function findTradeList(viewerId: string | null, listId: number) {
+  const [list] = await db
+    .select(feedListColumns)
+    .from(lists)
+    .where(
+      and(
+        eq(lists.id, listId),
+        eq(lists.discoverable, true),
+        takesPartInTrade,
+        notTradeSanctioned(sql`${lists.userId}`),
+        viewerId === null ? undefined : notBlockedEither(viewerId, sql`${lists.userId}`),
+      ),
+    );
+  if (!list || !isTradeType(list.listType)) throw new ORPCError("NOT_FOUND");
+  return { ...list, listType: list.listType };
+}
+
+/** A list's shown entries: have and sale narrowed to what the owner can still trade. */
+async function tradeEntriesOf(list: FeedList) {
+  const addressRows = await fetchAddresses([list.userId]);
+  const entriesOf = await fetchPostEntries([list], addressesByUser(addressRows));
+  return entriesOf.get(list.id) ?? [];
+}
+
+/**
+ * One side of a post on Trade, every objekt of it, ringed against the viewer as the feed rings it:
+ * by Compare with's lists when `list` is given, and not at all on the owner's own list. Not
+ * found when the list is gone, off Trade, or hidden from the viewer.
+ */
+export async function fetchSideItems(viewerId: string | null, input: SideItemsInput) {
+  const list = await findTradeList(viewerId, input.listId);
+  const ringing = viewerId !== null && viewerId !== list.userId;
+  const [entries, viewer, sides] = await Promise.all([
+    tradeEntriesOf(list),
+    ringing ? fetchViewer(viewerId) : null,
+    ringing && input.list ? resolveCompareSides(viewerId, input.list, input.mutual ?? false) : null,
+  ]);
+  const side = fullSide(
+    list.listType,
+    list,
+    entries,
+    viewer && sides ? narrowViewer(viewer, sides) : viewer,
+  );
+  const collectionRows = await fetchCollectionsBySlug(
+    side.items.map((item) => item.slug),
+    [],
+  );
+  return {
+    ...side,
+    collections: Object.fromEntries(collectionRows.map((c) => [c.slug, c])) as Record<
+      string,
+      ValidObjekt
+    >,
+  };
 }
 
 async function lastBumpOf(userId: string) {

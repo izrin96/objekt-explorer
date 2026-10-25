@@ -54,6 +54,8 @@ type ObjektCardProps<T extends ValidObjekt> = {
   /** extra controls, rendered after the check in the top-right block */
   children?: ReactNode;
   className?: string;
+  /** on the image alone, not its caption: a ring that should leave the label out */
+  imageClassName?: string;
 };
 
 /**
@@ -109,6 +111,7 @@ export function ObjektCard<T extends ValidObjekt>({
   description,
   children,
   className,
+  imageClassName,
 }: ObjektCardProps<T>) {
   const hideLabelSetting = useSettings((s) => s.hideLabel);
   const selecting = useSelection(selectIsSelecting);
@@ -146,7 +149,7 @@ export function ObjektCard<T extends ValidObjekt>({
     <div className={cn("group @container isolate flex min-w-0 flex-col gap-1.5", className)}>
       {/* the corner controls sit beside the card body, not in it: a button's
           children are presentational, so a nested control loses its name */}
-      <div className="relative">
+      <div className={cn("relative", imageClassName)}>
         <div
           role={interactive ? "button" : undefined}
           tabIndex={interactive ? 0 : undefined}

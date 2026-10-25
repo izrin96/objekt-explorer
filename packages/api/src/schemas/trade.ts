@@ -170,6 +170,14 @@ export const personInputSchema = z.object({
   list: z.string().min(1).optional(),
 });
 
+/** One post side's every objekt, for the strip's "+N" dialog; `list` and `mutual` narrow the rings as For you's Compare with does. */
+export const sideItemsInputSchema = z.object({
+  listId: z.number().int().positive(),
+  list: z.string().min(1).optional(),
+  mutual: z.boolean().optional(),
+});
+export type SideItemsInput = z.infer<typeof sideItemsInputSchema>;
+
 export const mutualCountInputSchema = z.object({ list: z.string().min(1).optional() });
 
 export const setShowOnTradeInputSchema = z.object({ slug: z.string(), on: z.boolean() });

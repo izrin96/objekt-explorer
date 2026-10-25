@@ -725,3 +725,27 @@ export function assemblePost<L extends TradeList>(
     },
   };
 }
+
+/** a side's dialog lists this many collections; a bigger list is counted past it */
+export const FULL_SIDE_LIMIT = 300;
+
+/**
+ * Every objekt of one post side, as its "+N" dialog lists them: copies stacked, the ones that
+ * match the viewer ringed and first, then newest. A rule's entries stay on its tile. `matched`
+ * counts the ringed collections, all of them, however many the limit leaves out.
+ */
+export function fullSide(
+  role: "have" | "want" | "sale",
+  list: TradeList,
+  entries: FeedEntry[],
+  viewer: Viewer | null,
+  limit: number = FULL_SIDE_LIMIT,
+) {
+  const index = viewer ? indexFor(role, list, viewer) : null;
+  const objekts = entries.filter((entry) => entry.ruleId === undefined);
+  const { items, more, copyCount } = previewSide(objekts, index, limit);
+  const matched = index
+    ? new Set(objekts.flatMap((entry) => (index.has(entry.slug) ? [entry.slug] : []))).size
+    : 0;
+  return { items, more, copyCount, matched };
+}
