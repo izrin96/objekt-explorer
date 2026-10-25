@@ -224,11 +224,11 @@ Turning a type off SHALL stop new notifications of that type. Changing between A
 - **THEN** no notification is created, and the trade page still shows the leg Verified
 
 ### Requirement: Want-list alerts
-For each of a user's want lists, whether or not it is on Trade, the system SHALL notify the user when an entry for a collection on that want list is newly added to another account's discoverable have list bound to a Cosmo profile when the want list is open to swaps, or to such a sale list when the want list is open to buying (see `web-lists`). Which of another account's lists take part SHALL follow the same rules as For you (see `web-trade-for-you` Account-wide matches): an idle list does not alert, and neither does a hidden, blocking, blocked or trade-blocked account's list. It SHALL also notify when such a list becomes discoverable. The alert SHALL arrive within 10 minutes, including when entries are committed out of order. An entry SHALL still alert when its save commits up to 10 minutes after it began. A stop of the alert job SHALL delay alerts, not drop them: once the job runs again, every entry added in the meantime SHALL alert, each at most once. Losing the cache server SHALL neither skip nor repeat an alert. Alerts SHALL be grouped as one unread notification per want list per day. While that notification is unread, further matches SHALL update its count and the latest objekts instead of creating new ones. A given want list, source list and collection SHALL alert at most once, even if the entry is removed and added again.
+For each of a user's want lists, whether or not it is on Trade, the system SHALL notify the user when an entry for a collection on that want list is newly added to another account's discoverable have list bound to a Cosmo profile, or to such a sale list set to Sell or swap, when the want list is open to swaps, or to such a sale list when the want list is open to buying (see `web-lists` Want list match option and Sale list Open to). Which of another account's lists take part SHALL follow the same rules as For you (see `web-trade-for-you` Account-wide matches): an idle list does not alert, and neither does a hidden, blocking, blocked or trade-blocked account's list. It SHALL also notify when such a list becomes discoverable. The alert SHALL arrive within 10 minutes, including when entries are committed out of order. An entry SHALL still alert when its save commits up to 10 minutes after it began. A stop of the alert job SHALL delay alerts, not drop them: once the job runs again, every entry added in the meantime SHALL alert, each at most once. Losing the cache server SHALL neither skip nor repeat an alert. Alerts SHALL be grouped as one unread notification per want list per day. While that notification is unread, further matches SHALL update its count and the latest objekts instead of creating new ones. A given want list, source list and collection SHALL alert at most once, even if the entry is removed and added again.
 
 **Any or Can swap.** Which matches alert SHALL follow the user's "Someone has what you want" choice (see Notification settings):
 - Any: every match above;
-- Can swap: a match only while the other account is one of the people For you lists under Can swap (its Mutual) on the page the alert opens: Compare with naming the alert's list, which compares that list and its linked list, or all the user's lists when the list compares one way (see `web-trade-browse` Matches and Compare with). That means they also want, on a want list open to swaps, a collection the user still owns on a bound have list. A match from a sale list SHALL never alert under Can swap, since a sale is not a swap.
+- Can swap: a match only while the other account is one of the people For you lists under Can swap (its Mutual) on the page the alert opens: Compare with naming the alert's list, which compares that list and its linked list, or all the user's lists when the list compares one way (see `web-trade-browse` Matches and Compare with). That means they also want, on a want list open to swaps, a collection the user still owns on a bound have list. A match from a sale list set to Sell only SHALL never alert under Can swap, since a sale is not a swap; one from a sale list set to Sell or swap counts like a have list's.
 
 The alert's target SHALL be For you with Compare with naming that want list (see `web-trade-browse`): `/trade/for-you?match=any&list=<want-list-slug>` for an alert made under Any, and `/trade/for-you?match=mutual&list=<want-list-slug>` for one made under Can swap. A grouped notification SHALL lead to the target of its latest match. A notification made before this choice existed SHALL lead to `match=any`.
 
@@ -249,7 +249,7 @@ An entry left out only because its owner cannot trade it yet, or, under Can swap
 - **THEN** no alert is created for that entry
 
 #### Scenario: New sale listing matches a want list
-- **WHEN** the user has "Someone has what you want" on Any, another account adds SeoYeon 204Z to a sale list shown on the Market, and SeoYeon 204Z is on the user's want list "Binary hunt", which is open to buying
+- **WHEN** the user has "Someone has what you want" on Any, another account adds SeoYeon 204Z to a sale list set to Sell only and shown on the Market, and SeoYeon 204Z is on the user's want list "Binary hunt", which is open to buying
 - **THEN** within 10 minutes the user has an unread notification for "Binary hunt" naming that objekt and seller, linking to `/trade/for-you?match=any&list=<slug>`
 
 #### Scenario: Sale listing under Can swap
@@ -285,8 +285,12 @@ An entry left out only because its owner cannot trade it yet, or, under Can swap
 - **THEN** no alert is created
 
 #### Scenario: Sale listing and a Trade only want list
-- **WHEN** another account adds SeoYeon 204Z to a sale list shown on the Market, and SeoYeon 204Z is on the user's want list "Binary hunt", which is open to swaps only
+- **WHEN** another account adds SeoYeon 204Z to a sale list set to Sell only and shown on the Market, and SeoYeon 204Z is on the user's want list "Binary hunt", which is open to swaps only
 - **THEN** no alert is created for that entry
+
+#### Scenario: Sell or swap listing and a Trade only want list
+- **WHEN** the user has "Someone has what you want" on Any, another account adds SeoYeon 204Z to a sale list set to Sell or swap, and SeoYeon 204Z is on the user's want list "Binary hunt", which is open to swaps only
+- **THEN** within 10 minutes the user has an alert for "Binary hunt" naming that objekt, as for a have list
 
 #### Scenario: Have listing and a Buying only want list
 - **WHEN** another account adds SeoYeon 204Z to a have list on Trade, and SeoYeon 204Z is on the user's want list "Binary hunt", which is set to Buying only
@@ -305,7 +309,7 @@ An entry left out only because its owner cannot trade it yet, or, under Can swap
 - **THEN** the next run carries on from where the last one stopped: no entry added in between is skipped and none alerts twice
 
 ### Requirement: Reverse-direction alerts
-Unless the user has "Someone wants what you have" on Off, the system SHALL notify them when another account adds, to a discoverable want list, a collection that is on one of the user's have lists bound to a Cosmo profile when that want list is open to swaps, or on such a sale list when that want list is open to buying (see `web-lists`). The same grouping, once-only, timing and exclusion rules as want-list alerts SHALL apply, grouped per the user's list. The same Any or Can swap rules SHALL apply from the user's side: under Can swap, the other account must be one of the people For you lists under Can swap, and a match against only the user's sale list SHALL never alert. The target SHALL be `/trade/for-you?match=any&list=<that-list-slug>` for an alert made under Any, and `/trade/for-you?match=mutual&list=<that-list-slug>` for one made under Can swap.
+Unless the user has "Someone wants what you have" on Off, the system SHALL notify them when another account adds, to a discoverable want list, a collection that is on one of the user's have lists bound to a Cosmo profile, or on such a sale list set to Sell or swap, when that want list is open to swaps, or on such a sale list when that want list is open to buying (see `web-lists` Want list match option and Sale list Open to). The same grouping, once-only, timing and exclusion rules as want-list alerts SHALL apply, grouped per the user's list. The same Any or Can swap rules SHALL apply from the user's side: under Can swap, the other account must be one of the people For you lists under Can swap, and a match against only the user's sale lists set to Sell only SHALL never alert. The target SHALL be `/trade/for-you?match=any&list=<that-list-slug>` for an alert made under Any, and `/trade/for-you?match=mutual&list=<that-list-slug>` for one made under Can swap.
 
 #### Scenario: Can swap by default
 - **WHEN** a user has never changed the setting, someone adds to a want list open to swaps a collection on the user's have list, and that person has on a have list a collection on the user's want list
@@ -320,7 +324,7 @@ Unless the user has "Someone wants what you have" on Off, the system SHALL notif
 - **THEN** no notification is created
 
 #### Scenario: Trade only want list and the user's sale list
-- **WHEN** the user has the setting on Any, and another account adds to a want list open to swaps only a collection that is only on the user's sale list
+- **WHEN** the user has the setting on Any, and another account adds to a want list open to swaps only a collection that is only on the user's sale list set to Sell only
 - **THEN** no alert is created
 
 #### Scenario: Buying only want list and the user's have list
