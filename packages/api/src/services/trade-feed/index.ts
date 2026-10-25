@@ -502,6 +502,15 @@ export async function fetchMyPosts(userId: string) {
     }));
 }
 
+/** A list the viewer may see on Trade: shown there, its owner not trade-sanctioned, no block either way. */
+const visibleOnTrade = (viewerId: string | null) =>
+  and(
+    eq(lists.discoverable, true),
+    takesPartInTrade,
+    notTradeSanctioned(sql`${lists.userId}`),
+    viewerId === null ? undefined : notBlockedEither(viewerId, sql`${lists.userId}`),
+  );
+
 type PostCardPost = NonNullable<PostCardView["post"]>;
 
 /**
@@ -529,10 +538,7 @@ export async function fetchPostCards(
     .where(
       and(
         or(inArray(lists.id, [...listIds, ...partnerIds]), inArray(lists.linkedListId, listIds)),
-        eq(lists.discoverable, true),
-        takesPartInTrade,
-        notTradeSanctioned(sql`${lists.userId}`),
-        viewerId === null ? undefined : notBlockedEither(viewerId, sql`${lists.userId}`),
+        visibleOnTrade(viewerId),
       ),
     );
   const posts = pairPosts(owned);
@@ -626,15 +632,7 @@ async function findTradeList(viewerId: string | null, listId: number) {
   const [list] = await db
     .select(feedListColumns)
     .from(lists)
-    .where(
-      and(
-        eq(lists.id, listId),
-        eq(lists.discoverable, true),
-        takesPartInTrade,
-        notTradeSanctioned(sql`${lists.userId}`),
-        viewerId === null ? undefined : notBlockedEither(viewerId, sql`${lists.userId}`),
-      ),
-    );
+    .where(and(eq(lists.id, listId), visibleOnTrade(viewerId)));
   if (!list || !isTradeType(list.listType)) throw new ORPCError("NOT_FOUND");
   return { ...list, listType: list.listType };
 }
