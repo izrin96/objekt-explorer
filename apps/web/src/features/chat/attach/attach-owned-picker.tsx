@@ -49,20 +49,25 @@ export function OwnedPicker({ onPick }: { onPick: (attachment: Attachment) => vo
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">
-      <PickerFilterBar filters={filters} onChange={setFilters}>
-        {profiles.length > 1 ? (
-          <SingleSelect
-            label={m.chat_attach_profile_label()}
-            options={profiles.map((p) => ({
-              value: p.address,
-              label: displayNickname(p.address, p.nickname),
-            }))}
-            value={address}
-            defaultValue={profiles[0]!.address}
-            onChange={setPicked}
-          />
-        ) : null}
-      </PickerFilterBar>
+      <PickerFilterBar
+        filters={filters}
+        onChange={setFilters}
+        source={
+          profiles.length > 1 ? (
+            <SingleSelect
+              label={m.chat_attach_profile_label()}
+              options={profiles.map((p) => ({
+                value: p.address,
+                label: displayNickname(p.address, p.nickname),
+              }))}
+              value={address}
+              defaultValue={profiles[0]!.address}
+              showValue
+              onChange={setPicked}
+            />
+          ) : null
+        }
+      />
       <OwnedGrid address={address} filters={filters} onPick={onPick} />
     </div>
   );

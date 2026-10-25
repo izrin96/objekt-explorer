@@ -1,15 +1,11 @@
 import type { CollectionFilters } from "@repo/api/schemas/common/filters";
-import { validOnlineTypes } from "@repo/cosmo/types/common";
-import type { ReactNode } from "react";
+import { type ReactNode, useState } from "react";
 
-import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
-import { m } from "@/paraglide/messages";
-
+import { FacetControls } from "./facet-controls";
 import { useScopedFacets } from "./facets";
 import { PickerSearchField } from "./filter-search";
-import { ONLINE_TYPE_LABEL } from "./labels";
+import { ResetButton } from "./reset-button";
 import { defaultFilters, type FilterSearch } from "./search-schema";
-import { SingleSelect } from "./single-select";
 
 /** What a picker in a dialog narrows by; empty arrays mean no filter. */
 export type PickerFacetFilters = Pick<
@@ -51,81 +47,45 @@ export const toFilterSearch = (filters: PickerFacetFilters): FilterSearch => ({
   collection: filters.collection.length > 0 ? filters.collection : undefined,
 });
 
-const ALL = "all";
-
-/** The filters the pickers share; `children` adds a picker's own controls. */
+/**
+ * The filters the pickers share, as the page toolbar draws them. `source` picks where the
+ * objekts come from (a list, a profile) and follows the filters; `children` adds a picker's
+ * own controls after Reset.
+ */
 export function PickerFilterBar<F extends PickerFacetFilters>({
   filters,
   onChange,
-  leading,
+  source,
   children,
 }: {
   filters: F;
   onChange: (next: F) => void;
-  leading?: ReactNode;
+  source?: ReactNode;
   children?: ReactNode;
 }) {
   const { facets, groups } = useScopedFacets();
-  const { getArtist } = useCosmoArtist();
-  const picked = filters.artist[0];
-  const members = picked
-    ? (groups.find((group) => group.artist.id === picked)?.members ?? [])
-    : facets.members;
-  const select = (
-    key: "member" | "season" | "class" | "collection",
-    label: string,
-    values: readonly string[],
-  ) => (
-    <SingleSelect
-      label={label}
-      options={[
-        { value: ALL, label: m.filter_all() },
-        ...values.map((value) => ({ value, label: value })),
-      ]}
-      value={filters[key][0] ?? ALL}
-      defaultValue={ALL}
-      onChange={(value) => onChange({ ...filters, [key]: value === ALL ? [] : [value] })}
-    />
-  );
+  // the search field keeps its own draft, so a reset remounts it to clear the text
+  const [searchKey, setSearchKey] = useState(0);
 
   return (
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-      {leading}
-      <PickerSearchField onCommit={(search) => onChange({ ...filters, search })} />
-      <SingleSelect
-        label={m.filter_artist()}
-        options={[
-          { value: ALL, label: m.filter_all() },
-          ...facets.artists.map((value) => ({ value, label: getArtist(value)?.title ?? value })),
-        ]}
-        value={picked ?? ALL}
-        defaultValue={ALL}
-        onChange={(value) => {
-          const artist = value === ALL ? [] : [value as F["artist"][number]];
-          const group = groups.find((g) => g.artist.id === value)?.members;
-          const member = filters.member.filter((name) => !group || group.includes(name));
-          onChange({ ...filters, artist, member });
+    <div className="flex flex-wrap items-center gap-2">
+      <PickerSearchField key={searchKey} onCommit={(search) => onChange({ ...filters, search })} />
+      <FacetControls
+        surface="inline"
+        facets={facets}
+        groups={groups}
+        values={filters}
+        onChange={(patch) => onChange({ ...filters, ...patch })}
+        noSheet
+      />
+      {source}
+      <ResetButton
+        disabled={!pickerFiltered(filters)}
+        onReset={() => {
+          setSearchKey((key) => key + 1);
+          onChange({ ...filters, ...NO_PICKER_FILTERS });
         }}
       />
-      {select("member", m.filter_member(), members)}
-      {select("season", m.filter_season(), facets.seasons)}
-      {select("class", m.filter_class(), facets.classes)}
-      <SingleSelect
-        label={m.filter_type()}
-        options={[
-          { value: ALL, label: m.filter_all() },
-          ...validOnlineTypes.map((value) => ({ value, label: ONLINE_TYPE_LABEL[value]() })),
-        ]}
-        value={filters.on_offline[0] ?? ALL}
-        defaultValue={ALL}
-        onChange={(value) =>
-          onChange({
-            ...filters,
-            on_offline: value === ALL ? [] : [value as F["on_offline"][number]],
-          })
-        }
-      />
-      {select("collection", m.filter_collection_no(), facets.collectionNos)}
       {children}
     </div>
   );

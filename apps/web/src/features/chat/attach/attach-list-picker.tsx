@@ -15,6 +15,7 @@ import {
   toFilterSearch,
 } from "@/features/filters/picker-filter-bar";
 import { SingleSelect } from "@/features/filters/single-select";
+import { listOption } from "@/features/list/list-option";
 import { listEntriesOptions } from "@/features/list/queries";
 import { ObjektCard } from "@/features/objekt/objekt-card";
 import { VirtualCardGrid } from "@/features/objekt/virtual-card-grid";
@@ -46,15 +47,20 @@ export function ListPicker({ onPick }: { onPick: (attachment: Attachment) => voi
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">
-      <PickerFilterBar filters={filters} onChange={setFilters}>
-        <SingleSelect
-          label={m.chat_attach_list_label()}
-          options={lists.map((l) => ({ value: l.slug, label: l.name }))}
-          value={list.slug}
-          defaultValue={lists[0]!.slug}
-          onChange={setPicked}
-        />
-      </PickerFilterBar>
+      <PickerFilterBar
+        filters={filters}
+        onChange={setFilters}
+        source={
+          <SingleSelect
+            label={m.chat_attach_list_label()}
+            options={lists.map((l) => listOption({ slug: l.slug, name: l.name, type: l.listType }))}
+            value={list.slug}
+            defaultValue={lists[0]!.slug}
+            showValue
+            onChange={setPicked}
+          />
+        }
+      />
       <ListGrid slug={list.slug} name={list.name} filters={filters} onPick={onPick} />
     </div>
   );

@@ -128,13 +128,13 @@ Opened for one of the partner's have or sale lists on Trade (from a Trade post o
 
 Each pickable objekt SHALL show its flags (not transferable, reserved, in another open offer). Send SHALL stay disabled until the offer holds at least one objekt.
 
-Each picker SHALL narrow by artist, member, season, class, online or offline, and collection number, where picking an artist limits the member choices to that artist's members, and SHALL load more as it scrolls, 200 objekts at a time, so a long list does not land at once. Each SHALL also offer a matching switch:
+Each picker SHALL narrow by artist, member, season, class, collection number, and online or offline, in that order, with the same controls as the page filter bar, where artist, member, season, class and collection number each take more than one value, picking artists limits the member choices to those artists' members, and a Reset clears every filter but the matching switch; and SHALL load more as it scrolls, 200 objekts at a time, so a long list does not land at once. Each SHALL also offer a matching switch:
 - You give: "Only what they want", off by default, keeps collections on the partner's discoverable want lists.
 - You get: "Only what I want", off by default, keeps collections on the sender's want lists.
 
-You give's picker SHALL offer a **From** choice: All your objekts, the default, which shows the have and sale list entries first as above; or one of the sender's have, sale or general lists, which shows only the objekts on that list the sender still holds at a linked address, with no separate list-first section. The filters and the matching switch apply on top of From.
+You give's picker SHALL offer a **List** choice, after the filters: All your objekts, the default, which shows the have and sale list entries first as above; or one of the sender's have, sale or general lists, each shown with its list type badge, which shows only the objekts on that list the sender still holds at a linked address, with no separate list-first section. The filters and the matching switch apply on top of List.
 
-You get's picker over lists SHALL offer a **From** choice when the offer is not scoped to one list and the partner has more than one have or sale list on Trade: All their lists, the default; or one of those lists, named with its type, which shows only that list's entries the sender may ask for. The filters and the matching switch apply on top of From. From changes only what the picker shows, not what may be sent. With a list picked, an empty picker SHALL say that nothing matches the filters, or else that nothing on that list is available.
+You get's picker over lists SHALL offer a **List** choice, after the filters, when the offer is not scoped to one list and the partner has a have or sale list on Trade: All their lists, the default; or one of those lists, shown as its name after its list type badge as in Compare with, which shows only that list's entries the sender may ask for. The filters and the matching switch apply on top of List. List changes only what the picker shows, not what may be sent. With a list picked, an empty picker SHALL say that nothing matches the filters, or else that nothing on that list is available.
 
 An empty You get picker over lists SHALL say why: the partner lists nothing the sender may ask for; nothing matches the filters; or the partner no longer holds anything they listed. The first reason SHALL win over the filters. An empty picker over their collection SHALL say the partner holds nothing the sender can ask for, or that nothing matches the filters. In either picker, when the matching switch is on and no other filter is set, "nothing matches the filters" SHALL instead say that nothing held is on the other side's want lists ("rin.trades holds nothing on your want lists" in You get, "You hold nothing on rin.trades's want lists" in You give) and offer Turn off for the switch.
 
@@ -166,25 +166,25 @@ An empty You get picker over lists SHALL say why: the partner lists nothing the 
 - **WHEN** the sender opens the builder from their conversation with rin.trades, who has "doubles" and "spares" on Trade
 - **THEN** You get's button reads "Add from rin.trades's lists", and its picker shows the entries of both lists
 
-#### Scenario: From one of my lists
-- **WHEN** the sender picks their sale list "doubles" under From, and holds 4 of its 6 entries
+#### Scenario: Pick one of my lists
+- **WHEN** the sender picks their sale list "doubles" under List, and holds 4 of its 6 entries
 - **THEN** the picker shows those 4 objekts only
 
-#### Scenario: From one of their lists
-- **WHEN** the sender, in their conversation with rin.trades, opens You get's picker and picks rin.trades's sale list "spares" under From
+#### Scenario: Pick one of their lists
+- **WHEN** the sender, in their conversation with rin.trades, opens You get's picker and picks rin.trades's sale list "spares" under List
 - **THEN** the picker shows only the entries of "spares" the sender may ask for
 
-#### Scenario: Their From hidden when scoped
+#### Scenario: Their List hidden when scoped
 - **WHEN** the sender opens You get's picker from rin.trades's post for the have list "doubles"
-- **THEN** the picker offers no From choice, and shows only the entries of "doubles"
+- **THEN** the picker offers no List choice, and shows only the entries of "doubles"
 
-#### Scenario: Their From hidden for one list
-- **WHEN** rin.trades has exactly one have or sale list on Trade
-- **THEN** You get's picker offers no From choice
+#### Scenario: Their List shown for one list
+- **WHEN** rin.trades has exactly one have or sale list on Trade, and the offer is not scoped to it
+- **THEN** You get's picker offers a List choice of All their lists and that list
 
-#### Scenario: Their From hidden over a collection
+#### Scenario: Their List hidden over a collection
 - **WHEN** rin.trades has no have or sale list on Trade, and the sender opens You get's picker
-- **THEN** the collection picker offers no From choice
+- **THEN** the collection picker offers no List choice
 
 #### Scenario: Artist narrows members
 - **WHEN** the sender picks ARTMS under Artist

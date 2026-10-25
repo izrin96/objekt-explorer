@@ -22,7 +22,7 @@ import {
   pickerFiltered,
 } from "@/features/filters/picker-filter-bar";
 import { SingleSelect } from "@/features/filters/single-select";
-import { LIST_TYPE_LABEL } from "@/features/list/list-type-badge";
+import { listOption } from "@/features/list/list-option";
 import { useUserLists } from "@/features/user/hooks";
 import { useLoadAllPages } from "@/hooks/use-load-all-pages";
 import { m } from "@/paraglide/messages";
@@ -209,36 +209,30 @@ function MatchSwitch({
 
 const ALL = "all";
 
-type FromChoice = { slug: string; name: string; type: ListType };
+type ListChoice = { slug: string; name: string; type: ListType };
 
 /** A picked list that has since left `lists` reads as All again. */
-function useFromList(lists: readonly FromChoice[]) {
-  const [from, setFrom] = useState(ALL);
-  const fromList = lists.some((list) => list.slug === from) ? from : undefined;
-  return [fromList, setFrom] as const;
+function useListChoice(lists: readonly ListChoice[]) {
+  const [picked, setList] = useState(ALL);
+  const fromList = lists.some((list) => list.slug === picked) ? picked : undefined;
+  return [fromList, setList] as const;
 }
 
-function FromSelect({
+function ListSelect({
   lists,
   allLabel,
   value,
   onChange,
 }: {
-  lists: readonly FromChoice[];
+  lists: readonly ListChoice[];
   allLabel: string;
   value: string | undefined;
   onChange: (value: string) => void;
 }) {
   return (
     <SingleSelect
-      label={m.offer_picker_from()}
-      options={[
-        { value: ALL, label: allLabel },
-        ...lists.map((list) => ({
-          value: list.slug,
-          label: m.offer_picker_from_list({ name: list.name, type: LIST_TYPE_LABEL[list.type]() }),
-        })),
-      ]}
+      label={m.offer_picker_list()}
+      options={[{ value: ALL, label: allLabel }, ...lists.map(listOption)]}
       value={value ?? ALL}
       defaultValue={ALL}
       onChange={onChange}
@@ -253,7 +247,7 @@ function PickerGrid({
   query,
   filters,
   onFilters,
-  leading,
+  source,
   matchLabel,
   suggestedTitle,
   allTitle,
@@ -263,7 +257,7 @@ function PickerGrid({
   query: Parameters<typeof pagedGridProps>[0] & { data?: { pages: Pages[] } };
   filters: Filters;
   onFilters: (filters: Filters) => void;
-  leading?: ReactNode;
+  source?: ReactNode;
   matchLabel: string;
   suggestedTitle?: string;
   allTitle?: string;
@@ -279,7 +273,7 @@ function PickerGrid({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">
-      <PickerFilterBar filters={filters} onChange={onFilters} leading={leading}>
+      <PickerFilterBar filters={filters} onChange={onFilters} source={source}>
         <MatchSwitch
           checked={filters.matchOnly}
           onChange={(matchOnly) => onFilters({ ...filters, matchOnly })}
@@ -308,7 +302,7 @@ function MineGrid({ to, name, ...grid }: GridProps & { name: string }) {
   const lists = useUserLists().flatMap((list) =>
     list.listType === "want" ? [] : [{ slug: list.slug, name: list.name, type: list.listType }],
   );
-  const [fromList, setFrom] = useFromList(lists);
+  const [fromList, setList] = useListChoice(lists);
   const query = useInfiniteQuery(myCandidatesOptions(to, filters, fromList));
 
   return (
@@ -317,13 +311,13 @@ function MineGrid({ to, name, ...grid }: GridProps & { name: string }) {
       query={query}
       filters={filters}
       onFilters={setFilters}
-      leading={
+      source={
         lists.length > 0 ? (
-          <FromSelect
+          <ListSelect
             lists={lists}
-            allLabel={m.offer_picker_from_all()}
+            allLabel={m.offer_picker_list_all()}
             value={fromList}
-            onChange={setFrom}
+            onChange={setList}
           />
         ) : null
       }
@@ -334,7 +328,7 @@ function MineGrid({ to, name, ...grid }: GridProps & { name: string }) {
         narrowed(filters)
           ? narrowedEmpty(filters, setFilters, m.offer_picker_mine_none_wanted({ name }))
           : fromList
-            ? { title: m.offer_picker_from_empty() }
+            ? { title: m.offer_picker_list_empty() }
             : { title: m.offer_picker_mine_empty() }
       }
     />
@@ -358,7 +352,7 @@ function theirsEmpty(
   if (narrowed(filters)) {
     return narrowedEmpty(filters, onFilters, m.offer_picker_theirs_none_wanted({ name }));
   }
-  if (fromList) return { title: m.offer_picker_theirs_from_empty() };
+  if (fromList) return { title: m.offer_picker_theirs_list_empty() };
   return {
     title: m.offer_picker_theirs_none_held({ name }),
     hint: m.offer_picker_theirs_none_held_hint(),
@@ -372,8 +366,8 @@ function TheirsGrid({
   ...grid
 }: GridProps & { name: string; lists: PartnerList[] }) {
   const [filters, setFilters] = useState(NO_FILTERS);
-  // a scoped offer gets no lists, and one list is the same as All
-  const [fromList, setFrom] = useFromList(lists);
+  // a scoped offer gets no lists
+  const [fromList, setList] = useListChoice(lists);
   const query = useInfiniteQuery(theirPickerOptions(to, filters, fromList));
   const listed = query.data?.pages[0]?.listed ?? true;
 
@@ -383,13 +377,13 @@ function TheirsGrid({
       query={query}
       filters={filters}
       onFilters={setFilters}
-      leading={
-        lists.length > 1 ? (
-          <FromSelect
+      source={
+        lists.length > 0 ? (
+          <ListSelect
             lists={lists}
-            allLabel={m.offer_picker_from_all_theirs()}
+            allLabel={m.offer_picker_list_all_theirs()}
             value={fromList}
-            onChange={setFrom}
+            onChange={setList}
           />
         ) : null
       }
