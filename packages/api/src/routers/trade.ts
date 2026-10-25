@@ -13,6 +13,7 @@ import {
   forYouInputSchema,
   fullestFilter,
   listMatchCountInputSchema,
+  listMatchesInputSchema,
   mutualCountInputSchema,
   personInputSchema,
   savePostInputSchema,
@@ -30,6 +31,7 @@ import {
   browseFeed,
   bumpPerson,
   collectionPostCounts,
+  fetchListMatches,
   fetchMyPosts,
   fetchSideItems,
   setShowOnTrade,
@@ -79,6 +81,14 @@ export const tradeRouter = {
     await limitFeed(context.session?.user.id, context.headers);
     return fetchSideItems(context.session?.user.id ?? null, input);
   }),
+
+  /** A list page's Show my matches: which of the list's collections match the viewer's lists. */
+  listMatches: authed
+    .input(listMatchesInputSchema)
+    .handler(async ({ input: { listId }, context }) => {
+      await limitFeed(context.session.user.id, context.headers);
+      return fetchListMatches(context.session.user.id, listId);
+    }),
 
   bump: authed.handler(async ({ context: { session } }) => bumpPerson(session.user.id)),
 

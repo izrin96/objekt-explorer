@@ -11,6 +11,7 @@ import {
   type FeedPhase,
   feedPlan,
   fullSide,
+  listMatchesOf,
   fillPage,
   readBatches,
   readBudget,
@@ -1307,5 +1308,63 @@ describe("fullSide", () => {
     );
     expect(slugs(side)).toEqual(["a"]);
     expect(side.matched).toBe(0);
+  });
+});
+describe("listMatchesOf", () => {
+  const none = new Map<string, number[]>();
+  // want list 9 is swaps only, 10 Buying only; have list 7, sale list 8
+  const viewer: Viewer = {
+    have: new Map([
+      ["x", [7]],
+      ["y", [8]],
+    ]),
+    tradeHave: new Map([["x", [7]]]),
+    saleHave: new Map([["y", [8]]]),
+    want: new Map([
+      ["a", [9]],
+      ["b", [10]],
+    ]),
+    tradeWant: new Map([["a", [9]]]),
+    saleWant: new Map([["b", [10]]]),
+  };
+  const entries = [entry(1, "a"), entry(2, "a"), entry(3, "b"), entry(4, "x"), entry(5, "y")];
+
+  test("a have list matches the viewer's want lists open to swaps, once per collection", () => {
+    expect(listMatchesOf("have", list({ id: 1, listType: "have" }), entries, viewer)).toEqual({
+      slugs: ["a"],
+      listIds: [9],
+    });
+  });
+
+  test("a sale list that takes swaps matches every want list", () => {
+    const sale = list({ id: 1, listType: "sale", takesSwaps: true });
+    expect(listMatchesOf("sale", sale, entries, viewer)).toEqual({
+      slugs: ["a", "b"],
+      listIds: [9, 10],
+    });
+  });
+
+  test("a want list matches by its Open to", () => {
+    const swaps = list({ id: 1, listType: "want", matchHave: true, matchSale: false });
+    expect(listMatchesOf("want", swaps, entries, viewer).slugs).toEqual(["x"]);
+    const both = list({ id: 1, listType: "want" });
+    expect(listMatchesOf("want", both, entries, viewer)).toEqual({
+      slugs: ["x", "y"],
+      listIds: [7, 8],
+    });
+  });
+
+  test("a rule's entries are left out, as the list page's grid leaves them out", () => {
+    const withRule = [entry(1, "x"), { ...entry(2, "y"), ruleId: 4 }];
+    const both = list({ id: 1, listType: "want" });
+    expect(listMatchesOf("want", both, withRule, viewer)).toEqual({ slugs: ["x"], listIds: [7] });
+  });
+
+  test("nothing matches, nothing back", () => {
+    const empty = { ...viewer, tradeWant: none };
+    expect(listMatchesOf("have", list({ id: 1, listType: "have" }), entries, empty)).toEqual({
+      slugs: [],
+      listIds: [],
+    });
   });
 });

@@ -207,7 +207,7 @@ export function previewSide(
 /** A collection slug to the viewer's lists that have it on. */
 type SlugIndex = ReadonlyMap<string, readonly number[]>;
 
-/** How many collections the sides' indexes hold between them, and the viewer's lists they are on. */
+/** The collections the sides' indexes hold between them, and the viewer's lists they are on. */
 function matchCollections(sides: { entries: { slug: string }[]; index: SlugIndex }[]) {
   const slugs = new Set<string>();
   const listIds = new Set<number>();
@@ -219,7 +219,7 @@ function matchCollections(sides: { entries: { slug: string }[]; index: SlugIndex
       for (const id of ids) listIds.add(id);
     }
   }
-  return { count: slugs.size, listIds: [...listIds] };
+  return { count: slugs.size, slugs: [...slugs], listIds: [...listIds] };
 }
 
 /** Whether a post's match line shows anything, so Only matches keeps it. */
@@ -748,4 +748,23 @@ export function fullSide(
     ? new Set(objekts.flatMap((entry) => (index.has(entry.slug) ? [entry.slug] : []))).size
     : 0;
   return { items, more, copyCount, matched };
+}
+/**
+ * A list's collections that match the viewer, by the rule its post side rings with, and the
+ * viewer's lists they matched: what a list page's Show my matches outlines. A rule's entries are
+ * left out, as the page's grid leaves them out for the Rules strip.
+ */
+export function listMatchesOf(
+  role: "have" | "want" | "sale",
+  list: TradeList,
+  entries: FeedEntry[],
+  viewer: Viewer,
+) {
+  const { slugs, listIds } = matchCollections([
+    {
+      entries: entries.filter((entry) => entry.ruleId === undefined),
+      index: indexFor(role, list, viewer),
+    },
+  ]);
+  return { slugs, listIds };
 }

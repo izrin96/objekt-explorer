@@ -408,6 +408,21 @@ Each rule row's menu SHALL offer See the objekts, Edit rule, Turn into objekts a
 - **WHEN** the owner turns that rule into objekts
 - **THEN** the rule is gone, the list holds its 78 objekts as objekts, and they no longer follow holdings
 
+### Requirement: Show my matches
+On someone else's list that is on Trade, a signed-in viewer SHALL have a Show my matches toggle in the filter bar, off by default. On, the grid SHALL show only the objekts whose collection matches the viewer's lists by the rules For you uses (on a have or sale list the viewer's want lists, on a want list the viewer's have and sale lists, as its Open to allows), together with the filters, and its total SHALL count only those; a rule's objekts stay in the Rules strip and are not counted. Beside the toggle the count SHALL read "N you want" or on a want list "N you have", counting collections, and open "Matched with your lists", naming each of those lists. The matches SHALL load only while the toggle is on; while they load the toggle SHALL show a spinner and the grid stays whole, and a refusal SHALL show its reason beside it. When nothing matches, the page SHALL say so and offer Show all, which turns the toggle off. It SHALL NOT show on the viewer's own list, to a signed-out visitor, on a list off Trade, or while a Compare is active, whose result already answers its own question.
+
+#### Scenario: Turn it on
+- **WHEN** a signed-in viewer opens sale list "WTS" on Trade, 2,407 objekts of which 58 collections are on the viewer's want list "binary hunt", and turns on Show my matches
+- **THEN** the grid shows only those objekts, the count reads "58 you want", and it opens a popover naming "binary hunt"
+
+#### Scenario: Nothing matches
+- **WHEN** the viewer turns it on and none of the list's objekts match
+- **THEN** the page reads "Nothing here matches your lists" with Show all, which brings the whole list back
+
+#### Scenario: While comparing
+- **WHEN** the viewer compares the list with a profile
+- **THEN** the toggle is gone, and the grid shows the Compare result, until the Compare is cleared
+
 ### Requirement: Add to list adds objekts only
 The Add to list dialog SHALL add the picked objekts, never a rule, whatever list is picked. A rule SHALL be added from the want list's own page.
 

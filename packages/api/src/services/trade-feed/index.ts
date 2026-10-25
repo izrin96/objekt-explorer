@@ -21,6 +21,7 @@ import {
   feedPlan,
   fillPage,
   fullSide,
+  listMatchesOf,
   isPostIdle,
   isSectioned,
   latest,
@@ -675,6 +676,14 @@ export async function fetchSideItems(viewerId: string | null, input: SideItemsIn
       ValidObjekt
     >,
   };
+}
+
+/** Which of a list's collections match the viewer's lists, and which of theirs: none on their own. */
+export async function fetchListMatches(viewerId: string, listId: number) {
+  const list = await findTradeList(viewerId, listId);
+  if (list.userId === viewerId) return { slugs: [], listIds: [] };
+  const [entries, viewer] = await Promise.all([tradeEntriesOf(list), fetchViewer(viewerId)]);
+  return listMatchesOf(list.listType, list, entries, viewer);
 }
 
 async function lastBumpOf(userId: string) {

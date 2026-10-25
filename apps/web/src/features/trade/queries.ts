@@ -50,3 +50,11 @@ export const sideItemsOptions = (
     staleTime: BROWSE_STALE_MS,
     retry: retryUnlessRefused,
   });
+/** A list page's Show my matches; asked only while the toggle is on. */
+export const listMatchesOptions = (listId: number, enabled: boolean) =>
+  orpc.trade.listMatches.queryOptions({
+    input: { listId },
+    enabled,
+    staleTime: BROWSE_STALE_MS,
+    retry: retryUnlessRefused,
+  });

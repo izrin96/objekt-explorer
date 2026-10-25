@@ -45,6 +45,7 @@ import { RemoveFromListDialog } from "./remove-from-list-dialog";
 import { listRulesOptions } from "./rules/queries";
 import { RulesStrip } from "./rules/rules-strip";
 import { SetPriceDialog } from "./set-price-dialog";
+import { canShowMatches, ShowMyMatches, useListMatches } from "./show-my-matches";
 import { useEntryDialogs } from "./use-entry-dialogs";
 import { useListOwned } from "./use-list-owned";
 
@@ -75,6 +76,11 @@ function ListEntries() {
   const setCompare = useSetCompare();
   const clearCompare = useCallback(() => setCompare(null), [setCompare]);
 
+  // a Compare result is already narrowed to its own question, so the outlines give way to it
+  const matchable = canShowMatches(list, !!user, isOwner) && compare === null;
+  const [showMatches, setShowMatches] = useState(false);
+  const matches = useListMatches(list, matchable && showMatches);
+
   const { data: rules } = useQuery({
     ...listRulesOptions(list.slug),
     enabled: list.listType === "want",
@@ -100,10 +106,12 @@ function ListEntries() {
   const filters = useCanonicalFilters();
   const deferredFilters = useDeferredValue(filters);
   const reset = useResetFilters();
-  const filtered = useMemo(
-    () => filterObjekts(deferredFilters, objekts),
-    [deferredFilters, objekts],
-  );
+  // Show my matches narrows the grid to what matches: an outline is lost on a long list
+  const filtered = useMemo(() => {
+    const kept = filterObjekts(deferredFilters, objekts);
+    const matched = matches.slugs;
+    return matched ? kept.filter((objekt) => matched.has(objekt.slug)) : kept;
+  }, [deferredFilters, objekts, matches.slugs]);
 
   const grouped = filters.grouped === true;
   // a fresh array each render would re-run the facet parity effect forever
@@ -265,7 +273,22 @@ function ListEntries() {
         sorts={sorts}
         longTail={LONG_TAIL.list}
         extras={extras}
-        actions={<GenerateDiscordButton objekts={filtered} rules={ruleLines} />}
+        actions={
+          <>
+            {matchable ? (
+              <ShowMyMatches
+                list={list}
+                on={showMatches}
+                onChange={setShowMatches}
+                count={matches.slugs?.size ?? null}
+                listIds={matches.listIds}
+                pending={matches.pending}
+                error={matches.error}
+              />
+            ) : null}
+            <GenerateDiscordButton objekts={filtered} rules={ruleLines} />
+          </>
+        }
       />
 
       {compare !== null ? <CompareBanner compare={compare} onClear={clearCompare} /> : null}
@@ -286,6 +309,17 @@ function ListEntries() {
         ) : (
           <EmptyList />
         )
+      ) : filtered.length === 0 && matches.slugs ? (
+        <EmptyState
+          icon={MagnifyingGlassIcon}
+          title={m.list_matches_empty_title()}
+          hint={m.list_matches_empty_hint()}
+          action={
+            <Button variant="outline" size="sm" onClick={() => setShowMatches(false)}>
+              {m.list_matches_show_all()}
+            </Button>
+          }
+        />
       ) : filtered.length === 0 ? (
         <EmptyState
           icon={MagnifyingGlassIcon}

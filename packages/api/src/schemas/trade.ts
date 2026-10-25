@@ -178,6 +178,9 @@ export const sideItemsInputSchema = z.object({
 });
 export type SideItemsInput = z.infer<typeof sideItemsInputSchema>;
 
+/** A list page's Show my matches. */
+export const listMatchesInputSchema = z.object({ listId: z.number().int().positive() });
+
 export const mutualCountInputSchema = z.object({ list: z.string().min(1).optional() });
 
 export const setShowOnTradeInputSchema = z.object({ slug: z.string(), on: z.boolean() });
