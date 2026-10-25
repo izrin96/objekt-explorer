@@ -681,23 +681,23 @@ From `@3xl` of the feed's width, the actions SHALL sit at the header's end and t
 
 #### Scenario: Mutual post on For you
 - **WHEN** on For you a person has a mutual score of 2 with the viewer
-- **THEN** the header reads "You can swap 2" with the 2 in indigo
+- **THEN** the chip beside the name reads "You can swap 2" on an indigo tint
 
 ### Requirement: Trade colours
 Trade rows on Browse and For you SHALL colour their type marks (see `web-lists` List type colours):
 - post tags, list badges and strip role labels take their list type's colour;
-- the header sentence's number is indigo when it is a mutual score ("You can swap 2") and neutral otherwise;
+- the "You can swap N" chip is an indigo tint, and the numbers of the counts under the name stay neutral;
 - a list's count chip is neutral text on a tint of the success colour.
 
 Rows, buttons, avatars and backgrounds SHALL stay neutral.
 
 #### Scenario: A WTS post
 - **WHEN** the viewer sees a person whose only post is a WTS post holding 3 collections on the viewer's want lists, and who wants none of the viewer's
-- **THEN** the WTS tag and SALE label are rose, the header reads "They have 3 you want" with a neutral number, and the SALE strip's chip reads "3 you want"
+- **THEN** the WTS tag and SALE label are rose, the header reads "They have 3 you want" with a neutral number and no chip, and the SALE strip's chip reads "3 you want"
 
 #### Scenario: Mutual partner
 - **WHEN** rin.trades's row reads "You can swap 2", with 14 collections on have list "spares" and 2 the viewer has on want list "binary hunt"
-- **THEN** the 2 in the sentence is indigo, the HAVE label is teal and the WANT label amber, and the chips read "14 you want" and "2 you have"
+- **THEN** the "You can swap 2" chip is indigo, the HAVE label is teal and the WANT label amber, and the chips read "14 you want" and "2 you have"
 
 ### Requirement: Matches and Compare with
 For you (`/trade/for-you`) SHALL list the same people as Browse, in the same rows and with the same Post type menu and facets, narrowed by matching. It SHALL carry a toggle button labelled Can swap, pressed or not (see Layout for where it sits). Not pressed is Any, the default; pressed is Mutual, which the viewer sees named Can swap, never Mutual; the URL keeps `match=mutual`:
@@ -793,8 +793,12 @@ The help beside the controls SHALL describe the mutual score as what the two peo
 - **THEN** the feed loads the remaining 8 in the same order, without repeating a person
 
 #### Scenario: Compare one pair
-- **WHEN** under Mutual the viewer picks have list "spares", linked to want list "binary hunt"
+- **WHEN** under Mutual the viewer picks "spares ⇄ binary hunt", have list "spares" linked to want list "binary hunt"
 - **THEN** the URL carries `list=spares`, the line reads "What you have: spares. What you want: binary hunt.", header sentences, list counts and rings count only those two lists, and the button counts the mutual people for them
+
+#### Scenario: A link naming the want half
+- **WHEN** a want-list alert opens `/trade/for-you?match=any&list=binary-hunt`, and "binary hunt" is linked to have list "spares"
+- **THEN** Compare with reads "spares ⇄ binary hunt", and both lists are compared
 
 #### Scenario: Lone list under Mutual
 - **WHEN** under Any the viewer picks sale list "duplicates" and then turns on Can swap
@@ -997,7 +1001,7 @@ The matching help (the ? beside Mutual only) SHALL be tables only, with no bulle
 - **THEN** labelled rows say that all of a person's lists count together, what Compare with narrows to, that only objekts still owned and transferable count, that hidden and blocked people never show, and that a want list's rule counts like the objekts it covers, once per collection, and shows on a post as one RULE tile with how many of the viewer's it takes, and no bulleted sentences follow
 
 ### Requirement: Rules on a post
-A post whose want list holds rules SHALL show each rule in its Want strip as one tile, before the objekts: marked RULE in its class colour, with its label ("CC366", "Cream02 FCO 3rd") and "any member" or its members. Activating a tile SHALL list the rule's objekts the viewer has.
+A post whose want list holds rules SHALL show each rule in its Want strip as one tile, before the objekts: a card with a neutral RULE badge, its label ("CC366", "Cream02 FCO 3rd") and "any member" or its members. Activating a tile SHALL list the rule's objekts the viewer has.
 
 #### Scenario: Rule tile
 - **WHEN** jinsoul.blue's WTT post wants the rule CC366, any member, and the viewer's bound have list holds Lynn CC366 and Nien CC366
