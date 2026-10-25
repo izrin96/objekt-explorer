@@ -200,8 +200,11 @@ export function CollectionView() {
   const renderOverlay = useCallback(
     (id: string) => {
       const objekt = pinned.find((item) => item.tokenId === id);
+      // the overlay has no container of its own, so the radius would read the viewport
       return objekt ? (
-        <ObjektCard objekt={objekt} pin hideLabel className="rounded-photocard shadow-xl" />
+        <div className="@container">
+          <ObjektCard objekt={objekt} pin hideLabel className="rounded-photocard shadow-xl" />
+        </div>
       ) : null;
     },
     [pinned],

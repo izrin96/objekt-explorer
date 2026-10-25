@@ -2,6 +2,7 @@ import { InfoIcon, NoteIcon } from "@phosphor-icons/react";
 import { useHydrated } from "@tanstack/react-router";
 import { useState } from "react";
 
+import { CornerDot } from "@/components/shared/unread-badge";
 import {
   Accordion,
   AccordionItem,
@@ -19,7 +20,6 @@ import {
   DialogPopup,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 import { useChangelogStore } from "@/stores/changelog";
 
@@ -32,6 +32,23 @@ import { AboutDialog, DISCORD_INVITE } from "./about";
  */
 const CHANGELOG = [
   {
+    date: "2026-10-25",
+    items: [
+      "Added a Trade page: Browse lists trade and sale posts, and For you (formerly Trade Matches) finds people to trade with across all your lists.",
+      "Post your lists on Trade to swap, sell or buy.",
+      "Want lists can be posted as Swap, as Buy, or as Swap that would also pay.",
+      'Want lists can hold rules, like "any member of CC366" or "Cream02 FCO 3rd".',
+      "Sale lists can be posted as Sell, or as Sell that is also open to swaps.",
+      "Added Messages and offers. Accepted trades are verified on-chain.",
+      "Added notifications for offers, trades and want list matches.",
+      "Added an Account page for all your settings.",
+      "Desktop shows every filter on the toolbar.",
+      "Added Default profile: choose which profile names you to others.",
+      "Removed Hide User.",
+      "Removed profile privacy settings.",
+    ],
+  },
+  {
     date: "2026-09-26 - 2026-10-06",
     items: [
       "Added a public API. Find it under API in the About dialog.",
@@ -41,6 +58,12 @@ const CHANGELOG = [
       "In select mode, Shift+click selects a range of objekts.",
       "The Marketplace can now show only what your profile doesn't own yet. Pick one of your profiles under Compare.",
       "The Compare dialog on a list now lets you pick one of your profiles, or choose Other profile to enter any Cosmo ID.",
+      "Rework Cosmo link flow UI.",
+      "Newly minted Welcome objekt now marked as non-transferable.",
+      "Exclude MinGyeol from overall progress chart.",
+      "Long press a pinned objekt to drag it into a new order. Long press any other objekt to select it.",
+      "Some UI improvements (move reset filter button, search user dialog, profile hover card, objekt preview on list card etc).",
+      "Improve cosmo-spin profile load.",
     ],
   },
   {
@@ -151,24 +174,8 @@ export function useChangelogNew() {
 
 /** Not `::after` on the corner: Button spends it on the touch target. */
 export function NewDot({ placement }: { placement: "corner" | "inline" }) {
-  return (
-    <span
-      aria-hidden
-      className={cn(
-        "flex size-1.5",
-        placement === "corner" ? "absolute -top-0.5 -right-0.5" : "relative",
-      )}
-    >
-      <span className="bg-accent-solid absolute size-full rounded-full opacity-75 motion-safe:animate-ping" />
-      <span
-        className={cn(
-          "bg-accent-solid relative size-full rounded-full",
-          // separates the dot from the button's border
-          placement === "corner" && "ring-background ring-2",
-        )}
-      />
-    </span>
-  );
+  if (placement === "corner") return <CornerDot />;
+  return <span aria-hidden className="bg-accent-solid size-2 shrink-0 rounded-full" />;
 }
 
 /** The nav's entry point: an icon button that owns the dialog beside it. */

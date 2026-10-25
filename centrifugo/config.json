@@ -1,0 +1,38 @@
+{
+  "client": {
+    "allow_anonymous_connect_without_token": true,
+    "subscribe_to_user_personal_channel": {
+      "enabled": true,
+      "personal_channel_namespace": "user"
+    }
+  },
+  "health": {
+    "enabled": true
+  },
+  "engine": {
+    "type": "memory",
+    "redis": {
+      "prefix": "centrifugo"
+    }
+  },
+  "channel": {
+    "namespaces": [
+      {
+        "name": "user",
+        "history_size": 100,
+        "history_ttl": "300s",
+        "force_recovery": true
+      },
+      {
+        "name": "activity",
+        "history_size": 50,
+        "history_ttl": "3600s",
+        "force_recovery": true,
+        "allow_subscribe_for_client": true,
+        "allow_subscribe_for_anonymous": true,
+        "allow_history_for_client": true,
+        "allow_history_for_anonymous": true
+      }
+    ]
+  }
+}

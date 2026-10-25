@@ -22,8 +22,15 @@ type SettingsState = {
   hideBanner: boolean;
   /** ISO 4217 code every marketplace price is converted into */
   currency: string;
+  /** Trade's Your posts shown or hidden; null until chosen, so it follows its default */
+  myPostsShown: boolean | null;
   set: (
-    patch: Partial<Pick<SettingsState, "theme" | "wide" | "hideLabel" | "hideBanner" | "currency">>,
+    patch: Partial<
+      Pick<
+        SettingsState,
+        "theme" | "wide" | "hideLabel" | "hideBanner" | "currency" | "myPostsShown"
+      >
+    >,
   ) => void;
 };
 
@@ -52,6 +59,7 @@ export const useSettings = create<SettingsState>()(
       hideLabel: false,
       hideBanner: false,
       currency: "USD",
+      myPostsShown: null,
       set: (patch) => set(patch),
     }),
     { name: SETTINGS_STORAGE_KEY, storage: seededStorage(seedSettings) },

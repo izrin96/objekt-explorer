@@ -1,15 +1,19 @@
 import { CheckIcon, EyeIcon, EyeSlashIcon } from "@phosphor-icons/react";
 import type { PublicProfile } from "@repo/api/schemas/profile";
+import { truncateAddress } from "@repo/lib/address";
 
 import { ApolloIcon } from "@/components/shared/apollo-icon";
 import { CopyButton } from "@/components/shared/copy-button";
+import { PersonAvatar } from "@/components/shared/person-avatar";
 import { SocialBadge } from "@/components/shared/social-badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "@/components/ui/tooltip";
+import { MessageButton } from "@/features/chat/message-button";
 import { EditCosmoDialog } from "@/features/link/edit-cosmo-dialog";
-import { displayNickname, truncateAddress } from "@/lib/address";
+import { SafetyMenu } from "@/features/moderation/safety-menu";
+import { TrustLine } from "@/features/offers/trust-line";
+import { displayNickname } from "@/lib/address";
 import { m } from "@/paraglide/messages";
 import { useSettings } from "@/stores/settings";
 
@@ -30,12 +34,11 @@ export function ProfileHeader({ profile }: { profile: PublicProfile }) {
 
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="flex min-w-0 items-end gap-3.5">
-          <Avatar className="border-background size-16 border-3">
-            {profile.user?.image && <AvatarImage src={profile.user.image} alt="" />}
-            <AvatarFallback className="text-base font-semibold">
-              {nickname.charAt(0).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
+          <PersonAvatar
+            name={nickname}
+            image={profile.user?.image}
+            className="border-background size-16 border-3 text-base font-semibold"
+          />
           <div className="min-w-0">
             {/* the badge sits beside the heading, not inside it: in the
                 heading it joins the accessible name as "<nickname> Verified" */}
@@ -63,6 +66,8 @@ export function ProfileHeader({ profile }: { profile: PublicProfile }) {
                 toastTitle={m.profile_header_address_copied()}
               />
             </div>
+            {/* set only when the profile shows its account */}
+            <TrustLine reputation={profile.reputation} className="mt-1" />
             {profile.user && (
               <div className="mt-1.5 flex flex-wrap gap-1.5">
                 {profile.user.name && <SocialBadge platform="cosmo" username={profile.user.name} />}
@@ -121,6 +126,15 @@ export function ProfileHeader({ profile }: { profile: PublicProfile }) {
             </TooltipTrigger>
             <TooltipPopup>{m.profile_header_view_in_apollo()}</TooltipPopup>
           </Tooltip>
+
+          {profile.messageable === true && !isProfileAuthed && (
+            <MessageButton target={{ kind: "profile", address: profile.address }} />
+          )}
+
+          {/* only when the profile shows its owner: a hidden owner's account is never named */}
+          {profile.userId !== undefined && !isProfileAuthed && (
+            <SafetyMenu userId={profile.userId} name={nickname} report />
+          )}
 
           {isProfileAuthed && (
             <EditCosmoDialog address={profile.address}>

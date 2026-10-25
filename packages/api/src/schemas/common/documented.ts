@@ -29,7 +29,7 @@ export function documented<T extends z.ZodType>(schema: T, options?: { open?: bo
   return wrapper;
 }
 
-type OperationObject = Exclude<NonNullable<Route["spec"]>, (...args: never) => unknown>;
+export type OperationObject = Exclude<NonNullable<Route["spec"]>, (...args: never) => unknown>;
 
 const errorDescriptions = {
   400: "Invalid input",

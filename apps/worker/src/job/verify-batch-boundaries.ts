@@ -36,6 +36,7 @@ import {
   tokenIdRange,
   writeSerialUpdates,
 } from "@/job/populate-serial";
+import { log } from "@/lib/log";
 import { preAssignedCollections as excludeCollections } from "@/lib/serial-constants";
 import {
   computeOfflineSerialUpdates,
@@ -45,6 +46,7 @@ import {
 } from "@/lib/serial-math";
 
 const CONCURRENCY = 5;
+const verifyLog = log("verify-batches");
 
 type Batch = { start: number; end: number };
 type Probe = "ours" | "foreign" | "unminted";
@@ -83,8 +85,8 @@ export async function verifyBatchBoundaries(dryRun = false) {
       ),
     );
 
-  console.log(
-    `[verify] ${dryRun ? "DRY RUN — " : ""}checking ${targets.length} offline collections with stored batches`,
+  verifyLog.debug(
+    `${dryRun ? "DRY RUN — " : ""}checking ${targets.length} offline collections with stored batches`,
   );
 
   let drifted = 0;
@@ -198,7 +200,7 @@ export async function verifyBatchBoundaries(dryRun = false) {
         }
       }
     } catch {
-      console.log(`[verify] ${t.slug}: API error, skipping`);
+      verifyLog.debug(`${t.slug}: Cosmo API error, skipping`);
       failed.push(t.slug);
       return;
     }
@@ -206,7 +208,7 @@ export async function verifyBatchBoundaries(dryRun = false) {
     if (reasons.length === 0) return;
 
     drifted++;
-    console.log(`[verify] ${t.slug}: DRIFT — ${reasons.join("; ")}`);
+    verifyLog.warn(`${t.slug}: drift — ${reasons.join("; ")}`);
 
     if (dryRun) return;
 
@@ -215,7 +217,7 @@ export async function verifyBatchBoundaries(dryRun = false) {
     try {
       fresh = await discoverBatches(t.cid, tokenIds);
     } catch {
-      console.log(`[verify] ${t.slug}: API error during rediscovery, skipping`);
+      verifyLog.debug(`${t.slug}: Cosmo API error during rediscovery, skipping`);
       failed.push(t.slug);
       return;
     }
@@ -230,7 +232,7 @@ export async function verifyBatchBoundaries(dryRun = false) {
       fresh.every((b, i) => b.start === batches[i]!.start && b.end === batches[i]!.end);
     if (same) {
       unchanged++;
-      console.log(`[verify] ${t.slug}: rediscovery gave back the stored batches, nothing written`);
+      verifyLog.debug(`${t.slug}: rediscovery gave back the stored batches, nothing written`);
       return;
     }
 
@@ -243,17 +245,16 @@ export async function verifyBatchBoundaries(dryRun = false) {
     }
 
     fixed++;
-    console.log(
-      `[verify] ${t.slug}: fixed — ${fresh.length} batches, ${updates.length} serials updated`,
-    );
+    verifyLog.info(`${t.slug}: fixed — ${fresh.length} batches, ${updates.length} serials updated`);
   }
 
   await chunk(targets, CONCURRENCY, async (group) => {
     await Promise.all(group.map((t) => processOne(t)));
   });
 
-  console.log(
-    `[verify] Done. ${drifted} drifted, ${dryRun ? "would fix" : "fixed"} ${fixed}` +
+  const done = failed.length > 0 ? verifyLog.warn : drifted > 0 ? verifyLog.info : verifyLog.debug;
+  done(
+    `Done. ${drifted} drifted, ${dryRun ? "would fix" : "fixed"} ${fixed}` +
       (unchanged ? `, ${unchanged} unchanged after rediscovery` : "") +
       "." +
       (failed.length ? ` Failed (API): ${failed.length} — ${failed.join(", ")}` : ""),

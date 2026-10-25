@@ -5,7 +5,6 @@ import { pins } from "@repo/db/schema";
 import { chunkMap } from "@repo/lib";
 import { and, asc, eq, inArray, sql } from "drizzle-orm";
 
-import { isAddressHiddenFromCaller } from "./privacy";
 import { TOKEN_CHUNK_SIZE } from "./utils";
 
 export async function getValidPins(address: string) {
@@ -32,7 +31,6 @@ export async function getValidPins(address: string) {
 }
 
 export async function fetchPins(address: string) {
-  if (await isAddressHiddenFromCaller(address)) return [];
   const validPins = await getValidPins(address);
   return validPins.map((a) => ({
     tokenId: a.tokenId.toString(),

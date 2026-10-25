@@ -5,19 +5,23 @@ import {
   InfoIcon,
   LinkIcon,
   PlusIcon,
+  ShieldCheckIcon,
   SignInIcon,
   SignOutIcon,
   UserIcon,
+  UsersIcon,
   XLogoIcon,
 } from "@phosphor-icons/react";
 import type { Icon } from "@phosphor-icons/react";
+import { isStaffRole } from "@repo/api/schemas/moderation";
 import type { User } from "@repo/api/services/auth";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link, useLocation } from "@tanstack/react-router";
 import { useState } from "react";
 
 import { AboutDialog } from "@/components/layout/about";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { lazyDialog } from "@/components/shared/lazy-dialog";
+import { PersonAvatar } from "@/components/shared/person-avatar";
 import { Button } from "@/components/ui/button";
 import {
   Menu,
@@ -31,25 +35,25 @@ import {
   MenuTrigger,
 } from "@/components/ui/menu";
 import { toastManager } from "@/components/ui/toast";
-import { AccountDialog } from "@/features/account/account-dialog";
-import { DiscordFormatDialog } from "@/features/discord/discord-format-dialog";
+import { forgetSession } from "@/features/auth/forget-session";
 import { CreateListDialog } from "@/features/list/create-list-dialog";
 import { getListLinkOption } from "@/features/list/list-link";
 import { ListTypeBadge } from "@/features/list/list-type-badge";
 import { ArtistsSubmenu } from "@/features/settings/artists-menu";
-import { SettingsDialog } from "@/features/settings/settings-dialog";
 import { useUserLists, useUserProfiles } from "@/features/user/hooks";
 import { displayNickname, nicknameParam } from "@/lib/address";
 import { authClient } from "@/lib/auth-client";
 import { m } from "@/paraglide/messages";
 
+const SettingsDialog = lazyDialog(() =>
+  import("@/features/settings/settings-dialog").then((mod) => mod.SettingsDialog),
+);
+const DiscordFormatDialog = lazyDialog(() =>
+  import("@/features/discord/discord-format-dialog").then((mod) => mod.DiscordFormatDialog),
+);
+
 export function UserAvatar({ user, className }: { user: User; className?: string }) {
-  return (
-    <Avatar className={className}>
-      {user.image && <AvatarImage src={user.image} alt="" />}
-      <AvatarFallback>{user.name.slice(0, 1).toUpperCase()}</AvatarFallback>
-    </Avatar>
-  );
+  return <PersonAvatar name={user.name} image={user.image} className={className} />;
 }
 
 /**
@@ -64,7 +68,6 @@ export function useSignInSearch(): { redirect: string | undefined } {
 
 export function UserMenu({ user }: { user: User }) {
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [accountOpen, setAccountOpen] = useState(false);
   const [createListOpen, setCreateListOpen] = useState(false);
   const [discordOpen, setDiscordOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
@@ -72,7 +75,7 @@ export function UserMenu({ user }: { user: User }) {
 
   const signOut = async () => {
     await authClient.signOut();
-    await queryClient.invalidateQueries();
+    await forgetSession(queryClient);
     toastManager.add({ type: "info", title: m.nav_sign_out_success() });
   };
 
@@ -118,7 +121,12 @@ export function UserMenu({ user }: { user: User }) {
 
           <MyCosmoSubmenu />
 
-          <MenuItem onClick={() => setAccountOpen(true)}>
+          <MenuItem render={<Link to="/trade/for-you" search={{ match: "mutual" }} />}>
+            <UsersIcon />
+            {m.trade_matches_menu()}
+          </MenuItem>
+
+          <MenuItem render={<Link to="/account" />}>
             <UserIcon />
             {m.nav_account()}
           </MenuItem>
@@ -127,6 +135,13 @@ export function UserMenu({ user }: { user: User }) {
             <GearIcon />
             {m.nav_setting()}
           </MenuItem>
+
+          {isStaffRole(user.role) && (
+            <MenuItem render={<Link to="/mod/reports" />}>
+              <ShieldCheckIcon />
+              {m.nav_mod_reports()}
+            </MenuItem>
+          )}
 
           <MenuSeparator />
 
@@ -144,7 +159,6 @@ export function UserMenu({ user }: { user: User }) {
         </MenuPopup>
       </Menu>
       <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
-      <AccountDialog open={accountOpen} onOpenChange={setAccountOpen} />
       <CreateListDialog open={createListOpen} onOpenChange={setCreateListOpen} />
       <DiscordFormatDialog open={discordOpen} onOpenChange={setDiscordOpen} />
       <AboutDialog open={aboutOpen} onOpenChange={setAboutOpen} />
@@ -191,7 +205,7 @@ function MyCosmoSubmenu() {
 
         <MenuSeparator />
 
-        <MenuItem render={<Link to="/link" />}>
+        <MenuItem render={<Link to="/account/profiles" />}>
           <LinkIcon />
           {m.nav_manage_cosmo_link()}
         </MenuItem>
@@ -223,7 +237,7 @@ function MyListsSubmenu({
           lists.map((list) => (
             <MenuItem key={list.slug} render={<Link {...getListLinkOption(list)} />}>
               <span className="truncate">{list.name}</span>
-              <ListTypeBadge type={list.listTypeNew} className="ml-auto" />
+              <ListTypeBadge type={list.listType} className="ml-auto" />
             </MenuItem>
           ))
         )}

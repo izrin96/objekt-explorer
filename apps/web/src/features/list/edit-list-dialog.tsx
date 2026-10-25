@@ -1,3 +1,4 @@
+import { startForList } from "@repo/api/schemas/trade-post";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
@@ -15,10 +16,14 @@ import {
 } from "@/components/ui/dialog";
 import { Form } from "@/components/ui/form";
 import { Spinner } from "@/components/ui/spinner";
-import { useUserLists, useUserProfiles } from "@/features/user/hooks";
+import { PostComposer, useComposer } from "@/features/trade/post-list-dialog";
+import { usePlanLists } from "@/features/trade/post-plan";
+import { TradeLine } from "@/features/trade/trade-line";
+import { useUserProfiles } from "@/features/user/hooks";
 import { isSameAddress, nicknameParam } from "@/lib/address";
 import { type FieldErrors, zodErrors } from "@/lib/form";
 import type { client } from "@/lib/orpc";
+import { refusalText } from "@/lib/refusal";
 import { m } from "@/paraglide/messages";
 
 import { useEditList } from "./actions";
@@ -62,7 +67,7 @@ export function EditListDialog({
             </DialogHeader>
             <DialogPanel>
               {error ? (
-                <p className="text-destructive-foreground text-sm">{error.message}</p>
+                <p className="text-destructive-foreground text-sm">{refusalText(error)}</p>
               ) : (
                 <div className="flex justify-center py-6">
                   <Spinner className="size-5" />
@@ -85,15 +90,16 @@ function toDraft(list: StoredList): ListDraft {
   return {
     name: list.name,
     description: list.description ?? "",
-    listTypeNew: list.listTypeNew,
+    listType: list.listType,
     currency: list.currency ?? "",
     linkedListId: list.linkedListId,
     profileAddress: list.profileAddress,
     isProfileBind: list.isProfileBind,
     discoverable: list.discoverable ?? false,
+    matchSale: list.matchSale,
+    matchHave: list.matchHave,
     gridColumns: list.gridColumns,
     hideSerial: list.hideSerial,
-    hideUser: list.hideUser,
     regenerateSlug: false,
   };
 }
@@ -114,44 +120,54 @@ function toListUrl(
 }
 
 function EditListForm({ list, onDone }: { list: StoredList; onDone: () => void }) {
-  const lists = useUserLists();
   const profiles = useUserProfiles();
+  const planLists = usePlanLists();
+  const composer = useComposer();
   const edit = useEditList();
   const [draft, setDraft] = useState<ListDraft>(() => toDraft(list));
   const [errors, setErrors] = useState<FieldErrors>({});
 
   return (
-    <Form
-      className="contents"
-      errors={errors}
-      onFormSubmit={() => {
-        const next = zodErrors(listDraftSchema(), draft);
-        setErrors(next);
-        if (Object.keys(next).length > 0) return;
-        edit.mutate(toEditInput(list.slug, draft), { onSuccess: onDone });
-      }}
-    >
-      <DialogHeader>
-        <DialogTitle className="font-display">{m.list_edit_title()}</DialogTitle>
-        <DialogDescription>{m.list_edit_description()}</DialogDescription>
-      </DialogHeader>
-      <DialogPanel>
-        <ListForm
-          idPrefix="edit-list"
-          mode="edit"
-          value={draft}
-          onChange={setDraft}
-          lists={lists.filter((entry) => entry.slug !== list.slug)}
-          profiles={profiles}
-          url={toListUrl(list, profiles)}
-        />
-      </DialogPanel>
-      <DialogFooter>
-        <DialogClose render={<Button variant="outline" />}>{m.common_modal_cancel()}</DialogClose>
-        <Button type="submit" loading={edit.isPending}>
-          {m.common_actions_save()}
-        </Button>
-      </DialogFooter>
-    </Form>
+    <>
+      <Form
+        className="contents"
+        errors={errors}
+        onFormSubmit={() => {
+          const next = zodErrors(listDraftSchema(), draft);
+          setErrors(next);
+          if (Object.keys(next).length > 0) return;
+          edit.mutate(toEditInput(list.slug, draft), { onSuccess: onDone });
+        }}
+      >
+        <DialogHeader>
+          <DialogTitle className="font-display">{m.list_edit_title()}</DialogTitle>
+          <DialogDescription>{m.list_edit_description()}</DialogDescription>
+        </DialogHeader>
+        <DialogPanel>
+          <ListForm
+            idPrefix="edit-list"
+            mode="edit"
+            value={draft}
+            onChange={setDraft}
+            profiles={profiles}
+            url={toListUrl(list, profiles)}
+            tradeLine={
+              <TradeLine
+                slug={list.slug}
+                onCompose={() => composer.openWith(startForList(planLists, list.slug))}
+              />
+            }
+          />
+        </DialogPanel>
+        <DialogFooter>
+          <DialogClose render={<Button variant="outline" />}>{m.common_modal_cancel()}</DialogClose>
+          <Button type="submit" loading={edit.isPending}>
+            {m.common_actions_save()}
+          </Button>
+        </DialogFooter>
+      </Form>
+      {/* outside the form: React carries a portal's submit up to its tree parent */}
+      <PostComposer {...composer.dialog} />
+    </>
   );
 }

@@ -13,7 +13,6 @@ import type {
   HoldersOutput,
   holdersInputSchema,
 } from "../schemas/collections";
-import { isProfileHidden } from "./privacy";
 import { getCache } from "./redis";
 
 // with the client's 60 s staleTime on top, figures stay within five minutes of ownership
@@ -34,8 +33,27 @@ function bucketOf(copies: number): HolderBucketKey {
   return "10+";
 }
 
+// the Redis entry can be ~1 MB of JSON, so a short per-process memo skips parsing it on every page
+const MEMO_TTL_MS = 15_000;
+const MEMO_MAX = 16;
+const memo = new Map<string, { expiresAt: number; ranking: Promise<Ranking> }>();
+
 /** Viewer-independent, so one cache entry serves every page and every viewer. */
 function fetchRanking(slug: string): Promise<Ranking> {
+  const hit = memo.get(slug);
+  if (hit && hit.expiresAt > Date.now()) return hit.ranking;
+
+  const ranking = loadRanking(slug);
+  memo.delete(slug);
+  memo.set(slug, { expiresAt: Date.now() + MEMO_TTL_MS, ranking });
+  if (memo.size > MEMO_MAX) memo.delete(memo.keys().next().value!);
+  void ranking.catch(() => {
+    if (memo.get(slug)?.ranking === ranking) memo.delete(slug);
+  });
+  return ranking;
+}
+
+function loadRanking(slug: string): Promise<Ranking> {
   return getCache(`holders:${slug}`, RANKING_TTL, async () => {
     const rows = await indexer
       .select({
@@ -86,7 +104,7 @@ function fetchRanking(slug: string): Promise<Ranking> {
   });
 }
 
-async function fetchPrivacy(addresses: string[]) {
+async function fetchNicknames(addresses: string[]) {
   const rows =
     addresses.length === 0
       ? []
@@ -94,44 +112,24 @@ async function fetchPrivacy(addresses: string[]) {
           .select({
             address: userAddress.address,
             nickname: userAddress.nickname,
-            hideNickname: userAddress.hideNickname,
-            privateProfile: userAddress.privateProfile,
-            privateSerial: userAddress.privateSerial,
-            userId: userAddress.userId,
           })
           .from(userAddress)
           .where(inArray(userAddress.address, addresses));
 
-  return new Map(rows.map((row) => [row.address.toLowerCase(), row]));
+  return new Map(rows.map((row) => [row.address.toLowerCase(), row.nickname]));
 }
 
-/**
- * Privacy is applied here rather than in the cached ranking, so a settings
- * change shows on the next request instead of after the cache expires.
- */
+/** Nicknames are read here rather than in the cached ranking, so a rename shows on the next request. */
 function toRow(
   [address, copies, lowestSerial, rank]: RankedHolder,
-  privacy: Awaited<ReturnType<typeof fetchPrivacy>>,
-  viewerId: string | undefined,
+  nicknames: Awaited<ReturnType<typeof fetchNicknames>>,
   viewerAddresses: Set<string>,
 ): HolderRow {
-  const owner = privacy.get(address);
-  const hidden = (flag: boolean) =>
-    !!owner && isProfileHidden({ privateProfile: flag, userId: owner.userId }, viewerId);
-
-  const privateProfile = hidden(owner?.privateProfile ?? false);
   return {
     rank,
     copies,
-    // a serial looked up in the Trades tab names its owner, so it would unmask a private row
-    lowestSerial: privateProfile || hidden(owner?.privateSerial ?? false) ? null : lowestSerial,
-    holder: privateProfile
-      ? { kind: "private" }
-      : {
-          kind: "public",
-          address,
-          nickname: owner?.hideNickname ? null : (owner?.nickname ?? null),
-        },
+    lowestSerial,
+    holder: { kind: "public", address, nickname: nicknames.get(address) ?? null },
     isViewer: viewerAddresses.has(address),
   };
 }
@@ -153,15 +151,15 @@ export async function fetchHolders(
       ? ranking.holders.filter(([address]) => viewerAddresses.has(address))
       : [];
 
-  const privacy = await fetchPrivacy(
+  const nicknames = await fetchNicknames(
     Array.from(new Set([...page, ...own].map(([address]) => address))),
   );
 
   const end = input.offset + page.length;
   return {
     summary: ranking.summary,
-    rows: page.map((holder) => toRow(holder, privacy, viewerId, viewerAddresses)),
-    viewer: own.map((holder) => toRow(holder, privacy, viewerId, viewerAddresses)),
+    rows: page.map((holder) => toRow(holder, nicknames, viewerAddresses)),
+    viewer: own.map((holder) => toRow(holder, nicknames, viewerAddresses)),
     nextOffset: end < ranking.holders.length ? end : undefined,
   };
 }

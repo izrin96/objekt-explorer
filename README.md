@@ -1,4 +1,4 @@
-# Objekt Explorer
+# Objekt Tracker
 
 A web explorer for [Cosmo](https://cosmo.fans)'s Objekts, focused on the client-side experience. Cosmo is an app by Modhaus Inc. that decentralizes K-pop using blockchain technology; Objekts are its digital photocard NFTs.
 

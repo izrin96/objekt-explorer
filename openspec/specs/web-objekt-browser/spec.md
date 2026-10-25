@@ -69,16 +69,23 @@ Clicking a card SHALL open a drawer with the objekt's attributes, a link to view
 Apollo, and these tabs in order: Owned, only when the viewer holds copies; Serials,
 labelled Trades; Market; Holders; and Metadata. Serials SHALL let the user step to the
 previous, next, first and last existing serial or type one, and for the chosen serial show
-loading, then either a private notice when the owner hides serials, a missing notice when
-it has no owner, or the owner with the transfer timeline. Market SHALL list current
-listings with floor price, listing count and seller count, sortable by price or date.
+loading, then either a missing notice when
+it has no owner, or the owner with the transfer timeline. Market SHALL show five live
+figures: Floor, Listings, Sellers, Median and Highest. Floor SHALL carry its change over 30
+days: the live floor against the first record of the last 30 days (see `web-market` Daily
+price history), as an up or down arrow with the percentage to one decimal, in the success
+colour when up and the destructive colour when down, with the direction in words for
+assistive technology. Under the figures, a 30-day sparkline of the daily floor SHALL sit
+beside a History toggle that opens the price history chart (see `web-market` Price history
+chart). With fewer than 2 records in the last 30 days there SHALL be no change and no
+sparkline; with no live floor there SHALL be no change. Market SHALL then list current listings, sortable by price or date.
 Metadata SHALL show every collection field. Holders SHALL behave as the
 `web-collection-holders` capability specifies, and SHALL fetch nothing until it is first
 opened.
 
 #### Scenario: Private serial
-- **WHEN** the chosen serial belongs to an owner who hides serials and the viewer is not that owner
-- **THEN** the Serials tab shows the private notice and no owner
+- **WHEN** the chosen serial belongs to an owner who hid serials before this change
+- **THEN** the Serials tab shows the owner and the transfer timeline
 
 #### Scenario: Step to next existing serial
 - **WHEN** serial 5 does not exist and the user presses Next from serial 4
@@ -87,6 +94,14 @@ opened.
 #### Scenario: Holders loads on first open
 - **WHEN** the drawer opens on the Trades tab
 - **THEN** no holders request is made until the user opens the Holders tab
+
+#### Scenario: 30-day change
+- **WHEN** a USD viewer opens the Market tab of a collection whose first record in the last 30 days has a $10 floor and whose live floor is $12
+- **THEN** Floor reads "$12.00" with "▲ 20.0%" in the success colour, a screen reader announces it as up 20.0%, and a 30-day sparkline shows under the figures
+
+#### Scenario: No history
+- **WHEN** the viewer opens the Market tab of a collection with no record yet
+- **THEN** Floor shows the live floor with no change, and there is no sparkline and no History toggle
 
 ### Requirement: No horizontal overflow
 At any viewport from 360 px, the filter bar, chips, grid and drawer SHALL not make the page
@@ -103,3 +118,46 @@ The `locked` URL parameter SHALL be absent for all objekts, `true` for only lock
 #### Scenario: Cycle
 - **WHEN** the user activates the lock filter three times from the default
 - **THEN** the URL goes `locked=true`, then `locked=false`, then no `locked` parameter
+
+### Requirement: Drawer links Market to Trade
+The objekt drawer's Market tab SHALL show how many posts on Trade have the collection on a have or sale side, and how many want it, with a link to `/trade?slug=<slug>`. The line SHALL be hidden when both counts are zero. The counts SHALL follow the feed's rules: lists on Trade, entries still owned, idle posts excluded.
+
+#### Scenario: Posts exist
+- **WHEN** the viewer opens the Market tab for SeoYeon 204Z, which 5 posts have and 7 want
+- **THEN** the tab shows "On Trade: 5 have it · 7 want it" with a link to `/trade?slug=<slug>`
+
+#### Scenario: None
+- **WHEN** no post on Trade has or wants the collection
+- **THEN** the On Trade line is not shown
+
+### Requirement: Message a seller from the Market tab
+Each listing row in the objekt drawer's Market tab SHALL offer Message, unless the viewer owns the listing, under the rules in `web-chat`. Message SHALL open the conversation with the list's owner, adding a card for that objekt and sale list.
+
+Below `sm`, while the Market tab is shown, the drawer SHALL keep a bar at its bottom for the first listing in the tab's current order that shows Message. The bar names that listing: its price, its serial, and its seller. It offers Message and Make offer as two full-width buttons that act as that row's Message and Make offer do. The bar SHALL not cover the last row: the tab's content gains room for it. With no such listing, there is no bar. From `sm` up, there is no bar.
+
+#### Scenario: From a listing
+- **WHEN** a user activates Message on the #537 row of SeoYeon 204Z
+- **THEN** the conversation with the list owner opens with a card for SeoYeon 204Z #537 and its price
+
+#### Scenario: Own listing
+- **WHEN** the viewer owns the sale list behind a row
+- **THEN** that row has no Message action
+
+#### Scenario: Phone bar
+- **WHEN** a user at 390 px opens SeoYeon 204Z's Market tab, sorted by price, and the cheapest listing is rin.trades's #537 at 6,000 KRW
+- **THEN** the bar reads "6,000 KRW · #537 · rin.trades" with Message and Make offer, and Make offer opens the builder with SeoYeon 204Z #537 under You get
+
+#### Scenario: Own cheapest listing
+- **WHEN** the cheapest listing is the viewer's own
+- **THEN** the bar names the next listing the viewer can message instead
+
+#### Scenario: Desktop
+- **WHEN** the same drawer is open at 1280 px
+- **THEN** there is no bar, and each row keeps its menu
+
+### Requirement: Make offer from the Market tab
+Each Market tab listing row that shows Message SHALL also offer Make offer. It opens the offer builder addressed to the list's owner, with that objekt under You get.
+
+#### Scenario: From a listing
+- **WHEN** a user activates Make offer on the #537 row of SeoYeon 204Z
+- **THEN** the builder opens with SeoYeon 204Z #537 under You get

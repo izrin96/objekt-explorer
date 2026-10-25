@@ -1,0 +1,435 @@
+import { realNickname, truncateAddress } from "@repo/lib/address";
+
+import { type ListType, pickedSides, tradeSideOf } from "../schemas/list";
+import { type OpenToFlags, pickByOpenTo } from "../schemas/open-to";
+import {
+  countsFit,
+  type MatchCounts,
+  type MutualRank,
+  mutualOf,
+  type OneWayRank,
+  type TradeFilter,
+} from "../schemas/trade";
+import { DAY_MS } from "./time";
+import { matchCounts } from "./trade-person";
+
+export const PARTNER_LIMIT = 50;
+export const CANDIDATE_LIMIT = 200;
+/** the candidates For you's Mutual and One way rankings read, cut by their own order */
+export const FEED_CANDIDATE_LIMIT = 1000;
+export const IDLE_DAYS = 30;
+
+export type MyList = { id: number; listType: ListType; linkedListId: number | null };
+
+/**
+ * The lists each direction matches from: every one of the user's, or a named list and the list
+ * it links to (see {@link pickedSides}). A one-way filter compares only its own direction.
+ * A list that is not one of the user's have, sale or want lists is ignored.
+ */
+export function matchSides(myLists: MyList[], listId: number | null, filter: TradeFilter) {
+  const named = myLists.find((list) => list.id === listId && tradeSideOf(list.listType) !== null);
+  const ofSide = (type: "have" | "want") =>
+    myLists.filter((list) => tradeSideOf(list.listType) === type).map((list) => list.id);
+  const sides = named
+    ? pickedSides(named, myLists)
+    : { haveListIds: ofSide("have"), wantListIds: ofSide("want") };
+  return {
+    listId: named?.id ?? null,
+    haveListIds: filter === "they_have" ? [] : sides.haveListIds,
+    wantListIds: filter === "they_want" ? [] : sides.wantListIds,
+  };
+}
+
+type Verdict = "ok" | "not_owned" | "not_transferable";
+type DropReason = Exclude<Verdict, "ok">;
+
+/** A have or sale entry: one specific objekt, or (with no `objektId`) any copy of its collection. */
+export type OwnedEntry = { listId: number; slug: string; objektId: string | null };
+
+/**
+ * What the indexer says about the entries in play. `objekts` is keyed by token id;
+ * `copies` by `<owner>:<slug>`, true when at least one of that owner's copies is
+ * transferable. Owners are lowercase.
+ */
+export type Holdings = {
+  objekts: ReadonlyMap<string, { owner: string; transferable: boolean }>;
+  copies: ReadonlyMap<string, boolean>;
+};
+
+export const copyKey = (owner: string, slug: string) => `${owner}:${slug}`;
+
+const VERDICT_RANK: Record<Verdict, number> = { ok: 2, not_transferable: 1, not_owned: 0 };
+
+export function entryVerdict(
+  entry: OwnedEntry,
+  addresses: ReadonlySet<string>,
+  holdings: Holdings,
+): Verdict {
+  if (entry.objektId !== null) {
+    const objekt = holdings.objekts.get(entry.objektId);
+    if (!objekt || !addresses.has(objekt.owner)) return "not_owned";
+    return objekt.transferable ? "ok" : "not_transferable";
+  }
+
+  let held = false;
+  for (const address of addresses) {
+    const transferable = holdings.copies.get(copyKey(address, entry.slug));
+    if (transferable) return "ok";
+    if (transferable === false) held = true;
+  }
+  return held ? "not_transferable" : "not_owned";
+}
+
+/** One collection's entries across the owner's lists: the best verdict wins, and `listIds` are the lists that can trade it. */
+export function collectionVerdict(
+  entries: OwnedEntry[],
+  addresses: ReadonlySet<string>,
+  holdings: Holdings,
+): { verdict: Verdict; listIds: number[] } {
+  let best: Verdict = "not_owned";
+  const listIds = new Set<number>();
+  for (const entry of entries) {
+    const verdict = entryVerdict(entry, addresses, holdings);
+    if (verdict === "ok") listIds.add(entry.listId);
+    if (VERDICT_RANK[verdict] > VERDICT_RANK[best]) best = verdict;
+  }
+  return { verdict: best, listIds: [...listIds] };
+}
+
+export function groupBySlug<T extends { slug: string }>(entries: T[]): Map<string, T[]> {
+  const groups = new Map<string, T[]>();
+  for (const entry of entries) {
+    const group = groups.get(entry.slug);
+    if (group) group.push(entry);
+    else groups.set(entry.slug, [entry]);
+  }
+  return groups;
+}
+
+/** `trade` is false when only a sale list makes the match, so it is no swap */
+export type Match = {
+  slug: string;
+  myListIds: number[];
+  partnerListIds: number[];
+  trade: boolean;
+};
+export type Dropped = {
+  slug: string;
+  direction: "theyHaveIWant" | "iHaveTheyWant";
+  reason: DropReason;
+};
+
+/** One of their want entries, with what its want list is open to. */
+export type TheyWant = { listId: number; slug: string } & OpenToFlags;
+
+export type Candidate = {
+  userId: string;
+  /** each matched list's last change, keyed by list id */
+  listUpdatedAt: Record<string, string>;
+  /**
+   * their have and sale entries on collections I want: `swap` when my want list takes it as a
+   * swap, `sale` when it buys it. A Sell or swap entry can be both. A cached entry from before
+   * `swap` existed reads `swap` as `!sale`.
+   */
+  theyHave: (OwnedEntry & { sale: boolean; swap?: boolean })[];
+  /** their want entries on collections I have, with what the want list is open to */
+  theyWant: TheyWant[];
+};
+
+type Recounted = {
+  userId: string;
+  updatedAt: string;
+  theyHaveIWant: Match[];
+  iHaveTheyWant: Match[];
+  dropped: Dropped[];
+};
+
+/** One of my want lists holding a collection, and whether it is open to buying and to swaps. */
+export type MyWant = { listId: number } & OpenToFlags;
+
+type Judged = ReturnType<typeof collectionVerdict>;
+
+/** My have side, already judged: over my have and sale lists, over the lists offering swaps (have, and sale lists that take swaps), and over my sale lists alone. */
+export type MyHaves = {
+  all: ReadonlyMap<string, Judged>;
+  trade: ReadonlyMap<string, Judged>;
+  sale: ReadonlyMap<string, Judged>;
+};
+
+/**
+ * The candidate's matches after the ownership check. `myWants` maps a collection to
+ * my want lists holding it. A partner's want list is judged against `myHaves.trade` when it
+ * is open to swaps only, `myHaves.sale` when it is open to buying only and `myHaves.all`
+ * otherwise. A partner's have list is answered only by my want lists open to swaps, and a
+ * partner's sale list only by my want lists open to buying.
+ */
+export function recount(
+  candidate: Candidate,
+  partnerAddresses: ReadonlySet<string>,
+  holdings: Holdings,
+  myWants: ReadonlyMap<string, MyWant[]>,
+  myHaves: MyHaves,
+): Recounted {
+  const theyHaveIWant: Match[] = [];
+  const iHaveTheyWant: Match[] = [];
+  const dropped: Dropped[] = [];
+
+  for (const [slug, entries] of groupBySlug(candidate.theyHave)) {
+    const { verdict } = collectionVerdict(entries, partnerAddresses, holdings);
+    if (verdict !== "ok") {
+      dropped.push({ slug, direction: "theyHaveIWant", reason: verdict });
+      continue;
+    }
+    const judgeOffers = (keep: (entry: (typeof entries)[number]) => boolean) =>
+      collectionVerdict(entries.filter(keep), partnerAddresses, holdings);
+    const haves = judgeOffers((entry) => entry.swap ?? !entry.sale);
+    const sales = judgeOffers((entry) => entry.sale);
+    const mine = myWants.get(slug) ?? [];
+    const takesSwaps = mine.some((want) => want.matchHave);
+    const takesBuying = mine.some((want) => want.matchSale);
+    const swaps = takesSwaps && haves.verdict === "ok";
+    const buys = takesBuying && sales.verdict === "ok";
+    if (!swaps && !buys) {
+      // the collection passed as a whole, but not the part my wants take
+      const relevant = [
+        ...(takesSwaps ? [haves.verdict] : []),
+        ...(takesBuying ? [sales.verdict] : []),
+      ];
+      if (relevant.length > 0) {
+        dropped.push({ slug, direction: "theyHaveIWant", reason: bestDrop(relevant) });
+      }
+      continue;
+    }
+    theyHaveIWant.push({
+      slug,
+      myListIds: mine
+        .filter((want) => (swaps && want.matchHave) || (buys && want.matchSale))
+        .map((want) => want.listId),
+      // a Sell or swap list is on both sides
+      partnerListIds: [
+        ...new Set([...(swaps ? haves.listIds : []), ...(buys ? sales.listIds : [])]),
+      ],
+      trade: swaps,
+    });
+  }
+
+  const havesByOpenTo = { buying: myHaves.sale, both: myHaves.all, swaps: myHaves.trade };
+  for (const [slug, entries] of groupBySlug(candidate.theyWant)) {
+    const judged = entries.flatMap((entry) => {
+      const mine = pickByOpenTo(entry, havesByOpenTo).get(slug);
+      return mine ? [{ listId: entry.listId, mine, swaps: entry.matchHave }] : [];
+    });
+    if (judged.length === 0) continue;
+    const ok = judged.filter(({ mine }) => mine.verdict === "ok");
+    if (ok.length > 0) {
+      iHaveTheyWant.push({
+        slug,
+        myListIds: [...new Set(ok.flatMap(({ mine }) => mine.listIds))],
+        partnerListIds: [...new Set(ok.map(({ listId }) => listId))],
+        trade: ok.some(({ swaps }) => swaps) && myHaves.trade.get(slug)?.verdict === "ok",
+      });
+    } else {
+      dropped.push({
+        slug,
+        direction: "iHaveTheyWant",
+        reason: bestDrop(judged.map(({ mine }) => mine.verdict)),
+      });
+    }
+  }
+
+  // idle is judged on the lists still contributing a match, not on one whose entries all dropped
+  const contributing = new Set(
+    [...theyHaveIWant, ...iHaveTheyWant].flatMap((match) => match.partnerListIds),
+  );
+  const changes = Object.entries(candidate.listUpdatedAt);
+  const updatedAt = (
+    changes.some(([id]) => contributing.has(Number(id)))
+      ? changes.filter(([id]) => contributing.has(Number(id)))
+      : changes
+  ).reduce((latest, [, at]) => (at > latest ? at : latest), "");
+
+  return { userId: candidate.userId, updatedAt, theyHaveIWant, iHaveTheyWant, dropped };
+}
+
+function bestDrop(verdicts: Verdict[]): DropReason {
+  return verdicts.includes("not_transferable") ? "not_transferable" : "not_owned";
+}
+
+export function isIdle(updatedAt: string, now: Date) {
+  return now.getTime() - new Date(updatedAt).getTime() >= IDLE_DAYS * DAY_MS;
+}
+
+type Rankable = {
+  theyHaveIWant: { slug: string; trade: boolean; myListIds: number[] }[];
+  iHaveTheyWant: { slug: string; trade: boolean; myListIds: number[] }[];
+  updatedAt: string;
+};
+
+/** Active before idle, then the mutual score, the sum, and the most recent change. */
+export function rankPartners<T extends Rankable>(partners: T[], filter: TradeFilter, now: Date) {
+  return partners
+    .flatMap((p) => {
+      const counts = matchCounts(p);
+      return countsFit(filter, counts)
+        ? [
+            {
+              partner: p,
+              idle: isIdle(p.updatedAt, now),
+              mutual: mutualOf(counts),
+              sum: counts.theyHave + counts.youHave,
+              at: new Date(p.updatedAt).getTime(),
+            },
+          ]
+        : [];
+    })
+    .toSorted(
+      (x, y) =>
+        Number(x.idle) - Number(y.idle) || y.mutual - x.mutual || y.sum - x.sum || y.at - x.at,
+    )
+    .slice(0, PARTNER_LIMIT)
+    .map(({ partner, idle }) => ({ partner, idle }));
+}
+
+type Ranked = { userId: string; updatedAt: string; counts: MatchCounts };
+
+/** One recounted partner as the ranking reads it. */
+export function toRanked(partner: {
+  userId: string;
+  updatedAt: string;
+  theyHaveIWant: Parameters<typeof matchCounts>[0]["theyHaveIWant"];
+  iHaveTheyWant: Parameters<typeof matchCounts>[0]["iHaveTheyWant"];
+}): Ranked {
+  return { userId: partner.userId, updatedAt: partner.updatedAt, counts: matchCounts(partner) };
+}
+
+/** A person's place in For you's One way ranking: the sum of both counts, last change, then id for a total order. */
+export function oneWayRankOf(partner: Ranked): OneWayRank {
+  return {
+    sum: partner.counts.theyHave + partner.counts.youHave,
+    at: new Date(partner.updatedAt).getTime(),
+    userId: partner.userId,
+  };
+}
+
+/** A person's place in the Mutual ranking: the score first, then the One way tuple. */
+export function mutualRankOf(partner: Ranked): MutualRank {
+  return { mutual: mutualOf(partner.counts), ...oneWayRankOf(partner) };
+}
+
+/** Best first; a rank with no `mutual` term is a One way rank. */
+function compareRanks(a: OneWayRank & { mutual?: number }, b: OneWayRank & { mutual?: number }) {
+  return (
+    (b.mutual ?? 0) - (a.mutual ?? 0) ||
+    b.sum - a.sum ||
+    b.at - a.at ||
+    (a.userId < b.userId ? -1 : a.userId > b.userId ? 1 : 0)
+  );
+}
+
+/** Browse's Mutual order: For you's ranking without its idle tier, since idle posts aren't listed. */
+export function mutualOrder<T extends Ranked>(partners: T[]): T[] {
+  return partners.toSorted((a, b) => compareRanks(mutualRankOf(a), mutualRankOf(b)));
+}
+
+/**
+ * Everyone who is Mutual with the viewer, in Mutual order. There is no `PARTNER_LIMIT` slice
+ * and no idle tier: the set is bounded by `FEED_CANDIDATE_LIMIT`, and an idle person's posts are
+ * never listed anyway.
+ */
+export function mutualPeople<T extends Ranked>(partners: T[]): T[] {
+  return mutualOrder(partners.filter((partner) => mutualOf(partner.counts) > 0));
+}
+
+/**
+ * Everyone who matches the viewer in either direction, most matches first, with no idle tier
+ * and no slice, for the same reasons as {@link mutualPeople}.
+ */
+export function oneWayPeople<T extends Ranked>(partners: T[]): T[] {
+  return partners
+    .filter((partner) => partner.counts.theyHave + partner.counts.youHave > 0)
+    .toSorted((a, b) => compareRanks(oneWayRankOf(a), oneWayRankOf(b)));
+}
+
+export type AddressRef = { address: string; nickname: string | null };
+/** A linked profile as the naming rules read it. */
+export type LinkedProfile = AddressRef & { isDefault: boolean };
+export type PartnerIdentity = {
+  /** what to call the partner: a Cosmo nickname, a shortened address or the account name */
+  name: string;
+  /** the profile `name` stands for, when it stands for one */
+  address: string | null;
+  /** that profile's Cosmo nickname; null when it has none, so a link uses the address */
+  nickname: string | null;
+  /** on Trade, the partner's other bound addresses among the matched lists; in chat, their other profiles */
+  also: AddressRef[];
+};
+
+/** Each account's linked addresses, lowercase. */
+export function addressesByUser(rows: readonly { userId: string | null; address: string }[]) {
+  const map = new Map<string, Set<string>>();
+  for (const row of rows) {
+    if (!row.userId) continue;
+    const set = map.get(row.userId) ?? new Set<string>();
+    set.add(row.address.toLowerCase());
+    map.set(row.userId, set);
+  }
+  return map;
+}
+
+/** Each address's Cosmo nickname, keyed lowercase. */
+export function nicknamesByAddress(rows: readonly AddressRef[]) {
+  return new Map(rows.map((row) => [row.address.toLowerCase(), row.nickname]));
+}
+
+/**
+ * Named by the profile of the list with the most matches: its nickname, else its shortened
+ * address. When no matched list is filed under a profile, the account's default profile names
+ * it, else the account name.
+ */
+export function toPartnerIdentity(
+  accountName: string,
+  matchedLists: { profileAddress: string | null; matches: number }[],
+  addresses: LinkedProfile[],
+): PartnerIdentity {
+  const nicknames = nicknamesByAddress(addresses);
+  const refOf = (address: string): AddressRef => ({
+    address,
+    nickname: nicknames.get(address) ?? null,
+  });
+
+  const ranked = matchedLists.toSorted(
+    (x, y) =>
+      y.matches - x.matches ||
+      Number(y.profileAddress !== null) - Number(x.profileAddress !== null),
+  );
+  const bestAddress = ranked[0]?.profileAddress?.toLowerCase() ?? null;
+  const nickname = bestAddress ? realNickname(bestAddress, refOf(bestAddress).nickname) : null;
+  const others = new Set(
+    ranked.flatMap((list) => (list.profileAddress ? [list.profileAddress.toLowerCase()] : [])),
+  );
+  if (bestAddress) others.delete(bestAddress);
+
+  if (!bestAddress) {
+    const fallback = defaultProfile(addresses);
+    if (fallback) return { ...nameProfile(fallback), also: [] };
+  }
+
+  return {
+    name: nickname ?? (bestAddress ? truncateAddress(bestAddress) : accountName),
+    address: bestAddress,
+    nickname,
+    also: [...others].map(refOf),
+  };
+}
+
+/** The profile the account made default while it is still linked, else its first linked one. */
+export function defaultProfile<T extends LinkedProfile>(addresses: T[]): T | undefined {
+  return addresses.find((info) => info.isDefault) ?? addresses[0];
+}
+
+/** A profile's name: its Cosmo nickname whatever Hide Cosmo ID says, else its shortened address. */
+export function nameProfile(profile: AddressRef) {
+  const address = profile.address.toLowerCase();
+  const nickname = realNickname(address, profile.nickname);
+  return { name: nickname ?? truncateAddress(address), address, nickname };
+}

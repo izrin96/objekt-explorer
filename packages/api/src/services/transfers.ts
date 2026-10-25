@@ -1,27 +1,13 @@
-import { toIndexedArtist } from "@repo/cosmo/types/common";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts, transfers } from "@repo/db/indexer/schema";
 import { Addresses } from "@repo/lib";
 import { mapOwnedObjekt, mapTransfer } from "@repo/lib/server/objekt";
 import { fetchPublicNicknames } from "@repo/lib/server/user";
-import {
-  type SQL,
-  and,
-  arrayOverlaps,
-  asc,
-  desc,
-  eq,
-  gt,
-  inArray,
-  lt,
-  lte,
-  ne,
-  or,
-} from "drizzle-orm";
+import { type SQL, and, asc, desc, eq, gt, inArray, lt, lte, ne, or } from "drizzle-orm";
 
 import type { AddressTransfersOutput, AddressTransfersFilters } from "../schemas/transfers";
+import { getCollectionFilters } from "./activity-feed";
 import { getCollectionColumns } from "./objekt";
-import { isAddressHiddenFromCaller } from "./privacy";
 import { mergeSortedTransfers } from "./transfer-merge";
 
 const PER_PAGE = 150;
@@ -31,10 +17,6 @@ export async function fetchAddressTransfers(
   query: AddressTransfersFilters,
 ): Promise<AddressTransfersOutput> {
   const addr = address.toLowerCase();
-
-  if (await isAddressHiddenFromCaller(addr, { checkHideTransfer: true })) {
-    return { hide: true, results: [] };
-  }
 
   const results = await fetchTransfers(query, addr);
 
@@ -64,18 +46,6 @@ export async function fetchAddressTransfers(
       };
     }),
   };
-}
-
-function getCollectionFilters(query: AddressTransfersFilters): SQL[] {
-  const filters: SQL[] = [];
-  if (query.artist.length)
-    filters.push(inArray(collections.artist, query.artist.map(toIndexedArtist)));
-  if (query.member.length) filters.push(arrayOverlaps(collections.members, query.member));
-  if (query.season.length) filters.push(inArray(collections.season, query.season));
-  if (query.class.length) filters.push(inArray(collections.class, query.class));
-  if (query.on_offline.length) filters.push(inArray(collections.onOffline, query.on_offline));
-  if (query.collection.length) filters.push(inArray(collections.collectionNo, query.collection));
-  return filters;
 }
 
 const transferSelect = {

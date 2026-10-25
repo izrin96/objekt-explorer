@@ -20,6 +20,13 @@ export const user = pgTable("user", {
   twitter: text("twitter"),
   showSocial: boolean("show_social").notNull().default(false),
   removeImage: boolean("remove_image").notNull().default(false),
+  // a deleted account keeps its row, scrubbed, so its trades and ratings stay in others' history
+  deletedAt: timestamp("deleted_at"),
+  // admin plugin
+  role: text("role"),
+  banned: boolean("banned").default(false),
+  banReason: text("ban_reason"),
+  banExpires: timestamp("ban_expires"),
 });
 
 export const session = pgTable(
@@ -38,6 +45,7 @@ export const session = pgTable(
     userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
+    impersonatedBy: text("impersonated_by"),
   },
   (table) => [index("session_userId_idx").on(table.userId)],
 );

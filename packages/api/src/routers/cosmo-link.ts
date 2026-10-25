@@ -1,20 +1,22 @@
 import crypto from "node:crypto";
 
-import { ORPCError } from "@orpc/server";
 import { fetchUserProfile } from "@repo/cosmo/server/user";
 import type { ValidArtist } from "@repo/cosmo/types/common";
 import { db } from "@repo/db";
 import { userAddress } from "@repo/db/schema";
-import { and, eq, inArray, isNotNull, sql } from "drizzle-orm";
+import { and, eq, inArray, isNotNull } from "drizzle-orm";
+import * as z from "zod";
 
 import { serverEnv } from "../env";
-import { type ApiMessages, authed } from "../orpc";
+import { refuse } from "../lib/refuse";
+import { authed } from "../orpc";
 import { addressSchema } from "../schemas/common/address";
 import {
   generateCodeInputSchema,
   type LinkedPreview,
   linkedPreviewsInputSchema,
 } from "../schemas/cosmo-link";
+import { linkVerified, setDefault, unlink } from "../services/cosmo-link";
 import { fetchOwnerCounts } from "../services/objekt";
 import { redis } from "../services/redis";
 import { getAccessToken } from "../services/token";
@@ -32,7 +34,7 @@ function generateCode() {
   return `verify-${hex}`;
 }
 
-async function assertAddressNotLinked(address: string, userId: string, messages: ApiMessages) {
+async function assertAddressNotLinked(address: string, userId: string) {
   const [existing] = await db
     .select({ userId: userAddress.userId })
     .from(userAddress)
@@ -40,12 +42,18 @@ async function assertAddressNotLinked(address: string, userId: string, messages:
     .limit(1);
 
   if (existing) {
-    throw new ORPCError("BAD_REQUEST", {
-      message:
-        existing.userId === userId
-          ? messages.cosmo_link_already_linked_self()
-          : messages.cosmo_link_already_linked_other(),
-    });
+    if (existing.userId === userId) {
+      refuse(
+        "BAD_REQUEST",
+        "cosmo_link_already_linked_self",
+        "This Cosmo ID is already linked to your account",
+      );
+    }
+    refuse(
+      "BAD_REQUEST",
+      "cosmo_link_already_linked_other",
+      "This Cosmo ID is already linked to another account",
+    );
   }
 }
 
@@ -53,8 +61,8 @@ export const cosmoLinkRouter = {
   // check if address is already linked
   checkAddress: authed
     .input(addressSchema)
-    .handler(async ({ input: address, context: { messages, session } }) => {
-      await assertAddressNotLinked(address, session.user.id, messages);
+    .handler(async ({ input: address, context: { session } }) => {
+      await assertAddressNotLinked(address, session.user.id);
     }),
 
   /** Only addresses the caller has linked, whatever else is asked for. */
@@ -85,18 +93,20 @@ export const cosmoLinkRouter = {
   removeLink: authed
     .input(addressSchema)
     .handler(async ({ input: address, context: { session } }) => {
-      await db
-        .update(userAddress)
-        .set({
-          userId: null,
-        })
-        .where(and(eq(userAddress.userId, session.user.id), eq(userAddress.address, address)));
+      await unlink(session.user.id, address);
+    }),
+
+  /** The profile that names the account to other people. */
+  setDefault: authed
+    .input(z.object({ address: addressSchema }))
+    .handler(async ({ input: { address }, context: { session } }) => {
+      await setDefault(session.user.id, address);
     }),
 
   // generate verification code for a specific artist profile
   generateCode: authed
     .input(generateCodeInputSchema)
-    .handler(async ({ input, context: { messages, session } }) => {
+    .handler(async ({ input, context: { session } }) => {
       // rate limit: max 5 attempts per user per 30s.
       // INCR creates the counter; EXPIRE NX (Redis 7+) sets the TTL only
       // when no TTL is set yet, so subsequent INCRs preserve the original
@@ -107,13 +117,15 @@ export const cosmoLinkRouter = {
       const attempts = await redis.incr(rateLimitKey);
       await redis.send("EXPIRE", [rateLimitKey, "30", "NX"]);
       if (attempts > 5) {
-        throw new ORPCError("TOO_MANY_REQUESTS", {
-          message: messages.cosmo_link_rate_limit(),
-        });
+        refuse(
+          "TOO_MANY_REQUESTS",
+          "cosmo_link_rate_limit",
+          "Too many attempts, try again shortly",
+        );
       }
 
       // re-check link status server-side
-      await assertAddressNotLinked(input.address, session.user.id, messages);
+      await assertAddressNotLinked(input.address, session.user.id);
 
       const code = generateCode();
 
@@ -136,14 +148,32 @@ export const cosmoLinkRouter = {
   // verify bio contains the code and link the account
   verifyStatusMessage: authed
     // typed, so the client can offer a new code: its countdown starts after the TTL does
-    .errors({ VERIFICATION_EXPIRED: { status: 400 } })
+    .errors({
+      VERIFICATION_EXPIRED: {
+        status: 400,
+        data: z.object({ reason: z.literal("cosmo_link_verification_expired") }),
+      },
+    })
     .input(addressSchema)
-    .handler(async ({ input: address, context: { messages, session }, errors }) => {
+    .handler(async ({ input: address, context: { session }, errors }) => {
+      // each check calls Cosmo with the shared token: max 10 per user per 30s
+      const rateLimitKey = `cosmo-verify-status-rate:${session.user.id}`;
+      const attempts = await redis.incr(rateLimitKey);
+      await redis.send("EXPIRE", [rateLimitKey, "30", "NX"]);
+      if (attempts > 10) {
+        refuse(
+          "TOO_MANY_REQUESTS",
+          "cosmo_link_rate_limit",
+          "Too many attempts, try again shortly",
+        );
+      }
+
       const redisKey = `cosmo-verify:${session.user.id}:${address}`;
       const raw = await redis.get(redisKey);
       if (!raw) {
         throw errors.VERIFICATION_EXPIRED({
-          message: messages.cosmo_link_verification_expired(),
+          message: "Verification expired, start over",
+          data: { reason: "cosmo_link_verification_expired" },
         });
       }
 
@@ -164,47 +194,22 @@ export const cosmoLinkRouter = {
         profile.nickname.toLowerCase() !== data.nickname.toLowerCase() ||
         profile.address.toLowerCase() !== data.address.toLowerCase()
       ) {
-        throw new ORPCError("BAD_REQUEST", {
-          message: messages.cosmo_link_profile_mismatch(),
-        });
+        refuse("BAD_REQUEST", "cosmo_link_profile_mismatch", "Profile data mismatch, start over");
       }
 
       if (!profile.statusMessage || !profile.statusMessage.toLowerCase().includes(data.code)) {
-        throw new ORPCError("BAD_REQUEST", {
-          message: messages.cosmo_link_code_not_found(),
-        });
+        refuse(
+          "BAD_REQUEST",
+          "cosmo_link_code_not_found",
+          "Verification code not found in the profile bio",
+        );
       }
 
-      const [linked] = await db
-        .insert(userAddress)
-        .values([
-          {
-            address: data.address,
-            nickname: data.nickname,
-            cosmoId: data.cosmoId,
-            linkedAt: sql`'now'`,
-            userId: session.user.id,
-            hideUser: false,
-          },
-        ])
-        .onConflictDoUpdate({
-          target: userAddress.address,
-          set: {
-            nickname: data.nickname,
-            cosmoId: data.cosmoId,
-            linkedAt: sql`'now'`,
-            userId: session.user.id,
-            hideUser: false,
-          },
-          where: sql`${userAddress.userId} IS NULL`,
-        })
-        .returning({ linkedUserId: userAddress.userId });
-
-      if (!linked || linked.linkedUserId !== session.user.id) {
-        throw new ORPCError("BAD_REQUEST", {
-          message: messages.cosmo_link_already_linked_other(),
-        });
-      }
+      await linkVerified(session.user.id, {
+        address: data.address,
+        nickname: data.nickname,
+        cosmoId: data.cosmoId,
+      });
 
       await redis.del(redisKey);
 

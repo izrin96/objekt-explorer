@@ -3,25 +3,37 @@ import { indexer } from "@repo/db/indexer";
 import { type ListEventOutbox, listEventOutbox, objekts } from "@repo/db/indexer/schema";
 import { listEntries, lists, lockedObjekts, pins } from "@repo/db/schema";
 import { chunk } from "@repo/lib";
+import { touchListWith } from "@repo/lib/server/list-touch";
 import { and, asc, eq, inArray } from "drizzle-orm";
+
+import { heartbeat, log } from "../lib/log";
+import { redis } from "../lib/redis";
 
 const BATCH_SIZE = 5000;
 const IN_CHUNK_SIZE = 500;
 const ADDRESS_CONCURRENCY = 10;
 
-export async function drainOutbox() {
-  console.log("[Outbox Drain] Starting outbox drain");
+const drainLog = log("drain");
+const drainBeat = heartbeat(drainLog);
+const cleanupLog = log("cleanup");
 
+export async function drainOutbox() {
+  drainBeat.count("runs");
+  try {
+    await drainBatch();
+  } finally {
+    drainBeat.flush();
+  }
+}
+
+async function drainBatch() {
   const batch = await indexer
     .select()
     .from(listEventOutbox)
     .orderBy(asc(listEventOutbox.createdAt))
     .limit(BATCH_SIZE);
 
-  if (batch.length === 0) {
-    console.log("[Outbox Drain] No events to process");
-    return;
-  }
+  if (batch.length === 0) return;
 
   const failedAddresses = await processBatch(batch);
 
@@ -34,12 +46,10 @@ export async function drainOutbox() {
     await indexer.delete(listEventOutbox).where(inArray(listEventOutbox.id, idsToDelete));
   }
 
-  console.log(
-    `[Outbox Drain] Processed ${idsToDelete.length} events` +
-      (failedAddresses.size > 0
-        ? `, ${failedAddresses.size} addresses failed (kept for retry)`
-        : ""),
-  );
+  drainBeat.count("events", idsToDelete.length);
+  if (failedAddresses.size > 0) {
+    drainLog.warn(`${failedAddresses.size} addresses failed; their events stay for the next run`);
+  }
 }
 
 async function processBatch(events: ListEventOutbox[]): Promise<Set<string>> {
@@ -71,7 +81,7 @@ async function processBatch(events: ListEventOutbox[]): Promise<Set<string>> {
         try {
           await cleanupAddress(address, gone);
         } catch (error) {
-          console.error(`[Outbox Drain] Error cleaning up for ${address}:`, error);
+          drainLog.error(`Cleanup failed for ${address}:`, error);
           failedAddresses.add(address);
         }
       }),
@@ -107,10 +117,16 @@ async function cleanupProfileListEntries(fromAddress: string, tokenIds: string[]
   const removed = await db
     .delete(listEntries)
     .where(and(inArray(listEntries.listId, listIds), inArray(listEntries.objektId, tokenIds)))
-    .returning({ id: listEntries.id });
+    .returning({ id: listEntries.id, listId: listEntries.listId });
 
   if (removed.length > 0) {
-    console.log(`[Outbox Drain] Removed ${removed.length} list entries for ${fromAddress}`);
+    // the owner traded the objekt away, so this counts as their own activity
+    await touchListWith(
+      redis,
+      removed.map((row) => row.listId),
+    );
+    drainBeat.count("list entries removed", removed.length);
+    drainLog.debug(`Removed ${removed.length} list entries for ${fromAddress}`);
   }
 }
 
@@ -134,7 +150,8 @@ async function cleanupTokenRows(
     .returning({ id: table.id });
 
   if (removed.length > 0) {
-    console.log(`[Outbox Drain] Removed ${removed.length} ${label} for ${fromAddress}`);
+    drainBeat.count(`${label} removed`, removed.length);
+    drainLog.debug(`Removed ${removed.length} ${label} for ${fromAddress}`);
   }
 }
 
@@ -181,7 +198,7 @@ async function cleanupStaleListEntries(): Promise<number> {
     return 0;
   }
 
-  console.log(`[Cleanup] Found ${profileLists.length} profile lists to check`);
+  cleanupLog.debug(`Checking ${profileLists.length} profile lists`);
 
   const allObjektIds = new Set<string>();
   for (const list of profileLists) {
@@ -197,6 +214,7 @@ async function cleanupStaleListEntries(): Promise<number> {
   const ownerMap = await fetchOwnerMap(Array.from(allObjektIds));
 
   const staleIds: number[] = [];
+  const staleListIds = new Set<number>();
   for (const list of profileLists) {
     if (!list.profileAddress) continue;
 
@@ -207,6 +225,7 @@ async function cleanupStaleListEntries(): Promise<number> {
       const owner = ownerMap.get(entry.objektId);
       if (!owner || owner !== profileAddressLower) {
         staleIds.push(entry.id);
+        staleListIds.add(list.id);
       }
     }
   }
@@ -216,6 +235,7 @@ async function cleanupStaleListEntries(): Promise<number> {
     await db.delete(listEntries).where(inArray(listEntries.id, idChunk));
     totalRemoved += idChunk.length;
   });
+  await touchListWith(redis, [...staleListIds]);
 
   return totalRemoved;
 }
@@ -255,18 +275,12 @@ async function cleanupStaleTokenRows(table: TokenTable): Promise<number> {
  * Loads all data upfront, processes in batches to avoid massive IN clauses and N+1 deletes.
  */
 export async function cleanupStaleEntries() {
-  console.log("[Cleanup] Starting full scan for stale entries");
-
+  const started = Date.now();
   const listEntriesRemoved = await cleanupStaleListEntries();
-  console.log(`[Cleanup] List entries removed: ${listEntriesRemoved}`);
-
   const pinsRemoved = await cleanupStaleTokenRows(pins);
-  console.log(`[Cleanup] Pins removed: ${pinsRemoved}`);
-
   const locksRemoved = await cleanupStaleTokenRows(lockedObjekts);
-  console.log(`[Cleanup] Locked objekts removed: ${locksRemoved}`);
-
-  console.log(
-    `[Cleanup] Full scan complete. Total removed: ${listEntriesRemoved + pinsRemoved + locksRemoved}`,
+  if (listEntriesRemoved + pinsRemoved + locksRemoved === 0) return;
+  cleanupLog.info(
+    `Full scan removed ${listEntriesRemoved} list entries, ${pinsRemoved} pins, ${locksRemoved} locks in ${Date.now() - started}ms`,
   );
 }

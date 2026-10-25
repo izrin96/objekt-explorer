@@ -1,13 +1,13 @@
-import { LockSimpleIcon } from "@phosphor-icons/react";
+import { truncateAddress } from "@repo/lib/address";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { type ReactNode, useEffect, useRef } from "react";
 
 import { CursorCard, cursorCardDelays } from "@/components/shared/cursor-card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { PersonAvatar } from "@/components/shared/person-avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TooltipPrimitive } from "@/components/ui/tooltip";
-import { displayNickname, nicknameParam, truncateAddress } from "@/lib/address";
+import { displayNickname, nicknameParam } from "@/lib/address";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -55,6 +55,7 @@ export function ProfileCell({
   nickname,
   className,
   linkClassName,
+  title,
   before,
   after,
   children,
@@ -63,6 +64,8 @@ export function ProfileCell({
   nickname: string | null | undefined;
   className?: string;
   linkClassName?: string;
+  /** the full name, where the cell truncates it */
+  title?: string;
   /** content ahead of the name, inside the hover area */
   before?: ReactNode;
   /** content after the name, inside the hover area */
@@ -77,7 +80,12 @@ export function ProfileCell({
       render={<span className={className} />}
     >
       {before}
-      <Link to="/@{$nickname}" params={profileParams(address, nickname)} className={linkClassName}>
+      <Link
+        to="/@{$nickname}"
+        params={profileParams(address, nickname)}
+        title={title}
+        className={linkClassName}
+      >
         {children}
       </Link>
       {after}
@@ -128,12 +136,11 @@ function CardBody({ address, nickname }: Payload) {
       )}
 
       <div className="flex items-center gap-3 p-3">
-        <Avatar className="size-10 shrink-0">
-          {data?.user?.image && <AvatarImage src={data.user.image} alt="" />}
-          <AvatarFallback className="text-sm font-semibold">
-            {name.charAt(0).toUpperCase()}
-          </AvatarFallback>
-        </Avatar>
+        <PersonAvatar
+          name={name}
+          image={data?.user?.image}
+          className="size-10 shrink-0 text-sm font-semibold"
+        />
 
         <div className="flex min-w-0 flex-col gap-0.5">
           <span
@@ -144,11 +151,6 @@ function CardBody({ address, nickname }: Payload) {
 
           {data === undefined ? (
             <Skeleton className="h-4 w-32" />
-          ) : data.isGuard ? (
-            <span className="text-muted-foreground flex items-center gap-1 text-xs">
-              <LockSimpleIcon weight="fill" aria-hidden />
-              {m.profile_profile_private()}
-            </span>
           ) : (
             data.counts && (
               <span className="text-muted-foreground truncate text-xs">

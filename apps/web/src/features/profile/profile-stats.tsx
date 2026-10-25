@@ -6,7 +6,7 @@ export function ProfileStats({ cells }: { cells: [Cell, Cell, Cell, Cell] }) {
   return (
     <dl className="bg-border grid grid-cols-2 gap-px overflow-hidden rounded-lg border md:grid-cols-4">
       {cells.map((cell) => (
-        <div key={cell.label} className="bg-popover px-3.5 py-3">
+        <div key={cell.label} className="bg-card px-3.5 py-3">
           <dd className="font-mono text-xl font-semibold tracking-tight tabular-nums">
             {cell.value}
             {cell.unit !== undefined && (

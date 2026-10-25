@@ -2,15 +2,16 @@ import { ORPCError } from "@orpc/client";
 import { UserIcon } from "@phosphor-icons/react";
 import { MAX_USER_SEARCH_LENGTH } from "@repo/api/schemas/user";
 import type { CosmoPublicUser } from "@repo/cosmo/types/user";
+import { truncateAddress } from "@repo/lib/address";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 
 import { EmptyState } from "@/components/shared/empty-state";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { PersonAvatar } from "@/components/shared/person-avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDebouncedCallback } from "@/hooks/use-debounced-callback";
-import { truncateAddress } from "@/lib/address";
 import { client } from "@/lib/orpc";
+import { refusalText } from "@/lib/refusal";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
@@ -31,8 +32,8 @@ export function useUserSearch(initialQuery = "") {
     retry: false,
   });
 
-  // a rate limit is an answer, not a blank list: show what the server said
-  const serverError = error instanceof ORPCError ? error.message : null;
+  // a rate limit is an answer, not a blank list
+  const serverError = error instanceof ORPCError ? refusalText(error) : null;
 
   // the debounce wait counts as searching too, or the empty state flashes
   // "no users match" against every keystroke before the request even starts
@@ -57,12 +58,7 @@ export function useUserSearch(initialQuery = "") {
 }
 
 function UserAvatar({ image, label }: { image: string | undefined; label: string }) {
-  return (
-    <Avatar className="size-6.5 flex-none">
-      {image && <AvatarImage src={image} alt="" />}
-      <AvatarFallback>{label.slice(0, 1).toUpperCase()}</AvatarFallback>
-    </Avatar>
-  );
+  return <PersonAvatar name={label} image={image} className="size-6.5 flex-none" />;
 }
 
 /** avatar, nickname and short address in a 6.5 leading slot */
@@ -115,7 +111,7 @@ export function UserSearchEmpty({
       title={serverError !== null ? m.nav_search_user_error() : notFound.title}
       hint={serverError ?? notFound.hint}
       bordered={false}
-      className="py-8"
+      className="py-8 md:py-8"
     />
   );
 }

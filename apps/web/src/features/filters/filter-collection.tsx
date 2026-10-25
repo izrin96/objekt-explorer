@@ -1,7 +1,6 @@
 import { CaretDownIcon, MagnifyingGlassIcon } from "@phosphor-icons/react";
 import { useRef } from "react";
 
-import { buttonVariants } from "@/components/ui/button";
 import {
   ComboboxEmpty,
   ComboboxItem,
@@ -11,6 +10,8 @@ import {
 } from "@/components/ui/combobox";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
+
+import { toolbarTrigger } from "./toolbar-trigger";
 
 /** `229 z` → `229z`: case, spaces and punctuation are dropped on both sides */
 const squash = (value: string) => value.toLowerCase().replace(/[^a-z0-9]/g, "");
@@ -52,11 +53,7 @@ export function FilterCollection({
         ref={triggerRef}
         aria-label={label}
         data-active={value.length > 0 || undefined}
-        className={cn(
-          buttonVariants({ variant: "outline", size: "sm" }),
-          "data-active:border-foreground gap-1.5",
-          className,
-        )}
+        className={cn(toolbarTrigger, className)}
       >
         <span>
           {label}

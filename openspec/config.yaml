@@ -1,22 +1,15 @@
 schema: spec-driven
 
 context: |
-  Objekt Explorer — Bun 1.4 + Turbo monorepo. Read AGENTS.md first; it is the authority on
+  Objekt Tracker — Bun 1.4 + Turbo monorepo. Read AGENTS.md first; it is the authority on
   structure, commands and code style (oxlint + oxfmt, TS strict, `import * as z from "zod"`,
   no class/enum, theme spacing over arbitrary values, catalog: for shared deps).
   Frontend: TanStack React Start + Vite + React 19 + Tailwind v4, ORPC + Zod, React Query,
   Zustand (selectors only), Better Auth, Paraglide i18n. Database: PostgreSQL 18 + Drizzle.
   The frontend is `apps/web` (Base UI via the cnippet registry). The legacy `apps/website` and
-  the `apps/lab` prototype are removed; `design/` keeps their notes as history, and the port
-  notes in `design/lab-code-review.md` remain requirements.
-  Rules for code under `apps/web`: Zustand reads are selectors only; URL state is route
-  `validateSearch` with zod, never nuqs; every user-facing string is `m.*` from Paraglide;
-  server data goes through React Query with `@orpc/tanstack-query` utils, and route loaders
-  load the first paint with `queryClient.query({ ...options, staleTime: "static" })`;
-  Phosphor icons; cnippet token names only; `virtua` grids.
-  A dialog's dismiss button is `m.common_modal_cancel()` only when the dialog has a primary
-  action that commits something, and `m.common_modal_close()` when it is informational or only
-  produces output to copy.
+  the `apps/lab` prototype are removed; `design/archive/` keeps their notes as history.
+  Each package's conventions live in its own `AGENTS.md` (`apps/web`, `apps/worker`,
+  `apps/indexer`, `packages/api`, `packages/db`); a change touching that package follows them.
   `packages/api` is the shared server layer.
   Comments: as few as possible. Comment only a non-obvious why (workaround, invariant, trap)
   the code cannot express; never narrate what the next line does, never record history
@@ -27,8 +20,9 @@ context: |
   create accounts or data without the user's explicit approval for that specific action.
   Mutation flows are verified up to the request boundary (validation, the request that would
   be sent) and recorded as "read-only verified"; read paths are exercised for real.
-  There is no test framework: `bun run lint`, `bun run typecheck` and `bun run build` are the
-  checks. Never git commit, push or run DB migrations without explicit approval.
+  The checks are `bun run lint`, `bun run typecheck`, `bun run test` and `bun run build`;
+  tests cover pure modules only (see AGENTS.md). Never git commit, push or run DB migrations
+  without explicit approval.
 
 rules:
   proposal:
@@ -36,5 +30,7 @@ rules:
     - Keep proposals under 600 words
   tasks:
     - Each task ends with lint + typecheck + build passing for the touched package
+    - The last task updates the `AGENTS.md` of every touched package (or the root one) whose
+      conventions, traps or workflow the change alters, or states that none changed
   design:
     - Prefer an existing component or store over a new one; say why when it does not fit

@@ -1,9 +1,9 @@
 import { ColumnsIcon, SortAscendingIcon, SortDescendingIcon } from "@phosphor-icons/react";
 import type { ValidCustomSort, ValidGroupBy, ValidSortDirection } from "@repo/cosmo/types/common";
 import { validGroupBy } from "@repo/cosmo/types/common";
-import { type ReactNode, useMemo, useState } from "react";
+import { type ReactNode, useMemo } from "react";
 
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectItem,
@@ -11,7 +11,6 @@ import {
   SelectPrimitive,
   SelectValue,
 } from "@/components/ui/select";
-import { SheetPrimitive } from "@/components/ui/sheet";
 import { cn, validColumns } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 import { useColumns, useColumnStore } from "@/stores/columns";
@@ -28,19 +27,15 @@ import {
   type FacetKey,
 } from "./facet-controls";
 import type { Facets, MemberGroup } from "./facets";
-import { FilterPopover, LongTailFields } from "./filter-popover";
 import { FilterSearchField } from "./filter-search";
-import { FilterSheet, FilterSheetTrigger } from "./filter-sheet";
+import { FilterSheet } from "./filter-sheet";
 import { GROUP_BY_LABEL, SORT_DESC, SORT_LABEL } from "./labels";
 import { LONG_TAIL, longTailCount, type LongTailField } from "./long-tail";
+import { LongTailFields, LongTailToolbar } from "./long-tail-fields";
 import { ResetButton } from "./reset-button";
 import { canReset, DEFAULT_SORT_DIR } from "./search-schema";
+import { toolbarTrigger } from "./toolbar-trigger";
 import { useCanonicalFilters, useFilters, useResetFilters, useSetFilters } from "./use-filters";
-
-/** `md+` opens the long-tail filters in the side sheet; `false` brings back the popover */
-const FILTERS_IN_SHEET = true;
-
-const toolbarTrigger = cn(buttonVariants({ variant: "outline", size: "sm" }), "gap-1.5");
 
 /**
  * Picking a sort resets the direction to the one that sort is normally read
@@ -187,7 +182,6 @@ function GroupBySelect({ className, stacked = false }: { className?: string; sta
           data-active={groupBy !== undefined || undefined}
           className={cn(
             toolbarTrigger,
-            "data-active:border-foreground",
             // `flex-1`, not `w-full`: the direction button shares the row once a
             // grouping is set, and a full-width trigger pushes it past the sheet
             stacked && "min-w-0 flex-1 justify-between",
@@ -278,8 +272,7 @@ export function FilterBar({
   const setFilters = useSetFilters();
   const sharedReset = useResetFilters();
   const reset = onReset ?? sharedReset;
-  const chips = useActiveChips();
-  const [sheet] = useState(() => SheetPrimitive.createHandle());
+  const chips = useActiveChips({ listed: extras.some((item) => item.key === "listed") });
   const longTailActive = longTailCount(filters, longTail);
   const nothingToReset = resetDisabled ?? !canReset(filters);
 
@@ -324,7 +317,6 @@ export function FilterBar({
             extraCount={longTailActive}
             onReset={reset}
             resetDisabled={nothingToReset}
-            handle={FILTERS_IN_SHEET ? sheet : undefined}
           >
             <div className="my-1 border-t md:hidden" />
             <LongTailFields fields={longTail} collectionNos={facets.collectionNos} />
@@ -344,15 +336,11 @@ export function FilterBar({
 
           {!extrasFirst && <ExtraFacetControls surface="inline" extras={extras} />}
 
-          {FILTERS_IN_SHEET ? (
-            <FilterSheetTrigger handle={sheet} count={longTailActive} className="max-md:hidden" />
-          ) : (
-            <FilterPopover
-              fields={longTail}
-              collectionNos={facets.collectionNos}
-              className="max-md:hidden"
-            />
-          )}
+          <LongTailToolbar
+            fields={longTail}
+            collectionNos={facets.collectionNos}
+            className="max-md:hidden"
+          />
 
           {extra}
 

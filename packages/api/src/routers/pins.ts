@@ -6,7 +6,7 @@ import { and, eq, inArray, isNull, sql } from "drizzle-orm";
 import { authed, pub } from "../orpc";
 import { addressOrBareInputSchema, addressTokenIdsInputSchema } from "../schemas/common/address";
 import { documented, errorResponses } from "../schemas/common/documented";
-import { movePinInputSchema, pinsOutputSchema } from "../schemas/pins";
+import { pinsOutputSchema } from "../schemas/pins";
 import { fetchPins, getValidPins } from "../services/pins";
 import { assertProfileOwned } from "../services/profile";
 import { TOKEN_CHUNK_SIZE } from "../services/utils";
@@ -26,8 +26,8 @@ export const pinsRouter = {
 
   batchPin: authed
     .input(addressTokenIdsInputSchema)
-    .handler(async ({ input: { address, tokenIds }, context: { messages, session } }) => {
-      await assertProfileOwned(address, session.user.id, messages);
+    .handler(async ({ input: { address, tokenIds }, context: { session } }) => {
+      await assertProfileOwned(address, session.user.id);
 
       if (tokenIds.length === 0) return;
 
@@ -58,54 +58,18 @@ export const pinsRouter = {
 
   batchUnpin: authed
     .input(addressTokenIdsInputSchema)
-    .handler(async ({ input: { address, tokenIds }, context: { messages, session } }) => {
-      await assertProfileOwned(address, session.user.id, messages);
+    .handler(async ({ input: { address, tokenIds }, context: { session } }) => {
+      await assertProfileOwned(address, session.user.id);
 
       if (tokenIds.length === 0) return;
 
       await db.delete(pins).where(and(inArray(pins.tokenId, tokenIds), eq(pins.address, address)));
     }),
 
-  movePin: authed
-    .input(movePinInputSchema)
-    .handler(async ({ input: { address, tokenId, direction }, context: { messages, session } }) => {
-      await assertProfileOwned(address, session.user.id, messages);
-
-      const validPins = await getValidPins(address);
-
-      const currentIdx = validPins.findIndex((p) => p.tokenId === tokenId);
-      if (currentIdx === -1) return;
-
-      const swapIdx = direction === "down" ? currentIdx - 1 : currentIdx + 1;
-      if (swapIdx < 0 || swapIdx >= validPins.length) return;
-
-      const current = validPins[currentIdx]!;
-      const adjacent = validPins[swapIdx]!;
-
-      // Assign brand-new order values derived purely from each row's target
-      // position (rank) in validPins, not from the old captured
-      // current.order/adjacent.order values. validPins is ascending by
-      // COALESCE(order, id), so index i maps to order value i + 1 (bigger =
-      // topmost). This mirrors reorderPins: even if current and adjacent
-      // happened to share the same order value (a tie), swapping their
-      // positions always produces two distinct values, so the tie cannot
-      // survive.
-      await db.transaction(async (tx) => {
-        await tx
-          .update(pins)
-          .set({ order: swapIdx + 1 })
-          .where(eq(pins.id, current.id));
-        await tx
-          .update(pins)
-          .set({ order: currentIdx + 1 })
-          .where(eq(pins.id, adjacent.id));
-      });
-    }),
-
   reorderPins: authed
     .input(addressTokenIdsInputSchema)
-    .handler(async ({ input: { address, tokenIds }, context: { messages, session } }) => {
-      await assertProfileOwned(address, session.user.id, messages);
+    .handler(async ({ input: { address, tokenIds }, context: { session } }) => {
+      await assertProfileOwned(address, session.user.id);
 
       const validPins = await getValidPins(address);
 

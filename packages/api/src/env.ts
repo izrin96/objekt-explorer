@@ -21,14 +21,25 @@ export const serverEnv = createEnv({
     SES_MAIL_FROM: z.string().min(1),
     BYPASS_LIVE_KEY: z.string().min(1).optional(),
     REDIS_URL: z.string().min(1),
+    // optional so the site starts without the real-time server; the token procedure refuses without it
+    CENTRIFUGO_URL: z.url().optional(),
+    CENTRIFUGO_API_KEY: z.string().min(1).optional(),
+    CENTRIFUGO_TOKEN_SECRET: z.string().min(1).optional(),
+    // optional so the site starts without it; a trade cancel refuses as indexer_behind without it
+    INDEXER_RPC_ENDPOINT: z.url().optional(),
     COSMO_KEY: z.string().min(1),
     // the public origin Better Auth signs in on and the only one it accepts;
     // required, or Better Auth would take it from the request's own Host
     SITE_URL: z.url(),
+    // Sentry; unset turns error tracking off. The browser gets the DSN at runtime and
+    // sends through /api/errors, never to the DSN's host
+    SENTRY_DSN: z.url().optional(),
+    SENTRY_ENVIRONMENT: z.string().min(1).optional(),
+    SENTRY_RELEASE: z.string().min(1).optional(),
     // client
     VITE_UMAMI_SCRIPT_URL: z.string().min(1).optional(),
     VITE_UMAMI_WEBSITE_ID: z.string().min(1).optional(),
-    VITE_ACTIVITY_WEBSOCKET_URL: z.string().optional(),
+    VITE_CENTRIFUGO_URL: z.string().optional(),
     VITE_LIVE_API_KEY: z.string().min(1),
   },
   runtimeEnv: process.env,

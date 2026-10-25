@@ -12,12 +12,14 @@
     "lint": "oxlint --type-aware",
     "lint:fix": "oxlint --type-aware --fix",
     "typecheck": "tsc --noEmit",
+    "test": "bun test",
     "format": "oxfmt ."
   },
   "dependencies": {
     "@repo/db": "workspace:*",
+    "@sentry/core": "catalog:",
     "drizzle-orm": "catalog:",
-    "jose": "^6.2.12"
+    "jose": "^6.2.13"
   },
   "devDependencies": {
     "@repo/lint": "workspace:*",

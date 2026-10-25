@@ -1,47 +1,75 @@
 import {
   ArrowsLeftRightIcon,
-  CheckIcon,
+  CopyIcon,
   DotsThreeIcon,
   DownloadSimpleIcon,
+  HashIcon,
+  ListPlusIcon,
   MagnifyingGlassIcon,
   PencilSimpleIcon,
   TrashIcon,
   UsersIcon,
 } from "@phosphor-icons/react";
+import { canBeOnTrade, pickedSides, tradeSideOf } from "@repo/api/schemas/list";
+import { fullestFilter } from "@repo/api/schemas/trade";
+import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 
+import { PendingStatus } from "@/components/router/pending";
+import { PersonAvatar } from "@/components/shared/person-avatar";
 import { SocialBadge } from "@/components/shared/social-badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Menu, MenuItem, MenuPopup, MenuSeparator, MenuTrigger } from "@/components/ui/menu";
+import { Skeleton } from "@/components/ui/skeleton";
+import { MessageButton } from "@/features/chat/message-button";
 import { CompareDialog } from "@/features/compare/compare-dialog";
+import { SkeletonGrid } from "@/features/objekt/skeleton-grid";
 import { ProfileLink } from "@/features/profile/profile-hover-card";
+import { mutualCountOptions } from "@/features/trade/queries";
+import { TagBadges } from "@/features/trade/tag-label";
 import { displayNickname } from "@/lib/address";
+import { copyWithToast } from "@/lib/clipboard";
 import { m } from "@/paraglide/messages";
 
+import { CopyListDialog } from "./copy-list-dialog";
 import { DeleteListDialog } from "./delete-list-dialog";
 import { EditListDialog } from "./edit-list-dialog";
 import { ExportListDialog } from "./export-list-dialog";
 import { getListLinkOption } from "./list-link";
+import { listPostTags } from "./list-post-tags";
 import { useListTarget } from "./list-provider";
-import { ListTypeBadge } from "./list-type-badge";
+import { ListBoundBadge, ListCurrencyBadge, ListTypeBadge } from "./list-type-badge";
+import { RuleDialog } from "./rules/rule-dialog";
 import { ShareListButton } from "./share-list-button";
-import { TradeMatchesDialog, useCanTradeMatch } from "./trade-matches";
 import { useListOwned } from "./use-list-owned";
 
 export function ListHeader() {
   const list = useListTarget();
   const isOwner = useListOwned();
-  const canTradeMatch = useCanTradeMatch();
+  const side = tradeSideOf(list.listType);
+  const canTradeMatch = isOwner && (side === "want" || (side === "have" && list.isProfileBind));
   const [compareOpen, setCompareOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
-  const [tradeOpen, setTradeOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  const [copyOpen, setCopyOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [ruleOpen, setRuleOpen] = useState(false);
+  const canAddRule = isOwner && list.listType === "want";
   const linked = list.linkedList;
-  const swappable = (list.listTypeNew === "have" || list.listTypeNew === "want") && linked;
+  const self = { id: list.id, listType: list.listType, linkedListId: linked?.id ?? null };
+  const linkedOnTrade =
+    linked && canBeOnTrade(linked.listType, linked.isProfileBind)
+      ? [{ id: linked.id, listType: linked.listType, linkedListId: list.id }]
+      : [];
+  const sides = pickedSides(self, [self, ...linkedOnTrade]);
+  const match = fullestFilter({
+    have: sides.haveListIds.length > 0,
+    want: sides.wantListIds.length > 0,
+  });
+  const tags = listPostTags(list);
+  const swappable = (list.listType === "have" || list.listType === "want") && linked;
 
   return (
     <div className="flex flex-col gap-3.5">
@@ -53,15 +81,17 @@ export function ListHeader() {
             <h1 className="font-display text-xl font-semibold tracking-tight text-balance">
               {list.name}
             </h1>
-            {list.isProfileBind ? (
-              <Badge variant="outline" size="sm">
-                <CheckIcon weight="bold" aria-hidden />
-                {m.profile_header_verified()}
+            {list.isProfileBind ? <ListBoundBadge /> : null}
+            {list.listType !== "general" ? <ListTypeBadge type={list.listType} /> : null}
+            {list.discoverable && canBeOnTrade(list.listType, list.isProfileBind) ? (
+              <Badge variant="outline" size="sm" render={<Link to="/trade" />}>
+                <ArrowsLeftRightIcon aria-hidden />
+                {m.list_on_trade()}
               </Badge>
             ) : null}
-            {list.listTypeNew !== "general" ? <ListTypeBadge type={list.listTypeNew} /> : null}
-            {list.listTypeNew === "sale" && list.currency ? (
-              <span className="text-muted-foreground font-mono text-xs">({list.currency})</span>
+            {tags.length > 0 ? <TagBadges tags={tags} /> : null}
+            {list.listType === "sale" && list.currency ? (
+              <ListCurrencyBadge currency={list.currency} />
             ) : null}
           </div>
 
@@ -78,10 +108,11 @@ export function ListHeader() {
 
           {list.user ? (
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-              <Avatar className="size-6">
-                {list.user.image ? <AvatarImage src={list.user.image} alt="" /> : null}
-                <AvatarFallback>{(list.user.name ?? "?").slice(0, 1).toUpperCase()}</AvatarFallback>
-              </Avatar>
+              <PersonAvatar
+                name={list.user.name ?? ""}
+                image={list.user.image}
+                className="size-6"
+              />
               {list.user.name ? <SocialBadge platform="cosmo" username={list.user.name} /> : null}
               {list.user.discord ? (
                 <SocialBadge platform="discord" username={list.user.discord} />
@@ -101,8 +132,18 @@ export function ListHeader() {
               render={<Link {...getListLinkOption(linked)} replace />}
             >
               <ArrowsLeftRightIcon />
-              {list.listTypeNew === "have" ? m.list_swap_to_want() : m.list_swap_to_have()}
+              {list.listType === "have" ? m.list_swap_to_want() : m.list_swap_to_have()}
             </Button>
+          ) : null}
+          {canTradeMatch ? <TradeMatchesLink slug={list.slug} match={match} /> : null}
+          {canAddRule ? (
+            <Button variant="outline" size="sm" onClick={() => setRuleOpen(true)}>
+              <ListPlusIcon />
+              {m.rule_add()}
+            </Button>
+          ) : null}
+          {list.messageable && !isOwner ? (
+            <MessageButton target={{ kind: "list", slug: list.slug }} />
           ) : null}
           <ShareListButton list={list} />
           <Menu>
@@ -122,18 +163,28 @@ export function ListHeader() {
                 <DownloadSimpleIcon />
                 {m.common_actions_export()}
               </MenuItem>
-              {canTradeMatch ? (
-                <MenuItem onClick={() => setTradeOpen(true)}>
-                  <UsersIcon />
-                  {m.list_trade_matches_title()}
-                </MenuItem>
-              ) : null}
+              {/* a profile-scoped link does not show the ID another list's compare takes */}
+              <MenuItem
+                onClick={() =>
+                  void copyWithToast(list.slug, {
+                    title: m.list_copy_id_copied(),
+                    description: list.slug,
+                  })
+                }
+              >
+                <HashIcon />
+                {m.list_copy_id()}
+              </MenuItem>
               {isOwner ? (
                 <>
                   <MenuSeparator />
                   <MenuItem onClick={() => setEditOpen(true)}>
                     <PencilSimpleIcon />
                     {m.list_card_edit()}
+                  </MenuItem>
+                  <MenuItem onClick={() => setCopyOpen(true)}>
+                    <CopyIcon />
+                    {m.list_copy_action()}
                   </MenuItem>
                   <MenuItem variant="destructive" onClick={() => setDeleteOpen(true)}>
                     <TrashIcon />
@@ -160,7 +211,6 @@ export function ListHeader() {
         onOpenChange={setCompareOpen}
       />
       <ExportListDialog slug={list.slug} open={exportOpen} onOpenChange={setExportOpen} />
-      <TradeMatchesDialog open={tradeOpen} onOpenChange={setTradeOpen} />
       {isOwner ? (
         <>
           <EditListDialog
@@ -169,6 +219,15 @@ export function ListHeader() {
             onOpenChange={setEditOpen}
             redirectOnSave
           />
+          <CopyListDialog slug={list.slug} open={copyOpen} onOpenChange={setCopyOpen} />
+          {canAddRule ? (
+            <RuleDialog
+              slug={list.slug}
+              listName={list.name}
+              open={ruleOpen}
+              onOpenChange={setRuleOpen}
+            />
+          ) : null}
           <DeleteListDialog
             slug={list.slug}
             name={list.name}
@@ -179,5 +238,59 @@ export function ListHeader() {
         </>
       ) : null}
     </div>
+  );
+}
+
+/** Both-way lists open on Mutual and show its count; a lone list opens on Any, which has none. */
+function TradeMatchesLink({
+  slug,
+  match,
+}: {
+  slug: string;
+  match: ReturnType<typeof fullestFilter>;
+}) {
+  const mutual = match === "mutual";
+  const { data: count } = useQuery({ ...mutualCountOptions(slug), enabled: mutual });
+  const shown = mutual ? count : undefined;
+
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      aria-label={shown === undefined ? undefined : m.trade_matches_link_label({ count: shown })}
+      render={
+        <Link to="/trade/for-you" search={{ match: mutual ? "mutual" : "any", list: slug }} />
+      }
+    >
+      <UsersIcon />
+      {m.nav_trade_matches()}
+      {shown === undefined ? null : (
+        <Badge variant="secondary" size="sm" className="font-mono tabular-nums">
+          {shown}
+        </Badge>
+      )}
+    </Button>
+  );
+}
+
+/** A list page while it loads: the header's shape over the objekt grid. */
+export function ListPageSkeleton() {
+  return (
+    <>
+      <PendingStatus />
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="flex flex-col gap-2">
+          <Skeleton className="h-7 w-56 max-w-full" />
+          <Skeleton className="h-4 w-36" />
+          <Skeleton className="h-6 w-44" />
+        </div>
+        <div className="flex gap-1.5">
+          <Skeleton className="h-8 w-24 rounded-md" />
+          <Skeleton className="size-8 rounded-md" />
+        </div>
+      </div>
+      <Skeleton className="h-9 w-full max-w-xl rounded-lg" />
+      <SkeletonGrid />
+    </>
   );
 }

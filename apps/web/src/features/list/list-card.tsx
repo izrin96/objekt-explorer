@@ -1,5 +1,6 @@
 import {
-  CheckIcon,
+  ArrowsLeftRightIcon,
+  CopyIcon,
   DotsThreeIcon,
   LinkIcon,
   LinkSimpleIcon,
@@ -7,7 +8,7 @@ import {
   ShareNetworkIcon,
   TrashIcon,
 } from "@phosphor-icons/react";
-import type { ListPreview, PublicList } from "@repo/api/schemas/list";
+import { canBeOnTrade, type ListPreview, type PublicList } from "@repo/api/schemas/list";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 
@@ -21,13 +22,16 @@ import {
   previewCardLinkClass,
 } from "@/features/objekt/objekt-preview-strip";
 import { ProfileLink } from "@/features/profile/profile-hover-card";
+import { TagBadges } from "@/features/trade/tag-label";
 import { displayNickname } from "@/lib/address";
 import { m } from "@/paraglide/messages";
 
+import { CopyListDialog } from "./copy-list-dialog";
 import { DeleteListDialog } from "./delete-list-dialog";
 import { EditListDialog } from "./edit-list-dialog";
 import { getListLinkOption } from "./list-link";
-import { ListTypeBadge } from "./list-type-badge";
+import { listPostTags } from "./list-post-tags";
+import { ListBoundBadge, ListCurrencyBadge, ListTypeBadge } from "./list-type-badge";
 import { useCopyListLink } from "./share-list-button";
 import { useIsListOwner } from "./use-list-owned";
 
@@ -48,11 +52,13 @@ export function ListCard({
   showProfile?: boolean;
 }) {
   const [editOpen, setEditOpen] = useState(false);
+  const [copyOpen, setCopyOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const owned = useIsListOwner(list.slug);
   const copyLink = useCopyListLink(list);
   const linked = list.linkedList;
   const chipAddress = showProfile ? list.profileAddress : null;
+  const tags = listPostTags(list);
 
   return (
     <div className={previewCardClass}>
@@ -67,17 +73,24 @@ export function ListCard({
           </h2>
 
           <div className="text-muted-foreground flex flex-wrap items-center gap-1.5 text-xs">
-            <ListTypeBadge type={list.listTypeNew} />
-            {list.isProfileBind ? (
-              <Badge variant="outline" size="sm">
-                <CheckIcon weight="bold" aria-hidden />
-                {m.profile_header_verified()}
+            <ListTypeBadge type={list.listType} />
+            {list.isProfileBind ? <ListBoundBadge /> : null}
+            {list.discoverable && canBeOnTrade(list.listType, list.isProfileBind) ? (
+              <Badge
+                variant="outline"
+                size="sm"
+                className="relative z-10"
+                render={<Link to="/trade" />}
+              >
+                <ArrowsLeftRightIcon aria-hidden />
+                {m.list_on_trade()}
               </Badge>
             ) : null}
-            <ObjektPreviewCount preview={preview} />
-            {list.listTypeNew === "sale" && list.currency ? (
-              <span className="font-mono">· {list.currency}</span>
+            {tags.length > 0 ? <TagBadges tags={tags} /> : null}
+            {list.listType === "sale" && list.currency ? (
+              <ListCurrencyBadge currency={list.currency} />
             ) : null}
+            <ObjektPreviewCount preview={preview} />
           </div>
 
           {/* The chip is "which Cosmo owns this list", so it keys off the address;
@@ -131,6 +144,10 @@ export function ListCard({
                   <PencilSimpleIcon />
                   {m.list_card_edit()}
                 </MenuItem>
+                <MenuItem onClick={() => setCopyOpen(true)}>
+                  <CopyIcon />
+                  {m.list_copy_action()}
+                </MenuItem>
                 <MenuSeparator />
                 <MenuItem variant="destructive" onClick={() => setDeleteOpen(true)}>
                   <TrashIcon />
@@ -145,6 +162,7 @@ export function ListCard({
       {owned ? (
         <>
           <EditListDialog slug={list.slug} open={editOpen} onOpenChange={setEditOpen} />
+          <CopyListDialog slug={list.slug} open={copyOpen} onOpenChange={setCopyOpen} />
           <DeleteListDialog
             slug={list.slug}
             name={list.name}

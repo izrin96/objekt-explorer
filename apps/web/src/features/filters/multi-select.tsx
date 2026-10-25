@@ -1,6 +1,5 @@
 import { CaretDownIcon } from "@phosphor-icons/react";
 
-import { buttonVariants } from "@/components/ui/button";
 import {
   Select,
   SelectGroup,
@@ -12,6 +11,7 @@ import {
 import { cn } from "@/lib/utils";
 
 import type { MemberGroup } from "./facets";
+import { toolbarTrigger } from "./toolbar-trigger";
 
 type MultiSelectProps = {
   label: string;
@@ -42,11 +42,7 @@ export function MultiSelect({
       <SelectPrimitive.Trigger
         aria-label={label}
         data-active={value.length > 0 || undefined}
-        className={cn(
-          buttonVariants({ variant: "outline", size: "sm" }),
-          "data-active:border-foreground gap-1.5",
-          className,
-        )}
+        className={cn(toolbarTrigger, className)}
       >
         <span>
           {label}

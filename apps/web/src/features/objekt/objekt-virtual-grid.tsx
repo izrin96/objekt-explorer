@@ -1,6 +1,6 @@
 import { CaretDownIcon } from "@phosphor-icons/react";
 import type { GridObjekt } from "@repo/lib/types/objekt";
-import { type ReactElement, useMemo } from "react";
+import { type ReactElement, memo, useMemo } from "react";
 import { InView } from "react-intersection-observer";
 import { WindowVirtualizer } from "virtua";
 
@@ -8,18 +8,25 @@ import { Spinner } from "@/components/ui/spinner";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import { useFilterData } from "@/features/filters/filter-data-provider";
 import type { FilterSearch } from "@/features/filters/search-schema";
+import { useWindowVirtualizerRestore } from "@/lib/use-window-virtualizer-restore";
 import { useColumns } from "@/stores/columns";
 
-import { buildVirtualData } from "./build-virtual-data";
+import { type VirtualItem, buildVirtualData } from "./build-virtual-data";
 import { ObjektGrid } from "./objekt-grid";
 import { SelectionOrderContext } from "./selection-order";
+
+type RenderItem<T extends GridObjekt> = (props: {
+  item: T[];
+  rowIndex: number;
+  groupTitle: string;
+}) => ReactElement | null;
 
 type ObjektVirtualGridProps<T extends GridObjekt> = {
   objekts: T[];
   filters: FilterSearch;
   /** overrides the shared column setting */
   columns?: number;
-  renderItem: (props: { item: T[]; rowIndex: number; groupTitle: string }) => ReactElement | null;
+  renderItem: RenderItem<T>;
   /** pinned objekts lead their group, in the owner's order */
   isProfile?: boolean;
   rarityMap?: Map<string, number>;
@@ -79,22 +86,22 @@ export function ObjektVirtualGrid<T extends GridObjekt>({
     [data],
   );
 
+  const { ref: virtualizerRef, cache: virtualizerCache } = useWindowVirtualizerRestore({
+    count: data.length,
+    layoutKey: columns,
+    enabled: data.length > 0,
+  });
+
   return (
     <SelectionOrderContext value={order}>
       {/* `key`: every row's height changes with the column count, and virtua
           keeps the measurements it already took */}
-      <WindowVirtualizer key={columns} data={data}>
+      <WindowVirtualizer key={columns} ref={virtualizerRef} cache={virtualizerCache} data={data}>
         {(item) =>
           item.type === "label" ? (
             <div className="font-display pt-3 pb-3 text-base font-semibold">{item.title}</div>
           ) : (
-            <ObjektGrid columns={columns} className="pb-(--gutter)">
-              {item.items.map((cell, index) => (
-                <div key={cell[0]?.id ?? index} className="contents">
-                  {renderItem({ item: cell, rowIndex: item.rowIndex, groupTitle: item.groupTitle })}
-                </div>
-              ))}
-            </ObjektGrid>
+            <GridRow row={item} columns={columns} renderItem={renderItem} />
           )
         }
       </WindowVirtualizer>
@@ -117,3 +124,31 @@ export function ObjektVirtualGrid<T extends GridObjekt>({
     </SelectionOrderContext>
   );
 }
+
+/**
+ * virtua calls its render function for every visible row on each scroll update, so without the
+ * memo every card on screen renders again while the page scrolls.
+ */
+const GridRow = memo(function GridRow({
+  row,
+  columns,
+  renderItem,
+}: {
+  row: Extract<VirtualItem, { type: "row" }>;
+  columns: number;
+  renderItem: RenderItem<GridObjekt>;
+}) {
+  return (
+    <ObjektGrid columns={columns} className="pb-(--gutter)">
+      {row.items.map((cell, index) => (
+        <div key={cell[0]?.id ?? index} className="contents">
+          {renderItem({ item: cell, rowIndex: row.rowIndex, groupTitle: row.groupTitle })}
+        </div>
+      ))}
+    </ObjektGrid>
+  );
+}) as <T extends GridObjekt>(props: {
+  row: Extract<VirtualItem<T>, { type: "row" }>;
+  columns: number;
+  renderItem: RenderItem<T>;
+}) => ReactElement;

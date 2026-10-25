@@ -1,5 +1,5 @@
-import instrumentSansLatin from "@fontsource-variable/instrument-sans/files/instrument-sans-latin-wght-normal.woff2?url";
-import { type QueryClient } from "@tanstack/react-query";
+import googleSansFlexLatin from "@fontsource-variable/google-sans-flex/files/google-sans-flex-latin-wght-normal.woff2?url";
+import { type QueryClient, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   HeadContent,
   Outlet,
@@ -18,6 +18,8 @@ import { ProfileHoverCard } from "@/features/profile/profile-hover-card";
 import { currentUserOptions } from "@/features/user/queries";
 import { startOverflowGuard } from "@/lib/dev-overflow-guard";
 import { clientEnv } from "@/lib/env/client";
+import { ErrorTrackingMeta, setErrorUser } from "@/lib/error-tracking";
+import { errorTrackingOptions } from "@/lib/functions/error-tracking";
 import { pageTitle } from "@/lib/meta";
 import { orpc } from "@/lib/orpc";
 import { SITE_NAME, THEME_COLORS } from "@/lib/utils";
@@ -72,6 +74,9 @@ const KEYWORDS = [
 
 export const Route = createRootRouteWithContext<RouterContext>()({
   loader: async ({ context: { queryClient } }) => {
+    // first and on its own, so a failing query below still leaves the browser its DSN to report
+    // with; error tracking never takes the page down
+    await queryClient.query(errorTrackingOptions).catch(() => null);
     await Promise.all([
       queryClient.query({ ...orpc.config.getArtists.queryOptions(), staleTime: "static" }),
       queryClient.query({ ...orpc.config.getSelectedArtists.queryOptions(), staleTime: "static" }),
@@ -83,7 +88,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
     const meta = [
       { charSet: "utf-8" },
       { title: pageTitle() },
-      { name: "description", content: m.home_description() },
+      { name: "description", content: m.home_meta_description() },
       { name: "application-name", content: SITE_NAME },
       { name: "keywords", content: KEYWORDS.join(",") },
       { name: "referrer", content: "origin-when-cross-origin" },
@@ -100,17 +105,6 @@ export const Route = createRootRouteWithContext<RouterContext>()({
     return {
       meta,
       links: [
-        { rel: "preconnect", href: "https://imagedelivery.net" },
-        { rel: "preconnect", href: "https://resources.cosmo.fans" },
-        { rel: "preconnect", href: "https://static.cosmo.fans" },
-        { rel: "preconnect", href: "https://media.objekt.top" },
-        {
-          rel: "preload",
-          href: instrumentSansLatin,
-          as: "font",
-          type: "font/woff2",
-          crossOrigin: "anonymous",
-        },
         {
           rel: "stylesheet",
           href: appCss,
@@ -147,6 +141,14 @@ function OverflowGuard() {
   return null;
 }
 
+function ErrorUser() {
+  const userId = useQuery(currentUserOptions).data?.user.id ?? null;
+
+  useEffect(() => setErrorUser(userId), [userId]);
+
+  return null;
+}
+
 function RootComponent() {
   useApplySettings();
 
@@ -169,16 +171,34 @@ function RootComponent() {
       </CosmoArtistProvider>
       <ProfileHoverCard />
       <ObjektHoverCard />
+      <ErrorUser />
       {import.meta.env.DEV && <OverflowGuard />}
     </ToastProvider>
   );
 }
 
 function RootDocument({ children }: { children: ReactNode }) {
+  // from the cache, not loader data: it is there even when the root loader failed
+  const errorTracking = useQueryClient().getQueryData(errorTrackingOptions.queryKey) ?? null;
+
   return (
     <html lang={getLocale()} dir="ltr" suppressHydrationWarning>
       <head>
+        {/* before HeadContent, whose ~170 modulepreloads would otherwise come first */}
+        <link rel="preconnect" href="https://imagedelivery.net" />
+        <link rel="preconnect" href="https://resources.cosmo.fans" />
+        <link rel="preconnect" href="https://static.cosmo.fans" />
+        <link rel="preconnect" href="https://media.objekt.top" />
+        {/* the body font; Instrument Sans only sets titles in dialogs and on the auth pages */}
+        <link
+          rel="preload"
+          href={googleSansFlexLatin}
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
+        />
         <script dangerouslySetInnerHTML={{ __html: applySettingsScript }} />
+        <ErrorTrackingMeta config={errorTracking} />
         <HeadContent />
       </head>
       <body className="text-foreground font-sans antialiased">

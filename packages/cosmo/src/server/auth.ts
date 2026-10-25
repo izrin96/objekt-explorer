@@ -4,21 +4,6 @@ import { cosmo } from "./http";
 
 /**
  * Refresh the given token.
- * @deprecated use refreshV3
- */
-export async function refresh(
-  refreshToken: string,
-  signal: AbortSignal | null = null,
-): Promise<RefreshTokenResult> {
-  return await cosmo<{ credentials: RefreshTokenResult }>("/auth/v1/refresh", {
-    method: "POST",
-    body: { refreshToken },
-    signal,
-  }).then((res: { credentials: RefreshTokenResult }) => res.credentials);
-}
-
-/**
- * Refresh the given token.
  */
 export async function refreshV3(
   refreshToken: string,

@@ -64,6 +64,12 @@
   --color-info: var(--info);
   --color-info-foreground: var(--info-foreground);
 
+  /* list types and trade progress: ink on an 8% (light) or 16% (dark) tint, as Badge tints */
+  --color-type-have: var(--type-have);
+  --color-type-want: var(--type-want);
+  --color-type-sale: var(--type-sale);
+  --color-progress: var(--progress);
+
   /* Transfer-event categories. Not feedback: an objekt being spun is not an
      error, so these are their own hues rather than borrowed status tokens. */
   --color-event-mint: var(--event-mint);
@@ -192,6 +198,15 @@
   --destructive: oklch(0.58 0.232 17.585);
   --destructive-foreground: oklch(0.52 0.208 17.585);
   /*
+   * List types (have teal, want amber, sale rose) and in-progress indigo, kept
+   * off success's green so green means verified. Each is ink for its own tint
+   * and clears 4.5:1 on it.
+   */
+  --type-have: oklch(0.5 0.1 182);
+  --type-want: oklch(0.53 0.12 65);
+  --type-sale: oklch(0.52 0.17 355);
+  --progress: oklch(0.5 0.2 277);
+  /*
    * The three transfer events, as solid dots rather than tints. One L per
    * theme so no event outweighs another. A dot is a solid mark with nothing
    * to soften it, so light takes each hue to its own sRGB ceiling rather than
@@ -273,6 +288,11 @@
   --warning-foreground: oklch(0.905 0.177 98.111);
   --destructive: oklch(0.586 0.234 17.585);
   --destructive-foreground: oklch(0.712 0.18 17.585);
+  /* lighter than accent-solid, which fails 4.5:1 as text on the dark card */
+  --type-have: oklch(0.8 0.12 182);
+  --type-want: oklch(0.84 0.135 78);
+  --type-sale: oklch(0.78 0.14 352);
+  --progress: oklch(0.78 0.14 277);
   /* same hues and the same 80% of max, lifted to the one L a near-black page
      needs; indigo is the hue that decides it, since its gamut thins fastest */
   --event-mint: oklch(0.72 0.157 131);

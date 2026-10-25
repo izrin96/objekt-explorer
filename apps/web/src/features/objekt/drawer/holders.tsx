@@ -1,5 +1,6 @@
 import { CaretDownIcon, UsersThreeIcon, WarningIcon } from "@phosphor-icons/react";
 import type { HolderBucketKey, HolderRow, HoldersOutput } from "@repo/api/schemas/collections";
+import { truncateAddress } from "@repo/lib/address";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { InView } from "react-intersection-observer";
 
@@ -8,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { ProfileCell } from "@/features/profile/profile-hover-card";
-import { isSameAddress, truncateAddress } from "@/lib/address";
+import { isSameAddress } from "@/lib/address";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
@@ -87,14 +88,7 @@ export function HoldersPanel({ slug, physical }: { slug: string; physical: boole
 
   const viewerRows = holders.data?.pages[0]?.viewer ?? [];
   const pinned = viewerRows.filter(
-    (own) =>
-      !rows.some(
-        (row) =>
-          row.isViewer &&
-          row.holder.kind === "public" &&
-          own.holder.kind === "public" &&
-          row.holder.address === own.holder.address,
-      ),
+    (own) => !rows.some((row) => row.isViewer && row.holder.address === own.holder.address),
   );
 
   return (
@@ -146,12 +140,8 @@ export function HoldersPanel({ slug, physical }: { slug: string; physical: boole
                   </tr>
                 </thead>
                 <tbody>
-                  {rows.map((row, index) => (
-                    <HolderTableRow
-                      key={row.holder.kind === "public" ? row.holder.address : `private-${index}`}
-                      row={row}
-                      copies={summary.copies}
-                    />
+                  {rows.map((row) => (
+                    <HolderTableRow key={row.holder.address} row={row} copies={summary.copies} />
                   ))}
                   {pinned.length > 0 && (
                     <tr className="border-t" aria-hidden>
@@ -160,9 +150,9 @@ export function HoldersPanel({ slug, physical }: { slug: string; physical: boole
                       </td>
                     </tr>
                   )}
-                  {pinned.map((row, index) => (
+                  {pinned.map((row) => (
                     <HolderTableRow
-                      key={`own-${row.holder.kind === "public" ? row.holder.address : index}`}
+                      key={`own-${row.holder.address}`}
                       row={row}
                       copies={summary.copies}
                     />
@@ -285,14 +275,6 @@ function HolderTableRow({ row, copies }: { row: HolderRow; copies: number }) {
 }
 
 function HolderName({ holder, isViewer }: { holder: HolderRow["holder"]; isViewer: boolean }) {
-  if (holder.kind === "private") {
-    return (
-      <span className="text-muted-foreground block truncate italic">
-        {m.objekt_holders_private()}
-      </span>
-    );
-  }
-
   // Cosmo gives an unnamed profile its own address as the nickname
   const nickname = isSameAddress(holder.nickname, holder.address) ? null : holder.nickname;
   return (

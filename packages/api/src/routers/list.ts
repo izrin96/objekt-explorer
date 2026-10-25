@@ -1,11 +1,11 @@
 import { listCrud } from "./list-crud";
 import { listEntriesRouter } from "./list-entries";
-import { listTrades } from "./list-trades";
+import { listRulesRouter } from "./list-rules";
 import { listUtils } from "./list-utils";
 
 export const listRouter = {
   ...listCrud,
   ...listEntriesRouter,
-  ...listTrades,
+  ...listRulesRouter,
   ...listUtils,
 };

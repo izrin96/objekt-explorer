@@ -14,9 +14,14 @@ export const relations = defineRelations(schema, (r) => ({
   },
   user: {
     userAddresses: r.many.userAddress(),
+    messagePref: r.one.messagePref({
+      from: r.user.id,
+      to: r.messagePref.userId,
+    }),
   },
   lists: {
     entries: r.many.listEntries(),
+    rules: r.many.listRule(),
     user: r.one.user({
       from: r.lists.userId,
       to: r.user.id,
@@ -35,6 +40,17 @@ export const relations = defineRelations(schema, (r) => ({
       from: r.listEntries.listId,
       to: r.lists.id,
     }),
+    rule: r.one.listRule({
+      from: r.listEntries.ruleId,
+      to: r.listRule.id,
+    }),
+  },
+  listRule: {
+    list: r.one.lists({
+      from: r.listRule.listId,
+      to: r.lists.id,
+    }),
+    entries: r.many.listEntries(),
   },
   pins: {
     userAddress: r.one.userAddress({
@@ -46,6 +62,15 @@ export const relations = defineRelations(schema, (r) => ({
     userAddress: r.one.userAddress({
       from: r.lockedObjekts.address,
       to: r.userAddress.address,
+    }),
+  },
+  tradeLeg: {
+    substitutes: r.many.tradeSubstitute(),
+  },
+  tradeSubstitute: {
+    leg: r.one.tradeLeg({
+      from: r.tradeSubstitute.tradeLegId,
+      to: r.tradeLeg.id,
     }),
   },
 }));

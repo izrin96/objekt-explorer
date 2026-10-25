@@ -1,10 +1,20 @@
 import { CaretDownIcon } from "@phosphor-icons/react";
+import type { ReactNode } from "react";
 
-import { buttonVariants } from "@/components/ui/button";
 import { Select, SelectItem, SelectPopup, SelectPrimitive } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
-type SingleOption<T extends string> = { value: T; label: string };
+import { toolbarTrigger } from "./toolbar-trigger";
+
+type SingleOption<T extends string> = {
+  value: T;
+  label: ReactNode;
+  /** the plain text of a `label` that is more than text: the trigger shows it, and typing finds it */
+  text?: string;
+  disabled?: boolean;
+  /** a short muted line under the label, such as why the option is disabled */
+  hint?: string;
+};
 
 type SingleSelectProps<T extends string> = {
   label: string;
@@ -13,6 +23,8 @@ type SingleSelectProps<T extends string> = {
   onChange: (value: T) => void;
   /** the value that counts as "nothing picked"; the trigger stays plain on it */
   defaultValue: T;
+  /** name the value on the trigger even when it is the default */
+  showValue?: boolean;
   className?: string;
 };
 
@@ -23,6 +35,7 @@ export function SingleSelect<T extends string>({
   value,
   onChange,
   defaultValue,
+  showValue = false,
   className,
 }: SingleSelectProps<T>) {
   const active = value !== defaultValue;
@@ -36,15 +49,13 @@ export function SingleSelect<T extends string>({
       <SelectPrimitive.Trigger
         aria-label={label}
         data-active={active || undefined}
-        className={cn(
-          buttonVariants({ variant: "outline", size: "sm" }),
-          "data-active:border-foreground gap-1.5",
-          className,
-        )}
+        className={cn(toolbarTrigger, className)}
       >
         <span>
           {label}
-          {active && <span className="text-muted-foreground"> · {picked?.label}</span>}
+          {(active || showValue) && (
+            <span className="text-muted-foreground"> · {picked?.text ?? picked?.label}</span>
+          )}
         </span>
         <SelectPrimitive.Icon>
           <CaretDownIcon className="size-3.5 opacity-50" />
@@ -52,8 +63,15 @@ export function SingleSelect<T extends string>({
       </SelectPrimitive.Trigger>
       <SelectPopup alignItemWithTrigger={false} className="min-w-40">
         {options.map((o) => (
-          <SelectItem key={o.value} value={o.value}>
-            {o.label}
+          <SelectItem key={o.value} value={o.value} label={o.text} disabled={o.disabled}>
+            {o.hint ? (
+              <span className="flex flex-col">
+                {o.label}
+                <span className="text-foreground text-xs">{o.hint}</span>
+              </span>
+            ) : (
+              o.label
+            )}
           </SelectItem>
         ))}
       </SelectPopup>

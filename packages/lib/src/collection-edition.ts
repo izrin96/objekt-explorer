@@ -1,6 +1,11 @@
 import type { ValidObjekt } from "./types/objekt";
 
-function getScoEdition(objekt: ValidObjekt, collection: number) {
+type EditionFields = Pick<
+  ValidObjekt,
+  "artist" | "season" | "collectionNo" | "class" | "onOffline"
+>;
+
+function getScoEdition(objekt: EditionFields, collection: number) {
   // tripleS atom01 sco for 2nd and 3rd edition start from 216z
   if (
     objekt.artist === "triples" &&
@@ -54,7 +59,7 @@ function getMotionEdition(collection: number) {
   return null;
 }
 
-export function getCollectionEdition(objekt: ValidObjekt) {
+export function getCollectionEdition(objekt: EditionFields) {
   if (objekt.artist === "idntt") {
     return null;
   }

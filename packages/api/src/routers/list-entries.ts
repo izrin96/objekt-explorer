@@ -1,15 +1,16 @@
 import { ORPCError } from "@orpc/server";
 import { db } from "@repo/db";
 import { listEntries } from "@repo/db/schema";
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, isNull } from "drizzle-orm";
 
-import { authed, optionalAuthed, pub } from "../orpc";
+import { authed, pub } from "../orpc";
 import { documented, errorResponses } from "../schemas/common/documented";
 import {
   addToListInputSchema,
   listEntriesInputSchema,
   listEntriesOutputSchema,
   listPreviewsInputSchema,
+  listPreviewsOutputSchema,
   profileListsInputSchema,
   profileListsOutputSchema,
   removeObjektsFromListInputSchema,
@@ -21,6 +22,7 @@ import {
   fetchListWithEntries,
   fetchProfileLists,
   findOwnedList,
+  touchList,
 } from "../services/list";
 
 export const listEntriesRouter = {
@@ -47,10 +49,18 @@ export const listEntriesRouter = {
 
   /** A slug is the list's address, so it reveals no more than opening the list would. */
   listPreviews: pub
+    .route({
+      method: "GET",
+      path: "/lists/previews",
+      tags: ["Lists"],
+      summary: "Several lists' entry counts and latest artworks, by slug",
+      spec: errorResponses(400),
+    })
     .input(listPreviewsInputSchema)
+    .output(documented(listPreviewsOutputSchema))
     .handler(({ input: { slugs } }) => fetchListPreviews(slugs)),
 
-  profileLists: optionalAuthed
+  profileLists: pub
     .route({
       method: "GET",
       path: "/profiles/{address}/lists",
@@ -60,9 +70,7 @@ export const listEntriesRouter = {
     })
     .input(profileListsInputSchema)
     .output(documented(profileListsOutputSchema))
-    .handler(({ input, context: { session } }) =>
-      fetchProfileLists(input.address, session?.user.id),
-    ),
+    .handler(({ input }) => fetchProfileLists(input.address)),
 
   addToList: authed.input(addToListInputSchema).handler(
     async ({
@@ -98,8 +106,16 @@ export const listEntriesRouter = {
       // an entry already gone, say removed from another tab, is not counted
       const rows = await db
         .delete(listEntries)
-        .where(and(inArray(listEntries.id, entryIds), eq(listEntries.listId, list.id)))
+        .where(
+          and(
+            inArray(listEntries.id, entryIds),
+            eq(listEntries.listId, list.id),
+            isNull(listEntries.ruleId),
+          ),
+        )
         .returning({ id: listEntries.id });
+
+      if (rows.length > 0) await touchList([list.id]);
 
       return { removed: rows.length };
     },

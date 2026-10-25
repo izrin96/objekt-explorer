@@ -1,4 +1,5 @@
 import { SESv2Client, SendEmailCommand } from "@aws-sdk/client-sesv2";
+import { type RenderedEmail, deleteAccount, resetPassword, verifyEmail } from "@repo/email";
 
 import { SITE_NAME } from "../constants";
 import { serverEnv } from "../env";
@@ -12,8 +13,10 @@ const ses = new SESv2Client({
 });
 
 const MAIL_FROM = `${SITE_NAME} <${serverEnv.SES_MAIL_FROM}>`;
+const site = { name: SITE_NAME, url: serverEnv.SITE_URL };
 
-export async function sendVerificationEmail(to: string, url: string) {
+async function sendMail(to: string, email: Promise<RenderedEmail>) {
+  const { subject, html, text } = await email;
   await ses.send(
     new SendEmailCommand({
       FromEmailAddress: MAIL_FROM,
@@ -22,21 +25,10 @@ export async function sendVerificationEmail(to: string, url: string) {
       },
       Content: {
         Simple: {
+          Subject: { Charset: "UTF-8", Data: subject },
           Body: {
-            Html: {
-              Charset: "UTF-8",
-              Data: `
-<html>
-  <body>
-  <p>Click the link below to verify your email.</p>
-  <a href="${url}">${url}</a>
-  </body>
-</html>`,
-            },
-          },
-          Subject: {
-            Charset: "UTF-8",
-            Data: "Verify your email",
+            Html: { Charset: "UTF-8", Data: html },
+            Text: { Charset: "UTF-8", Data: text },
           },
         },
       },
@@ -44,64 +36,11 @@ export async function sendVerificationEmail(to: string, url: string) {
   );
 }
 
-export async function sendResetPassword(to: string, url: string) {
-  await ses.send(
-    new SendEmailCommand({
-      FromEmailAddress: MAIL_FROM,
-      Destination: {
-        ToAddresses: [to],
-      },
-      Content: {
-        Simple: {
-          Body: {
-            Html: {
-              Charset: "UTF-8",
-              Data: `
-<html>
-  <body>
-  <p>Click the link below to reset your password.</p>
-  <a href="${url}">${url}</a>
-  </body>
-</html>`,
-            },
-          },
-          Subject: {
-            Charset: "UTF-8",
-            Data: "Reset your password",
-          },
-        },
-      },
-    }),
-  );
-}
+export const sendVerificationEmail = (to: string, url: string) =>
+  sendMail(to, verifyEmail({ site, url }));
 
-export async function sendDeleteAccountVerification(to: string, url: string) {
-  await ses.send(
-    new SendEmailCommand({
-      FromEmailAddress: MAIL_FROM,
-      Destination: {
-        ToAddresses: [to],
-      },
-      Content: {
-        Simple: {
-          Body: {
-            Html: {
-              Charset: "UTF-8",
-              Data: `
-<html>
-  <body>
-  <p>Click the link below to delete your account.</p>
-  <a href="${url}">${url}</a>
-  </body>
-</html>`,
-            },
-          },
-          Subject: {
-            Charset: "UTF-8",
-            Data: "Delete your account",
-          },
-        },
-      },
-    }),
-  );
-}
+export const sendResetPassword = (to: string, url: string) =>
+  sendMail(to, resetPassword({ site, url }));
+
+export const sendDeleteAccountVerification = (to: string, url: string) =>
+  sendMail(to, deleteAccount({ site, url }));

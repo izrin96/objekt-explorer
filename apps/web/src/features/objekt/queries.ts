@@ -1,6 +1,7 @@
 import type { CollectionListOutput } from "@repo/api/schemas/collections";
 import type { SortBy, SortDir } from "@repo/api/schemas/market";
 import type { OwnedByFilters } from "@repo/api/schemas/objekts";
+import type { PriceHistoryRange } from "@repo/api/schemas/price-history";
 import { keepPreviousData, queryOptions } from "@tanstack/react-query";
 import { ofetch } from "ofetch";
 
@@ -50,7 +51,7 @@ export const transfersOptions = (slug: string, serial: number | null) =>
   });
 
 export const marketListingsOptions = (slug: string, sortBy: SortBy, sortDir: SortDir) =>
-  orpc.market.marketListings.infiniteOptions({
+  orpc.market.listingsForViewer.infiniteOptions({
     input: (offset: number) => ({ collectionSlug: slug, sortBy, sortDir, offset, limit: 20 }),
     initialPageParam: 0,
     getNextPageParam: (page) => page.nextOffset,
@@ -71,4 +72,10 @@ export const marketStatsOptions = (slug: string) =>
   orpc.market.stats.queryOptions({
     input: { collectionSlug: slug },
     staleTime: 1000 * 60,
+  });
+
+export const priceHistoryOptions = (slug: string, range: PriceHistoryRange) =>
+  orpc.market.priceHistory.queryOptions({
+    input: { collectionSlug: slug, range },
+    staleTime: 1000 * 60 * 5,
   });

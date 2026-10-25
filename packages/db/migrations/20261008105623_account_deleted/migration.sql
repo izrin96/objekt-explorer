@@ -1,0 +1,3 @@
+ALTER TABLE "user" ADD COLUMN "deleted_at" timestamp;--> statement-breakpoint
+ALTER TABLE "offer" DROP CONSTRAINT "offer_cancel_reason", ADD CONSTRAINT "offer_cancel_reason" CHECK ("cancel_reason" IN ('reserved', 'blocked', 'sanction', 'token_moved', 'account_deleted'));--> statement-breakpoint
+ALTER TABLE "trade" DROP CONSTRAINT "trade_cancel_reason", ADD CONSTRAINT "trade_cancel_reason" CHECK ("cancel_reason" IN ('party', 'token_moved', 'expired'));

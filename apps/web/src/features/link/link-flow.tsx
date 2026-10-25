@@ -29,6 +29,7 @@ import { PROFILE_PAGE_KEY } from "@/features/profile/queries";
 import { currentUserOptions } from "@/features/user/queries";
 import { UserRowBody, UserSearchEmpty, useUserSearch } from "@/features/user/user-search";
 import { orpc } from "@/lib/orpc";
+import { refusalText } from "@/lib/refusal";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
@@ -65,12 +66,17 @@ export function LinkFlow() {
       <div className="bg-card flex w-full flex-col items-start gap-3 rounded-lg border p-5">
         <CheckCircleIcon className="text-success-foreground size-10" weight="fill" />
         <p className="text-sm text-pretty">{m.link_success({ nickname: found.nickname })}</p>
-        <Button
-          variant="outline"
-          render={<Link to="/@{$nickname}" params={{ nickname: found.nickname }} />}
-        >
-          {m.link_go_to_cosmo()}
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant="outline"
+            render={<Link to="/@{$nickname}" params={{ nickname: found.nickname }} />}
+          >
+            {m.link_go_to_cosmo()}
+          </Button>
+          <Button variant="ghost" render={<Link to="/account/profiles" />}>
+            {m.account_section_profiles()}
+          </Button>
+        </div>
       </div>
     );
   }
@@ -303,7 +309,7 @@ function NicknameStep({
         )}
       </Autocomplete>
 
-      {check.isError && <StepError message={check.error.message} />}
+      {check.isError && <StepError message={refusalText(check.error)} />}
     </div>
   );
 }
@@ -347,7 +353,7 @@ function ArtistStep({
         ))}
       </div>
 
-      {generate.isError && <StepError message={generate.error.message} />}
+      {generate.isError && <StepError message={refusalText(generate.error)} />}
     </div>
   );
 }
@@ -402,7 +408,7 @@ function VerifyStep({
         >
           {m.link_new_code()}
         </Button>
-        {renew.isError && <StepError message={renew.error.message} />}
+        {renew.isError && <StepError message={refusalText(renew.error)} />}
       </div>
     );
   }
@@ -424,9 +430,7 @@ function VerifyStep({
         <Countdown expiresInMs={code.expiresInMs} onExpire={() => setExpired(true)} />
       </div>
 
-      {verify.isError && (
-        <StepError message={verify.error.message || m.link_verification_failed()} />
-      )}
+      {verify.isError && <StepError message={refusalText(verify.error)} />}
     </div>
   );
 }

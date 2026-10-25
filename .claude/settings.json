@@ -23,7 +23,48 @@
       "Bash(npm view:*)",
       "Bash(npx ctx7@latest:*)",
       "Bash(npx skills@latest:*)",
-      "Bash(openspec:*)"
+      "Bash(openspec:*)",
+      "Bash(bun test:*)",
+      "Bash(bun run test)",
+      "Bash(bun run test:*)",
+      "Bash(bunx lefthook:*)",
+      "Bash(./scripts/setup-worktree.sh)"
+    ],
+    "ask": ["Bash(git commit:*)", "Bash(git push:*)"]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard-prod-db.ts\""
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun \"$CLAUDE_PROJECT_DIR/.claude/hooks/check-changed.ts\"",
+            "timeout": 180
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|MultiEdit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun \"$CLAUDE_PROJECT_DIR/.claude/hooks/format.ts\""
+          }
+        ]
+      }
     ]
   }
 }

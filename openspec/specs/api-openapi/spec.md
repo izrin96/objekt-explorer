@@ -11,11 +11,14 @@ request and response contracts third-party clients build against.
 `/artists`, `/collections`, `/collections/rarity`,
 `/collections/{collectionSlug}/metadata`, `/collections/{collectionSlug}/serials`,
 `/collections/{collectionSlug}/serials/{serial}/transfers`,
-`/collections/{collectionSlug}/holders`, `/filters`, `/lists/{slug}`,
-`/lists/{slug}/entries`, `/lists/{slug}/export`, `/objekts/owned-by/{address}`,
+`/collections/{collectionSlug}/holders`, `/filters`, `/lists/previews`, `/lists/{slug}`,
+`/lists/{slug}/entries`, `/lists/{slug}/export`, `/lists/{slug}/rules`,
+`/lists/{slug}/rules/{ruleId}/objekts`, `/objekts/owned-by/{address}`,
 `/objekts/held-by/{address}`, `/transfers/{address}`, `/users/search`, `/live-sessions`,
 `/market`, `/market/rates`, `/market/{collectionSlug}/listings`,
-`/market/{collectionSlug}/stats`, `/profiles/{address}`, `/profiles/{address}/pins`,
+`/market/{collectionSlug}/stats`, `/market/{collectionSlug}/history`,
+`/trade/people`, `/trade/lists/{listId}/items`, `/trade/collections/{slug}/post-counts`,
+`/profiles/{address}`, `/profiles/{address}/pins`,
 `/profiles/{address}/locked-objekts`, `/profiles/{address}/lists` and `/status`.
 No procedure that writes data or needs a signed-in account SHALL be reachable under
 `/api/v1`.
@@ -36,7 +39,7 @@ document.
 
 #### Scenario: Document lists every operation
 - **WHEN** a client fetches `/api/v1/spec.json`
-- **THEN** it lists the twenty-six public operations with their path and query
+- **THEN** it lists the thirty-three public operations with their path and query
   parameters, each with a documented 200 response schema
 
 ### Requirement: Documented response bodies
@@ -82,27 +85,6 @@ integer in range with 400.
 - **WHEN** a client requests `GET /api/v1/market/{collectionSlug}/listings?limit=500`
 - **THEN** the response is 400
 
-### Requirement: Profile privacy on public reads
-The profile, pins, locked-objekts and holders operations SHALL apply the same privacy
-rules the app applies: a private profile reveals itself only to the signed-in account that
-linked the address. A request without that account's session SHALL get the public view.
-
-#### Scenario: Private profile's pins
-- **WHEN** an anonymous client requests `GET /api/v1/profiles/{address}/pins` for an
-  address whose profile is private
-- **THEN** the response is 200 with an empty array
-
-#### Scenario: Private profile's preview
-- **WHEN** an anonymous client requests `GET /api/v1/profiles/{address}` for an address
-  whose profile is private
-- **THEN** the response names the address and marks it guarded, with `counts` null and no
-  banner or linked user
-
-#### Scenario: Private holder
-- **WHEN** an anonymous client requests a collection's holders and one holder's profile
-  is private
-- **THEN** that row is `{ "kind": "private" }` with `lowestSerial` null
-
 ### Requirement: Explicit artist filter on list reads
 A list's entries and its export SHALL be filtered by the `artist` parameter of the request
 alone. An omitted `artist` SHALL mean every artist, and no cookie SHALL change the result.
@@ -124,6 +106,20 @@ alone. An omitted `artist` SHALL mean every artist, and no cookie SHALL change t
 #### Scenario: Older client without the parameter
 - **WHEN** a client calls the list-entries procedure over `/rpc` with only `{ slug }`
 - **THEN** the call succeeds and returns the entries for every artist
+
+### Requirement: Trade feed paging
+`GET /trade/people` SHALL take the previous page's `nextCursor`, JSON-encoded, as its `cursor`
+query parameter, and the document SHALL describe `cursor` as a string. A `cursor` that is not
+valid JSON or not a cursor SHALL be rejected with 400. Without a session the response SHALL
+carry no viewer match fields. `/rpc` callers SHALL keep sending the cursor as an object.
+
+#### Scenario: Next page
+- **WHEN** a client requests `GET /api/v1/trade/people?cursor=<nextCursor as JSON>`
+- **THEN** the response is the page after the one that returned that cursor
+
+#### Scenario: Malformed cursor
+- **WHEN** a client requests `GET /api/v1/trade/people?cursor={bad`
+- **THEN** the response is 400
 
 ### Requirement: List export download
 `GET /lists/{slug}/export` SHALL respond with a `text/csv` body holding one header row
@@ -153,3 +149,76 @@ and outputs of `/rpc` procedures, and the responses of the legacy `/api` routes.
 - **WHEN** the same read is made through a legacy `/api` route and its `/api/v1`
   operation after the reorganization
 - **THEN** both return the body they returned before it
+
+### Requirement: Held-by first-copy fields
+Each collection row of `GET /objekts/held-by/{address}` SHALL carry, alongside `copies`,
+three fields computed over the copies the address holds at request time:
+`minSerial` (the lowest serial held in that collection), `minSerialTokenId` (the token ID
+of that copy) and `firstReceivedAt` (the earliest time, as an ISO 8601 string, at which
+the address received a copy it still holds). When two held copies share the lowest serial,
+`minSerialTokenId` SHALL be the lower token ID. The same fields SHALL be returned by the
+`/rpc` procedure and the legacy `/api/objekts/held-by/$address` route, and the OpenAPI
+document SHALL name them in the response schema.
+
+#### Scenario: Collector with several copies
+- **WHEN** an address holds serials 412, 37 and 980 of a collection, received on
+  2025-06-01, 2025-03-14 and 2025-09-20
+- **THEN** that collection's row has `copies` 3, `minSerial` 37, `minSerialTokenId` the
+  token ID of serial 37, and `firstReceivedAt` the 2025-03-14 timestamp
+
+#### Scenario: A copy sent away no longer counts
+- **WHEN** the address sends away its serial 37 and still holds 412 and 980
+- **THEN** after the held-by cache expires, the row has `copies` 2, `minSerial` 412 and
+  `firstReceivedAt` the 2025-06-01 timestamp
+
+#### Scenario: Artist filter
+- **WHEN** a client requests `GET /api/v1/objekts/held-by/{address}?artist=artms`
+- **THEN** every row is an artms collection and each carries the three fields
+
+#### Scenario: Document describes the fields
+- **WHEN** a client reads the `GET /objekts/held-by/{address}` operation in
+  `/api/v1/spec.json`
+- **THEN** each collection item's schema names `copies`, `minSerial`, `minSerialTokenId`
+  and `firstReceivedAt`
+
+#### Scenario: Hidden address
+- **WHEN** an anonymous client requests held-by for an address whose profile was private before this change
+- **THEN** the response lists that address's collections like any other
+
+### Requirement: Transfers sort order
+`GET /transfers/{address}` SHALL accept an `order` query parameter of `desc` or `asc`.
+An omitted `order` SHALL mean `desc`, newest first, as before. With `asc` the response
+SHALL list the same transfers oldest first, ordered by timestamp then ID, with the same
+body and cursor shape; following `nextCursor` SHALL continue toward newer transfers. The
+`type`, collection facet and `at` filters SHALL select the same transfers in both orders.
+Any other `order` value SHALL be rejected with 400. The `/rpc` procedure and the legacy
+`/api/transfers/$address` route SHALL accept the same parameter, and the OpenAPI document
+SHALL list it.
+
+#### Scenario: First transfer in one request
+- **WHEN** a client requests `GET /api/v1/transfers/{address}?order=asc`
+- **THEN** the first row of the response is the address's earliest transfer, sent or
+  received
+
+#### Scenario: Paging oldest first
+- **WHEN** a client requests the next page with `order=asc` and the previous page's
+  `nextCursor`
+- **THEN** every row is newer than, or at the same timestamp with a higher ID than, the
+  cursor, and no row repeats
+
+#### Scenario: Filters in ascending order
+- **WHEN** a client requests `?order=asc&type=received&artist=artms`
+- **THEN** the rows are the address's received artms transfers, oldest first
+
+#### Scenario: Default order is unchanged
+- **WHEN** a client requests `GET /api/v1/transfers/{address}` with no `order`
+- **THEN** the response is identical to the response before this change
+
+#### Scenario: Older client without the parameter
+- **WHEN** a client calls `transfers.byAddress` over `/rpc` with an input that has no
+  `order`
+- **THEN** the call succeeds and returns newest first
+
+#### Scenario: Invalid order
+- **WHEN** a client requests `?order=oldest`
+- **THEN** the response is 400

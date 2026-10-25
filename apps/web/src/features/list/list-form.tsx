@@ -1,11 +1,17 @@
-import type { ListTypeNew, PublicList } from "@repo/api/schemas/list";
+import { InfoIcon } from "@phosphor-icons/react";
+import { canBeOnTrade, type ListType } from "@repo/api/schemas/list";
+import type { OpenToFlags } from "@repo/api/schemas/open-to";
+import { Link } from "@tanstack/react-router";
+import type { ReactNode } from "react";
 import slugify from "slugify";
 import * as z from "zod";
 
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioPrimitive } from "@/components/ui/radio-group";
 import {
   Select,
   SelectItem,
@@ -16,28 +22,31 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { displayNickname, isSameAddress } from "@/lib/address";
-import { SITE_NAME, getBaseURL } from "@/lib/utils";
+import { toneChip } from "@/lib/tone";
+import { cn, getBaseURL } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
-import { LIST_TYPE_LABEL } from "./list-type-badge";
+import { LIST_TYPE_LABEL, LIST_TYPE_TONE, ListTypeBadge } from "./list-type-badge";
 
 /** `Select` has no value for "cleared", so the empty choice carries its own. */
 const NONE = "__none__";
 const CURRENCY_RE = /^[A-Za-z]{3}$/;
 
-const LIST_TYPES: ListTypeNew[] = ["general", "have", "want", "sale"];
+const LIST_TYPES: ListType[] = ["general", "have", "want", "sale"];
 
-const LIST_TYPE_DESC: Record<ListTypeNew, () => string> = {
+const isListType = (value: unknown): value is ListType => LIST_TYPES.some((type) => type === value);
+
+const LIST_TYPE_DESC: Record<ListType, () => string> = {
   general: m.list_create_general_list_desc,
   sale: m.list_create_sale_list_desc,
   have: m.list_create_have_list_desc,
   want: m.list_create_want_list_desc,
 };
 
-export type ListDraft = {
+export type ListDraft = OpenToFlags & {
   name: string;
   description: string;
-  listTypeNew: ListTypeNew;
+  listType: ListType;
   currency: string;
   linkedListId: number | null;
   profileAddress: string | null;
@@ -45,22 +54,22 @@ export type ListDraft = {
   discoverable: boolean;
   gridColumns: number | null;
   hideSerial: boolean;
-  hideUser: boolean;
   regenerateSlug: boolean;
 };
 
 export const EMPTY_DRAFT: ListDraft = {
   name: "",
   description: "",
-  listTypeNew: "general",
+  listType: "general",
   currency: "",
   linkedListId: null,
   profileAddress: null,
   isProfileBind: false,
   discoverable: false,
+  matchSale: false,
+  matchHave: true,
   gridColumns: null,
   hideSerial: false,
-  hideUser: false,
   regenerateSlug: false,
 };
 
@@ -71,12 +80,15 @@ export function listDraftSchema() {
       name: z.string().trim().min(1, m.common_validation_required_name()).max(256),
       description: z.string().max(5000),
       currency: z.string(),
-      listTypeNew: z.enum(["general", "sale", "have", "want"]),
+      listType: z.enum(["general", "sale", "have", "want"]),
       profileAddress: z.string().nullable(),
       isProfileBind: z.boolean(),
+      linkedListId: z.number().nullable(),
+      matchSale: z.boolean(),
+      matchHave: z.boolean(),
     })
     .superRefine((draft, ctx) => {
-      if (draft.listTypeNew === "sale" && !CURRENCY_RE.test(draft.currency)) {
+      if (draft.listType === "sale" && !CURRENCY_RE.test(draft.currency)) {
         ctx.addIssue({
           code: "custom",
           path: ["currency"],
@@ -94,29 +106,49 @@ export function listDraftSchema() {
 }
 
 /**
- * `list.create`'s input, normalised the way the router does before it writes:
- * the fields a type does not carry are dropped rather than kept stale.
+ * `list.create`'s input, normalised the way the router does before it writes: the fields a type
+ * does not carry are dropped rather than kept stale. A have or want list starts off Trade and
+ * unpaired; the post composer puts it on Trade.
  */
 export function toCreateInput(draft: ListDraft) {
-  const isProfileBind = ["have", "sale"].includes(draft.listTypeNew) && draft.isProfileBind;
+  const isProfileBind = ["have", "sale"].includes(draft.listType) && draft.isProfileBind;
 
   return {
     name: draft.name.trim(),
     description: draft.description.trim() || null,
-    currency: draft.listTypeNew === "sale" ? draft.currency.toUpperCase() : null,
-    listTypeNew: draft.listTypeNew,
-    linkedListId: ["have", "want"].includes(draft.listTypeNew) ? draft.linkedListId : null,
+    currency: draft.listType === "sale" ? draft.currency.toUpperCase() : null,
+    listType: draft.listType,
+    linkedListId: ["have", "want"].includes(draft.listType) ? draft.linkedListId : null,
     profileAddress: draft.profileAddress,
     isProfileBind,
-    discoverable: draft.discoverable,
+    discoverable: draft.listType === "sale" && draft.discoverable,
+    matchSale: draft.matchSale,
+    matchHave: draft.matchHave,
     hideSerial: draft.hideSerial,
-    hideUser: draft.hideUser,
   };
 }
 
+/**
+ * `list.edit`'s input. The link, Trade state and Open to of a have or want list belong to its post,
+ * so they are left out and the list keeps them; only a sale list's switch is sent.
+ */
 export function toEditInput(slug: string, draft: ListDraft) {
-  const { listTypeNew: _type, isProfileBind: _bind, ...rest } = toCreateInput(draft);
-  return { slug, ...rest, gridColumns: draft.gridColumns, regenerateSlug: draft.regenerateSlug };
+  const {
+    listType: _type,
+    isProfileBind: _bind,
+    linkedListId: _link,
+    discoverable,
+    matchSale: _sale,
+    matchHave: _have,
+    ...rest
+  } = toCreateInput(draft);
+  return {
+    slug,
+    ...rest,
+    ...(draft.listType === "sale" ? { discoverable } : {}),
+    gridColumns: draft.gridColumns,
+    regenerateSlug: draft.regenerateSlug,
+  };
 }
 
 type ListFormProps = {
@@ -124,32 +156,90 @@ type ListFormProps = {
   idPrefix: string;
   value: ListDraft;
   onChange: (next: ListDraft) => void;
-  /** the user's other lists, already free of the one being edited */
-  lists: PublicList[];
   profiles: { address: string; nickname: string | null }[];
   /** `list.edit` takes neither the type nor the binding, so edit locks both */
   mode: "create" | "edit";
   /** the profile-scoped address a bound list lives at; only edit has one to show */
   url?: ListUrl;
+  /** one line under the binding switch, for a note about what the form's current choices do */
+  notice?: ReactNode;
+  /** a have or want list's place on Trade, which the post composer sets */
+  tradeLine?: ReactNode;
 };
 
 export type ListUrl = { nickname: string; profileSlug: string; fallbackSlug: string };
 
-export function ListForm({ idPrefix, value, onChange, lists, profiles, mode, url }: ListFormProps) {
+export function ListForm({
+  idPrefix,
+  value,
+  onChange,
+  profiles,
+  mode,
+  url,
+  notice,
+  tradeLine,
+}: ListFormProps) {
   const id = (field: string) => `${idPrefix}-${field}`;
   const set = (patch: Partial<ListDraft>) => onChange({ ...value, ...patch });
 
   const isEdit = mode === "edit";
-  const isSale = value.listTypeNew === "sale";
-  const isPaired = value.listTypeNew === "have" || value.listTypeNew === "want";
-  const bindable = value.listTypeNew === "have" || isSale;
-  const linkable = lists.filter((list) =>
-    value.listTypeNew === "have" ? list.listTypeNew === "want" : list.listTypeNew === "have",
-  );
-  const discoverableDisabled = value.listTypeNew !== "want" && !value.isProfileBind;
+  const isSale = value.listType === "sale";
+  const isPaired = value.listType === "have" || value.listType === "want";
+  const bindable = value.listType === "have" || isSale;
+  const discoverableDisabled = !canBeOnTrade(value.listType, value.isProfileBind);
+
+  const changeType = (next: ListType | null) => {
+    const listType = next ?? "general";
+    const nextBindable = listType === "have" || listType === "sale";
+    // entering have or sale binds by default, to the chosen profile or else
+    // the first; moving between the two keeps what the user set
+    const entering = nextBindable && !bindable;
+    const profileAddress = entering
+      ? (value.profileAddress ?? profiles[0]?.address ?? null)
+      : value.profileAddress;
+    set({
+      listType,
+      linkedListId: null,
+      profileAddress,
+      isProfileBind: nextBindable && profileAddress !== null && (entering || value.isProfileBind),
+    });
+  };
 
   return (
     <div className="flex flex-col gap-4">
+      <div className="flex min-w-0 flex-col gap-1.5">
+        <Label render={<span />} id={id("type")}>
+          {m.list_create_list_type_label()}
+        </Label>
+        {isEdit ? (
+          <div>
+            <ListTypeBadge type={value.listType} size="lg" />
+          </div>
+        ) : (
+          <RadioGroup
+            aria-labelledby={id("type")}
+            aria-describedby={id("type-desc")}
+            value={value.listType}
+            onValueChange={(next) => {
+              if (isListType(next)) changeType(next);
+            }}
+            className="grid grid-cols-4 gap-1 rounded-lg border p-1"
+          >
+            {LIST_TYPES.map((type) => (
+              <TypeSegment key={type} type={type} selected={value.listType === type} />
+            ))}
+          </RadioGroup>
+        )}
+        <span id={id("type-desc")} className="text-muted-foreground text-xs text-pretty">
+          {LIST_TYPE_DESC[value.listType]()}
+        </span>
+        {isEdit ? (
+          <span className="text-muted-foreground text-xs text-pretty">
+            {m.list_edit_type_locked_hint()}
+          </span>
+        ) : null}
+      </div>
+
       <Field name="name" className="min-w-0 gap-1.5">
         <FieldLabel htmlFor={id("name")}>{m.list_create_name_label()}</FieldLabel>
         <Input
@@ -175,149 +265,102 @@ export function ListForm({ idPrefix, value, onChange, lists, profiles, mode, url
         />
       </Field>
 
-      {/* minmax(0,…) on both tracks, or the currency column is sized by the
-          type trigger's intrinsic width and the row overflows the dialog */}
-      <div
-        className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-3 data-currency:grid-cols-[minmax(0,1fr)_minmax(0,6.5rem)]"
-        data-currency={isSale || undefined}
-      >
-        <div className="flex min-w-0 flex-col gap-1.5">
-          <Label htmlFor={id("type")}>{m.list_create_list_type_label()}</Label>
+      {isSale ? (
+        <Field name="currency" className="min-w-0 gap-1.5">
+          <FieldLabel htmlFor={id("currency")}>{m.list_create_currency_label()}</FieldLabel>
+          <Input
+            id={id("currency")}
+            aria-required
+            maxLength={3}
+            placeholder="USD"
+            className="min-w-0 uppercase"
+            value={value.currency}
+            onChange={(event) => set({ currency: event.target.value.toUpperCase() })}
+          />
+          <FieldDescription>{m.list_create_currency_desc()}</FieldDescription>
+          <FieldError />
+        </Field>
+      ) : null}
+
+      {/* binding is set only here, and without it a have or sale list never goes on Trade */}
+      {bindable && !isEdit && (profiles.length === 0 || !value.isProfileBind) ? (
+        <Alert variant="warning">
+          <InfoIcon aria-hidden />
+          <AlertDescription>
+            {profiles.length === 0 ? (
+              <>
+                {m.list_create_bind_note_link()}{" "}
+                <Link to="/link/connect" className="font-medium underline underline-offset-2">
+                  {m.link_link_cosmo()}
+                </Link>
+              </>
+            ) : (
+              m.list_create_bind_note_off()
+            )}
+          </AlertDescription>
+        </Alert>
+      ) : null}
+
+      {isEdit && value.isProfileBind ? (
+        <div className="flex flex-col gap-1.5">
+          <span className="text-sm font-medium">{m.list_create_profile_tracked_label()}</span>
+          <span className="text-sm">
+            {value.profileAddress
+              ? displayNickname(
+                  value.profileAddress,
+                  profiles.find((profile) => isSameAddress(profile.address, value.profileAddress))
+                    ?.nickname,
+                )
+              : m.common_form_none()}
+          </span>
+        </div>
+      ) : (
+        <Field name="profileAddress" className="min-w-0 gap-1.5">
+          <FieldLabel htmlFor={id("profile")}>
+            {value.isProfileBind
+              ? m.list_create_profile_tracked_label()
+              : m.list_create_profile_display_label()}
+          </FieldLabel>
           <Select
-            value={value.listTypeNew}
-            disabled={isEdit}
-            onValueChange={(next: ListTypeNew | null) => {
-              const listTypeNew = next ?? "general";
-              const nextBindable = listTypeNew === "have" || listTypeNew === "sale";
-              // entering have or sale binds by default, to the chosen profile or else
-              // the first; moving between the two keeps what the user set
-              const entering = nextBindable && !bindable;
-              const profileAddress = entering
-                ? (value.profileAddress ?? profiles[0]?.address ?? null)
-                : value.profileAddress;
+            value={value.profileAddress ?? NONE}
+            isItemEqualToValue={(item, next) => item === next || isSameAddress(item, next)}
+            onValueChange={(next: string | null) => {
+              const profileAddress = next === null || next === NONE ? null : next;
               set({
-                listTypeNew,
-                linkedListId: null,
                 profileAddress,
-                isProfileBind:
-                  nextBindable && profileAddress !== null && (entering || value.isProfileBind),
+                isProfileBind: profileAddress === null ? false : value.isProfileBind,
               });
             }}
           >
-            <SelectTrigger id={id("type")} className="min-w-0">
-              <SelectValue>{(type: ListTypeNew) => LIST_TYPE_LABEL[type]()}</SelectValue>
-            </SelectTrigger>
-            <SelectPopup>
-              {LIST_TYPES.map((type) => (
-                <SelectItem key={type} value={type}>
-                  {LIST_TYPE_LABEL[type]()}
-                </SelectItem>
-              ))}
-            </SelectPopup>
-          </Select>
-          <span className="text-muted-foreground text-xs text-pretty">
-            {LIST_TYPE_DESC[value.listTypeNew]()}
-          </span>
-        </div>
-
-        {isSale ? (
-          <Field name="currency" className="min-w-0 gap-1.5">
-            <FieldLabel htmlFor={id("currency")}>{m.list_create_currency_label()}</FieldLabel>
-            <Input
-              id={id("currency")}
-              aria-required
-              maxLength={3}
-              placeholder="USD"
-              className="min-w-0 uppercase"
-              value={value.currency}
-              onChange={(event) => set({ currency: event.target.value.toUpperCase() })}
-            />
-            <FieldDescription>{m.list_create_currency_desc()}</FieldDescription>
-            <FieldError />
-          </Field>
-        ) : null}
-      </div>
-
-      {isPaired ? (
-        <div className="flex min-w-0 flex-col gap-1.5">
-          <Label htmlFor={id("linked")}>{m.list_create_link_list_label()}</Label>
-          <Select
-            value={value.linkedListId === null ? NONE : String(value.linkedListId)}
-            onValueChange={(next: string | null) =>
-              set({ linkedListId: next === null || next === NONE ? null : Number(next) })
-            }
-          >
-            <SelectTrigger id={id("linked")} className="min-w-0">
-              <SelectValue>
+            <SelectTrigger id={id("profile")} className="min-w-0">
+              <SelectValue placeholder={m.list_create_profile_placeholder()}>
                 {(next: string) =>
                   next === NONE
                     ? m.common_form_none()
-                    : (linkable.find((list) => String(list.id) === next)?.name ??
-                      m.common_form_none())
+                    : displayNickname(
+                        next,
+                        profiles.find((profile) => isSameAddress(profile.address, next))?.nickname,
+                      )
                 }
               </SelectValue>
             </SelectTrigger>
             <SelectPopup>
               <SelectItem value={NONE}>{m.common_form_none()}</SelectItem>
-              {linkable.map((list) => (
-                <SelectItem key={list.id} value={String(list.id)}>
-                  <span className="truncate">{list.name}</span>
+              {profiles.map((profile) => (
+                <SelectItem key={profile.address} value={profile.address}>
+                  {displayNickname(profile.address, profile.nickname)}
                 </SelectItem>
               ))}
             </SelectPopup>
           </Select>
-          <span className="text-muted-foreground text-xs text-pretty">
-            {m.list_create_link_list_desc()}
-          </span>
-        </div>
-      ) : null}
-
-      <Field name="profileAddress" className="min-w-0 gap-1.5">
-        <FieldLabel htmlFor={id("profile")}>
-          {value.isProfileBind
-            ? m.list_create_profile_tracked_label()
-            : m.list_create_profile_display_label()}
-        </FieldLabel>
-        <Select
-          value={value.profileAddress ?? NONE}
-          isItemEqualToValue={(item, next) => item === next || isSameAddress(item, next)}
-          disabled={isEdit && value.isProfileBind}
-          onValueChange={(next: string | null) => {
-            const profileAddress = next === null || next === NONE ? null : next;
-            set({
-              profileAddress,
-              isProfileBind: profileAddress === null ? false : value.isProfileBind,
-            });
-          }}
-        >
-          <SelectTrigger id={id("profile")} className="min-w-0">
-            <SelectValue placeholder={m.list_create_profile_placeholder()}>
-              {(next: string) =>
-                next === NONE
-                  ? m.common_form_none()
-                  : displayNickname(
-                      next,
-                      profiles.find((profile) => isSameAddress(profile.address, next))?.nickname,
-                    )
-              }
-            </SelectValue>
-          </SelectTrigger>
-          <SelectPopup>
-            <SelectItem value={NONE}>{m.common_form_none()}</SelectItem>
-            {profiles.map((profile) => (
-              <SelectItem key={profile.address} value={profile.address}>
-                {displayNickname(profile.address, profile.nickname)}
-              </SelectItem>
-            ))}
-          </SelectPopup>
-        </Select>
-        <FieldDescription>
-          {value.isProfileBind
-            ? m.list_create_profile_desc()
-            : m.list_create_display_profile_desc()}
-        </FieldDescription>
-        <FieldError />
-      </Field>
+          <FieldDescription>
+            {value.isProfileBind
+              ? m.list_create_profile_desc()
+              : m.list_create_display_profile_desc()}
+          </FieldDescription>
+          <FieldError />
+        </Field>
+      )}
 
       {/* shown locked in edit: it is the reason the switches below are off */}
       {bindable ? (
@@ -333,29 +376,27 @@ export function ListForm({ idPrefix, value, onChange, lists, profiles, mode, url
         />
       ) : null}
 
-      {value.listTypeNew !== "general" ? (
+      {notice}
+
+      {isSale ? (
         <SwitchRow
-          id={id("discoverable")}
-          label={
-            isSale ? m.list_create_discoverable_sale_label() : m.list_create_discoverable_label()
-          }
+          id={id("show-on-trade")}
+          label={m.list_create_discoverable_sale_label()}
           description={
             discoverableDisabled
               ? m.list_create_requires_bind_desc()
-              : value.listTypeNew === "want"
-                ? m.list_create_discoverable_want_desc()
-                : isSale
-                  ? m.list_create_discoverable_sale_desc()
-                  : m.list_create_discoverable_have_desc()
+              : m.list_create_on_market_desc()
           }
-          checked={value.discoverable}
+          checked={value.discoverable && !discoverableDisabled}
           disabled={discoverableDisabled}
           onCheckedChange={(checked) => set({ discoverable: checked })}
         />
       ) : null}
 
+      {isPaired ? tradeLine : null}
+
       {/* a serial only exists on an entry the bound profile owns */}
-      {isSale || value.listTypeNew === "have" ? (
+      {isSale || value.listType === "have" ? (
         <SwitchRow
           id={id("hide-serial")}
           label={m.list_create_hide_serial_label()}
@@ -370,14 +411,6 @@ export function ListForm({ idPrefix, value, onChange, lists, profiles, mode, url
         />
       ) : null}
 
-      <SwitchRow
-        id={id("hide-user")}
-        label={m.list_create_hide_user_label()}
-        description={m.list_create_hide_user_desc({ siteName: SITE_NAME })}
-        checked={value.hideUser}
-        onCheckedChange={(checked) => set({ hideUser: checked })}
-      />
-
       {isEdit && url ? (
         <div className="flex min-w-0 flex-col gap-2">
           <div className="flex min-w-0 flex-col gap-1.5">
@@ -390,7 +423,7 @@ export function ListForm({ idPrefix, value, onChange, lists, profiles, mode, url
                 id={id("url")}
                 readOnly
                 unstyled
-                className="grow px-3 text-sm"
+                className="grow text-sm"
                 value={
                   value.regenerateSlug
                     ? slugify(value.name, { lower: true, strict: true }) || url.fallbackSlug
@@ -419,6 +452,25 @@ export function ListForm({ idPrefix, value, onChange, lists, profiles, mode, url
         </div>
       ) : null}
     </div>
+  );
+}
+
+function TypeSegment({ type, selected }: { type: ListType; selected: boolean }) {
+  const tone = LIST_TYPE_TONE[type];
+  return (
+    <RadioPrimitive.Root
+      value={type}
+      className={cn(
+        "focus-visible:ring-ring focus-visible:ring-offset-background flex min-w-0 cursor-pointer items-center justify-center rounded-md border px-2 py-1.5 text-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-offset-1",
+        selected
+          ? tone === "neutral"
+            ? "border-border bg-muted text-foreground"
+            : toneChip(tone)
+          : "text-muted-foreground hover:text-foreground border-transparent",
+      )}
+    >
+      <span className="truncate">{LIST_TYPE_LABEL[type]()}</span>
+    </RadioPrimitive.Root>
   );
 }
 

@@ -5,7 +5,6 @@ import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
 import { openApiRouter } from "@repo/api";
 import { createFileRoute } from "@tanstack/react-router";
 
-import { apiMessages } from "@/lib/api-messages";
 import { logORPCError } from "@/lib/server/orpc-error-log";
 
 const handler = new OpenAPIHandler(openApiRouter, {
@@ -30,7 +29,6 @@ export const Route = createFileRoute("/api/v1/$")({
           prefix: "/api/v1",
           context: {
             headers: request.headers,
-            messages: apiMessages,
           },
         });
 

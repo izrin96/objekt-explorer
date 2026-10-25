@@ -3,6 +3,7 @@ import chroma from "chroma-js";
 
 import { isObjektOwned } from "@/features/objekt/objekt-utils";
 
+import { isListedWithin } from "./listed-window";
 import {
   DEFAULT_COLOR_SENSITIVITY,
   DEFAULT_SORT,
@@ -95,8 +96,12 @@ function getSortDate(obj: GridObjekt) {
       : new Date(obj.createdAt).getTime();
 }
 
-export function filterObjekts<T extends GridObjekt>(filters: FilterSearch, objekts: T[]): T[] {
-  const queries = (filters.search ?? "")
+/**
+ * The quick search as a predicate, or null when it is blank: comma-separated groups match
+ * if any does, a group's space-separated terms all have to, and `!` negates a term.
+ */
+export function searchMatcher(search: string | undefined) {
+  const queries = (search ?? "")
     .toLowerCase()
     .split(",")
     .map((group) =>
@@ -107,6 +112,25 @@ export function filterObjekts<T extends GridObjekt>(filters: FilterSearch, objek
         .filter(Boolean),
     )
     .filter((group) => group.length > 0);
+  if (queries.length === 0) return null;
+  return (objekt: GridObjekt) =>
+    queries.some((group) =>
+      group.every((term) =>
+        term.startsWith("!") ? !searchFilter(term.slice(1), objekt) : searchFilter(term, objekt),
+      ),
+    );
+}
+
+function currentUnixSeconds() {
+  return Math.floor(Date.now() / 1000);
+}
+
+export function filterObjekts<T extends GridObjekt>(
+  filters: FilterSearch,
+  objekts: T[],
+  nowSec: number = currentUnixSeconds(),
+): T[] {
+  const matchesSearch = searchMatcher(filters.search);
 
   let targetColor: chroma.Color | null = null;
   if (filters.color) {
@@ -168,14 +192,16 @@ export function filterObjekts<T extends GridObjekt>(filters: FilterSearch, objek
       if (filters.floor_max !== undefined && a.floorPrice > filters.floor_max) return false;
     }
 
-    if (queries.length > 0) {
-      const matchesQuery = queries.some((group) =>
-        group.every((term) =>
-          term.startsWith("!") ? !searchFilter(term.slice(1), a) : searchFilter(term, a),
-        ),
-      );
-      if (!matchesQuery) return false;
+    // only market rows carry a listing time; elsewhere a stray `listed` filters nothing
+    if (
+      filters.listed !== undefined &&
+      a.listedAt !== undefined &&
+      !isListedWithin(a.listedAt, filters.listed, nowSec)
+    ) {
+      return false;
     }
+
+    if (matchesSearch && !matchesSearch(a)) return false;
 
     if (targetColor) {
       try {
@@ -192,6 +218,29 @@ export function filterObjekts<T extends GridObjekt>(filters: FilterSearch, objek
   });
 }
 
+// one collator for every comparison: `localeCompare` builds one per call
+const collator = new Intl.Collator();
+
+/**
+ * Each distinct value's place under `compare`, equal values sharing one: a grid holds few members,
+ * seasons and numbers, so they are compared once each rather than on every comparison.
+ */
+function ranks(values: Iterable<string>, compare: (a: string, b: string) => number) {
+  const rank = new Map<string, number>();
+  let previous: string | undefined;
+  let place = 0;
+  for (const value of [...new Set(values)].toSorted(compare)) {
+    if (previous !== undefined && compare(previous, value) !== 0) place += 1;
+    rank.set(value, place);
+    previous = value;
+  }
+  return rank;
+}
+
+/**
+ * One stable sort per mode: each comparator reads its keys most significant first, as a chain of
+ * stable sorts would by sorting the least significant key first.
+ */
 export function sortObjekts<T extends GridObjekt>(
   data: T[],
   filters: FilterSearch,
@@ -203,42 +252,51 @@ export function sortObjekts<T extends GridObjekt>(
 
   const sort = filters.sort ?? DEFAULT_SORT;
   const sortDir = filters.sort_dir ?? DEFAULT_SORT_DIR;
+  const dir = sortDir === "asc" ? 1 : -1;
 
   if (sort === "date" || sort === "rare") {
-    if (sortDir === "desc") {
-      objekts = objekts.toSorted((a, b) => getSortDate(b) - getSortDate(a));
-    } else {
-      objekts = objekts.toSorted((a, b) => getSortDate(a) - getSortDate(b));
-    }
-
-    if (sort === "rare") {
-      if (!rarityMap) return [];
-
-      objekts = objekts.toSorted((a, b) => {
-        const countA = rarityMap.get(a.slug) ?? Infinity;
-        const countB = rarityMap.get(b.slug) ?? Infinity;
-
-        if (sortDir === "asc") {
-          return countA - countB;
-        } else {
-          return countB - countA;
-        }
-      });
-    }
-  } else if (sort === "season" || sort === "collectionNo") {
-    objekts = objekts.toSorted((a, b) => compareMember(a.member, b.member));
-
-    if (sortDir === "asc") {
-      objekts = objekts.toSorted((a, b) => a.collectionNo.localeCompare(b.collectionNo));
-      if (sort === "season") {
-        objekts = objekts.toSorted((a, b) => compareSeason(a.season, b.season));
-      }
-    } else {
-      objekts = objekts.toSorted((a, b) => b.collectionNo.localeCompare(a.collectionNo));
-      if (sort === "season") {
-        objekts = objekts.toSorted((a, b) => compareSeason(b.season, a.season));
-      }
-    }
+    if (sort === "rare" && !rarityMap) return [];
+    // a date parses once per objekt, not once per comparison
+    const keyed = objekts.map((objekt) => ({
+      objekt,
+      date: getSortDate(objekt),
+      rarity: rarityMap ? (rarityMap.get(objekt.slug) ?? Infinity) : 0,
+    }));
+    keyed.sort((a, b) => {
+      if (sort === "rare" && a.rarity !== b.rarity) return dir * (a.rarity - b.rarity);
+      return dir * (a.date - b.date);
+    });
+    objekts = keyed.map((entry) => entry.objekt);
+  } else if (sort === "season" || sort === "collectionNo" || sort === "member") {
+    const member = ranks(
+      objekts.map((objekt) => objekt.member),
+      compareMember,
+    );
+    const season = ranks(
+      objekts.map((objekt) => objekt.season),
+      compareSeason,
+    );
+    const number = ranks(
+      objekts.map((objekt) => objekt.collectionNo),
+      collator.compare,
+    );
+    const keyed = objekts.map((objekt) => ({
+      objekt,
+      member: member.get(objekt.member)!,
+      season: season.get(objekt.season)!,
+      number: number.get(objekt.collectionNo)!,
+    }));
+    keyed.sort(
+      sort === "member"
+        ? // only the member follows the direction; season and number always run ascending
+          (a, b) => dir * (a.member - b.member) || a.season - b.season || a.number - b.number
+        : // the member always runs in roster order, whichever way the rest runs
+          (a, b) =>
+            (sort === "season" ? dir * (a.season - b.season) : 0) ||
+            dir * (a.number - b.number) ||
+            a.member - b.member,
+    );
+    objekts = keyed.map((entry) => entry.objekt);
   } else if (sort === "serial") {
     if (sortDir === "desc") {
       objekts = objekts.toSorted((a, b) =>
@@ -248,16 +306,6 @@ export function sortObjekts<T extends GridObjekt>(
       objekts = objekts.toSorted((a, b) =>
         isObjektOwned(a) && isObjektOwned(b) ? a.serial - b.serial : 0,
       );
-    }
-  } else if (sort === "member") {
-    objekts = objekts
-      .toSorted((a, b) => a.collectionNo.localeCompare(b.collectionNo))
-      .toSorted((a, b) => compareSeason(a.season, b.season));
-
-    if (sortDir === "asc") {
-      objekts = objekts.toSorted((a, b) => compareMember(a.member, b.member));
-    } else {
-      objekts = objekts.toSorted((a, b) => compareMember(b.member, a.member));
     }
   } else if (sort === "price") {
     objekts = objekts.toSorted((a, b) => {
@@ -284,12 +332,30 @@ export function sortObjekts<T extends GridObjekt>(
       return sortDir === "asc" ? listedA - listedB : listedB - listedA;
     });
   } else if (sort === "supply") {
-    objekts = objekts.toSorted((a, b) => {
-      const countA = a.listingCount ?? 0;
-      const countB = b.listingCount ?? 0;
-      return sortDir === "asc" ? countA - countB : countB - countA;
-    });
+    objekts = objekts.toSorted(compareSupply(sortDir));
   }
 
   return objekts;
+}
+
+type SupplyRow = Pick<GridObjekt, "slug" | "listingCount" | "floorPrice" | "listedAt">;
+
+/** ties keep one order whichever way the count runs, so flipping the arrow doesn't reshuffle them */
+export function compareSupply(dir: "asc" | "desc") {
+  return (a: SupplyRow, b: SupplyRow): number => {
+    const countA = a.listingCount ?? 0;
+    const countB = b.listingCount ?? 0;
+    if (countA !== countB) return dir === "asc" ? countA - countB : countB - countA;
+    const floorA = a.floorPrice ?? null;
+    const floorB = b.floorPrice ?? null;
+    if (floorA !== floorB) {
+      if (floorA === null) return 1;
+      if (floorB === null) return -1;
+      return floorA - floorB;
+    }
+    const listedA = a.listedAt ?? 0;
+    const listedB = b.listedAt ?? 0;
+    if (listedA !== listedB) return listedB - listedA;
+    return a.slug < b.slug ? -1 : a.slug > b.slug ? 1 : 0;
+  };
 }

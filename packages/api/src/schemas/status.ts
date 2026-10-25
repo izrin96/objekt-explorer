@@ -6,5 +6,5 @@ export const statusOutputSchema = z.object({
     latestTransferDate: z.string().nullable(),
     behind: z.boolean(),
   }),
-  cosmo: z.object({ status: z.enum(["up", "partial", "down"]) }),
+  cosmo: z.object({ status: z.enum(["up", "down"]) }),
 });

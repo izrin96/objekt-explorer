@@ -1,7 +1,6 @@
 import { PulseIcon } from "@phosphor-icons/react";
 import type { ActivityType } from "@repo/api/schemas/activity";
 import { activityTypeSchema } from "@repo/api/schemas/activity";
-import { validOnlineTypes, type ValidOnlineType } from "@repo/cosmo/types/common";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useMemo, useState } from "react";
 
@@ -23,11 +22,11 @@ import {
 import { useScopedFacets } from "@/features/filters/facets";
 import { QuickFilters } from "@/features/filters/filter-bar";
 import { FilterSheet } from "@/features/filters/filter-sheet";
-import { ONLINE_TYPE_LABEL } from "@/features/filters/labels";
+import { OnlineFilter } from "@/features/filters/online-filter";
 import { ResetButton } from "@/features/filters/reset-button";
 import { canReset } from "@/features/filters/search-schema";
 import { SingleSelect } from "@/features/filters/single-select";
-import { useCanonicalFilters, useFilters, useSetFilters } from "@/features/filters/use-filters";
+import { useCanonicalFilters, useSetFilters } from "@/features/filters/use-filters";
 import { ObjektDrawer } from "@/features/objekt/drawer";
 import { m } from "@/paraglide/messages";
 
@@ -58,35 +57,6 @@ function EventFilter({ className }: { className?: string }) {
       value={type}
       onChange={setType}
       defaultValue="all"
-      className={className}
-    />
-  );
-}
-
-/** `all` is the absence of `on_offline`, spelled as a value the select can hold */
-const ALL_TYPES = "all";
-
-function OnlineFilter({ className }: { className?: string }) {
-  const onOffline = useFilters((f) => f.on_offline);
-  const setFilters = useSetFilters();
-  // built per render, not at module load: a message read at module scope is
-  // resolved once in the base locale on the server and mismatches on hydration
-  const options = [
-    { value: ALL_TYPES, label: m.filter_all() },
-    ...validOnlineTypes.map((value) => ({ value, label: ONLINE_TYPE_LABEL[value]() })),
-  ];
-
-  return (
-    <SingleSelect
-      label={m.filter_type()}
-      options={options}
-      value={onOffline?.[0] ?? ALL_TYPES}
-      defaultValue={ALL_TYPES}
-      onChange={(value) =>
-        setFilters({
-          on_offline: value === ALL_TYPES ? undefined : [value as ValidOnlineType],
-        })
-      }
       className={className}
     />
   );

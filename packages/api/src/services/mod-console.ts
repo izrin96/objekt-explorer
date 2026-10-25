@@ -1,0 +1,164 @@
+import { ORPCError } from "@orpc/server";
+import { db } from "@repo/db";
+import { notification, report, user, userSanction } from "@repo/db/schema";
+import { and, eq, sql } from "drizzle-orm";
+
+import { sanctionEnd } from "../lib/sanctions";
+import { disconnectUser, publishNotify } from "../realtime";
+import {
+  type ActInput,
+  type RevokeInput,
+  roleList,
+  type SetRoleInput,
+  staffTargetRefused,
+} from "../schemas/moderation";
+import type { SanctionPayload } from "../schemas/notification";
+import {
+  audit,
+  changeRole,
+  findAccount,
+  openReportsOf,
+  refuseModeration,
+  sanctionColumns,
+  syncBan,
+} from "./moderation";
+import { cancelOpenOffers, offersOf, publishCancelled } from "./offer/cancel";
+import { activeSanctionWhere } from "./safety";
+import { bumpSafetyVersions } from "./safety-cache";
+
+export async function applyModAction(me: string, isAdmin: boolean, input: ActInput) {
+  if (input.userId === me) refuseModeration("self");
+  const target = await findAccount(input.userId);
+  const kind = input.action === "dismiss" ? "dismiss" : "sanction";
+  if (staffTargetRefused(target.role, isAdmin, kind)) refuseModeration("staff_target");
+
+  const now = new Date();
+  const end = sanctionEnd(input.action, input.days, now);
+
+  const result = await db.transaction(async (tx) => {
+    // first, before the sanction insert, whose foreign-key check takes only KEY SHARE and so
+    // would not wait for a linker holding this row FOR SHARE, nor for a deletion's scrub; NO KEY
+    // UPDATE lets an accept's notification insert for this user through while it holds an offer
+    // row this cancels
+    if (input.action !== "dismiss") {
+      await tx.execute(sql`SELECT 1 FROM "user" WHERE id = ${input.userId} FOR NO KEY UPDATE`);
+      const [current] = await tx
+        .select({ deletedAt: user.deletedAt })
+        .from(user)
+        .where(eq(user.id, input.userId));
+      if (current?.deletedAt) refuseModeration("deleted_target");
+    }
+    const sanctionId =
+      input.action === "dismiss"
+        ? null
+        : (
+            await tx
+              .insert(userSanction)
+              .values({
+                userId: input.userId,
+                type: input.action,
+                reason: input.reason,
+                expiresAt: end?.toISOString() ?? null,
+                issuedBy: me,
+              })
+              .returning({ id: userSanction.id })
+          )[0]!.id;
+    if (input.action === "ban") await syncBan(tx, input.userId, { revokeSessions: true });
+
+    const resolved = await tx
+      .update(report)
+      .set({
+        status: input.action === "dismiss" ? "dismissed" : "actioned",
+        resolvedBy: me,
+        resolvedAt: sql`now()`,
+      })
+      .where(openReportsOf(input.userId))
+      .returning({ id: report.id });
+
+    await audit(tx, {
+      actorId: me,
+      action: input.action,
+      targetUserId: input.userId,
+      reportIds: resolved.map((r) => r.id),
+      detail: { reason: input.reason, days: input.days ?? null, sanctionId },
+    });
+
+    if (
+      sanctionId !== null &&
+      (input.action === "warn" || input.action === "chat_mute" || input.action === "trade_block")
+    ) {
+      await tx.insert(notification).values({
+        userId: input.userId,
+        type: "sanction",
+        payload: {
+          action: input.action,
+          reason: input.reason,
+          endsAt: end?.toISOString() ?? null,
+        } satisfies SanctionPayload,
+        // its own group, so a notice is never merged with another
+        groupKey: `sanction:${sanctionId}`,
+      });
+    }
+    const cancelled =
+      input.action === "trade_block" || input.action === "ban"
+        ? await cancelOpenOffers(tx, offersOf(input.userId), "sanction")
+        : null;
+    return { sanctionId, resolvedReports: resolved.length, cancelled };
+  });
+
+  if (input.action === "trade_block" || input.action === "ban") {
+    await bumpSafetyVersions([input.userId]);
+  }
+  if (input.action === "ban") await disconnectUser(input.userId);
+  else if (input.action !== "dismiss") await publishNotify(input.userId);
+  if (result.cancelled) await publishCancelled(result.cancelled);
+  return { sanctionId: result.sanctionId, resolvedReports: result.resolvedReports };
+}
+
+export async function revokeSanction(me: string, isAdmin: boolean, input: RevokeInput) {
+  const [sanction] = await db
+    .select({ ...sanctionColumns, userId: userSanction.userId })
+    .from(userSanction)
+    .where(and(eq(userSanction.id, input.sanctionId), activeSanctionWhere));
+  if (!sanction) refuseModeration("not_active");
+  // a sanction from before the viewer was staff is still theirs to live with
+  if (sanction.userId === me) refuseModeration("self");
+  const target = await findAccount(sanction.userId);
+  if (staffTargetRefused(target.role, isAdmin, "revoke")) refuseModeration("staff_target");
+
+  await db.transaction(async (tx) => {
+    await tx
+      .update(userSanction)
+      .set({ revokedAt: sql`now()`, revokedBy: me })
+      .where(eq(userSanction.id, sanction.id));
+    if (sanction.type === "ban") await syncBan(tx, sanction.userId, { revokeSessions: false });
+    await audit(tx, {
+      actorId: me,
+      action: "revoke",
+      targetUserId: sanction.userId,
+      detail: { reason: input.reason, sanctionId: sanction.id, type: sanction.type },
+    });
+  });
+
+  if (sanction.type === "trade_block" || sanction.type === "ban") {
+    await bumpSafetyVersions([sanction.userId]);
+  }
+  // an open tab drops the mute notice, or shows its trade lists again
+  await publishNotify(sanction.userId);
+}
+
+export async function setUserRole(me: string, isAdmin: boolean, input: SetRoleInput) {
+  if (!isAdmin) throw new ORPCError("FORBIDDEN");
+  if (input.userId === me) refuseModeration("self");
+  const target = await findAccount(input.userId);
+  if (roleList(target.role).includes("admin")) refuseModeration("staff_target");
+
+  await db.transaction((tx) =>
+    changeRole(tx, {
+      actorId: me,
+      userId: input.userId,
+      role: input.role,
+      previous: target.role ?? "user",
+    }),
+  );
+}

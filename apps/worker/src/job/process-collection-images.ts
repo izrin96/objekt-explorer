@@ -5,15 +5,12 @@ import { chunk } from "@repo/lib";
 import { and, eq, isNull, ne, or, sql } from "drizzle-orm";
 import { ofetch } from "ofetch";
 
+import { log } from "@/lib/log";
 import { redis } from "@/lib/redis";
 import { deleteObject, FOLDER, keyFromUrl, s3Url, uploadWebp } from "@/lib/s3";
 
 const BATCH_SIZE = 5;
-
-const LOCK_KEY = "lock:process-collection-images";
-// generous enough to cover a full backlog run, short enough that a crashed
-// worker does not wedge the job for long
-const LOCK_TTL_SECONDS = 1800;
+const imagesLog = log("images");
 
 const FETCH_OPTS = {
   responseType: "arrayBuffer",
@@ -36,7 +33,7 @@ async function convertToWebp(buf: ArrayBuffer, maxHeight?: number) {
   const sourceIsWebp = isWebp(buf);
 
   if (sourceIsWebp && !maxHeight) {
-    console.log("[process-images] Source is already WebP, skipping re-encode");
+    imagesLog.debug("Source is already WebP, skipping re-encode");
     return buffer;
   }
 
@@ -77,31 +74,9 @@ type CollectionRow = Pick<
   | "processedBackImage"
 >;
 
+// a backlog run can outlast the 10-minute cron; `safeRun`'s lock keeps an overlapping run from
+// re-selecting the same rows (their hash is still stale) and uploading every image twice
 export async function processCollectionImages() {
-  // the cron fires every 10 minutes but a backlog run can take longer; without
-  // a lock the overlapping run re-selects the same rows (their hash is still
-  // stale) and uploads every image twice
-  const token = crypto.randomUUID();
-  // variadic overload takes string args only
-  const acquired = await redis.set(LOCK_KEY, token, "NX", "EX", String(LOCK_TTL_SECONDS));
-
-  if (acquired === null) {
-    console.log("[process-images] Another run holds the lock, skipping");
-    return;
-  }
-
-  try {
-    await run();
-  } finally {
-    // only release our own lock: if it already expired mid-run, another worker
-    // may legitimately hold it now
-    if ((await redis.get(LOCK_KEY)) === token) {
-      await redis.del(LOCK_KEY);
-    }
-  }
-}
-
-async function run() {
   const needsProcessing = await indexer
     .select({
       slug: collections.slug,
@@ -125,12 +100,9 @@ async function run() {
       ),
     );
 
-  if (needsProcessing.length === 0) {
-    console.log("[process-images] All collections up to date");
-    return;
-  }
+  if (needsProcessing.length === 0) return;
 
-  console.log(`[process-images] ${needsProcessing.length} collections need processing`);
+  imagesLog.info(`${needsProcessing.length} collections need processing`);
 
   let processed = 0;
   const total = needsProcessing.length;
@@ -144,14 +116,14 @@ async function run() {
       else failed++;
     }
     processed += batch.length;
-    console.log(`[process-images] Progress: ${processed}/${total}`);
+    imagesLog.debug(`Progress: ${processed}/${total}`);
   });
 
   if (succeeded > 0) {
     await redis.set("collection:modified-at", new Date().toISOString());
   }
 
-  console.log(`[process-images] Done: ${succeeded} succeeded, ${failed} failed`);
+  imagesLog.info(`Done: ${succeeded} succeeded, ${failed} failed`);
 }
 
 /**
@@ -165,7 +137,7 @@ async function deleteQuietly(keys: string[]) {
       try {
         await deleteObject(key);
       } catch (err) {
-        console.error(`[process-images] Failed to delete ${key}:`, err);
+        imagesLog.warn(`Failed to delete ${key}:`, err);
       }
     }),
   );
@@ -239,10 +211,10 @@ async function processOne(c: CollectionRow) {
       await deleteQuietly(superseded);
     }
 
-    console.log(`[process-images] Processed ${slug}`);
+    imagesLog.debug(`Processed ${slug}`);
     return true;
   } catch (err) {
-    console.error(`[process-images] Failed for ${c.slug}:`, err);
+    imagesLog.error(`Failed for ${c.slug}:`, err);
     // nothing references these yet, so removing them is safe and keeps a
     // retry loop from piling up orphans
     await deleteQuietly(uploaded);

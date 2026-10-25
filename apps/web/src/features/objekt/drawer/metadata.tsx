@@ -21,6 +21,8 @@ function MetaRow({ label, children }: { label: string; children: ReactNode }) {
 
 function MetaLink({ href }: { href: string | null }) {
   if (!href) return <span className="text-muted-foreground">—</span>;
+  // the URL comes from upstream metadata, so only a web link becomes clickable
+  if (!/^https?:\/\//i.test(href)) return <span>{href}</span>;
   return (
     <a
       href={href}

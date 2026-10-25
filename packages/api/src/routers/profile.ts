@@ -4,7 +4,9 @@ import { userAddress } from "@repo/db/schema";
 import { type acceptedFileMimeTypes, mimeTypeToExtension } from "@repo/lib/media";
 import { and, eq, sql } from "drizzle-orm";
 
-import { type ApiMessages, authed, optionalAuthed } from "../orpc";
+import { ownBannerKey } from "../lib/banner-key";
+import { refuse } from "../lib/refuse";
+import { authed, optionalAuthed } from "../orpc";
 import { addressOrBareInputSchema, addressSchema } from "../schemas/common/address";
 import { documented, errorResponses } from "../schemas/common/documented";
 import {
@@ -32,58 +34,47 @@ export const profileRouter = {
     })
     .input(addressOrBareInputSchema)
     .output(documented(profilePreviewOutputSchema))
-    .handler(({ input, context: { session } }) =>
-      fetchProfilePreview(input.address, session?.user),
-    ),
+    .handler(({ input }) => fetchProfilePreview(input.address)),
 
-  find: authed
-    .input(addressSchema)
-    .handler(async ({ input: address, context: { messages, session } }) => {
-      const profile = await fetchOwnedProfile(address, session.user.id, messages);
-      return profile;
-    }),
+  find: authed.input(addressSchema).handler(async ({ input: address, context: { session } }) => {
+    const profile = await fetchOwnedProfile(address, session.user.id);
+    return profile;
+  }),
 
   edit: authed
     .input(makeEditProfileInputSchema(`${S3_PUBLIC_URL}/profile-banner/`))
-    .handler(async ({ input: { address, ...rest }, context: { messages, session } }) => {
-      const profile = await fetchOwnedProfile(address, session.user.id, messages);
+    .handler(async ({ input, context: { session } }) => {
+      const { address, bannerImgUrl, bannerImgType, gridColumns } = input;
+      const profile = await fetchOwnedProfile(address, session.user.id);
 
-      // `getPresignedPost` names every upload after its address, so a banner
-      // URL outside that prefix is another profile's file. Older uploads kept
-      // the checksummed address, hence the case-insensitive match.
-      const ownPrefix = `${S3_PUBLIC_URL}/profile-banner/${address}-`.toLowerCase();
-      const isOwnBanner = (url: string) => url.toLowerCase().startsWith(ownPrefix);
-      if (rest.bannerImgUrl && !isOwnBanner(rest.bannerImgUrl)) {
+      if (bannerImgUrl && !ownBannerKey(bannerImgUrl, S3_PUBLIC_URL, address)) {
         throw new ORPCError("BAD_REQUEST");
       }
 
       await db
         .update(userAddress)
         .set({
-          ...rest,
-          bannerUpdatedAt: rest.bannerImgUrl !== undefined ? sql`'now'` : undefined,
+          bannerImgUrl,
+          bannerImgType,
+          gridColumns,
+          bannerUpdatedAt: bannerImgUrl !== undefined ? sql`'now'` : undefined,
         })
         .where(and(eq(userAddress.address, address), eq(userAddress.userId, session.user.id)));
 
       // Delete the old banner only once the row no longer points at it, so a
       // failed update cannot leave a dangling URL
-      if (
-        profile.bannerImgUrl &&
-        isOwnBanner(profile.bannerImgUrl) &&
-        rest.bannerImgUrl !== undefined &&
-        rest.bannerImgUrl !== profile.bannerImgUrl
-      ) {
-        const fileName = profile.bannerImgUrl.split("/").pop();
-        if (fileName) {
-          await deleteFileFromBucket(S3_BUCKET, `profile-banner/${fileName}`);
-        }
+      const oldKey = profile.bannerImgUrl
+        ? ownBannerKey(profile.bannerImgUrl, S3_PUBLIC_URL, address)
+        : null;
+      if (oldKey && bannerImgUrl !== undefined && bannerImgUrl !== profile.bannerImgUrl) {
+        await deleteFileFromBucket(S3_BUCKET, oldKey);
       }
     }),
 
   getPresignedPost: authed
     .input(presignedPostInputSchema)
-    .handler(async ({ input: { address, mimeType, fileSize }, context: { messages, session } }) => {
-      await assertProfileOwned(address, session.user.id, messages);
+    .handler(async ({ input: { address, mimeType, fileSize }, context: { session } }) => {
+      await assertProfileOwned(address, session.user.id);
 
       const ext = mimeTypeToExtension[mimeType as (typeof acceptedFileMimeTypes)[number]];
       const key = `${address.toLowerCase()}-${Date.now()}.${ext}`;
@@ -102,18 +93,13 @@ export const profileRouter = {
     }),
 };
 
-async function fetchOwnedProfile(address: string, userId: string, messages: ApiMessages) {
+async function fetchOwnedProfile(address: string, userId: string) {
   const profile = await db.query.userAddress.findFirst({
     columns: {
       nickname: true,
       address: true,
-      hideUser: true,
       bannerImgUrl: true,
       bannerImgType: true,
-      privateSerial: true,
-      privateProfile: true,
-      hideNickname: true,
-      hideTransfer: true,
       gridColumns: true,
     },
     where: { address, userId },
@@ -123,9 +109,7 @@ async function fetchOwnedProfile(address: string, userId: string, messages: ApiM
   });
 
   if (!profile) {
-    throw new ORPCError("NOT_FOUND", {
-      message: messages.profile_not_found(),
-    });
+    refuse("NOT_FOUND", "profile_not_found", "Profile not found or not linked with this account");
   }
 
   return profile;

@@ -23,7 +23,6 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
-import { Switch } from "@/components/ui/switch";
 import { toastManager } from "@/components/ui/toast";
 import {
   BANNER_ACCEPT,
@@ -37,40 +36,10 @@ import { PROFILE_PAGE_KEY } from "@/features/profile/queries";
 import { currentUserOptions } from "@/features/user/queries";
 import { displayNickname } from "@/lib/address";
 import { client, orpc } from "@/lib/orpc";
-import { SITE_NAME } from "@/lib/utils";
+import { refusalText } from "@/lib/refusal";
 import { m } from "@/paraglide/messages";
 
 type Profile = Awaited<ReturnType<typeof client.profile.find>>;
-type FlagKey = "hideUser" | "hideNickname" | "privateSerial" | "hideTransfer" | "privateProfile";
-
-const FLAGS: { key: FlagKey; label: () => string; description: () => string }[] = [
-  {
-    key: "hideUser",
-    label: m.profile_edit_hide_user_label,
-    description: () => m.profile_edit_hide_user_desc({ siteName: SITE_NAME }),
-  },
-  {
-    key: "hideNickname",
-    label: m.profile_edit_hide_nickname_label,
-    description: m.profile_edit_hide_nickname_desc,
-  },
-  {
-    key: "privateSerial",
-    label: m.profile_edit_private_serial_label,
-    description: m.profile_edit_private_serial_desc,
-  },
-  {
-    key: "hideTransfer",
-    label: m.profile_edit_hide_transfer_label,
-    description: m.profile_edit_hide_transfer_desc,
-  },
-  {
-    key: "privateProfile",
-    label: m.profile_edit_private_profile_label,
-    description: m.profile_edit_private_profile_desc,
-  },
-];
-
 const BannerCropper = lazy(() =>
   import("@/features/link/banner-cropper").then((mod) => ({ default: mod.BannerCropper })),
 );
@@ -128,7 +97,7 @@ export function EditCosmoDialog({
           <>
             <DialogPanel>
               {error ? (
-                <p className="text-destructive-foreground text-sm">{error.message}</p>
+                <p className="text-destructive-foreground text-sm">{refusalText(error)}</p>
               ) : (
                 <div className="flex justify-center py-6">
                   <Spinner className="size-5" />
@@ -160,14 +129,6 @@ function EditForm({
 }) {
   const queryClient = useQueryClient();
   const cropperRef = useRef<CropperRef>(null);
-  const [draft, setDraft] = useState(() => ({
-    hideUser: profile.hideUser ?? false,
-    hideNickname: profile.hideNickname ?? false,
-    privateSerial: profile.privateSerial ?? false,
-    hideTransfer: profile.hideTransfer ?? false,
-    privateProfile: profile.privateProfile ?? false,
-    gridColumns: profile.gridColumns ?? null,
-  }));
   const [picked, setPicked] = useState<{ file: File; url: string } | null>(null);
   const [removeBanner, setRemoveBanner] = useState(false);
 
@@ -199,7 +160,12 @@ function EditForm({
         bannerImgType = null;
       }
 
-      await client.profile.edit({ address, ...draft, bannerImgUrl, bannerImgType });
+      await client.profile.edit({
+        address,
+        gridColumns: profile.gridColumns ?? null,
+        bannerImgUrl,
+        bannerImgType,
+      });
     },
     onSuccess: async () => {
       clearPick();
@@ -212,36 +178,18 @@ function EditForm({
         queryClient.invalidateQueries({ queryKey: orpc.cosmoLink.linkedPreviews.key() }),
       ]);
     },
-    onError: ({ message }) => {
-      toastManager.add({ type: "error", title: m.profile_edit_error(), description: message });
+    onError: (error) => {
+      toastManager.add({
+        type: "error",
+        title: m.profile_edit_error(),
+        description: refusalText(error),
+      });
     },
   });
 
   return (
     <>
       <DialogPanel className="flex flex-col gap-4">
-        {FLAGS.map((flag) => (
-          <Label
-            key={flag.key}
-            id={`edit-cosmo-${flag.key}-label`}
-            htmlFor={`edit-cosmo-${flag.key}`}
-            className="flex items-start justify-between gap-3 font-normal"
-          >
-            <span className="flex min-w-0 flex-col gap-0.5">
-              <span className="text-sm font-medium">{flag.label()}</span>
-              <span className="text-muted-foreground text-xs text-pretty">
-                {flag.description()}
-              </span>
-            </span>
-            <Switch
-              id={`edit-cosmo-${flag.key}`}
-              className="mt-0.5 shrink-0"
-              checked={draft[flag.key]}
-              onCheckedChange={(checked) => setDraft({ ...draft, [flag.key]: checked })}
-            />
-          </Label>
-        ))}
-
         <div className="flex flex-col gap-2">
           <Label htmlFor="edit-cosmo-banner">{m.profile_edit_banner_label()}</Label>
           <div className="flex items-center gap-1.5">
@@ -319,7 +267,7 @@ function EditForm({
               parts={m.profile_edit_unlink_note.parts()}
               markup={{
                 link: (children) => (
-                  <Link to="/link" className="underline underline-offset-2">
+                  <Link to="/account/profiles" className="underline underline-offset-2">
                     {children}
                   </Link>
                 ),

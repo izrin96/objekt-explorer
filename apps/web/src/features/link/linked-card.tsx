@@ -1,5 +1,6 @@
-import { DotsThreeIcon, LinkBreakIcon, PencilSimpleIcon } from "@phosphor-icons/react";
+import { DotsThreeIcon, LinkBreakIcon, PencilSimpleIcon, StarIcon } from "@phosphor-icons/react";
 import type { LinkedPreview } from "@repo/api/schemas/cosmo-link";
+import { truncateAddress } from "@repo/lib/address";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { type RefObject, useRef, useState } from "react";
@@ -14,6 +15,7 @@ import {
   AlertDialogPopup,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Menu, MenuItem, MenuPopup, MenuSeparator, MenuTrigger } from "@/components/ui/menu";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -28,20 +30,27 @@ import {
 import { BannerThumb, bannerThumbFrameClass } from "@/features/profile/banner-thumb";
 import { PROFILE_PAGE_KEY } from "@/features/profile/queries";
 import { currentUserOptions } from "@/features/user/queries";
-import { displayNickname, nicknameParam, truncateAddress } from "@/lib/address";
+import { displayNickname, nicknameParam } from "@/lib/address";
 import { orpc } from "@/lib/orpc";
+import { refusalText } from "@/lib/refusal";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 export type LinkedProfile = { address: string; nickname: string | null };
 
-/** `preview` is undefined while loading and null when it could not be read. */
+/**
+ * `preview` is undefined while loading and null when it could not be read. `isDefault` is
+ * undefined when the account has no default to choose (one profile), so neither the badge nor
+ * Make default shows.
+ */
 export function LinkedCard({
   profile,
   preview,
+  isDefault,
 }: {
   profile: LinkedProfile;
   preview: LinkedPreview | null | undefined;
+  isDefault?: boolean;
 }) {
   const queryClient = useQueryClient();
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -58,8 +67,32 @@ export function LinkedCard({
           queryClient.invalidateQueries({ queryKey: PROFILE_PAGE_KEY }),
         ]);
       },
-      onError: ({ message }) => {
-        toastManager.add({ type: "error", title: m.link_unlink_error(), description: message });
+      onError: (error) => {
+        toastManager.add({
+          type: "error",
+          title: m.link_unlink_error(),
+          description: refusalText(error),
+        });
+      },
+    }),
+  );
+
+  const setDefault = useMutation(
+    orpc.cosmoLink.setDefault.mutationOptions({
+      onSuccess: async () => {
+        toastManager.add({
+          type: "success",
+          title: m.link_make_default_success(),
+          description: m.link_make_default_success_desc({ name: nickname }),
+        });
+        await queryClient.invalidateQueries({ queryKey: currentUserOptions.queryKey });
+      },
+      onError: (error) => {
+        toastManager.add({
+          type: "error",
+          title: m.link_make_default_error(),
+          description: refusalText(error),
+        });
       },
     }),
   );
@@ -84,15 +117,22 @@ export function LinkedCard({
 
       <div className="flex items-start gap-2 px-3.5 pt-3 pb-3.5">
         <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-          <h2 className="font-display truncate text-base font-semibold">
-            <Link
-              to="/@{$nickname}"
-              params={{ nickname: nicknameParam(profile.address, profile.nickname) }}
-              className={previewCardLinkClass}
-            >
-              {nickname}
-            </Link>
-          </h2>
+          <div className="flex min-w-0 items-center gap-2">
+            <h2 className="font-display truncate text-base font-semibold">
+              <Link
+                to="/@{$nickname}"
+                params={{ nickname: nicknameParam(profile.address, profile.nickname) }}
+                className={previewCardLinkClass}
+              >
+                {nickname}
+              </Link>
+            </h2>
+            {isDefault ? (
+              <Badge variant="secondary" className="relative z-10">
+                {m.link_card_default()}
+              </Badge>
+            ) : null}
+          </div>
 
           <div className="text-muted-foreground flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1 text-xs">
             <span className="relative z-10 flex min-w-0 items-center gap-1 font-mono">
@@ -126,6 +166,15 @@ export function LinkedCard({
             <DotsThreeIcon weight="bold" />
           </MenuTrigger>
           <MenuPopup align="end" className="min-w-40">
+            {isDefault === false ? (
+              <MenuItem
+                disabled={setDefault.isPending}
+                onClick={() => setDefault.mutate({ address: profile.address })}
+              >
+                <StarIcon />
+                {m.link_card_make_default()}
+              </MenuItem>
+            ) : null}
             <MenuItem onClick={() => setEditOpen(true)}>
               <PencilSimpleIcon />
               {m.link_card_edit()}

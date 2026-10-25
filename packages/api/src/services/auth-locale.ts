@@ -17,6 +17,8 @@ export const betterAuthLocale = {
     FAILED_TO_GET_USER_INFO: "사용자 정보를 가져오는 데 실패했습니다",
     USER_EMAIL_NOT_FOUND: "사용자 이메일을 찾을 수 없습니다",
     EMAIL_NOT_VERIFIED: "이메일 인증이 완료되지 않았습니다",
+    // ours: refuseUnverifiedLink in auth.ts throws it from a before hook, which this plugin skips
+    LINK_NEEDS_VERIFIED_EMAIL: "다른 로그인을 연결하려면 먼저 이메일을 인증해 주세요",
     PASSWORD_TOO_SHORT: "비밀번호가 너무 짧습니다",
     PASSWORD_TOO_LONG: "비밀번호가 너무 깁니다",
     USER_ALREADY_EXISTS: "이미 존재하는 사용자입니다",
@@ -85,6 +87,8 @@ export const betterAuthLocale = {
     FAILED_TO_GET_USER_INFO: "ユーザー情報の取得に失敗しました",
     USER_EMAIL_NOT_FOUND: "ユーザーのメールアドレスが見つかりません",
     EMAIL_NOT_VERIFIED: "メールアドレスが認証されていません",
+    // ours: refuseUnverifiedLink in auth.ts throws it from a before hook, which this plugin skips
+    LINK_NEEDS_VERIFIED_EMAIL: "別のログインを連携するには、先にメールアドレスを認証してください",
     PASSWORD_TOO_SHORT: "パスワードが短すぎます",
     PASSWORD_TOO_LONG: "パスワードが長すぎます",
     USER_ALREADY_EXISTS: "このユーザーはすでに存在します",

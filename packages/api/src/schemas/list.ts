@@ -4,17 +4,49 @@ import * as z from "zod";
 import { addressInputSchema, addressSchema } from "./common/address";
 import { artistsArraySchema } from "./common/artist";
 import { indexedObjektSchema, ownedObjektSchema } from "./common/objekt";
+import { queryArray } from "./common/query";
 import type { ObjektPreview } from "./objekts";
 import { publicProfileSchema, publicUserSchema } from "./profile";
 
-export const listTypeNewSchema = z.enum(["general", "sale", "have", "want"]);
-export type ListTypeNew = z.infer<typeof listTypeNewSchema>;
+export const listTypeSchema = z.enum(["general", "sale", "have", "want"]);
+export type ListType = z.infer<typeof listTypeSchema>;
 
-export const baseListSchema = z.object({
+/**
+ * Whether the list's Show on Trade switch can be on: a want list any time, a have or sale list
+ * only while bound to a Cosmo profile, since matching reads that profile's holdings.
+ */
+export function canBeOnTrade(type: ListType, isProfileBind: boolean) {
+  return type === "want" || ((type === "have" || type === "sale") && isProfileBind);
+}
+
+/** Which side of a trade a list stands for: a sale list offers its objekts as a have list does. */
+export function tradeSideOf(type: ListType): "have" | "want" | null {
+  if (type === "want") return "want";
+  return type === "have" || type === "sale" ? "have" : null;
+}
+
+type TradeListRef = { id: number; listType: ListType; linkedListId: number | null };
+
+/**
+ * The sides a list compares when it is picked on its own: its own, and the other side when it
+ * links to a list in `onTrade` that stands for it. With no such link it compares one way.
+ */
+export function pickedSides<L extends TradeListRef>(list: L, onTrade: readonly L[]) {
+  const own = tradeSideOf(list.listType);
+  const paired = onTrade.find((other) => {
+    const side = tradeSideOf(other.listType);
+    return other.id === list.linkedListId && side !== null && side !== own;
+  });
+  const ids = (side: "have" | "want") =>
+    [list, paired].flatMap((l) => (l && tradeSideOf(l.listType) === side ? [l.id] : []));
+  return { haveListIds: ids("have"), wantListIds: ids("want"), paired };
+}
+
+const baseListSchema = z.object({
   id: z.number(),
   slug: z.string(),
   name: z.string(),
-  listTypeNew: listTypeNewSchema,
+  listType: listTypeSchema,
   isProfileBind: z.boolean(),
   profileSlug: z.string().nullable(),
   profileAddress: z.string().nullable(),
@@ -24,6 +56,11 @@ export const baseListSchema = z.object({
   gridColumns: z.number().nullish(),
   description: z.string().nullish(),
   discoverable: z.boolean().nullish(),
+  matchSale: z.boolean().nullish(),
+  matchHave: z.boolean().nullish(),
+  /** a sale list open to swaps (Sell or swap) */
+  takesSwaps: z.boolean().nullish(),
+  bumpedAt: z.string().nullish(),
   user: publicUserSchema.nullish(),
   profile: publicProfileSchema.nullish(),
 });
@@ -56,7 +93,7 @@ export const listEntriesOutputSchema = z.array(listObjektSchema);
  * Where added objekts come from. A bound list takes tokens its profile owns and
  * expands collections to every copy it owns; any other list takes collections.
  */
-export const addSourceSchema = z.discriminatedUnion("type", [
+const addSourceSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("objekts"), tokenIds: z.string().array().min(1).max(50000) }),
   z.object({ type: z.literal("collections"), slugs: z.string().array().min(1).max(50000) }),
   // a bound list hiding serials hands out entries: its cards carry no token id
@@ -69,7 +106,7 @@ export const addSourceSchema = z.discriminatedUnion("type", [
 export type AddSource = z.infer<typeof addSourceSchema>;
 
 // Trade match schemas
-export const partnerListMatchSchema = z.object({
+const partnerListMatchSchema = z.object({
   listId: z.number(),
   listSlug: z.string(),
   listName: z.string(),
@@ -79,9 +116,8 @@ export const partnerListMatchSchema = z.object({
   theyHaveIWant: z.string().array(),
   iHaveTheyWant: z.string().array(),
 });
-export type PartnerListMatch = z.infer<typeof partnerListMatchSchema>;
 
-export const tradePartnerSchema = z.object({
+const tradePartnerSchema = z.object({
   userId: z.string(),
   username: z.string(),
   user: publicUserSchema,
@@ -97,8 +133,7 @@ export const listEntriesInputSchema = listSlugInputSchema.extend({
 
 export const createListInputSchema = z.object({
   name: z.string().min(1).max(256),
-  hideUser: z.boolean(),
-  listTypeNew: listTypeNewSchema.default("general"),
+  listType: listTypeSchema.default("general"),
   isProfileBind: z.boolean().default(false),
   hideSerial: z.boolean().default(false),
   linkedListId: z.number().nullable(),
@@ -106,23 +141,53 @@ export const createListInputSchema = z.object({
   description: z.string().max(5000).nullable(),
   currency: z.string().max(10).nullable(),
   discoverable: z.boolean().default(false),
+  matchSale: z.boolean().default(false),
+  matchHave: z.boolean().default(true),
 });
+
+export const copyListInputSchema = createListInputSchema.extend({ sourceSlug: z.string() });
+
+export const copyPreviewInputSchema = z.object({
+  sourceSlug: z.string(),
+  listType: listTypeSchema,
+  isProfileBind: z.boolean(),
+  profileAddress: addressSchema.nullable(),
+});
+
+/** Collections where entries are carried as collections, copies where each entry is one copy. */
+const copyCountsSchema = z.object({
+  carried: z.number(),
+  leftOut: z.number(),
+  unit: z.enum(["collections", "copies"]),
+});
+
+export const copyPreviewOutputSchema = copyCountsSchema;
+export const copyListOutputSchema = copyCountsSchema.extend({ slug: z.string() });
 
 export const editListInputSchema = z.object({
   slug: z.string(),
   name: z.string().min(1).max(256),
-  hideUser: z.boolean(),
   gridColumns: z.number().min(2).max(18).nullable(),
   profileAddress: addressSchema.nullable(),
   description: z.string().max(5000).nullable(),
   currency: z.string().max(10).nullable(),
   hideSerial: z.boolean(),
-  linkedListId: z.number().nullable(),
-  discoverable: z.boolean(),
+  /** a sale list's Show on Trade; a have or want list's belongs to its post */
+  discoverable: z.boolean().optional(),
   regenerateSlug: z.boolean().default(false),
 });
 
-export const listPreviewsInputSchema = z.object({ slugs: z.string().array().max(500) });
+export const listPreviewsInputSchema = z.object({
+  slugs: queryArray(z.string()).pipe(z.array(z.string()).max(500)),
+});
+
+export const listPreviewsOutputSchema = z.array(
+  z.object({
+    slug: z.string(),
+    count: z.number().int(),
+    objekts: z.array(z.union([ownedObjektSchema, indexedObjektSchema])),
+  }),
+) satisfies z.ZodType<ListPreview[]>;
 
 /** `{ address }`, and also the `{ profileAddress }` that `/rpc` clients built before it send. */
 export const profileListsInputSchema = z.preprocess(
@@ -144,11 +209,6 @@ export const removeObjektsFromListInputSchema = z.object({
   entryIds: z.number().int().positive().array().max(50000),
 });
 
-export const findTradePartnersInputSchema = z.object({
-  slug: z.string(),
-  mode: z.enum(["have-to-want", "want-to-have", "both"]).optional(),
-});
-
 export const updateEntryPricesInputSchema = z.object({
   slug: z.string(),
   updates: z
@@ -167,3 +227,21 @@ export const generateDiscordFormatInputSchema = z.object({
   haveListSlug: z.string().optional(),
   wantListSlug: z.string().optional(),
 });
+
+/** `data.reason` on a refused list create or edit, price update or entry copy. */
+export const LIST_REFUSALS = [
+  "list_linked_not_found",
+  "list_have_links_want",
+  "list_want_links_have",
+  "list_pair_buying_only",
+  "list_collections_required",
+  "list_currency_required",
+  "list_profile_required",
+  "list_prices_sale_only",
+  "list_sale_links_sell_only",
+  "list_rule_not_want",
+  "list_rule_too_wide",
+  "list_rule_nothing_to_match",
+  "list_rule_no_collections",
+  "list_rule_limit",
+] as const;

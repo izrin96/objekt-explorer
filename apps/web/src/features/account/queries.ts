@@ -1,6 +1,7 @@
 import { queryOptions } from "@tanstack/react-query";
 
 import { authClient } from "@/lib/auth-client";
+import { orpc } from "@/lib/orpc";
 
 /** Better Auth has no oRPC route, so the key is written out rather than derived. */
 export const ACCOUNTS_QUERY_KEY = ["accounts"] as const;
@@ -17,3 +18,9 @@ export const accountsOptions = queryOptions({
   queryKey: ACCOUNTS_QUERY_KEY,
   queryFn: listAccounts,
 });
+
+/** Email sign-up leaves a `credential` account, the only kind with a password to change. */
+export const hasPassword = (accounts: readonly LinkedAccount[]) =>
+  accounts.some((a) => a.providerId === "credential");
+
+export const deletionCheckOptions = orpc.user.deletionCheck.queryOptions();

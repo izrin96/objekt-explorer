@@ -79,6 +79,9 @@ export const QUICK_FACET_KEYS: readonly FacetKey[] = [
 
 export type FacetSurface = "inline" | "stacked";
 
+/** Whether the toolbar drops a control below `md` and leaves it to the sheet. */
+export const foldsBelowMd = (quick: boolean, foldAll: boolean) => foldAll || !quick;
+
 /**
  * A toolbar control that is not one of the five facets but still has to be on
  * both surfaces. It goes through the same parity guard as `FACETS`, and
@@ -102,16 +105,18 @@ export const NO_EXTRAS: readonly ExtraFacet[] = [];
 export function ExtraFacetControls({
   surface,
   extras,
+  foldAll = false,
 }: {
   surface: FacetSurface;
   extras: readonly ExtraFacet[];
+  foldAll?: boolean;
 }) {
   return extras.map(({ key, quick, Control }) => (
     <Control
       key={key}
       className={cn(
         surface === "stacked" && "w-full justify-between",
-        surface === "inline" && !quick && "max-md:hidden",
+        surface === "inline" && foldsBelowMd(!!quick, foldAll) && "max-md:hidden",
       )}
     />
   ));
@@ -125,6 +130,8 @@ type FacetControlsProps = {
   onChange: (key: FacetKey, value: string[]) => void;
   /** defaults to every facet; narrow the sheet's too, or the dev parity guard trips */
   keys?: readonly FacetKey[];
+  /** hide every inline control below `md`, quick ones too: the sheet holds them */
+  foldAll?: boolean;
 };
 
 export function FacetControls({
@@ -134,6 +141,7 @@ export function FacetControls({
   values,
   onChange,
   keys = FACET_KEYS,
+  foldAll = false,
 }: FacetControlsProps) {
   const { getArtist } = useCosmoArtist();
   const artistTitle = (id: string) => getArtist(id)?.title ?? id;
@@ -150,7 +158,9 @@ export function FacetControls({
         onChange={(value) => onChange(key, value)}
         className={cn(
           surface === "stacked" && "w-full justify-between",
-          surface === "inline" && !QUICK_FACET_KEYS.includes(key) && "max-md:hidden",
+          surface === "inline" &&
+            foldsBelowMd(QUICK_FACET_KEYS.includes(key), foldAll) &&
+            "max-md:hidden",
         )}
       />
     ),

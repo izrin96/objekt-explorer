@@ -1,0 +1,6 @@
+# Local development only: `docker compose` merges this file on its own. Deploys name docker-compose.yml
+# alone, so Centrifugo stays reachable on the Docker network only. The dev server proxies /connection here.
+services:
+  centrifugo:
+    ports:
+      - "127.0.0.1:8000:8000"

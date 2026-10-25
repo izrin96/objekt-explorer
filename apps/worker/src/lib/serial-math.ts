@@ -1,11 +1,12 @@
 // The pure serial arithmetic behind populate-serial: no database or Cosmo API
 // access, so it can be tested on its own.
 
-// v1 metadata (which carried the serial number) shut down at this instant.
-// Objekts minted before it have authoritative v1 serials that this job must
+import { V1_CUTOFF_MS } from "@repo/lib/serial";
+
+// Objekts minted before V1_CUTOFF_MS have authoritative v1 serials that this job must
 // never overwrite; objekts minted at/after it have no serial from Cosmo and are
 // this job's responsibility to compute.
-export const V1_CUTOFF_MS = Date.parse("2026-06-04T08:07:02Z");
+export { V1_CUTOFF_MS };
 
 /**
  * Assign serials to the POST-cutoff objekts of an ONLINE collection, continuing

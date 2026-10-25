@@ -30,6 +30,7 @@ import { getListLinkOption } from "@/features/list/list-link";
 import { LIST_TYPE_LABEL } from "@/features/list/list-type-badge";
 import { useUserLists } from "@/features/user/hooks";
 import { orpc } from "@/lib/orpc";
+import { refusalText } from "@/lib/refusal";
 import { getBaseURL } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
@@ -95,11 +96,11 @@ export function DiscordFormatDialog({
 
   const generate = useMutation(
     orpc.list.generateDiscordFormat.mutationOptions({
-      onError: ({ message }) => {
+      onError: (error) => {
         toastManager.add({
           type: "error",
           title: m.generate_discord_error(),
-          description: message,
+          description: refusalText(error),
         });
       },
     }),
@@ -125,7 +126,7 @@ export function DiscordFormatDialog({
     generate.mutate(
       { haveListSlug, wantListSlug },
       {
-        onSuccess: ({ have, want }) => {
+        onSuccess: ({ have, want, wantRules }) => {
           const formatOptions = {
             showQuantity: options.showCount,
             lowercaseCollection: options.lowercaseCollection,
@@ -139,16 +140,24 @@ export function DiscordFormatDialog({
           };
           const output: string[] = [];
 
-          const section = (heading: string, rows: typeof have, slug: string | undefined) => {
-            if (!slug || rows.length === 0) return;
+          const section = (
+            heading: string,
+            rows: typeof have,
+            slug: string | undefined,
+            rules: string[] = [],
+          ) => {
+            if (!slug || (rows.length === 0 && rules.length === 0)) return;
             if (output.length > 0) output.push("");
-            output.push(heading, "", format(rows, formatOptions));
+            output.push(heading, "");
+            // a rule is one line in its own words, before the objekts
+            for (const rule of rules) output.push(options.bullet ? `- ${rule}` : rule);
+            if (rows.length > 0) output.push(format(rows, formatOptions));
             const url = options.includeLink ? listUrl(slug) : null;
             if (url) output.push("", `[${m.list_share()}](<${url}>)`);
           };
 
           section("## Have", have, haveListSlug);
-          section("## Want", want, wantListSlug);
+          section("## Want", want, wantListSlug, wantRules);
           setText(output.join("\n"));
         },
       },
@@ -319,7 +328,7 @@ function ListPicker({
             <SelectItem key={list.slug} value={list.slug}>
               <span className="truncate">{list.name}</span>
               <span className="text-muted-foreground ml-1.5 text-xs">
-                {LIST_TYPE_LABEL[list.listTypeNew]()}
+                {LIST_TYPE_LABEL[list.listType]()}
               </span>
             </SelectItem>
           ))}

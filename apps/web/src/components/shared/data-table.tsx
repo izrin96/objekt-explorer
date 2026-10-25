@@ -7,7 +7,8 @@ import { cn } from "@/lib/utils";
  * The grid template and minimum width are declared once and read from context,
  * so a column can never be added to the header without the rows. Below the
  * minimum the table scrolls sideways; `data-scroll-x` tells the dev overflow
- * guard that scroller is deliberate.
+ * guard that scroller is deliberate. The rows are divs so `virtua` can window
+ * them, which a `<table>` does not allow; the ARIA table roles stand in for it.
  */
 type TableShape = {
   /** the `grid-cols-[…]` every row and the header share */
@@ -27,12 +28,18 @@ function useTableShape(): TableShape {
 export function DataTable({
   columns,
   minWidth,
+  label,
   className,
   children,
-}: TableShape & { className?: string; children: ReactNode }) {
+}: TableShape & { label: string; className?: string; children: ReactNode }) {
   return (
     <TableContext value={{ columns, minWidth }}>
-      <div data-scroll-x className={cn("bg-card overflow-x-auto rounded-lg border", className)}>
+      <div
+        data-scroll-x
+        role="table"
+        aria-label={label}
+        className={cn("bg-card overflow-x-auto rounded-lg border", className)}
+      >
         {children}
       </div>
     </TableContext>
@@ -43,6 +50,7 @@ export function DataTableHead({ children }: { children: ReactNode }) {
   const { columns, minWidth } = useTableShape();
   return (
     <div
+      role="row"
       className={cn(
         "text-muted-foreground bg-secondary/60 grid h-9 items-center gap-3 border-b px-3.5 text-xs tracking-wide uppercase",
         columns,
@@ -75,7 +83,13 @@ export function DataTableRow({
     className,
   );
 
-  if (!onActivate) return <div className={shared}>{children}</div>;
+  if (!onActivate) {
+    return (
+      <div role="row" className={shared}>
+        {children}
+      </div>
+    );
+  }
 
   return (
     <div
@@ -88,6 +102,34 @@ export function DataTableRow({
         "hover:bg-secondary/50 focus-visible:ring-ring cursor-pointer outline-none focus-visible:ring-2 focus-visible:-outline-offset-2 focus-visible:ring-inset",
       )}
     >
+      {children}
+    </div>
+  );
+}
+
+export function DataTableColumnHeader({
+  className,
+  children,
+}: {
+  className?: string;
+  children: ReactNode;
+}) {
+  return (
+    <span role="columnheader" className={className}>
+      {children}
+    </span>
+  );
+}
+
+export function DataTableCell({
+  className,
+  children,
+}: {
+  className?: string;
+  children: ReactNode;
+}) {
+  return (
+    <div role="cell" className={cn("flex min-w-0 items-center self-stretch", className)}>
       {children}
     </div>
   );

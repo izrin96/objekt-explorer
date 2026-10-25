@@ -164,7 +164,8 @@ jobs:
             ghcr.io/${{ github.repository }}-${{ matrix.app }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          secrets: |
+          # public client values; only apps/web declares these args
+          build-args: |
             VITE_UMAMI_SCRIPT_URL=${{ secrets.VITE_UMAMI_SCRIPT_URL }}
             VITE_UMAMI_WEBSITE_ID=${{ secrets.VITE_UMAMI_WEBSITE_ID }}
             VITE_LIVE_API_KEY=${{ secrets.VITE_LIVE_API_KEY }}

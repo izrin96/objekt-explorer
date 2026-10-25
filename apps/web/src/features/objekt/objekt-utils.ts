@@ -203,7 +203,9 @@ const shortformMembers: Record<string, string> = {
  * The season and collection no. as one short label ("A2 201Z"), for a card or a
  * drawer that already shows the member in a slot of its own.
  */
-export function getCollectionShortNo(objekt: ValidObjekt) {
+export function getCollectionShortNo(
+  objekt: Pick<ValidObjekt, "artist" | "season" | "collectionNo">,
+) {
   if (objekt.artist === "idntt") {
     const prefix = objekt.season.slice(0, -2).toLowerCase();
     const shortName = seasonShortNames[prefix] ?? objekt.season.slice(0, -2);

@@ -1,3 +1,4 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import * as z from "zod";
 
@@ -30,7 +31,9 @@ import { displayNickname } from "@/lib/address";
 import { type FieldErrors, zodErrors } from "@/lib/form";
 import { m } from "@/paraglide/messages";
 
+import { parseListInput } from "./list-target";
 import { compareWithProfile } from "./profile-target";
+import { resolveListSlug } from "./resolve-list";
 import { useSetCompare } from "./use-compare";
 
 type TargetType = "profile" | "list";
@@ -109,12 +112,48 @@ export function CompareDialog({
   const [pickedChoice, setPickedChoice] = useState<string | null>(null);
   const [mode, setMode] = useState<Mode>("missing");
   const [errors, setErrors] = useState<FieldErrors>({});
+  const [resolving, setResolving] = useState(false);
+  const queryClient = useQueryClient();
 
   const field = TARGET_FIELD[targetType];
   const showPicker = targetType === "profile" && profiles.length > 0;
   const profileChoice = pickedChoice ?? profiles[0]?.address ?? OTHER_PROFILE;
   const choiceProfile = profiles.find((profile) => profile.address === profileChoice);
   const pickedProfile = showPicker ? choiceProfile : undefined;
+
+  const submit = async (values: Record<string, unknown>) => {
+    if (pickedProfile) {
+      setCompare(compareWithProfile(pickedProfile, mode));
+      onOpenChange(false);
+      return;
+    }
+
+    const schema = z.object({ target: z.string().trim().min(1, field.required()) });
+    const next = zodErrors(schema, values);
+    setErrors(next);
+    if (Object.keys(next).length > 0) return;
+    const target = typeof values.target === "string" ? values.target.trim() : "";
+
+    let cmpTo = target;
+    if (targetType === "list") {
+      setResolving(true);
+      const resolved = await resolveListSlug(queryClient, parseListInput(target));
+      setResolving(false);
+      if ("error" in resolved) {
+        setErrors({
+          target:
+            resolved.error === "not_found"
+              ? m.compare_list_selector_not_found()
+              : m.api_errors_unknown(),
+        });
+        return;
+      }
+      cmpTo = resolved.slug;
+    }
+
+    setCompare({ cmp_type: targetType, cmp_to: cmpTo, cmp_mode: mode });
+    onOpenChange(false);
+  };
 
   return (
     <Dialog
@@ -130,28 +169,7 @@ export function CompareDialog({
       }}
     >
       <DialogPopup className="max-w-md">
-        <Form
-          className="contents"
-          errors={errors}
-          onFormSubmit={(values) => {
-            if (pickedProfile) {
-              setCompare(compareWithProfile(pickedProfile, mode));
-              onOpenChange(false);
-              return;
-            }
-
-            const schema = z.object({ target: z.string().trim().min(1, field.required()) });
-            const next = zodErrors(schema, values);
-            setErrors(next);
-            if (Object.keys(next).length > 0) return;
-            setCompare({
-              cmp_type: targetType,
-              cmp_to: String(values.target ?? "").trim(),
-              cmp_mode: mode,
-            });
-            onOpenChange(false);
-          }}
-        >
+        <Form className="contents" errors={errors} onFormSubmit={(values) => void submit(values)}>
           <DialogHeader>
             <DialogTitle className="font-display">{m.compare_modal_title()}</DialogTitle>
             <DialogDescription>
@@ -230,7 +248,9 @@ export function CompareDialog({
             <DialogClose render={<Button variant="outline" />}>
               {m.common_modal_cancel()}
             </DialogClose>
-            <Button type="submit">{m.compare_modal_submit()}</Button>
+            <Button type="submit" loading={resolving}>
+              {m.compare_modal_submit()}
+            </Button>
           </DialogFooter>
         </Form>
       </DialogPopup>

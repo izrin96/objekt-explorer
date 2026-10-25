@@ -95,7 +95,7 @@ export function ObjektDrawer({
     >
       {/* the kit's 48px gutter is kept on a phone: full width leaves no backdrop
           to tap, and the close button becomes the only way out */}
-      <DrawerPopup showCloseButton className="sm:max-w-lg">
+      <DrawerPopup showCloseButton className="sm:max-w-xl">
         {objekt && (
           <DrawerBody
             key={objekt.id}
@@ -235,20 +235,24 @@ function DrawerBody({
           </div>
         )}
       </DrawerHeader>
-      {/* room under a short tab so the sheet still scrolls and a thumb can reach
-          the last row above a phone's bottom edge */}
-      <DrawerPanel className="flex flex-col gap-5 pb-64">
-        {/* one column below `sm`: the card at its natural 11rem plus an
-            attribute list whose labels alone are ~84px leaves the values under
-            100px, which is what pushed the drawer into sideways scrolling */}
-        <div className="grid gap-5 sm:grid-cols-[minmax(0,11rem)_1fr]">
-          <div className="w-full max-sm:mx-auto max-sm:max-w-44">
+      <DrawerPanel className="flex flex-col gap-5">
+        {/* one column below `sm`: the card beside an attribute list whose
+            labels alone are ~84px leaves the values under 100px, which is what
+            pushed the drawer into sideways scrolling */}
+        <div className="grid gap-5 sm:grid-cols-[minmax(0,14rem)_1fr]">
+          <div className="w-full max-sm:mx-auto max-sm:max-w-64">
             <ObjektFlip objekt={objekt} />
           </div>
           <ObjektSummary objekt={objekt} artistName={artistName} />
         </div>
 
-        <Tabs value={tab} onValueChange={(value) => changeTab(value as DrawerTab)}>
+        {/* at least a screen tall, so every tab scrolls the card away to the
+            same sticky strip and switching tabs never jumps the scroll */}
+        <Tabs
+          value={tab}
+          onValueChange={(value) => changeTab(value as DrawerTab)}
+          className="min-h-dvh"
+        >
           {/* five tabs outrun a phone-width sheet, so the strip scrolls and the
               sheet does not; the scroll area's root sets its own `position`,
               so the sticky wrapper stays outside it */}

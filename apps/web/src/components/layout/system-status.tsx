@@ -11,40 +11,25 @@ import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
-export type OverallStatus = "up" | "partial" | "down";
+type OverallStatus = "up" | "down";
 
 function useStatus() {
   return useQuery(orpc.status.get.queryOptions());
 }
 
-/** Anything red wins, then partial. */
+/** Anything red wins. */
 function overallStatus(
   data: { database: { behind: boolean }; cosmo: { status: string } } | undefined,
 ): OverallStatus {
   if (!data) return "down";
   if (data.database.behind || data.cosmo.status === "down") return "down";
-  if (data.cosmo.status === "partial") return "partial";
   return "up";
 }
 
-export function useOverallStatus(): OverallStatus {
+function useOverallStatus(): OverallStatus {
   const { data } = useStatus();
 
   return overallStatus(data);
-}
-
-/**
- * The logo's dot and the nav trigger read the same status, so they are tinted
- * from one place — a green dot over a red pulse button would be a lie.
- */
-export function statusDotClass(overall: OverallStatus): string {
-  // `*-foreground`, not the bare fill token: `--success` / `--warning` are the
-  // same pale chip colour in both themes and disappear on the light one
-  return overall === "down"
-    ? "after:bg-destructive-foreground"
-    : overall === "partial"
-      ? "after:bg-warning-foreground"
-      : "after:bg-success-foreground";
 }
 
 /** Tinted-chip treatment, matching the Badge feedback variants. */
@@ -53,8 +38,6 @@ function triggerClass(overall: OverallStatus): string {
     "[&_svg]:opacity-100",
     overall === "down" &&
       "border-destructive/30 bg-destructive/8 text-destructive-foreground hover:bg-destructive/16 dark:border-destructive/20 dark:bg-destructive/16 dark:hover:bg-destructive/24",
-    overall === "partial" &&
-      "border-warning/30 bg-warning/8 text-warning-foreground hover:bg-warning/16 dark:border-warning/20 dark:bg-warning/16 dark:hover:bg-warning/24",
     overall === "up" &&
       "border-success/30 bg-success/8 text-success-foreground hover:bg-success/16 dark:border-success/20 dark:bg-success/16 dark:hover:bg-success/24",
   );
@@ -111,30 +94,15 @@ function StatusRows() {
         )}
       </div>
 
-      <Separator className="-mx-3 data-[orientation=horizontal]:w-auto" />
+      <Separator className="-mx-(--viewport-inline-padding) data-[orientation=horizontal]:w-auto" />
 
       <div className="flex flex-col gap-1">
         <div className="flex items-center justify-between gap-2">
           <span className="font-display text-sm font-medium">{m.status_cosmo_api_label()}</span>
-          <Badge
-            variant={
-              data.cosmo.status === "down"
-                ? "error"
-                : data.cosmo.status === "partial"
-                  ? "warning"
-                  : "success"
-            }
-          >
-            {data.cosmo.status === "down"
-              ? m.status_cosmo_api_down()
-              : data.cosmo.status === "partial"
-                ? m.status_cosmo_api_partial()
-                : m.status_cosmo_api_up()}
+          <Badge variant={data.cosmo.status === "down" ? "error" : "success"}>
+            {data.cosmo.status === "down" ? m.status_cosmo_api_down() : m.status_cosmo_api_up()}
           </Badge>
         </div>
-        {data.cosmo.status === "partial" && (
-          <span className="text-muted-foreground text-xs">{m.status_cosmo_api_partial_hint()}</span>
-        )}
       </div>
     </div>
   );
@@ -150,7 +118,7 @@ function StatusSkeleton() {
         </div>
         <Skeleton className="h-3 w-44" />
       </div>
-      <Separator className="-mx-3 data-[orientation=horizontal]:w-auto" />
+      <Separator className="-mx-(--viewport-inline-padding) data-[orientation=horizontal]:w-auto" />
       <div className="flex flex-col gap-1">
         <div className="flex items-center justify-between">
           <Skeleton className="h-4 w-20" />

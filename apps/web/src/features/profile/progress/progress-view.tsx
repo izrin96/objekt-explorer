@@ -3,6 +3,7 @@ import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useMemo, useState } from "react";
 
 import { EmptyState } from "@/components/shared/empty-state";
+import { WidgetBoundary } from "@/components/shared/widget-boundary";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { ExtraFacet } from "@/features/filters/facet-controls";
@@ -89,10 +90,12 @@ export function ProgressView() {
           is already a request for that artist's members one by one */}
       {(filters.member?.length ?? 0) === 0 && (filters.artist?.length ?? 0) === 0 ? (
         measured.length > 0 ? (
-          <MemberProgressChart
-            rows={rows.toSorted((a, b) => b.pct - a.pct || b.total - a.total)}
-            onSelect={(member) => setFilters({ member: [member] })}
-          />
+          <WidgetBoundary>
+            <MemberProgressChart
+              rows={rows.toSorted((a, b) => b.pct - a.pct || b.total - a.total)}
+              onSelect={(member) => setFilters({ member: [member] })}
+            />
+          </WidgetBoundary>
         ) : (
           <EmptyState
             icon={ChartBarIcon}

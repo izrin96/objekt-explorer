@@ -1,6 +1,5 @@
 import { MagnifyingGlassIcon } from "@phosphor-icons/react";
 
-import { Button } from "@/components/ui/button";
 import {
   Menu,
   MenuGroup,
@@ -12,6 +11,7 @@ import {
 } from "@/components/ui/menu";
 import { compareWithProfile, findProfile } from "@/features/compare/profile-target";
 import { useSetCompare } from "@/features/compare/use-compare";
+import { toolbarTrigger } from "@/features/filters/toolbar-trigger";
 import { useUserProfiles } from "@/features/user/hooks";
 import { displayNickname } from "@/lib/address";
 import { m } from "@/paraglide/messages";
@@ -25,14 +25,8 @@ export function MarketCompareButton({ activeAddress }: { activeAddress: string |
   return (
     <Menu>
       <MenuTrigger
-        render={
-          <Button
-            variant="outline"
-            size="sm"
-            data-active={activeAddress !== undefined || undefined}
-            className="data-active:border-foreground gap-1.5"
-          />
-        }
+        data-active={activeAddress !== undefined || undefined}
+        className={toolbarTrigger}
       >
         <MagnifyingGlassIcon />
         {m.common_actions_compare()}

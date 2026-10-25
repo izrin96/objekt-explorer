@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
+import { Kbd } from "@/components/ui/kbd";
 import { Popover, PopoverPopup, PopoverTrigger } from "@/components/ui/popover";
 import { useDebouncedCallback } from "@/hooks/use-debounced-callback";
 import { m } from "@/paraglide/messages";
@@ -87,6 +88,55 @@ export function FilterSearchField() {
 
   return (
     <InputGroup className="min-w-55 flex-1 md:w-55 md:flex-none">
+      <InputGroupInput
+        ref={ref}
+        size="sm"
+        type="search"
+        aria-label={m.common_search_aria()}
+        aria-keyshortcuts="Meta+F Control+F"
+        placeholder={m.filter_quick_search()}
+        value={draft}
+        onChange={(event) => {
+          setDraft(event.target.value);
+          commit(event.target.value);
+        }}
+      />
+      <InputGroupAddon>
+        <MagnifyingGlassIcon />
+      </InputGroupAddon>
+      <InputGroupAddon align="inline-end">
+        {draft.length === 0 ? (
+          <>
+            <Kbd className="max-lg:hidden">⌘F</Kbd>
+            <SearchHelp />
+          </>
+        ) : (
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            aria-label={m.filter_search_clear_aria()}
+            onClick={() => {
+              setDraft("");
+              commit("");
+              ref.current?.focus();
+            }}
+          >
+            <XIcon />
+          </Button>
+        )}
+      </InputGroupAddon>
+    </InputGroup>
+  );
+}
+
+/** The same grammar for a picker in a dialog, whose filters live in its own state, not the URL. */
+export function PickerSearchField({ onCommit }: { onCommit: (value: string) => void }) {
+  const [draft, setDraft] = useState("");
+  const ref = useRef<HTMLInputElement>(null);
+  const commit = useDebouncedCallback(onCommit, 250);
+
+  return (
+    <InputGroup className="min-w-48 flex-1">
       <InputGroupInput
         ref={ref}
         size="sm"

@@ -15,9 +15,9 @@ import { ObjektNote } from "./objekt-note";
 import { getCollectionShortNo, isObjektOwned } from "./objekt-utils";
 import { SelectionOrderContext } from "./selection-order";
 
-// wraps rather than truncates: a clipped price reads as a different price
+// wraps rather than truncates, and only at a space: a clipped price reads as a different price
 const priceClass =
-  "text-xxs text-center leading-tight font-semibold text-balance tabular-nums wrap-anywhere @[9rem]:text-xs";
+  "text-xxs text-center leading-tight font-semibold text-balance tabular-nums @[9rem]:text-xs";
 
 type ObjektCardProps<T extends ValidObjekt> = {
   objekt: T;
@@ -49,9 +49,13 @@ type ObjektCardProps<T extends ValidObjekt> = {
   image?: "thumbnail" | "front";
   /** load eagerly — the first rows are above the fold */
   priority?: boolean;
+  /** read with the card's own name, for state its artwork shows */
+  description?: string;
   /** extra controls, rendered after the check in the top-right block */
   children?: ReactNode;
   className?: string;
+  /** on the image alone, not its caption: a ring that should leave the label out */
+  imageClassName?: string;
 };
 
 /**
@@ -104,8 +108,10 @@ export function ObjektCard<T extends ValidObjekt>({
   hideSerial = false,
   image = "thumbnail",
   priority = false,
+  description,
   children,
   className,
+  imageClassName,
 }: ObjektCardProps<T>) {
   const hideLabelSetting = useSettings((s) => s.hideLabel);
   const selecting = useSelection(selectIsSelecting);
@@ -141,75 +147,89 @@ export function ObjektCard<T extends ValidObjekt>({
   // of their own they paint over the sticky nav as the card scrolls under it
   return (
     <div className={cn("group @container isolate flex min-w-0 flex-col gap-1.5", className)}>
-      <div
-        role={interactive ? "button" : undefined}
-        tabIndex={interactive ? 0 : undefined}
-        {...handlers}
-        onClick={
-          interactive
-            ? (event) => {
-                // the long press already acted; swallow the click it releases
-                if (consumeClick()) return;
-                activate(event.shiftKey);
-              }
-            : undefined
-        }
-        // a shift-click would otherwise extend the page's text selection
-        onMouseDown={
-          interactive
-            ? (event) => {
-                if (event.shiftKey) event.preventDefault();
-              }
-            : undefined
-        }
-        onKeyDown={
-          interactive ? (event) => activateOnKey(event, () => activate(event.shiftKey)) : undefined
-        }
-        className={cn(
-          "rounded-photocard bg-secondary aspect-photocard relative w-full overflow-hidden outline-none select-none",
-          // no double-tap zoom delay, no iOS callout or drag on a long press
-          "touch-manipulation [-webkit-touch-callout:none]",
-          interactive && "focus-visible:ring-ring cursor-pointer focus-visible:ring-2",
-          // drawn outside the box so the artwork stays whole
-          selected && "ring-accent-solid ring-[3cqw]",
-        )}
-      >
-        <ObjektArtwork
-          objekt={objekt}
-          image={image}
-          hideSerial={serialHidden}
-          priority={priority}
-        />
-
-        {(pin || lock) && (
-          /* paints over the band and the image by DOM order, under the `z-10`
-             check control */
-          <div
-            aria-hidden="true"
-            className="rounded-br-photocard pointer-events-none absolute top-0 left-0 flex items-start gap-x-[3cqi] overflow-hidden p-[4cqi]"
-            style={{ backgroundColor: objekt.backgroundColor, color: objekt.textColor }}
-          >
-            {pin && <PushPinIcon weight="bold" className="size-[8cqi]" />}
-            {lock && <LockSimpleIcon weight="bold" className="size-[8cqi]" />}
-          </div>
-        )}
-
-        {faded && (
-          <div
-            aria-hidden="true"
-            className="bg-background/65 pointer-events-none absolute inset-0"
+      {/* the corner controls sit beside the card body, not in it: a button's
+          children are presentational, so a nested control loses its name */}
+      <div className={cn("relative", imageClassName)}>
+        <div
+          role={interactive ? "button" : undefined}
+          tabIndex={interactive ? 0 : undefined}
+          aria-pressed={selectMode ? selected : undefined}
+          {...handlers}
+          onClick={
+            interactive
+              ? (event) => {
+                  // the long press already acted; swallow the click it releases
+                  if (consumeClick()) return;
+                  activate(event.shiftKey);
+                }
+              : undefined
+          }
+          // a shift-click would otherwise extend the page's text selection
+          onMouseDown={
+            interactive
+              ? (event) => {
+                  if (event.shiftKey) event.preventDefault();
+                }
+              : undefined
+          }
+          onKeyDown={
+            interactive
+              ? (event) => activateOnKey(event, () => activate(event.shiftKey))
+              : undefined
+          }
+          className={cn(
+            "rounded-photocard bg-secondary aspect-photocard relative w-full overflow-hidden outline-none select-none",
+            // no double-tap zoom delay, no iOS callout or drag on a long press
+            "touch-manipulation [-webkit-touch-callout:none]",
+            interactive && "focus-visible:ring-ring cursor-pointer focus-visible:ring-2",
+            // drawn outside the box so the artwork stays whole
+            selected && "ring-accent-solid ring-[3cqw]",
+          )}
+        >
+          <ObjektArtwork
+            objekt={objekt}
+            image={image}
+            hideSerial={serialHidden}
+            priority={priority}
           />
-        )}
+          {description !== undefined && <span className="sr-only">{description}</span>}
+
+          {(pin || lock) && (
+            /* paints over the band and the image by DOM order, under the `z-10`
+               check control */
+            <div
+              aria-hidden="true"
+              className="rounded-br-photocard pointer-events-none absolute top-0 left-0 flex items-start gap-x-[3cqi] overflow-hidden p-[4cqi]"
+              style={{ backgroundColor: objekt.backgroundColor, color: objekt.textColor }}
+            >
+              {pin && <PushPinIcon weight="bold" className="size-[8cqi]" />}
+              {lock && <LockSimpleIcon weight="bold" className="size-[8cqi]" />}
+            </div>
+          )}
+
+          {faded && (
+            <div
+              aria-hidden="true"
+              className="bg-background/65 pointer-events-none absolute inset-0"
+            />
+          )}
+
+          {qty !== undefined && (
+            <div className="absolute bottom-[4cqw] left-[4cqw] grid h-[14cqw] min-w-[16cqw] place-items-center rounded-full bg-[rgba(10,12,16,.82)] px-[5cqw] font-mono text-[7.5cqw] font-semibold text-white">
+              {qty}
+            </div>
+          )}
+        </div>
 
         {(onToggleSelect || children) && (
-          /* A flush row in the corner, the mirror of the pin/lock tag: the
-             card's own radius clips the outer corner and `rounded-bl` curves
+          /* A flush row in the corner, the mirror of the pin/lock tag:
+             `rounded-tr` follows the card's own corner and `rounded-bl` curves
              the inner one, so both corners of the card are cut the same way.
              A pill inset from the corner would waste it and leave too small a
              target to hit. */
           <div
             className={cn(
-              "rounded-bl-photocard absolute top-0 right-0 z-10 flex items-center overflow-hidden",
+              "rounded-bl-photocard rounded-tr-photocard absolute top-0 right-0 z-10 flex items-center overflow-hidden",
               !selected && !selectMode && hoverOnlyClass,
             )}
           >
@@ -229,12 +249,6 @@ export function ObjektCard<T extends ValidObjekt>({
               </button>
             )}
             {children}
-          </div>
-        )}
-
-        {qty !== undefined && (
-          <div className="absolute bottom-[4cqw] left-[4cqw] grid h-[14cqw] min-w-[16cqw] place-items-center rounded-full bg-[rgba(10,12,16,.82)] px-[5cqw] font-mono text-[7.5cqw] font-semibold text-white">
-            {qty}
           </div>
         )}
       </div>
@@ -269,7 +283,7 @@ export function ObjektCard<T extends ValidObjekt>({
 
           {price !== undefined && (
             <div className="flex min-w-0 flex-col items-center">
-              <div className="flex min-w-0 items-center justify-center gap-1">
+              <div className="flex min-w-0 flex-wrap items-center justify-center gap-x-1">
                 {onPriceClick ? (
                   <button
                     type="button"

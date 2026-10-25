@@ -1,0 +1,57 @@
+# Git hooks for every commit and push, by people and by agents. Worktrees share the main checkout's
+# .git/hooks, so one `bunx lefthook install` (scripts/setup-worktree.sh runs it) covers them all.
+
+pre-commit:
+  parallel: true
+  jobs:
+    - name: format
+      glob: "*.{ts,tsx,js,mjs,mts,json,jsonc,md,css,yml,yaml}"
+      run: node_modules/.bin/oxfmt --no-error-on-unmatched-pattern {staged_files}
+      stage_fixed: true
+    # Lint runs from each package's directory, where oxlint finds that package's config.
+    - name: lint web
+      root: apps/web/
+      glob: "*.{ts,tsx,mts}"
+      exclude: ["**/*.gen.ts", "**/paraglide/**"]
+      run: bunx oxlint --type-aware --quiet {staged_files}
+    - name: lint worker
+      root: apps/worker/
+      glob: "*.{ts,tsx,mts}"
+      exclude: ["**/*.gen.ts", "**/paraglide/**"]
+      run: bunx oxlint --type-aware --quiet {staged_files}
+    - name: lint indexer
+      root: apps/indexer/
+      glob: "*.{ts,tsx,mts}"
+      exclude: ["**/*.gen.ts", "**/paraglide/**"]
+      run: bunx oxlint --type-aware --quiet {staged_files}
+    - name: lint api
+      root: packages/api/
+      glob: "*.{ts,tsx,mts}"
+      exclude: ["**/*.gen.ts", "**/paraglide/**"]
+      run: bunx oxlint --type-aware --quiet {staged_files}
+    - name: lint cosmo
+      root: packages/cosmo/
+      glob: "*.{ts,tsx,mts}"
+      exclude: ["**/*.gen.ts", "**/paraglide/**"]
+      run: bunx oxlint --type-aware --quiet {staged_files}
+    - name: lint db
+      root: packages/db/
+      glob: "*.{ts,tsx,mts}"
+      exclude: ["**/*.gen.ts", "**/paraglide/**"]
+      run: bunx oxlint --type-aware --quiet {staged_files}
+    - name: lint email
+      root: packages/email/
+      glob: "*.{ts,tsx,mts}"
+      exclude: ["**/*.gen.ts", "**/paraglide/**"]
+      run: bunx oxlint --type-aware --quiet {staged_files}
+    - name: lint lib
+      root: packages/lib/
+      glob: "*.{ts,tsx,mts}"
+      exclude: ["**/*.gen.ts", "**/paraglide/**"]
+      run: bunx oxlint --type-aware --quiet {staged_files}
+
+# The checks CI runs, before CI. Run by hand with `bunx lefthook run pre-push --force`.
+pre-push:
+  jobs:
+    - name: check
+      run: bun run check

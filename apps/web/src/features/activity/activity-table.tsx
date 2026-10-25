@@ -2,7 +2,7 @@ import type { ActivityItem } from "@repo/api/schemas/activity";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { WindowVirtualizer } from "virtua";
 
-import { DataTable, DataTableHead } from "@/components/shared/data-table";
+import { DataTable, DataTableColumnHeader, DataTableHead } from "@/components/shared/data-table";
 import { m } from "@/paraglide/messages";
 
 import { ActivityRow } from "./activity-row";
@@ -25,20 +25,17 @@ export function ActivityTable({
   onPointerLeave: () => void;
 }) {
   return (
-    <DataTable columns={COLUMNS} minWidth={MIN_WIDTH}>
+    <DataTable columns={COLUMNS} minWidth={MIN_WIDTH} label={m.activity_table_aria_label()}>
       <DataTableHead>
-        <span>{m.activity_table_event()}</span>
-        <span>{m.activity_table_objekt()}</span>
-        <span>{m.activity_table_from()}</span>
-        <span>{m.activity_table_to()}</span>
-        <span className="text-right">{m.activity_table_time()}</span>
+        <DataTableColumnHeader>{m.activity_table_event()}</DataTableColumnHeader>
+        <DataTableColumnHeader>{m.activity_table_objekt()}</DataTableColumnHeader>
+        <DataTableColumnHeader>{m.activity_table_from()}</DataTableColumnHeader>
+        <DataTableColumnHeader>{m.activity_table_to()}</DataTableColumnHeader>
+        <DataTableColumnHeader className="text-right">
+          {m.activity_table_time()}
+        </DataTableColumnHeader>
       </DataTableHead>
-      <div
-        role="region"
-        aria-label={m.activity_table_aria_label()}
-        onPointerEnter={onPointerEnter}
-        onPointerLeave={onPointerLeave}
-      >
+      <div role="rowgroup" onPointerEnter={onPointerEnter} onPointerLeave={onPointerLeave}>
         <WindowVirtualizer data={rows}>
           {(row: ActivityItem) => (
             <ActivityRow

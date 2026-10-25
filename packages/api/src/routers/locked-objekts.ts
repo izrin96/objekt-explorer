@@ -26,8 +26,8 @@ export const lockedObjektsRouter = {
 
   batchLock: authed
     .input(addressTokenIdsInputSchema)
-    .handler(async ({ input: { address, tokenIds }, context: { messages, session } }) => {
-      await assertProfileOwned(address, session.user.id, messages);
+    .handler(async ({ input: { address, tokenIds }, context: { session } }) => {
+      await assertProfileOwned(address, session.user.id);
 
       if (tokenIds.length === 0) return;
 
@@ -52,8 +52,8 @@ export const lockedObjektsRouter = {
 
   batchUnlock: authed
     .input(addressTokenIdsInputSchema)
-    .handler(async ({ input: { address, tokenIds }, context: { messages, session } }) => {
-      await assertProfileOwned(address, session.user.id, messages);
+    .handler(async ({ input: { address, tokenIds }, context: { session } }) => {
+      await assertProfileOwned(address, session.user.id);
 
       if (tokenIds.length === 0) return;
 

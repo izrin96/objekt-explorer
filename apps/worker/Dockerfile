@@ -4,7 +4,7 @@ FROM oven/bun:1.4-slim AS base
 FROM base AS pruner
 WORKDIR /app
 COPY . .
-RUN bunx turbo@2.11.7 prune worker --docker
+RUN bunx turbo@2.11.10 prune worker --docker
 
 # Install dependencies only for pruned workspace
 FROM base AS installer
@@ -24,14 +24,11 @@ RUN bun run build --filter=worker
 
 # Production image - copy only the bundle
 FROM base AS runner
-
-# Install curl for healthchecks
-RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
-
 WORKDIR /app
 ENV NODE_ENV=production
 
 # Only the bundled output is needed - bun build bundles all deps
 COPY --from=installer /app/apps/worker/dist ./apps/worker/dist
 
+USER bun
 CMD ["bun", "apps/worker/dist/index.js"]

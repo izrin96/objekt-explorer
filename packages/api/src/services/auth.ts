@@ -1,18 +1,50 @@
 import { i18n } from "@better-auth/i18n";
 import { db } from "@repo/db";
 import * as authSchema from "@repo/db/auth-schema";
-import { userAddress } from "@repo/db/schema";
-import { getRequestHeaders, setResponseHeader } from "@tanstack/react-start/server";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { getOAuthState } from "better-auth/api";
+import { APIError, createAuthMiddleware, getOAuthState, getSessionFromCtx } from "better-auth/api";
 import { betterAuth } from "better-auth/minimal";
+import { admin } from "better-auth/plugins/admin";
 import { username } from "better-auth/plugins/username";
-import { eq } from "drizzle-orm";
+import { and, eq, ne } from "drizzle-orm";
 
 import { SITE_NAME } from "../constants";
 import { serverEnv } from "../env";
+import { hasDeliverableEmail } from "../lib/account-deletion";
+import { ac, roles } from "../permissions";
+import { banNoticeMessage } from "../schemas/moderation";
+import { isDeleteRefusal } from "../schemas/user";
+import { deleteRefusal, refusalError } from "./account-delete";
 import { betterAuthLocale } from "./auth-locale";
 import { sendDeleteAccountVerification, sendResetPassword, sendVerificationEmail } from "./mail";
+
+// loaded on use, as it reaches back to this module through the socket publisher
+const anonymize = async (userId: string, self: boolean) => {
+  const { anonymizeUser } = await import("./account-anonymize");
+  await anonymizeUser(userId, { self });
+};
+
+/**
+ * Sign-up takes any email without proving it, so a password account whose email is unverified
+ * may belong to someone squatting on the address: a login linked to it would outlive the real
+ * owner's password reset. Such an account links nothing until its email is verified. An account
+ * made by a social sign-in has no password and links freely, as Discord's placeholder email can
+ * never be verified.
+ */
+async function refuseUnverifiedLink(ctx: Parameters<typeof getSessionFromCtx>[0]) {
+  const session = await getSessionFromCtx(ctx);
+  if (!session || session.user.emailVerified) return;
+  const accounts = await ctx.context.internalAdapter.findAccounts(session.user.id);
+  if (!accounts.some((account) => account.providerId === "credential")) return;
+  // the i18n plugin translates only after hooks, so the locale is read here
+  const locale = ctx.getCookie("PARAGLIDE_LOCALE");
+  const translated =
+    locale === "ko" || locale === "ja" ? betterAuthLocale[locale].LINK_NEEDS_VERIFIED_EMAIL : null;
+  throw new APIError("FORBIDDEN", {
+    code: "LINK_NEEDS_VERIFIED_EMAIL",
+    message: translated ?? "Verify your email before linking another login",
+  });
+}
 
 export const auth = betterAuth({
   appName: SITE_NAME,
@@ -22,6 +54,13 @@ export const auth = betterAuth({
   }),
   plugins: [
     username(),
+    admin({
+      ac,
+      roles,
+      adminRoles: ["admin"],
+      // reached only after the password check, so it never tells a stranger who is banned
+      bannedUserMessage: (user) => banNoticeMessage(user.banReason, user.banExpires),
+    }),
     i18n({
       defaultLocale: "en",
       translations: betterAuthLocale,
@@ -33,6 +72,7 @@ export const auth = betterAuth({
     enabled: true,
     autoSignIn: true,
     requireEmailVerification: false,
+    revokeSessionsOnPasswordReset: true,
     sendResetPassword: async ({ user, url }) => {
       await sendResetPassword(user.email, url);
     },
@@ -105,15 +145,14 @@ export const auth = betterAuth({
     deleteUser: {
       enabled: true,
       sendDeleteAccountVerification: async ({ user, url }) => {
+        // the before-hook refuses first; Better Auth swallows errors thrown here
+        if (!hasDeliverableEmail(user.email)) return;
         await sendDeleteAccountVerification(user.email, url);
       },
-      afterDelete: async (user) => {
-        await db
-          .update(userAddress)
-          .set({
-            userId: null,
-          })
-          .where(eq(userAddress.userId, user.id));
+      // before Better Auth removes the sessions and logins, so a refusal or failure leaves the
+      // account whole; it checks for blockers again, in the same transaction as the scrub
+      beforeDelete: async (user) => {
+        await anonymize(user.id, true);
       },
     },
     changeEmail: {
@@ -129,7 +168,59 @@ export const auth = betterAuth({
   session: {
     freshAge: 0,
   },
+  hooks: {
+    // before the confirmation email, which Better Auth sends before `beforeDelete` runs, and
+    // before the link's callback spends its token
+    before: createAuthMiddleware(async (ctx) => {
+      if (ctx.path === "/link-social") {
+        await refuseUnverifiedLink(ctx);
+        return;
+      }
+      if (ctx.path !== "/delete-user" && ctx.path !== "/delete-user/callback") return;
+      const session = await getSessionFromCtx(ctx);
+      if (!session) return;
+      const refusal = await deleteRefusal(session.user.id);
+      if (refusal) {
+        // the link is opened in a browser: back to the account page, not a JSON error
+        if (ctx.path === "/delete-user/callback") {
+          throw ctx.redirect(`/account/danger?refused=${refusal}`);
+        }
+        throw refusalError(refusal);
+      }
+      // with a token it is Delete now, which needs no email
+      const body = ctx.body as { token?: string } | undefined;
+      if (ctx.path === "/delete-user" && !body?.token && !hasDeliverableEmail(session.user.email)) {
+        throw refusalError("email_undeliverable");
+      }
+    }),
+    // the scrub's own re-check refuses after the callback spent its token; an error thrown here
+    // keeps the endpoint's status, which a browser won't follow, so it returns the redirect
+    after: createAuthMiddleware(async (ctx) => {
+      if (ctx.path !== "/delete-user/callback") return;
+      const returned = ctx.context.returned;
+      if (!(returned instanceof APIError) || !isDeleteRefusal(returned.body?.code)) return;
+      return new Response(null, {
+        status: 302,
+        headers: { location: `/account/danger?refused=${returned.body?.code}` },
+      });
+    }),
+  },
   databaseHooks: {
+    user: {
+      delete: {
+        // the row stays, scrubbed: returning false skips the delete, and Better Auth still ends
+        // the sessions and unlinks the logins. `beforeDelete` scrubbed it already, except on an
+        // admin's removal, which skips that hook
+        before: async (user) => {
+          const [row] = await db
+            .select({ deletedAt: authSchema.user.deletedAt })
+            .from(authSchema.user)
+            .where(eq(authSchema.user.id, user.id));
+          if (!row?.deletedAt) await anonymize(user.id, false);
+          return false;
+        },
+      },
+    },
     account: {
       create: {
         after: async (account) => {
@@ -143,11 +234,25 @@ export const auth = betterAuth({
             accessToken: account.accessToken ?? undefined,
           });
 
+          // only the first social link turns showSocial on, so a later link
+          // does not undo a user's choice to hide it
+          const [other] = await db
+            .select({ id: authSchema.account.id })
+            .from(authSchema.account)
+            .where(
+              and(
+                eq(authSchema.account.userId, account.userId),
+                ne(authSchema.account.providerId, "credential"),
+                ne(authSchema.account.id, account.id),
+              ),
+            )
+            .limit(1);
+
           await db
             .update(authSchema.user)
             .set({
               [account.providerId]: getProviderUsername(account.providerId, info),
-              showSocial: true,
+              ...(other ? {} : { showSocial: true }),
             })
             .where(eq(authSchema.user.id, account.userId));
         },
@@ -213,22 +318,4 @@ export async function refreshProviderProfile(account: {
 function getProviderUsername(providerId: string, info: { data?: unknown } | null | undefined) {
   const data = info?.data as { username?: string; data?: { username?: string } } | undefined;
   return providerId === "discord" ? data?.username : data?.data?.username;
-}
-
-export async function getSession() {
-  const session = await auth.api.getSession({
-    headers: getRequestHeaders(),
-    returnHeaders: true,
-  });
-
-  if (!session.response) {
-    return null;
-  }
-
-  const cookies = session.headers.getSetCookie();
-  if (cookies.length) {
-    setResponseHeader("Set-Cookie", cookies);
-  }
-
-  return session.response;
 }

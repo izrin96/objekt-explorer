@@ -8,14 +8,13 @@ its trades, collection progress and statistics.
 
 ### Requirement: Profile layout and privacy
 `/@<nickname>` SHALL resolve a nickname or address to a profile, show its banner, identity,
-linked socials when the owner allows, four summary counts and tabs for Collection, Trades,
-Progress, Statistics and Lists. A private profile SHALL show only the private guard to
-anyone but its owner. The owner SHALL see an Edit action opening the profile edit dialog.
+linked socials when the owner allows, four summary counts and tabs for Collection, Activity
+History (at `/@<nickname>/trades`), Progress, Statistics and Lists. Every profile SHALL show in full to every visitor. The owner SHALL see an Edit action opening the profile edit dialog.
 An unknown nickname SHALL show the not-found surface.
 
 #### Scenario: Private profile
-- **WHEN** a visitor who is not the owner opens a profile marked private
-- **THEN** the guard is shown and no objekt, pin or transfer is requested
+- **WHEN** a visitor opens a profile that was marked private before this change
+- **THEN** the full profile shows, with its objekts, pins and transfers
 
 ### Requirement: Owned collection with pins and locks
 The Collection tab SHALL list owned objekts with serials, loading more as the user scrolls,
@@ -43,16 +42,30 @@ and lock mark, and keep the date across filter changes until cleared.
 - **THEN** pins no longer lead the grid, cards carry no pin or lock marks, and selecting cards offers no actions
 
 ### Requirement: Trades, progress and statistics
-The Trades tab SHALL list the profile's transfers by type (all, mint, received, sent, spin)
-with paging and hide them entirely when the owner hides transfers. The Progress tab SHALL
+The Activity History tab SHALL list the profile's transfers by type (all, mint, received, sent, spin)
+with paging, to every visitor. The Progress tab SHALL
 show per member and season how many of each class are owned versus total, excluding the
 Welcome and Zero classes, with a chart per member. The Statistics tab SHALL chart the owned
 collection by member and by season.
 
 #### Scenario: Hidden transfers
-- **WHEN** the owner hides transfers and a visitor opens Trades
-- **THEN** the tab shows the hidden notice and no rows
+- **WHEN** a visitor opens Activity History of a profile that hid its transfers before this change
+- **THEN** the tab lists its transfers
 
 #### Scenario: Progress excludes Welcome
 - **WHEN** an address owns Welcome-class objekts
 - **THEN** Progress totals do not count them
+
+### Requirement: Message from a profile
+A profile whose address is linked to an account other than the viewer's SHALL offer Message in its header, under the rules in `web-chat`. A conversation started here carries no card, so it lands in the recipient's Requests. A profile with no linked account, and the viewer's own profile, SHALL show no Message.
+
+#### Scenario: Unlinked address
+- **WHEN** a visitor opens the profile of an address no account has linked
+- **THEN** the header shows no Message action
+
+### Requirement: Reputation on a profile
+A profile whose header shows the linked account SHALL show that account's reputation line (see `web-verified-trades`). A profile whose address no account has linked SHALL show none.
+
+#### Scenario: Unlinked address
+- **WHEN** a visitor opens the profile of an address no account has linked
+- **THEN** no reputation line is shown

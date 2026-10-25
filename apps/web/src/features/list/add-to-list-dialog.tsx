@@ -147,7 +147,6 @@ function AddToListDialog({
   const isDisabled = (list: PublicList) => list.isProfileBind && !bindable;
 
   const selected = available.find((list) => list.slug === slug && !isDisabled(list));
-
   const submit = () => {
     if (!selected) return;
     const { from, dropped } = toSource(selected, target, sourceList);
@@ -232,7 +231,7 @@ function AddToListDialog({
                           <span className="text-muted-foreground ml-1.5 text-xs">
                             {isDisabled(list)
                               ? m.list_manage_objekt_owned_only()
-                              : LIST_TYPE_LABEL[list.listTypeNew]()}
+                              : LIST_TYPE_LABEL[list.listType]()}
                           </span>
                         </SelectItem>
                       ))}

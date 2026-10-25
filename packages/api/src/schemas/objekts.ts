@@ -33,3 +33,6 @@ export const ownedByInputSchema = ownedByFiltersSchema.extend({ address: z.strin
 export const heldByInputSchema = ownedByFiltersSchema
   .pick({ artist: true })
   .extend({ address: z.string() });
+
+/** `data.reason` on a refused objekt read. */
+export const OBJEKT_REFUSALS = ["objekt_checkpoint_unavailable"] as const;

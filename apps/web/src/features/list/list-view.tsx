@@ -1,4 +1,5 @@
 import { CurrencyDollarIcon, MagnifyingGlassIcon, TrashIcon } from "@phosphor-icons/react";
+import { ruleLine } from "@repo/api/schemas/list-rule";
 import type { ValidCustomSort } from "@repo/cosmo/types/common";
 import type { ListObjekt } from "@repo/lib/types/objekt";
 import { useQuery } from "@tanstack/react-query";
@@ -30,6 +31,7 @@ import { SkeletonGrid } from "@/features/objekt/skeleton-grid";
 import { useCollectionRarity } from "@/features/objekt/use-collection-rarity";
 import { useCurrency } from "@/features/settings/use-currency";
 import { useCurrentUser } from "@/features/user/hooks";
+import { refusalText } from "@/lib/refusal";
 import { m } from "@/paraglide/messages";
 import { useClearSelectionOnNavigate, useSelection } from "@/stores/selection";
 
@@ -40,7 +42,10 @@ import { formatConvertedPrice, formatPrice } from "./list-price";
 import { useListTarget } from "./list-provider";
 import { listEntriesOptions } from "./queries";
 import { RemoveFromListDialog } from "./remove-from-list-dialog";
+import { listRulesOptions } from "./rules/queries";
+import { RulesStrip } from "./rules/rules-strip";
 import { SetPriceDialog } from "./set-price-dialog";
+import { canShowMatches, ShowMyMatches, useListMatches } from "./show-my-matches";
 import { useEntryDialogs } from "./use-entry-dialogs";
 import { useListOwned } from "./use-list-owned";
 
@@ -53,6 +58,7 @@ export function ListView() {
       address={list.isProfileBind ? (list.profileAddress ?? undefined) : undefined}
       sourceList={list.isProfileBind && list.hideSerial === true ? list.slug : undefined}
     >
+      <RulesStrip />
       <ListEntries />
     </AddToListProvider>
   );
@@ -69,6 +75,18 @@ function ListEntries() {
   const compare = isComparing(search) ? search : null;
   const setCompare = useSetCompare();
   const clearCompare = useCallback(() => setCompare(null), [setCompare]);
+
+  // a Compare result is already narrowed to its own question, so the outlines give way to it
+  const matchable = canShowMatches(list, !!user, isOwner) && compare === null;
+  const [showMatches, setShowMatches] = useState(false);
+  const matches = useListMatches(list, matchable && showMatches);
+
+  const { data: rules } = useQuery({
+    ...listRulesOptions(list.slug),
+    enabled: list.listType === "want",
+  });
+  const ruleLines =
+    list.listType === "want" && rules && rules.length > 0 ? rules.map(ruleLine) : undefined;
 
   const { selectedArtistIds } = useCosmoArtist();
   const entriesQuery = useQuery({
@@ -88,10 +106,12 @@ function ListEntries() {
   const filters = useCanonicalFilters();
   const deferredFilters = useDeferredValue(filters);
   const reset = useResetFilters();
-  const filtered = useMemo(
-    () => filterObjekts(deferredFilters, objekts),
-    [deferredFilters, objekts],
-  );
+  // Show my matches narrows the grid to what matches: an outline is lost on a long list
+  const filtered = useMemo(() => {
+    const kept = filterObjekts(deferredFilters, objekts);
+    const matched = matches.slugs;
+    return matched ? kept.filter((objekt) => matched.has(objekt.slug)) : kept;
+  }, [deferredFilters, objekts, matches.slugs]);
 
   const grouped = filters.grouped === true;
   // a fresh array each render would re-run the facet parity effect forever
@@ -108,7 +128,7 @@ function ListEntries() {
 
   useClearSelectionOnNavigate();
 
-  const isSale = list.listTypeNew === "sale" && list.currency !== null;
+  const isSale = list.listType === "sale" && list.currency !== null;
   const canPrice = isOwner && isSale;
   const currency = list.currency ?? "";
   const { formatConverted } = useCurrency();
@@ -124,9 +144,9 @@ function ListEntries() {
       ...(list.isProfileBind && list.hideSerial !== true ? (["serial"] as const) : []),
       "duplicate",
       "rare",
-      ...(list.listTypeNew === "sale" ? (["price"] as const) : []),
+      ...(list.listType === "sale" ? (["price"] as const) : []),
     ],
-    [list.isProfileBind, list.hideSerial, list.listTypeNew],
+    [list.isProfileBind, list.hideSerial, list.listType],
   );
 
   const dialogs = useEntryDialogs();
@@ -213,7 +233,11 @@ function ListEntries() {
 
   if (compare !== null && compareQuery.isError) {
     return (
-      <CompareBanner compare={compare} onClear={clearCompare} error={compareQuery.error.message} />
+      <CompareBanner
+        compare={compare}
+        onClear={clearCompare}
+        error={refusalText(compareQuery.error)}
+      />
     );
   }
 
@@ -249,7 +273,22 @@ function ListEntries() {
         sorts={sorts}
         longTail={LONG_TAIL.list}
         extras={extras}
-        actions={<GenerateDiscordButton objekts={filtered} />}
+        actions={
+          <>
+            {matchable ? (
+              <ShowMyMatches
+                list={list}
+                on={showMatches}
+                onChange={setShowMatches}
+                count={matches.slugs?.size ?? null}
+                listIds={matches.listIds}
+                pending={matches.pending}
+                error={matches.error}
+              />
+            ) : null}
+            <GenerateDiscordButton objekts={filtered} rules={ruleLines} />
+          </>
+        }
       />
 
       {compare !== null ? <CompareBanner compare={compare} onClear={clearCompare} /> : null}
@@ -270,6 +309,17 @@ function ListEntries() {
         ) : (
           <EmptyList />
         )
+      ) : filtered.length === 0 && matches.slugs ? (
+        <EmptyState
+          icon={MagnifyingGlassIcon}
+          title={m.list_matches_empty_title()}
+          hint={m.list_matches_empty_hint()}
+          action={
+            <Button variant="outline" size="sm" onClick={() => setShowMatches(false)}>
+              {m.list_matches_show_all()}
+            </Button>
+          }
+        />
       ) : filtered.length === 0 ? (
         <EmptyState
           icon={MagnifyingGlassIcon}

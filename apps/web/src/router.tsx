@@ -45,4 +45,14 @@ declare module "@tanstack/react-router" {
   interface Register {
     router: ReturnType<typeof getRouter>;
   }
+  interface StaticDataRouteOption {
+    /** false on a page that brings its own heading, so the section's header and tabs give way */
+    tradeChrome?: boolean;
+  }
+  interface HistoryState {
+    /** the thread was opened by a Message button, so its back button returns to that page */
+    fromMessage?: boolean;
+    /** the profile, lowercase, whose Message button opened the thread */
+    fromProfile?: string;
+  }
 }

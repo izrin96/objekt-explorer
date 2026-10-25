@@ -8,7 +8,7 @@ import type { MemberProgress, Tally } from "./shape-progress";
 
 function Panel({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section className="bg-popover rounded-lg border px-4 py-3.5">
+    <section className="bg-card rounded-lg border px-4 py-3.5">
       <h2 className="font-display text-foreground/80 mb-2.5 text-sm font-semibold">{title}</h2>
       {children}
     </section>

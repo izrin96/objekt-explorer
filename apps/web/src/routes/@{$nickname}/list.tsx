@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { ProfileLists } from "@/features/list/profile-lists";
 import { listPreviewsOptions, profileListsOptions } from "@/features/list/queries";
+import { PreviewCardsSkeleton } from "@/features/objekt/objekt-preview-strip";
 import { profileQuery } from "@/features/profile/queries";
 import { displayNickname } from "@/lib/address";
 import { generateMetadata } from "@/lib/meta";
@@ -33,6 +34,7 @@ export const Route = createFileRoute("/@{$nickname}/list")({
         })
       : {},
   component: ProfileListsPage,
+  pendingComponent: PreviewCardsSkeleton,
 });
 
 function ProfileListsPage() {

@@ -1,14 +1,11 @@
+import { truncateAddress } from "@repo/lib/address";
+
 /**
  * The only address equality: a stored address is lowercased while a Cosmo
  * profile carries its checksummed form, so `===` between the two never holds.
  */
 export function isSameAddress(a: string | null | undefined, b: string | null | undefined): boolean {
   return a != null && b != null && a.toLowerCase() === b.toLowerCase();
-}
-
-/** `0x3356…b7de` */
-export function truncateAddress(address: string): string {
-  return `${address.slice(0, 6)}…${address.slice(-4)}`;
 }
 
 /**

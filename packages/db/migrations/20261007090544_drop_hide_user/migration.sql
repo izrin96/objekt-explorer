@@ -1,0 +1,1 @@
+ALTER TABLE "message_pref" DROP COLUMN "allow_hidden";

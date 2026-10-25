@@ -1,4 +1,3 @@
-import { ORPCError } from "@orpc/server";
 import { fetchByNickname } from "@repo/cosmo/server/user";
 import { db } from "@repo/db";
 import { type UserAddress, userAddress } from "@repo/db/schema";
@@ -7,24 +6,26 @@ import { cacheUsers } from "@repo/lib/server/user";
 import { and, eq, sql } from "drizzle-orm";
 import type { FetchError } from "ofetch";
 
-import type { ApiMessages } from "../orpc";
+import { isMessageable, toMessagePref } from "../lib/chat-rules";
+import { refuse } from "../lib/refuse";
+import { HOUR_MS } from "../lib/time";
 import type { ProfilePreview, PublicProfile, PublicUser } from "../schemas/profile";
 import type { User } from "./auth";
+import { isBlockedEither } from "./moderation";
 import { fetchOwnerSummary } from "./objekt";
-import { isProfileHidden } from "./privacy";
-import { getCache } from "./redis";
+import { getCache, redis } from "./redis";
+import { reputationOf } from "./reputation";
+import { isBanned } from "./safety";
 
 /** the signed-in user has linked this Cosmo address */
-export async function assertProfileOwned(address: string, userId: string, messages: ApiMessages) {
+export async function assertProfileOwned(address: string, userId: string) {
   const count = await db.$count(
     userAddress,
     and(eq(userAddress.address, address), eq(userAddress.userId, userId)),
   );
 
   if (count < 1) {
-    throw new ORPCError("FORBIDDEN", {
-      message: messages.profile_not_linked(),
-    });
+    refuse("FORBIDDEN", "profile_not_linked", "This Cosmo is not linked with your account");
   }
 }
 
@@ -53,45 +54,53 @@ export function toPublicUser(user: User): PublicUser {
   };
 }
 
-export function toPublicProfile(
-  profile: UserAddress,
-  user: User | null,
-  currentUser?: User,
-): PublicProfile {
-  if (isProfileHidden(profile, currentUser?.id)) {
-    return {
-      isGuard: true,
-      address: profile.address,
-      nickname: profile.hideNickname ? null : profile.nickname,
-    };
-  }
-
+function toPublicProfile(profile: UserAddress, user: User | null): PublicProfile {
   return {
     verified: user !== null,
     address: profile.address,
-    nickname: profile.hideNickname ? null : profile.nickname,
+    nickname: profile.nickname,
     bannerImgType: profile.bannerImgType,
     bannerImgUrl: profile.bannerImgUrl,
     gridColumns: profile.gridColumns,
-    user: profile.hideUser || !user ? null : toPublicUser(user),
+    user: user ? toPublicUser(user) : null,
+  };
+}
+
+type ProfileUser = User & { messagePref: { allow: string } | null };
+
+/** The profile page's read: the public profile plus whether it offers Message to the viewer. */
+async function toProfilePage(profile: UserAddress, user: ProfileUser | null, currentUser?: User) {
+  const shown = toPublicProfile(profile, user);
+  const publicProfile =
+    shown.user && user
+      ? { ...shown, userId: user.id, reputation: (await reputationOf([user.id])).get(user.id) }
+      : shown;
+  if (!user || user.id === currentUser?.id) {
+    return { ...publicProfile, messageable: false };
+  }
+  // a blocked pair sees no button at all, as with Nobody, rather than a refusal
+  const [blocked, banned] = await Promise.all([
+    currentUser ? isBlockedEither(currentUser.id, user.id) : false,
+    isBanned(user.id),
+  ]);
+  return {
+    ...publicProfile,
+    messageable: !blocked && !banned && isMessageable(toMessagePref(user.messagePref)),
   };
 }
 
 /** The hover card: database only, so a hover never asks Cosmo or writes a row. */
-export async function fetchProfilePreview(
-  input: string,
-  viewer: User | undefined,
-): Promise<ProfilePreview> {
+export async function fetchProfilePreview(input: string): Promise<ProfilePreview> {
   const address = input.toLowerCase();
   const row = await db.query.userAddress.findFirst({
     with: { user: true },
     where: { address },
     orderBy: { id: "desc" },
   });
-  const profile = row ? toPublicProfile(row, row.user, viewer) : { address, nickname: null };
+  const profile = row ? toPublicProfile(row, row.user) : { address, nickname: null };
 
   // Spin holds too many tokens to count on a hover
-  if (profile.isGuard || address === Addresses.SPIN) return { ...profile, counts: null };
+  if (address === Addresses.SPIN) return { ...profile, counts: null };
 
   const counts = await getCache(`profile-preview:${address}`, 300, () =>
     fetchOwnerSummary(address),
@@ -120,7 +129,7 @@ export async function fetchUserByIdentifier(
 
   const cachedUser = await db.query.userAddress.findFirst({
     with: {
-      user: true,
+      user: { with: { messagePref: true } },
     },
     where: {
       [identifierIsAddress ? "address" : "nickname"]: identifier,
@@ -134,7 +143,7 @@ export async function fetchUserByIdentifier(
     // double check address with cosmo if last check more than 1 hour
     const needsCheck =
       !cachedUser.lastCosmoCheck ||
-      Date.now() - new Date(cachedUser.lastCosmoCheck).getTime() > 60 * 60 * 1000;
+      Date.now() - new Date(cachedUser.lastCosmoCheck).getTime() > HOUR_MS;
 
     if (needsCheck && cachedUser.nickname) {
       const user = await safeFetchByNickname(cachedUser.nickname);
@@ -157,7 +166,7 @@ export async function fetchUserByIdentifier(
         // no changes, update last check
         await touchLastCheck(cachedUser.nickname);
 
-        return toPublicProfile(cachedUser, cachedUser.user, currentUser);
+        return toProfilePage(cachedUser, cachedUser.user, currentUser);
       }
 
       // nickname not found, unbind
@@ -174,7 +183,7 @@ export async function fetchUserByIdentifier(
       await touchLastCheck(cachedUser.nickname);
     }
 
-    return toPublicProfile(cachedUser, cachedUser.user, currentUser);
+    return toProfilePage(cachedUser, cachedUser.user, currentUser);
   }
 
   if (identifierIsAddress) {
@@ -187,8 +196,13 @@ export async function fetchUserByIdentifier(
   // the user was just cached and still is not found, so Cosmo is not asked again
   if (retried) return undefined;
 
+  // a nickname Cosmo does not know is remembered, so random /@nickname visits do not each reach it
+  const notFoundKey = `profile:nickname-missing:${identifier.toLowerCase()}`;
+  if (await redis.get(notFoundKey)) return undefined;
+
   const user = await safeFetchByNickname(identifier);
   if (!user) {
+    if (user === null) await redis.set(notFoundKey, "1", "EX", 60);
     return undefined;
   }
 
