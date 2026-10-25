@@ -144,6 +144,9 @@ services:
       - SENTRY_DSN
       - SENTRY_ENVIRONMENT
       - SENTRY_RELEASE
+    volumes:
+      # earlier deploys' chunks, for tabs still on an old build
+      - web-assets:/app/asset-archive
     healthcheck:
       test: 'test ! -f /tmp/drain && bun -e "process.exit((await fetch(''http://localhost:3000/api/healthcheck'')).ok ? 0 : 1)"'
       interval: 5s
@@ -221,6 +224,7 @@ services:
 volumes:
   postgres-data:
   postgres-indexer-data:
+  web-assets:
 
 secrets:
   # Sentry token for the source map upload; optional

@@ -6,6 +6,20 @@ import { initClientErrorTracking, reportUncaught } from "@/lib/error-tracking";
 
 initClientErrorTracking();
 
+// a chunk this tab's build names is gone (a deploy older than the server's archive): load the new
+// build once; a second failure within a minute is left to throw, so a missing chunk cannot loop
+const RELOADED_AT = "chunk-reload-at";
+window.addEventListener("vite:preloadError", (event) => {
+  try {
+    if (Date.now() - Number(sessionStorage.getItem(RELOADED_AT)) < 60_000) return;
+    sessionStorage.setItem(RELOADED_AT, String(Date.now()));
+  } catch {
+    return;
+  }
+  event.preventDefault();
+  window.location.reload();
+});
+
 hydrateRoot(
   document,
   <StrictMode>

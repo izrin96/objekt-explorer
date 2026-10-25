@@ -64,6 +64,7 @@
  *   bun run server.ts
  */
 
+import { copyFile, mkdir, readdir, stat, unlink, utimes } from "node:fs/promises";
 import path from "node:path";
 import { Readable, pipeline } from "node:stream";
 import { constants, createGzip } from "node:zlib";
@@ -72,6 +73,12 @@ import { constants, createGzip } from "node:zlib";
 const SERVER_PORT = Number(process.env.PORT ?? 3000);
 const CLIENT_DIRECTORY = "./dist/client";
 const SERVER_ENTRY_POINT = "./dist/server/server.js";
+
+// Earlier deploys' hashed chunks, kept so a tab still on an old build can lazy-load its routes.
+// Off unless set; the directory must outlive the container (a volume).
+const ASSET_ARCHIVE_DIR = process.env.ASSET_ARCHIVE_DIR;
+const ASSET_ARCHIVE_MAX_AGE_MS =
+  Number(process.env.ASSET_ARCHIVE_MAX_AGE_DAYS ?? 7) * 24 * 60 * 60 * 1000;
 
 // Logging utilities for professional output
 const log = {
@@ -519,6 +526,54 @@ async function initializeStaticRoutes(clientDirectory: string): Promise<PreloadR
 }
 
 /**
+ * Copies this build's assets into the archive and drops archived ones no deploy has shipped within
+ * the max age. A file's mtime is the last startup whose build carried it.
+ */
+async function archiveAssets(archiveDir: string): Promise<void> {
+  const assetsDir = path.join(CLIENT_DIRECTORY, "assets");
+  try {
+    await mkdir(archiveDir, { recursive: true });
+    const now = new Date();
+    const names = await readdir(assetsDir);
+    const current = new Set(names.filter((name) => isHashedAsset(`assets/${name}`)));
+    for (const name of current) {
+      const target = path.join(archiveDir, name);
+      if (!(await Bun.file(target).exists())) await copyFile(path.join(assetsDir, name), target);
+      await utimes(target, now, now);
+    }
+
+    let pruned = 0;
+    for (const name of await readdir(archiveDir)) {
+      if (current.has(name)) continue;
+      const target = path.join(archiveDir, name);
+      if (now.getTime() - (await stat(target)).mtimeMs > ASSET_ARCHIVE_MAX_AGE_MS) {
+        await unlink(target);
+        pruned++;
+      }
+    }
+    log.success(`Archived ${String(current.size)} assets, pruned ${String(pruned)}`);
+  } catch (error) {
+    log.error(`Failed to archive assets in ${archiveDir}: ${String(error)}`);
+  }
+}
+
+const ARCHIVED_ASSET = /^\/assets\/([\w.-]+)$/;
+
+/** An earlier build's chunk, or null when the path is not one or the archive lacks it. */
+async function serveArchivedAsset(archiveDir: string, pathname: string): Promise<Response | null> {
+  const name = ARCHIVED_ASSET.exec(pathname)?.[1];
+  if (!name || !isHashedAsset(`assets/${name}`)) return null;
+  const file = Bun.file(path.join(archiveDir, name));
+  if (!(await file.exists())) return null;
+  return new Response(file, {
+    headers: {
+      "Content-Type": file.type || "application/octet-stream",
+      "Cache-Control": "public, max-age=31536000, immutable",
+    },
+  });
+}
+
+/**
  * Initialize the server
  */
 async function initializeServer() {
@@ -542,6 +597,7 @@ async function initializeServer() {
 
   // Build static routes with intelligent preloading
   const { routes: staticRoutes } = await initializeStaticRoutes(CLIENT_DIRECTORY);
+  if (ASSET_ARCHIVE_DIR) await archiveAssets(ASSET_ARCHIVE_DIR);
 
   // Create Bun server
   const server = Bun.serve({
@@ -553,6 +609,10 @@ async function initializeServer() {
       // Serve preloaded or on-demand static assets
       const staticHandler = staticRoutes[url.pathname];
       if (staticHandler) return staticHandler(req);
+      if (ASSET_ARCHIVE_DIR) {
+        const archived = await serveArchivedAsset(ASSET_ARCHIVE_DIR, url.pathname);
+        if (archived) return compressResponse(req, archived);
+      }
 
       // Fallback to TanStack Start handler for all other routes
       try {
