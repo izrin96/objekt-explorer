@@ -9,32 +9,25 @@ import { paraglideMiddleware } from "./paraglide/server.js";
 
 initServerErrorTracking();
 
-function isUnhandled(value: unknown): value is Error {
-  return value instanceof Error && (value as { unhandled?: boolean }).unhandled === true;
-}
-
 /**
- * When a client disconnects mid-request, Start rethrows the request's
- * `signal.reason` and h3 classifies it as an unhandled error: a `console.error`
- * plus a 500, once per abandoned request. Start calls h3's `toResponse` without
- * a config, so h3's own `silent` / `onError` escape hatches are unreachable —
- * filter at the sink instead. Genuine 500s still surface.
+ * When a client disconnects mid-request, reading its body rejects with Bun's AbortError and Start
+ * logs that as an unhandled error: a `console.error` plus a 500, once per abandoned request. Start
+ * offers no hook to silence it, so it is filtered at the sink. Genuine 500s still surface.
  *
  * @see https://github.com/TanStack/router/issues/7991
  */
-function isClientDisconnect(value: Error): boolean {
-  const { cause } = value;
-  return cause instanceof DOMException && cause.name === "AbortError";
+function isClientDisconnect(value: unknown): boolean {
+  return value instanceof DOMException && value.name === "AbortError";
 }
 
-// h3 logs each error a server route or SSR left unhandled here, once, so this sink is also
-// where they are reported
+// Start logs each error a server route or SSR left unhandled here, alone and unwrapped, so this
+// sink is also where they are reported
 const logError = console.error.bind(console);
 console.error = (...args: Array<unknown>) => {
   const [only] = args;
-  if (args.length === 1 && isUnhandled(only)) {
+  if (args.length === 1 && only instanceof Error) {
     if (isClientDisconnect(only)) return;
-    captureServerError(only.cause instanceof Error ? only.cause : only);
+    captureServerError(only);
   }
   logError(...args);
 };
