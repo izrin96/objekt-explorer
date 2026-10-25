@@ -5,6 +5,7 @@ import type { List } from "@repo/db/schema";
 import { and, asc, count, eq, inArray, sql } from "drizzle-orm";
 
 import { refuse } from "../../lib/refuse";
+import { ruleGroups } from "../../lib/rule-groups";
 import {
   type ListRuleDef,
   type ListRuleInput,
@@ -243,7 +244,7 @@ export async function fetchRuleDefs(listIds: number[]) {
 }
 
 /**
- * See the objekts: every collection the rule describes, grouped by collection number,
+ * See the objekts: every collection the rule describes, grouped by season and collection number,
  * with whether the owner holds it and whether the rule wants it now.
  */
 export async function ruleObjekts(list: List, ruleId: number) {
@@ -258,27 +259,25 @@ export async function ruleObjekts(list: List, ruleId: number) {
   const bySlug = new Map(full.map((c) => [c.slug, c]));
   const wanted = new Set(reading.slugs);
 
-  type Shown = (typeof full)[number] & { held: boolean; wanted: boolean };
-  const groups = new Map<string, { collectionNo: string; canMatch: number; objekts: Shown[] }>();
-  for (const c of covered) {
-    const collection = bySlug.get(c.slug);
-    if (!collection) continue;
-    let group = groups.get(c.collectionNo);
-    if (!group) {
-      group = { collectionNo: c.collectionNo, canMatch: 0, objekts: [] };
-      groups.set(c.collectionNo, group);
-    }
-    const want = wanted.has(c.slug);
-    if (want) group.canMatch += 1;
-    group.objekts.push(
-      Object.assign({}, collection, { held: reading.held.has(c.slug), wanted: want }),
-    );
-  }
+  const groups = ruleGroups(
+    covered,
+    (c) => {
+      const collection = bySlug.get(c.slug);
+      return (
+        collection &&
+        Object.assign({}, collection, {
+          held: reading.held.has(c.slug),
+          wanted: wanted.has(c.slug),
+        })
+      );
+    },
+    wanted,
+  );
   return {
     covers: reading.covers,
     owned: reading.owned,
     canMatch: reading.canMatch,
-    groups: [...groups.values()].toSorted((a, b) => a.collectionNo.localeCompare(b.collectionNo)),
+    groups,
   };
 }
 

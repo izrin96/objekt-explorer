@@ -333,13 +333,17 @@ The edit form of a have or want list SHALL show one Trade line in place of a swi
 ### Requirement: Want list rules
 A want list SHALL hold rules beside its objekts. A rule is one of:
 - **Any member of a collection**: a season and collection number, any member, with optional prio members;
-- **Class, season and edition**: a class, a season, editions (or any edition) and any member or chosen members.
+- **Class, season and edition**: a class, a season, editions (or any edition) and any member or chosen members. Only First, Special and Motion have editions, and no class of idntt does: there the dialog SHALL offer no Edition choice, and the server SHALL drop any edition sent, so the rule never asks for one that matches nothing.
 
 Each rule SHALL carry Skip ones I own, on by default. Only want lists SHALL hold rules; the server SHALL refuse a rule on any other list.
 
 #### Scenario: Any member of a collection
 - **WHEN** the owner of want list "binary hunt" adds the rule CC366, any member, prio YooYeon and NaKyoung
 - **THEN** the list holds that rule, and every Cream02 366 collection of every member is wanted, whatever the prio
+
+#### Scenario: idntt has no editions
+- **WHEN** the owner picks idntt and First in Add rule
+- **THEN** no Edition choice shows, and a rule sent with an edition is saved with none
 
 #### Scenario: Class, season and edition
 - **WHEN** the owner adds the rule First, Cream02, 3rd edition, any member
@@ -376,18 +380,22 @@ A rule SHALL describe at most 500 objekts before owned ones are skipped; a wider
 - **THEN** the dialog reads "0 can match", says why, and Add rule is disabled until Skip ones I own is off
 
 ### Requirement: Add rule
-The owner of a want list SHALL see an Add rule button in the list header, beside Find matches. It SHALL open a dialog with the two kinds of rule, the fields of the kind picked, Skip ones I own, and a live line naming the rule with how many objekts it covers, how many the owner holds and how many can match. Exact objekts SHALL still be added from the objekt pages, as today.
+The owner of a want list SHALL see an Add rule button in the list header, beside Find matches. It SHALL open a dialog with the two kinds of rule as choices that each say what they take and show an example ("One collection, every member", e.g. any CC366; "Every collection of a class, for the members you pick", e.g. Cream02 FCO 3rd), the fields of the kind picked, Skip ones I own, and a live line naming the rule with how many objekts it covers, how many the owner holds and how many can match. Exact objekts SHALL still be added from the objekt pages, as today.
 
 #### Scenario: Live count
 - **WHEN** the owner picks First, Cream02, 3rd edition, any member, holding 18 of them
 - **THEN** the dialog reads "Cream02 · FCO · 3rd · any member", "96 objekts · you own 18 · 78 can match"
+
+#### Scenario: Each kind explains itself
+- **WHEN** the owner opens Add rule
+- **THEN** Any member of a collection reads "One collection, every member." with "e.g. any CC366: Lynn CC366, Nien CC366 …", and Class, season and edition reads "Every collection of a class, for the members you pick." with "e.g. Cream02 FCO 3rd: 117Z to 120Z, every member"
 
 #### Scenario: Visitor
 - **WHEN** someone else opens the list
 - **THEN** no Add rule button shows
 
 ### Requirement: Rules strip
-A list holding rules SHALL show a Rules strip between its header and the filter bar: a header with the number of rules and how many objekts they can match, collapsible, and one row per rule with its label, what it skips, its "N can match" and, for the owner, a menu. The filters SHALL NOT hide rules. A rule's objekts SHALL stay out of the objekt grid and its count. A visitor SHALL see the strip without the menu.
+A list holding rules SHALL show a Rules strip between its header and the filter bar: a header with the number of rules and how many objekts they can match, collapsible, and one row per rule with its label, what it skips, its "N can match" and, for the owner, a menu. The filters SHALL NOT hide rules. A rule's objekts SHALL stay out of the objekt grid and its count. A visitor SHALL see the strip without the menu, and a See the objekts button on each row in its place. What a rule skips is the list owner's holdings, so only the owner SHALL read "skips the N you own" and "includes ones you own"; everyone else, signed out too, SHALL read "skips the N they own" and "includes ones they own".
 
 #### Scenario: Strip
 - **WHEN** "binary hunt" holds two rules matching 78 and 21 objekts and five objekts added by hand
@@ -397,12 +405,20 @@ A list holding rules SHALL show a Rules strip between its header and the filter 
 - **WHEN** a list holds no rules
 - **THEN** no Rules strip shows
 
+#### Scenario: A visitor reads whose they are
+- **WHEN** a signed-out visitor opens "binary hunt", whose rule skips 2 objekts its owner holds
+- **THEN** the row reads "skips the 2 they own" and offers See the objekts, and opening it notes "Faded = they own it"
+
 ### Requirement: Rule menu
-Each rule row's menu SHALL offer See the objekts, Edit rule, Turn into objekts and Delete rule. See the objekts SHALL expand the row into the rule's collections, one tab each with the number it can match, showing every member, the ones it skips faded. Turn into objekts SHALL replace the rule with the objekts it wants now, as objekts on the list.
+Each rule row's menu SHALL offer See the objekts, Edit rule, Turn into objekts and Delete rule. See the objekts SHALL expand the row into one scrolling grid of every objekt the rule describes, ordered by collection number then season, each card labelled with its member and collection, the ones it skips faded, with no tabs. When the rule spans several collections holding three or more cards each on average, each collection SHALL get a heading of its season and number with what it can match ("cc117 · 19 can match"); one collection, or one or two chosen members a collection, SHALL stay one flat grid. An any-season rule SHALL keep the same number of different seasons apart. Turn into objekts SHALL replace the rule with the objekts it wants now, as objekts on the list.
 
 #### Scenario: See the objekts
 - **WHEN** the owner opens See the 96 objekts on the 3rd edition rule, holding 5 of cc117
-- **THEN** the row expands with tabs cc117 · 19, cc118, cc119 and cc120, and cc117 shows 24 members with those 5 faded
+- **THEN** the row expands into one grid headed cc117 · 19 can match, cc118, cc119 and cc120, with those 5 faded and no tabs
+
+#### Scenario: Chosen member reads flat
+- **WHEN** the owner opens See the objekts on "any season · FCO · NaKyoung", one card a collection
+- **THEN** the objekts show as one flat grid with no headings
 
 #### Scenario: Turn into objekts
 - **WHEN** the owner turns that rule into objekts

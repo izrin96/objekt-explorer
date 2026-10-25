@@ -1,7 +1,7 @@
 import {
   type ListRuleDef,
   type ListRuleInput,
-  RULE_EDITION_CLASSES,
+  ruleHasEditions,
   RULE_EDITIONS,
   RULE_MAX_OBJEKTS,
   ruleDef,
@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioPrimitive } from "@/components/ui/radio-group";
 import {
   Select,
   SelectItem,
@@ -34,9 +35,9 @@ import { Switch } from "@/components/ui/switch";
 import { toastManager } from "@/components/ui/toast";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import { FilterToggle } from "@/features/filters/filter-toggle";
-import { SegmentedChoice } from "@/features/offers/segmented-choice";
 import { client, orpc } from "@/lib/orpc";
 import { refusalText } from "@/lib/refusal";
+import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import { RULE_KEYS } from "./queries";
@@ -77,7 +78,7 @@ function toInput(draft: Draft): ListRuleInput | null {
     artist,
     season: draft.season,
     class: draft.cls,
-    editions: RULE_EDITION_CLASSES.includes(draft.cls as never) ? draft.editions : [],
+    editions: ruleHasEditions(draft.artist, draft.cls) ? draft.editions : [],
     members: draft.members,
     skipOwned: draft.skipOwned,
   };
@@ -100,6 +101,20 @@ function fromRule(rule: ListRuleDef, artists: ValidArtist[]): Draft {
 const toggle = <T,>(items: T[], item: T) =>
   items.includes(item) ? items.filter((i) => i !== item) : [...items, item];
 
+const RULE_KINDS = [
+  {
+    value: "collection",
+    label: m.rule_kind_collection,
+    desc: m.rule_kind_collection_desc,
+    example: m.rule_kind_collection_example,
+  },
+  {
+    value: "set",
+    label: m.rule_kind_set,
+    desc: m.rule_kind_set_desc,
+    example: m.rule_kind_set_example,
+  },
+] as const;
 /**
  * Add rule, or Edit rule when `rule` is given. The live line asks the server what the rule
  * covers for the caller's own holdings, so the counts match what saving would do.
@@ -175,11 +190,16 @@ function RuleForm({
   });
   const set = (patch: Partial<Draft>) => setDraft((current) => ({ ...current, ...patch }));
 
-  const seasons = filterData?.seasonsMap.find((s) => s.artistId === draft.artist)?.seasons ?? [];
+  const seasonsOf = (artist: string) =>
+    filterData?.seasonsMap.find((s) => s.artistId === artist)?.seasons ?? [];
+  const seasons = seasonsOf(draft.artist);
+  // a collection rule has no Any season, so an empty season there falls back to the newest
+  const seasonFor = (kind: Draft["kind"], artist: string, season: string | null) =>
+    kind === "collection" && season === null ? (seasonsOf(artist).at(-1) ?? null) : season;
   const classes = filterData?.classesMap.find((c) => c.artistId === draft.artist)?.classes ?? [];
   const members =
     artists.find((a) => a.id === draft.artist)?.artistMembers.map((member) => member.name) ?? [];
-  const hasEditions = draft.kind === "set" && RULE_EDITION_CLASSES.includes(draft.cls as never);
+  const hasEditions = draft.kind === "set" && ruleHasEditions(draft.artist, draft.cls);
 
   const input = toInput(draft);
   const deferred = useDeferredValue(input);
@@ -224,16 +244,37 @@ function RuleForm({
         <DialogDescription>{m.rule_add_desc({ list: listName })}</DialogDescription>
       </DialogHeader>
       <DialogPanel className="flex flex-col gap-4">
-        <SegmentedChoice
-          label={m.rule_kind_label()}
+        {/* each kind says what it takes and shows one, since the two read alike by name */}
+        <RadioGroup
+          aria-label={m.rule_kind_label()}
           value={draft.kind}
-          onChange={(kind) => set({ kind })}
-          options={[
-            { value: "collection", label: m.rule_kind_collection() },
-            { value: "set", label: m.rule_kind_set() },
-          ]}
-          className="max-w-full flex-wrap"
-        />
+          onValueChange={(next) => {
+            const kind = RULE_KINDS.find((item) => item.value === next)?.value;
+            if (kind) set({ kind, season: seasonFor(kind, draft.artist, draft.season) });
+          }}
+          className="gap-2"
+        >
+          {RULE_KINDS.map((item) => (
+            <RadioPrimitive.Root
+              key={item.value}
+              value={item.value}
+              aria-describedby={`${id}-kind-${item.value}`}
+              className={cn(
+                "focus-visible:ring-ring focus-visible:ring-offset-background hover:bg-muted flex w-full cursor-pointer flex-col items-start gap-1 rounded-lg border p-3 text-start outline-none focus-visible:ring-2 focus-visible:ring-offset-1",
+                "data-checked:border-accent-solid data-checked:bg-accent",
+              )}
+            >
+              <span className="text-sm font-medium">{item.label()}</span>
+              <span
+                id={`${id}-kind-${item.value}`}
+                className="text-muted-foreground flex flex-col gap-0.5 text-xs text-pretty"
+              >
+                <span>{item.desc()}</span>
+                <span className="font-mono">{item.example()}</span>
+              </span>
+            </RadioPrimitive.Root>
+          ))}
+        </RadioGroup>
 
         {artists.length > 1 ? (
           <RuleSelect
@@ -244,7 +285,7 @@ function RuleForm({
             onChange={(artist) =>
               set({
                 artist: artist as ValidArtist,
-                season: null,
+                season: seasonFor(draft.kind, artist, null),
                 members: [],
                 prio: [],
               })

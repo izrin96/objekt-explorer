@@ -6,6 +6,7 @@ import {
   listRuleInputSchema,
   type RuleCollection,
   ruleDef,
+  ruleHasEditions,
   ruleLabel,
   ruleLine,
   ruleProblem,
@@ -150,5 +151,22 @@ describe("labels", () => {
     const rule = parse({ ...third, prio: ["Lynn"] });
     expect(rule.prio).toEqual([]);
     expect(anyCc366.members).toEqual([]);
+  });
+});
+
+describe("editions", () => {
+  test("First, Special and Motion have them, except on idntt", () => {
+    expect(ruleHasEditions("triples", "First")).toBe(true);
+    expect(ruleHasEditions("artms", "Motion")).toBe(true);
+    expect(ruleHasEditions("triples", "Double")).toBe(false);
+    expect(ruleHasEditions("idntt", "First")).toBe(false);
+    expect(ruleHasEditions("idntt", "Special")).toBe(false);
+  });
+
+  test("a rule keeps only editions its class can have", () => {
+    const set = { kind: "set", season: "Cream02", class: "First", editions: [3, 1, 3] };
+    expect(parse({ ...set, artist: "triples" }).editions).toEqual([1, 3]);
+    expect(parse({ ...set, artist: "idntt" }).editions).toEqual([]);
+    expect(parse({ ...set, artist: "triples", class: "Double" }).editions).toEqual([]);
   });
 });

@@ -11,6 +11,10 @@ const PRIO_MAX = 6;
 export const RULE_EDITION_CLASSES = ["First", "Special", "Motion"] as const;
 export const RULE_EDITIONS = [1, 2, 3] as const;
 
+/** Whether a rule can pick editions: idntt numbers its collections with none (`getCollectionEdition`). */
+export const ruleHasEditions = (artist: string, cls: string | null) =>
+  artist.toLowerCase() !== "idntt" && RULE_EDITION_CLASSES.some((edition) => edition === cls);
+
 const memberList = z.array(z.string().min(1).max(40)).max(40);
 
 const collectionRuleSchema = z.object({
@@ -76,7 +80,10 @@ export function ruleDef(input: ListRuleInput): ListRuleDef {
     season: input.season,
     collectionNo: null,
     class: input.class,
-    editions: [...new Set(input.editions)].toSorted((a, b) => a - b),
+    // an edition the class can't have would match nothing, so it is dropped rather than kept
+    editions: ruleHasEditions(input.artist, input.class)
+      ? [...new Set(input.editions)].toSorted((a, b) => a - b)
+      : [],
     members: [...new Set(input.members)],
     prio: [],
     skipOwned: input.skipOwned,

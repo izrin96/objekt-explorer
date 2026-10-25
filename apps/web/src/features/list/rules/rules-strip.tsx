@@ -21,7 +21,6 @@ import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Menu, MenuItem, MenuPopup, MenuSeparator, MenuTrigger } from "@/components/ui/menu";
 import { Spinner } from "@/components/ui/spinner";
-import { Tabs, TabsList, TabsPanel, TabsTab } from "@/components/ui/tabs";
 import { toastManager } from "@/components/ui/toast";
 import { ObjektCard } from "@/features/objekt/objekt-card";
 import { client, orpc } from "@/lib/orpc";
@@ -33,6 +32,7 @@ import { useListTarget } from "../list-provider";
 import { useListOwned } from "../use-list-owned";
 import { listRulesOptions, RULE_KEYS, ruleObjektsOptions } from "./queries";
 import { RuleDialog } from "./rule-dialog";
+import { showsHeadings } from "./rule-layout";
 import { ruleText, shortNo } from "./words";
 
 type Rule = Awaited<ReturnType<typeof client.list.rules>>[number];
@@ -92,9 +92,14 @@ function RuleRow({ rule }: { rule: Rule }) {
     rule.prio.length > 0 ? m.rule_prio_line({ members: rule.prio.join(", ") }) : null,
     rule.skipOwned
       ? rule.owned > 0
-        ? m.rule_skips_owned({ count: rule.owned })
+        ? // the count is the list owner's holdings, so only the owner reads "you"
+          isOwner
+          ? m.rule_skips_owned({ count: rule.owned })
+          : m.rule_skips_owned_theirs({ count: rule.owned })
         : null
-      : m.rule_includes_owned(),
+      : isOwner
+        ? m.rule_includes_owned()
+        : m.rule_includes_owned_theirs(),
   ].filter((part) => part !== null);
 
   return (
@@ -110,6 +115,17 @@ function RuleRow({ rule }: { rule: Rule }) {
           <span className="font-mono text-sm font-semibold tabular-nums">{rule.canMatch}</span>
           <span className="text-muted-foreground text-xs">{m.rule_can_match_label()}</span>
         </span>
+        {/* the owner reaches it through the menu, beside the rule's edits */}
+        {!isOwner ? (
+          <Button
+            variant="outline"
+            size="sm"
+            aria-expanded={expanded}
+            onClick={() => setExpanded((value) => !value)}
+          >
+            {expanded ? m.rule_hide_objekts() : m.rule_see_objekts({ count: rule.covers })}
+          </Button>
+        ) : null}
         {isOwner ? (
           <Menu>
             <MenuTrigger
@@ -145,7 +161,7 @@ function RuleRow({ rule }: { rule: Rule }) {
           </Menu>
         ) : null}
       </div>
-      {expanded ? <RuleObjekts slug={list.slug} ruleId={rule.id} /> : null}
+      {expanded ? <RuleObjekts slug={list.slug} ruleId={rule.id} owner={isOwner} /> : null}
       {isOwner ? (
         <>
           <RuleDialog
@@ -167,8 +183,8 @@ function RuleRow({ rule }: { rule: Rule }) {
   );
 }
 
-/** See the objekts: one tab per collection number, the held ones faded. */
-function RuleObjekts({ slug, ruleId }: { slug: string; ruleId: number }) {
+/** See the objekts: one grid, the held ones faded, with a heading per collection where those help. */
+function RuleObjekts({ slug, ruleId, owner }: { slug: string; ruleId: number; owner: boolean }) {
   const { data, isPending, error } = useQuery(ruleObjektsOptions(slug, ruleId));
 
   if (isPending) {
@@ -181,40 +197,52 @@ function RuleObjekts({ slug, ruleId }: { slug: string; ruleId: number }) {
   if (error) {
     return <p className="text-destructive-foreground px-3 pb-3 text-sm">{refusalText(error)}</p>;
   }
-  const first = data.groups[0];
-  if (!first) {
+  if (data.groups.length === 0) {
     return <p className="text-muted-foreground px-3 pb-3 text-sm">{m.rule_no_collections()}</p>;
   }
+  const headed = showsHeadings(data.groups);
 
   return (
     <div className="flex flex-col gap-2 px-3 pb-3">
-      <Tabs defaultValue={first.collectionNo}>
-        <div className="overflow-x-auto overflow-y-hidden" data-scroll-x>
-          <TabsList variant="underline">
-            {data.groups.map((group) => (
-              <TabsTab key={group.collectionNo} value={group.collectionNo} className="font-mono">
-                {m.rule_tab({
-                  no: shortNo(group.objekts[0]?.season ?? null, group.collectionNo),
-                  count: group.canMatch,
-                })}
-              </TabsTab>
-            ))}
-          </TabsList>
-        </div>
-        {data.groups.map((group) => (
-          <TabsPanel key={group.collectionNo} value={group.collectionNo}>
-            <ul className="grid grid-cols-4 gap-2 pt-2 sm:grid-cols-6 lg:grid-cols-8">
-              {group.objekts.map((objekt) => (
-                <li key={objekt.slug}>
-                  <ObjektCard objekt={objekt} faded={!objekt.wanted} hideLabel={false} />
-                </li>
-              ))}
-            </ul>
-          </TabsPanel>
-        ))}
-      </Tabs>
-      <p className="text-muted-foreground text-xs">{m.rule_faded_note()}</p>
+      {headed ? (
+        data.groups.map((group) => (
+          <section
+            key={`${group.season} ${group.collectionNo}`}
+            className="flex flex-col gap-2 border-t pt-2 first:border-t-0 first:pt-0"
+          >
+            <h4 className="text-muted-foreground text-xs">
+              <span className="text-foreground font-mono font-semibold">
+                {shortNo(group.season, group.collectionNo)}
+              </span>
+              {" · "}
+              {m.rule_can_match({ count: group.canMatch })}
+            </h4>
+            <RuleObjektGrid objekts={group.objekts} />
+          </section>
+        ))
+      ) : (
+        <RuleObjektGrid objekts={data.groups.flatMap((group) => group.objekts)} />
+      )}
+      <p className="text-muted-foreground text-xs">
+        {owner ? m.rule_faded_note() : m.rule_faded_note_theirs()}
+      </p>
     </div>
+  );
+}
+
+type RuleObjekt = Awaited<
+  ReturnType<typeof client.list.ruleObjekts>
+>["groups"][number]["objekts"][number];
+
+function RuleObjektGrid({ objekts }: { objekts: readonly RuleObjekt[] }) {
+  return (
+    <ul className="grid grid-cols-4 gap-2 sm:grid-cols-6 lg:grid-cols-8">
+      {objekts.map((objekt) => (
+        <li key={objekt.slug}>
+          <ObjektCard objekt={objekt} faded={!objekt.wanted} hideLabel={false} />
+        </li>
+      ))}
+    </ul>
   );
 }
 
