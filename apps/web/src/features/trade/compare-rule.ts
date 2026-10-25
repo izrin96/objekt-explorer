@@ -82,3 +82,35 @@ export function comparedList(
 ) {
   return tradeLists.find((item) => item.slug === slug && canCompare(item, tradeLists, scope));
 }
+
+export type CompareOption =
+  | { kind: "pair"; have: TradeList; want: TradeList }
+  | { kind: "one"; list: TradeList };
+
+/**
+ * Compare with's options: a linked pair is one option, since naming either half compares both,
+ * placed where its first list comes; a list with no partner on Trade stands alone.
+ */
+export function compareOptions(tradeLists: readonly TradeList[]): CompareOption[] {
+  const options: CompareOption[] = [];
+  const placed = new Set<number>();
+  for (const item of tradeLists) {
+    if (placed.has(item.id)) continue;
+    placed.add(item.id);
+    const { paired } = pickOf(item, tradeLists);
+    if (!paired || placed.has(paired.id)) {
+      options.push({ kind: "one", list: item });
+      continue;
+    }
+    placed.add(paired.id);
+    const [have, want] = item.listType === "want" ? [paired, item] : [item, paired];
+    options.push({ kind: "pair", have, want });
+  }
+  return options;
+}
+
+/** The slug that stands for a list in Compare with: a pair's have side for either half. */
+export function compareValue(list: TradeList, tradeLists: readonly TradeList[]) {
+  const { paired } = pickOf(list, tradeLists);
+  return paired && list.listType === "want" ? paired.slug : list.slug;
+}

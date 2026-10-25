@@ -2,7 +2,10 @@ import { describe, expect, test } from "bun:test";
 
 import {
   canCompare,
+  type CompareOption,
+  compareOptions,
   compareRefusal,
+  compareValue,
   comparedList,
   type TradeList,
   tradeListsOf,
@@ -89,5 +92,42 @@ describe("tradeListsOf", () => {
       { ...base, id: 3, slug: "g", listType: "general" },
     ]);
     expect(out).toEqual([{ id: 1, slug: "w", name: "W", listType: "want", linkedListId: 2 }]);
+  });
+});
+
+describe("compareOptions", () => {
+  const named = (options: CompareOption[]) =>
+    options.map((option) =>
+      option.kind === "pair" ? `${option.have.slug}+${option.want.slug}` : option.list.slug,
+    );
+
+  test("a linked pair is one option, where its first list comes", () => {
+    expect(named(compareOptions(lists))).toEqual([
+      "have-alone",
+      "sale",
+      "want-alone",
+      "pair-have+pair-want",
+      "sale-pair-sale+sale-pair-want",
+    ]);
+  });
+
+  test("a pair names its have side first, whichever half comes first", () => {
+    expect(named(compareOptions([pair[1]!, have, pair[0]!]))).toEqual([
+      "pair-have+pair-want",
+      "have-alone",
+    ]);
+  });
+
+  test("a list whose partner is not on Trade stands alone", () => {
+    expect(named(compareOptions([pair[1]!]))).toEqual(["pair-want"]);
+  });
+});
+
+describe("compareValue", () => {
+  test("either half of a pair stands for the pair by its have side", () => {
+    expect(compareValue(pair[1]!, lists)).toBe("pair-have");
+    expect(compareValue(pair[0]!, lists)).toBe("pair-have");
+    expect(compareValue(salePair[1]!, lists)).toBe("sale-pair-sale");
+    expect(compareValue(want, lists)).toBe("want-alone");
   });
 });

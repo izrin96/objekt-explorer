@@ -733,7 +733,7 @@ Each section SHALL open with a heading, Can swap (for Mutual) or One way, with n
 - N SHALL be in monospace, and the accessible name SHALL include it;
 - N MAY be up to 5 minutes behind the people Mutual lists.
 
-**Compare with.** For you SHALL always show a Compare with control. It offers All my lists and each of the viewer's have, sale and want lists that take part in Trade, each option tagged with its list type. It SHALL live in the URL as `list`, a list slug.
+**Compare with.** For you SHALL always show a Compare with control. It offers All my lists and each of the viewer's have, sale and want lists that take part in Trade, each option tagged with its list type. A linked pair SHALL be one option naming both, its have or sale list first ("spares ⇄ binary hunt"), since naming either half compares the two; it stands for the pair whichever half `list` names, and picking it names the have or sale list. It SHALL live in the URL as `list`, a list slug.
 - A named list SHALL compare together with its linked list, both ways.
 - A list with no link (a sale list, or a have or want list whose linked list doesn't take part) SHALL compare one way. It SHALL be offered under Any and disabled under Mutual, and switching to Mutual while it is selected SHALL reset Compare with to All my lists.
 - A disabled option SHALL carry the short muted reason "Compares one way".

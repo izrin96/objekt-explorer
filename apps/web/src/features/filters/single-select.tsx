@@ -1,4 +1,5 @@
 import { CaretDownIcon } from "@phosphor-icons/react";
+import type { ReactNode } from "react";
 
 import { Select, SelectItem, SelectPopup, SelectPrimitive } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
@@ -7,7 +8,9 @@ import { toolbarTrigger } from "./toolbar-trigger";
 
 type SingleOption<T extends string> = {
   value: T;
-  label: string;
+  label: ReactNode;
+  /** the plain text of a `label` that is more than text: the trigger shows it, and typing finds it */
+  text?: string;
   disabled?: boolean;
   /** a short muted line under the label, such as why the option is disabled */
   hint?: string;
@@ -51,7 +54,7 @@ export function SingleSelect<T extends string>({
         <span>
           {label}
           {(active || showValue) && (
-            <span className="text-muted-foreground"> · {picked?.label}</span>
+            <span className="text-muted-foreground"> · {picked?.text ?? picked?.label}</span>
           )}
         </span>
         <SelectPrimitive.Icon>
@@ -60,7 +63,7 @@ export function SingleSelect<T extends string>({
       </SelectPrimitive.Trigger>
       <SelectPopup alignItemWithTrigger={false} className="min-w-40">
         {options.map((o) => (
-          <SelectItem key={o.value} value={o.value} disabled={o.disabled}>
+          <SelectItem key={o.value} value={o.value} label={o.text} disabled={o.disabled}>
             {o.hint ? (
               <span className="flex flex-col">
                 {o.label}

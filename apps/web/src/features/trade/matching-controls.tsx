@@ -3,19 +3,21 @@ import { useQuery } from "@tanstack/react-query";
 
 import { Button } from "@/components/ui/button";
 import { SingleSelect } from "@/features/filters/single-select";
-import { LIST_TYPE_LABEL } from "@/features/list/list-type-badge";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import {
   type CompareRefusal,
+  compareOptions,
   compareRefusal,
+  compareValue,
   comparedList,
   pickOf,
   scopeOf,
   type TradeList,
 } from "./compare-rule";
 import { ALL_LISTS, COMPARE } from "./compare-with";
+import { ListRoleBadge } from "./list-role-badge";
 import { MatchHelp } from "./match-help";
 import { mutualCountOptions } from "./queries";
 
@@ -103,20 +105,38 @@ export function MatchingControls(props: MatchingProps) {
           label={m.trade_list_label()}
           options={[
             { value: ALL_LISTS, label: COMPARE.allLabel() },
-            ...tradeLists.map((item) => {
+            ...compareOptions(tradeLists).map((choice) => {
+              const item = choice.kind === "pair" ? choice.have : choice.list;
               const refusal = compareRefusal(item, tradeLists, scope);
               return {
                 value: item.slug,
-                label: m.trade_list_option({
-                  name: item.name,
-                  type: LIST_TYPE_LABEL[item.listType](),
-                }),
+                label:
+                  choice.kind === "pair" ? (
+                    <span className="flex flex-wrap items-center gap-1.5">
+                      <ListRoleBadge type={choice.have.listType} />
+                      {choice.have.name}
+                      <span aria-hidden className="text-muted-foreground">
+                        ⇄
+                      </span>
+                      <ListRoleBadge type={choice.want.listType} />
+                      {choice.want.name}
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1.5">
+                      <ListRoleBadge type={item.listType} />
+                      {item.name}
+                    </span>
+                  ),
+                text:
+                  choice.kind === "pair"
+                    ? m.trade_list_pair_option({ have: choice.have.name, want: choice.want.name })
+                    : item.name,
                 disabled: refusal !== null,
                 hint: refusal ? REFUSAL_TEXT[refusal]() : undefined,
               };
             }),
           ]}
-          value={selected?.slug ?? ALL_LISTS}
+          value={selected ? compareValue(selected, tradeLists) : ALL_LISTS}
           defaultValue={ALL_LISTS}
           showValue
           onChange={(value) => onChange({ list: value === ALL_LISTS ? undefined : value })}

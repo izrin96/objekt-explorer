@@ -154,7 +154,7 @@
   "trade_list_label": "비교할 목록",
   "trade_mutual_only": "교환 가능",
   "trade_list_all": "내 모든 목록",
-  "trade_list_option": "{name} ({type})",
+  "trade_list_pair_option": "{have} ⇄ {want}",
   "trade_compare_pair": "보유: {have}. 희망: {want}.",
   "trade_compare_have_alone": "{list}의 오브젝트를 원하는 사람을 표시합니다.",
   "trade_compare_want_alone": "{list}의 오브젝트를 가진 사람을 표시합니다.",

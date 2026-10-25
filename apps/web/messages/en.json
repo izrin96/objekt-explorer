@@ -154,7 +154,7 @@
   "trade_list_label": "Compare with",
   "trade_mutual_only": "Can swap",
   "trade_list_all": "All my lists",
-  "trade_list_option": "{name} ({type})",
+  "trade_list_pair_option": "{have} ⇄ {want}",
   "trade_compare_pair": "What you have: {have}. What you want: {want}.",
   "trade_compare_have_alone": "Showing who wants what's on {list}.",
   "trade_compare_want_alone": "Showing who has what's on {list}.",
