@@ -103,15 +103,15 @@ describe("expandRule", () => {
 });
 
 describe("ruleProblem", () => {
-  test("too wide past 500, counted before owned ones are skipped", () => {
+  test("too wide past 1500, counted before owned ones are skipped", () => {
     const many = Array.from(
-      { length: 501 },
+      { length: 1501 },
       (_, i) => cols("Cream02", `${300 + i}Z`, "Double", ["Lynn"])[0]!,
     );
     const rule = parse({ kind: "set", artist: "triples", season: "Cream02", class: "Double" });
     const held = new Set(many.slice(0, 10).map((c) => c.slug));
     expect(ruleProblem(rule, expandRule(rule, many, held))).toBe("too_wide");
-    expect(ruleProblem(rule, expandRule(rule, many.slice(0, 500), held))).toBeNull();
+    expect(ruleProblem(rule, expandRule(rule, many.slice(0, 1500), held))).toBeNull();
   });
 
   test("a rule that describes no collection says so, whatever skip owned is", () => {

@@ -1916,7 +1916,7 @@
   "rule_delete_title": "Delete rule?",
   "rule_delete_desc": "the rule and the objekts it wants leave the list. Objekts you added yourself stay.",
   "api_errors_list_rule_not_want": "Only want lists hold rules",
-  "api_errors_list_rule_too_wide": "A rule can cover up to 500 objekts. Pick a season or an edition to narrow it.",
+  "api_errors_list_rule_too_wide": "A rule can cover up to 1,500 objekts. Pick a season or an edition to narrow it.",
   "api_errors_list_rule_nothing_to_match": "You own everything this rule describes. Turn off Skip ones I own to keep it.",
   "api_errors_list_rule_limit": "A list holds up to 20 rules",
   "trade_rule_tag": "RULE",

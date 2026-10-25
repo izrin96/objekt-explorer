@@ -5,7 +5,7 @@ import * as z from "zod";
 import { indexedObjektSchema } from "./common/objekt";
 
 /** A rule covers at most this many objekts, counted before Skip ones I own. */
-export const RULE_MAX_OBJEKTS = 500;
+export const RULE_MAX_OBJEKTS = 1500;
 export const RULE_MAX_PER_LIST = 20;
 const PRIO_MAX = 6;
 

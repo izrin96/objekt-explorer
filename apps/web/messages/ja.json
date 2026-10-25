@@ -1916,7 +1916,7 @@
   "rule_delete_title": "ルールを削除しますか?",
   "rule_delete_desc": "ルールとその対象のオブジェクトがリストから外れます。自分で追加したオブジェクトは残ります。",
   "api_errors_list_rule_not_want": "ルールは希望リストにだけ追加できます",
-  "api_errors_list_rule_too_wide": "1つのルールはオブジェクト500個までです。シーズンかエディションで絞り込んでください。",
+  "api_errors_list_rule_too_wide": "1つのルールはオブジェクト1,500個までです。シーズンかエディションで絞り込んでください。",
   "api_errors_list_rule_nothing_to_match": "このルールの対象をすべて所持しています。残すには「持っているものを除く」をオフにしてください。",
   "api_errors_list_rule_limit": "1つのリストのルールは20個までです",
   "trade_rule_tag": "ルール",
