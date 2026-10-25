@@ -402,6 +402,10 @@ The owner of a want list SHALL see an Add rule button in the list header, beside
 - **WHEN** someone else opens the list
 - **THEN** no Add rule button shows
 
+#### Scenario: Changing the artist
+- **WHEN** the owner has typed collection number 366 under tripleS and switches the artist to ARTMS
+- **THEN** the collection number is cleared, the season moves to ARTMS's newest, the class stays if ARTMS has it and otherwise becomes ARTMS's first class, and the editions, members and priority members are cleared, so the dialog never carries over a number or class the new artist doesn't have
+
 ### Requirement: Rules strip
 A list holding rules SHALL show a Rules strip between its header and the filter bar: a header with the number of rules and how many objekts they can match, collapsible, and one row per rule with its label, what it skips, its "N can match" and, for the owner, a menu. The filters SHALL NOT hide rules. A rule's objekts SHALL stay out of the objekt grid and its count. A visitor SHALL see the strip without the menu, and a See the objekts button on each row in its place. What a rule skips is the list owner's holdings, so only the owner SHALL read "skips the N you own" and "includes ones you own"; everyone else, signed out too, SHALL read "skips the N they own" and "includes ones they own".
 

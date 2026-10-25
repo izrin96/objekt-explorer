@@ -196,7 +196,9 @@ function RuleForm({
   // a collection rule has no Any season, so an empty season there falls back to the newest
   const seasonFor = (kind: Draft["kind"], artist: string, season: string | null) =>
     kind === "collection" && season === null ? (seasonsOf(artist).at(-1) ?? null) : season;
-  const classes = filterData?.classesMap.find((c) => c.artistId === draft.artist)?.classes ?? [];
+  const classesOf = (artist: string) =>
+    filterData?.classesMap.find((c) => c.artistId === artist)?.classes ?? [];
+  const classes = classesOf(draft.artist);
   const members =
     artists.find((a) => a.id === draft.artist)?.artistMembers.map((member) => member.name) ?? [];
   const hasEditions = draft.kind === "set" && ruleHasEditions(draft.artist, draft.cls);
@@ -282,14 +284,19 @@ function RuleForm({
             label={m.rule_artist()}
             value={draft.artist}
             options={artists.map((a) => ({ value: a.id, label: a.title ?? a.id }))}
-            onChange={(artist) =>
+            onChange={(artist) => {
+              // a number, class or edition of one artist rarely exists for another
+              const next = classesOf(artist);
               set({
                 artist: artist as ValidArtist,
                 season: seasonFor(draft.kind, artist, null),
+                collectionNo: "",
+                cls: next.includes(draft.cls) ? draft.cls : (next[0] ?? draft.cls),
+                editions: [],
                 members: [],
                 prio: [],
-              })
-            }
+              });
+            }}
           />
         ) : null}
 
