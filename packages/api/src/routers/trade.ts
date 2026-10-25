@@ -29,6 +29,7 @@ import {
   bumpPerson,
   collectionPostCounts,
   fetchListMatches,
+  fetchMarketMatches,
   fetchMyPosts,
   fetchSideItems,
 } from "../services/trade-feed";
@@ -112,6 +113,12 @@ export const tradeRouter = {
       await limitFeed(context.session.user.id, context.headers);
       return fetchListMatches(context.session.user.id, listId);
     }),
+
+  /** Market's Show my matches: which collections the viewer's want lists open to buying hold. */
+  marketMatches: authed.handler(async ({ context }) => {
+    await limitFeed(context.session.user.id, context.headers);
+    return fetchMarketMatches(context.session.user.id);
+  }),
 
   bump: authed.handler(async ({ context: { session } }) => bumpPerson(session.user.id)),
 

@@ -277,7 +277,7 @@ function ListEntries() {
           <>
             {matchable ? (
               <ShowMyMatches
-                list={list}
+                matching={list.listType === "want" ? "have" : "want"}
                 on={showMatches}
                 onChange={setShowMatches}
                 count={matches.slugs?.size ?? null}

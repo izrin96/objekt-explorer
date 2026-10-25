@@ -845,6 +845,7 @@
   "market_empty_hint": "현재 필터에 맞는 판매 등록이 없습니다. 필터를 넓히거나 모두 해제하세요.",
   "market_compare_label": "미보유만 보기",
   "market_compare_empty": "이 프로필은 판매 중인 오브젝트를 모두 가지고 있습니다.",
+  "market_matches_empty_hint": "판매 중인 오브젝트 중 구매를 받는 희망 목록에 있는 것이 없거나, 필터 후 남은 것이 없습니다.",
   "activity_empty_hint": "현재 필터에 맞는 민팅, 전송, 스핀 기록이 없습니다.",
   "activity_end": "활동의 끝",
   "profile_stats_owned": "보유 오브젝트",

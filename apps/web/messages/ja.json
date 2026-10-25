@@ -845,6 +845,7 @@
   "market_empty_hint": "現在のフィルターに合う出品はありません。条件を広げるか、すべてクリアしてください。",
   "market_compare_label": "未所持のみ表示",
   "market_compare_empty": "このプロフィールは出品中のObjektをすべて所有しています。",
+  "market_matches_empty_hint": "出品中のObjektのうち購入を受け付ける希望リストにあるものがないか、フィルター後に残っていません。",
   "activity_empty_hint": "現在のフィルターに合うミント・転送・スピンはありません。",
   "activity_end": "アクティビティはここまでです",
   "profile_stats_owned": "所有Objekt",

@@ -21,9 +21,12 @@ const DEFAULT_MARKET_SORT = "listedAt";
  * joined server-side, so the cached catalogue is merged with the per-collection
  * listing aggregate by slug. Filtering runs over every row, so it follows a
  * deferred copy of the filters. `ownedSlugs` drops what a compared profile
- * already holds.
+ * already holds; `wanted`, Show my matches, keeps only what the viewer's want lists hold.
  */
-export function useMarketObjekts(ownedSlugs?: ReadonlySet<string>) {
+export function useMarketObjekts(
+  ownedSlugs?: ReadonlySet<string>,
+  wanted?: Readonly<Record<string, readonly number[]>>,
+) {
   const { selectedArtistIds } = useCosmoArtist();
   const filters = useCanonicalFilters();
   const deferredFilters = useDeferredValue(filters);
@@ -50,6 +53,7 @@ export function useMarketObjekts(ownedSlugs?: ReadonlySet<string>) {
     for (const collection of collections) {
       const entry = bySlug.get(collection.slug);
       if (!entry || ownedSlugs?.has(collection.slug)) continue;
+      if (wanted && !Object.hasOwn(wanted, collection.slug)) continue;
       objekts.push({
         ...collection,
         floorPrice: entry.minPrice,
@@ -60,9 +64,15 @@ export function useMarketObjekts(ownedSlugs?: ReadonlySet<string>) {
     }
 
     return objekts;
-  }, [collectionQuery.data, summaryQuery.data, ownedSlugs]);
+  }, [collectionQuery.data, summaryQuery.data, ownedSlugs, wanted]);
 
   const filtered = useMemo(() => filterObjekts(deferredFilters, listed), [deferredFilters, listed]);
+
+  // the want lists behind what is listed, for the count's popover
+  const matchedListIds = useMemo(
+    () => (wanted ? [...new Set(listed.flatMap((objekt) => wanted[objekt.slug] ?? []))] : []),
+    [listed, wanted],
+  );
 
   const marketFilters: FilterSearch = useMemo(
     () => ({ ...deferredFilters, sort: deferredFilters.sort ?? DEFAULT_MARKET_SORT }),
@@ -72,6 +82,7 @@ export function useMarketObjekts(ownedSlugs?: ReadonlySet<string>) {
   return {
     filtered,
     listedCount: listed.length,
+    matchedListIds,
     filters: marketFilters,
     rarityMap,
     totalListings: filtered.reduce((total, objekt) => total + objekt.listingCount, 0),

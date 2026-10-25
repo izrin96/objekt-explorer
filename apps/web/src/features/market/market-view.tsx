@@ -1,6 +1,7 @@
 import { MagnifyingGlassIcon, StorefrontIcon } from "@phosphor-icons/react";
 import type { ValidCustomSort } from "@repo/cosmo/types/common";
 import type { MarketObjekt, ValidObjekt } from "@repo/lib/types/objekt";
+import { useQuery } from "@tanstack/react-query";
 import { useCallback, useMemo, useState } from "react";
 
 import { EmptyState } from "@/components/shared/empty-state";
@@ -17,6 +18,7 @@ import { MemberChips } from "@/features/filters/member-chips";
 import { useFilters, useResetFilters } from "@/features/filters/use-filters";
 import { AddToListProvider } from "@/features/list/add-to-list-dialog";
 import { AddToListAction, AddToListMenuItem } from "@/features/list/add-to-list-menu-item";
+import { ShowMyMatches } from "@/features/list/show-my-matches";
 import { ObjektDrawer } from "@/features/objekt/drawer";
 import { ObjektCard } from "@/features/objekt/objekt-card";
 import { ObjektCardMenu } from "@/features/objekt/objekt-card-menu";
@@ -24,6 +26,7 @@ import { ObjektVirtualGrid } from "@/features/objekt/objekt-virtual-grid";
 import { SelectBar, SelectModeButton } from "@/features/objekt/select-bar";
 import { SkeletonGrid } from "@/features/objekt/skeleton-grid";
 import { useCurrency } from "@/features/settings/use-currency";
+import { marketMatchesOptions } from "@/features/trade/queries";
 import { useCurrentUser } from "@/features/user/hooks";
 import { m } from "@/paraglide/messages";
 import { useClearSelectionOnNavigate, useSelection } from "@/stores/selection";
@@ -53,11 +56,17 @@ export function MarketView() {
   const { compare } = marketCompare;
   const setCompare = useSetCompare();
   const clearCompare = useCallback(() => setCompare(null), [setCompare]);
-  const market = useMarketObjekts(marketCompare.ownedSlugs);
+  const [showMatches, setShowMatches] = useState(false);
+  const matchesOn = !!user && showMatches;
+  const matchesQuery = useQuery(marketMatchesOptions(matchesOn));
+  const wanted = matchesOn ? matchesQuery.data?.want : undefined;
+  const market = useMarketObjekts(marketCompare.ownedSlugs, wanted);
   const { filtered, filters, rarityMap, totalListings } = market;
-  const isPending = market.isPending || marketCompare.isPending;
-  // the banner carries the error; an unfiltered grid under it would read as the result
-  const compareFailed = marketCompare.error !== undefined;
+  const isPending =
+    market.isPending || marketCompare.isPending || (matchesOn && matchesQuery.isPending);
+  // the banner, or Show my matches, carries the error; an unfiltered grid under it would read
+  // as the result
+  const narrowingFailed = marketCompare.error !== undefined || (matchesOn && matchesQuery.isError);
   const { formatUsd } = useCurrency();
   const reset = useResetFilters();
   const floorMin = useFilters((f) => f.floor_min);
@@ -113,7 +122,20 @@ export function MarketView() {
         longTail={LONG_TAIL.market}
         extras={extras}
         actions={
-          user ? <MarketCompareButton activeAddress={marketCompare.activeAddress} /> : undefined
+          user ? (
+            <>
+              <ShowMyMatches
+                matching="want"
+                on={showMatches}
+                onChange={setShowMatches}
+                count={wanted ? market.listedCount : null}
+                listIds={market.matchedListIds}
+                pending={matchesOn && matchesQuery.isPending}
+                error={matchesOn ? matchesQuery.error : null}
+              />
+              <MarketCompareButton activeAddress={marketCompare.activeAddress} />
+            </>
+          ) : undefined
         }
       />
 
@@ -121,7 +143,7 @@ export function MarketView() {
         <CompareBanner compare={compare} onClear={clearCompare} error={marketCompare.error} />
       ) : null}
 
-      {!isPending && !compareFailed && (
+      {!isPending && !narrowingFailed && (
         <div className="flex items-center justify-between gap-2">
           <div className="text-muted-foreground font-mono text-xs">
             <MessageMarkup
@@ -138,8 +160,19 @@ export function MarketView() {
         </div>
       )}
 
-      {compareFailed ? null : isPending ? (
+      {narrowingFailed ? null : isPending ? (
         <SkeletonGrid />
+      ) : wanted && filtered.length === 0 ? (
+        <EmptyState
+          icon={MagnifyingGlassIcon}
+          title={m.list_matches_empty_title()}
+          hint={m.market_matches_empty_hint()}
+          action={
+            <Button variant="outline" size="sm" onClick={() => setShowMatches(false)}>
+              {m.list_matches_show_all()}
+            </Button>
+          }
+        />
       ) : compare !== null && market.listedCount === 0 ? (
         <EmptyState
           icon={MagnifyingGlassIcon}

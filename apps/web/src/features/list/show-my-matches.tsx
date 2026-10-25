@@ -35,10 +35,11 @@ export function useListMatches(list: PublicList, on: boolean) {
 
 /**
  * The toggle, and once it is on the count of what matched, which opens the viewer's lists behind
- * it: on a want list what the viewer has, on a have or sale list what they want.
+ * it: `have` counts what the viewer has (a want list), `want` what they want (a have or sale list,
+ * Market).
  */
 export function ShowMyMatches({
-  list,
+  matching,
   on,
   onChange,
   count,
@@ -46,7 +47,7 @@ export function ShowMyMatches({
   pending,
   error,
 }: {
-  list: PublicList;
+  matching: "have" | "want";
   on: boolean;
   onChange: (on: boolean) => void;
   count: number | null;
@@ -81,7 +82,7 @@ export function ShowMyMatches({
           listIds={listIds}
           className="bg-success/10 text-success-foreground h-6 shrink-0 rounded px-1.5 font-mono text-xs tabular-nums"
         >
-          {list.listType === "want"
+          {matching === "have"
             ? m.trade_list_count_you_have({ count })
             : m.trade_list_count_you_want({ count })}
         </MatchedListsChip>

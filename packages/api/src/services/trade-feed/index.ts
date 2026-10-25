@@ -499,6 +499,15 @@ export async function fetchListMatches(viewerId: string, listId: number) {
   return listMatchesOf(list.listType, list, entries, viewer);
 }
 
+/**
+ * Market's Show my matches: the collections on the viewer's want lists that a listing answers,
+ * those open to buying, as a sale list rings them, with the lists each is on.
+ */
+export async function fetchMarketMatches(viewerId: string) {
+  const viewer = await fetchViewer(viewerId);
+  return { want: Object.fromEntries(viewer.saleWant) as Record<string, number[]> };
+}
+
 async function lastBumpOf(userId: string) {
   const [row] = await db
     .select({ at: sql<string | null>`max(${lists.bumpedAt})::text` })
