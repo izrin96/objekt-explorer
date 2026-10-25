@@ -22,9 +22,8 @@ function isUnhandled(value: unknown): value is Error {
  *
  * @see https://github.com/TanStack/router/issues/7991
  */
-function isClientDisconnect(value: Error): boolean {
-  const { cause } = value;
-  return cause instanceof DOMException && cause.name === "AbortError";
+function isAbort(value: unknown): boolean {
+  return value instanceof DOMException && value.name === "AbortError";
 }
 
 // h3 logs each error a server route or SSR left unhandled here, once, so this sink is also
@@ -32,8 +31,10 @@ function isClientDisconnect(value: Error): boolean {
 const logError = console.error.bind(console);
 console.error = (...args: Array<unknown>) => {
   const [only] = args;
+  // a disconnect's abort also reaches here bare, outside h3's wrapper
+  if (args.length === 1 && isAbort(only)) return;
   if (args.length === 1 && isUnhandled(only)) {
-    if (isClientDisconnect(only)) return;
+    if (isAbort(only.cause)) return;
     captureServerError(only.cause instanceof Error ? only.cause : only);
   }
   logError(...args);

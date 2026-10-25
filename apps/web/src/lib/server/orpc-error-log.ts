@@ -1,5 +1,6 @@
 import { ORPCError, ValidationError } from "@orpc/server";
 import type { StandardHandlerInterceptorOptions } from "@orpc/server/standard";
+import { isExpectedError } from "@repo/lib/error-scrub";
 
 import { captureServerError } from "./error-tracking";
 
@@ -31,6 +32,13 @@ export function logORPCError(error: unknown, request: HandlerRequest) {
     });
     // input is a 400 and skipped; output validation is a 500, a bug in the procedure
     captureServerError(error, { procedure: request.url.pathname });
+    return;
+  }
+
+  // a refusal (a signed-out poll's 401, say) is one line, not a stack with minified source
+  if (isExpectedError(error)) {
+    const { status, code } = error as ORPCError<string, unknown>;
+    console.warn("ORPC refused:", where, status, code);
     return;
   }
 
