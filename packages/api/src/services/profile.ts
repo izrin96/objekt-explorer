@@ -31,7 +31,7 @@ export async function assertProfileOwned(address: string, userId: string) {
 
 async function safeFetchByNickname(identifier: string) {
   return fetchByNickname(identifier).catch((error: FetchError<{ error: { code: string } }>) => {
-    if (error.data?.error.code === "USER_NOT_FOUND") {
+    if (error.data?.error?.code === "USER_NOT_FOUND") {
       return null;
     }
     return undefined;
