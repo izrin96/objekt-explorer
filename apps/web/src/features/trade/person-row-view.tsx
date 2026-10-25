@@ -1,33 +1,25 @@
-import {
-  ArrowDownIcon,
-  ArrowsLeftRightIcon,
-  ArrowUpIcon,
-  EyeSlashIcon,
-  XIcon,
-} from "@phosphor-icons/react";
+import { EyeSlashIcon, XIcon } from "@phosphor-icons/react";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { memo } from "react";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Frame, FramePanel } from "@/components/ui/frame";
 import { MenuItem } from "@/components/ui/menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SafetyMenu } from "@/features/moderation/safety-menu";
 import { relativeTime } from "@/lib/time";
-import { toneChip } from "@/lib/tone";
-import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import { useHideWithUndo } from "./actions";
 import type { Surface } from "./browse-search";
+import { MatchChip, MatchCounts } from "./match-summary";
 import {
   leadPost,
   listCount,
-  type MatchBand,
   matchBand,
   matchedListIds,
   orderPosts,
+  swapThroughRules,
 } from "./person-row";
 import { EmptySide, isEmptySide, SideStrip } from "./post-side";
 import { postTime } from "./post-time";
@@ -39,103 +31,6 @@ import { TradeSides } from "./trade-row";
 
 /** posts shown before "+N more lists" */
 const SHOWN_POSTS = 2;
-
-/** stands where a message puts its number, so the number can be styled whatever its position */
-const NUMBER = "";
-
-/** A message with its number set apart in monospace; the words stay the accessible text. */
-function WithNumber({
-  render,
-  count,
-  className,
-}: {
-  render: (count: string) => string;
-  count: number;
-  className?: string;
-}) {
-  const [before = "", after = ""] = render(NUMBER).split(NUMBER);
-  return (
-    <>
-      {before}
-      <b className={cn("font-mono font-semibold tabular-nums", className)}>{count}</b>
-      {after}
-    </>
-  );
-}
-
-/**
- * Beside a person's name: what the two can swap, tinted, with how much of it runs through the
- * viewer's rules, or that the match runs only through sale lists. One way has no chip, since For you
- * heads that section already.
- */
-function MatchChip({ band, throughRules = 0 }: { band: MatchBand; throughRules?: number }) {
-  if (band.kind !== "swap") {
-    if (band.kind === "oneWay") return null;
-    return (
-      <Badge variant="secondary" className="text-muted-foreground">
-        {m.trade_band_no_swap()}
-      </Badge>
-    );
-  }
-  return (
-    <Badge
-      variant="outline"
-      // the rules note makes it long, so it may wrap on a phone rather than overflow
-      className={cn(
-        toneChip("progress"),
-        "gap-1.5",
-        throughRules > 0 && "h-auto py-0.5 text-start whitespace-normal",
-      )}
-    >
-      <ArrowsLeftRightIcon aria-hidden />
-      <span>
-        <WithNumber render={(count) => m.trade_person_swap({ count })} count={band.swap} />
-        {throughRules > 0 ? (
-          <span className="font-normal">
-            {" · "}
-            {throughRules < band.swap
-              ? m.trade_through_rules({ count: throughRules })
-              : band.swap === 2
-                ? m.trade_through_rules_both()
-                : m.trade_through_rules_all()}
-          </span>
-        ) : null}
-      </span>
-    </Badge>
-  );
-}
-
-/** Under a person's name: each direction's count. */
-function MatchCounts({ band }: { band: MatchBand }) {
-  return (
-    <span className="text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs">
-      {band.theyHave > 0 ? (
-        <span className="flex items-center gap-1">
-          <ArrowDownIcon aria-hidden className="size-3" />
-          <span>
-            <WithNumber
-              render={(count) => m.trade_match_they_have({ count })}
-              count={band.theyHave}
-              className="text-foreground"
-            />
-          </span>
-        </span>
-      ) : null}
-      {band.youHave > 0 ? (
-        <span className="flex items-center gap-1">
-          <ArrowUpIcon aria-hidden className="size-3" />
-          <span>
-            <WithNumber
-              render={(count) => m.trade_match_you_have({ count })}
-              count={band.youHave}
-              className="text-foreground"
-            />
-          </span>
-        </span>
-      ) : null}
-    </span>
-  );
-}
 
 /** The post as its own viewer sees it: no rings, since the viewer's row counts nothing. */
 function unringed(post: PersonPostData): PersonPostData {
@@ -233,11 +128,7 @@ export const PersonRow = memo(function PersonRow({
   // no match says nothing: a row without a chip or counts already reads as one
   const band = own || !signedIn ? null : matchBand(person.counts);
   const posts = orderPosts(person.posts);
-  const throughRules = new Set(
-    person.posts.flatMap((post) =>
-      post.ruleMatches.flatMap((found) => (found.swap ? [found.slug] : [])),
-    ),
-  ).size;
+  const throughRules = swapThroughRules(person.counts, person.posts);
   const lead = leadPost(person.posts);
   const all = led || expanded;
   const shown = all ? posts : posts.slice(0, SHOWN_POSTS);

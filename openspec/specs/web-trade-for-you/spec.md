@@ -189,11 +189,15 @@ Unknown or unparsable values SHALL be dropped. The For you rules then apply: a s
 - **THEN** its feed keeps loading the same posts until the tab is reloaded
 
 ### Requirement: Matched through your rules
-When a partner's objekts match the viewer's want lists only through the viewer's rules, the list's count ("N you want") SHALL name them in its "Matched with your lists" popover: under each want list, one line per rule it matched through, "via rule", the rule's label and how many collections. Nothing SHALL be listed under the strips. The header sentence SHALL add how many of the swap came through rules. Objekts matched by an objekt the viewer added by hand SHALL NOT be counted under a rule.
+When a partner's objekts match the viewer's want lists only through the viewer's rules, the list's count ("N you want") SHALL name them in its "Matched with your lists" popover: under each want list, one line per rule it matched through, "via rule", the rule's label and how many collections. Nothing SHALL be listed under the strips. The header sentence SHALL add how many of the swap needs the viewer's rules: the swap takes the collections wanted by hand first, so only what they leave short counts, and nothing is added when they cover the swap. Objekts matched by an objekt the viewer added by hand SHALL NOT be counted under a rule.
 
 #### Scenario: Two through rules
 - **WHEN** rin.trades has Lynn CC366 and Kaede CC118, which the viewer's want list "binary hunt" wants only through its rules CC366, any member, and Cream02 FCO 3rd
 - **THEN** rin.trades's row reads "You can swap 2 · both through your rules", and the count's popover lists "binary hunt" with "via rule CC366 · any member 1" and "via rule Cream02 · FCO · 3rd 1"
+
+#### Scenario: Collections by hand cover the swap
+- **WHEN** rin.trades has 3 collections the viewer wants, 2 added by hand and 1 only through a rule, and the two can swap 1
+- **THEN** the row reads "You can swap 1" with nothing about rules
 
 #### Scenario: Wanted by hand too
 - **WHEN** the viewer's list also holds Lynn CC366 as an objekt

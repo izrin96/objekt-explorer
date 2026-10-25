@@ -51,6 +51,25 @@ export function matchBand(counts: MatchCounts | undefined): MatchBand | null {
   return { kind: theyHave > 0 && youHave > 0 ? "noSwap" : "oneWay", theyHave, youHave };
 }
 
+/**
+ * How much of the swap needs the viewer's rules: the swap takes `mutualOf` collections from what
+ * the person has, and the ones wanted by hand go first, so only the shortfall counts. A collection
+ * reached through a rule on a sale list that doesn't take swaps is no part of the swap.
+ */
+export function swapThroughRules(
+  counts: MatchCounts | undefined,
+  posts: readonly { ruleMatches: readonly { slug: string; swap: boolean }[] }[],
+) {
+  if (!counts) return 0;
+  const swap = mutualOf(counts);
+  if (swap === 0) return 0;
+  const viaRules = new Set(
+    posts.flatMap((post) => post.ruleMatches.flatMap((found) => (found.swap ? [found.slug] : []))),
+  ).size;
+  const byHand = Math.max(0, counts.tradeTheyHave - viaRules);
+  return Math.max(0, swap - byHand);
+}
+
 /** A list's own count: on a want list what the viewer has, on a have or sale list what they want. */
 export function listCount(post: RowPost, side: { role: "have" | "want" | "sale" }) {
   if (!post.match) return 0;

@@ -7,6 +7,7 @@ import {
   matchedListIds,
   orderPosts,
   ruleCountsOf,
+  swapThroughRules,
 } from "./person-row";
 
 const post = (id: number, bumpedAt: string, match?: { youHave: number; youWant: number }) => ({
@@ -128,5 +129,45 @@ describe("ruleCountsOf", () => {
 
   test("a list matched by hand alone has no rule lines", () => {
     expect(ruleCountsOf(matches, 8)).toEqual([]);
+  });
+});
+
+describe("swapThroughRules", () => {
+  const counts = (tradeTheyHave: number, tradeYouHave: number) => ({
+    theyHave: tradeTheyHave,
+    youHave: tradeYouHave,
+    tradeTheyHave,
+    tradeYouHave,
+  });
+  const via = (...slugs: string[]) => [
+    { ruleMatches: slugs.map((slug) => ({ slug, swap: true })) },
+  ];
+
+  test("every collection of the swap through rules", () => {
+    expect(swapThroughRules(counts(2, 2), via("a", "b"))).toBe(2);
+  });
+
+  test("collections wanted by hand cover the swap first", () => {
+    // 3 they have (1 through a rule), swap of 1: the 2 by hand already make it
+    expect(swapThroughRules(counts(3, 1), via("a"))).toBe(0);
+  });
+
+  test("only the shortfall counts", () => {
+    // 3 they have (2 through rules), swap of 2: 1 by hand, 1 needs a rule
+    expect(swapThroughRules(counts(3, 2), via("a", "b"))).toBe(1);
+  });
+
+  test("a collection found in two posts counts once", () => {
+    expect(swapThroughRules(counts(1, 1), [...via("a"), ...via("a")])).toBe(1);
+  });
+
+  test("a rule match that is not a swap counts for nothing", () => {
+    const sale = [{ ruleMatches: [{ slug: "a", swap: false }] }];
+    expect(swapThroughRules(counts(1, 1), sale)).toBe(0);
+  });
+
+  test("no swap, nothing through rules", () => {
+    expect(swapThroughRules(counts(2, 0), via("a", "b"))).toBe(0);
+    expect(swapThroughRules(undefined, via("a"))).toBe(0);
   });
 });
