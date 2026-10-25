@@ -274,6 +274,7 @@ export async function loadPosts(ctx: LoadContext, rows: FeedRow[], need: number)
           more: side.more,
           copyCount: side.copyCount,
           others: side.others,
+          collectionCount: side.collectionCount,
           rules: side.rules.flatMap((tile) => {
             const rule = ruleDefs.get(tile.ruleId);
             if (!rule) return [];

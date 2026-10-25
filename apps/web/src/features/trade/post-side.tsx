@@ -243,7 +243,9 @@ export function SideStrip({
 }) {
   const { list } = side;
   const role = LIST_TYPE_LABEL[side.role]();
-  const total = side.copyCount + side.others;
+  // a narrowed strip whose label is the count chip, which counts collections
+  const inCollections = narrowed && count > 0;
+  const total = inCollections ? side.collectionCount : side.copyCount + side.others;
   const [allOpen, setAllOpen] = useState(false);
   // the dialog mounts on its first open only: a feed holds many strips, and most are never opened
   const [allMounted, setAllMounted] = useState(false);
@@ -296,9 +298,8 @@ export function SideStrip({
           ringed: item.ringed,
         }))}
         hidden={side.more}
-        // narrowed to matches, the label is the match chip, which counts collections
         copies={
-          narrowed && count > 0
+          inCollections
             ? undefined
             : side.copyCount - side.rules.reduce((sum, tile) => sum + tile.count, 0)
         }

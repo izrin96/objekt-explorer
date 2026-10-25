@@ -340,6 +340,19 @@ describe("assemblePost", () => {
     expect(sideOf(post, "have")).toMatchObject({ items: [], others: 2 });
   });
 
+  test("a side counts its collections whole, copies as one and a rule's left out", () => {
+    const copies: Record<number, FeedEntry[]> = {
+      1: [entry(10, "offer-a"), entry(11, "offer-b"), entry(12, "offer-b")],
+      2: [entry(20, "want-a"), { ...entry(21, "want-z"), ruleId: 5 }],
+    };
+    const post = assemblePost(pair!, (id) => copies[id] ?? [], viewer, {
+      ...NO_FILTER,
+      onlyMatches: true,
+    });
+    expect(sideOf(post, "have")).toMatchObject({ copyCount: 2, others: 1, collectionCount: 2 });
+    expect(sideOf(post, "want")?.collectionCount).toBe(1);
+  });
+
   test("a one-way match keeps the empty side", () => {
     const oneWay = { ...viewer, want: nothing, tradeWant: nothing, saleWant: nothing };
     const post = assemblePost(pair!, of, oneWay, { ...NO_FILTER, onlyMatches: true });

@@ -698,7 +698,20 @@ export function assemblePost<L extends TradeList>(
       Math.max(0, limit - rules.length),
     );
     const copyCount = related.length;
-    return { role, list, items, more, copyCount, others: entries.length - related.length, rules };
+    // the whole side's collections, as the side's dialog counts All; a rule's stay on its tile
+    const collectionCount = new Set(
+      entries.flatMap((entry) => (entry.ruleId === undefined ? [entry.slug] : [])),
+    ).size;
+    return {
+      role,
+      list,
+      items,
+      more,
+      copyCount,
+      others: entries.length - related.length,
+      collectionCount,
+      rules,
+    };
   });
   if (sides.every((side) => side.items.length + side.more + side.rules.length === 0)) return null;
 
