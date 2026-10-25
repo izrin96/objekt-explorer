@@ -8,6 +8,11 @@ import {
 } from "@repo/lib/error-scrub";
 import * as Sentry from "@sentry/bun";
 
+/** Bun's abort when a client disconnects mid-request: the client left, nothing broke. */
+function isClientAbort(error: unknown) {
+  return error instanceof DOMException && error.name === "AbortError";
+}
+
 /** Starts the server SDK once; without `SENTRY_DSN` it stays off and every capture is a no-op. */
 export function initServerErrorTracking() {
   const dsn = serverEnv.SENTRY_DSN;
@@ -23,7 +28,9 @@ export function initServerErrorTracking() {
       Sentry.onUnhandledRejectionIntegration({ mode: "strict" }),
     ],
     beforeSend: (event, hint) =>
-      isExpectedError(hint.originalException) ? null : scrubEvent(event),
+      isExpectedError(hint.originalException) || isClientAbort(hint.originalException)
+        ? null
+        : scrubEvent(event),
     beforeBreadcrumb: (breadcrumb) => scrubBreadcrumb(breadcrumb),
   });
 }

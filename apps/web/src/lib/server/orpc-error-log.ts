@@ -35,6 +35,12 @@ export function logORPCError(error: unknown, request: HandlerRequest) {
     return;
   }
 
+  // Bun rejects the body read when the client disconnects mid-upload
+  if (error instanceof DOMException && error.name === "AbortError") {
+    console.warn("ORPC client left:", where);
+    return;
+  }
+
   // a refusal (a signed-out poll's 401, say) is one line, not a stack with minified source
   if (isExpectedError(error)) {
     const { status, code } = error as ORPCError<string, unknown>;

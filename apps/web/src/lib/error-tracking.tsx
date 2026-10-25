@@ -43,12 +43,46 @@ function readMeta(name: string) {
   return document.querySelector<HTMLMetaElement>(`meta[name="${name}"]`)?.content || undefined;
 }
 
+// what Safari, Chrome and Firefox name a fetch that got no response
+const NETWORK_FAILURE = new Set([
+  "Load failed",
+  "Failed to fetch",
+  "NetworkError when attempting to fetch resource.",
+]);
+
+/** A request cut off before any response (offline, app backgrounded, navigation): not our bug. */
+function isNetworkFailure(error: unknown): boolean {
+  if (error instanceof TypeError) return NETWORK_FAILURE.has(error.message);
+  // ofetch's FetchError keeps the browser's TypeError as its cause
+  if (error instanceof Error && error.name === "FetchError") {
+    return (
+      (error as { response?: unknown }).response === undefined && isNetworkFailure(error.cause)
+    );
+  }
+  return false;
+}
+
+// what Chrome, Safari and Firefox name an `import()` whose chunk is gone, mostly after a deploy
+const CHUNK_FAILURE = [
+  "Failed to fetch dynamically imported module",
+  "Importing a module script failed",
+  "error loading dynamically imported module",
+];
+
+function isChunkFailure(error: unknown): boolean {
+  return (
+    error instanceof TypeError && CHUNK_FAILURE.some((prefix) => error.message.startsWith(prefix))
+  );
+}
+
 /**
- * Reported from the browser: not a refusal, not any oRPC error, and not an error SSR or a server
- * function sent over, since the server reported those itself.
+ * Reported from the browser: not a refusal, not any oRPC error, not an error SSR or a server
+ * function sent over, since the server reported those itself, and not a dropped connection or a
+ * stale chunk.
  */
 function shouldReport(error: unknown) {
   if (isExpectedError(error) || isFromServer(error)) return false;
+  if (isNetworkFailure(error) || isChunkFailure(error)) return false;
   const { status, code } = (error ?? {}) as { status?: unknown; code?: unknown };
   return !(typeof status === "number" && typeof code === "string");
 }
