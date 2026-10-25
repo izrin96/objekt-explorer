@@ -1189,7 +1189,7 @@
   "mod_report_title": "Report {name}",
   "mod_report_description": "We see the reason and your note, never your messages.",
   "mod_report_description_thread": "We can read only the messages you choose to share below.",
-  "mod_report_slow_notice": "We review every report, but we're a small team, so it may take a while.",
+  "mod_report_slow_notice": "We don't have a moderation team yet, so reports may take a while to be reviewed.",
   "mod_report_reason": "What's wrong?",
   "mod_report_reason_required": "Choose a reason to send the report.",
   "mod_report_note": "Note (optional)",

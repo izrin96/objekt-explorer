@@ -1189,7 +1189,7 @@
   "mod_report_title": "{name}님 신고",
   "mod_report_description": "사유와 메모만 보고, 메시지는 볼 수 없습니다.",
   "mod_report_description_thread": "아래에서 공유하기로 한 메시지만 읽을 수 있습니다.",
-  "mod_report_slow_notice": "모든 신고를 확인하지만 소규모 팀이라 시간이 걸릴 수 있습니다.",
+  "mod_report_slow_notice": "아직 운영팀이 없어 신고를 확인하는 데 시간이 걸릴 수 있습니다.",
   "mod_report_reason": "어떤 문제인가요?",
   "mod_report_reason_required": "신고하려면 사유를 선택하세요.",
   "mod_report_note": "메모 (선택)",

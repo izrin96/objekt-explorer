@@ -1189,7 +1189,7 @@
   "mod_report_title": "{name}を通報",
   "mod_report_description": "見えるのは理由とメモだけで、メッセージは見えません。",
   "mod_report_description_thread": "読めるのは、下で共有を選んだメッセージだけです。",
-  "mod_report_slow_notice": "通報はすべて確認しますが、少人数のチームのため時間がかかる場合があります。",
+  "mod_report_slow_notice": "まだモデレーターチームがいないため、通報の確認に時間がかかる場合があります。",
   "mod_report_reason": "どのような問題ですか?",
   "mod_report_reason_required": "通報するには理由を選んでください。",
   "mod_report_note": "メモ(任意)",
