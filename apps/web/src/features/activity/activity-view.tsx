@@ -15,18 +15,17 @@ import {
   ExtraFacetControls,
   FACET_KEYS,
   FacetControls,
+  facetValues,
   useDeclaredFacets,
   useFacetParity,
-  type FacetKey,
 } from "@/features/filters/facet-controls";
 import { useScopedFacets } from "@/features/filters/facets";
 import { QuickFilters } from "@/features/filters/filter-bar";
 import { FilterSheet } from "@/features/filters/filter-sheet";
-import { OnlineFilter } from "@/features/filters/online-filter";
 import { ResetButton } from "@/features/filters/reset-button";
 import { canReset } from "@/features/filters/search-schema";
 import { SingleSelect } from "@/features/filters/single-select";
-import { useCanonicalFilters, useSetFilters } from "@/features/filters/use-filters";
+import { useCanonicalFilters, useSetFacet, useSetFilters } from "@/features/filters/use-filters";
 import { ObjektDrawer } from "@/features/objekt/drawer";
 import { m } from "@/paraglide/messages";
 
@@ -77,23 +76,12 @@ export function ActivityView() {
     filters,
   );
 
-  const setFacet = (key: FacetKey, value: string[]) =>
-    setFilters({ [key]: value.length > 0 ? value : undefined });
-
-  const values = {
-    artist: filters.artist ?? [],
-    member: filters.member ?? [],
-    season: filters.season ?? [],
-    class: filters.class ?? [],
-    collection: filters.collection ?? [],
-  };
+  const setFacet = useSetFacet();
+  const values = facetValues(filters);
 
   const extras = useMemo<ExtraFacet[]>(
-    () => [
-      { key: "type", active: type !== "all", quick: true, Control: EventFilter },
-      { key: "on_offline", active: (filters.on_offline?.length ?? 0) > 0, Control: OnlineFilter },
-    ],
-    [type, filters.on_offline],
+    () => [{ key: "type", active: type !== "all", quick: true, Control: EventFilter }],
+    [type],
   );
 
   const declaredKeys = useMemo(() => [...FACET_KEYS, ...extras.map((e) => e.key)], [extras]);

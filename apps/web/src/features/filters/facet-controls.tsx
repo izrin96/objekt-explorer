@@ -1,12 +1,16 @@
+import { validOnlineTypes } from "@repo/cosmo/types/common";
 import { type ComponentType, useEffect } from "react";
 
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
-import type { Facets, MemberGroup } from "./facets";
+import { type Facets, groupsOf, type MemberGroup } from "./facets";
 import { FilterCollection } from "./filter-collection";
+import { ONLINE_TYPE_LABEL } from "./labels";
 import { MultiSelect } from "./multi-select";
+import type { FilterSearch } from "./search-schema";
+import { SingleSelect } from "./single-select";
 
 /** every facet control takes the same props, so the table below can drive both surfaces */
 type FacetControlProps = {
@@ -20,9 +24,48 @@ type FacetControlProps = {
 };
 
 /** the URL keys the facet row owns */
-export type FacetKey = "artist" | "member" | "season" | "class" | "collection";
+export type FacetKey = "artist" | "member" | "season" | "class" | "collection" | "on_offline";
 
 export type FacetValues = Record<FacetKey, string[]>;
+
+/** A facet change; picking artists also drops the members they don't have. */
+export type FacetPatch = Partial<FacetValues>;
+
+export const facetValues = (filters: Pick<FilterSearch, FacetKey>): FacetValues => ({
+  artist: filters.artist ?? [],
+  member: filters.member ?? [],
+  season: filters.season ?? [],
+  class: filters.class ?? [],
+  collection: filters.collection ?? [],
+  on_offline: filters.on_offline ?? [],
+});
+
+/** `all` is the absence of a value, spelled as one the select can hold */
+const ALL = "all";
+
+/** A one-of-N facet in the multi-value shape the table drives: none, or several from an old link, reads as All. */
+function SingleFacet({
+  label,
+  options,
+  getOptionLabel,
+  value,
+  onChange,
+  className,
+}: FacetControlProps) {
+  return (
+    <SingleSelect
+      label={label}
+      options={[
+        { value: ALL, label: m.filter_all() },
+        ...options.map((option) => ({ value: option, label: getOptionLabel?.(option) ?? option })),
+      ]}
+      value={value.length === 1 ? value[0]! : ALL}
+      defaultValue={ALL}
+      onChange={(next) => onChange(next === ALL ? [] : [next])}
+      className={className}
+    />
+  );
+}
 
 type FacetDef = {
   key: FacetKey;
@@ -30,23 +73,22 @@ type FacetDef = {
   options: (facets: Facets) => readonly string[];
   /** Member only: the dropdown groups by artist when several are in scope */
   grouped?: boolean;
-  /** the option values are artist ids, shown as the artist's title */
-  artistLabels?: boolean;
+  /** what an option reads as, when not its value; `artistTitle` names an artist id */
+  optionLabel?: (option: string, artistTitle: (id: string) => string) => string;
   Control: ComponentType<FacetControlProps>;
 };
 
 /**
  * The single source of truth for the facet row. Every surface renders from
  * this array twice — inline on `md+` and stacked in the mobile Filters sheet —
- * so a facet added here shows up in both places and on every page, unless
- * that page's `LONG_TAIL` column moves it into the Filters panel.
+ * so a facet added here shows up in both places and on every page.
  */
 const FACETS: readonly FacetDef[] = [
   {
     key: "artist",
     label: m.filter_artist,
     options: (f) => f.artists,
-    artistLabels: true,
+    optionLabel: (id, artistTitle) => artistTitle(id),
     Control: MultiSelect,
   },
   {
@@ -64,26 +106,24 @@ const FACETS: readonly FacetDef[] = [
     options: (f) => f.collectionNos,
     Control: FilterCollection,
   },
+  {
+    key: "on_offline",
+    label: m.filter_type,
+    options: () => validOnlineTypes,
+    optionLabel: (option) => ONLINE_TYPE_LABEL[option as (typeof validOnlineTypes)[number]](),
+    Control: SingleFacet,
+  },
 ];
 
 export const FACET_KEYS: readonly FacetKey[] = FACETS.map((facet) => facet.key);
 
 /** the facets a phone keeps on the toolbar; the rest live in the Filters sheet only */
-export const QUICK_FACET_KEYS: readonly FacetKey[] = [
-  "artist",
-  "member",
-  "season",
-  "class",
-  "collection",
-];
+export const QUICK_FACET_KEYS: readonly FacetKey[] = ["artist", "member", "season", "class"];
 
 export type FacetSurface = "inline" | "stacked";
 
-/** Whether the toolbar drops a control below `md` and leaves it to the sheet. */
-export const foldsBelowMd = (quick: boolean, foldAll: boolean) => foldAll || !quick;
-
 /**
- * A toolbar control that is not one of the five facets but still has to be on
+ * A toolbar control that is not one of the facets but still has to be on
  * both surfaces. It goes through the same parity guard as `FACETS`, and
  * declares whether it holds a non-default value so the sheet trigger's badge
  * can count it. A `quick` extra stays on the toolbar below `md` as well.
@@ -105,18 +145,16 @@ export const NO_EXTRAS: readonly ExtraFacet[] = [];
 export function ExtraFacetControls({
   surface,
   extras,
-  foldAll = false,
 }: {
   surface: FacetSurface;
   extras: readonly ExtraFacet[];
-  foldAll?: boolean;
 }) {
   return extras.map(({ key, quick, Control }) => (
     <Control
       key={key}
       className={cn(
         surface === "stacked" && "w-full justify-between",
-        surface === "inline" && foldsBelowMd(!!quick, foldAll) && "max-md:hidden",
+        surface === "inline" && !quick && "max-md:hidden",
       )}
     />
   ));
@@ -127,11 +165,9 @@ type FacetControlsProps = {
   facets: Facets;
   groups?: readonly MemberGroup[];
   values: FacetValues;
-  onChange: (key: FacetKey, value: string[]) => void;
-  /** defaults to every facet; narrow the sheet's too, or the dev parity guard trips */
-  keys?: readonly FacetKey[];
-  /** hide every inline control below `md`, quick ones too: the sheet holds them */
-  foldAll?: boolean;
+  onChange: (patch: FacetPatch) => void;
+  /** no Filters sheet to fold into, as in a picker: every facet stays below `md` */
+  noSheet?: boolean;
 };
 
 export function FacetControls({
@@ -140,31 +176,37 @@ export function FacetControls({
   groups,
   values,
   onChange,
-  keys = FACET_KEYS,
-  foldAll = false,
+  noSheet = false,
 }: FacetControlsProps) {
   const { getArtist } = useCosmoArtist();
   const artistTitle = (id: string) => getArtist(id)?.title ?? id;
+  // picked artists narrow Member to their members
+  const memberGroups = groups && groupsOf(groups, values.artist);
+  const scoped = memberGroups
+    ? { ...facets, members: memberGroups.flatMap((group) => group.members) }
+    : facets;
 
-  return FACETS.filter((def) => keys.includes(def.key)).map(
-    ({ key, label, options, grouped, artistLabels, Control }) => (
-      <Control
-        key={key}
-        label={label()}
-        options={options(facets)}
-        groups={grouped ? groups : undefined}
-        getOptionLabel={artistLabels ? artistTitle : undefined}
-        value={values[key]}
-        onChange={(value) => onChange(key, value)}
-        className={cn(
-          surface === "stacked" && "w-full justify-between",
-          surface === "inline" &&
-            foldsBelowMd(QUICK_FACET_KEYS.includes(key), foldAll) &&
-            "max-md:hidden",
-        )}
-      />
-    ),
-  );
+  const change = (key: FacetKey, value: string[]) => {
+    if (key !== "artist" || !groups) return onChange({ [key]: value });
+    const kept = groupsOf(groups, value).flatMap((group) => group.members);
+    onChange({ artist: value, member: values.member.filter((name) => kept.includes(name)) });
+  };
+
+  return FACETS.map(({ key, label, options, grouped, optionLabel, Control }) => (
+    <Control
+      key={key}
+      label={label()}
+      options={options(scoped)}
+      groups={grouped ? memberGroups : undefined}
+      getOptionLabel={optionLabel && ((option) => optionLabel(option, artistTitle))}
+      value={values[key]}
+      onChange={(value) => change(key, value)}
+      className={cn(
+        surface === "stacked" && "w-full justify-between",
+        surface === "inline" && !noSheet && !QUICK_FACET_KEYS.includes(key) && "max-md:hidden",
+      )}
+    />
+  ));
 }
 
 /**

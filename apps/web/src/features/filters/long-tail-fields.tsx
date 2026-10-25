@@ -5,16 +5,15 @@ import {
   LockSimpleOpenIcon,
   XIcon,
 } from "@phosphor-icons/react";
-import { validEdition, validOnlineTypes } from "@repo/cosmo/types/common";
-import type { ValidEdition, ValidOnlineType } from "@repo/cosmo/types/common";
-import { useId, type ReactNode } from "react";
+import { validEdition } from "@repo/cosmo/types/common";
+import type { ValidEdition } from "@repo/cosmo/types/common";
+import { Fragment, useId, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverPopup, PopoverTrigger } from "@/components/ui/popover";
-import { Radio, RadioGroup } from "@/components/ui/radio-group";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { useDebouncedCallback } from "@/hooks/use-debounced-callback";
@@ -23,12 +22,10 @@ import { m } from "@/paraglide/messages";
 
 import { ColorPicker } from "./color-picker";
 import { COLOR_SWATCHES } from "./facets";
-import { FilterCollection } from "./filter-collection";
 import { FilterToggle } from "./filter-toggle";
-import { EDITION_LABEL, ONLINE_TYPE_LABEL } from "./labels";
+import { EDITION_LABEL } from "./labels";
 import type { LongTailField } from "./long-tail";
 import { MultiSelect } from "./multi-select";
-import { ALL_TYPES, OnlineFilter } from "./online-filter";
 import {
   COLOR_SENSITIVITY_RANGE,
   DEFAULT_COLOR_SENSITIVITY,
@@ -220,37 +217,6 @@ function LockCycle() {
   );
 }
 
-function TypeField() {
-  const onOffline = useFilters((f) => f.on_offline);
-  const setFilters = useSetFilters();
-  const headingId = useId();
-
-  return (
-    <>
-      <GroupHeading id={headingId}>{m.filter_type()}</GroupHeading>
-      <RadioGroup
-        aria-labelledby={headingId}
-        className="gap-1"
-        value={onOffline?.[0] ?? ALL_TYPES}
-        onValueChange={(value) =>
-          setFilters({
-            on_offline: value === ALL_TYPES ? undefined : [value as ValidOnlineType],
-          })
-        }
-      >
-        <Row label={m.filter_all()}>
-          <Radio value={ALL_TYPES} />
-        </Row>
-        {validOnlineTypes.map((type) => (
-          <Row key={type} label={ONLINE_TYPE_LABEL[type]()}>
-            <Radio value={type} />
-          </Row>
-        ))}
-      </RadioGroup>
-    </>
-  );
-}
-
 function EditionField() {
   const edition = useFilters((f) => f.edition);
   const setFilters = useSetFilters();
@@ -295,21 +261,6 @@ function SwitchRow({
   );
 }
 
-function CollectionField({ options }: { options: readonly string[] }) {
-  const collection = useFilters((f) => f.collection);
-  const setFilters = useSetFilters();
-
-  return (
-    <FilterCollection
-      label={m.filter_collection_no()}
-      options={options}
-      value={collection ?? []}
-      onChange={(value) => setFilters({ collection: value.length > 0 ? value : undefined })}
-      className="w-full justify-between"
-    />
-  );
-}
-
 /**
  * The on/off long-tail filters, drawn as switches in the sheet and as
  * `FilterToggle`s on the toolbar; one list so the two read and write them alike.
@@ -342,53 +293,38 @@ const SWITCHES: readonly {
 ];
 
 /** The long tail as the mobile Filters sheet stacks it. */
-export function LongTailFields({
-  fields,
-  collectionNos = [],
-}: {
-  fields: readonly LongTailField[];
-  collectionNos?: readonly string[];
-}) {
+export function LongTailFields({ fields }: { fields: readonly LongTailField[] }) {
   const filters = useFilters();
   const setFilters = useSetFilters();
   const has = (field: LongTailField) => fields.includes(field);
   const switches = has("locked") || SWITCHES.some((def) => has(def.field));
+  const sections = [
+    switches && (
+      <Fragment key="switches">
+        {has("locked") && <LockCycle />}
+        {SWITCHES.filter((def) => has(def.field)).map((def) => (
+          <SwitchRow
+            key={def.field}
+            label={def.label()}
+            checked={def.checked(filters)}
+            onChange={(value) => setFilters(def.patch(value))}
+          />
+        ))}
+      </Fragment>
+    ),
+    has("edition") && <EditionField key="edition" />,
+    has("color") && <ColorField key="color" />,
+  ].filter(Boolean);
 
+  if (sections.length === 0) return null;
   return (
     <div className="flex flex-col gap-1">
-      {has("collection") && (
-        <>
-          <CollectionField options={collectionNos} />
-          <div className="my-1 border-t" />
-        </>
-      )}
-      {has("locked") && <LockCycle />}
-      {SWITCHES.filter((def) => has(def.field)).map((def) => (
-        <SwitchRow
-          key={def.field}
-          label={def.label()}
-          checked={def.checked(filters)}
-          onChange={(value) => setFilters(def.patch(value))}
-        />
+      {sections.map((section, index) => (
+        <Fragment key={index}>
+          {index > 0 && <div className="my-1 border-t" />}
+          {section}
+        </Fragment>
       ))}
-
-      {switches && <div className="my-1 border-t" />}
-
-      <TypeField />
-
-      {has("edition") && (
-        <>
-          <div className="my-1 border-t" />
-          <EditionField />
-        </>
-      )}
-
-      {has("color") && (
-        <>
-          <div className="my-1 border-t" />
-          <ColorField />
-        </>
-      )}
     </div>
   );
 }
@@ -427,11 +363,9 @@ const EDITION_OPTIONS = validEdition.map(String);
  */
 export function LongTailToolbar({
   fields,
-  collectionNos = [],
   className,
 }: {
   fields: readonly LongTailField[];
-  collectionNos?: readonly string[];
   className?: string;
 }) {
   const filters = useFilters();
@@ -442,16 +376,6 @@ export function LongTailToolbar({
 
   return (
     <>
-      {has("collection") && (
-        <FilterCollection
-          label={m.filter_collection_no()}
-          options={collectionNos}
-          value={filters.collection ?? []}
-          onChange={(value) => setFilters({ collection: value.length > 0 ? value : undefined })}
-          className={className}
-        />
-      )}
-      <OnlineFilter className={className} />
       {has("edition") && (
         <MultiSelect
           label={m.filter_edition()}

@@ -21,10 +21,10 @@ import {
   ExtraFacetControls,
   FACET_KEYS,
   FacetControls,
+  facetValues,
   NO_EXTRAS,
   useDeclaredFacets,
   useFacetParity,
-  type FacetKey,
 } from "./facet-controls";
 import type { Facets, MemberGroup } from "./facets";
 import { FilterSearchField } from "./filter-search";
@@ -35,7 +35,13 @@ import { LongTailFields, LongTailToolbar } from "./long-tail-fields";
 import { ResetButton } from "./reset-button";
 import { canReset, DEFAULT_SORT_DIR } from "./search-schema";
 import { toolbarTrigger } from "./toolbar-trigger";
-import { useCanonicalFilters, useFilters, useResetFilters, useSetFilters } from "./use-filters";
+import {
+  useCanonicalFilters,
+  useFilters,
+  useResetFilters,
+  useSetFacet,
+  useSetFilters,
+} from "./use-filters";
 
 /**
  * Picking a sort resets the direction to the one that sort is normally read
@@ -236,7 +242,7 @@ type FilterBarProps = {
   sorts?: readonly ValidCustomSort[];
   /** the surface's column of the long-tail matrix, from `LONG_TAIL` */
   longTail?: readonly LongTailField[];
-  /** toolbar controls this surface adds beside the five facets */
+  /** toolbar controls this surface adds beside the facets */
   extras?: readonly ExtraFacet[];
   /** the extras lead the facets, as the sheet always has them */
   extrasFirst?: boolean;
@@ -276,28 +282,10 @@ export function FilterBar({
   const longTailActive = longTailCount(filters, longTail);
   const nothingToReset = resetDisabled ?? !canReset(filters);
 
-  const values = {
-    artist: filters.artist ?? [],
-    member: filters.member ?? [],
-    season: filters.season ?? [],
-    class: filters.class ?? [],
-    collection: filters.collection ?? [],
-  };
-  const setFacet = (key: FacetKey, value: string[]) =>
-    setFilters({ [key]: value.length > 0 ? value : undefined });
+  const values = facetValues(filters);
+  const setFacet = useSetFacet();
 
-  // a surface that lists Collection no. in its long tail shows it in the Filters panel instead
-  const facetKeys = useMemo(
-    () =>
-      longTail.includes("collection")
-        ? FACET_KEYS.filter((key) => key !== "collection")
-        : FACET_KEYS,
-    [longTail],
-  );
-  const declaredKeys = useMemo(
-    () => [...facetKeys, ...extras.map((item) => item.key)],
-    [facetKeys, extras],
-  );
+  const declaredKeys = useMemo(() => [...FACET_KEYS, ...extras.map((item) => item.key)], [extras]);
   useDeclaredFacets("inline", declaredKeys);
   useFacetParity();
 
@@ -312,14 +300,13 @@ export function FilterBar({
             groups={groups}
             values={values}
             onChange={setFacet}
-            keys={facetKeys}
             extras={extras}
             extraCount={longTailActive}
             onReset={reset}
             resetDisabled={nothingToReset}
           >
-            <div className="my-1 border-t md:hidden" />
-            <LongTailFields fields={longTail} collectionNos={facets.collectionNos} />
+            {longTail.length > 0 && <div className="my-1 border-t md:hidden" />}
+            <LongTailFields fields={longTail} />
             <StackedToolbarFields showGroupBy={showSort} />
           </FilterSheet>
 
@@ -331,16 +318,11 @@ export function FilterBar({
             groups={groups}
             values={values}
             onChange={setFacet}
-            keys={facetKeys}
           />
 
           {!extrasFirst && <ExtraFacetControls surface="inline" extras={extras} />}
 
-          <LongTailToolbar
-            fields={longTail}
-            collectionNos={facets.collectionNos}
-            className="max-md:hidden"
-          />
+          <LongTailToolbar fields={longTail} className="max-md:hidden" />
 
           {extra}
 

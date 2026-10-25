@@ -27,7 +27,11 @@ Member, season, class, collection number, edition and online/offline facets SHAL
 populated from the server's filter data and the artist catalogue, limited to the selected
 artists; the member row SHALL group by artist with an artist segment control. Facet
 controls in the inline bar and in the narrow-viewport sheet SHALL expose the same set of
-facets.
+facets. On every page and picker the facets SHALL run artist, member, season, class,
+collection number, then Type (online/offline, one value or All). Picking artists, in the
+Artist filter or the artist bar, SHALL limit the Member choices to those artists' members and
+drop any picked member they don't have. Below `md`, collection
+number and Type SHALL leave the toolbar for the sheet, except in a picker, which has no sheet.
 
 #### Scenario: Artist scope narrows members
 - **WHEN** only ARTMS is selected in the artist scope

@@ -65,9 +65,9 @@ Only step 1 follows `dir`. The `supply` branch of `sortObjekts` becomes `objekts
 
 ### 6. The control is `SingleSelect`
 
-`features/market/filter-listed.tsx` renders the existing `SingleSelect`, as `OnlineFilter` does:
+`features/market/filter-listed.tsx` renders the existing `SingleSelect`, as the Type facet's `SingleFacet` (`features/filters/facet-controls.tsx`) does:
 - the label is `m.filter_listed()`;
-- the sentinel `"any"` stands for no `listed`, like `ALL_TYPES`;
+- the sentinel `"any"` stands for no `listed`, like `SingleFacet`'s `"all"`;
 - options are built per render, which avoids a hydration mismatch;
 - picking `"any"` writes `{ listed: undefined }`.
 

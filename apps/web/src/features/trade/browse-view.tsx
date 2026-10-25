@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import { useSelectedArtists } from "@/features/artist/use-selected-artists";
+import { FACET_KEYS } from "@/features/filters/facet-controls";
 import { SingleSelect } from "@/features/filters/single-select";
 import { ObjektDrawer } from "@/features/objekt/drawer";
 import { collectionName } from "@/features/objekt/objekt-label";
@@ -49,8 +50,6 @@ type PostType = NonNullable<FeedSearch["type"]> | "all";
 type FeedRow =
   | { heading: "mutual" | "oneWay"; person?: undefined }
   | { person: PersonData; heading?: undefined };
-
-const FACETS = ["artist", "member", "season", "class", "on_offline", "collection"] as const;
 
 const TYPES: PostType[] = ["all", "wtt", "wtb", "wts"];
 
@@ -133,7 +132,7 @@ export function BrowseView({ surface, search }: { surface: Surface; search: Feed
   );
   // Mutual fixes the type to WTT, so a leftover `type` is not a filter to reset
   const collectionFiltering =
-    search.slug !== undefined || FACETS.some((key) => (search[key]?.length ?? 0) > 0);
+    search.slug !== undefined || FACET_KEYS.some((key) => (search[key]?.length ?? 0) > 0);
   const filtering = (!mutual && search.type !== undefined) || collectionFiltering;
   const comparedName = forYou
     ? comparedList(search.list, tradeLists, scopeOf(mode, type))?.name

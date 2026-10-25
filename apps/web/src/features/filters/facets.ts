@@ -16,6 +16,10 @@ export type Facets = {
 
 export type MemberGroup = { artist: CosmoArtistWithMembersBFF; members: string[] };
 
+/** The groups of the picked artists, or every group while none is picked. */
+export const groupsOf = (groups: readonly MemberGroup[], artist: readonly string[]) =>
+  artist.length > 0 ? groups.filter((group) => artist.includes(group.artist.id)) : groups;
+
 /** neither class is minted as part of a set, so a completion view leaves them out */
 export const ETC_CLASSES: readonly string[] = ["Welcome", "Zero"];
 

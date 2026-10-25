@@ -1,27 +1,20 @@
-import { type ReactNode, useMemo } from "react";
+import type { ReactNode } from "react";
 
 import { ActiveChips, type ActiveChip, useActiveChips } from "@/features/filters/active-chips";
 import {
-  type ExtraFacet,
-  ExtraFacetControls,
   FACET_KEYS,
   FacetControls,
-  type FacetKey,
+  facetValues,
   useDeclaredFacets,
   useFacetParity,
 } from "@/features/filters/facet-controls";
 import { useScopedFacets } from "@/features/filters/facets";
 import { FilterSheet } from "@/features/filters/filter-sheet";
-import { OnlineFilter } from "@/features/filters/online-filter";
 import { ResetButton } from "@/features/filters/reset-button";
-import { useCanonicalFilters, useSetFilters } from "@/features/filters/use-filters";
+import { useCanonicalFilters, useSetFacet, useSetFilters } from "@/features/filters/use-filters";
 import { m } from "@/paraglide/messages";
 
 import type { FeedSearch } from "./browse-search";
-
-/** the Type filter sits right after Class */
-const BEFORE_TYPE = FACET_KEYS.slice(0, FACET_KEYS.indexOf("class") + 1);
-const AFTER_TYPE = FACET_KEYS.slice(FACET_KEYS.indexOf("class") + 1);
 
 export function BrowseFilters({
   search,
@@ -49,26 +42,10 @@ export function BrowseFilters({
   const setFilters = useSetFilters();
   const chips = useActiveChips();
 
-  const setFacet = (key: FacetKey, value: string[]) =>
-    setFilters({ [key]: value.length > 0 ? value : undefined });
+  const setFacet = useSetFacet();
+  const values = facetValues(filters);
 
-  const values = {
-    artist: filters.artist ?? [],
-    member: filters.member ?? [],
-    season: filters.season ?? [],
-    class: filters.class ?? [],
-    collection: filters.collection ?? [],
-  };
-
-  const extras = useMemo<ExtraFacet[]>(
-    () => [
-      { key: "on_offline", active: (filters.on_offline?.length ?? 0) > 0, Control: OnlineFilter },
-    ],
-    [filters.on_offline],
-  );
-
-  const declaredKeys = useMemo(() => [...FACET_KEYS, ...extras.map((e) => e.key)], [extras]);
-  useDeclaredFacets("inline", declaredKeys);
+  useDeclaredFacets("inline", FACET_KEYS);
   useFacetParity();
 
   const nothingToReset = !filtering;
@@ -95,9 +72,6 @@ export function BrowseFilters({
           groups={groups}
           values={values}
           onChange={setFacet}
-          keys={FACET_KEYS}
-          extras={extras}
-          foldAll
           onReset={onReset}
           resetDisabled={nothingToReset}
         />
@@ -108,18 +82,6 @@ export function BrowseFilters({
             groups={groups}
             values={values}
             onChange={setFacet}
-            keys={BEFORE_TYPE}
-            foldAll
-          />
-          <ExtraFacetControls surface="inline" extras={extras} foldAll />
-          <FacetControls
-            surface="inline"
-            facets={facets}
-            groups={groups}
-            values={values}
-            onChange={setFacet}
-            keys={AFTER_TYPE}
-            foldAll
           />
           <ResetButton onReset={onReset} disabled={nothingToReset} />
         </div>

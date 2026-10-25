@@ -17,7 +17,7 @@ import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
-import { useScopedFacets } from "./facets";
+import { groupsOf, useScopedFacets } from "./facets";
 import { useMemberColor } from "./member-colors";
 import { useCanonicalFilters, useFilters, useSetFilters } from "./use-filters";
 
@@ -160,10 +160,9 @@ export function MemberChips() {
 
   /** `undefined` is pressing the current artist again, back to every artist */
   const pickArtist = (next: ValidArtist | undefined) => {
-    const keep =
-      next === undefined
-        ? groups.flatMap((group) => group.members)
-        : (groups.find((group) => group.artist.id === next)?.members ?? []);
+    const keep = groupsOf(groups, next === undefined ? [] : [next]).flatMap(
+      (group) => group.members,
+    );
     const kept = selected.filter((name) => keep.includes(name));
     setFilters({
       artist: next === undefined ? undefined : [next],

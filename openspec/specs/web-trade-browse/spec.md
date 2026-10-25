@@ -167,7 +167,7 @@ The feed SHALL offer these filters, each kept in the URL:
 - One collection (`slug`, a collection slug): keep posts with that collection on any side.
 - On For you only, Can swap (`match`) and Compare with (`list`), after the Post type menu on the same row (see Matches and Compare with). Under Any and Mutual, only posts holding at least one objekt that matches the viewer are kept: the objekts the rings mark (see Narrowing). Each post is judged on its own lists, not on the owner's other lists.
 
-Below `md`, Browse and For you SHALL fold every collection filter (artist, member, season, class, Type and collection number) into the filter sheet, leaving none on the toolbar. The sheet's button SHALL read Filters, followed by the number of active collection filters when there are any. Other pages keep their own toolbar.
+Below `md`, Browse and For you SHALL keep artist, member, season and class on the toolbar and fold collection number and Type into the filter sheet, as the other collection pages do. The sheet's button SHALL read Filters, followed by the number of active filters it holds when there are any; the sheet SHALL hold every collection filter.
 
 The feed SHALL follow the artists selected in the app's artist picker, as Activity does. An `artist` value outside that selection SHALL be ignored. A `slug` link SHALL ignore the artist selection and the `artist` parameter, so a link from the objekt drawer lists every post holding that collection.
 
@@ -198,8 +198,8 @@ The posts left out SHALL be left out by the server, so every page of the feed ho
 A filter value that does not parse SHALL be ignored.
 
 #### Scenario: Filters on a phone
-- **WHEN** the viewer opens `/trade?member=SeoYeon&season=atom01` at 390 px
-- **THEN** no collection filter control shows on the toolbar, the Filters button reads "Filters 2", and the sheet it opens holds every collection filter
+- **WHEN** the viewer opens `/trade?member=SeoYeon&on_offline=offline` at 390 px
+- **THEN** Artist, Member, Season and Class show on the toolbar, Collection No. and Type do not, the Filters button reads "Filters 1", and the sheet it opens holds every collection filter
 
 #### Scenario: WTS only
 - **WHEN** the viewer picks WTS

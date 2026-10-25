@@ -3,6 +3,7 @@ import { useCallback, useMemo } from "react";
 
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 
+import type { FacetPatch } from "./facet-controls";
 import {
   defaultFilters,
   filterSearchSchema,
@@ -88,6 +89,20 @@ export function useSetFilters(): (patch: FilterPatch) => void {
       });
     },
     [navigate],
+  );
+}
+
+/** A facet control's change, an empty pick dropping its key from the URL. */
+export function useSetFacet(): (patch: FacetPatch) => void {
+  const setFilters = useSetFilters();
+  return useCallback(
+    (patch: FacetPatch) =>
+      setFilters(
+        Object.fromEntries(
+          Object.entries(patch).map(([key, value]) => [key, value.length > 0 ? value : undefined]),
+        ),
+      ),
+    [setFilters],
   );
 }
 

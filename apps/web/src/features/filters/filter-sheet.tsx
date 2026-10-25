@@ -21,11 +21,10 @@ import {
   ExtraFacetControls,
   FACET_KEYS,
   FacetControls,
-  foldsBelowMd,
   NO_EXTRAS,
   QUICK_FACET_KEYS,
   useDeclaredFacets,
-  type FacetKey,
+  type FacetPatch,
   type FacetValues,
 } from "./facet-controls";
 import type { Facets, MemberGroup } from "./facets";
@@ -35,15 +34,11 @@ type FilterSheetProps = {
   facets: Facets;
   groups?: readonly MemberGroup[];
   values: FacetValues;
-  onChange: (key: FacetKey, value: string[]) => void;
-  /** the facets this sheet renders; must match the toolbar's */
-  keys?: readonly FacetKey[];
+  onChange: (patch: FacetPatch) => void;
   extras?: readonly ExtraFacet[];
   /** the long-tail fields, plus toolbar controls this surface hides below `md` */
   children?: ReactNode;
   extraCount?: number;
-  /** the toolbar keeps no facet below `md`, so the badge counts every active one */
-  foldAll?: boolean;
   onReset?: () => void;
   resetDisabled?: boolean;
 };
@@ -74,30 +69,23 @@ export function FilterSheet({
   groups,
   values,
   onChange,
-  keys = FACET_KEYS,
   extras = NO_EXTRAS,
   children,
   extraCount = 0,
-  foldAll = false,
   onReset,
   resetDisabled = false,
 }: FilterSheetProps) {
   const [open, setOpen] = useState(false);
-  const declaredKeys = useMemo(() => [...keys, ...extras.map((e) => e.key)], [keys, extras]);
+  const declaredKeys = useMemo(() => [...FACET_KEYS, ...extras.map((e) => e.key)], [extras]);
   useDeclaredFacets("stacked", declaredKeys);
 
   // the badge counts only what the toolbar hides below `md`
   const count =
-    keys.reduce(
-      (sum, key) =>
-        sum +
-        (foldsBelowMd(QUICK_FACET_KEYS.includes(key), foldAll) && values[key].length > 0 ? 1 : 0),
+    FACET_KEYS.reduce(
+      (sum, key) => sum + (!QUICK_FACET_KEYS.includes(key) && values[key].length > 0 ? 1 : 0),
       0,
     ) +
-    extras.reduce(
-      (sum, extra) => sum + (foldsBelowMd(!!extra.quick, foldAll) && extra.active ? 1 : 0),
-      0,
-    ) +
+    extras.reduce((sum, extra) => sum + (!extra.quick && extra.active ? 1 : 0), 0) +
     extraCount;
 
   return (
@@ -122,7 +110,6 @@ export function FilterSheet({
               groups={groups}
               values={values}
               onChange={onChange}
-              keys={keys}
             />
           </div>
           {children}
