@@ -11,7 +11,7 @@ import {
   tradeLeg,
   userAddress,
 } from "@repo/db/schema";
-import { and, eq, gt, inArray, isNull, or, sql } from "drizzle-orm";
+import { type SQL, and, eq, gt, inArray, isNull, or, sql } from "drizzle-orm";
 
 import { holdsMessage, pairKey, startFactsOf, startVerdict } from "../../lib/chat-rules";
 import { type ListEntryRef, safetyRefusal } from "../../lib/offer-rules";
@@ -160,24 +160,34 @@ export const objektColumns = {
 export const lowerOwner = (row: IndexedObjekt) =>
   Object.assign(row, { owner: row.owner.toLowerCase() });
 
-export async function fetchObjekts(ids: string[]): Promise<Map<string, IndexedObjekt>> {
+/** `narrow` is an extra condition on the objekt or its collection, such as a picker's filters. */
+export async function fetchObjekts(
+  ids: string[],
+  narrow?: SQL,
+): Promise<Map<string, IndexedObjekt>> {
   if (ids.length === 0) return new Map();
   const rows = await indexer
     .select(objektColumns)
     .from(objekts)
     .innerJoin(collections, eq(collections.id, objekts.collectionId))
-    .where(inArray(objekts.id, unique(ids)));
+    .where(and(inArray(objekts.id, unique(ids)), narrow));
   return new Map(rows.map((row) => [row.id, lowerOwner(row)]));
 }
 
 /** Every copy of these collections the owners hold; bounded by the collections asked about. */
-export async function fetchCopies(slugs: string[], owners: string[]): Promise<IndexedObjekt[]> {
+export async function fetchCopies(
+  slugs: string[],
+  owners: string[],
+  narrow?: SQL,
+): Promise<IndexedObjekt[]> {
   if (slugs.length === 0 || owners.length === 0) return [];
   const rows = await indexer
     .select(objektColumns)
     .from(objekts)
     .innerJoin(collections, eq(collections.id, objekts.collectionId))
-    .where(and(inArray(collections.slug, unique(slugs)), inArray(objekts.owner, unique(owners))));
+    .where(
+      and(inArray(collections.slug, unique(slugs)), inArray(objekts.owner, unique(owners)), narrow),
+    );
   return rows.map(lowerOwner);
 }
 

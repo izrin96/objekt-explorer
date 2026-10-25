@@ -21,7 +21,14 @@ import {
   refuseOffer,
   reservedIds,
 } from "../core";
-import { collectionsOf, ownedPage, toCandidate, wantListOf, wantSlugsOf } from "./shared";
+import {
+  collectionWhere,
+  collectionsOf,
+  ownedPage,
+  toCandidate,
+  wantListOf,
+  wantSlugsOf,
+} from "./shared";
 
 /** The condition keeping what one of the sender's own have, sale or general lists names; null when it names nothing. */
 async function listWhere(me: string, slug: string) {
@@ -95,13 +102,19 @@ export async function mineCandidates(
   ]);
 
   const mine = new Set(addresses);
+  // the list-first section narrows by the picker's filters, as the page below does
+  const narrow = and(...collectionWhere(filters));
   const [haveTokens, haveCopies] = await Promise.all([
-    fetchObjekts(haveEntries.flatMap((e) => (e.objektId ? [e.objektId] : []))),
+    fetchObjekts(
+      haveEntries.flatMap((e) => (e.objektId ? [e.objektId] : [])),
+      narrow,
+    ),
     fetchCopies(
       haveEntries.flatMap((e) =>
         e.objektId === null && e.collectionSlug ? [e.collectionSlug] : [],
       ),
       addresses,
+      narrow,
     ),
   ]);
 
