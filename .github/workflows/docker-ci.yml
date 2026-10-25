@@ -1,8 +1,10 @@
 name: Docker CI/CD
 
-# Temporarily disabled: images are built on the VPS. Restore the push and
-# pull_request triggers (branches: ["main"]) to re-enable CI.
 on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
   workflow_dispatch:
     branches: ["main"]
     inputs:
@@ -164,11 +166,19 @@ jobs:
             ghcr.io/${{ github.repository }}-${{ matrix.app }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          # public client values; only apps/web declares these args
+          # public client values and the source map upload; only apps/web declares these args.
+          # The upload runs only with the token, org, project and release all set, so the Staging
+          # environment, which has no token, uploads nothing
           build-args: |
-            VITE_UMAMI_SCRIPT_URL=${{ secrets.VITE_UMAMI_SCRIPT_URL }}
-            VITE_UMAMI_WEBSITE_ID=${{ secrets.VITE_UMAMI_WEBSITE_ID }}
-            VITE_LIVE_API_KEY=${{ secrets.VITE_LIVE_API_KEY }}
+            VITE_UMAMI_SCRIPT_URL=${{ vars.VITE_UMAMI_SCRIPT_URL }}
+            VITE_UMAMI_WEBSITE_ID=${{ vars.VITE_UMAMI_WEBSITE_ID }}
+            VITE_LIVE_API_KEY=${{ vars.VITE_LIVE_API_KEY }}
+            SENTRY_URL=${{ vars.SENTRY_URL }}
+            SENTRY_ORG=${{ vars.SENTRY_ORG }}
+            SENTRY_PROJECT=${{ vars.SENTRY_PROJECT }}
+            SENTRY_RELEASE=${{ github.sha }}
+          secrets: |
+            SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}
 
   cleanup:
     runs-on: ubuntu-latest
