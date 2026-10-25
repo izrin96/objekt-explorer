@@ -24,6 +24,28 @@ const anonymize = async (userId: string, self: boolean) => {
   await anonymizeUser(userId, { self });
 };
 
+/**
+ * Sign-up takes any email without proving it, so a password account whose email is unverified
+ * may belong to someone squatting on the address: a login linked to it would outlive the real
+ * owner's password reset. Such an account links nothing until its email is verified. An account
+ * made by a social sign-in has no password and links freely, as Discord's placeholder email can
+ * never be verified.
+ */
+async function refuseUnverifiedLink(ctx: Parameters<typeof getSessionFromCtx>[0]) {
+  const session = await getSessionFromCtx(ctx);
+  if (!session || session.user.emailVerified) return;
+  const accounts = await ctx.context.internalAdapter.findAccounts(session.user.id);
+  if (!accounts.some((account) => account.providerId === "credential")) return;
+  // the i18n plugin translates only after hooks, so the locale is read here
+  const locale = ctx.getCookie("PARAGLIDE_LOCALE");
+  const translated =
+    locale === "ko" || locale === "ja" ? betterAuthLocale[locale].LINK_NEEDS_VERIFIED_EMAIL : null;
+  throw new APIError("FORBIDDEN", {
+    code: "LINK_NEEDS_VERIFIED_EMAIL",
+    message: translated ?? "Verify your email before linking another login",
+  });
+}
+
 export const auth = betterAuth({
   appName: SITE_NAME,
   database: drizzleAdapter(db, {
@@ -150,6 +172,10 @@ export const auth = betterAuth({
     // before the confirmation email, which Better Auth sends before `beforeDelete` runs, and
     // before the link's callback spends its token
     before: createAuthMiddleware(async (ctx) => {
+      if (ctx.path === "/link-social") {
+        await refuseUnverifiedLink(ctx);
+        return;
+      }
       if (ctx.path !== "/delete-user" && ctx.path !== "/delete-user/callback") return;
       const session = await getSessionFromCtx(ctx);
       if (!session) return;

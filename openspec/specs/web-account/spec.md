@@ -58,10 +58,22 @@ send a verification email to the new address and say so; the address changes onl
 The Sign-in section SHALL list Discord and Twitter with their linked state, and per provider offer
 Link, Refresh (re-read the handle from the provider) and Unlink behind a confirmation.
 Unlinking the last sign-in method SHALL be refused with the server's message.
+An account with a password whose email is not verified SHALL NOT link a provider: Link SHALL be
+refused with the server's message, in the user's language, until the email is verified, so a
+sign-up made with someone else's email can't keep a login after the real owner resets the
+password. An account made by a provider sign-in, which has no password, SHALL link freely.
 
 #### Scenario: Unlink
 - **WHEN** the user confirms Unlink on a linked provider that is not the last method
 - **THEN** the row shows the provider as not linked and the handle disappears from the account
+
+#### Scenario: Link before verifying the email
+- **WHEN** a user who signed up with email and password, and hasn't verified that email, presses Link on Discord
+- **THEN** the link is refused with "Verify your email before linking another login", and Discord stays unlinked
+
+#### Scenario: Link from a Discord account
+- **WHEN** a user who signed in with Discord and has no password presses Link on Twitter
+- **THEN** the link goes ahead as before
 
 ### Requirement: Password
 When the account has a password, the Password section SHALL let the user change it by entering the
