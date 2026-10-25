@@ -21,6 +21,8 @@ export type OfferRequest = {
   prefill?: OfferPrefill;
   /** prefills with the For you overlap with this partner, read through `offer.suggest` */
   suggestFor?: string;
+  /** a list of theirs You get's List choice opens on, as a Market listing's sale list */
+  startList?: string;
   /** a list of theirs whose entries are laid out under You get, ready to add */
   focusList?: string;
   /** a want list of theirs: what the viewer holds from it is laid out under You give */

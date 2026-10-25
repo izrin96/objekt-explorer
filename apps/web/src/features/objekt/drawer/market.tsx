@@ -315,6 +315,7 @@ function sellerOf(item: MarketListing) {
 const offerRequest = (item: MarketListing, slug: string): OfferRequest => ({
   to: { target: { kind: "list", slug: item.list.slug } },
   name: sellerOf(item).name ?? m.objekt_market_seller(),
+  startList: item.list.slug,
   prefill: {
     get: [
       {

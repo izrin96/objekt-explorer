@@ -22,7 +22,7 @@ import { type OfferRefusal } from "../../schemas/offer";
 import { type chatSafety, findMembership, prepareStart, type StartContext } from "../chat";
 import { lockUsersShared } from "../cosmo-link";
 import { notBlockedEither, notTradeSanctioned } from "../safety";
-import { offersOnTrade } from "../trade-lists";
+import { askableOnTrade } from "../trade-lists";
 
 export type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 export type Safety = Awaited<ReturnType<typeof chatSafety>>;
@@ -272,8 +272,6 @@ export type Addressed = {
   empty: boolean;
   /** set for a `target`: what a start needs, read once */
   start: StartContext | null;
-  /** a have or sale list target on Trade: the offer asks from this list only */
-  onlyList: string | null;
 };
 
 /**
@@ -293,7 +291,6 @@ export async function resolveAddressed(
       conversationId: input.conversationId,
       empty: !holdsMessage(lastMessageId),
       start: null,
-      onlyList: null,
     };
   }
   const target = input.target!;
@@ -310,41 +307,30 @@ export async function resolveAddressed(
     startFactsOf(start, holdsMessage(existing?.lastMessageId), { ok: true }),
   );
   if (!verdict.ok) refuseOffer(verdict.reason, verdict.retryAt ? { retryAt: verdict.retryAt } : {});
-  let onlyList: string | null = null;
-  if (target.kind === "list") {
-    const [scoped] = await db
-      .select({ slug: lists.slug })
-      .from(lists)
-      .where(and(eq(lists.slug, target.slug), eq(lists.userId, partnerId), offersOnTrade));
-    onlyList = scoped?.slug ?? null;
-  }
   return {
     partnerId,
     conversationId: existing?.id ?? null,
     empty: !holdsMessage(existing?.lastMessageId),
     start,
-    onlyList,
   };
 }
 
 export type AllowedEntry = ListEntryRef & { listId: number };
 
-/** The partner's entries the sender may ask for: those on their bound have and sale lists. */
+/** The partner's entries the sender may ask for: those on their have and sale lists on Trade. */
 export async function allowedEntries(
   addressed: Addressed,
   slugs?: string[],
   fromList?: string,
 ): Promise<AllowedEntry[]> {
-  // the scope wins over the picker's From choice
-  const only = addressed.onlyList ?? fromList;
   const allowed = await db
     .select({ id: lists.id, slug: lists.slug, hideSerial: lists.hideSerial })
     .from(lists)
     .where(
       and(
         eq(lists.userId, addressed.partnerId),
-        offersOnTrade,
-        only === undefined ? undefined : eq(lists.slug, only),
+        askableOnTrade,
+        fromList === undefined ? undefined : eq(lists.slug, fromList),
       ),
     );
   if (allowed.length === 0 || slugs?.length === 0) return [];
@@ -385,7 +371,7 @@ export async function partnerHasLists(partnerId: string) {
   const rows = await db
     .select({ id: lists.id })
     .from(lists)
-    .where(and(eq(lists.userId, partnerId), offersOnTrade))
+    .where(and(eq(lists.userId, partnerId), askableOnTrade))
     .limit(1);
   return rows.length > 0;
 }

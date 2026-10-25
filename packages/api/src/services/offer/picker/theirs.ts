@@ -14,7 +14,7 @@ import {
   type PartnerList,
   type PickerNarrowing,
 } from "../../../schemas/offer";
-import { offersOnTrade } from "../../trade-lists";
+import { askableOnTrade } from "../../trade-lists";
 import {
   type Addressed,
   type IndexedObjekt,
@@ -34,7 +34,6 @@ import {
   collectionWhere,
   collectionsOf,
   counteredGives,
-  keptGives,
   ownedPage,
   toCandidate,
   wantSlugsOf,
@@ -56,7 +55,7 @@ async function resolveTheirItems(me: string, addressed: Addressed, fromList?: st
   const [entries, linked, kept, hasLists] = await Promise.all([
     allowedEntries(addressed, undefined, fromList),
     linkedAddresses([partnerId]),
-    fromList ? null : keptGives(addressed, me),
+    fromList ? null : counteredGives(addressed.conversationId, me),
     partnerHasLists(partnerId),
   ]);
   const keptIds = [...(kept?.objekts.keys() ?? [])];
@@ -128,13 +127,12 @@ async function resolveTheirItems(me: string, addressed: Addressed, fromList?: st
   return { items, listed: entries.length > 0 || keptIds.length > 0, partnerLists: hasLists };
 }
 
-/** Empty for a scoped offer, which shows its one list only. */
+/** The partner's lists on Trade, for the picker's List choice. */
 export async function partnerListChoices(addressed: Addressed): Promise<PartnerList[]> {
-  if (addressed.onlyList !== null) return [];
   const rows = await db
     .select({ slug: lists.slug, name: lists.name, type: lists.listType })
     .from(lists)
-    .where(and(eq(lists.userId, addressed.partnerId), offersOnTrade))
+    .where(and(eq(lists.userId, addressed.partnerId), askableOnTrade))
     .orderBy(lists.id);
   return rows.flatMap((row) =>
     row.type === "have" || row.type === "sale" ? [{ ...row, type: row.type }] : [],
@@ -158,7 +156,6 @@ export async function theirCandidates(me: string, addressed: Addressed, myWants?
     nextOffset: null,
     listed,
     partnerLists,
-    scopedList: addressed.onlyList !== null,
     wanted: unique(
       items.flatMap((item) => (want.has(item.collectionSlug) ? [item.collectionSlug] : [])),
     ),
@@ -192,7 +189,6 @@ export async function theirPickerPage(
     nextOffset: end < shown.length ? end : null,
     listed,
     partnerLists,
-    scopedList: addressed.onlyList !== null,
     wanted: [],
     collections: await collectionsOf(slice.map((item) => item.collectionSlug)),
   };
@@ -227,9 +223,7 @@ export async function theirCollectionPage(
   narrowing: PickerNarrowing,
 ) {
   const { partnerId } = addressed;
-  if (addressed.onlyList !== null || (await partnerHasLists(partnerId))) {
-    refuseOffer("not_listed");
-  }
+  if (await partnerHasLists(partnerId)) refuseOffer("not_listed");
   const [addresses, myWants] = await Promise.all([
     collectionAddresses(partnerId),
     narrowing.matchOnly ? wantSlugsOf(me, false) : null,

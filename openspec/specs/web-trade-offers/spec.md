@@ -8,9 +8,9 @@ Offers between two accounts on `apps/web`: specific objekts (or any copy) on eac
 ### Requirement: Offers name objekts on both sides
 An offer SHALL be sent inside a conversation from one account to the other. It has two sides:
 - **You give**: specific objekts owned by one of the sender's linked addresses.
-- **You get**: specific objekts, or "any copy" of a collection. Each comes from an entry on one of the recipient's have or sale lists bound to a Cosmo profile, at any of the recipient's linked addresses. When the recipient has no have or sale list bound to a Cosmo profile and shown on Trade, each MAY instead come from what the recipient holds at any of their linked addresses (their collection): a specific objekt or any copy. This is checked when the offer is sent: once the recipient has such a list, only its entries can be asked for.
+- **You get**: specific objekts, or "any copy" of a collection. Each comes from an entry on one of the recipient's have or sale lists bound to a Cosmo profile and put on Trade (idle or not), at any of the recipient's linked addresses. A bound list kept off Trade SHALL not be asked from. When the recipient has no such list, each MAY instead come from what the recipient holds at any of their linked addresses (their collection): a specific objekt or any copy. This is checked when the offer is sent: once the recipient has such a list, only its entries can be asked for.
 
-An offer addressed to one of the recipient's lists, as Make offer on a Trade post (see `web-trade-browse`) and on a Market listing are, SHALL ask only for entries on that list when it is a have or sale list bound to a Cosmo profile and shown on Trade. Such an offer never draws on the recipient's other lists or on their collection. An offer addressed to any other list, such as a want list, follows the rule above. So do offers made inside a conversation, including one that began with an offer from a post.
+Where an offer starts (a Trade row, a Market listing, a conversation) SHALL not narrow what may be asked for: every offer follows the rule above.
 
 A counter-offer MAY also ask for any objekt the recipient listed under You give in the offer it counters, since the recipient already offered it.
 
@@ -124,7 +124,7 @@ The builder SHALL open as a dialog, and as a full-height sheet on a phone. It sh
 - You get, with an Add picker over the allowed list entries, labelled "Add from {name}'s lists"; or, when the partner has no have or sale list bound to a Cosmo profile and on Trade, an Add picker over their collection, labelled "Add from {name}'s collection", listing what they hold at their linked addresses, newest received first;
 - the top-up and the note.
 
-Opened for one of the partner's have or sale lists on Trade (from a Trade post or a Market listing), You get's Add picker SHALL list only that list's entries, labelled "Add from {name}'s list", with the same empty-picker reasons as over lists. Opened for any other list, such as a WTB post's want list, You get SHALL work as from a conversation.
+Opened from a Market listing, You get's picker SHALL open with its List choice on the listing's sale list; opened anywhere else, on All their lists.
 
 Each pickable objekt SHALL show its flags (not transferable, reserved, in another open offer). Send SHALL stay disabled until the offer holds at least one objekt.
 
@@ -134,7 +134,7 @@ Each picker SHALL narrow by artist, member, season, class, collection number, an
 
 You give's picker SHALL offer a **List** choice, after the filters: All your objekts, the default, which shows the have and sale list entries first as above; or one of the sender's have, sale or general lists, each shown with its list type badge, which shows only the objekts on that list the sender still holds at a linked address, with no separate list-first section. The filters and the matching switch apply on top of List.
 
-You get's picker over lists SHALL offer a **List** choice, after the filters, when the offer is not scoped to one list and the partner has a have or sale list on Trade: All their lists, the default; or one of those lists, shown as its name after its list type badge as in Compare with, which shows only that list's entries the sender may ask for. The filters and the matching switch apply on top of List. List changes only what the picker shows, not what may be sent. With a list picked, an empty picker SHALL say that nothing matches the filters, or else that nothing on that list is available.
+You get's picker over lists SHALL offer a **List** choice, after the filters, when the partner has a have or sale list on Trade: All their lists; or one of those lists, shown as its name after its list type badge as in Compare with, which shows only that list's entries the sender may ask for. The filters and the matching switch apply on top of List. List changes only what the picker shows, not what may be sent. With a list picked, an empty picker SHALL say that nothing matches the filters, or else that nothing on that list is available.
 
 An empty You get picker over lists SHALL say why: the partner lists nothing the sender may ask for; nothing matches the filters; or the partner no longer holds anything they listed. The first reason SHALL win over the filters. An empty picker over their collection SHALL say the partner holds nothing the sender can ask for, or that nothing matches the filters. In either picker, when the matching switch is on and no other filter is set, "nothing matches the filters" SHALL instead say that nothing held is on the other side's want lists ("rin.trades holds nothing on your want lists" in You get, "You hold nothing on rin.trades's want lists" in You give) and offer Turn off for the switch.
 
@@ -151,8 +151,12 @@ An empty You get picker over lists SHALL say why: the partner lists nothing the 
 - **THEN** You get's button reads "Add from {name}'s lists", and its picker shows only that list's entries
 
 #### Scenario: From a post
-- **WHEN** rin.trades has the have list "doubles" and the sale list "spares" on Trade, and the sender opens the builder from rin.trades's post for "doubles"
-- **THEN** You get's button reads "Add from rin.trades's list", and its picker shows only the entries of "doubles"
+- **WHEN** rin.trades has the have list "doubles" and the sale list "spares" on Trade, and the sender opens the builder from rin.trades's Trade row, whose lead post is "doubles"
+- **THEN** You get's button reads "Add from rin.trades's lists", and its picker opens on All their lists, showing the entries of both
+
+#### Scenario: A list kept off Trade
+- **WHEN** rin.trades has the bound have list "doubles" on Trade and the bound have list "private" off Trade
+- **THEN** You get's picker and its List choice show "doubles" only, and an offer asking for an entry only on "private" is refused when sent
 
 #### Scenario: From a WTB post
 - **WHEN** the sender opens the builder from rin.trades's WTB post, and rin.trades has "doubles" and "spares" on Trade
@@ -160,7 +164,7 @@ An empty You get picker over lists SHALL say why: the partner lists nothing the 
 
 #### Scenario: From a Market listing
 - **WHEN** the sender chooses Make offer on rin.trades's listing in an objekt's Market tab, which comes from the sale list "spares"
-- **THEN** the builder opens with that objekt under You get, and You get's picker shows only the entries of "spares"
+- **THEN** the builder opens with that objekt under You get, and You get's picker opens on "spares" under List, from which the sender MAY switch to All their lists
 
 #### Scenario: From a conversation
 - **WHEN** the sender opens the builder from their conversation with rin.trades, who has "doubles" and "spares" on Trade
@@ -174,12 +178,8 @@ An empty You get picker over lists SHALL say why: the partner lists nothing the 
 - **WHEN** the sender, in their conversation with rin.trades, opens You get's picker and picks rin.trades's sale list "spares" under List
 - **THEN** the picker shows only the entries of "spares" the sender may ask for
 
-#### Scenario: Their List hidden when scoped
-- **WHEN** the sender opens You get's picker from rin.trades's post for the have list "doubles"
-- **THEN** the picker offers no List choice, and shows only the entries of "doubles"
-
 #### Scenario: Their List shown for one list
-- **WHEN** rin.trades has exactly one have or sale list on Trade, and the offer is not scoped to it
+- **WHEN** rin.trades has exactly one have or sale list on Trade
 - **THEN** You get's picker offers a List choice of All their lists and that list
 
 #### Scenario: Their List hidden over a collection

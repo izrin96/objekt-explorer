@@ -14,6 +14,9 @@ export const offersOnTrade = and(
 
 export const takesPartInTrade = or(eq(lists.listType, "want"), offersOnTrade) as SQL;
 
+/** A have or sale list put on Trade, idle or not: what an offer may ask another member for. */
+export const askableOnTrade = and(offersOnTrade, eq(lists.discoverable, true)) as SQL;
+
 const column = (alias: string | undefined, name: string) =>
   sql.raw(alias ? `${alias}.${name}` : name);
 

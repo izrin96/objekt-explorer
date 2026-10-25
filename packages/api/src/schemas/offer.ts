@@ -179,7 +179,7 @@ const pickerNarrowingSchema = z.object({
   matchOnly: z.boolean().optional(),
   /** mine: only collections on this want list of the partner's */
   wantList: z.string().min(1).max(12).optional(),
-  /** mine: only what one of the sender's own have, sale or general lists names; theirs: only one of the partner's have or sale lists on Trade, ignored when the offer is scoped */
+  /** mine: only what one of the sender's own have, sale or general lists names; theirs: only one of the partner's have or sale lists on Trade */
   fromList: z.string().min(1).max(12).optional(),
 });
 export type PickerNarrowing = z.infer<typeof pickerNarrowingSchema>;

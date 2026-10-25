@@ -46,6 +46,7 @@ export function OfferPicker({
   name,
   source,
   theirLists,
+  startList,
   picked,
   onDone,
 }: {
@@ -56,6 +57,7 @@ export function OfferPicker({
   name: string;
   source: GetSource;
   theirLists: PartnerList[];
+  startList?: string;
   picked: OfferPick[];
   onDone: (picks: OfferPick[], collections: Collections) => void;
 }) {
@@ -68,6 +70,7 @@ export function OfferPicker({
           name={name}
           source={source}
           theirLists={theirLists}
+          startList={startList}
           picked={picked}
           onDone={onDone}
         />
@@ -82,6 +85,7 @@ function PickerBody({
   name,
   source,
   theirLists,
+  startList,
   picked,
   onDone,
 }: {
@@ -90,6 +94,7 @@ function PickerBody({
   name: string;
   source: GetSource;
   theirLists: PartnerList[];
+  startList?: string;
   picked: OfferPick[];
   onDone: (picks: OfferPick[], collections: Collections) => void;
 }) {
@@ -127,7 +132,7 @@ function PickerBody({
         ) : source === "collection" ? (
           <TheirCollectionGrid to={to} name={name} {...grid} />
         ) : (
-          <TheirsGrid to={to} name={name} lists={theirLists} {...grid} />
+          <TheirsGrid to={to} name={name} lists={theirLists} startList={startList} {...grid} />
         )}
       </div>
       <DialogFooter className="sm:items-center">
@@ -212,8 +217,8 @@ const ALL = "all";
 type ListChoice = { slug: string; name: string; type: ListType };
 
 /** A picked list that has since left `lists` reads as All again. */
-function useListChoice(lists: readonly ListChoice[]) {
-  const [picked, setList] = useState(ALL);
+function useListChoice(lists: readonly ListChoice[], start = ALL) {
+  const [picked, setList] = useState(start);
   const fromList = lists.some((list) => list.slug === picked) ? picked : undefined;
   return [fromList, setList] as const;
 }
@@ -363,11 +368,11 @@ function TheirsGrid({
   to,
   name,
   lists,
+  startList,
   ...grid
-}: GridProps & { name: string; lists: PartnerList[] }) {
+}: GridProps & { name: string; lists: PartnerList[]; startList?: string }) {
   const [filters, setFilters] = useState(NO_FILTERS);
-  // a scoped offer gets no lists
-  const [fromList, setList] = useListChoice(lists);
+  const [fromList, setList] = useListChoice(lists, startList);
   const query = useInfiniteQuery(theirPickerOptions(to, filters, fromList));
   const listed = query.data?.pages[0]?.listed ?? true;
 

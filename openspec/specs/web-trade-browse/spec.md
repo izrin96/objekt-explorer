@@ -525,13 +525,13 @@ The drawer's On Trade counts SHALL leave out trade-blocked and banned accounts. 
 - **THEN** no viewer sees rin.trades's posts on `/trade`
 
 ### Requirement: Make offer on a post
-Each row that shows Message SHALL also offer Make offer. It opens the offer builder for the person, addressed to the row's lead post's own list: the have list of a pair, or the post's only list. When that list is a have or sale list, You get SHALL ask only from it; a want-only lead post's You get works as from a conversation (see `web-trade-offers`).
+Each row that shows Message SHALL also offer Make offer. It opens the offer builder for the person, addressed to the row's lead post's own list: the have list of a pair, or the post's only list. You get SHALL ask from all of the person's have and sale lists on Trade, as from a conversation, its picker opening on All their lists (see `web-trade-offers`).
 
 The builder SHALL open empty: the row SHALL hand it no shortcuts and no prefill, and Add SHALL open the full picker.
 
 #### Scenario: From a WTT post
 - **WHEN** a user activates Make offer on rin.trades's row, whose lead post is the have list "doubles" with the most matches, and rin.trades also has the sale list "spares" on Trade
-- **THEN** the builder opens addressed to rin.trades, and You get's picker lists the entries of "doubles" only
+- **THEN** the builder opens addressed to rin.trades, and You get's picker lists the entries of "doubles" and "spares"
 
 #### Scenario: WTB post
 - **WHEN** a user activates Make offer on a row whose only post is a WTB post wanting HaSeul 302Z, and holds a copy of it

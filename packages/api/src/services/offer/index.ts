@@ -43,7 +43,7 @@ import {
 } from "./core";
 import { type ItemRow, checkItems } from "./items";
 import { partyNames, writeNotes } from "./notes";
-import { keptGives } from "./picker/shared";
+import { counteredGives } from "./picker/shared";
 import {
   type OfferRow,
   findOffer,
@@ -88,7 +88,7 @@ export async function createOffer(
       addressed,
       input.get.map((item) => item.collectionSlug),
     ),
-    keptGives(addressed, me),
+    counteredGives(addressed.conversationId, me),
     partnerHasLists(partnerId),
   ]);
   const getRows = input.get.map((item) => {

@@ -43,9 +43,7 @@ type CandidatesPage = {
   listed: boolean;
   /** theirs: false when the partner has no list to ask through; read as true when absent */
   partnerLists?: boolean;
-  /** theirs: the offer asks from one have or sale list only; absent reads as false */
-  scopedList?: boolean;
-  /** theirs, whole list only: the From choice's lists */
+  /** theirs, whole list only: the List choice's lists */
   lists?: PartnerList[];
   wanted: string[];
   collections: Awaited<ReturnType<typeof collectionsOf>>;
@@ -131,7 +129,6 @@ export async function suggestOffer(me: string, partnerId: string) {
     conversationId: existing[0]?.id ?? null,
     empty: !held,
     start: null,
-    onlyList: null,
   };
 
   const [theirs, mine] = await Promise.all([
