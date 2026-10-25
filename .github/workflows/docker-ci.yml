@@ -176,7 +176,7 @@ jobs:
             SENTRY_URL=${{ vars.SENTRY_URL }}
             SENTRY_ORG=${{ vars.SENTRY_ORG }}
             SENTRY_PROJECT=${{ vars.SENTRY_PROJECT }}
-            SENTRY_RELEASE=${{ github.sha }}
+            SENTRY_RELEASE=${{ vars.SENTRY_RELEASE }}
           secrets: |
             SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}
 
