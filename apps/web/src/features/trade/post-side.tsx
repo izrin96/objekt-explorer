@@ -69,8 +69,11 @@ function PostStrip({
   items: readonly StripItem[];
   /** collections the caller has not sent, past `items`: they take a tile each, until "+N" */
   hidden?: number;
-  /** every copy the side holds: "+N" counts the ones no drawn tile covers, as the label does */
-  copies: number;
+  /**
+   * every copy the side holds: "+N" counts the ones no drawn tile covers, as the label does.
+   * Left out when the label counts collections, and "+N" counts the collections not drawn.
+   */
+  copies?: number;
   collections: Readonly<Record<string, ValidObjekt | undefined>>;
   onOpen: (objekt: ValidObjekt) => void;
   more: (count: number) => ReactNode;
@@ -84,7 +87,8 @@ function PostStrip({
   // a hidden collection draws as the "+N" tile, so it counts as one more place
   const places = items.length + (hidden > 0 ? 1 : 0);
   const shown = items.slice(0, fitCount(width, places, { ...FIT, reserve: linkWidth }));
-  const rest = hiddenCopies(copies, shown);
+  const rest =
+    copies === undefined ? items.length - shown.length + hidden : hiddenCopies(copies, shown);
 
   return (
     <section className="flex min-w-0 flex-col gap-1">
@@ -292,7 +296,12 @@ export function SideStrip({
           ringed: item.ringed,
         }))}
         hidden={side.more}
-        copies={side.copyCount - side.rules.reduce((sum, tile) => sum + tile.count, 0)}
+        // narrowed to matches, the label is the match chip, which counts collections
+        copies={
+          narrowed && count > 0
+            ? undefined
+            : side.copyCount - side.rules.reduce((sum, tile) => sum + tile.count, 0)
+        }
         rules={
           side.rules.length > 0 ? (
             <RuleTiles tiles={side.rules} collections={collections} onOpen={onOpen} />
