@@ -93,15 +93,11 @@ The setting applies to new conversations only. A conversation is new until its f
 - **THEN** the send is refused, and they are offered the link flow
 
 ### Requirement: No Hide User
-Lists and linked Cosmo profiles SHALL have no Hide User setting: a list's page and a profile always show the linked account, and Message follows only "Who can message you" and blocks. A save from an older tab that still sends Hide User SHALL succeed and ignore it.
+Lists and linked Cosmo profiles SHALL have no Hide User setting: a list's page and a profile always show the linked account, and Message follows only "Who can message you" and blocks.
 
 #### Scenario: A sale list shows its owner
 - **WHEN** a visitor opens a sale list whose owner accepts messages from anyone
 - **THEN** the page shows the owner's account and offers Message
-
-#### Scenario: Older tab sends Hide User
-- **WHEN** a tab loaded before the setting was removed saves a list with Hide User on
-- **THEN** the save succeeds and nothing about the list hides its owner
 
 ### Requirement: Message from a list page
 A list's page SHALL offer Message in its header, so a list reached from a shared link can start a chat with its owner. It SHALL not be offered on the viewer's own list, between accounts where either blocked the other, or where the rules above hide it. It attaches no card, so the conversation starts as a request, as from a profile.
@@ -607,8 +603,6 @@ A conversation row in Inbox, Requests and Archived SHALL show the newest card se
 A row whose conversation has no such card SHALL show neither and keep its layout. A row whose last message is a post card with no text SHALL preview it as "Trade post".
 
 The context is part of the row: activating it opens the conversation, like the rest of the row, and it SHALL not be a separate control.
-
-The conversation list request SHALL keep accepting every input it accepts today. A tab loaded before this change SHALL keep listing conversations; a post card's context SHALL not break it and may show nothing there.
 
 #### Scenario: Started from a listing
 - **WHEN** a conversation started with a SeoYeon 204Z #537 card and has since exchanged text and an offer

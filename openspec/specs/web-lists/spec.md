@@ -109,8 +109,7 @@ A have, want or sale list SHALL be on Trade or not, off by default; it is what o
 Off Trade the list SHALL be in none of these, except that a want list still alerts its owner to matches (see `web-notifications`).
 - A have or sale list not filed under a Cosmo profile cannot be on Trade; the sale list's switch SHALL be disabled and say why.
 - Putting a list on Trade SHALL count as a bump of that list, unless its owner bumped in the last 24 hours, in which case it takes that bump's time (see `web-trade-browse` Bump).
-- A save from a tab loaded before this change MAY still carry the switch, the link and Open to on a have or want list. The server SHALL accept them: linking SHALL turn the switch on for the newly linked list when the saved list's switch is on and the linked list can have it on, saving a list whose link does not change SHALL leave its linked list's switch as it is, and saving a list SHALL never turn its linked list's switch off.
-- A save that leaves the switch, the link or Open to out SHALL keep the list's current value.
+- Saving a list from its form SHALL change neither its link nor a want list's Open to, nor a have or want list's switch; those are the post's, set through the post composer. A sale list's form saves its switch.
 
 #### Scenario: Turn on from the form
 - **WHEN** the owner edits a want list that is off Trade, activates Post it on its Trade line and posts it as a Buy post
@@ -135,14 +134,6 @@ Off Trade the list SHALL be in none of these, except that a want list still aler
 #### Scenario: Editing one half of a pair
 - **WHEN** want list "binary hunt" is on Trade and linked to have list "spares", which is off Trade, and the owner edits only the description of "binary hunt"
 - **THEN** "spares" stays off Trade, the two stay linked, and "binary hunt" keeps its Open to
-
-#### Scenario: Linking turns the partner on
-- **WHEN** a tab loaded before this change links want list "binary hunt", which is on Trade, to have list "spares", which is bound to a Cosmo profile and off Trade
-- **THEN** both lists are saved on Trade and "spares" appears on `/trade` paired with "binary hunt"
-
-#### Scenario: Older client
-- **WHEN** a tab loaded before this change saves a want list with discoverable on
-- **THEN** the save succeeds and the list is on Trade
 
 ### Requirement: On Trade mark in the list header
 A list header SHALL mark a list that is on Trade with an On Trade badge, for every visitor. The badge SHALL link to `/trade`. After it, the header and the list's card on `/list` SHALL show the tags of the post the list is in, as Trade tags it (see `web-trade-browse`): its linked list joins the post when that list is on Trade too. A list off Trade SHALL show no tags, and no list SHALL name its Open to in words, since the post sets it.
@@ -187,9 +178,9 @@ Have and general lists carry no choice; a sale list carries its own (see Sale li
 - Matches Any and Mutual, and Mutual N;
 - want-list alerts and "Someone wants what you have" alerts.
 
-The server SHALL refuse saving a want list linked to a have list as Buying only, and linking a want list set to Buying only to a have list, whether the request comes from the post composer or from a tab loaded before this change.
+The server SHALL refuse saving a want list linked to a have list as Buying only, and linking a want list set to Buying only to a have list, whether the request comes from the post composer or from creating a list.
 
-A request to create a want list that leaves the choice out SHALL save Swaps only. An update that leaves it out SHALL keep the list's current choice. An update that turns buying off SHALL leave the list open to swaps, so a want list is never open to nothing. A want list made before Swaps only became the default keeps the choice it had, Swaps or buying. No existing want list SHALL become Buying only unless its owner picks it.
+A request to create a want list that leaves the choice out SHALL save Swaps only. A save that turns buying off SHALL leave the list open to swaps, so a want list is never open to nothing. A want list made before Swaps only became the default keeps the choice it had, Swaps or buying. No existing want list SHALL become Buying only unless its owner picks it.
 
 The list page header and the list card SHALL name a want list's choice.
 
@@ -228,10 +219,6 @@ The list page header and the list card SHALL name a want list's choice.
 #### Scenario: Older want list
 - **WHEN** a user opens Edit post on the Swap post of a want list made before this default
 - **THEN** "also pay" is ticked, and saving without touching it keeps Swaps or buying
-
-#### Scenario: Turning buying off
-- **WHEN** a tab opened before Buying only existed saves a Buying only want list with Swaps only picked
-- **THEN** the list is saved as Swaps only
 
 #### Scenario: Choice shown on the list
 - **WHEN** a user opens a want list on Trade set to Buying only

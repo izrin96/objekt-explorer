@@ -98,7 +98,7 @@ function ListGrid({
           onOpen={() =>
             onPick({
               kind: "objekt",
-              input: { collectionSlug: objekt.slug, listSlug: slug },
+              input: { kind: "objekt", collectionSlug: objekt.slug, listSlug: slug },
               objekt,
               listName: name,
             })

@@ -14,57 +14,27 @@ import {
   browseMode,
   BUMP_COOLDOWN_HOURS,
   comparePosts,
-  FEED_FETCH_SIZE,
-  FEED_PAGE_SIZE,
-  type FeedPhase,
-  type FeedPlan,
-  feedPlan,
-  fillPage,
   fullSide,
   listMatchesOf,
   isPostIdle,
-  isSectioned,
   latest,
-  mergeSeen,
-  matchIndexOf,
   matchesViewer,
   narrowViewer,
   nextBumpAt,
   pairPosts,
-  type PhaseRead,
-  phaseScope,
   previewSide,
-  type SeenPeople,
   untradeableKey,
   type Viewer,
 } from "../../lib/trade-feed";
-import {
-  addressesByUser,
-  mutualRankOf,
-  nicknamesByAddress,
-  oneWayRankOf,
-  peopleAfter,
-  toPartnerIdentity,
-} from "../../lib/trade-rank";
+import { addressesByUser, nicknamesByAddress, toPartnerIdentity } from "../../lib/trade-rank";
 import { unique } from "../../lib/unique";
 import type { PostCardView } from "../../schemas/chat";
 import type { CollectionFilters } from "../../schemas/common/filters";
 import type { ListType } from "../../schemas/list";
-import {
-  type BrowseFilters,
-  type BrowseMatchMode,
-  type FeedCursor,
-  type SideItemsInput,
-} from "../../schemas/trade";
+import { type BrowseFilters, type SideItemsInput } from "../../schemas/trade";
 import { postKindOf } from "../../schemas/trade-post";
 import { getCollectionFilters } from "../activity-feed";
-import {
-  fetchCollectionsBySlug,
-  findOwnedList,
-  resolveDiscoverable,
-  touchList,
-  tradeColumns,
-} from "../list";
+import { fetchCollectionsBySlug } from "../list";
 import { fetchRulesById } from "../list-rules";
 import { toPublicUser } from "../profile";
 import { getCache } from "../redis";
@@ -75,11 +45,9 @@ import { takesPartInTrade, takesPartInTradeSql } from "../trade-lists";
 import { resolveCompareSides, type Sides } from "../trade-matches";
 import { fetchAddresses } from "../trade-matches/holdings";
 import { getMutualPeople } from "../trade-matches/mutual";
-import { getOneWayPeople } from "../trade-matches/one-way";
 import { type PersonMatch, personMatches } from "../trade-matches/person";
 import { type FeedList, feedListColumns, fetchPostEntries, fetchUntradeable } from "./entries";
-import { type FeedRow, fetchFeedRows, listedPost, postsCte } from "./query";
-import { loadScope, saveScope, scopeToken } from "./scope";
+import { type FeedRow, listedPost, postsCte } from "./query";
 import { fetchViewer, hasTradeList } from "./viewer";
 
 const COUNTS_TTL_SECONDS = 60;
@@ -137,36 +105,7 @@ function toListLink(list: FeedList, nicknameOf: ReadonlyMap<string, string | nul
   };
 }
 
-type Ranked = Awaited<ReturnType<typeof getOneWayPeople>>;
-
-type FeedContext = {
-  viewerId: string | null;
-  viewer: Viewer | null;
-  input: BrowseFilters & { cursor?: FeedCursor };
-  mode: BrowseMatchMode;
-  slugs: string[] | null;
-  match: { userId: string; sides: Sides; compared: Viewer } | null;
-  plan: FeedPlan;
-  mutual: Ranked;
-  oneWay: Ranked;
-  seen: SeenPeople;
-};
-
-type PostRank = Pick<FeedCursor, "rank" | "oneWay">;
-
-/** The two phases that page by a ranking of people: who is ranked, where a cursor resumes, what it keeps. */
-const RANKED_PHASES = {
-  mutual: {
-    people: (ctx: Pick<FeedContext, "mutual" | "oneWay">) => ctx.mutual,
-    rankOf: (person: Ranked[number]): PostRank => ({ rank: mutualRankOf(person) }),
-    resumeAt: (cursor: Pick<FeedCursor, "rank"> | undefined) => cursor?.rank,
-  },
-  oneWay: {
-    people: (ctx: Pick<FeedContext, "mutual" | "oneWay">) => ctx.oneWay,
-    rankOf: (person: Ranked[number]): PostRank => ({ oneWay: oneWayRankOf(person) }),
-    resumeAt: (cursor: Pick<FeedCursor, "oneWay"> | undefined) => cursor?.oneWay,
-  },
-} as const;
+type FeedMatch = { userId: string; sides: Sides; compared: Viewer };
 
 /** A one-way Compare with list has no Mutual people: Mutual needs both of the viewer's sides. */
 export async function mutualPeopleOf(match: { userId: string; sides: Sides }) {
@@ -176,7 +115,11 @@ export async function mutualPeopleOf(match: { userId: string; sides: Sides }) {
 }
 
 /** Stage 2: the posts of `rows`, up to `need`, with the viewer's rings and counts. */
-export type LoadContext = Pick<FeedContext, "viewerId" | "viewer" | "match" | "slugs"> & {
+export type LoadContext = {
+  viewerId: string | null;
+  viewer: Viewer | null;
+  match: FeedMatch | null;
+  slugs: string[] | null;
   input: Pick<BrowseFilters, "slug">;
 };
 
@@ -254,7 +197,6 @@ export async function loadPosts(ctx: LoadContext, rows: FeedRow[], need: number)
 
       posts.push({
         id: post.anchor.id,
-        tag: post.tag,
         tags: post.tags,
         narrowed,
         userId: account.id,
@@ -313,56 +255,6 @@ export async function loadPosts(ctx: LoadContext, rows: FeedRow[], need: number)
   return { posts, last, examined, identities };
 }
 
-type PostRows = Awaited<ReturnType<typeof loadPosts>>["posts"];
-
-const NO_ROWS: PhaseRead<never, FeedCursor> = { posts: [], dry: true, last: undefined };
-
-/** One phase's share of a page: its people (when it pages by a ranking), its rows, and its posts. */
-async function readPhase(
-  ctx: FeedContext,
-  phase: FeedPhase,
-  need: number,
-): Promise<PhaseRead<PostRows[number], Pick<FeedCursor, "bumpedAt" | "id" | "rank" | "oneWay">>> {
-  const { viewerId, input, match, mode, slugs, plan } = ctx;
-  const cursor = phase === plan.phases[0] ? input.cursor : undefined;
-
-  let owners: { ids: string[]; resume: boolean } | null = null;
-  let rankOf = new Map<string, PostRank>();
-  if (phase === "mutual" || phase === "oneWay") {
-    const spec = RANKED_PHASES[phase];
-    const ordered = spec.people(ctx);
-    rankOf = new Map(ordered.map((person) => [person.userId, spec.rankOf(person)]));
-    const resumed = spec.resumeAt(cursor);
-    const people = resumed ? peopleAfter(ordered, resumed) : ordered;
-    const [first] = people;
-    if (!first) return NO_ROWS;
-    owners = {
-      ids: people.map((person) => person.userId),
-      resume: resumed !== undefined && first.userId === resumed.userId,
-    };
-  }
-
-  const rows = await fetchFeedRows({
-    viewerId,
-    // Mutual is a swap between two people, so it lists WTT posts whatever the client asks
-    type: phase === "mutual" || mode === "mutual" ? "wtt" : input.type,
-    slugs,
-    slug: input.slug ?? null,
-    matches: match ? matchIndexOf(match.compared) : null,
-    owners,
-    cursor,
-    ...phaseScope(phase, plan, ctx.seen),
-  });
-  if (rows.length === 0) return NO_ROWS;
-
-  const { posts, last, examined } = await loadPosts(ctx, rows, need);
-  return {
-    posts,
-    dry: examined >= rows.length && rows.length < FEED_FETCH_SIZE,
-    last: last && { bumpedAt: iso(last.cursor_at)!, id: last.id, ...rankOf.get(last.user_id) },
-  };
-}
-
 /** The viewer's side of a feed read, or null when nothing can be listed. */
 export async function resolveFeed(viewerId: string | null, input: BrowseFilters) {
   const mode = browseMode(input);
@@ -375,7 +267,7 @@ export async function resolveFeed(viewerId: string | null, input: BrowseFilters)
 
   // the control shows on the same test, so a stale `match` from a viewer with no list on
   // Trade lists every post; a list that matches nothing yet empties the feed
-  let match: FeedContext["match"] = null;
+  let match: FeedMatch | null = null;
   if (takesPart && viewer !== null && viewerId !== null) {
     const sides = await resolveCompareSides(viewerId, input.list, mode === "mutual");
     const compared = narrowViewer(viewer, sides);
@@ -383,83 +275,6 @@ export async function resolveFeed(viewerId: string | null, input: BrowseFilters)
     match = { userId: viewerId, sides, compared };
   }
   return { mode, viewer, slugs, match };
-}
-
-export async function browseFeed(
-  viewerId: string | null,
-  input: BrowseFilters & { cursor?: FeedCursor },
-) {
-  const empty = { posts: [], nextCursor: undefined, collections: {} };
-  const resolved = await resolveFeed(viewerId, input);
-  if (!resolved) return empty;
-  const { mode, viewer, slugs, match } = resolved;
-
-  const plan = feedPlan(match ? mode : "off", input.type, input.cursor);
-  const sectioned = isSectioned(plan.phases);
-  const [mutual, oneWay, snapshot] = await Promise.all([
-    match && (plan.mutualOwned || plan.phases.includes("mutual")) ? mutualPeopleOf(match) : [],
-    match && sectioned ? getOneWayPeople(match.userId, match.sides) : [],
-    viewerId !== null && input.cursor?.scope ? loadScope(viewerId, input.cursor.scope) : undefined,
-  ]);
-  const seen = mergeSeen(snapshot, {
-    mutual: mutual.map((person) => person.userId),
-    oneWay: oneWay.map((person) => person.userId),
-  });
-
-  const ctx: FeedContext = {
-    viewerId,
-    viewer,
-    input,
-    mode,
-    slugs,
-    match,
-    plan,
-    mutual,
-    oneWay,
-    seen,
-  };
-  const page = await fillPage(
-    plan.phases,
-    FEED_PAGE_SIZE,
-    (phase, need) => readPhase(ctx, phase, need),
-    (post) => post.id,
-  );
-
-  const drawn = unique(
-    page.posts.flatMap((post) =>
-      post.sides
-        .flatMap((s) => [...s.items.map((i) => i.slug), ...s.rules.flatMap((r) => r.matchedSlugs)])
-        .concat(post.ruleMatches.map((found) => found.slug)),
-    ),
-  );
-  const collectionRows = await fetchCollectionsBySlug(drawn, []);
-
-  let scope: string | undefined;
-  if (sectioned && page.next && viewerId !== null) {
-    scope = scopeToken(seen);
-    if (scope !== input.cursor?.scope) await saveScope(viewerId, scope, seen);
-  }
-
-  return {
-    posts: page.posts.map(({ phase, ...post }) => ({
-      ...post,
-      section: sectioned
-        ? phase === "mutual"
-          ? ("mutual" as const)
-          : ("oneWay" as const)
-        : undefined,
-    })),
-    nextCursor: page.next && {
-      ...page.next.last,
-      ...(sectioned
-        ? { phase: page.next.phase === "bump" ? undefined : page.next.phase, scope }
-        : {}),
-    },
-    collections: Object.fromEntries(collectionRows.map((c) => [c.slug, c])) as Record<
-      string,
-      ValidObjekt
-    >,
-  };
 }
 
 async function fetchOwnTradeLists(userId: string) {
@@ -473,13 +288,12 @@ export async function fetchMyPosts(userId: string) {
   const now = new Date();
   const [own, lastBump] = await Promise.all([fetchOwnTradeLists(userId), lastBumpOf(userId)]);
   const next = nextBumpAt(lastBump, now);
-  // a list, as open tabs read it; every post carries the person's last and next bump
+  // every post carries the person's last and next bump
   return pairPosts(own)
     .toSorted(comparePosts)
     .map((post) => ({
       id: post.anchor.id,
       slug: post.anchor.slug,
-      tag: post.tag,
       tags: post.tags,
       kind: postKindOf(post).kind,
       alsoPay: postKindOf(post).alsoPay,
@@ -720,34 +534,6 @@ export async function bumpPerson(userId: string) {
   const next = nextBumpAt(await lastBumpOf(userId), now);
   if (next === null) throw new ORPCError("NOT_FOUND");
   throw new ORPCError("TOO_MANY_REQUESTS", { data: { nextBumpAt: next } });
-}
-
-type ShowOnTradeRefusal = "not_tradeable" | "needs_profile";
-
-export async function setShowOnTrade(userId: string, slug: string, on: boolean) {
-  const list = await findOwnedList(slug, userId);
-  if (!isTradeType(list.listType)) {
-    throw new ORPCError("BAD_REQUEST", {
-      data: { reason: "not_tradeable" satisfies ShowOnTradeRefusal },
-    });
-  }
-  if (on && !resolveDiscoverable(list.listType, list.isProfileBind, true)) {
-    throw new ORPCError("BAD_REQUEST", {
-      data: { reason: "needs_profile" satisfies ShowOnTradeRefusal },
-    });
-  }
-
-  const [saved] = await db
-    .update(lists)
-    .set(tradeColumns(on))
-    .where(eq(lists.id, list.id))
-    .returning({
-      discoverable: lists.discoverable,
-      bumpedAt: lists.bumpedAt,
-    });
-  if (!saved) throw new ORPCError("NOT_FOUND");
-  await touchList([list.id]);
-  return { ...saved, bumpedAt: iso(saved.bumpedAt) };
 }
 
 type CountRow = {

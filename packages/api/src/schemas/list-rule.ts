@@ -2,6 +2,8 @@ import { getCollectionEdition } from "@repo/lib/collection-edition";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import * as z from "zod";
 
+import { indexedObjektSchema } from "./common/objekt";
+
 /** A rule covers at most this many objekts, counted before Skip ones I own. */
 export const RULE_MAX_OBJEKTS = 500;
 export const RULE_MAX_PER_LIST = 20;
@@ -211,10 +213,49 @@ export function ruleLine(rule: ListRuleDef) {
 }
 
 const slug = z.string().min(1).max(32);
-const ruleId = z.number().int().positive();
+// coerced: `/api/v1` reads it from the path as a string
+const ruleId = z.coerce.number<number>().int().positive();
 
 export const previewRuleInputSchema = z.object({ rule: listRuleInputSchema });
 export const listRulesInputSchema = z.object({ slug });
 export const addRuleInputSchema = z.object({ slug, rule: listRuleInputSchema });
 export const updateRuleInputSchema = z.object({ slug, ruleId, rule: listRuleInputSchema });
 export const ruleIdInputSchema = z.object({ slug, ruleId });
+
+export const ruleDefSchema = z.object({
+  kind: z.enum(["collection", "set"]),
+  artist: z.string(),
+  season: z.string().nullable(),
+  collectionNo: z.string().nullable(),
+  class: z.string().nullable(),
+  editions: z.array(z.number().int()),
+  members: z.array(z.string()),
+  prio: z.array(z.string()),
+  skipOwned: z.boolean(),
+}) satisfies z.ZodType<ListRuleDef>;
+
+const ruleCountFields = {
+  covers: z.number().int(),
+  owned: z.number().int(),
+  canMatch: z.number().int(),
+};
+
+export const listRulesOutputSchema = z.array(
+  ruleDefSchema.extend({
+    id: z.number().int(),
+    ...ruleCountFields,
+    range: z.object({ from: z.string(), to: z.string(), count: z.number().int() }).nullable(),
+  }),
+);
+
+export const ruleObjektsOutputSchema = z.object({
+  ...ruleCountFields,
+  groups: z.array(
+    z.object({
+      season: z.string(),
+      collectionNo: z.string(),
+      canMatch: z.number().int(),
+      objekts: z.array(indexedObjektSchema.extend({ held: z.boolean(), wanted: z.boolean() })),
+    }),
+  ),
+});

@@ -3,7 +3,6 @@ import { describe, expect, test } from "bun:test";
 import {
   type Candidate,
   copyKey,
-  countDropped,
   entryVerdict,
   groupBySlug,
   type Holdings,
@@ -15,9 +14,7 @@ import {
   type MyList,
   type MyWant,
   oneWayPeople,
-  oneWayRankOf,
   PARTNER_LIMIT,
-  peopleAfter,
   rankPartners,
   recount,
   toPartnerIdentity,
@@ -203,7 +200,6 @@ describe("ownership", () => {
     expect(order(ranked.map((r) => r.partner))).toEqual(["B", "A"]);
     const rowA = ranked[1]!.partner;
     expect(Math.min(rowA.theyHaveIWant.length, rowA.iHaveTheyWant.length)).toBe(1);
-    expect(countDropped(recounted)).toEqual({ notOwned: 4, notTransferable: 0 });
   });
 
   test("my own sold have entry drops the match it made", () => {
@@ -562,17 +558,6 @@ describe("recount details", () => {
     expect(result.updatedAt).toBe(IDLE);
     expect(rankPartners([result], "all", NOW)[0]!.idle).toBe(true);
   });
-
-  test("my own dropped have counts once, a partner's once per partner", () => {
-    const mine = { slug: "x", direction: "iHaveTheyWant", reason: "not_owned" } as const;
-    const theirs = { slug: "y", direction: "theyHaveIWant", reason: "not_transferable" } as const;
-    expect(
-      countDropped([
-        { userId: "A", dropped: [mine, theirs] },
-        { userId: "B", dropped: [mine, theirs] },
-      ]),
-    ).toEqual({ notOwned: 1, notTransferable: 2 });
-  });
 });
 
 describe("toPartnerIdentity", () => {
@@ -807,32 +792,6 @@ describe("mutualPeople", () => {
   });
 });
 
-describe("peopleAfter", () => {
-  const person = (userId: string, mutual: number, updatedAt = RECENT) => ({
-    userId,
-    updatedAt,
-    counts: { theyHave: mutual, youHave: mutual, tradeTheyHave: mutual, tradeYouHave: mutual },
-  });
-  const ordered = mutualOrder([person("A", 5), person("B", 4), person("C", 3), person("D", 2)]);
-
-  test("starts at the cursor's person and keeps everyone after", () => {
-    const rank = mutualRankOf(person("B", 4));
-    expect(order(peopleAfter(ordered, rank))).toEqual(["B", "C", "D"]);
-  });
-
-  test("a person who moved up is only the cursor's person", () => {
-    const rank = mutualRankOf(person("C", 3));
-    const moved = mutualOrder([person("A", 5), person("C", 6), person("B", 4), person("D", 2)]);
-    expect(order(peopleAfter(moved, rank))).toEqual(["C", "D"]);
-    expect(order(peopleAfter(moved, mutualRankOf(person("B", 4))))).toEqual(["B", "D"]);
-  });
-
-  test("a cursor person who left the ranking continues with those after the tuple", () => {
-    const rank = mutualRankOf(person("X", 3, "2026-10-04T00:00:00Z"));
-    expect(order(peopleAfter(ordered, rank))).toEqual(["D"]);
-  });
-});
-
 describe("oneWayPeople", () => {
   const person = (userId: string, theyHave: number, youHave: number, updatedAt = RECENT) => ({
     userId,
@@ -869,35 +828,6 @@ describe("oneWayPeople", () => {
   test("keeps everyone past the 50 cap", () => {
     const many = Array.from({ length: PARTNER_LIMIT + 10 }, (_, i) => person(`p${i}`, 1, 0));
     expect(oneWayPeople(many)).toHaveLength(PARTNER_LIMIT + 10);
-  });
-});
-
-describe("peopleAfter", () => {
-  const person = (userId: string, sum: number, updatedAt = RECENT) => ({
-    userId,
-    updatedAt,
-    counts: { theyHave: sum, youHave: 0, tradeTheyHave: sum, tradeYouHave: 0 },
-  });
-  const ordered = oneWayPeople([person("A", 5), person("B", 4), person("C", 3), person("D", 2)]);
-
-  test("starts at the cursor's person and keeps everyone after", () => {
-    expect(order(peopleAfter(ordered, oneWayRankOf(person("B", 4))))).toEqual(["B", "C", "D"]);
-  });
-
-  test("a person who moved up is only the cursor's person", () => {
-    const moved = oneWayPeople([person("A", 5), person("C", 8), person("B", 4), person("D", 2)]);
-    expect(order(peopleAfter(moved, oneWayRankOf(person("C", 3))))).toEqual(["C", "D"]);
-    expect(order(peopleAfter(moved, oneWayRankOf(person("B", 4))))).toEqual(["B", "D"]);
-  });
-
-  test("a cursor person who left the ranking continues with those after the tuple", () => {
-    const rank = oneWayRankOf(person("X", 3, "2026-10-04T00:00:00Z"));
-    expect(order(peopleAfter(ordered, rank))).toEqual(["D"]);
-  });
-
-  test("a person with the cursor's tuple but another id sorts by id", () => {
-    const tied = oneWayPeople([person("a", 2), person("b", 2), person("c", 2)]);
-    expect(order(peopleAfter(tied, oneWayRankOf(person("b", 2))))).toEqual(["b", "c"]);
   });
 });
 

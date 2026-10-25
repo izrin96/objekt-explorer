@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { copyListInputSchema, createListInputSchema } from "./list";
+import { copyListInputSchema, createListInputSchema, listPreviewsInputSchema } from "./list";
 
 const base = {
   name: "x",
@@ -11,23 +11,24 @@ const base = {
 };
 
 describe("createListInputSchema", () => {
-  test("reads the listTypeNew an older tab sends", () => {
-    expect(createListInputSchema.parse({ ...base, listTypeNew: "want" }).listType).toBe("want");
-  });
-
-  test("listType wins over listTypeNew", () => {
-    const input = { ...base, listType: "have", listTypeNew: "want" };
-    expect(createListInputSchema.parse(input).listType).toBe("have");
-  });
-
-  test("neither key is a general list", () => {
+  test("no listType is a general list", () => {
     expect(createListInputSchema.parse(base).listType).toBe("general");
   });
 });
 
 describe("copyListInputSchema", () => {
-  test("reads the listTypeNew an older tab sends", () => {
-    const input = { ...base, sourceSlug: "abc", listTypeNew: "sale" };
-    expect(copyListInputSchema.parse(input).listType).toBe("sale");
+  test("takes the source slug beside the new list's fields", () => {
+    const input = { ...base, sourceSlug: "abc", listType: "sale" };
+    expect(copyListInputSchema.parse(input)).toMatchObject({ sourceSlug: "abc", listType: "sale" });
+  });
+});
+
+describe("listPreviewsInputSchema", () => {
+  test("takes the array /rpc sends", () => {
+    expect(listPreviewsInputSchema.parse({ slugs: ["a", "b"] })).toEqual({ slugs: ["a", "b"] });
+  });
+
+  test("takes one query-string value as a one-slug array", () => {
+    expect(listPreviewsInputSchema.parse({ slugs: "a" })).toEqual({ slugs: ["a"] });
   });
 });

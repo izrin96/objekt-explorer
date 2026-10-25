@@ -7,7 +7,6 @@ import { and, desc, eq, gt, inArray, or, sql } from "drizzle-orm";
 
 import { canReport } from "../lib/offer-rules";
 import { reportRetryAt, shapeExcerpt, shapeExcerptOffer } from "../lib/sanctions";
-import { cardKinds } from "../schemas/chat";
 import type { ReportInput } from "../schemas/moderation";
 import { afterBlockChange, findMembership, parseCard } from "./chat";
 import { lockUsersForWrite } from "./cosmo-link";
@@ -146,13 +145,14 @@ export async function fileReport(me: string, input: ReportInput) {
         excerpt: shared
           ? shapeExcerpt(
               shared.map((m) => {
-                const card = cardKinds(parseCard(m.card));
+                const card = parseCard(m.card);
                 return {
                   id: m.id,
                   senderId: m.senderId,
                   body: m.body,
-                  card: card.objekt,
-                  post: card.post ? { listId: card.post.listId } : null,
+                  // the excerpt keeps which list a post card named, not the match it showed
+                  card:
+                    card?.kind === "post" ? { kind: "post" as const, listId: card.listId } : card,
                   unsent: m.unsentAt !== null,
                   offer: (m.offerId === null ? undefined : offers?.get(m.offerId)) ?? null,
                   createdAt: m.createdAt,

@@ -11,11 +11,14 @@ request and response contracts third-party clients build against.
 `/artists`, `/collections`, `/collections/rarity`,
 `/collections/{collectionSlug}/metadata`, `/collections/{collectionSlug}/serials`,
 `/collections/{collectionSlug}/serials/{serial}/transfers`,
-`/collections/{collectionSlug}/holders`, `/filters`, `/lists/{slug}`,
-`/lists/{slug}/entries`, `/lists/{slug}/export`, `/objekts/owned-by/{address}`,
+`/collections/{collectionSlug}/holders`, `/filters`, `/lists/previews`, `/lists/{slug}`,
+`/lists/{slug}/entries`, `/lists/{slug}/export`, `/lists/{slug}/rules`,
+`/lists/{slug}/rules/{ruleId}/objekts`, `/objekts/owned-by/{address}`,
 `/objekts/held-by/{address}`, `/transfers/{address}`, `/users/search`, `/live-sessions`,
 `/market`, `/market/rates`, `/market/{collectionSlug}/listings`,
-`/market/{collectionSlug}/stats`, `/profiles/{address}`, `/profiles/{address}/pins`,
+`/market/{collectionSlug}/stats`, `/market/{collectionSlug}/history`,
+`/trade/people`, `/trade/lists/{listId}/items`, `/trade/collections/{slug}/post-counts`,
+`/profiles/{address}`, `/profiles/{address}/pins`,
 `/profiles/{address}/locked-objekts`, `/profiles/{address}/lists` and `/status`.
 No procedure that writes data or needs a signed-in account SHALL be reachable under
 `/api/v1`.
@@ -36,7 +39,7 @@ document.
 
 #### Scenario: Document lists every operation
 - **WHEN** a client fetches `/api/v1/spec.json`
-- **THEN** it lists the twenty-six public operations with their path and query
+- **THEN** it lists the thirty-three public operations with their path and query
   parameters, each with a documented 200 response schema
 
 ### Requirement: Documented response bodies
@@ -103,6 +106,20 @@ alone. An omitted `artist` SHALL mean every artist, and no cookie SHALL change t
 #### Scenario: Older client without the parameter
 - **WHEN** a client calls the list-entries procedure over `/rpc` with only `{ slug }`
 - **THEN** the call succeeds and returns the entries for every artist
+
+### Requirement: Trade feed paging
+`GET /trade/people` SHALL take the previous page's `nextCursor`, JSON-encoded, as its `cursor`
+query parameter, and the document SHALL describe `cursor` as a string. A `cursor` that is not
+valid JSON or not a cursor SHALL be rejected with 400. Without a session the response SHALL
+carry no viewer match fields. `/rpc` callers SHALL keep sending the cursor as an object.
+
+#### Scenario: Next page
+- **WHEN** a client requests `GET /api/v1/trade/people?cursor=<nextCursor as JSON>`
+- **THEN** the response is the page after the one that returned that cursor
+
+#### Scenario: Malformed cursor
+- **WHEN** a client requests `GET /api/v1/trade/people?cursor={bad`
+- **THEN** the response is 400
 
 ### Requirement: List export download
 `GET /lists/{slug}/export` SHALL respond with a `text/csv` body holding one header row

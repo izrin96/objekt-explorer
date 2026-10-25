@@ -1,19 +1,14 @@
 import { db } from "@repo/db";
-import { hiddenTradePartner, lists, messagePref, user, userBlock } from "@repo/db/schema";
+import { lists, messagePref, user } from "@repo/db/schema";
 import { tradeVersionKey } from "@repo/lib/server/list-touch";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { and, eq, inArray, sql } from "drizzle-orm";
 
 import { isMessageable, toMessagePref } from "../../lib/chat-rules";
 import { matchCounts } from "../../lib/trade-person";
-import {
-  countDropped,
-  rankPartners,
-  toPartnerIdentity,
-  nicknamesByAddress,
-} from "../../lib/trade-rank";
+import { rankPartners, toPartnerIdentity, nicknamesByAddress } from "../../lib/trade-rank";
 import { unique } from "../../lib/unique";
-import { CARD_LIMIT, type TradeFilter } from "../../schemas/trade";
+import { CARD_LIMIT } from "../../schemas/trade";
 import { fetchCollectionsBySlug } from "../list";
 import { toPublicUser } from "../profile";
 import { getCache, redis, redisFailOpen } from "../redis";
@@ -34,24 +29,12 @@ export async function tradeCacheScope(userId: string) {
   return `${version}:${market}`;
 }
 
-const CACHE_TTL_SECONDS = 300;
 const PERSON_TTL_SECONDS = 60;
 
-export async function getTradeMatches(userId: string, sides: Sides, filter: TradeFilter) {
-  const scope = await tradeCacheScope(userId);
-  return getCache(
-    `trade:foryou:10:${userId}:${scope}:${filter}:${sides.listId ?? "all"}`,
-    CACHE_TTL_SECONDS,
-    () => computeTradeMatches(userId, sides, filter),
-  );
-}
-
-export type TradeMatches = Awaited<ReturnType<typeof computeTradeMatches>>;
+type Partners = Awaited<ReturnType<typeof hydratePartners>>["partners"];
 
 /** Read past the matches cache, so a partner's Messages setting applies on the next load. */
-export async function withMessageable<M extends { partners: TradeMatches["partners"] }>(
-  matches: M,
-) {
+export async function withMessageable<M extends { partners: Partners }>(matches: M) {
   const ids = matches.partners.map((partner) => partner.userId);
   const prefs =
     ids.length === 0
@@ -75,32 +58,13 @@ export async function withMessageable<M extends { partners: TradeMatches["partne
 }
 
 /** Read past the matches cache, which outlives a reputation change. */
-export async function withReputation<M extends { partners: TradeMatches["partners"] }>(matches: M) {
+export async function withReputation<M extends { partners: Partners }>(matches: M) {
   const reputations = await reputationOf(matches.partners.map((partner) => partner.userId));
   return {
     ...matches,
     partners: matches.partners.map((partner) =>
       Object.assign(partner, { reputation: reputations.get(partner.userId) ?? null }),
     ),
-  };
-}
-
-async function computeTradeMatches(userId: string, sides: Sides, filter: TradeFilter) {
-  const now = new Date();
-  const [{ recounted, addressRows }, hidden, blocked] = await Promise.all([
-    recountPartners(userId, sides, filter),
-    db.$count(hiddenTradePartner, eq(hiddenTradePartner.userId, userId)),
-    // only the user's own blocks: counting who blocked them would tell them
-    db.$count(userBlock, eq(userBlock.blockerId, userId)),
-  ]);
-  const ranked = rankPartners(recounted, filter, now);
-  const { partners, collections } = await hydratePartners(ranked, addressRows);
-
-  return {
-    checkedAt: now.toISOString(),
-    partners,
-    notShown: { ...countDropped(recounted), hidden, blocked },
-    collections,
   };
 }
 

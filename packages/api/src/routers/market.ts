@@ -277,6 +277,13 @@ export const marketRouter = {
     }),
 
   priceHistory: pub
+    .route({
+      method: "GET",
+      path: "/market/{collectionSlug}/history",
+      tags: ["Market"],
+      summary: "One collection's daily floor, median and listing count over a range",
+      spec: errorResponses(400),
+    })
     .input(priceHistoryInputSchema)
     .output(priceHistoryOutputSchema)
     .handler(async ({ input }) => {

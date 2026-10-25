@@ -9,7 +9,9 @@ const line = (fromTarget: boolean, body: string | null): ExcerptEntry => ({
   fromTarget,
   body,
   card: null,
+  offer: null,
   at: AT,
+  unsent: false,
 });
 
 const offerNote = (note: string | null): ExcerptEntry => ({
@@ -18,6 +20,7 @@ const offerNote = (note: string | null): ExcerptEntry => ({
   card: null,
   offer: { offerId: 1, status: "open", give: [], get: [], topup: null, note },
   at: AT,
+  unsent: false,
 });
 
 describe("flagExcerpt", () => {

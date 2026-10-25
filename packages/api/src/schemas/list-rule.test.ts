@@ -7,6 +7,7 @@ import {
   type RuleCollection,
   ruleDef,
   ruleHasEditions,
+  ruleIdInputSchema,
   ruleLabel,
   ruleLine,
   ruleProblem,
@@ -168,5 +169,17 @@ describe("editions", () => {
     expect(parse({ ...set, artist: "triples" }).editions).toEqual([1, 3]);
     expect(parse({ ...set, artist: "idntt" }).editions).toEqual([]);
     expect(parse({ ...set, artist: "triples", class: "Double" }).editions).toEqual([]);
+  });
+});
+
+describe("ruleIdInputSchema", () => {
+  test("takes the number /rpc sends and the string a path carries", () => {
+    expect(ruleIdInputSchema.parse({ slug: "s", ruleId: 7 })).toEqual({ slug: "s", ruleId: 7 });
+    expect(ruleIdInputSchema.parse({ slug: "s", ruleId: "7" })).toEqual({ slug: "s", ruleId: 7 });
+  });
+
+  test("refuses a rule id that is not a positive integer", () => {
+    expect(ruleIdInputSchema.safeParse({ slug: "s", ruleId: "x" }).success).toBe(false);
+    expect(ruleIdInputSchema.safeParse({ slug: "s", ruleId: "0" }).success).toBe(false);
   });
 });

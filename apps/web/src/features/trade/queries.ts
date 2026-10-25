@@ -11,7 +11,7 @@ export const mutualCountOptions = (list: string | undefined) =>
   orpc.trade.mutualCount.queryOptions({ input: { list }, staleTime: 60_000 });
 
 export const tabCountsOptions = (enabled: boolean) =>
-  orpc.trade.tabCounts.queryOptions({ input: { forYou: false }, enabled, staleTime: 60_000 });
+  orpc.trade.tabCounts.queryOptions({ enabled, staleTime: 60_000 });
 
 export const hiddenPartnersOptions = (enabled: boolean) =>
   orpc.trade.hiddenPartners.queryOptions({ staleTime: 0, enabled });

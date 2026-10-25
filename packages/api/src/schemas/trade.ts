@@ -1,6 +1,12 @@
 import * as z from "zod";
 
 import { collectionFiltersSchema } from "./common/filters";
+import { indexedObjektSchema, ownedObjektSchema } from "./common/objekt";
+import { queryBoolean, queryJson } from "./common/query";
+import { listTypeSchema } from "./list";
+import { ruleDefSchema } from "./list-rule";
+import { publicUserSchema } from "./profile";
+import { reputationSchema } from "./reputation";
 import { POST_KINDS } from "./trade-post";
 
 const TRADE_FILTERS = ["all", "mutual", "they_have", "they_want"] as const;
@@ -14,8 +20,6 @@ export const PREVIEW_LIMIT = 22;
 
 /** the same for a one-sided post, whose side takes the whole middle column */
 export const SOLO_PREVIEW_LIMIT = 46;
-
-const DEFAULT_TRADE_FILTER = "all" satisfies TradeFilter;
 
 /** Whether `filter` can show anything for these sides: a one-way view needs its own side. */
 export function filterFits(filter: TradeFilter, sides: { have: boolean; want: boolean }) {
@@ -63,22 +67,7 @@ export function fullestFilter(sides: {
   return sides.have ? "they_want" : "they_have";
 }
 
-const tradeFilterSchema = z.enum(TRADE_FILTERS);
-
-export const forYouInputSchema = z.object({
-  filter: tradeFilterSchema.default(DEFAULT_TRADE_FILTER),
-  list: z.string().optional(),
-});
-
-export const listMatchCountInputSchema = z.object({ slug: z.string() });
-
-/** `forYou: false` skips the For you count, which only tabs loaded before the merge read. */
-export const tabCountsInputSchema = z.object({ forYou: z.boolean().default(true) });
-
-export const tabCountsOutputSchema = z.object({
-  forYou: z.number().int(),
-  mine: z.number().int(),
-});
+export const tabCountsOutputSchema = z.object({ mine: z.number().int() });
 
 export const tradePartnerInputSchema = z.object({ userId: z.string().min(1) });
 
@@ -91,71 +80,38 @@ export type BrowseMatchMode = (typeof BROWSE_MATCH_MODES)[number];
 const browseFiltersSchema = collectionFiltersSchema.extend({
   type: z.enum(POST_TYPES).default("all"),
   slug: z.string().optional(),
-  /** an older tab's Only matches switch; `match` wins when both are sent */
-  matches: z.boolean().optional(),
   match: z.enum(BROWSE_MATCH_MODES).optional(),
   /** Compare with: a list slug, read while matching is on */
   list: z.string().min(1).optional(),
 });
 export type BrowseFilters = z.infer<typeof browseFiltersSchema>;
 
-/** The last person's place in For you's One way ranking: the sum of both counts, last change, then id. */
-const oneWayRankSchema = z.object({
-  sum: z.number().int(),
-  at: z.number(),
-  userId: z.string().min(1),
-});
-export type OneWayRank = z.infer<typeof oneWayRankSchema>;
+/** A person's place in the One way ranking: the sum of both counts, last change, then id. */
+export type OneWayRank = { sum: number; at: number; userId: string };
 
 /** The Mutual ranking puts the mutual score before the One way tuple. */
-const mutualRankSchema = oneWayRankSchema.extend({ mutual: z.number().int() });
-export type MutualRank = z.infer<typeof mutualRankSchema>;
-
-/** Any's feed reads Mutual people, then One way people, then everyone else by bump. */
-const FEED_PHASES = ["mutual", "oneWay", "tail"] as const;
+export type MutualRank = OneWayRank & { mutual: number };
 
 /**
- * `phase`, `oneWay` and `scope` are optional so a cursor an open tab holds still parses: with
- * no `phase`, a `rank` reads as Mutual and anything else as the plain bump order. `scope`
- * names the server's snapshot of the people earlier phases showed.
- */
-const feedCursorSchema = z.object({
-  bumpedAt: z.iso.datetime({ offset: true }),
-  id: z.number().int(),
-  rank: mutualRankSchema.optional(),
-  phase: z.enum(FEED_PHASES).optional(),
-  oneWay: oneWayRankSchema.optional(),
-  scope: z.string().min(1).max(64).optional(),
-});
-export type FeedCursor = z.infer<typeof feedCursorSchema>;
-
-export const browseInputSchema = browseFiltersSchema.extend({
-  cursor: feedCursorSchema.optional(),
-});
-
-/**
- * `trade.people` pages by person: `bumpedAt` and `userId` are the last person's newest bump and
- * id, `lead` the `person` that opened the feed, which later pages keep leaving out. `order`
- * names the server's stored order of people and `at` the next place in it; a cursor without
- * them, from an open tab, resumes from its person. The other fields are `feedCursorSchema`'s.
+ * `trade.people` pages by person: `order` names the server's stored order of people and `at` the
+ * next place in it; `bumpedAt` and `userId` are the last person's newest bump and id, which go on
+ * past a capped order and find the place again in a rebuilt one. `lead` is the `person` that
+ * opened the feed, which later pages keep leaving out.
  */
 const peopleCursorSchema = z.object({
   bumpedAt: z.iso.datetime({ offset: true }),
   userId: z.string().min(1),
-  rank: mutualRankSchema.optional(),
-  phase: z.enum(FEED_PHASES).optional(),
-  oneWay: oneWayRankSchema.optional(),
-  scope: z.string().min(1).max(64).optional(),
   lead: z.string().min(1).optional(),
-  order: z.string().min(1).max(64).optional(),
-  at: z.number().int().nonnegative().optional(),
+  order: z.string().min(1).max(64),
+  at: z.number().int().nonnegative(),
 });
 export type PeopleCursor = z.infer<typeof peopleCursorSchema>;
 
 /** `person` is a user id whose row leads the first page. */
 export const peopleInputSchema = browseFiltersSchema.extend({
   person: z.string().min(1).optional(),
-  cursor: peopleCursorSchema.optional(),
+  /** `/api/v1` sends the previous page's `nextCursor` as JSON */
+  cursor: queryJson(peopleCursorSchema).optional(),
 });
 export type PeopleInput = z.infer<typeof peopleInputSchema>;
 
@@ -172,18 +128,123 @@ export const personInputSchema = z.object({
 
 /** One post side's every objekt, for the strip's "+N" dialog; `list` and `mutual` narrow the rings as For you's Compare with does. */
 export const sideItemsInputSchema = z.object({
-  listId: z.number().int().positive(),
+  listId: z.coerce.number<number>().int().positive(),
   list: z.string().min(1).optional(),
-  mutual: z.boolean().optional(),
+  mutual: queryBoolean.optional(),
 });
 export type SideItemsInput = z.infer<typeof sideItemsInputSchema>;
+
+const addressRefSchema = z.object({ address: z.string(), nickname: z.string().nullable() });
+
+const previewItemSchema = z.object({
+  entryId: z.number().int(),
+  slug: z.string(),
+  qty: z.number().int(),
+  ringed: z.literal(true).optional(),
+});
+
+const feedCollectionsSchema = z.record(
+  z.string(),
+  z.union([ownedObjektSchema, indexedObjektSchema]),
+);
+
+const feedSideSchema = z.object({
+  role: z.enum(["have", "want", "sale"]),
+  list: z.object({
+    id: z.number().int(),
+    slug: z.string(),
+    name: z.string(),
+    description: z.string().nullable(),
+    listType: listTypeSchema,
+    currency: z.string().nullable(),
+    profileSlug: z.string().nullable(),
+    profile: addressRefSchema.nullable(),
+  }),
+  items: z.array(previewItemSchema),
+  more: z.number().int(),
+  copyCount: z.number().int(),
+  others: z.number().int(),
+  collectionCount: z.number().int(),
+  rules: z.array(
+    z.object({
+      ruleId: z.number().int(),
+      count: z.number().int(),
+      matched: z.number().int().nullable(),
+      matchedSlugs: z.array(z.string()),
+      rule: ruleDefSchema,
+    }),
+  ),
+});
+
+const postTagSchema = z.enum(["wtt", "wtb", "wts"]);
+
+const feedPostSchema = z.object({
+  id: z.number().int(),
+  tags: z.array(postTagSchema),
+  narrowed: z.boolean(),
+  bumpedAt: z.string().nullable(),
+  updatedAt: z.string(),
+  sides: z.array(feedSideSchema),
+  match: z
+    .object({
+      youHave: z.number().int(),
+      youWant: z.number().int(),
+      haveListIds: z.array(z.number().int()),
+      wantListIds: z.array(z.number().int()),
+    })
+    .optional(),
+  ruleMatches: z.array(
+    z.object({
+      slug: z.string(),
+      ruleId: z.number().int(),
+      listId: z.number().int(),
+      swap: z.boolean(),
+      rule: ruleDefSchema,
+    }),
+  ),
+});
+
+export const peopleOutputSchema = z.object({
+  people: z.array(
+    z.object({
+      userId: z.string(),
+      identity: z.object({
+        name: z.string(),
+        address: z.string().nullable(),
+        nickname: z.string().nullable(),
+        also: z.array(addressRefSchema),
+      }),
+      user: publicUserSchema,
+      reputation: reputationSchema.nullable(),
+      messageable: z.boolean(),
+      counts: z
+        .object({
+          theyHave: z.number().int(),
+          youHave: z.number().int(),
+          tradeTheyHave: z.number().int(),
+          tradeYouHave: z.number().int(),
+        })
+        .optional(),
+      posts: z.array(feedPostSchema),
+      section: z.enum(["mutual", "oneWay"]).optional(),
+    }),
+  ),
+  nextCursor: peopleCursorSchema.optional(),
+  collections: feedCollectionsSchema,
+});
+
+export const sideItemsOutputSchema = z.object({
+  items: z.array(previewItemSchema),
+  more: z.number().int(),
+  copyCount: z.number().int(),
+  matched: z.number().int(),
+  collections: feedCollectionsSchema,
+});
 
 /** A list page's Show my matches. */
 export const listMatchesInputSchema = z.object({ listId: z.number().int().positive() });
 
 export const mutualCountInputSchema = z.object({ list: z.string().min(1).optional() });
-
-export const setShowOnTradeInputSchema = z.object({ slug: z.string(), on: z.boolean() });
 
 /** A post by what it is for and its lists, each by slug; `replaces` names the post being edited by its anchor list's slug. */
 export const savePostInputSchema = z.object({
@@ -192,8 +253,8 @@ export const savePostInputSchema = z.object({
   want: z.string().min(1).nullish(),
   sale: z.string().min(1).nullish(),
   alsoPay: z.boolean().default(false),
-  /** Sell: the sale list takes swaps; an open tab leaves it out, which keeps the list's own */
-  alsoSwap: z.boolean().optional(),
+  /** Sell: whether the sale list takes swaps */
+  alsoSwap: z.boolean().default(false),
   unpair: z.boolean().default(false),
   replaces: z.string().min(1).nullish(),
 });
@@ -202,6 +263,10 @@ export const savePostInputSchema = z.object({
 export const takeDownPostInputSchema = z.object({ slug: z.string().min(1) });
 
 export const collectionPostCountsInputSchema = z.object({ slug: z.string() });
+export const collectionPostCountsOutputSchema = z.object({
+  have: z.number().int(),
+  want: z.number().int(),
+});
 
 /** `data.reason` on a trade partner search the list or mode can't serve. */
 export const TRADE_MODE_REFUSALS = [

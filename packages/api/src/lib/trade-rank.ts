@@ -350,42 +350,6 @@ export function oneWayPeople<T extends Ranked>(partners: T[]): T[] {
     .toSorted((a, b) => compareRanks(oneWayRankOf(a), oneWayRankOf(b)));
 }
 
-/**
- * Where the next page of either ranking continues: the cursor's person first, whose later
- * posts are still to come, then everyone who sorts after the cursor's tuple. A person who moved
- * up since is only returned as the cursor's person. A rank with a `mutual` term is read as a
- * Mutual rank.
- */
-export function peopleAfter<T extends Ranked>(
-  ordered: T[],
-  rank: OneWayRank & { mutual?: number },
-): T[] {
-  const rankOf = rank.mutual === undefined ? oneWayRankOf : mutualRankOf;
-  const current = ordered.find((partner) => partner.userId === rank.userId);
-  const after = ordered.filter(
-    (partner) => partner.userId !== rank.userId && compareRanks(rankOf(partner), rank) > 0,
-  );
-  return current ? [current, ...after] : after;
-}
-
-export type NotShown = { notOwned: number; notTransferable: number };
-
-/** One drop per owner and collection: the user's own sold objekt counts once, however many partners want it. */
-export function countDropped(partners: { userId: string; dropped: Dropped[] }[]): NotShown {
-  const seen = new Map<string, DropReason>();
-  for (const partner of partners) {
-    for (const entry of partner.dropped) {
-      const owner = entry.direction === "iHaveTheyWant" ? "" : partner.userId;
-      seen.set(`${owner}:${entry.slug}`, entry.reason);
-    }
-  }
-  const reasons = [...seen.values()];
-  return {
-    notOwned: reasons.filter((reason) => reason === "not_owned").length,
-    notTransferable: reasons.filter((reason) => reason === "not_transferable").length,
-  };
-}
-
 export type AddressRef = { address: string; nickname: string | null };
 /** A linked profile as the naming rules read it. */
 export type LinkedProfile = AddressRef & { isDefault: boolean };

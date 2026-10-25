@@ -112,6 +112,7 @@ function OwnedGrid({
             onPick({
               kind: "objekt",
               input: {
+                kind: "objekt",
                 collectionSlug: objekt.slug,
                 objektId: isObjektOwned(objekt) ? objekt.id : undefined,
               },

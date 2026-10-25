@@ -166,7 +166,7 @@ The person sheet SHALL show the person's reputation line (see `web-verified-trad
 - `list` is kept as `list`;
 - `partner` becomes `person`.
 
-Unknown or unparsable values SHALL be dropped. The For you rules then apply: a signed-out visitor is sent to sign in, a signed-in viewer without a list that takes part in Trade is sent to `/trade`, and a `list` the viewer can't use reads as All my lists. A tab loaded before this change SHALL keep working until it is reloaded.
+Unknown or unparsable values SHALL be dropped. The For you rules then apply: a signed-out visitor is sent to sign in, a signed-in viewer without a list that takes part in Trade is sent to `/trade`, and a `list` the viewer can't use reads as All my lists.
 
 #### Scenario: Notification link
 - **WHEN** a signed-in user with want list "binary hunt" opens `/trade/for-you?list=binary-hunt` from an older notification
@@ -183,10 +183,6 @@ Unknown or unparsable values SHALL be dropped. The For you rules then apply: a s
 #### Scenario: Signed out
 - **WHEN** a visitor without a session opens `/trade/for-you?list=spares`
 - **THEN** the browser is at `/login`, which returns them to `/trade/for-you?list=spares` after signing in
-
-#### Scenario: Tab opened before the change
-- **WHEN** a tab loaded before this change is on Browse with Matches on Any after it ships
-- **THEN** its feed keeps loading the same posts until the tab is reloaded
 
 ### Requirement: Matched through your rules
 When a partner's objekts match the viewer's want lists only through the viewer's rules, the list's count ("N you want") SHALL name them in its "Matched with your lists" popover: under each want list, one line per rule it matched through, "via rule", the rule's label and how many collections. Nothing SHALL be listed under the strips. The header sentence SHALL add how many of the swap needs the viewer's rules: the swap takes the collections wanted by hand first, so only what they leave short counts, and nothing is added when they cover the swap. Objekts matched by an objekt the viewer added by hand SHALL NOT be counted under a rule.

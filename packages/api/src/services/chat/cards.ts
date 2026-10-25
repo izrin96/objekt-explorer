@@ -23,6 +23,7 @@ import {
   parseCaution,
   type StoredCard,
   type StoredMatch,
+  type CardRef,
   type StoredObjektCard,
   type StoredPostCard,
   storedCardSchema,
@@ -165,6 +166,7 @@ async function resolveObjektCard(
   }
 
   return {
+    kind: "objekt",
     collectionSlug: input.collectionSlug,
     ...(input.objektId === undefined ? {} : { objektId: input.objektId }),
     ...(list ? { listId: list.id } : {}),
@@ -182,7 +184,7 @@ export function parseCard(value: unknown): StoredCard | null {
  * Read live, so a card follows its list's name and price and drops a deleted list. A list that
  * hides serials shows its objekt's id and serial, and prices it by collection, only to its owner.
  */
-export async function hydrateCards(cards: StoredObjektCard[], viewerId: string | null) {
+export async function hydrateCards(cards: CardRef[], viewerId: string | null) {
   const listIds = unique(cards.flatMap((card) => (card.listId === undefined ? [] : [card.listId])));
   const objektIds = unique(
     cards.flatMap((card) => (card.objektId === undefined ? [] : [card.objektId])),
@@ -240,7 +242,7 @@ export async function hydrateCards(cards: StoredObjektCard[], viewerId: string |
   const listById = new Map(listRows.map((row) => [row.id, row]));
   const serialOf = new Map(serialRows.map((row) => [row.id, row]));
 
-  const view = (card: StoredObjektCard): CardView => {
+  const view = (card: CardRef): CardView => {
     const list = card.listId === undefined ? undefined : listById.get(card.listId);
     const hidden = hidesSerials(list, viewerId);
     const entry =
@@ -253,6 +255,7 @@ export async function hydrateCards(cards: StoredObjektCard[], viewerId: string |
           )
         : undefined;
     return {
+      kind: "objekt",
       collectionSlug: card.collectionSlug,
       objektId: hidden ? null : (card.objektId ?? null),
       serial:
@@ -315,6 +318,7 @@ export async function hydratePostCards(cards: StoredPostCard[], viewerId: string
   const collectionRows = await fetchCollectionsBySlug(slugs, []);
   return {
     view: (card: StoredPostCard): PostCardView => ({
+      kind: "post",
       listId: card.listId,
       post: posts.get(card.listId) ?? null,
       match: card.match ?? null,
@@ -366,8 +370,7 @@ export async function toChatMessages(
       id: row.id,
       mine: row.senderId === viewerId,
       body: row.body,
-      card: card.objekt ? view(card.objekt) : null,
-      post: card.post ? posts.view(card.post) : null,
+      card: card.objekt ? view(card.objekt) : card.post ? posts.view(card.post) : null,
       createdAt: new Date(row.createdAt).toISOString(),
       // an offer's caution is its note's, shown on the offer card
       caution: row.senderId === viewerId || offer ? null : parseCaution(row.caution),

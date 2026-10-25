@@ -2,11 +2,14 @@ import { ORPCError } from "@orpc/server";
 import { db } from "@repo/db";
 
 import { authed, pub } from "../orpc";
+import { documented, errorResponses } from "../schemas/common/documented";
 import {
   addRuleInputSchema,
   listRulesInputSchema,
+  listRulesOutputSchema,
   previewRuleInputSchema,
   ruleIdInputSchema,
+  ruleObjektsOutputSchema,
   updateRuleInputSchema,
 } from "../schemas/list-rule";
 import { findOwnedList } from "../services/list";
@@ -32,10 +35,20 @@ async function findList(slug: string) {
 
 export const listRulesRouter = {
   /** A want list's rules with how many objekts each wants now; anyone who can open the list. */
-  rules: pub.input(listRulesInputSchema).handler(async ({ input: { slug } }) => {
-    const list = await findList(slug);
-    return fetchListRules(list);
-  }),
+  rules: pub
+    .route({
+      method: "GET",
+      path: "/lists/{slug}/rules",
+      tags: ["Lists"],
+      summary: "A want list's rules, with how many objekts each covers and wants",
+      spec: errorResponses(400, 404),
+    })
+    .input(listRulesInputSchema)
+    .output(documented(listRulesOutputSchema))
+    .handler(async ({ input: { slug } }) => {
+      const list = await findList(slug);
+      return fetchListRules(list);
+    }),
 
   previewRule: authed
     .input(previewRuleInputSchema)
@@ -73,8 +86,19 @@ export const listRulesRouter = {
     }),
 
   /** See the objekts; held flags are the list owner's, public as every holding is. */
-  ruleObjekts: pub.input(ruleIdInputSchema).handler(async ({ input: { slug, ruleId } }) => {
-    const list = await findList(slug);
-    return ruleObjekts(list, ruleId);
-  }),
+  ruleObjekts: pub
+    .route({
+      method: "GET",
+      path: "/lists/{slug}/rules/{ruleId}/objekts",
+      tags: ["Lists"],
+      summary:
+        "Every collection one rule covers, with whether the owner holds it and the rule wants it",
+      spec: errorResponses(400, 404),
+    })
+    .input(ruleIdInputSchema)
+    .output(documented(ruleObjektsOutputSchema))
+    .handler(async ({ input: { slug, ruleId } }) => {
+      const list = await findList(slug);
+      return ruleObjekts(list, ruleId);
+    }),
 };

@@ -50,11 +50,6 @@ export function makeEditProfileInputSchema(bannerUrlPrefix: string) {
       .refine((url) => url.startsWith(bannerUrlPrefix))
       .nullish(),
     bannerImgType: z.string().max(50).nullish(),
-    // retired privacy settings: still accepted from tabs opened before their removal, and ignored
-    privateSerial: z.boolean().optional(),
-    privateProfile: z.boolean().optional(),
-    hideNickname: z.boolean().optional(),
-    hideTransfer: z.boolean().optional(),
     gridColumns: z.number().min(2).max(18).nullable(),
   });
 }

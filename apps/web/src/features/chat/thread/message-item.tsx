@@ -66,12 +66,12 @@ export function MessageItem({
             <MessageActions conversationId={conversationId} message={message} />
           ) : null}
           <div className={cn("flex min-w-0 flex-col gap-1", mine ? "items-end" : "items-start")}>
-            {message.card ? (
+            {message.card?.kind === "objekt" ? (
               <ObjektCardMessage card={message.card} collection={collection} onOpen={onOpen} />
             ) : null}
-            {message.post ? (
+            {message.card?.kind === "post" ? (
               <PostCardMessage
-                view={message.post}
+                view={message.card}
                 mine={mine}
                 collections={collections}
                 onOpen={onOpen}

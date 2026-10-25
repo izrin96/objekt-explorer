@@ -1,7 +1,7 @@
 import { db } from "@repo/db";
 import { type SQL, sql } from "drizzle-orm";
 
-import { cursorScope, FEED_FETCH_SIZE, type MatchIndex, type PostTag } from "../../lib/trade-feed";
+import { type MatchIndex, type PostTag } from "../../lib/trade-feed";
 import { IDLE_DAYS } from "../../lib/trade-rank";
 import { PERSON_POST_LIMIT, type PostType } from "../../schemas/trade";
 import { notBlockedEither, notTradeSanctioned } from "../safety";
@@ -123,16 +123,6 @@ export type FeedQuery = {
   matches: MatchIndex | null;
 };
 
-type Stage1 = FeedQuery & {
-  /** Mutual: only these owners, best first, grouped; `resume` is the cursor's owner, first in `ids` */
-  owners: { ids: string[]; resume: boolean } | null;
-  cursor: { bumpedAt: string; id: number } | undefined;
-  /** leave out every post of these owners: the tail's, past the people ranked before it */
-  excludeOwners?: string[];
-  /** leave out the WTT posts of these owners, which the Mutual section lists */
-  excludeWttOf?: string[];
-};
-
 /** The predicates every feed read shares: listed, visible to the viewer, and the filters. */
 export function feedWhere(query: FeedQuery): SQL[] {
   const where: SQL[] = [listedPost, notTradeSanctioned(sql`posts.user_id`)];
@@ -152,42 +142,6 @@ export function feedWhere(query: FeedQuery): SQL[] {
     if (query.viewerId !== null) where.push(sql`posts.user_id <> ${query.viewerId}`);
   }
   return where;
-}
-
-/** Stage 1: which posts make the page, in order. Uncached; it reads only the partial index's rows. */
-export async function fetchFeedRows(query: Stage1): Promise<FeedRow[]> {
-  const where = feedWhere(query);
-  const { owners, cursor, excludeOwners, excludeWttOf } = query;
-  if (owners) where.push(sql`posts.user_id = ANY(${sql.param(owners.ids)}::text[])`);
-  if (excludeOwners?.length) {
-    where.push(sql`NOT (posts.user_id = ANY(${sql.param(excludeOwners)}::text[]))`);
-  }
-  if (excludeWttOf?.length) {
-    where.push(
-      sql`NOT (posts.user_id = ANY(${sql.param(excludeWttOf)}::text[]) AND ${TAG_WHERE.wtt})`,
-    );
-  }
-  const scope = cursorScope(owners);
-  if (cursor && scope !== "none") {
-    const after = sql`(posts.bumped_at, posts.id) < (${cursor.bumpedAt}::timestamptz, ${cursor.id})`;
-    where.push(scope === "first" ? sql`(posts.user_id <> ${owners!.ids[0]} OR ${after})` : after);
-  }
-
-  const result = await db.execute<FeedRow>(sql`
-    WITH ${postsCte}
-    SELECT
-      posts.id,
-      posts.partner_id,
-      posts.user_id,
-      posts.bumped_at::text AS cursor_at,
-      mp.allow AS message_allow
-    FROM posts
-    LEFT JOIN message_pref mp ON mp.user_id = posts.user_id
-    WHERE ${sql.join(where, sql` AND `)}
-    ORDER BY ${owners ? sql`array_position(${sql.param(owners.ids)}::text[], posts.user_id), ` : sql``}posts.bumped_at DESC, posts.id DESC
-    LIMIT ${FEED_FETCH_SIZE}
-  `);
-  return result.rows;
 }
 
 /** How many of `ownerIds` have at least one post the stage-1 predicates keep. */

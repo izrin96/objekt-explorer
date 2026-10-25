@@ -6,20 +6,18 @@ import { and, desc, eq, inArray } from "drizzle-orm";
 
 import { refuse } from "../lib/refuse";
 import { authed, optionalAuthed, pub } from "../orpc";
+import { documented, errorResponses, type OperationObject } from "../schemas/common/documented";
 import {
-  browseInputSchema,
   peopleInputSchema,
+  peopleOutputSchema,
   collectionPostCountsInputSchema,
-  forYouInputSchema,
-  fullestFilter,
-  listMatchCountInputSchema,
+  collectionPostCountsOutputSchema,
   listMatchesInputSchema,
   mutualCountInputSchema,
   personInputSchema,
   savePostInputSchema,
-  setShowOnTradeInputSchema,
   sideItemsInputSchema,
-  tabCountsInputSchema,
+  sideItemsOutputSchema,
   tabCountsOutputSchema,
   takeDownPostInputSchema,
   tradePartnerInputSchema,
@@ -28,22 +26,14 @@ import { toPublicUser } from "../services/profile";
 import { ipRateLimited, refuseOverUserLimit, userRateLimited } from "../services/redis";
 import { bumpTradeVersions } from "../services/safety-cache";
 import {
-  browseFeed,
   bumpPerson,
   collectionPostCounts,
   fetchListMatches,
   fetchMyPosts,
   fetchSideItems,
-  setShowOnTrade,
 } from "../services/trade-feed";
 import { peopleFeed } from "../services/trade-feed/people";
-import {
-  getTradeMatches,
-  personDetail,
-  resolveTradeSides,
-  withMessageable,
-  withReputation,
-} from "../services/trade-matches";
+import { personDetail } from "../services/trade-matches";
 import { mutualCount } from "../services/trade-matches/mutual";
 import { savePost, takeDownPost } from "../services/trade-post";
 import { tabCounts } from "../services/trade-tabs";
@@ -60,27 +50,60 @@ async function limitFeed(userId: string | undefined, headers: Headers | undefine
     refuse("TOO_MANY_REQUESTS", "user_rate_limit", "Too many requests, try again shortly");
 }
 
+/** The document names `cursor` as the JSON text `/api/v1` sends, not the object `/rpc` does. */
+function jsonCursorParam(operation: OperationObject): OperationObject {
+  return {
+    ...operation,
+    parameters: operation.parameters?.map((param) =>
+      "name" in param && param.name === "cursor"
+        ? {
+            ...param,
+            description: "The previous page's `nextCursor`, JSON-encoded",
+            schema: { type: "string" },
+            style: undefined,
+            explode: undefined,
+          }
+        : param,
+    ),
+  };
+}
+
 // a sale list's save moves the market version, which every viewer's trade caches read
 const limitPostWrites = (userId: string) => refuseOverUserLimit("trade-post", userId, 60, 3600);
 
 export const tradeRouter = {
-  /** Public; viewer fields are present only with a session. */
-  browse: optionalAuthed.input(browseInputSchema).handler(async ({ input, context }) => {
-    await limitFeed(context.session?.user.id, context.headers);
-    return browseFeed(context.session?.user.id ?? null, input);
-  }),
-
-  /** Public like `browse`: the feed as people, 12 a page, each with all of their posts. */
-  people: optionalAuthed.input(peopleInputSchema).handler(async ({ input, context }) => {
-    await limitFeed(context.session?.user.id, context.headers);
-    return peopleFeed(context.session?.user.id ?? null, input);
-  }),
+  /** Public: the feed as people, 12 a page, each with all of their posts. */
+  people: optionalAuthed
+    .route({
+      method: "GET",
+      path: "/trade/people",
+      tags: ["Trade"],
+      summary: "The Trade feed by person, 12 a page, each with their posts",
+      description: "Match fields are filled only for a signed-in viewer.",
+      spec: (operation) => jsonCursorParam(errorResponses(400, 429)(operation)),
+    })
+    .input(peopleInputSchema)
+    .output(documented(peopleOutputSchema))
+    .handler(async ({ input, context }) => {
+      await limitFeed(context.session?.user.id, context.headers);
+      return peopleFeed(context.session?.user.id ?? null, input);
+    }),
 
   /** Public like `people`: every objekt of one post side, for its "+N" dialog. */
-  sideItems: optionalAuthed.input(sideItemsInputSchema).handler(async ({ input, context }) => {
-    await limitFeed(context.session?.user.id, context.headers);
-    return fetchSideItems(context.session?.user.id ?? null, input);
-  }),
+  sideItems: optionalAuthed
+    .route({
+      method: "GET",
+      path: "/trade/lists/{listId}/items",
+      tags: ["Trade"],
+      summary: "Every objekt of one post side, copies stacked",
+      spec: errorResponses(400, 404, 429),
+    })
+    .input(sideItemsInputSchema)
+    .output(documented(sideItemsOutputSchema))
+    .handler(async ({ input, context }) => {
+      await limitFeed(context.session?.user.id, context.headers);
+      return fetchSideItems(context.session?.user.id ?? null, input);
+    }),
 
   /** A list page's Show my matches: which of the list's collections match the viewer's lists. */
   listMatches: authed
@@ -93,12 +116,6 @@ export const tradeRouter = {
   bump: authed.handler(async ({ context: { session } }) => bumpPerson(session.user.id)),
 
   myPosts: authed.handler(async ({ context: { session } }) => fetchMyPosts(session.user.id)),
-
-  setShowOnTrade: authed
-    .input(setShowOnTradeInputSchema)
-    .handler(async ({ input: { slug, on }, context: { session } }) =>
-      setShowOnTrade(session.user.id, slug, on),
-    ),
 
   /** Creates or edits a post: its lists, their link, the want list's Open to and Trade state, at once. */
   savePost: authed.input(savePostInputSchema).handler(async ({ input, context: { session } }) => {
@@ -114,17 +131,16 @@ export const tradeRouter = {
     }),
 
   collectionPostCounts: pub
+    .route({
+      method: "GET",
+      path: "/trade/collections/{slug}/post-counts",
+      tags: ["Trade"],
+      summary: "How many Trade posts offer and want one collection",
+      spec: errorResponses(400),
+    })
     .input(collectionPostCountsInputSchema)
+    .output(documented(collectionPostCountsOutputSchema))
     .handler(async ({ input: { slug } }) => collectionPostCounts(slug)),
-
-  forYou: authed
-    .input(forYouInputSchema)
-    .handler(async ({ input: { filter, list }, context: { session } }) => {
-      const sides = await resolveTradeSides(session.user.id, list, filter);
-      return withReputation(
-        await withMessageable(await getTradeMatches(session.user.id, sides, filter)),
-      );
-    }),
 
   /** One person's matches, for the Browse person sheet. */
   person: authed
@@ -140,30 +156,10 @@ export const tradeRouter = {
       mutualCount(session.user.id, list),
     ),
 
-  /** Kept for tabs loaded before the merge; the list header reads `mutualCount`. */
-  listMatchCount: authed
-    .input(listMatchCountInputSchema)
-    .handler(async ({ input: { slug }, context: { session } }) => {
-      const sides = await resolveTradeSides(session.user.id, slug, "all");
-      if (sides.listId === null) throw new ORPCError("NOT_FOUND");
-      const filter = fullestFilter({
-        have: sides.haveListIds.length > 0,
-        want: sides.wantListIds.length > 0,
-      });
-      const result = await getTradeMatches(session.user.id, sides, filter);
-      return result.partners.length;
-    }),
-
-  /**
-   * The Trade tab badges: offers to answer plus trades in progress as `mine`. `forYou` is For you's
-   * partner count, computed only for tabs loaded before the merge; `forYou: false` returns 0.
-   */
+  /** The Trade tab badge: offers to answer plus trades in progress. */
   tabCounts: authed
-    .input(tabCountsInputSchema)
     .output(tabCountsOutputSchema)
-    .handler(async ({ input: { forYou }, context: { session } }) =>
-      tabCounts(session.user.id, forYou),
-    ),
+    .handler(async ({ context: { session } }) => tabCounts(session.user.id)),
 
   /**
    * Only a partner with a list For you or Browse can show is hidden; any other id gets the

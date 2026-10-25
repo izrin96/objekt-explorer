@@ -473,14 +473,6 @@ describe("Sell or swap", () => {
     });
   });
 
-  test("an edit that leaves alsoSwap out keeps the list's own", () => {
-    const sale = list({ slug: "stock", listType: "sale", takesSwaps: true, discoverable: true });
-    expect(planPost([sale], { kind: "sell", sale: "stock", replaces: "stock" })).toMatchObject({
-      ok: true,
-      saleSwaps: { id: sale.id, takesSwaps: true },
-    });
-  });
-
   test("unticking swaps on a paired sale list asks to unpair", () => {
     const sale = list({ slug: "stock", listType: "sale", takesSwaps: true, discoverable: true });
     const hunt = list({ slug: "hunt", listType: "want" });
@@ -508,7 +500,7 @@ describe("Sell or swap", () => {
     const sale = list({ slug: "stock", listType: "sale", takesSwaps: true });
     const hunt = list({ slug: "hunt", listType: "want" });
     pair(sale, hunt);
-    expect(planPost([sale, hunt], { kind: "sell", sale: "stock" })).toMatchObject({
+    expect(planPost([sale, hunt], { kind: "sell", sale: "stock", alsoSwap: true })).toMatchObject({
       ok: true,
       unlink: [],
     });

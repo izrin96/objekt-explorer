@@ -44,7 +44,6 @@ export const profileRouter = {
   edit: authed
     .input(makeEditProfileInputSchema(`${S3_PUBLIC_URL}/profile-banner/`))
     .handler(async ({ input, context: { session } }) => {
-      // the retired privacy fields in `input` are ignored
       const { address, bannerImgUrl, bannerImgType, gridColumns } = input;
       const profile = await fetchOwnedProfile(address, session.user.id);
 
@@ -113,12 +112,5 @@ async function fetchOwnedProfile(address: string, userId: string) {
     refuse("NOT_FOUND", "profile_not_found", "Profile not found or not linked with this account");
   }
 
-  // the retired privacy settings read as off, for tabs opened before their removal
-  return {
-    ...profile,
-    privateSerial: false,
-    privateProfile: false,
-    hideNickname: false,
-    hideTransfer: false,
-  };
+  return profile;
 }

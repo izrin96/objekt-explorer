@@ -10,7 +10,7 @@ import { firstLineSuggestions } from "./suggestions";
 
 const objekt = (listType?: ListType): Attachment => ({
   kind: "objekt",
-  input: { collectionSlug: "seoyeon-204z" },
+  input: { kind: "objekt", collectionSlug: "seoyeon-204z" },
   objekt: {} as ValidObjekt,
   listName: null,
   listType,
@@ -23,6 +23,7 @@ const post = (
   kind: "post",
   input: { kind: "post", listSlug: "abc" },
   view: {
+    kind: "post",
     listId: 1,
     post: tag && ({ tag } as NonNullable<PostAttachment["view"]["post"]>),
     match: match && {

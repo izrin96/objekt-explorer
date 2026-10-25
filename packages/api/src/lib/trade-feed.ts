@@ -2,7 +2,6 @@ import type { ListType } from "../schemas/list";
 import { offersSwaps, type OpenToFlags, pickByOpenTo } from "../schemas/open-to";
 import {
   type BrowseMatchMode,
-  type FeedCursor,
   type PeopleCursor,
   PREVIEW_LIMIT,
   SOLO_PREVIEW_LIMIT,
@@ -12,9 +11,6 @@ import { groupPosts, type PostTag, tagsOf } from "../schemas/trade-post";
 import { HOUR_MS } from "./time";
 import { isIdle } from "./trade-rank";
 
-export const FEED_PAGE_SIZE = 24;
-/** stage 2 can empty a post, so stage 1 reads more than a page */
-export const FEED_FETCH_SIZE = 36;
 export const BUMP_COOLDOWN_HOURS = 24;
 
 export type { PostTag };
@@ -37,10 +33,7 @@ export type Post<L extends TradeList> = {
   want: L | null;
   sale: L | null;
   tags: PostTag[];
-  /**
-   * The one tag of the rule before tags became a set, for tabs loaded before it and chat post
-   * cards: a want list alone open to swaps or buying stays WTB here.
-   */
+  /** The one tag chat post cards carry: a want list alone open to swaps or buying stays WTB here. */
   tag: PostTag;
   bumpedAt: string | null;
   updatedAt: string;
@@ -247,15 +240,9 @@ export type Viewer = {
 
 export type RuleWant = { ruleId: number; listId: number };
 
-/** The mode a Browse input asks for; an older tab's `matches` reads as Any, and none is Off. */
-export function browseMode({
-  match,
-  matches,
-}: {
-  match?: BrowseMatchMode;
-  matches?: boolean;
-}): BrowseMatchMode {
-  return match ?? (matches ? "any" : "off");
+/** The mode a feed input asks for; none is Off. */
+export function browseMode({ match }: { match?: BrowseMatchMode }): BrowseMatchMode {
+  return match ?? "off";
 }
 
 /** `index` keeping only the lists `keep` passes, and only the collections left on one. */
@@ -287,82 +274,13 @@ export function matchIndexOf(viewer: Viewer): MatchIndex {
   };
 }
 
-/** `bump` is the plain newest-bump order: Browse's, and an older Any cursor's. */
-export type FeedPhase = "mutual" | "oneWay" | "tail" | "bump";
-
-/** Which feed phases one page may read, in order. */
-export type FeedPlan = {
-  phases: FeedPhase[];
-  /** whether a Mutual person's WTT posts belong to the Mutual phase, so the later ones must skip them */
-  mutualOwned: boolean;
-};
-
-/** Any's three phases, whose posts carry a section; Browse and Mutual only have none. */
-export function isSectioned(phases: readonly FeedPhase[]) {
-  return phases.includes("oneWay") || phases.includes("tail");
-}
-
-/**
- * Browse reads the plain bump order and Mutual only its own phase. Any reads Mutual, then One
- * way people, then the tail, from the phase the cursor names; Mutual lists WTT posts only, so
- * WTB and WTS skip it. An older Any cursor (no `phase`, no `rank`) continues the plain bump
- * order and an older Mutual cursor (a `rank`) continues Mutual.
- */
-export function feedPlan(
-  mode: BrowseMatchMode,
-  type: PostType,
-  cursor?: Partial<FeedCursor> | Partial<PeopleCursor>,
-): FeedPlan {
-  if (mode === "off") return { phases: ["bump"], mutualOwned: false };
-  if (mode === "mutual") return { phases: ["mutual"], mutualOwned: false };
-
-  if (cursor && !cursor.phase && !cursor.rank) return { phases: ["bump"], mutualOwned: false };
-  const mutualOwned = type === "all" || type === "wtt";
-  const all: FeedPhase[] = mutualOwned ? ["mutual", "oneWay", "tail"] : ["oneWay", "tail"];
-  const start = cursor?.phase ?? (cursor?.rank ? "mutual" : undefined);
-  const from = start === undefined ? 0 : Math.max(0, all.indexOf(start));
-  return { phases: all.slice(from), mutualOwned };
-}
-
-/** The phase a page moves on to when `phase` has run dry, or null after the last. */
-export function phaseAfter(phases: FeedPhase[], phase: FeedPhase): FeedPhase | null {
-  return phases[phases.indexOf(phase) + 1] ?? null;
-}
-
-/** The people earlier phases showed, by account id. */
-export type SeenPeople = { mutual: string[]; oneWay: string[] };
-
-/** What the cursor's snapshot and the rankings now agree were shown: a person who left a ranking is still in it. */
-export function mergeSeen(snapshot: SeenPeople | undefined, now: SeenPeople): SeenPeople {
-  const union = (a: string[] | undefined, b: string[]) => [...new Set([...(a ?? []), ...b])];
-  return {
-    mutual: union(snapshot?.mutual, now.mutual),
-    oneWay: union(snapshot?.oneWay, now.oneWay),
-  };
-}
-
-/**
- * What a phase leaves out so that no post is listed twice: later phases skip a Mutual person's
- * WTT posts, and the tail skips every One way person.
- */
-export function phaseScope(phase: FeedPhase, plan: FeedPlan, seen: SeenPeople) {
-  const wttOf = plan.mutualOwned && (phase === "oneWay" || phase === "tail");
-  return {
-    excludeWttOf: wttOf ? seen.mutual : undefined,
-    excludeOwners: phase === "tail" ? seen.oneWay : undefined,
-  };
-}
-
-/** What one phase gave a page: its posts, whether it has none left, and where it stopped. */
-export type PhaseRead<P, C> = { posts: P[]; dry: boolean; last: C | undefined };
-
-/** stage-2 reads one request of `trade.people` may make past each phase's first */
+/** stage-2 reads one request of `trade.people` may make past its first */
 export const EXTRA_PEOPLE_READS = 3;
 
 /**
  * The stage-2 reads a request has left, so a run of people whose posts all emptied (sold out)
- * cannot turn one page into an unbounded string of recounts. A phase's first read always runs,
- * so a phase entered by handoff can still say where it stopped; each later read spends one.
+ * cannot turn one page into an unbounded string of recounts. The first read always runs, so a
+ * page can still say where it stopped; each later read spends one.
  */
 export function readBudget(extra: number) {
   let left = extra;
@@ -415,11 +333,8 @@ export const ORDER_LIMIT = 2000;
 /** Where a person sits in a people order: Mutual, One way, or (none) the tail or Browse. */
 export type OrderSection = "mutual" | "oneWay";
 
-/** One person in a people order, with the rank a cursor carries for a build that reads it. */
-export type OrderEntry = { id: string; section?: OrderSection } & Pick<
-  PeopleCursor,
-  "rank" | "oneWay"
->;
+/** One person in a people order. */
+export type OrderEntry = { id: string; section?: OrderSection };
 
 type PeopleKeyset = Pick<PeopleCursor, "bumpedAt" | "userId">;
 
@@ -456,26 +371,17 @@ export function nextSlice(people: readonly OrderEntry[], at: number, limit: numb
   return people.slice(at, at + limit);
 }
 
-const SECTION_PLACE = { mutual: 0, oneWay: 1, tail: 2 } as const;
-
 /**
- * Where a cursor goes on in an order it was not read from (expired, another filter, or an open
- * tab's cursor): after its person when they are in it, else at its position, else at the start of
- * the section its `phase` names, else at the top, where Mutual starts too.
+ * Where a cursor goes on in an order it was not read from (expired, or another filter): after
+ * its person when they are in it, else at its position.
  */
 export function resumeAt(
   people: readonly OrderEntry[],
-  cursor: Pick<PeopleCursor, "userId" | "at" | "phase">,
+  cursor: Pick<PeopleCursor, "userId" | "at">,
 ): number {
   const found = people.findIndex((entry) => entry.id === cursor.userId);
   if (found !== -1) return found + 1;
-  if (cursor.at !== undefined) return Math.min(cursor.at, people.length);
-  const { phase } = cursor;
-  if (phase === undefined) return 0;
-  const from = people.findIndex(
-    (entry) => SECTION_PLACE[entry.section ?? "tail"] >= SECTION_PLACE[phase],
-  );
-  return from === -1 ? people.length : from;
+  return Math.min(cursor.at, people.length);
 }
 
 /** A place a page of people reads: an order entry, or a person past a capped order. */
@@ -535,49 +441,6 @@ export function ordersFingerprint(filters: {
   return new Bun.CryptoHasher("sha1")
     .update(JSON.stringify({ facets, type, slug, mode, listId, lead }))
     .digest("hex");
-}
-
-/**
- * Fills a page of `size` items (posts, or people) from `phases` in order. A phase that runs dry
- * before the page is full hands the rest to the next, in the same call, and an item one phase
- * already gave, by `keyOf`, is not taken again.
- * `next` names the phase the page stopped in and where, or is undefined once nothing is left:
- * a phase that ran dry exactly as the page filled still names itself when a later one remains,
- * and the next call finds it dry and moves on.
- */
-export async function fillPage<P, C>(
-  phases: FeedPhase[],
-  size: number,
-  read: (phase: FeedPhase, need: number) => Promise<PhaseRead<P, C>>,
-  keyOf: (item: P) => string | number,
-): Promise<{
-  posts: (P & { phase: FeedPhase })[];
-  next: { phase: FeedPhase; last: C } | undefined;
-}> {
-  const posts: (P & { phase: FeedPhase })[] = [];
-  const seen = new Set<string | number>();
-  for (const phase of phases) {
-    const got = await read(phase, size - posts.length);
-    for (const post of got.posts) {
-      if (seen.has(keyOf(post))) continue;
-      seen.add(keyOf(post));
-      posts.push({ ...post, phase });
-    }
-    const more = !got.dry || (posts.length >= size && phaseAfter(phases, phase) !== null);
-    if (more && got.last !== undefined) return { posts, next: { phase, last: got.last } };
-    if (posts.length >= size || !got.dry) return { posts, next: undefined };
-  }
-  return { posts, next: undefined };
-}
-
-/**
- * Which owners the `(bumped_at, id)` cursor holds back: everyone when the owners aren't
- * grouped, only the cursor's own person when they resume, and no one when that person dropped
- * out of the ranking, since everyone listed then has not been shown yet.
- */
-export function cursorScope(owners: { resume: boolean } | null): "all" | "first" | "none" {
-  if (owners === null) return "all";
-  return owners.resume ? "first" : "none";
 }
 
 /** The viewer as Compare with sees it: only the compared have and sale lists, and want lists. */

@@ -4,7 +4,6 @@ import { iso } from "../../lib/time";
 import {
   buildPeopleOrder,
   EXTRA_PEOPLE_READS,
-  feedPlan,
   matchIndexOf,
   ORDER_LIMIT,
   orderReader,
@@ -14,7 +13,7 @@ import {
   readBudget,
   resumeAt,
 } from "../../lib/trade-feed";
-import { mutualRankOf, oneWayRankOf, type toPartnerIdentity } from "../../lib/trade-rank";
+import { type toPartnerIdentity } from "../../lib/trade-rank";
 import { unique } from "../../lib/unique";
 import { type BrowseMatchMode, PEOPLE_PAGE_SIZE, type PeopleInput } from "../../schemas/trade";
 import { fetchCollectionsBySlug } from "../list";
@@ -101,9 +100,11 @@ async function buildOrder(
   lead: string | undefined,
 ): Promise<{ order: PeopleOrder; mutual: Set<string> }> {
   const { match, input } = ctx;
-  const phases = feedPlan(mode, input.type).phases;
+  // Mutual lists WTT posts only, so WTB and WTS skip it
+  const withMutual =
+    mode === "mutual" || (mode === "any" && (input.type === "all" || input.type === "wtt"));
   const [ranked, oneWay] = await Promise.all([
-    match && phases.includes("mutual") ? mutualPeopleOf(match) : [],
+    match && withMutual ? mutualPeopleOf(match) : [],
     match && mode === "any" ? getOneWayPeople(match.userId, match.sides) : [],
   ]);
   // only a Mutual person with a kept WTT post is in the Mutual section; the rest are One way
@@ -121,13 +122,13 @@ async function buildOrder(
   const sections = [
     {
       section: "mutual" as const,
-      people: mutual.map((person) => ({ id: person.userId, rank: mutualRankOf(person) })),
+      people: mutual.map((person) => ({ id: person.userId })),
     },
     {
       section: "oneWay" as const,
       people: oneWay
         .filter((person) => keptOneWay.has(person.userId))
-        .map((person) => ({ id: person.userId, oneWay: oneWayRankOf(person) })),
+        .map((person) => ({ id: person.userId })),
     },
   ];
   const mutualIds = new Set(mutual.map((person) => person.userId));
@@ -174,7 +175,7 @@ async function openOrder(
 ): Promise<OpenedOrder> {
   const { viewerId, input } = ctx;
   const { cursor } = input;
-  if (cursor?.order !== undefined && cursor.at !== undefined) {
+  if (cursor) {
     const stored = await loadPeopleOrder(viewerId, cursor.order, filters);
     if (stored) return { order: stored, token: cursor.order, start: cursor.at };
   }
@@ -291,16 +292,12 @@ export async function peopleFeed(viewerId: string | null, input: PeopleInput) {
 
   return {
     people,
-    // `bumpedAt`, `phase` and the ranks let a cursor go on without its order, and a build
-    // that predates the order read it
+    // `bumpedAt` and `userId` let a cursor go on past a capped order or into a rebuilt one
     nextCursor: last && {
       bumpedAt:
         last.bumpedAt ??
         (lastTaken ? iso(lastTaken.newest)! : (cursor?.bumpedAt ?? new Date(0).toISOString())),
       userId: last.id,
-      ...(mode === "any" ? { phase: last.section ?? ("tail" as const) } : {}),
-      ...(last.rank ? { rank: last.rank } : {}),
-      ...(last.oneWay ? { oneWay: last.oneWay } : {}),
       lead,
       order: token,
       at: reader.position(),

@@ -5,38 +5,15 @@ import { flagsOf, openToOf, type OpenTo, pairRefusesOpenTo, resolveOpenTo } from
 const BUYING_ONLY = { matchSale: true, matchHave: false };
 
 describe("resolveOpenTo", () => {
-  test("a new want list with no matchHave matches have lists", () => {
-    expect(resolveOpenTo("want", { matchSale: false })).toEqual({
+  test("a Swaps only want list matches have lists", () => {
+    expect(resolveOpenTo("want", { matchSale: false, matchHave: true })).toEqual({
       matchSale: false,
-      matchHave: true,
-    });
-    expect(resolveOpenTo("want", { matchSale: true })).toEqual({
-      matchSale: true,
       matchHave: true,
     });
   });
 
   test("a new Buying only want list is saved as sent", () => {
-    expect(resolveOpenTo("want", { matchSale: true, matchHave: false })).toEqual(BUYING_ONLY);
-  });
-
-  test("an old tab's edit to Swaps only restores swaps on a Buying only list", () => {
-    expect(resolveOpenTo("want", { matchSale: false }, BUYING_ONLY)).toEqual({
-      matchSale: false,
-      matchHave: true,
-    });
-  });
-
-  test("an untouched old tab edit keeps Buying only", () => {
-    expect(resolveOpenTo("want", { matchSale: true }, BUYING_ONLY)).toEqual(BUYING_ONLY);
-    expect(resolveOpenTo("want", {}, BUYING_ONLY)).toEqual(BUYING_ONLY);
-  });
-
-  test("an edit that sends both flags overrides the row", () => {
-    expect(resolveOpenTo("want", { matchSale: true, matchHave: true }, BUYING_ONLY)).toEqual({
-      matchSale: true,
-      matchHave: true,
-    });
+    expect(resolveOpenTo("want", BUYING_ONLY)).toEqual(BUYING_ONLY);
   });
 
   test("open to nothing is never saved", () => {

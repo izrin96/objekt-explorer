@@ -67,23 +67,25 @@ export function useStartConversation() {
 
   const mutation = useMutation(
     orpc.chat.start.mutationOptions({
-      onSuccess: ({ id, card, postCard, thread }, { to }) => {
-        const objekt = card?.collections[card.input.collectionSlug];
-        if (card && objekt) {
-          putDraftCard(id, {
-            kind: "objekt",
-            input: card.input,
-            objekt,
-            listName: card.view.list?.name ?? null,
-            listType: card.view.list?.listType,
-          });
+      onSuccess: ({ id, card, thread }, { to }) => {
+        if (card?.kind === "objekt") {
+          const objekt = card.collections[card.input.collectionSlug];
+          if (objekt) {
+            putDraftCard(id, {
+              kind: "objekt",
+              input: card.input,
+              objekt,
+              listName: card.view.list?.name ?? null,
+              listType: card.view.list?.listType,
+            });
+          }
         }
-        if (postCard) {
+        if (card?.kind === "post") {
           putDraftCard(id, {
             kind: "post",
-            input: postCard.input,
-            view: postCard.view,
-            collections: postCard.collections,
+            input: card.input,
+            view: card.view,
+            collections: card.collections,
           });
         }
         // an open thread's cache may hold older pages and live messages; only a new one is seeded

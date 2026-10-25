@@ -42,7 +42,7 @@ The server SHALL keep one record per collection per UTC day holding, in USD, the
 
 The server SHALL record the current day at least once an hour. A day's record SHALL hold the last recording made that day, so today's record changes until UTC midnight. A collection with no priced listing at a recording SHALL have no record for that day: a record written earlier that day SHALL be removed. A recording made while the server has no currency rates SHALL write and remove nothing. Records for past days SHALL never change, whatever happens to the listings or sellers afterwards. No record SHALL be created for a day before the first recording.
 
-The site SHALL read a collection's records for the last 7, 30 or 90 days or all of them, together with the date of the collection's first record and its number of records. A range of N days SHALL cover today and the N − 1 days before it. This read SHALL not be offered under `/api/v1`.
+The site SHALL read a collection's records for the last 7, 30 or 90 days or all of them, together with the date of the collection's first record and its number of records. A range of N days SHALL cover today and the N − 1 days before it. This read SHALL also be offered as `GET /api/v1/market/{collectionSlug}/history`.
 
 #### Scenario: Blocked seller
 - **WHEN** at a recording the cheapest priced listing of SeoYeon 204Z belongs to a trade-blocked account

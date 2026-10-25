@@ -1,4 +1,4 @@
-import type { StoredObjektCard } from "../schemas/chat";
+import type { StoredCard } from "../schemas/chat";
 import {
   type ExcerptEntry,
   type ExcerptOffer,
@@ -80,8 +80,7 @@ export type ExcerptSource = {
   id: number;
   senderId: string;
   body: string | null;
-  card: StoredObjektCard | null;
-  post?: { listId: number } | null;
+  card: StoredCard | null;
   offer: ExcerptOffer | null;
   createdAt: string;
   unsent: boolean;
@@ -91,20 +90,14 @@ export type ExcerptSource = {
 export function shapeExcerpt(messages: ExcerptSource[], targetUserId: string): ExcerptEntry[] {
   return messages
     .toSorted((a, b) => a.id - b.id)
-    .map((message) =>
-      Object.assign(
-        {
-          fromTarget: message.senderId === targetUserId,
-          body: message.body,
-          card: message.card,
-          offer: message.offer,
-          at: new Date(message.createdAt).toISOString(),
-          unsent: message.unsent,
-        },
-        // only when present, so an excerpt without a post card keeps its old keys
-        message.post ? { post: message.post } : null,
-      ),
-    );
+    .map((message) => ({
+      fromTarget: message.senderId === targetUserId,
+      body: message.body,
+      card: message.card,
+      offer: message.offer,
+      at: new Date(message.createdAt).toISOString(),
+      unsent: message.unsent,
+    }));
 }
 
 type EffectiveSanction = { reason: string; until: string | null };

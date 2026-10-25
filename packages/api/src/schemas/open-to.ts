@@ -33,15 +33,9 @@ export function flagsOf(openTo: OpenTo): OpenToFlags {
 }
 
 /** A want list's Open to as saved. A list open to nothing would break `lists_open_to_something`, so a want list that stops matching sale lists always matches have lists. */
-export function resolveOpenTo(
-  listType: ListType,
-  input: Partial<OpenToFlags>,
-  current?: OpenToFlags,
-): OpenToFlags {
+export function resolveOpenTo(listType: ListType, input: OpenToFlags): OpenToFlags {
   if (listType !== "want") return flagsOf("both");
-  const matchSale = input.matchSale ?? current?.matchSale ?? false;
-  const matchHave = matchSale ? (input.matchHave ?? current?.matchHave ?? true) : true;
-  return { matchSale, matchHave };
+  return { matchSale: input.matchSale, matchHave: input.matchSale ? input.matchHave : true };
 }
 
 /** A sale list's Open to: Sell only, or Sell or swap (`takes_swaps`). */

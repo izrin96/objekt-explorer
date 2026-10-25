@@ -65,6 +65,7 @@ export const openApiRouter = {
     marketListings: marketRouter.marketListings,
     rates: marketRouter.rates,
     stats: marketRouter.stats,
+    priceHistory: marketRouter.priceHistory,
   },
   profiles: {
     preview: profileRouter.preview,
@@ -77,6 +78,14 @@ export const openApiRouter = {
     findPublic: listRouter.findPublic,
     listEntries: listRouter.listEntries,
     export: listRouter.export,
+    listPreviews: listRouter.listPreviews,
+    rules: listRouter.rules,
+    ruleObjekts: listRouter.ruleObjekts,
+  },
+  trade: {
+    people: tradeRouter.people,
+    sideItems: tradeRouter.sideItems,
+    collectionPostCounts: tradeRouter.collectionPostCounts,
   },
   config: { getArtists: configRouter.getArtists, getFilterData: configRouter.getFilterData },
 };

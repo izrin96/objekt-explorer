@@ -181,14 +181,16 @@ async function toConversationRows(me: string, page: ConversationListRow[]) {
           id: last.id,
           mine: last.senderId === me,
           body: row.unsent ? null : row.body,
-          card: lastCard.objekt,
-          post: lastCard.post !== null,
+          card: lastCard.objekt ? "objekt" : lastCard.post ? "post" : null,
           offerId: row.offer_id,
           createdAt: new Date(last.createdAt).toISOString(),
           unsent: row.unsent === true,
         },
-        context: context.objekt ? objekts.view(context.objekt) : null,
-        contextPost: context.post ? posts.view(context.post) : null,
+        context: context.objekt
+          ? objekts.view(context.objekt)
+          : context.post
+            ? posts.view(context.post)
+            : null,
         unread: rowUnread({ request: row.request, lastReadMessageId: lastRead }, incoming, me),
         request: row.request,
         archived: row.archived_at !== null,

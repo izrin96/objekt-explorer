@@ -71,8 +71,7 @@ export async function startConversation(
     return null;
   });
   const { card } = result;
-  if (!card) return { id: result.id, card: null, postCard: null, thread: await thread };
-  // an objekt card keeps its `card` field, which a tab loaded before post cards reads
+  if (!card) return { id: result.id, card: null, thread: await thread };
   if (card.kind === "post") {
     const [{ view, collections }, page] = await Promise.all([
       hydratePostCards([card.stored], me),
@@ -80,8 +79,7 @@ export async function startConversation(
     ]);
     return {
       id: result.id,
-      card: null,
-      postCard: { input: card.input, view: view(card.stored), collections },
+      card: { kind: "post" as const, input: card.input, view: view(card.stored), collections },
       thread: page,
     };
   }
@@ -91,8 +89,7 @@ export async function startConversation(
   ]);
   return {
     id: result.id,
-    card: { input: card.input, view: view(card.stored), collections },
-    postCard: null,
+    card: { kind: "objekt" as const, input: card.input, view: view(card.stored), collections },
     thread: page,
   };
 }

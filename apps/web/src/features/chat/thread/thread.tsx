@@ -255,7 +255,9 @@ function ThreadView({
                         message={message}
                         name={name}
                         collection={
-                          message.card ? collections[message.card.collectionSlug] : undefined
+                          message.card?.kind === "objekt"
+                            ? collections[message.card.collectionSlug]
+                            : undefined
                         }
                         collections={collections}
                         offerCard={

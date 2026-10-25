@@ -200,7 +200,7 @@ export type PostChoice = {
   want?: string | null;
   sale?: string | null;
   alsoPay?: boolean;
-  /** Sell: the sale list takes swaps; left out, it keeps what the list has */
+  /** Sell: whether the sale list takes swaps */
   alsoSwap?: boolean;
   unpair?: boolean;
   /** the post being edited, by its anchor list's slug */
@@ -250,7 +250,7 @@ export function planPost(lists: PlanList[], choice: PostChoice): PostPlan {
   }
 
   const saleList = choice.sale ? bySlug.get(choice.sale) : undefined;
-  const alsoSwap = choice.alsoSwap ?? saleList?.takesSwaps ?? false;
+  const alsoSwap = choice.alsoSwap ?? false;
   const writes = composerWrites({
     kind: choice.kind,
     alsoPay: choice.alsoPay,

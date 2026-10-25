@@ -291,7 +291,7 @@ function preview(last: ConversationRow["last"]) {
   const text =
     last.body ??
     (last.offerId !== null ? m.chat_preview_offer({ offer: offerNo(last.offerId) }) : null) ??
-    (last.post ? m.chat_preview_post() : m.chat_preview_card());
+    (last.card === "post" ? m.chat_preview_post() : m.chat_preview_card());
   return last.mine ? m.chat_preview_mine({ text }) : text;
 }
 
@@ -304,8 +304,9 @@ function ConversationItem({
   collections: Record<string, ValidObjekt>;
   now: number;
 }) {
-  const { partner, last, context, contextPost, unread, muted } = row;
-  const contextCollection = context ? collections[context.collectionSlug] : undefined;
+  const { partner, last, context, unread, muted } = row;
+  const contextCollection =
+    context?.kind === "objekt" ? collections[context.collectionSlug] : undefined;
   const name = partner.identity.name;
   const hydrated = useHydrated();
   // the exact end of a mute is in the viewer's time zone, which the server render does not know
@@ -355,7 +356,7 @@ function ConversationItem({
             </span>
           ) : null}
         </span>
-        {context ? (
+        {context?.kind === "objekt" ? (
           <div className="mt-1 flex min-w-0 items-center gap-2">
             <div aria-hidden className="flex">
               <OfferThumb
@@ -369,13 +370,13 @@ function ConversationItem({
               {context.serial !== null ? ` ${m.chat_card_serial({ serial: context.serial })}` : ""}
             </span>
           </div>
-        ) : contextPost ? (
+        ) : context?.kind === "post" ? (
           <div className="mt-1 flex min-w-0 items-center gap-2">
-            {contextPost.post ? (
+            {context.post ? (
               <>
-                <TagBadges tags={contextPost.post.tags} />
+                <TagBadges tags={context.post.tags} />
                 <span className="text-muted-foreground min-w-0 truncate font-mono text-xs">
-                  {m.chat_post_title({ name: contextPost.post.owner.name })}
+                  {m.chat_post_title({ name: context.post.owner.name })}
                 </span>
               </>
             ) : (

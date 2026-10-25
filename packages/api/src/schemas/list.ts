@@ -4,10 +4,11 @@ import * as z from "zod";
 import { addressInputSchema, addressSchema } from "./common/address";
 import { artistsArraySchema } from "./common/artist";
 import { indexedObjektSchema, ownedObjektSchema } from "./common/objekt";
+import { queryArray } from "./common/query";
 import type { ObjektPreview } from "./objekts";
 import { publicProfileSchema, publicUserSchema } from "./profile";
 
-const listTypeSchema = z.enum(["general", "sale", "have", "want"]);
+export const listTypeSchema = z.enum(["general", "sale", "have", "want"]);
 export type ListType = z.infer<typeof listTypeSchema>;
 
 /**
@@ -130,7 +131,7 @@ export const listEntriesInputSchema = listSlugInputSchema.extend({
   artist: artistsArraySchema.default([]),
 });
 
-const createListFields = z.object({
+export const createListInputSchema = z.object({
   name: z.string().min(1).max(256),
   listType: listTypeSchema.default("general"),
   isProfileBind: z.boolean().default(false),
@@ -144,20 +145,7 @@ const createListFields = z.object({
   matchHave: z.boolean().default(true),
 });
 
-/** Also takes the `listTypeNew` that `/rpc` clients built before the rename send, which the `general` default would otherwise swallow. */
-function withLegacyListType(value: unknown) {
-  if (typeof value !== "object" || value === null || "listType" in value) return value;
-  if (!("listTypeNew" in value)) return value;
-  const { listTypeNew, ...rest } = value;
-  return { ...rest, listType: listTypeNew };
-}
-
-export const createListInputSchema = z.preprocess(withLegacyListType, createListFields);
-
-export const copyListInputSchema = z.preprocess(
-  withLegacyListType,
-  createListFields.extend({ sourceSlug: z.string() }),
-);
+export const copyListInputSchema = createListInputSchema.extend({ sourceSlug: z.string() });
 
 export const copyPreviewInputSchema = z.object({
   sourceSlug: z.string(),
@@ -184,17 +172,22 @@ export const editListInputSchema = z.object({
   description: z.string().max(5000).nullable(),
   currency: z.string().max(10).nullable(),
   hideSerial: z.boolean(),
-  // optional: the post composer sets a have or want list's link and Trade state, so the list form
-  // leaves them out and the list keeps its own; `null` is still an unlink
-  linkedListId: z.number().nullable().optional(),
+  /** a sale list's Show on Trade; a have or want list's belongs to its post */
   discoverable: z.boolean().optional(),
-  // optional: a tab opened before the switch existed leaves the list's setting alone
-  matchSale: z.boolean().optional(),
-  matchHave: z.boolean().optional(),
   regenerateSlug: z.boolean().default(false),
 });
 
-export const listPreviewsInputSchema = z.object({ slugs: z.string().array().max(500) });
+export const listPreviewsInputSchema = z.object({
+  slugs: queryArray(z.string()).pipe(z.array(z.string()).max(500)),
+});
+
+export const listPreviewsOutputSchema = z.array(
+  z.object({
+    slug: z.string(),
+    count: z.number().int(),
+    objekts: z.array(z.union([ownedObjektSchema, indexedObjektSchema])),
+  }),
+) satisfies z.ZodType<ListPreview[]>;
 
 /** `{ address }`, and also the `{ profileAddress }` that `/rpc` clients built before it send. */
 export const profileListsInputSchema = z.preprocess(

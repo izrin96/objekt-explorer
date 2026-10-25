@@ -10,6 +10,7 @@ import {
   listEntriesInputSchema,
   listEntriesOutputSchema,
   listPreviewsInputSchema,
+  listPreviewsOutputSchema,
   profileListsInputSchema,
   profileListsOutputSchema,
   removeObjektsFromListInputSchema,
@@ -48,7 +49,15 @@ export const listEntriesRouter = {
 
   /** A slug is the list's address, so it reveals no more than opening the list would. */
   listPreviews: pub
+    .route({
+      method: "GET",
+      path: "/lists/previews",
+      tags: ["Lists"],
+      summary: "Several lists' entry counts and latest artworks, by slug",
+      spec: errorResponses(400),
+    })
     .input(listPreviewsInputSchema)
+    .output(documented(listPreviewsOutputSchema))
     .handler(({ input: { slugs } }) => fetchListPreviews(slugs)),
 
   profileLists: pub

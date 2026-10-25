@@ -214,12 +214,12 @@ function Excerpt({
                     {entry.body}
                   </Bubble>
                 ) : null}
-                {entry.card ? (
+                {entry.card?.kind === "objekt" ? (
                   <p className="text-muted-foreground font-mono text-xs break-all">
                     {m.mod_excerpt_card({ slug: entry.card.collectionSlug })}
                   </p>
                 ) : null}
-                {entry.post ? (
+                {entry.card?.kind === "post" ? (
                   <p className="text-muted-foreground font-mono text-xs">{m.mod_excerpt_post()}</p>
                 ) : null}
                 {entry.offer ? (

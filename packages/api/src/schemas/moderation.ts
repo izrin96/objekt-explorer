@@ -1,6 +1,6 @@
 import * as z from "zod";
 
-import { messageLength, storedObjektCardSchema } from "./chat";
+import { messageLength, storedCardSchema } from "./chat";
 import { addressSchema } from "./common/address";
 import { OFFER_STATUSES } from "./offer";
 
@@ -151,15 +151,10 @@ export type ExcerptOffer = z.infer<typeof excerptOfferSchema>;
 export const excerptEntrySchema = z.object({
   fromTarget: z.boolean(),
   body: z.string().nullable(),
-  /** objekt cards only; a post card is `post` */
-  card: storedObjektCardSchema.nullable(),
-  /** a Trade post card: the list it named, kept apart from `card` so every reader of `card` stays valid */
-  post: z.object({ listId: z.number() }).optional(),
-  /** absent on reports filed before offers were kept */
-  offer: excerptOfferSchema.nullable().optional(),
+  card: storedCardSchema.nullable(),
+  offer: excerptOfferSchema.nullable(),
   at: z.string(),
-  /** absent on reports filed before messages could be unsent */
-  unsent: z.boolean().optional(),
+  unsent: z.boolean(),
 });
 export type ExcerptEntry = z.infer<typeof excerptEntrySchema>;
 

@@ -2,7 +2,7 @@ import { ORPCError } from "@orpc/server";
 import { db } from "@repo/db";
 import { lists } from "@repo/db/schema";
 import { normalizeCurrency } from "@repo/lib/currency";
-import { and, eq, ne } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 
 import { refuse } from "../lib/refuse";
 import { authed, pub } from "../orpc";
@@ -17,9 +17,7 @@ import {
   findPublicOutputSchema,
   listSlugInputSchema,
 } from "../schemas/list";
-import { resolveOpenTo } from "../schemas/open-to";
 import {
-  checkLinkedList,
   fetchList,
   findOwnedList,
   generateProfileSlug,
@@ -136,40 +134,15 @@ export const listCrud = {
     }) => {
       const list = await findOwnedList(input.slug, user.id);
 
-      const sentLink = input.linkedListId !== undefined;
-      const linkedListId = !["have", "want", "sale"].includes(list.listType)
-        ? null
-        : sentLink
-          ? (input.linkedListId ?? null)
-          : list.linkedListId;
-
       // Validate currency for sale lists
       if (list.listType === "sale" && !input.currency) {
         refuse("BAD_REQUEST", "list_currency_required", "Currency is required for sale lists");
       }
 
-      // Validate profile ownership (skipped when isProfileBind — address changes are
-      // ignored) and linkedListId ownership + type compatibility.
-      // allSettled keeps the profile error taking precedence over the linked one.
-      const [profileCheck, linkedCheck] = await Promise.allSettled([
-        input.profileAddress && !list.isProfileBind
-          ? assertProfileOwned(input.profileAddress, user.id)
-          : undefined,
-        // a save that leaves the link out changes neither the link nor Open to, so a pair saved
-        // before the pair rule can still be edited
-        linkedListId !== null && sentLink
-          ? checkLinkedList(
-              list.listType,
-              linkedListId,
-              user.id,
-              resolveOpenTo(list.listType, input, list),
-              list.takesSwaps,
-            )
-          : undefined,
-      ]);
-
-      if (profileCheck.status === "rejected") throw profileCheck.reason;
-      if (linkedCheck.status === "rejected") throw linkedCheck.reason;
+      // address changes are ignored on a bound list, so only an unbound one is checked
+      if (input.profileAddress && !list.isProfileBind) {
+        await assertProfileOwned(input.profileAddress, user.id);
+      }
 
       let profileSlug: string | null = null;
       // For isProfileBind lists, the profileAddress is locked to the
@@ -191,79 +164,38 @@ export const listCrud = {
           : await generateProfileSlug(input.name, list.slug, address, list.id);
       }
 
-      const discoverable = resolveDiscoverable(
-        list.listType,
-        list.isProfileBind,
-        input.discoverable ?? list.discoverable,
-      );
+      // a have or want list's Trade state belongs to its post, which `trade.savePost` writes
+      const discoverable =
+        list.listType === "sale"
+          ? resolveDiscoverable(
+              list.listType,
+              list.isProfileBind,
+              input.discoverable ?? list.discoverable,
+            )
+          : list.discoverable;
 
-      const touched = await db.transaction(async (tx) => {
-        await tx
-          .update(lists)
-          .set({
-            name: input.name,
-            gridColumns: input.gridColumns,
-            profileAddress: list.isProfileBind
-              ? undefined
-              : input.profileAddress
-                ? input.profileAddress.toLowerCase()
-                : null,
-            description: input.description,
-            currency:
-              list.listType === "sale" && input.currency ? normalizeCurrency(input.currency) : null,
-            profileSlug,
-            hideSerial:
-              ["sale", "have"].includes(list.listType) && list.isProfileBind
-                ? input.hideSerial
-                : false,
-            linkedListId,
-            ...(list.listType === "want" ? resolveOpenTo(list.listType, input, list) : {}),
-            ...tradeColumns(discoverable),
-          })
-          .where(eq(lists.id, list.id));
-
-        const changed = [list.id];
-
-        // Bidirectional link: update reverse links
-        if (linkedListId !== list.linkedListId) {
-          // Clear old reverse link if there was one
-          if (list.linkedListId) {
-            await tx
-              .update(lists)
-              .set({ linkedListId: null })
-              .where(eq(lists.id, list.linkedListId));
-            changed.push(list.linkedListId);
-          }
-
-          // Set new reverse link, clearing any existing partner on the target
-          if (linkedListId !== null) {
-            const unlinked = await tx
-              .update(lists)
-              .set({ linkedListId: null })
-              .where(and(eq(lists.linkedListId, linkedListId), ne(lists.id, list.id)))
-              .returning({ id: lists.id });
-
-            await tx.update(lists).set({ linkedListId: list.id }).where(eq(lists.id, linkedListId));
-            changed.push(linkedListId, ...unlinked.map((row) => row.id));
-          }
-        }
-
-        // a new link brings the partner onto Trade; a save that keeps the link leaves the
-        // partner's own choice alone
-        const partner = linkedCheck.value;
-        if (
-          linkedListId !== null &&
-          linkedListId !== list.linkedListId &&
-          partner &&
-          resolveDiscoverable(partner.listType, partner.isProfileBind, discoverable)
-        ) {
-          await tx.update(lists).set(tradeColumns(true)).where(eq(lists.id, linkedListId));
-          changed.push(linkedListId);
-        }
-
-        return changed;
-      });
-      await touchList(touched);
+      await db
+        .update(lists)
+        .set({
+          name: input.name,
+          gridColumns: input.gridColumns,
+          profileAddress: list.isProfileBind
+            ? undefined
+            : input.profileAddress
+              ? input.profileAddress.toLowerCase()
+              : null,
+          description: input.description,
+          currency:
+            list.listType === "sale" && input.currency ? normalizeCurrency(input.currency) : null,
+          profileSlug,
+          hideSerial:
+            ["sale", "have"].includes(list.listType) && list.isProfileBind
+              ? input.hideSerial
+              : false,
+          ...tradeColumns(discoverable),
+        })
+        .where(eq(lists.id, list.id));
+      await touchList([list.id]);
     },
   ),
 

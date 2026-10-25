@@ -76,7 +76,12 @@ export function MarketPanel({
     message: (item) =>
       start(
         { kind: "list", slug: item.list.slug },
-        { collectionSlug: slug, objektId: item.objektId ?? undefined, listSlug: item.list.slug },
+        {
+          kind: "objekt",
+          collectionSlug: slug,
+          objektId: item.objektId ?? undefined,
+          listSlug: item.list.slug,
+        },
       ),
     offer: (request) => {
       if (gate()) builder.open(request);

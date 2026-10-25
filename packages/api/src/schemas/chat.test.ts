@@ -10,8 +10,10 @@ import {
   storedObjektCardSchema,
 } from "./chat";
 
+const clientId = "0b1c6f0e-5c1f-4d3e-9a3e-7f9d2a1b4c5d";
+
 describe("listConversationsInputSchema", () => {
-  test("the inputs a tab opened before the context field sends still validate", () => {
+  test("box defaults to inbox, and a cursor is optional", () => {
     expect(listConversationsInputSchema.parse({})).toEqual({ box: "inbox" });
     expect(listConversationsInputSchema.parse({ box: "archived" })).toEqual({ box: "archived" });
     const cursor = { at: "2026-10-01 12:00:00+00", id: 7 };
@@ -54,22 +56,18 @@ describe("message body", () => {
   });
 
   test("the refusal reads as the existing empty error", () => {
-    const result = sendInputSchema.safeParse({ conversationId: 1, body: "​" });
+    const result = sendInputSchema.safeParse({ conversationId: 1, clientId, body: "​" });
     expect(result.success).toBe(false);
     expect(result.error?.issues[0]?.message).toBe("empty");
   });
 });
 
 describe("send input", () => {
-  test("an old tab's input without clientId still validates", () => {
-    expect(sendInputSchema.parse({ conversationId: 1, body: "hi" })).toEqual({
-      conversationId: 1,
-      body: "hi",
-    });
+  test("refuses a send without its clientId", () => {
+    expect(sendInputSchema.safeParse({ conversationId: 1, body: "hi" }).success).toBe(false);
   });
 
   test("clientId must be a uuid", () => {
-    const clientId = "0b1c6f0e-5c1f-4d3e-9a3e-7f9d2a1b4c5d";
     expect(sendInputSchema.safeParse({ conversationId: 1, body: "hi", clientId }).success).toBe(
       true,
     );
@@ -80,44 +78,59 @@ describe("send input", () => {
 
   test("card slugs refuse NUL", () => {
     expect(
-      sendInputSchema.safeParse({ conversationId: 1, card: { collectionSlug: "a\0b" } }).success,
+      sendInputSchema.safeParse({
+        conversationId: 1,
+        clientId,
+        card: { kind: "objekt", collectionSlug: "a\0b" },
+      }).success,
     ).toBe(false);
     expect(
-      sendInputSchema.safeParse({ conversationId: 1, card: { collectionSlug: "seoyeon-204z" } })
-        .success,
+      sendInputSchema.safeParse({
+        conversationId: 1,
+        clientId,
+        card: { kind: "objekt", collectionSlug: "seoyeon-204z" },
+      }).success,
     ).toBe(true);
   });
 });
 
 describe("cards", () => {
-  const objektInput = { collectionSlug: "seoyeon-204z", objektId: "123", listSlug: "abc123" };
-  const stored = { collectionSlug: "seoyeon-204z", objektId: "123", listId: 7 };
+  const objektInput = {
+    kind: "objekt" as const,
+    collectionSlug: "seoyeon-204z",
+    objektId: "123",
+    listSlug: "abc123",
+  };
+  const stored = {
+    kind: "objekt" as const,
+    collectionSlug: "seoyeon-204z",
+    objektId: "123",
+    listId: 7,
+  };
   const match = {
     ownerHas: { count: 5, slugs: ["a", "b", "c"] },
     senderHas: { count: 1, slugs: ["d"] },
   };
 
-  test("an old tab's objekt input validates to the same data, with no kind added", () => {
+  test("an objekt input names its kind", () => {
     const parsed = startInputSchema.parse({
       to: { kind: "list", slug: "abc123" },
       card: objektInput,
     });
     expect(parsed.card).toEqual(objektInput);
-    expect(sendInputSchema.parse({ conversationId: 1, card: objektInput }).card).toEqual(
-      objektInput,
+    const { kind: _, ...unnamed } = objektInput;
+    expect(sendInputSchema.safeParse({ conversationId: 1, clientId, card: unnamed }).success).toBe(
+      false,
     );
-  });
-
-  test("an objekt input may name its kind", () => {
-    const named = { ...objektInput, kind: "objekt" as const };
-    expect(sendInputSchema.parse({ conversationId: 1, card: named }).card).toEqual(named);
   });
 
   test("a post input parses as a post, with or without a match request", () => {
     const card = { kind: "post" as const, listSlug: "abc123" };
-    expect(sendInputSchema.parse({ conversationId: 1, card }).card).toEqual(card);
+    expect(sendInputSchema.parse({ conversationId: 1, clientId, card }).card).toEqual(card);
     const withMatch = { ...card, withMatch: true };
-    expect(sendInputSchema.parse({ conversationId: 1, card: withMatch }).card).toEqual(withMatch);
+    expect(sendInputSchema.parse({ conversationId: 1, clientId, card: withMatch }).card).toEqual(
+      withMatch,
+    );
   });
 
   test("a post input names a list, never a collection", () => {
@@ -126,15 +139,20 @@ describe("cards", () => {
       { kind: "post", collectionSlug: "seoyeon-204z" },
       { kind: "post", listSlug: "a\0b" },
     ]) {
-      expect(sendInputSchema.safeParse({ conversationId: 1, card }).success).toBe(false);
+      expect(sendInputSchema.safeParse({ conversationId: 1, clientId, card }).success).toBe(false);
     }
   });
 
-  test("a stored card without a kind is an objekt card, unchanged", () => {
+  test("a stored objekt card parses unchanged and is no post card", () => {
     const parsed = storedCardSchema.parse(stored);
     expect(parsed).toEqual(stored);
     expect(isPostCard(parsed)).toBe(false);
     expect(storedObjektCardSchema.parse(stored)).toEqual(stored);
+  });
+
+  test("a stored card without its kind reads as no card", () => {
+    const { kind: _, ...unnamed } = stored;
+    expect(storedCardSchema.safeParse(unnamed).success).toBe(false);
   });
 
   test("a stored post card parses as a post and is no objekt card", () => {

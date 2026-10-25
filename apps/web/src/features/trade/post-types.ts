@@ -4,4 +4,4 @@ import type { Outputs } from "@repo/api";
 export type PersonData = Outputs["trade"]["people"]["people"][number];
 export type PersonPostData = PersonData["posts"][number];
 export type PostSideData = PersonPostData["sides"][number];
-export type PostTag = PersonPostData["tag"];
+export type PostTag = PersonPostData["tags"][number];
