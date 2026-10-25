@@ -240,7 +240,9 @@ function DrawerBody({
             labels alone are ~84px leaves the values under 100px, which is what
             pushed the drawer into sideways scrolling */}
         <div className="grid gap-5 sm:grid-cols-[minmax(0,14rem)_1fr]">
-          <div className="w-full max-sm:mx-auto max-sm:max-w-64">
+          {/* on a phone the card is capped at ~40% of the screen height
+              (26dvh wide at the photocard ratio), so the tabs stay in view */}
+          <div className="w-full max-sm:mx-auto max-sm:max-w-[min(16rem,26dvh)]">
             <ObjektFlip objekt={objekt} />
           </div>
           <ObjektSummary objekt={objekt} artistName={artistName} />
