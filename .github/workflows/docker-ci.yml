@@ -9,7 +9,7 @@ on:
     branches: ["main"]
     inputs:
       force_build_all:
-        description: "Force build all apps regardless of changes"
+        description: "Force the web image build regardless of changes"
         required: false
         default: "false"
         type: choice
@@ -108,13 +108,11 @@ jobs:
   build:
     runs-on: ubuntu-latest
     needs: [detect-changes, validate]
-    # Only run if changes detected or if it's a manual trigger
+    # Only web is built here; worker and indexer images are built on the VPS
     if: |
       always() &&
       (needs.validate.result == 'success' || needs.validate.result == 'skipped') &&
       (needs.detect-changes.outputs.web == 'true' ||
-      needs.detect-changes.outputs.worker == 'true' ||
-      needs.detect-changes.outputs.indexer == 'true' ||
       github.event_name == 'workflow_dispatch')
     environment: ${{ github.event_name == 'pull_request' && 'Staging' || 'Production' }}
     strategy:
@@ -123,10 +121,6 @@ jobs:
         include:
           - app: web
             dockerfile: ./apps/web/Dockerfile
-          - app: worker
-            dockerfile: ./apps/worker/Dockerfile
-          - app: indexer
-            dockerfile: ./apps/indexer/Dockerfile
     steps:
       - name: Show detected changes
         run: |
@@ -191,7 +185,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        app: [web, worker, indexer]
+        app: [web]
     steps:
       - name: Delete untagged ${{ matrix.app }} images
         if: needs.detect-changes.outputs[matrix.app] == 'true' || github.event.inputs.force_build_all == 'true'
