@@ -364,11 +364,11 @@ A rule SHALL want each collection it describes, except, with Skip ones I own on,
 - **THEN** it wants every collection it describes, held or not
 
 ### Requirement: Rule limits
-A rule SHALL describe at most 1,500 objekts before owned ones are skipped; a wider rule SHALL be refused, and the dialog SHALL say how many it covers and to pick a season or edition. With Skip ones I own on, a rule that has nothing left to match SHALL NOT be added, and the dialog SHALL say so and offer to turn Skip ones I own off.
+A rule SHALL have no limit on how many objekts it describes; a list SHALL hold at most 20 rules. With Skip ones I own on, a rule that has nothing left to match SHALL NOT be added, and the dialog SHALL say so and offer to turn Skip ones I own off.
 
-#### Scenario: Too wide
+#### Scenario: A wide rule
 - **WHEN** the owner sets First, any season, any edition
-- **THEN** the dialog says how many objekts that covers and that a rule covers up to 1,500, and Add rule is disabled
+- **THEN** the dialog says how many objekts that covers, and the rule can be added
 
 #### Scenario: Nothing to match
 - **WHEN** the owner holds every member's CC366 and sets the rule CC366, any member, with Skip ones I own on

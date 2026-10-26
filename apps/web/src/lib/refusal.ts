@@ -54,8 +54,6 @@ export function refusalText(error: unknown) {
       return m.api_errors_list_sale_links_sell_only();
     case "list_rule_not_want":
       return m.api_errors_list_rule_not_want();
-    case "list_rule_too_wide":
-      return m.api_errors_list_rule_too_wide();
     case "list_rule_nothing_to_match":
       return m.api_errors_list_rule_nothing_to_match();
     case "list_rule_limit":

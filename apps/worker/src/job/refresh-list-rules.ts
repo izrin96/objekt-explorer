@@ -1,4 +1,4 @@
-import { RULE_MAX_OBJEKTS, type RuleCollection } from "@repo/api/schemas/list-rule";
+import type { RuleCollection } from "@repo/api/schemas/list-rule";
 import {
   collectionsKey,
   linkedAddresses,
@@ -32,7 +32,6 @@ export async function refreshListRules() {
   const changedOwners = new Set<string>();
   let rules = 0;
   let changed = 0;
-  let tooWide = 0;
   let after = 0;
 
   try {
@@ -72,11 +71,6 @@ export async function refreshListRules() {
           await collections.get(key)!,
         );
         rules += 1;
-        // the save refused a rule this wide; one grown past it by new collections keeps its entries
-        if (reading.covers > RULE_MAX_OBJEKTS) {
-          tooWide += 1;
-          continue;
-        }
         if (await syncRuleEntries(id, reading.slugs, updatedAt)) {
           changed += 1;
           changedLists.add(listId);
@@ -91,11 +85,6 @@ export async function refreshListRules() {
     // one, so it must not keep an idle post listed or show it as updated
     await bumpTradeVersion(redis, changedOwners);
     refreshBeat.count("rules", rules);
-    if (tooWide > 0) {
-      refreshLog.warn(
-        `${tooWide} rules now cover more than ${RULE_MAX_OBJEKTS} objekts; left as they were`,
-      );
-    }
     if (changed > 0) {
       refreshLog.info(`${changed} of ${rules} rules changed entries on ${changedLists.size} lists`);
     }

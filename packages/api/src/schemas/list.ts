@@ -240,7 +240,6 @@ export const LIST_REFUSALS = [
   "list_prices_sale_only",
   "list_sale_links_sell_only",
   "list_rule_not_want",
-  "list_rule_too_wide",
   "list_rule_nothing_to_match",
   "list_rule_no_collections",
   "list_rule_limit",

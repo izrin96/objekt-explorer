@@ -24,7 +24,7 @@ import {
 } from "../services/list-rules";
 import { refuseOverUserLimit } from "../services/redis";
 
-/** Each rule save reads the indexer and writes up to 1,500 entries. */
+/** Each rule save reads the indexer and writes an entry for every collection the rule wants. */
 const limitRuleWrites = (userId: string) => refuseOverUserLimit("list-rule", userId, 60, 3600);
 
 async function findList(slug: string) {

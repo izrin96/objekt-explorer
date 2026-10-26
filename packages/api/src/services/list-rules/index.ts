@@ -9,7 +9,6 @@ import { ruleGroups } from "../../lib/rule-groups";
 import {
   type ListRuleDef,
   type ListRuleInput,
-  RULE_MAX_OBJEKTS,
   RULE_MAX_PER_LIST,
   ruleCovers,
   ruleDef,
@@ -78,14 +77,6 @@ function assertWantList(list: Pick<List, "listType">) {
 async function checkedSlugs(def: ListRuleDef, userId: string) {
   const reading = await readRule(def, await linkedAddresses(userId));
   const problem = ruleProblem(def, reading);
-  if (problem === "too_wide") {
-    refuse(
-      "BAD_REQUEST",
-      "list_rule_too_wide",
-      `A rule covers up to ${RULE_MAX_OBJEKTS} objekts; this one covers ${reading.covers}`,
-      { covers: reading.covers },
-    );
-  }
   if (problem === "no_collections") {
     refuse("BAD_REQUEST", "list_rule_no_collections", "No collection matches this rule");
   }

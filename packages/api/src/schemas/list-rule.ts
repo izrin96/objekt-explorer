@@ -4,8 +4,6 @@ import * as z from "zod";
 
 import { indexedObjektSchema } from "./common/objekt";
 
-/** A rule covers at most this many objekts, counted before Skip ones I own. */
-export const RULE_MAX_OBJEKTS = 1500;
 export const RULE_MAX_PER_LIST = 20;
 const PRIO_MAX = 6;
 
@@ -136,7 +134,6 @@ export function expandRule(
 /** Why a rule can't be saved, or null. */
 export function ruleProblem(rule: ListRuleDef, expansion: RuleExpansion) {
   if (expansion.covers === 0) return "no_collections" as const;
-  if (expansion.covers > RULE_MAX_OBJEKTS) return "too_wide" as const;
   if (rule.skipOwned && expansion.canMatch === 0) return "nothing_to_match" as const;
   return null;
 }

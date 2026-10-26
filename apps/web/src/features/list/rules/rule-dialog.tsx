@@ -3,7 +3,6 @@ import {
   type ListRuleInput,
   ruleHasEditions,
   RULE_EDITIONS,
-  RULE_MAX_OBJEKTS,
   ruleDef,
 } from "@repo/api/schemas/list-rule";
 import type { ValidArtist } from "@repo/cosmo/types/common";
@@ -431,7 +430,7 @@ function RulePreview({
         covers: number;
         owned: number;
         canMatch: number;
-        problem: "too_wide" | "nothing_to_match" | "no_collections" | null;
+        problem: "nothing_to_match" | "no_collections" | null;
       }
     | undefined;
   pending: boolean;
@@ -452,11 +451,6 @@ function RulePreview({
       ) : counts.problem === "no_collections" ? (
         <span className="text-destructive-foreground text-xs text-pretty">
           {m.rule_no_collections()}
-        </span>
-      ) : counts.problem === "too_wide" ? (
-        <span className="text-destructive-foreground text-xs text-pretty">
-          {m.rule_too_wide({ count: counts.covers, max: RULE_MAX_OBJEKTS })}{" "}
-          {m.rule_too_wide_hint()}
         </span>
       ) : (
         <>

@@ -8,6 +8,7 @@ import {
 } from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import { WindowVirtualizer } from "virtua";
 
 import {
   AlertDialog,
@@ -23,6 +24,7 @@ import { Menu, MenuItem, MenuPopup, MenuSeparator, MenuTrigger } from "@/compone
 import { Spinner } from "@/components/ui/spinner";
 import { toastManager } from "@/components/ui/toast";
 import { ObjektCard } from "@/features/objekt/objekt-card";
+import { useElementSize } from "@/hooks/use-element-size";
 import { client, orpc } from "@/lib/orpc";
 import { refusalText } from "@/lib/refusal";
 import { cn } from "@/lib/utils";
@@ -204,25 +206,7 @@ function RuleObjekts({ slug, ruleId, owner }: { slug: string; ruleId: number; ow
 
   return (
     <div className="flex flex-col gap-2 px-3 pb-3">
-      {headed ? (
-        data.groups.map((group) => (
-          <section
-            key={`${group.season} ${group.collectionNo}`}
-            className="flex flex-col gap-2 border-t pt-2 first:border-t-0 first:pt-0"
-          >
-            <h4 className="text-muted-foreground text-xs">
-              <span className="text-foreground font-mono font-semibold">
-                {shortNo(group.season, group.collectionNo)}
-              </span>
-              {" · "}
-              {m.rule_can_match({ count: group.canMatch })}
-            </h4>
-            <RuleObjektGrid objekts={group.objekts} />
-          </section>
-        ))
-      ) : (
-        <RuleObjektGrid objekts={data.groups.flatMap((group) => group.objekts)} />
-      )}
+      <RuleObjektRows groups={data.groups} headed={headed} />
       <p className="text-muted-foreground text-xs">
         {owner ? m.rule_faded_note() : m.rule_faded_note_theirs()}
       </p>
@@ -230,19 +214,78 @@ function RuleObjekts({ slug, ruleId, owner }: { slug: string; ruleId: number; ow
   );
 }
 
-type RuleObjekt = Awaited<
-  ReturnType<typeof client.list.ruleObjekts>
->["groups"][number]["objekts"][number];
+type RuleGroup = Awaited<ReturnType<typeof client.list.ruleObjekts>>["groups"][number];
 
-function RuleObjektGrid({ objekts }: { objekts: readonly RuleObjekt[] }) {
+/** The card width the grid aims for, and the `gap-2` between cards. */
+const CELL_PX = 96;
+const GAP_PX = 8;
+
+type RuleRow =
+  | { type: "heading"; key: string; group: RuleGroup; first: boolean }
+  | { type: "cards"; key: string; objekts: RuleGroup["objekts"] };
+
+/**
+ * A rule can cover thousands of collections, so its grid is virtualised by row against the
+ * page's scroll; the column count follows the strip's width, four at the least.
+ */
+function RuleObjektRows({ groups, headed }: { groups: RuleGroup[]; headed: boolean }) {
+  const [ref, { width }] = useElementSize<HTMLDivElement>();
+  const columns = Math.max(4, Math.floor((width + GAP_PX) / (CELL_PX + GAP_PX)));
+
+  const rows: RuleRow[] = [];
+  const pushCards = (key: string, objekts: RuleGroup["objekts"]) => {
+    for (let i = 0; i < objekts.length; i += columns) {
+      rows.push({ type: "cards", key: `${key}:${i}`, objekts: objekts.slice(i, i + columns) });
+    }
+  };
+  if (headed) {
+    for (const [index, group] of groups.entries()) {
+      const key = `${group.season} ${group.collectionNo}`;
+      rows.push({ type: "heading", key, group, first: index === 0 });
+      pushCards(key, group.objekts);
+    }
+  } else {
+    pushCards(
+      "all",
+      groups.flatMap((group) => group.objekts),
+    );
+  }
+
   return (
-    <ul className="grid grid-cols-4 gap-2 sm:grid-cols-6 lg:grid-cols-8">
-      {objekts.map((objekt) => (
-        <li key={objekt.slug}>
-          <ObjektCard objekt={objekt} faded={!objekt.wanted} hideLabel={false} />
-        </li>
-      ))}
-    </ul>
+    <div ref={ref}>
+      {/* `key`: every row's height changes with the column count, and virtua keeps what it
+          measured */}
+      {width > 0 ? (
+        <WindowVirtualizer key={columns} data={rows}>
+          {(row) =>
+            row.type === "heading" ? (
+              <h4
+                key={row.key}
+                className={cn("text-muted-foreground pb-2 text-xs", !row.first && "border-t pt-2")}
+              >
+                <span className="text-foreground font-mono font-semibold">
+                  {shortNo(row.group.season, row.group.collectionNo)}
+                </span>
+                {" · "}
+                {m.rule_can_match({ count: row.group.canMatch })}
+              </h4>
+            ) : (
+              <ul
+                key={row.key}
+                className="grid gap-2 pb-2"
+                style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
+              >
+                {row.objekts.map((objekt) => (
+                  <li key={objekt.slug}>
+                    <ObjektCard objekt={objekt} faded={!objekt.wanted} hideLabel={false} />
+                  </li>
+                ))}
+              </ul>
+            )
+          }
+        </WindowVirtualizer>
+      ) : null}
+    </div>
   );
 }
 
