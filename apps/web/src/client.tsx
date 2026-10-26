@@ -20,11 +20,17 @@ window.addEventListener("vite:preloadError", (event) => {
   window.location.reload();
 });
 
-hydrateRoot(
-  document,
-  <StrictMode>
-    <StartClient />
-  </StrictMode>,
-  // caught errors are reported by the route and widget boundaries, which know a refusal
-  { onUncaughtError: reportUncaught },
-);
+function hydrate() {
+  hydrateRoot(
+    document,
+    <StrictMode>
+      <StartClient />
+    </StrictMode>,
+    // caught errors are reported by the route and widget boundaries, which know a refusal
+    { onUncaughtError: reportUncaught },
+  );
+}
+
+// only browsers missing these download the polyfill; a failed download still hydrates
+if (typeof Object.groupBy === "function" && typeof Map.groupBy === "function") hydrate();
+else void import("@/lib/polyfills").catch(() => {}).then(hydrate);
