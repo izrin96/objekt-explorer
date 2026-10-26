@@ -51,7 +51,7 @@ function OfferBuilder({
     >
       {/* below `sm` the sheet sits in an auto-height grid row, so `h-full` would shrink to its
           content: its height is set outright, under the viewport's top inset */}
-      <DialogPopup className="max-w-3xl max-sm:h-[calc(100dvh-(--spacing(12)))]">
+      <DialogPopup className="max-w-3xl max-sm:h-[calc(100dvh-(--spacing(12)))] lg:max-w-5xl">
         {request ? (
           <BuilderForm key={session} request={request} onDraft={setDraft} onDone={close} />
         ) : null}

@@ -4,7 +4,7 @@ import {
   type TradeView as Trade,
 } from "@repo/api/schemas/offer";
 
-import { bothGive, type Copy, type Leg, nextStep, stepKind, tradeEnd } from "./next-step";
+import { bothGive, type Copy, type Leg, localDay, nextStep, stepKind, tradeEnd } from "./next-step";
 
 const HOUR_MS = 3_600_000;
 const DAY_MS = 24 * HOUR_MS;
@@ -18,6 +18,15 @@ export type TimelineRow =
   | { kind: "proposed"; at: string; when: When }
   | { kind: "accepted"; at: string; when: When }
   | { kind: "sent"; at: string | null; when: When; leg: Leg; txHash: string | null }
+  /** a party's transfers verified on one day; `total` is everything that party gives */
+  | {
+      kind: "sentGroup";
+      at: string | null;
+      when: When;
+      fromYou: boolean;
+      legs: Leg[];
+      total: number;
+    }
   | { kind: "copyArrived"; at: string; when: When; leg: Leg; copy: Copy; txHash: string }
   | { kind: "copyDue"; at: string; when: When; leg: Leg; copy: Copy }
   | { kind: "reminder"; at: string; when: When }
@@ -34,6 +43,7 @@ const ORDER: TimelineRow["kind"][] = [
   "proposed",
   "accepted",
   "sent",
+  "sentGroup",
   "copyArrived",
   "copyDue",
   "reminder",
@@ -75,21 +85,51 @@ export function expiryOutcome(trade: Pick<Trade, "progress" | "legs">) {
 const iso = (ms: number) => new Date(ms).toISOString();
 const ms = (at: string | null) => (at ? new Date(at).getTime() : 0);
 
+type SentRow = Extract<TimelineRow, { kind: "sent" }>;
+
+/** A party's transfers on one local day fold into one row, dated by the last; one stays a row. */
+function foldSent(rows: SentRow[], legs: Leg[]): TimelineRow[] {
+  const days = new Map<string, SentRow[]>();
+  for (const row of rows) {
+    const key = `${row.leg.fromYou}:${row.at ? localDay(ms(row.at)) : "-"}`;
+    days.set(key, [...(days.get(key) ?? []), row]);
+  }
+  return [...days.values()].map((day) => {
+    if (day.length === 1) return day[0]!;
+    const last = day.reduce((a, b) => (ms(b.at) > ms(a.at) ? b : a));
+    const fromYou = last.leg.fromYou;
+    return {
+      kind: "sentGroup",
+      at: last.at,
+      when: last.when,
+      fromYou,
+      legs: day.map((row) => row.leg),
+      total: legs.filter((leg) => leg.fromYou === fromYou).length,
+    };
+  });
+}
+
 /**
  * Every event of a trade in time order, with `now` (ms) among them while it is in progress, then
  * what lies ahead; once it ended, how it ended and when rating closes.
  */
-export function timelineRows(trade: Trade, now: number): TimelineRow[] {
+export function timelineRows(
+  trade: Trade,
+  now: number,
+  /** folding reads the local day, so a server render, in another zone, leaves it to the client */
+  { fold = true }: { fold?: boolean } = {},
+): TimelineRow[] {
   const when = (at: string): When => (ms(at) <= now ? "past" : "future");
   const live = trade.status === "in_progress";
   const rows: TimelineRow[] = [
     { kind: "proposed", at: trade.proposedAt, when: when(trade.proposedAt) },
     { kind: "accepted", at: trade.acceptedAt, when: when(trade.acceptedAt) },
   ];
+  const sent: SentRow[] = [];
   for (const leg of trade.legs) {
     if (leg.state === "verified") {
       const at = leg.verifiedAt;
-      rows.push({ kind: "sent", at, when: at ? when(at) : "past", leg, txHash: leg.txHash });
+      sent.push({ kind: "sent", at, when: at ? when(at) : "past", leg, txHash: leg.txHash });
     }
     for (const copy of leg.substitutes) {
       rows.push({
@@ -105,6 +145,7 @@ export function timelineRows(trade: Trade, now: number): TimelineRow[] {
       }
     }
   }
+  rows.push(...(fold ? foldSent(sent, trade.legs) : sent));
   if (live) {
     const accepted = ms(trade.acceptedAt);
     const reminder = iso(accepted + REMIND_AFTER_HOURS * HOUR_MS);

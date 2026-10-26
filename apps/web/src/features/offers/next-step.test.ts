@@ -245,14 +245,8 @@ describe("nextStep, in progress", () => {
 });
 
 describe("nextStep, primary", () => {
-  test("your turn copies the address", () => {
-    expect(step(trade()).primary).toBe("copyAddress");
-  });
-
-  test("your turn with no address to copy has no primary", () => {
-    const t = trade();
-    t.partner = { ...t.partner, identity: { ...t.partner.identity, address: null } };
-    expect(step(t)).toMatchObject({ kind: "yourTurn", primary: null });
+  test("your turn has none: objekts are sent in the Cosmo app", () => {
+    expect(step(trade())).toMatchObject({ kind: "yourTurn", primary: null });
   });
 
   test("a decision decides", () => {

@@ -27,7 +27,7 @@ import {
   pickKey,
   toPick,
 } from "@/features/offers/pick";
-import { copiesLeft, countOf, takeOut, totalOf } from "@/features/offers/quantity";
+import { copiesLeft, countOf, takeOut, takeOutAll, totalOf } from "@/features/offers/quantity";
 import {
   invalidateOfferLists,
   myCopyOptions,
@@ -270,6 +270,7 @@ export function BuilderForm({
                 source={source}
                 onAdd={() => setPicking(side)}
                 onRemove={(pick) => setPicks(takeOut(picks, pick))}
+                onRemoveMany={(rows) => setPicks(takeOutAll(picks, rows))}
               />
             );
           })}

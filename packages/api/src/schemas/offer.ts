@@ -300,6 +300,11 @@ const tradeLegViewSchema = z.object({
   stuck: z.boolean(),
   /** waiting while the objekt is away from the giver: when it left, and when the leg breaks */
   away: z.object({ at: z.string(), breaksAt: z.string() }).nullable(),
+  /**
+   * on the viewer's own open legs naming an objekt, while the viewer has two or more profiles: the
+   * profile holding it now; optional so payloads from before the field still validate
+   */
+  heldBy: z.object({ address: z.string(), name: z.string() }).nullable().optional(),
   verifiedAt: z.string().nullable(),
   txHash: z.string().nullable(),
   verifiedObjektId: z.string().nullable(),

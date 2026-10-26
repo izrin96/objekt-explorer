@@ -8,7 +8,7 @@ import type { TradeView as Trade } from "@repo/api/schemas/offer";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useHydrated } from "@tanstack/react-router";
-import { useState } from "react";
+import { type MouseEvent, useRef, useState } from "react";
 
 import { PendingStatus } from "@/components/router/pending";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -17,17 +17,20 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { untilLabel } from "@/features/chat/format";
 import { useSafetyDialogs } from "@/features/moderation/safety-dialogs";
 import { ObjektDrawer } from "@/features/objekt/drawer";
+import { useMediaQuery } from "@/hooks/use-media-query";
 import { m } from "@/paraglide/messages";
 import { useUserSocketLive } from "@/stores/user-socket";
 
 import { CancelTrade } from "./cancel-trade";
+import { type ExchangeFilter, needsYouCount, openingSide } from "./exchange";
 import { offerNo, tradeNo } from "./format";
 import { Mono } from "./mono";
-import { nextStep } from "./next-step";
-import { CopyAddressButton, DecideActions, NextStepBanner } from "./next-step-banner";
+import { type Leg, nextStep } from "./next-step";
+import { DecideActions, NextStepBanner } from "./next-step-banner";
 import type { Collections } from "./pick";
 import { tradeOptions } from "./queries";
-import { TradeLegs } from "./trade-legs";
+import { SelectedPanel, SelectedSheet } from "./selected-objekt";
+import { type ExchangeState, TradeExchange } from "./trade-exchange";
 import { TradeMenu } from "./trade-menu";
 import { TradePartnerCard, TradePartnerRow } from "./trade-partner-card";
 import { TradeTimeline } from "./trade-timeline";
@@ -131,11 +134,42 @@ function IndexerStrip({ trade, hydrated }: { trade: Trade; hydrated: boolean }) 
 
 function TradeDetail({ trade, collections }: { trade: Trade; collections: Collections }) {
   const name = trade.partner.identity.name;
-  const address = trade.partner.identity.address;
   const hydrated = useHydrated();
   const step = readStep(trade);
   const [active, setActive] = useState<ValidObjekt | null>(null);
   const [cancelOpen, setCancelOpen] = useState(false);
+  const [filter, setFilter] = useState<ExchangeFilter>("all");
+  const [find, setFind] = useState("");
+  const [view, setView] = useState<"grid" | "list">("grid");
+  const [side, setSide] = useState(() => openingSide(trade));
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const exchangeRef = useRef<HTMLElement>(null);
+  const pickedTile = useRef<HTMLElement | null>(null);
+  const wide = useMediaQuery("(min-width: 64rem)");
+  const ended = trade.status !== "in_progress";
+  const selected = trade.legs.find((leg) => leg.id === selectedId) ?? null;
+  const exchange: ExchangeState = {
+    filter,
+    setFilter,
+    find,
+    setFind,
+    view,
+    setView,
+    side,
+    setSide,
+    selectedId,
+    onSelect: (leg: Leg, event: MouseEvent<HTMLButtonElement>) => {
+      pickedTile.current = event.currentTarget;
+      setSelectedId((current) => (current === leg.id ? null : leg.id));
+    },
+  };
+  const showNeeds = () => {
+    setFilter("needsYou");
+    setFind("");
+    setSide(openingSide(trade));
+    exchangeRef.current?.scrollIntoView({ block: "start" });
+  };
+  const selectedProps = { ended, collections, name, onOpen: setActive };
   const safety = useSafetyDialogs({
     userId: trade.partner.userId,
     name,
@@ -165,12 +199,28 @@ function TradeDetail({ trade, collections }: { trade: Trade; collections: Collec
             collections={collections}
             name={name}
             hydrated={hydrated}
+            needsYou={needsYouCount(trade)}
             onCancel={() => setCancelOpen(true)}
             onReport={safety.openReport}
+            onShowNeeds={showNeeds}
           />
-          <TradeLegs trade={trade} collections={collections} onOpen={setActive} />
+          <TradeExchange
+            ref={exchangeRef}
+            trade={trade}
+            collections={collections}
+            state={exchange}
+          />
         </div>
         <aside className="flex min-w-0 flex-col gap-4">
+          {selected ? (
+            <div className="max-lg:hidden">
+              <SelectedPanel
+                {...selectedProps}
+                leg={selected}
+                onClose={() => setSelectedId(null)}
+              />
+            </div>
+          ) : null}
           <div className="max-sm:hidden">
             <TradePartnerCard {...menuProps} primary={step.primary} />
           </div>
@@ -183,9 +233,7 @@ function TradeDetail({ trade, collections }: { trade: Trade; collections: Collec
 
       {/* -mx-5 -mb-10 undo PageMain's px-5 pb-10, so the bar spans the screen and sits flush */}
       <div className="bg-background sticky bottom-0 -mx-5 -mb-10 flex items-center gap-2 border-t px-5 pt-3 pb-[calc(env(safe-area-inset-bottom,0px)+--spacing(4))] sm:hidden">
-        {step.primary === "copyAddress" && address ? (
-          <CopyAddressButton address={address} size="xl" className="min-w-0 flex-1" />
-        ) : step.kind === "youDecide" ? (
+        {step.kind === "youDecide" ? (
           <DecideActions trade={trade} leg={step.leg} copyId={step.copy.id} size="xl" />
         ) : null}
         {step.primary ? (
@@ -211,6 +259,13 @@ function TradeDetail({ trade, collections }: { trade: Trade; collections: Collec
         collections={collections}
         open={cancelOpen}
         onOpenChange={setCancelOpen}
+      />
+      <SelectedSheet
+        {...selectedProps}
+        leg={selected}
+        open={selected !== null && !wide}
+        returnFocus={pickedTile}
+        onClose={() => setSelectedId(null)}
       />
       <ObjektDrawer objekt={active} onClose={() => setActive(null)} />
       {safety.dialogs}
@@ -251,8 +306,10 @@ export function TradeViewSkeleton({ id }: { id: number }) {
             </div>
           </div>
           <div className="bg-card rounded-xl border">
-            <div className="border-b px-4 py-3.5 sm:px-5">
+            <div className="flex flex-col gap-3 border-b px-4 py-3.5 sm:px-5">
               <Skeleton className="h-5 w-28" />
+              <Skeleton className="h-8 w-72 rounded-full max-sm:hidden" />
+              <Skeleton className="h-8" />
             </div>
             <div className="grid sm:grid-cols-2">
               {[0, 1].map((index) => (
@@ -265,13 +322,14 @@ export function TradeViewSkeleton({ id }: { id: number }) {
                   }
                 >
                   <Skeleton className="h-5 w-24" />
-                  <div className="flex gap-3.5">
-                    <Skeleton className="aspect-photocard w-28 shrink-0 rounded-md max-sm:w-21" />
-                    <div className="flex flex-1 flex-col gap-2">
-                      <Skeleton className="h-5 w-24" />
-                      <Skeleton className="h-4 w-20" />
-                      <Skeleton className="h-4 w-16" />
-                    </div>
+                  <div className="grid grid-cols-[repeat(auto-fill,minmax(--spacing(18),1fr))] gap-1">
+                    {[0, 1, 2, 3].map((tile) => (
+                      <div key={tile} className="flex flex-col gap-1.5 p-1">
+                        <Skeleton className="aspect-photocard rounded-md" />
+                        <Skeleton className="h-3 w-3/4" />
+                        <Skeleton className="h-3 w-full" />
+                      </div>
+                    ))}
                   </div>
                 </div>
               ))}

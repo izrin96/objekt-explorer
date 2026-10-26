@@ -1,8 +1,17 @@
 import { ORPCError } from "@orpc/server";
 import { db } from "@repo/db";
-import { offer, trade, tradeFeedback, tradeLeg, tradeSubstitute, user } from "@repo/db/schema";
+import {
+  offer,
+  trade,
+  tradeFeedback,
+  tradeLeg,
+  tradeSubstitute,
+  user,
+  userAddress,
+} from "@repo/db/schema";
 import { and, desc, eq, gt, inArray, or, sql } from "drizzle-orm";
 
+import { type HeldBy, heldByProfile } from "../../lib/held-by";
 import { isBehind, parseIndexerSeen } from "../../lib/indexer-seen";
 import {
   atFault,
@@ -42,7 +51,7 @@ import {
   matchOpenLegs,
 } from "../trade-verify";
 import { offersOf } from "./cancel";
-import { type Tx, refuseOffer } from "./core";
+import { type Tx, fetchObjekts, refuseOffer } from "./core";
 import { partyNames, writeNotes } from "./notes";
 import { publishTouched } from "./state";
 import { fetchOffers, offerItemCards, topupView, itemViews } from "./view";
@@ -189,6 +198,23 @@ export async function rateTrade(me: string, tradeId: number, rating: TradeRating
 
 const RATE_WINDOW_MS = RATE_WINDOW_DAYS * DAY_MS;
 
+/** Which of the viewer's profiles holds each objekt they still owe; see `heldByProfile`. */
+async function heldByOf(me: string, legs: (typeof tradeLeg.$inferSelect)[]) {
+  const owed = legs.flatMap((leg) =>
+    leg.fromUserId === me && leg.open && leg.verifiedAt === null && leg.objektId !== null
+      ? [leg.objektId]
+      : [],
+  );
+  if (owed.length === 0) return new Map<string, HeldBy>();
+  const profiles = await db
+    .select({ address: userAddress.address, nickname: userAddress.nickname })
+    .from(userAddress)
+    .where(eq(userAddress.userId, me));
+  if (profiles.length < 2) return new Map<string, HeldBy>();
+  const objekts = await fetchObjekts(owed);
+  return heldByProfile(new Map([...objekts].map(([id, objekt]) => [id, objekt.owner])), profiles);
+}
+
 export async function fetchTrade(me: string, tradeId: number) {
   const now = new Date();
   const row = await findTrade(tradeId, me);
@@ -240,6 +266,8 @@ export async function fetchTrade(me: string, tradeId: number) {
   const partner = partners.get(partnerId);
   if (!partner) throw new ORPCError("NOT_FOUND");
   const slugOf = new Map(legs.map((leg) => [leg.id, leg.collectionSlug]));
+  const heldBy =
+    row.status === "in_progress" ? await heldByOf(me, legs) : new Map<string, HeldBy>();
   const { serial: serialOf, collections } = await hydrateCards(
     [
       ...legs.map((leg) =>
@@ -315,6 +343,7 @@ export async function fetchTrade(me: string, tradeId: number) {
           leg.open && leg.awayAt !== null
             ? { at: iso(leg.awayAt)!, breaksAt: awayBreaksAt(leg.awayAt) }
             : null,
+        heldBy: (leg.objektId !== null && heldBy.get(leg.objektId)) || null,
         verifiedAt: iso(leg.verifiedAt),
         txHash: leg.txHash,
         verifiedObjektId: leg.verifiedObjektId,

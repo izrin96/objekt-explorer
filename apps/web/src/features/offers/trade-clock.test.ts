@@ -273,3 +273,47 @@ describe("nextRow", () => {
     expect(nextRow(timelineRows(trade({ status: "cancelled", endedAt: "y" }), NOW))).toBeNull();
   });
 });
+
+describe("timelineRows, transfers by day", () => {
+  // minutes apart around noon UTC, so one local day in any zone
+  const at = (dayOffset: number, minute: number) =>
+    new Date(new Date(ACCEPTED).getTime() + dayOffset * DAY + minute * 60_000).toISOString();
+  const sentOn = (dayOffset: number, minute: number, fromYou = true) =>
+    verified({ fromYou, verifiedAt: at(dayOffset, minute), txHash: `0x${dayOffset}${minute}` });
+
+  test("a party's transfers on one day fold into one row", () => {
+    const mine = Array.from({ length: 14 }, (_, i) => sentOn(1, i));
+    const t = trade({ legs: [...mine, ...Array.from({ length: 4 }, () => leg())] });
+    const groups = timelineRows(t, NOW).filter((r) => r.kind === "sentGroup");
+    expect(groups).toHaveLength(1);
+    expect(groups[0]).toMatchObject({ fromYou: true, total: 18, at: at(1, 13) });
+    expect(groups[0]!.kind === "sentGroup" && groups[0]!.legs).toHaveLength(14);
+    expect(timelineRows(t, NOW).some((r) => r.kind === "sent")).toBe(false);
+  });
+
+  test("unfolded until the client renders", () => {
+    const t = trade({ legs: [sentOn(1, 0), sentOn(1, 5), leg({ fromYou: false })] });
+    const rows = timelineRows(t, NOW, { fold: false });
+    expect(rows.filter((r) => r.kind === "sent")).toHaveLength(2);
+    expect(rows.some((r) => r.kind === "sentGroup")).toBe(false);
+  });
+
+  test("a single transfer stays its own row with its hash", () => {
+    const t = trade({ legs: [sentOn(1, 0), leg({ fromYou: false })] });
+    const rows = timelineRows(t, NOW);
+    expect(rows.filter((r) => r.kind === "sent")).toHaveLength(1);
+    expect(rows.some((r) => r.kind === "sentGroup")).toBe(false);
+  });
+
+  test("the two parties never share a group, and days stay apart", () => {
+    const t = trade({
+      legs: [sentOn(1, 0), sentOn(1, 5), sentOn(1, 2, false), sentOn(1, 3, false), sentOn(2, 0)],
+    });
+    const rows = timelineRows(t, NOW).filter((r) => r.kind === "sentGroup" || r.kind === "sent");
+    expect(rows.map((r) => [r.kind, r.kind === "sentGroup" ? r.fromYou : r.leg.fromYou])).toEqual([
+      ["sentGroup", false],
+      ["sentGroup", true],
+      ["sent", true],
+    ]);
+  });
+});

@@ -6,6 +6,7 @@ import {
   groupRows,
   mergeCounts,
   takeOut,
+  takeOutAll,
   totalOf,
   withCount,
 } from "./quantity";
@@ -84,6 +85,31 @@ describe("takeOut", () => {
   test("any other row leaves whole", () => {
     expect(takeOut([ask, specific], specific)).toEqual([ask]);
     expect(takeOut([ask], ask)).toEqual([]);
+  });
+});
+
+describe("takeOutAll", () => {
+  test("several rows at once, a resolved copy taking its ask down by one", () => {
+    const ask: Counted = { key: "any:204z", count: 3 };
+    const other: Counted = { key: "12" };
+    const kept: Counted = { key: "77" };
+    expect(takeOutAll([ask, other, kept], [{ key: "537", replaces: ask.key }, other])).toEqual([
+      { ...ask, count: 2 },
+      kept,
+    ]);
+  });
+
+  test("two resolved copies of one ask take it down by two", () => {
+    const ask: Counted = { key: "any:204z", count: 2 };
+    expect(
+      takeOutAll(
+        [ask],
+        [
+          { key: "537", replaces: ask.key },
+          { key: "538", replaces: ask.key },
+        ],
+      ),
+    ).toEqual([]);
   });
 });
 

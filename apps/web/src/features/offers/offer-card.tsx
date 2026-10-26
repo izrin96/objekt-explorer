@@ -59,9 +59,11 @@ export function OfferCard({
           className="text-muted-foreground size-3.5 shrink-0 transition-transform group-data-panel-open:rotate-90"
         />
         <span className="flex min-w-0 flex-1 flex-col">
-          <span className="flex items-baseline gap-2">
-            <Mono className="text-xs font-medium">{offerNo(offer.id)}</Mono>
-            <span className={cn("text-xs", TONE_INK[line.tone])}>{line.text}</span>
+          <span className="flex min-w-0 items-baseline gap-2">
+            <Mono className="shrink-0 text-xs font-medium whitespace-nowrap">
+              {offerNo(offer.id)}
+            </Mono>
+            <span className={cn("min-w-0 truncate text-xs", TONE_INK[line.tone])}>{line.text}</span>
           </span>
           <span className="text-muted-foreground truncate text-xs">
             {offerSummary(offer, collections)}
@@ -107,18 +109,20 @@ function ThumbStrip({
           className="w-6"
         />
       ))}
-      {items.length > THUMBS_PER_SIDE ? (
-        <span className="text-muted-foreground font-mono text-xs tabular-nums">
-          +{items.length - THUMBS_PER_SIDE}
-        </span>
-      ) : null}
     </span>
   );
+  const counted = give.length > THUMBS_PER_SIDE || get.length > THUMBS_PER_SIDE;
   return (
     // the summary beside it already says all of this
     <span aria-hidden className="flex shrink-0 items-center gap-1.5">
       {side(give)}
-      <ArrowsLeftRightIcon className="text-muted-foreground size-3.5" />
+      {counted ? (
+        <span className="text-muted-foreground font-mono text-xs whitespace-nowrap tabular-nums">
+          {give.length} ⇄ {get.length}
+        </span>
+      ) : (
+        <ArrowsLeftRightIcon className="text-muted-foreground size-3.5" />
+      )}
       {side(get)}
     </span>
   );

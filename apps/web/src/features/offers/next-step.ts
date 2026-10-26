@@ -37,7 +37,7 @@ export type Note =
 type SendBody = "send" | "firstYou" | "firstThem" | "firstThemSent";
 
 /** The state's one filled button, which the card and the phone bar share. */
-export type Primary = "copyAddress" | "decide" | null;
+export type Primary = "decide" | null;
 
 type Base = { deadline: Deadline; primary: Primary };
 type Live = Base & { notes: Note[] };
@@ -187,7 +187,7 @@ export function nextStep(trade: Trade, now: number): NextStep {
         legs: sendable,
         body: sendBody(trade),
         canCancel: trade.canCancel,
-        primary: trade.partner.identity.address ? "copyAddress" : null,
+        primary: null,
         notes: [
           ...(stuck ? [{ kind: "ownStuck", leg: stuck } as const] : []),
           ...theirStuckNote,
@@ -270,7 +270,7 @@ export function legChip(leg: Leg, ended: boolean): LegChip {
 }
 
 /** Midnight of the instant's date in the runtime's zone, as a UTC day count, so DST can't skew it. */
-const localDay = (ms: number) => {
+export const localDay = (ms: number) => {
   const date = new Date(ms);
   return Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / DAY_MS;
 };

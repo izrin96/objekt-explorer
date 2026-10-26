@@ -63,6 +63,14 @@ export function takeOut<P extends Counted>(
   });
 }
 
+/** A side without several shown rows at once, each taken out as `takeOut` takes one. */
+export function takeOutAll<P extends Counted>(
+  picks: readonly P[],
+  shown: readonly (Counted & { replaces?: string })[],
+): P[] {
+  return shown.reduce<P[]>((left, row) => takeOut(left, row), [...picks]);
+}
+
 /** Offer items as rows: repeats of one any copy become one row with their count. */
 export function groupRows<T>(items: readonly T[], keyOf: (item: T) => string) {
   const rows = new Map<string, { key: string; item: T; count: number }>();

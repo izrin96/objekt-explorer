@@ -16,7 +16,8 @@ import { firstSenderInClock, nextRow, type TimelineRow, timelineRows } from "./t
 import { InPlaceOf } from "./wrong-copy";
 
 /** Reads the clock here: the compiler takes `Date.now` in a component body as a render-time call. */
-const readRows = (trade: Trade) => timelineRows(trade, Date.now());
+const readRows = (trade: Trade, hydrated: boolean) =>
+  timelineRows(trade, Date.now(), { fold: hydrated });
 
 const END_TONE: Record<Trade["status"], Tone> = {
   in_progress: "progress",
@@ -49,6 +50,12 @@ function label(row: TimelineRow, trade: Trade, name: string, collections: Collec
       return row.leg.fromYou
         ? m.offer_clock_you_sent({ objekt: itemLabel(row.leg, collections) })
         : m.offer_clock_they_sent({ name, objekt: itemLabel(row.leg, collections) });
+    case "sentGroup": {
+      const counts = { count: row.legs.length, total: row.total };
+      return row.fromYou
+        ? m.offer_clock_you_sent_many(counts)
+        : m.offer_clock_they_sent_many({ name, ...counts });
+    }
     case "copyArrived": {
       const sent = serialText({ serial: row.copy.serial, estimated: row.copy.serialEstimated });
       return row.leg.fromYou
@@ -115,6 +122,40 @@ function Hash({ hash }: { hash: string | null }) {
 
 type Props = { trade: Trade; collections: Collections; name: string; hydrated: boolean };
 
+/** A day's transfers by one party: the row opens to each one with its objekt and hash. */
+function SentGroup({
+  row,
+  collections,
+  label: text,
+}: {
+  row: Extract<TimelineRow, { kind: "sentGroup" }>;
+  collections: Collections;
+  label: string;
+}) {
+  return (
+    <Collapsible>
+      <CollapsibleTrigger className="group/sent focus-visible:ring-ring flex items-center gap-1 rounded-sm text-start outline-none focus-visible:ring-2">
+        {text}
+        <CaretDownIcon
+          aria-hidden
+          className="text-muted-foreground size-3.5 shrink-0 group-data-panel-open/sent:rotate-180 motion-safe:transition-transform"
+        />
+      </CollapsibleTrigger>
+      <CollapsiblePanel>
+        <ul className="mt-1.5 flex flex-col gap-2 border-s ps-3">
+          {row.legs.map((leg) => (
+            <li key={leg.id} className="flex flex-col">
+              <span className="text-xs">{itemLabel(leg, collections)}</span>
+              <InPlaceOf leg={leg} />
+              <Hash hash={leg.txHash} />
+            </li>
+          ))}
+        </ul>
+      </CollapsiblePanel>
+    </Collapsible>
+  );
+}
+
 function Rows({ trade, collections, name, hydrated, rows }: Props & { rows: TimelineRow[] }) {
   return (
     <ol className="flex flex-col gap-3 text-sm">
@@ -133,7 +174,15 @@ function Rows({ trade, collections, name, hydrated, rows }: Props & { rows: Time
                   ahead && "text-muted-foreground",
                 )}
               >
-                {label(row, trade, name, collections)}
+                {row.kind === "sentGroup" ? (
+                  <SentGroup
+                    row={row}
+                    collections={collections}
+                    label={label(row, trade, name, collections)}
+                  />
+                ) : (
+                  label(row, trade, name, collections)
+                )}
               </span>
               <Sub row={row} />
               {row.kind === "sent" || row.kind === "copyArrived" ? (
@@ -193,7 +242,7 @@ export function TradeTimeline(props: Props) {
   const { trade, collections, name, hydrated } = props;
   const titleId = useId();
   // where Today sits and which rows are past follow the viewer's clock, so they wait for the client
-  const rows = readRows(trade).filter((row) => hydrated || row.kind !== "today");
+  const rows = readRows(trade, hydrated).filter((row) => hydrated || row.kind !== "today");
   const next = hydrated ? nextRow(rows) : null;
   // with nothing ahead, the fold names how the trade ended
   const shown = next ?? (hydrated ? rows.at(-1) : undefined);

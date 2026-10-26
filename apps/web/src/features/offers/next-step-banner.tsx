@@ -2,7 +2,6 @@ import {
   ArrowRightIcon,
   CheckIcon,
   ClockIcon,
-  CopyIcon,
   FlagIcon,
   MinusIcon,
   PaperPlaneTiltIcon,
@@ -16,7 +15,6 @@ import { useId, type ReactNode } from "react";
 
 import { Button, type ButtonProps } from "@/components/ui/button";
 import { untilLabel } from "@/features/chat/format";
-import { copyWithToast } from "@/lib/clipboard";
 import { TONE_EDGE, TONE_FILL, TONE_INK, type Tone } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -152,21 +150,26 @@ export function NextStepBanner({
   collections,
   name,
   hydrated,
+  needsYou,
   onCancel,
   onReport,
+  onShowNeeds,
 }: {
   trade: Trade;
   step: NextStep;
   collections: Collections;
   name: string;
   hydrated: boolean;
+  /** legs the viewer can send plus different copies waiting on them */
+  needsYou: number;
   onCancel: () => void;
   onReport: () => void;
+  onShowNeeds: () => void;
 }) {
   const titleId = useId();
   const { tone, icon: StepIcon } = TONES[step.kind];
   const label = (leg: Leg) => itemLabel(leg, collections);
-  const address = trade.partner.identity.address;
+  const { identity } = trade.partner;
   const reportButton = (
     <Button variant="outline" size="sm" onClick={onReport}>
       <FlagIcon />
@@ -244,7 +247,7 @@ export function NextStepBanner({
             name,
           }),
           body: first[step.body],
-          extra: address ? <SendTo address={address} /> : null,
+          extra: identity.address ? <SendTo identity={identity} /> : null,
           actions: step.canCancel ? (
             <Button variant="ghost" size="sm" onClick={onCancel}>
               {m.offer_trade_cancel()}
@@ -336,7 +339,16 @@ export function NextStepBanner({
             </p>
           ))}
           {view.extra ? <div className="mt-2">{view.extra}</div> : null}
-          {view.actions ? <div className="mt-2 flex flex-wrap gap-2">{view.actions}</div> : null}
+          {view.actions || needsYou > 0 ? (
+            <div className="mt-2 flex flex-wrap gap-2">
+              {needsYou > 0 ? (
+                <Button variant="outline" size="sm" onClick={onShowNeeds}>
+                  {m.offer_show_needs_you({ count: needsYou })}
+                </Button>
+              ) : null}
+              {view.actions}
+            </div>
+          ) : null}
         </div>
         {deadline ? (
           <div className="flex min-w-36 shrink-0 flex-col gap-0.5 sm:text-end">
@@ -362,40 +374,23 @@ export function NextStepBanner({
   );
 }
 
-function SendTo({ address }: { address: string }) {
+/** Where to send in the Cosmo app: the default profile's nickname, then each other profile's. */
+function SendTo({ identity }: { identity: Trade["partner"]["identity"] }) {
+  const named = (profile: { address: string | null; nickname: string | null }) =>
+    profile.nickname ?? (profile.address ? truncateAddress(profile.address) : "");
+  const strong = (text: string) => <span className="font-medium">{text}</span>;
   return (
-    <div className="bg-background/60 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border px-3 py-2.5">
+    <div className="bg-background/60 flex flex-wrap items-baseline gap-x-3 gap-y-1 rounded-lg border px-3 py-2.5">
       <span className="text-muted-foreground text-xs">{m.offer_send_to()}</span>
-      <span
-        className="min-w-0 flex-1 basis-36 truncate font-mono text-sm font-medium"
-        title={address}
-      >
-        {truncateAddress(address)}
+      <span className="flex min-w-0 flex-1 basis-36 flex-col text-sm wrap-anywhere">
+        <span>{rich(m.offer_send_in_cosmo, { name: strong(named(identity)) })}</span>
+        {identity.also.map((profile) => (
+          <span key={profile.address} className="text-muted-foreground">
+            {rich(m.offer_send_or, { name: strong(named(profile)) })}
+          </span>
+        ))}
       </span>
-      <CopyAddressButton address={address} className="max-sm:hidden" />
     </div>
-  );
-}
-
-/** The your-turn primary: filled, with the same toast as the copy buttons beside names. */
-export function CopyAddressButton({
-  address,
-  size = "sm",
-  className,
-}: {
-  address: string;
-  size?: ButtonProps["size"];
-  className?: string;
-}) {
-  return (
-    <Button
-      size={size}
-      className={className}
-      onClick={() => void copyWithToast(address, { title: m.profile_header_address_copied() })}
-    >
-      <CopyIcon />
-      {m.offer_copy_address()}
-    </Button>
   );
 }
 
