@@ -137,7 +137,7 @@ export function MarketPanel({
 
   return (
     <div className="flex flex-col gap-4">
-      <StatRow stats={figures} className="grid-cols-3 sm:grid-cols-5" />
+      <StatRow stats={figures} className="grid-cols-2 @md:grid-cols-3" />
       {tracking && (
         <div className="flex flex-col gap-3">
           <button

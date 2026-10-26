@@ -13,26 +13,27 @@ export type Stat = {
 
 /**
  * Open figures on the drawer surface rather than a filled box. Dividers only
- * from `sm`: a phone wraps the row into a grid, where a leading rule would
- * land on the start of every row.
+ * from `sm`. Every figure carries a leading rule and the row is pulled back by
+ * that rule and its padding, so whichever figure starts a row has its rule
+ * clipped, however many columns fit. A `@container`, so callers can pick
+ * columns by the row's own width (a drawer is narrower than the viewport).
  */
 export function StatRow({ stats, className }: { stats: Stat[]; className?: string }) {
   return (
-    <dl className={cn("grid gap-x-4 gap-y-3", className)}>
-      {stats.map(({ label, value, detail }) => (
-        <div
-          key={label}
-          className="flex min-w-0 flex-col gap-0.5 sm:border-s sm:ps-4 sm:first:border-s-0 sm:first:ps-0"
-        >
-          <dt className="text-muted-foreground text-xs">{label}</dt>
-          <dd className="flex flex-wrap items-baseline gap-x-1.5 font-mono text-base font-medium tabular-nums">
-            {value === null ? <Skeleton className="my-1 h-4 w-14" /> : value}
-            {value !== null && detail !== undefined && (
-              <span className="text-muted-foreground text-xs font-normal">{detail}</span>
-            )}
-          </dd>
-        </div>
-      ))}
-    </dl>
+    <div className="@container overflow-hidden">
+      <dl className={cn("grid gap-x-4 gap-y-3 sm:-ms-[calc(--spacing(4)+1px)]", className)}>
+        {stats.map(({ label, value, detail }) => (
+          <div key={label} className="flex min-w-0 flex-col gap-0.5 sm:border-s sm:ps-4">
+            <dt className="text-muted-foreground text-xs">{label}</dt>
+            <dd className="flex flex-wrap items-baseline gap-x-1.5 font-mono text-base font-medium tabular-nums">
+              {value === null ? <Skeleton className="my-1 h-4 w-14" /> : value}
+              {value !== null && detail !== undefined && (
+                <span className="text-muted-foreground text-xs font-normal">{detail}</span>
+              )}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </div>
   );
 }
