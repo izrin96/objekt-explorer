@@ -44,6 +44,7 @@ export function notificationTone(notification: ToneInput): Toned {
         case "wrong_copy_auto_accepted":
           return DONE;
         case "wrong_copy":
+        case "away":
           return { icon: "warning", tone: "warning" };
         case "wrong_copy_declined":
           return { icon: "arrow", tone: "neutral" };

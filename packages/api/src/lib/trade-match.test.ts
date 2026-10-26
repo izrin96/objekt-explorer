@@ -17,6 +17,8 @@ import {
   type MatchTransfer,
   reminderCopy,
   matchLegs as matchAll,
+  awayChange,
+  legTransferable,
   nearMisses,
   stuckChange,
   tradeOutcome,
@@ -54,7 +56,8 @@ const transfer = (overrides: Partial<MatchTransfer> = {}): MatchTransfer => {
     id: `t${seq}`,
     from: GIVER,
     to: RECEIVER,
-    timestamp: `2026-10-02T00:00:${String(seq % 60).padStart(2, "0")}.000Z`,
+    // one second apart and never wrapping, so creation order is time order
+    timestamp: new Date(Date.parse("2026-10-02T00:00:00.000Z") + seq * 1000).toISOString(),
     hash: `0xhash${seq}`,
     tokenId: overrides.objektId ?? "1203",
     objektId: "1203",
@@ -62,6 +65,8 @@ const transfer = (overrides: Partial<MatchTransfer> = {}): MatchTransfer => {
     ...overrides,
   };
 };
+// the indexer has read a day past every transfer the tests make
+const PAST_GRACE = { seenUntil: "2026-10-04T00:00:00.000Z" };
 const minutesBeforeAccept = (minutes: number) =>
   new Date(new Date(ACCEPTED).getTime() - minutes * 60 * 1000).toISOString();
 
@@ -84,13 +89,12 @@ describe("matchLegs: a specific objekt", () => {
     expect(result).toMatchObject({ kind: "verified", transferId: sent.id });
   });
 
-  test("broken when it goes to a third party first", () => {
-    const sold = transfer({ to: THIRD });
-    const late = transfer();
-    expect(matchLegs([leg()], [late, sold]).get(1)).toEqual({
-      kind: "broken",
-      transferId: sold.id,
-      at: sold.timestamp,
+  test("delivered after a stop at a third wallet: verifies on the arrival", () => {
+    const out = transfer({ to: THIRD });
+    const delivered = transfer({ from: THIRD });
+    expect(matchLegs([leg()], [delivered, out], PAST_GRACE).get(1)).toMatchObject({
+      kind: "verified",
+      transferId: delivered.id,
     });
   });
 
@@ -180,8 +184,20 @@ describe("matchLegs: moves before the accept", () => {
     const back = transfer({ from: RECEIVER, to: GIVER_2, timestamp: BEFORE_ACCEPT(19) });
     const sold = transfer({ from: GIVER_2, to: THIRD, timestamp: BEFORE_ACCEPT(20) });
     expect(
-      matchLegs([leg({ giver: new Set([GIVER, GIVER_2]) })], [early, back, sold]).get(1),
+      matchLegs([leg({ giver: new Set([GIVER, GIVER_2]) })], [early, back, sold], PAST_GRACE).get(
+        1,
+      ),
     ).toMatchObject({ kind: "broken", transferId: sold.id });
+  });
+
+  test("reaching the receiver from a third wallet before the accept doesn't deliver", () => {
+    // the receiver may have bought it elsewhere for another deal
+    const sold = transfer({ to: THIRD, timestamp: BEFORE_ACCEPT(25) });
+    const bought = transfer({ from: THIRD, timestamp: BEFORE_ACCEPT(26) });
+    expect(matchLegs([leg()], [sold, bought]).get(1)).toEqual({
+      kind: "pending",
+      awaySince: sold.timestamp,
+    });
   });
 
   test("sent, returned and sent again credits the last send", () => {
@@ -223,25 +239,134 @@ describe("matchLegs: moves before the accept", () => {
   test("sold before the accept and never back breaks the leg, though the accept missed it", () => {
     // the indexer lagged the accept, so the accept still saw the objekt with the giver
     const sold = transfer({ to: THIRD, timestamp: BEFORE_ACCEPT(6) });
-    expect(matchLegs([leg()], [sold]).get(1)).toEqual({
+    expect(matchLegs([leg()], [sold], PAST_GRACE).get(1)).toEqual({
       kind: "broken",
       transferId: sold.id,
       at: sold.timestamp,
     });
     const resold = transfer({ from: THIRD, to: "0xfourth", timestamp: BEFORE_ACCEPT(7) });
-    expect(matchLegs([leg()], [sold, resold]).get(1)).toEqual({
+    expect(matchLegs([leg()], [sold, resold], PAST_GRACE).get(1)).toEqual({
       kind: "broken",
       transferId: sold.id,
       at: sold.timestamp,
     });
   });
 
-  test("the same move after the accept breaks the leg", () => {
+  test("the same move after the accept breaks the leg once the grace is read past", () => {
     const sold = transfer({ to: THIRD });
-    expect(matchLegs([leg()], [sold]).get(1)).toEqual({
+    expect(matchLegs([leg()], [sold], PAST_GRACE).get(1)).toEqual({
       kind: "broken",
       transferId: sold.id,
       at: sold.timestamp,
+    });
+  });
+});
+
+describe("matchLegs: away after the accept", () => {
+  const AT = "2026-10-02T01:00:00.000Z";
+  const out = () => transfer({ to: THIRD, timestamp: AT });
+  const hoursAfter = (hours: number) =>
+    new Date(new Date(AT).getTime() + hours * 60 * 60 * 1000).toISOString();
+
+  test("away for less than 24 hours waits, with when it left", () => {
+    expect(matchLegs([leg()], [out()], { seenUntil: hoursAfter(23) }).get(1)).toEqual({
+      kind: "pending",
+      awaySince: AT,
+    });
+  });
+
+  test("away 24 hours, as the indexer has read, breaks dated when it left", () => {
+    const sold = out();
+    expect(matchLegs([leg()], [sold], { seenUntil: hoursAfter(24) }).get(1)).toEqual({
+      kind: "broken",
+      transferId: sold.id,
+      at: AT,
+    });
+  });
+
+  test("with no reading of the indexer it never breaks", () => {
+    expect(matchLegs([leg()], [out()]).get(1)).toEqual({ kind: "pending", awaySince: AT });
+    expect(matchLegs([leg()], [out()], { seenUntil: null }).get(1)).toMatchObject({
+      kind: "pending",
+    });
+  });
+
+  test("back with the giver within the grace: waiting, as if it never left", () => {
+    const home = transfer({ from: THIRD, to: GIVER, timestamp: hoursAfter(1) });
+    expect(matchLegs([leg()], [out(), home], PAST_GRACE).get(1)).toEqual({ kind: "pending" });
+    const sent = transfer({ timestamp: hoursAfter(2) });
+    expect(matchLegs([leg()], [out(), home, sent], PAST_GRACE).get(1)).toMatchObject({
+      kind: "verified",
+      transferId: sent.id,
+    });
+  });
+
+  test("left again after coming back: the grace counts from the second move", () => {
+    const home = transfer({ from: THIRD, to: GIVER, timestamp: hoursAfter(1) });
+    const again = transfer({ to: THIRD, timestamp: hoursAfter(2) });
+    expect(matchLegs([leg()], [out(), home, again], { seenUntil: hoursAfter(25) }).get(1)).toEqual({
+      kind: "pending",
+      awaySince: again.timestamp,
+    });
+  });
+
+  test("passed on between other wallets keeps the first move's time", () => {
+    const onward = transfer({ from: THIRD, to: "0xfourth", timestamp: hoursAfter(1) });
+    expect(matchLegs([leg()], [out(), onward], { seenUntil: hoursAfter(2) }).get(1)).toEqual({
+      kind: "pending",
+      awaySince: AT,
+    });
+  });
+
+  test("back after the deadline, read in the same run: the break stands", () => {
+    const sold = out();
+    const home = transfer({ from: THIRD, to: GIVER, timestamp: hoursAfter(30) });
+    expect(matchLegs([leg()], [sold, home], { seenUntil: hoursAfter(40) }).get(1)).toEqual({
+      kind: "broken",
+      transferId: sold.id,
+      at: AT,
+    });
+    const late = transfer({ from: THIRD, timestamp: hoursAfter(38) });
+    expect(matchLegs([leg()], [sold, late], { seenUntil: hoursAfter(40) }).get(1)).toMatchObject({
+      kind: "broken",
+    });
+  });
+
+  test("out and back in one block is no move away, whichever the indexer lists first", () => {
+    for (const [outId, backId] of [
+      ["a", "z"],
+      ["z", "a"],
+    ]) {
+      const at = hoursAfter(1);
+      const left = transfer({ id: outId, to: THIRD, timestamp: at });
+      const back = transfer({ id: backId, from: THIRD, to: GIVER, timestamp: at });
+      expect(matchLegs([leg()], [back, left], PAST_GRACE).get(1)).toEqual({ kind: "pending" });
+    }
+  });
+
+  test("back and out again in one block is away, whichever the indexer lists first", () => {
+    const earlier = out();
+    for (const [backId, againId] of [
+      ["a", "z"],
+      ["z", "a"],
+    ]) {
+      const at = hoursAfter(1);
+      const back = transfer({ id: backId, from: THIRD, to: GIVER, timestamp: at });
+      const again = transfer({ id: againId, to: "0xfourth", timestamp: at });
+      expect(
+        matchLegs([leg()], [earlier, again, back], { seenUntil: hoursAfter(2) }).get(1),
+      ).toEqual({ kind: "pending", awaySince: at });
+    }
+  });
+
+  test("sent to the receiver from another account's wallet verifies", () => {
+    const delivered = transfer({ from: THIRD, timestamp: hoursAfter(3) });
+    expect(matchLegs([leg()], [out(), delivered], { seenUntil: hoursAfter(31) }).get(1)).toEqual({
+      kind: "verified",
+      transferId: delivered.id,
+      txHash: delivered.hash,
+      objektId: "1203",
+      at: delivered.timestamp,
     });
   });
 });
@@ -302,16 +427,16 @@ describe("matchLegs: used transfers", () => {
     const t = transfer({ objektId: "5" });
     const anyCopy = leg({ objektId: null });
     const used = new Set([transferKey(t)]);
-    expect(matchLegs([anyCopy], [t], used).get(1)).toEqual({ kind: "pending" });
+    expect(matchLegs([anyCopy], [t], { used }).get(1)).toEqual({ kind: "pending" });
     const specific = leg({ objektId: "5" });
-    expect(matchLegs([specific], [t], used).get(1)).toEqual({ kind: "pending" });
+    expect(matchLegs([specific], [t], { used }).get(1)).toEqual({ kind: "pending" });
   });
 
   test("still used after a re-index gives the transfer a new id", () => {
     const t = transfer({ objektId: "6" });
     const reindexed = { ...t, id: "019d0000-0000-7000-8000-000000000000" };
     expect(
-      matchLegs([leg({ objektId: null })], [reindexed], new Set([transferKey(t)])).get(1),
+      matchLegs([leg({ objektId: null })], [reindexed], { used: new Set([transferKey(t)]) }).get(1),
     ).toEqual({
       kind: "pending",
     });
@@ -320,7 +445,7 @@ describe("matchLegs: used transfers", () => {
 
 describe("nearMisses", () => {
   const misses = (legs: MatchLeg[], transfers: MatchTransfer[]) =>
-    nearMisses(legs, transfers, matchAll(legs, transfers));
+    nearMisses(legs, transfers, matchAll(legs, transfers, PAST_GRACE));
 
   test("a different copy from giver to receiver is reported", () => {
     const wrong = transfer({ objektId: "1207" });
@@ -352,7 +477,7 @@ describe("nearMisses", () => {
   test("a copy sent before the break is reported, so the break fails the trade", () => {
     const wrong = transfer({ objektId: "1207", timestamp: "2026-10-02T00:01:00.000Z" });
     const sold = transfer({ to: THIRD, timestamp: "2026-10-02T00:02:00.000Z" });
-    expect(matchLegs([leg()], [wrong, sold]).get(1)?.kind).toBe("broken");
+    expect(matchLegs([leg()], [wrong, sold], PAST_GRACE).get(1)?.kind).toBe("broken");
     expect(misses([leg()], [wrong, sold])).toEqual([
       { legId: 1, txHash: wrong.hash, objektId: "1207", at: wrong.timestamp },
     ]);
@@ -362,6 +487,15 @@ describe("nearMisses", () => {
     const sold = transfer({ to: THIRD, timestamp: "2026-10-02T00:01:00.000Z" });
     const wrong = transfer({ objektId: "1207", timestamp: "2026-10-02T00:02:00.000Z" });
     expect(misses([leg()], [sold, wrong])).toEqual([]);
+  });
+
+  test("nor one sent after it left while the leg still waits out the grace", () => {
+    const left = transfer({ to: THIRD, timestamp: "2026-10-02T00:01:00.000Z" });
+    const wrong = transfer({ objektId: "1207", timestamp: "2026-10-02T00:02:00.000Z" });
+    const legs = [leg()];
+    const matched = matchAll(legs, [left, wrong], { seenUntil: "2026-10-02T01:00:00.000Z" });
+    expect(matched.results.get(1)).toMatchObject({ kind: "pending", awaySince: left.timestamp });
+    expect(nearMisses(legs, [left, wrong], matched)).toEqual([]);
   });
 
   test("an any-copy leg reports none", () => {
@@ -434,6 +568,48 @@ describe("stuckChange", () => {
   test("an objekt the indexer doesn't know changes nothing", () => {
     expect(stuckChange(undefined, null)).toBeNull();
     expect(stuckChange(undefined, START)).toBeNull();
+  });
+});
+
+describe("awayChange", () => {
+  const LEFT = "2026-10-02T01:00:00.000Z";
+
+  test("marks an objekt newly away, or away since another move", () => {
+    expect(awayChange({ kind: "pending", awaySince: LEFT }, null)).toBe("away");
+    expect(awayChange({ kind: "pending", awaySince: LEFT }, "2026-10-02T00:00:00.000Z")).toBe(
+      "away",
+    );
+  });
+
+  test("the same move, in the database's format, changes nothing", () => {
+    expect(awayChange({ kind: "pending", awaySince: LEFT }, "2026-10-02 01:00:00+00")).toBeNull();
+  });
+
+  test("clears once it is back", () => {
+    expect(awayChange({ kind: "pending" }, LEFT)).toBe("clear");
+    expect(awayChange({ kind: "pending" }, null)).toBeNull();
+  });
+
+  test("back with the giver and stuck there clears it", () => {
+    expect(awayChange({ kind: "stuck" }, LEFT)).toBe("clear");
+    expect(awayChange({ kind: "stuck" }, null)).toBeNull();
+  });
+
+  test("a leg that closed changes nothing", () => {
+    expect(awayChange({ kind: "broken", transferId: "t", at: LEFT }, LEFT)).toBeNull();
+    expect(awayChange(undefined, null)).toBeNull();
+  });
+});
+
+describe("legTransferable", () => {
+  test("an objekt away from the giver is never stuck on them", () => {
+    expect(legTransferable({ kind: "pending", awaySince: START }, false)).toBe(true);
+  });
+
+  test("otherwise the indexer's reading stands", () => {
+    expect(legTransferable({ kind: "pending" }, false)).toBe(false);
+    expect(legTransferable({ kind: "pending" }, undefined)).toBeUndefined();
+    expect(legTransferable(undefined, true)).toBe(true);
   });
 });
 

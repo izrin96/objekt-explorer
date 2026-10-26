@@ -27,7 +27,11 @@ export type Deadline =
   | { kind: "ended"; at: string | null };
 
 /** Small warning lines under the body, each at most once, in this order. */
-type Note = { kind: "ownStuck"; leg: Leg } | { kind: "theirStuck"; leg: Leg };
+export type Note =
+  | { kind: "ownStuck"; leg: Leg }
+  | { kind: "theirStuck"; leg: Leg }
+  | { kind: "ownAway"; leg: Leg }
+  | { kind: "theirAway"; leg: Leg };
 
 /** What the body of Your turn says about who sends first. */
 type SendBody = "send" | "firstYou" | "firstThem" | "firstThemSent";
@@ -155,6 +159,15 @@ export function nextStep(trade: Trade, now: number): NextStep {
   const ends = endsDeadline(trade, now);
   const theirStuck = trade.legs.find((leg) => !leg.fromYou && leg.state === "waiting" && leg.stuck);
   const theirStuckNote: Note[] = theirStuck ? [{ kind: "theirStuck", leg: theirStuck }] : [];
+  // an objekt away from its giver shows in every live state, for both parties
+  const awayLeg = (fromYou: boolean) =>
+    trade.legs.find((leg) => leg.fromYou === fromYou && leg.state === "waiting" && leg.away);
+  const ownAway = awayLeg(true);
+  const theirAway = awayLeg(false);
+  const awayNotes: Note[] = [
+    ...(ownAway ? [{ kind: "ownAway", leg: ownAway } as const] : []),
+    ...(theirAway ? [{ kind: "theirAway", leg: theirAway } as const] : []),
+  ];
 
   switch (kind) {
     case "youDecide": {
@@ -162,7 +175,7 @@ export function nextStep(trade: Trade, now: number): NextStep {
       return {
         kind,
         ...held,
-        notes: [],
+        notes: awayNotes,
         primary: "decide",
         deadline: copyDeadline(held.copy, ends, "decide"),
       };
@@ -175,7 +188,11 @@ export function nextStep(trade: Trade, now: number): NextStep {
         body: sendBody(trade),
         canCancel: trade.canCancel,
         primary: trade.partner.identity.address ? "copyAddress" : null,
-        notes: [...(stuck ? [{ kind: "ownStuck", leg: stuck } as const] : []), ...theirStuckNote],
+        notes: [
+          ...(stuck ? [{ kind: "ownStuck", leg: stuck } as const] : []),
+          ...theirStuckNote,
+          ...awayNotes,
+        ],
         deadline: ends,
       };
     }
@@ -183,7 +200,7 @@ export function nextStep(trade: Trade, now: number): NextStep {
       return {
         kind,
         leg: owed.find((leg) => leg.stuck)!,
-        notes: [],
+        notes: awayNotes,
         primary: null,
         deadline: ends,
       };
@@ -192,7 +209,7 @@ export function nextStep(trade: Trade, now: number): NextStep {
       return {
         kind,
         ...held,
-        notes: [],
+        notes: awayNotes,
         primary: null,
         deadline: copyDeadline(held.copy, ends, "copyLeft"),
       };
@@ -201,7 +218,7 @@ export function nextStep(trade: Trade, now: number): NextStep {
       return {
         kind: "theirTurn",
         canReport: trade.canReport,
-        notes: theirStuckNote,
+        notes: [...theirStuckNote, ...awayNotes],
         primary: null,
         deadline: ends,
       };

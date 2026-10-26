@@ -520,6 +520,8 @@ export const tradeLeg = pgTable(
     verifiedAt: timestamp("verified_at", { mode: "string", withTimezone: true }),
     // set while the indexer reads the objekt as non-transferable, after something was sent
     untransferableAt: timestamp("untransferable_at", { mode: "string", withTimezone: true }),
+    // when the objekt left the giver for a third wallet, while it stays away (the transfer's time)
+    awayAt: timestamp("away_at", { mode: "string", withTimezone: true }),
     txHash: text("tx_hash"),
     verifiedObjektId: varchar("verified_objekt_id", { length: 255 }),
     // the indexer's transfer row, kept for debugging; a re-index gives it a new id, so nothing reads it

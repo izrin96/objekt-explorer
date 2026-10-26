@@ -211,6 +211,14 @@ export function tradeNotificationText(payload: TradePayload, partner = payload.p
       return m.notification_trade_reminder(params);
     case "stuck":
       return m.notification_trade_stuck(params);
+    case "away": {
+      const date = payload.breaksAt ? untilLabel(payload.breaksAt) : "";
+      if (!payload.away) return m.notification_trade_away({ ...params, date });
+      const serial = serialText(payload.away.asked);
+      return payload.away.byYou
+        ? m.notification_trade_away_yours({ ...params, serial, date })
+        : m.notification_trade_away_theirs({ ...params, serial, date });
+    }
     case "wrong_copy":
       return payload.acceptBy
         ? m.notification_trade_wrong_copy_until({

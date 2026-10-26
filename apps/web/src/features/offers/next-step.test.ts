@@ -204,6 +204,23 @@ describe("nextStep, in progress", () => {
     expect(s.kind === "yourTurn" && s.notes.map((n) => n.kind)).toEqual(["ownStuck", "theirStuck"]);
   });
 
+  test("an objekt away from its giver is a note for both parties, after the stuck ones", () => {
+    const away = { at: "2026-10-12T01:16:04.000Z", breaksAt: "2026-10-13T01:16:04.000Z" };
+    const mine = step(trade({ legs: [leg({ away }), leg(), leg({ fromYou: false })] }));
+    expect(mine.kind === "yourTurn" && mine.notes.map((n) => n.kind)).toEqual(["ownAway"]);
+    const theirs = step(trade({ legs: [verified(), leg({ fromYou: false, stuck: true, away })] }));
+    expect(theirs.kind === "theirTurn" && theirs.notes.map((n) => n.kind)).toEqual([
+      "theirStuck",
+      "theirAway",
+    ]);
+  });
+
+  test("a closed leg's away time shows nothing", () => {
+    const away = { at: "2026-10-12T01:16:04.000Z", breaksAt: "2026-10-13T01:16:04.000Z" };
+    const s = step(trade({ legs: [verified({ away }), leg({ fromYou: false })] }));
+    expect(s.kind === "theirTurn" && s.notes).toEqual([]);
+  });
+
   test("the indexer being behind adds no note in any in-progress state", () => {
     const behind = (legs: ReturnType<typeof leg>[]) => step(trade({ indexerBehind: true, legs }));
     for (const s of [

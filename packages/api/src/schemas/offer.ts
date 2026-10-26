@@ -19,6 +19,12 @@ export const RATE_WINDOW_DAYS = 14;
 export const COPY_ACCEPT_HOURS = 72;
 /** The receiver is reminded this long before a wrong copy counts as accepted. */
 export const COPY_REMIND_HOURS = 24;
+/** A reserved objekt away from both the giver and the receiver this long breaks its leg. */
+export const AWAY_GRACE_HOURS = 24;
+
+/** When a leg whose objekt left at `awayAt` breaks, unless it comes back or is delivered. */
+export const awayBreaksAt = (awayAt: string) =>
+  new Date(new Date(awayAt).getTime() + AWAY_GRACE_HOURS * 60 * 60 * 1000).toISOString();
 
 export const TRADE_RATINGS = ["positive", "neutral", "negative"] as const;
 export type TradeRating = (typeof TRADE_RATINGS)[number];
@@ -291,6 +297,8 @@ const tradeLegViewSchema = z.object({
   state: z.enum(["waiting", "verified", "closed"]),
   /** waiting, but the indexer reads the objekt as non-transferable */
   stuck: z.boolean(),
+  /** waiting while the objekt is away from the giver: when it left, and when the leg breaks */
+  away: z.object({ at: z.string(), breaksAt: z.string() }).nullable(),
   verifiedAt: z.string().nullable(),
   txHash: z.string().nullable(),
   verifiedObjektId: z.string().nullable(),
@@ -434,6 +442,7 @@ const TRADE_EVENTS = [
   "stuck",
   "wrong_copy_due",
   "wrong_copy_auto_accepted",
+  "away",
 ] as const;
 
 /** A serial as trade surfaces show it: null before it's numbered, `estimated` after Cosmo's cutoff. */
@@ -456,6 +465,10 @@ export const tradePayloadSchema = z.object({
   copy: z.object({ asked: shownSerialSchema, sent: shownSerialSchema }).optional(),
   /** ISO time the copy counts as accepted, on `wrong_copy` and `wrong_copy_due` */
   acceptBy: z.string().optional(),
+  /** ISO time the trade breaks unless the objekt is back or delivered, on `away` */
+  breaksAt: z.string().optional(),
+  /** on `away`: the objekt that left, and whether the reader is the one who owes it */
+  away: z.object({ asked: shownSerialSchema, byYou: z.boolean() }).optional(),
   /** as on an offer note: up to three collections, what the reader gets first */
   objekts: z.string().array().max(NOTE_OBJEKTS).optional(),
 });

@@ -8,6 +8,7 @@ import {
 } from "@phosphor-icons/react";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 
+import { untilLabel } from "@/features/chat/format";
 import { getCollectionShortNo } from "@/features/objekt/objekt-utils";
 import type { Tone } from "@/lib/tone";
 import { m } from "@/paraglide/messages";
@@ -98,6 +99,12 @@ export function LegCard({
           <p className="text-warning-foreground flex items-start gap-1 text-xs text-pretty">
             <WarningIcon aria-hidden weight="fill" className="mt-px size-3.5 shrink-0" />
             {m.offer_leg_stuck()}
+          </p>
+        ) : null}
+        {leg.state === "waiting" && leg.away ? (
+          <p className="text-warning-foreground flex items-start gap-1 text-xs text-pretty">
+            <WarningIcon aria-hidden weight="fill" className="mt-px size-3.5 shrink-0" />
+            {m.offer_leg_away({ date: untilLabel(leg.away.breaksAt) })}
           </p>
         ) : null}
       </div>

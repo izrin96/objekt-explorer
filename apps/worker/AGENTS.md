@@ -30,7 +30,7 @@ Serials of objekts minted offline come from `populateSerialOffline` (`job/popula
 
 ## Trade verifier
 
-A wrong copy's deadline, like expiry and stall reminders, is due against `seenUntil`, never the clock, so an asked-for objekt sent before the deadline but read late still verifies the leg first. Every automatic accept (deadline, expiry, break) goes through `acceptPicked` in `copy-deadlines.ts`, so the notes and progress stay the same whichever path accepts. A pending copy with a null `accept_by` gets its deadline from the worker the first time it sees the copy, not from the migration, so a copy recorded before the deploy still gets its full window after it.
+A wrong copy's deadline, like expiry, stall reminders and the away grace, is due against `seenUntil`, never the clock, so an asked-for objekt sent before the deadline but read late still verifies the leg first. A specific leg whose objekt left the giver breaks only once `seenUntil` is `AWAY_GRACE_HOURS` past the move (`matchLegs`); until then `recordAway` keeps `away_at` as `recordStuck` keeps `untransferable_at`: set with one `away` note per move, cleared silently when the objekt is back. Every automatic accept (deadline, expiry, break) goes through `acceptPicked` in `copy-deadlines.ts`, so the notes and progress stay the same whichever path accepts. A pending copy with a null `accept_by` gets its deadline from the worker the first time it sees the copy, not from the migration, so a copy recorded before the deploy still gets its full window after it.
 
 ## Want alerts
 

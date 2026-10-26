@@ -1,0 +1,1 @@
+ALTER TABLE "trade_leg" ADD COLUMN "away_at" timestamp with time zone;

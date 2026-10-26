@@ -41,6 +41,7 @@ export type LegRow = {
   collection_slug: string;
   objekt_id: string | null;
   untransferable_at: string | null;
+  away_at: string | null;
   window_start: string;
   accepted_at: string;
 };
@@ -57,6 +58,7 @@ export async function loadOpenLegs(giverIds?: string[]): Promise<LegRow[]> {
       ARRAY(SELECT lower(a.address) FROM user_address a WHERE a.user_id = l.from_user_id) AS from_current,
       ARRAY(SELECT lower(a.address) FROM user_address a WHERE a.user_id = l.to_user_id) AS to_current,
       l.collection_slug, l.objekt_id, l.untransferable_at::text AS untransferable_at,
+      l.away_at::text AS away_at,
       o.created_at::text AS window_start,
       t.accepted_at::text AS accepted_at
     FROM trade_leg l
@@ -73,9 +75,9 @@ const COPY_READ_BATCH = 100;
 /**
  * Every open leg is matched in one pass, so a transfer is spent on one leg across trades.
  * Copies are read for every leg's collection: any-copy legs take them, and a specific leg
- * reports the wrong ones.
+ * reports the wrong ones. `seenUntil` is how far the indexer has read, for the away grace.
  */
-export async function matchOpenLegs(legs: LegRow[]) {
+export async function matchOpenLegs(legs: LegRow[], seenUntil: string | null) {
   const collectionRows =
     legs.length === 0
       ? []
@@ -148,7 +150,7 @@ export async function matchOpenLegs(legs: LegRow[]) {
     db,
     candidates.map((t) => t.hash),
   );
-  const matched = matchLegs(matchLegsInput, candidates, used);
+  const matched = matchLegs(matchLegsInput, candidates, { used, seenUntil });
   return {
     results: matched.results,
     nearMisses: nearMisses(matchLegsInput, candidates, matched),

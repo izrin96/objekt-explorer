@@ -28,6 +28,7 @@ import {
   type HeldCopyStatus,
   INDEXER_SEEN_KEY,
   VERIFIER_LAST_KEY,
+  awayBreaksAt,
 } from "../../schemas/offer";
 import { chatSafety, fetchPartners, hydrateCards } from "../chat";
 import { indexerCaughtUp } from "../indexer-catch-up";
@@ -95,7 +96,8 @@ export async function cancelTrade(me: string, tradeId: number) {
     const legs = await loadOpenLegs([me, partnerId]);
     const ours = new Set(legs.filter((leg) => leg.trade_id === tradeId).map((leg) => leg.id));
     if (ours.size === 0) return;
-    const { results, nearMisses } = await matchOpenLegs(legs);
+    // only verified legs and held copies lock it, and neither waits on the away grace
+    const { results, nearMisses } = await matchOpenLegs(legs, null);
     const locked =
       [...ours].some((id) => results.get(id)?.kind === "verified") ||
       nearMisses.some((miss) => ours.has(miss.legId));
@@ -309,6 +311,10 @@ export async function fetchTrade(me: string, tradeId: number) {
         open: leg.open,
         state: leg.verifiedAt !== null ? "verified" : leg.open ? "waiting" : "closed",
         stuck: leg.open && leg.untransferableAt !== null,
+        away:
+          leg.open && leg.awayAt !== null
+            ? { at: iso(leg.awayAt)!, breaksAt: awayBreaksAt(leg.awayAt) }
+            : null,
         verifiedAt: iso(leg.verifiedAt),
         txHash: leg.txHash,
         verifiedObjektId: leg.verifiedObjektId,

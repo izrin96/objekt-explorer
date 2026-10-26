@@ -21,6 +21,7 @@ export function leg(overrides: Partial<Leg> = {}): Leg {
     open: true,
     state: "waiting",
     stuck: false,
+    away: null,
     verifiedAt: null,
     txHash: null,
     verifiedObjektId: null,

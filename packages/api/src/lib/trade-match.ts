@@ -1,4 +1,4 @@
-import { COPY_REMIND_HOURS } from "../schemas/offer";
+import { AWAY_GRACE_HOURS, COPY_REMIND_HOURS } from "../schemas/offer";
 import { HOUR_MS } from "./time";
 
 /**
@@ -16,11 +16,7 @@ export type MatchLeg = {
    * accept may be for another deal; the margin covers the accepting party sending just before.
    */
   copyWindowStart: string;
-  /**
-   * The trade's `accepted_at`. A move away after it breaks the leg at once. One before it
-   * breaks the leg only if the token never came back: the accept read the indexer, which
-   * can lag the chain, so it may not have seen that move.
-   */
+  /** The trade's `accepted_at`: after it, the token reaching the receiver from anyone delivers. */
   acceptedAt: string;
   giver: ReadonlySet<string>;
   receiver: ReadonlySet<string>;
@@ -77,7 +73,8 @@ export type LegResult =
   | { kind: "verified"; transferId: string; txHash: string; objektId: string; at: string }
   /** `at` is when the objekt left */
   | { kind: "broken"; transferId: string; at: string }
-  | { kind: "pending" }
+  /** `awaySince`: the objekt left the giver then, and the grace hasn't been read past yet */
+  | { kind: "pending"; awaySince?: string }
   /** pending, while the indexer reads its objekt as non-transferable */
   | { kind: "stuck" };
 
@@ -85,6 +82,33 @@ const time = (at: string) => new Date(at).getTime();
 
 function byTime(a: MatchTransfer, b: MatchTransfer) {
   return time(a.timestamp) - time(b.timestamp) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+}
+
+/**
+ * One token's transfers, sorted by time, in the order its holders passed it on: within one block
+ * the indexer's row ids carry no order, so each next move is the one leaving the current holder,
+ * starting from `startsWith` (the giver). A move whose sender receives in the same block goes later.
+ */
+function holderOrder(transfers: MatchTransfer[], startsWith: ReadonlySet<string>) {
+  const ordered: MatchTransfer[] = [];
+  let holder: string | null = null;
+  for (let i = 0; i < transfers.length;) {
+    let end = i;
+    while (end < transfers.length && transfers[end]!.timestamp === transfers[i]!.timestamp) end++;
+    const left = transfers.slice(i, end);
+    while (left.length > 0) {
+      const receiving = new Set(left.map((t) => t.to));
+      const rank = (t: MatchTransfer) =>
+        ((holder === null ? startsWith.has(t.from) : t.from === holder) ? 0 : 2) +
+        (receiving.has(t.from) ? 1 : 0);
+      const next = left.toSorted((a, b) => rank(a) - rank(b) || byTime(a, b))[0]!;
+      left.splice(left.indexOf(next), 1);
+      ordered.push(next);
+      holder = next.to;
+    }
+    i = end;
+  }
+  return ordered;
 }
 
 const broken = (transfer: MatchTransfer): LegResult => ({
@@ -125,16 +149,23 @@ function backWithGiver(
   return false;
 }
 
+/** When a token that left at `leftAt` breaks its leg if it is still away. */
+const graceEnd = (leftAt: string) => time(leftAt) + AWAY_GRACE_HOURS * HOUR_MS;
+
 /**
  * Decides each leg from the transfers. `used` holds the `transferKey`s already recorded on a
  * leg, so one transfer verifies at most one leg anywhere. Specific legs go first: their
  * token can only ever satisfy them, while any-copy legs can take another token. Among the
- * rest, the trade accepted first takes a transfer.
+ * rest, the trade accepted first takes a transfer. A specific token away from the giver breaks
+ * its leg only once `seenUntil` is `AWAY_GRACE_HOURS` past the move; null never breaks one.
  */
 export function matchLegs(
   legs: MatchLeg[],
   transfers: MatchTransfer[],
-  used: ReadonlySet<string> = new Set(),
+  {
+    used = new Set<string>(),
+    seenUntil = null,
+  }: { used?: ReadonlySet<string>; seenUntil?: string | null } = {},
 ): Matched {
   const taken = new Set(used);
   const sorted = transfers
@@ -157,30 +188,42 @@ export function matchLegs(
 
     if (leg.objektId !== null) {
       let result: LegResult = { kind: "pending" };
-      // the move that took the token from the giver before the accept, while it stays away
+      // the move that took the token from the giver, while it stays away
       let away: MatchTransfer | null = null;
-      for (const [i, t] of sorted.entries()) {
-        if (t.objektId !== leg.objektId || !inWindow(t)) continue;
+      const own = holderOrder(
+        sorted.filter((t) => t.objektId === leg.objektId),
+        giver,
+      );
+      for (const [i, t] of own.entries()) {
+        if (!inWindow(t)) continue;
+        // the break was due before this move, so a late return or delivery doesn't undo it
+        if (away && time(t.timestamp) >= Math.max(graceEnd(away.timestamp), accepted)) {
+          result = broken(away);
+          break;
+        }
         if (giver.has(t.to)) {
           away = null;
           continue;
         }
-        if (giver.has(t.from) && receiver.has(t.to)) {
+        if (receiver.has(t.to)) {
+          // before the accept only the giver's send counts: the receiver may have bought it
+          // elsewhere for another deal; after it, the asked-for token arriving is the delivery
+          if (!giver.has(t.from) && time(t.timestamp) < accepted) continue;
           // an early send the giver had back by the accept is not a delivery
-          if (!backWithGiver(sorted, i, giver, accepted)) {
+          if (!backWithGiver(own, i, giver, accepted)) {
             result = verified(t);
             break;
           }
           continue;
         }
-        if (time(t.timestamp) < accepted) {
-          if (giver.has(t.from)) away = t;
-          continue;
-        }
-        result = broken(away ?? t);
-        break;
+        away ??= t;
       }
-      if (result.kind === "pending" && away) result = broken(away);
+      if (result.kind === "pending" && away) {
+        result =
+          seenUntil !== null && time(seenUntil) >= graceEnd(away.timestamp)
+            ? broken(away)
+            : { kind: "pending", awaySince: away.timestamp };
+      }
       if (result.kind === "verified") {
         taken.add(transferKey({ hash: result.txHash, tokenId: result.objektId }));
       }
@@ -226,7 +269,8 @@ export function nearMisses(
     const giver = lower(leg.giver);
     const receiver = lower(leg.receiver);
     const start = time(leg.copyWindowStart);
-    const end = result.kind === "broken" ? time(result.at) : Infinity;
+    const leftAt = result.kind === "broken" ? result.at : result.awaySince;
+    const end = leftAt === undefined ? Infinity : time(leftAt);
     const seen = new Set<string>();
     for (const t of transfers) {
       const key = transferKey(t);
@@ -295,6 +339,30 @@ export function stuckChange(
   if (transferable === false && untransferableAt === null) return "stuck";
   if (transferable === true && untransferableAt !== null) return "clear";
   return null;
+}
+
+/**
+ * Whether a leg's objekt counts as transferable for its stuck check: one away from the giver is
+ * held by someone else, whose spin or grid says nothing about the giver, so it reads as free.
+ */
+export function legTransferable(result: LegResult | undefined, transferable: boolean | undefined) {
+  return result?.kind === "pending" && result.awaySince !== undefined ? true : transferable;
+}
+
+/**
+ * What a run writes to a waiting leg's `away_at`: `away` sets it to when the objekt left (and
+ * tells both parties) when that is new or differs, `clear` drops it once the objekt is back.
+ * Any other result changes nothing: a verified or broken leg closes.
+ */
+export function awayChange(
+  result: LegResult | undefined,
+  awayAt: string | null,
+): "away" | "clear" | null {
+  // stuck reads only an objekt the giver holds (`legTransferable`), so it is back
+  if (result?.kind === "stuck") return awayAt === null ? null : "clear";
+  if (result?.kind !== "pending") return null;
+  if (result.awaySince === undefined) return awayAt === null ? null : "clear";
+  return awayAt !== null && time(awayAt) === time(result.awaySince) ? null : "away";
 }
 
 /**

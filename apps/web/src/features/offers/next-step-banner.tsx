@@ -24,7 +24,7 @@ import { m } from "@/paraglide/messages";
 import { useOfferActions } from "./actions";
 import { itemLabel, leftLabel, shortDate, tradeStatusText } from "./format";
 import { MakeOfferButton } from "./make-offer-button";
-import { type Deadline, type Leg, type NextStep, tradeEnd } from "./next-step";
+import { type Deadline, type Leg, type NextStep, type Note, tradeEnd } from "./next-step";
 import { OfferThumb } from "./offer-item";
 import type { Collections } from "./pick";
 import { StatusBadge } from "./status-badge";
@@ -42,6 +42,20 @@ const TONES: Record<NextStep["kind"], { tone: Tone; icon: Icon }> = {
   theyDecide: { tone: "warning", icon: WarningIcon },
   theirTurn: { tone: "progress", icon: ClockIcon },
 };
+
+function noteText(note: Note, name: string, objekt: string) {
+  const date = note.leg.away ? untilLabel(note.leg.away.breaksAt) : "";
+  switch (note.kind) {
+    case "ownStuck":
+      return m.offer_next_stuck({ objekt });
+    case "theirStuck":
+      return m.offer_next_their_stuck({ name, objekt });
+    case "ownAway":
+      return m.offer_next_away({ objekt, date });
+    case "theirAway":
+      return m.offer_next_their_away({ name, objekt, date });
+  }
+}
 
 function chipText(trade: Trade, step: NextStep) {
   switch (step.kind) {
@@ -318,9 +332,7 @@ export function NextStepBanner({
               className="text-warning-foreground flex items-start gap-1.5 text-xs text-pretty"
             >
               <WarningIcon aria-hidden weight="fill" className="mt-px size-3.5 shrink-0" />
-              {note.kind === "ownStuck"
-                ? m.offer_next_stuck({ objekt: label(note.leg) })
-                : m.offer_next_their_stuck({ name, objekt: label(note.leg) })}
+              {noteText(note, name, label(note.leg))}
             </p>
           ))}
           {view.extra ? <div className="mt-2">{view.extra}</div> : null}
