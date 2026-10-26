@@ -14,7 +14,7 @@ import {
 import { type SQL, and, eq, gt, inArray, isNull, or, sql } from "drizzle-orm";
 
 import { holdsMessage, pairKey, startFactsOf, startVerdict } from "../../lib/chat-rules";
-import { type ListEntryRef, safetyRefusal } from "../../lib/offer-rules";
+import { type ListEntryRef, type OpenOfferHolder, safetyRefusal } from "../../lib/offer-rules";
 import { addressesByUser } from "../../lib/trade-rank";
 import { unique } from "../../lib/unique";
 import { type ChatTarget } from "../../schemas/chat";
@@ -236,15 +236,17 @@ export async function openAnyCopyLegs(
 
 export const copyKey = (userId: string, slug: string) => `${userId}:${slug}`;
 
-/** Open, unexpired offers holding each objekt. */
+/** Open, unexpired offers holding each objekt, with their two parties. */
 export async function openOfferHolders(ids: string[]) {
-  const map = new Map<string, { offerId: number; conversationId: number }[]>();
+  const map = new Map<string, OpenOfferHolder[]>();
   if (ids.length === 0) return map;
   const rows = await db
     .select({
       objektId: offerItem.objektId,
       offerId: offer.id,
       conversationId: offer.conversationId,
+      fromUserId: offer.fromUserId,
+      toUserId: offer.toUserId,
     })
     .from(offerItem)
     .innerJoin(offer, eq(offer.id, offerItem.offerId))
@@ -257,10 +259,8 @@ export async function openOfferHolders(ids: string[]) {
     );
   for (const row of rows) {
     if (!row.objektId) continue;
-    map.set(row.objektId, [
-      ...(map.get(row.objektId) ?? []),
-      { offerId: row.offerId, conversationId: row.conversationId },
-    ]);
+    const { objektId, ...holder } = row;
+    map.set(objektId, [...(map.get(objektId) ?? []), holder]);
   }
   return map;
 }

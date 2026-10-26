@@ -132,26 +132,55 @@ export function validateShape(input: ShapeInput, currencies: ReadonlySet<string>
   return { ok: true, topup: { amount, currency, payer: input.topup.payer } };
 }
 
-type ItemFlags = { transferable: boolean; reserved: boolean; inOpenOffer: number[] };
+export type OpenOfferHolder = {
+  offerId: number;
+  conversationId: number;
+  fromUserId: string;
+  toUserId: string;
+};
+
+type ItemFlags = {
+  transferable: boolean;
+  reserved: boolean;
+  inOpenOffer: number[];
+  inOtherOffer: boolean;
+};
 
 /**
- * `openOffers` maps an objekt id to the open offers holding it, each with its
- * conversation; the conversation being offered in is left out, since its open
- * offer is the one a new offer replaces.
+ * The open offers holding an objekt, the conversation being offered in left out, since its open
+ * offer is the one a new offer replaces. `mine` are those `me` is a party to, by offer id; an
+ * offer between others only counts, so no one learns another pair's offer numbers.
  */
+export function openOffersOf(
+  holders: readonly OpenOfferHolder[],
+  me: string,
+  conversationId: number | null,
+) {
+  const elsewhere = holders.filter((offer) => offer.conversationId !== conversationId);
+  const ours = (offer: OpenOfferHolder) => offer.fromUserId === me || offer.toUserId === me;
+  return {
+    mine: elsewhere
+      .filter(ours)
+      .map((offer) => offer.offerId)
+      .toSorted((a, b) => a - b),
+    others: elsewhere.some((offer) => !ours(offer)),
+  };
+}
+
+/** `openOffers` maps an objekt id to the open offers holding it (see `openOffersOf`). */
 export function itemFlags(
   objekt: { id: string; transferable: boolean },
   reserved: ReadonlySet<string>,
-  openOffers: ReadonlyMap<string, { offerId: number; conversationId: number }[]>,
+  openOffers: ReadonlyMap<string, readonly OpenOfferHolder[]>,
+  me: string,
   conversationId: number | null,
 ): ItemFlags {
+  const { mine, others } = openOffersOf(openOffers.get(objekt.id) ?? [], me, conversationId);
   return {
     transferable: objekt.transferable,
     reserved: reserved.has(objekt.id),
-    inOpenOffer: (openOffers.get(objekt.id) ?? [])
-      .filter((offer) => offer.conversationId !== conversationId)
-      .map((offer) => offer.offerId)
-      .toSorted((a, b) => a - b),
+    inOpenOffer: mine,
+    inOtherOffer: others,
   };
 }
 

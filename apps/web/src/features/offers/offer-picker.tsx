@@ -30,6 +30,7 @@ import { m } from "@/paraglide/messages";
 import { CandidateGrid, candidateMatcher, pagedGridProps } from "./candidate-grid";
 import { type GetSource, addLabel, pickerDescription } from "./get-source";
 import { type Collections, type OfferPick, type OfferSide, pickKey, toPick } from "./pick";
+import { countOf, stepCount, totalOf } from "./quantity";
 import {
   myCandidatesOptions,
   type OfferAddress,
@@ -100,24 +101,39 @@ function PickerBody({
 }) {
   const [selection, setSelection] = useState(() => new Map(picked.map((p) => [p.key, p])));
   const [seen, setSeen] = useState<Record<string, ValidObjekt>>({});
-  const full = selection.size >= OFFER_SIDE_LIMIT;
+  const total = totalOf(selection.values());
+  const full = total >= OFFER_SIDE_LIMIT;
+
+  const remember = (item: CandidateItem, collections: Collections) => {
+    const collection = collections[item.collectionSlug];
+    if (collection) setSeen((current) => ({ ...current, [item.collectionSlug]: collection }));
+  };
 
   const toggle = (item: CandidateItem, collections: Collections) => {
     const key = pickKey(item);
     setSelection((current) => {
       const next = new Map(current);
       if (next.has(key)) next.delete(key);
-      else if (next.size < OFFER_SIDE_LIMIT) next.set(key, toPick(item));
+      else if (totalOf(next.values()) < OFFER_SIDE_LIMIT) next.set(key, toPick(item));
       return next;
     });
-    const collection = collections[item.collectionSlug];
-    if (collection) setSeen((current) => ({ ...current, [item.collectionSlug]: collection }));
+    remember(item, collections);
+  };
+
+  // an any-copy item asks for as many copies as they spare
+  const step = (item: CandidateItem, delta: 1 | -1, collections: Collections) => {
+    setSelection((current) =>
+      stepCount(current, toPick(item), delta, item.copies ?? 1, OFFER_SIDE_LIMIT),
+    );
+    remember(item, collections);
   };
 
   const grid = {
     isSelected: (item: CandidateItem) => selection.has(pickKey(item)),
+    countOf: (item: CandidateItem) => countOf(selection.get(pickKey(item)) ?? { count: 0 }),
     full,
     onToggle: toggle,
+    onStep: step,
   };
 
   return (
@@ -140,7 +156,7 @@ function PickerBody({
           className="text-muted-foreground font-mono text-xs tabular-nums sm:me-auto"
           aria-live="polite"
         >
-          {m.offer_picker_count({ count: selection.size, max: OFFER_SIDE_LIMIT })}
+          {m.offer_picker_count({ count: total, max: OFFER_SIDE_LIMIT })}
         </p>
         <DialogClose render={<Button variant="outline" />}>{m.common_modal_cancel()}</DialogClose>
         <Button onClick={() => onDone([...selection.values()], seen)}>
@@ -154,8 +170,10 @@ function PickerBody({
 type GridProps = {
   to: OfferAddress;
   isSelected: (item: CandidateItem) => boolean;
+  countOf: (item: CandidateItem) => number;
   full: boolean;
   onToggle: (item: CandidateItem, collections: Collections) => void;
+  onStep: (item: CandidateItem, delta: 1 | -1, collections: Collections) => void;
 };
 
 type Filters = PickerFilters & { search: string };

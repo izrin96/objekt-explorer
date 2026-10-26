@@ -215,12 +215,16 @@ const candidateItemSchema = z.object({
   transferable: z.boolean(),
   /** in an accepted trade still in progress */
   reserved: z.boolean(),
-  /** other open offers holding it, the conversation's own excluded */
+  /** the viewer's other open offers holding it, the conversation's own excluded */
   inOpenOffer: z.number().array(),
+  /** an open offer between two other members holds it; never named */
+  inOtherOffer: z.boolean(),
   /** mine: the have list suggesting it; theirs: the list it comes from */
   listSlug: z.string().nullable(),
   /** any copy only: the transferable, unreserved copies held */
   copies: z.number().nullable(),
+  /** any copy only: the same copies are also offered by serial, so more than one is asked for that way */
+  bySerial: z.boolean(),
 });
 export type CandidateItem = z.infer<typeof candidateItemSchema>;
 

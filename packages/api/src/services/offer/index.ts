@@ -8,6 +8,7 @@ import {
   createEffect,
   effectiveStatus,
   matchEntry,
+  openOffersOf,
   validateShape,
 } from "../../lib/offer-rules";
 import { scanMessage } from "../../lib/scam-patterns";
@@ -158,11 +159,10 @@ export async function createOffer(
 
   const specificIds = items.flatMap((item) => (item.objektId ? [item.objektId] : []));
   const holders = await openOfferHolders(specificIds);
+  // only the sender's own offers are named back
   const warnings = specificIds.flatMap((objektId) => {
-    const offerIds = (holders.get(objektId) ?? [])
-      .filter((h) => h.conversationId !== addressed.conversationId)
-      .map((h) => h.offerId);
-    return offerIds.length > 0 ? [{ objektId, offerIds }] : [];
+    const { mine } = openOffersOf(holders.get(objektId) ?? [], me, addressed.conversationId);
+    return mine.length > 0 ? [{ objektId, offerIds: mine }] : [];
   });
 
   const name = await partyNames([me, partnerId]);

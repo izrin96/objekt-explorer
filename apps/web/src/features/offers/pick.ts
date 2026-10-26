@@ -12,12 +12,17 @@ export type OfferPick = {
   collectionSlug: string;
   /** null asks for any copy */
   objektId: string | null;
+  /** an any-copy pick: how many copies it asks for, one when absent */
+  count?: number;
   serial: number | null;
   /** unknown on a market row's prefill, which carries no mint time: the builder reads the candidate's */
   serialEstimated?: boolean;
   listSlug: string | null;
   /** null when the pick did not come from candidates, as in a counter's prefill */
-  flags: Pick<CandidateItem, "transferable" | "reserved" | "inOpenOffer" | "copies"> | null;
+  flags: Pick<
+    CandidateItem,
+    "transferable" | "reserved" | "inOpenOffer" | "inOtherOffer" | "copies"
+  > | null;
   /** a counter keeps what the countered offer gave, listed or not */
   kept?: boolean;
   /** the any-copy placeholder this resolved copy stands in for */
@@ -41,6 +46,7 @@ export function toPick(item: CandidateItem): OfferPick {
       transferable: item.transferable,
       reserved: item.reserved,
       inOpenOffer: item.inOpenOffer,
+      inOtherOffer: item.inOtherOffer,
       copies: item.copies,
     },
   };

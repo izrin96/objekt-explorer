@@ -28,6 +28,7 @@ import {
   pickKey,
   toPick,
 } from "@/features/offers/pick";
+import { countOf, takeOut, totalOf } from "@/features/offers/quantity";
 import {
   invalidateOfferLists,
   myCopyOptions,
@@ -111,21 +112,32 @@ export function BuilderForm({
     queries: asks.map((pick) => myCopyOptions(to, collections[pick.collectionSlug])),
   });
   const taken = new Set(give.flatMap((pick) => (pick.objektId ? [pick.objektId] : [])));
-  const resolved = new Map<string, OfferPick>();
+  const resolved = new Map<string, OfferPick[]>();
   for (const [i, ask] of asks.entries()) {
     const data = copies[i]?.data;
-    const copy = [...(data?.suggested ?? []), ...(data?.items ?? [])].find(
-      (item) =>
-        item.collectionSlug === ask.collectionSlug &&
-        item.objektId !== null &&
-        !taken.has(item.objektId) &&
-        blockedReason(item) === null,
-    );
-    if (!copy?.objektId) continue;
-    taken.add(copy.objektId);
-    resolved.set(ask.key, { ...toPick(copy), replaces: ask.key });
+    const found: OfferPick[] = [];
+    for (const copy of [...(data?.suggested ?? []), ...(data?.items ?? [])]) {
+      if (found.length >= countOf(ask)) break;
+      if (
+        copy.collectionSlug !== ask.collectionSlug ||
+        copy.objektId === null ||
+        taken.has(copy.objektId) ||
+        blockedReason(copy) !== null
+      ) {
+        continue;
+      }
+      taken.add(copy.objektId);
+      found.push({ ...toPick(copy), replaces: ask.key });
+    }
+    if (found.length > 0) resolved.set(ask.key, found);
   }
-  const giveShown = give.map((pick) => resolved.get(pick.key) ?? pick);
+  // an ask for several copies keeps what it couldn't fill, still waiting for a copy
+  const giveShown = give.flatMap((pick) => {
+    const found = resolved.get(pick.key);
+    if (!found) return [pick];
+    const left = countOf(pick) - found.length;
+    return left > 0 ? [...found, { ...pick, count: left }] : found;
+  });
 
   const reasonOf = (side: OfferSide, pick: OfferPick) => {
     if (side === "give" && pick.objektId === null) {
@@ -141,6 +153,11 @@ export function BuilderForm({
       !theirFlags.has(pick.key)
     ) {
       return m.offer_flag_not_listed();
+    }
+    // the copies they spare now, which may have dropped since the count was set
+    const spare = theirFlags.get(pick.key)?.copies ?? pick.flags?.copies;
+    if (side === "get" && pick.objektId === null && spare != null && countOf(pick) > spare) {
+      return m.offer_flag_too_many({ count: spare });
     }
     return blockedReason(flagsOf(pick));
   };
@@ -168,7 +185,7 @@ export function BuilderForm({
   const blocked =
     giveShown.some((pick) => reasonOf("give", pick) !== null) ||
     get.some((pick) => reasonOf("get", pick) !== null);
-  const overLimit = giveShown.length > OFFER_SIDE_LIMIT || get.length > OFFER_SIDE_LIMIT;
+  const overLimit = totalOf(giveShown) > OFFER_SIDE_LIMIT || totalOf(get) > OFFER_SIDE_LIMIT;
   const topupError = !topupOn
     ? null
     : amount === null || amount <= 0
@@ -214,7 +231,8 @@ export function BuilderForm({
   // what closing would lose: changes to the prefill, nothing while the send is on its way, and
   // an open top-up with no amount holds nothing
   const sameKeys = (picks: OfferPick[], from: OfferPick[] = []) =>
-    picks.length === from.length && picks.every((pick, i) => pick.key === from[i]?.key);
+    picks.length === from.length &&
+    picks.every((pick, i) => pick.key === from[i]?.key && countOf(pick) === countOf(from[i]!));
   const holdsDraft =
     !create.isPending &&
     (!sameKeys(give, prefill?.give) ||
@@ -241,11 +259,14 @@ export function BuilderForm({
       give: giveShown.flatMap((pick) =>
         pick.objektId ? [{ collectionSlug: pick.collectionSlug, objektId: pick.objektId }] : [],
       ),
-      get: get.map((pick) => ({
-        collectionSlug: pick.collectionSlug,
-        objektId: pick.objektId ?? undefined,
-        listSlug: pick.listSlug ?? undefined,
-      })),
+      // an any-copy pick of several copies asks for each one
+      get: get.flatMap((pick) =>
+        Array.from({ length: countOf(pick) }, () => ({
+          collectionSlug: pick.collectionSlug,
+          objektId: pick.objektId ?? undefined,
+          listSlug: pick.listSlug ?? undefined,
+        })),
+      ),
       topup: topupOn && amount !== null ? { amount, currency, payer } : undefined,
       note: note.trim() === "" ? undefined : note,
     });
@@ -262,14 +283,14 @@ export function BuilderForm({
       shown: request.focusWantList !== undefined,
       pending: mineWanted.isPending,
       items: giveFocus,
-      full: giveShown.length >= OFFER_SIDE_LIMIT,
+      full: totalOf(giveShown) >= OFFER_SIDE_LIMIT,
       label: m.offer_focus_give_hint(),
     },
     get: {
       shown: request.focusList !== undefined,
       pending: theirs.isPending,
       items: getFocus,
-      full: get.length >= OFFER_SIDE_LIMIT,
+      full: totalOf(get) >= OFFER_SIDE_LIMIT,
       label: m.offer_focus_hint(),
     },
   };
@@ -302,7 +323,7 @@ export function BuilderForm({
                 refused={refused}
                 source={source}
                 onAdd={() => setPicking(side)}
-                onRemove={(key) => setPicks(picks.filter((pick) => pick.key !== key))}
+                onRemove={(pick) => setPicks(takeOut(picks, pick))}
               >
                 {!shortcut.shown ? null : shortcut.pending ? (
                   <FocusStripSkeleton label={shortcut.label} />

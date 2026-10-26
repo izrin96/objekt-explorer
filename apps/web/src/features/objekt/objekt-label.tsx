@@ -27,7 +27,7 @@ export function SerialNo({ serial, estimated }: { serial: number; estimated?: bo
   );
 }
 
-/** `collectionName` with the code and serial in mono, as data is set everywhere else. */
+/** `collectionName` with the serial in mono; the code stays in the label font, where mono spaces its season and number apart. */
 export function CollectionLabel({
   slug,
   collection,
@@ -44,7 +44,7 @@ export function CollectionLabel({
       {collection ? (
         <>
           {collection.member}{" "}
-          <span className="font-mono whitespace-nowrap">{getCollectionShortNo(collection)}</span>
+          <span className="whitespace-nowrap tabular-nums">{getCollectionShortNo(collection)}</span>
         </>
       ) : (
         <span className="font-mono break-all">{slug}</span>

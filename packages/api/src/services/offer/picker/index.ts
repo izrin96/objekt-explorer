@@ -162,7 +162,7 @@ export async function suggestOffer(me: string, partnerId: string) {
           choice.id,
           toCandidate(
             choice,
-            itemFlags(choice, reserved, holders, addressed.conversationId),
+            itemFlags(choice, reserved, holders, me, addressed.conversationId),
             entry.listSlug,
           ),
         );

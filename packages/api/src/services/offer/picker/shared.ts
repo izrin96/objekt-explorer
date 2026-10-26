@@ -30,6 +30,7 @@ export function toCandidate(
     ...flags,
     listSlug,
     copies: null,
+    bySerial: false,
   };
 }
 

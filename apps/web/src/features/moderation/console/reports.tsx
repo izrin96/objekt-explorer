@@ -11,6 +11,7 @@ import { FLAG_LABEL, REASON_LABEL } from "@/features/moderation/labels";
 import { offerNo } from "@/features/offers/format";
 import { ItemLabel } from "@/features/offers/item-label";
 import { pickKey } from "@/features/offers/pick";
+import { groupRows } from "@/features/offers/quantity";
 import { formatCurrency } from "@/features/settings/use-currency";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -292,9 +293,10 @@ function ExcerptOfferView({
             <span>{m.offer_side_nothing()}</span>
           ) : (
             <ul className="flex flex-col gap-0.5">
-              {side.items.map((item) => (
-                <li key={pickKey(item)} className="break-words">
+              {groupRows(side.items, pickKey).map(({ key, item, count }) => (
+                <li key={key} className="break-words">
                   <ItemLabel item={item} collections={collections} />
+                  {count > 1 ? <> {m.offer_any_copy_times({ count })}</> : null}
                 </li>
               ))}
             </ul>

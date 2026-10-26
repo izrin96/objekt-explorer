@@ -8,6 +8,7 @@ import { itemLabel, offerNo } from "@/features/offers/format";
 import { type GetSource, addLabel } from "@/features/offers/get-source";
 import { OfferThumb } from "@/features/offers/offer-item";
 import type { Collections, OfferPick, OfferSide } from "@/features/offers/pick";
+import { countOf, totalOf } from "@/features/offers/quantity";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
@@ -36,7 +37,8 @@ export function SideColumn({
   /** You get's source; unknown while the partner's lists load */
   source: GetSource | undefined;
   onAdd: () => void;
-  onRemove: (key: string) => void;
+  /** a resolved copy or an ask's unfilled rest takes the ask down by what it stands for */
+  onRemove: (pick: OfferPick) => void;
   children?: ReactNode;
 }) {
   const headingId = useId();
@@ -46,7 +48,7 @@ export function SideColumn({
       <h3 id={headingId} className="flex items-baseline gap-2 text-sm font-medium">
         {side === "give" ? m.offer_side_give() : m.offer_side_get()}
         <span className="text-muted-foreground font-mono text-xs font-normal tabular-nums">
-          {m.offer_side_count({ count: picks.length, max: OFFER_SIDE_LIMIT })}
+          {m.offer_side_count({ count: totalOf(picks), max: OFFER_SIDE_LIMIT })}
         </span>
       </h3>
       <Button
@@ -88,6 +90,12 @@ export function SideColumn({
                       serial={pick.objektId === null ? null : pick.serial}
                       estimated={estimated}
                     />
+                    {countOf(pick) > 1 ? (
+                      <span className="text-muted-foreground tabular-nums">
+                        {" "}
+                        {m.offer_any_copy_times({ count: countOf(pick) })}
+                      </span>
+                    ) : null}
                   </span>
                   {pick.objektId === null && flags?.copies != null ? (
                     <span className="text-muted-foreground text-xs">
@@ -108,13 +116,17 @@ export function SideColumn({
                         offers: flags.inOpenOffer.map(offerNo).join(", "),
                       })}
                     </span>
+                  ) : flags?.inOtherOffer ? (
+                    <span className="text-warning-foreground text-xs">
+                      {m.offer_flag_in_other_offer()}
+                    </span>
                   ) : null}
                 </span>
                 <Button
                   variant="ghost"
                   size="icon-sm"
                   aria-label={m.offer_remove_item({ name: label })}
-                  onClick={() => onRemove(pick.replaces ?? pick.key)}
+                  onClick={() => onRemove(pick)}
                   className="shrink-0"
                 >
                   <XIcon />

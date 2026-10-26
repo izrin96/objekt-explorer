@@ -231,20 +231,44 @@ describe("item checks", () => {
       [
         "88",
         [
-          { offerId: 874, conversationId: 5 },
-          { offerId: 881, conversationId: 9 },
+          { offerId: 874, conversationId: 5, fromUserId: "me", toUserId: "rin" },
+          { offerId: 881, conversationId: 9, fromUserId: "me", toUserId: "mina" },
         ],
       ],
     ]);
-    expect(itemFlags({ id: "88", transferable: true }, new Set(), open, 9)).toEqual({
+    expect(itemFlags({ id: "88", transferable: true }, new Set(), open, "me", 9)).toEqual({
       transferable: true,
       reserved: false,
       inOpenOffer: [874],
+      inOtherOffer: false,
     });
-    expect(itemFlags({ id: "14", transferable: false }, new Set(["14"]), open, null)).toEqual({
-      transferable: false,
-      reserved: true,
+    expect(itemFlags({ id: "14", transferable: false }, new Set(["14"]), open, "me", null)).toEqual(
+      {
+        transferable: false,
+        reserved: true,
+        inOpenOffer: [],
+        inOtherOffer: false,
+      },
+    );
+  });
+
+  test("an offer between two others is flagged without its number", () => {
+    const open = new Map([
+      [
+        "88",
+        [
+          { offerId: 171, conversationId: 3, fromUserId: "rin", toUserId: "mina" },
+          { offerId: 874, conversationId: 5, fromUserId: "rin", toUserId: "me" },
+        ],
+      ],
+    ]);
+    expect(itemFlags({ id: "88", transferable: true }, new Set(), open, "me", 9)).toMatchObject({
+      inOpenOffer: [874],
+      inOtherOffer: true,
+    });
+    expect(itemFlags({ id: "88", transferable: true }, new Set(), open, "ji", 9)).toMatchObject({
       inOpenOffer: [],
+      inOtherOffer: true,
     });
   });
 

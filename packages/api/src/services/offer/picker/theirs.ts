@@ -74,7 +74,7 @@ async function resolveTheirItems(me: string, addressed: Addressed, fromList?: st
   const ids = unique([...tokens.keys(), ...copies.map((o) => o.id)]);
   const [reserved, holders] = await Promise.all([reservedIds(ids), openOfferHolders(ids)]);
   const flags = (objekt: IndexedObjekt) =>
-    itemFlags(objekt, reserved, holders, addressed.conversationId);
+    itemFlags(objekt, reserved, holders, me, addressed.conversationId);
 
   const items: CandidateItem[] = [];
   const seen = new Set<string>();
@@ -103,8 +103,10 @@ async function resolveTheirItems(me: string, addressed: Addressed, fromList?: st
         transferable: true,
         reserved: false,
         inOpenOffer: [],
+        inOtherOffer: false,
         listSlug: entry.listSlug,
         copies: spare,
+        bySerial: false,
       });
     }
     if (entry.hideSerial) continue;
@@ -121,6 +123,15 @@ async function resolveTheirItems(me: string, addressed: Addressed, fromList?: st
     if (!objekt || seen.has(id) || !theirs.has(objekt.owner)) continue;
     seen.add(id);
     items.push(toCandidate(objekt, flags(objekt), null));
+  }
+
+  // a whole-collection entry on a list that shows serials offers every copy by serial, so its
+  // any copy asks for one and more go by serial; a single listed objekt doesn't cover the rest
+  const bySerial = new Set(
+    entries.flatMap((e) => (entryObjektId(e) === null && !e.hideSerial ? [e.collectionSlug] : [])),
+  );
+  for (const item of items) {
+    if (item.objektId === null) item.bySerial = bySerial.has(item.collectionSlug);
   }
 
   // whether the partner listed anything at all, so an empty picker can say why
@@ -243,7 +254,7 @@ export async function theirCollectionPage(
   const [reserved, holders] = await Promise.all([reservedIds(ids), openOfferHolders(ids)]);
   return {
     items: objekts.map((objekt) =>
-      toCandidate(objekt, itemFlags(objekt, reserved, holders, addressed.conversationId), null),
+      toCandidate(objekt, itemFlags(objekt, reserved, holders, me, addressed.conversationId), null),
     ),
     suggested: [],
     nextCursor,

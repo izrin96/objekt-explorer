@@ -2,6 +2,7 @@ import type { OfferItemView, OfferView } from "@repo/api/schemas/offer";
 
 import type { OfferRequest } from "./offer-builder";
 import { type Collections, pickKey } from "./pick";
+import { mergeCounts } from "./quantity";
 
 /** The counter starts from this offer as the viewer sees it; the note is theirs, so it stays. */
 export function counterRequest(
@@ -25,8 +26,8 @@ export function counterRequest(
     counter: true,
     prefill: {
       // an any-copy ask stays, and the builder finds one of the viewer's copies for it
-      give: offer.give.map((item) => pick(item)),
-      get: offer.get.map((item) => pick(item, true)),
+      give: mergeCounts(offer.give.map((item) => pick(item))),
+      get: mergeCounts(offer.get.map((item) => pick(item, true))),
       topup: offer.topup
         ? {
             amount: Number(offer.topup.amount),

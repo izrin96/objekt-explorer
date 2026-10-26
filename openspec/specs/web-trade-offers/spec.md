@@ -68,15 +68,19 @@ Before an offer is sent, each specific objekt SHALL be checked against current o
 - each one must be transferable;
 - none may be in an accepted trade that is still in progress.
 
-An offer that fails any of these checks SHALL be refused, naming the objekt. An objekt that is already in another open offer SHALL show a warning naming that offer, and SHALL still be sendable.
+An offer that fails any of these checks SHALL be refused, naming the objekt. An objekt that is already in another open offer SHALL show a warning and SHALL still be sendable. The warning SHALL name the offer only when the user is one of its two parties; an offer between two other members SHALL read "In another open offer", naming no offer.
 
 #### Scenario: Not transferable
 - **WHEN** the user adds Kaede Divine01 322Z #14, which is not transferable
 - **THEN** the builder marks it "Not transferable" and it can't be added
 
 #### Scenario: Already offered elsewhere
-- **WHEN** the user adds JiWoo Cream01 108Z #88, which is in open offer O-874
-- **THEN** the builder shows "Also in open offer O-874" and the offer can still be sent
+- **WHEN** the user adds JiWoo Cream01 108Z #88, which is in their own open offer O-874
+- **THEN** the builder shows "Also in your open offer O-874" and the offer can still be sent
+
+#### Scenario: In someone else's offer
+- **WHEN** the user adds HeeJin A2 201Z #290, which is in open offer O-171 between two other members
+- **THEN** the builder shows "In another open offer", never "O-171", and the offer can still be sent
 
 #### Scenario: Reserved
 - **WHEN** the user adds an objekt that is part of an accepted trade in progress
@@ -207,7 +211,17 @@ When an entry on the recipient's list comes from a list that hides serial number
 
 A request asking for a specific objekt SHALL be refused unless that objekt is reachable through an entry on a list that shows serials, or it was under You give in the offer being countered, or it comes from the recipient's collection (see Offers name objekts on both sides). A copy listed only on hidden-serial lists can still be asked for as any copy.
 
-Asking for any copy through hidden-serial entries that name specific objekts SHALL draw only on those objekts, while the recipient still holds them, transferable and unreserved. The picker's "N you can ask for" and the most copies a request may ask for SHALL count only those. An entry for the whole collection, on any list, opens every copy the recipient holds.
+Asking for any copy through hidden-serial entries that name specific objekts SHALL draw only on those objekts, while the recipient still holds them, transferable and unreserved. The picker's "N available" and the most copies a request may ask for SHALL count only those. An entry for the whole collection, on any list, opens every copy the recipient holds.
+
+An any-copy item SHALL read "Any serial · N available" in You get's picker and "Any serial · N held" in You give, N being the copies the holder spares. When the same copies are not also offered by serial, as on a list that hides serials, the picked item SHALL show a count from 1 up to N under its tile, with − and + buttons and "They choose the serial"; − at 1 takes it out, and + stops at N or at the side's 50. When they are, the item SHALL stay a single pick, and more copies are picked by serial. Each copy SHALL count toward the 50, and You get SHALL list the item once with "× N" when N is more than 1, as the sent offer's card does. The offer asks for each copy as its own item. When the holder now spares fewer copies than the count, the item SHALL read "Only N available" and block Send until the count comes down. On You give, a counter's any-copy ask for several copies SHALL take that many of the sender's own copies; when they hold fewer, the copies found and the rest still waiting SHALL each be removable on their own.
+
+#### Scenario: Several copies of one collection
+- **WHEN** rin.trades lists SeoYeon 204Z for the whole collection on a list that hides serials, spares three copies, and the user picks it and presses + twice
+- **THEN** the picker reads 3, + is disabled, You get shows "SeoYeon 204Z × 3", the side counts 3 of 50, and the offer asks for three copies
+
+#### Scenario: Copies shown by serial
+- **WHEN** rin.trades lists SeoYeon 204Z for the whole collection on a list that shows serials, and spares three copies
+- **THEN** the picker shows "Any serial · 3 available" and #537, #812 and #904; Any serial picks one copy with no count, and the user picks exact serials for more
 
 #### Scenario: Collection at a hidden-serial address
 - **WHEN** rin.trades has no list on Trade and holds three SeoYeon 204Z at a linked address that hid serials before this change
@@ -215,7 +229,7 @@ Asking for any copy through hidden-serial entries that name specific objekts SHA
 
 #### Scenario: Hidden list in the picker
 - **WHEN** rin.trades's have list hides serials and lists SeoYeon 204Z #537, and the user opens You get
-- **THEN** the picker shows SeoYeon 204Z as "Any copy · 1 you can ask for", with no serial and no specific copies
+- **THEN** the picker shows SeoYeon 204Z as "Any serial · 1 available", with no serial and no specific copies
 
 #### Scenario: Same collection on a visible list
 - **WHEN** rin.trades also lists SeoYeon 204Z on a sale list that shows serials
@@ -223,7 +237,7 @@ Asking for any copy through hidden-serial entries that name specific objekts SHA
 
 #### Scenario: Listed one, holds three
 - **WHEN** rin.trades's hidden-serial list names one SeoYeon 204Z, and rin.trades holds three spare copies, none listed elsewhere
-- **THEN** the picker shows "Any copy · 1 you can ask for", and a request for two copies is refused
+- **THEN** the picker shows "Any serial · 1 available", its count stops at 1, and a request for two copies is refused
 
 #### Scenario: Listed token gone
 - **WHEN** the only SeoYeon 204Z a hidden-serial list names has left rin.trades's wallet

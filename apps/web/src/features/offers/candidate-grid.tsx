@@ -58,8 +58,10 @@ export function CandidateGrid({
   empty,
   more,
   isSelected,
+  countOf,
   full,
   onToggle,
+  onStep,
 }: {
   sections: { title: string | null; items: CandidateItem[] }[];
   collections: Collections;
@@ -68,8 +70,10 @@ export function CandidateGrid({
   empty: { title: string; hint?: string; action?: ReactNode };
   more?: { has: boolean; loading: boolean; failed: boolean; load: () => void };
   isSelected: (item: CandidateItem) => boolean;
+  countOf: (item: CandidateItem) => number;
   full: boolean;
   onToggle: (item: CandidateItem, collections: Collections) => void;
+  onStep: (item: CandidateItem, delta: 1 | -1, collections: Collections) => void;
 }) {
   if (pending) {
     return (
@@ -125,8 +129,10 @@ export function CandidateGrid({
           item={item}
           collection={collections[item.collectionSlug]}
           selected={isSelected(item)}
+          count={countOf(item)}
           full={full}
           onToggle={() => onToggle(item, collections)}
+          onStep={(delta) => onStep(item, delta, collections)}
         />
       )}
     />

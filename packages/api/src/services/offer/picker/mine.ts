@@ -137,7 +137,7 @@ export async function mineCandidates(
   const ids = unique([...page.map((o) => o.id), ...suggestedList.map((s) => s.objekt.id)]);
   const [reserved, holders] = await Promise.all([reservedIds(ids), openOfferHolders(ids)]);
   const flags = (objekt: IndexedObjekt) =>
-    itemFlags(objekt, reserved, holders, addressed.conversationId);
+    itemFlags(objekt, reserved, holders, me, addressed.conversationId);
   const suggestionOf = new Map(suggestedList.map((s) => [s.objekt.id, s.listSlug]));
 
   return {
