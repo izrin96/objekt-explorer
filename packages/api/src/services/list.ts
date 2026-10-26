@@ -727,11 +727,15 @@ export async function insertCopyRows(tx: Tx, listId: number, rows: CopyRow[]) {
 
 type AddableList = Pick<List, "id" | "isProfileBind" | "profileAddress">;
 
+/** What each added entry starts with: a sale list's price and note, set when the caller checked the list takes them. */
+type EntryPricing = { price: number | null; isQyop: boolean; note: string | null };
+
 /** `skipped` counts the requested items that added nothing. */
 export async function addEntries(
   list: AddableList,
   from: AddSource,
   skipDups: boolean,
+  pricing?: EntryPricing,
 ): Promise<{ rows: ListEntry[]; skipped: number }> {
   const owner = list.isProfileBind ? list.profileAddress?.toLowerCase() : undefined;
 
@@ -749,6 +753,7 @@ export async function addEntries(
       const rows = await insertTokens(
         list.id,
         copies.toSorted((a, b) => order.get(a.slug)! - order.get(b.slug)! || a.serial - b.serial),
+        pricing,
       );
       const added = new Set(rows.map((row) => row.collectionSlug));
       return { rows, skipped: slugs.filter((slug) => !added.has(slug)).length };
@@ -770,6 +775,7 @@ export async function addEntries(
     const rows = await insertTokens(
       list.id,
       unique.flatMap((id) => owned.get(id) ?? []),
+      pricing,
     );
     return { rows, skipped: requested - rows.length };
   }
@@ -799,7 +805,10 @@ export async function addEntries(
           chunkMap(slugs, TOKEN_CHUNK_SIZE, (batch) =>
             tx
               .insert(listEntries)
-              .values(batch.map((collectionSlug) => ({ listId: list.id, collectionSlug })))
+              // oxlint-disable-next-line oxc/no-map-spread
+              .values(
+                batch.map((collectionSlug) => ({ listId: list.id, collectionSlug, ...pricing })),
+              )
               .returning(),
           ),
         );
@@ -827,13 +836,25 @@ async function resolveEntryTokens(slug: string, entryIds: number[]) {
   return entries.flatMap((entry) => (entry.objektId ? [entry.objektId] : []));
 }
 
-async function insertTokens(listId: number, tokens: { id: string; slug: string }[]) {
+async function insertTokens(
+  listId: number,
+  tokens: { id: string; slug: string }[],
+  pricing?: EntryPricing,
+) {
   if (tokens.length === 0) return [];
   const inserted = await db.transaction((tx) =>
     chunkMap(tokens, TOKEN_CHUNK_SIZE, (batch) =>
       tx
         .insert(listEntries)
-        .values(batch.map((token) => ({ listId, objektId: token.id, collectionSlug: token.slug })))
+        .values(
+          // oxlint-disable-next-line oxc/no-map-spread
+          batch.map((token) => ({
+            listId,
+            objektId: token.id,
+            collectionSlug: token.slug,
+            ...pricing,
+          })),
+        )
         .onConflictDoNothing()
         .returning(),
     ),

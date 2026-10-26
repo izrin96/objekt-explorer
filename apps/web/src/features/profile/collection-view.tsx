@@ -228,13 +228,19 @@ export function CollectionView() {
     [isProfileAuthed, togglePin, toggleLock],
   );
 
+  // a combined card's copies, for Add to list to pick from by serial
+  const ownedTokens = useMemo(
+    () => (grouped === true ? filtered.filter(isObjektOwned) : undefined),
+    [filtered, grouped],
+  );
+
   const uniqueCount = new Set(filtered.map((objekt) => objekt.collectionId)).size;
   const ownerActions = isProfileAuthed
     ? selectActions(filtered.filter((objekt) => selected.has(objekt.id)))
     : [];
 
   return (
-    <AddToListProvider address={address}>
+    <AddToListProvider address={address} copies={ownedTokens} copiesPartial={hasNextPage}>
       <ProfileToolbar
         longTail={LONG_TAIL.collection}
         extras={extras}

@@ -3,6 +3,7 @@ import { db } from "@repo/db";
 import { listEntries } from "@repo/db/schema";
 import { and, eq, inArray, isNull } from "drizzle-orm";
 
+import { refuse } from "../lib/refuse";
 import { authed, pub } from "../orpc";
 import { documented, errorResponses } from "../schemas/common/documented";
 import {
@@ -74,13 +75,30 @@ export const listEntriesRouter = {
 
   addToList: authed.input(addToListInputSchema).handler(
     async ({
-      input: { slug, skipDups, from },
+      input: { slug, skipDups, from, price, isQyop, note },
       context: {
         session: { user },
       },
     }) => {
       const list = await findOwnedList(slug, user.id);
-      const { rows, skipped } = await addEntries(list, from, skipDups);
+      const trimmed = note?.trim() || null;
+      const priced = isQyop === true || price != null || trimmed !== null;
+      if (priced && list.listType !== "sale") {
+        refuse("BAD_REQUEST", "list_prices_sale_only", "Only sale lists can set prices");
+      }
+      const { rows, skipped } = await addEntries(
+        list,
+        from,
+        skipDups,
+        // a QYOP entry carries no price, and 0 is no price, as Set price saves them
+        priced
+          ? {
+              price: isQyop === true || !price ? null : price,
+              isQyop: isQyop === true,
+              note: trimmed,
+            }
+          : undefined,
+      );
 
       // unfiltered by the selected artists, so the entries are exactly what was added
       const entries =

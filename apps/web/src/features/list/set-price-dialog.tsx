@@ -103,8 +103,11 @@ function SetPriceForm({
               <span className="bg-secondary text-muted-foreground grid w-20 shrink-0 place-items-center rounded-s-lg border border-e-0 text-sm">
                 {currency}
               </span>
-              <NumberFieldGroup className="rounded-s-none">
-                <NumberFieldDecrement aria-label={m.filter_sort_by_price_label()} />
+              <NumberFieldGroup className="rounded-s-none before:rounded-s-none">
+                <NumberFieldDecrement
+                  className="rounded-s-none"
+                  aria-label={m.filter_sort_by_price_label()}
+                />
                 <NumberFieldInput className="tabular-nums" />
                 <NumberFieldIncrement aria-label={m.filter_sort_by_price_label()} />
               </NumberFieldGroup>
@@ -128,15 +131,6 @@ function SetPriceForm({
       </DialogPanel>
       <DialogFooter>
         <DialogClose render={<Button variant="outline" />}>{m.common_modal_cancel()}</DialogClose>
-        <Button
-          variant="secondary"
-          loading={update.isPending}
-          onClick={() =>
-            save(entryIds.map((entryId) => ({ entryId, price: null, isQyop: false, note: null })))
-          }
-        >
-          {m.list_manage_objekt_set_price_clear()}
-        </Button>
         <Button
           loading={update.isPending}
           onClick={() =>

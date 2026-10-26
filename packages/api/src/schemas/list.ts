@@ -202,6 +202,10 @@ export const addToListInputSchema = z.object({
   slug: z.string(),
   skipDups: z.boolean(),
   from: addSourceSchema,
+  /** set on the entries this adds, a sale list's only; an entry already there keeps its own */
+  price: z.number().min(0).nullish(),
+  isQyop: z.boolean().optional(),
+  note: z.string().max(255).nullish(),
 });
 
 export const removeObjektsFromListInputSchema = z.object({
