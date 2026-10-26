@@ -28,6 +28,12 @@ import { publish } from "./redis";
 const db = new TypeormDatabase({ supportHotBlocks: true });
 
 const EMPTY_COLLECTION = "empty-collection";
+const LIVE_WINDOW_MS = 5 * 60 * 1000;
+
+function isLive(blocks: { header: { timestamp: number } }[]) {
+  const last = blocks.at(-1);
+  return last !== undefined && Date.now() - last.header.timestamp < LIVE_WINDOW_MS;
+}
 
 processor.run(db, async (ctx) => {
   const { transfers, transferability, comoBalanceUpdates, votes, reveals } = parseBlocks(
@@ -132,8 +138,9 @@ processor.run(db, async (ctx) => {
     });
 
     // publish transfers to redis for websocket broadcast; skipped while catching up so history
-    // neither floods the live feed nor builds a multi-megabyte message
-    if (ctx.isHead && transferBatchAll.length > 0) {
+    // neither floods the live feed nor builds a multi-megabyte message. Not `ctx.isHead` alone:
+    // a hot update of several blocks runs one slice per block and only the last one is the head
+    if (isLive(ctx.blocks) && transferBatchAll.length > 0) {
       publish("transfers", JSON.stringify(transferBatchAll)).catch((error) =>
         ctx.log.warn(`Failed to publish transfers to Redis: ${error}`),
       );
