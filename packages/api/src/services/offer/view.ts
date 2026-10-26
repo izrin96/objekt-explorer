@@ -40,7 +40,13 @@ type HydratedOffer = {
   trade_status: TradeStatus | null;
   trade_progress: { verified: number; total: number } | null;
   latest: boolean;
-  items: [side: "give" | "get", slug: string, objektId: string | null, listSlug: string | null][];
+  items: [
+    side: "give" | "get",
+    slug: string,
+    objektId: string | null,
+    listSlug: string | null,
+    sentAt: string | null,
+  ][];
 };
 
 /** Offers with their items, trade and whether a newer offer exists, in one read. */
@@ -60,7 +66,10 @@ export async function fetchOffers(offerIds: number[]): Promise<Map<number, Hydra
         SELECT 1 FROM offer n WHERE n.conversation_id = o.conversation_id AND n.id > o.id
       ) AS latest,
       coalesce((
-        SELECT json_agg(json_build_array(i.side, i.collection_slug, i.objekt_id, l.slug) ORDER BY i.id)
+        SELECT json_agg(
+          json_build_array(i.side, i.collection_slug, i.objekt_id, l.slug, i.sent_at::text)
+          ORDER BY i.id
+        )
         FROM offer_item i LEFT JOIN lists l ON l.id = i.list_id
         WHERE i.offer_id = o.id
       ), '[]') AS items
@@ -96,12 +105,19 @@ export function itemViews(
   viewerId: string,
   serialOf: (id: string) => ShownSerial,
 ) {
-  const items = row.items.map(([side, collectionSlug, objektId, listSlug]) => {
+  const items = row.items.map(([side, collectionSlug, objektId, listSlug, sentAt]) => {
     const { serial, estimated } =
       objektId === null ? { serial: null, estimated: false } : serialOf(objektId);
     return {
       side,
-      view: { collectionSlug, objektId, serial, serialEstimated: estimated, listSlug },
+      view: {
+        collectionSlug,
+        objektId,
+        serial,
+        serialEstimated: estimated,
+        listSlug,
+        sentAt: iso(sentAt),
+      },
     };
   });
   const { give, get } = offerSummary(items, row.from_user_id === viewerId);

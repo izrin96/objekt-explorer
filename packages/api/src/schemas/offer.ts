@@ -243,6 +243,8 @@ const offerItemViewSchema = z.object({
   serial: z.number().nullable(),
   serialEstimated: z.boolean(),
   listSlug: z.string().nullable(),
+  /** the giver already sent it to the other party, while the offer is open */
+  sentAt: z.string().nullable(),
 });
 export type OfferItemView = z.infer<typeof offerItemViewSchema>;
 

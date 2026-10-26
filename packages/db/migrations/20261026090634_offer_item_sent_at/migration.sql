@@ -1,0 +1,1 @@
+ALTER TABLE "offer_item" ADD COLUMN "sent_at" timestamp with time zone;

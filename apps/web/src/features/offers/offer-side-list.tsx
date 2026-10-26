@@ -17,11 +17,14 @@ export function OfferSideList({
   label,
   items,
   collections,
+  open,
   onOpen,
 }: {
   label: string;
   items: OfferItemView[];
   collections: Collections;
+  /** the offer is open: only then do "already sent" marks show */
+  open: boolean;
   onOpen: (objekt: ValidObjekt) => void;
 }) {
   const headingId = useId();
@@ -54,6 +57,11 @@ export function OfferSideList({
                   <span className="text-muted-foreground tabular-nums">
                     {" "}
                     {m.offer_any_copy_times({ count })}
+                  </span>
+                ) : null}
+                {open && item.sentAt !== null ? (
+                  <span className="text-success-foreground block text-xs">
+                    {m.offer_item_sent()}
                   </span>
                 ) : null}
               </span>

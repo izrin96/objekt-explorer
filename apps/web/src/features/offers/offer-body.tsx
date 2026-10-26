@@ -1,4 +1,9 @@
-import { ArrowsLeftRightIcon, CaretRightIcon, WarningIcon } from "@phosphor-icons/react";
+import {
+  ArrowsLeftRightIcon,
+  CaretRightIcon,
+  CheckCircleIcon,
+  WarningIcon,
+} from "@phosphor-icons/react";
 import type { OfferView } from "@repo/api/schemas/offer";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { Link } from "@tanstack/react-router";
@@ -21,6 +26,7 @@ import {
 import { Mono, Progress, TopupText } from "./mono";
 import { OfferSideList } from "./offer-side-list";
 import { type Collections, pickKey } from "./pick";
+import { allSent } from "./sent";
 
 export function OfferBody({
   offer,
@@ -71,6 +77,7 @@ export function OfferBody({
           label={m.offer_side_give()}
           items={offer.give}
           collections={collections}
+          open={open}
           onOpen={onOpen}
         />
         <ArrowsLeftRightIcon
@@ -81,6 +88,7 @@ export function OfferBody({
           label={m.offer_side_get()}
           items={offer.get}
           collections={collections}
+          open={open}
           onOpen={onOpen}
         />
       </div>
@@ -101,6 +109,13 @@ export function OfferBody({
             <CautionLine categories={offer.caution} />
           ) : null}
         </div>
+      ) : null}
+
+      {open && allSent(offer) ? (
+        <p className="text-success-foreground flex items-start gap-1.5 text-xs text-pretty">
+          <CheckCircleIcon aria-hidden weight="fill" className="mt-px size-3.5 shrink-0" />
+          {offer.mine ? m.offer_sent_hint_wait({ name }) : m.offer_sent_hint_accept()}
+        </p>
       ) : null}
 
       {reason ? <p className="text-muted-foreground text-xs text-pretty">{reason}</p> : null}

@@ -23,6 +23,7 @@ import {
   itemFlags,
   type ListEntryRef,
   matchEntry,
+  earlySend,
   itemStillHeld,
   itemVerdict,
   type OfferState,
@@ -592,6 +593,42 @@ describe("itemStillHeld", () => {
   test("anywhere else, or unknown to the indexer, it moved", () => {
     expect(itemStillHeld(item, "0xstranger", [send({ to: "0xstranger" })])).toBe(false);
     expect(itemStillHeld(item, undefined, [])).toBe(false);
+  });
+});
+
+describe("earlySend", () => {
+  const item = {
+    objektId: "1",
+    holders: ["0xgiver"],
+    receivers: ["0xreceiver"],
+    since: "2026-10-05T00:00:00.000Z",
+  };
+  const send = (overrides: Partial<{ from: string; to: string; timestamp: string }> = {}) => ({
+    objektId: "1",
+    from: "0xGIVER",
+    to: "0xreceiver",
+    timestamp: "2026-10-06T00:00:00.000Z",
+    ...overrides,
+  });
+
+  test("the giver's send to the receiver after the offer", () => {
+    expect(earlySend(item, "0xReceiver", [send()])).toEqual(send());
+  });
+
+  test("none before the offer, from someone else, or of another objekt", () => {
+    expect(earlySend(item, "0xreceiver", [send({ timestamp: "2026-10-04T00:00:00.000Z" })])).toBe(
+      null,
+    );
+    expect(earlySend(item, "0xreceiver", [send({ from: "0xstranger" })])).toBe(null);
+    expect(earlySend(item, "0xreceiver", [{ ...send(), objektId: "2" }])).toBe(null);
+    // to a third wallet, which then passed it on to the receiver
+    expect(earlySend(item, "0xreceiver", [send({ to: "0xstranger" })])).toBe(null);
+  });
+
+  test("none while the giver holds it, or when the owner is unknown", () => {
+    expect(earlySend(item, "0xgiver", [send()])).toBe(null);
+    expect(earlySend(item, undefined, [send()])).toBe(null);
+    expect(earlySend(item, "0xstranger", [send()])).toBe(null);
   });
 });
 

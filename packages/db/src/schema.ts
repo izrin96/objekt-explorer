@@ -444,6 +444,8 @@ export const offerItem = pgTable(
     collectionSlug: varchar("collection_slug", { length: 255 }).notNull(),
     objektId: varchar("objekt_id", { length: 255 }),
     listId: integer("list_id").references(() => lists.id, { onDelete: "set null" }),
+    /** when the giver sent it to the other party before any accept, as the worker saw it */
+    sentAt: timestamp("sent_at", { mode: "string", withTimezone: true }),
   },
   (t) => [
     index("offer_item_offer_id_idx").on(t.offerId),

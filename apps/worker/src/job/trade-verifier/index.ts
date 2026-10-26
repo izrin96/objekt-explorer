@@ -179,6 +179,7 @@ async function verifyRun(trigger: Trigger) {
   verifierBeat.count("wrong copies", touched.wrongCopies);
   verifierBeat.count("trades ended", touched.ended + expired.length);
   verifierBeat.count("offers expired or cancelled", upkeep.expired + upkeep.moved);
+  verifierBeat.count("offers with sent marks changed", upkeep.sentChanged);
   verifierBeat.max("most open legs", legs.length);
   verifierBeat.max("slowest (ms)", ms);
   if (seen) {
@@ -190,7 +191,7 @@ async function verifyRun(trigger: Trigger) {
   // a run that changed nothing is counted in the hourly line only
   if (publishes.length > 0) {
     verifierLog.info(
-      `${trigger}: ${legs.length} open legs; ${touched.verified} verified, ${touched.wrongCopies} wrong copies, ${touched.stuck} stuck across ${touched.trades} trades, ${touched.ended} ended; ${upkeep.expired} offers expired, ${upkeep.moved} cancelled; ${expired.length} trades expired; ${ms}ms`,
+      `${trigger}: ${legs.length} open legs; ${touched.verified} verified, ${touched.wrongCopies} wrong copies, ${touched.stuck} stuck across ${touched.trades} trades, ${touched.ended} ended; ${upkeep.expired} offers expired, ${upkeep.moved} cancelled, ${upkeep.sentChanged} with sent marks changed; ${expired.length} trades expired; ${ms}ms`,
     );
   }
   verifierBeat.flush();

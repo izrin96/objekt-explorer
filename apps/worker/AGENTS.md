@@ -32,6 +32,8 @@ Serials of objekts minted offline come from `populateSerialOffline` (`job/popula
 
 A wrong copy's deadline, like expiry, stall reminders and the away grace, is due against `seenUntil`, never the clock, so an asked-for objekt sent before the deadline but read late still verifies the leg first. A specific leg whose objekt left the giver breaks only once `seenUntil` is `AWAY_GRACE_HOURS` past the move (`matchLegs`); until then `recordAway` keeps `away_at` as `recordStuck` keeps `untransferable_at`: set with one `away` note per move, cleared silently when the objekt is back. Every automatic accept (deadline, expiry, break) goes through `acceptPicked` in `copy-deadlines.ts`, so the notes and progress stay the same whichever path accepts. A pending copy with a null `accept_by` gets its deadline from the worker the first time it sees the copy, not from the migration, so a copy recorded before the deploy still gets its full window after it.
 
+`offerUpkeep` keeps `offer_item.sent_at` in step with the early send `itemStillHeld` counts (`earlySend`): `sentChanges` (`lib/offer-sent.ts`) sets it when the send appears and clears it when the objekt is back with its giver, which leaves the offer open. Both writes skip offers no longer open.
+
 ## Want alerts
 
 `job/want-alerts` keeps its progress (cursor and state) in the `worker_progress` row `want-alerts`, saved in the same transaction as the alerts (`recordRun`), on every run. A worker reads and writes progress only in the database it alerts on, so a local worker can never move production's cursor. A missing row is a first run: it sets the cursor to `max(id)` and announces nothing already listed. Unreadable progress stalls the job with an error and never starts over.

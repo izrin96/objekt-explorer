@@ -8,7 +8,8 @@ import { chunkMap } from "@repo/lib";
 import { and, eq, gte, inArray, lte, sql } from "drizzle-orm";
 
 import { unique } from "../../lib/array";
-import { earliest, offerNotes, toPublish } from "../../lib/offer-notes";
+import { earliest, type OfferRef, offerNotes, toPublish } from "../../lib/offer-notes";
+import { sentChanges } from "../../lib/offer-sent";
 import type { Publish } from "../../lib/trade-publish";
 
 const OWNER_BATCH = 500;
@@ -21,8 +22,8 @@ const offerRef = {
 };
 
 /**
- * Writes `expired`, and cancels offers whose specific objekt left its side's wallets or can no
- * longer be transferred.
+ * Writes `expired`, cancels offers whose specific objekt left its side's wallets or can no
+ * longer be transferred, and keeps the marks of objekts already sent to the other party.
  */
 export async function offerUpkeep() {
   const expiring = await db
@@ -55,13 +56,19 @@ export async function offerUpkeep() {
   }
 
   const held = await db.execute<{
+    item_id: number;
     offer_id: number;
+    conversation_id: number;
+    from_user_id: string;
+    to_user_id: string;
+    marked: boolean;
     objekt_id: string;
     created_at: string;
     holders: string[];
     receivers: string[];
   }>(sql`
-    SELECT o.id AS offer_id, i.objekt_id, o.created_at::text AS created_at,
+    SELECT i.id AS item_id, o.id AS offer_id, o.conversation_id, o.from_user_id, o.to_user_id,
+      i.sent_at IS NOT NULL AS marked, i.objekt_id, o.created_at::text AS created_at,
       ARRAY(
         SELECT lower(a.address) FROM user_address a
         WHERE a.user_id = CASE WHEN i.side = 'give' THEN o.from_user_id ELSE o.to_user_id END
@@ -75,6 +82,14 @@ export async function offerUpkeep() {
     WHERE o.status = 'open' AND o.expires_at > now() AND i.objekt_id IS NOT NULL
   `);
   const items = held.rows.map((row) => ({
+    itemId: row.item_id,
+    marked: row.marked,
+    offer: {
+      id: row.offer_id,
+      conversationId: row.conversation_id,
+      fromUserId: row.from_user_id,
+      toUserId: row.to_user_id,
+    },
     offerId: row.offer_id,
     objektId: row.objekt_id,
     holders: row.holders,
@@ -103,20 +118,71 @@ export async function offerUpkeep() {
   );
 
   const movedSet = new Set(movedIds);
-  const stuckIds = unique(
+  const stuckSet = new Set(
     items
       .filter((item) => untransferable.has(item.objektId) && !movedSet.has(item.offerId))
       .map((item) => item.offerId),
   );
+  const stuckIds = [...stuckSet];
 
   const movedRun = await cancelOffers(movedIds, "token_moved");
   const stuckRun = await cancelOffers(stuckIds, "not_transferable");
   publishes.push(...movedRun.publishes, ...stuckRun.publishes);
+  const offerOf = new Map(items.map((item) => [item.offerId, item.offer]));
+  const sentRun = await applySent(
+    sentChanges(items, ownerOf, sent, new Set([...movedSet, ...stuckSet])),
+    offerOf,
+  );
+  if (sentRun.publish !== null) publishes.push(sentRun.publish);
   return {
     publishes,
     expired,
     moved: movedRun.cancelled + stuckRun.cancelled,
+    /** offers whose "already sent" marks changed */
+    sentChanged: sentRun.offers,
     watchedObjekts,
+  };
+}
+
+/**
+ * Writes the marks `sentChanges` chose, only on offers still open, and refreshes their cards.
+ * No notification: the card is where the mark matters.
+ */
+async function applySent(
+  { mark, clear }: ReturnType<typeof sentChanges>,
+  offerOf: Map<number, OfferRef>,
+) {
+  if (mark.length === 0 && clear.length === 0) return { publish: null, offers: 0 };
+  const changed = await db.transaction(async (tx) => {
+    const ids: number[] = [];
+    if (mark.length > 0) {
+      const values = sql.join(
+        mark.map((m) => sql`(${m.itemId}::int, ${m.at}::timestamptz)`),
+        sql`, `,
+      );
+      const rows = await tx.execute<{ offer_id: number }>(sql`
+        UPDATE offer_item i SET sent_at = v.at
+        FROM (VALUES ${values}) AS v(id, at), offer o
+        WHERE i.id = v.id AND o.id = i.offer_id AND o.status = 'open' AND i.sent_at IS NULL
+        RETURNING i.offer_id
+      `);
+      ids.push(...rows.rows.map((row) => row.offer_id));
+    }
+    if (clear.length > 0) {
+      const rows = await tx.execute<{ offer_id: number }>(sql`
+        UPDATE offer_item i SET sent_at = NULL
+        FROM offer o
+        WHERE i.id = ANY(${sql.param(clear.map((c) => c.itemId))}::int[])
+          AND o.id = i.offer_id AND o.status = 'open' AND i.sent_at IS NOT NULL
+        RETURNING i.offer_id
+      `);
+      ids.push(...rows.rows.map((row) => row.offer_id));
+    }
+    return unique(ids).flatMap((id) => offerOf.get(id) ?? []);
+  });
+  return {
+    publish: changed.length === 0 ? null : toPublish(changed, []),
+    offers: changed.length,
   };
 }
 

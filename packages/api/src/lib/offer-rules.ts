@@ -254,16 +254,25 @@ export function itemStillHeld(
   transfers: SeenTransfer[],
 ): boolean {
   if (owner === undefined) return false;
-  const at = owner.toLowerCase();
-  if (item.holders.includes(at)) return true;
-  if (!item.receivers.includes(at)) return false;
+  return item.holders.includes(owner.toLowerCase()) || earlySend(item, owner, transfers) !== null;
+}
+
+/** The giver's send of the item to the receiver since the offer was made, while the receiver holds it. */
+export function earlySend(
+  item: HeldItem,
+  owner: string | undefined,
+  transfers: SeenTransfer[],
+): SeenTransfer | null {
+  if (owner === undefined || !item.receivers.includes(owner.toLowerCase())) return null;
   const since = new Date(item.since).getTime();
-  return transfers.some(
-    (t) =>
-      t.objektId === item.objektId &&
-      item.holders.includes(t.from.toLowerCase()) &&
-      item.receivers.includes(t.to.toLowerCase()) &&
-      new Date(t.timestamp).getTime() >= since,
+  return (
+    transfers.find(
+      (t) =>
+        t.objektId === item.objektId &&
+        item.holders.includes(t.from.toLowerCase()) &&
+        item.receivers.includes(t.to.toLowerCase()) &&
+        new Date(t.timestamp).getTime() >= since,
+    ) ?? null
   );
 }
 
