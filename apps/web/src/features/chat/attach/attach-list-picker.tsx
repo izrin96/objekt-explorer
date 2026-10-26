@@ -50,6 +50,7 @@ export function ListPicker({ onPick }: { onPick: (attachment: Attachment) => voi
       <PickerFilterBar
         filters={filters}
         onChange={setFilters}
+        pinSource
         source={
           <SingleSelect
             label={m.chat_attach_list_label()}

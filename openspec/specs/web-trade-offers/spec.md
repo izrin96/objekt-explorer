@@ -136,6 +136,8 @@ Each picker SHALL narrow by artist, member, season, class, collection number, an
 - You give: "Only what they want", off by default, keeps collections on the partner's discoverable want lists.
 - You get: "Only what I want", off by default, keeps collections on the sender's want lists.
 
+Below `sm`, each picker SHALL keep only its search field and a Filters button in view, the button counting the filters, List and matching switch that are set; choosing it SHALL show those controls in place. Its description SHALL be read to assistive technology only, and its footer SHALL be one row: the picked count, Cancel and Done.
+
 You give's picker SHALL offer a **List** choice, after the filters: All your objekts, the default, which shows the have and sale list entries first as above; or one of the sender's have, sale or general lists, each shown with its list type badge, which shows only the objekts on that list the sender still holds at a linked address, with no separate list-first section. The filters and the matching switch apply on top of List.
 
 You get's picker over lists SHALL offer a **List** choice, after the filters, when the partner has a have or sale list on Trade: All their lists; or one of those lists, shown as its name after its list type badge as in Compare with, which shows only that list's entries the sender may ask for. The filters and the matching switch apply on top of List. List changes only what the picker shows, not what may be sent. With a list picked, an empty picker SHALL say that nothing matches the filters, or else that nothing on that list is available.
@@ -201,6 +203,10 @@ An empty You get picker over lists SHALL say why: the partner lists nothing the 
 #### Scenario: Phone width
 - **WHEN** the builder is open at 390 px
 - **THEN** the two sides stack vertically, and the page doesn't scroll sideways
+
+#### Scenario: Picker on a phone
+- **WHEN** the sender opens You get's picker at 390 px with "Only what I want" on
+- **THEN** the search field and "Filters 1" sit on one row above the grid, the footer is one row, and choosing Filters shows the filters, List and the switch
 
 #### Scenario: Switches start off
 - **WHEN** a sender with a want list opens the builder

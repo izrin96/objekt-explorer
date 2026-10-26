@@ -149,7 +149,9 @@ function PickerBody({
     <>
       <DialogHeader>
         <DialogTitle className="font-display">{addLabel(side, source, name)}</DialogTitle>
-        <DialogDescription>{pickerDescription(side, source, name)}</DialogDescription>
+        <DialogDescription className="max-sm:sr-only">
+          {pickerDescription(side, source, name)}
+        </DialogDescription>
       </DialogHeader>
       <div className="flex min-h-0 flex-1 flex-col px-6 pb-4">
         {side === "give" ? (
@@ -160,9 +162,9 @@ function PickerBody({
           <TheirsGrid to={to} name={name} lists={theirLists} startList={startList} {...grid} />
         )}
       </div>
-      <DialogFooter className="sm:items-center">
+      <DialogFooter className="flex-row items-center">
         <p
-          className="text-muted-foreground font-mono text-xs tabular-nums sm:me-auto"
+          className="text-muted-foreground me-auto font-mono text-xs tabular-nums"
           aria-live="polite"
         >
           {m.offer_picker_count({ count: total, max: OFFER_SIDE_LIMIT })}
@@ -281,6 +283,7 @@ function PickerGrid({
   filters,
   onFilters,
   source,
+  sourceActive = false,
   matchLabel,
   suggestedTitle,
   allTitle,
@@ -291,6 +294,8 @@ function PickerGrid({
   filters: Filters;
   onFilters: (filters: Filters) => void;
   source?: ReactNode;
+  /** a List other than All is picked, for the folded filters' count on phones */
+  sourceActive?: boolean;
   matchLabel: string;
   suggestedTitle?: string;
   allTitle?: string;
@@ -306,7 +311,12 @@ function PickerGrid({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">
-      <PickerFilterBar filters={filters} onChange={onFilters} source={source}>
+      <PickerFilterBar
+        filters={filters}
+        onChange={onFilters}
+        source={source}
+        extraActive={(filters.matchOnly ? 1 : 0) + (sourceActive ? 1 : 0)}
+      >
         <MatchSwitch
           checked={filters.matchOnly}
           onChange={(matchOnly) => onFilters({ ...filters, matchOnly })}
@@ -344,6 +354,7 @@ function MineGrid({ to, name, ...grid }: GridProps & { name: string }) {
       query={query}
       filters={filters}
       onFilters={setFilters}
+      sourceActive={fromList !== undefined}
       source={
         lists.length > 0 ? (
           <ListSelect
@@ -410,6 +421,7 @@ function TheirsGrid({
       query={query}
       filters={filters}
       onFilters={setFilters}
+      sourceActive={fromList !== undefined}
       source={
         lists.length > 0 ? (
           <ListSelect

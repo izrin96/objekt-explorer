@@ -52,6 +52,7 @@ export function OwnedPicker({ onPick }: { onPick: (attachment: Attachment) => vo
       <PickerFilterBar
         filters={filters}
         onChange={setFilters}
+        pinSource
         source={
           profiles.length > 1 ? (
             <SingleSelect

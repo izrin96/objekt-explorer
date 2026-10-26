@@ -106,28 +106,34 @@ function RuleRow({ rule }: { rule: Rule }) {
 
   return (
     <li className="flex flex-col border-b last:border-b-0">
-      <div className="flex items-center gap-3 px-3 py-2.5">
-        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <span className="font-mono text-sm text-pretty">{ruleText(rule)}</span>
-          {details.length > 0 ? (
-            <span className="text-muted-foreground truncate text-xs">{details.join(" · ")}</span>
-          ) : null}
-        </div>
-        <span className="flex shrink-0 flex-col items-end">
-          <span className="font-mono text-sm font-semibold tabular-nums">{rule.canMatch}</span>
-          <span className="text-muted-foreground text-xs">{m.rule_can_match_label()}</span>
-        </span>
-        {/* the owner reaches it through the menu, beside the rule's edits */}
-        {!isOwner ? (
-          <Button
-            variant="outline"
-            size="sm"
-            aria-expanded={expanded}
-            onClick={() => setExpanded((value) => !value)}
-          >
-            {expanded ? m.rule_hide_objekts() : m.rule_see_objekts({ count: rule.covers })}
-          </Button>
-        ) : null}
+      <div className="flex items-center gap-1 pe-2">
+        {/* the rule itself opens its objekts, so a phone keeps the row's width for it */}
+        <button
+          type="button"
+          aria-expanded={expanded}
+          onClick={() => setExpanded((value) => !value)}
+          className="hover:bg-muted/48 focus-visible:ring-ring flex min-w-0 flex-1 items-center gap-3 rounded-lg py-2.5 ps-3 pe-2 text-start outline-none focus-visible:ring-2"
+        >
+          <CaretDownIcon
+            aria-hidden
+            className={cn(
+              "text-muted-foreground size-4 shrink-0 transition-transform",
+              !expanded && "-rotate-90",
+            )}
+          />
+          <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+            <span className="font-mono text-sm text-pretty">{ruleText(rule)}</span>
+            {details.length > 0 ? (
+              <span className="text-muted-foreground line-clamp-2 text-xs">
+                {details.join(" · ")}
+              </span>
+            ) : null}
+          </span>
+          <span className="flex shrink-0 flex-col items-end">
+            <span className="font-mono text-sm font-semibold tabular-nums">{rule.canMatch}</span>
+            <span className="text-muted-foreground text-xs">{m.rule_can_match_label()}</span>
+          </span>
+        </button>
         {isOwner ? (
           <Menu>
             <MenuTrigger

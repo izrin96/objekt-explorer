@@ -394,7 +394,7 @@ The owner of a want list SHALL see an Add rule button in the list header, beside
 - **THEN** the collection number is cleared, the season moves to ARTMS's newest, the class stays if ARTMS has it and otherwise becomes ARTMS's first class, and the editions, members and priority members are cleared, so the dialog never carries over a number or class the new artist doesn't have
 
 ### Requirement: Rules strip
-A list holding rules SHALL show a Rules strip between its header and the filter bar: a header with the number of rules and how many objekts they can match, collapsible, and one row per rule with its label, what it skips, its "N can match" and, for the owner, a menu. The filters SHALL NOT hide rules. A rule's objekts SHALL stay out of the objekt grid and its count. A visitor SHALL see the strip without the menu, and a See the objekts button on each row in its place. What a rule skips is the list owner's holdings, so only the owner SHALL read "skips the N you own" and "includes ones you own"; everyone else, signed out too, SHALL read "skips the N they own" and "includes ones they own".
+A list holding rules SHALL show a Rules strip between its header and the filter bar: a header with the number of rules and how many objekts they can match, collapsible, and one row per rule with its label, what it skips, its "N can match" and, for the owner, a menu. The filters SHALL NOT hide rules. A rule's objekts SHALL stay out of the objekt grid and its count. A visitor SHALL see the strip without the menu. Choosing a rule (its label, what it skips and its count) SHALL open or close its objekts, with a chevron showing which, so on a phone the rule keeps the row's width; screen readers SHALL read the same label, skip line and count as its name. What a rule skips is the list owner's holdings, so only the owner SHALL read "skips the N you own" and "includes ones you own"; everyone else, signed out too, SHALL read "skips the N they own" and "includes ones they own".
 
 #### Scenario: Strip
 - **WHEN** "binary hunt" holds two rules matching 78 and 21 objekts and five objekts added by hand
@@ -406,7 +406,7 @@ A list holding rules SHALL show a Rules strip between its header and the filter 
 
 #### Scenario: A visitor reads whose they are
 - **WHEN** a signed-out visitor opens "binary hunt", whose rule skips 2 objekts its owner holds
-- **THEN** the row reads "skips the 2 they own" and offers See the objekts, and opening it notes "Faded = they own it"
+- **THEN** the row reads "skips the 2 they own", choosing it opens the objekts, and the open grid notes "Faded = they own it"
 
 ### Requirement: Rule menu
 Each rule row's menu SHALL offer See the objekts, Edit rule, Turn into objekts and Delete rule. See the objekts SHALL expand the row into one scrolling grid of every objekt the rule describes, ordered by collection number then season, each card labelled with its member and collection, the ones it skips faded, with no tabs. When the rule spans several collections holding three or more cards each on average, each collection SHALL get a heading of its season and number with what it can match ("cc117 · 19 can match"); one collection, or one or two chosen members a collection, SHALL stay one flat grid. An any-season rule SHALL keep the same number of different seasons apart. Turn into objekts SHALL replace the rule with the objekts it wants now, as objekts on the list.
