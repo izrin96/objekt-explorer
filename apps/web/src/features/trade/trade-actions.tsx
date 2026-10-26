@@ -2,17 +2,11 @@ import type { CardInput, ChatTarget } from "@repo/api/schemas/chat";
 
 import { MessageButton } from "@/features/chat/message-button";
 import { MakeOfferButton } from "@/features/offers/make-offer-button";
-import type { OfferRequest } from "@/features/offers/offer-builder";
 import { m } from "@/paraglide/messages";
 
 /** The viewer's own post shows no Message, and no note saying so. */
 export type TradeContact =
-  | {
-      kind: "open";
-      target: ChatTarget;
-      card?: CardInput;
-      offer?: Pick<OfferRequest, "suggestFor" | "focusList" | "focusWantList">;
-    }
+  | { kind: "open"; target: ChatTarget; card?: CardInput }
   | { kind: "own" }
   | { kind: "closed" };
 
@@ -40,7 +34,7 @@ export function TradeActions({
       <MakeOfferButton
         variant="default"
         className={offerClassName}
-        request={{ to: { target: contact.target }, name, ...contact.offer }}
+        request={{ to: { target: contact.target }, name }}
       />
     </>
   );

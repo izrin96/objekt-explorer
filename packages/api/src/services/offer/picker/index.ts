@@ -10,7 +10,6 @@ import {
   type CandidateCursor,
   type CandidateItem,
   OFFER_SIDE_LIMIT,
-  type PartnerList,
   type PickerNarrowing,
 } from "../../../schemas/offer";
 import { chatSafety, fetchPref } from "../../chat";
@@ -27,27 +26,13 @@ import {
   resolveAddressed,
 } from "../core";
 import { mineCandidates } from "./mine";
-import { collectionsOf, toCandidate } from "./shared";
+import { type CandidatesPage, collectionsOf, toCandidate } from "./shared";
 import {
   partnerListChoices,
   theirCandidates,
   theirCollectionPage,
   theirPickerPage,
 } from "./theirs";
-
-type CandidatesPage = {
-  items: CandidateItem[];
-  suggested: CandidateItem[];
-  nextCursor: CandidateCursor | null;
-  nextOffset: number | null;
-  listed: boolean;
-  /** theirs: false when the partner has no list to ask through; read as true when absent */
-  partnerLists?: boolean;
-  /** theirs, whole list only: the List choice's lists */
-  lists?: PartnerList[];
-  wanted: string[];
-  collections: Awaited<ReturnType<typeof collectionsOf>>;
-};
 
 export async function offerCandidates(
   me: string,
@@ -146,7 +131,7 @@ export async function suggestOffer(me: string, partnerId: string) {
         ),
       ]);
       const ids = [...tokens.keys(), ...copies.map((c) => c.id)];
-      const [reserved, holders] = await Promise.all([reservedIds(ids), openOfferHolders(ids)]);
+      const [reserved, holders] = await Promise.all([reservedIds(ids), openOfferHolders(ids, me)]);
       const owned = new Set(addresses);
       const picked = new Map<string, CandidateItem>();
       const offerable = (o: IndexedObjekt) =>
@@ -162,7 +147,7 @@ export async function suggestOffer(me: string, partnerId: string) {
           choice.id,
           toCandidate(
             choice,
-            itemFlags(choice, reserved, holders, me, addressed.conversationId),
+            itemFlags(choice, reserved, holders, addressed.conversationId),
             entry.listSlug,
           ),
         );

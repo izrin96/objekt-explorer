@@ -237,7 +237,8 @@ export async function openAnyCopyLegs(
 export const copyKey = (userId: string, slug: string) => `${userId}:${slug}`;
 
 /** Open, unexpired offers holding each objekt, with their two parties. */
-export async function openOfferHolders(ids: string[]) {
+/** The open offers `me` is a party to that hold each of `ids`. */
+export async function openOfferHolders(ids: string[], me: string) {
   const map = new Map<string, OpenOfferHolder[]>();
   if (ids.length === 0) return map;
   const rows = await db
@@ -245,8 +246,6 @@ export async function openOfferHolders(ids: string[]) {
       objektId: offerItem.objektId,
       offerId: offer.id,
       conversationId: offer.conversationId,
-      fromUserId: offer.fromUserId,
-      toUserId: offer.toUserId,
     })
     .from(offerItem)
     .innerJoin(offer, eq(offer.id, offerItem.offerId))
@@ -255,6 +254,7 @@ export async function openOfferHolders(ids: string[]) {
         inArray(offerItem.objektId, unique(ids)),
         eq(offer.status, "open"),
         gt(offer.expiresAt, sql`now()`),
+        or(eq(offer.fromUserId, me), eq(offer.toUserId, me)),
       ),
     );
   for (const row of rows) {

@@ -1,6 +1,6 @@
 import { PlusIcon, XIcon } from "@phosphor-icons/react";
 import { OFFER_SIDE_LIMIT } from "@repo/api/schemas/offer";
-import { type ReactNode, useId } from "react";
+import { useId } from "react";
 
 import { Button } from "@/components/ui/button";
 import { CollectionLabel } from "@/features/objekt/objekt-label";
@@ -24,7 +24,6 @@ export function SideColumn({
   source,
   onAdd,
   onRemove,
-  children,
 }: {
   side: OfferSide;
   name: string;
@@ -39,7 +38,6 @@ export function SideColumn({
   onAdd: () => void;
   /** a resolved copy or an ask's unfilled rest takes the ask down by what it stands for */
   onRemove: (pick: OfferPick) => void;
-  children?: ReactNode;
 }) {
   const headingId = useId();
   // every control sits above the picks, so a growing list never moves one under the pointer
@@ -61,7 +59,6 @@ export function SideColumn({
         <PlusIcon />
         {addLabel(side, source ?? "lists", name)}
       </Button>
-      {children}
       {picks.length > 0 ? (
         <ul className="flex flex-col gap-1.5">
           {picks.map((pick) => {
@@ -115,10 +112,6 @@ export function SideColumn({
                       {m.offer_flag_in_open_offer({
                         offers: flags.inOpenOffer.map(offerNo).join(", "),
                       })}
-                    </span>
-                  ) : flags?.inOtherOffer ? (
-                    <span className="text-warning-foreground text-xs">
-                      {m.offer_flag_in_other_offer()}
                     </span>
                   ) : null}
                 </span>

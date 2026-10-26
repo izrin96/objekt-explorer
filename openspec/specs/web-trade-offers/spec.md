@@ -68,7 +68,7 @@ Before an offer is sent, each specific objekt SHALL be checked against current o
 - each one must be transferable;
 - none may be in an accepted trade that is still in progress.
 
-An offer that fails any of these checks SHALL be refused, naming the objekt. An objekt that is already in another open offer SHALL show a warning and SHALL still be sendable. The warning SHALL name the offer only when the user is one of its two parties; an offer between two other members SHALL read "In another open offer", naming no offer.
+An offer that fails any of these checks SHALL be refused, naming the objekt. An objekt that is already in another of the user's own open offers SHALL show a warning naming that offer, and SHALL still be sendable. An open offer between two other members SHALL show nothing: no one learns what other members are offering.
 
 #### Scenario: Not transferable
 - **WHEN** the user adds Kaede Divine01 322Z #14, which is not transferable
@@ -80,7 +80,7 @@ An offer that fails any of these checks SHALL be refused, naming the objekt. An 
 
 #### Scenario: In someone else's offer
 - **WHEN** the user adds HeeJin A2 201Z #290, which is in open offer O-171 between two other members
-- **THEN** the builder shows "In another open offer", never "O-171", and the offer can still be sent
+- **THEN** the builder shows no warning about it, and the offer can still be sent
 
 #### Scenario: Reserved
 - **WHEN** the user adds an objekt that is part of an accepted trade in progress
@@ -130,7 +130,7 @@ The builder SHALL open as a dialog, and as a full-height sheet on a phone. It sh
 
 Opened from a Market listing, You get's picker SHALL open with its List choice on the listing's sale list; opened anywhere else, on All their lists.
 
-Each pickable objekt SHALL show its flags (not transferable, reserved, in another open offer). Send SHALL stay disabled until the offer holds at least one objekt.
+Each pickable objekt SHALL show its flags (not transferable, reserved, in another of the user's own open offers). Send SHALL stay disabled until the offer holds at least one objekt.
 
 Each picker SHALL narrow by artist, member, season, class, collection number, and online or offline, in that order, with the same controls as the page filter bar, where artist, member, season, class and collection number each take more than one value, picking artists limits the member choices to those artists' members, and a Reset clears every filter but the matching switch; and SHALL load more as it scrolls, 200 objekts at a time, so a long list does not land at once. Each SHALL also offer a matching switch:
 - You give: "Only what they want", off by default, keeps collections on the partner's discoverable want lists.

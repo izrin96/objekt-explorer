@@ -22,6 +22,7 @@ import {
   reservedIds,
 } from "../core";
 import {
+  candidatesPage,
   collectionWhere,
   collectionsOf,
   ownedPage,
@@ -66,15 +67,6 @@ export async function mineCandidates(
   cursor: CandidateCursor | undefined,
   { filters, matchOnly, wantList, fromList }: PickerNarrowing,
 ) {
-  const empty = {
-    items: [],
-    suggested: [],
-    nextCursor: null,
-    nextOffset: null,
-    listed: true,
-    wanted: [],
-    collections: {},
-  };
   const [linked, partnerWants, named, fromWhere] = await Promise.all([
     linkedAddresses([me]),
     matchOnly ? wantSlugsOf(addressed.partnerId, true) : null,
@@ -83,7 +75,8 @@ export async function mineCandidates(
   ]);
   const keptSlugs = giveNarrowing(addressed.partnerId, partnerWants, named);
   const addresses = [...(linked.get(me) ?? [])];
-  if (addresses.length === 0 || keptSlugs?.length === 0 || fromWhere === null) return empty;
+  if (addresses.length === 0 || keptSlugs?.length === 0 || fromWhere === null)
+    return candidatesPage({});
 
   const [{ page, nextCursor }, haveEntries] = await Promise.all([
     ownedPage(addresses, cursor, { filters, slugs: keptSlugs, where: fromWhere }),
@@ -135,12 +128,12 @@ export async function mineCandidates(
     .slice(0, CANDIDATE_PAGE_SIZE);
 
   const ids = unique([...page.map((o) => o.id), ...suggestedList.map((s) => s.objekt.id)]);
-  const [reserved, holders] = await Promise.all([reservedIds(ids), openOfferHolders(ids)]);
+  const [reserved, holders] = await Promise.all([reservedIds(ids), openOfferHolders(ids, me)]);
   const flags = (objekt: IndexedObjekt) =>
-    itemFlags(objekt, reserved, holders, me, addressed.conversationId);
+    itemFlags(objekt, reserved, holders, addressed.conversationId);
   const suggestionOf = new Map(suggestedList.map((s) => [s.objekt.id, s.listSlug]));
 
-  return {
+  return candidatesPage({
     items: page.map((objekt) =>
       toCandidate(objekt, flags(objekt), suggestionOf.get(objekt.id) ?? null),
     ),
@@ -148,11 +141,8 @@ export async function mineCandidates(
       toCandidate(objekt, flags(objekt), listSlug),
     ),
     nextCursor,
-    nextOffset: null,
-    listed: true,
-    wanted: [],
     collections: await collectionsOf(
       [...page, ...suggestedList.map((s) => s.objekt)].map((o) => o.slug),
     ),
-  };
+  });
 }

@@ -1,6 +1,5 @@
 import { LinkIcon } from "@phosphor-icons/react";
 import {
-  type CandidateItem,
   OFFER_NOTE_MAX_LENGTH,
   OFFER_SIDE_LIMIT,
   TOPUP_MAX,
@@ -28,46 +27,36 @@ import {
   pickKey,
   toPick,
 } from "@/features/offers/pick";
-import { countOf, takeOut, totalOf } from "@/features/offers/quantity";
+import { copiesLeft, countOf, takeOut, totalOf } from "@/features/offers/quantity";
 import {
   invalidateOfferLists,
   myCopyOptions,
-  myWantListOptions,
   theirCandidatesOptions,
 } from "@/features/offers/queries";
 import { offerRefusalOf, offerRefusalText, refusedKeys } from "@/features/offers/refusal";
-import { shortcutItems, togglePick } from "@/features/offers/shortcuts";
 import { useCurrency } from "@/features/settings/use-currency";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
 
-import { FocusStrip, FocusStripSkeleton } from "./focus-strip";
 import { BuilderHeader } from "./header";
 import { BuilderRefused } from "./refused";
 import { SideColumn } from "./side-column";
 import { Topup } from "./topup";
-import type { OfferPrefill, OfferRequest } from "./types";
-
-const holds = (picks: readonly OfferPick[], item: CandidateItem) =>
-  picks.some((pick) => pick.key === pickKey(item));
+import type { OfferRequest } from "./types";
 
 export function BuilderForm({
   request,
-  prefill,
-  suggestFailed,
   onDraft,
   onDone,
 }: {
   request: OfferRequest;
-  prefill: OfferPrefill | undefined;
-  suggestFailed: boolean;
   /** hands over whether the draft holds anything, so closing it can ask first */
   onDraft: (holds: (() => boolean) | null) => void;
   onDone: () => void;
 }) {
-  const { to, name } = request;
+  const { to, name, prefill } = request;
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { currency: preferred } = useCurrency();
@@ -90,13 +79,11 @@ export function BuilderForm({
   const hintId = useId();
 
   const theirs = useQuery(theirCandidatesOptions(to));
-  const mineWanted = useQuery(myWantListOptions(to, request.focusWantList));
   // unknown until the partner's lists have loaded; an error leaves it on lists, which refuse alone
   const source: GetSource | undefined = theirs.isPending ? undefined : sourceOf(theirs.data ?? {});
   const theirFlags = new Map((theirs.data?.items ?? []).map((item) => [pickKey(item), item]));
   const collections: Collections = {
     ...theirs.data?.collections,
-    ...mineWanted.data?.collections,
     ...seen,
   };
   const flagsOf = (pick: OfferPick) => {
@@ -154,32 +141,15 @@ export function BuilderForm({
     ) {
       return m.offer_flag_not_listed();
     }
-    // the copies they spare now, which may have dropped since the count was set
+    // the copies they spare now, which may have dropped since the count was set, less those
+    // this offer also asks for by serial
     const spare = theirFlags.get(pick.key)?.copies ?? pick.flags?.copies;
-    if (side === "get" && pick.objektId === null && spare != null && countOf(pick) > spare) {
-      return m.offer_flag_too_many({ count: spare });
+    if (side === "get" && pick.objektId === null && spare != null) {
+      const left = copiesLeft(get, pick.collectionSlug, spare);
+      if (countOf(pick) > left) return m.offer_flag_too_many({ count: left });
     }
     return blockedReason(flagsOf(pick));
   };
-
-  const wanted = new Set(theirs.data?.wanted ?? []);
-  const getFocus = shortcutItems(
-    (theirs.data?.items ?? []).filter(
-      (item) => item.listSlug === request.focusList && blockedReason(item) === null,
-    ),
-    (item) => wanted.has(item.collectionSlug),
-  );
-  // the first page's have-list objekts lead it and recur among its items
-  const mineOnWant = new Map(
-    [...(mineWanted.data?.suggested ?? []), ...(mineWanted.data?.items ?? [])].map((item) => [
-      pickKey(item),
-      item,
-    ]),
-  );
-  const giveFocus = shortcutItems(
-    [...mineOnWant.values()].filter((item) => blockedReason(item) === null),
-    (item) => item.listSlug !== null,
-  );
 
   const noteLength = Array.from(note.trim()).length;
   const blocked =
@@ -273,27 +243,7 @@ export function BuilderForm({
   };
 
   const sides = { give: [give, setGive], get: [get, setGet] } as const;
-
   const shown = { give: giveShown, get };
-
-  const toggleFocused = (side: OfferSide, item: CandidateItem) =>
-    sides[side][1]((current) => togglePick(current, shown[side], toPick(item), OFFER_SIDE_LIMIT));
-  const shortcuts = {
-    give: {
-      shown: request.focusWantList !== undefined,
-      pending: mineWanted.isPending,
-      items: giveFocus,
-      full: totalOf(giveShown) >= OFFER_SIDE_LIMIT,
-      label: m.offer_focus_give_hint(),
-    },
-    get: {
-      shown: request.focusList !== undefined,
-      pending: theirs.isPending,
-      items: getFocus,
-      full: totalOf(get) >= OFFER_SIDE_LIMIT,
-      label: m.offer_focus_hint(),
-    },
-  };
 
   // a target the sender may not reach is refused before anything can be picked
   const upFront = offerRefusalOf(theirs.error);
@@ -303,13 +253,9 @@ export function BuilderForm({
     <>
       <BuilderHeader request={request} />
       <DialogPanel className="flex flex-col gap-6">
-        {suggestFailed ? (
-          <p className="text-muted-foreground text-sm text-pretty">{m.offer_suggest_error()}</p>
-        ) : null}
         <div className="grid min-w-0 gap-6 sm:grid-cols-2">
           {(["give", "get"] as const).map((side) => {
             const [picks, setPicks] = sides[side];
-            const shortcut = shortcuts[side];
             return (
               <SideColumn
                 key={side}
@@ -324,20 +270,7 @@ export function BuilderForm({
                 source={source}
                 onAdd={() => setPicking(side)}
                 onRemove={(pick) => setPicks(takeOut(picks, pick))}
-              >
-                {!shortcut.shown ? null : shortcut.pending ? (
-                  <FocusStripSkeleton label={shortcut.label} />
-                ) : shortcut.items.length > 0 ? (
-                  <FocusStrip
-                    label={shortcut.label}
-                    items={shortcut.items}
-                    collections={collections}
-                    full={shortcut.full}
-                    isSelected={(item) => holds(shown[side], item)}
-                    onToggle={(item) => toggleFocused(side, item)}
-                  />
-                ) : null}
-              </SideColumn>
+              />
             );
           })}
         </div>

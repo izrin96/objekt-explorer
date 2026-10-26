@@ -11,27 +11,38 @@ export const totalOf = (picks: Iterable<{ count?: number }>) => {
 };
 
 /**
- * One more or one fewer copy of an any-copy pick, kept within the copies `max` spares and the
- * side's `limit`; at zero the pick leaves. A pick not held yet joins at one.
+ * The copies an any-copy ask of `slug` may still take: those spared, less the ones `picks` already
+ * name by serial, since a send counts a copy named by serial only once.
  */
-export function stepCount<P extends Counted>(
+export function copiesLeft(
+  picks: Iterable<{ collectionSlug: string; objektId: string | null }>,
+  slug: string,
+  copies: number,
+) {
+  let named = 0;
+  for (const pick of picks) if (pick.objektId !== null && pick.collectionSlug === slug) named += 1;
+  return Math.max(0, copies - named);
+}
+
+/**
+ * An any-copy pick set to `count` copies, kept within the copies `max` spares and the side's
+ * `limit`; at zero the pick leaves. A pick not held yet joins.
+ */
+export function withCount<P extends Counted>(
   selection: ReadonlyMap<string, P>,
   pick: P,
-  delta: 1 | -1,
+  count: number,
   max: number,
   limit: number,
 ): Map<string, P> {
   const next = new Map(selection);
   const held = selection.get(pick.key);
   const current = held ? countOf(held) : 0;
-  const count = current + delta;
-  if (count <= 0) {
-    next.delete(pick.key);
-    return next;
-  }
-  // only a step up is capped, so a count above what is spare now can still come down
-  if (delta > 0 && (count > max || totalOf(selection.values()) >= limit)) return next;
-  next.set(pick.key, { ...(held ?? pick), count });
+  // only a raise is capped, so a count above what is spare now can still come down
+  const room = current + limit - totalOf(selection.values());
+  const capped = count > current ? Math.max(current, Math.min(count, max, room)) : count;
+  if (capped <= 0) next.delete(pick.key);
+  else next.set(pick.key, { ...(held ?? pick), count: capped });
   return next;
 }
 

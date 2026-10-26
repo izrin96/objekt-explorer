@@ -1,6 +1,14 @@
 import { describe, expect, test } from "bun:test";
 
-import { countOf, groupRows, mergeCounts, stepCount, takeOut, totalOf } from "./quantity";
+import {
+  copiesLeft,
+  countOf,
+  groupRows,
+  mergeCounts,
+  takeOut,
+  totalOf,
+  withCount,
+} from "./quantity";
 
 type Counted = { key: string; count?: number };
 const any: Counted = { key: "any:204z" };
@@ -12,15 +20,31 @@ describe("totalOf", () => {
   });
 });
 
-describe("stepCount", () => {
-  test("a pick not held joins at one", () => {
-    const next = stepCount(new Map(), any, 1, 3, 50);
+describe("copiesLeft", () => {
+  const picks = [
+    { collectionSlug: "204z", objektId: "537" },
+    { collectionSlug: "204z", objektId: null },
+    { collectionSlug: "301a", objektId: "12" },
+  ];
+
+  test("copies already named by serial in the same collection are not spare twice", () => {
+    expect(copiesLeft(picks, "204z", 3)).toBe(2);
+  });
+
+  test("never below zero", () => {
+    expect(copiesLeft(picks, "204z", 1)).toBe(0);
+  });
+});
+
+describe("withCount", () => {
+  test("a pick not held joins", () => {
+    const next = withCount(new Map(), any, 1, 3, 50);
     expect(countOf(next.get(any.key)!)).toBe(1);
   });
 
   test("stops at the copies spare", () => {
-    const held = new Map([[any.key, { ...any, count: 3 }]]);
-    expect(stepCount(held, any, 1, 3, 50).get(any.key)?.count).toBe(3);
+    const held = new Map([[any.key, { ...any, count: 1 }]]);
+    expect(withCount(held, any, 9, 3, 50).get(any.key)?.count).toBe(3);
   });
 
   test("stops at the side's limit", () => {
@@ -28,17 +52,21 @@ describe("stepCount", () => {
       [any.key, { ...any, count: 2 }],
       [specific.key, specific],
     ]);
-    expect(stepCount(held, any, 1, 9, 3).get(any.key)?.count).toBe(2);
+    expect(withCount(held, any, 3, 9, 3).get(any.key)?.count).toBe(2);
   });
 
   test("a count above what is spare now can still come down", () => {
     const held = new Map([[any.key, { ...any, count: 4 }]]);
-    expect(stepCount(held, any, -1, 2, 50).get(any.key)?.count).toBe(3);
+    expect(withCount(held, any, 3, 2, 50).get(any.key)?.count).toBe(3);
   });
 
-  test("one fewer at one takes the pick out", () => {
+  test("zero takes the pick out", () => {
     const held = new Map([[any.key, any]]);
-    expect(stepCount(held, any, -1, 3, 50).has(any.key)).toBe(false);
+    expect(withCount(held, any, 0, 3, 50).has(any.key)).toBe(false);
+  });
+
+  test("a pick not held, with nothing spare, stays out", () => {
+    expect(withCount(new Map(), any, 1, 0, 50).has(any.key)).toBe(false);
   });
 });
 

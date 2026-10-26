@@ -158,11 +158,10 @@ export async function createOffer(
   });
 
   const specificIds = items.flatMap((item) => (item.objektId ? [item.objektId] : []));
-  const holders = await openOfferHolders(specificIds);
-  // only the sender's own offers are named back
+  const holders = await openOfferHolders(specificIds, me);
   const warnings = specificIds.flatMap((objektId) => {
-    const { mine } = openOffersOf(holders.get(objektId) ?? [], me, addressed.conversationId);
-    return mine.length > 0 ? [{ objektId, offerIds: mine }] : [];
+    const offerIds = openOffersOf(holders.get(objektId) ?? [], addressed.conversationId);
+    return offerIds.length > 0 ? [{ objektId, offerIds }] : [];
   });
 
   const name = await partyNames([me, partnerId]);

@@ -30,7 +30,7 @@ import { m } from "@/paraglide/messages";
 import { CandidateGrid, candidateMatcher, pagedGridProps } from "./candidate-grid";
 import { type GetSource, addLabel, pickerDescription } from "./get-source";
 import { type Collections, type OfferPick, type OfferSide, pickKey, toPick } from "./pick";
-import { countOf, stepCount, totalOf } from "./quantity";
+import { copiesLeft, countOf, totalOf, withCount } from "./quantity";
 import {
   myCandidatesOptions,
   type OfferAddress,
@@ -109,21 +109,29 @@ function PickerBody({
     if (collection) setSeen((current) => ({ ...current, [item.collectionSlug]: collection }));
   };
 
+  // an any-copy item asks for as many copies as they spare, bar those picked by serial
+  const copiesOf = (picks: Map<string, OfferPick>, item: CandidateItem) =>
+    copiesLeft(picks.values(), item.collectionSlug, item.copies ?? 1);
+
   const toggle = (item: CandidateItem, collections: Collections) => {
     const key = pickKey(item);
     setSelection((current) => {
       const next = new Map(current);
       if (next.has(key)) next.delete(key);
-      else if (totalOf(next.values()) < OFFER_SIDE_LIMIT) next.set(key, toPick(item));
+      else if (
+        totalOf(next.values()) < OFFER_SIDE_LIMIT &&
+        (item.objektId !== null || copiesOf(next, item) > 0)
+      ) {
+        next.set(key, toPick(item));
+      }
       return next;
     });
     remember(item, collections);
   };
 
-  // an any-copy item asks for as many copies as they spare
-  const step = (item: CandidateItem, delta: 1 | -1, collections: Collections) => {
+  const setCount = (item: CandidateItem, count: number, collections: Collections) => {
     setSelection((current) =>
-      stepCount(current, toPick(item), delta, item.copies ?? 1, OFFER_SIDE_LIMIT),
+      withCount(current, toPick(item), count, copiesOf(current, item), OFFER_SIDE_LIMIT),
     );
     remember(item, collections);
   };
@@ -131,9 +139,10 @@ function PickerBody({
   const grid = {
     isSelected: (item: CandidateItem) => selection.has(pickKey(item)),
     countOf: (item: CandidateItem) => countOf(selection.get(pickKey(item)) ?? { count: 0 }),
+    copiesOf: (item: CandidateItem) => copiesOf(selection, item),
     full,
     onToggle: toggle,
-    onStep: step,
+    onCount: setCount,
   };
 
   return (
@@ -171,9 +180,10 @@ type GridProps = {
   to: OfferAddress;
   isSelected: (item: CandidateItem) => boolean;
   countOf: (item: CandidateItem) => number;
+  copiesOf: (item: CandidateItem) => number;
   full: boolean;
   onToggle: (item: CandidateItem, collections: Collections) => void;
-  onStep: (item: CandidateItem, delta: 1 | -1, collections: Collections) => void;
+  onCount: (item: CandidateItem, count: number, collections: Collections) => void;
 };
 
 type Filters = PickerFilters & { search: string };

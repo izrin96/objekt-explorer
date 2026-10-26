@@ -132,55 +132,37 @@ export function validateShape(input: ShapeInput, currencies: ReadonlySet<string>
   return { ok: true, topup: { amount, currency, payer: input.topup.payer } };
 }
 
-export type OpenOfferHolder = {
-  offerId: number;
-  conversationId: number;
-  fromUserId: string;
-  toUserId: string;
-};
+/** One of the viewer's own open offers holding an objekt; other members' offers are never read. */
+export type OpenOfferHolder = { offerId: number; conversationId: number };
 
 type ItemFlags = {
   transferable: boolean;
   reserved: boolean;
   inOpenOffer: number[];
-  inOtherOffer: boolean;
 };
 
 /**
- * The open offers holding an objekt, the conversation being offered in left out, since its open
- * offer is the one a new offer replaces. `mine` are those `me` is a party to, by offer id; an
- * offer between others only counts, so no one learns another pair's offer numbers.
+ * The viewer's open offers holding an objekt, by id, the conversation being offered in left out,
+ * since its open offer is the one a new offer replaces.
  */
-export function openOffersOf(
-  holders: readonly OpenOfferHolder[],
-  me: string,
-  conversationId: number | null,
-) {
-  const elsewhere = holders.filter((offer) => offer.conversationId !== conversationId);
-  const ours = (offer: OpenOfferHolder) => offer.fromUserId === me || offer.toUserId === me;
-  return {
-    mine: elsewhere
-      .filter(ours)
-      .map((offer) => offer.offerId)
-      .toSorted((a, b) => a - b),
-    others: elsewhere.some((offer) => !ours(offer)),
-  };
+export function openOffersOf(holders: readonly OpenOfferHolder[], conversationId: number | null) {
+  return holders
+    .filter((offer) => offer.conversationId !== conversationId)
+    .map((offer) => offer.offerId)
+    .toSorted((a, b) => a - b);
 }
 
-/** `openOffers` maps an objekt id to the open offers holding it (see `openOffersOf`). */
+/** `openOffers` maps an objekt id to the viewer's open offers holding it. */
 export function itemFlags(
   objekt: { id: string; transferable: boolean },
   reserved: ReadonlySet<string>,
   openOffers: ReadonlyMap<string, readonly OpenOfferHolder[]>,
-  me: string,
   conversationId: number | null,
 ): ItemFlags {
-  const { mine, others } = openOffersOf(openOffers.get(objekt.id) ?? [], me, conversationId);
   return {
     transferable: objekt.transferable,
     reserved: reserved.has(objekt.id),
-    inOpenOffer: mine,
-    inOtherOffer: others,
+    inOpenOffer: openOffersOf(openOffers.get(objekt.id) ?? [], conversationId),
   };
 }
 

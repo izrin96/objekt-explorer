@@ -13,6 +13,7 @@ import {
   CANDIDATE_PAGE_SIZE,
   type CandidateCursor,
   type CandidateItem,
+  type PartnerList,
 } from "../../../schemas/offer";
 import { fetchCollectionsBySlug } from "../../list";
 import { type IndexedObjekt, lowerOwner, objektColumns } from "../core";
@@ -38,6 +39,32 @@ export async function collectionsOf(slugs: string[]) {
   const rows = await fetchCollectionsBySlug(unique(slugs), []);
   return Object.fromEntries(rows.map((row) => [row.slug, row]));
 }
+
+export type CandidatesPage = {
+  items: CandidateItem[];
+  suggested: CandidateItem[];
+  nextCursor: CandidateCursor | null;
+  nextOffset: number | null;
+  listed: boolean;
+  /** theirs: false when the partner has no list to ask through; read as true when absent */
+  partnerLists?: boolean;
+  /** theirs, whole list only: the List choice's lists */
+  lists?: PartnerList[];
+  wanted: string[];
+  collections: Awaited<ReturnType<typeof collectionsOf>>;
+};
+
+/** A candidates page, the fields a side leaves out at their empty values. */
+export const candidatesPage = (page: Partial<CandidatesPage>): CandidatesPage => ({
+  items: [],
+  suggested: [],
+  nextCursor: null,
+  nextOffset: null,
+  listed: true,
+  wanted: [],
+  collections: {},
+  ...page,
+});
 
 export function collectionWhere(filters: Partial<CollectionFilters> | undefined) {
   if (!filters) return [];

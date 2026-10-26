@@ -217,8 +217,6 @@ const candidateItemSchema = z.object({
   reserved: z.boolean(),
   /** the viewer's other open offers holding it, the conversation's own excluded */
   inOpenOffer: z.number().array(),
-  /** an open offer between two other members holds it; never named */
-  inOtherOffer: z.boolean(),
   /** mine: the have list suggesting it; theirs: the list it comes from */
   listSlug: z.string().nullable(),
   /** any copy only: the transferable, unreserved copies held */

@@ -183,11 +183,6 @@ export function expiresLabel(iso: string) {
   return m.offer_expires_in({ time: relativeTime(new Date(iso).getTime(), Date.now(), "day") });
 }
 
-/** "4 minutes ago"; reads the clock here, outside any component body. */
-export function agoLabel(iso: string) {
-  return relativeTime(new Date(iso).getTime(), Date.now());
-}
-
 export function tradeNotificationText(payload: TradePayload, partner = payload.partner.name) {
   const params = { partner };
   // always set on the wrong-copy events

@@ -59,9 +59,10 @@ export function CandidateGrid({
   more,
   isSelected,
   countOf,
+  copiesOf,
   full,
   onToggle,
-  onStep,
+  onCount,
 }: {
   sections: { title: string | null; items: CandidateItem[] }[];
   collections: Collections;
@@ -71,9 +72,11 @@ export function CandidateGrid({
   more?: { has: boolean; loading: boolean; failed: boolean; load: () => void };
   isSelected: (item: CandidateItem) => boolean;
   countOf: (item: CandidateItem) => number;
+  /** an any-copy item's copies still free to ask for */
+  copiesOf: (item: CandidateItem) => number;
   full: boolean;
   onToggle: (item: CandidateItem, collections: Collections) => void;
-  onStep: (item: CandidateItem, delta: 1 | -1, collections: Collections) => void;
+  onCount: (item: CandidateItem, count: number, collections: Collections) => void;
 }) {
   if (pending) {
     return (
@@ -130,9 +133,10 @@ export function CandidateGrid({
           collection={collections[item.collectionSlug]}
           selected={isSelected(item)}
           count={countOf(item)}
+          copies={copiesOf(item)}
           full={full}
           onToggle={() => onToggle(item, collections)}
-          onStep={(delta) => onStep(item, delta, collections)}
+          onCount={(next) => onCount(item, next, collections)}
         />
       )}
     />

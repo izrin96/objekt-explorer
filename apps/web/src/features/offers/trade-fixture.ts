@@ -5,7 +5,7 @@ type Leg = TradeView["legs"][number];
 export const ACCEPTED = "2026-10-08T12:00:00.000Z";
 export const DAY = 86_400_000;
 export const HOUR = 3_600_000;
-export const PARTNER = "0x9ca6000000000000000000000000000000008b0d";
+const PARTNER = "0x9ca6000000000000000000000000000000008b0d";
 
 let nextId = 1;
 

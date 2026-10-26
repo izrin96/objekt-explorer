@@ -1,9 +1,15 @@
-import { CheckIcon, MinusIcon, PlusIcon } from "@phosphor-icons/react";
+import { CheckIcon } from "@phosphor-icons/react";
 import type { CandidateItem } from "@repo/api/schemas/offer";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useRef } from "react";
 
-import { Button } from "@/components/ui/button";
+import {
+  NumberField,
+  NumberFieldDecrement,
+  NumberFieldGroup,
+  NumberFieldIncrement,
+  NumberFieldInput,
+} from "@/components/ui/number-field";
 import { ObjektCard } from "@/features/objekt/objekt-card";
 import { CollectionLabel, collectionName, SerialNo } from "@/features/objekt/objekt-label";
 import { activateOnKey } from "@/lib/a11y";
@@ -18,25 +24,29 @@ export function CandidateTile({
   collection,
   selected,
   count = 0,
+  copies = item.copies ?? 0,
   full,
   onToggle,
-  onStep,
+  onCount,
 }: {
   item: CandidateItem;
   collection: ValidObjekt | undefined;
   selected: boolean;
-  /** an any-copy item: the copies asked for, stepped under the tile when `onStep` is given */
+  /** an any-copy item: the copies asked for, set under the tile when `onCount` is given */
   count?: number;
+  /** an any-copy item: the copies still free, less those picked by serial */
+  copies?: number;
   full: boolean;
   onToggle: () => void;
-  onStep?: (delta: 1 | -1) => void;
+  onCount?: (count: number) => void;
 }) {
   const blocked = blockedReason(item);
   // focusable while unavailable, so the reason under it is read with it
-  const unavailable = blocked !== null || (full && !selected);
+  const unavailable =
+    blocked !== null || (!selected && (full || (item.objektId === null && copies === 0)));
   const detail =
     item.objektId === null ? (
-      m.offer_any_copy_ask_count({ count: item.copies ?? 0 })
+      m.offer_any_copy_ask_count({ count: copies })
     ) : item.serial !== null ? (
       <SerialNo serial={item.serial} estimated={item.serialEstimated} />
     ) : null;
@@ -49,16 +59,16 @@ export function CandidateTile({
   // copies also offered by serial are picked that way, so this one asks for one; a count already
   // above one, as from another List choice, keeps its stepper so it can come down
   const stepper =
-    onStep && item.objektId === null && selected && (!item.bySerial || count > 1) ? (
+    onCount && item.objektId === null && selected && (!item.bySerial || count > 1) ? (
       <CopyStepper
         count={count}
-        max={item.copies ?? 1}
+        max={copies}
         full={full}
         name={collection ? collectionName(item.collectionSlug, collection) : item.collectionSlug}
-        onStep={(delta) => {
+        onCount={(next) => {
           // the last copy out takes the stepper with it, so focus goes back to the tile
-          if (delta === -1 && count <= 1) tileRef.current?.focus();
-          onStep(delta);
+          if (next <= 0) tileRef.current?.focus();
+          onCount(next);
         }}
       />
     ) : null;
@@ -106,8 +116,6 @@ export function CandidateTile({
           <span className="text-warning-foreground">
             {m.offer_flag_in_open_offer({ offers: item.inOpenOffer.map(offerNo).join(", ") })}
           </span>
-        ) : item.inOtherOffer ? (
-          <span className="text-warning-foreground">{m.offer_flag_in_other_offer()}</span>
         ) : null}
       </span>
     </div>
@@ -128,46 +136,33 @@ function CopyStepper({
   max,
   full,
   name,
-  onStep,
+  onCount,
 }: {
   count: number;
   max: number;
   full: boolean;
   name: string;
-  onStep: (delta: 1 | -1) => void;
+  onCount: (count: number) => void;
 }) {
-  const atMost = count >= max || full;
   return (
     <div className="flex flex-col gap-0.5">
-      {/* the picker's footer announces the total, so the count here is read, not announced */}
-      <div
-        role="group"
-        aria-label={name}
-        className="border-foreground flex items-center justify-between rounded-md border"
+      {/* a count already above what is spare stays, so it can come down; Base UI keeps a
+          stepper at its bound focusable */}
+      <NumberField
+        size="sm"
+        value={count}
+        min={0}
+        max={full ? count : Math.max(count, max)}
+        onValueChange={(next) => {
+          if (next !== null) onCount(next);
+        }}
       >
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          aria-label={m.offer_any_copy_fewer({ name })}
-          onClick={() => onStep(-1)}
-        >
-          <MinusIcon />
-        </Button>
-        <span className="text-sm tabular-nums">{count}</span>
-        {/* aria-disabled, not disabled: a disabled button drops the focus it held */}
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          aria-label={m.offer_any_copy_more({ name })}
-          aria-disabled={atMost || undefined}
-          className="aria-disabled:opacity-40"
-          onClick={() => {
-            if (!atMost) onStep(1);
-          }}
-        >
-          <PlusIcon />
-        </Button>
-      </div>
+        <NumberFieldGroup>
+          <NumberFieldDecrement aria-label={m.offer_any_copy_fewer({ name })} />
+          <NumberFieldInput aria-label={name} />
+          <NumberFieldIncrement aria-label={m.offer_any_copy_more({ name })} />
+        </NumberFieldGroup>
+      </NumberField>
       <span className="text-muted-foreground text-xs leading-tight">
         {m.offer_any_copy_their_choice()}
       </span>

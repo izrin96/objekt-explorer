@@ -19,10 +19,7 @@ export type OfferPick = {
   serialEstimated?: boolean;
   listSlug: string | null;
   /** null when the pick did not come from candidates, as in a counter's prefill */
-  flags: Pick<
-    CandidateItem,
-    "transferable" | "reserved" | "inOpenOffer" | "inOtherOffer" | "copies"
-  > | null;
+  flags: Pick<CandidateItem, "transferable" | "reserved" | "inOpenOffer" | "copies"> | null;
   /** a counter keeps what the countered offer gave, listed or not */
   kept?: boolean;
   /** the any-copy placeholder this resolved copy stands in for */
@@ -46,7 +43,6 @@ export function toPick(item: CandidateItem): OfferPick {
       transferable: item.transferable,
       reserved: item.reserved,
       inOpenOffer: item.inOpenOffer,
-      inOtherOffer: item.inOtherOffer,
       copies: item.copies,
     },
   };

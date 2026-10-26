@@ -5,7 +5,7 @@ import type { OfferAddress } from "@/features/offers/queries";
 
 type TopupDraft = { amount: number; currency: string; payer: TopupPayer };
 
-export type OfferPrefill = {
+type OfferPrefill = {
   give?: OfferPick[];
   get?: OfferPick[];
   topup?: TopupDraft;
@@ -19,12 +19,6 @@ export type OfferRequest = {
   name: string;
   counter?: boolean;
   prefill?: OfferPrefill;
-  /** prefills with the For you overlap with this partner, read through `offer.suggest` */
-  suggestFor?: string;
   /** a list of theirs You get's List choice opens on, as a Market listing's sale list */
   startList?: string;
-  /** a list of theirs whose entries are laid out under You get, ready to add */
-  focusList?: string;
-  /** a want list of theirs: what the viewer holds from it is laid out under You give */
-  focusWantList?: string;
 };

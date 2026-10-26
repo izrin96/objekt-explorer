@@ -1,4 +1,3 @@
-import { useQuery } from "@tanstack/react-query";
 import { createContext, type ReactNode, use, useCallback, useRef, useState } from "react";
 
 import {
@@ -12,14 +11,10 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogPopup } from "@/components/ui/dialog";
-import { Skeleton } from "@/components/ui/skeleton";
 import { m } from "@/paraglide/messages";
 
 import { BuilderForm } from "./builder/form";
-import { BuilderHeader } from "./builder/header";
-import type { OfferPrefill, OfferRequest } from "./builder/types";
-import { toPick } from "./pick";
-import { suggestOptions } from "./queries";
+import type { OfferRequest } from "./builder/types";
 
 export type { OfferRequest } from "./builder/types";
 
@@ -58,7 +53,7 @@ function OfferBuilder({
           content: its height is set outright, under the viewport's top inset */}
       <DialogPopup className="max-w-3xl max-sm:h-[calc(100dvh-(--spacing(12)))]">
         {request ? (
-          <BuilderLoader key={session} request={request} onDraft={setDraft} onDone={close} />
+          <BuilderForm key={session} request={request} onDraft={setDraft} onDone={close} />
         ) : null}
         <AlertDialog open={confirming} onOpenChange={setConfirming}>
           <AlertDialogPopup>
@@ -118,49 +113,4 @@ export function OfferBuilderProvider({ children }: { children: ReactNode }) {
 /** The provider's opener, or `null` where there is none. */
 export function useSharedOfferBuilder() {
   return use(SharedBuilder);
-}
-
-function BuilderLoader({
-  request,
-  onDraft,
-  onDone,
-}: {
-  request: OfferRequest;
-  onDraft: (holds: (() => boolean) | null) => void;
-  onDone: () => void;
-}) {
-  const suggest = useQuery({
-    ...suggestOptions(request.suggestFor ?? ""),
-    enabled: request.suggestFor !== undefined,
-  });
-
-  if (request.suggestFor !== undefined && suggest.isPending) {
-    return (
-      <>
-        <BuilderHeader request={request} />
-        <div className="grid gap-6 px-6 pb-6 sm:grid-cols-2">
-          <Skeleton className="h-32 rounded-lg" />
-          <Skeleton className="h-32 rounded-lg" />
-        </div>
-      </>
-    );
-  }
-
-  const prefill: OfferPrefill | undefined = suggest.data
-    ? {
-        give: suggest.data.give.map(toPick),
-        get: suggest.data.get.map(toPick),
-        collections: suggest.data.collections,
-      }
-    : request.prefill;
-
-  return (
-    <BuilderForm
-      request={request}
-      prefill={prefill}
-      suggestFailed={suggest.isError}
-      onDraft={onDraft}
-      onDone={onDone}
-    />
-  );
 }
