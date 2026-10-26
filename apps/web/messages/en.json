@@ -1686,6 +1686,8 @@
   "notification_settings_link": "Notification settings",
   "trade_tab_with_count": "{label}, {count}",
   "trade_strip_none_listed": "nothing listed",
+  "trade_strip_side_count_one": "1 objekt, {none}",
+  "trade_strip_side_count": "{count} objekts, {none}",
   "trade_compare_why_one_way": "Compares one way",
   "trade_browse_no_filter_title": "No posts match the filters",
   "trade_browse_no_mutual_list_title": "No one can swap with you for {list}",

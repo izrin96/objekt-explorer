@@ -199,7 +199,13 @@ const SIDE_LINK =
 /** A side with nothing related, under the post's other strip: its role and total, then why. */
 export function EmptySide({ side, surface }: { side: PostSideData; surface: Surface }) {
   const wording = sideWording(side, surface);
-  const none = side.others > 0 ? wording.none : m.trade_strip_none_listed();
+  // a unit on the count, so it doesn't read as a number of matches
+  const detail =
+    side.others === 0
+      ? m.trade_strip_none_listed()
+      : side.others === 1
+        ? m.trade_strip_side_count_one({ none: wording.none })
+        : m.trade_strip_side_count({ count: side.others, none: wording.none });
   return (
     <Link
       {...getListLinkOption(side.list)}
@@ -208,10 +214,10 @@ export function EmptySide({ side, surface }: { side: PostSideData; surface: Surf
         SIDE_LINK,
       )}
     >
-      {wording.role} {side.others}
+      {wording.role}
       <span className="normal-case">
         {" · "}
-        {none}
+        {detail}
       </span>
     </Link>
   );

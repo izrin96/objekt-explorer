@@ -1686,6 +1686,8 @@
   "notification_settings_link": "알림 설정",
   "trade_tab_with_count": "{label}, {count}",
   "trade_strip_none_listed": "올린 항목 없음",
+  "trade_strip_side_count_one": "오브젝트 1개, {none}",
+  "trade_strip_side_count": "오브젝트 {count}개, {none}",
   "trade_compare_why_one_way": "한쪽만 비교",
   "trade_browse_no_filter_title": "필터에 맞는 게시물이 없습니다",
   "trade_browse_no_mutual_list_title": "{list} 목록으로 교환할 수 있는 사람이 없습니다",
