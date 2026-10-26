@@ -53,7 +53,6 @@ const REFUSAL_STATUS: Record<OfferRefusal, ConstructorParameters<typeof ORPCErro
   not_accepting: "FORBIDDEN",
   muted: "FORBIDDEN",
   too_many_open: "TOO_MANY_REQUESTS",
-  start_limit: "TOO_MANY_REQUESTS",
   message_limit: "TOO_MANY_REQUESTS",
 };
 
@@ -302,10 +301,7 @@ export async function resolveAddressed(
     .select({ id: conversation.id, lastMessageId: conversation.lastMessageId })
     .from(conversation)
     .where(and(eq(conversation.userLow, userLow), eq(conversation.userHigh, userHigh)));
-  // the rate is counted when the conversation is created, not on a read
-  const verdict = startVerdict(
-    startFactsOf(start, holdsMessage(existing?.lastMessageId), { ok: true }),
-  );
+  const verdict = startVerdict(startFactsOf(start, holdsMessage(existing?.lastMessageId)));
   if (!verdict.ok) refuseOffer(verdict.reason, verdict.retryAt ? { retryAt: verdict.retryAt } : {});
   return {
     partnerId,

@@ -1156,7 +1156,6 @@
   "chat_refused_no_address": "メッセージを送るにはCosmoプロフィールを連携してください",
   "chat_refused_self": "自分にはメッセージを送れません",
   "chat_refused_not_accepting": "この人はメッセージを受け付けていません",
-  "chat_refused_start_limit": "過去24時間に新しい会話をたくさん始めました。次に始められるのは{time}です。",
   "chat_refused_message_limit": "送信が速すぎます。{time}にもう一度お試しください。",
   "chat_refused_invalid_card": "このObjektはここに添付できません",
   "chat_settings_tab": "メッセージ",

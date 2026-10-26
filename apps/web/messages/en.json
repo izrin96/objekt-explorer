@@ -1156,7 +1156,6 @@
   "chat_refused_no_address": "Link a Cosmo profile to send messages",
   "chat_refused_self": "You can't message yourself",
   "chat_refused_not_accepting": "This person isn't accepting messages",
-  "chat_refused_start_limit": "You've started a lot of new conversations in the last 24 hours. You can start another {time}.",
   "chat_refused_message_limit": "You're sending messages too fast. Try again {time}.",
   "chat_refused_invalid_card": "That objekt can't be attached here",
   "chat_settings_tab": "Messages",

@@ -1,19 +1,17 @@
 import { ORPCError } from "@orpc/server";
 import { db } from "@repo/db";
 import { conversation, conversationMember, lists, user, userAddress } from "@repo/db/schema";
-import { and, eq, gt, isNull, sql } from "drizzle-orm";
+import { and, eq, isNull, sql } from "drizzle-orm";
 
 import {
   type MessagePref,
   holdsMessage,
   pairKey,
-  rateDecision,
   startFactsOf,
   startMembers,
   startVerdict,
 } from "../../lib/chat-rules";
-import { HOUR_MS } from "../../lib/time";
-import { type ChatTarget, START_WINDOW_HOURS } from "../../schemas/chat";
+import { type ChatTarget } from "../../schemas/chat";
 import type { Tx } from "./members";
 import { refuse } from "./refuse";
 import { chatSafety } from "./safety";
@@ -56,16 +54,6 @@ export async function hasLinkedAddress(userId: string) {
  */
 export async function lockStarts(tx: Tx, userId: string) {
   await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext('chat_start'), hashtext(${userId}))`);
-}
-
-/** The times the user's conversations were started, by their first message or offer, in the start window. */
-async function recentStarts(tx: Tx, userId: string, now: Date): Promise<number[]> {
-  const since = new Date(now.getTime() - START_WINDOW_HOURS * HOUR_MS).toISOString();
-  const rows = await tx
-    .select({ startedAt: conversation.startedAt })
-    .from(conversation)
-    .where(and(eq(conversation.startedBy, userId), gt(conversation.startedAt, since)));
-  return rows.flatMap((row) => (row.startedAt === null ? [] : [new Date(row.startedAt).getTime()]));
 }
 
 export type StartContext = {
@@ -112,14 +100,9 @@ export async function prepareFirst(
   };
 }
 
-/** Refuses what `startVerdict` refuses; `existing` is a conversation that holds a message. Counts no start. */
-async function refuseStart(tx: Tx, ctx: StartContext, existing: boolean) {
-  const { senderId, recipientId, now } = ctx;
-  const rate =
-    existing || senderId === recipientId
-      ? ({ ok: true } as const)
-      : rateDecision(await recentStarts(tx, senderId, now), ctx.senderCreatedAt, now);
-  const verdict = startVerdict(startFactsOf(ctx, existing, rate));
+/** Refuses what `startVerdict` refuses; `existing` is a conversation that holds a message. */
+function refuseStart(ctx: StartContext, existing: boolean) {
+  const verdict = startVerdict(startFactsOf(ctx, existing));
   if (!verdict.ok) refuse(verdict.reason, verdict.retryAt);
 }
 
@@ -136,7 +119,7 @@ export async function checkStart(tx: Tx, ctx: StartContext): Promise<number | un
     .select({ id: conversation.id, lastMessageId: conversation.lastMessageId })
     .from(conversation)
     .where(and(eq(conversation.userLow, userLow), eq(conversation.userHigh, userHigh)));
-  await refuseStart(tx, ctx, holdsMessage(existing?.lastMessageId));
+  refuseStart(ctx, holdsMessage(existing?.lastMessageId));
   return existing?.id;
 }
 
@@ -145,7 +128,7 @@ export async function checkStart(tx: Tx, ctx: StartContext): Promise<number | un
  * caller took `lockStarts`: the start checks apply again, and the message becomes the start.
  */
 export async function openFirst(tx: Tx, ctx: StartContext, conversationId: number) {
-  await refuseStart(tx, { ...ctx, now: new Date() }, false);
+  refuseStart({ ...ctx, now: new Date() }, false);
   await tx
     .update(conversation)
     .set({ startedBy: ctx.senderId, startedAt: sql`now()` })

@@ -5,7 +5,6 @@ import type { ChatRefusal } from "../../schemas/chat";
 export function refuse(reason: ChatRefusal, retryAt?: Date): never {
   const data = retryAt ? { reason, retryAt: retryAt.toISOString() } : { reason };
   switch (reason) {
-    case "start_limit":
     case "message_limit":
     case "settings_limit":
       throw new ORPCError("TOO_MANY_REQUESTS", { data });

@@ -5,12 +5,7 @@ import {
   MESSAGE_LIMIT_PER_MINUTE,
   type MessageAllow,
   MESSAGE_PREF_DEFAULTS,
-  NEW_ACCOUNT_DAYS,
-  NEW_ACCOUNT_START_LIMIT,
-  START_LIMIT,
-  START_WINDOW_HOURS,
 } from "../schemas/chat";
-import { HOUR_MS } from "./time";
 import {
   defaultProfile,
   type LinkedProfile,
@@ -62,13 +57,6 @@ export function slidingWindow(
   if (inWindow.length < limit) return { ok: true };
   // the event that has to leave the window before one more fits
   return { ok: false, retryAt: new Date(inWindow[inWindow.length - limit]! + windowMs) };
-}
-
-/** `starts` are the times of the user's new conversations. */
-export function rateDecision(starts: number[], accountCreatedAt: Date, now: Date): RateDecision {
-  const isNew = now.getTime() - accountCreatedAt.getTime() < NEW_ACCOUNT_DAYS * 24 * HOUR_MS;
-  const limit = isNew ? NEW_ACCOUNT_START_LIMIT : START_LIMIT;
-  return slidingWindow(starts, now, START_WINDOW_HOURS * HOUR_MS, limit);
 }
 
 export const MESSAGE_WINDOW_MS = MINUTE_MS;
@@ -124,13 +112,12 @@ export type StartFacts = {
   blocked: boolean;
   senderMuted: boolean;
   muteUntil?: Date;
-  /** the conversation already holds a message, so the recipient's settings and the limit no longer apply */
+  /** the conversation already holds a message, so the recipient's settings no longer apply */
   existing: boolean;
-  rate: RateDecision;
 };
 
 /** What a start or a send can be refused for, a subset of both the chat and the offer refusals. */
-export type StartRefusal = "no_address" | "self" | "muted" | "not_accepting" | "start_limit";
+export type StartRefusal = "no_address" | "self" | "muted" | "not_accepting";
 
 type StartVerdict = { ok: true } | { ok: false; reason: StartRefusal; retryAt?: Date };
 
@@ -149,7 +136,6 @@ export function startFactsOf(
     safety: { blocked: boolean; mute: ChatMute };
   },
   existing: boolean,
-  rate: StartFacts["rate"],
 ): StartFacts {
   return {
     senderId: ctx.senderId,
@@ -160,7 +146,6 @@ export function startFactsOf(
     senderMuted: ctx.safety.mute !== null,
     muteUntil: muteEnd(ctx.safety.mute),
     existing,
-    rate,
   };
 }
 
@@ -176,7 +161,7 @@ export function hidesSerials(
 }
 
 /**
- * The recipient's settings, blocks, mutes and the start limit apply until the conversation
+ * The recipient's settings, blocks and mutes apply until the conversation
  * holds its first message. A block reads exactly like Nobody, so the blocked side cannot tell.
  */
 export function startVerdict(facts: StartFacts): StartVerdict {
@@ -185,7 +170,6 @@ export function startVerdict(facts: StartFacts): StartVerdict {
   if (facts.existing) return { ok: true };
   if (facts.senderMuted) return { ok: false, reason: "muted", retryAt: facts.muteUntil };
   if (facts.blocked || facts.pref.allow === "nobody") return { ok: false, reason: "not_accepting" };
-  if (!facts.rate.ok) return { ok: false, reason: "start_limit", retryAt: facts.rate.retryAt };
   return { ok: true };
 }
 

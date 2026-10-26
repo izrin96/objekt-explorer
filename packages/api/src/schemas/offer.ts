@@ -101,7 +101,6 @@ export const OFFER_REFUSALS = [
   "links_changed",
   "self",
   "not_accepting",
-  "start_limit",
   "message_limit",
   "muted",
 ] as const;

@@ -315,7 +315,7 @@ Anyone else SHALL get the not-found page. A signed-out visitor SHALL be sent to 
 - **THEN** HyeRin 301Z #1203 is under You give and SeoYeon 204Z #537 under You get, with no from and to column
 
 ### Requirement: Offer rate limits
-Sending an offer SHALL count toward the chat message limit. A first offer to someone without a conversation SHALL also count toward the new-conversation limit. A user SHALL have at most 20 open sent offers at a time.
+Sending an offer SHALL count toward the chat message limit. A user SHALL have at most 20 open sent offers at a time.
 
 #### Scenario: Too many open offers
 - **WHEN** a user with 20 open sent offers sends another

@@ -9,10 +9,6 @@ export const MESSAGE_MAX_LENGTH = 2000;
 export const THREAD_PAGE_SIZE = 50;
 export const CONVERSATION_PAGE_SIZE = 30;
 
-export const START_LIMIT = 20;
-export const NEW_ACCOUNT_START_LIMIT = 5;
-export const NEW_ACCOUNT_DAYS = 7;
-export const START_WINDOW_HOURS = 24;
 export const MESSAGE_LIMIT_PER_MINUTE = 30;
 
 export const MATCH_SLUGS = 3;
@@ -30,7 +26,6 @@ export const CHAT_REFUSALS = [
   "no_address",
   "self",
   "not_accepting",
-  "start_limit",
   "message_limit",
   "invalid_card",
   "muted",

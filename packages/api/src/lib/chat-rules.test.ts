@@ -15,7 +15,6 @@ import {
   muteEnd,
   nextMemberState,
   pairKey,
-  rateDecision,
   rowUnread,
   searchPatterns,
   slidingWindow,
@@ -31,8 +30,6 @@ import {
 const NOW = new Date("2026-10-07T12:00:00Z");
 const NOW_ISO = NOW.toISOString();
 const HOUR = 60 * 60 * 1000;
-const OLD_ACCOUNT = new Date("2025-01-01T00:00:00Z");
-const NEW_ACCOUNT = new Date(NOW.getTime() - 2 * 24 * HOUR);
 
 const facts = (overrides: Partial<StartFacts> = {}): StartFacts => ({
   senderId: "alice",
@@ -42,7 +39,6 @@ const facts = (overrides: Partial<StartFacts> = {}): StartFacts => ({
   blocked: false,
   senderMuted: false,
   existing: false,
-  rate: { ok: true },
   ...overrides,
 });
 
@@ -56,10 +52,8 @@ describe("pairKey", () => {
 });
 
 describe("startVerdict", () => {
-  test("second start reopens, even past the start limit", () => {
-    const limited = { ok: false as const, retryAt: NOW };
-    expect(startVerdict(facts({ rate: limited })).ok).toBe(false);
-    expect(startVerdict(facts({ rate: limited, existing: true }))).toEqual({ ok: true });
+  test("a start has no daily limit", () => {
+    expect(startVerdict(facts())).toEqual({ ok: true });
   });
 
   test("no linked address", () => {
@@ -235,22 +229,6 @@ describe("read state", () => {
 });
 
 describe("rate limits", () => {
-  const starts = (n: number) => Array.from({ length: n }, (_, i) => NOW.getTime() - (i + 1) * HOUR);
-
-  test("new-account start limit", () => {
-    expect(rateDecision(starts(4), NEW_ACCOUNT, NOW)).toEqual({ ok: true });
-    const sixth = rateDecision(starts(5), NEW_ACCOUNT, NOW);
-    // the oldest of the five, 5 hours ago, ages out 19 hours from now
-    expect(sixth).toEqual({ ok: false, retryAt: new Date(NOW.getTime() + 19 * HOUR) });
-    expect(rateDecision(starts(5), OLD_ACCOUNT, NOW)).toEqual({ ok: true });
-  });
-
-  test("an older account gets 20, and starts past 24 hours fall away", () => {
-    expect(rateDecision(starts(20), OLD_ACCOUNT, NOW).ok).toBe(false);
-    const stale = [...starts(19), NOW.getTime() - 25 * HOUR];
-    expect(rateDecision(stale, OLD_ACCOUNT, NOW)).toEqual({ ok: true });
-  });
-
   test("30 messages in any 60 seconds, not per calendar minute", () => {
     const second = 1000;
     // 30 sends in the last 2 seconds of a minute leave no room just after it turns
@@ -470,7 +448,6 @@ describe("startFactsOf", () => {
     const muted = startFactsOf(
       { ...ctx, safety: { blocked: true, mute: { until: end.toISOString() } } },
       false,
-      { ok: true },
     );
     expect(muted.blocked).toBe(true);
     expect(muted.senderMuted).toBe(true);
@@ -479,19 +456,16 @@ describe("startFactsOf", () => {
 
   test("a mute with no end date, or none, has no muteUntil", () => {
     expect(
-      startFactsOf({ ...ctx, safety: { blocked: false, mute: { until: null } } }, false, {
-        ok: true,
-      }),
+      startFactsOf({ ...ctx, safety: { blocked: false, mute: { until: null } } }, false),
     ).toMatchObject({ senderMuted: true, muteUntil: undefined });
-    expect(startFactsOf(ctx, false, { ok: true })).toMatchObject({
+    expect(startFactsOf(ctx, false)).toMatchObject({
       senderMuted: false,
       muteUntil: undefined,
     });
   });
 
-  test("carries the existing flag and the rate through", () => {
-    const rate = { ok: false as const, retryAt: NOW };
-    expect(startFactsOf(ctx, true, rate)).toMatchObject({ existing: true, rate });
+  test("carries the existing flag through", () => {
+    expect(startFactsOf(ctx, true)).toMatchObject({ existing: true });
   });
 });
 

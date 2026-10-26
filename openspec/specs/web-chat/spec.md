@@ -313,15 +313,11 @@ The user SHALL be able to mute a conversation for 8 hours, 1 week or until unmut
 - **THEN** new unread messages count toward the badge again
 
 ### Requirement: Rate limits
-A user SHALL be able to start at most 20 new conversations per rolling 24 hours, or 5 if their account is younger than 7 days. A conversation counts as started by the user who sends its first message or offer, at that moment; opening a conversation with Message and sending nothing SHALL not count. A user SHALL be able to send at most 30 messages per minute. Over a limit, the request SHALL be refused, and the UI SHALL say when the user can try again.
+Starting new conversations SHALL have no daily limit. A conversation is started by the user who sends its first message or offer, at that moment; opening a conversation with Message and sending nothing SHALL not start it. A user SHALL be able to send at most 30 messages per minute. Over a limit, the request SHALL be refused, and the UI SHALL say when the user can try again.
 
-#### Scenario: New account
-- **WHEN** a 2-day-old account tries to send the first message of a sixth conversation within 24 hours
-- **THEN** it is refused, and the UI says when it can start another
-
-#### Scenario: Browsing with Message
-- **WHEN** a 2-day-old account opens Message on 8 Trade posts and sends nothing
-- **THEN** no start is counted, and it can still send the first message in 5 of them
+#### Scenario: Many new people in a day
+- **WHEN** a 2-day-old account sends a first offer to a 30th person within 24 hours
+- **THEN** it is sent
 
 ### Requirement: Messages settings
 The Messages section of the account page (`/account/messages`) SHALL have "Who can message you" (Anyone with a linked Cosmo address, or Nobody), and "Show Seen and typing", on by default, and SHALL say which name partners see the account by ("People see you as <name>", its default profile; see `web-cosmo-link`), linking to `/account/profiles` when the account has two or more linked profiles. Changes SHALL save at once. The `/messages` header SHALL offer a settings control opening `/account/messages`. When the settings fail to load, the section SHALL say so and offer Retry rather than leave the controls disabled.
@@ -442,7 +438,7 @@ A post card can no longer be sent when its list is gone, is no longer posted on 
 
 A card from a list that hides serials SHALL show no serial and SHALL not reveal, through its price or otherwise, which copy the list holds, to anyone but the list's owner. A post card and its match SHALL name collections only, never serials.
 
-Opening a conversation SHALL not count against the start limit or the per-minute message limit; only sending does (see Rate limits).
+Opening a conversation SHALL not count against the per-minute message limit; only sending does (see Rate limits).
 
 #### Scenario: Card attached, not sent
 - **WHEN** a user activates Message on rin.trades's WTS post

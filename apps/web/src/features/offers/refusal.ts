@@ -72,7 +72,6 @@ export function offerRefusalText(refusal: OfferRefusalInfo, named: string) {
     case "no_address":
     case "self":
     case "not_accepting":
-    case "start_limit":
     case "message_limit":
     case "muted":
       return chatRefusalText({ reason, retryAt: refusal.retryAt });
