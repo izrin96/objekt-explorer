@@ -3,6 +3,7 @@ import { describe, expect, test } from "bun:test";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 
 import {
+  decideCount,
   exchangeGroups,
   filterCounts,
   findMatches,
@@ -158,6 +159,22 @@ describe("counts", () => {
 
   test("nothing needs the viewer once the trade ended", () => {
     expect(needsYouCount(trade({ status: "cancelled", legs: [leg()] }))).toBe(0);
+  });
+
+  test("To decide counts what the partner sent in place of an owed objekt, while the trade runs", () => {
+    const legs = [
+      leg(),
+      leg({ stuck: true }),
+      verified(),
+      verified({ fromYou: false, substitutes: [copy()] }),
+      leg({ substitutes: [copy()] }),
+      leg({ fromYou: false }),
+      leg({ fromYou: false, substitutes: [copy()] }),
+      leg({ fromYou: false, substitutes: [copy({ status: "declined" })] }),
+      leg({ fromYou: false, state: "closed", substitutes: [copy()] }),
+    ];
+    expect(decideCount(legs, false)).toBe(1);
+    expect(decideCount(legs, true)).toBe(0);
   });
 });
 

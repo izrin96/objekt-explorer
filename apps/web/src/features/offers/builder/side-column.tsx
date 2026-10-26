@@ -6,10 +6,27 @@ import { Button } from "@/components/ui/button";
 import { SerialNo } from "@/features/objekt/objekt-label";
 import { itemLabel, offerNo } from "@/features/offers/format";
 import { type GetSource, addLabel } from "@/features/offers/get-source";
-import { ObjektTile } from "@/features/offers/objekt-tile";
+import { ObjektTile, type TileNote } from "@/features/offers/objekt-tile";
 import type { Collections, OfferPick, OfferSide } from "@/features/offers/pick";
 import { countOf, totalOf } from "@/features/offers/quantity";
 import { m } from "@/paraglide/messages";
+
+/** A clean pick's lines under its tile: how many copies an ask covers, and the open offers it is in. */
+function notesOf(side: OfferSide, pick: OfferPick, flags: OfferPick["flags"]) {
+  const notes: TileNote[] = [];
+  if (pick.objektId === null && flags?.copies != null) {
+    const count = flags.copies;
+    notes.push({
+      text:
+        side === "get" ? m.offer_any_copy_ask_count({ count }) : m.offer_any_copy_count({ count }),
+    });
+  }
+  if (flags && flags.inOpenOffer.length > 0) {
+    const offers = flags.inOpenOffer.map(offerNo).join(", ");
+    notes.push({ text: m.offer_flag_in_open_offer({ offers }), warning: true });
+  }
+  return notes;
+}
 
 export function SideColumn({
   side,
@@ -49,8 +66,9 @@ export function SideColumn({
     loading?.has(pick.key)
       ? null
       : (reasonOf(pick) ?? (refused.has(pick.key) ? m.offer_flag_refused() : null));
-  const blockedPicks = picks.filter((pick) => problemOf(pick) !== null);
-  const blockedReasons = [...new Set(blockedPicks.map((pick) => problemOf(pick)!))];
+  const problems = new Map(picks.map((pick) => [pick.key, problemOf(pick)]));
+  const blockedPicks = picks.filter((pick) => problems.get(pick.key) !== null);
+  const blockedReasons = [...new Set(blockedPicks.map((pick) => problems.get(pick.key)))];
   // every control sits above the picks, so a growing list never moves one under the pointer
   return (
     <section aria-labelledby={headingId} className="@container flex min-w-0 flex-col gap-2">
@@ -90,31 +108,9 @@ export function SideColumn({
         // the picks scroll inside the side, so the top-up, note and Send stay in reach
         <ul className="grid max-h-80 grid-cols-4 gap-1 overflow-y-auto p-0.5 @sm:grid-cols-6">
           {picks.map((pick) => {
-            const flags = flagsOf(pick);
             const estimated = estimatedOf(pick);
             const label = itemLabel({ ...pick, serialEstimated: estimated }, collections);
-            const notes = [
-              ...(pick.objektId === null && flags?.copies != null
-                ? [
-                    {
-                      text:
-                        side === "get"
-                          ? m.offer_any_copy_ask_count({ count: flags.copies })
-                          : m.offer_any_copy_count({ count: flags.copies }),
-                    },
-                  ]
-                : []),
-              ...(flags && flags.inOpenOffer.length > 0
-                ? [
-                    {
-                      text: m.offer_flag_in_open_offer({
-                        offers: flags.inOpenOffer.map(offerNo).join(", "),
-                      }),
-                      warning: true,
-                    },
-                  ]
-                : []),
-            ];
+            const problem = problems.get(pick.key) ?? null;
             return (
               <li key={pick.key} className="min-w-0">
                 <ObjektTile
@@ -129,8 +125,8 @@ export function SideColumn({
                   }
                   label={label}
                   times={countOf(pick)}
-                  problem={problemOf(pick)}
-                  notes={problemOf(pick) ? [] : notes}
+                  problem={problem}
+                  notes={problem ? [] : notesOf(side, pick, flagsOf(pick))}
                   slot={
                     <Button
                       variant="outline"

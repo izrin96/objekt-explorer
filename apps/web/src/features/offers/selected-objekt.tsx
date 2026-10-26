@@ -13,7 +13,7 @@ import type { Leg } from "./next-step";
 import { OfferThumb } from "./offer-item";
 import type { Collections } from "./pick";
 import { legView } from "./trade-exchange";
-import { InPlaceOf, Serial, rich } from "./wrong-copy";
+import { InPlaceOf, LegSerial, Serial, rich } from "./wrong-copy";
 
 type Props = {
   leg: Leg;
@@ -21,6 +21,7 @@ type Props = {
   collections: Collections;
   /** the partner */
   name: string;
+  hydrated: boolean;
   onOpen: (objekt: ValidObjekt) => void;
 };
 
@@ -30,7 +31,7 @@ function NextLine({
   ended,
   name,
   warning,
-}: Omit<Props, "collections" | "onOpen"> & {
+}: Omit<Props, "collections" | "hydrated" | "onOpen"> & {
   warning: string | null;
 }) {
   if (warning) {
@@ -61,9 +62,9 @@ function NextLine({
   );
 }
 
-function SelectedBody({ leg, ended, collections, name, onOpen }: Props) {
+function SelectedBody({ leg, ended, collections, name, hydrated, onOpen }: Props) {
   const collection = collections[leg.collectionSlug];
-  const view = legView(leg, ended, collections);
+  const view = legView(leg, ended, collections, hydrated);
   return (
     <div className="flex gap-3.5">
       <OfferThumb slug={leg.collectionSlug} collection={collection} className="w-24" />
@@ -74,11 +75,7 @@ function SelectedBody({ leg, ended, collections, name, onOpen }: Props) {
         <p className="flex max-w-full items-baseline gap-2 font-mono text-xs">
           <span className="truncate">{collection ? getCollectionShortNo(collection) : null}</span>
           <span className="text-muted-foreground shrink-0">
-            {leg.objektId === null ? (
-              m.offer_leg_any_copy()
-            ) : (
-              <Serial serial={leg.serial} estimated={leg.serialEstimated} />
-            )}
+            <LegSerial leg={leg} />
           </span>
         </p>
         <p className="text-xs">

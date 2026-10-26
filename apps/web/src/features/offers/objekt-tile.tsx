@@ -10,6 +10,8 @@ import { OfferThumb } from "./offer-item";
 
 export type TileMark = { tone: Tone; icon: Icon; label: string };
 
+export type TileNote = { text: string; warning?: boolean };
+
 type Props = {
   slug: string;
   collection: ValidObjekt | undefined;
@@ -26,7 +28,7 @@ type Props = {
   /** outlined, with the reason under the caption */
   problem?: string | null;
   /** short lines under the caption, such as a copies count or an open-offer warning */
-  notes?: { text: string; warning?: boolean }[];
+  notes?: TileNote[];
   /** a button over the art's corner, such as remove */
   slot?: ReactNode;
   /** art only: the label alone names it */

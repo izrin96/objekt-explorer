@@ -30,7 +30,7 @@ import { DecideActions, NextStepBanner } from "./next-step-banner";
 import type { Collections } from "./pick";
 import { tradeOptions } from "./queries";
 import { SelectedPanel, SelectedSheet } from "./selected-objekt";
-import { type ExchangeState, TradeExchange } from "./trade-exchange";
+import { type ExchangeState, type ExchangeView, TradeExchange } from "./trade-exchange";
 import { TradeMenu } from "./trade-menu";
 import { TradePartnerCard, TradePartnerRow } from "./trade-partner-card";
 import { TradeTimeline } from "./trade-timeline";
@@ -140,7 +140,7 @@ function TradeDetail({ trade, collections }: { trade: Trade; collections: Collec
   const [cancelOpen, setCancelOpen] = useState(false);
   const [filter, setFilter] = useState<ExchangeFilter>("all");
   const [find, setFind] = useState("");
-  const [view, setView] = useState<"grid" | "list">("grid");
+  const [view, setView] = useState<ExchangeView>("grid");
   const [side, setSide] = useState(() => openingSide(trade));
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const exchangeRef = useRef<HTMLElement>(null);
@@ -169,7 +169,7 @@ function TradeDetail({ trade, collections }: { trade: Trade; collections: Collec
     setSide(openingSide(trade));
     exchangeRef.current?.scrollIntoView({ block: "start" });
   };
-  const selectedProps = { ended, collections, name, onOpen: setActive };
+  const selectedProps = { ended, collections, name, hydrated, onOpen: setActive };
   const safety = useSafetyDialogs({
     userId: trade.partner.userId,
     name,

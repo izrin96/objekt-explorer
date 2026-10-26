@@ -27,6 +27,8 @@ import {
   type ExchangeFilter,
   type ExchangeGroup,
   type GroupKey,
+  type LegStatus,
+  decideCount,
   exchangeGroups,
   filterCounts,
   legStatus,
@@ -36,10 +38,10 @@ import { MonoMessage, Progress, TopupText } from "./mono";
 import { type Leg, type LegChip, type SideStatus, sideStatus } from "./next-step";
 import { ObjektTile, type TileMark } from "./objekt-tile";
 import { OfferThumb } from "./offer-item";
-import type { Collections } from "./pick";
-import { Serial } from "./wrong-copy";
+import type { Collections, OfferSide } from "./pick";
+import { LegSerial } from "./wrong-copy";
 
-type Side = "give" | "get";
+export type ExchangeView = "grid" | "list";
 
 const SIDE_STATUS: Record<SideStatus, { text: () => string; ink: string }> = {
   sentVerified: { text: m.offer_side_sent_verified, ink: "text-success-foreground" },
@@ -79,8 +81,7 @@ const FILTER_LABEL: Record<ExchangeFilter, () => string> = {
  * A stuck or away leg's warning, while it waits. The away date is in the viewer's zone, unknown
  * to the server render, so it waits for the client.
  */
-function legWarning(leg: Leg, ended: boolean, hydrated: boolean) {
-  const { warning } = legStatus(leg, ended);
+function legWarning(leg: Leg, { warning }: LegStatus, hydrated: boolean) {
   if (warning === "stuck") return m.offer_leg_stuck();
   if (warning === "away" && leg.away && hydrated) {
     return m.offer_leg_away({ date: untilLabel(leg.away.breaksAt) });
@@ -89,21 +90,13 @@ function legWarning(leg: Leg, ended: boolean, hydrated: boolean) {
 }
 
 /** What a tile and a list row say about a leg: its mark and its accessible name. */
-export function legView(leg: Leg, ended: boolean, collections: Collections, hydrated = true) {
+export function legView(leg: Leg, ended: boolean, collections: Collections, hydrated: boolean) {
   const status = legStatus(leg, ended);
   const chip = LEG_MARKS[status.chip];
   const mark: TileMark = { tone: chip.tone, icon: chip.icon, label: chip.label() };
-  const warning = legWarning(leg, ended, hydrated);
+  const warning = legWarning(leg, status, hydrated);
   const label = [itemLabel(leg, collections), mark.label, warning].filter(Boolean).join(" · ");
   return { status, mark, warning, label };
-}
-
-function LegSerial({ leg }: { leg: Leg }) {
-  return leg.objektId === null ? (
-    m.offer_leg_any_copy()
-  ) : (
-    <Serial serial={leg.serial} estimated={leg.serialEstimated} />
-  );
 }
 
 export type ExchangeState = {
@@ -111,10 +104,10 @@ export type ExchangeState = {
   setFilter: (filter: ExchangeFilter) => void;
   find: string;
   setFind: (find: string) => void;
-  view: "grid" | "list";
-  setView: (view: "grid" | "list") => void;
-  side: Side;
-  setSide: (side: Side) => void;
+  view: ExchangeView;
+  setView: (view: ExchangeView) => void;
+  side: OfferSide;
+  setSide: (side: OfferSide) => void;
   selectedId: number | null;
   onSelect: (leg: Leg, event: MouseEvent<HTMLButtonElement>) => void;
 };
@@ -332,7 +325,7 @@ export function TradeExchange({
   const ended = trade.status !== "in_progress";
   const topupIn = trade.topup ? (trade.topup.payer === "you" ? "give" : "get") : null;
   // past tense once that side moved something; a top-up only moves with a completed trade
-  const moved = (key: Side, legs: Leg[]) =>
+  const moved = (key: OfferSide, legs: Leg[]) =>
     ended &&
     (legs.some((leg) => leg.state === "verified") ||
       (topupIn === key && trade.status === "completed"));
@@ -350,9 +343,7 @@ export function TradeExchange({
       legs: getLegs,
     },
   ];
-  const toDecide = getLegs.filter(
-    (leg) => leg.state === "waiting" && leg.substitutes.some((copy) => copy.status === "pending"),
-  ).length;
+  const toDecide = decideCount(getLegs, ended);
   const narrowed = state.filter !== "all" || state.find.trim() !== "";
   const showAll = () => {
     state.setFilter("all");
@@ -373,7 +364,7 @@ export function TradeExchange({
             ) : (
               <>
                 <Progress {...trade.progress} />
-                {toDecide > 0 && !ended ? (
+                {toDecide > 0 ? (
                   <>
                     {" · "}
                     <MonoMessage

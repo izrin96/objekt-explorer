@@ -1,9 +1,9 @@
 import type { TradeView as Trade } from "@repo/api/schemas/offer";
-import type { ValidObjekt } from "@repo/lib/types/objekt";
 
 import { getCollectionShortNo } from "@/features/objekt/objekt-utils";
 
 import { type Leg, type LegChip, legChip } from "./next-step";
+import type { Collections, OfferSide } from "./pick";
 
 type LegWarning = "stuck" | "away";
 
@@ -63,8 +63,6 @@ export type ExchangeGroup = {
   anyCopy?: boolean;
   legs: Leg[];
 };
-
-type Collections = Readonly<Record<string, ValidObjekt | undefined>>;
 
 /** Member or collection code holds the text, ignoring case; a blank text keeps everything. */
 export function findMatches(leg: Leg, find: string, collections: Collections) {
@@ -142,6 +140,11 @@ export function filterCounts(legs: Leg[], ended: boolean): Record<ExchangeFilter
   return counts;
 }
 
+/** Different copies the partner sent, each waiting on the viewer's Accept or Refuse. */
+export function decideCount(legs: Leg[], ended: boolean) {
+  return legs.filter((leg) => groupOf(leg, legStatus(leg, ended)) === "decide").length;
+}
+
 /** The status card's "Show the N that need you"; 0 once the trade ended. */
 export function needsYouCount(trade: Pick<Trade, "status" | "legs">) {
   if (trade.status !== "in_progress") return 0;
@@ -149,7 +152,7 @@ export function needsYouCount(trade: Pick<Trade, "status" | "legs">) {
 }
 
 /** The phone tab a trade opens on: the side holding what needs the viewer, else You give. */
-export function openingSide(trade: Pick<Trade, "status" | "legs">): "give" | "get" {
+export function openingSide(trade: Pick<Trade, "status" | "legs">): OfferSide {
   if (trade.status !== "in_progress") return "give";
   const needs = (fromYou: boolean) =>
     trade.legs.some((leg) => leg.fromYou === fromYou && legStatus(leg, false).needsYou);

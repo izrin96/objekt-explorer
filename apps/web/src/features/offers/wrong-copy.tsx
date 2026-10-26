@@ -44,6 +44,15 @@ export function Serial({ serial, estimated }: { serial: number | null; estimated
   );
 }
 
+/** A leg's serial, or "any serial" on an any-copy leg. */
+export function LegSerial({ leg }: { leg: Leg }) {
+  return leg.objektId === null ? (
+    m.offer_leg_any_copy()
+  ) : (
+    <Serial serial={leg.serial} estimated={leg.serialEstimated} />
+  );
+}
+
 /** "#1207 in place of #1203", under a leg verified with a wrong copy, by Accept or automatically. */
 export function InPlaceOf({ leg }: { leg: Leg }) {
   if (leg.state !== "verified" || leg.objektId === null || leg.verifiedObjektId === leg.objektId) {
