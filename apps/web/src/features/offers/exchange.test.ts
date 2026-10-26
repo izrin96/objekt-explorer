@@ -57,9 +57,19 @@ describe("exchangeGroups", () => {
   test("groups in spec order and drops empty ones", () => {
     expect(keys(exchangeGroups(give, { ended: false, collections }))).toEqual([
       ["send", null, 2],
-      ["waiting", null, 2],
+      ["stuck", null, 1],
+      ["waiting", null, 1],
       ["verified", null, 1],
     ]);
+  });
+
+  test("an owed objekt that can't be sent waits on nobody; theirs still waits on them", () => {
+    const legs = [leg({ stuck: true }), leg({ fromYou: false, stuck: true })];
+    expect(keys(exchangeGroups(legs, { ended: false, collections }))).toEqual([
+      ["stuck", null, 1],
+      ["waiting", null, 1],
+    ]);
+    expect(filterCounts(legs, false)).toEqual({ all: 2, needsYou: 0, waiting: 1, verified: 0 });
   });
 
   test("Decide on these holds different copies waiting on the viewer", () => {
@@ -82,7 +92,7 @@ describe("exchangeGroups", () => {
       ["send", null, 2],
     ]);
     expect(keys(exchangeGroups(give, { ended: false, filter: "waiting", collections }))).toEqual([
-      ["waiting", null, 2],
+      ["waiting", null, 1],
     ]);
     expect(exchangeGroups(give, { ended: false, filter: "verified", collections })).toHaveLength(1);
   });

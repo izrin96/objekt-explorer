@@ -1842,6 +1842,7 @@
   "offer_leg_send_this": "이것을 보내세요",
   "offer_group_send": "보낼 것",
   "offer_group_decide": "결정할 것",
+  "offer_group_stuck": "보낼 수 없음",
   "offer_group_from": "{name}에서",
   "offer_group_any_copy": "시리얼 무관",
   "offer_filter_label": "보기",

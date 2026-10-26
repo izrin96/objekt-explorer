@@ -199,18 +199,17 @@ export async function rateTrade(me: string, tradeId: number, rating: TradeRating
 const RATE_WINDOW_MS = RATE_WINDOW_DAYS * DAY_MS;
 
 /** Which of the viewer's profiles holds each objekt they still owe; see `heldByProfile`. */
-async function heldByOf(me: string, legs: (typeof tradeLeg.$inferSelect)[]) {
+async function heldByOf(
+  me: string,
+  legs: (typeof tradeLeg.$inferSelect)[],
+  profiles: { address: string; nickname: string | null }[],
+) {
   const owed = legs.flatMap((leg) =>
     leg.fromUserId === me && leg.open && leg.verifiedAt === null && leg.objektId !== null
       ? [leg.objektId]
       : [],
   );
-  if (owed.length === 0) return new Map<string, HeldBy>();
-  const profiles = await db
-    .select({ address: userAddress.address, nickname: userAddress.nickname })
-    .from(userAddress)
-    .where(eq(userAddress.userId, me));
-  if (profiles.length < 2) return new Map<string, HeldBy>();
+  if (owed.length === 0 || profiles.length < 2) return new Map<string, HeldBy>();
   const objekts = await fetchObjekts(owed);
   return heldByProfile(new Map([...objekts].map(([id, objekt]) => [id, objekt.owner])), profiles);
 }
@@ -231,6 +230,7 @@ export async function fetchTrade(me: string, tradeId: number) {
     [feedback],
     lastChecked,
     seen,
+    profiles,
   ] = await Promise.all([
     fetchOffers([row.offerId]),
     db.select().from(tradeLeg).where(eq(tradeLeg.tradeId, tradeId)).orderBy(tradeLeg.id),
@@ -261,32 +261,39 @@ export async function fetchTrade(me: string, tradeId: number) {
       .where(and(eq(tradeFeedback.tradeId, tradeId), eq(tradeFeedback.fromUserId, me))),
     redis.get(VERIFIER_LAST_KEY),
     readIndexerSeen(),
+    row.status === "in_progress"
+      ? db
+          .select({ address: userAddress.address, nickname: userAddress.nickname })
+          .from(userAddress)
+          .where(eq(userAddress.userId, me))
+      : [],
   ]);
   const source = offers.get(row.offerId)!;
   const partner = partners.get(partnerId);
   if (!partner) throw new ORPCError("NOT_FOUND");
   const slugOf = new Map(legs.map((leg) => [leg.id, leg.collectionSlug]));
-  const heldBy =
-    row.status === "in_progress" ? await heldByOf(me, legs) : new Map<string, HeldBy>();
-  const { serial: serialOf, collections } = await hydrateCards(
-    [
-      ...legs.map((leg) =>
-        leg.objektId === null
-          ? { collectionSlug: leg.collectionSlug }
-          : { collectionSlug: leg.collectionSlug, objektId: leg.objektId },
-      ),
-      ...legs.flatMap((leg) =>
-        leg.verifiedObjektId === null
-          ? []
-          : [{ collectionSlug: leg.collectionSlug, objektId: leg.verifiedObjektId }],
-      ),
-      ...substitutes.map((sub) => ({
-        collectionSlug: slugOf.get(sub.legId)!,
-        objektId: sub.objektId,
-      })),
-    ],
-    me,
-  );
+  const [heldBy, { serial: serialOf, collections }] = await Promise.all([
+    heldByOf(me, legs, profiles),
+    hydrateCards(
+      [
+        ...legs.map((leg) =>
+          leg.objektId === null
+            ? { collectionSlug: leg.collectionSlug }
+            : { collectionSlug: leg.collectionSlug, objektId: leg.objektId },
+        ),
+        ...legs.flatMap((leg) =>
+          leg.verifiedObjektId === null
+            ? []
+            : [{ collectionSlug: leg.collectionSlug, objektId: leg.verifiedObjektId }],
+        ),
+        ...substitutes.map((sub) => ({
+          collectionSlug: slugOf.get(sub.legId)!,
+          objektId: sub.objektId,
+        })),
+      ],
+      me,
+    ),
+  ]);
   const held = substitutes.length;
 
   const verified = legs.filter((leg) => leg.verifiedAt !== null).length;

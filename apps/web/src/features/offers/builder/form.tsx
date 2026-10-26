@@ -98,6 +98,7 @@ export function BuilderForm({
   const copies = useQueries({
     queries: asks.map((pick) => myCopyOptions(to, collections[pick.collectionSlug])),
   });
+  const loadingAsks = new Set(asks.filter((_, i) => copies[i]?.isPending).map((pick) => pick.key));
   const taken = new Set(give.flatMap((pick) => (pick.objektId ? [pick.objektId] : [])));
   const resolved = new Map<string, OfferPick[]>();
   for (const [i, ask] of asks.entries()) {
@@ -267,6 +268,7 @@ export function BuilderForm({
                 estimatedOf={estimatedOf}
                 reasonOf={(pick) => reasonOf(side, pick)}
                 refused={refused}
+                loading={side === "give" ? loadingAsks : undefined}
                 source={source}
                 onAdd={() => setPicking(side)}
                 onRemove={(pick) => setPicks(takeOut(picks, pick))}

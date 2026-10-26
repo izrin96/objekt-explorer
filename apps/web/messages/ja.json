@@ -1842,6 +1842,7 @@
   "offer_leg_send_this": "これを送付",
   "offer_group_send": "送るもの",
   "offer_group_decide": "判断するもの",
+  "offer_group_stuck": "送付できません",
   "offer_group_from": "{name}から",
   "offer_group_any_copy": "シリアル指定なし",
   "offer_filter_label": "表示",

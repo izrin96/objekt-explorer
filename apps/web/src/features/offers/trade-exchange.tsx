@@ -51,7 +51,7 @@ const SIDE_STATUS: Record<SideStatus, { text: () => string; ink: string }> = {
   notSent: { text: m.offer_side_not_sent, ink: "text-muted-foreground" },
 };
 
-export const LEG_MARKS: Record<LegChip, { tone: Tone; icon: Icon; label: () => string }> = {
+const LEG_MARKS: Record<LegChip, { tone: Tone; icon: Icon; label: () => string }> = {
   verified: { tone: "success", icon: CheckIcon, label: m.offer_leg_verified },
   waiting: { tone: "warning", icon: ClockIcon, label: m.offer_leg_waiting_short },
   sendThis: { tone: "progress", icon: PaperPlaneTiltIcon, label: m.offer_leg_send_this },
@@ -62,6 +62,7 @@ export const LEG_MARKS: Record<LegChip, { tone: Tone; icon: Icon; label: () => s
 const GROUPS: Record<GroupKey, { title: () => string; tone: Tone }> = {
   send: { title: m.offer_group_send, tone: "progress" },
   decide: { title: m.offer_group_decide, tone: "warning" },
+  stuck: { title: m.offer_group_stuck, tone: "warning" },
   waiting: { title: m.offer_side_waiting_them, tone: "warning" },
   verified: { title: m.offer_leg_verified, tone: "success" },
   notSent: { title: m.offer_side_not_sent, tone: "neutral" },
@@ -74,21 +75,25 @@ const FILTER_LABEL: Record<ExchangeFilter, () => string> = {
   verified: m.offer_leg_verified,
 };
 
-/** A stuck or away leg's warning, while it waits. */
-export function legWarning(leg: Leg, ended: boolean) {
+/**
+ * A stuck or away leg's warning, while it waits. The away date is in the viewer's zone, unknown
+ * to the server render, so it waits for the client.
+ */
+function legWarning(leg: Leg, ended: boolean, hydrated: boolean) {
   const { warning } = legStatus(leg, ended);
   if (warning === "stuck") return m.offer_leg_stuck();
-  if (warning === "away" && leg.away)
+  if (warning === "away" && leg.away && hydrated) {
     return m.offer_leg_away({ date: untilLabel(leg.away.breaksAt) });
+  }
   return null;
 }
 
 /** What a tile and a list row say about a leg: its mark and its accessible name. */
-export function legView(leg: Leg, ended: boolean, collections: Collections) {
+export function legView(leg: Leg, ended: boolean, collections: Collections, hydrated = true) {
   const status = legStatus(leg, ended);
   const chip = LEG_MARKS[status.chip];
   const mark: TileMark = { tone: chip.tone, icon: chip.icon, label: chip.label() };
-  const warning = legWarning(leg, ended);
+  const warning = legWarning(leg, ended, hydrated);
   const label = [itemLabel(leg, collections), mark.label, warning].filter(Boolean).join(" · ");
   return { status, mark, warning, label };
 }
@@ -224,11 +229,13 @@ function Group({
   ended,
   collections,
   state,
+  hydrated,
 }: {
   group: ExchangeGroup;
   ended: boolean;
   collections: Collections;
   state: ExchangeState;
+  hydrated: boolean;
 }) {
   const headingId = useId();
   return (
@@ -237,7 +244,7 @@ function Group({
       {state.view === "grid" ? (
         <ul className="grid grid-cols-[repeat(auto-fill,minmax(--spacing(18),1fr))] gap-1">
           {group.legs.map((leg) => {
-            const view = legView(leg, ended, collections);
+            const view = legView(leg, ended, collections, hydrated);
             return (
               <li key={leg.id} className="min-w-0">
                 <ObjektTile
@@ -258,7 +265,7 @@ function Group({
       ) : (
         <ul className="flex flex-col">
           {group.legs.map((leg) => {
-            const view = legView(leg, ended, collections);
+            const view = legView(leg, ended, collections, hydrated);
             const collection = collections[leg.collectionSlug];
             return (
               <li key={leg.id}>
@@ -312,15 +319,16 @@ export function TradeExchange({
   trade,
   collections,
   state,
+  hydrated,
   ref,
 }: {
   trade: TradeView;
   collections: Collections;
   state: ExchangeState;
+  hydrated: boolean;
   ref?: Ref<HTMLElement>;
 }) {
   const titleId = useId();
-  const tabsId = useId();
   const ended = trade.status !== "in_progress";
   const topupIn = trade.topup ? (trade.topup.payer === "you" ? "give" : "get") : null;
   // past tense once that side moved something; a top-up only moves with a completed trade
@@ -383,19 +391,12 @@ export function TradeExchange({
       </header>
 
       <div className="sm:hidden">
-        <div
-          role="tablist"
-          aria-label={m.offer_exchange_side_tabs()}
-          className="flex border-b px-4"
-        >
+        <div role="group" aria-label={m.offer_exchange_side_tabs()} className="flex border-b px-4">
           {sides.map((side) => (
             <button
               key={side.key}
               type="button"
-              role="tab"
-              id={`${tabsId}-${side.key}`}
-              aria-selected={state.side === side.key}
-              aria-controls={`${tabsId}-${side.key}-panel`}
+              aria-pressed={state.side === side.key}
               onClick={() => state.setSide(side.key)}
               className={cn(
                 "text-muted-foreground -mb-px flex min-h-11 flex-1 items-center justify-center gap-1.5 border-b-2 border-transparent text-sm font-medium",
@@ -422,8 +423,6 @@ export function TradeExchange({
           return (
             <div
               key={side.key}
-              id={`${tabsId}-${side.key}-panel`}
-              aria-labelledby={`${tabsId}-${side.key}-heading`}
               className={cn(
                 "flex min-w-0 flex-col gap-4 px-4 pt-4 pb-5 sm:px-5",
                 index === 1 && "sm:border-s",
@@ -431,7 +430,7 @@ export function TradeExchange({
               )}
             >
               <div className="flex items-center justify-between gap-2 max-sm:sr-only">
-                <h3 id={`${tabsId}-${side.key}-heading`} className="text-sm font-medium">
+                <h3 className="text-sm font-medium">
                   {side.title}{" "}
                   <span className="text-muted-foreground font-mono text-xs font-normal tabular-nums">
                     {side.legs.length}
@@ -455,11 +454,12 @@ export function TradeExchange({
               ) : (
                 groups.map((group) => (
                   <Group
-                    key={`${group.key}-${group.profile?.address ?? ""}`}
+                    key={`${group.key}-${group.profile?.address ?? (group.anyCopy ? "any" : "")}`}
                     group={group}
                     ended={ended}
                     collections={collections}
                     state={state}
+                    hydrated={hydrated}
                   />
                 ))
               )}

@@ -209,15 +209,20 @@ function TradeDetail({ trade, collections }: { trade: Trade; collections: Collec
             trade={trade}
             collections={collections}
             state={exchange}
+            hydrated={hydrated}
           />
         </div>
-        <aside className="flex min-w-0 flex-col gap-4">
+        {/* stretched to the exchange's height, so the Selected panel can stay in view beside it */}
+        <aside className="flex min-w-0 flex-col gap-4 lg:self-stretch">
           {selected ? (
-            <div className="max-lg:hidden">
+            <div className="max-lg:hidden lg:sticky lg:top-4 lg:z-10">
               <SelectedPanel
                 {...selectedProps}
                 leg={selected}
-                onClose={() => setSelectedId(null)}
+                onClose={() => {
+                  setSelectedId(null);
+                  pickedTile.current?.focus();
+                }}
               />
             </div>
           ) : null}

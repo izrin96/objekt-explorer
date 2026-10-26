@@ -20,6 +20,7 @@ export function SideColumn({
   estimatedOf,
   reasonOf,
   refused,
+  loading,
   source,
   onAdd,
   onRemove,
@@ -33,6 +34,8 @@ export function SideColumn({
   estimatedOf: (pick: OfferPick) => boolean;
   reasonOf: (pick: OfferPick) => string | null;
   refused: ReadonlySet<string>;
+  /** asks still looking for a copy of the sender's own: not blocked yet */
+  loading?: ReadonlySet<string>;
   /** You get's source; unknown while the partner's lists load */
   source: GetSource | undefined;
   onAdd: () => void;
@@ -43,7 +46,9 @@ export function SideColumn({
 }) {
   const headingId = useId();
   const problemOf = (pick: OfferPick) =>
-    reasonOf(pick) ?? (refused.has(pick.key) ? m.offer_flag_refused() : null);
+    loading?.has(pick.key)
+      ? null
+      : (reasonOf(pick) ?? (refused.has(pick.key) ? m.offer_flag_refused() : null));
   const blockedPicks = picks.filter((pick) => problemOf(pick) !== null);
   const blockedReasons = [...new Set(blockedPicks.map((pick) => problemOf(pick)!))];
   // every control sits above the picks, so a growing list never moves one under the pointer

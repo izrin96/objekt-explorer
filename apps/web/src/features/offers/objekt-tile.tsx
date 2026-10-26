@@ -65,6 +65,8 @@ export function ObjektTile({
           slug={slug}
           collection={collection}
           onOpen={onPress ? undefined : onOpen}
+          // the art takes the focus on a tile that opens the drawer, so it carries the label
+          description={onPress ? undefined : label}
           className={cn("w-full", dim && "opacity-55")}
         />
         {mark ? (
@@ -149,7 +151,7 @@ export function ObjektTile({
   }
 
   return (
-    <figure aria-label={label} title={label} className={cn(frame, "m-0")}>
+    <figure title={label} className={cn(frame, "m-0")}>
       {body}
       {slot ? <span className="absolute end-1.5 top-1.5 z-10">{slot}</span> : null}
     </figure>

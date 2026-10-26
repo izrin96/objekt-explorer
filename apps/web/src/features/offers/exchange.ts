@@ -5,7 +5,7 @@ import { getCollectionShortNo } from "@/features/objekt/objekt-utils";
 
 import { type Leg, type LegChip, legChip } from "./next-step";
 
-export type LegWarning = "stuck" | "away";
+type LegWarning = "stuck" | "away";
 
 export type LegStatus = {
   chip: LegChip;
@@ -26,18 +26,19 @@ export function legStatus(leg: Leg, ended: boolean): LegStatus {
 
 export type ExchangeFilter = "all" | "needsYou" | "waiting" | "verified";
 
-export type GroupKey = "send" | "decide" | "waiting" | "verified" | "notSent";
+export type GroupKey = "send" | "decide" | "stuck" | "waiting" | "verified" | "notSent";
 
-const GROUP_ORDER: GroupKey[] = ["send", "decide", "waiting", "verified", "notSent"];
+const GROUP_ORDER: GroupKey[] = ["send", "decide", "stuck", "waiting", "verified", "notSent"];
 
-function groupOf(status: LegStatus): GroupKey {
+function groupOf(leg: Leg, status: LegStatus): GroupKey {
   switch (status.chip) {
     case "sendThis":
       return "send";
     case "differentCopy":
       return status.needsYou ? "decide" : "waiting";
     case "waiting":
-      return "waiting";
+      // the viewer owes it but can't send it: it waits on nobody
+      return leg.fromYou && status.warning === "stuck" ? "stuck" : "waiting";
     case "verified":
       return "verified";
     case "notSent":
@@ -52,7 +53,7 @@ const FILTERS: Record<ExchangeFilter, (key: GroupKey) => boolean> = {
   verified: (key) => key === "verified",
 };
 
-export type Profile = NonNullable<Leg["heldBy"]>;
+type Profile = NonNullable<Leg["heldBy"]>;
 
 export type ExchangeGroup = {
   key: GroupKey;
@@ -119,7 +120,7 @@ export function exchangeGroups(
 ): ExchangeGroup[] {
   const buckets = new Map<GroupKey, Leg[]>(GROUP_ORDER.map((key) => [key, []]));
   for (const leg of legs) {
-    const key = groupOf(legStatus(leg, ended));
+    const key = groupOf(leg, legStatus(leg, ended));
     if (FILTERS[filter](key) && findMatches(leg, find, collections)) buckets.get(key)!.push(leg);
   }
   return GROUP_ORDER.flatMap((key) => {
@@ -133,7 +134,7 @@ export function exchangeGroups(
 export function filterCounts(legs: Leg[], ended: boolean): Record<ExchangeFilter, number> {
   const counts = { all: legs.length, needsYou: 0, waiting: 0, verified: 0 };
   for (const leg of legs) {
-    const key = groupOf(legStatus(leg, ended));
+    const key = groupOf(leg, legStatus(leg, ended));
     if (FILTERS.needsYou(key)) counts.needsYou++;
     if (key === "waiting") counts.waiting++;
     if (key === "verified") counts.verified++;

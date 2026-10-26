@@ -1842,6 +1842,7 @@
   "offer_leg_send_this": "Send this",
   "offer_group_send": "Send these",
   "offer_group_decide": "Decide on these",
+  "offer_group_stuck": "Can't be sent",
   "offer_group_from": "From {name}",
   "offer_group_any_copy": "Any serial",
   "offer_filter_label": "Show",

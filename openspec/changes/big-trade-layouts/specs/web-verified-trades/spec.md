@@ -8,7 +8,7 @@ The trade page SHALL show the legs in one card, The exchange, with a summary lin
 
 The status mark SHALL name the leg's status to assistive technology: Verified, Waiting, Send this (a leg the viewer owes and can send), Different copy, or Not sent (once the trade ended without it). A verified card's art SHALL be dimmed. A waiting leg whose objekt can no longer be transferred, or is away from its giver, SHALL carry a warning mark, and its warning SHALL show with the card when it is selected (see Selected objekt).
 
-Within a side, cards SHALL group under a heading with a count, in this order: Send these, Decide on these (a different copy waits on the viewer), Waiting on them, Verified, Not sent. A group with no card is left out.
+Within a side, cards SHALL group under a heading with a count, in this order: Send these, Decide on these (a different copy waits on the viewer), Can't be sent (an objekt the viewer owes that can't be transferred, which waits on nobody), Waiting on them, Verified, Not sent. A group with no card is left out.
 
 Transaction hashes SHALL appear in the Timeline, not on the cards. A side with no objekt SHALL read "Nothing".
 
@@ -31,6 +31,10 @@ Transaction hashes SHALL appear in the Timeline, not on the cards. A side with n
 #### Scenario: Note
 - **WHEN** the offer carried a note
 - **THEN** the note is quoted at the foot of The exchange
+
+#### Scenario: Owed but can't be sent
+- **WHEN** the user owes Kotone 301A and it reads as non-transferable
+- **THEN** its card sits under Can't be sent with its warning mark, and neither Needs you nor Waiting counts it
 
 #### Scenario: Art opens the drawer
 - **WHEN** the user picks an objekt's card and chooses View objekt
@@ -132,7 +136,7 @@ An ended trade SHALL show completed, failed or cancelled.
 ### Requirement: Trade page on phones
 Below `sm`:
 - the stepper SHALL keep all four steps with their labels;
-- You give and You get SHALL be two tabs, each naming its count, with the exchange's filters under them and four cards a row; the tab opens on the side holding what needs the viewer, else You give;
+- You give and You get SHALL be two toggle buttons, one pressed at a time, each naming its count, with the exchange's filters under them and four cards a row; the tab opens on the side holding what needs the viewer, else You give;
 - the Trading with card and the Timeline SHALL follow the exchange, the Timeline folded behind a disclosure that reads "Timeline", the next event as "Next: …", and a chevron;
 - a bar held at the bottom of the screen SHALL carry the state's primary action (Decline and Accept for a different copy, otherwise Open chat), plus Open chat when it is not the primary, and the actions menu, each at least 44 px tall;
 - the status card SHALL not repeat a button the bar carries.
