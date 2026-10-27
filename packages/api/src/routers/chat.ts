@@ -12,6 +12,7 @@ import {
 } from "../schemas/chat";
 import {
   acceptConversation,
+  inboxCounts,
   listConversations,
   loadThread,
   hasUnseenRequests,
@@ -98,6 +99,9 @@ export const chatRouter = {
   unreadCount: authed.handler(({ context: { session } }) =>
     unreadConversationCount(session.user.id),
   ),
+
+  /** the Inbox's Unread and Needs you chips */
+  inboxCounts: authed.handler(({ context: { session } }) => inboxCounts(session.user.id)),
 
   requestCount: authed.handler(({ context: { session } }) =>
     requestConversationCount(session.user.id),

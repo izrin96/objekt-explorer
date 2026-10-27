@@ -8,7 +8,7 @@ import type { ChatMessage } from "@repo/api/schemas/chat";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useHydrated, useLocation } from "@tanstack/react-router";
-import { Fragment, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { Fragment, type RefObject, useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { PendingStatus } from "@/components/router/pending";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -38,13 +38,11 @@ import { clearTyping, useChatTyping } from "@/stores/chat-typing";
 
 import { runPosition } from "./bubble-run";
 import { Composer } from "./composer";
+import { DealStrip } from "./deal-strip";
 import { MessageItem } from "./message-item";
 import { BlockedNotice, MuteNotice, PartnerDeletedNotice, RequestBar } from "./thread-banners";
 import { ThreadBackBar, ThreadHeader } from "./thread-header";
-import { useCatchUp, useMarkRead, useMuteEnd } from "./thread-hooks";
-
-/** How close to the bottom still counts as reading the newest message. */
-const STICK_PX = 96;
+import { nearEnd, useCatchUp, useJumpToMessage, useMarkRead, useMuteEnd } from "./thread-hooks";
 
 export function Thread({ id }: { id: number }) {
   const queryClient = useQueryClient();
@@ -85,6 +83,9 @@ export function Thread({ id }: { id: number }) {
         failed: query.isFetchNextPageError,
         // the page replaces the ones it started from, so what changed meanwhile is read again
         load: () => query.fetchNextPage().then(() => resyncThread(queryClient, id)),
+        fetch: () =>
+          query.fetchNextPage().then((result) => ({ failed: result.isFetchNextPageError })),
+        resync: () => resyncThread(queryClient, id),
       }}
     />
   );
@@ -99,7 +100,15 @@ function ThreadView({
   conversation: ThreadPage["conversation"];
   messages: ChatMessage[];
   collections: ThreadPage["collections"];
-  olderPage: { has: boolean; loading: boolean; failed: boolean; load: () => Promise<unknown> };
+  olderPage: {
+    has: boolean;
+    loading: boolean;
+    failed: boolean;
+    load: () => Promise<unknown>;
+    /** one page, with no read-again after it; the jump reads again once when it is done */
+    fetch: () => Promise<{ failed: boolean }>;
+    resync: () => Promise<unknown>;
+  };
 }) {
   const { id, partner } = conversation;
   const name = partner.identity.name;
@@ -145,6 +154,26 @@ function ThreadView({
   const newestIncoming = messages.findLast((message) => !message.mine)?.id;
   // the newest message of theirs the reader had in view when last at the bottom
   const [seenIncoming, setSeenIncoming] = useState(newestIncoming ?? 0);
+  // what was unread when the thread opened; later reads and arrivals never move the line
+  const [opened] = useState(() => ({
+    lastRead: conversation.lastReadMessageId ?? 0,
+    newest: newestIncoming ?? 0,
+  }));
+  const [dividerLost, setDividerLost] = useState(false);
+  const unreadAtOpen = opened.newest > opened.lastRead;
+  const firstUnread = messages.find(
+    (message) => !message.mine && message.id > opened.lastRead && message.id <= opened.newest,
+  )?.id;
+  // only once the message before it is loaded is this the first unread one
+  const dividerAt =
+    unreadAtOpen &&
+    !dividerLost &&
+    firstUnread !== undefined &&
+    (!olderPage.has || (messages[0]?.id ?? Infinity) <= opened.lastRead)
+      ? firstUnread
+      : undefined;
+  // the first unread message isn't loaded: nothing is marked read until the jump to it ends
+  const [jumping, setJumping] = useState(() => unreadAtOpen && dividerAt === undefined);
   const hasNew = !atBottom && newestIncoming !== undefined && newestIncoming > seenIncoming;
 
   // their message has landed, so whatever they were typing is no longer pending
@@ -187,12 +216,64 @@ function ThreadView({
     return () => observer.disconnect();
   }, []);
 
-  useMarkRead(id, newest, conversation.lastReadMessageId, atBottom);
+  const markOlder = () => {
+    heightBeforeOlder.current = scroller.current?.scrollHeight ?? null;
+  };
+  const jump = useJumpToMessage({ id, scroller, markOlder, olderPage });
+
+  // open on the New line when it would sit above the view, loading older pages to reach it
+  useEffect(() => {
+    if (!unreadAtOpen) return;
+    const el = scroller.current;
+    const line = () => el?.querySelector<HTMLElement>("[data-new-divider]");
+    const show = (divider: HTMLElement) => {
+      if (el && divider.offsetTop < el.scrollTop) divider.scrollIntoView({ block: "start" });
+    };
+    const drawn = line();
+    if (drawn) {
+      show(drawn);
+      return;
+    }
+    // look for the message before the first unread one; never read means the oldest page
+    void jump(
+      { has: (message) => message.id <= opened.lastRead, selector: "[data-new-divider]" },
+      { focus: false, block: "start", instant: true, quiet: true },
+    ).then((found) => {
+      if (!found) {
+        const reached = line();
+        if (reached) show(reached);
+        else setDividerLost(true);
+      }
+      setJumping(false);
+    });
+    // once, on open
+  }, []);
+
+  const offerOpen =
+    conversation.partnerDeleted || conversation.sendBlocked || conversation.blockedByMe
+      ? null
+      : (finalFocus?: RefObject<HTMLElement | null>) =>
+          builder.open({ to: { conversationId: id }, name, ...postOffer }, { finalFocus });
+
+  useMarkRead(id, newest, conversation.lastReadMessageId, atBottom && !jumping, scroller);
   useMuteEnd(id, conversation.sendBlocked?.until ?? null);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <ThreadHeader conversation={conversation} headingRef={heading} hydrated={hydrated} />
+      <DealStrip
+        deal={conversation.deal}
+        hadOffer={conversation.hadOffer}
+        name={name}
+        hydrated={hydrated}
+        onOffer={offerOpen}
+        onShowOffer={(offerId) =>
+          void jump({
+            has: (message) => message.offer?.id === offerId,
+            selector: `[data-offer-id="${offerId}"]`,
+          })
+        }
+      />
 
       <div
         ref={scroller}
@@ -202,7 +283,7 @@ function ThreadView({
         tabIndex={0}
         onScroll={(event) => {
           const el = event.currentTarget;
-          const near = el.scrollHeight - el.scrollTop - el.clientHeight < STICK_PX;
+          const near = nearEnd(el);
           stick.current = near;
           setAtBottom(near);
           if (near && newestIncoming !== undefined) setSeenIncoming(newestIncoming);
@@ -218,7 +299,7 @@ function ThreadView({
               isFetchingNextPage={olderPage.loading}
               isError={olderPage.failed}
               fetchNextPage={() => {
-                heightBeforeOlder.current = scroller.current?.scrollHeight ?? null;
+                markOlder();
                 void olderPage.load();
               }}
             />
@@ -253,6 +334,22 @@ function ThreadView({
                 const position = runPosition(previous, message, next);
                 return (
                   <Fragment key={message.id}>
+                    {message.id === dividerAt ? (
+                      // a list item holding the separator, so the list keeps only items
+                      <li data-new-divider>
+                        <div
+                          role="separator"
+                          aria-label={m.chat_new_divider()}
+                          className="flex items-center gap-3 py-2"
+                        >
+                          <span aria-hidden className="bg-border h-px flex-1" />
+                          <span aria-hidden className="text-muted-foreground text-xs font-medium">
+                            {m.chat_new_divider()}
+                          </span>
+                          <span aria-hidden className="bg-border h-px flex-1" />
+                        </div>
+                      </li>
+                    ) : null}
                     {newDay ? (
                       <li className="text-muted-foreground py-2 text-center text-xs font-medium">
                         {dayLabel(message.createdAt)}
@@ -275,7 +372,11 @@ function ThreadView({
                               offer={message.offer}
                               name={name}
                               collections={collections}
-                              collapsed={message.offer.id !== latestOffer}
+                              // an accepted newest offer is carried by the deal strip
+                              collapsed={
+                                message.offer.id !== latestOffer ||
+                                message.offer.status === "accepted"
+                              }
                               hydrated={hydrated}
                               onCounter={(offer) =>
                                 builder.open(counterRequest(offer, name, collections))
@@ -336,7 +437,7 @@ function ThreadView({
           attachment={attachment}
           setAttachment={setAttachment}
           onSent={() => (stick.current = true)}
-          onOffer={() => builder.open({ to: { conversationId: id }, name, ...postOffer })}
+          onOffer={(finalFocus) => offerOpen?.(finalFocus)}
           onOpen={setActive}
         />
       )}

@@ -13,14 +13,23 @@ import {
 const clientId = "0b1c6f0e-5c1f-4d3e-9a3e-7f9d2a1b4c5d";
 
 describe("listConversationsInputSchema", () => {
-  test("box defaults to inbox, and a cursor is optional", () => {
-    expect(listConversationsInputSchema.parse({})).toEqual({ box: "inbox" });
-    expect(listConversationsInputSchema.parse({ box: "archived" })).toEqual({ box: "archived" });
+  test("box defaults to inbox, show to all, and a cursor is optional", () => {
+    expect(listConversationsInputSchema.parse({})).toEqual({ box: "inbox", show: "all" });
+    expect(listConversationsInputSchema.parse({ box: "archived" })).toEqual({
+      box: "archived",
+      show: "all",
+    });
     const cursor = { at: "2026-10-01 12:00:00+00", id: 7 };
     expect(listConversationsInputSchema.parse({ box: "requests", cursor })).toEqual({
       box: "requests",
       cursor,
+      show: "all",
     });
+  });
+
+  test("show takes the Inbox chips only", () => {
+    expect(listConversationsInputSchema.parse({ show: "needs-you" }).show).toBe("needs-you");
+    expect(listConversationsInputSchema.safeParse({ show: "mine" }).success).toBe(false);
   });
 });
 

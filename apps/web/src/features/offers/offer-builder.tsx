@@ -1,6 +1,15 @@
 import { OFFER_SIDE_LIMIT } from "@repo/api/schemas/offer";
 import { useQuery } from "@tanstack/react-query";
-import { createContext, type ReactNode, type Ref, use, useCallback, useRef, useState } from "react";
+import {
+  createContext,
+  type ReactNode,
+  type Ref,
+  type RefObject,
+  use,
+  useCallback,
+  useRef,
+  useState,
+} from "react";
 
 import {
   AlertDialog,
@@ -157,12 +166,15 @@ function OfferBuilder({
   session,
   open,
   onOpenChange,
+  finalFocus,
 }: {
   request: OfferRequest | null;
   /** counts the openings, so each one starts a fresh form */
   session: number;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** where focus goes on close, when what opened it is gone, as a menu item is */
+  finalFocus?: RefObject<HTMLElement | null>;
 }) {
   // the open form's "does the draft hold anything"; absent while it loads or is refused
   const draft = useRef<(() => boolean) | null>(null);
@@ -190,6 +202,7 @@ function OfferBuilder({
         className="max-w-3xl max-sm:h-[calc(100dvh-(--spacing(12)))] lg:max-w-5xl"
         // the matches builder opens on its title, not on a placeholder or Remove matches
         initialFocus={request?.matches ? titleRef : undefined}
+        finalFocus={finalFocus}
       >
         {request?.matches ? (
           <MatchesBuilder
@@ -229,15 +242,26 @@ export function useOfferBuilder() {
   const [request, setRequest] = useState<OfferRequest | null>(null);
   const [session, setSession] = useState(0);
   const [open, setOpen] = useState(false);
-  const openWith = useCallback((next: OfferRequest) => {
-    setRequest(next);
-    setSession((n) => n + 1);
-    setOpen(true);
-  }, []);
+  const [finalFocus, setFinalFocus] = useState<RefObject<HTMLElement | null>>();
+  const openWith = useCallback(
+    (next: OfferRequest, options?: { finalFocus?: RefObject<HTMLElement | null> }) => {
+      setRequest(next);
+      setSession((n) => n + 1);
+      setFinalFocus(options?.finalFocus);
+      setOpen(true);
+    },
+    [],
+  );
   return {
     open: openWith,
     element: (
-      <OfferBuilder request={request} session={session} open={open} onOpenChange={setOpen} />
+      <OfferBuilder
+        request={request}
+        session={session}
+        open={open}
+        onOpenChange={setOpen}
+        finalFocus={finalFocus}
+      />
     ),
   };
 }

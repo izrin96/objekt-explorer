@@ -1,6 +1,6 @@
 import { ORPCError } from "@orpc/server";
 import { db } from "@repo/db";
-import { conversationMember, message } from "@repo/db/schema";
+import { conversationMember, message, offer } from "@repo/db/schema";
 import { and, asc, desc, eq, gt, lt, sql } from "drizzle-orm";
 import type * as z from "zod";
 
@@ -10,6 +10,7 @@ import {
   CONVERSATION_PAGE_SIZE,
   type ChatBox,
   type ConversationRow,
+  type InboxShow,
   type listConversationsInputSchema,
   MUTE_HOURS,
   type muteInputSchema,
@@ -17,12 +18,15 @@ import {
   splitCards,
   THREAD_PAGE_SIZE,
   type threadInputSchema,
+  UNREAD_COUNT_CAP,
 } from "../../schemas/chat";
+import { dealOf } from "../../schemas/chat-deal";
 import { loadIdentities } from "../identities";
 import { toPublicUser } from "../profile";
 import { reputationOf } from "../reputation";
 import { notBlockedBy } from "../safety";
 import { hydrateCards, hydratePostCards, parseCard, toChatMessages } from "./cards";
+import { needsYouSql, readDeals } from "./deal";
 import { findMembership, updateMember } from "./members";
 import { publishChatChanged } from "./notify";
 import { chatSafety } from "./safety";
@@ -75,6 +79,7 @@ type ConversationListRow = {
   created_at: string | null;
   incoming_id: string | null;
   context_card: unknown;
+  unread_count: number;
 };
 
 /** How many of a conversation's newest messages the row's context card is looked for in. */
@@ -85,6 +90,15 @@ const lastIncoming = (me: string) => sql`(
   SELECT max(u.id) FROM message u
   WHERE u.conversation_id = c.id AND u.sender_id <> ${me} AND u.unsent_at IS NULL
 )`;
+
+const notMuted = sql`NOT (m.muted_until IS NOT NULL AND m.muted_until > now())`;
+
+const hasUnread = (me: string) => sql`${lastIncoming(me)} > coalesce(m.last_read_message_id, 0)`;
+
+const SHOW_WHERE: Record<Exclude<InboxShow, "all">, (me: string) => ReturnType<typeof sql>> = {
+  unread: hasUnread,
+  "needs-you": needsYouSql,
+};
 
 const toMuted = (mutedUntil: string | null, now: Date) =>
   isMuted(mutedUntil, now)
@@ -108,7 +122,15 @@ export async function fetchPartners(userIds: string[]) {
  */
 async function selectConversationRows(me: string, scope: ReturnType<typeof sql>, limit: number) {
   const result = await db.execute<ConversationListRow>(sql`
-    SELECT page.*, ctx.card AS context_card
+    SELECT page.*, ctx.card AS context_card, (
+      -- \`message_conversation_id_idx\` walks only the unread tail, at most the cap
+      SELECT count(*)::int FROM (
+        SELECT 1 FROM message u
+        WHERE u.conversation_id = page.id AND u.sender_id <> ${me} AND u.unsent_at IS NULL
+          AND u.id > coalesce(page.last_read_message_id, 0)
+        LIMIT ${UNREAD_COUNT_CAP}
+      ) unread
+    ) AS unread_count
     FROM (
     SELECT
       c.id,
@@ -156,10 +178,14 @@ async function toConversationRows(me: string, page: ConversationListRow[]) {
   const now = new Date();
   const contexts = page.map((row) => parseCard(row.context_card));
   const split = splitCards(contexts);
-  const [partners, objekts, posts] = await Promise.all([
+  const [partners, objekts, posts, deals] = await Promise.all([
     fetchPartners(page.map((row) => row.partner_id)),
     hydrateCards(split.objekts, me),
     hydratePostCards(split.posts, me),
+    readDeals(
+      me,
+      page.map((row) => row.id),
+    ),
   ]);
   const collections = { ...objekts.collections, ...posts.collections };
   const items = page.flatMap((row, i): ConversationRow[] => {
@@ -195,6 +221,8 @@ async function toConversationRows(me: string, page: ConversationListRow[]) {
         request: row.request,
         archived: row.archived_at !== null,
         muted: toMuted(row.muted_until, now),
+        unreadCount: row.request ? 0 : row.unread_count,
+        deal: dealOf(deals.get(row.id) ?? [], me, now),
       },
     ];
   });
@@ -203,13 +231,14 @@ async function toConversationRows(me: string, page: ConversationListRow[]) {
 
 export async function listConversations(
   me: string,
-  { box, cursor, q }: z.infer<typeof listConversationsInputSchema>,
+  { box, cursor, q, show }: z.infer<typeof listConversationsInputSchema>,
 ) {
   const patterns = q === undefined ? null : searchPatterns(q);
   const rows = await selectConversationRows(
     me,
     sql`AND ${visibleIn(box, me)}
       ${patterns ? matchesSearch(me, patterns) : sql``}
+      ${box === "inbox" && show !== "all" ? sql`AND ${SHOW_WHERE[show](me)}` : sql``}
       ${cursor ? sql`AND (coalesce(c.last_message_at, c.created_at), c.id) < (${cursor.at}::timestamptz, ${cursor.id})` : sql``}`,
     CONVERSATION_PAGE_SIZE + 1,
   );
@@ -253,7 +282,8 @@ export async function loadThread(me: string, input: z.infer<typeof threadInputSc
   const now = new Date();
 
   const forward = input.after !== undefined;
-  const [rows, [member], partners, safety, reputations] = await Promise.all([
+  const older = input.before !== undefined;
+  const [rows, [member], partners, safety, reputations, deals, anyOffer] = await Promise.all([
     db
       .select({
         id: message.id,
@@ -289,6 +319,11 @@ export async function loadThread(me: string, input: z.infer<typeof threadInputSc
     fetchPartners([partnerId]),
     chatSafety(me, partnerId),
     reputationOf([partnerId]),
+    // the cache keeps only the newest page's `conversation`, so an older page skips the deal
+    older ? null : readDeals(me, [input.id]),
+    older
+      ? []
+      : db.select({ id: offer.id }).from(offer).where(eq(offer.conversationId, input.id)).limit(1),
   ]);
   const activity = await activityBetween(input.id, me, partnerId, safety.blockedEitherWay);
   const partner = partners.get(partnerId);
@@ -316,6 +351,9 @@ export async function loadThread(me: string, input: z.infer<typeof threadInputSc
       blockedByMe: safety.blockedByMe,
       /** the account was deleted: the thread stays readable and nothing more can be sent */
       partnerDeleted: safety.partnerDeleted,
+      deal: dealOf(deals?.get(input.id) ?? [], me, now),
+      /** picks "No offer between you yet" or "No open offer" when there is no deal */
+      hadOffer: anyOffer.length > 0,
     },
     messages,
     hasMore: rows.length > THREAD_PAGE_SIZE,
@@ -368,10 +406,31 @@ export async function unreadConversationCount(me: string) {
     JOIN conversation c ON c.id = m.conversation_id
     WHERE m.user_id = ${me}
       AND ${visibleIn("inbox", me)}
-      AND NOT (m.muted_until IS NOT NULL AND m.muted_until > now())
-      AND ${lastIncoming(me)} > coalesce(m.last_read_message_id, 0)
+      AND ${notMuted}
+      AND ${hasUnread(me)}
   `);
   return result.rows[0]?.count ?? 0;
+}
+
+/**
+ * The Inbox's Unread and Needs you counts, over the whole Inbox and each capped like the row's
+ * count. Muted conversations count toward neither, as toward the Messages icon.
+ */
+export async function inboxCounts(me: string) {
+  const count = (where: ReturnType<typeof sql>) => sql`(
+    SELECT count(*)::int FROM (
+      SELECT 1 FROM conversation_member m
+      JOIN conversation c ON c.id = m.conversation_id
+      WHERE m.user_id = ${me} AND c.last_message_id IS NOT NULL
+        AND ${visibleIn("inbox", me)} AND ${notMuted} AND ${where}
+      LIMIT ${UNREAD_COUNT_CAP}
+    ) x
+  )`;
+  const result = await db.execute<{ unread: number; needs_you: number }>(sql`
+    SELECT ${count(hasUnread(me))} AS unread, ${count(needsYouSql(me))} AS needs_you
+  `);
+  const row = result.rows[0];
+  return { unread: row?.unread ?? 0, needsYou: row?.needs_you ?? 0 };
 }
 
 /** Requests waiting on the viewer that hold at least one message from the other member. */

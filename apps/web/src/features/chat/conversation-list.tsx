@@ -3,14 +3,21 @@ import {
   ArrowClockwiseIcon,
   BellSlashIcon,
   ChatsCircleIcon,
+  ChecksIcon,
   MagnifyingGlassIcon,
   TrayIcon,
   WarningIcon,
 } from "@phosphor-icons/react";
-import type { ChatBox, ConversationRow } from "@repo/api/schemas/chat";
+import {
+  type ChatBox,
+  type ConversationRow,
+  INBOX_SHOWS,
+  type InboxShow,
+  UNREAD_COUNT_CAP,
+} from "@repo/api/schemas/chat";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useInfiniteQuery, type UseInfiniteQueryResult, useQuery } from "@tanstack/react-query";
-import { Link, useHydrated, useParams } from "@tanstack/react-router";
+import { Link, useHydrated, useNavigate, useParams } from "@tanstack/react-router";
 import {
   type FocusEvent,
   type ReactNode,
@@ -32,16 +39,24 @@ import { OfferThumb } from "@/features/offers/offer-item";
 import { TagBadges } from "@/features/trade/tag-label";
 import { useMinuteClock } from "@/hooks/use-minute-clock";
 import { relativeTime } from "@/lib/time";
+import { TONE_INK, TONE_SOLID } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import { useSeeRequests } from "./actions";
 import { ConversationMenu } from "./conversation-menu";
+import { dealNo, dealTone, rowText } from "./deal-text";
 import { nextDraftId, showsDraft } from "./draft-row";
 import { mutedLabel } from "./format";
+import { type Kept, nextKept, withKept } from "./kept-row";
 import type { ConversationsData } from "./live-message";
-import { conversationsOptions, requestCountOptions, threadOptions } from "./queries";
-import { newestId } from "./thread-cache";
+import {
+  conversationsOptions,
+  inboxCountsOptions,
+  requestCountOptions,
+  threadOptions,
+} from "./queries";
+import { newestId, threadMessages } from "./thread-cache";
 
 const EMPTY = {
   inbox: { icon: ChatsCircleIcon, title: m.chat_empty_inbox, hint: m.chat_empty_inbox_hint },
@@ -49,12 +64,39 @@ const EMPTY = {
   archived: { icon: ArchiveIcon, title: m.chat_empty_archived, hint: m.chat_empty_archived_hint },
 } as const;
 
-export function ConversationList({ box, q }: { box: ChatBox; q: string | undefined }) {
+const SHOW_LABEL: Record<InboxShow, () => string> = {
+  all: m.offer_filter_all,
+  unread: m.chat_unread,
+  "needs-you": m.offer_filter_needs_you,
+};
+
+const SHOW_EMPTY = {
+  unread: { icon: ChecksIcon, title: m.chat_show_empty_unread },
+  "needs-you": { icon: ChecksIcon, title: m.chat_show_empty_needs_you },
+} as const;
+
+export function ConversationList({
+  box,
+  q,
+  show,
+}: {
+  box: ChatBox;
+  q: string | undefined;
+  show: InboxShow;
+}) {
   useSeeRequests(box === "requests" && !q);
-  const query = useInfiniteQuery(conversationsOptions(box, q));
+  const query = useInfiniteQuery(conversationsOptions(box, q, show));
   const now = useMinuteClock();
   const region = useRef<HTMLDivElement>(null);
-  const rows = query.data?.pages.flatMap((page) => page.items) ?? [];
+  // a chip picked again counts as applying the filter, which lets the kept open row go
+  const [picks, setPicks] = useState(0);
+  const listed = query.data?.pages.flatMap((page) => page.items) ?? [];
+  const rows = useKeptOpenRow(
+    listed,
+    show,
+    `${show}:${q ?? ""}:${picks}`,
+    !query.isPlaceholderData,
+  );
   const onFocus = useFocusAfterLeave(region, rows);
 
   // one node for every state, so a change of its text is announced rather than a new node
@@ -76,7 +118,8 @@ export function ConversationList({ box, q }: { box: ChatBox; q: string | undefin
       <p role="status" className="sr-only">
         {announcement}
       </p>
-      <ConversationListBody query={query} rows={rows} box={box} q={q} now={now} />
+      {box === "inbox" ? <ShowChips show={show} onPick={() => setPicks((n) => n + 1)} /> : null}
+      <ConversationListBody query={query} rows={rows} box={box} q={q} show={show} now={now} />
     </div>
   );
 }
@@ -86,12 +129,14 @@ function ConversationListBody({
   rows,
   box,
   q,
+  show,
   now,
 }: {
   query: UseInfiniteQueryResult<ConversationsData>;
   rows: ConversationRow[];
   box: ChatBox;
   q: string | undefined;
+  show: InboxShow;
   now: number;
 }) {
   const draft = useDraftThread(rows, box, q);
@@ -114,6 +159,25 @@ function ConversationListBody({
   }
 
   const collections = Object.assign({}, ...query.data.pages.map((page) => page.collections));
+  if (rows.length === 0 && show !== "all") {
+    const empty = SHOW_EMPTY[show];
+    return (
+      <EmptyState
+        icon={empty.icon}
+        bordered={false}
+        title={empty.title()}
+        action={
+          <Button
+            variant="outline"
+            size="sm"
+            render={<Link to="." search={(prev) => ({ ...prev, show: undefined })} replace />}
+          >
+            {m.offer_exchange_show_all()}
+          </Button>
+        }
+      />
+    );
+  }
   if (rows.length === 0 && q !== undefined) {
     return (
       <EmptyState
@@ -163,6 +227,97 @@ function ConversationListBody({
       />
     </div>
   );
+}
+
+/** All, Unread and Needs you, under the Inbox's search; the counts leave out muted conversations. */
+function ShowChips({ show, onPick }: { show: InboxShow; onPick: () => void }) {
+  const navigate = useNavigate();
+  const { data: counts } = useQuery(inboxCountsOptions());
+  // the server's render can't wait for the counts, which stream in after it
+  const hydrated = useHydrated();
+  const count = (key: InboxShow) => {
+    if (!hydrated) return null;
+    const value = key === "unread" ? counts?.unread : key === "needs-you" ? counts?.needsYou : null;
+    if (value === null || value === undefined) return null;
+    return value >= UNREAD_COUNT_CAP ? "99+" : String(value);
+  };
+  return (
+    <div
+      role="group"
+      aria-label={m.chat_show_label()}
+      data-scroll-x
+      className="flex shrink-0 gap-1.5 overflow-x-auto px-3 py-2"
+    >
+      {INBOX_SHOWS.map((key) => (
+        <Button
+          key={key}
+          variant={show === key ? "default" : "outline"}
+          size="sm"
+          aria-pressed={show === key}
+          className="shrink-0 rounded-full"
+          onClick={() => {
+            onPick();
+            void navigate({
+              to: ".",
+              search: (prev) => ({ ...prev, show: key === "all" ? undefined : key }),
+              replace: true,
+            });
+          }}
+        >
+          {SHOW_LABEL[key]()}
+          {count(key) === null ? null : (
+            <span className="font-mono text-xs tabular-nums opacity-70">{count(key)}</span>
+          )}
+        </Button>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * Under a chip, the open conversation's row stays where it was after a refetch drops it, until
+ * the filter is next applied; it reads its deal from the open thread, which every offer and
+ * trade change refreshes. Component state, not a cache write, so the server's list stays the truth.
+ */
+function useKeptOpenRow(
+  rows: ConversationRow[],
+  show: InboxShow,
+  filter: string,
+  settled: boolean,
+) {
+  const openId = useParams({ strict: false, select: (params) => params.id });
+  const id = openId === undefined ? null : Number(openId);
+  const { data } = useInfiniteQuery({ ...threadOptions(id ?? 0), enabled: false });
+  const conversation = data?.pages[0]?.conversation;
+  // archived or turned into a request from the thread: it has left the Inbox
+  const inInbox = !conversation || (!conversation.archived && !conversation.request);
+  const [kept, setKept] = useState<Kept<ConversationRow>>(null);
+  const next = nextKept(kept, rows, id, show !== "all" && inInbox, filter, settled);
+  if (next !== kept) setKept(next);
+  const newest = data ? threadMessages(data).at(-1) : undefined;
+  // open beside the list, so read; its last message and deal come from the thread
+  const live =
+    next && conversation
+      ? {
+          ...next.row,
+          deal: conversation.deal,
+          muted: conversation.muted,
+          unread: false,
+          unreadCount: 0,
+          last: newest
+            ? {
+                id: newest.id,
+                mine: newest.mine,
+                body: newest.body,
+                card: newest.card?.kind ?? null,
+                offerId: newest.offer?.id ?? null,
+                createdAt: newest.createdAt,
+                unsent: newest.unsent,
+              }
+            : next.row.last,
+        }
+      : undefined;
+  return withKept(rows, next, live);
 }
 
 type Draft = { id: number; partner: ConversationRow["partner"] };
@@ -304,7 +459,7 @@ function ConversationItem({
   collections: Record<string, ValidObjekt>;
   now: number;
 }) {
-  const { partner, last, context, unread, muted } = row;
+  const { partner, last, context, unread, unreadCount, muted, deal } = row;
   const contextCollection =
     context?.kind === "objekt" ? collections[context.collectionSlug] : undefined;
   const name = partner.identity.name;
@@ -321,7 +476,7 @@ function ConversationItem({
           <span
             className={cn(
               "min-w-0 flex-1 truncate text-sm",
-              unread ? "font-semibold" : "font-medium",
+              unread && !muted ? "font-semibold" : "font-medium",
             )}
           >
             {name}
@@ -349,14 +504,11 @@ function ConversationItem({
               <span className="sr-only">{mutedText}</span>
             </span>
           ) : null}
-          {unread ? (
-            <span className="flex size-2 shrink-0">
-              <span className="bg-foreground size-full rounded-full" />
-              <span className="sr-only">{m.chat_unread()}</span>
-            </span>
-          ) : null}
+          {unread ? <UnreadMark count={unreadCount} muted={muted !== null} /> : null}
         </span>
-        {context?.kind === "objekt" ? (
+        {deal ? (
+          <DealLine deal={deal} muted={muted !== null} />
+        ) : context?.kind === "objekt" ? (
           <div className="mt-1 flex min-w-0 items-center gap-2">
             <div aria-hidden className="flex">
               <OfferThumb
@@ -389,6 +541,65 @@ function ConversationItem({
       </RowLink>
       <ConversationMenu conversation={row} name={name} className="absolute end-2 top-1.5" />
     </li>
+  );
+}
+
+/** The count of unread messages; a row from before the count existed keeps the dot. */
+function UnreadMark({ count, muted }: { count: number; muted: boolean }) {
+  if (count === 0) {
+    return (
+      <span className="flex size-2 shrink-0">
+        <span
+          className={cn("size-full rounded-full", muted ? "bg-muted-foreground" : "bg-foreground")}
+        />
+        <span className="sr-only">{m.chat_unread()}</span>
+      </span>
+    );
+  }
+  const over = count >= UNREAD_COUNT_CAP;
+  return (
+    <span
+      className={cn(
+        "flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full px-1.5 font-mono text-xs font-medium tabular-nums",
+        muted ? "bg-muted text-muted-foreground" : "bg-foreground text-background",
+      )}
+    >
+      <span aria-hidden>{over ? "99+" : count}</span>
+      <span className="sr-only">
+        {over
+          ? m.chat_unread_count_over()
+          : count === 1
+            ? m.chat_unread_count_one()
+            : m.chat_unread_count({ count })}
+      </span>
+    </span>
+  );
+}
+
+/**
+ * One line that never wraps: the words truncate, the number and the trailing count stay whole.
+ * A muted row is neutral whatever the state.
+ */
+function DealLine({ deal, muted }: { deal: NonNullable<ConversationRow["deal"]>; muted: boolean }) {
+  const tone = muted ? "neutral" : dealTone(deal.state);
+  const { words, trailing } = rowText(deal);
+  return (
+    <span className={cn("mt-1 flex min-w-0 items-center gap-1.5 text-xs", TONE_INK[tone])}>
+      <span aria-hidden className={cn("size-1.5 shrink-0 rounded-full", TONE_SOLID[tone])} />
+      <span className="shrink-0 font-mono">{dealNo(deal)}</span>
+      <span aria-hidden className="shrink-0">
+        ·
+      </span>
+      <span className="min-w-0 truncate">{words}</span>
+      {trailing ? (
+        <>
+          <span aria-hidden className="shrink-0">
+            ·
+          </span>
+          <span className="shrink-0 tabular-nums">{trailing}</span>
+        </>
+      ) : null}
+    </span>
   );
 }
 

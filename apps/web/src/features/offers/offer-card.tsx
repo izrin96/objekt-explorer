@@ -35,10 +35,17 @@ export function OfferCard({
   onOpen: (objekt: ValidObjekt) => void;
 }) {
   const line = offerLine(offer);
+  // the deal strip moves focus here (`useJumpToMessage`); never in the tab order
+  const target = {
+    tabIndex: -1,
+    "data-offer-id": offer.id,
+    className:
+      "bg-card @container focus-visible:ring-ring w-115 max-w-full rounded-lg border outline-none focus-visible:ring-2",
+  };
 
   if (!collapsed) {
     return (
-      <div className="bg-card @container w-115 max-w-full rounded-lg border">
+      <div {...target}>
         <OfferBody
           offer={offer}
           name={name}
@@ -52,7 +59,7 @@ export function OfferCard({
   }
 
   return (
-    <Collapsible className="bg-card @container w-115 max-w-full rounded-lg border">
+    <Collapsible {...target}>
       <CollapsibleTrigger className="group focus-visible:ring-ring flex w-full items-center gap-2 rounded-lg px-3 py-2 text-start text-sm outline-none focus-visible:ring-2">
         <CaretRightIcon
           aria-hidden

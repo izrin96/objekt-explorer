@@ -39,7 +39,7 @@ import {
   VERIFIER_LAST_KEY,
   awayBreaksAt,
 } from "../../schemas/offer";
-import { chatSafety, fetchPartners, hydrateCards } from "../chat";
+import { chatSafety, fetchPartners, hydrateCards, publishChatChanged } from "../chat";
 import { indexerCaughtUp } from "../indexer-catch-up";
 import { redis } from "../redis";
 import { forgetReputation, reputationOf } from "../reputation";
@@ -193,6 +193,8 @@ export async function rateTrade(me: string, tradeId: number, rating: TradeRating
       set: { rating, updatedAt: sql`now()` },
     });
   await forgetReputation([me, row.partnerId]);
+  // the rater's deal line and strip stop asking for a rating; the partner's deal is unchanged
+  await publishChatChanged([me], row.conversationId);
   return { rating };
 }
 

@@ -13,10 +13,11 @@ const LABEL: Record<ChatBox, () => string> = {
   archived: m.chat_box_archived,
 };
 
-/** Keeps `q`: a search carries across folders. */
+/** Keeps `q`: a search carries across folders. The Inbox's chip does not. */
 const boxSearch = (box: ChatBox) => (prev: { q?: string }) => ({
   ...prev,
   box: box === "inbox" ? undefined : box,
+  show: undefined,
 });
 
 /** Each folder is a real link; arrow keys move the selection, so they navigate too. */

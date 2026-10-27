@@ -15,7 +15,7 @@ import { useId, type ReactNode } from "react";
 
 import { Button, type ButtonProps } from "@/components/ui/button";
 import { untilLabel } from "@/features/chat/format";
-import { TONE_EDGE, TONE_FILL, TONE_INK, type Tone } from "@/lib/tone";
+import { STEP_TONE, TONE_EDGE, TONE_FILL, TONE_INK, type Tone } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
@@ -30,15 +30,15 @@ import { Feedback } from "./trade-feedback";
 import { TradeSteps } from "./trade-steps";
 import { AcceptCopy, Serial, rich } from "./wrong-copy";
 
-const TONES: Record<NextStep["kind"], { tone: Tone; icon: Icon }> = {
-  completed: { tone: "success", icon: CheckIcon },
-  failed: { tone: "destructive", icon: XIcon },
-  cancelled: { tone: "neutral", icon: MinusIcon },
-  youDecide: { tone: "warning", icon: WarningIcon },
-  yourTurn: { tone: "progress", icon: PaperPlaneTiltIcon },
-  stuck: { tone: "warning", icon: WarningIcon },
-  theyDecide: { tone: "warning", icon: WarningIcon },
-  theirTurn: { tone: "progress", icon: ClockIcon },
+const ICONS: Record<NextStep["kind"], Icon> = {
+  completed: CheckIcon,
+  failed: XIcon,
+  cancelled: MinusIcon,
+  youDecide: WarningIcon,
+  yourTurn: PaperPlaneTiltIcon,
+  stuck: WarningIcon,
+  theyDecide: WarningIcon,
+  theirTurn: ClockIcon,
 };
 
 function noteText(note: Note, name: string, objekt: string) {
@@ -167,7 +167,8 @@ export function NextStepBanner({
   onShowNeeds: () => void;
 }) {
   const titleId = useId();
-  const { tone, icon: StepIcon } = TONES[step.kind];
+  const tone: Tone = STEP_TONE[step.kind];
+  const StepIcon = ICONS[step.kind];
   const label = (leg: Leg) => itemLabel(leg, collections);
   const { identity } = trade.partner;
   const reportButton = (

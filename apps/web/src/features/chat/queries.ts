@@ -1,4 +1,9 @@
-import { CHAT_BOXES, type ChatBox, type ConversationCursor } from "@repo/api/schemas/chat";
+import {
+  CHAT_BOXES,
+  type ChatBox,
+  type ConversationCursor,
+  type InboxShow,
+} from "@repo/api/schemas/chat";
 import { OFFER_VIEWS_LIMIT } from "@repo/api/schemas/offer";
 import { hashKey, type QueryClient } from "@tanstack/react-query";
 
@@ -44,9 +49,19 @@ export const requestsUnseenOptions = (live: boolean) =>
     refetchInterval: pollUnlessLive(live),
   });
 
-export const conversationsOptions = (box: ChatBox, q?: string) =>
+/** The Inbox's Unread and Needs you chips; the lists' events and writes invalidate it. */
+export const inboxCountsOptions = () =>
+  orpc.chat.inboxCounts.queryOptions({ staleTime: 0, refetchOnWindowFocus: true });
+
+/** `show` stays out of an unfiltered list's input, so its key is the one live events patch. */
+export const conversationsOptions = (box: ChatBox, q?: string, show: InboxShow = "all") =>
   orpc.chat.list.infiniteOptions({
-    input: (cursor: ConversationCursor | undefined) => ({ box, q, cursor }),
+    input: (cursor: ConversationCursor | undefined) => ({
+      box,
+      q,
+      cursor,
+      ...(show === "all" ? {} : { show }),
+    }),
     initialPageParam: undefined as ConversationCursor | undefined,
     getNextPageParam: (page) => page.nextCursor ?? undefined,
     staleTime: 0,
@@ -77,6 +92,7 @@ const chatListKeys = [
   orpc.chat.unreadCount.key(),
   orpc.chat.requestCount.key(),
   orpc.chat.requestsUnseen.key(),
+  orpc.chat.inboxCounts.key(),
 ] as const;
 
 export function invalidateChatLists(queryClient: QueryClient) {
@@ -118,6 +134,8 @@ export function applyChatMessage(queryClient: QueryClient, event: ChatMessageEve
   queryClient.setQueryData(orpc.chat.unreadCount.queryKey(), event.unread);
   queryClient.setQueryData(orpc.chat.requestCount.queryKey(), event.requests);
   queryClient.setQueryData(orpc.chat.requestsUnseen.queryKey(), event.requestsUnseen);
+  void queryClient.invalidateQueries({ queryKey: orpc.chat.inboxCounts.key() });
+  // a filtered list needs the server's predicate to know whether the row still belongs
   void queryClient.invalidateQueries({
     queryKey: orpc.chat.list.key(),
     predicate: (query) => !unfilteredLists.has(hashKey(query.queryKey)),

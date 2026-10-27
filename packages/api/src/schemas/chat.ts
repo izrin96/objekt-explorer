@@ -1,5 +1,6 @@
 import * as z from "zod";
 
+import { dealSchema } from "./chat-deal";
 import { addressSchema } from "./common/address";
 import type { OfferView } from "./offer";
 import { publicUserSchema } from "./profile";
@@ -47,6 +48,13 @@ export function parseCaution(value: string[] | null): FlagCategory[] | null {
 
 export const CHAT_BOXES = ["inbox", "requests", "archived"] as const;
 export type ChatBox = (typeof CHAT_BOXES)[number];
+
+/** The Inbox's Show chips; the other boxes ignore it. */
+export const INBOX_SHOWS = ["all", "unread", "needs-you"] as const;
+export type InboxShow = (typeof INBOX_SHOWS)[number];
+
+/** The row's unread count and the chips' counts stop here; the web shows it as 99+. */
+export const UNREAD_COUNT_CAP = 100;
 
 /** Code points, as Postgres `char_length` counts them. */
 export const messageLength = (body: string) => Array.from(body).length;
@@ -196,6 +204,7 @@ export const listConversationsInputSchema = z.object({
   box: z.enum(CHAT_BOXES).default("inbox"),
   q: z.string().trim().min(1).max(SEARCH_MAX_LENGTH).optional(),
   cursor: conversationCursorSchema.optional(),
+  show: z.enum(INBOX_SHOWS).default("all"),
 });
 
 export const threadInputSchema = z.object({
@@ -358,5 +367,9 @@ export const conversationRowSchema = z.object({
   request: z.boolean(),
   archived: z.boolean(),
   muted: muteStateSchema,
+  /** the partner's messages since the viewer last read, capped at `UNREAD_COUNT_CAP`; 0 in Requests */
+  unreadCount: z.number().default(0),
+  /** defaults keep an event published by the previous build parsing */
+  deal: dealSchema.nullable().default(null),
 });
 export type ConversationRow = z.infer<typeof conversationRowSchema>;

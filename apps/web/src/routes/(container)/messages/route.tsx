@@ -9,7 +9,7 @@ import { BoxTabs } from "@/features/chat/box-tabs";
 import { ConversationList, ConversationListSkeleton } from "@/features/chat/conversation-list";
 import { ConversationSearch } from "@/features/chat/conversation-search";
 import { conversationsOptions } from "@/features/chat/queries";
-import { boxOf, messagesSearchSchema } from "@/features/chat/search-schema";
+import { boxOf, messagesSearchSchema, showOf } from "@/features/chat/search-schema";
 import { requireSignedIn } from "@/features/user/queries";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -18,11 +18,11 @@ import { m } from "@/paraglide/messages";
 export const Route = createFileRoute("/(container)/messages")({
   validateSearch: messagesSearchSchema,
   beforeLoad: requireSignedIn,
-  loaderDeps: ({ search }) => ({ box: boxOf(search), q: search.q }),
+  loaderDeps: ({ search }) => ({ box: boxOf(search), q: search.q, show: showOf(search) }),
   loader: async ({ context: { queryClient }, deps }) => {
     // a failed read leaves the list to show its error and retry, not the page to fail
     await queryClient
-      .infiniteQuery({ ...conversationsOptions(deps.box, deps.q), staleTime: "static" })
+      .infiniteQuery({ ...conversationsOptions(deps.box, deps.q, deps.show), staleTime: "static" })
       .catch(() => undefined);
   },
   component: MessagesLayout,
@@ -32,6 +32,7 @@ export const Route = createFileRoute("/(container)/messages")({
 function MessagesLayout() {
   const box = Route.useSearch({ select: boxOf });
   const q = Route.useSearch({ select: (search) => search.q });
+  const show = Route.useSearch({ select: showOf });
   const openId = useParams({ strict: false, select: (params) => params.id });
   const threadOpen = openId !== undefined;
   const lastOpen = useRef(openId);
@@ -50,7 +51,7 @@ function MessagesLayout() {
       box={box}
       q={q}
       threadOpen={threadOpen}
-      list={<ConversationList box={box} q={q} />}
+      list={<ConversationList box={box} q={q} show={show} />}
     >
       {/* on a phone the list and its heading are hidden while a thread is open */}
       {threadOpen ? <h1 className="sr-only md:hidden">{m.chat_title()}</h1> : null}
@@ -92,7 +93,6 @@ function MessagesFrame({
       <div className={cn(threadOpen && "max-md:hidden")}>
         <PageHeader
           title={m.chat_title()}
-          description={m.chat_page_description()}
           aside={
             <Button
               variant="ghost"
@@ -107,7 +107,7 @@ function MessagesFrame({
       </div>
       <div
         className={cn(
-          "bg-card grid h-[calc(100dvh-(--spacing(45))-1px)] min-h-96 grid-rows-1 overflow-hidden rounded-lg border md:grid-cols-[--spacing(80)_minmax(0,1fr)] lg:grid-cols-[--spacing(96)_minmax(0,1fr)]",
+          "bg-card grid h-[calc(100dvh-(--spacing(39.5))-1px)] min-h-96 grid-rows-1 overflow-hidden rounded-lg border md:grid-cols-[--spacing(80)_minmax(0,1fr)] lg:grid-cols-[--spacing(96)_minmax(0,1fr)]",
           threadOpen && "max-md:h-[calc(100dvh-(--spacing(28))-1px)]",
         )}
       >

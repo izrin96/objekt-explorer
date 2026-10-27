@@ -1,3 +1,5 @@
+import type { RefObject } from "react";
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -21,10 +23,13 @@ export function AttachObjektDialog({
   open,
   onOpenChange,
   onPick,
+  finalFocus,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onPick: (attachment: Attachment) => void;
+  /** where focus goes on close, after a pick or not */
+  finalFocus?: RefObject<HTMLElement | null>;
 }) {
   const pick = (attachment: Attachment) => {
     onPick(attachment);
@@ -34,7 +39,10 @@ export function AttachObjektDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       {/* a fixed height, so the grid scrolls inside it and stays virtualised */}
-      <DialogPopup className="h-[min(48rem,calc(100dvh-(--spacing(8))))] max-w-3xl max-sm:h-[calc(100dvh-(--spacing(12)))]">
+      <DialogPopup
+        finalFocus={finalFocus}
+        className="h-[min(48rem,calc(100dvh-(--spacing(8))))] max-w-3xl max-sm:h-[calc(100dvh-(--spacing(12)))]"
+      >
         <DialogHeader>
           <DialogTitle className="font-display">{m.chat_attach_title()}</DialogTitle>
           <DialogDescription>{m.chat_attach_description()}</DialogDescription>

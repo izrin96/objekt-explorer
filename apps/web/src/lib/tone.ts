@@ -58,6 +58,18 @@ export const TONE_SOLID: Record<Tone, string> = {
   neutral: "bg-muted-foreground",
 };
 
+/** The trade page's step tones, which the chat's deal line and strip reuse. */
+export const STEP_TONE = {
+  completed: "success",
+  failed: "destructive",
+  cancelled: "neutral",
+  youDecide: "warning",
+  yourTurn: "progress",
+  stuck: "warning",
+  theyDecide: "warning",
+  theirTurn: "progress",
+} as const satisfies Record<string, Tone>;
+
 /** Neutral is no colour at all: the chip keeps its own outline. */
 export function toneChip(tone: Tone) {
   return tone === "neutral" ? "" : `${TONE_EDGE[tone]} ${TONE_FILL[tone]} ${TONE_INK[tone]}`;
