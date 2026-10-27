@@ -425,7 +425,7 @@ A disabled action SHALL stay reachable by keyboard with its reason read out. Wit
 - **THEN** no actions menu shows
 
 ### Requirement: Next-step banner
-Under the breadcrumb (and the indexer strip, when shown), the trade page SHALL show one status card with a tone, the status chip, a title, one line of body, a deadline, the action its state names, and the stepper. The card SHALL be the only place on the page that states the ended reason, and Accept and Decline for a different copy. Its tone SHALL be indigo for your turn and their turn, amber for a different copy or a stuck objekt, green when completed, red when failed, and grey when cancelled. The page SHALL fill at most one button as primary: Open chat is filled only when the card has no primary action.
+Under the breadcrumb (and the indexer strip, when shown), the trade page SHALL show one status card with a tone, the status chip, a title, one line of body, a deadline, the action its state names, and the stepper. The card SHALL be the only place on the page that states the ended reason, and Accept and Decline for a different copy. Its tone SHALL be indigo for your turn and their turn, amber for a different copy or a stuck objekt, green when completed, red when failed, and grey when cancelled. The page SHALL fill at most one button as primary: Open chat is filled only when the card has no primary action. Trades are sent in the Cosmo app, to a nickname. On your turn the card SHALL say where to send: "Send to", the nickname of the partner's default profile and "in Cosmo", then "or" and the nickname of each of their other linked profiles, since a transfer to any of them verifies the leg. A profile with no nickname SHALL show its shortened address. The card SHALL not offer to copy an address.
 
 #### Scenario: Ended reason once
 - **WHEN** the user opens a trade cancelled because an objekt left the wallet
@@ -437,7 +437,11 @@ Under the breadcrumb (and the indexer strip, when shown), the trade page SHALL s
 
 #### Scenario: One primary
 - **WHEN** the user opens a trade where it is their turn
-- **THEN** Copy address in the card is the only filled button, and Open chat is outlined
+- **THEN** the card has no filled button, and Open chat is the only filled button on the page
+
+#### Scenario: Partner with two profiles
+- **WHEN** it is the user's turn, and binary.bin also has the linked profile binary_b
+- **THEN** the card reads "Send to binary.bin in Cosmo" and "or binary_b", with no button to copy anything
 
 #### Scenario: Make a new offer
 - **WHEN** the user opens a cancelled trade
@@ -455,7 +459,7 @@ An ended trade SHALL show completed, failed or cancelled.
 
 #### Scenario: Your turn, suggested first
 - **WHEN** neither party has sent, and the user was suggested to send SeoAh 203Z #722 first
-- **THEN** the card reads "Your turn: send SeoAh 203Z #722 to binary.bin", then "We suggested you send first. It's a suggestion: nothing stops either of you.", shows "Send to" with binary.bin's address and a Copy address button, and offers Cancel trade
+- **THEN** the card reads "Your turn: send SeoAh 203Z #722 to binary.bin", then "We suggested you send first. It's a suggestion: nothing stops either of you.", shows "Send to binary.bin in Cosmo", and offers Cancel trade
 
 #### Scenario: Their turn
 - **WHEN** every leg the user gives is verified, and binary.bin's leg is waiting
@@ -523,22 +527,28 @@ Past the expiry while the indexer is behind, it SHALL read "Paused" with the dat
 - **THEN** the receiver's deadline reads "Decide", "2 days left" and its date
 
 ### Requirement: You give and You get
-The trade page SHALL show the legs in one card, The exchange, with a summary line and two sides, You give and You get, side by side from `sm` and stacked below it; on an ended trade, a side that moved reads You gave or You got. Each side SHALL say where it stands: Sent · verified, Waiting on them, You owe this, After you send, Different copy, Verified or Not sent. Each objekt SHALL be a plain card with:
-- its art;
+The trade page SHALL show the legs in one card, The exchange, with a summary line and two sides, You give and You get, side by side from `sm` and stacked below it; on an ended trade, a side that moved reads You gave or You got. Each side SHALL say where it stands: Sent · verified, Waiting on them, You owe this, After you send, Different copy, Verified or Not sent. Each objekt SHALL be a small card in a grid that fits as many cards a row as the side's width allows, at least four, with:
+- its art, carrying a status mark;
 - the member;
-- the collection code with the serial, or "any copy";
-- the class beside a swatch of the collection's colour;
-- a chip: Verified, Waiting, Send this (a leg the viewer owes and can send), Different copy (with the serial sent instead), or Not sent (grey, once the trade ended without it).
+- the collection code with the serial, or "any copy".
 
-Transaction hashes SHALL appear in the Timeline, not on the cards. The art SHALL open the objekt drawer. A side with no objekt SHALL read "Nothing".
+The status mark SHALL name the leg's status to assistive technology: Verified, Waiting, Send this (a leg the viewer owes and can send), Different copy, or Not sent (once the trade ended without it). A verified card's art SHALL be dimmed. A waiting leg whose objekt can no longer be transferred, or is away from its giver, SHALL carry a warning mark, and its warning SHALL show with the card when it is selected (see Selected objekt).
+
+Within a side, cards SHALL group under a heading with a count, in this order: Send these, Decide on these (a different copy waits on the viewer), Can't be sent (an objekt the viewer owes that can't be transferred, which waits on nobody), Waiting on them, Verified, Not sent. A group with no card is left out.
+
+Transaction hashes SHALL appear in the Timeline, not on the cards. A side with no objekt SHALL read "Nothing".
 
 #### Scenario: Swap in progress
 - **WHEN** the user's SeoAh 203Z #722 has verified and binary.bin still owes any copy of SeoAh 203Z
-- **THEN** You give reads "Sent · verified" with #722's Verified chip, You get reads "Waiting on them" with "any copy" and a Waiting chip, and neither card shows a hash
+- **THEN** You give reads "Sent · verified" with #722 under Verified, dimmed with a Verified mark, You get reads "Waiting on them" with "any copy" under Waiting on them, and neither card shows a hash
 
 #### Scenario: Your turn
 - **WHEN** the user owes SeoAh 203Z #722 and has not sent it
-- **THEN** You give reads "You owe this" with a Send this chip, and You get reads "After you send"
+- **THEN** You give reads "You owe this" with #722 under Send these, and You get reads "After you send"
+
+#### Scenario: Forty objekts
+- **WHEN** the user opens a trade where they give 18 objekts and get 22, at 1440 px
+- **THEN** every card of both sides fits in about one screen of The exchange, each side grouped by status with what needs the user first
 
 #### Scenario: Cash buy
 - **WHEN** the user buys an objekt for a top-up paid outside
@@ -548,9 +558,17 @@ Transaction hashes SHALL appear in the Timeline, not on the cards. The art SHALL
 - **WHEN** the offer carried a note
 - **THEN** the note is quoted at the foot of The exchange
 
+#### Scenario: Owed but can't be sent
+- **WHEN** the user owes Kotone 301A and it reads as non-transferable
+- **THEN** its card sits under Can't be sent with its warning mark, and neither Needs you nor Waiting counts it
+
 #### Scenario: Art opens the drawer
-- **WHEN** the user clicks an objekt's art
+- **WHEN** the user picks an objekt's card and chooses View objekt
 - **THEN** the objekt drawer opens for that collection
+
+#### Scenario: Away mark
+- **WHEN** Kotone 301A, which binary.bin owes, is away from binary.bin's wallet
+- **THEN** its card under Waiting on them carries the warning mark, and selecting it shows that it left and when the trade breaks
 
 #### Scenario: Ended
 - **WHEN** the user opens a completed trade
@@ -558,7 +576,7 @@ Transaction hashes SHALL appear in the Timeline, not on the cards. The art SHALL
 
 #### Scenario: Cancelled before anything moved
 - **WHEN** the user opens a trade cancelled before any leg verified
-- **THEN** the sides still read You give and You get, each "Not sent", with grey Not sent chips, since a side counts as moved only once one of its legs verified, or its top-up on a completed trade
+- **THEN** the sides still read You give and You get, each "Not sent", with every card under Not sent, since a side counts as moved only once one of its legs verified, or its top-up on a completed trade
 
 ### Requirement: Rating on the trade page
 Rating controls SHALL show only in the status card of a completed or failed trade that the viewer can rate, with the date until which the rating can change. While the trade is in progress, no rating control SHALL show, and the Timeline's last row SHALL say rating opens once every transfer verifies.
@@ -574,19 +592,24 @@ Rating controls SHALL show only in the status card of a completed or failed trad
 ### Requirement: Trade page on phones
 Below `sm`:
 - the stepper SHALL keep all four steps with their labels;
-- the sides SHALL stack, followed by the Trading with card and the Timeline folded behind a disclosure that reads "Timeline", the next event as "Next: …", and a chevron;
-- a bar held at the bottom of the screen SHALL carry the state's primary action (Copy address on your turn, Decline and Accept for a different copy, otherwise Open chat), plus Open chat when it is not the primary, and the actions menu, each at least 44 px tall;
+- You give and You get SHALL be two toggle buttons, one pressed at a time, each naming its count, with the exchange's filters under them and four cards a row; the tab opens on the side holding what needs the viewer, else You give;
+- the Trading with card and the Timeline SHALL follow the exchange, the Timeline folded behind a disclosure that reads "Timeline", the next event as "Next: …", and a chevron;
+- a bar held at the bottom of the screen SHALL carry the state's primary action (Decline and Accept for a different copy, otherwise Open chat), plus Open chat when it is not the primary, and the actions menu, each at least 44 px tall;
 - the status card SHALL not repeat a button the bar carries.
 
 The page SHALL not scroll sideways.
 
 #### Scenario: Phone width
 - **WHEN** the trade page is shown at 390 px
-- **THEN** each objekt's name stays on one line, You give sits above You get, the bottom bar holds the primary action and the menu, and the page doesn't scroll sideways
+- **THEN** You give and You get are tabs over four cards a row, the bottom bar holds the primary action and the menu, and the page doesn't scroll sideways
+
+#### Scenario: Tab with what needs you
+- **WHEN** the user opens at 390 px a trade where a different copy from binary.bin waits on them and they owe nothing
+- **THEN** the You get tab is open
 
 #### Scenario: Your turn on a phone
 - **WHEN** it is the user's turn at 390 px
-- **THEN** the card shows "Send to" and the address, the bottom bar holds Copy address, Open chat and the menu, and the card has no Copy address button of its own
+- **THEN** the card shows "Send to binary.bin in Cosmo" with nothing to copy, and the bottom bar holds Open chat, filled, and the menu
 
 #### Scenario: Folded timeline
 - **WHEN** the user opens the Timeline disclosure at 390 px
@@ -604,11 +627,15 @@ The side panel SHALL open with a Trading with card: the partner's avatar as it s
 - **THEN** the figures give way to the same "New" mark the reputation line uses
 
 ### Requirement: Trade timeline
-The side panel SHALL hold one Timeline for every trade state, in time order: Proposed, Accepted, each verified transfer with its date and hash, and each different copy's arrival and deadline. While in progress it adds the reminder, Report a problem opening, Today, the expiry (saying how it would end) and rating, undated. Once ended it adds how it ended and when rating closes. Past rows are done, Today indigo, later rows hollow.
+The side panel SHALL hold one Timeline for every trade state, in time order: Proposed, Accepted, the verified transfers, and each different copy's arrival and deadline. Transfers by one party verified on the same day SHALL fold into one row ("You sent 14 of 18", "binary.bin sent 7 of 22") that opens to each transfer with its objekt, serial and hash; a day with a single transfer from that party shows it as its own row with its hash. While in progress it adds the reminder, Report a problem opening, Today, the expiry (saying how it would end) and rating, undated. Once ended it adds how it ended and when rating closes. Past rows are done, Today indigo, later rows hollow.
 
 #### Scenario: Mid-trade
 - **WHEN** a trade accepted 4 days ago has one verified transfer, by the user
 - **THEN** the Timeline lists Accepted, "You sent …" with its hash, the reminder, Today, Report a problem opens, the expiry and Rate the trade, past rows done, Today indigo and later rows hollow
+
+#### Scenario: Many transfers in a day
+- **WHEN** the user's 14 transfers verified on Oct 25
+- **THEN** the Timeline shows one row "You sent 14 of 18" dated Oct 25, which opens to the 14 transfers, each with its serial and hash
 
 #### Scenario: Expiry would fail
 - **WHEN** one leg has verified, or a different copy is held
@@ -620,7 +647,7 @@ The side panel SHALL hold one Timeline for every trade state, in time order: Pro
 
 #### Scenario: Completed
 - **WHEN** the user opens a completed trade
-- **THEN** the Timeline lists Proposed, Accepted, each transfer with its date and hash, and Completed with its date
+- **THEN** the Timeline lists Proposed, Accepted, the transfers by day with their hashes, and Completed with its date
 
 #### Scenario: Paused expiry
 - **WHEN** the expiry has passed while the indexer is behind
@@ -648,3 +675,59 @@ When the indexer first records that a reserved objekt of a waiting leg left the 
 #### Scenario: Left twice
 - **WHEN** Kotone 301A leaves, comes back, then leaves again an hour later
 - **THEN** both parties are notified again, and the new deadline counts from the second move
+
+### Requirement: Narrowing the exchange
+The exchange SHALL offer, above its sides, filter chips with counts (All, Needs you, Waiting, Verified), a Grid or List switch, and a find box. Needs you keeps legs the viewer owes and can send and different copies waiting on them. Find keeps cards whose member or collection code holds the text. List shows one line per objekt: art, member, code, serial and status. Narrowing changes only what shows; it SHALL reset when the page is opened again.
+
+#### Scenario: Needs you
+- **WHEN** the user owes 4 objekts and 2 different copies wait on them, among 40 legs
+- **THEN** the Needs you chip reads 6, and picking it leaves the 4 under Send these and the 2 under Decide on these
+
+#### Scenario: Find
+- **WHEN** the user types "seoah" in the find box
+- **THEN** only SeoAh cards show on both sides, grouped as before
+
+#### Scenario: Nothing left
+- **WHEN** the filters leave a side empty
+- **THEN** that side says nothing matches, and offers to show all
+
+#### Scenario: List
+- **WHEN** the user switches to List
+- **THEN** each objekt is one line with its serial and status, in the same groups
+
+### Requirement: Send these by profile
+When the viewer has more than one linked Cosmo profile and the specific objekts they still owe sit on more than one of them, Send these SHALL split into one group per profile, headed with the profile's name and its count, so the viewer sends from one account at a time. An any-copy leg, which no single profile holds, stays in a group of its own after them.
+
+#### Scenario: Two accounts
+- **WHEN** the user owes 4 objekts, 3 held by izrin96 and 1 by izrin96_b
+- **THEN** Send these shows "From izrin96 · 3" and "From izrin96_b · 1"
+
+#### Scenario: One account
+- **WHEN** the user owes 4 objekts, all held by izrin96
+- **THEN** Send these is one group with no profile heading
+
+### Requirement: Selected objekt
+Picking a card SHALL select it and show it in a Selected panel at the top of the side panel from `lg`, and in a sheet below it: its art, member, code and serial, the side, its status, a line on what happens next (a different copy names the serial sent instead; an away objekt says when the trade breaks; a stuck one says it can't be sent), and View objekt, which opens the objekt drawer. A selected card SHALL be marked as pressed.
+
+#### Scenario: Pick a different copy
+- **WHEN** the user picks SeoAh 203Z, for which binary.bin sent #801 instead of #722
+- **THEN** the Selected panel shows SeoAh 203Z #722, Different copy, and that #801 was sent instead
+
+#### Scenario: Drawer
+- **WHEN** the user picks a card and chooses View objekt
+- **THEN** the objekt drawer opens for that collection
+
+#### Scenario: Phone
+- **WHEN** the user taps a card at 390 px
+- **THEN** a sheet shows the same details, and closing it returns focus to the card
+
+### Requirement: Show what needs you
+While the viewer owes a leg they can send or a different copy waits on them, the status card SHALL offer "Show the N that need you", N counting both. It SHALL set the exchange's Needs you filter and move to The exchange.
+
+#### Scenario: Six to do
+- **WHEN** the user owes 4 objekts and 2 different copies wait on them
+- **THEN** the status card offers "Show the 6 that need you", and choosing it shows only those 6 in The exchange
+
+#### Scenario: Nothing to do
+- **WHEN** it is the partner's turn and nothing waits on the user
+- **THEN** the status card offers no such button

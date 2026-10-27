@@ -169,8 +169,8 @@ A badge SHALL show its colour as tinted text on a lightly tinted chip with a mat
 
 ### Requirement: Want list match option
 A want list SHALL carry an **Open to** choice, set by the post that holds it, not by the list form:
-- **Swaps only**, the default for a new want list and what a Swap post saves without "also pay": it matches entries on have lists only;
-- **Swaps or buying**, what a Swap post saves with "also pay": it matches entries on have lists and on sale lists;
+- **Swaps only**, what a Swap post saves without "also pay": it matches entries on have lists only;
+- **Swaps or buying**, the default for a new want list and what a Swap post saves with "also pay": it matches entries on have lists and on sale lists;
 - **Buying only**, what a Buy post saves: it matches entries on sale lists only. Only a want list on its own SHALL be Buying only: a want list linked to a have list, or to a sale list open to swaps, is someone trading, so it SHALL be open to swaps.
 
 Have and general lists carry no choice; a sale list carries its own (see Sale list Open to). A have list's entry, and the entry of a sale list open to swaps, SHALL count against a want list when that want list is open to swaps (Swaps only, or Swaps or buying). A sale list's entry SHALL count against a want list when that want list is open to buying (Swaps or buying, or Buying only). A sale list set to Sell only SHALL never count against a want list open to swaps only. Linking a have list and a want list SHALL NOT change what either list matches. This applies wherever Trade matches a want list against a have or sale list:
@@ -180,13 +180,13 @@ Have and general lists carry no choice; a sale list carries its own (see Sale li
 
 The server SHALL refuse saving a want list linked to a have list as Buying only, and linking a want list set to Buying only to a have list, whether the request comes from the post composer or from creating a list.
 
-A request to create a want list that leaves the choice out SHALL save Swaps only. A save that turns buying off SHALL leave the list open to swaps, so a want list is never open to nothing. A want list made before Swaps only became the default keeps the choice it had, Swaps or buying. No existing want list SHALL become Buying only unless its owner picks it.
+A request to create a want list that leaves the choice out SHALL save Swaps or buying. A save that turns buying off SHALL leave the list open to swaps, so a want list is never open to nothing. An existing want list SHALL keep the choice it has when this default changes. No existing want list SHALL become Buying only unless its owner picks it.
 
 The list page header and the list card SHALL name a want list's choice.
 
 #### Scenario: New want list
 - **WHEN** a user creates a want list
-- **THEN** the form shows no Open to choice, and Swaps only is saved
+- **THEN** the form shows no Open to choice, and Swaps or buying is saved
 
 #### Scenario: Trades only skips a sale list
 - **WHEN** the user's want list is open to swaps only, and a partner's sale list, set to Sell only, holds a collection on it
@@ -248,6 +248,14 @@ The list page header and the list card SHALL name a want list's choice.
 - **WHEN** the user's want list is open to swaps only, and a partner's sale list, open to swaps, holds a collection on it
 - **THEN** that collection counts toward the partner as one they have that the user wants, counts toward Can swap, and a want-list alert is sent for it under Any or Can swap
 
+#### Scenario: Unposted want list matches a seller
+- **WHEN** a user creates want list "hunt" with SeoYeon 204Z and does not post it, and a partner's sale list set to Sell only and on Trade holds SeoYeon 204Z
+- **THEN** that collection counts toward the partner on the user's Browse and For you
+
+#### Scenario: Posting narrows it
+- **WHEN** the user then posts "hunt" in a Swap post without "also pay"
+- **THEN** "hunt" is Swaps only, and the partner's Sell only entry no longer counts
+
 ### Requirement: Copy as new list
 The owner's menu on a list card and in the list header SHALL offer Copy as new list. It SHALL open the create form filled in from the source list:
 - the name with a copy suffix;
@@ -269,7 +277,7 @@ Type and profile binding SHALL be editable. The linked list SHALL start empty an
 
 #### Scenario: Open to from another type
 - **WHEN** the owner copies a sale list and picks Want
-- **THEN** Open to starts at Swaps only, as Create does
+- **THEN** Open to starts at Swaps or buying, as Create does
 
 ### Requirement: Copied entries
 A copy SHALL carry the source's entries in their order, converted to the new list's binding:
