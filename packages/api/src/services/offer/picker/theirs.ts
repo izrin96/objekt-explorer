@@ -14,6 +14,7 @@ import {
   type PartnerList,
   type PickerNarrowing,
 } from "../../../schemas/offer";
+import { pickerTagsFor } from "../../trade-feed";
 import { askableOnTrade } from "../../trade-lists";
 import {
   type Addressed,
@@ -189,11 +190,20 @@ export async function theirPickerPage(
   }
   const end = offset + CANDIDATE_PAGE_SIZE;
   const slice = shown.slice(offset, end);
+  const tags = matchOnly
+    ? await pickerTagsFor(
+        me,
+        addressed.partnerId,
+        "get",
+        slice.map((item) => item.collectionSlug),
+      )
+    : undefined;
   return candidatesPage({
     items: slice,
     nextOffset: end < shown.length ? end : null,
     listed,
     partnerLists,
+    tags,
     collections: await collectionsOf(slice.map((item) => item.collectionSlug)),
   });
 }

@@ -10,6 +10,7 @@ import {
   type CandidateCursor,
   type PickerNarrowing,
 } from "../../../schemas/offer";
+import { pickerTagsFor } from "../../trade-feed";
 import { offersOnTrade } from "../../trade-lists";
 import {
   type Addressed,
@@ -132,6 +133,12 @@ export async function mineCandidates(
   const flags = (objekt: IndexedObjekt) =>
     itemFlags(objekt, reserved, holders, addressed.conversationId);
   const suggestionOf = new Map(suggestedList.map((s) => [s.objekt.id, s.listSlug]));
+  const tags = matchOnly
+    ? await pickerTagsFor(me, addressed.partnerId, "give", [
+        ...page.map((o) => o.slug),
+        ...suggestedList.map((s) => s.objekt.slug),
+      ])
+    : undefined;
 
   return candidatesPage({
     items: page.map((objekt) =>
@@ -141,6 +148,7 @@ export async function mineCandidates(
       toCandidate(objekt, flags(objekt), listSlug),
     ),
     nextCursor,
+    tags,
     collections: await collectionsOf(
       [...page, ...suggestedList.map((s) => s.objekt)].map((o) => o.slug),
     ),

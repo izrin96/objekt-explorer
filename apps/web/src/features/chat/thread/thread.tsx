@@ -103,6 +103,15 @@ function ThreadView({
 }) {
   const { id, partner } = conversation;
   const name = partner.identity.name;
+  // the newest card is the partner's post with a match: Make offer adds that post's matches
+  const card = messages.findLast((message) => message.card !== null)?.card;
+  const postOffer =
+    card?.kind === "post" && card.match && card.post?.owner.userId === partner.userId
+      ? {
+          matches: { partnerId: partner.userId, post: card.post.list.slug },
+          startList: card.post.has ? card.post.list.slug : undefined,
+        }
+      : {};
   const scroller = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState<ValidObjekt | null>(null);
   const stick = useRef(true);
@@ -327,7 +336,7 @@ function ThreadView({
           attachment={attachment}
           setAttachment={setAttachment}
           onSent={() => (stick.current = true)}
-          onOffer={() => builder.open({ to: { conversationId: id }, name })}
+          onOffer={() => builder.open({ to: { conversationId: id }, name, ...postOffer })}
           onOpen={setActive}
         />
       )}

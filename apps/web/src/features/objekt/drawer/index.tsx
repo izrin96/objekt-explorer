@@ -57,6 +57,8 @@ type Props = {
   serial?: number;
   /** every serial the user moves to, so a surface can put it on the URL */
   onSerialChange?: (serial: number | undefined) => void;
+  /** a line the surface puts above the card, such as why a Trade near match isn't counted */
+  note?: ReactNode;
 };
 
 export function ObjektDrawer({
@@ -70,6 +72,7 @@ export function ObjektDrawer({
   menu,
   serial,
   onSerialChange,
+  note,
 }: Props) {
   const showOwned = owned !== undefined;
   // the body unmounts on close, so the chosen tab is held here instead: one
@@ -109,6 +112,7 @@ export function ObjektDrawer({
             selected={selected}
             onToggleSelect={onToggleSelect}
             menu={menu}
+            note={note}
           />
         )}
       </DrawerPopup>
@@ -127,6 +131,7 @@ function DrawerBody({
   selected: isSelected,
   onToggleSelect,
   menu,
+  note,
 }: {
   objekt: ValidObjekt;
   initialSerial?: number;
@@ -138,6 +143,7 @@ function DrawerBody({
   selected: boolean;
   onToggleSelect?: (objekt: ValidObjekt) => void;
   menu?: ReactNode;
+  note?: ReactNode;
 }) {
   const owned = isObjektOwned(objekt);
   const ownSerial = owned ? objekt.serial : null;
@@ -236,6 +242,7 @@ function DrawerBody({
         )}
       </DrawerHeader>
       <DrawerPanel className="flex flex-col gap-5">
+        {note}
         {/* one column below `sm`: the card beside an attribute list whose
             labels alone are ~84px leaves the values under 100px, which is what
             pushed the drawer into sideways scrolling */}

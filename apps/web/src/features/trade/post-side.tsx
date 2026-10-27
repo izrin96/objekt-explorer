@@ -1,6 +1,6 @@
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { Link } from "@tanstack/react-router";
-import { type ReactNode, memo, useState } from "react";
+import { type ReactNode, type RefObject, memo } from "react";
 
 import { getListLinkOption } from "@/features/list/list-link";
 import { LIST_TYPE_LABEL, LIST_TYPE_TONE } from "@/features/list/list-type-badge";
@@ -12,11 +12,12 @@ import { m } from "@/paraglide/messages";
 
 import type { Surface } from "./browse-search";
 import { MatchedListsChip } from "./matched-lists";
+import { type NearOpen, nearCountText, nearRingText, type OpenObjekt } from "./near";
 import type { PersonPostData, PostSideData } from "./post-types";
 import { RuleTiles } from "./rule-tile";
 import { SideItemsDialog } from "./side-items-dialog";
 import { fitCount, hiddenCopies } from "./strip-fit";
-import { RING, SlugTile, TILE } from "./thumb-grid";
+import { NEAR_RING, RING, SlugTile, TILE } from "./thumb-grid";
 
 /** `w-10` and `gap-1.5`, in px */
 const FIT = { thumb: 40, gap: 6, fallback: 4, lines: 1 };
@@ -33,6 +34,7 @@ type StripItem = {
   slug: string;
   qty?: number;
   ringed?: boolean;
+  near?: NearOpen;
 };
 
 /** The "+N" tile's face; the caller wraps it in the link or button that goes somewhere. */
@@ -75,7 +77,7 @@ function PostStrip({
    */
   copies?: number;
   collections: Readonly<Record<string, ValidObjekt | undefined>>;
-  onOpen: (objekt: ValidObjekt) => void;
+  onOpen: OpenObjekt;
   more: (count: number) => ReactNode;
   /** after the thumbnails and the "+N" tile: the objekts a filter left out */
   othersLink?: ReactNode;
@@ -110,6 +112,7 @@ function PostStrip({
             slug={item.slug}
             qty={item.qty ?? 1}
             ringed={item.ringed ?? false}
+            near={item.near}
             collection={collections[item.slug]}
             onOpen={onOpen}
           />
@@ -133,23 +136,28 @@ const StripTile = memo(function StripTile({
   slug,
   qty,
   ringed,
+  near,
   collection,
   onOpen,
 }: {
   slug: string;
   qty: number;
   ringed: boolean;
+  near: NearOpen | undefined;
   collection: ValidObjekt | undefined;
-  onOpen: (objekt: ValidObjekt) => void;
+  onOpen: OpenObjekt;
 }) {
   const stacked = qty > 1;
-  const description = stacked
-    ? ringed
-      ? m.trade_stack_copies_ring({ count: qty })
-      : m.trade_stack_copies({ count: qty })
-    : ringed
-      ? m.trade_match_ring()
-      : undefined;
+  const description = near
+    ? nearRingText(near.verb, qty)
+    : stacked
+      ? ringed
+        ? m.trade_stack_copies_ring({ count: qty })
+        : m.trade_stack_copies({ count: qty })
+      : ringed
+        ? m.trade_match_ring()
+        : undefined;
+  const ring = ringed ? RING : near ? NEAR_RING : undefined;
   return (
     /* a container, so the slug tile's radius matches the cards' */
     <li className="@container relative w-10 shrink-0">
@@ -158,12 +166,12 @@ const StripTile = memo(function StripTile({
           objekt={collection}
           image="thumbnail"
           hideLabel
-          onOpen={onOpen}
-          className={ringed ? RING : undefined}
+          onOpen={(objekt) => onOpen(objekt, near)}
+          className={ring}
           description={description}
         />
       ) : (
-        <SlugTile className={cn("text-xxs p-0.5", ringed && RING)}>
+        <SlugTile className={cn("text-xxs p-0.5", ring)}>
           {slug}
           {description ? <span className="sr-only">{description}</span> : null}
         </SlugTile>
@@ -233,6 +241,7 @@ export function SideStrip({
   narrowed,
   collections,
   onOpen,
+  onShowAll,
 }: {
   lead?: ReactNode;
   side: PostSideData;
@@ -245,20 +254,16 @@ export function SideStrip({
   /** a filter or matching left objekts out, so the side says how many it holds */
   narrowed: boolean;
   collections: Readonly<Record<string, ValidObjekt | undefined>>;
-  onOpen: (objekt: ValidObjekt) => void;
+  onOpen: OpenObjekt;
+  /** the "+N" tile opens the side's whole list, in the dialog the post keeps */
+  onShowAll: () => void;
 }) {
   const { list } = side;
   const role = LIST_TYPE_LABEL[side.role]();
   // a narrowed strip whose label is the count chip, which counts collections
   const inCollections = narrowed && count > 0;
   const total = inCollections ? side.collectionCount : side.copyCount + side.others;
-  const [allOpen, setAllOpen] = useState(false);
-  // the dialog mounts on its first open only: a feed holds many strips, and most are never opened
-  const [allMounted, setAllMounted] = useState(false);
-  const openAll = () => {
-    setAllMounted(true);
-    setAllOpen(true);
-  };
+  const near = side.near;
   const text = (
     <>
       <Link
@@ -281,12 +286,30 @@ export function SideStrip({
         <MatchedListsChip
           listIds={matchedListIds}
           ruleMatches={ruleMatches}
+          near={near}
           className="bg-success/10 text-success-foreground shrink-0 rounded px-1.5 normal-case"
         >
           {side.role === "want"
             ? m.trade_list_count_you_have({ count })
             : m.trade_list_count_you_want({ count })}
         </MatchedListsChip>
+      ) : null}
+      {/* never counted: muted, after the count, and the popover's way in when there is none */}
+      {near ? (
+        count > 0 ? (
+          <span className="text-muted-foreground shrink-0 normal-case">
+            <span aria-hidden>· </span>
+            {nearCountText(near.verb, near.count)}
+          </span>
+        ) : (
+          <MatchedListsChip
+            listIds={[]}
+            near={near}
+            className="text-muted-foreground shrink-0 rounded normal-case"
+          >
+            {nearCountText(near.verb, near.count)}
+          </MatchedListsChip>
+        )
       ) : null}
     </>
   );
@@ -302,6 +325,10 @@ export function SideStrip({
           slug: item.slug,
           qty: item.qty,
           ringed: item.ringed,
+          near:
+            item.near && near
+              ? { verb: near.verb, role: side.role, theirList: list.name, myListIds: item.near }
+              : undefined,
         }))}
         hidden={side.more}
         copies={
@@ -321,7 +348,7 @@ export function SideStrip({
           <button
             type="button"
             className={cn(TILE, STRIP_MORE, "w-full cursor-pointer")}
-            onClick={openAll}
+            onClick={onShowAll}
           >
             <StripMore count={count} />
           </button>
@@ -340,28 +367,49 @@ export function SideStrip({
           ) : undefined
         }
       />
-      {allMounted ? (
-        <SideItemsDialog
-          side={side}
-          narrowed={narrowed}
-          open={allOpen}
-          onOpenChange={setAllOpen}
-          onOpen={onOpen}
-          rules={
-            side.rules.length > 0 ? (
-              // the objekt view is a modal of its own, so the dialog gives way to it
-              <RuleTiles
-                tiles={side.rules}
-                collections={collections}
-                onOpen={(objekt) => {
-                  setAllOpen(false);
-                  onOpen(objekt);
-                }}
-              />
-            ) : undefined
-          }
-        />
-      ) : null}
     </>
+  );
+}
+
+/** A side's whole list, as its "+N" tile and the post's Show all open it. */
+export function SideAllDialog({
+  side,
+  narrowed,
+  collections,
+  onOpen,
+  open,
+  onOpenChange,
+  finalFocus,
+}: {
+  side: PostSideData;
+  narrowed: boolean;
+  collections: Readonly<Record<string, ValidObjekt | undefined>>;
+  onOpen: OpenObjekt;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  finalFocus?: RefObject<HTMLElement | null>;
+}) {
+  return (
+    <SideItemsDialog
+      side={side}
+      narrowed={narrowed}
+      open={open}
+      onOpenChange={onOpenChange}
+      onOpen={onOpen}
+      finalFocus={finalFocus}
+      rules={
+        side.rules.length > 0 ? (
+          // the objekt view is a modal of its own, so the dialog gives way to it
+          <RuleTiles
+            tiles={side.rules}
+            collections={collections}
+            onOpen={(objekt) => {
+              onOpenChange(false);
+              onOpen(objekt);
+            }}
+          />
+        ) : undefined
+      }
+    />
   );
 }

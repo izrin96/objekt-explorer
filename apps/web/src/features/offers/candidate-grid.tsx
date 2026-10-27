@@ -1,5 +1,6 @@
 import { ArrowClockwiseIcon, CardsThreeIcon, WarningIcon } from "@phosphor-icons/react";
 import type { CandidateItem } from "@repo/api/schemas/offer";
+import type { PickerTag } from "@repo/api/schemas/trade";
 import type { GridObjekt } from "@repo/lib/types/objekt";
 import type { ReactNode } from "react";
 
@@ -63,6 +64,7 @@ export function CandidateGrid({
   full,
   onToggle,
   onCount,
+  tagOf,
 }: {
   sections: { title: string | null; items: CandidateItem[] }[];
   collections: Collections;
@@ -77,6 +79,7 @@ export function CandidateGrid({
   full: boolean;
   onToggle: (item: CandidateItem, collections: Collections) => void;
   onCount: (item: CandidateItem, count: number, collections: Collections) => void;
+  tagOf?: (item: CandidateItem) => PickerTag | undefined;
 }) {
   if (pending) {
     return (
@@ -137,6 +140,7 @@ export function CandidateGrid({
           full={full}
           onToggle={() => onToggle(item, collections)}
           onCount={(next) => onCount(item, next, collections)}
+          tag={tagOf?.(item)}
         />
       )}
     />

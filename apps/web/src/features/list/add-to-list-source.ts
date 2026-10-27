@@ -18,6 +18,11 @@ export type AddTarget = {
   combined?: boolean;
   copies?: OwnedObjekt[];
   copiesPartial?: boolean;
+  /**
+   * offer only the user's bound sale lists, those bound to `profiles` when set: the fix for a near
+   * match they would sell, from the profiles holding it
+   */
+  saleOnly?: { profiles: readonly string[] | null };
 };
 
 type TargetList = Pick<PublicList, "isProfileBind" | "profileAddress">;

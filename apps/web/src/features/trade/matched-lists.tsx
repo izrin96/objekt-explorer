@@ -9,6 +9,7 @@ import { useUserLists } from "@/features/user/hooks";
 import { m } from "@/paraglide/messages";
 
 import { ListRoleBadge } from "./list-role-badge";
+import { nearCountText, type SideNear } from "./near";
 import { ruleCountsOf } from "./person-row";
 
 type RuleMatch = { listId: number; ruleId: number; rule: ListRuleDef };
@@ -21,19 +22,26 @@ type RuleMatch = { listId: number; ruleId: number; rule: ListRuleDef };
 export function MatchedListsChip({
   listIds,
   ruleMatches = [],
+  near,
   className,
   children,
 }: {
   listIds: readonly number[];
   /** the poster's collections the viewer wants only through a rule */
   ruleMatches?: readonly RuleMatch[];
+  /** the viewer's lists behind the side's near matches, named after the counted ones */
+  near?: SideNear;
   className: string;
   children: ReactNode;
 }) {
   const lists = useUserLists();
   const ids = new Set(listIds);
   const matched = lists.filter((list) => ids.has(list.id));
-  if (matched.length === 0) return <span className={className}>{children}</span>;
+  const nearIds = new Set(near?.listIds);
+  const nearLists = lists.filter((list) => nearIds.has(list.id) && !ids.has(list.id));
+  if (matched.length + nearLists.length === 0) {
+    return <span className={className}>{children}</span>;
+  }
   return (
     <Popover>
       <PopoverTrigger
@@ -68,6 +76,25 @@ export function MatchedListsChip({
                 ))}
               </li>
             ))}
+            {near
+              ? nearLists.map((list) => (
+                  <li
+                    key={list.id}
+                    className="text-muted-foreground flex min-w-0 items-center gap-2"
+                  >
+                    <ListRoleBadge type={list.listType} />
+                    <Link
+                      {...getListLinkOption(list)}
+                      className="min-w-0 break-words underline-offset-2 hover:underline"
+                    >
+                      {list.name}
+                    </Link>
+                    <span className="ms-auto shrink-0 text-xs">
+                      {nearCountText(near.verb, near.count)}
+                    </span>
+                  </li>
+                ))
+              : null}
           </ul>
         </div>
       </PopoverPopup>

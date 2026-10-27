@@ -6,29 +6,7 @@ import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import type { MatchBand } from "./person-row";
-
-/** stands where a message puts its number, so the number can be styled whatever its position */
-const NUMBER = "";
-
-/** A message with its number set apart in monospace; the words stay the accessible text. */
-function WithNumber({
-  render,
-  count,
-  className,
-}: {
-  render: (count: string) => string;
-  count: number;
-  className?: string;
-}) {
-  const [before = "", after = ""] = render(NUMBER).split(NUMBER);
-  return (
-    <>
-      {before}
-      <b className={cn("font-mono font-semibold tabular-nums", className)}>{count}</b>
-      {after}
-    </>
-  );
-}
+import { WithNumber } from "./with-number";
 
 /**
  * Beside a person's name: what the two can swap, tinted, with how much of it needs the viewer's

@@ -1,5 +1,6 @@
 import type { ListType } from "@repo/api/schemas/list";
 import { type CandidateItem, OFFER_SIDE_LIMIT, type PartnerList } from "@repo/api/schemas/offer";
+import type { PickerTag } from "@repo/api/schemas/trade";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { type ReactNode, useId, useState } from "react";
@@ -275,7 +276,12 @@ function ListSelect({
   );
 }
 
-type Pages = { items: CandidateItem[]; suggested: CandidateItem[]; collections: Collections };
+type Pages = {
+  items: CandidateItem[];
+  suggested: CandidateItem[];
+  collections: Collections;
+  tags?: Record<string, PickerTag>;
+};
 
 /** The filter bar and the grid over one candidates query; each picker supplies its query and wording. */
 function PickerGrid({
@@ -308,6 +314,7 @@ function PickerGrid({
   const allSuggested = pages[0]?.suggested ?? [];
   const suggested = match ? allSuggested.filter(match) : allSuggested;
   const items = pages.flatMap((page) => page.items);
+  const tags: Record<string, PickerTag> = Object.assign({}, ...pages.map((page) => page.tags));
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">
@@ -335,6 +342,7 @@ function PickerGrid({
         ]}
         collections={collections}
         empty={empty}
+        tagOf={filters.matchOnly ? (item) => tags[item.collectionSlug] : undefined}
       />
     </div>
   );

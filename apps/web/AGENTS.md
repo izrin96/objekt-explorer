@@ -19,6 +19,10 @@ TanStack Start app on Base UI (the cnippet registry). `src/components/ui/*` are 
 
 Quiet chrome, loud cards. The page is neutral zinc in both themes, with a near-black or white primary, and the objekt cards carry the colour. Colour elsewhere means something and comes from `lib/tone.ts`: list types (have teal, want amber, sale rose), progress indigo, and success, warning and destructive, each a chip of ink on a tint with an edge in Badge's recipe. Indigo `accent` is for focus and the current selection, not decoration. Objekt data (serials, collection numbers, counts, addresses) is `font-mono` (JetBrains Mono, slashed zero), prose is the sans (Google Sans Flex) and titles are `font-display` (Instrument Sans). Metadata reads as a " · " line. A new screen reuses these tokens and the vendored components before it adds anything; a design skill's palette, font or motion library gives way to this.
 
+## Offer builder
+
+A request with `matches` opens through `MatchesBuilder` (`features/offers/offer-builder.tsx`): it draws the header and one `role="status"` region that stays mounted from the first frame to the close, reading "Adding your matches…", then the line or the failure. `BuilderForm` portals its line (`builder/matches-line.tsx`, with Remove matches and Undo) into that region, so a screen reader hears every change in one node. A request without `matches` renders `BuilderForm` alone, with its own header and no region.
+
 ## Chat draft
 
 `stores/chat-draft.ts` keeps, per conversation id and in memory only, the card a Message button hands over and the unsent `body` with the `clientId` of the send being composed. The composer reads it through selectors. A failed send restores its text in the send mutation's `onError`, not the per-call one, because that one is lost when the thread unmounts. The same `clientId` goes with every retry so the server posts the message once; editing the text starts a new one.

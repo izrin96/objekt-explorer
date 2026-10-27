@@ -15,6 +15,7 @@ import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import { useSelectedArtists } from "@/features/artist/use-selected-artists";
 import { FACET_KEYS } from "@/features/filters/facet-controls";
 import { SingleSelect } from "@/features/filters/single-select";
+import { AddToListProvider } from "@/features/list/add-to-list-dialog";
 import { ObjektDrawer } from "@/features/objekt/drawer";
 import { collectionName } from "@/features/objekt/objekt-label";
 import { OfferBuilderProvider } from "@/features/offers/offer-builder";
@@ -37,6 +38,8 @@ import { HiddenPartnersDialog } from "./hidden-partners-dialog";
 import { LoadError } from "./load-error";
 import { ComparedLine, MatchingControls } from "./matching-controls";
 import { MyPosts } from "./my-posts";
+import type { NearOpen } from "./near";
+import { NearNote } from "./near-note";
 import { PersonRow, PersonRowSkeleton } from "./person-row-view";
 import { NEW_POST, PostComposer, useComposer } from "./post-list-dialog";
 import { usePlanLists } from "./post-plan";
@@ -78,10 +81,14 @@ export function BrowseView({ surface, search }: { surface: Surface; search: Feed
   const hidden = useQuery(hiddenPartnersOptions(Boolean(user)));
   const navigate = useNavigate();
   // the drawer's On Trade link lands on this same page; the new slug closes the drawer
-  const [opened, setOpened] = useState<{ objekt: ValidObjekt; slug?: string } | null>(null);
+  const [opened, setOpened] = useState<{
+    objekt: ValidObjekt;
+    slug?: string;
+    near?: NearOpen;
+  } | null>(null);
   const active = opened && opened.slug === search.slug ? opened.objekt : null;
-  const setActive = (objekt: ValidObjekt | null) =>
-    setOpened(objekt ? { objekt, slug: search.slug } : null);
+  const setActive = (objekt: ValidObjekt | null, near?: NearOpen) =>
+    setOpened(objekt ? { objekt, slug: search.slug, near } : null);
   const composer = useComposer();
   const planLists = usePlanLists();
   const [hiddenOpen, setHiddenOpen] = useState(false);
@@ -170,237 +177,257 @@ export function BrowseView({ surface, search }: { surface: Surface; search: Feed
   });
 
   return (
-    <OfferBuilderProvider>
-      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-        <p className="text-muted-foreground text-sm text-pretty max-md:hidden">
-          {forYou ? m.trade_for_you_description() : m.trade_browse_description()}
-        </p>
-        {/* on Browse, New post lives in the Your posts row */}
-        {user && forYou ? (
-          <Button variant="outline" size="sm" onClick={() => composer.openWith(NEW_POST)}>
-            <CardsThreeIcon />
-            {m.trade_new_post()}
-          </Button>
-        ) : user ? null : (
-          <Button
-            variant="outline"
-            size="sm"
-            render={<Link to="/login" search={{ redirect: "/trade" }} />}
-          >
-            <CardsThreeIcon />
-            {m.trade_new_post()}
-          </Button>
-        )}
-      </div>
-
-      {user && !forYou ? (
-        <MyPosts
-          onNew={() => composer.openWith(NEW_POST)}
-          onEdit={(slug) => composer.openWith(startForPost(planLists, slug))}
-        />
-      ) : null}
-
-      <BrowseFilters
-        search={search}
-        slugName={search.slug ? collectionName(search.slug, collections[search.slug]) : undefined}
-        filtering={filtering}
-        onClearSlug={() => setSearch({ slug: undefined })}
-        onReset={reset}
-        postType={postType}
-        matching={
-          forYou ? (
-            <MatchingControls
-              mode={matchModeOf(search)}
-              urlType={search.type ?? "all"}
-              list={search.list}
-              tradeLists={tradeLists}
-              onChange={(patch) => {
-                const next = { ...search, match: mode, ...patch };
-                // Mutual fixes the type to WTT, so a type picked under Any is dropped rather than kept
-                setSearch({
-                  ...patch,
-                  match: next.match,
-                  type: next.match === "mutual" ? undefined : next.type,
-                });
-              }}
-            />
-          ) : undefined
-        }
-        comparedLine={
-          forYou ? (
-            <ComparedLine
-              mode={matchModeOf(search)}
-              urlType={search.type ?? "all"}
-              list={search.list}
-              tradeLists={tradeLists}
-            />
-          ) : undefined
-        }
-      />
-
-      {user ? null : (
-        <p className="text-muted-foreground text-sm text-pretty">
-          {m.trade_browse_matches_sign_in()}{" "}
-          <Button
-            variant="link"
-            className="h-auto p-0 text-sm underline underline-offset-2"
-            render={<Link to="/login" search={{ redirect: "/trade/for-you" }} />}
-          >
-            {m.nav_sign_in()}
-          </Button>
-        </p>
-      )}
-
-      {query.isPending ? (
-        <>
-          <PendingStatus />
-          <BrowseFeedSkeleton />
-        </>
-      ) : query.isError && people.length === 0 ? (
-        <LoadError onRetry={() => void query.refetch()} />
-      ) : people.length === 0 && !query.hasNextPage && forYou && collectionFiltering ? (
-        <EmptyState
-          icon={CardsThreeIcon}
-          title={m.trade_browse_no_filter_title()}
-          hint={m.trade_browse_empty_hint()}
-          action={
-            <Button variant="outline" size="sm" onClick={reset}>
-              {m.filter_reset_filter()}
+    // a near match's drawer adds the objekt to a sale list from here
+    <AddToListProvider>
+      <OfferBuilderProvider>
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+          <p className="text-muted-foreground text-sm text-pretty max-md:hidden">
+            {forYou ? m.trade_for_you_description() : m.trade_browse_description()}
+          </p>
+          {/* on Browse, New post lives in the Your posts row */}
+          {user && forYou ? (
+            <Button variant="outline" size="sm" onClick={() => composer.openWith(NEW_POST)}>
+              <CardsThreeIcon />
+              {m.trade_new_post()}
             </Button>
-          }
-        />
-      ) : people.length === 0 && !query.hasNextPage && mutual ? (
-        <EmptyState
-          icon={CardsThreeIcon}
-          title={
-            comparedName
-              ? m.trade_browse_no_mutual_list_title({ list: comparedName })
-              : m.trade_browse_no_mutual_title()
-          }
-          hint={m.trade_browse_no_mutual_hint()}
-          action={
-            <Button variant="outline" size="sm" onClick={() => setSearch({ match: "any" })}>
-              {m.trade_browse_show_any()}
-            </Button>
-          }
-        />
-      ) : people.length === 0 && !query.hasNextPage && mode === "any" ? (
-        <EmptyState
-          icon={CardsThreeIcon}
-          title={
-            comparedName
-              ? m.trade_browse_no_matches_list_title({ list: comparedName })
-              : m.trade_browse_no_matches_title()
-          }
-          hint={m.trade_browse_no_matches_hint()}
-          action={
+          ) : user ? null : (
             <Button
               variant="outline"
               size="sm"
-              render={<Link to="/trade" search={forYouFallback(search)} />}
+              render={<Link to="/login" search={{ redirect: "/trade" }} />}
             >
-              {m.trade_browse_show_all_posts()}
+              <CardsThreeIcon />
+              {m.trade_new_post()}
             </Button>
+          )}
+        </div>
+
+        {user && !forYou ? (
+          <MyPosts
+            onNew={() => composer.openWith(NEW_POST)}
+            onEdit={(slug) => composer.openWith(startForPost(planLists, slug))}
+          />
+        ) : null}
+
+        <BrowseFilters
+          search={search}
+          slugName={search.slug ? collectionName(search.slug, collections[search.slug]) : undefined}
+          filtering={filtering}
+          onClearSlug={() => setSearch({ slug: undefined })}
+          onReset={reset}
+          postType={postType}
+          matching={
+            forYou ? (
+              <MatchingControls
+                mode={matchModeOf(search)}
+                urlType={search.type ?? "all"}
+                list={search.list}
+                tradeLists={tradeLists}
+                onChange={(patch) => {
+                  const next = { ...search, match: mode, ...patch };
+                  // Mutual fixes the type to WTT, so a type picked under Any is dropped rather than kept
+                  setSearch({
+                    ...patch,
+                    match: next.match,
+                    type: next.match === "mutual" ? undefined : next.type,
+                  });
+                }}
+              />
+            ) : undefined
           }
-        />
-      ) : people.length === 0 && !query.hasNextPage ? (
-        <EmptyState
-          icon={CardsThreeIcon}
-          title={m.trade_browse_empty_title()}
-          hint={filtering ? m.trade_browse_empty_hint() : m.trade_browse_empty_none_hint()}
-          action={
-            filtering ? (
-              <Button variant="outline" size="sm" onClick={reset}>
-                {m.filter_reset_filter()}
-              </Button>
+          comparedLine={
+            forYou ? (
+              <ComparedLine
+                mode={matchModeOf(search)}
+                urlType={search.type ?? "all"}
+                list={search.list}
+                tradeLists={tradeLists}
+              />
             ) : undefined
           }
         />
-      ) : (
-        <div
-          role="region"
-          aria-label={m.trade_posts_label()}
-          aria-busy={query.isPlaceholderData}
-          className={cn(query.isPlaceholderData && "opacity-60")}
-        >
-          {/* the server draws the first posts, so a full load is not blank until hydration.
+
+        {user ? null : (
+          <p className="text-muted-foreground text-sm text-pretty">
+            {m.trade_browse_matches_sign_in()}{" "}
+            <Button
+              variant="link"
+              className="h-auto p-0 text-sm underline underline-offset-2"
+              render={<Link to="/login" search={{ redirect: "/trade/for-you" }} />}
+            >
+              {m.nav_sign_in()}
+            </Button>
+          </p>
+        )}
+
+        {query.isPending ? (
+          <>
+            <PendingStatus />
+            <BrowseFeedSkeleton />
+          </>
+        ) : query.isError && people.length === 0 ? (
+          <LoadError onRetry={() => void query.refetch()} />
+        ) : people.length === 0 && !query.hasNextPage && forYou && collectionFiltering ? (
+          <EmptyState
+            icon={CardsThreeIcon}
+            title={m.trade_browse_no_filter_title()}
+            hint={m.trade_browse_empty_hint()}
+            action={
+              <Button variant="outline" size="sm" onClick={reset}>
+                {m.filter_reset_filter()}
+              </Button>
+            }
+          />
+        ) : people.length === 0 && !query.hasNextPage && mutual ? (
+          <EmptyState
+            icon={CardsThreeIcon}
+            title={
+              comparedName
+                ? m.trade_browse_no_mutual_list_title({ list: comparedName })
+                : m.trade_browse_no_mutual_title()
+            }
+            hint={m.trade_browse_no_mutual_hint()}
+            action={
+              <Button variant="outline" size="sm" onClick={() => setSearch({ match: "any" })}>
+                {m.trade_browse_show_any()}
+              </Button>
+            }
+          />
+        ) : people.length === 0 && !query.hasNextPage && mode === "any" ? (
+          <EmptyState
+            icon={CardsThreeIcon}
+            title={
+              comparedName
+                ? m.trade_browse_no_matches_list_title({ list: comparedName })
+                : m.trade_browse_no_matches_title()
+            }
+            hint={m.trade_browse_no_matches_hint()}
+            action={
+              <Button
+                variant="outline"
+                size="sm"
+                render={<Link to="/trade" search={forYouFallback(search)} />}
+              >
+                {m.trade_browse_show_all_posts()}
+              </Button>
+            }
+          />
+        ) : people.length === 0 && !query.hasNextPage ? (
+          <EmptyState
+            icon={CardsThreeIcon}
+            title={m.trade_browse_empty_title()}
+            hint={filtering ? m.trade_browse_empty_hint() : m.trade_browse_empty_none_hint()}
+            action={
+              filtering ? (
+                <Button variant="outline" size="sm" onClick={reset}>
+                  {m.filter_reset_filter()}
+                </Button>
+              ) : undefined
+            }
+          />
+        ) : (
+          <div
+            role="region"
+            aria-label={m.trade_posts_label()}
+            aria-busy={query.isPlaceholderData}
+            className={cn(query.isPlaceholderData && "opacity-60")}
+          >
+            {/* the server draws the first posts, so a full load is not blank until hydration.
               virtua then keeps drawing only `ssrCount` rows until the first scroll, so the list
               remounts without it once hydrated: otherwise For you's headings take two of the
               four rows and the feed looks like it ends after two posts */}
-          <SideCompareContext value={sideCompare}>
-            <WindowVirtualizer
-              key={hydrated ? "live" : "ssr"}
-              ref={virtualizerRef}
-              cache={virtualizerCache}
-              data={rows}
-              ssrCount={hydrated ? undefined : Math.min(SSR_ROWS, rows.length)}
+            <SideCompareContext value={sideCompare}>
+              <WindowVirtualizer
+                key={hydrated ? "live" : "ssr"}
+                ref={virtualizerRef}
+                cache={virtualizerCache}
+                data={rows}
+                ssrCount={hydrated ? undefined : Math.min(SSR_ROWS, rows.length)}
+              >
+                {(row: FeedRow | undefined) =>
+                  row?.heading ? (
+                    <h2
+                      key={row.heading}
+                      className="text-muted-foreground px-4 pt-1 pb-2 text-xs font-medium tracking-wide uppercase"
+                    >
+                      {row.heading === "mutual"
+                        ? m.trade_section_mutual()
+                        : m.trade_section_one_way()}
+                    </h2>
+                  ) : row ? (
+                    <div key={row.person.userId}>
+                      <PersonRow
+                        person={row.person}
+                        surface={surface}
+                        own={row.person.userId === user?.user.id}
+                        signedIn={!!user}
+                        led={row.person.userId === search.person}
+                        expanded={expanded.has(row.person.userId)}
+                        onExpand={expand}
+                        onClear={clearLead}
+                        collections={collections}
+                        now={now}
+                        onOpen={setActive}
+                      />
+                    </div>
+                  ) : (
+                    <div />
+                  )
+                }
+              </WindowVirtualizer>
+            </SideCompareContext>
+
+            {query.isFetchNextPageError ? (
+              <div className="flex justify-center py-4">
+                <Button variant="outline" size="sm" onClick={() => void query.fetchNextPage()}>
+                  <ArrowClockwiseIcon />
+                  {m.common_error_retry()}
+                </Button>
+              </div>
+            ) : (
+              <InfiniteSentinel
+                label={m.infinite_query_load_more_aria()}
+                endLabel={m.trade_browse_end()}
+                hasNextPage={query.hasNextPage}
+                isFetchingNextPage={query.isFetchingNextPage}
+                fetchNextPage={() => void query.fetchNextPage()}
+              />
+            )}
+          </div>
+        )}
+
+        {/* Browse drops their posts silently, so name the way back */}
+        {hidden.data && hidden.data.length > 0 && query.isSuccess && !query.hasNextPage ? (
+          <p className="text-muted-foreground text-center text-sm text-pretty">
+            {m.trade_browse_hidden_note()}{" "}
+            <Button
+              variant="link"
+              className="h-auto p-0 text-sm"
+              onClick={() => setHiddenOpen(true)}
             >
-              {(row: FeedRow | undefined) =>
-                row?.heading ? (
-                  <h2
-                    key={row.heading}
-                    className="text-muted-foreground px-4 pt-1 pb-2 text-xs font-medium tracking-wide uppercase"
-                  >
-                    {row.heading === "mutual"
-                      ? m.trade_section_mutual()
-                      : m.trade_section_one_way()}
-                  </h2>
-                ) : row ? (
-                  <div key={row.person.userId}>
-                    <PersonRow
-                      person={row.person}
-                      surface={surface}
-                      own={row.person.userId === user?.user.id}
-                      signedIn={!!user}
-                      led={row.person.userId === search.person}
-                      expanded={expanded.has(row.person.userId)}
-                      onExpand={expand}
-                      onClear={clearLead}
-                      collections={collections}
-                      now={now}
-                      onOpen={setActive}
-                    />
-                  </div>
-                ) : (
-                  <div />
-                )
-              }
-            </WindowVirtualizer>
-          </SideCompareContext>
+              {m.trade_hidden_partners()}
+            </Button>
+          </p>
+        ) : null}
 
-          {query.isFetchNextPageError ? (
-            <div className="flex justify-center py-4">
-              <Button variant="outline" size="sm" onClick={() => void query.fetchNextPage()}>
-                <ArrowClockwiseIcon />
-                {m.common_error_retry()}
-              </Button>
-            </div>
-          ) : (
-            <InfiniteSentinel
-              label={m.infinite_query_load_more_aria()}
-              endLabel={m.trade_browse_end()}
-              hasNextPage={query.hasNextPage}
-              isFetchingNextPage={query.isFetchingNextPage}
-              fetchNextPage={() => void query.fetchNextPage()}
-            />
-          )}
-        </div>
-      )}
-
-      {/* Browse drops their posts silently, so name the way back */}
-      {hidden.data && hidden.data.length > 0 && query.isSuccess && !query.hasNextPage ? (
-        <p className="text-muted-foreground text-center text-sm text-pretty">
-          {m.trade_browse_hidden_note()}{" "}
-          <Button variant="link" className="h-auto p-0 text-sm" onClick={() => setHiddenOpen(true)}>
-            {m.trade_hidden_partners()}
-          </Button>
-        </p>
-      ) : null}
-
-      <ObjektDrawer objekt={active} onClose={() => setActive(null)} />
-      {user ? <PostComposer {...composer.dialog} /> : null}
-      {user ? <HiddenPartnersDialog open={hiddenOpen} onOpenChange={setHiddenOpen} /> : null}
-    </OfferBuilderProvider>
+        <ObjektDrawer
+          objekt={active}
+          onClose={() => setActive(null)}
+          note={
+            active && opened?.near ? (
+              <NearNote
+                objekt={active}
+                near={opened.near}
+                onClose={() => setActive(null)}
+                onCompose={composer.openWith}
+              />
+            ) : undefined
+          }
+        />
+        {user ? <PostComposer {...composer.dialog} /> : null}
+        {user ? <HiddenPartnersDialog open={hiddenOpen} onOpenChange={setHiddenOpen} /> : null}
+      </OfferBuilderProvider>
+    </AddToListProvider>
   );
 }
 

@@ -5,6 +5,7 @@ import type { CandidateCursor, HistoryCursor, PickerNarrowing } from "@repo/api/
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import type { QueryClient } from "@tanstack/react-query";
 
+import type { OfferMatches } from "@/features/offers/builder/types";
 import { orpc } from "@/lib/orpc";
 import { isNotFound } from "@/lib/orpc-error";
 import { pollUnlessLive } from "@/stores/user-socket";
@@ -33,6 +34,19 @@ const toInput = (filters: PickerFilters): PickerNarrowing => ({
   },
   matchOnly: filters.matchOnly,
 });
+
+/**
+ * The swap matches a builder opens with. Read once per open: the builder is keyed by its session
+ * and the entry goes on close (`gcTime: 0`), and it never refetches under an open form, whose
+ * counts stay as it opened.
+ */
+export const suggestOptions = (matches: OfferMatches) =>
+  orpc.offer.suggest.queryOptions({
+    input: matches,
+    staleTime: "static",
+    gcTime: 0,
+    retry: retryUnlessRefused,
+  });
 
 /** Every item on the partner's allowed lists, for the builder to check picks against. */
 export const theirCandidatesOptions = (to: OfferAddress) =>

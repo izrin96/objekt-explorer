@@ -15,10 +15,14 @@ import { type VirtualItem, buildVirtualData } from "./build-virtual-data";
 import { ObjektGrid } from "./objekt-grid";
 import { SelectionOrderContext } from "./selection-order";
 
+/** A ring a section puts on every card it draws, with what it means for a screen reader. */
+export type CardRing = { className: string; description: string };
+
 type RenderItem<T extends GridObjekt> = (props: {
   item: T[];
   rowIndex: number;
   groupTitle: string;
+  ring?: CardRing;
 }) => ReactElement | null;
 
 type ObjektVirtualGridProps<T extends GridObjekt> = {
@@ -126,6 +130,51 @@ export function ObjektVirtualGrid<T extends GridObjekt>({
 }
 
 /**
+ * The same rows as `ObjektVirtualGrid` (sort, groups, Combine, the column setting) without a
+ * virtualizer: a short section under a virtual grid, which a second window virtualizer would
+ * fight for the page's scroll. Every card carries `ring`.
+ */
+export function ObjektStaticGrid<T extends GridObjekt>({
+  objekts,
+  filters,
+  renderItem,
+  rarityMap,
+  ring,
+}: Pick<ObjektVirtualGridProps<T>, "objekts" | "filters" | "renderItem" | "rarityMap"> & {
+  ring?: CardRing;
+}) {
+  const columns = useColumns();
+  const { compareSeason, compareClass } = useFilterData();
+  const { getArtist, compareMember } = useCosmoArtist();
+  const data = buildVirtualData({
+    objekts,
+    filters,
+    columns,
+    getArtist,
+    compareMember,
+    compareSeason,
+    compareClass,
+    rarityMap,
+  });
+  return (
+    <div>
+      {data.map((item, index) =>
+        item.type === "label" ? (
+          <div
+            key={`label:${item.title}`}
+            className="font-display pt-3 pb-3 text-base font-semibold"
+          >
+            {item.title}
+          </div>
+        ) : (
+          <GridRow key={index} row={item} columns={columns} renderItem={renderItem} ring={ring} />
+        ),
+      )}
+    </div>
+  );
+}
+
+/**
  * virtua calls its render function for every visible row on each scroll update, so without the
  * memo every card on screen renders again while the page scrolls.
  */
@@ -133,16 +182,18 @@ const GridRow = memo(function GridRow({
   row,
   columns,
   renderItem,
+  ring,
 }: {
   row: Extract<VirtualItem, { type: "row" }>;
   columns: number;
   renderItem: RenderItem<GridObjekt>;
+  ring?: CardRing;
 }) {
   return (
     <ObjektGrid columns={columns} className="pb-(--gutter)">
       {row.items.map((cell, index) => (
         <div key={cell[0]?.id ?? index} className="contents">
-          {renderItem({ item: cell, rowIndex: row.rowIndex, groupTitle: row.groupTitle })}
+          {renderItem({ item: cell, rowIndex: row.rowIndex, groupTitle: row.groupTitle, ring })}
         </div>
       ))}
     </ObjektGrid>
@@ -151,4 +202,5 @@ const GridRow = memo(function GridRow({
   row: Extract<VirtualItem<T>, { type: "row" }>;
   columns: number;
   renderItem: RenderItem<T>;
+  ring?: CardRing;
 }) => ReactElement;

@@ -71,6 +71,18 @@ export function takeOutAll<P extends Counted>(
   return shown.reduce<P[]>((left, row) => takeOut(left, row), [...picks]);
 }
 
+/** What Remove matches takes from a side: the picks the matches added, and the side left. */
+export function takeOutAdded<P extends Counted>(picks: readonly P[], added: ReadonlySet<string>) {
+  const taken = picks.filter((pick) => added.has(pick.key));
+  return { taken, left: takeOutAll(picks, taken) };
+}
+
+/** Undo of Remove matches: the taken picks back first, but none the side holds again since. */
+export function putBack<P extends Counted>(picks: readonly P[], taken: readonly P[]): P[] {
+  const held = new Set(picks.map((pick) => pick.key));
+  return [...taken.filter((pick) => !held.has(pick.key)), ...picks];
+}
+
 /** Offer items as rows: repeats of one any copy become one row with their count. */
 export function groupRows<T>(items: readonly T[], keyOf: (item: T) => string) {
   const rows = new Map<string, { key: string; item: T; count: number }>();

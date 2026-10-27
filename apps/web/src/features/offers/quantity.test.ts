@@ -5,7 +5,9 @@ import {
   countOf,
   groupRows,
   mergeCounts,
+  putBack,
   takeOut,
+  takeOutAdded,
   takeOutAll,
   totalOf,
   withCount,
@@ -110,6 +112,36 @@ describe("takeOutAll", () => {
         ],
       ),
     ).toEqual([]);
+  });
+});
+
+describe("takeOutAdded", () => {
+  test("takes every pick the matches added and leaves the sender's own", () => {
+    const own: Counted = { key: "2210" };
+    const added = [{ key: "537" }, { key: "any:302z", count: 2 }];
+    expect(takeOutAdded([...added, own], new Set(["537", "any:302z", "88"]))).toEqual({
+      taken: added,
+      left: [own],
+    });
+  });
+});
+
+describe("putBack", () => {
+  test("the taken picks come back first, the sender's since after them", () => {
+    const since: Counted = { key: "77" };
+    expect(putBack([since], [{ key: "537" }, { key: "88" }])).toEqual([
+      { key: "537" },
+      { key: "88" },
+      since,
+    ]);
+  });
+
+  test("a pick the side holds again stays as it is now", () => {
+    const again: Counted = { key: "any:302z", count: 3 };
+    expect(putBack([again], [{ key: "any:302z", count: 1 }, { key: "537" }])).toEqual([
+      { key: "537" },
+      again,
+    ]);
   });
 });
 

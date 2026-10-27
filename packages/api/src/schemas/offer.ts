@@ -172,7 +172,15 @@ export const offerViewsInputSchema = z.object({
 export const rateInputSchema = z.object({ tradeId: idSchema, rating: z.enum(TRADE_RATINGS) });
 export const tradeIdInputSchema = z.object({ tradeId: idSchema });
 export const substituteIdInputSchema = z.object({ substituteId: idSchema });
-export const suggestInputSchema = z.object({ partnerId: z.string().min(1) });
+/** `list`, `mutual` and `post` are optional, so a tab that sends `{ partnerId }` alone still validates. */
+export const suggestInputSchema = z.object({
+  partnerId: z.string().min(1),
+  /** Compare with: one of the viewer's lists, as the Trade row counted with it */
+  list: z.string().min(1).optional(),
+  mutual: z.boolean().optional(),
+  /** one of the partner's lists: only that post's matches */
+  post: z.string().min(1).optional(),
+});
 
 const candidateCursorSchema = z.object({ receivedAt: z.string(), id: z.string() });
 export type CandidateCursor = z.infer<typeof candidateCursorSchema>;

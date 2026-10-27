@@ -7,7 +7,8 @@ import {
 } from "@repo/api/schemas/offer";
 import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
+import { createPortal, flushSync } from "react-dom";
 
 import { Button } from "@/components/ui/button";
 import { DialogClose, DialogFooter, DialogPanel } from "@/components/ui/dialog";
@@ -27,7 +28,15 @@ import {
   pickKey,
   toPick,
 } from "@/features/offers/pick";
-import { copiesLeft, countOf, takeOut, takeOutAll, totalOf } from "@/features/offers/quantity";
+import {
+  copiesLeft,
+  countOf,
+  putBack,
+  takeOut,
+  takeOutAdded,
+  takeOutAll,
+  totalOf,
+} from "@/features/offers/quantity";
 import {
   invalidateOfferLists,
   myCopyOptions,
@@ -40,21 +49,32 @@ import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
 
+import { type NearGroup, nearPayer, withNear } from "../near-picks";
 import { BuilderHeader } from "./header";
+import { MatchesLine, NearLine } from "./matches-line";
 import { BuilderRefused } from "./refused";
 import { SideColumn } from "./side-column";
 import { Topup } from "./topup";
-import type { OfferRequest } from "./types";
+import type { AddedMatches, OfferRequest } from "./types";
 
 export function BuilderForm({
   request,
   onDraft,
   onDone,
+  header = true,
+  region,
+  added,
 }: {
   request: OfferRequest;
   /** hands over whether the draft holds anything, so closing it can ask first */
   onDraft: (holds: (() => boolean) | null) => void;
   onDone: () => void;
+  /** false where the caller already drew the header */
+  header?: boolean;
+  /** the caller's status region, which the matches line is drawn into */
+  region?: HTMLElement | null;
+  /** what the matches added when the builder opened */
+  added?: AddedMatches;
 }) {
   const { to, name, prefill } = request;
   const queryClient = useQueryClient();
@@ -64,16 +84,30 @@ export function BuilderForm({
   const [give, setGive] = useState<OfferPick[]>(prefill?.give ?? []);
   const [get, setGet] = useState<OfferPick[]>(prefill?.get ?? []);
   const [seen, setSeen] = useState<Collections>(prefill?.collections ?? {});
-  const [topupOn, setTopupOn] = useState(prefill?.topup !== undefined);
+  // a near sale or buy added at open opens the top-up with its payer, and no amount
+  const [topupNear, setTopupNear] = useState(added?.nearTopup ?? null);
+  const [topupOn, setTopupOn] = useState(prefill?.topup !== undefined || topupNear !== null);
   const [amount, setAmount] = useState<number | null>(prefill?.topup?.amount ?? null);
   const [currency, setCurrency] = useState(prefill?.topup?.currency ?? preferred);
-  const [payer, setPayer] = useState<TopupPayer>(prefill?.topup?.payer ?? "from");
+  const [payer, setPayer] = useState<TopupPayer>(
+    prefill?.topup?.payer ?? (topupNear ? nearPayer(topupNear.verb) : null) ?? "from",
+  );
   // the amount's error waits for a first edit, a blur or a send attempt
   const [topupTouched, setTopupTouched] = useState(false);
   const [note, setNote] = useState(prefill?.note ?? "");
   const [picking, setPicking] = useState<OfferSide | null>(null);
   const [error, setError] = useState<{ text: string; remove: boolean; link: boolean } | null>(null);
   const [refused, setRefused] = useState<ReadonlySet<string>>(new Set());
+  const [nearLeft, setNearLeft] = useState<NearGroup[]>(added?.near ?? []);
+  const [nearKeys, setNearKeys] = useState(added?.nearKeys ?? { give: [], get: [] });
+  // what Remove matches took out, while Undo can put it back
+  const [removed, setRemoved] = useState<{
+    give: OfferPick[];
+    get: OfferPick[];
+    topupNear: typeof topupNear;
+  } | null>(null);
+  const removeRef = useRef<HTMLButtonElement>(null);
+  const undoRef = useRef<HTMLButtonElement>(null);
   const noteId = useId();
   const errorId = useId();
   const hintId = useId();
@@ -166,6 +200,111 @@ export function BuilderForm({
         : null;
   const topupValid = topupError === null && (!topupOn || currency !== "");
   const empty = give.length + get.length === 0;
+
+  // what Add it added goes with the matches
+  const addedGive = new Set([...(added?.keys.give ?? []), ...nearKeys.give]);
+  const addedGet = new Set([...(added?.keys.get ?? []), ...nearKeys.get]);
+  const names = (picks: readonly OfferPick[]) =>
+    new Intl.ListFormat(getLocale(), { type: "conjunction" }).format(
+      picks.map((pick) => itemName(pick, collections)),
+    );
+  const addNear = (group: NearGroup) => {
+    const preset = nearPayer(group.verb);
+    // a pick already on the side stays the sender's own, and a full side takes no more
+    const { picks, added: fresh } = withNear(
+      group.side === "give" ? give : get,
+      group,
+      OFFER_SIDE_LIMIT,
+    );
+    flushSync(() => {
+      (group.side === "give" ? setGive : setGet)(picks);
+      setNearKeys((keys) => ({
+        ...keys,
+        [group.side]: [...keys[group.side], ...fresh.map((pick) => pick.key)],
+      }));
+      setNearLeft((groups) => groups.filter((g) => g !== group));
+      if (preset && !topupOn && fresh.length > 0) {
+        setTopupOn(true);
+        setPayer(preset);
+        setAmount(null);
+        setTopupTouched(false);
+        setTopupNear({ verb: group.verb, picks: fresh });
+      }
+    });
+    // the line and its button are gone: focus stays in the status region
+    (removeRef.current ?? undoRef.current)?.focus();
+  };
+  const nearPicks = [
+    ...give.filter((pick) => nearKeys.give.includes(pick.key)),
+    ...get.filter((pick) => nearKeys.get.includes(pick.key)),
+  ];
+  const nearNames = nearPicks.length > 0 ? names(nearPicks) : null;
+  const topupReason = topupNear
+    ? (topupNear.verb === "sell" ? m.offer_topup_near_sell : m.offer_topup_near_buy)({
+        name,
+        objekts: names(topupNear.picks),
+      })
+    : undefined;
+  // the line goes once the sender has removed every added pick by hand; what Add it added goes
+  // with the matches, so a builder that had none still offers Remove
+  const addedKeys = {
+    give: [...(added?.keys.give ?? []), ...nearKeys.give],
+    get: [...(added?.keys.get ?? []), ...nearKeys.get],
+  };
+  // once the sender has taken every match out by hand, the line names only what Add it added
+  const matchesKept =
+    removed !== null ||
+    give.some((pick) => added?.keys.give.includes(pick.key)) ||
+    get.some((pick) => added?.keys.get.includes(pick.key));
+  const lineAdded = added && !matchesKept ? { ...added, keys: { give: [], get: [] } } : added;
+  const showsLine =
+    added !== undefined &&
+    addedKeys.give.length + addedKeys.get.length > 0 &&
+    (removed !== null ||
+      give.some((pick) => addedGive.has(pick.key)) ||
+      get.some((pick) => addedGet.has(pick.key)));
+  // what Remove took out: the matches it counts, and the near picks it names
+  const takenMatches = (taken: { give: OfferPick[]; get: OfferPick[] }) => [
+    ...taken.give.filter((pick) => added?.keys.give.includes(pick.key)),
+    ...taken.get.filter((pick) => added?.keys.get.includes(pick.key)),
+  ];
+  const takenNear = (taken: { give: OfferPick[]; get: OfferPick[] }) => {
+    const near = [
+      ...taken.give.filter((pick) => nearKeys.give.includes(pick.key)),
+      ...taken.get.filter((pick) => nearKeys.get.includes(pick.key)),
+    ];
+    return near.length > 0 ? names(near) : null;
+  };
+  const removeMatches = () => {
+    const gave = takeOutAdded(give, addedGive);
+    const got = takeOutAdded(get, addedGet);
+    // a top-up the near picks opened, still with no amount, goes with them
+    const presetTopup = topupNear !== null && amount === null ? topupNear : null;
+    flushSync(() => {
+      setGive(gave.left);
+      setGet(got.left);
+      setRemoved({ give: gave.taken, get: got.taken, topupNear: presetTopup });
+      if (presetTopup) {
+        setTopupOn(false);
+        setTopupNear(null);
+      }
+    });
+    undoRef.current?.focus();
+  };
+  const undoRemove = () => {
+    if (!removed) return;
+    flushSync(() => {
+      setGive((current) => putBack(current, removed.give));
+      setGet((current) => putBack(current, removed.get));
+      if (removed.topupNear && !topupOn) {
+        setTopupOn(true);
+        setPayer(nearPayer(removed.topupNear.verb) ?? payer);
+        setTopupNear(removed.topupNear);
+      }
+      setRemoved(null);
+    });
+    removeRef.current?.focus();
+  };
   const create = useMutation(
     orpc.offer.create.mutationOptions({
       onSuccess: async ({ conversationId }) => {
@@ -204,8 +343,11 @@ export function BuilderForm({
   const sameKeys = (picks: OfferPick[], from: OfferPick[] = []) =>
     picks.length === from.length &&
     picks.every((pick, i) => pick.key === from[i]?.key && countOf(pick) === countOf(from[i]!));
+  // an empty builder holds nothing, even when the matches had filled it
+  const holdsNothing = empty && !(topupOn && amount !== null) && note.trim() === "";
   const holdsDraft =
     !create.isPending &&
+    !holdsNothing &&
     (!sameKeys(give, prefill?.give) ||
       !sameKeys(get, prefill?.get) ||
       (topupOn &&
@@ -248,11 +390,40 @@ export function BuilderForm({
 
   // a target the sender may not reach is refused before anything can be picked
   const upFront = offerRefusalOf(theirs.error);
-  if (upFront) return <BuilderRefused request={request} refusal={upFront} onDone={onDone} />;
+  if (upFront) {
+    return <BuilderRefused request={request} refusal={upFront} onDone={onDone} header={header} />;
+  }
 
   return (
     <>
-      <BuilderHeader request={request} />
+      {header ? <BuilderHeader request={request} /> : null}
+      {region && ((added && showsLine) || nearLeft.length > 0)
+        ? createPortal(
+            <div className="flex flex-col gap-2">
+              {added && showsLine ? (
+                <MatchesLine
+                  added={lineAdded ?? added}
+                  nearNames={nearNames}
+                  taken={removed ? takenMatches(removed).length : null}
+                  takenNames={removed ? takenNear(removed) : null}
+                  onRemove={removeMatches}
+                  onUndo={undoRemove}
+                  removeRef={removeRef}
+                  undoRef={undoRef}
+                />
+              ) : null}
+              {nearLeft.map((group) => (
+                <NearLine
+                  key={`${group.side}:${group.verb}`}
+                  group={group}
+                  names={names(group.picks)}
+                  onAdd={() => addNear(group)}
+                />
+              ))}
+            </div>,
+            region,
+          )
+        : null}
       <DialogPanel className="flex flex-col gap-6">
         <div className="grid min-w-0 gap-6 sm:grid-cols-2">
           {(["give", "get"] as const).map((side) => {
@@ -288,6 +459,7 @@ export function BuilderForm({
           onToggle={(on) => {
             setTopupOn(on);
             setTopupTouched(false);
+            if (!on) setTopupNear(null);
           }}
           amount={amount}
           onAmount={(next) => {
@@ -300,6 +472,7 @@ export function BuilderForm({
           payer={payer}
           onPayer={setPayer}
           error={topupTouched ? topupError : null}
+          reason={topupReason}
           name={name}
         />
 

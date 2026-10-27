@@ -1,6 +1,7 @@
 import type { CardInput, ChatTarget } from "@repo/api/schemas/chat";
 
 import { MessageButton } from "@/features/chat/message-button";
+import type { OfferMatches } from "@/features/offers/builder/types";
 import { MakeOfferButton } from "@/features/offers/make-offer-button";
 import { m } from "@/paraglide/messages";
 
@@ -16,10 +17,13 @@ export function TradeActions({
   name,
   compact = false,
   offerClassName,
+  matches,
 }: {
   contact: TradeContact;
   name: string;
   compact?: boolean;
+  /** Make offer opens with these swap matches added */
+  matches?: OfferMatches;
   /** e.g. `flex-1`, where Make offer fills the row */
   offerClassName?: string;
 }) {
@@ -34,7 +38,7 @@ export function TradeActions({
       <MakeOfferButton
         variant="default"
         className={offerClassName}
-        request={{ to: { target: contact.target }, name }}
+        request={{ to: { target: contact.target }, name, matches }}
       />
     </>
   );

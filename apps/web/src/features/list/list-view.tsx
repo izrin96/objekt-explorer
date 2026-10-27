@@ -1,6 +1,7 @@
 import { CurrencyDollarIcon, MagnifyingGlassIcon, TrashIcon } from "@phosphor-icons/react";
 import { ruleLine } from "@repo/api/schemas/list-rule";
 import type { ValidCustomSort } from "@repo/cosmo/types/common";
+import { truncateAddress } from "@repo/lib/address";
 import type { ListObjekt } from "@repo/lib/types/objekt";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useDeferredValue, useMemo, useState } from "react";
@@ -25,11 +26,13 @@ import { ObjektDrawer } from "@/features/objekt/drawer";
 import { ObjektCard } from "@/features/objekt/objekt-card";
 import { ObjektCardMenu } from "@/features/objekt/objekt-card-menu";
 import { ownedCopiesOf } from "@/features/objekt/objekt-utils";
-import { ObjektVirtualGrid } from "@/features/objekt/objekt-virtual-grid";
+import { type CardRing, ObjektVirtualGrid } from "@/features/objekt/objekt-virtual-grid";
 import { SelectBar, type SelectBarAction, SelectModeButton } from "@/features/objekt/select-bar";
 import { SkeletonGrid } from "@/features/objekt/skeleton-grid";
 import { useCollectionRarity } from "@/features/objekt/use-collection-rarity";
 import { useCurrency } from "@/features/settings/use-currency";
+import { NearNote } from "@/features/trade/near-note";
+import { PostComposer, useComposer } from "@/features/trade/post-list-dialog";
 import { useCurrentUser } from "@/features/user/hooks";
 import { refusalText } from "@/lib/refusal";
 import { m } from "@/paraglide/messages";
@@ -45,7 +48,7 @@ import { RemoveFromListDialog } from "./remove-from-list-dialog";
 import { listRulesOptions } from "./rules/queries";
 import { RulesStrip } from "./rules/rules-strip";
 import { SetPriceDialog } from "./set-price-dialog";
-import { canShowMatches, ShowMyMatches, useListMatches } from "./show-my-matches";
+import { canShowMatches, NearMatches, ShowMyMatches, useListMatches } from "./show-my-matches";
 import { useEntryDialogs } from "./use-entry-dialogs";
 import { useListOwned } from "./use-list-owned";
 
@@ -107,11 +110,15 @@ function ListEntries() {
   const deferredFilters = useDeferredValue(filters);
   const reset = useResetFilters();
   // Show my matches narrows the grid to what matches: an outline is lost on a long list
+  const kept = useMemo(() => filterObjekts(deferredFilters, objekts), [deferredFilters, objekts]);
   const filtered = useMemo(() => {
-    const kept = filterObjekts(deferredFilters, objekts);
     const matched = matches.slugs;
     return matched ? kept.filter((objekt) => matched.has(objekt.slug)) : kept;
-  }, [deferredFilters, objekts, matches.slugs]);
+  }, [kept, matches.slugs]);
+  const nearObjekts = useMemo(() => {
+    const near = matches.near?.slugs;
+    return near ? kept.filter((o) => near.has(o.slug)) : [];
+  }, [kept, matches.near]);
 
   const grouped = filters.grouped === true;
   // a fresh array each render would re-run the facet parity effect forever
@@ -178,7 +185,7 @@ function ListEntries() {
   );
 
   const renderObjekt = useCallback(
-    ({ item, rowIndex }: { item: ListObjekt[]; rowIndex: number }) => {
+    ({ item, rowIndex, ring }: { item: ListObjekt[]; rowIndex: number; ring?: CardRing }) => {
       const objekt = item[0];
       if (!objekt) return null;
       const unpriced = objekt.price === null && !objekt.isQyop;
@@ -199,6 +206,8 @@ function ListEntries() {
           onPriceClick={canPrice && compare === null ? () => openPrice(item) : undefined}
           note={isSale ? objekt.note : undefined}
           priority={rowIndex < 2}
+          imageClassName={ring?.className}
+          description={ring?.description}
         >
           {user ? <ObjektCardMenu>{menuItems(item)}</ObjektCardMenu> : null}
         </ObjektCard>
@@ -226,6 +235,22 @@ function ListEntries() {
   // is concerned, exactly as the website decides its default tab
   const showOwned = list.isProfileBind && list.hideSerial !== true;
   const activeObjekt = activeGroup[0] ?? null;
+  const composer = useComposer();
+  // a near card's drawer says why it isn't counted, as a Trade strip's does; a near collection
+  // is never a match, so the only card that opens one is in the near section
+  const activeNear =
+    activeObjekt && matches.near?.slugs.has(activeObjekt.slug) && isTradeRole(list.listType)
+      ? {
+          verb: matches.near.side.verb,
+          role: list.listType,
+          theirList: list.name,
+          myListIds: matches.near.listIdsOf[activeObjekt.slug] ?? [],
+          // as Trade names a person with no name: by the profile's address
+          person:
+            list.user?.name ??
+            (list.profileAddress ? truncateAddress(list.profileAddress) : undefined),
+        }
+      : null;
   const ownedCopies = useMemo(
     () => (showOwned ? ownedCopiesOf(filtered, activeObjekt) : []),
     [activeObjekt, filtered, showOwned],
@@ -265,6 +290,16 @@ function ListEntries() {
       : []),
   ];
 
+  const nearSection =
+    matches.near && nearObjekts.length > 0 ? (
+      <NearMatches
+        near={matches.near.side}
+        objekts={nearObjekts}
+        filters={deferredFilters}
+        rarityMap={rarityMap}
+        renderItem={renderObjekt}
+      />
+    ) : null;
   return (
     <>
       <FilterBar
@@ -282,6 +317,7 @@ function ListEntries() {
                 onChange={setShowMatches}
                 count={matches.slugs?.size ?? null}
                 listIds={matches.listIds}
+                near={matches.near?.side}
                 pending={matches.pending}
                 error={matches.error}
               />
@@ -310,16 +346,20 @@ function ListEntries() {
           <EmptyList />
         )
       ) : filtered.length === 0 && matches.slugs ? (
-        <EmptyState
-          icon={MagnifyingGlassIcon}
-          title={m.list_matches_empty_title()}
-          hint={m.list_matches_empty_hint()}
-          action={
-            <Button variant="outline" size="sm" onClick={() => setShowMatches(false)}>
-              {m.list_matches_show_all()}
-            </Button>
-          }
-        />
+        <>
+          <EmptyState
+            icon={MagnifyingGlassIcon}
+            title={m.list_matches_empty_title()}
+            // the near matches under it are on the viewer's lists, which the hint says none are
+            hint={nearSection ? undefined : m.list_matches_empty_hint()}
+            action={
+              <Button variant="outline" size="sm" onClick={() => setShowMatches(false)}>
+                {m.list_matches_show_all()}
+              </Button>
+            }
+          />
+          {nearSection}
+        </>
       ) : filtered.length === 0 ? (
         <EmptyState
           icon={MagnifyingGlassIcon}
@@ -348,6 +388,7 @@ function ListEntries() {
             rarityMap={rarityMap}
             renderItem={renderObjekt}
           />
+          {nearSection}
         </>
       )}
 
@@ -365,10 +406,25 @@ function ListEntries() {
         selected={activeObjekt !== null && ids.has(activeObjekt.id)}
         onToggleSelect={user ? (value) => toggle(value.id) : undefined}
         menu={user ? menuItems(activeGroup) : undefined}
+        note={
+          activeObjekt && activeNear ? (
+            <NearNote
+              objekt={activeObjekt}
+              near={activeNear}
+              onClose={() => setActiveGroup([])}
+              onCompose={composer.openWith}
+            />
+          ) : undefined
+        }
       />
+      {user ? <PostComposer {...composer.dialog} /> : null}
 
       {canPrice ? <SetPriceDialog {...dialogs.price} slug={list.slug} currency={currency} /> : null}
       {isOwner ? <RemoveFromListDialog {...dialogs.remove} slug={list.slug} /> : null}
     </>
   );
+}
+
+function isTradeRole(listType: string): listType is "have" | "want" | "sale" {
+  return listType === "have" || listType === "want" || listType === "sale";
 }

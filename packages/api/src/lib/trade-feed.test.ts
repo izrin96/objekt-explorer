@@ -9,6 +9,9 @@ import {
   type FeedEntry,
   fullSide,
   listMatchesOf,
+  nearFor,
+  nearOf,
+  pickerTags,
   readBatches,
   readBudget,
   isPostIdle,
@@ -1018,6 +1021,7 @@ describe("listMatchesOf", () => {
     expect(listMatchesOf("have", list({ id: 1, listType: "have" }), entries, viewer)).toEqual({
       slugs: ["a"],
       listIds: [9],
+      near: { verb: "swap", slugs: ["b"], listIds: [10], listIdsOf: { b: [10] } },
     });
   });
 
@@ -1026,6 +1030,7 @@ describe("listMatchesOf", () => {
     expect(listMatchesOf("sale", sale, entries, viewer)).toEqual({
       slugs: ["a", "b"],
       listIds: [9, 10],
+      near: null,
     });
   });
 
@@ -1036,20 +1041,218 @@ describe("listMatchesOf", () => {
     expect(listMatchesOf("want", both, entries, viewer)).toEqual({
       slugs: ["x", "y"],
       listIds: [7, 8],
+      near: null,
     });
   });
 
   test("a rule's entries are left out, as the list page's grid leaves them out", () => {
     const withRule = [entry(1, "x"), { ...entry(2, "y"), ruleId: 4 }];
     const both = list({ id: 1, listType: "want" });
-    expect(listMatchesOf("want", both, withRule, viewer)).toEqual({ slugs: ["x"], listIds: [7] });
+    expect(listMatchesOf("want", both, withRule, viewer)).toEqual({
+      slugs: ["x"],
+      listIds: [7],
+      near: null,
+    });
   });
 
   test("nothing matches, nothing back", () => {
-    const empty = { ...viewer, tradeWant: none };
+    const empty = { ...viewer, tradeWant: none, saleWant: none };
     expect(listMatchesOf("have", list({ id: 1, listType: "have" }), entries, empty)).toEqual({
       slugs: [],
       listIds: [],
+      near: null,
     });
+  });
+});
+
+describe("near matches", () => {
+  // the viewer's have list 7 holds "h", Sell only sale list 8 holds "s", Sell or swap sale list
+  // 6 holds "o"; swaps-only want list 9 wants "w", Buying only want list 10 wants "b"
+  const viewer: Viewer = {
+    have: new Map([
+      ["h", [7]],
+      ["s", [8]],
+      ["o", [6]],
+    ]),
+    tradeHave: new Map([
+      ["h", [7]],
+      ["o", [6]],
+    ]),
+    saleHave: new Map([
+      ["s", [8]],
+      ["o", [6]],
+    ]),
+    want: new Map([
+      ["w", [9]],
+      ["b", [10]],
+    ]),
+    tradeWant: new Map([["w", [9]]]),
+    saleWant: new Map([["b", [10]]]),
+  };
+  const slugsOf = (near: ReturnType<typeof nearFor>) => (near ? [...near.index.keys()] : null);
+
+  test("their Buying only want: what I hold only on have lists, if I sell", () => {
+    const near = nearFor("want", list({ id: 1, listType: "want", matchHave: false }), viewer);
+    expect(near?.verb).toBe("sell");
+    expect(slugsOf(near)).toEqual(["h"]);
+  });
+
+  test("their Swaps only want: what I hold only on Sell only sale lists, if I swap", () => {
+    const near = nearFor("want", list({ id: 1, listType: "want", matchSale: false }), viewer);
+    expect(near?.verb).toBe("swap");
+    expect(slugsOf(near)).toEqual(["s"]);
+  });
+
+  test("their have list: what I want only for buying, if I swap", () => {
+    const near = nearFor("have", list({ id: 1, listType: "have" }), viewer);
+    expect(near?.verb).toBe("swap");
+    expect(slugsOf(near)).toEqual(["b"]);
+  });
+
+  test("their Sell only sale list: what I want only by swapping, if I buy", () => {
+    const near = nearFor("sale", list({ id: 1, listType: "sale" }), viewer);
+    expect(near?.verb).toBe("buy");
+    expect(slugsOf(near)).toEqual(["w"]);
+  });
+
+  test("a list open both ways has none", () => {
+    expect(nearFor("want", list({ id: 1, listType: "want" }), viewer)).toBeNull();
+    expect(nearFor("sale", list({ id: 1, listType: "sale", takesSwaps: true }), viewer)).toBeNull();
+  });
+
+  test("a match is never near: a Sell or swap copy matches a Buying only want", () => {
+    const want = list({ id: 1, listType: "want", matchHave: false });
+    expect(slugsOf(nearFor("want", want, viewer))).not.toContain("o");
+  });
+
+  test("a strip sorts ringed, then near, then newest, and counts its near collections", () => {
+    const [post] = pairPosts([list({ id: 2, listType: "want", matchHave: false })]);
+    const entries = [entry(1, "h"), entry(2, "x"), entry(3, "s")];
+    const side = assemblePost(post!, () => entries, viewer, NO_FILTER)?.sides[0];
+    expect(side?.items.map((item) => [item.slug, item.ringed ?? false, item.near ?? null])).toEqual(
+      [
+        ["s", true, null],
+        ["h", false, [7]],
+        ["x", false, null],
+      ],
+    );
+    expect(side?.near).toEqual({ verb: "sell", count: 1, listIds: [7] });
+  });
+
+  test("Only matches leaves near out of the strip", () => {
+    const [post] = pairPosts([list({ id: 2, listType: "want", matchHave: false })]);
+    const entries = [entry(1, "h"), entry(2, "s")];
+    const filter = { ...NO_FILTER, onlyMatches: true };
+    const side = assemblePost(post!, () => entries, viewer, filter)?.sides[0];
+    expect(side?.near).toBeUndefined();
+    expect(side?.items.map((item) => item.near ?? null)).toEqual([null]);
+  });
+
+  test("near never changes the match counts", () => {
+    const [post] = pairPosts([list({ id: 2, listType: "want", matchHave: false })]);
+    const match = assemblePost(post!, () => [entry(1, "h")], viewer, NO_FILTER)?.match;
+    expect(match).toMatchObject({ youHave: 0, youWant: 0 });
+  });
+
+  test("the dialog marks near matches and counts only matches", () => {
+    const side = fullSide(
+      "sale",
+      list({ id: 1, listType: "sale" }),
+      [entry(1, "w"), entry(2, "b")],
+      viewer,
+    );
+    expect(side.matched).toBe(1);
+    expect(side.items.find((item) => item.slug === "w")?.near).toEqual([9]);
+    expect(side.near).toEqual({ verb: "buy", count: 1, listIds: [9] });
+  });
+
+  test("signed out: no near", () => {
+    const side = fullSide("sale", list({ id: 1, listType: "sale" }), [entry(1, "w")], null);
+    expect(side.near).toBeNull();
+  });
+
+  test("a match is never near: a want open both ways matches their have and sale lists", () => {
+    const both: Viewer = {
+      ...viewer,
+      want: new Map([["a", [11]]]),
+      tradeWant: new Map([["a", [11]]]),
+      saleWant: new Map([["a", [11]]]),
+    };
+    expect(slugsOf(nearFor("have", list({ id: 1, listType: "have" }), both))).toEqual([]);
+    expect(slugsOf(nearFor("sale", list({ id: 1, listType: "sale" }), both))).toEqual([]);
+  });
+
+  test("a collection wanted only through a rule is never near", () => {
+    const ruled: Viewer = { ...viewer, ruleWant: new Map([["w", [{ ruleId: 3, listId: 9 }]]]) };
+    expect(slugsOf(nearFor("sale", list({ id: 1, listType: "sale" }), ruled))).toEqual([]);
+  });
+
+  test("a rule's entries on their list are never near", () => {
+    const sale = list({ id: 1, listType: "sale" });
+    expect(nearOf("sale", sale, [{ ...entry(1, "w"), ruleId: 3 }], viewer)).toBeNull();
+    expect(nearOf("sale", sale, [entry(1, "w")], viewer)?.slugs).toEqual(["w"]);
+  });
+});
+
+describe("pickerTags", () => {
+  // have list 7 holds "h", Sell only sale list 8 holds "s"; swaps-only want 9 wants "w"
+  const viewer: Viewer = {
+    have: new Map([
+      ["h", [7]],
+      ["s", [8]],
+    ]),
+    tradeHave: new Map([["h", [7]]]),
+    saleHave: new Map([["s", [8]]]),
+    want: new Map([["w", [9]]]),
+    tradeWant: new Map([["w", [9]]]),
+    saleWant: new Map(),
+  };
+
+  test("giving to a Buying only want: a sale copy is a match, a have copy near, the rest loose", () => {
+    const want = list({ id: 1, listType: "want", matchHave: false });
+    const entries = [entry(1, "h"), entry(2, "s"), entry(3, "x")];
+    expect(
+      pickerTags(["h", "s", "x"], [{ role: "want", list: want, entries }], viewer, "give"),
+    ).toEqual({
+      h: "sell",
+      x: "loose",
+    });
+  });
+
+  test("asking from a Sell only sale list: a swaps-only want is near, if you buy", () => {
+    const sale = list({ id: 1, listType: "sale" });
+    expect(
+      pickerTags(["w"], [{ role: "sale", list: sale, entries: [entry(1, "w")] }], viewer, "get"),
+    ).toEqual({
+      w: "buy",
+    });
+  });
+
+  test("a match through any of their lists carries no tag", () => {
+    const buying = list({ id: 1, listType: "want", matchHave: false });
+    const swaps = list({ id: 2, listType: "want", matchSale: false });
+    const sides = [
+      { role: "want" as const, list: buying, entries: [entry(1, "h")] },
+      { role: "want" as const, list: swaps, entries: [entry(2, "h")] },
+    ];
+    expect(pickerTags(["h"], sides, viewer, "give")).toEqual({});
+  });
+
+  test("a copy is tagged by the lists that hold its collection", () => {
+    // "s" would match the Buying only want, but only the Swaps only want holds it
+    const buying = list({ id: 1, listType: "want", matchHave: false });
+    const swaps = list({ id: 2, listType: "want", matchSale: false });
+    const sides = [
+      { role: "want" as const, list: buying, entries: [entry(1, "x")] },
+      { role: "want" as const, list: swaps, entries: [entry(2, "s")] },
+    ];
+    expect(pickerTags(["s"], sides, viewer, "give")).toEqual({ s: "swap" });
+  });
+
+  test("asking, a copy that neither matches nor is near carries no tag", () => {
+    const sale = list({ id: 1, listType: "sale" });
+    expect(
+      pickerTags(["z"], [{ role: "sale", list: sale, entries: [entry(1, "z")] }], viewer, "get"),
+    ).toEqual({});
   });
 });

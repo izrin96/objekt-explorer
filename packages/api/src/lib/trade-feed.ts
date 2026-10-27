@@ -2,7 +2,9 @@ import type { ListType } from "../schemas/list";
 import { offersSwaps, type OpenToFlags, pickByOpenTo } from "../schemas/open-to";
 import {
   type BrowseMatchMode,
+  type NearVerb,
   type PeopleCursor,
+  type PickerTag,
   PREVIEW_LIMIT,
   SOLO_PREVIEW_LIMIT,
   type PostType,
@@ -155,6 +157,8 @@ type PreviewItem = {
   slug: string;
   qty: number;
   ringed?: true;
+  /** would match if one side were open the other way, never also ringed: the viewer's lists it is on */
+  near?: number[];
 };
 
 /** One stack per collection, with its newest copy. */
@@ -172,26 +176,25 @@ function stackEntries(entries: FeedEntry[]) {
 }
 
 /**
- * A side's preview: copies of a collection stack into one item, ringed first, then newest.
- * `more` counts the collections past `limit`, `copyCount` every entry.
+ * A side's preview: copies of a collection stack into one item, ringed first, then near
+ * matches, then newest. `more` counts the collections past `limit`, `copyCount` every entry.
  */
 export function previewSide(
   entries: FeedEntry[],
   ringed: SlugIndex | null,
   limit: number = PREVIEW_LIMIT,
+  near: SlugIndex | null = null,
 ) {
-  const isRinged = (slug: string) => ringed?.has(slug) ?? false;
+  const rank = (slug: string) => (ringed?.has(slug) ? 2 : near?.has(slug) ? 1 : 0);
   const stacks = stackEntries(entries);
   const items = stacks
-    .toSorted(
-      (a, b) =>
-        Number(isRinged(b.newest.slug)) - Number(isRinged(a.newest.slug)) ||
-        b.newest.id - a.newest.id,
-    )
+    .toSorted((a, b) => rank(b.newest.slug) - rank(a.newest.slug) || b.newest.id - a.newest.id)
     .slice(0, limit)
     .map(({ newest, copies }): PreviewItem => {
       const item: PreviewItem = { entryId: newest.id, slug: newest.slug, qty: copies.length };
-      if (isRinged(newest.slug)) item.ringed = true;
+      const at = rank(newest.slug);
+      if (at === 2) item.ringed = true;
+      else if (at === 1) item.near = [...(near?.get(newest.slug) ?? [])];
       return item;
     });
   return { items, more: Math.max(0, stacks.length - limit), copyCount: entries.length };
@@ -505,6 +508,97 @@ export function ruleMatchesOf(
   return [...found.values()];
 }
 
+/** `index` less the collections `minus` holds. */
+function withoutIndex(index: SlugIndex, minus: SlugIndex, ruled?: ReadonlyMap<string, unknown>) {
+  const left = new Map<string, readonly number[]>();
+  for (const [slug, listIds] of index) {
+    if (!minus.has(slug) && !ruled?.has(slug)) left.set(slug, listIds);
+  }
+  return left;
+}
+
+type NearIndexes = Record<"sell" | "swapWant" | "swapHave" | "buy", SlugIndex>;
+
+const nearIndexCache = new WeakMap<Viewer, NearIndexes>();
+
+function nearIndexes(viewer: Viewer): NearIndexes {
+  let found = nearIndexCache.get(viewer);
+  if (!found) {
+    found = {
+      sell: withoutIndex(viewer.tradeHave, viewer.saleHave),
+      swapWant: withoutIndex(viewer.saleHave, viewer.tradeHave),
+      // a collection wanted only through a rule is never near
+      swapHave: withoutIndex(viewer.saleWant, viewer.tradeWant, viewer.ruleWant),
+      buy: withoutIndex(viewer.tradeWant, viewer.saleWant, viewer.ruleWant),
+    };
+    nearIndexCache.set(viewer, found);
+  }
+  return found;
+}
+
+/**
+ * A side's near matches: the viewer's collections that would match it if one side's Open to
+ * allowed it, and what the viewer would do. Each is what `indexFor` leaves out of a wider set, so
+ * a match is never near. Null when the side is open both ways.
+ */
+export function nearFor(
+  role: "have" | "want" | "sale",
+  list: TradeList,
+  viewer: Viewer,
+): { verb: NearVerb; index: SlugIndex } | null {
+  const near = nearIndexes(viewer);
+  if (role === "have") return { verb: "swap", index: near.swapHave };
+  if (role === "sale") return list.takesSwaps ? null : { verb: "buy", index: near.buy };
+  return pickByOpenTo<{ verb: NearVerb; index: SlugIndex } | null>(list, {
+    buying: { verb: "sell", index: near.sell },
+    both: null,
+    swaps: { verb: "swap", index: near.swapWant },
+  });
+}
+
+/** A side's near collections, a rule's entries left out, and the viewer's lists they are on. */
+export function nearOf(
+  role: "have" | "want" | "sale",
+  list: TradeList,
+  entries: FeedEntry[],
+  viewer: Viewer,
+) {
+  const near = nearFor(role, list, viewer);
+  if (!near) return null;
+  const { slugs, listIds } = matchCollections([
+    { entries: entries.filter((entry) => entry.ruleId === undefined), index: near.index },
+  ]);
+  return slugs.length > 0 ? { verb: near.verb, slugs, listIds, index: near.index } : null;
+}
+
+/**
+ * The offer picker's tags for copies on `slugs`, against a person's lists as their strips ring
+ * them: none for a match, the verb for a near match. Giving, a copy whose collection is on none of
+ * the viewer's have or sale lists is "loose"; asking, every shown copy is one the viewer wants.
+ */
+export function pickerTags(
+  slugs: readonly string[],
+  sides: readonly { role: "have" | "want" | "sale"; list: TradeList; entries: FeedEntry[] }[],
+  viewer: Viewer,
+  direction: "give" | "get",
+) {
+  const tags: Record<string, PickerTag> = {};
+  const held = sides.map((side) => ({
+    side,
+    slugs: new Set(side.entries.map((entry) => entry.slug)),
+    index: indexFor(side.role, side.list, viewer),
+    near: nearFor(side.role, side.list, viewer),
+  }));
+  for (const slug of new Set(slugs)) {
+    const on = held.filter((side) => side.slugs.has(slug));
+    if (on.some((side) => side.index.has(slug))) continue;
+    const near = on.find((side) => side.near?.index.has(slug))?.near;
+    if (near) tags[slug] = near.verb;
+    else if (direction === "give" && !viewer.have.has(slug)) tags[slug] = "loose";
+  }
+  return tags;
+}
+
 /** What a post's side is matched and ringed against: the viewer's lists it can match. */
 function indexFor(role: "have" | "want" | "sale", list: TradeList, viewer: Viewer) {
   if (role === "have") return viewer.tradeWant;
@@ -549,6 +643,8 @@ export function assemblePost<L extends TradeList>(
   const limit = roles.length === 1 ? SOLO_PREVIEW_LIMIT : PREVIEW_LIMIT;
   const sides = roles.map(({ role, list, entries }) => {
     const index = viewer ? indexFor(role, list, viewer) : null;
+    // Only matches shows no near tile, so the strip names none
+    const near = viewer && !filter.onlyMatches ? nearOf(role, list, entries, viewer) : null;
     const isRelated = (entry: FeedEntry) =>
       (filter.slugs === null || filter.slugs.has(entry.slug)) &&
       (filter.slug === null || entry.slug === filter.slug) &&
@@ -559,6 +655,7 @@ export function assemblePost<L extends TradeList>(
       related.filter((entry) => entry.ruleId === undefined),
       index,
       Math.max(0, limit - rules.length),
+      near?.index ?? null,
     );
     const copyCount = related.length;
     // the whole side's collections, as the side's dialog counts All; a rule's stay on its tile
@@ -574,6 +671,7 @@ export function assemblePost<L extends TradeList>(
       others: entries.length - related.length,
       collectionCount,
       rules,
+      near: near ? { verb: near.verb, count: near.slugs.length, listIds: near.listIds } : undefined,
     };
   });
   if (sides.every((side) => side.items.length + side.more + side.rules.length === 0)) return null;
@@ -618,12 +716,19 @@ export function fullSide(
   limit: number = FULL_SIDE_LIMIT,
 ) {
   const index = viewer ? indexFor(role, list, viewer) : null;
+  const near = viewer ? nearOf(role, list, entries, viewer) : null;
   const objekts = entries.filter((entry) => entry.ruleId === undefined);
-  const { items, more, copyCount } = previewSide(objekts, index, limit);
+  const { items, more, copyCount } = previewSide(objekts, index, limit, near?.index ?? null);
   const matched = index
     ? new Set(objekts.flatMap((entry) => (index.has(entry.slug) ? [entry.slug] : []))).size
     : 0;
-  return { items, more, copyCount, matched };
+  return {
+    items,
+    more,
+    copyCount,
+    matched,
+    near: near ? { verb: near.verb, count: near.slugs.length, listIds: near.listIds } : null,
+  };
 }
 /**
  * A list's collections that match the viewer, by the rule its post side rings with, and the
@@ -642,5 +747,18 @@ export function listMatchesOf(
       index: indexFor(role, list, viewer),
     },
   ]);
-  return { slugs, listIds };
+  const near = nearOf(role, list, entries, viewer);
+  return {
+    slugs,
+    listIds,
+    near: near
+      ? {
+          verb: near.verb,
+          slugs: near.slugs,
+          listIds: near.listIds,
+          // the viewer's lists behind each, so the drawer can name the one holding it
+          listIdsOf: Object.fromEntries(near.slugs.map((slug) => [slug, near.index.get(slug)!])),
+        }
+      : null,
+  };
 }

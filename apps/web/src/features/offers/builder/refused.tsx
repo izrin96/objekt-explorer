@@ -14,14 +14,17 @@ export function BuilderRefused({
   request,
   refusal,
   onDone,
+  header = true,
 }: {
   request: OfferRequest;
   refusal: OfferRefusalInfo;
   onDone: () => void;
+  /** false where the caller already drew the header */
+  header?: boolean;
 }) {
   return (
     <>
-      <BuilderHeader request={request} />
+      {header ? <BuilderHeader request={request} /> : null}
       <DialogPanel>
         <div role="alert" className="flex flex-col items-start gap-3">
           <p className="text-sm text-pretty">

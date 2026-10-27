@@ -28,6 +28,7 @@ export function Topup({
   onPayer,
   error,
   name,
+  reason,
 }: {
   on: boolean;
   onToggle: (on: boolean) => void;
@@ -41,6 +42,8 @@ export function Topup({
   /** why the amount can't be sent, shown under it */
   error: string | null;
   name: string;
+  /** why the top-up opened on its own: a near sale or buy */
+  reason?: string;
 }) {
   const { codes } = useCurrency();
   const amountId = useId();
@@ -70,6 +73,7 @@ export function Topup({
           {m.offer_topup_remove()}
         </Button>
       </div>
+      {reason ? <p className="text-muted-foreground text-sm text-pretty">{reason}</p> : null}
       <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,7rem)] gap-3 sm:grid-cols-[minmax(0,12rem)_minmax(0,8rem)_auto]">
         <div className="flex min-w-0 flex-col gap-1.5">
           <Label htmlFor={amountId}>{m.offer_topup_amount()}</Label>

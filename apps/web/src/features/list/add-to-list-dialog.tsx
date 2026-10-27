@@ -57,11 +57,15 @@ import {
   toSource,
 } from "./add-to-list-source";
 import { CreateListDialog } from "./create-list-dialog";
+import { EMPTY_DRAFT, type ListDraft } from "./list-form";
 import { ListTypeBadge } from "./list-type-badge";
 
 export type { AddableObjekt } from "./add-to-list-source";
 
-type OpenAddToList = (objekts: AddableObjekt[], options?: { combined?: boolean }) => void;
+type OpenAddToList = (
+  objekts: AddableObjekt[],
+  options?: Pick<AddTarget, "combined" | "saleOnly">,
+) => void;
 
 /** rows the preview draws before folding the rest into a count */
 const PREVIEW_ROWS = 12;
@@ -96,7 +100,7 @@ export function AddToListProvider({
 
   const openAddToList = useCallback<OpenAddToList>((objekts, options) => {
     if (objekts.length === 0) return;
-    setTarget({ objekts, combined: options?.combined });
+    setTarget({ objekts, combined: options?.combined, saleOnly: options?.saleOnly });
     setOpen(true);
   }, []);
 
@@ -134,6 +138,7 @@ function AddToListDialog({
   const [slug, setSlug] = useState<string | null>(null);
   const [skipDups, setSkipDups] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
+  const [createDraft, setCreateDraft] = useState<ListDraft | undefined>(undefined);
   // up here, not in the form: a request still running when the popup closes
   // keeps its toast, and a reopened form sees it pending
   const addToList = useAddToList();
@@ -158,13 +163,22 @@ function AddToListDialog({
             onSlugChange={setSlug}
             skipDups={skipDups}
             onSkipDupsChange={setSkipDups}
-            onCreateList={() => setCreateOpen(true)}
+            onCreateList={(draft) => {
+              setCreateDraft(draft);
+              setCreateOpen(true);
+            }}
             // the parent's own setter, so a successful add keeps the list picked
             onDone={() => onOpenChange(false)}
           />
         </DialogPopup>
       </Dialog>
-      <CreateListDialog open={createOpen} onOpenChange={setCreateOpen} />
+      {/* keyed: the dialog keeps its draft between openings */}
+      <CreateListDialog
+        key={createDraft ? `sale:${createDraft.profileAddress}` : "any"}
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        initial={createDraft}
+      />
     </>
   );
 }
@@ -190,10 +204,20 @@ function AddToListForm({
   onSlugChange: (slug: string | null) => void;
   skipDups: boolean;
   onSkipDupsChange: (skipDups: boolean) => void;
-  onCreateList: () => void;
+  onCreateList: (draft?: ListDraft) => void;
   onDone: () => void;
 }) {
-  const lists = useUserLists();
+  const allLists = useUserLists();
+  const { saleOnly } = target;
+  const lists = saleOnly
+    ? allLists.filter(
+        (list) =>
+          list.listType === "sale" &&
+          list.isProfileBind &&
+          (saleOnly.profiles === null ||
+            saleOnly.profiles.some((a) => isSameAddress(a, list.profileAddress ?? ""))),
+      )
+    : allLists;
   const profiles = useUserProfiles();
   const [unpicked, setUnpicked] = useState<ReadonlySet<string>>(new Set());
   const [price, setPrice] = useState<number | null>(null);
@@ -312,12 +336,23 @@ function AddToListForm({
       <DialogPanel>
         {lists.length === 0 ? (
           <Note>
-            {m.list_manage_objekt_no_list_message()}{" "}
+            {saleOnly ? m.list_add_no_sale_list() : m.list_manage_objekt_no_list_message()}{" "}
             <Button
               variant="link"
               size="sm"
               className="h-auto p-0 underline"
-              onClick={onCreateList}
+              onClick={() =>
+                onCreateList(
+                  saleOnly
+                    ? {
+                        ...EMPTY_DRAFT,
+                        listType: "sale",
+                        isProfileBind: true,
+                        profileAddress: saleOnly.profiles?.[0] ?? null,
+                      }
+                    : undefined,
+                )
+              }
             >
               {m.list_manage_objekt_create_one_here()}
             </Button>

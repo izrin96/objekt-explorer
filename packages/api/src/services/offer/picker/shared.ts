@@ -15,6 +15,7 @@ import {
   type CandidateItem,
   type PartnerList,
 } from "../../../schemas/offer";
+import type { PickerTag } from "../../../schemas/trade";
 import { fetchCollectionsBySlug } from "../../list";
 import { type IndexedObjekt, lowerOwner, objektColumns } from "../core";
 
@@ -51,6 +52,8 @@ export type CandidatesPage = {
   /** theirs, whole list only: the List choice's lists */
   lists?: PartnerList[];
   wanted: string[];
+  /** with Only what they want on: each near or loose copy's tag, by collection */
+  tags?: Record<string, PickerTag>;
   collections: Awaited<ReturnType<typeof collectionsOf>>;
 };
 

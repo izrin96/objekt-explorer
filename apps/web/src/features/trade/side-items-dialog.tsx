@@ -1,7 +1,7 @@
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { createContext, type ReactNode, use } from "react";
+import { createContext, type ReactNode, type RefObject, use } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -21,9 +21,10 @@ import { LIST_TYPE_LABEL } from "@/features/list/list-type-badge";
 import { ObjektCard } from "@/features/objekt/objekt-card";
 import { m } from "@/paraglide/messages";
 
+import { type NearOpen, nearCountText, nearRingText, type OpenObjekt, type SideNear } from "./near";
 import type { PostSideData } from "./post-types";
 import { sideItemsOptions } from "./queries";
-import { RING, SlugTile } from "./thumb-grid";
+import { NEAR_RING, RING, SlugTile } from "./thumb-grid";
 
 /** For you's Compare with, as the feed sends it, so the dialog rings what the strip rings. */
 export const SideCompareContext = createContext<{ list?: string; mutual: boolean }>({
@@ -32,23 +33,31 @@ export const SideCompareContext = createContext<{ list?: string; mutual: boolean
 
 const GRID = "grid grid-cols-4 gap-x-2 gap-y-3 sm:grid-cols-6";
 
-type SideItem = { entryId: number; slug: string; qty: number; ringed?: true };
+type SideItem = { entryId: number; slug: string; qty: number; ringed?: true; near?: number[] };
 
 function SideGrid({
   items,
+  nearOf,
   collections,
   onOpen,
 }: {
   items: readonly SideItem[];
+  nearOf?: (myListIds: readonly number[]) => NearOpen | undefined;
   collections: Readonly<Record<string, ValidObjekt | undefined>>;
-  onOpen: (objekt: ValidObjekt) => void;
+  onOpen: OpenObjekt;
 }) {
   return (
     // padding gives the ring room
     <ul className={`${GRID} p-1`}>
       {items.map((item) => {
         const collection = collections[item.slug];
-        const description = item.ringed ? m.trade_match_ring() : undefined;
+        const near = item.near ? nearOf?.(item.near) : undefined;
+        const description = near
+          ? nearRingText(near.verb, item.qty)
+          : item.ringed
+            ? m.trade_match_ring()
+            : undefined;
+        const ring = item.ringed ? RING : near ? NEAR_RING : undefined;
         return (
           <li key={item.entryId} className="@container min-w-0">
             {collection ? (
@@ -56,17 +65,38 @@ function SideGrid({
                 objekt={collection}
                 image="thumbnail"
                 qty={item.qty > 1 ? item.qty : undefined}
-                onOpen={onOpen}
-                imageClassName={item.ringed ? RING : undefined}
+                onOpen={(objekt) => onOpen(objekt, near)}
+                imageClassName={ring}
                 description={description}
               />
             ) : (
-              <SlugTile className={item.ringed ? RING : undefined}>{item.slug}</SlugTile>
+              <SlugTile className={ring}>{item.slug}</SlugTile>
             )}
           </li>
         );
       })}
     </ul>
+  );
+}
+
+const KEY_SWATCH = "bg-muted inline-block h-3.5 w-2.5 shrink-0 rounded-xs outline-offset-1";
+
+/** The two rings, named, while the dialog shows a near match beside the matches. */
+function RingKey({ near }: { near: SideNear }) {
+  return (
+    <p className="text-muted-foreground flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
+      <span className="flex items-center gap-2">
+        <span aria-hidden className={`${KEY_SWATCH} outline-foreground outline-2`} />
+        {m.trade_match_ring()}
+      </span>
+      <span className="flex items-center gap-2">
+        <span
+          aria-hidden
+          className={`${KEY_SWATCH} outline-muted-foreground outline-2 outline-dashed`}
+        />
+        {nearCountText(near.verb, near.count)}
+      </span>
+    </p>
   );
 }
 
@@ -82,6 +112,7 @@ export function SideItemsDialog({
   open,
   onOpenChange,
   onOpen,
+  finalFocus,
 }: {
   side: PostSideData;
   /** the feed's filters left objekts out of the strip; the dialog shows them all */
@@ -90,16 +121,22 @@ export function SideItemsDialog({
   rules?: ReactNode;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onOpen: (objekt: ValidObjekt) => void;
+  onOpen: OpenObjekt;
+  /** where focus goes on close, when what opened it is gone by then (a menu item) */
+  finalFocus?: RefObject<HTMLElement | null>;
 }) {
   const compare = use(SideCompareContext);
   const query = useQuery(sideItemsOptions(side.list.id, compare, open));
   const data = query.data;
   // the objekt view is a modal of its own, so this one gives way to it
-  const openObjekt = (objekt: ValidObjekt) => {
+  const openObjekt: OpenObjekt = (objekt, near) => {
     onOpenChange(false);
-    onOpen(objekt);
+    onOpen(objekt, near);
   };
+  const nearOf = (myListIds: readonly number[]): NearOpen | undefined =>
+    data?.near
+      ? { verb: data.near.verb, role: side.role, theirList: side.list.name, myListIds }
+      : undefined;
   const matchLabel = (count: number) =>
     side.role === "want"
       ? m.trade_list_count_you_have({ count })
@@ -107,7 +144,7 @@ export function SideItemsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogPopup className="sm:max-w-2xl">
+      <DialogPopup className="sm:max-w-2xl" finalFocus={finalFocus}>
         <DialogHeader>
           <DialogTitle className="font-display truncate">{side.list.name}</DialogTitle>
           <DialogDescription>{LIST_TYPE_LABEL[side.role]()}</DialogDescription>
@@ -154,7 +191,15 @@ export function SideItemsDialog({
                 />
               </TabsPanel>
               <TabsPanel value="all" className="flex flex-col gap-3">
-                <SideGrid items={data.items} collections={data.collections} onOpen={openObjekt} />
+                {data.near && data.items.some((item) => item.near) ? (
+                  <RingKey near={data.near} />
+                ) : null}
+                <SideGrid
+                  items={data.items}
+                  nearOf={nearOf}
+                  collections={data.collections}
+                  onOpen={openObjekt}
+                />
                 {data.more > 0 ? (
                   <p className="text-muted-foreground text-xs">
                     {m.trade_side_more({ count: data.more })}

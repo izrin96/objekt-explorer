@@ -20,7 +20,9 @@ import {
   latest,
   matchesViewer,
   narrowViewer,
+  nearOf,
   nextBumpAt,
+  pickerTags,
   pairPosts,
   previewSide,
   untradeableKey,
@@ -230,6 +232,7 @@ export async function loadPosts(ctx: LoadContext, rows: FeedRow[], need: number)
               },
             ];
           }),
+          near: side.near,
         })),
         match: assembled.match,
         // the viewer's own rules, by the slugs they matched; For you names them under the strips
@@ -491,10 +494,85 @@ export async function fetchSideItems(viewerId: string | null, input: SideItemsIn
   };
 }
 
+/** A person's lists the viewer sees on Trade, in posts still listed: those their strips draw. */
+async function listedTradeLists(viewerId: string, personId: string) {
+  const rows = await db
+    .select(feedListColumns)
+    .from(lists)
+    .where(and(eq(lists.userId, personId), visibleOnTrade(viewerId)));
+  const now = new Date();
+  return pairPosts(rows)
+    .filter((post) => !isPostIdle(post, now))
+    .flatMap((post) =>
+      [post.have, post.sale, post.want].flatMap((list) =>
+        list && isTradeType(list.listType) ? [{ ...list, listType: list.listType }] : [],
+      ),
+    );
+}
+
+/**
+ * A person's near matches to the viewer, as their strips show them: for each of their lists on
+ * Trade, or only those `listIds` names, its role, verb and collections, with the viewer's lists
+ * behind each. `sides` narrows the viewer to Compare with's lists.
+ */
+export async function personNear(
+  viewerId: string,
+  personId: string,
+  sides: Sides | null,
+  listIds?: ReadonlySet<number>,
+) {
+  const tradeLists = (await listedTradeLists(viewerId, personId)).filter(
+    (list) => !listIds || listIds.has(list.id),
+  );
+  if (tradeLists.length === 0) return [];
+  const [addressRows, viewer] = await Promise.all([
+    fetchAddresses([personId]),
+    fetchViewer(viewerId),
+  ]);
+  const entriesOf = await fetchPostEntries(tradeLists, addressesByUser(addressRows));
+  const narrowed = sides ? narrowViewer(viewer, sides) : viewer;
+  return tradeLists.flatMap((list) => {
+    const near = nearOf(list.listType, list, entriesOf.get(list.id) ?? [], narrowed);
+    return near ? [{ listId: list.id, role: list.listType, ...near }] : [];
+  });
+}
+
+/**
+ * The offer picker's tags for the viewer's copies, giving (against the person's want lists), or
+ * the person's, asking (against their have and sale lists), by `pickerTags`.
+ */
+export async function pickerTagsFor(
+  viewerId: string,
+  personId: string,
+  direction: "give" | "get",
+  slugs: readonly string[],
+) {
+  if (slugs.length === 0) return {};
+  const sideLists = (await listedTradeLists(viewerId, personId)).filter(
+    (list) => (list.listType === "want") === (direction === "give"),
+  );
+  if (sideLists.length === 0) return {};
+  const [addressRows, viewer] = await Promise.all([
+    fetchAddresses([personId]),
+    fetchViewer(viewerId),
+  ]);
+  const entriesOf = await fetchPostEntries(sideLists, addressesByUser(addressRows));
+  return pickerTags(
+    slugs,
+    sideLists.map((list) => ({
+      role: list.listType,
+      list,
+      entries: (entriesOf.get(list.id) ?? []).filter((entry) => entry.ruleId === undefined),
+    })),
+    viewer,
+    direction,
+  );
+}
+
 /** Which of a list's collections match the viewer's lists, and which of theirs: none on their own. */
 export async function fetchListMatches(viewerId: string, listId: number) {
   const list = await findTradeList(viewerId, listId);
-  if (list.userId === viewerId) return { slugs: [], listIds: [] };
+  if (list.userId === viewerId) return { slugs: [], listIds: [], near: null };
   const [entries, viewer] = await Promise.all([tradeEntriesOf(list), fetchViewer(viewerId)]);
   return listMatchesOf(list.listType, list, entries, viewer);
 }

@@ -1,5 +1,6 @@
 import { CheckIcon } from "@phosphor-icons/react";
 import type { CandidateItem } from "@repo/api/schemas/offer";
+import type { PickerTag } from "@repo/api/schemas/trade";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useRef } from "react";
 
@@ -19,6 +20,13 @@ import { m } from "@/paraglide/messages";
 import { offerNo } from "./format";
 import { blockedReason } from "./pick";
 
+const TAG_TEXT: Record<PickerTag, () => string> = {
+  sell: m.offer_tag_near_sell,
+  swap: m.offer_tag_near_swap,
+  buy: m.offer_tag_near_buy,
+  loose: m.offer_tag_loose,
+};
+
 export function CandidateTile({
   item,
   collection,
@@ -28,6 +36,7 @@ export function CandidateTile({
   full,
   onToggle,
   onCount,
+  tag,
 }: {
   item: CandidateItem;
   collection: ValidObjekt | undefined;
@@ -39,6 +48,8 @@ export function CandidateTile({
   full: boolean;
   onToggle: () => void;
   onCount?: (count: number) => void;
+  /** with Only what they want on: a near match's verb, or kept on none of the viewer's lists */
+  tag?: PickerTag;
 }) {
   const blocked = blockedReason(item);
   // focusable while unavailable, so the reason under it is read with it
@@ -115,6 +126,16 @@ export function CandidateTile({
         ) : item.inOpenOffer.length > 0 ? (
           <span className="text-warning-foreground">
             {m.offer_flag_in_open_offer({ offers: item.inOpenOffer.map(offerNo).join(", ") })}
+          </span>
+        ) : null}
+        {tag ? (
+          <span
+            className={cn(
+              "text-muted-foreground mt-0.5 w-fit rounded-xs px-1",
+              tag === "loose" ? "bg-muted" : "border border-dashed",
+            )}
+          >
+            {TAG_TEXT[tag]()}
           </span>
         ) : null}
       </span>

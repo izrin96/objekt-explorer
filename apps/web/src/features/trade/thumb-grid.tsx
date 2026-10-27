@@ -9,6 +9,10 @@ import { cn } from "@/lib/utils";
  */
 export const RING = "rounded-photocard outline-foreground outline-2 outline-offset-1";
 
+/** A near match: the ring's shape, dashed and muted, so it reads as almost and never as a match. */
+export const NEAR_RING =
+  "rounded-photocard outline-muted-foreground outline-2 outline-dashed outline-offset-1";
+
 /** A photocard-shaped placeholder: the slug for a collection not loaded, or a "+N" count. */
 export const TILE =
   "bg-muted text-muted-foreground rounded-photocard aspect-photocard grid place-items-center font-mono";

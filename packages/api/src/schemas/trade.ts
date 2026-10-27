@@ -136,11 +136,27 @@ export type SideItemsInput = z.infer<typeof sideItemsInputSchema>;
 
 const addressRefSchema = z.object({ address: z.string(), nickname: z.string().nullable() });
 
+/** What the viewer would do to make a near match count: sell, swap or buy. */
+export const nearVerbSchema = z.enum(["sell", "swap", "buy"]);
+export type NearVerb = z.infer<typeof nearVerbSchema>;
+
+/** The offer picker's tag on a copy: a near match's verb, or "loose", kept on none of the viewer's lists. */
+export type PickerTag = NearVerb | "loose";
+
+/** A side's near matches: never counted, only shown beside the matches. */
+const sideNearSchema = z.object({
+  verb: nearVerbSchema,
+  count: z.number().int(),
+  listIds: z.array(z.number().int()),
+});
+export type SideNear = z.infer<typeof sideNearSchema>;
+
 const previewItemSchema = z.object({
   entryId: z.number().int(),
   slug: z.string(),
   qty: z.number().int(),
   ringed: z.literal(true).optional(),
+  near: z.array(z.number().int()).optional(),
 });
 
 const feedCollectionsSchema = z.record(
@@ -174,6 +190,7 @@ const feedSideSchema = z.object({
       rule: ruleDefSchema,
     }),
   ),
+  near: sideNearSchema.optional(),
 });
 
 const postTagSchema = z.enum(["wtt", "wtb", "wts"]);
@@ -238,6 +255,7 @@ export const sideItemsOutputSchema = z.object({
   more: z.number().int(),
   copyCount: z.number().int(),
   matched: z.number().int(),
+  near: sideNearSchema.nullable(),
   collections: feedCollectionsSchema,
 });
 

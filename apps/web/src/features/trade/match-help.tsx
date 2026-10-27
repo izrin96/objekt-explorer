@@ -106,6 +106,7 @@ const SECTIONS: Section[] = [
         { key: "owned", cells: [m.trade_help_owned_label, m.trade_match_help_owned] },
         { key: "hidden", cells: [m.trade_help_hidden_label, m.trade_help_hidden] },
         { key: "rules", cells: [m.trade_help_rules_label, m.trade_help_rules] },
+        { key: "near", cells: [m.trade_help_near_label, m.trade_help_near] },
       ],
     },
   },

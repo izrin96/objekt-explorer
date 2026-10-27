@@ -59,12 +59,10 @@ export const offerRouter = {
       respondToOffer(session.user.id, offerId, "withdraw"),
     ),
 
-  suggest: authed
-    .input(suggestInputSchema)
-    .handler(async ({ input: { partnerId }, context: { session } }) => {
-      await limitPicker(session.user.id);
-      return suggestOffer(session.user.id, partnerId);
-    }),
+  suggest: authed.input(suggestInputSchema).handler(async ({ input, context: { session } }) => {
+    await limitPicker(session.user.id);
+    return suggestOffer(session.user.id, input);
+  }),
 
   mine: authed
     .input(mineInputSchema)

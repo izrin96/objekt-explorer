@@ -3,17 +3,29 @@ import { conversation, listEntries, lists } from "@repo/db/schema";
 import { and, eq, inArray } from "drizzle-orm";
 
 import { holdsMessage, pairKey } from "../../../lib/chat-rules";
+import {
+  chooseMatchPicks,
+  itemsOnLists,
+  postSides,
+  matchesThrough,
+  type NearList,
+  nearGroups,
+  type PartnerEntry,
+} from "../../../lib/offer-prefill";
 import { itemFlags } from "../../../lib/offer-rules";
+import type { Match } from "../../../lib/trade-rank";
 import { unique } from "../../../lib/unique";
 import { type ChatTarget } from "../../../schemas/chat";
 import {
   type CandidateCursor,
   type CandidateItem,
-  OFFER_SIDE_LIMIT,
   type PickerNarrowing,
 } from "../../../schemas/offer";
+import type { NearVerb } from "../../../schemas/trade";
 import { chatSafety, fetchPref } from "../../chat";
-import { resolveTradeSides } from "../../trade-matches";
+import { personNear } from "../../trade-feed";
+import { takesPartInTrade } from "../../trade-lists";
+import { recountPartners, resolveCompareSides } from "../../trade-matches";
 import {
   type Addressed,
   type IndexedObjekt,
@@ -65,114 +77,252 @@ export async function offerCandidates(
   return { ...page, lists };
 }
 
-export async function suggestOffer(me: string, partnerId: string) {
+type SuggestInput = { partnerId: string; list?: string; mutual?: boolean; post?: string };
+
+/**
+ * The matches the partner's Trade row counts, swaps and sales alike, one copy per collection a
+ * side, chosen by
+ * `chooseMatchPicks`. `post` narrows them to one post's lists: its have or sale list for the get
+ * side, its want list for the give side.
+ */
+export async function suggestOffer(me: string, { partnerId, list, mutual, post }: SuggestInput) {
   if (partnerId === me) refuseOffer("self");
-  const empty = { give: [] as CandidateItem[], get: [] as CandidateItem[], collections: {} };
+  const empty = {
+    give: [] as CandidateItem[],
+    get: [] as CandidateItem[],
+    matched: { give: 0, get: 0 },
+    near: [] as SuggestedNear[],
+    postName: null as string | null,
+    collections: {},
+  };
   const safety = await chatSafety(me, partnerId);
   if (safety.blocked || safety.tradeBlocked || safety.partnerTradeBlocked) return empty;
 
-  const sides = await resolveTradeSides(me, undefined, "all");
   const { userLow, userHigh } = pairKey(me, partnerId);
-  const [myEntries, partnerWants, existing] = await Promise.all([
-    db
-      .select({
-        listId: listEntries.listId,
-        listSlug: lists.slug,
-        collectionSlug: listEntries.collectionSlug,
-        objektId: listEntries.objektId,
-      })
-      .from(listEntries)
-      .innerJoin(lists, eq(lists.id, listEntries.listId))
-      .where(inArray(listEntries.listId, [...sides.haveListIds, ...sides.wantListIds]))
-      .orderBy(listEntries.id),
-    db
-      .selectDistinct({ collectionSlug: listEntries.collectionSlug })
-      .from(listEntries)
-      .innerJoin(lists, eq(lists.id, listEntries.listId))
-      .where(
-        and(eq(lists.userId, partnerId), eq(lists.listType, "want"), eq(lists.discoverable, true)),
-      ),
+  const [sides, postLists, existing] = await Promise.all([
+    resolveCompareSides(me, list, mutual ?? false),
+    post === undefined ? null : postListsOf(partnerId, post),
     db
       .select({ id: conversation.id, lastMessageId: conversation.lastMessageId })
       .from(conversation)
       .where(and(eq(conversation.userLow, userLow), eq(conversation.userHigh, userHigh))),
   ]);
-  const haveIds = new Set(sides.haveListIds);
-  const myWantSlugs = unique(
-    myEntries.flatMap((e) =>
-      !haveIds.has(e.listId) && e.collectionSlug ? [e.collectionSlug] : [],
-    ),
-  );
-  const theyWant = new Set(
-    partnerWants.flatMap((w) => (w.collectionSlug ? [w.collectionSlug] : [])),
-  );
+  if (post !== undefined && !postLists) return empty;
   // until the first message, someone who accepts no messages is not read at all
   const held = holdsMessage(existing[0]?.lastMessageId);
   if (!held && (await fetchPref(partnerId)).allow === "nobody") return empty;
+  if (sides.haveListIds.length === 0 && sides.wantListIds.length === 0) return empty;
+
+  const [{ recounted }, nearLists] = await Promise.all([
+    recountPartners(me, sides, "all", { ownerIds: [partnerId] }),
+    // the strips' near matches, narrowed as the strips are: by Compare with when a list is named
+    personNear(
+      me,
+      partnerId,
+      list === undefined ? null : sides,
+      postLists ? new Set([...postLists.offerIds, ...postLists.wantIds]) : undefined,
+    ),
+  ]);
+  // a person with near matches only still gets them
+  const partner = recounted.find((row) => row.userId === partnerId);
+  const getMatches = partner ? matchesThrough(partner.theyHaveIWant, postLists?.offerIds) : [];
+  const giveMatches = partner ? matchesThrough(partner.iHaveTheyWant, postLists?.wantIds) : [];
+
   const addressed: Addressed = {
     partnerId,
     conversationId: existing[0]?.id ?? null,
     empty: !held,
     start: null,
   };
-
-  const [theirs, mine] = await Promise.all([
-    myWantSlugs.length === 0 ? null : theirCandidates(me, addressed, myWantSlugs),
-    (async () => {
-      const giveEntries = myEntries.filter(
-        (e) => haveIds.has(e.listId) && e.collectionSlug && theyWant.has(e.collectionSlug),
-      );
-      const addresses = [...((await linkedAddresses([me])).get(me) ?? [])];
-      const [tokens, copies] = await Promise.all([
-        fetchObjekts(giveEntries.flatMap((e) => (e.objektId ? [e.objektId] : []))),
-        fetchCopies(
-          giveEntries.flatMap((e) => (e.objektId === null ? [e.collectionSlug!] : [])),
-          addresses,
+  const [theirs, mine, offered] = await Promise.all([
+    getMatches.length === 0
+      ? null
+      : theirCandidates(
+          me,
+          addressed,
+          getMatches.map((match) => match.slug),
         ),
-      ]);
-      const ids = [...tokens.keys(), ...copies.map((c) => c.id)];
-      const [reserved, holders] = await Promise.all([reservedIds(ids), openOfferHolders(ids, me)]);
-      const owned = new Set(addresses);
-      const picked = new Map<string, CandidateItem>();
-      const offerable = (o: IndexedObjekt) =>
-        owned.has(o.owner) && o.transferable && !reserved.has(o.id) && !picked.has(o.id);
-      for (const entry of giveEntries) {
-        const choice = entry.objektId
-          ? [tokens.get(entry.objektId)].find(
-              (o) => o && o.slug === entry.collectionSlug && offerable(o),
-            )
-          : copies.find((o) => o.slug === entry.collectionSlug && offerable(o));
-        if (!choice) continue;
-        picked.set(
-          choice.id,
-          toCandidate(
-            choice,
-            itemFlags(choice, reserved, holders, addressed.conversationId),
-            entry.listSlug,
-          ),
-        );
-      }
-      return [...picked.values()];
-    })(),
+    giveMatches.length === 0 ? [] : myCopies(me, giveMatches, addressed.conversationId),
+    partnerEntries(
+      getMatches.flatMap((match) => match.partnerListIds),
+      getMatches.map((match) => match.slug),
+    ),
   ]);
 
-  const wanted = new Set(myWantSlugs);
-  const get = (theirs?.items ?? []).filter(
-    (item) => wanted.has(item.collectionSlug) && item.transferable && !item.reserved,
+  const theirItems = theirs?.items ?? [];
+  const near = await nearPicks(me, addressed, nearLists, {
+    give: new Set(giveMatches.map((match) => match.slug)),
+    get: new Set(getMatches.map((match) => match.slug)),
+  });
+  const picks = chooseMatchPicks(
+    giveMatches.map((match) => ({
+      slug: match.slug,
+      items: mine.filter((item) => item.collectionSlug === match.slug),
+    })),
+    getMatches.map((match) => ({
+      slug: match.slug,
+      items: itemsOnLists(
+        theirItems,
+        offered,
+        match.slug,
+        new Set(match.partnerListIds.filter((id) => !postLists || postLists.offerIds.has(id))),
+      ),
+    })),
   );
-  // one item per wanted collection: any copy where offered, else the first specific one
-  const bySlug = new Map<string, CandidateItem>();
-  for (const item of get) {
-    const current = bySlug.get(item.collectionSlug);
-    if (!current || (item.objektId === null && current.objektId !== null)) {
-      bySlug.set(item.collectionSlug, item);
+  return {
+    ...picks,
+    near,
+    postName: postLists?.name ?? null,
+    collections: await collectionsOf(
+      [...picks.give, ...picks.get, ...near.flatMap((group) => group.items)].map(
+        (item) => item.collectionSlug,
+      ),
+    ),
+  };
+}
+
+/** Near matches the builder offers to add, one group per side and verb, picked as matches are. */
+export type SuggestedNear = { side: "give" | "get"; verb: NearVerb; items: CandidateItem[] };
+
+/**
+ * One copy per near collection, by the rules for matches: under You give from the viewer's lists
+ * behind a want list's near match, under You get from the person's list. A collection already
+ * added as a match on that side is left out.
+ */
+async function nearPicks(
+  me: string,
+  addressed: Addressed,
+  nearLists: readonly NearList[],
+  matched: { give: ReadonlySet<string>; get: ReadonlySet<string> },
+): Promise<SuggestedNear[]> {
+  const wanted = nearGroups(nearLists, matched);
+  if (wanted.length === 0) return [];
+  const gives = wanted.filter((group) => group.side === "give").flatMap((group) => group.matches);
+  const gets = wanted.filter((group) => group.side === "get").flatMap((group) => group.matches);
+  const [mine, theirs, offered] = await Promise.all([
+    gives.length === 0 ? [] : myCopies(me, gives, addressed.conversationId),
+    gets.length === 0
+      ? null
+      : theirCandidates(
+          me,
+          addressed,
+          gets.map((match) => match.slug),
+        ),
+    partnerEntries(
+      gets.flatMap((match) => match.partnerListIds),
+      gets.map((match) => match.slug),
+    ),
+  ]);
+  const theirItems = theirs?.items ?? [];
+  return wanted.flatMap(({ side, verb, matches }) => {
+    const picks =
+      side === "give"
+        ? chooseMatchPicks(
+            matches.map((match) => ({
+              slug: match.slug,
+              items: mine.filter((item) => item.collectionSlug === match.slug),
+            })),
+            [],
+          ).give
+        : chooseMatchPicks(
+            [],
+            matches.map((match) => ({
+              slug: match.slug,
+              items: itemsOnLists(theirItems, offered, match.slug, new Set(match.partnerListIds)),
+            })),
+          ).get;
+    return picks.length > 0 ? [{ side, verb, items: picks }] : [];
+  });
+}
+
+/** The partner's post named by one of its lists (`postSides`), null when it is not on Trade. */
+async function postListsOf(partnerId: string, slug: string) {
+  const onTrade = and(eq(lists.userId, partnerId), eq(lists.discoverable, true), takesPartInTrade);
+  const [named] = await db
+    .select({ id: lists.id, linkedListId: lists.linkedListId })
+    .from(lists)
+    .where(and(onTrade, eq(lists.slug, slug)));
+  if (!named) return null;
+  const rows = await db
+    .select({
+      id: lists.id,
+      name: lists.name,
+      listType: lists.listType,
+    })
+    .from(lists)
+    .where(
+      and(
+        onTrade,
+        inArray(lists.id, [named.id, ...(named.linkedListId ? [named.linkedListId] : [])]),
+      ),
+    );
+  return postSides(rows);
+}
+
+/**
+ * The entries of those lists on `slugs`. The picker keeps one list per objekt, so an objekt on two
+ * lists is matched back here to the list its match runs through.
+ */
+async function partnerEntries(ids: number[], slugs: string[]) {
+  if (ids.length === 0 || slugs.length === 0) return [];
+  const rows = await db
+    .select({
+      listId: lists.id,
+      listSlug: lists.slug,
+      hideSerial: lists.hideSerial,
+      collectionSlug: listEntries.collectionSlug,
+      objektId: listEntries.objektId,
+    })
+    .from(listEntries)
+    .innerJoin(lists, eq(lists.id, listEntries.listId))
+    .where(and(inArray(lists.id, unique(ids)), inArray(listEntries.collectionSlug, slugs)))
+    .orderBy(listEntries.id);
+  return rows.flatMap((row): PartnerEntry[] =>
+    row.collectionSlug === null ? [] : [{ ...row, collectionSlug: row.collectionSlug }],
+  );
+}
+
+/**
+ * Every copy the viewer could give for the matches: the entries on the match's own lists, each
+ * specific objekt and each held copy of an any-copy entry, with its flags.
+ */
+async function myCopies(me: string, matches: Match[], conversationId: number | null) {
+  const listIds = unique(matches.flatMap((match) => match.myListIds));
+  const slugs = unique(matches.map((match) => match.slug));
+  const entries = await db
+    .select({
+      listSlug: lists.slug,
+      collectionSlug: listEntries.collectionSlug,
+      objektId: listEntries.objektId,
+    })
+    .from(listEntries)
+    .innerJoin(lists, eq(lists.id, listEntries.listId))
+    .where(and(inArray(listEntries.listId, listIds), inArray(listEntries.collectionSlug, slugs)))
+    .orderBy(listEntries.id);
+  const offering = entries.filter((entry) => entry.collectionSlug !== null);
+  const addresses = [...((await linkedAddresses([me])).get(me) ?? [])];
+  const [tokens, copies] = await Promise.all([
+    fetchObjekts(offering.flatMap((e) => (e.objektId ? [e.objektId] : []))),
+    fetchCopies(
+      unique(offering.flatMap((e) => (e.objektId === null ? [e.collectionSlug!] : []))),
+      addresses,
+    ),
+  ]);
+  const owned = new Set(addresses);
+  const found = new Map<string, { objekt: IndexedObjekt; listSlug: string }>();
+  for (const entry of offering) {
+    const held = entry.objektId
+      ? [tokens.get(entry.objektId)].filter((o) => o?.slug === entry.collectionSlug)
+      : copies.filter((o) => o.slug === entry.collectionSlug);
+    for (const objekt of held) {
+      if (objekt && owned.has(objekt.owner) && !found.has(objekt.id)) {
+        found.set(objekt.id, { objekt, listSlug: entry.listSlug });
+      }
     }
   }
-  const give = mine.slice(0, OFFER_SIDE_LIMIT);
-  const getItems = [...bySlug.values()].slice(0, OFFER_SIDE_LIMIT);
-  return {
-    give,
-    get: getItems,
-    collections: await collectionsOf([...give, ...getItems].map((item) => item.collectionSlug)),
-  };
+  const ids = [...found.keys()];
+  const [reserved, holders] = await Promise.all([reservedIds(ids), openOfferHolders(ids, me)]);
+  return [...found.values()].map(({ objekt, listSlug }) =>
+    toCandidate(objekt, itemFlags(objekt, reserved, holders, conversationId), listSlug),
+  );
 }
