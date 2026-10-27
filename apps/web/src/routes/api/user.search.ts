@@ -1,6 +1,5 @@
 import { MAX_USER_SEARCH_LENGTH } from "@repo/api/schemas/user";
-import { isIpRateLimited } from "@repo/api/services/redis";
-import { searchUsers } from "@repo/api/services/user-search";
+import { isUserSearchLimited, searchUsers } from "@repo/api/services/user-search";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/api/user/search")({
@@ -15,7 +14,7 @@ export const Route = createFileRoute("/api/user/search")({
           return Response.json({ error: "Query too long" }, { status: 400 });
         }
 
-        if (await isIpRateLimited("user-search", request.headers)) {
+        if (await isUserSearchLimited(request.headers)) {
           return Response.json({ error: "Too many requests" }, { status: 429 });
         }
 

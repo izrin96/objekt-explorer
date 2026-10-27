@@ -25,9 +25,8 @@ import { deletionState } from "../services/account-delete";
 import { auth, refreshProviderProfile } from "../services/auth";
 import { loadIdentities } from "../services/identities";
 import { offersOf, openOffersWhere } from "../services/offer/cancel";
-import { isIpRateLimited } from "../services/redis";
 import { getCurrentUser } from "../services/user";
-import { searchUsers } from "../services/user-search";
+import { isUserSearchLimited, searchUsers } from "../services/user-search";
 
 const DELETION_TOKEN_MINUTES = 5;
 
@@ -68,7 +67,7 @@ export const userRouter = {
       if (query.length > MAX_USER_SEARCH_LENGTH) {
         refuse("BAD_REQUEST", "user_query_too_long", "Query too long");
       }
-      if (await isIpRateLimited("user-search", context.headers ?? getRequestHeaders())) {
+      if (await isUserSearchLimited(context.headers ?? getRequestHeaders())) {
         refuse(
           "TOO_MANY_REQUESTS",
           "user_search_rate_limit",

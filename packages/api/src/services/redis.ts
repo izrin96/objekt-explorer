@@ -185,6 +185,11 @@ export function ipRateLimited(scope: string, headers: Headers, max: number, wind
   return rateLimitedFailOpen(scope, `${scope}:rl:ip:${ip}`, max, windowSeconds);
 }
 
+/** One limit shared by every caller, failing open (`rateLimitedFailOpen`). */
+export function globalRateLimited(scope: string, max: number, windowSeconds: number) {
+  return rateLimitedFailOpen(scope, `${scope}:rl:global`, max, windowSeconds);
+}
+
 /** `userRateLimited`, refusing with the shared `user_rate_limit` code. */
 export async function refuseOverUserLimit(
   scope: string,
