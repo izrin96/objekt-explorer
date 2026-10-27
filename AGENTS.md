@@ -70,7 +70,7 @@ bun run --filter=@repo/db db:studio     # Drizzle Studio
 
 The checks are `lint`, `typecheck` and `test`; `bun run check` runs all three, and CI runs each. Tests use `bun test`, sit beside the code as `*.test.ts`, and cover pure modules only: the root `.env` is production, so a test never touches the database, Redis or the Cosmo API. To test logic that lives in a hook or a job, move it into a module with no such imports (as `apps/worker/src/lib/serial-math.ts` and `apps/web/src/features/activity/live-feed.ts` do) and test that. `bun run knip` (config in `knip.json`) reports unused files, exports and dependencies. It is advisory, not a gate. Unused exports in the vendored `components/ui` files are ignored, since those files stay verbatim.
 
-Hooks run the checks early. lefthook (`lefthook.yml`) formats and lints staged files on commit, each package's lint from its own directory, and runs `bun run check` on push. Claude Code's hooks (`.claude/settings.json`) format each edited file, lint the turn's changed files before it ends, and block database writes aimed at production.
+Hooks run the checks early. lefthook (`lefthook.yml`) formats and lints staged files on commit, each package's lint from its own directory, and runs `bun run check` on push. Claude Code's hooks (`.claude/settings.json`) format each edited file, lint the turn's changed files before it ends, block database writes aimed at production, and hold an edit to a React component in `apps/web` until the agent has loaded `vercel-react-best-practices` (`require-react-skill.ts`, per session and per subagent).
 
 ## Skills and specs
 
@@ -78,35 +78,39 @@ Hooks run the checks early. lefthook (`lefthook.yml`) formats and lints staged f
 
 Skills live once under `.agents/skills/<name>` (agent-neutral) with `.claude/skills/<name>` a relative symlink to them, pinned in `skills-lock.json`, all committed so every worktree carries them. Third-party skills are advice, not authority: where one contradicts this file or a package `AGENTS.md`, the project document wins. The usual conflicts: commit only when the user asks, however often a skill says to commit; tests cover pure modules only, whatever `test-driven-development` asks of the rest; a "spec" is an OpenSpec change, never a `SPEC.md`. `using-agent-skills` routes a task to a skill; skills it names that are not installed here do not apply. Invoke the one for the layer being touched:
 
-| Layer or task                                       | Skills                                                                                        |
-| --------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| Routes, loaders, `validateSearch`                   | `router-core`, `tanstack-router-best-practices`                                               |
-| Server functions, SSR, entry points                 | `start-core`, `tanstack-start-best-practices`                                                 |
-| React components                                    | `vercel-react-best-practices`, `vercel-composition-patterns`                                  |
-| Writing new UI code                                 | `frontend-ui-engineering`                                                                     |
-| ORPC procedures, module boundaries, shared types    | `api-and-interface-design`                                                                    |
-| Better Auth server and client                       | `better-auth-best-practices`; `email-and-password-best-practices` for sign-in and passwords   |
-| Drizzle schema, raw SQL, indexes                    | `supabase-postgres-best-practices` (Postgres anywhere)                                        |
-| Bun APIs, `bun test`, `Bun.cron`                    | `bun-runtime`                                                                                 |
-| A library API you have not checked this session     | `source-driven-development`, fetching docs through `ctx7`                                     |
-| A change touching more than one file                | `incremental-implementation`, with `test-driven-development` for pure logic                   |
-| Reviewing or polishing a screen or flow             | `better-interface`, which loads the six `better-*` domain skills itself                       |
-| One UI domain, or a targeted fix                    | that domain's `better-*` skill alone; `fixing-accessibility` for a one-file accessibility fix |
-| Colour tokens, contrast, light/dark tints           | `oklch-skill`                                                                                 |
-| Checking a change in the running app                | `browser-testing-with-devtools`                                                               |
-| Something broken, slow or throwing                  | `debugging-and-error-recovery` first                                                          |
-| Reviewing a branch or a change                      | `code-review-and-quality`; `interface-review` for its UI                                      |
-| Code that works but reads badly                     | `code-simplification`                                                                         |
-| Auth, user input, sessions, third-party calls       | `security-and-hardening`; the `security-auditor` agent for a full audit                       |
-| Core Web Vitals, slow queries, bundle size          | `performance-optimization`; the `web-performance-auditor` agent for a full audit              |
-| Branches, commit messages, splitting work           | `git-workflow-and-versioning`                                                                 |
-| Recording a decision or its reasoning               | `documentation-and-adrs`                                                                      |
-| Passing work to another agent or session            | `handoff`                                                                                     |
-| Parallel work across agents or worktrees            | `orchestration` to supervise Orca workers; `orca-cli` to hand off a whole worktree            |
-| A merge conflict                                    | `resolving-merge-conflicts` (`routeTree.gen.ts`, `paraglide/` are regenerated, never merged)  |
-| Editing this file, a skill, an agent or `openspec/` | `writing-for-agents`                                                                          |
+| Layer or task                                       | Skills                                                                                         |
+| --------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Routes, loaders, `validateSearch`                   | `router-core`, `tanstack-router-best-practices`                                                |
+| A loader or component reading React Query           | `router-query` (`queryClient.query`, `staleTime: "static"`, SSR dehydration)                   |
+| Server functions, SSR, entry points                 | `start-core`, `tanstack-start-best-practices`                                                  |
+| Any `.tsx` change in `apps/web`                     | `vercel-react-best-practices` first; `vercel-composition-patterns` when props or an API change |
+| Writing new UI code                                 | `frontend-ui-engineering`, then the `better-*` skill of each domain it touches                 |
+| Page titles, descriptions, canonical, Open Graph    | `fixing-metadata`                                                                              |
+| ORPC procedures, module boundaries, shared types    | `api-and-interface-design`                                                                     |
+| Better Auth server and client                       | `better-auth-best-practices`; `email-and-password-best-practices` for sign-in and passwords    |
+| Drizzle schema, raw SQL, indexes                    | `supabase-postgres-best-practices` (Postgres anywhere)                                         |
+| Bun APIs, `bun test`, `Bun.cron`                    | `bun-runtime`                                                                                  |
+| A library API you have not checked this session     | `source-driven-development`, fetching docs through `ctx7`                                      |
+| A change touching more than one file                | `incremental-implementation`, with `test-driven-development` for pure logic                    |
+| Reviewing or polishing a screen or flow             | `better-interface`, which loads the six `better-*` domain skills itself                        |
+| One UI domain, or a targeted fix                    | that domain's `better-*` skill alone; `fixing-accessibility` for a one-file accessibility fix  |
+| Colour tokens, contrast, light/dark tints           | `oklch-skill`                                                                                  |
+| Checking a change in the running app                | `browser-testing-with-devtools`                                                                |
+| Something broken, slow or throwing                  | `debugging-and-error-recovery` first                                                           |
+| Reviewing a branch or a change                      | `code-review-and-quality`; `interface-review` for its UI                                       |
+| Code that works but reads badly                     | `code-simplification`                                                                          |
+| Auth, user input, sessions, third-party calls       | `security-and-hardening`; the `security-auditor` agent for a full audit                        |
+| Core Web Vitals, slow queries, bundle size          | `performance-optimization`; the `web-performance-auditor` agent for a full audit               |
+| Branches, commit messages, splitting work           | `git-workflow-and-versioning`                                                                  |
+| Recording a decision or its reasoning               | `documentation-and-adrs`                                                                       |
+| Passing work to another agent or session            | `handoff`                                                                                      |
+| Parallel work across agents or worktrees            | `orchestration` to supervise Orca workers; `orca-cli` to hand off a whole worktree             |
+| A merge conflict                                    | `resolving-merge-conflicts` (`routeTree.gen.ts`, `paraglide/` are regenerated, never merged)   |
+| Editing this file, a skill, an agent or `openspec/` | `writing-for-agents`                                                                           |
 
 `better-interface` loads `better-accessibility`, `better-layout`, `better-writing`, `better-typography`, `better-colors` and `better-ui` itself, so invoke it on its own; it reports without editing unless you also ask for the fixes. `better-accessibility` owns the accessibility rules the review applies, and `fixing-accessibility` stays the one-file fixer.
+
+The app's look is set in `apps/web/AGENTS.md` (Look), and UI work follows it. Design skills that bring a look of their own (`frontend-design`, the taste skills) are turned off here through `skillOverrides` and `enabledPlugins` in `.claude/settings.json`. Only the user starts `state-machine` (every state of one component on a scratch page, behind a switcher) and `break` (one component under worst-case content); suggest them when a component's states or edge cases are the work, and delete their scratch route when the user is done with it.
 
 The `addyosmani/agent-skills` skills read their checklists from `.agents/references/` (security, performance, accessibility, testing, definition of done) and the two agents in `.claude/agents/` from there too. `skills-lock.json` does not track those files: refresh them from that repository's `references/` by hand.
 

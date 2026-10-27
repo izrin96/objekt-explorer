@@ -32,6 +32,18 @@
     ],
     "ask": ["Bash(git commit:*)", "Bash(git push:*)"]
   },
+  "skillOverrides": {
+    "brandkit": "off",
+    "design-taste-frontend": "off",
+    "frontend-design": "off",
+    "gpt-taste": "off",
+    "minimalist-ui": "off",
+    "redesign-existing-projects": "off",
+    "stitch-design-taste": "off"
+  },
+  "enabledPlugins": {
+    "frontend-design@claude-plugins-official": false
+  },
   "hooks": {
     "PreToolUse": [
       {
@@ -40,6 +52,25 @@
           {
             "type": "command",
             "command": "bun \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard-prod-db.ts\""
+          }
+        ]
+      },
+      {
+        "matcher": "Skill|Edit|MultiEdit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun \"$CLAUDE_PROJECT_DIR/.claude/hooks/require-react-skill.ts\""
+          }
+        ]
+      }
+    ],
+    "UserPromptExpansion": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun \"$CLAUDE_PROJECT_DIR/.claude/hooks/require-react-skill.ts\""
           }
         ]
       }
