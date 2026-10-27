@@ -10,7 +10,7 @@ When `/api/v1` needs a different shape (a path parameter wants `{ address }`), c
 
 ## Errors
 
-A refusal the web app can show goes through `refuse(status, reason, message, data?)` (`src/lib/refuse.ts`): `reason` is a domain-prefixed code (`list_have_links_want`) from a `*_REFUSALS` tuple in `src/schemas/`, and `message` is an English sentence that the web app never renders; it serves tabs opened before a deploy and `/api/v1` callers. Chat, offer and moderation keep their own helpers with bare codes. A procedure that must keep an error code for old tabs to branch on declares it with `.errors()` and a `data: z.object({ reason })` schema. The web app translates the code through `refusalText` or the domain's own formatter, never `error.message`; a new code needs an `api_errors_*` string in `en`, `ko` and `ja`.
+A refusal the web app can show goes through `refuse(status, reason, message, data?)` (`src/lib/refuse.ts`): `reason` is a domain-prefixed code (`list_have_links_want`) from a `*_REFUSALS` tuple in `src/schemas/`, and `message` is an English sentence that the web app never renders; it serves tabs opened before a deploy and `/api/v1` callers. Chat, offer and moderation keep their own helpers with bare codes. A procedure that must keep an error code for old tabs to branch on declares it with `.errors()` and a `data: z.object({ reason })` schema. The web app translates the code through `refusalText` or the domain's own formatter, never `error.message`: a new `refuse()` code needs an `api_errors_*` string in `en`, `ko` and `ja`, and a new chat code a `chat_refused_*` string, worded in `features/chat/format.ts`.
 
 ## Lists
 
@@ -51,6 +51,10 @@ Requests add no number to the Messages icon, but they set its dot: `hasUnseenReq
 ## Chat: deals
 
 A conversation's row and thread carry its `deal`: the most urgent of its open offer, running trades and trades still to rate, since one conversation can hold several at once. `readDeals` (`services/chat/deal.ts`) reads them for a page in one statement and runs `rateRefusal` itself; the pure `dealOf` (`schemas/chat-deal.ts`, tested) picks a Needs you state first, then any other live one, then one to rate, the newest offer winning a tie, and decides a trade's state in the web's `stepKind` order. `needsYouSql` is the SQL twin of `NEEDS_YOU_STATES` and serves both `chat.list`'s `show: "needs-you"` and `chat.inboxCounts`, which leaves out muted conversations as the Messages icon does. `unreadCount` and `deal` are filled in `toConversationRows`, so the list, `loadConversationRow` and every `chat_message` event carry them; both have schema defaults, so an event from the previous build still parses.
+
+## Chat: replies
+
+`message.reply_to_id` names the message a reply answers: a bare id, checked by `sendMessage` to be a text or card message of the same conversation (`invalid_reply` otherwise). `ChatMessage.replyTo` is built at read time in `toChatMessages`, from one read of the quoted rows joined through each reply's own conversation, then the pure `quoteSourceOf` and `replyQuote` (`schemas/chat.ts`, tested), so a quote follows an unsend made after the reply and never carries unsent text or card; a missing row reads as unavailable. Every `MessageRow` source (`loadThread`, `appendMessage`'s return, `findSentMessage`) selects `reply_to_id`, or that path's messages lose their quote.
 
 ## Chat cards
 

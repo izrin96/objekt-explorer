@@ -294,6 +294,7 @@ export async function loadThread(me: string, input: z.infer<typeof threadInputSc
         caution: message.caution,
         offerId: message.offerId,
         unsentAt: message.unsentAt,
+        replyToId: message.replyToId,
       })
       .from(message)
       .where(

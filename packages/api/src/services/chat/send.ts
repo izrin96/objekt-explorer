@@ -94,6 +94,17 @@ export async function startConversation(
   };
 }
 
+/** A reply answers a text or card message of the same conversation; an unsent one is fine. */
+async function replyTargetAllowed(conversationId: number, replyTo: number) {
+  const [target] = await db
+    .select({ conversationId: message.conversationId, offerId: message.offerId })
+    .from(message)
+    .where(eq(message.id, replyTo));
+  return (
+    target !== undefined && target.conversationId === conversationId && target.offerId === null
+  );
+}
+
 const sendResult = (own: Awaited<ReturnType<typeof toChatMessages>>) => ({
   message: own.messages[0]!,
   collections: own.collections,
@@ -112,9 +123,14 @@ export async function sendMessage(
     : undefined;
   if (stored) return sendResult(await toChatMessages([{ ...stored, senderId: me }], me));
 
-  const [safety, hasAddress] = await Promise.all([chatSafety(me, partnerId), hasLinkedAddress(me)]);
+  const [safety, hasAddress, replyAllowed] = await Promise.all([
+    chatSafety(me, partnerId),
+    hasLinkedAddress(me),
+    input.replyTo === undefined ? true : replyTargetAllowed(input.conversationId, input.replyTo),
+  ]);
   if (!hasAddress) refuse("no_address");
   refuseSend(safety);
+  if (!replyAllowed) refuse("invalid_reply");
   const release = await checkMessageRate(me, now);
   const body = input.body ?? null;
   const caution = body === null ? [] : scanMessage(body);
@@ -134,6 +150,7 @@ export async function sendMessage(
         card,
         caution,
         clientId: input.clientId,
+        replyToId: input.replyTo ?? null,
         first: first ? () => openFirst(tx, first, input.conversationId) : undefined,
       });
     });

@@ -36,6 +36,7 @@ type AppendInput = {
   offerId?: number | null;
   /** makes a retry of the same send return the stored message instead of posting twice */
   clientId?: string;
+  replyToId?: number | null;
   /** runs under the row lock when the conversation holds no message yet; a throw aborts the send */
   first?: () => Promise<void>;
 };
@@ -59,6 +60,7 @@ export async function findSentMessage(
       card: message.card,
       caution: message.caution,
       unsentAt: message.unsentAt,
+      replyToId: message.replyToId,
     })
     .from(message)
     .where(and(eq(message.senderId, senderId), eq(message.clientId, clientId)));
@@ -82,6 +84,7 @@ export async function appendMessage(
     caution = [],
     offerId = null,
     clientId,
+    replyToId = null,
     first: openFirst,
   }: AppendInput,
 ) {
@@ -104,6 +107,7 @@ export async function appendMessage(
       offerId,
       caution: caution.length ? caution : null,
       clientId: clientId ?? null,
+      replyToId,
     })
     .onConflictDoNothing()
     .returning({ id: message.id, createdAt: message.createdAt });
@@ -146,6 +150,7 @@ export async function appendMessage(
     body,
     card,
     caution: caution.length ? caution : null,
+    replyToId,
     previousMessageId: locked?.lastMessageId ?? null,
     duplicate: false as const,
   };

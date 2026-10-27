@@ -1,5 +1,5 @@
 import type { Outputs } from "@repo/api";
-import { UNSEND_WINDOW_MINUTES, unsentMessage } from "@repo/api/schemas/chat";
+import { UNSEND_WINDOW_MINUTES, unsentMessage, unsentQuote } from "@repo/api/schemas/chat";
 import type { OfferView } from "@repo/api/schemas/offer";
 import type { InfiniteData } from "@tanstack/react-query";
 
@@ -91,17 +91,28 @@ export function patchOffers(data: ThreadData, views: OfferViews): ThreadData {
   };
 }
 
-/** Blanks the given messages as unsent where they are held, keeping their place and time. */
+/**
+ * Blanks the given messages as unsent where they are held, keeping their place and time, and
+ * the quotes of them, also when the quoted message itself isn't loaded.
+ */
 export function markUnsent(data: ThreadData, ids: ReadonlySet<number>): ThreadData {
-  const held = (message: ThreadPage["messages"][number]) => ids.has(message.id) && !message.unsent;
-  if (!data.pages.some((page) => page.messages.some(held))) return data;
+  type Message = ThreadPage["messages"][number];
+  const held = (message: Message) => ids.has(message.id) && !message.unsent;
+  const quoting = (message: Message) =>
+    message.replyTo?.state === "shown" && ids.has(message.replyTo.id);
+  const touched = (message: Message) => held(message) || quoting(message);
+  if (!data.pages.some((page) => page.messages.some(touched))) return data;
   return {
     ...data,
     pages: data.pages.map((page) =>
-      page.messages.some(held)
+      page.messages.some(touched)
         ? Object.assign({}, page, {
             messages: page.messages.map((message) =>
-              held(message) ? unsentMessage(message) : message,
+              held(message)
+                ? unsentMessage(message)
+                : quoting(message)
+                  ? { ...message, replyTo: unsentQuote(message.replyTo!) }
+                  : message,
             ),
           })
         : page,
@@ -133,9 +144,14 @@ export function seenMessageId(
   );
 }
 
-/** The ids a fresh page reports unsent, to apply to what is already held. */
+/** The ids a fresh page reports unsent, itself or through a reply's quote, to apply to what is already held. */
 export function unsentIds(page: Pick<ThreadPage, "messages">) {
-  return new Set(page.messages.flatMap((message) => (message.unsent ? [message.id] : [])));
+  return new Set(
+    page.messages.flatMap((message) => [
+      ...(message.unsent ? [message.id] : []),
+      ...(message.replyTo?.state === "unsent" ? [message.replyTo.id] : []),
+    ]),
+  );
 }
 
 /** Only the newest offer card is drawn in full; computed here, since a newer one arrives without re-reading the old. */

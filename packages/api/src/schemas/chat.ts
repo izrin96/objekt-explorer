@@ -32,6 +32,7 @@ export const CHAT_REFUSALS = [
   "muted",
   "unsend_closed",
   "settings_limit",
+  "invalid_reply",
 ] as const;
 export type ChatRefusal = (typeof CHAT_REFUSALS)[number];
 
@@ -184,6 +185,8 @@ export const sendInputSchema = z
     card: cardInputSchema.optional(),
     /** one per composed message, so a retry after an unknown outcome never posts twice */
     clientId: z.uuid(),
+    /** the message this one answers, in the same conversation and not an offer */
+    replyTo: idSchema.optional(),
   })
   .refine((input) => input.body !== undefined || input.card !== undefined, {
     message: "empty",
@@ -317,6 +320,81 @@ export type PostCardView = z.infer<typeof postCardViewSchema>;
 const chatCardViewSchema = z.discriminatedUnion("kind", [cardViewSchema, postCardViewSchema]);
 export type ChatCardView = z.infer<typeof chatCardViewSchema>;
 
+/** How much of a quoted message's first line a reply shows. */
+export const REPLY_EXCERPT_MAX = 120;
+
+const replyQuoteSchema = z.object({
+  id: z.number(),
+  /** `unavailable`: the message no longer exists */
+  state: z.enum(["shown", "unsent", "unavailable"]),
+  /** null when unavailable */
+  mine: z.boolean().nullable(),
+  /** the first line of its text, cut with "…"; null for a card-only, unsent or unavailable message */
+  excerpt: z.string().nullable(),
+  /** what a card-only message is quoted as */
+  card: z.enum(["objekt", "post"]).nullable(),
+});
+export type ReplyQuote = z.infer<typeof replyQuoteSchema>;
+
+/** A quoted message as the server's row or the web's cache has it; null when it no longer exists. */
+export type QuoteSource = {
+  mine: boolean;
+  body: string | null;
+  cardKind: "objekt" | "post" | null;
+  unsent: boolean;
+} | null;
+
+/** A quoted message's stored row, as the viewer sees it; undefined when the row is gone. */
+export function quoteSourceOf(
+  row:
+    | { senderId: string; body: string | null; card: StoredCard | null; unsentAt: string | null }
+    | undefined,
+  viewerId: string,
+): QuoteSource {
+  if (!row) return null;
+  return {
+    mine: row.senderId === viewerId,
+    body: row.body,
+    cardKind: row.card?.kind ?? null,
+    unsent: row.unsentAt !== null,
+  };
+}
+
+/** What a reply shows of the message it answers: never the text or card of an unsent one. */
+export function replyQuote(id: number, source: QuoteSource): ReplyQuote {
+  const gone = { id, mine: null, excerpt: null, card: null, state: "unavailable" } as const;
+  if (source === null) return gone;
+  if (source.unsent) return { id, mine: source.mine, excerpt: null, card: null, state: "unsent" };
+  // a line of only blank-rendering characters would quote as nothing
+  const lines = (source.body ?? "")
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => line.replace(BLANK_RENDERING, "") !== "");
+  const first = lines[0];
+  if (first) {
+    const points = Array.from(first);
+    const cut = points.length > REPLY_EXCERPT_MAX;
+    const excerpt = cut ? points.slice(0, REPLY_EXCERPT_MAX).join("").trimEnd() : first;
+    return {
+      id,
+      mine: source.mine,
+      excerpt: cut || lines.length > 1 ? `${excerpt}…` : excerpt,
+      card: null,
+      state: "shown",
+    };
+  }
+  if (source.cardKind === null) return gone;
+  return { id, mine: source.mine, excerpt: null, card: source.cardKind, state: "shown" };
+}
+
+/** A quote whose message was unsent since: its place and side, never its text or card. */
+export const unsentQuote = (quote: ReplyQuote): ReplyQuote => ({
+  ...quote,
+  state: "unsent",
+  excerpt: null,
+  card: null,
+});
+
 export const chatMessageSchema = z.object({
   id: z.number(),
   mine: z.boolean(),
@@ -327,6 +405,8 @@ export const chatMessageSchema = z.object({
   caution: z.enum(FLAG_CATEGORIES).array().nullable(),
   /** removed by its sender: no body or card is sent */
   unsent: z.boolean(),
+  /** the message this one answers; the default parses events from before replies */
+  replyTo: replyQuoteSchema.nullable().default(null),
 });
 /** `offer` is set on an offer message, and null on others; it lives in `./offer`, which imports this file. */
 export type ChatMessage = z.infer<typeof chatMessageSchema> & { offer?: OfferView | null };
@@ -342,6 +422,7 @@ export function unsentMessage(message: Pick<ChatMessage, "id" | "mine" | "create
     caution: null,
     unsent: true,
     offer: null,
+    replyTo: null,
   } satisfies ChatMessage;
 }
 

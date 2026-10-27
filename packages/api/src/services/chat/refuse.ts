@@ -11,6 +11,7 @@ export function refuse(reason: ChatRefusal, retryAt?: Date): never {
     case "self":
     case "invalid_card":
     case "unsend_closed":
+    case "invalid_reply":
       throw new ORPCError("BAD_REQUEST", { data });
     case "no_address":
     case "not_accepting":

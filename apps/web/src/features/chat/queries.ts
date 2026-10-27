@@ -9,6 +9,7 @@ import { hashKey, type QueryClient } from "@tanstack/react-query";
 
 import { client, orpc } from "@/lib/orpc";
 import { isNotFound } from "@/lib/orpc-error";
+import { markRepliesUnsent } from "@/stores/chat-draft";
 import { pollUnlessLive } from "@/stores/user-socket";
 
 import {
@@ -269,6 +270,7 @@ export function applyUnsent(queryClient: QueryClient, id: number, messageId: num
   queryClient.setQueryData<ThreadData>(threadOptions(id).queryKey, (old) =>
     old ? markUnsent(old, new Set([messageId])) : old,
   );
+  markRepliesUnsent(new Set([messageId]));
 }
 
 /**
@@ -287,6 +289,7 @@ async function syncUnsent(queryClient: QueryClient, id: number) {
   queryClient.setQueryData<ThreadData>(threadOptions(id).queryKey, (old) =>
     old ? markUnsent(old, ids) : old,
   );
+  markRepliesUnsent(ids);
 }
 
 const cachedThreadIds = (queryClient: QueryClient) =>

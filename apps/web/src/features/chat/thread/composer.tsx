@@ -4,8 +4,14 @@ import {
   type Icon,
   PaperPlaneRightIcon,
   PlusIcon,
+  XIcon,
 } from "@phosphor-icons/react";
-import { MESSAGE_MAX_LENGTH, messageLength } from "@repo/api/schemas/chat";
+import {
+  type ChatMessage,
+  MESSAGE_MAX_LENGTH,
+  messageLength,
+  type ReplyQuote,
+} from "@repo/api/schemas/chat";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -27,6 +33,7 @@ import type { Attachment } from "@/features/chat/attachment";
 import { refusalOf, refusalText } from "@/features/chat/format";
 import { useStartGate } from "@/features/chat/message-button";
 import { fetchNewer, invalidateChatLists } from "@/features/chat/queries";
+import { currentQuote, quoteText } from "@/features/chat/reply";
 import { SendingAs } from "@/features/link/shown-as";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { orpc } from "@/lib/orpc";
@@ -37,7 +44,9 @@ import {
   putDraftCard,
   restoreDraft,
   setDraftBody,
+  setDraftReply,
   beginSend,
+  sentReplies,
   useChatDraft,
 } from "@/stores/chat-draft";
 
@@ -54,6 +63,8 @@ const sentCards = new Map<string, Attachment>();
 export function Composer({
   conversationId,
   name,
+  textarea,
+  cached,
   empty: conversationEmpty,
   attachment,
   setAttachment,
@@ -63,6 +74,10 @@ export function Composer({
 }: {
   conversationId: number;
   name: string;
+  /** the thread's, so Reply in a message's menu can hand focus here */
+  textarea: RefObject<HTMLTextAreaElement | null>;
+  /** a loaded message, so the reply line follows an unsend */
+  cached: (messageId: number) => ChatMessage | undefined;
   /** the conversation has no message yet, so first lines are offered */
   empty: boolean;
   /** held by the thread, which words its empty state differently while a card is attached */
@@ -76,6 +91,7 @@ export function Composer({
   const queryClient = useQueryClient();
   const { offerLink } = useStartGate();
   const body = useChatDraft((state) => state.drafts[conversationId]?.body ?? "");
+  const reply = useChatDraft((state) => state.drafts[conversationId]?.reply ?? null);
   // a card handed over by a Message button is attached, then forgotten; also while this thread
   // is already open, as from the objekt drawer's Market tab
   const [attachOpen, setAttachOpen] = useState(false);
@@ -89,6 +105,7 @@ export function Composer({
   const [blockedUntil, setBlockedUntil] = useState<number | null>(null);
   const counterId = useId();
   const errorId = useId();
+  const replyId = useId();
 
   useEffect(() => {
     if (blockedUntil === null) return;
@@ -104,7 +121,6 @@ export function Composer({
 
   // at most one "typing" ping per interval; the server decides whether the partner sees it
   const pingTyping = useTypingPing(conversationId);
-  const textarea = useRef<HTMLTextAreaElement>(null);
 
   const length = messageLength(body.trim());
   const over = length - MESSAGE_MAX_LENGTH;
@@ -127,12 +143,19 @@ export function Composer({
       // here rather than per call, so a send that fails after the user left still restores
       onError: (_error, { conversationId: id, body: sentBody, clientId }) => {
         if (clientId === undefined) return;
-        restoreDraft(id, { body: sentBody ?? "", clientId });
+        // `invalid_reply` too puts its reply back: no control here offers a target it refuses
+        restoreDraft(id, {
+          body: sentBody ?? "",
+          clientId,
+          reply: sentReplies.get(clientId) ?? null,
+        });
         const card = sentCards.get(clientId);
         if (card) putDraftCard(id, { ...card }, true);
       },
       onSettled: (_data, _error, { clientId }) => {
-        if (clientId !== undefined) sentCards.delete(clientId);
+        if (clientId === undefined) return;
+        sentCards.delete(clientId);
+        sentReplies.delete(clientId);
       },
     }),
   );
@@ -142,7 +165,7 @@ export function Composer({
     if (empty || over > 0 || send.isPending || blockedUntil !== null) return;
     const sentAttachment = attachment;
     // cleared at once so typing can go on; a failure puts it back
-    const { body: sentBody, clientId } = beginSend(conversationId, body);
+    const { body: sentBody, clientId, reply } = beginSend(conversationId, body);
     if (sentAttachment) sentCards.set(clientId, sentAttachment);
     setAttachment(null);
     setError(null);
@@ -153,6 +176,7 @@ export function Composer({
         body: sentBody.trim() === "" ? undefined : sentBody,
         card: sentAttachment?.input,
         clientId,
+        replyTo: reply?.id,
       },
       {
         onError: (failure) => {
@@ -176,27 +200,43 @@ export function Composer({
     );
   };
 
+  const stopReplying = () => {
+    setDraftReply(conversationId, null);
+    textarea.current?.focus();
+  };
+
   const onKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
-    // an IME's Enter confirms the composition, it does not send; Safari ends the composition
-    // before this keydown, so only its keyCode 229 still tells
-    if (
-      event.key !== "Enter" ||
-      event.shiftKey ||
-      event.nativeEvent.isComposing ||
-      event.nativeEvent.keyCode === 229
-    ) {
+    // an IME's Enter or Escape ends the composition, it does not send or stop a reply; Safari
+    // ends the composition before this keydown, so only its keyCode 229 still tells
+    if (event.nativeEvent.isComposing || event.nativeEvent.keyCode === 229) return;
+    if (event.key === "Escape" && reply) {
+      event.preventDefault();
+      stopReplying();
       return;
     }
+    if (event.key !== "Enter" || event.shiftKey) return;
     event.preventDefault();
     submit();
   };
 
-  const describedBy = [length >= COUNTER_FROM ? counterId : null, error ? errorId : null]
+  const describedBy = [
+    reply ? replyId : null,
+    length >= COUNTER_FROM ? counterId : null,
+    error ? errorId : null,
+  ]
     .filter(Boolean)
     .join(" ");
 
   return (
     <form onSubmit={submit} className="flex flex-col gap-2 border-t p-3">
+      {reply ? (
+        <ReplyLine
+          id={replyId}
+          quote={currentQuote(reply, cached(reply.id))}
+          name={name}
+          onStop={stopReplying}
+        />
+      ) : null}
       {attachment ? (
         <AttachmentChip
           attachment={attachment}
@@ -425,5 +465,40 @@ function AddToMessage({
         </SheetPopup>
       </Sheet>
     </>
+  );
+}
+
+function ReplyLine({
+  id,
+  quote,
+  name,
+  onStop,
+}: {
+  id: string;
+  quote: ReplyQuote;
+  name: string;
+  onStop: () => void;
+}) {
+  return (
+    <div className="border-border flex min-w-0 items-center gap-2 border-s-2 ps-2">
+      <div id={id} className="flex min-w-0 flex-1 flex-col text-xs">
+        <span className="font-medium">
+          {quote.mine ? m.chat_replying_to_self() : m.chat_replying_to({ name })}
+        </span>
+        <span className={cn("text-muted-foreground truncate", quote.state !== "shown" && "italic")}>
+          {quoteText(quote)}
+        </span>
+      </div>
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon-xs"
+        aria-label={m.chat_reply_stop()}
+        onClick={onStop}
+        className="shrink-0"
+      >
+        <XIcon />
+      </Button>
+    </div>
   );
 }

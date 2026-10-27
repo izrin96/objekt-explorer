@@ -21,6 +21,7 @@ const message = (id: number) => ({
   caution: null,
   createdAt: new Date(id * 1000).toISOString(),
   unsent: false,
+  replyTo: null,
 });
 
 const row = (id: number, over: Partial<ConversationRow> = {}) =>

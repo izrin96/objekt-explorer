@@ -1,10 +1,11 @@
 import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
-import { listEntries, lists, userAddress } from "@repo/db/schema";
+import { listEntries, lists, message, userAddress } from "@repo/db/schema";
 import { isSerialEstimated, shownSerial } from "@repo/lib/serial";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { and, eq, inArray, sql } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 
 import { cardAllowed, cardListAllowed, hidesSerials } from "../../lib/chat-rules";
 import type { ActorLimits } from "../../lib/offer-rules";
@@ -21,6 +22,9 @@ import {
   type PostCardInput,
   type PostCardView,
   parseCaution,
+  quoteSourceOf,
+  type ReplyQuote,
+  replyQuote,
   type StoredCard,
   type StoredMatch,
   type CardRef,
@@ -339,7 +343,44 @@ type MessageRow = {
   caution: string[] | null;
   offerId?: number | null;
   unsentAt?: string | null;
+  replyToId?: number | null;
 };
+
+const quoted = alias(message, "quoted");
+
+/**
+ * The quotes of these replies, read now, so an unsend since the reply shows. A quoted message is
+ * read through its reply's conversation only, so a stored id never reaches another one.
+ */
+async function readQuotes(replies: { id: number; replyToId: number }[], viewerId: string) {
+  if (replies.length === 0) return new Map<number, ReplyQuote>();
+  const rows = await db
+    .select({
+      id: quoted.id,
+      senderId: quoted.senderId,
+      body: quoted.body,
+      card: quoted.card,
+      unsentAt: quoted.unsentAt,
+    })
+    .from(message)
+    .innerJoin(
+      quoted,
+      and(eq(quoted.id, message.replyToId), eq(quoted.conversationId, message.conversationId)),
+    )
+    .where(
+      inArray(
+        message.id,
+        replies.map((reply) => reply.id),
+      ),
+    );
+  const found = new Map(rows.map((row) => [row.id, { ...row, card: parseCard(row.card) }]));
+  return new Map(
+    replies.map(({ replyToId }) => [
+      replyToId,
+      replyQuote(replyToId, quoteSourceOf(found.get(replyToId), viewerId)),
+    ]),
+  );
+}
 
 /** `limits` are the viewer's own, so an offer card offers only what the viewer may do. */
 export async function toChatMessages(
@@ -350,9 +391,13 @@ export async function toChatMessages(
   const cards = rows.map((row) => (row.unsentAt ? null : parseCard(row.card)));
   const offers = await fetchOffers(rows.flatMap((row) => (row.offerId ? [row.offerId] : [])));
   const split = splitCards(cards);
-  const [objekts, posts] = await Promise.all([
+  const replies = rows.flatMap((row) =>
+    row.replyToId && !row.unsentAt ? [{ id: row.id, replyToId: row.replyToId }] : [],
+  );
+  const [objekts, posts, quotes] = await Promise.all([
     hydrateCards([...split.objekts, ...offerItemCards(offers.values())], viewerId),
     hydratePostCards(split.posts, viewerId),
+    readQuotes(replies, viewerId),
   ]);
   const { view, serial } = objekts;
   const now = new Date();
@@ -376,6 +421,7 @@ export async function toChatMessages(
       caution: row.senderId === viewerId || offer ? null : parseCaution(row.caution),
       offer: offer ? toOfferView(offer, viewerId, now, limits, serial) : null,
       unsent: false,
+      replyTo: row.replyToId ? (quotes.get(row.replyToId) ?? null) : null,
     };
   });
   const collectionMap = { ...objekts.collections, ...posts.collections };

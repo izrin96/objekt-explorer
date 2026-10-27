@@ -136,14 +136,55 @@ export type JumpOptions = {
   instant?: boolean;
   /** no notice when the message is too far back or a page fails; the caller falls back */
   quiet?: boolean;
+  /** tints the target for a moment through its `data-highlight` styles */
+  highlight?: boolean;
 };
+
+const HIGHLIGHT_MS = 1500;
+const highlightTimers = new WeakMap<HTMLElement, ReturnType<typeof setTimeout>>();
+
+/** Tints `el` for a moment; a second jump to it starts the moment again. */
+function flash(el: HTMLElement) {
+  clearTimeout(highlightTimers.get(el));
+  el.dataset.highlight = "";
+  highlightTimers.set(
+    el,
+    setTimeout(() => delete el.dataset.highlight, HIGHLIGHT_MS),
+  );
+}
+
+/**
+ * Resolves once a smooth scroll of `el` ends, at once when nothing scrolls, and after a cap
+ * where `scrollend` is missing.
+ */
+function scrollSettled(el: HTMLElement) {
+  return new Promise<void>((resolve) => {
+    let moved = false;
+    const onScroll = () => {
+      moved = true;
+    };
+    const done = () => {
+      el.removeEventListener("scroll", onScroll);
+      el.removeEventListener("scrollend", done);
+      clearTimeout(idle);
+      clearTimeout(cap);
+      resolve();
+    };
+    el.addEventListener("scroll", onScroll, { passive: true });
+    el.addEventListener("scrollend", done);
+    const idle = setTimeout(() => {
+      if (!moved) done();
+    }, 100);
+    const cap = setTimeout(done, 2000);
+  });
+}
 
 /**
  * Brings a message into view, loading up to 10 older pages when it isn't drawn yet. Each page
  * calls `markOlder` (the sentinel's `heightBeforeOlder` write), so the reader's place holds while
  * pages prepend, and the thread is read again once at the end, not per page. Stops at a failed
- * page and when the thread closes. Resolves to whether it was found. Review offer, View offer
- * and the New divider go through it.
+ * page and when the thread closes. Resolves to whether it was found. Review offer, View offer,
+ * the New divider and a reply's quote go through it.
  */
 export function useJumpToMessage({
   id,
@@ -167,7 +208,13 @@ export function useJumpToMessage({
 
   return async (
     target: JumpTarget,
-    { focus = true, block = "center", instant = false, quiet = false }: JumpOptions = {},
+    {
+      focus = true,
+      block = "center",
+      instant = false,
+      quiet = false,
+      highlight = false,
+    }: JumpOptions = {},
   ) => {
     const data = () => queryClient.getQueryData<ThreadData>(threadOptions(id).queryKey);
     const held = () => {
@@ -201,8 +248,16 @@ export function useJumpToMessage({
       return false;
     }
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    el.scrollIntoView({ block, behavior: instant || reduced ? "instant" : "smooth" });
+    const smooth = !instant && !reduced;
+    // the tint waits for the scroll, so it is seen where the message lands
+    const landed = highlight && smooth && scroller.current ? scrollSettled(scroller.current) : null;
+    el.scrollIntoView({ block, behavior: smooth ? "smooth" : "instant" });
     if (focus) el.focus({ preventScroll: true });
+    if (highlight) {
+      const target = el;
+      if (landed) void landed.then(() => flash(target));
+      else flash(target);
+    }
     return true;
   };
 }

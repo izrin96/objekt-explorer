@@ -19,6 +19,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import type { Attachment } from "@/features/chat/attachment";
 import { dayLabel } from "@/features/chat/format";
 import { resyncThread, threadOptions } from "@/features/chat/queries";
+import { quoteOf } from "@/features/chat/reply";
 import {
   latestOfferId,
   mergeCollections,
@@ -33,7 +34,7 @@ import { OfferCard } from "@/features/offers/offer-card";
 import { useMinuteClock } from "@/hooks/use-minute-clock";
 import { displayNickname, isSameAddress } from "@/lib/address";
 import { m } from "@/paraglide/messages";
-import { dropDraftCard, useChatDraft } from "@/stores/chat-draft";
+import { dropDraftCard, setDraftReply, useChatDraft } from "@/stores/chat-draft";
 import { clearTyping, useChatTyping } from "@/stores/chat-typing";
 
 import { runPosition } from "./bubble-run";
@@ -122,6 +123,7 @@ function ThreadView({
         }
       : {};
   const scroller = useRef<HTMLDivElement>(null);
+  const messageBox = useRef<HTMLTextAreaElement>(null);
   const [active, setActive] = useState<ValidObjekt | null>(null);
   const stick = useRef(true);
   // a card handed over by a Message button is attached, then forgotten; also while this thread
@@ -249,11 +251,24 @@ function ThreadView({
     // once, on open
   }, []);
 
-  const offerOpen =
-    conversation.partnerDeleted || conversation.sendBlocked || conversation.blockedByMe
-      ? null
-      : (finalFocus?: RefObject<HTMLElement | null>) =>
-          builder.open({ to: { conversationId: id }, name, ...postOffer }, { finalFocus });
+  // the message box is shown, not a notice in its place
+  const composing = !(
+    conversation.partnerDeleted ||
+    conversation.sendBlocked ||
+    conversation.blockedByMe
+  );
+  const offerOpen = composing
+    ? (finalFocus?: RefObject<HTMLElement | null>) =>
+        builder.open({ to: { conversationId: id }, name, ...postOffer }, { finalFocus })
+    : null;
+  const reply = composing
+    ? (message: ChatMessage) => setDraftReply(id, { id: message.id, quote: quoteOf(message) })
+    : null;
+  const showQuoted = (messageId: number) =>
+    void jump(
+      { has: (message) => message.id === messageId, selector: `[data-message-id="${messageId}"]` },
+      { highlight: true },
+    );
 
   useMarkRead(id, newest, conversation.lastReadMessageId, atBottom && !jumping, scroller);
   useMuteEnd(id, conversation.sendBlocked?.until ?? null);
@@ -389,6 +404,9 @@ function ThreadView({
                         seen={message.id === seenId}
                         hydrated={hydrated}
                         now={now}
+                        replyFocus={messageBox}
+                        onReply={reply}
+                        onQuote={showQuoted}
                         onOpen={setActive}
                       />
                     </WidgetBoundary>
@@ -433,6 +451,8 @@ function ThreadView({
         <Composer
           conversationId={id}
           name={name}
+          textarea={messageBox}
+          cached={(messageId) => messages.find((message) => message.id === messageId)}
           empty={messages.length === 0}
           attachment={attachment}
           setAttachment={setAttachment}

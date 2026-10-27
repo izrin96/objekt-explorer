@@ -1,16 +1,24 @@
+import { type ReplyQuote, unsentQuote } from "@repo/api/schemas/chat";
 import { create } from "zustand";
 
 import type { Attachment } from "@/features/chat/attachment";
+
+/** The message being answered, with its quote as it read when Reply was chosen. */
+export type DraftReply = { id: number; quote: ReplyQuote };
 
 type Draft = {
   body: string;
   /** names the message being composed, so a retry of one send never posts it twice */
   clientId: string | null;
+  reply: DraftReply | null;
 };
+
+/** The reply of each send in flight, by send id, for a failure to put back after the thread unmounted. */
+export const sentReplies = new Map<string, DraftReply>();
 
 /**
  * What a conversation's message box holds, by conversation id: a card a Message button hands to
- * the thread it opens, and the text not yet sent. Held in memory only, so a reload or a shared
+ * the thread it opens, and the text not yet sent with the message it replies to. Held in memory only, so a reload or a shared
  * link never brings either back.
  */
 export const useChatDraft = create<{
@@ -46,27 +54,69 @@ const withDraft = (conversationId: number, draft: Draft | null) =>
     return { drafts: draft === null ? rest : { ...rest, [conversationId]: draft } };
   });
 
-/** An edited message is a different message, so it starts a new send. */
-export const setDraftBody = (conversationId: number, body: string) =>
-  withDraft(conversationId, body === "" ? null : { body, clientId: null });
+const draftOf = (conversationId: number) => useChatDraft.getState().drafts[conversationId];
+
+/** An edited message is a different message, so it starts a new send; a reply outlives an emptied box. */
+export const setDraftBody = (conversationId: number, body: string) => {
+  const reply = draftOf(conversationId)?.reply ?? null;
+  withDraft(conversationId, body === "" && reply === null ? null : { body, clientId: null, reply });
+};
+
+/** Choosing, changing or stopping a reply makes a different message, so it starts a new send. */
+export const setDraftReply = (conversationId: number, reply: DraftReply | null) => {
+  const body = draftOf(conversationId)?.body ?? "";
+  withDraft(conversationId, body === "" && reply === null ? null : { body, clientId: null, reply });
+};
 
 /**
  * Begins sending `body`: the send id is the draft's, so a retry of an unedited message keeps it,
- * or a new one. The box is emptied, so typing can go on.
+ * or a new one. The box and its reply are emptied, so typing can go on.
  */
 export function beginSend(conversationId: number, body: string) {
-  const clientId = useChatDraft.getState().drafts[conversationId]?.clientId ?? crypto.randomUUID();
+  const draft = draftOf(conversationId);
+  const clientId = draft?.clientId ?? crypto.randomUUID();
+  const reply = draft?.reply ?? null;
+  if (reply) sentReplies.set(clientId, reply);
   withDraft(conversationId, null);
-  return { body, clientId };
+  return { body, clientId, reply };
 }
 
-/** A failed send puts its text back ahead of anything typed since, and keeps its id when nothing was. */
-export function restoreDraft(conversationId: number, sent: { body: string; clientId: string }) {
-  const current = useChatDraft.getState().drafts[conversationId]?.body ?? "";
+/**
+ * A failed send puts its text back ahead of anything typed since, with its reply unless another
+ * was started meanwhile, and keeps its id only when nothing was typed or started. A reply started
+ * and stopped meanwhile leaves nothing behind, so the failed one comes back.
+ */
+export function restoreDraft(
+  conversationId: number,
+  sent: { body: string; clientId: string; reply: DraftReply | null },
+) {
+  const current = draftOf(conversationId);
+  const body = current?.body ?? "";
+  const newer = current?.reply ?? null;
   withDraft(
     conversationId,
-    current === ""
+    body === "" && newer === null
       ? sent
-      : { body: sent.body === "" ? current : `${sent.body}\n${current}`, clientId: null },
+      : {
+          body: body === "" ? sent.body : sent.body === "" ? body : `${sent.body}\n${body}`,
+          clientId: null,
+          reply: newer ?? sent.reply,
+        },
   );
+}
+
+/** Quotes of messages unsent since, in drafts and sends in flight, lose their text and card. */
+export function markRepliesUnsent(ids: ReadonlySet<number>) {
+  const blank = (reply: DraftReply): DraftReply =>
+    ids.has(reply.id) ? { id: reply.id, quote: unsentQuote(reply.quote) } : reply;
+  for (const [clientId, reply] of sentReplies) sentReplies.set(clientId, blank(reply));
+  useChatDraft.setState((state) => {
+    const hit = Object.entries(state.drafts).filter(
+      ([, draft]) => draft.reply && ids.has(draft.reply.id),
+    );
+    if (hit.length === 0) return state;
+    const drafts = { ...state.drafts };
+    for (const [key, draft] of hit) drafts[Number(key)] = { ...draft, reply: blank(draft.reply!) };
+    return { drafts };
+  });
 }

@@ -1,9 +1,13 @@
 import { describe, expect, test } from "bun:test";
 
 import {
+  chatMessageSchema,
   isPostCard,
   listConversationsInputSchema,
   messageBodySchema,
+  quoteSourceOf,
+  REPLY_EXCERPT_MAX,
+  replyQuote,
   sendInputSchema,
   startInputSchema,
   storedCardSchema,
@@ -82,6 +86,17 @@ describe("send input", () => {
     );
     expect(
       sendInputSchema.safeParse({ conversationId: 1, body: "hi", clientId: "x" }).success,
+    ).toBe(false);
+  });
+
+  test("replyTo is optional, so an open tab's send validates unchanged", () => {
+    const plain = sendInputSchema.parse({ conversationId: 1, body: "hi", clientId });
+    expect(plain).toEqual({ conversationId: 1, body: "hi", clientId });
+    expect(
+      sendInputSchema.parse({ conversationId: 1, body: "hi", clientId, replyTo: 7 }).replyTo,
+    ).toBe(7);
+    expect(
+      sendInputSchema.safeParse({ conversationId: 1, body: "hi", clientId, replyTo: 0 }).success,
     ).toBe(false);
   });
 
@@ -184,5 +199,129 @@ describe("cards", () => {
 
   test("a kind this server does not know reads as no card", () => {
     expect(storedCardSchema.safeParse({ kind: "banner", listId: 7 }).success).toBe(false);
+  });
+});
+
+describe("replyQuote", () => {
+  const text = (body: string | null, cardKind: "objekt" | "post" | null = null) => ({
+    mine: false,
+    body,
+    cardKind,
+    unsent: false,
+  });
+
+  test("plain text is quoted whole", () => {
+    expect(replyQuote(5, text("sent 2 already, check the trade page"))).toEqual({
+      id: 5,
+      mine: false,
+      excerpt: "sent 2 already, check the trade page",
+      card: null,
+      state: "shown",
+    });
+  });
+
+  test("a long first line is cut at 120 code points, emoji counted as one", () => {
+    const line = "🫶".repeat(100) + "a".repeat(200);
+    const { excerpt } = replyQuote(5, text(line));
+    expect(Array.from(excerpt!)).toHaveLength(REPLY_EXCERPT_MAX + 1);
+    expect(excerpt).toBe("🫶".repeat(100) + "a".repeat(20) + "…");
+  });
+
+  test("a multi-line body quotes its first line", () => {
+    expect(replyQuote(5, text("  got them both\nthanks!\n")).excerpt).toBe("got them both…");
+  });
+
+  test("text with a card quotes the text", () => {
+    expect(replyQuote(5, text("still have this one?", "objekt"))).toMatchObject({
+      excerpt: "still have this one?",
+      card: null,
+    });
+  });
+
+  test("a card-only message is quoted by its kind", () => {
+    expect(replyQuote(5, text(null, "objekt"))).toMatchObject({ excerpt: null, card: "objekt" });
+    expect(replyQuote(5, { ...text(null, "post"), mine: true })).toMatchObject({
+      excerpt: null,
+      card: "post",
+      mine: true,
+      state: "shown",
+    });
+  });
+
+  test("a cut lands without trailing space before the ellipsis", () => {
+    const line = "a".repeat(REPLY_EXCERPT_MAX - 1) + " b";
+    expect(replyQuote(5, text(line)).excerpt).toBe("a".repeat(REPLY_EXCERPT_MAX - 1) + "…");
+  });
+
+  test("lines that render as nothing are skipped", () => {
+    expect(replyQuote(5, text("\u200b\u3164\nsent it")).excerpt).toBe("sent it");
+  });
+
+  test("a message with neither text nor card is unavailable", () => {
+    expect(replyQuote(5, text(null))).toMatchObject({ state: "unavailable", mine: null });
+  });
+
+  test("an unsent message shows neither text nor card", () => {
+    expect(replyQuote(5, { ...text("wrong one, sorry", "objekt"), unsent: true })).toEqual({
+      id: 5,
+      mine: false,
+      excerpt: null,
+      card: null,
+      state: "unsent",
+    });
+  });
+
+  test("a missing row is unavailable", () => {
+    expect(replyQuote(5, null)).toEqual({
+      id: 5,
+      mine: null,
+      excerpt: null,
+      card: null,
+      state: "unavailable",
+    });
+  });
+});
+
+describe("chatMessageSchema", () => {
+  test("a message from before replies parses with no quote", () => {
+    const parsed = chatMessageSchema.parse({
+      id: 1,
+      mine: true,
+      body: "hi",
+      card: null,
+      createdAt: "2026-10-28T00:00:00.000Z",
+      caution: null,
+      unsent: false,
+    });
+    expect(parsed.replyTo).toBeNull();
+  });
+});
+
+describe("quoteSourceOf", () => {
+  const row = {
+    senderId: "me",
+    body: "wrong one, sorry",
+    card: { kind: "objekt" as const, collectionSlug: "seoah-203z" },
+    unsentAt: null,
+  };
+
+  test("reads the side, text and card kind of a stored row", () => {
+    expect(quoteSourceOf(row, "me")).toEqual({
+      mine: true,
+      body: "wrong one, sorry",
+      cardKind: "objekt",
+      unsent: false,
+    });
+    expect(quoteSourceOf(row, "them")?.mine).toBe(false);
+  });
+
+  test("an unsent row quotes as unsent, never with its text or card", () => {
+    const source = quoteSourceOf({ ...row, unsentAt: "2026-10-28 04:40:00+00" }, "them");
+    expect(source?.unsent).toBe(true);
+    expect(replyQuote(5, source)).toMatchObject({ state: "unsent", excerpt: null, card: null });
+  });
+
+  test("a row that is gone, or in another conversation, is unavailable", () => {
+    expect(replyQuote(5, quoteSourceOf(undefined, "me")).state).toBe("unavailable");
   });
 });

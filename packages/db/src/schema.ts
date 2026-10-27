@@ -349,6 +349,9 @@ export const message = pgTable(
     // the content stays, so a report can still show what was unsent
     unsentAt: timestamp("unsent_at", { mode: "string", withTimezone: true }),
     clientId: uuid("client_id"),
+    // no foreign key: the send checks the target is in the same conversation, and a missing
+    // target reads as unavailable
+    replyToId: bigint("reply_to_id", { mode: "number" }),
   },
   (t) => [
     index("message_conversation_id_idx").on(t.conversationId, t.id.desc()),

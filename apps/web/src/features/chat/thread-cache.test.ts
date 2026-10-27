@@ -26,6 +26,7 @@ const message = (id: number) => ({
   caution: null,
   createdAt: new Date(id * 1000).toISOString(),
   unsent: false,
+  replyTo: null,
 });
 
 const conversation = {
@@ -208,6 +209,50 @@ describe("markUnsent", () => {
   test("unsentIds reads a fresh page", () => {
     const page = { messages: [message(1), { ...message(2), unsent: true }] };
     expect([...unsentIds(page)]).toEqual([2]);
+  });
+
+  const quoting = (id: number, target: number) => ({
+    ...message(id),
+    replyTo: { id: target, mine: true, excerpt: `m${target}`, card: null, state: "shown" as const },
+  });
+  const unsentQuote = (target: number) => ({
+    id: target,
+    mine: true,
+    excerpt: null,
+    card: null,
+    state: "unsent" as const,
+  });
+
+  test("blanks the quotes of an unsent message held in the thread", () => {
+    const data = thread([1, 2]);
+    data.pages[0]!.messages.push(quoting(3, 1));
+    const next = threadMessages(markUnsent(data, new Set([1])));
+    expect(next[0]).toMatchObject({ id: 1, unsent: true });
+    expect(next[2]!.replyTo).toEqual(unsentQuote(1));
+  });
+
+  test("blanks a quote whose message isn't loaded", () => {
+    const data = thread([5]);
+    data.pages[0]!.messages.push(quoting(6, 2));
+    const next = markUnsent(data, new Set([2]));
+    expect(threadMessages(next)[1]!.replyTo).toEqual(unsentQuote(2));
+    expect(markUnsent(next, new Set([2]))).toBe(next);
+  });
+
+  test("a reply that arrives after its message's unsend was heard shows it unsent", () => {
+    // the server built the reply before the unsend; the heard unsends are applied on append
+    const heard = new Set([1]);
+    const data = markUnsent(thread([1, 2]), heard);
+    const next = markUnsent(
+      appendToThread(data, { messages: [quoting(3, 1)], collections: {} }),
+      heard,
+    );
+    expect(threadMessages(next).at(-1)!.replyTo).toEqual(unsentQuote(1));
+  });
+
+  test("unsentIds reads a quote's unsent message too", () => {
+    const page = { messages: [{ ...quoting(9, 4), replyTo: unsentQuote(4) }, quoting(10, 5)] };
+    expect([...unsentIds(page)]).toEqual([4]);
   });
 });
 

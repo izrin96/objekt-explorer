@@ -1,5 +1,5 @@
 import { DotsThreeIcon } from "@phosphor-icons/react";
-import { useState } from "react";
+import { type RefObject, useRef, useState } from "react";
 
 import {
   AlertDialog,
@@ -16,15 +16,23 @@ import { useUnsendMessage } from "@/features/chat/actions";
 import { canUnsend, type ThreadPage } from "@/features/chat/thread-cache";
 import { m } from "@/paraglide/messages";
 
-/** The menu on one of the viewer's own messages; shown only while it can still be unsent. */
+/** Reply on any text or card message, and Unsend on the viewer's own while it can still be unsent. */
 export function MessageActions({
   conversationId,
   message,
+  unsendable,
+  replyFocus,
+  onReply,
 }: {
   conversationId: number;
   message: ThreadPage["messages"][number];
+  unsendable: boolean;
+  /** where focus goes after Reply, rather than back to the menu's button */
+  replyFocus: RefObject<HTMLElement | null>;
+  onReply: (() => void) | null;
 }) {
   const [confirming, setConfirming] = useState(false);
+  const replying = useRef(false);
   const unsend = useUnsendMessage(conversationId);
   // the menu's clock moves once a minute, so the window is checked again when Unsend is chosen
   const confirm = () => {
@@ -47,10 +55,29 @@ export function MessageActions({
         >
           <DotsThreeIcon weight="bold" />
         </MenuTrigger>
-        <MenuPopup align="end">
-          <MenuItem variant="destructive" onClick={confirm}>
-            {m.chat_unsend()}
-          </MenuItem>
+        <MenuPopup
+          align="end"
+          finalFocus={() => {
+            if (!replying.current) return true;
+            replying.current = false;
+            return replyFocus.current;
+          }}
+        >
+          {onReply ? (
+            <MenuItem
+              onClick={() => {
+                replying.current = true;
+                onReply();
+              }}
+            >
+              {m.chat_reply()}
+            </MenuItem>
+          ) : null}
+          {unsendable ? (
+            <MenuItem variant="destructive" onClick={confirm}>
+              {m.chat_unsend()}
+            </MenuItem>
+          ) : null}
         </MenuPopup>
       </Menu>
       <AlertDialog open={confirming} onOpenChange={setConfirming}>
