@@ -26,6 +26,13 @@ describe("listPostTags", () => {
     expect(listPostTags(list(1, "want", { matchSale: true, matchHave: false }))).toEqual(["wtb"]);
   });
 
+  test("a want list read without Open to takes the default, swaps and buying", () => {
+    expect(listPostTags(list(1, "want", { matchSale: null, matchHave: null }))).toEqual([
+      "wtt",
+      "wtb",
+    ]);
+  });
+
   test("either half of a Swap pair reads the pair's tags", () => {
     const want = list(2, "want", { matchSale: true });
     expect(listPostTags({ ...list(1, "have"), linkedList: want })).toEqual(["wtt", "wtb"]);

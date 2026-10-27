@@ -14,6 +14,13 @@ describe("createListInputSchema", () => {
   test("no listType is a general list", () => {
     expect(createListInputSchema.parse(base).listType).toBe("general");
   });
+
+  test("a want list that leaves Open to out is open to swaps and buying", () => {
+    expect(createListInputSchema.parse({ ...base, listType: "want" })).toMatchObject({
+      matchSale: true,
+      matchHave: true,
+    });
+  });
 });
 
 describe("copyListInputSchema", () => {

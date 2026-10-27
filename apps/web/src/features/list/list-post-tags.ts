@@ -22,8 +22,8 @@ export function listPostTags(list: TagList & { linkedList?: TagList | null }): P
     listType: item.listType,
     linkedListId,
     takesSwaps: item.takesSwaps ?? false,
-    // a want list's defaults: Swaps only
-    matchSale: item.matchSale ?? false,
+    // a want list's defaults: Swaps or buying
+    matchSale: item.matchSale ?? true,
     matchHave: item.matchHave ?? true,
     onTrade: !!item.discoverable && canBeOnTrade(item.listType, item.isProfileBind),
   });

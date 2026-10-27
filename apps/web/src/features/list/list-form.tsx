@@ -66,7 +66,8 @@ export const EMPTY_DRAFT: ListDraft = {
   profileAddress: null,
   isProfileBind: false,
   discoverable: false,
-  matchSale: false,
+  // a new want list is open to swaps and buying until a post narrows it
+  matchSale: true,
   matchHave: true,
   gridColumns: null,
   hideSerial: false,

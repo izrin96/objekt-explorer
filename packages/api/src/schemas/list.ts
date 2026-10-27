@@ -141,7 +141,7 @@ export const createListInputSchema = z.object({
   description: z.string().max(5000).nullable(),
   currency: z.string().max(10).nullable(),
   discoverable: z.boolean().default(false),
-  matchSale: z.boolean().default(false),
+  matchSale: z.boolean().default(true),
   matchHave: z.boolean().default(true),
 });
 
