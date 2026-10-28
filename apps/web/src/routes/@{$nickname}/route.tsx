@@ -1,5 +1,5 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { Outlet, createFileRoute } from "@tanstack/react-router";
+import { Outlet, createFileRoute, useParams } from "@tanstack/react-router";
 
 import { PageMain } from "@/components/layout/page-main";
 import { PendingStatus } from "@/components/router/pending";
@@ -23,7 +23,17 @@ export const Route = createFileRoute("/@{$nickname}")({
 });
 
 function ProfileLayout() {
-  const { nickname } = Route.useParams();
+  // undefined for a render after leaving the profile drops this match, before the layout unmounts
+  const nickname = useParams({
+    from: Route.id,
+    shouldThrow: false,
+    select: (params) => params.nickname,
+  });
+  if (nickname === undefined) return null;
+  return <ProfileBody nickname={nickname} />;
+}
+
+function ProfileBody({ nickname }: { nickname: string }) {
   const { data: profile } = useSuspenseQuery(profileQuery({ nickname }));
 
   return (

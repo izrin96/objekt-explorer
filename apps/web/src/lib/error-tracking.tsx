@@ -81,8 +81,11 @@ function isChunkFailure(error: unknown): boolean {
  * stale chunk.
  */
 function shouldReport(error: unknown) {
+  if (reloading) return false;
   if (isExpectedError(error) || isFromServer(error)) return false;
   if (isNetworkFailure(error) || isChunkFailure(error)) return false;
+  // a request we cancelled, as React Query does when the last component reading a query unmounts
+  if (error instanceof Error && error.name === "AbortError") return false;
   const { status, code } = (error ?? {}) as { status?: unknown; code?: unknown };
   return !(typeof status === "number" && typeof code === "string");
 }
@@ -137,6 +140,16 @@ export function initClientErrorTracking() {
     });
 }
 
+let reloading = false;
+
+/**
+ * Called before reloading for a missing chunk. Vite resolves that import to `undefined` once its
+ * `vite:preloadError` is prevented, so the router throws reading the module until the page goes.
+ */
+export function stopReportingForReload() {
+  reloading = true;
+}
+
 /** For error boundaries; refusals and oRPC errors are skipped. */
 export function reportError(error: unknown) {
   if (shouldReport(error)) withSdk((Sentry) => Sentry.captureException(error));
@@ -146,6 +159,21 @@ export function reportError(error: unknown) {
 export function reportUncaught(error: unknown, errorInfo: ErrorInfo) {
   console.error(error);
   withSdk((Sentry) => Sentry.reactErrorHandler()(error, errorInfo));
+}
+
+/**
+ * React's `onRecoverableError`: hands the error on as React would by default, except a router
+ * invariant from a route the user just left. The router clears that route's match before React
+ * unmounts it, so its hooks throw once and React recovers (TanStack/router#8198).
+ */
+export function reportRecoverable(error: unknown) {
+  const cause = error instanceof Error ? error.cause : undefined;
+  if (cause instanceof Error && cause.message === "Invariant failed") {
+    console.warn(error);
+    return;
+  }
+  if (typeof globalThis.reportError === "function") globalThis.reportError(error);
+  else console.error(error);
 }
 
 /** The internal user id only; `null` on sign-out. */

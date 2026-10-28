@@ -2,7 +2,12 @@ import { StartClient } from "@tanstack/react-start/client";
 import { StrictMode } from "react";
 import { hydrateRoot } from "react-dom/client";
 
-import { initClientErrorTracking, reportUncaught } from "@/lib/error-tracking";
+import {
+  initClientErrorTracking,
+  reportRecoverable,
+  reportUncaught,
+  stopReportingForReload,
+} from "@/lib/error-tracking";
 
 initClientErrorTracking();
 
@@ -17,6 +22,7 @@ window.addEventListener("vite:preloadError", (event) => {
     return;
   }
   event.preventDefault();
+  stopReportingForReload();
   window.location.reload();
 });
 
@@ -27,7 +33,7 @@ function hydrate() {
       <StartClient />
     </StrictMode>,
     // caught errors are reported by the route and widget boundaries, which know a refusal
-    { onUncaughtError: reportUncaught },
+    { onUncaughtError: reportUncaught, onRecoverableError: reportRecoverable },
   );
 }
 
