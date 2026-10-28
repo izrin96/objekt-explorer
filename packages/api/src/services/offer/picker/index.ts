@@ -286,7 +286,11 @@ async function partnerEntries(ids: number[], slugs: string[]) {
  * Every copy the viewer could give for the matches: the entries on the match's own lists, each
  * specific objekt and each held copy of an any-copy entry, with its flags.
  */
-async function myCopies(me: string, matches: Match[], conversationId: number | null) {
+async function myCopies(
+  me: string,
+  matches: Pick<Match, "slug" | "myListIds">[],
+  conversationId: number | null,
+) {
   const listIds = unique(matches.flatMap((match) => match.myListIds));
   const slugs = unique(matches.map((match) => match.slug));
   const entries = await db

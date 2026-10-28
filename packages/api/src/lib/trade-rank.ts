@@ -1,7 +1,7 @@
 import { realNickname, truncateAddress } from "@repo/lib/address";
 
 import { type ListType, pickedSides, tradeSideOf } from "../schemas/list";
-import { type OpenToFlags, pickByOpenTo } from "../schemas/open-to";
+import { offersSwaps, type OpenToFlags, pickByOpenTo } from "../schemas/open-to";
 import {
   countsFit,
   type MatchCounts,
@@ -11,7 +11,7 @@ import {
   type TradeFilter,
 } from "../schemas/trade";
 import { DAY_MS } from "./time";
-import { matchCounts } from "./trade-person";
+import { matchCounts, type PostOf } from "./trade-person";
 
 export const PARTNER_LIMIT = 50;
 export const CANDIDATE_LIMIT = 200;
@@ -19,7 +19,13 @@ export const CANDIDATE_LIMIT = 200;
 export const FEED_CANDIDATE_LIMIT = 1000;
 export const IDLE_DAYS = 30;
 
-export type MyList = { id: number; listType: ListType; linkedListId: number | null };
+export type MyList = {
+  id: number;
+  listType: ListType;
+  linkedListId: number | null;
+  /** a sale list set to Sell or swap */
+  takesSwaps?: boolean | null;
+};
 
 /**
  * The lists each direction matches from: every one of the user's, or a named list and the list
@@ -38,6 +44,22 @@ export function matchSides(myLists: MyList[], listId: number | null, filter: Tra
     haveListIds: filter === "they_have" ? [] : sides.haveListIds,
     wantListIds: filter === "they_want" ? [] : sides.wantListIds,
   };
+}
+
+/**
+ * The user's posts as Can swap reads them: each list paired by {@link pickedSides} keys to its
+ * pair's have or sale list, when that list offers swaps, as `partner_post` keys the partner's. A
+ * list with no such pair has no key.
+ */
+export function viewerPostOf(myLists: MyList[]): PostOf {
+  const postOf: Partial<Record<number, number>> = {};
+  for (const list of myLists) {
+    const { paired } = pickedSides(list, myLists);
+    if (!paired) continue;
+    const offering = tradeSideOf(list.listType) === "have" ? list : paired;
+    if (offersSwaps(offering)) postOf[list.id] = offering.id;
+  }
+  return postOf;
 }
 
 type Verdict = "ok" | "not_owned" | "not_transferable";
@@ -106,12 +128,17 @@ export function groupBySlug<T extends { slug: string }>(entries: T[]): Map<strin
   return groups;
 }
 
-/** `trade` is false when only a sale list makes the match, so it is no swap */
+/**
+ * `trade` is false when only a sale list makes the match, so it is no swap. `swapMyListIds` and
+ * `swapPartnerListIds` are the lists `trade` holds through, empty when it doesn't.
+ */
 export type Match = {
   slug: string;
   myListIds: number[];
   partnerListIds: number[];
   trade: boolean;
+  swapMyListIds: number[];
+  swapPartnerListIds: number[];
 };
 export type Dropped = {
   slug: string;
@@ -134,6 +161,8 @@ export type Candidate = {
   theyHave: (OwnedEntry & { sale: boolean; swap?: boolean })[];
   /** their want entries on collections I have, with what the want list is open to */
   theyWant: TheyWant[];
+  /** their matched lists that sit in a post that can swap, keyed as {@link PostOf} */
+  postOf: Record<string, number>;
 };
 
 type Recounted = {
@@ -142,6 +171,7 @@ type Recounted = {
   theyHaveIWant: Match[];
   iHaveTheyWant: Match[];
   dropped: Dropped[];
+  posts: { mine: PostOf; theirs: PostOf };
 };
 
 /** One of my want lists holding a collection, and whether it is open to buying and to swaps. */
@@ -169,6 +199,7 @@ export function recount(
   holdings: Holdings,
   myWants: ReadonlyMap<string, MyWant[]>,
   myHaves: MyHaves,
+  myPostOf: PostOf,
 ): Recounted {
   const theyHaveIWant: Match[] = [];
   const iHaveTheyWant: Match[] = [];
@@ -210,6 +241,8 @@ export function recount(
         ...new Set([...(swaps ? haves.listIds : []), ...(buys ? sales.listIds : [])]),
       ],
       trade: swaps,
+      swapMyListIds: swaps ? mine.filter((want) => want.matchHave).map((want) => want.listId) : [],
+      swapPartnerListIds: swaps ? haves.listIds : [],
     });
   }
 
@@ -222,11 +255,17 @@ export function recount(
     if (judged.length === 0) continue;
     const ok = judged.filter(({ mine }) => mine.verdict === "ok");
     if (ok.length > 0) {
+      const myTrade = myHaves.trade.get(slug);
+      const swapWants = ok.filter(({ swaps }) => swaps);
+      const trade = swapWants.length > 0 && myTrade?.verdict === "ok";
       iHaveTheyWant.push({
         slug,
         myListIds: [...new Set(ok.flatMap(({ mine }) => mine.listIds))],
         partnerListIds: [...new Set(ok.map(({ listId }) => listId))],
-        trade: ok.some(({ swaps }) => swaps) && myHaves.trade.get(slug)?.verdict === "ok",
+        trade,
+        // a want open to both reads every list of mine, Sell only sales too, so take the swap side's
+        swapMyListIds: trade ? (myTrade?.listIds ?? []) : [],
+        swapPartnerListIds: trade ? [...new Set(swapWants.map(({ listId }) => listId))] : [],
       });
     } else {
       dropped.push({
@@ -248,7 +287,14 @@ export function recount(
       : changes
   ).reduce((latest, [, at]) => (at > latest ? at : latest), "");
 
-  return { userId: candidate.userId, updatedAt, theyHaveIWant, iHaveTheyWant, dropped };
+  return {
+    userId: candidate.userId,
+    updatedAt,
+    theyHaveIWant,
+    iHaveTheyWant,
+    dropped,
+    posts: { mine: myPostOf, theirs: candidate.postOf },
+  };
 }
 
 function bestDrop(verdicts: Verdict[]): DropReason {
@@ -259,11 +305,7 @@ export function isIdle(updatedAt: string, now: Date) {
   return now.getTime() - new Date(updatedAt).getTime() >= IDLE_DAYS * DAY_MS;
 }
 
-type Rankable = {
-  theyHaveIWant: { slug: string; trade: boolean; myListIds: number[] }[];
-  iHaveTheyWant: { slug: string; trade: boolean; myListIds: number[] }[];
-  updatedAt: string;
-};
+type Rankable = Parameters<typeof matchCounts>[0] & { updatedAt: string };
 
 /** Active before idle, then the mutual score, the sum, and the most recent change. */
 export function rankPartners<T extends Rankable>(partners: T[], filter: TradeFilter, now: Date) {
@@ -293,12 +335,9 @@ export function rankPartners<T extends Rankable>(partners: T[], filter: TradeFil
 type Ranked = { userId: string; updatedAt: string; counts: MatchCounts };
 
 /** One recounted partner as the ranking reads it. */
-export function toRanked(partner: {
-  userId: string;
-  updatedAt: string;
-  theyHaveIWant: Parameters<typeof matchCounts>[0]["theyHaveIWant"];
-  iHaveTheyWant: Parameters<typeof matchCounts>[0]["iHaveTheyWant"];
-}): Ranked {
+export function toRanked(
+  partner: Parameters<typeof matchCounts>[0] & { userId: string; updatedAt: string },
+): Ranked {
   return { userId: partner.userId, updatedAt: partner.updatedAt, counts: matchCounts(partner) };
 }
 

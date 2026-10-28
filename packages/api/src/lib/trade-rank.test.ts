@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
+import type { PostOf } from "./trade-person";
 import {
   type Candidate,
   copyKey,
@@ -16,9 +17,10 @@ import {
   oneWayPeople,
   PARTNER_LIMIT,
   rankPartners,
-  recount,
+  recount as recountWith,
   toPartnerIdentity,
   toRanked,
+  viewerPostOf,
 } from "./trade-rank";
 
 const NOW = new Date("2026-10-06T00:00:00Z");
@@ -27,15 +29,39 @@ const IDLE = "2026-08-01T00:00:00Z";
 
 const slugs = (prefix: string, n: number) => Array.from({ length: n }, (_, i) => `${prefix}-${i}`);
 
+// every swap runs through one post on each side, so Can swap is the smaller swap count
+const MY_POST = 1;
+const THEIR_POST = 2;
+const ONE_POST = { mine: { [MY_POST]: MY_POST }, theirs: { [THEIR_POST]: THEIR_POST } };
+
 const matches = (prefix: string, n: number, trade = true) =>
-  slugs(prefix, n).map((slug) => ({ slug, trade, myListIds: [], partnerListIds: [] }));
+  slugs(prefix, n).map((slug) => ({
+    slug,
+    trade,
+    myListIds: [],
+    partnerListIds: [],
+    swapMyListIds: trade ? [MY_POST] : [],
+    swapPartnerListIds: trade ? [THEIR_POST] : [],
+  }));
 
 const partner = (userId: string, a: number, b: number, updatedAt = RECENT, trade = true) => ({
   userId,
   updatedAt,
   theyHaveIWant: matches("h", a, trade),
   iHaveTheyWant: matches("w", b, trade),
+  posts: ONE_POST,
 });
+
+/** {@link recountWith} with no posts unless a test names them: these tests aren't about Can swap. */
+const recount = (
+  candidate: Omit<Candidate, "postOf"> & { postOf?: Candidate["postOf"] },
+  partnerAddresses: Parameters<typeof recountWith>[1],
+  holdings: Holdings,
+  myWants: Parameters<typeof recountWith>[3],
+  myHaves: MyHaves,
+  myPostOf: PostOf = {},
+) =>
+  recountWith({ postOf: {}, ...candidate }, partnerAddresses, holdings, myWants, myHaves, myPostOf);
 
 const order = (partners: { userId: string }[]) => partners.map((p) => p.userId);
 
@@ -174,26 +200,23 @@ describe("ownership", () => {
       listUpdatedAt: { 1: RECENT, 2: RECENT },
       theyHave: aHave.map((slug, i) => ({ listId: 1, slug, objektId: `a-${i}`, sale: false })),
       theyWant: aWant.map((slug) => ({ listId: 2, slug, matchSale: true, matchHave: true })),
+      postOf: { 1: 1, 2: 1 },
     };
     const b: Candidate = {
       userId: "B",
       listUpdatedAt: { 3: RECENT, 4: RECENT },
       theyHave: bHave.map((slug) => ({ listId: 3, slug, objektId: null, sale: false })),
       theyWant: bWant.map((slug) => ({ listId: 4, slug, matchSale: true, matchHave: true })),
+      postOf: { 3: 3, 4: 3 },
     };
 
     const owned = { objekts: ownedTokens, copies };
+    // my want list 10 and have list 20 are one post
+    const myPosts = { 10: 20, 20: 20 };
+    const haves = { all: myHaves, trade: myHaves, sale: new Map() };
     const recounted = [
-      recount(a, new Set(["0xa"]), owned, myWants, {
-        all: myHaves,
-        trade: myHaves,
-        sale: new Map(),
-      }),
-      recount(b, new Set(["0xb"]), owned, myWants, {
-        all: myHaves,
-        trade: myHaves,
-        sale: new Map(),
-      }),
+      recount(a, new Set(["0xa"]), owned, myWants, haves, myPosts),
+      recount(b, new Set(["0xb"]), owned, myWants, haves, myPosts),
     ];
     const ranked = rankPartners(recounted, "all", NOW);
 
@@ -209,6 +232,7 @@ describe("ownership", () => {
       listUpdatedAt: { 5: RECENT },
       theyHave: [],
       theyWant: [{ listId: 5, slug: "mine", matchSale: true, matchHave: true }],
+      postOf: {},
     };
     const result = recount(candidate, theirs, holdings, new Map(), {
       all: judged,
@@ -249,7 +273,14 @@ describe("recount details", () => {
   test("my sale list answers a want list that takes sales", () => {
     const result = wantedBy([{ listId: 8, slug: "x", matchSale: true, matchHave: true }]);
     expect(result.iHaveTheyWant).toEqual([
-      { slug: "x", myListIds: [2], partnerListIds: [8], trade: false },
+      {
+        slug: "x",
+        myListIds: [2],
+        partnerListIds: [8],
+        trade: false,
+        swapMyListIds: [],
+        swapPartnerListIds: [],
+      },
     ]);
   });
 
@@ -291,7 +322,14 @@ describe("recount details", () => {
       { listId: 9, slug: "x", matchSale: true, matchHave: true },
     ]);
     expect(result.iHaveTheyWant).toEqual([
-      { slug: "x", myListIds: [2], partnerListIds: [9], trade: false },
+      {
+        slug: "x",
+        myListIds: [2],
+        partnerListIds: [9],
+        trade: false,
+        swapMyListIds: [],
+        swapPartnerListIds: [],
+      },
     ]);
     expect(result.dropped).toEqual([]);
   });
@@ -376,7 +414,14 @@ describe("recount details", () => {
 
     test("a Buying only want of mine is answered by a partner sale entry", () => {
       expect(theyHave([{ listId: 7, sale: true, objektId: "kept" }])).toEqual([
-        { slug: "x", myListIds: [3], partnerListIds: [7], trade: false },
+        {
+          slug: "x",
+          myListIds: [3],
+          partnerListIds: [7],
+          trade: false,
+          swapMyListIds: [],
+          swapPartnerListIds: [],
+        },
       ]);
     });
 
@@ -386,7 +431,16 @@ describe("recount details", () => {
           { listId: 6, sale: false, objektId: "kept" },
           { listId: 7, sale: true, objektId: "kept" },
         ]),
-      ).toEqual([{ slug: "x", myListIds: [3], partnerListIds: [7], trade: false }]);
+      ).toEqual([
+        {
+          slug: "x",
+          myListIds: [3],
+          partnerListIds: [7],
+          trade: false,
+          swapMyListIds: [],
+          swapPartnerListIds: [],
+        },
+      ]);
     });
 
     test("a Buying only want beside a swaps want on a slug is credited per entry kind", () => {
@@ -414,7 +468,14 @@ describe("recount details", () => {
         { all: new Map(), trade: new Map(), sale: new Map() },
       );
       expect(result.theyHaveIWant).toEqual([
-        { slug: "x", myListIds: [4], partnerListIds: [7], trade: false },
+        {
+          slug: "x",
+          myListIds: [4],
+          partnerListIds: [7],
+          trade: false,
+          swapMyListIds: [],
+          swapPartnerListIds: [],
+        },
       ]);
     });
 
@@ -462,10 +523,25 @@ describe("recount details", () => {
 
       test("is answered only by my sale list", () => {
         expect(answers(mine, buyingOnly)).toEqual([
-          { slug: "x", myListIds: [2], partnerListIds: [8], trade: false },
+          {
+            slug: "x",
+            myListIds: [2],
+            partnerListIds: [8],
+            trade: false,
+            swapMyListIds: [],
+            swapPartnerListIds: [],
+          },
         ]);
         expect(answers(mine, both)).toEqual([
-          { slug: "x", myListIds: [1, 2], partnerListIds: [8], trade: true },
+          {
+            slug: "x",
+            myListIds: [1, 2],
+            partnerListIds: [8],
+            trade: true,
+            // my sale list 2 answers it too, but only have list 1 swaps
+            swapMyListIds: [1],
+            swapPartnerListIds: [8],
+          },
         ]);
       });
 
@@ -730,11 +806,13 @@ describe("matchSides", () => {
           { listId: 8, slug: "on-spares", matchSale: true, matchHave: true },
           { listId: 8, slug: "on-dupes", matchSale: true, matchHave: true },
         ],
+        postOf: { 7: 7, 8: 7 },
       },
       new Set(["0xp"]),
       holdings,
       new Map([["binary", [{ listId: 3, matchSale: true, matchHave: true }]]]),
       { all: myHaves, trade: myHaves, sale: new Map() },
+      viewerPostOf(lists),
     );
 
     expect(result.iHaveTheyWant.map((m) => m.slug)).toEqual(["on-spares"]);
@@ -747,7 +825,15 @@ describe("mutualOrder", () => {
   const person = (userId: string, theyHave: number, youHave: number, updatedAt = RECENT) => ({
     userId,
     updatedAt,
-    counts: { theyHave, youHave, tradeTheyHave: theyHave, tradeYouHave: youHave },
+    counts: {
+      theyHave,
+      youHave,
+      tradeTheyHave: theyHave,
+      tradeYouHave: youHave,
+      swap: Math.min(theyHave, youHave),
+      swapTheyHave: theyHave,
+      swapPair: null,
+    },
   });
 
   test("mutual, then sum, then last change, then id, with no idle tier", () => {
@@ -766,7 +852,15 @@ describe("mutualPeople", () => {
   const person = (userId: string, theyHave: number, youHave: number, updatedAt = RECENT) => ({
     userId,
     updatedAt,
-    counts: { theyHave, youHave, tradeTheyHave: theyHave, tradeYouHave: youHave },
+    counts: {
+      theyHave,
+      youHave,
+      tradeTheyHave: theyHave,
+      tradeYouHave: youHave,
+      swap: Math.min(theyHave, youHave),
+      swapTheyHave: theyHave,
+      swapPair: null,
+    },
   });
 
   test("keeps every mutual person past the 50 cap, in Mutual order", () => {
@@ -796,7 +890,15 @@ describe("oneWayPeople", () => {
   const person = (userId: string, theyHave: number, youHave: number, updatedAt = RECENT) => ({
     userId,
     updatedAt,
-    counts: { theyHave, youHave, tradeTheyHave: theyHave, tradeYouHave: youHave },
+    counts: {
+      theyHave,
+      youHave,
+      tradeTheyHave: theyHave,
+      tradeYouHave: youHave,
+      swap: Math.min(theyHave, youHave),
+      swapTheyHave: theyHave,
+      swapPair: null,
+    },
   });
 
   test("most matches first, whichever way they run", () => {
@@ -854,13 +956,150 @@ describe("recount: a sale list that takes swaps", () => {
 
   test("answers a swaps-only want as a swap", () => {
     expect(theyHave({ matchSale: false, matchHave: true })).toEqual([
-      { slug: "x", myListIds: [3], partnerListIds: [7], trade: true },
+      {
+        slug: "x",
+        myListIds: [3],
+        partnerListIds: [7],
+        trade: true,
+        swapMyListIds: [3],
+        swapPartnerListIds: [7],
+      },
     ]);
   });
 
   test("answers a swaps-or-buying want as both a swap and a sale", () => {
     expect(theyHave({ matchSale: true, matchHave: true })).toEqual([
-      { slug: "x", myListIds: [3], partnerListIds: [7], trade: true },
+      {
+        slug: "x",
+        myListIds: [3],
+        partnerListIds: [7],
+        trade: true,
+        swapMyListIds: [3],
+        swapPartnerListIds: [7],
+      },
     ]);
+  });
+});
+
+describe("recount: the lists a swap runs through", () => {
+  const holdings: Holdings = {
+    objekts: new Map([["kept", { owner: "0xp", transferable: true }]]),
+    copies: new Map(),
+  };
+  const both = { matchSale: true, matchHave: true };
+
+  test("their have and Sell only sale lists on one collection: only the have list swaps", () => {
+    const [match] = recount(
+      {
+        userId: "P",
+        listUpdatedAt: { 6: RECENT, 7: RECENT },
+        theyHave: [
+          { listId: 6, slug: "x", objektId: "kept", sale: false, swap: true },
+          { listId: 7, slug: "x", objektId: "kept", sale: true, swap: false },
+        ],
+        theyWant: [],
+      },
+      new Set(["0xp"]),
+      holdings,
+      new Map([
+        [
+          "x",
+          [
+            { listId: 3, ...both },
+            { listId: 4, matchSale: true, matchHave: false },
+          ],
+        ],
+      ]),
+      { all: new Map(), trade: new Map(), sale: new Map() },
+    ).theyHaveIWant;
+    expect(match).toMatchObject({
+      myListIds: [3, 4],
+      partnerListIds: [6, 7],
+      swapMyListIds: [3],
+      swapPartnerListIds: [6],
+    });
+  });
+
+  test("their Sell or swap list is on the swap side", () => {
+    const [match] = recount(
+      {
+        userId: "P",
+        listUpdatedAt: { 7: RECENT },
+        theyHave: [{ listId: 7, slug: "x", objektId: "kept", sale: true, swap: true }],
+        theyWant: [],
+      },
+      new Set(["0xp"]),
+      holdings,
+      new Map([["x", [{ listId: 3, ...both }]]]),
+      { all: new Map(), trade: new Map(), sale: new Map() },
+    ).theyHaveIWant;
+    expect(match).toMatchObject({ trade: true, swapMyListIds: [3], swapPartnerListIds: [7] });
+  });
+
+  test("my have and sale lists answering a want open to both: only the have list swaps", () => {
+    const [match] = recount(
+      {
+        userId: "P",
+        listUpdatedAt: { 8: RECENT, 9: RECENT },
+        theyHave: [],
+        theyWant: [
+          { listId: 8, slug: "x", ...both },
+          { listId: 9, slug: "x", matchSale: true, matchHave: false },
+        ],
+      },
+      new Set(["0xp"]),
+      holdings,
+      new Map(),
+      {
+        all: new Map([["x", { verdict: "ok" as const, listIds: [1, 2] }]]),
+        trade: new Map([["x", { verdict: "ok" as const, listIds: [1] }]]),
+        sale: new Map([["x", { verdict: "ok" as const, listIds: [2] }]]),
+      },
+    ).iHaveTheyWant;
+    expect(match).toMatchObject({
+      myListIds: [1, 2],
+      partnerListIds: [8, 9],
+      swapMyListIds: [1],
+      swapPartnerListIds: [8],
+    });
+  });
+
+  test("carries both sides' posts", () => {
+    const result = recount(
+      { userId: "P", listUpdatedAt: {}, theyHave: [], theyWant: [], postOf: { 7: 7, 8: 7 } },
+      new Set(["0xp"]),
+      holdings,
+      new Map(),
+      { all: new Map(), trade: new Map(), sale: new Map() },
+      { 1: 1, 3: 1 },
+    );
+    expect(result.posts).toEqual({ mine: { 1: 1, 3: 1 }, theirs: { 7: 7, 8: 7 } });
+  });
+});
+
+describe("viewerPostOf", () => {
+  test("keys both halves of a pair to its have or sale list, and nothing else", () => {
+    const lists: MyList[] = [
+      { id: 1, listType: "have", linkedListId: 3 },
+      { id: 2, listType: "have", linkedListId: null },
+      { id: 3, listType: "want", linkedListId: 1 },
+      { id: 5, listType: "sale", linkedListId: 6, takesSwaps: true },
+      { id: 6, listType: "want", linkedListId: 5 },
+      { id: 7, listType: "want", linkedListId: null },
+    ];
+    expect(viewerPostOf(lists)).toEqual({ 1: 1, 3: 1, 5: 5, 6: 5 });
+  });
+
+  test("a pair whose sale list is Sell only keys to nothing", () => {
+    const lists: MyList[] = [
+      { id: 5, listType: "sale", linkedListId: 6, takesSwaps: false },
+      { id: 6, listType: "want", linkedListId: 5 },
+    ];
+    expect(viewerPostOf(lists)).toEqual({});
+  });
+
+  test("a link to a list not taking part keys to nothing", () => {
+    // the have list it links to is unbound, so it is not among the lists
+    expect(viewerPostOf([{ id: 3, listType: "want", linkedListId: 1 }])).toEqual({});
   });
 });

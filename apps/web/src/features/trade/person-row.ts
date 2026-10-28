@@ -38,9 +38,10 @@ export type MatchBand =
   | { kind: "noSwap" | "oneWay"; theyHave: number; youHave: number };
 
 /**
- * The band over a person's row: what they and the viewer can swap (have lists only), else
- * whether the match runs both ways (through sale lists, so nothing to swap) or one way. `theyHave`
- * is A, `youHave` B. No band when nothing matches.
+ * The band over a person's row: what they and the viewer can swap inside one post on each side,
+ * else whether the match runs both ways only through sales (so nothing to swap) or one way. Swaps
+ * that cross posts or run through lists with no link read as one way. `theyHave` is A, `youHave`
+ * B. No band when nothing matches.
  */
 export function matchBand(counts: MatchCounts | undefined): MatchBand | null {
   if (!counts) return null;
@@ -48,25 +49,39 @@ export function matchBand(counts: MatchCounts | undefined): MatchBand | null {
   if (theyHave === 0 && youHave === 0) return null;
   const swap = mutualOf(counts);
   if (swap > 0) return { kind: "swap", swap, theyHave, youHave };
-  return { kind: theyHave > 0 && youHave > 0 ? "noSwap" : "oneWay", theyHave, youHave };
+  const bothWays = theyHave > 0 && youHave > 0;
+  const swapsBothWays = counts.tradeTheyHave > 0 && counts.tradeYouHave > 0;
+  return { kind: bothWays && !swapsBothWays ? "noSwap" : "oneWay", theyHave, youHave };
 }
 
 /**
  * How much of the swap needs the viewer's rules: the swap takes `mutualOf` collections from what
- * the person has, and the ones wanted by hand go first, so only the shortfall counts. A collection
- * reached through a rule on a sale list that doesn't take swaps is no part of the swap.
+ * the person has in the counted pairing of posts (`swapPair`, `swapTheyHave`), and the ones wanted
+ * by hand go first, so only the shortfall counts. Only a rule of the viewer's post in that pairing,
+ * matched on the person's post in it, is part of the swap; so is no rule match on a sale list
+ * that doesn't take swaps.
  */
 export function swapThroughRules(
   counts: MatchCounts | undefined,
-  posts: readonly { ruleMatches: readonly { slug: string; swap: boolean }[] }[],
+  posts: readonly {
+    id: number;
+    ruleMatches: readonly { slug: string; listId: number; swap: boolean }[];
+  }[],
 ) {
-  if (!counts) return 0;
+  if (!counts?.swapPair) return 0;
   const swap = mutualOf(counts);
   if (swap === 0) return 0;
+  const { myListIds, theirPostId } = counts.swapPair;
   const viaRules = new Set(
-    posts.flatMap((post) => post.ruleMatches.flatMap((found) => (found.swap ? [found.slug] : []))),
+    posts.flatMap((post) =>
+      post.id === theirPostId
+        ? post.ruleMatches.flatMap((found) =>
+            found.swap && myListIds.includes(found.listId) ? [found.slug] : [],
+          )
+        : [],
+    ),
   ).size;
-  const byHand = Math.max(0, counts.tradeTheyHave - viaRules);
+  const byHand = Math.max(0, counts.swapTheyHave - viaRules);
   return Math.max(0, swap - byHand);
 }
 

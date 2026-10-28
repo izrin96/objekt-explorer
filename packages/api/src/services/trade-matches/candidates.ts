@@ -13,14 +13,16 @@ import {
 
 const HAVING: Record<TradeFilter, ReturnType<typeof sql>> = {
   all: sql``,
-  // Mutual is a swap, so only the swap counts can make it
+  // Mutual is a swap, so only the swap counts can make it; pooled over every list, a superset of
+  // the per-post score the recount decides
   mutual: sql`HAVING count(*) FILTER (WHERE they_have AND trade) > 0 AND count(*) FILTER (WHERE NOT they_have AND trade) > 0`,
   they_have: sql`HAVING count(*) FILTER (WHERE they_have) > 0`,
   they_want: sql`HAVING count(*) FILTER (WHERE NOT they_have) > 0`,
 };
 
 const ORDER: Record<TradeFilter | "sum", ReturnType<typeof sql>> = {
-  // `rankPartners` ranks on the swap score first, so the cut keeps the people it ranks first
+  // `rankPartners` ranks on the per-post swap score first; the pooled one here only roughly
+  // stands in for it, so the cut keeps about the people it ranks first
   all: sql`least(a_t, b_t) DESC, a + b DESC`,
   mutual: sql`least(a_t, b_t) DESC, a + b DESC`,
   they_have: sql`a DESC`,
@@ -39,6 +41,7 @@ export type CandidateOptions = {
 type CandidateRow = {
   user_id: string;
   list_updated_at: Record<string, string>;
+  post_of: Record<string, number>;
   they_have: Candidate["theyHave"];
   they_want: TheyWant[];
 };
@@ -73,7 +76,8 @@ export async function fetchTradeCandidates(
       GROUP BY e.collection_slug
     ),
     partner_lists AS (
-      SELECT l.id, l.user_id, l.list_type, l.match_sale, l.match_have, l.takes_swaps, l.updated_at
+      SELECT l.id, l.user_id, l.list_type, l.match_sale, l.match_have, l.takes_swaps, l.updated_at,
+        l.linked_list_id
       FROM lists l
       WHERE l.discoverable
         AND ${takesPartInTradeSql("l")}
@@ -83,22 +87,33 @@ export async function fetchTradeCandidates(
         ${ownerIds ? sql`AND l.user_id = ANY(${sql.param(ownerIds)}::text[])` : sql``}
         AND ${tradePartnerSql(userId, sql`l.user_id`)}
     ),
+    -- a post is a linked pair whose offering half can swap, keyed by that half's id; both halves
+    -- must take part, so a list linked to an unlisted one keys to no post
+    partner_post AS (
+      SELECT p.id, CASE WHEN p.list_type = 'want' THEN q.id ELSE p.id END AS post_key
+      FROM partner_lists p
+      JOIN partner_lists q ON q.id = p.linked_list_id AND q.user_id = p.user_id
+      WHERE (p.list_type = 'want') <> (q.list_type = 'want')
+        AND CASE WHEN p.list_type = 'want' THEN ${offersSwapsSql("q")} ELSE ${offersSwapsSql("p")} END
+    ),
     matched AS (
       -- a swap when the list offers swaps and my want list takes them; a sale when it is a sale
       -- list and my want list buys. A Sell or swap entry can be both
       SELECT p.user_id, p.id AS list_id, p.updated_at, p.match_sale, p.match_have, true AS they_have,
         ${offersSwapsSql("p")} AND w.match_have AS trade, p.list_type = 'sale' AND w.match_sale AS sale,
-        e.collection_slug, e.objekt_id
+        e.collection_slug, e.objekt_id, pp.post_key
       FROM partner_lists p
       JOIN list_entries e ON e.list_id = p.id
       JOIN my_want w ON w.collection_slug = e.collection_slug
+      LEFT JOIN partner_post pp ON pp.id = p.id
       WHERE p.list_type IN ('have', 'sale') AND ${offerMatchesWantSql("p", "w")}
       UNION ALL
       SELECT p.user_id, p.id, p.updated_at, p.match_sale, p.match_have, false,
-        p.match_have AND h.on_have, false, e.collection_slug, NULL
+        p.match_have AND h.on_have, false, e.collection_slug, NULL, pp.post_key
       FROM partner_lists p
       JOIN list_entries e ON e.list_id = p.id
       JOIN my_have h ON h.collection_slug = e.collection_slug
+      LEFT JOIN partner_post pp ON pp.id = p.id
       WHERE p.list_type = 'want' AND ((p.match_have AND h.on_have) OR (p.match_sale AND h.on_sale))
     ),
     grouped AS (
@@ -123,12 +138,14 @@ export async function fetchTradeCandidates(
           '[]'
         ) AS they_want,
         max(updated_at) AS updated_at,
-        jsonb_object_agg(list_id, updated_at) AS list_updated_at
+        jsonb_object_agg(list_id, updated_at) AS list_updated_at,
+        coalesce(jsonb_object_agg(list_id, post_key) FILTER (WHERE post_key IS NOT NULL), '{}')
+          AS post_of
       FROM matched
       GROUP BY user_id
       ${HAVING[filter]}
     )
-    SELECT user_id, list_updated_at, they_have, they_want FROM grouped
+    SELECT user_id, list_updated_at, post_of, they_have, they_want FROM grouped
     ORDER BY ${ORDER[order]}, updated_at DESC, user_id
     LIMIT ${limit}
   `);
@@ -138,6 +155,7 @@ export async function fetchTradeCandidates(
     listUpdatedAt: Object.fromEntries(
       Object.entries(row.list_updated_at).map(([id, at]) => [id, new Date(at).toISOString()]),
     ),
+    postOf: row.post_of,
     theyHave: row.they_have,
     theyWant: row.they_want,
   }));

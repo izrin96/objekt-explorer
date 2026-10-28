@@ -45,12 +45,15 @@ describe("orderPosts", () => {
 });
 
 describe("matchBand", () => {
-  /** counts where every match is a swap */
+  /** counts where every match is a swap inside one post */
   const swaps = (theyHave: number, youHave: number) => ({
     theyHave,
     youHave,
     tradeTheyHave: theyHave,
     tradeYouHave: youHave,
+    swap: Math.min(theyHave, youHave),
+    swapTheyHave: theyHave,
+    swapPair: Math.min(theyHave, youHave) > 0 ? { myListIds: [1, 2], theirPostId: 10 } : null,
   });
 
   test("swap when both ways match, by the smaller count, with both counts", () => {
@@ -67,13 +70,38 @@ describe("matchBand", () => {
   });
 
   test("the swap counts set the score, a sale on top doesn't raise it", () => {
-    const counts = { theyHave: 5, youHave: 2, tradeTheyHave: 1, tradeYouHave: 2 };
+    const counts = {
+      theyHave: 5,
+      youHave: 2,
+      tradeTheyHave: 1,
+      tradeYouHave: 2,
+      swap: 1,
+      swapTheyHave: 1,
+      swapPair: { myListIds: [1, 2], theirPostId: 10 },
+    };
     expect(matchBand(counts)).toEqual({ kind: "swap", swap: 1, theyHave: 5, youHave: 2 });
   });
 
   test("both ways through sale lists is no swap", () => {
-    const sale = { theyHave: 3, youHave: 1, tradeTheyHave: 0, tradeYouHave: 0 };
+    const sale = {
+      ...swaps(3, 1),
+      tradeTheyHave: 0,
+      tradeYouHave: 0,
+      swap: 0,
+      swapTheyHave: 0,
+      swapPair: null,
+    };
     expect(matchBand(sale)).toEqual({ kind: "noSwap", theyHave: 3, youHave: 1 });
+  });
+
+  test("a swap one way and a sale the other is no swap", () => {
+    const half = { ...swaps(3, 1), tradeYouHave: 0, swap: 0, swapTheyHave: 0, swapPair: null };
+    expect(matchBand(half)).toEqual({ kind: "noSwap", theyHave: 3, youHave: 1 });
+  });
+
+  test("swaps across posts, or through lists with no link, are one way with no chip", () => {
+    const crossPost = { ...swaps(2, 1), swap: 0, swapTheyHave: 0, swapPair: null };
+    expect(matchBand(crossPost)).toEqual({ kind: "oneWay", theyHave: 2, youHave: 1 });
   });
 
   test("no match, no band", () => {
@@ -133,15 +161,22 @@ describe("ruleCountsOf", () => {
 });
 
 describe("swapThroughRules", () => {
+  // the swap runs between the viewer's post (have 1, want 2) and the person's post 10
+  const PAIR = { myListIds: [1, 2], theirPostId: 10 };
   const counts = (tradeTheyHave: number, tradeYouHave: number) => ({
     theyHave: tradeTheyHave,
     youHave: tradeYouHave,
     tradeTheyHave,
     tradeYouHave,
+    swap: Math.min(tradeTheyHave, tradeYouHave),
+    swapTheyHave: tradeTheyHave,
+    swapPair: PAIR,
   });
-  const via = (...slugs: string[]) => [
-    { ruleMatches: slugs.map((slug) => ({ slug, swap: true })) },
+  /** rule matches of the viewer's want list `listId` on the person's post `id` */
+  const on = (id: number, listId: number, ...slugs: string[]) => [
+    { id, ruleMatches: slugs.map((slug) => ({ slug, listId, swap: true })) },
   ];
+  const via = (...slugs: string[]) => on(10, 2, ...slugs);
 
   test("every collection of the swap through rules", () => {
     expect(swapThroughRules(counts(2, 2), via("a", "b"))).toBe(2);
@@ -162,12 +197,31 @@ describe("swapThroughRules", () => {
   });
 
   test("a rule match that is not a swap counts for nothing", () => {
-    const sale = [{ ruleMatches: [{ slug: "a", swap: false }] }];
+    const sale = [{ id: 10, ruleMatches: [{ slug: "a", listId: 2, swap: false }] }];
     expect(swapThroughRules(counts(1, 1), sale)).toBe(0);
   });
 
   test("no swap, nothing through rules", () => {
     expect(swapThroughRules(counts(2, 0), via("a", "b"))).toBe(0);
     expect(swapThroughRules(undefined, via("a"))).toBe(0);
+  });
+  test("measures the counted pairing of posts, not every list", () => {
+    // 4 they have across posts but 1 in the pairing that swaps, through a rule: all of it by rule
+    const counted = { ...counts(4, 1), swapTheyHave: 1 };
+    expect(swapThroughRules(counted, via("a"))).toBe(1);
+  });
+
+  test("swaps across posts score nothing through rules", () => {
+    expect(
+      swapThroughRules({ ...counts(2, 2), swap: 0, swapTheyHave: 0, swapPair: null }, via("a")),
+    ).toBe(0);
+  });
+
+  test("rule matches outside the counted pairing are no part of the swap", () => {
+    // swap of 2 by hand inside the pairing; the person's post 20 matches 3 through the rule of
+    // the viewer's want list 4, on another post
+    expect(swapThroughRules(counts(2, 2), on(20, 4, "r1", "r2", "r3"))).toBe(0);
+    // the person's post in the pairing, but the rule of a want list outside it
+    expect(swapThroughRules(counts(2, 2), on(10, 4, "r1", "r2"))).toBe(0);
   });
 });

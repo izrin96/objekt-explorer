@@ -37,19 +37,24 @@ export function filterFits(filter: TradeFilter, sides: { have: boolean; want: bo
 
 /**
  * A person's counts against the viewer's lists, in collections. A sale list counts only against a
- * want list open to buying. `trade*` are the swap counts: have lists against want lists open to
- * swaps, sale lists left out.
+ * want list open to buying. `trade*` are the swap counts over all lists: lists offering swaps
+ * against want lists open to swaps, Sell only sales left out. `swap` is what the two can swap
+ * inside one post on each side, `swapTheyHave` what they have in that best pairing, and
+ * `swapPair` the pairing: the viewer's lists in it and the person's feed post id.
  */
 export type MatchCounts = {
   theyHave: number;
   youHave: number;
   tradeTheyHave: number;
   tradeYouHave: number;
+  swap: number;
+  swapTheyHave: number;
+  swapPair: { myListIds: number[]; theirPostId: number } | null;
 };
 
-/** The mutual score: what the two can swap, the smaller of the swap counts. A sale is not a swap. */
+/** The mutual score (Can swap): what the two can swap inside one post on each side. */
 export function mutualOf(counts: MatchCounts) {
-  return Math.min(counts.tradeTheyHave, counts.tradeYouHave);
+  return counts.swap;
 }
 
 /** Whether `filter` keeps a person with these counts: Mutual on the smaller count, the one-way views on each. */
@@ -240,6 +245,11 @@ export const peopleOutputSchema = z.object({
           youHave: z.number().int(),
           tradeTheyHave: z.number().int(),
           tradeYouHave: z.number().int(),
+          swap: z.number().int(),
+          swapTheyHave: z.number().int(),
+          swapPair: z
+            .object({ myListIds: z.array(z.number().int()), theirPostId: z.number().int() })
+            .nullable(),
         })
         .optional(),
       posts: z.array(feedPostSchema),

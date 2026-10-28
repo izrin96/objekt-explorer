@@ -4,7 +4,7 @@ import { redis, redisFailOpen } from "../redis";
 const ORDER_TTL_SECONDS = 3600;
 
 const orderKey = (viewerId: string | null, token: string) =>
-  `trade:people-order:2:${viewerId ?? "anon"}:${token}`;
+  `trade:people-order:3:${viewerId ?? "anon"}:${token}`;
 
 type StoredOrder = PeopleOrder & { v: 1; filters: string };
 

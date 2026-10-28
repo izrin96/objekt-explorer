@@ -4,6 +4,9 @@ import type { NearVerb } from "../schemas/trade";
 import { type ListEntryRef, matchEntry } from "./offer-rules";
 import type { Match } from "./trade-rank";
 
+/** A match as an offer reads it: which lists it runs through, not which posts. */
+type OfferMatch = Pick<Match, "slug" | "myListIds" | "partnerListIds" | "trade">;
+
 /** One matched collection and the copies that could fill it, in the order the matches came. */
 export type MatchCandidates = { slug: string; items: readonly CandidateItem[] };
 
@@ -77,7 +80,10 @@ export function postSides(rows: readonly { id: number; name: string; listType: L
 }
 
 /** The matches, swaps and sales alike, narrowed to those through one of `ids` when a post names them. */
-export function matchesThrough(matches: readonly Match[], ids: ReadonlySet<number> | undefined) {
+export function matchesThrough<M extends OfferMatch>(
+  matches: readonly M[],
+  ids: ReadonlySet<number> | undefined,
+) {
   return ids
     ? matches.filter((match) => match.partnerListIds.some((id) => ids.has(id)))
     : [...matches];
@@ -132,7 +138,7 @@ export function nearGroups(
   nearLists: readonly NearList[],
   matched: { give: ReadonlySet<string>; get: ReadonlySet<string> },
 ) {
-  const groups = new Map<string, { side: "give" | "get"; verb: NearVerb; matches: Match[] }>();
+  const groups = new Map<string, { side: "give" | "get"; verb: NearVerb; matches: OfferMatch[] }>();
   for (const near of nearLists) {
     const side = near.role === "want" ? "give" : "get";
     const key = `${side}:${near.verb}`;

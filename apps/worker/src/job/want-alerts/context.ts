@@ -5,6 +5,7 @@ import {
   toPartnerIdentity,
 } from "@repo/api/lib/trade-rank";
 import { NOTIFICATION_TYPES } from "@repo/api/schemas/notification";
+import { offersSwapsSql, takesPartInTradeSql } from "@repo/api/services/trade-lists";
 import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { lists, notificationPref, user, userAddress } from "@repo/db/schema";
@@ -23,7 +24,19 @@ export async function loadContext<P extends AlertPair>(pairs: P[]) {
       name: lists.name,
       listType: lists.listType,
       takesSwaps: lists.takesSwaps,
+      matchHave: lists.matchHave,
       profileAddress: lists.profileAddress,
+      // `pickedSides`' pair, which Compare with on the alert's link compares, when both halves
+      // can swap. The outer columns are qualified by hand: drizzle leaves them bare, and bare
+      // they would bind to `p`
+      swapPair: sql<boolean>`exists (
+        SELECT 1 FROM lists p
+        WHERE p.id = lists.linked_list_id AND p.user_id = lists.user_id
+          AND ${takesPartInTradeSql("p")}
+          AND (p.list_type = 'want') <> (lists.list_type = 'want')
+          AND CASE WHEN p.list_type = 'want' THEN ${offersSwapsSql("lists")} AND p.match_have
+            ELSE ${offersSwapsSql("p")} AND lists.match_have END
+      )`,
     })
     .from(lists)
     .where(inArray(lists.id, listIds));
@@ -66,6 +79,8 @@ export async function loadContext<P extends AlertPair>(pairs: P[]) {
         name: list.name,
         // a Sell or swap list can swap, so Can swap asks For you about it like a have list
         sale: list.listType === "sale" && !list.takesSwaps,
+        swapPair: list.swapPair,
+        wantsSwaps: list.listType === "want" && list.matchHave,
         ownerName: toPartnerIdentity(
           nameOf.get(list.userId) ?? "",
           [{ profileAddress: list.profileAddress, matches: 0 }],

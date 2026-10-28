@@ -12,6 +12,7 @@ import {
   type MyWant,
   type OwnedEntry,
   recount,
+  viewerPostOf,
 } from "../../lib/trade-rank";
 import { unique } from "../../lib/unique";
 import { mutualOf, type TradeFilter } from "../../schemas/trade";
@@ -21,7 +22,8 @@ import { fetchAddresses, fetchHoldings } from "./holdings";
 
 // Kept clear of `services/redis` (and so of `env.ts`): the worker imports this module.
 
-export type Sides = ReturnType<typeof matchSides>;
+/** `postOf` keys every one of the user's paired lists, whatever the sides narrow to. */
+export type Sides = ReturnType<typeof matchSides> & { postOf: ReturnType<typeof viewerPostOf> };
 
 /**
  * The user's bound have and sale lists and their want lists, narrowed by `slug` when it names
@@ -38,11 +40,12 @@ export async function resolveTradeSides(
       slug: lists.slug,
       listType: lists.listType,
       linkedListId: lists.linkedListId,
+      takesSwaps: lists.takesSwaps,
     })
     .from(lists)
     .where(and(eq(lists.userId, userId), takesPartInTrade));
   const named = slug === undefined ? undefined : myLists.find((list) => list.slug === slug);
-  return matchSides(myLists, named?.id ?? null, filter);
+  return { ...matchSides(myLists, named?.id ?? null, filter), postOf: viewerPostOf(myLists) };
 }
 
 /**
@@ -150,7 +153,7 @@ export async function recountPartners(
 
   return {
     recounted: candidates.map((c) =>
-      recount(c, addressesOf.get(c.userId) ?? none, holdings, myWants, myHaves),
+      recount(c, addressesOf.get(c.userId) ?? none, holdings, myWants, myHaves, sides.postOf),
     ),
     addressRows,
   };

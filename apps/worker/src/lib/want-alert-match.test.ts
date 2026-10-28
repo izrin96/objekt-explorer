@@ -27,6 +27,8 @@ const list = (id: number, userId: string, extra: Partial<AlertList> = {}): Alert
   name: `List ${id}`,
   ownerName: `${userId}-name`,
   sale: false,
+  swapPair: true,
+  wantsSwaps: true,
   ...extra,
 });
 
@@ -321,6 +323,75 @@ describe("selectAlerts, Any or Can swap", () => {
     const one = input({ matches: mutualOnly, holdings: holdings([]) });
     expect(mutualQuestions(one)).toEqual([]);
     expect(selectAlerts(one)).toEqual({ alerts: [], unowned: [forward()], notMutual: [] });
+  });
+  describe("a list with no pair", () => {
+    const unpairedWant = list(2, WANTER, { swapPair: false });
+    const haveList = list(1, SELLER);
+    const listsOf = (...all: AlertList[]) => new Map(all.map((l) => [l.id, l]));
+
+    test("a want list on Can swap alerts on a one-way have listing, as Any, without asking", () => {
+      const one = input({ matches: mutualOnly, lists: listsOf(haveList, unpairedWant) });
+      expect(mutualQuestions(one)).toEqual([]);
+      const { alerts, notMutual } = selectAlerts(one);
+      expect(alerts.map((alert) => [alert.userId, alert.mode])).toEqual([[WANTER, "any"]]);
+      expect(notMutual).toEqual([]);
+    });
+
+    test("a want list on Can swap skips a Sell only listing", () => {
+      const one = input({ matches: mutualOnly, lists: listsOf(saleList, unpairedWant) });
+      expect(mutualQuestions(one)).toEqual([]);
+      expect(selectAlerts(one)).toEqual({ alerts: [], unowned: [], notMutual: [] });
+    });
+
+    test("a want list on Can swap that buys only skips a Sell or swap listing", () => {
+      const buying = list(2, WANTER, { swapPair: false, wantsSwaps: false });
+      const one = input({ matches: mutualOnly, lists: listsOf(haveList, buying) });
+      expect(selectAlerts(one)).toEqual({ alerts: [], unowned: [], notMutual: [] });
+    });
+
+    test("a have list on Can swap alerts in reverse, as Any", () => {
+      const back = input({
+        pairs: [reverse],
+        matches: mutualOnly,
+        lists: listsOf(list(1, SELLER, { swapPair: false }), WANT),
+      });
+      expect(mutualQuestions(back)).toEqual([]);
+      expect(selectAlerts(back).alerts.map((alert) => [alert.userId, alert.mode])).toEqual([
+        [SELLER, "any"],
+      ]);
+    });
+
+    test("a Sell or swap list on Can swap skips a want list that only buys", () => {
+      const back = input({
+        pairs: [reverse],
+        matches: mutualOnly,
+        lists: listsOf(
+          list(1, SELLER, { swapPair: false }),
+          list(2, WANTER, { wantsSwaps: false }),
+        ),
+      });
+      expect(mutualQuestions(back)).toEqual([]);
+      expect(selectAlerts(back)).toEqual({ alerts: [], unowned: [], notMutual: [] });
+    });
+
+    test("a Sell only list on Can swap skips a buyer", () => {
+      const back = input({
+        pairs: [reverse],
+        matches: mutualOnly,
+        lists: listsOf(list(1, SELLER, { sale: true, swapPair: false }), WANT),
+      });
+      expect(mutualQuestions(back)).toEqual([]);
+      expect(selectAlerts(back)).toEqual({ alerts: [], unowned: [], notMutual: [] });
+    });
+
+    test("a paired list still asks the two-way question", () => {
+      const one = input({
+        matches: mutualOnly,
+        lists: listsOf(list(1, SELLER, { swapPair: false }), WANT),
+      });
+      expect(mutualQuestions(one).map((ask) => ask.list.id)).toEqual([WANT.id]);
+      expect(selectAlerts(one).notMutual).toEqual([forward()]);
+    });
   });
 });
 

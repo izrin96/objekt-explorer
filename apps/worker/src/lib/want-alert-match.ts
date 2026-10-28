@@ -16,6 +16,10 @@ export type AlertList = {
   ownerName: string;
   /** a sale list set to Sell only: never a swap, so never Can swap */
   sale: boolean;
+  /** linked to a list of the other side that takes part, both halves of the pair able to swap */
+  swapPair: boolean;
+  /** a want list open to swaps; false on any other list */
+  wantsSwaps: boolean;
 };
 
 /**
@@ -106,9 +110,14 @@ function judge<P extends AlertPair>(input: AlertInput<P>, group: P[]): Judged<P>
   const key = prefKey(recipient.userId, type);
 
   if (!(input.prefs.get(key) ?? NOTIFICATION_DEFAULTS[type])) return { kind: "skip" };
-  const mode = input.matches.get(key) ?? ALERT_MATCH_DEFAULT;
+  let mode = input.matches.get(key) ?? ALERT_MATCH_DEFAULT;
   // a sale can never become a swap, so no recheck either
   if (mode === "mutual" && offer.sale) return { kind: "skip" };
+  if (mode === "mutual" && !recipient.swapPair) {
+    // a list with no pair can never make Can swap, so it alerts on a swap one way, as Any does
+    if (!want.wantsSwaps) return { kind: "skip" };
+    mode = "any";
+  }
 
   const wanterHolds = [...(input.addresses.get(want.userId) ?? none)].some((address) =>
     input.holdings.copies.has(copyKey(address, first.slug)),
