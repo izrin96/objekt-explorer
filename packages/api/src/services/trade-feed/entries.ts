@@ -8,7 +8,10 @@ import { unique } from "../../lib/unique";
 import type { ListType } from "../../schemas/list";
 import { redis, redisFailOpen } from "../redis";
 
-const POST_TTL_SECONDS = 60;
+const POST_FRESH_SECONDS = 60;
+/** how long a copy stays stored after its last refresh, to be served stale */
+const POST_KEEP_SECONDS = 900;
+const POST_REFRESH_CLAIM_SECONDS = 60;
 
 export const feedListColumns = {
   id: lists.id,
@@ -78,7 +81,10 @@ export async function fetchUntradeable(
       }),
     ).values(),
   ];
-  const tokens = pairsOf((ref) => ref.objektId);
+  // in id order, so a large list's lookups walk the objekt primary key in order, not at random
+  const tokens = pairsOf((ref) => ref.objektId).toSorted(([, a], [, b]) =>
+    a < b ? -1 : a > b ? 1 : 0,
+  );
   const slugs = pairsOf((ref) => (ref.objektId ? null : ref.slug));
 
   const result = await indexer.execute<FailureRow>(sql`
@@ -129,33 +135,91 @@ export async function fetchUntradeable(
 }
 
 const postKey = (list: Pick<FeedList, "id" | "updatedAt">) =>
-  `trade:post:2:${list.id}:${list.updatedAt}`;
+  `trade:post:3:${list.id}:${list.updatedAt}`;
+
+type StoredPost = { at: number; entries: FeedEntry[] };
+
+function parseStored(json: string | null): StoredPost | undefined {
+  if (!json) return undefined;
+  try {
+    const stored = JSON.parse(json) as Partial<StoredPost> | null;
+    return typeof stored?.at === "number" && Array.isArray(stored.entries)
+      ? (stored as StoredPost)
+      : undefined;
+  } catch {
+    return undefined;
+  }
+}
 
 /**
  * Stage 2: each list's shown entries, have and sale narrowed to what the owner can still
- * trade. Keyed by `updated_at`, so an entry edit shows at once and a sale within the TTL.
+ * trade. Keyed by `updated_at`, so an entry edit shows at once and a sale within
+ * `POST_FRESH_SECONDS`. With `stale`, a copy past that is still returned and refreshed in the
+ * background, since the ownership check on a large profile-bound list takes seconds.
  */
 export async function fetchPostEntries(
   feedLists: Pick<FeedList, "id" | "userId" | "listType" | "updatedAt">[],
   addressesOf: ReadonlyMap<string, ReadonlySet<string>>,
+  { stale = false }: { stale?: boolean } = {},
 ): Promise<Map<number, FeedEntry[]>> {
   const result = new Map<number, FeedEntry[]>();
   const cached = await Promise.all(
     feedLists.map((list) => redisFailOpen("trade post", () => redis.get(postKey(list)))),
   );
 
-  const misses = feedLists.filter((list, i) => {
-    const hit = cached[i];
-    if (!hit) return true;
-    try {
-      result.set(list.id, JSON.parse(hit) as FeedEntry[]);
-      return false;
-    } catch {
-      return true;
-    }
+  const now = Date.now();
+  const misses: typeof feedLists = [];
+  const expired: typeof feedLists = [];
+  feedLists.forEach((list, i) => {
+    const stored = parseStored(cached[i] ?? null);
+    if (!stored) return misses.push(list);
+    const fresh = now - stored.at <= POST_FRESH_SECONDS * 1000;
+    if (!fresh && !stale) return misses.push(list);
+    result.set(list.id, stored.entries);
+    if (!fresh) expired.push(list);
   });
-  if (misses.length === 0) return result;
 
+  if (expired.length > 0) {
+    // a failed refresh leaves the stale copy; its claim holds the next try off for a minute
+    void refreshPostEntries(expired, addressesOf).catch((error: unknown) => {
+      console.warn(`[trade post] refresh of ${expired.length} lists failed`, error);
+    });
+  }
+  if (misses.length === 0) return result;
+  for (const [id, entries] of await computePostEntries(misses, addressesOf)) {
+    result.set(id, entries);
+  }
+  return result;
+}
+
+/** Refreshes the lists no other request is refreshing, across processes. */
+async function refreshPostEntries(
+  feedLists: Pick<FeedList, "id" | "userId" | "listType" | "updatedAt">[],
+  addressesOf: ReadonlyMap<string, ReadonlySet<string>>,
+) {
+  const claims = await Promise.all(
+    feedLists.map((list) =>
+      redisFailOpen("trade post", () =>
+        redis.send("SET", [
+          `${postKey(list)}:refresh`,
+          "1",
+          "NX",
+          "EX",
+          String(POST_REFRESH_CLAIM_SECONDS),
+        ]),
+      ),
+    ),
+  );
+  const claimed = feedLists.filter((_, i) => claims[i] !== null);
+  if (claimed.length > 0) await computePostEntries(claimed, addressesOf);
+}
+
+async function computePostEntries(
+  feedLists: Pick<FeedList, "id" | "userId" | "listType" | "updatedAt">[],
+  addressesOf: ReadonlyMap<string, ReadonlySet<string>>,
+): Promise<Map<number, FeedEntry[]>> {
+  // stamped before the reads, so a slow check does not stretch the copy's fresh window
+  const at = Date.now();
   const rows = await db
     .select({
       listId: listEntries.listId,
@@ -169,7 +233,7 @@ export async function fetchPostEntries(
       and(
         inArray(
           listEntries.listId,
-          misses.map((list) => list.id),
+          feedLists.map((list) => list.id),
         ),
         isNotNull(listEntries.collectionSlug),
       ),
@@ -188,7 +252,7 @@ export async function fetchPostEntries(
   }
 
   const untradeable = await fetchUntradeable(
-    misses
+    feedLists
       .filter((list) => list.listType !== "want")
       .flatMap((list) =>
         (byList.get(list.id) ?? []).map((entry) => ({
@@ -200,14 +264,16 @@ export async function fetchPostEntries(
     addressesOf,
   );
 
+  const result = new Map<number, FeedEntry[]>();
   await Promise.all(
-    misses.map((list) => {
+    feedLists.map((list) => {
       const entries = byList.get(list.id) ?? [];
       const shown =
         list.listType === "want" ? entries : tradeableEntries(entries, list.userId, untradeable);
       result.set(list.id, shown);
+      const stored: StoredPost = { at, entries: shown };
       return redisFailOpen("trade post", () =>
-        redis.set(postKey(list), JSON.stringify(shown), "EX", POST_TTL_SECONDS),
+        redis.set(postKey(list), JSON.stringify(stored), "EX", POST_KEEP_SECONDS),
       );
     }),
   );

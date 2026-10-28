@@ -167,7 +167,9 @@ export async function loadPosts(ctx: LoadContext, rows: FeedRow[], need: number)
   while (posts.length < need && examined < rows.length) {
     const batch = rows.slice(examined, examined + need - posts.length);
     examined += batch.length;
-    const entriesOf = await fetchPostEntries(batch.flatMap(membersOf), addressesOf);
+    const entriesOf = await fetchPostEntries(batch.flatMap(membersOf), addressesOf, {
+      stale: true,
+    });
     const ruleDefs = await fetchRulesById(
       unique([
         ...[...entriesOf.values()].flat().flatMap((entry) => entry.ruleId ?? []),
