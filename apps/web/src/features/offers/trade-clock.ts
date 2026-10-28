@@ -27,6 +27,8 @@ export type TimelineRow =
       legs: Leg[];
       total: number;
     }
+  /** a leg the receiver marked as received by hand, with no transfer behind it */
+  | { kind: "confirmed"; at: string | null; when: When; leg: Leg }
   | { kind: "copyArrived"; at: string; when: When; leg: Leg; copy: Copy; txHash: string }
   | { kind: "copyDue"; at: string; when: When; leg: Leg; copy: Copy }
   | { kind: "reminder"; at: string; when: When }
@@ -44,6 +46,7 @@ const ORDER: TimelineRow["kind"][] = [
   "accepted",
   "sent",
   "sentGroup",
+  "confirmed",
   "copyArrived",
   "copyDue",
   "reminder",
@@ -127,7 +130,9 @@ export function timelineRows(
   ];
   const sent: SentRow[] = [];
   for (const leg of trade.legs) {
-    if (leg.state === "verified") {
+    if (leg.state === "verified" && leg.confirmedAt !== null) {
+      rows.push({ kind: "confirmed", at: leg.confirmedAt, when: when(leg.confirmedAt), leg });
+    } else if (leg.state === "verified") {
       const at = leg.verifiedAt;
       sent.push({ kind: "sent", at, when: at ? when(at) : "past", leg, txHash: leg.txHash });
     }
@@ -162,7 +167,11 @@ export function timelineRows(
   // a transfer with no time sits right after the accept
   const sortAt = (row: TimelineRow) => ms(row.at ?? trade.acceptedAt);
   rows.sort((a, b) => sortAt(a) - sortAt(b) || ORDER.indexOf(a.kind) - ORDER.indexOf(b.kind));
-  if (live) return [...rows, { kind: "rate", at: null, when: "future" }];
+  if (live) {
+    // a trade with a leg marked as received takes no rating
+    const rates = trade.legs.every((leg) => leg.confirmedAt === null);
+    return rates ? [...rows, { kind: "rate", at: null, when: "future" }] : rows;
+  }
 
   rows.push({ kind: "end", at: trade.endedAt, when: "past", outcome: trade.status as Outcome });
   const { deadline } = nextStep(trade, now);

@@ -1,13 +1,30 @@
 import { describe, expect, test } from "bun:test";
 
 import { expiryOutcome, firstSenderInClock, nextRow, timelineRows } from "./trade-clock";
-import { ACCEPTED, DAY, HOUR, copy, leg, trade, verified } from "./trade-fixture";
+import { ACCEPTED, DAY, HOUR, confirmed, copy, leg, trade, verified } from "./trade-fixture";
 
 const NOW = new Date(ACCEPTED).getTime() + 4 * DAY;
 const ENDS = new Date(ACCEPTED).getTime() + 14 * DAY;
 const kinds = (t: ReturnType<typeof trade>, now = NOW) => timelineRows(t, now).map((r) => r.kind);
 
 describe("timelineRows, in progress", () => {
+  test("a leg marked as received is its own row, with no hash, and no rating lies ahead", () => {
+    const at = new Date(NOW - 12 * HOUR).toISOString();
+    const t = trade({
+      legs: [confirmed({ fromYou: false, verifiedAt: at, confirmedAt: at }), leg()],
+    });
+    expect(kinds(t)).toEqual([
+      "proposed",
+      "accepted",
+      "reminder",
+      "confirmed",
+      "today",
+      "report",
+      "ends",
+    ]);
+    expect(timelineRows(t, NOW).some((row) => row.kind === "sent")).toBe(false);
+  });
+
   test("mid-trade: past rows done, Today, later rows ahead", () => {
     const t = trade({
       legs: [

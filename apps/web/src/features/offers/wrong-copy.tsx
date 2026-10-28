@@ -55,7 +55,12 @@ export function LegSerial({ leg }: { leg: Leg }) {
 
 /** "#1207 in place of #1203", under a leg verified with a wrong copy, by Accept or automatically. */
 export function InPlaceOf({ leg }: { leg: Leg }) {
-  if (leg.state !== "verified" || leg.objektId === null || leg.verifiedObjektId === leg.objektId) {
+  if (
+    leg.state !== "verified" ||
+    leg.objektId === null ||
+    leg.verifiedObjektId === null ||
+    leg.verifiedObjektId === leg.objektId
+  ) {
     return null;
   }
   return (

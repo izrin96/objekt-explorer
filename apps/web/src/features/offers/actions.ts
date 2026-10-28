@@ -10,7 +10,8 @@ import { invalidateOfferLists } from "./queries";
 import { offerRefusalOf, offerRefusalText, refusedKeys } from "./refusal";
 
 /**
- * Accept, decline, withdraw and cancel, and a wrong copy's accept and decline. Each refreshes
+ * Accept, decline, withdraw and cancel, a wrong copy's accept and decline, and marking a leg as
+ * received. Each refreshes
  * the thread and the lists itself, so they work while the socket is down. A refusal also
  * refreshes: it usually means the state moved on. `named` words the objekts a refusal names.
  */
@@ -50,5 +51,6 @@ export function useOfferActions(
     cancelTrade: useMutation(orpc.offer.cancelTrade.mutationOptions(options)),
     acceptSubstitute: useMutation(orpc.offer.acceptSubstitute.mutationOptions(options)),
     declineSubstitute: useMutation(orpc.offer.declineSubstitute.mutationOptions(options)),
+    confirmLeg: useMutation(orpc.offer.confirmLeg.mutationOptions(options)),
   };
 }

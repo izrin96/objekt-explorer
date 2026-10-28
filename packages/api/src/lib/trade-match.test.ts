@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
+import { AWAY_GRACE_HOURS } from "../schemas/offer";
 import {
   batchMatters,
   copyDue,
@@ -65,8 +66,10 @@ const transfer = (overrides: Partial<MatchTransfer> = {}): MatchTransfer => {
     ...overrides,
   };
 };
-// the indexer has read a day past every transfer the tests make
-const PAST_GRACE = { seenUntil: "2026-10-04T00:00:00.000Z" };
+const hoursFrom = (iso: string, hours: number) =>
+  new Date(Date.parse(iso) + hours * 60 * 60 * 1000).toISOString();
+// the indexer has read a day past the away grace of every transfer the tests make
+const PAST_GRACE = { seenUntil: hoursFrom("2026-10-02T00:00:00.000Z", AWAY_GRACE_HOURS + 24) };
 const minutesBeforeAccept = (minutes: number) =>
   new Date(new Date(ACCEPTED).getTime() - minutes * 60 * 1000).toISOString();
 
@@ -265,19 +268,20 @@ describe("matchLegs: moves before the accept", () => {
 describe("matchLegs: away after the accept", () => {
   const AT = "2026-10-02T01:00:00.000Z";
   const out = () => transfer({ to: THIRD, timestamp: AT });
-  const hoursAfter = (hours: number) =>
-    new Date(new Date(AT).getTime() + hours * 60 * 60 * 1000).toISOString();
+  const hoursAfter = (hours: number) => hoursFrom(AT, hours);
 
-  test("away for less than 24 hours waits, with when it left", () => {
-    expect(matchLegs([leg()], [out()], { seenUntil: hoursAfter(23) }).get(1)).toEqual({
+  test("away for less than the grace waits, with when it left", () => {
+    expect(
+      matchLegs([leg()], [out()], { seenUntil: hoursAfter(AWAY_GRACE_HOURS - 1) }).get(1),
+    ).toEqual({
       kind: "pending",
       awaySince: AT,
     });
   });
 
-  test("away 24 hours, as the indexer has read, breaks dated when it left", () => {
+  test("away for the grace, as the indexer has read, breaks dated when it left", () => {
     const sold = out();
-    expect(matchLegs([leg()], [sold], { seenUntil: hoursAfter(24) }).get(1)).toEqual({
+    expect(matchLegs([leg()], [sold], { seenUntil: hoursAfter(AWAY_GRACE_HOURS) }).get(1)).toEqual({
       kind: "broken",
       transferId: sold.id,
       at: AT,
@@ -304,7 +308,11 @@ describe("matchLegs: away after the accept", () => {
   test("left again after coming back: the grace counts from the second move", () => {
     const home = transfer({ from: THIRD, to: GIVER, timestamp: hoursAfter(1) });
     const again = transfer({ to: THIRD, timestamp: hoursAfter(2) });
-    expect(matchLegs([leg()], [out(), home, again], { seenUntil: hoursAfter(25) }).get(1)).toEqual({
+    expect(
+      matchLegs([leg()], [out(), home, again], { seenUntil: hoursAfter(AWAY_GRACE_HOURS + 1) }).get(
+        1,
+      ),
+    ).toEqual({
       kind: "pending",
       awaySince: again.timestamp,
     });
@@ -320,14 +328,18 @@ describe("matchLegs: away after the accept", () => {
 
   test("back after the deadline, read in the same run: the break stands", () => {
     const sold = out();
-    const home = transfer({ from: THIRD, to: GIVER, timestamp: hoursAfter(30) });
-    expect(matchLegs([leg()], [sold, home], { seenUntil: hoursAfter(40) }).get(1)).toEqual({
+    const home = transfer({ from: THIRD, to: GIVER, timestamp: hoursAfter(AWAY_GRACE_HOURS + 6) });
+    expect(
+      matchLegs([leg()], [sold, home], { seenUntil: hoursAfter(AWAY_GRACE_HOURS + 16) }).get(1),
+    ).toEqual({
       kind: "broken",
       transferId: sold.id,
       at: AT,
     });
-    const late = transfer({ from: THIRD, timestamp: hoursAfter(38) });
-    expect(matchLegs([leg()], [sold, late], { seenUntil: hoursAfter(40) }).get(1)).toMatchObject({
+    const late = transfer({ from: THIRD, timestamp: hoursAfter(AWAY_GRACE_HOURS + 14) });
+    expect(
+      matchLegs([leg()], [sold, late], { seenUntil: hoursAfter(AWAY_GRACE_HOURS + 16) }).get(1),
+    ).toMatchObject({
       kind: "broken",
     });
   });
@@ -361,7 +373,11 @@ describe("matchLegs: away after the accept", () => {
 
   test("sent to the receiver from another account's wallet verifies", () => {
     const delivered = transfer({ from: THIRD, timestamp: hoursAfter(3) });
-    expect(matchLegs([leg()], [out(), delivered], { seenUntil: hoursAfter(31) }).get(1)).toEqual({
+    expect(
+      matchLegs([leg()], [out(), delivered], { seenUntil: hoursAfter(AWAY_GRACE_HOURS + 7) }).get(
+        1,
+      ),
+    ).toEqual({
       kind: "verified",
       transferId: delivered.id,
       txHash: delivered.hash,

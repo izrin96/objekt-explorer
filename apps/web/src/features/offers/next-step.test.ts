@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 
-import { legChip, nextStep, sideStatus, stepKind, timeLeft } from "./next-step";
-import { ACCEPTED, DAY, HOUR, copy, leg, trade, verified } from "./trade-fixture";
+import { canMarkReceived, legChip, nextStep, sideStatus, stepKind, timeLeft } from "./next-step";
+import { ACCEPTED, DAY, HOUR, confirmed, copy, leg, trade, verified } from "./trade-fixture";
 
 const NOW = new Date(ACCEPTED).getTime() + 4 * DAY;
 const step = (t: ReturnType<typeof trade>) => nextStep(t, NOW);
@@ -36,6 +36,25 @@ describe("nextStep, ended", () => {
       }),
     );
     expect(s).toMatchObject({ deadline: { kind: "rateUntil", at: "2026-10-30T00:00:00.000Z" } });
+  });
+
+  test("completed with a leg marked as received", () => {
+    const s = step(
+      trade({
+        status: "completed",
+        legs: [verified(), confirmed({ fromYou: false })],
+        endedAt: "2026-10-16T00:00:00.000Z",
+      }),
+    );
+    expect(s).toMatchObject({
+      kind: "completed",
+      confirmed: true,
+      canRate: false,
+      deadline: { kind: "ended", at: "2026-10-16T00:00:00.000Z" },
+    });
+    expect(
+      step(trade({ status: "completed", legs: [verified(), verified({ fromYou: false })] })),
+    ).toMatchObject({ confirmed: false });
   });
 
   test("completed, window closed", () => {
@@ -355,6 +374,38 @@ describe("legChip", () => {
   test("not sent once the trade ended without it", () => {
     expect(legChip(leg({ state: "closed" }), true)).toBe("notSent");
     expect(legChip(leg(), true)).toBe("notSent");
+  });
+
+  test("confirmed, live or ended", () => {
+    expect(legChip(confirmed({ fromYou: false }), false)).toBe("confirmed");
+    expect(legChip(confirmed(), true)).toBe("confirmed");
+  });
+});
+
+describe("canMarkReceived", () => {
+  test("a waiting leg the viewer receives, while the trade runs", () => {
+    expect(canMarkReceived(leg({ fromYou: false }), false)).toBe(true);
+    expect(
+      canMarkReceived(
+        leg({
+          fromYou: false,
+          away: { at: "2026-10-15T12:00:00.000Z", breaksAt: "2026-10-18T12:00:00.000Z" },
+        }),
+        false,
+      ),
+    ).toBe(true);
+  });
+
+  test("not the giver's, not once closed, not after the trade ended", () => {
+    expect(canMarkReceived(leg(), false)).toBe(false);
+    expect(canMarkReceived(verified({ fromYou: false }), false)).toBe(false);
+    expect(canMarkReceived(leg({ fromYou: false }), true)).toBe(false);
+  });
+
+  test("not while a wrong copy on it waits for an answer", () => {
+    expect(canMarkReceived(leg({ fromYou: false, substitutes: [copy()] }), false)).toBe(false);
+    const declined = copy({ status: "declined" });
+    expect(canMarkReceived(leg({ fromYou: false, substitutes: [declined] }), false)).toBe(true);
   });
 });
 

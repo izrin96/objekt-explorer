@@ -20,7 +20,7 @@ export function rowAction(item: Notification): RowAction | null {
         : null;
     case "trade":
       if (item.payload.event === "reminder") return "send";
-      if (item.payload.event === "completed") return "feedback";
+      if (item.payload.event === "completed" && !item.payload.confirmed) return "feedback";
       return null;
     default:
       return null;

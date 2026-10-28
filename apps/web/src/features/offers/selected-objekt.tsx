@@ -9,7 +9,9 @@ import { TONE_INK } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
-import type { Leg } from "./next-step";
+import { itemLabel, shortDate } from "./format";
+import { MarkReceived } from "./mark-received";
+import { type Leg, canMarkReceived } from "./next-step";
 import { OfferThumb } from "./offer-item";
 import type { Collections } from "./pick";
 import { legView } from "./trade-exchange";
@@ -17,6 +19,7 @@ import { InPlaceOf, LegSerial, Serial, rich } from "./wrong-copy";
 
 type Props = {
   leg: Leg;
+  conversationId: number;
   ended: boolean;
   collections: Collections;
   /** the partner */
@@ -31,7 +34,7 @@ function NextLine({
   ended,
   name,
   warning,
-}: Omit<Props, "collections" | "hydrated" | "onOpen"> & {
+}: Pick<Props, "leg" | "ended" | "name"> & {
   warning: string | null;
 }) {
   if (warning) {
@@ -39,6 +42,16 @@ function NextLine({
       <p className="text-warning-foreground flex items-start gap-1.5 text-xs text-pretty">
         <WarningIcon aria-hidden weight="fill" className="mt-px size-3.5 shrink-0" />
         {warning}
+      </p>
+    );
+  }
+  if (leg.confirmedAt !== null) {
+    const date = shortDate(leg.confirmedAt);
+    return (
+      <p className="text-muted-foreground text-xs text-pretty">
+        {leg.fromYou
+          ? m.offer_leg_confirmed_by_them({ name, date })
+          : m.offer_leg_confirmed_by_you({ date })}
       </p>
     );
   }
@@ -62,7 +75,7 @@ function NextLine({
   );
 }
 
-function SelectedBody({ leg, ended, collections, name, hydrated, onOpen }: Props) {
+function SelectedBody({ leg, conversationId, ended, collections, name, hydrated, onOpen }: Props) {
   const collection = collections[leg.collectionSlug];
   const view = legView(leg, ended, collections, hydrated);
   return (
@@ -86,11 +99,20 @@ function SelectedBody({ leg, ended, collections, name, hydrated, onOpen }: Props
           <span className={cn("font-medium", TONE_INK[view.mark.tone])}>{view.mark.label}</span>
         </p>
         <NextLine leg={leg} ended={ended} name={name} warning={view.warning} />
-        {collection ? (
-          <Button variant="outline" size="sm" className="mt-1" onClick={() => onOpen(collection)}>
-            {m.offer_selected_view()}
-          </Button>
-        ) : null}
+        <div className="mt-1 flex flex-wrap gap-2">
+          {collection ? (
+            <Button variant="outline" size="sm" onClick={() => onOpen(collection)}>
+              {m.offer_selected_view()}
+            </Button>
+          ) : null}
+          {canMarkReceived(leg, ended) ? (
+            <MarkReceived
+              conversationId={conversationId}
+              leg={leg}
+              objekt={itemLabel(leg, collections)}
+            />
+          ) : null}
+        </div>
       </div>
     </div>
   );

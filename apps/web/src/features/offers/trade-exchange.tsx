@@ -55,6 +55,7 @@ const SIDE_STATUS: Record<SideStatus, { text: () => string; ink: string }> = {
 
 const LEG_MARKS: Record<LegChip, { tone: Tone; icon: Icon; label: () => string }> = {
   verified: { tone: "success", icon: CheckIcon, label: m.offer_leg_verified },
+  confirmed: { tone: "success", icon: CheckIcon, label: m.offer_leg_confirmed },
   waiting: { tone: "warning", icon: ClockIcon, label: m.offer_leg_waiting_short },
   sendThis: { tone: "progress", icon: PaperPlaneTiltIcon, label: m.offer_leg_send_this },
   differentCopy: { tone: "warning", icon: WarningIcon, label: m.offer_side_different },

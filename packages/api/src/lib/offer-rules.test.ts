@@ -14,7 +14,7 @@ import {
   firstSender,
   rateRefusal,
   toReputation,
-  type TradeState,
+  type RatedTrade,
   createEffect,
   effectiveStatus,
   firstItemRefusal,
@@ -463,11 +463,12 @@ describe("atFault", () => {
 });
 
 describe("trade rules", () => {
-  const trade = (overrides: Partial<TradeState> = {}): TradeState => ({
+  const trade = (overrides: Partial<RatedTrade> = {}): RatedTrade => ({
     status: "in_progress",
     acceptedAt: new Date(NOW.getTime() - DAY).toISOString(),
     endedAt: null,
     verifiedLegs: 0,
+    confirmedLegs: 0,
     ...overrides,
   });
 
@@ -518,6 +519,19 @@ describe("trade rules", () => {
   test("a failed trade with nobody at fault takes no feedback", () => {
     const failed = trade({ status: "failed", endedAt: NOW.toISOString() });
     expect(rateRefusal(failed, NOW, ME, null)).toBe("not_completed");
+  });
+
+  test("a completed trade with a leg the receiver confirmed takes no feedback", () => {
+    const endedAt = NOW.toISOString();
+    expect(
+      rateRefusal(trade({ status: "completed", endedAt, confirmedLegs: 1 }), NOW, ME, null),
+    ).toBe("confirmed_trade");
+  });
+
+  test("a failed trade with a confirmed leg still takes the deliverer's feedback", () => {
+    const failed = trade({ status: "failed", endedAt: NOW.toISOString(), confirmedLegs: 1 });
+    expect(rateRefusal(failed, NOW, ME, RIN)).toBeNull();
+    expect(rateRefusal(failed, NOW, RIN, RIN)).toBe("not_completed");
   });
 
   test("cancelled and in-progress trades take no feedback", () => {

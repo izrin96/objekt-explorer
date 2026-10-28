@@ -52,6 +52,7 @@ type DealSqlRow = {
   ended_at: string | null;
   verified: number | null;
   total: number | null;
+  confirmed: number | null;
   owed: number | null;
   sendable: number | null;
   stuck: number | null;
@@ -105,6 +106,7 @@ export async function readDeals(me: string, conversationIds: number[]) {
       SELECT
         count(*) FILTER (WHERE l.verified_at IS NOT NULL)::int AS verified,
         count(*)::int AS total,
+        count(*) FILTER (WHERE l.confirmed_at IS NOT NULL)::int AS confirmed,
         count(*) FILTER (WHERE l.owed)::int AS owed,
         count(*) FILTER (WHERE l.owed AND l.untransferable_at IS NULL AND NOT l.pending)::int AS sendable,
         count(*) FILTER (WHERE l.owed AND l.untransferable_at IS NOT NULL)::int AS stuck,
@@ -160,7 +162,13 @@ function rating(me: string, row: DealSqlRow, now: Date) {
     ...(row.me_unverified ? [{ fromUserId: me, verifiedAt: null }] : []),
     ...(row.partner_unverified ? [{ fromUserId: partner, verifiedAt: null }] : []),
   ];
-  const state = { status, acceptedAt: row.accepted_at!, endedAt: row.ended_at, verifiedLegs: 0 };
+  const state = {
+    status,
+    acceptedAt: row.accepted_at!,
+    endedAt: row.ended_at,
+    verifiedLegs: 0,
+    confirmedLegs: row.confirmed ?? 0,
+  };
   const refusal = rateRefusal(state, now, me, atFault(owing, a, b));
   return {
     rateable: refusal === null && row.rated !== true,

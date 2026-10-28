@@ -196,6 +196,8 @@ export async function finishSettle(
   /** `autoAccepted`: how many of `verified` were wrong copies accepted automatically */
   counts: { alreadyVerified: number; verified: number; total: number; autoAccepted?: number },
   name: (userId: string) => { userId: string; name: string },
+  /** false when the caller writes its own note for a leg that closed without ending the trade */
+  { noteLegs = true }: { noteLegs?: boolean } = {},
 ) {
   const { tradeId, userA, userB } = settled;
   const held = applied.some((r) => r.kind === "broken" || r.kind === "stuck")
@@ -217,12 +219,21 @@ export async function finishSettle(
       .set({ open: false })
       .where(and(eq(tradeLeg.tradeId, tradeId), eq(tradeLeg.open, true)));
   }
-  if (!ended && !legVerifiedNoted(counts.verified, counts.autoAccepted ?? 0)) {
+  if (!ended && (!noteLegs || !legVerifiedNoted(counts.verified, counts.autoAccepted ?? 0))) {
     return { ended, notified: [], reputations: [] };
   }
 
   const event: TradePayload["event"] = ended ? outcome.status : "leg_verified";
   const progress = { verified: counts.alreadyVerified + counts.verified, total: counts.total };
+  const confirmed =
+    outcome.status === "completed" &&
+    (
+      await tx
+        .select({ id: tradeLeg.id })
+        .from(tradeLeg)
+        .where(and(eq(tradeLeg.tradeId, tradeId), isNotNull(tradeLeg.confirmedAt)))
+        .limit(1)
+    ).length > 0;
   const notified = await writeNotes(
     tx,
     [userA, userB].map((userId) => ({
@@ -236,6 +247,7 @@ export async function finishSettle(
         reason: outcome.status === "cancelled" ? outcome.reason : null,
         progress,
         partner: name(userId === userA ? userB : userA),
+        ...(confirmed ? { confirmed } : {}),
       },
     })),
   );

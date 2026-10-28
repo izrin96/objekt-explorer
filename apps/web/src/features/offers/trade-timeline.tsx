@@ -50,6 +50,10 @@ function label(row: TimelineRow, trade: Trade, name: string, collections: Collec
       return row.leg.fromYou
         ? m.offer_clock_you_sent({ objekt: itemLabel(row.leg, collections) })
         : m.offer_clock_they_sent({ name, objekt: itemLabel(row.leg, collections) });
+    case "confirmed":
+      return row.leg.fromYou
+        ? m.offer_clock_they_confirmed({ name, objekt: itemLabel(row.leg, collections) })
+        : m.offer_clock_you_confirmed({ objekt: itemLabel(row.leg, collections) });
     case "sentGroup": {
       const counts = { count: row.legs.length, total: row.total };
       return row.fromYou

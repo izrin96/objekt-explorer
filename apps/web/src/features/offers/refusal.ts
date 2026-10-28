@@ -63,6 +63,12 @@ export function offerRefusalText(refusal: OfferRefusalInfo, named: string) {
       return m.offer_refused_substitute_closed();
     case "substitute_taken":
       return m.offer_refused_substitute_taken();
+    case "leg_closed":
+      return m.offer_refused_leg_closed();
+    case "copy_pending":
+      return m.offer_refused_copy_pending();
+    case "confirmed_trade":
+      return m.offer_refused_confirmed_trade();
     case "not_completed":
       return m.offer_refused_not_completed();
     case "rating_closed":

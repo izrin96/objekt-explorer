@@ -23,6 +23,7 @@ export function leg(overrides: Partial<Leg> = {}): Leg {
     stuck: false,
     away: null,
     verifiedAt: null,
+    confirmedAt: null,
     txHash: null,
     verifiedObjektId: null,
     verifiedSerial: null,
@@ -52,6 +53,17 @@ export function verified(overrides: Partial<Leg> = {}): Leg {
     verifiedAt: "2026-10-12T12:00:00.000Z",
     txHash: "0xdef",
     verifiedObjektId: "o-1",
+    ...overrides,
+  });
+}
+
+/** A leg the receiver marked as received by hand: verified, with no transfer behind it. */
+export function confirmed(overrides: Partial<Leg> = {}): Leg {
+  return leg({
+    state: "verified",
+    open: false,
+    verifiedAt: "2026-10-12T12:00:00.000Z",
+    confirmedAt: "2026-10-12T12:00:00.000Z",
     ...overrides,
   });
 }

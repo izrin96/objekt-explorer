@@ -43,7 +43,8 @@ type Base = { deadline: Deadline; primary: Primary };
 type Live = Base & { notes: Note[] };
 
 export type NextStep =
-  | (Base & { kind: "completed"; canRate: boolean })
+  /** `confirmed`: a leg was marked as received by hand, so it counts toward no verified trades */
+  | (Base & { kind: "completed"; canRate: boolean; confirmed: boolean })
   | (Base & { kind: "failed"; canReport: boolean; canRate: boolean })
   | (Base & { kind: "cancelled" })
   | (Live & ({ kind: "youDecide" } & HeldCopy))
@@ -138,6 +139,7 @@ export function nextStep(trade: Trade, now: number): NextStep {
     return {
       kind,
       canRate: trade.canRate,
+      confirmed: trade.legs.some((leg) => leg.confirmedAt !== null),
       primary: null,
       deadline: endedDeadline(trade),
     };
@@ -260,13 +262,25 @@ export function sideStatus(trade: Trade, side: "give" | "get"): SideStatus | nul
   return side === "give" ? "sentVerified" : "verified";
 }
 
-export type LegChip = "verified" | "waiting" | "sendThis" | "differentCopy" | "notSent";
+export type LegChip =
+  | "verified"
+  | "confirmed"
+  | "waiting"
+  | "sendThis"
+  | "differentCopy"
+  | "notSent";
 
 export function legChip(leg: Leg, ended: boolean): LegChip {
+  if (leg.confirmedAt !== null) return "confirmed";
   if (leg.state === "verified") return "verified";
   if (ended || leg.state === "closed") return "notSent";
   if (pending(leg).length > 0) return "differentCopy";
   return leg.fromYou && !leg.stuck ? "sendThis" : "waiting";
+}
+
+/** The receiver can mark a waiting leg as received once no wrong copy on it waits on them. */
+export function canMarkReceived(leg: Leg, ended: boolean) {
+  return !ended && !leg.fromYou && leg.state === "waiting" && pending(leg).length === 0;
 }
 
 /** Midnight of the instant's date in the runtime's zone, as a UTC day count, so DST can't skew it. */

@@ -169,7 +169,14 @@ function TradeDetail({ trade, collections }: { trade: Trade; collections: Collec
     setSide(openingSide(trade));
     exchangeRef.current?.scrollIntoView({ block: "start" });
   };
-  const selectedProps = { ended, collections, name, hydrated, onOpen: setActive };
+  const selectedProps = {
+    conversationId: trade.conversationId,
+    ended,
+    collections,
+    name,
+    hydrated,
+    onOpen: setActive,
+  };
   const safety = useSafetyDialogs({
     userId: trade.partner.userId,
     name,

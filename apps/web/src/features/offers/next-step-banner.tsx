@@ -22,6 +22,7 @@ import { m } from "@/paraglide/messages";
 import { useOfferActions } from "./actions";
 import { itemLabel, leftLabel, shortDate, tradeStatusText } from "./format";
 import { MakeOfferButton } from "./make-offer-button";
+import { AwayHint } from "./mark-received";
 import { type Deadline, type Leg, type NextStep, type Note, tradeEnd } from "./next-step";
 import { OfferThumb } from "./offer-item";
 import type { Collections } from "./pick";
@@ -181,6 +182,9 @@ export function NextStepBanner({
   const view = ((): View => {
     switch (step.kind) {
       case "completed":
+        if (step.confirmed) {
+          return { title: m.offer_next_completed(), body: m.offer_next_completed_confirmed() };
+        }
         return step.canRate
           ? {
               title: m.offer_next_completed(),
@@ -339,6 +343,16 @@ export function NextStepBanner({
               {noteText(note, name, label(note.leg))}
             </p>
           ))}
+          {notes.map((note) =>
+            note.kind === "theirAway" ? (
+              <AwayHint
+                key={note.leg.id}
+                conversationId={trade.conversationId}
+                leg={note.leg}
+                objekt={label(note.leg)}
+              />
+            ) : null,
+          )}
           {view.extra ? <div className="mt-2">{view.extra}</div> : null}
           {view.actions || needsYou > 0 ? (
             <div className="mt-2 flex flex-wrap gap-2">

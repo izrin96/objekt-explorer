@@ -2,6 +2,7 @@ import { authed } from "../orpc";
 import {
   candidatesInputSchema,
   createOfferInputSchema,
+  legIdInputSchema,
   mineInputSchema,
   offerIdInputSchema,
   offerViewsInputSchema,
@@ -12,6 +13,7 @@ import {
 } from "../schemas/offer";
 import { createOffer, offerViews, respondToOffer } from "../services/offer";
 import { acceptOffer } from "../services/offer/accept";
+import { confirmLeg } from "../services/offer/confirm";
 import { offerCandidates, suggestOffer } from "../services/offer/picker";
 import { acceptSubstitute, declineSubstitute } from "../services/offer/substitute";
 import { cancelTrade, fetchMine, fetchTrade, rateTrade } from "../services/offer/trades";
@@ -101,5 +103,12 @@ export const offerRouter = {
     .input(substituteIdInputSchema)
     .handler(async ({ input: { substituteId }, context: { session } }) =>
       declineSubstitute(session.user.id, substituteId),
+    ),
+
+  /** The receiver marks a waiting leg as received, with no transfer behind it. */
+  confirmLeg: authed
+    .input(legIdInputSchema)
+    .handler(async ({ input: { legId }, context: { session } }) =>
+      confirmLeg(session.user.id, legId),
     ),
 };

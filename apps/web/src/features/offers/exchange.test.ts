@@ -11,7 +11,7 @@ import {
   needsYouCount,
   openingSide,
 } from "./exchange";
-import { copy, leg, trade, verified } from "./trade-fixture";
+import { confirmed, copy, leg, trade, verified } from "./trade-fixture";
 
 const collection = (member: string, collectionNo: string) =>
   ({ member, collectionNo, artist: "triples", season: "Atom01" }) as unknown as ValidObjekt;
@@ -78,6 +78,15 @@ describe("exchangeGroups", () => {
     expect(keys(exchangeGroups(get, { ended: false, collections }))).toEqual([
       ["decide", null, 1],
       ["waiting", null, 1],
+    ]);
+  });
+
+  test("a leg marked as received groups under Verified and needs nobody", () => {
+    const legs = [confirmed({ fromYou: false }), leg({ fromYou: false })];
+    expect(legStatus(legs[0]!, false)).toMatchObject({ chip: "confirmed", needsYou: false });
+    expect(keys(exchangeGroups(legs, { ended: false, collections }))).toEqual([
+      ["waiting", null, 1],
+      ["verified", null, 1],
     ]);
   });
 

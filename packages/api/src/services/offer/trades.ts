@@ -174,11 +174,19 @@ export async function rateTrade(me: string, tradeId: number, rating: TradeRating
   const safety = await chatSafety(me, row.partnerId);
   if (safety.tradeBlocked) refuseOffer("trade_blocked");
   const legs = await db
-    .select({ fromUserId: tradeLeg.fromUserId, verifiedAt: tradeLeg.verifiedAt })
+    .select({
+      fromUserId: tradeLeg.fromUserId,
+      verifiedAt: tradeLeg.verifiedAt,
+      confirmedAt: tradeLeg.confirmedAt,
+    })
     .from(tradeLeg)
     .where(eq(tradeLeg.tradeId, tradeId));
   const refusal = rateRefusal(
-    { ...row, verifiedLegs: 0 },
+    {
+      ...row,
+      verifiedLegs: 0,
+      confirmedLegs: legs.filter((leg) => leg.confirmedAt !== null).length,
+    },
     new Date(),
     me,
     atFault(legs, row.userA, row.userB),
@@ -299,7 +307,11 @@ export async function fetchTrade(me: string, tradeId: number) {
   const held = substitutes.length;
 
   const verified = legs.filter((leg) => leg.verifiedAt !== null).length;
-  const state = { ...row, verifiedLegs: verified };
+  const state = {
+    ...row,
+    verifiedLegs: verified,
+    confirmedLegs: legs.filter((leg) => leg.confirmedAt !== null).length,
+  };
   const createdAt = new Map(accounts.map((a) => [a.id, a.createdAt]));
   const party = (id: string): TradeParty => ({
     userId: id,
@@ -354,6 +366,7 @@ export async function fetchTrade(me: string, tradeId: number) {
             : null,
         heldBy: (leg.objektId !== null && heldBy.get(leg.objektId)) || null,
         verifiedAt: iso(leg.verifiedAt),
+        confirmedAt: iso(leg.confirmedAt),
         txHash: leg.txHash,
         verifiedObjektId: leg.verifiedObjektId,
         verifiedSerial: swapped?.serial ?? null,

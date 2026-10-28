@@ -193,6 +193,8 @@ export function tradeNotificationText(payload: TradePayload, partner = payload.p
   switch (payload.event) {
     case "leg_verified":
       return m.notification_trade_leg_verified(params);
+    case "leg_confirmed":
+      return m.notification_trade_leg_confirmed(params);
     case "completed":
       return m.notification_trade_completed(params);
     case "cancelled":

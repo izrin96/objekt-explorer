@@ -35,6 +35,7 @@ export function notificationTone(notification: ToneInput): Toned {
     case "trade":
       switch (notification.payload.event) {
         case "leg_verified":
+        case "leg_confirmed":
         case "completed":
           return DONE;
         case "reminder":

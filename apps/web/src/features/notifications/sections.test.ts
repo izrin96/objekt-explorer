@@ -72,6 +72,9 @@ describe("rowAction", () => {
 
   test("the rest name none", () => {
     expect(rowAction(trade("leg_verified"))).toBeNull();
+    const confirmed = trade("completed");
+    if (confirmed.type === "trade") confirmed.payload.confirmed = true;
+    expect(rowAction(confirmed)).toBeNull();
     expect(rowAction(offer("declined"))).toBeNull();
   });
 });

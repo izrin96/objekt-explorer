@@ -323,6 +323,9 @@ export type TradeState = {
   verifiedLegs: number;
 };
 
+/** legs the receiver closed by hand, which keep a trade from taking feedback */
+export type RatedTrade = TradeState & { confirmedLegs: number };
+
 export function canReport(trade: TradeState, now: Date) {
   if (trade.status === "failed") return true;
   return (
@@ -379,11 +382,12 @@ export function atFault(legs: LegOwed[], userA: string, userB: string): string |
 }
 
 /**
- * A completed trade takes feedback from both parties; a failed one only from the party who
- * delivered, so not from `faultyUser`. Either way until 14 days after it ended.
+ * A completed trade takes feedback from both parties, unless a leg of it was confirmed by hand; a
+ * failed one only from the party who delivered, so not from `faultyUser`, confirmed leg or not.
+ * Either way until 14 days after it ended.
  */
 export function rateRefusal(
-  trade: TradeState,
+  trade: RatedTrade,
   now: Date,
   viewerId: string,
   faultyUser: string | null,
@@ -392,6 +396,7 @@ export function rateRefusal(
     trade.status === "completed" ||
     (trade.status === "failed" && faultyUser !== null && faultyUser !== viewerId);
   if (!rateable || trade.endedAt === null) return "not_completed";
+  if (trade.status === "completed" && trade.confirmedLegs > 0) return "confirmed_trade";
   const closes = new Date(trade.endedAt).getTime() + RATE_WINDOW_DAYS * DAY_MS;
   return now.getTime() > closes ? "rating_closed" : null;
 }

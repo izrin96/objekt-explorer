@@ -20,7 +20,7 @@ export const COPY_ACCEPT_HOURS = 72;
 /** The receiver is reminded this long before a wrong copy counts as accepted. */
 export const COPY_REMIND_HOURS = 24;
 /** A reserved objekt away from both the giver and the receiver this long breaks its leg. */
-export const AWAY_GRACE_HOURS = 24;
+export const AWAY_GRACE_HOURS = 72;
 
 /** When a leg whose objekt left at `awayAt` breaks, unless it comes back or is delivered. */
 export const awayBreaksAt = (awayAt: string) =>
@@ -95,6 +95,9 @@ export const OFFER_REFUSALS = [
   "not_receiver",
   "substitute_closed",
   "substitute_taken",
+  "leg_closed",
+  "copy_pending",
+  "confirmed_trade",
   "not_completed",
   "rating_closed",
   "no_address",
@@ -172,6 +175,7 @@ export const offerViewsInputSchema = z.object({
 export const rateInputSchema = z.object({ tradeId: idSchema, rating: z.enum(TRADE_RATINGS) });
 export const tradeIdInputSchema = z.object({ tradeId: idSchema });
 export const substituteIdInputSchema = z.object({ substituteId: idSchema });
+export const legIdInputSchema = z.object({ legId: idSchema });
 /** `list`, `mutual` and `post` are optional, so a tab that sends `{ partnerId }` alone still validates. */
 export const suggestInputSchema = z.object({
   partnerId: z.string().min(1),
@@ -314,6 +318,8 @@ const tradeLegViewSchema = z.object({
    */
   heldBy: z.object({ address: z.string(), name: z.string() }).nullable().optional(),
   verifiedAt: z.string().nullable(),
+  /** the receiver marked it as received by hand: `verifiedAt` is set and there is no `txHash` */
+  confirmedAt: z.string().nullable().default(null),
   txHash: z.string().nullable(),
   verifiedObjektId: z.string().nullable(),
   /** set when the leg verified with another objekt than it asked for */
@@ -457,6 +463,7 @@ const TRADE_EVENTS = [
   "wrong_copy_due",
   "wrong_copy_auto_accepted",
   "away",
+  "leg_confirmed",
 ] as const;
 
 /** A serial as trade surfaces show it: null before it's numbered, `estimated` after Cosmo's cutoff. */
@@ -485,6 +492,8 @@ export const tradePayloadSchema = z.object({
   away: z.object({ asked: shownSerialSchema, byYou: z.boolean() }).optional(),
   /** as on an offer note: up to three collections, what the reader gets first */
   objekts: z.string().array().max(NOTE_OBJEKTS).optional(),
+  /** on `completed`: a leg was confirmed by hand, so the trade takes no feedback */
+  confirmed: z.boolean().optional(),
 });
 export type TradePayload = z.infer<typeof tradePayloadSchema>;
 

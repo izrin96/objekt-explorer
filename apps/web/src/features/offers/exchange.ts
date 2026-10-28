@@ -40,6 +40,7 @@ function groupOf(leg: Leg, status: LegStatus): GroupKey {
       // the viewer owes it but can't send it: it waits on nobody
       return leg.fromYou && status.warning === "stuck" ? "stuck" : "waiting";
     case "verified":
+    case "confirmed":
       return "verified";
     case "notSent":
       return "notSent";

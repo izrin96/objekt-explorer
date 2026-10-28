@@ -21,11 +21,20 @@ type Row = {
 async function computeReputation(userIds: string[]) {
   const ids = sql.param(userIds);
   const result = await db.execute<Row>(sql`
-    WITH done AS (
+    WITH completed AS (
+      -- a leg the receiver confirmed by hand earns neither party a verified trade
+      SELECT user_a, user_b FROM trade
+      WHERE status = 'completed'
+        AND (user_a = ANY(${ids}::text[]) OR user_b = ANY(${ids}::text[]))
+        AND NOT EXISTS (
+          SELECT 1 FROM trade_leg l WHERE l.trade_id = trade.id AND l.confirmed_at IS NOT NULL
+        )
+    ),
+    done AS (
       SELECT id, count(*)::int AS n FROM (
-        SELECT user_a AS id FROM trade WHERE status = 'completed' AND user_a = ANY(${ids}::text[])
+        SELECT user_a AS id FROM completed WHERE user_a = ANY(${ids}::text[])
         UNION ALL
-        SELECT user_b FROM trade WHERE status = 'completed' AND user_b = ANY(${ids}::text[])
+        SELECT user_b FROM completed WHERE user_b = ANY(${ids}::text[])
       ) t GROUP BY id
     ),
     fault AS (
