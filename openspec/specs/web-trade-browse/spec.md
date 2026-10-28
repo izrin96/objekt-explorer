@@ -285,9 +285,11 @@ A filter value that does not parse SHALL be ignored.
 For a signed-in viewer, each person's row on Browse and on For you SHALL show that person's counts. They are taken across all of the person's listed have, sale and want lists (on Trade, not idle), with the rules and ownership check of `web-trade-for-you`. They are counted against the viewer's lists, or, on For you, against the lists Compare with names:
 - "They have N you want": collections on the person's have or sale lists that are on one of the viewer's want lists that can take them. A have list, and a sale list open to swaps, count against a want list open to swaps (Swaps only, or Swaps or buying); every sale list counts against a want list open to buying (Swaps or buying, or Buying only).
 - "You have N they want": collections on the person's want lists that are on one of the viewer's have or sale lists that is bound to a Cosmo profile and still tradeable by the viewer. A have list, and a sale list open to swaps, count for a want list open to swaps; every sale list counts for a want list open to buying.
-- The mutual score: what the person and the viewer can swap, the smaller of two swap counts. One is the collections on the person's have lists, and sale lists open to swaps, that are on one of the viewer's want lists open to swaps (Swaps only, or Swaps or buying); the other is the collections on the person's want lists open to swaps that are on one of the viewer's have lists, or sale lists open to swaps, bound to a Cosmo profile and still tradeable by the viewer. A sale list set to Sell only, the person's or the viewer's, SHALL never count toward the mutual score, though it counts toward the two counts above: a sale is not a swap, so a person matched only through such lists is one way. A want list set to buying only never counts toward it either.
+- The mutual score: what the person and the viewer can swap within one post on each side. A post here is a linked pair: a have list, or a sale list open to swaps, and the want list linked to it, posted or not on the viewer's side. For each pairing of one of the viewer's posts with one of the person's posts there are two swap counts: the collections on the person's post's have list, or sale list open to swaps, that are on the viewer's post's want list when it is open to swaps (Swaps only, or Swaps or buying); and the collections on the person's post's want list, when it is open to swaps, that are on the viewer's post's have list, or sale list open to swaps, bound to a Cosmo profile and still tradeable by the viewer. A pairing scores the smaller of the two, and the person's mutual score is the highest score of any pairing. A list with no link, the person's or the viewer's, SHALL never count toward the mutual score, though it counts toward the two counts above. A sale list set to Sell only, the person's or the viewer's, SHALL never count toward the mutual score either: a sale is not a swap, so a person matched only through such lists is one way. A want list set to buying only never counts toward it.
 
 The counts show once, in the row's header sentence (see Trade card). Each list in the row SHALL also show its own count, by the same rules, taken on that list alone: on a have or sale list the collections the viewer wants ("14 you want"), on a want list the collections the viewer has ("2 you have"). Matched objekts SHALL be marked with a ring, judged on the list's own objekts. There SHALL be no match chip, no popover of matched lists and no All matches control.
+
+A person with both counts above zero and a mutual score of zero SHALL read as one way, with no Can swap mark, when that is only because the swaps cross posts or run through lists with no link; "No swap · buy or sell" SHALL stay for a person whose both-way matches run only through sale lists set to Sell only or want lists set to buying only.
 
 Matching SHALL use the viewer's have lists bound to a Cosmo profile, not everything their wallet holds, so an objekt the viewer keeps off their have lists never counts as offered.
 
@@ -320,8 +322,24 @@ Browse SHALL list the viewer's own row, so they can see where a bump put them, w
 - **THEN** that want list's strip reads "2 you have" with both ringed, and no popover or control names the viewer's lists
 
 #### Scenario: Unlinked lists, one person
-- **WHEN** rin.trades has a have list holding 1 collection the viewer wants and a separate want list asking for 2 collections on the viewer's bound have lists, none of these on sale lists
-- **THEN** rin.trades's one row reads "You can swap 1", the have list reads "1 you want" and the want list "2 you have"
+- **WHEN** rin.trades has a have list holding 1 collection the viewer wants and a separate want list, not linked to it, asking for 2 collections on the viewer's bound have lists, none of these on sale lists
+- **THEN** rin.trades's row reads "They have 1 you want" and "You have 2 they want" with no Can swap mark, the have list reads "1 you want", the want list "2 you have", and rin.trades is listed under One way
+
+#### Scenario: Swaps across the viewer's posts
+- **WHEN** the viewer's post P1 pairs have list "jiwoo spares" with want list "doubles hunt", their post P2 pairs have list "yooyeon spares" with want list "hyerin and kaede", and mina.k's post holds 2 collections on "doubles hunt" and wants 1 collection on "yooyeon spares"
+- **THEN** mina.k's row reads "They have 2 you want" and "You have 1 they want" with no Can swap mark, and mina.k is listed under One way, not Can swap
+
+#### Scenario: A rule inside one post
+- **WHEN** the viewer's post P1 pairs "jiwoo spares" with "doubles hunt", whose rule wants every Double, and rae.s's post holds a Double and wants a collection on "jiwoo spares"
+- **THEN** rae.s's row reads "You can swap 1", and rae.s is listed under Can swap
+
+#### Scenario: The viewer's unlinked want list
+- **WHEN** the viewer's want list "wishlist" has no link, sora.p's post holds 1 collection on "wishlist" and wants 1 collection on the viewer's have list "jiwoo spares", whose post pairs it with "doubles hunt", which wants nothing sora.p has
+- **THEN** sora.p's row reads "They have 1 you want" and "You have 1 they want" with no Can swap mark, and sora.p is listed under One way
+
+#### Scenario: The person's posts are counted one at a time
+- **WHEN** the viewer's single post pairs "spares" with "binary hunt", and rin.trades has two posts: the first holds 2 collections on "binary hunt" and wants nothing of the viewer's, the second holds nothing the viewer wants and wants 1 collection on "spares"
+- **THEN** rin.trades has no Can swap mark and is listed under One way
 
 #### Scenario: A sale list never makes a person mutual
 - **WHEN** jinsoul.blue's sale list, set to Sell only, holds 3 collections on the viewer's want lists (open to swaps or buying), jinsoul.blue has no have list, and their want list asks for 1 collection on the viewer's bound have list
@@ -368,11 +386,11 @@ Browse SHALL list the viewer's own row, so they can see where a bump put them, w
 - **THEN** rin.trades's row is not listed on Browse or For you for that viewer
 
 #### Scenario: A have list and a want list both ways make a swap
-- **WHEN** rin.trades's have list holds 2 collections on the viewer's want list open to swaps or buying, rin.trades's want list (open to swaps) asks for 3 collections on the viewer's bound have list, and rin.trades's sale list, set to Sell only, holds 4 more collections the viewer wants
+- **WHEN** rin.trades's have list holds 2 collections on the viewer's want list open to swaps or buying, rin.trades's want list (open to swaps), linked to that have list, asks for 3 collections on the viewer's bound have list, which is linked to that want list, and rin.trades's sale list, set to Sell only, holds 4 more collections the viewer wants
 - **THEN** rin.trades's row reads "You can swap 2", and rin.trades is listed under Mutual
 
 #### Scenario: A sale list open to swaps makes a swap
-- **WHEN** jinsoul.blue's sale list, open to swaps, holds 3 collections on the viewer's want list open to swaps only, and jinsoul.blue's want list (open to swaps) asks for 2 collections on the viewer's bound have list
+- **WHEN** jinsoul.blue's sale list, open to swaps, holds 3 collections on the viewer's want list open to swaps only, and jinsoul.blue's want list (open to swaps), linked to that sale list, asks for 2 collections on the viewer's bound have list, which is linked to that want list
 - **THEN** jinsoul.blue's row reads "You can swap 2", the sale list reads "3 you want", and jinsoul.blue is listed under Mutual
 
 ### Requirement: Bump
@@ -527,7 +545,7 @@ The drawer's On Trade counts SHALL leave out trade-blocked and banned accounts. 
 ### Requirement: Make offer on a post
 Each row that shows Message SHALL also offer Make offer. It opens the offer builder for the person, addressed to the row's lead post's own list: the have list of a pair, or the post's only list. You get SHALL ask from all of the person's have and sale lists on Trade, as from a conversation, its picker opening on All their lists (see `web-trade-offers`).
 
-The builder SHALL open with the viewer's matches with the person already added, swaps and sales alike, the ones the row counts under the current Compare with list (see `web-trade-offers` Matches added when the builder opens), and with none when the row has no match. Add SHALL open the full picker.
+The builder SHALL open with the viewer's matches with the person already added, chosen from those the row counts under the current Compare with list by the rule the row's chip follows (see `web-trade-offers` Matches added when the builder opens), and with none when the row has no match. Add SHALL open the full picker.
 
 #### Scenario: From a WTT post
 - **WHEN** a user activates Make offer on rin.trades's row, whose lead post is the have list "doubles" with the most matches, and rin.trades also has the sale list "spares" on Trade
@@ -998,11 +1016,11 @@ The matching help (the ? beside Mutual only) SHALL be tables only, with no bulle
 
 #### Scenario: Mutual table
 - **WHEN** the viewer reads What counts toward Mutual
-- **THEN** a have list against a want list open to swaps is marked yes, a sale list open to swaps against a want list open to swaps is marked yes, a sale list set to Sell only on either side and a want list set to Buying only are marked no, and a note says the score is the smaller of the two sides
+- **THEN** a have list against the want list linked to it, open to swaps, is marked yes, a sale list open to swaps against the want list linked to it, open to swaps, is marked yes, have and want lists on different posts or with no link are marked no, a sale list set to Sell only on either side and a want list set to Buying only are marked no, and a note says the score is the smaller of the two sides
 
 #### Scenario: Good to know
 - **WHEN** the viewer reads Good to know
-- **THEN** labelled rows say that all of a person's lists count together, what Compare with narrows to, that only objekts still owned and transferable count, that hidden and blocked people never show, and that a want list's rule counts like the objekts it covers, once per collection, and shows on a post as one RULE tile with how many of the viewer's it takes, and no bulleted sentences follow
+- **THEN** labelled rows say that a post is a have or sale list and the want list linked to it, that all of a person's lists count toward one-way matches while Can swap counts inside one post of each person, what Compare with narrows to, that only objekts still owned and transferable count, that hidden and blocked people never show, and that a want list's rule counts like the objekts it covers, once per collection, and shows on a post as one RULE tile with how many of the viewer's it takes, and no bulleted sentences follow
 
 ### Requirement: Rules on a post
 A post whose want list holds rules SHALL show each rule in its Want strip as one tile, before the objekts: a card with a neutral RULE badge, its label ("CC366", "Cream02 FCO 3rd") and "any member" or its members. Activating a tile SHALL list the rule's objekts the viewer has.

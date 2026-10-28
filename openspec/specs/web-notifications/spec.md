@@ -197,7 +197,7 @@ The Notifications section of the account page (`/account/notifications`) SHALL h
 - Offers: a switch, on by default;
 - Trades: a switch, on by default.
 
-Each choice SHALL say what it does: Any alerts for every match, Can swap alerts only when the other person also wants something the user has (see Want-list alerts), and Off sends none. Can swap SHALL say that it leaves out sale listings. A change SHALL save on its own, as the switches do.
+Each choice SHALL say what it does: Any alerts for every match, Can swap alerts only when the other person also wants something the user has, inside one of the user's posts (see Want-list alerts), and Off sends none. Can swap SHALL say that it leaves out sale listings, and that a list with no link alerts on swap listings. A change SHALL save on its own, as the switches do.
 
 A user who had turned either alert type off before this choice existed SHALL keep it Off. Every other setting of those two types, the default or turned on, SHALL become Can swap.
 
@@ -228,7 +228,8 @@ For each of a user's want lists, whether or not it is on Trade, the system SHALL
 
 **Any or Can swap.** Which matches alert SHALL follow the user's "Someone has what you want" choice (see Notification settings):
 - Any: every match above;
-- Can swap: a match only while the other account is one of the people For you lists under Can swap (its Mutual) on the page the alert opens: Compare with naming the alert's list, which compares that list and its linked list, or all the user's lists when the list compares one way (see `web-trade-browse` Matches and Compare with). That means they also want, on a want list open to swaps, a collection the user still owns on a bound have list. A match from a sale list set to Sell only SHALL never alert under Can swap, since a sale is not a swap; one from a sale list set to Sell or swap counts like a have list's.
+- Can swap: a match only while the other account is one of the people For you lists under Can swap (its Mutual) on the page the alert opens: Compare with naming the alert's list, which compares that list and its linked list (see `web-trade-browse` Matches and Compare with). That means one of the other account's posts can swap with the alert's pair: it holds a collection on the alert's want list, and its want list, open to swaps, wants a collection the user still owns on the have list linked to that want list (see `web-trade-browse` Matches to the signed-in viewer). The post holding the new match need not be that post. A match from a sale list set to Sell only SHALL never alert under Can swap, since a sale is not a swap; one from a sale list set to Sell or swap counts like a have list's.
+- A want list with no link can never make Can swap, so under Can swap it SHALL alert for a match from a have list or a sale list set to Sell or swap without asking whether the other account also wants something of the user's, and SHALL never alert for a sale list set to Sell only. Such an alert counts as made under Any.
 
 The alert's target SHALL be For you with Compare with naming that want list (see `web-trade-browse`): `/trade/for-you?match=any&list=<want-list-slug>` for an alert made under Any, and `/trade/for-you?match=mutual&list=<want-list-slug>` for one made under Can swap. A grouped notification SHALL lead to the target of its latest match. A notification made before this choice existed SHALL lead to `match=any`.
 
@@ -262,6 +263,18 @@ An entry left out only because its owner cannot trade it yet, or, under Can swap
 
 #### Scenario: One-sided match under Can swap
 - **WHEN** the user has Can swap, and another account adds SeoYeon 204Z to a have list on Trade, but wants nothing on the user's have lists
+- **THEN** no alert is created for that entry
+
+#### Scenario: Match across the user's posts under Can swap
+- **WHEN** the user has Can swap, "Binary hunt" is linked to have list "spares", and another account adds SeoYeon 204Z (on "Binary hunt") to its post while that post wants only a collection on the user's have list "doubles", which is linked to a different want list
+- **THEN** no alert is created for that entry
+
+#### Scenario: Unlinked want list under Can swap
+- **WHEN** the user has Can swap, their want list "wishlist", open to swaps, has no link, and another account that wants nothing of the user's adds a collection on "wishlist" to a have list on Trade
+- **THEN** within 10 minutes the user has an alert for "wishlist", linking to `/trade/for-you?match=any&list=<slug>`
+
+#### Scenario: Unlinked want list and a sale listing under Can swap
+- **WHEN** the user has Can swap, their want list "wishlist", open to swaps or buying, has no link, and another account adds a collection on "wishlist" to a sale list set to Sell only
 - **THEN** no alert is created for that entry
 
 #### Scenario: Becomes mutual within 24 hours
@@ -309,7 +322,7 @@ An entry left out only because its owner cannot trade it yet, or, under Can swap
 - **THEN** the next run carries on from where the last one stopped: no entry added in between is skipped and none alerts twice
 
 ### Requirement: Reverse-direction alerts
-Unless the user has "Someone wants what you have" on Off, the system SHALL notify them when another account adds, to a discoverable want list, a collection that is on one of the user's have lists bound to a Cosmo profile, or on such a sale list set to Sell or swap, when that want list is open to swaps, or on such a sale list when that want list is open to buying (see `web-lists` Want list match option and Sale list Open to). The same grouping, once-only, timing and exclusion rules as want-list alerts SHALL apply, grouped per the user's list. The same Any or Can swap rules SHALL apply from the user's side: under Can swap, the other account must be one of the people For you lists under Can swap, and a match against only the user's sale lists set to Sell only SHALL never alert. The target SHALL be `/trade/for-you?match=any&list=<that-list-slug>` for an alert made under Any, and `/trade/for-you?match=mutual&list=<that-list-slug>` for one made under Can swap.
+Unless the user has "Someone wants what you have" on Off, the system SHALL notify them when another account adds, to a discoverable want list, a collection that is on one of the user's have lists bound to a Cosmo profile, or on such a sale list set to Sell or swap, when that want list is open to swaps, or on such a sale list when that want list is open to buying (see `web-lists` Want list match option and Sale list Open to). The same grouping, once-only, timing and exclusion rules as want-list alerts SHALL apply, grouped per the user's list. The same Any or Can swap rules SHALL apply from the user's side: under Can swap, the other account must be one of the people For you lists under Can swap for the user's list and the want list linked to it, a match against only the user's sale lists set to Sell only SHALL never alert, and the user's have list, or sale list set to Sell or swap, with no link SHALL alert for a match from a want list open to swaps without asking whether the other account has something the user wants, and never for a match that only buying makes, that alert counting as made under Any. The target SHALL be `/trade/for-you?match=any&list=<that-list-slug>` for an alert made under Any, and `/trade/for-you?match=mutual&list=<that-list-slug>` for one made under Can swap.
 
 #### Scenario: Can swap by default
 - **WHEN** a user has never changed the setting, someone adds to a want list open to swaps a collection on the user's have list, and that person has on a have list a collection on the user's want list
@@ -334,6 +347,14 @@ Unless the user has "Someone wants what you have" on Off, the system SHALL notif
 #### Scenario: Opening the alert
 - **WHEN** the user opens a reverse-direction alert for have list "spares" made under Can swap
 - **THEN** the browser is at `/trade/for-you?match=mutual&list=spares`
+
+#### Scenario: Unlinked have list under Can swap
+- **WHEN** the user has the setting on Can swap, their have list "extras" has no link, and someone who has nothing the user wants adds to a want list open to swaps a collection on "extras"
+- **THEN** the user gets a reverse-direction alert for "extras", linking to `/trade/for-you?match=any&list=extras`
+
+#### Scenario: Unlinked sale list and a buyer under Can swap
+- **WHEN** the user has the setting on Can swap, their sale list "for sale", set to Sell only, has no link, and someone adds to a want list open to buying a collection on "for sale"
+- **THEN** no notification is created
 
 ### Requirement: Retention
 Read notifications SHALL be removed 90 days after they were created. Unread notifications SHALL be kept.

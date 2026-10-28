@@ -6,7 +6,7 @@ The account-wide trade match view on `apps/web` at `/trade/for-you`: who the use
 ## Requirements
 
 ### Requirement: Account-wide matches
-Trade SHALL match the signed-in user, one person at a time, against the other accounts whose listed have, sale or want lists (discoverable and not idle; see `web-trade-browse` Order and idle posts) overlap the user's have, sale and want lists. This drives the header sentences and list counts on Browse and For you, Any, Mutual and Mutual N (see `web-trade-browse`). An idle list SHALL not count toward its owner. A have list, and a sale list open to swaps, count against a want list open to swaps, and every sale list counts against a want list open to buying: a want list open to swaps only never matches a sale list set to Sell only, and one set to buying only never matches a have list (see `web-lists`). The user's own lists count whether or not they are discoverable. Matching SHALL use the user's have and sale lists, never everything their wallet holds: owning an objekt does not mean it is up for trade. A have or sale list SHALL take part only while it is bound to one of its owner's Cosmo profiles, since Trade checks that profile's holdings. Want lists always take part. The user's own account SHALL never be matched. Want-list alerts SHALL use the same rules for which of another account's lists take part (see `web-notifications` Want-list alerts).
+Trade SHALL match the signed-in user, one person at a time, against the other accounts whose listed have, sale or want lists (discoverable and not idle; see `web-trade-browse` Order and idle posts) overlap the user's have, sale and want lists. This drives the header sentences and list counts on Browse and For you, Any, Mutual and Mutual N (see `web-trade-browse`). An idle list SHALL not count toward its owner. A have list, and a sale list open to swaps, count against a want list open to swaps, and every sale list counts against a want list open to buying: a want list open to swaps only never matches a sale list set to Sell only, and one set to buying only never matches a have list (see `web-lists`). The user's own lists count whether or not they are discoverable. Matching SHALL use the user's have and sale lists, never everything their wallet holds: owning an objekt does not mean it is up for trade. A have or sale list SHALL take part only while it is bound to one of its owner's Cosmo profiles, since Trade checks that profile's holdings. Want lists always take part. The user's own account SHALL never be matched. Every list that takes part counts toward the one-way counts, but Can swap counts only inside one linked pair of the user's and one of the person's (see `web-trade-browse` Matches to the signed-in viewer). Want-list alerts SHALL use the same rules for which of another account's lists take part (see `web-notifications` Want-list alerts).
 
 #### Scenario: Matches across lists
 - **WHEN** a user has two have lists and one want list, and a person's discoverable lists overlap two of them
@@ -49,8 +49,12 @@ Trade SHALL match the signed-in user, one person at a time, against the other ac
 - **THEN** a new entry on that have list creates no want-list alert for the user
 
 #### Scenario: Sell or swap counts both ways
-- **WHEN** the user's want list is open to swaps only, and a person's sale list, open to swaps, holds 2 collections on it while the person's want list asks for 1 on the user's bound have list
+- **WHEN** the user's want list is open to swaps only and linked to their bound have list, and a person's sale list, open to swaps, holds 2 collections on it while the person's want list, linked to that sale list, asks for 1 on the user's bound have list
 - **THEN** the person's row reads "You can swap 1", and the person is listed under Can swap
+
+#### Scenario: Can swap stays inside one post
+- **WHEN** a person's have list holds a collection on the user's want list "doubles hunt", linked to have list "jiwoo spares", and the person wants a collection on the user's have list "yooyeon spares", linked to a different want list
+- **THEN** the person's row counts both directions, and the person is listed under One way, not Can swap
 
 ### Requirement: Current ownership
 An entry on a have or sale list SHALL count toward a match only while its owner can trade it:
@@ -146,15 +150,15 @@ Matching SHALL leave out people the user blocked, people who blocked the user, a
 - **THEN** kaede.k's posts are not listed, kaede.k is not counted in Mutual N, and `/trade?person=<kaede.k's id>` shows no matches
 
 ### Requirement: Make offer to a partner
-Make offer on a person's row, on Browse or For you, SHALL follow `web-trade-browse` Make offer on a post: it opens the offer builder addressed to the person and the row's lead post, with the matches the row counts, swaps and sales alike, already added (see `web-trade-offers` Matches added when the builder opens).
+Make offer on a person's row, on Browse or For you, SHALL follow `web-trade-browse` Make offer on a post: it opens the offer builder addressed to the person and the row's lead post, with the row's matches already added by the rule the row's chip follows (see `web-trade-offers` Matches added when the builder opens).
 
 #### Scenario: Prefilled overlap
-- **WHEN** a user activates Make offer on rin.trades's row on For you, which reads "They have 5 you want · You have 3 they want": rin.trades has 3 the user wants on have list "doubles" and 2 on sale list "spares", open to swaps, and the user has 3 on rin.trades's want list "wants"
-- **THEN** the builder opens addressed to rin.trades and "doubles", with the user's 3 under You give, rin.trades's 5 under You get, and the line "Added 3 you give and 5 you get from your matches"
+- **WHEN** a user activates Make offer on rin.trades's row on For you, which reads "They have 5 you want · You have 3 they want" with no Can swap mark: rin.trades has 3 the user wants on have list "doubles" and 2 on sale list "spares", open to swaps, and the user has 3 on rin.trades's want list "wants"
+- **THEN** the builder opens addressed to rin.trades and "doubles", with rin.trades's 5 under You get, nothing under You give, and the line "Added 5 you get from your matches"
 
 #### Scenario: Can swap under Compare with
 - **WHEN** For you shows Can swap with Compare with set to the user's have list "doubles", and the user activates Make offer on kaede.k's row
-- **THEN** You give holds only the matches from "doubles", as the row counted them
+- **THEN** You give holds only the matches from "doubles" inside the pair the row's Can swap counts
 
 ### Requirement: Partner reputation
 The person sheet SHALL show the person's reputation line (see `web-verified-trades`) beside their name.
