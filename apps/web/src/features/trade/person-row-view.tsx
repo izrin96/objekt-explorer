@@ -39,9 +39,6 @@ import { TradeActions, type TradeContact } from "./trade-actions";
 import { TradeHeader } from "./trade-header";
 import { TradeSides } from "./trade-row";
 
-/** posts shown before "+N more lists" */
-const SHOWN_POSTS = 2;
-
 /** The post as its own viewer sees it: no rings, since the viewer's row counts nothing. */
 function unringed(post: PersonPostData): PersonPostData {
   return {
@@ -221,8 +218,6 @@ export const PersonRow = memo(function PersonRow({
   own,
   signedIn,
   led,
-  expanded,
-  onExpand,
   onClear,
   collections,
   now,
@@ -234,11 +229,8 @@ export const PersonRow = memo(function PersonRow({
   own: boolean;
   /** a signed-out visitor has no lists to match, so the row says nothing about matching */
   signedIn: boolean;
-  /** `person` put this row first: every post shows, and the row can be cleared */
+  /** `person` put this row first, and the row can be cleared */
   led: boolean;
-  /** "+N more lists" was activated; kept by the feed, since a scrolled-off row loses its state */
-  expanded: boolean;
-  onExpand: (userId: string) => void;
   onClear: () => void;
   collections: Readonly<Record<string, ValidObjekt | undefined>>;
   now: number;
@@ -252,9 +244,6 @@ export const PersonRow = memo(function PersonRow({
   const posts = orderPosts(person.posts);
   const throughRules = swapThroughRules(person.counts, person.posts);
   const lead = leadPost(person.posts);
-  const all = led || expanded;
-  const shown = all ? posts : posts.slice(0, SHOWN_POSTS);
-  const more = posts.length - shown.length;
   // the post's own list: the have list of a pair
   const anchor = lead?.sides.find((side) => side.list.id === lead.id);
   const counts = person.counts;
@@ -331,7 +320,7 @@ export const PersonRow = memo(function PersonRow({
           }
         />
         <div className="flex min-w-0 flex-col gap-1 @3xl:col-span-2 @3xl:row-start-2">
-          {shown.map((post) => (
+          {posts.map((post) => (
             <PostBlock
               key={post.id}
               post={post}
@@ -344,17 +333,6 @@ export const PersonRow = memo(function PersonRow({
               onOpen={onOpen}
             />
           ))}
-          {more > 0 ? (
-            <button
-              type="button"
-              className="text-muted-foreground hover:text-foreground focus-visible:ring-ring mx-3 mt-1 mb-1.5 w-fit rounded-sm text-xs underline underline-offset-2 outline-none focus-visible:ring-2"
-              onClick={() => onExpand(person.userId)}
-            >
-              {more === 1
-                ? m.trade_person_more_lists_one()
-                : m.trade_person_more_lists({ count: more })}
-            </button>
-          ) : null}
         </div>
         {own ? null : (
           <div className="flex items-center gap-2 px-3 pb-2 @3xl:col-start-2 @3xl:row-start-1 @3xl:self-start @3xl:pb-0">

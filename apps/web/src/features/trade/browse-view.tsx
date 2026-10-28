@@ -92,8 +92,6 @@ export function BrowseView({ surface, search }: { surface: Surface; search: Feed
   const composer = useComposer();
   const planLists = usePlanLists();
   const [hiddenOpen, setHiddenOpen] = useState(false);
-  // a scrolled-off row loses its own state, so the feed keeps which rows showed all their lists
-  const [expanded, setExpanded] = useState<ReadonlySet<string>>(new Set());
   // one clock per page load, so every row's "3 hours ago" agrees
   const [now] = useState(Date.now);
 
@@ -111,7 +109,6 @@ export function BrowseView({ surface, search }: { surface: Surface; search: Feed
 
   const setSearch = (patch: Partial<FeedSearch>) =>
     go((prev) => ({ ...prev, ...patch }), { replace: true });
-  const expand = (userId: string) => setExpanded((prev) => new Set(prev).add(userId));
   const clearLead = () => setSearch({ person: undefined });
 
   const type = postTypeOf(search, surface);
@@ -362,8 +359,6 @@ export function BrowseView({ surface, search }: { surface: Surface; search: Feed
                         own={row.person.userId === user?.user.id}
                         signedIn={!!user}
                         led={row.person.userId === search.person}
-                        expanded={expanded.has(row.person.userId)}
-                        onExpand={expand}
                         onClear={clearLead}
                         collections={collections}
                         now={now}

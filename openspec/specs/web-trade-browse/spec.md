@@ -363,7 +363,7 @@ Browse SHALL list the viewer's own row, so they can see where a bump put them, w
 
 #### Scenario: Mutual partner
 - **WHEN** the viewer opens `/trade?person=<rin.trades's id>` and rin.trades has 4 listed posts
-- **THEN** rin.trades's row is listed first with all 4 posts shown and no "+N more lists", the rest of the feed follows without rin.trades, and clearing it removes `person` from the URL
+- **THEN** rin.trades's row is listed first with all 4 posts shown, the rest of the feed follows without rin.trades, and clearing it removes `person` from the URL
 
 #### Scenario: Person link to someone hidden
 - **WHEN** the viewer opens `/trade?person=<id>` for a person they hid
@@ -581,21 +581,17 @@ Each person in the feed SHALL be one row, a bordered card on the card surface, o
   - a WTT post with both lists: the HAVE strip and the WANT strip side by side, sharing the width equally, with a ⇄ mark between them;
   - a post with one side (WTS, WTB, or half a pair): that one strip across the width;
   - a side with no related objekt or no entries: the muted line Filters describes, under the other strip, with no ⇄ mark.
-- **More lists**: the row SHALL show its first 2 posts. When it holds more, a "+N more lists" control SHALL follow them and show the rest in place, after which it is gone. A row led by `person` shows every post.
+- **All lists**: the row SHALL show every post it holds.
 
 **Strip**: a monospace role label in its list type's colour, then " · " and the list's name, truncated to one line, then the list's own count when above zero ("14 you want", "2 you have"), on a tinted chip in monospace; under a narrowing filter the label reads as Filters says. The label SHALL link to the list page, carrying the list's name and description in its title, and the description SHALL also be available to assistive technology. The count SHALL sit beside the link, not in it, and activating it SHALL open a popover, "Matched with your lists", naming each of the viewer's lists that count was taken against, with its type and a link to it: on a want list the viewer's have and sale lists, on a have or sale list the viewer's want lists, as Compare with narrows them. Under a want list, it SHALL also name each rule the match went through, "via rule" with the rule's label and how many collections, on Browse as on For you (see Matched through your rules). Under it, one line of thumbnails 2.5rem wide with no caption, ringed objekts first. A strip SHALL never wrap: it shows as many thumbnails as fit its width, and when some don't fit, the last place holds a "+N" tile counting the copies not shown. On a narrowed strip that shows its count chip, which counts collections, the "+N" tile SHALL count the collections not shown instead, and "of N" the list's collections, as its dialog's All tab does, so they all read in one unit.
 
 **All of a list.** Activating a strip's "+N" tile SHALL open a dialog of that one list, never of the person's other posts: a bottom sheet below `sm`, a centred dialog from `sm` up. Its title is the list's name and its description the list's type. It SHALL list the list's objekts, copies of a collection stacked into one card with their count, those that match the viewer ringed as the strip rings them and first, then newest; a rule's objekts stay on its tile. When any match, two tabs SHALL lead it, "N you want" (on a want list "N you have") and "All N", counting collections, with the matching tab open first; otherwise it shows the list alone. Past 300 collections the rest are counted, "N more on the list page". The rings follow For you's Compare with, the owner's own list rings nothing, and a signed-out visitor sees no rings or tabs. A want side's rules SHALL lead the dialog as the strip's RULE tiles, since its objekt counts leave them out. When the feed's filters or matching narrowed the strip, the dialog SHALL still show the whole list of objekts and say that those aren't filtered; the RULE tiles keep the strip's counts. The objekts SHALL load only when the dialog opens. Activating an objekt SHALL close the dialog and open the objekt view. The footer SHALL offer Open list, which goes to the list page, and Close.
 
-From `@3xl` of the feed's width, the actions SHALL sit at the header's end and the posts SHALL be indented to start under the name. Narrower, the row SHALL stack: the header, each strip at full width with the ⇄ mark turned to point down, "+N more lists", then the actions in one row, Make offer filling the remaining width. The strips SHALL still not wrap, and the page SHALL not scroll sideways. Every row SHALL have the same layout whatever the number of objekts.
+From `@3xl` of the feed's width, the actions SHALL sit at the header's end and the posts SHALL be indented to start under the name. Narrower, the row SHALL stack: the header, each strip at full width with the ⇄ mark turned to point down, then the actions in one row, Make offer filling the remaining width. The strips SHALL still not wrap, and the page SHALL not scroll sideways. Every row SHALL have the same layout whatever the number of objekts.
 
 #### Scenario: Person with several posts
 - **WHEN** nuppotoz has three listed want posts, "WISHLIST" with 3 collections the viewer has, "S24 WISHLIST" and "Atom01 leftovers" with none, at 1280 px
-- **THEN** one row shows nuppotoz's header reading "You have 3 they want" and "3 lists", then the WISHLIST strip reading "3 you have", then S24 WISHLIST, then "+1 more list"
-
-#### Scenario: More lists
-- **WHEN** the viewer activates "+1 more list" on nuppotoz's row
-- **THEN** the Atom01 leftovers strip shows in place under the others, and the control is gone
+- **THEN** one row shows nuppotoz's header reading "You have 3 they want" and "3 lists", then the WISHLIST strip reading "3 you have", then S24 WISHLIST, then Atom01 leftovers
 
 #### Scenario: Same partner on both tabs
 - **WHEN** the viewer sees rin.trades's row on Browse and on For you, and rin.trades has 4 collections the viewer wants and wants 2 of the viewer's
@@ -667,7 +663,7 @@ From `@3xl` of the feed's width, the actions SHALL sit at the header's end and t
 
 #### Scenario: Phone width
 - **WHEN** Browse is shown at 390 px
-- **THEN** each row stacks its header, its strips at full width with ⇄ pointing down between a pair, "+N more lists" when there are more, and the actions with Make offer filling the row, each strip stays one line ending in "+N", and the page doesn't scroll sideways
+- **THEN** each row stacks its header, its strips at full width with ⇄ pointing down between a pair, and the actions with Make offer filling the row, each strip stays one line ending in "+N", and the page doesn't scroll sideways
 
 #### Scenario: New account on a phone
 - **WHEN** at 390 px a person has no completed and no unfinished trades

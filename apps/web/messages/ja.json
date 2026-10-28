@@ -1000,8 +1000,6 @@
   "trade_person_swap": "{count} 件交換できます",
   "trade_person_lists": "リスト {count} 件",
   "trade_person_lists_one": "リスト 1 件",
-  "trade_person_more_lists": "ほか {count} 件のリスト",
-  "trade_person_more_lists_one": "ほか 1 件のリスト",
   "trade_list_count_you_want": "自分の希望 {count} 件",
   "trade_list_count_you_have": "自分の所持 {count} 件",
   "trade_person_clear": "全員を表示",

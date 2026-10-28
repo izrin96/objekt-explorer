@@ -1000,8 +1000,6 @@
   "trade_person_swap": "You can swap {count}",
   "trade_person_lists": "{count} lists",
   "trade_person_lists_one": "1 list",
-  "trade_person_more_lists": "+{count} more lists",
-  "trade_person_more_lists_one": "+1 more list",
   "trade_list_count_you_want": "{count} you want",
   "trade_list_count_you_have": "{count} you have",
   "trade_person_clear": "Show everyone",

@@ -1000,8 +1000,6 @@
   "trade_person_swap": "{count}개 교환 가능",
   "trade_person_lists": "목록 {count}개",
   "trade_person_lists_one": "목록 1개",
-  "trade_person_more_lists": "목록 {count}개 더 보기",
-  "trade_person_more_lists_one": "목록 1개 더 보기",
   "trade_list_count_you_want": "내가 원하는 {count}개",
   "trade_list_count_you_have": "내가 보유한 {count}개",
   "trade_person_clear": "모두 보기",
