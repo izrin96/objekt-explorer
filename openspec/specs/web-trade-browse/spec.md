@@ -6,7 +6,7 @@ The public Trade Browse feed on `apps/web` at `/trade`: posts by people who put 
 ## Requirements
 
 ### Requirement: Posts from lists on Trade
-`/trade` SHALL hold one post per list its owner put on Trade through the post composer, or through Show on Market and Trade on a sale list (see `web-lists`). A have or sale list SHALL appear only while it is bound to a Cosmo profile; a want list needs no profile. A have list, or a sale list open to swaps, and the want list linked to it SHALL form one post when both are on Trade. When only one of the pair is on Trade, the post SHALL hold only that list. The feed SHALL list each person's posts together in one row (see Trade card). The page SHALL be open to signed-out visitors.
+`/trade` SHALL hold one post per list its owner put on Trade through the post composer, the only way any list goes on Trade (see `web-lists`). A have or sale list SHALL appear only while it is bound to a Cosmo profile; a want list needs no profile. A have list, or a sale list open to swaps, and the want list linked to it SHALL form one post when both are on Trade. When only one of the pair is on Trade, the post SHALL hold only that list. The feed SHALL list each person's posts together in one row (see Trade card). The page SHALL be open to signed-out visitors.
 
 Each post SHALL carry one, two or three tags:
 - WTT for a have list, alone or paired with its want list, which is open to swaps (a pair can't be Buying only, see `web-lists`), and for a want list on its own open to swaps (Swaps only, or Swaps or buying);
@@ -58,7 +58,7 @@ Each list in a post SHALL link to its list page.
 - **THEN** the feed shows a WTT post with only the Have side
 
 #### Scenario: Sale list on Market
-- **WHEN** a sale list bound to a Cosmo profile has Show on Market and Trade on
+- **WHEN** the owner posts a sale list bound to a Cosmo profile as a Sell post
 - **THEN** the feed shows it as a WTS post
 
 #### Scenario: Not on Trade

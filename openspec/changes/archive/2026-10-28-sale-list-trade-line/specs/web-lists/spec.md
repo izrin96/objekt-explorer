@@ -113,7 +113,7 @@ Type and profile binding SHALL be editable. The linked list SHALL start empty an
 - **THEN** Open to starts at Swaps or buying, as Create does
 
 ### Requirement: Trade line in the list form
-The edit form of a have, want or sale list SHALL show one Trade line: the post that holds the list, with its tags, pair and option, or that the list is off Trade. On a sale list in a post it SHALL also name the list's Open to, Sell only or Sell or swap, and say it is also on Market. It SHALL offer Edit post when the list is in a post and Post it otherwise, each opening the post composer with this list picked (see `web-trade-browse`). Creating a have or want list, or a sale list bound to a Cosmo profile, SHALL offer Post it.
+The edit form of a have, want or sale list SHALL show one Trade line: the post that holds the list, with its tags, pair and option, or that the list is off Trade. A sale list's line in a post SHALL also name its Open to (Sell only or Sell or swap) and Market. It SHALL offer Edit post when the list is in a post and Post it otherwise, each opening the composer with this list picked (see `web-trade-browse`). Creating a have or want list, or a sale list bound to a profile, SHALL offer Post it.
 
 #### Scenario: List in a post
 - **WHEN** the owner edits want list "binary hunt", which is in a Swap post with "spares" that would also pay
