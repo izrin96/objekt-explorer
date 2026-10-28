@@ -4,7 +4,7 @@ import { collections, objekts, transfers } from "@repo/db/indexer/schema";
 import { Addresses } from "@repo/lib";
 import { mapOwnedObjekt, mapTransfer } from "@repo/lib/server/objekt";
 import { fetchPublicNicknames } from "@repo/lib/server/user";
-import { type SQL, and, arrayOverlaps, desc, eq, inArray, lt, ne, or } from "drizzle-orm";
+import { type SQL, and, arrayOverlaps, desc, eq, inArray, ne, sql } from "drizzle-orm";
 
 import type { ActivityFeedInput, ActivityFeedOutput } from "../schemas/activity";
 import type { CollectionFilters } from "../schemas/common/filters";
@@ -79,12 +79,11 @@ function getTypeFilters(type: ActivityFeedInput["type"]): SQL[] {
 
 async function fetchTransfers(query: ActivityFeedInput) {
   const typeFilters = getTypeFilters(query.type);
+  // a row comparison, so the (timestamp, id) indexes seek to the cursor; the same test spelled
+  // with OR is only a filter, and a deep page walked every newer transfer
   const cursorFilter = query.cursor
     ? [
-        or(
-          lt(transfers.timestamp, query.cursor.timestamp),
-          and(eq(transfers.timestamp, query.cursor.timestamp), lt(transfers.id, query.cursor.id)),
-        ),
+        sql`(${transfers.timestamp}, ${transfers.id}) < (${query.cursor.timestamp}::timestamptz, ${query.cursor.id}::uuid)`,
       ]
     : [];
 
