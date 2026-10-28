@@ -95,7 +95,6 @@ function toDraft(list: StoredList): ListDraft {
     linkedListId: list.linkedListId,
     profileAddress: list.profileAddress,
     isProfileBind: list.isProfileBind,
-    discoverable: list.discoverable ?? false,
     matchSale: list.matchSale,
     matchHave: list.matchHave,
     gridColumns: list.gridColumns,

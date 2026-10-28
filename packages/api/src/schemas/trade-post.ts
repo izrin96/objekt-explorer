@@ -460,20 +460,21 @@ export type TradeLine =
       kind: PostKind;
       tags: PostTag[];
       alsoPay: boolean;
+      alsoSwap: boolean;
       partner: PlanList | null;
     }
   | { state: "paired_off"; partner: PlanList }
   | { state: "needs_profile" }
   | { state: "off" };
 
-/** What a have or want list's form says about Trade: its post, or that it is off Trade and why. */
+/** What a list's form says about Trade: its post, or that it is off Trade and why. */
 export function tradeLineOf(lists: PlanList[], list: PlanList): TradeLine {
   const post = postHolding(postsOf(lists), list.id);
   if (post) {
-    const { kind, alsoPay } = postKindOf(post);
+    const { kind, alsoPay, alsoSwap } = postKindOf(post);
     const partner =
       membersOf(post).find((member) => member.id !== list.id) ?? partnerOf(lists, list);
-    return { state: "in_post", kind, tags: tagsOf(post), alsoPay, partner };
+    return { state: "in_post", kind, tags: tagsOf(post), alsoPay, alsoSwap, partner };
   }
   if (!canBeOnTrade(list.listType, list.isProfileBind)) return { state: "needs_profile" };
   const partner = partnerOf(lists, list);

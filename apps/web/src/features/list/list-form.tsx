@@ -1,5 +1,5 @@
 import { InfoIcon } from "@phosphor-icons/react";
-import { canBeOnTrade, type ListType } from "@repo/api/schemas/list";
+import type { ListType } from "@repo/api/schemas/list";
 import type { OpenToFlags } from "@repo/api/schemas/open-to";
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
@@ -51,7 +51,6 @@ export type ListDraft = OpenToFlags & {
   linkedListId: number | null;
   profileAddress: string | null;
   isProfileBind: boolean;
-  discoverable: boolean;
   gridColumns: number | null;
   hideSerial: boolean;
   regenerateSlug: boolean;
@@ -65,7 +64,6 @@ export const EMPTY_DRAFT: ListDraft = {
   linkedListId: null,
   profileAddress: null,
   isProfileBind: false,
-  discoverable: false,
   // a new want list is open to swaps and buying until a post narrows it
   matchSale: true,
   matchHave: true,
@@ -108,8 +106,8 @@ export function listDraftSchema() {
 
 /**
  * `list.create`'s input, normalised the way the router does before it writes: the fields a type
- * does not carry are dropped rather than kept stale. A have or want list starts off Trade and
- * unpaired; the post composer puts it on Trade.
+ * does not carry are dropped rather than kept stale. A list starts off Trade, and a have or want
+ * list unpaired; the post composer puts it on Trade.
  */
 export function toCreateInput(draft: ListDraft) {
   const isProfileBind = ["have", "sale"].includes(draft.listType) && draft.isProfileBind;
@@ -122,7 +120,6 @@ export function toCreateInput(draft: ListDraft) {
     linkedListId: ["have", "want"].includes(draft.listType) ? draft.linkedListId : null,
     profileAddress: draft.profileAddress,
     isProfileBind,
-    discoverable: draft.listType === "sale" && draft.discoverable,
     matchSale: draft.matchSale,
     matchHave: draft.matchHave,
     hideSerial: draft.hideSerial,
@@ -130,15 +127,14 @@ export function toCreateInput(draft: ListDraft) {
 }
 
 /**
- * `list.edit`'s input. The link, Trade state and Open to of a have or want list belong to its post,
- * so they are left out and the list keeps them; only a sale list's switch is sent.
+ * `list.edit`'s input. A list's link, Trade state and Open to belong to its post, so they are left
+ * out and the list keeps them.
  */
 export function toEditInput(slug: string, draft: ListDraft) {
   const {
     listType: _type,
     isProfileBind: _bind,
     linkedListId: _link,
-    discoverable,
     matchSale: _sale,
     matchHave: _have,
     ...rest
@@ -146,7 +142,6 @@ export function toEditInput(slug: string, draft: ListDraft) {
   return {
     slug,
     ...rest,
-    ...(draft.listType === "sale" ? { discoverable } : {}),
     gridColumns: draft.gridColumns,
     regenerateSlug: draft.regenerateSlug,
   };
@@ -164,7 +159,7 @@ type ListFormProps = {
   url?: ListUrl;
   /** one line under the binding switch, for a note about what the form's current choices do */
   notice?: ReactNode;
-  /** a have or want list's place on Trade, which the post composer sets */
+  /** a have, want or sale list's place on Trade, which the post composer sets */
   tradeLine?: ReactNode;
 };
 
@@ -187,7 +182,6 @@ export function ListForm({
   const isSale = value.listType === "sale";
   const isPaired = value.listType === "have" || value.listType === "want";
   const bindable = value.listType === "have" || isSale;
-  const discoverableDisabled = !canBeOnTrade(value.listType, value.isProfileBind);
 
   const changeType = (next: ListType | null) => {
     const listType = next ?? "general";
@@ -363,7 +357,7 @@ export function ListForm({
         </Field>
       )}
 
-      {/* shown locked in edit: it is the reason the switches below are off */}
+      {/* shown locked in edit: it is why Hide Serial Numbers is off and the list can't go on Trade */}
       {bindable ? (
         <SwitchRow
           id={id("bind")}
@@ -379,22 +373,7 @@ export function ListForm({
 
       {notice}
 
-      {isSale ? (
-        <SwitchRow
-          id={id("show-on-trade")}
-          label={m.list_create_discoverable_sale_label()}
-          description={
-            discoverableDisabled
-              ? m.list_create_requires_bind_desc()
-              : m.list_create_on_market_desc()
-          }
-          checked={value.discoverable && !discoverableDisabled}
-          disabled={discoverableDisabled}
-          onCheckedChange={(checked) => set({ discoverable: checked })}
-        />
-      ) : null}
-
-      {isPaired ? tradeLine : null}
+      {isPaired || isSale ? tradeLine : null}
 
       {/* a serial only exists on an entry the bound profile owns */}
       {isSale || value.listType === "have" ? (

@@ -24,9 +24,7 @@ import {
   insertCopyRows,
   planCopy,
   prepareList,
-  resolveDiscoverable,
   touchList,
-  tradeColumns,
   writeList,
 } from "../services/list";
 import { copyRulesTx } from "../services/list-rules";
@@ -164,16 +162,7 @@ export const listCrud = {
           : await generateProfileSlug(input.name, list.slug, address, list.id);
       }
 
-      // a have or want list's Trade state belongs to its post, which `trade.savePost` writes
-      const discoverable =
-        list.listType === "sale"
-          ? resolveDiscoverable(
-              list.listType,
-              list.isProfileBind,
-              input.discoverable ?? list.discoverable,
-            )
-          : list.discoverable;
-
+      // no Trade state: every list's is its post's, which `trade.savePost` writes
       await db
         .update(lists)
         .set({
@@ -192,7 +181,6 @@ export const listCrud = {
             ["sale", "have"].includes(list.listType) && list.isProfileBind
               ? input.hideSerial
               : false,
-          ...tradeColumns(discoverable),
         })
         .where(eq(lists.id, list.id));
       await touchList([list.id]);

@@ -172,8 +172,6 @@ export const editListInputSchema = z.object({
   description: z.string().max(5000).nullable(),
   currency: z.string().max(10).nullable(),
   hideSerial: z.boolean(),
-  /** a sale list's Show on Trade; a have or want list's belongs to its post */
-  discoverable: z.boolean().optional(),
   regenerateSlug: z.boolean().default(false),
 });
 

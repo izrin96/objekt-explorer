@@ -411,8 +411,45 @@ describe("tradeLineOf", () => {
       kind: "swap",
       tags: ["wtt", "wtb"],
       alsoPay: true,
+      alsoSwap: false,
       partner: spares,
     });
+  });
+
+  test("a sale list alone in a Sell only post", () => {
+    const stock = list({ slug: "stock", listType: "sale", discoverable: true });
+    expect(tradeLineOf([stock], stock)).toEqual({
+      state: "in_post",
+      kind: "sell",
+      tags: ["wts"],
+      alsoPay: false,
+      alsoSwap: false,
+      partner: null,
+    });
+  });
+
+  test("a Sell or swap sale list paired with a want list that would also pay", () => {
+    const sale = list({ slug: "sale", listType: "sale", discoverable: true, takesSwaps: true });
+    const hunt = list({ slug: "hunt", listType: "want", discoverable: true, ...BOTH });
+    pair(sale, hunt);
+    expect(tradeLineOf([sale, hunt], sale)).toEqual({
+      state: "in_post",
+      kind: "sell",
+      tags: ["wts", "wtt", "wtb"],
+      alsoPay: true,
+      alsoSwap: true,
+      partner: hunt,
+    });
+  });
+
+  test("a sale pair off Trade, and an unbound sale list", () => {
+    const sale = list({ slug: "sale", listType: "sale", takesSwaps: true });
+    const hunt = list({ slug: "hunt", listType: "want" });
+    const loose = list({ slug: "loose", listType: "sale", isProfileBind: false });
+    pair(sale, hunt);
+    const lists = [sale, hunt, loose];
+    expect(tradeLineOf(lists, sale)).toEqual({ state: "paired_off", partner: hunt });
+    expect(tradeLineOf(lists, loose)).toEqual({ state: "needs_profile" });
   });
 
   test("paired off Trade, alone off Trade, and unbound", () => {

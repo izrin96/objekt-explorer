@@ -82,7 +82,6 @@ function toCopyDraft(list: StoredList): ListDraft {
     linkedListId: null,
     profileAddress: list.profileAddress,
     isProfileBind: list.isProfileBind,
-    discoverable: false,
     matchSale: list.listType === "want" ? list.matchSale : EMPTY_DRAFT.matchSale,
     matchHave: list.listType === "want" ? list.matchHave : EMPTY_DRAFT.matchHave,
     gridColumns: list.gridColumns,

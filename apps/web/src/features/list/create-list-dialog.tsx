@@ -42,7 +42,7 @@ export function CreateListDialog({
   };
   const [draft, setDraft] = useState<ListDraft>(opening);
   const [errors, setErrors] = useState<FieldErrors>({});
-  // a have or want list just made, which the dialog offers to post
+  // a have, want or sale list just made, which the dialog offers to post
   const [created, setCreated] = useState<ComposerStart | null>(null);
   const composer = useComposer();
 
@@ -63,7 +63,9 @@ export function CreateListDialog({
           <>
             <DialogHeader>
               <DialogTitle className="font-display">{m.list_create_success()}</DialogTitle>
-              <DialogDescription>{m.list_created_post_hint()}</DialogDescription>
+              <DialogDescription>
+                {created.sale ? m.trade_line_not_on_sale_hint() : m.list_created_post_hint()}
+              </DialogDescription>
             </DialogHeader>
             <DialogFooter>
               <DialogClose render={<Button variant="outline" />}>
@@ -91,14 +93,13 @@ export function CreateListDialog({
               create.mutate(input, {
                 onSuccess: ({ slug }) => {
                   const type = input.listType;
-                  if (
-                    (type === "have" || type === "want") &&
-                    canBeOnTrade(type, input.isProfileBind)
-                  ) {
+                  if (canBeOnTrade(type, input.isProfileBind)) {
                     setCreated(
                       type === "have"
                         ? { ...NEW_POST, kind: "swap", have: slug }
-                        : { ...NEW_POST, want: slug },
+                        : type === "sale"
+                          ? { ...NEW_POST, kind: "sell", sale: slug }
+                          : { ...NEW_POST, want: slug },
                     );
                   } else {
                     change(false);
