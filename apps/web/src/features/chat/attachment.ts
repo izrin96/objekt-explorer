@@ -3,7 +3,7 @@ import type { ListType } from "@repo/api/schemas/list";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 
 /** An objekt card waiting in the message box, sent with the next message. */
-export type ObjektAttachment = {
+type ObjektAttachment = {
   kind: "objekt";
   input: ObjektCardInput;
   objekt: ValidObjekt;

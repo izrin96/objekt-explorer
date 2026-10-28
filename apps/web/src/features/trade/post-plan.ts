@@ -5,7 +5,7 @@ import { useMemo } from "react";
 import { useUserLists } from "@/features/user/hooks";
 
 /** A list of the viewer's own as the post rules read it; a want list from before Open to is open to both. */
-export function toPlanList(list: PublicList): PlanList {
+function toPlanList(list: PublicList): PlanList {
   return {
     id: list.id,
     slug: list.slug,

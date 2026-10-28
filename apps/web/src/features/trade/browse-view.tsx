@@ -20,7 +20,7 @@ import { ObjektDrawer } from "@/features/objekt/drawer";
 import { collectionName } from "@/features/objekt/objekt-label";
 import { OfferBuilderProvider } from "@/features/offers/offer-builder";
 import { useCurrentUser, useUserLists } from "@/features/user/hooks";
-import { useWindowVirtualizerRestore } from "@/lib/use-window-virtualizer-restore";
+import { useWindowVirtualizerRestore } from "@/hooks/use-window-virtualizer-restore";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 

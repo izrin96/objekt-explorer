@@ -8,7 +8,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import { useFilterData } from "@/features/filters/filter-data-provider";
 import type { FilterSearch } from "@/features/filters/search-schema";
-import { useWindowVirtualizerRestore } from "@/lib/use-window-virtualizer-restore";
+import { useWindowVirtualizerRestore } from "@/hooks/use-window-virtualizer-restore";
 import { useColumns } from "@/stores/columns";
 
 import { type VirtualItem, buildVirtualData } from "./build-virtual-data";

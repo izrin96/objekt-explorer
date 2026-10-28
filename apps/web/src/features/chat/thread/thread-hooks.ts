@@ -41,7 +41,7 @@ export function useMuteEnd(id: number, until: string | null) {
 }
 
 /** How close to the bottom still counts as reading the newest message. */
-export const STICK_PX = 96;
+const STICK_PX = 96;
 
 export const nearEnd = (el: HTMLElement) =>
   el.scrollHeight - el.scrollTop - el.clientHeight < STICK_PX;
