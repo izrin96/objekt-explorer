@@ -51,7 +51,8 @@ type Draft = {
   season: string | null;
   /** digits only; the online suffix is added on save */
   collectionNo: string;
-  cls: string;
+  /** null is any class */
+  cls: string | null;
   editions: number[];
   members: string[];
   prio: string[];
@@ -89,7 +90,7 @@ function fromRule(rule: ListRuleDef, artists: ValidArtist[]): Draft {
     artist: artists.find((a) => a.toLowerCase() === rule.artist) ?? artists[0]!,
     season: rule.season,
     collectionNo: (rule.collectionNo ?? "").replace(/[A-Z]$/, ""),
-    cls: rule.class ?? "First",
+    cls: rule.kind === "set" ? rule.class : "First",
     editions: rule.editions,
     members: rule.members,
     prio: rule.prio,
@@ -290,7 +291,10 @@ function RuleForm({
                 artist: artist as ValidArtist,
                 season: seasonFor(draft.kind, artist, null),
                 collectionNo: "",
-                cls: next.includes(draft.cls) ? draft.cls : (next[0] ?? draft.cls),
+                cls:
+                  draft.cls === null || next.includes(draft.cls)
+                    ? draft.cls
+                    : (next[0] ?? draft.cls),
                 editions: [],
                 members: [],
                 prio: [],
@@ -304,9 +308,12 @@ function RuleForm({
             <RuleSelect
               id={`${id}-class`}
               label={m.rule_class()}
-              value={draft.cls}
-              options={classes.map((cls) => ({ value: cls, label: cls }))}
-              onChange={(cls) => set({ cls, editions: [] })}
+              value={draft.cls ?? ANY}
+              options={[
+                { value: ANY, label: m.rule_any_class() },
+                ...classes.map((cls) => ({ value: cls, label: cls })),
+              ]}
+              onChange={(cls) => set({ cls: cls === ANY ? null : cls, editions: [] })}
             />
           ) : null}
           <RuleSelect

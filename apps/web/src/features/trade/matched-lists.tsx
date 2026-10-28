@@ -70,7 +70,9 @@ export function MatchedListsChip({
                     className="text-muted-foreground flex min-w-0 items-baseline gap-1.5 ps-2 text-xs"
                   >
                     <span className="shrink-0">{m.trade_match_via_rule()}</span>
-                    <span className="text-foreground min-w-0 truncate">{ruleText(match.rule)}</span>
+                    <span className="text-foreground min-w-0 text-pretty">
+                      {ruleText(match.rule)}
+                    </span>
                     <span className="ms-auto shrink-0 font-mono tabular-nums">{count}</span>
                   </span>
                 ))}

@@ -2,6 +2,7 @@
 import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { listEntries, listRule, userAddress } from "@repo/db/schema";
+import { chunk } from "@repo/lib";
 import { and, eq, inArray, sql } from "drizzle-orm";
 
 import { ruleEntryDiff } from "../../lib/rule-entries";
@@ -24,7 +25,7 @@ type CollectionRow = {
 
 /** Rules with one key describe the same collections, so one read serves them all. */
 export const collectionsKey = (rule: ListRuleDef) =>
-  [rule.kind, rule.artist, rule.season ?? "*", rule.collectionNo ?? rule.class ?? ""].join("|");
+  [rule.kind, rule.artist, rule.season ?? "*", rule.collectionNo ?? rule.class ?? "*"].join("|");
 
 /** The online collections a rule can describe; `expandRule` applies the rest. */
 export async function ruleCollections(rule: ListRuleDef): Promise<RuleCollection[]> {
@@ -37,7 +38,9 @@ export async function ruleCollections(rule: ListRuleDef): Promise<RuleCollection
       ${
         rule.kind === "collection"
           ? sql`AND collection_no = ${rule.collectionNo ?? ""}`
-          : sql`AND class = ${rule.class ?? ""}`
+          : rule.class === null
+            ? sql``
+            : sql`AND class = ${rule.class}`
       }
     ORDER BY collection_no, member
   `);
@@ -106,6 +109,9 @@ export async function syncRuleEntries(ruleId: number, slugs: readonly string[], 
 
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
+/** Rows per write: an insert binds three parameters a row. */
+const WRITE_BATCH = 5000;
+
 /** `syncRuleEntries` inside the caller's transaction, so a rule and its entries land together. */
 export async function syncRuleEntriesTx(
   tx: Tx,
@@ -128,15 +134,17 @@ export async function syncRuleEntriesTx(
 
   const { stale, missing } = ruleEntryDiff(current, slugs);
 
-  if (stale.length > 0) {
+  // batched: Postgres binds at most 65,535 parameters per statement, and an any-class rule
+  // can cover a whole artist
+  await chunk(stale, WRITE_BATCH, async (ids) => {
     await tx
       .delete(listEntries)
-      .where(and(eq(listEntries.ruleId, ruleId), inArray(listEntries.id, stale)));
-  }
-  if (missing.length > 0) {
+      .where(and(eq(listEntries.ruleId, ruleId), inArray(listEntries.id, ids)));
+  });
+  await chunk(missing, WRITE_BATCH, async (slugs) => {
     await tx
       .insert(listEntries)
-      .values(missing.map((slug) => ({ listId: rule.listId, collectionSlug: slug, ruleId })));
-  }
+      .values(slugs.map((slug) => ({ listId: rule.listId, collectionSlug: slug, ruleId })));
+  });
   return stale.length > 0 || missing.length > 0;
 }

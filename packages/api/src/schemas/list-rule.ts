@@ -1,3 +1,4 @@
+import { validArtists } from "@repo/cosmo/types/common";
 import { getCollectionEdition } from "@repo/lib/collection-edition";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import * as z from "zod";
@@ -32,7 +33,8 @@ const setRuleSchema = z.object({
   artist: z.string().min(1).max(40),
   /** null is any season */
   season: z.string().min(1).max(40).nullable(),
-  class: z.string().min(1).max(40),
+  /** null is any class */
+  class: z.string().min(1).max(40).nullable(),
   /** empty is any edition */
   editions: z.array(z.number().int().min(1).max(3)).max(3).default([]),
   /** empty is any member */
@@ -101,7 +103,7 @@ export function ruleCovers(rule: ListRuleDef, c: RuleCollection) {
   if (c.onOffline !== "online" || c.artist !== rule.artist) return false;
   if (rule.season !== null && c.season !== rule.season) return false;
   if (rule.kind === "collection") return c.collectionNo === rule.collectionNo;
-  if (c.class !== rule.class) return false;
+  if (rule.class !== null && c.class !== rule.class) return false;
   if (rule.members.length > 0 && !rule.members.includes(c.member)) return false;
   if (rule.editions.length === 0) return true;
   const edition = getCollectionEdition(c);
@@ -182,29 +184,38 @@ export function ruleParts(rule: ListRuleDef) {
   };
 }
 
-/** The strip's label: `CC366 · any member`, `Cream02 · FCO · 3rd · any member`. */
+/** `triples` → `tripleS`: a rule stores its artist lowercased, as the indexer does. */
+const artistName = (artist: string) =>
+  validArtists.find((a) => a.toLowerCase() === artist) ?? artist;
+
+/** The strip's label: `tripleS · CC366 · any member`, `tripleS · Cream02 · FCO · 3rd · any member`. */
 export function ruleLabel(
   rule: ListRuleDef,
-  words: { anyMember: string; anySeason: string } = {
+  words: { anyMember: string; anySeason: string; anyClass: string } = {
     anyMember: "any member",
     anySeason: "any season",
+    anyClass: "any class",
   },
 ) {
   const parts = ruleParts(rule);
   const who = parts.members.length > 0 ? parts.members.join(", ") : words.anyMember;
-  if (rule.kind === "collection") return `${parts.title} · ${who}`;
-  const cls = rule.class ?? "";
+  const artist = artistName(rule.artist);
+  if (rule.kind === "collection") return `${artist} · ${parts.title} · ${who}`;
+  const cls = rule.class === null ? words.anyClass : (CLASS_SHORT[rule.class] ?? rule.class);
   const editions = rule.editions.map((e) => ORDINAL[e] ?? String(e)).join("/");
-  return [rule.season ?? words.anySeason, CLASS_SHORT[cls] ?? cls, editions, who]
-    .filter(Boolean)
-    .join(" · ");
+  return [artist, rule.season ?? words.anySeason, cls, editions, who].filter(Boolean).join(" · ");
 }
 
 /** One line for share text, export and the Discord format: `any CC366 (prio Lynn)`. */
 export function ruleLine(rule: ListRuleDef) {
   const parts = ruleParts(rule);
+  // with no class to name, the artist says what the rule spans: `any tripleS Cream02`
   const title =
-    rule.kind === "set" && rule.season === null ? `any season ${parts.title}` : parts.title;
+    rule.kind === "set" && rule.class === null
+      ? [artistName(rule.artist), parts.title].filter(Boolean).join(" ")
+      : rule.kind === "set" && rule.season === null
+        ? `${parts.title}, any season`
+        : parts.title;
   const head = parts.members.length > 0 ? `${parts.members.join(", ")} ${title}` : `any ${title}`;
   return parts.prio.length > 0 ? `${head} (prio ${parts.prio.join(", ")})` : head;
 }

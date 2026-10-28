@@ -123,18 +123,49 @@ describe("ruleProblem", () => {
   });
 });
 
+describe("any class", () => {
+  const everything = parse({ kind: "set", artist: "triples", season: null, class: null });
+
+  test("an artist-only rule wants every online collection of that artist", () => {
+    const out = expandRule(everything, CREAM, new Set());
+    expect(out.covers).toBe(CREAM.filter((c) => c.onOffline === "online").length);
+  });
+
+  test("any class keeps the season and members", () => {
+    const rule = parse({ ...everything, season: "Binary02", members: ["Lynn"] });
+    expect(expandRule(rule, CREAM, new Set()).slugs).toEqual(["binary02-lynn-117z"]);
+  });
+
+  test("an older tab's class still parses, and any class takes no edition", () => {
+    expect(parse({ ...everything, class: "First" }).class).toBe("First");
+    expect(parse({ ...everything, editions: [3] }).editions).toEqual([]);
+  });
+
+  test("labels and export lines name the artist", () => {
+    expect(ruleLabel(everything)).toBe("tripleS · any season · any class · any member");
+    expect(ruleLine(everything)).toBe("any tripleS");
+    expect(ruleLine(parse({ ...everything, season: "Cream02", members: ["Lynn"] }))).toBe(
+      "Lynn tripleS Cream02",
+    );
+  });
+});
+
 describe("labels", () => {
   test("strip labels", () => {
-    expect(ruleLabel(anyCc366)).toBe("CC366 · any member");
-    expect(ruleLabel(third)).toBe("Cream02 · FCO · 3rd · any member");
+    expect(ruleLabel(anyCc366)).toBe("tripleS · CC366 · any member");
+    expect(ruleLabel(third)).toBe("tripleS · Cream02 · FCO · 3rd · any member");
     expect(ruleLabel(parse({ ...third, members: ["Lynn"], editions: [1, 2] }))).toBe(
-      "Cream02 · FCO · 1st/2nd · Lynn",
+      "tripleS · Cream02 · FCO · 1st/2nd · Lynn",
     );
   });
 
   test("export lines", () => {
     expect(ruleLine(anyCc366)).toBe("any CC366 (prio YooYeon, NaKyoung)");
     expect(ruleLine(third)).toBe("any Cream02 FCO 3rd");
+    expect(ruleLine(parse({ ...third, season: null }))).toBe("any FCO 3rd, any season");
+    expect(ruleLine(parse({ ...third, season: null, members: ["Lynn"] }))).toBe(
+      "Lynn FCO 3rd, any season",
+    );
   });
 
   test("a collection rule keeps no members and a set rule no prio", () => {

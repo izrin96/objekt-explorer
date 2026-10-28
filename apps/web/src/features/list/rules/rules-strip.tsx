@@ -86,7 +86,8 @@ function RuleRow({ rule }: { rule: Rule }) {
   const [confirm, setConfirm] = useState<"delete" | "detach" | null>(null);
 
   const details = [
-    rule.kind === "set" && rule.range
+    // an any-class rule spans every number, so its range says nothing
+    rule.kind === "set" && rule.class !== null && rule.range
       ? rule.range.from === rule.range.to
         ? shortNo(rule.season, rule.range.from)
         : `${shortNo(rule.season, rule.range.from)}–${shortNo(rule.season, rule.range.to)}`

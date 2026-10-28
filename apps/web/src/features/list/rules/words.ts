@@ -2,9 +2,13 @@ import { type ListRuleDef, ruleLabel } from "@repo/api/schemas/list-rule";
 
 import { m } from "@/paraglide/messages";
 
-/** A rule's strip label in the reader's language: `CC366 · any member`. */
+/** A rule's strip label in the reader's language: `tripleS · CC366 · any member`. */
 export const ruleText = (rule: ListRuleDef) =>
-  ruleLabel(rule, { anyMember: m.rule_word_any_member(), anySeason: m.rule_word_any_season() });
+  ruleLabel(rule, {
+    anyMember: m.rule_word_any_member(),
+    anySeason: m.rule_word_any_season(),
+    anyClass: m.rule_word_any_class(),
+  });
 
 /** `117Z` → `cc117`, the way traders write a collection number on its own. */
 export const shortNo = (season: string | null, collectionNo: string) =>

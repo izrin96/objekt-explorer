@@ -400,6 +400,10 @@ Each rule SHALL carry Skip ones I own, on by default. Only want lists SHALL hold
 - **WHEN** the owner adds the rule First, Cream02, 3rd edition, any member
 - **THEN** cc117–cc120 of every member are wanted
 
+#### Scenario: Every collection of an artist
+- **WHEN** the owner picks tripleS, Any class, Any season and Any member in Add rule
+- **THEN** the live line reads "tripleS · any season · any class · any member", no Edition choice shows, and the rule wants every online tripleS collection of every member
+
 #### Scenario: Not a want list
 - **WHEN** a request adds a rule to have list "spares"
 - **THEN** it is refused
@@ -435,7 +439,7 @@ The owner of a want list SHALL see an Add rule button in the list header, beside
 
 #### Scenario: Live count
 - **WHEN** the owner picks First, Cream02, 3rd edition, any member, holding 18 of them
-- **THEN** the dialog reads "Cream02 · FCO · 3rd · any member", "96 objekts · you own 18 · 78 can match"
+- **THEN** the dialog reads "tripleS · Cream02 · FCO · 3rd · any member", "96 objekts · you own 18 · 78 can match"
 
 #### Scenario: Each kind explains itself
 - **WHEN** the owner opens Add rule
@@ -502,7 +506,7 @@ The Add to list dialog SHALL add the picked objekts, never a rule, whatever list
 - **THEN** the dialog offers no rule option, its button reads Add, and the list gains Lynn CC366
 
 ### Requirement: Rules in exports
-Share text, export and the Discord format SHALL write each rule as one line in its own words, before the objekts: "any CC366 (prio Lynn)", "any Cream02 FCO 3rd". Copy as new list SHALL keep the rules when the copy is a want list, and drop them, with the objekts they want, when it is not.
+Share text, export and the Discord format SHALL write each rule as one line in its own words, before the objekts: "any CC366 (prio Lynn)", "any Cream02 FCO 3rd", "any FCO 3rd, any season", and for a rule of any class its artist: "any tripleS Cream02", "any artms". Copy as new list SHALL keep the rules when the copy is a want list, and drop them, with the objekts they want, when it is not.
 
 #### Scenario: Discord format
 - **WHEN** the owner copies "binary hunt" in the Discord format

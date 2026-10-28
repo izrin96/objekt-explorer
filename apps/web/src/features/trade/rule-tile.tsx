@@ -52,10 +52,7 @@ function RuleTile({
       <Badge variant="outline" size="sm" className="tracking-wide">
         {m.trade_rule_tag()}
       </Badge>
-      {/* w-full: a column's items size to their text, so truncate needs the tile's width to stop at */}
-      <span className="w-full truncate text-xs" title={ruleText(tile.rule)}>
-        {ruleText(tile.rule)}
-      </span>
+      <span className="w-full text-xs text-pretty">{ruleText(tile.rule)}</span>
       {tile.matched !== null ? (
         <span
           className={cn(
