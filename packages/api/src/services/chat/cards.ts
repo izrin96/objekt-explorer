@@ -34,6 +34,7 @@ import {
   unsentMessage,
 } from "../../schemas/chat";
 import type { ShownSerial } from "../../schemas/offer";
+import { mutualOf } from "../../schemas/trade";
 import { fetchCollectionsBySlug } from "../list";
 import { fetchOffers, offerItemCards, toOfferView } from "../offer/view";
 import { notTradeSanctioned } from "../safety";
@@ -91,7 +92,9 @@ async function savedMatch(senderId: string, ownerId: string): Promise<StoredMatc
   });
   const ownerHas = side(partner.counts.theyHave, partner.theyHaveIWant);
   const senderHas = side(partner.counts.youHave, partner.iHaveTheyWant);
-  return ownerHas.count === 0 && senderHas.count === 0 ? null : { ownerHas, senderHas };
+  return ownerHas.count === 0 && senderHas.count === 0
+    ? null
+    : { ownerHas, senderHas, canSwap: mutualOf(partner.counts) > 0 };
 }
 
 /**

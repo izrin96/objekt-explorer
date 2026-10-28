@@ -3,12 +3,14 @@ import { describe, expect, test } from "bun:test";
 import type { CandidateItem } from "../schemas/offer";
 import {
   chooseMatchPicks,
+  fillMatches,
   itemsOnLists,
   matchesThrough,
   nearGroups,
   type PartnerEntry,
   postSides,
 } from "./offer-prefill";
+import { matchCounts } from "./trade-person";
 
 function item(
   slug: string,
@@ -181,6 +183,142 @@ describe("matchesThrough", () => {
     expect(matchesThrough(matches, undefined).map((m) => m.slug)).toEqual(["a", "b", "c"]);
     expect(matchesThrough(matches, new Set([1])).map((m) => m.slug)).toEqual(["a", "c"]);
     expect(matchesThrough(matches, new Set())).toEqual([]);
+  });
+});
+
+describe("fillMatches", () => {
+  // the sender's posts: P1 (have 1, want 2) and P2 "extras" (have 3, want "binary hunt" 4)
+  const mine = { 1: 1, 2: 1, 3: 3, 4: 3 };
+  const swap = (slug: string, my: number[], partner: number[], swapMy = my) => ({
+    slug,
+    myListIds: my,
+    partnerListIds: partner,
+    trade: true,
+    swapMyListIds: swapMy,
+    swapPartnerListIds: partner,
+  });
+  const sale = (slug: string, my: number[], partner: number[]) => ({
+    slug,
+    myListIds: my,
+    partnerListIds: partner,
+    trade: false,
+    swapMyListIds: [],
+    swapPartnerListIds: [],
+  });
+  type M = ReturnType<typeof swap>;
+  const person = (theyHaveIWant: M[], iHaveTheyWant: M[], theirs: Record<number, number>) => {
+    const matched = { theyHaveIWant, iHaveTheyWant, posts: { mine, theirs } };
+    return { matched, counts: matchCounts(matched) };
+  };
+  const slugs = (matches: M[]) => matches.map((match) => match.slug);
+  const post = (offerIds: number[], wantIds: number[]) => ({
+    offerIds: new Set(offerIds),
+    wantIds: new Set(wantIds),
+  });
+
+  // jun.p's post (have 10, want 11): Hyerin for P2, 3 DCOs P1's rule wants, and wants Yooyeon
+  // (P1 also holds Yooyeon, but as a sale-only entry, so it swaps through P2 alone)
+  const junP = person(
+    [
+      swap("302z", [4], [10]),
+      swap("dco1", [2], [10]),
+      swap("dco2", [2], [10]),
+      swap("dco3", [2], [10]),
+    ],
+    [swap("205z", [3, 1], [11], [3])],
+    { 10: 10, 11: 10 },
+  );
+
+  test("a Can swap person: only the pair, each match cut to the pair's lists", () => {
+    const { get, give } = fillMatches(junP.matched, junP.counts.swapPair);
+    expect(slugs(get)).toEqual(["302z"]);
+    expect(slugs(give)).toEqual(["205z"]);
+    expect(give[0]!.myListIds).toEqual([3]);
+    expect(get).toHaveLength(junP.counts.swapTheyHave);
+  });
+
+  test("both ways across posts: the bigger side only", () => {
+    // mina.k: 2 DCOs on her have 20 for P1's rule; her want 21 takes Yooyeon from P2
+    const mina = person(
+      [swap("dco1", [2], [20]), swap("dco2", [2], [20])],
+      [swap("205z", [3], [21])],
+      { 20: 20, 21: 20 },
+    );
+    expect(mina.counts.swapPair).toBeNull();
+    const { get, give } = fillMatches(mina.matched, mina.counts.swapPair);
+    expect(slugs(get)).toEqual(["dco1", "dco2"]);
+    expect(give).toEqual([]);
+  });
+
+  test("sales only: the bigger side, You give when it has more", () => {
+    const seller = person([sale("a", [2], [30])], [sale("x", [1], [31]), sale("y", [1], [31])], {});
+    const { get, give } = fillMatches(seller.matched, seller.counts.swapPair);
+    expect(get).toEqual([]);
+    expect(slugs(give)).toEqual(["x", "y"]);
+  });
+
+  test("a tie fills You get", () => {
+    const tie = person(
+      [sale("a", [2], [30]), sale("b", [2], [30])],
+      [sale("x", [1], [31]), sale("y", [1], [31])],
+      {},
+    );
+    const { get, give } = fillMatches(tie.matched, tie.counts.swapPair);
+    expect(slugs(get)).toEqual(["a", "b"]);
+    expect(give).toEqual([]);
+  });
+
+  // rin.trades: "doubles" (have 30) + "wants" (31) swap 3 with "extras"; "spares" (sale 32, open
+  // to swaps, unpaired) has 2 the sender wants; "wants" also takes one from P1
+  const rin = person(
+    [
+      swap("a", [4], [30]),
+      swap("b", [4], [30]),
+      swap("c", [4], [30]),
+      swap("s1", [4], [32]),
+      swap("s2", [4], [32]),
+    ],
+    [swap("x", [3], [31]), swap("y", [3], [31]), swap("z", [3], [31]), swap("w", [1], [31])],
+    { 30: 30, 31: 30 },
+  );
+
+  test("the post that is the person's half of the pair: the pair's matches", () => {
+    expect(rin.counts.swap).toBe(3);
+    const { get, give } = fillMatches(rin.matched, rin.counts.swapPair, post([30], [31]));
+    expect(slugs(get)).toEqual(["a", "b", "c"]);
+    expect(slugs(give)).toEqual(["x", "y", "z"]);
+  });
+
+  test("from the row: the pair only, each match cut to the person's lists in it", () => {
+    // "a" sits on "doubles" and "spares"; "w" swaps only through P1, "s1" only through "spares"
+    const both = person(
+      [swap("a", [4], [30, 32]), swap("s1", [4], [32])],
+      [swap("x", [3], [31]), swap("w", [1], [31])],
+      { 30: 30, 31: 30 },
+    );
+    const { get, give } = fillMatches(both.matched, both.counts.swapPair);
+    expect(slugs(get)).toEqual(["a"]);
+    expect(get[0]!.partnerListIds).toEqual([30]);
+    expect(slugs(give)).toEqual(["x"]);
+  });
+
+  test("another post of a Can swap person: its own matches, bigger side", () => {
+    const { get, give } = fillMatches(rin.matched, rin.counts.swapPair, post([32], []));
+    expect(slugs(get)).toEqual(["s1", "s2"]);
+    expect(give).toEqual([]);
+  });
+
+  test("a WTB post: You give only", () => {
+    // jun.k: "extras" (have 50, want 51) swaps 1 with P2; "hunting" (want 40) wants 2 of the sender's
+    const junK = person(
+      [swap("p", [4], [50])],
+      [swap("q", [3], [51]), swap("h1", [1], [40]), swap("h2", [1], [40])],
+      { 50: 50, 51: 50 },
+    );
+    expect(junK.counts.swap).toBe(1);
+    const { get, give } = fillMatches(junK.matched, junK.counts.swapPair, post([], [40]));
+    expect(get).toEqual([]);
+    expect(slugs(give)).toEqual(["h1", "h2"]);
   });
 });
 

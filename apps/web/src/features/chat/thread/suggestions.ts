@@ -26,8 +26,9 @@ function forPost({ view }: PostAttachment): Suggestion {
     if (youHave === 0) return m.chat_suggest_wtb;
     return youHave === 1 ? m.chat_suggest_you_have_one : m.chat_suggest_you_have_some;
   }
-  if (theyHave > 0 && youHave > 0) return m.chat_suggest_match;
-  if (theyHave > 0) {
+  // a card saved before `canSwap` existed reads as one the two could swap with
+  if (theyHave > 0 && youHave > 0 && view.match?.canSwap !== false) return m.chat_suggest_match;
+  if (theyHave > 0 && theyHave >= youHave) {
     return theyHave === 1 ? m.chat_suggest_they_have_one : m.chat_suggest_they_have_some;
   }
   if (youHave > 0)

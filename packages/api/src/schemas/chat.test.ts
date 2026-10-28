@@ -187,6 +187,13 @@ describe("cards", () => {
     expect(storedObjektCardSchema.safeParse(post).success).toBe(false);
   });
 
+  test("a saved match parses with or without whether the two could swap", () => {
+    const post = { kind: "post" as const, listId: 7, match };
+    expect(storedCardSchema.parse(post)).toEqual(post);
+    const swapped = { ...post, match: { ...match, canSwap: false } };
+    expect(storedCardSchema.parse(swapped)).toEqual(swapped);
+  });
+
   test("a saved match names at most three collections a side", () => {
     const four = {
       ownerHas: { count: 4, slugs: ["a", "b", "c", "d"] },

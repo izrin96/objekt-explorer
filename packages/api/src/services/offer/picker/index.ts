@@ -5,6 +5,7 @@ import { and, eq, inArray } from "drizzle-orm";
 import { holdsMessage, pairKey } from "../../../lib/chat-rules";
 import {
   chooseMatchPicks,
+  fillMatches,
   itemsOnLists,
   postSides,
   matchesThrough,
@@ -13,6 +14,7 @@ import {
   type PartnerEntry,
 } from "../../../lib/offer-prefill";
 import { itemFlags } from "../../../lib/offer-rules";
+import { matchCounts } from "../../../lib/trade-person";
 import type { Match } from "../../../lib/trade-rank";
 import { unique } from "../../../lib/unique";
 import { type ChatTarget } from "../../../schemas/chat";
@@ -80,10 +82,10 @@ export async function offerCandidates(
 type SuggestInput = { partnerId: string; list?: string; mutual?: boolean; post?: string };
 
 /**
- * The matches the partner's Trade row counts, swaps and sales alike, one copy per collection a
- * side, chosen by
- * `chooseMatchPicks`. `post` narrows them to one post's lists: its have or sale list for the get
- * side, its want list for the give side.
+ * The matches the partner's Trade row counts, filled by `fillMatches` (the Can swap pair, else
+ * the bigger side), one copy per collection a side, chosen by `chooseMatchPicks`. `post` narrows
+ * them to one post's lists: its have or sale list for the get side, its want list for the give
+ * side.
  */
 export async function suggestOffer(me: string, { partnerId, list, mutual, post }: SuggestInput) {
   if (partnerId === me) refuseOffer("self");
@@ -125,8 +127,9 @@ export async function suggestOffer(me: string, { partnerId, list, mutual, post }
   ]);
   // a person with near matches only still gets them
   const partner = recounted.find((row) => row.userId === partnerId);
-  const getMatches = partner ? matchesThrough(partner.theyHaveIWant, postLists?.offerIds) : [];
-  const giveMatches = partner ? matchesThrough(partner.iHaveTheyWant, postLists?.wantIds) : [];
+  const { get: getMatches, give: giveMatches } = partner
+    ? fillMatches(partner, matchCounts(partner).swapPair, postLists ?? undefined)
+    : { get: [], give: [] };
 
   const addressed: Addressed = {
     partnerId,
@@ -150,9 +153,14 @@ export async function suggestOffer(me: string, { partnerId, list, mutual, post }
   ]);
 
   const theirItems = theirs?.items ?? [];
+  // near matches skip every match through the post, the side left unfilled too
   const near = await nearPicks(me, addressed, nearLists, {
-    give: new Set(giveMatches.map((match) => match.slug)),
-    get: new Set(getMatches.map((match) => match.slug)),
+    give: new Set(
+      matchesThrough(partner?.iHaveTheyWant ?? [], postLists?.wantIds).map((match) => match.slug),
+    ),
+    get: new Set(
+      matchesThrough(partner?.theyHaveIWant ?? [], postLists?.offerIds).map((match) => match.slug),
+    ),
   });
   const picks = chooseMatchPicks(
     giveMatches.map((match) => ({

@@ -1,7 +1,8 @@
 import type { ListType } from "../schemas/list";
 import { type CandidateItem, OFFER_SIDE_LIMIT } from "../schemas/offer";
-import type { NearVerb } from "../schemas/trade";
+import type { MatchCounts, NearVerb } from "../schemas/trade";
 import { type ListEntryRef, matchEntry } from "./offer-rules";
+import type { PostOf } from "./trade-person";
 import type { Match } from "./trade-rank";
 
 /** A match as an offer reads it: which lists it runs through, not which posts. */
@@ -87,6 +88,42 @@ export function matchesThrough<M extends OfferMatch>(
   return ids
     ? matches.filter((match) => match.partnerListIds.some((id) => ids.has(id)))
     : [...matches];
+}
+
+type FillMatch = OfferMatch & Pick<Match, "swapMyListIds" | "swapPartnerListIds">;
+
+/**
+ * What Make offer fills, by the rule the row's chip follows. With a person the viewer can swap
+ * with, opened from their row or from their half of the pair: the pair's swap matches both ways,
+ * each cut to the pair's lists so copies come from those lists only. Otherwise the matches
+ * through `post` (or all), on the side with more matches only, You get on a tie.
+ */
+export function fillMatches<M extends FillMatch>(
+  matched: {
+    theyHaveIWant: readonly M[];
+    iHaveTheyWant: readonly M[];
+    posts: { theirs: PostOf };
+  },
+  swapPair: MatchCounts["swapPair"],
+  post?: { offerIds: ReadonlySet<number>; wantIds: ReadonlySet<number> },
+): { get: M[]; give: M[] } {
+  if (swapPair && (!post || post.offerIds.has(swapPair.theirPostId))) {
+    const mine = new Set(swapPair.myListIds);
+    const inPair = (matches: readonly M[]) =>
+      matches.flatMap((match) => {
+        const myListIds = match.swapMyListIds.filter((id) => mine.has(id));
+        const partnerListIds = match.swapPartnerListIds.filter(
+          (id) => matched.posts.theirs[id] === swapPair.theirPostId,
+        );
+        return myListIds.length > 0 && partnerListIds.length > 0
+          ? [{ ...match, myListIds, partnerListIds }]
+          : [];
+      });
+    return { get: inPair(matched.theyHaveIWant), give: inPair(matched.iHaveTheyWant) };
+  }
+  const get = matchesThrough(matched.theyHaveIWant, post?.offerIds);
+  const give = matchesThrough(matched.iHaveTheyWant, post?.wantIds);
+  return get.length >= give.length ? { get, give: [] } : { get: [], give };
 }
 
 /** One of the partner's entries on a list a match runs through. */

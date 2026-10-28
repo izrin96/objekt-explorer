@@ -174,6 +174,18 @@ describe("swapScore", () => {
       swapPair: { myListIds: [1, 2], theirPostId: 20 },
     });
   });
+
+  test("a full tie goes to the lowest post keys, whatever order the matches came in", () => {
+    // P2 swaps 1 for 1 with the person's post 10 and with their post 20
+    const theyHave = [swapMatch("a", 4, 20), swapMatch("b", 4, 10)];
+    const youHave = [swapMatch("x", 3, 21), swapMatch("y", 3, 11)];
+    const posts = { mine, theirs: { 10: 10, 11: 10, 20: 20, 21: 20 } };
+    for (const order of [(m: typeof theyHave) => m, (m: typeof theyHave) => m.toReversed()]) {
+      expect(
+        swapScore({ theyHaveIWant: order(theyHave), iHaveTheyWant: order(youHave), posts }),
+      ).toEqual({ swap: 1, swapTheyHave: 1, swapPair: { myListIds: [3, 4], theirPostId: 10 } });
+    }
+  });
 });
 
 describe("mutual", () => {

@@ -284,7 +284,7 @@ export const PersonRow = memo(function PersonRow({
       compact
       offerClassName="@max-3xl:flex-1"
       matches={
-        // every match the row counts is added, swap or sale, and its near matches offered
+        // the row's matches are added (the Can swap pair, else the bigger side), its near matches offered
         band ||
         (!own && signedIn && person.posts.some((post) => post.sides.some((side) => side.near)))
           ? {

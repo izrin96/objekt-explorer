@@ -18,7 +18,7 @@ const objekt = (listType?: ListType): Attachment => ({
 
 const post = (
   tag: "wtt" | "wtb" | "wts" | null,
-  match: { theirs: number; yours: number } | null = null,
+  match: { theirs: number; yours: number; canSwap?: boolean } | null = null,
 ): PostAttachment => ({
   kind: "post",
   input: { kind: "post", listSlug: "abc" },
@@ -29,6 +29,7 @@ const post = (
     match: match && {
       ownerHas: { count: match.theirs, slugs: [] },
       senderHas: { count: match.yours, slugs: [] },
+      ...(match.canSwap === undefined ? {} : { canSwap: match.canSwap }),
     },
   },
   collections: {},
@@ -75,6 +76,18 @@ describe("firstLineSuggestions", () => {
     expect(first(3, 0)).toBe(m.chat_suggest_they_have_some);
     expect(first(0, 1)).toBe(m.chat_suggest_you_have_one);
     expect(first(0, 3)).toBe(m.chat_suggest_you_have_some);
+  });
+
+  test("both ways reads as a swap only when the two could swap", () => {
+    const first = (theirs: number, yours: number, canSwap?: boolean) =>
+      firstLineSuggestions(post("wtt", { theirs, yours, canSwap }))[0];
+    // Can swap, and a card saved before it recorded whether they could
+    expect(first(1, 1, true)).toBe(m.chat_suggest_match);
+    expect(first(2, 1)).toBe(m.chat_suggest_match);
+    // across posts: the bigger side's line, the owner's on a tie
+    expect(first(2, 1, false)).toBe(m.chat_suggest_they_have_some);
+    expect(first(1, 3, false)).toBe(m.chat_suggest_you_have_some);
+    expect(first(1, 1, false)).toBe(m.chat_suggest_they_have_one);
   });
 
   test("a trade post with no match, or a removed post, asks about a swap", () => {

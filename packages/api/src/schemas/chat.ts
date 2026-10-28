@@ -99,6 +99,8 @@ const matchSideSchema = z.object({
 export const storedMatchSchema = z.object({
   ownerHas: matchSideSchema,
   senderHas: matchSideSchema,
+  /** whether the two could swap as the card was sent; a card saved before it has none */
+  canSwap: z.boolean().optional(),
 });
 export type StoredMatch = z.infer<typeof storedMatchSchema>;
 

@@ -19,11 +19,24 @@ type Matched = {
   posts: { mine: PostOf; theirs: PostOf };
 };
 
+type Pairing = { swap: number; theyHave: number; myPost: number; theirPost: number };
+
+function beats(a: Pairing, b: Pairing) {
+  return (
+    (a.swap - b.swap ||
+      a.theyHave - b.theyHave ||
+      b.theirPost - a.theirPost ||
+      b.myPost - a.myPost) > 0
+  );
+}
+
 /**
  * What the two can swap inside one post on each side: per pairing of my post with theirs, the
  * smaller of the two swap counts, and the best pairing wins. `swapTheyHave` is that pairing's
- * count of what they have; a tie keeps the pairing with more of it. `swapPair` names it: my lists
- * in that post, and their post by its key, which is also its feed post's id.
+ * count of what they have; a tie keeps the pairing with more of it, then the lowest post keys, so
+ * the cached row and a live recount name the same pairing whatever order the matches came in.
+ * `swapPair` names it: my lists in that post, and their post by its key, which is also its feed
+ * post's id.
  */
 export function swapScore({
   theyHaveIWant,
@@ -49,13 +62,12 @@ export function swapScore({
     return pairings;
   };
   const youHave = byPairing(iHaveTheyWant);
-  let best: { swap: number; theyHave: number; myPost: number; theirPost: number } | null = null;
+  let best: Pairing | null = null;
   for (const [key, { myPost, theirPost, slugs }] of byPairing(theyHaveIWant)) {
     const swap = Math.min(slugs.size, youHave.get(key)?.slugs.size ?? 0);
     if (swap === 0) continue;
-    if (!best || swap > best.swap || (swap === best.swap && slugs.size > best.theyHave)) {
-      best = { swap, theyHave: slugs.size, myPost, theirPost };
-    }
+    const next = { swap, theyHave: slugs.size, myPost, theirPost };
+    if (!best || beats(next, best)) best = next;
   }
   if (!best) return { swap: 0, swapTheyHave: 0, swapPair: null };
   const myListIds = Object.entries(posts.mine).flatMap(([id, post]) =>
