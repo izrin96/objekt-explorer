@@ -5,7 +5,7 @@ import { collections, objekts } from "@repo/db/indexer/schema";
 import type { CollectionField, ProcessedImageField } from "@repo/lib/types/objekt";
 import { and, asc, count, countDistinct, eq, inArray, ne } from "drizzle-orm";
 
-import { getCache } from "./redis";
+import { getStaleCache } from "./redis";
 import { classOrder } from "./utils";
 
 async function fetchUniqueCollections() {
@@ -102,8 +102,9 @@ async function fetchClassMap() {
   }));
 }
 
+/** The root loader awaits this on every page, so an indexer outage serves the stored copy. */
 export async function fetchFilterData() {
-  return getCache("filter-data", 60 * 60, async () => {
+  return getStaleCache("filter-data", 60 * 60, async () => {
     const [collections, seasonsMap, classesMap] = await Promise.all([
       fetchUniqueCollections(),
       fetchSeasonMap(),

@@ -66,6 +66,75 @@ async function loadCache<T>(key: string, ttl: Ttl<T>, callback: () => Promise<T>
   return freshData;
 }
 
+type Stored<T> = { fetchedAt: number; value: T };
+
+// the stored values for while Redis is down, as JSON like `local`; one entry per key, so no cap
+const staleLocal = new Map<string, string>();
+const refreshing = new Map<string, Promise<Stored<unknown>>>();
+const retryAt = new Map<string, number>();
+
+/** After a failed refresh, wait this long before trying again. */
+const STALE_RETRY_MS = 5 * 60 * 1000;
+
+/**
+ * A cache for what every page needs, so an upstream outage or a slow upstream never reaches a
+ * page: once a value is stored (in Redis with no expiry, and in process) it is returned at once,
+ * and one older than `freshSeconds` is refreshed in the background. A failed refresh keeps the
+ * stored value. Throws only when nothing is stored and `callback` fails, or failed under
+ * `STALE_RETRY_MS` ago. A stored value has no expiry, so a key whose value changes shape takes
+ * a new version, as the ranking caches do.
+ */
+export async function getStaleCache<T>(
+  key: string,
+  freshSeconds: number,
+  callback: () => Promise<T>,
+): Promise<T> {
+  const stored = await readStored<T>(key);
+  const now = Date.now();
+  const canRetry = now >= (retryAt.get(key) ?? 0);
+  if (stored) {
+    if (now - stored.fetchedAt > freshSeconds * 1000 && canRetry) {
+      void refreshStored(key, callback).catch(() => undefined);
+    }
+    return stored.value;
+  }
+  if (!canRetry) throw new Error(`${key}: nothing stored and the last refresh failed`);
+  return (await refreshStored(key, callback)).value;
+}
+
+async function readStored<T>(key: string): Promise<Stored<T> | undefined> {
+  const json =
+    (await redisFailOpen("cache", () => redis.get(`${key}:last-good`))) ?? staleLocal.get(key);
+  if (!json) return undefined;
+  try {
+    return JSON.parse(json) as Stored<T>;
+  } catch {
+    return undefined;
+  }
+}
+
+/** One refresh per key at a time per process. */
+function refreshStored<T>(key: string, callback: () => Promise<T>): Promise<Stored<T>> {
+  let running = refreshing.get(key) as Promise<Stored<T>> | undefined;
+  if (running) return running;
+  running = (async () => {
+    try {
+      const stored = { fetchedAt: Date.now(), value: await callback() };
+      const json = JSON.stringify(stored);
+      staleLocal.set(key, json);
+      retryAt.delete(key);
+      await redisFailOpen("cache", () => redis.set(`${key}:last-good`, json));
+      return stored;
+    } catch (error) {
+      retryAt.set(key, Date.now() + STALE_RETRY_MS);
+      console.warn(`[cache] ${key} refresh failed, retrying in 5 minutes`, error);
+      throw error;
+    }
+  })().finally(() => refreshing.delete(key));
+  refreshing.set(key, running);
+  return running;
+}
+
 // INCR and the expiry run as one script; a key that has no expiry, from before this ran or
 // otherwise, gets one on its next hit instead of living forever
 const RATE_LIMIT_SCRIPT = `

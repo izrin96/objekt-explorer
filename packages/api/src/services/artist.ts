@@ -1,9 +1,10 @@
 import { fetchArtist, fetchArtists } from "@repo/cosmo/server/artists";
-import type { CosmoMemberBFF } from "@repo/cosmo/types/artists";
+import type { CosmoArtistWithMembersBFF, CosmoMemberBFF } from "@repo/cosmo/types/artists";
 import type { ValidArtist } from "@repo/cosmo/types/common";
 import { validArtists } from "@repo/cosmo/types/common";
 
-import { getCache } from "./redis";
+import snapshot from "../data/artists.json";
+import { getStaleCache } from "./redis";
 import { getAccessToken } from "./token";
 
 const missingMembers: CosmoMemberBFF[] = [
@@ -24,26 +25,43 @@ const missingMembers: CosmoMemberBFF[] = [
   },
 ];
 
-export function getArtists() {
-  return getCache("artists", 60 * 60, async () => {
-    const { accessToken } = await getAccessToken();
-    const artists = await fetchArtists(accessToken);
-    const artistMembers = await Promise.all(
-      artists.map((artist) => fetchArtist(accessToken, artist.name)),
-    );
+/**
+ * Every artist and its members. The root loader awaits this on every page, so it never waits on
+ * Cosmo once a list is stored (`getStaleCache`), and with none stored and Cosmo down it serves
+ * the snapshot in `data/artists.json`.
+ */
+export async function getArtists() {
+  try {
+    return await getStaleCache("artists", 60 * 60, fetchArtistsFromCosmo);
+  } catch {
+    return structuredClone(snapshot) as CosmoArtistWithMembersBFF[];
+  }
+}
 
-    const idnttArtist = artistMembers.find((a) => a.name === "idntt");
-    if (idnttArtist) {
-      idnttArtist.artistMembers.push(...missingMembers);
-      idnttArtist.artistMembers.sort((a, b) => a.order - b.order);
-    }
+async function fetchArtistsFromCosmo() {
+  const { accessToken } = await getAccessToken();
+  const artists = await fetchArtists(accessToken);
+  const artistMembers = await Promise.all(
+    artists.map((artist) => fetchArtist(accessToken, artist.name)),
+  );
 
-    artistMembers.sort((a, b) => {
-      const aIndex = validArtists.indexOf(a.name as ValidArtist);
-      const bIndex = validArtists.indexOf(b.name as ValidArtist);
-      return aIndex - bIndex;
-    });
+  const idnttArtist = artistMembers.find((a) => a.name === "idntt");
+  if (idnttArtist) {
+    idnttArtist.artistMembers.push(...missingMembers);
+    idnttArtist.artistMembers.sort((a, b) => a.order - b.order);
+  }
 
-    return artistMembers;
+  artistMembers.sort((a, b) => {
+    const aIndex = validArtists.indexOf(a.name as ValidArtist);
+    const bIndex = validArtists.indexOf(b.name as ValidArtist);
+    return aIndex - bIndex;
   });
+
+  // a broken answer must not replace the last good list
+  const missing = validArtists.filter(
+    (name) => !artistMembers.some((a) => a.name === name && a.artistMembers.length > 0),
+  );
+  if (missing.length > 0) throw new Error(`Cosmo returned no members for ${missing.join(", ")}`);
+
+  return artistMembers;
 }
