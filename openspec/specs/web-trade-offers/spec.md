@@ -145,7 +145,7 @@ You get's picker over lists SHALL offer a **List** choice, after the filters, wh
 An empty You get picker over lists SHALL say why: the partner lists nothing the sender may ask for; nothing matches the filters; or the partner no longer holds anything they listed. The first reason SHALL win over the filters. An empty picker over their collection SHALL say the partner holds nothing the sender can ask for, or that nothing matches the filters. In either picker, when the matching switch is on and no other filter is set, "nothing matches the filters" SHALL instead say that nothing held is on the other side's want lists ("rin.trades holds nothing on your want lists" in You get, "You hold nothing on rin.trades's want lists" in You give) and offer Turn off for the switch.
 
 #### Scenario: Partner lists nothing
-- **WHEN** the partner has only want lists and the sender opens You get's picker with "Only what I want" on
+- **WHEN** the partner's only list on Trade is a have list with no entries, and the sender opens You get's picker with "Only what I want" on
 - **THEN** the picker says the partner lists nothing the sender can ask for, not that the filters match nothing
 
 #### Scenario: Partner with no lists
