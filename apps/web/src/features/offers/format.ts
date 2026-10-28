@@ -175,6 +175,9 @@ export function offerNotificationText(payload: OfferPayload, partner = payload.p
         ? m.notification_offer_cancelled_reason({ ...params, reason: why })
         : m.notification_offer_cancelled(params);
     }
+    // an event added after this tab loaded
+    default:
+      return m.notification_offer_updated(params);
   }
 }
 
@@ -241,6 +244,9 @@ export function tradeNotificationText(payload: TradePayload, partner = payload.p
         : m.notification_trade_wrong_copy_due_soon({ ...params, ...copy });
     case "wrong_copy_auto_accepted":
       return m.notification_trade_wrong_copy_auto_accepted({ ...params, ...copy });
+    // an event added after this tab loaded
+    default:
+      return m.notification_trade_updated(params);
   }
 }
 
