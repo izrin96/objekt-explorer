@@ -10,6 +10,8 @@ import { isUnauthorized } from "./orpc-error";
 let library: typeof CentrifugeLibrary | undefined;
 let instance: Promise<Centrifuge> | undefined;
 let consumers = 0;
+/** Consumers that need the user feed; with none, the connection skips the token request. */
+let userConsumers = 0;
 /** Whether the connection holds a token for a signed-in user, rather than none. */
 let authenticated = false;
 
@@ -24,6 +26,8 @@ function endpoint() {
  * A signed-in connection whose renewal is refused has lost its session, and ends for good.
  */
 async function getToken({ UnauthorizedError }: typeof CentrifugeLibrary) {
+  // only a signed-in tab mounts the user feed, so without it the request would be refused
+  if (userConsumers === 0) return "";
   try {
     const { token } = await client.realtime.token();
     authenticated = true;
@@ -63,11 +67,14 @@ export function isUnauthorizedDisconnect(code: number) {
  */
 export function acquireRealtime(connection: Centrifuge, { signedIn }: { signedIn: boolean }) {
   consumers += 1;
-  if (signedIn && !authenticated && connection.state === "connected") connection.disconnect();
+  if (signedIn) userConsumers += 1;
+  // a connection still connecting may have asked for its token before this consumer came
+  if (signedIn && !authenticated && connection.state !== "disconnected") connection.disconnect();
   connection.connect();
 
   return () => {
     consumers -= 1;
+    if (signedIn) userConsumers = Math.max(0, userConsumers - 1);
     if (consumers <= 0) {
       consumers = 0;
       connection.disconnect();
