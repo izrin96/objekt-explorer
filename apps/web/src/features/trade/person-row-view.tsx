@@ -31,7 +31,7 @@ import {
   orderPosts,
   swapThroughRules,
 } from "./person-row";
-import { EmptySide, isEmptySide, SideAllDialog, SideStrip } from "./post-side";
+import { EmptySide, isEmptySide, SideAllDialog, SideNotes, SideStrip } from "./post-side";
 import { postTime } from "./post-time";
 import type { PersonData, PersonPostData } from "./post-types";
 import { SideCompareContext } from "./side-items-dialog";
@@ -152,6 +152,7 @@ function PostBlock({
         {shown.sides.filter(isEmptySide).map((side) => (
           <EmptySide key={side.list.id} side={side} surface={surface} />
         ))}
+        <SideNotes sides={shown.sides} />
       </div>
       {strips.length > 0 && anchor ? (
         <Menu>

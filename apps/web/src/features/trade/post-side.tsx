@@ -201,6 +201,48 @@ function sideWording(side: PostSideData, surface: Surface) {
   };
 }
 
+/**
+ * A post's sides with a description, one per text: a pair often carries the same one twice, at
+ * times apart only in whitespace saved before the form trimmed it.
+ */
+function notedSides(sides: readonly PostSideData[]) {
+  const seen = new Set<string>();
+  return sides.filter((side) => {
+    const text = side.list.description?.replace(/\s+/g, " ").trim();
+    if (!text || seen.has(text)) return false;
+    seen.add(text);
+    return true;
+  });
+}
+
+/**
+ * A post's list descriptions, in one block under all its sides: beside one strip, a description
+ * would push its thumbnails below the other's. With two, each leads with its side's role.
+ */
+export function SideNotes({ sides }: { sides: readonly PostSideData[] }) {
+  const noted = notedSides(sides);
+  if (noted.length === 0) return null;
+  return (
+    <div className="border-border flex flex-col gap-1 border-s-2 ps-2.5">
+      {noted.map((side) => (
+        <p
+          key={side.list.id}
+          className="text-muted-foreground line-clamp-5 text-xs text-pretty break-words whitespace-pre-wrap"
+        >
+          {noted.length > 1 ? (
+            <>
+              <span className={cn("font-mono uppercase", TONE_INK[LIST_TYPE_TONE[side.role]])}>
+                {LIST_TYPE_LABEL[side.role]()}
+              </span>{" "}
+            </>
+          ) : null}
+          {side.list.description?.trim()}
+        </p>
+      ))}
+    </div>
+  );
+}
+
 const SIDE_LINK =
   "focus-visible:ring-ring rounded-sm underline-offset-2 outline-none hover:underline focus-visible:ring-2";
 
@@ -268,7 +310,7 @@ export function SideStrip({
     <>
       <Link
         {...getListLinkOption(list)}
-        title={list.description ? `${list.name}\n${list.description}` : list.name}
+        title={list.name}
         className={cn(SIDE_LINK, "flex w-fit max-w-full min-w-0 items-baseline gap-1.5")}
       >
         {/* the match chip carries the list's number, so a second one would only compete with it */}
@@ -279,7 +321,6 @@ export function SideStrip({
           ·
         </span>
         <span className="text-foreground min-w-0 truncate normal-case">{list.name}</span>
-        {list.description ? <span className="sr-only">. {list.description}</span> : null}
       </Link>
       {/* beside the link, not in it: it opens the viewer's lists behind it */}
       {count > 0 ? (

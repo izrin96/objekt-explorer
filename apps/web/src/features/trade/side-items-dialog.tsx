@@ -150,6 +150,12 @@ export function SideItemsDialog({
           <DialogDescription>{LIST_TYPE_LABEL[side.role]()}</DialogDescription>
         </DialogHeader>
         <DialogPanel className="flex flex-col gap-3">
+          {/* in the panel, not the header, so a long one scrolls; the post clips it to five lines */}
+          {side.list.description ? (
+            <p className="text-muted-foreground text-sm text-pretty break-words whitespace-pre-wrap">
+              {side.list.description.trim()}
+            </p>
+          ) : null}
           {narrowed ? (
             <p className="text-muted-foreground text-xs">{m.trade_side_unfiltered()}</p>
           ) : null}
