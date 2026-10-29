@@ -60,13 +60,19 @@ as new list).
 ### Requirement: Entries
 From the objekt grid a signed-in user SHALL add one or many objekts to a list through a
 card menu item and a selection-bar action; duplicates SHALL be skipped and the count of
-skipped ones reported. On their own list the owner SHALL remove entries and, on a sale list,
+skipped ones reported. A profile-bound list SHALL take only copies its profile owns, and the
+count of objekts it took none of SHALL be reported apart from the duplicates, naming the
+profile. On their own list the owner SHALL remove entries and, on a sale list,
 set a price, mark quote-your-own-price or clear the price on one or many entries at once.
 The list view SHALL honour the list's configured column count.
 
 #### Scenario: Skipped duplicates
 - **WHEN** the user adds three objekts of which one is already in the list
 - **THEN** two are added and the message says one was skipped
+
+#### Scenario: Objekts the bound profile does not own
+- **WHEN** the user adds to a profile-bound list two objekts, one of which that profile holds no copy of
+- **THEN** one is added and the message says one is not owned by that profile, not that it is already in the list
 
 ### Requirement: Share, export and Discord format
 The list header SHALL copy the list's share link, download the list as CSV, and open the
