@@ -1,4 +1,4 @@
-import { QueryClient } from "@tanstack/react-query";
+import { QueryCache, QueryClient } from "@tanstack/react-query";
 import { createRouter } from "@tanstack/react-router";
 import { setupRouterSsrQueryIntegration } from "@tanstack/react-router-ssr-query";
 
@@ -6,10 +6,23 @@ import { ErrorComponent } from "./components/router/error-boundary";
 import { NotFoundComponent } from "./components/router/not-found";
 import { PendingComponent } from "./components/router/pending";
 import { parseSearch, stringifySearch } from "./features/filters/search-params";
+import { currentUserOptions } from "./features/user/queries";
+import { isUnauthorized } from "./lib/orpc-error";
 import { routeTree } from "./routeTree.gen";
 
 export function getRouter() {
   const queryClient = new QueryClient({
+    queryCache: new QueryCache({
+      // the session ended under a tab that still shows a user (expired, or signed out in another
+      // tab): refetching the user signs it out, as a refused socket renewal does, and unmounts
+      // the bell and messages icon that poll
+      onError: (error) => {
+        if (!isUnauthorized(error)) return;
+        const { queryKey } = currentUserOptions;
+        if (!queryClient.getQueryData(queryKey) || queryClient.isFetching({ queryKey }) > 0) return;
+        void queryClient.invalidateQueries({ queryKey }).then(() => router.invalidate());
+      },
+    }),
     defaultOptions: {
       queries: {
         staleTime: 1000 * 60 * 5,
