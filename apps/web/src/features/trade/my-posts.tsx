@@ -11,11 +11,13 @@ import {
 import type { Outputs } from "@repo/api";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useHydrated, useRouter } from "@tanstack/react-router";
+import { useId, useRef } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Menu, MenuItem, MenuPopup, MenuTrigger } from "@/components/ui/menu";
+import { toastManager } from "@/components/ui/toast";
 import { MonoMessage } from "@/features/offers/mono";
 import { copyWithToast } from "@/lib/clipboard";
 import { relativeTime } from "@/lib/time";
@@ -38,6 +40,9 @@ export function MyPosts({ userId, onNew, onEdit }: MyPostsProps) {
   const query = useQuery(myPostsOptions());
   const bump = useBumpPost();
   const copyLink = useCopyTradeLink();
+  // one reason toast at a time, however often the button is pressed
+  const reasonToast = useRef<string | null>(null);
+  const reasonId = useId();
   const saved = useSettings((s) => s.myPostsShown);
   const setSettings = useSettings((s) => s.set);
   const hydrated = useHydrated();
@@ -79,12 +84,18 @@ export function MyPosts({ userId, onNew, onEdit }: MyPostsProps) {
       </section>
     );
   }
+  const summary = summarizePosts(posts);
   // every post carries the same last and next bump: Bump is one per person, so its time shows
   // once here instead of on each row
   const lastBumpAt = posts[0]?.lastBumpAt ?? null;
   const nextBumpAt = posts[0]?.nextBumpAt ?? null;
+  // the feed leaves the row out under a trade block or with every post idle, so a link would show nothing
+  const copyReason = posts[0]?.tradeBlocked
+    ? m.trade_post_copy_link_blocked()
+    : summary.listed === 0
+      ? m.trade_post_copy_link_idle()
+      : null;
 
-  const summary = summarizePosts(posts);
   // the server cannot read the saved choice, so the default holds until hydration
   const open = hydrated ? (saved ?? summary.shownByDefault) : summary.shownByDefault;
 
@@ -146,16 +157,27 @@ export function MyPosts({ userId, onNew, onEdit }: MyPostsProps) {
             ) : null}
           </div>
           <div className="flex shrink-0 flex-wrap items-center justify-end gap-1">
-            {/* with every post idle the feed leaves the row out, so there is nothing to link to */}
+            {/* focusable while disabled, so activating it can say why */}
             <Button
               variant="outline"
               size="sm"
-              disabled={summary.listed === 0}
-              onClick={() => void copyLink({ person: userId })}
+              aria-disabled={copyReason !== null || undefined}
+              aria-describedby={copyReason ? reasonId : undefined}
+              className="aria-disabled:hover:bg-popover dark:aria-disabled:hover:bg-input/32 aria-disabled:cursor-default aria-disabled:opacity-64"
+              onClick={() => {
+                if (!copyReason) return void copyLink({ person: userId });
+                if (reasonToast.current) toastManager.close(reasonToast.current);
+                reasonToast.current = toastManager.add({ type: "info", title: copyReason });
+              }}
             >
               <ShareNetworkIcon />
               {m.trade_post_copy_link()}
             </Button>
+            {copyReason ? (
+              <span id={reasonId} className="sr-only">
+                {copyReason}
+              </span>
+            ) : null}
             <Button size="sm" onClick={onNew}>
               <PlusIcon />
               {m.trade_new_post()}
@@ -224,6 +246,11 @@ function MyPostRow({
   const takeDown = useTakeDownPost();
   const copyLink = useCopyTradeLink();
   const { changed, time } = postTime(post);
+  const copyReason = post.tradeBlocked
+    ? m.trade_post_copy_link_blocked()
+    : post.listed
+      ? null
+      : m.trade_post_copy_link_idle();
   const when = relativeTime(new Date(time).getTime(), now);
   const details = [
     post.kind === "sell" ? m.trade_post_option_market() : null,
@@ -286,17 +313,18 @@ function MyPostRow({
             <PencilSimpleIcon />
             {m.trade_composer_edit_title()}
           </MenuItem>
-          {/* the feed leaves idle posts out, so their link would open Browse without the row */}
+          {/* the feed leaves the row out, so the link would open to the empty state */}
           <MenuItem
-            disabled={!post.listed}
+            disabled={copyReason !== null}
+            className="items-start py-1.5"
             onClick={() => void copyLink(postLinkSearch(userId, post))}
           >
-            <ShareNetworkIcon />
+            <ShareNetworkIcon className="mt-0.5" />
             <span className="flex flex-col">
-              {m.trade_post_copy_link()}
-              {post.listed ? null : (
-                <span className="text-xs text-pretty">{m.trade_post_copy_link_idle()}</span>
-              )}
+              <span>{m.trade_post_copy_link()}</span>
+              {copyReason ? (
+                <span className="text-muted-foreground text-xs text-pretty">{copyReason}</span>
+              ) : null}
             </span>
           </MenuItem>
           <MenuItem onClick={() => takeDown.takeDown(post.slug)}>

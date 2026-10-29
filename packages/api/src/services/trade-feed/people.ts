@@ -188,12 +188,30 @@ async function openOrder(
   };
 }
 
+/** The collections the rows' strips, rule tiles and rule matches draw, by slug. */
+async function collectionsOf(people: Pick<Loaded["person"], "posts">[]) {
+  const drawn = unique(
+    people.flatMap((person) =>
+      person.posts.flatMap((post) =>
+        post.sides
+          .flatMap((s) => [
+            ...s.items.map((i) => i.slug),
+            ...s.rules.flatMap((r) => r.matchedSlugs),
+          ])
+          .concat(post.ruleMatches.map((found) => found.slug)),
+      ),
+    ),
+  );
+  const rows = await fetchCollectionsBySlug(drawn, []);
+  return Object.fromEntries(rows.map((c) => [c.slug, c])) as Record<string, ValidObjekt>;
+}
+
 /**
  * Trade as people: 12 a page, each with every post the feed keeps for them (up to
  * `PERSON_POST_LIMIT`). Page 1 works out the whole order and stores it; later pages go on by
  * position in it, so a ranking or a bump that changes mid-scroll moves no one. An order that is
  * gone, or was built for other filters, is built again and the page goes on from the cursor's
- * person. `person` leads the first page with that person's row.
+ * person. A first-page `person` lists only that person's row, or none, with no further pages.
  */
 export async function peopleFeed(viewerId: string | null, input: PeopleInput) {
   const empty = { people: [], nextCursor: undefined, collections: {} };
@@ -207,6 +225,16 @@ export async function peopleFeed(viewerId: string | null, input: PeopleInput) {
   const ctx: PeopleContext = { viewerId, viewer, input, slugs, match };
   // Mutual is a swap between two people, so under Mutual only it lists WTT posts
   const query = feedQueryOf(ctx, mode === "mutual" ? "wtt" : input.type);
+  if (input.person && !cursor) {
+    const person = input.person;
+    // `query` reads WTT posts under Mutual only, so this and loadPeople keep its rule for leading
+    const mutual =
+      mode !== "mutual" ||
+      (match ? await mutualPeopleOf(match) : []).some((ranked) => ranked.userId === person);
+    const led = mutual ? (await loadPeople(ctx, query, [person]))[0] : undefined;
+    const people = led ? [{ ...led.person, section: undefined }] : [];
+    return { people, nextCursor: undefined, collections: await collectionsOf(people) };
+  }
   const filters = ordersFingerprint({
     facets: {
       artist: input.artist,
@@ -225,12 +253,6 @@ export async function peopleFeed(viewerId: string | null, input: PeopleInput) {
 
   const opened = await openOrder(ctx, mode, query, lead, filters);
   const { order, token, built } = opened;
-
-  // a person the feed would not list, or that Mutual only does not, has no row to lead with
-  const led =
-    lead && !cursor && built && (mode !== "mutual" || built.mutual.has(lead))
-      ? (await loadPeople(ctx, query, [lead]))[0]
-      : undefined;
 
   const ranked = order.people.flatMap((entry) => (entry.section ? [entry.id] : []));
   const reader = orderReader(
@@ -259,32 +281,16 @@ export async function peopleFeed(viewerId: string | null, input: PeopleInput) {
   });
   const sectionOf = new Map(order.people.map((entry) => [entry.id, entry.section]));
 
-  const people = [
-    ...(led ? [{ ...led.person, section: undefined }] : []),
-    ...read.taken.map(({ person }) => ({
-      ...person,
-      // under Any everyone past the Mutual section reads as One way, the tail too
-      section:
-        mode === "any"
-          ? sectionOf.get(person.userId) === "mutual"
-            ? ("mutual" as const)
-            : ("oneWay" as const)
-          : undefined,
-    })),
-  ];
-  const drawn = unique(
-    people.flatMap((person) =>
-      person.posts.flatMap((post) =>
-        post.sides
-          .flatMap((s) => [
-            ...s.items.map((i) => i.slug),
-            ...s.rules.flatMap((r) => r.matchedSlugs),
-          ])
-          .concat(post.ruleMatches.map((found) => found.slug)),
-      ),
-    ),
-  );
-  const collectionRows = await fetchCollectionsBySlug(drawn, []);
+  const people = read.taken.map(({ person }) => ({
+    ...person,
+    // under Any everyone past the Mutual section reads as One way, the tail too
+    section:
+      mode === "any"
+        ? sectionOf.get(person.userId) === "mutual"
+          ? ("mutual" as const)
+          : ("oneWay" as const)
+        : undefined,
+  }));
 
   const last = read.dry ? undefined : read.examined;
   const lastTaken = read.taken.at(-1);
@@ -302,9 +308,6 @@ export async function peopleFeed(viewerId: string | null, input: PeopleInput) {
       order: token,
       at: reader.position(),
     },
-    collections: Object.fromEntries(collectionRows.map((c) => [c.slug, c])) as Record<
-      string,
-      ValidObjekt
-    >,
+    collections: await collectionsOf(people),
   };
 }

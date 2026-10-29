@@ -291,9 +291,13 @@ async function fetchOwnTradeLists(userId: string) {
 
 export async function fetchMyPosts(userId: string) {
   const now = new Date();
-  const [own, lastBump] = await Promise.all([fetchOwnTradeLists(userId), lastBumpOf(userId)]);
+  const [own, lastBump, tradeBlocked] = await Promise.all([
+    fetchOwnTradeLists(userId),
+    lastBumpOf(userId),
+    isTradeBlocked(userId),
+  ]);
   const next = nextBumpAt(lastBump, now);
-  // every post carries the person's last and next bump
+  // every post carries the person's last and next bump, and whether a trade block hides them
   return pairPosts(own)
     .toSorted(comparePosts)
     .map((post) => ({
@@ -319,7 +323,15 @@ export async function fetchMyPosts(userId: string) {
       updatedAt: iso(post.updatedAt)!,
       lastBumpAt: iso(lastBump),
       nextBumpAt: next,
+      tradeBlocked,
     }));
+}
+
+async function isTradeBlocked(userId: string) {
+  const { rows } = await db.execute<{ blocked: boolean }>(
+    sql`SELECT NOT ${notTradeSanctioned(userId)} AS blocked`,
+  );
+  return rows[0]?.blocked ?? false;
 }
 
 /** A list the viewer may see on Trade: shown there, its owner not trade-sanctioned, no block either way. */

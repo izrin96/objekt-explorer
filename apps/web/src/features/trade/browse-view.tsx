@@ -40,6 +40,7 @@ import { ComparedLine, MatchingControls } from "./matching-controls";
 import { MyPosts } from "./my-posts";
 import type { NearOpen } from "./near";
 import { NearNote } from "./near-note";
+import { PersonLinkEmpty, PersonLinkView } from "./person-link-view";
 import { PersonRow, PersonRowSkeleton } from "./person-row-view";
 import { NEW_POST, PostComposer, useComposer } from "./post-list-dialog";
 import { usePlanLists } from "./post-plan";
@@ -109,7 +110,9 @@ export function BrowseView({ surface, search }: { surface: Surface; search: Feed
 
   const setSearch = (patch: Partial<FeedSearch>) =>
     go((prev) => ({ ...prev, ...patch }), { replace: true });
-  const clearLead = () => setSearch({ person: undefined });
+  // the feed as usual: the link's filters go with `person`, For you keeps its matching choice
+  const clearLead = () =>
+    go(forYou ? { match: search.match, list: search.list } : {}, { replace: true });
 
   const type = postTypeOf(search, surface);
   const mutual = forYou && mode === "mutual";
@@ -168,6 +171,9 @@ export function BrowseView({ surface, search }: { surface: Surface; search: Feed
     () => Object.assign({}, ...(query.data?.pages.map((page) => page.collections) ?? [])),
     [query.data],
   ) as Record<string, ValidObjekt | undefined>;
+  // a person link lists that one row; the previous key's data must not stand in for it
+  const led = search.person && people[0]?.userId === search.person ? people[0] : undefined;
+  const stalePerson = !!search.person && !led && query.isPlaceholderData;
   const { ref: virtualizerRef, cache: virtualizerCache } = useWindowVirtualizerRestore({
     count: rows.length,
     enabled: hydrated && rows.length > 0,
@@ -258,13 +264,30 @@ export function BrowseView({ surface, search }: { surface: Surface; search: Feed
           </p>
         )}
 
-        {query.isPending ? (
+        {/* an empty placeholder (a person link's no-row result) is still loading, not an empty feed */}
+        {query.isPending || stalePerson || (query.isPlaceholderData && people.length === 0) ? (
           <>
             <PendingStatus />
             <BrowseFeedSkeleton />
           </>
         ) : query.isError && people.length === 0 ? (
           <LoadError onRetry={() => void query.refetch()} />
+        ) : search.person && !led ? (
+          <PersonLinkEmpty onClear={clearLead} />
+        ) : led ? (
+          <SideCompareContext value={sideCompare}>
+            <PersonLinkView
+              person={led}
+              surface={surface}
+              own={led.userId === user?.user.id}
+              signedIn={!!user}
+              onClear={clearLead}
+              busy={query.isPlaceholderData}
+              collections={collections}
+              now={now}
+              onOpen={setActive}
+            />
+          </SideCompareContext>
         ) : people.length === 0 && !query.hasNextPage && forYou && collectionFiltering ? (
           <EmptyState
             icon={CardsThreeIcon}
@@ -393,7 +416,11 @@ export function BrowseView({ surface, search }: { surface: Surface; search: Feed
         )}
 
         {/* Browse drops their posts silently, so name the way back */}
-        {hidden.data && hidden.data.length > 0 && query.isSuccess && !query.hasNextPage ? (
+        {hidden.data &&
+        hidden.data.length > 0 &&
+        !search.person &&
+        query.isSuccess &&
+        !query.hasNextPage ? (
           <p className="text-muted-foreground text-center text-sm text-pretty">
             {m.trade_browse_hidden_note()}{" "}
             <Button

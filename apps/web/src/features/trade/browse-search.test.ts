@@ -71,6 +71,23 @@ describe("toBrowseInput", () => {
     );
   });
 
+  test("a person link ignores the artist selection", () => {
+    const search = parse({ person: "user-1" });
+    expect(toBrowseInput(search, artists, ["tripleS"], "browse", lists).artist).toEqual([]);
+  });
+
+  test("a person link keeps an artist it names, even outside the selection", () => {
+    const search = parse({ person: "user-1", artist: "idntt" });
+    expect(toBrowseInput(search, artists, ["tripleS"], "forYou", lists).artist).toEqual(["idntt"]);
+  });
+
+  test("without a person the selection still scopes", () => {
+    const search = parse({ artist: "idntt" });
+    expect(toBrowseInput(search, artists, ["tripleS"], "browse", lists).artist).toEqual([
+      "tripleS",
+    ]);
+  });
+
   test("sends the mode and Compare with, and no longer sends matches", () => {
     const input = toBrowseInput(
       parse({ match: "mutual", list: "spares" }),
