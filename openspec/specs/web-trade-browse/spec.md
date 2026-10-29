@@ -299,7 +299,7 @@ Matching SHALL use the viewer's have lists bound to a Cosmo profile, not everyth
 
 Browse SHALL list the viewer's own row, so they can see where a bump put them, with no header sentence and no list counts or rings. For you SHALL never list it. People the viewer hid SHALL be left out of both (see `web-trade-for-you` Hide a partner).
 
-**Person link.** `person=<user id>` on `/trade` or `/trade/for-you` SHALL list that person's row first, with every one of their kept posts shown, followed by the feed as usual without that person. A `person` the feed would not list (hidden, blocked, nothing listed, or no match on For you) SHALL be ignored. Activating the row's clear control, or going back, SHALL remove the parameter and leave the feed where it was. For a signed-out visitor, `person` SHALL lead Browse with that person's row without counts.
+**Person link.** `person=<user id>` on `/trade` or `/trade/for-you` SHALL list only that person's row, with every one of their kept posts shown, and no other people and no further pages. The row SHALL ignore the visitor's artist selection, as a `slug` link does, and SHALL follow the link's other filters, an `artist` parameter included; the filters stay on the page. Above the row a banner SHALL say that only that person's posts are shown, from a shared link, adding how many of their objekts are on the viewer's lists when the viewer is signed in and that number is above zero. The banner SHALL carry Copy link, which copies the Browse address for that person with the link's filters, leaving out For you's matching choice, and Show everyone. Under the row a line SHALL say more people are on Trade and lead to the full feed. The row SHALL carry no clear control of its own. When the feed would not list that person (hidden, blocking or blocked, trade-blocked, nothing listed or all idle, all sold out, no match on For you, or only one way under Mutual only), the page SHALL show an empty state saying the link's person has nothing to show here, with Show everyone, and SHALL not name the person. Show everyone and the line under the row SHALL remove the parameter and the link's filters, keeping For you's matching choice, and list the feed as usual; going back SHALL return to where the visitor came from. For a signed-out visitor, `person` SHALL show that person's row and the banner without counts.
 
 #### Scenario: Default
 - **WHEN** a signed-in viewer with a want list opens `/trade` with no parameters
@@ -363,11 +363,27 @@ Browse SHALL list the viewer's own row, so they can see where a bump put them, w
 
 #### Scenario: Mutual partner
 - **WHEN** the viewer opens `/trade?person=<rin.trades's id>` and rin.trades has 4 listed posts
-- **THEN** rin.trades's row is listed first with all 4 posts shown, the rest of the feed follows without rin.trades, and clearing it removes `person` from the URL
+- **THEN** rin.trades's row is the only row, with all 4 posts shown, no further page loads, and Show everyone in the banner removes `person` from the URL and lists the feed as usual
+
+#### Scenario: Banner on a shared link
+- **WHEN** a signed-in viewer opens `/trade?person=<nuppotoz's id>` and 3 objekts on nuppotoz's posts are on the viewer's lists
+- **THEN** the filters show, a banner above the row reads that only nuppotoz's posts are shown, from a shared link, and that 3 objekts are on the viewer's lists, with Copy link and Show everyone; the row has no clear control; a line under it says more people are on Trade
+
+#### Scenario: Signed-out banner
+- **WHEN** a visitor without a session opens `/trade?person=<id>` for someone with listed posts
+- **THEN** the banner names that person with no count, and Copy link copies `/trade?person=<id>`
 
 #### Scenario: Person link to someone hidden
 - **WHEN** the viewer opens `/trade?person=<id>` for a person they hid
-- **THEN** the feed lists as if `person` were absent
+- **THEN** no row is listed, and the empty state says the link's person has nothing to show here, without their name, and offers Show everyone
+
+#### Scenario: Person outside the artist selection
+- **WHEN** a visitor with only ARTMS selected opens `/trade?person=<id>` for someone whose posts hold only tripleS objekts
+- **THEN** that person's row is listed, and Show everyone brings back the ARTMS-only feed
+
+#### Scenario: Person with nothing listed
+- **WHEN** a visitor opens `/trade?person=<id>` for someone whose posts are all idle
+- **THEN** no row is listed, the empty state offers Show everyone, and activating it lists the feed as usual
 
 #### Scenario: Old link
 - **WHEN** the viewer opens `/trade?match=mutual` from an older link
@@ -424,7 +440,7 @@ A signed-in viewer's posts SHALL be summarised above the feed in one row: the ti
 - whether the post is listed or idle, and when it was last changed;
 - a menu with Edit post, Copy link and Take off Trade.
 
-A post has no address of its own, so Copy link SHALL copy the Person link (see Matches to the signed-in viewer) to the viewer's row: `/trade?person=<their id>`. The row's Copy link SHALL copy it as is, and SHALL be disabled while none of the posts is listed. A post's Copy link SHALL add `type` set to the tag of the post's kind (`wtt` for Swap, `wts` for Sell, `wtb` for Buy) when the post carries that tag, and leave it out when it does not. Both SHALL confirm with "Link copied" and the copied address. On an idle post Copy link SHALL be disabled with the reason that idle posts don't show in Browse until bumped, since the feed would leave the row out.
+A post has no address of its own, so Copy link SHALL copy the Person link (see Matches to the signed-in viewer) to the viewer's row: `/trade?person=<their id>`. The row's Copy link SHALL copy it as is. It SHALL be disabled while none of the posts is listed or the viewer is under a trade block, and SHALL show which reason applies. A post's Copy link SHALL add `type` set to the tag of the post's kind (`wtt` for Swap, `wts` for Sell, `wtb` for Buy) when the post carries that tag, and leave it out when it does not. Both SHALL confirm with "Link copied" and the copied address. A post's Copy link SHALL be disabled while the viewer is under a trade block, and on an idle post, each with its reason as a second line: a trade block hides their posts from Trade, and idle posts don't show in Browse until bumped. The feed would leave the row out in both cases.
 
 With no choice saved in this browser, the posts SHALL start shown when any of them is idle, and hidden otherwise. Showing or hiding them SHALL be remembered in this browser, and that choice SHALL win over the default. A viewer with no posts SHALL see the row say they have no posts on Trade, with New post. A signed-out visitor activating New post SHALL be sent to `/login?redirect=/trade`.
 
@@ -470,11 +486,15 @@ With no choice saved in this browser, the posts SHALL start shown when any of th
 
 #### Scenario: Copy the link to all posts
 - **WHEN** the viewer activates Copy link on the Your posts row with 3 listed posts
-- **THEN** `/trade?person=<their id>` is copied, and opening it lists their row first with every listed post
+- **THEN** `/trade?person=<their id>` is copied, and opening it lists only their row
 
 #### Scenario: Copy a post's link
 - **WHEN** the viewer chooses Copy link on a listed Sell post
-- **THEN** `/trade?person=<their id>&type=wts` is copied, and opening it lists their row first with their Sell posts
+- **THEN** `/trade?person=<their id>&type=wts` is copied, and opening it lists only their row, with their Sell posts
+
+#### Scenario: Copy link under a trade block
+- **WHEN** a viewer under a trade block opens Your posts
+- **THEN** the row's Copy link and each post's Copy link are disabled, and each says a trade block hides their posts from Trade
 
 #### Scenario: Copy link on an idle post
 - **WHEN** the viewer opens the menu of an idle post
