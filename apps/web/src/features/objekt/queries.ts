@@ -17,9 +17,15 @@ export const collectionOptions = (filters?: OwnedByFilters) =>
     refetchOnWindowFocus: false,
     queryFn: async () => {
       // plain GET rather than RPC, so the browser revalidates its cached copy with Last-Modified
-      const result = await ofetch<CollectionListOutput>("/api/v1/collections", {
-        query: { ...filters },
-      }).then((response) => response.collections);
+      const fetchCollections = (cache?: RequestCache) =>
+        ofetch<CollectionListOutput | undefined>("/api/v1/collections", {
+          query: { ...filters },
+          cache,
+        }).then((response) => response?.collections);
+
+      // Safari can hand the server's empty 304 to fetch instead of its cached copy (WEB-1F)
+      const result = (await fetchCollections()) ?? (await fetchCollections("no-store"));
+      if (!result) throw new Error("Collections response had no body");
 
       return result.map(mapObjektWithTag);
     },
