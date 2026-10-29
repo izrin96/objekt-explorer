@@ -921,6 +921,7 @@
   "compare_view_empty_matches": "比較対象はこのリストのObjektを一つも所有していません。",
   "actions_add_to_list_nothing": "追加するものがありません",
   "actions_add_to_list_skipped": "{count}件はすでにリストにあります",
+  "actions_add_to_list_unowned": "{count}件は{profile}が所有していません",
   "page_titles_profile_lists": "{nickname} · リスト",
   "common_copy_blocked": "クリップボードがブロックされています",
   "compare_modal_source_id": "ID: {id}",

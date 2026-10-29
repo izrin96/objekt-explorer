@@ -86,7 +86,7 @@ export const listEntriesRouter = {
       if (priced && list.listType !== "sale") {
         refuse("BAD_REQUEST", "list_prices_sale_only", "Only sale lists can set prices");
       }
-      const { rows, skipped } = await addEntries(
+      const { rows, skipped, unowned } = await addEntries(
         list,
         from,
         skipDups,
@@ -106,7 +106,7 @@ export const listEntriesRouter = {
           ? []
           : await buildListEntries(rows, list.isProfileBind, { hideSerial: list.hideSerial });
 
-      return { entries, skipped };
+      return { entries, skipped, unowned };
     },
   ),
 

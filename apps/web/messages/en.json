@@ -921,6 +921,7 @@
   "compare_view_empty_matches": "The target holds none of the objekts in this list.",
   "actions_add_to_list_nothing": "Nothing to add",
   "actions_add_to_list_skipped": "{count} already in the list",
+  "actions_add_to_list_unowned": "{count} not owned by {profile}",
   "page_titles_profile_lists": "{nickname} · Lists",
   "common_copy_blocked": "Clipboard blocked",
   "compare_modal_source_id": "ID: {id}",

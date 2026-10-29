@@ -302,8 +302,18 @@ function AddToListForm({
         }),
       },
       {
-        onSuccess: ({ entries, skipped: refused }) => {
-          const skipped = refused + dropped;
+        onSuccess: ({ entries, skipped, unowned: serverUnowned }) => {
+          const unowned = serverUnowned + dropped;
+          const owner = selected.profileAddress;
+          const reasons = [
+            unowned > 0 && owner !== null
+              ? m.actions_add_to_list_unowned({
+                  count: unowned.toLocaleString(),
+                  profile: profileName(owner),
+                })
+              : null,
+            skipped > 0 ? m.actions_add_to_list_skipped({ count: skipped.toLocaleString() }) : null,
+          ].filter((reason) => reason !== null);
           toastManager.add({
             type: entries.length > 0 ? "success" : "info",
             title:
@@ -314,10 +324,7 @@ function AddToListForm({
                       count: entries.length.toLocaleString(),
                     })
                   : m.actions_add_to_list_nothing(),
-            description:
-              skipped > 0
-                ? m.actions_add_to_list_skipped({ count: skipped.toLocaleString() })
-                : undefined,
+            description: reasons.length > 0 ? reasons.join(" · ") : undefined,
           });
           onDone();
         },

@@ -921,6 +921,7 @@
   "compare_view_empty_matches": "대상이 이 리스트의 오브젝트를 하나도 가지고 있지 않습니다.",
   "actions_add_to_list_nothing": "추가할 항목이 없습니다",
   "actions_add_to_list_skipped": "{count}개는 이미 리스트에 있습니다",
+  "actions_add_to_list_unowned": "{count}개는 {profile}이(가) 보유하고 있지 않습니다",
   "page_titles_profile_lists": "{nickname} · 리스트",
   "common_copy_blocked": "클립보드가 차단되었습니다",
   "compare_modal_source_id": "ID: {id}",

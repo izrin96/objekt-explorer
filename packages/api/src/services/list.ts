@@ -730,13 +730,16 @@ type AddableList = Pick<List, "id" | "isProfileBind" | "profileAddress">;
 /** What each added entry starts with: a sale list's price and note, set when the caller checked the list takes them. */
 type EntryPricing = { price: number | null; isQyop: boolean; note: string | null };
 
-/** `skipped` counts the requested items that added nothing. */
+/**
+ * Of the requested items that added nothing, `unowned` counts those the bound
+ * list's profile holds no copy of, and `skipped` the rest, already in the list.
+ */
 export async function addEntries(
   list: AddableList,
   from: AddSource,
   skipDups: boolean,
   pricing?: EntryPricing,
-): Promise<{ rows: ListEntry[]; skipped: number }> {
+): Promise<{ rows: ListEntry[]; skipped: number; unowned: number }> {
   const owner = list.isProfileBind ? list.profileAddress?.toLowerCase() : undefined;
 
   if (owner) {
@@ -756,7 +759,12 @@ export async function addEntries(
         pricing,
       );
       const added = new Set(rows.map((row) => row.collectionSlug));
-      return { rows, skipped: slugs.filter((slug) => !added.has(slug)).length };
+      const held = new Set(copies.map((copy) => copy.slug));
+      return {
+        rows,
+        skipped: slugs.filter((slug) => held.has(slug) && !added.has(slug)).length,
+        unowned: slugs.filter((slug) => !held.has(slug)).length,
+      };
     }
 
     const tokenIds =
@@ -777,7 +785,8 @@ export async function addEntries(
       unique.flatMap((id) => owned.get(id) ?? []),
       pricing,
     );
-    return { rows, skipped: requested - rows.length };
+    const heldCount = tokenIds.filter((id) => owned.has(id)).length;
+    return { rows, skipped: heldCount - rows.length, unowned: requested - heldCount };
   }
 
   if (from.type !== "collections") {
@@ -813,7 +822,7 @@ export async function addEntries(
           ),
         );
   if (rows.length > 0) await touchList([list.id]);
-  return { rows, skipped: from.slugs.length - rows.length };
+  return { rows, skipped: from.slugs.length - rows.length, unowned: 0 };
 }
 
 /** Only entries of that one list resolve, and only those holding a token. */
