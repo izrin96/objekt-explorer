@@ -41,7 +41,7 @@ No other place SHALL show it.
 - **THEN** the profile header shows no dot
 
 ### Requirement: Who sees the dot
-A viewer SHALL see a person's dot only when all of these hold: the viewer is signed in; the viewer has Show when I'm online on; the person has it on; neither has blocked the other; and the person is not the viewer. The server SHALL apply these rules, and SHALL return only whether each asked-about person is online for that viewer. It SHALL not reveal who is connected otherwise.
+A viewer SHALL see a person's dot only when all of these hold: the viewer is signed in; the person has Show when I'm online on; neither has blocked the other; and the person is not the viewer. The server SHALL apply these rules, and SHALL return only whether each asked-about person is online for that viewer. It SHALL not reveal who is connected otherwise. The viewer's own switch SHALL not change what they see.
 
 #### Scenario: Signed out
 - **WHEN** a signed-out visitor opens `/trade` while rin.trades is online
@@ -53,7 +53,7 @@ A viewer SHALL see a person's dot only when all of these hold: the viewer is sig
 
 #### Scenario: Viewer hides
 - **WHEN** a viewer with Show when I'm online off opens `/messages` while rin.trades is online with it on
-- **THEN** the viewer sees no dot on any avatar
+- **THEN** the viewer still sees rin.trades' dot, and nobody sees the viewer's
 
 #### Scenario: Blocked
 - **WHEN** either the viewer or rin.trades has blocked the other

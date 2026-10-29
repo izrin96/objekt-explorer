@@ -64,7 +64,7 @@ export function usePresencePoller() {
       clearInterval(tick);
       document.removeEventListener("visibilitychange", onVisibility);
       // a sign-out must not leave the last answers on screen
-      resetPresence({ recheck: false });
+      resetPresence();
     };
   }, []);
 }

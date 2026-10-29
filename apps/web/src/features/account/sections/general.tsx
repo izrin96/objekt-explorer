@@ -15,7 +15,6 @@ import { toastManager } from "@/components/ui/toast";
 import { type FieldErrors, zodErrors } from "@/lib/form";
 import { orpc } from "@/lib/orpc";
 import { m } from "@/paraglide/messages";
-import { resetPresence } from "@/stores/presence";
 
 function nameSchema() {
   return z.object({
@@ -33,10 +32,8 @@ export function GeneralSection({ user }: { user: User }) {
 
   const mutation = useMutation(
     orpc.user.updateAccount.mutationOptions({
-      onSuccess: async (_data, variables) => {
+      onSuccess: async () => {
         setRemovePic(false);
-        // this tab's dots follow at once; other tabs and viewers catch up on their next check
-        if (variables.showOnline !== (user.showOnline ?? true)) resetPresence({ recheck: true });
         await queryClient.invalidateQueries();
         toastManager.add({ type: "success", title: m.auth_account_account_updated() });
       },

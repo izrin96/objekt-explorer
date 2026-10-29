@@ -39,10 +39,9 @@ export function unwatchPresence(userId: string) {
   });
 }
 
-/** Forgets every answer; with `recheck`, asks again for everything on screen now. */
-export function resetPresence({ recheck }: { recheck: boolean }) {
+/** Forgets every answer, as on sign-out. */
+export function resetPresence() {
   generation += 1;
   lastChecked.clear();
   usePresence.setState({ online: {} });
-  if (recheck) poller?.checkAll();
 }

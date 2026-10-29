@@ -37,7 +37,7 @@ The card is an `Attachment` (`features/chat/attachment.ts`) of two kinds: an obj
 
 ## Presence
 
-A person's online dot is `OnlineAvatar` (`features/presence/online-avatar.tsx`), and text that says "Online" reads `useOnline(userId)`; `PersonAvatar` stays free of presence, since the hover card, Market and signed-out pages use it. Pass no `userId` for the viewer's own avatar. `useOnline` watches the id while it is mounted, so the watched set is what is mounted (all of a plain list, only the rows on screen of a virtua one), an id no avatar shows any more forgets its answer, and the tab's one `usePresencePoller`, mounted beside `useUserSocket` for signed-in users only, asks `presence.online` for it (`stores/presence.ts`, pure parts in `watch.ts`). A failed or refused check changes nothing. A save that changes `showOnline` calls `resetPresence({ recheck: true })`.
+A person's online dot is `OnlineAvatar` (`features/presence/online-avatar.tsx`), and text that says "Online" reads `useOnline(userId)`; `PersonAvatar` stays free of presence, since the hover card, Market and signed-out pages use it. Pass no `userId` for the viewer's own avatar. `useOnline` watches the id while it is mounted, so the watched set is what is mounted (all of a plain list, only the rows on screen of a virtua one), an id no avatar shows any more forgets its answer, and the tab's one `usePresencePoller`, mounted beside `useUserSocket` for signed-in users only, asks `presence.online` for it (`stores/presence.ts`, pure parts in `watch.ts`). A failed or refused check changes nothing.
 
 ## Verifying against production
 

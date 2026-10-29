@@ -57,9 +57,9 @@ describe("onlineFromReplies", () => {
 });
 
 describe("showsOnlineTo", () => {
-  const visible = { viewerShows: true, shownShows: true, blocked: false, self: false };
+  const visible = { shownShows: true, blocked: false, self: false };
 
-  test("both on, no block, someone else", () => {
+  test("switch on, no block, someone else", () => {
     expect(showsOnlineTo(visible)).toBe(true);
   });
 
@@ -71,10 +71,6 @@ describe("showsOnlineTo", () => {
     expect(showsOnlineTo({ ...visible, blocked: true })).toBe(false);
   });
 
-  test("the viewer off sees nobody", () => {
-    expect(showsOnlineTo({ ...visible, viewerShows: false })).toBe(false);
-  });
-
   test("the person off shows to nobody", () => {
     expect(showsOnlineTo({ ...visible, shownShows: false })).toBe(false);
   });
@@ -84,23 +80,19 @@ describe("presenceTargets", () => {
   const row = (id: string, shows = true, blocked = false) => ({ id, shows, blocked });
 
   test("asks for others with the switch on and no block", () => {
-    expect(presenceTargets("me", ["a", "b"], [row("me"), row("a"), row("b")])).toEqual(["a", "b"]);
+    expect(presenceTargets("me", ["a", "b"], [row("a"), row("b")])).toEqual(["a", "b"]);
   });
 
   test("never the viewer, even when asked", () => {
     expect(presenceTargets("me", ["me", "a"], [row("me"), row("a")])).toEqual(["a"]);
   });
 
-  test("the viewer off asks for nobody", () => {
-    expect(presenceTargets("me", ["a"], [row("me", false), row("a")])).toEqual([]);
-  });
-
-  test("no viewer row asks for nobody", () => {
-    expect(presenceTargets("me", ["a"], [row("a")])).toEqual([]);
+  test("the viewer's own switch off still sees others", () => {
+    expect(presenceTargets("me", ["a"], [row("me", false), row("a")])).toEqual(["a"]);
   });
 
   test("drops a person off, blocked, or unknown", () => {
-    const rows = [row("me"), row("off", false), row("blocked", true, true), row("a")];
+    const rows = [row("off", false), row("blocked", true, true), row("a")];
     expect(presenceTargets("me", ["off", "blocked", "ghost", "a"], rows)).toEqual(["a"]);
   });
 });

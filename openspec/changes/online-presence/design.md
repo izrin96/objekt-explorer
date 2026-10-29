@@ -37,11 +37,10 @@ The request builder and the reply parser live in the pure `packages/api/src/lib/
 
 `services/presence.ts` `onlineAmong(viewerId, ids)`:
 1. Drop the viewer's own id.
-2. One query reads `user.show_online` for the viewer and every id, and drops any id with a block either way (`notBlockedEither`).
-3. If the viewer is off, return `[]` without calling Centrifugo.
-4. Batch the ids that are left and return the online ones.
+2. One query reads `user.show_online` for every asked id, and drops any id with a block either way (`notBlockedEither`). The viewer's own switch is not read: it hides only them.
+3. Batch the ids that are left and return the online ones.
 
-The rule is `showsOnlineTo({ viewerShows, shownShows, blocked, self })` in `lib/presence.ts`, and it is tested. It does **not** reuse `showsActivityTo`, because it has no request rule: Trade rows already show the dot to any signed-in viewer, so hiding it inside a chat request would protect nothing.
+The rule is `showsOnlineTo({ shownShows, blocked, self })` in `lib/presence.ts`, and it is tested. It does **not** reuse `showsActivityTo`, because it has no request rule: Trade rows already show the dot to any signed-in viewer, so hiding it inside a chat request would protect nothing.
 
 Limit: `userRateLimited("presence", userId, 60, 60)`, shared by every tab and device of the account. A visible tab ticks twice a minute, and each scroll stop or return to the tab adds a check, so 60 leaves room for fast scrolling and two windows. Over the limit, the procedure refuses, and the client treats that as "no change" and keeps waiting for the next tick. No Redis cache: the rule query reads by primary key, and the batch runs with `parallel: true`, so on the Valkey engine a hundred lookups don't run one after another into the 1.5 s timeout.
 
@@ -64,7 +63,7 @@ Why a new store: none of the existing ones fit. `stores/chat-typing.ts` is keyed
 - Add `show_online boolean not null default true` to `user` in `packages/db/src/auth-schema.ts`, beside `show_social`, and generate the migration.
 - Declare it in Better Auth's `additionalFields` (`services/auth.ts`) as `showOnline`, `returned: true`, `input: false`, so the current user carries it to the General form, and only `user.updateAccount` writes it.
 - `updateAccountInputSchema` gains `showOnline: z.boolean().optional()`. A tab opened before the deploy sends no `showOnline` and still validates; `updateAccount` sets the column only when the field is present, so that tab's Save leaves it as it was.
-- The switch sits under the show-social switch in `sections/general.tsx`, as form state saved by the section's Save. When a save changes it, `onSuccess` also clears the presence store's `online` map and forces a check, so that tab shows the new state within 2 s.
+- The switch sits under the show-social switch in `sections/general.tsx`, as form state saved by the section's Save. It hides only the user's own dot, so saving it leaves the dots this tab shows alone.
 - No change limit and no notice to anyone, because nothing is pushed.
 - `anonymizeUser` needs no change: a deleted account has no session, so it never has presence.
 

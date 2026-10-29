@@ -6,9 +6,8 @@ are shown publicly, toggle "Show when I'm online" (on by default; see `web-prese
 profile picture. Saving SHALL persist through the server and refresh every place the account is shown
 without a reload.
 
-The Show when I'm online description SHALL say that turning it off also hides everyone else's online
-dot from the user. Once saved, the tab where it was saved SHALL show or drop other people's dots within
-2 seconds; the user's other tabs and other viewers SHALL follow by their next presence check.
+The Show when I'm online description SHALL say that turning it off hides the user's own dot and still
+shows other people's. Once saved, other viewers SHALL follow by their next presence check.
 
 #### Scenario: Rename
 - **WHEN** the user saves a new name
@@ -16,7 +15,7 @@ dot from the user. Once saved, the tab where it was saved SHALL show or drop oth
 
 #### Scenario: Online off
 - **WHEN** the user turns Show when I'm online off and saves
-- **THEN** that tab stops showing anyone's online dot within 2 seconds, and the user's other tabs and other viewers follow within 60 seconds
+- **THEN** other viewers stop seeing the user's dot within 60 seconds, and the user still sees other people's dots
 
 #### Scenario: Online switch default
 - **WHEN** a user who never changed it opens `/account/general`

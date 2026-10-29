@@ -17,7 +17,7 @@ export async function onlineAmong(viewerId: string, userIds: string[]): Promise<
       blocked: sql<boolean>`NOT ${notBlockedEither(viewerId, sql`${user.id}`)}`,
     })
     .from(user)
-    .where(inArray(user.id, [viewerId, ...userIds]));
+    .where(inArray(user.id, userIds));
   const shown = presenceTargets(viewerId, userIds, rows);
   if (shown.length === 0) return [];
 

@@ -9,7 +9,7 @@ Traders can't tell whether the person they're about to message, or who just sent
   - `/trade` (Browse) and `/trade/for-you`: the person row header;
   - `/@<name>`: the profile header, when the profile belongs to a linked account.
   - The dot appears and disappears within 60 seconds of the person opening or closing the site.
-- **A "Show when I'm online" switch** in `/account/general`, on by default, beside the show-social switch, since the dot shows across the site and not only in chat. It is independent of Show Seen and typing in Messages. It is reciprocal: turn it off and nobody sees your dot, and you see nobody's. It saves with the section's Save, like the other General settings.
+- **A "Show when I'm online" switch** in `/account/general`, on by default, beside the show-social switch, since the dot shows across the site and not only in chat. It is independent of Show Seen and typing in Messages. Turn it off and nobody sees your dot, while you still see other people's, as with Discord's Invisible. It saves with the section's Save, like the other General settings.
 - **Who sees a dot.** Only signed-in viewers. Never on the viewer's own avatar, and never between two accounts where either has blocked the other.
 - **Centrifugo** turns on presence for the `user` namespace, so the server can ask whether a person's personal channel has a connection. Browsers never see raw presence; the server filters it by the rules above.
 

@@ -32,19 +32,17 @@ export function onlineFromReplies(userIds: string[], response: unknown): string[
   });
 }
 
-/** Whether a person's online dot reaches the viewer: both keep the switch on, no block, not self. */
-export function showsOnlineTo(facts: {
-  viewerShows: boolean;
-  shownShows: boolean;
-  blocked: boolean;
-  self: boolean;
-}) {
-  return facts.viewerShows && facts.shownShows && !facts.blocked && !facts.self;
+/**
+ * Whether a person's online dot reaches the viewer: their switch on, no block, not self. The
+ * viewer's own switch only hides them, never what they see.
+ */
+export function showsOnlineTo(facts: { shownShows: boolean; blocked: boolean; self: boolean }) {
+  return facts.shownShows && !facts.blocked && !facts.self;
 }
 
 /**
- * Of the asked ids, those to look up: `rows` holds the viewer's and each asked person's switch and
- * whether a block stands between them; an id with no row is nobody.
+ * Of the asked ids, those to look up: `rows` holds each asked person's switch and whether a block
+ * stands between them and the viewer; an id with no row is nobody.
  */
 export function presenceTargets(
   viewerId: string,
@@ -52,13 +50,11 @@ export function presenceTargets(
   rows: { id: string; shows: boolean; blocked: boolean }[],
 ) {
   const byId = new Map(rows.map((row) => [row.id, row]));
-  const viewerShows = byId.get(viewerId)?.shows ?? false;
   return askedIds.filter((id) => {
     const row = byId.get(id);
     return (
       row !== undefined &&
       showsOnlineTo({
-        viewerShows,
         shownShows: row.shows,
         blocked: row.blocked,
         self: id === viewerId,
