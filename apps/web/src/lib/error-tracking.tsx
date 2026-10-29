@@ -62,7 +62,10 @@ function isNetworkFailure(error: unknown, depth = 0): boolean {
     );
   }
   // oRPC wraps a body cut off mid-read in "Cannot parse response body" (WEB-13)
-  return isNetworkFailure(error.cause, depth + 1);
+  return (
+    error.message.startsWith("Cannot parse response body") &&
+    isNetworkFailure(error.cause, depth + 1)
+  );
 }
 
 // what Chrome, Safari and Firefox name an `import()` whose chunk is gone, mostly after a deploy
