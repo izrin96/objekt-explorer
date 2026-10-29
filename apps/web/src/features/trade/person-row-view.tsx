@@ -338,23 +338,46 @@ export const PersonRow = memo(function PersonRow({
         </div>
         {own ? null : (
           <div className="flex items-center gap-2 px-3 pb-2 @3xl:col-start-2 @3xl:row-start-1 @3xl:self-start @3xl:pb-0">
-            <SafetyMenu
-              userId={person.userId}
-              name={person.identity.name}
-              report
-              extraItems={
-                <>
+            {signedIn ? (
+              <SafetyMenu
+                userId={person.userId}
+                name={person.identity.name}
+                report
+                extraItems={
+                  <>
+                    <MenuItem onClick={() => void copyLink({ person: person.userId })}>
+                      <ShareNetworkIcon />
+                      {m.trade_post_copy_link()}
+                    </MenuItem>
+                    <MenuItem onClick={() => hide(person.userId, person.identity.name)}>
+                      <EyeSlashIcon />
+                      {m.trade_hide_partner()}
+                    </MenuItem>
+                  </>
+                }
+              />
+            ) : (
+              // SafetyMenu renders nothing signed out, and Hide, Block and Report need an account
+              <Menu>
+                <MenuTrigger
+                  render={
+                    <Button
+                      variant="outline"
+                      size="icon-sm"
+                      aria-label={m.mod_more_actions({ name: person.identity.name })}
+                    />
+                  }
+                >
+                  <DotsThreeIcon weight="bold" />
+                </MenuTrigger>
+                <MenuPopup align="end" className="min-w-44">
                   <MenuItem onClick={() => void copyLink({ person: person.userId })}>
                     <ShareNetworkIcon />
                     {m.trade_post_copy_link()}
                   </MenuItem>
-                  <MenuItem onClick={() => hide(person.userId, person.identity.name)}>
-                    <EyeSlashIcon />
-                    {m.trade_hide_partner()}
-                  </MenuItem>
-                </>
-              }
-            />
+                </MenuPopup>
+              </Menu>
+            )}
             {actions}
           </div>
         )}
