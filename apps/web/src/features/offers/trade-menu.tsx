@@ -1,4 +1,4 @@
-import { DotsThreeIcon } from "@phosphor-icons/react";
+import { DotsThreeIcon, FlagIcon, type Icon, XCircleIcon } from "@phosphor-icons/react";
 import { REPORT_AFTER_DAYS, type TradeView as Trade } from "@repo/api/schemas/offer";
 import type { ReactNode } from "react";
 
@@ -12,6 +12,7 @@ const DAY_MS = 86_400_000;
 
 type Item = {
   key: string;
+  icon: Icon;
   label: string;
   /** why it can't be used; set means the item shows disabled */
   reason: ReactNode | null;
@@ -25,6 +26,7 @@ function items(trade: Trade, hydrated: boolean, onReport: () => void, onCancel: 
     const opens = new Date(Date.parse(trade.acceptedAt) + REPORT_AFTER_DAYS * DAY_MS);
     list.push({
       key: "report",
+      icon: FlagIcon,
       label: m.offer_report_problem(),
       reason: trade.canReport
         ? null
@@ -38,6 +40,7 @@ function items(trade: Trade, hydrated: boolean, onReport: () => void, onCancel: 
   if (inProgress) {
     list.push({
       key: "cancel",
+      icon: XCircleIcon,
       label: m.offer_trade_cancel(),
       reason: trade.canCancel
         ? null
@@ -86,6 +89,8 @@ export function TradeMenu({
             className="items-start py-1.5"
             onClick={item.onSelect}
           >
+            {/* top-aligned with the label, above the reason line */}
+            <item.icon className="mt-0.5" />
             <span className="flex flex-col">
               <span>{item.label}</span>
               {item.reason ? (

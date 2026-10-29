@@ -1,4 +1,4 @@
-import { DotsThreeIcon } from "@phosphor-icons/react";
+import { ArrowBendUpLeftIcon, DotsThreeIcon, TrashSimpleIcon } from "@phosphor-icons/react";
 import { type RefObject, useRef, useState } from "react";
 
 import {
@@ -70,11 +70,13 @@ export function MessageActions({
                 onReply();
               }}
             >
+              <ArrowBendUpLeftIcon />
               {m.chat_reply()}
             </MenuItem>
           ) : null}
           {unsendable ? (
             <MenuItem variant="destructive" onClick={confirm}>
+              <TrashSimpleIcon />
               {m.chat_unsend()}
             </MenuItem>
           ) : null}

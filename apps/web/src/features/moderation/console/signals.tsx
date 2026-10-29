@@ -1,4 +1,4 @@
-import { DotsThreeIcon } from "@phosphor-icons/react";
+import { ArrowsLeftRightIcon, DotsThreeIcon, LinkBreakIcon } from "@phosphor-icons/react";
 import { FLAG_CATEGORIES } from "@repo/api/schemas/chat";
 import { truncateAddress } from "@repo/lib/address";
 import { Link, useHydrated } from "@tanstack/react-router";
@@ -136,8 +136,12 @@ function AddressMenu({ address, userId }: { address: string; userId: string }) {
           <DotsThreeIcon weight="bold" />
         </MenuTrigger>
         <MenuPopup align="end">
-          <MenuItem onClick={() => setOpen("move")}>{m.mod_address_move()}</MenuItem>
+          <MenuItem onClick={() => setOpen("move")}>
+            <ArrowsLeftRightIcon />
+            {m.mod_address_move()}
+          </MenuItem>
           <MenuItem variant="destructive" onClick={() => setOpen("unlink")}>
+            <LinkBreakIcon />
             {m.mod_address_unlink()}
           </MenuItem>
         </MenuPopup>
