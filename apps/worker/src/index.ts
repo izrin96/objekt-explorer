@@ -3,7 +3,7 @@ import { cron, type CronJob } from "bun";
 
 import { flushErrorTracking } from "./instrument";
 import { relayActivity } from "./job/activity-relay";
-import { fixEmptyCollection } from "./job/collection";
+import { replayPendingTransfers } from "./job/collection";
 import { updateTransferableCosmoSpin } from "./job/cosmo-spin";
 import { cleanupStaleEntries, drainOutbox } from "./job/drain";
 import { populateRarity } from "./job/populate-rarity";
@@ -69,15 +69,10 @@ if (tokenRefresh) {
 }
 
 if (indexerWrites) {
-  // refetch metadata for empty-collection
-  // todo: rework, don't store into collection
-  const runFixEmptyCollection = safeRun("fix-collection", () =>
-    fixEmptyCollection({
-      version: 3,
-    }),
-  );
-  startupRuns.push(runFixEmptyCollection);
-  crons.push(cron("0 * * * *", runFixEmptyCollection));
+  // replay transfers the indexer held while Cosmo had no metadata for their token
+  const runReplayPending = safeRun("fix-collection", replayPendingTransfers);
+  startupRuns.push(runReplayPending);
+  crons.push(cron("0 * * * *", runReplayPending));
 
   // populate missing serials for online objekts
   const runSerialOnline = safeRun("serial-online", populateSerial);

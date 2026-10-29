@@ -5,7 +5,7 @@ import { indexer } from "@repo/db/indexer";
 import { collections } from "@repo/db/indexer/schema";
 import { listEntries, lists, user } from "@repo/db/schema";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
-import { and, eq, inArray, isNotNull, ne, or, sql } from "drizzle-orm";
+import { and, eq, inArray, isNotNull, or, sql } from "drizzle-orm";
 
 import { isMessageable, toMessagePref } from "../../lib/chat-rules";
 import { iso } from "../../lib/time";
@@ -88,7 +88,7 @@ async function resolveFilterSlugs(filters: BrowseFilters): Promise<string[] | nu
     const rows = await indexer
       .select({ slug: collections.slug })
       .from(collections)
-      .where(and(ne(collections.slug, "empty-collection"), ...predicates));
+      .where(and(...predicates));
     return rows.map((row) => row.slug);
   });
 }

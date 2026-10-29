@@ -5,8 +5,6 @@ import { and, eq, inArray, notInArray, sql } from "drizzle-orm";
 import { preAssignedCollections as excludeCollections } from "@/lib/serial-constants";
 import { computeOnlineSerials, V1_CUTOFF_MS } from "@/lib/serial-math";
 
-const excludeSlugs = ["empty-collection", ...excludeCollections];
-
 // write to prod only when explicitly asked. default dry-run: print the plan.
 const APPLY = process.argv.includes("--apply");
 
@@ -35,7 +33,9 @@ async function main() {
   const onlineCollections = await indexer
     .select({ id: collections.id, slug: collections.slug })
     .from(collections)
-    .where(and(eq(collections.onOffline, "online"), notInArray(collections.slug, excludeSlugs)));
+    .where(
+      and(eq(collections.onOffline, "online"), notInArray(collections.slug, excludeCollections)),
+    );
 
   console.log(`[check-serial-order] Scanning ${onlineCollections.length} online collections`);
 

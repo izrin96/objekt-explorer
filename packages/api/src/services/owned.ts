@@ -4,7 +4,7 @@ import { collections, objekts, transfers } from "@repo/db/indexer/schema";
 import { Addresses } from "@repo/lib";
 import { mapOwnedObjekt, overrideCollection } from "@repo/lib/server/objekt";
 import type { HeldObjekt } from "@repo/lib/types/objekt";
-import { and, asc, count, desc, eq, getColumns, inArray, lt, lte, ne, or, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, getColumns, inArray, lt, lte, or, sql } from "drizzle-orm";
 import type { AnyPgColumn } from "drizzle-orm/pg-core";
 
 import type { HeldByOutput, OwnedByFilters, OwnedByOutput } from "../schemas/objekts";
@@ -78,14 +78,7 @@ export async function fetchOwnedObjekts(
       .from(latest)
       .innerJoin(objekts, eq(latest.objektId, objekts.id))
       .innerJoin(collections, eq(collections.id, objekts.collectionId))
-      .where(
-        and(
-          eq(latest.to, addr),
-          ne(collections.slug, "empty-collection"),
-          ...collectionFilters,
-          cursorWhere(query, latest.timestamp),
-        ),
-      )
+      .where(and(eq(latest.to, addr), ...collectionFilters, cursorWhere(query, latest.timestamp)))
       .orderBy(...orderBy(latest.timestamp))
       .limit(PER_PAGE + 1);
 
@@ -108,12 +101,7 @@ export async function fetchOwnedObjekts(
     .from(objekts)
     .innerJoin(collections, eq(objekts.collectionId, collections.id))
     .where(
-      and(
-        eq(objekts.owner, addr),
-        ne(collections.slug, "empty-collection"),
-        ...collectionFilters,
-        cursorWhere(query, objekts.receivedAt),
-      ),
+      and(eq(objekts.owner, addr), ...collectionFilters, cursorWhere(query, objekts.receivedAt)),
     )
     .orderBy(...orderBy(objekts.receivedAt))
     .limit(PER_PAGE + 1);
@@ -177,8 +165,7 @@ async function countHeld(addr: string): Promise<HeldObjekt[]> {
     })
     .from(held)
     .innerJoin(collections, eq(collections.id, held.collectionId))
-    .innerJoinLateral(first, sql`true`)
-    .where(ne(collections.slug, "empty-collection"));
+    .innerJoinLateral(first, sql`true`);
 
   return results.map((row): HeldObjekt =>
     Object.assign(overrideCollection(row.collection), {

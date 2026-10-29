@@ -63,8 +63,7 @@ async function loadCollection(tokenId: number) {
   if (!collection) fail(`the collection of token ${tokenId} was not found`);
 
   const offline =
-    (collection.onOffline === "offline" && collection.slug !== "empty-collection") ||
-    excludeCollections.includes(collection.slug);
+    collection.onOffline === "offline" || excludeCollections.includes(collection.slug);
   if (!offline) fail(`${collection.slug} is an online collection; it has no reserved batches`);
 
   const rows = await indexer

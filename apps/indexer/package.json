@@ -11,6 +11,7 @@
     "lint": "oxlint --type-aware --config ./oxlint.config.mts",
     "lint:fix": "oxlint --type-aware --fix --config ./oxlint.config.mts",
     "typecheck": "tsc --pretty --noEmit",
+    "test": "bun test",
     "format": "oxfmt ."
   },
   "dependencies": {

@@ -295,6 +295,47 @@ export const votes = pgTable(
   ],
 );
 
+export const pendingTransfers = pgTable(
+  "pending_transfer",
+  {
+    id: varchar({ length: 36 }).primaryKey(),
+    tokenId: text("token_id").notNull(),
+    from: text().notNull(),
+    to: text().notNull(),
+    timestamp: timestamp({ withTimezone: true, mode: "string" }).notNull(),
+    hash: text().notNull(),
+    blockNumber: integer("block_number").notNull(),
+    logIndex: integer("log_index").notNull(),
+  },
+  (table) => [
+    index("idx_pending_transfer_token_id").using("btree", table.tokenId.asc().nullsLast()),
+  ],
+);
+
+export const transferabilityUpdates = pgTable(
+  "transferability_update",
+  {
+    id: varchar({ length: 36 }).primaryKey(),
+    tokenId: text("token_id").notNull(),
+    transferable: boolean().notNull(),
+    blockNumber: integer("block_number").notNull(),
+    transactionIndex: integer("transaction_index").notNull(),
+    hash: text().notNull(),
+    appliedAt: timestamp("applied_at", { withTimezone: true, mode: "string" }),
+  },
+  (table) => [
+    index("idx_transferability_update_token_id").using("btree", table.tokenId.asc().nullsLast()),
+    index("idx_transferability_update_block_number").using(
+      "btree",
+      table.blockNumber.asc().nullsLast(),
+    ),
+    index("idx_transferability_update_applied_at").using(
+      "btree",
+      table.appliedAt.asc().nullsLast(),
+    ),
+  ],
+);
+
 export type Transfer = typeof transfers.$inferSelect;
 export type Objekt = typeof objekts.$inferSelect;
 export type Collection = typeof collections.$inferSelect;

@@ -1,16 +1,17 @@
-import { emptyMetadata } from "@repo/cosmo/server/metadata";
 import type { CosmoObjektMetadataV1 } from "@repo/cosmo/types/metadata";
 import { addr, chunk, slugifyObjekt, Addresses } from "@repo/lib";
 import { TypeormDatabase, type Store } from "@subsquid/typeorm-store";
-import { IsNull } from "typeorm";
+import { In, IsNull } from "typeorm";
 
 import { env } from "./env";
+import { createHold } from "./hold";
 import { fetchMetadata } from "./metadata";
 import {
   Collection,
   ComoBalance,
   ListEventOutbox,
   Objekt,
+  PendingTransfer,
   type Transfer,
   TransferabilityUpdate,
   Vote,
@@ -27,7 +28,6 @@ import { publish } from "./redis";
 
 const db = new TypeormDatabase({ supportHotBlocks: true });
 
-const EMPTY_COLLECTION = "empty-collection";
 const LIVE_WINDOW_MS = 5 * 60 * 1000;
 
 function isLive(blocks: { header: { timestamp: number } }[]) {
@@ -50,50 +50,65 @@ processor.run(db, async (ctx) => {
     // chunk everything into batches
     await chunk(transfers, env.COSMO_PARALLEL_COUNT, async (chunk) => {
       const transferBatch: Transfer[] = [];
+      const pendingBatch: PendingTransfer[] = [];
       const collectionBatch = new Map<string, Collection>();
       const objektBatch = new Map<string, Objekt>();
 
-      const metadataBatch = env.SKIP_METADATA
-        ? chunk.map((e) => ({ status: "fulfilled" as const, value: emptyMetadata(e.tokenId) }))
-        : await Promise.allSettled(chunk.map((e) => fetchMetadata(e.tokenId)));
+      const held = await ctx.store.find(PendingTransfer, {
+        where: { tokenId: In([...new Set(chunk.map((e) => e.transfer.tokenId))]) },
+      });
+      const decide = createHold(held.map((p) => p.tokenId));
+      const metadataBatch = await Promise.all(chunk.map((e) => fetchMetadata(e.transfer.tokenId)));
       const newlyMintedIds: string[] = [];
 
-      // iterate over each objekt metadata request
-      for (let j = 0; j < metadataBatch.length; j++) {
-        const request = metadataBatch[j];
-        const transfer = chunk[j];
-        if (!transfer || !request || request.status === "rejected") {
-          ctx.log.error(`Unable to fetch metadata for token ${transfer?.tokenId ?? "unknown"}`);
-          continue;
-        }
+      for (const [j, { transfer, blockNumber, logIndex }] of chunk.entries()) {
+        const metadata = metadataBatch[j] ?? null;
+        const existing = await findObjekt(ctx, objektBatch, transfer.tokenId);
+        // an objekt with no collection has none to keep, so a failed fetch holds its transfer
+        const action = decide(transfer.tokenId, {
+          known: existing?.collection !== undefined && existing.collection !== null,
+          resolved: metadata !== null,
+        });
 
-        // handle objekt
-        const { objekt, isNew } = await handleObjekt(ctx, request.value, objektBatch, transfer);
-        objektBatch.set(objekt.id, objekt);
-
-        // handle collection
-        // a token never changes collection, so a failed fetch must not move a known objekt
+        let objekt: Objekt;
         let collection: Collection;
-        if (
-          !isNew &&
-          request.value.objekt.collectionId === EMPTY_COLLECTION &&
-          objekt.collection &&
-          objekt.collection.slug !== EMPTY_COLLECTION
-        ) {
-          collection = objekt.collection;
-        } else {
-          collection = await handleCollection(ctx, request.value, collectionBatch, transfer);
+        if (action === "record" && metadata) {
+          objekt = existing ? moveObjekt(existing, transfer) : newObjekt(metadata, transfer);
+          collection = await handleCollection(ctx, metadata, collectionBatch, transfer);
           collectionBatch.set(collection.slug, collection);
           objekt.collection = collection;
+          if (!existing) {
+            newlyMintedIds.push(objekt.id);
+          }
+        } else if (action === "keep-collection" && existing?.collection) {
+          objekt = moveObjekt(existing, transfer);
+          collection = existing.collection;
+        } else {
+          pendingBatch.push(
+            new PendingTransfer({
+              id: transfer.id,
+              tokenId: transfer.tokenId,
+              from: transfer.from,
+              to: transfer.to,
+              timestamp: transfer.timestamp,
+              hash: transfer.hash,
+              blockNumber,
+              logIndex,
+            }),
+          );
+          continue;
         }
-        if (isNew) {
-          newlyMintedIds.push(objekt.id);
-        }
+        objektBatch.set(objekt.id, objekt);
 
         // handle transfer
         transfer.objekt = objekt;
         transfer.collection = collection;
         transferBatch.push(transfer);
+      }
+
+      if (pendingBatch.length > 0) {
+        ctx.log.warn(`Holding ${pendingBatch.length} transfers until their metadata is fetched`);
+        await ctx.store.insert(pendingBatch);
       }
 
       // apply any pending transferability updates that were waiting for these mints
@@ -258,34 +273,36 @@ async function handleCollection(
 }
 
 /**
- * Create or update the objekt row.
+ * Find an objekt in the buffer or the database.
  */
-async function handleObjekt(
+async function findObjekt(
   ctx: ProcessorContext<Store>,
-  metadata: CosmoObjektMetadataV1,
   buffer: Map<string, Objekt>,
-  transfer: Transfer,
+  tokenId: string,
 ) {
-  // fetch out of buffer
-  let objekt = buffer.get(transfer.tokenId);
-
-  // fetch from db
-  if (!objekt) {
-    objekt = await ctx.store.get(Objekt, {
-      where: { id: transfer.tokenId },
+  return (
+    buffer.get(tokenId) ??
+    (await ctx.store.get(Objekt, {
+      where: { id: tokenId },
       relations: { collection: true },
-    });
-  }
+    }))
+  );
+}
 
-  // if not new, update fields. skip transferable
-  if (objekt) {
-    objekt.receivedAt = new Date(transfer.timestamp);
-    objekt.owner = addr(transfer.to);
-    return { objekt, isNew: false };
-  }
+/**
+ * Move a known objekt to the transfer's receiver. Transferable is left alone.
+ */
+function moveObjekt(objekt: Objekt, transfer: Transfer) {
+  objekt.receivedAt = new Date(transfer.timestamp);
+  objekt.owner = addr(transfer.to);
+  return objekt;
+}
 
-  // otherwise create it
-  objekt = new Objekt({
+/**
+ * Create the objekt row from its metadata.
+ */
+function newObjekt(metadata: CosmoObjektMetadataV1, transfer: Transfer) {
+  return new Objekt({
     id: transfer.tokenId,
     mintedAt: new Date(transfer.timestamp),
     receivedAt: new Date(transfer.timestamp),
@@ -293,8 +310,6 @@ async function handleObjekt(
     serial: metadata.objekt.objektNo,
     transferable: metadata.objekt.transferable,
   });
-
-  return { objekt, isNew: true };
 }
 
 /**

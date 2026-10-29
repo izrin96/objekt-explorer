@@ -2,7 +2,7 @@ import { fetchMetadataV3, normalizeV3 } from "@repo/cosmo/server/metadata";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
 import { slugifyObjekt, chunk } from "@repo/lib";
-import { and, eq, gte, between, ne, notInArray, inArray, or, lte, sql } from "drizzle-orm";
+import { and, eq, gte, between, notInArray, inArray, or, lte, sql } from "drizzle-orm";
 import { FetchError } from "ofetch";
 
 import { heartbeat, log, type Logger } from "@/lib/log";
@@ -68,7 +68,6 @@ export async function populateSerial() {
         gte(objekts.mintedAt, new Date(V1_CUTOFF_MS).toISOString()),
         lte(objekts.mintedAt, new Date(Date.now() - MINT_DELAY_MS).toISOString()),
         eq(collections.onOffline, "online"),
-        ne(collections.slug, "empty-collection"),
         // skip collection that already pre-assigned tokenId
         notInArray(collections.slug, excludeCollections),
       ),
@@ -434,7 +433,7 @@ export async function populateSerialOffline() {
       and(
         eq(objekts.serial, 0),
         or(
-          and(eq(collections.onOffline, "offline"), ne(collections.slug, "empty-collection")),
+          eq(collections.onOffline, "offline"),
           // extra collection with pre-assigned tokenId
           inArray(collections.slug, excludeCollections),
         ),

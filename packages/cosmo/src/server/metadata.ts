@@ -28,39 +28,6 @@ export async function fetchMetadataV3(tokenId: string) {
   );
 }
 
-/**
- * Empty metadata
- */
-export function emptyMetadata(tokenId: string): CosmoObjektMetadataV1 {
-  return {
-    name: "empty-collection",
-    description: "",
-    image: "",
-    background_color: "",
-    objekt: {
-      collectionId: "empty-collection",
-      season: "",
-      member: "",
-      members: [],
-      collectionNo: "",
-      class: "",
-      artists: [""],
-      thumbnailImage: "",
-      frontImage: "",
-      backgroundColor: "",
-      comoAmount: 0,
-      tokenId: tokenId,
-      // not possible to get from v3
-      backImage: "",
-      accentColor: "",
-      textColor: "",
-      objektNo: 0,
-      tokenAddress: "0x0000000000000000000000000000000000000000",
-      transferable: true,
-    },
-  };
-}
-
 function isUnitMetadata(metadata: CosmoObjektMetadataV3) {
   return metadata.attributes.some((a) => a.trait_type === "Class" && a.value === "Unit");
 }

@@ -33,20 +33,28 @@ async function blockTime(height: number) {
 
 /**
  * Stores the time of the newest block the indexer has written, hot blocks included, since
- * their transfers are already readable. On failure the previous reading stays, so its `readAt`
- * shows the failure.
+ * their transfers are already readable. A transfer held for its metadata is not readable yet,
+ * so the time stops one second before the oldest one. On failure the previous reading stays,
+ * so its `readAt` shows the failure.
  */
 export async function readIndexerHead(): Promise<IndexerSeen | null> {
   try {
-    const result = await indexer.execute<{ height: number | null }>(sql`
+    const result = await indexer.execute<{ height: number | null; held_from: number | null }>(sql`
       SELECT greatest(
         (SELECT max(height) FROM squid_processor.status),
         (SELECT max(height) FROM squid_processor.hot_block)
-      ) AS height
+      ) AS height,
+      (SELECT extract(epoch FROM min(timestamp)) * 1000 FROM pending_transfer)::float8 AS held_from
     `);
     const height = result.rows[0]?.height;
     if (height == null) throw new Error("no processor height");
-    const seen = { seenUntil: await blockTime(height), readAt: new Date().toISOString() };
+    const heldFrom = result.rows[0]?.held_from;
+    const head = await blockTime(height);
+    const seenUntil =
+      heldFrom != null && heldFrom - 1000 < Date.parse(head)
+        ? new Date(heldFrom - 1000).toISOString()
+        : head;
+    const seen = { seenUntil, readAt: new Date().toISOString() };
     await redis.set(INDEXER_SEEN_KEY, JSON.stringify(seen));
     return seen;
   } catch (error) {

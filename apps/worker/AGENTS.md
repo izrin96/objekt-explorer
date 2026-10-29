@@ -12,6 +12,10 @@ Register every cron job through `safeRun(tag, job)` in `src/index.ts`, with the 
 
 Jobs log only through `log(tag)` (`src/lib/log.ts`). A run that changed something logs one `info` summary; a run that changed nothing stays silent. Per-item lines go to `debug`, shown only with `WORKER_LOG_LEVEL=debug`. A job running every few minutes adds its counts to a `heartbeat`, which logs one line an hour. Drift and failures that retry on their own are `warn`, one line per run with a count; a failed job, or a failure only a person can fix (an expired Cosmo refresh token), is `error`. `src/script/` prints to the console, since its output is the point.
 
+## Held transfers
+
+`job/collection.ts` (tag `fix-collection`, hourly and on startup) replays the indexer's `pending_transfer` rows once Cosmo returns a token's metadata: it creates the collection if new, the objekt, its transfers and the outbox rows for non-mints, applies and stamps the token's unapplied `transferability_update` rows, and deletes the held rows, in one transaction per token (`lib/pending-replay.ts` plans it). Transferability follows the same finality rule: the replay applies only final `transferability_update` rows, and each run then settles the rows left unapplied on objekts that exist, never over a newer applied change and never for a token with a change still in a hot block. Only tokens whose every held row is at or below `squid_processor.status` height replay: a hot block can still be reorged out, and the worker's write would survive it. The verifier's `seenUntil` stops one second before the oldest held transfer (`trade-verifier/indexer-head.ts`), so a held send never lets a deadline pass.
+
 ## Offline serials
 
 Serials of objekts minted offline come from `populateSerialOffline` (`job/populate-serial.ts`), checked weekly by `job/verify-batch-boundaries.ts`. The model:

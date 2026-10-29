@@ -92,3 +92,14 @@ type ListEventOutbox @entity {
   timestamp: DateTime!
   createdAt: DateTime! @index
 }
+
+type PendingTransfer @entity {
+  id: ID! # the transfer's uuid, kept when it is replayed
+  tokenId: String! @index
+  from: String!
+  to: String!
+  timestamp: DateTime!
+  hash: String!
+  blockNumber: Int!
+  logIndex: Int!
+}

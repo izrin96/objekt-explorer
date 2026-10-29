@@ -18,7 +18,7 @@
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
 import { chunk } from "@repo/lib";
-import { and, asc, eq, inArray, isNull, lte, ne, or, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull, lte, or, sql } from "drizzle-orm";
 
 import { discoverBatches } from "@/job/populate-serial";
 import { preAssignedCollections as excludeCollections } from "@/lib/serial-constants";
@@ -42,10 +42,7 @@ const targets = await indexer
   .innerJoin(objekts, eq(objekts.collectionId, collections.id))
   .where(
     and(
-      or(
-        and(eq(collections.onOffline, "offline"), ne(collections.slug, "empty-collection")),
-        inArray(collections.slug, excludeCollections),
-      ),
+      or(eq(collections.onOffline, "offline"), inArray(collections.slug, excludeCollections)),
       FORCE ? undefined : isNull(collections.serialBatches),
     ),
   );

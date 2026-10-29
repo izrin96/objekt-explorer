@@ -22,16 +22,18 @@ export function parseBlocks(blocks: BlockData<Fields>[]) {
     transfers: logs
       .map(parseTransferEvent)
       .filter((e) => e !== undefined)
-      .map((event) => {
-        return new Transfer({
+      .map((event) => ({
+        transfer: new Transfer({
           id: Bun.randomUUIDv7(),
           from: event.from,
           to: event.to,
           timestamp: new Date(event.timestamp),
           tokenId: event.tokenId,
           hash: event.hash,
-        });
-      }),
+        }),
+        blockNumber: event.blockNumber,
+        logIndex: event.logIndex,
+      })),
 
     // objekt transferability updates
     transferability: transactions
@@ -67,6 +69,8 @@ export type TransferEvent = {
   to: string;
   tokenId: string;
   timestamp: number;
+  blockNumber: number;
+  logIndex: number;
 };
 
 /**
@@ -83,6 +87,8 @@ export function parseTransferEvent(log: Log): TransferEvent | undefined {
         contract: addr(log.address),
         tokenId: event.tokenId.toString(),
         timestamp: log.block.timestamp,
+        blockNumber: log.block.height,
+        logIndex: log.logIndex,
       };
     }
     return undefined;

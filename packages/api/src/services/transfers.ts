@@ -94,7 +94,7 @@ async function fetchTransfers(query: AddressTransfersFilters, addr: string) {
     const collectionSubquery = indexer
       .select({ id: collections.id })
       .from(collections)
-      .where(and(ne(collections.slug, "empty-collection"), ...collectionFilters));
+      .where(and(...collectionFilters));
 
     // Run the collection query first to check if any match,
     // avoids a full scan of transfers when no collections match the filters.
@@ -146,7 +146,7 @@ async function fetchTransfers(query: AddressTransfersFilters, addr: string) {
   }
 
   // No collection filters — planner can use partial indexes directly
-  const baseWhere = and(...cursorFilter, ...tsFilter, ne(collections.slug, "empty-collection"));
+  const baseWhere = and(...cursorFilter, ...tsFilter);
 
   const queryFn = (...addressFilters: (SQL | undefined)[]) =>
     indexer

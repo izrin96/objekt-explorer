@@ -1,221 +1,273 @@
 import { enrichUpdateMetadata } from "@repo/cosmo/server/metadata";
-import type { CosmoObjektMetadataV1, MetadataVersion } from "@repo/cosmo/types/metadata";
+import type { CosmoObjektMetadataV1 } from "@repo/cosmo/types/metadata";
 import { indexer } from "@repo/db/indexer";
-import { collections, objekts, transfers } from "@repo/db/indexer/schema";
+import {
+  collections,
+  listEventOutbox,
+  objekts,
+  pendingTransfers,
+  transferabilityUpdates,
+  transfers,
+} from "@repo/db/indexer/schema";
 import { addr, chunk, slugifyObjekt } from "@repo/lib";
-import { eq, inArray, sql } from "drizzle-orm";
+import { and, eq, inArray, isNull, sql } from "drizzle-orm";
 
 import { log } from "@/lib/log";
-import { safeFetchMetadataV1, safeFetchMetadataV3 } from "@/lib/metadata-utils";
+import { safeFetchMetadataV3 } from "@/lib/metadata-utils";
+import { planReplay } from "@/lib/pending-replay";
 
 const BATCH_SIZE = 50;
-const fixLog = log("fix-collection");
+const replayLog = log("fix-collection");
 
-export async function fixEmptyCollection({ version }: { version: MetadataVersion }) {
-  try {
-    await fixStaleTransfers();
-  } catch (error) {
-    fixLog.error("Stale transfer fix failed:", error);
-  }
+type Tx = Parameters<Parameters<typeof indexer.transaction>[0]>[0];
 
-  const objektsResults = await indexer
-    .select({
-      id: objekts.id,
-      mintedAt: objekts.mintedAt,
-    })
-    .from(objekts)
-    .innerJoin(collections, eq(objekts.collectionId, collections.id))
-    .where(eq(collections.slug, "empty-collection"));
+const finalHeight = sql`(select max(height) from squid_processor.status)`;
 
-  fixLog.debug(`${objektsResults.length} objekts to fix`);
+/**
+ * Replays the transfers the indexer held because Cosmo had no metadata for their token. A token
+ * replays only once every held row is final: this write would survive a reorg that undoes them.
+ */
+export async function replayPendingTransfers() {
+  const ready = await indexer.execute<{ token_id: string }>(sql`
+    select token_id from ${pendingTransfers}
+    group by token_id
+    having max(block_number) <= ${finalHeight}
+  `);
+  const tokenIds = ready.rows.map((row) => row.token_id);
+  replayLog.debug(`${tokenIds.length} held tokens to replay`);
 
-  const totalBatches = Math.ceil(objektsResults.length / BATCH_SIZE);
-  let batchNumber = 0;
-  let updated = 0;
-  let missing = 0;
+  let replayed = 0;
+  let unresolved = 0;
+  let failed = 0;
+  await chunk(tokenIds, BATCH_SIZE, async (batch) => {
+    const fetched = await Promise.all(
+      batch.map(async (tokenId) => ({ tokenId, metadata: await safeFetchMetadataV3(tokenId) })),
+    );
 
-  await chunk(objektsResults, BATCH_SIZE, async (batch) => {
-    batchNumber++;
-    try {
-      const result = await processMetadataBatch(batch, batchNumber, totalBatches, version);
-      updated += result.updated;
-      missing += result.missing;
-    } catch (error) {
-      fixLog.error(`Batch ${batchNumber}/${totalBatches} failed:`, error);
+    for (const { tokenId, metadata } of fetched) {
+      if (!metadata) {
+        unresolved++;
+        continue;
+      }
+      try {
+        if (await indexer.transaction((tx) => replayToken(tx, tokenId, metadata))) replayed++;
+      } catch (error) {
+        failed++;
+        replayLog.debug(`Replay of token ${tokenId} failed:`, error);
+      }
     }
   });
 
-  if (updated > 0)
-    fixLog.info(`Moved ${updated} of ${objektsResults.length} objekts to their collection`);
-  if (missing > 0)
-    fixLog.warn(`Cosmo returned no metadata for ${missing} objekts; they retry next run`);
+  const leftover = await applyLeftoverTransferability();
+
+  if (replayed > 0) replayLog.info(`Replayed the held transfers of ${replayed} tokens`);
+  if (leftover > 0) replayLog.info(`Settled ${leftover} leftover transferability changes`);
+  if (unresolved > 0)
+    replayLog.warn(`Cosmo returned no metadata for ${unresolved} held tokens; they retry next run`);
+  if (failed > 0) replayLog.warn(`Replay failed for ${failed} held tokens; they retry next run`);
 }
 
 /**
- * Transfers left on empty-collection after their objekt moved back to its real
- * collection. The objekt is no longer empty, so the metadata pass never sees them.
+ * Applies a final transferability change the indexer left unapplied although its objekt exists,
+ * such as one read while a replay of that token was committing. A change older than one already
+ * applied is only stamped, so the objekt never goes back to an earlier state. A token with any
+ * change still in a hot block waits: a reorg would not undo this write.
  */
-async function fixStaleTransfers() {
+async function applyLeftoverTransferability() {
   const result = await indexer.execute(sql`
-    update ${transfers} t
-    set collection_id = o.collection_id
-    from ${objekts} o, ${collections} tc, ${collections} oc
-    where t.objekt_id = o.id
-      and t.collection_id = tc.id
-      and o.collection_id = oc.id
-      and tc.slug = 'empty-collection'
-      and oc.slug <> 'empty-collection'
+    with pending as (
+      select u.id, u.token_id, u.transferable, u.block_number, u.transaction_index
+      from ${transferabilityUpdates} u
+      join ${objekts} o on o.id = u.token_id
+      where u.applied_at is null
+        and not exists (
+          select 1 from ${transferabilityUpdates} h
+          where h.token_id = u.token_id and h.block_number > ${finalHeight}
+        )
+    ),
+    latest as (
+      select distinct on (p.token_id) p.token_id, p.transferable
+      from pending p
+      where not exists (
+        select 1 from ${transferabilityUpdates} n
+        where n.token_id = p.token_id
+          and n.applied_at is not null
+          and (n.block_number, n.transaction_index) > (p.block_number, p.transaction_index)
+      )
+      order by p.token_id, p.block_number desc, p.transaction_index desc
+    ),
+    applied as (
+      update ${objekts} o set transferable = latest.transferable
+      from latest
+      where o.id = latest.token_id
+    )
+    update ${transferabilityUpdates} u set applied_at = now()
+    from pending
+    where u.id = pending.id
   `);
-
-  if (result.rowCount) fixLog.info(`Fixed ${result.rowCount} stale transfers`);
+  return result.rowCount ?? 0;
 }
 
-async function processMetadataBatch(
-  batch: { id: string; mintedAt: string }[],
-  batchNumber: number,
-  totalBatches: number,
-  version: MetadataVersion,
-): Promise<{ updated: number; missing: number }> {
-  fixLog.debug(`Processing batch ${batchNumber}/${totalBatches} (${batch.length} objekts)`);
+async function replayToken(tx: Tx, tokenId: string, metadata: CosmoObjektMetadataV1) {
+  const rows = await tx
+    .select({
+      id: pendingTransfers.id,
+      tokenId: pendingTransfers.tokenId,
+      from: pendingTransfers.from,
+      to: pendingTransfers.to,
+      timestamp: pendingTransfers.timestamp,
+      hash: pendingTransfers.hash,
+      blockNumber: pendingTransfers.blockNumber,
+      logIndex: pendingTransfers.logIndex,
+      final: sql<boolean>`${pendingTransfers.blockNumber} <= ${finalHeight}`,
+    })
+    .from(pendingTransfers)
+    .where(eq(pendingTransfers.tokenId, tokenId))
+    .for("update");
+  // the indexer may have held another transfer since the token was picked
+  if (rows.length === 0 || rows.some((row) => !row.final)) return false;
 
-  const metadataResults = await Promise.all(
-    batch.map(async (objekt) => ({
-      objektId: objekt.id,
-      mintedAt: objekt.mintedAt,
-      metadata:
-        version === 1 ? await safeFetchMetadataV1(objekt.id) : await safeFetchMetadataV3(objekt.id),
-    })),
+  const [objekt] = await tx
+    .select({ receivedAt: objekts.receivedAt })
+    .from(objekts)
+    .where(eq(objekts.id, tokenId))
+    .for("update");
+  const updates = await tx
+    .select({
+      id: transferabilityUpdates.id,
+      transferable: transferabilityUpdates.transferable,
+      blockNumber: transferabilityUpdates.blockNumber,
+      transactionIndex: transferabilityUpdates.transactionIndex,
+    })
+    .from(transferabilityUpdates)
+    .where(
+      and(
+        eq(transferabilityUpdates.tokenId, tokenId),
+        isNull(transferabilityUpdates.appliedAt),
+        // a change in a hot block waits for the leftover pass once it is final
+        sql`${transferabilityUpdates.blockNumber} <= ${finalHeight}`,
+      ),
+    );
+
+  const plan = planReplay({
+    rows,
+    objekt: objekt ?? null,
+    updates,
+    transferable: metadata.objekt.transferable,
+  });
+  if (!plan) return false;
+
+  const slug = slugifyObjekt(metadata.objekt.collectionId);
+  const collectionId = await ensureCollection(
+    tx,
+    slug,
+    metadata,
+    plan.insert?.mintedAt ?? plan.transfers[0]!.timestamp,
   );
 
-  const collectionSlugMap = new Map<string, string>();
-  const metadataMap = new Map<string, CosmoObjektMetadataV1>();
-  const updates: {
-    objektId: string;
-    collectionId: string;
-    serial: number;
-    transferable: boolean;
-  }[] = [];
-  const collectionMetadataUpdates: Map<string, CosmoObjektMetadataV1> = new Map();
-  const slugMintedAt = new Map<string, string>();
-
-  let missing = 0;
-  for (const result of metadataResults) {
-    if (!result.metadata) {
-      missing++;
-      fixLog.debug(`No metadata for token ID ${result.objektId}`);
-      continue;
-    }
-
-    metadataMap.set(result.objektId, result.metadata);
-
-    const slug = slugifyObjekt(result.metadata.objekt.collectionId);
-    collectionSlugMap.set(result.objektId, slug);
-
-    if (!collectionMetadataUpdates.has(slug)) {
-      collectionMetadataUpdates.set(slug, result.metadata);
-    }
-
-    const existingMintedAt = slugMintedAt.get(slug);
-    if (!existingMintedAt || result.mintedAt < existingMintedAt) {
-      slugMintedAt.set(slug, result.mintedAt);
-    }
-  }
-
-  const uniqueSlugs = [...new Set(collectionSlugMap.values())];
-  const collectionRecords = await indexer
-    .select({
-      id: collections.id,
-      slug: collections.slug,
-    })
-    .from(collections)
-    .where(inArray(collections.slug, uniqueSlugs));
-
-  const slugToCollectionId = new Map(collectionRecords.map((c) => [c.slug, c.id]));
-
-  const missingSlugs = uniqueSlugs.filter((s) => !slugToCollectionId.has(s));
-
-  if (missingSlugs.length > 0) {
-    const newCollections = missingSlugs.map((slug) => {
-      const metadata = collectionMetadataUpdates.get(slug)!;
-      const enriched = enrichUpdateMetadata(metadata, { version });
-      return {
-        id: Bun.randomUUIDv7(),
-        contract: addr(metadata.objekt.tokenAddress),
-        createdAt: slugMintedAt.get(slug)!,
-        collectionId: metadata.objekt.collectionId,
-        slug,
-        ...enriched,
-        backImage: enriched.backImage ?? metadata.objekt.backImage,
-        textColor: enriched.textColor ?? metadata.objekt.textColor,
-        accentColor: enriched.accentColor ?? metadata.objekt.accentColor,
-      };
-    });
-
-    await indexer.insert(collections).values(newCollections).onConflictDoNothing({
-      target: collections.slug,
-    });
-    fixLog.info(`Created ${newCollections.length} missing collections`);
-
-    // re-select for canonical ids (conflict means indexer created it concurrently with a different id)
-    const createdRecords = await indexer
-      .select({ id: collections.id, slug: collections.slug })
-      .from(collections)
-      .where(inArray(collections.slug, missingSlugs));
-    for (const record of createdRecords) {
-      slugToCollectionId.set(record.slug, record.id);
-    }
-  }
-
-  for (const [objektId, slug] of collectionSlugMap) {
-    const collectionId = slugToCollectionId.get(slug);
-    if (!collectionId) {
-      fixLog.debug(`No collection yet for token ID ${objektId}`);
-      continue;
-    }
-
-    const metadata = metadataMap.get(objektId);
-    if (!metadata) continue;
-
-    updates.push({
-      objektId,
-      collectionId,
+  if (plan.insert) {
+    await tx.insert(objekts).values({
+      id: tokenId,
+      ...plan.insert,
       serial: metadata.objekt.objektNo,
-      transferable: metadata.objekt.transferable,
+      collectionId,
     });
   }
-
-  if (updates.length === 0) {
-    fixLog.debug(`Batch ${batchNumber}/${totalBatches}: no updates needed`);
-    return { updated: 0, missing };
+  if (objekt) {
+    // a token never changes collection, so a known objekt without one gets this one
+    await tx
+      .update(objekts)
+      .set({ collectionId })
+      .where(and(eq(objekts.id, tokenId), isNull(objekts.collectionId)));
+  }
+  if (plan.move) {
+    await tx.update(objekts).set(plan.move).where(eq(objekts.id, tokenId));
+  }
+  if (plan.transferable !== null) {
+    await tx
+      .update(objekts)
+      .set({ transferable: plan.transferable })
+      .where(eq(objekts.id, tokenId));
   }
 
-  await indexer.transaction(async (tx) => {
-    if (updates.length > 0) {
-      for (const update of updates) {
-        // for objekts
-        await tx
-          .update(objekts)
-          .set({
-            collectionId: update.collectionId,
-            // only for v1
-            serial: version === 1 ? update.serial : undefined,
-            transferable: version === 1 ? update.transferable : undefined,
-          })
-          .where(eq(objekts.id, update.objektId));
-      }
+  await tx
+    .insert(transfers)
+    .values(
+      plan.transfers.map((row) => ({
+        id: row.id,
+        from: row.from,
+        to: row.to,
+        timestamp: row.timestamp,
+        tokenId,
+        hash: row.hash,
+        objektId: tokenId,
+        collectionId,
+      })),
+    )
+    .onConflictDoNothing();
 
-      for (const update of updates) {
-        // for transfers
-        await tx
-          .update(transfers)
-          .set({
-            collectionId: update.collectionId,
-          })
-          .where(eq(transfers.objektId, update.objektId));
-      }
-    }
-  });
+  // the outbox names the collection by slug, as the indexer writes it
+  if (plan.outbox.length > 0) {
+    await tx.insert(listEventOutbox).values(
+      plan.outbox.map((row) => ({
+        transferId: row.id,
+        fromAddress: row.from,
+        toAddress: row.to,
+        collectionId: slug,
+        tokenId,
+        timestamp: row.timestamp,
+      })),
+    );
+  }
 
-  fixLog.debug(`Batch ${batchNumber}/${totalBatches}: updated ${updates.length} objekts`);
-  return { updated: updates.length, missing };
+  if (updates.length > 0) {
+    await tx
+      .update(transferabilityUpdates)
+      .set({ appliedAt: sql`now()` })
+      .where(
+        inArray(
+          transferabilityUpdates.id,
+          updates.map((update) => update.id),
+        ),
+      );
+  }
+
+  await tx.delete(pendingTransfers).where(
+    inArray(
+      pendingTransfers.id,
+      rows.map((row) => row.id),
+    ),
+  );
+  return true;
+}
+
+async function ensureCollection(
+  tx: Tx,
+  slug: string,
+  metadata: CosmoObjektMetadataV1,
+  createdAt: string,
+) {
+  const enriched = enrichUpdateMetadata(metadata, { version: 3 });
+  await tx
+    .insert(collections)
+    .values({
+      id: Bun.randomUUIDv7(),
+      contract: addr(metadata.objekt.tokenAddress),
+      createdAt,
+      collectionId: metadata.objekt.collectionId,
+      slug,
+      ...enriched,
+      backImage: enriched.backImage ?? metadata.objekt.backImage,
+      textColor: enriched.textColor ?? metadata.objekt.textColor,
+      accentColor: enriched.accentColor ?? metadata.objekt.accentColor,
+    })
+    .onConflictDoNothing({ target: collections.slug });
+
+  // re-select for the canonical id: a conflict means the indexer created it with another id
+  const [collection] = await tx
+    .select({ id: collections.id })
+    .from(collections)
+    .where(eq(collections.slug, slug));
+  if (!collection) throw new Error(`No collection ${slug} after insert`);
+  return collection.id;
 }

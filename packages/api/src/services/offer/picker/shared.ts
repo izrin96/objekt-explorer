@@ -4,7 +4,7 @@ import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
 import { listEntries, lists, offer, offerItem } from "@repo/db/schema";
 import { isSerialEstimated, shownSerial } from "@repo/lib/serial";
-import { type SQL, and, desc, eq, gt, inArray, lt, ne, or, sql } from "drizzle-orm";
+import { type SQL, and, desc, eq, gt, inArray, lt, or, sql } from "drizzle-orm";
 
 import type { itemFlags } from "../../../lib/offer-rules";
 import { unique } from "../../../lib/unique";
@@ -161,7 +161,6 @@ export function ownedQuery(
     .where(
       and(
         inArray(objekts.owner, addresses),
-        ne(collections.slug, "empty-collection"),
         ...collectionWhere(filters),
         slugs ? inArray(collections.slug, [...slugs]) : undefined,
         where,

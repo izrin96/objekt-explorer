@@ -1,4 +1,4 @@
-import { emptyMetadata, fetchMetadataV3, normalizeV3 } from "@repo/cosmo/server/metadata";
+import { fetchMetadataV3, normalizeV3 } from "@repo/cosmo/server/metadata";
 
 export async function fetchMetadata(tokenId: string) {
   try {
@@ -6,7 +6,6 @@ export async function fetchMetadata(tokenId: string) {
     return normalizeV3(metadata, tokenId);
   } catch {
     console.error(`[fetchMetadata] Error fetching metadata`);
-    // fallback to empty metadata
-    return emptyMetadata(tokenId);
+    return null;
   }
 }

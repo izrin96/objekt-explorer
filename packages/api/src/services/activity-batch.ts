@@ -16,8 +16,6 @@ export async function enrichTransfers(transfers: TransferData[]): Promise<Activi
 
   const batch: ActivityItem[] = [];
   for (const transfer of transfers) {
-    if (transfer.collection.slug === "empty-collection") continue;
-
     const { objekt, collection, ...rest } = transfer;
     batch.push({
       nickname: {

@@ -5,3 +5,4 @@ export * from "./comoBalance.model";
 export * from "./vote.model";
 export * from "./listEventOutbox.model";
 export * from "./transferabilityUpdate.model";
+export * from "./pendingTransfer.model";

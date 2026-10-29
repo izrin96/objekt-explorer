@@ -77,10 +77,7 @@ export async function verifyBatchBoundaries(dryRun = false) {
     .from(collections)
     .where(
       and(
-        or(
-          and(eq(collections.onOffline, "offline"), ne(collections.slug, "empty-collection")),
-          inArray(collections.slug, excludeCollections),
-        ),
+        or(eq(collections.onOffline, "offline"), inArray(collections.slug, excludeCollections)),
         isNotNull(collections.serialBatches),
       ),
     );

@@ -95,7 +95,7 @@ async function fetchTransfers(query: ActivityFeedInput) {
     const collectionSubquery = indexer
       .select({ id: collections.id })
       .from(collections)
-      .where(and(ne(collections.slug, "empty-collection"), ...collectionFilters));
+      .where(and(...collectionFilters));
 
     // Run the collection query first to check if any match,
     // avoids a full scan of transfers when no collections match the filters.
@@ -138,7 +138,7 @@ async function fetchTransfers(query: ActivityFeedInput) {
     .from(transfers)
     .innerJoin(objekts, eq(transfers.objektId, objekts.id))
     .innerJoin(collections, eq(transfers.collectionId, collections.id))
-    .where(and(...cursorFilter, ...typeFilters, ne(collections.slug, "empty-collection")))
+    .where(and(...cursorFilter, ...typeFilters))
     .orderBy(desc(transfers.timestamp), desc(transfers.id))
     .limit(PAGE_SIZE + 1);
 }

@@ -71,7 +71,7 @@ export async function fetchCollectionList(
       : []),
     ...(query.at ? [lte(collections.createdAt, query.at)] : []),
   ];
-  const whereQuery = and(...filters, ne(collections.slug, "empty-collection"));
+  const whereQuery = and(...filters);
 
   const [overrideStr, [latest]] = await Promise.all([
     redis.get("collection:modified-at"),

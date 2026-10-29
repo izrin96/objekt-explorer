@@ -17,7 +17,7 @@
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
 import { chunk } from "@repo/lib";
-import { and, asc, eq, inArray, isNotNull, lte, ne, notInArray, or } from "drizzle-orm";
+import { and, asc, eq, inArray, isNotNull, lte, notInArray, or } from "drizzle-orm";
 
 import { refineBatches, writeSerialUpdates } from "@/job/populate-serial";
 import {
@@ -47,10 +47,7 @@ const targets = await indexer
   .from(collections)
   .where(
     and(
-      or(
-        and(eq(collections.onOffline, "offline"), ne(collections.slug, "empty-collection")),
-        inArray(collections.slug, excludeCollections),
-      ),
+      or(eq(collections.onOffline, "offline"), inArray(collections.slug, excludeCollections)),
       isNotNull(collections.serialBatches),
       notInArray(collections.season, preBlockSeasons),
     ),

@@ -3,7 +3,7 @@ import { validArtists, validFourSeason } from "@repo/cosmo/types/common";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
 import type { CollectionField, ProcessedImageField } from "@repo/lib/types/objekt";
-import { and, asc, count, countDistinct, eq, inArray, ne } from "drizzle-orm";
+import { asc, count, countDistinct, eq, inArray } from "drizzle-orm";
 
 import { getStaleCache } from "./redis";
 import { classOrder } from "./utils";
@@ -14,7 +14,6 @@ async function fetchUniqueCollections() {
       collectionNo: collections.collectionNo,
     })
     .from(collections)
-    .where(ne(collections.slug, "empty-collection"))
     .orderBy(asc(collections.collectionNo));
   return result.map((a) => a.collectionNo);
 }
@@ -165,12 +164,9 @@ export async function fetchOwnerCounts(addresses: string[]) {
     .from(objekts)
     .innerJoin(collections, eq(objekts.collectionId, collections.id))
     .where(
-      and(
-        inArray(
-          objekts.owner,
-          addresses.map((address) => address.toLowerCase()),
-        ),
-        ne(collections.slug, "empty-collection"),
+      inArray(
+        objekts.owner,
+        addresses.map((address) => address.toLowerCase()),
       ),
     )
     .groupBy(objekts.owner);
@@ -183,6 +179,6 @@ export async function fetchOwnerSummary(address: string) {
     .select({ objekts: count(), collections: countDistinct(collections.collectionId) })
     .from(objekts)
     .innerJoin(collections, eq(objekts.collectionId, collections.id))
-    .where(and(eq(objekts.owner, address.toLowerCase()), ne(collections.slug, "empty-collection")));
+    .where(eq(objekts.owner, address.toLowerCase()));
   return { objekts: row?.objekts ?? 0, collections: row?.collections ?? 0 };
 }

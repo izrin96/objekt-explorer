@@ -89,7 +89,6 @@ export async function processCollectionImages() {
     .from(collections)
     .where(
       and(
-        ne(collections.slug, "empty-collection"),
         or(
           isNull(collections.imageSyncHash),
           isNull(collections.processedFrontImage),

@@ -11,8 +11,7 @@ const envSchema = z.object({
   ENABLE_OBJEKTS: z.preprocess((x) => x === "true", z.coerce.boolean()),
   ENABLE_GRAVITY: z.preprocess((x) => x === "true", z.coerce.boolean()),
   COSMO_PARALLEL_COUNT: z.coerce.number().positive().default(500),
-  // diagnostic-only speed-up flags, not for production use
-  SKIP_METADATA: z.preprocess((x) => x === "true", z.coerce.boolean()).default(false),
+  // diagnostic-only speed-up flag, not for production use
   SKIP_OUTBOX: z.preprocess((x) => x === "true", z.coerce.boolean()).default(false),
   // diagnostic-only: override the block the processor starts from.
   // empty string is treated as unset so docker-compose can always pass the var.
