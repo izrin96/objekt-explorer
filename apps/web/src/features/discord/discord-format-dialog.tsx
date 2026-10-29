@@ -153,7 +153,7 @@ export function DiscordFormatDialog({
             for (const rule of rules) output.push(options.bullet ? `- ${rule}` : rule);
             if (rows.length > 0) output.push(format(rows, formatOptions));
             const url = options.includeLink ? listUrl(slug) : null;
-            if (url) output.push("", `[${m.list_share()}](<${url}>)`);
+            if (url) output.push("", `[View list](<${url}>)`);
           };
 
           section("## Have", have, haveListSlug);

@@ -902,7 +902,6 @@
   "list_scope_empty_hint_menu": "This list holds nothing under the selected artists. Change them from Artists in your avatar menu.",
   "list_scope_empty_hint_settings": "This list holds nothing under the selected artists. Change them from Artists in Settings.",
   "list_filtered_empty_hint": "Every objekt in this list is filtered out by the current facets.",
-  "list_share": "Share",
   "list_share_copied": "Link copied",
   "list_copy_id": "Copy list ID",
   "list_copy_id_copied": "List ID copied",

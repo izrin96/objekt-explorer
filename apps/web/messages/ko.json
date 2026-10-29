@@ -902,7 +902,6 @@
   "list_scope_empty_hint_menu": "선택한 아티스트 범위에서 이 리스트에 오브젝트가 없습니다. 아바타 메뉴의 '아티스트'에서 변경하세요.",
   "list_scope_empty_hint_settings": "선택한 아티스트 범위에서 이 리스트에 오브젝트가 없습니다. '설정'의 '아티스트'에서 변경하세요.",
   "list_filtered_empty_hint": "현재 필터로 이 리스트의 모든 오브젝트가 제외되었습니다.",
-  "list_share": "공유",
   "list_share_copied": "링크가 복사되었습니다",
   "list_copy_id": "목록 ID 복사",
   "list_copy_id_copied": "목록 ID가 복사되었습니다",

@@ -902,7 +902,6 @@
   "list_scope_empty_hint_menu": "選択中のアーティストの範囲では、このリストにObjektはありません。アバターメニューの「アーティスト」から変更できます。",
   "list_scope_empty_hint_settings": "選択中のアーティストの範囲では、このリストにObjektはありません。「設定」の「アーティスト」から変更できます。",
   "list_filtered_empty_hint": "現在のフィルターでこのリストのObjektはすべて除外されています。",
-  "list_share": "共有",
   "list_share_copied": "リンクをコピーしました",
   "list_copy_id": "リストIDをコピー",
   "list_copy_id_copied": "リストIDをコピーしました",

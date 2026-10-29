@@ -28,7 +28,7 @@ export function ShareListButton({ list }: { list: ShareableList }) {
   return (
     <Button variant="outline" size="sm" onClick={() => void copy()}>
       <ShareNetworkIcon />
-      {m.list_share()}
+      {m.list_copy_link()}
     </Button>
   );
 }
