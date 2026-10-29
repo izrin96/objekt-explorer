@@ -29,6 +29,7 @@ import {
   bannerFileError,
   cropToBanner,
   isCroppable,
+  isUploadFailure,
   putBanner,
 } from "@/features/link/banner-upload";
 import { PROFILE_QUERY_KEY, profileOptions } from "@/features/link/queries";
@@ -182,7 +183,7 @@ function EditForm({
       toastManager.add({
         type: "error",
         title: m.profile_edit_error(),
-        description: refusalText(error),
+        description: isUploadFailure(error) ? m.profile_edit_upload_error() : refusalText(error),
       });
     },
   });

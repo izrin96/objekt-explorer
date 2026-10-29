@@ -1,6 +1,5 @@
 import { MAX_FILE_SIZE } from "@repo/api/constants";
 import { CACHE_CONTROL, acceptedFileMimeTypes } from "@repo/lib/media";
-import { ofetch } from "ofetch";
 import type { CropperRef } from "react-advanced-cropper";
 
 import { m } from "@/paraglide/messages";
@@ -34,8 +33,12 @@ export async function cropToBanner(cropper: CropperRef | null, file: File): Prom
   return blob ? new File([blob], file.name, { type: file.type }) : file;
 }
 
+const UPLOAD_FAILED = "BannerUploadFailed";
+
+export const isUploadFailure = (error: Error) => error.name === UPLOAD_FAILED;
+
 export async function putBanner(url: string, file: File): Promise<void> {
-  const response = await ofetch.raw(url, {
+  const response = await fetch(url, {
     method: "PUT",
     body: file,
     headers: {
@@ -45,7 +48,9 @@ export async function putBanner(url: string, file: File): Promise<void> {
       // here fails the signature check
       "Cache-Control": CACHE_CONTROL,
     },
-  });
+  }).catch(() => null);
 
-  if (!response.ok) throw new Error(m.profile_edit_upload_error());
+  if (!response?.ok) {
+    throw Object.assign(new Error("Banner upload failed"), { name: UPLOAD_FAILED });
+  }
 }
