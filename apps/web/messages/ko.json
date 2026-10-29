@@ -1901,6 +1901,8 @@
   "trade_take_off": "거래에서 내리기",
   "trade_take_off_success": "거래에서 내렸습니다",
   "trade_take_off_error": "게시물을 거래에서 내리지 못했습니다. 다시 시도하세요.",
+  "trade_post_copy_link": "링크 복사",
+  "trade_post_copy_link_idle": "먼저 끌어올리세요. 휴면 게시물은 둘러보기에 표시되지 않습니다.",
   "list_trade_heading": "거래",
   "trade_line_off": "거래에 없음",
   "trade_line_not_on": "거래에 올리지 않음",

@@ -417,12 +417,14 @@ A person with posts on Trade SHALL be able to bump once every 24 hours. A bump S
 - **THEN** the list takes the bump time from 3 hours ago, and the owner's row keeps its place
 
 ### Requirement: Your posts and Post a list
-A signed-in viewer's posts SHALL be summarised above the feed in one row: the title Your posts, how many of them are listed, how many are idle, when the next bump is allowed while it is not, the one Bump control (see Bump), disabled until then, a New post control that opens the post composer, and a control that shows or hides the posts. The row SHALL show on Browse; For you and a signed-out visitor SHALL keep a New post control above the feed in its place. Shown, each entry SHALL be one post and show:
+A signed-in viewer's posts SHALL be summarised above the feed in one row: the title Your posts, how many of them are listed, how many are idle, when the next bump is allowed while it is not, the one Bump control (see Bump), disabled until then, a Copy link control, a New post control that opens the post composer, and a control that shows or hides the posts. The row SHALL show on Browse; For you and a signed-out visitor SHALL keep a New post control above the feed in its place. Shown, each entry SHALL be one post and show:
 - its tags and kind (Swap, Sell or Buy);
 - each list with its role: Offering for a have list, Looking for for a want list, Selling for a sale list, each linking to its list page;
 - the option it carries: "Would also pay" on a Swap post that would, "Also on Market" on a Sell post;
 - whether the post is listed or idle, and when it was last changed;
-- a menu with Edit post and Take off Trade.
+- a menu with Edit post, Copy link and Take off Trade.
+
+A post has no address of its own, so Copy link SHALL copy the Person link (see Matches to the signed-in viewer) to the viewer's row: `/trade?person=<their id>`. The row's Copy link SHALL copy it as is, and SHALL be disabled while none of the posts is listed. A post's Copy link SHALL add `type` set to the tag of the post's kind (`wtt` for Swap, `wts` for Sell, `wtb` for Buy) when the post carries that tag, and leave it out when it does not. Both SHALL confirm with "Link copied" and the copied address. On an idle post Copy link SHALL be disabled with the reason that idle posts don't show in Browse until bumped, since the feed would leave the row out.
 
 With no choice saved in this browser, the posts SHALL start shown when any of them is idle, and hidden otherwise. Showing or hiding them SHALL be remembered in this browser, and that choice SHALL win over the default. A viewer with no posts SHALL see the row say they have no posts on Trade, with New post. A signed-out visitor activating New post SHALL be sent to `/login?redirect=/trade`.
 
@@ -465,6 +467,18 @@ With no choice saved in this browser, the posts SHALL start shown when any of th
 #### Scenario: Take down from the dialog
 - **WHEN** the viewer chooses Take off Trade on a Sell post
 - **THEN** the sale list leaves `/trade`, Market and For you
+
+#### Scenario: Copy the link to all posts
+- **WHEN** the viewer activates Copy link on the Your posts row with 3 listed posts
+- **THEN** `/trade?person=<their id>` is copied, and opening it lists their row first with every listed post
+
+#### Scenario: Copy a post's link
+- **WHEN** the viewer chooses Copy link on a listed Sell post
+- **THEN** `/trade?person=<their id>&type=wts` is copied, and opening it lists their row first with their Sell posts
+
+#### Scenario: Copy link on an idle post
+- **WHEN** the viewer opens the menu of an idle post
+- **THEN** Copy link is disabled and says to bump the post first
 
 #### Scenario: No posts
 - **WHEN** a signed-in viewer has no posts

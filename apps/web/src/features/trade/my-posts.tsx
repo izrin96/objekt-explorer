@@ -1,36 +1,43 @@
 import {
   ArrowClockwiseIcon,
+  ArrowFatLineDownIcon,
   ArrowFatLineUpIcon,
   CaretDownIcon,
   DotsThreeIcon,
+  PencilSimpleIcon,
   PlusIcon,
+  ShareNetworkIcon,
 } from "@phosphor-icons/react";
 import type { Outputs } from "@repo/api";
 import { useQuery } from "@tanstack/react-query";
-import { Link, useHydrated } from "@tanstack/react-router";
+import { Link, useHydrated, useRouter } from "@tanstack/react-router";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Menu, MenuItem, MenuPopup, MenuTrigger } from "@/components/ui/menu";
 import { MonoMessage } from "@/features/offers/mono";
+import { copyWithToast } from "@/lib/clipboard";
 import { relativeTime } from "@/lib/time";
+import { getBaseURL } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 import { useSettings } from "@/stores/settings";
 
 import { useBumpPost, useTakeDownPost } from "./actions";
 import { summarizePosts } from "./my-posts-summary";
+import { postLinkSearch } from "./post-link";
 import { KIND_LABEL } from "./post-list-dialog";
 import { postTime } from "./post-time";
 import { myPostsOptions } from "./queries";
 import { TagBadges } from "./tag-label";
 
-type MyPostsProps = { onNew: () => void; onEdit: (slug: string) => void };
+type MyPostsProps = { userId: string; onNew: () => void; onEdit: (slug: string) => void };
 
 /** The viewer's posts on Browse, one row each, with New post in the header. */
-export function MyPosts({ onNew, onEdit }: MyPostsProps) {
+export function MyPosts({ userId, onNew, onEdit }: MyPostsProps) {
   const query = useQuery(myPostsOptions());
   const bump = useBumpPost();
+  const copyLink = useCopyTradeLink();
   const saved = useSettings((s) => s.myPostsShown);
   const setSettings = useSettings((s) => s.set);
   const hydrated = useHydrated();
@@ -139,6 +146,16 @@ export function MyPosts({ onNew, onEdit }: MyPostsProps) {
             ) : null}
           </div>
           <div className="flex shrink-0 flex-wrap items-center justify-end gap-1">
+            {/* with every post idle the feed leaves the row out, so there is nothing to link to */}
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={summary.listed === 0}
+              onClick={() => void copyLink({ person: userId })}
+            >
+              <ShareNetworkIcon />
+              {m.trade_post_copy_link()}
+            </Button>
             <Button size="sm" onClick={onNew}>
               <PlusIcon />
               {m.trade_new_post()}
@@ -165,7 +182,7 @@ export function MyPosts({ onNew, onEdit }: MyPostsProps) {
         <CollapsiblePanel>
           <ul className="flex flex-col divide-y border-t">
             {posts.map((post) => (
-              <MyPostRow key={post.id} post={post} now={now} onEdit={onEdit} />
+              <MyPostRow key={post.id} post={post} userId={userId} now={now} onEdit={onEdit} />
             ))}
           </ul>
         </CollapsiblePanel>
@@ -182,16 +199,30 @@ const ROLE_LABEL = {
   sale: m.trade_role_sale,
 } as const;
 
+/** Copies a Browse address led by the viewer's row: all their posts, or one post's type. */
+function useCopyTradeLink() {
+  const router = useRouter();
+
+  return async (search: ReturnType<typeof postLinkSearch> | { person: string }) => {
+    const { href } = router.buildLocation({ to: "/trade", search });
+    const url = new URL(href, getBaseURL()).toString();
+    await copyWithToast(url, { title: m.list_share_copied(), description: url });
+  };
+}
+
 function MyPostRow({
   post,
+  userId,
   now,
   onEdit,
 }: {
   post: MyPost;
+  userId: string;
   now: number;
   onEdit: (slug: string) => void;
 }) {
   const takeDown = useTakeDownPost();
+  const copyLink = useCopyTradeLink();
   const { changed, time } = postTime(post);
   const when = relativeTime(new Date(time).getTime(), now);
   const details = [
@@ -250,9 +281,28 @@ function MyPostRow({
         >
           <DotsThreeIcon weight="bold" />
         </MenuTrigger>
-        <MenuPopup align="end">
-          <MenuItem onClick={() => onEdit(post.slug)}>{m.trade_composer_edit_title()}</MenuItem>
-          <MenuItem onClick={() => takeDown.takeDown(post.slug)}>{m.trade_take_off()}</MenuItem>
+        <MenuPopup align="end" className="max-w-64">
+          <MenuItem onClick={() => onEdit(post.slug)}>
+            <PencilSimpleIcon />
+            {m.trade_composer_edit_title()}
+          </MenuItem>
+          {/* the feed leaves idle posts out, so their link would open Browse without the row */}
+          <MenuItem
+            disabled={!post.listed}
+            onClick={() => void copyLink(postLinkSearch(userId, post))}
+          >
+            <ShareNetworkIcon />
+            <span className="flex flex-col">
+              {m.trade_post_copy_link()}
+              {post.listed ? null : (
+                <span className="text-xs text-pretty">{m.trade_post_copy_link_idle()}</span>
+              )}
+            </span>
+          </MenuItem>
+          <MenuItem onClick={() => takeDown.takeDown(post.slug)}>
+            <ArrowFatLineDownIcon />
+            {m.trade_take_off()}
+          </MenuItem>
         </MenuPopup>
       </Menu>
     </li>

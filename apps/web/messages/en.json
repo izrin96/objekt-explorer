@@ -1901,6 +1901,8 @@
   "trade_take_off": "Take off Trade",
   "trade_take_off_success": "Taken off Trade",
   "trade_take_off_error": "Couldn't take this post off Trade. Try again.",
+  "trade_post_copy_link": "Copy link",
+  "trade_post_copy_link_idle": "Bump it first: idle posts don't show in Browse.",
   "list_trade_heading": "Trade",
   "trade_line_off": "Off Trade",
   "trade_line_not_on": "Not on Trade",

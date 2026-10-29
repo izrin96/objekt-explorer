@@ -201,6 +201,7 @@ export function BrowseView({ surface, search }: { surface: Surface; search: Feed
 
         {user && !forYou ? (
           <MyPosts
+            userId={user.user.id}
             onNew={() => composer.openWith(NEW_POST)}
             onEdit={(slug) => composer.openWith(startForPost(planLists, slug))}
           />

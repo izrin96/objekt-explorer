@@ -1901,6 +1901,8 @@
   "trade_take_off": "取引から外す",
   "trade_take_off_success": "取引から外しました",
   "trade_take_off_error": "投稿を取引から外せませんでした。もう一度お試しください。",
+  "trade_post_copy_link": "リンクをコピー",
+  "trade_post_copy_link_idle": "先にバンプしてください。休止中の投稿は「投稿」に表示されません。",
   "list_trade_heading": "取引",
   "trade_line_off": "取引に出していません",
   "trade_line_not_on": "取引に出していません",
