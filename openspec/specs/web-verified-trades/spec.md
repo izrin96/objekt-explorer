@@ -273,7 +273,7 @@ Report a problem files a report against the other party, with the trade attached
 - **THEN** its page offers Report a problem, which opens the report dialog with the trade attached
 
 ### Requirement: Indexer delay
-The system SHALL know how far the indexer has read the chain: the time of the newest block whose transfers it has recorded. It SHALL refresh this at least every 3 minutes. The indexer is **behind** when that time is more than 5 minutes old, or when it could not be determined for more than 5 minutes.
+The system SHALL know how far the indexer has read the chain: the time of the newest block whose transfers it has recorded, or, when a transfer is held waiting for its objekt's metadata, the time just before the oldest held transfer, whichever is earlier. It SHALL refresh this at least every 3 minutes. The indexer is **behind** when that time is more than 5 minutes old, or when it could not be determined for more than 5 minutes.
 
 While the indexer is behind:
 - every in-progress trade page SHALL show a notice once, as a neutral strip above the status card: transfers sent after a given time aren't seen yet, and nothing sent is lost;
@@ -301,6 +301,10 @@ The notice SHALL disappear, and these rules SHALL lift, within 3 minutes of the 
 #### Scenario: Caught up
 - **WHEN** the indexer catches up
 - **THEN** within 3 minutes the notice is gone, and cancel, expiry and reminders behave as before
+
+#### Scenario: Held transfer holds the expiry
+- **WHEN** the indexer has read the chain to 15:30, a giver's send of a fresh mint at 14:10 is held because Cosmo's metadata is down, and the trade's expiry falls at 14:30
+- **THEN** the indexer counts as read only to just before 14:10, the trade doesn't expire, and once the send is replayed the leg verifies instead
 
 ### Requirement: Feedback
 After a trade completes, each party SHALL be able to rate the other Positive, Neutral or Negative, and change that rating for 14 days after completion.
