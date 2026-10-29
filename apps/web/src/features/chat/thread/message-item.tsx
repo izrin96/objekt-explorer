@@ -12,6 +12,7 @@ import { m } from "@/paraglide/messages";
 import { Bubble } from "./bubble";
 import type { RunPosition } from "./bubble-run";
 import { MessageActions } from "./message-actions";
+import { MessageText } from "./message-text";
 import { ObjektCardMessage } from "./objekt-card-message";
 import { PostCardMessage } from "./post-card-message";
 
@@ -105,7 +106,7 @@ export function MessageItem({
               ) : null}
               {message.body ? (
                 <Bubble mine={mine} position={position}>
-                  {message.body}
+                  <MessageText text={message.body} />
                 </Bubble>
               ) : null}
             </div>
