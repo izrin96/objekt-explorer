@@ -14,6 +14,7 @@ export async function fetchMetadataV1(tokenId: string) {
   return await ofetch<CosmoObjektMetadataV1>(`https://api.cosmo.fans/objekt/v1/token/${tokenId}`, {
     retry: 1,
     retryDelay: 750, // 750ms backoff
+    timeout: 10_000,
   });
 }
 
@@ -24,7 +25,7 @@ export async function fetchMetadataV1(tokenId: string) {
 export async function fetchMetadataV3(tokenId: string) {
   return await ofetch<CosmoObjektMetadataV3>(
     `https://api.cosmo.fans/bff/v3/objekts/nft-metadata/${tokenId}`,
-    { retry: 2, retryDelay: 500 }, // 500ms backoff
+    { retry: 2, retryDelay: 500, timeout: 10_000 }, // 500ms backoff
   );
 }
 

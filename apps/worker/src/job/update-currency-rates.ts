@@ -20,7 +20,7 @@ export async function updateCurrencyRates() {
 
   let data: FrankfurterItem[];
   try {
-    data = await ofetch<FrankfurterItem[]>(FRANKFURTER_URL);
+    data = await ofetch<FrankfurterItem[]>(FRANKFURTER_URL, { timeout: 10_000 });
   } catch (err) {
     ratesLog.warn("Fetch failed; retrying at the next run:", err);
     return;
