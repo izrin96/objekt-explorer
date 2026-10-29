@@ -438,9 +438,9 @@ A signed-in viewer's posts SHALL be summarised above the feed in one row: the ti
 - each list with its role: Offering for a have list, Looking for for a want list, Selling for a sale list, each linking to its list page;
 - the option it carries: "Would also pay" on a Swap post that would, "Also on Market" on a Sell post;
 - whether the post is listed or idle, and when it was last changed;
-- a menu with Edit post, Copy link and Take off Trade.
+- a menu with Edit post and Take off Trade.
 
-A post has no address of its own, so Copy link SHALL copy the Person link (see Matches to the signed-in viewer) to the viewer's row: `/trade?person=<their id>`. The row's Copy link SHALL copy it as is. It SHALL be disabled while none of the posts is listed or the viewer is under a trade block, and SHALL show which reason applies. A post's Copy link SHALL add `type` set to the tag of the post's kind (`wtt` for Swap, `wts` for Sell, `wtb` for Buy) when the post carries that tag, and leave it out when it does not. Both SHALL confirm with "Link copied" and the copied address. A post's Copy link SHALL be disabled while the viewer is under a trade block, and on an idle post, each with its reason as a second line: a trade block hides their posts from Trade, and idle posts don't show in Browse until bumped. The feed would leave the row out in both cases.
+A post has no address of its own, so the row's Copy link SHALL copy the Person link (see Matches to the signed-in viewer) to the viewer's row: `/trade?person=<their id>`, confirming with "Link copied" and the copied address. It SHALL be disabled while none of the posts is listed or the viewer is under a trade block, staying focusable and saying which reason applies. A single post has no Copy link of its own.
 
 With no choice saved in this browser, the posts SHALL start shown when any of them is idle, and hidden otherwise. Showing or hiding them SHALL be remembered in this browser, and that choice SHALL win over the default. A viewer with no posts SHALL see the row say they have no posts on Trade, with New post. A signed-out visitor activating New post SHALL be sent to `/login?redirect=/trade`.
 
@@ -488,17 +488,13 @@ With no choice saved in this browser, the posts SHALL start shown when any of th
 - **WHEN** the viewer activates Copy link on the Your posts row with 3 listed posts
 - **THEN** `/trade?person=<their id>` is copied, and opening it lists only their row
 
-#### Scenario: Copy a post's link
-- **WHEN** the viewer chooses Copy link on a listed Sell post
-- **THEN** `/trade?person=<their id>&type=wts` is copied, and opening it lists only their row, with their Sell posts
-
 #### Scenario: Copy link under a trade block
 - **WHEN** a viewer under a trade block opens Your posts
-- **THEN** the row's Copy link and each post's Copy link are disabled, and each says a trade block hides their posts from Trade
+- **THEN** the row's Copy link is disabled and says a trade block hides their posts from Trade
 
-#### Scenario: Copy link on an idle post
-- **WHEN** the viewer opens the menu of an idle post
-- **THEN** Copy link is disabled and says to bump the post first
+#### Scenario: Copy link with every post idle
+- **WHEN** every one of the viewer's posts is idle
+- **THEN** the row's Copy link is disabled and says to bump first
 
 #### Scenario: No posts
 - **WHEN** a signed-in viewer has no posts
@@ -608,7 +604,7 @@ Each person in the feed SHALL be one row, a bordered card on the card surface, o
   - the reputation line (see `web-verified-trades`), on one line, truncated with an ellipsis when it doesn't fit, its full text available to assistive technology;
   - for a signed-in viewer on another person's row, the header sentence, from the counts in Matches to the signed-in viewer, with A the "They have" count, B the "You have" count and M the mutual score. Beside the name, a chip: "You can swap M", tinted, when M is above zero, else a muted "No swap · buy or sell" when A and B are both above zero; a one-way row has no chip. Under the reputation line, a muted line with "They have A you want" when A is above zero and "You have B they want" when B is above zero. With no count above zero the row SHALL show neither, so a row without them reads as no match. Each number SHALL be in monospace and stand out from the words, and the visible words SHALL be the accessible text;
   - on the reputation line, after it, muted: the number of the person's kept lists ("3 lists") and when their newest post was last bumped, or last changed if that is later;
-  - the ⋯ menu, holding Hide, Block and Report for a signed-in viewer who is not the person.
+  - the ⋯ menu, holding Copy link (the Person link to them, see Matches to the signed-in viewer), Hide, Block and Report for a signed-in viewer who is not the person.
 - **Actions**: Message, then Make offer as the primary button, both for the row's lead post (see Message a post's owner and Make offer on a post). An account that doesn't take messages from the viewer shows "Not taking messages" in their place. The viewer's own row has no actions.
 - **Posts**, under the header: each of the person's kept posts, in this order: posts with a list count above zero first, most matched collections first; then the rest, newest bump first. The first post in this order is the row's lead post. Each post shows:
   - its tags, which say what it takes (see Tag help);
@@ -653,7 +649,7 @@ From `@3xl` of the feed's width, the actions SHALL sit at the header's end and t
 
 #### Scenario: Hide from a post
 - **WHEN** a signed-in viewer opens the ⋯ menu on rin.trades's row
-- **THEN** it offers Hide, Block and Report
+- **THEN** it offers Copy link, Hide, Block and Report, and Copy link copies `/trade?person=<rin.trades's id>`
 
 #### Scenario: Desktop grid
 - **WHEN** the viewer opens `/trade` at 1280 px with 10 people loaded

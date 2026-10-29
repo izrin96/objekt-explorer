@@ -2,17 +2,31 @@ import { ORPCError } from "@orpc/client";
 import type { Outputs } from "@repo/api";
 import { startForPost } from "@repo/api/schemas/trade-post";
 import { type InfiniteData, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "@tanstack/react-router";
 
 import { toastManager } from "@/components/ui/toast";
 import { LIST_QUERY_KEY } from "@/features/list/queries";
 import { currentUserOptions } from "@/features/user/queries";
 import { addActionToast } from "@/lib/action-toast";
+import { copyWithToast } from "@/lib/clipboard";
 import { orpc } from "@/lib/orpc";
 import { isRefusalError, refusalText } from "@/lib/refusal";
 import { relativeTime } from "@/lib/time";
+import { getBaseURL } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import { usePlanLists } from "./post-plan";
+
+/** Copies the Browse address led by one person's row. */
+export function useCopyTradeLink() {
+  const router = useRouter();
+
+  return async (search: { person: string }) => {
+    const { href } = router.buildLocation({ to: "/trade", search });
+    const url = new URL(href, getBaseURL()).toString();
+    await copyWithToast(url, { title: m.list_share_copied(), description: url });
+  };
+}
 
 function useTradeInvalidation() {
   const queryClient = useQueryClient();

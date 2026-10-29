@@ -10,7 +10,7 @@ import {
 } from "@phosphor-icons/react";
 import type { Outputs } from "@repo/api";
 import { useQuery } from "@tanstack/react-query";
-import { Link, useHydrated, useRouter } from "@tanstack/react-router";
+import { Link, useHydrated } from "@tanstack/react-router";
 import { useId, useRef } from "react";
 
 import { Badge } from "@/components/ui/badge";
@@ -19,15 +19,12 @@ import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "@/components/
 import { Menu, MenuItem, MenuPopup, MenuTrigger } from "@/components/ui/menu";
 import { toastManager } from "@/components/ui/toast";
 import { MonoMessage } from "@/features/offers/mono";
-import { copyWithToast } from "@/lib/clipboard";
 import { relativeTime } from "@/lib/time";
-import { getBaseURL } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 import { useSettings } from "@/stores/settings";
 
-import { useBumpPost, useTakeDownPost } from "./actions";
+import { useBumpPost, useCopyTradeLink, useTakeDownPost } from "./actions";
 import { summarizePosts } from "./my-posts-summary";
-import { postLinkSearch } from "./post-link";
 import { KIND_LABEL } from "./post-list-dialog";
 import { postTime } from "./post-time";
 import { myPostsOptions } from "./queries";
@@ -204,7 +201,7 @@ export function MyPosts({ userId, onNew, onEdit }: MyPostsProps) {
         <CollapsiblePanel>
           <ul className="flex flex-col divide-y border-t">
             {posts.map((post) => (
-              <MyPostRow key={post.id} post={post} userId={userId} now={now} onEdit={onEdit} />
+              <MyPostRow key={post.id} post={post} now={now} onEdit={onEdit} />
             ))}
           </ul>
         </CollapsiblePanel>
@@ -221,36 +218,17 @@ const ROLE_LABEL = {
   sale: m.trade_role_sale,
 } as const;
 
-/** Copies a Browse address led by the viewer's row: all their posts, or one post's type. */
-function useCopyTradeLink() {
-  const router = useRouter();
-
-  return async (search: ReturnType<typeof postLinkSearch> | { person: string }) => {
-    const { href } = router.buildLocation({ to: "/trade", search });
-    const url = new URL(href, getBaseURL()).toString();
-    await copyWithToast(url, { title: m.list_share_copied(), description: url });
-  };
-}
-
 function MyPostRow({
   post,
-  userId,
   now,
   onEdit,
 }: {
   post: MyPost;
-  userId: string;
   now: number;
   onEdit: (slug: string) => void;
 }) {
   const takeDown = useTakeDownPost();
-  const copyLink = useCopyTradeLink();
   const { changed, time } = postTime(post);
-  const copyReason = post.tradeBlocked
-    ? m.trade_post_copy_link_blocked()
-    : post.listed
-      ? null
-      : m.trade_post_copy_link_idle();
   const when = relativeTime(new Date(time).getTime(), now);
   const details = [
     post.kind === "sell" ? m.trade_post_option_market() : null,
@@ -308,24 +286,10 @@ function MyPostRow({
         >
           <DotsThreeIcon weight="bold" />
         </MenuTrigger>
-        <MenuPopup align="end" className="max-w-64">
+        <MenuPopup align="end">
           <MenuItem onClick={() => onEdit(post.slug)}>
             <PencilSimpleIcon />
             {m.trade_composer_edit_title()}
-          </MenuItem>
-          {/* the feed leaves the row out, so the link would open to the empty state */}
-          <MenuItem
-            disabled={copyReason !== null}
-            className="items-start py-1.5"
-            onClick={() => void copyLink(postLinkSearch(userId, post))}
-          >
-            <ShareNetworkIcon className="mt-0.5" />
-            <span className="flex flex-col">
-              <span>{m.trade_post_copy_link()}</span>
-              {copyReason ? (
-                <span className="text-muted-foreground text-xs text-pretty">{copyReason}</span>
-              ) : null}
-            </span>
           </MenuItem>
           <MenuItem onClick={() => takeDown.takeDown(post.slug)}>
             <ArrowFatLineDownIcon />

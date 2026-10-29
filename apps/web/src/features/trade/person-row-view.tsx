@@ -2,6 +2,7 @@ import {
   DotsThreeIcon,
   EyeSlashIcon,
   HandshakeIcon,
+  ShareNetworkIcon,
   SquaresFourIcon,
   XIcon,
 } from "@phosphor-icons/react";
@@ -18,7 +19,7 @@ import { useSharedOfferBuilder } from "@/features/offers/offer-builder";
 import { relativeTime } from "@/lib/time";
 import { m } from "@/paraglide/messages";
 
-import { useHideWithUndo } from "./actions";
+import { useCopyTradeLink, useHideWithUndo } from "./actions";
 import type { Surface } from "./browse-search";
 import { MatchChip, MatchCounts } from "./match-summary";
 import type { OpenObjekt } from "./near";
@@ -237,6 +238,7 @@ export const PersonRow = memo(function PersonRow({
   onOpen: OpenObjekt;
 }) {
   const hide = useHideWithUndo();
+  const copyLink = useCopyTradeLink();
   // the Compare with list and mode the row counts with, so Make offer adds what it counted
   const compare = use(SideCompareContext);
   // no match says nothing: a row without a chip or counts already reads as one
@@ -341,10 +343,16 @@ export const PersonRow = memo(function PersonRow({
               name={person.identity.name}
               report
               extraItems={
-                <MenuItem onClick={() => hide(person.userId, person.identity.name)}>
-                  <EyeSlashIcon />
-                  {m.trade_hide_partner()}
-                </MenuItem>
+                <>
+                  <MenuItem onClick={() => void copyLink({ person: person.userId })}>
+                    <ShareNetworkIcon />
+                    {m.trade_post_copy_link()}
+                  </MenuItem>
+                  <MenuItem onClick={() => hide(person.userId, person.identity.name)}>
+                    <EyeSlashIcon />
+                    {m.trade_hide_partner()}
+                  </MenuItem>
+                </>
               }
             />
             {actions}
