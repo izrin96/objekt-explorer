@@ -21,7 +21,8 @@
         "name": "user",
         "history_size": 100,
         "history_ttl": "300s",
-        "force_recovery": true
+        "force_recovery": true,
+        "presence": true
       },
       {
         "name": "activity",

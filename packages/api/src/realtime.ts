@@ -64,6 +64,35 @@ async function call(request: ApiRequest) {
   if (await attempt(api, request)) await attempt(api, request);
 }
 
+/**
+ * One call whose reply the caller reads: the parsed JSON, or null when Centrifugo is unset, slow
+ * or answers non-2xx. No retry, since every caller asks again on its next poll.
+ */
+export async function query(request: ApiRequest): Promise<unknown> {
+  const api = target();
+  if (!api) return null;
+  const { path, body } = request;
+  try {
+    const response = await fetch(`${api.url}${path}`, {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-api-key": api.key },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+    });
+    if (!response.ok) {
+      console.error(`[Realtime] ${path} answered ${response.status}`);
+      return null;
+    }
+    return await response.json();
+  } catch (error) {
+    console.error(
+      `[Realtime] Failed to call ${path}:`,
+      error instanceof Error ? error.message : String(error),
+    );
+    return null;
+  }
+}
+
 export function publishUser(userId: string, event: RealtimeEvent) {
   return call(publishRequest(userId, event));
 }

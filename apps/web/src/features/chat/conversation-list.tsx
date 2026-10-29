@@ -30,12 +30,12 @@ import {
 import { PendingStatus } from "@/components/router/pending";
 import { EmptyState } from "@/components/shared/empty-state";
 import { InfiniteSentinel } from "@/components/shared/infinite-sentinel";
-import { PersonAvatar } from "@/components/shared/person-avatar";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { collectionName } from "@/features/objekt/objekt-label";
 import { offerNo } from "@/features/offers/format";
 import { OfferThumb } from "@/features/offers/offer-item";
+import { OnlineAvatar } from "@/features/presence/online-avatar";
 import { TagBadges } from "@/features/trade/tag-label";
 import { useMinuteClock } from "@/hooks/use-minute-clock";
 import { relativeTime } from "@/lib/time";
@@ -387,7 +387,12 @@ function RowLink({
         className,
       )}
     >
-      <PersonAvatar name={name} image={partner.user.image} className="size-10 shrink-0" />
+      <OnlineAvatar
+        userId={partner.userId}
+        name={name}
+        image={partner.user.image}
+        className="size-10 shrink-0"
+      />
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">{children}</div>
     </Link>
   );

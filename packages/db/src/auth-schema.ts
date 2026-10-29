@@ -19,6 +19,7 @@ export const user = pgTable("user", {
   discord: text("discord"),
   twitter: text("twitter"),
   showSocial: boolean("show_social").notNull().default(false),
+  showOnline: boolean("show_online").notNull().default(true),
   removeImage: boolean("remove_image").notNull().default(false),
   // a deleted account keeps its row, scrubbed, so its trades and ratings stay in others' history
   deletedAt: timestamp("deleted_at"),

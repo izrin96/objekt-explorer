@@ -35,6 +35,10 @@ The draft also carries the reply, with a snapshot of its quote, and keeps it whi
 
 The card is an `Attachment` (`features/chat/attachment.ts`) of two kinds: an objekt card (`kind: "objekt"`, drawn as a chip) and a Trade post card (`kind: "post"`, drawn by `thread/post-card-message.tsx`, the component the thread uses). Only a Trade row's Message (Browse and For you, one row per person, addressed to the row's lead post) attaches a post card; its `withMatch` asks the server for the match, and the first-line suggestion follows `view.match`, the match the server saved.
 
+## Presence
+
+A person's online dot is `OnlineAvatar` (`features/presence/online-avatar.tsx`), and text that says "Online" reads `useOnline(userId)`; `PersonAvatar` stays free of presence, since the hover card, Market and signed-out pages use it. Pass no `userId` for the viewer's own avatar. `useOnline` watches the id while it is mounted, so the watched set is what is mounted (all of a plain list, only the rows on screen of a virtua one), an id no avatar shows any more forgets its answer, and the tab's one `usePresencePoller`, mounted beside `useUserSocket` for signed-in users only, asks `presence.online` for it (`stores/presence.ts`, pure parts in `watch.ts`). A failed or refused check changes nothing. A save that changes `showOnline` calls `resetPresence({ recheck: true })`.
+
 ## Verifying against production
 
 The dev server talks to production unless `.env.local` overrides it, and the account in `SMOKE_TEST1_*` is the user's own: sign in and read, never write. A `window.fetch` shim cannot hold a write back, because `lib/orpc.ts` captures `fetch` when it builds its `RPCLink`. Verify a mutation up to the request boundary (its input and the request it would send) and leave the control unclicked.

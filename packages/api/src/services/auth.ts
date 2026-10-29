@@ -134,6 +134,13 @@ export const auth = betterAuth({
         returned: true,
         input: true,
       },
+      showOnline: {
+        type: "boolean",
+        required: false,
+        defaultValue: true,
+        returned: true,
+        input: false,
+      },
       removeImage: {
         type: "boolean",
         required: false,

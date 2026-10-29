@@ -168,6 +168,7 @@ export const userRouter = {
         .set({
           name: input.name,
           showSocial: input.showSocial,
+          showOnline: input.showOnline,
           image: input.removePic ? null : undefined,
           removeImage: input.removePic,
         })

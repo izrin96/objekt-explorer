@@ -20,6 +20,7 @@ import { notificationsRouter } from "./notifications";
 import { objektsRouter } from "./objekts";
 import { offerRouter } from "./offer";
 import { pinsRouter } from "./pins";
+import { presenceRouter } from "./presence";
 import { profileRouter } from "./profile";
 import { realtimeRouter } from "./realtime";
 import { statusRouter } from "./status";
@@ -49,6 +50,7 @@ export const router = {
   moderation: moderationRouter,
   offer: offerRouter,
   realtime: realtimeRouter,
+  presence: presenceRouter,
 };
 
 /** What `/api/v1` serves and documents; everything else stays RPC-only. */

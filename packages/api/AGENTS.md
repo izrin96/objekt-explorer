@@ -36,6 +36,10 @@ A block (`blockUser`, and the report's also-block) locks both users' rows `FOR N
 
 Profiles are public: holdings, serials, transfers and nicknames show to every viewer, as they are on chain. A list on Trade, or a discoverable list, shows its owner and its entries. The only per-list privacy left is `lists.hide_serial`, which shows that list's copies as counts (any copy), never by objekt id or serial. `hide_user`, and `user_address.private_profile`, `private_serial`, `hide_transfer` and `hide_nickname`, are retired: nothing reads or writes them, and the columns stay in the database until their drop migration.
 
+## Presence
+
+`presence.online` is the only way presence leaves the server. `onlineAmong` (`services/presence.ts`) reads each asked id's switch and blocks, and the pure, tested `presenceTargets` (`lib/presence.ts`) drops the viewer's own id, any id with a block either way and anyone with `user.show_online` off; a viewer with it off gets nobody, and Centrifugo is not asked. It reads the rest as `presence_stats` on each `user:#<id>` channel in one `/api/batch` (`presenceStatsRequest` and `onlineFromReplies`), sent with `parallel: true` because staging and production keep presence in Valkey, through `query()` (`realtime.ts`), the one Centrifugo call that returns its reply: one attempt, `null` when unset, slow or non-2xx. Presence fails closed: `null`, an error reply (the `user` namespace without `presence` answers code 108) or a missing reply reads as offline, so a down or unrestarted Centrifugo shows no dots. The rule is `showsOnlineTo`, apart from chat's `showsActivityTo` because it has no request rule: Trade rows show the dot to any signed-in viewer.
+
 ## Account deletion
 
 The `user` row is never deleted; deletion scrubs it in `anonymizeUser` (`services/account-anonymize.ts`). Both Better Auth paths end there: `beforeDelete` for a user deleting their own account, and the `user.delete.before` database hook, which returns `false`, for an admin's removal. A new foreign key to `user` may keep `onDelete: "cascade"`, but nothing may rely on the cascade firing.

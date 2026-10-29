@@ -15,6 +15,7 @@ import { toastManager } from "@/components/ui/toast";
 import { type FieldErrors, zodErrors } from "@/lib/form";
 import { orpc } from "@/lib/orpc";
 import { m } from "@/paraglide/messages";
+import { resetPresence } from "@/stores/presence";
 
 function nameSchema() {
   return z.object({
@@ -26,13 +27,16 @@ export function GeneralSection({ user }: { user: User }) {
   const queryClient = useQueryClient();
   const [errors, setErrors] = useState<FieldErrors>({});
   const [showSocial, setShowSocial] = useState(user.showSocial ?? false);
+  const [showOnline, setShowOnline] = useState(user.showOnline ?? true);
   // the picture comes from the provider; removing it is a pending edit until Save
   const [removePic, setRemovePic] = useState(false);
 
   const mutation = useMutation(
     orpc.user.updateAccount.mutationOptions({
-      onSuccess: async () => {
+      onSuccess: async (_data, variables) => {
         setRemovePic(false);
+        // this tab's dots follow at once; other tabs and viewers catch up on their next check
+        if (variables.showOnline !== (user.showOnline ?? true)) resetPresence({ recheck: true });
         await queryClient.invalidateQueries();
         toastManager.add({ type: "success", title: m.auth_account_account_updated() });
       },
@@ -52,7 +56,7 @@ export function GeneralSection({ user }: { user: User }) {
         const next = zodErrors(nameSchema(), values);
         setErrors(next);
         if (Object.keys(next).length > 0) return;
-        mutation.mutate({ name: String(values.name), showSocial, removePic });
+        mutation.mutate({ name: String(values.name), showSocial, showOnline, removePic });
       }}
     >
       <Field name="name" className="gap-1.5">
@@ -81,6 +85,25 @@ export function GeneralSection({ user }: { user: User }) {
           className="mt-0.5 shrink-0"
           checked={showSocial}
           onCheckedChange={setShowSocial}
+        />
+      </Label>
+
+      <Label
+        id="account-show-online-label"
+        htmlFor="account-show-online"
+        className="flex items-start justify-between gap-4 font-normal"
+      >
+        <span className="flex flex-col gap-0.5">
+          <span className="text-sm font-medium">{m.auth_account_show_online_label()}</span>
+          <span className="text-muted-foreground text-xs text-pretty">
+            {m.auth_account_show_online_desc()}
+          </span>
+        </span>
+        <Switch
+          id="account-show-online"
+          className="mt-0.5 shrink-0"
+          checked={showOnline}
+          onCheckedChange={setShowOnline}
         />
       </Label>
 

@@ -152,7 +152,7 @@ Full list in `.env.example`.
 
 ## Docker
 
-`docker-compose.yml` provides the full stack: web (port 3000, built from `apps/web/Dockerfile`), worker, indexer processor, two PostgreSQL instances each behind pgbouncer, Valkey, and Centrifugo (`centrifugo/config.json`; reachable only on the Docker network, with `/connection` routed to it by the reverse proxy, see `design/realtime-centrifugo-deploy.md`). Locally, `docker compose --env-file .env --env-file .env.local up -d centrifugo` also applies `docker-compose.override.yml`, which publishes it on `127.0.0.1:8000` for the dev server's `/connection` proxy. S3 storage and mail are external services configured through `.env`.
+`docker-compose.yml` provides the full stack: web (port 3000, built from `apps/web/Dockerfile`), worker, indexer processor, two PostgreSQL instances each behind pgbouncer, Valkey, and Centrifugo (`centrifugo/config.json`; reachable only on the Docker network, with `/connection` routed to it by the reverse proxy, see `design/realtime-centrifugo-deploy.md`). Locally, `docker compose --env-file .env --env-file .env.local up -d centrifugo` also applies `docker-compose.override.yml`, which publishes it on `127.0.0.1:8000` for the dev server's `/connection` proxy. The `user` namespace has `presence` on, which the online dot reads. Centrifugo reads its config only on start and `up -d` leaves a running container alone, so a change to `centrifugo/config.json` needs `docker compose … restart centrifugo`, on prod before the web that relies on it. S3 storage and mail are external services configured through `.env`.
 
 ## Error tracking
 

@@ -46,6 +46,8 @@ export const userSearchInputSchema = z.object({ query: z.string().default("") })
 export const updateAccountInputSchema = z.object({
   name: z.string().min(1).max(256),
   showSocial: z.boolean(),
+  // absent from tabs loaded before it existed; their Save leaves the column as it was
+  showOnline: z.boolean().optional(),
   removePic: z.boolean(),
 });
 

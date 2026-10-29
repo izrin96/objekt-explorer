@@ -4,7 +4,6 @@ import { truncateAddress } from "@repo/lib/address";
 
 import { ApolloIcon } from "@/components/shared/apollo-icon";
 import { CopyButton } from "@/components/shared/copy-button";
-import { PersonAvatar } from "@/components/shared/person-avatar";
 import { SocialBadge } from "@/components/shared/social-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,6 +12,7 @@ import { MessageButton } from "@/features/chat/message-button";
 import { EditCosmoDialog } from "@/features/link/edit-cosmo-dialog";
 import { SafetyMenu } from "@/features/moderation/safety-menu";
 import { TrustLine } from "@/features/offers/trust-line";
+import { OnlineAvatar } from "@/features/presence/online-avatar";
 import { displayNickname } from "@/lib/address";
 import { m } from "@/paraglide/messages";
 import { useSettings } from "@/stores/settings";
@@ -34,7 +34,8 @@ export function ProfileHeader({ profile }: { profile: PublicProfile }) {
 
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="flex min-w-0 items-end gap-3.5">
-          <PersonAvatar
+          <OnlineAvatar
+            userId={isProfileAuthed ? undefined : profile.userId}
             name={nickname}
             image={profile.user?.image}
             className="border-background size-16 border-3 text-base font-semibold"
