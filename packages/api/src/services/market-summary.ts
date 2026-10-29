@@ -46,15 +46,16 @@ export async function getMarketSummary(): Promise<MarketSummaryEntry[]> {
 
   const stored = parseStored(await redisFailOpen("market summary", () => redis.get(SUMMARY_KEY)));
   if (!stored || stored.version !== version) return buildSummary(version);
-  local = stored;
+  // a read that began before this process's last build can return an older copy than it holds
+  if (local?.version !== version || stored.at > local.at) local = stored;
 
-  if (!isFresh(stored)) {
+  if (!isFresh(local)) {
     // a failed refresh leaves the stale copy; its claim holds the next try off for a minute
     void refreshSummary(version).catch((error: unknown) => {
       console.warn("[market] summary refresh failed", error);
     });
   }
-  return stored.entries;
+  return local.entries;
 }
 
 async function refreshSummary(version: string) {
