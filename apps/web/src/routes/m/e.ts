@@ -51,18 +51,24 @@ export const Route = createFileRoute("/m/e")({
           body = withClientIp(body, ip);
         }
 
-        const upstream = await fetch(new URL("/api/send", scriptUrl), {
-          method: "POST",
-          headers,
-          body,
-        });
+        try {
+          const upstream = await fetch(new URL("/api/send", scriptUrl), {
+            method: "POST",
+            headers,
+            body,
+            signal: AbortSignal.timeout(5000),
+          });
 
-        return new Response(upstream.body, {
-          status: upstream.status,
-          headers: {
-            "content-type": upstream.headers.get("content-type") ?? "application/json",
-          },
-        });
+          return new Response(upstream.body, {
+            status: upstream.status,
+            headers: {
+              "content-type": upstream.headers.get("content-type") ?? "application/json",
+            },
+          });
+        } catch {
+          // not reported: every analytics event during an umami outage would land in Sentry
+          return new Response(null, { status: 502 });
+        }
       },
     },
   },
