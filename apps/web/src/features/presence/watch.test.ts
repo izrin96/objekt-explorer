@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { applyOnline, chunk, dueIds, PRESENCE_POLL_MS, unwatch, watch } from "./watch";
+import { applyPresence, chunk, dueIds, PRESENCE_POLL_MS, unwatch, watch } from "./watch";
 
 describe("watch and unwatch", () => {
   test("the first avatar starts a watch, later ones only count", () => {
@@ -60,16 +60,48 @@ describe("chunk", () => {
   });
 });
 
-describe("applyOnline", () => {
+describe("applyPresence", () => {
+  const empty = () => ({ online: {}, idle: {} });
+
   test("the answer replaces only the ids asked", () => {
-    expect(applyOnline({ u1: true, u9: true }, ["u1", "u2"], ["u2"])).toEqual({
-      u2: true,
-      u9: true,
+    const state = {
+      online: { u1: true, u9: true } as const,
+      idle: { u1: true, u9: true } as const,
+    };
+    expect(applyPresence(state, ["u1", "u2"], { online: ["u2"], idle: [] })).toEqual({
+      online: { u2: true, u9: true },
+      idle: { u9: true },
     });
   });
 
-  test("an unchanged answer keeps the same object", () => {
-    const online: Record<string, true> = { u1: true };
-    expect(applyOnline(online, ["u1", "u2"], ["u1"])).toBe(online);
+  test("an idle id is online too", () => {
+    expect(applyPresence(empty(), ["u1", "u2"], { online: ["u1", "u2"], idle: ["u2"] })).toEqual({
+      online: { u1: true, u2: true },
+      idle: { u2: true },
+    });
+  });
+
+  test("an idle id the answer doesn't call online is dropped", () => {
+    expect(applyPresence(empty(), ["u1"], { online: [], idle: ["u1"] })).toEqual(empty());
+  });
+
+  test("going offline leaves idle", () => {
+    const state = { online: { u1: true } as const, idle: { u1: true } as const };
+    expect(applyPresence(state, ["u1"], { online: [], idle: [] })).toEqual(empty());
+  });
+
+  test("coming back from idle stays online", () => {
+    const state = { online: { u1: true } as const, idle: { u1: true } as const };
+    const next = applyPresence(state, ["u1"], { online: ["u1"], idle: [] });
+    expect(next).toEqual({ online: { u1: true }, idle: {} });
+    expect(next.online).toBe(state.online);
+  });
+
+  test("an unchanged answer keeps the same objects", () => {
+    const state = { online: { u1: true, u2: true } as const, idle: { u2: true } as const };
+    const next = applyPresence(state, ["u1", "u2", "u3"], { online: ["u1", "u2"], idle: ["u2"] });
+    expect(next).toBe(state);
+    expect(next.online).toBe(state.online);
+    expect(next.idle).toBe(state.idle);
   });
 });

@@ -1,9 +1,12 @@
 import { create } from "zustand";
 
-import { unwatch, watch } from "@/features/presence/watch";
+import { type PresenceMaps, unwatch, watch } from "@/features/presence/watch";
 
-/** The people shown online to this viewer, by user id; filled by the tab's one poller. */
-export const usePresence = create<{ online: Record<string, true> }>(() => ({ online: {} }));
+/**
+ * The people shown online to this viewer, by user id, and which of them are idle; filled by the
+ * tab's one poller.
+ */
+export const usePresence = create<PresenceMaps>(() => ({ online: {}, idle: {} }));
 
 /** Ids on screen, by how many mounted avatars show each. */
 export const watchedIds = new Map<string, number>();
@@ -33,9 +36,10 @@ export function unwatchPresence(userId: string) {
   if (!unwatch(watchedIds, userId)) return;
   lastChecked.delete(userId);
   usePresence.setState((state) => {
-    if (!(userId in state.online)) return state;
+    if (!(userId in state.online) && !(userId in state.idle)) return state;
     const { [userId]: _, ...online } = state.online;
-    return { online };
+    const { [userId]: __, ...idle } = state.idle;
+    return { online, idle };
   });
 }
 
@@ -43,5 +47,5 @@ export function unwatchPresence(userId: string) {
 export function resetPresence() {
   generation += 1;
   lastChecked.clear();
-  usePresence.setState({ online: {} });
+  usePresence.setState({ online: {}, idle: {} });
 }

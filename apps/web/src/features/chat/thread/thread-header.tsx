@@ -8,7 +8,7 @@ import { mutedLabel } from "@/features/chat/format";
 import type { ThreadPage } from "@/features/chat/thread-cache";
 import { TrustLine } from "@/features/offers/trust-line";
 import { OnlineAvatar } from "@/features/presence/online-avatar";
-import { useOnline } from "@/features/presence/use-online";
+import { usePresenceStatus } from "@/features/presence/use-presence-status";
 import { ProfileLink } from "@/features/profile/profile-hover-card";
 import { displayNickname } from "@/lib/address";
 import { m } from "@/paraglide/messages";
@@ -63,7 +63,7 @@ export function ThreadHeader({
   const { partner, muted } = conversation;
   const name = partner.identity.name;
   const also = partner.identity.also.map((ref) => displayNickname(ref.address, ref.nickname));
-  const online = useOnline(partner.userId);
+  const presence = usePresenceStatus(partner.userId);
   return (
     <header className="flex items-center gap-3 border-b px-3 py-2.5 md:px-4">
       <ThreadBackButton />
@@ -98,9 +98,9 @@ export function ThreadHeader({
             </span>
           ) : null}
         </h2>
-        {online ? (
+        {presence ? (
           <span className="text-muted-foreground block truncate text-xs">
-            {m.presence_online()}
+            {presence === "idle" ? m.presence_idle() : m.presence_online()}
             {partner.reputation ? <span aria-hidden>{" · "}</span> : null}
             <TrustLine reputation={partner.reputation} className="inline" />
           </span>

@@ -1171,6 +1171,7 @@
   "chat_unsent": "보낸 메시지를 취소했습니다",
   "chat_seen": "읽음",
   "presence_online": "온라인",
+  "presence_idle": "자리 비움",
   "chat_typing": "{name}님이 입력 중…",
   "chat_suggestions_label": "추천 첫 메시지",
   "chat_suggest_sale": "안녕하세요! 아직 판매 중인가요?",

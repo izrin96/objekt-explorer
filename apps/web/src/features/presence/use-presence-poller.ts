@@ -10,18 +10,19 @@ import {
   watchedIds,
 } from "@/stores/presence";
 
-import { applyOnline, chunk, dueIds, PRESENCE_DEBOUNCE_MS, PRESENCE_POLL_MS } from "./watch";
+import { applyPresence, chunk, dueIds, PRESENCE_DEBOUNCE_MS, PRESENCE_POLL_MS } from "./watch";
 
 const visible = () => document.visibilityState === "visible";
 
 async function check(userIds: string[]) {
   const generation = presenceGeneration();
   try {
-    const { online } = await client.presence.online({ userIds });
+    const { online, idle } = await client.presence.online({ userIds });
     if (generation !== presenceGeneration()) return;
     const now = Date.now();
     for (const id of userIds) lastChecked.set(id, now);
-    usePresence.setState((state) => ({ online: applyOnline(state.online, userIds, online) }));
+    // a server from before idle answers without it
+    usePresence.setState((state) => applyPresence(state, userIds, { online, idle: idle ?? [] }));
   } catch {
     // a refusal or a failure changes nothing; the next tick asks again
   }

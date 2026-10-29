@@ -12,6 +12,7 @@ import { Group } from "@/components/ui/group";
 import { MessagesIcon } from "@/features/chat/messages-icon";
 import { NotificationBell } from "@/features/notifications/notification-bell";
 import { useUserSocket } from "@/features/notifications/use-user-socket";
+import { useActivityReporter } from "@/features/presence/use-activity-reporter";
 import { usePresencePoller } from "@/features/presence/use-presence-poller";
 import { useCurrentUser } from "@/features/user/hooks";
 import { SITE_NAME, cn, containerClass } from "@/lib/utils";
@@ -106,10 +107,14 @@ export function AppNav() {
   );
 }
 
-/** One socket and one presence poller per tab: the bell and the messages icon share the socket. */
+/**
+ * One socket, one presence poller and one activity reporter per tab: the bell and the messages
+ * icon share the socket.
+ */
 function SignedInActions({ user }: { user: User }) {
   useUserSocket();
   usePresencePoller();
+  useActivityReporter();
   return (
     <div className="flex shrink-0 items-center gap-1 pointer-coarse:gap-2">
       <MessagesIcon />

@@ -1171,6 +1171,7 @@
   "chat_unsent": "メッセージの送信を取り消しました",
   "chat_seen": "既読",
   "presence_online": "オンライン",
+  "presence_idle": "退席中",
   "chat_typing": "{name}さんが入力中…",
   "chat_suggestions_label": "最初のメッセージの候補",
   "chat_suggest_sale": "こんにちは！これはまだ販売中ですか？",

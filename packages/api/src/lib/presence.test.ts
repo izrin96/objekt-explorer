@@ -1,6 +1,9 @@
 import { describe, expect, test } from "bun:test";
 
 import {
+  activeKey,
+  IDLE_AFTER_SECONDS,
+  idleFrom,
   onlineFromReplies,
   presenceStatsRequest,
   presenceTargets,
@@ -94,5 +97,43 @@ describe("presenceTargets", () => {
   test("drops a person off, blocked, or unknown", () => {
     const rows = [row("off", false), row("blocked", true, true), row("a")];
     expect(presenceTargets("me", ["off", "blocked", "ghost", "a"], rows)).toEqual(["a"]);
+  });
+});
+
+describe("activeKey", () => {
+  test("one key per user under the presence prefix", () => {
+    expect(activeKey("u1")).toBe("presence:active:u1");
+  });
+});
+
+describe("idleFrom", () => {
+  const now = 10_000_000;
+  const fresh = String(now - 1000);
+  const stale = String(now - IDLE_AFTER_SECONDS * 1000);
+
+  test("activity within the last 10 minutes is not idle", () => {
+    expect(idleFrom(["a", "b"], [fresh, String(now - IDLE_AFTER_SECONDS * 1000 + 1)], now)).toEqual(
+      [],
+    );
+  });
+
+  test("activity 10 minutes or more ago is idle", () => {
+    expect(idleFrom(["a", "b"], [stale, String(now - 3_600_000)], now)).toEqual(["a", "b"]);
+  });
+
+  test("a missing mark is not idle, so a tab from before the reporter shows online", () => {
+    expect(idleFrom(["a", "b", "c"], [null, stale, fresh], now)).toEqual(["b"]);
+  });
+
+  test("an unparseable mark is not idle", () => {
+    expect(idleFrom(["a"], ["x"], now)).toEqual([]);
+  });
+
+  test("unreadable marks fail toward online", () => {
+    expect(idleFrom(["a", "b"], null, now)).toEqual([]);
+  });
+
+  test("keeps the order the online ids came in", () => {
+    expect(idleFrom(["c", "a", "b"], [stale, fresh, stale], now)).toEqual(["c", "b"]);
   });
 });

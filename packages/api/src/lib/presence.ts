@@ -1,6 +1,31 @@
 import { userChannel } from "../schemas/realtime";
 import type { ApiRequest } from "./realtime-requests";
 
+/** A person counts as idle once no tab of theirs has seen activity for this long. */
+export const IDLE_AFTER_SECONDS = 600;
+/**
+ * How long an activity mark lives. Long, because a missing mark reads as online: a tab from
+ * before the reporter, or marks lost with Valkey, must not make an active person look idle.
+ */
+export const ACTIVE_MARK_SECONDS = 7 * 24 * 60 * 60;
+/** When the person was last active in some tab, in epoch milliseconds. */
+export const activeKey = (userId: string) => `presence:active:${userId}`;
+
+/**
+ * The online ids whose last activity, `marks[i]` for `online[i]`, is at least
+ * `IDLE_AFTER_SECONDS` before `now`. A missing or unreadable mark is not idle, and `null` marks
+ * (Valkey unreadable) is nobody idle, so idle fails toward online.
+ */
+export function idleFrom(online: string[], marks: readonly (string | null)[] | null, now: number) {
+  if (marks === null) return [];
+  return online.filter((_, index) => {
+    const mark = marks[index];
+    if (mark == null) return false;
+    const at = Number(mark);
+    return Number.isFinite(at) && now - at >= IDLE_AFTER_SECONDS * 1000;
+  });
+}
+
 /**
  * One `presence_stats` per user channel in one call; the replies come back in the same order.
  * `parallel`, since staging and production keep presence in Valkey, where a hundred lookups one

@@ -45,20 +45,14 @@ export function chunk<T>(items: T[], size = PRESENCE_BATCH_LIMIT) {
   return chunks;
 }
 
-/**
- * The online map after an answer: each asked id is online exactly when the answer names it.
- * Returns the same object when nothing changed, so no selector re-renders.
- */
-export function applyOnline(
-  online: Readonly<Record<string, true>>,
-  asked: string[],
-  answer: string[],
-): Record<string, true> {
-  const now = new Set(answer);
-  const next: Record<string, true> = { ...online };
+export type PresenceMaps = { online: Record<string, true>; idle: Record<string, true> };
+
+/** Each asked id is in the map exactly when `ids` names it; the same object when nothing changed. */
+function applyIds(map: Record<string, true>, asked: string[], ids: ReadonlySet<string>) {
+  const next: Record<string, true> = { ...map };
   let changed = false;
   for (const id of asked) {
-    if (now.has(id)) {
+    if (ids.has(id)) {
       if (next[id] !== true) {
         next[id] = true;
         changed = true;
@@ -68,5 +62,20 @@ export function applyOnline(
       changed = true;
     }
   }
-  return changed ? next : online;
+  return changed ? next : map;
+}
+
+/**
+ * The maps after an answer, for the asked ids only. An id is idle only while it is online.
+ * Returns the same objects when nothing changed, so no selector re-renders.
+ */
+export function applyPresence(
+  state: PresenceMaps,
+  asked: string[],
+  answer: { online: string[]; idle: string[] },
+): PresenceMaps {
+  const onlineIds = new Set(answer.online);
+  const online = applyIds(state.online, asked, onlineIds);
+  const idle = applyIds(state.idle, asked, new Set(answer.idle.filter((id) => onlineIds.has(id))));
+  return online === state.online && idle === state.idle ? state : { online, idle };
 }

@@ -1171,6 +1171,7 @@
   "chat_unsent": "Message unsent",
   "chat_seen": "Seen",
   "presence_online": "Online",
+  "presence_idle": "Idle",
   "chat_typing": "{name} is typing…",
   "chat_suggestions_label": "Suggested first messages",
   "chat_suggest_sale": "Hi! Is this still for sale?",

@@ -1,6 +1,6 @@
 ## Purpose
 
-Shows signed-in people whether someone they might trade or chat with has the site open right now, as a green dot on that person's avatar, and lets anyone hide their own.
+Shows signed-in people whether someone they might trade or chat with has the site open right now, as a dot on that person's avatar, and lets anyone hide their own.
 
 ## ADDED Requirements
 
