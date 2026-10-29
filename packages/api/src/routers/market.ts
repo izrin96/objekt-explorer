@@ -32,17 +32,11 @@ import {
 } from "../schemas/market";
 import { historyCacheSeconds, rangeStart, type PriceHistoryRange } from "../schemas/price-history";
 import { getUsdRates } from "../services/currency-rates";
-import {
-  countedListings,
-  fetchMarketSummary,
-  pricedUsd,
-  usdPriceExpr,
-} from "../services/market-aggregate";
+import { countedListings, pricedUsd, usdPriceExpr } from "../services/market-aggregate";
+import { getMarketSummary } from "../services/market-summary";
 import { getCache } from "../services/redis";
 import { notBlockedEither } from "../services/safety";
-import { marketVersion } from "../services/safety-cache";
 
-const SUMMARY_TTL = 60;
 const EMPTY_HISTORY_TTL = 60;
 
 async function fetchPriceHistory(
@@ -202,17 +196,7 @@ export const marketRouter = {
       summary: "Every collection on sale, with its listing count and floor price",
     })
     .output(documented(marketSummaryOutputSchema))
-    .handler(async () => {
-      try {
-        const version = await marketVersion();
-        return await getCache(`market:summary:${version}`, SUMMARY_TTL, async () =>
-          fetchMarketSummary(await getUsdRates()),
-        );
-      } catch {
-        console.warn("[market] Redis unavailable, falling back to direct DB query");
-        return fetchMarketSummary(await getUsdRates());
-      }
-    }),
+    .handler(() => getMarketSummary()),
 
   marketListings: pub
     .route({
