@@ -50,16 +50,19 @@ const NETWORK_FAILURE = new Set([
   "NetworkError when attempting to fetch resource.",
 ]);
 
-/** A request cut off before any response (offline, app backgrounded, navigation): not our bug. */
-function isNetworkFailure(error: unknown): boolean {
+/** A request cut off before or during its response (offline, app backgrounded, navigation): not our bug. */
+function isNetworkFailure(error: unknown, depth = 0): boolean {
   if (error instanceof TypeError) return NETWORK_FAILURE.has(error.message);
+  if (!(error instanceof Error) || depth > 4) return false;
   // ofetch's FetchError keeps the browser's TypeError as its cause
-  if (error instanceof Error && error.name === "FetchError") {
+  if (error.name === "FetchError") {
     return (
-      (error as { response?: unknown }).response === undefined && isNetworkFailure(error.cause)
+      (error as { response?: unknown }).response === undefined &&
+      isNetworkFailure(error.cause, depth + 1)
     );
   }
-  return false;
+  // oRPC wraps a body cut off mid-read in "Cannot parse response body" (WEB-13)
+  return isNetworkFailure(error.cause, depth + 1);
 }
 
 // what Chrome, Safari and Firefox name an `import()` whose chunk is gone, mostly after a deploy
