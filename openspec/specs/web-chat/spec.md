@@ -623,6 +623,31 @@ An unsent message SHALL keep its dashed, transparent "Message unsent" look with 
 - **WHEN** the middle message of a run is unsent
 - **THEN** it shows "Message unsent" with a dashed outline in the same position and shape
 
+### Requirement: Links in messages
+The thread SHALL make each `http://` or `https://` link in a text message clickable, underlined in the bubble's text colour, opening in a new tab with no referrer and `nofollow ugc`. Other schemes and bare domains stay text. A link's host is ASCII and its path takes any non-space character. Trailing sentence punctuation, Latin or CJK, and a closing bracket the link never opened stay text.
+
+The moderation console, reply quotes and Inbox previews show links as plain text.
+
+#### Scenario: A link mid-sentence
+- **WHEN** mina sends "see https://example.com/x. ok?"
+- **THEN** kaede.k sees `https://example.com/x` as a link that opens in a new tab, and ". ok?" as text
+
+#### Scenario: A Korean path
+- **WHEN** mina sends "여기 https://namu.wiki/w/이달의_소녀 봐"
+- **THEN** the whole `https://namu.wiki/w/이달의_소녀` is one link
+
+#### Scenario: Text straight after a domain
+- **WHEN** mina sends "https://example.com에서 봐"
+- **THEN** only `https://example.com` is a link, and "에서 봐" is text
+
+#### Scenario: Japanese brackets
+- **WHEN** mina sends "「https://example.com/ja/ページ」。"
+- **THEN** only `https://example.com/ja/ページ` is a link, and the brackets and full stop are text
+
+#### Scenario: Another scheme
+- **WHEN** mina sends "javascript:alert(1)"
+- **THEN** it shows as text
+
 ### Requirement: Conversation context thumbnail
 A conversation row in Inbox, Requests and Archived SHALL show the newest card sent in that conversation that was not unsent:
 - for an objekt card, a small thumbnail of it and, next to it in monospace, the card's collection name and, for a specific objekt, its serial. While the collection is unknown, its slug SHALL stand in for the art;
