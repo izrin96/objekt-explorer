@@ -63,7 +63,8 @@ export function AppNav() {
         {/* never wraps or squashes; the search field absorbs the shortfall */}
         <Link
           to="/"
-          className="font-display flex shrink-0 items-center gap-2 self-stretch text-base font-bold tracking-tight whitespace-nowrap"
+          // the link fills the bar's height, so the ring sits on a shorter box
+          className="font-display after:ring-ring relative flex shrink-0 items-center gap-2 self-stretch text-base font-bold tracking-tight whitespace-nowrap outline-none after:pointer-events-none after:absolute after:-inset-x-1.5 after:inset-y-2.5 after:rounded-lg focus-visible:after:ring-2"
         >
           <span className="bg-foreground text-background grid size-6 shrink-0 place-items-center rounded-[7px]">
             <CubeIcon weight="bold" className="size-3.5" />
@@ -80,7 +81,7 @@ export function AppNav() {
               to={l.to}
               activeOptions={{ exact: l.exact }}
               data-status={alsoActive(l) ? "active" : undefined}
-              className="text-muted-foreground hover:text-foreground data-[status=active]:bg-secondary data-[status=active]:text-foreground rounded-[7px] px-2.5 py-1.5 text-sm font-medium whitespace-nowrap"
+              className="text-muted-foreground hover:text-foreground data-[status=active]:bg-secondary data-[status=active]:text-foreground focus-visible:ring-ring rounded-[7px] px-2.5 py-1.5 text-sm font-medium whitespace-nowrap outline-none focus-visible:ring-2"
             >
               {l.label}
             </Link>

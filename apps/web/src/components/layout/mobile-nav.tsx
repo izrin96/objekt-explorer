@@ -67,7 +67,7 @@ export function MobileNav({ links }: { links: readonly NavLink[] }) {
                 activeOptions={{ exact: l.exact }}
                 data-status={alsoActive(l) ? "active" : undefined}
                 onClick={() => setOpen(false)}
-                className="text-muted-foreground hover:text-foreground data-[status=active]:bg-secondary data-[status=active]:text-foreground rounded-lg px-3 py-2 text-sm font-medium"
+                className="text-muted-foreground hover:text-foreground data-[status=active]:bg-secondary data-[status=active]:text-foreground focus-visible:ring-ring rounded-lg px-3 py-2 text-sm font-medium outline-none focus-visible:ring-2"
               >
                 {l.label}
               </Link>
@@ -81,7 +81,7 @@ export function MobileNav({ links }: { links: readonly NavLink[] }) {
                 setOpen(false);
                 setChangelogOpen(true);
               }}
-              className="text-muted-foreground hover:text-foreground flex items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium"
+              className="text-muted-foreground hover:text-foreground focus-visible:ring-ring flex items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium outline-none focus-visible:ring-2"
             >
               <NoteIcon className="size-4 shrink-0" />
               {m.common_changelog()}
