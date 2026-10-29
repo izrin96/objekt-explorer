@@ -163,12 +163,17 @@ export function reportUncaught(error: unknown, errorInfo: ErrorInfo) {
 
 /**
  * React's `onRecoverableError`: hands the error on as React would by default, except a router
- * invariant from a route the user just left. The router clears that route's match before React
- * unmounts it, so its hooks throw once and React recovers (TanStack/router#8198).
+ * error from a route the user just left. The router clears that route's match before React
+ * unmounts it, so its hooks throw once ("Invariant failed", or `<Outlet>` reading `_notFound` of
+ * the missing match) and React recovers (TanStack/router#8198).
  */
 export function reportRecoverable(error: unknown) {
   const cause = error instanceof Error ? error.cause : undefined;
-  if (cause instanceof Error && cause.message === "Invariant failed") {
+  if (
+    cause instanceof Error &&
+    (cause.message === "Invariant failed" ||
+      (cause instanceof TypeError && cause.message.includes("_notFound")))
+  ) {
     console.warn(error);
     return;
   }
