@@ -32,7 +32,7 @@ export function useUserSearch(initialQuery = "") {
     retry: false,
   });
 
-  // a rate limit is an answer, not a blank list
+  // a refusal is an answer, not a blank list
   const serverError = error instanceof ORPCError ? refusalText(error) : null;
 
   // the debounce wait counts as searching too, or the empty state flashes

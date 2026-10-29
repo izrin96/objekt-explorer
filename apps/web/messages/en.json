@@ -759,7 +759,6 @@
   "api_errors_compare_target_profile_not_found": "Target profile not found",
   "api_errors_compare_target_list_not_found": "Target list not found",
   "api_errors_unknown": "Something went wrong. Please try again.",
-  "api_errors_user_search_rate_limit": "Too many searches. Please wait a moment.",
   "api_errors_user_rate_limit": "Too many requests. Please wait a moment.",
   "api_errors_user_query_too_long": "That search is too long",
   "api_errors_list_linked_not_found": "Linked list not found",

@@ -118,8 +118,6 @@ export function refusalText(error: unknown) {
       return m.api_errors_profile_not_found();
     case "user_query_too_long":
       return m.api_errors_user_query_too_long();
-    case "user_search_rate_limit":
-      return m.api_errors_user_search_rate_limit();
     case "user_rate_limit":
       return m.api_errors_user_rate_limit();
     case "user_not_linked_provider":

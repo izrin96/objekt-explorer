@@ -31,8 +31,9 @@ Typing SHALL query the server for Cosmo users by nickname and list the matches; 
 that starts with `0x` and matches no user SHALL offer to open it as a raw address. Picking a
 result SHALL navigate to that profile and record it in a per-browser Recent list of at most
 seven entries shown when the query is empty, ending with a "Clear history" action that empties
-the list without closing the dialog. Requests SHALL be debounced and rate-limit errors from
-the server SHALL be shown, not swallowed.
+the list without closing the dialog. Requests SHALL be debounced. The server SHALL NOT refuse a
+search for its rate: a caller over its limit gets matches from the nicknames stored in the app
+instead of Cosmo's. A refusal the server does send SHALL be shown, not swallowed.
 
 #### Scenario: Search and pick
 - **WHEN** the user types a nickname prefix and presses Enter on the first match

@@ -15,7 +15,7 @@ const RESULT_TTL_SECONDS = 60;
 const COSMO_SEARCHES_PER_MINUTE = 300;
 
 /** Per IP: a minute's budget, and a burst cap so it can't be spent in one go. */
-export async function isUserSearchLimited(headers: Headers): Promise<boolean> {
+async function isUserSearchLimited(headers: Headers): Promise<boolean> {
   const [minute, burst] = await Promise.all([
     ipRateLimited("user-search", headers, 20, 60),
     ipRateLimited("user-search-burst", headers, 5, 5),
@@ -51,21 +51,34 @@ async function searchCosmo(query: string): Promise<CosmoSearchResult> {
   return { ...results, results: validUsers };
 }
 
-/** Cosmo's user search, falling back to the nicknames cached here when Cosmo fails or is over its limit. */
-export async function searchUsers(query: string): Promise<CosmoSearchResult> {
+/**
+ * Cosmo's user search. A caller over its own limit, or Cosmo failing or over its global limit,
+ * gets the nicknames cached here instead; the search itself is never refused.
+ */
+export async function searchUsers(query: string, headers: Headers): Promise<CosmoSearchResult> {
   if (query.length < 1) return emptyResult;
 
-  try {
-    // its own prefix: under `user-search:` a query like "rl:global" would land on a rate-limit key
-    return await getCache(`user-search-result:${query.toLowerCase()}`, RESULT_TTL_SECONDS, () =>
-      searchCosmo(query),
-    );
-  } catch (err) {
-    if (err !== OVER_GLOBAL_LIMIT) console.error("Cosmo user search failed:", err);
+  // checked before getCache: concurrent misses share one load, which would hand every caller
+  // the first caller's verdict
+  if (!(await isUserSearchLimited(headers))) {
+    try {
+      // its own prefix: under `user-search:` a query like "rl:global" would land on a rate-limit key
+      return await getCache(`user-search-result:${query.toLowerCase()}`, RESULT_TTL_SECONDS, () =>
+        searchCosmo(query),
+      );
+    } catch (err) {
+      if (err !== OVER_GLOBAL_LIMIT) console.error("Cosmo user search failed:", err);
+    }
   }
 
-  const escapedQuery = query.replace(/[\\%_]/g, "\\$&");
+  // cached too, so a caller past every limit costs a Redis read, not a query
+  return getCache(`user-search-fallback:${query.toLowerCase()}`, RESULT_TTL_SECONDS, () =>
+    searchStoredUsers(query),
+  );
+}
 
+async function searchStoredUsers(query: string): Promise<CosmoSearchResult> {
+  const escapedQuery = query.replace(/[\\%_]/g, "\\$&");
   const users = await db
     .selectDistinctOn([userAddress.nickname], {
       cosmoId: userAddress.cosmoId,

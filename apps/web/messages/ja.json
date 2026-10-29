@@ -759,7 +759,6 @@
   "api_errors_compare_target_profile_not_found": "比較対象のプロフィールが見つかりません",
   "api_errors_compare_target_list_not_found": "比較対象のリストが見つかりません",
   "api_errors_unknown": "問題が発生しました。もう一度お試しください。",
-  "api_errors_user_search_rate_limit": "検索回数が多すぎます。しばらく待ってからお試しください。",
   "api_errors_user_rate_limit": "リクエストが多すぎます。しばらく待ってからお試しください。",
   "api_errors_user_query_too_long": "検索語が長すぎます",
   "api_errors_list_linked_not_found": "ペアにしたリストが見つかりません",

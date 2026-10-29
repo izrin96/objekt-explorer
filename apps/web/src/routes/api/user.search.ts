@@ -1,5 +1,5 @@
 import { MAX_USER_SEARCH_LENGTH } from "@repo/api/schemas/user";
-import { isUserSearchLimited, searchUsers } from "@repo/api/services/user-search";
+import { searchUsers } from "@repo/api/services/user-search";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/api/user/search")({
@@ -9,16 +9,11 @@ export const Route = createFileRoute("/api/user/search")({
         const url = new URL(request.url);
         const query = url.searchParams.get("query") ?? "";
 
-        if (query.length < 1) return Response.json(await searchUsers(query));
         if (query.length > MAX_USER_SEARCH_LENGTH) {
           return Response.json({ error: "Query too long" }, { status: 400 });
         }
 
-        if (await isUserSearchLimited(request.headers)) {
-          return Response.json({ error: "Too many requests" }, { status: 429 });
-        }
-
-        return Response.json(await searchUsers(query));
+        return Response.json(await searchUsers(query, request.headers));
       },
     },
   },

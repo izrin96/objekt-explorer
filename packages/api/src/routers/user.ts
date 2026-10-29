@@ -26,7 +26,7 @@ import { auth, refreshProviderProfile } from "../services/auth";
 import { loadIdentities } from "../services/identities";
 import { offersOf, openOffersWhere } from "../services/offer/cancel";
 import { getCurrentUser } from "../services/user";
-import { isUserSearchLimited, searchUsers } from "../services/user-search";
+import { searchUsers } from "../services/user-search";
 
 const DELETION_TOKEN_MINUTES = 5;
 
@@ -58,23 +58,15 @@ export const userRouter = {
       path: "/users/search",
       tags: ["Users"],
       summary: "Find Cosmo users by nickname",
-      spec: errorResponses(400, 429),
+      spec: errorResponses(400),
     })
     .input(userSearchInputSchema)
     .output(documented(userSearchOutputSchema, { open: true }))
     .handler(async ({ input: { query }, context }) => {
-      if (query.length < 1) return searchUsers(query);
       if (query.length > MAX_USER_SEARCH_LENGTH) {
         refuse("BAD_REQUEST", "user_query_too_long", "Query too long");
       }
-      if (await isUserSearchLimited(context.headers ?? getRequestHeaders())) {
-        refuse(
-          "TOO_MANY_REQUESTS",
-          "user_search_rate_limit",
-          "Too many searches, try again shortly",
-        );
-      }
-      return searchUsers(query);
+      return searchUsers(query, context.headers ?? getRequestHeaders());
     }),
 
   refreshProfile: authed

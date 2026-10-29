@@ -116,7 +116,6 @@ export const deletionTokenOutputSchema = z.object({ token: z.string() });
 /** `data.reason` on a refused user search or provider refresh; `user_failed_get_info` also carries `data.provider`. */
 export const USER_REFUSALS = [
   "user_query_too_long",
-  "user_search_rate_limit",
   "user_rate_limit",
   "user_not_linked_provider",
   "user_failed_get_info",
