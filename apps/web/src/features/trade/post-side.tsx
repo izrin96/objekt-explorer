@@ -227,7 +227,7 @@ export function SideNotes({ sides }: { sides: readonly PostSideData[] }) {
       {noted.map((side) => (
         <p
           key={side.list.id}
-          className="text-muted-foreground line-clamp-5 text-xs text-pretty break-words whitespace-pre-wrap"
+          className="text-muted-foreground line-clamp-8 text-xs text-pretty break-words whitespace-pre-wrap"
         >
           {noted.length > 1 ? (
             <>
