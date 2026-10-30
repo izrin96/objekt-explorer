@@ -4,9 +4,9 @@ import type { NearGroup } from "@/features/offers/near-picks";
 import type { Collections, OfferPick } from "@/features/offers/pick";
 import type { OfferAddress } from "@/features/offers/queries";
 
-type TopupDraft = { amount: number; currency: string; payer: TopupPayer };
+export type TopupDraft = { amount: number; currency: string; payer: TopupPayer };
 
-type OfferPrefill = {
+export type OfferPrefill = {
   give?: OfferPick[];
   get?: OfferPick[];
   topup?: TopupDraft;

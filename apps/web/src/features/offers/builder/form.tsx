@@ -50,6 +50,7 @@ import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
 
 import { type NearGroup, nearPayer, withNear } from "../near-picks";
+import { offerInput } from "./draft";
 import { BuilderHeader } from "./header";
 import { MatchesLine, NearLine } from "./matches-line";
 import { BuilderRefused } from "./refused";
@@ -367,22 +368,14 @@ export function BuilderForm({
     if (empty || blocked || overLimit || !topupValid || noteLength > OFFER_NOTE_MAX_LENGTH) return;
     setError(null);
     setRefused(new Set());
-    create.mutate({
-      ...to,
-      give: giveShown.flatMap((pick) =>
-        pick.objektId ? [{ collectionSlug: pick.collectionSlug, objektId: pick.objektId }] : [],
-      ),
-      // an any-copy pick of several copies asks for each one
-      get: get.flatMap((pick) =>
-        Array.from({ length: countOf(pick) }, () => ({
-          collectionSlug: pick.collectionSlug,
-          objektId: pick.objektId ?? undefined,
-          listSlug: pick.listSlug ?? undefined,
-        })),
-      ),
-      topup: topupOn && amount !== null ? { amount, currency, payer } : undefined,
-      note: note.trim() === "" ? undefined : note,
-    });
+    create.mutate(
+      offerInput(to, {
+        give: giveShown,
+        get,
+        topup: { on: topupOn, amount, currency, payer },
+        note,
+      }),
+    );
   };
 
   const sides = { give: [give, setGive], get: [get, setGet] } as const;
