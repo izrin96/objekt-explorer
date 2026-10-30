@@ -33,14 +33,16 @@ export function ProfileHeader({ profile }: { profile: PublicProfile }) {
       <ProfileBanner profile={profile} />
 
       <div className="flex flex-wrap items-end justify-between gap-4">
-        <div className="flex min-w-0 items-end gap-3.5">
+        {/* both grow: sized to their content, Safari measures the trust line a few pixels
+            shorter than it draws it and wraps its last word */}
+        <div className="flex min-w-0 grow items-end gap-3.5">
           <OnlineAvatar
             userId={isProfileAuthed ? undefined : profile.userId}
             name={nickname}
             image={profile.user?.image}
             className="border-background size-16 border-3 text-base font-semibold"
           />
-          <div className="min-w-0">
+          <div className="min-w-0 grow">
             {/* the badge sits beside the heading, not inside it: in the
                 heading it joins the accessible name as "<nickname> Verified" */}
             <div className="flex items-center gap-2">

@@ -48,7 +48,7 @@ export function TrustLine({
   const hint = m.trust_unfinished_hint();
   return (
     // a span, so it can sit inside a button's phrasing content (the For you row)
-    <span className={cn("text-muted-foreground block text-xs tabular-nums", className)}>
+    <span className={cn("text-muted-foreground block text-xs", className)}>
       <span className="sr-only">{m.trust_label()} </span>
       {reputation.verified === 0 ? (
         unfinished > 0 ? (
