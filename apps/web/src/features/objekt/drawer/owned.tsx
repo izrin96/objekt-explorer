@@ -16,6 +16,7 @@ import { Menu, MenuPopup, MenuTrigger } from "@/components/ui/menu";
 import { formatTimestamp } from "@/lib/time";
 import { m } from "@/paraglide/messages";
 
+import { headRowClass, ScrollTable } from "./scroll-table";
 import { SortableHeader, type SortState } from "./sortable-header";
 
 const PAGE_SIZE = 10;
@@ -83,80 +84,67 @@ export function OwnedPanel({
           has one focusable cell, so without `tabIndex` the columns past the
           fold are pointer-only. The row menu's 44px touch target pokes past
           the last row, so the vertical axis is clipped rather than scrolled. */}
-      <div
-        data-scroll-x
-        tabIndex={0}
-        role="region"
-        aria-label={m.objekt_owned_table_aria()}
-        className="bg-card focus-visible:ring-ring overflow-x-auto overflow-y-hidden rounded-lg border outline-none focus-visible:ring-2"
-      >
-        <table className="w-full min-w-96 border-collapse text-sm">
-          <caption className="sr-only">{m.objekt_owned_table_aria()}</caption>
-          <thead>
-            <tr className="text-muted-foreground bg-secondary/60 text-xs tracking-wide uppercase">
-              <SortableHeader sort={sort} column="serial" onToggle={toggle}>
-                {m.objekt_serial()}
-              </SortableHeader>
-              <th scope="col" className="px-3 py-2 text-left font-medium">
-                {m.objekt_token_id()}
+      <ScrollTable label={m.objekt_owned_table_aria()}>
+        <thead>
+          <tr className={headRowClass}>
+            <SortableHeader sort={sort} column="serial" onToggle={toggle}>
+              {m.objekt_serial()}
+            </SortableHeader>
+            <th scope="col" className="px-3 py-2 text-left font-medium">
+              {m.objekt_token_id()}
+            </th>
+            <SortableHeader sort={sort} column="receivedAt" onToggle={toggle}>
+              {m.objekt_received()}
+            </SortableHeader>
+            <th scope="col" className="px-3 py-2 text-left font-medium">
+              {m.objekt_transferable()}
+            </th>
+            {menu && <th scope="col" className="w-10" />}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((item) => (
+            <tr key={item.id} className="border-t">
+              <th scope="row" className="px-3 py-1.5 text-left font-normal">
+                <button
+                  type="button"
+                  className="hover:text-accent-solid inline-flex cursor-pointer items-center gap-1.5 font-mono font-medium tabular-nums underline-offset-2 hover:underline"
+                  onClick={() => onOpenSerial(item.serial)}
+                >
+                  {item.serial}
+                  {item.isPin === true && <PushPinIcon className="size-3" aria-hidden />}
+                  {item.isLocked === true && <LockSimpleIcon className="size-3" aria-hidden />}
+                </button>
               </th>
-              <SortableHeader sort={sort} column="receivedAt" onToggle={toggle}>
-                {m.objekt_received()}
-              </SortableHeader>
-              <th scope="col" className="px-3 py-2 text-left font-medium">
-                {m.objekt_transferable()}
-              </th>
-              {menu && <th scope="col" className="w-10" />}
+              <td className="px-3 py-1.5 font-mono tabular-nums">{item.tokenId}</td>
+              <td className="px-3 py-1.5 whitespace-nowrap tabular-nums">
+                {formatTimestamp(new Date(item.receivedAt))}
+              </td>
+              <td className="px-3 py-1.5">
+                <Badge variant={item.transferable ? "success" : "error"} size="sm">
+                  {item.transferable ? m.objekt_yes() : m.objekt_no()}
+                </Badge>
+              </td>
+              {menu && (
+                <td className="pr-2 pl-1">
+                  <Menu>
+                    <MenuTrigger
+                      render={
+                        <Button variant="ghost" size="icon-sm" aria-label={m.objekt_menu_aria()} />
+                      }
+                    >
+                      <DotsThreeIcon weight="bold" />
+                    </MenuTrigger>
+                    <MenuPopup align="end" className="min-w-44">
+                      {menu(item)}
+                    </MenuPopup>
+                  </Menu>
+                </td>
+              )}
             </tr>
-          </thead>
-          <tbody>
-            {rows.map((item) => (
-              <tr key={item.id} className="border-t">
-                <th scope="row" className="px-3 py-1.5 text-left font-normal">
-                  <button
-                    type="button"
-                    className="hover:text-accent-solid inline-flex cursor-pointer items-center gap-1.5 font-mono font-medium tabular-nums underline-offset-2 hover:underline"
-                    onClick={() => onOpenSerial(item.serial)}
-                  >
-                    {item.serial}
-                    {item.isPin === true && <PushPinIcon className="size-3" aria-hidden />}
-                    {item.isLocked === true && <LockSimpleIcon className="size-3" aria-hidden />}
-                  </button>
-                </th>
-                <td className="px-3 py-1.5 font-mono tabular-nums">{item.tokenId}</td>
-                <td className="px-3 py-1.5 whitespace-nowrap tabular-nums">
-                  {formatTimestamp(new Date(item.receivedAt))}
-                </td>
-                <td className="px-3 py-1.5">
-                  <Badge variant={item.transferable ? "success" : "error"} size="sm">
-                    {item.transferable ? m.objekt_yes() : m.objekt_no()}
-                  </Badge>
-                </td>
-                {menu && (
-                  <td className="pr-2 pl-1">
-                    <Menu>
-                      <MenuTrigger
-                        render={
-                          <Button
-                            variant="ghost"
-                            size="icon-sm"
-                            aria-label={m.objekt_menu_aria()}
-                          />
-                        }
-                      >
-                        <DotsThreeIcon weight="bold" />
-                      </MenuTrigger>
-                      <MenuPopup align="end" className="min-w-44">
-                        {menu(item)}
-                      </MenuPopup>
-                    </Menu>
-                  </td>
-                )}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+          ))}
+        </tbody>
+      </ScrollTable>
 
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-3">

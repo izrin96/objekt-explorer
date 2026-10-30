@@ -18,6 +18,7 @@ import { ProfileCell, ProfileLink } from "@/features/profile/profile-hover-card"
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
+import { headRowClass, ScrollTable } from "./scroll-table";
 import { SortableHeader, type SortState } from "./sortable-header";
 
 export type EventKind = "mint" | "transfer" | "spin";
@@ -249,65 +250,56 @@ function OwnershipTable({ events }: { events: TimelineEvent[] }) {
     /* the owner names run long, so the table keeps its own scroller rather
        than squeezing them; the region takes focus so the columns past the
        fold are reachable without a pointer */
-    <div
-      data-scroll-x
-      tabIndex={0}
-      role="region"
-      aria-label={m.objekt_serial_table_aria()}
-      className="bg-card focus-visible:ring-ring overflow-x-auto rounded-lg border outline-none focus-visible:ring-2"
-    >
-      <table className="w-full min-w-96 border-collapse text-sm">
-        <caption className="sr-only">{m.objekt_serial_table_aria()}</caption>
-        <thead>
-          <tr className="text-muted-foreground bg-secondary/60 text-xs tracking-wide uppercase">
-            <th scope="col" className="px-3 py-2 text-left font-medium">
-              {m.objekt_owner()}
-            </th>
-            <SortableHeader
-              sort={sort}
-              column="at"
-              onToggle={() =>
-                setSort((prev) => ({ ...prev, dir: prev.dir === "asc" ? "desc" : "asc" }))
-              }
-            >
-              {m.objekt_date()}
-            </SortableHeader>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((event) => {
-            return (
-              <tr key={event.id} className="border-t">
-                <th scope="row" className="px-3 py-1.5 text-left font-normal">
-                  {/* the spin address is Cosmo's burn wallet, so it has no profile */}
-                  {event.kind === "spin" ? (
-                    <span className="flex items-center gap-2">
-                      <EventMarker kind={event.kind} />
-                      <span className="truncate">{event.owner}</span>
-                    </span>
-                  ) : (
-                    <ProfileCell
-                      address={event.address}
-                      nickname={event.mono ? null : event.owner}
-                      className="-mx-3 -my-1.5 flex items-center gap-2 px-3 py-1.5"
-                      before={<EventMarker kind={event.kind} />}
-                      linkClassName={cn(
-                        "truncate underline-offset-2 hover:underline",
-                        event.mono && "font-mono text-xs",
-                      )}
-                    >
-                      {event.mono ? truncateAddress(event.owner) : event.owner}
-                    </ProfileCell>
-                  )}
-                </th>
-                <td className="text-muted-foreground px-3 py-1.5 text-xs whitespace-nowrap tabular-nums">
-                  <Timestamp date={event.at} />
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
+    <ScrollTable label={m.objekt_serial_table_aria()} clipY={false}>
+      <thead>
+        <tr className={headRowClass}>
+          <th scope="col" className="px-3 py-2 text-left font-medium">
+            {m.objekt_owner()}
+          </th>
+          <SortableHeader
+            sort={sort}
+            column="at"
+            onToggle={() =>
+              setSort((prev) => ({ ...prev, dir: prev.dir === "asc" ? "desc" : "asc" }))
+            }
+          >
+            {m.objekt_date()}
+          </SortableHeader>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((event) => {
+          return (
+            <tr key={event.id} className="border-t">
+              <th scope="row" className="px-3 py-1.5 text-left font-normal">
+                {/* the spin address is Cosmo's burn wallet, so it has no profile */}
+                {event.kind === "spin" ? (
+                  <span className="flex items-center gap-2">
+                    <EventMarker kind={event.kind} />
+                    <span className="truncate">{event.owner}</span>
+                  </span>
+                ) : (
+                  <ProfileCell
+                    address={event.address}
+                    nickname={event.mono ? null : event.owner}
+                    className="-mx-3 -my-1.5 flex items-center gap-2 px-3 py-1.5"
+                    before={<EventMarker kind={event.kind} />}
+                    linkClassName={cn(
+                      "truncate underline-offset-2 hover:underline",
+                      event.mono && "font-mono text-xs",
+                    )}
+                  >
+                    {event.mono ? truncateAddress(event.owner) : event.owner}
+                  </ProfileCell>
+                )}
+              </th>
+              <td className="text-muted-foreground px-3 py-1.5 text-xs whitespace-nowrap tabular-nums">
+                <Timestamp date={event.at} />
+              </td>
+            </tr>
+          );
+        })}
+      </tbody>
+    </ScrollTable>
   );
 }

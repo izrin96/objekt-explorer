@@ -40,6 +40,7 @@ import { m } from "@/paraglide/messages";
 
 import { ObjektNote } from "../objekt-note";
 import { marketListingsOptions, marketStatsOptions, priceHistoryOptions } from "../queries";
+import { headRowClass, ScrollTable } from "./scroll-table";
 import { SortableHeader, type SortState } from "./sortable-header";
 import { type Stat, StatRow } from "./stat-row";
 
@@ -196,55 +197,44 @@ export function MarketPanel({
         <div className="flex flex-col gap-1.5">
           {/* the price leads so it stays in view when a phone-width drawer
               scrolls the table sideways */}
-          <div
-            data-scroll-x
-            tabIndex={0}
-            role="region"
-            aria-label={m.objekt_market_listings()}
-            className="bg-card focus-visible:ring-ring overflow-x-auto overflow-y-hidden rounded-lg border outline-none focus-visible:ring-2"
+          <ScrollTable
+            label={m.objekt_market_listings()}
+            className="max-sm:[&_td]:px-1.5 max-sm:[&_th]:px-1.5"
           >
-            <table className="w-full border-collapse text-sm max-sm:[&_td]:px-1.5 max-sm:[&_th]:px-1.5">
-              <caption className="sr-only">{m.objekt_market_listings()}</caption>
-              <thead>
-                <tr className="text-muted-foreground bg-secondary/60 text-xs tracking-wide uppercase">
-                  <SortableHeader
-                    sort={sort}
-                    column="price"
-                    onToggle={toggle}
-                    className="text-right"
-                  >
-                    {m.list_manage_objekt_set_price_label()}
-                  </SortableHeader>
-                  <th scope="col" className="px-3 py-2 text-left font-medium">
-                    {m.objekt_serial()}
-                  </th>
-                  <th scope="col" className="w-full px-3 py-2 text-left font-medium">
-                    {m.objekt_market_seller()}
-                  </th>
-                  <SortableHeader sort={sort} column="createdAt" onToggle={toggle}>
-                    {m.objekt_date()}
-                  </SortableHeader>
-                  <th scope="col" className="w-10">
-                    <span className="sr-only">{m.objekt_market_actions()}</span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {items.map((item) => (
-                  <MarketRow
-                    key={item.id}
-                    item={item}
-                    slug={slug}
-                    messageable={item.messageable && !isMine(item)}
-                    currency={currency}
-                    formatUsd={formatUsd}
-                    onOpenSerial={onOpenSerial}
-                    actions={actions}
-                  />
-                ))}
-              </tbody>
-            </table>
-          </div>
+            <thead>
+              <tr className={headRowClass}>
+                <SortableHeader sort={sort} column="price" onToggle={toggle} className="text-right">
+                  {m.list_manage_objekt_set_price_label()}
+                </SortableHeader>
+                <th scope="col" className="px-3 py-2 text-left font-medium">
+                  {m.objekt_serial()}
+                </th>
+                <th scope="col" className="w-full px-3 py-2 text-left font-medium">
+                  {m.objekt_market_seller()}
+                </th>
+                <SortableHeader sort={sort} column="createdAt" onToggle={toggle}>
+                  {m.objekt_date()}
+                </SortableHeader>
+                <th scope="col" className="w-10">
+                  <span className="sr-only">{m.objekt_market_actions()}</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {items.map((item) => (
+                <MarketRow
+                  key={item.id}
+                  item={item}
+                  slug={slug}
+                  messageable={item.messageable && !isMine(item)}
+                  currency={currency}
+                  formatUsd={formatUsd}
+                  onOpenSerial={onOpenSerial}
+                  actions={actions}
+                />
+              ))}
+            </tbody>
+          </ScrollTable>
 
           <InfiniteSentinel
             label={m.infinite_query_load_more_aria()}

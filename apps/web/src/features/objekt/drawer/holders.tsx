@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import { holdersOptions } from "../queries";
+import { headRowClass, ScrollTable } from "./scroll-table";
 import { type Stat, StatRow } from "./stat-row";
 
 type Summary = HoldersOutput["summary"];
@@ -110,55 +111,46 @@ export function HoldersPanel({ slug, physical }: { slug: string; physical: boole
         <>
           <SpreadChart summary={summary} />
           <div className="flex flex-col gap-1.5">
-            <div
-              data-scroll-x
-              tabIndex={0}
-              role="region"
-              aria-label={m.objekt_holders_top()}
-              className="bg-card focus-visible:ring-ring overflow-x-auto overflow-y-hidden rounded-lg border outline-none focus-visible:ring-2"
-            >
-              <table className="w-full min-w-96 border-collapse text-sm">
-                <caption className="sr-only">{m.objekt_holders_top()}</caption>
-                <thead>
-                  <tr className="text-muted-foreground bg-secondary/60 text-xs tracking-wide uppercase">
-                    <th scope="col" className="w-12 px-3 py-2 text-left font-medium">
-                      {m.objekt_holders_rank()}
-                    </th>
-                    <th scope="col" className="w-full px-3 py-2 text-left font-medium">
-                      {m.objekt_holders_holder()}
-                    </th>
-                    <th scope="col" className="px-3 py-2 text-right font-medium">
-                      {m.objekt_holders_lowest()}
-                    </th>
-                    <th scope="col" className="px-3 py-2 text-right font-medium">
-                      {m.objekt_holders_share()}
-                    </th>
-                    <th scope="col" className="px-3 py-2 text-right font-medium">
-                      {m.objekt_holders_copies()}
-                    </th>
+            <ScrollTable label={m.objekt_holders_top()}>
+              <thead>
+                <tr className={headRowClass}>
+                  <th scope="col" className="w-12 px-3 py-2 text-left font-medium">
+                    {m.objekt_holders_rank()}
+                  </th>
+                  <th scope="col" className="w-full px-3 py-2 text-left font-medium">
+                    {m.objekt_holders_holder()}
+                  </th>
+                  <th scope="col" className="px-3 py-2 text-right font-medium">
+                    {m.objekt_holders_lowest()}
+                  </th>
+                  <th scope="col" className="px-3 py-2 text-right font-medium">
+                    {m.objekt_holders_share()}
+                  </th>
+                  <th scope="col" className="px-3 py-2 text-right font-medium">
+                    {m.objekt_holders_copies()}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((row) => (
+                  <HolderTableRow key={row.holder.address} row={row} copies={summary.copies} />
+                ))}
+                {pinned.length > 0 && (
+                  <tr className="border-t" aria-hidden>
+                    <td colSpan={5} className="text-muted-foreground py-0.5 text-center">
+                      ⋯
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {rows.map((row) => (
-                    <HolderTableRow key={row.holder.address} row={row} copies={summary.copies} />
-                  ))}
-                  {pinned.length > 0 && (
-                    <tr className="border-t" aria-hidden>
-                      <td colSpan={5} className="text-muted-foreground py-0.5 text-center">
-                        ⋯
-                      </td>
-                    </tr>
-                  )}
-                  {pinned.map((row) => (
-                    <HolderTableRow
-                      key={`own-${row.holder.address}`}
-                      row={row}
-                      copies={summary.copies}
-                    />
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                )}
+                {pinned.map((row) => (
+                  <HolderTableRow
+                    key={`own-${row.holder.address}`}
+                    row={row}
+                    copies={summary.copies}
+                  />
+                ))}
+              </tbody>
+            </ScrollTable>
 
             <InfiniteSentinel
               label={m.infinite_query_load_more_aria()}
