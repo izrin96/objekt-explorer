@@ -2,7 +2,6 @@ import { InfoIcon } from "@phosphor-icons/react";
 import type { ListType } from "@repo/api/schemas/list";
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
-import slugify from "slugify";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -24,7 +23,20 @@ import { toneChip } from "@/lib/tone";
 import { cn, getBaseURL } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
-import type { ListDraft, ListUrl } from "./list-draft";
+import {
+  bindNote,
+  isBindable,
+  isListType,
+  LIST_TYPE_DESC,
+  LIST_TYPES,
+  type ListDraft,
+  type ListUrl,
+  listTypePatch,
+  NONE,
+  profileLabel,
+  profilePatch,
+  slugPreview,
+} from "./list-draft";
 import { LIST_TYPE_LABEL, LIST_TYPE_TONE, ListTypeBadge } from "./list-type-badge";
 
 export {
@@ -35,20 +47,6 @@ export {
   toCreateInput,
   toEditInput,
 } from "./list-draft";
-
-/** `Select` has no value for "cleared", so the empty choice carries its own. */
-const NONE = "__none__";
-
-const LIST_TYPES: ListType[] = ["general", "have", "want", "sale"];
-
-const isListType = (value: unknown): value is ListType => LIST_TYPES.some((type) => type === value);
-
-const LIST_TYPE_DESC: Record<ListType, () => string> = {
-  general: m.list_create_general_list_desc,
-  sale: m.list_create_sale_list_desc,
-  have: m.list_create_have_list_desc,
-  want: m.list_create_want_list_desc,
-};
 
 type ListFormProps = {
   /** prefixes every field id, so create and edit can be open in one document */
@@ -82,24 +80,8 @@ export function ListForm({
   const isEdit = mode === "edit";
   const isSale = value.listType === "sale";
   const isPaired = value.listType === "have" || value.listType === "want";
-  const bindable = value.listType === "have" || isSale;
-
-  const changeType = (next: ListType | null) => {
-    const listType = next ?? "general";
-    const nextBindable = listType === "have" || listType === "sale";
-    // entering have or sale binds by default, to the chosen profile or else
-    // the first; moving between the two keeps what the user set
-    const entering = nextBindable && !bindable;
-    const profileAddress = entering
-      ? (value.profileAddress ?? profiles[0]?.address ?? null)
-      : value.profileAddress;
-    set({
-      listType,
-      linkedListId: null,
-      profileAddress,
-      isProfileBind: nextBindable && profileAddress !== null && (entering || value.isProfileBind),
-    });
-  };
+  const bindable = isBindable(value.listType);
+  const note = bindNote(value, mode, profiles.length);
 
   return (
     <div className="flex flex-col gap-4">
@@ -117,7 +99,7 @@ export function ListForm({
             aria-describedby={id("type-desc")}
             value={value.listType}
             onValueChange={(next) => {
-              if (isListType(next)) changeType(next);
+              if (isListType(next)) set(listTypePatch(value, next, profiles));
             }}
             className="grid grid-cols-4 gap-1 rounded-lg border p-1"
           >
@@ -179,11 +161,11 @@ export function ListForm({
       ) : null}
 
       {/* binding is set only here, and without it a have or sale list never goes on Trade */}
-      {bindable && !isEdit && (profiles.length === 0 || !value.isProfileBind) ? (
+      {note !== null ? (
         <Alert variant="warning">
           <InfoIcon aria-hidden />
           <AlertDescription>
-            {profiles.length === 0 ? (
+            {note === "link" ? (
               <>
                 {m.list_create_bind_note_link()}{" "}
                 <Link to="/link/connect" className="font-medium underline underline-offset-2">
@@ -202,11 +184,7 @@ export function ListForm({
           <span className="text-sm font-medium">{m.list_create_profile_tracked_label()}</span>
           <span className="text-sm">
             {value.profileAddress
-              ? displayNickname(
-                  value.profileAddress,
-                  profiles.find((profile) => isSameAddress(profile.address, value.profileAddress))
-                    ?.nickname,
-                )
+              ? profileLabel(value.profileAddress, profiles)
               : m.common_form_none()}
           </span>
         </div>
@@ -220,23 +198,12 @@ export function ListForm({
           <Select
             value={value.profileAddress ?? NONE}
             isItemEqualToValue={(item, next) => item === next || isSameAddress(item, next)}
-            onValueChange={(next: string | null) => {
-              const profileAddress = next === null || next === NONE ? null : next;
-              set({
-                profileAddress,
-                isProfileBind: profileAddress === null ? false : value.isProfileBind,
-              });
-            }}
+            onValueChange={(next: string | null) => set(profilePatch(value, next))}
           >
             <SelectTrigger id={id("profile")} className="min-w-0">
               <SelectValue placeholder={m.list_create_profile_placeholder()}>
                 {(next: string) =>
-                  next === NONE
-                    ? m.common_form_none()
-                    : displayNickname(
-                        next,
-                        profiles.find((profile) => isSameAddress(profile.address, next))?.nickname,
-                      )
+                  next === NONE ? m.common_form_none() : profileLabel(next, profiles)
                 }
               </SelectValue>
             </SelectTrigger>
@@ -277,7 +244,7 @@ export function ListForm({
       {isPaired || isSale ? tradeLine : null}
 
       {/* a serial only exists on an entry the bound profile owns */}
-      {isSale || value.listType === "have" ? (
+      {bindable ? (
         <SwitchRow
           id={id("hide-serial")}
           label={m.list_create_hide_serial_label()}
@@ -305,11 +272,7 @@ export function ListForm({
                 readOnly
                 unstyled
                 className="grow text-sm"
-                value={
-                  value.regenerateSlug
-                    ? slugify(value.name, { lower: true, strict: true }) || url.fallbackSlug
-                    : url.profileSlug
-                }
+                value={slugPreview(value.name, url, value.regenerateSlug)}
               />
             </div>
           </div>

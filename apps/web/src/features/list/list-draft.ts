@@ -1,7 +1,9 @@
 import type { ListType } from "@repo/api/schemas/list";
 import type { OpenToFlags } from "@repo/api/schemas/open-to";
+import slugify from "slugify";
 import * as z from "zod";
 
+import { displayNickname, isSameAddress } from "@/lib/address";
 import { m } from "@/paraglide/messages";
 
 const CURRENCY_RE = /^[A-Za-z]{3}$/;
@@ -111,3 +113,78 @@ export function toEditInput(slug: string, draft: ListDraft) {
 }
 
 export type ListUrl = { nickname: string; profileSlug: string; fallbackSlug: string };
+
+/** `Select` has no value for "cleared", so the empty choice carries its own. */
+export const NONE = "__none__";
+
+export const LIST_TYPES: ListType[] = ["general", "have", "want", "sale"];
+
+export const isListType = (value: unknown): value is ListType =>
+  LIST_TYPES.some((type) => type === value);
+
+export const LIST_TYPE_DESC: Record<ListType, () => string> = {
+  general: m.list_create_general_list_desc,
+  sale: m.list_create_sale_list_desc,
+  have: m.list_create_have_list_desc,
+  want: m.list_create_want_list_desc,
+};
+
+export const isBindable = (type: ListType) => type === "have" || type === "sale";
+
+export function listTypePatch(
+  draft: ListDraft,
+  next: ListType | null,
+  profiles: readonly { address: string }[],
+): Pick<ListDraft, "listType" | "linkedListId" | "profileAddress" | "isProfileBind"> {
+  const listType = next ?? "general";
+  const nextBindable = isBindable(listType);
+  // entering have or sale binds by default, to the chosen profile or else
+  // the first; moving between the two keeps what the user set
+  const entering = nextBindable && !isBindable(draft.listType);
+  const profileAddress = entering
+    ? (draft.profileAddress ?? profiles[0]?.address ?? null)
+    : draft.profileAddress;
+  return {
+    listType,
+    linkedListId: null,
+    profileAddress,
+    isProfileBind: nextBindable && profileAddress !== null && (entering || draft.isProfileBind),
+  };
+}
+
+export function profilePatch(
+  draft: ListDraft,
+  next: string | null,
+): Pick<ListDraft, "profileAddress" | "isProfileBind"> {
+  const profileAddress = next === null || next === NONE ? null : next;
+  return {
+    profileAddress,
+    isProfileBind: profileAddress === null ? false : draft.isProfileBind,
+  };
+}
+
+export function profileLabel(
+  address: string,
+  profiles: readonly { address: string; nickname: string | null }[],
+): string {
+  return displayNickname(
+    address,
+    profiles.find((p) => isSameAddress(p.address, address))?.nickname,
+  );
+}
+
+export function bindNote(
+  draft: ListDraft,
+  mode: "create" | "edit",
+  profileCount: number,
+): "link" | "off" | null {
+  if (!isBindable(draft.listType) || mode !== "create") return null;
+  if (profileCount === 0) return "link";
+  return draft.isProfileBind ? null : "off";
+}
+
+export function slugPreview(name: string, url: ListUrl, regenerate: boolean): string {
+  return regenerate
+    ? slugify(name, { lower: true, strict: true }) || url.fallbackSlug
+    : url.profileSlug;
+}
