@@ -25,9 +25,10 @@ import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
-import { type Collections, NotificationRow, type RowVariant } from "./notification-items";
+import { NotificationRow, type RowVariant } from "./notification-items";
 import { notificationKeys, notificationPrefsOptions, notificationsOptions } from "./queries";
 import { type Section, SECTIONS, sectionOf } from "./sections";
+import type { Collections } from "./stack";
 
 const TAB_LABEL: Record<NotificationKind, () => string> = {
   all: m.notification_tab_all,

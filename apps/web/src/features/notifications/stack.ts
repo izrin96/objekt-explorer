@@ -1,5 +1,8 @@
+import type { Outputs } from "@repo/api";
 import type { Notification } from "@repo/api/schemas/notification";
 import { NOTE_OBJEKTS } from "@repo/api/schemas/offer";
+
+export type Collections = Outputs["notifications"]["list"]["collections"];
 
 /**
  * The collections a notification names, in the order it leads with them: an alert's newest
@@ -23,3 +26,12 @@ export function notificationSlugs(notification: Notification): readonly string[]
 export function stackSlugs(slugs: readonly string[], isLoaded: (slug: string) => boolean) {
   return slugs.filter(isLoaded).slice(0, NOTE_OBJEKTS);
 }
+
+export function shownSlugs(notification: Notification, collections: Collections) {
+  return stackSlugs(notificationSlugs(notification), (slug) =>
+    Boolean(collections[slug]?.thumbnailImage),
+  );
+}
+
+export const sameSlugs = (a: readonly string[] = [], b: readonly string[] = []) =>
+  a.length === b.length && a.every((slug, at) => slug === b[at]);

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { notificationSlugs, stackSlugs } from "./stack";
+import { notificationSlugs, sameSlugs, shownSlugs, stackSlugs } from "./stack";
 
 const loaded = (...slugs: string[]) => {
   const set = new Set(slugs);
@@ -42,5 +42,52 @@ describe("notificationSlugs", () => {
 
   test("a moderator notice names none", () => {
     expect(notificationSlugs({ type: "sanction", payload: {} } as never)).toEqual([]);
+  });
+});
+
+describe("sameSlugs", () => {
+  test("equal lists, and two missing ones, are the same", () => {
+    expect(sameSlugs(["a", "b"], ["a", "b"])).toBe(true);
+    expect(sameSlugs(undefined, undefined)).toBe(true);
+  });
+
+  test("a missing list is the empty one", () => {
+    expect(sameSlugs(undefined, [])).toBe(true);
+    expect(sameSlugs([], undefined)).toBe(true);
+    expect(sameSlugs(undefined, ["a"])).toBe(false);
+  });
+
+  test("a different length, or the same slugs in another order, is not the same", () => {
+    expect(sameSlugs(["a"], ["a", "b"])).toBe(false);
+    expect(sameSlugs(["a", "b"], ["b", "a"])).toBe(false);
+  });
+});
+
+describe("shownSlugs", () => {
+  const alert = {
+    type: "want_match",
+    payload: {
+      latest: ["a", "b", "c", "d", "e"].map((collectionSlug) => ({ collectionSlug })),
+    },
+  } as never;
+
+  test("drops slugs with no collection or no thumbnail, keeping the order", () => {
+    const collections = {
+      a: { thumbnailImage: "a.png" },
+      b: { thumbnailImage: "" },
+      d: { thumbnailImage: "d.png" },
+    } as never;
+    expect(shownSlugs(alert, collections)).toEqual(["a", "d"]);
+  });
+
+  test("stops at three, as stackSlugs does", () => {
+    const collections = Object.fromEntries(
+      ["a", "b", "c", "d", "e"].map((slug) => [slug, { thumbnailImage: `${slug}.png` }]),
+    ) as never;
+    expect(shownSlugs(alert, collections)).toEqual(["a", "b", "c"]);
+  });
+
+  test("a moderator notice shows none", () => {
+    expect(shownSlugs({ type: "sanction", payload: {} } as never, {} as never)).toEqual([]);
   });
 });

@@ -10,7 +10,6 @@ import {
   WarningIcon,
   XIcon,
 } from "@phosphor-icons/react";
-import type { Outputs } from "@repo/api";
 import type { NoteEvent, Notification } from "@repo/api/schemas/notification";
 import { Link, linkOptions } from "@tanstack/react-router";
 import { type ReactNode, useState } from "react";
@@ -31,11 +30,17 @@ import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import { PARTNER_TOKEN, splitAround } from "./headline";
+import {
+  ACTION_LABEL,
+  alertText,
+  type ListNotification,
+  sanctionText,
+  updatesLabel,
+} from "./row-text";
 import { type RowAction, rowAction } from "./sections";
-import { notificationSlugs, stackSlugs } from "./stack";
+import { type Collections, sameSlugs, shownSlugs } from "./stack";
 import { type NotificationIcon, notificationTone } from "./tone";
 
-export type Collections = Outputs["notifications"]["list"]["collections"];
 export type RowVariant = "popover" | "sheet";
 
 const TONE_ICON: Record<NotificationIcon, Icon> = {
@@ -47,13 +52,6 @@ const TONE_ICON: Record<NotificationIcon, Icon> = {
   package: PackageIcon,
   shield: ShieldWarningIcon,
   warning: WarningIcon,
-};
-
-const ACTION_LABEL: Record<RowAction, () => string> = {
-  send: m.notification_action_send,
-  review: m.notification_action_review,
-  feedback: m.notification_action_feedback,
-  matches: m.notification_action_matches,
 };
 
 /** An alert's objekts keep their list type's colour; it is the one colour a row has besides class stripes. */
@@ -305,7 +303,6 @@ function RowBody({
   );
 }
 
-type ListNotification = Extract<Notification, { type: "want_match" | "have_wanted" }>;
 type OfferNotification = Extract<Notification, { type: "offer" | "trade" }>;
 type SanctionNotification = Extract<Notification, { type: "sanction" }>;
 
@@ -317,28 +314,13 @@ type RowProps<N> = {
   variant: RowVariant;
 };
 
-function sanctionText({ action, reason, endsAt }: SanctionNotification["payload"]) {
-  switch (action) {
-    case "warn":
-      return m.notification_sanction_warn({ reason });
-    case "chat_mute":
-      return endsAt
-        ? m.notification_sanction_chat_mute({ time: untilLabel(endsAt), reason })
-        : m.notification_sanction_chat_mute_always({ reason });
-    case "trade_block":
-      return m.notification_sanction_trade_block({ reason });
-    default:
-      return null;
-  }
-}
-
 const rowTone = (unread: boolean) => (unread ? "bg-muted/60" : undefined);
 const rowClass = (unread: boolean, variant: RowVariant) =>
   cn(ROW, rowTone(unread), variant === "sheet" && "min-h-16");
 
 /** A notice from moderators: it leads nowhere, so activating it only marks it read. */
 function SanctionItem({ notification, now, onOpen, variant }: RowProps<SanctionNotification>) {
-  const text = sanctionText(notification.payload);
+  const text = sanctionText(notification.payload, untilLabel);
   if (text === null) return null;
   const unread = notification.readAt === null;
 
@@ -374,9 +356,6 @@ function SanctionItem({ notification, now, onOpen, variant }: RowProps<SanctionN
   );
 }
 
-const sameSlugs = (a: readonly string[] = [], b: readonly string[] = []) =>
-  a.length === b.length && a.every((slug, at) => slug === b[at]);
-
 function eventText(note: NoteEvent, partner: string) {
   return note.type === "trade"
     ? tradeNotificationText(note.payload, partner)
@@ -395,9 +374,7 @@ function OfferItem({
   const { payload } = notification;
   const unread = notification.readAt === null;
   const { icon } = notificationTone(notification);
-  const slugs = stackSlugs(notificationSlugs(notification), (slug) =>
-    Boolean(collections[slug]?.thumbnailImage),
-  );
+  const slugs = shownSlugs(notification, collections);
   const action = rowAction(notification);
   const earlier = notification.earlier ?? [];
   const target =
@@ -455,9 +432,7 @@ function OfferItem({
             onClick={() => setExpanded((open) => !open)}
             className="text-muted-foreground -ms-2"
           >
-            {notification.updates === 1
-              ? m.notification_updates_one()
-              : m.notification_updates({ count: notification.updates })}
+            {updatesLabel(notification.updates)}
             <CaretDownIcon className={cn("transition-transform", expanded && "rotate-180")} />
           </Button>
           {expanded ? (
@@ -486,16 +461,16 @@ function OfferItem({
 
 function ListItem({ notification, collections, now, onOpen, variant }: RowProps<ListNotification>) {
   const first = notification.payload.latest[0];
-  const text = notificationText(notification, collections, PARTNER_TOKEN);
+  const text = alertText(notification, PARTNER_TOKEN, (slug) =>
+    collectionName(slug, collections[slug]),
+  );
   // an older tab skips a type a newer server sends
   if (!first || text === null) return null;
 
   const unread = notification.readAt === null;
   const tone = notificationTone(notification);
   const action = rowAction(notification);
-  const slugs = stackSlugs(notificationSlugs(notification), (slug) =>
-    Boolean(collections[slug]?.thumbnailImage),
-  );
+  const slugs = shownSlugs(notification, collections);
 
   return (
     <Link
@@ -545,35 +520,6 @@ export function NotificationRow(props: RowProps<Notification>) {
     case "want_match":
     case "have_wanted":
       return <ListItem {...props} notification={notification} />;
-    default:
-      return null;
-  }
-}
-
-function notificationText(
-  notification: ListNotification,
-  collections: Collections,
-  partner: string,
-) {
-  const { list, count, latest } = notification.payload;
-  const first = latest[0];
-  if (!first) return null;
-  const params = {
-    count,
-    list: list.name,
-    partner,
-    objekt: collectionName(first.collectionSlug, collections[first.collectionSlug]),
-  };
-
-  switch (notification.type) {
-    case "want_match":
-      return count > 1
-        ? m.notification_want_match_multiple(params)
-        : m.notification_want_match_single(params);
-    case "have_wanted":
-      return count > 1
-        ? m.notification_have_wanted_multiple(params)
-        : m.notification_have_wanted_single(params);
     default:
       return null;
   }
