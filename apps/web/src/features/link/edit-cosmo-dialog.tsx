@@ -33,9 +33,7 @@ import {
   putBanner,
   refusalMessage,
 } from "@/features/link/banner-upload";
-import { PROFILE_QUERY_KEY, profileOptions } from "@/features/link/queries";
-import { PROFILE_PAGE_KEY } from "@/features/profile/queries";
-import { currentUserOptions } from "@/features/user/queries";
+import { PROFILE_QUERY_KEY, invalidateLinkChange, profileOptions } from "@/features/link/queries";
 import { displayNickname } from "@/lib/address";
 import { client, orpc } from "@/lib/orpc";
 import { refusalText } from "@/lib/refusal";
@@ -197,8 +195,7 @@ function EditForm({
       toastManager.add({ type: "success", title: m.profile_edit_success() });
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: PROFILE_QUERY_KEY }),
-        queryClient.invalidateQueries({ queryKey: PROFILE_PAGE_KEY }),
-        queryClient.invalidateQueries({ queryKey: currentUserOptions.queryKey }),
+        invalidateLinkChange(queryClient),
         queryClient.invalidateQueries({ queryKey: orpc.cosmoLink.linkedPreviews.key() }),
       ]);
     },
