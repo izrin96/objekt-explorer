@@ -8,10 +8,9 @@ import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
 import { DiscordFormatDialog } from "@/features/discord/discord-format-dialog";
 import { CreateListDialog } from "@/features/list/create-list-dialog";
-import { ListCard } from "@/features/list/list-card";
+import { ListRows, ListRowsSkeleton } from "@/features/list/list-rows";
 import { listPreviewsOptions } from "@/features/list/queries";
 import { useListPreviews } from "@/features/list/use-list-previews";
-import { PreviewCardsSkeleton } from "@/features/objekt/objekt-preview-strip";
 import { useUserLists } from "@/features/user/hooks";
 import { currentUserOptions, requireSignedIn } from "@/features/user/queries";
 import { generateMetadata } from "@/lib/meta";
@@ -21,7 +20,7 @@ export const Route = createFileRoute("/(container)/list/")({
   beforeLoad: requireSignedIn,
   loader: async ({ context: { queryClient } }) => {
     const user = await queryClient.query({ ...currentUserOptions, staleTime: "static" });
-    // a failed preview read leaves the cards to fetch it again, not the page to fail
+    // a failed preview read leaves the rows to fetch it again, not the page to fail
     await queryClient
       .query({
         ...listPreviewsOptions(user?.lists.map((list) => list.slug) ?? []),
@@ -81,11 +80,7 @@ function ListsPage() {
           }
         />
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {lists.map((list) => (
-            <ListCard key={list.slug} list={list} preview={getPreview(list.slug)} />
-          ))}
-        </div>
+        <ListRows lists={lists} getPreview={getPreview} />
       )}
 
       <CreateListDialog open={createOpen} onOpenChange={setCreateOpen} />
@@ -98,7 +93,7 @@ function ListsPending() {
   return (
     <>
       <PageHeader title={m.list_title()} />
-      <PreviewCardsSkeleton />
+      <ListRowsSkeleton />
     </>
   );
 }
