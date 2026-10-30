@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 
 import { savePostInputSchema } from "@repo/api/schemas/trade";
-import { type PlanList, type PostPlan, planPost } from "@repo/api/schemas/trade-post";
+import { type PlanList, type PostPlan, planPost, startForPost } from "@repo/api/schemas/trade-post";
 
 import {
   type Choice,
@@ -249,5 +249,40 @@ describe("pairedPartner and unpairedNames", () => {
   test("lists nobody when every unlinked list is picked", () => {
     const plan = okPlan(unpaired);
     expect(unpairedNames(REPO, plan, { have: "h1", want: "w1", sale: null })).toEqual([]);
+  });
+});
+
+describe("undo after take down", () => {
+  const posted = [
+    list({
+      id: 21,
+      slug: "s9",
+      listType: "sale",
+      takesSwaps: true,
+      linkedListId: 22,
+      discoverable: true,
+    }),
+    list({ id: 22, slug: "w9", listType: "want", linkedListId: 21, discoverable: true }),
+    list({ id: 23, slug: "s8", listType: "sale", takesSwaps: true, discoverable: true }),
+  ];
+  const takenDown = posted.map((entry) => ({ ...entry, discoverable: false }));
+  const undo = (slug: string) => {
+    const start = startForPost(posted, slug);
+    if (!start.kind) throw new Error(`no post for ${slug}`);
+    return postInput({ ...start, kind: start.kind }, null);
+  };
+
+  test("a Sell post that takes swaps comes back with its want list", () => {
+    const plan = planPost(takenDown, undo("s9"));
+    expect(plan.ok).toBe(true);
+    if (!plan.ok) return;
+    expect(plan.saleSwaps).toEqual({ id: 21, takesSwaps: true });
+    expect(plan.on.map((entry) => entry.id).toSorted((a, b) => a - b)).toEqual([21, 22]);
+  });
+
+  test("a sale list posted alone still takes swaps", () => {
+    const plan = planPost(takenDown, undo("s8"));
+    expect(plan.ok).toBe(true);
+    if (plan.ok) expect(plan.saleSwaps).toEqual({ id: 23, takesSwaps: true });
   });
 });

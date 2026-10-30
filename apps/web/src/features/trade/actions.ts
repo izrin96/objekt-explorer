@@ -15,6 +15,7 @@ import { relativeTime } from "@/lib/time";
 import { getBaseURL } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
+import { postInput } from "./composer-choice";
 import { usePlanLists } from "./post-plan";
 
 /** Copies the Browse address led by one person's row. */
@@ -177,16 +178,18 @@ export function useTakeDownPost() {
     isPending: takeDown.isPending,
     // not `mutate`'s callbacks: the row that calls this leaves Your posts, and an unmounted observer skips them
     takeDown: (slug: string) => {
-      const { kind, have, want, sale, alsoPay } = startForPost(lists, slug);
+      const start = startForPost(lists, slug);
       void takeDown.mutateAsync({ slug }).then(
         () => {
           const title = m.trade_take_off_success();
+          const { kind } = start;
           if (!kind) return void toastManager.add({ type: "success", title });
           addActionToast(
             { type: "success", title },
             {
               label: m.common_actions_undo(),
-              onClick: () => save.mutate({ kind, have, want, sale, alsoPay, replaces: null }),
+              // the post as it was, Sell's swaps included
+              onClick: () => save.mutate(postInput({ ...start, kind }, null)),
             },
           );
         },
