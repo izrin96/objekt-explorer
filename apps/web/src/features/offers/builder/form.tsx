@@ -1,7 +1,6 @@
-import { LinkIcon } from "@phosphor-icons/react";
 import { OFFER_NOTE_MAX_LENGTH, OFFER_SIDE_LIMIT, type TopupPayer } from "@repo/api/schemas/offer";
 import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useId, useRef, useState } from "react";
 import { createPortal, flushSync } from "react-dom";
 
@@ -43,7 +42,7 @@ import {
 import { BuilderHeader } from "./header";
 import { addedKeys, matchesLine } from "./matches";
 import { MatchesLine, NearLine } from "./matches-line";
-import { BuilderRefused } from "./refused";
+import { BuilderRefused, type SendFailure, SendError } from "./refused";
 import { SideColumn } from "./side-column";
 import { Topup } from "./topup";
 import type { AddedMatches, OfferRequest } from "./types";
@@ -87,7 +86,7 @@ export function BuilderForm({
   const [topupTouched, setTopupTouched] = useState(false);
   const [note, setNote] = useState(prefill?.note ?? "");
   const [picking, setPicking] = useState<OfferSide | null>(null);
-  const [error, setError] = useState<{ text: string; remove: boolean; link: boolean } | null>(null);
+  const [error, setError] = useState<SendFailure | null>(null);
   const [refused, setRefused] = useState<ReadonlySet<string>>(new Set());
   const [nearLeft, setNearLeft] = useState<NearGroup[]>(added?.near ?? []);
   const [nearKeys, setNearKeys] = useState(added?.nearKeys ?? { give: [], get: [] });
@@ -387,29 +386,7 @@ export function BuilderForm({
 
         <SendingAs onNavigate={onDone} />
 
-        <div id={errorId} role="alert" className="empty:hidden">
-          {error ? (
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-              <p className="text-destructive-foreground text-sm text-pretty">
-                {error.text}
-                {error.remove ? (
-                  <span className="block">{m.offer_refused_remove_hint()}</span>
-                ) : null}
-              </p>
-              {error.link ? (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  render={<Link to="/account/profiles" />}
-                  onClick={onDone}
-                >
-                  <LinkIcon />
-                  {m.link_link_cosmo()}
-                </Button>
-              ) : null}
-            </div>
-          ) : null}
-        </div>
+        <SendError id={errorId} error={error} onDone={onDone} />
       </DialogPanel>
       <DialogFooter className="sm:items-center">
         <p id={hintId} className="text-muted-foreground text-xs text-pretty sm:me-auto">
