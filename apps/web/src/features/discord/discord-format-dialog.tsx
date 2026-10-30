@@ -2,9 +2,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
 import { useState } from "react";
 
-import { CopyButton } from "@/components/shared/copy-button";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogClose,
@@ -22,7 +20,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { toastManager } from "@/components/ui/toast";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import { useFilterData } from "@/features/filters/filter-data-provider";
@@ -34,50 +31,13 @@ import { refusalText } from "@/lib/refusal";
 import { getBaseURL } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
-import { type FormatStyle, type GroupByMode, format } from "./format";
+import { EMPTY_CHOICES, type Section, joinSections, toFormatOptions } from "./choices";
+import { ChoicesFields, FLAGS, FormattedText } from "./choices-fields";
+import { format } from "./format";
 
 const NONE = "__none__";
 
-type Flag =
-  | "showCount"
-  | "includeLink"
-  | "lowercaseCollection"
-  | "bullet"
-  | "showMemberEmoji"
-  | "hideType";
-
-const FLAGS: { key: Flag; label: () => string }[] = [
-  { key: "showCount", label: m.generate_discord_show_count },
-  { key: "includeLink", label: m.generate_discord_include_link },
-  { key: "lowercaseCollection", label: m.generate_discord_lower_case },
-  { key: "bullet", label: m.generate_discord_bulleted_list },
-  { key: "showMemberEmoji", label: m.generate_discord_show_member_emoji },
-  { key: "hideType", label: m.generate_discord_hide_type },
-];
-
-const GROUP_BY: { value: GroupByMode; label: () => string }[] = [
-  { value: "none", label: m.generate_discord_group_by_none },
-  { value: "season", label: m.generate_discord_group_by_season },
-  { value: "season-first", label: m.generate_discord_group_by_season_first },
-];
-
-const STYLES: { value: FormatStyle; label: () => string }[] = [
-  { value: "default", label: m.generate_discord_style_default },
-  { value: "compact", label: m.generate_discord_style_compact },
-];
-
-const EMPTY_OPTIONS = {
-  haveList: NONE,
-  wantList: NONE,
-  showCount: false,
-  includeLink: false,
-  lowercaseCollection: false,
-  bullet: false,
-  showMemberEmoji: false,
-  hideType: false,
-  groupBy: "none" as GroupByMode,
-  style: "default" as FormatStyle,
-};
+const EMPTY_LISTS = { haveList: NONE, wantList: NONE };
 
 /** The owner's generator: it builds from saved have/want lists, opened from the user menu and `/list`. */
 export function DiscordFormatDialog({
@@ -91,7 +51,8 @@ export function DiscordFormatDialog({
   const router = useRouter();
   const { compareArtistMember } = useCosmoArtist();
   const { compareSeason } = useFilterData();
-  const [options, setOptions] = useState(EMPTY_OPTIONS);
+  const [picked, setPicked] = useState(EMPTY_LISTS);
+  const [choices, setChoices] = useState(EMPTY_CHOICES);
   const [text, setText] = useState("");
 
   const generate = useMutation(
@@ -106,8 +67,6 @@ export function DiscordFormatDialog({
     }),
   );
 
-  const set = (patch: Partial<typeof EMPTY_OPTIONS>) => setOptions({ ...options, ...patch });
-
   const listUrl = (slug: string) => {
     const list = lists.find((entry) => entry.slug === slug);
     if (!list) return null;
@@ -115,8 +74,8 @@ export function DiscordFormatDialog({
   };
 
   const submit = () => {
-    const haveListSlug = options.haveList === NONE ? undefined : options.haveList;
-    const wantListSlug = options.wantList === NONE ? undefined : options.wantList;
+    const haveListSlug = picked.haveList === NONE ? undefined : picked.haveList;
+    const wantListSlug = picked.wantList === NONE ? undefined : picked.wantList;
 
     if (!haveListSlug && !wantListSlug) {
       toastManager.add({ type: "error", title: m.generate_discord_select_at_least_one() });
@@ -127,38 +86,20 @@ export function DiscordFormatDialog({
       { haveListSlug, wantListSlug },
       {
         onSuccess: ({ have, want, wantRules }) => {
-          const formatOptions = {
-            showQuantity: options.showCount,
-            lowercaseCollection: options.lowercaseCollection,
-            bullet: options.bullet,
-            showMemberEmoji: options.showMemberEmoji,
-            hideType: options.hideType,
-            groupByMode: options.groupBy,
-            style: options.style,
-            compareArtistMember,
-            compareSeason,
-          };
-          const output: string[] = [];
-
-          const section = (
-            heading: string,
-            rows: typeof have,
-            slug: string | undefined,
-            rules: string[] = [],
-          ) => {
+          const formatOptions = toFormatOptions(choices, compareArtistMember, compareSeason);
+          const sections: Section[] = [];
+          const add = (heading: string, rows: typeof have, slug?: string, rules: string[] = []) => {
             if (!slug || (rows.length === 0 && rules.length === 0)) return;
-            if (output.length > 0) output.push("");
-            output.push(heading, "");
-            // a rule is one line in its own words, before the objekts
-            for (const rule of rules) output.push(options.bullet ? `- ${rule}` : rule);
-            if (rows.length > 0) output.push(format(rows, formatOptions));
-            const url = options.includeLink ? listUrl(slug) : null;
-            if (url) output.push("", `[View list](<${url}>)`);
+            sections.push({
+              heading,
+              rules,
+              body: rows.length > 0 ? format(rows, formatOptions) : undefined,
+              url: choices.includeLink ? listUrl(slug) : null,
+            });
           };
-
-          section("## Have", have, haveListSlug);
-          section("## Want", want, wantListSlug, wantRules);
-          setText(output.join("\n"));
+          add("## Have", have, haveListSlug);
+          add("## Want", want, wantListSlug, wantRules);
+          setText(joinSections(sections, choices.bullet));
         },
       },
     );
@@ -174,114 +115,28 @@ export function DiscordFormatDialog({
           <ListPicker
             id="discord-have"
             label={m.generate_discord_have_list_label()}
-            value={options.haveList}
+            value={picked.haveList}
             lists={lists}
-            onValueChange={(next) => set({ haveList: next })}
+            onValueChange={(next) => setPicked({ ...picked, haveList: next })}
           />
           <ListPicker
             id="discord-want"
             label={m.generate_discord_want_list_label()}
-            value={options.wantList}
+            value={picked.wantList}
             lists={lists}
-            onValueChange={(next) => set({ wantList: next })}
+            onValueChange={(next) => setPicked({ ...picked, wantList: next })}
           />
 
-          <div className="grid grid-cols-2 gap-x-3 gap-y-2">
-            {FLAGS.map((flag) => (
-              <Label
-                key={flag.key}
-                htmlFor={`discord-${flag.key}`}
-                className="flex items-center gap-2 text-sm font-normal"
-              >
-                <Checkbox
-                  id={`discord-${flag.key}`}
-                  checked={options[flag.key]}
-                  onCheckedChange={(checked) => set({ [flag.key]: checked })}
-                />
-                {flag.label()}
-              </Label>
-            ))}
-          </div>
-
-          <div className="grid min-w-0 gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-            <div className="flex min-w-0 flex-col gap-1.5">
-              <Label htmlFor="discord-group-by">{m.generate_discord_group_by_label()}</Label>
-              <Select
-                value={options.groupBy}
-                onValueChange={(next: GroupByMode | null) =>
-                  set({
-                    groupBy: next ?? "none",
-                    // compact only differs once there is a grouping to compact
-                    style: next === "none" || next === null ? "default" : options.style,
-                  })
-                }
-              >
-                <SelectTrigger id="discord-group-by" className="min-w-0">
-                  <SelectValue>
-                    {(value: GroupByMode) =>
-                      GROUP_BY.find((entry) => entry.value === value)?.label() ?? value
-                    }
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectPopup>
-                  {GROUP_BY.map((entry) => (
-                    <SelectItem key={entry.value} value={entry.value}>
-                      {entry.label()}
-                    </SelectItem>
-                  ))}
-                </SelectPopup>
-              </Select>
-            </div>
-
-            <div className="flex min-w-0 flex-col gap-1.5">
-              <Label htmlFor="discord-style">{m.generate_discord_style_label()}</Label>
-              <Select
-                value={options.style}
-                disabled={options.groupBy === "none"}
-                onValueChange={(next: FormatStyle | null) => set({ style: next ?? "default" })}
-              >
-                <SelectTrigger id="discord-style" className="min-w-0">
-                  <SelectValue>
-                    {(value: FormatStyle) =>
-                      STYLES.find((entry) => entry.value === value)?.label() ?? value
-                    }
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectPopup>
-                  {STYLES.map((entry) => (
-                    <SelectItem key={entry.value} value={entry.value}>
-                      {entry.label()}
-                    </SelectItem>
-                  ))}
-                </SelectPopup>
-              </Select>
-            </div>
-          </div>
-
-          <div className="flex min-w-0 flex-col gap-1.5">
-            <div className="flex items-center justify-between gap-2">
-              <Label htmlFor="discord-output">{m.generate_discord_formatted_text_label()}</Label>
-              <CopyButton
-                text={text}
-                label={m.common_copy_button()}
-                toastTitle={m.common_copy_copied()}
-              />
-            </div>
-            <Textarea
-              id="discord-output"
-              value={text}
-              rows={8}
-              className="max-h-64 text-xs"
-              onChange={(event) => setText(event.target.value)}
-            />
-          </div>
+          <ChoicesFields idPrefix="discord" flags={FLAGS} choices={choices} onChange={setChoices} />
+          <FormattedText id="discord-output" text={text} onTextChange={setText} />
         </DialogPanel>
         <DialogFooter>
           <DialogClose render={<Button variant="outline" />}>{m.common_modal_close()}</DialogClose>
           <Button
             variant="outline"
             onClick={() => {
-              setOptions(EMPTY_OPTIONS);
+              setPicked(EMPTY_LISTS);
+              setChoices(EMPTY_CHOICES);
               setText("");
             }}
           >
