@@ -41,6 +41,7 @@ import {
   sendGate,
 } from "./draft";
 import { BuilderHeader } from "./header";
+import { addedKeys, matchesLine } from "./matches";
 import { MatchesLine, NearLine } from "./matches-line";
 import { BuilderRefused } from "./refused";
 import { SideColumn } from "./side-column";
@@ -144,9 +145,7 @@ export function BuilderForm({
   });
   const { noteLength, noteTooLong, topupError } = gate;
 
-  // what Add it added goes with the matches
-  const addedGive = new Set([...(added?.keys.give ?? []), ...nearKeys.give]);
-  const addedGet = new Set([...(added?.keys.get ?? []), ...nearKeys.get]);
+  const { give: addedGive, get: addedGet } = addedKeys(added, nearKeys);
   const names = (picks: readonly OfferPick[]) =>
     new Intl.ListFormat(getLocale(), { type: "conjunction" }).format(
       picks.map((pick) => itemName(pick, collections)),
@@ -177,47 +176,13 @@ export function BuilderForm({
     // the line and its button are gone: focus stays in the status region
     (removeRef.current ?? undoRef.current)?.focus();
   };
-  const nearPicks = [
-    ...give.filter((pick) => nearKeys.give.includes(pick.key)),
-    ...get.filter((pick) => nearKeys.get.includes(pick.key)),
-  ];
-  const nearNames = nearPicks.length > 0 ? names(nearPicks) : null;
   const topupReason = topupNear
     ? (topupNear.verb === "sell" ? m.offer_topup_near_sell : m.offer_topup_near_buy)({
         name,
         objekts: names(topupNear.picks),
       })
     : undefined;
-  // the line goes once the sender has removed every added pick by hand; what Add it added goes
-  // with the matches, so a builder that had none still offers Remove
-  const addedKeys = {
-    give: [...(added?.keys.give ?? []), ...nearKeys.give],
-    get: [...(added?.keys.get ?? []), ...nearKeys.get],
-  };
-  // once the sender has taken every match out by hand, the line names only what Add it added
-  const matchesKept =
-    removed !== null ||
-    give.some((pick) => added?.keys.give.includes(pick.key)) ||
-    get.some((pick) => added?.keys.get.includes(pick.key));
-  const lineAdded = added && !matchesKept ? { ...added, keys: { give: [], get: [] } } : added;
-  const showsLine =
-    added !== undefined &&
-    addedKeys.give.length + addedKeys.get.length > 0 &&
-    (removed !== null ||
-      give.some((pick) => addedGive.has(pick.key)) ||
-      get.some((pick) => addedGet.has(pick.key)));
-  // what Remove took out: the matches it counts, and the near picks it names
-  const takenMatches = (taken: { give: OfferPick[]; get: OfferPick[] }) => [
-    ...taken.give.filter((pick) => added?.keys.give.includes(pick.key)),
-    ...taken.get.filter((pick) => added?.keys.get.includes(pick.key)),
-  ];
-  const takenNear = (taken: { give: OfferPick[]; get: OfferPick[] }) => {
-    const near = [
-      ...taken.give.filter((pick) => nearKeys.give.includes(pick.key)),
-      ...taken.get.filter((pick) => nearKeys.get.includes(pick.key)),
-    ];
-    return near.length > 0 ? names(near) : null;
-  };
+  const line = matchesLine({ added, nearKeys, give, get, removed });
   const removeMatches = () => {
     const gave = takeOutAdded(give, addedGive);
     const got = takeOutAdded(get, addedGet);
@@ -318,15 +283,15 @@ export function BuilderForm({
   return (
     <>
       {header ? <BuilderHeader request={request} /> : null}
-      {region && ((added && showsLine) || nearLeft.length > 0)
+      {region && (line || nearLeft.length > 0)
         ? createPortal(
             <div className="flex flex-col gap-2">
-              {added && showsLine ? (
+              {line ? (
                 <MatchesLine
-                  added={lineAdded ?? added}
-                  nearNames={nearNames}
-                  taken={removed ? takenMatches(removed).length : null}
-                  takenNames={removed ? takenNear(removed) : null}
+                  added={line.added}
+                  nearNames={line.nearPicks.length > 0 ? names(line.nearPicks) : null}
+                  taken={line.taken}
+                  takenNames={line.takenNear ? names(line.takenNear) : null}
                   onRemove={removeMatches}
                   onUndo={undoRemove}
                   removeRef={removeRef}
