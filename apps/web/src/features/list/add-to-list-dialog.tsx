@@ -1,10 +1,8 @@
-import { CheckIcon } from "@phosphor-icons/react";
 import type { PublicList } from "@repo/api/schemas/list";
 import type { OwnedObjekt } from "@repo/lib/types/objekt";
-import { createContext, Fragment, type ReactNode, use, useCallback, useState } from "react";
+import { createContext, type ReactNode, use, useCallback, useState } from "react";
 
 import { Note } from "@/components/shared/note";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -18,21 +16,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectGroup,
-  SelectGroupLabel,
-  SelectItem,
-  SelectPopup,
-  SelectSeparator,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { toastManager } from "@/components/ui/toast";
 import { useUserLists, useUserProfiles } from "@/features/user/hooks";
 import { m } from "@/paraglide/messages";
 
 import { useAddToList } from "./actions";
+import { ListPicker } from "./add-to-list-picker";
 import { PreviewSection } from "./add-to-list-preview";
 import { PriceFields } from "./add-to-list-price-fields";
 import {
@@ -40,7 +29,6 @@ import {
   type AddTarget,
   addToListInput,
   currencyChanges,
-  groupLists,
   isBoundHere,
   isListDisabled,
   pickableCopies,
@@ -52,7 +40,6 @@ import {
 import { addedToast, addHint, profileLabel } from "./add-to-list-text";
 import { CreateListDialog } from "./create-list-dialog";
 import { EMPTY_DRAFT, type ListDraft } from "./list-form";
-import { ListTypeBadge } from "./list-type-badge";
 
 export type { AddableObjekt } from "./add-to-list-source";
 
@@ -206,8 +193,6 @@ function AddToListForm({
   const [isQyop, setIsQyop] = useState(false);
   const [note, setNote] = useState("");
 
-  const groups = groupLists(lists, address);
-
   const isDisabled = (list: PublicList) => isListDisabled(list, target, { address, sourceList });
 
   const selected = lists.find((list) => list.slug === slug && !isDisabled(list));
@@ -297,55 +282,14 @@ function AddToListForm({
             <div className="flex min-w-0 flex-col gap-1.5">
               <Label htmlFor="add-to-list">{m.list_manage_objekt_list_label()}</Label>
               {/* the last pick outlives a successful add, and may be greyed out on this open */}
-              <Select value={selected?.slug ?? null} onValueChange={pickList}>
-                <SelectTrigger id="add-to-list" className="min-w-0">
-                  <SelectValue placeholder={m.list_manage_objekt_list_placeholder()}>
-                    {(value: string | null) => {
-                      const list = lists.find((l) => l.slug === value);
-                      return list ? (
-                        <ListChoice
-                          list={list}
-                          profile={
-                            list.isProfileBind && list.profileAddress !== null
-                              ? profileName(list.profileAddress)
-                              : undefined
-                          }
-                        />
-                      ) : (
-                        m.list_manage_objekt_list_placeholder()
-                      );
-                    }}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectPopup>
-                  {groups.unbound.length > 0 && (
-                    <SelectGroup>
-                      <SelectGroupLabel>{m.list_add_group_unbound()}</SelectGroupLabel>
-                      {groups.unbound.map((list) => (
-                        <SelectItem key={list.slug} value={list.slug}>
-                          <ListChoice list={list} />
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  )}
-                  {groups.bound.map((group, i) => (
-                    <Fragment key={group.address}>
-                      {(i > 0 || groups.unbound.length > 0) && <SelectSeparator />}
-                      <SelectGroup>
-                        <SelectGroupLabel className="flex items-center gap-1.5">
-                          <CheckIcon weight="bold" className="size-3" aria-hidden />
-                          {m.list_add_group_bound({ profile: profileName(group.address) })}
-                        </SelectGroupLabel>
-                        {group.lists.map((list) => (
-                          <SelectItem key={list.slug} value={list.slug} disabled={isDisabled(list)}>
-                            <ListChoice list={list} ownedOnly={isDisabled(list)} />
-                          </SelectItem>
-                        ))}
-                      </SelectGroup>
-                    </Fragment>
-                  ))}
-                </SelectPopup>
-              </Select>
+              <ListPicker
+                lists={lists}
+                address={address}
+                value={selected?.slug ?? null}
+                onValueChange={pickList}
+                isDisabled={isDisabled}
+                profileName={profileName}
+              />
             </div>
 
             <PreviewSection
@@ -394,38 +338,5 @@ function AddToListForm({
         </Button>
       </DialogFooter>
     </>
-  );
-}
-
-/**
- * A list as the picker draws it: type badge and name. The closed picker also
- * names the profile a bound list follows; in the popup its group heading does.
- */
-function ListChoice({
-  list,
-  profile,
-  ownedOnly = false,
-}: {
-  list: PublicList;
-  profile?: string;
-  ownedOnly?: boolean;
-}) {
-  return (
-    <span className="flex min-w-0 items-center gap-1.5">
-      <ListTypeBadge type={list.listType} className="shrink-0" />
-      <span className="truncate">{list.name}</span>
-      {profile !== undefined && (
-        // a static mark: the Bound badge's tooltip button cannot sit inside an option
-        <Badge variant="outline" size="sm" className="max-w-32 min-w-0">
-          <CheckIcon weight="bold" className="size-3.5 sm:size-3" aria-hidden />
-          <span className="truncate">{profile}</span>
-        </Badge>
-      )}
-      {ownedOnly && (
-        <span className="text-muted-foreground shrink-0 text-xs">
-          {m.list_manage_objekt_owned_only()}
-        </span>
-      )}
-    </span>
   );
 }
