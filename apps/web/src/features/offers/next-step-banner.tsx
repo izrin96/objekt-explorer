@@ -9,7 +9,7 @@ import {
   WarningIcon,
   XIcon,
 } from "@phosphor-icons/react";
-import { TRADE_EXPIRE_DAYS, type TradeView as Trade } from "@repo/api/schemas/offer";
+import type { TradeView as Trade } from "@repo/api/schemas/offer";
 import { truncateAddress } from "@repo/lib/address";
 import { useId, type ReactNode } from "react";
 
@@ -23,13 +23,16 @@ import { useOfferActions } from "./actions";
 import { itemLabel, leftLabel, shortDate, tradeStatusText } from "./format";
 import { MakeOfferButton } from "./make-offer-button";
 import { AwayHint } from "./mark-received";
-import { type Deadline, type Leg, type NextStep, type Note, tradeEnd } from "./next-step";
+import { type Leg, type NextStep, tradeEnd } from "./next-step";
+import { deadlineText, endedText, noteText, yourTurnText, type CardFormat } from "./next-step-text";
 import { OfferThumb } from "./offer-item";
 import type { Collections } from "./pick";
 import { StatusBadge } from "./status-badge";
 import { Feedback } from "./trade-feedback";
 import { TradeSteps } from "./trade-steps";
 import { AcceptCopy, Serial, rich } from "./wrong-copy";
+
+const FORMAT: CardFormat = { left: leftLabel, date: shortDate, until: untilLabel };
 
 const ICONS: Record<NextStep["kind"], Icon> = {
   completed: CheckIcon,
@@ -41,20 +44,6 @@ const ICONS: Record<NextStep["kind"], Icon> = {
   theyDecide: WarningIcon,
   theirTurn: ClockIcon,
 };
-
-function noteText(note: Note, name: string, objekt: string) {
-  const date = note.leg.away ? untilLabel(note.leg.away.breaksAt) : "";
-  switch (note.kind) {
-    case "ownStuck":
-      return m.offer_next_stuck({ objekt });
-    case "theirStuck":
-      return m.offer_next_their_stuck({ name, objekt });
-    case "ownAway":
-      return m.offer_next_away({ objekt, date });
-    case "theirAway":
-      return m.offer_next_their_away({ name, objekt, date });
-  }
-}
 
 function chipText(trade: Trade, step: NextStep) {
   switch (step.kind) {
@@ -70,66 +59,6 @@ function chipText(trade: Trade, step: NextStep) {
       return m.offer_chip_stuck();
     default:
       return tradeStatusText(trade.status);
-  }
-}
-
-function endedText(trade: Trade, name: string) {
-  if (trade.status === "failed") {
-    return trade.cancelReason === "expired"
-      ? m.offer_trade_failed_expired_desc({ days: TRADE_EXPIRE_DAYS })
-      : m.offer_trade_failed_desc();
-  }
-  if (trade.cancelReason === "token_moved") return m.offer_trade_cancelled_moved();
-  if (trade.cancelReason === "not_transferable") {
-    return m.offer_trade_cancelled_not_transferable();
-  }
-  if (trade.cancelReason === "expired") {
-    return m.offer_trade_cancelled_expired({ days: TRADE_EXPIRE_DAYS });
-  }
-  return trade.cancelledByYou
-    ? m.offer_trade_cancelled_by_you()
-    : m.offer_trade_cancelled_by_them({ name });
-}
-
-/** Label over value, with a note under it; reads the viewer's clock, so only once hydrated. */
-function deadlineParts(deadline: Deadline) {
-  switch (deadline.kind) {
-    case "ends":
-      return {
-        label: m.offer_deadline_ends(),
-        value: m.offer_deadline_in({ left: leftLabel(deadline.at) }),
-        note: shortDate(deadline.at),
-      };
-    case "endsHeld":
-      return {
-        label: m.offer_deadline_ends(),
-        value: m.offer_deadline_paused(),
-        note: m.offer_deadline_was({ date: shortDate(deadline.at) }),
-      };
-    case "decide":
-      return {
-        label: m.offer_deadline_decide(),
-        value: m.offer_deadline_left({ left: leftLabel(deadline.at) }),
-        note: shortDate(deadline.at),
-      };
-    case "copyLeft":
-      return {
-        label: m.offer_deadline_counts(),
-        value: m.offer_deadline_in({ left: leftLabel(deadline.at) }),
-        note: shortDate(deadline.at),
-      };
-    case "rateBy":
-      return {
-        label: m.offer_deadline_rate_by(),
-        value: shortDate(deadline.at),
-        note: m.offer_deadline_rate_note(),
-      };
-    case "rateUntil":
-      return { label: m.offer_deadline_change_until(), value: shortDate(deadline.at), note: null };
-    case "ended":
-      return deadline.at
-        ? { label: m.offer_deadline_ended(), value: shortDate(deadline.at), note: null }
-        : null;
   }
 }
 
@@ -236,22 +165,10 @@ export function NextStepBanner({
         };
       }
       case "yourTurn": {
-        const first = {
-          send: m.offer_next_send_body(),
-          firstYou: `${m.offer_first_you()} ${m.offer_next_suggestion()}`,
-          firstThem: `${m.offer_first_them({ name })} ${m.offer_next_suggestion()}`,
-          firstThemSent: `${m.offer_first_them({ name })} ${m.offer_first_them_sent({ name })}`,
-        };
-        const [only] = step.legs;
+        const { title, body } = yourTurnText(step, name, label);
         return {
-          title: m.offer_next_your_turn({
-            objekts:
-              step.legs.length === 1 && only
-                ? label(only)
-                : m.offer_next_objekts_multiple({ count: step.legs.length }),
-            name,
-          }),
-          body: first[step.body],
+          title,
+          body,
           extra: identity.address ? <SendTo identity={identity} /> : null,
           actions: step.canCancel ? (
             <Button variant="ghost" size="sm" onClick={onCancel}>
@@ -298,7 +215,7 @@ export function NextStepBanner({
   })();
 
   // the viewer's own clock, so the deadline waits for the client
-  const deadline = hydrated ? deadlineParts(step.deadline) : null;
+  const deadline = hydrated ? deadlineText(step.deadline, FORMAT) : null;
   const notes = "notes" in step ? step.notes : [];
 
   return (
@@ -340,7 +257,7 @@ export function NextStepBanner({
               className="text-warning-foreground flex items-start gap-1.5 text-xs text-pretty"
             >
               <WarningIcon aria-hidden weight="fill" className="mt-px size-3.5 shrink-0" />
-              {noteText(note, name, label(note.leg))}
+              {noteText(note, { name, objekt: label(note.leg), until: FORMAT.until })}
             </p>
           ))}
           {notes.map((note) =>
