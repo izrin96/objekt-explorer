@@ -33,6 +33,20 @@ export function isBoundHere(list: TargetList, address: string | undefined): bool
   return list.isProfileBind && isSameAddress(list.profileAddress, address);
 }
 
+/** The lists the picker offers: with `saleOnly`, only bound sale lists, those bound to its profiles when set. */
+export function pickerLists<
+  T extends Pick<PublicList, "listType" | "isProfileBind" | "profileAddress">,
+>(lists: T[], saleOnly: AddTarget["saleOnly"]): T[] {
+  if (!saleOnly) return lists;
+  return lists.filter(
+    (list) =>
+      list.listType === "sale" &&
+      list.isProfileBind &&
+      (saleOnly.profiles === null ||
+        saleOnly.profiles.some((a) => isSameAddress(a, list.profileAddress ?? ""))),
+  );
+}
+
 /**
  * The picker's order: unbound lists, then one group per profile, the profile
  * these objekts are on first. Lists keep their order within a group.
@@ -54,6 +68,32 @@ export function groupLists<T extends TargetList>(
         Number(isSameAddress(b.address, address)) - Number(isSameAddress(a.address, address)),
     ),
   };
+}
+
+export function isListDisabled(
+  list: TargetList,
+  target: AddTarget,
+  o: { address: string | undefined; sourceList: string | undefined },
+): boolean {
+  // a profile's own bound list has nothing to take from collections it does not
+  // own; a list bound elsewhere takes collections, so it is never greyed out
+  const bindable = o.sourceList !== undefined || target.objekts.some(isObjektOwned);
+  return isBoundHere(list, o.address) && !bindable;
+}
+
+export function currencyChanges<T extends Pick<PublicList, "slug" | "currency">>(
+  lists: readonly T[],
+  selected: T | undefined,
+  next: string | null,
+): boolean {
+  const nextCurrency = lists.find((list) => list.slug === next)?.currency ?? null;
+  return nextCurrency !== (selected?.currency ?? null);
+}
+
+export function toggleUnpicked(set: ReadonlySet<string>, tokenId: string): ReadonlySet<string> {
+  const next = new Set(set);
+  if (!next.delete(tokenId)) next.add(tokenId);
+  return next;
 }
 
 /** The tokens a bound list would take, each pickable by serial; none from a list that hides its serials. */

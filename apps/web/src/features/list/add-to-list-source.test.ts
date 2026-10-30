@@ -1,14 +1,18 @@
 import { describe, expect, test } from "bun:test";
 
-import { addToListInputSchema, type AddSource } from "@repo/api/schemas/list";
+import { addToListInputSchema, type AddSource, type PublicList } from "@repo/api/schemas/list";
 import type { OwnedObjekt } from "@repo/lib/types/objekt";
 
 import {
   type AddableObjekt,
   addToListInput,
+  currencyChanges,
   groupLists,
+  isListDisabled,
   pickableCopies,
+  pickerLists,
   previewRows,
+  toggleUnpicked,
   toSource,
 } from "./add-to-list-source";
 
@@ -139,6 +143,110 @@ describe("groupLists", () => {
       ["0xabc", ["here-have", "here-sale"]],
       ["0xdef", ["other-have", "other-sale"]],
     ]);
+  });
+});
+
+type PickerList = Pick<PublicList, "slug" | "listType" | "isProfileBind" | "profileAddress">;
+const pickerList = (
+  slug: string,
+  listType: PublicList["listType"],
+  profileAddress: string | null,
+): PickerList => ({ slug, listType, isProfileBind: profileAddress !== null, profileAddress });
+
+describe("pickerLists", () => {
+  const lists = [
+    pickerList("sale-a", "sale", "0xAAA"),
+    pickerList("sale-b", "sale", "0xbbb"),
+    pickerList("sale-unbound", "sale", null),
+    pickerList("have-a", "have", "0xaaa"),
+    pickerList("want-b", "want", "0xbbb"),
+  ];
+  const slugs = (picked: PickerList[]) => picked.map((l) => l.slug);
+
+  test("without saleOnly every list stays, the same array", () => {
+    expect(pickerLists(lists, undefined)).toBe(lists);
+  });
+
+  test("saleOnly with no profiles keeps only bound sale lists", () => {
+    expect(slugs(pickerLists(lists, { profiles: null }))).toEqual(["sale-a", "sale-b"]);
+  });
+
+  test("saleOnly with profiles keeps the sale lists bound to them, in any letter case", () => {
+    expect(slugs(pickerLists(lists, { profiles: ["0xaaa"] }))).toEqual(["sale-a"]);
+    expect(slugs(pickerLists(lists, { profiles: ["0xBBB", "0xAaA"] }))).toEqual([
+      "sale-a",
+      "sale-b",
+    ]);
+  });
+
+  test("a bound sale list with no address is dropped when profiles are set", () => {
+    const noAddress = { ...pickerList("sale-x", "sale", null), isProfileBind: true };
+    expect(slugs(pickerLists([noAddress], { profiles: ["0xaaa"] }))).toEqual([]);
+    expect(slugs(pickerLists([noAddress], { profiles: null }))).toEqual(["sale-x"]);
+  });
+});
+
+describe("isListDisabled", () => {
+  const unowned = { objekts: [collection("c")] };
+  const owned = { objekts: [collection("c"), a1] };
+
+  test("an unbound list is never disabled", () => {
+    expect(isListDisabled(unbound, unowned, { address: HERE, sourceList: undefined })).toBe(false);
+  });
+
+  test("a list bound to another profile is never disabled", () => {
+    expect(isListDisabled(boundElsewhere, unowned, { address: HERE, sourceList: undefined })).toBe(
+      false,
+    );
+  });
+
+  test("a list bound here is disabled when nothing is owned and there is no source list", () => {
+    expect(isListDisabled(bound, unowned, { address: HERE, sourceList: undefined })).toBe(true);
+  });
+
+  test("a source list or one owned objekt keeps it enabled", () => {
+    expect(isListDisabled(bound, unowned, { address: HERE, sourceList: "hidden" })).toBe(false);
+    expect(isListDisabled(bound, owned, { address: HERE, sourceList: undefined })).toBe(false);
+  });
+});
+
+describe("currencyChanges", () => {
+  const list = (slug: string, currency: string | null) => ({ slug, currency });
+  const krw = list("krw", "KRW");
+  const lists = [krw, list("krw-2", "KRW"), list("usd", "USD"), list("plain", null)];
+
+  test("the same currency does not change", () => {
+    expect(currencyChanges(lists, krw, "krw-2")).toBe(false);
+  });
+
+  test("a different currency changes", () => {
+    expect(currencyChanges(lists, krw, "usd")).toBe(true);
+  });
+
+  test("nothing selected: an unpriced next does not change, a priced one does", () => {
+    expect(currencyChanges(lists, undefined, "plain")).toBe(false);
+    expect(currencyChanges(lists, undefined, "usd")).toBe(true);
+  });
+
+  test("an unknown or null next counts as no currency", () => {
+    expect(currencyChanges(lists, undefined, "missing")).toBe(false);
+    expect(currencyChanges(lists, undefined, null)).toBe(false);
+    expect(currencyChanges(lists, krw, "missing")).toBe(true);
+    expect(currencyChanges(lists, krw, null)).toBe(true);
+  });
+});
+
+describe("toggleUnpicked", () => {
+  test("adds a missing id and removes a present one", () => {
+    expect([...toggleUnpicked(new Set(["a"]), "b")]).toEqual(["a", "b"]);
+    expect([...toggleUnpicked(new Set(["a", "b"]), "a")]).toEqual(["b"]);
+  });
+
+  test("never changes the set it was given", () => {
+    const given = new Set(["a"]);
+    toggleUnpicked(given, "b");
+    toggleUnpicked(given, "a");
+    expect([...given]).toEqual(["a"]);
   });
 });
 

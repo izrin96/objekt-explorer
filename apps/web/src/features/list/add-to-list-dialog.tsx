@@ -51,10 +51,14 @@ import {
   type AddableObjekt,
   type AddTarget,
   addToListInput,
+  currencyChanges,
   groupLists,
   isBoundHere,
+  isListDisabled,
   pickableCopies,
+  pickerLists,
   previewRows,
+  toggleUnpicked,
   toSource,
 } from "./add-to-list-source";
 import { CreateListDialog } from "./create-list-dialog";
@@ -208,17 +212,8 @@ function AddToListForm({
   onCreateList: (draft?: ListDraft) => void;
   onDone: () => void;
 }) {
-  const allLists = useUserLists();
   const { saleOnly } = target;
-  const lists = saleOnly
-    ? allLists.filter(
-        (list) =>
-          list.listType === "sale" &&
-          list.isProfileBind &&
-          (saleOnly.profiles === null ||
-            saleOnly.profiles.some((a) => isSameAddress(a, list.profileAddress ?? ""))),
-      )
-    : allLists;
+  const lists = pickerLists(useUserLists(), saleOnly);
   const profiles = useUserProfiles();
   const [unpicked, setUnpicked] = useState<ReadonlySet<string>>(new Set());
   const [price, setPrice] = useState<number | null>(null);
@@ -227,10 +222,7 @@ function AddToListForm({
 
   const groups = groupLists(lists, address);
 
-  // a profile's own bound list has nothing to take from collections it does not
-  // own; a list bound elsewhere takes collections, so it is never greyed out
-  const bindable = sourceList !== undefined || target.objekts.some(isObjektOwned);
-  const isDisabled = (list: PublicList) => isBoundHere(list, address) && !bindable;
+  const isDisabled = (list: PublicList) => isListDisabled(list, target, { address, sourceList });
 
   const selected = lists.find((list) => list.slug === slug && !isDisabled(list));
   const boundTo =
@@ -274,17 +266,12 @@ function AddToListForm({
 
   // a price is in its list's currency: 10 typed for a KRW list is not 10 USD
   const pickList = (next: string | null) => {
-    const nextCurrency = lists.find((list) => list.slug === next)?.currency ?? null;
-    if (nextCurrency !== (selected?.currency ?? null)) setPrice(null);
+    if (currencyChanges(lists, selected, next)) setPrice(null);
     onSlugChange(next);
   };
 
   const toggleSerial = (tokenId: string) =>
-    setUnpicked((current) => {
-      const next = new Set(current);
-      if (!next.delete(tokenId)) next.add(tokenId);
-      return next;
-    });
+    setUnpicked((current) => toggleUnpicked(current, tokenId));
 
   const submit = () => {
     if (!selected || !source) return;
