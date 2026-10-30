@@ -14,7 +14,7 @@ import { Button, type ButtonProps } from "@/components/ui/button";
 import { SerialNo } from "@/features/objekt/objekt-label";
 import { m } from "@/paraglide/messages";
 
-import type { useOfferActions } from "./actions";
+import { useOfferActions } from "./actions";
 
 type Leg = TradeView["legs"][number];
 type Substitute = Leg["substitutes"][number];
@@ -122,6 +122,43 @@ export function AcceptCopy({
           </AlertDialogFooter>
         </AlertDialogPopup>
       </AlertDialog>
+    </>
+  );
+}
+
+/** Decline and Accept for the copy the card shows; the phone bar renders its own pair. */
+export function DecideActions({
+  trade,
+  leg,
+  copyId,
+  size = "sm",
+}: {
+  trade: TradeView;
+  leg: Leg;
+  copyId: number;
+  size?: ButtonProps["size"];
+}) {
+  const actions = useOfferActions(trade.conversationId, () => "");
+  const sub = leg.substitutes.find((copy) => copy.id === copyId)!;
+  const bar = size !== "sm";
+  return (
+    <>
+      <Button
+        variant="outline"
+        size={size}
+        className={bar ? "shrink-0 px-3 text-base" : undefined}
+        loading={actions.declineSubstitute.isPending}
+        onClick={() => actions.declineSubstitute.mutate({ substituteId: sub.id })}
+      >
+        {m.offer_wrong_copy_decline()}
+      </Button>
+      <AcceptCopy
+        sub={sub}
+        leg={leg}
+        actions={actions}
+        size={size}
+        className={bar ? "min-w-0 flex-1 px-3 text-base" : undefined}
+      />
     </>
   );
 }

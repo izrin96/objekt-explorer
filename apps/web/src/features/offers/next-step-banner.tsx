@@ -13,13 +13,12 @@ import type { TradeView as Trade } from "@repo/api/schemas/offer";
 import { truncateAddress } from "@repo/lib/address";
 import { useId, type ReactNode } from "react";
 
-import { Button, type ButtonProps } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { untilLabel } from "@/features/chat/format";
 import { STEP_TONE, TONE_EDGE, TONE_FILL, TONE_INK, type Tone } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
-import { useOfferActions } from "./actions";
 import { itemLabel, leftLabel, shortDate } from "./format";
 import { MakeOfferButton } from "./make-offer-button";
 import { AwayHint } from "./mark-received";
@@ -37,7 +36,7 @@ import type { Collections } from "./pick";
 import { StatusBadge } from "./status-badge";
 import { Feedback } from "./trade-feedback";
 import { TradeSteps } from "./trade-steps";
-import { AcceptCopy, Serial, rich } from "./wrong-copy";
+import { DecideActions, Serial, rich } from "./wrong-copy";
 
 const FORMAT: CardFormat = { left: leftLabel, date: shortDate, until: untilLabel };
 
@@ -357,42 +356,5 @@ function CompareCopies({
         </span>
       </div>
     </div>
-  );
-}
-
-/** Decline and Accept for the copy the card shows; the phone bar renders its own pair. */
-export function DecideActions({
-  trade,
-  leg,
-  copyId,
-  size = "sm",
-}: {
-  trade: Trade;
-  leg: Leg;
-  copyId: number;
-  size?: ButtonProps["size"];
-}) {
-  const actions = useOfferActions(trade.conversationId, () => "");
-  const sub = leg.substitutes.find((copy) => copy.id === copyId)!;
-  const bar = size !== "sm";
-  return (
-    <>
-      <Button
-        variant="outline"
-        size={size}
-        className={bar ? "shrink-0 px-3 text-base" : undefined}
-        loading={actions.declineSubstitute.isPending}
-        onClick={() => actions.declineSubstitute.mutate({ substituteId: sub.id })}
-      >
-        {m.offer_wrong_copy_decline()}
-      </Button>
-      <AcceptCopy
-        sub={sub}
-        leg={leg}
-        actions={actions}
-        size={size}
-        className={bar ? "min-w-0 flex-1 px-3 text-base" : undefined}
-      />
-    </>
   );
 }

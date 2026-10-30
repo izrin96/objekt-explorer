@@ -26,7 +26,7 @@ import { type ExchangeFilter, needsYouCount, openingSide } from "./exchange";
 import { offerNo, tradeNo } from "./format";
 import { Mono } from "./mono";
 import { type Leg, nextStep } from "./next-step";
-import { DecideActions, NextStepBanner } from "./next-step-banner";
+import { NextStepBanner } from "./next-step-banner";
 import type { Collections } from "./pick";
 import { tradeOptions } from "./queries";
 import { SelectedPanel, SelectedSheet } from "./selected-objekt";
@@ -34,7 +34,7 @@ import { type ExchangeState, type ExchangeView, TradeExchange } from "./trade-ex
 import { TradeMenu } from "./trade-menu";
 import { TradePartnerCard, TradePartnerRow } from "./trade-partner-card";
 import { TradeTimeline } from "./trade-timeline";
-import { rich } from "./wrong-copy";
+import { DecideActions, rich } from "./wrong-copy";
 
 /** Reads the clock here: the compiler takes `Date.now` in a component body as a render-time call. */
 const readStep = (trade: Trade) => nextStep(trade, Date.now());
