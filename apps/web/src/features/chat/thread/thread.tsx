@@ -44,7 +44,14 @@ import { MessageItem } from "./message-item";
 import { BlockedNotice, MuteNotice, PartnerDeletedNotice, RequestBar } from "./thread-banners";
 import { ThreadBackBar, ThreadHeader } from "./thread-header";
 import { nearEnd, useCatchUp, useJumpToMessage, useMarkRead, useMuteEnd } from "./thread-hooks";
-import { newDividerAt, newestIncomingId, openedUnread, unreadAtOpen } from "./thread-view";
+import {
+  newDividerAt,
+  newestIncomingId,
+  openedUnread,
+  postOfferOf,
+  threadFooter,
+  unreadAtOpen,
+} from "./thread-view";
 
 export function Thread({ id }: { id: number }) {
   const queryClient = useQueryClient();
@@ -114,15 +121,7 @@ function ThreadView({
 }) {
   const { id, partner } = conversation;
   const name = partner.identity.name;
-  // the newest card is the partner's post with a match: Make offer adds that post's matches
-  const card = messages.findLast((message) => message.card !== null)?.card;
-  const postOffer =
-    card?.kind === "post" && card.match && card.post?.owner.userId === partner.userId
-      ? {
-          matches: { partnerId: partner.userId, post: card.post.list.slug },
-          startList: card.post.has ? card.post.list.slug : undefined,
-        }
-      : {};
+  const postOffer = postOfferOf(messages, partner.userId);
   const scroller = useRef<HTMLDivElement>(null);
   const messageBox = useRef<HTMLTextAreaElement>(null);
   const [active, setActive] = useState<ValidObjekt | null>(null);
@@ -242,11 +241,8 @@ function ThreadView({
   }, []);
 
   // the message box is shown, not a notice in its place
-  const composing = !(
-    conversation.partnerDeleted ||
-    conversation.sendBlocked ||
-    conversation.blockedByMe
-  );
+  const footer = threadFooter(conversation);
+  const composing = footer === "composer";
   const offerOpen = composing
     ? (finalFocus?: RefObject<HTMLElement | null>) =>
         builder.open({ to: { conversationId: id }, name, ...postOffer }, { finalFocus })
@@ -431,11 +427,11 @@ function ThreadView({
       {conversation.request && !conversation.archived && !conversation.partnerDeleted ? (
         <RequestBar id={id} name={name} />
       ) : null}
-      {conversation.partnerDeleted ? (
+      {footer === "deleted" ? (
         <PartnerDeletedNotice />
-      ) : conversation.sendBlocked ? (
+      ) : footer === "muted" && conversation.sendBlocked ? (
         <MuteNotice notice={conversation.sendBlocked} hydrated={hydrated} />
-      ) : conversation.blockedByMe ? (
+      ) : footer === "blocked" ? (
         <BlockedNotice userId={partner.userId} name={name} />
       ) : (
         <Composer

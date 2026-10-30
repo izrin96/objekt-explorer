@@ -1,5 +1,7 @@
 import type { ChatMessage } from "@repo/api/schemas/chat";
 
+import type { ThreadPage } from "@/features/chat/thread-cache";
+
 type Message = Pick<ChatMessage, "id" | "mine">;
 
 export type OpenedUnread = { lastRead: number; newest: number };
@@ -36,4 +38,26 @@ export function newDividerAt(
     (!olderPages || (messages[0]?.id ?? Infinity) <= opened.lastRead)
     ? firstUnread
     : undefined;
+}
+
+export function postOfferOf(messages: readonly Pick<ChatMessage, "card">[], partnerId: string) {
+  // the newest card is the partner's post with a match: Make offer adds that post's matches
+  const card = messages.findLast((message) => message.card !== null)?.card;
+  return card?.kind === "post" && card.match && card.post?.owner.userId === partnerId
+    ? {
+        matches: { partnerId, post: card.post.list.slug },
+        startList: card.post.has ? card.post.list.slug : undefined,
+      }
+    : {};
+}
+
+export type ThreadFooter = "deleted" | "muted" | "blocked" | "composer";
+
+export function threadFooter(
+  conversation: Pick<ThreadPage["conversation"], "partnerDeleted" | "sendBlocked" | "blockedByMe">,
+): ThreadFooter {
+  if (conversation.partnerDeleted) return "deleted";
+  if (conversation.sendBlocked) return "muted";
+  if (conversation.blockedByMe) return "blocked";
+  return "composer";
 }

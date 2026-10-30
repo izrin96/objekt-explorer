@@ -1,6 +1,15 @@
 import { describe, expect, test } from "bun:test";
 
-import { newDividerAt, newestIncomingId, openedUnread, unreadAtOpen } from "./thread-view";
+import type { ChatMessage, PostCardView } from "@repo/api/schemas/chat";
+
+import {
+  newDividerAt,
+  newestIncomingId,
+  openedUnread,
+  postOfferOf,
+  threadFooter,
+  unreadAtOpen,
+} from "./thread-view";
 
 const theirs = (id: number) => ({ id, mine: false });
 const mine = (id: number) => ({ id, mine: true });
@@ -89,5 +98,101 @@ describe("newDividerAt", () => {
     const opened = openedUnread(messages, null);
     expect(newDividerAt(messages, opened, settled)).toBe(2);
     expect(newDividerAt(messages, opened, { olderPages: true, lost: false })).toBeUndefined();
+  });
+});
+
+describe("threadFooter", () => {
+  const free = { partnerDeleted: false, sendBlocked: null, blockedByMe: false };
+  const mute = { reason: "spam", until: null };
+
+  test("is the composer with no flag set", () => {
+    expect(threadFooter(free)).toBe("composer");
+  });
+
+  test("each flag alone picks its notice", () => {
+    expect(threadFooter({ ...free, partnerDeleted: true })).toBe("deleted");
+    expect(threadFooter({ ...free, sendBlocked: mute })).toBe("muted");
+    expect(threadFooter({ ...free, blockedByMe: true })).toBe("blocked");
+  });
+
+  test("deleted beats muted beats blocked", () => {
+    expect(threadFooter({ partnerDeleted: true, sendBlocked: mute, blockedByMe: true })).toBe(
+      "deleted",
+    );
+    expect(threadFooter({ partnerDeleted: false, sendBlocked: mute, blockedByMe: true })).toBe(
+      "muted",
+    );
+  });
+});
+
+describe("postOfferOf", () => {
+  const side = { slugs: ["a"], more: 0, copyCount: 1 };
+  const matchSide = { count: 1, slugs: ["a"] };
+  const match = { ownerHas: matchSide, senderHas: matchSide };
+
+  function postCard(owner: string, options: { match?: boolean; has?: boolean } = {}): PostCardView {
+    const { match: withMatch = true, has = true } = options;
+    return {
+      kind: "post",
+      listId: 1,
+      post: {
+        tag: "wtt",
+        tags: ["wtt"],
+        owner: { userId: owner, name: owner },
+        list: { id: 1, slug: "post-slug", name: "Post", profileSlug: null, profile: null },
+        has: has ? side : null,
+        wants: null,
+        price: null,
+      },
+      match: withMatch ? match : null,
+    };
+  }
+
+  const objektCard: ChatMessage["card"] = {
+    kind: "objekt",
+    collectionSlug: "c",
+    objektId: null,
+    serial: null,
+    list: null,
+    price: null,
+    isQyop: false,
+  };
+
+  test("the partner's post with a match adds its matches and starts on its list", () => {
+    expect(postOfferOf([{ card: postCard("them") }], "them")).toEqual({
+      matches: { partnerId: "them", post: "post-slug" },
+      startList: "post-slug",
+    });
+  });
+
+  test("a post without a have side starts on no list", () => {
+    expect(postOfferOf([{ card: postCard("them", { has: false }) }], "them")).toEqual({
+      matches: { partnerId: "them", post: "post-slug" },
+      startList: undefined,
+    });
+  });
+
+  test("a newer objekt card hides an older matching post", () => {
+    expect(postOfferOf([{ card: postCard("them") }, { card: objektCard }], "them")).toEqual({});
+  });
+
+  test("is empty for someone else's post, such as the viewer's own", () => {
+    expect(postOfferOf([{ card: postCard("me") }], "them")).toEqual({});
+  });
+
+  test("is empty without a match", () => {
+    expect(postOfferOf([{ card: postCard("them", { match: false }) }], "them")).toEqual({});
+  });
+
+  test("is empty with no cards", () => {
+    expect(postOfferOf([], "them")).toEqual({});
+    expect(postOfferOf([{ card: null }], "them")).toEqual({});
+  });
+
+  test("a message without a card after the post card does not hide it", () => {
+    expect(postOfferOf([{ card: postCard("them") }, { card: null }], "them")).toEqual({
+      matches: { partnerId: "them", post: "post-slug" },
+      startList: "post-slug",
+    });
   });
 });
