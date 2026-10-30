@@ -2,8 +2,8 @@ import { describe, expect, test } from "bun:test";
 
 import { TRADE_EXPIRE_DAYS } from "@repo/api/schemas/offer";
 
-import { type Deadline, type Leg, type NextStep, nextStep } from "./next-step";
-import { deadlineText, endedText, noteText, yourTurnText } from "./next-step-text";
+import { type Deadline, type Leg, type NextStep, type StepKind, nextStep } from "./next-step";
+import { deadlineText, endedText, noteText, stepChipText, yourTurnText } from "./next-step-text";
 import { ACCEPTED, DAY, leg, trade } from "./trade-fixture";
 
 // `m.*` returns a branded string, which `expect(...).toBe("...")` rejects.
@@ -208,4 +208,23 @@ describe("yourTurnText", () => {
       "We suggested binary.bin sends first. binary.bin did, so it's your turn.",
     );
   });
+});
+
+describe("stepChipText", () => {
+  const CHIPS: Record<StepKind, string> = {
+    yourTurn: "In progress · your turn",
+    theirTurn: "In progress · their turn",
+    youDecide: "In progress · you decide",
+    theyDecide: "In progress · they decide",
+    stuck: "In progress · can't send",
+    completed: "Completed",
+    failed: "Failed",
+    cancelled: "Cancelled",
+  };
+
+  for (const [kind, words] of Object.entries(CHIPS)) {
+    test(kind, () => {
+      check(stepChipText(kind as StepKind)).toBe(words);
+    });
+  }
 });

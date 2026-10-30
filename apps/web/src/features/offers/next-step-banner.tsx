@@ -20,11 +20,18 @@ import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import { useOfferActions } from "./actions";
-import { itemLabel, leftLabel, shortDate, tradeStatusText } from "./format";
+import { itemLabel, leftLabel, shortDate } from "./format";
 import { MakeOfferButton } from "./make-offer-button";
 import { AwayHint } from "./mark-received";
 import { type Leg, type NextStep, tradeEnd } from "./next-step";
-import { deadlineText, endedText, noteText, yourTurnText, type CardFormat } from "./next-step-text";
+import {
+  deadlineText,
+  endedText,
+  noteText,
+  stepChipText,
+  yourTurnText,
+  type CardFormat,
+} from "./next-step-text";
 import { OfferThumb } from "./offer-item";
 import type { Collections } from "./pick";
 import { StatusBadge } from "./status-badge";
@@ -44,23 +51,6 @@ const ICONS: Record<NextStep["kind"], Icon> = {
   theyDecide: WarningIcon,
   theirTurn: ClockIcon,
 };
-
-function chipText(trade: Trade, step: NextStep) {
-  switch (step.kind) {
-    case "yourTurn":
-      return m.offer_chip_your_turn();
-    case "theirTurn":
-      return m.offer_chip_their_turn();
-    case "youDecide":
-      return m.offer_chip_you_decide();
-    case "theyDecide":
-      return m.offer_chip_they_decide();
-    case "stuck":
-      return m.offer_chip_stuck();
-    default:
-      return tradeStatusText(trade.status);
-  }
-}
 
 type View = {
   title: ReactNode;
@@ -240,7 +230,7 @@ export function NextStepBanner({
         </span>
         <div className="flex min-w-0 flex-1 basis-48 flex-col gap-1.5">
           <StatusBadge tone={tone} className="self-start">
-            {chipText(trade, step)}
+            {stepChipText(step.kind)}
           </StatusBadge>
           <h1
             id={titleId}

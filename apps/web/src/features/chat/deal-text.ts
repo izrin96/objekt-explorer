@@ -1,5 +1,6 @@
 import type { Deal, DealState } from "@repo/api/schemas/chat-deal";
 
+import { stepChipText } from "@/features/offers/next-step-text";
 import { STEP_TONE, type Tone } from "@/lib/tone";
 import { m } from "@/paraglide/messages";
 
@@ -67,14 +68,6 @@ export type StripText = {
   tone: Tone;
 };
 
-const IN_PROGRESS: Partial<Record<DealState, () => string>> = {
-  youDecide: m.offer_chip_you_decide,
-  yourTurn: m.offer_chip_your_turn,
-  theirTurn: m.offer_chip_their_turn,
-  stuck: m.offer_chip_stuck,
-  theyDecide: m.offer_chip_they_decide,
-};
-
 /** The thread's strip: the deal's line, its second line and its one action. */
 export function stripText(
   deal: Deal | null,
@@ -108,7 +101,7 @@ export function stripText(
     case "failed":
       return {
         ...base,
-        words: deal.state === "completed" ? m.offer_trade_completed() : m.offer_trade_failed(),
+        words: stepChipText(deal.state),
         second: deal.until ? m.chat_deal_rate_by({ name, date: format.date(deal.until) }) : null,
         action: "rate",
       };
@@ -116,7 +109,7 @@ export function stripText(
       const count = deal.count ?? 0;
       return {
         ...base,
-        words: IN_PROGRESS[deal.state]!(),
+        words: stepChipText(deal.state),
         trailing: progress(deal),
         second:
           deal.state === "yourTurn"

@@ -2,7 +2,7 @@ import { TRADE_EXPIRE_DAYS, type TradeView as Trade } from "@repo/api/schemas/of
 
 import { m } from "@/paraglide/messages";
 
-import type { Deadline, Leg, NextStep, Note } from "./next-step";
+import type { Deadline, Leg, NextStep, Note, StepKind } from "./next-step";
 
 /**
  * How the card writes time left ("3 days"), a date ("Oct 30") and an until-date: `leftLabel`,
@@ -122,4 +122,26 @@ export function yourTurnText(
     }),
     body: sendBody(step, name),
   };
+}
+
+/** The chip's words, which the chat strip shares. The last three match `tradeStatusText`. */
+export function stepChipText(kind: StepKind) {
+  switch (kind) {
+    case "yourTurn":
+      return m.offer_chip_your_turn();
+    case "theirTurn":
+      return m.offer_chip_their_turn();
+    case "youDecide":
+      return m.offer_chip_you_decide();
+    case "theyDecide":
+      return m.offer_chip_they_decide();
+    case "stuck":
+      return m.offer_chip_stuck();
+    case "completed":
+      return m.offer_trade_completed();
+    case "failed":
+      return m.offer_trade_failed();
+    case "cancelled":
+      return m.offer_trade_cancelled();
+  }
 }
