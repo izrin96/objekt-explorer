@@ -1,8 +1,9 @@
-import type { CreateOfferInput, TopupPayer } from "@repo/api/schemas/offer";
+import type { CandidateItem, CreateOfferInput, TopupPayer } from "@repo/api/schemas/offer";
 
 import type { OfferPick } from "@/features/offers/pick";
 import type { OfferAddress } from "@/features/offers/queries";
 
+import { blockedReason, toPick } from "../pick";
 import { countOf } from "../quantity";
 import type { OfferPrefill } from "./types";
 
@@ -59,4 +60,47 @@ export function holdsDraft(d: Draft, prefill: OfferPrefill | undefined): boolean
         d.topup.payer !== prefill.topup.payer)) ||
     d.note.trim() !== (prefill?.note ?? "").trim()
   );
+}
+
+/** The viewer's candidates for one ask: what `myCopyOptions` returns. */
+type Page = { suggested?: readonly CandidateItem[]; items?: readonly CandidateItem[] };
+
+/** A counter's any-copy asks, in the order their pages are fetched. */
+export const asksOf = (give: readonly OfferPick[]) => give.filter((pick) => pick.objektId === null);
+
+/**
+ * The give side as shown: each any-copy ask takes free copies of the viewer's own, `pages[i]`
+ * being the candidates for `asksOf(give)[i]`. A copy goes to one ask only, and never when the side
+ * names it by serial. An ask for several copies keeps what it couldn't fill, still waiting.
+ */
+export function resolveAsks(
+  give: readonly OfferPick[],
+  pages: readonly (Page | undefined)[],
+): OfferPick[] {
+  const taken = new Set(give.flatMap((pick) => (pick.objektId ? [pick.objektId] : [])));
+  const resolved = new Map<string, OfferPick[]>();
+  for (const [i, ask] of asksOf(give).entries()) {
+    const page = pages[i];
+    const found: OfferPick[] = [];
+    for (const copy of [...(page?.suggested ?? []), ...(page?.items ?? [])]) {
+      if (found.length >= countOf(ask)) break;
+      if (
+        copy.collectionSlug !== ask.collectionSlug ||
+        copy.objektId === null ||
+        taken.has(copy.objektId) ||
+        blockedReason(copy) !== null
+      ) {
+        continue;
+      }
+      taken.add(copy.objektId);
+      found.push({ ...toPick(copy), replaces: ask.key });
+    }
+    if (found.length > 0) resolved.set(ask.key, found);
+  }
+  return give.flatMap((pick) => {
+    const found = resolved.get(pick.key);
+    if (!found) return [pick];
+    const left = countOf(pick) - found.length;
+    return left > 0 ? [...found, { ...pick, count: left }] : found;
+  });
 }

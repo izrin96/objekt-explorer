@@ -50,7 +50,7 @@ import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
 
 import { type NearGroup, nearPayer, withNear } from "../near-picks";
-import { holdsDraft as holdsDraftOf, offerInput } from "./draft";
+import { asksOf, holdsDraft as holdsDraftOf, offerInput, resolveAsks } from "./draft";
 import { BuilderHeader } from "./header";
 import { MatchesLine, NearLine } from "./matches-line";
 import { BuilderRefused } from "./refused";
@@ -129,38 +129,15 @@ export function BuilderForm({
     pick.serialEstimated ?? theirFlags.get(pick.key)?.serialEstimated ?? false;
 
   // a counter's any-copy asks: each takes one free copy of the viewer's own, when there is one
-  const asks = give.filter((pick) => pick.objektId === null);
+  const asks = asksOf(give);
   const copies = useQueries({
     queries: asks.map((pick) => myCopyOptions(to, collections[pick.collectionSlug])),
   });
   const loadingAsks = new Set(asks.filter((_, i) => copies[i]?.isPending).map((pick) => pick.key));
-  const taken = new Set(give.flatMap((pick) => (pick.objektId ? [pick.objektId] : [])));
-  const resolved = new Map<string, OfferPick[]>();
-  for (const [i, ask] of asks.entries()) {
-    const data = copies[i]?.data;
-    const found: OfferPick[] = [];
-    for (const copy of [...(data?.suggested ?? []), ...(data?.items ?? [])]) {
-      if (found.length >= countOf(ask)) break;
-      if (
-        copy.collectionSlug !== ask.collectionSlug ||
-        copy.objektId === null ||
-        taken.has(copy.objektId) ||
-        blockedReason(copy) !== null
-      ) {
-        continue;
-      }
-      taken.add(copy.objektId);
-      found.push({ ...toPick(copy), replaces: ask.key });
-    }
-    if (found.length > 0) resolved.set(ask.key, found);
-  }
-  // an ask for several copies keeps what it couldn't fill, still waiting for a copy
-  const giveShown = give.flatMap((pick) => {
-    const found = resolved.get(pick.key);
-    if (!found) return [pick];
-    const left = countOf(pick) - found.length;
-    return left > 0 ? [...found, { ...pick, count: left }] : found;
-  });
+  const giveShown = resolveAsks(
+    give,
+    copies.map((query) => query.data),
+  );
 
   const reasonOf = (side: OfferSide, pick: OfferPick) => {
     if (side === "give" && pick.objektId === null) {

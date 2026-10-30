@@ -1,10 +1,10 @@
 import { describe, expect, test } from "bun:test";
 
-import { createOfferInputSchema } from "@repo/api/schemas/offer";
+import { type CandidateItem, createOfferInputSchema } from "@repo/api/schemas/offer";
 
 import type { OfferPick } from "@/features/offers/pick";
 
-import { holdsDraft, offerInput } from "./draft";
+import { asksOf, holdsDraft, offerInput, resolveAsks } from "./draft";
 import type { OfferPrefill } from "./types";
 
 type Draft = Parameters<typeof holdsDraft>[0];
@@ -132,5 +132,105 @@ describe("holdsDraft", () => {
   test("with no prefill, anything picked is a change", () => {
     expect(holds({ give: [A], get: [], topup: OFF, note: "" }, undefined)).toBe(true);
     expect(holds({ give: [], get: [], topup: OFF, note: "" }, undefined)).toBe(false);
+  });
+});
+
+const SLUG = "atom01-heejin-101z";
+const ask = (count?: number, slug = SLUG) =>
+  pick({ key: `any:${slug}`, collectionSlug: slug, count });
+const copy = (id: string | null, over: Partial<CandidateItem> = {}): CandidateItem => ({
+  collectionSlug: SLUG,
+  objektId: id,
+  serial: 1,
+  serialEstimated: false,
+  transferable: true,
+  reserved: false,
+  inOpenOffer: [],
+  listSlug: null,
+  copies: null,
+  bySerial: false,
+  ...over,
+});
+const keysOf = (picks: OfferPick[]) => picks.map((p) => p.key);
+
+describe("asksOf", () => {
+  test("keeps the any-copy picks in order", () => {
+    const a = ask(1, "a");
+    const b = ask(1, "b");
+    expect(asksOf([a, pick({ key: "o1", objektId: "o1" }), b])).toEqual([a, b]);
+  });
+});
+
+describe("resolveAsks", () => {
+  test("a pick named by serial passes through unchanged", () => {
+    const named = pick({ key: "o1", objektId: "o1", serial: 5 });
+    expect(resolveAsks([named], [])).toEqual([named]);
+  });
+
+  test("an ask with no page yet stays as is", () => {
+    const a = ask(2);
+    expect(resolveAsks([a], [undefined])).toEqual([a]);
+  });
+
+  test("suggested is read before items", () => {
+    const shown = resolveAsks([ask()], [{ suggested: [copy("s")], items: [copy("i")] }]);
+    expect(keysOf(shown)).toEqual(["s"]);
+    expect(shown[0]).toMatchObject({ replaces: `any:${SLUG}`, objektId: "s" });
+  });
+
+  test("skips other collections, null objektId and blocked copies", () => {
+    const shown = resolveAsks(
+      [ask(3)],
+      [
+        {
+          items: [
+            copy("x", { collectionSlug: "other" }),
+            copy(null),
+            copy("nt", { transferable: false }),
+            copy("rs", { reserved: true }),
+            copy("ok"),
+          ],
+        },
+      ],
+    );
+    expect(keysOf(shown)).toEqual(["ok", `any:${SLUG}`]);
+  });
+
+  test("a copy the side names by serial is never taken", () => {
+    const named = pick({ key: "o1", objektId: "o1", serial: 1 });
+    const shown = resolveAsks([named, ask()], [{ items: [copy("o1"), copy("o2")] }]);
+    expect(keysOf(shown)).toEqual(["o1", "o2"]);
+  });
+
+  test("two asks of the same collection never share a copy", () => {
+    const first = ask();
+    const second = pick({ key: "any2", collectionSlug: SLUG });
+    const page = { items: [copy("c1"), copy("c2")] };
+    const shown = resolveAsks([first, second], [page, page]);
+    expect(shown.map((p) => [p.key, p.replaces])).toEqual([
+      ["c1", first.key],
+      ["c2", "any2"],
+    ]);
+  });
+
+  test("a copy in both suggested and items is taken once", () => {
+    const shown = resolveAsks([ask(2)], [{ suggested: [copy("c1")], items: [copy("c1")] }]);
+    expect(keysOf(shown)).toEqual(["c1", `any:${SLUG}`]);
+  });
+
+  test("an ask for 2 with 3 copies takes 2", () => {
+    const shown = resolveAsks([ask(2)], [{ items: [copy("c1"), copy("c2"), copy("c3")] }]);
+    expect(keysOf(shown)).toEqual(["c1", "c2"]);
+  });
+
+  test("an ask for 3 with 2 found shows them, then the ask for the rest, in its place", () => {
+    const a = ask(3);
+    const before = pick({ key: "o0", objektId: "o0" });
+    const after = pick({ key: "o9", objektId: "o9" });
+    const shown = resolveAsks([before, a, after], [{ items: [copy("c1"), copy("c2")] }]);
+    expect(keysOf(shown)).toEqual(["o0", "c1", "c2", a.key, "o9"]);
+    expect(shown[1]!.replaces).toBe(a.key);
+    expect(shown[2]!.replaces).toBe(a.key);
+    expect(shown[3]).toEqual({ ...a, count: 1 });
   });
 });
