@@ -1,25 +1,12 @@
-import { MOD_REASON_MAX_LENGTH } from "@repo/api/schemas/moderation";
 import { truncateAddress } from "@repo/lib/address";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { type FormEvent, useId, useState } from "react";
 
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogClose,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogPanel,
-  DialogPopup,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { toastManager } from "@/components/ui/toast";
 import { orpc } from "@/lib/orpc";
 import { errorReason } from "@/lib/orpc-error";
 import { m } from "@/paraglide/messages";
+
+import { ReasonDialog, ReasonForm } from "./reason-dialog";
 
 function unlinkErrorText(error: unknown) {
   switch (errorReason(error).reason) {
@@ -47,18 +34,14 @@ export function UnlinkAddressDialog({
   onOpenChange: (open: boolean) => void;
 }) {
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogPopup className="max-w-sm">
-        {open ? (
-          <UnlinkForm
-            address={address}
-            short={truncateAddress(address)}
-            userId={userId}
-            onDone={() => onOpenChange(false)}
-          />
-        ) : null}
-      </DialogPopup>
-    </Dialog>
+    <ReasonDialog open={open} onOpenChange={onOpenChange}>
+      <UnlinkForm
+        address={address}
+        short={truncateAddress(address)}
+        userId={userId}
+        onDone={() => onOpenChange(false)}
+      />
+    </ReasonDialog>
   );
 }
 
@@ -74,10 +57,6 @@ function UnlinkForm({
   onDone: () => void;
 }) {
   const queryClient = useQueryClient();
-  const [reason, setReason] = useState("");
-  const [missing, setMissing] = useState(false);
-  const id = useId();
-  const errorId = useId();
   const unlink = useMutation(
     orpc.moderation.unlinkAddress.mutationOptions({
       onSuccess: () => {
@@ -88,48 +67,15 @@ function UnlinkForm({
     }),
   );
 
-  const submit = (event: FormEvent) => {
-    event.preventDefault();
-    if (reason.trim() === "") {
-      setMissing(true);
-      return;
-    }
-    unlink.mutate({ address, userId, reason: reason.trim() });
-  };
-
   return (
-    <form onSubmit={submit} noValidate className="flex min-h-0 flex-col">
-      <DialogHeader>
-        <DialogTitle className="font-display">
-          {m.mod_unlink_address_title({ address: short })}
-        </DialogTitle>
-        <DialogDescription>{m.mod_unlink_address_description()}</DialogDescription>
-      </DialogHeader>
-      <DialogPanel className="flex flex-col gap-1.5">
-        <Label htmlFor={id}>{m.mod_act_reason()}</Label>
-        <Textarea
-          id={id}
-          value={reason}
-          maxLength={MOD_REASON_MAX_LENGTH}
-          aria-required
-          aria-invalid={missing || undefined}
-          aria-describedby={errorId}
-          onChange={(event) => setReason(event.target.value)}
-        />
-        <p id={errorId} role="alert" className="text-destructive-foreground text-xs empty:hidden">
-          {missing
-            ? m.mod_act_reason_required()
-            : unlink.isError
-              ? unlinkErrorText(unlink.error)
-              : null}
-        </p>
-      </DialogPanel>
-      <DialogFooter>
-        <DialogClose render={<Button variant="outline" />}>{m.common_modal_cancel()}</DialogClose>
-        <Button type="submit" variant="destructive" loading={unlink.isPending}>
-          {m.mod_unlink_address_submit()}
-        </Button>
-      </DialogFooter>
-    </form>
+    <ReasonForm
+      title={m.mod_unlink_address_title({ address: short })}
+      description={m.mod_unlink_address_description()}
+      submitLabel={m.mod_unlink_address_submit()}
+      submitVariant="destructive"
+      pending={unlink.isPending}
+      error={unlink.isError ? unlinkErrorText(unlink.error) : null}
+      onSubmit={(reason) => unlink.mutate({ address, userId, reason })}
+    />
   );
 }

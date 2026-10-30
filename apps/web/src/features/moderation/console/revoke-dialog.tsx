@@ -1,24 +1,13 @@
-import { MOD_REASON_MAX_LENGTH } from "@repo/api/schemas/moderation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { type FormEvent, useId, useState } from "react";
+import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogClose,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogPanel,
-  DialogPopup,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { toastManager } from "@/components/ui/toast";
 import { orpc } from "@/lib/orpc";
 import { errorReason } from "@/lib/orpc-error";
 import { m } from "@/paraglide/messages";
+
+import { ReasonDialog, ReasonForm } from "./reason-dialog";
 
 function revokeErrorText(error: unknown) {
   const { reason } = errorReason(error);
@@ -40,13 +29,9 @@ export function RevokeButton({ sanctionId, label }: { sanctionId: number; label:
       >
         {m.mod_revoke()}
       </Button>
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogPopup className="max-w-sm">
-          {open ? (
-            <RevokeForm sanctionId={sanctionId} label={label} onDone={() => setOpen(false)} />
-          ) : null}
-        </DialogPopup>
-      </Dialog>
+      <ReasonDialog open={open} onOpenChange={setOpen}>
+        <RevokeForm sanctionId={sanctionId} label={label} onDone={() => setOpen(false)} />
+      </ReasonDialog>
     </>
   );
 }
@@ -61,10 +46,6 @@ function RevokeForm({
   onDone: () => void;
 }) {
   const queryClient = useQueryClient();
-  const [reason, setReason] = useState("");
-  const [missing, setMissing] = useState(false);
-  const id = useId();
-  const errorId = useId();
   const revoke = useMutation(
     orpc.moderation.revoke.mutationOptions({
       // close first, so focus returns to the Revoke button before the list refetches
@@ -83,48 +64,14 @@ function RevokeForm({
     }),
   );
 
-  const submit = (event: FormEvent) => {
-    event.preventDefault();
-    if (reason.trim() === "") {
-      setMissing(true);
-      return;
-    }
-    revoke.mutate({ sanctionId, reason: reason.trim() });
-  };
-
   return (
-    <form onSubmit={submit} noValidate className="flex min-h-0 flex-col">
-      <DialogHeader>
-        <DialogTitle className="font-display">
-          {m.mod_revoke_title({ sanction: label })}
-        </DialogTitle>
-        <DialogDescription>{m.mod_revoke_description()}</DialogDescription>
-      </DialogHeader>
-      <DialogPanel className="flex flex-col gap-1.5">
-        <Label htmlFor={id}>{m.mod_act_reason()}</Label>
-        <Textarea
-          id={id}
-          value={reason}
-          maxLength={MOD_REASON_MAX_LENGTH}
-          aria-required
-          aria-invalid={missing || undefined}
-          aria-describedby={errorId}
-          onChange={(event) => setReason(event.target.value)}
-        />
-        <p id={errorId} role="alert" className="text-destructive-foreground text-xs empty:hidden">
-          {missing
-            ? m.mod_act_reason_required()
-            : revoke.isError
-              ? revokeErrorText(revoke.error)
-              : null}
-        </p>
-      </DialogPanel>
-      <DialogFooter>
-        <DialogClose render={<Button variant="outline" />}>{m.common_modal_cancel()}</DialogClose>
-        <Button type="submit" loading={revoke.isPending}>
-          {m.mod_revoke()}
-        </Button>
-      </DialogFooter>
-    </form>
+    <ReasonForm
+      title={m.mod_revoke_title({ sanction: label })}
+      description={m.mod_revoke_description()}
+      submitLabel={m.mod_revoke()}
+      pending={revoke.isPending}
+      error={revoke.isError ? revokeErrorText(revoke.error) : null}
+      onSubmit={(reason) => revoke.mutate({ sanctionId, reason })}
+    />
   );
 }
