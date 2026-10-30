@@ -4,8 +4,10 @@ import { createOfferInputSchema } from "@repo/api/schemas/offer";
 
 import type { OfferPick } from "@/features/offers/pick";
 
-import { offerInput } from "./draft";
+import { holdsDraft, offerInput } from "./draft";
+import type { OfferPrefill } from "./types";
 
+type Draft = Parameters<typeof holdsDraft>[0];
 const to = { conversationId: 7 };
 const OFF = { on: false, amount: null, currency: "USD", payer: "from" } as const;
 
@@ -74,5 +76,61 @@ describe("offerInput", () => {
     const input = offerInput(target, { give: [], get: [], topup: OFF, note: "" });
     expect(input).toMatchObject(target);
     expect(createOfferInputSchema.safeParse(input).success).toBe(true);
+  });
+});
+
+describe("holdsDraft", () => {
+  const A = pick({ key: "a", objektId: "a" });
+  const B = pick({ key: "b", objektId: "b" });
+  const any = (count: number) => pick({ key: "any:atom01-heejin-101z", count });
+  const topup = { amount: 10, currency: "USD", payer: "from" } as const;
+  const prefill: OfferPrefill = { give: [A], get: [any(2)], topup, note: "hi" };
+  const same: Draft = { give: [A], get: [any(2)], topup: { on: true, ...topup }, note: "hi" };
+  const holds = (d: Partial<Draft> = {}, from: OfferPrefill | undefined = prefill) =>
+    holdsDraft({ ...same, ...d }, from);
+
+  test("an untouched prefill holds nothing", () => {
+    expect(holds()).toBe(false);
+  });
+
+  test("an emptied builder holds nothing, even when matches had filled it", () => {
+    expect(holds({ give: [], get: [], topup: OFF, note: "" })).toBe(false);
+    expect(holds({ give: [], get: [], topup: OFF, note: " " })).toBe(false);
+  });
+
+  test("an open top-up with no amount holds nothing", () => {
+    const open = { ...OFF, on: true };
+    expect(holds({ give: [], get: [], topup: open, note: "" })).toBe(false);
+  });
+
+  test("a changed any-copy count is a change", () => {
+    expect(holds({ get: [any(3)] })).toBe(true);
+  });
+
+  test("a currency or payer change counts only when there is an amount", () => {
+    expect(holds({ topup: { ...same.topup, currency: "EUR" } })).toBe(true);
+    expect(holds({ topup: { ...same.topup, payer: "to" } })).toBe(true);
+    expect(holds({ topup: { ...same.topup, amount: null, currency: "EUR" } })).toBe(false);
+    expect(holds({ topup: { ...same.topup, on: false, payer: "to" } })).toBe(false);
+  });
+
+  test("reordering picks is a change, as the keys are compared in order", () => {
+    const two = { ...prefill, give: [A, B] };
+    expect(holds({ give: [A, B] }, two)).toBe(false);
+    expect(holds({ give: [B, A] }, two)).toBe(true);
+  });
+
+  test("a note that differs only in whitespace holds nothing", () => {
+    expect(holds({ note: "  hi \n" })).toBe(false);
+    expect(holds({ note: "hello" })).toBe(true);
+  });
+
+  test("removing a prefilled top-up is not a change, as it is current behaviour", () => {
+    expect(holds({ topup: OFF })).toBe(false);
+  });
+
+  test("with no prefill, anything picked is a change", () => {
+    expect(holds({ give: [A], get: [], topup: OFF, note: "" }, undefined)).toBe(true);
+    expect(holds({ give: [], get: [], topup: OFF, note: "" }, undefined)).toBe(false);
   });
 });

@@ -50,7 +50,7 @@ import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
 
 import { type NearGroup, nearPayer, withNear } from "../near-picks";
-import { offerInput } from "./draft";
+import { holdsDraft as holdsDraftOf, offerInput } from "./draft";
 import { BuilderHeader } from "./header";
 import { MatchesLine, NearLine } from "./matches-line";
 import { BuilderRefused } from "./refused";
@@ -339,24 +339,10 @@ export function BuilderForm({
     }),
   );
 
-  // what closing would lose: changes to the prefill, nothing while the send is on its way, and
-  // an open top-up with no amount holds nothing
-  const sameKeys = (picks: OfferPick[], from: OfferPick[] = []) =>
-    picks.length === from.length &&
-    picks.every((pick, i) => pick.key === from[i]?.key && countOf(pick) === countOf(from[i]!));
-  // an empty builder holds nothing, even when the matches had filled it
-  const holdsNothing = empty && !(topupOn && amount !== null) && note.trim() === "";
+  // nothing is lost while the send is on its way
   const holdsDraft =
     !create.isPending &&
-    !holdsNothing &&
-    (!sameKeys(give, prefill?.give) ||
-      !sameKeys(get, prefill?.get) ||
-      (topupOn &&
-        amount !== null &&
-        (amount !== prefill?.topup?.amount ||
-          currency !== prefill.topup.currency ||
-          payer !== prefill.topup.payer)) ||
-      note.trim() !== (prefill?.note ?? "").trim());
+    holdsDraftOf({ give, get, topup: { on: topupOn, amount, currency, payer }, note }, prefill);
 
   useEffect(() => {
     onDraft(() => holdsDraft);
