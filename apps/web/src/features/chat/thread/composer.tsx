@@ -6,12 +6,7 @@ import {
   PlusIcon,
   XIcon,
 } from "@phosphor-icons/react";
-import {
-  type ChatMessage,
-  MESSAGE_MAX_LENGTH,
-  messageLength,
-  type ReplyQuote,
-} from "@repo/api/schemas/chat";
+import { type ChatMessage, MESSAGE_MAX_LENGTH, type ReplyQuote } from "@repo/api/schemas/chat";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -51,11 +46,9 @@ import {
 } from "@/stores/chat-draft";
 
 import { AttachmentChip } from "./composer-attachment";
+import { boxCheck, keyAction, sendInput } from "./composer-rules";
 import { firstLineSuggestions } from "./suggestions";
 import { useTypingPing } from "./use-typing-ping";
-
-/** The counter shows from here, so it never sits there for an ordinary message. */
-const COUNTER_FROM = MESSAGE_MAX_LENGTH - 200;
 
 /** The card of each send in flight, by send id, for a failure to put back after the thread unmounted. */
 const sentCards = new Map<string, Attachment>();
@@ -122,9 +115,11 @@ export function Composer({
   // at most one "typing" ping per interval; the server decides whether the partner sees it
   const pingTyping = useTypingPing(conversationId);
 
-  const length = messageLength(body.trim());
-  const over = length - MESSAGE_MAX_LENGTH;
-  const empty = length === 0 && attachment === null;
+  const { length, over, counter, ready } = boxCheck(
+    body,
+    attachment !== null,
+    blockedUntil !== null,
+  );
 
   const send = useMutation(
     orpc.chat.send.mutationOptions({
@@ -162,7 +157,7 @@ export function Composer({
 
   const submit = (event?: FormEvent) => {
     event?.preventDefault();
-    if (empty || over > 0 || send.isPending || blockedUntil !== null) return;
+    if (!ready || send.isPending) return;
     const sentAttachment = attachment;
     // cleared at once so typing can go on; a failure puts it back
     const { body: sentBody, clientId, reply } = beginSend(conversationId, body);
@@ -170,34 +165,25 @@ export function Composer({
     setAttachment(null);
     setError(null);
     textarea.current?.focus();
-    send.mutate(
-      {
-        conversationId,
-        body: sentBody.trim() === "" ? undefined : sentBody,
-        card: sentAttachment?.input,
-        clientId,
-        replyTo: reply?.id,
+    send.mutate(sendInput(conversationId, { body: sentBody, clientId, reply }, sentAttachment), {
+      onError: (failure) => {
+        const refusal = refusalOf(failure);
+        if (refusal?.reason === "no_address") {
+          offerLink();
+          return;
+        }
+        if (refusal?.reason === "message_limit" && refusal.retryAt) {
+          setBlockedUntil(new Date(refusal.retryAt).getTime());
+        }
+        setError(
+          refusal
+            ? refusalText(refusal)
+            : navigator.onLine
+              ? m.chat_send_error()
+              : m.chat_send_offline(),
+        );
       },
-      {
-        onError: (failure) => {
-          const refusal = refusalOf(failure);
-          if (refusal?.reason === "no_address") {
-            offerLink();
-            return;
-          }
-          if (refusal?.reason === "message_limit" && refusal.retryAt) {
-            setBlockedUntil(new Date(refusal.retryAt).getTime());
-          }
-          setError(
-            refusal
-              ? refusalText(refusal)
-              : navigator.onLine
-                ? m.chat_send_error()
-                : m.chat_send_offline(),
-          );
-        },
-      },
-    );
+    });
   };
 
   const stopReplying = () => {
@@ -206,24 +192,22 @@ export function Composer({
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
-    // an IME's Enter or Escape ends the composition, it does not send or stop a reply; Safari
-    // ends the composition before this keydown, so only its keyCode 229 still tells
-    if (event.nativeEvent.isComposing || event.nativeEvent.keyCode === 229) return;
-    if (event.key === "Escape" && reply) {
-      event.preventDefault();
-      stopReplying();
-      return;
-    }
-    if (event.key !== "Enter" || event.shiftKey) return;
+    const action = keyAction(
+      {
+        key: event.key,
+        shiftKey: event.shiftKey,
+        isComposing: event.nativeEvent.isComposing,
+        keyCode: event.nativeEvent.keyCode,
+      },
+      reply !== null,
+    );
+    if (action === null) return;
     event.preventDefault();
-    submit();
+    if (action === "stop-reply") stopReplying();
+    else submit();
   };
 
-  const describedBy = [
-    reply ? replyId : null,
-    length >= COUNTER_FROM ? counterId : null,
-    error ? errorId : null,
-  ]
+  const describedBy = [reply ? replyId : null, counter ? counterId : null, error ? errorId : null]
     .filter(Boolean)
     .join(" ");
 
@@ -300,7 +284,7 @@ export function Composer({
           type="submit"
           size="icon"
           aria-label={m.chat_send()}
-          disabled={empty || over > 0 || blockedUntil !== null}
+          disabled={!ready}
           loading={send.isPending}
           // keeps focus, and a phone's keyboard, in the message box
           onPointerDown={(event) => event.preventDefault()}
@@ -320,7 +304,7 @@ export function Composer({
       >
         {error}
       </p>
-      {length >= COUNTER_FROM ? (
+      {counter ? (
         <p
           id={counterId}
           className={cn(
