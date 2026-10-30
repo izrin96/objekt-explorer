@@ -50,6 +50,7 @@ import { useAddToList } from "./actions";
 import {
   type AddableObjekt,
   type AddTarget,
+  addToListInput,
   groupLists,
   isBoundHere,
   pickableCopies,
@@ -290,17 +291,7 @@ function AddToListForm({
     const { from, dropped } = source;
 
     addToList.mutate(
-      {
-        slug: selected.slug,
-        skipDups,
-        from,
-        // 0 clears the price, as Set price reads it
-        ...(isSale && {
-          isQyop,
-          price: isQyop || !price ? null : price,
-          note: note.trim() || null,
-        }),
-      },
+      addToListInput({ slug: selected.slug, skipDups, from, isSale, isQyop, price, note }),
       {
         onSuccess: ({ entries, skipped, unowned: serverUnowned }) => {
           const unowned = serverUnowned + dropped;

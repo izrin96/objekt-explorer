@@ -1,9 +1,11 @@
 import { describe, expect, test } from "bun:test";
 
+import { addToListInputSchema, type AddSource } from "@repo/api/schemas/list";
 import type { OwnedObjekt } from "@repo/lib/types/objekt";
 
 import {
   type AddableObjekt,
+  addToListInput,
   groupLists,
   pickableCopies,
   previewRows,
@@ -154,5 +156,60 @@ describe("previewRows", () => {
       { objekt: a7, copies: [a1, a7] },
       { objekt: b3, copies: [b3] },
     ]);
+  });
+});
+
+describe("addToListInput", () => {
+  const base = {
+    slug: "my-list",
+    skipDups: true,
+    from: { type: "collections", slugs: ["a"] } as AddSource,
+    isSale: true,
+    isQyop: false,
+    price: null as number | null,
+    note: "",
+  };
+  const build = (over: Partial<typeof base> = {}) => {
+    const input = addToListInput({ ...base, ...over });
+    addToListInputSchema.parse(input);
+    return input;
+  };
+
+  test("a non-sale body has no sale keys, whatever was typed", () => {
+    const input = build({ isSale: false, isQyop: true, price: 5, note: "hi" });
+    expect(input).not.toHaveProperty("isQyop");
+    expect(input).not.toHaveProperty("price");
+    expect(input).not.toHaveProperty("note");
+  });
+
+  test("a sale price goes as typed", () => {
+    expect(build({ price: 12.5 })).toMatchObject({ price: 12.5, isQyop: false });
+  });
+
+  test("a price of 0 or none goes as null", () => {
+    expect(build({ price: 0 }).price).toBeNull();
+    expect(build({ price: null }).price).toBeNull();
+  });
+
+  test("QYOP drops the price", () => {
+    expect(build({ isQyop: true, price: 12.5 })).toMatchObject({ price: null, isQyop: true });
+  });
+
+  test("the note is trimmed, and null when only spaces", () => {
+    expect(build({ note: "  hi " }).note).toBe("hi");
+    expect(build({ note: "   " }).note).toBeNull();
+  });
+
+  test("from passes through for each kind", () => {
+    const sources: AddSource[] = [
+      { type: "objekts", tokenIds: ["1", "2"] },
+      { type: "collections", slugs: ["a", "b"] },
+      { type: "list", slug: "other", entryIds: [3, 4] },
+    ];
+    for (const from of sources) expect(build({ from }).from).toEqual(from);
+  });
+
+  test("slug and skipDups pass through", () => {
+    expect(build({ slug: "x", skipDups: false })).toMatchObject({ slug: "x", skipDups: false });
   });
 });

@@ -1,5 +1,6 @@
-import type { AddSource, PublicList } from "@repo/api/schemas/list";
+import type { AddSource, PublicList, addToListInputSchema } from "@repo/api/schemas/list";
 import type { ListEntryFields, OwnedObjekt, ValidObjekt } from "@repo/lib/types/objekt";
+import type * as z from "zod";
 
 import { isObjektOwned } from "@/features/objekt/objekt-utils";
 import { isSameAddress } from "@/lib/address";
@@ -133,5 +134,27 @@ export function toSource(
       combined === true
         ? new Set(objekts.flatMap((o) => (held.has(o.slug) ? [] : [o.slug]))).size
         : objekts.length - pickable.length,
+  };
+}
+
+export function addToListInput(a: {
+  slug: string;
+  skipDups: boolean;
+  from: AddSource;
+  isSale: boolean;
+  isQyop: boolean;
+  price: number | null;
+  note: string;
+}): z.input<typeof addToListInputSchema> {
+  return {
+    slug: a.slug,
+    skipDups: a.skipDups,
+    from: a.from,
+    // 0 clears the price, as Set price reads it
+    ...(a.isSale && {
+      isQyop: a.isQyop,
+      price: a.isQyop || !a.price ? null : a.price,
+      note: a.note.trim() || null,
+    }),
   };
 }
