@@ -9,15 +9,30 @@ import {
 } from "@repo/api/schemas/list-rule";
 import type { ValidArtist } from "@repo/cosmo/types/common";
 
+import { m } from "@/paraglide/messages";
+
 import {
+  ANY,
+  artistPatch,
+  classesOf,
+  classOptions,
   collectionDigits,
+  editionLabel,
   fromRule,
+  kindPatch,
   newDraft,
+  previewIsCurrent,
   type RuleDraft,
+  seasonFor,
+  seasonOptions,
+  seasonsOf,
   toggle,
   toInput,
   togglePrio,
 } from "./rule-draft";
+
+// `m.*` returns a branded string, which `expect(...).toBe("...")` rejects.
+const check = (actual: unknown) => expect(actual);
 
 const ARTISTS: ValidArtist[] = ["tripleS", "artms", "idntt"];
 
@@ -236,5 +251,160 @@ describe("collectionDigits", () => {
     expect(collectionDigits("3a6-6")).toBe("366");
     expect(collectionDigits("12345")).toBe("123");
     expect(collectionDigits("")).toBe("");
+  });
+});
+
+describe("seasonsOf and classesOf", () => {
+  const data = {
+    seasonsMap: [{ artistId: "tripleS" as const, seasons: ["Atom01", "Cream02"] }],
+    classesMap: [{ artistId: "tripleS" as const, classes: ["First", "Double"] }],
+  };
+
+  test("return the artist's list", () => {
+    expect(seasonsOf(data, "tripleS")).toEqual(["Atom01", "Cream02"]);
+    expect(classesOf(data, "tripleS")).toEqual(["First", "Double"]);
+  });
+
+  test("are empty without data or for a missing artist", () => {
+    expect(seasonsOf(undefined, "tripleS")).toEqual([]);
+    expect(classesOf(undefined, "tripleS")).toEqual([]);
+    expect(seasonsOf(data, "artms")).toEqual([]);
+    expect(classesOf(data, "artms")).toEqual([]);
+  });
+});
+
+describe("seasonFor", () => {
+  const seasons = ["Atom01", "Cream02"];
+
+  test("a collection rule without a season gets the newest, or none", () => {
+    expect(seasonFor("collection", null, seasons)).toBe("Cream02");
+    expect(seasonFor("collection", null, [])).toBeNull();
+  });
+
+  test("a set rule without a season stays without", () => {
+    expect(seasonFor("set", null, seasons)).toBeNull();
+  });
+
+  test("keeps an existing season for either kind", () => {
+    expect(seasonFor("collection", "Atom01", seasons)).toBe("Atom01");
+    expect(seasonFor("set", "Atom01", seasons)).toBe("Atom01");
+  });
+});
+
+describe("kindPatch", () => {
+  const seasons = ["Atom01", "Cream02"];
+
+  test("to a collection rule with Any season picks the newest", () => {
+    expect(kindPatch(setDraft({ season: null }), "collection", seasons)).toEqual({
+      kind: "collection",
+      season: "Cream02",
+    });
+  });
+
+  test("to a set rule keeps Any season", () => {
+    expect(kindPatch(collectionDraft({ season: null }), "set", seasons)).toEqual({
+      kind: "set",
+      season: null,
+    });
+  });
+
+  test("keeps a chosen season", () => {
+    expect(kindPatch(setDraft({ season: "Atom01" }), "collection", seasons).season).toBe("Atom01");
+  });
+});
+
+describe("artistPatch", () => {
+  const next = { seasons: ["Atom01", "Atom02"], classes: ["First", "Special"] };
+
+  test("clears what belongs to the old artist and sets the new one", () => {
+    expect(artistPatch(setDraft(), "artms", next)).toMatchObject({
+      artist: "artms",
+      collectionNo: "",
+      editions: [],
+      members: [],
+      prio: [],
+    });
+  });
+
+  test("a collection draft gets the new artist's newest season, a set draft none", () => {
+    expect(artistPatch(collectionDraft(), "artms", next).season).toBe("Atom02");
+    expect(artistPatch(setDraft(), "artms", next).season).toBeNull();
+  });
+
+  test("any class stays any", () => {
+    expect(artistPatch(setDraft({ cls: null }), "artms", next).cls).toBeNull();
+  });
+
+  test("keeps a class the new artist has", () => {
+    expect(artistPatch(setDraft({ cls: "Special" }), "artms", next).cls).toBe("Special");
+  });
+
+  test("falls back to the new artist's first class", () => {
+    expect(artistPatch(setDraft({ cls: "Double" }), "artms", next).cls).toBe("First");
+  });
+
+  test("keeps the class when the new artist has none", () => {
+    expect(artistPatch(setDraft({ cls: "Double" }), "artms", { ...next, classes: [] }).cls).toBe(
+      "Double",
+    );
+  });
+});
+
+describe("seasonOptions", () => {
+  test("a set rule offers Any first, then the seasons newest first", () => {
+    const options = seasonOptions("set", ["Atom01", "Cream02"]);
+    expect(options.map((o) => o.value)).toEqual([ANY, "Cream02", "Atom01"]);
+    check(options[0]!.label).toBe(m.rule_any_season());
+    expect(options[1]!.label).toBe("Cream02");
+  });
+
+  test("a collection rule has no Any", () => {
+    expect(seasonOptions("collection", ["Atom01", "Cream02"]).map((o) => o.value)).toEqual([
+      "Cream02",
+      "Atom01",
+    ]);
+  });
+
+  test("leaves the input as it was", () => {
+    const seasons = ["Atom01", "Cream02"];
+    seasonOptions("set", seasons);
+    expect(seasons).toEqual(["Atom01", "Cream02"]);
+  });
+});
+
+describe("classOptions", () => {
+  test("offers Any first, then the classes in order", () => {
+    const options = classOptions(["First", "Double"]);
+    expect(options.map((o) => o.value)).toEqual([ANY, "First", "Double"]);
+    check(options[0]!.label).toBe(m.rule_any_class());
+    expect(options[2]!.label).toBe("Double");
+  });
+});
+
+describe("editionLabel", () => {
+  test("is the ordinal", () => {
+    expect(editionLabel(1)).toBe("1st");
+    expect(editionLabel(2)).toBe("2nd");
+    expect(editionLabel(3)).toBe("3rd");
+  });
+});
+
+describe("previewIsCurrent", () => {
+  const input = () => toInput(setDraft());
+
+  test("equal content in different objects is current", () => {
+    expect(previewIsCurrent(input(), input(), false)).toBe(true);
+  });
+
+  test("a deferred value that lags is not", () => {
+    expect(previewIsCurrent(input(), toInput(setDraft({ season: null })), false)).toBe(false);
+  });
+
+  test("a kept placeholder is not", () => {
+    expect(previewIsCurrent(input(), input(), true)).toBe(false);
+  });
+
+  test("an incomplete rule is not", () => {
+    expect(previewIsCurrent(null, null, false)).toBe(false);
   });
 });

@@ -41,18 +41,24 @@ import { m } from "@/paraglide/messages";
 
 import { RULE_KEYS } from "./queries";
 import {
+  ANY,
+  artistPatch,
+  classesOf,
+  classOptions,
   collectionDigits,
+  editionLabel,
   fromRule,
+  kindPatch,
   newDraft,
+  previewIsCurrent,
   type RuleDraft,
+  seasonOptions,
+  seasonsOf,
   toggle,
   toInput,
   togglePrio,
 } from "./rule-draft";
 import { ruleText } from "./words";
-
-const ANY = "__any__";
-const ORDINAL = ["", "1st", "2nd", "3rd"];
 
 const RULE_KINDS = [
   {
@@ -128,22 +134,12 @@ function RuleForm({
     const start = rule ?? initial;
     if (start) return fromRule(start, artistIds);
     const artist = selectedArtists[0]?.id ?? artistIds[0]!;
-    return newDraft(
-      artist,
-      filterData?.seasonsMap.find((s) => s.artistId === artist)?.seasons ?? [],
-    );
+    return newDraft(artist, seasonsOf(filterData, artist));
   });
   const set = (patch: Partial<RuleDraft>) => setDraft((current) => ({ ...current, ...patch }));
 
-  const seasonsOf = (artist: string) =>
-    filterData?.seasonsMap.find((s) => s.artistId === artist)?.seasons ?? [];
-  const seasons = seasonsOf(draft.artist);
-  // a collection rule has no Any season, so an empty season there falls back to the newest
-  const seasonFor = (kind: RuleDraft["kind"], artist: string, season: string | null) =>
-    kind === "collection" && season === null ? (seasonsOf(artist).at(-1) ?? null) : season;
-  const classesOf = (artist: string) =>
-    filterData?.classesMap.find((c) => c.artistId === artist)?.classes ?? [];
-  const classes = classesOf(draft.artist);
+  const seasons = seasonsOf(filterData, draft.artist);
+  const classes = classesOf(filterData, draft.artist);
   const members =
     artists.find((a) => a.id === draft.artist)?.artistMembers.map((member) => member.name) ?? [];
   const hasEditions = draft.kind === "set" && ruleHasEditions(draft.artist, draft.cls);
@@ -158,12 +154,7 @@ function RuleForm({
       staleTime: 30_000,
     }),
   );
-  // counts for another rule (the deferred one still catching up, or the previous result kept
-  // while the new one loads) say nothing about this one
-  const current =
-    input !== null &&
-    !preview.isPlaceholderData &&
-    JSON.stringify(deferred) === JSON.stringify(input);
+  const current = previewIsCurrent(input, deferred, preview.isPlaceholderData);
   const counts = current ? preview.data : undefined;
   const problem = counts?.problem ?? null;
 
@@ -197,7 +188,7 @@ function RuleForm({
           value={draft.kind}
           onValueChange={(next) => {
             const kind = RULE_KINDS.find((item) => item.value === next)?.value;
-            if (kind) set({ kind, season: seasonFor(kind, draft.artist, draft.season) });
+            if (kind) set(kindPatch(draft, kind, seasons));
           }}
           className="gap-2"
         >
@@ -229,22 +220,14 @@ function RuleForm({
             label={m.rule_artist()}
             value={draft.artist}
             options={artists.map((a) => ({ value: a.id, label: a.title ?? a.id }))}
-            onChange={(artist) => {
-              // a number, class or edition of one artist rarely exists for another
-              const next = classesOf(artist);
-              set({
-                artist: artist as ValidArtist,
-                season: seasonFor(draft.kind, artist, null),
-                collectionNo: "",
-                cls:
-                  draft.cls === null || next.includes(draft.cls)
-                    ? draft.cls
-                    : (next[0] ?? draft.cls),
-                editions: [],
-                members: [],
-                prio: [],
-              });
-            }}
+            onChange={(artist) =>
+              set(
+                artistPatch(draft, artist as ValidArtist, {
+                  seasons: seasonsOf(filterData, artist),
+                  classes: classesOf(filterData, artist),
+                }),
+              )
+            }
           />
         ) : null}
 
@@ -254,10 +237,7 @@ function RuleForm({
               id={`${id}-class`}
               label={m.rule_class()}
               value={draft.cls ?? ANY}
-              options={[
-                { value: ANY, label: m.rule_any_class() },
-                ...classes.map((cls) => ({ value: cls, label: cls })),
-              ]}
+              options={classOptions(classes)}
               onChange={(cls) => set({ cls: cls === ANY ? null : cls, editions: [] })}
             />
           ) : null}
@@ -265,10 +245,7 @@ function RuleForm({
             id={`${id}-season`}
             label={m.rule_season()}
             value={draft.season ?? ANY}
-            options={[
-              ...(draft.kind === "set" ? [{ value: ANY, label: m.rule_any_season() }] : []),
-              ...seasons.toReversed().map((season) => ({ value: season, label: season })),
-            ]}
+            options={seasonOptions(draft.kind, seasons)}
             onChange={(season) => set({ season: season === ANY ? null : season })}
           />
           {draft.kind === "collection" ? (
@@ -297,7 +274,7 @@ function RuleForm({
             {RULE_EDITIONS.map((edition) => (
               <FilterToggle
                 key={edition}
-                label={ORDINAL[edition]!}
+                label={editionLabel(edition)}
                 pressed={draft.editions.includes(edition)}
                 onPressedChange={() => set({ editions: toggle(draft.editions, edition) })}
               />
