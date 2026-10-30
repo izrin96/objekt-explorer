@@ -41,6 +41,7 @@ import { m } from "@/paraglide/messages";
 import { ObjektNote } from "../objekt-note";
 import { marketListingsOptions, marketStatsOptions, priceHistoryOptions } from "../queries";
 import { headRowClass, ScrollTable } from "./scroll-table";
+import { nextSort } from "./sort-state";
 import { SortableHeader, type SortState } from "./sortable-header";
 import { type Stat, StatRow } from "./stat-row";
 
@@ -90,12 +91,8 @@ export function MarketPanel({
   const listings = useInfiniteQuery(marketListingsOptions(slug, sort.key, sort.dir));
 
   const toggle = (key: SortBy) =>
-    setSort((prev) =>
-      prev.key === key
-        ? { key, dir: prev.dir === "asc" ? "desc" : "asc" }
-        : // cheapest first, newest first — the default each field is most useful in
-          { key, dir: key === "price" ? "asc" : "desc" },
-    );
+    // cheapest first, newest first — the default each field is most useful in
+    setSort((prev) => nextSort(prev, key, key === "price" ? "asc" : "desc"));
 
   const liveFloor = stats.data?.floorPrice ?? null;
   const points = history.data?.points ?? [];

@@ -17,6 +17,7 @@ import { formatTimestamp } from "@/lib/time";
 import { m } from "@/paraglide/messages";
 
 import { headRowClass, ScrollTable } from "./scroll-table";
+import { nextSort } from "./sort-state";
 import { SortableHeader, type SortState } from "./sortable-header";
 
 const PAGE_SIZE = 10;
@@ -71,11 +72,7 @@ export function OwnedPanel({
   const rows = sorted.slice((current - 1) * PAGE_SIZE, current * PAGE_SIZE);
 
   const toggle = (key: SortKey) =>
-    setSort((prev) =>
-      prev.key === key
-        ? { key, dir: prev.dir === "asc" ? "desc" : "asc" }
-        : { key, dir: key === "serial" ? "asc" : "desc" },
-    );
+    setSort((prev) => nextSort(prev, key, key === "serial" ? "asc" : "desc"));
 
   return (
     <div className="flex flex-col gap-2.5">

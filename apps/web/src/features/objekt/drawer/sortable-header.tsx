@@ -3,7 +3,9 @@ import type { ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
 
-export type SortState<Key extends string> = { key: Key; dir: "asc" | "desc" };
+import type { SortState } from "./sort-state";
+
+export type { SortState };
 
 /** A column header that carries the table's sort; shared by the drawer's tables. */
 export function SortableHeader<Key extends string>({
