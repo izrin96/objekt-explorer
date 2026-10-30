@@ -52,7 +52,7 @@ export function BoxTabs({ box }: { box: ChatBox }) {
             {LABEL[item]()}
             {item === "requests" && requests > 0 ? (
               <>
-                <span aria-hidden className="text-muted-foreground font-mono text-xs tabular-nums">
+                <span aria-hidden className="text-muted-foreground text-xs tabular-nums">
                   {requests > 99 ? "99+" : requests}
                 </span>
                 <span className="sr-only">{m.chat_box_requests_count({ count: requests })}</span>

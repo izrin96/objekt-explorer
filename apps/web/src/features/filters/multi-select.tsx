@@ -47,7 +47,7 @@ export function MultiSelect({
         <span>
           {label}
           {value.length > 0 && (
-            <span className="text-muted-foreground font-mono"> · {value.length}</span>
+            <span className="text-muted-foreground tabular-nums"> · {value.length}</span>
           )}
         </span>
         <SelectPrimitive.Icon>
@@ -59,7 +59,7 @@ export function MultiSelect({
           ? groups.map((group) => (
               <SelectGroup key={group.artist.id}>
                 {/* sticky so the artist stays readable while its members scroll past */}
-                <SelectGroupLabel className="bg-popover sticky top-0 z-1 font-mono tracking-wide">
+                <SelectGroupLabel className="bg-popover sticky top-0 z-1 tracking-wide">
                   {group.artist.title}
                 </SelectGroupLabel>
                 {group.members.map((member) => (

@@ -33,7 +33,7 @@ export function ProgressSummary({
         {/* hidden from screen readers: the meter below announces the same figures */}
         <div
           aria-hidden
-          className="font-mono text-3xl leading-none font-semibold tracking-tight tabular-nums"
+          className="text-3xl leading-none font-semibold tracking-tight tabular-nums"
         >
           {totals.pct.toFixed(1)}
           <small className="text-muted-foreground text-sm font-medium tracking-normal">
@@ -55,8 +55,8 @@ export function ProgressSummary({
         </Meter>
         {best && (
           <p className="text-muted-foreground mt-2 text-xs">
-            {m.progress_best_member()}: <b className="text-foreground font-mono">{best.member}</b>{" "}
-            <b className="text-foreground font-mono tabular-nums">{best.pct.toFixed(0)}%</b>
+            {m.progress_best_member()}: <b className="text-foreground">{best.member}</b>{" "}
+            <b className="text-foreground tabular-nums">{best.pct.toFixed(0)}%</b>
           </p>
         )}
       </Panel>
@@ -78,7 +78,7 @@ export function ProgressSummary({
                   style={{ background: row.color }}
                 />
                 <span className="truncate font-medium">{row.member}</span>
-                <span className="text-muted-foreground ml-auto flex-none font-mono text-xs tabular-nums">
+                <span className="text-muted-foreground ml-auto flex-none text-xs tabular-nums">
                   <MessageMarkup
                     parts={m.progress_to_go.parts({
                       count: (row.total - row.owned).toLocaleString(),

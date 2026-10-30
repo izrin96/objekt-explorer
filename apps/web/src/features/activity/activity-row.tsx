@@ -39,7 +39,7 @@ function Who({ address, nickname }: { address: string; nickname: string | undefi
 function System({ label }: { label: string }) {
   return (
     <span className="flex min-w-0">
-      <span className="text-muted-foreground truncate font-mono text-xs">{label}</span>
+      <span className="text-muted-foreground truncate text-xs">{label}</span>
     </span>
   );
 }
@@ -86,7 +86,7 @@ export const ActivityRow = memo(function ActivityRow({
         )}
       </DataTableCell>
 
-      <DataTableCell className="text-muted-foreground justify-end font-mono text-xs whitespace-nowrap">
+      <DataTableCell className="text-muted-foreground justify-end text-xs whitespace-nowrap tabular-nums">
         <Timestamp date={new Date(item.transfer.timestamp)} />
       </DataTableCell>
     </DataTableRow>

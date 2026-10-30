@@ -25,7 +25,7 @@ export function StatRow({ stats, className }: { stats: Stat[]; className?: strin
         {stats.map(({ label, value, detail }) => (
           <div key={label} className="flex min-w-0 flex-col gap-0.5 sm:border-s sm:ps-4">
             <dt className="text-muted-foreground text-xs">{label}</dt>
-            <dd className="flex flex-wrap items-baseline gap-x-1.5 font-mono text-base font-medium tabular-nums">
+            <dd className="flex flex-wrap items-baseline gap-x-1.5 text-base font-medium tabular-nums">
               {value === null ? <Skeleton className="my-1 h-4 w-14" /> : value}
               {value !== null && detail !== undefined && (
                 <span className="text-muted-foreground text-xs font-normal">{detail}</span>

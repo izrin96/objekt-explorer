@@ -92,9 +92,7 @@ function ColorControls() {
             <Label id={sensitivityId} render={<span />} className="font-medium">
               {m.filter_color_sensitivity()}
             </Label>
-            <span className="text-muted-foreground font-mono text-xs tabular-nums">
-              {sensitivity}
-            </span>
+            <span className="text-muted-foreground text-xs tabular-nums">{sensitivity}</span>
           </div>
           <Slider
             aria-labelledby={sensitivityId}

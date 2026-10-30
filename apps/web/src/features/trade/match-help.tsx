@@ -178,9 +178,7 @@ export function MatchHelp() {
           <PopoverTitle className="text-sm">{m.trade_match_help_aria()}</PopoverTitle>
           {SECTIONS.map((section) => (
             <section key={section.heading()} className="flex flex-col gap-1">
-              <h3 className="text-muted-foreground font-mono text-xs uppercase">
-                {section.heading()}
-              </h3>
+              <h3 className="text-muted-foreground text-xs uppercase">{section.heading()}</h3>
               <HelpTable table={section.table} />
               {section.note ? (
                 <p className="text-muted-foreground text-xs text-pretty">{section.note()}</p>

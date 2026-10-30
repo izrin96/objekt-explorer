@@ -90,7 +90,7 @@ function BreakdownPie({ data, label }: { data: Slice[]; label: string }) {
                     />
                     <div className="flex flex-1 items-center justify-between gap-2 leading-none">
                       <span className="text-foreground">{row.name}</span>
-                      <span className="text-foreground font-mono font-medium tabular-nums">
+                      <span className="text-foreground font-medium tabular-nums">
                         {row.percentage}% ({String(value)})
                       </span>
                     </div>

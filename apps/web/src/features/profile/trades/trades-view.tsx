@@ -53,16 +53,10 @@ const TYPE_LABEL: Record<TransferType, () => string> = {
 /** the two counterparties that are Cosmo itself rather than another collector */
 function Counterparty({ row, isReceiver }: { row: TransferItem; isReceiver: boolean }) {
   if (isReceiver && row.transfer.from === Addresses.NULL) {
-    return (
-      <span className="text-muted-foreground min-w-0 truncate font-mono">{m.trades_cosmo()}</span>
-    );
+    return <span className="text-muted-foreground min-w-0 truncate">{m.trades_cosmo()}</span>;
   }
   if (!isReceiver && row.transfer.to === Addresses.SPIN) {
-    return (
-      <span className="text-muted-foreground min-w-0 truncate font-mono">
-        {m.trades_cosmo_spin()}
-      </span>
-    );
+    return <span className="text-muted-foreground min-w-0 truncate">{m.trades_cosmo_spin()}</span>;
   }
 
   const address = isReceiver ? row.transfer.from : row.transfer.to;
@@ -97,7 +91,7 @@ function TradeRow({
 
   return (
     <TableRow className="h-11 *:py-0">
-      <TableCell className="text-muted-foreground px-3.5 font-mono text-xs">
+      <TableCell className="text-muted-foreground px-3.5 text-xs tabular-nums">
         <Timestamp date={new Date(row.transfer.timestamp)} />
       </TableCell>
       <TableCell className="truncate px-3.5">
@@ -194,7 +188,7 @@ export function TradesView() {
         />
       ) : (
         <>
-          <p className="text-muted-foreground font-mono text-xs tabular-nums">
+          <p className="text-muted-foreground text-xs tabular-nums">
             {m.trades_count({
               count: `${rows.length.toLocaleString()}${query.hasNextPage ? "+" : ""}`,
             })}

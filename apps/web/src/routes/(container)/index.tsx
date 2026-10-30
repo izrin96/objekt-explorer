@@ -81,7 +81,7 @@ function HomePage() {
 
       {!isPending && (
         <div className="flex items-center justify-between gap-2">
-          <div className="text-muted-foreground font-mono text-xs">
+          <div className="text-muted-foreground text-xs tabular-nums">
             <MessageMarkup
               parts={m.common_count_total.parts({ count: filtered.length.toLocaleString() })}
               markup={countMarkup}

@@ -154,11 +154,11 @@ function CardBody({ address, nickname }: Payload) {
           ) : (
             data.counts && (
               <span className="text-muted-foreground truncate text-xs">
-                <span className="text-foreground font-mono font-semibold tabular-nums">
+                <span className="text-foreground font-semibold tabular-nums">
                   {data.counts.objekts.toLocaleString()}
                 </span>{" "}
                 {m.profile_stats_owned()} ·{" "}
-                <span className="text-foreground font-mono font-semibold tabular-nums">
+                <span className="text-foreground font-semibold tabular-nums">
                   {data.counts.collections.toLocaleString()}
                 </span>{" "}
                 {m.profile_stats_collections()}

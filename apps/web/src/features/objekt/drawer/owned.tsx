@@ -124,7 +124,7 @@ export function OwnedPanel({
                   </button>
                 </th>
                 <td className="px-3 py-1.5 font-mono tabular-nums">{item.tokenId}</td>
-                <td className="px-3 py-1.5 font-mono whitespace-nowrap">
+                <td className="px-3 py-1.5 whitespace-nowrap tabular-nums">
                   {formatTimestamp(new Date(item.receivedAt))}
                 </td>
                 <td className="px-3 py-1.5">
@@ -170,7 +170,7 @@ export function OwnedPanel({
             <CaretLeftIcon />
           </Button>
           {/* the buttons disable at the ends, so the count is what announces the move */}
-          <span role="status" className="font-mono text-sm tabular-nums">
+          <span role="status" className="text-sm tabular-nums">
             {current} / {totalPages}
           </span>
           <Button

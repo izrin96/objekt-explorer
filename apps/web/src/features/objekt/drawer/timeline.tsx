@@ -300,7 +300,7 @@ function OwnershipTable({ events }: { events: TimelineEvent[] }) {
                     </ProfileCell>
                   )}
                 </th>
-                <td className="text-muted-foreground px-3 py-1.5 font-mono text-xs whitespace-nowrap">
+                <td className="text-muted-foreground px-3 py-1.5 text-xs whitespace-nowrap tabular-nums">
                   <Timestamp date={event.at} />
                 </td>
               </tr>

@@ -155,7 +155,7 @@ function Composer({ start, onDone }: { start: ComposerStart; onDone: () => void 
       {/* clear of the dialog's close button */}
       <div className="flex items-baseline justify-between gap-3 pe-8">
         <DialogTitle className="font-display">{title}</DialogTitle>
-        <span className="text-muted-foreground shrink-0 font-mono text-xs tabular-nums">
+        <span className="text-muted-foreground shrink-0 text-xs tabular-nums">
           {m.trade_composer_step({ step: step === "kind" ? "1" : "2" })}
         </span>
       </div>

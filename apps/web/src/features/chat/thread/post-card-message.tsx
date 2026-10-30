@@ -128,7 +128,7 @@ function Strip({
 }) {
   return (
     <section className="flex min-w-0 flex-col gap-1">
-      <h3 className={cn("font-mono text-xs uppercase tabular-nums", TONE_INK[role])}>
+      <h3 className={cn("text-xs uppercase tabular-nums", TONE_INK[role])}>
         {LIST_TYPE_LABEL[role]()} {copyCount ?? slugs.length + more}
       </h3>
       {slugs.length === 0 ? (
@@ -142,7 +142,7 @@ function Strip({
             className="w-8 shrink-0"
           />
           {more > 0 ? (
-            <li className="text-muted-foreground ps-1 font-mono text-xs tabular-nums">
+            <li className="text-muted-foreground ps-1 text-xs tabular-nums">
               <span aria-hidden>+{more}</span>
               <span className="sr-only">{m.trade_more_count({ count: more })}</span>
             </li>
@@ -178,7 +178,7 @@ function MatchRow({
 function PostPrice({ price }: { price: NonNullable<NonNullable<PostCardView["post"]>["price"]> }) {
   const { min, max } = formatPostPrices(price.min, price.max, price.currency);
   return (
-    <p className="font-mono font-semibold tabular-nums">
+    <p className="font-semibold tabular-nums">
       {price.min === price.max ? min : m.chat_post_price({ min, max })}
     </p>
   );

@@ -212,7 +212,7 @@ function AccountHeader({ data }: { data: Account }) {
                   <>
                     {" · "}
                     {m.mod_sanction_ends()}{" "}
-                    <When iso={sanction.expiresAt} className="font-mono tabular-nums" />
+                    <When iso={sanction.expiresAt} className="tabular-nums" />
                   </>
                 ) : null}
               </Badge>
@@ -250,7 +250,7 @@ function ActionBar({
     <>
       {/* -mx-5 -mb-10 undo PageMain's px-5 pb-10, so the bar spans the screen and sits flush */}
       <div className="bg-background sticky bottom-0 -mx-5 -mb-10 flex items-center gap-3 border-t px-5 pt-3 pb-[calc(env(safe-area-inset-bottom,0px)+--spacing(4))] xl:hidden">
-        <span className="text-muted-foreground min-w-0 flex-1 font-mono text-sm tabular-nums">
+        <span className="text-muted-foreground min-w-0 flex-1 text-sm tabular-nums">
           {m.mod_queue_open({ count: openReports })}
         </span>
         <Button size="lg" onClick={() => setOpen(true)}>

@@ -152,7 +152,7 @@ export function PriceHistoryChart({
                           />
                           {config[name as keyof typeof config]?.label ?? name}
                         </span>
-                        <span className="font-mono font-medium tabular-nums">
+                        <span className="font-medium tabular-nums">
                           {name === "listings" ? String(value) : format(Number(value))}
                         </span>
                       </div>

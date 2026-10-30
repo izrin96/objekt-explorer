@@ -324,7 +324,7 @@ export function Composer({
         <p
           id={counterId}
           className={cn(
-            "self-end font-mono text-xs tabular-nums",
+            "self-end text-xs tabular-nums",
             over > 0 ? "text-destructive-foreground" : "text-muted-foreground",
           )}
         >

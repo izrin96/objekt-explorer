@@ -484,7 +484,7 @@ function ListChoice({
 }) {
   return (
     <span className="flex min-w-0 items-center gap-1.5">
-      <ListTypeBadge type={list.listType} className="shrink-0 font-mono" />
+      <ListTypeBadge type={list.listType} className="shrink-0" />
       <span className="truncate">{list.name}</span>
       {profile !== undefined && (
         // a static mark: the Bound badge's tooltip button cannot sit inside an option
@@ -523,7 +523,7 @@ function PreviewSection({
       <div className="flex items-baseline justify-between gap-2">
         <span className="text-sm font-medium">{m.list_add_preview_label()}</span>
         {copyCount && (
-          <span className="text-muted-foreground font-mono text-xs tabular-nums">
+          <span className="text-muted-foreground text-xs tabular-nums">
             {m.list_add_copies_count({
               picked: copyCount.picked.toLocaleString(),
               total: copyCount.total.toLocaleString(),

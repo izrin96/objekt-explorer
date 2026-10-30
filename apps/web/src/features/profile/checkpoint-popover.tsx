@@ -23,7 +23,7 @@ const EARLIEST = new Date(2022, 7, 1);
 const END_OF_DAY_TIME = "23:59:59";
 /** Safari centres a date or time value unless its inner field is told otherwise */
 const dateTimeClass =
-  "font-mono [&_input]:appearance-none [&_input::-webkit-date-and-time-value]:text-left";
+  "tabular-nums [&_input]:appearance-none [&_input::-webkit-date-and-time-value]:text-left";
 
 /** the day alone for the default end-of-day instant, the time as well when one was picked */
 export function formatCheckpoint(date: Date): string {

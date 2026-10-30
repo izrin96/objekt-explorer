@@ -95,7 +95,7 @@ export function AddressHistory({ address }: { address: string }) {
                     ) : null}
                     <When
                       iso={event.at}
-                      className="text-muted-foreground font-mono text-xs tabular-nums sm:ms-auto"
+                      className="text-muted-foreground text-xs tabular-nums sm:ms-auto"
                     />
                   </div>
                 </li>
@@ -184,7 +184,7 @@ function AddressHeader({
                 {personName(holder)}
               </Link>
               {linkedAt ? (
-                <span className="text-muted-foreground font-mono text-xs tabular-nums">
+                <span className="text-muted-foreground text-xs tabular-nums">
                   {m.mod_signal_linked()} <When iso={linkedAt} />
                 </span>
               ) : null}

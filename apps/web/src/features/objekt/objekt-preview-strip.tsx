@@ -22,7 +22,7 @@ export function ObjektPreviewCount({
   if (preview === null) return null;
   if (preview === undefined) return <Skeleton className="h-3 w-16" />;
   return (
-    <span className="font-mono tabular-nums">
+    <span className="tabular-nums">
       {preview.count === 0
         ? m.objekt_count_none()
         : preview.count === 1

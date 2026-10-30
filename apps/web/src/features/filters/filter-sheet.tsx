@@ -51,7 +51,7 @@ function FilterSheetTrigger({ count, className }: { count: number; className?: s
       <FunnelSimpleIcon />
       {m.filter_filters()}
       {count > 0 && (
-        <Badge size="sm" className="bg-accent text-accent-foreground font-mono">
+        <Badge size="sm" className="bg-accent text-accent-foreground tabular-nums">
           {count}
         </Badge>
       )}

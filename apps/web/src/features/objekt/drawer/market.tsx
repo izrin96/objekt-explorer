@@ -372,19 +372,12 @@ function MarketRow({
         <div className="flex items-center justify-end gap-1">
           {item.note && <ObjektNote note={item.note} />}
           {/* a listing is set in the seller's currency, not the viewer's */}
-          <span
-            className={cn(
-              "font-mono tabular-nums",
-              priced ? "font-medium" : "text-muted-foreground",
-            )}
-          >
+          <span className={cn("tabular-nums", priced ? "font-medium" : "text-muted-foreground")}>
             {item.isQyop ? m.objekt_qyop() : priced ? formatCurrency(price, listed) : "—"}
           </span>
         </div>
         {priced && listed !== currency && usdPrice !== null && (
-          <div className="text-muted-foreground font-mono text-xs tabular-nums">
-            ≈{formatUsd(usdPrice)}
-          </div>
+          <div className="text-muted-foreground text-xs tabular-nums">≈{formatUsd(usdPrice)}</div>
         )}
       </td>
       <th scope="row" className="px-3 py-1.5 text-left font-normal">
@@ -419,7 +412,7 @@ function MarketRow({
           </ProfileCell>
         )}
       </td>
-      <td className="text-muted-foreground px-3 py-1.5 font-mono text-xs tabular-nums">
+      <td className="text-muted-foreground px-3 py-1.5 text-xs tabular-nums">
         <ListingTime date={new Date(item.createdAt)} />
       </td>
       <td className="pe-1.5 max-sm:px-0!">

@@ -167,7 +167,7 @@ export function ActivityView() {
       {paused && (
         <div
           aria-live="polite"
-          className="bg-foreground text-background sticky bottom-4 z-5 mx-auto w-max rounded-full px-3 py-1 font-mono text-xs"
+          className="bg-foreground text-background sticky bottom-4 z-5 mx-auto w-max rounded-full px-3 py-1 text-xs"
         >
           {m.activity_paused_on_hover()}
         </div>

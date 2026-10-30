@@ -73,7 +73,7 @@ export function MatchedListsChip({
                     <span className="text-foreground min-w-0 text-pretty">
                       {ruleText(match.rule)}
                     </span>
-                    <span className="ms-auto shrink-0 font-mono tabular-nums">{count}</span>
+                    <span className="ms-auto shrink-0 tabular-nums">{count}</span>
                   </span>
                 ))}
               </li>

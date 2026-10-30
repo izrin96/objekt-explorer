@@ -35,7 +35,7 @@ export function AttachedTrades({
                 <span className="text-muted-foreground">{m.mod_trade_with({ name: other })}</span>
                 <span className="text-muted-foreground text-xs">
                   {m.offer_trade_accepted()}{" "}
-                  <When iso={trade.acceptedAt} className="font-mono tabular-nums" />
+                  <When iso={trade.acceptedAt} className="tabular-nums" />
                 </span>
               </div>
               <ul className="flex flex-col divide-y rounded-md border">
@@ -74,7 +74,7 @@ export function AttachedTrades({
                       <span className="text-muted-foreground flex flex-wrap items-baseline gap-x-2 text-xs">
                         <span className="font-mono break-all">{leg.txHash}</span>
                         {leg.verifiedAt ? (
-                          <When iso={leg.verifiedAt} className="font-mono tabular-nums" />
+                          <When iso={leg.verifiedAt} className="tabular-nums" />
                         ) : null}
                       </span>
                     ) : null}

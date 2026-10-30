@@ -62,7 +62,7 @@ export function ListBoundBadge() {
 export function ListCurrencyBadge({ currency }: { currency: string }) {
   const label = m.list_currency_badge_label({ currency });
   return (
-    <Badge variant="outline" size="sm" className="font-mono" title={label}>
+    <Badge variant="outline" size="sm" title={label}>
       <CoinsIcon aria-hidden />
       <span aria-hidden>{currency}</span>
       <span className="sr-only">{label}</span>

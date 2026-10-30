@@ -405,8 +405,7 @@ function ConvertProgress({ percent }: { percent: number }) {
         <div className={cn("h-full", TONE_SOLID.progress)} style={{ width: `${percent}%` }} />
       </div>
       <span className="text-muted-foreground text-xs">
-        {m.profile_edit_banner_converting()}{" "}
-        <span className="font-mono tabular-nums">{percent}%</span>
+        {m.profile_edit_banner_converting()} <span className="tabular-nums">{percent}%</span>
       </span>
     </div>
   );

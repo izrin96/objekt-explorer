@@ -79,7 +79,7 @@ export function ModQueue() {
 
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-muted-foreground font-mono text-xs tabular-nums">
+      <p className="text-muted-foreground text-xs tabular-nums">
         {m.mod_queue_summary({ reports: openReports, accounts: query.data.length })}
       </p>
       {/* single choice, so pressing the active filter again (an empty group) is ignored */}
@@ -101,7 +101,7 @@ export function ModQueue() {
             className="text-muted-foreground data-pressed:text-foreground gap-1.5"
           >
             {FILTER_LABEL[value]()}
-            <span className="font-mono text-xs tabular-nums opacity-70">
+            <span className="text-xs tabular-nums opacity-70">
               {query.data.filter(MATCHES[value]).length}
             </span>
           </ToggleGroupItem>
@@ -146,7 +146,7 @@ function QueueRow({ row, current }: { row: Row; current: boolean }) {
         <span className="flex min-w-0 flex-1 flex-col gap-1">
           {/* the name has the line to itself: beside a full timestamp the sidebar left it a few letters */}
           <span className="truncate font-semibold">{name}</span>
-          <span className="text-muted-foreground flex flex-wrap gap-x-1.5 font-mono text-xs tabular-nums">
+          <span className="text-muted-foreground flex flex-wrap gap-x-1.5 text-xs tabular-nums">
             <span>
               {m.mod_queue_open({ count: row.openReports })}
               {row.sharedExcerpts > 0 ? (

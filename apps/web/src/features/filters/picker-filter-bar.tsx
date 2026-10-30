@@ -95,7 +95,7 @@ export function PickerFilterBar<F extends PickerFacetFilters>({
         <FunnelSimpleIcon />
         {m.filter_filters()}
         {active > 0 ? (
-          <Badge size="sm" className="bg-accent text-accent-foreground font-mono">
+          <Badge size="sm" className="bg-accent text-accent-foreground tabular-nums">
             {active}
           </Badge>
         ) : null}

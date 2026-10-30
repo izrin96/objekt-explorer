@@ -211,7 +211,7 @@ function SpreadChart({ summary }: { summary: Summary }) {
           <span key={b.key} className="inline-flex items-center gap-1.5">
             <span className={cn("size-2 rounded-xs", BUCKETS[b.key].color)} />
             {BUCKETS[b.key].label()}
-            <span className="font-mono tabular-nums">{b.holders.toLocaleString()}</span>
+            <span className="tabular-nums">{b.holders.toLocaleString()}</span>
           </span>
         ))}
       </figcaption>
@@ -241,7 +241,7 @@ function SpreadBar({
                 key={b.key}
                 style={{ flexGrow: b[pick] }}
                 className={cn(
-                  "text-background flex min-w-0.5 basis-0 items-center overflow-hidden px-1 font-mono font-medium",
+                  "text-background flex min-w-0.5 basis-0 items-center overflow-hidden px-1 font-medium tabular-nums",
                   BUCKETS[b.key].color,
                 )}
               >
@@ -257,17 +257,15 @@ function SpreadBar({
 function HolderTableRow({ row, copies }: { row: HolderRow; copies: number }) {
   return (
     <tr className={cn("border-t", row.isViewer && "bg-accent")}>
-      <td className="text-muted-foreground px-3 py-1.5 font-mono tabular-nums">{row.rank}</td>
+      <td className="text-muted-foreground px-3 py-1.5 tabular-nums">{row.rank}</td>
       <th scope="row" className="max-w-0 px-3 py-1.5 text-left font-normal">
         <HolderName holder={row.holder} isViewer={row.isViewer} />
       </th>
-      <td className="text-muted-foreground px-3 py-1.5 text-right font-mono tabular-nums">
+      <td className="text-muted-foreground px-3 py-1.5 text-right tabular-nums">
         {row.lowestSerial === null ? "—" : `#${row.lowestSerial}`}
       </td>
-      <td className="px-3 py-1.5 text-right font-mono tabular-nums">
-        {percent(row.copies, copies)}
-      </td>
-      <td className="px-3 py-1.5 text-right font-mono font-medium tabular-nums">
+      <td className="px-3 py-1.5 text-right tabular-nums">{percent(row.copies, copies)}</td>
+      <td className="px-3 py-1.5 text-right font-medium tabular-nums">
         {row.copies.toLocaleString()}
       </td>
     </tr>

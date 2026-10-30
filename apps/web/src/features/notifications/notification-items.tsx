@@ -171,7 +171,7 @@ function ItemTime({ createdAt, now }: { createdAt: string; now: number }) {
     <time
       dateTime={createdAt}
       title={formatTimestamp(new Date(createdAt))}
-      className="text-muted-foreground shrink-0 pt-0.5 font-mono text-xs whitespace-nowrap"
+      className="text-muted-foreground shrink-0 pt-0.5 text-xs whitespace-nowrap tabular-nums"
     >
       {/* narrow ("2w ago"), so the time column leaves the headline room; the title has the instant */}
       {relativeTime(new Date(createdAt).getTime(), now, "year", "narrow")}
@@ -218,7 +218,7 @@ function ObjektLine({
 }) {
   if (slugs.length === 0) return null;
   return (
-    <span className="text-muted-foreground truncate font-mono text-xs">
+    <span className="text-muted-foreground truncate text-xs">
       {slugs.map((slug) => collectionName(slug, collections[slug])).join(", ")}
     </span>
   );
@@ -235,7 +235,7 @@ function Progress({ verified, total }: { verified: number; total: number }) {
           />
         ))}
       </span>
-      <span className="text-muted-foreground font-mono text-xs tabular-nums">
+      <span className="text-muted-foreground text-xs tabular-nums">
         {m.offer_trade_step_progress({ verified, total })}
       </span>
     </span>

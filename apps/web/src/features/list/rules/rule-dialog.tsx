@@ -272,7 +272,7 @@ function RuleForm({
                 className="text-muted-foreground flex flex-col gap-0.5 text-xs text-pretty"
               >
                 <span>{item.desc()}</span>
-                <span className="font-mono">{item.example()}</span>
+                <span>{item.example()}</span>
               </span>
             </RadioPrimitive.Root>
           ))}
@@ -452,7 +452,7 @@ function RulePreview({
       aria-busy={pending}
       className="bg-muted/48 flex flex-col gap-1 rounded-lg border px-3 py-2.5"
     >
-      <span className="font-mono text-sm">{label}</span>
+      <span className="text-sm">{label}</span>
       {counts === undefined ? (
         <span className="text-muted-foreground text-xs">{m.rule_counting()}</span>
       ) : counts.problem === "no_collections" ? (

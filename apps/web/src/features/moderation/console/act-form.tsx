@@ -269,7 +269,7 @@ export function ActForm({
               <ToggleGroupItem
                 key={value}
                 value={String(value)}
-                className="data-pressed:bg-primary data-pressed:text-primary-foreground font-mono tabular-nums"
+                className="data-pressed:bg-primary data-pressed:text-primary-foreground tabular-nums"
               >
                 {value === 0
                   ? m.mod_act_no_end()

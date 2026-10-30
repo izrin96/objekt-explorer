@@ -266,7 +266,7 @@ function ShowChips({ show, onPick }: { show: InboxShow; onPick: () => void }) {
         >
           {SHOW_LABEL[key]()}
           {count(key) === null ? null : (
-            <span className="font-mono text-xs tabular-nums opacity-70">{count(key)}</span>
+            <span className="text-xs tabular-nums opacity-70">{count(key)}</span>
           )}
         </Button>
       ))}
@@ -532,12 +532,12 @@ function ConversationItem({
             {context.post ? (
               <>
                 <TagBadges tags={context.post.tags} />
-                <span className="text-muted-foreground min-w-0 truncate font-mono text-xs">
+                <span className="text-muted-foreground min-w-0 truncate text-xs">
                   {m.chat_post_title({ name: context.post.owner.name })}
                 </span>
               </>
             ) : (
-              <span className="text-muted-foreground min-w-0 truncate font-mono text-xs">
+              <span className="text-muted-foreground min-w-0 truncate text-xs">
                 {m.chat_post_removed()}
               </span>
             )}
@@ -565,7 +565,7 @@ function UnreadMark({ count, muted }: { count: number; muted: boolean }) {
   return (
     <span
       className={cn(
-        "flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full px-1.5 font-mono text-xs font-medium tabular-nums",
+        "flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full px-1.5 text-xs font-medium tabular-nums",
         muted ? "bg-muted text-muted-foreground" : "bg-foreground text-background",
       )}
     >

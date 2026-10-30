@@ -192,7 +192,7 @@ function LinkStep({
       <div className="flex min-h-7 items-center gap-3">
         <span
           className={cn(
-            "grid size-6 flex-none place-items-center rounded-full border font-mono text-xs tabular-nums",
+            "grid size-6 flex-none place-items-center rounded-full border text-xs tabular-nums",
             status === "done" && "bg-success/8 text-success-foreground border-transparent",
             status === "current" && "border-foreground text-foreground font-medium",
             status === "upcoming" && "text-muted-foreground",
@@ -455,7 +455,7 @@ function Countdown({ expiresInMs, onExpire }: { expiresInMs: number; onExpire: (
   ).padStart(2, "0")}`;
 
   return (
-    <span className="text-muted-foreground font-mono text-xs tabular-nums">
+    <span className="text-muted-foreground text-xs tabular-nums">
       {m.link_process_countdown_remaining({ countdown })}
     </span>
   );

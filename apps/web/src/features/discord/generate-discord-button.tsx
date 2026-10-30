@@ -222,7 +222,7 @@ function GenerateDiscordDialog({
               id="generate-discord-output"
               value={text}
               rows={8}
-              className="max-h-64 font-mono text-xs"
+              className="max-h-64 text-xs"
               onChange={(event) => setText(event.target.value)}
             />
           </div>

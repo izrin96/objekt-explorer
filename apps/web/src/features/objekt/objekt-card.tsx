@@ -215,7 +215,7 @@ export function ObjektCard<T extends ValidObjekt>({
           )}
 
           {qty !== undefined && (
-            <div className="absolute bottom-[4cqw] left-[4cqw] grid h-[14cqw] min-w-[16cqw] place-items-center rounded-full bg-[rgba(10,12,16,.82)] px-[5cqw] font-mono text-[7.5cqw] font-semibold text-white">
+            <div className="absolute bottom-[4cqw] left-[4cqw] grid h-[14cqw] min-w-[16cqw] place-items-center rounded-full bg-[rgba(10,12,16,.82)] px-[5cqw] text-[7.5cqw] font-semibold text-white tabular-nums">
               {qty}
             </div>
           )}

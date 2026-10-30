@@ -200,7 +200,7 @@ export function MemberChips() {
           {shown.map((group) => (
             <Fragment key={group.artist.id}>
               {shown.length > 1 && (
-                <span className="text-muted-foreground flex h-8 flex-none items-center pr-0.5 pl-2 font-mono text-xs tracking-wide">
+                <span className="text-muted-foreground flex h-8 flex-none items-center pr-0.5 pl-2 text-xs tracking-wide">
                   {group.artist.title}
                 </span>
               )}

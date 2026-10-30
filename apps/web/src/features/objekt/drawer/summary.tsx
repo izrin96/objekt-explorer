@@ -40,7 +40,7 @@ export function ObjektSummary({ objekt, artistName }: { objekt: ValidObjekt; art
               </Badge>
             </dd>
             <dt className="text-muted-foreground">{m.objekt_received()}</dt>
-            <dd className="font-mono">{formatTimestamp(new Date(objekt.receivedAt))}</dd>
+            <dd className="tabular-nums">{formatTimestamp(new Date(objekt.receivedAt))}</dd>
           </>
         )}
       </dl>

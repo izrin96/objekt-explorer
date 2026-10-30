@@ -123,7 +123,7 @@ export function ClassCard({
           />
         </span>
 
-        <span className="text-muted-foreground flex items-center gap-1.5 font-mono text-xs tabular-nums">
+        <span className="text-muted-foreground flex items-center gap-1.5 text-xs tabular-nums">
           <TallyValue row={group} />
           <CaretDownIcon
             className={cn(

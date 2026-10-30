@@ -57,7 +57,7 @@ export function ObjektCardMessage({
             <ListRoleBadge type={list.listType} />
           </p>
         ) : null}
-        {price ? <p className="mt-auto font-mono font-semibold tabular-nums">{price}</p> : null}
+        {price ? <p className="mt-auto font-semibold tabular-nums">{price}</p> : null}
       </div>
     </div>
   );

@@ -48,7 +48,7 @@ function ListsPage() {
             parts={m.common_count_total.parts({ count: lists.length.toLocaleString() })}
             markup={{
               b: (children) => (
-                <b className="text-foreground font-mono font-semibold tabular-nums">{children}</b>
+                <b className="text-foreground font-semibold tabular-nums">{children}</b>
               ),
             }}
           />

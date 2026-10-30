@@ -78,11 +78,11 @@ export function Reports({
           <TabsList aria-label={m.mod_reports_tabs()}>
             <TabsTab value="open">
               {m.mod_status_open()}
-              <span className="font-mono text-xs tabular-nums opacity-70">{open.length}</span>
+              <span className="text-xs tabular-nums opacity-70">{open.length}</span>
             </TabsTab>
             <TabsTab value="resolved">
               {m.mod_reports_resolved()}
-              <span className="font-mono text-xs tabular-nums opacity-70">{resolved.length}</span>
+              <span className="text-xs tabular-nums opacity-70">{resolved.length}</span>
             </TabsTab>
           </TabsList>
         </div>
@@ -128,7 +128,7 @@ function ReportCard({
           search={{ report: report.id }}
           className="text-muted-foreground hover:text-foreground focus-visible:ring-ring ms-auto rounded-sm underline-offset-2 outline-none hover:underline focus-visible:ring-2"
         >
-          <When iso={report.createdAt} className="font-mono text-xs tabular-nums" />
+          <When iso={report.createdAt} className="text-xs tabular-nums" />
         </Link>
       </div>
       {report.note ? (
@@ -196,7 +196,7 @@ function Excerpt({
                     {entry.fromTarget ? targetName : reporterName}
                   </span>
                 ) : null}
-                <When iso={entry.at} className="font-mono tabular-nums" />
+                <When iso={entry.at} className="tabular-nums" />
                 {entry.unsent ? (
                   <span className="text-warning-foreground font-medium">
                     {m.mod_excerpt_unsent()}
@@ -221,7 +221,7 @@ function Excerpt({
                   </p>
                 ) : null}
                 {entry.card?.kind === "post" ? (
-                  <p className="text-muted-foreground font-mono text-xs">{m.mod_excerpt_post()}</p>
+                  <p className="text-muted-foreground text-xs">{m.mod_excerpt_post()}</p>
                 ) : null}
                 {entry.offer ? (
                   <ExcerptOfferView

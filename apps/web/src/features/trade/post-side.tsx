@@ -24,7 +24,7 @@ const FIT = { thumb: 40, gap: 6, fallback: 4, lines: 1 };
 
 /** `ObjektCard`'s own count scales with the card, too small to read at `w-10` */
 const STACK_COUNT =
-  "pointer-events-none absolute top-0.5 left-0.5 rounded-full bg-[rgba(10,12,16,.82)] px-1 font-mono text-xxs leading-4 font-semibold text-white tabular-nums";
+  "pointer-events-none absolute top-0.5 left-0.5 rounded-full bg-[rgba(10,12,16,.82)] px-1 text-xxs leading-4 font-semibold text-white tabular-nums";
 
 const STRIP_MORE =
   "hover:text-foreground focus-visible:ring-ring text-xs tabular-nums outline-none focus-visible:ring-2";
@@ -96,7 +96,7 @@ function PostStrip({
     <section className="flex min-w-0 flex-col gap-1">
       <h3
         className={cn(
-          "flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 font-mono text-xs uppercase tabular-nums",
+          "flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs uppercase tabular-nums",
           tone,
         )}
       >
@@ -231,7 +231,7 @@ export function SideNotes({ sides }: { sides: readonly PostSideData[] }) {
         >
           {noted.length > 1 ? (
             <>
-              <span className={cn("font-mono uppercase", TONE_INK[LIST_TYPE_TONE[side.role]])}>
+              <span className={cn("uppercase", TONE_INK[LIST_TYPE_TONE[side.role]])}>
                 {LIST_TYPE_LABEL[side.role]()}
               </span>{" "}
             </>
@@ -260,7 +260,7 @@ export function EmptySide({ side, surface }: { side: PostSideData; surface: Surf
     <Link
       {...getListLinkOption(side.list)}
       className={cn(
-        "text-muted-foreground hover:text-foreground w-fit font-mono text-xs uppercase tabular-nums",
+        "text-muted-foreground hover:text-foreground w-fit text-xs uppercase tabular-nums",
         SIDE_LINK,
       )}
     >

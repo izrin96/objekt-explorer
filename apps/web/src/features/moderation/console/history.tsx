@@ -39,12 +39,12 @@ export function History({
                 <span className="text-pretty break-words">{sanction.reason}</span>
                 <span className="text-muted-foreground text-xs">
                   {m.mod_sanction_by({ name: personName(sanction.issuedBy) })}{" "}
-                  <When iso={sanction.createdAt} className="font-mono tabular-nums" />
+                  <When iso={sanction.createdAt} className="tabular-nums" />
                   {sanction.expiresAt ? (
                     <>
                       {" · "}
                       {m.mod_sanction_ends()}{" "}
-                      <When iso={sanction.expiresAt} className="font-mono tabular-nums" />
+                      <When iso={sanction.expiresAt} className="tabular-nums" />
                     </>
                   ) : null}
                 </span>
@@ -72,7 +72,7 @@ export function History({
                   <span className="font-medium">{auditActionLabel(entry.action)}</span>
                   {role ? <span className="text-muted-foreground">→ {roleLabel(role)}</span> : null}
                   {days !== undefined ? (
-                    <span className="text-muted-foreground font-mono text-xs tabular-nums">
+                    <span className="text-muted-foreground text-xs tabular-nums">
                       {days === 1 ? m.mod_act_one_day() : m.mod_act_days({ count: days })}
                     </span>
                   ) : null}
@@ -81,7 +81,7 @@ export function History({
                   </span>
                   <When
                     iso={entry.createdAt}
-                    className="text-muted-foreground ms-auto font-mono text-xs tabular-nums"
+                    className="text-muted-foreground ms-auto text-xs tabular-nums"
                   />
                 </span>
                 {reason ? (

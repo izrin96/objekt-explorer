@@ -7,7 +7,7 @@ export const listOption = (list: { slug: string; name: string; type: ListType })
   value: list.slug,
   label: (
     <span className="flex items-center gap-1.5">
-      <ListTypeBadge type={list.type} className="font-mono" />
+      <ListTypeBadge type={list.type} />
       {list.name}
     </span>
   ),

@@ -123,7 +123,7 @@ function RuleRow({ rule }: { rule: Rule }) {
             )}
           />
           <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-            <span className="font-mono text-sm text-pretty">{ruleText(rule)}</span>
+            <span className="text-sm text-pretty">{ruleText(rule)}</span>
             {details.length > 0 ? (
               <span className="text-muted-foreground line-clamp-2 text-xs">
                 {details.join(" · ")}
@@ -131,7 +131,7 @@ function RuleRow({ rule }: { rule: Rule }) {
             ) : null}
           </span>
           <span className="flex shrink-0 flex-col items-end">
-            <span className="font-mono text-sm font-semibold tabular-nums">{rule.canMatch}</span>
+            <span className="text-sm font-semibold tabular-nums">{rule.canMatch}</span>
             <span className="text-muted-foreground text-xs">{m.rule_can_match_label()}</span>
           </span>
         </button>
@@ -338,7 +338,7 @@ function ConfirmRule({
             {action === "detach" ? m.rule_detach_title() : m.rule_delete_title()}
           </AlertDialogTitle>
           <AlertDialogDescription>
-            <span className="text-foreground font-mono">{ruleText(rule)}</span> —{" "}
+            <span className="text-foreground">{ruleText(rule)}</span> —{" "}
             {action === "detach"
               ? m.rule_detach_desc({ count: rule.canMatch })
               : m.rule_delete_desc()}

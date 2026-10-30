@@ -90,7 +90,7 @@ export function ListSection({
       <h2 id={headingId} className="flex items-baseline gap-2 text-sm font-semibold">
         <span className={TONE_INK[LIST_TYPE_TONE[tone]]}>{title}</span>
         <span className="sr-only">: </span>
-        <span className="text-muted-foreground font-mono text-xs font-normal tabular-nums">
+        <span className="text-muted-foreground text-xs font-normal tabular-nums">
           {count.toLocaleString()}
         </span>
       </h2>

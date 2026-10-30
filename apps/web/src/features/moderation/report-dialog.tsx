@@ -177,10 +177,7 @@ function ReportForm({
             placeholder={m.mod_report_note_placeholder()}
           />
           {/* in the tree throughout, but silent until the note nears the limit */}
-          <p
-            aria-live="polite"
-            className="text-muted-foreground self-end font-mono text-xs tabular-nums"
-          >
+          <p aria-live="polite" className="text-muted-foreground self-end text-xs tabular-nums">
             {note.length >= NOTE_MAX - 50
               ? m.chat_counter({
                   count: note.length.toLocaleString(),

@@ -81,7 +81,7 @@ export function InfiniteSentinel({
       {isFetchingNextPage && <Spinner className="size-4" />}
 
       {!hasNextPage && endLabel !== undefined && (
-        <p className="flex items-center gap-1.5 font-mono text-xs">
+        <p className="flex items-center gap-1.5 text-xs">
           <FlagBannerFoldIcon className="size-4" aria-hidden />
           {endLabel}
         </p>

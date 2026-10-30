@@ -75,14 +75,14 @@ function ColumnsSelect() {
     <Select value={columns} onValueChange={(value: number | null) => value && setColumns(value)}>
       <SelectPrimitive.Trigger
         aria-label={m.filter_column()}
-        className={cn(toolbarTrigger, "font-mono")}
+        className={cn(toolbarTrigger, "tabular-nums")}
       >
         <ColumnsIcon />
         <SelectValue />
       </SelectPrimitive.Trigger>
       <SelectPopup alignItemWithTrigger={false} align="end" className="min-w-20">
         {validColumns.map((count) => (
-          <SelectItem key={count} value={count} className="font-mono">
+          <SelectItem key={count} value={count} className="tabular-nums">
             {count}
           </SelectItem>
         ))}

@@ -37,7 +37,7 @@ const TAG_TYPE = { wtt: "have", wtb: "want", wts: "sale" } as const satisfies Re
 
 export function TagBadge({ tag }: { tag: PostTag }) {
   return (
-    <Badge variant="outline" size="sm" className={cn("font-mono", toneChip(TAG_TYPE[tag]))}>
+    <Badge variant="outline" size="sm" className={toneChip(TAG_TYPE[tag])}>
       <TagLabel tag={tag} />
     </Badge>
   );
