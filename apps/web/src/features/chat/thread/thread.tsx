@@ -44,6 +44,7 @@ import { MessageItem } from "./message-item";
 import { BlockedNotice, MuteNotice, PartnerDeletedNotice, RequestBar } from "./thread-banners";
 import { ThreadBackBar, ThreadHeader } from "./thread-header";
 import { nearEnd, useCatchUp, useJumpToMessage, useMarkRead, useMuteEnd } from "./thread-hooks";
+import { newDividerAt, newestIncomingId, openedUnread, unreadAtOpen } from "./thread-view";
 
 export function Thread({ id }: { id: number }) {
   const queryClient = useQueryClient();
@@ -153,29 +154,18 @@ function ThreadView({
   const latestOffer = latestOfferId(messages);
   const seenId = seenMessageId(messages, conversation.partnerReadMessageId);
   const typing = useChatTyping((state) => id in state.typing);
-  const newestIncoming = messages.findLast((message) => !message.mine)?.id;
+  const newestIncoming = newestIncomingId(messages);
   // the newest message of theirs the reader had in view when last at the bottom
   const [seenIncoming, setSeenIncoming] = useState(newestIncoming ?? 0);
-  // what was unread when the thread opened; later reads and arrivals never move the line
-  const [opened] = useState(() => ({
-    lastRead: conversation.lastReadMessageId ?? 0,
-    newest: newestIncoming ?? 0,
-  }));
+  const [opened] = useState(() => openedUnread(messages, conversation.lastReadMessageId));
   const [dividerLost, setDividerLost] = useState(false);
-  const unreadAtOpen = opened.newest > opened.lastRead;
-  const firstUnread = messages.find(
-    (message) => !message.mine && message.id > opened.lastRead && message.id <= opened.newest,
-  )?.id;
-  // only once the message before it is loaded is this the first unread one
-  const dividerAt =
-    unreadAtOpen &&
-    !dividerLost &&
-    firstUnread !== undefined &&
-    (!olderPage.has || (messages[0]?.id ?? Infinity) <= opened.lastRead)
-      ? firstUnread
-      : undefined;
+  const unread = unreadAtOpen(opened);
+  const dividerAt = newDividerAt(messages, opened, {
+    olderPages: olderPage.has,
+    lost: dividerLost,
+  });
   // the first unread message isn't loaded: nothing is marked read until the jump to it ends
-  const [jumping, setJumping] = useState(() => unreadAtOpen && dividerAt === undefined);
+  const [jumping, setJumping] = useState(() => unread && dividerAt === undefined);
   const hasNew = !atBottom && newestIncoming !== undefined && newestIncoming > seenIncoming;
 
   // their message has landed, so whatever they were typing is no longer pending
@@ -225,7 +215,7 @@ function ThreadView({
 
   // open on the New line when it would sit above the view, loading older pages to reach it
   useEffect(() => {
-    if (!unreadAtOpen) return;
+    if (!unread) return;
     const el = scroller.current;
     const line = () => el?.querySelector<HTMLElement>("[data-new-divider]");
     const show = (divider: HTMLElement) => {
