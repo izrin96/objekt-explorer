@@ -21,7 +21,7 @@ function objekt(
   member: string,
   season: string,
   collectionNo: string,
-  artist = "tripleS",
+  artist: DiscordFormatObjekt["artist"] = "triples",
 ): DiscordFormatObjekt {
   return {
     slug: `${season}-${member}-${collectionNo}`.toLowerCase(),
