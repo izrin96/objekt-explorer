@@ -5,7 +5,7 @@ import {
 } from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { lazy, type ReactElement, Suspense, useRef, useState } from "react";
+import { lazy, type ReactElement, Suspense, useEffect, useRef, useState } from "react";
 import type { CropperRef } from "react-advanced-cropper";
 
 import { MessageMarkup } from "@/components/shared/message-markup";
@@ -27,10 +27,11 @@ import { toastManager } from "@/components/ui/toast";
 import {
   BANNER_ACCEPT,
   bannerFileError,
-  cropToBanner,
   isCroppable,
   isUploadFailure,
+  prepareBanner,
   putBanner,
+  refusalMessage,
 } from "@/features/link/banner-upload";
 import { PROFILE_QUERY_KEY, profileOptions } from "@/features/link/queries";
 import { PROFILE_PAGE_KEY } from "@/features/profile/queries";
@@ -38,6 +39,8 @@ import { currentUserOptions } from "@/features/user/queries";
 import { displayNickname } from "@/lib/address";
 import { client, orpc } from "@/lib/orpc";
 import { refusalText } from "@/lib/refusal";
+import { TONE_SOLID } from "@/lib/tone";
+import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 type Profile = Awaited<ReturnType<typeof client.profile.find>>;
@@ -130,30 +133,49 @@ function EditForm({
 }) {
   const queryClient = useQueryClient();
   const cropperRef = useRef<CropperRef>(null);
+  const saveRef = useRef<AbortController | null>(null);
   const [picked, setPicked] = useState<{ file: File; url: string } | null>(null);
+  const [cropReady, setCropReady] = useState(false);
+  const [percent, setPercent] = useState<number | null>(null);
   const [removeBanner, setRemoveBanner] = useState(false);
 
+  useEffect(() => () => saveRef.current?.abort(), []);
+
   const clearPick = () => {
+    saveRef.current?.abort();
     if (picked) URL.revokeObjectURL(picked.url);
     setPicked(null);
+    setCropReady(false);
   };
+
+  const awaitingCrop = picked !== null && !removeBanner && isCroppable(picked.file) && !cropReady;
 
   const save = useMutation({
     mutationFn: async () => {
+      const controller = new AbortController();
+      saveRef.current = controller;
+      const { signal } = controller;
       let bannerImgUrl: string | null | undefined;
       let bannerImgType: string | null | undefined;
 
       if (picked && !removeBanner) {
-        const file = isCroppable(picked.file)
-          ? await cropToBanner(cropperRef.current, picked.file)
-          : picked.file;
+        const file = await prepareBanner(picked.file, {
+          cropper: cropperRef.current,
+          signal,
+          // a whole percent, so a frame that moves nothing re-renders nothing
+          onProgress: (progress) => setPercent(Math.floor(progress * 100)),
+        }).finally(() => setPercent(null));
+        signal.throwIfAborted();
         const { url, publicUrl } = await client.profile.getPresignedPost({
           address,
           fileName: file.name,
           mimeType: file.type,
           fileSize: file.size,
         });
-        await putBanner(url, file);
+        signal.throwIfAborted();
+        await putBanner(url, file, signal).catch((error: unknown) => {
+          throw signal.aborted ? signal.reason : error;
+        });
         bannerImgUrl = publicUrl;
         bannerImgType = file.type;
       } else if (removeBanner) {
@@ -161,6 +183,7 @@ function EditForm({
         bannerImgType = null;
       }
 
+      signal.throwIfAborted();
       await client.profile.edit({
         address,
         gridColumns: profile.gridColumns ?? null,
@@ -180,6 +203,13 @@ function EditForm({
       ]);
     },
     onError: (error) => {
+      // the dialog closed or the pick changed mid-save
+      if (error.name === "AbortError") return;
+      const refused = refusalMessage(error);
+      if (refused !== null) {
+        toastManager.add({ type: "error", title: refused });
+        return;
+      }
       toastManager.add({
         type: "error",
         title: m.profile_edit_error(),
@@ -227,7 +257,25 @@ function EditForm({
             )}
           </div>
 
-          {picked && <BannerPreview file={picked.file} url={picked.url} cropperRef={cropperRef} />}
+          {picked && (
+            <BannerPreview
+              // a new pick remounts the cropper, so its onReady fires again
+              key={picked.url}
+              file={picked.file}
+              url={picked.url}
+              cropperRef={cropperRef}
+              onCropReady={() => setCropReady(true)}
+              onCropError={() => {
+                toastManager.add({
+                  type: "error",
+                  title: m.profile_edit_file_unsupported({ name: picked.file.name }),
+                });
+                clearPick();
+              }}
+            />
+          )}
+
+          {percent !== null && <ConvertProgress percent={percent} />}
 
           <span className="text-muted-foreground text-xs">
             {m.profile_edit_banner_recommendation()}
@@ -279,7 +327,7 @@ function EditForm({
       </DialogPanel>
       <DialogFooter>
         <DialogClose render={<Button variant="outline" />}>{m.common_modal_cancel()}</DialogClose>
-        <Button loading={save.isPending} onClick={() => save.mutate()}>
+        <Button loading={save.isPending} disabled={awaitingCrop} onClick={() => save.mutate()}>
           {m.profile_edit_submit()}
         </Button>
       </DialogFooter>
@@ -291,10 +339,14 @@ function BannerPreview({
   file,
   url,
   cropperRef,
+  onCropReady,
+  onCropError,
 }: {
   file: File;
   url: string;
   cropperRef: React.RefObject<CropperRef | null>;
+  onCropReady: () => void;
+  onCropError: () => void;
 }) {
   return (
     <>
@@ -308,10 +360,13 @@ function BannerPreview({
           playsInline
         />
       ) : isCroppable(file) ? (
-        // an unloaded cropper leaves the ref empty, and `cropToBanner` then
-        // uploads the picked file as it is
         <Suspense fallback={<div className="h-52 w-full" />}>
-          <BannerCropper url={url} cropperRef={cropperRef} />
+          <BannerCropper
+            url={url}
+            cropperRef={cropperRef}
+            onReady={onCropReady}
+            onError={onCropError}
+          />
         </Suspense>
       ) : (
         <img
@@ -324,5 +379,26 @@ function BannerPreview({
         {m.profile_edit_banner_selected({ name: file.name })}
       </span>
     </>
+  );
+}
+
+function ConvertProgress({ percent }: { percent: number }) {
+  return (
+    <div className="flex items-center gap-2">
+      <div
+        role="progressbar"
+        aria-label={m.profile_edit_banner_converting()}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={percent}
+        className="bg-muted h-1 flex-1 overflow-hidden rounded-full"
+      >
+        <div className={cn("h-full", TONE_SOLID.progress)} style={{ width: `${percent}%` }} />
+      </div>
+      <span className="text-muted-foreground text-xs">
+        {m.profile_edit_banner_converting()}{" "}
+        <span className="font-mono tabular-nums">{percent}%</span>
+      </span>
+    </div>
   );
 }

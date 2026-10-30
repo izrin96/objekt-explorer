@@ -28,6 +28,10 @@ Serials of objekts minted offline come from `populateSerialOffline` (`job/popula
 - Manual anchors are ground truth like v1 serials: reported `(tokenId, serial)` pairs in `collection.serial_anchors` that pin the batch their token sits in (v1 wins on the same token). Every serial write must pass them, and `computeOfflineSerials` / `computeOfflineSerialUpdates` take them as a required argument so a missed caller fails to type-check; only the holdout measurement in `refine-serial-batches.ts` passes `[]`, on purpose.
 - Add, remove or list anchors with `script/serial-anchor.ts`; `add` and `remove` are a dry run until `APPLY=1`.
 
+## Banner backfill
+
+`script/backfill-banner-compression.ts` re-encodes profile banners uploaded before the browser compressed them, to the targets in `@repo/lib/banner` (`sharp` for stills, ffmpeg with libx264 for GIF and video). It runs by hand on a machine with ffmpeg, never in the container, and is a dry run until `APPLY=1`. It points a profile at the new object with a compare-and-set on the old URL and never deletes the original; its done-log holds each old and new URL for a rollback. The rules are pure, in `lib/banner-backfill.ts`.
+
 ## Price history
 
 `job/snapshot-price-history.ts` runs hourly at minute 5 and on startup. It writes only today's UTC rows of `collection_price_history`, never touches a past day, and skips the run when the rate table is empty. It reads and writes the app database only, so it runs outside `if (indexerWrites)`.

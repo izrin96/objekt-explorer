@@ -27,6 +27,7 @@
     "@repo/lint": "workspace:*",
     "@repo/tsconfig": "workspace:*",
     "@types/bun": "catalog:dev",
+    "sharp": "catalog:dev",
     "typescript": "catalog:dev"
   }
 }

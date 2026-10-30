@@ -13,12 +13,10 @@ export const acceptedFileMimeTypes = [
   "image/gif",
   "image/webp",
   "image/bmp",
-  "image/svg+xml",
   "video/mp4",
   "video/webm",
   "video/ogg",
   "video/quicktime",
-  "video/x-msvideo",
   "video/x-matroska",
   "video/x-m4v",
 ] as const;
@@ -31,12 +29,10 @@ export const mimeTypeToExtension: Record<AcceptedFileMimeType, string> = {
   "image/gif": "gif",
   "image/webp": "webp",
   "image/bmp": "bmp",
-  "image/svg+xml": "svg",
   "video/mp4": "mp4",
   "video/webm": "webm",
   "video/ogg": "ogv",
   "video/quicktime": "mov",
-  "video/x-msvideo": "avi",
   "video/x-matroska": "mkv",
   "video/x-m4v": "m4v",
 };
@@ -44,12 +40,15 @@ export const mimeTypeToExtension: Record<AcceptedFileMimeType, string> = {
 /**
  * Derived so it cannot drift from the forward map. `jpeg` and `jfif` are added
  * by hand: profile banner keys used to take their extension from the uploaded
- * filename, and Windows saves JPEGs as .jfif. Both are plain JPEG bytes.
+ * filename, and Windows saves JPEGs as .jfif. Both are plain JPEG bytes. `svg`
+ * and `avi` are no longer accepted for upload, but banners stored as them remain.
  */
 export const extensionToMimeType: Record<string, string> = {
   ...Object.fromEntries(Object.entries(mimeTypeToExtension).map(([mime, ext]) => [ext, mime])),
   jpeg: "image/jpeg",
   jfif: "image/jpeg",
+  svg: "image/svg+xml",
+  avi: "video/x-msvideo",
 };
 
 /**
