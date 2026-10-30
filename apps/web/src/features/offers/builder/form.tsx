@@ -1,10 +1,5 @@
 import { LinkIcon } from "@phosphor-icons/react";
-import {
-  OFFER_NOTE_MAX_LENGTH,
-  OFFER_SIDE_LIMIT,
-  TOPUP_MAX,
-  type TopupPayer,
-} from "@repo/api/schemas/offer";
+import { OFFER_NOTE_MAX_LENGTH, OFFER_SIDE_LIMIT, type TopupPayer } from "@repo/api/schemas/offer";
 import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useId, useRef, useState } from "react";
@@ -20,23 +15,8 @@ import { EstimatedSerialNote } from "@/features/offers/estimated-serial-note";
 import { itemLabel, itemName } from "@/features/offers/format";
 import { type GetSource, sourceOf } from "@/features/offers/get-source";
 import { OfferPicker } from "@/features/offers/offer-picker";
-import {
-  blockedReason,
-  type Collections,
-  type OfferPick,
-  type OfferSide,
-  pickKey,
-  toPick,
-} from "@/features/offers/pick";
-import {
-  copiesLeft,
-  countOf,
-  putBack,
-  takeOut,
-  takeOutAdded,
-  takeOutAll,
-  totalOf,
-} from "@/features/offers/quantity";
+import { type Collections, type OfferPick, type OfferSide, pickKey } from "@/features/offers/pick";
+import { putBack, takeOut, takeOutAdded, takeOutAll } from "@/features/offers/quantity";
 import {
   invalidateOfferLists,
   myCopyOptions,
@@ -50,7 +30,16 @@ import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
 
 import { type NearGroup, nearPayer, withNear } from "../near-picks";
-import { asksOf, holdsDraft as holdsDraftOf, offerInput, resolveAsks } from "./draft";
+import {
+  asksOf,
+  holdsDraft as holdsDraftOf,
+  offerInput,
+  pickEstimated,
+  pickFlags,
+  pickProblem,
+  resolveAsks,
+  sendGate,
+} from "./draft";
 import { BuilderHeader } from "./header";
 import { MatchesLine, NearLine } from "./matches-line";
 import { BuilderRefused } from "./refused";
@@ -121,12 +110,8 @@ export function BuilderForm({
     ...theirs.data?.collections,
     ...seen,
   };
-  const flagsOf = (pick: OfferPick) => {
-    const live = theirFlags.get(pick.key);
-    return pick.flags ?? (live ? toPick(live).flags : null);
-  };
-  const estimatedOf = (pick: OfferPick) =>
-    pick.serialEstimated ?? theirFlags.get(pick.key)?.serialEstimated ?? false;
+  const flagsOf = (pick: OfferPick) => pickFlags(pick, theirFlags);
+  const estimatedOf = (pick: OfferPick) => pickEstimated(pick, theirFlags);
 
   // a counter's any-copy asks: each takes one free copy of the viewer's own, when there is one
   const asks = asksOf(give);
@@ -139,45 +124,25 @@ export function BuilderForm({
     copies.map((query) => query.data),
   );
 
-  const reasonOf = (side: OfferSide, pick: OfferPick) => {
-    if (side === "give" && pick.objektId === null) {
-      return m.offer_flag_pick_copy({ name: itemName(pick, collections) });
-    }
-    // only what their lists offer can be asked for, bar what the countered offer gave; with no
-    // lists, the collection picker's picks are checked when the offer is sent
-    if (
-      side === "get" &&
-      theirs.data &&
-      source !== "collection" &&
-      !pick.kept &&
-      !theirFlags.has(pick.key)
-    ) {
-      return m.offer_flag_not_listed();
-    }
-    // the copies they spare now, which may have dropped since the count was set, less those
-    // this offer also asks for by serial
-    const spare = theirFlags.get(pick.key)?.copies ?? pick.flags?.copies;
-    if (side === "get" && pick.objektId === null && spare != null) {
-      const left = copiesLeft(get, pick.collectionSlug, spare);
-      if (countOf(pick) > left) return m.offer_flag_too_many({ count: left });
-    }
-    return blockedReason(flagsOf(pick));
-  };
+  const reasonOf = (side: OfferSide, pick: OfferPick) =>
+    pickProblem(side, pick, {
+      get,
+      live: theirFlags,
+      loaded: theirs.data !== undefined,
+      source,
+      nameOf: (p) => itemName(p, collections),
+    });
 
-  const noteLength = Array.from(note.trim()).length;
-  const blocked =
-    giveShown.some((pick) => reasonOf("give", pick) !== null) ||
-    get.some((pick) => reasonOf("get", pick) !== null);
-  const overLimit = totalOf(giveShown) > OFFER_SIDE_LIMIT || totalOf(get) > OFFER_SIDE_LIMIT;
-  const topupError = !topupOn
-    ? null
-    : amount === null || amount <= 0
-      ? m.offer_topup_amount_required()
-      : amount > TOPUP_MAX
-        ? m.offer_topup_amount_max({ max: TOPUP_MAX.toLocaleString(getLocale()) })
-        : null;
-  const topupValid = topupError === null && (!topupOn || currency !== "");
-  const empty = give.length + get.length === 0;
+  const gate = sendGate({
+    give: giveShown,
+    get,
+    blocked:
+      giveShown.some((pick) => reasonOf("give", pick) !== null) ||
+      get.some((pick) => reasonOf("get", pick) !== null),
+    topup: { on: topupOn, amount, currency },
+    note,
+  });
+  const { noteLength, noteTooLong, topupError } = gate;
 
   // what Add it added goes with the matches
   const addedGive = new Set([...(added?.keys.give ?? []), ...nearKeys.give]);
@@ -328,7 +293,7 @@ export function BuilderForm({
 
   const send = () => {
     if (topupError !== null) setTopupTouched(true);
-    if (empty || blocked || overLimit || !topupValid || noteLength > OFFER_NOTE_MAX_LENGTH) return;
+    if (!gate.canSend) return;
     setError(null);
     setRefused(new Set());
     create.mutate(
@@ -438,16 +403,14 @@ export function BuilderForm({
             id={noteId}
             value={note}
             rows={2}
-            aria-invalid={noteLength > OFFER_NOTE_MAX_LENGTH || undefined}
+            aria-invalid={noteTooLong || undefined}
             onChange={(event) => setNote(event.target.value)}
             placeholder={m.offer_note_placeholder()}
           />
           <p
             className={cn(
               "self-end text-xs tabular-nums",
-              noteLength > OFFER_NOTE_MAX_LENGTH
-                ? "text-destructive-foreground"
-                : "text-muted-foreground",
+              noteTooLong ? "text-destructive-foreground" : "text-muted-foreground",
             )}
           >
             {m.chat_counter({
@@ -485,27 +448,13 @@ export function BuilderForm({
       </DialogPanel>
       <DialogFooter className="sm:items-center">
         <p id={hintId} className="text-muted-foreground text-xs text-pretty sm:me-auto">
-          {empty
-            ? m.offer_builder_empty_hint()
-            : overLimit
-              ? m.offer_refused_too_many({ max: OFFER_SIDE_LIMIT })
-              : blocked
-                ? m.offer_builder_blocked_hint()
-                : topupError
-                  ? topupError
-                  : m.offer_builder_expiry()}
+          {gate.hint}
         </p>
         <DialogClose render={<Button variant="outline" />}>{m.common_modal_cancel()}</DialogClose>
         <Button
-          disabled={
-            empty ||
-            blocked ||
-            overLimit ||
-            (!topupValid && topupError === null) ||
-            noteLength > OFFER_NOTE_MAX_LENGTH
-          }
+          disabled={gate.disabled}
           // a topup's reason stays clickable, so a send attempt shows it at the field
-          aria-disabled={topupError !== null || undefined}
+          aria-disabled={gate.ariaDisabled || undefined}
           className="aria-disabled:opacity-64"
           loading={create.isPending}
           aria-describedby={error ? `${hintId} ${errorId}` : hintId}

@@ -1,10 +1,27 @@
 import { describe, expect, test } from "bun:test";
 
-import { type CandidateItem, createOfferInputSchema } from "@repo/api/schemas/offer";
+import {
+  type CandidateItem,
+  createOfferInputSchema,
+  OFFER_NOTE_MAX_LENGTH,
+  OFFER_SIDE_LIMIT,
+  TOPUP_MAX,
+} from "@repo/api/schemas/offer";
 
 import type { OfferPick } from "@/features/offers/pick";
+import { m } from "@/paraglide/messages";
+import { getLocale } from "@/paraglide/runtime";
 
-import { asksOf, holdsDraft, offerInput, resolveAsks } from "./draft";
+import {
+  asksOf,
+  holdsDraft,
+  offerInput,
+  pickEstimated,
+  pickFlags,
+  pickProblem,
+  resolveAsks,
+  sendGate,
+} from "./draft";
 import type { OfferPrefill } from "./types";
 
 type Draft = Parameters<typeof holdsDraft>[0];
@@ -232,5 +249,222 @@ describe("resolveAsks", () => {
     expect(shown[1]!.replaces).toBe(a.key);
     expect(shown[2]!.replaces).toBe(a.key);
     expect(shown[3]).toEqual({ ...a, count: 1 });
+  });
+});
+
+const liveOf = (...items: CandidateItem[]) =>
+  new Map(items.map((item) => [item.objektId ?? `any:${item.collectionSlug}`, item]));
+const FLAGS = { transferable: true, reserved: false, inOpenOffer: [], copies: null };
+
+describe("pickProblem", () => {
+  const ctx = (over: Partial<Parameters<typeof pickProblem>[2]> = {}) => ({
+    get: [],
+    live: liveOf(),
+    loaded: true,
+    source: "lists" as const,
+    nameOf: (p: OfferPick) => `name of ${p.key}`,
+    ...over,
+  });
+
+  test("an unresolved ask on give asks for a copy, by the injected name", () => {
+    expect(pickProblem("give", ask(), ctx())).toBe(
+      m.offer_flag_pick_copy({ name: `name of any:${SLUG}` }),
+    );
+  });
+
+  test("a get pick missing from their lists is not listed", () => {
+    expect(pickProblem("get", ask(), ctx())).toBe(m.offer_flag_not_listed());
+  });
+
+  test("a get pick is not checked against lists from their collection, when kept, or before load", () => {
+    expect(pickProblem("get", ask(), ctx({ source: "collection" }))).toBeNull();
+    expect(pickProblem("get", { ...ask(), kept: true }, ctx())).toBeNull();
+    expect(pickProblem("get", ask(), ctx({ loaded: false }))).toBeNull();
+  });
+
+  test("a give pick named by serial is never not listed", () => {
+    expect(pickProblem("give", pick({ key: "o1", objektId: "o1" }), ctx())).toBeNull();
+  });
+
+  test("an any-copy get pick is too many against the copies left", () => {
+    const live = liveOf(copy(null, { copies: 2 }));
+    expect(pickProblem("get", ask(3), ctx({ live }))).toBe(m.offer_flag_too_many({ count: 2 }));
+    expect(pickProblem("get", ask(2), ctx({ live }))).toBeNull();
+  });
+
+  test("live copies win over the pick's own", () => {
+    const own = ask(2);
+    own.flags = { ...FLAGS, copies: 5 };
+    const live = liveOf(copy(null, { copies: 1 }));
+    expect(pickProblem("get", own, ctx({ live }))).toBe(m.offer_flag_too_many({ count: 1 }));
+  });
+
+  test("the pick's own copies are the fallback, and no count means no check", () => {
+    const own = ask(3);
+    own.flags = { ...FLAGS, copies: 2 };
+    expect(pickProblem("get", { ...own, kept: true }, ctx())).toBe(
+      m.offer_flag_too_many({ count: 2 }),
+    );
+    expect(pickProblem("get", { ...ask(9), kept: true }, ctx())).toBeNull();
+  });
+
+  test("copies the get side also names by serial count against the spare", () => {
+    const live = liveOf(copy(null, { copies: 2 }));
+    const named = pick({ key: "o1", objektId: "o1", serial: 1 });
+    expect(pickProblem("get", ask(2), ctx({ live, get: [named] }))).toBe(
+      m.offer_flag_too_many({ count: 1 }),
+    );
+  });
+
+  test("own flags win over live ones, and live ones are the fallback", () => {
+    const live = liveOf(copy("o1", { transferable: false }));
+    const named = pick({ key: "o1", objektId: "o1" });
+    expect(pickProblem("get", named, ctx({ live }))).toBe(m.offer_flag_not_transferable());
+    expect(pickProblem("get", { ...named, flags: FLAGS }, ctx({ live }))).toBeNull();
+    expect(pickFlags(named, live)).toEqual({
+      transferable: false,
+      reserved: false,
+      inOpenOffer: [],
+      copies: null,
+    });
+    expect(pickFlags({ ...named, flags: FLAGS }, live)).toBe(FLAGS);
+    expect(pickFlags(named, liveOf())).toBeNull();
+  });
+
+  test("a reserved copy is refused", () => {
+    const named = pick({ key: "o1", objektId: "o1", flags: { ...FLAGS, reserved: true } });
+    expect(pickProblem("give", named, ctx())).toBe(m.offer_flag_reserved());
+  });
+
+  test("a clean pick gives null", () => {
+    const live = liveOf(copy("o1"));
+    expect(pickProblem("get", pick({ key: "o1", objektId: "o1" }), ctx({ live }))).toBeNull();
+  });
+
+  test("an estimated serial is the pick's own, else the live one", () => {
+    const live = liveOf(copy("o1", { serialEstimated: true }));
+    const named = pick({ key: "o1", objektId: "o1" });
+    expect(pickEstimated(named, live)).toBe(true);
+    expect(pickEstimated({ ...named, serialEstimated: false }, live)).toBe(false);
+    expect(pickEstimated(named, liveOf())).toBe(false);
+  });
+});
+
+describe("sendGate", () => {
+  const one = pick({ key: "o1", objektId: "o1" });
+  const TOPUP = { on: false, amount: null, currency: "USD" };
+  const gate = (over: Partial<Parameters<typeof sendGate>[0]> = {}) =>
+    sendGate({ give: [one], get: [], blocked: false, topup: TOPUP, note: "", ...over });
+  const many = (n: number) =>
+    Array.from({ length: n }, (_, i) => pick({ key: `o${i}`, objektId: `o${i}` }));
+
+  test("a plain draft can be sent and shows the expiry line", () => {
+    expect(gate()).toMatchObject({
+      hint: m.offer_builder_expiry(),
+      canSend: true,
+      disabled: false,
+      ariaDisabled: false,
+      topupError: null,
+    });
+  });
+
+  test("empty disables Send and shows the empty hint", () => {
+    expect(gate({ give: [] })).toMatchObject({
+      hint: m.offer_builder_empty_hint(),
+      canSend: false,
+      disabled: true,
+    });
+  });
+
+  test("the hint goes empty, then over limit, then blocked, then top-up error, then expiry", () => {
+    const over = many(OFFER_SIDE_LIMIT + 1);
+    const bad = { on: true, amount: null, currency: "USD" };
+    expect(gate({ give: [], blocked: true, topup: bad }).hint).toBe(m.offer_builder_empty_hint());
+    expect(gate({ give: over, blocked: true, topup: bad }).hint).toBe(
+      m.offer_refused_too_many({ max: OFFER_SIDE_LIMIT }),
+    );
+    expect(gate({ blocked: true, topup: bad }).hint).toBe(m.offer_builder_blocked_hint());
+    expect(gate({ topup: bad }).hint).toBe(m.offer_topup_amount_required());
+    expect(gate().hint).toBe(m.offer_builder_expiry());
+  });
+
+  test("a top-up amount of null, 0 or below is required, and above the maximum is max", () => {
+    const err = (amount: number | null) =>
+      gate({ topup: { on: true, amount, currency: "USD" } }).topupError;
+    for (const amount of [null, 0, -5]) expect(err(amount)).toBe(m.offer_topup_amount_required());
+    expect(err(TOPUP_MAX + 1)).toBe(
+      m.offer_topup_amount_max({ max: TOPUP_MAX.toLocaleString(getLocale()) }),
+    );
+    expect(err(TOPUP_MAX)).toBeNull();
+    expect(err(1)).toBeNull();
+  });
+
+  test("an off top-up never errors, whatever its amount", () => {
+    expect(gate({ topup: { on: false, amount: -1, currency: "" } })).toMatchObject({
+      topupError: null,
+      canSend: true,
+    });
+  });
+
+  test("a top-up error leaves Send clickable but aria-disabled", () => {
+    expect(gate({ topup: { on: true, amount: null, currency: "USD" } })).toMatchObject({
+      disabled: false,
+      ariaDisabled: true,
+      canSend: false,
+    });
+  });
+
+  test("an open top-up with an amount and no currency disables Send, with no error", () => {
+    expect(gate({ topup: { on: true, amount: 5, currency: "" } })).toMatchObject({
+      topupError: null,
+      hint: m.offer_builder_expiry(),
+      disabled: true,
+      ariaDisabled: false,
+      canSend: false,
+    });
+  });
+
+  test("an empty currency with an error is aria-disabled only", () => {
+    expect(gate({ topup: { on: true, amount: null, currency: "" } })).toMatchObject({
+      disabled: false,
+      ariaDisabled: true,
+      canSend: false,
+    });
+  });
+
+  test("blocked disables Send", () => {
+    expect(gate({ blocked: true })).toMatchObject({ disabled: true, canSend: false });
+  });
+
+  test("noteLength counts code points of the trimmed note", () => {
+    expect(gate({ note: "  hi \u{1F600}  " }).noteLength).toBe(4);
+    expect(gate({ note: "   " }).noteLength).toBe(0);
+  });
+
+  test("a note of 280 code points passes and 281 does not", () => {
+    const emoji = (n: number) => "\u{1F600}".repeat(n);
+    expect(gate({ note: emoji(OFFER_NOTE_MAX_LENGTH) })).toMatchObject({
+      noteTooLong: false,
+      canSend: true,
+    });
+    expect(gate({ note: emoji(OFFER_NOTE_MAX_LENGTH + 1) })).toMatchObject({
+      noteTooLong: true,
+      disabled: true,
+      canSend: false,
+    });
+  });
+
+  test("a side holds up to the limit, counting an ask's copies", () => {
+    expect(gate({ give: many(OFFER_SIDE_LIMIT) }).canSend).toBe(true);
+    expect(gate({ give: many(OFFER_SIDE_LIMIT + 1) })).toMatchObject({
+      disabled: true,
+      canSend: false,
+    });
+    expect(gate({ get: [ask(OFFER_SIDE_LIMIT)] }).canSend).toBe(true);
+    expect(gate({ get: [ask(OFFER_SIDE_LIMIT + 1)] }).canSend).toBe(false);
+  });
+
+  test("the limit counts each side alone", () => {
+    expect(gate({ give: many(OFFER_SIDE_LIMIT), get: [ask(OFFER_SIDE_LIMIT)] }).canSend).toBe(true);
   });
 });
