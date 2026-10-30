@@ -101,7 +101,7 @@ export function TradeSteps({
               {state ? <span className="sr-only">{state}</span> : null}
               <span
                 aria-live={step.key === "transfers" ? "polite" : undefined}
-                className="text-muted-foreground font-mono tabular-nums"
+                className="text-muted-foreground tabular-nums"
               >
                 {step.detail}
               </span>

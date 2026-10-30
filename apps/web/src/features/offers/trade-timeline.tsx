@@ -197,7 +197,7 @@ function Rows({ trade, collections, name, hydrated, rows }: Props & { rows: Time
               <time
                 dateTime={row.at}
                 className={cn(
-                  "shrink-0 font-mono text-xs tabular-nums",
+                  "shrink-0 text-xs tabular-nums",
                   row.kind === "today" ? "text-progress" : "text-muted-foreground",
                 )}
               >

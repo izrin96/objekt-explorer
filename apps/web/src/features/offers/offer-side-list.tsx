@@ -56,7 +56,7 @@ export function OfferSideList({
             onClick={() => setSheetOpen(true)}
             className="text-muted-foreground hover:text-foreground focus-visible:ring-ring rounded-sm tracking-wide uppercase outline-none focus-visible:ring-2"
           >
-            {label} · <span className="font-mono tabular-nums">{items.length}</span>
+            {label} · <span className="tabular-nums">{items.length}</span>
           </button>
         ) : (
           <span className="text-muted-foreground tracking-wide uppercase">{label}</span>
@@ -90,7 +90,7 @@ export function OfferSideList({
                 type="button"
                 aria-label={showAll}
                 onClick={() => setSheetOpen(true)}
-                className="text-foreground hover:bg-accent/60 focus-visible:ring-ring rounded-photocard aspect-photocard grid w-full place-items-center border border-dashed font-mono text-xs font-semibold tabular-nums outline-none focus-visible:ring-2"
+                className="text-foreground hover:bg-accent/60 focus-visible:ring-ring rounded-photocard aspect-photocard grid w-full place-items-center border border-dashed text-xs font-semibold tabular-nums outline-none focus-visible:ring-2"
               >
                 +{more}
               </button>
@@ -102,7 +102,7 @@ export function OfferSideList({
         <SheetPopup>
           <SheetHeader>
             <SheetTitle className="text-base">
-              {label} · <span className="font-mono tabular-nums">{items.length}</span>
+              {label} · <span className="tabular-nums">{items.length}</span>
             </SheetTitle>
           </SheetHeader>
           <SheetPanel>

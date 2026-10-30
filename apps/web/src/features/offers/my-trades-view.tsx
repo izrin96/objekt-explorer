@@ -116,7 +116,7 @@ function MineSection({
       <h2 id={headingId} className="flex flex-wrap items-baseline gap-x-2 text-sm font-medium">
         {title}
         {counted ? (
-          <span className="text-muted-foreground font-mono text-xs font-normal tabular-nums">
+          <span className="text-muted-foreground text-xs font-normal tabular-nums">
             {rows.length}
           </span>
         ) : null}

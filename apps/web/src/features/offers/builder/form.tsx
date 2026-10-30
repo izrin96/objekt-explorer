@@ -488,7 +488,7 @@ export function BuilderForm({
           />
           <p
             className={cn(
-              "self-end font-mono text-xs tabular-nums",
+              "self-end text-xs tabular-nums",
               noteLength > OFFER_NOTE_MAX_LENGTH
                 ? "text-destructive-foreground"
                 : "text-muted-foreground",

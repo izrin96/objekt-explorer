@@ -74,7 +74,7 @@ export function SideColumn({
     <section aria-labelledby={headingId} className="@container flex min-w-0 flex-col gap-2">
       <h3 id={headingId} className="flex items-baseline gap-2 text-sm font-medium">
         {side === "give" ? m.offer_side_give() : m.offer_side_get()}
-        <span className="text-muted-foreground font-mono text-xs font-normal tabular-nums">
+        <span className="text-muted-foreground text-xs font-normal tabular-nums">
           {m.offer_side_count({ count: totalOf(picks), max: OFFER_SIDE_LIMIT })}
         </span>
       </h3>

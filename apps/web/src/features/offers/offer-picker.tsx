@@ -164,10 +164,7 @@ function PickerBody({
         )}
       </div>
       <DialogFooter className="flex-row items-center">
-        <p
-          className="text-muted-foreground me-auto font-mono text-xs tabular-nums"
-          aria-live="polite"
-        >
+        <p className="text-muted-foreground me-auto text-xs tabular-nums" aria-live="polite">
           {m.offer_picker_count({ count: total, max: OFFER_SIDE_LIMIT })}
         </p>
         <DialogClose render={<Button variant="outline" />}>{m.common_modal_cancel()}</DialogClose>

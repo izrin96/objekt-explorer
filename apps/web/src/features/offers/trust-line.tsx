@@ -4,8 +4,6 @@ import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
 
-import { Mono, MonoMessage } from "./mono";
-
 /** `since` is `YYYY-MM`; read in UTC, so the server and the browser print the same month. */
 export function sinceLabel(since: string) {
   const [year, month] = since.split("-").map(Number);
@@ -48,12 +46,12 @@ export function TrustLine({
   const hint = m.trust_unfinished_hint();
   return (
     // a span, so it can sit inside a button's phrasing content (the For you row)
-    <span className={cn("text-muted-foreground block text-xs", className)}>
+    <span className={cn("text-muted-foreground block text-xs tabular-nums", className)}>
       <span className="sr-only">{m.trust_label()} </span>
       {reputation.verified === 0 ? (
         unfinished > 0 ? (
           <span title={hint}>
-            <MonoMessage values={[count]} text={([n]) => m.trust_none_unfinished({ count: n! })} />
+            {m.trust_none_unfinished({ count })}
             <span className="sr-only"> ({hint})</span>
           </span>
         ) : (
@@ -61,15 +59,12 @@ export function TrustLine({
         )
       ) : (
         <>
-          <MonoMessage
-            values={[reputation.verified.toLocaleString(getLocale())]}
-            text={([count]) => m.trust_verified({ count: count! })}
-          />
+          {m.trust_verified({ count: reputation.verified.toLocaleString(getLocale()) })}
           {unfinished > 0 ? (
             <>
               {" · "}
               <span title={hint} className="text-destructive-foreground">
-                <MonoMessage values={[count]} text={([n]) => m.trust_unfinished({ count: n! })} />
+                {m.trust_unfinished({ count })}
                 <span className="sr-only"> ({hint})</span>
               </span>
             </>
@@ -77,7 +72,7 @@ export function TrustLine({
           {reputation.positive !== null ? (
             <>
               {" · "}
-              <Mono aria-hidden>{`${reputation.positive}%`}</Mono>
+              <span aria-hidden>{`${reputation.positive}%`}</span>
               <span className="sr-only">{m.trust_positive({ percent: reputation.positive })}</span>
             </>
           ) : null}

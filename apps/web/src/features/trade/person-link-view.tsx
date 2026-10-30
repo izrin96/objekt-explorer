@@ -3,7 +3,6 @@ import type { ValidObjekt } from "@repo/lib/types/objekt";
 
 import { EmptyState } from "@/components/shared/empty-state";
 import { Button } from "@/components/ui/button";
-import { MonoMessage } from "@/features/offers/mono";
 import { copyWithToast } from "@/lib/clipboard";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -64,16 +63,11 @@ export function PersonLinkView({
           <span className="font-medium">{person.identity.name}</span>
           {after}
           {counted > 0 ? (
-            <span className="text-muted-foreground">
+            <span className="text-muted-foreground tabular-nums">
               {" "}
-              <MonoMessage
-                values={[counted]}
-                text={([count]) =>
-                  counted === 1
-                    ? m.trade_person_link_on_lists_one({ count: count! })
-                    : m.trade_person_link_on_lists({ count: count! })
-                }
-              />
+              {counted === 1
+                ? m.trade_person_link_on_lists_one({ count: counted })
+                : m.trade_person_link_on_lists({ count: counted })}
             </span>
           ) : null}
         </p>

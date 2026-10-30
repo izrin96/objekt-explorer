@@ -13,7 +13,6 @@ import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
 
-import { Mono, MonoMessage } from "./mono";
 import type { Primary } from "./next-step";
 import { TradeMenu } from "./trade-menu";
 import { TrustLine, sinceLabel } from "./trust-line";
@@ -96,7 +95,7 @@ function Figures({ reputation }: { reputation: Reputation }) {
           <dt className="text-muted-foreground truncate text-xs">{figure.label}</dt>
           <dd
             className={cn(
-              "font-mono text-base font-semibold tabular-nums",
+              "text-base font-semibold tabular-nums",
               figure.warn && "text-warning-foreground",
             )}
             title={figure.warn ? m.trust_unfinished_hint() : undefined}
@@ -128,7 +127,7 @@ export function TradePartnerCard({ trade, primary, hydrated, onReport, onCancel 
           className="size-11 shrink-0"
         />
         <div className="flex min-w-0 flex-1 flex-col">
-          <Name trade={trade} className="font-mono text-base font-semibold" />
+          <Name trade={trade} className="text-base font-semibold" />
           {reputation ? (
             <span className="text-muted-foreground text-xs">
               {m.offer_partner_since({ month: sinceLabel(reputation.since) })}
@@ -174,31 +173,25 @@ export function TradePartnerRow({ trade }: { trade: Trade }) {
         className="size-9 shrink-0"
       />
       <div className="flex min-w-0 flex-1 flex-col">
-        <Name trade={trade} className="font-mono font-semibold" />
+        <Name trade={trade} className="font-semibold" />
         {reputation ? (
           isNew(reputation) ? (
             <TrustLine reputation={reputation} variant="compact" className="self-start" />
           ) : (
             <span className="text-muted-foreground text-xs tabular-nums">
-              <MonoMessage
-                values={[reputation.verified.toLocaleString(locale)]}
-                text={([count]) => m.trust_verified({ count: count! })}
-              />
+              {m.trust_verified({ count: reputation.verified.toLocaleString(locale) })}
               {reputation.unfinished > 0 ? (
                 <>
                   {" · "}
                   <span className="text-warning-foreground" title={m.trust_unfinished_hint()}>
-                    <MonoMessage
-                      values={[reputation.unfinished.toLocaleString(locale)]}
-                      text={([count]) => m.trust_unfinished({ count: count! })}
-                    />
+                    {m.trust_unfinished({ count: reputation.unfinished.toLocaleString(locale) })}
                   </span>
                 </>
               ) : null}
               {reputation.positive !== null ? (
                 <>
                   {" · "}
-                  <Mono aria-hidden>{`${reputation.positive}%`}</Mono>
+                  <span aria-hidden>{`${reputation.positive}%`}</span>
                   <span className="sr-only">
                     {m.trust_positive({ percent: reputation.positive })}
                   </span>

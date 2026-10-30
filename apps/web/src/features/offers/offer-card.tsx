@@ -124,7 +124,7 @@ function ThumbStrip({
     <span aria-hidden className="flex shrink-0 items-center gap-1.5">
       {side(give)}
       {counted ? (
-        <span className="text-muted-foreground font-mono text-xs whitespace-nowrap tabular-nums">
+        <span className="text-muted-foreground text-xs whitespace-nowrap tabular-nums">
           {give.length} ⇄ {get.length}
         </span>
       ) : (

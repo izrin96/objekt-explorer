@@ -93,7 +93,7 @@ export function ObjektTile({
         {times && times > 1 ? (
           <span
             aria-hidden
-            className="bg-foreground text-background absolute start-1 bottom-1 rounded-sm px-1 font-mono text-xs leading-4 font-semibold tabular-nums"
+            className="bg-foreground text-background absolute start-1 bottom-1 rounded-sm px-1 text-xs leading-4 font-semibold tabular-nums"
           >
             ×{times}
           </span>

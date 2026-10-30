@@ -34,7 +34,7 @@ import {
   legStatus,
 } from "./exchange";
 import { itemLabel } from "./format";
-import { MonoMessage, Progress, TopupText } from "./mono";
+import { Progress, TopupText } from "./mono";
 import { type Leg, type LegChip, type SideStatus, sideStatus } from "./next-step";
 import { ObjektTile, type TileMark } from "./objekt-tile";
 import { OfferThumb } from "./offer-item";
@@ -142,7 +142,7 @@ function FilterChips({
           onClick={() => state.setFilter(filter)}
         >
           {FILTER_LABEL[filter]()}
-          <span className="font-mono text-xs tabular-nums opacity-70">{counts[filter]}</span>
+          <span className="text-xs tabular-nums opacity-70">{counts[filter]}</span>
         </Button>
       ))}
     </div>
@@ -213,7 +213,7 @@ function GroupHeading({ group, id }: { group: ExchangeGroup; id: string }) {
     <h4 id={id} className={cn("flex items-center gap-2 text-xs font-medium", TONE_INK[meta.tone])}>
       <span aria-hidden className={cn("size-2 rounded-full", TONE_SOLID[meta.tone])} />
       {title}
-      <span className="text-muted-foreground font-mono tabular-nums">{group.legs.length}</span>
+      <span className="text-muted-foreground tabular-nums">{group.legs.length}</span>
     </h4>
   );
 }
@@ -368,10 +368,7 @@ export function TradeExchange({
                 {toDecide > 0 ? (
                   <>
                     {" · "}
-                    <MonoMessage
-                      values={[toDecide]}
-                      text={([count]) => m.offer_exchange_to_decide({ count: count! })}
-                    />
+                    {m.offer_exchange_to_decide({ count: toDecide })}
                   </>
                 ) : null}
               </>
@@ -396,7 +393,7 @@ export function TradeExchange({
               )}
             >
               {side.title}
-              <span className="font-mono text-xs tabular-nums opacity-70">{side.legs.length}</span>
+              <span className="text-xs tabular-nums opacity-70">{side.legs.length}</span>
             </button>
           ))}
         </div>
@@ -424,7 +421,7 @@ export function TradeExchange({
               <div className="flex items-center justify-between gap-2 max-sm:sr-only">
                 <h3 className="text-sm font-medium">
                   {side.title}{" "}
-                  <span className="text-muted-foreground font-mono text-xs font-normal tabular-nums">
+                  <span className="text-muted-foreground text-xs font-normal tabular-nums">
                     {side.legs.length}
                   </span>
                 </h3>

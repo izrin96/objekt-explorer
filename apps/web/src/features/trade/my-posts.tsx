@@ -18,7 +18,6 @@ import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Menu, MenuItem, MenuPopup, MenuTrigger } from "@/components/ui/menu";
 import { toastManager } from "@/components/ui/toast";
-import { MonoMessage } from "@/features/offers/mono";
 import { relativeTime } from "@/lib/time";
 import { m } from "@/paraglide/messages";
 import { useSettings } from "@/stores/settings";
@@ -112,10 +111,7 @@ export function MyPosts({ userId, onNew, onEdit }: MyPostsProps) {
               ·
             </span>
             <span className="text-muted-foreground tabular-nums">
-              <MonoMessage
-                values={[summary.listed]}
-                text={([count]) => m.trade_my_posts_listed({ count: count! })}
-              />
+              {m.trade_my_posts_listed({ count: summary.listed })}
             </span>
             {summary.idle > 0 ? (
               <>
@@ -123,10 +119,7 @@ export function MyPosts({ userId, onNew, onEdit }: MyPostsProps) {
                   ·
                 </span>
                 <Badge variant="outline" size="sm" className="tabular-nums">
-                  <MonoMessage
-                    values={[summary.idle]}
-                    text={([count]) => m.trade_my_posts_idle({ count: count! })}
-                  />
+                  {m.trade_my_posts_idle({ count: summary.idle })}
                 </Badge>
               </>
             ) : null}
