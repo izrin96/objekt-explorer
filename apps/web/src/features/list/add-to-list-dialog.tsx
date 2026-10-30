@@ -58,7 +58,7 @@ import {
   toggleUnpicked,
   toSource,
 } from "./add-to-list-source";
-import { addHint, profileLabel } from "./add-to-list-text";
+import { addedToast, addHint, profileLabel } from "./add-to-list-text";
 import { CreateListDialog } from "./create-list-dialog";
 import { EMPTY_DRAFT, type ListDraft } from "./list-form";
 import { ListTypeBadge } from "./list-type-badge";
@@ -262,30 +262,10 @@ function AddToListForm({
     addToList.mutate(
       addToListInput({ slug: selected.slug, skipDups, from, isSale, isQyop, price, note }),
       {
-        onSuccess: ({ entries, skipped, unowned: serverUnowned }) => {
-          const unowned = serverUnowned + dropped;
-          const owner = selected.profileAddress;
-          const reasons = [
-            unowned > 0 && owner !== null
-              ? m.actions_add_to_list_unowned({
-                  count: unowned.toLocaleString(),
-                  profile: profileName(owner),
-                })
-              : null,
-            skipped > 0 ? m.actions_add_to_list_skipped({ count: skipped.toLocaleString() }) : null,
-          ].filter((reason) => reason !== null);
-          toastManager.add({
-            type: entries.length > 0 ? "success" : "info",
-            title:
-              entries.length === 1 && entries[0]
-                ? m.actions_add_to_list_success_single({ collectionId: entries[0].collectionId })
-                : entries.length > 1
-                  ? m.actions_add_to_list_success_multiple({
-                      count: entries.length.toLocaleString(),
-                    })
-                  : m.actions_add_to_list_nothing(),
-            description: reasons.length > 0 ? reasons.join(" · ") : undefined,
-          });
+        onSuccess: (result) => {
+          toastManager.add(
+            addedToast(result, { dropped, owner: selected.profileAddress, profileName }),
+          );
           onDone();
         },
       },

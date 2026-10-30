@@ -7,7 +7,7 @@ import type { OwnedObjekt } from "@repo/lib/types/objekt";
 import { m } from "@/paraglide/messages";
 
 import type { AddableObjekt, AddTarget } from "./add-to-list-source";
-import { addHint, profileLabel } from "./add-to-list-text";
+import { addedToast, addHint, profileLabel } from "./add-to-list-text";
 
 // `m.*` returns a branded string, which `expect(...).toBe("...")` rejects.
 const check = (actual: unknown) => expect(actual);
@@ -103,5 +103,72 @@ describe("addHint", () => {
   test("here and not picking: an objekts source or none has no hint", () => {
     expect(addHint({ ...base, source: objekts })).toBeNull();
     expect(addHint(base)).toBeNull();
+  });
+});
+
+describe("addedToast", () => {
+  const entry = (collectionId: string) => ({ collectionId });
+  const profileName = (address: string) => `name:${address}`;
+  const base = { dropped: 0, owner: ADDRESS, profileName };
+  const none = { entries: [], skipped: 0, unowned: 0 };
+  const unownedText = (count: string) =>
+    m.actions_add_to_list_unowned({ count, profile: profileName(ADDRESS) });
+  const skippedText = (count: string) => m.actions_add_to_list_skipped({ count });
+
+  test("one entry is the single title, as a success", () => {
+    const toast = addedToast({ ...none, entries: [entry("c1")] }, base);
+    expect(toast.type).toBe("success");
+    check(toast.title).toBe(m.actions_add_to_list_success_single({ collectionId: "c1" }));
+  });
+
+  test("several entries are the multiple title with their count", () => {
+    const toast = addedToast({ ...none, entries: [entry("a"), entry("b"), entry("c")] }, base);
+    expect(toast.type).toBe("success");
+    check(toast.title).toBe(m.actions_add_to_list_success_multiple({ count: "3" }));
+  });
+
+  test("no entries is the nothing title, as info", () => {
+    const toast = addedToast(none, base);
+    expect(toast.type).toBe("info");
+    check(toast.title).toBe(m.actions_add_to_list_nothing());
+  });
+
+  test("server unowned plus dropped is one unowned reason with the owner's name", () => {
+    const names: string[] = [];
+    const toast = addedToast(
+      { ...none, unowned: 2 },
+      {
+        ...base,
+        dropped: 1,
+        profileName: (address) => {
+          names.push(address);
+          return profileName(address);
+        },
+      },
+    );
+    check(toast.description).toBe(unownedText("3"));
+    expect(names).toEqual([ADDRESS]);
+  });
+
+  test("dropped alone still gives the unowned reason", () => {
+    check(addedToast(none, { ...base, dropped: 2 }).description).toBe(unownedText("2"));
+  });
+
+  test("no owner drops the unowned reason", () => {
+    const toast = addedToast({ ...none, unowned: 2 }, { ...base, owner: null });
+    expect(toast.description).toBeUndefined();
+  });
+
+  test("only skipped gives that reason alone", () => {
+    check(addedToast({ ...none, skipped: 4 }, base).description).toBe(skippedText("4"));
+  });
+
+  test("both reasons join with a middle dot, unowned first", () => {
+    const toast = addedToast({ ...none, skipped: 4, unowned: 2 }, base);
+    check(toast.description).toBe(`${unownedText("2")} · ${skippedText("4")}`);
+  });
+
+  test("neither reason leaves the description undefined", () => {
+    expect(addedToast(none, base).description).toBeUndefined();
   });
 });
