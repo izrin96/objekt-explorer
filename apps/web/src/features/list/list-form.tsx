@@ -1,10 +1,8 @@
 import { InfoIcon } from "@phosphor-icons/react";
 import type { ListType } from "@repo/api/schemas/list";
-import type { OpenToFlags } from "@repo/api/schemas/open-to";
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import slugify from "slugify";
-import * as z from "zod";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -26,11 +24,20 @@ import { toneChip } from "@/lib/tone";
 import { cn, getBaseURL } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
+import type { ListDraft, ListUrl } from "./list-draft";
 import { LIST_TYPE_LABEL, LIST_TYPE_TONE, ListTypeBadge } from "./list-type-badge";
+
+export {
+  EMPTY_DRAFT,
+  type ListDraft,
+  type ListUrl,
+  listDraftSchema,
+  toCreateInput,
+  toEditInput,
+} from "./list-draft";
 
 /** `Select` has no value for "cleared", so the empty choice carries its own. */
 const NONE = "__none__";
-const CURRENCY_RE = /^[A-Za-z]{3}$/;
 
 const LIST_TYPES: ListType[] = ["general", "have", "want", "sale"];
 
@@ -42,110 +49,6 @@ const LIST_TYPE_DESC: Record<ListType, () => string> = {
   have: m.list_create_have_list_desc,
   want: m.list_create_want_list_desc,
 };
-
-export type ListDraft = OpenToFlags & {
-  name: string;
-  description: string;
-  listType: ListType;
-  currency: string;
-  linkedListId: number | null;
-  profileAddress: string | null;
-  isProfileBind: boolean;
-  gridColumns: number | null;
-  hideSerial: boolean;
-  regenerateSlug: boolean;
-};
-
-export const EMPTY_DRAFT: ListDraft = {
-  name: "",
-  description: "",
-  listType: "general",
-  currency: "",
-  linkedListId: null,
-  profileAddress: null,
-  isProfileBind: false,
-  // a new want list is open to swaps and buying until a post narrows it
-  matchSale: true,
-  matchHave: true,
-  gridColumns: null,
-  hideSerial: false,
-  regenerateSlug: false,
-};
-
-/** Built per submit: the message functions read the request's locale. */
-export function listDraftSchema() {
-  return z
-    .object({
-      name: z.string().trim().min(1, m.common_validation_required_name()).max(256),
-      description: z.string().max(5000),
-      currency: z.string(),
-      listType: z.enum(["general", "sale", "have", "want"]),
-      profileAddress: z.string().nullable(),
-      isProfileBind: z.boolean(),
-      linkedListId: z.number().nullable(),
-      matchSale: z.boolean(),
-      matchHave: z.boolean(),
-    })
-    .superRefine((draft, ctx) => {
-      if (draft.listType === "sale" && !CURRENCY_RE.test(draft.currency)) {
-        ctx.addIssue({
-          code: "custom",
-          path: ["currency"],
-          message: m.list_create_currency_invalid(),
-        });
-      }
-      if (draft.isProfileBind && draft.profileAddress === null) {
-        ctx.addIssue({
-          code: "custom",
-          path: ["profileAddress"],
-          message: m.list_create_profile_required(),
-        });
-      }
-    });
-}
-
-/**
- * `list.create`'s input, normalised the way the router does before it writes: the fields a type
- * does not carry are dropped rather than kept stale. A list starts off Trade, and a have or want
- * list unpaired; the post composer puts it on Trade.
- */
-export function toCreateInput(draft: ListDraft) {
-  const isProfileBind = ["have", "sale"].includes(draft.listType) && draft.isProfileBind;
-
-  return {
-    name: draft.name.trim(),
-    description: draft.description.trim() || null,
-    currency: draft.listType === "sale" ? draft.currency.toUpperCase() : null,
-    listType: draft.listType,
-    linkedListId: ["have", "want"].includes(draft.listType) ? draft.linkedListId : null,
-    profileAddress: draft.profileAddress,
-    isProfileBind,
-    matchSale: draft.matchSale,
-    matchHave: draft.matchHave,
-    hideSerial: draft.hideSerial,
-  };
-}
-
-/**
- * `list.edit`'s input. A list's link, Trade state and Open to belong to its post, so they are left
- * out and the list keeps them.
- */
-export function toEditInput(slug: string, draft: ListDraft) {
-  const {
-    listType: _type,
-    isProfileBind: _bind,
-    linkedListId: _link,
-    matchSale: _sale,
-    matchHave: _have,
-    ...rest
-  } = toCreateInput(draft);
-  return {
-    slug,
-    ...rest,
-    gridColumns: draft.gridColumns,
-    regenerateSlug: draft.regenerateSlug,
-  };
-}
 
 type ListFormProps = {
   /** prefixes every field id, so create and edit can be open in one document */
@@ -162,8 +65,6 @@ type ListFormProps = {
   /** a have, want or sale list's place on Trade, which the post composer sets */
   tradeLine?: ReactNode;
 };
-
-export type ListUrl = { nickname: string; profileSlug: string; fallbackSlug: string };
 
 export function ListForm({
   idPrefix,
