@@ -232,6 +232,11 @@ export type PostPlan =
 
 const SLOTS = ["have", "want", "sale"] as const;
 
+/** A Swap, or a Sell that takes swaps: a post whose have or sale list keeps its want list. */
+export function keepsPair(kind: PostKind, alsoSwap: boolean) {
+  return kind === "swap" || (kind === "sell" && alsoSwap);
+}
+
 /**
  * What `trade.savePost` writes for a choice over the poster's lists, or why it refuses. A list is
  * in one post at a time. A Swap post with one list keeps that list's pair, its partner staying
@@ -294,9 +299,8 @@ export function planPost(lists: PlanList[], choice: PostChoice): PostPlan {
       continue;
     }
     const otherSlot = slot === "want" ? (choice.have ?? choice.sale) : choice.want;
-    // a post that keeps a pair: a Swap, or a Sell that takes swaps, with one half picked
-    const keepsPair = choice.kind === "swap" || (choice.kind === "sell" && alsoSwap);
-    if (keepsPair && !otherSlot) {
+    // a post that keeps a pair, with one half picked
+    if (keepsPair(choice.kind, alsoSwap) && !otherSlot) {
       // both halves on Trade make one post, so a partner in another post would absorb this list
       if (inOther(partner)) {
         return { ok: false, reason: "trade_post_list_in_post", slug: partner.slug };

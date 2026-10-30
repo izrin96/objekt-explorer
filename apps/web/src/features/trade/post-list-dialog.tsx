@@ -3,6 +3,7 @@ import {
   type ComposerStart,
   type PlanList,
   type PostKind,
+  keepsPair,
   planPost,
   partnerOf,
   rowBlock,
@@ -197,7 +198,7 @@ function Composer({ start, onDone }: { start: ComposerStart; onDone: () => void 
   // the sale list
   const otherOf = (slot: Slot): Slot =>
     slot !== "want" ? "want" : kind === "sell" ? "sale" : "have";
-  const keepsPair = kind === "swap" || sellSwaps;
+  const pairs = keepsPair(kind, choice.alsoSwap);
   const plan = planPost(lists, request);
   const alsoPayCheck = (
     <OptionCheck
@@ -220,7 +221,7 @@ function Composer({ start, onDone }: { start: ComposerStart; onDone: () => void 
       // one half of a pair brings the other along on a post that keeps it, unless that side is taken
       const other = otherOf(slot);
       const list = lists.find((entry) => entry.slug === slug);
-      const partner = list && keepsPair && prev[other] === null ? partnerOf(lists, list) : null;
+      const partner = list && pairs && prev[other] === null ? partnerOf(lists, list) : null;
       // a want list's partner may be a have or a sale list; only one that fits the slot comes along
       if (
         partner &&
@@ -241,7 +242,7 @@ function Composer({ start, onDone }: { start: ComposerStart; onDone: () => void 
       optional={kind === "swap" || slot === "want"}
       lists={lists}
       value={choice[slot]}
-      otherPicked={keepsPair && choice[otherOf(slot)] !== null}
+      otherPicked={pairs && choice[otherOf(slot)] !== null}
       replaces={start.replaces}
       prompt={
         !plan.ok &&
