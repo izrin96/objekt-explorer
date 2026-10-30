@@ -1,20 +1,8 @@
-import {
-  ArrowsLeftRightIcon,
-  CaretDownIcon,
-  CheckIcon,
-  ClockIcon,
-  HeartIcon,
-  type Icon,
-  PackageIcon,
-  ShieldWarningIcon,
-  WarningIcon,
-  XIcon,
-} from "@phosphor-icons/react";
+import { CaretDownIcon } from "@phosphor-icons/react";
 import type { NoteEvent, Notification } from "@repo/api/schemas/notification";
 import { Link, linkOptions } from "@tanstack/react-router";
-import { type ReactNode, useState } from "react";
+import { useState } from "react";
 
-import { PersonAvatar } from "@/components/shared/person-avatar";
 import { Button } from "@/components/ui/button";
 import { untilLabel } from "@/features/chat/format";
 import { collectionName } from "@/features/objekt/objekt-label";
@@ -24,284 +12,28 @@ import {
   tradeNo,
   tradeNotificationText,
 } from "@/features/offers/format";
-import { formatTimestamp, relativeTime } from "@/lib/time";
-import type { Tone } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
-import { PARTNER_TOKEN, splitAround } from "./headline";
+import { PARTNER_TOKEN } from "./headline";
 import {
-  ACTION_LABEL,
-  alertText,
-  type ListNotification,
-  sanctionText,
-  updatesLabel,
-} from "./row-text";
-import { type RowAction, rowAction } from "./sections";
+  ActionLabel,
+  Headline,
+  ItemTime,
+  ObjektLine,
+  Progress,
+  RefChip,
+  RowBody,
+  type RowVariant,
+} from "./row-body";
+import { NotificationStack, PartnerAvatar, TONE_FRAME, ToneTile } from "./row-lead";
+import { alertText, type ListNotification, sanctionText, updatesLabel } from "./row-text";
+import { rowAction } from "./sections";
 import { type Collections, sameSlugs, shownSlugs } from "./stack";
-import { type NotificationIcon, notificationTone } from "./tone";
-
-export type RowVariant = "popover" | "sheet";
-
-const TONE_ICON: Record<NotificationIcon, Icon> = {
-  check: CheckIcon,
-  clock: ClockIcon,
-  cross: XIcon,
-  arrow: ArrowsLeftRightIcon,
-  heart: HeartIcon,
-  package: PackageIcon,
-  shield: ShieldWarningIcon,
-  warning: WarningIcon,
-};
-
-/** An alert's objekts keep their list type's colour; it is the one colour a row has besides class stripes. */
-const TONE_FRAME: Partial<Record<Tone, string>> = {
-  want: "outline-type-want",
-  have: "outline-type-have",
-};
-
-/** Every leading mark sits in this slot, so the text beside it does not move between kinds. */
-const SLOT = "relative flex h-12 w-11 shrink-0";
+import { notificationTone } from "./tone";
 
 const ROW =
   "hover:bg-accent focus-visible:bg-accent focus-visible:ring-ring relative flex items-start gap-3 py-2.5 ps-5 pe-4 outline-none focus-visible:ring-2 focus-visible:ring-inset";
-
-type Partner = { name: string; image?: string | null };
-
-function Glyph({ icon, className }: { icon: NotificationIcon; className?: string }) {
-  const Mark = TONE_ICON[icon];
-  return <Mark aria-hidden weight="bold" className={className} />;
-}
-
-function Badge({ icon }: { icon: NotificationIcon }) {
-  return (
-    <span className="bg-popover absolute start-6 top-7.5 z-10 rounded-full p-0.5">
-      <span className="bg-muted text-foreground grid size-4.5 place-items-center rounded-full">
-        <Glyph icon={icon} className="size-2.5" />
-      </span>
-    </span>
-  );
-}
-
-function PartnerFace({ partner, className }: { partner: Partner; className?: string }) {
-  return <PersonAvatar name={partner.name} image={partner.image} className={className} />;
-}
-
-function ToneTile({ icon }: { icon: NotificationIcon }) {
-  return (
-    <span className={SLOT}>
-      <span className="bg-muted text-foreground grid h-10 w-7 place-items-center rounded">
-        <Glyph icon={icon} className="size-4" />
-      </span>
-    </span>
-  );
-}
-
-/** Where each objekt of a stack sits, counted from the front one. */
-const DECK = [
-  "start-0 top-1",
-  "start-1.25 top-0.5 opacity-80",
-  "start-2.5 top-0 opacity-50",
-] as const;
-
-/** `partner` sits on the stack's other corner, so an offer's objekts still show who it is with. */
-function NotificationStack({
-  slugs,
-  collections,
-  frame,
-  badge,
-  partner,
-}: {
-  slugs: readonly string[];
-  collections: Collections;
-  frame?: string;
-  badge?: NotificationIcon;
-  partner?: Partner;
-}) {
-  return (
-    <span className={SLOT}>
-      {/* the front one last, so it paints over the rest */}
-      {slugs
-        .map((slug, depth) => ({ slug, depth }))
-        .toReversed()
-        .map(({ slug, depth }) => (
-          <img
-            key={depth}
-            src={collections[slug]?.thumbnailImage}
-            alt=""
-            className={cn(
-              "aspect-photocard absolute w-7 rounded-sm object-cover",
-              DECK[depth],
-              frame && ["outline-offset-1", slugs.length > 1 ? "outline-1" : "outline-2", frame],
-            )}
-          />
-        ))}
-      {partner ? (
-        <span className="bg-popover absolute -start-1.5 top-7.5 z-10 rounded-full p-0.5">
-          <PartnerFace partner={partner} className="size-4.5" />
-        </span>
-      ) : null}
-      {badge ? <Badge icon={badge} /> : null}
-    </span>
-  );
-}
-
-function PartnerAvatar({ partner, icon }: { partner: Partner; icon: NotificationIcon }) {
-  return (
-    <span className={SLOT}>
-      <PartnerFace partner={partner} className="mt-1 size-9 text-sm" />
-      <Badge icon={icon} />
-    </span>
-  );
-}
-
-function UnreadMark() {
-  return (
-    <span className="absolute start-2 top-5 flex size-1.5">
-      <span className="bg-accent-solid size-full rounded-full" />
-      <span className="sr-only">{m.notification_unread()}</span>
-    </span>
-  );
-}
-
-function ItemTime({ createdAt, now }: { createdAt: string; now: number }) {
-  return (
-    <time
-      dateTime={createdAt}
-      title={formatTimestamp(new Date(createdAt))}
-      className="text-muted-foreground shrink-0 pt-0.5 text-xs whitespace-nowrap tabular-nums"
-    >
-      {/* narrow ("2w ago"), so the time column leaves the headline room; the title has the instant */}
-      {relativeTime(new Date(createdAt).getTime(), now, "year", "narrow")}
-    </time>
-  );
-}
-
-/**
- * `text` was written with `PARTNER_TOKEN` for the partner, so the name is bold wherever the
- * language puts it; a headline without the token never named them.
- */
-function Headline({ text, partner, unread }: { text: string; partner: string; unread: boolean }) {
-  const parts = splitAround(text, PARTNER_TOKEN);
-  return (
-    <span
-      className={cn(
-        "text-sm text-pretty break-words",
-        unread ? "text-foreground" : "text-muted-foreground",
-      )}
-    >
-      {parts ? (
-        <>
-          {parts.before}
-          <strong
-            className={cn("font-semibold", unread ? "text-foreground" : "text-foreground/80")}
-          >
-            {partner}
-          </strong>
-          {parts.after}
-        </>
-      ) : (
-        text
-      )}
-    </span>
-  );
-}
-
-function ObjektLine({
-  slugs,
-  collections,
-}: {
-  slugs: readonly string[];
-  collections: Collections;
-}) {
-  if (slugs.length === 0) return null;
-  return (
-    <span className="text-muted-foreground truncate text-xs">
-      {slugs.map((slug) => collectionName(slug, collections[slug])).join(", ")}
-    </span>
-  );
-}
-
-function Progress({ verified, total }: { verified: number; total: number }) {
-  return (
-    <span className="flex items-center gap-1.5" title={m.offer_progress({ verified, total })}>
-      <span aria-hidden className="flex gap-0.5">
-        {Array.from({ length: total }, (_, at) => (
-          <span
-            key={at}
-            className={cn("h-1 w-3.5 rounded-full", at < verified ? "bg-foreground" : "bg-muted")}
-          />
-        ))}
-      </span>
-      <span className="text-muted-foreground text-xs tabular-nums">
-        {m.offer_trade_step_progress({ verified, total })}
-      </span>
-    </span>
-  );
-}
-
-function RefChip({ children }: { children: ReactNode }) {
-  return (
-    <span className="text-foreground/80 rounded border px-1 font-mono text-xs leading-4">
-      {children}
-    </span>
-  );
-}
-
-/** Text inside the row's link, never a control of its own: it leads where the row does. */
-function ActionLabel({ action, primary }: { action: RowAction; primary: boolean }) {
-  return (
-    <span
-      className={cn(
-        "inline-flex h-6 items-center rounded-md border px-2 text-xs font-medium whitespace-nowrap",
-        primary ? "bg-foreground text-background border-foreground" : "text-foreground",
-      )}
-    >
-      {ACTION_LABEL[action]()}
-    </span>
-  );
-}
-
-function RowBody({
-  lead,
-  headline,
-  objekts,
-  meta,
-  action,
-  createdAt,
-  now,
-  unread,
-  variant,
-}: {
-  lead: ReactNode;
-  headline: ReactNode;
-  objekts?: ReactNode;
-  meta?: ReactNode;
-  action?: ReactNode;
-  createdAt: string;
-  now: number;
-  unread: boolean;
-  variant: RowVariant;
-}) {
-  return (
-    <>
-      {unread ? <UnreadMark /> : null}
-      {lead}
-      <span className="flex min-w-0 flex-1 flex-col gap-1">
-        {headline}
-        {objekts}
-        {meta || (action && variant === "popover") ? (
-          <span className="flex flex-wrap items-center gap-2">
-            {meta}
-            {variant === "popover" && action ? <span className="ms-auto">{action}</span> : null}
-          </span>
-        ) : null}
-        {variant === "sheet" && action ? <span className="mt-1">{action}</span> : null}
-      </span>
-      <ItemTime createdAt={createdAt} now={now} />
-    </>
-  );
-}
 
 type OfferNotification = Extract<Notification, { type: "offer" | "trade" }>;
 type SanctionNotification = Extract<Notification, { type: "sanction" }>;
