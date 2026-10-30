@@ -1,12 +1,10 @@
 import { CardsThreeIcon } from "@phosphor-icons/react";
 import {
-  choiceTags,
   type ComposerStart,
   type PlanList,
   type PostKind,
   planPost,
   partnerOf,
-  type RowBlock,
   rowBlock,
 } from "@repo/api/schemas/trade-post";
 import { Link } from "@tanstack/react-router";
@@ -32,6 +30,18 @@ import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import { useSavePost } from "./actions";
+import {
+  KIND_DESC,
+  KIND_LABEL,
+  KIND_TAG,
+  KIND_TITLE,
+  type Slot,
+  SLOT_HEADING,
+  rowNote,
+  matchLines,
+  previewTags,
+  unpairText,
+} from "./post-kind-text";
 import { usePlanLists } from "./post-plan";
 import { TagBadge, TagBadges } from "./tag-label";
 
@@ -47,45 +57,11 @@ export const NEW_POST: ComposerStart = {
 
 const KINDS: PostKind[] = ["swap", "sell", "buy"];
 
-export const KIND_LABEL: Record<PostKind, () => string> = {
-  swap: m.trade_kind_swap,
-  sell: m.trade_kind_sell,
-  buy: m.trade_kind_buy,
-};
-
-const KIND_DESC: Record<PostKind, () => string> = {
-  swap: m.trade_kind_swap_desc,
-  sell: m.trade_kind_sell_desc,
-  buy: m.trade_kind_buy_desc,
-};
-
-const KIND_TITLE: Record<PostKind, () => string> = {
-  swap: m.trade_composer_swap_title,
-  sell: m.trade_composer_sell_title,
-  buy: m.trade_composer_buy_title,
-};
-
-const KIND_TAG = { swap: "wtt", sell: "wts", buy: "wtb" } as const;
-
-export const IN_POST: Record<PostKind, () => string> = {
-  swap: m.trade_in_swap_post,
-  sell: m.trade_in_sell_post,
-  buy: m.trade_in_buy_post,
-};
-
-type Slot = "have" | "want" | "sale";
-
 const SLOTS_OF: Record<PostKind, Slot[]> = {
   swap: ["have", "want"],
   // the want list only once the sale list takes swaps: it is what the seller would swap for
   sell: ["sale", "want"],
   buy: ["want"],
-};
-
-const SLOT_HEADING: Record<Slot, () => string> = {
-  have: m.trade_composer_have_heading,
-  want: m.trade_composer_want_heading,
-  sale: m.trade_composer_sale_heading,
 };
 
 /** A composer per host: it opens on a start, and each opening starts afresh. */
@@ -396,12 +372,6 @@ function KindStep({
 
 const NONE = "__none__";
 
-function blockText(block: RowBlock) {
-  return block.reason === "needs_profile"
-    ? m.trade_composer_needs_profile()
-    : IN_POST[block.kind]();
-}
-
 type Prompt = { partner: string; onUnpair: () => void; onPickAnother: () => void };
 
 function ListSection({
@@ -461,12 +431,7 @@ function ListSection({
           ) : null}
           {candidates.map((list) => {
             const block = rowBlock(lists, list, kind, replaces, otherPicked);
-            const partner = partnerOf(lists, list);
-            const note = block
-              ? blockText(block)
-              : partner
-                ? m.trade_paired_with({ name: partner.name })
-                : null;
+            const note = rowNote(block, partnerOf(lists, list)?.name ?? null);
             return (
               <ListRow
                 key={list.id}
@@ -539,11 +504,7 @@ function UnpairPrompt({ id, kind, prompt }: { id: string; kind: PostKind; prompt
   return (
     <Alert id={id}>
       <AlertDescription className="text-foreground">
-        {kind === "buy"
-          ? m.trade_composer_unpair_buy({ name: prompt.partner })
-          : kind === "sell"
-            ? m.trade_composer_unpair_sell({ name: prompt.partner })
-            : m.trade_composer_unpair_swap({ name: prompt.partner })}
+        {unpairText(kind, prompt.partner)}
         <span className="flex flex-wrap gap-2">
           <Button type="button" size="sm" onClick={prompt.onUnpair}>
             {m.trade_composer_unpair_action()}
@@ -638,35 +599,16 @@ function Preview({
   alsoPay: boolean;
   alsoSwap: boolean;
 }) {
-  const tags = choiceTags({ kind, have, want, sale, alsoPay, alsoSwap });
-  const lines =
-    kind === "sell"
-      ? [
-          m.trade_composer_match_sell(),
-          ...(alsoSwap ? [m.trade_composer_match_sell_swap()] : []),
-          ...(want && alsoPay ? [m.trade_composer_match_also_pay()] : []),
-        ]
-      : kind === "buy"
-        ? [m.trade_composer_match_buy()]
-        : [
-            have && want
-              ? m.trade_composer_match_both()
-              : have
-                ? m.trade_composer_match_have()
-                : want
-                  ? m.trade_composer_match_want()
-                  : m.trade_composer_pick_list(),
-            ...(want && alsoPay ? [m.trade_composer_match_also_pay()] : []),
-          ];
+  const picks = { kind, have, want, sale, alsoPay, alsoSwap };
   return (
     <div className="bg-muted/40 flex flex-col gap-1.5 rounded-lg border px-3.5 py-3">
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-muted-foreground text-xs">{m.trade_composer_shows_as()}</span>
-        <TagBadges tags={tags.length > 0 ? tags : [KIND_TAG[kind]]} />
+        <TagBadges tags={previewTags(picks)} />
       </div>
       {/* polite, so the match line reads out as the picks change it */}
       <p aria-live="polite" className="text-sm text-pretty">
-        {lines.join(" ")}
+        {matchLines(picks).join(" ")}
       </p>
     </div>
   );

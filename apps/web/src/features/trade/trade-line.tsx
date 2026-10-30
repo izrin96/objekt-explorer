@@ -4,7 +4,7 @@ import { useId } from "react";
 import { Button } from "@/components/ui/button";
 import { m } from "@/paraglide/messages";
 
-import { IN_POST } from "./post-list-dialog";
+import { IN_POST } from "./post-kind-text";
 import { usePlanLists } from "./post-plan";
 import { TagBadges } from "./tag-label";
 import { type DetailPart, lineDetail, type LineHint, lineHint } from "./trade-line-parts";

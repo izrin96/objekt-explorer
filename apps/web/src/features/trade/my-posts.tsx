@@ -24,7 +24,7 @@ import { useSettings } from "@/stores/settings";
 
 import { useBumpPost, useCopyTradeLink, useTakeDownPost } from "./actions";
 import { summarizePosts } from "./my-posts-summary";
-import { KIND_LABEL } from "./post-list-dialog";
+import { KIND_LABEL } from "./post-kind-text";
 import { postTime } from "./post-time";
 import { myPostsOptions } from "./queries";
 import { TagBadges } from "./tag-label";
