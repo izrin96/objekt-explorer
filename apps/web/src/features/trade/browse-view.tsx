@@ -110,8 +110,9 @@ export function BrowseView({ surface, search }: { surface: Surface; search: Feed
 
   const setSearch = (patch: Partial<FeedSearch>) =>
     go((prev) => ({ ...prev, ...patch }), { replace: true });
-  // the feed as usual: the link's filters go with `person`, For you keeps its matching choice
-  const clearLead = () =>
+  // back to the feed as usual: the person link and every filter go, but For you keeps its
+  // matching choice, which isn't a filter
+  const reset = () =>
     go(forYou ? { match: search.match, list: search.list } : {}, { replace: true });
 
   const type = postTypeOf(search, surface);
@@ -144,9 +145,6 @@ export function BrowseView({ surface, search }: { surface: Surface; search: Feed
   const comparedName = forYou
     ? comparedList(search.list, tradeLists, scopeOf(mode, type))?.name
     : undefined;
-  // the matching choice isn't a filter: For you keeps it
-  const reset = () =>
-    go(forYou ? { match: search.match, list: search.list } : {}, { replace: true });
   // a person who moved between two pages can come back once more: first place wins
   const people = useMemo(() => {
     const seen = new Set<string>();
@@ -273,7 +271,7 @@ export function BrowseView({ surface, search }: { surface: Surface; search: Feed
         ) : query.isError && people.length === 0 ? (
           <LoadError onRetry={() => void query.refetch()} />
         ) : search.person && !led ? (
-          <PersonLinkEmpty onClear={clearLead} />
+          <PersonLinkEmpty onClear={reset} />
         ) : led ? (
           <SideCompareContext value={sideCompare}>
             <PersonLinkView
@@ -281,7 +279,7 @@ export function BrowseView({ surface, search }: { surface: Surface; search: Feed
               surface={surface}
               own={led.userId === user?.user.id}
               signedIn={!!user}
-              onClear={clearLead}
+              onClear={reset}
               busy={query.isPlaceholderData}
               collections={collections}
               now={now}
@@ -383,7 +381,7 @@ export function BrowseView({ surface, search }: { surface: Surface; search: Feed
                         own={row.person.userId === user?.user.id}
                         signedIn={!!user}
                         led={row.person.userId === search.person}
-                        onClear={clearLead}
+                        onClear={reset}
                         collections={collections}
                         now={now}
                         onOpen={setActive}
