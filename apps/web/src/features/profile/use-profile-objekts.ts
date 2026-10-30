@@ -85,6 +85,27 @@ function useProfileFilters(address: string, filters: FilterSearch): FilterSearch
 }
 
 /**
+ * What both profile views read: the tabs' filters (deferred), every owned page,
+ * and the catalogue behind them.
+ */
+function useProfileSources() {
+  const profile = useProfile();
+  const { selectedArtistIds } = useCosmoArtist();
+  const filters = useProfileFilters(profile.address, useCanonicalFilters());
+  const deferredFilters = useDeferredValue(filters);
+
+  const serverFilters = ownedServerFilters(selectedArtistIds, filters);
+  const owned = useOwnedPages(profile.address, serverFilters);
+  // the catalogue is only worth fetching once every owned page is in, or the
+  // missing set would be measured against a partial collection
+  const collections = useQuery({
+    ...collectionOptions({ artist: selectedArtistIds, at: filters.at }),
+    enabled: !owned.hasNextPage,
+  });
+  return { profile, deferredFilters, owned, collections };
+}
+
+/**
  * Owned objekts for the profile in context, merged with its pins and locks.
  *
  * A checkpoint (`filters.at`) asks the server for a past state, which carries
@@ -92,24 +113,10 @@ function useProfileFilters(address: string, filters: FilterSearch): FilterSearch
  * today's marks onto yesterday's collection.
  */
 export function useProfileObjekts() {
-  const profile = useProfile();
-  const { selectedArtistIds } = useCosmoArtist();
-  const filters = useProfileFilters(profile.address, useCanonicalFilters());
-  const deferredFilters = useDeferredValue(filters);
-
-  const serverFilters = ownedServerFilters(selectedArtistIds, filters);
-  const { objekts, isPending, hasNextPage, isFetchingNextPage, fetchNextPage } = useOwnedPages(
-    profile.address,
-    serverFilters,
-  );
+  const { profile, deferredFilters, owned: ownedPages, collections } = useProfileSources();
+  const { objekts, isPending, hasNextPage, isFetchingNextPage, fetchNextPage } = ownedPages;
   const { pins, locks } = usePinsAndLocks(profile.address);
   const { rarityMap, isLoading: rarityLoading } = useCollectionRarity();
-  // the catalogue is only worth fetching once every owned page is in, or the
-  // missing set would be measured against a partial collection
-  const collections = useQuery({
-    ...collectionOptions({ artist: selectedArtistIds, at: filters.at }),
-    enabled: !hasNextPage,
-  });
 
   // apart from the filters, so a filter change doesn't copy every objekt again
   const pastState = Boolean(deferredFilters.at);
@@ -193,17 +200,8 @@ export function useProfileSummary() {
 
 /** Owned objekts and the catalogue behind them, for Progress and Statistics. */
 export function useProfileCatalogue() {
-  const profile = useProfile();
-  const { selectedArtistIds } = useCosmoArtist();
-  const filters = useProfileFilters(profile.address, useCanonicalFilters());
-  const deferredFilters = useDeferredValue(filters);
-
-  const serverFilters = ownedServerFilters(selectedArtistIds, filters);
-  const { objekts, isPending, hasNextPage } = useOwnedPages(profile.address, serverFilters);
-  const collections = useQuery({
-    ...collectionOptions({ artist: selectedArtistIds, at: filters.at }),
-    enabled: !hasNextPage,
-  });
+  const { deferredFilters, owned: ownedPages, collections } = useProfileSources();
+  const { objekts, isPending } = ownedPages;
 
   const derived = useMemo(
     () => ({
