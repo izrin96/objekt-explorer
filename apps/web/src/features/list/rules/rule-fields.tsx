@@ -1,4 +1,5 @@
 import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioPrimitive } from "@/components/ui/radio-group";
 import {
   Select,
   SelectItem,
@@ -6,6 +7,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
+import { m } from "@/paraglide/messages";
+
+import type { RuleDraft } from "./rule-draft";
 
 export function RuleSelect({
   id,
@@ -63,5 +68,64 @@ export function ChipGroup({
       ) : null}
       <div className="flex flex-wrap gap-1.5">{children}</div>
     </fieldset>
+  );
+}
+
+const RULE_KINDS = [
+  {
+    value: "collection",
+    label: m.rule_kind_collection,
+    desc: m.rule_kind_collection_desc,
+    example: m.rule_kind_collection_example,
+  },
+  {
+    value: "set",
+    label: m.rule_kind_set,
+    desc: m.rule_kind_set_desc,
+    example: m.rule_kind_set_example,
+  },
+] as const;
+
+// each kind says what it takes and shows one, since the two read alike by name
+export function RuleKindRadio({
+  id,
+  value,
+  onChange,
+}: {
+  id: string;
+  value: RuleDraft["kind"];
+  onChange: (kind: RuleDraft["kind"]) => void;
+}) {
+  return (
+    <RadioGroup
+      aria-label={m.rule_kind_label()}
+      value={value}
+      onValueChange={(next) => {
+        const kind = RULE_KINDS.find((item) => item.value === next)?.value;
+        if (kind) onChange(kind);
+      }}
+      className="gap-2"
+    >
+      {RULE_KINDS.map((item) => (
+        <RadioPrimitive.Root
+          key={item.value}
+          value={item.value}
+          aria-describedby={`${id}-kind-${item.value}`}
+          className={cn(
+            "focus-visible:ring-ring focus-visible:ring-offset-background hover:bg-muted flex w-full cursor-pointer flex-col items-start gap-1 rounded-lg border p-3 text-start outline-none focus-visible:ring-2 focus-visible:ring-offset-1",
+            "data-checked:border-accent-solid data-checked:bg-accent",
+          )}
+        >
+          <span className="text-sm font-medium">{item.label()}</span>
+          <span
+            id={`${id}-kind-${item.value}`}
+            className="text-muted-foreground flex flex-col gap-0.5 text-xs text-pretty"
+          >
+            <span>{item.desc()}</span>
+            <span>{item.example()}</span>
+          </span>
+        </RadioPrimitive.Root>
+      ))}
+    </RadioGroup>
   );
 }

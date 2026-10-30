@@ -21,14 +21,12 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioPrimitive } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
 import { toastManager } from "@/components/ui/toast";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import { FilterToggle } from "@/features/filters/filter-toggle";
 import { client, orpc } from "@/lib/orpc";
 import { refusalText } from "@/lib/refusal";
-import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import { RULE_KEYS } from "./queries";
@@ -50,23 +48,9 @@ import {
   toInput,
   togglePrio,
 } from "./rule-draft";
-import { ChipGroup, RuleSelect } from "./rule-fields";
+import { ChipGroup, RuleKindRadio, RuleSelect } from "./rule-fields";
 import { RulePreview } from "./rule-preview";
 
-const RULE_KINDS = [
-  {
-    value: "collection",
-    label: m.rule_kind_collection,
-    desc: m.rule_kind_collection_desc,
-    example: m.rule_kind_collection_example,
-  },
-  {
-    value: "set",
-    label: m.rule_kind_set,
-    desc: m.rule_kind_set_desc,
-    example: m.rule_kind_set_example,
-  },
-] as const;
 /**
  * Add rule, or Edit rule when `rule` is given. The live line asks the server what the rule
  * covers for the caller's own holdings, so the counts match what saving would do.
@@ -175,37 +159,11 @@ function RuleForm({
         <DialogDescription>{m.rule_add_desc({ list: listName })}</DialogDescription>
       </DialogHeader>
       <DialogPanel className="flex flex-col gap-4">
-        {/* each kind says what it takes and shows one, since the two read alike by name */}
-        <RadioGroup
-          aria-label={m.rule_kind_label()}
+        <RuleKindRadio
+          id={id}
           value={draft.kind}
-          onValueChange={(next) => {
-            const kind = RULE_KINDS.find((item) => item.value === next)?.value;
-            if (kind) set(kindPatch(draft, kind, seasons));
-          }}
-          className="gap-2"
-        >
-          {RULE_KINDS.map((item) => (
-            <RadioPrimitive.Root
-              key={item.value}
-              value={item.value}
-              aria-describedby={`${id}-kind-${item.value}`}
-              className={cn(
-                "focus-visible:ring-ring focus-visible:ring-offset-background hover:bg-muted flex w-full cursor-pointer flex-col items-start gap-1 rounded-lg border p-3 text-start outline-none focus-visible:ring-2 focus-visible:ring-offset-1",
-                "data-checked:border-accent-solid data-checked:bg-accent",
-              )}
-            >
-              <span className="text-sm font-medium">{item.label()}</span>
-              <span
-                id={`${id}-kind-${item.value}`}
-                className="text-muted-foreground flex flex-col gap-0.5 text-xs text-pretty"
-              >
-                <span>{item.desc()}</span>
-                <span>{item.example()}</span>
-              </span>
-            </RadioPrimitive.Root>
-          ))}
-        </RadioGroup>
+          onChange={(kind) => set(kindPatch(draft, kind, seasons))}
+        />
 
         {artists.length > 1 ? (
           <RuleSelect
