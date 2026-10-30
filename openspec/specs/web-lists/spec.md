@@ -31,7 +31,7 @@ as new list).
 
 #### Scenario: Profile-bound but hidden
 - **WHEN** a list is filed under a profile with the show-on-profile flag off
-- **THEN** its card on `/list` carries the profile chip and the profile's Lists tab does not show it
+- **THEN** its row on `/list` carries the profile chip and the profile's Lists tab does not show it
 
 #### Scenario: Type comes first
 - **WHEN** a user opens the create list dialog
@@ -56,6 +56,25 @@ as new list).
 #### Scenario: Redirect
 - **WHEN** a profile-bound list is opened by its plain slug
 - **THEN** the URL becomes the profile-scoped address and the list renders
+
+### Requirement: List rows
+Lists SHALL show as rows on `/list` and on a profile's Lists tab. A row SHALL show the list's latest artworks (five slots on wider screens, dashed where the list has fewer; up to three overlapping on a phone), its name linking to the list, and one line with the objekt count, the Bound badge, On Trade with its post's tags, a sale list's currency, and chips for the linked list and the Cosmo profile; the profile chip SHALL be left out on that profile's own tab. A row's menu SHALL offer Copy link to everyone, and Edit, Copy as new list and Delete to the owner.
+
+`/list` SHALL group the rows into Want, Have, Sale and General sections in that order, each headed by its type in the type's colour and its number of lists, and leave out a type with no list.
+
+A profile's Lists tab SHALL show two columns side by side on wider screens, stacked on a phone: Has, holding its have and sale lists, with a Sale badge on each sale list, and Wants, holding its want lists. Its general lists SHALL follow under Other lists. A column with no list SHALL say so in its place; a profile with no have, sale or want list SHALL show neither column.
+
+#### Scenario: Own lists by type
+- **WHEN** a user with two want lists and one sale list opens `/list`
+- **THEN** the page shows a Want section of two rows, then a Sale section of one, and no Have or General section
+
+#### Scenario: A visitor reads a profile
+- **WHEN** a visitor opens the Lists tab of a profile with have list "spares", sale list "binary sale" and want list "binary hunt"
+- **THEN** Has lists "spares" and "binary sale", the second with a Sale badge, Wants lists "binary hunt", and no row carries the profile chip
+
+#### Scenario: Only general lists
+- **WHEN** a visitor opens the Lists tab of a profile whose only list is a general list
+- **THEN** the tab shows that list under Other lists and no Has or Wants column
 
 ### Requirement: Entries
 From the objekt grid a signed-in user SHALL add one or many objekts to a list through a
@@ -154,7 +173,7 @@ Off Trade the list SHALL be in none of these, except that a want list still aler
 - **THEN** "binary sale" stays on Trade and on Market
 
 ### Requirement: On Trade mark in the list header
-A list header SHALL mark a list that is on Trade with an On Trade badge, for every visitor. The badge SHALL link to `/trade`. After it, the header and the list's card on `/list` SHALL show the tags of the post the list is in, as Trade tags it (see `web-trade-browse`): its linked list joins the post when that list is on Trade too. A list off Trade SHALL show no tags, and no list SHALL name its Open to in words, since the post sets it.
+A list header SHALL mark a list that is on Trade with an On Trade badge, for every visitor. The badge SHALL link to `/trade`. After it, the header and the list's row on `/list` SHALL show the tags of the post the list is in, as Trade tags it (see `web-trade-browse`): its linked list joins the post when that list is on Trade too. A list off Trade SHALL show no tags, and no list SHALL name its Open to in words, since the post sets it.
 
 #### Scenario: Visitor sees the mark
 - **WHEN** a signed-out visitor opens a have list that is on Trade
@@ -166,10 +185,10 @@ A list header SHALL mark a list that is on Trade with an On Trade badge, for eve
 
 #### Scenario: Off Trade
 - **WHEN** a want list set to Buying only is not on Trade
-- **THEN** its header and card show no tag and no Open to
+- **THEN** its header and its row on `/list` show no tag and no Open to
 
 ### Requirement: List type colours
-Each list type SHALL have one colour, used wherever the app names that type: list badges on list pages, list cards and the account menu, and post tags and list badges on Trade.
+Each list type SHALL have one colour, used wherever the app names that type: list badges on list pages, list rows and the account menu, and post tags and list badges on Trade.
 - **Have**, and the WTT tag: teal.
 - **Want**, and the WTB tag: amber.
 - **Sale**, and the WTS tag: rose.
@@ -200,7 +219,7 @@ The server SHALL refuse saving a want list linked to a have list as Buying only,
 
 A request to create a want list that leaves the choice out SHALL save Swaps or buying. A save that turns buying off SHALL leave the list open to swaps, so a want list is never open to nothing. An existing want list SHALL keep the choice it has when this default changes. No existing want list SHALL become Buying only unless its owner picks it.
 
-The list page header and the list card SHALL name a want list's choice.
+The list page header and the list's row SHALL name a want list's choice.
 
 #### Scenario: New want list
 - **WHEN** a user creates a want list
@@ -240,7 +259,7 @@ The list page header and the list card SHALL name a want list's choice.
 
 #### Scenario: Choice shown on the list
 - **WHEN** a user opens a want list on Trade set to Buying only
-- **THEN** its header and its card on `/list` show the WTB tag beside On Trade, and no "Buying only" text
+- **THEN** its header and its row on `/list` show the WTB tag beside On Trade, and no "Buying only" text
 
 #### Scenario: Not a want list
 - **WHEN** a user creates a have list
@@ -275,7 +294,7 @@ The list page header and the list card SHALL name a want list's choice.
 - **THEN** "hunt" is Swaps only, and the partner's Sell only entry no longer counts
 
 ### Requirement: Copy as new list
-The owner's menu on a list card and in the list header SHALL offer Copy as new list. It SHALL open the create form filled in from the source list:
+The owner's menu on a list row and in the list header SHALL offer Copy as new list. It SHALL open the create form filled in from the source list:
 - the name with a copy suffix;
 - description, profile, currency, Open to (from a want list only), columns and hide serial.
 
@@ -527,7 +546,7 @@ A sale list SHALL carry an **Open to** choice, set by its post, not by the list 
 
 #### Scenario: Sell or swap
 - **WHEN** the owner posts sale list "binary sale" as a Sell post with "Also open to swaps"
-- **THEN** "binary sale" is open to swaps, its header and card show WTS and WTT, and it is still on Market at its prices
+- **THEN** "binary sale" is open to swaps, its header and row show WTS and WTT, and it is still on Market at its prices
 
 #### Scenario: Have list
 - **WHEN** a user opens the post composer with a have list
