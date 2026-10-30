@@ -1,6 +1,5 @@
 import { CheckIcon } from "@phosphor-icons/react";
 import type { PublicList } from "@repo/api/schemas/list";
-import { truncateAddress } from "@repo/lib/address";
 import type { OwnedObjekt } from "@repo/lib/types/objekt";
 import { createContext, Fragment, type ReactNode, use, useCallback, useState } from "react";
 
@@ -41,9 +40,7 @@ import { Switch } from "@/components/ui/switch";
 import { toastManager } from "@/components/ui/toast";
 import { Toggle } from "@/components/ui/toggle";
 import { ObjektCard } from "@/features/objekt/objekt-card";
-import { isObjektOwned } from "@/features/objekt/objekt-utils";
 import { useUserLists, useUserProfiles } from "@/features/user/hooks";
-import { isSameAddress } from "@/lib/address";
 import { m } from "@/paraglide/messages";
 
 import { useAddToList } from "./actions";
@@ -61,6 +58,7 @@ import {
   toggleUnpicked,
   toSource,
 } from "./add-to-list-source";
+import { addHint, profileLabel } from "./add-to-list-text";
 import { CreateListDialog } from "./create-list-dialog";
 import { EMPTY_DRAFT, type ListDraft } from "./list-form";
 import { ListTypeBadge } from "./list-type-badge";
@@ -231,13 +229,7 @@ function AddToListForm({
   const here = selected !== undefined && isBoundHere(selected, address);
   const isSale = selected?.listType === "sale";
 
-  const profileName = (profileAddress: string) => {
-    const nickname = profiles.find((p) => isSameAddress(p.address, profileAddress))?.nickname;
-    // an unnamed profile's nickname is its own address
-    return nickname && !isSameAddress(nickname, profileAddress)
-      ? `@${nickname}`
-      : truncateAddress(profileAddress);
-  };
+  const profileName = (profileAddress: string) => profileLabel(profiles, profileAddress);
 
   const pickable = pickableCopies(target, sourceList);
   // a lone copy has no choice to offer, only a way to add nothing
@@ -246,23 +238,13 @@ function AddToListForm({
   const pickedCount = pickable.filter((copy) => !unpicked.has(copy.tokenId)).length;
   const source = selected ? toSource(selected, target, { address, sourceList, unpicked }) : null;
 
-  const hint = (() => {
-    if (boundTo === undefined) return null;
-    const profile = profileName(boundTo);
-    // another profile's tokens, or collections: the list's profile adds its own copies
-    if (!here) {
-      return target.objekts.some(isObjektOwned)
-        ? m.list_add_own_copies({ profile })
-        : m.list_add_every_copy({ profile });
-    }
-    if (picking) {
-      return target.combined === true && target.copiesPartial === true
-        ? m.list_add_copies_partial()
-        : m.list_add_copies_hint();
-    }
-    // a combined card whose copies are not all known goes as its collection
-    return source?.from.type === "collections" ? m.list_add_every_copy({ profile }) : null;
-  })();
+  const hint = addHint({
+    target,
+    profile: boundTo === undefined ? null : profileName(boundTo),
+    here,
+    picking,
+    source,
+  });
 
   // a price is in its list's currency: 10 typed for a KRW list is not 10 USD
   const pickList = (next: string | null) => {
