@@ -1,13 +1,12 @@
-import { CaretDownIcon, UsersThreeIcon, WarningIcon } from "@phosphor-icons/react";
+import { UsersThreeIcon, WarningIcon } from "@phosphor-icons/react";
 import type { HolderBucketKey, HolderRow, HoldersOutput } from "@repo/api/schemas/collections";
 import { truncateAddress } from "@repo/lib/address";
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { InView } from "react-intersection-observer";
 
 import { EmptyState } from "@/components/shared/empty-state";
+import { InfiniteSentinel } from "@/components/shared/infinite-sentinel";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Spinner } from "@/components/ui/spinner";
 import { ProfileCell } from "@/features/profile/profile-hover-card";
 import { isSameAddress } from "@/lib/address";
 import { cn } from "@/lib/utils";
@@ -161,21 +160,13 @@ export function HoldersPanel({ slug, physical }: { slug: string; physical: boole
               </table>
             </div>
 
-            {holders.hasNextPage && (
-              <InView
-                as="div"
-                className="flex justify-center py-3"
-                onChange={(inView) => {
-                  if (inView && !holders.isFetchingNextPage) void holders.fetchNextPage();
-                }}
-              >
-                {holders.isFetchingNextPage ? (
-                  <Spinner className="size-4" />
-                ) : (
-                  <CaretDownIcon className="text-muted-foreground size-4" aria-hidden />
-                )}
-              </InView>
-            )}
+            <InfiniteSentinel
+              label={m.infinite_query_load_more_aria()}
+              hasNextPage={holders.hasNextPage}
+              isFetchingNextPage={holders.isFetchingNextPage}
+              isError={holders.isFetchNextPageError}
+              fetchNextPage={() => void holders.fetchNextPage()}
+            />
           </div>
         </>
       )}

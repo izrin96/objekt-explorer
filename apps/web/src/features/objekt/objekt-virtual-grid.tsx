@@ -1,14 +1,13 @@
-import { CaretDownIcon } from "@phosphor-icons/react";
 import type { GridObjekt } from "@repo/lib/types/objekt";
 import { type ReactElement, memo, useMemo } from "react";
-import { InView } from "react-intersection-observer";
 import { WindowVirtualizer } from "virtua";
 
-import { Spinner } from "@/components/ui/spinner";
+import { InfiniteSentinel } from "@/components/shared/infinite-sentinel";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import { useFilterData } from "@/features/filters/filter-data-provider";
 import type { FilterSearch } from "@/features/filters/search-schema";
 import { useWindowVirtualizerRestore } from "@/hooks/use-window-virtualizer-restore";
+import { m } from "@/paraglide/messages";
 import { useColumns } from "@/stores/columns";
 
 import { type VirtualItem, buildVirtualData } from "./build-virtual-data";
@@ -110,20 +109,13 @@ export function ObjektVirtualGrid<T extends GridObjekt>({
         }
       </WindowVirtualizer>
 
-      {onLoadMore !== undefined && hasNextPage && (
-        <InView
-          as="div"
-          className="flex justify-center py-6"
-          onChange={(inView) => {
-            if (inView && !isFetchingNextPage) onLoadMore();
-          }}
-        >
-          {isFetchingNextPage ? (
-            <Spinner className="size-4" />
-          ) : (
-            <CaretDownIcon className="text-muted-foreground size-4" aria-hidden />
-          )}
-        </InView>
+      {onLoadMore !== undefined && (
+        <InfiniteSentinel
+          label={m.infinite_query_load_more_aria()}
+          hasNextPage={hasNextPage}
+          isFetchingNextPage={isFetchingNextPage}
+          fetchNextPage={onLoadMore}
+        />
       )}
     </SelectionOrderContext>
   );

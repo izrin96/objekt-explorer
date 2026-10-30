@@ -14,14 +14,13 @@ import { truncateAddress } from "@repo/lib/address";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { lazy, Suspense, useId, useState } from "react";
-import { InView } from "react-intersection-observer";
 
 import { EmptyState } from "@/components/shared/empty-state";
+import { InfiniteSentinel } from "@/components/shared/infinite-sentinel";
 import { WidgetBoundary } from "@/components/shared/widget-boundary";
 import { Button } from "@/components/ui/button";
 import { Menu, MenuItem, MenuPopup, MenuSeparator, MenuTrigger } from "@/components/ui/menu";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Spinner } from "@/components/ui/spinner";
 import { useStartConversation, useStartGate } from "@/features/chat/message-button";
 import { getListLinkOption } from "@/features/list/list-link";
 import { formatUtcDay } from "@/features/market/format-utc-day";
@@ -247,21 +246,13 @@ export function MarketPanel({
             </table>
           </div>
 
-          {listings.hasNextPage && (
-            <InView
-              as="div"
-              className="flex justify-center py-3"
-              onChange={(inView) => {
-                if (inView && !listings.isFetchingNextPage) void listings.fetchNextPage();
-              }}
-            >
-              {listings.isFetchingNextPage ? (
-                <Spinner className="size-4" />
-              ) : (
-                <CaretDownIcon className="text-muted-foreground size-4" aria-hidden />
-              )}
-            </InView>
-          )}
+          <InfiniteSentinel
+            label={m.infinite_query_load_more_aria()}
+            hasNextPage={listings.hasNextPage}
+            isFetchingNextPage={listings.isFetchingNextPage}
+            isError={listings.isFetchNextPageError}
+            fetchNextPage={() => void listings.fetchNextPage()}
+          />
         </div>
       )}
       {builder.element}
