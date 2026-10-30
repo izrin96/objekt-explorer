@@ -35,13 +35,12 @@ export function leadPost<P extends RowPost>(posts: readonly P[]): P | undefined 
 
 export type MatchBand =
   | { kind: "swap"; swap: number; theyHave: number; youHave: number }
-  | { kind: "noSwap" | "oneWay"; theyHave: number; youHave: number };
+  | { kind: "oneWay"; theyHave: number; youHave: number };
 
 /**
  * The band over a person's row: what they and the viewer can swap inside one post on each side,
- * else whether the match runs both ways only through sales (so nothing to swap) or one way. Swaps
- * that cross posts or run through lists with no link read as one way. `theyHave` is A, `youHave`
- * B. No band when nothing matches.
+ * else one way, whichever directions match. `theyHave` is A, `youHave` B. No band when nothing
+ * matches.
  */
 export function matchBand(counts: MatchCounts | undefined): MatchBand | null {
   if (!counts) return null;
@@ -49,9 +48,7 @@ export function matchBand(counts: MatchCounts | undefined): MatchBand | null {
   if (theyHave === 0 && youHave === 0) return null;
   const swap = mutualOf(counts);
   if (swap > 0) return { kind: "swap", swap, theyHave, youHave };
-  const bothWays = theyHave > 0 && youHave > 0;
-  const swapsBothWays = counts.tradeTheyHave > 0 && counts.tradeYouHave > 0;
-  return { kind: bothWays && !swapsBothWays ? "noSwap" : "oneWay", theyHave, youHave };
+  return { kind: "oneWay", theyHave, youHave };
 }
 
 /**

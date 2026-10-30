@@ -123,9 +123,6 @@ export type PeopleInput = z.infer<typeof peopleInputSchema>;
 /** people a page of `trade.people` holds */
 export const PEOPLE_PAGE_SIZE = 12;
 
-/** posts a person's row holds at most, which bounds a page */
-export const PERSON_POST_LIMIT = 20;
-
 export const personInputSchema = z.object({
   userId: z.string().min(1),
   list: z.string().min(1).optional(),

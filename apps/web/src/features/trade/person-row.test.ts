@@ -82,7 +82,7 @@ describe("matchBand", () => {
     expect(matchBand(counts)).toEqual({ kind: "swap", swap: 1, theyHave: 5, youHave: 2 });
   });
 
-  test("both ways through sale lists is no swap", () => {
+  test("both ways through sale lists is one way with no chip", () => {
     const sale = {
       ...swaps(3, 1),
       tradeTheyHave: 0,
@@ -91,12 +91,12 @@ describe("matchBand", () => {
       swapTheyHave: 0,
       swapPair: null,
     };
-    expect(matchBand(sale)).toEqual({ kind: "noSwap", theyHave: 3, youHave: 1 });
+    expect(matchBand(sale)).toEqual({ kind: "oneWay", theyHave: 3, youHave: 1 });
   });
 
-  test("a swap one way and a sale the other is no swap", () => {
+  test("a swap one way and a sale the other is one way with no chip", () => {
     const half = { ...swaps(3, 1), tradeYouHave: 0, swap: 0, swapTheyHave: 0, swapPair: null };
-    expect(matchBand(half)).toEqual({ kind: "noSwap", theyHave: 3, youHave: 1 });
+    expect(matchBand(half)).toEqual({ kind: "oneWay", theyHave: 3, youHave: 1 });
   });
 
   test("swaps across posts, or through lists with no link, are one way with no chip", () => {

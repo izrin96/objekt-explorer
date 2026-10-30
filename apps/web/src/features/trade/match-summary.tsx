@@ -10,18 +10,10 @@ import { WithNumber } from "./with-number";
 
 /**
  * Beside a person's name: what the two can swap, tinted, with how much of it needs the viewer's
- * rules (`swapThroughRules`), or that the match runs only through sale lists. One way has no
- * chip, since For you heads that section already.
+ * rules (`swapThroughRules`). One way has no chip, since For you heads that section already.
  */
 export function MatchChip({ band, throughRules = 0 }: { band: MatchBand; throughRules?: number }) {
-  if (band.kind !== "swap") {
-    if (band.kind === "oneWay") return null;
-    return (
-      <Badge variant="secondary" className="text-muted-foreground">
-        {m.trade_band_no_swap()}
-      </Badge>
-    );
-  }
+  if (band.kind !== "swap") return null;
   return (
     <Badge
       variant="outline"

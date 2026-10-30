@@ -1003,7 +1003,6 @@
   "trade_updated_at": "Updated {time}",
   "trade_match_they_have": "They have {count} you want",
   "trade_match_you_have": "You have {count} they want",
-  "trade_band_no_swap": "No swap · buy or sell",
   "trade_person_swap": "You can swap {count}",
   "trade_person_lists": "{count} lists",
   "trade_person_lists_one": "1 list",

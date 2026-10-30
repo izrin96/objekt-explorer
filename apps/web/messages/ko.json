@@ -1003,7 +1003,6 @@
   "trade_updated_at": "{time} 업데이트",
   "trade_match_they_have": "내가 원하는 {count}개를 상대가 보유",
   "trade_match_you_have": "상대가 원하는 {count}개 보유",
-  "trade_band_no_swap": "교환 없음 · 구매 또는 판매",
   "trade_person_swap": "{count}개 교환 가능",
   "trade_person_lists": "목록 {count}개",
   "trade_person_lists_one": "목록 1개",

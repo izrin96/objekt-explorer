@@ -3,7 +3,7 @@ import { type SQL, sql } from "drizzle-orm";
 
 import { type MatchIndex, type PostTag } from "../../lib/trade-feed";
 import { IDLE_DAYS } from "../../lib/trade-rank";
-import { PERSON_POST_LIMIT, type PostType } from "../../schemas/trade";
+import { type PostType } from "../../schemas/trade";
 import { notBlockedEither, notTradeSanctioned } from "../safety";
 import { offersSwapsSql, takesPartInTradeSql } from "../trade-lists";
 
@@ -205,32 +205,24 @@ export async function fetchFeedOwners(query: FeedQuery, ownerIds: string[]): Pro
 }
 
 /**
- * Every kept post of `ownerIds`, newest bump first within each person, at most
- * `PERSON_POST_LIMIT` a person. The people's order is the caller's.
+ * Every kept post of `ownerIds`, newest bump first within each person. No cap per person: a row
+ * that dropped older posts would count matches it can't show. The people's order is the caller's.
  */
 export async function fetchPersonRows(query: FeedQuery, ownerIds: string[]): Promise<FeedRow[]> {
   if (ownerIds.length === 0) return [];
   const where = [...feedWhere(query), sql`posts.user_id = ANY(${sql.param(ownerIds)}::text[])`];
   const result = await db.execute<FeedRow>(sql`
-    WITH ${postsCte},
-    kept AS (
-      SELECT
-        posts.id,
-        posts.partner_id,
-        posts.user_id,
-        posts.bumped_at,
-        mp.allow AS message_allow,
-        row_number() OVER (
-          PARTITION BY posts.user_id ORDER BY posts.bumped_at DESC, posts.id DESC
-        ) AS place
-      FROM posts
-      LEFT JOIN message_pref mp ON mp.user_id = posts.user_id
-      WHERE ${sql.join(where, sql` AND `)}
-    )
-    SELECT id, partner_id, user_id, bumped_at::text AS cursor_at, message_allow
-    FROM kept
-    WHERE place <= ${PERSON_POST_LIMIT}
-    ORDER BY user_id, bumped_at DESC, id DESC
+    WITH ${postsCte}
+    SELECT
+      posts.id,
+      posts.partner_id,
+      posts.user_id,
+      posts.bumped_at::text AS cursor_at,
+      mp.allow AS message_allow
+    FROM posts
+    LEFT JOIN message_pref mp ON mp.user_id = posts.user_id
+    WHERE ${sql.join(where, sql` AND `)}
+    ORDER BY posts.user_id, posts.bumped_at DESC, posts.id DESC
   `);
   return result.rows;
 }

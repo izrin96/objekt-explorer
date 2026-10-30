@@ -143,6 +143,10 @@ The order SHALL be worked out once, when the feed opens, for its filters, Compar
 - **WHEN** 30 people have listed posts and the viewer scrolls past the first 12 rows
 - **THEN** the feed loads the next 12 people, each with all of their listed posts, and no person is listed twice
 
+#### Scenario: A match in an older post
+- **WHEN** rin.trades has 26 listed posts, all bumped at the same time, and the one collection they have that the viewer wants sits in the first one they posted
+- **THEN** rin.trades's row holds all 26 posts, the matching post leads the row with that objekt ringed, and the row reads "They have 1 you want"
+
 #### Scenario: Bump while scrolling
 - **WHEN** the viewer has loaded the first 12 people on Browse, and sodalove, who sits further down, bumps a post
 - **THEN** sodalove is still listed at the place the feed opened with, once, and moves to the top only when the feed is opened again
@@ -289,7 +293,7 @@ For a signed-in viewer, each person's row on Browse and on For you SHALL show th
 
 The counts show once, in the row's header sentence (see Trade card). Each list in the row SHALL also show its own count, by the same rules, taken on that list alone: on a have or sale list the collections the viewer wants ("14 you want"), on a want list the collections the viewer has ("2 you have"). Matched objekts SHALL be marked with a ring, judged on the list's own objekts. There SHALL be no match chip, no popover of matched lists and no All matches control.
 
-A person with both counts above zero and a mutual score of zero SHALL read as one way, with no Can swap mark, when that is only because the swaps cross posts or run through lists with no link; "No swap · buy or sell" SHALL stay for a person whose both-way matches run only through sale lists set to Sell only or want lists set to buying only.
+A person with a mutual score of zero SHALL read as one way, with no mark beside the name, whatever directions their counts run: whether the swaps cross posts, run through lists with no link, or one or both directions run only through sale lists set to Sell only or want lists set to buying only.
 
 Matching SHALL use the viewer's have lists bound to a Cosmo profile, not everything their wallet holds, so an objekt the viewer keeps off their have lists never counts as offered.
 
@@ -602,7 +606,7 @@ Each person in the feed SHALL be one row, a bordered card on the card surface, o
   - the avatar;
   - the name, headed as For you heads a partner (see `web-trade-for-you` Partner identity), linking to the profile, with the Discord and X badges the person chose to show, wrapping onto the next line when they don't fit. On Browse, the viewer's own row SHALL carry a muted "You" tag after the name;
   - the reputation line (see `web-verified-trades`), on one line, truncated with an ellipsis when it doesn't fit, its full text available to assistive technology;
-  - for a signed-in viewer on another person's row, the header sentence, from the counts in Matches to the signed-in viewer, with A the "They have" count, B the "You have" count and M the mutual score. Beside the name, a chip: "You can swap M", tinted, when M is above zero, else a muted "No swap · buy or sell" when A and B are both above zero; a one-way row has no chip. Under the reputation line, a muted line with "They have A you want" when A is above zero and "You have B they want" when B is above zero. With no count above zero the row SHALL show neither, so a row without them reads as no match. Each number SHALL be in monospace and stand out from the words, and the visible words SHALL be the accessible text;
+  - for a signed-in viewer on another person's row, the header sentence, from the counts in Matches to the signed-in viewer, with A the "They have" count, B the "You have" count and M the mutual score. Beside the name, a chip: "You can swap M", tinted, when M is above zero; any other row has no chip. Under the reputation line, a muted line with "They have A you want" when A is above zero and "You have B they want" when B is above zero. With no count above zero the row SHALL show neither, so a row without them reads as no match. Each number SHALL be in monospace and stand out from the words, and the visible words SHALL be the accessible text;
   - on the reputation line, after it, muted: the number of the person's kept lists ("3 lists") and when their newest post was last bumped, or last changed if that is later;
   - the ⋯ menu, holding Copy link (the Person link to them, see Matches to the signed-in viewer), Hide, Block and Report for a signed-in viewer who is not the person.
 - **Actions**: Message, then Make offer as the primary button, both for the row's lead post (see Message a post's owner and Make offer on a post). An account that doesn't take messages from the viewer shows "Not taking messages" in their place. The viewer's own row has no actions.

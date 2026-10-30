@@ -434,7 +434,7 @@ The matches SHALL be read live, by the rules and the Compare with list the row c
 - **THEN** the builder opens with the 2 DCOs under You get and nothing under You give, and the line reads "Added 2 you get from your matches"
 
 #### Scenario: From a Trade row
-- **WHEN** rin.trades's row reads "They have 5 you want · You have 3 they want" with "No swap · buy or sell", and the sender chooses Make offer on it
+- **WHEN** rin.trades's row reads "They have 5 you want · You have 3 they want" with no Can swap mark, and the sender chooses Make offer on it
 - **THEN** the builder opens with 5 under You get and nothing under You give
 
 #### Scenario: Equal both ways

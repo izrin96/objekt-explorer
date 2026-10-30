@@ -207,11 +207,10 @@ async function collectionsOf(people: Pick<Loaded["person"], "posts">[]) {
 }
 
 /**
- * Trade as people: 12 a page, each with every post the feed keeps for them (up to
- * `PERSON_POST_LIMIT`). Page 1 works out the whole order and stores it; later pages go on by
- * position in it, so a ranking or a bump that changes mid-scroll moves no one. An order that is
- * gone, or was built for other filters, is built again and the page goes on from the cursor's
- * person. A first-page `person` lists only that person's row, or none, with no further pages.
+ * Trade as people: 12 a page, each with every post the feed keeps for them. Page 1 works out the
+ * whole order and stores it; later pages go on by position in it, so a ranking or a bump that
+ * changes mid-scroll moves no one. An order that is gone, or was built for other filters, is built
+ * again and the page goes on from the cursor's person. A first-page `person` lists only that person's row, or none, with no further pages.
  */
 export async function peopleFeed(viewerId: string | null, input: PeopleInput) {
   const empty = { people: [], nextCursor: undefined, collections: {} };
