@@ -3,6 +3,7 @@ import {
   type ComposerStart,
   type PlanList,
   type PostKind,
+  type PostPlan,
   keepsPair,
   planPost,
   partnerOf,
@@ -32,6 +33,17 @@ import { m } from "@/paraglide/messages";
 
 import { useSavePost } from "./actions";
 import {
+  type Choice,
+  SLOTS_OF,
+  choiceForKind,
+  otherSlot,
+  pairedPartner,
+  pickList,
+  postInput,
+  unpairedNames,
+  withAlsoSwap,
+} from "./composer-choice";
+import {
   KIND_DESC,
   KIND_LABEL,
   KIND_TAG,
@@ -57,13 +69,6 @@ export const NEW_POST: ComposerStart = {
 };
 
 const KINDS: PostKind[] = ["swap", "sell", "buy"];
-
-const SLOTS_OF: Record<PostKind, Slot[]> = {
-  swap: ["have", "want"],
-  // the want list only once the sale list takes swaps: it is what the seller would swap for
-  sell: ["sale", "want"],
-  buy: ["want"],
-};
 
 /** A composer per host: it opens on a start, and each opening starts afresh. */
 export function useComposer() {
@@ -91,16 +96,6 @@ export function PostComposer({ open, start, session, onOpenChange }: ComposerDia
   );
 }
 
-type Choice = {
-  kind: PostKind | null;
-  have: string | null;
-  want: string | null;
-  sale: string | null;
-  alsoPay: boolean;
-  alsoSwap: boolean;
-  unpair: boolean;
-};
-
 function Composer({ start, onDone }: { start: ComposerStart; onDone: () => void }) {
   const lists = usePlanLists();
   const save = useSavePost();
@@ -109,17 +104,7 @@ function Composer({ start, onDone }: { start: ComposerStart; onDone: () => void 
   const editing = start.replaces !== null;
   const tradeLists = lists.filter((list) => list.listType !== "general");
 
-  const setKind = (kind: PostKind) => {
-    const keeps = SLOTS_OF[kind];
-    setChoice((prev) => ({
-      ...prev,
-      kind,
-      have: keeps.includes("have") ? prev.have : null,
-      want: keeps.includes("want") ? prev.want : null,
-      sale: keeps.includes("sale") ? prev.sale : null,
-      unpair: false,
-    }));
-  };
+  const setKind = (kind: PostKind) => setChoice((prev) => choiceForKind(prev, kind));
 
   const title = editing
     ? m.trade_composer_edit_title()
@@ -183,21 +168,7 @@ function Composer({ start, onDone }: { start: ComposerStart; onDone: () => void 
   }
 
   const kind = choice.kind;
-  const sellSwaps = kind === "sell" && choice.alsoSwap;
-  const request = {
-    kind,
-    have: choice.have,
-    want: kind === "sell" && !choice.alsoSwap ? null : choice.want,
-    sale: choice.sale,
-    alsoPay: (kind === "swap" || sellSwaps) && choice.want !== null && choice.alsoPay,
-    alsoSwap: kind === "sell" ? choice.alsoSwap : undefined,
-    unpair: choice.unpair,
-    replaces: start.replaces,
-  };
-  // the half a picked list's partner fills: a want list's is the have list, or on a Sell post
-  // the sale list
-  const otherOf = (slot: Slot): Slot =>
-    slot !== "want" ? "want" : kind === "sell" ? "sale" : "have";
+  const request = postInput({ ...choice, kind }, start.replaces);
   const pairs = keepsPair(kind, choice.alsoSwap);
   const plan = planPost(lists, request);
   const alsoPayCheck = (
@@ -214,52 +185,35 @@ function Composer({ start, onDone }: { start: ComposerStart; onDone: () => void 
     />
   );
 
-  const pick = (slot: Slot, slug: string | null) => {
-    setChoice((prev) => {
-      const next = { ...prev, [slot]: slug, unpair: false };
-      if (slot === "want" && slug === null) next.alsoPay = false;
-      // one half of a pair brings the other along on a post that keeps it, unless that side is taken
-      const other = otherOf(slot);
-      const list = lists.find((entry) => entry.slug === slug);
-      const partner = list && pairs && prev[other] === null ? partnerOf(lists, list) : null;
-      // a want list's partner may be a have or a sale list; only one that fits the slot comes along
-      if (
-        partner &&
-        partner.listType === other &&
-        rowBlock(lists, partner, kind, start.replaces) === null
-      ) {
-        next[other] = partner.slug;
-      }
-      return next;
-    });
-  };
+  const pick = (slot: Slot, slug: string | null) =>
+    setChoice((prev) => pickList(lists, prev, kind, slot, slug, start.replaces));
 
-  const renderSection = (slot: Slot) => (
-    <ListSection
-      key={slot}
-      slot={slot}
-      kind={kind}
-      optional={kind === "swap" || slot === "want"}
-      lists={lists}
-      value={choice[slot]}
-      otherPicked={pairs && choice[otherOf(slot)] !== null}
-      replaces={start.replaces}
-      prompt={
-        !plan.ok &&
-        plan.reason === "trade_post_list_paired" &&
-        plan.slug === choice[slot] &&
-        plan.partner
-          ? {
-              partner: lists.find((list) => list.slug === plan.partner)?.name ?? "",
-              onUnpair: () => setChoice((prev) => ({ ...prev, unpair: true })),
-              onPickAnother: () => pick(slot, null),
-            }
-          : null
-      }
-      onPick={(slug) => pick(slot, slug)}
-      onDone={onDone}
-    />
-  );
+  const renderSection = (slot: Slot) => {
+    const partner = pairedPartner(plan, choice[slot], lists);
+    return (
+      <ListSection
+        key={slot}
+        slot={slot}
+        kind={kind}
+        optional={kind === "swap" || slot === "want"}
+        lists={lists}
+        value={choice[slot]}
+        otherPicked={pairs && choice[otherSlot(kind, slot)] !== null}
+        replaces={start.replaces}
+        prompt={
+          partner !== null
+            ? {
+                partner,
+                onUnpair: () => setChoice((prev) => ({ ...prev, unpair: true })),
+                onPickAnother: () => pick(slot, null),
+              }
+            : null
+        }
+        onPick={(slug) => pick(slot, slug)}
+        onDone={onDone}
+      />
+    );
+  };
 
   return (
     <form
@@ -288,15 +242,7 @@ function Composer({ start, onDone }: { start: ComposerStart; onDone: () => void 
               }
               checked={choice.alsoSwap}
               disabled={false}
-              onChange={(alsoSwap) =>
-                setChoice((prev) => ({
-                  ...prev,
-                  alsoSwap,
-                  want: alsoSwap ? prev.want : null,
-                  alsoPay: alsoSwap && prev.alsoPay,
-                  unpair: false,
-                }))
-              }
+              onChange={(alsoSwap) => setChoice((prev) => withAlsoSwap(prev, alsoSwap))}
             />
             {/* what the seller would swap for, once the sale list takes swaps */}
             {choice.alsoSwap ? (
@@ -311,11 +257,11 @@ function Composer({ start, onDone }: { start: ComposerStart; onDone: () => void 
         {plan.ok ? <UnpairedNote lists={lists} plan={plan} picked={request} /> : null}
         <Preview
           kind={kind}
-          have={choice.have !== null}
-          want={choice.want !== null}
-          sale={choice.sale !== null}
+          have={request.have !== null}
+          want={request.want !== null}
+          sale={request.sale !== null}
           alsoPay={request.alsoPay}
-          alsoSwap={sellSwaps}
+          alsoSwap={request.alsoSwap === true}
         />
       </DialogPanel>
       <DialogFooter>
@@ -560,8 +506,6 @@ function OptionCheck({
   );
 }
 
-type Plan = Extract<ReturnType<typeof planPost>, { ok: true }>;
-
 /** Names the lists posting will unpair, so the unpair the viewer chose stays in sight. */
 function UnpairedNote({
   lists,
@@ -569,14 +513,10 @@ function UnpairedNote({
   picked,
 }: {
   lists: PlanList[];
-  plan: Plan;
+  plan: Extract<PostPlan, { ok: true }>;
   picked: { have: string | null; want: string | null; sale: string | null };
 }) {
-  const pickedSlugs = [picked.have, picked.want, picked.sale];
-  const names = plan.unlink
-    .map((id) => lists.find((list) => list.id === id))
-    .filter((list) => list !== undefined && !pickedSlugs.includes(list.slug))
-    .map((list) => list!.name);
+  const names = unpairedNames(lists, plan, picked);
   if (names.length === 0) return null;
   return (
     <p className="text-muted-foreground text-xs text-pretty">
