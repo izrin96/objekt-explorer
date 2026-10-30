@@ -248,6 +248,8 @@ function EditForm({
                 }
                 clearPick();
                 setPicked({ file, url: URL.createObjectURL(file) });
+                // a new banner replaces the old one, so it is no longer removed
+                setRemoveBanner(false);
               }}
             />
             {picked && (
@@ -301,7 +303,14 @@ function EditForm({
                   {m.common_actions_undo()}
                 </Button>
               ) : (
-                <Button variant="outline" size="sm" onClick={() => setRemoveBanner(true)}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    clearPick();
+                    setRemoveBanner(true);
+                  }}
+                >
                   <TrashSimpleIcon />
                   {m.common_actions_remove()}
                 </Button>
