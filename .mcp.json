@@ -3,6 +3,10 @@
     "sentry": {
       "type": "http",
       "url": "https://mcp.sentry.dev/mcp"
+    },
+    "skill-issue": {
+      "type": "http",
+      "url": "https://skill-issue.in/api/mcp"
     }
   }
 }
