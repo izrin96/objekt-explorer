@@ -40,66 +40,19 @@ import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import { RULE_KEYS } from "./queries";
+import {
+  collectionDigits,
+  fromRule,
+  newDraft,
+  type RuleDraft,
+  toggle,
+  toInput,
+  togglePrio,
+} from "./rule-draft";
 import { ruleText } from "./words";
 
 const ANY = "__any__";
 const ORDINAL = ["", "1st", "2nd", "3rd"];
-
-type Draft = {
-  kind: "collection" | "set";
-  artist: ValidArtist;
-  season: string | null;
-  /** digits only; the online suffix is added on save */
-  collectionNo: string;
-  /** null is any class */
-  cls: string | null;
-  editions: number[];
-  members: string[];
-  prio: string[];
-  skipOwned: boolean;
-};
-
-function toInput(draft: Draft): ListRuleInput | null {
-  const artist = draft.artist.toLowerCase();
-  if (draft.kind === "collection") {
-    const digits = draft.collectionNo.trim();
-    if (!/^\d{3}$/.test(digits) || !draft.season) return null;
-    return {
-      kind: "collection",
-      artist,
-      season: draft.season,
-      collectionNo: `${digits}Z`,
-      prio: draft.prio,
-      skipOwned: draft.skipOwned,
-    };
-  }
-  return {
-    kind: "set",
-    artist,
-    season: draft.season,
-    class: draft.cls,
-    editions: ruleHasEditions(draft.artist, draft.cls) ? draft.editions : [],
-    members: draft.members,
-    skipOwned: draft.skipOwned,
-  };
-}
-
-function fromRule(rule: ListRuleDef, artists: ValidArtist[]): Draft {
-  return {
-    kind: rule.kind,
-    artist: artists.find((a) => a.toLowerCase() === rule.artist) ?? artists[0]!,
-    season: rule.season,
-    collectionNo: (rule.collectionNo ?? "").replace(/[A-Z]$/, ""),
-    cls: rule.kind === "set" ? rule.class : "First",
-    editions: rule.editions,
-    members: rule.members,
-    prio: rule.prio,
-    skipOwned: rule.skipOwned,
-  };
-}
-
-const toggle = <T,>(items: T[], item: T) =>
-  items.includes(item) ? items.filter((i) => i !== item) : [...items, item];
 
 const RULE_KINDS = [
   {
@@ -171,30 +124,22 @@ function RuleForm({
   const artistIds = artists.map((a) => a.id);
   const { data: filterData } = useQuery(orpc.config.getFilterData.queryOptions());
 
-  const [draft, setDraft] = useState<Draft>(() => {
+  const [draft, setDraft] = useState<RuleDraft>(() => {
     const start = rule ?? initial;
     if (start) return fromRule(start, artistIds);
     const artist = selectedArtists[0]?.id ?? artistIds[0]!;
-    const seasons = filterData?.seasonsMap.find((s) => s.artistId === artist)?.seasons ?? [];
-    return {
-      kind: "set",
+    return newDraft(
       artist,
-      season: seasons.at(-1) ?? null,
-      collectionNo: "",
-      cls: "First",
-      editions: [],
-      members: [],
-      prio: [],
-      skipOwned: true,
-    };
+      filterData?.seasonsMap.find((s) => s.artistId === artist)?.seasons ?? [],
+    );
   });
-  const set = (patch: Partial<Draft>) => setDraft((current) => ({ ...current, ...patch }));
+  const set = (patch: Partial<RuleDraft>) => setDraft((current) => ({ ...current, ...patch }));
 
   const seasonsOf = (artist: string) =>
     filterData?.seasonsMap.find((s) => s.artistId === artist)?.seasons ?? [];
   const seasons = seasonsOf(draft.artist);
   // a collection rule has no Any season, so an empty season there falls back to the newest
-  const seasonFor = (kind: Draft["kind"], artist: string, season: string | null) =>
+  const seasonFor = (kind: RuleDraft["kind"], artist: string, season: string | null) =>
     kind === "collection" && season === null ? (seasonsOf(artist).at(-1) ?? null) : season;
   const classesOf = (artist: string) =>
     filterData?.classesMap.find((c) => c.artistId === artist)?.classes ?? [];
@@ -336,9 +281,7 @@ function RuleForm({
                 placeholder="366"
                 className="font-mono"
                 value={draft.collectionNo}
-                onChange={(event) =>
-                  set({ collectionNo: event.target.value.replace(/\D/g, "").slice(0, 3) })
-                }
+                onChange={(event) => set({ collectionNo: collectionDigits(event.target.value) })}
               />
             </div>
           ) : null}
@@ -385,7 +328,7 @@ function RuleForm({
                 key={member}
                 label={member}
                 pressed={draft.prio.includes(member)}
-                onPressedChange={() => set({ prio: toggle(draft.prio, member).slice(0, 6) })}
+                onPressedChange={() => set({ prio: togglePrio(draft.prio, member) })}
               />
             ))}
           </ChipGroup>
