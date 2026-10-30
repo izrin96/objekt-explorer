@@ -1,11 +1,4 @@
-import {
-  CardsThreeIcon,
-  HandshakeIcon,
-  type Icon,
-  PaperPlaneRightIcon,
-  PlusIcon,
-  XIcon,
-} from "@phosphor-icons/react";
+import { PaperPlaneRightIcon, XIcon } from "@phosphor-icons/react";
 import { type ChatMessage, MESSAGE_MAX_LENGTH, type ReplyQuote } from "@repo/api/schemas/chat";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -20,8 +13,6 @@ import {
 } from "react";
 
 import { Button } from "@/components/ui/button";
-import { Menu, MenuItem, MenuPopup, MenuTrigger } from "@/components/ui/menu";
-import { Sheet, SheetHeader, SheetPanel, SheetPopup, SheetTitle } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import { AttachObjektDialog } from "@/features/chat/attach/attach-objekt-dialog";
 import type { Attachment } from "@/features/chat/attachment";
@@ -30,7 +21,6 @@ import { useStartGate } from "@/features/chat/message-button";
 import { fetchNewer, invalidateChatLists } from "@/features/chat/queries";
 import { currentQuote, quoteText } from "@/features/chat/reply";
 import { SendingAs } from "@/features/link/shown-as";
-import { useMediaQuery } from "@/hooks/use-media-query";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -45,12 +35,12 @@ import {
   useChatDraft,
 } from "@/stores/chat-draft";
 
+import { AddToMessage } from "./add-to-message";
 import { AttachmentChip } from "./composer-attachment";
 import { boxCheck, keyAction, sendInput } from "./composer-rules";
 import { firstLineSuggestions } from "./suggestions";
 import { useTypingPing } from "./use-typing-ping";
 
-/** The card of each send in flight, by send id, for a failure to put back after the thread unmounted. */
 const sentCards = new Map<string, Attachment>();
 
 export function Composer({
@@ -85,8 +75,6 @@ export function Composer({
   const { offerLink } = useStartGate();
   const body = useChatDraft((state) => state.drafts[conversationId]?.body ?? "");
   const reply = useChatDraft((state) => state.drafts[conversationId]?.reply ?? null);
-  // a card handed over by a Message button is attached, then forgotten; also while this thread
-  // is already open, as from the objekt drawer's Market tab
   const [attachOpen, setAttachOpen] = useState(false);
   const addRef = useRef<HTMLButtonElement>(null);
   const detach = () => {
@@ -331,124 +319,6 @@ export function Composer({
         }}
       />
     </form>
-  );
-}
-
-type AddChoice = { icon: Icon; label: string; description: string; run: () => void };
-
-/**
- * One button for Attach objekt and Make offer: a menu from `md` up, where the conversation
- * list joins the thread, and a bottom sheet below it, with a line under each choice. What a
- * choice opens hands focus back to the button when it closes.
- */
-function AddToMessage({
-  buttonRef,
-  onAttach,
-  onOffer,
-}: {
-  buttonRef: RefObject<HTMLButtonElement | null>;
-  onAttach: () => void;
-  onOffer: () => void;
-}) {
-  const wide = useMediaQuery("(min-width: 48rem)");
-  const [sheetOpen, setSheetOpen] = useState(false);
-  // a choice opens its dialog once the sheet has closed and handed focus back, or the sheet's
-  // focus return lands on Add behind the new dialog
-  const chosen = useRef<(() => void) | null>(null);
-  const choices: AddChoice[] = [
-    {
-      icon: CardsThreeIcon,
-      label: m.chat_attach_title(),
-      description: m.chat_add_attach_desc(),
-      run: onAttach,
-    },
-    {
-      icon: HandshakeIcon,
-      label: m.offer_composer(),
-      description: m.chat_add_offer_desc(),
-      run: onOffer,
-    },
-  ];
-  // the same height as Send, so the row lines up with a one-line message box
-  const button = (
-    <Button
-      ref={buttonRef}
-      variant="ghost"
-      size="icon"
-      aria-label={m.chat_add_to_message()}
-      title={m.chat_add_to_message()}
-      className="shrink-0"
-    />
-  );
-
-  if (wide) {
-    return (
-      <Menu>
-        <MenuTrigger render={button}>
-          <PlusIcon />
-        </MenuTrigger>
-        <MenuPopup side="top" align="start">
-          {choices.map(({ icon: ChoiceIcon, label, run }) => (
-            <MenuItem key={label} onClick={run}>
-              <ChoiceIcon />
-              {label}
-            </MenuItem>
-          ))}
-        </MenuPopup>
-      </Menu>
-    );
-  }
-
-  return (
-    <>
-      <Button
-        ref={buttonRef}
-        variant="ghost"
-        size="icon"
-        aria-label={m.chat_add_to_message()}
-        aria-haspopup="dialog"
-        aria-expanded={sheetOpen}
-        onClick={() => setSheetOpen(true)}
-        className="shrink-0"
-      >
-        <PlusIcon />
-      </Button>
-      <Sheet
-        open={sheetOpen}
-        onOpenChange={setSheetOpen}
-        onOpenChangeComplete={(open) => {
-          if (open) return;
-          const run = chosen.current;
-          chosen.current = null;
-          run?.();
-        }}
-      >
-        <SheetPopup side="bottom" finalFocus={buttonRef}>
-          <SheetHeader>
-            <SheetTitle className="font-display">{m.chat_add_to_message()}</SheetTitle>
-          </SheetHeader>
-          <SheetPanel className="flex flex-col gap-1 pt-0">
-            {choices.map(({ icon: ChoiceIcon, label, description, run }) => (
-              <Button
-                key={label}
-                variant="ghost"
-                className="h-auto justify-start gap-3 py-3 text-start"
-                onClick={() => {
-                  chosen.current = run;
-                  setSheetOpen(false);
-                }}
-              >
-                <ChoiceIcon className="size-5" />
-                <span className="flex flex-col">
-                  <span className="text-sm font-medium">{label}</span>
-                  <span className="text-muted-foreground text-xs font-normal">{description}</span>
-                </span>
-              </Button>
-            ))}
-          </SheetPanel>
-        </SheetPopup>
-      </Sheet>
-    </>
   );
 }
 
