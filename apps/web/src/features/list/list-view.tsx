@@ -6,8 +6,8 @@ import type { ListObjekt } from "@repo/lib/types/objekt";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useDeferredValue, useMemo, useState } from "react";
 
+import { CountBar, TotalCount } from "@/components/shared/count-bar";
 import { EmptyState } from "@/components/shared/empty-state";
-import { countMarkup, MessageMarkup } from "@/components/shared/message-markup";
 import { Button } from "@/components/ui/button";
 import { MenuItem } from "@/components/ui/menu";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
@@ -373,15 +373,9 @@ function ListEntries() {
         />
       ) : (
         <>
-          <div className="flex items-center justify-between gap-2">
-            <div className="text-muted-foreground text-xs tabular-nums">
-              <MessageMarkup
-                parts={m.common_count_total.parts({ count: filtered.length.toLocaleString() })}
-                markup={countMarkup}
-              />
-            </div>
-            {user && <SelectModeButton />}
-          </div>
+          <CountBar aside={user && <SelectModeButton />}>
+            <TotalCount count={filtered.length} />
+          </CountBar>
           <ObjektVirtualGrid
             objekts={filtered}
             filters={deferredFilters}

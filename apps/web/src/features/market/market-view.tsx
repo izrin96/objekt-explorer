@@ -4,6 +4,7 @@ import type { MarketObjekt, ValidObjekt } from "@repo/lib/types/objekt";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useMemo, useState } from "react";
 
+import { CountBar, TotalCount } from "@/components/shared/count-bar";
 import { EmptyState } from "@/components/shared/empty-state";
 import { countMarkup, MessageMarkup } from "@/components/shared/message-markup";
 import { PageHeader } from "@/components/shared/page-header";
@@ -144,20 +145,14 @@ export function MarketView() {
       ) : null}
 
       {!isPending && !narrowingFailed && (
-        <div className="flex items-center justify-between gap-2">
-          <div className="text-muted-foreground text-xs tabular-nums">
-            <MessageMarkup
-              parts={m.common_count_total.parts({ count: filtered.length.toLocaleString() })}
-              markup={countMarkup}
-            />
-            {" · "}
-            <MessageMarkup
-              parts={m.market_listing_count.parts({ count: totalListings.toLocaleString() })}
-              markup={countMarkup}
-            />
-          </div>
-          {user && filtered.length > 0 && <SelectModeButton />}
-        </div>
+        <CountBar aside={user && filtered.length > 0 && <SelectModeButton />}>
+          <TotalCount count={filtered.length} />
+          {" · "}
+          <MessageMarkup
+            parts={m.market_listing_count.parts({ count: totalListings.toLocaleString() })}
+            markup={countMarkup}
+          />
+        </CountBar>
       )}
 
       {narrowingFailed ? null : isPending ? (

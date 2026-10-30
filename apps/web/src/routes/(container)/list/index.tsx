@@ -2,8 +2,8 @@ import { CardsThreeIcon, DiscordLogoIcon, PlusIcon } from "@phosphor-icons/react
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 
+import { TotalCount } from "@/components/shared/count-bar";
 import { EmptyState } from "@/components/shared/empty-state";
-import { MessageMarkup } from "@/components/shared/message-markup";
 import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
 import { DiscordFormatDialog } from "@/features/discord/discord-format-dialog";
@@ -43,16 +43,7 @@ function ListsPage() {
     <>
       <PageHeader
         title={m.list_title()}
-        description={
-          <MessageMarkup
-            parts={m.common_count_total.parts({ count: lists.length.toLocaleString() })}
-            markup={{
-              b: (children) => (
-                <b className="text-foreground font-semibold tabular-nums">{children}</b>
-              ),
-            }}
-          />
-        }
+        description={<TotalCount count={lists.length} />}
         aside={
           <div className="flex flex-wrap items-center gap-1.5">
             <Button variant="outline" size="sm" onClick={() => setDiscordOpen(true)}>
