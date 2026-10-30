@@ -1,3 +1,4 @@
+import { ArrowClockwiseIcon } from "@phosphor-icons/react";
 import type { LiveSession } from "@repo/cosmo/types/live";
 import {
   ParticipantView,
@@ -6,13 +7,17 @@ import {
 } from "@stream-io/video-react-sdk";
 import { type PropsWithChildren, type ReactElement, createContext, use } from "react";
 
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { LiveAvatar } from "@/features/live/session-list";
 import { m } from "@/paraglide/messages";
 
-/** the viewport minus the nav and the footer under it; both states keep it so
- *  the page does not jump between a live session and an ended one */
-const STAGE = "relative flex h-[calc(100svh-7rem)] w-full items-center justify-center";
+/** the viewport minus the chrome around it, so the footer stays on screen: the
+ *  nav (h-13 and a 1px border), PageMain's pt-5 and pb-10, the gap-2 and the
+ *  footer's two text lines (2.75rem). Both states keep it so the page does not
+ *  jump between a live session and an ended one */
+const STAGE = "relative flex h-[calc(100svh-10.25rem-1px)] w-full items-center justify-center";
 
 const LiveSessionContext = createContext<LiveSession | null>(null);
 
@@ -63,6 +68,20 @@ export function LiveStagePending() {
   );
 }
 
+export function LiveStageFailed({ onRetry }: { onRetry: () => void }) {
+  return (
+    <div className={`${STAGE} flex-col gap-3 overflow-hidden rounded-lg bg-black text-white`}>
+      <p role="alert" className="text-sm">
+        {m.live_join_failed()}
+      </p>
+      <Button variant="outline" size="sm" onClick={onRetry}>
+        <ArrowClockwiseIcon />
+        {m.common_error_retry()}
+      </Button>
+    </div>
+  );
+}
+
 export function LiveEnded() {
   const live = useLiveSession();
 
@@ -78,9 +97,14 @@ export function LiveEnded() {
         )}
       </div>
       <div className="bg-background/50 absolute size-full" />
-      <div className="text-foreground absolute flex justify-center font-semibold">
+      {/* `outline` is translucent in dark mode; over a photo it needs an opaque fill */}
+      <Badge
+        variant="outline"
+        size="lg"
+        className="dark:bg-background absolute px-2.5 font-semibold"
+      >
         {m.live_live_stream_ended()}
-      </div>
+      </Badge>
     </div>
   );
 }
