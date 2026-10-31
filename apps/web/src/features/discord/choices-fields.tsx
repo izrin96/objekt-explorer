@@ -143,7 +143,7 @@ export function FormattedText({
         id={id}
         value={text}
         rows={8}
-        className="max-h-64 text-xs"
+        className="max-h-64"
         onChange={(event) => onTextChange(event.target.value)}
       />
     </div>

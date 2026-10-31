@@ -1,11 +1,13 @@
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
-import { useState } from "react";
+import { type Ref, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogClose,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogPanel,
@@ -38,6 +40,7 @@ import { format } from "./format";
 const NONE = "__none__";
 
 const EMPTY_LISTS = { haveList: NONE, wantList: NONE };
+const ERROR_ID = "discord-lists-error";
 
 /** The owner's generator: it builds from saved have/want lists, opened from the user menu and `/list`. */
 export function DiscordFormatDialog({
@@ -54,6 +57,9 @@ export function DiscordFormatDialog({
   const [picked, setPicked] = useState(EMPTY_LISTS);
   const [choices, setChoices] = useState(EMPTY_CHOICES);
   const [text, setText] = useState("");
+  const [tried, setTried] = useState(false);
+  const havePicker = useRef<HTMLButtonElement>(null);
+  const missing = tried && picked.haveList === NONE && picked.wantList === NONE;
 
   const generate = useMutation(
     orpc.list.generateDiscordFormat.mutationOptions({
@@ -78,7 +84,9 @@ export function DiscordFormatDialog({
     const wantListSlug = picked.wantList === NONE ? undefined : picked.wantList;
 
     if (!haveListSlug && !wantListSlug) {
-      toastManager.add({ type: "error", title: m.generate_discord_select_at_least_one() });
+      // the error must exist before focus lands, so the picker reads it out
+      flushSync(() => setTried(true));
+      havePicker.current?.focus();
       return;
     }
 
@@ -110,13 +118,16 @@ export function DiscordFormatDialog({
       <DialogPopup className="max-w-md">
         <DialogHeader>
           <DialogTitle className="font-display">{m.generate_discord_title()}</DialogTitle>
+          <DialogDescription>{m.generate_discord_desc()}</DialogDescription>
         </DialogHeader>
         <DialogPanel className="flex flex-col gap-4">
           <ListPicker
+            ref={havePicker}
             id="discord-have"
             label={m.generate_discord_have_list_label()}
             value={picked.haveList}
             lists={lists}
+            invalid={missing}
             onValueChange={(next) => setPicked({ ...picked, haveList: next })}
           />
           <ListPicker
@@ -124,8 +135,14 @@ export function DiscordFormatDialog({
             label={m.generate_discord_want_list_label()}
             value={picked.wantList}
             lists={lists}
+            invalid={missing}
             onValueChange={(next) => setPicked({ ...picked, wantList: next })}
           />
+          {missing ? (
+            <p id={ERROR_ID} role="alert" className="text-destructive-foreground -mt-2 text-xs">
+              {m.generate_discord_select_at_least_one()}
+            </p>
+          ) : null}
 
           <ChoicesFields flags={FLAGS} choices={choices} onChange={setChoices} />
           <FormattedText id="discord-output" text={text} onTextChange={setText} />
@@ -136,6 +153,7 @@ export function DiscordFormatDialog({
             variant="outline"
             onClick={() => {
               setPicked(EMPTY_LISTS);
+              setTried(false);
               setChoices(EMPTY_CHOICES);
               setText("");
             }}
@@ -152,23 +170,33 @@ export function DiscordFormatDialog({
 }
 
 function ListPicker({
+  ref,
   id,
   label,
   value,
   lists,
+  invalid,
   onValueChange,
 }: {
+  ref?: Ref<HTMLButtonElement>;
   id: string;
   label: string;
   value: string;
   lists: ReturnType<typeof useUserLists>;
+  invalid: boolean;
   onValueChange: (next: string) => void;
 }) {
   return (
     <div className="flex min-w-0 flex-col gap-1.5">
       <Label htmlFor={id}>{label}</Label>
       <Select value={value} onValueChange={(next: string | null) => onValueChange(next ?? NONE)}>
-        <SelectTrigger id={id} className="min-w-0">
+        <SelectTrigger
+          ref={ref}
+          id={id}
+          aria-invalid={invalid || undefined}
+          aria-describedby={invalid ? ERROR_ID : undefined}
+          className="min-w-0"
+        >
           <SelectValue>
             {(next: string) =>
               next === NONE
