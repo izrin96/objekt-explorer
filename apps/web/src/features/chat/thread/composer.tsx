@@ -27,7 +27,6 @@ import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
 import {
   dropDraftSendId,
-  putDraftCard,
   restoreDraft,
   setDraftBody,
   setDraftReply,
@@ -128,13 +127,13 @@ export function Composer({
       onError: (_error, { conversationId: id, body: sentBody, clientId }) => {
         if (clientId === undefined) return;
         // `invalid_reply` too puts its reply back: no control here offers a target it refuses
+        const card = sentCards.get(clientId);
         restoreDraft(id, {
           body: sentBody ?? "",
           clientId,
           reply: sentReplies.get(clientId) ?? null,
+          card: card ? { ...card } : null,
         });
-        const card = sentCards.get(clientId);
-        if (card) putDraftCard(id, { ...card }, true);
       },
       onSettled: (_data, _error, { clientId }) => {
         if (clientId === undefined) return;

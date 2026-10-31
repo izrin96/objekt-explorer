@@ -35,7 +35,7 @@ import { useMinuteClock } from "@/hooks/use-minute-clock";
 import { displayNickname, isSameAddress } from "@/lib/address";
 import { joinSentences } from "@/lib/text";
 import { m } from "@/paraglide/messages";
-import { dropDraftCard, setDraftReply, useChatDraft } from "@/stores/chat-draft";
+import { boxCards, dropDraftCard, setDraftReply, useChatDraft } from "@/stores/chat-draft";
 import { clearTyping, useChatTyping } from "@/stores/chat-typing";
 
 import { runPosition } from "./bubble-run";
@@ -139,6 +139,13 @@ function ThreadView({
   useEffect(() => {
     if (handed) dropDraftCard(id);
   }, [handed, id]);
+  useEffect(() => {
+    if (attachment === null) return;
+    boxCards.add(id);
+    return () => {
+      boxCards.delete(id);
+    };
+  }, [attachment, id]);
   const [atBottom, setAtBottom] = useState(true);
   const heightBeforeOlder = useRef<number | null>(null);
   const heading = useRef<HTMLHeadingElement>(null);

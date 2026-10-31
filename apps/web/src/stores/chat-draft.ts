@@ -17,6 +17,12 @@ type Draft = {
 export const sentReplies = new Map<string, DraftReply>();
 
 /**
+ * Conversations whose open thread has a card in its box. The card itself is the thread's state,
+ * gone when it unmounts, so a failed send reads this to tell whether a card was attached since.
+ */
+export const boxCards = new Set<number>();
+
+/**
  * What a conversation's message box holds, by conversation id: a card a Message button hands to
  * the thread it opens, and the text not yet sent with the message it replies to. Held in memory only, so a reload or a shared
  * link never brings either back.
@@ -82,27 +88,30 @@ export function beginSend(conversationId: number, body: string) {
 }
 
 /**
- * A failed send puts its text back ahead of anything typed since, with its reply unless another
- * was started meanwhile, and keeps its id only when nothing was typed or started. A reply started
- * and stopped meanwhile leaves nothing behind, so the failed one comes back.
+ * A failed send puts its text back ahead of anything typed since, with its reply and its card
+ * unless another was started or attached meanwhile, and keeps its id only when nothing was typed,
+ * started or attached. A reply or card added and removed meanwhile leaves nothing behind, so the
+ * failed one comes back.
  */
 export function restoreDraft(
   conversationId: number,
-  sent: { body: string; clientId: string; reply: DraftReply | null },
+  sent: { body: string; clientId: string; reply: DraftReply | null; card?: Attachment | null },
 ) {
   const current = draftOf(conversationId);
   const body = current?.body ?? "";
   const newer = current?.reply ?? null;
+  const newerCard = boxCards.has(conversationId);
   withDraft(
     conversationId,
-    body === "" && newer === null
-      ? sent
+    body === "" && newer === null && !newerCard
+      ? { body: sent.body, clientId: sent.clientId, reply: sent.reply }
       : {
           body: body === "" ? sent.body : sent.body === "" ? body : `${sent.body}\n${body}`,
           clientId: null,
           reply: newer ?? sent.reply,
         },
   );
+  if (sent.card && !newerCard) putDraftCard(conversationId, sent.card, true);
 }
 
 /** Quotes of messages unsent since, in drafts and sends in flight, lose their text and card. */

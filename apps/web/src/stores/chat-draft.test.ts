@@ -1,7 +1,10 @@
 import { beforeEach, describe, expect, test } from "bun:test";
 
+import type { Attachment } from "@/features/chat/attachment";
+
 import {
   beginSend,
+  boxCards,
   type DraftReply,
   markRepliesUnsent,
   restoreDraft,
@@ -16,10 +19,13 @@ const reply = (id: number, excerpt = `m${id}`): DraftReply => ({
   quote: { id, mine: false, excerpt, card: null, state: "shown" },
 });
 const draft = () => useChatDraft.getState().drafts[1];
+// only its identity matters here
+const card = (name: string) => ({ kind: "objekt", name }) as unknown as Attachment;
 
 beforeEach(() => {
   useChatDraft.setState({ cards: {}, drafts: {} });
   sentReplies.clear();
+  boxCards.clear();
 });
 
 describe("the reply in a draft", () => {
@@ -96,6 +102,41 @@ describe("beginSend and restoreDraft", () => {
 
     restoreDraft(1, sent);
     expect(draft()).toEqual({ body: "one\ntwo", clientId: null, reply: reply(5) });
+  });
+});
+
+describe("the card of a failed send", () => {
+  const handed = () => useChatDraft.getState().cards[1];
+
+  test("comes back with its text and id when the box holds no card", () => {
+    const sent = beginSend(1, "this one?");
+    restoreDraft(1, { ...sent, card: card("a") });
+    expect(handed()).toEqual(card("a"));
+    expect(draft()).toEqual({ body: "this one?", clientId: sent.clientId, reply: null });
+  });
+
+  test("a card attached since wins, and the failed text comes back with a new send", () => {
+    const sent = beginSend(1, "this one?");
+    boxCards.add(1);
+    restoreDraft(1, { ...sent, card: card("a") });
+    expect(handed()).toBeUndefined();
+    expect(draft()).toEqual({ body: "this one?", clientId: null, reply: null });
+  });
+
+  test("a card attached since, after a send without one, also starts a new send", () => {
+    const sent = beginSend(1, "and this");
+    boxCards.add(1);
+    restoreDraft(1, { ...sent, card: null });
+    expect(draft()?.clientId).toBeNull();
+  });
+
+  test("a card attached and removed since leaves nothing behind, so the failed one comes back", () => {
+    const sent = beginSend(1, "this one?");
+    boxCards.add(1);
+    boxCards.delete(1);
+    restoreDraft(1, { ...sent, card: card("a") });
+    expect(handed()).toEqual(card("a"));
+    expect(draft()?.clientId).toBe(sent.clientId);
   });
 });
 
