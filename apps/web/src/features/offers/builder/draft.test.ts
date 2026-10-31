@@ -15,12 +15,20 @@ import { getLocale } from "@/paraglide/runtime";
 import {
   asksOf,
   holdsDraft,
+  initialTopup,
   offerInput,
   pickEstimated,
   pickFlags,
   pickProblem,
   resolveAsks,
   sendGate,
+  toggleTopup,
+  topupForNear,
+  topupRestored,
+  topupValue,
+  topupWithoutNear,
+  touchTopup,
+  type TopupState,
 } from "./draft";
 import type { OfferPrefill } from "./types";
 
@@ -466,5 +474,180 @@ describe("sendGate", () => {
 
   test("the limit counts each side alone", () => {
     expect(gate({ give: many(OFFER_SIDE_LIMIT), get: [ask(OFFER_SIDE_LIMIT)] }).canSend).toBe(true);
+  });
+});
+
+describe("top-up state", () => {
+  const pick = (key: string) => ({ key, collectionSlug: key }) as unknown as OfferPick;
+  const fresh = [pick("a")];
+  const off: TopupState = {
+    on: false,
+    amount: null,
+    chosenCurrency: null,
+    payer: "from",
+    touched: false,
+    near: null,
+  };
+  const prefill = { amount: 5, currency: "EUR", payer: "to" } as const;
+
+  test("initialTopup: nothing", () => {
+    expect(initialTopup(undefined, undefined)).toEqual(off);
+  });
+
+  test("initialTopup: prefill only", () => {
+    expect(initialTopup(prefill, undefined)).toEqual({
+      on: true,
+      amount: 5,
+      chosenCurrency: "EUR",
+      payer: "to",
+      touched: false,
+      near: null,
+    });
+  });
+
+  test("initialTopup: near sale pays to, near buy from, both without an amount", () => {
+    const sell = initialTopup(undefined, { verb: "sell", picks: fresh });
+    expect(sell).toMatchObject({ on: true, amount: null, payer: "to", chosenCurrency: null });
+    expect(sell.near).toEqual({ verb: "sell", picks: fresh });
+    expect(initialTopup(undefined, { verb: "buy", picks: fresh })).toMatchObject({
+      on: true,
+      amount: null,
+      payer: "from",
+    });
+  });
+
+  test("initialTopup: prefill payer wins over the near one", () => {
+    const t = initialTopup({ ...prefill, payer: "from" }, { verb: "sell", picks: fresh });
+    expect(t.payer).toBe("from");
+    expect(t.near).not.toBeNull();
+  });
+
+  test("initialTopup: a swap near keeps from (unreachable today)", () => {
+    expect(initialTopup(undefined, { verb: "swap", picks: fresh }).payer).toBe("from");
+  });
+
+  test("topupValue: an unchosen currency follows the preferred one", () => {
+    expect(topupValue(off, "KRW").currency).toBe("KRW");
+    expect(topupValue(off, "USD").currency).toBe("USD");
+  });
+
+  test("topupValue: a chosen currency wins, and the value is exactly four fields", () => {
+    const t = { ...off, on: true, amount: 3, chosenCurrency: "EUR", payer: "to" } as const;
+    expect(topupValue(t, "KRW")).toEqual({ on: true, amount: 3, currency: "EUR", payer: "to" });
+  });
+
+  test("topupForNear: a closed top-up opens with the sale's payer", () => {
+    const t = { ...off, chosenCurrency: "EUR" };
+    const next = topupForNear(t, "sell", fresh);
+    expect(next).toMatchObject({ on: true, payer: "to", chosenCurrency: "EUR" });
+    expect(next.near).toEqual({ verb: "sell", picks: fresh });
+  });
+
+  test("topupForNear: leftover amount and touched are reset", () => {
+    const next = topupForNear({ ...off, amount: 5, touched: true }, "sell", fresh);
+    expect(next.amount).toBeNull();
+    expect(next.touched).toBe(false);
+  });
+
+  test("topupForNear: a buy pays from", () => {
+    expect(topupForNear({ ...off, payer: "to" }, "buy", fresh).payer).toBe("from");
+  });
+
+  test("topupForNear: swap, already on, or nothing fresh change nothing", () => {
+    expect(topupForNear(off, "swap", fresh)).toBe(off);
+    const on = { ...off, on: true };
+    expect(topupForNear(on, "sell", fresh)).toBe(on);
+    expect(topupForNear(off, "sell", [])).toBe(off);
+  });
+
+  test("topupWithoutNear: an amountless near top-up goes", () => {
+    const near = { verb: "sell", picks: fresh } as const;
+    const t = {
+      ...off,
+      on: true,
+      payer: "to",
+      chosenCurrency: "EUR",
+      touched: true,
+      near,
+    } as const;
+    const { topup, taken } = topupWithoutNear(t);
+    expect(topup).toEqual({ ...t, on: false, near: null });
+    expect(taken).toBe(near);
+  });
+
+  test("topupWithoutNear: an amount, even 0, stays", () => {
+    const near = { verb: "sell", picks: fresh } as const;
+    for (const amount of [5, 0]) {
+      const t = { ...off, on: true, amount, near } as const;
+      const out = topupWithoutNear(t);
+      expect(out.topup).toBe(t);
+      expect(out.taken).toBeNull();
+    }
+  });
+
+  test("topupWithoutNear: no near changes nothing", () => {
+    const t = { ...off, on: true };
+    const out = topupWithoutNear(t);
+    expect(out.topup).toBe(t);
+    expect(out.taken).toBeNull();
+  });
+
+  test("topupRestored: nothing taken, or already on, changes nothing", () => {
+    expect(topupRestored(off, null)).toBe(off);
+    const on = { ...off, on: true };
+    expect(topupRestored(on, { verb: "sell", picks: fresh })).toBe(on);
+  });
+
+  test("topupRestored: reopens with the payer and keeps amount and touched", () => {
+    const near = { verb: "sell", picks: fresh } as const;
+    const t = { ...off, amount: 5, touched: true };
+    const next = topupRestored(t, near);
+    expect(next).toEqual({ ...t, on: true, payer: "to", near });
+  });
+
+  test("topupRestored: a swap keeps the payer (unreachable today)", () => {
+    const t = { ...off, payer: "to" } as const;
+    expect(topupRestored(t, { verb: "swap", picks: fresh }).payer).toBe("to");
+  });
+
+  test("toggleTopup: on resets touched and keeps the rest", () => {
+    const t = { ...off, amount: 4, payer: "to", touched: true } as const;
+    expect(toggleTopup(t, true)).toEqual({ ...t, on: true, touched: false });
+  });
+
+  test("toggleTopup: off clears near and keeps the amount", () => {
+    const near = { verb: "buy", picks: fresh } as const;
+    const t = { ...off, on: true, amount: 4, touched: true, near } as const;
+    expect(toggleTopup(t, false)).toEqual({ ...t, on: false, touched: false, near: null });
+  });
+
+  test("touchTopup: sets touched once", () => {
+    const touched = touchTopup(off);
+    expect(touched.touched).toBe(true);
+    expect(touchTopup(touched)).toBe(touched);
+  });
+
+  test("near is only ever set while on", () => {
+    const near = { verb: "sell", picks: fresh } as const;
+    const starts: TopupState[] = [
+      off,
+      { ...off, amount: 5, touched: true },
+      initialTopup(undefined, near),
+      initialTopup(prefill, near),
+      initialTopup(prefill, undefined),
+    ];
+    for (const s of starts) {
+      const outs = [
+        topupForNear(s, "sell", fresh),
+        topupForNear(s, "buy", fresh),
+        topupWithoutNear(s).topup,
+        topupRestored(s, near),
+        toggleTopup(s, true),
+        toggleTopup(s, false),
+        touchTopup(s),
+        topupRestored(topupWithoutNear(s).topup, topupWithoutNear(s).taken),
+      ];
+      for (const o of outs) expect(o.near === null || o.on).toBe(true);
+    }
   });
 });

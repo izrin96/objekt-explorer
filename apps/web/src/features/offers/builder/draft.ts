@@ -6,15 +6,17 @@ import {
   TOPUP_MAX,
   type TopupPayer,
 } from "@repo/api/schemas/offer";
+import type { NearVerb } from "@repo/api/schemas/trade";
 
 import type { OfferAddress } from "@/features/offers/queries";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
 
 import type { GetSource } from "../get-source";
+import { nearPayer } from "../near-picks";
 import { blockedReason, type OfferPick, type OfferSide, toPick } from "../pick";
 import { copiesLeft, countOf, totalOf } from "../quantity";
-import type { OfferPrefill } from "./types";
+import type { AddedMatches, OfferPrefill } from "./types";
 
 type Draft = {
   /** the side as shown: an ask already resolved into the copies it stands for */
@@ -23,6 +25,84 @@ type Draft = {
   topup: { on: boolean; amount: number | null; currency: string; payer: TopupPayer };
   note: string;
 };
+
+export type TopupValue = Draft["topup"];
+
+type NearTopup = NonNullable<AddedMatches["nearTopup"]>;
+
+/**
+ * The form's top-up. The currency is only a held choice: `null` follows the preferred one, which
+ * reads "USD" until the rates load. `near` is set only while `on`; every transition keeps that,
+ * and Remove matches relies on it.
+ */
+export type TopupState = {
+  on: boolean;
+  amount: number | null;
+  chosenCurrency: string | null;
+  payer: TopupPayer;
+  /** the amount's error waits for a first edit, a blur or a send attempt */
+  touched: boolean;
+  /** a near sale or buy that opened the top-up with its payer, and no amount */
+  near: NearTopup | null;
+};
+
+export function initialTopup(
+  prefill: OfferPrefill["topup"],
+  near: NearTopup | undefined,
+): TopupState {
+  const nearNow = near ?? null;
+  return {
+    on: prefill !== undefined || nearNow !== null,
+    amount: prefill?.amount ?? null,
+    chosenCurrency: prefill?.currency ?? null,
+    payer: prefill?.payer ?? (nearNow ? nearPayer(nearNow.verb) : null) ?? "from",
+    touched: false,
+    near: nearNow,
+  };
+}
+
+export function topupValue(t: TopupState, preferred: string): TopupValue {
+  return {
+    on: t.on,
+    amount: t.amount,
+    currency: t.chosenCurrency ?? preferred,
+    payer: t.payer,
+  };
+}
+
+/** Adding a near sale or buy opens a closed top-up with its payer, and no amount. */
+export function topupForNear(t: TopupState, verb: NearVerb, fresh: OfferPick[]): TopupState {
+  const preset = nearPayer(verb);
+  if (!preset || t.on || fresh.length === 0) return t;
+  return {
+    ...t,
+    on: true,
+    payer: preset,
+    amount: null,
+    touched: false,
+    near: { verb, picks: fresh },
+  };
+}
+
+/** Remove matches takes a top-up the near picks opened, still with no amount, with them. */
+export function topupWithoutNear(t: TopupState): { topup: TopupState; taken: NearTopup | null } {
+  if (t.near === null || t.amount !== null) return { topup: t, taken: null };
+  return { topup: { ...t, on: false, near: null }, taken: t.near };
+}
+
+/** Undo puts the taken top-up back unless the sender has opened one since. */
+export function topupRestored(t: TopupState, near: NearTopup | null): TopupState {
+  if (!near || t.on) return t;
+  return { ...t, on: true, payer: nearPayer(near.verb) ?? t.payer, near };
+}
+
+export function toggleTopup(t: TopupState, on: boolean): TopupState {
+  return { ...t, on, touched: false, near: on ? t.near : null };
+}
+
+export function touchTopup(t: TopupState): TopupState {
+  return t.touched ? t : { ...t, touched: true };
+}
 
 /** The request that sends the draft to `to`. */
 export function offerInput(to: OfferAddress, d: Draft): CreateOfferInput {

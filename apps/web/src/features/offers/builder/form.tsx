@@ -1,4 +1,4 @@
-import { OFFER_NOTE_MAX_LENGTH, OFFER_SIDE_LIMIT, type TopupPayer } from "@repo/api/schemas/offer";
+import { OFFER_NOTE_MAX_LENGTH, OFFER_SIDE_LIMIT } from "@repo/api/schemas/offer";
 import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useId, useRef, useState } from "react";
@@ -28,16 +28,24 @@ import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
 
-import { type NearGroup, nearPayer, withNear } from "../near-picks";
+import { type NearGroup, withNear } from "../near-picks";
 import {
   asksOf,
   holdsDraft as holdsDraftOf,
+  initialTopup,
   offerInput,
   pickEstimated,
   pickFlags,
   pickProblem,
   resolveAsks,
   sendGate,
+  toggleTopup,
+  topupForNear,
+  topupRestored,
+  topupValue,
+  topupWithoutNear,
+  touchTopup,
+  type TopupState,
 } from "./draft";
 import { addedKeys, matchesLine } from "./matches";
 import { MatchesLine, NearLine } from "./matches-line";
@@ -70,18 +78,8 @@ export function BuilderForm({
   const [give, setGive] = useState<OfferPick[]>(prefill?.give ?? []);
   const [get, setGet] = useState<OfferPick[]>(prefill?.get ?? []);
   const [seen, setSeen] = useState<Collections>(prefill?.collections ?? {});
-  // a near sale or buy added at open opens the top-up with its payer, and no amount
-  const [topupNear, setTopupNear] = useState(added?.nearTopup ?? null);
-  const [topupOn, setTopupOn] = useState(prefill?.topup !== undefined || topupNear !== null);
-  const [amount, setAmount] = useState<number | null>(prefill?.topup?.amount ?? null);
-  // only a pick is held: the preferred currency reads "USD" until the rates load
-  const [chosenCurrency, setCurrency] = useState(prefill?.topup?.currency ?? null);
-  const currency = chosenCurrency ?? preferred;
-  const [payer, setPayer] = useState<TopupPayer>(
-    prefill?.topup?.payer ?? (topupNear ? nearPayer(topupNear.verb) : null) ?? "from",
-  );
-  // the amount's error waits for a first edit, a blur or a send attempt
-  const [topupTouched, setTopupTouched] = useState(false);
+  const [topup, setTopup] = useState(() => initialTopup(prefill?.topup, added?.nearTopup));
+  const topupNow = topupValue(topup, preferred);
   const [note, setNote] = useState(prefill?.note ?? "");
   const [picking, setPicking] = useState<OfferSide | null>(null);
   const [error, setError] = useState<SendFailure | null>(null);
@@ -92,7 +90,7 @@ export function BuilderForm({
   const [removed, setRemoved] = useState<{
     give: OfferPick[];
     get: OfferPick[];
-    topupNear: typeof topupNear;
+    topupNear: TopupState["near"];
   } | null>(null);
   const removeRef = useRef<HTMLButtonElement>(null);
   const undoRef = useRef<HTMLButtonElement>(null);
@@ -137,7 +135,7 @@ export function BuilderForm({
     blocked:
       giveShown.some((pick) => reasonOf("give", pick) !== null) ||
       get.some((pick) => reasonOf("get", pick) !== null),
-    topup: { on: topupOn, amount, currency },
+    topup: topupNow,
     note,
   });
   const { noteLength, noteTooLong, topupError } = gate;
@@ -148,7 +146,6 @@ export function BuilderForm({
       picks.map((pick) => itemName(pick, collections)),
     );
   const addNear = (group: NearGroup) => {
-    const preset = nearPayer(group.verb);
     // a pick already on the side stays the sender's own, and a full side takes no more
     const { picks, added: fresh } = withNear(
       group.side === "give" ? give : get,
@@ -162,21 +159,15 @@ export function BuilderForm({
         [group.side]: [...keys[group.side], ...fresh.map((pick) => pick.key)],
       }));
       setNearLeft((groups) => groups.filter((g) => g !== group));
-      if (preset && !topupOn && fresh.length > 0) {
-        setTopupOn(true);
-        setPayer(preset);
-        setAmount(null);
-        setTopupTouched(false);
-        setTopupNear({ verb: group.verb, picks: fresh });
-      }
+      setTopup(topupForNear(topup, group.verb, fresh));
     });
     // the line and its button are gone: focus stays in the status region
     (removeRef.current ?? undoRef.current)?.focus();
   };
-  const topupReason = topupNear
-    ? (topupNear.verb === "sell" ? m.offer_topup_near_sell : m.offer_topup_near_buy)({
+  const topupReason = topup.near
+    ? (topup.near.verb === "sell" ? m.offer_topup_near_sell : m.offer_topup_near_buy)({
         name,
-        objekts: names(topupNear.picks),
+        objekts: names(topup.near.picks),
       })
     : undefined;
   const line = matchesLine({ added, nearKeys, give, get, removed });
@@ -184,15 +175,12 @@ export function BuilderForm({
     const gave = takeOutAdded(give, addedGive);
     const got = takeOutAdded(get, addedGet);
     // a top-up the near picks opened, still with no amount, goes with them
-    const presetTopup = topupNear !== null && amount === null ? topupNear : null;
+    const { topup: next, taken } = topupWithoutNear(topup);
     flushSync(() => {
       setGive(gave.left);
       setGet(got.left);
-      setRemoved({ give: gave.taken, get: got.taken, topupNear: presetTopup });
-      if (presetTopup) {
-        setTopupOn(false);
-        setTopupNear(null);
-      }
+      setRemoved({ give: gave.taken, get: got.taken, topupNear: taken });
+      setTopup(next);
     });
     undoRef.current?.focus();
   };
@@ -201,11 +189,7 @@ export function BuilderForm({
     flushSync(() => {
       setGive((current) => putBack(current, removed.give));
       setGet((current) => putBack(current, removed.get));
-      if (removed.topupNear && !topupOn) {
-        setTopupOn(true);
-        setPayer(nearPayer(removed.topupNear.verb) ?? payer);
-        setTopupNear(removed.topupNear);
-      }
+      setTopup(topupRestored(topup, removed.topupNear));
       setRemoved(null);
     });
     removeRef.current?.focus();
@@ -245,8 +229,7 @@ export function BuilderForm({
 
   // nothing is lost while the send is on its way
   const holdsDraft =
-    !create.isPending &&
-    holdsDraftOf({ give, get, topup: { on: topupOn, amount, currency, payer }, note }, prefill);
+    !create.isPending && holdsDraftOf({ give, get, topup: topupNow, note }, prefill);
 
   useEffect(() => {
     onDraft(() => holdsDraft);
@@ -254,7 +237,7 @@ export function BuilderForm({
   }, [onDraft, holdsDraft]);
 
   const send = () => {
-    if (topupError !== null) setTopupTouched(true);
+    if (topupError !== null) setTopup(touchTopup);
     if (!gate.canSend) return;
     setError(null);
     setRefused(new Set());
@@ -262,7 +245,7 @@ export function BuilderForm({
       offerInput(to, {
         give: giveShown,
         get,
-        topup: { on: topupOn, amount, currency, payer },
+        topup: topupNow,
         note,
       }),
     );
@@ -337,23 +320,16 @@ export function BuilderForm({
         ) : null}
 
         <Topup
-          on={topupOn}
-          onToggle={(on) => {
-            setTopupOn(on);
-            setTopupTouched(false);
-            if (!on) setTopupNear(null);
-          }}
-          amount={amount}
-          onAmount={(next) => {
-            setAmount(next);
-            setTopupTouched(true);
-          }}
-          onAmountBlur={() => setTopupTouched(true)}
-          currency={currency}
-          onCurrency={setCurrency}
-          payer={payer}
-          onPayer={setPayer}
-          error={topupTouched ? topupError : null}
+          on={topup.on}
+          onToggle={(on) => setTopup((t) => toggleTopup(t, on))}
+          amount={topup.amount}
+          onAmount={(next) => setTopup((t) => ({ ...t, amount: next, touched: true }))}
+          onAmountBlur={() => setTopup(touchTopup)}
+          currency={topupNow.currency}
+          onCurrency={(c) => setTopup((t) => ({ ...t, chosenCurrency: c }))}
+          payer={topup.payer}
+          onPayer={(p) => setTopup((t) => ({ ...t, payer: p }))}
+          error={topup.touched ? topupError : null}
           reason={topupReason}
           name={name}
         />
