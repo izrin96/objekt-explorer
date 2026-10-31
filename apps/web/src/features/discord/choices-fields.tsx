@@ -1,3 +1,5 @@
+import { useId } from "react";
+
 import { CopyButton } from "@/components/shared/copy-button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -36,16 +38,15 @@ const STYLES: { value: FormatStyle; label: () => string }[] = [
 
 /** The format checkboxes and the group-by and style selects both Discord dialogs share. */
 export function ChoicesFields({
-  idPrefix,
   flags,
   choices,
   onChange,
 }: {
-  idPrefix: string;
   flags: typeof FLAGS;
   choices: FormatChoices;
   onChange: (next: FormatChoices) => void;
 }) {
+  const idPrefix = useId();
   return (
     <>
       <div className="grid grid-cols-2 gap-x-3 gap-y-2">

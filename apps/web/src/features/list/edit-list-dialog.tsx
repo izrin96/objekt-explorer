@@ -144,7 +144,6 @@ function EditListForm({ list, onDone }: { list: StoredList; onDone: () => void }
         </DialogHeader>
         <DialogPanel>
           <ListForm
-            idPrefix="edit-list"
             mode="edit"
             value={draft}
             onChange={setDraft}

@@ -23,7 +23,6 @@ import { m } from "@/paraglide/messages";
 import { useAddToList } from "./actions";
 import { ListPicker } from "./add-to-list-picker";
 import { PreviewSection } from "./add-to-list-preview";
-import { PriceFields } from "./add-to-list-price-fields";
 import {
   type AddableObjekt,
   type AddTarget,
@@ -40,8 +39,11 @@ import {
 import { addedToast, addHint, profileLabel } from "./add-to-list-text";
 import { CreateListDialog } from "./create-list-dialog";
 import { EMPTY_DRAFT, type ListDraft } from "./list-form";
+import { PriceFields, type PriceValue } from "./price-fields";
 
 export type { AddableObjekt } from "./add-to-list-source";
+
+const EMPTY_PRICE: PriceValue = { price: null, isQyop: false, note: "" };
 
 type OpenAddToList = (
   objekts: AddableObjekt[],
@@ -189,9 +191,7 @@ function AddToListForm({
   const lists = pickerLists(useUserLists(), saleOnly);
   const profiles = useUserProfiles();
   const [unpicked, setUnpicked] = useState<ReadonlySet<string>>(new Set());
-  const [price, setPrice] = useState<number | null>(null);
-  const [isQyop, setIsQyop] = useState(false);
-  const [note, setNote] = useState("");
+  const [priceValue, setPriceValue] = useState<PriceValue>(EMPTY_PRICE);
 
   const isDisabled = (list: PublicList) => isListDisabled(list, target, { address, sourceList });
 
@@ -221,7 +221,7 @@ function AddToListForm({
 
   // a price is in its list's currency: 10 typed for a KRW list is not 10 USD
   const pickList = (next: string | null) => {
-    if (currencyChanges(lists, selected, next)) setPrice(null);
+    if (currencyChanges(lists, selected, next)) setPriceValue((v) => ({ ...v, price: null }));
     onSlugChange(next);
   };
 
@@ -233,7 +233,7 @@ function AddToListForm({
     const { from, dropped } = source;
 
     addToList.mutate(
-      addToListInput({ slug: selected.slug, skipDups, from, isSale, isQyop, price, note }),
+      addToListInput({ slug: selected.slug, skipDups, from, isSale, ...priceValue }),
       {
         onSuccess: (result) => {
           toastManager.add(
@@ -301,15 +301,18 @@ function AddToListForm({
             />
 
             {isSale && selected && (
-              <PriceFields
-                currency={selected.currency ?? ""}
-                price={price}
-                onPriceChange={setPrice}
-                isQyop={isQyop}
-                onQyopChange={setIsQyop}
-                note={note}
-                onNoteChange={setNote}
-              />
+              <div className="flex min-w-0 flex-col gap-3">
+                <PriceFields
+                  currency={selected.currency ?? ""}
+                  value={priceValue}
+                  onChange={setPriceValue}
+                  noteHint={
+                    <span className="text-muted-foreground text-xs text-pretty">
+                      {m.list_add_price_hint()}
+                    </span>
+                  }
+                />
+              </div>
             )}
 
             {/* a bound list holds each token once, whatever this says */}

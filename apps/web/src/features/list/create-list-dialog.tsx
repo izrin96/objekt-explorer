@@ -113,13 +113,7 @@ export function CreateListDialog({
               <DialogDescription>{m.list_create_list_type_desc()}</DialogDescription>
             </DialogHeader>
             <DialogPanel>
-              <ListForm
-                idPrefix="create-list"
-                mode="create"
-                value={draft}
-                onChange={setDraft}
-                profiles={profiles}
-              />
+              <ListForm mode="create" value={draft} onChange={setDraft} profiles={profiles} />
             </DialogPanel>
             <DialogFooter>
               <DialogClose render={<Button variant="outline" />}>

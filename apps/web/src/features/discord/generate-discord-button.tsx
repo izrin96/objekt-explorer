@@ -83,12 +83,7 @@ function GenerateDiscordDialog({
           <DialogDescription>{m.discord_format_modal_description()}</DialogDescription>
         </DialogHeader>
         <DialogPanel className="flex flex-col gap-4">
-          <ChoicesFields
-            idPrefix="generate-discord"
-            flags={VISITOR_FLAGS}
-            choices={choices}
-            onChange={setChoices}
-          />
+          <ChoicesFields flags={VISITOR_FLAGS} choices={choices} onChange={setChoices} />
           <FormattedText id="generate-discord-output" text={text} onTextChange={setText} />
         </DialogPanel>
         <DialogFooter>

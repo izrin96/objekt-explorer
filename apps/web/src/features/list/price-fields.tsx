@@ -1,3 +1,5 @@
+import { type ReactNode, useId } from "react";
+
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -10,38 +12,42 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { m } from "@/paraglide/messages";
 
+export type PriceValue = { price: number | null; isQyop: boolean; note: string };
+
+/** A sale entry's QYOP switch, price and note, bare: the parent lays them out. */
 export function PriceFields({
   currency,
-  price,
-  onPriceChange,
-  isQyop,
-  onQyopChange,
-  note,
-  onNoteChange,
+  value,
+  onChange,
+  priceHint,
+  noteHint,
 }: {
   currency: string;
-  price: number | null;
-  onPriceChange: (price: number | null) => void;
-  isQyop: boolean;
-  onQyopChange: (isQyop: boolean) => void;
-  note: string;
-  onNoteChange: (note: string) => void;
+  value: PriceValue;
+  onChange: (next: PriceValue) => void;
+  /** under the price */
+  priceHint?: ReactNode;
+  /** under the note */
+  noteHint?: ReactNode;
 }) {
+  const id = useId();
+  const { price, isQyop, note } = value;
   return (
-    <div className="flex min-w-0 flex-col gap-3">
-      <Label
-        htmlFor="add-to-list-qyop"
-        className="flex items-center justify-between gap-3 font-normal"
-      >
+    <>
+      <Label htmlFor={`${id}-qyop`} className="flex items-center justify-between gap-3 font-normal">
         <span className="text-sm font-medium">{m.list_manage_objekt_set_price_qyop()}</span>
-        <Switch id="add-to-list-qyop" checked={isQyop} onCheckedChange={onQyopChange} />
+        <Switch
+          id={`${id}-qyop`}
+          checked={isQyop}
+          onCheckedChange={(next) => onChange({ ...value, isQyop: next })}
+        />
       </Label>
       <div className="flex min-w-0 flex-col gap-1.5">
-        <Label htmlFor="add-to-list-price">{m.list_manage_objekt_set_price_label()}</Label>
+        <Label htmlFor={`${id}-price`}>{m.list_manage_objekt_set_price_label()}</Label>
         <NumberField
-          id="add-to-list-price"
+          id={`${id}-price`}
           value={price}
-          onValueChange={onPriceChange}
+          onValueChange={(next) => onChange({ ...value, price: next })}
           min={0}
           step={1}
           largeStep={10}
@@ -62,18 +68,19 @@ export function PriceFields({
             </NumberFieldGroup>
           </div>
         </NumberField>
+        {priceHint}
       </div>
       <div className="flex min-w-0 flex-col gap-1.5">
-        <Label htmlFor="add-to-list-note">{m.list_manage_objekt_set_price_note()}</Label>
+        <Label htmlFor={`${id}-note`}>{m.list_manage_objekt_set_price_note()}</Label>
         <Input
-          id="add-to-list-note"
+          id={`${id}-note`}
           maxLength={255}
           placeholder={m.list_manage_objekt_set_price_note_placeholder()}
           value={note}
-          onChange={(event) => onNoteChange(event.target.value)}
+          onChange={(event) => onChange({ ...value, note: event.target.value })}
         />
-        <span className="text-muted-foreground text-xs text-pretty">{m.list_add_price_hint()}</span>
+        {noteHint}
       </div>
-    </div>
+    </>
   );
 }

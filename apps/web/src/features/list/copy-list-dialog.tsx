@@ -125,7 +125,6 @@ function CopyListForm({ list, onDone }: { list: StoredList; onDone: () => void }
       </DialogHeader>
       <DialogPanel>
         <ListForm
-          idPrefix="copy-list"
           mode="create"
           value={draft}
           onChange={setDraft}

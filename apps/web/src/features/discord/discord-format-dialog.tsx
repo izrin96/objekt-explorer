@@ -127,7 +127,7 @@ export function DiscordFormatDialog({
             onValueChange={(next) => setPicked({ ...picked, wantList: next })}
           />
 
-          <ChoicesFields idPrefix="discord" flags={FLAGS} choices={choices} onChange={setChoices} />
+          <ChoicesFields flags={FLAGS} choices={choices} onChange={setChoices} />
           <FormattedText id="discord-output" text={text} onTextChange={setText} />
         </DialogPanel>
         <DialogFooter>

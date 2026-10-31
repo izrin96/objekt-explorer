@@ -59,15 +59,12 @@ export function RuleDialog({
   slug,
   listName,
   rule,
-  initial,
   open,
   onOpenChange,
 }: {
   slug: string;
   listName: string;
   rule?: { id: number } & ListRuleDef;
-  /** a fresh dialog's starting rule, say from Add to list */
-  initial?: ListRuleDef;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
@@ -79,7 +76,6 @@ export function RuleDialog({
             slug={slug}
             listName={listName}
             rule={rule}
-            initial={initial}
             onDone={() => onOpenChange(false)}
           />
         ) : null}
@@ -92,13 +88,11 @@ function RuleForm({
   slug,
   listName,
   rule,
-  initial,
   onDone,
 }: {
   slug: string;
   listName: string;
   rule?: { id: number } & ListRuleDef;
-  initial?: ListRuleDef;
   onDone: () => void;
 }) {
   const id = useId();
@@ -108,8 +102,7 @@ function RuleForm({
   const { data: filterData } = useQuery(orpc.config.getFilterData.queryOptions());
 
   const [draft, setDraft] = useState<RuleDraft>(() => {
-    const start = rule ?? initial;
-    if (start) return fromRule(start, artistIds);
+    if (rule) return fromRule(rule, artistIds);
     const artist = selectedArtists[0]?.id ?? artistIds[0]!;
     return newDraft(artist, seasonsOf(filterData, artist));
   });

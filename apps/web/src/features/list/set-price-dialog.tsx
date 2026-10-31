@@ -12,19 +12,10 @@ import {
   DialogPopup,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  NumberField,
-  NumberFieldDecrement,
-  NumberFieldGroup,
-  NumberFieldIncrement,
-  NumberFieldInput,
-} from "@/components/ui/number-field";
-import { Switch } from "@/components/ui/switch";
 import { m } from "@/paraglide/messages";
 
 import { useUpdateEntryPrices } from "./actions";
+import { PriceFields, type PriceValue } from "./price-fields";
 
 type Props = {
   open: boolean;
@@ -63,9 +54,12 @@ function SetPriceForm({
 }: Omit<Props, "open" | "onOpenChange"> & { onDone: () => void }) {
   const update = useUpdateEntryPrices();
   const first = objekts[0];
-  const [price, setPrice] = useState<number | null>(first?.price ?? null);
-  const [isQyop, setIsQyop] = useState(first?.isQyop ?? false);
-  const [note, setNote] = useState(first?.note ?? "");
+  const [value, setValue] = useState<PriceValue>({
+    price: first?.price ?? null,
+    isQyop: first?.isQyop ?? false,
+    note: first?.note ?? "",
+  });
+  const { price, isQyop, note } = value;
 
   const entryIds = objekts.map((objekt) => objekt.entryId);
   const save = (updates: Update[]) => update.mutate({ slug, updates }, { onSuccess: onDone });
@@ -79,55 +73,16 @@ function SetPriceForm({
         </DialogDescription>
       </DialogHeader>
       <DialogPanel className="flex flex-col gap-4">
-        <Label
-          htmlFor="set-price-qyop"
-          className="flex items-center justify-between gap-3 font-normal"
-        >
-          <span className="text-sm font-medium">{m.list_manage_objekt_set_price_qyop()}</span>
-          <Switch id="set-price-qyop" checked={isQyop} onCheckedChange={setIsQyop} />
-        </Label>
-
-        <div className="flex min-w-0 flex-col gap-1.5">
-          <Label htmlFor="set-price-value">{m.list_manage_objekt_set_price_label()}</Label>
-          <NumberField
-            id="set-price-value"
-            value={price}
-            onValueChange={setPrice}
-            min={0}
-            step={1}
-            largeStep={10}
-            disabled={isQyop}
-            format={{ minimumFractionDigits: 2, maximumFractionDigits: 2 }}
-          >
-            <div className="flex w-full items-stretch">
-              <span className="bg-secondary text-muted-foreground grid w-20 shrink-0 place-items-center rounded-s-lg border border-e-0 text-sm">
-                {currency}
-              </span>
-              <NumberFieldGroup className="rounded-s-none before:rounded-s-none">
-                <NumberFieldDecrement
-                  className="rounded-s-none"
-                  aria-label={m.filter_sort_by_price_label()}
-                />
-                <NumberFieldInput className="tabular-nums" />
-                <NumberFieldIncrement aria-label={m.filter_sort_by_price_label()} />
-              </NumberFieldGroup>
-            </div>
-          </NumberField>
-          <span className="text-muted-foreground text-xs">
-            {m.list_manage_objekt_set_price_clear_hint()}
-          </span>
-        </div>
-
-        <div className="flex min-w-0 flex-col gap-1.5">
-          <Label htmlFor="set-price-note">{m.list_manage_objekt_set_price_note()}</Label>
-          <Input
-            id="set-price-note"
-            maxLength={255}
-            placeholder={m.list_manage_objekt_set_price_note_placeholder()}
-            value={note}
-            onChange={(event) => setNote(event.target.value)}
-          />
-        </div>
+        <PriceFields
+          currency={currency}
+          value={value}
+          onChange={setValue}
+          priceHint={
+            <span className="text-muted-foreground text-xs">
+              {m.list_manage_objekt_set_price_clear_hint()}
+            </span>
+          }
+        />
       </DialogPanel>
       <DialogFooter>
         <DialogClose render={<Button variant="outline" />}>{m.common_modal_cancel()}</DialogClose>

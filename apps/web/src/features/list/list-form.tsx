@@ -1,6 +1,6 @@
 import { InfoIcon } from "@phosphor-icons/react";
 import { Link } from "@tanstack/react-router";
-import type { ReactNode } from "react";
+import { type ReactNode, useId } from "react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field";
@@ -21,8 +21,6 @@ export {
 } from "./list-draft";
 
 type ListFormProps = {
-  /** prefixes every field id, so create and edit can be open in one document */
-  idPrefix: string;
   value: ListDraft;
   onChange: (next: ListDraft) => void;
   profiles: { address: string; nickname: string | null }[];
@@ -37,7 +35,6 @@ type ListFormProps = {
 };
 
 export function ListForm({
-  idPrefix,
   value,
   onChange,
   profiles,
@@ -46,7 +43,8 @@ export function ListForm({
   notice,
   tradeLine,
 }: ListFormProps) {
-  const id = (field: string) => `${idPrefix}-${field}`;
+  const prefix = useId();
+  const id = (field: string) => `${prefix}-${field}`;
   const set = (patch: Partial<ListDraft>) => onChange({ ...value, ...patch });
 
   const isEdit = mode === "edit";
