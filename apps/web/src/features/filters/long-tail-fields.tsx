@@ -7,7 +7,7 @@ import {
 } from "@phosphor-icons/react";
 import { validEdition } from "@repo/cosmo/types/common";
 import type { ValidEdition } from "@repo/cosmo/types/common";
-import { Fragment, useId, type ReactNode } from "react";
+import { Fragment, useId, useState, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -20,7 +20,7 @@ import { useDebouncedCallback } from "@/hooks/use-debounced-callback";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
-import { ColorPicker } from "./color-picker";
+import { canonicalHex, FilterColorPicker } from "./color-picker";
 import { COLOR_SWATCHES } from "./facets";
 import { FilterToggle } from "./filter-toggle";
 import { EDITION_LABEL } from "./labels";
@@ -66,25 +66,46 @@ function GroupHeading({ id, children }: { id: string; children: ReactNode }) {
   );
 }
 
+/** what the picker shows while no colour is set; not a swatch, since picking the colour already shown is a no-op */
+const UNSET_COLOR = "#3b82f6";
+
 /**
  * `onValueChange` fires on every pointer move across the saturation plane, so
  * it reaches the URL through a debounce; each commit re-filters the catalogue.
+ * The picker follows `draft` at once: fed the lagging URL value, it would
+ * re-seed from it and snap the thumb back mid-drag. A URL change the picker
+ * did not write (Clear, back) replaces the draft.
  */
 function ColorControls() {
-  const color = useFilters((f) => f.color);
+  const color = useFilters((f) => f.color) ?? undefined;
   const colorSensitivity = useFilters((f) => f.colorSensitivity);
   const setFilters = useSetFilters();
   const sensitivityId = useId();
-  const commitColor = useDebouncedCallback((hex: string) => setFilters({ color: hex }), 60);
+  const [draft, setDraft] = useState(color);
+  const [written, setWritten] = useState(color);
+  const [seenColor, setSeenColor] = useState(color);
+  if (color !== seenColor) {
+    setSeenColor(color);
+    if (color !== written) {
+      setDraft(color);
+      setWritten(color);
+    }
+  }
+  const writeColor = useDebouncedCallback((hex: string) => {
+    setWritten(hex);
+    setFilters({ color: hex });
+  }, 60);
   const sensitivity = colorSensitivity ?? DEFAULT_COLOR_SENSITIVITY;
 
   return (
     <div className="flex flex-col gap-2">
-      <ColorPicker
-        value={color ?? undefined}
-        defaultValue={COLOR_SWATCHES[0]}
+      <FilterColorPicker
+        value={canonicalHex(draft) ?? UNSET_COLOR}
         swatches={COLOR_SWATCHES}
-        onValueChange={commitColor}
+        onValueChange={(hex) => {
+          setDraft(hex);
+          writeColor(hex);
+        }}
       />
       {color !== undefined && (
         <>
@@ -115,7 +136,11 @@ function ColorControls() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setFilters({ color: undefined, colorSensitivity: undefined })}
+            onClick={() => {
+              // a write still pending would put the colour back after the clear
+              writeColor.cancel();
+              setFilters({ color: undefined, colorSensitivity: undefined });
+            }}
           >
             <XIcon />
             {m.filter_clear_color()}

@@ -9,7 +9,7 @@ import { useEffect, useMemo, useRef } from "react";
 export function useDebouncedCallback<A extends unknown[]>(
   callback: (...args: A) => void,
   delay: number,
-): (...args: A) => void {
+): ((...args: A) => void) & { cancel: () => void } {
   const latest = useRef(callback);
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
@@ -19,12 +19,12 @@ export function useDebouncedCallback<A extends unknown[]>(
 
   useEffect(() => () => clearTimeout(timer.current), []);
 
-  return useMemo(
-    () =>
-      (...args: A) => {
-        clearTimeout(timer.current);
-        timer.current = setTimeout(() => latest.current(...args), delay);
-      },
-    [delay],
-  );
+  return useMemo(() => {
+    const debounced = (...args: A) => {
+      clearTimeout(timer.current);
+      timer.current = setTimeout(() => latest.current(...args), delay);
+    };
+    debounced.cancel = () => clearTimeout(timer.current);
+    return debounced;
+  }, [delay]);
 }

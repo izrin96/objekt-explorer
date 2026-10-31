@@ -1,61 +1,22 @@
-/* oxlint-disable jsx-a11y/prefer-tag-over-role -- the 2D saturation/brightness plane has no native input equivalent; it implements the slider keyboard contract */
-
 import { CopyIcon, EyedropperIcon } from "@phosphor-icons/react";
-import type { CSSProperties, KeyboardEvent, PointerEvent } from "react";
-import { useState } from "react";
+import { useId, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupInput,
-  InputGroupText,
-} from "@/components/ui/input-group";
-import { SliderPrimitive } from "@/components/ui/slider";
+  ColorPicker,
+  ColorPickerArea,
+  ColorPickerHue,
+  ColorPickerInput,
+  ColorPickerSwatch,
+  ColorPickerSwatches,
+  hexToHsv,
+  hsvToHex,
+  useColorPicker,
+} from "@/components/ui/color-picker";
+import { InputGroup, InputGroupAddon } from "@/components/ui/input-group";
 import { toastManager } from "@/components/ui/toast";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
-
-/* HSV internally, hex at the edges. Hue is kept in state rather than
- * re-derived, so the rail does not snap to 0 when saturation or brightness
- * reach an extreme. Adapted from Neon UI's `color-picker`. */
-type Hsv = { h: number; s: number; v: number };
-
-const HEX_RE = /^#?(?<hex>[0-9a-f]{6})$/iu;
-
-const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
-
-function hexToHsv(hex: string): Hsv | null {
-  const match = HEX_RE.exec(hex.trim());
-  if (!match?.groups?.hex) return null;
-
-  const int = Number.parseInt(match.groups.hex, 16);
-  const r = Math.floor(int / 65_536) / 255;
-  const g = Math.floor((int % 65_536) / 256) / 255;
-  const b = (int % 256) / 255;
-  const max = Math.max(r, g, b);
-  const delta = max - Math.min(r, g, b);
-  let h = 0;
-  if (delta > 0) {
-    if (max === r) h = 60 * (((g - b) / delta) % 6);
-    else if (max === g) h = 60 * ((b - r) / delta + 2);
-    else h = 60 * ((r - g) / delta + 4);
-  }
-
-  return { h: (h + 360) % 360, s: max === 0 ? 0 : delta / max, v: max };
-}
-
-function hsvToHex({ h, s, v }: Hsv): string {
-  const f = (n: number) => {
-    const k = (n + h / 60) % 6;
-    const channel = v - v * s * Math.max(0, Math.min(k, 4 - k, 1));
-    return Math.round(channel * 255)
-      .toString(16)
-      .padStart(2, "0");
-  };
-  return `#${f(5)}${f(3)}${f(1)}`;
-}
 
 type EyeDropperConstructor = new () => { open: () => Promise<{ sRGBHex: string }> };
 
@@ -64,90 +25,38 @@ function getEyeDropper(): EyeDropperConstructor | null {
   return (window as { EyeDropper?: EyeDropperConstructor }).EyeDropper ?? null;
 }
 
-/** a pointer event as 0–1 coordinates within its target */
-function fraction(event: PointerEvent<HTMLDivElement>) {
-  const rect = event.currentTarget.getBoundingClientRect();
-  return {
-    x: clamp01((event.clientX - rect.left) / rect.width),
-    y: clamp01((event.clientY - rect.top) / rect.height),
-  };
-}
-
-const ARROW_DELTA: Record<string, [number, number]> = {
-  ArrowUp: [0, -1],
-  ArrowDown: [0, 1],
-  ArrowLeft: [-1, 0],
-  ArrowRight: [1, 0],
-};
-
-/** the plane's thumb and the hue thumb share one look */
-const thumbClass =
-  "size-3.5 rounded-full border-2 border-white shadow-[0_0_0_1px_rgb(0_0_0/0.5)] transition-transform duration-150 motion-reduce:transition-none";
-
-function Thumb({ dragging, style }: { dragging: boolean; style: CSSProperties }) {
-  return (
-    <span
-      aria-hidden="true"
-      className={cn(
-        thumbClass,
-        "pointer-events-none absolute -translate-x-1/2 -translate-y-1/2",
-        dragging && "scale-125",
-      )}
-      style={style}
-    />
-  );
-}
-
-export function ColorPicker({
-  value,
-  defaultValue,
-  onValueChange,
-  swatches,
+function IconAction({
+  label,
+  onClick,
+  children,
 }: {
-  value?: string;
-  /** the colour the plane opens on while there is no `value` */
-  defaultValue?: string;
-  onValueChange: (hex: string) => void;
-  swatches?: readonly string[];
+  label: string;
+  onClick: () => void;
+  children: ReactNode;
 }) {
-  const [hsv, setHsv] = useState<Hsv>(
-    () => hexToHsv(value ?? defaultValue ?? "") ?? { h: 0, s: 1, v: 1 },
+  return (
+    <Tooltip>
+      <TooltipTrigger
+        render={<Button variant="ghost" size="icon-xs" aria-label={label} onClick={onClick} />}
+      >
+        {children}
+      </TooltipTrigger>
+      <TooltipPopup>{label}</TooltipPopup>
+    </Tooltip>
   );
-  // the hex field's text, only while it is being edited
-  const [draft, setDraft] = useState<string | null>(null);
-  const [dragging, setDragging] = useState(false);
-  // a controlled value re-seeds the plane during render, not in an effect
-  const [seenValue, setSeenValue] = useState(value);
-  if (value !== seenValue) {
-    setSeenValue(value);
-    const parsed = value ? hexToHsv(value) : null;
-    if (parsed) setHsv(parsed);
-  }
+}
 
-  const hex = (value ?? hsvToHex(hsv)).toLowerCase();
-  const hueOnly = hsvToHex({ h: hsv.h, s: 1, v: 1 });
+function HexField({ onValueChange }: { onValueChange: (hex: string) => void }) {
+  const { hex, setHex } = useColorPicker();
   const eyeDropper = getEyeDropper();
 
-  const commit = (next: Hsv) => {
-    setHsv(next);
-    setDraft(null);
-    onValueChange(hsvToHex(next));
-  };
-
-  const commitHex = (candidate: string) => {
-    const parsed = hexToHsv(candidate);
-    if (parsed) commit(parsed);
-    else setDraft(null);
-  };
-
-  const pickFromScreen = async () => {
-    if (!eyeDropper) return;
-    try {
-      const result = await new eyeDropper().open();
-      commitHex(result.sRGBHex);
-    } catch {
-      // dismissed: keep the current colour
-    }
+  // the picker drops a colour equal to the one it shows, so with no filter set, typing or
+  // eyedropping that colour would apply nothing; send it on directly instead
+  const pick = (candidate: string) => {
+    const next = canonicalHex(candidate);
+    if (!next) return;
+    if (next === hex) onValueChange(next);
+    else setHex(next);
   };
 
   const copyHex = async () => {
@@ -155,162 +64,93 @@ export function ColorPicker({
       await navigator.clipboard.writeText(hex);
       toastManager.add({ type: "success", title: m.common_copy_copied() });
     } catch {
-      toastManager.add({ type: "error", title: "Clipboard blocked", description: hex });
+      toastManager.add({ type: "error", title: m.common_copy_blocked(), description: hex });
     }
   };
 
-  const onFieldPointer = (event: PointerEvent<HTMLDivElement>) => {
-    event.currentTarget.setPointerCapture(event.pointerId);
-    setDragging(true);
-    const { x, y } = fraction(event);
-    commit({ ...hsv, s: x, v: 1 - y });
-  };
-
-  const onFieldKey = (event: KeyboardEvent<HTMLDivElement>) => {
-    const delta = ARROW_DELTA[event.key];
-    if (!delta) return;
-    event.preventDefault();
-    const step = event.shiftKey ? 0.1 : 0.02;
-    commit({
-      ...hsv,
-      s: clamp01(hsv.s + delta[0] * step),
-      v: clamp01(hsv.v - delta[1] * step),
-    });
+  const pickFromScreen = async () => {
+    if (!eyeDropper) return;
+    try {
+      const result = await new eyeDropper().open();
+      pick(result.sRGBHex);
+    } catch {
+      // dismissed: keep the current colour
+    }
   };
 
   return (
-    <div className="flex flex-col gap-3">
-      <div
-        role="slider"
-        aria-label={m.filter_color_plane()}
-        aria-valuemin={0}
-        aria-valuemax={100}
-        aria-valuenow={Math.round(hsv.v * 100)}
-        aria-valuetext={hex}
-        tabIndex={0}
-        className="focus-visible:ring-ring relative h-36 cursor-crosshair touch-none rounded-md outline-none focus-visible:ring-2"
-        style={{
-          background: `linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, transparent), ${hueOnly}`,
+    <InputGroup>
+      <ColorPickerInput
+        unstyled
+        size="sm"
+        name="hex"
+        aria-label={m.filter_color_hex()}
+        onKeyDown={(event) => {
+          if (event.key === "Enter") pick(event.currentTarget.value);
         }}
-        onKeyDown={onFieldKey}
-        onPointerDown={onFieldPointer}
-        onPointerMove={(event) => {
-          if (event.buttons > 0) onFieldPointer(event);
-        }}
-        onPointerUp={() => setDragging(false)}
-        onPointerCancel={() => setDragging(false)}
-        onLostPointerCapture={() => setDragging(false)}
-      >
-        <Thumb
-          dragging={dragging}
-          style={{
-            backgroundColor: hex,
-            left: `${hsv.s * 100}%`,
-            top: `${(1 - hsv.v) * 100}%`,
-          }}
-        />
-      </div>
+      />
+      <InputGroupAddon align="inline-end">
+        <IconAction label={m.common_copy_button()} onClick={() => void copyHex()}>
+          <CopyIcon />
+        </IconAction>
+        {eyeDropper && (
+          <IconAction label={m.filter_color_eyedropper()} onClick={() => void pickFromScreen()}>
+            <EyedropperIcon />
+          </IconAction>
+        )}
+      </InputGroupAddon>
+    </InputGroup>
+  );
+}
 
-      <SliderPrimitive.Root
-        value={hsv.h}
-        onValueChange={(h) => commit({ ...hsv, h })}
-        min={0}
-        max={360}
+/**
+ * Lowercase `#rrggbb`, or null if `hex` does not parse. The picker re-seeds whenever its
+ * `value` differs from its own `#rrggbb`, so a `#fff` or `ff0000` from a hand-edited URL
+ * would re-render it forever.
+ */
+export function canonicalHex(hex: string | undefined): string | null {
+  const parsed = hex ? hexToHsv(hex) : null;
+  return parsed ? hsvToHex(parsed) : null;
+}
+
+export function FilterColorPicker({
+  value,
+  onValueChange,
+  swatches,
+}: {
+  /** lowercase `#rrggbb`; see `canonicalHex` */
+  value: string;
+  onValueChange: (hex: string) => void;
+  swatches?: readonly string[];
+}) {
+  const hueLabelId = useId();
+
+  return (
+    <ColorPicker value={value} onValueChange={onValueChange}>
+      <ColorPickerArea className="h-36 cursor-crosshair" />
+      {/* Base UI names the hue's range input from the root's `aria-labelledby`, never its `aria-label` */}
+      <span id={hueLabelId} className="sr-only">
+        {m.filter_color_hue()}
+      </span>
+      <ColorPickerHue
+        aria-label={m.filter_color_hue()}
+        aria-labelledby={hueLabelId}
+        name="hue"
         largeStep={30}
-      >
-        <SliderPrimitive.Control className="flex h-3 cursor-ew-resize touch-none items-center select-none">
-          <SliderPrimitive.Track
-            className="relative h-3 w-full rounded-full"
-            style={{
-              background: "linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00)",
-            }}
-          >
-            <SliderPrimitive.Thumb
-              aria-label={m.filter_color_hue()}
-              className={cn(
-                thumbClass,
-                "has-focus-visible:ring-ring outline-none has-focus-visible:ring-2 data-dragging:scale-125",
-              )}
-              style={{ backgroundColor: hueOnly }}
-            />
-          </SliderPrimitive.Track>
-        </SliderPrimitive.Control>
-      </SliderPrimitive.Root>
-
-      <InputGroup>
-        <InputGroupAddon>
-          <InputGroupText className="font-mono">#</InputGroupText>
-        </InputGroupAddon>
-        <InputGroupInput
-          size="sm"
-          name="hex"
-          aria-label={m.filter_color_hex()}
-          spellCheck={false}
-          className="font-mono"
-          value={(draft ?? hex).replace("#", "")}
-          onChange={(event) => setDraft(event.target.value)}
-          onBlur={() => commitHex(draft ?? hex)}
-          onKeyDown={(event) => {
-            if (event.key === "Enter") commitHex(draft ?? hex);
-          }}
-        />
-        <InputGroupAddon align="inline-end">
-          <Tooltip>
-            <TooltipTrigger
-              render={
-                <Button
-                  variant="ghost"
-                  size="icon-xs"
-                  aria-label={m.common_copy_button()}
-                  onClick={() => void copyHex()}
-                />
-              }
-            >
-              <CopyIcon />
-            </TooltipTrigger>
-            <TooltipPopup>{m.common_copy_button()}</TooltipPopup>
-          </Tooltip>
-          {eyeDropper && (
-            <Tooltip>
-              <TooltipTrigger
-                render={
-                  <Button
-                    variant="ghost"
-                    size="icon-xs"
-                    aria-label={m.filter_color_eyedropper()}
-                    onClick={() => void pickFromScreen()}
-                  />
-                }
-              >
-                <EyedropperIcon />
-              </TooltipTrigger>
-              <TooltipPopup>{m.filter_color_eyedropper()}</TooltipPopup>
-            </Tooltip>
-          )}
-        </InputGroupAddon>
-      </InputGroup>
-
+      />
+      <HexField onValueChange={onValueChange} />
       {swatches && swatches.length > 0 && (
-        <div className="grid grid-cols-8 gap-1.5">
-          {swatches.map((swatch) => {
-            const active = swatch.toLowerCase() === hex;
-            return (
-              <button
-                key={swatch}
-                type="button"
-                aria-label={m.filter_color_use({ color: swatch })}
-                aria-pressed={active}
-                className={cn(
-                  "ring-foreground/15 focus-visible:ring-ring aspect-square w-full cursor-pointer rounded-full ring-1 transition-shadow outline-none focus-visible:ring-2",
-                  active && "ring-foreground ring-offset-popover ring-2 ring-offset-2",
-                )}
-                style={{ backgroundColor: swatch }}
-                onClick={() => commitHex(swatch)}
-              />
-            );
-          })}
-        </div>
+        <ColorPickerSwatches className="grid grid-cols-8">
+          {swatches.map((swatch) => (
+            <ColorPickerSwatch
+              key={swatch}
+              value={swatch}
+              aria-label={m.filter_color_use({ color: swatch })}
+              className="focus-visible:ring-offset-popover aria-pressed:ring-offset-popover aspect-square size-auto w-full"
+            />
+          ))}
+        </ColorPickerSwatches>
       )}
-    </div>
+    </ColorPicker>
   );
 }
