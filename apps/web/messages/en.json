@@ -901,6 +901,7 @@
   "profile_scope_empty_hint_menu": "This profile holds nothing under the selected artists. Change them from Artists in your avatar menu.",
   "profile_scope_empty_hint_settings": "This profile holds nothing under the selected artists. Change them from Artists in Settings.",
   "profile_no_match_hint": "Nothing this profile holds fits the current filters.",
+  "profile_matches_empty_hint": "Nothing transferable this profile holds is on your want lists, or none left after the filters.",
   "progress_overall": "Overall",
   "progress_best_member": "Best member",
   "progress_closest_title": "Closest to complete",

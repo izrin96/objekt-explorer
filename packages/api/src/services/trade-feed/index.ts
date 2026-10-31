@@ -600,6 +600,12 @@ export async function fetchMarketMatches(viewerId: string) {
   return { want: Object.fromEntries(viewer.saleWant) as Record<string, number[]> };
 }
 
+/** A profile's Show my matches: what any of the viewer's want lists hold, whatever its Open to. */
+export async function fetchProfileMatches(viewerId: string) {
+  const viewer = await fetchViewer(viewerId);
+  return { want: Object.fromEntries(viewer.want) as Record<string, number[]> };
+}
+
 async function lastBumpOf(userId: string) {
   const [row] = await db
     .select({ at: sql<string | null>`max(${lists.bumpedAt})::text` })

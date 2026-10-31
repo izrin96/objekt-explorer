@@ -59,6 +59,14 @@ export const listMatchesOptions = (listId: number, enabled: boolean) =>
     retry: retryUnlessRefused,
   });
 
+/** A profile's Show my matches; asked only while the toggle is on. */
+export const profileMatchesOptions = (enabled: boolean) =>
+  orpc.trade.profileMatches.queryOptions({
+    enabled,
+    staleTime: BROWSE_STALE_MS,
+    retry: retryUnlessRefused,
+  });
+
 /** Market's Show my matches; asked only while the toggle is on. */
 export const marketMatchesOptions = (enabled: boolean) =>
   orpc.trade.marketMatches.queryOptions({

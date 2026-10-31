@@ -901,6 +901,7 @@
   "profile_scope_empty_hint_menu": "選択中のアーティストの範囲では、このプロフィールが所有するObjektはありません。アバターメニューの「アーティスト」から変更できます。",
   "profile_scope_empty_hint_settings": "選択中のアーティストの範囲では、このプロフィールが所有するObjektはありません。「設定」の「アーティスト」から変更できます。",
   "profile_no_match_hint": "このプロフィールが所有するObjektに現在のフィルターと一致するものはありません。",
+  "profile_matches_empty_hint": "このプロフィールが所有する譲渡可能なObjektのうち自分の希望リストにあるものがないか、フィルター後に残っていません。",
   "progress_overall": "全体",
   "progress_best_member": "達成率トップ",
   "progress_closest_title": "コンプリート間近",

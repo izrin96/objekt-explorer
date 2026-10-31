@@ -901,6 +901,7 @@
   "profile_scope_empty_hint_menu": "선택한 아티스트 범위에서 이 프로필이 보유한 오브젝트가 없습니다. 아바타 메뉴의 '아티스트'에서 변경하세요.",
   "profile_scope_empty_hint_settings": "선택한 아티스트 범위에서 이 프로필이 보유한 오브젝트가 없습니다. '설정'의 '아티스트'에서 변경하세요.",
   "profile_no_match_hint": "이 프로필이 보유한 오브젝트 중 현재 필터에 맞는 것이 없습니다.",
+  "profile_matches_empty_hint": "이 프로필이 보유한 전송 가능한 오브젝트 중 내 희망 목록에 있는 것이 없거나, 필터 후 남은 것이 없습니다.",
   "progress_overall": "전체",
   "progress_best_member": "최고 진행 멤버",
   "progress_closest_title": "완성에 가장 가까움",

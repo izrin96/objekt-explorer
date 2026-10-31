@@ -1,9 +1,12 @@
 import { arrayMove } from "@dnd-kit/sortable";
-import { CaretDownIcon, CaretUpIcon } from "@phosphor-icons/react";
+import { CaretDownIcon, CaretUpIcon, MagnifyingGlassIcon } from "@phosphor-icons/react";
 import type { GridObjekt } from "@repo/lib/types/objekt";
-import { useCallback, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useCallback, useMemo, useState } from "react";
 
+import { EmptyState } from "@/components/shared/empty-state";
 import { countMarkup, MessageMarkup } from "@/components/shared/message-markup";
+import { Button } from "@/components/ui/button";
 import { MenuItem, MenuSeparator } from "@/components/ui/menu";
 import { GenerateDiscordButton } from "@/features/discord/generate-discord-button";
 import type { ExtraFacet } from "@/features/filters/facet-controls";
@@ -13,6 +16,7 @@ import { isFiltering } from "@/features/filters/search-schema";
 import { useFilters } from "@/features/filters/use-filters";
 import { AddToListProvider } from "@/features/list/add-to-list-dialog";
 import { AddToListAction, AddToListMenuItem } from "@/features/list/add-to-list-menu-item";
+import { ShowMyMatches } from "@/features/list/show-my-matches";
 import { ObjektDrawer } from "@/features/objekt/drawer";
 import type { OwnedRowMenu } from "@/features/objekt/drawer/owned";
 import { useObjektLink } from "@/features/objekt/drawer/use-objekt-link";
@@ -22,6 +26,7 @@ import { copiesIn, isObjektOwned, ownedCopiesOf } from "@/features/objekt/objekt
 import { ObjektVirtualGrid } from "@/features/objekt/objekt-virtual-grid";
 import { SelectBar, SelectModeButton } from "@/features/objekt/select-bar";
 import { SkeletonGrid } from "@/features/objekt/skeleton-grid";
+import { profileMatchesOptions } from "@/features/trade/queries";
 import { useCurrentUser } from "@/features/user/hooks";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
@@ -49,7 +54,7 @@ export function CollectionView() {
   const toggleSelect = useSelection((s) => s.toggle);
 
   const {
-    filtered,
+    filtered: allFiltered,
     allOwned,
     catalogue,
     filters,
@@ -59,6 +64,31 @@ export function CollectionView() {
     fetchNextPage,
     isPending,
   } = useProfileObjekts();
+
+  // someone else's holdings today: a past state or Spin has nothing to trade
+  const canMatch =
+    Boolean(user) && !isProfileAuthed && filters.at === undefined && !isSpinAddress(address);
+  const [showMatches, setShowMatches] = useState(false);
+  const matchesOn = canMatch && showMatches;
+  const matchesQuery = useQuery(profileMatchesOptions(matchesOn));
+  const wanted = matchesOn ? matchesQuery.data?.want : undefined;
+  const filtered = useMemo(
+    () =>
+      wanted
+        ? allFiltered.filter(
+            (objekt) =>
+              isObjektOwned(objekt) && objekt.transferable && Object.hasOwn(wanted, objekt.slug),
+          )
+        : allFiltered,
+    [allFiltered, wanted],
+  );
+  const matchedListIds = useMemo(
+    () => (wanted ? [...new Set(filtered.flatMap((objekt) => wanted[objekt.slug] ?? []))] : []),
+    [filtered, wanted],
+  );
+  // the error sits beside the toggle; an unfiltered grid under it would read as the result
+  const matchesPending = matchesOn && matchesQuery.isPending;
+  const matchesFailed = matchesOn && matchesQuery.isError;
 
   const { togglePin, toggleLock, selectActions } = useOwnerActions(address);
   const { objekts, pinned, pinnedIds, reorder } = usePinOrder(
@@ -247,12 +277,27 @@ export function CollectionView() {
         extras={extras}
         // Spin is counted from today's holdings alone
         extra={isSpinAddress(address) ? undefined : <CheckpointPopover />}
-        actions={<GenerateDiscordButton objekts={filtered} />}
+        actions={
+          <>
+            {canMatch && (
+              <ShowMyMatches
+                matching="want"
+                on={showMatches}
+                onChange={setShowMatches}
+                count={wanted ? uniqueCount : null}
+                listIds={matchedListIds}
+                pending={matchesPending}
+                error={matchesOn ? matchesQuery.error : null}
+              />
+            )}
+            <GenerateDiscordButton objekts={filtered} />
+          </>
+        }
       />
 
       <CollectionNotices address={address} at={filters.at} />
 
-      {isPending ? (
+      {matchesFailed ? null : isPending || matchesPending ? (
         <SkeletonGrid columns={columns} />
       ) : (
         <>
@@ -269,7 +314,21 @@ export function CollectionView() {
             {showActions && filtered.length > 0 && <SelectModeButton />}
           </div>
 
-          {filtered.length === 0 ? (
+          {wanted && filtered.length === 0 && hasNextPage ? (
+            // matches are sparse: a later page may still bring the first one
+            <SkeletonGrid columns={columns} />
+          ) : wanted && filtered.length === 0 ? (
+            <EmptyState
+              icon={MagnifyingGlassIcon}
+              title={m.list_matches_empty_title()}
+              hint={m.profile_matches_empty_hint()}
+              action={
+                <Button variant="outline" size="sm" onClick={() => setShowMatches(false)}>
+                  {m.list_matches_show_all()}
+                </Button>
+              }
+            />
+          ) : filtered.length === 0 ? (
             <CollectionEmpty filtering={isFiltering(filters)} />
           ) : (
             <PinDnd
