@@ -7,6 +7,8 @@ import {
 import type { OfferView } from "@repo/api/schemas/offer";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { Link, useHydrated } from "@tanstack/react-router";
+import { useRef } from "react";
+import { flushSync } from "react-dom";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,6 +16,7 @@ import { CautionLine } from "@/features/chat/caution-line";
 import { useMinuteClock } from "@/hooks/use-minute-clock";
 import { joinList } from "@/lib/text";
 import { m } from "@/paraglide/messages";
+import { cancelOfferHold, holdOfferAction, useOfferHolds } from "@/stores/offer-holds";
 
 import { useOfferActions } from "./actions";
 import {
@@ -25,6 +28,7 @@ import {
   tradeNo,
   tradeStatusText,
 } from "./format";
+import { type HeldAction, holdLine } from "./hold";
 import { Mono, Progress, TopupText } from "./mono";
 import { OfferSideList } from "./offer-side-list";
 import { type Collections, pickKey } from "./pick";
@@ -52,6 +56,23 @@ export function OfferBody({
         .map((item) => itemLabel(item, collections)),
     ),
   );
+  const held = useOfferHolds((s) => s.holds[offer.id]);
+  const undoRef = useRef<HTMLButtonElement>(null);
+  const declineRef = useRef<HTMLButtonElement>(null);
+  const withdrawRef = useRef<HTMLButtonElement>(null);
+  const hold = (action: HeldAction) => {
+    const origin = action === "decline" ? declineRef : withdrawRef;
+    const input = { offerId: offer.id };
+    flushSync(() =>
+      holdOfferAction(offer.id, action, {
+        send: () =>
+          action === "decline" ? actions.decline.mutate(input) : actions.withdraw.mutate(input),
+        // after the restored button has rendered; with the thread gone the ref is null and this does nothing
+        onUndo: () => requestAnimationFrame(() => origin.current?.focus()),
+      }),
+    );
+    undoRef.current?.focus();
+  };
   const busy = actions.accept.isPending || actions.decline.isPending || actions.withdraw.isPending;
   const open = offer.status === "open";
   const reason = offer.status === "cancelled" ? cancelReasonText(offer.cancelReason) : null;
@@ -149,26 +170,40 @@ export function OfferBody({
           {open && hydrated ? (
             <p className="text-muted-foreground text-xs">{expiresLabel(offer.expiresAt, now)}</p>
           ) : null}
-          {offer.actions.length > 0 ? (
+          {held ? (
+            <div className="ms-auto flex flex-wrap items-center justify-end gap-2">
+              <p className="text-muted-foreground text-sm">{holdLine(held)}</p>
+              <Button
+                ref={undoRef}
+                variant="outline"
+                size="sm"
+                onClick={() => cancelOfferHold(offer.id)}
+              >
+                {m.chat_undo()}
+              </Button>
+            </div>
+          ) : offer.actions.length > 0 ? (
             <div className="ms-auto flex flex-wrap justify-end gap-2">
               {offer.actions.includes("withdraw") ? (
                 <Button
+                  ref={withdrawRef}
                   variant="outline"
                   size="sm"
                   disabled={busy}
                   loading={actions.withdraw.isPending}
-                  onClick={() => actions.withdraw.mutate({ offerId: offer.id })}
+                  onClick={() => hold("withdraw")}
                 >
                   {m.offer_withdraw()}
                 </Button>
               ) : null}
               {offer.actions.includes("decline") ? (
                 <Button
+                  ref={declineRef}
                   variant="outline"
                   size="sm"
                   disabled={busy}
                   loading={actions.decline.isPending}
-                  onClick={() => actions.decline.mutate({ offerId: offer.id })}
+                  onClick={() => hold("decline")}
                 >
                   {m.offer_decline()}
                 </Button>
