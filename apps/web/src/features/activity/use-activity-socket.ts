@@ -48,12 +48,15 @@ export function useActivitySocket({
         const item = activityItemSchema.safeParse(ctx.data);
         if (!item.success) return;
         pending.push(item.data);
-        flush ??= setTimeout(() => {
-          const data = pending.toReversed();
-          pending = [];
-          flush = undefined;
-          handler.current({ type: "transfer", data });
-        }, BATCH_MS);
+        // not `??=`: the React Compiler skips any function that uses it
+        if (flush === undefined) {
+          flush = setTimeout(() => {
+            const data = pending.toReversed();
+            pending = [];
+            flush = undefined;
+            handler.current({ type: "transfer", data });
+          }, BATCH_MS);
+        }
       });
 
       // the history is newest first, the order a batch is drawn in

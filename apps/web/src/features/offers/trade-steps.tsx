@@ -42,14 +42,15 @@ export function TradeSteps({
   className?: string;
 }) {
   const hydrated = useHydrated();
-  // in the viewer's zone, unknown to the server render
-  const time = (at: string) => (hydrated ? <time dateTime={at}>{shortDate(at)}</time> : null);
+  // in the viewer's zone, unknown to the server render. Not named `time`: the React Compiler
+  // confuses a binding named after the `<time>` it renders and skips the component
+  const when = (at: string) => (hydrated ? <time dateTime={at}>{shortDate(at)}</time> : null);
   const { marks: list, current } = marks(trade.status, kind);
   const live = trade.status === "in_progress";
 
   const steps: { key: string; label: string; detail: ReactNode }[] = [
-    { key: "proposed", label: m.offer_trade_proposed(), detail: time(trade.proposedAt) },
-    { key: "accepted", label: m.offer_trade_accepted(), detail: time(trade.acceptedAt) },
+    { key: "proposed", label: m.offer_trade_proposed(), detail: when(trade.proposedAt) },
+    { key: "accepted", label: m.offer_trade_accepted(), detail: when(trade.acceptedAt) },
     {
       key: "transfers",
       label: m.offer_trade_step_transfers(),
@@ -58,7 +59,7 @@ export function TradeSteps({
     {
       key: "complete",
       label: m.offer_trade_step_complete(),
-      detail: trade.status === "completed" && trade.endedAt ? time(trade.endedAt) : null,
+      detail: trade.status === "completed" && trade.endedAt ? when(trade.endedAt) : null,
     },
   ];
 
