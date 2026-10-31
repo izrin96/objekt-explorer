@@ -2,7 +2,7 @@ import { ArrowClockwiseIcon, CardsThreeIcon, WarningIcon } from "@phosphor-icons
 import type { CandidateItem } from "@repo/api/schemas/offer";
 import type { PickerTag } from "@repo/api/schemas/trade";
 import type { GridObjekt } from "@repo/lib/types/objekt";
-import type { ReactNode } from "react";
+import { type ReactNode, createContext, use } from "react";
 
 import { EmptyState } from "@/components/shared/empty-state";
 import { Button } from "@/components/ui/button";
@@ -51,6 +51,24 @@ function loadError(error: unknown, refetch: () => Promise<unknown>) {
   };
 }
 
+type PickerSelection = {
+  isSelected: (item: CandidateItem) => boolean;
+  countOf: (item: CandidateItem) => number;
+  /** an any-copy item's copies still free to ask for */
+  copiesOf: (item: CandidateItem) => number;
+  full: boolean;
+  onToggle: (item: CandidateItem, collections: Collections) => void;
+  onCount: (item: CandidateItem, count: number, collections: Collections) => void;
+};
+
+export const PickerSelectionContext = createContext<PickerSelection | null>(null);
+
+function usePickerSelection(): PickerSelection {
+  const selection = use(PickerSelectionContext);
+  if (!selection) throw new Error("CandidateGrid must be used within PickerSelectionContext");
+  return selection;
+}
+
 export function CandidateGrid({
   sections,
   collections,
@@ -58,12 +76,6 @@ export function CandidateGrid({
   error,
   empty,
   more,
-  isSelected,
-  countOf,
-  copiesOf,
-  full,
-  onToggle,
-  onCount,
   tagOf,
 }: {
   sections: { title: string | null; items: CandidateItem[] }[];
@@ -72,15 +84,9 @@ export function CandidateGrid({
   error: { retry: () => void; text: string | null } | null;
   empty: { title: string; hint?: string; action?: ReactNode };
   more?: { has: boolean; loading: boolean; failed: boolean; load: () => void };
-  isSelected: (item: CandidateItem) => boolean;
-  countOf: (item: CandidateItem) => number;
-  /** an any-copy item's copies still free to ask for */
-  copiesOf: (item: CandidateItem) => number;
-  full: boolean;
-  onToggle: (item: CandidateItem, collections: Collections) => void;
-  onCount: (item: CandidateItem, count: number, collections: Collections) => void;
   tagOf?: (item: CandidateItem) => PickerTag | undefined;
 }) {
+  const { isSelected, countOf, copiesOf, full, onToggle, onCount } = usePickerSelection();
   if (pending) {
     return (
       <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">

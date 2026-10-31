@@ -28,7 +28,12 @@ import { useUserLists } from "@/features/user/hooks";
 import { useLoadAllPages } from "@/hooks/use-load-all-pages";
 import { m } from "@/paraglide/messages";
 
-import { CandidateGrid, candidateMatcher, pagedGridProps } from "./candidate-grid";
+import {
+  CandidateGrid,
+  PickerSelectionContext,
+  candidateMatcher,
+  pagedGridProps,
+} from "./candidate-grid";
 import { type GetSource, addLabel, pickerDescription } from "./get-source";
 import { type Collections, type OfferPick, type OfferSide, pickKey, toPick } from "./pick";
 import { copiesLeft, countOf, totalOf, withCount } from "./quantity";
@@ -137,7 +142,7 @@ function PickerBody({
     remember(item, collections);
   };
 
-  const grid = {
+  const selected = {
     isSelected: (item: CandidateItem) => selection.has(pickKey(item)),
     countOf: (item: CandidateItem) => countOf(selection.get(pickKey(item)) ?? { count: 0 }),
     copiesOf: (item: CandidateItem) => copiesOf(selection, item),
@@ -147,7 +152,7 @@ function PickerBody({
   };
 
   return (
-    <>
+    <PickerSelectionContext value={selected}>
       <DialogHeader>
         <DialogTitle className="font-display">{addLabel(side, source, name)}</DialogTitle>
         <DialogDescription className="max-sm:sr-only">
@@ -156,11 +161,11 @@ function PickerBody({
       </DialogHeader>
       <div className="flex min-h-0 flex-1 flex-col px-6 pb-4">
         {side === "give" ? (
-          <MineGrid to={to} name={name} {...grid} />
+          <MineGrid to={to} name={name} />
         ) : source === "collection" ? (
-          <TheirCollectionGrid to={to} name={name} {...grid} />
+          <TheirCollectionGrid to={to} name={name} />
         ) : (
-          <TheirsGrid to={to} name={name} lists={theirLists} startList={startList} {...grid} />
+          <TheirsGrid to={to} name={name} lists={theirLists} startList={startList} />
         )}
       </div>
       <DialogFooter className="flex-row items-center">
@@ -172,19 +177,11 @@ function PickerBody({
           {m.offer_picker_done()}
         </Button>
       </DialogFooter>
-    </>
+    </PickerSelectionContext>
   );
 }
 
-type GridProps = {
-  to: OfferAddress;
-  isSelected: (item: CandidateItem) => boolean;
-  countOf: (item: CandidateItem) => number;
-  copiesOf: (item: CandidateItem) => number;
-  full: boolean;
-  onToggle: (item: CandidateItem, collections: Collections) => void;
-  onCount: (item: CandidateItem, count: number, collections: Collections) => void;
-};
+type GridProps = { to: OfferAddress };
 
 type Filters = PickerFilters & { search: string };
 
@@ -291,8 +288,7 @@ function PickerGrid({
   suggestedTitle,
   allTitle,
   empty,
-  ...grid
-}: Omit<GridProps, "to"> & {
+}: {
   query: Parameters<typeof pagedGridProps>[0] & { data?: { pages: Pages[] } };
   filters: Filters;
   onFilters: (filters: Filters) => void;
@@ -328,7 +324,6 @@ function PickerGrid({
         />
       </PickerFilterBar>
       <CandidateGrid
-        {...grid}
         {...pagedGridProps(query, items.length + allSuggested.length)}
         sections={[
           { title: suggestedTitle ?? null, items: suggested },
@@ -345,7 +340,7 @@ function PickerGrid({
   );
 }
 
-function MineGrid({ to, name, ...grid }: GridProps & { name: string }) {
+function MineGrid({ to, name }: GridProps & { name: string }) {
   const [filters, setFilters] = useState(NO_FILTERS);
   const lists = useUserLists().flatMap((list) =>
     list.listType === "want" ? [] : [{ slug: list.slug, name: list.name, type: list.listType }],
@@ -355,7 +350,6 @@ function MineGrid({ to, name, ...grid }: GridProps & { name: string }) {
 
   return (
     <PickerGrid
-      {...grid}
       query={query}
       filters={filters}
       onFilters={setFilters}
@@ -413,7 +407,6 @@ function TheirsGrid({
   name,
   lists,
   startList,
-  ...grid
 }: GridProps & { name: string; lists: PartnerList[]; startList?: string }) {
   const [filters, setFilters] = useState(NO_FILTERS);
   const [fromList, setList] = useListChoice(lists, startList);
@@ -422,7 +415,6 @@ function TheirsGrid({
 
   return (
     <PickerGrid
-      {...grid}
       query={query}
       filters={filters}
       onFilters={setFilters}
@@ -443,13 +435,12 @@ function TheirsGrid({
   );
 }
 
-function TheirCollectionGrid({ to, name, ...grid }: GridProps & { name: string }) {
+function TheirCollectionGrid({ to, name }: GridProps & { name: string }) {
   const [filters, setFilters] = useState(NO_FILTERS);
   const query = useInfiniteQuery(theirCollectionOptions(to, filters));
 
   return (
     <PickerGrid
-      {...grid}
       query={query}
       filters={filters}
       onFilters={setFilters}
