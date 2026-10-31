@@ -1594,7 +1594,6 @@
   "offer_leg_verified": "確認済み",
   "offer_leg_closed": "終了",
   "offer_make": "オファーする",
-  "offer_make_name": "{name}さんにオファーする",
   "offer_mine_needs_you": "あなたの番",
   "offer_mine_waiting": "相手の返事待ち",
   "offer_mine_in_progress": "進行中",

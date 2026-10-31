@@ -1594,7 +1594,6 @@
   "offer_leg_verified": "Verified",
   "offer_leg_closed": "Closed",
   "offer_make": "Make offer",
-  "offer_make_name": "Make an offer to {name}",
   "offer_mine_needs_you": "Needs you",
   "offer_mine_waiting": "Waiting for them",
   "offer_mine_in_progress": "In progress",

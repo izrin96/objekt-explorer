@@ -1594,7 +1594,6 @@
   "offer_leg_verified": "확인됨",
   "offer_leg_closed": "종료됨",
   "offer_make": "제안하기",
-  "offer_make_name": "{name}님에게 제안하기",
   "offer_mine_needs_you": "내 차례",
   "offer_mine_waiting": "상대방 응답 대기",
   "offer_mine_in_progress": "진행 중",

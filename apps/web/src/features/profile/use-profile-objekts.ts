@@ -2,7 +2,7 @@ import type { OwnedByFilters } from "@repo/api/schemas/objekts";
 import { Addresses } from "@repo/lib";
 import type { GridObjekt, PinState } from "@repo/lib/types/objekt";
 import { useInfiniteQuery, useQueries, useQuery } from "@tanstack/react-query";
-import { useDeferredValue, useEffect, useMemo } from "react";
+import { useDeferredValue, useMemo } from "react";
 
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import { filterObjekts } from "@/features/filters/filter-utils";
@@ -11,6 +11,7 @@ import { useCanonicalFilters, useValidatedCanonicalFilters } from "@/features/fi
 import { copiesIn, isObjektOwned } from "@/features/objekt/objekt-utils";
 import { collectionOptions } from "@/features/objekt/queries";
 import { useCollectionRarity } from "@/features/objekt/use-collection-rarity";
+import { useLoadAllPages } from "@/hooks/use-load-all-pages";
 
 import { useProfile } from "./profile-provider";
 import {
@@ -48,16 +49,9 @@ function useOwnedPages(address: string, filters: OwnedByFilters) {
   const spin = isSpinAddress(address);
   const query = useInfiniteQuery({ ...ownedCollectionOptions(address, filters), enabled: !spin });
   const held = useQuery({ ...heldCollectionsOptions(address, filters.artist), enabled: spin });
-  const { hasNextPage, isFetchingNextPage, isError, fetchNextPage } = query;
-
-  // the profile header and the open tab both observe this query, so both run
-  // this effect in the same commit; without `cancelRefetch: false` the second
-  // call aborts the first and every page is requested twice
-  useEffect(() => {
-    if (hasNextPage && !isFetchingNextPage && !isError) {
-      void fetchNextPage({ cancelRefetch: false });
-    }
-  }, [hasNextPage, isFetchingNextPage, isError, fetchNextPage]);
+  const { hasNextPage, isFetchingNextPage, fetchNextPage } = query;
+  // the profile header and the open tab both observe this query, so both page it in one commit
+  useLoadAllPages(!spin, query);
 
   const pages = query.data?.pages;
   const objekts = useMemo<GridObjekt[]>(

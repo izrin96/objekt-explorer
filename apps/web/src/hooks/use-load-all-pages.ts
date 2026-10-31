@@ -18,6 +18,8 @@ export function useLoadAllPages(
 ) {
   useEffect(() => {
     if (enabled && hasNextPage && !isFetchingNextPage && !isFetchNextPageError) {
+      // two observers of one query run this in the same commit; without `cancelRefetch: false`
+      // the second call aborts the first and every page is requested twice
       void fetchNextPage({ cancelRefetch: false });
     }
   }, [enabled, hasNextPage, isFetchingNextPage, isFetchNextPageError, fetchNextPage]);
