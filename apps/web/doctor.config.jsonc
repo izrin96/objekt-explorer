@@ -1,0 +1,67 @@
+{
+  "$schema": "https://react.doctor/schema/config.json",
+  "rules": {
+    // TanStack file routes export `Route` beside their components by design
+    "react-doctor/only-export-components": "off",
+    // Base UI's `render={<a />}` receives the Button's children, which the rule cannot see
+    "react-doctor/anchor-has-content": "off",
+    "react-doctor/no-high-complexity-react-function": "off",
+    "react-doctor/no-giant-component": "off",
+  },
+  "ignore": {
+    // vendored registry copies (kept verbatim) and generated output
+    "files": ["src/components/ui/**", "src/paraglide/**", "src/routeTree.gen.ts"],
+    // each one read and found sound; see the reason beside it
+    "overrides": [
+      {
+        // Stream's useCallStateHooks() returns a fixed module of hooks; the SDK exports no other way in
+        "files": ["src/features/live/**"],
+        "rules": ["react-hooks-js/hooks"],
+      },
+      {
+        // cleanup runs through a `detach` closure or a callback ref's return, which the rule misses
+        "files": [
+          "src/features/activity/use-activity-socket.ts",
+          "src/features/notifications/use-user-socket.ts",
+          "src/features/chat/thread/thread-hooks.ts",
+          "src/features/presence/use-presence-poller.ts",
+          "src/hooks/use-element-size.ts",
+        ],
+        "rules": ["react-doctor/effect-needs-cleanup"],
+      },
+      {
+        // Better Auth calls with no cached data to refresh; linkSocial leaves the page for OAuth
+        "files": ["src/features/auth/**", "src/features/account/sections/**"],
+        "rules": ["react-doctor/query-mutation-missing-invalidation"],
+      },
+      {
+        // the browser entry, never imported during SSR
+        "files": ["src/client.tsx"],
+        "rules": ["react-doctor/no-unguarded-browser-global-at-module-scope"],
+      },
+      {
+        // the error-tracking config loads first on purpose, so a failed query can still be reported
+        "files": ["src/routes/__root.tsx"],
+        "rules": ["react-doctor/tanstack-start-loader-parallel-fetch"],
+      },
+      {
+        // deps keyed on ids.join(",") on purpose; the compiler memoises `selected`
+        "files": [
+          "src/features/chat/conversation-list.tsx",
+          "src/features/settings/artists-menu.tsx",
+        ],
+        "rules": ["react-doctor/exhaustive-deps"],
+      },
+      {
+        // `copyCount` is an object or null, never a number
+        "files": ["src/features/list/add-to-list-preview.tsx"],
+        "rules": ["react-doctor/rendering-conditional-render"],
+      },
+      {
+        // a row is "the next N cards" and reflows on any filter, as virtua keys it; cards key by id
+        "files": ["src/features/objekt/objekt-virtual-grid.tsx"],
+        "rules": ["react-doctor/no-array-index-as-key"],
+      },
+    ],
+  },
+}
