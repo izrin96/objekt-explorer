@@ -34,7 +34,7 @@ export function CandidateTile({
   collection,
   selected,
   count = 0,
-  copies = item.copies ?? 0,
+  copies: copiesProp,
   full,
   fullId,
   onToggle,
@@ -55,6 +55,7 @@ export function CandidateTile({
   /** with Only what they want on: a near match's verb, or kept on none of the viewer's lists */
   tag?: PickerTag;
 }) {
+  const copies = copiesProp ?? item.copies ?? 0;
   const blocked = blockedReason(item);
   const capped = !selected && full && blocked === null;
   // focusable while unavailable, so the reason under it is read with it
