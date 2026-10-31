@@ -74,7 +74,9 @@ export function BuilderForm({
   const [topupNear, setTopupNear] = useState(added?.nearTopup ?? null);
   const [topupOn, setTopupOn] = useState(prefill?.topup !== undefined || topupNear !== null);
   const [amount, setAmount] = useState<number | null>(prefill?.topup?.amount ?? null);
-  const [currency, setCurrency] = useState(prefill?.topup?.currency ?? preferred);
+  // only a pick is held: the preferred currency reads "USD" until the rates load
+  const [chosenCurrency, setCurrency] = useState(prefill?.topup?.currency ?? null);
+  const currency = chosenCurrency ?? preferred;
   const [payer, setPayer] = useState<TopupPayer>(
     prefill?.topup?.payer ?? (topupNear ? nearPayer(topupNear.verb) : null) ?? "from",
   );
