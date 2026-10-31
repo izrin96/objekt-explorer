@@ -132,6 +132,9 @@ export function initClientErrorTracking() {
         // no session per page view, and no reports about dropped events
         integrations: (defaults) => defaults.filter(({ name }) => name !== "BrowserSession"),
         sendClientReports: false,
+        // only errors thrown in our chunks: Chrome on iOS injects scripts whose errors carry the
+        // page's URL as their file, and analytics loads from /m/s
+        allowUrls: [/\/assets\/[^/?#]+\.js/],
         beforeSend: (event, hint) =>
           shouldReport(hint.originalException) ? scrubEvent(event) : null,
         beforeBreadcrumb: (breadcrumb) => scrubBreadcrumb(breadcrumb),
