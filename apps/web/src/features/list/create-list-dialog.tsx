@@ -73,7 +73,9 @@ export function CreateListDialog({
               <DialogClose render={<Button variant="outline" />}>
                 {m.common_modal_close()}
               </DialogClose>
-              <Button onClick={() => composer.openWith(created)}>{m.trade_post_it()}</Button>
+              <Button autoFocus onClick={() => composer.openWith(created)}>
+                {m.trade_post_it()}
+              </Button>
             </DialogFooter>
             <PostComposer
               {...composer.dialog}

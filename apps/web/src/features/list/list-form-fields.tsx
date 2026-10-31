@@ -59,7 +59,7 @@ export function ListTypeField({
           onValueChange={(next) => {
             if (isListType(next)) onChange(next);
           }}
-          className="grid grid-cols-4 gap-1 rounded-lg border p-1"
+          className="grid grid-cols-2 gap-1 rounded-lg border p-1 sm:grid-cols-4"
         >
           {LIST_TYPES.map((type) => (
             <TypeSegment key={type} type={type} selected={listType === type} />
@@ -196,7 +196,7 @@ function TypeSegment({ type, selected }: { type: ListType; selected: boolean }) 
           : "text-muted-foreground hover:text-foreground border-transparent",
       )}
     >
-      <span className="truncate">{LIST_TYPE_LABEL[type]()}</span>
+      <span className="text-center text-pretty">{LIST_TYPE_LABEL[type]()}</span>
     </RadioPrimitive.Root>
   );
 }

@@ -68,9 +68,7 @@ function SetPriceForm({
     <>
       <DialogHeader>
         <DialogTitle className="font-display">{m.list_manage_objekt_set_price_title()}</DialogTitle>
-        <DialogDescription>
-          {m.list_manage_objekt_set_price_desc()} ({currency})
-        </DialogDescription>
+        <DialogDescription>{m.list_manage_objekt_set_price_desc({ currency })}</DialogDescription>
       </DialogHeader>
       <DialogPanel className="flex flex-col gap-4">
         <PriceFields

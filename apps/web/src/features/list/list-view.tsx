@@ -9,7 +9,7 @@ import { useCallback, useDeferredValue, useMemo, useState } from "react";
 import { CountBar, TotalCount } from "@/components/shared/count-bar";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Button } from "@/components/ui/button";
-import { MenuItem } from "@/components/ui/menu";
+import { MenuItem, MenuSeparator } from "@/components/ui/menu";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import { CompareBanner } from "@/features/compare/compare-banner";
 import { isComparing } from "@/features/compare/search-schema";
@@ -166,17 +166,20 @@ function ListEntries() {
       return (
         <>
           <AddToListMenuItem objekts={[objekt]} />
-          {isOwner && compare === null ? (
-            <MenuItem variant="destructive" onClick={() => openRemove(objekts)}>
-              <TrashIcon />
-              {m.objekt_menu_remove_from_list()}
-            </MenuItem>
-          ) : null}
           {canPrice && compare === null ? (
             <MenuItem onClick={() => openPrice(objekts)}>
               <CurrencyDollarIcon />
               {m.objekt_menu_set_price()}
             </MenuItem>
+          ) : null}
+          {isOwner && compare === null ? (
+            <>
+              <MenuSeparator />
+              <MenuItem variant="destructive" onClick={() => openRemove(objekts)}>
+                <TrashIcon />
+                {m.objekt_menu_remove_from_list()}
+              </MenuItem>
+            </>
           ) : null}
         </>
       );

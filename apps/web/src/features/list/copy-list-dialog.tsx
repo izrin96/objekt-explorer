@@ -63,7 +63,7 @@ export function CopyListDialog({
             </DialogPanel>
             <DialogFooter>
               <DialogClose render={<Button variant="outline" />}>
-                {m.common_modal_cancel()}
+                {m.common_modal_close()}
               </DialogClose>
             </DialogFooter>
           </>
@@ -131,16 +131,17 @@ function CopyListForm({ list, onDone }: { list: StoredList; onDone: () => void }
           onChange={setDraft}
           profiles={profiles}
           notice={
-            needsPreview && preview ? (
-              <p role="status" className="text-muted-foreground text-xs text-pretty">
-                {(preview.unit === "copies"
-                  ? m.list_copy_hint_copies
-                  : m.list_copy_hint_collections)({
-                  carried: preview.carried.toLocaleString(getLocale()),
-                  leftOut: preview.leftOut.toLocaleString(getLocale()),
-                })}
-              </p>
-            ) : null
+            // mounted empty so the text, once it arrives, is announced
+            <p role="status" className="text-muted-foreground text-xs text-pretty empty:sr-only">
+              {needsPreview && preview
+                ? (preview.unit === "copies"
+                    ? m.list_copy_hint_copies
+                    : m.list_copy_hint_collections)({
+                    carried: preview.carried.toLocaleString(getLocale()),
+                    leftOut: preview.leftOut.toLocaleString(getLocale()),
+                  })
+                : null}
+            </p>
           }
         />
       </DialogPanel>

@@ -76,7 +76,7 @@ export function EditListDialog({
             </DialogPanel>
             <DialogFooter>
               <DialogClose render={<Button variant="outline" />}>
-                {m.common_modal_cancel()}
+                {m.common_modal_close()}
               </DialogClose>
             </DialogFooter>
           </>

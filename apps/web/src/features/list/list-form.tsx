@@ -66,7 +66,6 @@ export function ListForm({
         <FieldLabel htmlFor={id("name")}>{m.list_create_name_label()}</FieldLabel>
         <Input
           id={id("name")}
-          autoFocus
           aria-required
           maxLength={256}
           placeholder={m.list_create_name_placeholder()}

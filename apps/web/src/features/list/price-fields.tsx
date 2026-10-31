@@ -61,10 +61,10 @@ export function PriceFields({
             <NumberFieldGroup className="rounded-s-none before:rounded-s-none">
               <NumberFieldDecrement
                 className="rounded-s-none"
-                aria-label={m.filter_sort_by_price_label()}
+                aria-label={m.list_price_decrease()}
               />
               <NumberFieldInput className="tabular-nums" />
-              <NumberFieldIncrement aria-label={m.filter_sort_by_price_label()} />
+              <NumberFieldIncrement aria-label={m.list_price_increase()} />
             </NumberFieldGroup>
           </div>
         </NumberField>
