@@ -21,6 +21,7 @@ import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import { unobtainableSlugs } from "@/lib/unobtainables";
 import { scrollXOnlyClass } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
+import { useSelection } from "@/stores/selection";
 
 import { ObjektFlip } from "../objekt-flip";
 import { getCollectionShortNo, isObjektOwned } from "../objekt-utils";
@@ -48,9 +49,8 @@ type Props = {
    */
   owned?: OwnedGridObjekt[];
   ownedMenu?: OwnedRowMenu;
-  selected?: boolean;
   /** the card's check and menu are hover-only, so a touch surface reaches them here */
-  onToggleSelect?: (objekt: ValidObjekt) => void;
+  selectable?: boolean;
   /** the items only; the sheet supplies the trigger and the popup */
   menu?: ReactNode;
   /** a linked serial: the sheet opens on its trade history */
@@ -67,8 +67,7 @@ export function ObjektDrawer({
   defaultTab = "serials",
   owned,
   ownedMenu,
-  selected = false,
-  onToggleSelect,
+  selectable = false,
   menu,
   serial,
   onSerialChange,
@@ -109,8 +108,7 @@ export function ObjektDrawer({
             onTabChange={setTab}
             owned={owned}
             ownedMenu={ownedMenu}
-            selected={selected}
-            onToggleSelect={onToggleSelect}
+            selectable={selectable}
             menu={menu}
             note={note}
           />
@@ -128,8 +126,7 @@ function DrawerBody({
   onTabChange,
   owned: ownedCopies,
   ownedMenu,
-  selected: isSelected,
-  onToggleSelect,
+  selectable,
   menu,
   note,
 }: {
@@ -140,11 +137,12 @@ function DrawerBody({
   onTabChange: (tab: DrawerTab) => void;
   owned?: OwnedGridObjekt[];
   ownedMenu?: OwnedRowMenu;
-  selected: boolean;
-  onToggleSelect?: (objekt: ValidObjekt) => void;
+  selectable: boolean;
   menu?: ReactNode;
   note?: ReactNode;
 }) {
+  const isSelected = useSelection((s) => selectable && s.ids.has(objekt.id));
+  const toggleSelect = useSelection((s) => s.toggle);
   const owned = isObjektOwned(objekt);
   const ownSerial = owned ? objekt.serial : null;
   const { getArtist } = useCosmoArtist();
@@ -210,15 +208,15 @@ function DrawerBody({
             {artistName} · {objekt.season} · {objekt.class}
           </DrawerDescription>
         </div>
-        {(onToggleSelect || menu) && (
+        {(selectable || menu) && (
           <div className="flex shrink-0 items-center gap-1.5">
-            {onToggleSelect && (
+            {selectable && (
               <Toggle
                 variant="outline"
                 size="sm"
                 aria-label={isSelected ? m.objekt_deselect_aria() : m.objekt_select_aria()}
                 pressed={isSelected}
-                onPressedChange={() => onToggleSelect(objekt)}
+                onPressedChange={() => toggleSelect(objekt.id)}
                 className="data-pressed:bg-foreground data-pressed:text-background data-pressed:border-foreground data-pressed:hover:bg-foreground/90 dark:data-pressed:bg-foreground dark:data-pressed:hover:bg-foreground/90"
               >
                 <CheckIcon weight="bold" />

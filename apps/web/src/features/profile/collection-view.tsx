@@ -305,8 +305,7 @@ export function CollectionView() {
         // Spin is counted per collection, so it has no tokens to list
         owned={isSpinAddress(address) ? undefined : ownedCopies}
         ownedMenu={showActions ? ownedMenu : undefined}
-        selected={active !== null && selected.has(active.id)}
-        onToggleSelect={showActions ? (item) => toggleSelect(item.id) : undefined}
+        selectable={showActions}
         menu={showActions && active !== null ? objektMenuItems(active) : undefined}
       />
     </AddToListProvider>

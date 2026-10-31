@@ -397,8 +397,7 @@ function ListEntries() {
         onClose={() => setActiveGroup([])}
         owned={showOwned ? ownedCopies : undefined}
         ownedMenu={user ? (item) => <AddToListMenuItem objekts={[item]} /> : undefined}
-        selected={activeObjekt !== null && ids.has(activeObjekt.id)}
-        onToggleSelect={user ? (value) => toggle(value.id) : undefined}
+        selectable={Boolean(user)}
         menu={user ? menuItems(activeGroup) : undefined}
         note={
           activeObjekt && activeNear ? (

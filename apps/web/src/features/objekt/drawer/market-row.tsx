@@ -11,7 +11,6 @@ import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Menu, MenuItem, MenuPopup, MenuSeparator, MenuTrigger } from "@/components/ui/menu";
 import { getListLinkOption } from "@/features/list/list-link";
-import type { OfferRequest } from "@/features/offers/builder/types";
 import { ProfileCell } from "@/features/profile/profile-hover-card";
 import { formatCurrency } from "@/features/settings/use-currency";
 import { formatTimestamp } from "@/lib/time";
@@ -19,11 +18,11 @@ import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import { ObjektNote } from "../objekt-note";
-import { listingPrice, offerRequest, sellerOf } from "./market-listing";
+import { listingPrice, sellerOf } from "./market-listing";
 
 export type RowActions = {
-  message: (item: MarketListing) => void;
-  offer: (request: OfferRequest) => void;
+  message: () => void;
+  offer: () => void;
 };
 
 /** The app's one timestamp; a phone-width drawer keeps the day and leaves the time to `title`. */
@@ -41,22 +40,18 @@ function ListingTime({ date }: { date: Date }) {
 /** The row's actions sit in one menu, so the table fits the drawer at phone width. */
 export function MarketRow({
   item,
-  slug,
-  messageable,
   currency,
   formatUsd,
   onOpenSerial,
   actions,
 }: {
   item: MarketListing;
-  slug: string;
-  /** false on the viewer's own listings too */
-  messageable: boolean;
   /** the viewer's code; the conversion is only worth showing when the seller's differs */
   currency: string;
   formatUsd: (usd: number) => string;
   onOpenSerial: (serial: number) => void;
-  actions: RowActions;
+  /** null when the seller can't be messaged, and on the viewer's own listings */
+  actions: RowActions | null;
 }) {
   const { address, nickname, name: sellerName } = sellerOf(item);
   const { label, priced, converted } = listingPrice(item, currency, formatCurrency, formatUsd);
@@ -111,7 +106,7 @@ export function MarketRow({
         <ListingTime date={new Date(item.createdAt)} />
       </td>
       <td className="pe-1.5 max-sm:px-0!">
-        {messageable ? (
+        {actions ? (
           <Menu>
             <MenuTrigger
               render={
@@ -127,11 +122,11 @@ export function MarketRow({
               <DotsThreeIcon weight="bold" />
             </MenuTrigger>
             <MenuPopup align="end" className="min-w-44">
-              <MenuItem onClick={() => actions.message(item)}>
+              <MenuItem onClick={() => actions.message()}>
                 <ChatCircleIcon />
                 {m.chat_message()}
               </MenuItem>
-              <MenuItem onClick={() => actions.offer(offerRequest(item, slug))}>
+              <MenuItem onClick={() => actions.offer()}>
                 <HandshakeIcon />
                 {m.offer_make()}
               </MenuItem>

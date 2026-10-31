@@ -117,8 +117,7 @@ function HomePage() {
         serial={serial}
         onSerialChange={changeSerial}
         onClose={close}
-        selected={active !== null && ids.has(active.id)}
-        onToggleSelect={user ? (value) => toggle(value.id) : undefined}
+        selectable={Boolean(user)}
         menu={user && active ? <AddToListMenuItem objekts={[active]} /> : undefined}
       />
     </AddToListProvider>

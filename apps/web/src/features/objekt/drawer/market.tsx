@@ -17,8 +17,14 @@ import { useUserLists, useUserProfiles } from "@/features/user/hooks";
 import { m } from "@/paraglide/messages";
 
 import { marketListingsOptions, marketStatsOptions, priceHistoryOptions } from "../queries";
-import { floorTrend, isOwnListing, messageRequest, trackingText } from "./market-listing";
-import { MarketRow, type RowActions } from "./market-row";
+import {
+  floorTrend,
+  isOwnListing,
+  messageRequest,
+  offerRequest,
+  trackingText,
+} from "./market-listing";
+import { MarketRow } from "./market-row";
 import { OnTradeLine } from "./on-trade-line";
 import { headRowClass, ScrollTable } from "./scroll-table";
 import { nextSort } from "./sort-state";
@@ -51,12 +57,6 @@ export function MarketPanel({
   const builder = useOfferBuilder();
   const { gate } = useStartGate();
   const { start } = useStartConversation();
-  const actions: RowActions = {
-    message: (item) => start(...messageRequest(item, slug)),
-    offer: (request) => {
-      if (gate()) builder.open(request);
-    },
-  };
   const listings = useInfiniteQuery(marketListingsOptions(slug, sort.key, sort.dir));
 
   const toggle = (key: SortBy) =>
@@ -183,12 +183,19 @@ export function MarketPanel({
                 <MarketRow
                   key={item.id}
                   item={item}
-                  slug={slug}
-                  messageable={item.messageable && !isOwnListing(item, myListSlugs, myAddresses)}
                   currency={currency}
                   formatUsd={formatUsd}
                   onOpenSerial={onOpenSerial}
-                  actions={actions}
+                  actions={
+                    item.messageable && !isOwnListing(item, myListSlugs, myAddresses)
+                      ? {
+                          message: () => start(...messageRequest(item, slug)),
+                          offer: () => {
+                            if (gate()) builder.open(offerRequest(item, slug));
+                          },
+                        }
+                      : null
+                  }
                 />
               ))}
             </tbody>

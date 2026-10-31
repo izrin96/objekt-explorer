@@ -203,8 +203,7 @@ export function MarketView() {
         objekt={active}
         onClose={() => setActive(null)}
         defaultTab="market"
-        selected={active !== null && ids.has(active.id)}
-        onToggleSelect={user ? (value) => toggle(value.id) : undefined}
+        selectable={Boolean(user)}
         menu={user && active ? <AddToListMenuItem objekts={[active]} /> : undefined}
       />
     </AddToListProvider>
