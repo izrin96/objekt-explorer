@@ -167,7 +167,9 @@ function OfferItem({
             className="text-muted-foreground -ms-2"
           >
             {updatesLabel(notification.updates)}
-            <CaretDownIcon className={cn("transition-transform", expanded && "rotate-180")} />
+            <CaretDownIcon
+              className={cn("motion-safe:transition-transform", expanded && "rotate-180")}
+            />
           </Button>
           {/* mounted while closed so the toggle's aria-controls always has a target */}
           <ol id={earlierId} hidden={!expanded} className="border-s ps-3 pt-1">

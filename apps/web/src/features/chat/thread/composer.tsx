@@ -289,7 +289,7 @@ export function Composer({
       <p
         id={errorId}
         role="alert"
-        className="text-destructive-foreground text-xs text-pretty empty:hidden"
+        className="text-destructive-foreground text-xs text-pretty empty:sr-only"
       >
         {error}
       </p>
@@ -301,12 +301,14 @@ export function Composer({
             over > 0 ? "text-destructive-foreground" : "text-muted-foreground",
           )}
         >
-          {over > 0
-            ? m.chat_too_long({ count: over.toLocaleString(getLocale()) })
-            : m.chat_counter({
-                count: length.toLocaleString(getLocale()),
-                max: MESSAGE_MAX_LENGTH.toLocaleString(getLocale()),
-              })}
+          {over === 1
+            ? m.chat_too_long_one()
+            : over > 1
+              ? m.chat_too_long({ count: over.toLocaleString(getLocale()) })
+              : m.chat_counter({
+                  count: length.toLocaleString(getLocale()),
+                  max: MESSAGE_MAX_LENGTH.toLocaleString(getLocale()),
+                })}
         </p>
       ) : null}
 

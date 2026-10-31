@@ -67,7 +67,7 @@ export function RulesStrip() {
         <CaretDownIcon
           aria-hidden
           className={cn(
-            "text-muted-foreground ms-auto size-4 shrink-0 transition-transform",
+            "text-muted-foreground ms-auto size-4 shrink-0 motion-safe:transition-transform",
             open && "rotate-180",
           )}
         />
@@ -125,7 +125,7 @@ function RuleRow({ rule }: { rule: Rule }) {
           <CaretDownIcon
             aria-hidden
             className={cn(
-              "text-muted-foreground size-4 shrink-0 transition-transform",
+              "text-muted-foreground size-4 shrink-0 motion-safe:transition-transform",
               !expanded && "-rotate-90",
             )}
           />

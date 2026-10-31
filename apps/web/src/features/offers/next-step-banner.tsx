@@ -20,6 +20,7 @@ import { useMinuteClock } from "@/hooks/use-minute-clock";
 import { STEP_TONE, TONE_EDGE, TONE_FILL, TONE_INK, type Tone } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
+import { getLocale } from "@/paraglide/runtime";
 
 import { itemLabel, leftLabel, shortDate } from "./format";
 import { MakeOfferButton } from "./make-offer-button";
@@ -269,7 +270,9 @@ export function NextStepBanner({
             <div className="mt-2 flex flex-wrap gap-2">
               {needsYou > 0 ? (
                 <Button variant="outline" size="sm" onClick={onShowNeeds}>
-                  {m.offer_show_needs_you({ count: needsYou })}
+                  {needsYou === 1
+                    ? m.offer_show_needs_you_one()
+                    : m.offer_show_needs_you({ count: needsYou.toLocaleString(getLocale()) })}
                 </Button>
               ) : null}
               {view.actions}

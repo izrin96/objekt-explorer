@@ -9,6 +9,7 @@ import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useHydrated } from "@tanstack/react-router";
 import { type MouseEvent, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 
 import { PendingStatus } from "@/components/router/pending";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -143,6 +144,8 @@ function TradeDetail({ trade, collections }: { trade: Trade; collections: Collec
   const [side, setSide] = useState(() => openingSide(trade));
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const exchangeRef = useRef<HTMLElement>(null);
+  const exchangeHeading = useRef<HTMLHeadingElement>(null);
+  const selectedHeading = useRef<HTMLHeadingElement>(null);
   const pickedTile = useRef<HTMLElement | null>(null);
   const wide = useMediaQuery("(min-width: 64rem)");
   const ended = trade.status !== "in_progress";
@@ -159,14 +162,19 @@ function TradeDetail({ trade, collections }: { trade: Trade; collections: Collec
     selectedId,
     onSelect: (leg: Leg, event: MouseEvent<HTMLButtonElement>) => {
       pickedTile.current = event.currentTarget;
-      setSelectedId((current) => (current === leg.id ? null : leg.id));
+      const next = selectedId === leg.id ? null : leg.id;
+      flushSync(() => setSelectedId(next));
+      if (next !== null && wide) selectedHeading.current?.focus({ preventScroll: true });
     },
   };
   const showNeeds = () => {
-    setFilter("needsYou");
-    setFind("");
-    setSide(openingSide(trade));
+    flushSync(() => {
+      setFilter("needsYou");
+      setFind("");
+      setSide(openingSide(trade));
+    });
     exchangeRef.current?.scrollIntoView({ block: "start" });
+    exchangeHeading.current?.focus({ preventScroll: true });
   };
   const selectedProps = {
     conversationId: trade.conversationId,
@@ -209,6 +217,7 @@ function TradeDetail({ trade, collections }: { trade: Trade; collections: Collec
           />
           <TradeExchange
             ref={exchangeRef}
+            headingRef={exchangeHeading}
             trade={trade}
             collections={collections}
             state={exchange}
@@ -217,10 +226,11 @@ function TradeDetail({ trade, collections }: { trade: Trade; collections: Collec
         {/* stretched to the exchange's height, so the Selected panel can stay in view beside it */}
         <aside className="flex min-w-0 flex-col gap-4 lg:self-stretch">
           {selected ? (
-            <div className="max-lg:hidden lg:sticky lg:top-4 lg:z-10">
+            <div className="max-lg:hidden lg:sticky lg:top-18 lg:z-10">
               <SelectedPanel
                 {...selectedProps}
                 leg={selected}
+                headingRef={selectedHeading}
                 onClose={() => {
                   setSelectedId(null);
                   pickedTile.current?.focus();
@@ -239,26 +249,27 @@ function TradeDetail({ trade, collections }: { trade: Trade; collections: Collec
       </div>
 
       {/* -mx-5 -mb-10 undo PageMain's px-5 pb-10, so the bar spans the screen and sits flush */}
-      <div className="bg-background sticky bottom-0 -mx-5 -mb-10 flex items-center gap-2 border-t px-5 pt-3 pb-[calc(env(safe-area-inset-bottom,0px)+--spacing(4))] sm:hidden">
+      <div
+        data-trade-bar
+        className="bg-background sticky bottom-0 -mx-5 -mb-10 flex flex-col gap-2 border-t px-5 pt-3 pb-[calc(env(safe-area-inset-bottom,0px)+--spacing(4))] sm:hidden"
+      >
         {step.kind === "youDecide" ? (
-          <DecideActions trade={trade} leg={step.leg} copyId={step.copy.id} size="xl" />
+          <div className="flex gap-2">
+            <DecideActions trade={trade} leg={step.leg} copyId={step.copy.id} size="xl" />
+          </div>
         ) : null}
-        {step.primary ? (
+        <div className="flex items-center gap-2">
           <Button
-            variant="outline"
-            size="icon-xl"
-            aria-label={m.offer_open_chat()}
+            variant={step.primary ? "outline" : "default"}
+            size="xl"
+            className="min-w-0 flex-1"
             render={chatLink}
           >
             <ChatCircleIcon />
-          </Button>
-        ) : (
-          <Button size="xl" className="min-w-0 flex-1" render={chatLink}>
-            <ChatCircleIcon />
             {m.offer_open_chat()}
           </Button>
-        )}
-        <TradeMenu {...menuProps} size="icon-xl" />
+          <TradeMenu {...menuProps} size="icon-xl" />
+        </div>
       </div>
 
       <CancelTrade

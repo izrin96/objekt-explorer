@@ -286,14 +286,18 @@ function Group({
                   </span>
                   <span
                     className={cn(
-                      "flex shrink-0 items-center gap-1 text-xs max-sm:sr-only",
+                      "flex shrink-0 items-center gap-1 text-xs",
                       TONE_INK[view.mark.tone],
                     )}
                   >
                     {view.warning ? (
-                      <WarningIcon aria-hidden weight="fill" className="text-warning-foreground" />
+                      <WarningIcon
+                        aria-hidden
+                        weight="fill"
+                        className="text-warning-foreground size-3"
+                      />
                     ) : null}
-                    {view.mark.label}
+                    <span className="max-sm:sr-only">{view.mark.label}</span>
                   </span>
                 </button>
               </li>
@@ -314,11 +318,13 @@ export function TradeExchange({
   collections,
   state,
   ref,
+  headingRef,
 }: {
   trade: TradeView;
   collections: Collections;
   state: ExchangeState;
   ref?: Ref<HTMLElement>;
+  headingRef?: Ref<HTMLHeadingElement>;
 }) {
   const titleId = useId();
   const ended = trade.status !== "in_progress";
@@ -351,10 +357,15 @@ export function TradeExchange({
   const activeLegs = state.side === "give" ? giveLegs : getLegs;
 
   return (
-    <section ref={ref} aria-labelledby={titleId} className="bg-card scroll-mt-4 rounded-xl border">
+    <section ref={ref} aria-labelledby={titleId} className="bg-card scroll-mt-18 rounded-xl border">
       <header className="flex flex-col gap-3 border-b px-4 py-3.5 sm:px-5">
         <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-          <h2 id={titleId} className="text-sm font-semibold">
+          <h2
+            id={titleId}
+            ref={headingRef}
+            tabIndex={-1}
+            className="text-sm font-semibold outline-none"
+          >
             {m.offer_exchange_title()}
           </h2>
           <span className="text-muted-foreground text-xs">

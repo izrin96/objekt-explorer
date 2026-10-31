@@ -60,7 +60,7 @@ export function OfferCard({
       <CollapsibleTrigger className="group focus-visible:ring-ring flex w-full items-center gap-2 rounded-lg px-3 py-2 text-start text-sm outline-none focus-visible:ring-2">
         <CaretRightIcon
           aria-hidden
-          className="text-muted-foreground size-3.5 shrink-0 transition-transform group-data-panel-open:rotate-90"
+          className="text-muted-foreground size-3.5 shrink-0 group-data-panel-open:rotate-90 motion-safe:transition-transform"
         />
         <span className="flex min-w-0 flex-1 flex-col">
           <span className="flex min-w-0 items-baseline gap-2">

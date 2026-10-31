@@ -1,7 +1,7 @@
 import { WarningIcon, XIcon } from "@phosphor-icons/react";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useHydrated } from "@tanstack/react-router";
-import type { RefObject } from "react";
+import type { Ref, RefObject } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetHeader, SheetPanel, SheetPopup, SheetTitle } from "@/components/ui/sheet";
@@ -120,14 +120,19 @@ function SelectedBody({ leg, conversationId, ended, collections, name, onOpen }:
 }
 
 /** From `lg`, the side panel's first card while an objekt is selected. */
-export function SelectedPanel(props: Props & { onClose: () => void }) {
+export function SelectedPanel({
+  headingRef,
+  ...props
+}: Props & { onClose: () => void; headingRef?: Ref<HTMLHeadingElement> }) {
   return (
     <section
       aria-label={m.offer_selected_title()}
       className="bg-card flex flex-col gap-3 rounded-xl border p-4"
     >
       <div className="flex items-center justify-between gap-2">
-        <h2 className="text-sm font-semibold">{m.offer_selected_title()}</h2>
+        <h2 ref={headingRef} tabIndex={-1} className="text-sm font-semibold outline-none">
+          {m.offer_selected_title()}
+        </h2>
         <Button
           variant="ghost"
           size="icon-sm"

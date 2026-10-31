@@ -349,6 +349,12 @@
     background-color: var(--background);
     scrollbar-gutter: stable;
   }
+  /* the trade page's phone bar is sticky; keep a focused tile above it */
+  @media (width < 40rem) {
+    html:has([data-trade-bar]) {
+      scroll-padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 8rem);
+    }
+  }
   html.dark {
     color-scheme: dark;
   }
