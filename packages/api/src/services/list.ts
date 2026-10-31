@@ -12,7 +12,6 @@ import { mapOwnedObjekt, overrideCollection } from "@repo/lib/server/objekt";
 import type { ListEntryFields, ListObjekt } from "@repo/lib/types/objekt";
 import { type SQL, and, eq, inArray, isNotNull, isNull, ne, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
-import slugify from "slugify";
 import type * as z from "zod";
 
 import { OBJEKT_PREVIEW_SIZE } from "../constants";
@@ -28,6 +27,7 @@ import {
   type createListInputSchema,
   type ListPreview,
   type ListType,
+  profileSlugBase,
   type PublicList,
 } from "../schemas/list";
 import { carriesPrices, copyMode, copyUnit, needsHoldings } from "../schemas/list-copy";
@@ -508,8 +508,7 @@ export async function generateProfileSlug(
   excludeListId?: number,
   executor: Tx | typeof db = db,
 ): Promise<string> {
-  // profile_slug is varchar(100); leave room for the "-<counter>" suffix
-  const baseSlug = slugify(name, { lower: true, strict: true }).slice(0, 90).replace(/-+$/, "");
+  const baseSlug = profileSlugBase(name);
   let slug = baseSlug || listSlug;
   let counter = 2;
 

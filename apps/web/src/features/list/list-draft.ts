@@ -1,6 +1,5 @@
-import type { ListType } from "@repo/api/schemas/list";
+import { type ListType, profileSlugBase } from "@repo/api/schemas/list";
 import type { OpenToFlags } from "@repo/api/schemas/open-to";
-import slugify from "slugify";
 import * as z from "zod";
 
 import { displayNickname, isSameAddress } from "@/lib/address";
@@ -184,7 +183,5 @@ export function bindNote(
 }
 
 export function slugPreview(name: string, url: ListUrl, regenerate: boolean): string {
-  return regenerate
-    ? slugify(name, { lower: true, strict: true }) || url.fallbackSlug
-    : url.profileSlug;
+  return regenerate ? profileSlugBase(name) || url.fallbackSlug : url.profileSlug;
 }

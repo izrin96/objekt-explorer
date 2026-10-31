@@ -326,6 +326,11 @@ describe("slugPreview", () => {
     expect(slugPreview("My List!", url, true)).toBe("my-list");
   });
 
+  test("a long name is cut where the server cuts it, with no dash left at the end", () => {
+    const name = `${"a".repeat(89)} ${"b".repeat(40)}`;
+    expect(slugPreview(name, url, true)).toBe("a".repeat(89));
+  });
+
   test("a name that slugifies to nothing uses the fallback", () => {
     expect(slugPreview("!!!", url, true)).toBe(url.fallbackSlug);
   });
