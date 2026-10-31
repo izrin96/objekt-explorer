@@ -17,8 +17,8 @@ import { m } from "@/paraglide/messages";
 // on the layout so the list keeps its folder while a thread is open beside it
 export const Route = createFileRoute("/(container)/messages")({
   validateSearch: messagesSearchSchema,
-  beforeLoad: requireSignedIn,
   loaderDeps: ({ search }) => ({ box: boxOf(search), q: search.q, show: showOf(search) }),
+  beforeLoad: requireSignedIn,
   loader: async ({ context: { queryClient }, deps }) => {
     // a failed read leaves the list to show its error and retry, not the page to fail
     await queryClient

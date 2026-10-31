@@ -11,8 +11,6 @@ import { m } from "@/paraglide/messages";
 export const Route = createFileRoute("/@{$nickname}/")({
   // a copy is linked by its token; the serial browsed stays off the URL here
   validateSearch: filterSearchSchema.extend(objektSearchSchema.omit({ serial: true }).shape),
-  // another profile starts fresh, so an open objekt drawer does not carry over to it
-  remountDeps: ({ params }) => params.nickname,
   loader: ({ params, context: { queryClient } }) =>
     queryClient.query({ ...profileQuery({ nickname: params.nickname }), staleTime: "static" }),
   head: ({ loaderData }) =>
@@ -23,5 +21,7 @@ export const Route = createFileRoute("/@{$nickname}/")({
           }),
         })
       : {},
+  // another profile starts fresh, so an open objekt drawer does not carry over to it
+  remountDeps: ({ params }) => params.nickname,
   component: CollectionView,
 });

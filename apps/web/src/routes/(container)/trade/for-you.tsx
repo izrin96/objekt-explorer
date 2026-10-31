@@ -14,6 +14,8 @@ import { m } from "@/paraglide/messages";
 
 export const Route = createFileRoute("/(container)/trade/for-you")({
   validateSearch: forYouSearchSchema,
+  // all of it, `person` too: the loader fills the key BrowseView reads
+  loaderDeps: ({ search }) => search,
   beforeLoad: async ({ search, context, location }) => {
     // an older link's one-way view or `partner`, mapped in place before anything else
     const normalised = forYouNormalise(search);
@@ -24,8 +26,6 @@ export const Route = createFileRoute("/(container)/trade/for-you")({
       throw redirect({ to: "/trade", search: forYouFallback(search), replace: true });
     }
   },
-  // all of it, `person` too: the loader fills the key BrowseView reads
-  loaderDeps: ({ search }) => search,
   loader: ({ context: { queryClient }, deps, cause }) =>
     loadBrowse({ queryClient, search: deps, cause, surface: "forYou" }),
   head: () => generateMetadata({ title: m.page_titles_trade() }),

@@ -8,11 +8,11 @@ import { m } from "@/paraglide/messages";
 
 export const Route = createFileRoute("/(container)/live/$id")({
   validateSearch: z.object({ token: z.string().optional().catch(undefined) }),
+  loaderDeps: ({ search }) => ({ token: search.token }),
   beforeLoad: async ({ search }) => {
     const isAllowed = await checkAccess({ data: { token: search.token } });
     if (!isAllowed) throw redirect({ to: "/live" });
   },
-  loaderDeps: ({ search }) => ({ token: search.token }),
   loader: async ({ params, deps }) => ({
     live: await getLiveSessionById({ data: { id: params.id, token: deps.token } }),
   }),
