@@ -37,6 +37,7 @@ function hydrate() {
   );
 }
 
-// only browsers missing these download the polyfill; a failed download still hydrates
+// only browsers missing these download the polyfills; groupBy is the newest of them in every engine,
+// so a browser that has it has the rest. A failed download still hydrates
 if (typeof Object.groupBy === "function" && typeof Map.groupBy === "function") hydrate();
 else void import("@/lib/polyfills").catch(() => {}).then(hydrate);
