@@ -16,7 +16,8 @@
     "typecheck": "bun run paraglide:compile && tsc --noEmit",
     "test": "bun test",
     "format": "oxfmt .",
-    "scan": "bunx react-scan@latest localhost:3200"
+    "scan": "bunx react-scan@latest localhost:3200",
+    "doctor": "bunx react-doctor@0.9.18 . --no-score --scope changed --base origin/main"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
