@@ -335,8 +335,8 @@ export function SideStrip({
           className="bg-success/10 text-success-foreground shrink-0 rounded px-1.5 normal-case"
         >
           {side.role === "want"
-            ? m.trade_list_count_you_have({ count })
-            : m.trade_list_count_you_want({ count })}
+            ? m.trade_list_count_you_have({ count: count.toLocaleString(getLocale()) })
+            : m.trade_list_count_you_want({ count: count.toLocaleString(getLocale()) })}
         </MatchedListsChip>
       ) : null}
       {/* never counted: muted, after the count, and the popover's way in when there is none */}

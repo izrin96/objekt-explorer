@@ -109,8 +109,8 @@ export function ShowMyMatches({
           className="bg-success/10 text-success-foreground h-6 shrink-0 rounded px-1.5 text-xs tabular-nums"
         >
           {matching === "have"
-            ? m.trade_list_count_you_have({ count })
-            : m.trade_list_count_you_want({ count })}
+            ? m.trade_list_count_you_have({ count: count.toLocaleString(getLocale()) })
+            : m.trade_list_count_you_want({ count: count.toLocaleString(getLocale()) })}
         </MatchedListsChip>
       ) : null}
       {on && near ? (

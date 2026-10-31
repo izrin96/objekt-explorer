@@ -299,7 +299,9 @@ function ExcerptOfferView({
               {groupRows(side.items, pickKey).map(({ key, item, count }) => (
                 <li key={key} className="break-words">
                   <ItemLabel item={item} collections={collections} />
-                  {count > 1 ? <> {m.offer_any_copy_times({ count })}</> : null}
+                  {count > 1 ? (
+                    <> {m.offer_any_copy_times({ count: count.toLocaleString(getLocale()) })}</>
+                  ) : null}
                 </li>
               ))}
             </ul>

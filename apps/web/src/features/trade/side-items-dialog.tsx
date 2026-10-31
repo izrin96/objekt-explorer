@@ -140,8 +140,8 @@ export function SideItemsDialog({
       : undefined;
   const matchLabel = (count: number) =>
     side.role === "want"
-      ? m.trade_list_count_you_have({ count })
-      : m.trade_list_count_you_want({ count });
+      ? m.trade_list_count_you_have({ count: count.toLocaleString(getLocale()) })
+      : m.trade_list_count_you_want({ count: count.toLocaleString(getLocale()) });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

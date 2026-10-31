@@ -44,7 +44,7 @@ export function OfferSideList({
   const tileLabel = (item: OfferItemView, count: number) =>
     [
       itemLabel(item, collections),
-      count > 1 ? m.offer_any_copy_times({ count }) : null,
+      count > 1 ? m.offer_any_copy_times({ count: count.toLocaleString(getLocale()) }) : null,
       sent(item) ? m.offer_item_sent() : null,
     ]
       .filter(Boolean)
@@ -60,7 +60,8 @@ export function OfferSideList({
             onClick={() => setSheetOpen(true)}
             className="text-muted-foreground hover:text-foreground focus-visible:ring-ring rounded-sm tracking-wide uppercase outline-none focus-visible:ring-2"
           >
-            {label} · <span className="tabular-nums">{items.length}</span>
+            {label} ·{" "}
+            <span className="tabular-nums">{items.length.toLocaleString(getLocale())}</span>
           </button>
         ) : (
           <span className="text-muted-foreground tracking-wide uppercase">{label}</span>
@@ -106,7 +107,8 @@ export function OfferSideList({
         <SheetPopup>
           <SheetHeader>
             <SheetTitle className="text-base">
-              {label} · <span className="tabular-nums">{items.length}</span>
+              {label} ·{" "}
+              <span className="tabular-nums">{items.length.toLocaleString(getLocale())}</span>
             </SheetTitle>
           </SheetHeader>
           <SheetPanel>
@@ -127,7 +129,7 @@ export function OfferSideList({
                     {count > 1 ? (
                       <span className="text-muted-foreground tabular-nums">
                         {" "}
-                        {m.offer_any_copy_times({ count })}
+                        {m.offer_any_copy_times({ count: count.toLocaleString(getLocale()) })}
                       </span>
                     ) : null}
                     {sent(item) ? (

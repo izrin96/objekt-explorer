@@ -407,7 +407,9 @@ function WaitingRequests() {
   if (!count) return null;
   return (
     <div className="flex flex-col items-center gap-2">
-      <p className="text-sm">{m.chat_empty_inbox_requests({ count })}</p>
+      <p className="text-sm">
+        {m.chat_empty_inbox_requests({ count: count.toLocaleString(getLocale()) })}
+      </p>
       <Button
         variant="outline"
         size="sm"
@@ -572,13 +574,13 @@ function UnreadMark({ count, muted }: { count: number; muted: boolean }) {
         muted ? "bg-muted text-muted-foreground" : "bg-foreground text-background",
       )}
     >
-      <span aria-hidden>{over ? "99+" : count}</span>
+      <span aria-hidden>{over ? "99+" : count.toLocaleString(getLocale())}</span>
       <span className="sr-only">
         {over
           ? m.chat_unread_count_over()
           : count === 1
             ? m.chat_unread_count_one()
-            : m.chat_unread_count({ count })}
+            : m.chat_unread_count({ count: count.toLocaleString(getLocale()) })}
       </span>
     </span>
   );

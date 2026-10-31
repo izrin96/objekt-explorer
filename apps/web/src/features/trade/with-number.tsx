@@ -1,6 +1,7 @@
 import { Fragment } from "react";
 
 import { cn } from "@/lib/utils";
+import { getLocale } from "@/paraglide/runtime";
 
 /** stands where a message puts a number, so each number can be styled whatever its position */
 const mark = (index: number) => `${index}`;
@@ -29,7 +30,7 @@ export function WithNumbers<K extends string>({
           <Fragment key={index}>{part}</Fragment>
         ) : (
           <b key={index} className={cn("font-semibold tabular-nums", className)}>
-            {entries[Number(part)]?.[1]}
+            {entries[Number(part)]?.[1]?.toLocaleString(getLocale())}
           </b>
         ),
       )}

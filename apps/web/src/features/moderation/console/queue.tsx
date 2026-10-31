@@ -81,7 +81,10 @@ export function ModQueue() {
   return (
     <div className="flex flex-col gap-3">
       <p className="text-muted-foreground text-xs tabular-nums">
-        {m.mod_queue_summary({ reports: openReports, accounts: query.data.length })}
+        {m.mod_queue_summary({
+          reports: openReports.toLocaleString(getLocale()),
+          accounts: query.data.length.toLocaleString(getLocale()),
+        })}
       </p>
       {/* single choice, so pressing the active filter again (an empty group) is ignored */}
       <ToggleGroup
