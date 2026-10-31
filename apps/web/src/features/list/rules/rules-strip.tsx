@@ -7,7 +7,7 @@ import {
   TrashIcon,
 } from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useId, useState } from "react";
 import { WindowVirtualizer } from "virtua";
 
 import {
@@ -24,11 +24,13 @@ import { Menu, MenuItem, MenuPopup, MenuSeparator, MenuTrigger } from "@/compone
 import { Spinner } from "@/components/ui/spinner";
 import { toastManager } from "@/components/ui/toast";
 import { ObjektCard } from "@/features/objekt/objekt-card";
+import { rich } from "@/features/offers/wrong-copy";
 import { useElementSize } from "@/hooks/use-element-size";
 import { client, orpc } from "@/lib/orpc";
 import { refusalText } from "@/lib/refusal";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
+import { getLocale } from "@/paraglide/runtime";
 
 import { useListTarget } from "../list-provider";
 import { useListOwned } from "../use-list-owned";
@@ -57,7 +59,10 @@ export function RulesStrip() {
         <ListBulletsIcon className="text-muted-foreground size-4 shrink-0" aria-hidden />
         <span className="text-sm font-semibold">{m.rules_heading()}</span>
         <span className="text-muted-foreground text-sm tabular-nums">
-          {m.rules_summary({ count: rules.length, canMatch })}
+          {m.rules_summary({
+            count: rules.length.toLocaleString(getLocale()),
+            canMatch: canMatch.toLocaleString(getLocale()),
+          })}
         </span>
         <CaretDownIcon
           aria-hidden
@@ -82,6 +87,7 @@ function RuleRow({ rule }: { rule: Rule }) {
   const list = useListTarget();
   const isOwner = useListOwned();
   const [expanded, setExpanded] = useState(false);
+  const objektsId = useId();
   const [editOpen, setEditOpen] = useState(false);
   const [confirm, setConfirm] = useState<"delete" | "detach" | null>(null);
 
@@ -97,8 +103,8 @@ function RuleRow({ rule }: { rule: Rule }) {
       ? rule.owned > 0
         ? // the count is the list owner's holdings, so only the owner reads "you"
           isOwner
-          ? m.rule_skips_owned({ count: rule.owned })
-          : m.rule_skips_owned_theirs({ count: rule.owned })
+          ? m.rule_skips_owned({ count: rule.owned.toLocaleString(getLocale()) })
+          : m.rule_skips_owned_theirs({ count: rule.owned.toLocaleString(getLocale()) })
         : null
       : isOwner
         ? m.rule_includes_owned()
@@ -112,6 +118,7 @@ function RuleRow({ rule }: { rule: Rule }) {
         <button
           type="button"
           aria-expanded={expanded}
+          aria-controls={objektsId}
           onClick={() => setExpanded((value) => !value)}
           className="hover:bg-muted/48 focus-visible:ring-ring flex min-w-0 flex-1 items-center gap-3 rounded-lg py-2.5 ps-3 pe-2 text-start outline-none focus-visible:ring-2"
         >
@@ -131,7 +138,9 @@ function RuleRow({ rule }: { rule: Rule }) {
             ) : null}
           </span>
           <span className="flex shrink-0 flex-col items-end">
-            <span className="text-sm font-semibold tabular-nums">{rule.canMatch}</span>
+            <span className="text-sm font-semibold tabular-nums">
+              {rule.canMatch.toLocaleString(getLocale())}
+            </span>
             <span className="text-muted-foreground text-xs">{m.rule_can_match_label()}</span>
           </span>
         </button>
@@ -151,7 +160,11 @@ function RuleRow({ rule }: { rule: Rule }) {
             <MenuPopup align="end" className="min-w-44">
               <MenuItem onClick={() => setExpanded((value) => !value)}>
                 <EyeIcon />
-                {expanded ? m.rule_hide_objekts() : m.rule_see_objekts({ count: rule.covers })}
+                {expanded
+                  ? m.rule_hide_objekts()
+                  : rule.covers === 1
+                    ? m.rule_see_objekts_one()
+                    : m.rule_see_objekts({ count: rule.covers.toLocaleString(getLocale()) })}
               </MenuItem>
               <MenuItem onClick={() => setEditOpen(true)}>
                 <PencilSimpleIcon />
@@ -170,7 +183,10 @@ function RuleRow({ rule }: { rule: Rule }) {
           </Menu>
         ) : null}
       </div>
-      {expanded ? <RuleObjekts slug={list.slug} ruleId={rule.id} owner={isOwner} /> : null}
+      {/* mounted while closed so the toggle's aria-controls always has a target */}
+      <div id={objektsId} hidden={!expanded}>
+        {expanded ? <RuleObjekts slug={list.slug} ruleId={rule.id} owner={isOwner} /> : null}
+      </div>
       {isOwner ? (
         <>
           <RuleDialog
@@ -274,7 +290,7 @@ function RuleObjektRows({ groups, headed }: { groups: RuleGroup[]; headed: boole
                   {shortNo(row.group.season, row.group.collectionNo)}
                 </span>
                 {" · "}
-                {m.rule_can_match({ count: row.group.canMatch })}
+                {m.rule_can_match({ count: row.group.canMatch.toLocaleString(getLocale()) })}
               </h4>
             ) : (
               <ul
@@ -317,7 +333,12 @@ function ConfirmRule({
       onClose();
       toastManager.add({
         type: "success",
-        title: kind === "delete" ? m.rule_deleted() : m.rule_detached({ count: rule.canMatch }),
+        title:
+          kind === "delete"
+            ? m.rule_deleted()
+            : rule.canMatch === 1
+              ? m.rule_detached_one()
+              : m.rule_detached({ count: rule.canMatch.toLocaleString(getLocale()) }),
       });
       await Promise.all(
         [...RULE_KEYS, orpc.list.key()].map((queryKey) =>
@@ -325,10 +346,16 @@ function ConfirmRule({
         ),
       );
     },
-    onError: (error) => {
-      toastManager.add({ type: "error", title: m.rule_error(), description: refusalText(error) });
+    onError: (error, kind) => {
+      toastManager.add({
+        type: "error",
+        title: kind === "delete" ? m.rule_delete_error() : m.rule_detach_error(),
+        description: refusalText(error),
+      });
     },
   });
+
+  const ruleName = <span className="text-foreground">{ruleText(rule)}</span>;
 
   return (
     <AlertDialog open={action !== null} onOpenChange={(open) => !open && onClose()}>
@@ -338,10 +365,18 @@ function ConfirmRule({
             {action === "detach" ? m.rule_detach_title() : m.rule_delete_title()}
           </AlertDialogTitle>
           <AlertDialogDescription>
-            <span className="text-foreground">{ruleText(rule)}</span> —{" "}
             {action === "detach"
-              ? m.rule_detach_desc({ count: rule.canMatch })
-              : m.rule_delete_desc()}
+              ? rich(
+                  rule.canMatch === 1
+                    ? m.rule_detach_desc_one
+                    : (p) =>
+                        m.rule_detach_desc({
+                          ...p,
+                          count: rule.canMatch.toLocaleString(getLocale()),
+                        }),
+                  { rule: ruleName },
+                )
+              : rich(m.rule_delete_desc, { rule: ruleName })}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

@@ -32,6 +32,7 @@ import { TagBadges } from "@/features/trade/tag-label";
 import { displayNickname } from "@/lib/address";
 import { copyWithToast } from "@/lib/clipboard";
 import { m } from "@/paraglide/messages";
+import { getLocale } from "@/paraglide/runtime";
 
 import { CopyListDialog } from "./copy-list-dialog";
 import { DeleteListDialog } from "./delete-list-dialog";
@@ -257,7 +258,13 @@ function TradeMatchesLink({
     <Button
       variant="outline"
       size="sm"
-      aria-label={shown === undefined ? undefined : m.trade_matches_link_label({ count: shown })}
+      aria-label={
+        shown === undefined
+          ? undefined
+          : shown === 1
+            ? m.trade_matches_link_label_one()
+            : m.trade_matches_link_label({ count: shown.toLocaleString(getLocale()) })
+      }
       render={
         <Link to="/trade/for-you" search={{ match: mutual ? "mutual" : "any", list: slug }} />
       }
@@ -266,7 +273,7 @@ function TradeMatchesLink({
       {m.nav_trade_matches()}
       {shown === undefined ? null : (
         <Badge variant="secondary" size="sm" className="tabular-nums">
-          {shown}
+          {shown.toLocaleString(getLocale())}
         </Badge>
       )}
     </Button>
