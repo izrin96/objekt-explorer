@@ -62,6 +62,8 @@ export type StripText = {
   /** null when there is no deal */
   no: string | null;
   words: string;
+  /** below `md`, in place of `words`, so whose turn it is is never cut; null keeps `words` */
+  phoneWords: string | null;
   trailing: string | null;
   second: string | null;
   action: StripAction;
@@ -79,13 +81,19 @@ export function stripText(
     return {
       no: null,
       words: hadOffer ? m.chat_deal_none_open() : m.chat_deal_none_yet(),
+      phoneWords: null,
       trailing: null,
       second: null,
       action: "makeOffer",
       tone: "neutral",
     };
   }
-  const base = { no: dealNo(deal), tone: dealTone(deal.state), trailing: null };
+  const base = {
+    no: dealNo(deal),
+    tone: dealTone(deal.state),
+    trailing: null,
+    phoneWords: null,
+  };
   const expires = deal.until ? m.chat_deal_expires({ time: format.left(deal.until) }) : null;
   switch (deal.state) {
     case "waitingYou":
@@ -110,6 +118,11 @@ export function stripText(
       return {
         ...base,
         words: stepChipText(deal.state),
+        // the row's words are shorter for these; for the decide states they are longer
+        phoneWords:
+          deal.state === "yourTurn" || deal.state === "theirTurn" || deal.state === "stuck"
+            ? rowText(deal).words
+            : null,
         trailing: progress(deal),
         second:
           deal.state === "yourTurn"

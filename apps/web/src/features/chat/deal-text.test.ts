@@ -140,6 +140,22 @@ describe("strip, as the spec's Strip by state table", () => {
     );
   });
 
+  test.each<[DealState, string | null]>([
+    ["waitingYou", null],
+    ["waitingThem", null],
+    ["youDecide", null],
+    ["yourTurn", "Your turn"],
+    ["theirTurn", "Waiting for them"],
+    ["stuck", "Can't be sent"],
+    ["theyDecide", null],
+    ["completed", null],
+    ["failed", null],
+  ])("below md, %s reads %p", (state, words) => {
+    const deal = state === "waitingYou" || state === "waitingThem" ? offer(state) : trade(state);
+    const text = stripText(deal, true, "haneul_07", { left: () => "3 days", date: () => "Oct 30" });
+    expect(text.phoneWords).toBe(words);
+  });
+
   test("no deal", () => {
     expect(strip(null, false)).toEqual({
       line: "No offer between you yet",
@@ -147,5 +163,10 @@ describe("strip, as the spec's Strip by state table", () => {
       action: "makeOffer",
     });
     expect(strip(null, true).line).toBe("No open offer");
+    for (const hadOffer of [false, true]) {
+      expect(
+        stripText(null, hadOffer, "haneul_07", { left: String, date: String }).phoneWords,
+      ).toBeNull();
+    }
   });
 });

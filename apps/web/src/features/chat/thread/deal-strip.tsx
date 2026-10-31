@@ -90,13 +90,22 @@ function StripFrame({
               </span>
             </>
           ) : null}
-          <span className="min-w-0 truncate">{text.words}</span>
+          <span className="min-w-0 truncate">
+            {text.phoneWords ? (
+              <>
+                <span className="md:hidden">{text.phoneWords}</span>
+                <span className="max-md:hidden">{text.words}</span>
+              </>
+            ) : (
+              text.words
+            )}
+          </span>
           {text.trailing ? (
             <>
-              <span aria-hidden className="shrink-0">
+              <span aria-hidden className="shrink-0 max-md:hidden">
                 ·
               </span>
-              <span className="shrink-0 tabular-nums">{text.trailing}</span>
+              <span className="shrink-0 tabular-nums max-md:hidden">{text.trailing}</span>
             </>
           ) : null}
         </p>
