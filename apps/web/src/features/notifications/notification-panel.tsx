@@ -79,8 +79,8 @@ export function NotificationPanel({
   const [kind, setKind] = useState<NotificationKind>("all");
   const query = useInfiniteQuery(notificationsOptions(kind));
   const { data: prefs } = useQuery(notificationPrefsOptions());
-  // the panel mounts on open, so times read relative to that moment
-  const [now] = useState(Date.now);
+  // rows read from their fetch, so ones that arrive while the panel is open aren't in the future
+  const now = query.dataUpdatedAt;
 
   const refetch = () =>
     Promise.all(notificationKeys.map((queryKey) => queryClient.invalidateQueries({ queryKey })));

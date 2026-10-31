@@ -52,7 +52,6 @@ export function MarketPanel({
   const history = useQuery(priceHistoryOptions(slug, "30d"));
   const [historyOpen, setHistoryOpen] = useState(false);
   const chartId = useId();
-  const [now] = useState(() => new Date());
   // one of each for the whole table, rather than a dialog per row
   const builder = useOfferBuilder();
   const { gate } = useStartGate();
@@ -66,7 +65,8 @@ export function MarketPanel({
   const liveFloor = stats.data?.floorPrice ?? null;
   const points = history.data?.points ?? [];
   const tracking = history.data?.tracking ?? null;
-  const today = utcDate(now);
+  // the day the points were read, so the trend ends where they do past UTC midnight
+  const today = utcDate(new Date(history.dataUpdatedAt));
   const { change, sparkline } = floorTrend(points, liveFloor, today);
 
   const price = (usd: number | null | undefined) =>

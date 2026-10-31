@@ -93,8 +93,10 @@ export function BrowseView({ surface, search }: { surface: Surface; search: Feed
   const composer = useComposer();
   const planLists = usePlanLists();
   const [hiddenOpen, setHiddenOpen] = useState(false);
-  // one clock per page load, so every row's "3 hours ago" agrees
-  const [now] = useState(Date.now);
+  // rows read from their fetch, so every "3 hours ago" agrees, and the server's render too;
+  // a placeholder carries 0 while the last filters' rows stay up, so those keep their own time
+  const [now, setNow] = useState(query.dataUpdatedAt);
+  if (!query.isPlaceholderData && query.dataUpdatedAt !== now) setNow(query.dataUpdatedAt);
 
   // the two routes have their own search types; the view reads both through `FeedSearch`
   const go = (
