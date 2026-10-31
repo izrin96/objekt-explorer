@@ -181,9 +181,8 @@ export function offerNotificationText(payload: OfferPayload, partner = payload.p
   }
 }
 
-/** Reads the clock here: the compiler takes `Date.now` in a component body as a render-time call. */
-export function expiresLabel(iso: string) {
-  return m.offer_expires_in({ time: relativeTime(new Date(iso).getTime(), Date.now(), "day") });
+export function expiresLabel(iso: string, now: number) {
+  return m.offer_expires_in({ time: relativeTime(new Date(iso).getTime(), now, "day") });
 }
 
 export function tradeNotificationText(payload: TradePayload, partner = payload.partner.name) {
@@ -257,9 +256,9 @@ export function shortDate(iso: string) {
   );
 }
 
-/** "5 days" or "3 hours" until `iso`; reads the clock here, outside any component body. */
-export function leftLabel(iso: string) {
-  const { unit, value } = timeLeft(iso, Date.now());
+/** "5 days" or "3 hours" until `iso`. */
+export function leftLabel(iso: string, now: number) {
+  const { unit, value } = timeLeft(iso, now);
   return new Intl.NumberFormat(getLocale(), {
     style: "unit",
     unit,

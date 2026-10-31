@@ -18,6 +18,7 @@ import { untilLabel } from "@/features/chat/format";
 import { useSafetyDialogs } from "@/features/moderation/safety-dialogs";
 import { ObjektDrawer } from "@/features/objekt/drawer";
 import { useMediaQuery } from "@/hooks/use-media-query";
+import { useMinuteClock } from "@/hooks/use-minute-clock";
 import { m } from "@/paraglide/messages";
 import { useUserSocketLive } from "@/stores/user-socket";
 
@@ -35,9 +36,6 @@ import { TradeMenu } from "./trade-menu";
 import { TradePartnerCard, TradePartnerRow } from "./trade-partner-card";
 import { TradeTimeline } from "./trade-timeline";
 import { DecideActions, rich } from "./wrong-copy";
-
-/** Reads the clock here: the compiler takes `Date.now` in a component body as a render-time call. */
-const readStep = (trade: Trade) => nextStep(trade, Date.now());
 
 const GRID = "grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_--spacing(85)] lg:gap-5";
 
@@ -135,7 +133,8 @@ function IndexerStrip({ trade }: { trade: Trade }) {
 
 function TradeDetail({ trade, collections }: { trade: Trade; collections: Collections }) {
   const name = trade.partner.identity.name;
-  const step = readStep(trade);
+  const now = useMinuteClock();
+  const step = nextStep(trade, now);
   const [active, setActive] = useState<ValidObjekt | null>(null);
   const [cancelOpen, setCancelOpen] = useState(false);
   const [filter, setFilter] = useState<ExchangeFilter>("all");

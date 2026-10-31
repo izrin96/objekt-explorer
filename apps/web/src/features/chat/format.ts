@@ -61,7 +61,6 @@ export function refusalOf(error: unknown) {
   return reason ? { reason, retryAt } : null;
 }
 
-/** Reads the clock here: the compiler takes `Date.now` in a component body as a render-time call. */
 export function refusalText(refusal: { reason: ChatRefusal; retryAt: string | null }) {
   const now = Date.now();
   const at = refusal.retryAt ? new Date(refusal.retryAt).getTime() : now;

@@ -16,6 +16,7 @@ import { useId, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
 import { untilLabel } from "@/features/chat/format";
+import { useMinuteClock } from "@/hooks/use-minute-clock";
 import { STEP_TONE, TONE_EDGE, TONE_FILL, TONE_INK, type Tone } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -38,8 +39,6 @@ import { StatusBadge } from "./status-badge";
 import { Feedback } from "./trade-feedback";
 import { TradeSteps } from "./trade-steps";
 import { DecideActions, Serial, rich } from "./wrong-copy";
-
-const FORMAT: CardFormat = { left: leftLabel, date: shortDate, until: untilLabel };
 
 const ICONS: Record<NextStep["kind"], Icon> = {
   completed: CheckIcon,
@@ -85,6 +84,12 @@ export function NextStepBanner({
   onShowNeeds: () => void;
 }) {
   const hydrated = useHydrated();
+  const now = useMinuteClock();
+  const format: CardFormat = {
+    left: (iso) => leftLabel(iso, now),
+    date: shortDate,
+    until: untilLabel,
+  };
   const titleId = useId();
   const tone: Tone = STEP_TONE[step.kind];
   const StepIcon = ICONS[step.kind];
@@ -204,7 +209,7 @@ export function NextStepBanner({
   })();
 
   // the viewer's own clock, so the deadline waits for the client
-  const deadline = hydrated ? deadlineText(step.deadline, FORMAT) : null;
+  const deadline = hydrated ? deadlineText(step.deadline, format) : null;
   const notes = "notes" in step ? step.notes : [];
 
   return (
@@ -246,7 +251,7 @@ export function NextStepBanner({
               className="text-warning-foreground flex items-start gap-1.5 text-xs text-pretty"
             >
               <WarningIcon aria-hidden weight="fill" className="mt-px size-3.5 shrink-0" />
-              {noteText(note, { name, objekt: label(note.leg), until: FORMAT.until })}
+              {noteText(note, { name, objekt: label(note.leg), until: format.until })}
             </p>
           ))}
           {notes.map((note) =>

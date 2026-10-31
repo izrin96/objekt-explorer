@@ -11,6 +11,7 @@ import { Link, useHydrated } from "@tanstack/react-router";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CautionLine } from "@/features/chat/caution-line";
+import { useMinuteClock } from "@/hooks/use-minute-clock";
 import { m } from "@/paraglide/messages";
 
 import { useOfferActions } from "./actions";
@@ -42,6 +43,7 @@ export function OfferBody({
   onOpen: (objekt: ValidObjekt) => void;
 }) {
   const hydrated = useHydrated();
+  const now = useMinuteClock();
   const actions = useOfferActions(offer.conversationId, (keys) =>
     [...offer.give, ...offer.get]
       .filter((item) => keys.has(pickKey(item)))
@@ -143,7 +145,7 @@ export function OfferBody({
       {(open && hydrated) || offer.actions.length > 0 ? (
         <footer className="flex flex-wrap items-center justify-between gap-2">
           {open && hydrated ? (
-            <p className="text-muted-foreground text-xs">{expiresLabel(offer.expiresAt)}</p>
+            <p className="text-muted-foreground text-xs">{expiresLabel(offer.expiresAt, now)}</p>
           ) : null}
           {offer.actions.length > 0 ? (
             <div className="ms-auto flex flex-wrap justify-end gap-2">

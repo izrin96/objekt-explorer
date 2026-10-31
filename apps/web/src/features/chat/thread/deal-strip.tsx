@@ -4,13 +4,12 @@ import type { ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
 import { leftLabel, shortDate } from "@/features/offers/format";
+import { useMinuteClock } from "@/hooks/use-minute-clock";
 import { TONE_INK, TONE_SOLID } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import { type StripAction, stripText } from "../deal-text";
-
-const FORMAT = { left: leftLabel, date: shortDate };
 
 /**
  * The conversation's deal under the thread header, outside the scroller so it stays in view:
@@ -31,7 +30,11 @@ export function DealStrip({
   onOffer: (() => void) | null;
 }) {
   const hydrated = useHydrated();
-  const text = stripText(deal, hadOffer, name, FORMAT);
+  const now = useMinuteClock();
+  const text = stripText(deal, hadOffer, name, {
+    left: (iso) => leftLabel(iso, now),
+    date: shortDate,
+  });
   const label: Record<StripAction, () => string> = {
     review: m.chat_deal_review_offer,
     view: m.chat_deal_view_offer,

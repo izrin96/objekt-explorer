@@ -7,6 +7,7 @@ import { useId, type ReactNode } from "react";
 import { CopyButton } from "@/components/shared/copy-button";
 import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Popover, PopoverPopup, PopoverTrigger } from "@/components/ui/popover";
+import { useMinuteClock } from "@/hooks/use-minute-clock";
 import { TONE_SOLID, type Tone } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -15,10 +16,6 @@ import { itemLabel, serialText, shortDate, tradeStatusText } from "./format";
 import type { Collections } from "./pick";
 import { firstSenderInClock, nextRow, type TimelineRow, timelineRows } from "./trade-clock";
 import { InPlaceOf } from "./wrong-copy";
-
-/** Reads the clock here: the compiler takes `Date.now` in a component body as a render-time call. */
-const readRows = (trade: Trade, hydrated: boolean) =>
-  timelineRows(trade, Date.now(), { fold: hydrated });
 
 const END_TONE: Record<Trade["status"], Tone> = {
   in_progress: "progress",
@@ -247,9 +244,12 @@ function Footer({ trade, name }: { trade: Trade; name: string }) {
 export function TradeTimeline(props: Props) {
   const { trade, collections, name } = props;
   const hydrated = useHydrated();
+  const now = useMinuteClock();
   const titleId = useId();
   // where Today sits and which rows are past follow the viewer's clock, so they wait for the client
-  const rows = readRows(trade, hydrated).filter((row) => hydrated || row.kind !== "today");
+  const rows = timelineRows(trade, now, { fold: hydrated }).filter(
+    (row) => hydrated || row.kind !== "today",
+  );
   const next = hydrated ? nextRow(rows) : null;
   // with nothing ahead, the fold names how the trade ended
   const shown = next ?? (hydrated ? rows.at(-1) : undefined);
