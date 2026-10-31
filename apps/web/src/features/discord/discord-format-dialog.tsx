@@ -26,7 +26,7 @@ import { toastManager } from "@/components/ui/toast";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import { useFilterData } from "@/features/filters/filter-data-provider";
 import { getListLinkOption } from "@/features/list/list-link";
-import { LIST_TYPE_LABEL } from "@/features/list/list-type-badge";
+import { ListLabel } from "@/features/list/list-option";
 import { useUserLists } from "@/features/user/hooks";
 import { orpc } from "@/lib/orpc";
 import { refusalText } from "@/lib/refusal";
@@ -198,21 +198,21 @@ function ListPicker({
           className="min-w-0"
         >
           <SelectValue>
-            {(next: string) =>
-              next === NONE
-                ? m.generate_discord_list_placeholder()
-                : (lists.find((list) => list.slug === next)?.name ?? next)
-            }
+            {(next: string) => {
+              const list = lists.find((entry) => entry.slug === next);
+              return list ? (
+                <ListLabel name={list.name} type={list.listType} />
+              ) : (
+                m.generate_discord_list_placeholder()
+              );
+            }}
           </SelectValue>
         </SelectTrigger>
         <SelectPopup>
           <SelectItem value={NONE}>{m.generate_discord_list_placeholder()}</SelectItem>
           {lists.map((list) => (
-            <SelectItem key={list.slug} value={list.slug}>
-              <span className="truncate">{list.name}</span>
-              <span className="text-muted-foreground ml-1.5 text-xs">
-                {LIST_TYPE_LABEL[list.listType]()}
-              </span>
+            <SelectItem key={list.slug} value={list.slug} label={list.name}>
+              <ListLabel name={list.name} type={list.listType} />
             </SelectItem>
           ))}
         </SelectPopup>
