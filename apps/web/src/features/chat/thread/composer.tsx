@@ -24,6 +24,7 @@ import { SendingAs } from "@/features/link/shown-as";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
+import { getLocale } from "@/paraglide/runtime";
 import {
   dropDraftSendId,
   putDraftCard,
@@ -301,10 +302,10 @@ export function Composer({
           )}
         >
           {over > 0
-            ? m.chat_too_long({ count: over.toLocaleString() })
+            ? m.chat_too_long({ count: over.toLocaleString(getLocale()) })
             : m.chat_counter({
-                count: length.toLocaleString(),
-                max: MESSAGE_MAX_LENGTH.toLocaleString(),
+                count: length.toLocaleString(getLocale()),
+                max: MESSAGE_MAX_LENGTH.toLocaleString(getLocale()),
               })}
         </p>
       ) : null}

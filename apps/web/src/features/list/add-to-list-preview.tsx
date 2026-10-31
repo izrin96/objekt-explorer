@@ -1,6 +1,7 @@
 import { Toggle } from "@/components/ui/toggle";
 import { ObjektCard } from "@/features/objekt/objekt-card";
 import { m } from "@/paraglide/messages";
+import { getLocale } from "@/paraglide/runtime";
 
 import type { previewRows } from "./add-to-list-source";
 
@@ -30,8 +31,8 @@ export function PreviewSection({
         {copyCount && (
           <span className="text-muted-foreground text-xs tabular-nums">
             {m.list_add_copies_count({
-              picked: copyCount.picked.toLocaleString(),
-              total: copyCount.total.toLocaleString(),
+              picked: copyCount.picked.toLocaleString(getLocale()),
+              total: copyCount.total.toLocaleString(getLocale()),
             })}
           </span>
         )}
@@ -65,7 +66,7 @@ export function PreviewSection({
         ))}
         {hidden > 0 && (
           <li className="text-muted-foreground text-xs">
-            {m.list_add_more_rows({ count: hidden.toLocaleString() })}
+            {m.list_add_more_rows({ count: hidden.toLocaleString(getLocale()) })}
           </li>
         )}
       </ul>

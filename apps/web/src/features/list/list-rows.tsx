@@ -29,6 +29,7 @@ import { TagBadges } from "@/features/trade/tag-label";
 import { displayNickname } from "@/lib/address";
 import { TONE_INK } from "@/lib/tone";
 import { m } from "@/paraglide/messages";
+import { getLocale } from "@/paraglide/runtime";
 
 import { CopyListDialog } from "./copy-list-dialog";
 import { DeleteListDialog } from "./delete-list-dialog";
@@ -91,7 +92,7 @@ export function ListSection({
         <span className={TONE_INK[LIST_TYPE_TONE[tone]]}>{title}</span>
         <span className="sr-only">: </span>
         <span className="text-muted-foreground text-xs font-normal tabular-nums">
-          {count.toLocaleString()}
+          {count.toLocaleString(getLocale())}
         </span>
       </h2>
       {children}

@@ -12,6 +12,7 @@ import { StatRow } from "@/features/objekt/drawer/stat-row";
 import { displayNickname } from "@/lib/address";
 import { formatTimestamp } from "@/lib/time";
 import { m } from "@/paraglide/messages";
+import { getLocale } from "@/paraglide/runtime";
 
 import { MoveAddressDialog } from "./move-address-dialog";
 import { type Account, personName, sectionTitle } from "./shared";
@@ -32,16 +33,16 @@ export function AccountStats({ data }: { data: Account }) {
         },
         {
           label: m.mod_signal_verified(),
-          value: (data.reputation?.verified ?? 0).toLocaleString(),
+          value: (data.reputation?.verified ?? 0).toLocaleString(getLocale()),
         },
         {
           label: m.mod_signal_unfinished(),
-          value: (data.reputation?.unfinished ?? 0).toLocaleString(),
+          value: (data.reputation?.unfinished ?? 0).toLocaleString(getLocale()),
         },
-        { label: m.mod_signal_starts(), value: data.startsLast24h.toLocaleString() },
+        { label: m.mod_signal_starts(), value: data.startsLast24h.toLocaleString(getLocale()) },
         ...FLAG_CATEGORIES.map((category) => ({
           label: FLAG_LABEL[category](),
-          value: data.flags[category].toLocaleString(),
+          value: data.flags[category].toLocaleString(getLocale()),
         })),
       ]}
     />

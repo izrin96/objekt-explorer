@@ -4,6 +4,7 @@ import { truncateAddress } from "@repo/lib/address";
 import { isObjektOwned } from "@/features/objekt/objekt-utils";
 import { isSameAddress } from "@/lib/address";
 import { m } from "@/paraglide/messages";
+import { getLocale } from "@/paraglide/runtime";
 
 import type { AddTarget } from "./add-to-list-source";
 
@@ -50,11 +51,13 @@ export function addedToast(
   const reasons = [
     unowned > 0 && o.owner !== null
       ? m.actions_add_to_list_unowned({
-          count: unowned.toLocaleString(),
+          count: unowned.toLocaleString(getLocale()),
           profile: o.profileName(o.owner),
         })
       : null,
-    skipped > 0 ? m.actions_add_to_list_skipped({ count: skipped.toLocaleString() }) : null,
+    skipped > 0
+      ? m.actions_add_to_list_skipped({ count: skipped.toLocaleString(getLocale()) })
+      : null,
   ].filter((reason) => reason !== null);
   return {
     type: entries.length > 0 ? ("success" as const) : ("info" as const),
@@ -63,7 +66,7 @@ export function addedToast(
         ? m.actions_add_to_list_success_single({ collectionId: entries[0].collectionId })
         : entries.length > 1
           ? m.actions_add_to_list_success_multiple({
-              count: entries.length.toLocaleString(),
+              count: entries.length.toLocaleString(getLocale()),
             })
           : m.actions_add_to_list_nothing(),
     description: reasons.length > 0 ? reasons.join(" · ") : undefined,

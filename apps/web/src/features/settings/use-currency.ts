@@ -25,7 +25,7 @@ export function formatCurrency(amount: number, code: string): string {
     }
     return formatter.format(amount);
   } catch {
-    return `${amount.toLocaleString()} ${currency}`;
+    return `${amount.toLocaleString(getLocale())} ${currency}`;
   }
 }
 

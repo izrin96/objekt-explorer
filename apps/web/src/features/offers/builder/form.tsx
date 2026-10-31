@@ -351,8 +351,8 @@ export function BuilderForm({
             )}
           >
             {m.chat_counter({
-              count: noteLength.toLocaleString(),
-              max: OFFER_NOTE_MAX_LENGTH.toLocaleString(),
+              count: noteLength.toLocaleString(getLocale()),
+              max: OFFER_NOTE_MAX_LENGTH.toLocaleString(getLocale()),
             })}
           </p>
         </div>

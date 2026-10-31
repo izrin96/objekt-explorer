@@ -6,6 +6,7 @@ import { currentUserOptions } from "@/features/user/queries";
 import { orpc } from "@/lib/orpc";
 import { refusalText } from "@/lib/refusal";
 import { m } from "@/paraglide/messages";
+import { getLocale } from "@/paraglide/runtime";
 
 import { LIST_QUERY_KEY } from "./queries";
 
@@ -71,8 +72,8 @@ export function useCopyList() {
     orpc.list.copy.mutationOptions({
       onSuccess: async ({ slug, carried, leftOut, unit }) => {
         const counts = {
-          carried: carried.toLocaleString(),
-          leftOut: leftOut.toLocaleString(),
+          carried: carried.toLocaleString(getLocale()),
+          leftOut: leftOut.toLocaleString(getLocale()),
         };
         toastManager.add({
           type: "success",
@@ -164,7 +165,7 @@ export function useRemoveObjektsFromList() {
         toastManager.add({
           type: "success",
           title: m.actions_remove_from_list_success_multiple({
-            count: removed.toLocaleString(),
+            count: removed.toLocaleString(getLocale()),
           }),
         });
         await invalidate(slug);

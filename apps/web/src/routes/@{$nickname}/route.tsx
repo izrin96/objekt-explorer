@@ -13,6 +13,7 @@ import { ProfileTabs } from "@/features/profile/profile-tabs";
 import { profileQuery } from "@/features/profile/queries";
 import { useProfileSummary } from "@/features/profile/use-profile-objekts";
 import { m } from "@/paraglide/messages";
+import { getLocale } from "@/paraglide/runtime";
 
 export const Route = createFileRoute("/@{$nickname}")({
   loader: ({ params, context: { queryClient } }) =>
@@ -53,7 +54,7 @@ function ProfileBody({ nickname }: { nickname: string }) {
 function ProfileSummary() {
   const summary = useProfileSummary();
   const count = (value: number) =>
-    summary.isPending ? "—" : `${value.toLocaleString()}${summary.partial ? "+" : ""}`;
+    summary.isPending ? "—" : `${value.toLocaleString(getLocale())}${summary.partial ? "+" : ""}`;
 
   return (
     <ProfileStats
@@ -64,8 +65,8 @@ function ProfileSummary() {
           unit: m.profile_stats_unique(),
           label: m.profile_stats_collections(),
         },
-        { value: summary.pins.toLocaleString(), label: m.profile_stats_pinned() },
-        { value: summary.locks.toLocaleString(), label: m.profile_stats_locked() },
+        { value: summary.pins.toLocaleString(getLocale()), label: m.profile_stats_pinned() },
+        { value: summary.locks.toLocaleString(getLocale()), label: m.profile_stats_locked() },
       ]}
     />
   );

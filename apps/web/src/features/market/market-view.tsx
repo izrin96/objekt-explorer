@@ -30,6 +30,7 @@ import { useCurrency } from "@/features/settings/use-currency";
 import { marketMatchesOptions } from "@/features/trade/queries";
 import { useCurrentUser } from "@/features/user/hooks";
 import { m } from "@/paraglide/messages";
+import { getLocale } from "@/paraglide/runtime";
 import { useClearSelectionOnNavigate, useSelection } from "@/stores/selection";
 
 import { FloorPriceFilter } from "./filter-floor-price";
@@ -149,7 +150,9 @@ export function MarketView() {
           <TotalCount count={filtered.length} />
           {" · "}
           <MessageMarkup
-            parts={m.market_listing_count.parts({ count: totalListings.toLocaleString() })}
+            parts={m.market_listing_count.parts({
+              count: totalListings.toLocaleString(getLocale()),
+            })}
             markup={countMarkup}
           />
         </CountBar>

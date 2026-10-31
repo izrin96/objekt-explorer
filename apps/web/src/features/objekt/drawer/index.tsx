@@ -21,6 +21,7 @@ import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import { unobtainableSlugs } from "@/lib/unobtainables";
 import { scrollXOnlyClass } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
+import { getLocale } from "@/paraglide/runtime";
 import { useSelection } from "@/stores/selection";
 
 import { ObjektFlip } from "../objekt-flip";
@@ -282,7 +283,9 @@ function DrawerBody({
                 {ownedCopies && (
                   <TabsTab value="owned">
                     {m.objekt_owned()}
-                    {ownedCopies.length > 1 ? ` (${ownedCopies.length.toLocaleString()})` : ""}
+                    {ownedCopies.length > 1
+                      ? ` (${ownedCopies.length.toLocaleString(getLocale())})`
+                      : ""}
                   </TabsTab>
                 )}
                 <TabsTab value="serials">{m.objekt_trades()}</TabsTab>

@@ -21,6 +21,7 @@ import type { client } from "@/lib/orpc";
 import { orpc } from "@/lib/orpc";
 import { refusalText } from "@/lib/refusal";
 import { m } from "@/paraglide/messages";
+import { getLocale } from "@/paraglide/runtime";
 
 import { useCopyList } from "./actions";
 import { EMPTY_DRAFT, type ListDraft, ListForm, listDraftSchema, toCreateInput } from "./list-form";
@@ -135,8 +136,8 @@ function CopyListForm({ list, onDone }: { list: StoredList; onDone: () => void }
                 {(preview.unit === "copies"
                   ? m.list_copy_hint_copies
                   : m.list_copy_hint_collections)({
-                  carried: preview.carried.toLocaleString(),
-                  leftOut: preview.leftOut.toLocaleString(),
+                  carried: preview.carried.toLocaleString(getLocale()),
+                  leftOut: preview.leftOut.toLocaleString(getLocale()),
                 })}
               </p>
             ) : null

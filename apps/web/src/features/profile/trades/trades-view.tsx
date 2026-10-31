@@ -34,6 +34,7 @@ import { ObjektDrawer } from "@/features/objekt/drawer";
 import { ObjektNameButton } from "@/features/objekt/objekt-hover-card";
 import { isSameAddress } from "@/lib/address";
 import { m } from "@/paraglide/messages";
+import { getLocale } from "@/paraglide/runtime";
 
 import { CheckpointPopover } from "../checkpoint-popover";
 import { ProfileCell } from "../profile-hover-card";
@@ -190,7 +191,7 @@ export function TradesView() {
         <>
           <p className="text-muted-foreground text-xs tabular-nums">
             {m.trades_count({
-              count: `${rows.length.toLocaleString()}${query.hasNextPage ? "+" : ""}`,
+              count: `${rows.length.toLocaleString(getLocale())}${query.hasNextPage ? "+" : ""}`,
             })}
           </p>
 

@@ -13,6 +13,7 @@ import { NumberField, NumberFieldGroup, NumberFieldInput } from "@/components/ui
 import { Skeleton } from "@/components/ui/skeleton";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { m } from "@/paraglide/messages";
+import { getLocale } from "@/paraglide/runtime";
 
 import { type Stat, StatRow } from "./stat-row";
 
@@ -212,15 +213,15 @@ function SerialStats({
   const stats: Stat[] = [
     {
       label: physical ? m.objekt_scanned_copies() : m.objekt_copies(),
-      value: data ? data.total.toLocaleString() : null,
+      value: data ? data.total.toLocaleString(getLocale()) : null,
     },
     {
       label: m.objekt_event_spun(),
-      value: data ? data.spin.toLocaleString() : null,
+      value: data ? data.spin.toLocaleString(getLocale()) : null,
     },
     {
       label: m.objekt_non_spin(),
-      value: data ? (data.total - data.spin).toLocaleString() : null,
+      value: data ? (data.total - data.spin).toLocaleString(getLocale()) : null,
     },
     {
       label: m.objekt_transferable(),
@@ -229,7 +230,7 @@ function SerialStats({
           ? `${((data.transferable / data.total) * 100).toFixed(2)}%`
           : "—"
         : null,
-      detail: data?.transferable.toLocaleString(),
+      detail: data?.transferable.toLocaleString(getLocale()),
     },
   ];
 

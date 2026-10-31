@@ -20,6 +20,7 @@ import { StatRow } from "@/features/objekt/drawer/stat-row";
 import { ProfileLink } from "@/features/profile/profile-hover-card";
 import { formatTimestamp } from "@/lib/time";
 import { m } from "@/paraglide/messages";
+import { getLocale } from "@/paraglide/runtime";
 
 import { linkEventLabel } from "./link-history";
 import { addressHistoryOptions } from "./queries";
@@ -200,8 +201,8 @@ function AddressHeader({
           <StatRow
             className="grid-cols-2 sm:grid-cols-3"
             stats={[
-              { label: m.mod_address_accounts(), value: accounts.toLocaleString() },
-              { label: m.mod_address_events(), value: events.length.toLocaleString() },
+              { label: m.mod_address_accounts(), value: accounts.toLocaleString(getLocale()) },
+              { label: m.mod_address_events(), value: events.length.toLocaleString(getLocale()) },
               {
                 label: m.mod_address_first(),
                 value: first && hydrated ? formatTimestamp(new Date(first.at)).slice(0, 10) : "",

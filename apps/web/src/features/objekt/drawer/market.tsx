@@ -15,6 +15,7 @@ import { useOfferBuilder } from "@/features/offers/offer-builder";
 import { useCurrency } from "@/features/settings/use-currency";
 import { useUserLists, useUserProfiles } from "@/features/user/hooks";
 import { m } from "@/paraglide/messages";
+import { getLocale } from "@/paraglide/runtime";
 
 import { marketListingsOptions, marketStatsOptions, priceHistoryOptions } from "../queries";
 import {
@@ -80,11 +81,11 @@ export function MarketPanel({
     },
     {
       label: m.objekt_market_listings(),
-      value: stats.data ? stats.data.total.toLocaleString() : null,
+      value: stats.data ? stats.data.total.toLocaleString(getLocale()) : null,
     },
     {
       label: m.objekt_market_sellers(),
-      value: stats.data ? stats.data.sellers.toLocaleString() : null,
+      value: stats.data ? stats.data.sellers.toLocaleString(getLocale()) : null,
     },
     { label: m.objekt_market_median(), value: price(stats.data?.medianPrice) },
     { label: m.objekt_market_highest(), value: price(stats.data?.maxPrice) },

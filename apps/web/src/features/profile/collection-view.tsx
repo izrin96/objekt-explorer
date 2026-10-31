@@ -24,6 +24,7 @@ import { SelectBar, SelectModeButton } from "@/features/objekt/select-bar";
 import { SkeletonGrid } from "@/features/objekt/skeleton-grid";
 import { useCurrentUser } from "@/features/user/hooks";
 import { m } from "@/paraglide/messages";
+import { getLocale } from "@/paraglide/runtime";
 import { selectIsSelecting, useClearSelectionOnNavigate, useSelection } from "@/stores/selection";
 
 import { CheckpointPopover } from "./checkpoint-popover";
@@ -259,8 +260,8 @@ export function CollectionView() {
             <p className="text-muted-foreground text-xs tabular-nums">
               <MessageMarkup
                 parts={m.profile_count_summary.parts({
-                  shown: `${copiesIn(filtered).toLocaleString()}${hasNextPage ? "+" : ""}`,
-                  unique: uniqueCount.toLocaleString(),
+                  shown: `${copiesIn(filtered).toLocaleString(getLocale())}${hasNextPage ? "+" : ""}`,
+                  unique: uniqueCount.toLocaleString(getLocale()),
                 })}
                 markup={countMarkup}
               />
