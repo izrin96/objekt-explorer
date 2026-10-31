@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 
 import type { Notification } from "@repo/api/schemas/notification";
 
-import { needsYou, rowAction, sectionOf } from "./sections";
+import { needsYou, renderable, rowAction, sectionOf } from "./sections";
 
 const now = new Date(2026, 9, 17, 15, 0).getTime();
 const at = (...parts: [number, number, number, number?]) =>
@@ -96,5 +96,43 @@ describe("sectionOf", () => {
     expect(
       sectionOf(trade("completed", new Date(2026, 9, 9, 23, 59).toISOString()), true, now),
     ).toBe("earlier");
+  });
+});
+
+describe("renderable", () => {
+  const alert = (latest: number): Notification => ({
+    id: 3,
+    readAt: null,
+    createdAt: at(2026, 9, 17),
+    type: "want_match",
+    payload: {
+      list: { id: 1, slug: "wants", name: "Wants" },
+      count: Math.max(latest, 1),
+      latest: Array.from({ length: latest }, () => ({
+        collectionSlug: "divine01-jiwoo-312z",
+        partnerName: "binary.bin",
+        sourceListSlug: "haves",
+      })),
+    },
+  });
+  const sanction = (action: string): Notification => ({
+    id: 4,
+    readAt: null,
+    createdAt: at(2026, 9, 17),
+    type: "sanction",
+    payload: { action: action as "warn", reason: "spam", endsAt: null },
+  });
+
+  test("every row this tab knows draws", () => {
+    expect(renderable(trade("reminder"))).toBe(true);
+    expect(renderable(offer("received"))).toBe(true);
+    expect(renderable(alert(1))).toBe(true);
+    expect(renderable(sanction("warn"))).toBe(true);
+  });
+
+  test("a type, a moderator action or an empty alert it doesn't know draws nothing", () => {
+    expect(renderable({ ...trade("reminder"), type: "badge" } as never)).toBe(false);
+    expect(renderable(sanction("ban"))).toBe(false);
+    expect(renderable(alert(0))).toBe(false);
   });
 });

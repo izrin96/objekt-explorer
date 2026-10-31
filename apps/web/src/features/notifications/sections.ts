@@ -1,6 +1,8 @@
 import type { Notification } from "@repo/api/schemas/notification";
 import { TRADE_EXPIRE_DAYS } from "@repo/api/schemas/offer";
 
+import { alertText, sanctionText } from "./row-text";
+
 export const SECTIONS = ["needs-you", "today", "week", "earlier"] as const;
 export type Section = (typeof SECTIONS)[number];
 
@@ -24,6 +26,22 @@ export function rowAction(item: Notification): RowAction | null {
       return null;
     default:
       return null;
+  }
+}
+
+/** Whether this tab can draw the row: an older tab skips a type or an action a newer server sends. */
+export function renderable(item: Notification) {
+  switch (item.type) {
+    case "sanction":
+      return sanctionText(item.payload, String) !== null;
+    case "want_match":
+    case "have_wanted":
+      return alertText(item, "", String) !== null;
+    case "offer":
+    case "trade":
+      return true;
+    default:
+      return false;
   }
 }
 

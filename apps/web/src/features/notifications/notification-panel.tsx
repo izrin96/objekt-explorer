@@ -13,7 +13,7 @@ import {
 } from "@repo/api/schemas/notification";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import { EmptyState } from "@/components/shared/empty-state";
 import { Button } from "@/components/ui/button";
@@ -24,11 +24,12 @@ import { Tabs, TabsList, TabsPanel, TabsTab } from "@/components/ui/tabs";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
+import { getLocale } from "@/paraglide/runtime";
 
 import { NotificationRow } from "./notification-items";
 import { notificationKeys, notificationPrefsOptions, notificationsOptions } from "./queries";
 import type { RowVariant } from "./row-body";
-import { type Section, SECTIONS, sectionOf } from "./sections";
+import { renderable, type Section, SECTIONS, sectionOf } from "./sections";
 import type { Collections } from "./stack";
 
 const TAB_LABEL: Record<NotificationKind, () => string> = {
@@ -89,8 +90,12 @@ export function NotificationPanel({
     orpc.notifications.markAllRead.mutationOptions({ onSettled: refetch }),
   );
   const markRead = useMutation(orpc.notifications.markRead.mutationOptions({ onSettled: refetch }));
+  const selectedTab = useRef<HTMLButtonElement>(null);
+  // the button disables itself while it works and once nothing is unread, which drops focus
+  const markAll = () =>
+    markAllRead.mutate({ kind }, { onSettled: () => selectedTab.current?.focus() });
 
-  const items = query.data?.pages.flatMap((page) => page.items) ?? [];
+  const items = (query.data?.pages.flatMap((page) => page.items) ?? []).filter(renderable);
   const empty = query.isSuccess && items.length === 0;
   const collections: Collections = Object.assign(
     {},
@@ -117,7 +122,7 @@ export function NotificationPanel({
           )}
           {unread > 0 ? (
             <span className="text-muted-foreground text-xs tabular-nums">
-              {m.notification_new_count({ count: unread })}
+              {m.notification_new_count({ count: unread.toLocaleString(getLocale()) })}
             </span>
           ) : null}
         </div>
@@ -129,7 +134,7 @@ export function NotificationPanel({
               aria-label={m.notification_mark_all_read()}
               disabled={unread === 0}
               loading={markAllRead.isPending}
-              onClick={() => markAllRead.mutate({ kind })}
+              onClick={markAll}
             >
               <ChecksIcon />
             </Button>
@@ -139,7 +144,7 @@ export function NotificationPanel({
               size="sm"
               disabled={unread === 0}
               loading={markAllRead.isPending}
-              onClick={() => markAllRead.mutate({ kind })}
+              onClick={markAll}
             >
               <ChecksIcon />
               {m.notification_mark_all_read()}
@@ -180,6 +185,7 @@ export function NotificationPanel({
           {NOTIFICATION_KINDS.map((item) => (
             <TabsTab
               key={item}
+              ref={item === kind ? selectedTab : undefined}
               value={item}
               className="hover:text-foreground data-active:text-foreground h-10 grow-0 rounded-none px-3"
             >

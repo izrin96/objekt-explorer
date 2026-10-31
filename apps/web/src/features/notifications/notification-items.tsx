@@ -1,7 +1,7 @@
 import { CaretDownIcon } from "@phosphor-icons/react";
 import type { NoteEvent, Notification } from "@repo/api/schemas/notification";
 import { Link, linkOptions } from "@tanstack/react-router";
-import { useState } from "react";
+import { useId, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { untilLabel } from "@/features/chat/format";
@@ -103,6 +103,7 @@ function OfferItem({
   variant,
 }: RowProps<OfferNotification>) {
   const [expanded, setExpanded] = useState(false);
+  const earlierId = useId();
   const { payload } = notification;
   const unread = notification.readAt === null;
   const { icon } = notificationTone(notification);
@@ -161,30 +162,32 @@ function OfferItem({
             variant="ghost"
             size="xs"
             aria-expanded={expanded}
+            aria-controls={earlierId}
             onClick={() => setExpanded((open) => !open)}
             className="text-muted-foreground -ms-2"
           >
             {updatesLabel(notification.updates)}
             <CaretDownIcon className={cn("transition-transform", expanded && "rotate-180")} />
           </Button>
-          {expanded ? (
-            <ol className="border-s ps-3 pt-1">
-              {earlier.map((note) => (
-                <li key={note.id} className="flex items-start justify-between gap-3 py-1.5">
-                  <span className="flex min-w-0 flex-col gap-0.5">
-                    <span className="text-muted-foreground text-xs text-pretty">
-                      {eventText(note, note.payload.partner.name)}
+          {/* mounted while closed so the toggle's aria-controls always has a target */}
+          <ol id={earlierId} hidden={!expanded} className="border-s ps-3 pt-1">
+            {expanded
+              ? earlier.map((note) => (
+                  <li key={note.id} className="flex items-start justify-between gap-3 py-1.5">
+                    <span className="flex min-w-0 flex-col gap-0.5">
+                      <span className="text-muted-foreground text-xs text-pretty">
+                        {eventText(note, note.payload.partner.name)}
+                      </span>
+                      {sameSlugs(note.payload.objekts, payload.objekts) ? null : (
+                        <ObjektLine slugs={note.payload.objekts ?? []} collections={collections} />
+                      )}
+                      {note.type === "trade" ? <Progress {...note.payload.progress} /> : null}
                     </span>
-                    {sameSlugs(note.payload.objekts, payload.objekts) ? null : (
-                      <ObjektLine slugs={note.payload.objekts ?? []} collections={collections} />
-                    )}
-                    {note.type === "trade" ? <Progress {...note.payload.progress} /> : null}
-                  </span>
-                  <ItemTime createdAt={note.createdAt} now={now} />
-                </li>
-              ))}
-            </ol>
-          ) : null}
+                    <ItemTime createdAt={note.createdAt} now={now} />
+                  </li>
+                ))
+              : null}
+          </ol>
         </div>
       ) : null}
     </>
