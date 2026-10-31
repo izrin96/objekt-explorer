@@ -12,6 +12,7 @@ import {
   XIcon,
 } from "@phosphor-icons/react";
 import type { TradeView } from "@repo/api/schemas/offer";
+import { useHydrated } from "@tanstack/react-router";
 import { type MouseEvent, type Ref, useId } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -223,14 +224,13 @@ function Group({
   ended,
   collections,
   state,
-  hydrated,
 }: {
   group: ExchangeGroup;
   ended: boolean;
   collections: Collections;
   state: ExchangeState;
-  hydrated: boolean;
 }) {
+  const hydrated = useHydrated();
   const headingId = useId();
   return (
     <section aria-labelledby={headingId} className="flex flex-col gap-2">
@@ -313,13 +313,11 @@ export function TradeExchange({
   trade,
   collections,
   state,
-  hydrated,
   ref,
 }: {
   trade: TradeView;
   collections: Collections;
   state: ExchangeState;
-  hydrated: boolean;
   ref?: Ref<HTMLElement>;
 }) {
   const titleId = useId();
@@ -448,7 +446,6 @@ export function TradeExchange({
                     ended={ended}
                     collections={collections}
                     state={state}
-                    hydrated={hydrated}
                   />
                 ))
               )}

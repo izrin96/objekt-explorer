@@ -11,6 +11,7 @@ import {
 } from "@phosphor-icons/react";
 import type { TradeView as Trade } from "@repo/api/schemas/offer";
 import { truncateAddress } from "@repo/lib/address";
+import { useHydrated } from "@tanstack/react-router";
 import { useId, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -68,7 +69,6 @@ export function NextStepBanner({
   step,
   collections,
   name,
-  hydrated,
   needsYou,
   onCancel,
   onReport,
@@ -78,13 +78,13 @@ export function NextStepBanner({
   step: NextStep;
   collections: Collections;
   name: string;
-  hydrated: boolean;
   /** legs the viewer can send plus different copies waiting on them */
   needsYou: number;
   onCancel: () => void;
   onReport: () => void;
   onShowNeeds: () => void;
 }) {
+  const hydrated = useHydrated();
   const titleId = useId();
   const tone: Tone = STEP_TONE[step.kind];
   const StepIcon = ICONS[step.kind];
@@ -288,7 +288,6 @@ export function NextStepBanner({
       <TradeSteps
         trade={trade}
         kind={step.kind}
-        hydrated={hydrated}
         className={cn("border-t px-4 pt-3.5 pb-4 sm:px-5", TONE_EDGE[tone])}
       />
     </section>

@@ -1,6 +1,7 @@
 import { CaretDownIcon } from "@phosphor-icons/react";
 import type { TradeView as Trade } from "@repo/api/schemas/offer";
 import { truncateAddress } from "@repo/lib/address";
+import { useHydrated } from "@tanstack/react-router";
 import { useId, type ReactNode } from "react";
 
 import { CopyButton } from "@/components/shared/copy-button";
@@ -124,7 +125,7 @@ function Hash({ hash }: { hash: string | null }) {
   );
 }
 
-type Props = { trade: Trade; collections: Collections; name: string; hydrated: boolean };
+type Props = { trade: Trade; collections: Collections; name: string };
 
 /** A day's transfers by one party: the row opens to each one with its objekt and hash. */
 function SentGroup({
@@ -160,7 +161,8 @@ function SentGroup({
   );
 }
 
-function Rows({ trade, collections, name, hydrated, rows }: Props & { rows: TimelineRow[] }) {
+function Rows({ trade, collections, name, rows }: Props & { rows: TimelineRow[] }) {
+  const hydrated = useHydrated();
   return (
     <ol className="flex flex-col gap-3 text-sm">
       {rows.map((row, index) => {
@@ -243,7 +245,8 @@ function Footer({ trade, name }: { trade: Trade; name: string }) {
  * it folds behind a disclosure that names the next event.
  */
 export function TradeTimeline(props: Props) {
-  const { trade, collections, name, hydrated } = props;
+  const { trade, collections, name } = props;
+  const hydrated = useHydrated();
   const titleId = useId();
   // where Today sits and which rows are past follow the viewer's clock, so they wait for the client
   const rows = readRows(trade, hydrated).filter((row) => hydrated || row.kind !== "today");

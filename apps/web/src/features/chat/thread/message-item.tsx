@@ -1,5 +1,6 @@
 import type { ChatMessage, ReplyQuote } from "@repo/api/schemas/chat";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
+import { useHydrated } from "@tanstack/react-router";
 import type { ReactNode, RefObject } from "react";
 
 import { CautionLine } from "@/features/chat/caution-line";
@@ -20,12 +21,10 @@ export function MessageItem({
   conversationId,
   message,
   name,
-  collection,
   collections,
   offerCard,
   position,
   seen,
-  hydrated,
   now,
   replyFocus,
   onReply,
@@ -35,13 +34,11 @@ export function MessageItem({
   conversationId: number;
   message: ChatMessage;
   name: string;
-  collection: ValidObjekt | undefined;
   collections: Readonly<Record<string, ValidObjekt | undefined>>;
   offerCard: ReactNode;
   position: RunPosition;
   /** the latest of the viewer's messages the partner has read */
   seen: boolean;
-  hydrated: boolean;
   now: number;
   replyFocus: RefObject<HTMLElement | null>;
   /** null where the message box is hidden or replaced by a notice */
@@ -49,7 +46,10 @@ export function MessageItem({
   onQuote: (messageId: number) => void;
   onOpen: (objekt: ValidObjekt) => void;
 }) {
+  const hydrated = useHydrated();
   const { mine } = message;
+  const collection =
+    message.card?.kind === "objekt" ? collections[message.card.collectionSlug] : undefined;
   const replyable = onReply !== null && canReply(message);
   // the clock is the viewer's, so the window is read once the client renders
   const unsendable = hydrated && canUnsend(message, now);

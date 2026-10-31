@@ -6,7 +6,7 @@ import {
 } from "@phosphor-icons/react";
 import type { OfferView } from "@repo/api/schemas/offer";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
-import { Link } from "@tanstack/react-router";
+import { Link, useHydrated } from "@tanstack/react-router";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -32,17 +32,16 @@ export function OfferBody({
   offer,
   name,
   collections,
-  hydrated,
   onCounter,
   onOpen,
 }: {
   offer: OfferView;
   name: string;
   collections: Collections;
-  hydrated: boolean;
   onCounter: (offer: OfferView) => void;
   onOpen: (objekt: ValidObjekt) => void;
 }) {
+  const hydrated = useHydrated();
   const actions = useOfferActions(offer.conversationId, (keys) =>
     [...offer.give, ...offer.get]
       .filter((item) => keys.has(pickKey(item)))

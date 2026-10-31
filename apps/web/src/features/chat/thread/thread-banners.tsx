@@ -1,4 +1,5 @@
 import { ProhibitIcon } from "@phosphor-icons/react";
+import { useHydrated } from "@tanstack/react-router";
 
 import { Button } from "@/components/ui/button";
 import { useConversationActions } from "@/features/chat/actions";
@@ -6,13 +7,8 @@ import { untilLabel } from "@/features/chat/format";
 import { useUnblock } from "@/features/moderation/actions";
 import { m } from "@/paraglide/messages";
 
-export function MuteNotice({
-  notice,
-  hydrated,
-}: {
-  notice: { reason: string; until: string | null };
-  hydrated: boolean;
-}) {
+export function MuteNotice({ notice }: { notice: { reason: string; until: string | null } }) {
+  const hydrated = useHydrated();
   return (
     <div role="status" className="bg-secondary/60 flex flex-col gap-1 border-t px-4 py-3">
       <p className="flex items-center gap-2 text-sm font-medium">

@@ -20,7 +20,6 @@ import { TrustLine, sinceLabel } from "./trust-line";
 type Props = {
   trade: Trade;
   primary: Primary;
-  hydrated: boolean;
   onReport: () => void;
   onCancel: () => void;
 };
@@ -109,7 +108,7 @@ function Figures({ reputation }: { reputation: Reputation }) {
 }
 
 /** The side panel's first card: who the trade is with, their record, and the ways to reach them. */
-export function TradePartnerCard({ trade, primary, hydrated, onReport, onCancel }: Props) {
+export function TradePartnerCard({ trade, primary, onReport, onCancel }: Props) {
   const titleId = useId();
   const { reputation, user } = trade.partner;
   return (
@@ -152,7 +151,7 @@ export function TradePartnerCard({ trade, primary, hydrated, onReport, onCancel 
           {m.offer_open_chat()}
         </Button>
         <ViewProfile trade={trade} />
-        <TradeMenu trade={trade} hydrated={hydrated} onReport={onReport} onCancel={onCancel} />
+        <TradeMenu trade={trade} onReport={onReport} onCancel={onCancel} />
       </div>
     </section>
   );

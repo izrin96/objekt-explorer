@@ -261,12 +261,11 @@ function ThreadView({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <ThreadHeader conversation={conversation} headingRef={heading} hydrated={hydrated} />
+      <ThreadHeader conversation={conversation} headingRef={heading} />
       <DealStrip
         deal={conversation.deal}
         hadOffer={conversation.hadOffer}
         name={name}
-        hydrated={hydrated}
         onOffer={offerOpen}
         onShowOffer={(offerId) =>
           void jump({
@@ -361,11 +360,6 @@ function ThreadView({
                         conversationId={id}
                         message={message}
                         name={name}
-                        collection={
-                          message.card?.kind === "objekt"
-                            ? collections[message.card.collectionSlug]
-                            : undefined
-                        }
                         collections={collections}
                         offerCard={
                           message.offer ? (
@@ -378,7 +372,6 @@ function ThreadView({
                                 message.offer.id !== latestOffer ||
                                 message.offer.status === "accepted"
                               }
-                              hydrated={hydrated}
                               onCounter={(offer) =>
                                 builder.open(counterRequest(offer, name, collections))
                               }
@@ -388,7 +381,6 @@ function ThreadView({
                         }
                         position={position}
                         seen={message.id === seenId}
-                        hydrated={hydrated}
                         now={now}
                         replyFocus={messageBox}
                         onReply={reply}
@@ -430,7 +422,7 @@ function ThreadView({
       {footer === "deleted" ? (
         <PartnerDeletedNotice />
       ) : footer === "muted" && conversation.sendBlocked ? (
-        <MuteNotice notice={conversation.sendBlocked} hydrated={hydrated} />
+        <MuteNotice notice={conversation.sendBlocked} />
       ) : footer === "blocked" ? (
         <BlockedNotice userId={partner.userId} name={name} />
       ) : (

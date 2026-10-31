@@ -1,5 +1,6 @@
 import { DotsThreeIcon, FlagIcon, type Icon, XCircleIcon } from "@phosphor-icons/react";
 import { REPORT_AFTER_DAYS, type TradeView as Trade } from "@repo/api/schemas/offer";
+import { useHydrated } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -61,17 +62,16 @@ function items(trade: Trade, hydrated: boolean, onReport: () => void, onCancel: 
  */
 export function TradeMenu({
   trade,
-  hydrated,
   onReport,
   onCancel,
   size = "icon",
 }: {
   trade: Trade;
-  hydrated: boolean;
   onReport: () => void;
   onCancel: () => void;
   size?: "icon" | "icon-xl";
 }) {
+  const hydrated = useHydrated();
   const list = items(trade, hydrated, onReport, onCancel);
   if (list.length === 0) return null;
   return (

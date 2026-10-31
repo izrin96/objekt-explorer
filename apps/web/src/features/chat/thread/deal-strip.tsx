@@ -1,5 +1,5 @@
 import type { Deal } from "@repo/api/schemas/chat-deal";
-import { Link } from "@tanstack/react-router";
+import { Link, useHydrated } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -20,19 +20,17 @@ export function DealStrip({
   deal,
   hadOffer,
   name,
-  hydrated,
   onShowOffer,
   onOffer,
 }: {
   deal: Deal | null;
   hadOffer: boolean;
   name: string;
-  /** times and dates are the viewer's, so the second line waits for the client */
-  hydrated: boolean;
   onShowOffer: (offerId: number) => void;
   /** null wherever the message box is hidden or replaced by a notice */
   onOffer: (() => void) | null;
 }) {
+  const hydrated = useHydrated();
   const text = stripText(deal, hadOffer, name, FORMAT);
   const label: Record<StripAction, () => string> = {
     review: m.chat_deal_review_offer,
@@ -60,6 +58,7 @@ export function DealStrip({
         {label.makeOffer()}
       </Button>
     ) : null;
+  // times and dates are the viewer's, so the second line waits for the client
   return <StripFrame text={text} action={action} second={hydrated ? text.second : null} />;
 }
 

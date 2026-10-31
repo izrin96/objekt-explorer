@@ -115,7 +115,8 @@ function TradeBreadcrumb({ id, trade }: { id: number; trade?: Trade }) {
 }
 
 /** While the indexer is behind: once, above the status card, and nowhere else. */
-function IndexerStrip({ trade, hydrated }: { trade: Trade; hydrated: boolean }) {
+function IndexerStrip({ trade }: { trade: Trade }) {
+  const hydrated = useHydrated();
   if (trade.status !== "in_progress" || !trade.indexerBehind) return null;
   return (
     <div
@@ -134,7 +135,6 @@ function IndexerStrip({ trade, hydrated }: { trade: Trade; hydrated: boolean }) 
 
 function TradeDetail({ trade, collections }: { trade: Trade; collections: Collections }) {
   const name = trade.partner.identity.name;
-  const hydrated = useHydrated();
   const step = readStep(trade);
   const [active, setActive] = useState<ValidObjekt | null>(null);
   const [cancelOpen, setCancelOpen] = useState(false);
@@ -174,7 +174,6 @@ function TradeDetail({ trade, collections }: { trade: Trade; collections: Collec
     ended,
     collections,
     name,
-    hydrated,
     onOpen: setActive,
   };
   const safety = useSafetyDialogs({
@@ -188,7 +187,6 @@ function TradeDetail({ trade, collections }: { trade: Trade; collections: Collec
   });
   const menuProps = {
     trade,
-    hydrated,
     onReport: safety.openReport,
     onCancel: () => setCancelOpen(true),
   };
@@ -199,13 +197,12 @@ function TradeDetail({ trade, collections }: { trade: Trade; collections: Collec
       <TradeBreadcrumb id={trade.id} trade={trade} />
       <div className={GRID}>
         <div className="flex min-w-0 flex-col gap-4">
-          <IndexerStrip trade={trade} hydrated={hydrated} />
+          <IndexerStrip trade={trade} />
           <NextStepBanner
             trade={trade}
             step={step}
             collections={collections}
             name={name}
-            hydrated={hydrated}
             needsYou={needsYouCount(trade)}
             onCancel={() => setCancelOpen(true)}
             onReport={safety.openReport}
@@ -216,7 +213,6 @@ function TradeDetail({ trade, collections }: { trade: Trade; collections: Collec
             trade={trade}
             collections={collections}
             state={exchange}
-            hydrated={hydrated}
           />
         </div>
         {/* stretched to the exchange's height, so the Selected panel can stay in view beside it */}
@@ -239,7 +235,7 @@ function TradeDetail({ trade, collections }: { trade: Trade; collections: Collec
           <div className="sm:hidden">
             <TradePartnerRow trade={trade} />
           </div>
-          <TradeTimeline trade={trade} collections={collections} name={name} hydrated={hydrated} />
+          <TradeTimeline trade={trade} collections={collections} name={name} />
         </aside>
       </div>
 

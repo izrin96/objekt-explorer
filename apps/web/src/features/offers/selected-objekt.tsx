@@ -1,5 +1,6 @@
 import { WarningIcon, XIcon } from "@phosphor-icons/react";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
+import { useHydrated } from "@tanstack/react-router";
 import type { RefObject } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -24,7 +25,6 @@ type Props = {
   collections: Collections;
   /** the partner */
   name: string;
-  hydrated: boolean;
   onOpen: (objekt: ValidObjekt) => void;
 };
 
@@ -75,7 +75,8 @@ function NextLine({
   );
 }
 
-function SelectedBody({ leg, conversationId, ended, collections, name, hydrated, onOpen }: Props) {
+function SelectedBody({ leg, conversationId, ended, collections, name, onOpen }: Props) {
+  const hydrated = useHydrated();
   const collection = collections[leg.collectionSlug];
   const view = legView(leg, ended, collections, hydrated);
   return (

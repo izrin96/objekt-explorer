@@ -21,7 +21,6 @@ export function OfferCard({
   name,
   collections,
   collapsed,
-  hydrated,
   onCounter,
   onOpen,
 }: {
@@ -30,7 +29,6 @@ export function OfferCard({
   name: string;
   collections: Collections;
   collapsed: boolean;
-  hydrated: boolean;
   onCounter: (offer: OfferView) => void;
   onOpen: (objekt: ValidObjekt) => void;
 }) {
@@ -50,7 +48,6 @@ export function OfferCard({
           offer={offer}
           name={name}
           collections={collections}
-          hydrated={hydrated}
           onCounter={onCounter}
           onOpen={onOpen}
         />
@@ -84,7 +81,6 @@ export function OfferCard({
             offer={offer}
             name={name}
             collections={collections}
-            hydrated={hydrated}
             onCounter={onCounter}
             onOpen={onOpen}
           />

@@ -1,4 +1,5 @@
 import type { TradeView } from "@repo/api/schemas/offer";
+import { useHydrated } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 
 import { TONE_INK, TONE_SOLID, type Tone } from "@/lib/tone";
@@ -34,14 +35,13 @@ const segment = (mark: Mark) =>
 export function TradeSteps({
   trade,
   kind,
-  hydrated,
   className,
 }: {
   trade: TradeView;
   kind: StepKind;
-  hydrated: boolean;
   className?: string;
 }) {
+  const hydrated = useHydrated();
   // in the viewer's zone, unknown to the server render
   const time = (at: string) => (hydrated ? <time dateTime={at}>{shortDate(at)}</time> : null);
   const { marks: list, current } = marks(trade.status, kind);

@@ -54,12 +54,11 @@ export function ThreadBackBar() {
 export function ThreadHeader({
   conversation,
   headingRef,
-  hydrated,
 }: {
   conversation: ThreadPage["conversation"];
   headingRef: Ref<HTMLHeadingElement>;
-  hydrated: boolean;
 }) {
+  const hydrated = useHydrated();
   const { partner, muted } = conversation;
   const name = partner.identity.name;
   const also = partner.identity.also.map((ref) => displayNickname(ref.address, ref.nickname));
