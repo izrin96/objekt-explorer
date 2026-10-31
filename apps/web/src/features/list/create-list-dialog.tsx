@@ -40,7 +40,9 @@ export function CreateListDialog({
     ...initial,
     profileAddress: initial.profileAddress ?? profiles[0]?.address ?? null,
   };
-  const [draft, setDraft] = useState<ListDraft>(opening);
+  // only edits are held, so an opening follows the profiles and `initial` as they are now
+  const [edited, setEdited] = useState<ListDraft | null>(null);
+  const draft = edited ?? opening;
   const [errors, setErrors] = useState<FieldErrors>({});
   // a have, want or sale list just made, which the dialog offers to post
   const [created, setCreated] = useState<ComposerStart | null>(null);
@@ -49,7 +51,7 @@ export function CreateListDialog({
   const change = (next: boolean) => {
     // reset on close too: the dialog keeps its state while the toast animates out
     if (!next) {
-      setDraft(opening);
+      setEdited(null);
       setErrors({});
       setCreated(null);
     }
@@ -113,7 +115,7 @@ export function CreateListDialog({
               <DialogDescription>{m.list_create_list_type_desc()}</DialogDescription>
             </DialogHeader>
             <DialogPanel>
-              <ListForm mode="create" value={draft} onChange={setDraft} profiles={profiles} />
+              <ListForm mode="create" value={draft} onChange={setEdited} profiles={profiles} />
             </DialogPanel>
             <DialogFooter>
               <DialogClose render={<Button variant="outline" />}>

@@ -152,13 +152,7 @@ function AddToListDialog({
           />
         </DialogPopup>
       </Dialog>
-      {/* keyed: the dialog keeps its draft between openings */}
-      <CreateListDialog
-        key={createDraft ? `sale:${createDraft.profileAddress}` : "any"}
-        open={createOpen}
-        onOpenChange={setCreateOpen}
-        initial={createDraft}
-      />
+      <CreateListDialog open={createOpen} onOpenChange={setCreateOpen} initial={createDraft} />
     </>
   );
 }
