@@ -75,7 +75,7 @@ export function InPlaceOf({ leg }: { leg: Leg }) {
 }
 
 /** Accept and its confirmation, for the copy the banner shows. */
-export function AcceptCopy({
+function AcceptCopy({
   sub,
   leg,
   actions,

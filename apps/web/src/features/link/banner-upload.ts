@@ -51,7 +51,7 @@ function hasTransparency(canvas: HTMLCanvasElement): boolean {
  * re-encoded as JPEG, a transparent one stays PNG, since a stored banner shows
  * on both themes and no backdrop colour suits both.
  */
-export async function cropToBanner(cropper: CropperRef | null, file: File): Promise<File> {
+async function cropToBanner(cropper: CropperRef | null, file: File): Promise<File> {
   const canvas = cropper?.getCanvas({ maxWidth: STILL_MAX.width, maxHeight: STILL_MAX.height });
   if (!canvas) throw uploadFailure();
 
@@ -65,7 +65,7 @@ export async function cropToBanner(cropper: CropperRef | null, file: File): Prom
 }
 
 /** The key's extension comes from the type, but the name should not contradict it. */
-export function renamed(blob: Blob, name: string): File {
+function renamed(blob: Blob, name: string): File {
   const ext = mimeTypeToExtension[blob.type as AcceptedFileMimeType] ?? "";
   const base = name.replace(/\.[^.]*$/, "");
   return new File([blob], ext ? `${base}.${ext}` : name, { type: blob.type });

@@ -12,7 +12,7 @@ const ALWAYS_REPLACE = new Set([
 ]);
 
 /** A replace for size alone must save at least this share, or a banner already compressed is redone for nothing. */
-export const MIN_SAVING = 0.1;
+const MIN_SAVING = 0.1;
 
 export type BackfillDecision = "replace" | "keep" | "too-large";
 
