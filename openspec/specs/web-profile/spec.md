@@ -42,14 +42,14 @@ and lock mark, and keep the date across filter changes until cleared.
 - **THEN** pins no longer lead the grid, cards carry no pin or lock marks, and selecting cards offers no actions
 
 ### Requirement: Trades, progress and statistics
-The Activity History tab SHALL list the profile's transfers by type (all, mint, received, sent, spin)
+The Activity history tab SHALL list the profile's transfers by type (all, mint, received, sent, spin)
 with paging, to every visitor. The Progress tab SHALL
 show per member and season how many of each class are owned versus total, excluding the
 Welcome and Zero classes, with a chart per member. The Statistics tab SHALL chart the owned
 collection by member and by season.
 
 #### Scenario: Hidden transfers
-- **WHEN** a visitor opens Activity History of a profile that hid its transfers before this change
+- **WHEN** a visitor opens Activity history of a profile that hid its transfers before this change
 - **THEN** the tab lists its transfers
 
 #### Scenario: Progress excludes Welcome

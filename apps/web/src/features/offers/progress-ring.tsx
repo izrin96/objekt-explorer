@@ -1,4 +1,4 @@
-import { m } from "@/paraglide/messages";
+import { progressText } from "./format";
 
 const R = 8;
 const CIRCUMFERENCE = 2 * Math.PI * R;
@@ -23,7 +23,7 @@ export function ProgressRing({ verified, total }: { verified: number; total: num
       <span aria-hidden>
         {verified}/{total}
       </span>
-      <span className="sr-only">{m.offer_progress({ verified, total })}</span>
+      <span className="sr-only">{progressText(verified, total)}</span>
     </span>
   );
 }

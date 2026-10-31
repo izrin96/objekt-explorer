@@ -190,9 +190,11 @@ export function TradesView() {
       ) : (
         <>
           <p className="text-muted-foreground text-xs tabular-nums">
-            {m.trades_count({
-              count: `${rows.length.toLocaleString(getLocale())}${query.hasNextPage ? "+" : ""}`,
-            })}
+            {rows.length === 1 && !query.hasNextPage
+              ? m.trades_count_one()
+              : m.trades_count({
+                  count: `${rows.length.toLocaleString(getLocale())}${query.hasNextPage ? "+" : ""}`,
+                })}
           </p>
 
           {/* the table's own container scrolls below its minimum width */}

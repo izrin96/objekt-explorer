@@ -283,7 +283,7 @@ When any objekt shown in the builder, or any waiting leg on the trade page, has 
 ### Requirement: My trades
 `/trade/mine` SHALL list the signed-in user's offers and trades in four groups:
 - **Needs you**: open offers sent to the user;
-- **Waiting on them**: open offers the user sent;
+- **Waiting for them**: open offers the user sent;
 - **In progress**: accepted trades not yet ended;
 - **History**: ended offers and trades, newest first, loading more as the user scrolls.
 

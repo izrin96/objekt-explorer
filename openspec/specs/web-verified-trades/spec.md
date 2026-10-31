@@ -487,7 +487,7 @@ An ended trade SHALL show completed, failed or cancelled.
 
 #### Scenario: Their turn
 - **WHEN** every leg the user gives is verified, and binary.bin's leg is waiting
-- **THEN** the banner reads "Waiting on binary.bin to send their part" and "Nothing to do on your side."
+- **THEN** the banner reads "Waiting for binary.bin to send their part" and "Nothing to do on your side."
 
 #### Scenario: Their turn after a week
 - **WHEN** the same trade is still in progress 7 days after accept
@@ -551,20 +551,20 @@ Past the expiry while the indexer is behind, it SHALL read "Paused" with the dat
 - **THEN** the receiver's deadline reads "Decide", "2 days left" and its date
 
 ### Requirement: You give and You get
-The trade page SHALL show the legs in one card, The exchange, with a summary line and two sides, You give and You get, side by side from `sm` and stacked below it; on an ended trade, a side that moved reads You gave or You got. Each side SHALL say where it stands: Sent · verified, Waiting on them, You owe this, After you send, Different copy, Verified or Not sent. Each objekt SHALL be a small card in a grid that fits as many cards a row as the side's width allows, at least four, with:
+The trade page SHALL show the legs in one card, The exchange, with a summary line and two sides, You give and You get, side by side from `sm` and stacked below it; on an ended trade, a side that moved reads You gave or You got. Each side SHALL say where it stands: Sent · verified, Waiting for them, You owe this, After you send, Different copy, Verified or Not sent. Each objekt SHALL be a small card in a grid that fits as many cards a row as the side's width allows, at least four, with:
 - its art, carrying a status mark;
 - the member;
 - the collection code with the serial, or "any copy".
 
 The status mark SHALL name the leg's status to assistive technology: Verified, Waiting, Send this (a leg the viewer owes and can send), Different copy, or Not sent (once the trade ended without it). A verified card's art SHALL be dimmed. A waiting leg whose objekt can no longer be transferred, or is away from its giver, SHALL carry a warning mark, and its warning SHALL show with the card when it is selected (see Selected objekt).
 
-Within a side, cards SHALL group under a heading with a count, in this order: Send these, Decide on these (a different copy waits on the viewer), Can't be sent (an objekt the viewer owes that can't be transferred, which waits on nobody), Waiting on them, Verified, Not sent. A group with no card is left out.
+Within a side, cards SHALL group under a heading with a count, in this order: Send these, Decide on these (a different copy waits on the viewer), Can't be sent (an objekt the viewer owes that can't be transferred, which waits on nobody), Waiting for them, Verified, Not sent. A group with no card is left out.
 
 Transaction hashes SHALL appear in the Timeline, not on the cards. A side with no objekt SHALL read "Nothing".
 
 #### Scenario: Swap in progress
 - **WHEN** the user's SeoAh 203Z #722 has verified and binary.bin still owes any copy of SeoAh 203Z
-- **THEN** You give reads "Sent · verified" with #722 under Verified, dimmed with a Verified mark, You get reads "Waiting on them" with "any copy" under Waiting on them, and neither card shows a hash
+- **THEN** You give reads "Sent · verified" with #722 under Verified, dimmed with a Verified mark, You get reads "Waiting for them" with "any copy" under Waiting for them, and neither card shows a hash
 
 #### Scenario: Your turn
 - **WHEN** the user owes SeoAh 203Z #722 and has not sent it
@@ -592,7 +592,7 @@ Transaction hashes SHALL appear in the Timeline, not on the cards. A side with n
 
 #### Scenario: Away mark
 - **WHEN** Kotone 301A, which binary.bin owes, is away from binary.bin's wallet
-- **THEN** its card under Waiting on them carries the warning mark, and selecting it shows that it left and when the trade breaks
+- **THEN** its card under Waiting for them carries the warning mark, and selecting it shows that it left and when the trade breaks
 
 #### Scenario: Ended
 - **WHEN** the user opens a completed trade

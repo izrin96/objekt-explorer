@@ -110,7 +110,7 @@ describe("strip, as the spec's Strip by state table", () => {
     [
       "theirTurn",
       "T-89 · In progress · their turn · 3 of 6",
-      "Waiting on haneul_07 to send their part",
+      "Waiting for haneul_07 to send their part",
     ],
     ["stuck", "T-89 · In progress · can't send · 3 of 6", null],
     ["theyDecide", "T-89 · In progress · they decide · 3 of 6", null],

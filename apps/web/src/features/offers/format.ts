@@ -265,3 +265,10 @@ export function leftLabel(iso: string, now: number) {
     unitDisplay: "long",
   }).format(value);
 }
+
+export function progressText(verified: number, total: number) {
+  const done = verified.toLocaleString(getLocale());
+  return total === 1
+    ? m.offer_progress_one({ verified: done })
+    : m.offer_progress({ verified: done, total: total.toLocaleString(getLocale()) });
+}

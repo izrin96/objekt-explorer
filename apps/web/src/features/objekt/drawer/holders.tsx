@@ -80,7 +80,11 @@ export function HoldersPanel({ slug, physical }: { slug: string; physical: boole
       label: m.objekt_holders(),
       value: summary ? summary.holders.toLocaleString(getLocale()) : null,
       detail: summary
-        ? (physical ? m.objekt_holders_scanned_detail : m.objekt_holders_copies_detail)({
+        ? (physical
+            ? m.objekt_holders_scanned_detail
+            : summary.copies === 1
+              ? m.objekt_holders_copies_detail_one
+              : m.objekt_holders_copies_detail)({
             count: summary.copies.toLocaleString(getLocale()),
           })
         : undefined,

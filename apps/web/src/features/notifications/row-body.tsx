@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 import { collectionName } from "@/features/objekt/objekt-label";
+import { progressText } from "@/features/offers/format";
 import { formatTimestamp, relativeTime } from "@/lib/time";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -89,7 +90,7 @@ export function ObjektLine({
 
 export function Progress({ verified, total }: { verified: number; total: number }) {
   return (
-    <span className="flex items-center gap-1.5" title={m.offer_progress({ verified, total })}>
+    <span className="flex items-center gap-1.5" title={progressText(verified, total)}>
       <span aria-hidden className="flex gap-0.5">
         {Array.from({ length: total }, (_, at) => (
           <span

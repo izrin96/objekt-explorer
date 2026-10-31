@@ -150,7 +150,10 @@ export function MarketView() {
           <TotalCount count={filtered.length} />
           {" · "}
           <MessageMarkup
-            parts={m.market_listing_count.parts({
+            parts={(totalListings === 1
+              ? m.market_listing_count_one
+              : m.market_listing_count
+            ).parts({
               count: totalListings.toLocaleString(getLocale()),
             })}
             markup={countMarkup}

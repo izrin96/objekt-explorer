@@ -4,7 +4,7 @@ import type { ComponentProps } from "react";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
-import { topupAmount } from "./format";
+import { progressText, topupAmount } from "./format";
 
 /** Identifiers (offer and trade numbers, serials) are set in mono with tabular figures. */
 export function Mono({ className, ...props }: ComponentProps<"span">) {
@@ -12,7 +12,7 @@ export function Mono({ className, ...props }: ComponentProps<"span">) {
 }
 
 export function Progress({ verified, total }: { verified: number; total: number }) {
-  return <span className="tabular-nums">{m.offer_progress({ verified, total })}</span>;
+  return <span className="tabular-nums">{progressText(verified, total)}</span>;
 }
 
 /** Always says the money is outside the site: nothing here can verify it. */

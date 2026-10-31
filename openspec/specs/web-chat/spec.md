@@ -902,7 +902,7 @@ Under its header, the thread SHALL show one strip for the conversation's deal: a
 | Offer from you | O-n · Waiting for them | It expires in {time}. | View offer |
 | You decide | T-n · In progress · you decide · v of t | none | Open trade |
 | Your turn | T-n · In progress · your turn · v of t | Send N objekts to {name} in Cosmo | Open trade |
-| Their turn | T-n · In progress · their turn · v of t | Waiting on {name} to send their part | Open trade |
+| Their turn | T-n · In progress · their turn · v of t | Waiting for {name} to send their part | Open trade |
 | Stuck | T-n · In progress · can't send · v of t | none | Open trade |
 | They decide | T-n · In progress · they decide · v of t | none | Open trade |
 | Completed, to rate | T-n · Completed | Rate {name} by {date} | Rate |

@@ -164,9 +164,12 @@ export function useRemoveObjektsFromList() {
       onSuccess: async ({ removed }, { slug }) => {
         toastManager.add({
           type: "success",
-          title: m.actions_remove_from_list_success_multiple({
-            count: removed.toLocaleString(getLocale()),
-          }),
+          title:
+            removed === 1
+              ? m.actions_remove_from_list_success_one()
+              : m.actions_remove_from_list_success_multiple({
+                  count: removed.toLocaleString(getLocale()),
+                }),
         });
         await invalidate(slug);
       },
