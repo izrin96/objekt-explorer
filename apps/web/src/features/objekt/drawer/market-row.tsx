@@ -44,14 +44,17 @@ export function MarketRow({
   formatUsd,
   onOpenSerial,
   actions,
+  closed,
 }: {
   item: MarketListing;
   /** the viewer's code; the conversion is only worth showing when the seller's differs */
   currency: string;
   formatUsd: (usd: number) => string;
   onOpenSerial: (serial: number) => void;
-  /** null when the seller can't be messaged, and on the viewer's own listings */
+  /** null unless the seller can be messaged and the listing isn't the viewer's own */
   actions: RowActions | null;
+  /** the seller can't be messaged; the note wraps, as the cell is a word wide on a phone */
+  closed: boolean;
 }) {
   const { address, nickname, name: sellerName } = sellerOf(item);
   const { label, priced, converted } = listingPrice(item, currency, formatCurrency, formatUsd);
@@ -100,6 +103,11 @@ export function MarketRow({
           >
             {sellerName}
           </ProfileCell>
+        )}
+        {closed && (
+          <div className="text-muted-foreground text-xs text-pretty">
+            {m.trade_not_messageable()}
+          </div>
         )}
       </td>
       <td className="text-muted-foreground px-3 py-1.5 text-xs tabular-nums">

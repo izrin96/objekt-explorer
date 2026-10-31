@@ -16,6 +16,7 @@ import {
   messageRequest,
   offerRequest,
   onTradeText,
+  rowContact,
   sellerOf,
   trackingText,
 } from "./market-listing";
@@ -263,5 +264,20 @@ describe("floorTrend", () => {
     const points = [-9, -8, -7, -6, -4, -3, -2].map((offset) => point(day(offset), 1));
     const { sparkline } = floorTrend(points, 1, today);
     expect(sparkline).toEqual([1, 1, 1, 1, null, 1, 1, 1, null, null]);
+  });
+});
+
+describe("rowContact", () => {
+  test("is open for a seller who takes messages", () => {
+    expect(rowContact(listing({ messageable: true }), false)).toBe("open");
+  });
+
+  test("is closed for a seller who can't be messaged", () => {
+    expect(rowContact(listing({ messageable: false }), false)).toBe("closed");
+  });
+
+  test("is none on the viewer's own listing, whatever the seller allows", () => {
+    expect(rowContact(listing({ messageable: true }), true)).toBe("none");
+    expect(rowContact(listing({ messageable: false }), true)).toBe("none");
   });
 });

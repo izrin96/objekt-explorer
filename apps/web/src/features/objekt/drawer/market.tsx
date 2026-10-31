@@ -23,6 +23,7 @@ import {
   isOwnListing,
   messageRequest,
   offerRequest,
+  rowContact,
   trackingText,
 } from "./market-listing";
 import { MarketRow } from "./market-row";
@@ -180,25 +181,29 @@ export function MarketPanel({
               </tr>
             </thead>
             <tbody>
-              {items.map((item) => (
-                <MarketRow
-                  key={item.id}
-                  item={item}
-                  currency={currency}
-                  formatUsd={formatUsd}
-                  onOpenSerial={onOpenSerial}
-                  actions={
-                    item.messageable && !isOwnListing(item, myListSlugs, myAddresses)
-                      ? {
-                          message: () => start(...messageRequest(item, slug)),
-                          offer: () => {
-                            if (gate()) builder.open(offerRequest(item, slug));
-                          },
-                        }
-                      : null
-                  }
-                />
-              ))}
+              {items.map((item) => {
+                const contact = rowContact(item, isOwnListing(item, myListSlugs, myAddresses));
+                return (
+                  <MarketRow
+                    key={item.id}
+                    item={item}
+                    currency={currency}
+                    formatUsd={formatUsd}
+                    onOpenSerial={onOpenSerial}
+                    closed={contact === "closed"}
+                    actions={
+                      contact === "open"
+                        ? {
+                            message: () => start(...messageRequest(item, slug)),
+                            offer: () => {
+                              if (gate()) builder.open(offerRequest(item, slug));
+                            },
+                          }
+                        : null
+                    }
+                  />
+                );
+              })}
             </tbody>
           </ScrollTable>
 

@@ -1,5 +1,9 @@
 import type { CardInput, ChatTarget } from "@repo/api/schemas/chat";
-import type { MarketListing, PriceHistoryOutput } from "@repo/api/schemas/market";
+import type {
+  MarketListing,
+  PriceHistoryOutput,
+  ViewerMarketListing,
+} from "@repo/api/schemas/market";
 import { floorChange } from "@repo/api/schemas/price-history";
 import { truncateAddress } from "@repo/lib/address";
 
@@ -58,6 +62,12 @@ export const isOwnListing = (
 ) =>
   listSlugs.has(item.list.slug) ||
   addresses.some((address) => isSameAddress(address, item.list.profile?.address));
+
+/** The viewer's own listing has nothing to say, whatever its owner allows. */
+export const rowContact = (
+  item: Pick<ViewerMarketListing, "messageable">,
+  own: boolean,
+): "open" | "closed" | "none" => (own ? "none" : item.messageable ? "open" : "closed");
 
 /** A listing is set in the seller's currency, not the viewer's. */
 export function listingPrice(
