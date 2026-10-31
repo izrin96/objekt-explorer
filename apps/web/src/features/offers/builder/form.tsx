@@ -39,7 +39,6 @@ import {
   resolveAsks,
   sendGate,
 } from "./draft";
-import { BuilderHeader } from "./header";
 import { addedKeys, matchesLine } from "./matches";
 import { MatchesLine, NearLine } from "./matches-line";
 import { BuilderRefused, type SendFailure, SendError } from "./refused";
@@ -51,7 +50,6 @@ export function BuilderForm({
   request,
   onDraft,
   onDone,
-  header = true,
   region,
   added,
 }: {
@@ -59,8 +57,6 @@ export function BuilderForm({
   /** hands over whether the draft holds anything, so closing it can ask first */
   onDraft: (holds: (() => boolean) | null) => void;
   onDone: () => void;
-  /** false where the caller already drew the header */
-  header?: boolean;
   /** the caller's status region, which the matches line is drawn into */
   region?: HTMLElement | null;
   /** what the matches added when the builder opened */
@@ -276,12 +272,11 @@ export function BuilderForm({
   // a target the sender may not reach is refused before anything can be picked
   const upFront = offerRefusalOf(theirs.error);
   if (upFront) {
-    return <BuilderRefused request={request} refusal={upFront} onDone={onDone} header={header} />;
+    return <BuilderRefused refusal={upFront} onDone={onDone} />;
   }
 
   return (
     <>
-      {header ? <BuilderHeader request={request} /> : null}
       {region && (line || nearLeft.length > 0)
         ? createPortal(
             <div className="flex flex-col gap-2">

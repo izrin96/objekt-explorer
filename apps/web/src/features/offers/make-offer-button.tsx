@@ -9,11 +9,7 @@ import { type OfferRequest, useOfferBuilder, useSharedOfferBuilder } from "./off
 type MakeOfferProps = {
   request: OfferRequest;
   label?: string;
-  iconOnly?: boolean;
-  /** e.g. `max-sm:sr-only`, where a row has no room for the word */
-  labelClassName?: string;
   variant?: ButtonProps["variant"];
-  size?: ButtonProps["size"];
   className?: string;
 };
 
@@ -40,29 +36,23 @@ function OwnBuilderButton(props: MakeOfferProps) {
 function OfferButton({
   request,
   label = m.offer_make(),
-  iconOnly = false,
-  labelClassName,
   variant = "outline",
-  size,
   className,
   onOpen,
 }: MakeOfferProps & { onOpen: (request: OfferRequest) => void }) {
   const { gate } = useStartGate();
-  const named = m.offer_make_name({ name: request.name });
 
   return (
     <Button
       variant={variant}
-      size={size ?? (iconOnly ? "icon-sm" : "sm")}
-      aria-label={iconOnly ? named : undefined}
-      title={iconOnly ? named : undefined}
+      size="sm"
       onClick={() => {
         if (gate()) onOpen(request);
       }}
       className={className}
     >
       <HandshakeIcon />
-      {iconOnly ? null : <span className={labelClassName}>{label}</span>}
+      <span>{label}</span>
     </Button>
   );
 }

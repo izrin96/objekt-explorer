@@ -3,7 +3,7 @@ import type { CardInput, ChatTarget } from "@repo/api/schemas/chat";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation, useNavigate } from "@tanstack/react-router";
 
-import { Button, type ButtonProps } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { toastManager } from "@/components/ui/toast";
 import { useCurrentUser } from "@/features/user/hooks";
 import { addActionToast } from "@/lib/action-toast";
@@ -25,36 +25,26 @@ export function MessageButton({
   card,
   name,
   iconOnly = false,
-  labelClassName,
-  variant = "outline",
-  size,
-  className,
 }: {
   target: ChatTarget;
   card?: CardInput;
   name?: string;
   iconOnly?: boolean;
-  /** e.g. `max-sm:sr-only`, where a row has no room for the word */
-  labelClassName?: string;
-  variant?: ButtonProps["variant"];
-  size?: ButtonProps["size"];
-  className?: string;
 }) {
   const { start, pending } = useStartConversation();
   const label = name ? m.chat_message_name({ name }) : m.chat_message();
 
   return (
     <Button
-      variant={variant}
-      size={size ?? (iconOnly ? "icon-sm" : "sm")}
+      variant="outline"
+      size={iconOnly ? "icon-sm" : "sm"}
       aria-label={name ? label : undefined}
       title={iconOnly ? label : undefined}
       loading={pending}
       onClick={() => start(target, card)}
-      className={className}
     >
       <ChatCircleIcon />
-      {iconOnly ? null : <span className={labelClassName}>{m.chat_message()}</span>}
+      {iconOnly ? null : <span>{m.chat_message()}</span>}
     </Button>
   );
 }

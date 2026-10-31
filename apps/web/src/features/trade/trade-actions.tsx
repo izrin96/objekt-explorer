@@ -11,17 +11,15 @@ export type TradeContact =
   | { kind: "own" }
   | { kind: "closed" };
 
-/** Message, then Make offer as the primary button. `compact` makes Message icon-only. */
+/** Message (icon-only), then Make offer as the primary button. */
 export function TradeActions({
   contact,
   name,
-  compact = false,
   offerClassName,
   matches,
 }: {
   contact: TradeContact;
   name: string;
-  compact?: boolean;
   /** Make offer opens with these swap matches added */
   matches?: OfferMatches;
   /** e.g. `flex-1`, where Make offer fills the row */
@@ -34,7 +32,7 @@ export function TradeActions({
 
   return (
     <>
-      <MessageButton target={contact.target} card={contact.card} name={name} iconOnly={compact} />
+      <MessageButton target={contact.target} card={contact.card} name={name} iconOnly />
       <MakeOfferButton
         variant="default"
         className={offerClassName}

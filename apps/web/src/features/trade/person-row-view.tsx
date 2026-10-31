@@ -273,7 +273,6 @@ export const PersonRow = memo(function PersonRow({
     <TradeActions
       contact={contact}
       name={person.identity.name}
-      compact
       offerClassName="@max-3xl:flex-1"
       matches={
         // the row's matches are added (the Can swap pair, else the bigger side), its near matches offered

@@ -26,7 +26,7 @@ Quiet chrome, loud cards. The page is neutral zinc in both themes, with a near-b
 
 ## Offer builder
 
-A request with `matches` opens through `MatchesBuilder` (`features/offers/offer-builder.tsx`): it draws the header and one `role="status"` region that stays mounted from the first frame to the close, reading "Adding your matches…", then the line or the failure. `BuilderForm` portals its line (`builder/matches-line.tsx`, with Remove matches and Undo) into that region, so a screen reader hears every change in one node. A request without `matches` renders `BuilderForm` alone, with its own header and no region.
+A request with `matches` opens through `MatchesBuilder` (`features/offers/offer-builder.tsx`): it draws the header and one `role="status"` region that stays mounted from the first frame to the close, reading "Adding your matches…", then the line or the failure. `BuilderForm` portals its line (`builder/matches-line.tsx`, with Remove matches and Undo) into that region, so a screen reader hears every change in one node. A request without `matches` renders `BuilderHeader` and `BuilderForm`, with no region. `BuilderForm` and `BuilderRefused` never draw the header: their caller does.
 
 ## Chat draft
 

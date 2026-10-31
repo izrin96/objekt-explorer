@@ -6,25 +6,16 @@ import { DialogClose, DialogFooter, DialogPanel } from "@/components/ui/dialog";
 import { type OfferRefusalInfo, offerRefusalText } from "@/features/offers/refusal";
 import { m } from "@/paraglide/messages";
 
-import { BuilderHeader } from "./header";
-import type { OfferRequest } from "./types";
-
 /** Reads like a refused Message: nothing can be sent, so the only way out is Close. */
 export function BuilderRefused({
-  request,
   refusal,
   onDone,
-  header = true,
 }: {
-  request: OfferRequest;
   refusal: OfferRefusalInfo;
   onDone: () => void;
-  /** false where the caller already drew the header */
-  header?: boolean;
 }) {
   return (
     <>
-      {header ? <BuilderHeader request={request} /> : null}
       <DialogPanel>
         <div role="alert" className="flex flex-col items-start gap-3">
           <p className="text-sm text-pretty">

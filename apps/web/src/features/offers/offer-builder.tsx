@@ -2,6 +2,7 @@ import { OFFER_SIDE_LIMIT } from "@repo/api/schemas/offer";
 import { useQuery } from "@tanstack/react-query";
 import {
   createContext,
+  Fragment,
   type ReactNode,
   type Ref,
   type RefObject,
@@ -133,7 +134,6 @@ function MatchesBuilder({
                 }
               : request
           }
-          header={false}
           region={region}
           added={
             data
@@ -214,7 +214,10 @@ function OfferBuilder({
             onDone={close}
           />
         ) : request ? (
-          <BuilderForm key={session} request={request} onDraft={setDraft} onDone={close} />
+          <Fragment key={session}>
+            <BuilderHeader request={request} />
+            <BuilderForm request={request} onDraft={setDraft} onDone={close} />
+          </Fragment>
         ) : null}
         <AlertDialog open={confirming} onOpenChange={setConfirming}>
           <AlertDialogPopup>
