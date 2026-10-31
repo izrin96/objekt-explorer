@@ -1,6 +1,7 @@
 import { PlusIcon, WarningIcon, XIcon } from "@phosphor-icons/react";
 import type { TopupPayer } from "@repo/api/schemas/offer";
-import { useId } from "react";
+import { type RefObject, useId, useRef } from "react";
+import { flushSync } from "react-dom";
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -19,6 +20,7 @@ import { m } from "@/paraglide/messages";
 export function Topup({
   on,
   onToggle,
+  amountRef,
   amount,
   onAmount,
   onAmountBlur,
@@ -32,6 +34,8 @@ export function Topup({
 }: {
   on: boolean;
   onToggle: (on: boolean) => void;
+  /** the form focuses it when Send is refused over the amount */
+  amountRef: RefObject<HTMLInputElement | null>;
   amount: number | null;
   onAmount: (amount: number | null) => void;
   onAmountBlur: () => void;
@@ -50,12 +54,22 @@ export function Topup({
   const currencyId = useId();
   const headingId = useId();
   const errorId = useId();
+  const addRef = useRef<HTMLButtonElement>(null);
   // the chosen code stays selectable before the rates answer
   const options = codes.includes(currency) ? codes : [...codes, currency].toSorted();
 
   if (!on) {
     return (
-      <Button variant="ghost" size="sm" className="self-start" onClick={() => onToggle(true)}>
+      <Button
+        ref={addRef}
+        variant="ghost"
+        size="sm"
+        className="self-start"
+        onClick={() => {
+          flushSync(() => onToggle(true));
+          amountRef.current?.focus();
+        }}
+      >
         <PlusIcon />
         {m.offer_topup_add()}
       </Button>
@@ -68,7 +82,14 @@ export function Topup({
         <h3 id={headingId} className="text-sm font-medium">
           {m.offer_topup_title()}
         </h3>
-        <Button variant="ghost" size="sm" onClick={() => onToggle(false)}>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => {
+            flushSync(() => onToggle(false));
+            addRef.current?.focus();
+          }}
+        >
           <XIcon />
           {m.offer_topup_remove()}
         </Button>
@@ -86,6 +107,7 @@ export function Topup({
           >
             <NumberFieldGroup>
               <NumberFieldInput
+                ref={amountRef}
                 className="text-start tabular-nums"
                 aria-invalid={error !== null || undefined}
                 aria-describedby={error !== null ? errorId : undefined}
@@ -112,7 +134,7 @@ export function Topup({
               {options.map((code) => (
                 <SelectItem key={code} value={code}>
                   <span className="font-mono">{code}</span>
-                  <span className="text-muted-foreground ml-2">{currencyName(code)}</span>
+                  <span className="text-muted-foreground ms-2">{currencyName(code)}</span>
                 </SelectItem>
               ))}
             </SelectPopup>

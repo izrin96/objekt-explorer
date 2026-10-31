@@ -272,9 +272,11 @@ export function sendGate(d: {
       ? m.offer_refused_too_many({ max: OFFER_SIDE_LIMIT })
       : d.blocked
         ? m.offer_builder_blocked_hint()
-        : topupError
-          ? topupError
-          : m.offer_builder_expiry();
+        : noteTooLong
+          ? m.offer_builder_note_hint()
+          : topupError
+            ? topupError
+            : m.offer_builder_expiry();
   return {
     noteLength,
     noteTooLong,

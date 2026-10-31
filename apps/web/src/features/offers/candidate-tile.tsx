@@ -34,6 +34,7 @@ export function CandidateTile({
   count = 0,
   copies = item.copies ?? 0,
   full,
+  fullId,
   onToggle,
   onCount,
   tag,
@@ -46,12 +47,14 @@ export function CandidateTile({
   /** an any-copy item: the copies still free, less those picked by serial */
   copies?: number;
   full: boolean;
+  fullId: string;
   onToggle: () => void;
   onCount?: (count: number) => void;
   /** with Only what they want on: a near match's verb, or kept on none of the viewer's lists */
   tag?: PickerTag;
 }) {
   const blocked = blockedReason(item);
+  const capped = !selected && full && blocked === null;
   // focusable while unavailable, so the reason under it is read with it
   const unavailable =
     blocked !== null || (!selected && (full || (item.objektId === null && copies === 0)));
@@ -92,13 +95,14 @@ export function CandidateTile({
       tabIndex={0}
       aria-pressed={selected}
       aria-disabled={unavailable || undefined}
+      aria-describedby={capped ? fullId : undefined}
       onClick={activate}
       onKeyDown={(event) => activateOnKey(event, activate)}
       className="group/tile focus-visible:ring-ring flex w-full cursor-pointer flex-col gap-1 rounded-md text-start outline-none focus-visible:ring-2 aria-disabled:cursor-not-allowed"
     >
       {/* a container, so the selection ring's photocard radius measures the tile, not the page */}
       <span className="@container relative block">
-        <span className={cn("block", blocked && "opacity-40 grayscale")}>
+        <span className={cn("block", blocked ? "opacity-40 grayscale" : capped && "opacity-64")}>
           {collection ? (
             <ObjektCard objekt={collection} image="thumbnail" hideLabel hideSerial />
           ) : (

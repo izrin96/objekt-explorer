@@ -54,7 +54,7 @@ export function SendError({
   onDone: () => void;
 }) {
   return (
-    <div id={id} role="alert" className="empty:hidden">
+    <div id={id} role="alert" className="empty:sr-only">
       {error ? (
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
           <p className="text-destructive-foreground text-sm text-pretty">

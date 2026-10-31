@@ -95,6 +95,8 @@ export function BuilderForm({
   const removeRef = useRef<HTMLButtonElement>(null);
   const undoRef = useRef<HTMLButtonElement>(null);
   const noteId = useId();
+  const counterId = useId();
+  const amountRef = useRef<HTMLInputElement>(null);
   const errorId = useId();
   const hintId = useId();
 
@@ -237,7 +239,12 @@ export function BuilderForm({
   }, [onDraft, holdsDraft]);
 
   const send = () => {
-    if (topupError !== null) setTopup(touchTopup);
+    if (topupError !== null) {
+      // the error is drawn before focus lands, so the field is read with it
+      flushSync(() => setTopup(touchTopup));
+      amountRef.current?.focus();
+      return;
+    }
     if (!gate.canSend) return;
     setError(null);
     setRefused(new Set());
@@ -320,6 +327,7 @@ export function BuilderForm({
         ) : null}
 
         <Topup
+          amountRef={amountRef}
           on={topup.on}
           onToggle={(on) => setTopup((t) => toggleTopup(t, on))}
           amount={topup.amount}
@@ -341,10 +349,12 @@ export function BuilderForm({
             value={note}
             rows={2}
             aria-invalid={noteTooLong || undefined}
+            aria-describedby={counterId}
             onChange={(event) => setNote(event.target.value)}
             placeholder={m.offer_note_placeholder()}
           />
           <p
+            id={counterId}
             className={cn(
               "self-end text-xs tabular-nums",
               noteTooLong ? "text-destructive-foreground" : "text-muted-foreground",
@@ -362,7 +372,10 @@ export function BuilderForm({
         <SendError id={errorId} error={error} onDone={onDone} />
       </DialogPanel>
       <DialogFooter className="sm:items-center">
-        <p id={hintId} className="text-muted-foreground text-xs text-pretty sm:me-auto">
+        <p
+          id={hintId}
+          className="text-muted-foreground text-xs text-pretty max-sm:order-last sm:me-auto"
+        >
           {gate.hint}
         </p>
         <DialogClose render={<Button variant="outline" />}>{m.common_modal_cancel()}</DialogClose>

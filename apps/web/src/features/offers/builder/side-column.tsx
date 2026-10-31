@@ -1,6 +1,7 @@
 import { PlusIcon, XIcon } from "@phosphor-icons/react";
 import { OFFER_SIDE_LIMIT } from "@repo/api/schemas/offer";
-import { useId } from "react";
+import { useId, useRef } from "react";
+import { flushSync } from "react-dom";
 
 import { Button } from "@/components/ui/button";
 import { SerialNo } from "@/features/objekt/objekt-label";
@@ -9,6 +10,8 @@ import { type GetSource, addLabel } from "@/features/offers/get-source";
 import { ObjektTile, type TileNote } from "@/features/offers/objekt-tile";
 import type { Collections, OfferPick, OfferSide } from "@/features/offers/pick";
 import { countOf, totalOf } from "@/features/offers/quantity";
+import { TONE_EDGE, TONE_FILL } from "@/lib/tone";
+import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 /** A clean pick's lines under its tile: how many copies an ask covers, and the open offers it is in. */
@@ -62,6 +65,8 @@ export function SideColumn({
   onRemoveMany: (picks: OfferPick[]) => void;
 }) {
   const headingId = useId();
+  const addRef = useRef<HTMLButtonElement>(null);
+  const listRef = useRef<HTMLUListElement>(null);
   const problemOf = (pick: OfferPick) =>
     loading?.has(pick.key)
       ? null
@@ -69,6 +74,11 @@ export function SideColumn({
   const problems = new Map(picks.map((pick) => [pick.key, problemOf(pick)]));
   const blockedPicks = picks.filter((pick) => problems.get(pick.key) !== null);
   const blockedReasons = [...new Set(blockedPicks.map((pick) => problems.get(pick.key)))];
+  // by index, not key: resolving asks can change keys after a removal
+  const focusPick = (index: number) => {
+    const xs = listRef.current?.querySelectorAll<HTMLButtonElement>("[data-pick-remove]");
+    (xs?.[Math.min(index, xs.length - 1)] ?? addRef.current)?.focus();
+  };
   // every control sits above the picks, so a growing list never moves one under the pointer
   return (
     <section aria-labelledby={headingId} className="@container flex min-w-0 flex-col gap-2">
@@ -79,6 +89,7 @@ export function SideColumn({
         </span>
       </h3>
       <Button
+        ref={addRef}
         variant="outline"
         size="sm"
         className="self-start"
@@ -88,26 +99,41 @@ export function SideColumn({
         <PlusIcon />
         {addLabel(side, source ?? "lists", name)}
       </Button>
-      {blockedPicks.length > 0 ? (
-        <div
-          role="status"
-          className="border-destructive/30 bg-destructive/8 flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-lg border px-3 py-2"
-        >
-          <p className="min-w-0 flex-1 text-xs text-pretty">
-            <span className="text-destructive-foreground font-medium">
-              {m.offer_blocked_banner({ count: blockedPicks.length })}
-            </span>
-            <span className="text-muted-foreground block">{blockedReasons.join(" · ")}</span>
-          </p>
-          <Button variant="outline" size="xs" onClick={() => onRemoveMany(blockedPicks)}>
-            {m.offer_remove_them()}
-          </Button>
-        </div>
-      ) : null}
+      <div role="status" className="empty:sr-only">
+        {blockedPicks.length > 0 ? (
+          <div
+            className={cn(
+              "flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-lg border px-3 py-2",
+              TONE_FILL.destructive,
+              TONE_EDGE.destructive,
+            )}
+          >
+            <p className="min-w-0 flex-1 text-xs text-pretty">
+              <span className="text-destructive-foreground font-medium">
+                {m.offer_blocked_banner({ count: blockedPicks.length })}
+              </span>
+              <span className="text-muted-foreground block">{blockedReasons.join(" · ")}</span>
+            </p>
+            <Button
+              variant="outline"
+              size="xs"
+              onClick={() => {
+                flushSync(() => onRemoveMany(blockedPicks));
+                focusPick(0);
+              }}
+            >
+              {m.offer_remove_them()}
+            </Button>
+          </div>
+        ) : null}
+      </div>
       {picks.length > 0 ? (
         // the picks scroll inside the side, so the top-up, note and Send stay in reach
-        <ul className="grid max-h-80 grid-cols-4 gap-1 overflow-y-auto p-0.5 @sm:grid-cols-6">
-          {picks.map((pick) => {
+        <ul
+          ref={listRef}
+          className="grid max-h-80 grid-cols-4 gap-1 overflow-y-auto p-0.5 @sm:grid-cols-6"
+        >
+          {picks.map((pick, i) => {
             const estimated = estimatedOf(pick);
             const label = itemLabel({ ...pick, serialEstimated: estimated }, collections);
             const problem = problems.get(pick.key) ?? null;
@@ -132,7 +158,11 @@ export function SideColumn({
                       variant="outline"
                       size="icon-xs"
                       aria-label={m.offer_remove_item({ name: label })}
-                      onClick={() => onRemove(pick)}
+                      data-pick-remove
+                      onClick={() => {
+                        flushSync(() => onRemove(pick));
+                        focusPick(i);
+                      }}
                       className="bg-background dark:bg-background rounded-full shadow-xs"
                     >
                       <XIcon />

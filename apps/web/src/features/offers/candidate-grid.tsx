@@ -57,6 +57,8 @@ type PickerSelection = {
   /** an any-copy item's copies still free to ask for */
   copiesOf: (item: CandidateItem) => number;
   full: boolean;
+  /** the id of the footer line that says the side is full */
+  fullId: string;
   onToggle: (item: CandidateItem, collections: Collections) => void;
   onCount: (item: CandidateItem, count: number, collections: Collections) => void;
 };
@@ -86,7 +88,7 @@ export function CandidateGrid({
   more?: { has: boolean; loading: boolean; failed: boolean; load: () => void };
   tagOf?: (item: CandidateItem) => PickerTag | undefined;
 }) {
-  const { isSelected, countOf, copiesOf, full, onToggle, onCount } = usePickerSelection();
+  const { isSelected, countOf, copiesOf, full, fullId, onToggle, onCount } = usePickerSelection();
   if (pending) {
     return (
       <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
@@ -144,6 +146,7 @@ export function CandidateGrid({
           count={countOf(item)}
           copies={copiesOf(item)}
           full={full}
+          fullId={fullId}
           onToggle={() => onToggle(item, collections)}
           onCount={(next) => onCount(item, next, collections)}
           tag={tagOf?.(item)}

@@ -109,6 +109,7 @@ function PickerBody({
   const [seen, setSeen] = useState<Record<string, ValidObjekt>>({});
   const total = totalOf(selection.values());
   const full = total >= OFFER_SIDE_LIMIT;
+  const fullId = useId();
 
   const remember = (item: CandidateItem, collections: Collections) => {
     const collection = collections[item.collectionSlug];
@@ -147,6 +148,7 @@ function PickerBody({
     countOf: (item: CandidateItem) => countOf(selection.get(pickKey(item)) ?? { count: 0 }),
     copiesOf: (item: CandidateItem) => copiesOf(selection, item),
     full,
+    fullId,
     onToggle: toggle,
     onCount: setCount,
   };
@@ -171,6 +173,11 @@ function PickerBody({
       <DialogFooter className="flex-row items-center">
         <p className="text-muted-foreground me-auto text-xs tabular-nums" aria-live="polite">
           {m.offer_picker_count({ count: total, max: OFFER_SIDE_LIMIT })}
+          {full ? (
+            <span id={fullId} className="block">
+              {m.offer_picker_full()}
+            </span>
+          ) : null}
         </p>
         <DialogClose render={<Button variant="outline" />}>{m.common_modal_cancel()}</DialogClose>
         <Button onClick={() => onDone([...selection.values()], seen)}>

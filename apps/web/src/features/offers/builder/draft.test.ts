@@ -384,7 +384,7 @@ describe("sendGate", () => {
     });
   });
 
-  test("the hint goes empty, then over limit, then blocked, then top-up error, then expiry", () => {
+  test("the hint goes empty, then over limit, then blocked, then note, then top-up error, then expiry", () => {
     const over = many(OFFER_SIDE_LIMIT + 1);
     const bad = { on: true, amount: null, currency: "USD" };
     expect(gate({ give: [], blocked: true, topup: bad }).hint).toBe(m.offer_builder_empty_hint());
@@ -392,6 +392,8 @@ describe("sendGate", () => {
       m.offer_refused_too_many({ max: OFFER_SIDE_LIMIT }),
     );
     expect(gate({ blocked: true, topup: bad }).hint).toBe(m.offer_builder_blocked_hint());
+    const long = "a".repeat(OFFER_NOTE_MAX_LENGTH + 1);
+    expect(gate({ note: long, topup: bad }).hint).toBe(m.offer_builder_note_hint());
     expect(gate({ topup: bad }).hint).toBe(m.offer_topup_amount_required());
     expect(gate().hint).toBe(m.offer_builder_expiry());
   });
@@ -437,6 +439,15 @@ describe("sendGate", () => {
       disabled: false,
       ariaDisabled: true,
       canSend: false,
+    });
+  });
+
+  test("a note over the limit shows its hint and disables Send", () => {
+    expect(gate({ note: "a".repeat(OFFER_NOTE_MAX_LENGTH + 1) })).toMatchObject({
+      hint: m.offer_builder_note_hint(),
+      disabled: true,
+      canSend: false,
+      noteTooLong: true,
     });
   });
 

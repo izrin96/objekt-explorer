@@ -109,7 +109,7 @@ function MatchesBuilder({
   return (
     <>
       <BuilderHeader request={request} titleRef={titleRef} />
-      <div ref={setRegion} role="status" className="px-6 pb-3 empty:hidden">
+      <div ref={setRegion} role="status" className="px-6 pb-3 empty:sr-only">
         {suggest.isPending ? (
           <p className="text-muted-foreground text-sm">{m.offer_matches_loading()}</p>
         ) : suggest.isError ? (
