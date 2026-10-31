@@ -13,7 +13,7 @@ import {
   withCount,
 } from "./quantity";
 
-type Counted = { key: string; count?: number };
+type Counted = { key: string; count?: number; skip?: readonly string[] };
 const any: Counted = { key: "any:204z" };
 const specific: Counted = { key: "537" };
 
@@ -77,7 +77,16 @@ describe("takeOut", () => {
   const ask: Counted = { key: "any:204z", count: 3 };
 
   test("a resolved copy takes its ask down by one", () => {
-    expect(takeOut([ask], { key: "537", replaces: ask.key })).toEqual([{ ...ask, count: 2 }]);
+    expect(takeOut([ask], { key: "537", replaces: ask.key })).toEqual([
+      { ...ask, count: 2, skip: ["537"] },
+    ]);
+  });
+
+  test("a resolved copy taken out is skipped by its ask from then on", () => {
+    const once = takeOut([ask], { key: "537", replaces: ask.key });
+    expect(takeOut(once, { key: "538", replaces: ask.key })).toEqual([
+      { ...ask, count: 1, skip: ["537", "538"] },
+    ]);
   });
 
   test("an ask's unfilled rest takes it down to what was filled", () => {
@@ -96,7 +105,7 @@ describe("takeOutAll", () => {
     const other: Counted = { key: "12" };
     const kept: Counted = { key: "77" };
     expect(takeOutAll([ask, other, kept], [{ key: "537", replaces: ask.key }, other])).toEqual([
-      { ...ask, count: 2 },
+      { ...ask, count: 2, skip: ["537"] },
       kept,
     ]);
   });

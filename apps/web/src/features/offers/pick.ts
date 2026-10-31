@@ -24,6 +24,8 @@ export type OfferPick = {
   kept?: boolean;
   /** the any-copy placeholder this resolved copy stands in for */
   replaces?: string;
+  /** an any-copy pick: the copies taken off it, which it no longer resolves to */
+  skip?: readonly string[];
 };
 
 export const anyKey = (collectionSlug: string) => `any:${collectionSlug}`;

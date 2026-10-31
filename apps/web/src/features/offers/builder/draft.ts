@@ -177,6 +177,7 @@ export function resolveAsks(
         copy.collectionSlug !== ask.collectionSlug ||
         copy.objektId === null ||
         taken.has(copy.objektId) ||
+        ask.skip?.includes(copy.objektId) ||
         blockedReason(copy) !== null
       ) {
         continue;

@@ -1,5 +1,8 @@
-/** An offer pick as the counts read it: a key, and how many copies an any-copy pick asks for. */
-type Counted = { key: string; count?: number };
+/**
+ * An offer pick as the counts read it: a key, how many copies an any-copy pick asks for, and the
+ * copies taken off it, which it never resolves to again.
+ */
+type Counted = { key: string; count?: number; skip?: readonly string[] };
 
 export const countOf = (pick: { count?: number }) => pick.count ?? 1;
 
@@ -49,7 +52,8 @@ export function withCount<P extends Counted>(
 /**
  * A side without what one shown row stands for. A resolved copy stands for one copy of the ask it
  * `replaces`, and an ask's unfilled rest for the copies it still waits for, so either takes the
- * ask down by that many and leaves the rest; any other row leaves whole.
+ * ask down by that many and leaves the rest; any other row leaves whole. A resolved copy joins the
+ * ask's `skip`, or the ask would resolve to that copy again and drop a copy the viewer kept.
  */
 export function takeOut<P extends Counted>(
   picks: readonly P[],
@@ -59,7 +63,12 @@ export function takeOut<P extends Counted>(
   return picks.flatMap((pick) => {
     if (pick.key !== key) return [pick];
     const left = countOf(pick) - countOf(shown);
-    return left > 0 ? [{ ...pick, count: left }] : [];
+    if (left <= 0) return [];
+    return [
+      shown.replaces
+        ? { ...pick, count: left, skip: [...(pick.skip ?? []), shown.key] }
+        : { ...pick, count: left },
+    ];
   });
 }
 

@@ -9,6 +9,7 @@ import {
 } from "@repo/api/schemas/offer";
 
 import type { OfferPick } from "@/features/offers/pick";
+import { takeOut } from "@/features/offers/quantity";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
 
@@ -246,6 +247,13 @@ describe("resolveAsks", () => {
   test("an ask for 2 with 3 copies takes 2", () => {
     const shown = resolveAsks([ask(2)], [{ items: [copy("c1"), copy("c2"), copy("c3")] }]);
     expect(keysOf(shown)).toEqual(["c1", "c2"]);
+  });
+
+  test("a copy taken off the ask is passed over, so X removes the copy pressed", () => {
+    const page = { items: [copy("c1"), copy("c2")] };
+    const [first] = resolveAsks([ask(2)], [page]);
+    const left = takeOut([ask(2)], first!);
+    expect(keysOf(resolveAsks(left, [page]))).toEqual(["c2"]);
   });
 
   test("an ask for 3 with 2 found shows them, then the ask for the rest, in its place", () => {
