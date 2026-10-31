@@ -131,6 +131,7 @@ function EditForm({
 }) {
   const queryClient = useQueryClient();
   const cropperRef = useRef<CropperRef>(null);
+  const bannerInputRef = useRef<HTMLInputElement>(null);
   const saveRef = useRef<AbortController | null>(null);
   const [picked, setPicked] = useState<{ file: File; url: string } | null>(null);
   const [cropReady, setCropReady] = useState(false);
@@ -221,19 +222,21 @@ function EditForm({
         <div className="flex flex-col gap-2">
           <Label htmlFor="edit-cosmo-banner">{m.profile_edit_banner_label()}</Label>
           <div className="flex items-center gap-1.5">
+            {/* a real button, not a label over an sr-only input, so keyboard focus is visible */}
             <Button
+              id="edit-cosmo-banner"
               variant="outline"
               size="sm"
-              render={<label htmlFor="edit-cosmo-banner" className="cursor-pointer" />}
+              onClick={() => bannerInputRef.current?.click()}
             >
               <UploadSimpleIcon />
               {m.profile_edit_banner_label()}
             </Button>
             <input
-              id="edit-cosmo-banner"
+              ref={bannerInputRef}
               type="file"
               accept={BANNER_ACCEPT}
-              className="sr-only"
+              hidden
               onChange={(event) => {
                 const file = event.target.files?.[0];
                 event.target.value = "";
