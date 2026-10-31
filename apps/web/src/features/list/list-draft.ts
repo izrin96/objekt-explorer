@@ -1,4 +1,4 @@
-import { type ListType, profileSlugBase } from "@repo/api/schemas/list";
+import type { ListType } from "@repo/api/schemas/list";
 import type { OpenToFlags } from "@repo/api/schemas/open-to";
 import * as z from "zod";
 
@@ -111,7 +111,7 @@ export function toEditInput(slug: string, draft: ListDraft) {
   };
 }
 
-export type ListUrl = { nickname: string; profileSlug: string; fallbackSlug: string };
+export type ListUrl = { nickname: string; profileSlug: string; listSlug: string };
 
 /** `Select` has no value for "cleared", so the empty choice carries its own. */
 export const NONE = "__none__";
@@ -182,6 +182,7 @@ export function bindNote(
   return draft.isProfileBind ? null : "off";
 }
 
-export function slugPreview(name: string, url: ListUrl, regenerate: boolean): string {
-  return regenerate ? profileSlugBase(name) || url.fallbackSlug : url.profileSlug;
+/** Empty while regenerating with no preview yet, so the field shows its on-save hint. */
+export function slugFieldValue(url: ListUrl, regenerate: boolean, preview: string | undefined) {
+  return regenerate ? (preview ?? "") : url.profileSlug;
 }

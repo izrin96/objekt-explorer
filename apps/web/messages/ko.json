@@ -271,6 +271,7 @@
   "list_edit_url_label": "목록 URL",
   "list_edit_regenerate_slug_label": "새 이름으로 URL 다시 생성",
   "list_edit_regenerate_slug_desc": "이 목록의 기존 링크는 더 이상 작동하지 않습니다.",
+  "list_edit_url_on_save": "저장할 때 이름으로 생성됩니다",
   "list_edit_success": "목록이 업데이트되었습니다",
   "list_edit_error": "목록 수정 오류",
   "list_swap_to_have": "보유 목록 보기",

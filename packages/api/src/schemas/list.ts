@@ -1,5 +1,4 @@
 import type { ListObjekt } from "@repo/lib/types/objekt";
-import slugify from "slugify";
 import * as z from "zod";
 
 import { addressInputSchema, addressSchema } from "./common/address";
@@ -8,13 +7,6 @@ import { indexedObjektSchema, ownedObjektSchema } from "./common/objekt";
 import { queryArray } from "./common/query";
 import type { ObjektPreview } from "./objekts";
 import { publicProfileSchema, publicUserSchema } from "./profile";
-
-/**
- * A list's profile slug from its name, before any "-<counter>" a taken slug gets: profile_slug is
- * varchar(100), so the base stops at 90. Empty when the name has no letters slugify keeps.
- */
-export const profileSlugBase = (name: string) =>
-  slugify(name, { lower: true, strict: true }).slice(0, 90).replace(/-+$/, "");
 
 export const listTypeSchema = z.enum(["general", "sale", "have", "want"]);
 export type ListType = z.infer<typeof listTypeSchema>;
@@ -182,6 +174,12 @@ export const editListInputSchema = z.object({
   hideSerial: z.boolean(),
   regenerateSlug: z.boolean().default(false),
 });
+
+export const slugPreviewInputSchema = z.object({
+  slug: z.string(),
+  name: editListInputSchema.shape.name,
+});
+export const slugPreviewOutputSchema = z.object({ profileSlug: z.string() });
 
 export const listPreviewsInputSchema = z.object({
   slugs: queryArray(z.string()).pipe(z.array(z.string()).max(500)),

@@ -1,4 +1,6 @@
 import type { ListType } from "@repo/api/schemas/list";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 
 import { Checkbox } from "@/components/ui/checkbox";
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field";
@@ -13,7 +15,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { useDebouncedCallback } from "@/hooks/use-debounced-callback";
 import { displayNickname, isSameAddress } from "@/lib/address";
+import { orpc } from "@/lib/orpc";
 import { toneChip } from "@/lib/tone";
 import { cn, getBaseURL } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -27,7 +31,7 @@ import {
   NONE,
   profileLabel,
   profilePatch,
-  slugPreview,
+  slugFieldValue,
 } from "./list-draft";
 import { LIST_TYPE_LABEL, LIST_TYPE_TONE, ListTypeBadge } from "./list-type-badge";
 
@@ -147,6 +151,7 @@ export function ListUrlField({
   regenerate: boolean;
   onRegenerateChange: (checked: boolean) => void;
 }) {
+  const preview = useSlugPreview(url.listSlug, name, regenerate);
   return (
     <div className="flex min-w-0 flex-col gap-2">
       <div className="flex min-w-0 flex-col gap-1.5">
@@ -160,7 +165,8 @@ export function ListUrlField({
             readOnly
             unstyled
             className="grow text-sm"
-            value={slugPreview(name, url, regenerate)}
+            value={slugFieldValue(url, regenerate, preview)}
+            placeholder={m.list_edit_url_on_save()}
           />
         </div>
       </div>
@@ -180,6 +186,29 @@ export function ListUrlField({
       </Label>
     </div>
   );
+}
+
+const SLUG_PREVIEW_DEBOUNCE_MS = 300;
+
+function useSlugPreview(listSlug: string, name: string, regenerate: boolean) {
+  const [debouncedName, setDebouncedName] = useState(() => name.trim());
+  const debounce = useDebouncedCallback(setDebouncedName, SLUG_PREVIEW_DEBOUNCE_MS);
+  useEffect(() => {
+    debounce(name.trim());
+  }, [debounce, name]);
+
+  const { data, isError } = useQuery(
+    orpc.list.slugPreview.queryOptions({
+      input: { slug: listSlug, name: debouncedName },
+      enabled: regenerate && debouncedName !== "",
+      // keeps the last slug in the box while the next name is asked for
+      placeholderData: keepPreviousData,
+      // another list's edit or delete takes or frees a slug without invalidating this
+      staleTime: 0,
+      retry: false,
+    }),
+  );
+  return regenerate && debouncedName !== "" && !isError ? data?.profileSlug : undefined;
 }
 
 function TypeSegment({ type, selected }: { type: ListType; selected: boolean }) {

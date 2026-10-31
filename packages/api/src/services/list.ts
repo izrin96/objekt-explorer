@@ -18,6 +18,7 @@ import { OBJEKT_PREVIEW_SIZE } from "../constants";
 import { isMessageable, toMessagePref } from "../lib/chat-rules";
 import { buildCopyRows, type CopyRow, type OwnedCopy } from "../lib/list-copy";
 import { pairRefusal, type PairRefusal } from "../lib/list-pair";
+import { profileSlugBase } from "../lib/profile-slug";
 import { refuse } from "../lib/refuse";
 import { BUMP_COOLDOWN_HOURS } from "../lib/trade-feed";
 import {
@@ -27,7 +28,6 @@ import {
   type createListInputSchema,
   type ListPreview,
   type ListType,
-  profileSlugBase,
   type PublicList,
 } from "../schemas/list";
 import { carriesPrices, copyMode, copyUnit, needsHoldings } from "../schemas/list-copy";

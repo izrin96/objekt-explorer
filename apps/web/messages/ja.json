@@ -271,6 +271,7 @@
   "list_edit_url_label": "リストURL",
   "list_edit_regenerate_slug_label": "新しい名前からURLを再生成",
   "list_edit_regenerate_slug_desc": "このリストへの既存のリンクは無効になります。",
+  "list_edit_url_on_save": "保存時に名前から作成されます",
   "list_edit_success": "リストを更新しました",
   "list_edit_error": "リストの編集に失敗しました",
   "list_swap_to_have": "所持リストを表示",

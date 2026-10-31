@@ -271,6 +271,7 @@
   "list_edit_url_label": "List URL",
   "list_edit_regenerate_slug_label": "Regenerate URL from new name",
   "list_edit_regenerate_slug_desc": "Existing links to this list will stop working.",
+  "list_edit_url_on_save": "Made from the name when you save",
   "list_edit_success": "List updated",
   "list_edit_error": "Error editing list",
   "list_swap_to_have": "View have list",

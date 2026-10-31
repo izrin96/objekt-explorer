@@ -16,6 +16,8 @@ import {
   editListInputSchema,
   findPublicOutputSchema,
   listSlugInputSchema,
+  slugPreviewInputSchema,
+  slugPreviewOutputSchema,
 } from "../schemas/list";
 import {
   fetchList,
@@ -186,6 +188,32 @@ export const listCrud = {
       await touchList([list.id]);
     },
   ),
+
+  slugPreview: authed
+    .input(slugPreviewInputSchema)
+    .output(slugPreviewOutputSchema)
+    .handler(
+      async ({
+        input: { slug, name },
+        context: {
+          session: { user },
+        },
+      }) => {
+        await refuseOverUserLimit("list-slug-preview", user.id, 60, 60);
+        const list = await findOwnedList(slug, user.id);
+        if (!list.profileAddress) {
+          refuse("BAD_REQUEST", "list_profile_required", "The list is not filed under a profile");
+        }
+        // the call list.edit makes, so the preview carries the "-<counter>" a taken slug gets
+        const profileSlug = await generateProfileSlug(
+          name,
+          list.slug,
+          list.profileAddress.toLowerCase(),
+          list.id,
+        );
+        return { profileSlug };
+      },
+    ),
 
   delete: authed.input(listSlugInputSchema).handler(
     async ({

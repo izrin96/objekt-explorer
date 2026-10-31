@@ -5,7 +5,6 @@ import {
   createListInputSchema,
   editListInputSchema,
 } from "@repo/api/schemas/list";
-import slugify from "slugify";
 
 import { displayNickname } from "@/lib/address";
 import { zodErrors } from "@/lib/form";
@@ -23,7 +22,7 @@ import {
   NONE,
   profileLabel,
   profilePatch,
-  slugPreview,
+  slugFieldValue,
   toCreateInput,
   toEditInput,
 } from "./list-draft";
@@ -315,30 +314,18 @@ describe("bindNote", () => {
   });
 });
 
-describe("slugPreview", () => {
-  const url = { nickname: "n", profileSlug: "kept-slug", fallbackSlug: "fallback" };
+describe("slugFieldValue", () => {
+  const url = { nickname: "n", profileSlug: "kept-slug", listSlug: "abc123" };
 
-  test("without regeneration it shows the current slug", () => {
-    expect(slugPreview("Anything", url, false)).toBe(url.profileSlug);
+  test("without regeneration it shows the current slug, whatever the preview", () => {
+    expect(slugFieldValue(url, false, "new-slug")).toBe(url.profileSlug);
   });
 
-  test("regenerating slugifies the name", () => {
-    expect(slugPreview("My List!", url, true)).toBe("my-list");
+  test("regenerating shows the server's preview", () => {
+    expect(slugFieldValue(url, true, "my-list-2")).toBe("my-list-2");
   });
 
-  test("a long name is cut where the server cuts it, with no dash left at the end", () => {
-    const name = `${"a".repeat(89)} ${"b".repeat(40)}`;
-    expect(slugPreview(name, url, true)).toBe("a".repeat(89));
-  });
-
-  test("a name that slugifies to nothing uses the fallback", () => {
-    expect(slugPreview("!!!", url, true)).toBe(url.fallbackSlug);
-  });
-
-  test("a Hangul-only name follows slugify itself", () => {
-    const name = "한글 목록";
-    expect(slugPreview(name, url, true)).toBe(
-      slugify(name, { lower: true, strict: true }) || url.fallbackSlug,
-    );
+  test("regenerating before the preview arrives is empty", () => {
+    expect(slugFieldValue(url, true, undefined)).toBe("");
   });
 });

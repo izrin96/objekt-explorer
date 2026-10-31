@@ -4,7 +4,7 @@ import {
   copyListInputSchema,
   createListInputSchema,
   listPreviewsInputSchema,
-  profileSlugBase,
+  slugPreviewInputSchema,
 } from "./list";
 
 const base = {
@@ -45,17 +45,15 @@ describe("listPreviewsInputSchema", () => {
   });
 });
 
-describe("profileSlugBase", () => {
-  test("lowercases and drops what slugify strips", () => {
-    expect(profileSlugBase("My List!")).toBe("my-list");
+describe("slugPreviewInputSchema", () => {
+  test("takes a name the edit form would save", () => {
+    expect(slugPreviewInputSchema.parse({ slug: "abc", name: "My List" }).name).toBe("My List");
   });
 
-  test("stops at 90 characters, with no dash left at the cut", () => {
-    expect(profileSlugBase(`${"a".repeat(89)} ${"b".repeat(40)}`)).toBe("a".repeat(89));
-    expect(profileSlugBase("c".repeat(120))).toHaveLength(90);
-  });
-
-  test("a name with nothing slugify keeps is empty", () => {
-    expect(profileSlugBase("!!!")).toBe("");
+  test("refuses an empty name and one longer than a list name may be", () => {
+    expect(slugPreviewInputSchema.safeParse({ slug: "abc", name: "" }).success).toBe(false);
+    expect(slugPreviewInputSchema.safeParse({ slug: "abc", name: "a".repeat(257) }).success).toBe(
+      false,
+    );
   });
 });

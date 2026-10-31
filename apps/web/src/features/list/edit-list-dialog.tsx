@@ -114,7 +114,7 @@ function toListUrl(
   return {
     nickname: nicknameParam(address, profile?.nickname),
     profileSlug: list.profileSlug,
-    fallbackSlug: list.slug,
+    listSlug: list.slug,
   };
 }
 

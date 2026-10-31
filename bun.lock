@@ -81,7 +81,6 @@
         "react-dom": "catalog:",
         "react-intersection-observer": "^11.0.1",
         "recharts": "^3.10.1",
-        "slugify": "catalog:",
         "tailwind-merge": "^3.7.0",
         "virtua": "^0.53.6",
         "zod": "catalog:",
