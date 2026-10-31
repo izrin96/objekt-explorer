@@ -7,6 +7,7 @@ import { Kbd } from "@/components/ui/kbd";
 import { Popover, PopoverPopup, PopoverTrigger } from "@/components/ui/popover";
 import { useDebouncedCallback } from "@/hooks/use-debounced-callback";
 import { m } from "@/paraglide/messages";
+import { useFilterResets } from "@/stores/filter-resets";
 
 import { useFilters, useSetFilters } from "./use-filters";
 
@@ -57,18 +58,22 @@ export function FilterSearchField() {
   const setFilters = useSetFilters();
   const [draft, setDraft] = useState(search ?? "");
   const [committed, setCommitted] = useState(search);
+  const resets = useFilterResets((state) => state.count);
+  const [seenResets, setSeenResets] = useState(resets);
   const ref = useRef<HTMLInputElement>(null);
 
-  // a Reset or a pasted link changes the committed value under the field
-  if (search !== committed) {
+  // a Reset or a pasted link changes the committed value under the field; a Reset that leaves it
+  // as it was still clears the text not committed yet
+  if (search !== committed || resets !== seenResets) {
     setCommitted(search);
+    setSeenResets(resets);
     setDraft(search ?? "");
   }
 
-  const commit = useDebouncedCallback(
-    (value: string) => setFilters({ search: value.length > 0 ? value : undefined }),
-    250,
-  );
+  const commit = useDebouncedCallback((value: string, typedAt: number) => {
+    if (typedAt !== useFilterResets.getState().count) return;
+    setFilters({ search: value.length > 0 ? value : undefined });
+  }, 250);
 
   // the browser's own find is the wrong tool on a virtualised grid: it can only
   // reach the rows that happen to be mounted
@@ -98,7 +103,7 @@ export function FilterSearchField() {
         value={draft}
         onChange={(event) => {
           setDraft(event.target.value);
-          commit(event.target.value);
+          commit(event.target.value, resets);
         }}
       />
       <InputGroupAddon>
@@ -117,7 +122,7 @@ export function FilterSearchField() {
             aria-label={m.filter_search_clear_aria()}
             onClick={() => {
               setDraft("");
-              commit("");
+              commit("", resets);
               ref.current?.focus();
             }}
           >

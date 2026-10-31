@@ -2,6 +2,7 @@ import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useCallback, useMemo } from "react";
 
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
+import { noteFilterReset } from "@/stores/filter-resets";
 
 import type { FacetPatch } from "./facet-controls";
 import {
@@ -108,5 +109,8 @@ export function useSetFacet(): (patch: FacetPatch) => void {
 
 export function useResetFilters(): () => void {
   const setFilters = useSetFilters();
-  return useCallback(() => setFilters(resetPatch), [setFilters]);
+  return useCallback(() => {
+    noteFilterReset();
+    setFilters(resetPatch);
+  }, [setFilters]);
 }
