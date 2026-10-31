@@ -1,4 +1,5 @@
 import {
+  ArrowClockwiseIcon,
   ArrowsLeftRightIcon,
   ListMagnifyingGlassIcon,
   QuestionMarkIcon,
@@ -13,6 +14,7 @@ import { type ReactNode, useMemo, useState } from "react";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Timestamp } from "@/components/shared/timestamp";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ProfileCell, ProfileLink } from "@/features/profile/profile-hover-card";
 import { cn } from "@/lib/utils";
@@ -113,11 +115,10 @@ function resolveSerial(
 
 function EventMarker({ kind }: { kind: EventKind }) {
   return (
-    <>
+    <span className="flex shrink-0 items-center gap-1.5">
       <i aria-hidden className={cn("size-1.5 shrink-0 rounded-full", EVENT_COLOR[kind])} />
-      {/* the dot's colour is the event; this names it for a screen reader */}
-      <span className="sr-only">{EVENT_LABEL[kind]()}:</span>
-    </>
+      <span className="text-muted-foreground text-xs">{EVENT_LABEL[kind]()}</span>
+    </span>
   );
 }
 
@@ -205,7 +206,19 @@ export function Timeline({
   }
 
   if (view.kind === "error") {
-    return <EmptyState icon={WarningIcon} title={m.common_error_loading_data()} bordered={false} />;
+    return (
+      <EmptyState
+        icon={WarningIcon}
+        title={m.common_error_loading_data()}
+        bordered={false}
+        action={
+          <Button variant="outline" size="sm" onClick={() => void query.refetch()}>
+            <ArrowClockwiseIcon />
+            {m.common_error_retry()}
+          </Button>
+        }
+      />
+    );
   }
 
   if (view.kind === "missing") {

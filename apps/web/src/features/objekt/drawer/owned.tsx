@@ -7,7 +7,8 @@ import {
   PushPinIcon,
 } from "@phosphor-icons/react";
 import type { OwnedGridObjekt } from "@repo/lib/types/objekt";
-import { type ReactNode, useMemo, useState } from "react";
+import { type ReactNode, useMemo, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 
 import { EmptyState } from "@/components/shared/empty-state";
 import { Badge } from "@/components/ui/badge";
@@ -45,6 +46,8 @@ export function OwnedPanel({
 }) {
   const [sort, setSort] = useState<Sort>({ key: "receivedAt", dir: "desc" });
   const [page, setPage] = useState(1);
+  const previousRef = useRef<HTMLButtonElement>(null);
+  const nextRef = useRef<HTMLButtonElement>(null);
 
   const sorted = useMemo(() => {
     const sign = sort.dir === "desc" ? -1 : 1;
@@ -71,6 +74,13 @@ export function OwnedPanel({
   const current = Math.min(page, totalPages);
   const rows = sorted.slice((current - 1) * PAGE_SIZE, current * PAGE_SIZE);
 
+  // the clicked pager button disables itself at either end, which drops focus
+  // to <body>; the other one is still disabled until the page commits
+  const goTo = (target: number, other: typeof nextRef) => {
+    flushSync(() => setPage(target));
+    if (target <= 1 || target >= totalPages) other.current?.focus();
+  };
+
   const toggle = (key: SortKey) =>
     setSort((prev) => nextSort(prev, key, key === "serial" ? "asc" : "desc"));
 
@@ -96,7 +106,11 @@ export function OwnedPanel({
             <th scope="col" className="px-3 py-2 text-left font-medium">
               {m.objekt_transferable()}
             </th>
-            {menu && <th scope="col" className="w-10" />}
+            {menu && (
+              <th scope="col" className="w-10">
+                <span className="sr-only">{m.objekt_market_actions()}</span>
+              </th>
+            )}
           </tr>
         </thead>
         <tbody>
@@ -109,8 +123,18 @@ export function OwnedPanel({
                   onClick={() => onOpenSerial(item.serial)}
                 >
                   {item.serial}
-                  {item.isPin === true && <PushPinIcon className="size-3" aria-hidden />}
-                  {item.isLocked === true && <LockSimpleIcon className="size-3" aria-hidden />}
+                  {item.isPin === true && (
+                    <>
+                      <PushPinIcon className="size-3" aria-hidden />
+                      <span className="sr-only">{m.objekt_owned_pinned()}</span>
+                    </>
+                  )}
+                  {item.isLocked === true && (
+                    <>
+                      <LockSimpleIcon className="size-3" aria-hidden />
+                      <span className="sr-only">{m.objekt_owned_locked()}</span>
+                    </>
+                  )}
                 </button>
               </th>
               <td className="px-3 py-1.5 font-mono tabular-nums">{item.tokenId}</td>
@@ -127,7 +151,11 @@ export function OwnedPanel({
                   <Menu>
                     <MenuTrigger
                       render={
-                        <Button variant="ghost" size="icon-sm" aria-label={m.objekt_menu_aria()} />
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          aria-label={m.objekt_menu_serial({ serial: item.serial })}
+                        />
                       }
                     >
                       <DotsThreeIcon weight="bold" />
@@ -148,9 +176,10 @@ export function OwnedPanel({
           <Button
             variant="outline"
             size="icon-sm"
+            ref={previousRef}
             disabled={current <= 1}
             aria-label={m.objekt_pagination_previous_aria()}
-            onClick={() => setPage(current - 1)}
+            onClick={() => goTo(current - 1, nextRef)}
           >
             <CaretLeftIcon />
           </Button>
@@ -161,9 +190,10 @@ export function OwnedPanel({
           <Button
             variant="outline"
             size="icon-sm"
+            ref={nextRef}
             disabled={current >= totalPages}
             aria-label={m.objekt_pagination_next_aria()}
-            onClick={() => setPage(current + 1)}
+            onClick={() => goTo(current + 1, previousRef)}
           >
             <CaretRightIcon />
           </Button>

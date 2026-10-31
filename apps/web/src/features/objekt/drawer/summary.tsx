@@ -12,23 +12,24 @@ import { isObjektOwned, memberNames } from "../objekt-utils";
 export function ObjektSummary({ objekt, artistName }: { objekt: ValidObjekt; artistName: string }) {
   const owned = isObjektOwned(objekt);
 
-  const attributes: [string, string][] = [
+  // mono marks an identifier read character by character; names and labels stay sans
+  const attributes: [label: string, value: string, mono?: boolean][] = [
     [m.objekt_artist(), artistName],
     [m.objekt_member(), memberNames(objekt)],
     [m.objekt_season(), objekt.season],
     [m.objekt_class(), objekt.class],
-    [m.objekt_collection_no(), objekt.collectionNo],
+    [m.objekt_collection_no(), objekt.collectionNo, true],
     [m.objekt_type(), objekt.onOffline === "offline" ? m.objekt_physical() : m.objekt_digital()],
   ];
-  if (owned) attributes.push([m.objekt_serial(), `#${objekt.serial}`]);
+  if (owned) attributes.push([m.objekt_serial(), `#${objekt.serial}`, true]);
 
   return (
     <div className="flex min-w-0 flex-col gap-3">
       <dl className="grid grid-cols-[auto_minmax(0,1fr)] content-start gap-x-4 gap-y-1.5 text-sm">
-        {attributes.map(([label, value]) => (
+        {attributes.map(([label, value, mono]) => (
           <div key={label} className="contents">
             <dt className="text-muted-foreground">{label}</dt>
-            <dd className="font-mono">{value}</dd>
+            <dd className={mono ? "font-mono" : undefined}>{value}</dd>
           </div>
         ))}
         {owned && (

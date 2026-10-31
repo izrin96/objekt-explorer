@@ -1,7 +1,7 @@
 import { CheckIcon, DotsThreeIcon } from "@phosphor-icons/react";
 import type { OwnedGridObjekt, ValidObjekt } from "@repo/lib/types/objekt";
 import { useQuery } from "@tanstack/react-query";
-import { type ReactNode, useMemo, useState } from "react";
+import { type ReactNode, useMemo, useRef, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -166,6 +166,15 @@ function DrawerBody({
     onTabChange(next);
   };
 
+  // the clicked serial button unmounts with its tab, so focus moves to the
+  // Serials tab, which is always mounted (its panel may still be loading)
+  const serialsTabRef = useRef<HTMLButtonElement>(null);
+  const openSerial = (value: number) => {
+    changeSerial(value);
+    onTabChange("serials");
+    serialsTabRef.current?.focus();
+  };
+
   const metadata = useQuery(collectionMetadataOptions(objekt.slug));
   const serials = useQuery(serialListOptions(objekt.slug));
 
@@ -215,7 +224,7 @@ function DrawerBody({
               <Toggle
                 variant="outline"
                 size="sm"
-                aria-label={isSelected ? m.objekt_deselect_aria() : m.objekt_select_aria()}
+                aria-label={m.objekt_select_aria()}
                 pressed={isSelected}
                 onPressedChange={() => toggleSelect(objekt.id)}
                 className="data-pressed:bg-foreground data-pressed:text-background data-pressed:border-foreground data-pressed:hover:bg-foreground/90 dark:data-pressed:bg-foreground dark:data-pressed:hover:bg-foreground/90"
@@ -282,13 +291,16 @@ function DrawerBody({
               >
                 {ownedCopies && (
                   <TabsTab value="owned">
-                    {m.objekt_owned()}
                     {ownedCopies.length > 1
-                      ? ` (${ownedCopies.length.toLocaleString(getLocale())})`
-                      : ""}
+                      ? m.objekt_owned_count({
+                          count: ownedCopies.length.toLocaleString(getLocale()),
+                        })
+                      : m.objekt_owned()}
                   </TabsTab>
                 )}
-                <TabsTab value="serials">{m.objekt_trades()}</TabsTab>
+                <TabsTab ref={serialsTabRef} value="serials">
+                  {m.objekt_trades()}
+                </TabsTab>
                 <TabsTab value="market">{m.objekt_market()}</TabsTab>
                 <TabsTab value="holders">{m.objekt_holders()}</TabsTab>
                 <TabsTab value="metadata">{m.objekt_metadata()}</TabsTab>
@@ -297,14 +309,7 @@ function DrawerBody({
           </div>
           {ownedCopies && (
             <TabsPanel value="owned">
-              <OwnedPanel
-                objekts={ownedCopies}
-                menu={ownedMenu}
-                onOpenSerial={(value) => {
-                  changeSerial(value);
-                  onTabChange("serials");
-                }}
-              />
+              <OwnedPanel objekts={ownedCopies} menu={ownedMenu} onOpenSerial={openSerial} />
             </TabsPanel>
           )}
           <TabsPanel value="serials">
@@ -321,13 +326,7 @@ function DrawerBody({
             </SerialsPanel>
           </TabsPanel>
           <TabsPanel value="market">
-            <MarketPanel
-              slug={objekt.slug}
-              onOpenSerial={(value) => {
-                changeSerial(value);
-                onTabChange("serials");
-              }}
-            />
+            <MarketPanel slug={objekt.slug} onOpenSerial={openSerial} />
           </TabsPanel>
           <TabsPanel value="holders">
             <HoldersPanel slug={objekt.slug} physical={objekt.onOffline === "offline"} />

@@ -1,4 +1,5 @@
 import {
+  ArrowClockwiseIcon,
   CaretLeftIcon,
   CaretLineLeftIcon,
   CaretLineRightIcon,
@@ -98,97 +99,97 @@ export function SerialsPanel({
   };
 
   // the stats come from their own query, so they show while the serials load
-  if (loading) {
-    return (
-      <div className="flex flex-col gap-3">
-        <SerialStats metadata={metadata} physical={physical} />
-        <div className="flex flex-col gap-3" role="status">
-          {/* a live region announces its content, so the label has to be in it */}
-          <span className="sr-only">{m.objekt_serials_loading()}</span>
-          <Skeleton className="h-8 w-full rounded-md" />
-          <Skeleton className="h-21 w-full rounded-lg" />
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="flex flex-col gap-3">
       <SerialStats metadata={metadata} physical={physical} />
-      <div className="flex items-center gap-1.5">
-        <NumberField
-          value={serial}
-          // null is an empty input, not "no serial"; 0 keeps the field usable
-          onValueChange={(value) => onSerialChange(value ?? 0)}
-          min={0}
-          size="sm"
-          className="min-w-0 grow"
-        >
-          <NumberFieldGroup>
-            <NumberFieldInput
-              aria-label={m.objekt_serial_aria()}
-              className="text-left font-mono"
-              placeholder={m.objekt_serial()}
-            />
-          </NumberFieldGroup>
-        </NumberField>
-        <Button
-          variant="outline"
-          size="icon-sm"
-          aria-label={m.trade_view_serial_first_aria()}
-          onClick={() => updateSerial("first")}
-        >
-          <CaretLineLeftIcon />
-        </Button>
-        <Button
-          variant="outline"
-          size="icon-sm"
-          aria-label={m.trade_view_serial_previous_aria()}
-          onClick={() => updateSerial("prev")}
-        >
-          <CaretLeftIcon />
-        </Button>
-        <Button
-          variant="outline"
-          size="icon-sm"
-          aria-label={m.trade_view_serial_next_aria()}
-          onClick={() => updateSerial("next")}
-        >
-          <CaretRightIcon />
-        </Button>
-        <Button
-          variant="outline"
-          size="icon-sm"
-          aria-label={m.trade_view_serial_last_aria()}
-          onClick={() => updateSerial("last")}
-        >
-          <CaretLineRightIcon />
-        </Button>
+      {/* one node stays mounted across the load so the change is announced;
+          `sr-only`, not `hidden`, keeps it in the accessibility tree while empty */}
+      <div role="status" className="sr-only">
+        {loading ? m.objekt_serials_loading() : null}
       </div>
+      {loading ? (
+        <>
+          <Skeleton className="h-8 w-full rounded-md" />
+          <Skeleton className="h-21 w-full rounded-lg" />
+        </>
+      ) : (
+        <>
+          <div className="flex items-center gap-1.5">
+            <NumberField
+              value={serial}
+              // null is an empty input, not "no serial"; 0 keeps the field usable
+              onValueChange={(value) => onSerialChange(value ?? 0)}
+              min={0}
+              size="sm"
+              className="min-w-0 grow"
+            >
+              <NumberFieldGroup>
+                <NumberFieldInput
+                  aria-label={m.objekt_serial_aria()}
+                  className="text-left font-mono"
+                  placeholder={m.objekt_serial()}
+                />
+              </NumberFieldGroup>
+            </NumberField>
+            <Button
+              variant="outline"
+              size="icon-sm"
+              aria-label={m.trade_view_serial_first_aria()}
+              onClick={() => updateSerial("first")}
+            >
+              <CaretLineLeftIcon />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon-sm"
+              aria-label={m.trade_view_serial_previous_aria()}
+              onClick={() => updateSerial("prev")}
+            >
+              <CaretLeftIcon />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon-sm"
+              aria-label={m.trade_view_serial_next_aria()}
+              onClick={() => updateSerial("next")}
+            >
+              <CaretRightIcon />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon-sm"
+              aria-label={m.trade_view_serial_last_aria()}
+              onClick={() => updateSerial("last")}
+            >
+              <CaretLineRightIcon />
+            </Button>
+          </div>
 
-      {/* single choice, so pressing the active scope again (an empty group) is ignored */}
-      <ToggleGroup
-        variant="outline"
-        size="sm"
-        aria-label={m.objekt_serial_scope_aria()}
-        value={[scope]}
-        onValueChange={([next]) => {
-          if (next !== undefined && isScope(next)) changeScope(next);
-        }}
-      >
-        {SCOPES.map((value) => (
-          <ToggleGroupItem
-            key={value}
-            value={value}
-            disabled={scopeEmpty[value] && scope !== value}
-            className="text-muted-foreground data-pressed:text-foreground h-7 sm:h-6 sm:text-xs"
+          {/* single choice, so pressing the active scope again (an empty group) is ignored */}
+          <ToggleGroup
+            variant="outline"
+            size="sm"
+            aria-label={m.objekt_serial_scope_aria()}
+            value={[scope]}
+            onValueChange={([next]) => {
+              if (next !== undefined && isScope(next)) changeScope(next);
+            }}
           >
-            {SCOPE_LABEL[value]()}
-          </ToggleGroupItem>
-        ))}
-      </ToggleGroup>
+            {SCOPES.map((value) => (
+              <ToggleGroupItem
+                key={value}
+                value={value}
+                disabled={scopeEmpty[value] && scope !== value}
+                className="text-muted-foreground data-pressed:text-foreground h-7 sm:h-6 sm:text-xs"
+              >
+                {SCOPE_LABEL[value]()}
+              </ToggleGroupItem>
+            ))}
+          </ToggleGroup>
 
-      {children}
+          {children}
+        </>
+      )}
     </div>
   );
 }
@@ -203,9 +204,15 @@ function SerialStats({
 }) {
   if (metadata.isError) {
     return (
-      <Badge variant="error" size="sm" className="self-start">
-        {m.objekt_error_fetching_metadata()}
-      </Badge>
+      <div className="flex items-center gap-2 self-start">
+        <Badge variant="error" size="sm">
+          {m.objekt_error_fetching_metadata()}
+        </Badge>
+        <Button variant="ghost" size="xs" onClick={() => void metadata.refetch()}>
+          <ArrowClockwiseIcon />
+          {m.common_error_retry()}
+        </Button>
+      </div>
     );
   }
 

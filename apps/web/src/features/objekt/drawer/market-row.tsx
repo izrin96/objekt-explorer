@@ -141,7 +141,9 @@ export function MarketRow({
           <Button
             variant="ghost"
             size="icon-sm"
-            aria-label={m.objekt_market_view_list()}
+            aria-label={m.objekt_market_view_list_of({
+              name: sellerName ?? m.objekt_market_seller(),
+            })}
             render={<Link {...getListLinkOption(item.list)} />}
           >
             <CaretRightIcon />

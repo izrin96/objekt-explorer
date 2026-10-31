@@ -1,4 +1,4 @@
-import { UsersThreeIcon, WarningIcon } from "@phosphor-icons/react";
+import { ArrowClockwiseIcon, UsersThreeIcon, WarningIcon } from "@phosphor-icons/react";
 import type { HolderBucketKey, HolderRow, HoldersOutput } from "@repo/api/schemas/collections";
 import { truncateAddress } from "@repo/lib/address";
 import { useInfiniteQuery } from "@tanstack/react-query";
@@ -6,6 +6,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { EmptyState } from "@/components/shared/empty-state";
 import { InfiniteSentinel } from "@/components/shared/infinite-sentinel";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ProfileCell } from "@/features/profile/profile-hover-card";
 import { isSameAddress } from "@/lib/address";
@@ -30,7 +31,7 @@ const BUCKETS: Record<HolderBucketKey, { label: () => string; color: string }> =
 const ONE_EACH_SHARE = 0.99;
 
 const percent = (part: number, whole: number) =>
-  (whole === 0 ? 0 : part / whole).toLocaleString(undefined, {
+  (whole === 0 ? 0 : part / whole).toLocaleString(getLocale(), {
     style: "percent",
     minimumFractionDigits: 1,
     maximumFractionDigits: 1,
@@ -46,7 +47,19 @@ export function HoldersPanel({ slug, physical }: { slug: string; physical: boole
   const rows = holders.data?.pages.flatMap((page) => page.rows) ?? [];
 
   if (holders.isError && summary === undefined) {
-    return <EmptyState icon={WarningIcon} title={m.common_error_loading_data()} bordered={false} />;
+    return (
+      <EmptyState
+        icon={WarningIcon}
+        title={m.common_error_loading_data()}
+        bordered={false}
+        action={
+          <Button variant="outline" size="sm" onClick={() => void holders.refetch()}>
+            <ArrowClockwiseIcon />
+            {m.common_error_retry()}
+          </Button>
+        }
+      />
+    );
   }
 
   if (!holders.isPending && (summary === undefined || summary.holders === 0)) {
@@ -229,7 +242,7 @@ function SpreadBar({
                   BUCKETS[b.key].color,
                 )}
               >
-                {share >= 0.15 && share.toLocaleString(undefined, { style: "percent" })}
+                {share >= 0.15 && share.toLocaleString(getLocale(), { style: "percent" })}
               </span>
             );
           })}
