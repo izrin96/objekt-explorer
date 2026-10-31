@@ -61,3 +61,19 @@ export function threadFooter(
   if (conversation.blockedByMe) return "blocked";
   return "composer";
 }
+
+/** setTimeout's ceiling, about 24.8 days; a 30-day mute is waited out in two steps. */
+const MAX_TIMEOUT = 2 ** 31 - 1;
+
+/**
+ * When an open thread next looks at a chat mute, which ends with no nudge: `refresh` reads
+ * the thread's state, else the wait only steps toward an end past setTimeout's reach. A mute
+ * that ended while the thread sat in the cache is read at once.
+ */
+export function muteWait(until: string | null, now: number) {
+  if (until === null) return null;
+  const left = new Date(until).getTime() - now;
+  if (Number.isNaN(left)) return null;
+  if (left <= 0) return { ms: 0, refresh: true };
+  return { ms: Math.min(left + 1000, MAX_TIMEOUT), refresh: left <= MAX_TIMEOUT };
+}

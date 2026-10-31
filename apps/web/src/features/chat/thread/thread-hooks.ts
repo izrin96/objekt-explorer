@@ -14,11 +14,10 @@ import { orpc } from "@/lib/orpc";
 import { m } from "@/paraglide/messages";
 import { useUserSocketLive } from "@/stores/user-socket";
 
+import { muteWait } from "./thread-view";
+
 /** How often an open thread asks for newer messages while the socket is down. */
 const CATCH_UP_MS = 10_000;
-
-/** setTimeout's ceiling, about 24.8 days; a 30-day mute is waited out in two steps. */
-const MAX_TIMEOUT = 2 ** 31 - 1;
 
 /** A chat mute ends on its own, with no nudge: refresh the thread's state when it does. */
 export function useMuteEnd(id: number, until: string | null) {
@@ -26,16 +25,13 @@ export function useMuteEnd(id: number, until: string | null) {
   const [step, setStep] = useState(0);
 
   useEffect(() => {
-    if (until === null) return;
-    const left = new Date(until).getTime() - Date.now();
-    if (!(left > 0)) return;
-    const timer = setTimeout(
-      () => {
-        if (left > MAX_TIMEOUT) setStep((value) => value + 1);
-        else void fetchNewer(queryClient, id);
-      },
-      Math.min(left + 1000, MAX_TIMEOUT),
-    );
+    const wait = muteWait(until, Date.now());
+    if (wait === null) return;
+    // a refresh leaves `until` as it was, so a mute already over is read once
+    const timer = setTimeout(() => {
+      if (wait.refresh) void fetchNewer(queryClient, id);
+      else setStep((value) => value + 1);
+    }, wait.ms);
     return () => clearTimeout(timer);
   }, [id, until, step, queryClient]);
 }

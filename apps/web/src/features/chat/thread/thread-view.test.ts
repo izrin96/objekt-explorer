@@ -3,6 +3,7 @@ import { describe, expect, test } from "bun:test";
 import type { ChatMessage, PostCardView } from "@repo/api/schemas/chat";
 
 import {
+  muteWait,
   newDividerAt,
   newestIncomingId,
   openedUnread,
@@ -194,5 +195,29 @@ describe("postOfferOf", () => {
       matches: { partnerId: "them", post: "post-slug" },
       startList: "post-slug",
     });
+  });
+});
+
+describe("muteWait", () => {
+  const now = Date.parse("2026-10-31T00:00:00Z");
+  const at = (ms: number) => new Date(now + ms).toISOString();
+  const DAY = 86_400_000;
+
+  test("no mute, or an unreadable end, waits for nothing", () => {
+    expect(muteWait(null, now)).toBeNull();
+    expect(muteWait("not a date", now)).toBeNull();
+  });
+
+  test("a mute that ended while the thread was cached is read at once", () => {
+    expect(muteWait(at(-DAY), now)).toEqual({ ms: 0, refresh: true });
+    expect(muteWait(at(0), now)).toEqual({ ms: 0, refresh: true });
+  });
+
+  test("a running mute is read a second after it ends", () => {
+    expect(muteWait(at(5000), now)).toEqual({ ms: 6000, refresh: true });
+  });
+
+  test("an end past setTimeout's reach is waited out in steps", () => {
+    expect(muteWait(at(30 * DAY), now)).toEqual({ ms: 2 ** 31 - 1, refresh: false });
   });
 });
