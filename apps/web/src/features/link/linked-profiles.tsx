@@ -9,6 +9,7 @@ import { useLinkedPreviews } from "@/features/link/use-linked-previews";
 import { PreviewCardsSkeleton } from "@/features/objekt/objekt-preview-strip";
 import { useCurrentUser, useUserProfiles } from "@/features/user/hooks";
 import { m } from "@/paraglide/messages";
+import { getLocale } from "@/paraglide/runtime";
 
 export function LinkedProfilesPanel() {
   const profiles = useUserProfiles();
@@ -24,7 +25,7 @@ export function LinkedProfilesPanel() {
       description={
         profiles.length === 0
           ? m.link_no_cosmo_linked()
-          : m.link_profiles_linked({ count: String(profiles.length) })
+          : m.link_profiles_linked({ count: profiles.length.toLocaleString(getLocale()) })
       }
       aside={
         <Button size="sm" render={<Link to="/link/connect" />}>

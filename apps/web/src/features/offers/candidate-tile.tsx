@@ -14,8 +14,10 @@ import {
 import { ObjektCard } from "@/features/objekt/objekt-card";
 import { CollectionLabel, collectionName, SerialNo } from "@/features/objekt/objekt-label";
 import { activateOnKey } from "@/lib/a11y";
+import { joinList } from "@/lib/text";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
+import { getLocale } from "@/paraglide/runtime";
 
 import { offerNo } from "./format";
 import { blockedReason } from "./pick";
@@ -60,7 +62,7 @@ export function CandidateTile({
     blocked !== null || (!selected && (full || (item.objektId === null && copies === 0)));
   const detail =
     item.objektId === null ? (
-      m.offer_any_copy_ask_count({ count: copies })
+      m.offer_any_copy_ask_count({ count: copies.toLocaleString(getLocale()) })
     ) : item.serial !== null ? (
       <SerialNo serial={item.serial} estimated={item.serialEstimated} />
     ) : null;
@@ -129,7 +131,9 @@ export function CandidateTile({
           <span className="text-destructive-foreground">{blocked}</span>
         ) : item.inOpenOffer.length > 0 ? (
           <span className="text-warning-foreground">
-            {m.offer_flag_in_open_offer({ offers: item.inOpenOffer.map(offerNo).join(", ") })}
+            {m.offer_flag_in_open_offer({
+              offers: joinList(item.inOpenOffer.map(offerNo), "compact"),
+            })}
           </span>
         ) : null}
         {tag ? (

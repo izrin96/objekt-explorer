@@ -11,6 +11,7 @@ import { useUnblock } from "@/features/moderation/actions";
 import { ProfileLink } from "@/features/profile/profile-hover-card";
 import { displayNickname } from "@/lib/address";
 import { orpc } from "@/lib/orpc";
+import { joinList } from "@/lib/text";
 import { m } from "@/paraglide/messages";
 
 type BlockedRow = Outputs["moderation"]["blocked"][number];
@@ -74,7 +75,7 @@ function BlockedIdentity({ row }: { row: BlockedRow }) {
       </span>
       {also.length > 0 ? (
         <span className="text-muted-foreground text-xs break-words">
-          {m.trade_also({ names: also.join(", ") })}
+          {m.trade_also({ names: joinList(also) })}
         </span>
       ) : null}
     </span>

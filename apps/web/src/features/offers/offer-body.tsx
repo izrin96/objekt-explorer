@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CautionLine } from "@/features/chat/caution-line";
 import { useMinuteClock } from "@/hooks/use-minute-clock";
+import { joinList } from "@/lib/text";
 import { m } from "@/paraglide/messages";
 
 import { useOfferActions } from "./actions";
@@ -45,10 +46,11 @@ export function OfferBody({
   const hydrated = useHydrated();
   const now = useMinuteClock();
   const actions = useOfferActions(offer.conversationId, (keys) =>
-    [...offer.give, ...offer.get]
-      .filter((item) => keys.has(pickKey(item)))
-      .map((item) => itemLabel(item, collections))
-      .join(", "),
+    joinList(
+      [...offer.give, ...offer.get]
+        .filter((item) => keys.has(pickKey(item)))
+        .map((item) => itemLabel(item, collections)),
+    ),
   );
   const busy = actions.accept.isPending || actions.decline.isPending || actions.withdraw.isPending;
   const open = offer.status === "open";

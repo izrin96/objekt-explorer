@@ -11,6 +11,7 @@ import { OnlineAvatar } from "@/features/presence/online-avatar";
 import { usePresenceStatus } from "@/features/presence/use-presence-status";
 import { ProfileLink } from "@/features/profile/profile-hover-card";
 import { displayNickname } from "@/lib/address";
+import { joinList } from "@/lib/text";
 import { m } from "@/paraglide/messages";
 
 function ThreadBackButton() {
@@ -93,7 +94,7 @@ export function ThreadHeader({
           {also.length > 0 ? (
             <span className="text-muted-foreground text-sm font-normal">
               {" · "}
-              {m.trade_also({ names: also.join(", ") })}
+              {m.trade_also({ names: joinList(also) })}
             </span>
           ) : null}
         </h2>

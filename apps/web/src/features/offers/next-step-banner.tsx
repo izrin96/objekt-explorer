@@ -17,6 +17,7 @@ import { useId, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { untilLabel } from "@/features/chat/format";
 import { useMinuteClock } from "@/hooks/use-minute-clock";
+import { sentenceGap } from "@/lib/text";
 import { STEP_TONE, TONE_EDGE, TONE_FILL, TONE_INK, type Tone } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -189,7 +190,7 @@ export function NextStepBanner({
               {rich(m.offer_wrong_copy_giver_hint, { name, asked })}
               {step.copy.acceptBy && hydrated ? (
                 <>
-                  {" "}
+                  {sentenceGap()}
                   {m.offer_wrong_copy_accept_by_giver({
                     name,
                     date: untilLabel(step.copy.acceptBy),

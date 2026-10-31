@@ -21,6 +21,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { SANCTION_LABEL, roleLabel } from "@/features/moderation/labels";
 import { ProfileLink } from "@/features/profile/profile-hover-card";
 import { m } from "@/paraglide/messages";
+import { getLocale } from "@/paraglide/runtime";
 
 import { ActForm } from "./act-form";
 import { History } from "./history";
@@ -219,7 +220,7 @@ function AccountHeader({ data }: { data: Account }) {
             ))}
             {warnings > 0 ? (
               <Badge variant="outline" size="sm" className="text-muted-foreground tabular-nums">
-                {m.mod_warnings_before({ count: warnings })}
+                {m.mod_warnings_before({ count: warnings.toLocaleString(getLocale()) })}
               </Badge>
             ) : null}
           </div>
@@ -251,7 +252,7 @@ function ActionBar({
       {/* -mx-5 -mb-10 undo PageMain's px-5 pb-10, so the bar spans the screen and sits flush */}
       <div className="bg-background sticky bottom-0 -mx-5 -mb-10 flex items-center gap-3 border-t px-5 pt-3 pb-[calc(env(safe-area-inset-bottom,0px)+--spacing(4))] xl:hidden">
         <span className="text-muted-foreground min-w-0 flex-1 text-sm tabular-nums">
-          {m.mod_queue_open({ count: openReports })}
+          {m.mod_queue_open({ count: openReports.toLocaleString(getLocale()) })}
         </span>
         <Button size="lg" onClick={() => setOpen(true)}>
           {m.mod_act_heading()}
@@ -262,7 +263,7 @@ function ActionBar({
           <DrawerHeader className="pe-13">
             <DrawerTitle className="font-display">{m.mod_act_heading()}</DrawerTitle>
             <DrawerDescription>
-              {name} · {m.mod_act_resolves({ count: openReports })}
+              {name} · {m.mod_act_resolves({ count: openReports.toLocaleString(getLocale()) })}
             </DrawerDescription>
           </DrawerHeader>
           <DrawerPanel>{children({ framed: false, onDone: () => setOpen(false) })}</DrawerPanel>

@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { SANCTION_LABEL, auditActionLabel, roleLabel } from "@/features/moderation/labels";
 import { m } from "@/paraglide/messages";
+import { getLocale } from "@/paraglide/runtime";
 
 import { RevokeButton } from "./revoke-dialog";
 import { type Account, personName, sectionTitle } from "./shared";
@@ -73,7 +74,9 @@ export function History({
                   {role ? <span className="text-muted-foreground">→ {roleLabel(role)}</span> : null}
                   {days !== undefined ? (
                     <span className="text-muted-foreground text-xs tabular-nums">
-                      {days === 1 ? m.mod_act_one_day() : m.mod_act_days({ count: days })}
+                      {days === 1
+                        ? m.mod_act_one_day()
+                        : m.mod_act_days({ count: days.toLocaleString(getLocale()) })}
                     </span>
                   ) : null}
                   <span className="text-muted-foreground">

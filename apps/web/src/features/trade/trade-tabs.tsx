@@ -5,6 +5,7 @@ import { useEffect } from "react";
 import { Tabs, TabsList, TabsTab } from "@/components/ui/tabs";
 import { useCurrentUser, useUserLists } from "@/features/user/hooks";
 import { m } from "@/paraglide/messages";
+import { getLocale } from "@/paraglide/runtime";
 
 import { canMatchOf } from "./browse-search";
 import { tabCountsOptions } from "./queries";
@@ -53,7 +54,7 @@ export function TradeTabs() {
       >
         {items.map((item, i) => {
           const count = item === MINE ? (counts?.mine ?? 0) : 0;
-          const shown = count > COUNT_CAP ? `${COUNT_CAP}+` : String(count);
+          const shown = count > COUNT_CAP ? `${COUNT_CAP}+` : count.toLocaleString(getLocale());
           return (
             <TabsTab
               key={item.to}

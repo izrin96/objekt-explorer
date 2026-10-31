@@ -28,6 +28,7 @@ import { rich } from "@/features/offers/wrong-copy";
 import { useElementSize } from "@/hooks/use-element-size";
 import { client, orpc } from "@/lib/orpc";
 import { refusalText } from "@/lib/refusal";
+import { joinList } from "@/lib/text";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
@@ -98,7 +99,7 @@ function RuleRow({ rule }: { rule: Rule }) {
         ? shortNo(rule.season, rule.range.from)
         : `${shortNo(rule.season, rule.range.from)}–${shortNo(rule.season, rule.range.to)}`
       : null,
-    rule.prio.length > 0 ? m.rule_prio_line({ members: rule.prio.join(", ") }) : null,
+    rule.prio.length > 0 ? m.rule_prio_line({ members: joinList(rule.prio, "compact") }) : null,
     rule.skipOwned
       ? rule.owned > 0
         ? // the count is the list owner's holdings, so only the owner reads "you"

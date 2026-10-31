@@ -24,6 +24,7 @@ import {
 import { offerRefusalOf, offerRefusalText, refusedKeys } from "@/features/offers/refusal";
 import { useCurrency } from "@/features/settings/use-currency";
 import { orpc } from "@/lib/orpc";
+import { joinList } from "@/lib/text";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
@@ -144,9 +145,7 @@ export function BuilderForm({
 
   const { give: addedGive, get: addedGet } = addedKeys(added, nearKeys);
   const names = (picks: readonly OfferPick[]) =>
-    new Intl.ListFormat(getLocale(), { type: "conjunction" }).format(
-      picks.map((pick) => itemName(pick, collections)),
-    );
+    joinList(picks.map((pick) => itemName(pick, collections)));
   const addNear = (group: NearGroup) => {
     // a pick already on the side stays the sender's own, and a full side takes no more
     const { picks, added: fresh } = withNear(
@@ -216,10 +215,11 @@ export function BuilderForm({
           return;
         }
         const keys = refusedKeys(refusal);
-        const named = [...giveShown, ...get]
-          .filter((pick) => keys.has(pick.key))
-          .map((pick) => itemLabel({ ...pick, serialEstimated: estimatedOf(pick) }, collections))
-          .join(", ");
+        const named = joinList(
+          [...giveShown, ...get]
+            .filter((pick) => keys.has(pick.key))
+            .map((pick) => itemLabel({ ...pick, serialEstimated: estimatedOf(pick) }, collections)),
+        );
         setRefused(keys);
         const text =
           offerRefusalText(refusal, named || m.offer_refused_some()) ?? m.offer_send_error();

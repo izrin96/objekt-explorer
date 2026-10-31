@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { copyWithToast } from "@/lib/clipboard";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
+import { getLocale } from "@/paraglide/runtime";
 
 import type { Surface } from "./browse-search";
 import type { OpenObjekt } from "./near";
@@ -66,8 +67,8 @@ export function PersonLinkView({
             <span className="text-muted-foreground tabular-nums">
               {" "}
               {counted === 1
-                ? m.trade_person_link_on_lists_one({ count: counted })
-                : m.trade_person_link_on_lists({ count: counted })}
+                ? m.trade_person_link_on_lists_one({ count: counted.toLocaleString(getLocale()) })
+                : m.trade_person_link_on_lists({ count: counted.toLocaleString(getLocale()) })}
             </span>
           ) : null}
         </p>

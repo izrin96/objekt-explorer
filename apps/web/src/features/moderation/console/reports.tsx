@@ -15,6 +15,7 @@ import { groupRows } from "@/features/offers/quantity";
 import { formatCurrency } from "@/features/settings/use-currency";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
+import { getLocale } from "@/paraglide/runtime";
 
 import { type Account, personName, sectionTitle } from "./shared";
 import { When } from "./when";
@@ -172,8 +173,10 @@ function Excerpt({
   return (
     <details open={open} className="group rounded-md border">
       <summary className="text-muted-foreground hover:text-foreground cursor-pointer px-3 py-2 text-xs font-medium">
-        {m.mod_excerpt_summary({ count: entries.length })}
-        {flaggedCount > 0 ? <> · {m.mod_excerpt_flagged_count({ count: flaggedCount })}</> : null}
+        {m.mod_excerpt_summary({ count: entries.length.toLocaleString(getLocale()) })}
+        {flaggedCount > 0 ? (
+          <> · {m.mod_excerpt_flagged_count({ count: flaggedCount.toLocaleString(getLocale()) })}</>
+        ) : null}
       </summary>
       <ol className="flex max-h-128 flex-col overflow-y-auto overscroll-contain border-t px-3 py-3">
         {entries.map((entry, i) => {

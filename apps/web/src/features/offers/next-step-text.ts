@@ -1,6 +1,8 @@
 import { TRADE_EXPIRE_DAYS, type TradeView as Trade } from "@repo/api/schemas/offer";
 
+import { joinSentences } from "@/lib/text";
 import { m } from "@/paraglide/messages";
+import { getLocale } from "@/paraglide/runtime";
 
 import type { Deadline, Leg, NextStep, Note, StepKind } from "./next-step";
 
@@ -97,11 +99,11 @@ function sendBody(step: Extract<NextStep, { kind: "yourTurn" }>, name: string) {
     case "send":
       return m.offer_next_send_body();
     case "firstYou":
-      return `${m.offer_first_you()} ${m.offer_next_suggestion()}`;
+      return joinSentences([m.offer_first_you(), m.offer_next_suggestion()]);
     case "firstThem":
-      return `${m.offer_first_them({ name })} ${m.offer_next_suggestion()}`;
+      return joinSentences([m.offer_first_them({ name }), m.offer_next_suggestion()]);
     case "firstThemSent":
-      return `${m.offer_first_them({ name })} ${m.offer_first_them_sent({ name })}`;
+      return joinSentences([m.offer_first_them({ name }), m.offer_first_them_sent({ name })]);
   }
 }
 
@@ -117,7 +119,7 @@ export function yourTurnText(
       objekts:
         step.legs.length === 1 && only
           ? nameOf(only)
-          : m.offer_next_objekts_multiple({ count: step.legs.length }),
+          : m.offer_next_objekts_multiple({ count: step.legs.length.toLocaleString(getLocale()) }),
       name,
     }),
     body: sendBody(step, name),

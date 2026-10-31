@@ -10,22 +10,24 @@ import { type GetSource, addLabel } from "@/features/offers/get-source";
 import { ObjektTile, type TileNote } from "@/features/offers/objekt-tile";
 import type { Collections, OfferPick, OfferSide } from "@/features/offers/pick";
 import { countOf, totalOf } from "@/features/offers/quantity";
+import { joinList } from "@/lib/text";
 import { TONE_EDGE, TONE_FILL } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
+import { getLocale } from "@/paraglide/runtime";
 
 /** A clean pick's lines under its tile: how many copies an ask covers, and the open offers it is in. */
 function notesOf(side: OfferSide, pick: OfferPick, flags: OfferPick["flags"]) {
   const notes: TileNote[] = [];
   if (pick.objektId === null && flags?.copies != null) {
-    const count = flags.copies;
+    const count = flags.copies.toLocaleString(getLocale());
     notes.push({
       text:
         side === "get" ? m.offer_any_copy_ask_count({ count }) : m.offer_any_copy_count({ count }),
     });
   }
   if (flags && flags.inOpenOffer.length > 0) {
-    const offers = flags.inOpenOffer.map(offerNo).join(", ");
+    const offers = joinList(flags.inOpenOffer.map(offerNo), "compact");
     notes.push({ text: m.offer_flag_in_open_offer({ offers }), warning: true });
   }
   return notes;
@@ -85,7 +87,10 @@ export function SideColumn({
       <h3 id={headingId} className="flex items-baseline gap-2 text-sm font-medium">
         {side === "give" ? m.offer_side_give() : m.offer_side_get()}
         <span className="text-muted-foreground text-xs font-normal tabular-nums">
-          {m.offer_side_count({ count: totalOf(picks), max: OFFER_SIDE_LIMIT })}
+          {m.offer_side_count({
+            count: totalOf(picks).toLocaleString(getLocale()),
+            max: OFFER_SIDE_LIMIT,
+          })}
         </span>
       </h3>
       <Button
@@ -110,7 +115,7 @@ export function SideColumn({
           >
             <p className="min-w-0 flex-1 text-xs text-pretty">
               <span className="text-destructive-foreground font-medium">
-                {m.offer_blocked_banner({ count: blockedPicks.length })}
+                {m.offer_blocked_banner({ count: blockedPicks.length.toLocaleString(getLocale()) })}
               </span>
               <span className="text-muted-foreground block">{blockedReasons.join(" · ")}</span>
             </p>

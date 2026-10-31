@@ -14,6 +14,7 @@ import { NEAR_RING } from "@/features/trade/thumb-grid";
 import { refusalText } from "@/lib/refusal";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
+import { getLocale } from "@/paraglide/runtime";
 
 /** Someone else's list on Trade, for a signed-in viewer: the only page with matches to show. */
 export function canShowMatches(list: PublicList, signedIn: boolean, owner: boolean) {
@@ -161,7 +162,9 @@ export function NearMatches<T extends GridObjekt>({
         ring={{ className: NEAR_RING, description: nearRingText(near.verb, 1) }}
       />
       {rest > 0 ? (
-        <p className="text-muted-foreground text-xs">{m.trade_more_count({ count: rest })}</p>
+        <p className="text-muted-foreground text-xs">
+          {m.trade_more_count({ count: rest.toLocaleString(getLocale()) })}
+        </p>
       ) : null}
     </section>
   );

@@ -9,6 +9,7 @@ import type { OfferRequest } from "@/features/offers/builder/types";
 import { anyKey } from "@/features/offers/pick";
 import { isSameAddress } from "@/lib/address";
 import { m } from "@/paraglide/messages";
+import { getLocale } from "@/paraglide/runtime";
 
 const TREND_MIN_RECORDS = 7;
 
@@ -79,8 +80,12 @@ export const onTradeText = (counts: { have: number; want: number }) =>
     ? null
     : [
         m.objekt_market_on_trade(),
-        counts.have > 0 ? m.objekt_market_on_trade_have({ count: counts.have }) : null,
-        counts.want > 0 ? m.objekt_market_on_trade_want({ count: counts.want }) : null,
+        counts.have > 0
+          ? m.objekt_market_on_trade_have({ count: counts.have.toLocaleString(getLocale()) })
+          : null,
+        counts.want > 0
+          ? m.objekt_market_on_trade_want({ count: counts.want.toLocaleString(getLocale()) })
+          : null,
       ]
         .filter((part) => part !== null)
         .join(" · ");

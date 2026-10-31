@@ -9,6 +9,7 @@ import { useElementSize } from "@/hooks/use-element-size";
 import { TONE_INK } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
+import { getLocale } from "@/paraglide/runtime";
 
 import type { Surface } from "./browse-search";
 import { MatchedListsChip } from "./matched-lists";
@@ -152,8 +153,8 @@ const StripTile = memo(function StripTile({
     ? nearRingText(near.verb, qty)
     : stacked
       ? ringed
-        ? m.trade_stack_copies_ring({ count: qty })
-        : m.trade_stack_copies({ count: qty })
+        ? m.trade_stack_copies_ring({ count: qty.toLocaleString(getLocale()) })
+        : m.trade_stack_copies({ count: qty.toLocaleString(getLocale()) })
       : ringed
         ? m.trade_match_ring()
         : undefined;
@@ -255,7 +256,10 @@ export function EmptySide({ side, surface }: { side: PostSideData; surface: Surf
       ? m.trade_strip_none_listed()
       : side.others === 1
         ? m.trade_strip_side_count_one({ none: wording.none })
-        : m.trade_strip_side_count({ count: side.others, none: wording.none });
+        : m.trade_strip_side_count({
+            count: side.others.toLocaleString(getLocale()),
+            none: wording.none,
+          });
   return (
     <Link
       {...getListLinkOption(side.list)}

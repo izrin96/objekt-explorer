@@ -20,6 +20,7 @@ import { orpc } from "@/lib/orpc";
 import { errorReason } from "@/lib/orpc-error";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
+import { getLocale } from "@/paraglide/runtime";
 
 import { sectionTitle } from "./shared";
 
@@ -47,12 +48,12 @@ function submitLabel(action: ModAction, name: string, days: number) {
     case "chat_mute":
       return days === 1
         ? m.mod_submit_chat_mute_one_day({ name })
-        : m.mod_submit_chat_mute_days({ name, count: days });
+        : m.mod_submit_chat_mute_days({ name, count: days.toLocaleString(getLocale()) });
     case "trade_block":
       return m.mod_submit_trade_block({ name });
     case "ban":
       return days > 0
-        ? m.mod_submit_ban_days({ name, count: days })
+        ? m.mod_submit_ban_days({ name, count: days.toLocaleString(getLocale()) })
         : m.mod_submit_ban_forever({ name });
   }
 }
@@ -63,7 +64,7 @@ const SEVERITY_STEPS = MOD_ACTIONS.length - 1;
 function resolvedText(count: number) {
   if (count === 0) return m.mod_act_success_none();
   if (count === 1) return m.mod_act_success_one();
-  return m.mod_act_success({ count });
+  return m.mod_act_success({ count: count.toLocaleString(getLocale()) });
 }
 
 function errorText(error: unknown) {
@@ -168,7 +169,7 @@ export function ActForm({
             {m.mod_act_heading()}
           </h2>
           <p id={ids.summary} className="text-muted-foreground text-sm text-pretty">
-            {m.mod_act_resolves({ count: openReports })}
+            {m.mod_act_resolves({ count: openReports.toLocaleString(getLocale()) })}
           </p>
         </div>
       ) : null}
@@ -275,7 +276,7 @@ export function ActForm({
                   ? m.mod_act_no_end()
                   : value === 1
                     ? m.mod_act_one_day()
-                    : m.mod_act_days({ count: value })}
+                    : m.mod_act_days({ count: value.toLocaleString(getLocale()) })}
               </ToggleGroupItem>
             ))}
           </ToggleGroup>
@@ -328,7 +329,7 @@ export function ActForm({
         title={
           action === "ban"
             ? banDays > 0
-              ? m.mod_confirm_ban_days({ name, count: banDays })
+              ? m.mod_confirm_ban_days({ name, count: banDays.toLocaleString(getLocale()) })
               : m.mod_confirm_ban_forever({ name })
             : m.mod_confirm_trade_block({ name })
         }

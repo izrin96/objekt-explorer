@@ -236,7 +236,8 @@ export function pickProblem(
   const spare = ctx.live.get(pick.key)?.copies ?? pick.flags?.copies;
   if (side === "get" && pick.objektId === null && spare != null) {
     const left = copiesLeft(ctx.get, pick.collectionSlug, spare);
-    if (countOf(pick) > left) return m.offer_flag_too_many({ count: left });
+    if (countOf(pick) > left)
+      return m.offer_flag_too_many({ count: left.toLocaleString(getLocale()) });
   }
   return blockedReason(pickFlags(pick, ctx.live));
 }

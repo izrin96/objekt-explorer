@@ -19,7 +19,9 @@ import { forgetSession } from "@/features/auth/forget-session";
 import { authClient } from "@/lib/auth-client";
 import { client } from "@/lib/orpc";
 import { deleteRefusalText, refusalText } from "@/lib/refusal";
+import { joinSentences } from "@/lib/text";
 import { m } from "@/paraglide/messages";
+import { getLocale } from "@/paraglide/runtime";
 
 async function requestDeletion(step: Exclude<DeletionStep, "sign-in-again">) {
   let token: string | undefined;
@@ -143,11 +145,13 @@ function DeletionAction({
               </AlertDialogTrigger>
             }
             title={m.auth_account_delete_account()}
-            description={[
-              m.auth_account_delete_confirm_offers({ count: openOffers }),
+            description={joinSentences([
+              m.auth_account_delete_confirm_offers({
+                count: openOffers.toLocaleString(getLocale()),
+              }),
               m.auth_account_delete_confirm_keeps(),
               m.auth_account_delete_confirm_unlinks(),
-            ].join(" ")}
+            ])}
             confirmLabel={
               step === "delete" ? m.auth_account_delete_now() : m.auth_account_delete_send_email()
             }

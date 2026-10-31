@@ -3,6 +3,7 @@ import type { Deal, DealState } from "@repo/api/schemas/chat-deal";
 import { stepChipText } from "@/features/offers/next-step-text";
 import { STEP_TONE, type Tone } from "@/lib/tone";
 import { m } from "@/paraglide/messages";
+import { getLocale } from "@/paraglide/runtime";
 
 /** A failed trade asks for a rating here rather than reporting a loss, so it is warning, not destructive. */
 export function dealTone(state: DealState): Tone {
@@ -27,7 +28,10 @@ export type StripFormat = { left: (iso: string) => string; date: (iso: string) =
 const progress = (deal: Deal) =>
   deal.verified === null || deal.total === null
     ? null
-    : m.offer_trade_step_progress({ verified: deal.verified, total: deal.total });
+    : m.offer_trade_step_progress({
+        verified: deal.verified.toLocaleString(getLocale()),
+        total: deal.total.toLocaleString(getLocale()),
+      });
 
 /** The row's line after the number: `words` truncate, `trailing` stays whole. */
 export function rowText(deal: Deal): { words: string; trailing: string | null } {
@@ -41,7 +45,7 @@ export function rowText(deal: Deal): { words: string; trailing: string | null } 
     case "yourTurn":
       return {
         words: m.chat_deal_row_your_turn(),
-        trailing: m.chat_deal_row_send({ count: deal.count ?? 0 }),
+        trailing: m.chat_deal_row_send({ count: (deal.count ?? 0).toLocaleString(getLocale()) }),
       };
     case "theirTurn":
       return { words: m.offer_status_waiting_them(), trailing: progress(deal) };
@@ -128,7 +132,7 @@ export function stripText(
           deal.state === "yourTurn"
             ? count === 1
               ? m.chat_deal_send_one({ name })
-              : m.chat_deal_send({ count, name })
+              : m.chat_deal_send({ count: count.toLocaleString(getLocale()), name })
             : deal.state === "theirTurn"
               ? m.offer_next_their_turn({ name })
               : null,

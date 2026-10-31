@@ -42,6 +42,7 @@ import { relativeTime } from "@/lib/time";
 import { TONE_INK, TONE_SOLID } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
+import { getLocale } from "@/paraglide/runtime";
 
 import { useSeeRequests } from "./actions";
 import { ConversationMenu } from "./conversation-menu";
@@ -106,7 +107,9 @@ export function ConversationList({
       ? null
       : rows.length === 0
         ? m.chat_search_none()
-        : m.chat_search_results({ count: query.hasNextPage ? `${rows.length}+` : rows.length });
+        : m.chat_search_results({
+            count: `${rows.length.toLocaleString(getLocale())}${query.hasNextPage ? "+" : ""}`,
+          });
 
   return (
     <div

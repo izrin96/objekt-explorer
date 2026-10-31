@@ -5,6 +5,7 @@ import { useId, useState } from "react";
 
 import { Sheet, SheetHeader, SheetPanel, SheetPopup, SheetTitle } from "@/components/ui/sheet";
 import { m } from "@/paraglide/messages";
+import { getLocale } from "@/paraglide/runtime";
 
 import { itemLabel } from "./format";
 import { ItemLabel } from "./item-label";
@@ -35,7 +36,10 @@ export function OfferSideList({
   const rows = groupRows(items, pickKey);
   const shown = rows.length > SIDE_TILES ? rows.slice(0, SIDE_TILES - 1) : rows;
   const more = rows.length - shown.length;
-  const showAll = m.offer_side_all({ count: items.length, side: label });
+  const showAll = m.offer_side_all({
+    count: items.length.toLocaleString(getLocale()),
+    side: label,
+  });
   const sent = (item: OfferItemView) => open && item.sentAt !== null;
   const tileLabel = (item: OfferItemView, count: number) =>
     [

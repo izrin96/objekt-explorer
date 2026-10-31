@@ -7,6 +7,7 @@ import { ruleText } from "@/features/list/rules/words";
 import { ObjektCard } from "@/features/objekt/objekt-card";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
+import { getLocale } from "@/paraglide/runtime";
 
 import type { PostSideData } from "./post-types";
 import { SlugTile } from "./thumb-grid";
@@ -60,7 +61,7 @@ function RuleTile({
             ringed ? "text-success-foreground" : "text-muted-foreground",
           )}
         >
-          {m.trade_list_count_you_have({ count: tile.matched })}
+          {m.trade_list_count_you_have({ count: tile.matched.toLocaleString(getLocale()) })}
         </span>
       ) : null}
     </>
@@ -104,7 +105,9 @@ function RuleTile({
         </ul>
         {(tile.matched ?? 0) > tile.matchedSlugs.length ? (
           <p className="text-muted-foreground mt-2 text-xs">
-            {m.trade_more_count({ count: (tile.matched ?? 0) - tile.matchedSlugs.length })}
+            {m.trade_more_count({
+              count: ((tile.matched ?? 0) - tile.matchedSlugs.length).toLocaleString(getLocale()),
+            })}
           </p>
         ) : null}
       </PopoverPopup>

@@ -13,6 +13,7 @@ import { createContext, useContext } from "react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+import { m } from "@/paraglide/messages";
 
 type DrawerPosition = "right" | "left" | "top" | "bottom";
 
@@ -199,7 +200,7 @@ export function DrawerPopup({
           {children}
           {showCloseButton && (
             <DrawerPrimitive.Close
-              aria-label="Close"
+              aria-label={m.common_modal_close()}
               className="absolute inset-e-2 top-2"
               render={<Button size="icon" variant="ghost" />}
             >

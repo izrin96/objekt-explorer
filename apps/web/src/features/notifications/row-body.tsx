@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 
 import { collectionName } from "@/features/objekt/objekt-label";
 import { progressText } from "@/features/offers/format";
+import { joinList } from "@/lib/text";
 import { formatTimestamp, relativeTime } from "@/lib/time";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -83,7 +84,10 @@ export function ObjektLine({
   if (slugs.length === 0) return null;
   return (
     <span className="text-muted-foreground truncate text-xs">
-      {slugs.map((slug) => collectionName(slug, collections[slug])).join(", ")}
+      {joinList(
+        slugs.map((slug) => collectionName(slug, collections[slug])),
+        "compact",
+      )}
     </span>
   );
 }

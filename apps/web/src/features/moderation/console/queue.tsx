@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { FLAG_LABEL, REASON_LABEL } from "@/features/moderation/labels";
 import { m } from "@/paraglide/messages";
+import { getLocale } from "@/paraglide/runtime";
 
 import { queueOptions } from "./queries";
 import { When } from "./when";
@@ -148,9 +149,12 @@ function QueueRow({ row, current }: { row: Row; current: boolean }) {
           <span className="truncate font-semibold">{name}</span>
           <span className="text-muted-foreground flex flex-wrap gap-x-1.5 text-xs tabular-nums">
             <span>
-              {m.mod_queue_open({ count: row.openReports })}
+              {m.mod_queue_open({ count: row.openReports.toLocaleString(getLocale()) })}
               {row.sharedExcerpts > 0 ? (
-                <> · {m.mod_queue_shared({ count: row.sharedExcerpts })}</>
+                <>
+                  {" "}
+                  · {m.mod_queue_shared({ count: row.sharedExcerpts.toLocaleString(getLocale()) })}
+                </>
               ) : null}
             </span>
             <When iso={row.latestAt} />
@@ -163,12 +167,15 @@ function QueueRow({ row, current }: { row: Row; current: boolean }) {
             ) : null}
             {flag ? (
               <Badge variant="warning" size="sm" className="tabular-nums">
-                {m.mod_flag_count({ label: FLAG_LABEL[flag](), count: row.flags[flag] })}
+                {m.mod_flag_count({
+                  label: FLAG_LABEL[flag](),
+                  count: row.flags[flag].toLocaleString(getLocale()),
+                })}
               </Badge>
             ) : null}
             {more > 0 ? (
               <span className="text-muted-foreground text-xs">
-                {m.mod_queue_more({ count: more })}
+                {m.mod_queue_more({ count: more.toLocaleString(getLocale()) })}
               </span>
             ) : null}
           </span>

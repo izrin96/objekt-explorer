@@ -20,6 +20,7 @@ import { getListLinkOption } from "@/features/list/list-link";
 import { LIST_TYPE_LABEL } from "@/features/list/list-type-badge";
 import { ObjektCard } from "@/features/objekt/objekt-card";
 import { m } from "@/paraglide/messages";
+import { getLocale } from "@/paraglide/runtime";
 
 import { type NearOpen, nearCountText, nearRingText, type OpenObjekt, type SideNear } from "./near";
 import type { PostSideData } from "./post-types";
@@ -185,7 +186,9 @@ export function SideItemsDialog({
                 <TabsList aria-label={m.trade_side_tabs_label()}>
                   <TabsTab value="matched">{matchLabel(data.matched)}</TabsTab>
                   <TabsTab value="all">
-                    {m.trade_side_all({ count: data.items.length + data.more })}
+                    {m.trade_side_all({
+                      count: (data.items.length + data.more).toLocaleString(getLocale()),
+                    })}
                   </TabsTab>
                 </TabsList>
               ) : null}
@@ -208,7 +211,7 @@ export function SideItemsDialog({
                 />
                 {data.more > 0 ? (
                   <p className="text-muted-foreground text-xs">
-                    {m.trade_side_more({ count: data.more })}
+                    {m.trade_side_more({ count: data.more.toLocaleString(getLocale()) })}
                   </p>
                 ) : null}
               </TabsPanel>

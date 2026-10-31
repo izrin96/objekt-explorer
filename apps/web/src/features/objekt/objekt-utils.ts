@@ -1,6 +1,8 @@
 import { getCollectionEdition } from "@repo/lib/collection-edition";
 import type { GridObjekt, ObjektTags, OwnedObjekt, ValidObjekt } from "@repo/lib/types/objekt";
 
+import { joinList } from "@/lib/text";
+
 function getMemberShortKeys(value: string) {
   return Object.keys(shortformMembers).filter((key) => shortformMembers[key] === value);
 }
@@ -86,7 +88,7 @@ export function mapObjektWithTag<T extends ValidObjekt>(objekt: T): T & ObjektTa
 
 /** a unit objekt carries every member it features; a solo one only has `member` */
 export function memberNames(objekt: ValidObjekt): string {
-  return (objekt.members.length > 0 ? objekt.members : [objekt.member]).join(", ");
+  return joinList(objekt.members.length > 0 ? objekt.members : [objekt.member], "compact");
 }
 
 export function isObjektOwned<T extends ValidObjekt>(objekt: T): objekt is T & OwnedObjekt {

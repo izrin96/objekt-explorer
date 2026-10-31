@@ -4,6 +4,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 
 import { Tabs, TabsList, TabsTab } from "@/components/ui/tabs";
 import { m } from "@/paraglide/messages";
+import { getLocale } from "@/paraglide/runtime";
 
 import { requestCountOptions } from "./queries";
 
@@ -55,7 +56,9 @@ export function BoxTabs({ box }: { box: ChatBox }) {
                 <span aria-hidden className="text-muted-foreground text-xs tabular-nums">
                   {requests > 99 ? "99+" : requests}
                 </span>
-                <span className="sr-only">{m.chat_box_requests_count({ count: requests })}</span>
+                <span className="sr-only">
+                  {m.chat_box_requests_count({ count: requests.toLocaleString(getLocale()) })}
+                </span>
               </>
             ) : null}
           </TabsTab>

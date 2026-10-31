@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Radio, RadioGroup } from "@/components/ui/radio-group";
+import { joinSentences, joinList } from "@/lib/text";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
@@ -230,7 +231,7 @@ export function UnpairedNote({
   if (names.length === 0) return null;
   return (
     <p className="text-muted-foreground text-xs text-pretty">
-      {m.trade_composer_unpaired({ name: names.join(", ") })}
+      {m.trade_composer_unpaired({ name: joinList(names) })}
     </p>
   );
 }
@@ -259,7 +260,7 @@ export function Preview({
       </div>
       {/* polite, so the match line reads out as the picks change it */}
       <p aria-live="polite" className="text-sm text-pretty">
-        {matchLines(picks).join(" ")}
+        {joinSentences(matchLines(picks))}
       </p>
     </div>
   );

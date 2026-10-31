@@ -1,6 +1,7 @@
 import { WarningIcon } from "@phosphor-icons/react";
 import type { FlagCategory } from "@repo/api/schemas/chat";
 
+import { sentenceGap } from "@/lib/text";
 import { m } from "@/paraglide/messages";
 
 const CAUTION: Record<FlagCategory, () => string> = {
@@ -18,7 +19,8 @@ export function CautionLine({ categories }: { categories: FlagCategory[] }) {
         className="text-muted-foreground mt-px size-3.5 shrink-0"
       />
       <span>
-        <span className="font-medium">{m.mod_caution_title()}</span>{" "}
+        <span className="font-medium">{m.mod_caution_title()}</span>
+        {sentenceGap()}
         {categories.length > 1
           ? m.mod_caution_both()
           : categories.map((category) => CAUTION[category]()).join(" ")}

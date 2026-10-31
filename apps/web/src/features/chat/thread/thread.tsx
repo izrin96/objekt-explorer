@@ -33,6 +33,7 @@ import { useOfferBuilder } from "@/features/offers/offer-builder";
 import { OfferCard } from "@/features/offers/offer-card";
 import { useMinuteClock } from "@/hooks/use-minute-clock";
 import { displayNickname, isSameAddress } from "@/lib/address";
+import { joinSentences } from "@/lib/text";
 import { m } from "@/paraglide/messages";
 import { dropDraftCard, setDraftReply, useChatDraft } from "@/stores/chat-draft";
 import { clearTyping, useChatTyping } from "@/stores/chat-typing";
@@ -310,7 +311,7 @@ function ThreadView({
               icon={ChatsCircleIcon}
               bordered={false}
               title={m.chat_thread_empty({ name })}
-              hint={[
+              hint={joinSentences([
                 startedFrom
                   ? m.chat_thread_alt_profile({
                       profile: displayNickname(startedFrom.address, startedFrom.nickname),
@@ -318,9 +319,7 @@ function ThreadView({
                     })
                   : null,
                 attachment ? m.chat_thread_empty_card() : m.chat_thread_empty_hint(),
-              ]
-                .filter(Boolean)
-                .join(" ")}
+              ])}
             />
           ) : (
             <ol className="flex flex-col gap-1">

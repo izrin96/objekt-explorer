@@ -11,6 +11,7 @@ import { TagBadges } from "@/features/trade/tag-label";
 import { TONE_INK } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
+import { getLocale } from "@/paraglide/runtime";
 
 type Collections = Readonly<Record<string, ValidObjekt | undefined>>;
 type PostSide = NonNullable<NonNullable<PostCardView["post"]>["has"]>;
@@ -144,7 +145,9 @@ function Strip({
           {more > 0 ? (
             <li className="text-muted-foreground ps-1 text-xs tabular-nums">
               <span aria-hidden>+{more}</span>
-              <span className="sr-only">{m.trade_more_count({ count: more })}</span>
+              <span className="sr-only">
+                {m.trade_more_count({ count: more.toLocaleString(getLocale()) })}
+              </span>
             </li>
           ) : null}
         </ul>

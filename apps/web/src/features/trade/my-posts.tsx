@@ -20,6 +20,7 @@ import { Menu, MenuItem, MenuPopup, MenuTrigger } from "@/components/ui/menu";
 import { toastManager } from "@/components/ui/toast";
 import { relativeTime } from "@/lib/time";
 import { m } from "@/paraglide/messages";
+import { getLocale } from "@/paraglide/runtime";
 import { useSettings } from "@/stores/settings";
 
 import { useBumpPost, useCopyTradeLink, useTakeDownPost } from "./actions";
@@ -111,7 +112,7 @@ export function MyPosts({ userId, onNew, onEdit }: MyPostsProps) {
               ·
             </span>
             <span className="text-muted-foreground tabular-nums">
-              {m.trade_my_posts_listed({ count: summary.listed })}
+              {m.trade_my_posts_listed({ count: summary.listed.toLocaleString(getLocale()) })}
             </span>
             {summary.idle > 0 ? (
               <>
@@ -119,7 +120,7 @@ export function MyPosts({ userId, onNew, onEdit }: MyPostsProps) {
                   ·
                 </span>
                 <Badge variant="outline" size="sm" className="tabular-nums">
-                  {m.trade_my_posts_idle({ count: summary.idle })}
+                  {m.trade_my_posts_idle({ count: summary.idle.toLocaleString(getLocale()) })}
                 </Badge>
               </>
             ) : null}

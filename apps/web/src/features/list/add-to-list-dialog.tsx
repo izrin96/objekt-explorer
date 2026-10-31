@@ -19,6 +19,7 @@ import { Label } from "@/components/ui/label";
 import { toastManager } from "@/components/ui/toast";
 import { useUserLists, useUserProfiles } from "@/features/user/hooks";
 import { m } from "@/paraglide/messages";
+import { getLocale } from "@/paraglide/runtime";
 
 import { useAddToList } from "./actions";
 import { ListPicker } from "./add-to-list-picker";
@@ -244,7 +245,7 @@ function AddToListForm({
       <DialogHeader>
         <DialogTitle className="font-display">{m.list_manage_objekt_add_title()}</DialogTitle>
         <DialogDescription>
-          {m.filter_selected_count({ count: target.objekts.length })}
+          {m.filter_selected_count({ count: target.objekts.length.toLocaleString(getLocale()) })}
         </DialogDescription>
       </DialogHeader>
       <DialogPanel>

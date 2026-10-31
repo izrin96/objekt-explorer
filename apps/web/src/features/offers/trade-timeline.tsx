@@ -8,9 +8,11 @@ import { CopyButton } from "@/components/shared/copy-button";
 import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Popover, PopoverPopup, PopoverTrigger } from "@/components/ui/popover";
 import { useMinuteClock } from "@/hooks/use-minute-clock";
+import { sentenceGap } from "@/lib/text";
 import { TONE_SOLID, type Tone } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
+import { getLocale } from "@/paraglide/runtime";
 
 import { itemLabel, serialText, shortDate, tradeStatusText } from "./format";
 import type { Collections } from "./pick";
@@ -53,7 +55,10 @@ function label(row: TimelineRow, trade: Trade, name: string, collections: Collec
         ? m.offer_clock_they_confirmed({ name, objekt: itemLabel(row.leg, collections) })
         : m.offer_clock_you_confirmed({ objekt: itemLabel(row.leg, collections) });
     case "sentGroup": {
-      const counts = { count: row.legs.length, total: row.total };
+      const counts = {
+        count: row.legs.length.toLocaleString(getLocale()),
+        total: row.total.toLocaleString(getLocale()),
+      };
       return row.fromYou
         ? m.offer_clock_you_sent_many(counts)
         : m.offer_clock_they_sent_many({ name, ...counts });
@@ -218,7 +223,10 @@ function Footer({ trade, name }: { trade: Trade; name: string }) {
         <p className="text-muted-foreground border-t pt-3 text-xs text-pretty">
           {first.you ? m.offer_first_you() : m.offer_first_them({ name })}
           {first.sent ? (
-            <> {first.you ? m.offer_first_you_sent() : m.offer_first_them_sent({ name })}</>
+            <>
+              {sentenceGap()}
+              {first.you ? m.offer_first_you_sent() : m.offer_first_them_sent({ name })}
+            </>
           ) : null}
         </p>
       ) : null}

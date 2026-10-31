@@ -18,6 +18,7 @@ import { SafetyMenu } from "@/features/moderation/safety-menu";
 import { useSharedOfferBuilder } from "@/features/offers/offer-builder";
 import { relativeTime } from "@/lib/time";
 import { m } from "@/paraglide/messages";
+import { getLocale } from "@/paraglide/runtime";
 
 import { useCopyTradeLink, useHideWithUndo } from "./actions";
 import type { Surface } from "./browse-search";
@@ -267,7 +268,9 @@ export const PersonRow = memo(function PersonRow({
   // relative to the render: the server's minute and the browser's can differ
   const when = relativeTime(new Date(newest.time).getTime(), now);
   const lists =
-    posts.length === 1 ? m.trade_person_lists_one() : m.trade_person_lists({ count: posts.length });
+    posts.length === 1
+      ? m.trade_person_lists_one()
+      : m.trade_person_lists({ count: posts.length.toLocaleString(getLocale()) });
 
   const actions = (
     <TradeActions

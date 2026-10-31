@@ -13,6 +13,7 @@ import {
 import { untilLabel } from "@/features/chat/format";
 import { collectionName } from "@/features/objekt/objekt-label";
 import { formatCurrency } from "@/features/settings/use-currency";
+import { joinList } from "@/lib/text";
 import { relativeTime } from "@/lib/time";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
@@ -59,7 +60,7 @@ export function offerSummary(
     const names = items.map((item) => itemName(item, collections));
     const shown = names.length > 2 ? [...names.slice(0, 2), `+${names.length - 2}`] : names;
     if (offer.topup && pays) shown.push(topupAmount(offer.topup));
-    return shown.length > 0 ? shown.join(", ") : m.offer_side_nothing();
+    return shown.length > 0 ? joinList(shown, "compact") : m.offer_side_nothing();
   };
   const youPay = offer.topup?.payer === "you";
   return `${side(offer.give, youPay)} ⇄ ${side(offer.get, !youPay)}`;

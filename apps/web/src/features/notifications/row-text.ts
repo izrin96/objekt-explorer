@@ -1,6 +1,7 @@
 import type { Notification, SanctionPayload } from "@repo/api/schemas/notification";
 
 import { m } from "@/paraglide/messages";
+import { getLocale } from "@/paraglide/runtime";
 
 import type { RowAction } from "./sections";
 
@@ -61,5 +62,7 @@ export function alertText(
 }
 
 export function updatesLabel(count: number) {
-  return count === 1 ? m.notification_updates_one() : m.notification_updates({ count });
+  return count === 1
+    ? m.notification_updates_one()
+    : m.notification_updates({ count: count.toLocaleString(getLocale()) });
 }

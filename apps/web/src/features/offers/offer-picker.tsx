@@ -27,6 +27,7 @@ import { listOption } from "@/features/list/list-option";
 import { useUserLists } from "@/features/user/hooks";
 import { useLoadAllPages } from "@/hooks/use-load-all-pages";
 import { m } from "@/paraglide/messages";
+import { getLocale } from "@/paraglide/runtime";
 
 import {
   CandidateGrid,
@@ -172,7 +173,10 @@ function PickerBody({
       </div>
       <DialogFooter className="flex-row items-center">
         <p className="text-muted-foreground me-auto text-xs tabular-nums" aria-live="polite">
-          {m.offer_picker_count({ count: total, max: OFFER_SIDE_LIMIT })}
+          {m.offer_picker_count({
+            count: total.toLocaleString(getLocale()),
+            max: OFFER_SIDE_LIMIT,
+          })}
           {full ? (
             <span id={fullId} className="block">
               {m.offer_picker_full()}

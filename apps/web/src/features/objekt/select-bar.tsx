@@ -14,6 +14,7 @@ import { Menu, MenuItem, MenuPopup, MenuTrigger } from "@/components/ui/menu";
 import { Popover, PopoverPopup, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
+import { getLocale } from "@/paraglide/runtime";
 import { selectIsSelecting, useSelection } from "@/stores/selection";
 
 import { getCollectionShortNo, isObjektOwned } from "./objekt-utils";
@@ -191,7 +192,9 @@ function SelectedPopover({
           "relative pointer-coarse:after:absolute pointer-coarse:after:size-full pointer-coarse:after:min-h-11",
         )}
       >
-        <span className="truncate">{m.filter_selected_count({ count })}</span>
+        <span className="truncate">
+          {m.filter_selected_count({ count: count.toLocaleString(getLocale()) })}
+        </span>
         <CaretUpIcon className="size-3 shrink-0 opacity-70" aria-hidden />
       </PopoverTrigger>
       <PopoverPopup
@@ -237,7 +240,7 @@ function SelectedPopover({
           ))}
           {rest > 0 && (
             <li className="text-muted-foreground px-2.5 py-2 text-xs">
-              {m.selection_more_count({ count: rest })}
+              {m.selection_more_count({ count: rest.toLocaleString(getLocale()) })}
             </li>
           )}
         </ul>

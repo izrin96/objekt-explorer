@@ -9,6 +9,7 @@ import { Popover, PopoverPopup, PopoverTrigger } from "@/components/ui/popover";
 import { Sheet, SheetPopup, SheetTrigger } from "@/components/ui/sheet";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { m } from "@/paraglide/messages";
+import { getLocale } from "@/paraglide/runtime";
 import { useUserSocketLive } from "@/stores/user-socket";
 
 import { unreadCountOptions } from "./queries";
@@ -34,7 +35,7 @@ export function NotificationBell() {
       size="icon"
       aria-label={
         unread > 0
-          ? m.notification_bell_label_unread({ count: unread })
+          ? m.notification_bell_label_unread({ count: unread.toLocaleString(getLocale()) })
           : m.notification_bell_label()
       }
       className="relative shrink-0"

@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { toneChip } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
+import { getLocale } from "@/paraglide/runtime";
 
 import type { MatchBand } from "./person-row";
 import { WithNumber } from "./with-number";
@@ -31,7 +32,7 @@ export function MatchChip({ band, throughRules = 0 }: { band: MatchBand; through
           <span className="font-normal">
             {" · "}
             {throughRules < band.swap
-              ? m.trade_through_rules({ count: throughRules })
+              ? m.trade_through_rules({ count: throughRules.toLocaleString(getLocale()) })
               : band.swap === 2
                 ? m.trade_through_rules_both()
                 : m.trade_through_rules_all()}

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { SingleSelect } from "@/features/filters/single-select";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
+import { getLocale } from "@/paraglide/runtime";
 
 import {
   type CompareRefusal,
@@ -90,7 +91,7 @@ export function MatchingControls(props: MatchingProps) {
   const { data: count = 0 } = useQuery(
     mutualCountOptions(comparedList(list, tradeLists, scopeOf("mutual", urlType))?.slug),
   );
-  const shown = count > COUNT_CAP ? `${COUNT_CAP}+` : String(count);
+  const shown = count > COUNT_CAP ? `${COUNT_CAP}+` : count.toLocaleString(getLocale());
 
   const setMutual = (on: boolean) => {
     const next: Mode = on ? "mutual" : "any";

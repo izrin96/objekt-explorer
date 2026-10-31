@@ -10,6 +10,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { joinList } from "@/lib/text";
 import { m } from "@/paraglide/messages";
 
 import { useOfferActions } from "./actions";
@@ -29,10 +30,9 @@ export function CancelTrade({
   onOpenChange: (open: boolean) => void;
 }) {
   const actions = useOfferActions(trade.conversationId, (keys) =>
-    trade.legs
-      .filter((leg) => keys.has(pickKey(leg)))
-      .map((leg) => itemLabel(leg, collections))
-      .join(", "),
+    joinList(
+      trade.legs.filter((leg) => keys.has(pickKey(leg))).map((leg) => itemLabel(leg, collections)),
+    ),
   );
 
   return (

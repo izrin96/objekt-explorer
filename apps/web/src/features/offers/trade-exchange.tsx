@@ -22,6 +22,7 @@ import { untilLabel } from "@/features/chat/format";
 import { TONE_INK, TONE_SOLID, type Tone } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
+import { getLocale } from "@/paraglide/runtime";
 
 import { EstimatedSerialNote } from "./estimated-serial-note";
 import {
@@ -377,7 +378,7 @@ export function TradeExchange({
                 {toDecide > 0 ? (
                   <>
                     {" · "}
-                    {m.offer_exchange_to_decide({ count: toDecide })}
+                    {m.offer_exchange_to_decide({ count: toDecide.toLocaleString(getLocale()) })}
                   </>
                 ) : null}
               </>
