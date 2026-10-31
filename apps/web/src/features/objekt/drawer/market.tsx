@@ -9,8 +9,7 @@ import {
   StorefrontIcon,
 } from "@phosphor-icons/react";
 import type { MarketListing, SortBy } from "@repo/api/schemas/market";
-import { floorChange, utcDate } from "@repo/api/schemas/price-history";
-import { truncateAddress } from "@repo/lib/address";
+import { utcDate } from "@repo/api/schemas/price-history";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { lazy, Suspense, useId, useState } from "react";
@@ -23,29 +22,33 @@ import { Menu, MenuItem, MenuPopup, MenuSeparator, MenuTrigger } from "@/compone
 import { Skeleton } from "@/components/ui/skeleton";
 import { useStartConversation, useStartGate } from "@/features/chat/message-button";
 import { getListLinkOption } from "@/features/list/list-link";
-import { formatUtcDay } from "@/features/market/format-utc-day";
 import { PriceDelta } from "@/features/market/price-delta";
-import { toRows } from "@/features/market/price-history-rows";
 import { PriceSparkline } from "@/features/market/price-sparkline";
 import { type OfferRequest, useOfferBuilder } from "@/features/offers/offer-builder";
-import { anyKey } from "@/features/offers/pick";
 import { ProfileCell } from "@/features/profile/profile-hover-card";
 import { formatCurrency, useCurrency } from "@/features/settings/use-currency";
 import { collectionPostCountsOptions } from "@/features/trade/queries";
 import { useUserLists, useUserProfiles } from "@/features/user/hooks";
-import { isSameAddress } from "@/lib/address";
 import { formatTimestamp } from "@/lib/time";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import { ObjektNote } from "../objekt-note";
 import { marketListingsOptions, marketStatsOptions, priceHistoryOptions } from "../queries";
+import {
+  floorTrend,
+  isOwnListing,
+  listingPrice,
+  messageRequest,
+  offerRequest,
+  onTradeText,
+  sellerOf,
+  trackingText,
+} from "./market-listing";
 import { headRowClass, ScrollTable } from "./scroll-table";
 import { nextSort } from "./sort-state";
 import { SortableHeader, type SortState } from "./sortable-header";
 import { type Stat, StatRow } from "./stat-row";
-
-const TREND_MIN_RECORDS = 7;
 
 // recharts is large and only the History toggle needs it
 const PriceHistoryChart = lazy(() =>
@@ -74,16 +77,7 @@ export function MarketPanel({
   const { gate } = useStartGate();
   const { start } = useStartConversation();
   const actions: RowActions = {
-    message: (item) =>
-      start(
-        { kind: "list", slug: item.list.slug },
-        {
-          kind: "objekt",
-          collectionSlug: slug,
-          objektId: item.objektId ?? undefined,
-          listSlug: item.list.slug,
-        },
-      ),
+    message: (item) => start(...messageRequest(item, slug)),
     offer: (request) => {
       if (gate()) builder.open(request);
     },
@@ -97,11 +91,8 @@ export function MarketPanel({
   const liveFloor = stats.data?.floorPrice ?? null;
   const points = history.data?.points ?? [];
   const tracking = history.data?.tracking ?? null;
-  const trending = points.length >= TREND_MIN_RECORDS;
-  const change = trending && points[0] ? floorChange(points[0].floorUsd, liveFloor) : null;
-  const sparkline = trending
-    ? toRows(points, null, utcDate(now), (usd) => usd).map((row) => row.floor)
-    : null;
+  const today = utcDate(now);
+  const { change, sparkline } = floorTrend(points, liveFloor, today);
 
   const price = (usd: number | null | undefined) =>
     stats.data ? (usd == null ? "—" : formatUsd(usd)) : null;
@@ -128,9 +119,6 @@ export function MarketPanel({
   // the rows are public, so the viewer's own listings are told apart here
   const myListSlugs = new Set(useUserLists().map((list) => list.slug));
   const myAddresses = useUserProfiles().map((profile) => profile.address);
-  const isMine = (item: MarketListing) =>
-    myListSlugs.has(item.list.slug) ||
-    myAddresses.some((address) => isSameAddress(address, item.list.profile?.address));
 
   return (
     <div className="flex flex-col gap-4">
@@ -151,10 +139,8 @@ export function MarketPanel({
                   {m.objekt_market_floor_trend()}
                   <PriceSparkline values={sparkline} />
                 </>
-              ) : tracking.snapshots === 1 && tracking.since === utcDate(now) ? (
-                m.objekt_market_tracking_started({ date: formatUtcDay(tracking.since) })
               ) : (
-                m.objekt_market_tracking_since({ date: formatUtcDay(tracking.since) })
+                trackingText(tracking, today)
               )}
             </span>
             {historyOpen ? (
@@ -223,7 +209,7 @@ export function MarketPanel({
                   key={item.id}
                   item={item}
                   slug={slug}
-                  messageable={item.messageable && !isMine(item)}
+                  messageable={item.messageable && !isOwnListing(item, myListSlugs, myAddresses)}
                   currency={currency}
                   formatUsd={formatUsd}
                   onOpenSerial={onOpenSerial}
@@ -259,7 +245,9 @@ type RowActions = {
 function OnTradeLine({ slug }: { slug: string }) {
   const { data, isPending } = useQuery(collectionPostCountsOptions(slug));
   if (isPending) return <Skeleton className="h-9.5 rounded-lg" />;
-  if (!data || (data.have === 0 && data.want === 0)) return null;
+  if (!data) return null;
+  const text = onTradeText(data);
+  if (text === null) return null;
 
   return (
     <Link
@@ -267,46 +255,11 @@ function OnTradeLine({ slug }: { slug: string }) {
       search={{ slug }}
       className="hover:bg-secondary/60 focus-visible:ring-ring flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-sm outline-none focus-visible:ring-2"
     >
-      <span className="tabular-nums">
-        {[
-          m.objekt_market_on_trade(),
-          data.have > 0 ? m.objekt_market_on_trade_have({ count: data.have }) : null,
-          data.want > 0 ? m.objekt_market_on_trade_want({ count: data.want }) : null,
-        ]
-          .filter((part) => part !== null)
-          .join(" · ")}
-      </span>
+      <span className="tabular-nums">{text}</span>
       <CaretRightIcon className="text-muted-foreground size-4 shrink-0" aria-hidden />
     </Link>
   );
 }
-
-/** Cosmo gives an unnamed profile its own address as the nickname. */
-function sellerOf(item: MarketListing) {
-  const address = item.list.profile?.address ?? null;
-  const rawNickname = item.list.profile?.nickname ?? null;
-  const nickname = isSameAddress(rawNickname, address) ? null : rawNickname;
-  const name = nickname ?? (address ? truncateAddress(address.toLowerCase()) : undefined);
-  return { address, nickname, name };
-}
-
-const offerRequest = (item: MarketListing, slug: string): OfferRequest => ({
-  to: { target: { kind: "list", slug: item.list.slug } },
-  name: sellerOf(item).name ?? m.objekt_market_seller(),
-  startList: item.list.slug,
-  prefill: {
-    get: [
-      {
-        key: item.objektId ?? anyKey(slug),
-        collectionSlug: slug,
-        objektId: item.objektId,
-        serial: item.serial,
-        listSlug: item.list.slug,
-        flags: null,
-      },
-    ],
-  },
-});
 
 /** The app's one timestamp; a phone-width drawer keeps the day and leaves the time to `title`. */
 function ListingTime({ date }: { date: Date }) {
@@ -341,8 +294,7 @@ function MarketRow({
   actions: RowActions;
 }) {
   const { address, nickname, name: sellerName } = sellerOf(item);
-  const { price, currency: listed, usdPrice } = item;
-  const priced = !item.isQyop && price !== null && listed !== null;
+  const { label, priced, converted } = listingPrice(item, currency, formatCurrency, formatUsd);
 
   return (
     <tr className="border-t">
@@ -351,11 +303,11 @@ function MarketRow({
           {item.note && <ObjektNote note={item.note} />}
           {/* a listing is set in the seller's currency, not the viewer's */}
           <span className={cn("tabular-nums", priced ? "font-medium" : "text-muted-foreground")}>
-            {item.isQyop ? m.objekt_qyop() : priced ? formatCurrency(price, listed) : "—"}
+            {label}
           </span>
         </div>
-        {priced && listed !== currency && usdPrice !== null && (
-          <div className="text-muted-foreground text-xs tabular-nums">≈{formatUsd(usdPrice)}</div>
+        {converted !== null && (
+          <div className="text-muted-foreground text-xs tabular-nums">≈{converted}</div>
         )}
       </td>
       <th scope="row" className="px-3 py-1.5 text-left font-normal">
@@ -386,7 +338,7 @@ function MarketRow({
               nickname === null && "font-mono text-xs",
             )}
           >
-            {nickname ?? truncateAddress(address.toLowerCase())}
+            {sellerName}
           </ProfileCell>
         )}
       </td>
