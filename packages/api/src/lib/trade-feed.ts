@@ -232,6 +232,18 @@ export function previewSide(
   return { items, more: Math.max(0, stacks.length - limit), copyCount: entries.length };
 }
 
+/**
+ * The side's first collection in the list's own order (newest entry first), whatever the viewer
+ * rings or the filters narrow, so a shared post previews the same for everyone.
+ */
+export function firstSlug(entries: readonly FeedEntry[]): string | undefined {
+  let first: FeedEntry | undefined;
+  for (const entry of entries) {
+    if (entry.ruleId === undefined && (!first || entry.id > first.id)) first = entry;
+  }
+  return first?.slug;
+}
+
 /** A collection slug to the viewer's lists that have it on. */
 type SlugIndex = ReadonlyMap<string, readonly number[]>;
 
@@ -699,6 +711,8 @@ export function assemblePost<L extends TradeList>(
     return {
       role,
       list,
+      // only an offering side's first is read, as a shared post's image
+      first: role === "want" ? undefined : firstSlug(entries),
       items,
       more,
       copyCount,

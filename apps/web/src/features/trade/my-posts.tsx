@@ -24,16 +24,17 @@ import { getLocale } from "@/paraglide/runtime";
 import { useSettings } from "@/stores/settings";
 
 import { useBumpPost, useCopyTradeLink, useTakeDownPost } from "./actions";
+import { CopyLinkItem } from "./copy-link-item";
 import { summarizePosts } from "./my-posts-summary";
 import { KIND_LABEL } from "./post-kind-text";
 import { postTime } from "./post-time";
 import { myPostsOptions } from "./queries";
 import { TagBadges } from "./tag-label";
 
-type MyPostsProps = { userId: string; onNew: () => void; onEdit: (slug: string) => void };
+type MyPostsProps = { onNew: () => void; onEdit: (slug: string) => void };
 
 /** The viewer's posts on Browse, one row each, with New post in the header. */
-export function MyPosts({ userId, onNew, onEdit }: MyPostsProps) {
+export function MyPosts({ onNew, onEdit }: MyPostsProps) {
   const query = useQuery(myPostsOptions());
   const bump = useBumpPost();
   const copyLink = useCopyTradeLink();
@@ -86,12 +87,11 @@ export function MyPosts({ userId, onNew, onEdit }: MyPostsProps) {
   // once here instead of on each row
   const lastBumpAt = posts[0]?.lastBumpAt ?? null;
   const nextBumpAt = posts[0]?.nextBumpAt ?? null;
-  // the feed leaves the row out under a trade block or with every post idle, so a link would show nothing
-  const copyReason = posts[0]?.tradeBlocked
-    ? m.trade_post_copy_link_blocked()
-    : summary.listed === 0
-      ? m.trade_post_copy_link_idle()
-      : null;
+  const handle = posts[0]?.handle ?? null;
+  const blocked = posts[0]?.tradeBlocked ?? false;
+  // the feed leaves the row out under a trade block or with every post idle, so a link would show
+  // nothing; with no linked profile there is no page at all
+  const copyReason = linkReason({ handle, blocked, listed: summary.listed > 0 });
 
   // the server cannot read the saved choice, so the default holds until hydration
   const open = hydrated ? (saved ?? summary.shownByDefault) : summary.shownByDefault;
@@ -156,7 +156,7 @@ export function MyPosts({ userId, onNew, onEdit }: MyPostsProps) {
               aria-describedby={copyReason ? reasonId : undefined}
               className="aria-disabled:hover:bg-popover dark:aria-disabled:hover:bg-input/32 aria-disabled:cursor-default aria-disabled:opacity-64"
               onClick={() => {
-                if (!copyReason) return void copyLink({ person: userId });
+                if (!copyReason && handle) return void copyLink({ handle });
                 if (reasonToast.current) toastManager.close(reasonToast.current);
                 reasonToast.current = toastManager.add({ type: "info", title: copyReason });
               }}
@@ -195,7 +195,16 @@ export function MyPosts({ userId, onNew, onEdit }: MyPostsProps) {
         <CollapsiblePanel>
           <ul className="flex flex-col divide-y border-t">
             {posts.map((post) => (
-              <MyPostRow key={post.id} post={post} now={now} onEdit={onEdit} />
+              <MyPostRow
+                key={post.id}
+                post={post}
+                now={now}
+                onEdit={onEdit}
+                copyReason={linkReason({ handle, blocked, listed: post.listed })}
+                onCopy={() => {
+                  if (handle) void copyLink({ handle, slug: post.slug });
+                }}
+              />
             ))}
           </ul>
         </CollapsiblePanel>
@@ -205,6 +214,22 @@ export function MyPosts({ userId, onNew, onEdit }: MyPostsProps) {
 }
 
 type MyPost = Outputs["trade"]["myPosts"][number];
+
+/** Why Copy link can't be used, or null when it can. */
+function linkReason({
+  handle,
+  blocked,
+  listed,
+}: {
+  handle: string | null;
+  blocked: boolean;
+  listed: boolean;
+}) {
+  if (!handle) return m.trade_post_copy_link_no_profile();
+  if (blocked) return m.trade_post_copy_link_blocked();
+  if (!listed) return m.trade_post_copy_link_idle();
+  return null;
+}
 
 const ROLE_LABEL = {
   have: m.trade_role_have,
@@ -216,10 +241,14 @@ function MyPostRow({
   post,
   now,
   onEdit,
+  copyReason,
+  onCopy,
 }: {
   post: MyPost;
   now: number;
   onEdit: (slug: string) => void;
+  copyReason: string | null;
+  onCopy: () => void;
 }) {
   const takeDown = useTakeDownPost();
   const { changed, time } = postTime(post);
@@ -285,6 +314,7 @@ function MyPostRow({
             <PencilSimpleIcon />
             {m.trade_composer_edit_title()}
           </MenuItem>
+          <CopyLinkItem reason={copyReason} onCopy={onCopy} />
           <MenuItem onClick={() => takeDown.takeDown(post.slug)}>
             <ArrowFatLineDownIcon />
             {m.trade_take_off()}

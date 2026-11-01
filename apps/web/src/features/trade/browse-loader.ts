@@ -2,10 +2,11 @@ import type { QueryClient } from "@tanstack/react-query";
 
 import { currentUserOptions } from "@/features/user/queries";
 import { orpc } from "@/lib/orpc";
+import { isClientError } from "@/lib/orpc-error";
 
-import { type FeedSearch, type Surface, toBrowseInput } from "./browse-search";
+import { type FeedSearch, oldPersonLink, type Surface, toBrowseInput } from "./browse-search";
 import { tradeListsOf } from "./compare-rule";
-import { peopleOptions, myPostsOptions } from "./queries";
+import { peopleOptions, myPostsOptions, tradePersonOptions } from "./queries";
 
 /**
  * The loader of both Trade surfaces, so the loader and `BrowseView` build the same query key.
@@ -45,4 +46,61 @@ export async function loadBrowse({
       ? queryClient.query({ ...myPostsOptions(), staleTime: "static" }).catch(() => undefined)
       : undefined;
   await Promise.all([feed, mine]);
+}
+
+/** The one-person read a person or post page draws; the visitor's artist selection is ignored. */
+export const personSearch = (userId: string): FeedSearch => ({ person: userId });
+
+/**
+ * A person page's row, read as the page's view reads it: the person's row, `null` when the feed
+ * doesn't show them to this viewer, or `undefined` when the read failed, which the view retries.
+ */
+export async function loadPersonRow({
+  queryClient,
+  userId,
+}: {
+  queryClient: QueryClient;
+  userId: string;
+}) {
+  const [artists, selected, user] = await Promise.all([
+    queryClient.query({ ...orpc.config.getArtists.queryOptions(), staleTime: "static" }),
+    queryClient.query({ ...orpc.config.getSelectedArtists.queryOptions(), staleTime: "static" }),
+    queryClient.query({ ...currentUserOptions, staleTime: "static" }),
+  ]);
+  const options = peopleOptions(
+    toBrowseInput(
+      personSearch(userId),
+      artists,
+      selected,
+      "browse",
+      tradeListsOf(user?.lists ?? []),
+    ),
+  );
+  const feed = await queryClient
+    .infiniteQuery({ ...options, staleTime: "static" })
+    .catch(() => undefined);
+  if (!feed) return undefined;
+  const page = feed.pages[0];
+  const row = page?.people.find((person) => person.userId === userId) ?? null;
+  return { row, collections: page?.collections ?? {} };
+}
+
+/**
+ * Where an older `person=<id>` (or For you's `partner=<id>`) link goes: that person's handle, or,
+ * for an unknown id, an account with no page or any refused lookup (a bad id, the rate limit),
+ * the search without the parameter. Null when there is no such parameter.
+ */
+export async function oldPersonTarget<T extends { person?: string; partner?: string }>(
+  queryClient: QueryClient,
+  search: T,
+) {
+  const link = oldPersonLink(search);
+  if (!link) return null;
+  const person = await queryClient
+    .query(tradePersonOptions({ userId: link.id }))
+    .catch((error: unknown) => {
+      if (isClientError(error)) return null;
+      throw error;
+    });
+  return person?.handle ? { handle: person.handle } : { rest: link.rest };
 }

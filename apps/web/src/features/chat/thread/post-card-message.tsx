@@ -85,9 +85,13 @@ export function PostCardMessage({
 
       {post ? (
         <Link
-          // the sender opens the owner on Trade; the owner, who receives it, opens their own list
-          {...(mine
-            ? { to: "/trade", search: { person: post.owner.userId } }
+          // the sender opens the post's page; the owner, who receives it, opens their own list, as
+          // does the sender of a post whose owner has no page (no linked Cosmo profile)
+          {...(mine && post.owner.handle
+            ? {
+                to: "/trade/@{$handle}/$slug",
+                params: { handle: post.owner.handle, slug: post.list.slug },
+              }
             : getListLinkOption(post.list))}
           className="self-start text-xs font-medium underline underline-offset-2 hover:no-underline"
         >

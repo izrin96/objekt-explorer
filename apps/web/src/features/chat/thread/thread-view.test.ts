@@ -139,7 +139,7 @@ describe("postOfferOf", () => {
       post: {
         tag: "wtt",
         tags: ["wtt"],
-        owner: { userId: owner, name: owner },
+        owner: { userId: owner, name: owner, handle: owner },
         list: { id: 1, slug: "post-slug", name: "Post", profileSlug: null, profile: null },
         has: has ? side : null,
         wants: null,

@@ -8,6 +8,7 @@ import {
   forYouNormalise,
   forYouSearchSchema,
   matchModeOf,
+  oldPersonLink,
   postTypeOf,
   toBrowseInput,
 } from "./browse-search";
@@ -71,12 +72,12 @@ describe("toBrowseInput", () => {
     );
   });
 
-  test("a person link ignores the artist selection", () => {
+  test("a person page's read ignores the artist selection", () => {
     const search = parse({ person: "user-1" });
     expect(toBrowseInput(search, artists, ["tripleS"], "browse", lists).artist).toEqual([]);
   });
 
-  test("a person link keeps an artist it names, even outside the selection", () => {
+  test("a person read keeps an artist it names, even outside the selection", () => {
     const search = parse({ person: "user-1", artist: "idntt" });
     expect(toBrowseInput(search, artists, ["tripleS"], "forYou", lists).artist).toEqual(["idntt"]);
   });
@@ -170,10 +171,17 @@ describe("browseSearchSchema", () => {
 describe("browseRedirect", () => {
   const go = (input: Record<string, unknown>) => browseRedirect(parse(input));
 
-  test("Old Browse link: match=mutual goes to For you with list, person and filters", () => {
-    expect(go({ match: "mutual", list: "spares", person: "u1", member: "SeoYeon" })).toEqual({
+  test("Old Browse link: match=mutual goes to For you with list and filters", () => {
+    expect(go({ match: "mutual", list: "spares", member: "SeoYeon" })).toEqual({
       to: "/trade/for-you",
-      search: { match: "mutual", list: "spares", person: "u1", member: ["SeoYeon"] },
+      search: { match: "mutual", list: "spares", member: ["SeoYeon"] },
+    });
+  });
+
+  test("never carries person, which redirects to the person page first", () => {
+    expect(go({ match: "mutual", person: "u1" })).toEqual({
+      to: "/trade/for-you",
+      search: { match: "mutual" },
     });
   });
 
@@ -210,7 +218,7 @@ describe("browseRedirect", () => {
 
   test("a clean Browse link, or one with an unparsable match, stays", () => {
     expect(go({})).toBeNull();
-    expect(go({ type: "wtb", person: "u1" })).toBeNull();
+    expect(go({ type: "wtb" })).toBeNull();
     expect(go({ match: "they_have" })).toBeNull();
   });
 });
@@ -226,28 +234,20 @@ describe("forYouNormalise", () => {
     expect(norm({ match: "they_have" })).toMatchObject({ match: "any" });
   });
 
-  test("Partner link: partner becomes person", () => {
-    expect(norm({ match: "mutual", partner: "u1" })).toMatchObject({
-      match: "mutual",
-      person: "u1",
-    });
-    expect(norm({ match: "mutual", partner: "u1" })).not.toHaveProperty("partner");
-  });
-
-  test("person wins over partner", () => {
-    expect(norm({ person: "u2", partner: "u1" })).toMatchObject({ person: "u2" });
+  test("never carries person or partner, which redirect to the person page first", () => {
+    expect(norm({ match: "they_have", partner: "u1", person: "u2" })).toEqual({ match: "any" });
   });
 
   test("a current link, an empty one and an unparsable match need nothing", () => {
     expect(norm({})).toBeNull();
     expect(norm({ match: "any", list: "spares" })).toBeNull();
-    expect(norm({ match: "mutual", person: "u1" })).toBeNull();
+    expect(norm({ match: "mutual" })).toBeNull();
     expect(norm({ match: "bogus" })).toBeNull();
   });
 });
 
 describe("forYouFallback", () => {
-  test("keeps the filters and the person sheet, and drops matching state", () => {
+  test("keeps the filters, and drops matching state and any person", () => {
     const search = forYouSearchSchema.parse({
       match: "mutual",
       list: "spares",
@@ -255,8 +255,22 @@ describe("forYouFallback", () => {
       member: "SeoYeon",
       type: "wts",
     });
-    expect(forYouFallback(search)).toEqual({ member: ["SeoYeon"], type: "wts", person: "u1" });
-    expect(forYouFallback(forYouSearchSchema.parse({ partner: "u2" }))).toEqual({ person: "u2" });
+    expect(forYouFallback(search)).toEqual({ member: ["SeoYeon"], type: "wts" });
+    expect(forYouFallback(forYouSearchSchema.parse({ partner: "u2" }))).toEqual({});
+  });
+});
+
+describe("oldPersonLink", () => {
+  test("person, else partner, and the search without either", () => {
+    const browse = parse({ person: "u1", type: "wtt" });
+    expect(oldPersonLink(browse)).toEqual({ id: "u1", rest: { type: "wtt" } });
+    const forYou = forYouSearchSchema.parse({ match: "mutual", partner: "u2", person: "u3" });
+    expect(oldPersonLink(forYou)).toEqual({ id: "u3", rest: { match: "mutual" } });
+    expect(oldPersonLink(forYouSearchSchema.parse({ partner: "u2" }))?.id).toBe("u2");
+  });
+
+  test("no person, nothing to follow", () => {
+    expect(oldPersonLink(parse({ type: "wts" }))).toBeNull();
   });
 });
 

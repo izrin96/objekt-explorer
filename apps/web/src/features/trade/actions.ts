@@ -18,12 +18,15 @@ import { m } from "@/paraglide/messages";
 import { postInput } from "./composer-choice";
 import { usePlanLists } from "./post-plan";
 
-/** Copies the Browse address led by one person's row. */
+/** Copies a person page, `/trade/@<handle>`, or with `slug` one of their post pages. */
 export function useCopyTradeLink() {
   const router = useRouter();
 
-  return async (search: { person: string }) => {
-    const { href } = router.buildLocation({ to: "/trade", search });
+  return async ({ handle, slug }: { handle: string; slug?: string }) => {
+    const { href } =
+      slug === undefined
+        ? router.buildLocation({ to: "/trade/@{$handle}", params: { handle } })
+        : router.buildLocation({ to: "/trade/@{$handle}/$slug", params: { handle, slug } });
     const url = new URL(href, getBaseURL()).toString();
     await copyWithToast(url, { title: m.list_share_copied(), description: url });
   };

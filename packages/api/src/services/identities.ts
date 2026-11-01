@@ -3,7 +3,8 @@ import { user, userAddress } from "@repo/db/schema";
 import { asc, inArray, sql } from "drizzle-orm";
 
 import { chatIdentity } from "../lib/chat-rules";
-import type { LinkedProfile, PartnerIdentity } from "../lib/trade-rank";
+import type { PartnerIdentity } from "../lib/trade-rank";
+import type { LinkedProfile } from "../schemas/trade-person";
 
 /**
  * How each account is named to the people it chats and trades with. Shared by the API and

@@ -10,6 +10,7 @@ import {
   type OneWayRank,
   type TradeFilter,
 } from "../schemas/trade";
+import { type AddressRef, defaultProfile, type LinkedProfile } from "../schemas/trade-person";
 import { DAY_MS } from "./time";
 import { matchCounts, type PostOf } from "./trade-person";
 
@@ -389,9 +390,6 @@ export function oneWayPeople<T extends Ranked>(partners: T[]): T[] {
     .toSorted((a, b) => compareRanks(oneWayRankOf(a), oneWayRankOf(b)));
 }
 
-export type AddressRef = { address: string; nickname: string | null };
-/** A linked profile as the naming rules read it. */
-export type LinkedProfile = AddressRef & { isDefault: boolean };
 export type PartnerIdentity = {
   /** what to call the partner: a Cosmo nickname, a shortened address or the account name */
   name: string;
@@ -459,11 +457,6 @@ export function toPartnerIdentity(
     nickname,
     also: [...others].map(refOf),
   };
-}
-
-/** The profile the account made default while it is still linked, else its first linked one. */
-export function defaultProfile<T extends LinkedProfile>(addresses: T[]): T | undefined {
-  return addresses.find((info) => info.isDefault) ?? addresses[0];
 }
 
 /** A profile's name: its Cosmo nickname whatever Hide Cosmo ID says, else its shortened address. */

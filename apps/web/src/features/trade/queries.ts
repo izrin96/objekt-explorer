@@ -33,6 +33,14 @@ export const peopleOptions = (input: BrowseInput) =>
     retry: retryUnlessRefused,
   });
 
+/**
+ * Who a person page's handle, or an older link's user id, names, and their canonical handle.
+ * A route reads it with this stale time, not `"static"`: an open tab must see a handle change,
+ * or its redirect would aim at the old one.
+ */
+export const tradePersonOptions = (input: { handle: string } | { userId: string }) =>
+  orpc.trade.person.queryOptions({ input, staleTime: 60_000, retry: retryUnlessRefused });
+
 export const myPostsOptions = () => orpc.trade.myPosts.queryOptions({ staleTime: 0 });
 
 export const collectionPostCountsOptions = (slug: string) =>

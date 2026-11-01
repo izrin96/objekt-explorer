@@ -30,13 +30,14 @@ type Loaded = {
   person: {
     userId: string;
     identity: ReturnType<typeof toPartnerIdentity>;
+    handle: string | null;
     user: PersonPosts[number]["user"];
     reputation: PersonPosts[number]["reputation"];
     messageable: boolean;
     counts: PersonMatch["counts"] | undefined;
     posts: Omit<
       PersonPosts[number],
-      "userId" | "user" | "reputation" | "identity" | "person" | "messageable"
+      "userId" | "user" | "reputation" | "identity" | "handle" | "person" | "messageable"
     >[];
   };
   newest: string;
@@ -61,12 +62,13 @@ async function loadPeople(ctx: LoadContext, query: FeedQuery, ids: string[]): Pr
         person: {
           userId: id,
           identity: identities.get(id) ?? first.identity,
+          handle: first.handle,
           user: first.user,
           reputation: first.reputation,
           messageable: first.messageable,
           counts: first.person?.counts,
           posts: group.map(
-            ({ userId, user, reputation, identity, person, messageable, ...post }) => post,
+            ({ userId, user, reputation, identity, handle, person, messageable, ...post }) => post,
           ),
         },
       },
@@ -195,6 +197,7 @@ async function collectionsOf(people: Pick<Loaded["person"], "posts">[]) {
       person.posts.flatMap((post) =>
         post.sides
           .flatMap((s) => [
+            ...(s.first ? [s.first] : []),
             ...s.items.map((i) => i.slug),
             ...s.rules.flatMap((r) => r.matchedSlugs),
           ])

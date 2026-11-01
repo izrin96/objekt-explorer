@@ -34,6 +34,7 @@ import type { PostCardView } from "../../schemas/chat";
 import type { CollectionFilters } from "../../schemas/common/filters";
 import type { ListType } from "../../schemas/list";
 import { type BrowseFilters, type SideItemsInput } from "../../schemas/trade";
+import { tradeHandle } from "../../schemas/trade-person";
 import { postKindOf } from "../../schemas/trade-post";
 import { getCollectionFilters } from "../activity-feed";
 import { fetchCollectionsBySlug } from "../list";
@@ -211,11 +212,13 @@ export async function loadPosts(ctx: LoadContext, rows: FeedRow[], need: number)
           members.map((list) => ({ profileAddress: list.profileAddress, matches: 0 })),
           addressRows.filter((a) => a.userId === account.id),
         ),
+        handle: tradeHandle(addressRows.filter((a) => a.userId === account.id)),
         bumpedAt: iso(post.bumpedAt),
         updatedAt: iso(post.updatedAt)!,
         sides: assembled.sides.map((side) => ({
           role: side.role,
           list: toListLink(side.list, nicknameOf),
+          first: side.first,
           items: side.items,
           more: side.more,
           copyCount: side.copyCount,
@@ -291,12 +294,14 @@ async function fetchOwnTradeLists(userId: string) {
 
 export async function fetchMyPosts(userId: string) {
   const now = new Date();
-  const [own, lastBump, tradeBlocked] = await Promise.all([
+  const [own, lastBump, tradeBlocked, addressRows] = await Promise.all([
     fetchOwnTradeLists(userId),
     lastBumpOf(userId),
     isTradeBlocked(userId),
+    fetchAddresses([userId]),
   ]);
   const next = nextBumpAt(lastBump, now);
+  const handle = tradeHandle(addressRows);
   // every post carries the person's last and next bump, and whether a trade block hides them
   return pairPosts(own)
     .toSorted(comparePosts)
@@ -324,6 +329,7 @@ export async function fetchMyPosts(userId: string) {
       lastBumpAt: iso(lastBump),
       nextBumpAt: next,
       tradeBlocked,
+      handle,
     }));
 }
 
@@ -433,6 +439,7 @@ export async function fetchPostCards(
       tags: post.tags,
       owner: {
         userId: account.id,
+        handle: tradeHandle(addressRows.filter((row) => row.userId === account.id)),
         name: toPartnerIdentity(
           account.name,
           [post.have, post.want, post.sale].flatMap((list) =>

@@ -1,6 +1,6 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 
-import { loadBrowse } from "@/features/trade/browse-loader";
+import { loadBrowse, oldPersonTarget } from "@/features/trade/browse-loader";
 import {
   canMatchOf,
   forYouFallback,
@@ -14,10 +14,17 @@ import { m } from "@/paraglide/messages";
 
 export const Route = createFileRoute("/(container)/trade/for-you")({
   validateSearch: forYouSearchSchema,
-  // all of it, `person` too: the loader fills the key BrowseView reads
+  // all of it: the loader fills the key BrowseView reads
   loaderDeps: ({ search }) => search,
   beforeLoad: async ({ search, context, location }) => {
-    // an older link's one-way view or `partner`, mapped in place before anything else
+    // an older person link goes to the person page, which a signed-out visitor can read too, so
+    // before the sign-in redirect
+    const old = await oldPersonTarget(context.queryClient, search);
+    if (old?.handle) {
+      throw redirect({ to: "/trade/@{$handle}", params: { handle: old.handle }, replace: true });
+    }
+    if (old) throw redirect({ to: "/trade/for-you", search: old.rest, replace: true });
+    // an older link's one-way view, mapped in place
     const normalised = forYouNormalise(search);
     if (normalised) throw redirect({ to: "/trade/for-you", search: normalised, replace: true });
     await requireSignedIn({ context, location });

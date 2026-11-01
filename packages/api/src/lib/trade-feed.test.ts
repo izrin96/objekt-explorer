@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 
 import { PREVIEW_LIMIT, SOLO_PREVIEW_LIMIT } from "../schemas/trade";
 import {
+  firstSlug,
   assemblePost,
   browseMode,
   buildPeopleOrder,
@@ -184,6 +185,14 @@ describe("ownership", () => {
     const [post] = pairPosts([list({ id: 1, listType: "have" })]);
     const sold = tradeableEntries([entry(1, "s2", "t2")], "u1", untradeable);
     expect(assemblePost(post!, () => sold, null, NO_FILTER)).toBeNull();
+  });
+});
+
+describe("firstSlug", () => {
+  test("the newest entry's collection, whatever the rings, skipping rule entries", () => {
+    const entries = [entry(3, "older"), { ...entry(9, "ruled"), ruleId: 1 }, entry(7, "newest")];
+    expect(firstSlug(entries)).toBe("newest");
+    expect(firstSlug([])).toBeUndefined();
   });
 });
 

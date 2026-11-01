@@ -1,13 +1,14 @@
 import {
+  CaretDownIcon,
   DotsThreeIcon,
   EyeSlashIcon,
   HandshakeIcon,
-  ShareNetworkIcon,
   SquaresFourIcon,
-  XIcon,
 } from "@phosphor-icons/react";
+import { handleName } from "@repo/api/schemas/trade-person";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
-import { memo, use, useRef, useState } from "react";
+import { memo, type ReactNode, use, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 
 import { Button } from "@/components/ui/button";
 import { Frame, FramePanel } from "@/components/ui/frame";
@@ -17,13 +18,16 @@ import { useStartGate } from "@/features/chat/message-button";
 import { SafetyMenu } from "@/features/moderation/safety-menu";
 import { useSharedOfferBuilder } from "@/features/offers/offer-builder";
 import { relativeTime } from "@/lib/time";
+import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
 
 import { useCopyTradeLink, useHideWithUndo } from "./actions";
 import type { Surface } from "./browse-search";
+import { CopyLinkItem } from "./copy-link-item";
 import { MatchChip, MatchCounts } from "./match-summary";
 import type { OpenObjekt } from "./near";
+import { anchorOf } from "./person-page";
 import {
   leadPost,
   listCount,
@@ -61,6 +65,8 @@ function PostBlock({
   contact,
   partnerId,
   name,
+  handle,
+  focused,
   collections,
   onOpen,
 }: {
@@ -71,14 +77,18 @@ function PostBlock({
   contact: TradeContact;
   partnerId: string;
   name: string;
+  /** the person's handle, for the post page's Copy link; null with no linked Cosmo profile */
+  handle: string | null;
+  /** the post a post page names, outlined as the current selection */
+  focused: boolean;
   collections: Readonly<Record<string, ValidObjekt | undefined>>;
   onOpen: OpenObjekt;
 }) {
   const shown = own ? unringed(post) : post;
   const strips = shown.sides.filter((side) => !isEmptySide(side));
   const tag = <TagBadges tags={post.tags} className="flex-wrap font-sans normal-case" />;
-  // the post's own list: the have list of a pair, or its only list
-  const anchor = post.sides.find((side) => side.list.id === post.id) ?? post.sides[0];
+  const anchor = anchorOf(post);
+  const copyLink = useCopyTradeLink();
   const offering = post.sides.find((side) => side.role !== "want");
   const compare = use(SideCompareContext);
   const openBuilder = useSharedOfferBuilder();
@@ -129,8 +139,15 @@ function PostBlock({
   };
 
   return (
-    <FramePanel className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] gap-x-2 p-3">
+    <FramePanel
+      aria-current={focused || undefined}
+      className={cn(
+        "grid min-w-0 grid-cols-[minmax(0,1fr)_auto] gap-x-2 p-3",
+        focused && "ring-accent-solid ring-2",
+      )}
+    >
       <div className="flex min-w-0 flex-col gap-2">
+        {focused ? <span className="sr-only">{m.trade_post_linked()}</span> : null}
         {/* the tag leads the first strip's label; a post with no strip keeps it on a line of its own */}
         {strips.length === 0 ? tag : null}
         <TradeSides
@@ -156,7 +173,7 @@ function PostBlock({
         ))}
         <SideNotes sides={shown.sides} />
       </div>
-      {strips.length > 0 && anchor ? (
+      {anchor ? (
         <Menu>
           <MenuTrigger
             ref={menuRef}
@@ -181,12 +198,23 @@ function PostBlock({
                 <MenuSeparator />
               </>
             ) : null}
-            {strips.map((side) => (
-              <MenuItem key={side.list.id} onClick={() => showAll(side.list.id, true)}>
-                <SquaresFourIcon />
-                {m.trade_post_show_all({ list: side.list.name })}
-              </MenuItem>
-            ))}
+            {strips.length > 0 ? (
+              <>
+                {strips.map((side) => (
+                  <MenuItem key={side.list.id} onClick={() => showAll(side.list.id, true)}>
+                    <SquaresFourIcon />
+                    {m.trade_post_show_all({ list: side.list.name })}
+                  </MenuItem>
+                ))}
+                <MenuSeparator />
+              </>
+            ) : null}
+            <CopyLinkItem
+              reason={handle ? null : m.trade_post_copy_link_no_profile()}
+              onCopy={() => {
+                if (handle) void copyLink({ handle, slug: anchor.list.slug });
+              }}
+            />
           </MenuPopup>
         </Menu>
       ) : null}
@@ -210,10 +238,11 @@ function PostBlock({
 }
 
 /**
- * One person on Browse or For you: a header that says what they and the viewer can swap, then a
- * strip per list. The header sentence counts the person, each strip its own list.
- */
-/**
+ * One person on Browse, For you or their person page: a header that says what they and the viewer
+ * can swap, then a strip per list. The header sentence counts the person, each strip its own list.
+ * With `focus` (a post page), only that post shows, outlined, and the row's actions address it;
+ * the rest follow it once the viewer asks for them.
+ *
  * Memoized: virtua calls the feed's render function for every visible row on each scroll update,
  * so without it every row on screen renders again while the page scrolls.
  */
@@ -222,8 +251,8 @@ export const PersonRow = memo(function PersonRow({
   surface,
   own,
   signedIn,
-  led,
-  onClear,
+  focus,
+  ownActions,
   collections,
   now,
   onOpen,
@@ -234,9 +263,10 @@ export const PersonRow = memo(function PersonRow({
   own: boolean;
   /** a signed-out visitor has no lists to match, so the row says nothing about matching */
   signedIn: boolean;
-  /** `person` put this row first, and the row can be cleared */
-  led: boolean;
-  onClear: () => void;
+  /** a post page's post id, one of `person.posts` */
+  focus?: number;
+  /** what the owner can do from a post page, where the row's actions would be */
+  ownActions?: ReactNode;
   collections: Readonly<Record<string, ValidObjekt | undefined>>;
   now: number;
   onOpen: OpenObjekt;
@@ -245,11 +275,16 @@ export const PersonRow = memo(function PersonRow({
   const copyLink = useCopyTradeLink();
   // the Compare with list and mode the row counts with, so Make offer adds what it counted
   const compare = use(SideCompareContext);
+  const [expanded, setExpanded] = useState(false);
+  const moreRef = useRef<HTMLDivElement>(null);
   // no match says nothing: a row without a chip or counts already reads as one
   const band = own || !signedIn ? null : matchBand(person.counts);
   const posts = orderPosts(person.posts);
+  const focused = focus === undefined ? undefined : posts.find((post) => post.id === focus);
+  const rest = focused ? posts.filter((post) => post !== focused) : [];
+  const shownPosts = focused ? [focused, ...(expanded ? rest : [])] : posts;
   const throughRules = swapThroughRules(person.counts, person.posts);
-  const lead = leadPost(person.posts);
+  const lead = focused ?? leadPost(person.posts);
   // the post's own list: the have list of a pair
   const anchor = lead?.sides.find((side) => side.list.id === lead.id);
   const counts = person.counts;
@@ -274,24 +309,42 @@ export const PersonRow = memo(function PersonRow({
       ? m.trade_person_lists_one()
       : m.trade_person_lists({ count: posts.length.toLocaleString(getLocale()) });
 
+  // the row's matches are added (the Can swap pair, else the bigger side), its near matches
+  // offered; a post page adds those through its one post, as that post's own Make offer does
+  const offerMatches = focused
+    ? !own &&
+      signedIn &&
+      focused.sides.some((side) => listCount(focused, side) > 0 || side.near) &&
+      anchor
+      ? {
+          partnerId: person.userId,
+          list: compare.list,
+          mutual: compare.mutual || undefined,
+          post: anchor.list.slug,
+        }
+      : undefined
+    : band ||
+        (!own && signedIn && person.posts.some((post) => post.sides.some((side) => side.near)))
+      ? {
+          partnerId: person.userId,
+          list: compare.list,
+          mutual: compare.mutual || undefined,
+        }
+      : undefined;
   const actions = (
     <TradeActions
       contact={contact}
       name={person.identity.name}
       offerClassName="@max-3xl:flex-1"
-      matches={
-        // the row's matches are added (the Can swap pair, else the bigger side), its near matches offered
-        band ||
-        (!own && signedIn && person.posts.some((post) => post.sides.some((side) => side.near)))
-          ? {
-              partnerId: person.userId,
-              list: compare.list,
-              mutual: compare.mutual || undefined,
-            }
-          : undefined
-      }
+      matches={offerMatches}
     />
   );
+  const copyReason = person.handle ? null : m.trade_post_copy_link_no_profile();
+  // the page's own name for the person, which doesn't change with the viewer's matches
+  const pageName = person.handle ? handleName(person.handle) : person.identity.name;
+  const copyPerson = () => {
+    if (person.handle) void copyLink({ handle: person.handle });
+  };
 
   return (
     // padding, not margin, so virtua measures the gap between people with the row
@@ -317,31 +370,38 @@ export const PersonRow = memo(function PersonRow({
               </time>
             </>
           }
-          end={
-            led ? (
-              <Button variant="outline" size="xs" onClick={onClear}>
-                <XIcon />
-                <span className="@max-3xl:sr-only">{m.trade_person_clear()}</span>
-              </Button>
-            ) : null
-          }
         />
         <div className="flex min-w-0 flex-col gap-1 @3xl:col-span-2 @3xl:row-start-2">
-          {posts.map((post) => (
-            <PostBlock
+          {shownPosts.map((post) => (
+            <div
               key={post.id}
-              post={post}
-              surface={surface}
-              own={own}
-              contact={contact}
-              partnerId={person.userId}
-              name={person.identity.name}
-              collections={collections}
-              onOpen={onOpen}
-            />
+              // the first post "Show more" revealed takes focus, so the reader lands on it
+              ref={focused && post === rest[0] ? moreRef : undefined}
+              tabIndex={focused && post === rest[0] ? -1 : undefined}
+              className="outline-none"
+            >
+              <PostBlock
+                post={post}
+                surface={surface}
+                own={own}
+                contact={contact}
+                partnerId={person.userId}
+                name={person.identity.name}
+                handle={person.handle}
+                focused={post === focused}
+                collections={collections}
+                onOpen={onOpen}
+              />
+            </div>
           ))}
         </div>
-        {own ? null : (
+        {own ? (
+          ownActions ? (
+            <div className="flex flex-wrap items-center gap-2 px-3 pb-2 @3xl:col-start-2 @3xl:row-start-1 @3xl:self-start @3xl:pb-0">
+              {ownActions}
+            </div>
+          ) : null
+        ) : (
           <div className="flex items-center gap-2 px-3 pb-2 @3xl:col-start-2 @3xl:row-start-1 @3xl:self-start @3xl:pb-0">
             {signedIn ? (
               <SafetyMenu
@@ -350,10 +410,7 @@ export const PersonRow = memo(function PersonRow({
                 report
                 extraItems={
                   <>
-                    <MenuItem onClick={() => void copyLink({ person: person.userId })}>
-                      <ShareNetworkIcon />
-                      {m.trade_post_copy_link()}
-                    </MenuItem>
+                    <CopyLinkItem reason={copyReason} onCopy={copyPerson} />
                     <MenuItem onClick={() => hide(person.userId, person.identity.name)}>
                       <EyeSlashIcon />
                       {m.trade_hide_partner()}
@@ -376,10 +433,7 @@ export const PersonRow = memo(function PersonRow({
                   <DotsThreeIcon weight="bold" />
                 </MenuTrigger>
                 <MenuPopup align="end" className="min-w-44">
-                  <MenuItem onClick={() => void copyLink({ person: person.userId })}>
-                    <ShareNetworkIcon />
-                    {m.trade_post_copy_link()}
-                  </MenuItem>
+                  <CopyLinkItem reason={copyReason} onCopy={copyPerson} />
                 </MenuPopup>
               </Menu>
             )}
@@ -387,6 +441,25 @@ export const PersonRow = memo(function PersonRow({
           </div>
         )}
       </Frame>
+      {rest.length > 0 && !expanded ? (
+        <Button
+          variant="outline"
+          size="sm"
+          className="mt-3"
+          onClick={() => {
+            flushSync(() => setExpanded(true));
+            moreRef.current?.focus();
+          }}
+        >
+          <CaretDownIcon />
+          {rest.length === 1
+            ? m.trade_person_more_one({ name: pageName })
+            : m.trade_person_more({
+                count: rest.length.toLocaleString(getLocale()),
+                name: pageName,
+              })}
+        </Button>
+      ) : null}
     </article>
   );
 });

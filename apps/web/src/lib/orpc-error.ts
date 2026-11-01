@@ -14,6 +14,12 @@ export function errorReason(error: unknown) {
   };
 }
 
+/** A refusal (any status under 500: bad input, not found, over a rate limit), not a server failure. */
+export const isClientError = (error: unknown) => error instanceof ORPCError && error.status < 500;
+
+export const isBadRequest = (error: unknown) =>
+  error instanceof ORPCError && error.code === "BAD_REQUEST";
+
 export const isUnauthorized = (error: unknown) =>
   error instanceof ORPCError && error.code === "UNAUTHORIZED";
 

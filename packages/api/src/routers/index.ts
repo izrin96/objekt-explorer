@@ -86,6 +86,7 @@ export const openApiRouter = {
   },
   trade: {
     people: tradeRouter.people,
+    person: tradeRouter.person,
     sideItems: tradeRouter.sideItems,
     collectionPostCounts: tradeRouter.collectionPostCounts,
   },

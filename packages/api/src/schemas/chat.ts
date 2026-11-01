@@ -298,7 +298,12 @@ export const postCardViewSchema = z.object({
       tag: postTagSchema,
       /** every tag the post lists under on Browse, as its badges */
       tags: postTagSchema.array(),
-      owner: z.object({ userId: z.string(), name: z.string() }),
+      // defaulted, so a `chat_message` event from the previous build still parses
+      owner: z.object({
+        userId: z.string(),
+        name: z.string(),
+        handle: z.string().nullable().default(null),
+      }),
       /** the post's own list, which the card links to */
       list: z.object({
         id: z.number(),

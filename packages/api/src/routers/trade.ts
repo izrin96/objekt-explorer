@@ -14,7 +14,6 @@ import {
   collectionPostCountsOutputSchema,
   listMatchesInputSchema,
   mutualCountInputSchema,
-  personInputSchema,
   savePostInputSchema,
   sideItemsInputSchema,
   sideItemsOutputSchema,
@@ -22,6 +21,7 @@ import {
   takeDownPostInputSchema,
   tradePartnerInputSchema,
 } from "../schemas/trade";
+import { tradePersonInputSchema, tradePersonOutputSchema } from "../schemas/trade-person";
 import { toPublicUser } from "../services/profile";
 import { ipRateLimited, refuseOverUserLimit, userRateLimited } from "../services/redis";
 import { bumpTradeVersions } from "../services/safety-cache";
@@ -35,8 +35,8 @@ import {
   fetchSideItems,
 } from "../services/trade-feed";
 import { peopleFeed } from "../services/trade-feed/people";
-import { personDetail } from "../services/trade-matches";
 import { mutualCount } from "../services/trade-matches/mutual";
+import { resolveTradePerson } from "../services/trade-person";
 import { savePost, takeDownPost } from "../services/trade-post";
 import { tabCounts } from "../services/trade-tabs";
 
@@ -156,12 +156,26 @@ export const tradeRouter = {
     .output(documented(collectionPostCountsOutputSchema))
     .handler(async ({ input: { slug } }) => collectionPostCounts(slug)),
 
-  /** One person's matches, for the Browse person sheet. */
-  person: authed
-    .input(personInputSchema)
-    .handler(async ({ input: { userId, list }, context: { session } }) =>
-      personDetail(session.user.id, userId, list),
-    ),
+  /**
+   * Public: the account a Trade person page names, by handle or by an older link's user id, and
+   * its canonical handle. Replaces the person sheet's read, which no client has called since the
+   * sheet went.
+   */
+  person: optionalAuthed
+    .route({
+      method: "GET",
+      path: "/trade/person",
+      tags: ["Trade"],
+      summary:
+        "The account behind a Trade handle or user id (pass exactly one), and its canonical handle",
+      spec: errorResponses(400, 404, 429),
+    })
+    .input(tradePersonInputSchema)
+    .output(documented(tradePersonOutputSchema))
+    .handler(async ({ input, context }) => {
+      await limitFeed(context.session?.user.id, context.headers);
+      return resolveTradePerson(input);
+    }),
 
   /** "Mutual N" on Browse, and the list header's count. */
   mutualCount: authed

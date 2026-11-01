@@ -1,12 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import {
-  filterFits,
-  fullestFilter,
-  mutualCountInputSchema,
-  peopleInputSchema,
-  personInputSchema,
-} from "./trade";
+import { filterFits, fullestFilter, mutualCountInputSchema, peopleInputSchema } from "./trade";
 
 describe("people cursor", () => {
   const cursor = { bumpedAt: "2026-10-07T09:12:30.123Z", userId: "u1", order: "a1b2c3", at: 24 };
@@ -83,7 +77,6 @@ describe("feed inputs", () => {
     expect(parsed.match).toBeUndefined();
     expect(parsed.list).toBeUndefined();
     expect(peopleInputSchema.safeParse({ match: "sometimes" }).success).toBe(false);
-    expect(personInputSchema.parse({ userId: "u1" }).list).toBeUndefined();
     expect(mutualCountInputSchema.parse({})).toEqual({});
   });
 });

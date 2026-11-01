@@ -123,11 +123,6 @@ export type PeopleInput = z.infer<typeof peopleInputSchema>;
 /** people a page of `trade.people` holds */
 export const PEOPLE_PAGE_SIZE = 12;
 
-export const personInputSchema = z.object({
-  userId: z.string().min(1),
-  list: z.string().min(1).optional(),
-});
-
 /** One post side's every objekt, for the strip's "+N" dialog; `list` and `mutual` narrow the rings as For you's Compare with does. */
 export const sideItemsInputSchema = z.object({
   listId: z.coerce.number<number>().int().positive(),
@@ -180,6 +175,8 @@ const feedSideSchema = z.object({
     profileSlug: z.string().nullable(),
     profile: addressRefSchema.nullable(),
   }),
+  /** a have or sale side's first collection in the list's own order, unringed and unfiltered: a share preview's image */
+  first: z.string().optional(),
   items: z.array(previewItemSchema),
   more: z.number().int(),
   copyCount: z.number().int(),
@@ -236,6 +233,8 @@ export const peopleOutputSchema = z.object({
         nickname: z.string().nullable(),
         also: z.array(addressRefSchema),
       }),
+      /** the person page's `/trade/@<handle>`; null with no linked Cosmo profile */
+      handle: z.string().nullable(),
       user: publicUserSchema,
       reputation: reputationSchema.nullable(),
       messageable: z.boolean(),

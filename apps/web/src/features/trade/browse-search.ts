@@ -7,12 +7,15 @@ import { filterSearchSchema } from "@/features/filters/search-schema";
 
 import { comparedList, scopeOf, type TradeList } from "./compare-rule";
 
-/** What both Trade surfaces take: the filters, the post type and the person who leads. */
+/** What both Trade surfaces take: the filters and the post type. */
 const feedSearchSchema = filterSearchSchema.extend({
   /** `all` is the absence of `type` */
   type: z.enum(["wtt", "wtb", "wts"]).optional().catch(undefined),
   slug: z.string().min(1).optional().catch(undefined),
-  /** the person whose row leads the feed */
+  /**
+   * a user id: on `/trade` and `/trade/for-you` read only to redirect an older link to the person
+   * page, which passes it to its own one-person read
+   */
   person: z.string().min(1).optional().catch(undefined),
 });
 
@@ -34,23 +37,34 @@ export const forYouSearchSchema = feedSearchSchema.extend({
   /** `they_*` read as Any */
   match: z.enum(["any", "mutual", "they_have", "they_want"]).optional().catch(undefined),
   list: z.string().min(1).optional().catch(undefined),
-  /** read as `person` */
+  /** read only to redirect, as `person` is */
   partner: z.string().min(1).optional().catch(undefined),
 });
 
 export type ForYouSearch = z.infer<typeof forYouSearchSchema>;
 
+/**
+ * An older link's person, `person` or For you's `partner` (`person` wins), and the search without
+ * either, which the link keeps when the person has no page.
+ */
+export function oldPersonLink<T extends { person?: string; partner?: string }>(search: T) {
+  const { person, partner, ...rest } = search;
+  const id = person ?? partner;
+  return id === undefined ? null : { id, rest };
+}
+
 /** Where an old `/trade` link belongs, or `null` when it is already in its place. */
 export type BrowseRedirect =
-  | { to: "/trade/for-you"; search: Omit<ForYouSearch, "partner"> }
-  | { to: "/trade"; search: Omit<BrowseSearch, "match" | "matches" | "list"> };
+  | { to: "/trade/for-you"; search: Omit<ForYouSearch, "partner" | "person"> }
+  | { to: "/trade"; search: Omit<BrowseSearch, "match" | "matches" | "list" | "person"> };
 
 /**
  * Matching lives on For you: `match=any|mutual` and `matches=1` go there, `match=off` and a
- * stray `list` are dropped. `match` wins over `matches`.
+ * stray `list` are dropped. `match` wins over `matches`. An older person link redirects before
+ * this, so `person` never travels on.
  */
 export function browseRedirect(search: BrowseSearch): BrowseRedirect | null {
-  const { match, matches, list, ...rest } = search;
+  const { match, matches, list, person: _person, ...rest } = search;
   if (match === "off") return { to: "/trade", search: rest };
   if (match === "any" || match === "mutual") {
     return { to: "/trade/for-you", search: { ...rest, match, list } };
@@ -60,26 +74,22 @@ export function browseRedirect(search: BrowseSearch): BrowseRedirect | null {
   return null;
 }
 
-/** Maps `they_*` to Any and `partner` to `person`, or `null` when there is nothing to map. */
-export function forYouNormalise(search: ForYouSearch): Omit<ForYouSearch, "partner"> | null {
-  const { partner, ...rest } = search;
+/** Maps `they_*` to Any, or `null` when there is nothing to map. */
+export function forYouNormalise(
+  search: ForYouSearch,
+): Omit<ForYouSearch, "partner" | "person"> | null {
+  const { partner: _partner, person: _person, ...rest } = search;
   const oneWay = rest.match === "they_have" || rest.match === "they_want";
-  if (partner === undefined && !oneWay) return null;
-  return {
-    ...rest,
-    match: oneWay ? "any" : rest.match,
-    person: rest.person ?? partner,
-  };
+  if (!oneWay) return null;
+  return { ...rest, match: "any" };
 }
 
 /** For you's address for a viewer who can't use it: the filters, with no matching state. */
 export function forYouFallback(
   search: FeedSearch & { partner?: string },
-): Omit<BrowseSearch, "match" | "matches" | "list"> {
-  // a person leads Browse too, so a shared link keeps it
-  const { match, list, partner, ...rest } = search;
-  const person = rest.person ?? partner;
-  return person === undefined ? rest : { ...rest, person };
+): Omit<BrowseSearch, "match" | "matches" | "list" | "person"> {
+  const { match: _match, list: _list, partner: _partner, person: _person, ...rest } = search;
+  return rest;
 }
 
 /** Whether the viewer has a list that takes part in Trade, and so can match. */
@@ -132,7 +142,7 @@ export function toBrowseInput(
   const chosen = search.slug
     ? []
     : (search.artist ?? []).filter((id) => selectedArtistIds.includes(id));
-  // a person link shows one row, so the visitor's selection must not hide the sharer
+  // a person page shows one row, so the visitor's selection must not hide the sharer
   const artist = search.slug
     ? []
     : search.person

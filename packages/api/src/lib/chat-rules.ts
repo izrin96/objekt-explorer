@@ -6,12 +6,8 @@ import {
   type MessageAllow,
   MESSAGE_PREF_DEFAULTS,
 } from "../schemas/chat";
-import {
-  defaultProfile,
-  type LinkedProfile,
-  nameProfile,
-  type PartnerIdentity,
-} from "./trade-rank";
+import { defaultProfile, type LinkedProfile } from "../schemas/trade-person";
+import { nameProfile, type PartnerIdentity } from "./trade-rank";
 
 const MINUTE_MS = 60 * 1000;
 
