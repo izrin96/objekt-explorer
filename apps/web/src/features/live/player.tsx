@@ -35,6 +35,7 @@ import { m } from "@/paraglide/messages";
 const videoClient = new StreamVideoClient({
   apiKey: clientEnv.VITE_LIVE_API_KEY,
   user: { type: "anonymous" },
+  options: { clientEventsReportingEnabled: false },
 });
 
 const route = getRouteApi("/(container)/live/$id");
