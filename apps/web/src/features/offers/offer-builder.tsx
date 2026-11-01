@@ -187,7 +187,7 @@ export function OfferPage({ request, backHref }: { request: OfferRequest; backHr
       <Button
         variant="ghost"
         size="sm"
-        className="-ms-2 w-fit"
+        className="-ms-2 w-fit max-w-full"
         render={
           <a
             href={backHref}
@@ -200,7 +200,7 @@ export function OfferPage({ request, backHref }: { request: OfferRequest; backHr
         }
       >
         <ArrowLeftIcon />
-        {m.offer_page_back({ name: request.name })}
+        <span className="truncate">{m.offer_page_back({ name: request.name })}</span>
       </Button>
       {request.matches ? (
         <MatchesBuilder

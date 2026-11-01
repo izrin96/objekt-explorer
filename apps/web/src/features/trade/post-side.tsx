@@ -5,7 +5,7 @@ import { type ReactNode, type RefObject, memo } from "react";
 import { getListLinkOption } from "@/features/list/list-link";
 import { LIST_TYPE_LABEL, LIST_TYPE_TONE } from "@/features/list/list-type-badge";
 import { RatioChip } from "@/features/list/ratio-chip";
-import { type RatioSide, ratioSideOf } from "@/features/list/ratio-text";
+import { type RatioSide, ratioName, ratioSideOf } from "@/features/list/ratio-text";
 import { ObjektCard } from "@/features/objekt/objekt-card";
 import { useElementSize } from "@/hooks/use-element-size";
 import { TONE_INK } from "@/lib/tone";
@@ -176,7 +176,11 @@ const StripTile = memo(function StripTile({
   const ring = ringed ? RING : near ? NEAR_RING : undefined;
   return (
     /* a container, so the slug tile's radius matches the cards' */
-    <li className="@container relative w-10 shrink-0">
+    <li
+      className="@container relative w-10 shrink-0"
+      // the chip lies inert over the card, so the tile carries its tooltip
+      title={ratio !== undefined && ratioSide ? ratioName(ratio, ratioSide, { owner }) : undefined}
+    >
       {collection ? (
         <ObjektCard
           objekt={collection}

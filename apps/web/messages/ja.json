@@ -1040,7 +1040,7 @@
   "trade_person_more": "{name}さんの投稿をあと{count}件表示",
   "trade_person_more_one": "{name}さんの投稿をあと1件表示",
   "trade_person_nothing_title": "今は取引に投稿がありません",
-  "trade_person_nothing_hint": "この相手には、今取引に出している投稿がありません。",
+  "trade_person_nothing_hint": "{name}さんには、今取引に出している投稿がありません。",
   "trade_person_not_found": "その名前の取引相手はいません",
   "trade_person_not_found_hint": "そのニックネームまたはアドレスで連携されたCosmoプロフィールはありません。",
   "trade_list_count_you_want": "自分の希望 {count} 件",
@@ -1506,6 +1506,7 @@
   "offer_add_mine": "コレクションから追加",
   "offer_add_theirs": "{name}さんのリストから追加",
   "offer_add_theirs_collection": "{name}さんのコレクションから追加",
+  "offer_add_theirs_pending": "{name}さんから追加",
   "offer_note_label": "メモ（任意）",
   "offer_note_placeholder": "例：今夜21時（KST）以降に送れます",
   "offer_send": "オファーを送る",
@@ -2161,6 +2162,8 @@
   "ratio_set_title": "比率を設定",
   "ratio_set_have_desc": "選択した各オブジェクト1つに求める数です。1:1にすると消え、全体の比率に従います。",
   "ratio_set_want_desc": "選択した各オブジェクト1つに出せる数です。1:1にすると消え、全体の比率に従います。",
+  "ratio_set_have_desc_list": "選択した各オブジェクト1つに求める数です。「リストと同じ」にすると消え、リストの比率（{ratio}）に従います。",
+  "ratio_set_want_desc_list": "選択した各オブジェクト1つに出せる数です。「リストと同じ」にすると消え、リストの比率（{ratio}）に従います。",
   "ratio_set_success": "比率を更新しました",
   "ratio_set_error": "比率を更新できませんでした",
   "objekt_menu_set_ratio": "比率を設定",
@@ -2198,6 +2201,7 @@
   "trade_composer_objekt_ratio": "{name}の比率",
   "trade_composer_objekt_ratio_set": "{name}の比率、現在は{ratio}",
   "trade_composer_rule_ratio": "ルール {rule} の比率",
+  "trade_composer_rule_ratio_set": "ルール {rule} の比率、現在は{ratio}",
   "trade_composer_new_want": "新しい希望リスト",
   "trade_composer_new_want_hint": "空の状態で作成され、Tradeには出ず、Cosmoプロフィールにも紐づきません。"
 }

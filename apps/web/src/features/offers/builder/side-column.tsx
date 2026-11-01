@@ -98,12 +98,12 @@ export function SideColumn({
         ref={addRef}
         variant="outline"
         size="sm"
-        className="self-start"
+        className="max-w-full self-start"
         disabled={side === "get" && source === undefined}
         onClick={onAdd}
       >
         <PlusIcon />
-        {addLabel(side, source ?? "lists", name)}
+        <span className="truncate">{addLabel(side, source, name)}</span>
       </Button>
       <div role="status" className="empty:sr-only">
         {blockedPicks.length > 0 ? (

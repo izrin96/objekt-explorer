@@ -1,4 +1,5 @@
 import { m } from "@/paraglide/messages";
+import { getLocale } from "@/paraglide/runtime";
 
 /** A have entry asks for more; a want entry or rule gives more. */
 export type RatioSide = "have" | "want";
@@ -56,4 +57,19 @@ export function ratioName(
         ? m.ratio_you_give({ count })
         : m.ratio_they_give({ count });
   return owner && inherited ? m.ratio_from_list({ name }) : name;
+}
+
+/**
+ * The chip's text, then its words: the accessible name of the chip, and of a control that holds
+ * one, so a voice command naming the visible `1:2` still finds it.
+ */
+export function ratioLabel(
+  ratio: number,
+  side: RatioSide,
+  options: { owner: boolean; inherited?: boolean },
+) {
+  const name = ratioName(ratio, side, options);
+  // `ratioName` opens a sentence; here it follows the chip's text
+  const rest = name.charAt(0).toLocaleLowerCase(getLocale()) + name.slice(1);
+  return m.ratio_option_name({ ratio: ratioText(ratio, side), name: rest });
 }

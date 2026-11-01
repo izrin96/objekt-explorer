@@ -38,7 +38,7 @@ function list<T extends z.ZodType>(item: T) {
   return z.preprocess(toList, z.array(item).min(1)).optional().catch(undefined);
 }
 
-function flag() {
+export function flag() {
   return z
     .preprocess((value) => (typeof value === "string" ? value === "true" : value), z.boolean())
     .optional()

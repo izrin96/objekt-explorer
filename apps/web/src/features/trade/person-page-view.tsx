@@ -36,6 +36,7 @@ import { anchorOf, slugTarget } from "./person-page";
 import { PersonRow, PersonRowSkeleton } from "./person-row-view";
 import { usePlanLists } from "./post-plan";
 import { peopleOptions } from "./queries";
+import { sharePreview } from "./share-preview";
 import { SideCompareContext } from "./side-items-dialog";
 
 /** a person page counts against all of the viewer's lists, as Browse does */
@@ -90,7 +91,11 @@ export function PersonPageView({
   return (
     <AddToListProvider>
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-3">
-        <h1 className="sr-only">{m.trade_share_person_title({ name: handleName(handle) })}</h1>
+        <h1 className="sr-only">
+          {row && focused
+            ? sharePreview({ handle, posts: row.posts }, focused).title
+            : m.trade_share_person_title({ name: handleName(handle) })}
+        </h1>
         <BackToTrade />
 
         {gone ? (
@@ -111,12 +116,7 @@ export function PersonPageView({
           <EmptyState
             icon={CardsThreeIcon}
             title={m.trade_person_nothing_title()}
-            hint={m.trade_person_nothing_hint()}
-            action={
-              <Button variant="outline" size="sm" render={<Link to="/trade" />}>
-                {m.trade_person_back()}
-              </Button>
-            }
+            hint={m.trade_person_nothing_hint({ name: handleName(handle) })}
           />
         ) : (
           <SideCompareContext value={NO_COMPARE}>
@@ -128,6 +128,7 @@ export function PersonPageView({
               own={own}
               signedIn={!!user}
               focus={focused?.id}
+              page
               ownActions={
                 own && focused ? (
                   <OwnPostActions handle={handle} slug={anchorOf(focused)?.list.slug ?? ""} />

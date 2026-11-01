@@ -22,7 +22,7 @@ import { LIST_TYPE_LABEL, LIST_TYPE_TONE } from "@/features/list/list-type-badge
 import { listEntriesOptions, listFindOptions } from "@/features/list/queries";
 import { RatioChip } from "@/features/list/ratio-chip";
 import { RatioPicker } from "@/features/list/ratio-picker";
-import { appliedRatio, type RatioSide, ratioName, ratioText } from "@/features/list/ratio-text";
+import { appliedRatio, type RatioSide, ratioLabel, ratioText } from "@/features/list/ratio-text";
 import { listRulesOptions, RULE_KEYS } from "@/features/list/rules/queries";
 import { RuleForm } from "@/features/list/rules/rule-dialog";
 import { ruleInputOf } from "@/features/list/rules/rule-draft";
@@ -90,11 +90,15 @@ export function ComposerPreview({
       }
     : null;
   const nameOf = (slug: string) => lists.find((list) => list.slug === slug)?.name ?? slug;
+  const sides = request ? previewSides(request) : [];
 
   return (
     <section
       aria-labelledby={`${id}-heading`}
-      className={cn("flex min-w-0 flex-col gap-4 rounded-xl border p-4 sm:p-5", className)}
+      className={cn(
+        "flex min-w-0 flex-col gap-4 rounded-xl border p-4 max-md:**:scroll-mb-24 sm:p-5",
+        className,
+      )}
     >
       <div className="flex flex-col gap-0.5">
         <h2 id={`${id}-heading`} className="font-display text-base font-semibold">
@@ -107,13 +111,13 @@ export function ComposerPreview({
       <div className="flex flex-col gap-1.5">
         {picks ? <TagBadges tags={previewTags(picks)} /> : null}
         {/* mounted from the start and polite, so the match line reads out as the picks change it */}
-        <p aria-live="polite" className="text-sm text-pretty">
+        <p aria-live="polite" className="max-w-prose text-sm text-pretty">
           {picks ? joinSentences(matchLines(picks)) : null}
         </p>
       </div>
       {request ? (
-        <div className="grid min-w-0 items-start gap-5 lg:grid-cols-2">
-          {previewSides(request).map((side) =>
+        <div className={cn("grid min-w-0 items-start gap-5", sides.length > 1 && "lg:grid-cols-2")}>
+          {sides.map((side) =>
             side.slug === null ? (
               <EmptySide key={side.role} role={side.role} />
             ) : (
@@ -152,6 +156,8 @@ export function ComposerPreview({
     </section>
   );
 }
+
+const THUMB_GRID = "grid grid-cols-[repeat(auto-fill,minmax(3.5rem,1fr))] gap-1.5";
 
 function SideHeading({ role, children }: { role: PreviewSide["role"]; children?: ReactNode }) {
   return (
@@ -196,7 +202,7 @@ function PickedSide({
 
   return (
     <div className="flex min-w-0 flex-col gap-2.5">
-      <div className="flex min-h-7 min-w-0 flex-wrap items-center justify-between gap-x-3 gap-y-1.5 sm:min-h-6">
+      <div className="flex min-w-0 flex-col gap-1.5">
         <SideHeading role={role}>
           <span aria-hidden className="text-muted-foreground shrink-0">
             ·
@@ -225,22 +231,22 @@ function PickedSide({
       ) : null}
 
       {entries.isPending ? (
-        <div className="flex flex-wrap gap-1.5">
+        <div className={THUMB_GRID}>
           {Array.from({ length: 6 }, (_, index) => (
-            <Skeleton key={index} className="rounded-photocard aspect-photocard w-14" />
+            <Skeleton key={index} className="rounded-photocard aspect-photocard" />
           ))}
         </div>
       ) : total === 0 ? (
         <p className="text-muted-foreground text-xs">{m.trade_composer_side_empty()}</p>
       ) : (
-        <ul className="flex flex-wrap gap-1.5">
+        <ul className={THUMB_GRID}>
           {shown.map((entry) => (
-            <li key={entry.entryId} className="w-14">
+            <li key={entry.entryId} className="min-w-0">
               <EntryThumb entry={entry} slug={slug} side={ratio} listRatio={listRatio} />
             </li>
           ))}
           {rest > 0 ? (
-            <li className="@container w-14">
+            <li className="@container min-w-0">
               <button
                 type="button"
                 onClick={() => onOpenSheet({ view: "all", slug, name, ratio })}
@@ -269,7 +275,7 @@ function ListRatioControl({ stored, side }: { stored: StoredList; side: RatioSid
   const ratio = stored.ratio ?? null;
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger render={<Button variant="outline" size="xs" className="shrink-0" />}>
+      <PopoverTrigger render={<Button variant="outline" size="xs" className="self-start" />}>
         {m.ratio_for_all()}
         <span className="tabular-nums">{ratio === null ? "1:1" : ratioText(ratio, side)}</span>
       </PopoverTrigger>
@@ -330,7 +336,7 @@ function EntryThumb({
           applied
             ? m.trade_composer_objekt_ratio_set({
                 name,
-                ratio: ratioName(applied.ratio, side, {
+                ratio: ratioLabel(applied.ratio, side, {
                   owner: true,
                   inherited: applied.inherited,
                 }),
@@ -419,7 +425,7 @@ function PreviewRules({
 }
 
 const RULE_BOX =
-  "flex max-w-64 min-w-0 flex-wrap items-center gap-1.5 rounded-lg border px-2 py-1 text-start text-xs";
+  "flex max-w-64 min-w-0 items-start gap-1.5 rounded-lg border px-2 py-1 text-start text-xs";
 
 function RuleChip({
   rule,
@@ -437,12 +443,18 @@ function RuleChip({
   const text = ruleText(rule);
   const face = (
     <>
-      <Badge variant="outline" size="sm" className="tracking-wide">
+      <Badge variant="outline" size="sm" className="shrink-0 tracking-wide">
         {m.trade_rule_tag()}
       </Badge>
-      <span className="min-w-0 text-pretty">{text}</span>
+      <span className="min-w-0 flex-1 text-pretty">{text}</span>
       {applied && ratio ? (
-        <RatioChip ratio={applied.ratio} side={ratio} owner inherited={applied.inherited} />
+        <RatioChip
+          ratio={applied.ratio}
+          side={ratio}
+          owner
+          inherited={applied.inherited}
+          className="shrink-0"
+        />
       ) : null}
     </>
   );
@@ -455,7 +467,17 @@ function RuleChip({
           RULE_BOX,
           "hover:bg-accent/50 focus-visible:ring-ring cursor-pointer outline-none focus-visible:ring-2",
         )}
-        aria-label={m.trade_composer_rule_ratio({ rule: text })}
+        aria-label={
+          applied
+            ? m.trade_composer_rule_ratio_set({
+                rule: text,
+                ratio: ratioLabel(applied.ratio, ratio, {
+                  owner: true,
+                  inherited: applied.inherited,
+                }),
+              })
+            : m.trade_composer_rule_ratio({ rule: text })
+        }
       >
         {face}
       </PopoverTrigger>

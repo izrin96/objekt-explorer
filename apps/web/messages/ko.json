@@ -1040,7 +1040,7 @@
   "trade_person_more": "{name}님의 게시물 {count}개 더 보기",
   "trade_person_more_one": "{name}님의 게시물 1개 더 보기",
   "trade_person_nothing_title": "지금 거래에 올린 게시물이 없습니다",
-  "trade_person_nothing_hint": "이 사용자는 지금 거래에 올린 게시물이 없습니다.",
+  "trade_person_nothing_hint": "{name}님은 지금 거래에 올린 게시물이 없습니다.",
   "trade_person_not_found": "거래에 해당 이름의 사용자가 없습니다",
   "trade_person_not_found_hint": "해당 닉네임이나 주소로 연결된 Cosmo 프로필이 없습니다.",
   "trade_list_count_you_want": "내가 원하는 {count}개",
@@ -1506,6 +1506,7 @@
   "offer_add_mine": "내 컬렉션에서 추가",
   "offer_add_theirs": "{name}님의 목록에서 추가",
   "offer_add_theirs_collection": "{name}님의 컬렉션에서 추가",
+  "offer_add_theirs_pending": "{name}님에게서 추가",
   "offer_note_label": "메모 (선택)",
   "offer_note_placeholder": "예: 오늘 밤 9시(KST) 이후에 보낼 수 있어요",
   "offer_send": "제안 보내기",
@@ -2161,6 +2162,8 @@
   "ratio_set_title": "비율 설정",
   "ratio_set_have_desc": "선택한 각 오브젝트 하나에 요청하는 개수입니다. 1:1을 고르면 지워지고 전체 비율을 따릅니다.",
   "ratio_set_want_desc": "선택한 각 오브젝트 하나에 줄 수 있는 개수입니다. 1:1을 고르면 지워지고 전체 비율을 따릅니다.",
+  "ratio_set_have_desc_list": "선택한 각 오브젝트 하나에 요청하는 개수입니다. '목록과 같음'을 고르면 지워지고 목록 비율({ratio})을 따릅니다.",
+  "ratio_set_want_desc_list": "선택한 각 오브젝트 하나에 줄 수 있는 개수입니다. '목록과 같음'을 고르면 지워지고 목록 비율({ratio})을 따릅니다.",
   "ratio_set_success": "비율을 업데이트했습니다",
   "ratio_set_error": "비율을 업데이트하지 못했습니다",
   "objekt_menu_set_ratio": "비율 설정",
@@ -2198,6 +2201,7 @@
   "trade_composer_objekt_ratio": "{name}의 비율",
   "trade_composer_objekt_ratio_set": "{name}의 비율, 현재 {ratio}",
   "trade_composer_rule_ratio": "규칙 {rule}의 비율",
+  "trade_composer_rule_ratio_set": "규칙 {rule}의 비율, 현재 {ratio}",
   "trade_composer_new_want": "새 희망 목록",
   "trade_composer_new_want_hint": "빈 목록으로 시작하며, Trade에 올라가지 않고 Cosmo 프로필에 연결되지 않습니다."
 }

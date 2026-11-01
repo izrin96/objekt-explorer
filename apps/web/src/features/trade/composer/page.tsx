@@ -29,7 +29,7 @@ export function ComposerPage({ start, from }: { start: ComposerStart; from?: str
   const title = editing ? m.trade_composer_edit_title() : m.trade_new_post();
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-1 flex-col gap-5">
       <nav aria-label={m.offer_breadcrumb()} className="text-sm">
         <ol className="text-muted-foreground flex items-center gap-2">
           <li>
@@ -48,7 +48,7 @@ export function ComposerPage({ start, from }: { start: ComposerStart; from?: str
       <PageHeader title={title} description={m.trade_composer_lists_prompt()} />
 
       {/* a flex column below `md`, not a grid, so the bar sticks across the whole page */}
-      <div className="flex flex-col gap-6 md:grid md:grid-cols-[minmax(0,20rem)_minmax(0,1fr)] md:grid-rows-[auto_1fr] md:items-start md:gap-x-8 md:gap-y-5">
+      <div className="flex flex-col gap-6 max-md:flex-1 md:grid md:grid-cols-[minmax(0,20rem)_minmax(0,1fr)] md:grid-rows-[auto_1fr] md:items-start md:gap-x-8 md:gap-y-5">
         <ComposerSettings
           lists={lists}
           choice={choice}
@@ -64,7 +64,8 @@ export function ComposerPage({ start, from }: { start: ComposerStart; from?: str
           className="md:col-start-2 md:row-span-2 md:row-start-1"
         />
         {/* -mx-5 -mb-10 undo PageMain's px-5 pb-10, so the phone bar spans the screen and sits flush */}
-        <div className="bg-background sticky bottom-0 z-10 -mx-5 -mb-10 border-t px-5 pt-3 pb-[calc(env(safe-area-inset-bottom,0px)+--spacing(4))] md:static md:col-start-1 md:row-start-2 md:m-0 md:border-0 md:bg-transparent md:p-0">
+        {/* mt-auto: on a short page the bar still sits on the screen's bottom edge */}
+        <div className="bg-background sticky bottom-0 z-10 -mx-5 mt-auto -mb-10 border-t px-5 pt-3 pb-[calc(env(safe-area-inset-bottom,0px)+--spacing(4))] md:static md:col-start-1 md:row-start-2 md:m-0 md:border-0 md:bg-transparent md:p-0">
           <PostButton
             editing={editing}
             disabled={!plan?.ok}

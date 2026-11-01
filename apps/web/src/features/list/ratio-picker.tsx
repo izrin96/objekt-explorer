@@ -4,7 +4,7 @@ import { useId } from "react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { m } from "@/paraglide/messages";
 
-import { type RatioSide, ratioName, ratioText } from "./ratio-text";
+import { type RatioSide, ratioLabel, ratioText } from "./ratio-text";
 
 const NONE = "1";
 
@@ -68,10 +68,7 @@ export function RatioPicker({
           <ToggleGroupItem
             key={ratio}
             value={String(ratio)}
-            aria-label={m.ratio_option_name({
-              ratio: ratioText(ratio, side),
-              name: ratioName(ratio, side, { owner: true }),
-            })}
+            aria-label={ratioLabel(ratio, side, { owner: true })}
             className="tabular-nums"
           >
             {ratioText(ratio, side)}

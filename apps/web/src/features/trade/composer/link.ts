@@ -7,6 +7,7 @@ import {
 } from "@repo/api/schemas/trade-post";
 import * as z from "zod";
 
+import { flag } from "@/features/filters/search-schema";
 import { isSafeRedirect } from "@/lib/utils";
 
 export const NEW_POST: ComposerStart = {
@@ -20,7 +21,6 @@ export const NEW_POST: ComposerStart = {
 };
 
 const slug = z.string().min(1).max(256).optional().catch(undefined);
-const flag = z.boolean().optional().catch(undefined);
 
 /** `/trade/new`'s search: the composer's start, with `edit` for `replaces`, and where Post returns. */
 export const composerSearchSchema = z.object({
@@ -28,8 +28,8 @@ export const composerSearchSchema = z.object({
   have: slug,
   want: slug,
   sale: slug,
-  alsoPay: flag,
-  alsoSwap: flag,
+  alsoPay: flag(),
+  alsoSwap: flag(),
   /** the anchor slug of the post being edited */
   edit: slug,
   from: z.string().max(2048).refine(isSafeRedirect).optional().catch(undefined),

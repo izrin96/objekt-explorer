@@ -2,6 +2,8 @@ import { describe, expect, test } from "bun:test";
 
 import type { PlanList } from "@repo/api/schemas/trade-post";
 
+import { parseSearch, stringifySearch } from "@/features/filters/search-params";
+
 import { NEW_POST, composerSearch, composerSearchSchema, resolveStart, returnPath } from "./link";
 
 const list = (over: Partial<PlanList> & Pick<PlanList, "id" | "slug" | "listType">): PlanList => ({
@@ -64,6 +66,23 @@ describe("composerSearch", () => {
     expect(resolveStart(composerSearchSchema.parse(search), LISTS)).toEqual(start);
   });
 
+  test("its flags survive the URL, where the router hands them back as strings", () => {
+    const start = {
+      kind: "sell" as const,
+      have: null,
+      want: "binary-hunt",
+      sale: "binary-sale",
+      alsoPay: true,
+      alsoSwap: true,
+      replaces: "binary-sale",
+    };
+    const url = stringifySearch(composerSearch(start, "/list/binary-sale"));
+    const parsed = composerSearchSchema.parse(parseSearch(url));
+    expect(parsed.alsoPay).toBe(true);
+    expect(parsed.alsoSwap).toBe(true);
+    expect(resolveStart(parsed, LISTS)).toEqual(start);
+  });
+
   test("an off-site from is left out", () => {
     expect(composerSearch(NEW_POST, "//evil.example")).toEqual({});
     expect(composerSearch(NEW_POST, "https://evil.example")).toEqual({});
@@ -75,7 +94,7 @@ describe("composerSearchSchema", () => {
     const parsed = composerSearchSchema.parse({
       kind: "trade",
       have: "",
-      alsoPay: "yes",
+      alsoPay: 1,
       from: "/\\evil.example",
     });
     expect(parsed).toEqual({

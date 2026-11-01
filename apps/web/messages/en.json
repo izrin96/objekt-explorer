@@ -1040,7 +1040,7 @@
   "trade_person_more": "Show {count} more posts from {name}",
   "trade_person_more_one": "Show 1 more post from {name}",
   "trade_person_nothing_title": "Nothing on Trade right now",
-  "trade_person_nothing_hint": "This person has no posts on Trade right now.",
+  "trade_person_nothing_hint": "{name} has no posts on Trade right now.",
   "trade_person_not_found": "No one on Trade by that name",
   "trade_person_not_found_hint": "No linked Cosmo profile has that nickname or address.",
   "trade_list_count_you_want": "{count} you want",
@@ -1506,6 +1506,7 @@
   "offer_add_mine": "Add from your collection",
   "offer_add_theirs": "Add from {name}'s lists",
   "offer_add_theirs_collection": "Add from {name}'s collection",
+  "offer_add_theirs_pending": "Add from {name}",
   "offer_note_label": "Note (optional)",
   "offer_note_placeholder": "e.g. Can send tonight after 9pm KST",
   "offer_send": "Send offer",
@@ -2161,6 +2162,8 @@
   "ratio_set_title": "Set ratio",
   "ratio_set_have_desc": "What you ask for one of each selected objekt. 1:1 clears it, and the objekt follows Ratio for all.",
   "ratio_set_want_desc": "What you'd give for one of each selected objekt. 1:1 clears it, and the objekt follows Ratio for all.",
+  "ratio_set_have_desc_list": "What you ask for one of each selected objekt. Same as list clears it, and the objekt follows the list's {ratio}.",
+  "ratio_set_want_desc_list": "What you'd give for one of each selected objekt. Same as list clears it, and the objekt follows the list's {ratio}.",
   "ratio_set_success": "Ratio updated",
   "ratio_set_error": "Couldn't update the ratio",
   "objekt_menu_set_ratio": "Set ratio",
@@ -2198,6 +2201,7 @@
   "trade_composer_objekt_ratio": "Ratio for {name}",
   "trade_composer_objekt_ratio_set": "Ratio for {name}, now {ratio}",
   "trade_composer_rule_ratio": "Ratio for the rule {rule}",
+  "trade_composer_rule_ratio_set": "Ratio for the rule {rule}, now {ratio}",
   "trade_composer_new_want": "New want list",
   "trade_composer_new_want_hint": "Starts empty and off Trade, with no Cosmo profile."
 }

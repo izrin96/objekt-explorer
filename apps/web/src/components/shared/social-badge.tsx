@@ -10,7 +10,7 @@ const PLATFORM: Record<SocialPlatform, { icon: ReactElement | null; tone: string
   cosmo: { icon: null, tone: "bg-popover border-border text-foreground" },
   discord: {
     icon: <DiscordLogoIcon weight="fill" className="size-3.5 shrink-0" />,
-    tone: "bg-discord/10 border-discord/20 text-discord",
+    tone: "bg-discord/10 border-discord/20 text-discord-ink",
   },
   twitter: {
     icon: <XLogoIcon weight="fill" className="size-3.5 shrink-0" />,

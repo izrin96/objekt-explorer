@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { appliedRatio, groupRatio, ratioName, ratioText } from "./ratio-text";
+import { appliedRatio, groupRatio, ratioLabel, ratioName, ratioText } from "./ratio-text";
 
 // `m.*` returns a branded string, which `expect(...).toBe("...")` rejects.
 const check = (actual: unknown) => expect(actual);
@@ -62,5 +62,15 @@ describe("ratioName", () => {
       "You ask 2 for this, from Ratio for all",
     );
     check(ratioName(2, "have", { owner: false, inherited: true })).toBe("They ask 2 for this");
+  });
+});
+
+describe("ratioLabel", () => {
+  test("starts with the chip's text, then its words mid-sentence", () => {
+    check(ratioLabel(2, "have", { owner: true })).toBe("1:2, you ask 2 for this");
+    check(ratioLabel(3, "want", { owner: false })).toBe("3:1, they'd give 3 for this");
+    check(ratioLabel(2, "have", { owner: true, inherited: true })).toBe(
+      "1:2, you ask 2 for this, from Ratio for all",
+    );
   });
 });

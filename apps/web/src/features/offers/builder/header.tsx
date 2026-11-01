@@ -15,7 +15,7 @@ export function BuilderHeader({ request }: { request: OfferRequest }) {
       <h1
         ref={titleRef}
         tabIndex={-1}
-        className="font-display text-xl font-semibold tracking-tight text-balance outline-none"
+        className="font-display text-xl font-semibold tracking-tight text-balance wrap-anywhere outline-none"
       >
         {request.counter
           ? m.offer_builder_counter_title({ name: request.name })

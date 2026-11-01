@@ -191,7 +191,8 @@ function KindSegment({
             value={item}
             className={cn(
               "focus-visible:ring-ring focus-visible:ring-offset-background hover:bg-muted flex min-w-0 cursor-pointer flex-col items-center gap-1 rounded-lg border px-2 py-2.5 outline-none focus-visible:ring-2 focus-visible:ring-offset-1",
-              "data-checked:border-accent-solid data-checked:bg-accent",
+              // the light wash at full strength drops the tag inside it under 4.5:1
+              "data-checked:border-accent-solid data-checked:bg-accent/60 dark:data-checked:bg-accent",
             )}
           >
             <span className="text-sm font-medium">{KIND_LABEL[item]()}</span>

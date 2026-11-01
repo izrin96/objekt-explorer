@@ -58,8 +58,9 @@ export function BuilderBody({
       {/* `contents` below `lg`, so the bar is a child of the page's column and sticks across it */}
       <div className="contents lg:sticky lg:top-20 lg:col-start-1 lg:row-start-2 lg:flex lg:min-w-0 lg:flex-col lg:gap-5">
         {details}
-        {/* -mx-5 -mb-10 undo PageMain's px-5 pb-10, so the phone bar spans the screen and sits flush */}
-        <div className="bg-background sticky bottom-0 z-10 -mx-5 -mb-10 flex flex-col gap-2 border-t px-5 pt-3 pb-[calc(env(safe-area-inset-bottom,0px)+--spacing(4))] lg:static lg:m-0 lg:border-0 lg:bg-transparent lg:p-0">
+        {/* -mx-5 -mb-10 undo PageMain's px-5 pb-10, so the phone bar spans the screen and sits flush;
+            the page's scroll padding keeps a focused field from scrolling in under it */}
+        <div className="bg-background sticky bottom-0 z-10 -mx-5 -mb-10 flex flex-col gap-2 border-t px-5 pt-3 pb-[calc(env(safe-area-inset-bottom,0px)+--spacing(4))] lg:static lg:m-0 lg:border-0 lg:bg-transparent lg:p-0 max-lg:[html:has(&)]:scroll-pb-28">
           {hint}
           <div className="flex items-center gap-2">
             {cancel}

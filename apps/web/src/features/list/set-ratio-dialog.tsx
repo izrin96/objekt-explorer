@@ -16,7 +16,7 @@ import { m } from "@/paraglide/messages";
 
 import { useSetRatio } from "./actions";
 import { RatioPicker } from "./ratio-picker";
-import type { RatioSide } from "./ratio-text";
+import { type RatioSide, ratioText } from "./ratio-text";
 
 type Props = {
   open: boolean;
@@ -62,7 +62,13 @@ function SetRatioForm({
       <DialogHeader>
         <DialogTitle className="font-display">{m.ratio_set_title()}</DialogTitle>
         <DialogDescription>
-          {side === "have" ? m.ratio_set_have_desc() : m.ratio_set_want_desc()}
+          {listRatio === null
+            ? side === "have"
+              ? m.ratio_set_have_desc()
+              : m.ratio_set_want_desc()
+            : side === "have"
+              ? m.ratio_set_have_desc_list({ ratio: ratioText(listRatio, side) })
+              : m.ratio_set_want_desc_list({ ratio: ratioText(listRatio, side) })}
         </DialogDescription>
       </DialogHeader>
       <DialogPanel>

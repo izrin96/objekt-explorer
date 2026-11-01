@@ -17,6 +17,7 @@ export type TradePerson = {
 export function TradeHeader({
   person,
   you = false,
+  handle,
   meta,
   badge,
   note,
@@ -25,6 +26,8 @@ export function TradeHeader({
 }: {
   person: TradePerson;
   you?: boolean;
+  /** shown muted after the name, as "@handle"; the caller passes it only where it differs */
+  handle?: string;
   /** on the reputation line, after it */
   meta?: ReactNode;
   /** after the name */
@@ -59,6 +62,9 @@ export function TradeHeader({
               identity.name
             )}
           </h2>
+          {handle ? (
+            <span className="text-muted-foreground min-w-0 text-xs break-all">@{handle}</span>
+          ) : null}
           {badge}
           {you ? (
             <span className="bg-secondary text-muted-foreground rounded-sm px-1.5 text-xs">
@@ -69,18 +75,14 @@ export function TradeHeader({
           {user.twitter ? <SocialBadge platform="twitter" username={user.twitter} /> : null}
         </div>
         <div className="flex min-w-0 flex-col gap-0.5">
-          {/* one line where the card is wide, wrapping between words on a phone; the reputation
-              takes the ellipsis, so `meta` always shows */}
-          <span className="text-muted-foreground block text-xs tabular-nums @3xl:flex">
-            <TrustLine
-              reputation={person.reputation}
-              className="inline @3xl:block @3xl:min-w-0 @3xl:truncate"
-            />
+          {/* wraps between " · " segments, so beside the owner's buttons nothing is cut off */}
+          <span className="text-muted-foreground block text-xs text-pretty tabular-nums">
+            <TrustLine reputation={person.reputation} className="inline" />
             {meta ? (
-              <span className="@3xl:shrink-0">
-                {person.reputation ? <span className="whitespace-pre"> · </span> : null}
+              <>
+                {person.reputation ? " · " : null}
                 {meta}
-              </span>
+              </>
             ) : null}
           </span>
           {note}

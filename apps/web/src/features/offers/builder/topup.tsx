@@ -64,7 +64,7 @@ export function Topup({
         ref={addRef}
         variant="ghost"
         size="sm"
-        className="self-start"
+        className="-ms-2 self-start"
         onClick={() => {
           flushSync(() => onToggle(true));
           amountRef.current?.focus();
@@ -76,8 +76,9 @@ export function Topup({
     );
   }
 
+  // sized by its own width: from `lg` it sits in the 20rem sidebar, however wide the screen
   return (
-    <section aria-labelledby={headingId} className="flex min-w-0 flex-col gap-3">
+    <section aria-labelledby={headingId} className="@container flex min-w-0 flex-col gap-3">
       <div className="flex items-center justify-between gap-2">
         <h3 id={headingId} className="text-sm font-medium">
           {m.offer_topup_title()}
@@ -95,7 +96,7 @@ export function Topup({
         </Button>
       </div>
       {reason ? <p className="text-muted-foreground text-sm text-pretty">{reason}</p> : null}
-      <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,7rem)] gap-3 sm:grid-cols-[minmax(0,12rem)_minmax(0,8rem)_auto]">
+      <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,7rem)] gap-3 @2xl:grid-cols-[minmax(0,12rem)_minmax(0,8rem)_auto]">
         <div className="flex min-w-0 flex-col gap-1.5">
           <Label htmlFor={amountId}>{m.offer_topup_amount()}</Label>
           <NumberField
@@ -148,7 +149,8 @@ export function Topup({
           ]}
           value={payer}
           onChange={onPayer}
-          className="col-span-full self-end sm:col-span-1"
+          // tracks grow to their content in turn, so only the partner's name, when too long, truncates
+          className="col-span-full grid auto-cols-[minmax(0,max-content)] grid-flow-col @2xl:col-span-1 @2xl:self-end"
         />
       </div>
       <p className="text-warning-foreground flex items-start gap-1.5 text-sm text-pretty">

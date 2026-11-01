@@ -53,7 +53,7 @@ export function OptionCheck({
       htmlFor={id}
       className={cn(
         "flex min-w-0 items-start gap-2.5 rounded-lg border px-3 py-2.5 font-normal",
-        disabled && "cursor-not-allowed opacity-64",
+        disabled && "cursor-not-allowed",
       )}
     >
       <Checkbox
@@ -65,7 +65,7 @@ export function OptionCheck({
         aria-describedby={`${id}-hint`}
       />
       <span className="flex min-w-0 flex-col gap-0.5">
-        <span className="text-sm font-medium">{label}</span>
+        <span className={cn("text-sm font-medium", disabled && "opacity-64")}>{label}</span>
         <span id={`${id}-hint`} className="text-muted-foreground text-xs text-pretty">
           {hint}
         </span>

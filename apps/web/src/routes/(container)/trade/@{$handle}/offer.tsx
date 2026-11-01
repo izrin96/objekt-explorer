@@ -146,6 +146,7 @@ function BackButton({ href, label }: { href: string; label: string }) {
     <Button
       variant="outline"
       size="sm"
+      className="max-w-full"
       render={
         <a
           href={href}
@@ -157,7 +158,7 @@ function BackButton({ href, label }: { href: string; label: string }) {
         />
       }
     >
-      {label}
+      <span className="truncate">{label}</span>
     </Button>
   );
 }

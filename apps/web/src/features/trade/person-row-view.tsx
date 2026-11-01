@@ -243,6 +243,7 @@ export const PersonRow = memo(function PersonRow({
   own,
   signedIn,
   focus,
+  page = false,
   ownActions,
   collections,
   now,
@@ -256,6 +257,8 @@ export const PersonRow = memo(function PersonRow({
   signedIn: boolean;
   /** a post page's post id, one of `person.posts` */
   focus?: number;
+  /** on the person's own page, where the header also names their handle */
+  page?: boolean;
   /** what the owner can do from a post page, where the row's actions would be */
   ownActions?: ReactNode;
   collections: Readonly<Record<string, ValidObjekt | undefined>>;
@@ -295,10 +298,11 @@ export const PersonRow = memo(function PersonRow({
     .reduce((a, b) => (Date.parse(b.time) > Date.parse(a.time) ? b : a));
   // relative to the render: the server's minute and the browser's can differ
   const when = relativeTime(new Date(newest.time).getTime(), now);
+  const keptLists = new Set(posts.flatMap((post) => post.sides.map((side) => side.list.id))).size;
   const lists =
-    posts.length === 1
+    keptLists === 1
       ? m.trade_person_lists_one()
-      : m.trade_person_lists({ count: posts.length.toLocaleString(getLocale()) });
+      : m.trade_person_lists({ count: keptLists.toLocaleString(getLocale()) });
 
   // the row's matches are added (the Can swap pair, else the bigger side), its near matches
   // offered; a post page adds those through its one post, as that post's own Make offer does
@@ -334,9 +338,14 @@ export const PersonRow = memo(function PersonRow({
     <article className="@container pb-3">
       <Frame className="grid gap-x-4 gap-y-3 pt-2.5 @3xl:grid-cols-[minmax(0,1fr)_auto]">
         <TradeHeader
-          className="min-w-0 px-3 @3xl:row-start-1"
+          className="row-start-1 min-w-0 px-3"
           person={person}
           you={own}
+          handle={
+            page && person.handle && handleName(person.handle) !== person.identity.name
+              ? handleName(person.handle)
+              : undefined
+          }
           badge={
             band ? (
               <MatchChip band={band} throughRules={surface === "forYou" ? throughRules : 0} />
@@ -345,8 +354,8 @@ export const PersonRow = memo(function PersonRow({
           note={band ? <MatchCounts band={band} /> : undefined}
           meta={
             <>
-              {lists} ·{" "}
-              <time dateTime={newest.time} suppressHydrationWarning>
+              <span className="whitespace-nowrap">{lists}</span> ·{" "}
+              <time dateTime={newest.time} suppressHydrationWarning className="whitespace-nowrap">
                 {newest.changed
                   ? m.trade_updated_at({ time: when })
                   : m.trade_bumped_at({ time: when })}
@@ -354,37 +363,15 @@ export const PersonRow = memo(function PersonRow({
             </>
           }
         />
-        <div className="flex min-w-0 flex-col gap-1 @3xl:col-span-2 @3xl:row-start-2">
-          {shownPosts.map((post) => (
-            <div
-              key={post.id}
-              // the first post "Show more" revealed takes focus, so the reader lands on it
-              ref={focused && post === rest[0] ? moreRef : undefined}
-              tabIndex={focused && post === rest[0] ? -1 : undefined}
-              className="outline-none"
-            >
-              <PostBlock
-                post={post}
-                surface={surface}
-                own={own}
-                contact={contact}
-                name={person.identity.name}
-                handle={person.handle}
-                focused={post === focused}
-                collections={collections}
-                onOpen={onOpen}
-              />
-            </div>
-          ))}
-        </div>
+        {/* before the posts in the DOM, so the actions come next in tab order from the header */}
         {own ? (
           ownActions ? (
-            <div className="flex flex-wrap items-center gap-2 px-3 pb-2 @3xl:col-start-2 @3xl:row-start-1 @3xl:self-start @3xl:pb-0">
+            <div className="row-start-3 flex flex-wrap items-center gap-2 px-3 pb-2 @3xl:col-start-2 @3xl:row-start-1 @3xl:self-start @3xl:pb-0">
               {ownActions}
             </div>
           ) : null
         ) : (
-          <div className="flex items-center gap-2 px-3 pb-2 @3xl:col-start-2 @3xl:row-start-1 @3xl:self-start @3xl:pb-0">
+          <div className="row-start-3 flex items-center gap-2 px-3 pb-2 @3xl:col-start-2 @3xl:row-start-1 @3xl:self-start @3xl:pb-0">
             {signedIn ? (
               <SafetyMenu
                 userId={person.userId}
@@ -422,6 +409,29 @@ export const PersonRow = memo(function PersonRow({
             {actions}
           </div>
         )}
+        <div className="row-start-2 flex min-w-0 flex-col gap-1 @3xl:col-span-2">
+          {shownPosts.map((post) => (
+            <div
+              key={post.id}
+              // the first post "Show more" revealed takes focus, so the reader lands on it
+              ref={focused && post === rest[0] ? moreRef : undefined}
+              tabIndex={focused && post === rest[0] ? -1 : undefined}
+              className="focus-visible:ring-ring rounded-lg outline-none focus-visible:ring-2"
+            >
+              <PostBlock
+                post={post}
+                surface={surface}
+                own={own}
+                contact={contact}
+                name={person.identity.name}
+                handle={person.handle}
+                focused={post === focused}
+                collections={collections}
+                onOpen={onOpen}
+              />
+            </div>
+          ))}
+        </div>
       </Frame>
       {rest.length > 0 && !expanded ? (
         <Button

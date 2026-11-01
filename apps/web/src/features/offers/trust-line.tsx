@@ -50,7 +50,7 @@ export function TrustLine({
       <span className="sr-only">{m.trust_label()} </span>
       {reputation.verified === 0 ? (
         unfinished > 0 ? (
-          <span title={hint}>
+          <span title={hint} className="whitespace-nowrap">
             {m.trust_none_unfinished({ count })}
             <span className="sr-only"> ({hint})</span>
           </span>
@@ -59,11 +59,14 @@ export function TrustLine({
         )
       ) : (
         <>
-          {m.trust_verified({ count: reputation.verified.toLocaleString(getLocale()) })}
+          {/* each " · " segment stays whole, so a wrapping line breaks only between them */}
+          <span className="whitespace-nowrap">
+            {m.trust_verified({ count: reputation.verified.toLocaleString(getLocale()) })}
+          </span>
           {unfinished > 0 ? (
             <>
               {" · "}
-              <span title={hint} className="text-destructive-foreground">
+              <span title={hint} className="text-destructive-foreground whitespace-nowrap">
                 {m.trust_unfinished({ count })}
                 <span className="sr-only"> ({hint})</span>
               </span>
@@ -79,7 +82,9 @@ export function TrustLine({
           {variant === "full" ? (
             <>
               {" · "}
-              {m.trust_since({ month: sinceLabel(reputation.since) })}
+              <span className="whitespace-nowrap">
+                {m.trust_since({ month: sinceLabel(reputation.since) })}
+              </span>
             </>
           ) : null}
         </>

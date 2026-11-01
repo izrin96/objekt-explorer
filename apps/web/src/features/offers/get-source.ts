@@ -19,8 +19,13 @@ const THEIR_TEXT = {
 export const sourceOf = (theirs: { partnerLists?: boolean }): GetSource =>
   theirs.partnerLists === false ? "collection" : "lists";
 
-export const addLabel = (side: OfferSide, source: GetSource, name: string) =>
-  side === "give" ? m.offer_add_mine() : THEIR_TEXT[source].add(name);
+/** `source` is undefined while the partner's lists load, so the label never flips from lists to collection */
+export const addLabel = (side: OfferSide, source: GetSource | undefined, name: string) =>
+  side === "give"
+    ? m.offer_add_mine()
+    : source === undefined
+      ? m.offer_add_theirs_pending({ name })
+      : THEIR_TEXT[source].add(name);
 
 export const pickerDescription = (side: OfferSide, source: GetSource, name: string) =>
   side === "give" ? m.offer_picker_mine_desc() : THEIR_TEXT[source].desc(name);
