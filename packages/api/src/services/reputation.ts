@@ -4,7 +4,7 @@ import { sql } from "drizzle-orm";
 import { toReputation } from "../lib/offer-rules";
 import { unique } from "../lib/unique";
 import { type Reputation, reputationKey, reputationSchema } from "../schemas/reputation";
-import { redis } from "./redis";
+import { redis, redisFailOpen } from "./redis";
 
 const TTL_SECONDS = 600;
 
@@ -109,7 +109,11 @@ export async function reputationOf(userIds: string[]): Promise<Map<string, Reput
   const found = new Map<string, Reputation>();
   if (ids.length === 0) return found;
 
-  const cached = (await redis.send("MGET", ids.map(reputationKey))) as (string | null)[];
+  // with Redis down every id is a miss, computed from the database
+  const cached =
+    ((await redisFailOpen("reputation", () => redis.send("MGET", ids.map(reputationKey)))) as
+      | (string | null)[]
+      | null) ?? [];
   const missing: string[] = [];
   ids.forEach((id, i) => {
     const parsed = cached[i] ? reputationSchema.safeParse(parseJson(cached[i])) : null;
@@ -121,13 +125,17 @@ export async function reputationOf(userIds: string[]): Promise<Map<string, Reput
   const fresh = await computeReputation(missing);
   await Promise.all(
     [...fresh].map(([id, reputation]) =>
-      redis.set(reputationKey(id), JSON.stringify(reputation), "EX", TTL_SECONDS),
+      redisFailOpen("reputation", () =>
+        redis.set(reputationKey(id), JSON.stringify(reputation), "EX", TTL_SECONDS),
+      ),
     ),
   );
   for (const [id, reputation] of fresh) found.set(id, reputation);
   return found;
 }
 
+/** Runs after the write commits; a failed delete leaves the cached copy until its TTL. */
 export async function forgetReputation(userIds: string[]) {
-  if (userIds.length > 0) await redis.send("DEL", unique(userIds).map(reputationKey));
+  if (userIds.length === 0) return;
+  await redisFailOpen("reputation", () => redis.send("DEL", unique(userIds).map(reputationKey)));
 }

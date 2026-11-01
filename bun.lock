@@ -167,11 +167,11 @@
       "version": "0.0.0",
       "dependencies": {
         "ofetch": "catalog:",
-        "zod": "catalog:",
       },
       "devDependencies": {
         "@repo/lint": "workspace:*",
         "@repo/tsconfig": "workspace:*",
+        "@types/bun": "catalog:dev",
         "typescript": "catalog:dev",
       },
     },
@@ -182,7 +182,6 @@
         "@repo/cosmo": "workspace:*",
         "drizzle-orm": "catalog:",
         "pg": "catalog:",
-        "zod": "catalog:",
       },
       "devDependencies": {
         "@repo/lint": "workspace:*",

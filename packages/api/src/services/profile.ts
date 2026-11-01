@@ -13,7 +13,7 @@ import type { ProfilePreview, PublicProfile, PublicUser } from "../schemas/profi
 import type { User } from "./auth";
 import { isBlockedEither } from "./moderation";
 import { fetchOwnerSummary } from "./objekt";
-import { getCache, redis } from "./redis";
+import { getCache, redis, redisFailOpen } from "./redis";
 import { reputationOf } from "./reputation";
 import { isBanned } from "./safety";
 
@@ -198,11 +198,13 @@ export async function fetchUserByIdentifier(
 
   // a nickname Cosmo does not know is remembered, so random /@nickname visits do not each reach it
   const notFoundKey = `profile:nickname-missing:${identifier.toLowerCase()}`;
-  if (await redis.get(notFoundKey)) return undefined;
+  if (await redisFailOpen("nickname missing", () => redis.get(notFoundKey))) return undefined;
 
   const user = await safeFetchByNickname(identifier);
   if (!user) {
-    if (user === null) await redis.set(notFoundKey, "1", "EX", 60);
+    if (user === null) {
+      await redisFailOpen("nickname missing", () => redis.set(notFoundKey, "1", "EX", 60));
+    }
     return undefined;
   }
 

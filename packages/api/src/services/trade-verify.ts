@@ -1,4 +1,5 @@
 import { db } from "@repo/db";
+import type { Tx } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts, transfers } from "@repo/db/indexer/schema";
 import { trade, tradeLeg, tradeSubstitute } from "@repo/db/schema";
@@ -22,7 +23,6 @@ import {
 } from "../lib/trade-match";
 import { unique } from "../lib/unique";
 import { HELD_COPY_STATUSES, type TradePayload } from "../schemas/offer";
-import type { Tx } from "./offer/core";
 import { writeNotes } from "./offer/notes";
 
 export type LegRow = {

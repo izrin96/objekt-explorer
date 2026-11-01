@@ -50,7 +50,7 @@ export function makeEditProfileInputSchema(bannerUrlPrefix: string) {
       .refine((url) => url.startsWith(bannerUrlPrefix))
       .nullish(),
     bannerImgType: z.string().max(50).nullish(),
-    gridColumns: z.number().min(2).max(18).nullable(),
+    gridColumns: z.int().min(2).max(18).nullable(),
   });
 }
 

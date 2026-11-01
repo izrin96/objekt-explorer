@@ -1,5 +1,6 @@
 import { ORPCError } from "@orpc/server";
 import { db } from "@repo/db";
+import type { Tx } from "@repo/db";
 import { conversation, conversationMember, lists, user, userAddress } from "@repo/db/schema";
 import { and, eq, isNull, sql } from "drizzle-orm";
 
@@ -12,7 +13,6 @@ import {
   startVerdict,
 } from "../../lib/chat-rules";
 import { type ChatTarget } from "../../schemas/chat";
-import type { Tx } from "./members";
 import { refuse } from "./refuse";
 import { chatSafety } from "./safety";
 import { fetchPref } from "./settings";

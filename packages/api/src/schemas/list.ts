@@ -94,13 +94,19 @@ export const listEntriesOutputSchema = z.array(listObjektSchema);
  * expands collections to every copy it owns; any other list takes collections.
  */
 const addSourceSchema = z.discriminatedUnion("type", [
-  z.object({ type: z.literal("objekts"), tokenIds: z.string().array().min(1).max(50000) }),
-  z.object({ type: z.literal("collections"), slugs: z.string().array().min(1).max(50000) }),
+  z.object({
+    type: z.literal("objekts"),
+    tokenIds: z.string().max(255).array().min(1).max(50000),
+  }),
+  z.object({
+    type: z.literal("collections"),
+    slugs: z.string().max(255).array().min(1).max(50000),
+  }),
   // a bound list hiding serials hands out entries: its cards carry no token id
   z.object({
     type: z.literal("list"),
     slug: z.string(),
-    entryIds: z.number().int().positive().array().min(1).max(50000),
+    entryIds: z.int32().positive().array().min(1).max(50000),
   }),
 ]);
 export type AddSource = z.infer<typeof addSourceSchema>;
@@ -136,7 +142,7 @@ export const createListInputSchema = z.object({
   listType: listTypeSchema.default("general"),
   isProfileBind: z.boolean().default(false),
   hideSerial: z.boolean().default(false),
-  linkedListId: z.number().nullable(),
+  linkedListId: z.int32().positive().nullable(),
   profileAddress: addressSchema.nullable(),
   description: z.string().max(5000).nullable(),
   currency: z.string().max(10).nullable(),
@@ -167,7 +173,7 @@ export const copyListOutputSchema = copyCountsSchema.extend({ slug: z.string() }
 export const editListInputSchema = z.object({
   slug: z.string(),
   name: z.string().min(1).max(256),
-  gridColumns: z.number().min(2).max(18).nullable(),
+  gridColumns: z.int().min(2).max(18).nullable(),
   profileAddress: addressSchema.nullable(),
   description: z.string().max(5000).nullable(),
   currency: z.string().max(10).nullable(),
@@ -222,7 +228,7 @@ export const updateEntryPricesInputSchema = z.object({
   updates: z
     .array(
       z.object({
-        entryId: z.number(),
+        entryId: z.int32().positive(),
         price: z.number().min(0).nullable(),
         isQyop: z.boolean(),
         note: z.string().max(255).optional().nullable(),

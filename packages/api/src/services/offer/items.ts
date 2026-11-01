@@ -1,4 +1,4 @@
-import { db } from "@repo/db";
+import { db, type Tx } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { transfers } from "@repo/db/indexer/schema";
 import { and, gte, inArray } from "drizzle-orm";
@@ -14,7 +14,6 @@ import { transferKey } from "../../lib/trade-match";
 import { unique } from "../../lib/unique";
 import { usedTransfers } from "../trade-verify";
 import {
-  type Tx,
   copyKey,
   fetchCopies,
   fetchObjekts,

@@ -15,7 +15,6 @@ import {
   VERIFIER_LAST_KEY,
   VERIFIER_NUDGE_CHANNEL,
 } from "@repo/api/schemas/offer";
-import type { Tx } from "@repo/api/services/offer/core";
 import { partyNames, writeNotes } from "@repo/api/services/offer/notes";
 import {
   finishSettle,
@@ -28,6 +27,7 @@ import {
   shownSerials,
   wrongCopyNote,
 } from "@repo/api/services/trade-verify";
+import type { Tx } from "@repo/db";
 import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { collections } from "@repo/db/indexer/schema";

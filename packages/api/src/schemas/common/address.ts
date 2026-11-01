@@ -13,5 +13,5 @@ export const addressOrBareInputSchema = z.preprocess(
 
 export const addressTokenIdsInputSchema = z.object({
   address: addressSchema,
-  tokenIds: z.number().array().max(50000),
+  tokenIds: z.int32().positive().array().max(50000),
 });

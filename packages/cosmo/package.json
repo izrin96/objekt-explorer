@@ -10,15 +10,16 @@
     "lint": "oxlint --type-aware",
     "lint:fix": "oxlint --type-aware --fix",
     "typecheck": "tsc --noEmit",
+    "test": "bun test",
     "format": "oxfmt ."
   },
   "dependencies": {
-    "ofetch": "catalog:",
-    "zod": "catalog:"
+    "ofetch": "catalog:"
   },
   "devDependencies": {
     "@repo/lint": "workspace:*",
     "@repo/tsconfig": "workspace:*",
+    "@types/bun": "catalog:dev",
     "typescript": "catalog:dev"
   }
 }

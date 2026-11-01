@@ -1,4 +1,5 @@
 import { db } from "@repo/db";
+import type { Tx } from "@repo/db";
 import { trade, tradeLeg, userSanction } from "@repo/db/schema";
 import { APIError } from "better-auth/api";
 import { and, eq, isNull, ne, or, sql } from "drizzle-orm";
@@ -10,7 +11,6 @@ import {
   refusalOf,
 } from "../lib/account-deletion";
 import type { DeleteRefusal } from "../schemas/user";
-import type { Tx } from "./offer/core";
 import { heldCopies } from "./trade-verify";
 
 /** The trades and sanctions `deletionBlockers` decides on, read through `db` or a transaction. */

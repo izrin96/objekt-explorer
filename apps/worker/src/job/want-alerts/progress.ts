@@ -1,4 +1,4 @@
-import { db } from "@repo/db";
+import { db, type Tx } from "@repo/db";
 import { workerProgress } from "@repo/db/schema";
 import { eq, sql } from "drizzle-orm";
 
@@ -6,8 +6,6 @@ import { parseState, type State } from "../../lib/want-alert-state";
 import type { RunProgress } from "./record";
 
 const NAME = "want-alerts";
-
-export type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
 export type Progress =
   | { kind: "row"; cursor: number; state: State }

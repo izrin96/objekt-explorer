@@ -1,5 +1,5 @@
 import { ORPCError } from "@orpc/server";
-import { db } from "@repo/db";
+import { db, type Tx } from "@repo/db";
 import { conversation, offer } from "@repo/db/schema";
 import { and, eq, or, sql } from "drizzle-orm";
 
@@ -8,7 +8,7 @@ import { unique } from "../../lib/unique";
 import { publishNotify } from "../../realtime";
 import type { OfferAction, OfferStatus } from "../../schemas/offer";
 import { publishChatChanged } from "../chat";
-import { type Tx, refuseOffer } from "./core";
+import { refuseOffer } from "./core";
 
 export type OfferRow = {
   id: number;

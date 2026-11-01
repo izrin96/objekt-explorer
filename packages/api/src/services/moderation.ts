@@ -1,5 +1,5 @@
 import { ORPCError } from "@orpc/server";
-import { db } from "@repo/db";
+import { db, type Tx } from "@repo/db";
 import { modAudit, report, session, user, userSanction } from "@repo/db/schema";
 import { and, eq, sql } from "drizzle-orm";
 
@@ -103,8 +103,6 @@ export async function findAccount(userId: string) {
   if (!row) throw new ORPCError("NOT_FOUND");
   return row;
 }
-
-export type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
 export async function audit(
   tx: Tx,

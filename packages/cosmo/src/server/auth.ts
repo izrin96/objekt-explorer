@@ -24,5 +24,8 @@ export async function refreshV3(
       "x-cosmo-encrypted": "1",
     },
     signal,
+    // Cosmo rotates the refresh token, so a refresh cut off after Cosmo completed it loses the
+    // new token and leaves only the dead one
+    timeout: 30_000,
   }).then((res: { credentials: RefreshTokenResult }) => res.credentials);
 }

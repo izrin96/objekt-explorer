@@ -15,6 +15,7 @@ import {
   profilePreviewOutputSchema,
 } from "../schemas/profile";
 import { assertProfileOwned, fetchProfilePreview } from "../services/profile";
+import { refuseOverUserLimit } from "../services/redis";
 import {
   createPresignedUploadUrl,
   deleteFileFromBucket,
@@ -74,6 +75,8 @@ export const profileRouter = {
   getPresignedPost: authed
     .input(presignedPostInputSchema)
     .handler(async ({ input: { address, mimeType, fileSize }, context: { session } }) => {
+      // each call signs a fresh upload key, and only the banner it replaces is ever deleted
+      await refuseOverUserLimit("banner-presign", session.user.id, 20, 3600);
       await assertProfileOwned(address, session.user.id);
 
       const ext = mimeTypeToExtension[mimeType as (typeof acceptedFileMimeTypes)[number]];

@@ -23,8 +23,7 @@
   "dependencies": {
     "@repo/cosmo": "workspace:*",
     "drizzle-orm": "catalog:",
-    "pg": "catalog:",
-    "zod": "catalog:"
+    "pg": "catalog:"
   },
   "devDependencies": {
     "@repo/lint": "workspace:*",

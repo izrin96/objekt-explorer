@@ -1,5 +1,5 @@
 import { ORPCError } from "@orpc/server";
-import { db } from "@repo/db";
+import { db, type Tx } from "@repo/db";
 import {
   offer,
   trade,
@@ -9,7 +9,7 @@ import {
   user,
   userAddress,
 } from "@repo/db/schema";
-import { and, desc, eq, gt, inArray, or, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, or, sql } from "drizzle-orm";
 
 import { type HeldBy, heldByProfile } from "../../lib/held-by";
 import { isBehind, parseIndexerSeen } from "../../lib/indexer-seen";
@@ -41,7 +41,7 @@ import {
 } from "../../schemas/offer";
 import { chatSafety, fetchPartners, hydrateCards, publishChatChanged } from "../chat";
 import { indexerCaughtUp } from "../indexer-catch-up";
-import { redis } from "../redis";
+import { redis, redisFailOpen } from "../redis";
 import { forgetReputation, reputationOf } from "../reputation";
 import {
   autoAcceptedLegs,
@@ -50,8 +50,8 @@ import {
   loadOpenLegs,
   matchOpenLegs,
 } from "../trade-verify";
-import { offersOf } from "./cancel";
-import { type Tx, fetchObjekts, refuseOffer } from "./core";
+import { offersOf, openOffersWhere } from "./cancel";
+import { fetchObjekts, refuseOffer } from "./core";
 import { partyNames, writeNotes } from "./notes";
 import { publishTouched } from "./state";
 import { fetchOffers, offerItemCards, topupView, itemViews } from "./view";
@@ -91,7 +91,9 @@ const countVerified = (tx: Tx, tradeId: number) =>
     .where(eq(tradeLeg.tradeId, tradeId))
     .then((rows) => rows[0] ?? { total: 0, verified: 0 });
 
-const readIndexerSeen = async () => parseIndexerSeen(await redis.get(INDEXER_SEEN_KEY));
+// null when Redis is down, which `isBehind` reads as behind
+const readIndexerSeen = async () =>
+  parseIndexerSeen(await redisFailOpen("indexer seen", () => redis.get(INDEXER_SEEN_KEY)));
 
 export async function cancelTrade(me: string, tradeId: number) {
   const row = await findTrade(tradeId, me);
@@ -269,7 +271,7 @@ export async function fetchTrade(me: string, tradeId: number) {
       .select({ rating: sql<TradeRating>`${tradeFeedback.rating}` })
       .from(tradeFeedback)
       .where(and(eq(tradeFeedback.tradeId, tradeId), eq(tradeFeedback.fromUserId, me))),
-    redis.get(VERIFIER_LAST_KEY),
+    redisFailOpen("verifier last", () => redis.get(VERIFIER_LAST_KEY)),
     readIndexerSeen(),
     row.status === "in_progress"
       ? db
@@ -425,12 +427,9 @@ type HistoryRow = {
 
 const GROUP_LIMIT = 100;
 
-/** Open offers still inside their window, sent or received. */
-export const openOffersWhere = (me: string) =>
-  and(offersOf(me), eq(offer.status, "open"), gt(offer.expiresAt, sql`now()`));
-
 /** Open offers waiting on `me` to answer. */
-export const needsYouWhere = (me: string) => and(openOffersWhere(me), eq(offer.toUserId, me));
+export const needsYouWhere = (me: string) =>
+  and(openOffersWhere(offersOf(me)), eq(offer.toUserId, me));
 
 export const inProgressWhere = (me: string) =>
   and(or(eq(trade.userA, me), eq(trade.userB, me)), eq(trade.status, "in_progress"));
@@ -458,7 +457,7 @@ export async function fetchMine(me: string, cursor: HistoryCursor | undefined) {
             at: sql<string>`${offer.createdAt}::text`,
           })
           .from(offer)
-          .where(openOffersWhere(me))
+          .where(openOffersWhere(offersOf(me)))
           .orderBy(desc(offer.createdAt))
           .limit(GROUP_LIMIT * 2),
         db

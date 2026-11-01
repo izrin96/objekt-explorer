@@ -1,8 +1,8 @@
+import type { Tx } from "@repo/db";
 import { offer } from "@repo/db/schema";
 import { and, eq, gt, or, sql } from "drizzle-orm";
 
 import type { OfferCancelReason } from "../../schemas/offer";
-import type { Tx } from "./core";
 import { partyNames, writeNotes } from "./notes";
 import { publishTouched } from "./state";
 

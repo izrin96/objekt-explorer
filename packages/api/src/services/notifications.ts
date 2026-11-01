@@ -189,7 +189,7 @@ export async function listNotifications(
   return {
     items,
     nextCursor:
-      rows.length > NOTIFICATION_PAGE_SIZE && last ? { at: last.createdAt, id: last.id } : null,
+      headRows.length > NOTIFICATION_PAGE_SIZE && last ? { at: last.createdAt, id: last.id } : null,
     collections: Object.fromEntries(
       collections.map((c) => [
         c.slug,

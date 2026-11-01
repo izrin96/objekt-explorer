@@ -1,6 +1,8 @@
 import { ORPCError } from "@orpc/server";
 import { db } from "@repo/db";
+import { getRequestHeaders } from "@tanstack/react-start/server";
 
+import { refuse } from "../lib/refuse";
 import { authed, pub } from "../orpc";
 import { documented, errorResponses } from "../schemas/common/documented";
 import {
@@ -22,7 +24,7 @@ import {
   ruleObjekts,
   updateRule,
 } from "../services/list-rules";
-import { refuseOverUserLimit } from "../services/redis";
+import { ipRateLimited, refuseOverUserLimit } from "../services/redis";
 
 /** Each rule save reads the indexer and writes an entry for every collection the rule wants. */
 const limitRuleWrites = (userId: string) => refuseOverUserLimit("list-rule", userId, 60, 3600);
@@ -50,9 +52,13 @@ export const listRulesRouter = {
       return fetchListRules(list);
     }),
 
+  // the rule dialog asks again on each change of the draft, so this budget is per minute
   previewRule: authed
     .input(previewRuleInputSchema)
-    .handler(({ input: { rule }, context: { session } }) => previewRule(rule, session.user.id)),
+    .handler(async ({ input: { rule }, context: { session } }) => {
+      await refuseOverUserLimit("list-rule-preview", session.user.id, 120, 60);
+      return previewRule(rule, session.user.id);
+    }),
 
   addRule: authed
     .input(addRuleInputSchema)
@@ -97,7 +103,10 @@ export const listRulesRouter = {
     })
     .input(ruleIdInputSchema)
     .output(documented(ruleObjektsOutputSchema))
-    .handler(async ({ input: { slug, ruleId } }) => {
+    .handler(async ({ input: { slug, ruleId }, context }) => {
+      if (await ipRateLimited("rule-objekts", context.headers ?? getRequestHeaders(), 60, 60)) {
+        refuse("TOO_MANY_REQUESTS", "user_rate_limit", "Too many requests, try again shortly");
+      }
       const list = await findList(slug);
       return ruleObjekts(list, ruleId);
     }),

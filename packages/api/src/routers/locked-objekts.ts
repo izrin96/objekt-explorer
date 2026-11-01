@@ -8,7 +8,9 @@ import { addressOrBareInputSchema, addressTokenIdsInputSchema } from "../schemas
 import { documented, errorResponses } from "../schemas/common/documented";
 import { lockedObjektsOutputSchema } from "../schemas/locked-objekts";
 import { fetchLockedObjekts } from "../services/locked-objekts";
+import { ownedTokenIds } from "../services/owned";
 import { assertProfileOwned } from "../services/profile";
+import { refuseOverUserLimit } from "../services/redis";
 import { TOKEN_CHUNK_SIZE } from "../services/utils";
 
 export const lockedObjektsRouter = {
@@ -26,9 +28,12 @@ export const lockedObjektsRouter = {
 
   batchLock: authed
     .input(addressTokenIdsInputSchema)
-    .handler(async ({ input: { address, tokenIds }, context: { session } }) => {
+    .handler(async ({ input: { address, tokenIds: asked }, context: { session } }) => {
+      await refuseOverUserLimit("lock-write", session.user.id, 60, 60);
       await assertProfileOwned(address, session.user.id);
 
+      // rows only for what the address holds, so they never outnumber its objekts
+      const tokenIds = await ownedTokenIds(address, asked);
       if (tokenIds.length === 0) return;
 
       await db.transaction(async (tx) => {

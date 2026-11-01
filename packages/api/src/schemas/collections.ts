@@ -87,5 +87,5 @@ export const collectionListInputSchema = z.object({
 });
 
 export const serialTransfersInputSchema = collectionSlugInputSchema.extend({
-  serial: z.coerce.number().int(),
+  serial: z.coerce.number().pipe(z.int32()),
 });

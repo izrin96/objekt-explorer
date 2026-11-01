@@ -2,6 +2,7 @@ import { db } from "@repo/db";
 import { offer, offerItem, trade, tradeLeg } from "@repo/db/schema";
 import { and, eq, gt, inArray, ne, sql } from "drizzle-orm";
 
+import { legInsertOrder } from "../../lib/leg-order";
 import { unique } from "../../lib/unique";
 import { VERIFIER_NUDGE_CHANNEL } from "../../schemas/offer";
 import { chatSafety } from "../chat";
@@ -111,18 +112,7 @@ export async function acceptOffer(me: string, offerId: number) {
 
     const snapshot = (addresses: ReadonlySet<string>) => [...addresses].toSorted();
     try {
-      // a fixed order, so two accepts over the same objekts wait instead of deadlocking
-      const ordered = items.toSorted((a, b) =>
-        a.objektId === b.objektId
-          ? 0
-          : a.objektId === null
-            ? 1
-            : b.objektId === null
-              ? -1
-              : a.objektId < b.objektId
-                ? -1
-                : 1,
-      );
+      const ordered = legInsertOrder(items);
       await tx.insert(tradeLeg).values(
         ordered.map((item) => {
           const fromSender = item.side === "give";

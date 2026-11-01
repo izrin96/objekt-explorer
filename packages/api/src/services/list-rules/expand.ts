@@ -1,5 +1,5 @@
 // Env-free: the worker's refresh-list-rules job imports this module.
-import { db } from "@repo/db";
+import { db, type Tx } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { listEntries, listRule, userAddress } from "@repo/db/schema";
 import { chunk } from "@repo/lib";
@@ -106,8 +106,6 @@ export async function readRule(
 export async function syncRuleEntries(ruleId: number, slugs: readonly string[], readAt?: string) {
   return db.transaction((tx) => syncRuleEntriesTx(tx, ruleId, slugs, readAt));
 }
-
-type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
 /** Rows per write: an insert binds three parameters a row. */
 const WRITE_BATCH = 5000;

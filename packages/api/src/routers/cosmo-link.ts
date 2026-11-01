@@ -1,5 +1,6 @@
 import crypto from "node:crypto";
 
+import { ORPCError } from "@orpc/server";
 import { fetchUserProfile } from "@repo/cosmo/server/user";
 import type { ValidArtist } from "@repo/cosmo/types/common";
 import { db } from "@repo/db";
@@ -18,7 +19,7 @@ import {
 } from "../schemas/cosmo-link";
 import { linkVerified, setDefault, unlink } from "../services/cosmo-link";
 import { fetchOwnerCounts } from "../services/objekt";
-import { redis } from "../services/redis";
+import { redis, redisFailOpen, userRateLimited } from "../services/redis";
 import { getAccessToken } from "../services/token";
 
 type VerificationData = {
@@ -107,16 +108,7 @@ export const cosmoLinkRouter = {
   generateCode: authed
     .input(generateCodeInputSchema)
     .handler(async ({ input, context: { session } }) => {
-      // rate limit: max 5 attempts per user per 30s.
-      // INCR creates the counter; EXPIRE NX (Redis 7+) sets the TTL only
-      // when no TTL is set yet, so subsequent INCRs preserve the original
-      // window. EXPIRE is sent unconditionally so that a process crash
-      // between INCR and EXPIRE on the first call does not leave a
-      // TTL-less counter.
-      const rateLimitKey = `cosmo-verify-rate:${session.user.id}`;
-      const attempts = await redis.incr(rateLimitKey);
-      await redis.send("EXPIRE", [rateLimitKey, "30", "NX"]);
-      if (attempts > 5) {
+      if (await userRateLimited("cosmo-verify", session.user.id, 5, 30)) {
         refuse(
           "TOO_MANY_REQUESTS",
           "cosmo_link_rate_limit",
@@ -137,7 +129,11 @@ export const cosmoLinkRouter = {
         nickname: input.nickname,
         address: input.address,
       };
-      await redis.set(redisKey, JSON.stringify(redisValue), "EX", 120);
+      // a code that was never stored could only fail at verify, so no code is handed out
+      const stored = await redisFailOpen("cosmo verify", () =>
+        redis.set(redisKey, JSON.stringify(redisValue), "EX", 120),
+      );
+      if (stored === null) throw new ORPCError("SERVICE_UNAVAILABLE");
 
       return {
         code,
@@ -157,10 +153,7 @@ export const cosmoLinkRouter = {
     .input(addressSchema)
     .handler(async ({ input: address, context: { session }, errors }) => {
       // each check calls Cosmo with the shared token: max 10 per user per 30s
-      const rateLimitKey = `cosmo-verify-status-rate:${session.user.id}`;
-      const attempts = await redis.incr(rateLimitKey);
-      await redis.send("EXPIRE", [rateLimitKey, "30", "NX"]);
-      if (attempts > 10) {
+      if (await userRateLimited("cosmo-verify-status", session.user.id, 10, 30)) {
         refuse(
           "TOO_MANY_REQUESTS",
           "cosmo_link_rate_limit",
@@ -169,7 +162,12 @@ export const cosmoLinkRouter = {
       }
 
       const redisKey = `cosmo-verify:${session.user.id}:${address}`;
-      const raw = await redis.get(redisKey);
+      // wrapped, so an unreachable Redis (null) is told apart from an expired code
+      const read = await redisFailOpen("cosmo verify", async () => ({
+        raw: await redis.get(redisKey),
+      }));
+      if (read === null) throw new ORPCError("SERVICE_UNAVAILABLE");
+      const { raw } = read;
       if (!raw) {
         throw errors.VERIFICATION_EXPIRED({
           message: "Verification expired, start over",
@@ -211,7 +209,8 @@ export const cosmoLinkRouter = {
         cosmoId: data.cosmoId,
       });
 
-      await redis.del(redisKey);
+      // the code expires on its own within 2 minutes
+      await redisFailOpen("cosmo verify", () => redis.del(redisKey));
 
       return {
         nickname: data.nickname,

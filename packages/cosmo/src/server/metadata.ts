@@ -8,17 +8,6 @@ import type {
 } from "../types/metadata";
 
 /**
- * Fetch objekt metadata from the v1 API.
- */
-export async function fetchMetadataV1(tokenId: string) {
-  return await ofetch<CosmoObjektMetadataV1>(`https://api.cosmo.fans/objekt/v1/token/${tokenId}`, {
-    retry: 1,
-    retryDelay: 750, // 750ms backoff
-    timeout: 10_000,
-  });
-}
-
-/**
  * Fetch objekt metadata from the v3 API.
  * Shouldn't be used as it doesn't contain full collection data.
  */

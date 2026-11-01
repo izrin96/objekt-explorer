@@ -1,13 +1,11 @@
 import { ORPCError } from "@orpc/server";
-import { db } from "@repo/db";
+import { db, type Tx } from "@repo/db";
 import { conversation, conversationMember, message, messageFlag } from "@repo/db/schema";
 import { and, eq, sql } from "drizzle-orm";
 
 import { type MemberEvent, type MemberState, nextMemberState } from "../../lib/chat-rules";
 import { type FlagCategory, parseCaution, type StoredCard } from "../../schemas/chat";
 import { parseCard } from "./cards";
-
-export type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
 const memberColumns = {
   userId: conversationMember.userId,

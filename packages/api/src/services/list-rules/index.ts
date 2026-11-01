@@ -1,5 +1,6 @@
 import { ORPCError } from "@orpc/server";
 import { db } from "@repo/db";
+import type { Tx } from "@repo/db";
 import { listEntries, listRule, lists } from "@repo/db/schema";
 import type { List } from "@repo/db/schema";
 import { and, asc, count, eq, inArray, sql } from "drizzle-orm";
@@ -16,7 +17,6 @@ import {
   type RuleCollection,
 } from "../../schemas/list-rule";
 import { fetchCollectionsBySlug, touchList } from "../list";
-import type { Tx } from "../moderation";
 import {
   collectionsKey,
   linkedAddresses,

@@ -10,6 +10,8 @@ const ses = new SESv2Client({
     accessKeyId: serverEnv.SES_ACCESS_KEY,
     secretAccessKey: serverEnv.SES_SECRET_KEY,
   },
+  // the SDK waits forever by default; a stalled call would hold the request that made it
+  requestHandler: { connectionTimeout: 5_000, requestTimeout: 10_000, throwOnRequestTimeout: true },
 });
 
 const MAIL_FROM = `${SITE_NAME} <${serverEnv.SES_MAIL_FROM}>`;

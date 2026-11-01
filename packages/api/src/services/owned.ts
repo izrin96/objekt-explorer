@@ -1,7 +1,7 @@
 import { toIndexedArtist } from "@repo/cosmo/types/common";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts, transfers } from "@repo/db/indexer/schema";
-import { Addresses } from "@repo/lib";
+import { Addresses, chunkMap } from "@repo/lib";
 import { mapOwnedObjekt, overrideCollection } from "@repo/lib/server/objekt";
 import type { HeldObjekt } from "@repo/lib/types/objekt";
 import { and, asc, count, desc, eq, getColumns, inArray, lt, lte, or, sql } from "drizzle-orm";
@@ -10,6 +10,7 @@ import type { AnyPgColumn } from "drizzle-orm/pg-core";
 import type { HeldByOutput, OwnedByFilters, OwnedByOutput } from "../schemas/objekts";
 import { getCollectionColumns } from "./objekt";
 import { getCache } from "./redis";
+import { TOKEN_CHUNK_SIZE } from "./utils";
 
 const PER_PAGE = 8000;
 
@@ -195,4 +196,18 @@ export async function fetchHeldObjekts(
       ? all.filter((collection) => artists.includes(collection.artist.toLowerCase()))
       : all,
   };
+}
+
+/** The tokens of `tokenIds` that `address` holds now, deduplicated, in the order given. */
+export async function ownedTokenIds(address: string, tokenIds: number[]) {
+  const wanted = [...new Set(tokenIds)];
+  if (wanted.length === 0) return [];
+  const rows = await chunkMap(wanted.map(String), TOKEN_CHUNK_SIZE, (batch) =>
+    indexer
+      .select({ id: objekts.id })
+      .from(objekts)
+      .where(and(inArray(objekts.id, batch), eq(objekts.owner, address.toLowerCase()))),
+  );
+  const held = new Set(rows.map((row) => row.id));
+  return wanted.filter((tokenId) => held.has(String(tokenId)));
 }

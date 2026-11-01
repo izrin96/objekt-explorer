@@ -1,6 +1,6 @@
 import { ORPCError } from "@orpc/server";
 import { toIndexedArtist, type ValidArtist } from "@repo/cosmo/types/common";
-import { db } from "@repo/db";
+import { db, type Tx } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
 import { listEntries, lists, messagePref } from "@repo/db/schema";
@@ -32,7 +32,8 @@ import {
 } from "../schemas/list";
 import { carriesPrices, copyMode, copyUnit, needsHoldings } from "../schemas/list-copy";
 import { type OpenToFlags, resolveOpenTo } from "../schemas/open-to";
-import { isBlockedEither, type Tx } from "./moderation";
+import type { PlanList } from "../schemas/trade-post";
+import { isBlockedEither } from "./moderation";
 import { getCollectionColumns, getPartialCollectionColumns } from "./objekt";
 import { assertProfileOwned, toPublicUser } from "./profile";
 import { isBanned } from "./safety";
@@ -588,9 +589,47 @@ export async function prepareList(input: NewList, userId: string) {
 
 export type PreparedList = Awaited<ReturnType<typeof prepareList>>;
 
+/**
+ * The poster's have, want and sale lists, locked until the transaction ends, so two saves can't
+ * put one list in two posts. List create takes the same lock, in the same order, before it links.
+ */
+export async function lockTradeLists(tx: Tx, userId: string): Promise<PlanList[]> {
+  return tx
+    .select({
+      id: lists.id,
+      slug: lists.slug,
+      name: lists.name,
+      listType: lists.listType,
+      linkedListId: lists.linkedListId,
+      discoverable: lists.discoverable,
+      isProfileBind: lists.isProfileBind,
+      matchSale: lists.matchSale,
+      matchHave: lists.matchHave,
+      takesSwaps: lists.takesSwaps,
+    })
+    .from(lists)
+    .where(and(eq(lists.userId, userId), inArray(lists.listType, ["have", "want", "sale"])))
+    .orderBy(lists.id)
+    .for("update");
+}
+
 /** The one place a list row is created. Returns the ids to `touchList` once the transaction commits. */
 export async function writeList(tx: Tx, prepared: PreparedList) {
-  const { input, userId, slug, isProfileBind, linkedListId, partner, discoverable } = prepared;
+  const { input, userId, slug, isProfileBind, linkedListId, discoverable } = prepared;
+  // the partner checked in prepareList may have changed or gained a link since, so it is
+  // checked again under the lock that list create and trade.savePost share
+  let partner = prepared.partner;
+  if (linkedListId !== null) {
+    const locked = (await lockTradeLists(tx, userId)).find((list) => list.id === linkedListId);
+    if (!locked) refuse("BAD_REQUEST", "list_linked_not_found", "Linked list not found");
+    const reason = pairRefusal(
+      input.listType,
+      { openTo: resolveOpenTo(input.listType, input), takesSwaps: false },
+      locked,
+    );
+    if (reason) refuse("BAD_REQUEST", reason, PAIR_MESSAGES[reason]);
+    partner = locked;
+  }
   // picked right before the insert, on the transaction's own connection, so the gap in which
   // two lists can pick the same profile slug stays as short as the insert itself
   const profileSlug = input.profileAddress
@@ -796,14 +835,16 @@ export async function addEntries(
     );
   }
 
-  let slugs = from.slugs;
+  // a slug repeated on purpose stays: with skipDups off it adds another copy
+  const known = await knownSlugs(from.slugs);
+  let slugs = from.slugs.filter((slug) => known.has(slug));
   if (skipDups) {
     const existing = await db
       .selectDistinct({ slug: listEntries.collectionSlug })
       .from(listEntries)
       .where(and(eq(listEntries.listId, list.id), isNull(listEntries.ruleId)));
     const existingSlugs = new Set(existing.map((entry) => entry.slug));
-    slugs = Array.from(new Set(from.slugs)).filter((slug) => !existingSlugs.has(slug));
+    slugs = Array.from(new Set(slugs)).filter((slug) => !existingSlugs.has(slug));
   }
 
   const rows =
@@ -822,6 +863,16 @@ export async function addEntries(
         );
   if (rows.length > 0) await touchList([list.id]);
   return { rows, skipped: from.slugs.length - rows.length, unowned: 0 };
+}
+
+async function knownSlugs(slugs: string[]) {
+  const found = await chunkMap(Array.from(new Set(slugs)), TOKEN_CHUNK_SIZE, (batch) =>
+    indexer
+      .select({ slug: collections.slug })
+      .from(collections)
+      .where(inArray(collections.slug, batch)),
+  );
+  return new Set(found.map((row) => row.slug));
 }
 
 /** Only entries of that one list resolve, and only those holding a token. */

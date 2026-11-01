@@ -5,16 +5,8 @@ import { and, eq, inArray, notInArray, or } from "drizzle-orm";
 
 import { refuse } from "../lib/refuse";
 import type { TradePostRefusal } from "../schemas/trade";
-import {
-  membersOf,
-  type PlanList,
-  planPost,
-  type PostChoice,
-  postHolding,
-  postsOf,
-} from "../schemas/trade-post";
-import { touchList, tradeColumns } from "./list";
-import type { Tx } from "./moderation";
+import { membersOf, planPost, type PostChoice, postHolding, postsOf } from "../schemas/trade-post";
+import { lockTradeLists, touchList, tradeColumns } from "./list";
 
 const REFUSAL_MESSAGE: Record<TradePostRefusal, string> = {
   trade_post_list_in_post: "That list is already in another post on Trade",
@@ -24,34 +16,10 @@ const REFUSAL_MESSAGE: Record<TradePostRefusal, string> = {
   trade_post_empty: "Pick a list for this post",
 };
 
-/**
- * The poster's have, want and sale lists, locked until the transaction ends, so two saves can't
- * put one list in two posts.
- */
-async function lockPosterLists(tx: Tx, userId: string): Promise<PlanList[]> {
-  return tx
-    .select({
-      id: lists.id,
-      slug: lists.slug,
-      name: lists.name,
-      listType: lists.listType,
-      linkedListId: lists.linkedListId,
-      discoverable: lists.discoverable,
-      isProfileBind: lists.isProfileBind,
-      matchSale: lists.matchSale,
-      matchHave: lists.matchHave,
-      takesSwaps: lists.takesSwaps,
-    })
-    .from(lists)
-    .where(and(eq(lists.userId, userId), inArray(lists.listType, ["have", "want", "sale"])))
-    .orderBy(lists.id)
-    .for("update");
-}
-
 /** Saves a post's lists, link, Open to and Trade state in one transaction. */
 export async function savePost(userId: string, choice: PostChoice) {
   const changed = await db.transaction(async (tx) => {
-    const own = await lockPosterLists(tx, userId);
+    const own = await lockTradeLists(tx, userId);
     const plan = planPost(own, choice);
     if (!plan.ok) {
       if (plan.reason === "not_found") throw new ORPCError("NOT_FOUND");
@@ -118,7 +86,7 @@ export async function savePost(userId: string, choice: PostChoice) {
 /** Takes every list of the post off Trade; a pair stays linked, so posting it again brings it back. */
 export async function takeDownPost(userId: string, slug: string) {
   const changed = await db.transaction(async (tx) => {
-    const own = await lockPosterLists(tx, userId);
+    const own = await lockTradeLists(tx, userId);
     const list = own.find((entry) => entry.slug === slug);
     const post = list ? postHolding(postsOf(own), list.id) : null;
     if (!post) throw new ORPCError("NOT_FOUND");

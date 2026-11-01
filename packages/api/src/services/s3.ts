@@ -14,6 +14,8 @@ const s3Client = new S3Client({
     accessKeyId: serverEnv.S3_ACCESS_KEY,
     secretAccessKey: serverEnv.S3_SECRET_KEY,
   },
+  // the SDK waits forever by default; a stalled call would hold the request that made it
+  requestHandler: { connectionTimeout: 5_000, requestTimeout: 10_000, throwOnRequestTimeout: true },
 });
 
 export async function deleteFileFromBucket(bucketName: string, fileName: string) {

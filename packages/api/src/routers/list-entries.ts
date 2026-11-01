@@ -25,6 +25,7 @@ import {
   findOwnedList,
   touchList,
 } from "../services/list";
+import { refuseOverUserLimit } from "../services/redis";
 
 export const listEntriesRouter = {
   listEntries: pub
@@ -80,6 +81,7 @@ export const listEntriesRouter = {
         session: { user },
       },
     }) => {
+      await refuseOverUserLimit("list-add", user.id, 60, 60);
       const list = await findOwnedList(slug, user.id);
       const trimmed = note?.trim() || null;
       const priced = isQyop === true || price != null || trimmed !== null;

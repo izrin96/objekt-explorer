@@ -1,6 +1,5 @@
 import { dueCopy, type LegResult, reminderCopy } from "@repo/api/lib/trade-match";
 import { COPY_ACCEPT_HOURS, COPY_REMIND_HOURS } from "@repo/api/schemas/offer";
-import type { Tx } from "@repo/api/services/offer/core";
 import { partyNames, writeNotes } from "@repo/api/services/offer/notes";
 import {
   type AcceptedCopy,
@@ -12,6 +11,7 @@ import {
   shownSerials,
   wrongCopyNote,
 } from "@repo/api/services/trade-verify";
+import type { Tx } from "@repo/db";
 import { db } from "@repo/db";
 import { offer, trade, tradeLeg, tradeSubstitute } from "@repo/db/schema";
 import { and, eq, inArray, isNull, lte, sql } from "drizzle-orm";

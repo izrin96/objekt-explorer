@@ -1,4 +1,4 @@
-import type { db } from "@repo/db";
+import type { Tx } from "@repo/db";
 import { notification, notificationPref, offer, offerItem } from "@repo/db/schema";
 import { and, eq, inArray, sql } from "drizzle-orm";
 
@@ -10,8 +10,6 @@ import {
   type TradePayload,
 } from "../../schemas/offer";
 import { loadIdentities } from "../identities";
-
-type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
 type Note =
   | { type: "offer"; userId: string; payload: OfferPayload }

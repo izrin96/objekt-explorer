@@ -13,7 +13,7 @@ import type {
   SerialsOutput,
 } from "../schemas/collections";
 import { getCollectionColumns } from "./objekt";
-import { redis } from "./redis";
+import { redis, redisFailOpen } from "./redis";
 
 type CollectionListQuery = { artist: ValidArtist[]; at?: string };
 
@@ -74,7 +74,7 @@ export async function fetchCollectionList(
   const whereQuery = and(...filters);
 
   const [overrideStr, [latest]] = await Promise.all([
-    redis.get("collection:modified-at"),
+    redisFailOpen("collection modified-at", () => redis.get("collection:modified-at")),
     indexer
       .select({
         createdAt: collections.createdAt,

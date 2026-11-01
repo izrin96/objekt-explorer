@@ -1,5 +1,5 @@
 import { ORPCError } from "@orpc/server";
-import { db } from "@repo/db";
+import { db, type Tx } from "@repo/db";
 import { offer, trade, tradeLeg, tradeSubstitute } from "@repo/db/schema";
 import { and, eq, or, sql } from "drizzle-orm";
 
@@ -7,7 +7,7 @@ import { substituteRefusal } from "../../lib/offer-rules";
 import type { TradeStatus } from "../../schemas/offer";
 import { forgetReputation } from "../reputation";
 import { acceptCopy, finishSettle, shownSerials, wrongCopyNote } from "../trade-verify";
-import { refuseOffer, type Tx } from "./core";
+import { refuseOffer } from "./core";
 import { partyNames, writeNotes } from "./notes";
 import { publishTouched } from "./state";
 

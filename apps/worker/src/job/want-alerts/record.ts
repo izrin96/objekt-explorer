@@ -1,13 +1,13 @@
 import { groupKey, mergePayload } from "@repo/api/lib/notification-group";
 import { type AlertMatch, alertPayloadSchema } from "@repo/api/schemas/notification";
-import { db } from "@repo/db";
+import { db, type Tx } from "@repo/db";
 import { notification, wantAlertSent } from "@repo/db/schema";
 import { and, inArray, isNull, sql } from "drizzle-orm";
 
 import { chunks, unique } from "../../lib/array";
 import { type Alert, alertKeyId } from "../../lib/want-alert-match";
 import type { State } from "../../lib/want-alert-state";
-import { saveProgress, type Tx } from "./progress";
+import { saveProgress } from "./progress";
 
 const WRITE_CHUNK = 1000;
 

@@ -3,6 +3,7 @@
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules", ".turbo"],
   "compilerOptions": {
+    "types": ["node", "bun"],
     "paths": {
       "@/*": ["./src/*"]
     }

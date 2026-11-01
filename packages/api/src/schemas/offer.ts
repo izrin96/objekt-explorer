@@ -1,6 +1,7 @@
 import * as z from "zod";
 
 import { chatPartnerSchema, chatTargetSchema, FLAG_CATEGORIES } from "./chat";
+import { receivedAtCursorSchema, timestampTextSchema } from "./common/cursor";
 import { collectionFiltersSchema } from "./common/filters";
 import { reputationSchema } from "./reputation";
 
@@ -186,8 +187,7 @@ export const suggestInputSchema = z.object({
   post: z.string().min(1).optional(),
 });
 
-const candidateCursorSchema = z.object({ receivedAt: z.string(), id: z.string() });
-export type CandidateCursor = z.infer<typeof candidateCursorSchema>;
+export type CandidateCursor = z.infer<typeof receivedAtCursorSchema>;
 
 /** How the offer picker narrows a side. */
 const pickerNarrowingSchema = z.object({
@@ -205,7 +205,7 @@ export const candidatesInputSchema = addressedSchema
   .extend({
     side: z.enum(["mine", "theirs", "theirs-collection"]),
     /** mine and theirs-collection: where the next page starts */
-    cursor: candidateCursorSchema.optional(),
+    cursor: receivedAtCursorSchema.optional(),
     /** theirs: where the next page starts in the resolved list */
     offset: z.number().int().min(0).optional(),
     ...pickerNarrowingSchema.shape,
@@ -214,9 +214,9 @@ export const candidatesInputSchema = addressedSchema
 
 /** The last History row of the previous page, as the server sent it. */
 const historyCursorSchema = z.object({
-  at: z.string(),
+  at: timestampTextSchema,
   kind: z.enum(["offer", "trade"]),
-  id: z.number().int(),
+  id: z.int32(),
 });
 export type HistoryCursor = z.infer<typeof historyCursorSchema>;
 

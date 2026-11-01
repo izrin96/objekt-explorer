@@ -1,10 +1,10 @@
 import { db } from "@repo/db";
+import type { Tx } from "@repo/db";
 import { addressLinkEvent, userAddress, userSanction } from "@repo/db/schema";
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
 
 import { linkRefusal, unlinkRefusal } from "../lib/link-rules";
 import { refuse } from "../lib/refuse";
-import type { Tx } from "./moderation";
 import { activeSanctionWhere } from "./safety";
 
 type Executor = Pick<typeof db, "select" | "selectDistinct" | "execute">;

@@ -1,5 +1,5 @@
 import { ORPCError } from "@orpc/server";
-import { db } from "@repo/db";
+import { db, type Tx } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
 import {
@@ -24,7 +24,6 @@ import { lockUsersShared } from "../cosmo-link";
 import { notBlockedEither, notTradeSanctioned } from "../safety";
 import { askableOnTrade } from "../trade-lists";
 
-export type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 export type Safety = Awaited<ReturnType<typeof chatSafety>>;
 
 const REFUSAL_STATUS: Record<OfferRefusal, ConstructorParameters<typeof ORPCError>[0]> = {
