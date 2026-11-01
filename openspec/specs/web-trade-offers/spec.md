@@ -146,7 +146,7 @@ Of two offers holding the same objekt, the first accepted wins. Either party SHA
 - **THEN** exactly one becomes a trade, and the other is refused as reserved
 
 ### Requirement: Offer builder
-The builder SHALL open as a dialog, and as a full-height sheet on a phone. It shows:
+The builder SHALL be a page, `/trade/@<handle>/offer` (see Offer page), never a dialog. It shows:
 - You give, with an Add picker over the sender's own objekts, entries on their bound have and sale lists first;
 - You get, with an Add picker over the allowed list entries, labelled "Add from {name}'s lists"; or, when the partner has no have or sale list bound to a Cosmo profile and on Trade, an Add picker over their collection, labelled "Add from {name}'s collection", listing what they hold at their linked addresses, newest received first;
 - the top-up and the note.
@@ -412,11 +412,11 @@ The hint SHALL ignore the top-up, change nothing about the offer, and go away on
 - **THEN** the hint goes away
 
 ### Requirement: Picks in the builder
-Each side of the offer builder SHALL show its picks as a grid of small cards, as many a row as the side's width allows (six at the dialog's full width, four on a phone), each with its art, collection code and serial (or its any-copy count) and a remove button named for the objekt. The grid SHALL scroll inside its side, so the top-up, the note and the footer stay in reach whatever the count. A pick's warnings SHALL show with its card.
+Each side of the offer builder SHALL show its picks as a grid of small cards, as many a row as the side's width allows (six at 1280 px, four on a phone), each with its art, collection code and serial (or its any-copy count) and a remove button named for the objekt. The grid SHALL grow with the page rather than scroll inside its side; the column keeps the top-up, the note and Send in reach whatever the count, and on a phone Send stays in the bottom bar. A pick's warnings SHALL show with its card.
 
 #### Scenario: Large offer
 - **WHEN** the sender holds 24 picks under You give and 31 under You get
-- **THEN** each side shows its picks six a row, scrolling within the side, and the top-up, note and Send stay on screen
+- **THEN** each side shows its picks six a row at 1280 px, the page scrolls to show them all, and the column with the top-up, note and Send stays on screen
 
 #### Scenario: Remove one
 - **WHEN** the sender chooses the remove button on SeoAh 203Z #722
@@ -477,11 +477,11 @@ The matches SHALL be read live, by the rules and the Compare with list the row c
 - **THEN** the sender can still add Yooyeon 205Z, or anything else on their lists, under You give, and the offer sends with it
 
 ### Requirement: Reading the matches
-While the read runs, the builder SHALL show its title, a status line reading "Adding your matches…", a placeholder for each side and Cancel, and no picker, footer hint or Send. The status line SHALL stay in one place from the first frame to the close, then say what was added or that the read failed. Focus SHALL start on the dialog's title.
+While the read runs, the builder SHALL show its title, a status line reading "Adding your matches…", a placeholder for each side and Cancel, and no picker, send hint or Send. The status line SHALL stay in one place from the first frame to the close, then say what was added or that the read failed. Focus SHALL start on the page's title.
 
 #### Scenario: Loading
 - **WHEN** the builder is reading the matches
-- **THEN** it shows its title, the status line "Adding your matches…", a placeholder for each side and Cancel, with no picker, no "Add at least one objekt to either side." hint and no Send, and focus is on the title
+- **THEN** it shows its title, the status line "Adding your matches…", a placeholder for each side and Cancel, with no picker, no "Add at least one objekt to either side." hint and no Send, and focus is on the page's title
 
 #### Scenario: One status line throughout
 - **WHEN** the read ends and the sides appear
@@ -572,18 +572,18 @@ Remove matches SHALL take out every pick the matches added that is still there a
 - **THEN** the line goes
 
 ### Requirement: Closing after matches were added
-Closing the builder SHALL ask nothing when the added picks are unchanged, or when the builder holds nothing (no picks, no top-up amount and no note), including after Remove matches. Otherwise closing SHALL ask as for any draft.
+Leaving the page (see Leaving the offer page) SHALL ask nothing when the added picks are unchanged, or when the builder holds nothing (no picks, no top-up amount and no note), including after Remove matches. Otherwise leaving SHALL ask as for any draft.
 
 #### Scenario: Close unchanged
-- **WHEN** the sender closes the builder without changing the added picks
-- **THEN** it closes without asking to discard
+- **WHEN** the sender activates Back without changing the added picks
+- **THEN** the page is left without asking to discard
 
 #### Scenario: Close empty after Remove matches
-- **WHEN** the sender chooses Remove matches with no picks of their own, no top-up amount and no note, and then closes the builder
-- **THEN** it closes without asking to discard
+- **WHEN** the sender chooses Remove matches with no picks of their own, no top-up amount and no note, and then activates Cancel
+- **THEN** the page is left without asking to discard
 
 #### Scenario: Close with the sender's own pick
-- **WHEN** the sender chooses Remove matches while JiWoo 101Z they added is still under You get, and then closes the builder
+- **WHEN** the sender chooses Remove matches while JiWoo 101Z they added is still under You get, and then activates Back
 - **THEN** it asks to discard, as for any draft
 
 ### Requirement: When no matches are added
@@ -622,3 +622,73 @@ In the offer builder, a get-side item drawn from an entry of the partner's have 
 #### Scenario: No ratio
 - **WHEN** a picked item's entry has no ratio
 - **THEN** no chip shows
+
+### Requirement: Offer page
+Every Make offer and Counter SHALL open the offer page, `/trade/@<handle>/offer` of the partner (see `web-trade-person-pages` Trade handle): on a Trade row and each post's menu, the person and post pages, a near match's Make offer with it, chat's Add to message and deal strip, Counter, the trade page's status card, and a Market tab listing. The page SHALL start as the dialog did from the same place, with the same address, prefill and matches.
+
+#### Scenario: From a Trade row
+- **WHEN** a signed-in viewer activates Make offer on rin.trades's row on For you under Mutual only
+- **THEN** rin.trades's offer page opens, addressed to the row's lead post, with the matches the row's chip counts added
+
+#### Scenario: Counter
+- **WHEN** the sender activates Counter on rin.trades's offer O-881 in their conversation
+- **THEN** rin.trades's offer page opens titled as a counter, with O-881's picks, top-up and note, and Send counter-offer
+
+#### Scenario: From a Market listing
+- **WHEN** the sender activates Make offer on rin.trades's listing of SeoYeon 204Z #537 from sale list "spares"
+- **THEN** rin.trades's offer page opens with that objekt under You get, its picker opening on "spares"
+
+### Requirement: Offer page address
+The page's URL SHALL say how the offer starts: the list or the conversation it is addressed to, which matches to add (the row's under its Compare with list and Mutual only, or one post's), a near match to add, the countered offer, or a Market listing's objekt and sale list, and where to return. It SHALL never carry the sender's picks; a Market link names only the one listed objekt it starts from. Reopening the URL SHALL start the offer again from the same point.
+
+#### Scenario: Reload
+- **WHEN** the sender reloads the page after adding one objekt of their own to the added matches
+- **THEN** the browser asks to leave, and after leaving the page opens again with the matches added and without that objekt
+
+#### Scenario: Countered offer not theirs
+- **WHEN** the URL names an offer the viewer is not a party to, or one that is no longer open
+- **THEN** the page says the offer can't be countered and offers Back
+
+### Requirement: Offer page access
+A signed-out visitor SHALL be sent to sign in and back. A handle other than the partner's canonical one SHALL redirect as on the person page, keeping the rest of the URL. A handle with no account SHALL show not found.
+
+#### Scenario: Signed out
+- **WHEN** a visitor without a session opens `/trade/@rin.trades/offer`
+- **THEN** sign in opens, and after signing in they are back on that page
+
+#### Scenario: Other nickname
+- **WHEN** the sender opens `/trade/@rin.alt/offer?post=<spares slug>`, rin.alt being linked to rin.trades's account
+- **THEN** the browser is at `/trade/@rin.trades/offer?post=<spares slug>`
+
+### Requirement: Offer page layout
+From `lg` up, the page SHALL hold a narrow column, the title over a sticky part with the top-up, the note, Sending as, the send hint and Send, beside a main area with the status line across its width and then You get and You give side by side. The title scrolls with the page. Back to <name> SHALL lead the page. Add SHALL open the picker in a sheet from the end edge, as wide as the main area, with the column still in view.
+
+#### Scenario: Desktop
+- **WHEN** the sender opens rin.trades's offer page at 1440 px with 50 matches added under You get
+- **THEN** the column shows the title, top-up, note and Send, the line "Added 50 you get…" spans the main area, and You get and You give sit side by side under it
+
+#### Scenario: Scrolled
+- **WHEN** the sender scrolls down to the last rows of the 50 picks at 1440 px
+- **THEN** the title has scrolled away, and the top-up, note and Send stay in view beside the sides
+
+#### Scenario: Picker
+- **WHEN** the sender activates Add from rin.trades's lists at 1440 px
+- **THEN** the picker opens as a sheet over the main area, and the column with Send stays visible
+
+### Requirement: Offer page on a phone
+Below `lg`, the page SHALL stack the title, the status line, You get, You give, the top-up and the note, with Send and the send hint in a bottom bar, and the picker SHALL take the full screen. The page SHALL not scroll sideways.
+
+#### Scenario: Phone
+- **WHEN** the sender opens the offer page at 390 px
+- **THEN** the sides stack, Send sits in the bottom bar, and Add opens the picker full screen
+
+### Requirement: Leaving the offer page
+Back to <name> and Cancel SHALL return to the page the offer was started from, or to the partner's person page when there is none. Leaving by Back, Cancel, a link or the browser's back SHALL ask as Closing after matches were added says; a reload or closing the tab SHALL get the browser's own prompt under the same rule. Sending SHALL go to the conversation, and from a conversation return there.
+
+#### Scenario: Back to chat
+- **WHEN** the sender opens Make offer from their conversation with rin.trades and activates Cancel with nothing changed
+- **THEN** the conversation opens again
+
+#### Scenario: Link away with a draft
+- **WHEN** the sender has added a note and activates the Trade tab in the header
+- **THEN** they are asked to discard the draft, and staying keeps the page as it was

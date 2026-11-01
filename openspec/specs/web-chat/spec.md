@@ -1015,7 +1015,7 @@ The message box SHALL have one button, named "Add to message", beside the text f
 - **THEN** the row holds Add, the text field and Send, Add opens a bottom sheet with both choices labelled and described, and the page does not scroll sideways
 
 ### Requirement: Add to message focus
-Escape, and the sheet's close button, SHALL close the menu or sheet and return focus to Add to message. Closing the objekt picker or the offer builder opened from it, after a pick or without one, SHALL return focus to Add to message.
+Escape, and the sheet's close button, SHALL close the menu or sheet and return focus to Add to message. Closing the objekt picker opened from it, after a pick or without one, SHALL return focus to Add to message. Make offer SHALL open the offer page (see `web-trade-offers` Offer page); leaving it without sending SHALL return to the conversation with focus on Add to message.
 
 #### Scenario: Escape
 - **WHEN** izrin96 opens the menu with the keyboard and presses Escape
@@ -1024,6 +1024,10 @@ Escape, and the sheet's close button, SHALL close the menu or sheet and return f
 #### Scenario: After a pick
 - **WHEN** izrin96 chooses Attach objekt, picks SeoAh 203Z and the picker closes
 - **THEN** the card is attached to the draft and focus is on Add to message
+
+#### Scenario: Back from the offer page
+- **WHEN** izrin96 chooses Make offer from Add to message, then Cancel on the offer page
+- **THEN** the conversation opens again with focus on Add to message
 
 ### Requirement: Messages page header
 On `/messages`, the page header SHALL show the title and the settings link only, without the page description, and the conversation frame SHALL take the height the description used.
