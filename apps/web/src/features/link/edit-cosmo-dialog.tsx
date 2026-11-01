@@ -5,7 +5,7 @@ import {
 } from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { lazy, type ReactElement, Suspense, useEffect, useRef, useState } from "react";
+import { lazy, type ReactElement, Suspense, useEffect, useId, useRef, useState } from "react";
 import type { CropperRef } from "react-advanced-cropper";
 
 import { MessageMarkup } from "@/components/shared/message-markup";
@@ -21,7 +21,19 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
+import {
+  FileUpload,
+  FileUploadDropzone,
+  type FileRejectReason,
+  FileUploadTrigger,
+} from "@/components/ui/file-upload";
+import {
+  Progress,
+  ProgressIndicator,
+  ProgressLabel,
+  ProgressTrack,
+  ProgressValue,
+} from "@/components/ui/progress";
 import { Spinner } from "@/components/ui/spinner";
 import { toastManager } from "@/components/ui/toast";
 import {
@@ -38,7 +50,6 @@ import { displayNickname } from "@/lib/address";
 import { client, orpc } from "@/lib/orpc";
 import { refusalText } from "@/lib/refusal";
 import { TONE_SOLID } from "@/lib/tone";
-import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 type Profile = Awaited<ReturnType<typeof client.profile.find>>;
@@ -131,18 +142,79 @@ function EditForm({
 }) {
   const queryClient = useQueryClient();
   const cropperRef = useRef<CropperRef>(null);
-  const bannerInputRef = useRef<HTMLInputElement>(null);
   const saveRef = useRef<AbortController | null>(null);
   const [picked, setPicked] = useState<{ file: File; url: string } | null>(null);
   const [cropReady, setCropReady] = useState(false);
   const [percent, setPercent] = useState<number | null>(null);
   const [removeBanner, setRemoveBanner] = useState(false);
+  const bannerLabelId = useId();
+  const bannerFieldRef = useRef<HTMLDivElement>(null);
+  // the control that had focus unmounts on a pick or a Clear, so its replacement takes focus
+  const focusOnMount = useRef(false);
+  const takeFocus = (node: HTMLElement | null) => {
+    if (node === null || !focusOnMount.current) return;
+    focusOnMount.current = false;
+    node.focus();
+  };
 
   useEffect(() => () => saveRef.current?.abort(), []);
 
+  // a file dropped anywhere but the dropzone (which cancels its own events) would open in the tab
+  // and lose the dialog; refuse it so the cursor shows the drop is not allowed
+  useEffect(() => {
+    const refuseDragOver = (event: DragEvent) => {
+      if (event.defaultPrevented || !event.dataTransfer?.types.includes("Files")) return;
+      event.preventDefault();
+      event.dataTransfer.dropEffect = "none";
+    };
+    const refuseDrop = (event: DragEvent) => {
+      if (!event.defaultPrevented) event.preventDefault();
+    };
+    window.addEventListener("dragover", refuseDragOver);
+    window.addEventListener("drop", refuseDrop);
+    return () => {
+      window.removeEventListener("dragover", refuseDragOver);
+      window.removeEventListener("drop", refuseDrop);
+    };
+  }, []);
+
+  // a replaced pick, a Clear, a Save and a Cancel all release the preview's object URL here
+  const pickedUrl = picked?.url;
+  useEffect(() => {
+    if (pickedUrl === undefined) return;
+    return () => URL.revokeObjectURL(pickedUrl);
+  }, [pickedUrl]);
+
+  // FileUpload reports each rejected file of a drop on its own, all in one pass: gather them
+  // and show one toast per reason
+  const rejectedRef = useRef<{ unsupported: File[]; extra: number } | null>(null);
+  const rejectFile = (file: File, reason: FileRejectReason) => {
+    if (rejectedRef.current === null) {
+      const rejected = { unsupported: [] as File[], extra: 0 };
+      rejectedRef.current = rejected;
+      queueMicrotask(() => {
+        rejectedRef.current = null;
+        const [first, ...more] = rejected.unsupported;
+        if (first) {
+          toastManager.add({
+            type: "error",
+            title:
+              more.length === 0
+                ? m.profile_edit_file_unsupported({ name: first.name })
+                : m.profile_edit_files_unsupported({ count: more.length + 1 }),
+          });
+        }
+        if (rejected.extra > 0) {
+          toastManager.add({ type: "info", title: m.profile_edit_banner_one_file() });
+        }
+      });
+    }
+    if (reason === "type") rejectedRef.current.unsupported.push(file);
+    else rejectedRef.current.extra += 1;
+  };
+
   const clearPick = () => {
     saveRef.current?.abort();
-    if (picked) URL.revokeObjectURL(picked.url);
     setPicked(null);
     setCropReady(false);
   };
@@ -220,44 +292,67 @@ function EditForm({
     <>
       <DialogPanel className="flex flex-col gap-4">
         <div className="flex flex-col gap-2">
-          <Label htmlFor="edit-cosmo-banner">{m.profile_edit_banner_label()}</Label>
-          <div className="flex items-center gap-1.5">
-            {/* a real button, not a label over an sr-only input, so keyboard focus is visible */}
-            <Button
-              id="edit-cosmo-banner"
-              variant="outline"
-              size="sm"
-              onClick={() => bannerInputRef.current?.click()}
-            >
-              <UploadSimpleIcon />
-              {m.profile_edit_banner_label()}
-            </Button>
-            <input
-              ref={bannerInputRef}
-              type="file"
-              accept={BANNER_ACCEPT}
-              hidden
-              onChange={(event) => {
-                const file = event.target.files?.[0];
-                event.target.value = "";
-                if (!file) return;
-                const problem = bannerFileError(file);
-                if (problem !== null) {
-                  toastManager.add({ type: "error", title: problem });
-                  return;
-                }
-                clearPick();
-                setPicked({ file, url: URL.createObjectURL(file) });
-                // a new banner replaces the old one, so it is no longer removed
-                setRemoveBanner(false);
-              }}
-            />
-            {picked && (
-              <Button variant="outline" size="sm" onClick={clearPick}>
-                {m.profile_edit_banner_clear()}
-              </Button>
+          <span id={bannerLabelId} className="text-sm font-medium">
+            {m.profile_edit_banner_label()}
+          </span>
+          <FileUpload
+            ref={bannerFieldRef}
+            role="group"
+            aria-labelledby={bannerLabelId}
+            accept={BANNER_ACCEPT}
+            disabled={save.isPending}
+            value={picked ? [picked.file] : []}
+            onValueChange={([file]) => {
+              // empty when Replace picked a file `accept` rejects; keep the current pick
+              if (!file) return;
+              const problem = bannerFileError(file);
+              if (problem !== null) {
+                toastManager.add({ type: "error", title: problem });
+                return;
+              }
+              focusOnMount.current = picked === null;
+              clearPick();
+              setPicked({ file, url: URL.createObjectURL(file) });
+              // a new banner replaces the old one, so it is no longer removed
+              setRemoveBanner(false);
+            }}
+            onFileReject={rejectFile}
+          >
+            {picked ? (
+              <div className="flex items-center gap-1.5">
+                <FileUploadTrigger ref={takeFocus} size="sm">
+                  <UploadSimpleIcon />
+                  {m.profile_edit_banner_replace()}
+                </FileUploadTrigger>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    focusOnMount.current = true;
+                    clearPick();
+                  }}
+                >
+                  {m.profile_edit_banner_clear()}
+                </Button>
+              </div>
+            ) : (
+              <FileUploadDropzone ref={takeFocus} className="hover:bg-muted/50 rounded-lg py-6">
+                <div className="bg-background flex size-9 items-center justify-center rounded-full border">
+                  <UploadSimpleIcon aria-hidden className="size-4 opacity-72" />
+                </div>
+                <p className="text-sm font-medium text-balance">
+                  <MessageMarkup
+                    parts={m.profile_edit_banner_drop.parts()}
+                    markup={{
+                      browse: (children) => (
+                        <span className="underline underline-offset-4">{children}</span>
+                      ),
+                    }}
+                  />
+                </p>
+              </FileUploadDropzone>
             )}
-          </div>
+          </FileUpload>
 
           {picked && (
             <BannerPreview
@@ -272,6 +367,9 @@ function EditForm({
                   type: "error",
                   title: m.profile_edit_file_unsupported({ name: picked.file.name }),
                 });
+                // the failure lands late: take focus back only if it sat on Replace or Clear
+                focusOnMount.current =
+                  bannerFieldRef.current?.contains(document.activeElement) === true;
                 clearPick();
               }}
             />
@@ -393,20 +491,16 @@ function BannerPreview({
 
 function ConvertProgress({ percent }: { percent: number }) {
   return (
-    <div className="flex items-center gap-2">
-      <div
-        role="progressbar"
-        aria-label={m.profile_edit_banner_converting()}
-        aria-valuemin={0}
-        aria-valuemax={100}
-        aria-valuenow={percent}
-        className="bg-muted h-1 flex-1 overflow-hidden rounded-full"
-      >
-        <div className={cn("h-full", TONE_SOLID.progress)} style={{ width: `${percent}%` }} />
-      </div>
+    <Progress value={percent} className="flex-row items-center">
+      <ProgressTrack className="bg-muted h-1 flex-1">
+        <ProgressIndicator className={TONE_SOLID.progress} />
+      </ProgressTrack>
       <span className="text-muted-foreground text-xs">
-        {m.profile_edit_banner_converting()} <span className="tabular-nums">{percent}%</span>
+        <ProgressLabel className="text-xs font-normal">
+          {m.profile_edit_banner_converting()}
+        </ProgressLabel>{" "}
+        <ProgressValue className="text-xs" />
       </span>
-    </div>
+    </Progress>
   );
 }

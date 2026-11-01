@@ -11,4 +11,11 @@ export default defineConfig({
     "src/paraglide",
     ".tanstack",
   ],
+  overrides: [
+    {
+      // vendored verbatim; the effect is FileUploadItemPreview's object URL, a part no caller uses
+      files: ["src/components/ui/file-upload.tsx"],
+      rules: { "react/set-state-in-effect": "off" },
+    },
+  ],
 });

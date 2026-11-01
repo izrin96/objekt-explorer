@@ -60,6 +60,14 @@ spelling (`#fff`, `ff0000`) never equals the plane's own hex, and the picker re-
 throws (`canonicalHex`). `ColorPickerHue` puts `aria-label` on the slider's group, not its range
 input; name the input with `aria-labelledby`.
 
+`file-upload` backs the Edit profile banner field (`features/link/edit-cosmo-dialog.tsx`), laid out as
+`v-file-upload-1` in single-file mode: a dropzone until a file is picked, then the cropper with
+Replace (`FileUploadTrigger`) and Clear. `bannerFileError` stays the size gate, so no `maxSize` is
+passed; `accept` rejects on drop too, and a multi-file drop rejects the extras with `"count"`. Its
+`FileUploadList` and `FileUploadItem*` parts carry English labels and are unused. The file stays
+verbatim: `FileUploadItemPreview` sets state in an effect, so `oxlint.config.ts` turns
+`react/set-state-in-effect` off for this one file rather than editing it.
+
 ## Local edits
 
 | File                                    | Edit                                                                                                                                                                                                                         | Why                                                                                                                                                                                                  |
