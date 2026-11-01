@@ -60,6 +60,10 @@ export function refusalText(error: unknown) {
       return m.api_errors_list_rule_limit();
     case "list_rule_no_collections":
       return m.api_errors_list_rule_no_collections();
+    case "list_ratio_list_type":
+      return m.api_errors_list_ratio_list_type();
+    case "list_ratio_entry":
+      return m.api_errors_list_ratio_entry();
     case "trade_mode_list_type":
       return m.api_errors_trade_mode_list_type();
     case "trade_mode_both_needs_pair":

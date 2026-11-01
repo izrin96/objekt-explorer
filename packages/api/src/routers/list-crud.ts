@@ -19,6 +19,8 @@ import {
   slugPreviewInputSchema,
   slugPreviewOutputSchema,
 } from "../schemas/list";
+import { carriesRatios } from "../schemas/list-copy";
+import { takesRatio } from "../schemas/trade-ratio";
 import {
   fetchList,
   findOwnedList,
@@ -98,6 +100,9 @@ export const listCrud = {
         const { slug, changed } = await db.transaction(async (tx) => {
           const created = await writeList(tx, prepared);
           await insertCopyRows(tx, created.id, rows);
+          if (source.ratio !== null && carriesRatios(source.listType, input.listType)) {
+            await tx.update(lists).set({ ratio: source.ratio }).where(eq(lists.id, created.id));
+          }
           // any other copy drops the rules with the objekts they want
           if (input.listType === "want" && source.listType === "want") {
             await copyRulesTx(tx, source.id, created.id);
@@ -138,6 +143,9 @@ export const listCrud = {
       // Validate currency for sale lists
       if (list.listType === "sale" && !input.currency) {
         refuse("BAD_REQUEST", "list_currency_required", "Currency is required for sale lists");
+      }
+      if (input.ratio != null && !takesRatio(list.listType)) {
+        refuse("BAD_REQUEST", "list_ratio_list_type", "Only have and want lists take a ratio");
       }
 
       // address changes are ignored on a bound list, so only an unbound one is checked
@@ -184,6 +192,7 @@ export const listCrud = {
             ["sale", "have"].includes(list.listType) && list.isProfileBind
               ? input.hideSerial
               : false,
+          ratio: takesRatio(list.listType) ? input.ratio : undefined,
         })
         .where(eq(lists.id, list.id));
       await touchList([list.id]);

@@ -7,6 +7,7 @@ import { indexedObjektSchema, ownedObjektSchema } from "./common/objekt";
 import { queryArray } from "./common/query";
 import type { ObjektPreview } from "./objekts";
 import { publicProfileSchema, publicUserSchema } from "./profile";
+import { tradeRatioSchema } from "./trade-ratio";
 
 export const listTypeSchema = z.enum(["general", "sale", "have", "want"]);
 export type ListType = z.infer<typeof listTypeSchema>;
@@ -60,6 +61,8 @@ const baseListSchema = z.object({
   matchHave: z.boolean().nullish(),
   /** a sale list open to swaps (Sell or swap) */
   takesSwaps: z.boolean().nullish(),
+  /** a have or want list's trade ratio, which entries and rules without one follow */
+  ratio: z.number().int().nullish(),
   bumpedAt: z.string().nullish(),
   user: publicUserSchema.nullish(),
   profile: publicProfileSchema.nullish(),
@@ -80,6 +83,8 @@ const listEntryFields = {
   price: z.number().nullable(),
   isQyop: z.boolean(),
   note: z.string().nullable(),
+  /** the entry's own; null follows the list's `ratio` */
+  ratio: z.number().int().nullable(),
 };
 
 const listObjektSchema = z.union([
@@ -179,6 +184,8 @@ export const editListInputSchema = z.object({
   currency: z.string().max(10).nullable(),
   hideSerial: z.boolean(),
   regenerateSlug: z.boolean().default(false),
+  /** a have or want list's "Ratio for all"; omitted keeps the stored one, as a tab from before ratios sends it */
+  ratio: tradeRatioSchema.nullable().optional(),
 });
 
 export const slugPreviewInputSchema = z.object({
@@ -223,6 +230,13 @@ export const removeObjektsFromListInputSchema = z.object({
   entryIds: z.number().int().positive().array().max(50000),
 });
 
+/** Set ratio on a have or want list's own entries; null is 1:1. */
+export const setRatioInputSchema = z.object({
+  slug: z.string(),
+  entryIds: z.int32().positive().array().min(1).max(50000),
+  ratio: tradeRatioSchema.nullable(),
+});
+
 export const updateEntryPricesInputSchema = z.object({
   slug: z.string(),
   updates: z
@@ -257,4 +271,6 @@ export const LIST_REFUSALS = [
   "list_rule_nothing_to_match",
   "list_rule_no_collections",
   "list_rule_limit",
+  "list_ratio_list_type",
+  "list_ratio_entry",
 ] as const;

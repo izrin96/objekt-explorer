@@ -1,5 +1,6 @@
 import type { ListType } from "@repo/api/schemas/list";
 import type { OpenToFlags } from "@repo/api/schemas/open-to";
+import { takesRatio } from "@repo/api/schemas/trade-ratio";
 import * as z from "zod";
 
 import { displayNickname, isSameAddress } from "@/lib/address";
@@ -18,6 +19,8 @@ export type ListDraft = OpenToFlags & {
   gridColumns: number | null;
   hideSerial: boolean;
   regenerateSlug: boolean;
+  /** a have or want list's Ratio for all; edit only */
+  ratio: number | null;
 };
 
 export const EMPTY_DRAFT: ListDraft = {
@@ -34,6 +37,7 @@ export const EMPTY_DRAFT: ListDraft = {
   gridColumns: null,
   hideSerial: false,
   regenerateSlug: false,
+  ratio: null,
 };
 
 /** Built per submit: the message functions read the request's locale. */
@@ -92,9 +96,9 @@ export function toCreateInput(draft: ListDraft) {
 
 /**
  * `list.edit`'s input. A list's link, Trade state and Open to belong to its post, so they are left
- * out and the list keeps them.
+ * out and the list keeps them. Ratio for all goes only when it differs from `storedRatio`.
  */
-export function toEditInput(slug: string, draft: ListDraft) {
+export function toEditInput(slug: string, draft: ListDraft, storedRatio: number | null = null) {
   const {
     listType: _type,
     isProfileBind: _bind,
@@ -108,6 +112,7 @@ export function toEditInput(slug: string, draft: ListDraft) {
     ...rest,
     gridColumns: draft.gridColumns,
     regenerateSlug: draft.regenerateSlug,
+    ...(takesRatio(draft.listType) && draft.ratio !== storedRatio && { ratio: draft.ratio }),
   };
 }
 

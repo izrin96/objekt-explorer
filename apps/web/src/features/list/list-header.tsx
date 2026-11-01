@@ -225,6 +225,7 @@ export function ListHeader() {
             <RuleDialog
               slug={list.slug}
               listName={list.name}
+              listRatio={list.ratio ?? null}
               open={ruleOpen}
               onOpenChange={setRuleOpen}
             />

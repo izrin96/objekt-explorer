@@ -161,6 +161,21 @@ describe("toEditInput", () => {
     expect(input).toMatchObject({ slug: "my-list", gridColumns: 6, regenerateSlug: true });
   });
 
+  test("sends Ratio for all only when it changed, so a save keeps the stored one", () => {
+    const have = draft({ listType: "have", profileAddress: ADDRESS, ratio: 2 });
+    expect(toEditInput("my-list", have, 2)).not.toHaveProperty("ratio");
+    expect(toEditInput("my-list", have, null)).toMatchObject({ ratio: 2 });
+    expect(toEditInput("my-list", { ...have, ratio: null }, 3)).toMatchObject({ ratio: null });
+    expect(editListInputSchema.parse(toEditInput("my-list", have, null)).ratio).toBe(2);
+  });
+
+  test("never sends a ratio for a sale or general list", () => {
+    for (const listType of ["sale", "general"] as const) {
+      const input = toEditInput("my-list", draft({ listType, currency: "USD", ratio: 2 }), null);
+      expect(input).not.toHaveProperty("ratio");
+    }
+  });
+
   test("parses to itself with a null or a set grid", () => {
     for (const gridColumns of [null, 4]) {
       const input = toEditInput("my-list", draft({ profileAddress: ADDRESS, gridColumns }));

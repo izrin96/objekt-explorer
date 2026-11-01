@@ -11,6 +11,7 @@ import {
   NumberFieldIncrement,
   NumberFieldInput,
 } from "@/components/ui/number-field";
+import { RatioChip } from "@/features/list/ratio-chip";
 import { ObjektCard } from "@/features/objekt/objekt-card";
 import { CollectionLabel, collectionName, SerialNo } from "@/features/objekt/objekt-label";
 import { activateOnKey } from "@/lib/a11y";
@@ -128,6 +129,10 @@ export function CandidateTile({
           <CollectionLabel slug={item.collectionSlug} collection={collection} />
         </span>
         {detail ? <span className="text-muted-foreground tabular-nums">{detail}</span> : null}
+        {/* only the partner's have-list items carry one, so this is always what they ask */}
+        {item.ratio !== undefined ? (
+          <RatioChip ratio={item.ratio} side="have" owner={false} className="mt-0.5 self-start" />
+        ) : null}
         {blocked ? (
           <span className="text-destructive-foreground">{blocked}</span>
         ) : item.inOpenOffer.length > 0 ? (

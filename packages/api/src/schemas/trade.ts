@@ -159,6 +159,8 @@ const previewItemSchema = z.object({
   qty: z.number().int(),
   ringed: z.literal(true).optional(),
   near: z.array(z.number().int()).optional(),
+  /** the trade ratio, the highest of the copies it folds; absent is 1:1 or a side that doesn't swap */
+  ratio: z.number().int().optional(),
 });
 
 const feedCollectionsSchema = z.record(
@@ -190,6 +192,7 @@ const feedSideSchema = z.object({
       matched: z.number().int().nullable(),
       matchedSlugs: z.array(z.string()),
       rule: ruleDefSchema,
+      ratio: z.number().int().optional(),
     }),
   ),
   near: sideNearSchema.optional(),

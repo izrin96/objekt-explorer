@@ -62,18 +62,18 @@ export const listRulesRouter = {
 
   addRule: authed
     .input(addRuleInputSchema)
-    .handler(async ({ input: { slug, rule }, context: { session } }) => {
+    .handler(async ({ input: { slug, rule, ratio }, context: { session } }) => {
       await limitRuleWrites(session.user.id);
       const list = await findOwnedList(slug, session.user.id);
-      return addRule(list, rule, session.user.id);
+      return addRule(list, rule, ratio ?? null, session.user.id);
     }),
 
   updateRule: authed
     .input(updateRuleInputSchema)
-    .handler(async ({ input: { slug, ruleId, rule }, context: { session } }) => {
+    .handler(async ({ input: { slug, ruleId, rule, ratio }, context: { session } }) => {
       await limitRuleWrites(session.user.id);
       const list = await findOwnedList(slug, session.user.id);
-      await updateRule(list, ruleId, rule, session.user.id);
+      await updateRule(list, ruleId, rule, ratio, session.user.id);
     }),
 
   deleteRule: authed

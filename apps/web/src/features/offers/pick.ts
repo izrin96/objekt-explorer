@@ -26,6 +26,8 @@ export type OfferPick = {
   replaces?: string;
   /** an any-copy pick: the copies taken off it, which it no longer resolves to */
   skip?: readonly string[];
+  /** a get pick from the partner's have list: what its entry asks, shown and never checked */
+  ratio?: number;
 };
 
 export const anyKey = (collectionSlug: string) => `any:${collectionSlug}`;
@@ -47,6 +49,7 @@ export function toPick(item: CandidateItem): OfferPick {
       inOpenOffer: item.inOpenOffer,
       copies: item.copies,
     },
+    ...(item.ratio !== undefined && { ratio: item.ratio }),
   };
 }
 

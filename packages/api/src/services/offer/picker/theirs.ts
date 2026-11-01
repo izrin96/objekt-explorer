@@ -97,7 +97,7 @@ async function resolveTheirItems(me: string, addressed: Addressed, fromList?: st
       if (!objekt || !theirs.has(objekt.owner) || objekt.slug !== entry.collectionSlug) continue;
       if (seen.has(objekt.id)) continue;
       seen.add(objekt.id);
-      items.push(toCandidate(objekt, flags(objekt), entry.listSlug));
+      items.push(toCandidate(objekt, flags(objekt), entry.listSlug, entry.ratio));
       continue;
     }
     const held = copies.filter((o) => o.slug === entry.collectionSlug);
@@ -118,13 +118,14 @@ async function resolveTheirItems(me: string, addressed: Addressed, fromList?: st
         listSlug: entry.listSlug,
         copies: spare,
         bySerial: bySerial.has(entry.collectionSlug),
+        ...(entry.ratio !== null && { ratio: entry.ratio }),
       });
     }
     if (entry.hideSerial) continue;
     for (const objekt of held) {
       if (seen.has(objekt.id)) continue;
       seen.add(objekt.id);
-      items.push(toCandidate(objekt, flags(objekt), entry.listSlug));
+      items.push(toCandidate(objekt, flags(objekt), entry.listSlug, entry.ratio));
     }
   }
 

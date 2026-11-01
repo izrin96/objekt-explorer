@@ -1,4 +1,5 @@
 import type { ListType } from "./list";
+import { takesRatio } from "./trade-ratio";
 
 export type CopyBinding = {
   listType: ListType;
@@ -25,6 +26,11 @@ export function needsHoldings(mode: CopyMode) {
 /** Price, quote-your-own-price and note only mean something on a sale list. */
 export function carriesPrices(source: ListType, target: ListType) {
   return source === "sale" && target === "sale";
+}
+
+/** Ratios read by the list type, so a copy keeps them only as the same type of have or want list. */
+export function carriesRatios(source: ListType, target: ListType) {
+  return source === target && takesRatio(target);
 }
 
 export function copyUnit(mode: CopyMode) {

@@ -29,6 +29,8 @@ type Props = {
   problem?: string | null;
   /** short lines under the caption, such as a copies count or an open-offer warning */
   notes?: TileNote[];
+  /** a chip under the caption, such as the partner's trade ratio */
+  badge?: ReactNode;
   /** a button over the art's corner, such as remove */
   slot?: ReactNode;
   /** art only: the label alone names it */
@@ -53,6 +55,7 @@ export function ObjektTile({
   dim = false,
   problem,
   notes = [],
+  badge,
   slot,
   compact = false,
   onOpen,
@@ -122,6 +125,7 @@ export function ObjektTile({
             {note.text}
           </span>
         ))}
+        {badge != null ? <span className="mt-0.5 flex">{badge}</span> : null}
       </span>
     </>
   );

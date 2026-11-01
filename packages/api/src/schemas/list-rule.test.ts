@@ -9,6 +9,7 @@ import {
   ruleHasEditions,
   ruleIdInputSchema,
   ruleLabel,
+  updateRuleInputSchema,
   ruleLine,
   ruleProblem,
 } from "./list-rule";
@@ -201,5 +202,32 @@ describe("ruleIdInputSchema", () => {
   test("refuses a rule id that is not a positive integer", () => {
     expect(ruleIdInputSchema.safeParse({ slug: "s", ruleId: "x" }).success).toBe(false);
     expect(ruleIdInputSchema.safeParse({ slug: "s", ruleId: "0" }).success).toBe(false);
+  });
+});
+
+describe("rule ratio", () => {
+  const rule = { kind: "collection", artist: "triples", season: "Cream02", collectionNo: "366Z" };
+
+  test("an update without ratio keeps the stored one", () => {
+    const parsed = updateRuleInputSchema.parse({ slug: "s", ruleId: 1, rule });
+    expect(parsed.ratio).toBeUndefined();
+    expect("ratio" in parsed).toBe(false);
+  });
+
+  test("null clears it, 2 to 5 set it, anything else is refused", () => {
+    expect(updateRuleInputSchema.parse({ slug: "s", ruleId: 1, rule, ratio: null }).ratio).toBe(
+      null,
+    );
+    expect(updateRuleInputSchema.parse({ slug: "s", ruleId: 1, rule, ratio: 5 }).ratio).toBe(5);
+    for (const ratio of [0, 1, 6, 2.5]) {
+      expect(updateRuleInputSchema.safeParse({ slug: "s", ruleId: 1, rule, ratio }).success).toBe(
+        false,
+      );
+    }
+  });
+
+  test("never enters the definition", () => {
+    const parsed = updateRuleInputSchema.parse({ slug: "s", ruleId: 1, rule, ratio: 2 });
+    expect("ratio" in ruleDef(parsed.rule)).toBe(false);
   });
 });

@@ -29,6 +29,7 @@ import { client, orpc } from "@/lib/orpc";
 import { refusalText } from "@/lib/refusal";
 import { m } from "@/paraglide/messages";
 
+import { RatioPicker } from "../ratio-picker";
 import { RULE_KEYS } from "./queries";
 import {
   ANY,
@@ -58,13 +59,16 @@ import { RulePreview } from "./rule-preview";
 export function RuleDialog({
   slug,
   listName,
+  listRatio = null,
   rule,
   open,
   onOpenChange,
 }: {
   slug: string;
   listName: string;
-  rule?: { id: number } & ListRuleDef;
+  /** the list's Ratio for all, which a rule's 1:1 follows */
+  listRatio?: number | null;
+  rule?: EditedRule;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
@@ -75,6 +79,7 @@ export function RuleDialog({
           <RuleForm
             slug={slug}
             listName={listName}
+            listRatio={listRatio}
             rule={rule}
             onDone={() => onOpenChange(false)}
           />
@@ -84,15 +89,19 @@ export function RuleDialog({
   );
 }
 
+type EditedRule = { id: number; ratio?: number | null } & ListRuleDef;
+
 function RuleForm({
   slug,
   listName,
+  listRatio,
   rule,
   onDone,
 }: {
   slug: string;
   listName: string;
-  rule?: { id: number } & ListRuleDef;
+  listRatio: number | null;
+  rule?: EditedRule;
   onDone: () => void;
 }) {
   const id = useId();
@@ -107,6 +116,8 @@ function RuleForm({
     return newDraft(artist, seasonsOf(filterData, artist));
   });
   const set = (patch: Partial<RuleDraft>) => setDraft((current) => ({ ...current, ...patch }));
+  const storedRatio = rule?.ratio ?? null;
+  const [ratio, setRatio] = useState<number | null>(storedRatio);
 
   const seasons = seasonsOf(filterData, draft.artist);
   const classes = classesOf(filterData, draft.artist);
@@ -130,8 +141,15 @@ function RuleForm({
 
   const save = useMutation({
     mutationFn: async (next: ListRuleInput) => {
-      if (rule) await client.list.updateRule({ slug, ruleId: rule.id, rule: next });
-      else await client.list.addRule({ slug, rule: next });
+      if (rule) {
+        await client.list.updateRule({
+          slug,
+          ruleId: rule.id,
+          rule: next,
+          // sent only when changed, as a tab from before ratios leaves it out
+          ...(ratio !== storedRatio && { ratio }),
+        });
+      } else await client.list.addRule({ slug, rule: next, ratio });
     },
     onSuccess: async () => {
       onDone();
@@ -272,6 +290,15 @@ function RuleForm({
             onCheckedChange={(skipOwned) => set({ skipOwned })}
           />
         </Label>
+
+        <RatioPicker
+          side="want"
+          label={m.ratio_label()}
+          description={m.rule_ratio_desc()}
+          value={ratio}
+          onChange={setRatio}
+          listRatio={listRatio}
+        />
 
         <RulePreview input={input} counts={counts} pending={preview.isFetching} />
       </DialogPanel>

@@ -1,6 +1,6 @@
 import { db } from "@repo/db";
 import { conversation, listEntries, lists } from "@repo/db/schema";
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 
 import { holdsMessage, pairKey } from "../../../lib/chat-rules";
 import {
@@ -280,6 +280,9 @@ async function partnerEntries(ids: number[], slugs: string[]) {
       hideSerial: lists.hideSerial,
       collectionSlug: listEntries.collectionSlug,
       objektId: listEntries.objektId,
+      ratio: sql<
+        number | null
+      >`CASE WHEN ${lists.listType} = 'have' THEN coalesce(${listEntries.ratio}, ${lists.ratio}) END`,
     })
     .from(listEntries)
     .innerJoin(lists, eq(lists.id, listEntries.listId))

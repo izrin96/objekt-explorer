@@ -3,6 +3,7 @@ import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Popover, PopoverPopup, PopoverTitle, PopoverTrigger } from "@/components/ui/popover";
+import { RatioChip } from "@/features/list/ratio-chip";
 import { ruleText } from "@/features/list/rules/words";
 import { ObjektCard } from "@/features/objekt/objekt-card";
 import { cn } from "@/lib/utils";
@@ -22,16 +23,19 @@ export function RuleTiles({
   tiles,
   collections,
   onOpen,
+  owner = false,
 }: {
   tiles: readonly RuleTileData[];
   collections: Readonly<Record<string, ValidObjekt | undefined>>;
   onOpen: (objekt: ValidObjekt) => void;
+  /** the viewer's own post: the ratio reads "You'd give" */
+  owner?: boolean;
 }) {
   return (
     <ul className="-m-1 flex flex-wrap gap-1.5 p-1">
       {tiles.map((tile) => (
         <li key={tile.ruleId}>
-          <RuleTile tile={tile} collections={collections} onOpen={onOpen} />
+          <RuleTile tile={tile} collections={collections} onOpen={onOpen} owner={owner} />
         </li>
       ))}
     </ul>
@@ -42,17 +46,24 @@ function RuleTile({
   tile,
   collections,
   onOpen,
+  owner,
 }: {
   tile: RuleTileData;
   collections: Readonly<Record<string, ValidObjekt | undefined>>;
   onOpen: (objekt: ValidObjekt) => void;
+  owner: boolean;
 }) {
   const ringed = (tile.matched ?? 0) > 0;
   const face = (
     <>
-      <Badge variant="outline" size="sm" className="tracking-wide">
-        {m.trade_rule_tag()}
-      </Badge>
+      <span className="flex items-center gap-1">
+        <Badge variant="outline" size="sm" className="tracking-wide">
+          {m.trade_rule_tag()}
+        </Badge>
+        {tile.ratio !== undefined ? (
+          <RatioChip ratio={tile.ratio} side="want" owner={owner} />
+        ) : null}
+      </span>
       <span className="w-full text-xs text-pretty">{ruleText(tile.rule)}</span>
       {tile.matched !== null ? (
         <span

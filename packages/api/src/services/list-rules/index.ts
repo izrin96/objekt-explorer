@@ -39,9 +39,10 @@ const ruleColumns = {
   members: listRule.members,
   prio: listRule.prio,
   skipOwned: listRule.skipOwned,
+  ratio: listRule.ratio,
 };
 
-type RuleRow = ListRuleDef & { id: number; listId: number };
+type RuleRow = ListRuleDef & { id: number; listId: number; ratio: number | null };
 
 const toDef = (row: RuleRow): ListRuleDef => ({
   kind: row.kind,
@@ -86,7 +87,12 @@ async function checkedSlugs(def: ListRuleDef, userId: string) {
   return reading.slugs;
 }
 
-export async function addRule(list: List, input: ListRuleInput, userId: string) {
+export async function addRule(
+  list: List,
+  input: ListRuleInput,
+  ratio: number | null,
+  userId: string,
+) {
   assertWantList(list);
   const def = ruleDef(input);
   // the indexer reads stay outside the transaction, so it holds no connection while they run
@@ -103,7 +109,7 @@ export async function addRule(list: List, input: ListRuleInput, userId: string) 
     }
     const [row] = await tx
       .insert(listRule)
-      .values({ listId: list.id, ...def })
+      .values({ listId: list.id, ...def, ratio })
       .returning({ id: listRule.id });
     await syncRuleEntriesTx(tx, row!.id, slugs);
     return row!.id;
@@ -121,7 +127,14 @@ async function findRule(list: List, ruleId: number) {
   return row;
 }
 
-export async function updateRule(list: List, ruleId: number, input: ListRuleInput, userId: string) {
+/** `ratio` undefined keeps the stored one. */
+export async function updateRule(
+  list: List,
+  ruleId: number,
+  input: ListRuleInput,
+  ratio: number | null | undefined,
+  userId: string,
+) {
   assertWantList(list);
   await findRule(list, ruleId);
   const def = ruleDef(input);
@@ -129,7 +142,7 @@ export async function updateRule(list: List, ruleId: number, input: ListRuleInpu
   await db.transaction(async (tx) => {
     const updated = await tx
       .update(listRule)
-      .set({ ...def, updatedAt: sql`now()` })
+      .set({ ...def, ratio, updatedAt: sql`now()` })
       .where(and(eq(listRule.id, ruleId), eq(listRule.listId, list.id)))
       .returning({ id: listRule.id });
     // deleted from another tab since `findRule`
@@ -154,7 +167,7 @@ export async function deleteRule(list: List, ruleId: number) {
 export async function detachRule(list: List, ruleId: number) {
   const changed = await db.transaction(async (tx) => {
     const [rule] = await tx
-      .select({ id: listRule.id })
+      .select({ id: listRule.id, ratio: listRule.ratio })
       .from(listRule)
       .where(and(eq(listRule.id, ruleId), eq(listRule.listId, list.id)))
       .for("update");
@@ -168,7 +181,10 @@ export async function detachRule(list: List, ruleId: number) {
         AND h.rule_id IS NULL
         AND h.collection_slug = r.collection_slug
     `);
-    await tx.update(listEntries).set({ ruleId: null }).where(eq(listEntries.ruleId, ruleId));
+    await tx
+      .update(listEntries)
+      .set({ ruleId: null, ratio: rule.ratio })
+      .where(eq(listEntries.ruleId, ruleId));
     await tx.delete(listRule).where(eq(listRule.id, ruleId));
     return true;
   });
@@ -205,6 +221,7 @@ export async function fetchListRules(list: Pick<List, "id" | "userId">) {
       const numbers = [...new Set(covered.map((c) => c.collectionNo))].toSorted();
       return Object.assign(def, {
         id: row.id,
+        ratio: row.ratio,
         canMatch: row.canMatch,
         covers: reading.covers,
         owned: reading.owned,
@@ -217,18 +234,19 @@ export async function fetchListRules(list: Pick<List, "id" | "userId">) {
   );
 }
 
-/** The rule definitions of several lists, for export and the Discord format. */
+/** The rule definitions of several lists, with each rule's own ratio, for export and the Discord format. */
 export async function fetchRuleDefs(listIds: number[]) {
-  if (listIds.length === 0) return new Map<number, ListRuleDef[]>();
+  type Def = ListRuleDef & { ratio: number | null };
+  if (listIds.length === 0) return new Map<number, Def[]>();
   const rows = await db
     .select(ruleColumns)
     .from(listRule)
     .where(inArray(listRule.listId, listIds))
     .orderBy(asc(listRule.id));
-  const byList = new Map<number, ListRuleDef[]>();
+  const byList = new Map<number, Def[]>();
   for (const row of rows) {
     const defs = byList.get(row.listId) ?? [];
-    defs.push(toDef(row));
+    defs.push(Object.assign(toDef(row), { ratio: row.ratio }));
     byList.set(row.listId, defs);
   }
   return byList;
@@ -285,7 +303,7 @@ export async function copyRulesTx(tx: Tx, sourceListId: number, targetListId: nu
   for (const row of rows) {
     const [copy] = await tx
       .insert(listRule)
-      .values({ listId: targetListId, ...toDef(row) })
+      .values({ listId: targetListId, ...toDef(row), ratio: row.ratio })
       .returning({ id: listRule.id });
     await tx.execute(sql`
       INSERT INTO ${listEntries} (list_id, collection_slug, rule_id)

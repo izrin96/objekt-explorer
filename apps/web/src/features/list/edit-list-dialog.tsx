@@ -100,6 +100,7 @@ function toDraft(list: StoredList): ListDraft {
     gridColumns: list.gridColumns,
     hideSerial: list.hideSerial,
     regenerateSlug: false,
+    ratio: list.ratio,
   };
 }
 
@@ -135,7 +136,7 @@ function EditListForm({ list, onDone }: { list: StoredList; onDone: () => void }
           const next = zodErrors(listDraftSchema(), draft);
           setErrors(next);
           if (Object.keys(next).length > 0) return;
-          edit.mutate(toEditInput(list.slug, draft), { onSuccess: onDone });
+          edit.mutate(toEditInput(list.slug, draft, list.ratio), { onSuccess: onDone });
         }}
       >
         <DialogHeader>

@@ -15,6 +15,7 @@ import {
   primaryKey,
   real,
   serial,
+  smallint,
   text,
   timestamp,
   uniqueIndex,
@@ -102,6 +103,8 @@ export const lists = pgTable(
       .notNull()
       .defaultNow(),
     bumpedAt: timestamp("bumped_at", { mode: "string", withTimezone: true }),
+    /** a have or want list's trade ratio, which entries and rules without one follow; null is 1:1, never matched */
+    ratio: smallint("ratio"),
   },
   (t) => [
     uniqueIndex("lists_slug_idx").on(t.slug),
@@ -123,6 +126,7 @@ export const lists = pgTable(
       .where(sql`discoverable`),
     check("lists_open_to_something", sql`${t.matchSale} OR ${t.matchHave}`),
     check("lists_takes_swaps_sale_only", sql`NOT ${t.takesSwaps} OR ${t.listType} = 'sale'`),
+    check("lists_ratio_range", sql`${t.ratio} BETWEEN 2 AND 5`),
   ],
 );
 
@@ -149,6 +153,8 @@ export const listRule = pgTable(
     /** shown beside the rule, never matched */
     prio: text("prio").array().notNull().default([]),
     skipOwned: boolean("skip_owned").notNull().default(true),
+    /** shown beside the rule, never matched; kept out of the definition so expansion cannot read it */
+    ratio: smallint("ratio"),
     createdAt: timestamp("created_at", { mode: "string", withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -159,6 +165,7 @@ export const listRule = pgTable(
   (t) => [
     index("list_rule_list_idx").on(t.listId),
     check("list_rule_kind_chk", sql`${t.kind} IN ('collection', 'set')`),
+    check("list_rule_ratio_range", sql`${t.ratio} BETWEEN 2 AND 5`),
   ],
 );
 
@@ -180,6 +187,8 @@ export const listEntries = pgTable(
     price: real("price"),
     isQyop: boolean("is_qyop").notNull().default(false),
     note: varchar("note", { length: 255 }),
+    /** null follows the list; a rule's entries leave it null and follow the rule */
+    ratio: smallint("ratio"),
     createdAt: timestamp("created_at", { mode: "string", withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -194,6 +203,7 @@ export const listEntries = pgTable(
     uniqueIndex("list_entries_list_objekt_uniq")
       .on(t.listId, t.objektId)
       .where(sql`objekt_id IS NOT NULL`),
+    check("list_entries_ratio_range", sql`${t.ratio} BETWEEN 2 AND 5`),
   ],
 );
 

@@ -12,6 +12,7 @@ const entry = (
   price: null,
   isQyop: false,
   note: null,
+  ratio: null,
   ...extra,
 });
 
@@ -101,6 +102,49 @@ describe("buildCopyRows", () => {
     expect(buildCopyRows("expand", entries, owned, false)).toMatchObject({
       carried: 1,
       leftOut: 1,
+    });
+  });
+
+  describe("ratios", () => {
+    const owned = new Map<string, OwnedCopy[]>([
+      [
+        "a",
+        [
+          { id: "1", serial: 1 },
+          { id: "2", serial: 2 },
+        ],
+      ],
+    ]);
+    const entries = [entry("a", "1", { ratio: 2 }), entry("a", "2", { ratio: 3 })];
+
+    test("go with every mode when carried, a folded collection taking its highest", () => {
+      expect(
+        buildCopyRows("rows", entries, new Set(), false, true).rows.map((r) => r.ratio),
+      ).toEqual([2, 3]);
+      expect(
+        buildCopyRows("tokens", entries, new Set(["1", "2"]), false, true).rows.map((r) => r.ratio),
+      ).toEqual([2, 3]);
+      expect(
+        buildCopyRows("distinct-collections", entries, new Set(), false, true).rows.map(
+          (r) => r.ratio,
+        ),
+      ).toEqual([3]);
+      expect(buildCopyRows("expand", entries, owned, false, true).rows.map((r) => r.ratio)).toEqual(
+        [3, 3],
+      );
+    });
+
+    test("are dropped in every mode when not carried", () => {
+      for (const [mode, held] of [
+        ["rows", new Set<string>()],
+        ["tokens", new Set(["1", "2"])],
+        ["distinct-collections", new Set<string>()],
+        ["expand", owned],
+      ] as const) {
+        const out = buildCopyRows(mode, entries, held, false, false);
+        expect(out.rows.length).toBeGreaterThan(0);
+        expect(out.rows.every((r) => r.ratio === null)).toBe(true);
+      }
     });
   });
 });

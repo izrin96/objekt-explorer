@@ -1,4 +1,9 @@
-import { CurrencyDollarIcon, MagnifyingGlassIcon, TrashIcon } from "@phosphor-icons/react";
+import {
+  CurrencyDollarIcon,
+  MagnifyingGlassIcon,
+  ScalesIcon,
+  TrashIcon,
+} from "@phosphor-icons/react";
 import { ruleLine } from "@repo/api/schemas/list-rule";
 import type { ValidCustomSort } from "@repo/cosmo/types/common";
 import { truncateAddress } from "@repo/lib/address";
@@ -44,10 +49,13 @@ import { EmptyList } from "./list-empty";
 import { formatConvertedPrice, formatPrice } from "./list-price";
 import { useListTarget } from "./list-provider";
 import { listEntriesOptions } from "./queries";
+import { RatioChip } from "./ratio-chip";
+import { groupRatio, ratioSideOf } from "./ratio-text";
 import { RemoveFromListDialog } from "./remove-from-list-dialog";
 import { listRulesOptions } from "./rules/queries";
 import { RulesStrip } from "./rules/rules-strip";
 import { SetPriceDialog } from "./set-price-dialog";
+import { SetRatioDialog } from "./set-ratio-dialog";
 import { canShowMatches, NearMatches, ShowMyMatches, useListMatches } from "./show-my-matches";
 import { useEntryDialogs } from "./use-entry-dialogs";
 import { useListOwned } from "./use-list-owned";
@@ -137,6 +145,10 @@ function ListEntries() {
 
   const isSale = list.listType === "sale" && list.currency !== null;
   const canPrice = isOwner && isSale;
+  const ratioSide = ratioSideOf(list.listType);
+  // the grid holds no rule entries (they show as the Rules strip), so Set ratio never reaches one
+  const canRatio = isOwner && ratioSide !== null;
+  const listRatio = list.ratio ?? null;
   const currency = list.currency ?? "";
   const { formatConverted } = useCurrency();
 
@@ -157,7 +169,7 @@ function ListEntries() {
   );
 
   const dialogs = useEntryDialogs();
-  const { openPrice, openRemove } = dialogs;
+  const { openPrice, openRatio, openRemove } = dialogs;
 
   const menuItems = useCallback(
     (objekts: ListObjekt[]) => {
@@ -172,6 +184,12 @@ function ListEntries() {
               {m.objekt_menu_set_price()}
             </MenuItem>
           ) : null}
+          {canRatio && compare === null ? (
+            <MenuItem onClick={() => openRatio(objekts)}>
+              <ScalesIcon />
+              {m.objekt_menu_set_ratio()}
+            </MenuItem>
+          ) : null}
           {isOwner && compare === null ? (
             <>
               <MenuSeparator />
@@ -184,7 +202,7 @@ function ListEntries() {
         </>
       );
     },
-    [isOwner, canPrice, compare, openPrice, openRemove],
+    [isOwner, canPrice, canRatio, compare, openPrice, openRatio, openRemove],
   );
 
   const renderObjekt = useCallback(
@@ -192,6 +210,7 @@ function ListEntries() {
       const objekt = item[0];
       if (!objekt) return null;
       const unpriced = objekt.price === null && !objekt.isQyop;
+      const ratio = ratioSide ? groupRatio(item, listRatio) : null;
 
       return (
         <ObjektCard
@@ -208,6 +227,16 @@ function ListEntries() {
           }
           onPriceClick={canPrice && compare === null ? () => openPrice(item) : undefined}
           note={isSale ? objekt.note : undefined}
+          badge={
+            ratio && ratioSide ? (
+              <RatioChip
+                ratio={ratio.ratio}
+                side={ratioSide}
+                owner={isOwner}
+                inherited={ratio.inherited}
+              />
+            ) : undefined
+          }
           priority={rowIndex < 2}
           imageClassName={ring?.className}
           description={ring?.description}
@@ -229,10 +258,19 @@ function ListEntries() {
       grouped,
       list.hideSerial,
       menuItems,
+      ratioSide,
+      listRatio,
+      isOwner,
     ],
   );
 
   const selected = useMemo(() => filtered.filter((objekt) => ids.has(objekt.id)), [filtered, ids]);
+  // a combined card is selected by its first copy but stands for every copy, as its chip does
+  const ratioTargets = useMemo(() => {
+    if (!grouped) return selected;
+    const picked = new Set(selected.map((objekt) => objekt.collectionId));
+    return filtered.filter((objekt) => picked.has(objekt.collectionId));
+  }, [grouped, selected, filtered]);
 
   // a bound list hiding serials is a list of collections as far as the drawer
   // is concerned, exactly as the website decides its default tab
@@ -288,6 +326,15 @@ function ListEntries() {
             label: m.filter_set_price(),
             icon: <CurrencyDollarIcon />,
             onClick: () => openPrice(selected),
+          },
+        ]
+      : []),
+    ...(canRatio
+      ? [
+          {
+            label: m.filter_set_ratio(),
+            icon: <ScalesIcon />,
+            onClick: () => openRatio(ratioTargets),
           },
         ]
       : []),
@@ -416,6 +463,14 @@ function ListEntries() {
       {user ? <PostComposer {...composer.dialog} /> : null}
 
       {canPrice ? <SetPriceDialog {...dialogs.price} slug={list.slug} currency={currency} /> : null}
+      {canRatio && ratioSide ? (
+        <SetRatioDialog
+          {...dialogs.ratio}
+          slug={list.slug}
+          side={ratioSide}
+          listRatio={listRatio}
+        />
+      ) : null}
       {isOwner ? <RemoveFromListDialog {...dialogs.remove} slug={list.slug} /> : null}
     </>
   );

@@ -54,6 +54,8 @@ export type ListEntryFields = {
   price: number | null;
   isQyop: boolean;
   note: string | null;
+  /** the entry's own trade ratio; null follows the list's */
+  ratio: number | null;
 };
 
 /** set by the marketplace from its listing summary */

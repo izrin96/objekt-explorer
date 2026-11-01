@@ -30,7 +30,13 @@ import {
   type ListType,
   type PublicList,
 } from "../schemas/list";
-import { carriesPrices, copyMode, copyUnit, needsHoldings } from "../schemas/list-copy";
+import {
+  carriesPrices,
+  carriesRatios,
+  copyMode,
+  copyUnit,
+  needsHoldings,
+} from "../schemas/list-copy";
 import { type OpenToFlags, resolveOpenTo } from "../schemas/open-to";
 import type { PlanList } from "../schemas/trade-post";
 import { isBlockedEither } from "./moderation";
@@ -47,7 +53,7 @@ interface ListEntryTransformConfig {
 
 type EntryPick = Pick<
   ListEntry,
-  "collectionSlug" | "objektId" | "id" | "price" | "isQyop" | "note"
+  "collectionSlug" | "objektId" | "id" | "price" | "isQyop" | "note" | "ratio"
 >;
 
 /** `id` stays unique when a list holds the same collection twice */
@@ -58,6 +64,7 @@ function entryFields(entry: EntryPick): ListEntryFields & { id: string } {
     price: entry.price,
     isQyop: entry.isQyop,
     note: entry.note,
+    ratio: entry.ratio,
   };
 }
 
@@ -237,6 +244,7 @@ export async function fetchList(
     matchSale: result.matchSale,
     matchHave: result.matchHave,
     takesSwaps: result.takesSwaps,
+    ratio: result.ratio,
     bumpedAt: result.bumpedAt,
     user: result.user ? toPublicUser(result.user) : null,
     profile: result.userAddress ? toPartialProfile(result.userAddress) : null,
@@ -702,6 +710,7 @@ export async function planCopy(source: List, target: CopyTarget, userId: string)
       price: listEntries.price,
       isQyop: listEntries.isQyop,
       note: listEntries.note,
+      ratio: listEntries.ratio,
     })
     .from(listEntries)
     // a rule's entries travel as the rule (`copyRules`), or not at all
@@ -748,7 +757,13 @@ export async function planCopy(source: List, target: CopyTarget, userId: string)
     }
   }
 
-  const plan = buildCopyRows(mode, entries, owned, carriesPrices(source.listType, target.listType));
+  const plan = buildCopyRows(
+    mode,
+    entries,
+    owned,
+    carriesPrices(source.listType, target.listType),
+    carriesRatios(source.listType, target.listType),
+  );
   return { ...plan, unit: copyUnit(mode) };
 }
 

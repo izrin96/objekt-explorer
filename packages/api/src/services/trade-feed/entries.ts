@@ -1,7 +1,7 @@
 import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
-import { listEntries, lists } from "@repo/db/schema";
-import { and, inArray, isNotNull, sql } from "drizzle-orm";
+import { listEntries, listRule, lists } from "@repo/db/schema";
+import { and, eq, inArray, isNotNull, sql } from "drizzle-orm";
 
 import { type FeedEntry, tradeableEntries, untradeableKey } from "../../lib/trade-feed";
 import { unique } from "../../lib/unique";
@@ -135,7 +135,7 @@ export async function fetchUntradeable(
 }
 
 const postKey = (list: Pick<FeedList, "id" | "updatedAt">) =>
-  `trade:post:3:${list.id}:${list.updatedAt}`;
+  `trade:post:4:${list.id}:${list.updatedAt}`;
 
 type StoredPost = { at: number; entries: FeedEntry[] };
 
@@ -227,8 +227,12 @@ async function computePostEntries(
       slug: listEntries.collectionSlug,
       objektId: listEntries.objektId,
       ruleId: listEntries.ruleId,
+      // a rule's entries leave theirs null and follow the rule
+      ratio: sql<number | null>`coalesce(${listEntries.ratio}, ${listRule.ratio}, ${lists.ratio})`,
     })
     .from(listEntries)
+    .innerJoin(lists, eq(lists.id, listEntries.listId))
+    .leftJoin(listRule, eq(listRule.id, listEntries.ruleId))
     .where(
       and(
         inArray(
@@ -247,6 +251,7 @@ async function computePostEntries(
       slug: row.slug!,
       objektId: row.objektId,
       ...(row.ruleId !== null && { ruleId: row.ruleId }),
+      ...(row.ratio !== null && { ratio: row.ratio }),
     });
     byList.set(row.listId, entries);
   }

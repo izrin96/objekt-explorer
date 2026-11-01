@@ -107,30 +107,58 @@ export type FeedEntry = {
   objektId: string | null;
   /** set on a want-list rule's entries, which show as the rule's tile, not as cards */
   ruleId?: number;
+  /** the trade ratio that applies (the entry's or rule's, else the list's); absent is 1:1 */
+  ratio?: number;
 };
+
+/** A tile folding several entries shows the highest ratio among them. */
+export function highestRatio(entries: readonly FeedEntry[]) {
+  let highest: number | undefined;
+  for (const { ratio } of entries) {
+    if (ratio !== undefined && (highest === undefined || ratio > highest)) highest = ratio;
+  }
+  return highest;
+}
+
+/** A side shows ratios only when it swaps: a have list, or a want list open to swaps. */
+function showsRatio(role: "have" | "want" | "sale", list: Pick<TradeList, "matchHave">) {
+  return role === "have" || (role === "want" && list.matchHave);
+}
 
 /**
  * A want side's rule tiles, oldest rule first: each rule's collections and how many of them the
  * viewer's index holds. A rule's entries are one slug each, so a count is a collection count.
  */
-export function ruleTiles(entries: FeedEntry[], index: SlugIndex | null) {
-  const byRule = new Map<number, { count: number; slugs: string[] }>();
+export function ruleTiles(entries: FeedEntry[], index: SlugIndex | null, ratios = false) {
+  const byRule = new Map<number, { count: number; slugs: string[]; entries: FeedEntry[] }>();
   for (const entry of entries) {
     if (entry.ruleId === undefined) continue;
-    const tile = byRule.get(entry.ruleId) ?? { count: 0, slugs: [] };
+    const tile = byRule.get(entry.ruleId) ?? { count: 0, slugs: [], entries: [] };
     tile.count += 1;
+    tile.entries.push(entry);
     if (index?.has(entry.slug)) tile.slugs.push(entry.slug);
     byRule.set(entry.ruleId, tile);
   }
   return [...byRule]
     .toSorted(([a], [b]) => a - b)
-    .map(([ruleId, tile]) => ({
-      ruleId,
-      count: tile.count,
-      matched: tile.slugs.length,
-      /** what activating the tile lists; capped, `matched` keeps the whole count */
-      matchedSlugs: tile.slugs.slice(0, RULE_TILE_SLUGS),
-    }));
+    .map(([ruleId, tile]) => {
+      const out: {
+        ruleId: number;
+        count: number;
+        matched: number;
+        matchedSlugs: string[];
+        ratio?: number;
+      } = {
+        ruleId,
+        count: tile.count,
+        matched: tile.slugs.length,
+        /** what activating the tile lists; capped, `matched` keeps the whole count */
+        matchedSlugs: tile.slugs.slice(0, RULE_TILE_SLUGS),
+      };
+      const ratio = ratios ? highestRatio(tile.entries) : undefined;
+      if (ratio !== undefined) out.ratio = ratio;
+      return out;
+    });
 }
 
 export const RULE_TILE_SLUGS = 24;
@@ -159,6 +187,7 @@ type PreviewItem = {
   ringed?: true;
   /** would match if one side were open the other way, never also ringed: the viewer's lists it is on */
   near?: number[];
+  ratio?: number;
 };
 
 /** One stack per collection, with its newest copy. */
@@ -184,6 +213,7 @@ export function previewSide(
   ringed: SlugIndex | null,
   limit: number = PREVIEW_LIMIT,
   near: SlugIndex | null = null,
+  ratios = false,
 ) {
   const rank = (slug: string) => (ringed?.has(slug) ? 2 : near?.has(slug) ? 1 : 0);
   const stacks = stackEntries(entries);
@@ -195,6 +225,8 @@ export function previewSide(
       const at = rank(newest.slug);
       if (at === 2) item.ringed = true;
       else if (at === 1) item.near = [...(near?.get(newest.slug) ?? [])];
+      const ratio = ratios ? highestRatio(copies) : undefined;
+      if (ratio !== undefined) item.ratio = ratio;
       return item;
     });
   return { items, more: Math.max(0, stacks.length - limit), copyCount: entries.length };
@@ -650,12 +682,14 @@ export function assemblePost<L extends TradeList>(
       (filter.slug === null || entry.slug === filter.slug) &&
       (!filter.onlyMatches || (index?.has(entry.slug) ?? false));
     const related = entries.filter(isRelated);
-    const rules = ruleTiles(related, index);
+    const ratios = showsRatio(role, list);
+    const rules = ruleTiles(related, index, ratios);
     const { items, more } = previewSide(
       related.filter((entry) => entry.ruleId === undefined),
       index,
       Math.max(0, limit - rules.length),
       near?.index ?? null,
+      ratios,
     );
     const copyCount = related.length;
     // the whole side's collections, as the side's dialog counts All; a rule's stay on its tile
@@ -718,7 +752,13 @@ export function fullSide(
   const index = viewer ? indexFor(role, list, viewer) : null;
   const near = viewer ? nearOf(role, list, entries, viewer) : null;
   const objekts = entries.filter((entry) => entry.ruleId === undefined);
-  const { items, more, copyCount } = previewSide(objekts, index, limit, near?.index ?? null);
+  const { items, more, copyCount } = previewSide(
+    objekts,
+    index,
+    limit,
+    near?.index ?? null,
+    showsRatio(role, list),
+  );
   const matched = index
     ? new Set(objekts.flatMap((entry) => (index.has(entry.slug) ? [entry.slug] : []))).size
     : 0;

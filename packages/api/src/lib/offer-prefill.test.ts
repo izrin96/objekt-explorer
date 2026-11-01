@@ -323,12 +323,18 @@ describe("fillMatches", () => {
 });
 
 describe("itemsOnLists", () => {
-  const entry = (listId: number, objektId: string | null, hideSerial = false): PartnerEntry => ({
+  const entry = (
+    listId: number,
+    objektId: string | null,
+    hideSerial = false,
+    ratio: number | null = null,
+  ): PartnerEntry => ({
     listId,
     listSlug: `l${listId}`,
     collectionSlug: "302z",
     objektId,
     hideSerial,
+    ratio,
   });
   const lists = (...ids: number[]) => new Set(ids);
 
@@ -352,6 +358,12 @@ describe("itemsOnLists", () => {
   test("a specific copy never lands on a list that hides serials", () => {
     const items = [item("302z", 7)];
     expect(itemsOnLists(items, [entry(1, null, true)], "302z", lists(1))).toEqual([]);
+  });
+
+  test("a copy carries the ratio of the entry it lands on, and none from another list", () => {
+    const items = [item("302z", 7, { listSlug: "sell", ratio: 4 })];
+    expect(itemsOnLists(items, [entry(2, null, false, 2)], "302z", lists(2))[0]?.ratio).toBe(2);
+    expect(itemsOnLists(items, [entry(2, null)], "302z", lists(2))[0]).not.toHaveProperty("ratio");
   });
 
   test("entries outside the lists or the slug are passed over", () => {

@@ -18,6 +18,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsPanel, TabsTab } from "@/components/ui/tabs";
 import { getListLinkOption } from "@/features/list/list-link";
 import { LIST_TYPE_LABEL } from "@/features/list/list-type-badge";
+import { RatioChip } from "@/features/list/ratio-chip";
+import { type RatioSide, ratioSideOf } from "@/features/list/ratio-text";
 import { ObjektCard } from "@/features/objekt/objekt-card";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
@@ -34,18 +36,29 @@ export const SideCompareContext = createContext<{ list?: string; mutual: boolean
 
 const GRID = "grid grid-cols-4 gap-x-2 gap-y-3 sm:grid-cols-6";
 
-type SideItem = { entryId: number; slug: string; qty: number; ringed?: true; near?: number[] };
+type SideItem = {
+  entryId: number;
+  slug: string;
+  qty: number;
+  ringed?: true;
+  near?: number[];
+  ratio?: number;
+};
 
 function SideGrid({
   items,
   nearOf,
   collections,
   onOpen,
+  ratioSide,
+  owner,
 }: {
   items: readonly SideItem[];
   nearOf?: (myListIds: readonly number[]) => NearOpen | undefined;
   collections: Readonly<Record<string, ValidObjekt | undefined>>;
   onOpen: OpenObjekt;
+  ratioSide: RatioSide | null;
+  owner: boolean;
 }) {
   return (
     // padding gives the ring room
@@ -69,6 +82,11 @@ function SideGrid({
                 onOpen={(objekt) => onOpen(objekt, near)}
                 imageClassName={ring}
                 description={description}
+                badge={
+                  item.ratio !== undefined && ratioSide ? (
+                    <RatioChip ratio={item.ratio} side={ratioSide} owner={owner} />
+                  ) : undefined
+                }
               />
             ) : (
               <SlugTile className={ring}>{item.slug}</SlugTile>
@@ -114,6 +132,7 @@ export function SideItemsDialog({
   onOpenChange,
   onOpen,
   finalFocus,
+  owner = false,
 }: {
   side: PostSideData;
   /** the feed's filters left objekts out of the strip; the dialog shows them all */
@@ -125,8 +144,11 @@ export function SideItemsDialog({
   onOpen: OpenObjekt;
   /** where focus goes on close, when what opened it is gone by then (a menu item) */
   finalFocus?: RefObject<HTMLElement | null>;
+  /** the viewer's own post: a ratio reads "You ask" */
+  owner?: boolean;
 }) {
   const compare = use(SideCompareContext);
+  const ratioSide = ratioSideOf(side.role);
   const query = useQuery(sideItemsOptions(side.list.id, compare, open));
   const data = query.data;
   // the objekt view is a modal of its own, so this one gives way to it
@@ -197,6 +219,8 @@ export function SideItemsDialog({
                   items={data.items.filter((item) => item.ringed)}
                   collections={data.collections}
                   onOpen={openObjekt}
+                  ratioSide={ratioSide}
+                  owner={owner}
                 />
               </TabsPanel>
               <TabsPanel value="all" className="flex flex-col gap-3">
@@ -208,6 +232,8 @@ export function SideItemsDialog({
                   nearOf={nearOf}
                   collections={data.collections}
                   onOpen={openObjekt}
+                  ratioSide={ratioSide}
+                  owner={owner}
                 />
                 {data.more > 0 ? (
                   <p className="text-muted-foreground text-xs">

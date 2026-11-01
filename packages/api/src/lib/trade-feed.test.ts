@@ -8,6 +8,7 @@ import {
   comparePosts,
   type FeedEntry,
   fullSide,
+  highestRatio,
   listMatchesOf,
   nearFor,
   nearOf,
@@ -1254,5 +1255,95 @@ describe("pickerTags", () => {
     expect(
       pickerTags(["z"], [{ role: "sale", list: sale, entries: [entry(1, "z")] }], viewer, "get"),
     ).toEqual({});
+  });
+});
+
+describe("ratios", () => {
+  const rated = (id: number, slug: string, ratio?: number, ruleId?: number): FeedEntry => ({
+    ...entry(id, slug),
+    ...(ratio !== undefined && { ratio }),
+    ...(ruleId !== undefined && { ruleId }),
+  });
+
+  test("a folded tile shows the highest ratio among its copies", () => {
+    expect(highestRatio([rated(1, "a", 2), rated(2, "a", 3), rated(3, "a")])).toBe(3);
+    expect(highestRatio([rated(1, "a"), rated(2, "a")])).toBeUndefined();
+    const { items } = previewSide(
+      [rated(1, "a", 2), rated(2, "a", 3), rated(3, "b")],
+      null,
+      PREVIEW_LIMIT,
+      null,
+      true,
+    );
+    expect(items.find((item) => item.slug === "a")?.ratio).toBe(3);
+    expect("ratio" in items.find((item) => item.slug === "b")!).toBe(false);
+  });
+
+  test("previews and rule tiles leave ratios off unless asked", () => {
+    const { items } = previewSide([rated(1, "a", 2)], null);
+    expect("ratio" in items[0]!).toBe(false);
+    const entries = [rated(1, "a", 2, 5), rated(2, "b", 2, 5)];
+    expect(ruleTiles(entries, null)[0]).not.toHaveProperty("ratio");
+    expect(ruleTiles(entries, null, true)[0]?.ratio).toBe(2);
+  });
+
+  const sideRatios = (post: ReturnType<typeof assemblePost>, role: string) => {
+    const side = post?.sides.find((s) => s.role === role);
+    return [
+      ...(side?.items.map((item) => item.ratio) ?? []),
+      ...(side?.rules.map((tile) => tile.ratio) ?? []),
+    ];
+  };
+
+  test("a have side and a want side open to swaps show theirs", () => {
+    const [pair] = pairPosts([
+      list({ id: 1, listType: "have", linkedListId: 2 }),
+      list({ id: 2, listType: "want" }),
+    ]);
+    const of = (id: number) =>
+      id === 1 ? [rated(10, "a", 2)] : [rated(20, "b", 3), rated(21, "c", 4, 9)];
+    const post = assemblePost(pair!, of, null, NO_FILTER);
+    expect(sideRatios(post, "have")).toEqual([2]);
+    expect(sideRatios(post, "want")).toEqual([3, 4]);
+  });
+
+  test("a Buying only want side shows none", () => {
+    const [post] = pairPosts([list({ id: 2, listType: "want", matchHave: false })]);
+    const assembled = assemblePost(
+      post!,
+      () => [rated(20, "b", 3), rated(21, "c", 4, 9)],
+      null,
+      NO_FILTER,
+    );
+    expect(sideRatios(assembled, "want")).toEqual([undefined, undefined]);
+    const side = fullSide(
+      "want",
+      list({ id: 2, listType: "want", matchHave: false }),
+      [rated(20, "b", 3)],
+      null,
+    );
+    expect("ratio" in side.items[0]!).toBe(false);
+  });
+
+  test("the full side list shows a have side's", () => {
+    const side = fullSide("have", list({ id: 1, listType: "have" }), [rated(1, "a", 5)], null);
+    expect(side.items[0]?.ratio).toBe(5);
+  });
+
+  test("a ratio changes no count or ring", () => {
+    const [post] = pairPosts([list({ id: 1, listType: "have" })]);
+    const plain = assemblePost(post!, () => [entry(1, "a"), entry(2, "b")], null, NO_FILTER);
+    const withRatio = assemblePost(
+      post!,
+      () => [rated(1, "a", 3), rated(2, "b", 2)],
+      null,
+      NO_FILTER,
+    );
+    const strip = (p: typeof plain) =>
+      p?.sides.map((side) => ({
+        ...side,
+        items: side.items.map((item) => ({ ...item, ratio: undefined })),
+      }));
+    expect(strip(withRatio)).toEqual(strip(plain));
   });
 });

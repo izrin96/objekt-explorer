@@ -38,6 +38,8 @@ type ObjektCardProps<T extends ValidObjekt> = {
   /** makes the price caption a button: the owner's way to set or change a card's price */
   onPriceClick?: (objekt: T) => void;
   note?: string | null;
+  /** a chip under the label, such as a list entry's trade ratio */
+  badge?: ReactNode;
   /** overrides the hide-label setting; the drawer's big card always hides it */
   hideLabel?: boolean;
   /** the collection can no longer be minted, so no total counts it */
@@ -102,6 +104,7 @@ export function ObjektCard<T extends ValidObjekt>({
   priceConverted,
   onPriceClick,
   note,
+  badge,
   hideLabel,
   unobtainable = false,
   faded = false,
@@ -124,7 +127,7 @@ export function ObjektCard<T extends ValidObjekt>({
   // a grouped card stands for several tokens, so no single serial belongs to it
   const serialHidden = hideSerial || (qty !== undefined && qty > 1);
   const serial = !serialHidden && isObjektOwned(objekt) ? objekt.serial : undefined;
-  const caption = !labelHidden || unobtainable || price !== undefined;
+  const caption = !labelHidden || unobtainable || price !== undefined || badge != null;
 
   const { handlers, consumeClick } = useLongPress({
     disabled: onToggleSelect === undefined || !longPressSelect,
@@ -280,6 +283,8 @@ export function ObjektCard<T extends ValidObjekt>({
               {m.objekt_unobtainable()}
             </Badge>
           )}
+
+          {badge != null && <div className="flex justify-center">{badge}</div>}
 
           {price !== undefined && (
             <div className="flex min-w-0 flex-col items-center">

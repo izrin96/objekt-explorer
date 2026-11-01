@@ -240,6 +240,8 @@ const candidateItemSchema = z.object({
   copies: z.number().nullable(),
   /** any copy only: the same copies are also offered by serial, so more than one is asked for that way */
   bySerial: z.boolean(),
+  /** theirs from a have list: the trade ratio its entry asks (the entry's, else the list's); shown, never checked */
+  ratio: z.number().int().optional(),
 });
 export type CandidateItem = z.infer<typeof candidateItemSchema>;
 

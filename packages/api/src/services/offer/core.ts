@@ -313,7 +313,11 @@ export async function resolveAddressed(
   };
 }
 
-export type AllowedEntry = ListEntryRef & { listId: number };
+export type AllowedEntry = ListEntryRef & {
+  listId: number;
+  /** what a have list's entry asks, else null; shown in the picker, never checked */
+  ratio: number | null;
+};
 
 /** The partner's entries the sender may ask for: those on their have and sale lists on Trade. */
 export async function allowedEntries(
@@ -322,7 +326,13 @@ export async function allowedEntries(
   fromList?: string,
 ): Promise<AllowedEntry[]> {
   const allowed = await db
-    .select({ id: lists.id, slug: lists.slug, hideSerial: lists.hideSerial })
+    .select({
+      id: lists.id,
+      slug: lists.slug,
+      hideSerial: lists.hideSerial,
+      listType: lists.listType,
+      ratio: lists.ratio,
+    })
     .from(lists)
     .where(
       and(
@@ -339,6 +349,7 @@ export async function allowedEntries(
       listId: listEntries.listId,
       collectionSlug: listEntries.collectionSlug,
       objektId: listEntries.objektId,
+      ratio: listEntries.ratio,
     })
     .from(listEntries)
     .where(
@@ -359,6 +370,7 @@ export async function allowedEntries(
             collectionSlug: row.collectionSlug,
             objektId: row.objektId,
             hideSerial: list.hideSerial,
+            ratio: list.listType === "have" ? (row.ratio ?? list.ratio) : null,
           },
         ];
   });

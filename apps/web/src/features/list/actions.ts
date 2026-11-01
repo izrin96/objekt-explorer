@@ -184,6 +184,26 @@ export function useRemoveObjektsFromList() {
   );
 }
 
+export function useSetRatio() {
+  const invalidate = useListInvalidation();
+
+  return useMutation(
+    orpc.list.setRatio.mutationOptions({
+      onSuccess: async (_data, { slug }) => {
+        toastManager.add({ type: "success", title: m.ratio_set_success() });
+        await invalidate(slug);
+      },
+      onError: (error) => {
+        toastManager.add({
+          type: "error",
+          title: m.ratio_set_error(),
+          description: refusalText(error),
+        });
+      },
+    }),
+  );
+}
+
 export function useUpdateEntryPrices() {
   const invalidate = useListInvalidation();
 

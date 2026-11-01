@@ -1,7 +1,7 @@
 import { ORPCError } from "@orpc/server";
 import { db } from "@repo/db";
 import { listEntries } from "@repo/db/schema";
-import { sql } from "drizzle-orm";
+import { and, eq, isNull, sql } from "drizzle-orm";
 import * as z from "zod";
 
 import { refuse } from "../lib/refuse";
@@ -10,9 +10,11 @@ import { errorResponses } from "../schemas/common/documented";
 import {
   generateDiscordFormatInputSchema,
   listEntriesInputSchema,
+  setRatioInputSchema,
   updateEntryPricesInputSchema,
 } from "../schemas/list";
 import { ruleLine } from "../schemas/list-rule";
+import { takesRatio } from "../schemas/trade-ratio";
 import {
   buildListEntries,
   fetchListWithEntries,
@@ -61,6 +63,41 @@ export const listUtils = {
           ) AS v(id, price, is_qyop, has_note, note)
           WHERE ${listEntries.id} = v.id AND ${listEntries.listId} = ${list.id}
         `);
+      await touchList([list.id]);
+    },
+  ),
+
+  /** Not a bump: `touchList` moves `updated_at` only, so the post keeps its place in the feed. */
+  setRatio: authed.input(setRatioInputSchema).handler(
+    async ({
+      input: { slug, entryIds, ratio },
+      context: {
+        session: { user },
+      },
+    }) => {
+      const list = await findOwnedList(slug, user.id);
+      if (!takesRatio(list.listType)) {
+        refuse("BAD_REQUEST", "list_ratio_list_type", "Only have and want lists take a ratio");
+      }
+      const ids = [...new Set(entryIds)];
+      // one array parameter, not one per id: a list holds up to 50,000 entries
+      const inIds = sql`${listEntries.id} = ANY(${sql.param(ids)}::int[])`;
+      // a refused request changes nothing, so every id is checked before the write
+      await db.transaction(async (tx) => {
+        const found = await tx
+          .select({ id: listEntries.id })
+          .from(listEntries)
+          .where(and(inIds, eq(listEntries.listId, list.id), isNull(listEntries.ruleId)))
+          .for("update");
+        if (found.length !== ids.length) {
+          refuse(
+            "BAD_REQUEST",
+            "list_ratio_entry",
+            "A rule's objekts take the rule's ratio, and every entry must be on the list",
+          );
+        }
+        await tx.update(listEntries).set({ ratio }).where(inIds);
+      });
       await touchList([list.id]);
     },
   ),
@@ -122,14 +159,18 @@ export const listUtils = {
         "is_qyop",
         "note",
         "rule",
+        // trailing, so a reader that goes by column position still works
+        "ratio",
       ];
-      const blank = Array.from({ length: headers.length - 1 }, () => "");
+      const blank = Array.from({ length: headers.length - 2 }, () => "");
+      // what the entry or rule reads: its own ratio, else the list's
+      const ratioOf = (own: number | null) => String(own ?? result.ratio ?? "");
 
       const csv = [
         headers.join(","),
         // a want list's rules first, one row each, named in the last column
         ...(rules.get(result.id) ?? []).map((rule) =>
-          [...blank, escapeCSV(ruleLine(rule))].join(","),
+          [...blank, escapeCSV(ruleLine(rule)), ratioOf(rule.ratio)].join(","),
         ),
         ...entries.map((e) =>
           [
@@ -148,6 +189,7 @@ export const listUtils = {
             e.isQyop,
             e.note ?? "",
             "",
+            ratioOf(e.ratio),
           ]
             .map((v) => escapeCSV(String(v ?? "")))
             .join(","),

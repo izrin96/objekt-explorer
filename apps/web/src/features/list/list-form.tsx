@@ -10,6 +10,7 @@ import { m } from "@/paraglide/messages";
 
 import { bindNote, isBindable, type ListDraft, type ListUrl, listTypePatch } from "./list-draft";
 import { ListTypeField, ListUrlField, ProfileField, SwitchRow } from "./list-form-fields";
+import { RatioPicker } from "./ratio-picker";
 
 export {
   EMPTY_DRAFT,
@@ -147,6 +148,19 @@ export function ListForm({
       {notice}
 
       {isPaired || isSale ? tradeLine : null}
+
+      {/* `list.create` takes no ratio: a list starts at 1:1 */}
+      {isEdit && isPaired ? (
+        <RatioPicker
+          side={value.listType === "have" ? "have" : "want"}
+          label={m.ratio_for_all()}
+          description={
+            value.listType === "have" ? m.ratio_for_all_have_desc() : m.ratio_for_all_want_desc()
+          }
+          value={value.ratio}
+          onChange={(ratio) => set({ ratio })}
+        />
+      ) : null}
 
       {/* a serial only exists on an entry the bound profile owns */}
       {bindable ? (

@@ -34,6 +34,8 @@ import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
 
 import { useListTarget } from "../list-provider";
+import { RatioChip } from "../ratio-chip";
+import { appliedRatio } from "../ratio-text";
 import { useListOwned } from "../use-list-owned";
 import { listRulesOptions, RULE_KEYS, ruleObjektsOptions } from "./queries";
 import { RuleDialog } from "./rule-dialog";
@@ -91,6 +93,7 @@ function RuleRow({ rule }: { rule: Rule }) {
   const objektsId = useId();
   const [editOpen, setEditOpen] = useState(false);
   const [confirm, setConfirm] = useState<"delete" | "detach" | null>(null);
+  const ratio = appliedRatio(rule.ratio, list.ratio);
 
   const details = [
     // an any-class rule spans every number, so its range says nothing
@@ -131,7 +134,21 @@ function RuleRow({ rule }: { rule: Rule }) {
             )}
           />
           <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-            <span className="text-sm text-pretty">{ruleText(rule)}</span>
+            <span className="text-sm text-pretty">
+              {ruleText(rule)}
+              {ratio ? (
+                <>
+                  {" "}
+                  <RatioChip
+                    ratio={ratio.ratio}
+                    side="want"
+                    owner={isOwner}
+                    inherited={ratio.inherited}
+                    className="align-text-bottom"
+                  />
+                </>
+              ) : null}
+            </span>
             {details.length > 0 ? (
               <span className="text-muted-foreground line-clamp-2 text-xs">
                 {details.join(" · ")}
@@ -193,6 +210,7 @@ function RuleRow({ rule }: { rule: Rule }) {
           <RuleDialog
             slug={list.slug}
             listName={list.name}
+            listRatio={list.ratio ?? null}
             rule={rule}
             open={editOpen}
             onOpenChange={setEditOpen}

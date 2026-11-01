@@ -23,6 +23,7 @@ export function toCandidate(
   objekt: IndexedObjekt,
   flags: ReturnType<typeof itemFlags>,
   listSlug: string | null,
+  ratio: number | null = null,
 ): CandidateItem {
   return {
     collectionSlug: objekt.slug,
@@ -33,6 +34,7 @@ export function toCandidate(
     listSlug,
     copies: null,
     bySerial: false,
+    ...(ratio !== null && { ratio }),
   };
 }
 

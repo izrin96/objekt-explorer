@@ -4,6 +4,7 @@ import { useId, useRef } from "react";
 import { flushSync } from "react-dom";
 
 import { Button } from "@/components/ui/button";
+import { RatioChip } from "@/features/list/ratio-chip";
 import { SerialNo } from "@/features/objekt/objekt-label";
 import { itemLabel, offerNo } from "@/features/offers/format";
 import { type GetSource, addLabel } from "@/features/offers/get-source";
@@ -158,6 +159,11 @@ export function SideColumn({
                   times={countOf(pick)}
                   problem={problem}
                   notes={problem ? [] : notesOf(side, pick, flagsOf(pick))}
+                  badge={
+                    side === "get" && pick.ratio !== undefined ? (
+                      <RatioChip ratio={pick.ratio} side="have" owner={false} />
+                    ) : undefined
+                  }
                   slot={
                     <Button
                       variant="outline"

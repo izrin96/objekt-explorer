@@ -147,6 +147,7 @@ function PostBlock({
               collections={collections}
               onOpen={openNear}
               onShowAll={() => showAll(side.list.id, false)}
+              owner={own}
             />
           ))}
         />
@@ -201,6 +202,7 @@ function PostBlock({
             open={allOpen === side.list.id}
             onOpenChange={(open) => setAllOpen(open ? side.list.id : null)}
             finalFocus={fromMenu ? menuRef : undefined}
+            owner={own}
           />
         ))}
     </FramePanel>

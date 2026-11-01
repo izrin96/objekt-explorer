@@ -88,6 +88,8 @@ function toCopyDraft(list: StoredList): ListDraft {
     gridColumns: list.gridColumns,
     hideSerial: list.hideSerial,
     regenerateSlug: false,
+    // the server carries the list's ratio when the copy keeps its type
+    ratio: null,
   };
 }
 

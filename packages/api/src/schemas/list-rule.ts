@@ -4,6 +4,7 @@ import type { ValidObjekt } from "@repo/lib/types/objekt";
 import * as z from "zod";
 
 import { indexedObjektSchema } from "./common/objekt";
+import { tradeRatioSchema } from "./trade-ratio";
 
 export const RULE_MAX_PER_LIST = 20;
 const PRIO_MAX = 6;
@@ -226,8 +227,19 @@ const ruleId = z.coerce.number<number>().int().positive();
 
 export const previewRuleInputSchema = z.object({ rule: listRuleInputSchema });
 export const listRulesInputSchema = z.object({ slug });
-export const addRuleInputSchema = z.object({ slug, rule: listRuleInputSchema });
-export const updateRuleInputSchema = z.object({ slug, ruleId, rule: listRuleInputSchema });
+// the ratio sits beside the definition, so nothing on the expansion path can read it
+export const addRuleInputSchema = z.object({
+  slug,
+  rule: listRuleInputSchema,
+  ratio: tradeRatioSchema.nullish(),
+});
+/** `ratio` omitted keeps the stored one, as a tab from before ratios sends it; null clears it. */
+export const updateRuleInputSchema = z.object({
+  slug,
+  ruleId,
+  rule: listRuleInputSchema,
+  ratio: tradeRatioSchema.nullable().optional(),
+});
 export const ruleIdInputSchema = z.object({ slug, ruleId });
 
 export const ruleDefSchema = z.object({
@@ -251,6 +263,7 @@ const ruleCountFields = {
 export const listRulesOutputSchema = z.array(
   ruleDefSchema.extend({
     id: z.number().int(),
+    ratio: z.number().int().nullable(),
     ...ruleCountFields,
     range: z.object({ from: z.string(), to: z.string(), count: z.number().int() }).nullable(),
   }),

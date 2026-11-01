@@ -127,7 +127,11 @@ export function fillMatches<M extends FillMatch>(
 }
 
 /** One of the partner's entries on a list a match runs through. */
-export type PartnerEntry = ListEntryRef & { listId: number };
+export type PartnerEntry = ListEntryRef & {
+  listId: number;
+  /** what a have list's entry asks, else null */
+  ratio: number | null;
+};
 
 /**
  * Of the partner's items on `slug`, those a list in `listIds` offers, each carrying that list.
@@ -152,7 +156,11 @@ export function itemsOnLists(
       },
       offered,
     );
-    return entry ? [{ ...item, listSlug: entry.listSlug }] : [];
+    if (!entry) return [];
+    const { ratio: _, ...rest } = item;
+    return [
+      { ...rest, listSlug: entry.listSlug, ...(entry.ratio !== null && { ratio: entry.ratio }) },
+    ];
   });
 }
 

@@ -4,6 +4,8 @@ import { type ReactNode, type RefObject, memo } from "react";
 
 import { getListLinkOption } from "@/features/list/list-link";
 import { LIST_TYPE_LABEL, LIST_TYPE_TONE } from "@/features/list/list-type-badge";
+import { RatioChip } from "@/features/list/ratio-chip";
+import { type RatioSide, ratioSideOf } from "@/features/list/ratio-text";
 import { ObjektCard } from "@/features/objekt/objekt-card";
 import { useElementSize } from "@/hooks/use-element-size";
 import { TONE_INK } from "@/lib/tone";
@@ -36,6 +38,7 @@ type StripItem = {
   qty?: number;
   ringed?: boolean;
   near?: NearOpen;
+  ratio?: number;
 };
 
 /** The "+N" tile's face; the caller wraps it in the link or button that goes somewhere. */
@@ -64,6 +67,7 @@ function PostStrip({
   more,
   othersLink,
   rules,
+  ratio,
 }: {
   /** before the label, on its line: the post's tag */
   lead?: ReactNode;
@@ -84,6 +88,8 @@ function PostStrip({
   othersLink?: ReactNode;
   /** a want side's rule tiles, drawn before its objekts */
   rules?: ReactNode;
+  /** how a tile's ratio chip reads; none on a side that carries no ratio */
+  ratio?: { side: RatioSide; owner: boolean };
 }) {
   const [ref, { width }] = useElementSize<HTMLUListElement>();
   const [linkRef, { width: linkWidth }] = useElementSize<HTMLLIElement>();
@@ -116,6 +122,9 @@ function PostStrip({
             near={item.near}
             collection={collections[item.slug]}
             onOpen={onOpen}
+            ratio={item.ratio}
+            ratioSide={ratio?.side}
+            owner={ratio?.owner ?? false}
           />
         ))}
         {rest > 0 ? <li className="@container w-10 shrink-0">{more(rest)}</li> : null}
@@ -140,6 +149,9 @@ const StripTile = memo(function StripTile({
   near,
   collection,
   onOpen,
+  ratio,
+  ratioSide,
+  owner,
 }: {
   slug: string;
   qty: number;
@@ -147,6 +159,9 @@ const StripTile = memo(function StripTile({
   near: NearOpen | undefined;
   collection: ValidObjekt | undefined;
   onOpen: OpenObjekt;
+  ratio: number | undefined;
+  ratioSide: RatioSide | undefined;
+  owner: boolean;
 }) {
   const stacked = qty > 1;
   const description = near
@@ -181,6 +196,15 @@ const StripTile = memo(function StripTile({
         <span aria-hidden className={STACK_COUNT}>
           {qty}
         </span>
+      ) : null}
+      {ratio !== undefined && ratioSide ? (
+        <RatioChip
+          ratio={ratio}
+          side={ratioSide}
+          owner={owner}
+          // opaque: in dark mode the outline badge's fill is nearly clear, and the artwork shows through
+          className="text-xxs sm:text-xxs bg-background dark:bg-background pointer-events-none absolute end-0.5 bottom-0.5 h-4 px-0.5 shadow-xs sm:h-4"
+        />
       ) : null}
     </li>
   );
@@ -288,6 +312,7 @@ export function SideStrip({
   collections,
   onOpen,
   onShowAll,
+  owner = false,
 }: {
   lead?: ReactNode;
   side: PostSideData;
@@ -303,6 +328,8 @@ export function SideStrip({
   onOpen: OpenObjekt;
   /** the "+N" tile opens the side's whole list, in the dialog the post keeps */
   onShowAll: () => void;
+  /** the viewer's own post: a ratio reads "You ask" */
+  owner?: boolean;
 }) {
   const { list } = side;
   const role = LIST_TYPE_LABEL[side.role]();
@@ -310,6 +337,7 @@ export function SideStrip({
   const inCollections = narrowed && count > 0;
   const total = inCollections ? side.collectionCount : side.copyCount + side.others;
   const near = side.near;
+  const ratioSide = ratioSideOf(side.role);
   const text = (
     <>
       <Link
@@ -374,7 +402,9 @@ export function SideStrip({
             item.near && near
               ? { verb: near.verb, role: side.role, theirList: list.name, myListIds: item.near }
               : undefined,
+          ratio: item.ratio,
         }))}
+        ratio={ratioSide ? { side: ratioSide, owner } : undefined}
         hidden={side.more}
         copies={
           inCollections
@@ -383,7 +413,7 @@ export function SideStrip({
         }
         rules={
           side.rules.length > 0 ? (
-            <RuleTiles tiles={side.rules} collections={collections} onOpen={onOpen} />
+            <RuleTiles tiles={side.rules} collections={collections} onOpen={onOpen} owner={owner} />
           ) : undefined
         }
         collections={collections}
@@ -425,6 +455,7 @@ export function SideAllDialog({
   open,
   onOpenChange,
   finalFocus,
+  owner = false,
 }: {
   side: PostSideData;
   narrowed: boolean;
@@ -433,6 +464,8 @@ export function SideAllDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
   finalFocus?: RefObject<HTMLElement | null>;
+  /** the viewer's own post: a ratio reads "You ask" */
+  owner?: boolean;
 }) {
   return (
     <SideItemsDialog
@@ -442,6 +475,7 @@ export function SideAllDialog({
       onOpenChange={onOpenChange}
       onOpen={onOpen}
       finalFocus={finalFocus}
+      owner={owner}
       rules={
         side.rules.length > 0 ? (
           // the objekt view is a modal of its own, so the dialog gives way to it
@@ -452,6 +486,7 @@ export function SideAllDialog({
               onOpenChange(false);
               onOpen(objekt);
             }}
+            owner={owner}
           />
         ) : undefined
       }
