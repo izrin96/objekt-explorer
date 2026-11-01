@@ -45,8 +45,9 @@ export function postOfferOf(messages: readonly Pick<ChatMessage, "card">[], part
   const card = messages.findLast((message) => message.card !== null)?.card;
   return card?.kind === "post" && card.match && card.post?.owner.userId === partnerId
     ? {
-        matches: { partnerId, post: card.post.list.slug },
+        matches: { post: card.post.list.slug },
         startList: card.post.has ? card.post.list.slug : undefined,
+        handle: card.post.owner.handle,
       }
     : {};
 }

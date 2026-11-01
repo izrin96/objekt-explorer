@@ -71,6 +71,7 @@ import { Route as containerModReportsIndexRouteImport } from './routes/(containe
 import { Route as containerModReportsUserIdRouteImport } from './routes/(container)/mod/reports/$userId'
 import { Route as containerTradeAtChar123handleChar125IndexRouteImport } from './routes/(container)/trade/@{$handle}/index'
 import { Route as containerTradeAtChar123handleChar125SlugRouteImport } from './routes/(container)/trade/@{$handle}/$slug'
+import { Route as containerTradeAtChar123handleChar125OfferRouteImport } from './routes/(container)/trade/@{$handle}/offer'
 import { Route as containerTradeMineIndexRouteImport } from './routes/(container)/trade/mine/index'
 import { Route as containerTradeMineTradeIdRouteImport } from './routes/(container)/trade/mine/$tradeId'
 import { Route as ApiObjektsHeldByAddressRouteImport } from './routes/api/objekts/held-by.$address'
@@ -407,6 +408,12 @@ const containerTradeAtChar123handleChar125SlugRoute =
     path: '/$slug',
     getParentRoute: () => containerTradeAtChar123handleChar125RouteRoute,
   } as any)
+const containerTradeAtChar123handleChar125OfferRoute =
+  containerTradeAtChar123handleChar125OfferRouteImport.update({
+    id: '/offer',
+    path: '/offer',
+    getParentRoute: () => containerTradeAtChar123handleChar125RouteRoute,
+  } as any)
 const containerTradeMineIndexRoute = containerTradeMineIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -508,6 +515,7 @@ export interface FileRoutesByFullPath {
   '/mod/addresses/$address': typeof containerModAddressesAddressRoute
   '/mod/reports/$userId': typeof containerModReportsUserIdRoute
   '/trade/@{$handle}/$slug': typeof containerTradeAtChar123handleChar125SlugRoute
+  '/trade/@{$handle}/offer': typeof containerTradeAtChar123handleChar125OfferRoute
   '/trade/mine/$tradeId': typeof containerTradeMineTradeIdRoute
   '/api/objekts/held-by/$address': typeof ApiObjektsHeldByAddressRoute
   '/api/objekts/list/$collectionSlug': typeof ApiObjektsListCollectionSlugRoute
@@ -571,6 +579,7 @@ export interface FileRoutesByTo {
   '/mod/addresses/$address': typeof containerModAddressesAddressRoute
   '/mod/reports/$userId': typeof containerModReportsUserIdRoute
   '/trade/@{$handle}/$slug': typeof containerTradeAtChar123handleChar125SlugRoute
+  '/trade/@{$handle}/offer': typeof containerTradeAtChar123handleChar125OfferRoute
   '/trade/mine/$tradeId': typeof containerTradeMineTradeIdRoute
   '/api/objekts/held-by/$address': typeof ApiObjektsHeldByAddressRoute
   '/api/objekts/list/$collectionSlug': typeof ApiObjektsListCollectionSlugRoute
@@ -643,6 +652,7 @@ export interface FileRoutesById {
   '/(container)/mod/addresses/$address': typeof containerModAddressesAddressRoute
   '/(container)/mod/reports/$userId': typeof containerModReportsUserIdRoute
   '/(container)/trade/@{$handle}/$slug': typeof containerTradeAtChar123handleChar125SlugRoute
+  '/(container)/trade/@{$handle}/offer': typeof containerTradeAtChar123handleChar125OfferRoute
   '/(container)/trade/mine/$tradeId': typeof containerTradeMineTradeIdRoute
   '/api/objekts/held-by/$address': typeof ApiObjektsHeldByAddressRoute
   '/api/objekts/list/$collectionSlug': typeof ApiObjektsListCollectionSlugRoute
@@ -715,6 +725,7 @@ export interface FileRouteTypes {
     | '/mod/addresses/$address'
     | '/mod/reports/$userId'
     | '/trade/@{$handle}/$slug'
+    | '/trade/@{$handle}/offer'
     | '/trade/mine/$tradeId'
     | '/api/objekts/held-by/$address'
     | '/api/objekts/list/$collectionSlug'
@@ -778,6 +789,7 @@ export interface FileRouteTypes {
     | '/mod/addresses/$address'
     | '/mod/reports/$userId'
     | '/trade/@{$handle}/$slug'
+    | '/trade/@{$handle}/offer'
     | '/trade/mine/$tradeId'
     | '/api/objekts/held-by/$address'
     | '/api/objekts/list/$collectionSlug'
@@ -849,6 +861,7 @@ export interface FileRouteTypes {
     | '/(container)/mod/addresses/$address'
     | '/(container)/mod/reports/$userId'
     | '/(container)/trade/@{$handle}/$slug'
+    | '/(container)/trade/@{$handle}/offer'
     | '/(container)/trade/mine/$tradeId'
     | '/api/objekts/held-by/$address'
     | '/api/objekts/list/$collectionSlug'
@@ -1319,6 +1332,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof containerTradeAtChar123handleChar125SlugRouteImport
       parentRoute: typeof containerTradeAtChar123handleChar125RouteRoute
     }
+    '/(container)/trade/@{$handle}/offer': {
+      id: '/(container)/trade/@{$handle}/offer'
+      path: '/offer'
+      fullPath: '/trade/@{$handle}/offer'
+      preLoaderRoute: typeof containerTradeAtChar123handleChar125OfferRouteImport
+      parentRoute: typeof containerTradeAtChar123handleChar125RouteRoute
+    }
     '/(container)/trade/mine/': {
       id: '/(container)/trade/mine/'
       path: '/'
@@ -1422,6 +1442,7 @@ const containerMessagesRouteRouteWithChildren =
 
 interface containerTradeAtChar123handleChar125RouteRouteChildren {
   containerTradeAtChar123handleChar125SlugRoute: typeof containerTradeAtChar123handleChar125SlugRoute
+  containerTradeAtChar123handleChar125OfferRoute: typeof containerTradeAtChar123handleChar125OfferRoute
   containerTradeAtChar123handleChar125IndexRoute: typeof containerTradeAtChar123handleChar125IndexRoute
 }
 
@@ -1429,6 +1450,8 @@ const containerTradeAtChar123handleChar125RouteRouteChildren: containerTradeAtCh
   {
     containerTradeAtChar123handleChar125SlugRoute:
       containerTradeAtChar123handleChar125SlugRoute,
+    containerTradeAtChar123handleChar125OfferRoute:
+      containerTradeAtChar123handleChar125OfferRoute,
     containerTradeAtChar123handleChar125IndexRoute:
       containerTradeAtChar123handleChar125IndexRoute,
   }

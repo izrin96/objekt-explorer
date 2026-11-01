@@ -21,7 +21,8 @@ export function AddToMessage({
 }: {
   buttonRef: RefObject<HTMLButtonElement | null>;
   onAttach: () => void;
-  onOffer: () => void;
+  /** absent, there is no Make offer: the partner has no Cosmo profile to address */
+  onOffer: (() => void) | null;
 }) {
   const wide = useMediaQuery("(min-width: 48rem)");
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -35,12 +36,16 @@ export function AddToMessage({
       description: m.chat_add_attach_desc(),
       run: onAttach,
     },
-    {
-      icon: HandshakeIcon,
-      label: m.offer_composer(),
-      description: m.chat_add_offer_desc(),
-      run: onOffer,
-    },
+    ...(onOffer
+      ? [
+          {
+            icon: HandshakeIcon,
+            label: m.offer_composer(),
+            description: m.chat_add_offer_desc(),
+            run: onOffer,
+          },
+        ]
+      : []),
   ];
   // the same height as Send, so the row lines up with a one-line message box
   const button = (

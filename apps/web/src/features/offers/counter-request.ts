@@ -1,6 +1,6 @@
 import type { OfferItemView, OfferView } from "@repo/api/schemas/offer";
 
-import type { OfferRequest } from "./offer-builder";
+import type { OfferRequest } from "./builder/types";
 import { type Collections, pickKey } from "./pick";
 import { mergeCounts } from "./quantity";
 

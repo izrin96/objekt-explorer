@@ -85,7 +85,7 @@ export function SideColumn({
   // every control sits above the picks, so a growing list never moves one under the pointer
   return (
     <section aria-labelledby={headingId} className="@container flex min-w-0 flex-col gap-2">
-      <h3 id={headingId} className="flex items-baseline gap-2 text-sm font-medium">
+      <h2 id={headingId} className="flex items-baseline gap-2 text-sm font-medium">
         {side === "give" ? m.offer_side_give() : m.offer_side_get()}
         <span className="text-muted-foreground text-xs font-normal tabular-nums">
           {m.offer_side_count({
@@ -93,7 +93,7 @@ export function SideColumn({
             max: OFFER_SIDE_LIMIT,
           })}
         </span>
-      </h3>
+      </h2>
       <Button
         ref={addRef}
         variant="outline"
@@ -134,11 +134,8 @@ export function SideColumn({
         ) : null}
       </div>
       {picks.length > 0 ? (
-        // the picks scroll inside the side, so the top-up, note and Send stay in reach
-        <ul
-          ref={listRef}
-          className="grid max-h-80 grid-cols-4 gap-1 overflow-y-auto p-0.5 @sm:grid-cols-6"
-        >
+        // the picks grow with the page; the sticky column (a bar on a phone) keeps Send in reach
+        <ul ref={listRef} className="grid grid-cols-4 gap-1 p-0.5 @sm:grid-cols-6">
           {picks.map((pick, i) => {
             const estimated = estimatedOf(pick);
             const label = itemLabel({ ...pick, serialEstimated: estimated }, collections);

@@ -29,7 +29,7 @@ export function OfferCard({
   name: string;
   collections: Collections;
   collapsed: boolean;
-  onCounter: (offer: OfferView) => void;
+  onCounter?: (offer: OfferView) => void;
   onOpen: (objekt: ValidObjekt) => void;
 }) {
   const line = offerLine(offer);

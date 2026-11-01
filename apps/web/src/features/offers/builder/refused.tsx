@@ -2,39 +2,46 @@ import { LinkIcon } from "@phosphor-icons/react";
 import { Link } from "@tanstack/react-router";
 
 import { Button } from "@/components/ui/button";
-import { DialogClose, DialogFooter, DialogPanel } from "@/components/ui/dialog";
 import { type OfferRefusalInfo, offerRefusalText } from "@/features/offers/refusal";
 import { m } from "@/paraglide/messages";
 
-/** Reads like a refused Message: nothing can be sent, so the only way out is Close. */
+import { BuilderBody } from "./layout";
+
+/** Reads like a refused Message: nothing can be sent, so the only way out is leaving. */
 export function BuilderRefused({
   refusal,
-  onDone,
+  status,
+  onLeave,
 }: {
   refusal: OfferRefusalInfo;
-  onDone: () => void;
+  /** whether the caller draws a status region above the sides */
+  status: boolean;
+  onLeave: () => void;
 }) {
   return (
-    <>
-      <DialogPanel>
+    <BuilderBody
+      status={status}
+      sides={
         <div role="alert" className="flex flex-col items-start gap-3">
           <p className="text-sm text-pretty">
             {offerRefusalText(refusal, m.offer_refused_some()) ?? m.offer_send_error()}
           </p>
-          {refusal.reason === "no_address" ? <LinkCosmoButton onDone={onDone} /> : null}
+          {refusal.reason === "no_address" ? <LinkCosmoButton /> : null}
         </div>
-      </DialogPanel>
-      <DialogFooter>
-        <DialogClose render={<Button variant="outline" />}>{m.common_modal_close()}</DialogClose>
-      </DialogFooter>
-    </>
+      }
+      cancel={
+        <Button variant="outline" onClick={onLeave}>
+          {m.common_modal_close()}
+        </Button>
+      }
+    />
   );
 }
 
-/** For a sender with no Cosmo linked: off to link one, closing the builder. */
-function LinkCosmoButton({ onDone }: { onDone: () => void }) {
+/** For a sender with no Cosmo linked: off to link one, which leaves the page. */
+function LinkCosmoButton() {
   return (
-    <Button variant="outline" size="sm" render={<Link to="/account/profiles" />} onClick={onDone}>
+    <Button variant="outline" size="sm" render={<Link to="/account/profiles" />}>
       <LinkIcon />
       {m.link_link_cosmo()}
     </Button>
@@ -44,15 +51,7 @@ function LinkCosmoButton({ onDone }: { onDone: () => void }) {
 export type SendFailure = { text: string; remove: boolean; link: boolean };
 
 /** Why the last send failed. Always mounted, empty until then: Send's description points at it. */
-export function SendError({
-  id,
-  error,
-  onDone,
-}: {
-  id: string;
-  error: SendFailure | null;
-  onDone: () => void;
-}) {
+export function SendError({ id, error }: { id: string; error: SendFailure | null }) {
   return (
     <div id={id} role="alert" className="empty:sr-only">
       {error ? (
@@ -61,7 +60,7 @@ export function SendError({
             {error.text}
             {error.remove ? <span className="block">{m.offer_refused_remove_hint()}</span> : null}
           </p>
-          {error.link ? <LinkCosmoButton onDone={onDone} /> : null}
+          {error.link ? <LinkCosmoButton /> : null}
         </div>
       ) : null}
     </div>

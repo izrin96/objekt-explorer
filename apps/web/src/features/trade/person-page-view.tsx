@@ -21,7 +21,6 @@ import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import { useSelectedArtists } from "@/features/artist/use-selected-artists";
 import { AddToListProvider } from "@/features/list/add-to-list-dialog";
 import { ObjektDrawer } from "@/features/objekt/drawer";
-import { OfferBuilderProvider } from "@/features/offers/offer-builder";
 import { useCurrentUser, useUserLists } from "@/features/user/hooks";
 import { m } from "@/paraglide/messages";
 
@@ -90,74 +89,72 @@ export function PersonPageView({
 
   return (
     <AddToListProvider>
-      <OfferBuilderProvider>
-        <div className="mx-auto flex w-full max-w-5xl flex-col gap-3">
-          <h1 className="sr-only">{m.trade_share_person_title({ name: handleName(handle) })}</h1>
-          <BackToTrade />
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-3">
+        <h1 className="sr-only">{m.trade_share_person_title({ name: handleName(handle) })}</h1>
+        <BackToTrade />
 
-          {gone ? (
-            <Alert variant="info" role="status">
-              <InfoIcon />
-              <AlertDescription>{m.trade_post_gone()}</AlertDescription>
-            </Alert>
-          ) : null}
+        {gone ? (
+          <Alert variant="info" role="status">
+            <InfoIcon />
+            <AlertDescription>{m.trade_post_gone()}</AlertDescription>
+          </Alert>
+        ) : null}
 
-          {current === undefined && query.isError ? (
-            <LoadError onRetry={() => void query.refetch()} />
-          ) : current === undefined ? (
-            <>
-              <PendingStatus />
-              <PersonRowSkeleton />
-            </>
-          ) : !row ? (
-            <EmptyState
-              icon={CardsThreeIcon}
-              title={m.trade_person_nothing_title()}
-              hint={m.trade_person_nothing_hint()}
-              action={
-                <Button variant="outline" size="sm" render={<Link to="/trade" />}>
-                  {m.trade_person_back()}
-                </Button>
+        {current === undefined && query.isError ? (
+          <LoadError onRetry={() => void query.refetch()} />
+        ) : current === undefined ? (
+          <>
+            <PendingStatus />
+            <PersonRowSkeleton />
+          </>
+        ) : !row ? (
+          <EmptyState
+            icon={CardsThreeIcon}
+            title={m.trade_person_nothing_title()}
+            hint={m.trade_person_nothing_hint()}
+            action={
+              <Button variant="outline" size="sm" render={<Link to="/trade" />}>
+                {m.trade_person_back()}
+              </Button>
+            }
+          />
+        ) : (
+          <SideCompareContext value={NO_COMPARE}>
+            <PersonRow
+              // a new post page starts folded again
+              key={focused?.id ?? "all"}
+              person={row}
+              surface="browse"
+              own={own}
+              signedIn={!!user}
+              focus={focused?.id}
+              ownActions={
+                own && focused ? (
+                  <OwnPostActions handle={handle} slug={anchorOf(focused)?.list.slug ?? ""} />
+                ) : undefined
               }
+              collections={collections}
+              now={now}
+              onOpen={setActive}
             />
-          ) : (
-            <SideCompareContext value={NO_COMPARE}>
-              <PersonRow
-                // a new post page starts folded again
-                key={focused?.id ?? "all"}
-                person={row}
-                surface="browse"
-                own={own}
-                signedIn={!!user}
-                focus={focused?.id}
-                ownActions={
-                  own && focused ? (
-                    <OwnPostActions handle={handle} slug={anchorOf(focused)?.list.slug ?? ""} />
-                  ) : undefined
-                }
-                collections={collections}
-                now={now}
-                onOpen={setActive}
-              />
-            </SideCompareContext>
-          )}
-        </div>
+          </SideCompareContext>
+        )}
+      </div>
 
-        <ObjektDrawer
-          objekt={opened?.objekt ?? null}
-          onClose={() => setActive(null)}
-          note={
-            opened?.near ? (
-              <NearNote
-                objekt={opened.objekt}
-                near={opened.near}
-                onClose={() => setActive(null)}
-                onCompose={openComposer}
-              />
-            ) : undefined
-          }
-        />
-      </OfferBuilderProvider>
+      <ObjektDrawer
+        objekt={opened?.objekt ?? null}
+        onClose={() => setActive(null)}
+        note={
+          opened?.near ? (
+            <NearNote
+              objekt={opened.objekt}
+              near={opened.near}
+              onClose={() => setActive(null)}
+              onCompose={openComposer}
+            />
+          ) : undefined
+        }
+      />
     </AddToListProvider>
   );
 }

@@ -6,7 +6,6 @@ import { truncateAddress } from "@repo/lib/address";
 
 import { formatUtcDay } from "@/features/market/format-utc-day";
 import type { HistoryPoint } from "@/features/market/price-history-rows";
-import { anyKey } from "@/features/offers/pick";
 import { m } from "@/paraglide/messages";
 
 import {
@@ -14,7 +13,7 @@ import {
   isOwnListing,
   listingPrice,
   messageRequest,
-  offerRequest,
+  offerStartOf,
   onTradeText,
   rowContact,
   sellerOf,
@@ -73,33 +72,23 @@ describe("sellerOf", () => {
   });
 });
 
-describe("offerRequest", () => {
-  test("keys the pick by the objekt id", () => {
-    const request = offerRequest(listing(), "col-1");
-    expect(request.to).toEqual({ target: { kind: "list", slug: "my-list" } });
-    expect(request.startList).toBe("my-list");
-    expect(request.name).toBe("Seller");
-    expect(request.prefill?.get).toEqual([
-      {
-        key: "obj-1",
-        collectionSlug: "col-1",
-        objektId: "obj-1",
-        serial: 5,
-        listSlug: "my-list",
-        flags: null,
-      },
-    ]);
+describe("offerStartOf", () => {
+  test("asks for the listed objekt from its sale list, under the seller's address", () => {
+    expect(offerStartOf(listing(), "col-1")).toEqual({
+      handle: ADDRESS.toLowerCase(),
+      to: { list: "my-list" },
+      startList: "my-list",
+      ask: { collectionSlug: "col-1", objektId: "obj-1", serial: 5 },
+    });
   });
 
-  test("falls back to the any-key when the list hides serials", () => {
-    const pick = offerRequest(listing({ objektId: null }), "col-1").prefill?.get?.[0];
-    expect(pick?.key).toBe(anyKey("col-1"));
-    expect(pick?.objektId).toBeNull();
+  test("asks for any copy when the list hides serials", () => {
+    expect(offerStartOf(listing({ objektId: null }), "col-1")?.ask?.objektId).toBeNull();
   });
 
-  test("names an unknown seller generically", () => {
+  test("has no page to open for a listing with no profile", () => {
     const item = listing({ list: { slug: "l", profileSlug: null, profile: null } });
-    check(offerRequest(item, "col-1").name).toBe(m.objekt_market_seller());
+    expect(offerStartOf(item, "col-1")).toBeNull();
   });
 });
 

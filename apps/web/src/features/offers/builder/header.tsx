@@ -1,30 +1,29 @@
-import type { Ref } from "react";
+import { useEffect, useRef } from "react";
 
-import { DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { m } from "@/paraglide/messages";
 
 import type { OfferRequest } from "./types";
 
-/** `titleRef` makes the title the dialog's first focus, where no field should take it. */
-export function BuilderHeader({
-  request,
-  titleRef,
-}: {
-  request: OfferRequest;
-  titleRef?: Ref<HTMLHeadingElement>;
-}) {
+/** The page's title, which takes focus when the page opens: no field should take it first. */
+export function BuilderHeader({ request }: { request: OfferRequest }) {
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    titleRef.current?.focus({ preventScroll: true });
+  }, []);
   return (
-    <DialogHeader>
-      <DialogTitle
-        className="font-display outline-none"
+    <div>
+      <h1
         ref={titleRef}
-        tabIndex={titleRef ? -1 : undefined}
+        tabIndex={-1}
+        className="font-display text-xl font-semibold tracking-tight text-balance outline-none"
       >
         {request.counter
           ? m.offer_builder_counter_title({ name: request.name })
           : m.offer_builder_title({ name: request.name })}
-      </DialogTitle>
-      <DialogDescription>{m.offer_builder_description()}</DialogDescription>
-    </DialogHeader>
+      </h1>
+      <p className="text-muted-foreground mt-0.5 text-sm text-pretty">
+        {m.offer_builder_description()}
+      </p>
+    </div>
   );
 }

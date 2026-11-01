@@ -36,6 +36,7 @@ import {
   type CardFormat,
 } from "./next-step-text";
 import { OfferThumb } from "./offer-item";
+import { partnerHandle } from "./offer-link";
 import type { Collections } from "./pick";
 import { StatusBadge } from "./status-badge";
 import { Feedback } from "./trade-feedback";
@@ -97,6 +98,7 @@ export function NextStepBanner({
   const StepIcon = ICONS[step.kind];
   const label = (leg: Leg) => itemLabel(leg, collections);
   const { identity } = trade.partner;
+  const handle = partnerHandle(identity);
   const reportButton = (
     <Button variant="outline" size="sm" onClick={onReport}>
       <FlagIcon />
@@ -128,12 +130,12 @@ export function NextStepBanner({
         return {
           title: m.offer_next_cancelled(),
           body: endedText(trade, name),
-          actions: (
+          actions: handle ? (
             <MakeOfferButton
               label={m.offer_make_new()}
-              request={{ to: { conversationId: trade.conversationId }, name }}
+              start={{ handle, to: { conversation: trade.conversationId } }}
             />
-          ),
+          ) : null,
         };
       case "youDecide": {
         const sent = <Serial serial={step.copy.serial} estimated={step.copy.serialEstimated} />;

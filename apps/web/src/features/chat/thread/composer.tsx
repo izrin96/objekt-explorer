@@ -53,6 +53,7 @@ export function Composer({
   setAttachment,
   onSent,
   onOffer,
+  addRef: givenAddRef,
   onOpen,
 }: {
   conversationId: number;
@@ -67,8 +68,10 @@ export function Composer({
   attachment: Attachment | null;
   setAttachment: (attachment: Attachment | null) => void;
   onSent: () => void;
-  /** opens the builder, which hands focus back to `finalFocus` when it closes */
-  onOffer: (finalFocus: RefObject<HTMLElement | null>) => void;
+  /** opens the offer page; absent, Add to message offers no Make offer */
+  onOffer: (() => void) | null;
+  /** Add to message, which the thread focuses on coming back from the offer page */
+  addRef?: RefObject<HTMLButtonElement | null>;
   onOpen: (objekt: ValidObjekt) => void;
 }) {
   const queryClient = useQueryClient();
@@ -76,7 +79,8 @@ export function Composer({
   const body = useChatDraft((state) => state.drafts[conversationId]?.body ?? "");
   const reply = useChatDraft((state) => state.drafts[conversationId]?.reply ?? null);
   const [attachOpen, setAttachOpen] = useState(false);
-  const addRef = useRef<HTMLButtonElement>(null);
+  const ownAddRef = useRef<HTMLButtonElement>(null);
+  const addRef = givenAddRef ?? ownAddRef;
   const detach = () => {
     setAttachment(null);
     dropDraftSendId(conversationId);
@@ -248,11 +252,7 @@ export function Composer({
       ) : null}
 
       <div className="@container flex items-end gap-2">
-        <AddToMessage
-          buttonRef={addRef}
-          onAttach={() => setAttachOpen(true)}
-          onOffer={() => onOffer(addRef)}
-        />
+        <AddToMessage buttonRef={addRef} onAttach={() => setAttachOpen(true)} onOffer={onOffer} />
         <Textarea
           ref={textarea}
           value={body}

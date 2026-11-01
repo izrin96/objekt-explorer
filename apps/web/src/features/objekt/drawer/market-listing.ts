@@ -9,8 +9,7 @@ import { truncateAddress } from "@repo/lib/address";
 
 import { formatUtcDay } from "@/features/market/format-utc-day";
 import { type HistoryPoint, toRows } from "@/features/market/price-history-rows";
-import type { OfferRequest } from "@/features/offers/builder/types";
-import { anyKey } from "@/features/offers/pick";
+import type { OfferStart } from "@/features/offers/offer-link";
 import { isSameAddress } from "@/lib/address";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
@@ -26,23 +25,18 @@ export function sellerOf(item: Pick<MarketListing, "list">) {
   return { address, nickname, name };
 }
 
-export const offerRequest = (item: MarketListing, slug: string): OfferRequest => ({
-  to: { target: { kind: "list", slug: item.list.slug } },
-  name: sellerOf(item).name ?? m.objekt_market_seller(),
-  startList: item.list.slug,
-  prefill: {
-    get: [
-      {
-        key: item.objektId ?? anyKey(slug),
-        collectionSlug: slug,
-        objektId: item.objektId,
-        serial: item.serial,
-        listSlug: item.list.slug,
-        flags: null,
-      },
-    ],
-  },
-});
+/** Make offer on a listing: its one objekt from its sale list. No profile, no page to offer on. */
+export function offerStartOf(item: MarketListing, slug: string): Omit<OfferStart, "from"> | null {
+  const profile = item.list.profile;
+  if (!profile) return null;
+  return {
+    // the address, which no other account can share; the page redirects to the canonical handle
+    handle: profile.address.toLowerCase(),
+    to: { list: item.list.slug },
+    startList: item.list.slug,
+    ask: { collectionSlug: slug, objektId: item.objektId, serial: item.serial },
+  };
+}
 
 export const messageRequest = (item: MarketListing, slug: string): [ChatTarget, CardInput] => [
   { kind: "list", slug: item.list.slug },

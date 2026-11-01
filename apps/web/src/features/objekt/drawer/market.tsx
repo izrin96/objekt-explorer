@@ -8,10 +8,10 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { InfiniteSentinel } from "@/components/shared/infinite-sentinel";
 import { WidgetBoundary } from "@/components/shared/widget-boundary";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useStartConversation, useStartGate } from "@/features/chat/message-button";
+import { useStartConversation } from "@/features/chat/message-button";
 import { PriceDelta } from "@/features/market/price-delta";
 import { PriceSparkline } from "@/features/market/price-sparkline";
-import { useOfferBuilder } from "@/features/offers/offer-builder";
+import { useOpenOffer } from "@/features/offers/make-offer-button";
 import { useCurrency } from "@/features/settings/use-currency";
 import { useUserLists, useUserProfiles } from "@/features/user/hooks";
 import { m } from "@/paraglide/messages";
@@ -22,7 +22,7 @@ import {
   floorTrend,
   isOwnListing,
   messageRequest,
-  offerRequest,
+  offerStartOf,
   rowContact,
   trackingText,
 } from "./market-listing";
@@ -54,9 +54,7 @@ export function MarketPanel({
   const history = useQuery(priceHistoryOptions(slug, "30d"));
   const [historyOpen, setHistoryOpen] = useState(false);
   const chartId = useId();
-  // one of each for the whole table, rather than a dialog per row
-  const builder = useOfferBuilder();
-  const { gate } = useStartGate();
+  const openOffer = useOpenOffer();
   const { start } = useStartConversation();
   const listings = useInfiniteQuery(marketListingsOptions(slug, sort.key, sort.dir));
 
@@ -183,6 +181,7 @@ export function MarketPanel({
             <tbody>
               {items.map((item) => {
                 const contact = rowContact(item, isOwnListing(item, myListSlugs, myAddresses));
+                const offerStart = offerStartOf(item, slug);
                 return (
                   <MarketRow
                     key={item.id}
@@ -195,9 +194,7 @@ export function MarketPanel({
                       contact === "open"
                         ? {
                             message: () => start(...messageRequest(item, slug)),
-                            offer: () => {
-                              if (gate()) builder.open(offerRequest(item, slug));
-                            },
+                            offer: offerStart && (() => openOffer(offerStart)),
                           }
                         : null
                     }
@@ -216,7 +213,6 @@ export function MarketPanel({
           />
         </div>
       )}
-      {builder.element}
     </div>
   );
 }

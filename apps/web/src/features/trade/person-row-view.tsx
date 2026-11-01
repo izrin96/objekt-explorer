@@ -14,9 +14,8 @@ import { Button } from "@/components/ui/button";
 import { Frame, FramePanel } from "@/components/ui/frame";
 import { Menu, MenuItem, MenuPopup, MenuSeparator, MenuTrigger } from "@/components/ui/menu";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useStartGate } from "@/features/chat/message-button";
 import { SafetyMenu } from "@/features/moderation/safety-menu";
-import { useSharedOfferBuilder } from "@/features/offers/offer-builder";
+import { useOpenOffer } from "@/features/offers/make-offer-button";
 import { relativeTime } from "@/lib/time";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -63,7 +62,6 @@ function PostBlock({
   surface,
   own,
   contact,
-  partnerId,
   name,
   handle,
   focused,
@@ -75,7 +73,6 @@ function PostBlock({
   own: boolean;
   /** the row's contact: Make offer on this post shows only where the row's Make offer does */
   contact: TradeContact;
-  partnerId: string;
   name: string;
   /** the person's handle, for the post page's Copy link; null with no linked Cosmo profile */
   handle: string | null;
@@ -91,8 +88,7 @@ function PostBlock({
   const copyLink = useCopyTradeLink();
   const offering = post.sides.find((side) => side.role !== "want");
   const compare = use(SideCompareContext);
-  const openBuilder = useSharedOfferBuilder();
-  const { gate } = useStartGate();
+  const openOffer = useOpenOffer();
   const menuRef = useRef<HTMLButtonElement>(null);
   // one "+N" dialog per strip, shared with Show all; each mounts on its first open only, since a
   // feed holds many strips and most are never opened
@@ -104,7 +100,7 @@ function PostBlock({
     setFromMenu(viaMenu);
     setAllOpen(listId);
   };
-  const offersHere = contact.kind === "open" && openBuilder !== null && !!anchor;
+  const offersHere = contact.kind === "open" && !!anchor && handle !== null;
   // a near match's drawer names the person, and offers it on this post when the row offers one
   const openNear: OpenObjekt = (objekt, near) =>
     onOpen(
@@ -117,24 +113,19 @@ function PostBlock({
     );
   /** `addNear`: Make offer with it, from a near match's drawer */
   const makeOffer = (addNear?: string) => {
-    if (!anchor || !openBuilder || !gate()) return;
+    if (!anchor || handle === null) return;
     // near matches ride on the same read, so a strip with only those still asks for it
     const matched =
       !own &&
       (addNear !== undefined || strips.some((side) => listCount(post, side) > 0 || side.near));
-    openBuilder({
-      to: { target: { kind: "list", slug: anchor.list.slug } },
-      name,
+    openOffer({
+      handle,
+      to: { list: anchor.list.slug },
       startList: offering?.list.slug,
       matches: matched
-        ? {
-            partnerId,
-            list: compare.list,
-            mutual: compare.mutual || undefined,
-            post: anchor.list.slug,
-          }
+        ? { list: compare.list, mutual: compare.mutual || undefined, post: anchor.list.slug }
         : undefined,
-      addNear,
+      near: addNear,
     });
   };
 
@@ -316,25 +307,17 @@ export const PersonRow = memo(function PersonRow({
       signedIn &&
       focused.sides.some((side) => listCount(focused, side) > 0 || side.near) &&
       anchor
-      ? {
-          partnerId: person.userId,
-          list: compare.list,
-          mutual: compare.mutual || undefined,
-          post: anchor.list.slug,
-        }
+      ? { list: compare.list, mutual: compare.mutual || undefined, post: anchor.list.slug }
       : undefined
     : band ||
         (!own && signedIn && person.posts.some((post) => post.sides.some((side) => side.near)))
-      ? {
-          partnerId: person.userId,
-          list: compare.list,
-          mutual: compare.mutual || undefined,
-        }
+      ? { list: compare.list, mutual: compare.mutual || undefined }
       : undefined;
   const actions = (
     <TradeActions
       contact={contact}
       name={person.identity.name}
+      handle={person.handle}
       offerClassName="@max-3xl:flex-1"
       matches={offerMatches}
     />
@@ -385,7 +368,6 @@ export const PersonRow = memo(function PersonRow({
                 surface={surface}
                 own={own}
                 contact={contact}
-                partnerId={person.userId}
                 name={person.identity.name}
                 handle={person.handle}
                 focused={post === focused}

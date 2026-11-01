@@ -22,7 +22,8 @@ import { listingPrice, sellerOf } from "./market-listing";
 
 export type RowActions = {
   message: () => void;
-  offer: () => void;
+  /** null for a listing with no profile, which has no offer page */
+  offer: (() => void) | null;
 };
 
 /** The app's one timestamp; a phone-width drawer keeps the day and leaves the time to `title`. */
@@ -134,10 +135,12 @@ export function MarketRow({
                 <ChatCircleIcon />
                 {m.chat_message()}
               </MenuItem>
-              <MenuItem onClick={() => actions.offer()}>
-                <HandshakeIcon />
-                {m.offer_make()}
-              </MenuItem>
+              {actions.offer ? (
+                <MenuItem onClick={actions.offer}>
+                  <HandshakeIcon />
+                  {m.offer_make()}
+                </MenuItem>
+              ) : null}
               <MenuSeparator />
               <MenuItem render={<Link {...getListLinkOption(item.list)} />}>
                 <ListIcon />

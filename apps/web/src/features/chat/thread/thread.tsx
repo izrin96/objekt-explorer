@@ -8,7 +8,7 @@ import type { ChatMessage } from "@repo/api/schemas/chat";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useHydrated, useLocation } from "@tanstack/react-router";
-import { Fragment, type RefObject, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { PendingStatus } from "@/components/router/pending";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -28,9 +28,10 @@ import {
   type ThreadPage,
 } from "@/features/chat/thread-cache";
 import { ObjektDrawer } from "@/features/objekt/drawer";
-import { counterRequest } from "@/features/offers/counter-request";
-import { useOfferBuilder } from "@/features/offers/offer-builder";
+import { useOpenOffer } from "@/features/offers/make-offer-button";
 import { OfferCard } from "@/features/offers/offer-card";
+import { partnerHandle } from "@/features/offers/offer-link";
+import { takeReturn } from "@/features/offers/return-focus";
 import { useMinuteClock } from "@/hooks/use-minute-clock";
 import { displayNickname, isSameAddress } from "@/lib/address";
 import { joinSentences } from "@/lib/text";
@@ -157,7 +158,12 @@ function ThreadView({
       ? partner.identity.also.find((ref) => isSameAddress(ref.address, fromProfile))
       : undefined;
   const now = useMinuteClock();
-  const builder = useOfferBuilder();
+  const openOffer = useOpenOffer();
+  const { handle: cardHandle, ...postStart } = postOffer;
+  const handle = partnerHandle(partner.identity, cardHandle);
+  const addRef = useRef<HTMLButtonElement>(null);
+  // back from the offer page Add to message opened: focus goes back there; read once per mount
+  const returnedToAdd = useRef<boolean | null>(null);
   const latestOffer = latestOfferId(messages);
   const seenId = seenMessageId(messages, conversation.partnerReadMessageId);
   const typing = useChatTyping((state) => id in state.typing);
@@ -182,8 +188,10 @@ function ThreadView({
 
   // below `md` the list just hid, taking focus with it: start the reader at the thread
   useEffect(() => {
-    if (window.matchMedia("(width < 48rem)").matches) heading.current?.focus();
-  }, []);
+    returnedToAdd.current ??= takeReturn(`chat-add:${id}`);
+    if (returnedToAdd.current) addRef.current?.focus();
+    else if (window.matchMedia("(width < 48rem)").matches) heading.current?.focus();
+  }, [id]);
 
   const oldest = messages[0]?.id;
   const newest = messages.at(-1);
@@ -251,10 +259,14 @@ function ThreadView({
   // the message box is shown, not a notice in its place
   const footer = threadFooter(conversation);
   const composing = footer === "composer";
-  const offerOpen = composing
-    ? (finalFocus?: RefObject<HTMLElement | null>) =>
-        builder.open({ to: { conversationId: id }, name, ...postOffer }, { finalFocus })
-    : null;
+  const offerOpen =
+    composing && handle !== null
+      ? (fromAdd: boolean) =>
+          openOffer(
+            { handle, to: { conversation: id }, ...postStart },
+            fromAdd ? `chat-add:${id}` : undefined,
+          )
+      : null;
   const reply = composing
     ? (message: ChatMessage) => setDraftReply(id, { id: message.id, quote: quoteOf(message) })
     : null;
@@ -274,7 +286,7 @@ function ThreadView({
         deal={conversation.deal}
         hadOffer={conversation.hadOffer}
         name={name}
-        onOffer={offerOpen}
+        onOffer={offerOpen && (() => offerOpen(false))}
         onShowOffer={(offerId) =>
           void jump({
             has: (message) => message.offer?.id === offerId,
@@ -378,8 +390,15 @@ function ThreadView({
                                 message.offer.id !== latestOffer ||
                                 message.offer.status === "accepted"
                               }
-                              onCounter={(offer) =>
-                                builder.open(counterRequest(offer, name, collections))
+                              onCounter={
+                                handle === null
+                                  ? undefined
+                                  : (offer) =>
+                                      openOffer({
+                                        handle,
+                                        to: { conversation: offer.conversationId },
+                                        counter: offer.id,
+                                      })
                               }
                               onOpen={setActive}
                             />
@@ -441,12 +460,12 @@ function ThreadView({
           attachment={attachment}
           setAttachment={setAttachment}
           onSent={() => (stick.current = true)}
-          onOffer={(finalFocus) => offerOpen?.(finalFocus)}
+          onOffer={offerOpen && (() => offerOpen(true))}
+          addRef={addRef}
           onOpen={setActive}
         />
       )}
       <ObjektDrawer objekt={active} onClose={() => setActive(null)} />
-      {builder.element}
     </div>
   );
 }

@@ -44,7 +44,8 @@ export function OfferBody({
   offer: OfferView;
   name: string;
   collections: Collections;
-  onCounter: (offer: OfferView) => void;
+  /** absent, no Counter: the partner has no Cosmo profile to address */
+  onCounter?: (offer: OfferView) => void;
   onOpen: (objekt: ValidObjekt) => void;
 }) {
   const hydrated = useHydrated();
@@ -208,7 +209,7 @@ export function OfferBody({
                   {m.offer_decline()}
                 </Button>
               ) : null}
-              {offer.actions.includes("counter") ? (
+              {offer.actions.includes("counter") && onCounter ? (
                 <Button
                   variant="outline"
                   size="sm"

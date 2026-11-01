@@ -67,5 +67,7 @@ declare module "@tanstack/react-router" {
     fromMessage?: boolean;
     /** the profile, lowercase, whose Message button opened the thread */
     fromProfile?: string;
+    /** the offer page was opened from inside the app, so Back can go back a step */
+    offerBack?: boolean;
   }
 }

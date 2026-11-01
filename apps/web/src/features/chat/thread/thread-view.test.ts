@@ -161,15 +161,17 @@ describe("postOfferOf", () => {
 
   test("the partner's post with a match adds its matches and starts on its list", () => {
     expect(postOfferOf([{ card: postCard("them") }], "them")).toEqual({
-      matches: { partnerId: "them", post: "post-slug" },
+      matches: { post: "post-slug" },
       startList: "post-slug",
+      handle: "them",
     });
   });
 
   test("a post without a have side starts on no list", () => {
     expect(postOfferOf([{ card: postCard("them", { has: false }) }], "them")).toEqual({
-      matches: { partnerId: "them", post: "post-slug" },
+      matches: { post: "post-slug" },
       startList: undefined,
+      handle: "them",
     });
   });
 
@@ -192,8 +194,9 @@ describe("postOfferOf", () => {
 
   test("a message without a card after the post card does not hide it", () => {
     expect(postOfferOf([{ card: postCard("them") }, { card: null }], "them")).toEqual({
-      matches: { partnerId: "them", post: "post-slug" },
+      matches: { post: "post-slug" },
       startList: "post-slug",
+      handle: "them",
     });
   });
 });

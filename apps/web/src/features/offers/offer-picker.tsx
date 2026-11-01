@@ -6,16 +6,16 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { type ReactNode, useId, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogClose,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogPopup,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import {
+  Sheet,
+  SheetClose,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetPopup,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { Switch } from "@/components/ui/switch";
 import {
   NO_PICKER_FILTERS,
@@ -70,8 +70,15 @@ export function OfferPicker({
   onDone: (picks: OfferPick[], collections: Collections) => void;
 }) {
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogPopup className="h-[min(48rem,calc(100dvh-(--spacing(8))))] max-w-3xl max-sm:h-[calc(100dvh-(--spacing(12)))]">
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      {/* full screen below `lg`; from `lg` as wide as the main area, so the column stays in view.
+          A set height gives the grid a bounded scroller */}
+      <SheetPopup
+        side="right"
+        className="h-full w-full max-w-none lg:w-[min(calc(100vw-(--spacing(96))),80rem)]"
+        // the column beside the sheet stays readable: dimmed, not blurred
+        portalProps={{ className: "*:data-[slot=sheet-backdrop]:backdrop-blur-none" }}
+      >
         <PickerBody
           side={side}
           to={to}
@@ -82,8 +89,8 @@ export function OfferPicker({
           picked={picked}
           onDone={onDone}
         />
-      </DialogPopup>
-    </Dialog>
+      </SheetPopup>
+    </Sheet>
   );
 }
 
@@ -156,12 +163,12 @@ function PickerBody({
 
   return (
     <PickerSelectionContext value={selected}>
-      <DialogHeader>
-        <DialogTitle className="font-display">{addLabel(side, source, name)}</DialogTitle>
-        <DialogDescription className="max-sm:sr-only">
+      <SheetHeader>
+        <SheetTitle className="font-display pe-8">{addLabel(side, source, name)}</SheetTitle>
+        <SheetDescription className="max-sm:sr-only">
           {pickerDescription(side, source, name)}
-        </DialogDescription>
-      </DialogHeader>
+        </SheetDescription>
+      </SheetHeader>
       <div className="flex min-h-0 flex-1 flex-col px-6 pb-4">
         {side === "give" ? (
           <MineGrid to={to} name={name} />
@@ -171,7 +178,7 @@ function PickerBody({
           <TheirsGrid to={to} name={name} lists={theirLists} startList={startList} />
         )}
       </div>
-      <DialogFooter className="flex-row items-center">
+      <SheetFooter className="flex-row items-center">
         <p className="text-muted-foreground me-auto text-xs tabular-nums" aria-live="polite">
           {m.offer_picker_count({
             count: total.toLocaleString(getLocale()),
@@ -183,11 +190,11 @@ function PickerBody({
             </span>
           ) : null}
         </p>
-        <DialogClose render={<Button variant="outline" />}>{m.common_modal_cancel()}</DialogClose>
+        <SheetClose render={<Button variant="outline" />}>{m.common_modal_cancel()}</SheetClose>
         <Button onClick={() => onDone([...selection.values()], seen)}>
           {m.offer_picker_done()}
         </Button>
-      </DialogFooter>
+      </SheetFooter>
     </PickerSelectionContext>
   );
 }

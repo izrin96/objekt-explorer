@@ -1,11 +1,9 @@
 import { OFFER_NOTE_MAX_LENGTH, OFFER_SIDE_LIMIT } from "@repo/api/schemas/offer";
 import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useId, useRef, useState } from "react";
 import { createPortal, flushSync } from "react-dom";
 
 import { Button } from "@/components/ui/button";
-import { DialogClose, DialogFooter, DialogPanel } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { fetchNewer, invalidateChatLists } from "@/features/chat/queries";
@@ -48,6 +46,7 @@ import {
   touchTopup,
   type TopupState,
 } from "./draft";
+import { BuilderBody } from "./layout";
 import { addedKeys, matchesLine } from "./matches";
 import { MatchesLine, NearLine } from "./matches-line";
 import { BuilderRefused, type SendFailure, SendError } from "./refused";
@@ -58,22 +57,25 @@ import type { AddedMatches, OfferRequest } from "./types";
 export function BuilderForm({
   request,
   onDraft,
-  onDone,
+  onSent,
+  onLeave,
   region,
   added,
 }: {
   request: OfferRequest;
-  /** hands over whether the draft holds anything, so closing it can ask first */
+  /** hands over whether the draft holds anything, so leaving it can ask first */
   onDraft: (holds: (() => boolean) | null) => void;
-  onDone: () => void;
-  /** the caller's status region, which the matches line is drawn into */
+  /** the offer is in the conversation, which the caller goes to */
+  onSent: (conversationId: number) => void;
+  /** Cancel: leaves the page */
+  onLeave: () => void;
+  /** the caller's status region above the sides, which the matches line is drawn into */
   region?: HTMLElement | null;
   /** what the matches added when the builder opened */
   added?: AddedMatches;
 }) {
   const { to, name, prefill } = request;
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
   const { currency: preferred } = useCurrency();
 
   const [give, setGive] = useState<OfferPick[]>(prefill?.give ?? []);
@@ -198,15 +200,14 @@ export function BuilderForm({
   const create = useMutation(
     orpc.offer.create.mutationOptions({
       onSuccess: async ({ conversationId }) => {
-        onDone();
-        await Promise.all([
+        // the thread's loader reads its cache as it stands, so the new offer is in it first; the
+        // offer is sent whatever these do, so a failed one never reads as a failed send
+        await Promise.allSettled([
           invalidateChatLists(queryClient),
           invalidateOfferLists(queryClient),
           fetchNewer(queryClient, conversationId),
         ]);
-        if (!("conversationId" in to)) {
-          void navigate({ to: "/messages/$id", params: { id: String(conversationId) } });
-        }
+        onSent(conversationId);
       },
       onError: (failure) => {
         const refusal = offerRefusalOf(failure);
@@ -264,154 +265,169 @@ export function BuilderForm({
   // a target the sender may not reach is refused before anything can be picked
   const upFront = offerRefusalOf(theirs.error);
   if (upFront) {
-    return <BuilderRefused refusal={upFront} onDone={onDone} />;
+    return <BuilderRefused refusal={upFront} status={region !== undefined} onLeave={onLeave} />;
   }
+
+  const matchesPortal =
+    region && (line || nearLeft.length > 0)
+      ? createPortal(
+          <div className="flex flex-col gap-2">
+            {line ? (
+              <MatchesLine
+                added={line.added}
+                nearNames={line.nearPicks.length > 0 ? names(line.nearPicks) : null}
+                taken={line.taken}
+                takenNames={line.takenNear ? names(line.takenNear) : null}
+                onRemove={removeMatches}
+                onUndo={undoRemove}
+                removeRef={removeRef}
+                undoRef={undoRef}
+              />
+            ) : null}
+            {nearLeft.map((group) => (
+              <NearLine
+                key={`${group.side}:${group.verb}`}
+                group={group}
+                names={names(group.picks)}
+                onAdd={() => addNear(group)}
+              />
+            ))}
+          </div>,
+          region,
+        )
+      : null;
 
   return (
     <>
-      {region && (line || nearLeft.length > 0)
-        ? createPortal(
-            <div className="flex flex-col gap-2">
-              {line ? (
-                <MatchesLine
-                  added={line.added}
-                  nearNames={line.nearPicks.length > 0 ? names(line.nearPicks) : null}
-                  taken={line.taken}
-                  takenNames={line.takenNear ? names(line.takenNear) : null}
-                  onRemove={removeMatches}
-                  onUndo={undoRemove}
-                  removeRef={removeRef}
-                  undoRef={undoRef}
-                />
-              ) : null}
-              {nearLeft.map((group) => (
-                <NearLine
-                  key={`${group.side}:${group.verb}`}
-                  group={group}
-                  names={names(group.picks)}
-                  onAdd={() => addNear(group)}
-                />
-              ))}
-            </div>,
-            region,
-          )
-        : null}
-      <DialogPanel className="flex flex-col gap-6">
-        <div className="grid min-w-0 gap-6 sm:grid-cols-2">
-          {(["give", "get"] as const).map((side) => {
-            const [picks, setPicks] = sides[side];
-            return (
-              <SideColumn
-                key={side}
-                side={side}
-                name={name}
-                picks={shown[side]}
-                collections={collections}
-                flagsOf={flagsOf}
-                estimatedOf={estimatedOf}
-                reasonOf={(pick) => reasonOf(side, pick)}
-                refused={refused}
-                loading={side === "give" ? loadingAsks : undefined}
-                source={source}
-                onAdd={() => setPicking(side)}
-                onRemove={(pick) => setPicks(takeOut(picks, pick))}
-                onRemoveMany={(rows) => setPicks(takeOutAll(picks, rows))}
+      {matchesPortal}
+      <BuilderBody
+        status={region !== undefined}
+        sides={
+          <>
+            <div className="grid min-w-0 gap-6 md:grid-cols-2">
+              {(["get", "give"] as const).map((side) => {
+                const [picks, setPicks] = sides[side];
+                return (
+                  <SideColumn
+                    key={side}
+                    side={side}
+                    name={name}
+                    picks={shown[side]}
+                    collections={collections}
+                    flagsOf={flagsOf}
+                    estimatedOf={estimatedOf}
+                    reasonOf={(pick) => reasonOf(side, pick)}
+                    refused={refused}
+                    loading={side === "give" ? loadingAsks : undefined}
+                    source={source}
+                    onAdd={() => setPicking(side)}
+                    onRemove={(pick) => setPicks(takeOut(picks, pick))}
+                    onRemoveMany={(rows) => setPicks(takeOutAll(picks, rows))}
+                  />
+                );
+              })}
+            </div>
+            {[...giveShown, ...get].some(
+              (pick) => pick.objektId !== null && pick.serial !== null && estimatedOf(pick),
+            ) ? (
+              <EstimatedSerialNote />
+            ) : null}
+          </>
+        }
+        details={
+          <div className="flex min-w-0 flex-col gap-5">
+            <Topup
+              amountRef={amountRef}
+              on={topup.on}
+              onToggle={(on) => setTopup((t) => toggleTopup(t, on))}
+              amount={topup.amount}
+              onAmount={(next) => setTopup((t) => ({ ...t, amount: next, touched: true }))}
+              onAmountBlur={() => setTopup(touchTopup)}
+              currency={topupNow.currency}
+              onCurrency={(c) => setTopup((t) => ({ ...t, chosenCurrency: c }))}
+              payer={topup.payer}
+              onPayer={(p) => setTopup((t) => ({ ...t, payer: p }))}
+              error={topup.touched ? topupError : null}
+              reason={topupReason}
+              name={name}
+            />
+
+            <div className="flex min-w-0 flex-col gap-1.5">
+              <Label htmlFor={noteId}>{m.offer_note_label()}</Label>
+              <Textarea
+                id={noteId}
+                value={note}
+                rows={2}
+                aria-invalid={noteTooLong || undefined}
+                aria-describedby={counterId}
+                onChange={(event) => setNote(event.target.value)}
+                placeholder={m.offer_note_placeholder()}
               />
-            );
-          })}
-        </div>
-        {[...giveShown, ...get].some(
-          (pick) => pick.objektId !== null && pick.serial !== null && estimatedOf(pick),
-        ) ? (
-          <EstimatedSerialNote />
-        ) : null}
+              <p
+                id={counterId}
+                className={cn(
+                  "self-end text-xs tabular-nums",
+                  noteTooLong ? "text-destructive-foreground" : "text-muted-foreground",
+                )}
+              >
+                {m.chat_counter({
+                  count: noteLength.toLocaleString(getLocale()),
+                  max: OFFER_NOTE_MAX_LENGTH.toLocaleString(getLocale()),
+                })}
+              </p>
+            </div>
 
-        <Topup
-          amountRef={amountRef}
-          on={topup.on}
-          onToggle={(on) => setTopup((t) => toggleTopup(t, on))}
-          amount={topup.amount}
-          onAmount={(next) => setTopup((t) => ({ ...t, amount: next, touched: true }))}
-          onAmountBlur={() => setTopup(touchTopup)}
-          currency={topupNow.currency}
-          onCurrency={(c) => setTopup((t) => ({ ...t, chosenCurrency: c }))}
-          payer={topup.payer}
-          onPayer={(p) => setTopup((t) => ({ ...t, payer: p }))}
-          error={topup.touched ? topupError : null}
-          reason={topupReason}
-          name={name}
-        />
+            <SendingAs />
 
-        <div className="flex min-w-0 flex-col gap-1.5">
-          <Label htmlFor={noteId}>{m.offer_note_label()}</Label>
-          <Textarea
-            id={noteId}
-            value={note}
-            rows={2}
-            aria-invalid={noteTooLong || undefined}
-            aria-describedby={counterId}
-            onChange={(event) => setNote(event.target.value)}
-            placeholder={m.offer_note_placeholder()}
-          />
-          <p
-            id={counterId}
-            className={cn(
-              "self-end text-xs tabular-nums",
-              noteTooLong ? "text-destructive-foreground" : "text-muted-foreground",
-            )}
-          >
-            {m.chat_counter({
-              count: noteLength.toLocaleString(getLocale()),
-              max: OFFER_NOTE_MAX_LENGTH.toLocaleString(getLocale()),
-            })}
+            <SendError id={errorId} error={error} />
+          </div>
+        }
+        hint={
+          <p id={hintId} className="text-muted-foreground text-xs text-pretty">
+            {gate.hint}
           </p>
-        </div>
-
-        <SendingAs onNavigate={onDone} />
-
-        <SendError id={errorId} error={error} onDone={onDone} />
-      </DialogPanel>
-      <DialogFooter className="sm:items-center">
-        <p
-          id={hintId}
-          className="text-muted-foreground text-xs text-pretty max-sm:order-last sm:me-auto"
-        >
-          {gate.hint}
-        </p>
-        <DialogClose render={<Button variant="outline" />}>{m.common_modal_cancel()}</DialogClose>
-        <Button
-          disabled={gate.disabled}
-          // a topup's reason stays clickable, so a send attempt shows it at the field
-          aria-disabled={gate.ariaDisabled || undefined}
-          className="aria-disabled:opacity-64"
-          loading={create.isPending}
-          aria-describedby={error ? `${hintId} ${errorId}` : hintId}
-          onClick={send}
-        >
-          {request.counter ? m.offer_send_counter() : m.offer_send()}
-        </Button>
-      </DialogFooter>
-
-      {picking ? (
-        <OfferPicker
-          open
-          onOpenChange={(next) => {
-            if (!next) setPicking(null);
-          }}
-          side={picking}
-          to={to}
-          name={name}
-          source={source ?? "lists"}
-          theirLists={theirs.data?.lists ?? []}
-          startList={request.startList}
-          picked={sides[picking][0]}
-          onDone={(picks, found) => {
-            sides[picking][1](picks);
-            setSeen((current) => ({ ...current, ...found }));
-            setPicking(null);
-          }}
-        />
-      ) : null}
+        }
+        cancel={
+          <Button variant="outline" onClick={onLeave}>
+            {m.common_modal_cancel()}
+          </Button>
+        }
+        send={
+          <Button
+            disabled={gate.disabled}
+            // a topup's reason stays clickable, so a send attempt shows it at the field
+            aria-disabled={gate.ariaDisabled || undefined}
+            className="flex-1 aria-disabled:opacity-64"
+            loading={create.isPending}
+            aria-describedby={error ? `${hintId} ${errorId}` : hintId}
+            onClick={send}
+          >
+            {request.counter ? m.offer_send_counter() : m.offer_send()}
+          </Button>
+        }
+        picker={
+          picking ? (
+            <OfferPicker
+              open
+              onOpenChange={(next) => {
+                if (!next) setPicking(null);
+              }}
+              side={picking}
+              to={to}
+              name={name}
+              source={source ?? "lists"}
+              theirLists={theirs.data?.lists ?? []}
+              startList={request.startList}
+              picked={sides[picking][0]}
+              onDone={(picks, found) => {
+                sides[picking][1](picks);
+                setSeen((current) => ({ ...current, ...found }));
+                setPicking(null);
+              }}
+            />
+          ) : null
+        }
+      />
     </>
   );
 }
