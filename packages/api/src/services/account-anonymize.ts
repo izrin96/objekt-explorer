@@ -15,6 +15,7 @@ import { ownBannerKey } from "../lib/banner-key";
 import { disconnectUser } from "../realtime";
 import { deletionState, refusalError } from "./account-delete";
 import { lockAddresses, recordLinkEvents } from "./cosmo-link";
+import { lockTradeLists } from "./list";
 import { audit, openReportsOf } from "./moderation";
 import { cancelOpenOffers, offersOf, publishCancelled } from "./offer/cancel";
 import { deleteFileFromBucket, S3_BUCKET, S3_PUBLIC_URL } from "./s3";
@@ -88,6 +89,7 @@ export async function anonymizeUser(userId: string, { self }: { self: boolean })
         reason: "account_deleted" as const,
       })),
     );
+    await lockTradeLists(tx, userId);
     await tx.delete(lists).where(eq(lists.userId, userId));
     await tx.delete(notification).where(eq(notification.userId, userId));
     await tx.delete(notificationPref).where(eq(notificationPref.userId, userId));

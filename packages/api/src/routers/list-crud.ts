@@ -24,6 +24,7 @@ import {
   findOwnedList,
   generateProfileSlug,
   insertCopyRows,
+  lockTradeLists,
   planCopy,
   prepareList,
   touchList,
@@ -224,7 +225,11 @@ export const listCrud = {
     }) => {
       const list = await findOwnedList(slug, user.id);
 
-      await db.delete(lists).where(eq(lists.id, list.id));
+      await db.transaction(async (tx) => {
+        // ON DELETE SET NULL also locks the partner, so take the shared lock in id order first
+        if (list.listType !== "general") await lockTradeLists(tx, user.id);
+        await tx.delete(lists).where(eq(lists.id, list.id));
+      });
       await bumpTradeVersions([user.id]);
     },
   ),
