@@ -23,7 +23,7 @@ The thread SHALL render a post card, read live from the post, with:
 - the post's tag (WTT, WTS and the rest, as Browse shows them) and its owner's name;
 - a strip with up to six objekts of the post's have or sale list and the count of the rest, labelled as Browse labels it: its role ("HAVE", or "SALE" on a sale post) and its number of copies, in the list type's colour;
 - for a post with a want list, a WANT strip the same way; for a sale post with no want list, its price range in place of the WANT strip, with whole amounts shown without decimals;
-- a link to the post: for the sender, it opens Trade with the owner's row first (`person=<owner id>`); for the owner, it opens their own list.
+- a link to the post: for the sender, it opens the post's page (`/trade/@<owner's handle>/<anchor slug>`, see `web-trade-person-pages`); for the owner, it opens their own list.
 
 A post card with a match SHALL show, in place of the strips, the two directions between the sender and the post's owner: first the count and up to three objekts of the owner's that are on the sender's wants, then the count and up to three objekts of the sender's that are on the owner's wants. Each direction SHALL be labelled from the viewer's side, in the wording Browse uses: "They have N you want" and "You have N they want", so the sender and the owner each read the card correctly. A direction with no matches SHALL be left out. The match SHALL show what was saved when the card was sent, even after either side's lists change, and SHALL still link to the post.
 
@@ -39,7 +39,7 @@ A post card whose post no longer exists, or whose list is no longer posted on Tr
 
 #### Scenario: Open post
 - **WHEN** kaede.k activates the link on the post card she sent mina, and mina activates the same link
-- **THEN** kaede.k is on Trade with mina's row first, and mina is on her own list
+- **THEN** kaede.k is on the post's page under mina's handle, and mina is on her own list
 
 #### Scenario: Sale post
 - **WHEN** a user sends a post card for rin.trades's WTS post priced from 4,000 to 9,000 KRW, with no want list

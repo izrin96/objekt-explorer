@@ -303,8 +303,6 @@ Matching SHALL use the viewer's have lists bound to a Cosmo profile, not everyth
 
 Browse SHALL list the viewer's own row, so they can see where a bump put them, with no header sentence and no list counts or rings. For you SHALL never list it. People the viewer hid SHALL be left out of both (see `web-trade-for-you` Hide a partner).
 
-**Person link.** `person=<user id>` on `/trade` or `/trade/for-you` SHALL list only that person's row, with every one of their kept posts shown, and no other people and no further pages. The row SHALL ignore the visitor's artist selection, as a `slug` link does, and SHALL follow the link's other filters, an `artist` parameter included; the filters stay on the page. Above the row a banner SHALL say that only that person's posts are shown, from a shared link, adding how many of their objekts are on the viewer's lists when the viewer is signed in and that number is above zero. The banner SHALL carry Copy link, which copies the Browse address for that person with the link's filters, leaving out For you's matching choice, and Show everyone. Under the row a line SHALL say more people are on Trade and lead to the full feed. The row SHALL carry no clear control of its own. When the feed would not list that person (hidden, blocking or blocked, trade-blocked, nothing listed or all idle, all sold out, no match on For you, or only one way under Mutual only), the page SHALL show an empty state saying the link's person has nothing to show here, with Show everyone, and SHALL not name the person. Show everyone and the line under the row SHALL remove the parameter and the link's filters, keeping For you's matching choice, and list the feed as usual; going back SHALL return to where the visitor came from. For a signed-out visitor, `person` SHALL show that person's row and the banner without counts.
-
 #### Scenario: Default
 - **WHEN** a signed-in viewer with a want list opens `/trade` with no parameters
 - **THEN** every person with a listed post is listed, with header sentences, list counts and rings, and no Matches or Compare with control shows
@@ -367,27 +365,27 @@ Browse SHALL list the viewer's own row, so they can see where a bump put them, w
 
 #### Scenario: Mutual partner
 - **WHEN** the viewer opens `/trade?person=<rin.trades's id>` and rin.trades has 4 listed posts
-- **THEN** rin.trades's row is the only row, with all 4 posts shown, no further page loads, and Show everyone in the banner removes `person` from the URL and lists the feed as usual
+- **THEN** the browser is at `/trade/@rin.trades`, showing rin.trades's row with all 4 posts
 
 #### Scenario: Banner on a shared link
-- **WHEN** a signed-in viewer opens `/trade?person=<nuppotoz's id>` and 3 objekts on nuppotoz's posts are on the viewer's lists
-- **THEN** the filters show, a banner above the row reads that only nuppotoz's posts are shown, from a shared link, and that 3 objekts are on the viewer's lists, with Copy link and Show everyone; the row has no clear control; a line under it says more people are on Trade
+- **WHEN** a signed-in viewer opens `/trade?person=<nuppotoz's id>`
+- **THEN** no banner shows on the feed: the browser is at nuppotoz's person page
 
 #### Scenario: Signed-out banner
 - **WHEN** a visitor without a session opens `/trade?person=<id>` for someone with listed posts
-- **THEN** the banner names that person with no count, and Copy link copies `/trade?person=<id>`
+- **THEN** the browser is at that person's page, showing their row with no counts
 
 #### Scenario: Person link to someone hidden
 - **WHEN** the viewer opens `/trade?person=<id>` for a person they hid
-- **THEN** no row is listed, and the empty state says the link's person has nothing to show here, without their name, and offers Show everyone
+- **THEN** the browser is at that person's page, which says they have nothing on Trade right now
 
 #### Scenario: Person outside the artist selection
 - **WHEN** a visitor with only ARTMS selected opens `/trade?person=<id>` for someone whose posts hold only tripleS objekts
-- **THEN** that person's row is listed, and Show everyone brings back the ARTMS-only feed
+- **THEN** the browser is at that person's page, showing every post
 
 #### Scenario: Person with nothing listed
 - **WHEN** a visitor opens `/trade?person=<id>` for someone whose posts are all idle
-- **THEN** no row is listed, the empty state offers Show everyone, and activating it lists the feed as usual
+- **THEN** the browser is at that person's page, which says they have nothing on Trade right now
 
 #### Scenario: Old link
 - **WHEN** the viewer opens `/trade?match=mutual` from an older link
@@ -442,9 +440,9 @@ A signed-in viewer's posts SHALL be summarised above the feed in one row: the ti
 - each list with its role: Offering for a have list, Looking for for a want list, Selling for a sale list, each linking to its list page;
 - the option it carries: "Would also pay" on a Swap post that would, "Also on Market" on a Sell post;
 - whether the post is listed or idle, and when it was last changed;
-- a menu with Edit post and Take off Trade.
+- a menu with Edit post, Copy link and Take off Trade.
 
-A post has no address of its own, so the row's Copy link SHALL copy the Person link (see Matches to the signed-in viewer) to the viewer's row: `/trade?person=<their id>`, confirming with "Link copied" and the copied address. It SHALL be disabled while none of the posts is listed or the viewer is under a trade block, staying focusable and saying which reason applies. A single post has no Copy link of its own.
+The row's Copy link SHALL copy the viewer's person page (see `web-trade-person-pages`), `/trade/@<their handle>`, and each entry's menu SHALL also hold Copy link, copying that post's page, `/trade/@<their handle>/<anchor slug>`; each confirms with "Link copied" and the copied address. The row's Copy link SHALL be disabled while none of the posts is listed, the viewer is under a trade block, or the viewer has no linked Cosmo profile and so no handle, staying focusable and saying which reason applies. An entry's Copy link SHALL be disabled in the same way while that post is idle, or for the same block or missing profile.
 
 With no choice saved in this browser, the posts SHALL start shown when any of them is idle, and hidden otherwise. Showing or hiding them SHALL be remembered in this browser, and that choice SHALL win over the default. A viewer with no posts SHALL see the row say they have no posts on Trade, with New post. A signed-out visitor activating New post SHALL be sent to `/login?redirect=/trade`.
 
@@ -490,7 +488,15 @@ With no choice saved in this browser, the posts SHALL start shown when any of th
 
 #### Scenario: Copy the link to all posts
 - **WHEN** the viewer activates Copy link on the Your posts row with 3 listed posts
-- **THEN** `/trade?person=<their id>` is copied, and opening it lists only their row
+- **THEN** `/trade/@<their handle>` is copied, and opening it shows their row with the 3 posts
+
+#### Scenario: Copy one post's link
+- **WHEN** the viewer chooses Copy link in the menu of their listed Swap post anchored on "spares"
+- **THEN** `/trade/@<their handle>/<spares slug>` is copied
+
+#### Scenario: Copy link without a profile
+- **WHEN** a viewer whose account links no Cosmo profile has a listed want post
+- **THEN** the row's Copy link is disabled and says to link a Cosmo profile first
 
 #### Scenario: Copy link under a trade block
 - **WHEN** a viewer under a trade block opens Your posts
@@ -608,7 +614,7 @@ Each person in the feed SHALL be one row, a bordered card on the card surface, o
   - the reputation line (see `web-verified-trades`), on one line, truncated with an ellipsis when it doesn't fit, its full text available to assistive technology;
   - for a signed-in viewer on another person's row, the header sentence, from the counts in Matches to the signed-in viewer, with A the "They have" count, B the "You have" count and M the mutual score. Beside the name, a chip: "You can swap M", tinted, when M is above zero; any other row has no chip. Under the reputation line, a muted line with "They have A you want" when A is above zero and "You have B they want" when B is above zero. With no count above zero the row SHALL show neither, so a row without them reads as no match. Each number SHALL be in monospace and stand out from the words, and the visible words SHALL be the accessible text;
   - on the reputation line, after it, muted: the number of the person's kept lists ("3 lists") and when their newest post was last bumped, or last changed if that is later;
-  - the ⋯ menu, holding Copy link (the Person link to them, see Matches to the signed-in viewer), Hide, Block and Report for a signed-in viewer who is not the person.
+  - the ⋯ menu, holding Copy link (their person page, see `web-trade-person-pages`), Hide, Block and Report for a signed-in viewer who is not the person; a signed-out visitor's menu holds Copy link alone. Copy link SHALL be disabled, saying why, for a person with no linked Cosmo profile.
 - **Actions**: Message, then Make offer as the primary button, both for the row's lead post (see Message a post's owner and Make offer on a post). An account that doesn't take messages from the viewer shows "Not taking messages" in their place. The viewer's own row has no actions.
 - **Posts**, under the header: each of the person's kept posts, in this order: posts with a list count above zero first, most matched collections first; then the rest, newest bump first. The first post in this order is the row's lead post. Each post shows:
   - its tags, which say what it takes (see Tag help);
@@ -616,6 +622,7 @@ Each person in the feed SHALL be one row, a bordered card on the card surface, o
   - a post with one side (WTS, WTB, or half a pair): that one strip across the width;
   - a side with no related objekt or no entries: the muted line Filters describes, under the other strip, with no ⇄ mark;
   - its lists' descriptions, empty sides' included, in one muted block set off by a rule at its start edge, under all its sides: each clipped to eight lines, keeping the owner's line breaks. A text both lists of a pair share SHALL show once. When two different descriptions show, each SHALL lead with its side's role label in its list type's colour. Under all the sides, never under one strip, so a description never pushes one strip's thumbnails below the other's.
+  - a ⋯ menu holding Copy link, which copies that post's page (see `web-trade-person-pages`) and is disabled, saying why, for a person with no linked Cosmo profile.
 - **All lists**: the row SHALL show every post it holds.
 
 **Strip**: a monospace role label in its list type's colour, then " · " and the list's name, truncated to one line, then the list's own count when above zero ("14 you want", "2 you have"), on a tinted chip in monospace; under a narrowing filter the label reads as Filters says. The label SHALL link to the list page, carrying the list's name in its title; the list's description sits under the post's sides (see Posts). The count SHALL sit beside the link, not in it, and activating it SHALL open a popover, "Matched with your lists", naming each of the viewer's lists that count was taken against, with its type and a link to it: on a want list the viewer's have and sale lists, on a have or sale list the viewer's want lists, as Compare with narrows them. Under a want list, it SHALL also name each rule the match went through, "via rule" with the rule's label and how many collections, on Browse as on For you (see Matched through your rules). Under it, one line of thumbnails 2.5rem wide with no caption, ringed objekts first. A strip SHALL never wrap: it shows as many thumbnails as fit its width, and when some don't fit, the last place holds a "+N" tile counting the copies not shown. On a narrowed strip that shows its count chip, which counts collections, the "+N" tile SHALL count the collections not shown instead, and "of N" the list's collections, as its dialog's All tab does, so they all read in one unit.
@@ -654,7 +661,11 @@ From `@3xl` of the feed's width, the actions SHALL sit at the header's end and t
 
 #### Scenario: Hide from a post
 - **WHEN** a signed-in viewer opens the ⋯ menu on rin.trades's row
-- **THEN** it offers Copy link, Hide, Block and Report, and Copy link copies `/trade?person=<rin.trades's id>`
+- **THEN** it offers Copy link, Hide, Block and Report, and Copy link copies `/trade/@rin.trades`
+
+#### Scenario: Copy a post's link from the row
+- **WHEN** a visitor chooses Copy link in the ⋯ menu of rin.trades's post anchored on "spares"
+- **THEN** `/trade/@rin.trades/<spares slug>` is copied
 
 #### Scenario: Desktop grid
 - **WHEN** the viewer opens `/trade` at 1280 px with 10 people loaded
@@ -763,11 +774,11 @@ For you (`/trade/for-you`) SHALL list the same people as Browse, in the same row
 
 **Who sees it.** For you SHALL require a signed-in viewer with at least one list that takes part in Trade (a want list, or a have or sale list bound to a Cosmo profile):
 - a signed-out visitor opening it SHALL be sent to `/login`, and back to the same For you address after signing in;
-- a signed-in viewer without such a list SHALL be sent to `/trade`, keeping the filters and `person`, and dropping `match` and `list`.
+- a signed-in viewer without such a list SHALL be sent to `/trade`, keeping the filters, and dropping `match` and `list`.
 
 **Post type menu.** On Browse and For you, the post type SHALL be one menu labelled Post type, offering All, WTT, WTB and WTS, with each tag spelled out ("WTT · Want to trade"). It replaces the Type tabs, so the controls beside it never move. Mutual is a swap between two people, and a WTB or WTS post is one-way money, so Mutual SHALL list WTT posts only: the menu SHALL read WTT with every other option disabled, a `type` in the URL or in a request SHALL be ignored, by the server as well as the page, and turning Can swap on SHALL drop it from the URL. Who counts as Mutual is unchanged (see Matches to the signed-in viewer).
 
-**Default and URL.** The option SHALL live in the URL as `match`, with the values `any` and `mutual`. With no `match`, or a value that does not parse, Any SHALL apply. Browse's `type`, `slug`, facet and `person` parameters SHALL carry the same meaning on For you.
+**Default and URL.** The option SHALL live in the URL as `match`, with the values `any` and `mutual`. With no `match`, or a value that does not parse, Any SHALL apply. Browse's `type`, `slug` and facet parameters SHALL carry the same meaning on For you.
 
 **Mutual order.** Under Mutual the feed SHALL list people best match first:
 1. the mutual score;
@@ -803,7 +814,7 @@ Each section SHALL open with a heading, Can swap (for Mutual) or One way, with n
 The help beside the controls SHALL describe the mutual score as what the two people can swap, the smaller of the two swap counts, with sale lists never counting toward it, and describe Compare with as one list plus its linked list, a list with no link comparing one way.
 
 **Old Browse links.** `/trade` SHALL no longer take `match` or `list`:
-- `/trade?match=any`, `/trade?match=mutual` or `/trade?matches=1` SHALL redirect to `/trade/for-you` with the same option (`matches=1` becomes `match=any`), keeping `list`, `person` and the filters;
+- `/trade?match=any`, `/trade?match=mutual` or `/trade?matches=1` SHALL redirect to `/trade/for-you` with the same option (`matches=1` becomes `match=any`), keeping `list` and the filters;
 - `/trade?match=off` SHALL drop `match` and `list` and stay on Browse;
 - on a viewer who can't use For you, the redirected address then sends them on as Who sees it says.
 

@@ -29,16 +29,16 @@ Trade SHALL match the signed-in user, one person at a time, against the other ac
 - **THEN** there is no Matches control, and a line asks them for such a list with a Post a list control
 
 #### Scenario: Opened from Browse
-- **WHEN** the user follows a link to `/trade?person=<id>`
-- **THEN** that person's row leads Browse with every post shown, counted against all of the user's lists
+- **WHEN** the user follows a link to `/trade?person=<id>`, which leads to that person's page
+- **THEN** that person's row shows with every post, counted against all of the user's lists
 
 #### Scenario: Idle list
 - **WHEN** a person's only have list overlapping the user's wants is idle
 - **THEN** it does not count toward that person, and the person is not listed on For you through it
 
 #### Scenario: Signed out
-- **WHEN** a visitor without a session opens `/trade?person=<id>`
-- **THEN** that person's row leads Browse with no counts, and Browse shows the sign-in prompt
+- **WHEN** a visitor without a session opens `/trade/@<handle>`
+- **THEN** that person's row shows with no counts
 
 #### Scenario: Trade opens Browse
 - **WHEN** a signed-in user opens `/trade`
@@ -147,7 +147,7 @@ Matching SHALL leave out people the user blocked, people who blocked the user, a
 
 #### Scenario: Blocked partner
 - **WHEN** the user has blocked kaede.k
-- **THEN** kaede.k's posts are not listed, kaede.k is not counted in Mutual N, and `/trade?person=<kaede.k's id>` shows no matches
+- **THEN** kaede.k's posts are not listed, kaede.k is not counted in Mutual N, and kaede.k's person page shows that they have nothing on Trade right now
 
 ### Requirement: Make offer to a partner
 Make offer on a person's row, on Browse or For you, SHALL follow `web-trade-browse` Make offer on a post: it opens the offer builder addressed to the person and the row's lead post, with the row's matches already added by the rule the row's chip follows (see `web-trade-offers` Matches added when the builder opens).
@@ -172,7 +172,7 @@ The person sheet SHALL show the person's reputation line (see `web-verified-trad
 - `match=mutual` stays `match=mutual`;
 - `match=they_have` or `match=they_want` becomes `match=any`;
 - `list` is kept as `list`;
-- `partner` becomes `person`.
+- `partner`, like `person`, leads to that person's page (see `web-trade-person-pages` Old person links).
 
 Unknown or unparsable values SHALL be dropped. The For you rules then apply: a signed-out visitor is sent to sign in, a signed-in viewer without a list that takes part in Trade is sent to `/trade`, and a `list` the viewer can't use reads as All my lists.
 
@@ -185,8 +185,8 @@ Unknown or unparsable values SHALL be dropped. The For you rules then apply: a s
 - **THEN** the browser is at `/trade/for-you?match=any&list=spares`
 
 #### Scenario: Partner link
-- **WHEN** a signed-in user opens `/trade/for-you?match=mutual&partner=<id>`
-- **THEN** the browser is at `/trade/for-you?match=mutual&person=<id>` with that person's row first
+- **WHEN** a signed-in user opens `/trade/for-you?match=mutual&partner=<rin.trades's id>`
+- **THEN** the browser is at `/trade/@rin.trades`
 
 #### Scenario: Signed out
 - **WHEN** a visitor without a session opens `/trade/for-you?list=spares`
