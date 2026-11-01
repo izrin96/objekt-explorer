@@ -13,7 +13,6 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogClose,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogPanel,
@@ -23,7 +22,7 @@ import {
 import { m } from "@/paraglide/messages";
 import { useChangelogStore } from "@/stores/changelog";
 
-import { AboutDialog, DISCORD_INVITE } from "./about";
+import { AboutDialog } from "./about";
 
 /**
  * Release notes are a dated record of what shipped, not product chrome, so they
@@ -216,21 +215,8 @@ export function ChangelogDialog({
       <DialogPopup className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle className="font-display">{m.common_changelog()}</DialogTitle>
-          <DialogDescription className="sr-only">{m.about_discord_invite()}</DialogDescription>
         </DialogHeader>
         <DialogPanel className="flex flex-col gap-4">
-          <p className="bg-secondary/60 rounded-lg border px-3 py-2.5 text-sm">
-            {m.about_discord_invite()}{" "}
-            <a
-              href={DISCORD_INVITE}
-              target="_blank"
-              rel="noreferrer"
-              className="underline underline-offset-2"
-            >
-              discord.gg/SWEm6RbJD3
-            </a>
-          </p>
-
           {/* hiddenUntilFound keeps shut entries in the DOM, so find-in-page still reaches them */}
           <Accordion
             multiple

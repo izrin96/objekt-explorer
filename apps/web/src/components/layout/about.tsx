@@ -13,9 +13,10 @@ import {
 } from "@/components/ui/dialog";
 import { m } from "@/paraglide/messages";
 
-export const DISCORD_INVITE = "https://discord.gg/SWEm6RbJD3";
+const DISCORD_INVITE = "https://discord.gg/SWEm6RbJD3";
 const GITHUB_REPO = "https://github.com/izrin96/objekt-explorer";
 const API_DOCS = "/api/v1/";
+const TRIPLES_LOVE = "https://triples.love/p/objekttop/?lang=en&utm_source=badge";
 
 export function AboutDialog({
   open,
@@ -34,6 +35,31 @@ export function AboutDialog({
         <DialogPanel className="flex flex-col gap-3 text-sm">
           <p>{m.about_description()}</p>
           <p>{m.about_discord_invite()}</p>
+          <a
+            href={TRIPLES_LOVE}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="focus-visible:ring-ring w-fit rounded-sm outline-none focus-visible:ring-2"
+          >
+            <img
+              src="https://triples.love/badges/listed-light.svg"
+              alt={m.about_listed_badge()}
+              width={216}
+              height={32}
+              loading="lazy"
+              decoding="async"
+              className="h-auto max-w-full dark:hidden"
+            />
+            <img
+              src="https://triples.love/badges/listed-dark.svg"
+              alt={m.about_listed_badge()}
+              width={216}
+              height={32}
+              loading="lazy"
+              decoding="async"
+              className="hidden h-auto max-w-full dark:block"
+            />
+          </a>
         </DialogPanel>
         <DialogFooter>
           <DialogClose render={<Button variant="outline" />}>{m.common_modal_close()}</DialogClose>
