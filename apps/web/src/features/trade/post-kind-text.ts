@@ -21,12 +21,6 @@ export const KIND_DESC: Record<PostKind, () => string> = {
   buy: m.trade_kind_buy_desc,
 };
 
-export const KIND_TITLE: Record<PostKind, () => string> = {
-  swap: m.trade_composer_swap_title,
-  sell: m.trade_composer_sell_title,
-  buy: m.trade_composer_buy_title,
-};
-
 export const KIND_TAG = { swap: "wtt", sell: "wts", buy: "wtb" } as const;
 
 export const IN_POST: Record<PostKind, () => string> = {

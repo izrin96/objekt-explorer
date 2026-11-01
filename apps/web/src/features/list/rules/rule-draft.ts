@@ -53,6 +53,33 @@ export function toInput(draft: RuleDraft): ListRuleInput | null {
   };
 }
 
+/**
+ * A saved rule sent back unchanged, as a ratio-only `updateRule` needs it. Not through `toInput`,
+ * which rebuilds the number with a `Z` suffix and would rewrite any other.
+ */
+export function ruleInputOf(rule: ListRuleDef): ListRuleInput | null {
+  if (rule.kind === "collection") {
+    if (rule.season === null || rule.collectionNo === null) return null;
+    return {
+      kind: "collection",
+      artist: rule.artist,
+      season: rule.season,
+      collectionNo: rule.collectionNo,
+      prio: rule.prio,
+      skipOwned: rule.skipOwned,
+    };
+  }
+  return {
+    kind: "set",
+    artist: rule.artist,
+    season: rule.season,
+    class: rule.class,
+    editions: rule.editions,
+    members: rule.members,
+    skipOwned: rule.skipOwned,
+  };
+}
+
 export function fromRule(rule: ListRuleDef, artists: ValidArtist[]): RuleDraft {
   return {
     kind: rule.kind,

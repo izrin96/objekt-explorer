@@ -20,7 +20,7 @@ export type Choice = {
   unpair: boolean;
 };
 
-export const SLOTS_OF: Record<PostKind, Slot[]> = {
+const SLOTS_OF: Record<PostKind, Slot[]> = {
   swap: ["have", "want"],
   // the want list only once the sale list takes swaps: it is what the seller would swap for
   sell: ["sale", "want"],

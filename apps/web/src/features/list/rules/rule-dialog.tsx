@@ -91,17 +91,20 @@ export function RuleDialog({
 
 type EditedRule = { id: number; ratio?: number | null } & ListRuleDef;
 
-function RuleForm({
+export function RuleForm({
   slug,
   listName,
   listRatio,
   rule,
+  withRatio = true,
   onDone,
 }: {
   slug: string;
   listName: string;
   listRatio: number | null;
   rule?: EditedRule;
+  /** off where the list's post takes no ratio (a Buy post): no picker, and no ratio is sent */
+  withRatio?: boolean;
   onDone: () => void;
 }) {
   const id = useId();
@@ -147,9 +150,9 @@ function RuleForm({
           ruleId: rule.id,
           rule: next,
           // sent only when changed, as a tab from before ratios leaves it out
-          ...(ratio !== storedRatio && { ratio }),
+          ...(withRatio && ratio !== storedRatio && { ratio }),
         });
-      } else await client.list.addRule({ slug, rule: next, ratio });
+      } else await client.list.addRule({ slug, rule: next, ...(withRatio && { ratio }) });
     },
     onSuccess: async () => {
       onDone();
@@ -291,14 +294,16 @@ function RuleForm({
           />
         </Label>
 
-        <RatioPicker
-          side="want"
-          label={m.ratio_label()}
-          description={m.rule_ratio_desc()}
-          value={ratio}
-          onChange={setRatio}
-          listRatio={listRatio}
-        />
+        {withRatio ? (
+          <RatioPicker
+            side="want"
+            label={m.ratio_label()}
+            description={m.rule_ratio_desc()}
+            value={ratio}
+            onChange={setRatio}
+            listRatio={listRatio}
+          />
+        ) : null}
 
         <RulePreview input={input} counts={counts} pending={preview.isFetching} />
       </DialogPanel>

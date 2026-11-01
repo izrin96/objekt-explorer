@@ -4,6 +4,7 @@ import { takesRatio } from "@repo/api/schemas/trade-ratio";
 import * as z from "zod";
 
 import { displayNickname, isSameAddress } from "@/lib/address";
+import type { client } from "@/lib/orpc";
 import { m } from "@/paraglide/messages";
 
 const CURRENCY_RE = /^[A-Za-z]{3}$/;
@@ -190,4 +191,26 @@ export function bindNote(
 /** Empty while regenerating with no preview yet, so the field shows its on-save hint. */
 export function slugFieldValue(url: ListUrl, regenerate: boolean, preview: string | undefined) {
   return regenerate ? (preview ?? "") : url.profileSlug;
+}
+
+/** A list as `list.find` stores it, the edit form's draft. */
+export type StoredList = Awaited<ReturnType<typeof client.list.find>>;
+
+/** The edit form's draft of a stored list, which `toEditInput` turns back into `list.edit`'s input. */
+export function toDraft(list: StoredList): ListDraft {
+  return {
+    name: list.name,
+    description: list.description ?? "",
+    listType: list.listType,
+    currency: list.currency ?? "",
+    linkedListId: list.linkedListId,
+    profileAddress: list.profileAddress,
+    isProfileBind: list.isProfileBind,
+    matchSale: list.matchSale,
+    matchHave: list.matchHave,
+    gridColumns: list.gridColumns,
+    hideSerial: list.hideSerial,
+    regenerateSlug: false,
+    ratio: list.ratio,
+  };
 }

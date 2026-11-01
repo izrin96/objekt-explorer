@@ -14,7 +14,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Form } from "@/components/ui/form";
-import { NEW_POST, PostComposer, useComposer } from "@/features/trade/post-list-dialog";
+import { NEW_POST } from "@/features/trade/composer/link";
+import { useOpenComposer } from "@/features/trade/composer/use-open-composer";
 import { useUserProfiles } from "@/features/user/hooks";
 import { type FieldErrors, zodErrors } from "@/lib/form";
 import { m } from "@/paraglide/messages";
@@ -46,7 +47,7 @@ export function CreateListDialog({
   const [errors, setErrors] = useState<FieldErrors>({});
   // a have, want or sale list just made, which the dialog offers to post
   const [created, setCreated] = useState<ComposerStart | null>(null);
-  const composer = useComposer();
+  const openComposer = useOpenComposer();
 
   const change = (next: boolean) => {
     // reset on close too: the dialog keeps its state while the toast animates out
@@ -73,17 +74,16 @@ export function CreateListDialog({
               <DialogClose render={<Button variant="outline" />}>
                 {m.common_modal_close()}
               </DialogClose>
-              <Button autoFocus onClick={() => composer.openWith(created)}>
+              <Button
+                autoFocus
+                onClick={() => {
+                  change(false);
+                  openComposer(created);
+                }}
+              >
                 {m.trade_post_it()}
               </Button>
             </DialogFooter>
-            <PostComposer
-              {...composer.dialog}
-              onOpenChange={(next) => {
-                composer.dialog.onOpenChange(next);
-                if (!next) change(false);
-              }}
-            />
           </>
         ) : (
           <Form

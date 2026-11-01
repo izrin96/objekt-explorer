@@ -36,8 +36,8 @@ import { SelectBar, type SelectBarAction, SelectModeButton } from "@/features/ob
 import { SkeletonGrid } from "@/features/objekt/skeleton-grid";
 import { useCollectionRarity } from "@/features/objekt/use-collection-rarity";
 import { useCurrency } from "@/features/settings/use-currency";
+import { useOpenComposer } from "@/features/trade/composer/use-open-composer";
 import { NearNote } from "@/features/trade/near-note";
-import { PostComposer, useComposer } from "@/features/trade/post-list-dialog";
 import { useCurrentUser } from "@/features/user/hooks";
 import { refusalText } from "@/lib/refusal";
 import { m } from "@/paraglide/messages";
@@ -276,7 +276,7 @@ function ListEntries() {
   // is concerned, exactly as the website decides its default tab
   const showOwned = list.isProfileBind && list.hideSerial !== true;
   const activeObjekt = activeGroup[0] ?? null;
-  const composer = useComposer();
+  const openComposer = useOpenComposer();
   // a near card's drawer says why it isn't counted, as a Trade strip's does; a near collection
   // is never a match, so the only card that opens one is in the near section
   const activeNear =
@@ -455,12 +455,11 @@ function ListEntries() {
               objekt={activeObjekt}
               near={activeNear}
               onClose={() => setActiveGroup([])}
-              onCompose={composer.openWith}
+              onCompose={openComposer}
             />
           ) : undefined
         }
       />
-      {user ? <PostComposer {...composer.dialog} /> : null}
 
       {canPrice ? <SetPriceDialog {...dialogs.price} slug={list.slug} currency={currency} /> : null}
       {canRatio && ratioSide ? (

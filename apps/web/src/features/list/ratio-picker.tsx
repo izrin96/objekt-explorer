@@ -16,6 +16,7 @@ export function RatioPicker({
   label,
   description,
   listRatio = null,
+  disabled = false,
 }: {
   value: number | null;
   onChange: (ratio: number | null) => void;
@@ -24,6 +25,8 @@ export function RatioPicker({
   description?: string;
   /** for an entry or rule: the list's Ratio for all, which null follows */
   listRatio?: number | null;
+  /** while a save from it is in flight */
+  disabled?: boolean;
 }) {
   const id = useId();
   const inherited = listRatio === null ? null : ratioText(listRatio, side);
@@ -42,6 +45,7 @@ export function RatioPicker({
         size="sm"
         aria-labelledby={`${id}-label`}
         aria-describedby={description ? `${id}-desc` : undefined}
+        disabled={disabled}
         value={[value === null ? NONE : String(value)]}
         onValueChange={([next]) => {
           if (next === undefined) return;

@@ -34,6 +34,8 @@ import {
   toBrowseInput,
 } from "./browse-search";
 import { comparedList, scopeOf, tradeListsOf } from "./compare-rule";
+import { NEW_POST } from "./composer/link";
+import { useOpenComposer } from "./composer/use-open-composer";
 import { HiddenPartnersDialog } from "./hidden-partners-dialog";
 import { LoadError } from "./load-error";
 import { ComparedLine, MatchingControls } from "./matching-controls";
@@ -42,7 +44,6 @@ import type { NearOpen } from "./near";
 import { NearNote } from "./near-note";
 import { PersonLinkEmpty, PersonLinkView } from "./person-link-view";
 import { PersonRow, PersonRowSkeleton } from "./person-row-view";
-import { NEW_POST, PostComposer, useComposer } from "./post-list-dialog";
 import { usePlanLists } from "./post-plan";
 import type { PersonData } from "./post-types";
 import { hiddenPartnersOptions, peopleOptions } from "./queries";
@@ -90,7 +91,7 @@ export function BrowseView({ surface, search }: { surface: Surface; search: Feed
   const active = opened && opened.slug === search.slug ? opened.objekt : null;
   const setActive = (objekt: ValidObjekt | null, near?: NearOpen) =>
     setOpened(objekt ? { objekt, slug: search.slug, near } : null);
-  const composer = useComposer();
+  const openComposer = useOpenComposer();
   const planLists = usePlanLists();
   const [hiddenOpen, setHiddenOpen] = useState(false);
   // rows read from their fetch, so every "3 hours ago" agrees, and the server's render too;
@@ -189,7 +190,7 @@ export function BrowseView({ surface, search }: { surface: Surface; search: Feed
           </p>
           {/* on Browse, New post lives in the Your posts row */}
           {user && forYou ? (
-            <Button variant="outline" size="sm" onClick={() => composer.openWith(NEW_POST)}>
+            <Button variant="outline" size="sm" onClick={() => openComposer(NEW_POST)}>
               <CardsThreeIcon />
               {m.trade_new_post()}
             </Button>
@@ -208,8 +209,8 @@ export function BrowseView({ surface, search }: { surface: Surface; search: Feed
         {user && !forYou ? (
           <MyPosts
             userId={user.user.id}
-            onNew={() => composer.openWith(NEW_POST)}
-            onEdit={(slug) => composer.openWith(startForPost(planLists, slug))}
+            onNew={() => openComposer(NEW_POST)}
+            onEdit={(slug) => openComposer(startForPost(planLists, slug))}
           />
         ) : null}
 
@@ -442,12 +443,11 @@ export function BrowseView({ surface, search }: { surface: Surface; search: Feed
                 objekt={active}
                 near={opened.near}
                 onClose={() => setActive(null)}
-                onCompose={composer.openWith}
+                onCompose={openComposer}
               />
             ) : undefined
           }
         />
-        {user ? <PostComposer {...composer.dialog} /> : null}
         {user ? <HiddenPartnersDialog open={hiddenOpen} onOpenChange={setHiddenOpen} /> : null}
       </OfferBuilderProvider>
     </AddToListProvider>

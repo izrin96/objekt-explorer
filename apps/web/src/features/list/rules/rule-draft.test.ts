@@ -23,6 +23,7 @@ import {
   newDraft,
   previewIsCurrent,
   type RuleDraft,
+  ruleInputOf,
   seasonFor,
   seasonOptions,
   seasonsOf,
@@ -406,5 +407,50 @@ describe("previewIsCurrent", () => {
 
   test("an incomplete rule is not", () => {
     expect(previewIsCurrent(null, null, false)).toBe(false);
+  });
+});
+
+describe("ruleInputOf", () => {
+  test("sends a saved rule back as it is, with a suffix other than Z kept", () => {
+    const rule: ListRuleDef = {
+      kind: "collection",
+      artist: "triples",
+      season: "Atom01",
+      collectionNo: "101A",
+      class: null,
+      editions: [],
+      members: [],
+      prio: ["Nien"],
+      skipOwned: true,
+    };
+    const input = ruleInputOf(rule);
+    expect(input).toEqual({
+      kind: "collection",
+      artist: "triples",
+      season: "Atom01",
+      collectionNo: "101A",
+      prio: ["Nien"],
+      skipOwned: true,
+    });
+    expect(
+      ruleDef(updateRuleInputSchema.parse({ slug: "s", ruleId: 1, rule: input }).rule),
+    ).toEqual(rule);
+  });
+
+  test("a set rule keeps any season and any class", () => {
+    const rule: ListRuleDef = {
+      kind: "set",
+      artist: "triples",
+      season: null,
+      collectionNo: null,
+      class: null,
+      editions: [],
+      members: ["Lynn"],
+      prio: [],
+      skipOwned: false,
+    };
+    expect(
+      ruleDef(updateRuleInputSchema.parse({ slug: "s", ruleId: 1, rule: ruleInputOf(rule) }).rule),
+    ).toEqual(rule);
   });
 });

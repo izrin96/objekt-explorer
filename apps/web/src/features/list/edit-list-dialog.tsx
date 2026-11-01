@@ -16,21 +16,19 @@ import {
 } from "@/components/ui/dialog";
 import { Form } from "@/components/ui/form";
 import { Spinner } from "@/components/ui/spinner";
-import { PostComposer, useComposer } from "@/features/trade/post-list-dialog";
+import { useOpenComposer } from "@/features/trade/composer/use-open-composer";
 import { usePlanLists } from "@/features/trade/post-plan";
 import { TradeLine } from "@/features/trade/trade-line";
 import { useUserProfiles } from "@/features/user/hooks";
 import { isSameAddress, nicknameParam } from "@/lib/address";
 import { type FieldErrors, zodErrors } from "@/lib/form";
-import type { client } from "@/lib/orpc";
 import { refusalText } from "@/lib/refusal";
 import { m } from "@/paraglide/messages";
 
 import { useEditList } from "./actions";
+import { type StoredList, toDraft } from "./list-draft";
 import { type ListDraft, ListForm, type ListUrl, listDraftSchema, toEditInput } from "./list-form";
 import { listFindOptions } from "./queries";
-
-type StoredList = Awaited<ReturnType<typeof client.list.find>>;
 
 export function EditListDialog({
   slug,
@@ -54,6 +52,7 @@ export function EditListDialog({
           // mounted with the stored list in hand, so the draft is its initial state
           <EditListForm
             list={data}
+            onClose={() => onOpenChange(false)}
             onDone={() => {
               onOpenChange(false);
               if (redirectOnSave) void navigate({ to: "/list/$slug", params: { slug } });
@@ -86,24 +85,6 @@ export function EditListDialog({
   );
 }
 
-function toDraft(list: StoredList): ListDraft {
-  return {
-    name: list.name,
-    description: list.description ?? "",
-    listType: list.listType,
-    currency: list.currency ?? "",
-    linkedListId: list.linkedListId,
-    profileAddress: list.profileAddress,
-    isProfileBind: list.isProfileBind,
-    matchSale: list.matchSale,
-    matchHave: list.matchHave,
-    gridColumns: list.gridColumns,
-    hideSerial: list.hideSerial,
-    regenerateSlug: false,
-    ratio: list.ratio,
-  };
-}
-
 /** mirrors `getListLinkOption`: the nickname when the profile has one, else the address */
 function toListUrl(
   list: StoredList,
@@ -119,54 +100,62 @@ function toListUrl(
   };
 }
 
-function EditListForm({ list, onDone }: { list: StoredList; onDone: () => void }) {
+function EditListForm({
+  list,
+  onDone,
+  onClose,
+}: {
+  list: StoredList;
+  onDone: () => void;
+  onClose: () => void;
+}) {
   const profiles = useUserProfiles();
   const planLists = usePlanLists();
-  const composer = useComposer();
+  const openComposer = useOpenComposer();
   const edit = useEditList();
   const [draft, setDraft] = useState<ListDraft>(() => toDraft(list));
   const [errors, setErrors] = useState<FieldErrors>({});
 
   return (
-    <>
-      <Form
-        className="contents"
-        errors={errors}
-        onFormSubmit={() => {
-          const next = zodErrors(listDraftSchema(), draft);
-          setErrors(next);
-          if (Object.keys(next).length > 0) return;
-          edit.mutate(toEditInput(list.slug, draft, list.ratio), { onSuccess: onDone });
-        }}
-      >
-        <DialogHeader>
-          <DialogTitle className="font-display">{m.list_edit_title()}</DialogTitle>
-          <DialogDescription>{m.list_edit_description()}</DialogDescription>
-        </DialogHeader>
-        <DialogPanel>
-          <ListForm
-            mode="edit"
-            value={draft}
-            onChange={setDraft}
-            profiles={profiles}
-            url={toListUrl(list, profiles)}
-            tradeLine={
-              <TradeLine
-                slug={list.slug}
-                onCompose={() => composer.openWith(startForList(planLists, list.slug))}
-              />
-            }
-          />
-        </DialogPanel>
-        <DialogFooter>
-          <DialogClose render={<Button variant="outline" />}>{m.common_modal_cancel()}</DialogClose>
-          <Button type="submit" loading={edit.isPending}>
-            {m.common_actions_save()}
-          </Button>
-        </DialogFooter>
-      </Form>
-      {/* outside the form: React carries a portal's submit up to its tree parent */}
-      <PostComposer {...composer.dialog} />
-    </>
+    <Form
+      className="contents"
+      errors={errors}
+      onFormSubmit={() => {
+        const next = zodErrors(listDraftSchema(), draft);
+        setErrors(next);
+        if (Object.keys(next).length > 0) return;
+        edit.mutate(toEditInput(list.slug, draft, list.ratio), { onSuccess: onDone });
+      }}
+    >
+      <DialogHeader>
+        <DialogTitle className="font-display">{m.list_edit_title()}</DialogTitle>
+        <DialogDescription>{m.list_edit_description()}</DialogDescription>
+      </DialogHeader>
+      <DialogPanel>
+        <ListForm
+          mode="edit"
+          value={draft}
+          onChange={setDraft}
+          profiles={profiles}
+          url={toListUrl(list, profiles)}
+          tradeLine={
+            <TradeLine
+              slug={list.slug}
+              saveFirst={JSON.stringify(draft) !== JSON.stringify(toDraft(list))}
+              onCompose={() => {
+                onClose();
+                openComposer(startForList(planLists, list.slug));
+              }}
+            />
+          }
+        />
+      </DialogPanel>
+      <DialogFooter>
+        <DialogClose render={<Button variant="outline" />}>{m.common_modal_cancel()}</DialogClose>
+        <Button type="submit" loading={edit.isPending}>
+          {m.common_actions_save()}
+        </Button>
+      </DialogFooter>
+    </Form>
   );
 }

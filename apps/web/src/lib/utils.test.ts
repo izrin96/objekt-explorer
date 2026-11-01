@@ -13,4 +13,9 @@ describe("isSafeRedirect", () => {
     expect(isSafeRedirect("https://evil.example")).toBe(false);
     expect(isSafeRedirect("trade")).toBe(false);
   });
+  test("rejects control characters, which the URL parser strips into a protocol-relative URL", () => {
+    expect(isSafeRedirect(decodeURIComponent("%2F%09%2Fevil.example"))).toBe(false);
+    expect(isSafeRedirect("/\n/evil.example")).toBe(false);
+    expect(isSafeRedirect("/trade\u007f")).toBe(false);
+  });
 });

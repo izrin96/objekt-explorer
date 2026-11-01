@@ -59,6 +59,7 @@ import { Route as containerModReportsRouteImport } from './routes/(container)/mo
 import { Route as containerTradeIndexRouteImport } from './routes/(container)/trade/index'
 import { Route as containerTradeForYouRouteImport } from './routes/(container)/trade/for-you'
 import { Route as containerTradeMineRouteRouteImport } from './routes/(container)/trade/mine/route'
+import { Route as containerTradeNewRouteImport } from './routes/(container)/trade/new'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth.$'
 import { Route as ApiTransfersAddressRouteImport } from './routes/api/transfers.$address'
 import { Route as ApiUserSearchRouteImport } from './routes/api/user.search'
@@ -336,6 +337,11 @@ const containerTradeMineRouteRoute = containerTradeMineRouteRouteImport.update({
   path: '/mine',
   getParentRoute: () => containerTradeRouteRoute,
 } as any)
+const containerTradeNewRoute = containerTradeNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => containerTradeRouteRoute,
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -465,6 +471,7 @@ export interface FileRoutesByFullPath {
   '/messages/$id': typeof containerMessagesIdRoute
   '/mod/reports': typeof containerModReportsRouteWithChildren
   '/trade/for-you': typeof containerTradeForYouRoute
+  '/trade/new': typeof containerTradeNewRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/transfers/$address': typeof ApiTransfersAddressRoute
   '/api/user/search': typeof ApiUserSearchRoute
@@ -525,6 +532,7 @@ export interface FileRoutesByTo {
   '/live/$id': typeof containerLiveIdRoute
   '/messages/$id': typeof containerMessagesIdRoute
   '/trade/for-you': typeof containerTradeForYouRoute
+  '/trade/new': typeof containerTradeNewRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/transfers/$address': typeof ApiTransfersAddressRoute
   '/api/user/search': typeof ApiUserSearchRoute
@@ -593,6 +601,7 @@ export interface FileRoutesById {
   '/(container)/messages/$id': typeof containerMessagesIdRoute
   '/(container)/mod/reports': typeof containerModReportsRouteWithChildren
   '/(container)/trade/for-you': typeof containerTradeForYouRoute
+  '/(container)/trade/new': typeof containerTradeNewRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/transfers/$address': typeof ApiTransfersAddressRoute
   '/api/user/search': typeof ApiUserSearchRoute
@@ -661,6 +670,7 @@ export interface FileRouteTypes {
     | '/messages/$id'
     | '/mod/reports'
     | '/trade/for-you'
+    | '/trade/new'
     | '/api/auth/$'
     | '/api/transfers/$address'
     | '/api/user/search'
@@ -721,6 +731,7 @@ export interface FileRouteTypes {
     | '/live/$id'
     | '/messages/$id'
     | '/trade/for-you'
+    | '/trade/new'
     | '/api/auth/$'
     | '/api/transfers/$address'
     | '/api/user/search'
@@ -788,6 +799,7 @@ export interface FileRouteTypes {
     | '/(container)/messages/$id'
     | '/(container)/mod/reports'
     | '/(container)/trade/for-you'
+    | '/(container)/trade/new'
     | '/api/auth/$'
     | '/api/transfers/$address'
     | '/api/user/search'
@@ -1186,6 +1198,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof containerTradeMineRouteRouteImport
       parentRoute: typeof containerTradeRouteRoute
     }
+    '/(container)/trade/new': {
+      id: '/(container)/trade/new'
+      path: '/new'
+      fullPath: '/trade/new'
+      preLoaderRoute: typeof containerTradeNewRouteImport
+      parentRoute: typeof containerTradeRouteRoute
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
@@ -1362,12 +1381,14 @@ const containerTradeMineRouteRouteWithChildren =
 interface containerTradeRouteRouteChildren {
   containerTradeMineRouteRoute: typeof containerTradeMineRouteRouteWithChildren
   containerTradeForYouRoute: typeof containerTradeForYouRoute
+  containerTradeNewRoute: typeof containerTradeNewRoute
   containerTradeIndexRoute: typeof containerTradeIndexRoute
 }
 
 const containerTradeRouteRouteChildren: containerTradeRouteRouteChildren = {
   containerTradeMineRouteRoute: containerTradeMineRouteRouteWithChildren,
   containerTradeForYouRoute: containerTradeForYouRoute,
+  containerTradeNewRoute: containerTradeNewRoute,
   containerTradeIndexRoute: containerTradeIndexRoute,
 }
 

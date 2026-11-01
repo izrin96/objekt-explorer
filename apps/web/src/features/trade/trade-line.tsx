@@ -29,7 +29,16 @@ const HINT: Record<LineHint, () => string> = {
  * A have, want or sale list's place on Trade in its edit form: the post holding it, or that it is
  * off Trade, with Edit post or Post it opening the composer on this list.
  */
-export function TradeLine({ slug, onCompose }: { slug: string; onCompose: () => void }) {
+export function TradeLine({
+  slug,
+  onCompose,
+  saveFirst = false,
+}: {
+  slug: string;
+  onCompose: () => void;
+  /** the form holds unsaved changes, which leaving for the composer would lose */
+  saveFirst?: boolean;
+}) {
   const id = useId();
   const lists = usePlanLists();
   const list = lists.find((entry) => entry.slug === slug);
@@ -57,6 +66,7 @@ export function TradeLine({ slug, onCompose }: { slug: string; onCompose: () => 
           )
           .join(" · ")
       : HINT[lineHint(line, list.listType)]();
+  const note = saveFirst ? m.trade_line_save_first() : detail;
 
   return (
     <section aria-labelledby={`${id}-heading`} className="flex min-w-0 flex-col gap-1.5">
@@ -66,9 +76,9 @@ export function TradeLine({ slug, onCompose }: { slug: string; onCompose: () => 
       <div className="bg-muted/40 flex min-w-0 flex-wrap items-center justify-between gap-3 rounded-lg border px-3.5 py-3">
         <span className="flex min-w-0 flex-col gap-1">
           <span className="text-sm font-medium break-words">{title}</span>
-          {detail ? (
+          {note ? (
             <span id={`${id}-detail`} className="text-muted-foreground text-xs text-pretty">
-              {detail}
+              {note}
             </span>
           ) : null}
         </span>
@@ -78,7 +88,8 @@ export function TradeLine({ slug, onCompose }: { slug: string; onCompose: () => 
             size="sm"
             variant={line.state === "in_post" ? "outline" : "default"}
             className="shrink-0"
-            aria-describedby={detail ? `${id}-detail` : undefined}
+            aria-describedby={note ? `${id}-detail` : undefined}
+            disabled={saveFirst}
             onClick={onCompose}
           >
             {line.state === "in_post" ? m.trade_composer_edit_title() : m.trade_post_it()}
