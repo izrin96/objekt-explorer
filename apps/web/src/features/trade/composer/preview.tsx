@@ -1,4 +1,4 @@
-import { PlusIcon } from "@phosphor-icons/react";
+import { PlusIcon, TrashIcon } from "@phosphor-icons/react";
 import type { PlanList } from "@repo/api/schemas/trade-post";
 import type { ListObjekt } from "@repo/lib/types/objekt";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -26,6 +26,7 @@ import { appliedRatio, type RatioSide, ratioLabel, ratioText } from "@/features/
 import { listRulesOptions, RULE_KEYS } from "@/features/list/rules/queries";
 import { RuleForm } from "@/features/list/rules/rule-dialog";
 import { ruleInputOf } from "@/features/list/rules/rule-draft";
+import { ConfirmRule } from "@/features/list/rules/rules-strip";
 import { ruleText } from "@/features/list/rules/words";
 import { ObjektCard } from "@/features/objekt/objekt-card";
 import { collectionName } from "@/features/objekt/objekt-label";
@@ -405,16 +406,37 @@ function PreviewRules({
   onAddRule: () => void;
 }) {
   const { data: rules } = useQuery(listRulesOptions(slug));
+  // kept after closing so the dialog can animate out and hand focus back to its button
+  const [deleting, setDeleting] = useState<{ rule: Rule; open: boolean } | null>(null);
   return (
     <div className="flex min-w-0 flex-col gap-1.5">
       {rules && rules.length > 0 ? (
         <ul className="flex flex-wrap gap-1.5">
           {rules.map((rule) => (
-            <li key={rule.id} className="min-w-0">
+            <li key={rule.id} className="flex min-w-0 items-start gap-0.5">
               <RuleChip rule={rule} slug={slug} listRatio={listRatio} ratio={ratio} />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-xs"
+                className="text-muted-foreground hover:text-destructive-foreground shrink-0"
+                aria-label={m.trade_composer_rule_delete({ rule: ruleText(rule) })}
+                title={m.rule_delete()}
+                onClick={() => setDeleting({ rule, open: true })}
+              >
+                <TrashIcon />
+              </Button>
             </li>
           ))}
         </ul>
+      ) : null}
+      {deleting ? (
+        <ConfirmRule
+          slug={slug}
+          rule={deleting.rule}
+          action={deleting.open ? "delete" : null}
+          onClose={() => setDeleting({ rule: deleting.rule, open: false })}
+        />
       ) : null}
       <Button type="button" variant="outline" size="xs" className="w-fit" onClick={onAddRule}>
         <PlusIcon />

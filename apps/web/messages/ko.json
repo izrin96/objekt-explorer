@@ -2200,6 +2200,7 @@
   "trade_composer_all_desc_ratio": "{list}에 {count}개. 하나를 골라 비율을 정하세요.",
   "trade_composer_objekt_ratio": "{name}의 비율",
   "trade_composer_objekt_ratio_set": "{name}의 비율, 현재 {ratio}",
+  "trade_composer_rule_delete": "규칙 {rule} 삭제",
   "trade_composer_rule_ratio": "규칙 {rule}의 비율",
   "trade_composer_rule_ratio_set": "규칙 {rule}의 비율, 현재 {ratio}",
   "trade_composer_new_want": "새 희망 목록",

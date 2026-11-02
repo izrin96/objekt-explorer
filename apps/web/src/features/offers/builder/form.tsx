@@ -305,7 +305,7 @@ export function BuilderForm({
         sides={
           <>
             <div className="grid min-w-0 gap-6 md:grid-cols-2">
-              {(["get", "give"] as const).map((side) => {
+              {(["give", "get"] as const).map((side) => {
                 const [picks, setPicks] = sides[side];
                 return (
                   <SideColumn

@@ -1198,7 +1198,7 @@ The composer SHALL show the post as Trade will show it: its tags, Has (Selling f
 - **THEN** a side sheet shows all 30 objekts of "spares"
 
 ### Requirement: Rules in the composer
-While a want list is picked, its side of the preview SHALL list its rules and offer Add rule, which SHALL open the list page's rule form in a side sheet. Adding a rule SHALL save it to the list at once, close the sheet and keep the composer's picks; leaving the composer SHALL keep the rule.
+While a want list is picked, its side of the preview SHALL list its rules and offer Add rule, which SHALL open the list page's rule form in a side sheet. Adding a rule SHALL save it to the list at once, close the sheet and keep the composer's picks; leaving the composer SHALL keep the rule. Each listed rule SHALL carry Delete rule, which asks first as the list page does, then removes the rule from the list at once and keeps the picks.
 
 #### Scenario: Add a rule while posting
 - **WHEN** the viewer picks Swap and want list "binary hunt", activates Add rule and adds the rule CC366, any member
@@ -1207,6 +1207,10 @@ While a want list is picked, its side of the preview SHALL list its rules and of
 #### Scenario: Leave without posting
 - **WHEN** the viewer adds a rule to "binary hunt" on the page, then leaves without posting
 - **THEN** "binary hunt" holds the rule, and its Trade state is as before
+
+#### Scenario: Delete a rule while posting
+- **WHEN** the viewer activates Delete rule beside the CC366 rule on "binary hunt" and confirms
+- **THEN** the rule leaves "binary hunt" and the Wants side, and the picks are as before
 
 #### Scenario: Rule limit
 - **WHEN** "binary hunt" already holds 20 rules and the viewer adds another

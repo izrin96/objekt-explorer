@@ -331,7 +331,7 @@ function RuleObjektRows({ groups, headed }: { groups: RuleGroup[]; headed: boole
   );
 }
 
-function ConfirmRule({
+export function ConfirmRule({
   slug,
   rule,
   action,

@@ -2200,6 +2200,7 @@
   "trade_composer_all_desc_ratio": "{count} in {list}. Pick one to set its ratio.",
   "trade_composer_objekt_ratio": "Ratio for {name}",
   "trade_composer_objekt_ratio_set": "Ratio for {name}, now {ratio}",
+  "trade_composer_rule_delete": "Delete the rule {rule}",
   "trade_composer_rule_ratio": "Ratio for the rule {rule}",
   "trade_composer_rule_ratio_set": "Ratio for the rule {rule}, now {ratio}",
   "trade_composer_new_want": "New want list",
