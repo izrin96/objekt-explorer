@@ -4,7 +4,7 @@ import { message } from "@repo/db/schema";
 import { and, eq, gt, isNull, sql } from "drizzle-orm";
 import type * as z from "zod";
 
-import { holdsMessage, muteEnd, sendVerdict } from "../../lib/chat-rules";
+import { firstListed, holdsMessage, muteEnd, sendVerdict } from "../../lib/chat-rules";
 import { scanMessage } from "../../lib/scam-patterns";
 import { publishNotify } from "../../realtime";
 import {
@@ -136,9 +136,9 @@ export async function sendMessage(
   const caution = body === null ? [] : scanMessage(body);
 
   const sent = await (async () => {
-    const card = input.card
-      ? (await resolveCard(input.card, { senderId: me, partnerId })).stored
-      : null;
+    const resolved = input.card ? await resolveCard(input.card, { senderId: me, partnerId }) : null;
+    const card = resolved?.stored ?? null;
+    const listed = firstListed(resolved ? { card: { list: resolved.list } } : {}, partnerId);
     // the first message is the conversation's start; the start lock comes before the row lock
     const first = holdsMessage(lastMessageId)
       ? null
@@ -152,6 +152,7 @@ export async function sendMessage(
         clientId: input.clientId,
         replyToId: input.replyTo ?? null,
         first: first ? () => openFirst(tx, first, input.conversationId) : undefined,
+        listed,
       });
     });
   })().catch(async (error: unknown) => {

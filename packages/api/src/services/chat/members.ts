@@ -37,6 +37,8 @@ type AppendInput = {
   replyToId?: number | null;
   /** runs under the row lock when the conversation holds no message yet; a throw aborts the send */
   first?: () => Promise<void>;
+  /** `firstListed` for this message; read only when it is the first, and missing opens a request */
+  listed?: boolean;
 };
 
 /**
@@ -84,6 +86,7 @@ export async function appendMessage(
     clientId,
     replyToId = null,
     first: openFirst,
+    listed = false,
   }: AppendInput,
 ) {
   const [locked] = await tx
@@ -92,7 +95,6 @@ export async function appendMessage(
     .where(eq(conversation.id, conversationId))
     .for("update");
   const first = locked?.lastMessageId === null;
-  const opensWithContent = first && (card !== null || offerId !== null);
   if (first) await openFirst?.();
 
   const [inserted] = await tx
@@ -139,7 +141,7 @@ export async function appendMessage(
     const event: MemberEvent =
       userId === senderId
         ? { type: "send", messageId: inserted.id }
-        : { type: "incoming", first, opensWithContent };
+        : { type: "incoming", first, listed };
     await writeMember(tx, conversationId, userId, nextMemberState(state, event, now));
   }
   // read under the row lock, so it is the message this one follows
@@ -180,32 +182,38 @@ export async function findMembership(conversationId: number, userId: string) {
   return { ...row, partnerId: row.userLow === userId ? row.userHigh : row.userLow };
 }
 
+type ToEvent = (state: MemberState, lastMessageId: number | null) => MemberEvent | null;
+
 /** Applies one member event under a row lock and returns the new state. */
-export async function updateMember(
+export async function updateMember(conversationId: number, userId: string, toEvent: ToEvent) {
+  return db.transaction((tx) => updateMemberIn(tx, conversationId, userId, toEvent));
+}
+
+/** `updateMember` inside the caller's transaction, after any conversation row lock it holds. */
+export async function updateMemberIn(
+  tx: Tx,
   conversationId: number,
   userId: string,
-  toEvent: (state: MemberState, lastMessageId: number | null) => MemberEvent | null,
+  toEvent: ToEvent,
 ) {
-  return db.transaction(async (tx) => {
-    const [row] = await tx
-      .select({ ...memberColumns, lastMessageId: conversation.lastMessageId })
-      .from(conversationMember)
-      .innerJoin(conversation, eq(conversation.id, conversationMember.conversationId))
-      .where(
-        and(
-          eq(conversationMember.conversationId, conversationId),
-          eq(conversationMember.userId, userId),
-          visibleToMember(userId),
-        ),
-      )
-      .for("update", { of: conversationMember });
-    if (!row) throw new ORPCError("NOT_FOUND");
+  const [row] = await tx
+    .select({ ...memberColumns, lastMessageId: conversation.lastMessageId })
+    .from(conversationMember)
+    .innerJoin(conversation, eq(conversation.id, conversationMember.conversationId))
+    .where(
+      and(
+        eq(conversationMember.conversationId, conversationId),
+        eq(conversationMember.userId, userId),
+        visibleToMember(userId),
+      ),
+    )
+    .for("update", { of: conversationMember });
+  if (!row) throw new ORPCError("NOT_FOUND");
 
-    const { userId: _, lastMessageId, ...state } = row;
-    const event = toEvent(state, lastMessageId);
-    if (event === null) return { state, changed: false };
-    const next = nextMemberState(state, event, new Date().toISOString());
-    await writeMember(tx, conversationId, userId, next);
-    return { state: next, changed: true };
-  });
+  const { userId: _, lastMessageId, ...state } = row;
+  const event = toEvent(state, lastMessageId);
+  if (event === null) return { state, changed: false };
+  const next = nextMemberState(state, event, new Date().toISOString());
+  await writeMember(tx, conversationId, userId, next);
+  return { state: next, changed: true };
 }

@@ -1,11 +1,13 @@
 import { describe, expect, test } from "bun:test";
 
+import type { ListType } from "../schemas/list";
 import {
   boxOf,
   cardAllowed,
   cardListAllowed,
   chatIdentity,
   countsTowardBadge,
+  firstListed,
   hidesSerials,
   holdsMessage,
   isMessageable,
@@ -131,11 +133,11 @@ describe("requests", () => {
     expect(countsTowardBadge(opened, { id: 1, senderId: "alice" }, "kaede", NOW)).toBe(false);
   });
 
-  test("a first message with a card or an offer goes straight to the Inbox", () => {
+  test("a listed first message goes straight to the Inbox", () => {
     const { recipient } = startMembers();
     const opened = nextMemberState(
       recipient,
-      { type: "incoming", first: true, opensWithContent: true },
+      { type: "incoming", first: true, listed: true },
       NOW_ISO,
     );
     expect(boxOf(opened)).toBe("inbox");
@@ -151,6 +153,13 @@ describe("requests", () => {
     const { recipient } = startMembers();
     const requested = nextMemberState(recipient, { type: "incoming", first: true }, NOW_ISO);
     expect(boxOf(nextMemberState(requested, { type: "incoming" }, NOW_ISO))).toBe("requests");
+  });
+
+  test("a later listed message leaves a request in Requests", () => {
+    const { recipient } = startMembers();
+    const requested = nextMemberState(recipient, { type: "incoming", first: true }, NOW_ISO);
+    const later = nextMemberState(requested, { type: "incoming", listed: true }, NOW_ISO);
+    expect(boxOf(later)).toBe("requests");
   });
 
   test("a first message without one stays a request", () => {
@@ -498,5 +507,37 @@ describe("hidesSerials", () => {
     expect(hidesSerials({ ...list, hideSerial: false }, "rin")).toBe(false);
     expect(hidesSerials(null, "rin")).toBe(false);
     expect(hidesSerials(undefined, "rin")).toBe(false);
+  });
+});
+
+describe("firstListed", () => {
+  const list = (ownerId: string, listType: ListType) => ({ card: { list: { ownerId, listType } } });
+
+  test("a card on the recipient's sale, have or want list is listed", () => {
+    for (const type of ["sale", "have", "want"] as const) {
+      expect(firstListed(list("kaede", type), "kaede")).toBe(true);
+    }
+  });
+
+  test("a card on the recipient's general list is not", () => {
+    expect(firstListed(list("kaede", "general"), "kaede")).toBe(false);
+  });
+
+  test("a card on the sender's list, or naming no list, is not", () => {
+    expect(firstListed(list("rin", "sale"), "kaede")).toBe(false);
+    expect(firstListed({ card: { list: null } }, "kaede")).toBe(false);
+  });
+
+  test("a message with neither card nor offer is not", () => {
+    expect(firstListed({}, "kaede")).toBe(false);
+  });
+
+  test("an offer is listed when it asks through a list or gives something wanted", () => {
+    const offer = (asksThroughList: boolean, givesWanted: boolean) => ({
+      offer: { asksThroughList, givesWanted },
+    });
+    expect(firstListed(offer(true, false), "kaede")).toBe(true);
+    expect(firstListed(offer(false, true), "kaede")).toBe(true);
+    expect(firstListed(offer(false, false), "kaede")).toBe(false);
   });
 });

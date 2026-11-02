@@ -6,6 +6,7 @@ import {
   type MessageAllow,
   MESSAGE_PREF_DEFAULTS,
 } from "../schemas/chat";
+import type { ListType } from "../schemas/list";
 import { defaultProfile, type LinkedProfile } from "../schemas/trade-person";
 import { nameProfile, type PartnerIdentity } from "./trade-rank";
 
@@ -175,6 +176,24 @@ export function sendVerdict(facts: { blocked: boolean; senderMuted: boolean }): 
   return { ok: true };
 }
 
+const INVITING_LISTS: ReadonlySet<ListType> = new Set(["sale", "have", "want"]);
+
+export type FirstMessageFacts = {
+  /** the list the card names, or null for a card naming none */
+  card?: { list: { ownerId: string; listType: ListType } | null };
+  offer?: { asksThroughList: boolean; givesWanted: boolean };
+};
+
+/**
+ * A first message goes straight to the Inbox only when it is about the recipient's sale, have or
+ * want lists. A general list is public but invites no one, so a card through it is a request.
+ */
+export function firstListed(facts: FirstMessageFacts, recipientId: string) {
+  const list = facts.card?.list;
+  if (list && list.ownerId === recipientId && INVITING_LISTS.has(list.listType)) return true;
+  return facts.offer !== undefined && (facts.offer.asksThroughList || facts.offer.givesWanted);
+}
+
 export type MemberState = {
   request: boolean;
   archivedAt: string | null;
@@ -197,8 +216,8 @@ export function startMembers(): { sender: MemberState; recipient: MemberState } 
 
 export type MemberEvent =
   | { type: "send"; messageId: number }
-  /** `first`: the conversation's first message; `opensWithContent`: it carries a card or an offer */
-  | { type: "incoming"; first?: boolean; opensWithContent?: boolean }
+  /** `first`: the conversation's first message; `listed`: it is about the recipient's lists (`firstListed`) */
+  | { type: "incoming"; first?: boolean; listed?: boolean }
   | { type: "read"; messageId: number }
   | { type: "accept" }
   | { type: "decline" }
@@ -221,7 +240,7 @@ export function nextMemberState(state: MemberState, event: MemberEvent, now: str
     case "incoming":
       return {
         ...state,
-        request: event.first ? !event.opensWithContent : state.request,
+        request: event.first ? !event.listed : state.request,
         archivedAt: null,
       };
     case "read":

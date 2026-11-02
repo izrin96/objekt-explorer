@@ -5,7 +5,7 @@ import { and, eq, gt, inArray, ne, sql } from "drizzle-orm";
 import { legInsertOrder } from "../../lib/leg-order";
 import { unique } from "../../lib/unique";
 import { VERIFIER_NUDGE_CHANNEL } from "../../schemas/offer";
-import { chatSafety } from "../chat";
+import { chatSafety, updateMemberIn } from "../chat";
 import { lockAddresses } from "../cosmo-link";
 import { redis } from "../redis";
 import { cancelledColumns, cancelledNotes } from "./cancel";
@@ -147,6 +147,10 @@ export async function acceptOffer(me: string, offerId: number) {
         .where(eq(offer.id, offerId));
       refuseOffer(why?.open ? "expired" : "not_open");
     }
+    // a deal taken from Requests is an answer, as a reply is; after the conversation lock, as appendMessage
+    await updateMemberIn(tx, row.conversationId, me, (state) =>
+      state.request ? { type: "accept" } : null,
+    );
 
     const specificIds = items.flatMap((item) => (item.objektId ? [item.objektId] : []));
     const cancelled =

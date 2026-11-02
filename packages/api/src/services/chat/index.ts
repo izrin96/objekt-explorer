@@ -1,5 +1,5 @@
 export { afterBlockChange, chatSafety } from "./safety";
-export { appendMessage, findMembership, updateMember } from "./members";
+export { appendMessage, findMembership, updateMember, updateMemberIn } from "./members";
 export { checkMessageRate } from "./rate";
 export {
   checkStart,

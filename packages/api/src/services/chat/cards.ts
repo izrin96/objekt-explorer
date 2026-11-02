@@ -33,6 +33,7 @@ import {
   storedCardSchema,
   unsentMessage,
 } from "../../schemas/chat";
+import type { ListType } from "../../schemas/list";
 import type { ShownSerial } from "../../schemas/offer";
 import { mutualOf } from "../../schemas/trade";
 import { fetchCollectionsBySlug } from "../list";
@@ -45,24 +46,28 @@ import { refuse } from "./refuse";
 
 type CardContext = { senderId: string; partnerId: string };
 
-export type ResolvedCard =
+/** The list a card names, for `firstListed`. */
+type CardList = { ownerId: string; listType: ListType } | null;
+
+export type ResolvedCard = { list: CardList } & (
   | { kind: "post"; input: PostCardInput; stored: StoredPostCard }
-  | { kind: "objekt"; input: ObjektCardInput; stored: StoredObjektCard };
+  | { kind: "objekt"; input: ObjektCardInput; stored: StoredObjektCard }
+);
 
 /** The card to store for `input`, or `invalid_card` when it can no longer be sent. */
 export async function resolveCard(input: CardInput, context: CardContext): Promise<ResolvedCard> {
   return isPostInput(input)
-    ? { kind: "post", input, stored: await resolvePostCard(input, context) }
-    : { kind: "objekt", input, stored: await resolveObjektCard(input, context) };
+    ? { kind: "post", input, ...(await resolvePostCard(input, context)) }
+    : { kind: "objekt", input, ...(await resolveObjektCard(input, context)) };
 }
 
 /** A post is a list shown on Trade that the partner owns; a match is the server's, never the client's. */
 async function resolvePostCard(
   input: PostCardInput,
   { senderId, partnerId }: CardContext,
-): Promise<StoredPostCard> {
+): Promise<{ stored: StoredPostCard; list: CardList }> {
   const [list] = await db
-    .select({ id: lists.id })
+    .select({ id: lists.id, listType: lists.listType })
     .from(lists)
     .where(
       and(
@@ -75,7 +80,10 @@ async function resolvePostCard(
     );
   if (!list) refuse("invalid_card");
   const match = input.withMatch ? await savedMatch(senderId, partnerId) : null;
-  return { kind: "post", listId: list.id, ...(match ? { match } : {}) };
+  return {
+    stored: { kind: "post", listId: list.id, ...(match ? { match } : {}) },
+    list: { ownerId: partnerId, listType: list.listType },
+  };
 }
 
 /**
@@ -105,7 +113,7 @@ async function savedMatch(senderId: string, ownerId: string): Promise<StoredMatc
 async function resolveObjektCard(
   input: ObjektCardInput,
   context: CardContext,
-): Promise<StoredObjektCard> {
+): Promise<{ stored: StoredObjektCard; list: CardList }> {
   const [list, collection, objekt] = await Promise.all([
     input.listSlug === undefined
       ? undefined
@@ -113,6 +121,7 @@ async function resolveObjektCard(
           .select({
             id: lists.id,
             ownerId: lists.userId,
+            listType: lists.listType,
             hideSerial: lists.hideSerial,
           })
           .from(lists)
@@ -173,10 +182,13 @@ async function resolveObjektCard(
   }
 
   return {
-    kind: "objekt",
-    collectionSlug: input.collectionSlug,
-    ...(input.objektId === undefined ? {} : { objektId: input.objektId }),
-    ...(list ? { listId: list.id } : {}),
+    stored: {
+      kind: "objekt",
+      collectionSlug: input.collectionSlug,
+      ...(input.objektId === undefined ? {} : { objektId: input.objektId }),
+      ...(list ? { listId: list.id } : {}),
+    },
+    list: list ? { ownerId: list.ownerId, listType: list.listType } : null,
   };
 }
 

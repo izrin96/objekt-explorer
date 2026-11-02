@@ -1,7 +1,8 @@
 import { db } from "@repo/db";
-import { offer, offerItem, userSanction } from "@repo/db/schema";
+import { listEntries, lists, offer, offerItem, userSanction } from "@repo/db/schema";
 import { and, eq, gt, inArray, ne, sql } from "drizzle-orm";
 
+import { firstListed } from "../../lib/chat-rules";
 import {
   type ActorLimits,
   anyCopyScope,
@@ -54,6 +55,24 @@ import {
   refuseAction,
 } from "./state";
 import { fetchOffers, offerItemCards, toOfferView } from "./view";
+
+/** Whether any of `slugs` is on one of the partner's want lists. */
+async function givesWanted(partnerId: string, slugs: string[]) {
+  if (slugs.length === 0) return false;
+  const [row] = await db
+    .select({ id: listEntries.id })
+    .from(listEntries)
+    .innerJoin(lists, eq(lists.id, listEntries.listId))
+    .where(
+      and(
+        eq(lists.userId, partnerId),
+        eq(lists.listType, "want"),
+        inArray(listEntries.collectionSlug, [...new Set(slugs)]),
+      ),
+    )
+    .limit(1);
+  return row !== undefined;
+}
 
 export async function createOffer(
   me: string,
@@ -132,6 +151,23 @@ export async function createOffer(
     }
   }
   const keptIds = new Set(getRows.flatMap((row) => (row.kept ? [row.item.objektId!] : [])));
+  const asksThroughList = getRows.some((row) => row.listId !== null);
+  const listed =
+    firstCtx !== null &&
+    firstListed(
+      {
+        offer: {
+          asksThroughList,
+          givesWanted:
+            !asksThroughList &&
+            (await givesWanted(
+              partnerId,
+              input.give.map((item) => item.collectionSlug),
+            )),
+        },
+      },
+      partnerId,
+    );
 
   const items: ItemRow[] = [
     ...input.give.map((item) => ({
@@ -282,6 +318,7 @@ export async function createOffer(
         caution,
         offerId,
         first: firstCtx ? () => openFirst(tx, firstCtx, conversationId) : undefined,
+        listed,
       });
 
       const notified = await writeNotes(tx, [
