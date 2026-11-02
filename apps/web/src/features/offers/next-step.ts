@@ -47,6 +47,9 @@ export type NextStep =
   | (Base & { kind: "completed"; canRate: boolean; confirmed: boolean })
   | (Base & { kind: "failed"; canReport: boolean; canRate: boolean })
   | (Base & { kind: "cancelled" })
+  /** a request to cancel, open since `at`: the partner's to answer, or the viewer's waiting */
+  | (Live & { kind: "theyAskCancel"; at: string })
+  | (Live & { kind: "youAskCancel"; at: string })
   | (Live & ({ kind: "youDecide" } & HeldCopy))
   | (Live & { kind: "yourTurn"; legs: Leg[]; body: SendBody; canCancel: boolean })
   | (Live & { kind: "stuck"; leg: Leg })
@@ -98,6 +101,7 @@ export function stepKind(trade: Trade): StepKind {
   if (trade.status === "completed") return "completed";
   if (trade.status === "failed") return "failed";
   if (trade.status === "cancelled") return "cancelled";
+  if (trade.cancelRequest) return trade.cancelRequest.byYou ? "youAskCancel" : "theyAskCancel";
   const { owed, sendable, toDecide } = sets(trade);
   if (toDecide.length > 0) return "youDecide";
   if (sendable.length > 0) return "yourTurn";
@@ -172,6 +176,15 @@ export function nextStep(trade: Trade, now: number): NextStep {
   ];
 
   switch (kind) {
+    case "theyAskCancel":
+    case "youAskCancel":
+      return {
+        kind,
+        at: trade.cancelRequest!.at,
+        notes: awayNotes,
+        primary: kind === "theyAskCancel" ? "decide" : null,
+        deadline: ends,
+      };
     case "youDecide": {
       const held = earliestCopy(toDecide)!;
       return {

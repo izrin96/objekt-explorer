@@ -44,6 +44,7 @@ export function endedText(
       ? m.offer_trade_failed_expired_desc({ days: TRADE_EXPIRE_DAYS })
       : m.offer_trade_failed_desc();
   }
+  if (t.cancelReason === "agreed") return m.offer_trade_cancelled_agreed({ name });
   if (t.cancelReason === "token_moved") return m.offer_trade_cancelled_moved();
   if (t.cancelReason === "not_transferable") return m.offer_trade_cancelled_not_transferable();
   if (t.cancelReason === "expired") {
@@ -126,6 +127,13 @@ export function yourTurnText(
   };
 }
 
+/** The card's title and body while a request to cancel is open. */
+export function askCancelText(kind: "theyAskCancel" | "youAskCancel", name: string) {
+  return kind === "theyAskCancel"
+    ? { title: m.offer_next_they_ask_cancel({ name }), body: m.offer_next_they_ask_cancel_body() }
+    : { title: m.offer_next_you_ask_cancel({ name }), body: m.offer_next_you_ask_cancel_body() };
+}
+
 /** The chip's words, which the chat strip shares. The last three match `tradeStatusText`. */
 export function stepChipText(kind: StepKind) {
   switch (kind) {
@@ -137,6 +145,10 @@ export function stepChipText(kind: StepKind) {
       return m.offer_chip_you_decide();
     case "theyDecide":
       return m.offer_chip_they_decide();
+    case "theyAskCancel":
+      return m.offer_chip_they_ask_cancel();
+    case "youAskCancel":
+      return m.offer_chip_you_ask_cancel();
     case "stuck":
       return m.offer_chip_stuck();
     case "completed":

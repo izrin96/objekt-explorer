@@ -10,9 +10,11 @@ import {
   substituteIdInputSchema,
   suggestInputSchema,
   tradeIdInputSchema,
+  answerCancelInputSchema,
 } from "../schemas/offer";
 import { createOffer, offerViews, respondToOffer } from "../services/offer";
 import { acceptOffer } from "../services/offer/accept";
+import { answerCancel, askCancel, withdrawCancel } from "../services/offer/cancel-request";
 import { confirmLeg } from "../services/offer/confirm";
 import { offerCandidates, suggestOffer } from "../services/offer/picker";
 import { acceptSubstitute, declineSubstitute } from "../services/offer/substitute";
@@ -21,6 +23,9 @@ import { refuseOverUserLimit } from "../services/redis";
 
 /** The picker pages and the suggestion share one budget: a minute of fast scrolling stays well under it. */
 const limitPicker = (userId: string) => refuseOverUserLimit("offer-picker", userId, 120, 60);
+// asking and withdrawing in a loop would add a Timeline row and a partner notice each round
+const limitCancelAsk = (userId: string) =>
+  refuseOverUserLimit("trade-cancel-ask", userId, 6, 60 * 60);
 
 export const offerRouter = {
   /** What the builder can pick: `mine` paged from the sender's wallet, `theirs` from the partner's allowed lists. */
@@ -90,6 +95,29 @@ export const offerRouter = {
     .handler(async ({ input: { tradeId }, context: { session } }) =>
       cancelTrade(session.user.id, tradeId),
     ),
+
+  /** Either party asks to cancel a trade they can't cancel alone; the other party answers. */
+  askCancel: authed
+    .input(tradeIdInputSchema)
+    .handler(async ({ input: { tradeId }, context: { session } }) => {
+      await limitCancelAsk(session.user.id);
+      return askCancel(session.user.id, tradeId);
+    }),
+
+  /** The party who didn't ask accepts, ending the trade cancelled by agreement, or declines. */
+  answerCancel: authed
+    .input(answerCancelInputSchema)
+    .handler(async ({ input: { tradeId, accept }, context: { session } }) =>
+      answerCancel(session.user.id, tradeId, accept),
+    ),
+
+  /** The asker takes back a request to cancel that is still waiting. */
+  withdrawCancel: authed
+    .input(tradeIdInputSchema)
+    .handler(async ({ input: { tradeId }, context: { session } }) => {
+      await limitCancelAsk(session.user.id);
+      return withdrawCancel(session.user.id, tradeId);
+    }),
 
   /** The receiver takes a wrong copy in place of the asked-for objekt, verifying its leg. */
   acceptSubstitute: authed

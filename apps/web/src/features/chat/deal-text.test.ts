@@ -34,6 +34,8 @@ describe("row line, as the spec's Wording by state table", () => {
   test.each<[string, Deal, string]>([
     ["offer to you", offer("waitingYou"), "O-261 · Waiting for you"],
     ["offer from you", offer("waitingThem"), "O-261 · Waiting for them"],
+    ["asked to cancel", trade("theyAskCancel"), "T-89 · They asked to cancel"],
+    ["you asked to cancel", trade("youAskCancel"), "T-89 · Waiting for them to answer"],
     ["you decide", trade("youDecide"), "T-89 · Different copy to decide"],
     ["your turn", trade("yourTurn", { count: 4 }), "T-89 · Your turn · send 4"],
     ["their turn", trade("theirTurn"), "T-89 · Waiting for them · 3 of 6"],
@@ -53,6 +55,8 @@ test("tones, as the spec's Tone by state table", () => {
         [
           "waitingYou",
           "waitingThem",
+          "theyAskCancel",
+          "youAskCancel",
           "youDecide",
           "yourTurn",
           "theirTurn",
@@ -66,6 +70,8 @@ test("tones, as the spec's Tone by state table", () => {
   ).toEqual({
     waitingYou: "warning",
     waitingThem: "neutral",
+    theyAskCancel: "warning",
+    youAskCancel: "warning",
     youDecide: "warning",
     yourTurn: "progress",
     theirTurn: "progress",
@@ -106,6 +112,8 @@ describe("strip, as the spec's Strip by state table", () => {
   });
 
   test.each<[DealState, string, string | null]>([
+    ["theyAskCancel", "T-89 · In progress · they asked to cancel · 3 of 6", null],
+    ["youAskCancel", "T-89 · In progress · you asked to cancel · 3 of 6", null],
     ["youDecide", "T-89 · In progress · you decide · 3 of 6", null],
     [
       "theirTurn",
@@ -143,6 +151,8 @@ describe("strip, as the spec's Strip by state table", () => {
   test.each<[DealState, string | null]>([
     ["waitingYou", null],
     ["waitingThem", null],
+    ["theyAskCancel", null],
+    ["youAskCancel", null],
     ["youDecide", null],
     ["yourTurn", "Your turn"],
     ["theirTurn", "Waiting for them"],

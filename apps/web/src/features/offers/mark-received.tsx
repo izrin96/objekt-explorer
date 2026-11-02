@@ -39,7 +39,10 @@ export function MarkReceived({
         <AlertDialogPopup>
           <AlertDialogHeader>
             <AlertDialogTitle>{m.offer_mark_received_title({ objekt })}</AlertDialogTitle>
-            <AlertDialogDescription>{m.offer_mark_received_desc()}</AlertDialogDescription>
+            <AlertDialogDescription render={<div />} className="flex flex-col gap-2">
+              <p>{m.offer_mark_received_desc()}</p>
+              <p>{m.offer_mark_received_call_off()}</p>
+            </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogClose render={<Button variant="outline" />}>

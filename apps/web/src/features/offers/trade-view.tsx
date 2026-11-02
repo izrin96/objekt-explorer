@@ -23,7 +23,7 @@ import { useMinuteClock } from "@/hooks/use-minute-clock";
 import { m } from "@/paraglide/messages";
 import { useUserSocketLive } from "@/stores/user-socket";
 
-import { CancelTrade } from "./cancel-trade";
+import { AnswerCancelActions, AskCancel, CancelTrade } from "./cancel-trade";
 import { type ExchangeFilter, needsYouCount, openingSide } from "./exchange";
 import { offerNo, tradeNo } from "./format";
 import { Mono } from "./mono";
@@ -138,6 +138,7 @@ function TradeDetail({ trade, collections }: { trade: Trade; collections: Collec
   const step = nextStep(trade, now);
   const [active, setActive] = useState<ValidObjekt | null>(null);
   const [cancelOpen, setCancelOpen] = useState(false);
+  const [askOpen, setAskOpen] = useState(false);
   const [filter, setFilter] = useState<ExchangeFilter>("all");
   const [find, setFind] = useState("");
   const [view, setView] = useState<ExchangeView>("grid");
@@ -196,6 +197,7 @@ function TradeDetail({ trade, collections }: { trade: Trade; collections: Collec
     trade,
     onReport: safety.openReport,
     onCancel: () => setCancelOpen(true),
+    onAskCancel: () => setAskOpen(true),
   };
   const chatLink = <Link to="/messages/$id" params={{ id: String(trade.conversationId) }} />;
 
@@ -257,6 +259,10 @@ function TradeDetail({ trade, collections }: { trade: Trade; collections: Collec
           <div className="flex gap-2">
             <DecideActions trade={trade} leg={step.leg} copyId={step.copy.id} size="xl" />
           </div>
+        ) : step.kind === "theyAskCancel" ? (
+          <div className="flex gap-2">
+            <AnswerCancelActions trade={trade} size="xl" />
+          </div>
         ) : null}
         <div className="flex items-center gap-2">
           <Button
@@ -278,6 +284,7 @@ function TradeDetail({ trade, collections }: { trade: Trade; collections: Collec
         open={cancelOpen}
         onOpenChange={setCancelOpen}
       />
+      <AskCancel trade={trade} open={askOpen} onOpenChange={setAskOpen} />
       <SelectedSheet
         {...selectedProps}
         leg={selected}

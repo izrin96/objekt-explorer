@@ -16,7 +16,13 @@ type Mark = "done" | "todo" | Tone;
 function marks(status: TradeView["status"], kind: StepKind) {
   switch (status) {
     case "in_progress": {
-      const transfers = kind === "youDecide" || kind === "theyDecide" ? "warning" : "progress";
+      const transfers =
+        kind === "youDecide" ||
+        kind === "theyDecide" ||
+        kind === "theyAskCancel" ||
+        kind === "youAskCancel"
+          ? "warning"
+          : "progress";
       return { marks: ["done", "done", transfers, "todo"] as Mark[], current: 2 };
     }
     case "completed":

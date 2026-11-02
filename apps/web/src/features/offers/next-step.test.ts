@@ -107,6 +107,34 @@ describe("nextStep, in progress", () => {
     });
   });
 
+  test("a request to cancel outranks a different copy and your turn", () => {
+    const owed = leg();
+    const decide = leg({ fromYou: false, substitutes: [copy()] });
+    const at = "2026-10-12T11:22:00.000Z";
+    const they = step(
+      trade({ legs: [verified(), owed, decide], cancelRequest: { byYou: false, at } }),
+    );
+    expect(they).toMatchObject({
+      kind: "theyAskCancel",
+      at,
+      primary: "decide",
+      deadline: { kind: "ends", at: ENDS },
+    });
+    const you = step(
+      trade({ legs: [verified(), owed, decide], cancelRequest: { byYou: true, at } }),
+    );
+    expect(you).toMatchObject({ kind: "youAskCancel", at, primary: null });
+  });
+
+  test("an ended trade ignores a request still pending", () => {
+    const ended = trade({
+      status: "completed",
+      legs: [verified(), verified({ fromYou: false })],
+      cancelRequest: { byYou: false, at: "2026-10-12T11:22:00.000Z" },
+    });
+    expect(stepKind(ended)).toBe("completed");
+  });
+
   test("a decision outranks your turn", () => {
     const owed = leg();
     const decide = leg({ fromYou: false, substitutes: [copy()] });

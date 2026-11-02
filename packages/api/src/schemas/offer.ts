@@ -16,6 +16,8 @@ export const REPORT_AFTER_DAYS = 7;
 /** A trade still in progress this long after accept ends: failed with a verified leg, else cancelled. */
 export const TRADE_EXPIRE_DAYS = 14;
 export const RATE_WINDOW_DAYS = 14;
+/** After a declined request to cancel, its asker can ask again this long after the decline. */
+export const CANCEL_ASK_WAIT_HOURS = 24;
 /** A pending wrong copy counts as accepted this long after it was recorded. */
 export const COPY_ACCEPT_HOURS = 72;
 /** The receiver is reminded this long before a wrong copy counts as accepted. */
@@ -62,9 +64,19 @@ export type SubstituteStatus = (typeof SUBSTITUTE_STATUSES)[number];
 export const HELD_COPY_STATUSES = ["pending", "declined"] as const satisfies SubstituteStatus[];
 export type HeldCopyStatus = (typeof HELD_COPY_STATUSES)[number];
 
-/** Set on a cancelled trade; `expired` also on a failed one. */
-const TRADE_CANCEL_REASONS = ["party", "token_moved", "expired", "not_transferable"] as const;
+/** Set on a cancelled trade; `expired` also on a failed one. `agreed`: both parties agreed to cancel. */
+const TRADE_CANCEL_REASONS = [
+  "party",
+  "token_moved",
+  "expired",
+  "not_transferable",
+  "agreed",
+] as const;
 export type TradeCancelReason = (typeof TRADE_CANCEL_REASONS)[number];
+
+/** `trade_cancel_request.status`, as `packages/db` types it. */
+export const CANCEL_REQUEST_STATUSES = ["pending", "accepted", "declined", "withdrawn"] as const;
+export type CancelRequestStatus = (typeof CANCEL_REQUEST_STATUSES)[number];
 
 const OFFER_ACTIONS = ["accept", "decline", "counter", "withdraw"] as const;
 export type OfferAction = (typeof OFFER_ACTIONS)[number];
@@ -103,6 +115,9 @@ export const OFFER_REFUSALS = [
   "rating_closed",
   "no_address",
   "links_changed",
+  "cancel_asked",
+  "cancel_wait",
+  "no_cancel_request",
   "self",
   "not_accepting",
   "message_limit",
@@ -177,6 +192,7 @@ export const rateInputSchema = z.object({ tradeId: idSchema, rating: z.enum(TRAD
 export const tradeIdInputSchema = z.object({ tradeId: idSchema });
 export const substituteIdInputSchema = z.object({ substituteId: idSchema });
 export const legIdInputSchema = z.object({ legId: idSchema });
+export const answerCancelInputSchema = z.object({ tradeId: idSchema, accept: z.boolean() });
 /** `list`, `mutual` and `post` are optional, so a tab that sends `{ partnerId }` alone still validates. */
 export const suggestInputSchema = z.object({
   partnerId: z.string().min(1),
@@ -348,7 +364,16 @@ const tradeLegViewSchema = z.object({
   autoAccepted: z.boolean().optional(),
 });
 
-const tradeViewSchema = z.object({
+/** A request to cancel, as the viewer sees it; `lapsed`: still pending when the trade ended another way. */
+const cancelRequestViewSchema = z.object({
+  byYou: z.boolean(),
+  at: z.string(),
+  status: z.enum([...CANCEL_REQUEST_STATUSES, "lapsed"]),
+  answeredAt: z.string().nullable(),
+});
+export type CancelRequestView = z.infer<typeof cancelRequestViewSchema>;
+
+export const tradeViewSchema = z.object({
   id: z.number(),
   offerId: z.number(),
   conversationId: z.number(),
@@ -379,6 +404,12 @@ const tradeViewSchema = z.object({
   rateUntil: z.string().nullable(),
   /** the verifier's last finished run, ISO; null before its first */
   lastCheckedAt: z.string().nullable(),
+  /** every request to cancel, oldest first; defaults keep payloads from before them valid */
+  cancelRequests: cancelRequestViewSchema.array().default([]),
+  /** the open request, only while the trade is in progress */
+  cancelRequest: z.object({ byYou: z.boolean(), at: z.string() }).nullable().default(null),
+  /** ISO time the viewer may ask again after a decline, while that is still ahead */
+  cancelAskOpensAt: z.string().nullable().default(null),
 });
 export type TradeView = z.infer<typeof tradeViewSchema>;
 
@@ -466,6 +497,8 @@ const TRADE_EVENTS = [
   "wrong_copy_auto_accepted",
   "away",
   "leg_confirmed",
+  "cancel_asked",
+  "cancel_declined",
 ] as const;
 
 /** A serial as trade surfaces show it: null before it's numbered, `estimated` after Cosmo's cutoff. */

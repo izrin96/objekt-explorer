@@ -1,5 +1,7 @@
 import type { ListType } from "../schemas/list";
 import {
+  CANCEL_ASK_WAIT_HOURS,
+  type CancelRequestStatus,
   type OfferAction,
   type OfferRefusal,
   type OfferSide,
@@ -347,6 +349,50 @@ export function cancelRefusal(
   if (trade.status !== "in_progress") return "trade_ended";
   if (trade.verifiedLegs > 0 || heldCopies > 0) return "locked";
   return indexerBehind ? "indexer_behind" : null;
+}
+
+type CancelRequestRow = {
+  askedBy: string;
+  status: CancelRequestStatus;
+  answeredAt: string | Date | null;
+};
+
+/**
+ * When `askerId` may ask to cancel again: 24 hours after the decline of their latest declined
+ * request, while that is still ahead of `now`; null when they may ask now.
+ */
+export function cancelAskWait(
+  requests: readonly CancelRequestRow[],
+  askerId: string,
+  now: Date,
+): Date | null {
+  let last: number | null = null;
+  for (const request of requests) {
+    if (request.askedBy !== askerId || request.status !== "declined" || !request.answeredAt) {
+      continue;
+    }
+    const at = new Date(request.answeredAt).getTime();
+    if (last === null || at > last) last = at;
+  }
+  if (last === null) return null;
+  const opens = last + CANCEL_ASK_WAIT_HOURS * 60 * 60 * 1000;
+  return opens > now.getTime() ? new Date(opens) : null;
+}
+
+/**
+ * Who may act on a trade's pending request to cancel: only the other party answers it, only its
+ * asker withdraws it. A pending row on an ended trade is no longer open.
+ */
+export function cancelAnswerRefusal(
+  tradeStatus: TradeStatus,
+  pending: { askedBy: string } | null,
+  viewerId: string,
+  action: "answer" | "withdraw",
+): OfferRefusal | null {
+  if (action === "answer" && tradeStatus !== "in_progress") return "trade_ended";
+  if (pending === null || tradeStatus !== "in_progress") return "no_cancel_request";
+  const asker = pending.askedBy === viewerId;
+  return (action === "answer") === asker ? "not_allowed" : null;
 }
 
 /** The parties a stall reminder goes to: each one still giving an open leg. */

@@ -22,6 +22,7 @@ type Props = {
   primary: Primary;
   onReport: () => void;
   onCancel: () => void;
+  onAskCancel: () => void;
 };
 
 const isNew = (reputation: Reputation) => reputation.verified === 0 && reputation.unfinished === 0;
@@ -108,7 +109,7 @@ function Figures({ reputation }: { reputation: Reputation }) {
 }
 
 /** The side panel's first card: who the trade is with, their record, and the ways to reach them. */
-export function TradePartnerCard({ trade, primary, onReport, onCancel }: Props) {
+export function TradePartnerCard({ trade, primary, ...handlers }: Props) {
   const titleId = useId();
   const { reputation, user } = trade.partner;
   return (
@@ -151,7 +152,7 @@ export function TradePartnerCard({ trade, primary, onReport, onCancel }: Props) 
           {m.offer_open_chat()}
         </Button>
         <ViewProfile trade={trade} />
-        <TradeMenu trade={trade} onReport={onReport} onCancel={onCancel} />
+        <TradeMenu trade={trade} {...handlers} />
       </div>
     </section>
   );

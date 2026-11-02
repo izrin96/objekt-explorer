@@ -9,6 +9,8 @@ import {
   collectionAskAllowed,
   specificCopyShortfall,
   atFault,
+  cancelAnswerRefusal,
+  cancelAskWait,
   cancelRefusal,
   canReport,
   firstSender,
@@ -753,5 +755,63 @@ describe("shownCancelReason", () => {
   test("any other cause, or none, is kept", () => {
     expect(shownCancelReason("reserved")).toBe("reserved");
     expect(shownCancelReason(null)).toBeNull();
+  });
+});
+
+describe("cancelAskWait", () => {
+  const now = new Date("2026-10-30T12:00:00Z");
+  const declined = (askedBy: string, answeredAt: string) => ({
+    askedBy,
+    status: "declined" as const,
+    answeredAt,
+  });
+
+  test("asking again inside 24 hours of a decline waits until 24 hours after it", () => {
+    expect(cancelAskWait([declined("me", "2026-10-30T09:00:00Z")], "me", now)).toEqual(
+      new Date("2026-10-31T09:00:00Z"),
+    );
+  });
+
+  test("24 hours after the decline, or with no decline, asking is open", () => {
+    expect(cancelAskWait([declined("me", "2026-10-29T12:00:00Z")], "me", now)).toBeNull();
+    expect(cancelAskWait([], "me", now)).toBeNull();
+  });
+
+  test("reads the latest decline of this asker only", () => {
+    const requests = [
+      declined("me", "2026-10-28T09:00:00Z"),
+      declined("me", "2026-10-30T10:00:00Z"),
+      declined("them", "2026-10-30T11:00:00Z"),
+      { askedBy: "me", status: "withdrawn" as const, answeredAt: "2026-10-30T11:30:00Z" },
+    ];
+    expect(cancelAskWait(requests, "me", now)).toEqual(new Date("2026-10-31T10:00:00Z"));
+    expect(cancelAskWait(requests, "other", now)).toBeNull();
+  });
+});
+
+describe("cancelAnswerRefusal", () => {
+  const pending = { askedBy: "asker" };
+
+  test("the other party answers, the asker withdraws", () => {
+    expect(cancelAnswerRefusal("in_progress", pending, "other", "answer")).toBeNull();
+    expect(cancelAnswerRefusal("in_progress", pending, "asker", "withdraw")).toBeNull();
+  });
+
+  test("the asker can't answer their own request, nor the other party withdraw it", () => {
+    expect(cancelAnswerRefusal("in_progress", pending, "asker", "answer")).toBe("not_allowed");
+    expect(cancelAnswerRefusal("in_progress", pending, "other", "withdraw")).toBe("not_allowed");
+  });
+
+  test("with no pending request there is nothing to answer or withdraw", () => {
+    expect(cancelAnswerRefusal("in_progress", null, "other", "answer")).toBe("no_cancel_request");
+    expect(cancelAnswerRefusal("in_progress", null, "asker", "withdraw")).toBe("no_cancel_request");
+  });
+
+  test("an ended trade refuses an answer as ended, and holds no request to withdraw", () => {
+    expect(cancelAnswerRefusal("completed", pending, "other", "answer")).toBe("trade_ended");
+    expect(cancelAnswerRefusal("cancelled", null, "other", "answer")).toBe("trade_ended");
+    expect(cancelAnswerRefusal("completed", pending, "asker", "withdraw")).toBe(
+      "no_cancel_request",
+    );
   });
 });

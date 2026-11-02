@@ -102,6 +102,9 @@ export function trade(overrides: Partial<TradeView> = {}): TradeView {
     canRate: false,
     rateUntil: null,
     lastCheckedAt: null,
+    cancelRequests: [],
+    cancelRequest: null,
+    cancelAskOpensAt: null,
     ...overrides,
   };
 }

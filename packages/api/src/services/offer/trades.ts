@@ -3,6 +3,7 @@ import { db, type Tx } from "@repo/db";
 import {
   offer,
   trade,
+  tradeCancelRequest,
   tradeFeedback,
   tradeLeg,
   tradeSubstitute,
@@ -15,6 +16,7 @@ import { type HeldBy, heldByProfile } from "../../lib/held-by";
 import { isBehind, parseIndexerSeen } from "../../lib/indexer-seen";
 import {
   atFault,
+  cancelAskWait,
   cancelRefusal,
   canReport,
   rateRefusal,
@@ -29,6 +31,7 @@ import {
   type HistoryCursor,
   type MineRow,
   type TradeCancelReason,
+  type CancelRequestStatus,
   RATE_WINDOW_DAYS,
   type TradeRating,
   type TradeStatus,
@@ -69,7 +72,7 @@ const tradeColumns = {
 };
 
 /** NOT_FOUND unless the viewer is one of the trade's two parties. */
-async function findTrade(tradeId: number, me: string) {
+export async function findTrade(tradeId: number, me: string) {
   const [row] = await db
     .select({ ...tradeColumns, conversationId: offer.conversationId })
     .from(trade)
@@ -84,12 +87,41 @@ const progressColumns = {
   verified: sql<number>`(count(*) FILTER (WHERE ${tradeLeg.verifiedAt} IS NOT NULL))::int`,
 };
 
-const countVerified = (tx: Tx, tradeId: number) =>
+export const countVerified = (tx: Tx, tradeId: number) =>
   tx
     .select(progressColumns)
     .from(tradeLeg)
     .where(eq(tradeLeg.tradeId, tradeId))
     .then((rows) => rows[0] ?? { total: 0, verified: 0 });
+
+/**
+ * Ends an in-progress trade as cancelled, under its row lock: every leg closes, releasing its
+ * reservation, and a wrong copy still pending on one is declined, so none waits on a closed leg.
+ */
+export async function endTradeCancelled(
+  tx: Tx,
+  tradeId: number,
+  reason: Extract<TradeCancelReason, "party" | "agreed">,
+  cancelledBy: string,
+) {
+  await tx
+    .update(trade)
+    .set({ status: "cancelled", endedAt: sql`now()`, cancelledBy, cancelReason: reason })
+    .where(eq(trade.id, tradeId));
+  await tx.update(tradeLeg).set({ open: false }).where(eq(tradeLeg.tradeId, tradeId));
+  await tx
+    .update(tradeSubstitute)
+    .set({ status: "declined", decidedAt: sql`now()` })
+    .where(
+      and(
+        eq(tradeSubstitute.status, "pending"),
+        inArray(
+          tradeSubstitute.tradeLegId,
+          tx.select({ id: tradeLeg.id }).from(tradeLeg).where(eq(tradeLeg.tradeId, tradeId)),
+        ),
+      ),
+    );
+}
 
 // null when Redis is down, which `isBehind` reads as behind
 const readIndexerSeen = async () =>
@@ -142,11 +174,7 @@ export async function cancelTrade(me: string, tradeId: number) {
     );
     if (refusal) refuseOffer(refusal);
 
-    await tx
-      .update(trade)
-      .set({ status: "cancelled", endedAt: sql`now()`, cancelledBy: me, cancelReason: "party" })
-      .where(eq(trade.id, tradeId));
-    await tx.update(tradeLeg).set({ open: false }).where(eq(tradeLeg.tradeId, tradeId));
+    await endTradeCancelled(tx, tradeId, "party", me);
     return writeNotes(tx, [
       {
         type: "trade",
@@ -243,6 +271,7 @@ export async function fetchTrade(me: string, tradeId: number) {
     lastChecked,
     seen,
     profiles,
+    cancelRows,
   ] = await Promise.all([
     fetchOffers([row.offerId]),
     db.select().from(tradeLeg).where(eq(tradeLeg.tradeId, tradeId)).orderBy(tradeLeg.id),
@@ -279,6 +308,16 @@ export async function fetchTrade(me: string, tradeId: number) {
           .from(userAddress)
           .where(eq(userAddress.userId, me))
       : [],
+    db
+      .select({
+        askedBy: tradeCancelRequest.askedBy,
+        askedAt: tradeCancelRequest.askedAt,
+        status: sql<CancelRequestStatus>`${tradeCancelRequest.status}`,
+        answeredAt: tradeCancelRequest.answeredAt,
+      })
+      .from(tradeCancelRequest)
+      .where(eq(tradeCancelRequest.tradeId, tradeId))
+      .orderBy(tradeCancelRequest.askedAt, tradeCancelRequest.id),
   ]);
   const source = offers.get(row.offerId)!;
   const partner = partners.get(partnerId);
@@ -327,6 +366,9 @@ export async function fetchTrade(me: string, tradeId: number) {
       : null;
   const behind = row.status === "in_progress" && isBehind(seen, now.getTime());
   const cancel = cancelRefusal(state, behind, held);
+  const live = row.status === "in_progress";
+  // a request still pending when the trade ended another way was never answered
+  const open = live ? cancelRows.find((request) => request.status === "pending") : undefined;
 
   const result: TradeView = {
     id: row.id,
@@ -403,6 +445,14 @@ export async function fetchTrade(me: string, tradeId: number) {
         ? new Date(new Date(row.endedAt).getTime() + RATE_WINDOW_MS).toISOString()
         : null,
     lastCheckedAt: lastChecked,
+    cancelRequests: cancelRows.map((request) => ({
+      byYou: request.askedBy === me,
+      at: iso(request.askedAt)!,
+      status: request.status === "pending" && !live ? "lapsed" : request.status,
+      answeredAt: iso(request.answeredAt),
+    })),
+    cancelRequest: open ? { byYou: open.askedBy === me, at: iso(open.askedAt)! } : null,
+    cancelAskOpensAt: live ? (cancelAskWait(cancelRows, me, now)?.toISOString() ?? null) : null,
   };
   return { trade: result, collections };
 }

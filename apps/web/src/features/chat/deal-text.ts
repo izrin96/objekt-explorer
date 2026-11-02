@@ -40,6 +40,10 @@ export function rowText(deal: Deal): { words: string; trailing: string | null } 
       return { words: m.offer_status_waiting_you(), trailing: null };
     case "waitingThem":
       return { words: m.offer_status_waiting_them(), trailing: null };
+    case "theyAskCancel":
+      return { words: m.chat_deal_row_they_ask_cancel(), trailing: null };
+    case "youAskCancel":
+      return { words: m.chat_deal_row_you_ask_cancel(), trailing: null };
     case "youDecide":
       return { words: m.chat_deal_row_you_decide(), trailing: null };
     case "yourTurn":

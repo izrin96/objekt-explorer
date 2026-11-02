@@ -266,6 +266,59 @@ describe("timelineRows, ended", () => {
     expect(rows.map((r) => r.kind)).toContain("copyArrived");
   });
 
+  test("each request to cancel is a row with its answer, and an agreed end reads agreed", () => {
+    const request = (at: string, status: "accepted" | "declined" | "withdrawn" | "lapsed") => ({
+      byYou: false,
+      at,
+      status,
+      answeredAt: status === "lapsed" ? null : at,
+    });
+    const rows = timelineRows(
+      trade({
+        status: "cancelled",
+        cancelReason: "agreed",
+        endedAt: "2026-10-12T11:27:00.000Z",
+        legs: [sent("2026-10-11T00:00:00.000Z", true, "0x01"), leg({ fromYou: false })],
+        cancelRequests: [
+          request("2026-10-10T09:00:00.000Z", "withdrawn"),
+          request("2026-10-10T12:00:00.000Z", "declined"),
+          request("2026-10-12T11:22:00.000Z", "accepted"),
+        ],
+      }),
+      NOW,
+    );
+    expect(rows.map((r) => r.kind)).toEqual([
+      "proposed",
+      "accepted",
+      "cancelAsked",
+      "cancelAsked",
+      "sent",
+      "cancelAsked",
+      "end",
+    ]);
+    expect(
+      rows.flatMap((r) => (r.kind === "cancelAsked" ? [`${r.byYou}:${r.status}`] : [])),
+    ).toEqual(["false:withdrawn", "false:declined", "false:accepted"]);
+    expect(rows.at(-1)).toMatchObject({ outcome: "agreed", at: "2026-10-12T11:27:00.000Z" });
+  });
+
+  test("a request the trade outlived reads as lapsed before Completed", () => {
+    const rows = timelineRows(
+      trade({
+        status: "completed",
+        endedAt: "2026-10-12T12:00:00.000Z",
+        legs: [sent("2026-10-12T12:00:00.000Z", false, "0x02")],
+        cancelRequests: [
+          { byYou: false, at: "2026-10-12T11:22:00.000Z", status: "lapsed", answeredAt: null },
+        ],
+      }),
+      NOW,
+    );
+    expect(rows.map((r) => r.kind)).toEqual(["proposed", "accepted", "cancelAsked", "sent", "end"]);
+    expect(rows[2]).toMatchObject({ status: "lapsed" });
+    expect(rows.at(-1)).toMatchObject({ outcome: "completed" });
+  });
+
   test("failed and cancelled end rows, and no clock rows", () => {
     expect(
       timelineRows(trade({ status: "failed", endedAt: "x", legs: [verified(), leg()] }), NOW).at(

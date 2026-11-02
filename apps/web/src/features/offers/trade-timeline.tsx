@@ -69,6 +69,10 @@ function label(row: TimelineRow, trade: Trade, name: string, collections: Collec
         ? m.offer_timeline_copy_you_sent({ sent })
         : m.offer_timeline_copy_they_sent({ name, sent });
     }
+    case "cancelAsked":
+      return row.byYou
+        ? m.offer_clock_you_asked_cancel()
+        : m.offer_clock_they_asked_cancel({ name });
     case "copyDue":
       return m.offer_clock_copy_due({
         sent: serialText({ serial: row.copy.serial, estimated: row.copy.serialEstimated }),
@@ -88,7 +92,9 @@ function label(row: TimelineRow, trade: Trade, name: string, collections: Collec
     case "rate":
       return m.offer_clock_rate();
     case "end":
-      return tradeStatusText(trade.status);
+      return row.outcome === "agreed"
+        ? m.offer_clock_cancelled_agreed()
+        : tradeStatusText(trade.status);
     case "rateCloses":
       return m.offer_timeline_rate_closes();
   }
@@ -112,7 +118,25 @@ function Sub({ row }: { row: TimelineRow }): ReactNode {
     );
   }
   if (row.kind === "sent") return <InPlaceOf leg={row.leg} />;
+  if (row.kind === "cancelAsked") {
+    return <span className="text-muted-foreground text-xs">{cancelAnswerText(row.status)}</span>;
+  }
   return null;
+}
+
+function cancelAnswerText(status: Extract<TimelineRow, { kind: "cancelAsked" }>["status"]) {
+  switch (status) {
+    case "pending":
+      return m.offer_clock_cancel_waiting();
+    case "accepted":
+      return m.offer_clock_cancel_accepted();
+    case "declined":
+      return m.offer_clock_cancel_declined();
+    case "withdrawn":
+      return m.offer_clock_cancel_withdrawn();
+    case "lapsed":
+      return m.offer_clock_cancel_lapsed();
+  }
 }
 
 function Hash({ hash }: { hash: string | null }) {

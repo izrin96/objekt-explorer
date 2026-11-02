@@ -3,7 +3,14 @@ import { describe, expect, test } from "bun:test";
 import { TRADE_EXPIRE_DAYS } from "@repo/api/schemas/offer";
 
 import { type Deadline, type Leg, type NextStep, type StepKind, nextStep } from "./next-step";
-import { deadlineText, endedText, noteText, stepChipText, yourTurnText } from "./next-step-text";
+import {
+  askCancelText,
+  deadlineText,
+  endedText,
+  noteText,
+  stepChipText,
+  yourTurnText,
+} from "./next-step-text";
 import { ACCEPTED, DAY, leg, trade } from "./trade-fixture";
 
 // `m.*` returns a branded string, which `expect(...).toBe("...")` rejects.
@@ -61,6 +68,30 @@ describe("endedText", () => {
   test("cancelled by them, and by null", () => {
     check(ended("cancelled", null, false)).toBe("binary.bin cancelled this trade.");
     check(ended("cancelled", null, null)).toBe("binary.bin cancelled this trade.");
+  });
+
+  test("cancelled by agreement reads the same whoever asked", () => {
+    for (const byYou of [true, false]) {
+      check(ended("cancelled", "agreed", byYou)).toBe(
+        "You and binary.bin agreed to cancel this trade.",
+      );
+    }
+  });
+});
+
+describe("askCancelText", () => {
+  test("they asked", () => {
+    const text = askCancelText("theyAskCancel", "binary.bin");
+    check(text.title).toBe("binary.bin asked to cancel this trade");
+    check(text.body).toBe(
+      "If you accept, the trade ends as cancelled. Objekts already sent are not returned automatically: settle any return in chat.",
+    );
+  });
+
+  test("you asked", () => {
+    const text = askCancelText("youAskCancel", "binary.bin");
+    check(text.title).toBe("You asked binary.bin to cancel this trade");
+    check(text.body).toBe("The trade carries on until they answer.");
   });
 });
 
@@ -217,6 +248,8 @@ describe("stepChipText", () => {
     youDecide: "In progress · you decide",
     theyDecide: "In progress · they decide",
     stuck: "In progress · can't send",
+    theyAskCancel: "In progress · they asked to cancel",
+    youAskCancel: "In progress · you asked to cancel",
     completed: "Completed",
     failed: "Failed",
     cancelled: "Cancelled",

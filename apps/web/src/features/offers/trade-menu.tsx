@@ -1,10 +1,17 @@
-import { DotsThreeIcon, FlagIcon, type Icon, XCircleIcon } from "@phosphor-icons/react";
+import {
+  DotsThreeIcon,
+  FlagIcon,
+  HandshakeIcon,
+  type Icon,
+  XCircleIcon,
+} from "@phosphor-icons/react";
 import { REPORT_AFTER_DAYS, type TradeView as Trade } from "@repo/api/schemas/offer";
 import { useHydrated } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Menu, MenuItem, MenuPopup, MenuTrigger } from "@/components/ui/menu";
+import { untilLabel } from "@/features/chat/format";
 import { m } from "@/paraglide/messages";
 
 import { shortDate } from "./format";
@@ -20,7 +27,9 @@ type Item = {
   onSelect: () => void;
 };
 
-function items(trade: Trade, hydrated: boolean, onReport: () => void, onCancel: () => void) {
+type Handlers = { onReport: () => void; onCancel: () => void; onAskCancel: () => void };
+
+function items(trade: Trade, hydrated: boolean, { onReport, onCancel, onAskCancel }: Handlers) {
   const list: Item[] = [];
   const inProgress = trade.status === "in_progress";
   if (inProgress || (trade.status === "failed" && trade.canReport)) {
@@ -52,6 +61,22 @@ function items(trade: Trade, hydrated: boolean, onReport: () => void, onCancel: 
             : "",
       onSelect: onCancel,
     });
+    // an open request shows on the status card instead
+    if (!trade.canCancel && !trade.cancelRequest) {
+      const opens = trade.cancelAskOpensAt;
+      list.push({
+        key: "askCancel",
+        icon: HandshakeIcon,
+        label: m.offer_cancel_ask(),
+        reason: opens
+          ? // the viewer's zone, so the time waits for the client
+            hydrated
+            ? m.offer_cancel_ask_opens({ date: untilLabel(opens) })
+            : ""
+          : null,
+        onSelect: onAskCancel,
+      });
+    }
   }
   return list;
 }
@@ -62,17 +87,14 @@ function items(trade: Trade, hydrated: boolean, onReport: () => void, onCancel: 
  */
 export function TradeMenu({
   trade,
-  onReport,
-  onCancel,
   size = "icon",
-}: {
+  ...handlers
+}: Handlers & {
   trade: Trade;
-  onReport: () => void;
-  onCancel: () => void;
   size?: "icon" | "icon-xl";
 }) {
   const hydrated = useHydrated();
-  const list = items(trade, hydrated, onReport, onCancel);
+  const list = items(trade, hydrated, handlers);
   if (list.length === 0) return null;
   return (
     <Menu>

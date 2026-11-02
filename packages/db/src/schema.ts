@@ -497,7 +497,7 @@ export const trade = pgTable(
     cancelledBy: text("cancelled_by").references(() => user.id, { onDelete: "cascade" }),
     // `expired` also ends a failed trade
     cancelReason: text("cancel_reason").$type<
-      "party" | "token_moved" | "expired" | "not_transferable"
+      "party" | "token_moved" | "expired" | "not_transferable" | "agreed"
     >(),
     remindedAt: timestamp("reminded_at", { mode: "string", withTimezone: true }),
   },
@@ -508,7 +508,7 @@ export const trade = pgTable(
     check("trade_status", sql`${t.status} IN ('in_progress', 'completed', 'cancelled', 'failed')`),
     check(
       "trade_cancel_reason",
-      sql`${t.cancelReason} IN ('party', 'token_moved', 'expired', 'not_transferable')`,
+      sql`${t.cancelReason} IN ('party', 'token_moved', 'expired', 'not_transferable', 'agreed')`,
     ),
   ],
 );
@@ -592,6 +592,39 @@ export const tradeSubstitute = pgTable(
     // not unique without the leg: one copy may wait against legs of two trades
     uniqueIndex("trade_substitute_transfer_uniq").on(t.tradeLegId, t.txHash, t.objektId),
     check("trade_substitute_status", sql`${t.status} IN ('pending', 'accepted', 'declined')`),
+  ],
+);
+
+/**
+ * A party's request to end an in-progress trade by agreement. A pending row counts only while its
+ * trade is `in_progress`: a trade that ends another way leaves it pending, and reads gate on that.
+ */
+export const tradeCancelRequest = pgTable(
+  "trade_cancel_request",
+  {
+    id: serial("id").primaryKey(),
+    tradeId: integer("trade_id")
+      .notNull()
+      .references(() => trade.id, { onDelete: "cascade" }),
+    askedBy: text("asked_by")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    askedAt: timestamp("asked_at", { mode: "string", withTimezone: true }).notNull().defaultNow(),
+    status: text("status")
+      .$type<"pending" | "accepted" | "declined" | "withdrawn">()
+      .notNull()
+      .default("pending"),
+    answeredAt: timestamp("answered_at", { mode: "string", withTimezone: true }),
+  },
+  (t) => [
+    uniqueIndex("trade_cancel_request_pending_uniq")
+      .on(t.tradeId)
+      .where(sql`status = 'pending'`),
+    index("trade_cancel_request_trade_id_idx").on(t.tradeId, t.askedAt),
+    check(
+      "trade_cancel_request_status",
+      sql`${t.status} IN ('pending', 'accepted', 'declined', 'withdrawn')`,
+    ),
   ],
 );
 

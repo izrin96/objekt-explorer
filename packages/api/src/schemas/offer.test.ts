@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { noteObjekts, offerPayloadSchema, tradePayloadSchema } from "./offer";
+import { noteObjekts, offerPayloadSchema, tradePayloadSchema, tradeViewSchema } from "./offer";
 
 const item = (side: "give" | "get", collectionSlug: string) => ({ side, collectionSlug });
 // the creator gives seoyeon and gets jiwoo and kaede
@@ -55,5 +55,59 @@ describe("notification payloads", () => {
     expect(tradePayloadSchema.safeParse({ ...trade, objekts: ["a", "b", "c", "d"] }).success).toBe(
       false,
     );
+  });
+});
+
+describe("tradeViewSchema", () => {
+  // the partner is left out: its shape is chat's, unchanged here
+  const view = tradeViewSchema.omit({ partner: true });
+  const before = {
+    id: 516,
+    offerId: 900,
+    conversationId: 12,
+    status: "in_progress" as const,
+    cancelReason: null,
+    cancelledByYou: null,
+    proposedAt: "2026-10-30T10:00:00.000Z",
+    acceptedAt: "2026-10-30T10:05:00.000Z",
+    endedAt: null,
+    topup: null,
+    note: null,
+    legs: [],
+    progress: { verified: 0, total: 0 },
+    firstSender: null,
+    canCancel: false,
+    cancelLocked: true,
+    seenUntil: null,
+    indexerBehind: false,
+    canReport: false,
+    rating: null,
+    canRate: false,
+    rateUntil: null,
+    lastCheckedAt: null,
+  };
+
+  test("a payload from before cancel requests parses, with none open", () => {
+    const parsed = view.parse(before);
+    expect(parsed.cancelRequests).toEqual([]);
+    expect(parsed.cancelRequest).toBeNull();
+    expect(parsed.cancelAskOpensAt).toBeNull();
+  });
+
+  test("a lapsed request and the agreed reason parse", () => {
+    const request = {
+      byYou: false,
+      at: "2026-10-30T11:22:00.000Z",
+      status: "lapsed" as const,
+      answeredAt: null,
+    };
+    const parsed = view.parse({
+      ...before,
+      status: "cancelled",
+      cancelReason: "agreed",
+      cancelRequests: [request],
+    });
+    expect(parsed.cancelRequests).toEqual([request]);
+    expect(parsed.cancelReason).toBe("agreed");
   });
 });

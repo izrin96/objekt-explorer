@@ -28,6 +28,7 @@ const trade = (over: Partial<NonNullable<DealRow["trade"]>> = {}): DealRow =>
       toDecide: 0,
       rateable: false,
       rateUntil: null,
+      cancelAsk: null,
       ...over,
     },
   });
@@ -63,6 +64,20 @@ describe("dealOf", () => {
 
   test("you decide", () => {
     expect(stateOf(trade({ toDecide: 1 }))).toBe("youDecide");
+  });
+
+  test("a request to cancel comes before a different copy and your turn", () => {
+    expect(stateOf(trade({ cancelAsk: "them", toDecide: 1, owed: 4, sendable: 4 }))).toBe(
+      "theyAskCancel",
+    );
+    expect(stateOf(trade({ cancelAsk: "you", toDecide: 1, owed: 4, sendable: 4 }))).toBe(
+      "youAskCancel",
+    );
+  });
+
+  test("asked to cancel needs you; waiting for their answer does not", () => {
+    expect(needsYou("theyAskCancel")).toBe(true);
+    expect(needsYou("youAskCancel")).toBe(false);
   });
 
   test("you decide comes before your turn", () => {
@@ -154,8 +169,8 @@ describe("dealOf", () => {
   });
 });
 
-test("Needs you is offer to you, you decide and your turn, as needsYouSql filters", () => {
-  expect([...NEEDS_YOU_STATES]).toEqual(["waitingYou", "youDecide", "yourTurn"]);
+test("Needs you is offer to you, asked to cancel, you decide and your turn, as needsYouSql filters", () => {
+  expect([...NEEDS_YOU_STATES]).toEqual(["waitingYou", "theyAskCancel", "youDecide", "yourTurn"]);
   expect(needsYou("stuck")).toBe(false);
   expect(needsYou("yourTurn")).toBe(true);
 });

@@ -1,6 +1,11 @@
-import { OFFER_REFUSALS, OFFER_SIDE_LIMIT, type OfferRefusal } from "@repo/api/schemas/offer";
+import {
+  CANCEL_ASK_WAIT_HOURS,
+  OFFER_REFUSALS,
+  OFFER_SIDE_LIMIT,
+  type OfferRefusal,
+} from "@repo/api/schemas/offer";
 
-import { refusalText as chatRefusalText } from "@/features/chat/format";
+import { refusalText as chatRefusalText, untilLabel } from "@/features/chat/format";
 import { errorReason } from "@/lib/orpc-error";
 import { m } from "@/paraglide/messages";
 
@@ -75,6 +80,14 @@ export function offerRefusalText(refusal: OfferRefusalInfo, named: string) {
       return m.offer_refused_rating_closed();
     case "links_changed":
       return m.offer_refused_links_changed();
+    case "cancel_asked":
+      return m.offer_refused_cancel_asked();
+    case "cancel_wait":
+      return refusal.retryAt
+        ? m.offer_refused_cancel_wait({ date: untilLabel(refusal.retryAt) })
+        : m.offer_refused_cancel_wait_soon({ hours: CANCEL_ASK_WAIT_HOURS });
+    case "no_cancel_request":
+      return m.offer_refused_no_cancel_request();
     case "no_address":
     case "self":
     case "not_accepting":

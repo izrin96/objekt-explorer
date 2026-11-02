@@ -3,6 +3,7 @@ import {
   CheckIcon,
   ClockIcon,
   FlagIcon,
+  HandshakeIcon,
   MinusIcon,
   PaperPlaneTiltIcon,
   type Icon,
@@ -23,11 +24,13 @@ import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
 
+import { AnswerCancelActions, WithdrawCancel } from "./cancel-trade";
 import { itemLabel, leftLabel, shortDate } from "./format";
 import { MakeOfferButton } from "./make-offer-button";
 import { AwayHint } from "./mark-received";
 import { type Leg, type NextStep, tradeEnd } from "./next-step";
 import {
+  askCancelText,
   deadlineText,
   endedText,
   noteText,
@@ -47,6 +50,8 @@ const ICONS: Record<NextStep["kind"], Icon> = {
   completed: CheckIcon,
   failed: XIcon,
   cancelled: MinusIcon,
+  theyAskCancel: HandshakeIcon,
+  youAskCancel: HandshakeIcon,
   youDecide: WarningIcon,
   yourTurn: PaperPlaneTiltIcon,
   stuck: WarningIcon,
@@ -137,6 +142,17 @@ export function NextStepBanner({
             />
           ) : null,
         };
+      case "theyAskCancel":
+        return {
+          ...askCancelText(step.kind, name),
+          actions: (
+            <span className="contents max-sm:hidden">
+              <AnswerCancelActions trade={trade} />
+            </span>
+          ),
+        };
+      case "youAskCancel":
+        return { ...askCancelText(step.kind, name), actions: <WithdrawCancel trade={trade} /> };
       case "youDecide": {
         const sent = <Serial serial={step.copy.serial} estimated={step.copy.serialEstimated} />;
         const asked = <Serial serial={step.leg.serial} estimated={step.leg.serialEstimated} />;

@@ -25,6 +25,11 @@ describe("notificationTone", () => {
     });
   });
 
+  test("a request to cancel is an amber warning sign, and its decline stays neutral", () => {
+    expect(notificationTone(trade("cancel_asked"))).toEqual({ icon: "warning", tone: "warning" });
+    expect(notificationTone(trade("cancel_declined"))).toEqual({ icon: "arrow", tone: "neutral" });
+  });
+
   test("a wrong copy due tomorrow is an amber clock", () => {
     expect(notificationTone(trade("wrong_copy_due"))).toEqual({ icon: "clock", tone: "warning" });
   });

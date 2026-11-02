@@ -201,14 +201,21 @@ export function tradeNotificationText(payload: TradePayload, partner = payload.p
       return m.notification_trade_leg_confirmed(params);
     case "completed":
       return m.notification_trade_completed(params);
+    case "cancel_asked":
+      return m.notification_trade_cancel_asked(params);
+    case "cancel_declined":
+      return m.notification_trade_cancel_declined(params);
     case "cancelled":
+      if (payload.reason === "agreed") return m.notification_trade_cancelled_agreed(params);
       return payload.reason === "party"
         ? m.notification_offer_trade_cancelled(params)
         : payload.reason === "expired"
           ? m.notification_trade_cancelled_expired({ ...params, days: TRADE_EXPIRE_DAYS })
           : payload.reason === "not_transferable"
             ? m.notification_trade_cancelled_not_transferable(params)
-            : m.notification_trade_cancelled_moved(params);
+            : payload.reason === "token_moved"
+              ? m.notification_trade_cancelled_moved(params)
+              : m.notification_trade_cancelled(params);
     case "failed":
       return payload.reason === "expired"
         ? m.notification_trade_failed_expired({ ...params, days: TRADE_EXPIRE_DAYS })

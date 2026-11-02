@@ -73,4 +73,10 @@ export const relations = defineRelations(schema, (r) => ({
       to: r.tradeLeg.id,
     }),
   },
+  tradeCancelRequest: {
+    trade: r.one.trade({
+      from: r.tradeCancelRequest.tradeId,
+      to: r.trade.id,
+    }),
+  },
 }));

@@ -457,7 +457,10 @@ export const conversationRowSchema = z.object({
   muted: muteStateSchema,
   /** the partner's messages since the viewer last read, capped at `UNREAD_COUNT_CAP`; 0 in Requests */
   unreadCount: z.number().default(0),
-  /** defaults keep an event published by the previous build parsing */
-  deal: dealSchema.nullable().default(null),
+  /**
+   * defaults keep an event published by the previous build parsing; `catch` keeps a deal state
+   * from a newer build from failing the whole event, which a tab would otherwise drop
+   */
+  deal: dealSchema.nullable().default(null).catch(null),
 });
 export type ConversationRow = z.infer<typeof conversationRowSchema>;

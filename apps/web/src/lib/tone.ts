@@ -63,6 +63,8 @@ export const STEP_TONE = {
   completed: "success",
   failed: "destructive",
   cancelled: "neutral",
+  theyAskCancel: "warning",
+  youAskCancel: "warning",
   youDecide: "warning",
   yourTurn: "progress",
   stuck: "warning",

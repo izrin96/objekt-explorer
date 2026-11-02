@@ -4,6 +4,8 @@ import * as z from "zod";
 export const DEAL_STATES = [
   "waitingYou",
   "waitingThem",
+  "theyAskCancel",
+  "youAskCancel",
   "youDecide",
   "yourTurn",
   "theirTurn",
@@ -17,6 +19,7 @@ export type DealState = (typeof DEAL_STATES)[number];
 /** What the Inbox's Needs you lists; `needsYouSql` (services/chat/deal.ts) is the SQL twin. */
 export const NEEDS_YOU_STATES = [
   "waitingYou",
+  "theyAskCancel",
   "youDecide",
   "yourTurn",
 ] as const satisfies readonly DealState[];
@@ -58,6 +61,8 @@ export type DealRow = {
     /** the viewer may rate now (`rateRefusal`) and has not */
     rateable: boolean;
     rateUntil: string | null;
+    /** who asked to cancel, while a request is open on a trade in progress */
+    cancelAsk: "you" | "them" | null;
   } | null;
 };
 
@@ -65,6 +70,8 @@ export const needsYou = (state: DealState) =>
   (NEEDS_YOU_STATES as readonly DealState[]).includes(state);
 
 const tradeState = (t: NonNullable<DealRow["trade"]>): DealState => {
+  if (t.cancelAsk === "them") return "theyAskCancel";
+  if (t.cancelAsk === "you") return "youAskCancel";
   if (t.toDecide > 0) return "youDecide";
   if (t.sendable > 0) return "yourTurn";
   if (t.owed === 0) return "theirTurn";

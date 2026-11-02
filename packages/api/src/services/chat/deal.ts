@@ -20,8 +20,9 @@ const pendingCopy = sql`EXISTS (
 
 /**
  * Something in conversation `c` waits on `me`: an open offer sent to them, or a running trade
- * holding a different copy for them to decide on or a leg they can send. The SQL twin of
- * `NEEDS_YOU_STATES`.
+ * whose partner asked to cancel it, or, with no request to cancel open (which outranks them, as
+ * in `dealOf`), holding a different copy for them to decide on or a leg they can send. The SQL
+ * twin of `NEEDS_YOU_STATES`.
  */
 export const needsYouSql = (me: string) => sql`EXISTS (
   SELECT 1 FROM offer o
@@ -29,6 +30,12 @@ export const needsYouSql = (me: string) => sql`EXISTS (
   WHERE o.conversation_id = c.id
     AND ((o.status = 'open' AND o.expires_at > now() AND o.to_user_id = ${me})
     OR (t.status = 'in_progress' AND EXISTS (
+      SELECT 1 FROM trade_cancel_request r
+      WHERE r.trade_id = t.id AND r.status = 'pending' AND r.asked_by <> ${me}
+    ))
+    OR (t.status = 'in_progress' AND NOT EXISTS (
+      SELECT 1 FROM trade_cancel_request r WHERE r.trade_id = t.id AND r.status = 'pending'
+    ) AND EXISTS (
       SELECT 1 FROM trade_leg l
       WHERE l.trade_id = t.id AND l.open AND l.verified_at IS NULL
         AND (
@@ -60,6 +67,7 @@ type DealSqlRow = {
   me_unverified: boolean | null;
   partner_unverified: boolean | null;
   rated: boolean | null;
+  cancel_ask: "you" | "them" | null;
 };
 
 /**
@@ -83,7 +91,13 @@ export async function readDeals(me: string, conversationIds: number[]) {
         t.user_a,
         t.user_b,
         t.accepted_at::text AS accepted_at,
-        t.ended_at::text AS ended_at
+        t.ended_at::text AS ended_at,
+        -- a pending request counts only while its trade runs
+        CASE WHEN t.status = 'in_progress' THEN (
+          SELECT CASE WHEN r.asked_by = ${me} THEN 'you' ELSE 'them' END
+          FROM trade_cancel_request r
+          WHERE r.trade_id = t.id AND r.status = 'pending'
+        ) END AS cancel_ask
       FROM offer o
       LEFT JOIN trade t ON t.offer_id = o.id
       WHERE o.conversation_id = ANY(${sql.param(conversationIds)}::int[])
@@ -144,6 +158,7 @@ export async function readDeals(me: string, conversationIds: number[]) {
               sendable: row.sendable ?? 0,
               stuck: row.stuck ?? 0,
               toDecide: row.to_decide ?? 0,
+              cancelAsk: row.cancel_ask,
               ...rating(me, row, now),
             },
     });

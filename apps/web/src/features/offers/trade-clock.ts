@@ -1,4 +1,5 @@
 import {
+  type CancelRequestView,
   REMIND_AFTER_HOURS,
   REPORT_AFTER_DAYS,
   type TradeView as Trade,
@@ -31,13 +32,21 @@ export type TimelineRow =
   | { kind: "confirmed"; at: string | null; when: When; leg: Leg }
   | { kind: "copyArrived"; at: string; when: When; leg: Leg; copy: Copy; txHash: string }
   | { kind: "copyDue"; at: string; when: When; leg: Leg; copy: Copy }
+  /** a request to cancel, with how it was answered */
+  | {
+      kind: "cancelAsked";
+      at: string;
+      when: When;
+      byYou: boolean;
+      status: CancelRequestView["status"];
+    }
   | { kind: "reminder"; at: string; when: When }
   | { kind: "report"; at: string; when: When }
   | { kind: "today"; at: string; when: "today" }
   | { kind: "ends"; at: string; when: When; outcome: Outcome }
   /** undated, always last while in progress */
   | { kind: "rate"; at: null; when: "future" }
-  | { kind: "end"; at: string | null; when: "past"; outcome: Outcome }
+  | { kind: "end"; at: string | null; when: "past"; outcome: Outcome | "agreed" }
   | { kind: "rateCloses"; at: string; when: When };
 
 /** Rows at the same instant keep this order. */
@@ -49,6 +58,7 @@ const ORDER: TimelineRow["kind"][] = [
   "confirmed",
   "copyArrived",
   "copyDue",
+  "cancelAsked",
   "reminder",
   "report",
   "ends",
@@ -151,6 +161,15 @@ export function timelineRows(
     }
   }
   rows.push(...(fold ? foldSent(sent, trade.legs) : sent));
+  for (const request of trade.cancelRequests) {
+    rows.push({
+      kind: "cancelAsked",
+      at: request.at,
+      when: when(request.at),
+      byYou: request.byYou,
+      status: request.status,
+    });
+  }
   if (live) {
     const accepted = ms(trade.acceptedAt);
     const reminder = iso(accepted + REMIND_AFTER_HOURS * HOUR_MS);
@@ -173,7 +192,12 @@ export function timelineRows(
     return rates ? [...rows, { kind: "rate", at: null, when: "future" }] : rows;
   }
 
-  rows.push({ kind: "end", at: trade.endedAt, when: "past", outcome: trade.status as Outcome });
+  rows.push({
+    kind: "end",
+    at: trade.endedAt,
+    when: "past",
+    outcome: trade.cancelReason === "agreed" ? "agreed" : (trade.status as Outcome),
+  });
   const { deadline } = nextStep(trade, now);
   if (deadline.kind === "rateBy" || deadline.kind === "rateUntil") {
     rows.push({ kind: "rateCloses", at: deadline.at, when: when(deadline.at) });
