@@ -3,7 +3,7 @@ import { MAX_USER_SEARCH_LENGTH } from "@repo/api/schemas/user";
 import type { CosmoPublicUser } from "@repo/cosmo/types/user";
 import { truncateAddress } from "@repo/lib/address";
 import { useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo } from "react";
+import { useEffect, useEffectEvent, useMemo } from "react";
 
 import {
   Command,
@@ -98,17 +98,18 @@ export function NavSearch({
   const clearRecent = useUserSearchStore((s) => s.clearAll);
   const navigate = useNavigate();
 
+  const onKey = useEffectEvent((e: KeyboardEvent) => {
+    // autofill fires a keydown with no `key`
+    if ((e.metaKey || e.ctrlKey) && e.key?.toLowerCase() === "k") {
+      e.preventDefault();
+      onOpenChange(!open);
+    }
+  });
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      // autofill fires a keydown with no `key`
-      if ((e.metaKey || e.ctrlKey) && e.key?.toLowerCase() === "k") {
-        e.preventDefault();
-        onOpenChange(!open);
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [open, onOpenChange]);
+    const listener = (e: KeyboardEvent) => onKey(e);
+    window.addEventListener("keydown", listener);
+    return () => window.removeEventListener("keydown", listener);
+  }, []);
 
   const groups = useMemo<Group[]>(() => {
     if (trimmed === "") {

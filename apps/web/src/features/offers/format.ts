@@ -13,6 +13,7 @@ import {
 import { untilLabel } from "@/features/chat/format";
 import { collectionName } from "@/features/objekt/objekt-label";
 import { formatCurrency } from "@/features/settings/use-currency";
+import { intlCached } from "@/lib/intl-cache";
 import { joinList } from "@/lib/text";
 import { relativeTime } from "@/lib/time";
 import { m } from "@/paraglide/messages";
@@ -250,21 +251,28 @@ export function tradeNotificationText(payload: TradePayload, partner = payload.p
   }
 }
 
+const shortDates = new Map<string, Intl.DateTimeFormat>();
+const leftUnits = new Map<string, Intl.NumberFormat>();
+
 /** "Oct 22", in the viewer's zone, so it waits for the client. */
 export function shortDate(iso: string) {
-  return new Intl.DateTimeFormat(getLocale(), { month: "short", day: "numeric" }).format(
-    new Date(iso),
-  );
+  const locale = getLocale();
+  return intlCached(
+    shortDates,
+    locale,
+    () => new Intl.DateTimeFormat(locale, { month: "short", day: "numeric" }),
+  ).format(new Date(iso));
 }
 
 /** "5 days" or "3 hours" until `iso`. */
 export function leftLabel(iso: string, now: number) {
   const { unit, value } = timeLeft(iso, now);
-  return new Intl.NumberFormat(getLocale(), {
-    style: "unit",
-    unit,
-    unitDisplay: "long",
-  }).format(value);
+  const locale = getLocale();
+  return intlCached(
+    leftUnits,
+    `${locale}|${unit}`,
+    () => new Intl.NumberFormat(locale, { style: "unit", unit, unitDisplay: "long" }),
+  ).format(value);
 }
 
 export function progressText(verified: number, total: number) {

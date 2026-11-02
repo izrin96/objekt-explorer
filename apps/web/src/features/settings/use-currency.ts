@@ -2,6 +2,7 @@ import { normalizeCurrency } from "@repo/lib/currency";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 
+import { intlCached } from "@/lib/intl-cache";
 import { orpc } from "@/lib/orpc";
 import { getLocale } from "@/paraglide/runtime";
 import { useSettings } from "@/stores/settings";
@@ -29,10 +30,18 @@ export function formatCurrency(amount: number, code: string): string {
   }
 }
 
+const currencyNames = new Map<string, Intl.DisplayNames>();
+
 /** Falls back to the code itself where the runtime has no display name for it. */
 export function currencyName(code: string): string {
   try {
-    return new Intl.DisplayNames(getLocale(), { type: "currency" }).of(code) ?? code;
+    const locale = getLocale();
+    const names = intlCached(
+      currencyNames,
+      locale,
+      () => new Intl.DisplayNames(locale, { type: "currency" }),
+    );
+    return names.of(code) ?? code;
   } catch {
     return code;
   }

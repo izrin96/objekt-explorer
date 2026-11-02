@@ -3,7 +3,7 @@ import { type CandidateItem, OFFER_SIDE_LIMIT, type PartnerList } from "@repo/ap
 import type { PickerTag } from "@repo/api/schemas/trade";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { type ReactNode, useId, useState } from "react";
+import { type ReactNode, useId, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -114,14 +114,14 @@ function PickerBody({
   onDone: (picks: OfferPick[], collections: Collections) => void;
 }) {
   const [selection, setSelection] = useState(() => new Map(picked.map((p) => [p.key, p])));
-  const [seen, setSeen] = useState<Record<string, ValidObjekt>>({});
+  const seen = useRef<Record<string, ValidObjekt>>({});
   const total = totalOf(selection.values());
   const full = total >= OFFER_SIDE_LIMIT;
   const fullId = useId();
 
   const remember = (item: CandidateItem, collections: Collections) => {
     const collection = collections[item.collectionSlug];
-    if (collection) setSeen((current) => ({ ...current, [item.collectionSlug]: collection }));
+    if (collection) seen.current[item.collectionSlug] = collection;
   };
 
   // an any-copy item asks for as many copies as they spare, bar those picked by serial
@@ -191,7 +191,7 @@ function PickerBody({
           ) : null}
         </p>
         <SheetClose render={<Button variant="outline" />}>{m.common_modal_cancel()}</SheetClose>
-        <Button onClick={() => onDone([...selection.values()], seen)}>
+        <Button onClick={() => onDone([...selection.values()], { ...seen.current })}>
           {m.offer_picker_done()}
         </Button>
       </SheetFooter>

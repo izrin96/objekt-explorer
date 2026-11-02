@@ -3,6 +3,7 @@ import { CHAT_REFUSALS } from "@repo/api/schemas/chat";
 import { normalizeCurrency } from "@repo/lib/currency";
 
 import { formatCurrency } from "@/features/settings/use-currency";
+import { intlCached as cached } from "@/lib/intl-cache";
 import { errorReason } from "@/lib/orpc-error";
 import { relativeTime } from "@/lib/time";
 import { m } from "@/paraglide/messages";
@@ -17,15 +18,6 @@ const untilFormats = new Map<string, Intl.DateTimeFormat>();
 const timeFormats = new Map<string, Intl.DateTimeFormat>();
 const dayFormats = new Map<string, Intl.DateTimeFormat>();
 const secondFormats = new Map<string, Intl.RelativeTimeFormat>();
-
-function cached<T>(cache: Map<string, T>, locale: string, build: () => T): T {
-  let formatter = cache.get(locale);
-  if (formatter === undefined) {
-    formatter = build();
-    cache.set(locale, formatter);
-  }
-  return formatter;
-}
 
 /** A date and time in the viewer's zone, for an end that may be days away. */
 export function untilLabel(iso: string) {

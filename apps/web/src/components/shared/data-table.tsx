@@ -1,6 +1,5 @@
 import { createContext, type ReactNode, use } from "react";
 
-import { activateOnKey } from "@/lib/a11y";
 import { cn } from "@/lib/utils";
 
 /**
@@ -62,44 +61,16 @@ export function DataTableHead({ children }: { children: ReactNode }) {
   );
 }
 
-/**
- * `onActivate` makes the whole row the control, which only works for a row with
- * nothing interactive of its own — a link inside a button is invalid.
- */
-export function DataTableRow({
-  onActivate,
-  className,
-  children,
-}: {
-  onActivate?: () => void;
-  className?: string;
-  children: ReactNode;
-}) {
+export function DataTableRow({ className, children }: { className?: string; children: ReactNode }) {
   const { columns, minWidth } = useTableShape();
-  const shared = cn(
-    "grid h-11 items-center gap-3 border-t px-3.5 text-sm first:border-t-0",
-    columns,
-    minWidth,
-    className,
-  );
-
-  if (!onActivate) {
-    return (
-      <div role="row" className={shared}>
-        {children}
-      </div>
-    );
-  }
-
   return (
     <div
-      role="button"
-      tabIndex={0}
-      onClick={onActivate}
-      onKeyDown={(e) => activateOnKey(e, onActivate)}
+      role="row"
       className={cn(
-        shared,
-        "hover:bg-secondary/50 focus-visible:ring-ring cursor-pointer outline-none focus-visible:ring-2 focus-visible:-outline-offset-2 focus-visible:ring-inset",
+        "grid h-11 items-center gap-3 border-t px-3.5 text-sm first:border-t-0",
+        columns,
+        minWidth,
+        className,
       )}
     >
       {children}

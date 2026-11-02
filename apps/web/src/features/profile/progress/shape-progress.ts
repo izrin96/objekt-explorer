@@ -115,13 +115,13 @@ export function shapeProgress(
   { compareMember, compareSeason, compareClass, memberColor }: Comparators,
 ): MemberSeason[] {
   const sections = new Map<string, Map<string, ValidObjekt[]>>();
+  const selected = new Set(selectedMembers);
 
   for (const objekt of catalogue) {
     if (!isMeasuredClass(objekt)) continue;
 
-    const matched = selectedMembers?.length
-      ? objekt.members.filter((member) => selectedMembers.includes(member))
-      : [];
+    const matched =
+      selected.size > 0 ? objekt.members.filter((member) => selected.has(member)) : [];
     const members = matched.length > 0 ? matched : [objekt.member];
 
     for (const member of members) {

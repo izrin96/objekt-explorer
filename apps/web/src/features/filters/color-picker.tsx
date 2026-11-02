@@ -1,4 +1,5 @@
 import { CopyIcon, EyedropperIcon } from "@phosphor-icons/react";
+import { useHydrated } from "@tanstack/react-router";
 import { useId, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -21,7 +22,6 @@ import { m } from "@/paraglide/messages";
 type EyeDropperConstructor = new () => { open: () => Promise<{ sRGBHex: string }> };
 
 function getEyeDropper(): EyeDropperConstructor | null {
-  if (typeof window === "undefined") return null;
   return (window as { EyeDropper?: EyeDropperConstructor }).EyeDropper ?? null;
 }
 
@@ -48,7 +48,8 @@ function IconAction({
 
 function HexField({ onValueChange }: { onValueChange: (hex: string) => void }) {
   const { hex, setHex } = useColorPicker();
-  const eyeDropper = getEyeDropper();
+  // the server has no EyeDropper, so the button joins after hydration to keep both renders equal
+  const eyeDropper = useHydrated() ? getEyeDropper() : null;
 
   // the picker drops a colour equal to the one it shows, so with no filter set, typing or
   // eyedropping that colour would apply nothing; send it on directly instead

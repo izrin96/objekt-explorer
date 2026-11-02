@@ -22,6 +22,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { priceHistoryOptions } from "@/features/objekt/queries";
 import { useCurrency } from "@/features/settings/use-currency";
+import { intlCached } from "@/lib/intl-cache";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
 
@@ -38,6 +39,23 @@ const RANGE_LABEL: Record<PriceHistoryRange, () => string> = {
 
 const isRange = (value: string): value is PriceHistoryRange =>
   PRICE_HISTORY_RANGES.some((range) => range === value);
+
+const compactPrices = new Map<string, Intl.NumberFormat>();
+
+function compactPrice(value: number, currency: string) {
+  const locale = getLocale();
+  return intlCached(
+    compactPrices,
+    `${locale}|${currency}`,
+    () =>
+      new Intl.NumberFormat(locale, {
+        style: "currency",
+        currency,
+        notation: "compact",
+        maximumFractionDigits: 2,
+      }),
+  ).format(value);
+}
 
 export function PriceHistoryChart({
   slug,
@@ -119,14 +137,7 @@ export function PriceHistoryChart({
               domain={[0, "auto"]}
               // a flat series tops out on its highest tick; room above keeps the line off the edge
               padding={{ top: 12 }}
-              tickFormatter={(value: number) =>
-                new Intl.NumberFormat(getLocale(), {
-                  style: "currency",
-                  currency,
-                  notation: "compact",
-                  maximumFractionDigits: 2,
-                }).format(value)
-              }
+              tickFormatter={(value: number) => compactPrice(value, currency)}
             />
             <YAxis
               yAxisId="count"

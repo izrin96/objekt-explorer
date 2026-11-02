@@ -11,7 +11,7 @@ import type { ValidArtist } from "@repo/cosmo/types/common";
 import type { CosmoPublicUser } from "@repo/cosmo/types/user";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { type ReactNode, useEffect, useState } from "react";
+import { type ReactNode, useEffect, useEffectEvent, useState } from "react";
 
 import {
   Autocomplete,
@@ -434,16 +434,17 @@ function VerifyStep({
 function Countdown({ expiresInMs, onExpire }: { expiresInMs: number; onExpire: () => void }) {
   const [deadline] = useState(() => Date.now() + expiresInMs);
   const [remaining, setRemaining] = useState(expiresInMs);
+  const expire = useEffectEvent(onExpire);
 
   useEffect(() => {
     // read the clock rather than decrementing, so a backgrounded tab catches up
     const id = setInterval(() => {
       const next = Math.max(deadline - Date.now(), 0);
       setRemaining(next);
-      if (next <= 0) onExpire();
+      if (next <= 0) expire();
     }, 500);
     return () => clearInterval(id);
-  }, [deadline, onExpire]);
+  }, [deadline]);
 
   const seconds = Math.ceil(remaining / 1000);
   const countdown = `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(

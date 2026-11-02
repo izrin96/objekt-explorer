@@ -1,16 +1,25 @@
 import { CaretDownIcon, CaretUpIcon } from "@phosphor-icons/react";
 
+import { intlCached } from "@/lib/intl-cache";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
 
+const percents = new Map<string, Intl.NumberFormat>();
+
 /** `change` is a fraction: 0.2 reads as 20.0%. */
 export function PriceDelta({ change }: { change: number }) {
-  const percent = new Intl.NumberFormat(getLocale(), {
-    style: "percent",
-    minimumFractionDigits: 1,
-    maximumFractionDigits: 1,
-  }).format(Math.abs(change));
+  const locale = getLocale();
+  const percent = intlCached(
+    percents,
+    locale,
+    () =>
+      new Intl.NumberFormat(locale, {
+        style: "percent",
+        minimumFractionDigits: 1,
+        maximumFractionDigits: 1,
+      }),
+  ).format(Math.abs(change));
   const up = change > 0;
   const down = change < 0;
 
