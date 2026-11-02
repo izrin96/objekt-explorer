@@ -113,6 +113,8 @@ export const objekts = pgTable(
       table.collectionId.asc().nullsLast(),
       table.owner.asc().nullsLast(),
     ),
+    // in prod as `(collection_id) INCLUDE (id, serial, minted_at)`; Drizzle cannot express INCLUDE
+    index("idx_objekt_collection_cover").using("btree", table.collectionId.asc().nullsLast()),
     index("idx_objekt_collection_serial").using(
       "btree",
       table.collectionId.asc().nullsLast(),
