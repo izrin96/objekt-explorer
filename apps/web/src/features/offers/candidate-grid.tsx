@@ -7,8 +7,8 @@ import { type ReactNode, createContext, use } from "react";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Button } from "@/components/ui/button";
 import { searchMatcher } from "@/features/filters/filter-utils";
+import { CardGridSkeleton } from "@/features/objekt/card-grid";
 import { mapObjektWithTag } from "@/features/objekt/objekt-utils";
-import { PhotocardSkeleton } from "@/features/objekt/photocard-skeleton";
 import { VirtualCardGrid } from "@/features/objekt/virtual-card-grid";
 import { isRefusalError, refusalText } from "@/lib/refusal";
 import { m } from "@/paraglide/messages";
@@ -90,13 +90,7 @@ export function CandidateGrid({
 }) {
   const { isSelected, countOf, copiesOf, full, fullId, onToggle, onCount } = usePickerSelection();
   if (pending) {
-    return (
-      <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
-        {[0, 1, 2, 3, 4].map((i) => (
-          <PhotocardSkeleton key={i} />
-        ))}
-      </div>
-    );
+    return <CardGridSkeleton />;
   }
   if (error) {
     if (error.text) {

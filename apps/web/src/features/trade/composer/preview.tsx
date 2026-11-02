@@ -142,7 +142,9 @@ export function ComposerPreview({
           className={
             sheet?.view === "add"
               ? "h-[88dvh] max-sm:h-[calc(100dvh-(--spacing(12)))]"
-              : "sm:max-w-lg"
+              : sheet?.view === "all"
+                ? "sm:max-w-3xl"
+                : "sm:max-w-lg"
           }
           finalFocus={opener}
         >

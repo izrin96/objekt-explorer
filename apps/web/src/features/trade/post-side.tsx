@@ -18,7 +18,7 @@ import { MatchedListsChip } from "./matched-lists";
 import { type NearOpen, nearCountText, nearRingText, type OpenObjekt } from "./near";
 import type { PersonPostData, PostSideData } from "./post-types";
 import { RuleTiles } from "./rule-tile";
-import { SideItemsDialog } from "./side-items-dialog";
+import { SideItemsSheet } from "./side-items-sheet";
 import { fitCount, hiddenCopies } from "./strip-fit";
 import { NEAR_RING, RING, SlugTile, TILE } from "./thumb-grid";
 
@@ -330,7 +330,7 @@ export function SideStrip({
   narrowed: boolean;
   collections: Readonly<Record<string, ValidObjekt | undefined>>;
   onOpen: OpenObjekt;
-  /** the "+N" tile opens the side's whole list, in the dialog the post keeps */
+  /** the "+N" tile opens the side's whole list, in the sheet the post keeps */
   onShowAll: () => void;
   /** the viewer's own post: a ratio reads "You ask" */
   owner?: boolean;
@@ -422,7 +422,7 @@ export function SideStrip({
         }
         collections={collections}
         onOpen={onOpen}
-        // the rest of the list in a dialog, so a phone that fits few tiles can still see them all
+        // the rest of the list in a sheet, so a phone that fits few tiles can still see them all
         more={(count) => (
           <button
             type="button"
@@ -472,7 +472,7 @@ export function SideAllDialog({
   owner?: boolean;
 }) {
   return (
-    <SideItemsDialog
+    <SideItemsSheet
       side={side}
       narrowed={narrowed}
       open={open}
@@ -482,7 +482,7 @@ export function SideAllDialog({
       owner={owner}
       rules={
         side.rules.length > 0 ? (
-          // the objekt view is a modal of its own, so the dialog gives way to it
+          // the objekt view is a modal of its own, so the sheet gives way to it
           <RuleTiles
             tiles={side.rules}
             collections={collections}

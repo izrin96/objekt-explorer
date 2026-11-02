@@ -37,7 +37,7 @@ import { PersonRow, PersonRowSkeleton } from "./person-row-view";
 import { usePlanLists } from "./post-plan";
 import { peopleOptions } from "./queries";
 import { sharePreview } from "./share-preview";
-import { SideCompareContext } from "./side-items-dialog";
+import { SideCompareContext } from "./side-items-sheet";
 
 /** a person page counts against all of the viewer's lists, as Browse does */
 const NO_COMPARE = { list: undefined, mutual: false };

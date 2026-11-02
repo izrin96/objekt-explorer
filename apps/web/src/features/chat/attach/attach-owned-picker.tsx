@@ -15,6 +15,7 @@ import {
   toFilterSearch,
 } from "@/features/filters/picker-filter-bar";
 import { SingleSelect } from "@/features/filters/single-select";
+import { CardGridSkeleton } from "@/features/objekt/card-grid";
 import { ObjektCard } from "@/features/objekt/objekt-card";
 import { isObjektOwned } from "@/features/objekt/objekt-utils";
 import { VirtualCardGrid } from "@/features/objekt/virtual-card-grid";
@@ -24,7 +25,7 @@ import { useLoadAllPages } from "@/hooks/use-load-all-pages";
 import { displayNickname } from "@/lib/address";
 import { m } from "@/paraglide/messages";
 
-import { GridSkeleton, LoadError } from "./attach-picker-parts";
+import { LoadError } from "./attach-picker-parts";
 
 export function OwnedPicker({ onPick }: { onPick: (attachment: Attachment) => void }) {
   const profiles = useUserProfiles();
@@ -88,7 +89,7 @@ function OwnedGrid({
   const filtering = pickerFiltered(filters);
   useLoadAllPages(filtering, query);
 
-  if (query.isPending) return <GridSkeleton />;
+  if (query.isPending) return <CardGridSkeleton />;
   const all = query.data?.pages.flatMap((page) => page.objekts) ?? [];
   if (all.length === 0) {
     if (query.isError) return <LoadError onRetry={() => void query.refetch()} />;

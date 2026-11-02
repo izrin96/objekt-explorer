@@ -45,7 +45,7 @@ import { PersonRow, PersonRowSkeleton } from "./person-row-view";
 import { usePlanLists } from "./post-plan";
 import type { PersonData } from "./post-types";
 import { hiddenPartnersOptions, peopleOptions } from "./queries";
-import { SideCompareContext } from "./side-items-dialog";
+import { SideCompareContext } from "./side-items-sheet";
 import { tagText } from "./tag-label";
 
 type PostType = NonNullable<FeedSearch["type"]> | "all";

@@ -2,16 +2,14 @@ import type { ReactNode } from "react";
 import { VList } from "virtua";
 
 import { InfiniteSentinel } from "@/components/shared/infinite-sentinel";
-import { useElementSize } from "@/hooks/use-element-size";
 import { m } from "@/paraglide/messages";
+
+import { useCardColumns } from "./card-grid";
 
 type Row<T> =
   | { type: "title"; key: string; title: string }
   | { type: "row"; key: string; items: T[] }
   | { type: "more"; key: string };
-
-/** Card width the grid aims for; the column count follows the container's width. */
-const CELL_PX = 112;
 
 /**
  * A card grid virtualised by row inside a fixed-height container, such as a dialog's body.
@@ -28,8 +26,7 @@ export function VirtualCardGrid<T>({
   renderItem: (item: T) => ReactNode;
   more?: { has: boolean; loading: boolean; failed: boolean; load: () => void };
 }) {
-  const [ref, { width }] = useElementSize<HTMLDivElement>();
-  const columns = Math.max(3, Math.floor(width / CELL_PX));
+  const { ref, measured, columns } = useCardColumns<HTMLDivElement>();
 
   const rows: Row<T>[] = [];
   for (const [index, section] of sections.entries()) {
@@ -43,7 +40,7 @@ export function VirtualCardGrid<T>({
 
   return (
     <div ref={ref} className="min-h-0 flex-1">
-      {width > 0 ? (
+      {measured ? (
         <VList data={rows} style={{ height: "100%" }} className="overscroll-contain">
           {(row) =>
             row.type === "title" ? (

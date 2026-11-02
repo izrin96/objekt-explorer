@@ -12,7 +12,7 @@ import { Popover, PopoverPopup, PopoverTrigger } from "@/components/ui/popover";
 import { SheetClose, SheetDescription, SheetTitle } from "@/components/ui/sheet";
 import { toastManager } from "@/components/ui/toast";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
-import { GridSkeleton, LoadError } from "@/features/chat/attach/attach-picker-parts";
+import { LoadError } from "@/features/chat/attach/attach-picker-parts";
 import { filterObjekts } from "@/features/filters/filter-utils";
 import {
   NO_PICKER_FILTERS,
@@ -26,6 +26,7 @@ import { addedToast, profileLabel } from "@/features/list/add-to-list-text";
 import type { StoredList } from "@/features/list/list-draft";
 import { PriceFields, type PriceValue } from "@/features/list/price-fields";
 import { listFindOptions } from "@/features/list/queries";
+import { CardGridSkeleton } from "@/features/objekt/card-grid";
 import { ObjektCard } from "@/features/objekt/objekt-card";
 import { collectionName } from "@/features/objekt/objekt-label";
 import { isObjektOwned } from "@/features/objekt/objekt-utils";
@@ -73,7 +74,11 @@ export function AddObjektsSheet({
           <SheetTitle className="font-display pe-8 text-lg">
             {m.trade_composer_add_title({ list: name })}
           </SheetTitle>
-          {stored.isError ? <LoadError onRetry={() => void stored.refetch()} /> : <GridSkeleton />}
+          {stored.isError ? (
+            <LoadError onRetry={() => void stored.refetch()} />
+          ) : (
+            <CardGridSkeleton />
+          )}
         </>
       )}
     </div>
@@ -359,7 +364,7 @@ function OwnedGrid({ address, filters, ticked, onToggle }: GridProps & { address
   const filtering = pickerFiltered(filters);
   useLoadAllPages(filtering, query);
 
-  if (query.isPending) return <GridSkeleton />;
+  if (query.isPending) return <CardGridSkeleton />;
   const all = query.data?.pages.flatMap((page) => page.objekts) ?? [];
   if (all.length === 0) {
     if (query.isError) return <LoadError onRetry={() => void query.refetch()} />;
@@ -406,7 +411,7 @@ function CollectionGrid({ filters, ticked, onToggle }: GridProps) {
     throwOnError: false,
   });
 
-  if (query.isPending) return <GridSkeleton />;
+  if (query.isPending) return <CardGridSkeleton />;
   if (query.isError) return <LoadError onRetry={() => void query.refetch()} />;
   const all = query.data;
   if (all.length === 0) {

@@ -5,21 +5,21 @@ import { createContext, type ReactNode, type RefObject, use } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogClose,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogPanel,
-  DialogPopup,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Skeleton } from "@/components/ui/skeleton";
+  Sheet,
+  SheetClose,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetPanel,
+  SheetPopup,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { Tabs, TabsList, TabsPanel, TabsTab } from "@/components/ui/tabs";
 import { getListLinkOption } from "@/features/list/list-link";
 import { LIST_TYPE_LABEL } from "@/features/list/list-type-badge";
 import { RatioChip } from "@/features/list/ratio-chip";
 import { type RatioSide, ratioSideOf } from "@/features/list/ratio-text";
+import { CardGrid, CardGridSkeleton } from "@/features/objekt/card-grid";
 import { ObjektCard } from "@/features/objekt/objekt-card";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
@@ -29,12 +29,10 @@ import type { PostSideData } from "./post-types";
 import { sideItemsOptions } from "./queries";
 import { NEAR_RING, RING, SlugTile } from "./thumb-grid";
 
-/** For you's Compare with, as the feed sends it, so the dialog rings what the strip rings. */
+/** For you's Compare with, as the feed sends it, so the sheet rings what the strip rings. */
 export const SideCompareContext = createContext<{ list?: string; mutual: boolean }>({
   mutual: false,
 });
-
-const GRID = "grid grid-cols-4 gap-x-2 gap-y-3 sm:grid-cols-6";
 
 type SideItem = {
   entryId: number;
@@ -62,7 +60,7 @@ function SideGrid({
 }) {
   return (
     // padding gives the ring room
-    <ul className={`${GRID} p-1`}>
+    <CardGrid className="p-1">
       {items.map((item) => {
         const collection = collections[item.slug];
         const near = item.near ? nearOf?.(item.near) : undefined;
@@ -94,13 +92,13 @@ function SideGrid({
           </li>
         );
       })}
-    </ul>
+    </CardGrid>
   );
 }
 
 const KEY_SWATCH = "bg-muted inline-block h-3.5 w-2.5 shrink-0 rounded-xs outline-offset-1";
 
-/** The two rings, named, while the dialog shows a near match beside the matches. */
+/** The two rings, named, while the sheet shows a near match beside the matches. */
 function RingKey({ near }: { near: SideNear }) {
   return (
     <p className="text-muted-foreground flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
@@ -124,7 +122,7 @@ function RingKey({ near }: { near: SideNear }) {
  * the viewer outlined and first, on their own tab when there are any. A want side's rules lead it
  * as the strip's tiles, since its objekt counts leave them out.
  */
-export function SideItemsDialog({
+export function SideItemsSheet({
   side,
   narrowed,
   rules,
@@ -135,7 +133,7 @@ export function SideItemsDialog({
   owner = false,
 }: {
   side: PostSideData;
-  /** the feed's filters left objekts out of the strip; the dialog shows them all */
+  /** the feed's filters left objekts out of the strip; the sheet shows them all */
   narrowed: boolean;
   /** the side's rule tiles, as the strip draws them */
   rules?: ReactNode;
@@ -166,13 +164,13 @@ export function SideItemsDialog({
       : m.trade_list_count_you_want({ count: count.toLocaleString(getLocale()) });
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogPopup className="sm:max-w-2xl" finalFocus={finalFocus}>
-        <DialogHeader>
-          <DialogTitle className="font-display truncate">{side.list.name}</DialogTitle>
-          <DialogDescription>{LIST_TYPE_LABEL[side.role]()}</DialogDescription>
-        </DialogHeader>
-        <DialogPanel className="flex flex-col gap-3">
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetPopup side="right" className="sm:max-w-3xl" finalFocus={finalFocus}>
+        <SheetHeader>
+          <SheetTitle className="font-display truncate">{side.list.name}</SheetTitle>
+          <SheetDescription>{LIST_TYPE_LABEL[side.role]()}</SheetDescription>
+        </SheetHeader>
+        <SheetPanel className="flex flex-col gap-3">
           {/* in the panel, not the header, so a long one scrolls; the post clips it to eight lines */}
           {side.list.description ? (
             <p className="text-muted-foreground text-sm text-pretty break-words whitespace-pre-wrap">
@@ -192,11 +190,7 @@ export function SideItemsDialog({
                 </Button>
               </div>
             ) : (
-              <div className={GRID} aria-busy>
-                {Array.from({ length: 12 }, (_, i) => (
-                  <Skeleton key={i} className="rounded-photocard aspect-photocard" />
-                ))}
-              </div>
+              <CardGridSkeleton />
             )
           ) : (
             // keyed: a refetch that empties the matched tab must not leave it selected and hidden
@@ -243,14 +237,14 @@ export function SideItemsDialog({
               </TabsPanel>
             </Tabs>
           )}
-        </DialogPanel>
-        <DialogFooter>
+        </SheetPanel>
+        <SheetFooter>
           <Button variant="outline" render={<Link {...getListLinkOption(side.list)} />}>
             {m.trade_side_open_list()}
           </Button>
-          <DialogClose render={<Button variant="outline" />}>{m.common_modal_close()}</DialogClose>
-        </DialogFooter>
-      </DialogPopup>
-    </Dialog>
+          <SheetClose render={<Button variant="outline" />}>{m.common_modal_close()}</SheetClose>
+        </SheetFooter>
+      </SheetPopup>
+    </Sheet>
   );
 }

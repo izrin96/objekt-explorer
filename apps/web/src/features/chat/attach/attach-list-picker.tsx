@@ -17,12 +17,13 @@ import {
 import { SingleSelect } from "@/features/filters/single-select";
 import { listOption } from "@/features/list/list-option";
 import { listEntriesOptions } from "@/features/list/queries";
+import { CardGridSkeleton } from "@/features/objekt/card-grid";
 import { ObjektCard } from "@/features/objekt/objekt-card";
 import { VirtualCardGrid } from "@/features/objekt/virtual-card-grid";
 import { useUserLists } from "@/features/user/hooks";
 import { m } from "@/paraglide/messages";
 
-import { GridSkeleton, LoadError } from "./attach-picker-parts";
+import { LoadError } from "./attach-picker-parts";
 
 export function ListPicker({ onPick }: { onPick: (attachment: Attachment) => void }) {
   const lists = useUserLists();
@@ -80,7 +81,7 @@ function ListGrid({
 }) {
   const query = useQuery(listEntriesOptions(slug, []));
 
-  if (query.isPending) return <GridSkeleton />;
+  if (query.isPending) return <CardGridSkeleton />;
   if (query.isError) return <LoadError onRetry={() => void query.refetch()} />;
   // one card per collection: a list's collection is what the card names
   const all = [...new Map((query.data ?? []).map((entry) => [entry.slug, entry])).values()];

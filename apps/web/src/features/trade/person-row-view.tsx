@@ -38,7 +38,7 @@ import {
 import { EmptySide, isEmptySide, SideAllDialog, SideNotes, SideStrip } from "./post-side";
 import { postTime } from "./post-time";
 import type { PersonData, PersonPostData } from "./post-types";
-import { SideCompareContext } from "./side-items-dialog";
+import { SideCompareContext } from "./side-items-sheet";
 import { TagBadges } from "./tag-label";
 import { TradeActions, type TradeContact } from "./trade-actions";
 import { TradeHeader } from "./trade-header";
