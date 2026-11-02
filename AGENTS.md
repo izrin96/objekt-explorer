@@ -68,7 +68,7 @@ bun run --filter=@repo/db db:push       # Push schema directly (needs approval)
 bun run --filter=@repo/db db:studio     # Drizzle Studio
 ```
 
-The checks are `lint`, `typecheck` and `test`; `bun run check` runs all three, and CI runs each. Tests use `bun test`, sit beside the code as `*.test.ts`, and cover pure modules only: the root `.env` is production, so a test never touches the database, Redis or the Cosmo API. To test logic that lives in a hook or a job, move it into a module with no such imports (as `apps/worker/src/lib/serial-math.ts` and `apps/web/src/features/activity/live-feed.ts` do) and test that. `bun run knip` (config in `knip.json`) reports unused files, exports and dependencies. It is advisory, not a gate. Unused exports in the vendored `components/ui` files are ignored, since those files stay verbatim.
+The checks are `lint`, `typecheck` and `test`; `bun run check` runs all three in one Turbo run, and CI runs it too. Tests use `bun test`, sit beside the code as `*.test.ts`, and cover pure modules only: the root `.env` is production, so a test never touches the database, Redis or the Cosmo API. To test logic that lives in a hook or a job, move it into a module with no such imports (as `apps/worker/src/lib/serial-math.ts` and `apps/web/src/features/activity/live-feed.ts` do) and test that. `bun run knip` (config in `knip.json`) reports unused files, exports and dependencies. It is advisory, not a gate. Unused exports in the vendored `components/ui` files are ignored, since those files stay verbatim.
 
 Hooks run the checks early. lefthook (`lefthook.yml`) formats and lints staged files on commit, each package's lint from its own directory, and runs `bun run check` on push. Claude Code's hooks (`.claude/settings.json`) format each edited file, lint the turn's changed files before it ends, block database writes aimed at production, and hold an edit to a React component in `apps/web` until the agent has loaded `vercel-react-best-practices` (`require-react-skill.ts`, per session and per subagent).
 
@@ -148,7 +148,7 @@ A single root `.env`, copied from `.env.example`, is shared by every app. Packag
 
 Full list in `.env.example`.
 
-`apps/web` compiles Paraglide messages before type-checking (`typecheck` runs `paraglide:compile` first), so `src/paraglide` is generated output — never edit it by hand. Same for `src/routeTree.gen.ts`.
+`apps/web` compiles Paraglide messages into `src/paraglide`, generated output never edited by hand; same for `src/routeTree.gen.ts`. Web's `lint`, `typecheck` and `test` import it, so Turbo runs `paraglide:compile` before each (`apps/web/turbo.json`); run one of them straight from `apps/web` and `bun run paraglide:compile` comes first.
 
 ## Docker
 

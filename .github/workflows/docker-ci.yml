@@ -93,14 +93,8 @@ jobs:
       - name: Check formatting
         run: bunx oxfmt --check
 
-      - name: Run linter
-        run: bun run lint
-
-      - name: Run type checking
-        run: bun run typecheck
-
-      - name: Run tests
-        run: bun run test
+      - name: Lint, type check and test
+        run: bun run check
 
       - name: Build web
         run: bun run --filter web build:prod

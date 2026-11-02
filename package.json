@@ -46,7 +46,7 @@
     "test": "turbo run test",
     "format": "turbo run format",
     "knip": "knip",
-    "check": "bun run lint && bun run typecheck && bun run test"
+    "check": "turbo run lint typecheck test"
   },
   "devDependencies": {
     "@types/node": "^26.6.5",

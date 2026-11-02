@@ -8,8 +8,22 @@
     "build:prod": {
       "outputs": ["dist/**", ".tanstack/**"]
     },
+    "paraglide:compile": {
+      "inputs": ["project.inlang/**", "messages/**"],
+      "outputs": ["src/paraglide/**"]
+    },
     "lint": {
+      "dependsOn": ["$TURBO_EXTENDS$", "paraglide:compile"],
       "inputs": ["$TURBO_DEFAULT$", "oxlint.config.ts"]
+    },
+    "lint:fix": {
+      "dependsOn": ["$TURBO_EXTENDS$", "paraglide:compile"]
+    },
+    "typecheck": {
+      "dependsOn": ["$TURBO_EXTENDS$", "paraglide:compile"]
+    },
+    "test": {
+      "dependsOn": ["$TURBO_EXTENDS$", "paraglide:compile"]
     }
   }
 }
