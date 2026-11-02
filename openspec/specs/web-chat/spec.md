@@ -111,7 +111,7 @@ A list's page SHALL offer Message in its header, so a list reached from a shared
 - **THEN** the header has no Message button
 
 ### Requirement: Requests
-A conversation whose first message carries no objekt card SHALL appear in the recipient's Requests, not their Inbox, until they reply or accept. The recipient is whoever did not send the first message, whoever opened the conversation. Request conversations SHALL not count as unread. Declining a request SHALL archive it for the recipient without telling the sender. A conversation whose first message carries a card SHALL go straight to the Inbox.
+A conversation whose first message is not listed SHALL appear in the recipient's Requests, not their Inbox, until they reply or accept. A first message is listed when its card names one of the recipient's sale, have or want lists (every post card does), or when it is an offer that asks for something through one of the recipient's lists or gives an objekt whose collection is on one of the recipient's want lists. A general list never makes a message listed. A conversation whose first message is listed SHALL go straight to the Inbox. The recipient is whoever did not send the first message, whoever opened the conversation. Request conversations SHALL not count as unread. Declining a request SHALL archive it for the recipient without telling the sender.
 
 A conversation with no message yet SHALL be shown only to a member who opened it with Message: a member who did not SHALL get the not-found surface for it, and every request about it from that member (thread, mark read, accept, decline, archive, mute) SHALL be refused as not found. No conversation list SHALL show a conversation with no message yet as a row of its own, for either member: it joins the opener's list with its first message or offer, so a Message click that sends nothing leaves nothing in their Inbox. The one exception is the thread the opener has open: their Inbox (with no search) SHALL show it at the top as a "New message" row, until the conversation's own row replaces it, they leave the thread, or they archive it.
 
@@ -128,6 +128,46 @@ The request bar SHALL say that declining moves the conversation to Archived with
 #### Scenario: Card removed before the first message
 - **WHEN** a user activates Message on a Trade post, removes the attached card and sends "Hi"
 - **THEN** the conversation appears under Requests for the post's owner
+
+#### Scenario: Post card
+- **WHEN** a user activates Message on rin.trades's Trade row and sends "Still trading?" with the post card attached
+- **THEN** the conversation goes straight to rin.trades's Inbox
+
+#### Scenario: Market listing
+- **WHEN** a user activates Message on the #537 row of SeoYeon 204Z's Market tab, listed on kaede.k's sale list, and sends with the card attached
+- **THEN** the conversation goes straight to kaede.k's Inbox
+
+#### Scenario: Their own objekt on none of their lists
+- **WHEN** rin.trades messages kaede.k from her profile, attaches her SeoYeon 204Z #537, which is on none of her lists, and sends "sell?"
+- **THEN** the conversation appears under Requests for kaede.k, and rin.trades sees it in his Inbox as he would for any conversation he started
+
+#### Scenario: Card from the sender's own list
+- **WHEN** rin.trades messages kaede.k from her profile with a card for SeoYeon 204Z from his own sale list
+- **THEN** the conversation appears under Requests for kaede.k
+
+#### Scenario: Card from the recipient's general list
+- **WHEN** rin.trades messages kaede.k from her profile with a card for SeoYeon 204Z from her general list "favourites"
+- **THEN** the conversation appears under Requests for kaede.k
+
+#### Scenario: Offer opening a request while Messages is open
+- **WHEN** kaede.k has `/messages` open on Inbox, and an offer touching none of her lists opens a conversation with her
+- **THEN** without a reload the conversation joins Requests, not the Inbox, the Requests tab's count goes up and her Messages icon shows its dot
+
+#### Scenario: Collection card with no list
+- **WHEN** rin.trades messages kaede.k from her profile with a card naming the SeoYeon 204Z collection and no list
+- **THEN** the conversation appears under Requests for kaede.k
+
+#### Scenario: Offer through their list
+- **WHEN** a user's first message to rin.trades is an offer asking for SeoYeon 204Z #537 from his have list "doubles"
+- **THEN** the conversation goes straight to rin.trades's Inbox
+
+#### Scenario: Offer giving what they want
+- **WHEN** a user's first message to kaede.k is an offer that asks for nothing and gives HyeRin 301Z #12, a collection on kaede.k's want list
+- **THEN** the conversation goes straight to kaede.k's Inbox
+
+#### Scenario: Offer touching none of their lists
+- **WHEN** rin.trades has no lists, and a user's first message to him is an offer asking for SeoYeon 204Z #537 from his collection and giving an objekt on none of his want lists
+- **THEN** the offer is sent, and the conversation appears under Requests for rin.trades
 
 #### Scenario: The other side writes first
 - **WHEN** rin.trades opens Message on kaede.k's profile and never writes, and kaede.k later messages rin.trades with no card
@@ -442,7 +482,7 @@ When the card is narrower than about 448 px, as on a phone or beside the convers
 - **THEN** the strip names T-87, and O-266 still shows as a collapsed "Accepted" line that opens to the full card
 
 ### Requirement: Offer from the composer
-The message box's Add to message menu SHALL have Make offer, which opens the offer builder for this conversation; the deal strip offers it too while no deal is open. Both SHALL open the builder as the composer's Offer action did, with the same prefill: when the conversation's newest card is the partner's post card with a match, the builder adds that post's matches (see web-trade-offers). Both are hidden wherever the message box is hidden or replaced by a notice. A first offer sent from outside a conversation SHALL open a new conversation under the same start rules as Message, in the Inbox rather than in Requests.
+The message box's Add to message menu SHALL have Make offer, which opens the offer builder for this conversation; the deal strip offers it too while no deal is open. Both SHALL open the builder as the composer's Offer action did, with the same prefill: when the conversation's newest card is the partner's post card with a match, the builder adds that post's matches (see web-trade-offers). Both are hidden wherever the message box is hidden or replaced by a notice. A first offer sent from outside a conversation SHALL open a new conversation under the same start rules as Message, in the Inbox or in Requests as Requests decides for a first message.
 
 #### Scenario: Muted sender
 - **WHEN** the user is under a chat mute
@@ -1166,3 +1206,14 @@ A send naming a message to reply to SHALL be refused with a "can't reply to that
 #### Scenario: Another conversation
 - **WHEN** a request names a message from a conversation the sender is not reading
 - **THEN** it is refused and nothing is posted
+
+### Requirement: Accepting an offer accepts a request
+Accepting an offer in a conversation that sits in the user's Requests SHALL move the conversation to their Inbox, as a reply does. Declining the offer, or letting it expire, SHALL leave the conversation in Requests.
+
+#### Scenario: Accept from Requests
+- **WHEN** rin.trades accepts O-301, which opened a conversation under his Requests
+- **THEN** the trade starts and the conversation moves to his Inbox
+
+#### Scenario: Decline from Requests
+- **WHEN** rin.trades declines O-301 from his Requests
+- **THEN** the offer is declined and the conversation stays under Requests
