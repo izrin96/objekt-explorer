@@ -401,7 +401,11 @@ Each party SHALL be notified when, in one of their trades:
 - a leg verifies;
 - the trade completes, with a prompt to leave feedback;
 - the trade is cancelled or fails, with the reason;
-- a stall reminder is due.
+- a stall reminder is due;
+- the other party asks to cancel it (see `web-verified-trades` Ask to cancel);
+- the other party declines their request to cancel it.
+
+Withdrawing a request to cancel SHALL notify nobody.
 
 For a wrong copy (see `web-verified-trades` Wrong copy sent):
 - its notification SHALL say when it counts as accepted;
@@ -413,6 +417,18 @@ Notifications for one trade SHALL show as a single row, read or not (see Notific
 #### Scenario: Leg verified
 - **WHEN** binary.bin's transfer of HyeRin 301Z #1203 to the user is verified
 - **THEN** the bell shows "binary.bin's transfer is verified" with the chip T-1042 and "1 of 2", which opens the trade page
+
+#### Scenario: Asked to cancel
+- **WHEN** binary.bin asks to cancel T-1042
+- **THEN** the user's bell shows "binary.bin asked to cancel" with the chip T-1042, which opens the trade page
+
+#### Scenario: Cancelled by agreement
+- **WHEN** the user accepts binary.bin's request to cancel T-1042
+- **THEN** binary.bin's bell shows that T-1042 was cancelled by agreement
+
+#### Scenario: Request declined
+- **WHEN** the user declines binary.bin's request to cancel T-1042
+- **THEN** binary.bin's bell shows that the user declined, and that the trade carries on
 
 #### Scenario: Wrong copy due
 - **WHEN** a wrong copy on T-1042 has 24 hours left and the receiver hasn't answered

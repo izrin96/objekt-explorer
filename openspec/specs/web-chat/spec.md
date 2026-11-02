@@ -795,6 +795,8 @@ The row's deal line SHALL read as the table in "Wording by state" gives it, whic
 | --- | --- | --- | --- |
 | Offer to you | open, not expired, sent to the viewer | O-n · Waiting for you | yes |
 | Offer from you | open, not expired, sent by the viewer | O-n · Waiting for them | no |
+| Asked to cancel | the partner asked to cancel and the viewer has not answered | T-n · They asked to cancel | yes |
+| You asked to cancel | the viewer asked to cancel and the partner has not answered | T-n · Waiting for them to answer | no |
 | You decide | the partner sent a different copy the viewer has not answered | T-n · Different copy to decide | yes |
 | Your turn | the viewer owes objekts they can send | T-n · Your turn · send N | yes |
 | Their turn | the viewer owes nothing more | T-n · Waiting for them · v of t | no |
@@ -818,6 +820,10 @@ The row's deal line SHALL read as the table in "Wording by state" gives it, whic
 #### Scenario: Different copy
 - **WHEN** the partner sent #1210 in place of the #1207 izrin96 is owed, and izrin96 has not answered
 - **THEN** izrin96's row reads "Different copy to decide", even if izrin96 also owes objekts
+
+#### Scenario: Asked to cancel
+- **WHEN** dalgom asked to cancel T-87, and izrin96 also owes objekts
+- **THEN** izrin96's row reads "T-87 · They asked to cancel", the conversation is under Needs you, and dalgom's row reads "T-87 · Waiting for them to answer"
 
 #### Scenario: Stuck
 - **WHEN** the only objekt izrin96 still owes in T-91 reads as non-transferable, and 2 of 6 are verified

@@ -426,15 +426,20 @@ A trade's own page SHALL open with a breadcrumb in place of the Trade page heade
 - **THEN** `/trade/mine` opens
 
 ### Requirement: Trade actions menu
-The Trading with card's menu, and on phones the bottom bar's, SHALL hold Report a problem and, while the trade is in progress, Cancel trade. An action that can't be used yet SHALL show disabled with its reason:
+The Trading with card's menu, and on phones the bottom bar's, SHALL hold Report a problem and, while the trade is in progress, Cancel trade. While Cancel trade can't be used, the menu SHALL also hold Ask to cancel (see Ask to cancel), unless a request is open: the status card then carries it. An action that can't be used yet SHALL show disabled with its reason:
 - Report a problem, with the date it opens;
-- Cancel trade, with "Cancelling is locked after the first verified transfer", or, while the indexer is behind, its refusal.
+- Cancel trade, with "Cancelling is locked after the first verified transfer", or, while the indexer is behind, its refusal;
+- Ask to cancel, after a decline, with the time it opens again.
 
 A disabled action SHALL stay reachable by keyboard with its reason read out. With no action left, the menu SHALL not show.
 
 #### Scenario: Cancel locked
 - **WHEN** one leg has verified and the user opens the menu
-- **THEN** Cancel trade shows disabled with "Cancelling is locked after the first verified transfer"
+- **THEN** Cancel trade shows disabled with "Cancelling is locked after the first verified transfer", followed by Ask to cancel
+
+#### Scenario: Request open
+- **WHEN** either party has asked to cancel and the user opens the menu
+- **THEN** the menu holds no Ask to cancel, and the status card shows the request
 
 #### Scenario: Report not open yet
 - **WHEN** a trade accepted 3 days ago on Oct 10 is still in progress
@@ -449,7 +454,7 @@ A disabled action SHALL stay reachable by keyboard with its reason read out. Wit
 - **THEN** no actions menu shows
 
 ### Requirement: Next-step banner
-Under the breadcrumb (and the indexer strip, when shown), the trade page SHALL show one status card with a tone, the status chip, a title, one line of body, a deadline, the action its state names, and the stepper. The card SHALL be the only place on the page that states the ended reason, and Accept and Decline for a different copy. Its tone SHALL be indigo for your turn and their turn, amber for a different copy or a stuck objekt, green when completed, red when failed, and grey when cancelled. The page SHALL fill at most one button as primary: Open chat is filled only when the card has no primary action. Trades are sent in the Cosmo app, to a nickname. On your turn the card SHALL say where to send: "Send to", the nickname of the partner's default profile and "in Cosmo", then "or" and the nickname of each of their other linked profiles, since a transfer to any of them verifies the leg. A profile with no nickname SHALL show its shortened address. The card SHALL not offer to copy an address.
+Under the breadcrumb (and the indexer strip, when shown), the trade page SHALL show one status card with a tone, the status chip, a title, one line of body, a deadline, the action its state names, and the stepper. The card SHALL be the only place on the page that states the ended reason, and Accept and Decline for a different copy or a cancel request. Its tone SHALL be indigo for your turn and their turn, amber for a different copy, a stuck objekt or a cancel request, green when completed, red when failed, and grey when cancelled. The page SHALL fill at most one button as primary: Open chat is filled only when the card has no primary action. Trades are sent in the Cosmo app, to a nickname. On your turn the card SHALL say where to send: "Send to", the nickname of the partner's default profile and "in Cosmo", then "or" and the nickname of each of their other linked profiles, since a transfer to any of them verifies the leg. A profile with no nickname SHALL show its shortened address. The card SHALL not offer to copy an address.
 
 #### Scenario: Ended reason once
 - **WHEN** the user opens a trade cancelled because an objekt left the wallet
@@ -473,13 +478,27 @@ Under the breadcrumb (and the indexer strip, when shown), the trade page SHALL s
 
 ### Requirement: Next-step states
 While a trade is in progress, the banner SHALL show the first state that applies:
-1. A different copy the viewer received and must decide on.
-2. Your turn: the viewer owes a transfer they can send.
-3. Stuck: an objekt the viewer owes can't be sent.
-4. A different copy the viewer sent, awaiting the partner.
-5. Their turn.
+1. The partner asked to cancel: the viewer must answer.
+2. The viewer asked to cancel, awaiting the partner.
+3. A different copy the viewer received and must decide on.
+4. Your turn: the viewer owes a transfer they can send.
+5. Stuck: an objekt the viewer owes can't be sent.
+6. A different copy the viewer sent, awaiting the partner.
+7. Their turn.
 
 An ended trade SHALL show completed, failed or cancelled.
+
+#### Scenario: They asked to cancel
+- **WHEN** binary.bin asked to cancel, and the user still owes a leg
+- **THEN** the amber banner reads "binary.bin asked to cancel this trade", says objekts already sent are not returned automatically, and offers Decline and Accept, Accept asking for confirmation first
+
+#### Scenario: You asked to cancel
+- **WHEN** the user asked to cancel, and binary.bin hasn't answered
+- **THEN** the amber banner reads "You asked binary.bin to cancel this trade", says the trade carries on until they answer, and offers Withdraw
+
+#### Scenario: Cancelled by agreement
+- **WHEN** the user opens a trade cancelled by agreement
+- **THEN** the grey banner reads "Trade cancelled" and "You and binary.bin agreed to cancel this trade.", with Make a new offer
 
 #### Scenario: Your turn, suggested first
 - **WHEN** neither party has sent, and the user was suggested to send SeoAh 203Z #722 first
@@ -651,7 +670,7 @@ The side panel SHALL open with a Trading with card: the partner's avatar as it s
 - **THEN** the figures give way to the same "New" mark the reputation line uses
 
 ### Requirement: Trade timeline
-The side panel SHALL hold one Timeline for every trade state, in time order: Proposed, Accepted, the verified transfers, and each different copy's arrival and deadline. Transfers by one party verified on the same day SHALL fold into one row ("You sent 14 of 18", "binary.bin sent 7 of 22") that opens to each transfer with its objekt, serial and hash; a day with a single transfer from that party shows it as its own row with its hash. While in progress it adds the reminder, Report a problem opening, Today, the expiry (saying how it would end) and rating, undated. Once ended it adds how it ended and when rating closes. Past rows are done, Today indigo, later rows hollow.
+The side panel SHALL hold one Timeline for every trade state, in time order: Proposed, Accepted, the verified transfers, each different copy's arrival and deadline, and each cancel request with how it was answered or withdrawn. Transfers by one party verified on the same day SHALL fold into one row ("You sent 14 of 18", "binary.bin sent 7 of 22") that opens to each transfer with its objekt, serial and hash; a day with a single transfer from that party shows it as its own row with its hash. While in progress it adds the reminder, Report a problem opening, Today, the expiry (saying how it would end) and rating, undated. Once ended it adds how it ended and when rating closes. Past rows are done, Today indigo, later rows hollow.
 
 #### Scenario: Mid-trade
 - **WHEN** a trade accepted 4 days ago has one verified transfer, by the user
@@ -672,6 +691,14 @@ The side panel SHALL hold one Timeline for every trade state, in time order: Pro
 #### Scenario: Completed
 - **WHEN** the user opens a completed trade
 - **THEN** the Timeline lists Proposed, Accepted, the transfers by day with their hashes, and Completed with its date
+
+#### Scenario: Cancelled by agreement
+- **WHEN** the user opens a trade binary.bin asked to cancel on Oct 30 at 11:22 and the user accepted at 11:27
+- **THEN** the Timeline lists the verified transfers, "binary.bin asked to cancel" at 11:22, and "Cancelled by agreement" at 11:27
+
+#### Scenario: Request the trade outlived
+- **WHEN** binary.bin asked to cancel, and the last leg verified before the user answered
+- **THEN** the Timeline shows "binary.bin asked to cancel" with "No answer before the trade ended", and Completed
 
 #### Scenario: Paused expiry
 - **WHEN** the expiry has passed while the indexer is behind
@@ -767,7 +794,7 @@ While the viewer owes a leg they can send or a different copy waits on them, the
 - **THEN** the status card offers no such button
 
 ### Requirement: Receiver confirms a leg
-While a trade is in progress, the receiver of a waiting leg SHALL be able to close it as **confirmed**: received with no transfer the tracker matched. Only the receiver SHALL be able to confirm, only while the leg is waiting with no wrong copy on it waiting for an answer, and only after confirming in a dialog that says the trade won't count as verified or, once it completes, take feedback. A refused request SHALL leave the trade unchanged. A confirmation SHALL not be undone.
+While a trade is in progress, the receiver of a waiting leg SHALL be able to close it as **confirmed**: received with no transfer the tracker matched. Only the receiver SHALL be able to confirm, only while the leg is waiting with no wrong copy on it waiting for an answer, and only after confirming in a dialog that says the trade won't count as verified or, once it completes, take feedback, and that to call the deal off they ask to cancel instead (see Ask to cancel). A refused request SHALL leave the trade unchanged. A confirmation SHALL not be undone.
 
 #### Scenario: Confirm a leg
 - **WHEN** the user receives Kotone 113Z from binary.bin, it went to a friend's profile at the user's request, and the user chooses Mark as received and confirms
@@ -792,6 +819,10 @@ While a trade is in progress, the receiver of a waiting leg SHALL be able to clo
 #### Scenario: Dismissed dialog
 - **WHEN** the user chooses Mark as received and then cancels the dialog
 - **THEN** nothing changes
+
+#### Scenario: Calling the deal off
+- **WHEN** the user opens Mark as received on a leg binary.bin never sent, because the two agreed to redo the deal
+- **THEN** the dialog says that to call the deal off they ask to cancel instead, and Mark as received is only for objekts they did get
 
 ### Requirement: What a confirmed leg counts as
 A confirmed leg SHALL count as a verified transfer for progress ("n of m"), completion, the cancel lock and the unfinished count. A trade with a confirmed leg SHALL not count toward either party's verified trades, and a completed one SHALL take no feedback (see Reputation, Feedback). The giver SHALL be notified when a leg they give is confirmed; once the trade completes, both parties SHALL get the completed note instead, with no Leave feedback action.
@@ -822,3 +853,60 @@ A confirmed leg's card SHALL sit under Verified, dimmed, with the status mark Co
 #### Scenario: Completed with a confirmation
 - **WHEN** the user opens a trade that completed with a confirmed leg
 - **THEN** the green status card reads that the trade is complete and won't count toward verified trades, with no rating controls
+
+### Requirement: Ask to cancel
+While a trade is in progress and the viewer can't cancel it alone (Cancel locks after the first transfer, or the indexer is behind), either party SHALL be able to ask to cancel it, after a dialog that says objekts already sent are not returned automatically. A trade SHALL hold at most one open request. The asker SHALL be able to withdraw it while it waits, which notifies nobody. After a decline, the same party SHALL be able to ask again only 24 hours later.
+
+#### Scenario: Ask
+- **WHEN** one leg of T-516 has verified, and the user chooses Ask to cancel and confirms
+- **THEN** the request is open, binary.bin is notified, and the user's page shows that they asked
+
+#### Scenario: Only one at a time
+- **WHEN** binary.bin already asked to cancel T-516, and the user sends a request to ask too
+- **THEN** it is refused, and the user's page shows binary.bin's request to answer
+
+#### Scenario: Withdraw
+- **WHEN** the user withdraws their request before binary.bin answers
+- **THEN** the request is gone from both pages, the trade carries on, and nobody is notified
+
+#### Scenario: Asking again after a decline
+- **WHEN** binary.bin declined the user's request 3 hours ago
+- **THEN** Ask to cancel shows disabled with the time it opens again, and a request to ask is refused
+
+#### Scenario: Cancel still open
+- **WHEN** no leg has verified, no wrong copy is held, and the indexer is caught up
+- **THEN** the menu offers Cancel trade, not Ask to cancel
+
+### Requirement: Answer a cancel request
+Only the party who did not ask SHALL be able to answer, while the trade is in progress and the request is open. Accept SHALL ask for confirmation, saying objekts already sent are not returned automatically, then end the trade Cancelled with the reason "cancelled by agreement", release every reservation and notify the asker. Decline SHALL close the request and notify the asker; the trade carries on. A refused answer SHALL leave the trade unchanged.
+
+#### Scenario: Accept
+- **WHEN** binary.bin asked to cancel T-516, and the user accepts and confirms
+- **THEN** T-516 shows Cancelled with "cancelled by agreement", binary.bin is notified, and its open legs close
+
+#### Scenario: Decline
+- **WHEN** the user declines binary.bin's request
+- **THEN** the trade stays in progress, binary.bin is notified that the user declined, and the request is gone from both pages
+
+#### Scenario: Asker answers their own request
+- **WHEN** the party who asked sends a request to accept it
+- **THEN** it is refused, and the trade is unchanged
+
+#### Scenario: Withdrawn meanwhile
+- **WHEN** the user accepts a request that binary.bin withdrew a moment earlier
+- **THEN** it is refused, and the trade page shows the trade as it now stands
+
+#### Scenario: Last leg verified first
+- **WHEN** the last waiting leg verifies just before the user accepts
+- **THEN** the accept is refused, and the trade shows Completed
+
+### Requirement: What an agreed cancel counts as
+A trade cancelled by agreement SHALL count as cancelled everywhere: toward neither party's verified nor unfinished trades, with no feedback and no Report a problem on its page. Legs that verified SHALL keep their transfers on the page and in the Timeline. Waiting legs, and any wrong copy still pending on them, SHALL close without being accepted. Returning what was sent SHALL be left to the two parties.
+
+#### Scenario: Nobody at fault
+- **WHEN** T-516 is cancelled by agreement after the user's 6 legs verified
+- **THEN** neither party's verified or unfinished count changes, and neither page offers rating controls
+
+#### Scenario: Sent objekts on record
+- **WHEN** the user opens T-516 after the agreed cancel
+- **THEN** the six verified transfers still show with their hashes in the exchange and the Timeline, and none of the other legs is reserved
