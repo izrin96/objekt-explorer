@@ -5,11 +5,11 @@ import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 
 import { EmptyState } from "@/components/shared/empty-state";
+import { FadeScrollArea } from "@/components/shared/fade-scroll-area";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverPopup, PopoverTrigger } from "@/components/ui/popover";
-import { ScrollAreaPrimitive, ScrollBar } from "@/components/ui/scroll-area";
 import { SheetClose, SheetDescription, SheetTitle } from "@/components/ui/sheet";
 import { toastManager } from "@/components/ui/toast";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
@@ -343,33 +343,26 @@ function TickedList({
     onUntick(key, objekt);
   };
   return (
-    // Base UI's parts, not the shared ScrollArea: its viewport is `h-full`, which a `max-h` frame
-    // leaves unbounded, so the list would never scroll in the popover
-    <ScrollAreaPrimitive.Root className={cn("flex min-h-0 flex-col", scrollClassName)}>
-      <ScrollAreaPrimitive.Viewport
-        data-slot="scroll-area-viewport"
-        className="focus-visible:ring-ring min-h-0 flex-1 overscroll-y-contain mask-t-from-[calc(100%-min(var(--fade-size),var(--scroll-area-overflow-y-start)))] mask-b-from-[calc(100%-min(var(--fade-size),var(--scroll-area-overflow-y-end)))] outline-none [--fade-size:1.5rem] focus-visible:ring-2 focus-visible:ring-inset"
+    <FadeScrollArea className={scrollClassName}>
+      <ul
+        ref={listRef} // clear of the scrollbar, which takes clicks even while hidden
+        className={cn("grid content-start gap-1.5 pe-2.5", className)}
       >
-        <ScrollAreaPrimitive.Content>
-          <ul ref={listRef} className={cn("grid content-start gap-1.5", className)}>
-            {[...ticked].map(([key, objekt], index) => (
-              <li key={key} className="relative min-w-0">
-                <ObjektCard objekt={objekt} image="thumbnail" hideLabel />
-                <button
-                  type="button"
-                  aria-label={m.trade_composer_add_untick({ name: tickedName(objekt) })}
-                  onClick={() => untick(index, key, objekt)}
-                  className="bg-background hover:bg-muted focus-visible:ring-ring absolute end-0.5 top-0.5 z-10 grid size-6 place-items-center rounded-full border shadow-xs outline-none focus-visible:ring-2"
-                >
-                  <XIcon className="size-3" />
-                </button>
-              </li>
-            ))}
-          </ul>
-        </ScrollAreaPrimitive.Content>
-      </ScrollAreaPrimitive.Viewport>
-      <ScrollBar />
-    </ScrollAreaPrimitive.Root>
+        {[...ticked].map(([key, objekt], index) => (
+          <li key={key} className="relative min-w-0">
+            <ObjektCard objekt={objekt} image="thumbnail" hideLabel />
+            <button
+              type="button"
+              aria-label={m.trade_composer_add_untick({ name: tickedName(objekt) })}
+              onClick={() => untick(index, key, objekt)}
+              className="bg-background hover:bg-muted focus-visible:ring-ring absolute end-0.5 top-0.5 z-10 grid size-6 place-items-center rounded-full border shadow-xs outline-none focus-visible:ring-2"
+            >
+              <XIcon className="size-3" />
+            </button>
+          </li>
+        ))}
+      </ul>
+    </FadeScrollArea>
   );
 }
 

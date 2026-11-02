@@ -38,13 +38,13 @@ export function rich<K extends string>(
 
 export function Serial({ serial, estimated }: { serial: number | null; estimated: boolean }) {
   return serial === null ? (
-    m.offer_serial_unnumbered()
+    <span className="font-sans">{m.offer_serial_unnumbered()}</span>
   ) : (
     <SerialNo serial={serial} estimated={estimated} />
   );
 }
 
-/** "any serial" in the body font: the serial line it stands in is set in mono for the numbers. */
+/** "any serial" in the body font, as "unnumbered" is: the serial line is set in mono for numbers. */
 export function AnySerial() {
   return <span className="font-sans">{m.offer_leg_any_copy()}</span>;
 }

@@ -1,8 +1,9 @@
 import { type ReactNode, useCallback, useRef, useState } from "react";
 import { Virtualizer } from "virtua";
 
+import { FadeScrollArea } from "@/components/shared/fade-scroll-area";
 import { InfiniteSentinel } from "@/components/shared/infinite-sentinel";
-import { ScrollArea, ScrollAreaPrimitive } from "@/components/ui/scroll-area";
+import { ScrollAreaPrimitive } from "@/components/ui/scroll-area";
 import { m } from "@/paraglide/messages";
 
 import { useCardColumns } from "./card-grid";
@@ -92,9 +93,9 @@ function loadAhead(scroll: { size: number; offset: number; viewport: number }, m
  */
 export function VirtualCardGrid<T>(props: GridProps<T>) {
   return (
-    <ScrollArea scrollFade className="flex-1">
+    <FadeScrollArea wrapContent={false} className="flex-1">
       <PanelCardGrid {...props} />
-    </ScrollArea>
+    </FadeScrollArea>
   );
 }
 
