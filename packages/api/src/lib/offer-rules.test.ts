@@ -11,6 +11,7 @@ import {
   atFault,
   cancelAnswerRefusal,
   cancelAskWait,
+  cancelRequestViews,
   cancelRefusal,
   canReport,
   firstSender,
@@ -786,6 +787,54 @@ describe("cancelAskWait", () => {
     ];
     expect(cancelAskWait(requests, "me", now)).toEqual(new Date("2026-10-31T10:00:00Z"));
     expect(cancelAskWait(requests, "other", now)).toBeNull();
+  });
+});
+
+describe("cancelRequestViews", () => {
+  const now = new Date("2026-10-30T12:00:00Z");
+  const row = (
+    askedBy: string,
+    status: "pending" | "accepted" | "declined" | "withdrawn",
+    answeredAt: string | null = null,
+  ) => ({ askedBy, askedAt: "2026-10-30T08:00:00Z", status, answeredAt });
+
+  test("a running trade's pending request is open, and says who asked", () => {
+    const views = cancelRequestViews([row("them", "pending")], "me", true, now);
+    expect(views.cancelRequest).toEqual({ byYou: false, at: "2026-10-30T08:00:00.000Z" });
+    expect(views.cancelRequests.map((request) => request.status)).toEqual(["pending"]);
+  });
+
+  test("a request still pending on an ended trade reads as lapsed and is not open", () => {
+    const views = cancelRequestViews([row("me", "pending")], "me", false, now);
+    expect(views.cancelRequest).toBeNull();
+    expect(views.cancelRequests).toEqual([
+      { byYou: true, at: "2026-10-30T08:00:00.000Z", status: "lapsed", answeredAt: null },
+    ]);
+  });
+
+  test("the wait to ask again shows only while the trade runs", () => {
+    const declined = [row("me", "declined", "2026-10-30T09:00:00Z")];
+    expect(cancelRequestViews(declined, "me", true, now).cancelAskOpensAt).toBe(
+      "2026-10-31T09:00:00.000Z",
+    );
+    expect(cancelRequestViews(declined, "me", false, now).cancelAskOpensAt).toBeNull();
+  });
+
+  test("answered requests keep their status and answer time", () => {
+    const views = cancelRequestViews(
+      [
+        row("them", "declined", "2026-10-30T09:00:00Z"),
+        row("me", "withdrawn", "2026-10-30T10:00:00Z"),
+      ],
+      "me",
+      true,
+      now,
+    );
+    expect(views.cancelRequests.map((request) => [request.byYou, request.status])).toEqual([
+      [false, "declined"],
+      [true, "withdrawn"],
+    ]);
+    expect(views.cancelRequest).toBeNull();
   });
 });
 

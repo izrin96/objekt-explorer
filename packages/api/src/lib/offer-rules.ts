@@ -2,6 +2,7 @@ import type { ListType } from "../schemas/list";
 import {
   CANCEL_ASK_WAIT_HOURS,
   type CancelRequestStatus,
+  type CancelRequestView,
   type OfferAction,
   type OfferRefusal,
   type OfferSide,
@@ -15,7 +16,7 @@ import {
   type TopupInput,
   type TradeStatus,
 } from "../schemas/offer";
-import { DAY_MS } from "./time";
+import { DAY_MS, iso } from "./time";
 import { unique } from "./unique";
 
 /** A block never reaches the API as the cause of a cancellation. */
@@ -377,6 +378,41 @@ export function cancelAskWait(
   if (last === null) return null;
   const opens = last + CANCEL_ASK_WAIT_HOURS * 60 * 60 * 1000;
   return opens > now.getTime() ? new Date(opens) : null;
+}
+
+type CancelRequestRecord = {
+  askedBy: string;
+  askedAt: string;
+  status: CancelRequestStatus;
+  answeredAt: string | null;
+};
+
+/**
+ * What the trade read shows of its requests to cancel, oldest first in `rows`. A request still
+ * pending when the trade ended another way was never answered: it reads as `lapsed`, and only a
+ * running trade has an open request or a wait to ask again.
+ */
+export function cancelRequestViews(
+  rows: readonly CancelRequestRecord[],
+  me: string,
+  live: boolean,
+  now: Date,
+): {
+  cancelRequests: CancelRequestView[];
+  cancelRequest: { byYou: boolean; at: string } | null;
+  cancelAskOpensAt: string | null;
+} {
+  const open = live ? rows.find((request) => request.status === "pending") : undefined;
+  return {
+    cancelRequests: rows.map((request) => ({
+      byYou: request.askedBy === me,
+      at: iso(request.askedAt)!,
+      status: request.status === "pending" && !live ? "lapsed" : request.status,
+      answeredAt: iso(request.answeredAt),
+    })),
+    cancelRequest: open ? { byYou: open.askedBy === me, at: iso(open.askedAt)! } : null,
+    cancelAskOpensAt: live ? (cancelAskWait(rows, me, now)?.toISOString() ?? null) : null,
+  };
 }
 
 /**

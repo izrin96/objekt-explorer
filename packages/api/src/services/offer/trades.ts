@@ -16,8 +16,8 @@ import { type HeldBy, heldByProfile } from "../../lib/held-by";
 import { isBehind, parseIndexerSeen } from "../../lib/indexer-seen";
 import {
   atFault,
-  cancelAskWait,
   cancelRefusal,
+  cancelRequestViews,
   canReport,
   rateRefusal,
   shownCancelReason,
@@ -366,9 +366,6 @@ export async function fetchTrade(me: string, tradeId: number) {
       : null;
   const behind = row.status === "in_progress" && isBehind(seen, now.getTime());
   const cancel = cancelRefusal(state, behind, held);
-  const live = row.status === "in_progress";
-  // a request still pending when the trade ended another way was never answered
-  const open = live ? cancelRows.find((request) => request.status === "pending") : undefined;
 
   const result: TradeView = {
     id: row.id,
@@ -445,14 +442,7 @@ export async function fetchTrade(me: string, tradeId: number) {
         ? new Date(new Date(row.endedAt).getTime() + RATE_WINDOW_MS).toISOString()
         : null,
     lastCheckedAt: lastChecked,
-    cancelRequests: cancelRows.map((request) => ({
-      byYou: request.askedBy === me,
-      at: iso(request.askedAt)!,
-      status: request.status === "pending" && !live ? "lapsed" : request.status,
-      answeredAt: iso(request.answeredAt),
-    })),
-    cancelRequest: open ? { byYou: open.askedBy === me, at: iso(open.askedAt)! } : null,
-    cancelAskOpensAt: live ? (cancelAskWait(cancelRows, me, now)?.toISOString() ?? null) : null,
+    ...cancelRequestViews(cancelRows, me, row.status === "in_progress", now),
   };
   return { trade: result, collections };
 }
