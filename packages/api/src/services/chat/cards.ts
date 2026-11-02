@@ -40,7 +40,7 @@ import { fetchOffers, offerItemCards, toOfferView } from "../offer/view";
 import { notTradeSanctioned } from "../safety";
 import { fetchPostCards } from "../trade-feed";
 import { takesPartInTrade } from "../trade-lists";
-import { personDetail } from "../trade-matches";
+import { personMatch } from "../trade-matches";
 import { refuse } from "./refuse";
 
 type CardContext = { senderId: string; partnerId: string };
@@ -84,7 +84,7 @@ async function resolvePostCard(
  * when there is none either way.
  */
 async function savedMatch(senderId: string, ownerId: string): Promise<StoredMatch | null> {
-  const { partner } = await personDetail(senderId, ownerId, undefined);
+  const partner = await personMatch(senderId, ownerId);
   if (!partner) return null;
   const side = (count: number, items: { slug: string }[]) => ({
     count,

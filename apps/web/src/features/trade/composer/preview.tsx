@@ -271,16 +271,21 @@ function PickedSide({
 
 /** "Ratio for all" by the list's name: `list.edit` takes the whole list, so it starts from the stored one. */
 function ListRatioControl({ stored, side }: { stored: StoredList; side: RatioSide }) {
-  const edit = useEditList();
+  const edit = useEditList(m.ratio_set_success);
   const [open, setOpen] = useState(false);
   const ratio = stored.ratio ?? null;
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger render={<Button variant="outline" size="xs" className="self-start" />}>
+      <PopoverTrigger
+        render={<Button variant="outline" size="xs" className="self-start" />}
+        aria-label={m.trade_composer_list_ratio_set({
+          ratio: ratio === null ? m.ratio_none_name() : ratioLabel(ratio, side, { owner: true }),
+        })}
+      >
         {m.ratio_for_all()}
         <span className="tabular-nums">{ratio === null ? "1:1" : ratioText(ratio, side)}</span>
       </PopoverTrigger>
-      <PopoverPopup className="w-80" align="end">
+      <PopoverPopup className="w-80" align="start">
         <RatioPicker
           side={side}
           label={m.ratio_for_all()}
@@ -408,6 +413,7 @@ function PreviewRules({
   const { data: rules } = useQuery(listRulesOptions(slug));
   // kept after closing so the dialog can animate out and hand focus back to its button
   const [deleting, setDeleting] = useState<{ rule: Rule; open: boolean } | null>(null);
+  const addRef = useRef<HTMLButtonElement>(null);
   return (
     <div className="flex min-w-0 flex-col gap-1.5">
       {rules && rules.length > 0 ? (
@@ -432,13 +438,27 @@ function PreviewRules({
       ) : null}
       {deleting ? (
         <ConfirmRule
+          key={deleting.rule.id}
           slug={slug}
           rule={deleting.rule}
+          focusAfterDone={addRef}
           action={deleting.open ? "delete" : null}
-          onClose={() => setDeleting({ rule: deleting.rule, open: false })}
+          onClose={() =>
+            // a delete that finishes after another rule's dialog opened must not close that one
+            setDeleting((current) =>
+              current?.rule.id === deleting.rule.id ? { ...current, open: false } : current,
+            )
+          }
         />
       ) : null}
-      <Button type="button" variant="outline" size="xs" className="w-fit" onClick={onAddRule}>
+      <Button
+        ref={addRef}
+        type="button"
+        variant="outline"
+        size="xs"
+        className="w-fit"
+        onClick={onAddRule}
+      >
         <PlusIcon />
         {m.rule_add()}
       </Button>

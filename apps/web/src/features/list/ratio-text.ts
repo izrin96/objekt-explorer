@@ -36,6 +36,29 @@ export function groupRatio(
   return found;
 }
 
+/** Set ratio opens on the highest own ratio among the selected copies; none of their own is 1:1. */
+export function highestOwn(copies: readonly { ratio?: number | null }[]) {
+  let highest: number | null = null;
+  for (const { ratio } of copies) {
+    if (ratio != null && (highest === null || ratio > highest)) highest = ratio;
+  }
+  return highest;
+}
+
+/**
+ * What Set ratio changes: the selected copies, or with Combine dups every copy of a selected
+ * card's collection, since a combined card is selected by its first copy but stands for them all.
+ */
+export function ratioTargets<T extends { collectionId: string }>(
+  selected: T[],
+  shown: readonly T[],
+  grouped: boolean,
+): T[] {
+  if (!grouped) return selected;
+  const picked = new Set(selected.map((copy) => copy.collectionId));
+  return shown.filter((copy) => picked.has(copy.collectionId));
+}
+
 /** The chip, in the owner's give:get as Discord trades read it: `1:2` on a have, `2:1` on a want. */
 export function ratioText(ratio: number, side: RatioSide) {
   return side === "have" ? `1:${ratio}` : `${ratio}:1`;

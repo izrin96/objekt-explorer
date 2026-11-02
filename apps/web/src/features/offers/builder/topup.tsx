@@ -80,9 +80,9 @@ export function Topup({
   return (
     <section aria-labelledby={headingId} className="@container flex min-w-0 flex-col gap-3">
       <div className="flex items-center justify-between gap-2">
-        <h3 id={headingId} className="text-sm font-medium">
+        <h2 id={headingId} className="text-sm font-medium">
           {m.offer_topup_title()}
-        </h3>
+        </h2>
         <Button
           variant="ghost"
           size="sm"

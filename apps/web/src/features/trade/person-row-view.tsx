@@ -26,7 +26,7 @@ import type { Surface } from "./browse-search";
 import { CopyLinkItem } from "./copy-link-item";
 import { MatchChip, MatchCounts } from "./match-summary";
 import type { OpenObjekt } from "./near";
-import { anchorOf } from "./person-page";
+import { anchorOf, offerHandleOf } from "./person-page";
 import {
   leadPost,
   listCount,
@@ -64,6 +64,7 @@ function PostBlock({
   contact,
   name,
   handle,
+  offerHandle,
   focused,
   collections,
   onOpen,
@@ -76,6 +77,8 @@ function PostBlock({
   name: string;
   /** the person's handle, for the post page's Copy link; null with no linked Cosmo profile */
   handle: string | null;
+  /** the handle Make offer links under (`offerHandleOf`); null with no linked Cosmo profile */
+  offerHandle: string | null;
   /** the post a post page names, outlined as the current selection */
   focused: boolean;
   collections: Readonly<Record<string, ValidObjekt | undefined>>;
@@ -100,7 +103,7 @@ function PostBlock({
     setFromMenu(viaMenu);
     setAllOpen(listId);
   };
-  const offersHere = contact.kind === "open" && !!anchor && handle !== null;
+  const offersHere = contact.kind === "open" && !!anchor && offerHandle !== null;
   // a near match's drawer names the person, and offers it on this post when the row offers one
   const openNear: OpenObjekt = (objekt, near) =>
     onOpen(
@@ -113,13 +116,13 @@ function PostBlock({
     );
   /** `addNear`: Make offer with it, from a near match's drawer */
   const makeOffer = (addNear?: string) => {
-    if (!anchor || handle === null) return;
+    if (!anchor || offerHandle === null) return;
     // near matches ride on the same read, so a strip with only those still asks for it
     const matched =
       !own &&
       (addNear !== undefined || strips.some((side) => listCount(post, side) > 0 || side.near));
     openOffer({
-      handle,
+      handle: offerHandle,
       to: { list: anchor.list.slug },
       startList: offering?.list.slug,
       matches: matched
@@ -279,8 +282,7 @@ export const PersonRow = memo(function PersonRow({
   const shownPosts = focused ? [focused, ...(expanded ? rest : [])] : posts;
   const throughRules = swapThroughRules(person.counts, person.posts);
   const lead = focused ?? leadPost(person.posts);
-  // the post's own list: the have list of a pair
-  const anchor = lead?.sides.find((side) => side.list.id === lead.id);
+  const anchor = lead ? anchorOf(lead) : undefined;
   const counts = person.counts;
   const matches = !!counts && (counts.theyHave > 0 || counts.youHave > 0);
   const contact: TradeContact = own
@@ -298,7 +300,12 @@ export const PersonRow = memo(function PersonRow({
     .reduce((a, b) => (Date.parse(b.time) > Date.parse(a.time) ? b : a));
   // relative to the render: the server's minute and the browser's can differ
   const when = relativeTime(new Date(newest.time).getTime(), now);
-  const keptLists = new Set(posts.flatMap((post) => post.sides.map((side) => side.list.id))).size;
+  // a side with no copies draws no strip, so it is no list to the reader
+  const keptLists = new Set(
+    posts.flatMap((post) =>
+      post.sides.filter((side) => !isEmptySide(side)).map((side) => side.list.id),
+    ),
+  ).size;
   const lists =
     keptLists === 1
       ? m.trade_person_lists_one()
@@ -317,11 +324,12 @@ export const PersonRow = memo(function PersonRow({
         (!own && signedIn && person.posts.some((post) => post.sides.some((side) => side.near)))
       ? { list: compare.list, mutual: compare.mutual || undefined }
       : undefined;
+  const offerHandle = offerHandleOf(person);
   const actions = (
     <TradeActions
       contact={contact}
       name={person.identity.name}
-      handle={person.handle}
+      handle={offerHandle}
       offerClassName="@max-3xl:flex-1"
       matches={offerMatches}
     />
@@ -338,7 +346,7 @@ export const PersonRow = memo(function PersonRow({
     <article className="@container pb-3">
       <Frame className="grid gap-x-4 gap-y-3 pt-2.5 @3xl:grid-cols-[minmax(0,1fr)_auto]">
         <TradeHeader
-          className="row-start-1 min-w-0 px-3"
+          className="min-w-0 px-3"
           person={person}
           you={own}
           handle={
@@ -363,15 +371,15 @@ export const PersonRow = memo(function PersonRow({
             </>
           }
         />
-        {/* before the posts in the DOM, so the actions come next in tab order from the header */}
+        {/* under the header at every width (beside it from @3xl), so the order read is the order seen */}
         {own ? (
           ownActions ? (
-            <div className="row-start-3 flex flex-wrap items-center gap-2 px-3 pb-2 @3xl:col-start-2 @3xl:row-start-1 @3xl:self-start @3xl:pb-0">
+            <div className="flex flex-wrap items-center gap-2 px-3 @3xl:col-start-2 @3xl:row-start-1 @3xl:self-start">
               {ownActions}
             </div>
           ) : null
         ) : (
-          <div className="row-start-3 flex items-center gap-2 px-3 pb-2 @3xl:col-start-2 @3xl:row-start-1 @3xl:self-start @3xl:pb-0">
+          <div className="flex items-center gap-2 px-3 @3xl:col-start-2 @3xl:row-start-1 @3xl:self-start">
             {signedIn ? (
               <SafetyMenu
                 userId={person.userId}
@@ -409,7 +417,7 @@ export const PersonRow = memo(function PersonRow({
             {actions}
           </div>
         )}
-        <div className="row-start-2 flex min-w-0 flex-col gap-1 @3xl:col-span-2">
+        <div className="flex min-w-0 flex-col gap-1 @3xl:col-span-2 @3xl:row-start-2">
           {shownPosts.map((post) => (
             <div
               key={post.id}
@@ -425,6 +433,7 @@ export const PersonRow = memo(function PersonRow({
                 contact={contact}
                 name={person.identity.name}
                 handle={person.handle}
+                offerHandle={offerHandle}
                 focused={post === focused}
                 collections={collections}
                 onOpen={onOpen}
@@ -456,7 +465,7 @@ export const PersonRow = memo(function PersonRow({
   );
 });
 
-/** A row's shape (header, two strips, actions), so the first page lands in place. */
+/** A row's shape (header, actions, two strips), so the first page lands in place. */
 export function PersonRowSkeleton() {
   return (
     <div className="@container pb-3">
@@ -468,6 +477,7 @@ export function PersonRowSkeleton() {
             <Skeleton className="h-3 w-24" />
           </div>
         </div>
+        <Skeleton className="mx-3 h-8 w-28 rounded-md @3xl:col-start-2 @3xl:row-start-1" />
         <FramePanel className="p-3 @3xl:col-span-2 @3xl:row-start-2">
           <TradeSides
             strips={[0, 1].map((side) => (
@@ -485,7 +495,6 @@ export function PersonRowSkeleton() {
             ))}
           />
         </FramePanel>
-        <Skeleton className="mx-3 mb-2 h-8 w-28 rounded-md @3xl:col-start-2 @3xl:row-start-1 @3xl:mb-0" />
       </Frame>
     </div>
   );

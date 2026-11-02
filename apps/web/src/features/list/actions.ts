@@ -96,13 +96,14 @@ export function useCopyList() {
   );
 }
 
-export function useEditList() {
+/** `successTitle`: the toast, for a caller that changes one thing (Ratio for all) */
+export function useEditList(successTitle: () => string = m.list_edit_success) {
   const invalidate = useListInvalidation();
 
   return useMutation(
     orpc.list.edit.mutationOptions({
       onSuccess: async (_data, { slug }) => {
-        toastManager.add({ type: "success", title: m.list_edit_success() });
+        toastManager.add({ type: "success", title: successTitle() });
         await invalidate(slug);
       },
       onError: (error) => {

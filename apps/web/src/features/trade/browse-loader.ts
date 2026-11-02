@@ -1,4 +1,5 @@
-import type { QueryClient } from "@tanstack/react-query";
+import type { Outputs } from "@repo/api";
+import type { InfiniteData, QueryClient } from "@tanstack/react-query";
 
 import { currentUserOptions } from "@/features/user/queries";
 import { orpc } from "@/lib/orpc";
@@ -55,7 +56,22 @@ export const personSearch = (userId: string): FeedSearch => ({ person: userId })
  * A person page's row, read as the page's view reads it: the person's row, `null` when the feed
  * doesn't show them to this viewer, or `undefined` when the read failed, which the view retries.
  */
-export async function loadPersonRow({
+export async function loadPersonRow(args: { queryClient: QueryClient; userId: string }) {
+  const options = await personRowOptions(args);
+  const feed = await args.queryClient
+    .infiniteQuery({ ...options, staleTime: "static" })
+    .catch(() => undefined);
+  return feed && rowOf(feed, args.userId);
+}
+
+/** `loadPersonRow` for a caller that tells a refusal from a failure: the feed's error is thrown. */
+export async function readPersonRow(args: { queryClient: QueryClient; userId: string }) {
+  const options = await personRowOptions(args);
+  const feed = await args.queryClient.infiniteQuery({ ...options, staleTime: "static" });
+  return rowOf(feed, args.userId);
+}
+
+async function personRowOptions({
   queryClient,
   userId,
 }: {
@@ -67,7 +83,7 @@ export async function loadPersonRow({
     queryClient.query({ ...orpc.config.getSelectedArtists.queryOptions(), staleTime: "static" }),
     queryClient.query({ ...currentUserOptions, staleTime: "static" }),
   ]);
-  const options = peopleOptions(
+  return peopleOptions(
     toBrowseInput(
       personSearch(userId),
       artists,
@@ -76,10 +92,9 @@ export async function loadPersonRow({
       tradeListsOf(user?.lists ?? []),
     ),
   );
-  const feed = await queryClient
-    .infiniteQuery({ ...options, staleTime: "static" })
-    .catch(() => undefined);
-  if (!feed) return undefined;
+}
+
+function rowOf(feed: InfiniteData<Outputs["trade"]["people"]>, userId: string) {
   const page = feed.pages[0];
   const row = page?.people.find((person) => person.userId === userId) ?? null;
   return { row, collections: page?.collections ?? {} };

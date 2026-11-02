@@ -65,8 +65,8 @@ export function BuilderForm({
   request: OfferRequest;
   /** hands over whether the draft holds anything, so leaving it can ask first */
   onDraft: (holds: (() => boolean) | null) => void;
-  /** the offer is in the conversation, which the caller goes to */
-  onSent: (conversationId: number) => void;
+  /** the offer is in the conversation, which the caller goes to once `ready` settles */
+  onSent: (conversationId: number, ready: Promise<unknown>) => void;
   /** Cancel: leaves the page */
   onLeave: () => void;
   /** the caller's status region above the sides, which the matches line is drawn into */
@@ -202,12 +202,14 @@ export function BuilderForm({
       onSuccess: async ({ conversationId }) => {
         // the thread's loader reads its cache as it stands, so the new offer is in it first; the
         // offer is sent whatever these do, so a failed one never reads as a failed send
-        await Promise.allSettled([
+        const ready = Promise.allSettled([
           invalidateChatLists(queryClient),
           invalidateOfferLists(queryClient),
           fetchNewer(queryClient, conversationId),
         ]);
-        onSent(conversationId);
+        onSent(conversationId, ready);
+        // still pending meanwhile, so Send stays disabled
+        await ready;
       },
       onError: (failure) => {
         const refusal = offerRefusalOf(failure);

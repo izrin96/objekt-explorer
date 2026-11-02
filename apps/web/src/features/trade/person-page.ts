@@ -3,13 +3,29 @@ import type { PersonPostData } from "./post-types";
 /**
  * The same address under another handle: the `@…` segment after `/trade/` is swapped, and the
  * rest of the path and the search stay, so a deeper page (a post, an offer) survives the redirect.
- * Always a path on this site.
+ * `href` is the location as it came, still encoded: from a decoded path an `%2F` or `%3F` in a
+ * slug would become a real one and move the redirect elsewhere. Always a path on this site.
  */
-export function withHandle(pathname: string, searchStr: string, handle: string) {
-  const segments = pathname.split("/");
+export function withHandle(href: string, handle: string) {
+  const end = href.search(/[?#]/);
+  const path = end === -1 ? href : href.slice(0, end);
+  const segments = path.split("/");
   // ["", "trade", "@…", ...rest]
   segments[2] = `@${encodeURIComponent(handle)}`;
-  return `/${segments.slice(1).join("/")}${searchStr}`;
+  return `/${segments.slice(1).join("/")}${end === -1 ? "" : href.slice(end)}`;
+}
+
+/**
+ * The handle a feed row's Make offer links under: the profile's address, as chat's
+ * `partnerHandle` does, since two accounts can share a nickname; the page redirects it to the
+ * canonical handle. Null with no linked profile, which has no page. Copy link keeps the handle.
+ */
+export function offerHandleOf(person: {
+  handle: string | null;
+  identity: { address: string | null };
+}) {
+  if (person.handle === null) return null;
+  return person.identity.address?.toLowerCase() ?? person.handle;
 }
 
 /** The post's own list: the have or sale list of a pair, else its only list. */

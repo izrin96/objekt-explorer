@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { handleName, tradeHandle, tradePersonInputSchema } from "./trade-person";
+import { handleName, handleOwner, tradeHandle, tradePersonInputSchema } from "./trade-person";
 
 const A = "0xAbCdEf0123456789abcdef0123456789ABCDEF01";
 const B = "0x1111111111111111111111111111111111111111";
@@ -34,6 +34,54 @@ describe("tradeHandle", () => {
 
   test("no profile, so null", () => {
     expect(tradeHandle([])).toBeNull();
+  });
+});
+
+describe("handleOwner", () => {
+  test("the account whose own handle it is wins over an older row holding the nickname", () => {
+    const oldHolder = {
+      userId: "old",
+      addresses: [
+        { address: A, nickname: "rin", isDefault: false },
+        { address: A, nickname: "rin.now", isDefault: true },
+      ],
+    };
+    const owner = {
+      userId: "owner",
+      addresses: [{ address: B, nickname: "Rin", isDefault: true }],
+    };
+    expect(handleOwner("rin", [oldHolder, owner])).toBe("owner");
+  });
+
+  test("the input's letter case doesn't matter", () => {
+    const owner = {
+      userId: "owner",
+      addresses: [{ address: B, nickname: "rin", isDefault: false }],
+    };
+    expect(
+      handleOwner("RIN", [
+        { userId: "other", addresses: [{ address: A, nickname: "x", isDefault: true }] },
+        owner,
+      ]),
+    ).toBe("owner");
+  });
+
+  test("an address handle picks the account whose handle is that address", () => {
+    const owner = { userId: "owner", addresses: [{ address: A, nickname: null, isDefault: true }] };
+    expect(handleOwner(A, [owner])).toBe("owner");
+  });
+
+  test("no account's handle matches, so the first candidate", () => {
+    expect(
+      handleOwner("rin", [
+        { userId: "first", addresses: [{ address: A, nickname: "a", isDefault: true }] },
+        { userId: "second", addresses: [{ address: B, nickname: "b", isDefault: true }] },
+      ]),
+    ).toBe("first");
+  });
+
+  test("no candidates, so none", () => {
+    expect(handleOwner("rin", [])).toBeUndefined();
   });
 });
 

@@ -113,7 +113,9 @@ function EditListForm({
   const planLists = usePlanLists();
   const openComposer = useOpenComposer();
   const edit = useEditList();
-  const [draft, setDraft] = useState<ListDraft>(() => toDraft(list));
+  // what the draft started from: a refetch after another tab's edit must not read as this one's
+  const [seed] = useState(() => toDraft(list));
+  const [draft, setDraft] = useState<ListDraft>(seed);
   const [errors, setErrors] = useState<FieldErrors>({});
 
   return (
@@ -124,7 +126,7 @@ function EditListForm({
         const next = zodErrors(listDraftSchema(), draft);
         setErrors(next);
         if (Object.keys(next).length > 0) return;
-        edit.mutate(toEditInput(list.slug, draft, list.ratio), { onSuccess: onDone });
+        edit.mutate(toEditInput(list.slug, draft, seed.ratio), { onSuccess: onDone });
       }}
     >
       <DialogHeader>
@@ -141,7 +143,7 @@ function EditListForm({
           tradeLine={
             <TradeLine
               slug={list.slug}
-              saveFirst={JSON.stringify(draft) !== JSON.stringify(toDraft(list))}
+              saveFirst={JSON.stringify(draft) !== JSON.stringify(seed)}
               onCompose={() => {
                 onClose();
                 openComposer(startForList(planLists, list.slug));

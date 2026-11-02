@@ -16,6 +16,14 @@ export function armReturn() {
   armed = true;
 }
 
+/**
+ * The leave was called off (Keep editing), or the page it landed on has drawn without the
+ * opener: a row that mounts later must not take focus. The opener stays for the next Back.
+ */
+export function disarmReturn() {
+  armed = false;
+}
+
 export function forgetOpener() {
   opener = null;
   armed = false;

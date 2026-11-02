@@ -21,7 +21,6 @@ export function TradeHeader({
   meta,
   badge,
   note,
-  end,
   className,
 }: {
   person: TradePerson;
@@ -34,7 +33,6 @@ export function TradeHeader({
   badge?: ReactNode;
   /** under the reputation line */
   note?: ReactNode;
-  end?: ReactNode;
   className?: string;
 }) {
   const { identity, user } = person;
@@ -88,7 +86,6 @@ export function TradeHeader({
           {note}
         </div>
       </div>
-      {end ? <div className="flex shrink-0 items-center gap-2">{end}</div> : null}
     </div>
   );
 }

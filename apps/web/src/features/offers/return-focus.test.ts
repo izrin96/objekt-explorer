@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test } from "bun:test";
 
-import { armReturn, forgetOpener, rememberOpener, takeReturn } from "./return-focus";
+import { armReturn, disarmReturn, forgetOpener, rememberOpener, takeReturn } from "./return-focus";
 
 beforeEach(forgetOpener);
 
@@ -29,6 +29,25 @@ describe("return focus", () => {
     rememberOpener("row-1");
     armReturn();
     rememberOpener("row-2");
+    expect(takeReturn("row-1")).toBe(false);
+  });
+
+  test("Keep editing disarms the return but keeps the opener for the next Back", () => {
+    rememberOpener("row-1");
+    armReturn();
+    disarmReturn();
+    expect(takeReturn("row-1")).toBe(false);
+    armReturn();
+    expect(takeReturn("row-1")).toBe(true);
+  });
+
+  test("an opener not drawn when the page lands never takes focus later", () => {
+    rememberOpener("row-1");
+    armReturn();
+    // the landing page drew without row-1
+    expect(takeReturn("row-2")).toBe(false);
+    disarmReturn();
+    // row-1 mounts as the reader scrolls to it
     expect(takeReturn("row-1")).toBe(false);
   });
 });

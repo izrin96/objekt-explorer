@@ -2,7 +2,7 @@ import { ArrowLeftIcon } from "@phosphor-icons/react";
 import { OFFER_SIDE_LIMIT } from "@repo/api/schemas/offer";
 import { useQuery } from "@tanstack/react-query";
 import { useBlocker, useLocation, useRouter } from "@tanstack/react-router";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
   AlertDialog,
@@ -25,7 +25,7 @@ import { BuilderHeader } from "./builder/header";
 import { BuilderBody, BuilderGrid, BuilderTitle, STATUS_AREA } from "./builder/layout";
 import { StatusLine } from "./builder/matches-line";
 import type { OfferMatches, OfferRequest } from "./builder/types";
-import { armReturn, forgetOpener } from "./return-focus";
+import { armReturn, disarmReturn, forgetOpener } from "./return-focus";
 
 /** Both sides' shape while the matches load: a heading, the Add button and a row of tiles. */
 function SidesSkeleton() {
@@ -50,7 +50,7 @@ type BuilderProps = {
   request: OfferRequest;
   onLeave: () => void;
   onDraft: (holds: (() => boolean) | null) => void;
-  onSent: (conversationId: number) => void;
+  onSent: (conversationId: number, ready: Promise<unknown>) => void;
 };
 
 /**
@@ -159,9 +159,17 @@ function MatchesBuilder({
 export function OfferPage({ request, backHref }: { request: OfferRequest; backHref: string }) {
   const router = useRouter();
   const leave = useLeaveOffer(backHref);
+  const openedInApp = useLocation({ select: (location) => location.state.offerBack === true });
   // the open form's "does the draft hold anything"; absent while it loads or is refused
   const draft = useRef<(() => boolean) | null>(null);
   const sent = useRef(false);
+  const mounted = useRef(false);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
   const setDraft = useCallback((holds: (() => boolean) | null) => {
     draft.current = holds;
   }, []);
@@ -172,13 +180,28 @@ export function OfferPage({ request, backHref }: { request: OfferRequest; backHr
     withResolver: true,
   });
 
-  const onSent = (conversationId: number) => {
+  // marked sent as the server answers, so leaving while the thread loads asks nothing
+  const onSent = (conversationId: number, ready: Promise<unknown>) => {
     sent.current = true;
     forgetOpener();
-    void router.navigate({
-      to: "/messages/$id",
-      params: { id: String(conversationId) },
-      replace: true,
+    void ready.then(() => {
+      // the mutation outlives the page: a reader who left meanwhile stays where they went
+      if (!mounted.current) return;
+      const thread = `/messages/${conversationId}`;
+      // opened from that thread, it is already the entry below: going back keeps one copy of it
+      if (
+        openedInApp &&
+        router.history.canGoBack() &&
+        new URL(backHref, window.location.origin).pathname === thread
+      ) {
+        router.history.back();
+        return;
+      }
+      void router.navigate({
+        to: "/messages/$id",
+        params: { id: String(conversationId) },
+        replace: true,
+      });
     });
   };
 
@@ -221,7 +244,9 @@ export function OfferPage({ request, backHref }: { request: OfferRequest; backHr
       <AlertDialog
         open={blocker.status === "blocked"}
         onOpenChange={(open) => {
-          if (!open) blocker.reset?.();
+          if (open) return;
+          disarmReturn();
+          blocker.reset?.();
         }}
       >
         <AlertDialogPopup>
@@ -252,6 +277,11 @@ export function useLeaveOffer(backHref: string) {
   const openedInApp = useLocation({ select: (location) => location.state.offerBack === true });
   return () => {
     armReturn();
+    // the landing page's openers look once, as it draws; one drawn later must not take focus
+    const stop = router.subscribe("onResolved", () => {
+      stop();
+      requestAnimationFrame(() => requestAnimationFrame(disarmReturn));
+    });
     if (openedInApp && router.history.canGoBack()) router.history.back();
     else router.history.replace(backHref);
   };

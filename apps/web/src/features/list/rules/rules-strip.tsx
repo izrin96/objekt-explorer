@@ -7,7 +7,7 @@ import {
   TrashIcon,
 } from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useId, useState } from "react";
+import { type RefObject, useId, useRef, useState } from "react";
 import { WindowVirtualizer } from "virtua";
 
 import {
@@ -336,19 +336,24 @@ export function ConfirmRule({
   rule,
   action,
   onClose,
+  focusAfterDone,
 }: {
   slug: string;
   rule: Rule;
   action: "delete" | "detach" | null;
   onClose: () => void;
+  /** where focus goes after a delete or detach succeeds, since the rule's own controls leave */
+  focusAfterDone?: RefObject<HTMLElement | null>;
 }) {
   const queryClient = useQueryClient();
+  const done = useRef(false);
   const run = useMutation({
     mutationFn: (kind: "delete" | "detach") =>
       kind === "delete"
         ? client.list.deleteRule({ slug, ruleId: rule.id })
         : client.list.detachRule({ slug, ruleId: rule.id }),
     onSuccess: async (_data, kind) => {
+      done.current = true;
       onClose();
       toastManager.add({
         type: "success",
@@ -378,7 +383,12 @@ export function ConfirmRule({
 
   return (
     <AlertDialog open={action !== null} onOpenChange={(open) => !open && onClose()}>
-      <AlertDialogPopup className="max-w-sm">
+      <AlertDialogPopup
+        className="max-w-sm"
+        finalFocus={
+          focusAfterDone ? () => (done.current ? focusAfterDone.current : true) : undefined
+        }
+      >
         <AlertDialogHeader>
           <AlertDialogTitle className="font-display">
             {action === "detach" ? m.rule_detach_title() : m.rule_delete_title()}

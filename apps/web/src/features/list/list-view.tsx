@@ -50,7 +50,7 @@ import { formatConvertedPrice, formatPrice } from "./list-price";
 import { useListTarget } from "./list-provider";
 import { listEntriesOptions } from "./queries";
 import { RatioChip } from "./ratio-chip";
-import { groupRatio, ratioSideOf } from "./ratio-text";
+import { groupRatio, ratioSideOf, ratioTargets } from "./ratio-text";
 import { RemoveFromListDialog } from "./remove-from-list-dialog";
 import { listRulesOptions } from "./rules/queries";
 import { RulesStrip } from "./rules/rules-strip";
@@ -265,12 +265,10 @@ function ListEntries() {
   );
 
   const selected = useMemo(() => filtered.filter((objekt) => ids.has(objekt.id)), [filtered, ids]);
-  // a combined card is selected by its first copy but stands for every copy, as its chip does
-  const ratioTargets = useMemo(() => {
-    if (!grouped) return selected;
-    const picked = new Set(selected.map((objekt) => objekt.collectionId));
-    return filtered.filter((objekt) => picked.has(objekt.collectionId));
-  }, [grouped, selected, filtered]);
+  const targets = useMemo(
+    () => ratioTargets(selected, filtered, grouped),
+    [grouped, selected, filtered],
+  );
 
   // a bound list hiding serials is a list of collections as far as the drawer
   // is concerned, exactly as the website decides its default tab
@@ -334,7 +332,7 @@ function ListEntries() {
           {
             label: m.filter_set_ratio(),
             icon: <ScalesIcon />,
-            onClick: () => openRatio(ratioTargets),
+            onClick: () => openRatio(targets),
           },
         ]
       : []),

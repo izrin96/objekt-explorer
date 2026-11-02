@@ -158,8 +158,7 @@ export const tradeRouter = {
 
   /**
    * Public: the account a Trade person page names, by handle or by an older link's user id, and
-   * its canonical handle. Replaces the person sheet's read, which no client has called since the
-   * sheet went.
+   * its canonical handle.
    */
   person: optionalAuthed
     .route({

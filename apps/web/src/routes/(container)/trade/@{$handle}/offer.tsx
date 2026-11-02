@@ -15,7 +15,7 @@ import {
   requestOf,
   withoutLists,
 } from "@/features/offers/offer-link";
-import { loadPersonRow } from "@/features/trade/browse-loader";
+import { readPersonRow } from "@/features/trade/browse-loader";
 import { PersonPageRefused } from "@/features/trade/person-page-view";
 import { tradePersonOptions } from "@/features/trade/queries";
 import { requireSignedIn } from "@/features/user/queries";
@@ -38,70 +38,76 @@ export const Route = createFileRoute("/(container)/trade/@{$handle}/offer")({
   }),
   beforeLoad: ({ context, location }) => requireSignedIn({ context, location }),
   loader: async ({ context: { queryClient, person }, deps }) => {
-    if (!person) return { name: null, counter: null, unavailable: null, foreign: false };
+    const none = { counter: null, unavailable: null, foreign: false, refused: false };
+    if (!person) return { ...none, name: null };
     const name = handleName(person.handle);
-    // the thread is usually cached by the page Make offer was chosen on
-    const partnerOf = async (conversationId: number) => {
-      const thread = await queryClient
-        .infiniteQuery({ ...threadOptions(conversationId), staleTime: "static" })
-        .catch((error: unknown) => {
-          if (isClientError(error)) return null;
-          throw error;
+    try {
+      // the thread is usually cached by the page Make offer was chosen on
+      const partnerOf = async (conversationId: number) => {
+        const thread = await queryClient
+          .infiniteQuery({ ...threadOptions(conversationId), staleTime: "static" })
+          .catch((error: unknown) => {
+            if (isClientError(error)) return null;
+            throw error;
+          });
+        return thread ? threadPartner(thread)?.userId : undefined;
+      };
+      if (deps.counter !== undefined) {
+        // read fresh: whether it can still be countered is the point
+        const views = await queryClient.query({
+          ...orpc.offer.views.queryOptions({ input: { ids: [deps.counter] } }),
+          staleTime: 0,
         });
-      return thread ? threadPartner(thread)?.userId : undefined;
-    };
-    if (deps.counter !== undefined) {
-      // read fresh: whether it can still be countered is the point
-      const views = await queryClient.query({
-        ...orpc.offer.views.queryOptions({ input: { ids: [deps.counter] } }),
-        staleTime: 0,
-      });
-      const offer = views.offers[0];
-      if (
-        offer?.actions.includes("counter") &&
-        (await partnerOf(offer.conversationId)) === person.userId
-      ) {
-        return {
-          name,
-          counter: { offer, collections: views.collections },
-          unavailable: null,
-          foreign: false,
-        };
+        const offer = views.offers[0];
+        if (
+          offer?.actions.includes("counter") &&
+          (await partnerOf(offer.conversationId)) === person.userId
+        ) {
+          return { ...none, name, counter: { offer, collections: views.collections } };
+        }
+        return { ...none, name, unavailable: "counter" as const };
       }
-      return { name, counter: null, unavailable: "counter" as const, foreign: false };
-    }
-    if (deps.conversation !== undefined && (await partnerOf(deps.conversation)) !== person.userId) {
-      return { name, counter: null, unavailable: "conversation" as const, foreign: false };
-    }
-    // a refusal says the list or its profile names no one; anything else (the rate limit, a
-    // server error) shows the error page rather than quietly dropping the matches
-    const unless404 = (error: unknown) => {
-      if (isNotFound(error) || isBadRequest(error)) return null;
+      if (
+        deps.conversation !== undefined &&
+        (await partnerOf(deps.conversation)) !== person.userId
+      ) {
+        return { ...none, name, unavailable: "conversation" as const };
+      }
+      // a not found or bad slug says the list or its profile names no one; any other refusal
+      // offers a retry below, and a server error shows the error page, rather than quietly
+      // dropping the matches
+      const unless404 = (error: unknown) => {
+        if (isNotFound(error) || isBadRequest(error)) return null;
+        throw error;
+      };
+      // a bound list's owner is the account behind its profile
+      const boundOwner = async (slug: string) => {
+        const list = await queryClient
+          .query({ ...orpc.list.findPublic.queryOptions({ input: { slug } }), staleTime: 60_000 })
+          .catch(unless404);
+        if (!list?.profileAddress) return null;
+        const owner = await queryClient
+          .query(tradePersonOptions({ handle: list.profileAddress }))
+          .catch(unless404);
+        return owner?.userId ?? null;
+      };
+      const owners = await Promise.all(deps.lists.map(boundOwner));
+      let foreign = owners.some((owner) => owner !== person.userId);
+      // a want list has no profile: it is theirs when one of their posts on Trade holds it
+      if (foreign) {
+        const { row } = await readPersonRow({ queryClient, userId: person.userId });
+        const theirs = new Set(
+          (row?.posts ?? []).flatMap((post) => post.sides.map((side) => side.list.slug)),
+        );
+        foreign = deps.lists.some((slug, i) => owners[i] !== person.userId && !theirs.has(slug));
+      }
+      return { ...none, name, foreign };
+    } catch (error) {
+      // a refusal (the rate limit) offers the person page's retry under the plain Trade title,
+      // never the error page
+      if (isClientError(error)) return { ...none, name: null, refused: true };
       throw error;
-    };
-    // a bound list's owner is the account behind its profile
-    const boundOwner = async (slug: string) => {
-      const list = await queryClient
-        .query({ ...orpc.list.findPublic.queryOptions({ input: { slug } }), staleTime: 60_000 })
-        .catch(unless404);
-      if (!list?.profileAddress) return null;
-      const owner = await queryClient
-        .query(tradePersonOptions({ handle: list.profileAddress }))
-        .catch(unless404);
-      return owner?.userId ?? null;
-    };
-    const owners = await Promise.all(deps.lists.map(boundOwner));
-    let foreign = owners.some((owner) => owner !== person.userId);
-    // a want list has no profile: it is theirs when one of their posts on Trade holds it
-    if (foreign) {
-      const loaded = await loadPersonRow({ queryClient, userId: person.userId });
-      if (!loaded) throw new Error("The person's posts could not be read");
-      const theirs = new Set(
-        (loaded.row?.posts ?? []).flatMap((post) => post.sides.map((side) => side.list.slug)),
-      );
-      foreign = deps.lists.some((slug, i) => owners[i] !== person.userId && !theirs.has(slug));
     }
-    return { name, counter: null, unavailable: null, foreign };
   },
   head: ({ loaderData, match }) =>
     generateMetadata({
@@ -117,8 +123,8 @@ export const Route = createFileRoute("/(container)/trade/@{$handle}/offer")({
 function OfferRoute() {
   const { person } = Route.useRouteContext();
   const search = Route.useSearch();
-  const { counter, unavailable, foreign } = Route.useLoaderData();
-  if (!person) return <PersonPageRefused />;
+  const { counter, unavailable, foreign, refused } = Route.useLoaderData();
+  if (!person || refused) return <PersonPageRefused />;
   const name = handleName(person.handle);
   const back = backPath(search.from, person.handle);
   if (unavailable) {

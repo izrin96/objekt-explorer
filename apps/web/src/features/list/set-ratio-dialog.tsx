@@ -16,7 +16,7 @@ import { m } from "@/paraglide/messages";
 
 import { useSetRatio } from "./actions";
 import { RatioPicker } from "./ratio-picker";
-import { type RatioSide, ratioText } from "./ratio-text";
+import { highestOwn, type RatioSide, ratioText } from "./ratio-text";
 
 type Props = {
   open: boolean;
@@ -97,12 +97,4 @@ function SetRatioForm({
       </DialogFooter>
     </>
   );
-}
-
-function highestOwn(objekts: readonly ListObjekt[]) {
-  let highest: number | null = null;
-  for (const { ratio } of objekts) {
-    if (ratio != null && (highest === null || ratio > highest)) highest = ratio;
-  }
-  return highest;
 }

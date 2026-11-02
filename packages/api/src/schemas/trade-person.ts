@@ -19,6 +19,20 @@ export function tradeHandle(addresses: LinkedProfile[]): string | null {
   return (realNickname(chosen.address, chosen.nickname) ?? chosen.address).toLowerCase();
 }
 
+/**
+ * Which account a handle names, among the accounts holding a profile row that matches it, in
+ * lookup order: the one whose own handle it is, else the first. An old row keeps the nickname it
+ * was cached with, so two accounts can share one, and only the canonical handle tells them apart.
+ */
+export function handleOwner(
+  handle: string,
+  candidates: { userId: string; addresses: LinkedProfile[] }[],
+): string | undefined {
+  const wanted = handle.toLowerCase();
+  const owner = candidates.find((candidate) => tradeHandle(candidate.addresses) === wanted);
+  return (owner ?? candidates[0])?.userId;
+}
+
 const ADDRESS = /^0x[0-9a-f]{40}$/i;
 
 /** Whether a handle names a profile by its address rather than its nickname. */
@@ -41,7 +55,7 @@ export const tradePersonInputSchema = z
   });
 export type TradePersonInput = z.infer<typeof tradePersonInputSchema>;
 
-/** `handle` is the account's canonical one; null when it no longer has a linked profile. */
+/** `handle` is the account's canonical one; an account with none is NOT_FOUND. */
 export const tradePersonOutputSchema = z.object({
   userId: z.string(),
   handle: z.string().nullable(),

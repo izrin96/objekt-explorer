@@ -31,7 +31,7 @@ export const Route = createFileRoute("/(container)/trade/@{$handle}")({
     if (!person.handle) throw notFound();
     if (person.handle !== params.handle) {
       throw redirect({
-        href: withHandle(location.pathname, location.searchStr, person.handle),
+        href: withHandle(location.href, person.handle),
         replace: true,
         // the offer page's Back steps back through history only when it was opened in the app
         state: { offerBack: location.state.offerBack },

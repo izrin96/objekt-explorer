@@ -1,40 +1,53 @@
 import { ORPCError } from "@orpc/server";
 import { db } from "@repo/db";
-import { user, userAddress } from "@repo/db/schema";
+import { userAddress } from "@repo/db/schema";
 import { and, desc, eq, isNotNull } from "drizzle-orm";
 
-import { isAddressHandle, tradeHandle, type TradePersonInput } from "../schemas/trade-person";
+import { unique } from "../lib/unique";
+import {
+  handleOwner,
+  isAddressHandle,
+  tradeHandle,
+  type TradePersonInput,
+} from "../schemas/trade-person";
 import { fetchAddresses } from "./trade-matches/holdings";
 
-/** The account a handle (any linked nickname or address, any case) or a user id names. */
-async function findUserId(input: TradePersonInput) {
-  if (input.handle !== undefined) {
-    // both columns are citext, so case never matters
-    const column = isAddressHandle(input.handle) ? userAddress.address : userAddress.nickname;
-    const [row] = await db
-      .select({ userId: userAddress.userId })
-      .from(userAddress)
-      .where(and(eq(column, input.handle), isNotNull(userAddress.userId)))
-      // two profiles can share a nickname: an account's default profile wins, then the newest
-      .orderBy(desc(userAddress.isDefault), desc(userAddress.id))
-      .limit(1);
-    return row?.userId ?? undefined;
-  }
-  if (input.userId === undefined) return undefined;
-  const [row] = await db
-    .select({ id: user.id })
-    .from(user)
-    .where(eq(user.id, input.userId))
-    .limit(1);
-  return row?.id;
+// a nickname is held by a handful of rows at most; this bounds a pathological one
+const CANDIDATE_ROWS = 20;
+
+/** The account a handle (any linked nickname or address, any case) names, and its profiles. */
+async function findByHandle(handle: string) {
+  // both columns are citext, so case never matters
+  const column = isAddressHandle(handle) ? userAddress.address : userAddress.nickname;
+  const rows = await db
+    .select({ userId: userAddress.userId })
+    .from(userAddress)
+    .where(and(eq(column, handle), isNotNull(userAddress.userId)))
+    // the fallback when no candidate's own handle is this one: a default profile, then the newest
+    .orderBy(desc(userAddress.isDefault), desc(userAddress.id))
+    .limit(CANDIDATE_ROWS);
+  const ids = unique(rows.flatMap((row) => (row.userId ? [row.userId] : [])));
+  const addresses = await fetchAddresses(ids);
+  const candidates = ids.map((userId) => ({
+    userId,
+    addresses: addresses.filter((row) => row.userId === userId),
+  }));
+  const userId = handleOwner(handle, candidates);
+  return candidates.find((candidate) => candidate.userId === userId);
 }
 
 /**
  * The account behind a Trade person page and its canonical handle, so the caller can redirect a
- * handle that isn't it. Only linked profiles resolve; anything else is NOT_FOUND.
+ * handle that isn't it. Only an account with a linked profile resolves; anything else is NOT_FOUND.
  */
 export async function resolveTradePerson(input: TradePersonInput) {
-  const userId = await findUserId(input);
-  if (!userId) throw new ORPCError("NOT_FOUND");
-  return { userId, handle: tradeHandle(await fetchAddresses([userId])) };
+  const found =
+    input.handle !== undefined
+      ? await findByHandle(input.handle)
+      : input.userId !== undefined
+        ? { userId: input.userId, addresses: await fetchAddresses([input.userId]) }
+        : undefined;
+  const handle = found ? tradeHandle(found.addresses) : null;
+  if (!found || !handle) throw new ORPCError("NOT_FOUND");
+  return { userId: found.userId, handle };
 }

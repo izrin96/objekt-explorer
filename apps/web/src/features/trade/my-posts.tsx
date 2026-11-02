@@ -11,7 +11,7 @@ import {
 import type { Outputs } from "@repo/api";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useHydrated } from "@tanstack/react-router";
-import { useId, useRef } from "react";
+import { type ReactNode, useId, useRef } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -108,46 +108,33 @@ export function MyPosts({ onNew, onEdit }: MyPostsProps) {
             <h2 id="my-posts-title" className="text-muted-foreground font-medium">
               {m.trade_my_posts_title()}
             </h2>
-            <span aria-hidden className="text-muted-foreground">
-              ·
-            </span>
-            <span className="text-muted-foreground tabular-nums">
+            {/* each " · " travels with the item after it, so a wrapped line never ends on one */}
+            <MetaItem>
               {m.trade_my_posts_listed({ count: summary.listed.toLocaleString(getLocale()) })}
-            </span>
+            </MetaItem>
             {summary.idle > 0 ? (
-              <>
-                <span aria-hidden className="text-muted-foreground">
-                  ·
-                </span>
+              <MetaItem>
                 <Badge variant="outline" size="sm" className="tabular-nums">
                   {m.trade_my_posts_idle({ count: summary.idle.toLocaleString(getLocale()) })}
                 </Badge>
-              </>
+              </MetaItem>
             ) : null}
             {lastBumpAt ? (
-              <>
-                <span aria-hidden className="text-muted-foreground">
-                  ·
-                </span>
-                <time dateTime={lastBumpAt} className="text-muted-foreground tabular-nums">
+              <MetaItem>
+                <time dateTime={lastBumpAt}>
                   {m.trade_bumped_at({ time: relativeTime(new Date(lastBumpAt).getTime(), now) })}
                 </time>
-              </>
+              </MetaItem>
             ) : null}
             {nextBumpAt ? (
-              <>
-                <span aria-hidden className="text-muted-foreground">
-                  ·
-                </span>
-                <span className="text-muted-foreground tabular-nums">
-                  {m.trade_bump_next({
-                    time: relativeTime(new Date(nextBumpAt).getTime(), now, "hour"),
-                  })}
-                </span>
-              </>
+              <MetaItem>
+                {m.trade_bump_next({
+                  time: relativeTime(new Date(nextBumpAt).getTime(), now, "hour"),
+                })}
+              </MetaItem>
             ) : null}
           </div>
-          <div className="flex shrink-0 flex-wrap items-center justify-end gap-1">
+          <div className="flex max-w-full min-w-0 flex-wrap items-center gap-1">
             {/* focusable while disabled, so activating it can say why */}
             <Button
               variant="outline"
@@ -214,6 +201,15 @@ export function MyPosts({ onNew, onEdit }: MyPostsProps) {
 }
 
 type MyPost = Outputs["trade"]["myPosts"][number];
+
+function MetaItem({ children }: { children: ReactNode }) {
+  return (
+    <span className="text-muted-foreground inline-flex items-center gap-2 whitespace-nowrap tabular-nums">
+      <span aria-hidden>·</span>
+      {children}
+    </span>
+  );
+}
 
 /** Why Copy link can't be used, or null when it can. */
 function linkReason({

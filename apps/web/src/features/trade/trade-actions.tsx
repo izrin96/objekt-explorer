@@ -21,7 +21,7 @@ export function TradeActions({
 }: {
   contact: TradeContact;
   name: string;
-  /** the person's handle, which the offer page lives under; none, no Make offer */
+  /** any handle of theirs, which the offer page lives under; none, no Make offer */
   handle: string | null;
   /** Make offer opens with these swap matches added */
   matches?: OfferStart["matches"];

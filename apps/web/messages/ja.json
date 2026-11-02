@@ -2200,6 +2200,7 @@
   "trade_composer_all_desc_ratio": "{list}に{count}個。1つ選んで比率を設定できます。",
   "trade_composer_objekt_ratio": "{name}の比率",
   "trade_composer_objekt_ratio_set": "{name}の比率、現在は{ratio}",
+  "trade_composer_list_ratio_set": "全体の比率、現在は{ratio}",
   "trade_composer_rule_delete": "ルール {rule} を削除",
   "trade_composer_rule_ratio": "ルール {rule} の比率",
   "trade_composer_rule_ratio_set": "ルール {rule} の比率、現在は{ratio}",

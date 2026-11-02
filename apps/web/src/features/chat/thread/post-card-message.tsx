@@ -93,6 +93,8 @@ export function PostCardMessage({
                 params: { handle: post.owner.handle, slug: post.list.slug },
               }
             : getListLinkOption(post.list))}
+          // a post page's preload reads the person's row against the feed's rate limit
+          preload={false}
           className="self-start text-xs font-medium underline underline-offset-2 hover:no-underline"
         >
           {m.chat_post_open()}

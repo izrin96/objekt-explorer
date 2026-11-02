@@ -1,6 +1,14 @@
 import { describe, expect, test } from "bun:test";
 
-import { appliedRatio, groupRatio, ratioLabel, ratioName, ratioText } from "./ratio-text";
+import {
+  appliedRatio,
+  groupRatio,
+  highestOwn,
+  ratioLabel,
+  ratioName,
+  ratioTargets,
+  ratioText,
+} from "./ratio-text";
 
 // `m.*` returns a branded string, which `expect(...).toBe("...")` rejects.
 const check = (actual: unknown) => expect(actual);
@@ -36,6 +44,42 @@ describe("groupRatio", () => {
 
   test("no ratio anywhere is none", () => {
     expect(groupRatio([{ ratio: null }, {}], null)).toBeNull();
+  });
+});
+
+describe("highestOwn", () => {
+  test("the highest own ratio among the copies", () => {
+    expect(highestOwn([{ ratio: 2 }, { ratio: null }, { ratio: 4 }, {}])).toBe(4);
+  });
+
+  test("none of their own is 1:1, whatever the list's", () => {
+    expect(highestOwn([{ ratio: null }, {}])).toBeNull();
+    expect(highestOwn([])).toBeNull();
+  });
+});
+
+describe("ratioTargets", () => {
+  const copies = [
+    { id: "a1", collectionId: "A" },
+    { id: "a2", collectionId: "A" },
+    { id: "b1", collectionId: "B" },
+    { id: "c1", collectionId: "C" },
+  ];
+
+  test("separate cards set only the selected copies", () => {
+    expect(ratioTargets([copies[0]!], copies, false)).toEqual([copies[0]!]);
+  });
+
+  test("a combined card stands for every copy of its collection", () => {
+    expect(ratioTargets([copies[0]!, copies[3]!], copies, true)).toEqual([
+      copies[0]!,
+      copies[1]!,
+      copies[3]!,
+    ]);
+  });
+
+  test("nothing selected sets nothing", () => {
+    expect(ratioTargets([], copies, true)).toEqual([]);
   });
 });
 

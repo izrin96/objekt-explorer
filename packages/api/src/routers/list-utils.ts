@@ -82,12 +82,13 @@ export const listUtils = {
       const ids = [...new Set(entryIds)];
       // one array parameter, not one per id: a list holds up to 50,000 entries
       const inIds = sql`${listEntries.id} = ANY(${sql.param(ids)}::int[])`;
+      const ownEntries = and(inIds, eq(listEntries.listId, list.id), isNull(listEntries.ruleId));
       // a refused request changes nothing, so every id is checked before the write
       await db.transaction(async (tx) => {
         const found = await tx
           .select({ id: listEntries.id })
           .from(listEntries)
-          .where(and(inIds, eq(listEntries.listId, list.id), isNull(listEntries.ruleId)))
+          .where(ownEntries)
           .for("update");
         if (found.length !== ids.length) {
           refuse(
@@ -96,7 +97,7 @@ export const listUtils = {
             "A rule's objekts take the rule's ratio, and every entry must be on the list",
           );
         }
-        await tx.update(listEntries).set({ ratio }).where(inIds);
+        await tx.update(listEntries).set({ ratio }).where(ownEntries);
       });
       await touchList([list.id]);
     },
