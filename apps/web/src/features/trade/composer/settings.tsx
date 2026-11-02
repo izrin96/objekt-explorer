@@ -29,6 +29,7 @@ import {
   Select,
   SelectItem,
   SelectPopup,
+  SelectSeparator,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -341,7 +342,8 @@ function ListSelect({
               </span>
             </SelectItem>
           ))}
-          <SelectItem value={NEW} disabled={needsProfile} className="border-t">
+          {optional || rows.length > 0 ? <SelectSeparator /> : null}
+          <SelectItem value={NEW} disabled={needsProfile}>
             <span className="flex min-w-0 items-center gap-1.5">
               <PlusIcon aria-hidden />
               {NEW_LIST_LABEL[slot]()}
