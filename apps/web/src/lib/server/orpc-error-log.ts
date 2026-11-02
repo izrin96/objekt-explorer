@@ -44,7 +44,7 @@ export function logORPCError(error: unknown, request: HandlerRequest) {
   // a refusal (a signed-out poll's 401, say) is one line, not a stack with minified source
   if (isExpectedError(error)) {
     const { status, code } = error as ORPCError<string, unknown>;
-    console.warn("ORPC refused:", where, status, code);
+    console.warn("ORPC refused:", where, status, code, { ua });
     return;
   }
 
