@@ -11,6 +11,7 @@ import { type GetSource, addLabel } from "@/features/offers/get-source";
 import { ObjektTile, type TileNote } from "@/features/offers/objekt-tile";
 import type { Collections, OfferPick, OfferSide } from "@/features/offers/pick";
 import { countOf, totalOf } from "@/features/offers/quantity";
+import { AnySerial } from "@/features/offers/wrong-copy";
 import { joinList } from "@/lib/text";
 import { TONE_EDGE, TONE_FILL } from "@/lib/tone";
 import { cn } from "@/lib/utils";
@@ -147,7 +148,7 @@ export function SideColumn({
                   collection={collections[pick.collectionSlug]}
                   serial={
                     pick.objektId === null ? (
-                      m.offer_leg_any_copy()
+                      <AnySerial />
                     ) : pick.serial === null ? null : (
                       <SerialNo serial={pick.serial} estimated={estimated} />
                     )

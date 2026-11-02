@@ -44,10 +44,15 @@ export function Serial({ serial, estimated }: { serial: number | null; estimated
   );
 }
 
+/** "any serial" in the body font: the serial line it stands in is set in mono for the numbers. */
+export function AnySerial() {
+  return <span className="font-sans">{m.offer_leg_any_copy()}</span>;
+}
+
 /** A leg's serial, or "any serial" on an any-copy leg. */
 export function LegSerial({ leg }: { leg: Leg }) {
   return leg.objektId === null ? (
-    m.offer_leg_any_copy()
+    <AnySerial />
   ) : (
     <Serial serial={leg.serial} estimated={leg.serialEstimated} />
   );
