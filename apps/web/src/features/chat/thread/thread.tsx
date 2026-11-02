@@ -188,7 +188,8 @@ function ThreadView({
 
   // below `md` the list just hid, taking focus with it: start the reader at the thread
   useEffect(() => {
-    returnedToAdd.current ??= takeReturn(`chat-add:${id}`);
+    // `??=` makes the React Compiler skip this whole component
+    if (returnedToAdd.current === null) returnedToAdd.current = takeReturn(`chat-add:${id}`);
     if (returnedToAdd.current) addRef.current?.focus();
     else if (window.matchMedia("(width < 48rem)").matches) heading.current?.focus();
   }, [id]);
