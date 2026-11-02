@@ -1,7 +1,8 @@
 import { type ReactNode, useCallback, useRef, useState } from "react";
-import { Virtualizer, VList, type VListHandle } from "virtua";
+import { Virtualizer } from "virtua";
 
 import { InfiniteSentinel } from "@/components/shared/infinite-sentinel";
+import { ScrollArea, ScrollAreaPrimitive } from "@/components/ui/scroll-area";
 import { m } from "@/paraglide/messages";
 
 import { useCardColumns } from "./card-grid";
@@ -85,48 +86,15 @@ function loadAhead(scroll: { size: number; offset: number; viewport: number }, m
 }
 
 /**
- * A card grid virtualised by row inside a fixed-height container, such as a dialog's body.
- * It fills its flex parent, so the parent sets the height.
+ * A card grid virtualised by row in a scroll area of its own, with edge fades, for a fixed-height
+ * body where something above it (a filter bar) stays put. It fills its flex parent, so the parent
+ * sets the height.
  */
-export function VirtualCardGrid<T>({ sections, getKey, renderItem, more }: GridProps<T>) {
-  const { ref, measured, columns } = useCardColumns<HTMLDivElement>();
-  const list = useRef<VListHandle>(null);
-  const rows = cardRows(sections, columns, more);
-
+export function VirtualCardGrid<T>(props: GridProps<T>) {
   return (
-    <div ref={ref} className="min-h-0 flex-1">
-      {measured ? (
-        <VList
-          ref={list}
-          data={rows}
-          onScroll={() => {
-            const handle = list.current;
-            if (!handle) return;
-            loadAhead(
-              {
-                size: handle.scrollSize,
-                offset: handle.scrollOffset,
-                viewport: handle.viewportSize,
-              },
-              more,
-            );
-          }}
-          style={{ height: "100%" }}
-          className="overscroll-contain"
-        >
-          {(row) => (
-            <CardRow
-              key={row.key}
-              row={row}
-              columns={columns}
-              getKey={getKey}
-              renderItem={renderItem}
-              more={more}
-            />
-          )}
-        </VList>
-      ) : null}
-    </div>
+    <ScrollArea scrollFade className="flex-1">
+      <PanelCardGrid {...props} />
+    </ScrollArea>
   );
 }
 
@@ -161,9 +129,9 @@ function useScrollAreaPlacement() {
 }
 
 /**
- * `VirtualCardGrid` for a `SheetPanel` or `DialogPanel`: it virtualises inside the panel's own
- * scroll area, so the panel keeps its edge fades and scrollbar, and what sits above the grid in
- * the panel scrolls away with it. Outside a `ScrollArea` it has no scroller and draws nothing.
+ * A card grid virtualised by row inside the `ScrollArea` around it (a `SheetPanel`'s, a
+ * `DialogPanel`'s): the edge fades and the thin scrollbar stay, and what sits above the grid in
+ * that scroll area scrolls away with it. It must sit inside a `ScrollArea`.
  */
 export function PanelCardGrid<T>({ sections, getKey, renderItem, more }: GridProps<T>) {
   const { ref, measured, columns } = useCardColumns<HTMLDivElement>();
@@ -182,7 +150,9 @@ export function PanelCardGrid<T>({ sections, getKey, renderItem, more }: GridPro
   );
 
   return (
-    <div ref={attach}>
+    // Content, not a plain div: the scroll area only watches its viewport's box, so without it the
+    // edge fades miss the grid growing and stay off until the first scroll
+    <ScrollAreaPrimitive.Content ref={attach}>
       {measured && startMargin !== null ? (
         <Virtualizer
           data={rows}
@@ -213,6 +183,6 @@ export function PanelCardGrid<T>({ sections, getKey, renderItem, more }: GridPro
           )}
         </Virtualizer>
       ) : null}
-    </div>
+    </ScrollAreaPrimitive.Content>
   );
 }

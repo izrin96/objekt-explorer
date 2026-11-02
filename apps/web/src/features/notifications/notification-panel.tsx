@@ -18,6 +18,7 @@ import { useRef, useState } from "react";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Button } from "@/components/ui/button";
 import { PopoverTitle } from "@/components/ui/popover";
+import { ScrollAreaPrimitive, ScrollBar } from "@/components/ui/scroll-area";
 import { SheetClose, SheetTitle } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsPanel, TabsTab } from "@/components/ui/tabs";
@@ -193,89 +194,100 @@ export function NotificationPanel({
             </TabsTab>
           ))}
         </TabsList>
-        <TabsPanel value={kind} className="relative min-h-0 flex-1 overflow-y-auto">
-          {query.isPending ? (
-            <NotificationSkeleton />
-          ) : query.isError ? (
-            <EmptyState
-              icon={WarningIcon}
-              bordered={false}
-              title={m.common_error_loading_data()}
-              action={
-                <Button variant="outline" size="sm" onClick={() => void query.refetch()}>
-                  <ArrowClockwiseIcon />
-                  {m.common_error_retry()}
-                </Button>
-              }
-            />
-          ) : empty ? (
-            <EmptyState
-              icon={BellIcon}
-              bordered={false}
-              title={EMPTY[kind].title()}
-              hint={EMPTY[kind].hint()}
-              preview={<ExampleRow framed={kind === "alerts"} />}
-              action={
-                <Button
-                  variant="outline"
-                  size="sm"
-                  render={<Link to={EMPTY[kind].to} />}
-                  onClick={onNavigate}
-                >
-                  {EMPTY[kind].action()}
-                </Button>
-              }
-            />
-          ) : (
-            <>
-              {kind === "all" && unread === 0 ? (
-                <p className="text-muted-foreground flex items-center gap-2 border-b px-5 py-2.5 text-sm">
-                  <ChecksIcon aria-hidden className="size-4" />
-                  {m.notification_caught_up()}
-                </p>
-              ) : null}
-              {SECTIONS.map((section) => {
-                const rows = sections.get(section);
-                if (!rows) return null;
-                return (
-                  <section key={section} aria-labelledby={`notification-section-${section}`}>
-                    <h3
-                      id={`notification-section-${section}`}
-                      className="text-muted-foreground bg-popover sticky top-0 z-20 border-b px-5 pt-3 pb-1.5 text-xs font-medium tracking-wide uppercase"
-                    >
-                      {SECTION_LABEL[section]()}
-                    </h3>
-                    <ul className="flex flex-col divide-y">
-                      {rows.map((item) => (
-                        <li key={item.id}>
-                          <NotificationRow
-                            notification={item}
-                            collections={collections}
-                            now={now}
-                            variant={variant}
-                            onOpen={() => openRow(item)}
-                          />
-                        </li>
-                      ))}
-                    </ul>
-                  </section>
-                );
-              })}
-            </>
-          )}
+        <TabsPanel value={kind} className="flex min-h-0 flex-1 flex-col">
+          {/* a fade at the bottom edge only: at the top it would fade the pinned section heading */}
+          <ScrollAreaPrimitive.Root className="flex min-h-0 flex-1 flex-col">
+            <ScrollAreaPrimitive.Viewport
+              data-slot="scroll-area-viewport"
+              className="focus-visible:ring-ring relative min-h-0 flex-1 overscroll-y-contain mask-b-from-[calc(100%-min(var(--fade-size),var(--scroll-area-overflow-y-end)))] outline-none [--fade-size:1.5rem] focus-visible:ring-2 focus-visible:ring-inset"
+            >
+              <ScrollAreaPrimitive.Content>
+                {query.isPending ? (
+                  <NotificationSkeleton />
+                ) : query.isError ? (
+                  <EmptyState
+                    icon={WarningIcon}
+                    bordered={false}
+                    title={m.common_error_loading_data()}
+                    action={
+                      <Button variant="outline" size="sm" onClick={() => void query.refetch()}>
+                        <ArrowClockwiseIcon />
+                        {m.common_error_retry()}
+                      </Button>
+                    }
+                  />
+                ) : empty ? (
+                  <EmptyState
+                    icon={BellIcon}
+                    bordered={false}
+                    title={EMPTY[kind].title()}
+                    hint={EMPTY[kind].hint()}
+                    preview={<ExampleRow framed={kind === "alerts"} />}
+                    action={
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        render={<Link to={EMPTY[kind].to} />}
+                        onClick={onNavigate}
+                      >
+                        {EMPTY[kind].action()}
+                      </Button>
+                    }
+                  />
+                ) : (
+                  <>
+                    {kind === "all" && unread === 0 ? (
+                      <p className="text-muted-foreground flex items-center gap-2 border-b px-5 py-2.5 text-sm">
+                        <ChecksIcon aria-hidden className="size-4" />
+                        {m.notification_caught_up()}
+                      </p>
+                    ) : null}
+                    {SECTIONS.map((section) => {
+                      const rows = sections.get(section);
+                      if (!rows) return null;
+                      return (
+                        <section key={section} aria-labelledby={`notification-section-${section}`}>
+                          <h3
+                            id={`notification-section-${section}`}
+                            className="text-muted-foreground bg-popover sticky top-0 z-20 border-b px-5 pt-3 pb-1.5 text-xs font-medium tracking-wide uppercase"
+                          >
+                            {SECTION_LABEL[section]()}
+                          </h3>
+                          <ul className="flex flex-col divide-y">
+                            {rows.map((item) => (
+                              <li key={item.id}>
+                                <NotificationRow
+                                  notification={item}
+                                  collections={collections}
+                                  now={now}
+                                  variant={variant}
+                                  onOpen={() => openRow(item)}
+                                />
+                              </li>
+                            ))}
+                          </ul>
+                        </section>
+                      );
+                    })}
+                  </>
+                )}
 
-          {query.hasNextPage ? (
-            <div className="flex justify-center border-t p-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                loading={query.isFetchingNextPage}
-                onClick={() => void query.fetchNextPage()}
-              >
-                {m.notification_load_more()}
-              </Button>
-            </div>
-          ) : null}
+                {query.hasNextPage ? (
+                  <div className="flex justify-center border-t p-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      loading={query.isFetchingNextPage}
+                      onClick={() => void query.fetchNextPage()}
+                    >
+                      {m.notification_load_more()}
+                    </Button>
+                  </div>
+                ) : null}
+              </ScrollAreaPrimitive.Content>
+            </ScrollAreaPrimitive.Viewport>
+            <ScrollBar />
+          </ScrollAreaPrimitive.Root>
         </TabsPanel>
       </Tabs>
     </div>

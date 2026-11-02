@@ -9,6 +9,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverPopup, PopoverTrigger } from "@/components/ui/popover";
+import { ScrollAreaPrimitive, ScrollBar } from "@/components/ui/scroll-area";
 import { SheetClose, SheetDescription, SheetTitle } from "@/components/ui/sheet";
 import { toastManager } from "@/components/ui/toast";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
@@ -179,7 +180,6 @@ function AddObjektsBody({
       ) : null}
       <PickerFilterBar filters={filters} onChange={setFilters} />
       <div className="grid min-h-0 flex-1 grid-rows-[minmax(0,1fr)_auto] gap-3 md:grid-cols-[minmax(0,1fr)_16rem] md:grid-rows-1 md:gap-4">
-        {/* a plain column, not SheetPanel: its ScrollArea gives virtua no viewport */}
         <div className="flex min-h-0 flex-col">
           {owner !== null ? (
             <OwnedGrid address={owner} {...gridProps} />
@@ -190,7 +190,7 @@ function AddObjektsBody({
           )}
         </div>
         <aside className="flex min-h-0 flex-col gap-3 border-s ps-4 max-md:hidden">
-          <Tray {...tray} listClassName="flex-1 grid-cols-3" />
+          <Tray {...tray} scrollClassName="flex-1" listClassName="grid-cols-3" />
           {priceFields ? <div className="flex flex-col gap-3">{priceFields}</div> : null}
           <div className="flex gap-2">
             <SheetClose render={<Button variant="outline" className="flex-1" />}>
@@ -210,7 +210,7 @@ function AddObjektsBody({
             </PopoverTrigger>
             <PopoverPopup side="top" align="start" className="w-80 max-w-full">
               <div className="flex flex-col gap-3">
-                <Tray {...tray} listClassName="max-h-64 grid-cols-4" />
+                <Tray {...tray} scrollClassName="max-h-64" listClassName="grid-cols-4" />
               </div>
             </PopoverPopup>
           </Popover>
@@ -262,11 +262,14 @@ function Tray({
   ticked,
   onUntick,
   onClear,
+  scrollClassName,
   listClassName,
 }: {
   ticked: Ticked;
   onUntick: (key: string, objekt: ValidObjekt) => void;
   onClear: () => void;
+  /** sizes the scroll area: it fills a column, or stops at a height in the popover */
+  scrollClassName: string;
   listClassName: string;
 }) {
   // where focus lands when the control holding it leaves the tray
@@ -303,6 +306,7 @@ function Tray({
           ticked={ticked}
           onUntick={onUntick}
           onEmptied={() => heading.current?.focus()}
+          scrollClassName={scrollClassName}
           className={listClassName}
         />
       )}
@@ -320,11 +324,13 @@ function TickedList({
   ticked,
   onUntick,
   onEmptied,
+  scrollClassName,
   className,
 }: {
   ticked: Ticked;
   onUntick: (key: string, objekt: ValidObjekt) => void;
   onEmptied: () => void;
+  scrollClassName: string;
   className: string;
 }) {
   const listRef = useRef<HTMLUListElement>(null);
@@ -337,24 +343,33 @@ function TickedList({
     onUntick(key, objekt);
   };
   return (
-    <ul
-      ref={listRef}
-      className={cn("grid min-h-0 content-start gap-1.5 overflow-y-auto", className)}
-    >
-      {[...ticked].map(([key, objekt], index) => (
-        <li key={key} className="relative min-w-0">
-          <ObjektCard objekt={objekt} image="thumbnail" hideLabel />
-          <button
-            type="button"
-            aria-label={m.trade_composer_add_untick({ name: tickedName(objekt) })}
-            onClick={() => untick(index, key, objekt)}
-            className="bg-background hover:bg-muted focus-visible:ring-ring absolute end-0.5 top-0.5 z-10 grid size-6 place-items-center rounded-full border shadow-xs outline-none focus-visible:ring-2"
-          >
-            <XIcon className="size-3" />
-          </button>
-        </li>
-      ))}
-    </ul>
+    // Base UI's parts, not the shared ScrollArea: its viewport is `h-full`, which a `max-h` frame
+    // leaves unbounded, so the list would never scroll in the popover
+    <ScrollAreaPrimitive.Root className={cn("flex min-h-0 flex-col", scrollClassName)}>
+      <ScrollAreaPrimitive.Viewport
+        data-slot="scroll-area-viewport"
+        className="focus-visible:ring-ring min-h-0 flex-1 overscroll-y-contain mask-t-from-[calc(100%-min(var(--fade-size),var(--scroll-area-overflow-y-start)))] mask-b-from-[calc(100%-min(var(--fade-size),var(--scroll-area-overflow-y-end)))] outline-none [--fade-size:1.5rem] focus-visible:ring-2 focus-visible:ring-inset"
+      >
+        <ScrollAreaPrimitive.Content>
+          <ul ref={listRef} className={cn("grid content-start gap-1.5", className)}>
+            {[...ticked].map(([key, objekt], index) => (
+              <li key={key} className="relative min-w-0">
+                <ObjektCard objekt={objekt} image="thumbnail" hideLabel />
+                <button
+                  type="button"
+                  aria-label={m.trade_composer_add_untick({ name: tickedName(objekt) })}
+                  onClick={() => untick(index, key, objekt)}
+                  className="bg-background hover:bg-muted focus-visible:ring-ring absolute end-0.5 top-0.5 z-10 grid size-6 place-items-center rounded-full border shadow-xs outline-none focus-visible:ring-2"
+                >
+                  <XIcon className="size-3" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        </ScrollAreaPrimitive.Content>
+      </ScrollAreaPrimitive.Viewport>
+      <ScrollBar />
+    </ScrollAreaPrimitive.Root>
   );
 }
 

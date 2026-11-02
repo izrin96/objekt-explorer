@@ -11,6 +11,7 @@ import {
   Sheet,
   SheetDescription,
   SheetHeader,
+  SheetPanel,
   SheetPopup,
   SheetTitle,
 } from "@/components/ui/sheet";
@@ -30,7 +31,7 @@ import { ConfirmRule } from "@/features/list/rules/rules-strip";
 import { ruleText } from "@/features/list/rules/words";
 import { ObjektCard } from "@/features/objekt/objekt-card";
 import { collectionName } from "@/features/objekt/objekt-label";
-import { VirtualCardGrid } from "@/features/objekt/virtual-card-grid";
+import { PanelCardGrid } from "@/features/objekt/virtual-card-grid";
 import { client } from "@/lib/orpc";
 import { refusalText } from "@/lib/refusal";
 import { joinSentences } from "@/lib/text";
@@ -638,15 +639,15 @@ function AllObjekts({
             : m.trade_composer_all_desc({ count, list: name })}
         </SheetDescription>
       </SheetHeader>
-      <div className="flex min-h-0 flex-1 flex-col px-6 pb-6">
-        <VirtualCardGrid
+      <SheetPanel>
+        <PanelCardGrid
           sections={[{ title: null, items: entries ?? [] }]}
           getKey={(entry) => String(entry.entryId)}
           renderItem={(entry) => (
             <EntryThumb entry={entry} slug={slug} side={ratio} listRatio={listRatio} />
           )}
         />
-      </div>
+      </SheetPanel>
     </>
   );
 }
