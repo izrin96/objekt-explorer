@@ -2,6 +2,7 @@ import { ArrowsLeftRightIcon, CaretRightIcon } from "@phosphor-icons/react";
 import type { OfferItemView, OfferView } from "@repo/api/schemas/offer";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 
+import { Card } from "@/components/ui/card";
 import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { TONE_INK } from "@/lib/tone";
 import { cn } from "@/lib/utils";
@@ -38,12 +39,12 @@ export function OfferCard({
     tabIndex: -1,
     "data-offer-id": offer.id,
     className:
-      "bg-card @container focus-visible:ring-ring w-115 max-w-full rounded-lg border outline-none focus-visible:ring-2",
+      "@container focus-visible:ring-ring w-115 max-w-full outline-none focus-visible:ring-2",
   };
 
   if (!collapsed) {
     return (
-      <div {...target}>
+      <Card {...target}>
         <OfferBody
           offer={offer}
           name={name}
@@ -51,13 +52,13 @@ export function OfferCard({
           onCounter={onCounter}
           onOpen={onOpen}
         />
-      </div>
+      </Card>
     );
   }
 
   return (
-    <Collapsible {...target}>
-      <CollapsibleTrigger className="group focus-visible:ring-ring flex w-full items-center gap-2 rounded-lg px-3 py-2 text-start text-sm outline-none focus-visible:ring-2">
+    <Collapsible {...target} render={<Card />}>
+      <CollapsibleTrigger className="group focus-visible:ring-ring flex w-full items-center gap-2 rounded-2xl px-3 py-2 text-start text-sm outline-none focus-visible:ring-2">
         <CaretRightIcon
           aria-hidden
           className="text-muted-foreground size-3.5 shrink-0 group-data-panel-open:rotate-90 motion-safe:transition-transform"

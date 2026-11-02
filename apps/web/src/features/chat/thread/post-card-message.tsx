@@ -3,6 +3,7 @@ import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 
+import { Card } from "@/components/ui/card";
 import { formatPostPrices } from "@/features/chat/format";
 import { getListLinkOption } from "@/features/list/list-link";
 import { LIST_TYPE_LABEL } from "@/features/list/list-type-badge";
@@ -37,7 +38,7 @@ export function PostCardMessage({
   const { post, match } = view;
 
   return (
-    <div className="bg-background relative flex w-72 max-w-full flex-col gap-2 rounded-xl border p-2.5 text-sm">
+    <Card className="w-72 max-w-full gap-2 p-2.5 text-sm">
       {action ? <div className="absolute end-1 top-1">{action}</div> : null}
       {post ? (
         <p className={cn("flex min-w-0 items-center gap-2", action && "pe-7")}>
@@ -100,7 +101,7 @@ export function PostCardMessage({
           {m.chat_post_open()}
         </Link>
       ) : null}
-    </div>
+    </Card>
   );
 }
 

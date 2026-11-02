@@ -2,6 +2,7 @@ import type { CardView } from "@repo/api/schemas/chat";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { Link } from "@tanstack/react-router";
 
+import { Card } from "@/components/ui/card";
 import { getListLinkOption } from "@/features/list/list-link";
 import { ObjektCard } from "@/features/objekt/objekt-card";
 import { CollectionLabel } from "@/features/objekt/objekt-label";
@@ -27,7 +28,7 @@ export function ObjektCardMessage({
       : null;
 
   return (
-    <div className="bg-background flex w-72 max-w-full gap-3 rounded-lg border p-2">
+    <Card className="w-72 max-w-full flex-row gap-3 p-2.5">
       <div className="@container w-20 shrink-0">
         {collection ? (
           <ObjektCard objekt={collection} image="thumbnail" hideSerial hideLabel onOpen={onOpen} />
@@ -59,6 +60,6 @@ export function ObjektCardMessage({
         ) : null}
         {price ? <p className="mt-auto font-semibold tabular-nums">{price}</p> : null}
       </div>
-    </div>
+    </Card>
   );
 }
