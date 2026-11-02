@@ -46,18 +46,31 @@ export const myPostsOptions = () => orpc.trade.myPosts.queryOptions({ staleTime:
 export const collectionPostCountsOptions = (slug: string) =>
   orpc.trade.collectionPostCounts.queryOptions({ input: { slug }, staleTime: 60_000 });
 
-/** One post side's every objekt, for its "+N" dialog; `compare` is For you's Compare with. */
+/** One post side's objekts, a page at a time, for its "+N" sheet; `compare` is For you's Compare with. */
 export const sideItemsOptions = (
   listId: number,
   compare: { list?: string; mutual: boolean },
   enabled: boolean,
 ) =>
-  orpc.trade.sideItems.queryOptions({
-    input: { listId, list: compare.list, mutual: compare.mutual || undefined },
+  orpc.trade.sideItems.infiniteOptions({
+    input: (cursor: number) => ({
+      listId,
+      list: compare.list,
+      mutual: compare.mutual || undefined,
+      cursor,
+    }),
+    initialPageParam: 0,
+    getNextPageParam: (page) => page.nextCursor,
     enabled,
     staleTime: BROWSE_STALE_MS,
+    // a refetch replays every loaded page, each counted by the feed's rate limit, so nothing
+    // refetches on its own and the pages go once the sheet stops showing them
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: 0,
     retry: retryUnlessRefused,
   });
+
 /** A list page's Show my matches; asked only while the toggle is on. */
 export const listMatchesOptions = (listId: number, enabled: boolean) =>
   orpc.trade.listMatches.queryOptions({

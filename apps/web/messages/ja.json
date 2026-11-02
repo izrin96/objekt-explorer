@@ -1027,7 +1027,6 @@
   "trade_match_via_rule": "ルール経由",
   "trade_side_all": "すべて {count}",
   "trade_side_open_list": "リストを開く",
-  "trade_side_more": "残り {count} 件はリストのページで",
   "trade_side_tabs_label": "表示するオブジェクト",
   "trade_side_unfiltered": "下のオブジェクトはフィルターなしのリスト全体です。",
   "trade_strip_total": "全 {total} 件",

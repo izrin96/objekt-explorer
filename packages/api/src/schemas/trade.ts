@@ -123,11 +123,19 @@ export type PeopleInput = z.infer<typeof peopleInputSchema>;
 /** people a page of `trade.people` holds */
 export const PEOPLE_PAGE_SIZE = 12;
 
-/** One post side's every objekt, for the strip's "+N" dialog; `list` and `mutual` narrow the rings as For you's Compare with does. */
+/** A page of one post side's objekts, for the strip's "+N" sheet; `list` and `mutual` narrow the rings as For you's Compare with does. */
 export const sideItemsInputSchema = z.object({
   listId: z.coerce.number<number>().int().positive(),
   list: z.string().min(1).optional(),
   mutual: queryBoolean.optional(),
+  /** the previous page's `nextCursor`; none is the first page */
+  cursor: z
+    // an empty `?cursor=` is no number, not the first page
+    .preprocess(
+      (value) => (value === "" ? Number.NaN : value),
+      z.coerce.number<number>().int().min(0),
+    )
+    .optional(),
 });
 export type SideItemsInput = z.infer<typeof sideItemsInputSchema>;
 
@@ -259,9 +267,21 @@ export const peopleOutputSchema = z.object({
   collections: feedCollectionsSchema,
 });
 
+/** What a sale stack's copies ask; a have or want side's items carry none of it. */
+const sideItemSchema = previewItemSchema.extend({
+  /** the lowest and highest of its priced copies */
+  price: z.object({ min: z.number(), max: z.number() }).optional(),
+  /** a copy is QYOP */
+  qyop: z.literal(true).optional(),
+  /** its copies' distinct notes, newest first */
+  notes: z.array(z.string()).optional(),
+});
+
 export const sideItemsOutputSchema = z.object({
-  items: z.array(previewItemSchema),
+  items: z.array(sideItemSchema),
+  /** collections after this page */
   more: z.number().int(),
+  nextCursor: z.number().int().optional(),
   copyCount: z.number().int(),
   matched: z.number().int(),
   near: sideNearSchema.nullable(),

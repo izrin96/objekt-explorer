@@ -1,5 +1,6 @@
+import type { Outputs } from "@repo/api";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { createContext, type ReactNode, type RefObject, use } from "react";
 
@@ -19,14 +20,17 @@ import { getListLinkOption } from "@/features/list/list-link";
 import { LIST_TYPE_LABEL } from "@/features/list/list-type-badge";
 import { RatioChip } from "@/features/list/ratio-chip";
 import { type RatioSide, ratioSideOf } from "@/features/list/ratio-text";
-import { CardGrid, CardGridSkeleton } from "@/features/objekt/card-grid";
+import { CardGridSkeleton } from "@/features/objekt/card-grid";
 import { ObjektCard } from "@/features/objekt/objekt-card";
+import { PanelCardGrid } from "@/features/objekt/virtual-card-grid";
+import { formatCurrency } from "@/features/settings/use-currency";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
 
 import { type NearOpen, nearCountText, nearRingText, type OpenObjekt, type SideNear } from "./near";
 import type { PostSideData } from "./post-types";
 import { sideItemsOptions } from "./queries";
+import { stackPriceText } from "./stack-price";
 import { NEAR_RING, RING, SlugTile } from "./thumb-grid";
 
 /** For you's Compare with, as the feed sends it, so the sheet rings what the strip rings. */
@@ -34,65 +38,54 @@ export const SideCompareContext = createContext<{ list?: string; mutual: boolean
   mutual: false,
 });
 
-type SideItem = {
-  entryId: number;
-  slug: string;
-  qty: number;
-  ringed?: true;
-  near?: number[];
-  ratio?: number;
-};
+type SideItem = Outputs["trade"]["sideItems"]["items"][number];
 
-function SideGrid({
-  items,
-  nearOf,
-  collections,
+function SideCard({
+  item,
+  collection,
+  near,
   onOpen,
   ratioSide,
   owner,
+  currency,
 }: {
-  items: readonly SideItem[];
-  nearOf?: (myListIds: readonly number[]) => NearOpen | undefined;
-  collections: Readonly<Record<string, ValidObjekt | undefined>>;
+  item: SideItem;
+  collection: ValidObjekt | undefined;
+  near: NearOpen | undefined;
   onOpen: OpenObjekt;
   ratioSide: RatioSide | null;
   owner: boolean;
+  /** a sale side's list currency, its cards showing what they ask; null on a have or want side */
+  currency: string | null;
 }) {
+  const description = near
+    ? nearRingText(near.verb, item.qty)
+    : item.ringed
+      ? m.trade_match_ring()
+      : undefined;
+  const ring = item.ringed ? RING : near ? NEAR_RING : undefined;
+  if (!collection) return <SlugTile className={ring}>{item.slug}</SlugTile>;
+  const price =
+    currency !== null
+      ? stackPriceText(item, (amount) => formatCurrency(amount, currency))
+      : undefined;
   return (
-    // padding gives the ring room
-    <CardGrid className="p-1">
-      {items.map((item) => {
-        const collection = collections[item.slug];
-        const near = item.near ? nearOf?.(item.near) : undefined;
-        const description = near
-          ? nearRingText(near.verb, item.qty)
-          : item.ringed
-            ? m.trade_match_ring()
-            : undefined;
-        const ring = item.ringed ? RING : near ? NEAR_RING : undefined;
-        return (
-          <li key={item.entryId} className="@container min-w-0">
-            {collection ? (
-              <ObjektCard
-                objekt={collection}
-                image="thumbnail"
-                qty={item.qty > 1 ? item.qty : undefined}
-                onOpen={(objekt) => onOpen(objekt, near)}
-                imageClassName={ring}
-                description={description}
-                badge={
-                  item.ratio !== undefined && ratioSide ? (
-                    <RatioChip ratio={item.ratio} side={ratioSide} owner={owner} />
-                  ) : undefined
-                }
-              />
-            ) : (
-              <SlugTile className={ring}>{item.slug}</SlugTile>
-            )}
-          </li>
-        );
-      })}
-    </CardGrid>
+    <ObjektCard
+      objekt={collection}
+      image="thumbnail"
+      qty={item.qty > 1 ? item.qty : undefined}
+      onOpen={(objekt) => onOpen(objekt, near)}
+      imageClassName={ring}
+      description={description}
+      price={price?.text}
+      priceMuted={price?.muted}
+      note={currency !== null ? item.notes?.join("\n") : undefined}
+      badge={
+        item.ratio !== undefined && ratioSide ? (
+          <RatioChip ratio={item.ratio} side={ratioSide} owner={owner} />
+        ) : undefined
+      }
+    />
   );
 }
 
@@ -118,9 +111,9 @@ function RingKey({ near }: { near: SideNear }) {
 }
 
 /**
- * Every objekt of one of a person's lists, opened from its strip's "+N" tile: the ones that match
- * the viewer outlined and first, on their own tab when there are any. A want side's rules lead it
- * as the strip's tiles, since its objekt counts leave them out.
+ * Every objekt of one of a person's lists, opened from its strip's "+N" tile, a page at a time:
+ * the ones that match the viewer outlined and first, on their own tab when there are any. A want
+ * side's rules lead it as the strip's tiles, since its objekt counts leave them out.
  */
 export function SideItemsSheet({
   side,
@@ -147,24 +140,74 @@ export function SideItemsSheet({
 }) {
   const compare = use(SideCompareContext);
   const ratioSide = ratioSideOf(side.role);
-  const query = useQuery(sideItemsOptions(side.list.id, compare, open));
-  const data = query.data;
+  const currency = side.role === "sale" ? (side.list.currency ?? "") : null;
+  const queryClient = useQueryClient();
+  const options = sideItemsOptions(side.list.id, compare, open);
+  const query = useInfiniteQuery(options);
+  const first = query.data?.pages[0];
+
+  // a list that changed between pages can send a collection again, under another newest copy
+  const seen = new Set<string>();
+  const items: SideItem[] = [];
+  const collections: Record<string, ValidObjekt | undefined> = {};
+  for (const page of query.data?.pages ?? []) {
+    Object.assign(collections, page.collections);
+    for (const item of page.items) {
+      if (seen.has(item.slug)) continue;
+      seen.add(item.slug);
+      items.push(item);
+    }
+  }
+  const ringed = items.filter((item) => item.ringed);
+
   // the objekt view is a modal of its own, so this one gives way to it
   const openObjekt: OpenObjekt = (objekt, near) => {
     onOpenChange(false);
     onOpen(objekt, near);
   };
   const nearOf = (myListIds: readonly number[]): NearOpen | undefined =>
-    data?.near
-      ? { verb: data.near.verb, role: side.role, theirList: side.list.name, myListIds }
+    first?.near
+      ? { verb: first.near.verb, role: side.role, theirList: side.list.name, myListIds }
       : undefined;
   const matchLabel = (count: number) =>
     side.role === "want"
       ? m.trade_list_count_you_have({ count: count.toLocaleString(getLocale()) })
       : m.trade_list_count_you_want({ count: count.toLocaleString(getLocale()) });
+  const more = (has: boolean) => ({
+    has,
+    loading: query.isFetchingNextPage,
+    failed: query.isFetchNextPageError,
+    load: () => void query.fetchNextPage({ cancelRefetch: false }),
+  });
+
+  const grid = (shown: readonly SideItem[], has: boolean) => (
+    <PanelCardGrid
+      sections={[{ title: null, items: shown }]}
+      getKey={(item) => item.slug}
+      more={more(has)}
+      renderItem={(item) => (
+        <SideCard
+          item={item}
+          collection={collections[item.slug]}
+          near={item.near ? nearOf(item.near) : undefined}
+          onOpen={openObjekt}
+          ratioSide={ratioSide}
+          owner={owner}
+          currency={currency}
+        />
+      )}
+    />
+  );
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
+    <Sheet
+      open={open}
+      onOpenChange={onOpenChange}
+      // a stale reopen would refetch every page it had loaded; dropping them costs one request
+      onOpenChangeComplete={(next) => {
+        if (!next) queryClient.removeQueries({ queryKey: options.queryKey, exact: true });
+      }}
+    >
       <SheetPopup side="right" className="sm:max-w-3xl" finalFocus={finalFocus}>
         <SheetHeader>
           <SheetTitle className="font-display truncate">{side.list.name}</SheetTitle>
@@ -181,7 +224,7 @@ export function SideItemsSheet({
             <p className="text-muted-foreground text-xs">{m.trade_side_unfiltered()}</p>
           ) : null}
           {rules}
-          {!data ? (
+          {!first ? (
             query.isError ? (
               <div className="flex flex-col items-center gap-2 py-6 text-sm">
                 <p className="text-muted-foreground">{m.common_error_loading_data()}</p>
@@ -195,45 +238,26 @@ export function SideItemsSheet({
           ) : (
             // keyed: a refetch that empties the matched tab must not leave it selected and hidden
             <Tabs
-              key={data.matched > 0 ? "matched" : "all"}
-              defaultValue={data.matched > 0 ? "matched" : "all"}
+              key={first.matched > 0 ? "matched" : "all"}
+              defaultValue={first.matched > 0 ? "matched" : "all"}
             >
-              {data.matched > 0 ? (
+              {first.matched > 0 ? (
                 <TabsList aria-label={m.trade_side_tabs_label()}>
-                  <TabsTab value="matched">{matchLabel(data.matched)}</TabsTab>
+                  <TabsTab value="matched">{matchLabel(first.matched)}</TabsTab>
                   <TabsTab value="all">
                     {m.trade_side_all({
-                      count: (data.items.length + data.more).toLocaleString(getLocale()),
+                      count: (first.items.length + first.more).toLocaleString(getLocale()),
                     })}
                   </TabsTab>
                 </TabsList>
               ) : null}
               <TabsPanel value="matched">
-                <SideGrid
-                  items={data.items.filter((item) => item.ringed)}
-                  collections={data.collections}
-                  onOpen={openObjekt}
-                  ratioSide={ratioSide}
-                  owner={owner}
-                />
+                {grid(ringed, query.hasNextPage && ringed.length < first.matched)}
               </TabsPanel>
               <TabsPanel value="all" className="flex flex-col gap-3">
-                {data.near && data.items.some((item) => item.near) ? (
-                  <RingKey near={data.near} />
-                ) : null}
-                <SideGrid
-                  items={data.items}
-                  nearOf={nearOf}
-                  collections={data.collections}
-                  onOpen={openObjekt}
-                  ratioSide={ratioSide}
-                  owner={owner}
-                />
-                {data.more > 0 ? (
-                  <p className="text-muted-foreground text-xs">
-                    {m.trade_side_more({ count: data.more.toLocaleString(getLocale()) })}
-                  </p>
-                ) : null}
+                {/* from the first page, so a near match arriving later doesn't push the grid down */}
+                {first.near && first.near.count > 0 ? <RingKey near={first.near} /> : null}
+                {grid(items, query.hasNextPage)}
               </TabsPanel>
             </Tabs>
           )}

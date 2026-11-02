@@ -205,6 +205,32 @@ function stackEntries(entries: FeedEntry[]) {
 }
 
 /**
+ * Stacks ringed first, then near matches, then newest, and how one becomes its item: callers
+ * slice first, so a long side builds only the items it shows.
+ */
+function rankedStacks(
+  entries: FeedEntry[],
+  ringed: SlugIndex | null,
+  near: SlugIndex | null,
+  ratios: boolean,
+) {
+  const rank = (slug: string) => (ringed?.has(slug) ? 2 : near?.has(slug) ? 1 : 0);
+  const stacks = stackEntries(entries).toSorted(
+    (a, b) => rank(b.newest.slug) - rank(a.newest.slug) || b.newest.id - a.newest.id,
+  );
+  const toItem = ({ newest, copies }: (typeof stacks)[number]): PreviewItem => {
+    const item: PreviewItem = { entryId: newest.id, slug: newest.slug, qty: copies.length };
+    const at = rank(newest.slug);
+    if (at === 2) item.ringed = true;
+    else if (at === 1) item.near = [...(near?.get(newest.slug) ?? [])];
+    const ratio = ratios ? highestRatio(copies) : undefined;
+    if (ratio !== undefined) item.ratio = ratio;
+    return item;
+  };
+  return { stacks, toItem };
+}
+
+/**
  * A side's preview: copies of a collection stack into one item, ringed first, then near
  * matches, then newest. `more` counts the collections past `limit`, `copyCount` every entry.
  */
@@ -215,21 +241,12 @@ export function previewSide(
   near: SlugIndex | null = null,
   ratios = false,
 ) {
-  const rank = (slug: string) => (ringed?.has(slug) ? 2 : near?.has(slug) ? 1 : 0);
-  const stacks = stackEntries(entries);
-  const items = stacks
-    .toSorted((a, b) => rank(b.newest.slug) - rank(a.newest.slug) || b.newest.id - a.newest.id)
-    .slice(0, limit)
-    .map(({ newest, copies }): PreviewItem => {
-      const item: PreviewItem = { entryId: newest.id, slug: newest.slug, qty: copies.length };
-      const at = rank(newest.slug);
-      if (at === 2) item.ringed = true;
-      else if (at === 1) item.near = [...(near?.get(newest.slug) ?? [])];
-      const ratio = ratios ? highestRatio(copies) : undefined;
-      if (ratio !== undefined) item.ratio = ratio;
-      return item;
-    });
-  return { items, more: Math.max(0, stacks.length - limit), copyCount: entries.length };
+  const { stacks, toItem } = rankedStacks(entries, ringed, near, ratios);
+  return {
+    items: stacks.slice(0, limit).map(toItem),
+    more: Math.max(0, stacks.length - limit),
+    copyCount: entries.length,
+  };
 }
 
 /**
@@ -748,42 +765,72 @@ export function assemblePost<L extends TradeList>(
   };
 }
 
-/** a side's dialog lists this many collections; a bigger list is counted past it */
-export const FULL_SIDE_LIMIT = 300;
+/** A sale list entry's ask, as `list_entries` stores it. */
+export type EntryAsk = { id: number; price: number | null; isQyop: boolean; note: string | null };
 
 /**
- * Every objekt of one post side, as its "+N" dialog lists them: copies stacked, the ones that
- * match the viewer ringed and first, then newest. A rule's entries stay on its tile. `matched`
- * counts the ringed collections, all of them, however many the limit leaves out.
+ * What a stack of sale copies asks: the lowest and highest price of those priced, whether any is
+ * QYOP (whose stored price, as everywhere else, counts for nothing), and their distinct notes,
+ * newest first. Empty fields are left out.
+ */
+export function stackAsk(copies: readonly EntryAsk[]) {
+  const ask: { price?: { min: number; max: number }; qyop?: true; notes?: string[] } = {};
+  const notes: string[] = [];
+  for (const copy of copies.toSorted((a, b) => b.id - a.id)) {
+    if (copy.isQyop) ask.qyop = true;
+    else if (copy.price !== null) {
+      ask.price = ask.price
+        ? { min: Math.min(ask.price.min, copy.price), max: Math.max(ask.price.max, copy.price) }
+        : { min: copy.price, max: copy.price };
+    }
+    const note = copy.note?.trim();
+    if (note && !notes.includes(note)) notes.push(note);
+  }
+  if (notes.length > 0) ask.notes = notes;
+  return ask;
+}
+
+/** collections a page of a side's "+N" sheet holds */
+const SIDE_PAGE = 200;
+
+/**
+ * One page of every objekt of one post side, as its "+N" sheet lists them: copies stacked, the
+ * ones that match the viewer ringed and first, then newest, from `offset`. A rule's entries stay
+ * on its tile. `matched` counts the ringed collections of the whole side, `more` those past the
+ * page, `nextCursor` where the next page starts, and `copyIds` holds each item's copies, for the
+ * server only.
  */
 export function fullSide(
   role: "have" | "want" | "sale",
   list: TradeList,
   entries: FeedEntry[],
   viewer: Viewer | null,
-  limit: number = FULL_SIDE_LIMIT,
+  { offset = 0, limit = SIDE_PAGE }: { offset?: number; limit?: number } = {},
 ) {
   const index = viewer ? indexFor(role, list, viewer) : null;
   const near = viewer ? nearOf(role, list, entries, viewer) : null;
   const objekts = entries.filter((entry) => entry.ruleId === undefined);
-  const { items, more, copyCount } = previewSide(
+  const { stacks, toItem } = rankedStacks(
     objekts,
     index,
-    limit,
     near?.index ?? null,
     showsRatio(role, list),
   );
+  const page = stacks.slice(offset, offset + limit);
   const matched = index
     ? new Set(objekts.flatMap((entry) => (index.has(entry.slug) ? [entry.slug] : []))).size
     : 0;
   return {
-    items,
-    more,
-    copyCount,
+    items: page.map(toItem),
+    copyIds: page.map(({ copies }) => copies.map((copy) => copy.id)),
+    more: Math.max(0, stacks.length - offset - page.length),
+    nextCursor: offset + page.length < stacks.length ? offset + page.length : undefined,
+    copyCount: objekts.length,
     matched,
     near: near ? { verb: near.verb, count: near.slugs.length, listIds: near.listIds } : null,
   };
 }
+
 /**
  * A list's collections that match the viewer, by the rule its post side rings with, and the
  * viewer's lists they matched: what a list page's Show my matches outlines. A rule's entries are

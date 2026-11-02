@@ -91,13 +91,13 @@ export const tradeRouter = {
       return peopleFeed(context.session?.user.id ?? null, input);
     }),
 
-  /** Public like `people`: every objekt of one post side, for its "+N" dialog. */
+  /** Public like `people`: one post side's objekts a page at a time, for its "+N" sheet. */
   sideItems: optionalAuthed
     .route({
       method: "GET",
       path: "/trade/lists/{listId}/items",
       tags: ["Trade"],
-      summary: "Every objekt of one post side, copies stacked",
+      summary: "One post side's objekts, copies stacked, a page at a time",
       spec: errorResponses(400, 404, 429),
     })
     .input(sideItemsInputSchema)

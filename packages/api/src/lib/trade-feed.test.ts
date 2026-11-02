@@ -9,6 +9,7 @@ import {
   comparePosts,
   type FeedEntry,
   fullSide,
+  stackAsk,
   highestRatio,
   listMatchesOf,
   nearFor,
@@ -991,10 +992,20 @@ describe("fullSide", () => {
     ).toBe(3);
   });
 
-  test("counts past the limit, and every match however many are drawn", () => {
-    const side = fullSide("have", list({ id: 1, listType: "have" }), entries, viewer, 1);
-    expect(slugs(side)).toEqual(["c"]);
-    expect(side).toMatchObject({ more: 3, matched: 2 });
+  test("pages from an offset, counting every match on every page", () => {
+    const have = list({ id: 1, listType: "have" });
+    const first = fullSide("have", have, entries, viewer, { limit: 1 });
+    expect(slugs(first)).toEqual(["c"]);
+    expect(first.copyIds).toEqual([[3, 4]]);
+    expect(first).toMatchObject({ more: 3, nextCursor: 1, matched: 2, copyCount: 5 });
+    const middle = fullSide("have", have, entries, viewer, { offset: 1, limit: 2 });
+    expect(slugs(middle)).toEqual(["a", "d"]);
+    expect(middle).toMatchObject({ more: 1, nextCursor: 3, matched: 2 });
+    const last = fullSide("have", have, entries, viewer, { offset: 3, limit: 2 });
+    expect(slugs(last)).toEqual(["b"]);
+    expect(last).toMatchObject({ more: 0, nextCursor: undefined });
+    const past = fullSide("have", have, entries, viewer, { offset: 9 });
+    expect(past).toMatchObject({ items: [], copyIds: [], more: 0, nextCursor: undefined });
   });
 
   test("leaves a rule's entries to its tile, and rings nothing signed out", () => {
@@ -1008,6 +1019,50 @@ describe("fullSide", () => {
     expect(side.matched).toBe(0);
   });
 });
+describe("stackAsk", () => {
+  const ask = (id: number, price: number | null, isQyop = false, note: string | null = null) => ({
+    id,
+    price,
+    isQyop,
+    note,
+  });
+
+  test("one price", () => {
+    expect(stackAsk([ask(1, 10), ask(2, 10)])).toEqual({ price: { min: 10, max: 10 } });
+  });
+
+  test("a range, with QYOP copies flagged beside it", () => {
+    expect(stackAsk([ask(1, 15), ask(2, null, true), ask(3, 10)])).toEqual({
+      price: { min: 10, max: 15 },
+      qyop: true,
+    });
+  });
+
+  test("a QYOP copy's stored price counts for nothing", () => {
+    expect(stackAsk([ask(1, 10), ask(2, 99, true)])).toEqual({
+      price: { min: 10, max: 10 },
+      qyop: true,
+    });
+    expect(stackAsk([ask(1, 99, true)])).toEqual({ qyop: true });
+  });
+
+  test("QYOP only, and nothing at all", () => {
+    expect(stackAsk([ask(1, null, true)])).toEqual({ qyop: true });
+    expect(stackAsk([ask(1, null)])).toEqual({});
+  });
+
+  test("distinct notes, trimmed, newest first, blanks left out", () => {
+    expect(
+      stackAsk([ask(1, 5, false, "nego"), ask(2, 5, false, " nego "), ask(3, 5, false, "  ")])
+        .notes,
+    ).toEqual(["nego"]);
+    expect(stackAsk([ask(1, 5, false, "old"), ask(4, 5, false, "new")]).notes).toEqual([
+      "new",
+      "old",
+    ]);
+  });
+});
+
 describe("listMatchesOf", () => {
   const none = new Map<string, number[]>();
   // want list 9 is swaps only, 10 Buying only; have list 7, sale list 8

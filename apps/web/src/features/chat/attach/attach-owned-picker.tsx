@@ -108,7 +108,7 @@ function OwnedGrid({
         has: query.hasNextPage,
         loading: query.isFetchingNextPage,
         failed: query.isFetchNextPageError,
-        load: () => void query.fetchNextPage(),
+        load: () => void query.fetchNextPage({ cancelRefetch: false }),
       }}
       renderItem={(objekt) => (
         <ObjektCard

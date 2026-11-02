@@ -389,7 +389,7 @@ function OwnedGrid({ address, filters, ticked, onToggle }: GridProps & { address
         has: query.hasNextPage,
         loading: query.isFetchingNextPage,
         failed: query.isFetchNextPageError,
-        load: () => void query.fetchNextPage(),
+        load: () => void query.fetchNextPage({ cancelRefetch: false }),
       }}
       renderItem={(objekt) => (
         <TickTile

@@ -12,7 +12,7 @@ export function ObjektNote({ note }: { note: string }) {
       >
         <NoteIcon />
       </PopoverTrigger>
-      <PopoverPopup padding="sm" className="max-w-64 text-sm">
+      <PopoverPopup padding="sm" className="max-w-64 text-sm whitespace-pre-line">
         <span className="text-muted-foreground">{m.objekt_note()}: </span>
         {note}
       </PopoverPopup>

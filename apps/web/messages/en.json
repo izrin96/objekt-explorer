@@ -1027,7 +1027,6 @@
   "trade_match_via_rule": "via rule",
   "trade_side_all": "All {count}",
   "trade_side_open_list": "Open list",
-  "trade_side_more": "{count} more on the list page",
   "trade_side_tabs_label": "Objekts to show",
   "trade_side_unfiltered": "The objekts below aren't filtered: they're the whole list.",
   "trade_strip_total": "of {total}",

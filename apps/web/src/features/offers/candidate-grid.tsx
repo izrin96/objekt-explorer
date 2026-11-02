@@ -160,7 +160,7 @@ export function pagedGridProps(
     hasNextPage: boolean;
     isFetchingNextPage: boolean;
     isFetchNextPageError: boolean;
-    fetchNextPage: () => Promise<unknown>;
+    fetchNextPage: (options?: { cancelRefetch?: boolean }) => Promise<unknown>;
   },
   loaded: number,
 ) {
@@ -171,7 +171,7 @@ export function pagedGridProps(
       has: query.hasNextPage,
       loading: query.isFetchingNextPage,
       failed: query.isFetchNextPageError,
-      load: () => void query.fetchNextPage(),
+      load: () => void query.fetchNextPage({ cancelRefetch: false }),
     },
   };
 }

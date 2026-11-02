@@ -14,6 +14,7 @@ import {
   browseMode,
   BUMP_COOLDOWN_HOURS,
   comparePosts,
+  type EntryAsk,
   fullSide,
   listMatchesOf,
   isPostIdle,
@@ -25,6 +26,7 @@ import {
   pickerTags,
   pairPosts,
   previewSide,
+  stackAsk,
   untradeableKey,
   type Viewer,
 } from "../../lib/trade-feed";
@@ -484,9 +486,10 @@ async function tradeEntriesOf(list: FeedList) {
 }
 
 /**
- * One side of a post on Trade, every objekt of it, ringed against the viewer as the feed rings it:
- * by Compare with's lists when `list` is given, and not at all on the owner's own list. Not
- * found when the list is gone, off Trade, or hidden from the viewer.
+ * A page of one side of a post on Trade, from `cursor`, ringed against the viewer as the feed rings
+ * it: by Compare with's lists when `list` is given, and not at all on the owner's own list. A sale
+ * page carries what each stack asks. Not found when the list is gone, off Trade, or hidden from
+ * the viewer.
  */
 export async function fetchSideItems(viewerId: string | null, input: SideItemsInput) {
   const list = await findTradeList(viewerId, input.listId);
@@ -496,23 +499,49 @@ export async function fetchSideItems(viewerId: string | null, input: SideItemsIn
     ringing ? fetchViewer(viewerId) : null,
     ringing && input.list ? resolveCompareSides(viewerId, input.list, input.mutual ?? false) : null,
   ]);
-  const side = fullSide(
+  const offset = input.cursor ?? 0;
+  const { copyIds, ...side } = fullSide(
     list.listType,
     list,
     entries,
     viewer && sides ? narrowViewer(viewer, sides) : viewer,
+    { offset },
   );
-  const collectionRows = await fetchCollectionsBySlug(
-    side.items.map((item) => item.slug),
-    [],
-  );
+  const [collectionRows, asks] = await Promise.all([
+    fetchCollectionsBySlug(
+      side.items.map((item) => item.slug),
+      [],
+    ),
+    list.listType === "sale" ? fetchAsks(copyIds.flat()) : null,
+  ]);
   return {
     ...side,
+    items: asks
+      ? side.items.map((item, i) => ({
+          ...item,
+          ...stackAsk((copyIds[i] ?? []).flatMap((id) => asks.get(id) ?? [])),
+        }))
+      : side.items,
     collections: Object.fromEntries(collectionRows.map((c) => [c.slug, c])) as Record<
       string,
       ValidObjekt
     >,
   };
+}
+
+/** The price, QYOP flag and note of each sale entry, by id. */
+async function fetchAsks(ids: readonly number[]) {
+  if (ids.length === 0) return new Map<number, EntryAsk>();
+  const rows = await db
+    .select({
+      id: listEntries.id,
+      price: listEntries.price,
+      isQyop: listEntries.isQyop,
+      note: listEntries.note,
+    })
+    .from(listEntries)
+    .where(inArray(listEntries.id, [...ids]));
+  return new Map(rows.map((row) => [row.id, row]));
 }
 
 /** A person's lists the viewer sees on Trade, in posts still listed: those their strips draw. */

@@ -1027,7 +1027,6 @@
   "trade_match_via_rule": "규칙으로",
   "trade_side_all": "전체 {count}",
   "trade_side_open_list": "리스트 열기",
-  "trade_side_more": "나머지 {count}개는 리스트 페이지에서",
   "trade_side_tabs_label": "표시할 오브젝트",
   "trade_side_unfiltered": "아래 오브젝트는 필터가 적용되지 않은 리스트 전체입니다.",
   "trade_strip_total": "전체 {total}개",
