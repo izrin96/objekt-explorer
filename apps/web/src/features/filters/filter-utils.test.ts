@@ -12,6 +12,31 @@ function row(slug: string, extra: Record<string, unknown> = {}) {
   return { slug, ...extra } as unknown as GridObjekt;
 }
 
+describe("filterObjekts member and colour", () => {
+  const slugs = (list: GridObjekt[]) => list.map((r) => r.slug);
+
+  test("a row with no members filters by its member", () => {
+    const rows = [
+      row("solo", { member: "JiWoo", members: [] }),
+      row("unit", { member: "a X b", members: ["SeoYeon", "JiWoo"] }),
+      row("other", { member: "HyeRin", members: ["HyeRin"] }),
+    ];
+    expect(slugs(filterObjekts({ member: ["jiwoo"] }, rows, NOW))).toEqual(["solo", "unit"]);
+  });
+
+  test("a colour near the target passes and an unparsable one never does", () => {
+    const rows = [
+      row("near", { backgroundColor: "#ff0000" }),
+      row("far", { backgroundColor: "#0000ff" }),
+      row("bad", { backgroundColor: "not a colour" }),
+    ];
+    const filters = { color: "#fe0101", colorSensitivity: 10 };
+    expect(slugs(filterObjekts(filters, rows, NOW))).toEqual(["near"]);
+    // the second run reads the cached colours and agrees
+    expect(slugs(filterObjekts(filters, rows, NOW))).toEqual(["near"]);
+  });
+});
+
 describe("filterObjekts listed window", () => {
   const rows = [
     row("a", { listedAt: NOW - DAY / 2, floorPrice: 3 }),

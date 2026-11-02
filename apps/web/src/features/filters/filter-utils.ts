@@ -12,6 +12,7 @@ import {
 } from "./search-schema";
 
 function parseCollectionNo(value: string) {
+  // the last class is only a, z, A or Z, the two collection types, not a typo of [a-zA-Z]
   const expression = /^([a-zA-Z]*)(\d{3})([azAZ]?)$/;
   const match = value.match(expression);
   if (!match) return null;
@@ -85,7 +86,7 @@ function searchFilter(keyword: string, objekt: GridObjekt) {
     );
   }
 
-  return objekt.tags.some((value) => value === keyword);
+  return objekt.tags.includes(keyword);
 }
 
 function getSortDate(obj: GridObjekt) {
@@ -121,6 +122,25 @@ export function searchMatcher(search: string | undefined) {
     );
 }
 
+// every objekt of a collection shares its background, so a grid parses a few hundred
+// colours, not one per row on every slider move; an unparsable one is stored as null
+const parsedColors = new Map<string, chroma.Color | null>();
+
+function parsedColor(objekt: GridObjekt): chroma.Color | null {
+  const key = objekt.backgroundColor.trim();
+  let color = parsedColors.get(key);
+  if (color === undefined) {
+    try {
+      color = chroma(key);
+    } catch {
+      console.error(`Error parsing background color for ${objekt.slug}`, objekt.backgroundColor);
+      color = null;
+    }
+    parsedColors.set(key, color);
+  }
+  return color;
+}
+
 function currentUnixSeconds() {
   return Math.floor(Date.now() / 1000);
 }
@@ -154,7 +174,11 @@ export function filterObjekts<T extends GridObjekt>(
     : null;
 
   return objekts.filter((a) => {
-    if (memberSet && !a.members.some((m) => memberSet.has(m.toLowerCase()))) return false;
+    if (memberSet) {
+      // the same fallback as the tags, for a row stored without `members`
+      const members = a.members.length > 0 ? a.members : [a.member];
+      if (!members.some((m) => memberSet.has(m.toLowerCase()))) return false;
+    }
 
     if (artistSet && !artistSet.has(a.artist.toLowerCase())) return false;
 
@@ -204,14 +228,10 @@ export function filterObjekts<T extends GridObjekt>(
     if (matchesSearch && !matchesSearch(a)) return false;
 
     if (targetColor) {
-      try {
-        const color = chroma(a.backgroundColor.trim());
-        const deltaE = chroma.deltaE(targetColor, color);
-        if (deltaE > (filters.colorSensitivity ?? DEFAULT_COLOR_SENSITIVITY)) return false;
-      } catch {
-        console.error(`Error parsing background color for ${a.slug}`, a.backgroundColor);
-        return false;
-      }
+      const color = parsedColor(a);
+      if (color === null) return false;
+      const deltaE = chroma.deltaE(targetColor, color);
+      if (deltaE > (filters.colorSensitivity ?? DEFAULT_COLOR_SENSITIVITY)) return false;
     }
 
     return true;

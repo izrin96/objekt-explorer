@@ -4,7 +4,7 @@ import type { GridObjekt, ObjektTags, OwnedObjekt, ValidObjekt } from "@repo/lib
 import { joinList } from "@/lib/text";
 
 function getMemberShortKeys(value: string) {
-  return Object.keys(shortformMembers).filter((key) => shortformMembers[key] === value);
+  return shortKeysByMember.get(value) ?? [];
 }
 
 // unit collections carry a combined name ("id1 X id2") alongside the individual
@@ -200,6 +200,11 @@ const shortformMembers: Record<string, string> = {
   ec: "EunChan",
   esg: "EunSung",
 };
+
+const shortKeysByMember = new Map<string, string[]>();
+for (const [key, member] of Object.entries(shortformMembers)) {
+  shortKeysByMember.set(member, [...(shortKeysByMember.get(member) ?? []), key]);
+}
 
 /**
  * The season and collection no. as one short label ("A2 201Z"), for a card or a
