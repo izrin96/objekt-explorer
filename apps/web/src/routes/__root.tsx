@@ -17,7 +17,6 @@ import { ObjektHoverCard } from "@/features/objekt/objekt-hover-card";
 import { ProfileHoverCard } from "@/features/profile/profile-hover-card";
 import { currentUserOptions } from "@/features/user/queries";
 import { startOverflowGuard } from "@/lib/dev-overflow-guard";
-import { clientEnv } from "@/lib/env/client";
 import { ErrorTrackingMeta, setErrorUser } from "@/lib/error-tracking";
 import { errorTrackingOptions } from "@/lib/functions/error-tracking";
 import { pageTitle } from "@/lib/meta";
@@ -117,17 +116,6 @@ export const Route = createRootRouteWithContext<RouterContext>()({
         { rel: "icon", href: "/favicon.ico" },
         { rel: "apple-touch-icon", href: "/apple-touch-icon.png", sizes: "180x180" },
       ],
-      scripts:
-        import.meta.env.DEV || !clientEnv.VITE_UMAMI_WEBSITE_ID
-          ? []
-          : [
-              {
-                defer: true,
-                src: "/m/s",
-                "data-host-url": "/m",
-                "data-website-id": clientEnv.VITE_UMAMI_WEBSITE_ID,
-              },
-            ],
     };
   },
   shellComponent: RootDocument,
