@@ -31,11 +31,13 @@ import { ObjektCard } from "@/features/objekt/objekt-card";
 import { collectionName } from "@/features/objekt/objekt-label";
 import { isObjektOwned } from "@/features/objekt/objekt-utils";
 import { collectionOptions } from "@/features/objekt/queries";
+import { SelectedMark } from "@/features/objekt/selected-mark";
 import { VirtualCardGrid } from "@/features/objekt/virtual-card-grid";
 import { ownedCollectionOptions } from "@/features/profile/queries";
 import { formatCurrency } from "@/features/settings/use-currency";
 import { useUserProfiles } from "@/features/user/hooks";
 import { useLoadAllPages } from "@/hooks/use-load-all-pages";
+import { activateOnKey } from "@/lib/a11y";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
@@ -390,12 +392,10 @@ function OwnedGrid({ address, filters, ticked, onToggle }: GridProps & { address
         load: () => void query.fetchNextPage(),
       }}
       renderItem={(objekt) => (
-        <ObjektCard
+        <TickTile
           objekt={objekt}
-          image="thumbnail"
-          selected={ticked.has(objekt.id)}
-          onToggleSelect={() => onToggle(objekt.id, objekt)}
-          onOpen={() => onToggle(objekt.id, objekt)}
+          ticked={ticked.has(objekt.id)}
+          onToggle={() => onToggle(objekt.id, objekt)}
         />
       )}
     />
@@ -431,15 +431,39 @@ function CollectionGrid({ filters, ticked, onToggle }: GridProps) {
       sections={[{ title: null, items: rows }]}
       getKey={(objekt) => objekt.slug}
       renderItem={(objekt) => (
-        <ObjektCard
+        <TickTile
           objekt={objekt}
-          image="thumbnail"
-          selected={ticked.has(objekt.slug)}
-          onToggleSelect={() => onToggle(objekt.slug, objekt)}
-          onOpen={() => onToggle(objekt.slug, objekt)}
+          ticked={ticked.has(objekt.slug)}
+          onToggle={() => onToggle(objekt.slug, objekt)}
         />
       )}
     />
+  );
+}
+
+/** A tile ticks as the offer picker's do, never with the collection's indigo selection ring. */
+function TickTile({
+  objekt,
+  ticked,
+  onToggle,
+}: {
+  objekt: ValidObjekt;
+  ticked: boolean;
+  onToggle: () => void;
+}) {
+  // not a `<button>`: WebKit collapses the card's `aspect-ratio` box inside one
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      aria-pressed={ticked}
+      onClick={onToggle}
+      onKeyDown={(event) => activateOnKey(event, onToggle)}
+      className="focus-visible:ring-ring @container relative cursor-pointer rounded-md outline-none focus-visible:ring-2"
+    >
+      <ObjektCard objekt={objekt} image="thumbnail" />
+      {ticked ? <SelectedMark /> : null}
+    </div>
   );
 }
 

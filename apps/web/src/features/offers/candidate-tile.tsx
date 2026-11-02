@@ -1,4 +1,3 @@
-import { CheckIcon } from "@phosphor-icons/react";
 import type { CandidateItem } from "@repo/api/schemas/offer";
 import type { PickerTag } from "@repo/api/schemas/trade";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
@@ -14,6 +13,7 @@ import {
 import { RatioChip } from "@/features/list/ratio-chip";
 import { ObjektCard } from "@/features/objekt/objekt-card";
 import { CollectionLabel, collectionName, SerialNo } from "@/features/objekt/objekt-label";
+import { SelectedMark } from "@/features/objekt/selected-mark";
 import { activateOnKey } from "@/lib/a11y";
 import { joinList } from "@/lib/text";
 import { cn } from "@/lib/utils";
@@ -115,14 +115,7 @@ export function CandidateTile({
             </span>
           )}
         </span>
-        {/* monochrome on purpose: the class stripes stay the only colour in the grid */}
-        {selected ? (
-          <span className="rounded-photocard border-foreground pointer-events-none absolute inset-0 grid place-items-start justify-end border-2 p-1">
-            <span className="bg-foreground text-background grid size-5 place-items-center rounded-full">
-              <CheckIcon weight="bold" className="size-3" />
-            </span>
-          </span>
-        ) : null}
+        {selected ? <SelectedMark /> : null}
       </span>
       <span className="flex min-w-0 flex-col text-xs leading-tight">
         <span className="font-medium break-words">
