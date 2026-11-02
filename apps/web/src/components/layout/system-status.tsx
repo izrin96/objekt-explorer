@@ -1,15 +1,18 @@
 import { PulseIcon } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
 
-import { Timestamp } from "@/components/shared/timestamp";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverPopup, PopoverTrigger } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useCurrentUser } from "@/features/user/hooks";
+import { useMinuteClock } from "@/hooks/use-minute-clock";
 import { orpc } from "@/lib/orpc";
+import { formatTimestamp, relativeTime } from "@/lib/time";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
+import { useUserSocketLive } from "@/stores/user-socket";
 
 type OverallStatus = "up" | "down";
 
@@ -83,14 +86,8 @@ function StatusRows() {
             {data.database.behind ? m.status_database_behind() : m.status_database_up_to_date()}
           </Badge>
         </div>
-        {/* the popover answers "is the indexer keeping up", which is a
-            distance, not a wall-clock reading; the exact stamp is one hover
-            away */}
         {data.database.latestTransferDate !== null && (
-          <span className="text-muted-foreground text-xs">
-            {m.status_database_last_transfer()}{" "}
-            <Timestamp date={new Date(data.database.latestTransferDate)} />
-          </span>
+          <LastTransfer date={new Date(data.database.latestTransferDate)} />
         )}
       </div>
 
@@ -104,7 +101,55 @@ function StatusRows() {
           </Badge>
         </div>
       </div>
+
+      <LiveUpdates />
     </div>
+  );
+}
+
+/**
+ * This tab's own socket, not a server check: the server can reach Centrifugo while the browser
+ * cannot. Only a signed-in tab opens it, and a drop is no outage, since the views it refreshes
+ * poll instead, so it stays out of the overall colour.
+ */
+function LiveUpdates() {
+  const { data: user } = useCurrentUser();
+  const live = useUserSocketLive((state) => state.live);
+
+  if (!user) return null;
+
+  return (
+    <>
+      <Separator className="-mx-(--viewport-inline-padding) data-[orientation=horizontal]:w-auto" />
+      <div className="flex flex-col gap-1">
+        <div className="flex items-center justify-between gap-2">
+          <span className="font-display text-sm font-medium">{m.status_live_updates_label()}</span>
+          <Badge variant={live ? "success" : "warning"}>
+            {live ? m.status_live_updates_connected() : m.status_live_updates_connecting()}
+          </Badge>
+        </div>
+        {!live && (
+          <span className="text-muted-foreground text-xs">{m.status_live_updates_polling()}</span>
+        )}
+      </div>
+    </>
+  );
+}
+
+/**
+ * The popover answers "is the indexer keeping up", which is a distance, not a wall-clock
+ * reading; the exact stamp is one hover away.
+ */
+function LastTransfer({ date }: { date: Date }) {
+  const now = useMinuteClock();
+
+  return (
+    <span className="text-muted-foreground text-xs">
+      {m.status_database_last_transfer()}{" "}
+      <time dateTime={date.toISOString()} title={formatTimestamp(date)}>
+        {relativeTime(date.getTime(), now)}
+      </time>
+    </span>
   );
 }
 
