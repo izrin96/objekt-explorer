@@ -625,9 +625,9 @@ Each person in the feed SHALL be one row, a bordered card on the card surface, o
   - a ⋯ menu holding Copy link, which copies that post's page (see `web-trade-person-pages`) and is disabled, saying why, for a person with no linked Cosmo profile.
 - **All lists**: the row SHALL show every post it holds.
 
-**Strip**: a monospace role label in its list type's colour, then " · " and the list's name, truncated to one line, then the list's own count when above zero ("14 you want", "2 you have"), on a tinted chip in monospace; under a narrowing filter the label reads as Filters says. The label SHALL link to the list page, carrying the list's name in its title; the list's description sits under the post's sides (see Posts). The count SHALL sit beside the link, not in it, and activating it SHALL open a popover, "Matched with your lists", naming each of the viewer's lists that count was taken against, with its type and a link to it: on a want list the viewer's have and sale lists, on a have or sale list the viewer's want lists, as Compare with narrows them. Under a want list, it SHALL also name each rule the match went through, "via rule" with the rule's label and how many collections, on Browse as on For you (see Matched through your rules). Under it, one line of thumbnails 2.5rem wide with no caption, ringed objekts first. A strip SHALL never wrap: it shows as many thumbnails as fit its width, and when some don't fit, the last place holds a "+N" tile counting the copies not shown. On a narrowed strip that shows its count chip, which counts collections, the "+N" tile SHALL count the collections not shown instead, and "of N" the list's collections, as its dialog's All tab does, so they all read in one unit.
+**Strip**: a monospace role label in its list type's colour, then " · " and the list's name, truncated to one line, then the list's own count when above zero ("14 you want", "2 you have"), on a tinted chip in monospace; under a narrowing filter the label reads as Filters says. The label SHALL link to the list page, carrying the list's name in its title; the list's description sits under the post's sides (see Posts). The count SHALL sit beside the link, not in it, and activating it SHALL open a popover, "Matched with your lists", naming each of the viewer's lists that count was taken against, with its type and a link to it: on a want list the viewer's have and sale lists, on a have or sale list the viewer's want lists, as Compare with narrows them. Under a want list, it SHALL also name each rule the match went through, "via rule" with the rule's label and how many collections, on Browse as on For you (see Matched through your rules). Under it, one line of thumbnails 2.5rem wide with no caption, ringed objekts first. A strip SHALL never wrap: it shows as many thumbnails as fit its width, and when some don't fit, the last place holds a "+N" tile counting the copies not shown. On a narrowed strip that shows its count chip, which counts collections, the "+N" tile SHALL count the collections not shown instead, and "of N" the list's collections, as its sheet's All tab does, so they all read in one unit.
 
-**All of a list.** Activating a strip's "+N" tile SHALL open a dialog of that one list, never of the person's other posts: a bottom sheet below `sm`, a centred dialog from `sm` up. Its title is the list's name and its description the list's type. When the list has a description, the dialog SHALL show it in full above the objekts, scrolling with them. It SHALL list the list's objekts, copies of a collection stacked into one card with their count, those that match the viewer ringed as the strip rings them and first, then newest; a rule's objekts stay on its tile. When any match, two tabs SHALL lead it, "N you want" (on a want list "N you have") and "All N", counting collections, with the matching tab open first; otherwise it shows the list alone. Past 300 collections the rest are counted, "N more on the list page". The rings follow For you's Compare with, the owner's own list rings nothing, and a signed-out visitor sees no rings or tabs. A want side's rules SHALL lead the dialog as the strip's RULE tiles, since its objekt counts leave them out. When the feed's filters or matching narrowed the strip, the dialog SHALL still show the whole list of objekts and say that those aren't filtered; the RULE tiles keep the strip's counts. The objekts SHALL load only when the dialog opens. Activating an objekt SHALL close the dialog and open the objekt view. The footer SHALL offer Open list, which goes to the list page, and Close.
+**All of a list.** Activating a strip's "+N" tile SHALL open a sheet of that one list, never of the person's other posts, sliding in from the end side at every width: the viewport less 3rem below `sm`, up to 48rem from `sm` up. Its title is the list's name and its description the list's type. When the list has a description, the sheet SHALL show it in full above the objekts, scrolling with them. It SHALL list the list's objekts in columns that follow its width, one per 112 px and at least three, as the objekt pickers lay theirs out, copies of a collection stacked into one card with their count, those that match the viewer ringed as the strip rings them and first, then newest; a rule's objekts stay on its tile. When any match, two tabs SHALL lead it, "N you want" (on a want list "N you have") and "All N", counting collections, with the matching tab open first; otherwise it shows the list alone. Past 300 collections the rest are counted, "N more on the list page". The rings follow For you's Compare with, the owner's own list rings nothing, and a signed-out visitor sees no rings or tabs. A want side's rules SHALL lead the sheet as the strip's RULE tiles, since its objekt counts leave them out. When the feed's filters or matching narrowed the strip, the sheet SHALL still show the whole list of objekts and say that those aren't filtered; the RULE tiles keep the strip's counts. The objekts SHALL load only when the sheet opens. Activating an objekt SHALL close the sheet and open the objekt view. The footer SHALL offer Open list, which goes to the list page, and Close.
 
 From `@3xl` of the feed's width, the actions SHALL sit at the header's end and the posts SHALL be indented to start under the name. Narrower, the row SHALL stack: the header, each strip at full width with the ⇄ mark turned to point down, then the actions in one row, Make offer filling the remaining width. The strips SHALL still not wrap, and the page SHALL not scroll sideways. Every row SHALL have the same layout whatever the number of objekts.
 
@@ -697,15 +697,19 @@ From `@3xl` of the feed's width, the actions SHALL sit at the header's end and t
 
 #### Scenario: See all of a list
 - **WHEN** at 390 px a person's HAVE strip holds 24 collections, 14 of them on the viewer's want lists, and shows 4 thumbnails then "+20"
-- **THEN** activating "+20" opens a bottom sheet titled with that list's name, with tabs "14 you want", open first and all 14 ringed, and "All 24"
+- **THEN** activating "+20" opens a sheet from the end side titled with that list's name, its objekts in three columns, with tabs "14 you want", open first and all 14 ringed, and "All 24"
+
+#### Scenario: See all of a list on a desktop
+- **WHEN** at 1280 px a person's HAVE strip holds 40 collections and shows "+34"
+- **THEN** activating "+34" opens a sheet from the end side, 48rem wide, its objekts in six columns, and the feed stays in view beside it
 
 #### Scenario: Descriptions under a pair
 - **WHEN** at 1280 px a WTT post's have list "spares" has the description "dm for proofs" and its want list "binary hunt" has a ten-line description
-- **THEN** the HAVE and WANT strips' thumbnails start on the same line, and under both strips the post's note block reads "HAVE dm for proofs", then "WANT" with the first eight lines of the other; the "+N" dialog of "binary hunt" shows all ten lines
+- **THEN** the HAVE and WANT strips' thumbnails start on the same line, and under both strips the post's note block reads "HAVE dm for proofs", then "WANT" with the first eight lines of the other; the "+N" sheet of "binary hunt" shows all ten lines
 
 #### Scenario: Nothing matches
 - **WHEN** the viewer opens a strip's "+N" on a list none of whose objekts match them
-- **THEN** the dialog shows the list's objekts with no tabs and no rings
+- **THEN** the sheet shows the list's objekts with no tabs and no rings
 
 #### Scenario: WTS post
 - **WHEN** a person's WTS post's sale list holds 19 objekts
@@ -1091,7 +1095,7 @@ For a signed-in viewer, each rule tile SHALL read "N you have", N being the rule
 - **THEN** the rule tiles show their labels with no count and no ring
 
 ### Requirement: Post menu
-Each post on a person's row, on Browse and For you, SHALL carry a ⋯ menu: a ghost icon button in a column of its own at the post's top end, never inside a strip's label. Its accessible name SHALL be "More actions for the post {list}", where `{list}` is the post's own list (the have list of a pair). The menu SHALL offer Make offer on this post first, then Show all of {list} for each strip, which opens that strip's "+N" dialog whether or not it has the tile.
+Each post on a person's row, on Browse and For you, SHALL carry a ⋯ menu: a ghost icon button in a column of its own at the post's top end, never inside a strip's label. Its accessible name SHALL be "More actions for the post {list}", where `{list}` is the post's own list (the have list of a pair). The menu SHALL offer Make offer on this post first, then Show all of {list} for each strip, which opens that strip's "+N" sheet whether or not it has the tile.
 
 #### Scenario: Menu on a WTT post
 - **WHEN** a user opens the ⋯ menu of rin.trades's post with the have list "doubles" and the want list "wants", on a row that also has the post "spares"
@@ -1099,7 +1103,7 @@ Each post on a person's row, on Browse and For you, SHALL carry a ⋯ menu: a gh
 
 #### Scenario: Show all without a "+N" tile
 - **WHEN** a strip shows all of its 5 objekts, so it has no "+N" tile, and the user chooses its Show all
-- **THEN** the dialog of that list opens as the "+N" tile would open it, and closing it returns focus to the menu's button
+- **THEN** the sheet of that list opens as the "+N" tile would open it, and closing it returns focus to the menu's button
 
 #### Scenario: Phone
 - **WHEN** a row is shown at 390 px
@@ -1187,7 +1191,7 @@ Each list of a post SHALL be picked from one dropdown per side. A list the compo
 - **THEN** the Looking for dropdown lists "store hunt" disabled with "In your Buy post"
 
 ### Requirement: Post preview
-The composer SHALL show the post as Trade will show it: its tags, Has (Selling for a sale list) and Wants, each with its list's name and up to 23 objekt thumbnails followed by "+N", the want list's rules, and who it matches. "+N" SHALL open every objekt of that side in a side sheet. The preview SHALL follow every pick as it changes.
+The composer SHALL show the post as Trade will show it: its tags, Has (Selling for a sale list) and Wants, each with its list's name and up to 23 objekt thumbnails followed by "+N", the want list's rules, and who it matches. "+N" SHALL open every objekt of that side in a side sheet as wide as a list's "+N" sheet on Trade. The preview SHALL follow every pick as it changes.
 
 #### Scenario: Preview follows picks
 - **WHEN** the viewer picks Swap, have list "spares" holding 30 objekts and want list "binary hunt" holding the rule CC366
@@ -1195,7 +1199,7 @@ The composer SHALL show the post as Trade will show it: its tags, Has (Selling f
 
 #### Scenario: All objekts
 - **WHEN** the viewer activates "+7"
-- **THEN** a side sheet shows all 30 objekts of "spares"
+- **THEN** a side sheet as wide as Trade's "+N" sheet shows all 30 objekts of "spares"
 
 ### Requirement: Rules in the composer
 While a want list is picked, its side of the preview SHALL list its rules and offer Add rule, which SHALL open the list page's rule form in a side sheet. Adding a rule SHALL save it to the list at once, close the sheet and keep the composer's picks; leaving the composer SHALL keep the rule. Each listed rule SHALL carry Delete rule, which asks first as the list page does, then removes the rule from the list at once and keeps the picks.

@@ -35,7 +35,7 @@ A collection on another person's list SHALL be a near match for a signed-in view
 
 ### Requirement: A near match is never counted
 
-A near match SHALL NOT change any count or order: the row's header sentence and chip, a list's count, Can swap and the mutual score, For you's people, order and narrowing, the order of posts in a row, the "+N" tile and dialog tab counts, Show my matches' count, want-list alerts and notifications, chat post cards and their reply suggestions, or any API response outside the viewer's own reads described here.
+A near match SHALL NOT change any count or order: the row's header sentence and chip, a list's count, Can swap and the mutual score, For you's people, order and narrowing, the order of posts in a row, the "+N" tile and sheet tab counts, Show my matches' count, want-list alerts and notifications, chat post cards and their reply suggestions, or any API response outside the viewer's own reads described here.
 
 #### Scenario: Counts stay
 - **WHEN** sodalove's row holds 2 matches and 1 near match on "Set want tripleS"
@@ -69,9 +69,9 @@ A strip's "Matched with your lists" popover SHALL, after the lists its count was
 - **WHEN** the viewer opens the popover on sodalove's "Set want tripleS"
 - **THEN** it names "spares sale" for the 2 matches, then, muted, "have 3" with "1 more if you sell"
 
-### Requirement: Near matches in a list's dialog
+### Requirement: Near matches in a list's sheet
 
-A strip's "+N" dialog SHALL ring its near matches dashed, after the matches. When any are shown, a key SHALL name both rings: "On your lists" and "N more if you sell" (or swap, or buy). Its matching tab SHALL keep only matches; All SHALL hold the near matches.
+A strip's "+N" sheet SHALL ring its near matches dashed, after the matches. When any are shown, a key SHALL name both rings: "On your lists" and "N more if you sell" (or swap, or buy). Its matching tab SHALL keep only matches; All SHALL hold the near matches.
 
 #### Scenario: Tabs
 - **WHEN** the viewer opens "Set want tripleS" from its "+N" tile
