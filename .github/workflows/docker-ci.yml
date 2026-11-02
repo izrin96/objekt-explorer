@@ -87,8 +87,24 @@ jobs:
           # the same Bun the Dockerfiles run
           bun-version-file: package.json
 
+      - name: Cache Bun packages
+        uses: actions/cache@v6
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+          restore-keys: bun-${{ runner.os }}-
+
       - name: Install dependencies
         run: bun install --frozen-lockfile
+
+      # Turbo's task hashes decide what is reused; the key only picks the blob. It starts over
+      # when bun.lock or the root package.json (Bun version, catalog) changes, which keeps it small
+      - name: Restore Turbo cache
+        uses: actions/cache/restore@v6
+        with:
+          path: .turbo/cache
+          key: turbo-${{ runner.os }}-${{ hashFiles('bun.lock', 'package.json') }}-${{ github.sha }}
+          restore-keys: turbo-${{ runner.os }}-${{ hashFiles('bun.lock', 'package.json') }}-
 
       - name: Check formatting
         run: bunx oxfmt --check
@@ -96,18 +112,22 @@ jobs:
       - name: Lint, type check and test
         run: bun run check
 
-      - name: Build web
-        run: bun run --filter web build:prod
+      # main only: PR saves would spend the repo's cache quota, which the Docker layer cache shares
+      - name: Save Turbo cache
+        if: github.event_name == 'push'
+        uses: actions/cache/save@v6
+        with:
+          path: .turbo/cache
+          key: turbo-${{ runner.os }}-${{ hashFiles('bun.lock', 'package.json') }}-${{ github.sha }}
 
   build:
     runs-on: ubuntu-latest
-    needs: [detect-changes, validate]
-    # Only web is built here; worker and indexer images are built on the VPS
+    needs: detect-changes
+    # Only web is built here; worker and indexer images are built on the VPS. Runs beside
+    # validate and pushes only the commit tag; tag-latest moves :latest once validate passes
     if: |
-      always() &&
-      (needs.validate.result == 'success' || needs.validate.result == 'skipped') &&
-      (needs.detect-changes.outputs.web == 'true' ||
-      github.event_name == 'workflow_dispatch')
+      needs.detect-changes.outputs.web == 'true' ||
+      github.event_name == 'workflow_dispatch'
     environment: ${{ github.event_name == 'pull_request' && 'Staging' || 'Production' }}
     strategy:
       fail-fast: false
@@ -149,9 +169,7 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           # Load image locally on PRs for validation
           load: ${{ github.event_name == 'pull_request' }}
-          tags: |
-            ghcr.io/${{ github.repository }}-${{ matrix.app }}:${{ github.sha }}
-            ghcr.io/${{ github.repository }}-${{ matrix.app }}:latest
+          tags: ghcr.io/${{ github.repository }}-${{ matrix.app }}:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           # public client values and the source map upload; only apps/web declares these args.
@@ -168,9 +186,33 @@ jobs:
           secrets: |
             SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}
 
+  # Production pulls :latest by hand, so it only ever points at an image whose commit passed validate
+  tag-latest:
+    runs-on: ubuntu-latest
+    needs: [detect-changes, validate, build]
+    if: |
+      always() &&
+      github.event_name != 'pull_request' &&
+      needs.build.result == 'success' &&
+      (needs.validate.result == 'success' || needs.validate.result == 'skipped') &&
+      (needs.detect-changes.outputs.web == 'true' || github.event.inputs.force_build_all == 'true')
+    steps:
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Point web latest at this commit
+        run: docker buildx imagetools create -t ghcr.io/${{ github.repository }}-web:latest ghcr.io/${{ github.repository }}-web:${{ github.sha }}
+
   cleanup:
     runs-on: ubuntu-latest
-    needs: [detect-changes, build]
+    needs: [detect-changes, build, tag-latest]
     # Run cleanup only on main branch and only if build succeeded or was skipped
     if: |
       always() &&

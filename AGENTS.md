@@ -165,7 +165,7 @@ Sentry (sentry.io, hosted; the official `@sentry/*` SDKs, pinned in the catalog)
 
 ## CI/CD
 
-`.github/workflows/docker-ci.yml` — on push/PR to main: detects changed apps, runs the format check, lint, typecheck and the web production build, then builds and pushes the `web` Docker image (from `apps/web`) when web changed. Worker and indexer images are not built in CI; they are built on the VPS.
+`.github/workflows/docker-ci.yml` — on push/PR to main: detects changed apps, runs the format check and `bun run check`, and beside them builds the `web` Docker image (from `apps/web`) when web changed. On main the image is pushed as `:<sha>`, and `tag-latest` moves `:latest` to it only once the checks pass, since production pulls `:latest` by hand. Worker and indexer images are not built in CI; they are built on the VPS.
 
 ## Behavior
 
