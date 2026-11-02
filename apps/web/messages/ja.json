@@ -2220,6 +2220,7 @@
   "trade_composer_add_tray_empty": "カードをタップして選択してください。",
   "trade_composer_add_untick": "{name}の選択を解除",
   "trade_composer_add_button": "{count}件を追加",
+  "trade_composer_add_price_note": "価格とメモ",
   "trade_composer_add_price_hint": "今回追加するものに設定されます。すでにリストにあるObjektは元の価格のままです。",
   "trade_composer_add_no_objekts": "このプロフィールはObjektを所持していません",
   "trade_composer_add_no_collections": "選択中のアーティストのコレクションはありません",

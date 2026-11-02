@@ -1300,7 +1300,7 @@ Each picked side of the preview SHALL start its thumbnails with an Add objekts t
 - **THEN** Add is disabled
 
 ### Requirement: Ticked tray
-Beside the sheet's grid, a Ticked tray SHALL show how many are ticked and each ticked objekt, which the viewer can untick from there, with Clear to untick all, disabled while nothing is ticked, and SHALL hold Cancel and Add with the count. Unticking or clearing SHALL keep focus in the tray: on the next ticked objekt, else the tray's heading. Below the width where the tray fits beside the grid, it SHALL sit under the grid with Cancel and Add still in reach.
+Beside the sheet's grid, a Ticked tray SHALL show how many are ticked and each ticked objekt, untickable there, with Clear, disabled while nothing is ticked, and Cancel and Add with the count. Unticking or clearing SHALL keep focus in the tray: on the next ticked objekt, else its heading. Below the width where the tray fits beside the grid, one row under the grid SHALL hold the count, which opens the tray, a sale list's price and note, and Add, leaving the grid the rest of the sheet.
 
 #### Scenario: Untick from the tray
 - **WHEN** the viewer has ticked three objekts and removes one from the tray
@@ -1314,8 +1314,12 @@ Beside the sheet's grid, a Ticked tray SHALL show how many are ticked and each t
 - **WHEN** a keyboard user unticks the first of three objekts from the tray
 - **THEN** focus moves to the untick control of the next ticked objekt
 
+#### Scenario: Phone
+- **WHEN** the viewer opens Add objekts on sale list "binary sale" on a phone and ticks two objekts
+- **THEN** the row under the grid shows 2, Price & note and Add 2, and the sheet's close button stands in for Cancel
+
 ### Requirement: What Add objekts offers
-For a have or sale list, Add objekts SHALL offer each objekt the Cosmo profile the list is bound to holds, one card per copy with its serial. For a want list it SHALL offer every collection of the artists the viewer has selected, as the index does. Both SHALL search and filter like the offer picker. For a sale list the tray SHALL also take an optional price, QYOP and note, set on what it adds; an objekt already on the list keeps its own.
+For a have or sale list, Add objekts SHALL offer each objekt the Cosmo profile the list is bound to holds, one card per copy with its serial. For a want list it SHALL offer every collection of the artists the viewer has selected, as the index does. Both SHALL search and filter like the offer picker. For a sale list Add objekts SHALL also take an optional price, QYOP and note, set on what it adds; an objekt already on the list keeps its own.
 
 #### Scenario: Have list offers its profile's holdings
 - **WHEN** have list "spares" is bound to "rin" and the viewer opens Add objekts on it

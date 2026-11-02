@@ -2220,6 +2220,7 @@
   "trade_composer_add_tray_empty": "카드를 눌러 선택하세요.",
   "trade_composer_add_untick": "{name} 선택 해제",
   "trade_composer_add_button": "{count}개 추가",
+  "trade_composer_add_price_note": "가격 및 메모",
   "trade_composer_add_price_hint": "이번에 추가하는 항목에 적용되며, 이미 목록에 있는 오브젝트는 기존 가격을 유지합니다.",
   "trade_composer_add_no_objekts": "이 프로필에는 오브젝트가 없습니다",
   "trade_composer_add_no_collections": "선택한 아티스트의 컬렉션이 없습니다",

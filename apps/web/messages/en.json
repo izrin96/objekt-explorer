@@ -2220,6 +2220,7 @@
   "trade_composer_add_tray_empty": "Tap cards to tick them.",
   "trade_composer_add_untick": "Untick {name}",
   "trade_composer_add_button": "Add {count}",
+  "trade_composer_add_price_note": "Price & note",
   "trade_composer_add_price_hint": "Set on what this adds; an objekt already on the list keeps its own.",
   "trade_composer_add_no_objekts": "This profile holds no objekts",
   "trade_composer_add_no_collections": "No collections for the artists you've selected",

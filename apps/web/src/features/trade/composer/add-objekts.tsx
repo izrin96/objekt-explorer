@@ -1,4 +1,4 @@
-import { CardsThreeIcon, InfoIcon, LinkIcon, XIcon } from "@phosphor-icons/react";
+import { CardsThreeIcon, CaretUpIcon, InfoIcon, LinkIcon, XIcon } from "@phosphor-icons/react";
 import { canBeOnTrade } from "@repo/api/schemas/list";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Popover, PopoverPopup, PopoverTrigger } from "@/components/ui/popover";
 import { SheetClose, SheetDescription, SheetTitle } from "@/components/ui/sheet";
 import { toastManager } from "@/components/ui/toast";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
@@ -31,8 +32,10 @@ import { isObjektOwned } from "@/features/objekt/objekt-utils";
 import { collectionOptions } from "@/features/objekt/queries";
 import { VirtualCardGrid } from "@/features/objekt/virtual-card-grid";
 import { ownedCollectionOptions } from "@/features/profile/queries";
+import { formatCurrency } from "@/features/settings/use-currency";
 import { useUserProfiles } from "@/features/user/hooks";
 import { useLoadAllPages } from "@/hooks/use-load-all-pages";
+import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
 
@@ -48,7 +51,8 @@ type GridProps = {
 
 /**
  * Add objekts on a picked side: the filters across the top, the grid, and the Ticked tray beside
- * it from `md` (under it below). Adding saves to the list at once and closes.
+ * it from `md`; below, a bar whose popovers hold the tray and the price, so the grid keeps the
+ * screen. Adding saves to the list at once and closes.
  */
 export function AddObjektsSheet({
   slug,
@@ -95,8 +99,6 @@ function AddObjektsBody({
   const profileName = (address: string) => profileLabel(profiles, address);
   // a new post can't pick a list already on Trade, so this holds only for a list in the post being edited
   const onTrade = list.discoverable === true && canBeOnTrade(list.listType, list.isProfileBind);
-  // where focus lands when the control holding it leaves the tray
-  const trayHeading = useRef<HTMLSpanElement>(null);
 
   const toggle = (key: string, objekt: ValidObjekt) =>
     setTicked((prev) => {
@@ -119,6 +121,27 @@ function AddObjektsBody({
 
   const count = ticked.size;
   const gridProps = { filters, ticked, onToggle: toggle };
+  const sale = list.listType === "sale";
+  const tray = { ticked, onUntick: toggle, onClear: () => setTicked(new Map()) };
+  const priceFields = sale ? (
+    <PriceFields
+      currency={list.currency ?? ""}
+      value={price}
+      onChange={setPrice}
+      priceHint={
+        <p className="text-muted-foreground text-xs text-pretty">
+          {m.trade_composer_add_price_hint()}
+        </p>
+      }
+    />
+  ) : null;
+  const addButton = (
+    <Button className="flex-1" disabled={count === 0} loading={add.isPending} onClick={submit}>
+      {count === 0
+        ? m.list_manage_objekt_add_button()
+        : m.trade_composer_add_button({ count: count.toLocaleString(getLocale()) })}
+    </Button>
+  );
 
   return (
     <>
@@ -126,7 +149,8 @@ function AddObjektsBody({
         <SheetTitle className="font-display pe-8 text-lg">
           {m.trade_composer_add_title({ list: name })}
         </SheetTitle>
-        <SheetDescription className="text-pretty">
+        {/* a phone needs the room for the grid; screen readers still get it */}
+        <SheetDescription className="text-pretty max-md:sr-only">
           {owner !== null
             ? m.trade_composer_add_source_owned({ profile: profileName(owner) })
             : source === "collections"
@@ -135,10 +159,16 @@ function AddObjektsBody({
         </SheetDescription>
       </div>
       {onTrade ? (
-        <Alert variant="warning">
-          <InfoIcon aria-hidden />
-          <AlertDescription>{m.trade_composer_add_on_trade({ list: name })}</AlertDescription>
-        </Alert>
+        <>
+          <Alert variant="warning" className="max-md:hidden">
+            <InfoIcon aria-hidden />
+            <AlertDescription>{m.trade_composer_add_on_trade({ list: name })}</AlertDescription>
+          </Alert>
+          <p className="text-muted-foreground flex items-start gap-1.5 text-xs text-pretty md:hidden">
+            <InfoIcon aria-hidden className="text-warning mt-px size-3.5 shrink-0" />
+            {m.trade_composer_add_on_trade({ list: name })}
+          </p>
+        </>
       ) : null}
       <PickerFilterBar filters={filters} onChange={setFilters} />
       <div className="grid min-h-0 flex-1 grid-rows-[minmax(0,1fr)_auto] gap-3 md:grid-cols-[minmax(0,1fr)_16rem] md:grid-rows-1 md:gap-4">
@@ -152,69 +182,123 @@ function AddObjektsBody({
             <EmptyState icon={LinkIcon} bordered={false} title={m.trade_composer_add_unbound()} />
           )}
         </div>
-        <aside className="flex min-h-0 flex-col gap-3 max-md:border-t max-md:pt-3 md:border-s md:ps-4">
-          <div className="flex items-center gap-2">
-            <span ref={trayHeading} tabIndex={-1} className="text-sm font-medium outline-none">
-              {m.trade_composer_add_ticked()}
-            </span>
-            <Badge variant="outline" className="tabular-nums">
-              {count.toLocaleString(getLocale())}
-            </Badge>
-            <Button
-              variant="ghost"
-              size="xs"
-              className="ms-auto"
-              disabled={count === 0}
-              onClick={() => {
-                trayHeading.current?.focus();
-                setTicked(new Map());
-              }}
-            >
-              {m.trade_composer_add_clear()}
-            </Button>
-          </div>
-          {count === 0 ? (
-            <p className="text-muted-foreground text-xs text-pretty">
-              {m.trade_composer_add_tray_empty()}
-            </p>
-          ) : (
-            <TickedList
-              ticked={ticked}
-              onUntick={toggle}
-              onEmptied={() => trayHeading.current?.focus()}
-            />
-          )}
-          {list.listType === "sale" ? (
-            <div className="flex flex-col gap-3">
-              <PriceFields
-                currency={list.currency ?? ""}
-                value={price}
-                onChange={setPrice}
-                priceHint={
-                  <p className="text-muted-foreground text-xs text-pretty">
-                    {m.trade_composer_add_price_hint()}
-                  </p>
-                }
-              />
-            </div>
-          ) : null}
+        <aside className="flex min-h-0 flex-col gap-3 border-s ps-4 max-md:hidden">
+          <Tray {...tray} listClassName="flex-1 grid-cols-3" />
+          {priceFields ? <div className="flex flex-col gap-3">{priceFields}</div> : null}
           <div className="flex gap-2">
             <SheetClose render={<Button variant="outline" className="flex-1" />}>
               {m.common_modal_cancel()}
             </SheetClose>
-            <Button
-              className="flex-1"
-              disabled={count === 0}
-              loading={add.isPending}
-              onClick={submit}
-            >
-              {count === 0
-                ? m.list_manage_objekt_add_button()
-                : m.trade_composer_add_button({ count: count.toLocaleString(getLocale()) })}
-            </Button>
+            {addButton}
           </div>
         </aside>
+        {/* below md the sheet's close button stands in for Cancel */}
+        <div className="flex min-w-0 items-center gap-2 border-t pt-3 md:hidden">
+          <Popover>
+            <PopoverTrigger render={<Button variant="outline" className="shrink-0" />}>
+              <CardsThreeIcon aria-hidden />
+              <span className="sr-only">{m.trade_composer_add_ticked()}</span>
+              <span className="tabular-nums">{count.toLocaleString(getLocale())}</span>
+              <CaretUpIcon aria-hidden className="size-3.5 opacity-60" />
+            </PopoverTrigger>
+            <PopoverPopup side="top" align="start" className="w-80 max-w-full">
+              <div className="flex flex-col gap-3">
+                <Tray {...tray} listClassName="max-h-64 grid-cols-4" />
+              </div>
+            </PopoverPopup>
+          </Popover>
+          {priceFields ? (
+            <Popover>
+              <PopoverTrigger render={<Button variant="outline" className="min-w-0 shrink" />}>
+                <PriceButtonLabel summary={priceSummary(price, list.currency ?? "")} />
+                <CaretUpIcon aria-hidden className="size-3.5 shrink-0 opacity-60" />
+              </PopoverTrigger>
+              <PopoverPopup side="top" className="w-80 max-w-full">
+                <div className="flex flex-col gap-3">{priceFields}</div>
+              </PopoverPopup>
+            </Popover>
+          ) : null}
+          {addButton}
+        </div>
       </div>
+    </>
+  );
+}
+
+/** "MYR 5 · Note" once set, so the bar shows what Add will apply. */
+function priceSummary({ price, isQyop, note }: PriceValue, currency: string) {
+  const parts = [
+    isQyop
+      ? m.list_manage_objekt_set_price_qyop()
+      : price !== null
+        ? formatCurrency(price, currency)
+        : null,
+    note.trim() ? m.list_manage_objekt_set_price_note() : null,
+  ].filter((part) => part !== null);
+  return parts.length > 0 ? parts.join(" · ") : null;
+}
+
+/** The summary alone would leave the button's name as just "QYOP", so the label stays for screen readers. */
+function PriceButtonLabel({ summary }: { summary: string | null }) {
+  if (summary === null)
+    return <span className="truncate">{m.trade_composer_add_price_note()}</span>;
+  return (
+    <span className="truncate">
+      <span className="sr-only">{m.trade_composer_add_price_note()}: </span>
+      {summary}
+    </span>
+  );
+}
+
+/** The Ticked heading, count and Clear over the ticked cards; beside the grid, or in the bar's popover. */
+function Tray({
+  ticked,
+  onUntick,
+  onClear,
+  listClassName,
+}: {
+  ticked: Ticked;
+  onUntick: (key: string, objekt: ValidObjekt) => void;
+  onClear: () => void;
+  listClassName: string;
+}) {
+  // where focus lands when the control holding it leaves the tray
+  const heading = useRef<HTMLSpanElement>(null);
+  const count = ticked.size;
+  return (
+    <>
+      <div className="flex items-center gap-2">
+        <span ref={heading} tabIndex={-1} className="text-sm font-medium outline-none">
+          {m.trade_composer_add_ticked()}
+        </span>
+        <Badge variant="outline" className="tabular-nums">
+          {count.toLocaleString(getLocale())}
+        </Badge>
+        <Button
+          variant="ghost"
+          size="xs"
+          className="ms-auto"
+          disabled={count === 0}
+          onClick={() => {
+            heading.current?.focus();
+            onClear();
+          }}
+        >
+          {m.trade_composer_add_clear()}
+        </Button>
+      </div>
+      {count === 0 ? (
+        <p className="text-muted-foreground text-xs text-pretty">
+          {m.trade_composer_add_tray_empty()}
+        </p>
+      ) : (
+        <TickedList
+          ticked={ticked}
+          onUntick={onUntick}
+          onEmptied={() => heading.current?.focus()}
+          className={listClassName}
+        />
+      )}
     </>
   );
 }
@@ -225,15 +309,16 @@ function tickedName(objekt: ValidObjekt) {
   return isObjektOwned(objekt) ? `${base} #${objekt.serial}` : base;
 }
 
-/** A strip below `md`, so Cancel and Add stay on a phone's screen; three columns beside the grid. */
 function TickedList({
   ticked,
   onUntick,
   onEmptied,
+  className,
 }: {
   ticked: Ticked;
   onUntick: (key: string, objekt: ValidObjekt) => void;
   onEmptied: () => void;
+  className: string;
 }) {
   const listRef = useRef<HTMLUListElement>(null);
   // the pressed button leaves with its card, so focus moves to a neighbour that stays
@@ -247,11 +332,10 @@ function TickedList({
   return (
     <ul
       ref={listRef}
-      data-scroll-x
-      className="flex min-h-0 gap-1.5 overflow-x-auto max-md:pb-1 md:grid md:flex-1 md:grid-cols-3 md:content-start md:overflow-x-visible md:overflow-y-auto"
+      className={cn("grid min-h-0 content-start gap-1.5 overflow-y-auto", className)}
     >
       {[...ticked].map(([key, objekt], index) => (
-        <li key={key} className="@container relative min-w-0 max-md:w-14 max-md:shrink-0">
+        <li key={key} className="relative min-w-0">
           <ObjektCard objekt={objekt} image="thumbnail" hideLabel />
           <button
             type="button"
