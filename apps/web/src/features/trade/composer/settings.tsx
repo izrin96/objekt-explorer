@@ -9,9 +9,19 @@ import {
   rowBlock,
 } from "@repo/api/schemas/trade-post";
 import { Link } from "@tanstack/react-router";
-import { type Dispatch, type ReactNode, type SetStateAction, useId, useState } from "react";
+import { type Dispatch, type RefObject, type SetStateAction, useId, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogClose,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogPanel,
+  DialogPopup,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioPrimitive } from "@/components/ui/radio-group";
@@ -23,7 +33,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useCreateList } from "@/features/list/actions";
-import { NONE } from "@/features/list/list-draft";
+import { CreateListDialog } from "@/features/list/create-list-dialog";
+import { EMPTY_DRAFT, NONE } from "@/features/list/list-draft";
+import { useUserProfiles } from "@/features/user/hooks";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
@@ -70,8 +82,18 @@ export function ComposerSettings({
   const pick = (slot: Slot, slug: string | null) => {
     if (kind) setChoice((prev) => pickList(lists, prev, kind, slot, slug, replaces));
   };
+  const hasProfile = useUserProfiles().length > 0;
+  // the slot outlives a close, so the dialog keeps its type while it animates out
+  const [newList, setNewList] = useState<{ slot: Slot; open: boolean }>({
+    slot: "have",
+    open: false,
+  });
+  const closeNewList = () => setNewList((prev) => ({ ...prev, open: false }));
+  // the item that opened the dialog is gone with its popup, so focus goes back to the dropdown
+  const newListOpener = useRef<HTMLElement | null>(null);
+  const bindSlot = newList.slot === "want" ? "have" : newList.slot;
 
-  const side = (slot: Slot, extra?: ReactNode) => {
+  const side = (slot: Slot) => {
     if (!kind || !plan) return null;
     const partner = pairedPartner(plan, choice[slot], lists);
     const otherPicked = keepsPair(kind, choice.alsoSwap) && choice[otherSlot(kind, slot)] !== null;
@@ -85,6 +107,11 @@ export function ComposerSettings({
         value={choice[slot]}
         otherPicked={otherPicked}
         replaces={replaces}
+        needsProfile={slot !== "want" && !hasProfile}
+        onNew={(trigger) => {
+          newListOpener.current = trigger;
+          setNewList({ slot, open: true });
+        }}
         prompt={
           partner !== null
             ? {
@@ -95,13 +122,10 @@ export function ComposerSettings({
             : null
         }
         onPick={(slug) => pick(slot, slug)}
-      >
-        {extra}
-      </ListSelect>
+      />
     );
   };
 
-  const newWant = <NewWantList onCreated={(slug) => pick("want", slug)} />;
   const alsoPayCheck = request ? (
     <OptionCheck
       label={m.trade_composer_also_pay()}
@@ -125,7 +149,7 @@ export function ComposerSettings({
       {kind === "swap" ? (
         <>
           {side("have")}
-          {side("want", newWant)}
+          {side("want")}
           {alsoPayCheck}
         </>
       ) : kind === "sell" ? (
@@ -148,15 +172,33 @@ export function ComposerSettings({
           {/* what the seller would swap for, once the sale list takes swaps */}
           {choice.alsoSwap ? (
             <>
-              {side("want", newWant)}
+              {side("want")}
               {alsoPayCheck}
             </>
           ) : null}
         </>
       ) : kind === "buy" ? (
-        side("want", newWant)
+        side("want")
       ) : null}
       {plan?.ok && request ? <UnpairedNote lists={lists} plan={plan} picked={request} /> : null}
+      <CreateListDialog
+        open={newList.open && newList.slot !== "want"}
+        onOpenChange={(open) => {
+          if (!open) closeNewList();
+        }}
+        initial={{ ...EMPTY_DRAFT, listType: bindSlot, isProfileBind: true }}
+        lockType
+        onCreated={(slug) => pick(bindSlot, slug)}
+        finalFocus={newListOpener}
+      />
+      <NewWantListDialog
+        open={newList.open && newList.slot === "want"}
+        onOpenChange={(open) => {
+          if (!open) closeNewList();
+        }}
+        onCreated={(slug) => pick("want", slug)}
+        finalFocus={newListOpener}
+      />
     </div>
   );
 }
@@ -209,6 +251,15 @@ function KindSegment({
 
 type Prompt = { partner: string; onUnpair: () => void; onPickAnother: () => void };
 
+/** the dropdown's last item, beside `NONE` */
+const NEW = "__new__";
+
+const NEW_LIST_LABEL: Record<Slot, () => string> = {
+  have: m.trade_composer_new_list_have,
+  sale: m.trade_composer_new_list_sale,
+  want: m.trade_composer_new_list_want,
+};
+
 /** One side's list as a dropdown: a list the post can't take stays in it, disabled, with why. */
 function ListSelect({
   slot,
@@ -218,9 +269,10 @@ function ListSelect({
   value,
   otherPicked,
   replaces,
+  needsProfile,
+  onNew,
   prompt,
   onPick,
-  children,
 }: {
   slot: Slot;
   kind: PostKind;
@@ -231,12 +283,14 @@ function ListSelect({
   /** the other side is picked, so a list no longer brings its partner along */
   otherPicked: boolean;
   replaces: string | null;
+  /** a have or sale list can't be made without a linked Cosmo profile */
+  needsProfile: boolean;
+  onNew: (trigger: HTMLElement | null) => void;
   prompt: Prompt | null;
   onPick: (slug: string | null) => void;
-  /** under the dropdown: New want list */
-  children?: ReactNode;
 }) {
   const id = useId();
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const candidates = lists.filter((list) => list.listType === slot);
   const rows = candidates.map((list) => {
     const block = rowBlock(lists, list, kind, replaces, otherPicked);
@@ -245,104 +299,119 @@ function ListSelect({
   const picked = rows.find((row) => row.list.slug === value);
   const showPrompt = prompt !== null && picked !== undefined;
   const note = showPrompt ? null : (picked?.note ?? null);
-  const describedBy = showPrompt ? `${id}-prompt` : note ? `${id}-note` : undefined;
+  const describedBy =
+    [
+      showPrompt ? `${id}-prompt` : note ? `${id}-note` : null,
+      needsProfile ? `${id}-profile` : null,
+    ]
+      .filter((part) => part !== null)
+      .join(" ") || undefined;
 
   return (
     <div className="flex min-w-0 flex-col gap-1.5">
       <Label htmlFor={id}>{SLOT_HEADING[slot]()}</Label>
-      {candidates.length === 0 && slot !== "want" ? (
-        <p className="text-muted-foreground text-xs text-pretty">
-          {m.trade_composer_none_of_type()}{" "}
-          <Button
-            variant="link"
-            className="h-auto p-0 text-xs underline underline-offset-2"
-            render={<Link to="/list" />}
-          >
-            {m.nav_create_list()}
-          </Button>
+      <Select
+        value={value ?? NONE}
+        onValueChange={(next: string | null) => {
+          // New list opens its dialog and leaves the pick as it is
+          if (next === NEW) onNew(triggerRef.current);
+          else onPick(next === null || next === NONE ? null : next);
+        }}
+      >
+        <SelectTrigger ref={triggerRef} id={id} className="min-w-0" aria-describedby={describedBy}>
+          <SelectValue>
+            {(next: string) =>
+              next === NONE
+                ? optional
+                  ? m.trade_composer_no_list()
+                  : m.trade_composer_side_pick()
+                : (picked?.list.name ?? next)
+            }
+          </SelectValue>
+        </SelectTrigger>
+        <SelectPopup>
+          {optional ? <SelectItem value={NONE}>{m.trade_composer_no_list()}</SelectItem> : null}
+          {rows.map(({ list, block, note: rowText }) => (
+            <SelectItem key={list.id} value={list.slug} label={list.name} disabled={block !== null}>
+              <span className="flex min-w-0 flex-col">
+                <span className="break-words">{list.name}</span>
+                {rowText ? (
+                  <span className="text-muted-foreground text-xs text-pretty">{rowText}</span>
+                ) : null}
+              </span>
+            </SelectItem>
+          ))}
+          <SelectItem value={NEW} disabled={needsProfile} className="border-t">
+            <span className="flex min-w-0 items-center gap-1.5">
+              <PlusIcon aria-hidden />
+              {NEW_LIST_LABEL[slot]()}
+            </span>
+          </SelectItem>
+        </SelectPopup>
+      </Select>
+      {needsProfile ? (
+        <p id={`${id}-profile`} className="text-muted-foreground text-xs text-pretty">
+          {slot === "sale"
+            ? m.trade_composer_sale_needs_profile()
+            : m.trade_composer_have_needs_profile()}{" "}
+          <Link to="/account/profiles" className="text-foreground underline underline-offset-2">
+            {m.link_link_cosmo()}
+          </Link>
         </p>
-      ) : (
-        <Select
-          value={value ?? NONE}
-          onValueChange={(next: string | null) =>
-            onPick(next === null || next === NONE ? null : next)
-          }
-        >
-          <SelectTrigger id={id} className="min-w-0" aria-describedby={describedBy}>
-            <SelectValue>
-              {(next: string) =>
-                next === NONE
-                  ? optional
-                    ? m.trade_composer_no_list()
-                    : m.trade_composer_side_pick()
-                  : (picked?.list.name ?? next)
-              }
-            </SelectValue>
-          </SelectTrigger>
-          <SelectPopup>
-            {optional ? <SelectItem value={NONE}>{m.trade_composer_no_list()}</SelectItem> : null}
-            {rows.map(({ list, block, note: rowText }) => (
-              <SelectItem
-                key={list.id}
-                value={list.slug}
-                label={list.name}
-                disabled={block !== null}
-              >
-                <span className="flex min-w-0 flex-col">
-                  <span className="break-words">{list.name}</span>
-                  {rowText ? (
-                    <span className="text-muted-foreground text-xs text-pretty">{rowText}</span>
-                  ) : null}
-                </span>
-              </SelectItem>
-            ))}
-          </SelectPopup>
-        </Select>
-      )}
+      ) : null}
       {note ? (
         <p id={`${id}-note`} className="text-muted-foreground text-xs text-pretty">
           {note}
         </p>
       ) : null}
       {showPrompt ? <UnpairPrompt id={`${id}-prompt`} kind={kind} prompt={prompt} /> : null}
-      {children}
     </div>
   );
 }
 
-/** An empty want list, under no profile and off Trade, picked once it exists. */
-function NewWantList({ onCreated }: { onCreated: (slug: string) => void }) {
+/** New want list…: a name only, for an empty want list under no profile and off Trade. */
+function NewWantListDialog({
+  open,
+  onOpenChange,
+  onCreated,
+  finalFocus,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onCreated: (slug: string) => void;
+  finalFocus: RefObject<HTMLElement | null>;
+}) {
+  // a fresh name on each opening
+  const [session, setSession] = useState(0);
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={onOpenChange}
+      onOpenChangeComplete={(next) => {
+        if (!next) setSession((prev) => prev + 1);
+      }}
+    >
+      <DialogPopup className="max-w-md" finalFocus={finalFocus}>
+        <NewWantListForm
+          key={session}
+          onCreated={(slug) => {
+            onCreated(slug);
+            onOpenChange(false);
+          }}
+        />
+      </DialogPopup>
+    </Dialog>
+  );
+}
+
+function NewWantListForm({ onCreated }: { onCreated: (slug: string) => void }) {
   const id = useId();
   const create = useCreateList();
-  const [open, setOpen] = useState(false);
-  // once the field closes, focus goes back to the button that opened it
-  const [returned, setReturned] = useState(false);
   const [name, setName] = useState("");
   const trimmed = name.trim();
-  const close = () => {
-    setOpen(false);
-    setReturned(true);
-  };
-
-  if (!open) {
-    return (
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        className="text-muted-foreground w-fit"
-        autoFocus={returned}
-        onClick={() => setOpen(true)}
-      >
-        <PlusIcon />
-        {m.trade_composer_new_want()}
-      </Button>
-    );
-  }
-
   return (
     <form
-      className="bg-muted/40 flex flex-col gap-2 rounded-lg border p-3"
+      className="contents"
       onSubmit={(event) => {
         event.preventDefault();
         if (!trimmed) return;
@@ -357,38 +426,34 @@ function NewWantList({ onCreated }: { onCreated: (slug: string) => void }) {
             currency: null,
             discoverable: false,
           },
-          {
-            // runs after the hook's own onSuccess has refetched the viewer's lists
-            onSuccess: ({ slug }) => {
-              onCreated(slug);
-              close();
-              setName("");
-            },
-          },
+          // runs after the hook's own onSuccess has refetched the viewer's lists
+          { onSuccess: ({ slug }) => onCreated(slug) },
         );
       }}
     >
-      <Label htmlFor={id}>{m.trade_composer_new_want()}</Label>
-      <Input
-        id={id}
-        autoFocus
-        maxLength={256}
-        placeholder={m.list_create_name_placeholder()}
-        aria-describedby={`${id}-hint`}
-        value={name}
-        onChange={(event) => setName(event.target.value)}
-      />
-      <p id={`${id}-hint`} className="text-muted-foreground text-xs text-pretty">
-        {m.trade_composer_new_want_hint()}
-      </p>
-      <div className="flex justify-end gap-2">
-        <Button type="button" variant="outline" size="sm" onClick={close}>
-          {m.common_modal_cancel()}
-        </Button>
-        <Button type="submit" size="sm" disabled={!trimmed} loading={create.isPending}>
+      <DialogHeader>
+        <DialogTitle className="font-display">{m.trade_composer_new_want()}</DialogTitle>
+        <DialogDescription>{m.trade_composer_new_want_hint()}</DialogDescription>
+      </DialogHeader>
+      <DialogPanel>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor={id}>{m.list_create_name_label()}</Label>
+          <Input
+            id={id}
+            autoFocus
+            maxLength={256}
+            placeholder={m.list_create_name_placeholder()}
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+          />
+        </div>
+      </DialogPanel>
+      <DialogFooter>
+        <DialogClose render={<Button variant="outline" />}>{m.common_modal_cancel()}</DialogClose>
+        <Button type="submit" disabled={!trimmed} loading={create.isPending}>
           {m.common_actions_create()}
         </Button>
-      </div>
+      </DialogFooter>
     </form>
   );
 }

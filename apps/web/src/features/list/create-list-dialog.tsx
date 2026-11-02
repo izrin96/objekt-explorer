@@ -1,6 +1,6 @@
 import { canBeOnTrade } from "@repo/api/schemas/list";
 import type { ComposerStart } from "@repo/api/schemas/trade-post";
-import { useState } from "react";
+import { type RefObject, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -28,11 +28,20 @@ export function CreateListDialog({
   open,
   onOpenChange,
   initial = EMPTY_DRAFT,
+  lockType = false,
+  onCreated,
+  finalFocus,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   /** The draft it opens with, and goes back to on close. */
   initial?: ListDraft;
+  /** `initial`'s type, bound to a profile, with neither changeable */
+  lockType?: boolean;
+  /** hands the new list back and closes, in place of offering Post it */
+  onCreated?: (slug: string) => void;
+  /** opened from code, not a trigger, so the caller says where focus goes back to */
+  finalFocus?: RefObject<HTMLElement | null>;
 }) {
   const profiles = useUserProfiles();
   const create = useCreateList();
@@ -61,7 +70,7 @@ export function CreateListDialog({
 
   return (
     <Dialog open={open} onOpenChange={change}>
-      <DialogPopup className="max-w-md">
+      <DialogPopup className="max-w-md" finalFocus={finalFocus}>
         {created ? (
           <>
             <DialogHeader>
@@ -97,7 +106,10 @@ export function CreateListDialog({
               create.mutate(input, {
                 onSuccess: ({ slug }) => {
                   const type = input.listType;
-                  if (canBeOnTrade(type, input.isProfileBind)) {
+                  if (onCreated) {
+                    onCreated(slug);
+                    change(false);
+                  } else if (canBeOnTrade(type, input.isProfileBind)) {
                     setCreated(
                       type === "have"
                         ? { ...NEW_POST, kind: "swap", have: slug }
@@ -114,10 +126,18 @@ export function CreateListDialog({
           >
             <DialogHeader>
               <DialogTitle className="font-display">{m.list_create_title()}</DialogTitle>
-              <DialogDescription>{m.list_create_list_type_desc()}</DialogDescription>
+              <DialogDescription>
+                {onCreated ? m.list_create_picked_desc() : m.list_create_list_type_desc()}
+              </DialogDescription>
             </DialogHeader>
             <DialogPanel>
-              <ListForm mode="create" value={draft} onChange={setEdited} profiles={profiles} />
+              <ListForm
+                mode="create"
+                value={draft}
+                onChange={setEdited}
+                profiles={profiles}
+                lockBind={lockType}
+              />
             </DialogPanel>
             <DialogFooter>
               <DialogClose render={<Button variant="outline" />}>

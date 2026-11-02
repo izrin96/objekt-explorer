@@ -39,11 +39,14 @@ export function ListTypeField({
   id,
   listType,
   locked,
+  lockedHint = locked,
   onChange,
 }: {
   id: (field: string) => string;
   listType: ListType;
   locked: boolean;
+  /** how to make a list of another type, which only an existing list needs */
+  lockedHint?: boolean;
   onChange: (next: ListType) => void;
 }) {
   return (
@@ -73,7 +76,7 @@ export function ListTypeField({
       <span id={id("type-desc")} className="text-muted-foreground text-xs text-pretty">
         {LIST_TYPE_DESC[listType]()}
       </span>
-      {locked ? (
+      {lockedHint ? (
         <span className="text-muted-foreground text-xs text-pretty">
           {m.list_edit_type_locked_hint()}
         </span>
@@ -87,12 +90,15 @@ export function ProfileField({
   value,
   profiles,
   locked,
+  required = false,
   onChange,
 }: {
   id: (field: string) => string;
   value: ListDraft;
   profiles: readonly { address: string; nickname: string | null }[];
   locked: boolean;
+  /** no None: the list stays bound to one of the profiles */
+  required?: boolean;
   onChange: (patch: Pick<ListDraft, "profileAddress" | "isProfileBind">) => void;
 }) {
   return locked ? (
@@ -122,7 +128,7 @@ export function ProfileField({
           </SelectValue>
         </SelectTrigger>
         <SelectPopup>
-          <SelectItem value={NONE}>{m.common_form_none()}</SelectItem>
+          {required ? null : <SelectItem value={NONE}>{m.common_form_none()}</SelectItem>}
           {profiles.map((profile) => (
             <SelectItem key={profile.address} value={profile.address}>
               {displayNickname(profile.address, profile.nickname)}

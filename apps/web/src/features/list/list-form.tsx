@@ -33,6 +33,8 @@ type ListFormProps = {
   notice?: ReactNode;
   /** a have, want or sale list's place on Trade, which the post composer sets */
   tradeLine?: ReactNode;
+  /** create only: the type and the profile binding are fixed, as the post composer needs them */
+  lockBind?: boolean;
 };
 
 export function ListForm({
@@ -43,6 +45,7 @@ export function ListForm({
   url,
   notice,
   tradeLine,
+  lockBind = false,
 }: ListFormProps) {
   const prefix = useId();
   const id = (field: string) => `${prefix}-${field}`;
@@ -59,7 +62,8 @@ export function ListForm({
       <ListTypeField
         id={id}
         listType={value.listType}
-        locked={isEdit}
+        locked={isEdit || lockBind}
+        lockedHint={isEdit}
         onChange={(next) => set(listTypePatch(value, next, profiles))}
       />
 
@@ -128,11 +132,12 @@ export function ListForm({
         value={value}
         profiles={profiles}
         locked={isEdit && value.isProfileBind}
+        required={lockBind}
         onChange={set}
       />
 
       {/* shown locked in edit: it is why Hide Serial Numbers is off and the list can't go on Trade */}
-      {bindable ? (
+      {bindable && !lockBind ? (
         <SwitchRow
           id={id("bind")}
           label={m.list_create_profile_bind_label()}

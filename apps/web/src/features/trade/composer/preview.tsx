@@ -43,14 +43,16 @@ import type { PostInput } from "../composer-choice";
 import { matchLines, previewTags } from "../post-kind-text";
 import { TagBadges } from "../tag-label";
 import { TILE } from "../thumb-grid";
+import { AddObjektsSheet } from "./add-objekts";
 import { type PreviewSide, previewSides } from "./preview-sides";
 
-/** thumbnails before "+N", which opens the rest in the side sheet */
-const SHOWN = 23;
+/** thumbnails before "+N", which opens the rest in the side sheet; the Add objekts tile comes first */
+const SHOWN = 22;
 
 type Rule = Awaited<ReturnType<typeof client.list.rules>>[number];
 
 type SheetView =
+  | { view: "add"; slug: string; name: string }
   | { view: "rule"; slug: string; name: string; listRatio: number | null; withRatio: boolean }
   | { view: "all"; slug: string; name: string; ratio: RatioSide | null };
 
@@ -134,8 +136,24 @@ export function ComposerPreview({
       ) : null}
 
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-        <SheetPopup className="sm:max-w-lg" finalFocus={opener}>
-          {sheet?.view === "rule" ? (
+        <SheetPopup
+          side={sheet?.view === "add" ? "bottom" : "right"}
+          // a set height gives the picker's grid a bounded scroller; a phone takes all but the viewport's top gap
+          className={
+            sheet?.view === "add"
+              ? "h-[88dvh] max-sm:h-[calc(100dvh-(--spacing(12)))]"
+              : "sm:max-w-lg"
+          }
+          finalFocus={opener}
+        >
+          {sheet?.view === "add" ? (
+            <AddObjektsSheet
+              key={sheet.session}
+              slug={sheet.slug}
+              name={sheet.name}
+              onDone={() => setSheetOpen(false)}
+            />
+          ) : sheet?.view === "rule" ? (
             <RuleForm
               key={sheet.session}
               slug={sheet.slug}
@@ -237,10 +255,22 @@ function PickedSide({
             <Skeleton key={index} className="rounded-photocard aspect-photocard" />
           ))}
         </div>
-      ) : total === 0 ? (
-        <p className="text-muted-foreground text-xs">{m.trade_composer_side_empty()}</p>
       ) : (
         <ul className={THUMB_GRID}>
+          <li className="@container min-w-0">
+            <button
+              type="button"
+              aria-label={m.trade_composer_add_tile({ list: name })}
+              title={m.trade_composer_add_tile({ list: name })}
+              onClick={() => onOpenSheet({ view: "add", slug, name })}
+              className={cn(
+                TILE,
+                "hover:text-foreground hover:border-foreground/40 hover:bg-muted focus-visible:ring-ring w-full border border-dashed bg-transparent outline-none focus-visible:ring-2",
+              )}
+            >
+              <PlusIcon aria-hidden className="size-5" />
+            </button>
+          </li>
           {shown.map((entry) => (
             <li key={entry.entryId} className="min-w-0">
               <EntryThumb entry={entry} slug={slug} side={ratio} listRatio={listRatio} />
