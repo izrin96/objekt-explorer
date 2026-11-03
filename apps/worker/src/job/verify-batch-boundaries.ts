@@ -35,7 +35,7 @@ import {
   refineBatches,
   tokenIdRange,
   writeSerialUpdates,
-} from "@/job/populate-serial";
+} from "@/job/serial-batches";
 import { log } from "@/lib/log";
 import { preAssignedCollections as excludeCollections } from "@/lib/serial-constants";
 import {

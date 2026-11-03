@@ -111,7 +111,7 @@ async function main() {
 
 /**
  * Write serials in chunks using the same CASE-per-id transaction pattern as
- * populate-serial.ts. Atomic per collection.
+ * job/serial-batches.ts. Atomic per collection.
  */
 async function applyUpdates(updates: { id: string; newSerial: number }[]) {
   await indexer.transaction(async (tx) => {

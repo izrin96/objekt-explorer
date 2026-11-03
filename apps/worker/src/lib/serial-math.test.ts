@@ -7,8 +7,12 @@ import {
   computeOfflineSerialUpdates,
   computeOnlineSerials,
   discoveryBoundaries,
+  gapSeparators,
   mayHoldReservedBlocks,
+  planRediscovery,
+  probeWindow,
   snapBatchLengths,
+  tokenIdSpans,
   V1_CUTOFF_MS,
 } from "./serial-math";
 
@@ -347,5 +351,140 @@ describe("snapBatchLengths", () => {
       { start: 2000, end: 2033 },
     ];
     expect(snapBatchLengths(batches, [1050, 2010])).toEqual(batches);
+  });
+});
+
+describe("planRediscovery", () => {
+  const batches = [
+    { start: 100, end: 199 },
+    { start: 300, end: 350 },
+  ];
+
+  test("returns null when every present token is inside a stored batch", () => {
+    expect(planRediscovery(batches, [100, 150, 199, 300, 350])).toBeNull();
+  });
+
+  test("returns null when no token is present", () => {
+    expect(planRediscovery(batches, [])).toBeNull();
+    expect(planRediscovery([], [])).toBeNull();
+  });
+
+  test("full rescan when no batches are stored", () => {
+    expect(planRediscovery([], [5, 6])).toEqual({});
+  });
+
+  test("resumes from the frontier start when uncovered tokens sit at or above it", () => {
+    expect(planRediscovery(batches, [100, 300, 351, 400])).toEqual({ resumeFrom: 300 });
+    expect(planRediscovery(batches, [300])).toBeNull();
+    expect(planRediscovery(batches, [200, 300])).toEqual({});
+  });
+
+  test("full rescan when an uncovered token sits below the frontier", () => {
+    expect(planRediscovery(batches, [250, 351])).toEqual({});
+  });
+
+  test("a gap between batches counts as uncovered, batch ends are covered", () => {
+    expect(planRediscovery(batches, [199, 300])).toBeNull();
+    expect(planRediscovery(batches, [200])).toEqual({});
+  });
+});
+
+describe("probeWindow", () => {
+  test("asks for 20 tokens upward, one step past the start", () => {
+    const w = probeWindow(100, 1, 0);
+    expect(w).toHaveLength(20);
+    expect(w[0]).toBe(101);
+    expect(w[19]).toBe(120);
+  });
+
+  test("continues from the offset", () => {
+    expect(probeWindow(100, 1, 20)[0]).toBe(121);
+  });
+
+  test("walks downward", () => {
+    expect(probeWindow(100, -1, 0).slice(0, 3)).toEqual([99, 98, 97]);
+  });
+
+  test("stops below token 1 going down", () => {
+    expect(probeWindow(3, -1, 0)).toEqual([2, 1]);
+    expect(probeWindow(1, -1, 0)).toEqual([]);
+  });
+
+  test("cuts off after maxOffset tokens from the start", () => {
+    expect(probeWindow(100, 1, 0, 3)).toEqual([101, 102, 103]);
+    expect(probeWindow(100, 1, 20, 25)).toEqual([121, 122, 123, 124, 125]);
+  });
+
+  test("a window past maxOffset is empty", () => {
+    expect(probeWindow(100, 1, 20, 20)).toEqual([]);
+    expect(probeWindow(100, 1, 0, 0)).toEqual([]);
+  });
+
+  test("tokens above 1 are kept going up, even from 0", () => {
+    expect(probeWindow(0, 1, 0, 2)).toEqual([1, 2]);
+  });
+
+  test("a maxOffset of 0 on the downward scan is empty", () => {
+    expect(probeWindow(50, -1, 0, 0)).toEqual([]);
+  });
+});
+
+describe("tokenIdSpans", () => {
+  test("one span inside a single digit length", () => {
+    expect(tokenIdSpans(120, 450)).toEqual([{ len: 3, lo: 120, hi: 450 }]);
+  });
+
+  test("splits at each digit length", () => {
+    expect(tokenIdSpans(950, 10050)).toEqual([
+      { len: 3, lo: 950, hi: 999 },
+      { len: 4, lo: 1000, hi: 9999 },
+      { len: 5, lo: 10000, hi: 10050 },
+    ]);
+  });
+
+  test("a single token is a span of lo = hi", () => {
+    expect(tokenIdSpans(7, 7)).toEqual([{ len: 1, lo: 7, hi: 7 }]);
+  });
+
+  test("keeps spans with lo > hi", () => {
+    // start > end: the one length of start comes out crossed
+    expect(tokenIdSpans(500, 500 - 1)).toEqual([{ len: 3, lo: 500, hi: 499 }]);
+    // a range ending at a length boundary splits into one span per length
+    expect(tokenIdSpans(95, 100)).toEqual([
+      { len: 2, lo: 95, hi: 99 },
+      { len: 3, lo: 100, hi: 100 },
+    ]);
+  });
+
+  test("start above end within one length leaves one crossed span", () => {
+    expect(tokenIdSpans(50, 40)).toEqual([{ len: 2, lo: 50, hi: 40 }]);
+  });
+
+  test("no spans when start has more digits than end", () => {
+    expect(tokenIdSpans(1000, 999)).toEqual([]);
+  });
+});
+
+describe("gapSeparators", () => {
+  const gap = { start: 200, end: 300 };
+
+  test("minted tokens first, then foreign ones inside the gap", () => {
+    expect(gapSeparators([250, 210], [280, 230], gap)).toEqual([250, 210, 280, 230]);
+  });
+
+  test("drops foreign tokens outside the gap, bounds included", () => {
+    expect(gapSeparators([], [199, 200, 300, 301], gap)).toEqual([200, 300]);
+  });
+
+  test("dedupes a foreign token that is also minted", () => {
+    expect(gapSeparators([250], [250, 260], gap)).toEqual([250, 260]);
+  });
+
+  test("minted tokens are kept as given, not clipped to the gap", () => {
+    expect(gapSeparators([50], [], gap)).toEqual([50]);
+  });
+
+  test("empty inputs give an empty list", () => {
+    expect(gapSeparators([], [], gap)).toEqual([]);
   });
 });

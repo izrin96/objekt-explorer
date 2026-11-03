@@ -316,3 +316,82 @@ export function snapBatchLengths(batches: Batch[], presentTokenIds: number[]): B
     return start > b.start ? { start, end: b.end } : b;
   });
 }
+
+/**
+ * Whether a collection's stored batches need rediscovering for the tokens now
+ * present, and from where. `null`: every present token sits inside a stored
+ * batch (or nothing is present), so the stored ranges stand. Otherwise
+ * `resumeFrom` is the frontier batch's start when only that last, provisional
+ * batch can have changed (closed batches ended at a real foreign boundary and
+ * never change), and absent when a full rescan is needed: no stored batches, or
+ * an uncovered token below the frontier (a late-indexed old mint).
+ */
+export function planRediscovery(
+  batches: Batch[],
+  presentTokenIds: number[],
+): { resumeFrom?: number } | null {
+  const isCovered = (tokenId: number) =>
+    batches.some((r) => tokenId >= r.start && tokenId <= r.end);
+  const uncovered =
+    batches.length === 0 ? presentTokenIds : presentTokenIds.filter((t) => !isCovered(t));
+  if (uncovered.length === 0) return null;
+
+  const frontier = batches[batches.length - 1];
+  const canIncremental = frontier !== undefined && uncovered.every((t) => t >= frontier.start);
+  return canIncremental ? { resumeFrom: frontier.start } : {};
+}
+
+/**
+ * The token ids one round of `findBoundaryTokenId` asks Cosmo for, `size`
+ * tokens `offset` steps from `start` in `direction`. A `maxOffset` cuts the
+ * window off at that many tokens from the start, and walking down stops below
+ * token 1. An empty window means the scan is over.
+ */
+export function probeWindow(
+  start: number,
+  direction: -1 | 1,
+  offset: number,
+  maxOffset?: number,
+  size = 20,
+): number[] {
+  const window: number[] = [];
+  for (let i = 0; i < size; i++) {
+    const step = offset + i + 1;
+    if (maxOffset !== undefined && step > maxOffset) break;
+    const tokenId = start + direction * step;
+    if (direction === -1 && tokenId < 1) break;
+    window.push(tokenId);
+  }
+  return window;
+}
+
+/**
+ * The token id range [start, end] split per digit length, where string order
+ * equals numeric order. A span can come out with lo > hi (an empty one, when
+ * start is above end within one digit length), and is kept.
+ */
+export function tokenIdSpans(
+  start: number,
+  end: number,
+): { len: number; lo: number; hi: number }[] {
+  const spans = [];
+  for (let len = String(start).length; len <= String(end).length; len++) {
+    spans.push({
+      len,
+      lo: Math.max(start, 10 ** (len - 1)),
+      hi: Math.min(end, 10 ** len - 1),
+    });
+  }
+  return spans;
+}
+
+/**
+ * The tokens inside a gap that keep a claimed block from spanning it: the
+ * minted ones, then the ones Cosmo attributes to another collection, deduped,
+ * in that order.
+ */
+export function gapSeparators(minted: number[], knownForeign: number[], gap: Batch): number[] {
+  const separators = new Set(minted);
+  for (const t of knownForeign) if (t >= gap.start && t <= gap.end) separators.add(t);
+  return [...separators];
+}

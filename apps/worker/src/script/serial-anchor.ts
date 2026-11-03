@@ -21,7 +21,7 @@ import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
 import { and, asc, eq, isNotNull, sql } from "drizzle-orm";
 
-import { writeSerialUpdates } from "@/job/populate-serial";
+import { writeSerialUpdates } from "@/job/serial-batches";
 import { preAssignedCollections as excludeCollections } from "@/lib/serial-constants";
 import { checkManualAnchor, computeOfflineSerialUpdates } from "@/lib/serial-math";
 

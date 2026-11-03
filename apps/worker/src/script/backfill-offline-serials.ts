@@ -20,7 +20,7 @@ import { collections, objekts } from "@repo/db/indexer/schema";
 import { chunk } from "@repo/lib";
 import { and, asc, eq, inArray, isNull, lte, or, sql } from "drizzle-orm";
 
-import { discoverBatches } from "@/job/populate-serial";
+import { discoverBatches } from "@/job/serial-batches";
 import { preAssignedCollections as excludeCollections } from "@/lib/serial-constants";
 import { computeOfflineSerials, type ManualAnchor, V1_CUTOFF_MS } from "@/lib/serial-math";
 

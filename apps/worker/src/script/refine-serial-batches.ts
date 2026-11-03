@@ -19,7 +19,7 @@ import { collections, objekts } from "@repo/db/indexer/schema";
 import { chunk } from "@repo/lib";
 import { and, asc, eq, inArray, isNotNull, lte, notInArray, or } from "drizzle-orm";
 
-import { refineBatches, writeSerialUpdates } from "@/job/populate-serial";
+import { refineBatches, writeSerialUpdates } from "@/job/serial-batches";
 import {
   preAssignedCollections as excludeCollections,
   preBlockSeasons,
