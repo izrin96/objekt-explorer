@@ -25,6 +25,8 @@ export default defineConfig({
     "typescript/unbound-method": "off",
     "typescript/restrict-template-expressions": "off",
     "import/no-duplicates": "error",
+    // type-only cycles are erased at build time and cost nothing at runtime
+    "import/no-cycle": ["error", { ignoreTypes: true }],
     "oxc/no-map-spread": "warn",
   },
 });

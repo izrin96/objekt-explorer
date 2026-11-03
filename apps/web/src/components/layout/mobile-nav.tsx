@@ -2,8 +2,8 @@ import { CubeIcon, ListIcon, NoteIcon, SignInIcon } from "@phosphor-icons/react"
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 
-import { type NavLink, useAlsoActive } from "@/components/layout/app-nav";
 import { ChangelogDialog, NewDot, useChangelogNew } from "@/components/layout/changelog";
+import { type NavLink, useAlsoActive } from "@/components/layout/nav-links";
 import { SystemStatus } from "@/components/layout/system-status";
 import { UserAvatar, useSignInSearch } from "@/components/layout/user-menu";
 import { Button } from "@/components/ui/button";
