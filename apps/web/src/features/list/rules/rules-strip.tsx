@@ -7,7 +7,7 @@ import {
   TrashIcon,
 } from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { type RefObject, useId, useRef, useState } from "react";
+import { type RefObject, useRef, useState } from "react";
 import { WindowVirtualizer } from "virtua";
 
 import { rich } from "@/components/shared/message-markup";
@@ -90,7 +90,6 @@ function RuleRow({ rule }: { rule: Rule }) {
   const list = useListTarget();
   const isOwner = useListOwned();
   const [expanded, setExpanded] = useState(false);
-  const objektsId = useId();
   const [editOpen, setEditOpen] = useState(false);
   const [confirm, setConfirm] = useState<"delete" | "detach" | null>(null);
   const ratio = appliedRatio(rule.ratio, list.ratio);
@@ -116,16 +115,15 @@ function RuleRow({ rule }: { rule: Rule }) {
   ].filter((part) => part !== null);
 
   return (
-    <li className="flex flex-col border-b last:border-b-0">
+    <Collapsible
+      open={expanded}
+      onOpenChange={setExpanded}
+      render={<li />}
+      className="flex flex-col border-b last:border-b-0"
+    >
       <div className="flex items-center gap-1 pe-2">
         {/* the rule itself opens its objekts, so a phone keeps the row's width for it */}
-        <button
-          type="button"
-          aria-expanded={expanded}
-          aria-controls={objektsId}
-          onClick={() => setExpanded((value) => !value)}
-          className="hover:bg-muted/48 focus-visible:ring-ring flex min-w-0 flex-1 items-center gap-3 rounded-lg py-2.5 ps-3 pe-2 text-start outline-none focus-visible:ring-2"
-        >
+        <CollapsibleTrigger className="hover:bg-muted/48 focus-visible:ring-ring flex min-w-0 flex-1 items-center gap-3 rounded-lg py-2.5 ps-3 pe-2 text-start outline-none focus-visible:ring-2">
           <CaretDownIcon
             aria-hidden
             className={cn(
@@ -161,7 +159,7 @@ function RuleRow({ rule }: { rule: Rule }) {
             </span>
             <span className="text-muted-foreground text-xs">{m.rule_can_match_label()}</span>
           </span>
-        </button>
+        </CollapsibleTrigger>
         {isOwner ? (
           <Menu>
             <MenuTrigger
@@ -201,10 +199,9 @@ function RuleRow({ rule }: { rule: Rule }) {
           </Menu>
         ) : null}
       </div>
-      {/* mounted while closed so the toggle's aria-controls always has a target */}
-      <div id={objektsId} hidden={!expanded}>
-        {expanded ? <RuleObjekts slug={list.slug} ruleId={rule.id} owner={isOwner} /> : null}
-      </div>
+      <CollapsiblePanel className="motion-reduce:transition-none">
+        <RuleObjekts slug={list.slug} ruleId={rule.id} owner={isOwner} />
+      </CollapsiblePanel>
       {isOwner ? (
         <>
           <RuleDialog
@@ -223,7 +220,7 @@ function RuleRow({ rule }: { rule: Rule }) {
           />
         </>
       ) : null}
-    </li>
+    </Collapsible>
   );
 }
 

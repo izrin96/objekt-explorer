@@ -98,7 +98,8 @@ export function ClassCard({
       <CollapsiblePanel
         role="region"
         aria-label={m.progress_section_aria({ section: section.key, class: group.class })}
-        className="motion-reduce:transition-none"
+        // the panel clips to animate its height; the inset keeps the edge cards' focus ring
+        className="-mx-1 px-1 motion-reduce:transition-none"
       >
         <ObjektGrid columns={columns} className="mt-3">
           {group.items.map((item) => {

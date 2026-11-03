@@ -6,6 +6,7 @@ import { useId, useMemo } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
+import { TogglePrimitive } from "@/components/ui/toggle";
 import { ObjektStaticGrid } from "@/features/objekt/objekt-virtual-grid";
 import { MatchedListsChip } from "@/features/trade/matched-lists";
 import type { SideNear } from "@/features/trade/near";
@@ -84,21 +85,21 @@ export function ShowMyMatches({
 }) {
   return (
     <>
-      <Button
-        type="button"
-        size="sm"
-        variant="outline"
-        aria-pressed={on}
-        // pressed like the Can swap button: the outline stays, its border darkens over a tint
-        className={cn(
-          "whitespace-nowrap",
-          on && "border-foreground bg-input/64 text-foreground dark:bg-input",
-        )}
-        onClick={() => onChange(!on)}
+      <TogglePrimitive
+        pressed={on}
+        onPressedChange={onChange}
+        render={
+          // pressed like the Can swap button: the outline stays, its border darkens over a tint
+          <Button
+            size="sm"
+            variant="outline"
+            className="data-pressed:border-foreground data-pressed:bg-input/64 dark:data-pressed:bg-input whitespace-nowrap"
+          />
+        }
       >
         {pending ? <Spinner className="size-3.5" /> : null}
         {m.list_show_my_matches()}
-      </Button>
+      </TogglePrimitive>
       {error ? (
         <span role="alert" className="text-destructive-foreground text-xs">
           {refusalText(error)}

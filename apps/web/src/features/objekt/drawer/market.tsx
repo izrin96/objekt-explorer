@@ -2,11 +2,12 @@ import { CaretDownIcon, CaretUpIcon, StorefrontIcon } from "@phosphor-icons/reac
 import type { SortBy } from "@repo/api/schemas/market";
 import { utcDate } from "@repo/api/schemas/price-history";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
-import { lazy, Suspense, useId, useState } from "react";
+import { lazy, Suspense, useState } from "react";
 
 import { EmptyState } from "@/components/shared/empty-state";
 import { InfiniteSentinel } from "@/components/shared/infinite-sentinel";
 import { WidgetBoundary } from "@/components/shared/widget-boundary";
+import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useStartConversation } from "@/features/chat/message-button";
 import { PriceDelta } from "@/features/market/price-delta";
@@ -53,7 +54,6 @@ export function MarketPanel({
   const stats = useQuery(marketStatsOptions(slug));
   const history = useQuery(priceHistoryOptions(slug, "30d"));
   const [historyOpen, setHistoryOpen] = useState(false);
-  const chartId = useId();
   const openOffer = useOpenOffer();
   const { start } = useStartConversation();
   const listings = useInfiniteQuery(marketListingsOptions(slug, sort.key, sort.dir));
@@ -99,14 +99,12 @@ export function MarketPanel({
     <div className="flex flex-col gap-4">
       <StatRow stats={figures} className="grid-cols-2 @md:grid-cols-3" />
       {tracking && (
-        <div className="flex flex-col gap-3">
-          <button
-            type="button"
-            aria-expanded={historyOpen}
-            aria-controls={chartId}
-            onClick={() => setHistoryOpen((open) => !open)}
-            className="hover:bg-secondary/60 focus-visible:ring-ring flex cursor-pointer items-center justify-between gap-3 rounded-lg border px-3 py-2 text-left text-sm outline-none focus-visible:ring-2"
-          >
+        <Collapsible
+          open={historyOpen}
+          onOpenChange={setHistoryOpen}
+          className="flex flex-col gap-3"
+        >
+          <CollapsibleTrigger className="hover:bg-secondary/60 focus-visible:ring-ring flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-left text-sm outline-none focus-visible:ring-2">
             <span className="shrink-0">{m.objekt_market_history()}</span>
             <span className="text-muted-foreground flex min-w-0 flex-1 items-center justify-end gap-2 text-xs">
               {sparkline ? (
@@ -123,18 +121,16 @@ export function MarketPanel({
             ) : (
               <CaretDownIcon className="text-muted-foreground size-4 shrink-0" aria-hidden />
             )}
-          </button>
-          {/* mounted while closed so the toggle's aria-controls always has a target */}
-          <div id={chartId} hidden={!historyOpen}>
-            {historyOpen && (
-              <WidgetBoundary resetKey={slug} className="h-56">
-                <Suspense fallback={<Skeleton className="h-56 rounded-lg" />}>
-                  <PriceHistoryChart slug={slug} since={tracking.since} liveFloor={liveFloor} />
-                </Suspense>
-              </WidgetBoundary>
-            )}
-          </div>
-        </div>
+          </CollapsibleTrigger>
+          {/* the panel clips to animate its height; the inset keeps the range chips' focus ring */}
+          <CollapsiblePanel className="-m-1 p-1 motion-reduce:transition-none">
+            <WidgetBoundary resetKey={slug} className="h-56">
+              <Suspense fallback={<Skeleton className="h-56 rounded-lg" />}>
+                <PriceHistoryChart slug={slug} since={tracking.since} liveFloor={liveFloor} />
+              </Suspense>
+            </WidgetBoundary>
+          </CollapsiblePanel>
+        </Collapsible>
       )}
       <OnTradeLine slug={slug} />
 

@@ -2,9 +2,9 @@ import type { PostType } from "@repo/api/schemas/trade";
 import { useQuery } from "@tanstack/react-query";
 
 import { Button } from "@/components/ui/button";
+import { TogglePrimitive } from "@/components/ui/toggle";
 import { SingleSelect } from "@/features/filters/single-select";
 import { ListRoleBadge } from "@/features/list/list-role-badge";
-import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
 
@@ -53,22 +53,22 @@ function MutualButton({
   shown: string;
 }) {
   return (
-    <Button
-      type="button"
-      size="sm"
-      variant="outline"
-      aria-pressed={pressed}
-      // pressed like FilterToggle: the outline stays, its border darkens over a tint
-      className={cn(
-        "whitespace-nowrap",
-        pressed && "border-foreground bg-input/64 text-foreground dark:bg-input",
-      )}
+    <TogglePrimitive
+      pressed={pressed}
+      onPressedChange={onChange}
+      render={
+        // pressed like FilterToggle: the outline stays, its border darkens over a tint
+        <Button
+          size="sm"
+          variant="outline"
+          className="data-pressed:border-foreground data-pressed:bg-input/64 dark:data-pressed:bg-input whitespace-nowrap"
+        />
+      }
       aria-label={
         count > 0
           ? m.trade_tab_with_count({ label: m.trade_mutual_only(), count: shown })
           : undefined
       }
-      onClick={() => onChange(!pressed)}
     >
       {m.trade_mutual_only()}
       {count > 0 ? (
@@ -76,7 +76,7 @@ function MutualButton({
           {shown}
         </span>
       ) : null}
-    </Button>
+    </TogglePrimitive>
   );
 }
 
