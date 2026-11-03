@@ -13,38 +13,22 @@ import {
   copyWindowStart,
   giversOf,
   type LegResult,
-  legVerifiedNoted,
+  type LegRow,
   type MatchLeg,
   type MatchTransfer,
   matchLegs,
   nearMisses,
-  tradeOutcome,
+  type SettledTrade,
   transferKey,
 } from "../../lib/trade-match";
+import { wrongCopyNote } from "../../lib/trade-notes";
+import { needsHeld, settleNotes, settlePlan } from "../../lib/trade-settle";
 import { unique } from "../../lib/unique";
-import { HELD_COPY_STATUSES, type TradePayload } from "../../schemas/offer";
+import { HELD_COPY_STATUSES } from "../../schemas/offer";
 import { writeNotes } from "./notes";
 
-export type LegRow = {
-  id: number;
-  trade_id: number;
-  offer_id: number;
-  conversation_id: number;
-  user_a: string;
-  user_b: string;
-  from_user_id: string;
-  to_user_id: string;
-  from_addresses: string[];
-  to_addresses: string[];
-  from_current: string[];
-  to_current: string[];
-  collection_slug: string;
-  objekt_id: string | null;
-  untransferable_at: string | null;
-  away_at: string | null;
-  window_start: string;
-  accepted_at: string;
-};
+export { wrongCopyNote };
+export type { LegRow, SettledTrade };
 
 /**
  * The open legs of in-progress trades, or of the ones these users give in, with both sides'
@@ -175,14 +159,6 @@ export async function usedTransfers(q: Tx | typeof db, hashes: string[]) {
   );
 }
 
-export type SettledTrade = {
-  tradeId: number;
-  offerId: number;
-  conversationId: number;
-  userA: string;
-  userB: string;
-};
-
 /**
  * Under the trade's row lock, after this run's legs are recorded: ends the trade when the
  * results decide it, and notes a verified leg or the end to both parties. `applied` holds
@@ -200,18 +176,15 @@ export async function finishSettle(
   { noteLegs = true }: { noteLegs?: boolean } = {},
 ) {
   const { tradeId, userA, userB } = settled;
-  const held = applied.some((r) => r.kind === "broken" || r.kind === "stuck")
-    ? await heldCopies(tx, tradeId)
-    : 0;
-  const outcome = tradeOutcome(applied, counts.alreadyVerified, held);
-  const ended = outcome.status !== "in_progress";
-  if (ended) {
+  const held = needsHeld(applied) ? await heldCopies(tx, tradeId) : 0;
+  const plan = settlePlan(applied, counts, held, noteLegs);
+  if (plan.ended) {
     await tx
       .update(trade)
       .set({
-        status: outcome.status,
+        status: plan.status,
         endedAt: sql`now()`,
-        cancelReason: outcome.status === "cancelled" ? outcome.reason : null,
+        cancelReason: plan.cancelReason,
       })
       .where(eq(trade.id, tradeId));
     await tx
@@ -219,14 +192,10 @@ export async function finishSettle(
       .set({ open: false })
       .where(and(eq(tradeLeg.tradeId, tradeId), eq(tradeLeg.open, true)));
   }
-  if (!ended && (!noteLegs || !legVerifiedNoted(counts.verified, counts.autoAccepted ?? 0))) {
-    return { ended, notified: [], reputations: [] };
-  }
+  if (plan.note === null) return { ended: plan.ended, notified: [], reputations: [] };
 
-  const event: TradePayload["event"] = ended ? outcome.status : "leg_verified";
-  const progress = { verified: counts.alreadyVerified + counts.verified, total: counts.total };
   const confirmed =
-    outcome.status === "completed" &&
+    plan.status === "completed" &&
     (
       await tx
         .select({ id: tradeLeg.id })
@@ -234,58 +203,11 @@ export async function finishSettle(
         .where(and(eq(tradeLeg.tradeId, tradeId), isNotNull(tradeLeg.confirmedAt)))
         .limit(1)
     ).length > 0;
-  const notified = await writeNotes(
-    tx,
-    [userA, userB].map((userId) => ({
-      type: "trade" as const,
-      userId,
-      payload: {
-        tradeId,
-        offerId: settled.offerId,
-        conversationId: settled.conversationId,
-        event,
-        reason: outcome.status === "cancelled" ? outcome.reason : null,
-        progress,
-        partner: name(userId === userA ? userB : userA),
-        ...(confirmed ? { confirmed } : {}),
-      },
-    })),
-  );
+  const notified = await writeNotes(tx, settleNotes(settled, plan, name, confirmed));
   return {
-    ended,
+    ended: plan.ended,
     notified,
-    // a completed or failed trade changes both parties' cached reputation
-    reputations:
-      outcome.status === "completed" || outcome.status === "failed" ? [userA, userB] : [],
-  };
-}
-
-/**
- * A wrong copy's note: `wrong_copy` and `wrong_copy_auto_accepted` go to both parties,
- * `wrong_copy_declined` to the giver, `wrong_copy_due` to the receiver.
- */
-export function wrongCopyNote(
-  settled: SettledTrade,
-  event: "wrong_copy" | "wrong_copy_declined" | "wrong_copy_due" | "wrong_copy_auto_accepted",
-  to: { userId: string; partner: { userId: string; name: string } },
-  progress: { verified: number; total: number },
-  copy: NonNullable<TradePayload["copy"]>,
-  acceptBy?: string | null,
-) {
-  return {
-    type: "trade" as const,
-    userId: to.userId,
-    payload: {
-      tradeId: settled.tradeId,
-      offerId: settled.offerId,
-      conversationId: settled.conversationId,
-      event,
-      reason: null,
-      progress,
-      partner: to.partner,
-      copy,
-      ...(acceptBy ? { acceptBy: new Date(acceptBy).toISOString() } : {}),
-    },
+    reputations: plan.changesReputation ? [userA, userB] : [],
   };
 }
 

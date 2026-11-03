@@ -1,16 +1,12 @@
 import {
-  awayChange,
   batchMatters,
   legTransferable,
   copyRescue,
-  firstPending,
   giversOf,
   type LegResult,
   type NearMiss,
-  stuckChange,
 } from "@repo/api/lib/trade-match";
 import {
-  awayBreaksAt,
   type ShownSerial,
   VERIFIER_LAST_KEY,
   VERIFIER_NUDGE_CHANNEL,
@@ -25,7 +21,6 @@ import {
   matchOpenLegs,
   readTransferable,
   shownSerials,
-  wrongCopyNote,
 } from "@repo/api/services/offer/verify";
 import type { Tx } from "@repo/db";
 import { db } from "@repo/db";
@@ -36,11 +31,20 @@ import { createSubscriber } from "@repo/lib/server/redis-subscriber";
 import { and, eq, inArray, isNull, sql } from "drizzle-orm";
 
 import { unique } from "../../lib/array";
+import { awayNotes, awayPlan, stuckPlan } from "../../lib/leg-marks";
 import { heartbeat, log } from "../../lib/log";
 import { isUniqueViolation } from "../../lib/pg-error";
 import { redis } from "../../lib/redis";
 import { withRedisLock } from "../../lib/redis-lock";
 import { type Publish, publishAll } from "../../lib/trade-publish";
+import { applyStuck, partitionOpenLegs, tradeNeedsSettle } from "../../lib/verifier-settle";
+import {
+  freshMisses,
+  noteDeadline,
+  openMisses,
+  unrecordedMisses,
+  wrongCopyNotes,
+} from "../../lib/wrong-copies";
 import { ACCEPT_BY_FROM_NOW, acceptPicked, type Name, settleCopyDeadlines } from "./copy-deadlines";
 import { readIndexerHead } from "./indexer-head";
 import { offerUpkeep } from "./offer-upkeep";
@@ -125,27 +129,13 @@ async function verifyRun(trigger: Trigger) {
       leg.objekt_id === null
         ? undefined
         : legTransferable(results.get(leg.id), transferableOf.get(leg.objekt_id));
-    for (const leg of legs) {
-      if (results.get(leg.id)?.kind === "pending" && transferable(leg) === false) {
-        results.set(leg.id, { kind: "stuck" });
-      }
-    }
+    applyStuck(legs, results, transferable);
     const tradeOf = new Map(legs.map((leg) => [leg.id, leg.trade_id]));
     const missesOf = Map.groupBy(await unrecorded(nearMisses), (miss) => tradeOf.get(miss.legId));
     const byTrade = Map.groupBy(legs, (leg) => leg.trade_id);
     for (const [tradeId, tradeLegs] of byTrade) {
-      // a leg that stays stuck or away needs nothing; one newly stuck or away, or freed, does
-      const decided = tradeLegs.filter((leg) => {
-        const result = results.get(leg.id);
-        const kind = result?.kind;
-        return (
-          (kind !== "pending" && kind !== "stuck") ||
-          stuckChange(transferable(leg), leg.untransferable_at) !== null ||
-          awayChange(result, leg.away_at) !== null
-        );
-      });
       const misses = missesOf.get(tradeId) ?? [];
-      if (decided.length === 0 && misses.length === 0) continue;
+      if (!tradeNeedsSettle(tradeLegs, results, transferable, misses.length)) continue;
       const outcome = await skips.step(tradeId, () =>
         settleTrade(tradeId, tradeLegs, results, misses, transferable),
       );
@@ -242,10 +232,8 @@ async function settleTrade(
     const applied = new Map<number, LegResult>();
     const waiting: LegRow[] = [];
     let verified = 0;
-    for (const leg of legs) {
-      if (!openIds.has(leg.id)) continue;
-      const result = results.get(leg.id) ?? { kind: "pending" };
-      if (result.kind !== "verified") {
+    for (const { leg, result, record } of partitionOpenLegs(legs, results, openIds)) {
+      if (!record) {
         applied.set(leg.id, result);
         waiting.push(leg);
         continue;
@@ -284,29 +272,13 @@ async function settleTrade(
     // recorded before the outcome, so a leg breaking in this run sees the copy as held
     const added = await recordWrongCopies(tx, misses, openIds);
     const progress = { verified: alreadyVerified + verified, total: state.length };
-    // only a leg's earliest pending copy can be accepted, so only its note names a date
-    const firstOf = new Map(
-      [
-        ...Map.groupBy(
-          await legCopies(tx, unique(added.map((row) => row.legId))),
-          (copy) => copy.legId,
-        ),
-      ].map(([legId, copies]) => [legId, firstPending(copies)?.id]),
+    const deadline = noteDeadline(
+      added,
+      Map.groupBy(await legCopies(tx, unique(added.map((row) => row.legId))), (copy) => copy.legId),
     );
     const copyNotified = await writeNotes(
       tx,
-      added.flatMap((row) =>
-        parties.map((userId) =>
-          wrongCopyNote(
-            settled,
-            "wrong_copy",
-            { userId, partner: name(userId === first.user_a ? first.user_b : first.user_a) },
-            progress,
-            { asked: serialOf(askedOf.get(row.legId) ?? ""), sent: serialOf(row.objektId) },
-            firstOf.get(row.legId) === row.id ? row.acceptBy : null,
-          ),
-        ),
-      ),
+      wrongCopyNotes(settled, added, askedOf, serialOf, deadline, progress, name),
     );
 
     // a leg broken with a pending copy sent before the break accepts that copy instead
@@ -401,12 +373,7 @@ async function recordStuck(
   progress: { verified: number; total: number },
   name: (userId: string) => { userId: string; name: string },
 ) {
-  const stuckSince = new Map(state.map((leg) => [leg.id, leg.untransferableAt]));
-  const changes = Map.groupBy(waiting, (leg) =>
-    stuckChange(transferable(leg), stuckSince.get(leg.id) ?? null),
-  );
-  const toMark = (changes.get("stuck") ?? []).map((leg) => leg.id);
-  const toClear = (changes.get("clear") ?? []).map((leg) => leg.id);
+  const { mark: toMark, clear: toClear } = stuckPlan(waiting, state, transferable);
   const marked =
     toMark.length === 0
       ? []
@@ -456,46 +423,17 @@ async function recordAway(
   name: (userId: string) => { userId: string; name: string },
   serialOf: (objektId: string) => ShownSerial,
 ) {
-  const awayAt = new Map(state.map((leg) => [leg.id, leg.awayAt]));
-  const toMark: { leg: LegRow; since: string }[] = [];
-  const toClear: number[] = [];
-  for (const leg of waiting) {
-    const result = results.get(leg.id);
-    const change = awayChange(result, awayAt.get(leg.id) ?? null);
-    if (change === "clear") toClear.push(leg.id);
-    if (change === "away" && result?.kind === "pending" && result.awaySince) {
-      toMark.push({ leg, since: result.awaySince });
-    }
-  }
-  for (const { leg, since } of toMark) {
-    await tx.update(tradeLeg).set({ awayAt: since }).where(eq(tradeLeg.id, leg.id));
+  const { mark: toMark, clear: toClear, first } = awayPlan(waiting, state, results);
+  for (const { legId, since } of toMark) {
+    await tx.update(tradeLeg).set({ awayAt: since }).where(eq(tradeLeg.id, legId));
   }
   if (toClear.length > 0) {
     await tx.update(tradeLeg).set({ awayAt: null }).where(inArray(tradeLeg.id, toClear));
   }
-  if (toMark.length === 0) return { notified: [], marked: 0, cleared: toClear.length };
-  // the trade group holds one unread note per reader, so it names the move that breaks first
-  const first = toMark.toSorted((a, b) => Date.parse(a.since) - Date.parse(b.since))[0]!;
-  const breaksAt = awayBreaksAt(first.since);
-  const asked = serialOf(first.leg.objekt_id ?? "");
-  const { tradeId, offerId, conversationId, userA, userB } = settled;
+  if (first === null) return { notified: [], marked: 0, cleared: toClear.length };
   const notified = await writeNotes(
     tx,
-    [userA, userB].map((userId) => ({
-      type: "trade" as const,
-      userId,
-      payload: {
-        tradeId,
-        offerId,
-        conversationId,
-        event: "away" as const,
-        reason: null,
-        progress,
-        partner: name(userId === userA ? userB : userA),
-        breaksAt,
-        away: { asked, byYou: userId === first.leg.from_user_id },
-      },
-    })),
+    awayNotes(settled, first, serialOf(first.objektId ?? ""), progress, name),
   );
   return { notified, marked: toMark.length, cleared: toClear.length };
 }
@@ -511,10 +449,7 @@ async function unrecorded(misses: NearMiss[]) {
     })
     .from(tradeSubstitute)
     .where(inArray(tradeSubstitute.tradeLegId, unique(misses.map((miss) => miss.legId))));
-  const key = (row: { legId: number; txHash: string; objektId: string }) =>
-    `${row.legId}:${row.txHash}:${row.objektId}`;
-  const recorded = new Set(rows.map(key));
-  return misses.filter((miss) => !recorded.has(key(miss)));
+  return unrecordedMisses(misses, rows);
 }
 
 /**
@@ -522,14 +457,13 @@ async function unrecorded(misses: NearMiss[]) {
  * leg since the match read it. A copy already recorded is skipped, so each is noted once.
  */
 async function recordWrongCopies(tx: Tx, misses: NearMiss[], openIds: ReadonlySet<number>) {
-  const waiting = misses.filter((miss) => openIds.has(miss.legId));
+  const waiting = openMisses(misses, openIds);
   if (waiting.length === 0) return [];
   const spent = await tx
     .select({ txHash: tradeLeg.txHash, objektId: tradeLeg.verifiedObjektId })
     .from(tradeLeg)
     .where(inArray(tradeLeg.txHash, unique(waiting.map((miss) => miss.txHash))));
-  const spentKeys = new Set(spent.map((row) => `${row.txHash}:${row.objektId}`));
-  const fresh = waiting.filter((miss) => !spentKeys.has(`${miss.txHash}:${miss.objektId}`));
+  const fresh = freshMisses(waiting, openIds, spent);
   if (fresh.length === 0) return [];
   return tx
     .insert(tradeSubstitute)

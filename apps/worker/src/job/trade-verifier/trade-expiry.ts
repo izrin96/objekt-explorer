@@ -6,6 +6,7 @@ import { db } from "@repo/db";
 import { offer, trade, tradeLeg } from "@repo/db/schema";
 import { and, eq, lte, sql } from "drizzle-orm";
 
+import { expiryNotes, expiryPlan } from "../../lib/trade-expiry-plan";
 import type { Publish } from "../../lib/trade-publish";
 import { acceptPicked, readLegs } from "./copy-deadlines";
 import type { RunSkips } from "./run-skips";
@@ -64,11 +65,8 @@ export async function expireStalls(seenUntil: string | null, skips: RunSkips): P
           before,
           name,
         );
-        const progress = {
-          verified: before.verified + accepted.accepted.length,
-          total: before.total,
-        };
-        if (progress.verified === progress.total) {
+        const plan = expiryPlan(before, accepted.accepted.length);
+        if (plan.complete) {
           const finished = await finishSettle(tx, settled, accepted.applied, accepted.counts, name);
           return {
             notified: [...accepted.notified, ...finished.notified],
@@ -76,7 +74,7 @@ export async function expireStalls(seenUntil: string | null, skips: RunSkips): P
             reputations: finished.reputations,
           };
         }
-        const status = expiredOutcome(progress.verified, await heldCopies(tx, id));
+        const status = expiredOutcome(plan.progress.verified, await heldCopies(tx, id));
 
         await tx
           .update(trade)
@@ -87,26 +85,12 @@ export async function expireStalls(seenUntil: string | null, skips: RunSkips): P
           .set({ open: false })
           .where(and(eq(tradeLeg.tradeId, id), eq(tradeLeg.open, true)));
 
-        const notified = await writeNotes(
-          tx,
-          parties.map((userId) => ({
-            type: "trade" as const,
-            userId,
-            payload: {
-              tradeId: id,
-              offerId,
-              conversationId,
-              event: status,
-              reason: "expired" as const,
-              progress,
-              partner: name(userId === userA ? userB : userA),
-            },
-          })),
-        );
+        const expiry = expiryNotes(settled, status, plan.progress, name);
+        const notified = await writeNotes(tx, expiry.notes);
         return {
           notified: [...accepted.notified, ...notified],
           conversations: [{ id: conversationId, userIds: parties }],
-          reputations: status === "failed" ? parties : [],
+          reputations: expiry.reputations,
         };
       }),
     );

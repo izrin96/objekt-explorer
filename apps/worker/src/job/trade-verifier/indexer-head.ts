@@ -5,6 +5,7 @@ import { sql } from "drizzle-orm";
 
 import { log } from "../../lib/log";
 import { redis } from "../../lib/redis";
+import { blockTimeOf, seenUntilOf } from "../../lib/seen-until";
 
 const verifierLog = log("verifier");
 
@@ -28,7 +29,7 @@ async function blockTime(height: number) {
   const body = (await response.json()) as { result?: { timestamp?: string } | null };
   const timestamp = body.result?.timestamp;
   if (!timestamp) throw new Error(`no block ${height}`);
-  return new Date(Number.parseInt(timestamp, 16) * 1000).toISOString();
+  return blockTimeOf(timestamp);
 }
 
 /**
@@ -50,10 +51,7 @@ export async function readIndexerHead(): Promise<IndexerSeen | null> {
     if (height == null) throw new Error("no processor height");
     const heldFrom = result.rows[0]?.held_from;
     const head = await blockTime(height);
-    const seenUntil =
-      heldFrom != null && heldFrom - 1000 < Date.parse(head)
-        ? new Date(heldFrom - 1000).toISOString()
-        : head;
+    const seenUntil = seenUntilOf(head, heldFrom ?? null);
     const seen = { seenUntil, readAt: new Date().toISOString() };
     await redis.set(INDEXER_SEEN_KEY, JSON.stringify(seen));
     return seen;

@@ -34,6 +34,35 @@ export type MatchTransfer = {
   collectionId: string | null;
 };
 
+export type LegRow = {
+  id: number;
+  trade_id: number;
+  offer_id: number;
+  conversation_id: number;
+  user_a: string;
+  user_b: string;
+  from_user_id: string;
+  to_user_id: string;
+  from_addresses: string[];
+  to_addresses: string[];
+  from_current: string[];
+  to_current: string[];
+  collection_slug: string;
+  objekt_id: string | null;
+  untransferable_at: string | null;
+  away_at: string | null;
+  window_start: string;
+  accepted_at: string;
+};
+
+export type SettledTrade = {
+  tradeId: number;
+  offerId: number;
+  conversationId: number;
+  userA: string;
+  userB: string;
+};
+
 const COPY_WINDOW_MARGIN_MS = 10 * 60 * 1000;
 
 export const copyWindowStart = (acceptedAt: string) =>

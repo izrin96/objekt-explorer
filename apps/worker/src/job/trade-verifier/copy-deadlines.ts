@@ -1,4 +1,5 @@
 import { dueCopy, type LegResult, reminderCopy } from "@repo/api/lib/trade-match";
+import { wrongCopyNote } from "@repo/api/lib/trade-notes";
 import { COPY_ACCEPT_HOURS, COPY_REMIND_HOURS } from "@repo/api/schemas/offer";
 import { partyNames, writeNotes } from "@repo/api/services/offer/notes";
 import {
@@ -9,13 +10,13 @@ import {
   legCopies,
   type SettledTrade,
   shownSerials,
-  wrongCopyNote,
 } from "@repo/api/services/offer/verify";
 import type { Tx } from "@repo/db";
 import { db } from "@repo/db";
 import { offer, trade, tradeLeg, tradeSubstitute } from "@repo/db/schema";
 import { and, eq, inArray, isNull, lte, sql } from "drizzle-orm";
 
+import { autoAcceptNotes, legProgress, pickCopies, pickedResult } from "../../lib/copy-accept";
 import type { Publish } from "../../lib/trade-publish";
 import type { RunSkips } from "./run-skips";
 
@@ -51,21 +52,9 @@ async function autoAccept(
   const serialOf = await shownSerials(
     accepted.flatMap((copy) => [copy.objektId, askedOf.get(copy.legId) ?? ""]),
   );
-  const after = { verified: progress.verified + accepted.length, total: progress.total };
-  const { userA, userB } = settled;
   const notified = await writeNotes(
     tx,
-    accepted.flatMap((copy) =>
-      [userA, userB].map((userId) =>
-        wrongCopyNote(
-          settled,
-          "wrong_copy_auto_accepted",
-          { userId, partner: name(userId === userA ? userB : userA) },
-          after,
-          { asked: serialOf(askedOf.get(copy.legId) ?? ""), sent: serialOf(copy.objektId) },
-        ),
-      ),
-    ),
+    autoAcceptNotes(settled, accepted, askedOf, serialOf, progress, name),
   );
   return { results, accepted: accepted.map((copy) => copy.legId), notified };
 }
@@ -85,20 +74,11 @@ export async function acceptPicked(
   name: Name,
 ) {
   const copiesOf = Map.groupBy(await legCopies(tx, legIds), (copy) => copy.legId);
-  const picks = legIds.flatMap((legId) => {
-    const copy = pick(legId, copiesOf.get(legId) ?? []);
-    return copy ? [copy] : [];
-  });
+  const picks = pickCopies(legIds, copiesOf, pick);
   const accepted = await autoAccept(tx, settled, picks, askedOf, progress, name);
   return {
     ...accepted,
-    applied: legIds.map((legId): LegResult => accepted.results.get(legId) ?? { kind: "pending" }),
-    counts: {
-      alreadyVerified: progress.verified,
-      verified: accepted.accepted.length,
-      total: progress.total,
-      autoAccepted: accepted.accepted.length,
-    },
+    ...pickedResult(legIds, accepted.results, progress, accepted.accepted.length),
   };
 }
 
@@ -117,11 +97,7 @@ export async function readLegs(tx: Tx, tradeId: number) {
     .where(eq(tradeLeg.tradeId, tradeId));
   return {
     open: legs.filter((leg) => leg.open),
-    askedOf: new Map(legs.map((leg) => [leg.id, leg.objektId ?? ""])),
-    progress: {
-      verified: legs.filter((leg) => leg.verifiedAt !== null).length,
-      total: legs.length,
-    },
+    ...legProgress(legs),
   };
 }
 
