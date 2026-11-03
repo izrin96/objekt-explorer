@@ -101,6 +101,7 @@ function Figures({ reputation }: { reputation: Reputation }) {
             title={figure.warn ? m.trust_unfinished_hint() : undefined}
           >
             {figure.value}
+            {figure.warn ? <span className="sr-only"> ({m.trust_unfinished_hint()})</span> : null}
           </dd>
         </div>
       ))}
@@ -185,6 +186,7 @@ export function TradePartnerRow({ trade }: { trade: Trade }) {
                   {" · "}
                   <span className="text-warning-foreground" title={m.trust_unfinished_hint()}>
                     {m.trust_unfinished({ count: reputation.unfinished.toLocaleString(locale) })}
+                    <span className="sr-only"> ({m.trust_unfinished_hint()})</span>
                   </span>
                 </>
               ) : null}

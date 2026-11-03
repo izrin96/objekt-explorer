@@ -110,7 +110,7 @@ export function ListForm({
 
       {/* binding is set only here, and without it a have or sale list never goes on Trade */}
       {note !== null ? (
-        <Alert variant="warning">
+        <Alert variant="warning" role="status">
           <InfoIcon aria-hidden />
           <AlertDescription>
             {note === "link" ? (

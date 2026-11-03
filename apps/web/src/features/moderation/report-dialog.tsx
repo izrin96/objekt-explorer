@@ -128,7 +128,7 @@ function ReportForm({
       </DialogHeader>
 
       <DialogPanel className="flex flex-col gap-6">
-        <Alert>
+        <Alert role="status">
           <InfoIcon aria-hidden />
           <AlertDescription>{m.mod_report_slow_notice()}</AlertDescription>
         </Alert>

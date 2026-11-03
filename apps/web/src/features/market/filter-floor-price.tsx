@@ -1,4 +1,5 @@
 import { CurrencyDollarIcon } from "@phosphor-icons/react";
+import { useId } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -20,6 +21,8 @@ export function FloorPriceFilter({ className }: { className?: string }) {
   const floorMax = useFilters((f) => f.floor_max);
   const setFilters = useSetFilters();
   const { currency, fromUsd, toUsd } = useCurrency();
+  const minId = useId();
+  const maxId = useId();
 
   const active = floorMin !== undefined || floorMax !== undefined;
   const display = (usd: number | undefined) => (usd === undefined ? null : fromUsd(usd));
@@ -39,24 +42,26 @@ export function FloorPriceFilter({ className }: { className?: string }) {
       <PopoverPopup className="w-64">
         <div className="flex flex-col gap-3">
           <NumberField
+            id={minId}
             min={0}
             size="sm"
             value={display(floorMin)}
             onValueChange={(value) => setFilters({ floor_min: store(value) })}
           >
-            <Label>{m.filter_floor_min({ currency })}</Label>
+            <Label htmlFor={minId}>{m.filter_floor_min({ currency })}</Label>
             <NumberFieldGroup>
               <NumberFieldInput className="tabular-nums" />
             </NumberFieldGroup>
           </NumberField>
 
           <NumberField
+            id={maxId}
             min={0}
             size="sm"
             value={display(floorMax)}
             onValueChange={(value) => setFilters({ floor_max: store(value) })}
           >
-            <Label>{m.filter_floor_max({ currency })}</Label>
+            <Label htmlFor={maxId}>{m.filter_floor_max({ currency })}</Label>
             <NumberFieldGroup>
               <NumberFieldInput className="tabular-nums" />
             </NumberFieldGroup>

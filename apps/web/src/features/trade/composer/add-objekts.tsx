@@ -168,7 +168,7 @@ function AddObjektsBody({
       </div>
       {onTrade ? (
         <>
-          <Alert variant="warning" className="max-md:hidden">
+          <Alert variant="warning" role="status" className="max-md:hidden">
             <InfoIcon aria-hidden />
             <AlertDescription>{m.trade_composer_add_on_trade({ list: name })}</AlertDescription>
           </Alert>
