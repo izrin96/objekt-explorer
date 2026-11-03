@@ -7,7 +7,6 @@ import { artistsOutputSchema, filterDataOutputSchema } from "../schemas/config";
 import { getArtists } from "../services/artist";
 import { parseSelectedArtists } from "../services/cookie";
 import { fetchFilterData } from "../services/objekt";
-import type { Outputs } from "./index";
 
 export const configRouter = {
   getSelectedArtists: pub.handler(parseSelectedArtists),
@@ -41,5 +40,3 @@ export const configRouter = {
     .output(documented(artistsOutputSchema, { open: true }))
     .handler(getArtists),
 };
-
-export type FilterDataOutput = Outputs["config"]["getFilterData"];
