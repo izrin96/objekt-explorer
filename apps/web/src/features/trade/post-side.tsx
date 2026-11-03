@@ -2,6 +2,7 @@ import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { Link } from "@tanstack/react-router";
 import { type ReactNode, type RefObject, memo } from "react";
 
+import { MoreCount } from "@/components/shared/more-count";
 import { getListLinkOption } from "@/features/list/list-link";
 import { LIST_TYPE_LABEL, LIST_TYPE_TONE } from "@/features/list/list-type-badge";
 import { RatioChip } from "@/features/list/ratio-chip";
@@ -41,16 +42,6 @@ type StripItem = {
   near?: NearOpen;
   ratio?: number;
 };
-
-/** The "+N" tile's face; the caller wraps it in the link or button that goes somewhere. */
-function StripMore({ count }: { count: number }) {
-  return (
-    <>
-      <span aria-hidden>+{count}</span>
-      <span className="sr-only">{m.trade_more_count({ count })}</span>
-    </>
-  );
-}
 
 /**
  * One side of a post or a partner: a label over up to two lines of thumbnails. It draws as many as
@@ -432,7 +423,7 @@ export function SideStrip({
             className={cn(TILE, STRIP_MORE, "w-full cursor-pointer")}
             onClick={onShowAll}
           >
-            <StripMore count={count} />
+            <MoreCount count={count} />
           </button>
         )}
         othersLink={

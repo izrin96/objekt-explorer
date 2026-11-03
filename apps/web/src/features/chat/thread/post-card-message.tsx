@@ -3,6 +3,7 @@ import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 
+import { MoreCount } from "@/components/shared/more-count";
 import { Card } from "@/components/ui/card";
 import { formatPostPrices } from "@/features/chat/format";
 import { getListLinkOption } from "@/features/list/list-link";
@@ -12,7 +13,6 @@ import { OfferThumb } from "@/features/offers/offer-item";
 import { TONE_INK } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
-import { getLocale } from "@/paraglide/runtime";
 
 type Collections = Readonly<Record<string, ValidObjekt | undefined>>;
 type PostSide = NonNullable<NonNullable<PostCardView["post"]>["has"]>;
@@ -151,10 +151,7 @@ function Strip({
           />
           {more > 0 ? (
             <li className="text-muted-foreground ps-1 text-xs tabular-nums">
-              <span aria-hidden>+{more}</span>
-              <span className="sr-only">
-                {m.trade_more_count({ count: more.toLocaleString(getLocale()) })}
-              </span>
+              <MoreCount count={more} />
             </li>
           ) : null}
         </ul>

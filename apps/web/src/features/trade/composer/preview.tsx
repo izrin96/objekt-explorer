@@ -3,6 +3,7 @@ import type { PlanList } from "@repo/api/schemas/trade-post";
 import { useQuery } from "@tanstack/react-query";
 import { type ReactNode, useId, useRef, useState } from "react";
 
+import { MoreCount } from "@/components/shared/more-count";
 import { Sheet, SheetPopup } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LIST_TYPE_LABEL, LIST_TYPE_TONE } from "@/features/list/list-type-badge";
@@ -265,10 +266,7 @@ function PickedSide({
                   "hover:text-foreground focus-visible:ring-ring w-full text-xs tabular-nums outline-none focus-visible:ring-2",
                 )}
               >
-                <span aria-hidden>+{rest}</span>
-                <span className="sr-only">
-                  {m.trade_more_count({ count: rest.toLocaleString(getLocale()) })}
-                </span>
+                <MoreCount count={rest} />
               </button>
             </li>
           ) : null}

@@ -3,6 +3,7 @@ import type { OfferItemView } from "@repo/api/schemas/offer";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useId, useState } from "react";
 
+import { MoreCount } from "@/components/shared/more-count";
 import { Sheet, SheetHeader, SheetPanel, SheetPopup, SheetTitle } from "@/components/ui/sheet";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
@@ -97,7 +98,7 @@ export function OfferSideList({
                 onClick={() => setSheetOpen(true)}
                 className="text-foreground hover:bg-accent/60 focus-visible:ring-ring rounded-photocard aspect-photocard grid w-full place-items-center border border-dashed text-xs font-semibold tabular-nums outline-none focus-visible:ring-2"
               >
-                +{more}
+                <MoreCount count={more} />
               </button>
             </li>
           ) : null}
