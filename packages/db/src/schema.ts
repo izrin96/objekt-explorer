@@ -851,7 +851,6 @@ export const pins = pgTable(
       .defaultNow(),
   },
   (t) => [
-    index("pins_address_idx").on(t.address),
     index("pins_token_id_idx").on(t.tokenId),
     uniqueIndex("pins_address_token_id_idx").on(t.address, t.tokenId),
   ],
@@ -865,7 +864,6 @@ export const lockedObjekts = pgTable(
     tokenId: integer("token_id").notNull(),
   },
   (t) => [
-    index("locked_objekts_address_idx").on(t.address),
     index("locked_objekts_token_id_idx").on(t.tokenId),
     uniqueIndex("locked_objekts_address_token_id_idx").on(t.address, t.tokenId),
   ],
