@@ -9,7 +9,7 @@ import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "@/components/
 import { Popover, PopoverPopup, PopoverTrigger } from "@/components/ui/popover";
 import { useMinuteClock } from "@/hooks/use-minute-clock";
 import { sentenceGap } from "@/lib/text";
-import { TONE_SOLID, type Tone } from "@/lib/tone";
+import { TONE_INK, TONE_SOLID, type Tone } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
@@ -28,7 +28,7 @@ const END_TONE: Record<Trade["status"], Tone> = {
 
 const DOT = {
   past: "bg-muted-foreground",
-  today: "bg-progress",
+  today: TONE_SOLID.progress,
   future: "border-border bg-card border-2",
   paused: "border-muted-foreground border-2 border-dashed",
 } as const;
@@ -202,7 +202,7 @@ function Rows({ trade, collections, name, rows }: Props & { rows: TimelineRow[] 
             <span className="flex min-w-0 flex-1 flex-col text-pretty wrap-anywhere">
               <span
                 className={cn(
-                  row.kind === "today" && "text-progress font-semibold",
+                  row.kind === "today" && `${TONE_INK.progress} font-semibold`,
                   ahead && "text-muted-foreground",
                 )}
               >
@@ -226,7 +226,7 @@ function Rows({ trade, collections, name, rows }: Props & { rows: TimelineRow[] 
                 dateTime={row.at}
                 className={cn(
                   "shrink-0 text-xs tabular-nums",
-                  row.kind === "today" ? "text-progress" : "text-muted-foreground",
+                  row.kind === "today" ? TONE_INK.progress : TONE_INK.neutral,
                 )}
               >
                 {shortDate(row.at)}

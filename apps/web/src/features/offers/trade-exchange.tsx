@@ -14,6 +14,7 @@ import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/in
 import { TogglePrimitive } from "@/components/ui/toggle";
 import { ToggleGroup, ToggleGroupItem, ToggleGroupPrimitive } from "@/components/ui/toggle-group";
 import { FOCUS_RING } from "@/lib/a11y";
+import { TONE_INK, type Tone } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
@@ -27,14 +28,14 @@ import type { Collections, OfferSide } from "./pick";
 
 export type ExchangeView = "grid" | "list";
 
-const SIDE_STATUS: Record<SideStatus, { text: () => string; ink: string }> = {
-  sentVerified: { text: m.offer_side_sent_verified, ink: "text-success-foreground" },
-  verified: { text: m.offer_leg_verified, ink: "text-success-foreground" },
-  waitingOnThem: { text: m.offer_side_waiting_them, ink: "text-warning-foreground" },
-  differentCopy: { text: m.offer_side_different, ink: "text-warning-foreground" },
-  youOwe: { text: m.offer_side_you_owe, ink: "text-progress" },
-  afterYouSend: { text: m.offer_side_after_you, ink: "text-muted-foreground" },
-  notSent: { text: m.offer_side_not_sent, ink: "text-muted-foreground" },
+const SIDE_STATUS: Record<SideStatus, { text: () => string; tone: Tone }> = {
+  sentVerified: { text: m.offer_side_sent_verified, tone: "success" },
+  verified: { text: m.offer_leg_verified, tone: "success" },
+  waitingOnThem: { text: m.offer_side_waiting_them, tone: "warning" },
+  differentCopy: { text: m.offer_side_different, tone: "warning" },
+  youOwe: { text: m.offer_side_you_owe, tone: "progress" },
+  afterYouSend: { text: m.offer_side_after_you, tone: "neutral" },
+  notSent: { text: m.offer_side_not_sent, tone: "neutral" },
 };
 
 const FILTER_LABEL: Record<ExchangeFilter, () => string> = {
@@ -280,7 +281,7 @@ export function TradeExchange({
                   </span>
                 </h3>
                 {status ? (
-                  <span className={cn("text-xs", SIDE_STATUS[status].ink)}>
+                  <span className={cn("text-xs", TONE_INK[SIDE_STATUS[status].tone])}>
                     {SIDE_STATUS[status].text()}
                   </span>
                 ) : null}
@@ -306,7 +307,7 @@ export function TradeExchange({
                 ))
               )}
               {topupIn === side.key && trade.topup ? (
-                <p className="text-warning-foreground flex items-start gap-1.5 text-sm text-pretty">
+                <p className={cn(TONE_INK.warning, "flex items-start gap-1.5 text-sm text-pretty")}>
                   <WarningIcon aria-hidden weight="fill" className="mt-0.5 size-4 shrink-0" />
                   <TopupText topup={trade.topup} />
                 </p>
