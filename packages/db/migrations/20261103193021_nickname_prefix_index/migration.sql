@@ -1,0 +1,1 @@
+CREATE INDEX "user_address_nickname_prefix_idx" ON "user_address" (lower("nickname"::text) text_pattern_ops);

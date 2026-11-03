@@ -3,7 +3,7 @@ import type { CosmoSearchResult } from "@repo/cosmo/types/user";
 import { db } from "@repo/db";
 import { userAddress } from "@repo/db/schema";
 import { cacheUsers } from "@repo/lib/server/user";
-import { desc, like } from "drizzle-orm";
+import { desc, sql } from "drizzle-orm";
 
 import { getCache, globalRateLimited, ipRateLimited } from "./redis";
 import { getAccessToken } from "./token";
@@ -86,7 +86,8 @@ async function searchStoredUsers(query: string): Promise<CosmoSearchResult> {
       address: userAddress.address,
     })
     .from(userAddress)
-    .where(like(userAddress.nickname, `${escapedQuery}%`))
+    // the expression `user_address_nickname_prefix_idx` indexes; a citext LIKE scans every row
+    .where(sql`lower(${userAddress.nickname}::text) LIKE lower(${escapedQuery}) || '%'`)
     .orderBy(userAddress.nickname, desc(userAddress.id))
     .limit(100);
 

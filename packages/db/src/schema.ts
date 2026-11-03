@@ -59,6 +59,11 @@ export const userAddress = pgTable(
   (t) => [
     uniqueIndex("user_address_address_idx").on(t.address),
     index("user_address_nickname_idx").on(t.nickname),
+    // a citext LIKE can't range-scan the index above, so a prefix search reads this one
+    index("user_address_nickname_prefix_idx").using(
+      "btree",
+      sql`lower(${t.nickname}::text) text_pattern_ops`,
+    ),
     uniqueIndex("user_address_address_nickname_idx").on(t.address, t.nickname),
     index("user_address_user_id_idx").on(t.userId),
     uniqueIndex("user_address_default_idx")
