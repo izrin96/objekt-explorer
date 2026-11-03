@@ -2,6 +2,7 @@ import { PlusIcon } from "@phosphor-icons/react";
 
 import { Button } from "@/components/ui/button";
 import { MenuItem } from "@/components/ui/menu";
+import { ToolbarButton } from "@/components/ui/toolbar";
 import { selectBarFillClass, selectBarIconOnlyClass } from "@/features/objekt/select-bar";
 import { m } from "@/paraglide/messages";
 import { useSelection } from "@/stores/selection";
@@ -38,10 +39,13 @@ export function AddToListAction({
   const ids = useSelection((s) => s.ids);
 
   return (
-    <Button
-      size="sm"
-      className={`${selectBarFillClass} ${selectBarIconOnlyClass} shrink-0`}
+    // a select-bar item: it joins the bar's arrow-key order
+    <ToolbarButton
       disabled={ids.size === 0}
+      focusableWhenDisabled={false}
+      render={
+        <Button size="sm" className={`${selectBarFillClass} ${selectBarIconOnlyClass} shrink-0`} />
+      }
       onClick={() =>
         openAddToList(
           objekts.filter((objekt) => ids.has(objekt.id)),
@@ -51,6 +55,6 @@ export function AddToListAction({
     >
       <PlusIcon />
       <span className="max-sm:sr-only">{m.filter_add_to_list()}</span>
-    </Button>
+    </ToolbarButton>
   );
 }

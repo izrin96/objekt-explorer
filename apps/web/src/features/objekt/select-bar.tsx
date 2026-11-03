@@ -13,6 +13,7 @@ import { FadeScrollArea } from "@/components/shared/fade-scroll-area";
 import { Button } from "@/components/ui/button";
 import { Menu, MenuItem, MenuPopup, MenuTrigger } from "@/components/ui/menu";
 import { Popover, PopoverPopup, PopoverTrigger } from "@/components/ui/popover";
+import { ToolbarButton, ToolbarPrimitive } from "@/components/ui/toolbar";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
@@ -86,9 +87,8 @@ export function SelectBar({ objekts, children, secondary = NO_SECONDARY }: Selec
   const allSelected = objekts.length > 0 && selected.length === objekts.length;
 
   return (
-    <div
+    <ToolbarPrimitive.Root
       ref={barRef}
-      role="toolbar"
       aria-label={m.selection_toolbar_aria()}
       className="bg-foreground text-background sticky bottom-4 z-5 mx-auto mt-auto flex w-max max-w-full min-w-0 items-center gap-1.5 rounded-xl py-1.5 pr-1.5 pl-3.5 text-base shadow-lg sm:text-sm"
     >
@@ -98,47 +98,62 @@ export function SelectBar({ objekts, children, secondary = NO_SECONDARY }: Selec
 
       {/* the same actions twice over, but only ever one of them laid out */}
       {secondary.map((action) => (
-        <Button
+        <ToolbarButton
           key={action.label}
-          size="sm"
-          variant="outline"
           disabled={empty}
+          focusableWhenDisabled={false}
           onClick={action.onClick}
-          className={`${selectBarActionClass} max-sm:hidden`}
+          render={
+            <Button
+              size="sm"
+              variant="outline"
+              className={`${selectBarActionClass} max-sm:hidden`}
+            />
+          }
         >
           {action.icon}
           {action.label}
-        </Button>
+        </ToolbarButton>
       ))}
 
-      <Button
-        size="sm"
-        variant="outline"
+      <ToolbarButton
         disabled={objekts.length === 0}
+        focusableWhenDisabled={false}
         onClick={() => selectAll(allSelected ? [] : objekts.map((objekt) => objekt.id))}
-        className={cn(selectBarActionClass, selectBarIconOnlyClass, "shrink-0")}
+        render={
+          <Button
+            size="sm"
+            variant="outline"
+            className={cn(selectBarActionClass, selectBarIconOnlyClass, "shrink-0")}
+          />
+        }
       >
         {allSelected ? <SelectionSlashIcon /> : <SelectionAllIcon />}
         <span className="max-sm:sr-only">
           {allSelected ? m.selection_deselect_all() : m.filter_select_all()}
         </span>
-      </Button>
+      </ToolbarButton>
 
       {secondary.length > 0 && (
         <Menu>
-          <MenuTrigger
+          <ToolbarButton
             disabled={empty}
+            focusableWhenDisabled={false}
             render={
-              <Button
-                size="icon-sm"
-                variant="outline"
-                aria-label={m.selection_more_actions()}
-                className={cn(selectBarActionClass, "size-8 shrink-0 sm:hidden")}
+              <MenuTrigger
+                render={
+                  <Button
+                    size="icon-sm"
+                    variant="outline"
+                    aria-label={m.selection_more_actions()}
+                    className={cn(selectBarActionClass, "size-8 shrink-0 sm:hidden")}
+                  />
+                }
               />
             }
           >
             <DotsThreeIcon weight="bold" />
-          </MenuTrigger>
+          </ToolbarButton>
           <MenuPopup align="end" side="top">
             {secondary.map((action) => (
               <MenuItem key={action.label} onClick={action.onClick}>
@@ -150,16 +165,20 @@ export function SelectBar({ objekts, children, secondary = NO_SECONDARY }: Selec
         </Menu>
       )}
 
-      <Button
-        size="icon-sm"
-        variant="outline"
-        aria-label={m.selection_clear()}
+      <ToolbarButton
         onClick={clear}
-        className={cn(selectBarActionClass, "size-7 shrink-0 max-sm:size-8")}
+        render={
+          <Button
+            size="icon-sm"
+            variant="outline"
+            aria-label={m.selection_clear()}
+            className={cn(selectBarActionClass, "size-7 shrink-0 max-sm:size-8")}
+          />
+        }
       >
         <XIcon />
-      </Button>
-    </div>
+      </ToolbarButton>
+    </ToolbarPrimitive.Root>
   );
 }
 
@@ -186,8 +205,10 @@ function SelectedPopover({
   return (
     // select mode keeps the bar up at zero, so an emptied list has to close itself
     <Popover open={open && count > 0} onOpenChange={setOpen}>
-      <PopoverTrigger
+      <ToolbarButton
         disabled={count === 0}
+        focusableWhenDisabled={false}
+        render={<PopoverTrigger />}
         className={cn(
           "focus-visible:ring-background flex min-w-0 cursor-pointer items-center gap-1 rounded-sm whitespace-nowrap outline-none focus-visible:ring-2 max-sm:text-xs",
           "underline-offset-2 hover:underline disabled:cursor-default disabled:no-underline",
@@ -199,7 +220,7 @@ function SelectedPopover({
           {m.filter_selected_count({ count: count.toLocaleString(getLocale()) })}
         </span>
         <CaretUpIcon className="size-3 shrink-0 opacity-70" aria-hidden />
-      </PopoverTrigger>
+      </ToolbarButton>
       <PopoverPopup
         anchor={anchor}
         side="top"
