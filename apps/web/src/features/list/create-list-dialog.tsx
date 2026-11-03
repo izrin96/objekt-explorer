@@ -36,7 +36,7 @@ export function CreateListDialog({
   onOpenChange: (open: boolean) => void;
   /** The draft it opens with, and goes back to on close. */
   initial?: ListDraft;
-  /** `initial`'s type, bound to a profile, with neither changeable */
+  /** `initial`'s type, not changeable; a have or sale list is also bound to a profile */
   lockType?: boolean;
   /** hands the new list back and closes, in place of offering Post it */
   onCreated?: (slug: string) => void;

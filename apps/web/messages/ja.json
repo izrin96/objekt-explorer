@@ -2206,8 +2206,6 @@
   "trade_composer_rule_delete": "ルール {rule} を削除",
   "trade_composer_rule_ratio": "ルール {rule} の比率",
   "trade_composer_rule_ratio_set": "ルール {rule} の比率、現在は{ratio}",
-  "trade_composer_new_want": "新しい希望リスト",
-  "trade_composer_new_want_hint": "空の状態で作成され、Tradeには出ず、Cosmoプロフィールにも紐づきません。",
   "list_create_picked_desc": "作成すると、この投稿に選択されます。",
   "trade_composer_new_list_have": "新しい所持リスト…",
   "trade_composer_new_list_sale": "新しい販売リスト…",

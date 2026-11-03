@@ -2206,8 +2206,6 @@
   "trade_composer_rule_delete": "Delete the rule {rule}",
   "trade_composer_rule_ratio": "Ratio for the rule {rule}",
   "trade_composer_rule_ratio_set": "Ratio for the rule {rule}, now {ratio}",
-  "trade_composer_new_want": "New want list",
-  "trade_composer_new_want_hint": "Starts empty and off Trade, with no Cosmo profile.",
   "list_create_picked_desc": "Once created, it's picked for your post.",
   "trade_composer_new_list_have": "New have list…",
   "trade_composer_new_list_sale": "New sale list…",

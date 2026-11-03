@@ -9,20 +9,9 @@ import {
   rowBlock,
 } from "@repo/api/schemas/trade-post";
 import { Link } from "@tanstack/react-router";
-import { type Dispatch, type RefObject, type SetStateAction, useId, useRef, useState } from "react";
+import { type Dispatch, type SetStateAction, useId, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogClose,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogPanel,
-  DialogPopup,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioPrimitive } from "@/components/ui/radio-group";
 import {
@@ -33,9 +22,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useCreateList } from "@/features/list/actions";
 import { CreateListDialog } from "@/features/list/create-list-dialog";
-import { EMPTY_DRAFT, NONE } from "@/features/list/list-draft";
+import { EMPTY_DRAFT, NONE, isBindable } from "@/features/list/list-draft";
 import { TagBadge } from "@/features/list/tag-label";
 import { useUserProfiles } from "@/features/user/hooks";
 import { cn } from "@/lib/utils";
@@ -92,7 +80,6 @@ export function ComposerSettings({
   const closeNewList = () => setNewList((prev) => ({ ...prev, open: false }));
   // the item that opened the dialog is gone with its popup, so focus goes back to the dropdown
   const newListOpener = useRef<HTMLElement | null>(null);
-  const bindSlot = newList.slot === "want" ? "have" : newList.slot;
 
   const side = (slot: Slot) => {
     if (!kind || !plan) return null;
@@ -183,21 +170,17 @@ export function ComposerSettings({
       ) : null}
       {plan?.ok && request ? <UnpairedNote lists={lists} plan={plan} picked={request} /> : null}
       <CreateListDialog
-        open={newList.open && newList.slot !== "want"}
+        open={newList.open}
         onOpenChange={(open) => {
           if (!open) closeNewList();
         }}
-        initial={{ ...EMPTY_DRAFT, listType: bindSlot, isProfileBind: true }}
+        initial={{
+          ...EMPTY_DRAFT,
+          listType: newList.slot,
+          isProfileBind: isBindable(newList.slot),
+        }}
         lockType
-        onCreated={(slug) => pick(bindSlot, slug)}
-        finalFocus={newListOpener}
-      />
-      <NewWantListDialog
-        open={newList.open && newList.slot === "want"}
-        onOpenChange={(open) => {
-          if (!open) closeNewList();
-        }}
-        onCreated={(slug) => pick("want", slug)}
+        onCreated={(slug) => pick(newList.slot, slug)}
         finalFocus={newListOpener}
       />
     </div>
@@ -368,95 +351,6 @@ function ListSelect({
       ) : null}
       {showPrompt ? <UnpairPrompt id={`${id}-prompt`} kind={kind} prompt={prompt} /> : null}
     </div>
-  );
-}
-
-/** New want list…: a name only, for an empty want list under no profile and off Trade. */
-function NewWantListDialog({
-  open,
-  onOpenChange,
-  onCreated,
-  finalFocus,
-}: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onCreated: (slug: string) => void;
-  finalFocus: RefObject<HTMLElement | null>;
-}) {
-  // a fresh name on each opening
-  const [session, setSession] = useState(0);
-  return (
-    <Dialog
-      open={open}
-      onOpenChange={onOpenChange}
-      onOpenChangeComplete={(next) => {
-        if (!next) setSession((prev) => prev + 1);
-      }}
-    >
-      <DialogPopup className="max-w-md" finalFocus={finalFocus}>
-        <NewWantListForm
-          key={session}
-          onCreated={(slug) => {
-            onCreated(slug);
-            onOpenChange(false);
-          }}
-        />
-      </DialogPopup>
-    </Dialog>
-  );
-}
-
-function NewWantListForm({ onCreated }: { onCreated: (slug: string) => void }) {
-  const id = useId();
-  const create = useCreateList();
-  const [name, setName] = useState("");
-  const trimmed = name.trim();
-  return (
-    <form
-      className="contents"
-      onSubmit={(event) => {
-        event.preventDefault();
-        if (!trimmed) return;
-        create.mutate(
-          {
-            name: trimmed,
-            listType: "want",
-            isProfileBind: false,
-            linkedListId: null,
-            profileAddress: null,
-            description: null,
-            currency: null,
-            discoverable: false,
-          },
-          // runs after the hook's own onSuccess has refetched the viewer's lists
-          { onSuccess: ({ slug }) => onCreated(slug) },
-        );
-      }}
-    >
-      <DialogHeader>
-        <DialogTitle className="font-display">{m.trade_composer_new_want()}</DialogTitle>
-        <DialogDescription>{m.trade_composer_new_want_hint()}</DialogDescription>
-      </DialogHeader>
-      <DialogPanel>
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor={id}>{m.list_create_name_label()}</Label>
-          <Input
-            id={id}
-            autoFocus
-            maxLength={256}
-            placeholder={m.list_create_name_placeholder()}
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-          />
-        </div>
-      </DialogPanel>
-      <DialogFooter>
-        <DialogClose render={<Button variant="outline" />}>{m.common_modal_cancel()}</DialogClose>
-        <Button type="submit" disabled={!trimmed} loading={create.isPending}>
-          {m.common_actions_create()}
-        </Button>
-      </DialogFooter>
-    </form>
   );
 }
 

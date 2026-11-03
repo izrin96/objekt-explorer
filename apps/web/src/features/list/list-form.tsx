@@ -33,7 +33,7 @@ type ListFormProps = {
   notice?: ReactNode;
   /** a have, want or sale list's place on Trade, which the post composer sets */
   tradeLine?: ReactNode;
-  /** create only: the type and the profile binding are fixed, as the post composer needs them */
+  /** create only: the type is fixed, as the post composer needs it, and a have or sale list is bound with no None */
   lockBind?: boolean;
 };
 
@@ -132,7 +132,7 @@ export function ListForm({
         value={value}
         profiles={profiles}
         locked={isEdit && value.isProfileBind}
-        required={lockBind}
+        required={lockBind && bindable}
         onChange={set}
       />
 
