@@ -1,3 +1,4 @@
+import { normalizeUserText } from "@repo/api/schemas/common/user-text";
 import type { ListType } from "@repo/api/schemas/list";
 import type { OpenToFlags } from "@repo/api/schemas/open-to";
 import { takesRatio } from "@repo/api/schemas/trade-ratio";
@@ -83,7 +84,7 @@ export function toCreateInput(draft: ListDraft) {
 
   return {
     name: draft.name.trim(),
-    description: draft.description.trim() || null,
+    description: normalizeUserText(draft.description),
     currency: draft.listType === "sale" ? draft.currency.toUpperCase() : null,
     listType: draft.listType,
     linkedListId: ["have", "want"].includes(draft.listType) ? draft.linkedListId : null,

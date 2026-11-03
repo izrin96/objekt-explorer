@@ -149,7 +149,7 @@ export function ProfileHeader({ profile }: { profile: PublicProfile }) {
 
       {/* set only while the profile shows its account; plain text, so a URL or markup stays as typed */}
       {profile.bio ? (
-        <p className="mt-3 max-w-prose text-sm text-pretty break-words whitespace-pre-line">
+        <p className="mt-3 max-w-prose text-sm text-pretty break-words whitespace-pre-wrap">
           {profile.bio}
         </p>
       ) : null}

@@ -84,10 +84,10 @@ describe("listDraftSchema", () => {
 });
 
 describe("toCreateInput", () => {
-  test("trims the name and description, and a blank description is null", () => {
-    expect(toCreateInput(draft({ name: "  Mine  ", description: "  hi  " }))).toMatchObject({
+  test("trims the name, keeps a description's indentation, and a blank description is null", () => {
+    expect(toCreateInput(draft({ name: "  Mine  ", description: "\n  hi  \n" }))).toMatchObject({
       name: "Mine",
-      description: "hi",
+      description: "  hi",
     });
     expect(toCreateInput(draft({ description: "   " })).description).toBeNull();
   });

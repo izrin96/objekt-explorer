@@ -9,6 +9,7 @@ import { and, eq, inArray, isNotNull, isNull } from "drizzle-orm";
 
 import { OBJEKT_PREVIEW_SIZE } from "../../constants";
 import { isMessageable, toMessagePref } from "../../lib/chat-rules";
+import { normalizeUserText } from "../../schemas/common/user-text";
 import { type ListPreview, type PublicList } from "../../schemas/list";
 import { isBlockedEither } from "../moderation/core";
 import { isBanned } from "../moderation/safety";
@@ -101,7 +102,7 @@ export async function fetchList(
     bumpedAt: result.bumpedAt,
     user: result.user ? toPublicUser(result.user) : null,
     profile: result.userAddress ? toPartialProfile(result.userAddress) : null,
-    description: result.description,
+    description: result.description ? normalizeUserText(result.description) : null,
     linkedList: result.linkedList
       ? {
           ...result.linkedList,

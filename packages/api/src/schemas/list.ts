@@ -5,6 +5,7 @@ import { addressInputSchema, addressSchema } from "./common/address";
 import { artistsArraySchema } from "./common/artist";
 import { indexedObjektSchema, ownedObjektSchema } from "./common/objekt";
 import { queryArray } from "./common/query";
+import { normalizeUserText } from "./common/user-text";
 import type { ObjektPreview } from "./objekts";
 import { publicProfileSchema, publicUserSchema } from "./profile";
 import { tradeRatioSchema } from "./trade-ratio";
@@ -142,6 +143,13 @@ export const listEntriesInputSchema = listSlugInputSchema.extend({
   artist: artistsArraySchema.default([]),
 });
 
+// the server's cleanup is the one that counts: an old tab or an API caller sends whatever it likes
+const listDescriptionSchema = z
+  .string()
+  .max(5000)
+  .nullable()
+  .transform((text) => (text === null ? null : normalizeUserText(text)));
+
 export const createListInputSchema = z.object({
   name: z.string().min(1).max(256),
   listType: listTypeSchema.default("general"),
@@ -149,7 +157,7 @@ export const createListInputSchema = z.object({
   hideSerial: z.boolean().default(false),
   linkedListId: z.int32().positive().nullable(),
   profileAddress: addressSchema.nullable(),
-  description: z.string().max(5000).nullable(),
+  description: listDescriptionSchema,
   currency: z.string().max(10).nullable(),
   discoverable: z.boolean().default(false),
   matchSale: z.boolean().default(true),
@@ -180,7 +188,7 @@ export const editListInputSchema = z.object({
   name: z.string().min(1).max(256),
   gridColumns: z.int().min(2).max(18).nullable(),
   profileAddress: addressSchema.nullable(),
-  description: z.string().max(5000).nullable(),
+  description: listDescriptionSchema,
   currency: z.string().max(10).nullable(),
   hideSerial: z.boolean(),
   regenerateSlug: z.boolean().default(false),

@@ -7,7 +7,7 @@ Users asked for a bio on their profile. Today a profile header shows only the ni
 ## What Changes
 
 - **A bio on each profile.** Each linked Cosmo profile (each `user_address`) gets its own short bio, stored beside its banner. The owner sets it in the profile edit dialog, the same dialog that sets the banner.
-- **Plain text, 160 characters.** Line breaks are kept and blank lines collapse. Markdown is not rendered and URLs are not linked. Clearing the field removes the bio.
+- **Plain text, 160 characters.** Line breaks, blank lines and indentation are kept as typed, for decoration. Markdown is not rendered and URLs are not linked. Clearing the field removes the bio.
 - **Shown in the profile header** under the identity block, to every visitor, only while the profile shows its account. An address that no account has linked shows no bio, so every bio has an owner who can be reported.
 - **The bio leaves with the account.** Unlinking a profile, a staff unlink or move, and deleting the account each clear its bio, so a bio never shows under an account that did not write it.
 - Only the field's label, placeholder and counter are translated (en, ko, ja). The bio text is shown as written.

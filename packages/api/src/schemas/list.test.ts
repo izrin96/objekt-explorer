@@ -3,6 +3,7 @@ import { describe, expect, test } from "bun:test";
 import {
   copyListInputSchema,
   createListInputSchema,
+  editListInputSchema,
   listPreviewsInputSchema,
   slugPreviewInputSchema,
 } from "./list";
@@ -15,6 +16,16 @@ const base = {
   currency: null,
 };
 
+const editBase = {
+  slug: "abc",
+  name: "x",
+  gridColumns: null,
+  profileAddress: null,
+  description: null,
+  currency: null,
+  hideSerial: false,
+};
+
 describe("createListInputSchema", () => {
   test("no listType is a general list", () => {
     expect(createListInputSchema.parse(base).listType).toBe("general");
@@ -25,6 +36,30 @@ describe("createListInputSchema", () => {
       matchSale: true,
       matchHave: true,
     });
+  });
+});
+
+describe("list description", () => {
+  test("is cleaned on create, copy and edit", () => {
+    const description = "\n  WTT only\r\n\n\n\ndm me  \n";
+    expect(createListInputSchema.parse({ ...base, description }).description).toBe(
+      "  WTT only\n\n\n\ndm me",
+    );
+    expect(copyListInputSchema.parse({ ...base, sourceSlug: "abc", description }).description).toBe(
+      "  WTT only\n\n\n\ndm me",
+    );
+    const edited = editListInputSchema.parse({ ...editBase, description });
+    expect(edited.description).toBe("  WTT only\n\n\n\ndm me");
+  });
+
+  test("blank text is no description, and null stays null", () => {
+    expect(createListInputSchema.parse({ ...base, description: " \n " }).description).toBeNull();
+    expect(createListInputSchema.parse(base).description).toBeNull();
+  });
+
+  test("the 5000 limit still applies to what is sent", () => {
+    const long = "a".repeat(5001);
+    expect(createListInputSchema.safeParse({ ...base, description: long }).success).toBe(false);
   });
 });
 

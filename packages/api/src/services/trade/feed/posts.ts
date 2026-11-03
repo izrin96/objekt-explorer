@@ -18,6 +18,7 @@ import {
 import { addressesByUser, nicknamesByAddress, toPartnerIdentity } from "../../../lib/trade-rank";
 import { unique } from "../../../lib/unique";
 import type { CollectionFilters } from "../../../schemas/common/filters";
+import { normalizeUserText } from "../../../schemas/common/user-text";
 import { type BrowseFilters } from "../../../schemas/trade";
 import { tradeHandle } from "../../../schemas/trade-person";
 import { getCollectionFilters } from "../../activity-feed";
@@ -72,7 +73,7 @@ function toListLink(list: FeedList, nicknameOf: ReadonlyMap<string, string | nul
     id: list.id,
     slug: list.slug,
     name: list.name,
-    description: list.description,
+    description: list.description ? normalizeUserText(list.description) : null,
     listType: list.listType,
     currency: list.currency,
     profileSlug: list.profileSlug,

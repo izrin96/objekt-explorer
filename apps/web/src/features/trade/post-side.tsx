@@ -257,7 +257,7 @@ export function SideNotes({ sides }: { sides: readonly PostSideData[] }) {
               </span>{" "}
             </>
           ) : null}
-          {side.list.description?.trim()}
+          {side.list.description}
         </p>
       ))}
     </div>

@@ -3,6 +3,7 @@ import * as z from "zod";
 
 import { MAX_FILE_SIZE } from "../constants";
 import { addressSchema } from "./common/address";
+import { normalizeUserText } from "./common/user-text";
 import { reputationSchema } from "./reputation";
 
 export const publicUserSchema = z.object({
@@ -44,25 +45,6 @@ export type ProfilePreview = z.infer<typeof profilePreviewOutputSchema>;
 
 export const BIO_MAX_LENGTH = 160;
 
-// bidi embedding, override and isolate marks can make a bio read as someone else's text
-const HIDDEN_CHARS = /(?!\n)[\p{Cc}\u202A-\u202E\u2066-\u2069]/gu;
-// a line of only spaces or invisible fillers (zero-width marks, Hangul fillers, the blank
-// Braille cell) reads as empty; ZWJ alone stays legal inside text, since emoji need it
-const BLANK_LINE = /^[\s\u115F\u1160\u200B-\u200D\u2060\u2800\u3164\uFEFF\uFFA0]*$/u;
-
-/** The stored form of a bio, or null when nothing is left to show. */
-export function normalizeBio(text: string): string | null {
-  const bio = text
-    .replace(/\r\n?/g, "\n")
-    .replace(HIDDEN_CHARS, "")
-    .split("\n")
-    .map((line) => (BLANK_LINE.test(line) ? "" : line.trimEnd()))
-    .join("\n")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
-  return bio === "" ? null : bio;
-}
-
 /** The banner URL must sit under `bannerUrlPrefix`, which comes from server config. */
 export function makeEditProfileInputSchema(bannerUrlPrefix: string) {
   return z.object({
@@ -79,7 +61,7 @@ export function makeEditProfileInputSchema(bannerUrlPrefix: string) {
       .string()
       .max(BIO_MAX_LENGTH * 4)
       .nullish()
-      .transform((bio) => (typeof bio === "string" ? normalizeBio(bio) : bio))
+      .transform((bio) => (typeof bio === "string" ? normalizeUserText(bio) : bio))
       .pipe(z.string().max(BIO_MAX_LENGTH).nullish()),
   });
 }

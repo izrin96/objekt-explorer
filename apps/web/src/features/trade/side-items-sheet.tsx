@@ -218,7 +218,7 @@ export function SideItemsSheet({
           {/* in the panel, not the header, so a long one scrolls; the post clips it to eight lines */}
           {side.list.description ? (
             <p className="text-muted-foreground text-sm text-pretty break-words whitespace-pre-wrap">
-              {side.list.description.trim()}
+              {side.list.description}
             </p>
           ) : null}
           {narrowed ? (

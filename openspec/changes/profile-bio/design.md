@@ -20,15 +20,16 @@ A tab loaded before the deploy keeps calling `profile.edit` with `{ address, gri
 
 **A nullable `bio text` column on `user_address`.** The bio belongs to the Cosmo profile, as the banner does, so a second linked profile can say something else. Putting it on `user` would show one text on every profile of the account. The column is `text`, and the length is checked in Zod, as `lists.description` does. A database `CHECK` would count characters differently from the browser's `maxLength` and would make a later limit change a migration.
 
-**`bio` in `makeEditProfileInputSchema` is `.nullish()`, passed through `normalizeBio`.** `undefined` keeps the stored bio: Drizzle leaves an `undefined` key out of `.set()`, the rule `bannerImgUrl` already follows. `null` or a string that normalises to empty clears it. An open tab sends no `bio` and so still validates to data that leaves the bio as it is. A `.default(null)` would make that tab's banner save wipe the bio. The dialog sends `bio` only when the field differs from the text it opened with, so a save from a tab holding a stale copy (a banner change, say) cannot write that copy back over a bio saved from another tab.
+**`bio` in `makeEditProfileInputSchema` is `.nullish()`, passed through `normalizeUserText`.** `undefined` keeps the stored bio: Drizzle leaves an `undefined` key out of `.set()`, the rule `bannerImgUrl` already follows. `null` or a string that normalises to empty clears it. An open tab sends no `bio` and so still validates to data that leaves the bio as it is. A `.default(null)` would make that tab's banner save wipe the bio. The dialog sends `bio` only when the field differs from the text it opened with, so a save from a tab holding a stale copy (a banner change, say) cannot write that copy back over a bio saved from another tab.
 
-**`normalizeBio` lives in `packages/api/src/schemas/profile.ts`, beside `BIO_MAX_LENGTH = 160`, with `profile.test.ts`.** The web imports both from `schemas/` (the Vite rule allows only `schemas/` and `constants.ts`). The function:
-- turns CRLF and CR into LF;
-- drops control characters other than LF, and the bidi embedding, override and isolate marks (U+202A to U+202E, U+2066 to U+2069), which can make a bio read as someone else's text;
-- treats a line of only spaces or invisible fillers (zero-width marks, Hangul fillers, the blank Braille cell) as blank, so they cannot make an empty-looking bio or dodge the collapse; ZWJ inside text stays, since emoji sequences need it;
-- trims each line's end and the whole text;
-- collapses three or more LFs to two;
-- returns `null` for an empty result.
+**`normalizeUserText` lives in `packages/api/src/schemas/common/user-text.ts`, with its test, and list descriptions use it too; `BIO_MAX_LENGTH = 160` stays in `schemas/profile.ts`.** The web imports both from `schemas/` (the Vite rule allows only `schemas/` and `constants.ts`). The function:
+- turns CRLF, CR and the line and paragraph separators (U+2028, U+2029) into LF;
+- drops control characters other than LF, and the text-direction marks (embedding, override and isolate U+202A to U+202E and U+2066 to U+2069, and the implicit LRM U+200E, RLM U+200F and ALM U+061C), which can make a bio read as someone else's text;
+- turns a tab into a space;
+- trims each line's end, and drops blank lines at the very start and end;
+- returns `null` when what is left is only spaces, default-ignorable code points (zero-width marks, Hangul fillers, tag characters, variation selectors, the soft hyphen) or the blank Braille cell, so nothing shows as an empty block.
+
+It removes only what is unsafe or invisible. Indentation, the first line's included, runs of blank lines and rows of fillers stay, since owners decorate with them (K-pop profiles space with the blank Braille cell U+2800 and the Hangul filler U+3164 where plain spaces collapse); the header renders with `whitespace-pre-wrap` so they show. Padding is limited only by length: a bio of one character, 158 line breaks and another character is valid and renders about 159 lines tall, since the profile header has no line limit, and the list page header shows a description of up to 5000 characters in full. Trade clips a description to 8 lines. ZWJ inside text stays, since emoji sequences need it.
 
 Zod runs it as a transform, then checks the result against `BIO_MAX_LENGTH`. Before the transform, the raw input is capped at `BIO_MAX_LENGTH * 4`, so a huge body is refused before any work. Both the browser and Zod count length in UTF-16 code units, so the field's limit and the server's agree.
 
