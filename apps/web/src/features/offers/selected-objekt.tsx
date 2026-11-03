@@ -3,6 +3,7 @@ import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useHydrated } from "@tanstack/react-router";
 import type { Ref, RefObject } from "react";
 
+import { rich } from "@/components/shared/message-markup";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetHeader, SheetPanel, SheetPopup, SheetTitle } from "@/components/ui/sheet";
 import { getCollectionShortNo } from "@/features/objekt/objekt-utils";
@@ -16,7 +17,7 @@ import { type Leg, canMarkReceived } from "./next-step";
 import { OfferThumb } from "./offer-item";
 import type { Collections } from "./pick";
 import { legView } from "./trade-exchange";
-import { InPlaceOf, LegSerial, Serial, rich } from "./wrong-copy";
+import { InPlaceOf, LegSerial, Serial } from "./wrong-copy";
 
 type Props = {
   leg: Leg;

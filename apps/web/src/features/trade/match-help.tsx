@@ -3,10 +3,9 @@ import type { ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverPopup, PopoverTitle, PopoverTrigger } from "@/components/ui/popover";
+import { TagBadge } from "@/features/list/tag-label";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
-
-import { TagBadge } from "./tag-label";
 
 type Table = {
   /** none for a table of labelled rows */

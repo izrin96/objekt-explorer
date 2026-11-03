@@ -8,7 +8,8 @@ import type { Deadline, Leg, NextStep, Note, StepKind } from "./next-step";
 
 /**
  * How the card writes time left ("3 days"), a date ("Oct 30") and an until-date: `leftLabel`,
- * `shortDate` and `untilLabel`. Those reach the network, so this module can't import them.
+ * `shortDate` and `untilLabel`. `leftLabel` and `shortDate` reach the network, so this module
+ * can't import them.
  */
 export type CardFormat = {
   left: (iso: string) => string;

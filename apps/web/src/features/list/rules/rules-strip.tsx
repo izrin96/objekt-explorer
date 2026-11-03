@@ -10,6 +10,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { type RefObject, useId, useRef, useState } from "react";
 import { WindowVirtualizer } from "virtua";
 
+import { rich } from "@/components/shared/message-markup";
 import {
   AlertDialog,
   AlertDialogDescription,
@@ -24,7 +25,6 @@ import { Menu, MenuItem, MenuPopup, MenuSeparator, MenuTrigger } from "@/compone
 import { Spinner } from "@/components/ui/spinner";
 import { toastManager } from "@/components/ui/toast";
 import { ObjektCard } from "@/features/objekt/objekt-card";
-import { rich } from "@/features/offers/wrong-copy";
 import { useElementSize } from "@/hooks/use-element-size";
 import { client, orpc } from "@/lib/orpc";
 import { refusalText } from "@/lib/refusal";

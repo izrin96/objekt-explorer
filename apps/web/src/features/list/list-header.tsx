@@ -28,7 +28,6 @@ import { CompareDialog } from "@/features/compare/compare-dialog";
 import { SkeletonGrid } from "@/features/objekt/skeleton-grid";
 import { ProfileLink } from "@/features/profile/profile-hover-card";
 import { mutualCountOptions } from "@/features/trade/queries";
-import { TagBadges } from "@/features/trade/tag-label";
 import { displayNickname } from "@/lib/address";
 import { copyWithToast } from "@/lib/clipboard";
 import { m } from "@/paraglide/messages";
@@ -44,6 +43,7 @@ import { useListTarget } from "./list-provider";
 import { ListBoundBadge, ListCurrencyBadge, ListTypeBadge } from "./list-type-badge";
 import { RuleDialog } from "./rules/rule-dialog";
 import { ShareListButton } from "./share-list-button";
+import { TagBadges } from "./tag-label";
 import { useListOwned } from "./use-list-owned";
 
 export function ListHeader() {

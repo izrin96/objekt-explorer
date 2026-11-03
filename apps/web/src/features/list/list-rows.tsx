@@ -25,7 +25,6 @@ import { Menu, MenuItem, MenuPopup, MenuSeparator, MenuTrigger } from "@/compone
 import { Skeleton } from "@/components/ui/skeleton";
 import { ObjektPreviewCount } from "@/features/objekt/objekt-preview-strip";
 import { ProfileLink } from "@/features/profile/profile-hover-card";
-import { TagBadges } from "@/features/trade/tag-label";
 import { displayNickname } from "@/lib/address";
 import { TONE_INK } from "@/lib/tone";
 import { m } from "@/paraglide/messages";
@@ -44,6 +43,7 @@ import {
   ListTypeBadge,
 } from "./list-type-badge";
 import { useCopyListLink } from "./share-list-button";
+import { TagBadges } from "./tag-label";
 import { useIsListOwner } from "./use-list-owned";
 
 const chipClass =

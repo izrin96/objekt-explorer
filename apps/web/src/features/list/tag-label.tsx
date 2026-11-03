@@ -1,11 +1,10 @@
 import type { ListType } from "@repo/api/schemas/list";
+import type { PostTag } from "@repo/api/schemas/trade-post";
 
 import { Badge } from "@/components/ui/badge";
 import { toneChip } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
-
-import type { PostTag } from "./post-types";
 
 const TAG_LABEL: Record<PostTag, { short: () => string; long: () => string }> = {
   wtt: { short: m.trade_tag_wtt, long: m.trade_tag_wtt_desc },

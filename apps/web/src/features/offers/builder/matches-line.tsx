@@ -2,9 +2,9 @@ import { ArrowsLeftRightIcon, WarningIcon } from "@phosphor-icons/react";
 import { OFFER_SIDE_LIMIT } from "@repo/api/schemas/offer";
 import type { ReactNode, Ref } from "react";
 
+import { WithNumber, WithNumbers } from "@/components/shared/with-number";
 import { Button } from "@/components/ui/button";
-import { nearCountText } from "@/features/trade/near";
-import { WithNumber, WithNumbers } from "@/features/trade/with-number";
+import { nearCountText } from "@/lib/near-text";
 import { TONE_EDGE, TONE_FILL, TONE_INK } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";

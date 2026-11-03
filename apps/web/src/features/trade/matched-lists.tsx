@@ -4,12 +4,13 @@ import type { ReactNode } from "react";
 
 import { Popover, PopoverPopup, PopoverTitle, PopoverTrigger } from "@/components/ui/popover";
 import { getListLinkOption } from "@/features/list/list-link";
+import { ListRoleBadge } from "@/features/list/list-role-badge";
 import { ruleText } from "@/features/list/rules/words";
 import { useUserLists } from "@/features/user/hooks";
+import { nearCountText } from "@/lib/near-text";
 import { m } from "@/paraglide/messages";
 
-import { ListRoleBadge } from "./list-role-badge";
-import { nearCountText, type SideNear } from "./near";
+import type { SideNear } from "./near";
 import { ruleCountsOf } from "./person-row";
 
 type RuleMatch = { listId: number; ruleId: number; rule: ListRuleDef };

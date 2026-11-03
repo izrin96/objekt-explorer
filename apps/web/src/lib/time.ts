@@ -1,5 +1,6 @@
 import { format } from "date-fns";
 
+import { intlCached as cached } from "@/lib/intl-cache";
 import { getLocale } from "@/paraglide/runtime";
 
 /** The one way the app writes an instant: `2026/09/23 06:36:12 PM`. */
@@ -57,4 +58,16 @@ export function relativeTime(
     if (Math.abs(seconds) >= size) return formatter.format(Math.round(seconds / size), unit);
   }
   return formatter.format(0, "second");
+}
+
+const untilFormats = new Map<string, Intl.DateTimeFormat>();
+
+/** A date and time in the viewer's zone, for an end that may be days away. */
+export function untilLabel(iso: string) {
+  const locale = getLocale();
+  return cached(
+    untilFormats,
+    locale,
+    () => new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }),
+  ).format(new Date(iso));
 }

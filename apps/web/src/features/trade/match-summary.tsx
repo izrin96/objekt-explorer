@@ -1,5 +1,6 @@
 import { ArrowDownIcon, ArrowsLeftRightIcon, ArrowUpIcon } from "@phosphor-icons/react";
 
+import { WithNumber } from "@/components/shared/with-number";
 import { Badge } from "@/components/ui/badge";
 import { toneChip } from "@/lib/tone";
 import { cn } from "@/lib/utils";
@@ -7,7 +8,6 @@ import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
 
 import type { MatchBand } from "./person-row";
-import { WithNumber } from "./with-number";
 
 /**
  * Beside a person's name: what the two can swap, tinted, with how much of it needs the viewer's

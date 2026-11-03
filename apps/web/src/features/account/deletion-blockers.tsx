@@ -2,8 +2,8 @@ import type { DeletionCheck } from "@repo/api/schemas/user";
 import { Link } from "@tanstack/react-router";
 import { useId } from "react";
 
-import { untilLabel } from "@/features/chat/format";
 import { SANCTION_LABEL } from "@/features/moderation/labels";
+import { untilLabel } from "@/lib/time";
 import { m } from "@/paraglide/messages";
 
 type Blocker = DeletionCheck["blockers"][number];

@@ -8,6 +8,7 @@ import { RatioChip } from "@/features/list/ratio-chip";
 import { type RatioSide, ratioName, ratioSideOf } from "@/features/list/ratio-text";
 import { ObjektCard } from "@/features/objekt/objekt-card";
 import { useElementSize } from "@/hooks/use-element-size";
+import { nearCountText, nearRingText } from "@/lib/near-text";
 import { TONE_INK } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -15,7 +16,7 @@ import { getLocale } from "@/paraglide/runtime";
 
 import type { Surface } from "./browse-search";
 import { MatchedListsChip } from "./matched-lists";
-import { type NearOpen, nearCountText, nearRingText, type OpenObjekt } from "./near";
+import type { NearOpen, OpenObjekt } from "./near";
 import type { PersonPostData, PostSideData } from "./post-types";
 import { RuleTiles } from "./rule-tile";
 import { SideItemsSheet } from "./side-items-sheet";

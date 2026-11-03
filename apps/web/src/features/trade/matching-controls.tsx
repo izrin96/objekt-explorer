@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import { Button } from "@/components/ui/button";
 import { SingleSelect } from "@/features/filters/single-select";
+import { ListRoleBadge } from "@/features/list/list-role-badge";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
@@ -18,7 +19,6 @@ import {
   type TradeList,
 } from "./compare-rule";
 import { ALL_LISTS, COMPARE } from "./compare-with";
-import { ListRoleBadge } from "./list-role-badge";
 import { MatchHelp } from "./match-help";
 import { mutualCountOptions } from "./queries";
 

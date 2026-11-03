@@ -4,7 +4,6 @@ import { Link, linkOptions } from "@tanstack/react-router";
 import { useId, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { untilLabel } from "@/features/chat/format";
 import { collectionName } from "@/features/objekt/objekt-label";
 import {
   offerNo,
@@ -12,6 +11,7 @@ import {
   tradeNo,
   tradeNotificationText,
 } from "@/features/offers/format";
+import { untilLabel } from "@/lib/time";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 

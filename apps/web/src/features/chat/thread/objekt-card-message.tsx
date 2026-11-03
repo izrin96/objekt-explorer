@@ -4,10 +4,10 @@ import { Link } from "@tanstack/react-router";
 
 import { Card } from "@/components/ui/card";
 import { getListLinkOption } from "@/features/list/list-link";
+import { ListRoleBadge } from "@/features/list/list-role-badge";
 import { ObjektCard } from "@/features/objekt/objekt-card";
 import { CollectionLabel } from "@/features/objekt/objekt-label";
 import { formatCurrency } from "@/features/settings/use-currency";
-import { ListRoleBadge } from "@/features/trade/list-role-badge";
 import { m } from "@/paraglide/messages";
 
 /** Read live: a list or entry deleted since the card was sent drops out, the card stays. */

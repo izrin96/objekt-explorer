@@ -3,10 +3,10 @@ import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useHydrated } from "@tanstack/react-router";
 import type { ReactNode, RefObject } from "react";
 
-import { CautionLine } from "@/features/chat/caution-line";
 import { messageTime } from "@/features/chat/format";
 import { canReply, quoteLabel, quoteText } from "@/features/chat/reply";
 import { canUnsend } from "@/features/chat/thread-cache";
+import { CautionLine } from "@/features/moderation/caution-line";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 

@@ -11,7 +11,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { untilLabel } from "@/features/chat/format";
+import { untilLabel } from "@/lib/time";
 import { m } from "@/paraglide/messages";
 
 import { useOfferActions } from "./actions";

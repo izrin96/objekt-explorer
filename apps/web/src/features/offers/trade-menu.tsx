@@ -11,7 +11,7 @@ import type { ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Menu, MenuItem, MenuPopup, MenuTrigger } from "@/components/ui/menu";
-import { untilLabel } from "@/features/chat/format";
+import { untilLabel } from "@/lib/time";
 import { m } from "@/paraglide/messages";
 
 import { shortDate } from "./format";

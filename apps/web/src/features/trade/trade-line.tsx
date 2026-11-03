@@ -2,11 +2,11 @@ import { tradeLineOf } from "@repo/api/schemas/trade-post";
 import { useId } from "react";
 
 import { Button } from "@/components/ui/button";
+import { TagBadges } from "@/features/list/tag-label";
 import { m } from "@/paraglide/messages";
 
 import { IN_POST } from "./post-kind-text";
 import { usePlanLists } from "./post-plan";
-import { TagBadges } from "./tag-label";
 import { type DetailPart, lineDetail, type LineHint, lineHint } from "./trade-line-parts";
 
 const DETAIL: Record<Exclude<DetailPart, "partner">, () => string> = {

@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Frame, FramePanel } from "@/components/ui/frame";
 import { Menu, MenuItem, MenuPopup, MenuSeparator, MenuTrigger } from "@/components/ui/menu";
 import { Skeleton } from "@/components/ui/skeleton";
+import { TagBadges } from "@/features/list/tag-label";
 import { SafetyMenu } from "@/features/moderation/safety-menu";
 import { useOpenOffer } from "@/features/offers/make-offer-button";
 import { relativeTime } from "@/lib/time";
@@ -39,7 +40,6 @@ import { EmptySide, isEmptySide, SideAllDialog, SideNotes, SideStrip } from "./p
 import { postTime } from "./post-time";
 import type { PersonData, PersonPostData } from "./post-types";
 import { SideCompareContext } from "./side-items-sheet";
-import { TagBadges } from "./tag-label";
 import { TradeActions, type TradeContact } from "./trade-actions";
 import { TradeHeader } from "./trade-header";
 import { TradeSides } from "./trade-row";

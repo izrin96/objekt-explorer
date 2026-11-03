@@ -15,10 +15,11 @@ import { truncateAddress } from "@repo/lib/address";
 import { useHydrated } from "@tanstack/react-router";
 import { useId, type ReactNode } from "react";
 
+import { rich } from "@/components/shared/message-markup";
 import { Button } from "@/components/ui/button";
-import { untilLabel } from "@/features/chat/format";
 import { useMinuteClock } from "@/hooks/use-minute-clock";
 import { sentenceGap } from "@/lib/text";
+import { untilLabel } from "@/lib/time";
 import { STEP_TONE, TONE_EDGE, TONE_FILL, TONE_INK, type Tone } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -44,7 +45,7 @@ import type { Collections } from "./pick";
 import { StatusBadge } from "./status-badge";
 import { Feedback } from "./trade-feedback";
 import { TradeSteps } from "./trade-steps";
-import { DecideActions, Serial, rich } from "./wrong-copy";
+import { DecideActions, Serial } from "./wrong-copy";
 
 const ICONS: Record<NextStep["kind"], Icon> = {
   completed: CheckIcon,

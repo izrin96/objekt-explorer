@@ -36,6 +36,7 @@ import {
 import { useCreateList } from "@/features/list/actions";
 import { CreateListDialog } from "@/features/list/create-list-dialog";
 import { EMPTY_DRAFT, NONE } from "@/features/list/list-draft";
+import { TagBadge } from "@/features/list/tag-label";
 import { useUserProfiles } from "@/features/user/hooks";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -58,7 +59,6 @@ import {
   SLOT_HEADING,
   type Slot,
 } from "../post-kind-text";
-import { TagBadge } from "../tag-label";
 
 /** What the post is for, its lists and its options. Post sits apart, in `PostButton`. */
 export function ComposerSettings({

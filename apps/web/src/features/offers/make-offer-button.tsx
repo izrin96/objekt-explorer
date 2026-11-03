@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate, useRouter } from "@tanstack/react-route
 import { useEffect, useRef } from "react";
 
 import { Button, type ButtonProps } from "@/components/ui/button";
-import { useStartGate } from "@/features/chat/message-button";
+import { useStartGate } from "@/features/user/start-gate";
 import { m } from "@/paraglide/messages";
 
 import { offerLink, type OfferStart } from "./offer-link";

@@ -10,12 +10,11 @@ import {
   type TradeView,
 } from "@repo/api/schemas/offer";
 
-import { untilLabel } from "@/features/chat/format";
 import { collectionName } from "@/features/objekt/objekt-label";
 import { formatCurrency } from "@/features/settings/use-currency";
 import { intlCached } from "@/lib/intl-cache";
 import { joinList } from "@/lib/text";
-import { relativeTime } from "@/lib/time";
+import { relativeTime, untilLabel } from "@/lib/time";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
 

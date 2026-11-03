@@ -16,6 +16,7 @@ import { useSelectedArtists } from "@/features/artist/use-selected-artists";
 import { FACET_KEYS } from "@/features/filters/facet-controls";
 import { SingleSelect } from "@/features/filters/single-select";
 import { AddToListProvider } from "@/features/list/add-to-list-dialog";
+import { tagText } from "@/features/list/tag-label";
 import { ObjektDrawer } from "@/features/objekt/drawer";
 import { collectionName } from "@/features/objekt/objekt-label";
 import { useCurrentUser, useUserLists } from "@/features/user/hooks";
@@ -46,7 +47,6 @@ import { usePlanLists } from "./post-plan";
 import type { PersonData } from "./post-types";
 import { hiddenPartnersOptions, peopleOptions } from "./queries";
 import { SideCompareContext } from "./side-items-sheet";
-import { tagText } from "./tag-label";
 
 type PostType = NonNullable<FeedSearch["type"]> | "all";
 

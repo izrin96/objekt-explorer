@@ -5,7 +5,7 @@ import { normalizeCurrency } from "@repo/lib/currency";
 import { formatCurrency } from "@/features/settings/use-currency";
 import { intlCached as cached } from "@/lib/intl-cache";
 import { errorReason } from "@/lib/orpc-error";
-import { relativeTime } from "@/lib/time";
+import { relativeTime, untilLabel } from "@/lib/time";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
 
@@ -14,20 +14,9 @@ export function mutedLabel(muted: NonNullable<ConversationRow["muted"]>) {
   return m.chat_muted_until({ time: untilLabel(muted.until) });
 }
 
-const untilFormats = new Map<string, Intl.DateTimeFormat>();
 const timeFormats = new Map<string, Intl.DateTimeFormat>();
 const dayFormats = new Map<string, Intl.DateTimeFormat>();
 const secondFormats = new Map<string, Intl.RelativeTimeFormat>();
-
-/** A date and time in the viewer's zone, for an end that may be days away. */
-export function untilLabel(iso: string) {
-  const locale = getLocale();
-  return cached(
-    untilFormats,
-    locale,
-    () => new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }),
-  ).format(new Date(iso));
-}
 
 export function messageTime(iso: string) {
   const locale = getLocale();

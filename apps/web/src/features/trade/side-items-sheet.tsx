@@ -24,10 +24,11 @@ import { CardGridSkeleton } from "@/features/objekt/card-grid";
 import { ObjektCard } from "@/features/objekt/objekt-card";
 import { PanelCardGrid } from "@/features/objekt/virtual-card-grid";
 import { formatCurrency } from "@/features/settings/use-currency";
+import { nearCountText, nearRingText } from "@/lib/near-text";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
 
-import { type NearOpen, nearCountText, nearRingText, type OpenObjekt, type SideNear } from "./near";
+import { type NearOpen, type OpenObjekt, type SideNear } from "./near";
 import type { PostSideData } from "./post-types";
 import { sideItemsOptions } from "./queries";
 import { stackPriceText } from "./stack-price";

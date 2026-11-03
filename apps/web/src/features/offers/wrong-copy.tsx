@@ -1,6 +1,7 @@
 import type { TradeView } from "@repo/api/schemas/offer";
-import { Fragment, type ReactNode, useState } from "react";
+import { useState } from "react";
 
+import { rich } from "@/components/shared/message-markup";
 import {
   AlertDialog,
   AlertDialogClose,
@@ -18,23 +19,6 @@ import { useOfferActions } from "./actions";
 
 type Leg = TradeView["legs"][number];
 type Substitute = Leg["substitutes"][number];
-
-/** A message with markup in its slots; private-use stand-ins keep each locale's word order. */
-export function rich<K extends string>(
-  format: (params: Record<K, string>) => string,
-  nodes: Record<K, ReactNode>,
-) {
-  const keys = Object.keys(nodes) as K[];
-  const params = Object.fromEntries(
-    keys.map((key, i) => [key, String.fromCharCode(0xe000 + i)]),
-  ) as Record<K, string>;
-  return format(params)
-    .split(/([-])/)
-    .map((part, i) => {
-      const key = keys[part.length === 1 ? part.charCodeAt(0) - 0xe000 : -1];
-      return <Fragment key={i}>{key === undefined ? part : nodes[key]}</Fragment>;
-    });
-}
 
 export function Serial({ serial, estimated }: { serial: number | null; estimated: boolean }) {
   return serial === null ? (

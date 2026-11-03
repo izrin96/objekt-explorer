@@ -18,7 +18,7 @@ import { type MouseEvent, type Ref, useId } from "react";
 import { Button } from "@/components/ui/button";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { untilLabel } from "@/features/chat/format";
+import { untilLabel } from "@/lib/time";
 import { TONE_INK, TONE_SOLID, type Tone } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";

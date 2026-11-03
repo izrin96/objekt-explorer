@@ -5,8 +5,9 @@ import {
   type OfferRefusal,
 } from "@repo/api/schemas/offer";
 
-import { refusalText as chatRefusalText, untilLabel } from "@/features/chat/format";
+import { refusalText as chatRefusalText } from "@/features/chat/format";
 import { errorReason } from "@/lib/orpc-error";
+import { untilLabel } from "@/lib/time";
 import { m } from "@/paraglide/messages";
 
 import { anyKey } from "./pick";

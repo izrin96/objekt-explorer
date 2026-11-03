@@ -38,6 +38,12 @@ import { useCollectionRarity } from "@/features/objekt/use-collection-rarity";
 import { useCurrency } from "@/features/settings/use-currency";
 import { useOpenComposer } from "@/features/trade/composer/use-open-composer";
 import { NearNote } from "@/features/trade/near-note";
+import {
+  canShowMatches,
+  NearMatches,
+  ShowMyMatches,
+  useListMatches,
+} from "@/features/trade/show-my-matches";
 import { useCurrentUser } from "@/features/user/hooks";
 import { refusalText } from "@/lib/refusal";
 import { m } from "@/paraglide/messages";
@@ -56,7 +62,6 @@ import { listRulesOptions } from "./rules/queries";
 import { RulesStrip } from "./rules/rules-strip";
 import { SetPriceDialog } from "./set-price-dialog";
 import { SetRatioDialog } from "./set-ratio-dialog";
-import { canShowMatches, NearMatches, ShowMyMatches, useListMatches } from "./show-my-matches";
 import { useEntryDialogs } from "./use-entry-dialogs";
 import { useListOwned } from "./use-list-owned";
 

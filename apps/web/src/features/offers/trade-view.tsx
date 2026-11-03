@@ -13,13 +13,14 @@ import { flushSync } from "react-dom";
 
 import { PendingStatus } from "@/components/router/pending";
 import { EmptyState } from "@/components/shared/empty-state";
+import { rich } from "@/components/shared/message-markup";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { untilLabel } from "@/features/chat/format";
 import { useSafetyDialogs } from "@/features/moderation/safety-dialogs";
 import { ObjektDrawer } from "@/features/objekt/drawer";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { useMinuteClock } from "@/hooks/use-minute-clock";
+import { untilLabel } from "@/lib/time";
 import { m } from "@/paraglide/messages";
 import { useUserSocketLive } from "@/stores/user-socket";
 
@@ -36,7 +37,7 @@ import { type ExchangeState, type ExchangeView, TradeExchange } from "./trade-ex
 import { TradeMenu } from "./trade-menu";
 import { TradePartnerCard, TradePartnerRow } from "./trade-partner-card";
 import { TradeTimeline } from "./trade-timeline";
-import { DecideActions, rich } from "./wrong-copy";
+import { DecideActions } from "./wrong-copy";
 
 const GRID = "grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_--spacing(85)] lg:gap-5";
 

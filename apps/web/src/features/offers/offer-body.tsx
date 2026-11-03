@@ -12,7 +12,7 @@ import { flushSync } from "react-dom";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CautionLine } from "@/features/chat/caution-line";
+import { CautionLine } from "@/features/moderation/caution-line";
 import { useMinuteClock } from "@/hooks/use-minute-clock";
 import { joinList } from "@/lib/text";
 import { m } from "@/paraglide/messages";

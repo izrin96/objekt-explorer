@@ -43,7 +43,7 @@ ENV NODE_ENV=production
 
 COPY --from=builder /app/server.js ./server.js
 COPY --from=builder /app/apps/web/dist ./dist
-# earlier deploys' chunks (server.ts); mount a volume here, owned by bun so the server can write it
+# earlier deploys' chunks (bun-server/asset-archive.ts); mount a volume here, owned by bun so the server can write it
 ENV ASSET_ARCHIVE_DIR=/app/asset-archive
 RUN mkdir -p /app/asset-archive && chown bun:bun /app/asset-archive
 

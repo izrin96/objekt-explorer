@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Menu, MenuItem, MenuPopup, MenuTrigger } from "@/components/ui/menu";
 import { toastManager } from "@/components/ui/toast";
+import { TagBadges } from "@/features/list/tag-label";
 import { relativeTime } from "@/lib/time";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
@@ -29,7 +30,6 @@ import { summarizePosts } from "./my-posts-summary";
 import { KIND_LABEL } from "./post-kind-text";
 import { postTime } from "./post-time";
 import { myPostsOptions } from "./queries";
-import { TagBadges } from "./tag-label";
 
 type MyPostsProps = { onNew: () => void; onEdit: (slug: string) => void };
 

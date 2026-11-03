@@ -3,8 +3,8 @@ import { useHydrated } from "@tanstack/react-router";
 
 import { Button } from "@/components/ui/button";
 import { useConversationActions } from "@/features/chat/actions";
-import { untilLabel } from "@/features/chat/format";
 import { useUnblock } from "@/features/moderation/actions";
+import { untilLabel } from "@/lib/time";
 import { m } from "@/paraglide/messages";
 
 export function MuteNotice({ notice }: { notice: { reason: string; until: string | null } }) {
