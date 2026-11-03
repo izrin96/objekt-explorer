@@ -1,7 +1,7 @@
 import { CaretDownIcon, CheckIcon } from "@phosphor-icons/react";
 import type { GridObjekt, ValidObjekt } from "@repo/lib/types/objekt";
-import type { ReactNode } from "react";
 
+import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { AddToListMenuItem } from "@/features/list/add-to-list-menu-item";
 import { ObjektCard } from "@/features/objekt/objekt-card";
 import { ObjektCardMenu } from "@/features/objekt/objekt-card-menu";
@@ -13,50 +13,12 @@ import { m } from "@/paraglide/messages";
 
 import type { ClassGroup, MemberSeason, Tally } from "./shape-progress";
 
-/** Member names and seasons carry spaces and dots (`id6 X id11`), so every part
- *  is reduced to word characters before it becomes a DOM id. */
-const nodeId = (...parts: string[]) =>
-  `progress-${parts.map((part) => part.replace(/[^a-zA-Z0-9]+/g, "_")).join("--")}`;
-
 export function TallyValue({ row }: { row: Tally }) {
   return (
     <>
       <b className="text-foreground font-semibold">{row.owned}</b>/{row.total} ({row.pct.toFixed(1)}
       %)
     </>
-  );
-}
-
-/**
- * `grid-template-rows: 0fr → 1fr` needs no measured height and folds away under
- * reduced motion. The content stays mounted through the collapse so there is
- * something to animate, which is why a closed region is taken out of the tab
- * order and the a11y tree explicitly — a `0fr` track still holds focusable cards.
- */
-function Region({
-  id,
-  label,
-  open,
-  children,
-}: {
-  id: string;
-  label: string;
-  open: boolean;
-  children: ReactNode;
-}) {
-  return (
-    <div
-      id={id}
-      role="region"
-      aria-label={label}
-      inert={!open}
-      className={cn(
-        "grid transition-[grid-template-rows] duration-300 ease-out motion-reduce:transition-none",
-        open ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
-      )}
-    >
-      <div className="overflow-hidden">{children}</div>
-    </div>
   );
 }
 
@@ -85,15 +47,13 @@ export function ClassCard({
   /** a missing objekt is as addable as an owned one: it is how a want list is built */
   showActions: boolean;
 }) {
-  const id = nodeId(section.key, group.class);
   const complete = group.pct >= 100;
 
   return (
-    <div className="flex flex-col">
-      <button
-        type="button"
-        aria-expanded={open}
-        aria-controls={`${id}-panel`}
+    // a closed class unmounts its grid once the panel has folded away, so a long Progress page
+    // renders only the open ones
+    <Collapsible open={open} onOpenChange={onToggle} className="flex flex-col">
+      <CollapsibleTrigger
         /* below `sm` the title takes the whole row and the bar shares the next
            one with the value: three fixed tracks do not fit a phone */
         className={cn(
@@ -102,7 +62,6 @@ export function ClassCard({
           "sm:grid-cols-[7.5rem_minmax(0,1fr)_auto]",
           open && "bg-secondary/40",
         )}
-        onClick={onToggle}
       >
         <span className="flex items-center gap-2 font-medium max-sm:col-span-full">
           {/* a fixed-size slot either way, so a facet taking the card to 100%
@@ -134,12 +93,12 @@ export function ClassCard({
             )}
           />
         </span>
-      </button>
+      </CollapsibleTrigger>
 
-      <Region
-        id={`${id}-panel`}
-        label={m.progress_section_aria({ section: section.key, class: group.class })}
-        open={open}
+      <CollapsiblePanel
+        role="region"
+        aria-label={m.progress_section_aria({ section: section.key, class: group.class })}
+        className="motion-reduce:transition-none"
       >
         <ObjektGrid columns={columns} className="mt-3">
           {group.items.map((item) => {
@@ -175,7 +134,7 @@ export function ClassCard({
             );
           })}
         </ObjektGrid>
-      </Region>
-    </div>
+      </CollapsiblePanel>
+    </Collapsible>
   );
 }
