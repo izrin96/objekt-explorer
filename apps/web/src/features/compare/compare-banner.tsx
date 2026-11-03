@@ -1,6 +1,6 @@
 import { WarningIcon } from "@phosphor-icons/react";
 
-import { Note } from "@/components/shared/note";
+import { Alert, AlertAction, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { m } from "@/paraglide/messages";
 
@@ -17,15 +17,15 @@ export function CompareBanner({
 }) {
   if (error !== undefined) {
     return (
-      <Note intent="warning" className="flex flex-wrap items-center justify-between gap-3 p-3">
-        <span className="flex items-center gap-1.5 font-medium">
-          <WarningIcon />
-          {error}
-        </span>
-        <Button variant="outline" size="sm" onClick={onClear}>
-          {m.common_modal_cancel()}
-        </Button>
-      </Note>
+      <Alert variant="warning" role="status">
+        <WarningIcon aria-hidden />
+        <AlertTitle>{error}</AlertTitle>
+        <AlertAction>
+          <Button variant="outline" size="sm" onClick={onClear}>
+            {m.common_modal_cancel()}
+          </Button>
+        </AlertAction>
+      </Alert>
     );
   }
 

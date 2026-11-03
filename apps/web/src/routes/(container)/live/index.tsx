@@ -1,7 +1,8 @@
+import { InfoIcon } from "@phosphor-icons/react";
 import { createFileRoute } from "@tanstack/react-router";
 import * as z from "zod";
 
-import { Note } from "@/components/shared/note";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { LiveSessionList } from "@/features/live/session-list";
 import { checkAccess } from "@/lib/functions/live";
 import { generateMetadata } from "@/lib/meta";
@@ -21,7 +22,10 @@ function LivePage() {
 
   return (
     <>
-      <Note>{m.live_tos_notice()}</Note>
+      <Alert role="status">
+        <InfoIcon aria-hidden />
+        <AlertDescription>{m.live_tos_notice()}</AlertDescription>
+      </Alert>
       {isAllowed && <LiveSessionList token={token} />}
     </>
   );

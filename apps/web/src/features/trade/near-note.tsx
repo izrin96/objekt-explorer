@@ -1,7 +1,8 @@
+import { InfoIcon } from "@phosphor-icons/react";
 import { type ComposerStart, startForList } from "@repo/api/schemas/trade-post";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 
-import { Note } from "@/components/shared/note";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { useOpenAddToList } from "@/features/list/add-to-list-dialog";
 import { useUserLists } from "@/features/user/hooks";
@@ -65,25 +66,28 @@ export function NearNote({
   };
 
   return (
-    <Note className="flex flex-col items-start gap-2 p-3">
-      <p>{why}</p>
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-        <Button variant="link" className="h-auto p-0" onClick={runFix}>
-          {fixLabel}
-        </Button>
-        {makeOffer ? (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              onClose();
-              makeOffer();
-            }}
-          >
-            {m.trade_near_make_offer()}
+    <Alert role="status">
+      <InfoIcon aria-hidden />
+      <AlertDescription className="items-start">
+        <p>{why}</p>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          <Button variant="link" className="h-auto p-0" onClick={runFix}>
+            {fixLabel}
           </Button>
-        ) : null}
-      </div>
-    </Note>
+          {makeOffer ? (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                onClose();
+                makeOffer();
+              }}
+            >
+              {m.trade_near_make_offer()}
+            </Button>
+          ) : null}
+        </div>
+      </AlertDescription>
+    </Alert>
   );
 }

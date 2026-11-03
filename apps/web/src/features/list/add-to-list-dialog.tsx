@@ -1,8 +1,9 @@
+import { InfoIcon } from "@phosphor-icons/react";
 import type { PublicList } from "@repo/api/schemas/list";
 import type { OwnedObjekt } from "@repo/lib/types/objekt";
 import { createContext, type ReactNode, use, useCallback, useState } from "react";
 
-import { Note } from "@/components/shared/note";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -250,28 +251,33 @@ function AddToListForm({
       </DialogHeader>
       <DialogPanel>
         {lists.length === 0 ? (
-          <Note>
-            {saleOnly ? m.list_add_no_sale_list() : m.list_manage_objekt_no_list_message()}{" "}
-            <Button
-              variant="link"
-              size="sm"
-              className="h-auto p-0 underline"
-              onClick={() =>
-                onCreateList(
-                  saleOnly
-                    ? {
-                        ...EMPTY_DRAFT,
-                        listType: "sale",
-                        isProfileBind: true,
-                        profileAddress: saleOnly.profiles?.[0] ?? null,
-                      }
-                    : undefined,
-                )
-              }
-            >
-              {m.list_manage_objekt_create_one_here()}
-            </Button>
-          </Note>
+          <Alert role="status">
+            <InfoIcon aria-hidden />
+            <AlertDescription>
+              <p>
+                {saleOnly ? m.list_add_no_sale_list() : m.list_manage_objekt_no_list_message()}{" "}
+                <Button
+                  variant="link"
+                  size="sm"
+                  className="h-auto p-0 underline"
+                  onClick={() =>
+                    onCreateList(
+                      saleOnly
+                        ? {
+                            ...EMPTY_DRAFT,
+                            listType: "sale",
+                            isProfileBind: true,
+                            profileAddress: saleOnly.profiles?.[0] ?? null,
+                          }
+                        : undefined,
+                    )
+                  }
+                >
+                  {m.list_manage_objekt_create_one_here()}
+                </Button>
+              </p>
+            </AlertDescription>
+          </Alert>
         ) : (
           <div className="flex min-w-0 flex-col gap-4">
             <div className="flex min-w-0 flex-col gap-1.5">
