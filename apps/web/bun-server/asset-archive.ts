@@ -36,7 +36,8 @@ export async function archiveAssets(archiveDir: string): Promise<void> {
   }
 }
 
-const ARCHIVED_ASSET = /^\/assets\/([\w.-]+)$/;
+// route chunks take their file's name: `(container)-….js` for a group, `@__handle_-….js` for `@{$handle}`
+const ARCHIVED_ASSET = /^\/assets\/([\w.@()-]+)$/;
 
 /** An earlier build's chunk, or null when the path is not one or the archive lacks it. */
 export async function serveArchivedAsset(
