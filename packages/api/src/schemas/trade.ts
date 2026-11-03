@@ -2,7 +2,7 @@ import * as z from "zod";
 
 import { collectionFiltersSchema } from "./common/filters";
 import { indexedObjektSchema, ownedObjektSchema } from "./common/objekt";
-import { queryBoolean, queryJson } from "./common/query";
+import { queryBoolean, queryCursor, queryJson } from "./common/query";
 import { listTypeSchema } from "./list";
 import { ruleDefSchema } from "./list-rule";
 import { publicUserSchema } from "./profile";
@@ -128,14 +128,7 @@ export const sideItemsInputSchema = z.object({
   listId: z.coerce.number<number>().int().positive(),
   list: z.string().min(1).optional(),
   mutual: queryBoolean.optional(),
-  /** the previous page's `nextCursor`; none is the first page */
-  cursor: z
-    // an empty `?cursor=` is no number, not the first page
-    .preprocess(
-      (value) => (value === "" ? Number.NaN : value),
-      z.coerce.number<number>().int().min(0),
-    )
-    .optional(),
+  cursor: queryCursor,
 });
 export type SideItemsInput = z.infer<typeof sideItemsInputSchema>;
 

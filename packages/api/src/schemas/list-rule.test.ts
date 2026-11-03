@@ -12,6 +12,7 @@ import {
   updateRuleInputSchema,
   ruleLine,
   ruleProblem,
+  ruleObjektsInputSchema,
 } from "./list-rule";
 
 const MEMBERS = ["Lynn", "YooYeon", "NaKyoung", "Nien"];
@@ -229,5 +230,25 @@ describe("rule ratio", () => {
   test("never enters the definition", () => {
     const parsed = updateRuleInputSchema.parse({ slug: "s", ruleId: 1, rule, ratio: 2 });
     expect("ratio" in ruleDef(parsed.rule)).toBe(false);
+  });
+});
+
+describe("ruleObjektsInputSchema", () => {
+  test("a tab from before paging sends no cursor: the first page", () => {
+    expect(ruleObjektsInputSchema.parse({ slug: "wants", ruleId: 4 })).toEqual({
+      slug: "wants",
+      ruleId: 4,
+    });
+  });
+
+  test("a query string's cursor is a number, and an empty one is refused", () => {
+    expect(ruleObjektsInputSchema.parse({ slug: "wants", ruleId: "4", cursor: "500" })).toEqual({
+      slug: "wants",
+      ruleId: 4,
+      cursor: 500,
+    });
+    expect(ruleObjektsInputSchema.safeParse({ slug: "wants", ruleId: 4, cursor: "" }).success).toBe(
+      false,
+    );
   });
 });

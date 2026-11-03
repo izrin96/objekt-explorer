@@ -13,6 +13,17 @@ export function queryArray<T extends z.ZodType>(item: T) {
 /** A boolean that may arrive in a query string as `true` or `false`. */
 export const queryBoolean = z.union([z.boolean(), z.stringbool()]);
 
+/**
+ * A page cursor, the previous page's `nextCursor`; none is the first page. In a query string
+ * an empty `?cursor=` is no number, not the first page.
+ */
+export const queryCursor = z
+  .preprocess(
+    (value) => (value === "" ? Number.NaN : value),
+    z.coerce.number<number>().int().min(0),
+  )
+  .optional();
+
 /** An object that may arrive in a query string as JSON, as a feed cursor does on `/api/v1`. */
 export function queryJson<T extends z.ZodType>(schema: T) {
   return z.preprocess((value) => {

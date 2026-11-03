@@ -6,7 +6,7 @@ import type { List } from "@repo/db/schema";
 import { and, asc, count, eq, inArray, sql } from "drizzle-orm";
 
 import { refuse } from "../../../lib/refuse";
-import { ruleGroups } from "../../../lib/rule-groups";
+import { rulePage } from "../../../lib/rule-groups";
 import {
   type ListRuleDef,
   type ListRuleInput,
@@ -254,40 +254,48 @@ export async function fetchRuleDefs(listIds: number[]) {
 }
 
 /**
- * See the objekts: every collection the rule describes, grouped by season and collection number,
- * with whether the owner holds it and whether the rule wants it now.
+ * See the objekts, a page at a time from `cursor`: the collections the rule describes, grouped
+ * by season and collection number, with whether the owner holds each and whether the rule wants
+ * it now. The counts and `headed` cover the whole rule; only the page's collections are read
+ * whole, which is most of the cost of a rule spanning thousands.
  */
-export async function ruleObjekts(list: List, ruleId: number) {
+export async function ruleObjekts(list: List, ruleId: number, cursor?: number) {
   const row = await findRule(list, ruleId);
   const def = toDef(row);
   const reading = await readRule(def, await linkedAddresses(list.userId));
-  const covered = reading.collections.filter((c) => ruleCovers(def, c));
+  const wanted = new Set(reading.slugs);
+  const page = rulePage(
+    reading.collections.filter((c) => ruleCovers(def, c)),
+    wanted,
+    { cursor },
+  );
   const full = await fetchCollectionsBySlug(
-    covered.map((c) => c.slug),
+    page.groups.flatMap((group) => group.objekts.map((c) => c.slug)),
     [],
   );
   const bySlug = new Map(full.map((c) => [c.slug, c]));
-  const wanted = new Set(reading.slugs);
 
-  const groups = ruleGroups(
-    covered,
-    (c) => {
-      const collection = bySlug.get(c.slug);
-      return (
-        collection &&
-        Object.assign({}, collection, {
-          held: reading.held.has(c.slug),
-          wanted: wanted.has(c.slug),
-        })
-      );
-    },
-    wanted,
-  );
   return {
     covers: reading.covers,
     owned: reading.owned,
     canMatch: reading.canMatch,
-    groups,
+    headed: page.headed,
+    nextCursor: page.nextCursor,
+    // a collection the indexer can't return whole is left out; the cursor still counts it
+    groups: page.groups.flatMap((group) => {
+      const objekts = group.objekts.flatMap((c) => {
+        const collection = bySlug.get(c.slug);
+        return collection
+          ? [
+              Object.assign({}, collection, {
+                held: reading.held.has(c.slug),
+                wanted: wanted.has(c.slug),
+              }),
+            ]
+          : [];
+      });
+      return objekts.length === 0 ? [] : [Object.assign({}, group, { objekts })];
+    }),
   };
 }
 

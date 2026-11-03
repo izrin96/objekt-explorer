@@ -1,12 +1,25 @@
-/** cards a collection holds on average before a heading over each is worth its line */
-const HEADING_MIN = 3;
+type PageGroup<O> = { season: string; collectionNo: string; canMatch: number; objekts: O[] };
 
 /**
- * Whether See the objekts heads each collection: only when the rule spans several and they hold
- * a few cards each. One collection, or one or two chosen members a collection, reads best flat.
+ * See the objekts' loaded pages as one list of groups: a group cut across pages is joined, and a
+ * collection a later page sends again (the rule grew between requests) shows once.
  */
-export function showsHeadings(groups: readonly { objekts: readonly unknown[] }[]) {
-  if (groups.length < 2) return false;
-  const cards = groups.reduce((sum, group) => sum + group.objekts.length, 0);
-  return cards / groups.length >= HEADING_MIN;
+export function mergeRulePages<O extends { slug: string }>(
+  pages: readonly { groups: readonly PageGroup<O>[] }[],
+) {
+  const merged: PageGroup<O>[] = [];
+  const seen = new Set<string>();
+  for (const page of pages) {
+    for (const group of page.groups) {
+      const objekts = group.objekts.filter((objekt) => !seen.has(objekt.slug));
+      for (const objekt of objekts) seen.add(objekt.slug);
+      const last = merged.at(-1);
+      if (last && last.season === group.season && last.collectionNo === group.collectionNo) {
+        last.objekts.push(...objekts);
+      } else if (objekts.length > 0) {
+        merged.push(Object.assign({}, group, { objekts }));
+      }
+    }
+  }
+  return merged;
 }

@@ -6,10 +6,11 @@ import {
   PencilSimpleIcon,
   TrashIcon,
 } from "@phosphor-icons/react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { type RefObject, useRef, useState } from "react";
 import { WindowVirtualizer } from "virtua";
 
+import { InfiniteSentinel } from "@/components/shared/infinite-sentinel";
 import { rich } from "@/components/shared/message-markup";
 import {
   AlertDialog,
@@ -39,7 +40,7 @@ import { appliedRatio } from "../ratio-text";
 import { useListOwned } from "../use-list-owned";
 import { listRulesOptions, RULE_KEYS, ruleObjektsOptions } from "./queries";
 import { RuleDialog } from "./rule-dialog";
-import { showsHeadings } from "./rule-layout";
+import { mergeRulePages } from "./rule-layout";
 import { ruleText, shortNo } from "./words";
 
 type Rule = Awaited<ReturnType<typeof client.list.rules>>[number];
@@ -224,28 +225,41 @@ function RuleRow({ rule }: { rule: Rule }) {
   );
 }
 
-/** See the objekts: one grid, the held ones faded, with a heading per collection where those help. */
+/**
+ * See the objekts: one grid, the held ones faded, with a heading per collection where those help.
+ * A page at a time, the next one loading as the grid's end comes near.
+ */
 function RuleObjekts({ slug, ruleId, owner }: { slug: string; ruleId: number; owner: boolean }) {
-  const { data, isPending, error } = useQuery(ruleObjektsOptions(slug, ruleId));
+  const query = useInfiniteQuery(ruleObjektsOptions(slug, ruleId));
 
-  if (isPending) {
+  if (query.isPending) {
     return (
       <div className="flex justify-center px-3 pb-3">
         <Spinner className="size-5" />
       </div>
     );
   }
-  if (error) {
-    return <p className="text-destructive-foreground px-3 pb-3 text-sm">{refusalText(error)}</p>;
+  // a failed next page keeps what loaded, with the sentinel's retry
+  if (query.data === undefined) {
+    return (
+      <p className="text-destructive-foreground px-3 pb-3 text-sm">{refusalText(query.error)}</p>
+    );
   }
-  if (data.groups.length === 0) {
+  const groups = mergeRulePages(query.data.pages);
+  if (groups.length === 0 && !query.hasNextPage) {
     return <p className="text-muted-foreground px-3 pb-3 text-sm">{m.rule_no_collections()}</p>;
   }
-  const headed = showsHeadings(data.groups);
 
   return (
     <div className="flex flex-col gap-2 px-3 pb-3">
-      <RuleObjektRows groups={data.groups} headed={headed} />
+      <RuleObjektRows groups={groups} headed={query.data.pages[0]?.headed ?? false} />
+      <InfiniteSentinel
+        label={m.infinite_query_load_more_aria()}
+        hasNextPage={query.hasNextPage}
+        isFetchingNextPage={query.isFetchingNextPage}
+        isError={query.isFetchNextPageError}
+        fetchNextPage={() => void query.fetchNextPage({ cancelRefetch: false })}
+      />
       <p className="text-muted-foreground text-xs">
         {owner ? m.rule_faded_note() : m.rule_faded_note_theirs()}
       </p>

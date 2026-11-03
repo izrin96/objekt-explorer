@@ -11,6 +11,7 @@ import {
   listRulesOutputSchema,
   previewRuleInputSchema,
   ruleIdInputSchema,
+  ruleObjektsInputSchema,
   ruleObjektsOutputSchema,
   updateRuleInputSchema,
 } from "../schemas/list-rule";
@@ -98,16 +99,16 @@ export const listRulesRouter = {
       path: "/lists/{slug}/rules/{ruleId}/objekts",
       tags: ["Lists"],
       summary:
-        "Every collection one rule covers, with whether the owner holds it and the rule wants it",
+        "The collections one rule covers, a page at a time, with whether the owner holds each and the rule wants it",
       spec: errorResponses(400, 404),
     })
-    .input(ruleIdInputSchema)
+    .input(ruleObjektsInputSchema)
     .output(documented(ruleObjektsOutputSchema))
-    .handler(async ({ input: { slug, ruleId }, context }) => {
+    .handler(async ({ input: { slug, ruleId, cursor }, context }) => {
       if (await ipRateLimited("rule-objekts", context.headers ?? getRequestHeaders(), 60, 60)) {
         refuse("TOO_MANY_REQUESTS", "user_rate_limit", "Too many requests, try again shortly");
       }
       const list = await findList(slug);
-      return ruleObjekts(list, ruleId);
+      return ruleObjekts(list, ruleId, cursor);
     }),
 };

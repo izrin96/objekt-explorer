@@ -4,6 +4,7 @@ import type { ValidObjekt } from "@repo/lib/types/objekt";
 import * as z from "zod";
 
 import { indexedObjektSchema } from "./common/objekt";
+import { queryCursor } from "./common/query";
 import { tradeRatioSchema } from "./trade-ratio";
 
 export const RULE_MAX_PER_LIST = 20;
@@ -241,6 +242,8 @@ export const updateRuleInputSchema = z.object({
   ratio: tradeRatioSchema.nullable().optional(),
 });
 export const ruleIdInputSchema = z.object({ slug, ruleId });
+/** No `cursor` is the first page, as a tab from before paging sends it. */
+export const ruleObjektsInputSchema = ruleIdInputSchema.extend({ cursor: queryCursor });
 
 export const ruleDefSchema = z.object({
   kind: z.enum(["collection", "set"]),
@@ -271,6 +274,11 @@ export const listRulesOutputSchema = z.array(
 
 export const ruleObjektsOutputSchema = z.object({
   ...ruleCountFields,
+  /** whether each collection gets a heading, decided over the whole rule */
+  headed: z.boolean(),
+  /** where the next page starts; absent on the last. A group may go on into the next page. */
+  nextCursor: z.number().int().optional(),
+  /** this page's collections; a group's `canMatch` counts the whole group */
   groups: z.array(
     z.object({
       season: z.string(),
