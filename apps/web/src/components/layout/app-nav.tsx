@@ -1,5 +1,5 @@
 import { CubeIcon } from "@phosphor-icons/react";
-import type { User } from "@repo/api/services/auth";
+import type { User } from "@repo/api/services/account/auth";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 

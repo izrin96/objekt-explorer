@@ -21,11 +21,11 @@ import {
   userSearchInputSchema,
   userSearchOutputSchema,
 } from "../schemas/user";
-import { deletionState } from "../services/account-delete";
-import { auth, refreshProviderProfile } from "../services/auth";
-import { loadIdentities } from "../services/identities";
+import { auth, refreshProviderProfile } from "../services/account/auth";
+import { deletionState } from "../services/account/delete";
+import { loadIdentities } from "../services/account/identities";
+import { getCurrentUser } from "../services/account/user";
 import { offersOf, openOffersWhere } from "../services/offer/cancel";
-import { getCurrentUser } from "../services/user";
 import { searchUsers } from "../services/user-search";
 
 const DELETION_TOKEN_MINUTES = 5;

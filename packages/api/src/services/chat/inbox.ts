@@ -21,10 +21,10 @@ import {
   UNREAD_COUNT_CAP,
 } from "../../schemas/chat";
 import { dealOf } from "../../schemas/chat-deal";
-import { loadIdentities } from "../identities";
+import { loadIdentities } from "../account/identities";
+import { notBlockedBy } from "../moderation/safety";
 import { toPublicUser } from "../profile";
 import { reputationOf } from "../reputation";
-import { notBlockedBy } from "../safety";
 import { hydrateCards, hydratePostCards, parseCard, toChatMessages } from "./cards";
 import { needsYouSql, readDeals } from "./deal";
 import { findMembership, updateMember } from "./members";

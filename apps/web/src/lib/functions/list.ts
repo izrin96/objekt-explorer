@@ -1,4 +1,4 @@
-import { fetchList, isListMessageable } from "@repo/api/services/list";
+import { fetchList, isListMessageable } from "@repo/api/services/list/read";
 import { notFound } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import * as z from "zod";

@@ -7,7 +7,7 @@ import type { DealRow } from "../../schemas/chat-deal";
 import { RATE_WINDOW_DAYS, type TradeStatus } from "../../schemas/offer";
 
 /**
- * `heldCopyWhere`'s pending copy (`services/trade-verify.ts`), which the trade page reads: a copy
+ * `heldCopyWhere`'s pending copy (`services/offer/verify.ts`), which the trade page reads: a copy
  * that has since verified a leg, of this trade or another, is no longer waiting on anyone.
  */
 const pendingCopy = sql`EXISTS (

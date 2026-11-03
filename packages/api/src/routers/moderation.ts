@@ -9,11 +9,11 @@ import {
   unlinkAddressInputSchema,
   userIdInputSchema,
 } from "../schemas/moderation";
-import { blockedAccounts, blockUser, unblockUser } from "../services/blocks";
-import { applyModAction, revokeSanction, setUserRole } from "../services/mod-console";
-import { addressHistory, moveAddress, unlinkAddress } from "../services/mod-links";
-import { accountDossier, reportQueue } from "../services/mod-reads";
-import { fileReport } from "../services/report";
+import { blockedAccounts, blockUser, unblockUser } from "../services/moderation/blocks";
+import { applyModAction, revokeSanction, setUserRole } from "../services/moderation/console";
+import { addressHistory, moveAddress, unlinkAddress } from "../services/moderation/links";
+import { accountDossier, reportQueue } from "../services/moderation/reads";
+import { fileReport } from "../services/moderation/report";
 
 export const moderationRouter = {
   block: authed

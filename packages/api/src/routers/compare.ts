@@ -7,7 +7,8 @@ import { authed, optionalAuthed } from "../orpc";
 import { addressInputSchema } from "../schemas/common/address";
 import { compareInputSchema } from "../schemas/compare";
 import { fetchHeldSlugs, fetchListSlugs, performComparison } from "../services/compare";
-import { buildListEntries, fetchListWithEntries } from "../services/list";
+import { buildListEntries } from "../services/list/entry-view";
+import { fetchListWithEntries } from "../services/list/read";
 
 export const compareRouter = {
   compare: optionalAuthed.input(compareInputSchema).handler(async ({ input }) => {

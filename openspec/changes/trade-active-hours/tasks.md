@@ -6,7 +6,7 @@
 
 - [ ] 2.1 Add `packages/api/src/lib/active-hours.ts` (design decision 2): schemas, `periodsBetween`, `isActiveAt`. Add `active-hours.test.ts` covering Kuala Lumpur, London across 25 Oct 2026, a past-midnight range at a weekday/weekend boundary, overlap rejection, an unknown timezone, and a 7-day span. Verify `bun test packages/api/src/lib/active-hours.test.ts` passes.
 - [ ] 2.2 Add `services/active-hours.ts` with the owner's read and upsert, and `activePeriodsOf(userIds, now)` (design decision 3). Add `user.activeHours` and `user.setActiveHours` (design decision 5). Verify lint and typecheck pass for `@repo/api`.
-- [ ] 2.3 Attach `activePeriods` to Browse posts (`services/trade-feed/index.ts`), For you partners (`services/trade-matches/index.ts`, beside `reputationOf`, past the cache) and the chat thread partner (`services/chat/inbox.ts`). Verify the outputs carry `activePeriods` and no `time_zone`, and lint and typecheck pass for `@repo/api`.
+- [ ] 2.3 Attach `activePeriods` to Browse posts (`services/trade/feed/posts.ts`), For you partners (`services/trade/matches/index.ts`, beside `reputationOf`, past the cache) and the chat thread partner (`services/chat/inbox.ts`). Verify the outputs carry `activePeriods` and no `time_zone`, and lint and typecheck pass for `@repo/api`.
 - [ ] 2.4 Add `active` to the browse input and the owner-id filter (design decision 4): load enabled rows, keep the active ids with `isActiveAt`, pass `owners` to `fetchFeedRows`, return empty at once when none. Verify lint and typecheck pass for `@repo/api`.
 
 ## 3. Account section

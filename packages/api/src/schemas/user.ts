@@ -1,7 +1,7 @@
 import type { CosmoSearchResult } from "@repo/cosmo/types/user";
 import * as z from "zod";
 
-import type { User } from "../services/auth";
+import type { User } from "../services/account/auth";
 import { artistIdSchema } from "./common/artist";
 import { publicListSchema } from "./list";
 import { SANCTION_TYPES } from "./moderation";

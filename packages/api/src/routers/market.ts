@@ -31,11 +31,11 @@ import {
   priceHistoryOutputSchema,
 } from "../schemas/market";
 import { historyCacheSeconds, rangeStart, type PriceHistoryRange } from "../schemas/price-history";
-import { getUsdRates } from "../services/currency-rates";
-import { countedListings, pricedUsd, usdPriceExpr } from "../services/market-aggregate";
-import { getMarketSummary } from "../services/market-summary";
+import { countedListings, pricedUsd, usdPriceExpr } from "../services/market/aggregate";
+import { getUsdRates } from "../services/market/currency-rates";
+import { getMarketSummary } from "../services/market/summary";
+import { notBlockedEither } from "../services/moderation/safety";
 import { getCache } from "../services/redis";
-import { notBlockedEither } from "../services/safety";
 
 const EMPTY_HISTORY_TTL = 60;
 

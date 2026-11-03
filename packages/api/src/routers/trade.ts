@@ -22,23 +22,22 @@ import {
   tradePartnerInputSchema,
 } from "../schemas/trade";
 import { tradePersonInputSchema, tradePersonOutputSchema } from "../schemas/trade-person";
+import { bumpTradeVersions } from "../services/moderation/safety-cache";
+import { tabCounts } from "../services/offer/tab-counts";
 import { toPublicUser } from "../services/profile";
 import { ipRateLimited, refuseOverUserLimit, userRateLimited } from "../services/redis";
-import { bumpTradeVersions } from "../services/safety-cache";
+import { collectionPostCounts } from "../services/trade/feed/counts";
+import { bumpPerson, fetchMyPosts } from "../services/trade/feed/mine";
+import { peopleFeed } from "../services/trade/feed/people";
 import {
-  bumpPerson,
-  collectionPostCounts,
   fetchListMatches,
   fetchMarketMatches,
   fetchProfileMatches,
-  fetchMyPosts,
   fetchSideItems,
-} from "../services/trade-feed";
-import { peopleFeed } from "../services/trade-feed/people";
-import { mutualCount } from "../services/trade-matches/mutual";
-import { resolveTradePerson } from "../services/trade-person";
-import { savePost, takeDownPost } from "../services/trade-post";
-import { tabCounts } from "../services/trade-tabs";
+} from "../services/trade/feed/sides";
+import { mutualCount } from "../services/trade/matches/mutual";
+import { resolveTradePerson } from "../services/trade/person";
+import { savePost, takeDownPost } from "../services/trade/post";
 
 /**
  * A feed page is public and runs several heavy reads, so each viewer gets a budget: by account

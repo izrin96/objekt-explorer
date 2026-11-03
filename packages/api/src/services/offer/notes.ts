@@ -9,7 +9,7 @@ import {
   type OfferSide,
   type TradePayload,
 } from "../../schemas/offer";
-import { loadIdentities } from "../identities";
+import { loadIdentities } from "../account/identities";
 
 type Note =
   | { type: "offer"; userId: string; payload: OfferPayload }

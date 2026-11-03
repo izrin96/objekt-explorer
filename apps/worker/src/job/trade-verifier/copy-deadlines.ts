@@ -10,7 +10,7 @@ import {
   type SettledTrade,
   shownSerials,
   wrongCopyNote,
-} from "@repo/api/services/trade-verify";
+} from "@repo/api/services/offer/verify";
 import type { Tx } from "@repo/db";
 import { db } from "@repo/db";
 import { offer, trade, tradeLeg, tradeSubstitute } from "@repo/db/schema";

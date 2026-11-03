@@ -12,7 +12,6 @@ import {
 } from "../../lib/offer-rules";
 import { transferKey } from "../../lib/trade-match";
 import { unique } from "../../lib/unique";
-import { usedTransfers } from "../trade-verify";
 import {
   copyKey,
   fetchCopies,
@@ -21,6 +20,7 @@ import {
   refuseOffer,
   reservedIds,
 } from "./core";
+import { usedTransfers } from "./verify";
 
 export type Side = "give" | "get";
 export type ItemRow = { side: Side; collectionSlug: string; objektId: string | null };

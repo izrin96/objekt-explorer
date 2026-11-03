@@ -1,7 +1,7 @@
 import { expiredOutcome, firstPending } from "@repo/api/lib/trade-match";
 import { TRADE_EXPIRE_DAYS } from "@repo/api/schemas/offer";
 import { partyNames, writeNotes } from "@repo/api/services/offer/notes";
-import { finishSettle, heldCopies } from "@repo/api/services/trade-verify";
+import { finishSettle, heldCopies } from "@repo/api/services/offer/verify";
 import { db } from "@repo/db";
 import { offer, trade, tradeLeg } from "@repo/db/schema";
 import { and, eq, lte, sql } from "drizzle-orm";

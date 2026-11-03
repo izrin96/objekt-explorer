@@ -48,7 +48,7 @@ The feedback shows the artist scope in the header isn't found, and the old filte
 
 1. Put the filter bar back: an artist segmented control first (All · tripleS · ARTMS · idntt), then member, season, class, online/offline in the shared `QuickFilters` + `FilterSheet`. The artist control drives the same selected-artists state as the header, so they never disagree.
 2. Narrow the strips. When any facet is set, a post's strips show only the objekts that match, and the strip ends in a muted "+12 others" link to the full list. A post with no matching objekt on any side is not shown (the server already does this via `hasEntryIn`).
-3. Server: `fetchPostEntries` (in `packages/api/src/services/trade-feed/`) takes the same slug set the `WHERE` uses and returns matching entries first plus an `others` count, so `+N` stays correct.
+3. Server: `fetchPostEntries` (in `packages/api/src/services/trade/feed/`) takes the same slug set the `WHERE` uses and returns matching entries first plus an `others` count, so `+N` stays correct.
 
 Open questions:
 

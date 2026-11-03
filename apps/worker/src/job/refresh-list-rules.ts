@@ -5,7 +5,7 @@ import {
   readRule,
   ruleCollections,
   syncRuleEntries,
-} from "@repo/api/services/list-rules/expand";
+} from "@repo/api/services/list/rules/expand";
 import { db } from "@repo/db";
 import { listRule, lists } from "@repo/db/schema";
 import { bumpTradeVersion } from "@repo/lib/server/list-touch";

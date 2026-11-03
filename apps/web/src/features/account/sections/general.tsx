@@ -1,5 +1,5 @@
 import { ArrowCounterClockwiseIcon, TrashSimpleIcon } from "@phosphor-icons/react";
-import type { User } from "@repo/api/services/auth";
+import type { User } from "@repo/api/services/account/auth";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import * as z from "zod";

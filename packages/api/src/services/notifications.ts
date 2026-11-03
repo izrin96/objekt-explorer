@@ -24,8 +24,8 @@ import {
   notificationSchema,
   RETENTION_DAYS,
 } from "../schemas/notification";
-import { loadIdentities } from "./identities";
-import { fetchCollectionsBySlug } from "./list";
+import { loadIdentities } from "./account/identities";
+import { fetchCollectionsBySlug } from "./list/collections";
 
 /** A head with the rest of its trade or conversation; only rows of its own type go under it. */
 function withGroup(

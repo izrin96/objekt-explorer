@@ -26,7 +26,7 @@ import {
   readTransferable,
   shownSerials,
   wrongCopyNote,
-} from "@repo/api/services/trade-verify";
+} from "@repo/api/services/offer/verify";
 import type { Tx } from "@repo/db";
 import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";

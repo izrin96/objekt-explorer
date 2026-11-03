@@ -36,12 +36,12 @@ import {
 import type { ListType } from "../../schemas/list";
 import type { ShownSerial } from "../../schemas/offer";
 import { mutualOf } from "../../schemas/trade";
-import { fetchCollectionsBySlug } from "../list";
+import { fetchCollectionsBySlug } from "../list/collections";
+import { notTradeSanctioned } from "../moderation/safety";
 import { fetchOffers, offerItemCards, toOfferView } from "../offer/view";
-import { notTradeSanctioned } from "../safety";
-import { fetchPostCards } from "../trade-feed";
-import { takesPartInTrade } from "../trade-lists";
-import { personMatch } from "../trade-matches";
+import { fetchPostCards } from "../trade/feed/post-cards";
+import { takesPartInTrade } from "../trade/lists";
+import { personMatch } from "../trade/matches";
 import { refuse } from "./refuse";
 
 type CardContext = { senderId: string; partnerId: string };

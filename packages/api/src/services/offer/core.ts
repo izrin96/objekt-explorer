@@ -19,10 +19,10 @@ import { addressesByUser } from "../../lib/trade-rank";
 import { unique } from "../../lib/unique";
 import { type ChatTarget } from "../../schemas/chat";
 import { type OfferRefusal } from "../../schemas/offer";
+import { lockUsersShared } from "../account/cosmo-link";
 import { type chatSafety, findMembership, prepareStart, type StartContext } from "../chat";
-import { lockUsersShared } from "../cosmo-link";
-import { notBlockedEither, notTradeSanctioned } from "../safety";
-import { askableOnTrade } from "../trade-lists";
+import { notBlockedEither, notTradeSanctioned } from "../moderation/safety";
+import { askableOnTrade } from "../trade/lists";
 
 export type Safety = Awaited<ReturnType<typeof chatSafety>>;
 

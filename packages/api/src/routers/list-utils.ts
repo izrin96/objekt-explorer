@@ -15,14 +15,10 @@ import {
 } from "../schemas/list";
 import { ruleLine } from "../schemas/list-rule";
 import { takesRatio } from "../schemas/trade-ratio";
-import {
-  buildListEntries,
-  fetchListWithEntries,
-  fetchPartialOwnedListCollections,
-  findOwnedList,
-  touchList,
-} from "../services/list";
-import { fetchRuleDefs } from "../services/list-rules";
+import { buildListEntries, fetchPartialOwnedListCollections } from "../services/list/entry-view";
+import { fetchListWithEntries, findOwnedList } from "../services/list/read";
+import { fetchRuleDefs } from "../services/list/rules";
+import { touchList } from "../services/list/shared";
 import { escapeCSV } from "../services/utils";
 
 async function ruleLines(slug: string, userId: string) {

@@ -21,21 +21,14 @@ import {
 } from "../schemas/list";
 import { carriesRatios } from "../schemas/list-copy";
 import { takesRatio } from "../schemas/trade-ratio";
-import {
-  fetchList,
-  findOwnedList,
-  generateProfileSlug,
-  insertCopyRows,
-  lockTradeLists,
-  planCopy,
-  prepareList,
-  touchList,
-  writeList,
-} from "../services/list";
-import { copyRulesTx } from "../services/list-rules";
+import { insertCopyRows, planCopy } from "../services/list/copy";
+import { generateProfileSlug, prepareList, writeList } from "../services/list/create";
+import { fetchList, findOwnedList } from "../services/list/read";
+import { copyRulesTx } from "../services/list/rules";
+import { lockTradeLists, touchList } from "../services/list/shared";
+import { bumpTradeVersions } from "../services/moderation/safety-cache";
 import { assertProfileOwned } from "../services/profile";
 import { refuseOverUserLimit } from "../services/redis";
-import { bumpTradeVersions } from "../services/safety-cache";
 
 /** `list.create` and `list.copy` share one budget; each one inserts a list and its rows. */
 const limitListWrites = (userId: string) => refuseOverUserLimit("list-create", userId, 30, 3600);

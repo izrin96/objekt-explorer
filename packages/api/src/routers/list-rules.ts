@@ -14,7 +14,7 @@ import {
   ruleObjektsOutputSchema,
   updateRuleInputSchema,
 } from "../schemas/list-rule";
-import { findOwnedList } from "../services/list";
+import { findOwnedList } from "../services/list/read";
 import {
   addRule,
   deleteRule,
@@ -23,7 +23,7 @@ import {
   previewRule,
   ruleObjekts,
   updateRule,
-} from "../services/list-rules";
+} from "../services/list/rules";
 import { ipRateLimited, refuseOverUserLimit } from "../services/redis";
 
 /** Each rule save reads the indexer and writes an entry for every collection the rule wants. */

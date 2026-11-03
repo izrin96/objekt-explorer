@@ -25,9 +25,9 @@ import {
 } from "../../../schemas/offer";
 import type { NearVerb } from "../../../schemas/trade";
 import { chatSafety, fetchPref } from "../../chat";
-import { personNear } from "../../trade-feed";
-import { takesPartInTrade } from "../../trade-lists";
-import { recountPartners, resolveCompareSides } from "../../trade-matches";
+import { personNear } from "../../trade/feed/near";
+import { takesPartInTrade } from "../../trade/lists";
+import { recountPartners, resolveCompareSides } from "../../trade/matches";
 import {
   type Addressed,
   type IndexedObjekt,

@@ -16,15 +16,15 @@ import {
   profileListsOutputSchema,
   removeObjektsFromListInputSchema,
 } from "../schemas/list";
+import { addEntries } from "../services/list/entries";
+import { buildListEntries } from "../services/list/entry-view";
 import {
-  addEntries,
-  buildListEntries,
   fetchListPreviews,
   fetchListWithEntries,
   fetchProfileLists,
   findOwnedList,
-  touchList,
-} from "../services/list";
+} from "../services/list/read";
+import { touchList } from "../services/list/shared";
 import { refuseOverUserLimit } from "../services/redis";
 
 export const listEntriesRouter = {

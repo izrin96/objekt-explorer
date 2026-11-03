@@ -6,10 +6,10 @@ import { and, eq, or, sql } from "drizzle-orm";
 import { substituteRefusal } from "../../lib/offer-rules";
 import type { TradeStatus } from "../../schemas/offer";
 import { forgetReputation } from "../reputation";
-import { acceptCopy, finishSettle, shownSerials, wrongCopyNote } from "../trade-verify";
 import { refuseOffer } from "./core";
 import { partyNames, writeNotes } from "./notes";
 import { publishTouched } from "./state";
+import { acceptCopy, finishSettle, shownSerials, wrongCopyNote } from "./verify";
 
 /** NOT_FOUND unless the viewer is a party to the substitute's trade. */
 async function findSubstitute(substituteId: number, me: string) {

@@ -4,8 +4,8 @@ import { and, eq, inArray, sql } from "drizzle-orm";
 
 import { type MessagePref, showsActivityTo, toMessagePref } from "../../lib/chat-rules";
 import { MESSAGE_PREF_DEFAULTS, type MessageSettings } from "../../schemas/chat";
+import { notBlockedEither } from "../moderation/safety";
 import { redis, redisFailOpen } from "../redis";
-import { notBlockedEither } from "../safety";
 import { refuse } from "./refuse";
 
 export async function fetchPref(userId: string): Promise<MessagePref> {

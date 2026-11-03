@@ -14,8 +14,8 @@ import {
   type PartnerList,
   type PickerNarrowing,
 } from "../../../schemas/offer";
-import { pickerTagsFor } from "../../trade-feed";
-import { askableOnTrade } from "../../trade-lists";
+import { pickerTagsFor } from "../../trade/feed/near";
+import { askableOnTrade } from "../../trade/lists";
 import {
   type Addressed,
   type IndexedObjekt,

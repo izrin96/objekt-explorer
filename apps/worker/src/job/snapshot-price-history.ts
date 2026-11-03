@@ -1,5 +1,5 @@
 import { utcDate } from "@repo/api/schemas/price-history";
-import { fetchPriceSnapshot } from "@repo/api/services/market-aggregate";
+import { fetchPriceSnapshot } from "@repo/api/services/market/aggregate";
 import { db } from "@repo/db";
 import { collectionPriceHistory, currencyRates } from "@repo/db/schema";
 import { and, eq, sql } from "drizzle-orm";
@@ -10,7 +10,7 @@ import { log } from "../lib/log";
 const CHUNK = 1000;
 const priceLog = log("price-history");
 
-// not getUsdRates: services/currency-rates loads the web app's serverEnv through services/redis
+// not getUsdRates: services/market/currency-rates loads the web app's serverEnv through services/redis
 async function readUsdRates(): Promise<Record<string, number>> {
   const rows = await db
     .select({ code: currencyRates.code, rate: currencyRates.rate })

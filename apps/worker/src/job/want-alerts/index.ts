@@ -1,6 +1,6 @@
 import { publishUsers } from "@repo/api/realtime";
-import { takesPartInTrade } from "@repo/api/services/trade-lists";
-import { mutualPartnerIds } from "@repo/api/services/trade-matches/recount";
+import { takesPartInTrade } from "@repo/api/services/trade/lists";
+import { mutualPartnerIds } from "@repo/api/services/trade/matches/recount";
 import { db } from "@repo/db";
 import { lists } from "@repo/db/schema";
 import { and, eq, sql } from "drizzle-orm";

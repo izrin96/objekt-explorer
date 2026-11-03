@@ -14,7 +14,7 @@ import {
 } from "@phosphor-icons/react";
 import type { Icon } from "@phosphor-icons/react";
 import { isStaffRole } from "@repo/api/schemas/moderation";
-import type { User } from "@repo/api/services/auth";
+import type { User } from "@repo/api/services/account/auth";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link, useLocation } from "@tanstack/react-router";
 import { useState } from "react";

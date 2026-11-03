@@ -2,7 +2,7 @@ import { ORPCError, os } from "@orpc/server";
 import { getRequestHeaders, setResponseHeader } from "@tanstack/react-start/server";
 
 import { isStaffRole, roleList } from "./schemas/moderation";
-import { auth } from "./services/auth";
+import { auth } from "./services/account/auth";
 
 const base = os.$context<{ headers?: Headers }>();
 

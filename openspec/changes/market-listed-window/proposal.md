@@ -43,4 +43,4 @@
 - `apps/web/src/features/market/`: new `filter-listed.tsx`; `market-view.tsx` adds it to `extras`.
 - `apps/web/messages/{en,ko,ja}.json`: five `filter_listed*` messages.
 - `apps/web/src/components/layout/changelog.tsx`: one line.
-- Sibling `market-price-history` moves `market.summary`'s query into `packages/api/src/services/market-aggregate.ts` and edits the drawer's Market tab. This change touches neither, so the two only meet in the message files.
+- Sibling `market-price-history` moves `market.summary`'s query into `packages/api/src/services/market/aggregate.ts` and edits the drawer's Market tab. This change touches neither, so the two only meet in the message files.

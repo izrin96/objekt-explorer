@@ -10,12 +10,12 @@ import { isMessageable, toMessagePref } from "../lib/chat-rules";
 import { refuse } from "../lib/refuse";
 import { HOUR_MS } from "../lib/time";
 import type { ProfilePreview, PublicProfile, PublicUser } from "../schemas/profile";
-import type { User } from "./auth";
-import { isBlockedEither } from "./moderation";
+import type { User } from "./account/auth";
+import { isBlockedEither } from "./moderation/core";
+import { isBanned } from "./moderation/safety";
 import { fetchOwnerSummary } from "./objekt";
 import { getCache, redis, redisFailOpen } from "./redis";
 import { reputationOf } from "./reputation";
-import { isBanned } from "./safety";
 
 /** the signed-in user has linked this Cosmo address */
 export async function assertProfileOwned(address: string, userId: string) {

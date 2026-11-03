@@ -5,10 +5,10 @@ import { and, eq, or, sql } from "drizzle-orm";
 
 import type { TradeStatus } from "../../schemas/offer";
 import { forgetReputation } from "../reputation";
-import { finishSettle } from "../trade-verify";
 import { refuseOffer } from "./core";
 import { partyNames, writeNotes } from "./notes";
 import { publishTouched } from "./state";
+import { finishSettle } from "./verify";
 
 /** NOT_FOUND unless the viewer is a party to the leg's trade. */
 async function findLeg(legId: number, me: string) {

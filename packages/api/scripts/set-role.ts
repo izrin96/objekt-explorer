@@ -5,7 +5,7 @@ import { user } from "@repo/db/schema";
 import { eq, or } from "drizzle-orm";
 
 import { type Role, roles } from "../src/permissions";
-import { changeRole } from "../src/services/moderation";
+import { changeRole } from "../src/services/moderation/core";
 
 const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "::1", "[::1]"]);
 

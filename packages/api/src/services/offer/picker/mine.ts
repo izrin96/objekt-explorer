@@ -10,8 +10,8 @@ import {
   type CandidateCursor,
   type PickerNarrowing,
 } from "../../../schemas/offer";
-import { pickerTagsFor } from "../../trade-feed";
-import { offersOnTrade } from "../../trade-lists";
+import { pickerTagsFor } from "../../trade/feed/near";
+import { offersOnTrade } from "../../trade/lists";
 import {
   type Addressed,
   type IndexedObjekt,

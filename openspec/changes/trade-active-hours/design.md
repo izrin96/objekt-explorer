@@ -2,8 +2,8 @@
 
 See proposal.md for why. Relevant current state:
 - `message_pref` (`packages/db/src/schema.ts`) holds per-user chat settings (`allow`, `chat_as`, `show_activity`), read and saved through `chat.settings` / `chat.setSettings`, and shown in `features/account/sections/messages.tsx` with switches that save at once.
-- Reputation is attached to other people in three places, each read past any cache with `reputationOf(ids)`: `services/trade-feed/index.ts` (posts), `services/trade-matches/index.ts` (For you partners, past the matches cache) and `services/chat/inbox.ts` (thread partner). Active periods follow the same path.
-- `fetchFeedRows` (`services/trade-feed/query.ts`) builds the feed's `WHERE` from `FeedQuery`; Only matches adds a SQL prefilter and a JS check in the page loop.
+- Reputation is attached to other people in three places, each read past any cache with `reputationOf(ids)`: `services/trade/feed/posts.ts` (posts), `services/trade/matches/index.ts` (For you partners, past the matches cache) and `services/chat/inbox.ts` (thread partner). Active periods follow the same path.
+- `fetchFeedRows` (`services/trade/feed/query.ts`) builds the feed's `WHERE` from `FeedQuery`; Only matches adds a SQL prefilter and a JS check in the page loop.
 - Bun 1.4 has `Temporal` and `Intl.supportedValuesOf("timeZone")` (445 zones). Browsers can't be assumed to have `Temporal`.
 - `useHydrated` and `useMinuteClock` already exist for browser-rendered relative times (For you's "updated 2h ago").
 

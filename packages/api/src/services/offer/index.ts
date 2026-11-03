@@ -28,8 +28,8 @@ import {
   prepareFirst,
   publishChatChanged,
 } from "../chat";
-import { getUsdRates } from "../currency-rates";
-import { activeSanctionWhere } from "../safety";
+import { getUsdRates } from "../market/currency-rates";
+import { activeSanctionWhere } from "../moderation/safety";
 import { refusedCollectionAsks } from "./collection";
 import {
   linkedAddresses,

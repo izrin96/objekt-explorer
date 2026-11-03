@@ -16,7 +16,7 @@ import {
   type PartnerList,
 } from "../../../schemas/offer";
 import type { PickerTag } from "../../../schemas/trade";
-import { fetchCollectionsBySlug } from "../../list";
+import { fetchCollectionsBySlug } from "../../list/collections";
 import { type IndexedObjekt, lowerOwner, objektColumns } from "../core";
 
 export function toCandidate(

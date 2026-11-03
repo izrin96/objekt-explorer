@@ -46,17 +46,11 @@ import { chatSafety, fetchPartners, hydrateCards, publishChatChanged } from "../
 import { indexerCaughtUp } from "../indexer-catch-up";
 import { redis, redisFailOpen } from "../redis";
 import { forgetReputation, reputationOf } from "../reputation";
-import {
-  autoAcceptedLegs,
-  heldCopies,
-  heldCopyWhere,
-  loadOpenLegs,
-  matchOpenLegs,
-} from "../trade-verify";
 import { offersOf, openOffersWhere } from "./cancel";
 import { fetchObjekts, refuseOffer } from "./core";
 import { partyNames, writeNotes } from "./notes";
 import { publishTouched } from "./state";
+import { autoAcceptedLegs, heldCopies, heldCopyWhere, loadOpenLegs, matchOpenLegs } from "./verify";
 import { fetchOffers, offerItemCards, topupView, itemViews } from "./view";
 
 const tradeColumns = {

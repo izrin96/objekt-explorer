@@ -5,7 +5,7 @@ import {
   toPartnerIdentity,
 } from "@repo/api/lib/trade-rank";
 import { NOTIFICATION_TYPES } from "@repo/api/schemas/notification";
-import { offersSwapsSql, takesPartInTradeSql } from "@repo/api/services/trade-lists";
+import { offersSwapsSql, takesPartInTradeSql } from "@repo/api/services/trade/lists";
 import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { lists, notificationPref, user, userAddress } from "@repo/db/schema";

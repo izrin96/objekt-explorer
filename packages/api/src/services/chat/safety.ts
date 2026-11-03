@@ -10,8 +10,8 @@ import {
   notBlockedBy,
   notBlockedEither,
   notTradeSanctioned,
-} from "../safety";
-import { bumpTradeVersions } from "../safety-cache";
+} from "../moderation/safety";
+import { bumpTradeVersions } from "../moderation/safety-cache";
 import { publishChatChanged } from "./notify";
 
 /** Blocks between the pair, and the user's own chat mute in force. A deleted or banned partner reads as a block. */

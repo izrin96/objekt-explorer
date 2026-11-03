@@ -11,8 +11,8 @@ import {
   presenceTargets,
 } from "../lib/presence";
 import { query } from "../realtime";
+import { notBlockedEither } from "./moderation/safety";
 import { redis, redisFailOpen } from "./redis";
-import { notBlockedEither } from "./safety";
 
 /**
  * Of `userIds`, those online whose dot the viewer may see, and which of them are idle; nobody

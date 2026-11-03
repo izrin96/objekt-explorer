@@ -1,11 +1,11 @@
-import { notTradeSanctioned } from "@repo/api/services/safety";
-import { listedCte, postsCte } from "@repo/api/services/trade-feed/query";
+import { notTradeSanctioned } from "@repo/api/services/moderation/safety";
+import { listedCte, postsCte } from "@repo/api/services/trade/feed/query";
 import {
   offerMatchesWantSql,
   offersOnTradeSql,
   takesPartInTradeSql,
   tradePartnerSql,
-} from "@repo/api/services/trade-lists";
+} from "@repo/api/services/trade/lists";
 import { db } from "@repo/db";
 import { type SQL, sql } from "drizzle-orm";
 
