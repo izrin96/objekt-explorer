@@ -102,8 +102,8 @@ async function relink(
       .update(userAddress)
       .set(
         toUserId === undefined
-          ? { userId: null, isDefault: false }
-          : { userId: toUserId, linkedAt: sql`now()`, isDefault: false },
+          ? { userId: null, isDefault: false, bio: null }
+          : { userId: toUserId, linkedAt: sql`now()`, isDefault: false, bio: null },
       )
       .where(eq(userAddress.address, address));
     const reasonCode = toUserId === undefined ? ("staff_unlink" as const) : ("staff_move" as const);

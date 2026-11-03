@@ -48,6 +48,7 @@ export const userAddress = pgTable(
     linkedAt: timestamp("linked_at", { mode: "string", withTimezone: true }),
     bannerImgUrl: text("banner_img_url"),
     bannerImgType: text("banner_img_type"),
+    bio: text("bio"),
     isAbstract: boolean("is_abstract").notNull().default(false),
     gridColumns: integer("grid_columns"),
     cosmoId: integer("cosmo_id"),

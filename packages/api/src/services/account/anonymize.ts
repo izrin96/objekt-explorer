@@ -77,7 +77,7 @@ export async function anonymizeUser(userId: string, { self }: { self: boolean })
     );
     const unlinked = await tx
       .update(userAddress)
-      .set({ userId: null, isDefault: false, bannerImgUrl: null, bannerImgType: null })
+      .set({ userId: null, isDefault: false, bannerImgUrl: null, bannerImgType: null, bio: null })
       .where(eq(userAddress.userId, userId))
       .returning({ address: userAddress.address });
     await recordLinkEvents(

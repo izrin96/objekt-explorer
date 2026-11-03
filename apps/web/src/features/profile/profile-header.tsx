@@ -146,6 +146,13 @@ export function ProfileHeader({ profile }: { profile: PublicProfile }) {
           )}
         </div>
       </div>
+
+      {/* set only while the profile shows its account; plain text, so a URL or markup stays as typed */}
+      {profile.bio ? (
+        <p className="mt-3 max-w-prose text-sm text-pretty break-words whitespace-pre-line">
+          {profile.bio}
+        </p>
+      ) : null}
     </div>
   );
 }

@@ -45,7 +45,7 @@ export const profileRouter = {
   edit: authed
     .input(makeEditProfileInputSchema(`${S3_PUBLIC_URL}/profile-banner/`))
     .handler(async ({ input, context: { session } }) => {
-      const { address, bannerImgUrl, bannerImgType, gridColumns } = input;
+      const { address, bannerImgUrl, bannerImgType, gridColumns, bio } = input;
       const profile = await fetchOwnedProfile(address, session.user.id);
 
       if (bannerImgUrl && !ownBannerKey(bannerImgUrl, S3_PUBLIC_URL, address)) {
@@ -58,6 +58,7 @@ export const profileRouter = {
           bannerImgUrl,
           bannerImgType,
           gridColumns,
+          bio,
           bannerUpdatedAt: bannerImgUrl !== undefined ? sql`'now'` : undefined,
         })
         .where(and(eq(userAddress.address, address), eq(userAddress.userId, session.user.id)));
@@ -104,6 +105,7 @@ async function fetchOwnedProfile(address: string, userId: string) {
       bannerImgUrl: true,
       bannerImgType: true,
       gridColumns: true,
+      bio: true,
     },
     where: { address, userId },
     orderBy: {

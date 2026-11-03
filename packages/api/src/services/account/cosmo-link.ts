@@ -254,7 +254,7 @@ export async function unlink(userId: string, address: string) {
 
     const removed = await tx
       .update(userAddress)
-      .set({ userId: null, isDefault: false })
+      .set({ userId: null, isDefault: false, bio: null })
       .where(and(eq(userAddress.userId, userId), eq(userAddress.address, address)))
       .returning({ address: userAddress.address });
     await recordLinkEvents(

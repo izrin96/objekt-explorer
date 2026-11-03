@@ -73,7 +73,12 @@ async function toProfilePage(profile: UserAddress, user: ProfileUser | null, cur
   const shown = toPublicProfile(profile, user);
   const publicProfile =
     shown.user && user
-      ? { ...shown, userId: user.id, reputation: (await reputationOf([user.id])).get(user.id) }
+      ? {
+          ...shown,
+          userId: user.id,
+          reputation: (await reputationOf([user.id])).get(user.id),
+          bio: profile.bio,
+        }
       : shown;
   if (!user || user.id === currentUser?.id) {
     return { ...publicProfile, messageable: false };

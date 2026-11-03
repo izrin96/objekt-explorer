@@ -3,6 +3,7 @@ import {
   TrashSimpleIcon,
   UploadSimpleIcon,
 } from "@phosphor-icons/react";
+import { BIO_MAX_LENGTH } from "@repo/api/schemas/profile";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { lazy, type ReactElement, Suspense, useEffect, useId, useRef, useState } from "react";
@@ -27,6 +28,7 @@ import {
   type FileRejectReason,
   FileUploadTrigger,
 } from "@/components/ui/file-upload";
+import { Label } from "@/components/ui/label";
 import {
   Progress,
   ProgressIndicator,
@@ -35,6 +37,7 @@ import {
   ProgressValue,
 } from "@/components/ui/progress";
 import { Spinner } from "@/components/ui/spinner";
+import { Textarea } from "@/components/ui/textarea";
 import { toastManager } from "@/components/ui/toast";
 import {
   BANNER_ACCEPT,
@@ -51,6 +54,7 @@ import { client, orpc } from "@/lib/orpc";
 import { refusalText } from "@/lib/refusal";
 import { TONE_SOLID } from "@/lib/tone";
 import { m } from "@/paraglide/messages";
+import { getLocale } from "@/paraglide/runtime";
 
 type Profile = Awaited<ReturnType<typeof client.profile.find>>;
 const BannerCropper = lazy(() =>
@@ -147,7 +151,12 @@ function EditForm({
   const [cropReady, setCropReady] = useState(false);
   const [percent, setPercent] = useState<number | null>(null);
   const [removeBanner, setRemoveBanner] = useState(false);
+  // an untouched bio is not sent, so a stale copy can't overwrite one saved from another tab;
+  // the check reads what the form opened with, since a refetch replaces `profile`
+  const [initialBio] = useState(profile.bio ?? "");
+  const [bio, setBio] = useState(initialBio);
   const bannerLabelId = useId();
+  const bioId = useId();
   const bannerFieldRef = useRef<HTMLDivElement>(null);
   // the control that had focus unmounts on a pick or a Clear, so its replacement takes focus
   const focusOnMount = useRef(false);
@@ -260,6 +269,7 @@ function EditForm({
         gridColumns: profile.gridColumns ?? null,
         bannerImgUrl,
         bannerImgType,
+        bio: bio === initialBio ? undefined : bio,
       });
     },
     onSuccess: async () => {
@@ -416,6 +426,33 @@ function EditForm({
             </div>
           </div>
         )}
+
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor={`${bioId}-field`}>{m.profile_edit_bio_label()}</Label>
+          <Textarea
+            id={`${bioId}-field`}
+            value={bio}
+            maxLength={BIO_MAX_LENGTH}
+            disabled={save.isPending}
+            aria-describedby={`${bioId}-hint`}
+            onChange={(event) => setBio(event.target.value)}
+            placeholder={m.profile_edit_bio_placeholder()}
+          />
+          <div className="flex items-start justify-between gap-3">
+            <span id={`${bioId}-hint`} className="text-muted-foreground text-xs text-pretty">
+              {m.profile_edit_bio_hint()}
+            </span>
+            {/* in the tree throughout, but silent until the bio nears the limit */}
+            <p aria-live="polite" className="text-muted-foreground shrink-0 text-xs tabular-nums">
+              {bio.length >= BIO_MAX_LENGTH - 30
+                ? m.chat_counter({
+                    count: bio.length.toLocaleString(getLocale()),
+                    max: BIO_MAX_LENGTH.toLocaleString(getLocale()),
+                  })
+                : null}
+            </p>
+          </div>
+        </div>
 
         {showUnlinkNote && (
           <span className="text-muted-foreground text-xs text-pretty">
