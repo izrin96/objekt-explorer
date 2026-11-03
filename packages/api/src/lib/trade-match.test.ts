@@ -459,6 +459,85 @@ describe("matchLegs: used transfers", () => {
   });
 });
 
+describe("matchLegs: one token sent back and forth", () => {
+  const anyCopy = (id: number, overrides: Partial<MatchLeg> = {}) =>
+    leg({ id, objektId: null, ...overrides });
+  const roundTrip = (objektId: string) => [
+    transfer({ objektId }),
+    transfer({ objektId, from: RECEIVER, to: GIVER }),
+    transfer({ objektId }),
+  ];
+
+  test("verifies one of two any-copy legs, not both", () => {
+    const [sent, back, again] = roundTrip("5");
+    const results = matchLegs([anyCopy(1), anyCopy(2)], [sent!, back!, again!]);
+    expect(results.get(1)).toMatchObject({ kind: "verified", transferId: sent!.id });
+    expect(results.get(2)).toEqual({ kind: "pending" });
+  });
+
+  test("the send again doesn't verify a leg once an earlier run spent the first", () => {
+    const [sent, , again] = roundTrip("5");
+    const used = new Set([transferKey(sent!)]);
+    expect(matchLegs([anyCopy(2)], [sent!, again!], { used }).get(2)).toEqual({ kind: "pending" });
+  });
+
+  test("a specific leg doesn't take its token's send again after an any-copy leg spent it", () => {
+    const [sent, back, again] = roundTrip("1203");
+    const used = new Set([transferKey(sent!)]);
+    expect(matchLegs([leg({ id: 2 })], [sent!, back!, again!], { used }).get(2)).toEqual({
+      kind: "pending",
+    });
+  });
+
+  test("whichever leg goes first, the other waits", () => {
+    const [sent, back, again] = roundTrip("1203");
+    const results = matchLegs([anyCopy(1), leg({ id: 2 })], [sent!, back!, again!]);
+    expect(results.get(2)).toMatchObject({ kind: "verified", transferId: sent!.id });
+    expect(results.get(1)).toEqual({ kind: "pending" });
+  });
+
+  test("a send that verified a leg before this leg's window doesn't hold it back", () => {
+    const sent = transfer({ objektId: "5", timestamp: minutesBeforeAccept(30) });
+    const again = transfer({ objektId: "5" });
+    const used = new Set([transferKey(sent)]);
+    expect(matchLegs([anyCopy(2)], [sent, again], { used }).get(2)).toMatchObject({
+      kind: "verified",
+      transferId: again.id,
+    });
+  });
+
+  test("sent on to another receiver after the return, it verifies their leg", () => {
+    const [sent, back] = roundTrip("5");
+    const onward = transfer({ objektId: "5", to: RECEIVER_2 });
+    const used = new Set([transferKey(sent!)]);
+    expect(
+      matchLegs([anyCopy(2, { receiver: new Set([RECEIVER_2]) })], [sent!, back!, onward], {
+        used,
+      }).get(2),
+    ).toMatchObject({ kind: "verified", transferId: onward.id });
+  });
+
+  test("the send again is no wrong copy for a waiting specific leg", () => {
+    const [sent, back, again] = roundTrip("1207");
+    const legs = [leg({ id: 1 }), anyCopy(2)];
+    const transfers = [sent!, back!, again!];
+    const matched = matchAll(legs, transfers, PAST_GRACE);
+    expect(matched.results.get(2)).toMatchObject({ kind: "verified", transferId: sent!.id });
+    expect(nearMisses(legs, transfers, matched)).toEqual([]);
+  });
+
+  test("only its first send is a wrong copy, so two legs can't each accept one", () => {
+    const [sent, back, again] = roundTrip("1207");
+    const legs = [leg({ id: 1 }), leg({ id: 2, objektId: "1208" })];
+    const transfers = [again!, back!, sent!];
+    const reported = nearMisses(legs, transfers, matchAll(legs, transfers, PAST_GRACE));
+    expect(reported.map((miss) => [miss.legId, miss.txHash])).toEqual([
+      [1, sent!.hash],
+      [2, sent!.hash],
+    ]);
+  });
+});
+
 describe("nearMisses", () => {
   const misses = (legs: MatchLeg[], transfers: MatchTransfer[]) =>
     nearMisses(legs, transfers, matchAll(legs, transfers, PAST_GRACE));

@@ -16,6 +16,8 @@ One transfer SHALL verify at most one leg. A transfer is identified by its trans
 - a leg naming that specific objekt SHALL take it before any-copy legs;
 - among the rest, the leg of the trade accepted first SHALL take it.
 
+One copy sent back and forth SHALL count as one delivery. When the giver sends an objekt to the receiver, the receiver passes it back, and the giver sends it again, the later send SHALL not verify a leg if an earlier send of it, since that leg's window opened, verified a leg. The receiver can still mark such a leg received (see Receiver confirms a leg).
+
 A verified leg SHALL record the transaction hash and time. When the last leg verifies, the trade SHALL become Completed.
 
 A leg SHALL verify within 3 minutes of the indexer recording its transfer, even if a live update was missed.
@@ -51,6 +53,14 @@ A leg SHALL verify within 3 minutes of the indexer recording its transfer, even 
 #### Scenario: Indexer rebuilt
 - **WHEN** the indexer is rebuilt from the chain while a trade with a verified any-copy leg has another trade's any-copy leg waiting for the same collection
 - **THEN** the transfer that already verified the first leg doesn't verify the second
+
+#### Scenario: One copy sent back and forth
+- **WHEN** T-1040 and T-1042 each ask binary.bin for any copy of Nien 205Z, binary.bin sends #88 and T-1040's leg verifies, the user sends #88 back, and binary.bin sends #88 again
+- **THEN** T-1042's leg stays Waiting, whether the second send is read in the same check as the first or days later
+
+#### Scenario: Sent again for a later trade
+- **WHEN** binary.bin's #88 verified T-1040's leg, the user sent it back, and binary.bin sends #88 again for T-1050, which the user accepted the next day
+- **THEN** T-1050's any-copy leg verifies with the new send
 
 ### Requirement: Broken trades
 If a reserved objekt in an in-progress trade moves to anyone other than the receiver, and it is still away from both the giver and the receiver 72 hours after it left, as read by the indexer (see Indexer delay), its leg breaks. A leg holding a pending wrong copy sent before the objekt left accepts that copy instead (see Wrong copy sent). When a leg breaks:
@@ -119,6 +129,7 @@ While a specific-objekt leg of an in-progress trade is waiting, the system SHALL
 - goes from an address of the giver to an address of the receiver (as "Legs verify from on-chain transfers" counts addresses);
 - happened no earlier than 10 minutes before the accept;
 - has not verified any leg.
+- is the first such send of that objekt: one passed back and sent again is the same copy, recorded once.
 
 A wrong copy SHALL be recorded within 3 minutes of the indexer recording its transfer. One transfer MAY be recorded against several waiting legs, but it SHALL verify at most one.
 
@@ -149,6 +160,10 @@ A copy that was already pending when this rule shipped SHALL have its 72 hours c
 #### Scenario: Our serial was off
 - **WHEN** the trade asks for HyeRin 301Z #1203, and the giver sends the copy Cosmo shows as #1203, which our index has as #1207
 - **THEN** within 3 minutes both parties see "sent #1207, this trade asks for #1203" in the banner, the leg's card shows "Sent #1207 instead" with its hash, and the leg stays Waiting
+
+#### Scenario: One wrong copy sent twice
+- **WHEN** T-1040 asks binary.bin for Nien 205Z #101 and T-1042 for #102, binary.bin sends #88, the user sends it back, and binary.bin sends #88 again
+- **THEN** each leg records #88 once, from the first send, so the two legs can't each accept a send of it
 
 #### Scenario: Receiver accepts
 - **WHEN** the receiver accepts the wrong copy and confirms

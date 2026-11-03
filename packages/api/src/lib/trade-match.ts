@@ -178,12 +178,40 @@ function backWithGiver(
   return false;
 }
 
+/**
+ * Whether `t` sends again a token the giver already sent this receiver since `start` with a
+ * transfer that verified a leg. The receiver must have passed it back in between, so it is
+ * the same copy delivered twice: it verifies one leg and is no wrong copy for another.
+ * `sameToken` holds the token's transfers, addresses lowercased.
+ */
+function sentAgain(
+  t: MatchTransfer,
+  sameToken: readonly MatchTransfer[],
+  {
+    giver,
+    receiver,
+    start,
+  }: { giver: ReadonlySet<string>; receiver: ReadonlySet<string>; start: number },
+  taken: ReadonlySet<string>,
+) {
+  const key = transferKey(t);
+  return sameToken.some(
+    (other) =>
+      transferKey(other) !== key &&
+      time(other.timestamp) >= start &&
+      giver.has(other.from) &&
+      receiver.has(other.to) &&
+      taken.has(transferKey(other)),
+  );
+}
+
 /** When a token that left at `leftAt` breaks its leg if it is still away. */
 const graceEnd = (leftAt: string) => time(leftAt) + AWAY_GRACE_HOURS * HOUR_MS;
 
 /**
  * Decides each leg from the transfers. `used` holds the `transferKey`s already recorded on a
- * leg, so one transfer verifies at most one leg anywhere. Specific legs go first: their
+ * leg, so one transfer verifies at most one leg anywhere, and a token the receiver passed back
+ * verifies no second leg when sent again (`sentAgain`). Specific legs go first: their
  * token can only ever satisfy them, while any-copy legs can take another token. Among the
  * rest, the trade accepted first takes a transfer. A specific token away from the giver breaks
  * its leg only once `seenUntil` is `AWAY_GRACE_HOURS` past the move; null never breaks one.
@@ -197,9 +225,8 @@ export function matchLegs(
   }: { used?: ReadonlySet<string>; seenUntil?: string | null } = {},
 ): Matched {
   const taken = new Set(used);
-  const sorted = transfers
-    .map((t) => Object.assign({}, t, { from: t.from.toLowerCase(), to: t.to.toLowerCase() }))
-    .toSorted(byTime);
+  const sorted = lowered(transfers).toSorted(byTime);
+  const byToken = Map.groupBy(sorted, (t) => t.tokenId);
   const results = new Map<number, LegResult>();
   const ordered = legs.toSorted(
     (a, b) =>
@@ -214,6 +241,8 @@ export function matchLegs(
     const start = time(leg.objektId === null ? leg.copyWindowStart : leg.windowStart);
     const accepted = time(leg.acceptedAt);
     const inWindow = (t: MatchTransfer) => time(t.timestamp) >= start && !taken.has(transferKey(t));
+    const again = (t: MatchTransfer) =>
+      sentAgain(t, byToken.get(t.tokenId) ?? [], { giver, receiver, start }, taken);
 
     if (leg.objektId !== null) {
       let result: LegResult = { kind: "pending" };
@@ -238,6 +267,7 @@ export function matchLegs(
           // before the accept only the giver's send counts: the receiver may have bought it
           // elsewhere for another deal; after it, the asked-for token arriving is the delivery
           if (!giver.has(t.from) && time(t.timestamp) < accepted) continue;
+          if (again(t)) continue;
           // an early send the giver had back by the accept is not a delivery
           if (!backWithGiver(own, i, giver, accepted)) {
             result = verified(t);
@@ -265,7 +295,8 @@ export function matchLegs(
         t.collectionId === leg.collectionId &&
         inWindow(t) &&
         giver.has(t.from) &&
-        receiver.has(t.to),
+        receiver.has(t.to) &&
+        !again(t),
     );
     if (match) taken.add(transferKey(match));
     results.set(leg.id, match ? verified(match) : { kind: "pending" });
@@ -281,8 +312,9 @@ export type NearMiss = { legId: number; txHash: string; objektId: string; at: st
 /**
  * The wrong copies for the specific legs `matchLegs` left pending or broken, counted as any-copy
  * legs count. A broken leg's copy counts only if it came before the break, so the trade fails
- * rather than cancels. A transfer it took verifies a leg, so it's never one; one transfer may
- * still be a near miss for several legs, which their receivers decide one at a time.
+ * rather than cancels. A transfer it took verifies a leg, so it's never one, nor is a token it
+ * took sent again (`sentAgain`); one transfer may still be a near miss for several legs, which
+ * their receivers decide one at a time.
  */
 export function nearMisses(
   legs: MatchLeg[],
@@ -290,6 +322,8 @@ export function nearMisses(
   { results, taken }: Matched,
 ): NearMiss[] {
   const misses: NearMiss[] = [];
+  const sorted = lowered(transfers).toSorted(byTime);
+  const byToken = Map.groupBy(sorted, (t) => t.tokenId);
   for (const leg of legs) {
     const result = results.get(leg.id);
     if (leg.objektId === null || (result?.kind !== "pending" && result?.kind !== "broken")) {
@@ -300,26 +334,33 @@ export function nearMisses(
     const start = time(leg.copyWindowStart);
     const leftAt = result.kind === "broken" ? result.at : result.awaySince;
     const end = leftAt === undefined ? Infinity : time(leftAt);
-    const seen = new Set<string>();
-    for (const t of transfers) {
-      const key = transferKey(t);
+    // a token passed back and sent again is one copy: only its first send is reported
+    const tokens = new Set<string>();
+    for (const t of sorted) {
       if (
         t.collectionId !== leg.collectionId ||
         t.tokenId === leg.objektId ||
         time(t.timestamp) < start ||
         time(t.timestamp) >= end ||
-        taken.has(key) ||
-        seen.has(key) ||
-        !giver.has(t.from.toLowerCase()) ||
-        !receiver.has(t.to.toLowerCase())
+        taken.has(transferKey(t)) ||
+        tokens.has(t.tokenId) ||
+        !giver.has(t.from) ||
+        !receiver.has(t.to) ||
+        sentAgain(t, byToken.get(t.tokenId) ?? [], { giver, receiver, start }, taken)
       ) {
         continue;
       }
-      seen.add(key);
+      tokens.add(t.tokenId);
       misses.push({ legId: leg.id, txHash: t.hash, objektId: t.tokenId, at: t.timestamp });
     }
   }
   return misses;
+}
+
+function lowered(transfers: MatchTransfer[]) {
+  return transfers.map((t) =>
+    Object.assign({}, t, { from: t.from.toLowerCase(), to: t.to.toLowerCase() }),
+  );
 }
 
 function lower(addresses: ReadonlySet<string>) {
