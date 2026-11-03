@@ -306,12 +306,14 @@ export function EmptySide({ side, surface }: { side: PostSideData; surface: Surf
   );
 }
 
+const NO_LIST_IDS: readonly number[] = Object.freeze([]);
+
 /** A person's list: its role and name, its own count, its ringed matches; the label links to the list. */
 export function SideStrip({
   lead,
   side,
   count,
-  matchedListIds = [],
+  matchedListIds = NO_LIST_IDS,
   ruleMatches,
   narrowed,
   collections,

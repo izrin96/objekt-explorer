@@ -11,12 +11,12 @@ import { TONE_INK } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
+import { legView } from "./exchange-group";
 import { itemLabel, shortDate } from "./format";
 import { MarkReceived } from "./mark-received";
 import { type Leg, canMarkReceived } from "./next-step";
 import { OfferThumb } from "./offer-item";
 import type { Collections } from "./pick";
-import { legView } from "./trade-exchange";
 import { InPlaceOf, LegSerial, Serial } from "./wrong-copy";
 
 type Props = {

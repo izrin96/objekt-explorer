@@ -48,7 +48,7 @@ keep their raw `<table>` inside a focusable `role="region"` scroller: `Table`'s 
 take the scroll, and the arrow keys would stop moving it.
 
 `frame` is vendored for the Trade feed's rows (`features/trade/person-row-view.tsx`): a person is a
-`Frame`, each of their lists a `FramePanel`. The hand-drawn `rounded-lg border` panels (Messages,
+`Frame`, each post a `FramePanel` (drawn in `features/trade/post-block.tsx`). The hand-drawn `rounded-lg border` panels (Messages,
 account sections) could move to it too; it changes their look, so that waits on a design call.
 
 `color-picker` backs the catalogue's colour filter (`features/filters/color-picker.tsx`), laid out as

@@ -15,6 +15,8 @@ import { ruleCountsOf } from "./person-row";
 
 type RuleMatch = { listId: number; ruleId: number; rule: ListRuleDef };
 
+const NO_RULE_MATCHES: readonly RuleMatch[] = Object.freeze([]);
+
 /**
  * A list's own count ("3 you have") as a button: it opens the viewer's lists the count was taken
  * against, and under a want list each of its rules the match went through, with how many. With
@@ -22,7 +24,7 @@ type RuleMatch = { listId: number; ruleId: number; rule: ListRuleDef };
  */
 export function MatchedListsChip({
   listIds,
-  ruleMatches = [],
+  ruleMatches = NO_RULE_MATCHES,
   near,
   className,
   children,

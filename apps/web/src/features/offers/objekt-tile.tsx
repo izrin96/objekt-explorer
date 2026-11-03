@@ -12,6 +12,8 @@ export type TileMark = { tone: Tone; icon: Icon; label: string };
 
 export type TileNote = { text: string; warning?: boolean };
 
+const NO_NOTES: TileNote[] = [];
+
 type Props = {
   slug: string;
   collection: ValidObjekt | undefined;
@@ -54,7 +56,7 @@ export function ObjektTile({
   times,
   dim = false,
   problem,
-  notes = [],
+  notes = NO_NOTES,
   badge,
   slot,
   compact = false,

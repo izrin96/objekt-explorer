@@ -62,6 +62,8 @@ type SelectBarProps = {
   secondary?: SelectBarAction[];
 };
 
+const NO_SECONDARY: SelectBarAction[] = [];
+
 /**
  * Open for as long as select mode is, so an empty selection still shows how to
  * fill it. `mt-auto` drops it to the foot of `<main>` on a page shorter than
@@ -69,7 +71,7 @@ type SelectBarProps = {
  * `sm` the secondary actions fold into a "⋯" menu and the labelled buttons go
  * icon-only, so one row fits a 320px phone.
  */
-export function SelectBar({ objekts, children, secondary = [] }: SelectBarProps) {
+export function SelectBar({ objekts, children, secondary = NO_SECONDARY }: SelectBarProps) {
   const ids = useSelection((s) => s.ids);
   const barRef = useRef<HTMLDivElement>(null);
   const selecting = useSelection(selectIsSelecting);
