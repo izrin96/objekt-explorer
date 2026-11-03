@@ -21,6 +21,14 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  SheetClose,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetPanel,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { Switch } from "@/components/ui/switch";
 import { toastManager } from "@/components/ui/toast";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
@@ -91,12 +99,32 @@ export function RuleDialog({
 
 type EditedRule = { id: number; ratio?: number | null } & ListRuleDef;
 
+const DIALOG_PARTS = {
+  Header: DialogHeader,
+  Title: DialogTitle,
+  Description: DialogDescription,
+  Panel: DialogPanel,
+  Footer: DialogFooter,
+  Close: DialogClose,
+};
+
+/** The form's frame inside a `SheetPopup`: Dialog's parts size their spacing off a dialog popup. */
+export const SHEET_PARTS: typeof DIALOG_PARTS = {
+  Header: SheetHeader,
+  Title: SheetTitle,
+  Description: SheetDescription,
+  Panel: SheetPanel,
+  Footer: SheetFooter,
+  Close: SheetClose,
+};
+
 export function RuleForm({
   slug,
   listName,
   listRatio,
   rule,
   withRatio = true,
+  parts = DIALOG_PARTS,
   onDone,
 }: {
   slug: string;
@@ -105,8 +133,10 @@ export function RuleForm({
   rule?: EditedRule;
   /** off where the list's post takes no ratio (a Buy post): no picker, and no ratio is sent */
   withRatio?: boolean;
+  parts?: typeof DIALOG_PARTS;
   onDone: () => void;
 }) {
+  const { Header, Title, Description, Panel, Footer, Close } = parts;
   const id = useId();
   const queryClient = useQueryClient();
   const { artists, selectedArtists } = useCosmoArtist();
@@ -166,13 +196,11 @@ export function RuleForm({
 
   return (
     <>
-      <DialogHeader>
-        <DialogTitle className="font-display">
-          {rule ? m.rule_edit_title() : m.rule_add_title()}
-        </DialogTitle>
-        <DialogDescription>{m.rule_add_desc({ list: listName })}</DialogDescription>
-      </DialogHeader>
-      <DialogPanel className="flex flex-col gap-4">
+      <Header>
+        <Title className="font-display">{rule ? m.rule_edit_title() : m.rule_add_title()}</Title>
+        <Description>{m.rule_add_desc({ list: listName })}</Description>
+      </Header>
+      <Panel className="flex flex-col gap-4">
         <RuleKindRadio
           id={id}
           value={draft.kind}
@@ -306,9 +334,9 @@ export function RuleForm({
         ) : null}
 
         <RulePreview input={input} counts={counts} pending={preview.isFetching} />
-      </DialogPanel>
-      <DialogFooter>
-        <DialogClose render={<Button variant="outline" />}>{m.common_modal_cancel()}</DialogClose>
+      </Panel>
+      <Footer>
+        <Close render={<Button variant="outline" />}>{m.common_modal_cancel()}</Close>
         <Button
           loading={save.isPending}
           disabled={input === null || counts === undefined || problem !== null}
@@ -316,7 +344,7 @@ export function RuleForm({
         >
           {rule ? m.rule_save() : m.rule_add()}
         </Button>
-      </DialogFooter>
+      </Footer>
     </>
   );
 }

@@ -12,6 +12,7 @@ import { type MouseEvent, type Ref, useId } from "react";
 import { Button } from "@/components/ui/button";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { FOCUS_RING } from "@/lib/a11y";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
@@ -232,7 +233,8 @@ export function TradeExchange({
               aria-pressed={state.side === side.key}
               onClick={() => state.setSide(side.key)}
               className={cn(
-                "text-muted-foreground -mb-px flex min-h-11 flex-1 items-center justify-center gap-1.5 border-b-2 border-transparent text-sm font-medium",
+                FOCUS_RING,
+                "text-muted-foreground -mb-px flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-t-sm border-b-2 border-transparent text-sm font-medium",
                 state.side === side.key && "text-foreground border-foreground",
               )}
             >

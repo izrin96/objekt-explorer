@@ -13,3 +13,7 @@ export function activateOnKey(event: KeyboardEvent, activate: () => void): void 
   event.preventDefault();
   activate();
 }
+
+/** The kit `Button`'s focus ring, for a control that can't be one (a chip, a table cell, a grid row). */
+export const FOCUS_RING =
+  "outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background";

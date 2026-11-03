@@ -8,6 +8,7 @@ import {
   ComboboxPopup,
   ComboboxPrimitive,
 } from "@/components/ui/combobox";
+import { FOCUS_RING } from "@/lib/a11y";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
@@ -98,7 +99,7 @@ export function FilterCollection({
             <button
               type="button"
               onClick={() => onChange([])}
-              className="hover:text-foreground px-1"
+              className={cn(FOCUS_RING, "hover:text-foreground rounded-sm px-1")}
             >
               {m.filter_clear()}
             </button>

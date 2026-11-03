@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { LIST_TYPE_LABEL, LIST_TYPE_TONE } from "@/features/list/list-type-badge";
 import { listEntriesOptions, listFindOptions } from "@/features/list/queries";
 import { type RatioSide } from "@/features/list/ratio-text";
-import { RuleForm } from "@/features/list/rules/rule-dialog";
+import { RuleForm, SHEET_PARTS } from "@/features/list/rules/rule-dialog";
 import { TagBadges } from "@/features/list/tag-label";
 import { joinSentences } from "@/lib/text";
 import { TONE_INK } from "@/lib/tone";
@@ -138,6 +138,7 @@ export function ComposerPreview({
               listName={sheet.name}
               listRatio={sheet.listRatio}
               withRatio={sheet.withRatio}
+              parts={SHEET_PARTS}
               onDone={() => setSheetOpen(false)}
             />
           ) : sheet?.view === "all" ? (

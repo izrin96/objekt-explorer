@@ -14,7 +14,9 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Menu, MenuPopup, MenuTrigger } from "@/components/ui/menu";
+import { FOCUS_RING } from "@/lib/a11y";
 import { formatTimestamp } from "@/lib/time";
+import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import { headRowClass, ScrollTable } from "./scroll-table";
@@ -119,7 +121,10 @@ export function OwnedPanel({
               <th scope="row" className="px-3 py-1.5 text-left font-normal">
                 <button
                   type="button"
-                  className="hover:text-accent-solid inline-flex cursor-pointer items-center gap-1.5 font-mono font-medium tabular-nums underline-offset-2 hover:underline"
+                  className={cn(
+                    FOCUS_RING,
+                    "hover:text-accent-solid inline-flex cursor-pointer items-center gap-1.5 rounded-sm font-mono font-medium tabular-nums underline-offset-2 hover:underline",
+                  )}
                   onClick={() => onOpenSerial(item.serial)}
                 >
                   {item.serial}

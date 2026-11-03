@@ -9,6 +9,7 @@ import {
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useRef, useState, type ReactNode, type RefObject } from "react";
 
+import { FadeScrollArea } from "@/components/shared/fade-scroll-area";
 import { Button } from "@/components/ui/button";
 import { Menu, MenuItem, MenuPopup, MenuTrigger } from "@/components/ui/menu";
 import { Popover, PopoverPopup, PopoverTrigger } from "@/components/ui/popover";
@@ -207,45 +208,49 @@ function SelectedPopover({
         aria-label={m.selection_list_aria()}
         className="w-72 max-w-[calc(100vw-2rem)]"
       >
-        {/* the rows' 44px touch targets overhang the edge; only the list height may scroll */}
-        <ul className="max-h-72 divide-y overflow-x-hidden overflow-y-auto">
-          {shown.map((objekt) => (
-            <li key={objekt.id} className="flex items-center gap-2 py-1.5 pr-1.5 pl-2.5">
-              <img
-                src={objekt.thumbnailImage}
-                alt=""
-                loading="lazy"
-                decoding="async"
-                className="bg-secondary aspect-photocard h-7 shrink-0 rounded-sm object-cover"
-              />
-              <span className="min-w-0 flex-1 truncate text-sm">
-                {objekt.member}
-                <span className="text-muted-foreground ml-1.5 font-mono text-xs">
-                  {getCollectionShortNo(objekt)}
-                  {isObjektOwned(objekt) && <b className="ml-1 font-semibold">#{objekt.serial}</b>}
+        {/* the rows' 44px touch targets overhang the edge; clip, so only the list height scrolls */}
+        <FadeScrollArea className="max-h-72">
+          <ul className="divide-y overflow-x-clip">
+            {shown.map((objekt) => (
+              <li key={objekt.id} className="flex items-center gap-2 py-1.5 pr-1.5 pl-2.5">
+                <img
+                  src={objekt.thumbnailImage}
+                  alt=""
+                  loading="lazy"
+                  decoding="async"
+                  className="bg-secondary aspect-photocard h-7 shrink-0 rounded-sm object-cover"
+                />
+                <span className="min-w-0 flex-1 truncate text-sm">
+                  {objekt.member}
+                  <span className="text-muted-foreground ml-1.5 font-mono text-xs">
+                    {getCollectionShortNo(objekt)}
+                    {isObjektOwned(objekt) && (
+                      <b className="ml-1 font-semibold">#{objekt.serial}</b>
+                    )}
+                  </span>
                 </span>
-              </span>
-              <Button
-                size="icon-sm"
-                variant="ghost"
-                aria-label={m.objekt_deselect_aria()}
-                onClick={() => {
-                  // or it would spring back open with the next selection
-                  if (count === 1) setOpen(false);
-                  toggle(objekt.id);
-                }}
-                className="size-7 shrink-0"
-              >
-                <XIcon />
-              </Button>
-            </li>
-          ))}
-          {rest > 0 && (
-            <li className="text-muted-foreground px-2.5 py-2 text-xs">
-              {m.selection_more_count({ count: rest.toLocaleString(getLocale()) })}
-            </li>
-          )}
-        </ul>
+                <Button
+                  size="icon-sm"
+                  variant="ghost"
+                  aria-label={m.objekt_deselect_aria()}
+                  onClick={() => {
+                    // or it would spring back open with the next selection
+                    if (count === 1) setOpen(false);
+                    toggle(objekt.id);
+                  }}
+                  className="size-7 shrink-0"
+                >
+                  <XIcon />
+                </Button>
+              </li>
+            ))}
+            {rest > 0 && (
+              <li className="text-muted-foreground px-2.5 py-2 text-xs">
+                {m.selection_more_count({ count: rest.toLocaleString(getLocale()) })}
+              </li>
+            )}
+          </ul>
+        </FadeScrollArea>
       </PopoverPopup>
     </Popover>
   );

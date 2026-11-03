@@ -4,6 +4,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { ArtistAvatar } from "@/features/artist/artist-avatar";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import { useCurrency } from "@/features/settings/use-currency";
+import { FOCUS_RING } from "@/lib/a11y";
 import { cn, scrollXOnlyClass } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
@@ -224,7 +225,10 @@ export function ActiveChips({
               type="button"
               aria-label={m.filter_remove_chip({ label: chip.label })}
               onClick={() => onRemove(chip)}
-              className="bg-secondary hover:bg-input inline-flex h-6.5 flex-none cursor-pointer items-center gap-1.5 rounded-full pr-2 pl-2.5 text-xs whitespace-nowrap data-swatched:pl-1"
+              className={cn(
+                FOCUS_RING,
+                "bg-secondary hover:bg-input inline-flex h-6.5 flex-none cursor-pointer items-center gap-1.5 rounded-full pr-2 pl-2.5 text-xs whitespace-nowrap data-swatched:pl-1",
+              )}
               data-swatched={swatched || undefined}
             >
               {artist !== undefined && <ArtistAvatar artist={artist} className="size-4 ring-0" />}

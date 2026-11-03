@@ -13,6 +13,7 @@ import { Menu, MenuItem, MenuPopup, MenuSeparator, MenuTrigger } from "@/compone
 import { getListLinkOption } from "@/features/list/list-link";
 import { ProfileCell } from "@/features/profile/profile-hover-card";
 import { formatCurrency } from "@/features/settings/use-currency";
+import { FOCUS_RING } from "@/lib/a11y";
 import { formatTimestamp } from "@/lib/time";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -80,7 +81,10 @@ export function MarketRow({
         ) : (
           <button
             type="button"
-            className="hover:text-accent-solid cursor-pointer font-mono font-medium tabular-nums underline-offset-2 hover:underline"
+            className={cn(
+              FOCUS_RING,
+              "hover:text-accent-solid cursor-pointer rounded-sm font-mono font-medium tabular-nums underline-offset-2 hover:underline",
+            )}
             onClick={() => onOpenSerial(item.serial ?? 0)}
           >
             #{item.serial}

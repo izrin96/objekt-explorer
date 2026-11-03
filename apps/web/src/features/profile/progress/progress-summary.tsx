@@ -2,6 +2,8 @@ import type { ReactNode } from "react";
 
 import { MessageMarkup } from "@/components/shared/message-markup";
 import { Meter, MeterIndicator, MeterTrack } from "@/components/ui/meter";
+import { FOCUS_RING } from "@/lib/a11y";
+import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
 
@@ -73,7 +75,10 @@ export function ProgressSummary({
               <button
                 type="button"
                 onClick={() => onPickMember(row.member)}
-                className="hover:bg-secondary/60 -mx-1.5 flex w-[calc(100%+--spacing(3))] cursor-pointer items-center gap-2.5 rounded-md px-1.5 py-1 text-left text-sm"
+                className={cn(
+                  FOCUS_RING,
+                  "hover:bg-secondary/60 -mx-1.5 flex w-[calc(100%+--spacing(3))] cursor-pointer items-center gap-2.5 rounded-md px-1.5 py-1 text-left text-sm",
+                )}
               >
                 <span
                   className="ring-foreground/15 size-2.5 flex-none rounded-[3px] ring-1"
