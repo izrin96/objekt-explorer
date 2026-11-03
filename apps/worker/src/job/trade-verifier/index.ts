@@ -295,12 +295,23 @@ async function settleTrade(
       name,
     );
 
+    // counts the legs the rescue accepted, which `progress` was taken before
+    const settledProgress = { verified: alreadyVerified + verified, total: state.length };
     const stuck = ended
       ? { notified: [], marked: 0, cleared: 0 }
-      : await recordStuck(tx, settled, stillWaiting, state, transferable, progress, name);
+      : await recordStuck(tx, settled, stillWaiting, state, transferable, settledProgress, name);
     const away = ended
       ? { notified: [], marked: 0, cleared: 0 }
-      : await recordAway(tx, settled, stillWaiting, state, applied, progress, name, serialOf);
+      : await recordAway(
+          tx,
+          settled,
+          stillWaiting,
+          state,
+          applied,
+          settledProgress,
+          name,
+          serialOf,
+        );
 
     if (
       verified === 0 &&
