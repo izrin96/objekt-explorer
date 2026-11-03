@@ -106,7 +106,7 @@ export function MetadataPanel({
             className="grid size-4 place-items-center rounded-sm border border-black/10"
             style={{ background: objekt.backgroundColor }}
           >
-            <span className="size-2 rounded-[2px]" style={{ background: objekt.textColor }} />
+            <span className="size-2 rounded-xs" style={{ background: objekt.textColor }} />
           </span>
           {objekt.textColor.toUpperCase()}
         </span>

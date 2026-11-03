@@ -217,7 +217,7 @@ export function ActForm({
                       <span
                         key={i}
                         className={cn(
-                          "size-1.5 rounded-[2px]",
+                          "size-1.5 rounded-xs",
                           i >= step
                             ? "bg-foreground/12"
                             : heavy

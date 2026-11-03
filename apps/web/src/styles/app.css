@@ -148,6 +148,8 @@
   /* `--accent` is a 10-15% wash; this is the same hue at full strength, for
      the places that need a solid mark rather than a hover surface */
   --color-accent-solid: var(--accent-solid);
+  /* a dark wash under white text on card art, so it stays dark in both themes */
+  --color-scrim: rgb(10 12 16 / 0.82);
   --color-discord: #5865f2;
   /* the brand blue fails 4.5:1 as small text on its own tint, in both themes */
   --color-discord-ink: var(--discord-ink);

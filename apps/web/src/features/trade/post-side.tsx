@@ -29,7 +29,7 @@ const FIT = { thumb: 40, gap: 6, fallback: 4, lines: 1 };
 
 /** `ObjektCard`'s own count scales with the card, too small to read at `w-10` */
 const STACK_COUNT =
-  "pointer-events-none absolute top-0.5 left-0.5 rounded-full bg-[rgba(10,12,16,.82)] px-1 text-xxs leading-4 font-semibold text-white tabular-nums";
+  "pointer-events-none absolute top-0.5 left-0.5 bg-scrim rounded-full px-1 text-xxs leading-4 font-semibold text-white tabular-nums";
 
 const STRIP_MORE =
   "hover:text-foreground focus-visible:ring-ring text-xs tabular-nums outline-none focus-visible:ring-2";

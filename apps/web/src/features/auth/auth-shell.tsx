@@ -1,7 +1,7 @@
-import { CubeIcon } from "@phosphor-icons/react";
 import { Link } from "@tanstack/react-router";
 import type React from "react";
 
+import { BrandMark } from "@/components/layout/brand-mark";
 import { MessageMarkup } from "@/components/shared/message-markup";
 import { SITE_NAME, cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -25,9 +25,7 @@ export function AuthShell({
           to="/"
           className="font-display mx-auto flex items-center gap-2 text-base font-bold tracking-tight whitespace-nowrap"
         >
-          <span className="bg-foreground text-background grid size-6 shrink-0 place-items-center rounded-[7px]">
-            <CubeIcon weight="bold" className="size-3.5" />
-          </span>
+          <BrandMark />
           <span>{SITE_NAME}</span>
         </Link>
         <div className={cn("bg-card flex min-w-0 flex-col gap-5 rounded-xl border p-5", className)}>

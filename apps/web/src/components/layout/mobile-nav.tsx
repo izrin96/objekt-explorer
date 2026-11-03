@@ -1,7 +1,8 @@
-import { CubeIcon, ListIcon, NoteIcon, SignInIcon } from "@phosphor-icons/react";
+import { ListIcon, NoteIcon, SignInIcon } from "@phosphor-icons/react";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 
+import { BrandMark } from "@/components/layout/brand-mark";
 import { ChangelogDialog, NewDot, useChangelogNew } from "@/components/layout/changelog";
 import { type NavLink, useAlsoActive } from "@/components/layout/nav-links";
 import { SystemStatus } from "@/components/layout/system-status";
@@ -52,9 +53,7 @@ export function MobileNav({ links }: { links: readonly NavLink[] }) {
         <SheetPopup side="left" className="flex max-w-72 flex-col">
           <SheetHeader>
             <SheetTitle className="font-display flex items-center gap-2 text-base">
-              <span className="bg-foreground text-background grid size-6 shrink-0 place-items-center rounded-[7px]">
-                <CubeIcon weight="bold" className="size-3.5" />
-              </span>
+              <BrandMark />
               {SITE_NAME}
             </SheetTitle>
             <SheetDescription className="sr-only">{m.nav_navigation()}</SheetDescription>
