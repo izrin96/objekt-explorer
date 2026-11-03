@@ -28,6 +28,7 @@ export async function remindStalls(seenUntil: string | null, skips: RunSkips): P
     );
   const publishes: Publish[] = [];
   for (const { id } of stalled) {
+    if (skips.has(id)) continue;
     const publish = await skips.step(id, () =>
       db.transaction(async (tx) => {
         const [row] = await tx
