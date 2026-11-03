@@ -127,7 +127,7 @@ function SessionCard({ live, token }: { live: LiveSession; token: string | undef
           alt=""
         />
         {live.status === "in_progress" && (
-          <div className="absolute top-2 left-2 rounded-lg bg-rose-500 px-1.5 py-0.5 text-sm font-semibold text-white shadow">
+          <div className="bg-destructive absolute top-2 left-2 rounded-lg px-1.5 py-0.5 text-sm font-semibold text-white shadow">
             {m.live_live_badge()}
           </div>
         )}

@@ -29,6 +29,7 @@ import { invalidateLinkChange } from "@/features/link/queries";
 import { UserRowBody, UserSearchEmpty, useUserSearch } from "@/features/user/user-search";
 import { orpc } from "@/lib/orpc";
 import { refusalText } from "@/lib/refusal";
+import { TONE_FILL, TONE_INK, toneChip } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
@@ -192,7 +193,7 @@ function LinkStep({
         <span
           className={cn(
             "grid size-6 flex-none place-items-center rounded-full border text-xs tabular-nums",
-            status === "done" && "bg-success/8 text-success-foreground border-transparent",
+            status === "done" && toneChip("success"),
             status === "current" && "border-foreground text-foreground font-medium",
             status === "upcoming" && "text-muted-foreground",
           )}
@@ -462,7 +463,11 @@ function StepError({ message }: { message: string }) {
   return (
     <p
       role="alert"
-      className="text-warning-foreground bg-warning/8 flex items-start gap-1.5 rounded-md px-2.5 py-1.5 text-xs text-pretty"
+      className={cn(
+        TONE_FILL.warning,
+        TONE_INK.warning,
+        "flex items-start gap-1.5 rounded-md px-2.5 py-1.5 text-xs text-pretty",
+      )}
     >
       <WarningIcon className="mt-0.5 shrink-0" />
       {message}

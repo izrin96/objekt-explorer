@@ -13,6 +13,7 @@ import { listMatchesOptions } from "@/features/trade/queries";
 import { NEAR_RING } from "@/features/trade/thumb-grid";
 import { nearCountText, nearRingText } from "@/lib/near-text";
 import { refusalText } from "@/lib/refusal";
+import { toneChip } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
@@ -107,7 +108,10 @@ export function ShowMyMatches({
         <MatchedListsChip
           listIds={listIds}
           near={near}
-          className="bg-success/10 text-success-foreground h-6 shrink-0 rounded px-1.5 text-xs tabular-nums"
+          className={cn(
+            toneChip("success"),
+            "h-6 shrink-0 rounded-sm border px-1.5 text-xs tabular-nums",
+          )}
         >
           {matching === "have"
             ? m.trade_list_count_you_have({ count: count.toLocaleString(getLocale()) })

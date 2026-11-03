@@ -10,6 +10,7 @@ import { useCurrentUser } from "@/features/user/hooks";
 import { useMinuteClock } from "@/hooks/use-minute-clock";
 import { orpc } from "@/lib/orpc";
 import { formatTimestamp, relativeTime } from "@/lib/time";
+import { toneChip } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 import { useUserSocketLive } from "@/stores/user-socket";
@@ -39,10 +40,11 @@ function useOverallStatus(): OverallStatus {
 function triggerClass(overall: OverallStatus): string {
   return cn(
     "[&_svg]:opacity-100",
-    overall === "down" &&
-      "border-destructive/30 bg-destructive/8 text-destructive-foreground hover:bg-destructive/16 dark:border-destructive/20 dark:bg-destructive/16 dark:hover:bg-destructive/24",
-    overall === "up" &&
-      "border-success/30 bg-success/8 text-success-foreground hover:bg-success/16 dark:border-success/20 dark:bg-success/16 dark:hover:bg-success/24",
+    overall === "down" && [
+      toneChip("destructive"),
+      "hover:bg-destructive/16 dark:hover:bg-destructive/24",
+    ],
+    overall === "up" && [toneChip("success"), "hover:bg-success/16 dark:hover:bg-success/24"],
   );
 }
 

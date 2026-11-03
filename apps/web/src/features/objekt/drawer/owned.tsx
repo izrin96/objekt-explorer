@@ -123,7 +123,7 @@ export function OwnedPanel({
                   type="button"
                   className={cn(
                     FOCUS_RING,
-                    "hover:text-accent-solid inline-flex cursor-pointer items-center gap-1.5 rounded-sm font-mono font-medium tabular-nums underline-offset-2 hover:underline",
+                    "hover:text-foreground inline-flex cursor-pointer items-center gap-1.5 rounded-sm font-mono font-medium tabular-nums underline-offset-2 hover:underline",
                   )}
                   onClick={() => onOpenSerial(item.serial)}
                 >

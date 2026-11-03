@@ -4,6 +4,7 @@ import { useState } from "react";
 import * as z from "zod";
 
 import { MessageMarkup } from "@/components/shared/message-markup";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Form } from "@/components/ui/form";
@@ -57,12 +58,11 @@ export function SignInForm({
       <AuthHeader title={m.auth_sign_in_title()} description={m.auth_sign_in_description()} />
 
       {notice ? (
-        <p
-          role="alert"
-          className="border-destructive/32 text-destructive-foreground rounded-lg border px-3 py-2 text-sm text-pretty"
-        >
-          {notice}
-        </p>
+        <Alert variant="error" role="alert">
+          <AlertDescription className="text-destructive-foreground text-pretty">
+            {notice}
+          </AlertDescription>
+        </Alert>
       ) : null}
 
       <SocialSignIn redirect={redirect} />

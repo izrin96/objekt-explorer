@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import { TONE_FILL, TONE_INK } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 
 /** `border-current/15`, so the border takes the note's own ink. */
@@ -18,7 +19,7 @@ export function Note({
       className={cn(
         "w-full rounded-lg border border-current/15 p-4 text-sm/6 text-pretty",
         intent === "default" && "bg-muted/50 text-secondary-foreground",
-        intent === "warning" && "bg-warning/8 text-warning-foreground dark:bg-warning/16",
+        intent === "warning" && [TONE_FILL.warning, TONE_INK.warning],
         className,
       )}
     >

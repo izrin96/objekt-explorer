@@ -9,7 +9,7 @@ import { type RatioSide, ratioName, ratioSideOf } from "@/features/list/ratio-te
 import { ObjektCard } from "@/features/objekt/objekt-card";
 import { useElementSize } from "@/hooks/use-element-size";
 import { nearCountText, nearRingText } from "@/lib/near-text";
-import { TONE_INK } from "@/lib/tone";
+import { TONE_INK, toneChip } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
@@ -367,7 +367,7 @@ export function SideStrip({
           listIds={matchedListIds}
           ruleMatches={ruleMatches}
           near={near}
-          className="bg-success/10 text-success-foreground shrink-0 rounded px-1.5 normal-case"
+          className={cn(toneChip("success"), "shrink-0 rounded-sm border px-1.5 normal-case")}
         >
           {side.role === "want"
             ? m.trade_list_count_you_have({ count: count.toLocaleString(getLocale()) })
