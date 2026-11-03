@@ -11,7 +11,8 @@ import { type MouseEvent, type Ref, useId } from "react";
 
 import { Button } from "@/components/ui/button";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { TogglePrimitive } from "@/components/ui/toggle";
+import { ToggleGroup, ToggleGroupItem, ToggleGroupPrimitive } from "@/components/ui/toggle-group";
 import { FOCUS_RING } from "@/lib/a11y";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -69,26 +70,33 @@ function FilterChips({
 }) {
   const counts = filterCounts(legs, ended);
   return (
-    <div
-      role="group"
+    <ToggleGroupPrimitive
+      value={[state.filter]}
+      // pressing the active chip again would empty the group; a filter is always picked
+      onValueChange={([next]: ExchangeFilter[]) => {
+        if (next) state.setFilter(next);
+      }}
       aria-label={m.offer_filter_label()}
       data-scroll-x
       className={cn("flex min-w-0 gap-1.5 overflow-x-auto", className)}
     >
       {(Object.keys(FILTER_LABEL) as ExchangeFilter[]).map((filter) => (
-        <Button
+        <TogglePrimitive
           key={filter}
-          variant={state.filter === filter ? "default" : "outline"}
-          size="sm"
-          aria-pressed={state.filter === filter}
-          className="shrink-0 rounded-full"
-          onClick={() => state.setFilter(filter)}
+          value={filter}
+          render={
+            <Button
+              variant={state.filter === filter ? "default" : "outline"}
+              size="sm"
+              className="shrink-0 rounded-full"
+            />
+          }
         >
           {FILTER_LABEL[filter]()}
           <span className="text-xs tabular-nums opacity-70">{counts[filter]}</span>
-        </Button>
+        </TogglePrimitive>
       ))}
-    </div>
+    </ToggleGroupPrimitive>
   );
 }
 

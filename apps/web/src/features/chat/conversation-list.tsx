@@ -23,6 +23,8 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { InfiniteSentinel } from "@/components/shared/infinite-sentinel";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { TogglePrimitive } from "@/components/ui/toggle";
+import { ToggleGroupPrimitive } from "@/components/ui/toggle-group";
 import { useMinuteClock } from "@/hooks/use-minute-clock";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
@@ -219,35 +221,41 @@ function ShowChips({ show, onPick }: { show: InboxShow; onPick: () => void }) {
     return value >= UNREAD_COUNT_CAP ? "99+" : String(value);
   };
   return (
-    <div
-      role="group"
+    <ToggleGroupPrimitive
+      value={[show]}
+      // pressing the active chip again would empty the group; one show is always picked
+      onValueChange={([next]: InboxShow[]) => {
+        if (!next) return;
+        onPick();
+        void navigate({
+          to: ".",
+          search: (prev) => ({ ...prev, show: next === "all" ? undefined : next }),
+          replace: true,
+        });
+      }}
       aria-label={m.chat_show_label()}
       data-scroll-x
       className="flex shrink-0 gap-1.5 overflow-x-auto px-3 py-2"
     >
       {INBOX_SHOWS.map((key) => (
-        <Button
+        <TogglePrimitive
           key={key}
-          variant={show === key ? "default" : "outline"}
-          size="sm"
-          aria-pressed={show === key}
-          className="shrink-0 rounded-full"
-          onClick={() => {
-            onPick();
-            void navigate({
-              to: ".",
-              search: (prev) => ({ ...prev, show: key === "all" ? undefined : key }),
-              replace: true,
-            });
-          }}
+          value={key}
+          render={
+            <Button
+              variant={show === key ? "default" : "outline"}
+              size="sm"
+              className="shrink-0 rounded-full"
+            />
+          }
         >
           {SHOW_LABEL[key]()}
           {count(key) === null ? null : (
             <span className="text-xs tabular-nums opacity-70">{count(key)}</span>
           )}
-        </Button>
+        </TogglePrimitive>
       ))}
-    </div>
+    </ToggleGroupPrimitive>
   );
 }
 
