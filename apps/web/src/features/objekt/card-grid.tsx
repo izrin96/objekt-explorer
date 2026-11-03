@@ -1,5 +1,3 @@
-import type { ReactNode } from "react";
-
 import { useElementSize } from "@/hooks/use-element-size";
 import { cn } from "@/lib/utils";
 
@@ -19,23 +17,6 @@ const GAPS = "gap-x-2 gap-y-3";
 
 function columnsStyle(columns: number) {
   return { gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` };
-}
-
-/**
- * `VirtualCardGrid`'s layout without the virtualising, for a short list inside a panel that
- * scrolls. Hidden until measured, so the first frame does not show the wrong column count.
- */
-export function CardGrid({ className, children }: { className?: string; children: ReactNode }) {
-  const { ref, measured, columns } = useCardColumns<HTMLUListElement>();
-  return (
-    <ul
-      ref={ref}
-      className={cn("grid", GAPS, !measured && "invisible", className)}
-      style={columnsStyle(columns)}
-    >
-      {children}
-    </ul>
-  );
 }
 
 /** Placeholders in the columns the loaded card grid will have. */

@@ -5,7 +5,7 @@ import { createServerFn } from "@tanstack/react-start";
 import type { ErrorTrackingConfig } from "@/lib/error-tracking";
 
 /** Read at runtime, so no build carries a DSN; null keeps the browser SDK off. */
-export const getErrorTrackingConfig = createServerFn({ method: "GET" }).handler(
+const getErrorTrackingConfig = createServerFn({ method: "GET" }).handler(
   (): ErrorTrackingConfig | null =>
     serverEnv.SENTRY_DSN
       ? {
