@@ -98,3 +98,14 @@ A trend needs 7 records. While the collection has fewer than 7 records in the la
 #### Scenario: Gap
 - **WHEN** a collection has records for 1 and 4 October and none for 2 and 3 October
 - **THEN** the chart has no bars on 2 and 3 October, and the floor runs from 1 to 4 October as a faded dashed line
+
+### Requirement: Most listed ordering
+`/market`'s Most listed sort (`sort=supply`) SHALL order collections by their number of live listings, one per listing rather than one per seller, most first unless the direction is flipped. Collections with the same number SHALL be ordered by floor price, cheapest first with unpriced collections last, then by newest listing, most recent first, then by collection slug. This tie order SHALL be the same in both directions.
+
+#### Scenario: Tie on count
+- **WHEN** two collections each have 3 live listings, one with a floor of $2 and one with a floor of $1, and the sort is Most listed in either direction
+- **THEN** the $1 collection comes before the $2 collection
+
+#### Scenario: Unpriced tie
+- **WHEN** two collections each have 5 live listings and every listing of one of them is quote-your-own-price
+- **THEN** the priced collection comes before the quote-your-own-price one
