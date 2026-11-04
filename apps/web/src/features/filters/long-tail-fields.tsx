@@ -379,6 +379,7 @@ const LOCK_OPTION = { all: undefined, locked: true, unlocked: false } as const;
 type LockOption = keyof typeof LOCK_OPTION;
 
 const EDITION_OPTIONS = validEdition.map(String);
+const editionOf = (value: string) => validEdition.find((edition) => String(edition) === value);
 
 /**
  * The same long tail as `LongTailFields`, one toolbar control per field, for
@@ -404,13 +405,15 @@ export function LongTailToolbar({
           label={m.filter_edition()}
           // the select keys its items by string; editions are numbers in the URL
           options={EDITION_OPTIONS}
-          getOptionLabel={(value) => EDITION_LABEL[Number(value) as ValidEdition]}
+          getOptionLabel={(value) => {
+            const edition = editionOf(value);
+            return edition === undefined ? value : EDITION_LABEL[edition];
+          }}
           value={(filters.edition ?? []).map(String)}
-          onChange={(value) =>
-            setFilters({
-              edition: value.length > 0 ? value.map((v) => Number(v) as ValidEdition) : undefined,
-            })
-          }
+          onChange={(value) => {
+            const edition = value.map(editionOf).filter((e) => e !== undefined);
+            setFilters({ edition: edition.length > 0 ? edition : undefined });
+          }}
           className={className}
         />
       )}

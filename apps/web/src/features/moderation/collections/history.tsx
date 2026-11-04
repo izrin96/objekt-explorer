@@ -6,6 +6,11 @@ import { m } from "@/paraglide/messages";
 
 type AdminData = Outputs["admin"]["collectionOverrides"];
 
+/** A stored JSON value read as fields, empty when it is not an object. */
+function fieldsOf(value: unknown): Record<string, unknown> {
+  return typeof value === "object" && value !== null ? { ...value } : {};
+}
+
 function colorText(value: unknown) {
   return typeof value === "string" ? value : m.mod_collections_history_source();
 }
@@ -23,8 +28,8 @@ export function History({ history }: { history: AdminData["history"] }) {
           {history.map((entry) => {
             const detail = entry.detail ?? {};
             const slug = typeof detail.slug === "string" ? detail.slug : null;
-            const before = (detail.before ?? {}) as Record<string, unknown>;
-            const after = (detail.after ?? {}) as Record<string, unknown>;
+            const before = fieldsOf(detail.before);
+            const after = fieldsOf(detail.after);
             const changes = [
               before.textColor !== after.textColor
                 ? m.mod_collections_history_text({

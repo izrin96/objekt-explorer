@@ -30,12 +30,14 @@ export function settlePlan(
   const outcome = tradeOutcome(applied, counts.alreadyVerified, held);
   const ended = outcome.status !== "in_progress";
   const cancelReason = outcome.status === "cancelled" ? outcome.reason : null;
+  const event: TradePayload["event"] =
+    outcome.status === "in_progress" ? "leg_verified" : outcome.status;
   const quiet =
     !ended && (!noteLegs || !legVerifiedNoted(counts.verified, counts.autoAccepted ?? 0));
   const note = quiet
     ? null
     : {
-        event: (ended ? outcome.status : "leg_verified") as TradePayload["event"],
+        event,
         reason: cancelReason,
         progress: { verified: counts.alreadyVerified + counts.verified, total: counts.total },
       };
