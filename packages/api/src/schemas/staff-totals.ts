@@ -229,7 +229,8 @@ export const staffTradeSchema = z.object({
       ...shownSerialFields,
       txHash: z.string(),
       transferredAt: instantSchema,
-      status: z.enum(["pending", "accepted", "declined"]),
+      /** `lapsed`: still pending when its leg closed, so never decided */
+      status: z.enum(["pending", "accepted", "declined", "lapsed"]),
       decidedAt: instantSchema.nullable(),
       acceptBy: instantSchema.nullable(),
       autoAccepted: z.boolean(),

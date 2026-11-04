@@ -66,7 +66,9 @@ function TradeBody({ trade }: { trade: StaffTrade }) {
                               ? copy.autoAccepted
                                 ? m.offer_leg_auto_accepted()
                                 : m.mod_staff_trade_copy_accepted()
-                              : m.mod_staff_trade_copy_declined()}
+                              : copy.status === "lapsed"
+                                ? m.mod_staff_trade_copy_lapsed()
+                                : m.mod_staff_trade_copy_declined()}
                         </Badge>
                       </span>
                       <span className="text-muted-foreground text-xs">

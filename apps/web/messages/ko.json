@@ -2435,6 +2435,7 @@
   "mod_staff_trade_copy_pending": "받는 사람의 결정 대기",
   "mod_staff_trade_copy_accepted": "수락",
   "mod_staff_trade_copy_declined": "거절",
+  "mod_staff_trade_copy_lapsed": "전송이 끝나 효력 없음",
   "mod_staff_trade_requests": "취소 요청",
   "mod_staff_trade_request_by": "{name} 요청",
   "mod_staff_trade_request_pending": "답변 대기",

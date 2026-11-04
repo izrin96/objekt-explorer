@@ -10,6 +10,7 @@ import {
 import { and, eq, inArray } from "drizzle-orm";
 
 import { staffTimeline } from "../../lib/staff-timeline";
+import { staffCopyStatus } from "../../lib/staff-totals";
 import { iso } from "../../lib/time";
 import { awayBreaksAt } from "../../schemas/offer";
 import type { StaffTrade } from "../../schemas/staff-totals";
@@ -44,6 +45,7 @@ export async function staffTrade(tradeId: number): Promise<StaffTrade> {
         decidedAt: tradeSubstitute.decidedAt,
         acceptBy: tradeSubstitute.acceptBy,
         autoAccepted: tradeSubstitute.autoAccepted,
+        legOpen: tradeLeg.open,
       })
       .from(tradeSubstitute)
       .innerJoin(tradeLeg, eq(tradeLeg.id, tradeSubstitute.tradeLegId))
@@ -138,7 +140,7 @@ export async function staffTrade(tradeId: number): Promise<StaffTrade> {
         serialEstimated: shown.estimated,
         txHash: copy.txHash,
         transferredAt: iso(copy.transferredAt)!,
-        status: copy.status,
+        status: staffCopyStatus(copy.status, copy.legOpen),
         decidedAt: iso(copy.decidedAt),
         acceptBy: iso(copy.acceptBy),
         autoAccepted: copy.autoAccepted,

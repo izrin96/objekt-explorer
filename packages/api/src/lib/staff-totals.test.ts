@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { fillDays, percentile, rangeDays, rangeStart } from "./staff-totals";
+import { fillDays, percentile, rangeDays, rangeStart, staffCopyStatus } from "./staff-totals";
 
 describe("rangeDays", () => {
   test("7 days end with today in UTC, oldest first, across a month end", () => {
@@ -95,5 +95,17 @@ describe("percentile", () => {
     const hours = [1, 2, 2, 3, 4, 5, 6, 8, 20, 30];
     expect(percentile(hours, 0.5)).toBe(4.5);
     expect(percentile(hours, 0.9)).toBeCloseTo(21, 9);
+  });
+});
+
+describe("staffCopyStatus", () => {
+  test("a copy still pending on a closed leg lapsed", () => {
+    expect(staffCopyStatus("pending", false)).toBe("lapsed");
+  });
+
+  test("an open leg's pending copy waits; a decided copy keeps its decision", () => {
+    expect(staffCopyStatus("pending", true)).toBe("pending");
+    expect(staffCopyStatus("accepted", false)).toBe("accepted");
+    expect(staffCopyStatus("declined", false)).toBe("declined");
   });
 });

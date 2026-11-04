@@ -2435,6 +2435,7 @@
   "mod_staff_trade_copy_pending": "受け手の判断待ち",
   "mod_staff_trade_copy_accepted": "承諾",
   "mod_staff_trade_copy_declined": "辞退",
+  "mod_staff_trade_copy_lapsed": "送付の終了で失効",
   "mod_staff_trade_requests": "キャンセル依頼",
   "mod_staff_trade_request_by": "{name}が依頼",
   "mod_staff_trade_request_pending": "回答待ち",

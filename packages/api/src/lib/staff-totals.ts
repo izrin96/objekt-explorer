@@ -39,3 +39,12 @@ export function percentile(sorted: number[], p: number): number | null {
   const high = Math.ceil(at);
   return sorted[low]! + (sorted[high]! - sorted[low]!) * (at - low);
 }
+
+/**
+ * A wrong copy's state for staff. One still pending on a closed leg was never decided: the right
+ * objekt verified the leg, another copy was accepted, or the trade ended, and nothing declines
+ * the rest, so it reads as `lapsed`, as a request to cancel left open by an ended trade does.
+ */
+export function staffCopyStatus(status: "pending" | "accepted" | "declined", legOpen: boolean) {
+  return status === "pending" && !legOpen ? "lapsed" : status;
+}

@@ -2435,6 +2435,7 @@
   "mod_staff_trade_copy_pending": "Waiting on the receiver",
   "mod_staff_trade_copy_accepted": "Accepted",
   "mod_staff_trade_copy_declined": "Declined",
+  "mod_staff_trade_copy_lapsed": "Lapsed when its leg closed",
   "mod_staff_trade_requests": "Requests to cancel",
   "mod_staff_trade_request_by": "Asked by {name}",
   "mod_staff_trade_request_pending": "Waiting for an answer",
