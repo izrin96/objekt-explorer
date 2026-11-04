@@ -64,7 +64,8 @@ export function useCreateList() {
   );
 }
 
-export function useCopyList() {
+/** `opensCopy: false` for a caller that takes the copy itself; the post composer picks it */
+export function useCopyList({ opensCopy = true }: { opensCopy?: boolean } = {}) {
   const invalidate = useListInvalidation();
   const navigate = useNavigate();
 
@@ -83,7 +84,7 @@ export function useCopyList() {
               : m.list_copy_success_collections(counts),
         });
         await invalidate();
-        await navigate({ to: "/list/$slug", params: { slug } });
+        if (opensCopy) await navigate({ to: "/list/$slug", params: { slug } });
       },
       onError: (error) => {
         toastManager.add({

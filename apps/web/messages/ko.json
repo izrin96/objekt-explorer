@@ -2282,6 +2282,8 @@
   "trade_composer_new_list_have": "새 보유 목록…",
   "trade_composer_new_list_sale": "새 판매 목록…",
   "trade_composer_new_list_want": "새 희망 목록…",
+  "trade_composer_copy_list": "목록 복사…",
+  "trade_composer_copy_from": "복사할 목록",
   "trade_composer_have_needs_profile": "Trade가 보유 오브젝트를 확인하므로 보유 목록에는 연결된 Cosmo 프로필이 필요합니다.",
   "trade_composer_sale_needs_profile": "Trade가 보유 오브젝트를 확인하므로 판매 목록에는 연결된 Cosmo 프로필이 필요합니다.",
   "trade_composer_add_tile": "{list}에 오브젝트 추가",

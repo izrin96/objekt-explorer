@@ -1,3 +1,4 @@
+import type { ListType } from "@repo/api/schemas/list";
 import { copyMode } from "@repo/api/schemas/list-copy";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
@@ -24,7 +25,8 @@ import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
 
 import { useCopyList } from "./actions";
-import { EMPTY_DRAFT, type ListDraft, ListForm, listDraftSchema, toCreateInput } from "./list-form";
+import { toCopyDraft } from "./copy-draft";
+import { type ListDraft, ListForm, listDraftSchema, toCreateInput } from "./list-form";
 import { listFindOptions } from "./queries";
 
 type StoredList = Awaited<ReturnType<typeof client.list.find>>;
@@ -43,15 +45,15 @@ export function CopyListDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogPopup className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="font-display">{m.list_copy_title()}</DialogTitle>
+          <DialogDescription>{m.list_create_list_type_desc()}</DialogDescription>
+        </DialogHeader>
         {data ? (
           // mounted with the stored list in hand, so the draft is its initial state
           <CopyListForm key={slug} list={data} onDone={() => onOpenChange(false)} />
         ) : (
           <>
-            <DialogHeader>
-              <DialogTitle className="font-display">{m.list_copy_title()}</DialogTitle>
-              <DialogDescription>{m.list_create_list_type_desc()}</DialogDescription>
-            </DialogHeader>
             <DialogPanel>
               {error ? (
                 <p className="text-destructive-foreground text-sm">{refusalText(error)}</p>
@@ -73,30 +75,22 @@ export function CopyListDialog({
   );
 }
 
-/** The source's own choices, but never its partner or its place on Trade. */
-function toCopyDraft(list: StoredList): ListDraft {
-  return {
-    name: m.list_copy_name({ name: list.name }),
-    description: list.description ?? "",
-    listType: list.listType,
-    currency: list.currency ?? "",
-    linkedListId: null,
-    profileAddress: list.profileAddress,
-    isProfileBind: list.isProfileBind,
-    matchSale: list.listType === "want" ? list.matchSale : EMPTY_DRAFT.matchSale,
-    matchHave: list.listType === "want" ? list.matchHave : EMPTY_DRAFT.matchHave,
-    gridColumns: list.gridColumns,
-    hideSerial: list.hideSerial,
-    regenerateSlug: false,
-    // the server carries the list's ratio when the copy keeps its type
-    ratio: null,
-  };
-}
-
-function CopyListForm({ list, onDone }: { list: StoredList; onDone: () => void }) {
+export function CopyListForm({
+  list,
+  onDone,
+  fixedType,
+  onCreated,
+}: {
+  list: StoredList;
+  onDone: () => void;
+  /** the copy's type, not changeable; a have or sale copy is also bound to a profile */
+  fixedType?: ListType;
+  /** hands the copy back in place of opening it */
+  onCreated?: (slug: string) => void;
+}) {
   const profiles = useUserProfiles();
-  const copy = useCopyList();
-  const [draft, setDraft] = useState<ListDraft>(() => toCopyDraft(list));
+  const copy = useCopyList({ opensCopy: onCreated === undefined });
+  const [draft, setDraft] = useState<ListDraft>(() => toCopyDraft(list, { fixedType, profiles }));
   const [errors, setErrors] = useState<FieldErrors>({});
 
   const { listType, isProfileBind, profileAddress } = toCreateInput(draft);
@@ -119,19 +113,25 @@ function CopyListForm({ list, onDone }: { list: StoredList; onDone: () => void }
         const next = zodErrors(listDraftSchema(), draft);
         setErrors(next);
         if (Object.keys(next).length > 0) return;
-        copy.mutate({ ...toCreateInput(draft), sourceSlug: list.slug }, { onSuccess: onDone });
+        // per call, so a dialog closed while the copy is in flight picks nothing
+        copy.mutate(
+          { ...toCreateInput(draft), sourceSlug: list.slug },
+          {
+            onSuccess: ({ slug }) => {
+              onCreated?.(slug);
+              onDone();
+            },
+          },
+        );
       }}
     >
-      <DialogHeader>
-        <DialogTitle className="font-display">{m.list_copy_title()}</DialogTitle>
-        <DialogDescription>{m.list_create_list_type_desc()}</DialogDescription>
-      </DialogHeader>
       <DialogPanel>
         <ListForm
           mode="create"
           value={draft}
           onChange={setDraft}
           profiles={profiles}
+          lockBind={fixedType !== undefined}
           notice={
             // mounted empty so the text, once it arrives, is announced
             <p role="status" className="text-muted-foreground text-xs text-pretty empty:sr-only">
