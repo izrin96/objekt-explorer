@@ -2282,6 +2282,8 @@
   "trade_composer_new_list_have": "New have list…",
   "trade_composer_new_list_sale": "New sale list…",
   "trade_composer_new_list_want": "New want list…",
+  "trade_composer_copy_list": "Copy a list…",
+  "trade_composer_copy_from": "Copy from",
   "trade_composer_have_needs_profile": "A have list needs a linked Cosmo profile, since Trade checks what it holds.",
   "trade_composer_sale_needs_profile": "A sale list needs a linked Cosmo profile, since Trade checks what it holds.",
   "trade_composer_add_tile": "Add objekts to {list}",

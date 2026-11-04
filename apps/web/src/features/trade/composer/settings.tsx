@@ -1,4 +1,4 @@
-import { PlusIcon } from "@phosphor-icons/react";
+import { CopyIcon, PlusIcon } from "@phosphor-icons/react";
 import {
   type PlanList,
   type PostKind,
@@ -25,7 +25,7 @@ import {
 import { CreateListDialog } from "@/features/list/create-list-dialog";
 import { EMPTY_DRAFT, NONE, isBindable } from "@/features/list/list-draft";
 import { TagBadge } from "@/features/list/tag-label";
-import { useUserProfiles } from "@/features/user/hooks";
+import { useUserLists, useUserProfiles } from "@/features/user/hooks";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
@@ -47,6 +47,7 @@ import {
   SLOT_HEADING,
   type Slot,
 } from "../post-kind-text";
+import { ComposerCopyDialog } from "./copy-list-dialog";
 
 /** What the post is for, its lists and its options. Post sits apart, in `PostButton`. */
 export function ComposerSettings({
@@ -72,6 +73,7 @@ export function ComposerSettings({
     if (kind) setChoice((prev) => pickList(lists, prev, kind, slot, slug, replaces));
   };
   const hasProfile = useUserProfiles().length > 0;
+  const hasLists = useUserLists().length > 0;
   // the slot outlives a close, so the dialog keeps its type while it animates out
   const [newList, setNewList] = useState<{ slot: Slot; open: boolean }>({
     slot: "have",
@@ -80,6 +82,11 @@ export function ComposerSettings({
   const closeNewList = () => setNewList((prev) => ({ ...prev, open: false }));
   // the item that opened the dialog is gone with its popup, so focus goes back to the dropdown
   const newListOpener = useRef<HTMLElement | null>(null);
+  const [copyList, setCopyList] = useState<{ slot: Slot; open: boolean }>({
+    slot: "have",
+    open: false,
+  });
+  const copyListOpener = useRef<HTMLElement | null>(null);
 
   const side = (slot: Slot) => {
     if (!kind || !plan) return null;
@@ -100,6 +107,14 @@ export function ComposerSettings({
           newListOpener.current = trigger;
           setNewList({ slot, open: true });
         }}
+        onCopy={
+          hasLists
+            ? (trigger) => {
+                copyListOpener.current = trigger;
+                setCopyList({ slot, open: true });
+              }
+            : null
+        }
         prompt={
           partner !== null
             ? {
@@ -183,6 +198,15 @@ export function ComposerSettings({
         onCreated={(slug) => pick(newList.slot, slug)}
         finalFocus={newListOpener}
       />
+      <ComposerCopyDialog
+        slot={copyList.slot}
+        open={copyList.open}
+        onOpenChange={(open) => {
+          if (!open) setCopyList((prev) => ({ ...prev, open: false }));
+        }}
+        onCreated={(slug) => pick(copyList.slot, slug)}
+        finalFocus={copyListOpener}
+      />
     </div>
   );
 }
@@ -235,8 +259,9 @@ function KindSegment({
 
 type Prompt = { partner: string; onUnpair: () => void; onPickAnother: () => void };
 
-/** the dropdown's last item, beside `NONE` */
+/** the dropdown's last items, beside `NONE` */
 const NEW = "__new__";
+const COPY = "__copy__";
 
 const NEW_LIST_LABEL: Record<Slot, () => string> = {
   have: m.trade_composer_new_list_have,
@@ -255,6 +280,7 @@ function ListSelect({
   replaces,
   needsProfile,
   onNew,
+  onCopy,
   prompt,
   onPick,
 }: {
@@ -270,11 +296,14 @@ function ListSelect({
   /** a have or sale list can't be made without a linked Cosmo profile */
   needsProfile: boolean;
   onNew: (trigger: HTMLElement | null) => void;
+  /** null hides Copy a list…, for a viewer with no list to copy */
+  onCopy: ((trigger: HTMLElement | null) => void) | null;
   prompt: Prompt | null;
   onPick: (slug: string | null) => void;
 }) {
   const id = useId();
   const triggerRef = useRef<HTMLButtonElement>(null);
+  const typed = useRef(false);
   const candidates = lists.filter((list) => list.listType === slot);
   const rows = candidates.map((list) => {
     const block = rowBlock(lists, list, kind, replaces, otherPicked);
@@ -296,13 +325,33 @@ function ListSelect({
       <Label htmlFor={id}>{SLOT_HEADING[slot]()}</Label>
       <Select
         value={value ?? NONE}
-        onValueChange={(next: string | null) => {
-          // New list opens its dialog and leaves the pick as it is
+        onValueChange={(next: string | null, details) => {
+          // typing on the closed trigger and Base UI's reset of a value it holds no item for yet
+          // (a list just made and picked, until the refetched lists render) both report "none";
+          // only typing comes from a key, so the reset is the one skipped; typing picks lists only,
+          // never the items that open a dialog
+          if (details.reason === "none" && (!typed.current || next === NEW || next === COPY)) {
+            return;
+          }
+          // New list and Copy a list open their dialog and leave the pick as it is
           if (next === NEW) onNew(triggerRef.current);
+          else if (next === COPY) onCopy?.(triggerRef.current);
           else onPick(next === null || next === NONE ? null : next);
         }}
       >
-        <SelectTrigger ref={triggerRef} id={id} className="min-w-0" aria-describedby={describedBy}>
+        <SelectTrigger
+          ref={triggerRef}
+          id={id}
+          className="min-w-0"
+          aria-describedby={describedBy}
+          onKeyDownCapture={() => {
+            typed.current = true;
+            // a timeout, not a microtask: one runs between React's capture and bubble listeners
+            setTimeout(() => {
+              typed.current = false;
+            }, 0);
+          }}
+        >
           <SelectValue>
             {(next: string) =>
               next === NONE
@@ -332,6 +381,14 @@ function ListSelect({
               {NEW_LIST_LABEL[slot]()}
             </span>
           </SelectItem>
+          {onCopy ? (
+            <SelectItem value={COPY} disabled={needsProfile}>
+              <span className="flex min-w-0 items-center gap-1.5">
+                <CopyIcon aria-hidden />
+                {m.trade_composer_copy_list()}
+              </span>
+            </SelectItem>
+          ) : null}
         </SelectPopup>
       </Select>
       {needsProfile ? (

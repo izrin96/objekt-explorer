@@ -2282,6 +2282,8 @@
   "trade_composer_new_list_have": "新しい所持リスト…",
   "trade_composer_new_list_sale": "新しい販売リスト…",
   "trade_composer_new_list_want": "新しい希望リスト…",
+  "trade_composer_copy_list": "リストをコピー…",
+  "trade_composer_copy_from": "コピー元",
   "trade_composer_have_needs_profile": "Tradeは所持しているObjektを確認するため、所持リストには連携済みのCosmoプロフィールが必要です。",
   "trade_composer_sale_needs_profile": "Tradeは所持しているObjektを確認するため、販売リストには連携済みのCosmoプロフィールが必要です。",
   "trade_composer_add_tile": "{list}にObjektを追加",
