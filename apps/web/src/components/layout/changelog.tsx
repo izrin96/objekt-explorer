@@ -31,6 +31,18 @@ import { AboutDialog } from "./about";
  */
 const CHANGELOG = [
   {
+    date: "2026-10-26 - 2026-11-04",
+    items: [
+      "Trade people and posts have their own shareable pages.",
+      "Have and want lists can show a trade ratio (display only).",
+      "Added Show my matches on the Marketplace, list pages and profiles.",
+      "Reworked Add to list. Want-list rules have no size limit.",
+      "Messages: reply with a quote, see each conversation's deal, and click links.",
+      "Profiles can have a bio, and you can see who is online.",
+      "Snapshot picker date presets.",
+    ],
+  },
+  {
     date: "2026-10-25",
     items: [
       "Added a Trade page: Browse lists trade and sale posts, and For you (formerly Trade Matches) finds people to trade with across all your lists.",
