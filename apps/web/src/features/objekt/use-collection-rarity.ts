@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useFilters } from "@/features/filters/use-filters";
 import { orpc } from "@/lib/orpc";
 
-/** the server caches the map for two hours; a browser holding it for one is still fresh */
+/** the worker refreshes the map hourly, so a browser holding it for an hour is still fresh */
 const RARITY_STALE_TIME = 1000 * 60 * 60;
 
 const rarityOptions = (enabled: boolean) =>

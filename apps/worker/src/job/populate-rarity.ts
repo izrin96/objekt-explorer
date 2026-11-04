@@ -28,7 +28,14 @@ export async function populateRarity() {
     .where(gt(objekts.mintedAt, base.at))
     .groupBy(collections.slug);
 
-  await redis.set(RARITY_KEY, JSON.stringify(mergeRarity(base.counts, recent)), "EX", 2 * 60 * 60);
+  // refreshed hourly; the long expiry keeps the web off its own full count while this job is down,
+  // and a day-old count still sorts by rarity correctly
+  await redis.set(
+    RARITY_KEY,
+    JSON.stringify(mergeRarity(base.counts, recent)),
+    "EX",
+    2 * 24 * 60 * 60,
+  );
 }
 
 async function fullCount(nowMs: number): Promise<RarityBase> {
