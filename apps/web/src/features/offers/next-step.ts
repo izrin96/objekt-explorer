@@ -3,6 +3,7 @@ import {
   TRADE_EXPIRE_DAYS,
   type TradeView as Trade,
 } from "@repo/api/schemas/offer";
+import { tradeStep } from "@repo/api/schemas/trade-step";
 
 export type Leg = Trade["legs"][number];
 export type Copy = Leg["substitutes"][number];
@@ -96,18 +97,21 @@ function sets(trade: Trade): Sets {
   };
 }
 
-/** The state alone, which the clock also reads. First match wins; see design.md Decision 1. */
+/**
+ * The state alone, which the clock also reads. A running trade's step is `tradeStep`'s, which
+ * the Inbox's deal reads too, so a step the banner does not draw fails to compile here.
+ */
 export function stepKind(trade: Trade): StepKind {
-  if (trade.status === "completed") return "completed";
-  if (trade.status === "failed") return "failed";
-  if (trade.status === "cancelled") return "cancelled";
-  if (trade.cancelRequest) return trade.cancelRequest.byYou ? "youAskCancel" : "theyAskCancel";
+  if (trade.status !== "in_progress") return trade.status;
   const { owed, sendable, toDecide } = sets(trade);
-  if (toDecide.length > 0) return "youDecide";
-  if (sendable.length > 0) return "yourTurn";
-  if (owed.length === 0) return "theirTurn";
-  if (owed.some((leg) => leg.stuck)) return "stuck";
-  return "theyDecide";
+  const ask = trade.cancelRequest;
+  return tradeStep({
+    owed: owed.length,
+    sendable: sendable.length,
+    stuck: owed.filter((leg) => leg.stuck).length,
+    toDecide: toDecide.length,
+    cancelAsk: ask ? (ask.byYou ? "you" : "them") : null,
+  });
 }
 
 export function bothGive(trade: Pick<Trade, "legs">) {

@@ -62,26 +62,9 @@ describe("dealOf", () => {
     expect(stateOf(offer({ offerExpiresAt: "2026-10-28T11:59:59Z" }))).toBe("none");
   });
 
-  test("you decide", () => {
-    expect(stateOf(trade({ toDecide: 1 }))).toBe("youDecide");
-  });
-
-  test("a request to cancel comes before a different copy and your turn", () => {
-    expect(stateOf(trade({ cancelAsk: "them", toDecide: 1, owed: 4, sendable: 4 }))).toBe(
-      "theyAskCancel",
-    );
-    expect(stateOf(trade({ cancelAsk: "you", toDecide: 1, owed: 4, sendable: 4 }))).toBe(
-      "youAskCancel",
-    );
-  });
-
   test("asked to cancel needs you; waiting for their answer does not", () => {
     expect(needsYou("theyAskCancel")).toBe(true);
     expect(needsYou("youAskCancel")).toBe(false);
-  });
-
-  test("you decide comes before your turn", () => {
-    expect(stateOf(trade({ toDecide: 1, owed: 4, sendable: 4 }))).toBe("youDecide");
   });
 
   test("your turn counts what can be sent now", () => {
@@ -97,14 +80,6 @@ describe("dealOf", () => {
 
   test("their turn", () => {
     expect(dealOf([trade()], ME, NOW)).toMatchObject({ state: "theirTurn", count: null });
-  });
-
-  test("stuck", () => {
-    expect(stateOf(trade({ owed: 1, stuck: 1 }))).toBe("stuck");
-  });
-
-  test("they decide", () => {
-    expect(stateOf(trade({ owed: 1 }))).toBe("theyDecide");
   });
 
   test("completed and failed show while rateable", () => {

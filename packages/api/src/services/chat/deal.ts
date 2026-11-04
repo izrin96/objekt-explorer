@@ -21,7 +21,7 @@ const pendingCopy = sql`EXISTS (
 /**
  * Something in conversation `c` waits on `me`: an open offer sent to them, or a running trade
  * whose partner asked to cancel it, or, with no request to cancel open (which outranks them, as
- * in `dealOf`), holding a different copy for them to decide on or a leg they can send. The SQL
+ * in `tradeStep`), holding a different copy for them to decide on or a leg they can send. The SQL
  * twin of `NEEDS_YOU_STATES`.
  */
 export const needsYouSql = (me: string) => sql`EXISTS (

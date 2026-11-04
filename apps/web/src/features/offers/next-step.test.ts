@@ -135,12 +135,6 @@ describe("nextStep, in progress", () => {
     expect(stepKind(ended)).toBe("completed");
   });
 
-  test("a decision outranks your turn", () => {
-    const owed = leg();
-    const decide = leg({ fromYou: false, substitutes: [copy()] });
-    expect(stepKind(trade({ legs: [owed, decide] }))).toBe("youDecide");
-  });
-
   test("the earliest acceptBy among several copies wins", () => {
     const late = leg({
       fromYou: false,
@@ -207,12 +201,6 @@ describe("nextStep, in progress", () => {
   test("only stuck legs owed: stuck", () => {
     const s = step(trade({ legs: [leg({ stuck: true }), verified({ fromYou: false })] }));
     expect(s.kind).toBe("stuck");
-  });
-
-  test("stuck outranks they decide", () => {
-    const stuck = leg({ stuck: true });
-    const held = leg({ substitutes: [copy()] });
-    expect(stepKind(trade({ legs: [stuck, held, verified({ fromYou: false })] }))).toBe("stuck");
   });
 
   test("they decide: every owed leg holds a pending copy", () => {

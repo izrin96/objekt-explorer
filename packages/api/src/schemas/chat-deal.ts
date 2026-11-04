@@ -1,16 +1,12 @@
 import * as z from "zod";
 
-/** A trade's states in `stepKind`'s order (apps/web `features/offers/next-step.ts`), offers first. */
+import { TRADE_STEPS, type TradeCounts, tradeStep } from "./trade-step";
+
+/** An offer's states, then a running trade's steps, then an ended trade left to rate. */
 export const DEAL_STATES = [
   "waitingYou",
   "waitingThem",
-  "theyAskCancel",
-  "youAskCancel",
-  "youDecide",
-  "yourTurn",
-  "theirTurn",
-  "stuck",
-  "theyDecide",
+  ...TRADE_STEPS,
   "completed",
   "failed",
 ] as const;
@@ -45,38 +41,21 @@ export type DealRow = {
   offerStatus: string;
   offerToId: string;
   offerExpiresAt: string;
-  trade: {
-    id: number;
-    status: string;
-    verified: number;
-    total: number;
-    /** open, unverified legs the viewer gives */
-    owed: number;
-    /** of those, transferable and with no different copy waiting */
-    sendable: number;
-    /** of those, not transferable */
-    stuck: number;
-    /** open, unverified legs the viewer receives, holding a different copy for them to decide on */
-    toDecide: number;
-    /** the viewer may rate now (`rateRefusal`) and has not */
-    rateable: boolean;
-    rateUntil: string | null;
-    /** who asked to cancel, while a request is open on a trade in progress */
-    cancelAsk: "you" | "them" | null;
-  } | null;
+  trade:
+    | (TradeCounts & {
+        id: number;
+        status: string;
+        verified: number;
+        total: number;
+        /** the viewer may rate now (`rateRefusal`) and has not */
+        rateable: boolean;
+        rateUntil: string | null;
+      })
+    | null;
 };
 
 export const needsYou = (state: DealState) =>
   (NEEDS_YOU_STATES as readonly DealState[]).includes(state);
-
-const tradeState = (t: NonNullable<DealRow["trade"]>): DealState => {
-  if (t.cancelAsk === "them") return "theyAskCancel";
-  if (t.cancelAsk === "you") return "youAskCancel";
-  if (t.toDecide > 0) return "youDecide";
-  if (t.sendable > 0) return "yourTurn";
-  if (t.owed === 0) return "theirTurn";
-  return t.stuck > 0 ? "stuck" : "theyDecide";
-};
 
 /** One offer's deal, or null when it is not open, running or left to rate. */
 function dealFor(row: DealRow, viewerId: string, now: Date): Deal | null {
@@ -99,7 +78,7 @@ function dealFor(row: DealRow, viewerId: string, now: Date): Deal | null {
     return { ...base, state: trade.status, until: trade.rateUntil };
   }
   if (trade.status !== "in_progress") return null;
-  const state = tradeState(trade);
+  const state = tradeStep(trade);
   return {
     ...base,
     state,
