@@ -3,6 +3,7 @@ import { addr, chunk, slugifyObjekt, Addresses } from "@repo/lib";
 import { TypeormDatabase, type Store } from "@subsquid/typeorm-store";
 import { In, IsNull } from "typeorm";
 
+import { collectionChanged, collectionFields } from "./collection-fields";
 import { env } from "./env";
 import { createHold } from "./hold";
 import { fetchMetadata } from "./metadata";
@@ -74,8 +75,9 @@ processor.run(db, async (ctx) => {
         let collection: Collection;
         if (action === "record" && metadata) {
           objekt = existing ? moveObjekt(existing, transfer) : newObjekt(metadata, transfer);
-          collection = await handleCollection(ctx, metadata, collectionBatch, transfer);
-          collectionBatch.set(collection.slug, collection);
+          const handled = await handleCollection(ctx, metadata, collectionBatch, transfer);
+          collection = handled.collection;
+          if (handled.save) collectionBatch.set(collection.slug, collection);
           objekt.collection = collection;
           if (!existing) {
             newlyMintedIds.push(objekt.id);
@@ -220,7 +222,8 @@ processor.run(db, async (ctx) => {
 });
 
 /**
- * Create or update the collection row.
+ * The collection for this metadata, created when new; `save` is false when the row already
+ * holds every value, so the batch's upsert skips it.
  */
 async function handleCollection(
   ctx: ProcessorContext<Store>,
@@ -242,34 +245,26 @@ async function handleCollection(
     collection = buffer.get(slug);
   }
 
-  // create
-  if (!collection) {
-    collection = new Collection({
-      id: Bun.randomUUIDv7(),
-      contract: addr(metadata.objekt.tokenAddress),
-      createdAt: new Date(transfer.timestamp),
-      collectionId: metadata.objekt.collectionId,
-      slug: slug,
-      textColor: metadata.objekt.textColor,
-      backImage: metadata.objekt.backImage,
-      backgroundColor: metadata.objekt.backgroundColor,
-      accentColor: metadata.objekt.accentColor,
-    });
+  const fields = collectionFields(metadata);
+  if (collection) {
+    if (!collectionChanged(collection, fields)) return { collection, save: false };
+    Object.assign(collection, fields);
+    return { collection, save: true };
   }
 
-  // set and/or update metadata
-  collection.season = metadata.objekt.season;
-  collection.member = metadata.objekt.member;
-  collection.members = metadata.objekt.members ?? [metadata.objekt.member];
-  collection.artist = metadata.objekt.artists[0]!.toLowerCase();
-  collection.collectionNo = metadata.objekt.collectionNo;
-  collection.class = metadata.objekt.class;
-  collection.comoAmount = metadata.objekt.comoAmount;
-  collection.onOffline = metadata.objekt.collectionNo.includes("Z") ? "online" : "offline";
-  collection.thumbnailImage = metadata.objekt.thumbnailImage;
-  collection.frontImage = metadata.objekt.frontImage;
-
-  return collection;
+  collection = new Collection({
+    id: Bun.randomUUIDv7(),
+    contract: addr(metadata.objekt.tokenAddress),
+    createdAt: new Date(transfer.timestamp),
+    collectionId: metadata.objekt.collectionId,
+    slug: slug,
+    textColor: metadata.objekt.textColor,
+    backImage: metadata.objekt.backImage,
+    backgroundColor: metadata.objekt.backgroundColor,
+    accentColor: metadata.objekt.accentColor,
+    ...fields,
+  });
+  return { collection, save: true };
 }
 
 /**
