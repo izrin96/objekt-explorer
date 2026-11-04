@@ -9,7 +9,7 @@ import type { AnyPgColumn } from "drizzle-orm/pg-core";
 
 import type { HeldByOutput, OwnedByFilters, OwnedByOutput } from "../schemas/objekts";
 import { getCollectionColumns } from "./objekt";
-import { getCache } from "./redis";
+import { getCache, redis, redisFailOpen } from "./redis";
 import { TOKEN_CHUNK_SIZE } from "./utils";
 
 const PER_PAGE = 8000;
@@ -120,13 +120,20 @@ export async function fetchOwnedObjekts(
 
 const CACHE_TTL = 60 * 5;
 
+const heldKey = (addr: string) => `held-by:v3:${addr}`;
+
+/** Drops Spin's cached held list, which carries collection colours, after a colour save. */
+export function forgetSpinHeld() {
+  return redisFailOpen("held-by evict", () => redis.del(heldKey(Addresses.SPIN)));
+}
+
 /**
  * Held copies counted per collection, for an owner too large to list token by
  * token (COSMO Spin holds millions). Copies are grouped before the join, so
  * only one row per collection meets the collection table; the lowest-serial
  * token is one indexed probe per collection, not a sort of every token.
  */
-async function countHeld(addr: string): Promise<HeldObjekt[]> {
+async function countHeld(addr: string) {
   const held = indexer.$with("held").as(
     indexer
       .select({
@@ -168,14 +175,7 @@ async function countHeld(addr: string): Promise<HeldObjekt[]> {
     .innerJoin(collections, eq(collections.id, held.collectionId))
     .innerJoinLateral(first, sql`true`);
 
-  return results.map((row): HeldObjekt =>
-    Object.assign(overrideCollection(row.collection), {
-      copies: row.copies,
-      minSerial: row.minSerial,
-      minSerialTokenId: row.minSerialTokenId,
-      firstReceivedAt: new Date(row.firstReceivedAt).toISOString(),
-    }),
-  );
+  return results;
 }
 
 export async function fetchHeldObjekts(
@@ -185,10 +185,18 @@ export async function fetchHeldObjekts(
   const addr = address.toLowerCase();
 
   // only Spin's pass is slow enough to cache; one entry whatever the artist scope
-  const all =
+  const rows =
     addr === Addresses.SPIN
-      ? await getCache(`held-by:v2:${addr}`, CACHE_TTL, () => countHeld(addr))
+      ? await getCache(heldKey(addr), CACHE_TTL, () => countHeld(addr))
       : await countHeld(addr);
+  const all = rows.map((row): HeldObjekt =>
+    Object.assign(overrideCollection(row.collection), {
+      copies: row.copies,
+      minSerial: row.minSerial,
+      minSerialTokenId: row.minSerialTokenId,
+      firstReceivedAt: new Date(row.firstReceivedAt).toISOString(),
+    }),
+  );
   const artists = artist?.map((a) => a.toLowerCase());
 
   return {

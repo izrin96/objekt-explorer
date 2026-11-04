@@ -39,7 +39,7 @@
 | Jobs        | `Bun.cron`                                           |
 | Indexer     | Subsquid (EVM processor)                             |
 
-App schema lives in `packages/db/src/schema.ts` (plus `auth-schema.ts` and `relation.ts`); the indexer's read-only NFT schema lives in `packages/db/src/indexer/`. Uses `citext` for case-insensitive fields. Relations defined via Drizzle relations. Migrations: `packages/db/migrations` and `packages/db/indexer-migrations`.
+App schema lives in `packages/db/src/schema.ts` (plus `auth-schema.ts` and `relation.ts`); the indexer's NFT schema lives in `packages/db/src/indexer/`, written by the indexer, the worker, and the web for `collection` colours only. Uses `citext` for case-insensitive fields. Relations defined via Drizzle relations. Migrations: `packages/db/migrations` and `packages/db/indexer-migrations`.
 
 Shared dependency versions are pinned in the root `package.json` bun **catalog** — new packages should use `"catalog:"` / `"catalog:dev"` rather than repeating a version.
 

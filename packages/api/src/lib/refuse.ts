@@ -1,5 +1,6 @@
 import { ORPCError } from "@orpc/server";
 
+import type { ADMIN_REFUSALS } from "../schemas/admin";
 import type { COMPARE_REFUSALS } from "../schemas/compare";
 import type { COSMO_LINK_REFUSALS } from "../schemas/cosmo-link";
 import type { LIST_REFUSALS } from "../schemas/list";
@@ -17,7 +18,8 @@ export type Refusal =
   | (typeof PROFILE_REFUSALS)[number]
   | (typeof USER_REFUSALS)[number]
   | (typeof DELETE_REFUSALS)[number]
-  | (typeof OBJEKT_REFUSALS)[number];
+  | (typeof OBJEKT_REFUSALS)[number]
+  | (typeof ADMIN_REFUSALS)[number];
 
 /** `message` is English and never shown by the web app; it serves old tabs and `/api/v1` callers. */
 export function refuse(

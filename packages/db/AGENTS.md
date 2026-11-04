@@ -3,7 +3,7 @@
 Two databases, two schemas:
 
 - **App** (`DATABASE_URL`): `src/schema.ts`, `src/auth-schema.ts`, `src/relation.ts`; migrations in `migrations/` from `db:generate`.
-- **Indexer** (`INDEXER_DATABASE_URL`): `src/indexer/` mirrors the tables `apps/indexer` owns. Read from this side, written by the indexer and the worker. Its Drizzle-owned changes are **hand-written SQL** in `indexer-migrations/`, applied by the indexer on start after the Subsquid migrations (`apps/indexer/src/migrate-drizzle.ts`). `drizzle-kit generate` against `drizzle-indexer.config.ts` would diff against tables the indexer owns, so write those folders by hand.
+- **Indexer** (`INDEXER_DATABASE_URL`): `src/indexer/` mirrors the tables `apps/indexer` owns. Read from this side, written by the indexer and the worker; the web's one write is staff colours on `collection` (Collection colours). Its Drizzle-owned changes are **hand-written SQL** in `indexer-migrations/`, applied by the indexer on start after the Subsquid migrations (`apps/indexer/src/migrate-drizzle.ts`). `drizzle-kit generate` against `drizzle-indexer.config.ts` would diff against tables the indexer owns, so write those folders by hand.
 
 ## Production
 
@@ -14,6 +14,10 @@ The root `.env` is production for both databases. `.env.local` points `DATABASE_
 Pending migrations run before the new code is live, so each one must work with the code still running from `main`: **expand, deploy, then contract**. Add a column, deploy the code that uses it, and drop the old column in a later migration once nothing live reads it. Drizzle v1 runs every migration folder whose name is not recorded, in any order, without a hash check, so a migration written after a column already left `schema.ts` needs `drizzle-kit generate --custom` (a plain generate finds no diff). Make such drops `IF EXISTS`, since a local database may already lack the column.
 
 A column can leave `schema.ts` before it leaves the database: generate the migration so its snapshot drops the column, then replace its SQL with a no-op (`20261024135516_retire_privacy_columns`). Otherwise the next `db:generate` writes the `DROP COLUMN` into whatever change comes next. `user_address.private_profile`, `private_serial`, `hide_transfer` and `hide_nickname` are kept that way, values intact, until the owner approves their drop.
+
+## Collection colours
+
+Staff colour fixes live on the indexer's `collection` row: `text_color` and `background_color` hold the colour shown, and `source_text_color` / `source_background_color` (Drizzle-owned, `20261104150000_collection_colour_source`) hold the value a staff colour replaced, as the source gave it, null where the source applies. `collection_staff_colors` requires a staff-set colour to be lowercase `#` and six hex digits; a source stays unchecked, since 20 production rows hold malformed ones. The history is the app's `mod_audit` (`collection_override` entries); the worker's `replay-collection-colours.ts` puts it back on the rows after a resync. `.env.local`'s read-only indexer is what stops a local save from reaching production: it fails at the row lock and writes nothing, so keep `default_transaction_read_only=on` there.
 
 ## Link history
 

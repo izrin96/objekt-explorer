@@ -118,7 +118,7 @@ export async function endTradeCancelled(
 }
 
 // null when Redis is down, which `isBehind` reads as behind
-const readIndexerSeen = async () =>
+export const readIndexerSeen = async () =>
   parseIndexerSeen(await redisFailOpen("indexer seen", () => redis.get(INDEXER_SEEN_KEY)));
 
 export async function cancelTrade(me: string, tradeId: number) {

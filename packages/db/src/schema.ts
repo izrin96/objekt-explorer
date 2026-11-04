@@ -69,6 +69,9 @@ export const userAddress = pgTable(
     uniqueIndex("user_address_default_idx")
       .on(t.userId)
       .where(sql`is_default`),
+    index("user_address_banner_feed_idx")
+      .on(t.bannerUpdatedAt.desc().nullsLast(), t.id.desc())
+      .where(sql`banner_img_url IS NOT NULL`),
     check("user_address_default_linked", sql`NOT ${t.isDefault} OR ${t.userId} IS NOT NULL`),
   ],
 );
@@ -832,6 +835,9 @@ export const modAudit = pgTable(
         | "address_move"
         | "address_unlink"
         | "account_deleted"
+        | "banner_remove"
+        | "collection_override"
+        | "collection_refresh"
       >()
       .notNull(),
     targetUserId: text("target_user_id").references(() => user.id, { onDelete: "set null" }),

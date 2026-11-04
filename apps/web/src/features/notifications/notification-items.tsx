@@ -11,6 +11,7 @@ import {
   tradeNo,
   tradeNotificationText,
 } from "@/features/offers/format";
+import { nicknameParam } from "@/lib/address";
 import { untilLabel } from "@/lib/time";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -50,11 +51,53 @@ const rowTone = (unread: boolean) => (unread ? "bg-muted/60" : undefined);
 const rowClass = (unread: boolean, variant: RowVariant) =>
   cn(ROW, rowTone(unread), variant === "sheet" && "min-h-16");
 
-/** A notice from moderators: it leads nowhere, so activating it only marks it read. */
+/**
+ * A notice from moderators. A banner removal opens the profile it names; any other notice leads
+ * nowhere, so activating it only marks it read.
+ */
 function SanctionItem({ notification, now, onOpen, variant }: RowProps<SanctionNotification>) {
   const text = sanctionText(notification.payload, untilLabel);
   if (text === null) return null;
   const unread = notification.readAt === null;
+  const { profile } = notification.payload;
+
+  const body = (
+    <RowBody
+      lead={<ToneTile icon="shield" />}
+      headline={
+        <span className="flex flex-col gap-0.5">
+          <span className="text-muted-foreground text-xs font-medium">
+            {m.notification_sanction_from()}
+          </span>
+          <span
+            className={cn(
+              "text-sm text-pretty break-words",
+              unread ? "text-foreground" : "text-muted-foreground",
+            )}
+          >
+            {text}
+          </span>
+        </span>
+      }
+      createdAt={notification.createdAt}
+      now={now}
+      unread={unread}
+      variant={variant}
+    />
+  );
+
+  if (profile) {
+    return (
+      <Link
+        to="/@{$nickname}"
+        params={{ nickname: nicknameParam(profile.address, profile.nickname) }}
+        onClick={onOpen}
+        className={rowClass(unread, variant)}
+      >
+        {body}
+      </Link>
+    );
+  }
 
   return (
     <button
@@ -62,28 +105,7 @@ function SanctionItem({ notification, now, onOpen, variant }: RowProps<SanctionN
       onClick={onOpen}
       className={cn(rowClass(unread, variant), "w-full text-start")}
     >
-      <RowBody
-        lead={<ToneTile icon="shield" />}
-        headline={
-          <span className="flex flex-col gap-0.5">
-            <span className="text-muted-foreground text-xs font-medium">
-              {m.notification_sanction_from()}
-            </span>
-            <span
-              className={cn(
-                "text-sm text-pretty break-words",
-                unread ? "text-foreground" : "text-muted-foreground",
-              )}
-            >
-              {text}
-            </span>
-          </span>
-        }
-        createdAt={notification.createdAt}
-        now={now}
-        unread={unread}
-        variant={variant}
-      />
+      {body}
     </button>
   );
 }

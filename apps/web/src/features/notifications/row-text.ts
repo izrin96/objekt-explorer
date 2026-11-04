@@ -15,7 +15,7 @@ export const ACTION_LABEL: Record<RowAction, () => string> = {
 };
 
 export function sanctionText(
-  { action, reason, endsAt }: SanctionPayload,
+  { action, reason, endsAt, profile }: SanctionPayload,
   until: (iso: string) => string,
 ) {
   switch (action) {
@@ -27,6 +27,13 @@ export function sanctionText(
         : m.notification_sanction_chat_mute_always({ reason });
     case "trade_block":
       return m.notification_sanction_trade_block({ reason });
+    case "banner_remove":
+      return profile
+        ? m.notification_sanction_banner_remove({
+            profile: profile.nickname ?? profile.address,
+            reason,
+          })
+        : null;
     default:
       return null;
   }

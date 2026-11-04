@@ -52,9 +52,23 @@ export const authed = pub.use(requiredAuthMiddleware);
 
 export const optionalAuthed = pub.use(optionalAuthMiddleware);
 
-/** NOT_FOUND for everyone else, so the console's existence is not confirmed. */
-export const moderator = authed.use(async ({ next, context }) => {
-  const { role } = context.session.user;
-  if (!isStaffRole(role)) throw new ORPCError("NOT_FOUND");
-  return next({ context: { ...context, isAdmin: roleList(role).includes("admin") } });
+/**
+ * NOT_FOUND for everyone else, signed out included, so the staff area's existence is not
+ * confirmed.
+ */
+export const moderator = optionalAuthed.use(async ({ next, context }) => {
+  const { session } = context;
+  if (!session || !isStaffRole(session.user.role)) throw new ORPCError("NOT_FOUND");
+  return next({
+    context: { ...context, session, isAdmin: roleList(session.user.role).includes("admin") },
+  });
+});
+
+/**
+ * Admins only. A moderator already knows the staff area exists, so FORBIDDEN tells them nothing
+ * new; everyone else still gets `moderator`'s NOT_FOUND.
+ */
+export const adminOnly = moderator.use(async ({ next, context }) => {
+  if (!context.isAdmin) throw new ORPCError("FORBIDDEN");
+  return next();
 });

@@ -6,6 +6,7 @@ import { overrideCollection } from "@repo/lib/server/objekt";
 import { fetchPublicNicknames } from "@repo/lib/server/user";
 import { type SQL, and, asc, count, desc, eq, inArray, lte, ne, sql } from "drizzle-orm";
 
+import { nextModifiedAt } from "../lib/collection-bump";
 import type {
   CollectionMetadataOutput,
   CollectionListOutput,
@@ -14,6 +15,8 @@ import type {
 } from "../schemas/collections";
 import { getCollectionColumns } from "./objekt";
 import { redis, redisFailOpen } from "./redis";
+
+const MODIFIED_AT_KEY = "collection:modified-at";
 
 type CollectionListQuery = { artist: ValidArtist[]; at?: string };
 
@@ -74,7 +77,7 @@ export async function fetchCollectionList(
   const whereQuery = and(...filters);
 
   const [overrideStr, [latest]] = await Promise.all([
-    redisFailOpen("collection modified-at", () => redis.get("collection:modified-at")),
+    redisFailOpen("collection modified-at", () => redis.get(MODIFIED_AT_KEY)),
     indexer
       .select({
         createdAt: collections.createdAt,
@@ -101,6 +104,38 @@ export async function fetchCollectionList(
       : await queryCollections(whereQuery);
 
   return { notModified: false, lastModifiedMs, result };
+}
+
+/**
+ * Marks the collection list as changed now, so every browser's next load gets it again instead
+ * of a 304. The one writer of `collection:modified-at` besides `process-collection-images`.
+ * Call it after the change commits; `refreshed: false` means Redis did not take it.
+ */
+export async function bumpCollectionList() {
+  const written = await redisFailOpen("collection modified-at bump", async () => {
+    const previous = await redis.get(MODIFIED_AT_KEY);
+    const next = new Date(nextModifiedAt(Date.now(), previous)).toISOString();
+    await redis.set(MODIFIED_AT_KEY, next);
+    return next;
+  });
+  return { refreshed: written !== null, modifiedAt: written };
+}
+
+/** When the full collection list last changed: the later of the last bump and the newest collection. */
+export async function collectionListModifiedAt() {
+  const [stored, [latest]] = await Promise.all([
+    redisFailOpen("collection modified-at", () => redis.get(MODIFIED_AT_KEY)),
+    indexer
+      .select({ createdAt: collections.createdAt })
+      .from(collections)
+      .orderBy(desc(collections.id))
+      .limit(1),
+  ]);
+  const ms = Math.max(
+    stored ? Date.parse(stored) || 0 : 0,
+    latest ? new Date(latest.createdAt).getTime() : 0,
+  );
+  return ms > 0 ? new Date(ms).toISOString() : null;
 }
 
 export async function fetchCollectionMetadata(slug: string): Promise<CollectionMetadataOutput> {

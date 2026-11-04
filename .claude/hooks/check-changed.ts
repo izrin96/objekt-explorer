@@ -36,7 +36,7 @@ const failures: string[] = [];
 for (const [pkg, files] of byPackage) {
   const dir = join(root, pkg);
   const config = existsSync(join(dir, "oxlint.config.mts")) ? ["--config", "./oxlint.config.mts"] : [];
-  const result = await Bun.$`bunx oxlint --type-aware --quiet --format=agent ${config} ${files}`
+  const result = await Bun.$`bunx oxlint --type-aware --quiet --format=agent --no-error-on-unmatched-pattern ${config} ${files}`
     .cwd(dir)
     .quiet()
     .nothrow();

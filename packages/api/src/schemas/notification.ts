@@ -56,9 +56,11 @@ const rowFields = {
 
 /** A moderator's notice; never grouped, and not something a user can turn off. */
 const sanctionPayloadSchema = z.object({
-  action: z.enum(["warn", "chat_mute", "trade_block"]),
+  action: z.enum(["warn", "chat_mute", "trade_block", "banner_remove"]),
   reason: z.string(),
   endsAt: z.string().nullable(),
+  /** the profile a `banner_remove` took the banner from; opening the notice goes there */
+  profile: z.object({ address: z.string(), nickname: z.string().nullable() }).optional(),
 });
 export type SanctionPayload = z.infer<typeof sanctionPayloadSchema>;
 

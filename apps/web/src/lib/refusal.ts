@@ -1,4 +1,5 @@
 import type { Refusal } from "@repo/api/lib/refuse";
+import { ADMIN_REFUSALS } from "@repo/api/schemas/admin";
 import { COMPARE_REFUSALS } from "@repo/api/schemas/compare";
 import { COSMO_LINK_REFUSALS } from "@repo/api/schemas/cosmo-link";
 import { LIST_REFUSALS } from "@repo/api/schemas/list";
@@ -21,6 +22,7 @@ const REFUSALS: readonly string[] = [
   ...USER_REFUSALS,
   ...OBJEKT_REFUSALS,
   ...DELETE_REFUSALS,
+  ...ADMIN_REFUSALS,
 ];
 
 const isRefusal = (code: string | null): code is Refusal =>
@@ -135,6 +137,12 @@ export function refusalText(error: unknown) {
     case "email_undeliverable":
     case "sign_in_again":
       return deleteRefusalText(reason);
+    case "admin_collection_not_found":
+      return m.api_errors_admin_collection_not_found();
+    case "admin_banner_changed":
+      return m.api_errors_admin_banner_changed();
+    case "admin_staff_target":
+      return m.api_errors_admin_staff_target();
   }
 }
 
