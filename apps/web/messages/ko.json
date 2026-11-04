@@ -2287,6 +2287,7 @@
   "trade_composer_have_needs_profile": "Trade가 보유 오브젝트를 확인하므로 보유 목록에는 연결된 Cosmo 프로필이 필요합니다.",
   "trade_composer_sale_needs_profile": "Trade가 보유 오브젝트를 확인하므로 판매 목록에는 연결된 Cosmo 프로필이 필요합니다.",
   "trade_composer_add_tile": "{list}에 오브젝트 추가",
+  "trade_composer_edit_list": "{list} 편집",
   "trade_composer_add_title": "{list}에 추가",
   "trade_composer_add_source_owned": "{profile}이(가) 보유한 오브젝트를 한 장씩 보여 줍니다. 이미 목록에 있는 것은 건너뜁니다.",
   "trade_composer_add_source_want": "선택한 아티스트의 모든 컬렉션입니다. 이미 목록에 있는 것은 건너뜁니다.",

@@ -1,11 +1,13 @@
-import { PlusIcon } from "@phosphor-icons/react";
+import { PencilSimpleIcon, PlusIcon } from "@phosphor-icons/react";
 import type { PlanList } from "@repo/api/schemas/trade-post";
 import { useQuery } from "@tanstack/react-query";
 import { type ReactNode, useId, useRef, useState } from "react";
 
 import { MoreCount } from "@/components/shared/more-count";
+import { Button } from "@/components/ui/button";
 import { Sheet, SheetPopup } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EditListDialog } from "@/features/list/edit-list-dialog";
 import { LIST_TYPE_LABEL, LIST_TYPE_TONE } from "@/features/list/list-type-badge";
 import { listEntriesOptions, listFindOptions } from "@/features/list/queries";
 import { type RatioSide } from "@/features/list/ratio-text";
@@ -198,23 +200,39 @@ function PickedSide({
   const total = entries.data?.length ?? 0;
   const shown = entries.data?.slice(0, SHOWN) ?? [];
   const rest = total - shown.length;
+  const [editOpen, setEditOpen] = useState(false);
+  // Safari doesn't focus a clicked button, so the dialog's default return would land on the page
+  const editButton = useRef<HTMLButtonElement>(null);
 
   return (
     <div className="flex min-w-0 flex-col gap-2.5">
       <div className="flex min-w-0 flex-col gap-1.5">
-        <SideHeading role={role}>
-          <span aria-hidden className="text-muted-foreground shrink-0">
-            ·
-          </span>
-          <span className="text-foreground min-w-0 truncate normal-case" title={name}>
-            {name}
-          </span>
-          {entries.data ? (
-            <span className="text-muted-foreground shrink-0 tabular-nums">
-              {total.toLocaleString(getLocale())}
+        <div className="flex min-w-0 items-center gap-1">
+          <SideHeading role={role}>
+            <span aria-hidden className="text-muted-foreground shrink-0">
+              ·
             </span>
-          ) : null}
-        </SideHeading>
+            <span className="text-foreground min-w-0 truncate normal-case" title={name}>
+              {name}
+            </span>
+            {entries.data ? (
+              <span className="text-muted-foreground shrink-0 tabular-nums">
+                {total.toLocaleString(getLocale())}
+              </span>
+            ) : null}
+          </SideHeading>
+          <Button
+            ref={editButton}
+            variant="ghost"
+            size="icon-xs"
+            className="shrink-0"
+            aria-label={m.trade_composer_edit_list({ list: name })}
+            title={m.trade_composer_edit_list({ list: name })}
+            onClick={() => setEditOpen(true)}
+          >
+            <PencilSimpleIcon />
+          </Button>
+        </div>
         {ratio && stored ? <ListRatioControl stored={stored} side={ratio} /> : null}
       </div>
 
@@ -272,6 +290,13 @@ function PickedSide({
           ) : null}
         </ul>
       )}
+      <EditListDialog
+        slug={slug}
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        showTradeLine={false}
+        finalFocus={editButton}
+      />
     </div>
   );
 }

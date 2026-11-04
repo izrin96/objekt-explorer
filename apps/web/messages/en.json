@@ -2287,6 +2287,7 @@
   "trade_composer_have_needs_profile": "A have list needs a linked Cosmo profile, since Trade checks what it holds.",
   "trade_composer_sale_needs_profile": "A sale list needs a linked Cosmo profile, since Trade checks what it holds.",
   "trade_composer_add_tile": "Add objekts to {list}",
+  "trade_composer_edit_list": "Edit {list}",
   "trade_composer_add_title": "Add to {list}",
   "trade_composer_add_source_owned": "What {profile} holds, one card per copy. What's already on the list is skipped.",
   "trade_composer_add_source_want": "Every collection of the artists you've selected. What's already on the list is skipped.",

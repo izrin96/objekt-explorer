@@ -1,7 +1,7 @@
 import { startForList } from "@repo/api/schemas/trade-post";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { type RefObject, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -35,23 +35,29 @@ export function EditListDialog({
   open,
   onOpenChange,
   redirectOnSave = false,
+  showTradeLine = true,
+  finalFocus,
 }: {
   slug: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   /** for the list's own page: a save can move its profile address, and `/list/$slug` redirects to wherever it now lives */
   redirectOnSave?: boolean;
+  /** off in the composer, where Edit post or Post it would reopen the page it is on and drop its picks */
+  showTradeLine?: boolean;
+  finalFocus?: RefObject<HTMLElement | null>;
 }) {
   const navigate = useNavigate();
   const { data, error } = useQuery(listFindOptions(slug, open));
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogPopup className="max-w-md">
+      <DialogPopup className="max-w-md" finalFocus={finalFocus}>
         {data ? (
           // mounted with the stored list in hand, so the draft is its initial state
           <EditListForm
             list={data}
+            showTradeLine={showTradeLine}
             onClose={() => onOpenChange(false)}
             onDone={() => {
               onOpenChange(false);
@@ -102,10 +108,12 @@ function toListUrl(
 
 function EditListForm({
   list,
+  showTradeLine,
   onDone,
   onClose,
 }: {
   list: StoredList;
+  showTradeLine: boolean;
   onDone: () => void;
   onClose: () => void;
 }) {
@@ -141,14 +149,16 @@ function EditListForm({
           profiles={profiles}
           url={toListUrl(list, profiles)}
           tradeLine={
-            <TradeLine
-              slug={list.slug}
-              saveFirst={JSON.stringify(draft) !== JSON.stringify(seed)}
-              onCompose={() => {
-                onClose();
-                openComposer(startForList(planLists, list.slug));
-              }}
-            />
+            showTradeLine ? (
+              <TradeLine
+                slug={list.slug}
+                saveFirst={JSON.stringify(draft) !== JSON.stringify(seed)}
+                onCompose={() => {
+                  onClose();
+                  openComposer(startForList(planLists, list.slug));
+                }}
+              />
+            ) : null
           }
         />
       </DialogPanel>

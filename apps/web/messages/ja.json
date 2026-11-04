@@ -2287,6 +2287,7 @@
   "trade_composer_have_needs_profile": "Tradeは所持しているObjektを確認するため、所持リストには連携済みのCosmoプロフィールが必要です。",
   "trade_composer_sale_needs_profile": "Tradeは所持しているObjektを確認するため、販売リストには連携済みのCosmoプロフィールが必要です。",
   "trade_composer_add_tile": "{list}にObjektを追加",
+  "trade_composer_edit_list": "{list}を編集",
   "trade_composer_add_title": "{list}に追加",
   "trade_composer_add_source_owned": "{profile}が所持しているObjektを1枚ずつ表示します。すでにリストにあるものはスキップされます。",
   "trade_composer_add_source_want": "選択中のアーティストのすべてのコレクションです。すでにリストにあるものはスキップされます。",
