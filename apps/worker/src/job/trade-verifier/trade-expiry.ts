@@ -3,12 +3,12 @@ import { TRADE_EXPIRE_DAYS } from "@repo/api/schemas/offer";
 import { partyNames, writeNotes } from "@repo/api/services/offer/notes";
 import { finishSettle, heldCopies } from "@repo/api/services/offer/verify";
 import { db } from "@repo/db";
-import { offer, trade, tradeLeg } from "@repo/db/schema";
+import { trade, tradeLeg } from "@repo/db/schema";
 import { and, eq, lte, sql } from "drizzle-orm";
 
 import { expiryNotes, expiryPlan } from "../../lib/trade-expiry-plan";
 import type { Publish } from "../../lib/trade-publish";
-import { acceptPicked, readLegs } from "./copy-deadlines";
+import { acceptPicked, lockTrade, readLegs } from "./locked-trade";
 import type { RunSkips } from "./run-skips";
 
 const EXPIRE_AFTER = sql`make_interval(days => ${TRADE_EXPIRE_DAYS})`;
@@ -37,24 +37,12 @@ export async function expireStalls(seenUntil: string | null, skips: RunSkips): P
     const publish = await skips.step(id, () =>
       db.transaction(async (tx) => {
         // the lock a party's cancel and the verifier's settle take too
-        const [row] = await tx
-          .select({
-            status: trade.status,
-            offerId: trade.offerId,
-            userA: trade.userA,
-            userB: trade.userB,
-            conversationId: offer.conversationId,
-          })
-          .from(trade)
-          .innerJoin(offer, eq(offer.id, trade.offerId))
-          .where(eq(trade.id, id))
-          .for("update", { of: trade });
-        if (row?.status !== "in_progress") return null;
-        const { offerId, userA, userB, conversationId } = row;
+        const settled = await lockTrade(tx, id);
+        if (!settled) return null;
+        const { userA, userB, conversationId } = settled;
 
         const parties = [userA, userB];
         const name = await partyNames(parties);
-        const settled = { tradeId: id, offerId, conversationId, userA, userB };
         const { open, askedOf, progress: before } = await readLegs(tx, id);
         const accepted = await acceptPicked(
           tx,

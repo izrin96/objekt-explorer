@@ -45,8 +45,9 @@ import {
   unrecordedMisses,
   wrongCopyNotes,
 } from "../../lib/wrong-copies";
-import { ACCEPT_BY_FROM_NOW, acceptPicked, type Name, settleCopyDeadlines } from "./copy-deadlines";
+import { settleCopyDeadlines } from "./copy-deadlines";
 import { readIndexerHead } from "./indexer-head";
+import { ACCEPT_BY_FROM_NOW, acceptPicked, type Name } from "./locked-trade";
 import { offerUpkeep } from "./offer-upkeep";
 import { runSkips } from "./run-skips";
 import { expireStalls } from "./trade-expiry";
