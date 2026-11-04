@@ -340,7 +340,7 @@ The owner's menu on a list row and in the list header SHALL offer Copy as new li
 - the name with a copy suffix;
 - description, profile, currency, Open to (from a want list only), columns and hide serial.
 
-Type and profile binding SHALL be editable. The linked list SHALL start empty and the copy SHALL start off Trade. Saving SHALL create a new list, open it, and leave the source unchanged. Other visitors SHALL not see the action.
+Type and profile binding SHALL be editable. The linked list SHALL start empty and the copy SHALL start off Trade. Saving SHALL create a new list, open it, and leave the source unchanged. A copy made from the post composer SHALL be picked there and not opened, its type fixed to the composer side's (see `web-trade-browse` Composer copy form). Other visitors SHALL not see the action.
 
 #### Scenario: Owner copies a have list as a sale list
 - **WHEN** the owner of have list "spares", bound to a profile and linked to want list "binary hunt", activates Copy as new list, picks Sale, enters a currency and saves
@@ -361,6 +361,10 @@ Type and profile binding SHALL be editable. The linked list SHALL start empty an
 #### Scenario: Open to from another type
 - **WHEN** the owner copies a sale list and picks Want
 - **THEN** Open to starts at Swaps or buying, as Create does
+
+#### Scenario: Copied from the composer
+- **WHEN** the owner copies have list "spares" through Copy a list… in the post composer's Selling for dropdown
+- **THEN** the browser stays on the composer with "spares (copy)" picked, and no list page opens
 
 ### Requirement: Copied entries
 A copy SHALL carry the source's entries in their order, converted to the new list's binding:
