@@ -55,6 +55,8 @@ export function notificationTone(notification: ToneInput): Toned {
         case "failed":
           return ENDED;
       }
+      // a new event fails to compile until it has a tone; an older tab falls through at runtime
+      notification.payload.event satisfies never;
       break;
     case "offer":
       switch (notification.payload.event) {
@@ -70,6 +72,7 @@ export function notificationTone(notification: ToneInput): Toned {
         case "expired":
           return ENDED;
       }
+      notification.payload.event satisfies never;
       break;
   }
   return { icon: "arrow", tone: "neutral" };
