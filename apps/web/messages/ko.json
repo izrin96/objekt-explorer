@@ -1486,6 +1486,8 @@
   "mod_banners_no_account": "이 프로필을 가진 계정이 없습니다",
   "mod_banners_remove": "삭제",
   "mod_banners_remove_label": "{profile}의 배너 삭제",
+  "mod_banners_play_label": "{profile}의 배너 재생",
+  "mod_banners_pause_label": "{profile}의 배너 일시정지",
   "mod_banners_remove_title": "{profile}의 배너를 삭제할까요?",
   "mod_banners_remove_notified": "배너와 파일이 삭제되고, 계정에 아래 사유가 보입니다. 기록이 남으며 제재는 아닙니다.",
   "mod_banners_remove_unheld": "배너와 파일이 삭제됩니다. 이 프로필을 가진 계정이 없어 아무에게도 알리지 않습니다. 기록은 남습니다.",

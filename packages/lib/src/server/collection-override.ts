@@ -1,7 +1,7 @@
 import { db } from "@repo/db";
 import { collectionOverride } from "@repo/db/schema";
 
-import { copyServes } from "./collection-override-copy";
+import { overrideReadPlan } from "./collection-override-copy";
 import type { CollectionOverride, CollectionOverrides } from "./objekt";
 
 type Copy = { map: CollectionOverrides; startedAt: number };
@@ -47,16 +47,25 @@ function startRead() {
 }
 
 /**
- * Every collection colour override, from one per-process copy kept a minute. `freshAfter`
- * (`collection:modified-at` in ms) asks for a copy read after that bump. Env-free, so the
- * worker can call it. A failed read serves the last good copy, or none, with `fresh: false`,
- * so a database blip costs colours rather than pages.
+ * Every collection colour override, from one per-process copy. A copy a minute old is still
+ * served at once while one read refreshes it behind, so an indexer read never waits on the app
+ * database once the process has a copy; a failed refresh keeps the old copy and the next read
+ * tries again. `freshAfter` (`collection:modified-at` in ms) waits instead for a copy read after
+ * that bump and under a minute old. Env-free, so the worker can call it. A failed read the caller
+ * waited on serves the last good copy, or none, with `fresh: false`, so a database blip costs
+ * colours rather than pages.
  */
 export async function loadCollectionOverrides(
   options: { freshAfter?: number } = {},
 ): Promise<{ map: CollectionOverrides; fresh: boolean }> {
   const { freshAfter } = options;
-  if (copy && copyServes(copy.startedAt, Date.now(), freshAfter)) {
+  const plan = overrideReadPlan(copy?.startedAt, Date.now(), freshAfter);
+  if (copy && plan !== "wait") {
+    if (plan === "serve-and-refresh" && !inFlight) {
+      void startRead().result.catch((error: unknown) => {
+        console.error("Collection overrides refresh failed:", error);
+      });
+    }
     return { map: copy.map, fresh: true };
   }
   const read =

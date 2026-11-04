@@ -1486,6 +1486,8 @@
   "mod_banners_no_account": "No account holds this profile",
   "mod_banners_remove": "Remove",
   "mod_banners_remove_label": "Remove the banner of {profile}",
+  "mod_banners_play_label": "Play the banner of {profile}",
+  "mod_banners_pause_label": "Pause the banner of {profile}",
   "mod_banners_remove_title": "Remove the banner of {profile}?",
   "mod_banners_remove_notified": "The banner and its file are deleted, and the account sees the reason below. It is logged, and it is not a sanction.",
   "mod_banners_remove_unheld": "The banner and its file are deleted. No account holds this profile, so nobody is told. It is logged.",

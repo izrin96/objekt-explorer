@@ -1486,6 +1486,8 @@
   "mod_banners_no_account": "このプロフィールを持つアカウントはありません",
   "mod_banners_remove": "削除",
   "mod_banners_remove_label": "{profile}のバナーを削除",
+  "mod_banners_play_label": "{profile}のバナーを再生",
+  "mod_banners_pause_label": "{profile}のバナーを一時停止",
   "mod_banners_remove_title": "{profile}のバナーを削除しますか？",
   "mod_banners_remove_notified": "バナーとファイルは削除され、アカウントには下の理由が表示されます。記録に残り、制裁にはなりません。",
   "mod_banners_remove_unheld": "バナーとファイルは削除されます。このプロフィールを持つアカウントがないため、誰にも通知しません。記録には残ります。",

@@ -191,6 +191,21 @@ The banner SHALL fill the tile's width at its own shape. Each tile SHALL show th
 - **WHEN** a profile unlinked from its account still has a banner
 - **THEN** its tile shows the banner and the profile link, and says no account holds it
 
+### Requirement: Banner video playback
+A video banner SHALL play only while its tile is on screen and pause when the tile leaves it, loading no more than its metadata before it first plays. Each video tile SHALL offer Play and Pause. Under a reduced-motion preference a video SHALL start still until Play is pressed.
+
+#### Scenario: Scrolling the feed
+- **WHEN** a moderator scrolls `/mod/banners` past a video tile
+- **THEN** that video plays while its tile is on screen and pauses once it has scrolled away
+
+#### Scenario: Pause
+- **WHEN** a moderator presses Pause on a playing video tile
+- **THEN** that video stays still, on screen or off, until Play is pressed
+
+#### Scenario: Reduced motion
+- **WHEN** a moderator whose system asks for reduced motion opens `/mod/banners`
+- **THEN** every video tile shows its banner still, and pressing a tile's Play plays that video muted and looping
+
 ### Requirement: Remove a banner
 Each tile SHALL offer Remove, which opens a reason field under that tile; the reason, up to 500 characters, is shown to the account. Removal SHALL clear the profile's banner, delete its file, and write an audit entry on the holding account naming the profile, the banner and the reason. It SHALL not be a sanction: it resolves no report and adds nothing to the account's sanctions. A moderator SHALL not remove a staff account's banner; an admin may remove anyone's.
 

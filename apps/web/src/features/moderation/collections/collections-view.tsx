@@ -3,8 +3,8 @@ import type { Outputs } from "@repo/api";
 import { parseHexColor, type SetCollectionColorsInput } from "@repo/api/schemas/admin";
 import type { IndexedObjekt } from "@repo/lib/types/objekt";
 import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
-import { useDeferredValue, useId, useState } from "react";
-import { WindowVirtualizer } from "virtua";
+import { useDeferredValue, useId, useRef, useState } from "react";
+import { WindowVirtualizer, type WindowVirtualizerHandle } from "virtua";
 
 import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
@@ -30,6 +30,8 @@ type AdminData = Outputs["admin"]["collectionOverrides"];
 type OverrideRow = AdminData["overrides"][number];
 type Listed = IndexedObjekt;
 type Draft = { slug: string; text: string; background: string };
+/** A control in a row: its first colour field, Edit, or Save. */
+type RowControl = "input" | "edit" | "save";
 
 const COLUMNS =
   "grid grid-cols-[--spacing(12)_minmax(--spacing(48),1fr)_--spacing(40)_--spacing(40)_--spacing(40)_--spacing(36)] items-center gap-x-3";
@@ -44,6 +46,8 @@ export function CollectionsView() {
   const [draft, setDraft] = useState<Draft | null>(null);
   const [unrefreshed, setUnrefreshed] = useState(false);
   const searchId = useId();
+  const table = useRef<HTMLDivElement>(null);
+  const virtualizer = useRef<WindowVirtualizerHandle>(null);
 
   const refetch = () =>
     Promise.all([
@@ -117,7 +121,50 @@ export function CollectionsView() {
     : listed;
   const rows = scope.filter((collection) => matchesSearch(collection, deferredSearch));
 
+  /** Whether focus is still in the row, or was dropped when its focused button went away. */
+  const focusLeftRow = (slug: string) => {
+    const active = document.activeElement;
+    if (!active || active === document.body) return true;
+    return active.closest("[data-row]")?.getAttribute("data-row") === slug;
+  };
+
+  // Edit, Save and Cancel swap the row's controls and drop the focused button, so focus moves to
+  // the row's new control once it is drawn. A save can outlast the row: virtua unmounts it when
+  // scrolled away, so it is scrolled back first.
+  const focusControl = (slug: string, control: RowControl) => {
+    const selector = `[data-row="${CSS.escape(slug)}"] ${control === "input" ? "input" : `[data-control="${control}"]`}`;
+    let scrolled = false;
+    let frames = 0;
+    const attempt = () => {
+      const found = table.current?.querySelector<HTMLElement>(selector);
+      // Save stays disabled until the failed save's render lands
+      if (found && !found.matches(":disabled")) {
+        found.focus();
+        return;
+      }
+      if (!found && !scrolled) {
+        scrolled = true;
+        const index = rows.findIndex((row) => row.slug === slug);
+        if (index === -1) return;
+        virtualizer.current?.scrollToIndex(index, { align: "center" });
+      }
+      frames += 1;
+      if (frames < 10) requestAnimationFrame(attempt);
+    };
+    requestAnimationFrame(attempt);
+  };
+
   const send = (input: SetCollectionColorsInput) => save.mutate(input);
+  // these run once the mutation's own callbacks have refetched and closed the row
+  const saveDraft = (input: SetCollectionColorsInput) =>
+    save.mutate(input, {
+      onSuccess: () => {
+        if (focusLeftRow(input.slug)) focusControl(input.slug, "edit");
+      },
+      onError: () => {
+        if (focusLeftRow(input.slug)) focusControl(input.slug, "save");
+      },
+    });
 
   return (
     <>
@@ -201,6 +248,7 @@ export function CollectionsView() {
       ) : (
         <div className="overflow-x-auto" data-scroll-x>
           <div
+            ref={table}
             role="table"
             aria-label={m.mod_collections_title()}
             aria-rowcount={rows.length + 1}
@@ -228,7 +276,7 @@ export function CollectionsView() {
               </div>
             </div>
             <div role="rowgroup">
-              <WindowVirtualizer data={rows}>
+              <WindowVirtualizer ref={virtualizer} data={rows}>
                 {(collection: Listed, index: number) => {
                   const override = overrideOf.get(collection.slug);
                   const colors = rowColors(collection, override);
@@ -236,6 +284,7 @@ export function CollectionsView() {
                   return (
                     <div
                       key={collection.slug}
+                      data-row={collection.slug}
                       role="row"
                       aria-rowindex={index + 2}
                       className={cn(COLUMNS, "border-b px-3 py-2 last:border-b-0")}
@@ -247,8 +296,11 @@ export function CollectionsView() {
                           draft={editing}
                           saving={save.isPending}
                           onDraft={setDraft}
-                          onSave={(input) => send(input)}
-                          onCancel={() => setDraft(null)}
+                          onSave={saveDraft}
+                          onCancel={() => {
+                            setDraft(null);
+                            focusControl(collection.slug, "edit");
+                          }}
                         />
                       ) : (
                         <ViewRow
@@ -256,13 +308,14 @@ export function CollectionsView() {
                           colors={colors}
                           override={override}
                           busy={save.isPending}
-                          onEdit={() =>
+                          onEdit={() => {
                             setDraft({
                               slug: collection.slug,
                               text: colors.text.current,
                               background: colors.background.current,
-                            })
-                          }
+                            });
+                            focusControl(collection.slug, "input");
+                          }}
                           onReset={(field) =>
                             send(
                               field === "text"
@@ -443,6 +496,7 @@ function ViewRow({
         <Button
           size="xs"
           variant="outline"
+          data-control="edit"
           aria-label={m.mod_collections_edit_label({ slug: collection.slug })}
           onClick={onEdit}
         >
@@ -528,6 +582,7 @@ function EditRow({
       <div role="cell" className="flex justify-end gap-1">
         <Button
           size="xs"
+          data-control="save"
           disabled={change === null}
           loading={saving}
           onClick={() => {
