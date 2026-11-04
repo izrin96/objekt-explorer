@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 
 import type { OfferView } from "@repo/api/schemas/offer";
+import { fromAny, fromPartial } from "@total-typescript/shoehorn";
 
 import {
   appendToThread,
@@ -29,18 +30,18 @@ const message = (id: number) => ({
   replyTo: null,
 });
 
-const conversation = {
+const conversation: ThreadData["pages"][number]["conversation"] = fromPartial({
   id: 1,
   partner: {
     userId: "u2",
-    user: { name: "rin", image: null, discord: null, twitter: null, displayUsername: null },
+    user: { name: "rin", image: null, discord: null, twitter: null },
     identity: { name: "rin", address: null, also: [] },
   },
   request: false,
   archived: false,
   muted: null,
   lastReadMessageId: null,
-} as unknown as ThreadData["pages"][number]["conversation"];
+});
 
 function thread(...pages: number[][]): ThreadData {
   return {
@@ -102,13 +103,13 @@ describe("appendToThread", () => {
 
 const withOffer = (
   id: number,
-  offer: { status: string; tradeStatus: string | null } | null,
+  offer: Pick<OfferView, "status" | "tradeStatus"> | null,
 ): ThreadData["pages"][number]["messages"][number] =>
-  ({
+  fromPartial({
     ...message(id),
     body: null,
     offer: offer ? { id: id * 10, ...offer } : null,
-  }) as unknown as ThreadData["pages"][number]["messages"][number];
+  });
 
 function offerThread(...messages: ThreadData["pages"][number]["messages"]): ThreadData {
   return {
@@ -161,8 +162,8 @@ describe("patchOffers", () => {
       ],
       pageParams: [undefined, 3],
     };
-    const fresh = { id: 10, status: "countered", tradeStatus: null } as unknown as OfferView;
-    const next = patchOffers(data, { offers: [fresh], collections: { a: {} as never } });
+    const fresh = fromPartial<OfferView>({ id: 10, status: "countered", tradeStatus: null });
+    const next = patchOffers(data, { offers: [fresh], collections: { a: fromAny({}) } });
     expect(next.pages[1]!.messages[0]!.offer).toBe(fresh);
     expect(next.pages[0]!.messages[0]!.offer?.status).toBe("open");
     expect(threadMessages(next).map((m) => m.id)).toEqual([1, 2, 3]);
@@ -268,7 +269,7 @@ describe("canUnsend", () => {
   test("never another's, an offer, or one already unsent", () => {
     expect(canUnsend({ ...own, mine: false }, sent)).toBe(false);
     expect(canUnsend({ ...own, unsent: true }, sent)).toBe(false);
-    expect(canUnsend({ ...own, offer: {} as never }, sent)).toBe(false);
+    expect(canUnsend({ ...own, offer: fromAny({}) }, sent)).toBe(false);
   });
 });
 

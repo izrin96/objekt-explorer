@@ -1,13 +1,15 @@
 import { describe, expect, test } from "bun:test";
 
+import { fromPartial } from "@total-typescript/shoehorn";
+
 import type { PersonPostData, PostSideData } from "./post-types";
 import { sharePreview } from "./share-preview";
 
 const side = (role: PostSideData["role"], copyCount: number) =>
-  ({ role, list: { id: 1, slug: role }, items: [], copyCount }) as unknown as PostSideData;
+  fromPartial<PostSideData>({ role, list: { id: 1, slug: role }, items: [], copyCount });
 
 const post = (tags: PersonPostData["tags"], sides: PostSideData[]) =>
-  ({ id: 1, tags, sides }) as unknown as PersonPostData;
+  fromPartial<PersonPostData>({ id: 1, tags, sides });
 
 describe("sharePreview", () => {
   test("a person: their name, post count and tags in a fixed order", () => {

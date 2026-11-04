@@ -30,6 +30,7 @@
   "devDependencies": {
     "@repo/lint": "workspace:*",
     "@repo/tsconfig": "workspace:*",
+    "@total-typescript/shoehorn": "catalog:dev",
     "@types/bun": "catalog:dev",
     "typescript": "catalog:dev"
   }

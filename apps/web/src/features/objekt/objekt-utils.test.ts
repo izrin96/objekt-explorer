@@ -1,19 +1,20 @@
 import { describe, expect, test } from "bun:test";
 
 import type { ValidObjekt } from "@repo/lib/types/objekt";
+import { fromPartial } from "@total-typescript/shoehorn";
 
 import { mapObjektWithTag } from "./objekt-utils";
 
-function objekt(extra: Partial<ValidObjekt>) {
-  return {
-    artist: "tripleS",
+function objekt(extra: Partial<ValidObjekt>): ValidObjekt {
+  return fromPartial({
+    artist: "triples",
     member: "Kaede",
     members: ["Kaede"],
     season: "Atom01",
     class: "First",
     collectionNo: "201Z",
     ...extra,
-  } as ValidObjekt;
+  });
 }
 
 describe("mapObjektWithTag", () => {

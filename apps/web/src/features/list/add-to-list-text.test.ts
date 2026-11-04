@@ -3,6 +3,7 @@ import { describe, expect, test } from "bun:test";
 import type { AddSource } from "@repo/api/schemas/list";
 import { truncateAddress } from "@repo/lib/address";
 import type { OwnedObjekt } from "@repo/lib/types/objekt";
+import { fromPartial } from "@total-typescript/shoehorn";
 
 import { m } from "@/paraglide/messages";
 
@@ -45,20 +46,20 @@ describe("profileLabel", () => {
 });
 
 describe("addHint", () => {
-  const collection = (slug: string) => ({ id: slug, slug }) as unknown as AddableObjekt;
+  const collection = (slug: string) => fromPartial<AddableObjekt>({ id: slug, slug });
   const token = (slug: string, serial: number) =>
-    ({
+    fromPartial<OwnedObjekt>({
       id: `${slug}-${serial}`,
       slug,
       serial,
       tokenId: `${slug}-${serial}`,
-    }) as unknown as OwnedObjekt;
+    });
 
   const unowned: AddTarget = { objekts: [collection("a")] };
   const owned: AddTarget = { objekts: [collection("a"), token("b", 1)] };
   const profile = "@nick";
-  const collections = { from: { type: "collections", slugs: ["a"] } as AddSource };
-  const objekts = { from: { type: "objekts", tokenIds: ["a-1"] } as AddSource };
+  const collections = { from: fromPartial<AddSource>({ type: "collections", slugs: ["a"] }) };
+  const objekts = { from: fromPartial<AddSource>({ type: "objekts", tokenIds: ["a-1"] }) };
   const base = { target: unowned, profile, here: true, picking: false, source: null };
 
   test("an unbound list has no hint, whatever else is set", () => {

@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 
 import type { ChatMessage } from "@repo/api/schemas/chat";
+import { fromPartial } from "@total-typescript/shoehorn";
 
 import { canReply, currentQuote, quoteLabel, quoteText } from "./reply";
 
@@ -24,7 +25,9 @@ describe("canReply", () => {
 
   test("never an unsent message or an offer", () => {
     expect(canReply(message({ unsent: true, body: null }))).toBe(false);
-    expect(canReply(message({ body: null, offer: {} as ChatMessage["offer"] }))).toBe(false);
+    expect(canReply(message({ body: null, offer: fromPartial<ChatMessage["offer"]>({}) }))).toBe(
+      false,
+    );
   });
 });
 

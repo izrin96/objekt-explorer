@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 
 import type { ConversationRow } from "@repo/api/schemas/chat";
+import { fromPartial } from "@total-typescript/shoehorn";
 
 import {
   appendLiveMessage,
@@ -25,10 +26,17 @@ const message = (id: number) => ({
 });
 
 const row = (id: number, over: Partial<ConversationRow> = {}) =>
-  ({ id, request: false, archived: false, muted: null, unread: true, ...over }) as ConversationRow;
+  fromPartial<ConversationRow>({
+    id,
+    request: false,
+    archived: false,
+    muted: null,
+    unread: true,
+    ...over,
+  });
 
 const thread = (...ids: number[]): ThreadData =>
-  ({
+  fromPartial({
     pages: [
       {
         conversation: { id: 1, request: true, archived: false, muted: null },
@@ -38,10 +46,10 @@ const thread = (...ids: number[]): ThreadData =>
       },
     ],
     pageParams: [undefined],
-  }) as unknown as ThreadData;
+  });
 
 const event = (id: number, previousMessageId: number | null, conversation = row(1)) =>
-  ({
+  fromPartial<ChatMessageEvent>({
     type: "chat_message",
     conversationId: 1,
     previousMessageId,
@@ -50,19 +58,19 @@ const event = (id: number, previousMessageId: number | null, conversation = row(
     conversation,
     unread: 1,
     requests: 0,
-  }) as unknown as ChatMessageEvent;
+  });
 
-const collections = { a: { slug: "a" } } as unknown as ChatMessageEvent["collections"];
+const collections = fromPartial<ChatMessageEvent["collections"]>({ a: { slug: "a" } });
 
 const list = (...pages: number[][]): ConversationsData =>
-  ({
+  fromPartial({
     pages: pages.map((ids) => ({
       items: ids.map((id) => row(id)),
       collections: {},
       nextCursor: null,
     })),
     pageParams: pages.map(() => undefined),
-  }) as unknown as ConversationsData;
+  });
 
 const ids = (data: ConversationsData) => data.pages.flatMap((page) => page.items.map((i) => i.id));
 

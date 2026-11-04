@@ -1,21 +1,23 @@
 import { describe, expect, test } from "bun:test";
 
+import { fromPartial } from "@total-typescript/shoehorn";
+
 import { offerHandleOf, slugTarget, withHandle } from "./person-page";
 import type { PersonPostData, PostSideData } from "./post-types";
 
 const side = (id: number, slug: string, role: PostSideData["role"]) =>
-  ({ role, list: { id, slug }, items: [], copyCount: 0 }) as unknown as PostSideData;
+  fromPartial<PostSideData>({ role, list: { id, slug }, items: [], copyCount: 0 });
 
 /** a pair anchored on its have list, as the feed sends it */
 const pair = (id: number, have: string, want: string) =>
-  ({
+  fromPartial<PersonPostData>({
     id,
     tags: ["wtt"],
     sides: [side(id, have, "have"), side(id + 1, want, "want")],
-  }) as unknown as PersonPostData;
+  });
 
 const wantOnly = (id: number, want: string) =>
-  ({ id, tags: ["wtb"], sides: [side(id, want, "want")] }) as unknown as PersonPostData;
+  fromPartial<PersonPostData>({ id, tags: ["wtb"], sides: [side(id, want, "want")] });
 
 describe("withHandle", () => {
   test("swaps the handle and keeps the rest of the path and the search", () => {

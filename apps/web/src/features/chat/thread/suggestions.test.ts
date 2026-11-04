@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 
 import type { ListType } from "@repo/api/schemas/list";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
+import { fromPartial } from "@total-typescript/shoehorn";
 
 import { m } from "@/paraglide/messages";
 
@@ -11,7 +12,7 @@ import { firstLineSuggestions } from "./suggestions";
 const objekt = (listType?: ListType): Attachment => ({
   kind: "objekt",
   input: { kind: "objekt", collectionSlug: "seoyeon-204z" },
-  objekt: {} as ValidObjekt,
+  objekt: fromPartial<ValidObjekt>({}),
   listName: null,
   listType,
 });
@@ -25,7 +26,7 @@ const post = (
   view: {
     kind: "post",
     listId: 1,
-    post: tag && ({ tag } as NonNullable<PostAttachment["view"]["post"]>),
+    post: tag && fromPartial<NonNullable<PostAttachment["view"]["post"]>>({ tag }),
     match: match && {
       ownerHas: { count: match.theirs, slugs: [] },
       senderHas: { count: match.yours, slugs: [] },

@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 
 import { TRADE_EXPIRE_DAYS } from "@repo/api/schemas/offer";
+import { fromPartial } from "@total-typescript/shoehorn";
 
 import { type Deadline, type Leg, type NextStep, type StepKind, nextStep } from "./next-step";
 import {
@@ -160,7 +161,7 @@ describe("deadlineText", () => {
 });
 
 describe("noteText", () => {
-  const away = { breaksAt: AT } as NonNullable<Leg["away"]>;
+  const away = fromPartial<NonNullable<Leg["away"]>>({ breaksAt: AT });
   const text = (kind: "ownStuck" | "theirStuck" | "ownAway" | "theirAway") =>
     noteText(
       { kind, leg: leg({ away }) },

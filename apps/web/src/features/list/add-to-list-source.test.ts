@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 
 import { addToListInputSchema, type AddSource, type PublicList } from "@repo/api/schemas/list";
 import type { OwnedObjekt } from "@repo/lib/types/objekt";
+import { fromPartial } from "@total-typescript/shoehorn";
 
 import {
   type AddableObjekt,
@@ -16,16 +17,16 @@ import {
   toSource,
 } from "./add-to-list-source";
 
-const collection = (slug: string) => ({ id: slug, slug }) as unknown as AddableObjekt;
+const collection = (slug: string) => fromPartial<AddableObjekt>({ id: slug, slug });
 const token = (slug: string, serial: number) =>
-  ({
+  fromPartial<OwnedObjekt>({
     id: `${slug}-${serial}`,
     slug,
     serial,
     tokenId: `${slug}-${serial}`,
-  }) as unknown as OwnedObjekt;
+  });
 const entry = (slug: string, entryId: number) =>
-  ({ id: String(entryId), slug, entryId }) as unknown as AddableObjekt;
+  fromPartial<AddableObjekt>({ id: String(entryId), slug, entryId });
 
 const HERE = "0xAbC";
 const bound = { isProfileBind: true, profileAddress: "0xabc" };
@@ -271,7 +272,7 @@ describe("addToListInput", () => {
   const base = {
     slug: "my-list",
     skipDups: true,
-    from: { type: "collections", slugs: ["a"] } as AddSource,
+    from: fromPartial<AddSource>({ type: "collections", slugs: ["a"] }),
     isSale: true,
     isQyop: false,
     price: null as number | null,

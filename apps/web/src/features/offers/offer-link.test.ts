@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 
 import type { OfferView } from "@repo/api/schemas/offer";
+import { fromPartial } from "@total-typescript/shoehorn";
 
 import { counterRequest } from "./counter-request";
 import {
@@ -219,14 +220,14 @@ describe("partnerHandle", () => {
 
 describe("a counter's start", () => {
   test("comes from the offer as the viewer sees it", () => {
-    const offer = {
+    const offer = fromPartial<OfferView>({
       id: 881,
       conversationId: 42,
       give: [],
       get: [],
       topup: null,
       note: "theirs",
-    } as unknown as OfferView;
+    });
     const request = counterRequest(offer, "rin.trades", {});
     expect(request.to).toEqual({ conversationId: 42 });
     expect(request.counter).toBe(true);

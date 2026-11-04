@@ -1,10 +1,11 @@
 import { describe, expect, test } from "bun:test";
 
 import type { PlanList, TradeLine } from "@repo/api/schemas/trade-post";
+import { fromPartial } from "@total-typescript/shoehorn";
 
 import { lineDetail, lineHint } from "./trade-line-parts";
 
-const partner = (listType: PlanList["listType"]) => ({ listType }) as PlanList;
+const partner = (listType: PlanList["listType"]) => fromPartial<PlanList>({ listType });
 type InPost = Extract<TradeLine, { state: "in_post" }>;
 const inPost = (patch: Partial<InPost>): InPost => ({
   state: "in_post",

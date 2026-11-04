@@ -1,6 +1,9 @@
 import { describe, expect, test } from "bun:test";
 
-import { notificationSlugs, sameSlugs, shownSlugs, stackSlugs } from "./stack";
+import type { Notification } from "@repo/api/schemas/notification";
+import { fromPartial } from "@total-typescript/shoehorn";
+
+import { type Collections, notificationSlugs, sameSlugs, shownSlugs, stackSlugs } from "./stack";
 
 const loaded = (...slugs: string[]) => {
   const set = new Set(slugs);
@@ -26,22 +29,26 @@ describe("notificationSlugs", () => {
   test("an alert names its newest matches in order", () => {
     const latest = [{ collectionSlug: "a" }, { collectionSlug: "b" }];
     for (const type of ["want_match", "have_wanted"] as const) {
-      expect(notificationSlugs({ type, payload: { latest } } as never)).toEqual(["a", "b"]);
+      expect(notificationSlugs(fromPartial<Notification>({ type, payload: { latest } }))).toEqual([
+        "a",
+        "b",
+      ]);
     }
   });
 
   test("an offer or trade names its objekts, and none written before them", () => {
     for (const type of ["offer", "trade"] as const) {
-      expect(notificationSlugs({ type, payload: { objekts: ["a", "b"] } } as never)).toEqual([
-        "a",
-        "b",
-      ]);
-      expect(notificationSlugs({ type, payload: {} } as never)).toEqual([]);
+      expect(
+        notificationSlugs(fromPartial<Notification>({ type, payload: { objekts: ["a", "b"] } })),
+      ).toEqual(["a", "b"]);
+      expect(notificationSlugs(fromPartial<Notification>({ type, payload: {} }))).toEqual([]);
     }
   });
 
   test("a moderator notice names none", () => {
-    expect(notificationSlugs({ type: "sanction", payload: {} } as never)).toEqual([]);
+    expect(notificationSlugs(fromPartial<Notification>({ type: "sanction", payload: {} }))).toEqual(
+      [],
+    );
   });
 });
 
@@ -64,30 +71,37 @@ describe("sameSlugs", () => {
 });
 
 describe("shownSlugs", () => {
-  const alert = {
+  const alert = fromPartial<Notification>({
     type: "want_match",
     payload: {
       latest: ["a", "b", "c", "d", "e"].map((collectionSlug) => ({ collectionSlug })),
     },
-  } as never;
+  });
 
   test("drops slugs with no collection or no thumbnail, keeping the order", () => {
-    const collections = {
+    const collections = fromPartial<Collections>({
       a: { thumbnailImage: "a.png" },
       b: { thumbnailImage: "" },
       d: { thumbnailImage: "d.png" },
-    } as never;
+    });
     expect(shownSlugs(alert, collections)).toEqual(["a", "d"]);
   });
 
   test("stops at three, as stackSlugs does", () => {
-    const collections = Object.fromEntries(
-      ["a", "b", "c", "d", "e"].map((slug) => [slug, { thumbnailImage: `${slug}.png` }]),
-    ) as never;
+    const collections = fromPartial<Collections>(
+      Object.fromEntries(
+        ["a", "b", "c", "d", "e"].map((slug) => [slug, { thumbnailImage: `${slug}.png` }]),
+      ),
+    );
     expect(shownSlugs(alert, collections)).toEqual(["a", "b", "c"]);
   });
 
   test("a moderator notice shows none", () => {
-    expect(shownSlugs({ type: "sanction", payload: {} } as never, {} as never)).toEqual([]);
+    expect(
+      shownSlugs(
+        fromPartial<Notification>({ type: "sanction", payload: {} }),
+        fromPartial<Collections>({}),
+      ),
+    ).toEqual([]);
   });
 });

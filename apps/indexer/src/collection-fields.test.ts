@@ -1,10 +1,11 @@
 import { describe, expect, test } from "bun:test";
 
 import type { CosmoObjektMetadataV1 } from "@repo/cosmo/types/metadata";
+import { fromPartial } from "@total-typescript/shoehorn";
 
 import { collectionChanged, collectionFields, type CollectionFields } from "./collection-fields";
 
-const metadata = {
+const metadata = fromPartial<CosmoObjektMetadataV1>({
   objekt: {
     season: "Atom01",
     member: "SeoYeon",
@@ -15,7 +16,7 @@ const metadata = {
     thumbnailImage: "https://example.com/thumb.png",
     frontImage: "https://example.com/front.png",
   },
-} as unknown as CosmoObjektMetadataV1;
+});
 
 const fields: CollectionFields = collectionFields(metadata);
 
@@ -27,9 +28,9 @@ describe("collectionFields", () => {
   });
 
   test("an offline collection number is offline", () => {
-    const offline = {
+    const offline = fromPartial<CosmoObjektMetadataV1>({
       objekt: { ...metadata.objekt, collectionNo: "101A" },
-    } as CosmoObjektMetadataV1;
+    });
     expect(collectionFields(offline).onOffline).toBe("offline");
   });
 });

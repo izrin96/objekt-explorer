@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 
 import type { ActivityItem, ActivityParams } from "@repo/api/schemas/activity";
 import { Addresses } from "@repo/lib";
+import { fromPartial } from "@total-typescript/shoehorn";
 
 import {
   addToFeed,
@@ -33,10 +34,10 @@ function item(
     ...objekt
   }: { from?: string; to?: string } & Partial<ActivityItem["objekt"]> = {},
 ): ActivityItem {
-  return {
+  return fromPartial({
     transfer: { id, from, to },
     objekt: {
-      artist: "tripleS",
+      artist: "triples",
       member: "JiWoo",
       members: ["JiWoo"],
       season: "Divine01",
@@ -45,7 +46,7 @@ function item(
       collectionNo: "333Z",
       ...objekt,
     },
-  } as ActivityItem;
+  });
 }
 
 const ids = (items: ActivityItem[]) => items.map((i) => i.transfer.id);

@@ -1,9 +1,17 @@
 import { describe, expect, test } from "bun:test";
 
+import type { Notification } from "@repo/api/schemas/notification";
+import { fromAny, fromPartial } from "@total-typescript/shoehorn";
+
 import { notificationTone } from "./tone";
 
-const offer = (event: string) => ({ type: "offer", payload: { event } }) as never;
-const trade = (event: string) => ({ type: "trade", payload: { event } }) as never;
+type OfferEvent = Extract<Notification, { type: "offer" }>["payload"]["event"];
+type TradeEvent = Extract<Notification, { type: "trade" }>["payload"]["event"];
+
+const offer = (event: OfferEvent): Notification =>
+  fromPartial({ type: "offer", payload: { event } });
+const trade = (event: TradeEvent): Notification =>
+  fromPartial({ type: "trade", payload: { event } });
 
 describe("notificationTone", () => {
   test("verified, completed and accepted are a green check", () => {
@@ -60,24 +68,30 @@ describe("notificationTone", () => {
   });
 
   test("alerts take their list type's colour", () => {
-    expect(notificationTone({ type: "want_match", payload: {} } as never)).toEqual({
+    expect(
+      notificationTone(fromPartial<Notification>({ type: "want_match", payload: {} })),
+    ).toEqual({
       icon: "heart",
       tone: "want",
     });
-    expect(notificationTone({ type: "have_wanted", payload: {} } as never)).toEqual({
+    expect(
+      notificationTone(fromPartial<Notification>({ type: "have_wanted", payload: {} })),
+    ).toEqual({
       icon: "package",
       tone: "have",
     });
   });
 
   test("a sanction is a red shield", () => {
-    expect(notificationTone({ type: "sanction", payload: {} } as never)).toEqual({
+    expect(notificationTone(fromPartial<Notification>({ type: "sanction", payload: {} }))).toEqual({
       icon: "shield",
       tone: "destructive",
     });
   });
 
   test("an event a newer server sends stays neutral", () => {
-    expect(notificationTone(offer("something_new"))).toEqual({ icon: "arrow", tone: "neutral" });
+    expect(
+      notificationTone(fromAny({ type: "offer", payload: { event: "something_new" } })),
+    ).toEqual({ icon: "arrow", tone: "neutral" });
   });
 });

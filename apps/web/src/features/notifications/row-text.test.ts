@@ -1,6 +1,7 @@
 import { describe, expect, mock, test } from "bun:test";
 
 import type { AlertMatch } from "@repo/api/schemas/notification";
+import { fromAny } from "@total-typescript/shoehorn";
 
 import { m } from "@/paraglide/messages";
 
@@ -87,7 +88,10 @@ describe("alertText", () => {
   });
 
   test("a type this tab does not know draws nothing", () => {
-    const notification = { ...alert("want_match", 1), type: "unknown" as never };
+    const notification: Parameters<typeof alertText>[0] = fromAny({
+      ...alert("want_match", 1),
+      type: "unknown",
+    });
     check(alertText(notification, "P", objektName)).toBeNull();
   });
 
@@ -152,7 +156,7 @@ describe("sanctionText", () => {
   });
 
   test("an action this tab does not know draws nothing", () => {
-    check(sanctionText({ action: "ban" as never, reason: "r", endsAt: null }, until)).toBeNull();
+    check(sanctionText(fromAny({ action: "ban", reason: "r", endsAt: null }), until)).toBeNull();
   });
 });
 

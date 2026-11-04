@@ -1,8 +1,10 @@
 import { describe, expect, test } from "bun:test";
 
 import { MESSAGE_MAX_LENGTH, sendInputSchema } from "@repo/api/schemas/chat";
+import { fromPartial } from "@total-typescript/shoehorn";
 
 import type { Attachment } from "@/features/chat/attachment";
+import type { DraftReply } from "@/stores/chat-draft";
 
 import { boxCheck, COUNTER_FROM, keyAction, sendInput } from "./composer-rules";
 
@@ -88,11 +90,11 @@ describe("keyAction", () => {
 
 describe("sendInput", () => {
   const card: Attachment["input"] = { kind: "objekt", collectionSlug: "atom01-heejin-101z" };
-  const attachment = { kind: "objekt", input: card } as Attachment;
+  const attachment = fromPartial<Attachment>({ kind: "objekt", input: card });
   const sent = (body: string, reply: { id: number } | null = null) => ({
     body,
     clientId: CLIENT_ID,
-    reply: reply as never,
+    reply: fromPartial<DraftReply | null>(reply),
   });
 
   test("a whitespace-only body with a card sends no body", () => {

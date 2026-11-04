@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 
 import type { Notification } from "@repo/api/schemas/notification";
+import { fromAny } from "@total-typescript/shoehorn";
 
 import { needsYou, renderable, rowAction, sectionOf } from "./sections";
 
@@ -131,7 +132,9 @@ describe("renderable", () => {
   });
 
   test("a type, a moderator action or an empty alert it doesn't know draws nothing", () => {
-    expect(renderable({ ...trade("reminder"), type: "badge" } as never)).toBe(false);
+    expect(
+      renderable(fromAny<Notification, unknown>({ ...trade("reminder"), type: "badge" })),
+    ).toBe(false);
     expect(renderable(sanction("ban"))).toBe(false);
     expect(renderable(alert(0))).toBe(false);
   });

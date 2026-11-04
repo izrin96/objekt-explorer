@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, test } from "bun:test";
 
+import { fromAny } from "@total-typescript/shoehorn";
+
 import type { Attachment } from "@/features/chat/attachment";
 
 import {
@@ -20,7 +22,7 @@ const reply = (id: number, excerpt = `m${id}`): DraftReply => ({
 });
 const draft = () => useChatDraft.getState().drafts[1];
 // only its identity matters here
-const card = (name: string) => ({ kind: "objekt", name }) as unknown as Attachment;
+const card = (name: string) => fromAny<Attachment, unknown>({ kind: "objekt", name });
 
 beforeEach(() => {
   useChatDraft.setState({ cards: {}, drafts: {} });

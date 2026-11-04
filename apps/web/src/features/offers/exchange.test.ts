@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 
 import type { ValidObjekt } from "@repo/lib/types/objekt";
+import { fromPartial } from "@total-typescript/shoehorn";
 
 import {
   decideCount,
@@ -14,7 +15,7 @@ import {
 import { confirmed, copy, leg, trade, verified } from "./trade-fixture";
 
 const collection = (member: string, collectionNo: string) =>
-  ({ member, collectionNo, artist: "triples", season: "Atom01" }) as unknown as ValidObjekt;
+  fromPartial<ValidObjekt>({ member, collectionNo, artist: "triples", season: "Atom01" });
 
 const collections = {
   "seoah-203z": collection("SeoAh", "203Z"),

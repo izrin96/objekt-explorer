@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 
 import type { GridObjekt } from "@repo/lib/types/objekt";
+import { fromPartial } from "@total-typescript/shoehorn";
 
 import { compareSupply, filterObjekts, sortObjekts } from "./filter-utils";
 import { filterSearchSchema } from "./search-schema";
@@ -9,7 +10,7 @@ const NOW = 1_800_000_000;
 const DAY = 86_400;
 
 function row(slug: string, extra: Record<string, unknown> = {}) {
-  return { slug, ...extra } as unknown as GridObjekt;
+  return fromPartial<GridObjekt>({ slug, ...extra });
 }
 
 describe("filterObjekts member and colour", () => {

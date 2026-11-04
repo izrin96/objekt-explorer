@@ -7,6 +7,7 @@ import {
   OFFER_SIDE_LIMIT,
   TOPUP_MAX,
 } from "@repo/api/schemas/offer";
+import { fromPartial } from "@total-typescript/shoehorn";
 
 import type { OfferPick } from "@/features/offers/pick";
 import { takeOut } from "@/features/offers/quantity";
@@ -497,7 +498,7 @@ describe("sendGate", () => {
 });
 
 describe("top-up state", () => {
-  const pick = (key: string) => ({ key, collectionSlug: key }) as unknown as OfferPick;
+  const pick = (key: string): OfferPick => fromPartial({ key, collectionSlug: key });
   const fresh = [pick("a")];
   const off: TopupState = {
     on: false,

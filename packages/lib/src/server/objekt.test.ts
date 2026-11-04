@@ -1,8 +1,10 @@
 import { describe, expect, test } from "bun:test";
 
+import { fromAny, fromPartial } from "@total-typescript/shoehorn";
+
 import { mapOwnedObjekt, overrideCollection } from "./objekt";
 
-const collection = {
+const collection = fromPartial<Parameters<typeof overrideCollection>[0]>({
   id: "c0ffee",
   createdAt: "2026-01-01T00:00:00.000Z",
   slug: "atom01-heejin-322z",
@@ -25,7 +27,7 @@ const collection = {
   processedThumbnailImage: null,
   processedFrontImage: null,
   processedBackImage: null,
-} as unknown as Parameters<typeof overrideCollection>[0];
+});
 
 describe("overrideCollection", () => {
   test("carries the row's colours", () => {
@@ -35,32 +37,32 @@ describe("overrideCollection", () => {
   });
 
   test("an idntt offline collection on black gets its band image", () => {
-    const idntt = {
+    const idntt = fromPartial<typeof collection>({
       ...collection,
       slug: "idntt-offline",
       artist: "idntt",
       class: "First",
       onOffline: "offline",
       backgroundColor: "#000000",
-    } as typeof collection;
+    });
     expect(overrideCollection(idntt).bandImageUrl).toContain("fab4f9ec98d24a00a7c417e012a493cd");
   });
 
   test("lists its fields, so no other column of the row is carried", () => {
-    const row = { ...collection, sourceTextColor: "#000000" } as typeof collection;
+    const row = fromAny<typeof collection, unknown>({ ...collection, sourceTextColor: "#000000" });
     expect(overrideCollection(row)).not.toHaveProperty("sourceTextColor");
   });
 });
 
 describe("mapOwnedObjekt", () => {
   test("takes the objekt's token id, serial and dates over the collection's", () => {
-    const objekt = {
+    const objekt = fromPartial<Parameters<typeof mapOwnedObjekt>[0]>({
       id: "42",
       serial: 7,
       receivedAt: "2026-02-01T00:00:00.000Z",
       mintedAt: "2026-01-01T00:00:00.000Z",
       transferable: true,
-    } as unknown as Parameters<typeof mapOwnedObjekt>[0];
+    });
     const result = mapOwnedObjekt(objekt, collection);
     expect(result.id).toBe("42");
     expect(result.tokenId).toBe("42");
