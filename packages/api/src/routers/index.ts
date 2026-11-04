@@ -6,6 +6,7 @@ import type {
 } from "@orpc/server";
 
 import { activityRouter } from "./activity";
+import { adminRouter } from "./admin";
 import { chatRouter } from "./chat";
 import { collectionsRouter } from "./collections";
 import { compareRouter } from "./compare";
@@ -51,6 +52,7 @@ export const router = {
   offer: offerRouter,
   realtime: realtimeRouter,
   presence: presenceRouter,
+  admin: adminRouter,
 };
 
 /** What `/api/v1` serves and documents; everything else stays RPC-only. */

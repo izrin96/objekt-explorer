@@ -127,6 +127,30 @@ describe("sanctionText", () => {
     expect(stub).not.toHaveBeenCalled();
   });
 
+  test("a banner removal names the profile and the reason", () => {
+    const payload = {
+      action: "banner_remove",
+      reason: "r",
+      endsAt: null,
+      profile: { address: "0xabc", nickname: "kaede.k" },
+    } as const;
+    check(sanctionText(payload, until)).toBe(
+      m.notification_sanction_banner_remove({ profile: "kaede.k", reason: "r" }),
+    );
+  });
+
+  test("a banner removal on a profile with no nickname names its address", () => {
+    const payload = {
+      action: "banner_remove",
+      reason: "r",
+      endsAt: null,
+      profile: { address: "0xabc", nickname: null },
+    } as const;
+    check(sanctionText(payload, until)).toBe(
+      m.notification_sanction_banner_remove({ profile: "0xabc", reason: "r" }),
+    );
+  });
+
   test("an action this tab does not know draws nothing", () => {
     check(sanctionText({ action: "ban" as never, reason: "r", endsAt: null }, until)).toBeNull();
   });

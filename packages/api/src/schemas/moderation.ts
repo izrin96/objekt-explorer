@@ -22,6 +22,9 @@ export const AUDIT_ACTIONS = [
   "address_move",
   "address_unlink",
   "account_deleted",
+  "banner_remove",
+  "collection_override",
+  "collection_refresh",
 ] as const;
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];
 
@@ -75,7 +78,7 @@ export const reportInputSchema = z.object({
 });
 export type ReportInput = z.infer<typeof reportInputSchema>;
 
-const modReasonSchema = z
+export const modReasonSchema = z
   .string()
   .trim()
   .min(1)

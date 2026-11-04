@@ -69,6 +69,9 @@ export const userAddress = pgTable(
     uniqueIndex("user_address_default_idx")
       .on(t.userId)
       .where(sql`is_default`),
+    index("user_address_banner_feed_idx")
+      .on(t.bannerUpdatedAt.desc().nullsLast(), t.id.desc())
+      .where(sql`banner_img_url IS NOT NULL`),
     check("user_address_default_linked", sql`NOT ${t.isDefault} OR ${t.userId} IS NOT NULL`),
   ],
 );
@@ -832,6 +835,9 @@ export const modAudit = pgTable(
         | "address_move"
         | "address_unlink"
         | "account_deleted"
+        | "banner_remove"
+        | "collection_override"
+        | "collection_refresh"
       >()
       .notNull(),
     targetUserId: text("target_user_id").references(() => user.id, { onDelete: "set null" }),
@@ -842,6 +848,31 @@ export const modAudit = pgTable(
       .defaultNow(),
   },
   (t) => [index("mod_audit_target_created_idx").on(t.targetUserId, t.createdAt.desc())],
+);
+
+/**
+ * Staff fixes to a collection's colours, keyed by the indexer's slug (another database, so no
+ * foreign key). Kept apart from the indexer's rows, so a reindex never touches them.
+ */
+export const collectionOverride = pgTable(
+  "collection_override",
+  {
+    slug: text("slug").primaryKey(),
+    textColor: text("text_color"),
+    backgroundColor: text("background_color"),
+    updatedBy: text("updated_by").references(() => user.id, { onDelete: "set null" }),
+    updatedAt: timestamp("updated_at", { mode: "string", withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    check("collection_override_text_color", sql`${t.textColor} ~ '^#[0-9a-f]{6}$'`),
+    check("collection_override_background_color", sql`${t.backgroundColor} ~ '^#[0-9a-f]{6}$'`),
+    check(
+      "collection_override_some_color",
+      sql`${t.textColor} IS NOT NULL OR ${t.backgroundColor} IS NOT NULL`,
+    ),
+  ],
 );
 
 export const pins = pgTable(
@@ -899,6 +930,7 @@ export const collectionPriceHistory = pgTable(
 export type AccessToken = typeof accessToken.$inferSelect;
 export type UserAddress = typeof userAddress.$inferSelect;
 export type Pin = typeof pins.$inferSelect;
+export type CollectionOverrideRow = typeof collectionOverride.$inferSelect;
 
 export type User = typeof user.$inferSelect;
 export type Session = typeof session.$inferSelect;

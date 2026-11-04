@@ -1,6 +1,7 @@
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts, transfers } from "@repo/db/indexer/schema";
 import { Addresses } from "@repo/lib";
+import { loadCollectionOverrides } from "@repo/lib/server/collection-override";
 import { mapOwnedObjekt, mapTransfer } from "@repo/lib/server/objekt";
 import { fetchPublicNicknames } from "@repo/lib/server/user";
 import { type SQL, and, asc, desc, eq, gt, inArray, lt, lte, ne, or } from "drizzle-orm";
@@ -18,7 +19,10 @@ export async function fetchAddressTransfers(
 ): Promise<AddressTransfersOutput> {
   const addr = address.toLowerCase();
 
-  const results = await fetchTransfers(query, addr);
+  const [results, overrides] = await Promise.all([
+    fetchTransfers(query, addr),
+    loadCollectionOverrides(),
+  ]);
 
   const hasNext = results.length > PER_PAGE;
   const nextCursor = hasNext
@@ -38,7 +42,7 @@ export async function fetchAddressTransfers(
     results: slicedResults.map((row) => {
       return {
         transfer: mapTransfer(row.transfer),
-        objekt: mapOwnedObjekt(row.objekt, row.collection),
+        objekt: mapOwnedObjekt(row.objekt, row.collection, overrides.map),
         nickname: {
           from: nicknameOf(row.transfer.from),
           to: nicknameOf(row.transfer.to),

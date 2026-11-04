@@ -1,20 +1,16 @@
-import { isStaffRole } from "@repo/api/schemas/moderation";
 import { Outlet, createFileRoute, notFound, useParams } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 
 import { PageHeader } from "@/components/shared/page-header";
 import { queueOptions } from "@/features/moderation/console/queries";
 import { ModQueue, ModQueueSkeleton } from "@/features/moderation/console/queue";
-import { currentUserOptions } from "@/features/user/queries";
+import { canOpenTab } from "@/features/moderation/staff-tabs";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
-// not-found for everyone else, before any loader runs: the console's existence stays unconfirmed
 export const Route = createFileRoute("/(container)/mod/reports")({
-  beforeLoad: async ({ context: { queryClient } }) => {
-    const user = await queryClient.query({ ...currentUserOptions, staleTime: "static" });
-    if (!user || !isStaffRole(user.user.role)) throw notFound();
-    return { viewerRole: user.user.role ?? null };
+  beforeLoad: ({ context: { viewerRole } }) => {
+    if (!canOpenTab("reports", viewerRole)) throw notFound();
   },
   loader: async ({ context: { queryClient } }) => {
     // a failed read leaves the queue to show its error and retry, not the page to fail

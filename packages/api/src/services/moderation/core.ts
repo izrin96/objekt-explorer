@@ -109,12 +109,17 @@ export async function audit(
   entry: {
     actorId: string | null;
     action: AuditAction;
-    targetUserId: string;
+    /** null for an entry about no account: a collection change, a banner no account holds */
+    targetUserId: string | null;
     reportIds?: number[];
     detail: Record<string, unknown>;
   },
 ) {
-  await tx.insert(modAudit).values({ ...entry, reportIds: entry.reportIds ?? null });
+  const [row] = await tx
+    .insert(modAudit)
+    .values({ ...entry, reportIds: entry.reportIds ?? null })
+    .returning({ id: modAudit.id });
+  return row!.id;
 }
 
 export const openReportsOf = (userId: string) =>

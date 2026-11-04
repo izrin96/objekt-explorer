@@ -4,6 +4,7 @@ import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
 import type { ListEntry } from "@repo/db/schema";
 import { chunkMap } from "@repo/lib";
+import { loadCollectionOverrides } from "@repo/lib/server/collection-override";
 import { mapOwnedObjekt, overrideCollection } from "@repo/lib/server/objekt";
 import type { ListEntryFields, ListObjekt } from "@repo/lib/types/objekt";
 import { and, eq, inArray } from "drizzle-orm";
@@ -42,23 +43,26 @@ async function buildProfileListEntries(
 
   if (objektIds.length === 0) return [];
 
-  const objektsData = await chunkMap(objektIds, TOKEN_CHUNK_SIZE, (batch) =>
-    indexer
-      .select({
-        objekt: objekts,
-        collection: getCollectionColumns(),
-      })
-      .from(objekts)
-      .innerJoin(collections, eq(collections.id, objekts.collectionId))
-      .where(
-        and(
-          inArray(objekts.id, batch),
-          ...(config?.artists?.length
-            ? [inArray(collections.artist, config.artists.map(toIndexedArtist))]
-            : []),
+  const [objektsData, overrides] = await Promise.all([
+    chunkMap(objektIds, TOKEN_CHUNK_SIZE, (batch) =>
+      indexer
+        .select({
+          objekt: objekts,
+          collection: getCollectionColumns(),
+        })
+        .from(objekts)
+        .innerJoin(collections, eq(collections.id, objekts.collectionId))
+        .where(
+          and(
+            inArray(objekts.id, batch),
+            ...(config?.artists?.length
+              ? [inArray(collections.artist, config.artists.map(toIndexedArtist))]
+              : []),
+          ),
         ),
-      ),
-  );
+    ),
+    loadCollectionOverrides(),
+  ]);
 
   const objektMap = new Map(objektsData.map((o) => [o.objekt.id, o]));
 
@@ -68,8 +72,8 @@ async function buildProfileListEntries(
       const data = objektMap.get(entry.objektId!);
       if (!data) return null;
       const objekt = config?.hideSerial
-        ? overrideCollection(data.collection)
-        : mapOwnedObjekt(data.objekt, data.collection);
+        ? overrideCollection(data.collection, overrides.map)
+        : mapOwnedObjekt(data.objekt, data.collection, overrides.map);
       return Object.assign({}, objekt, entryFields(entry));
     })
     .filter((a) => a !== null);

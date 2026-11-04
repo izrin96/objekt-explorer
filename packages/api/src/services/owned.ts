@@ -2,6 +2,7 @@ import { toIndexedArtist } from "@repo/cosmo/types/common";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts, transfers } from "@repo/db/indexer/schema";
 import { Addresses, chunkMap } from "@repo/lib";
+import { loadCollectionOverrides } from "@repo/lib/server/collection-override";
 import { mapOwnedObjekt, overrideCollection } from "@repo/lib/server/objekt";
 import type { HeldObjekt } from "@repo/lib/types/objekt";
 import { and, asc, count, desc, eq, getColumns, inArray, lt, lte, or, sql } from "drizzle-orm";
@@ -83,14 +84,16 @@ export async function fetchOwnedObjekts(
       .orderBy(...orderBy(latest.timestamp))
       .limit(PER_PAGE + 1);
 
-    const results = await mainQuery;
+    const [results, overrides] = await Promise.all([mainQuery, loadCollectionOverrides()]);
 
     const hasNext = results.length > PER_PAGE;
     const nextCursor = hasNext ? cursorAfter(results[PER_PAGE - 1]!) : undefined;
 
     return {
       nextCursor,
-      objekts: results.slice(0, PER_PAGE).map((a) => mapOwnedObjekt(a.objekt, a.collection)),
+      objekts: results
+        .slice(0, PER_PAGE)
+        .map((a) => mapOwnedObjekt(a.objekt, a.collection, overrides.map)),
     };
   }
 
@@ -107,14 +110,16 @@ export async function fetchOwnedObjekts(
     .orderBy(...orderBy(objekts.receivedAt))
     .limit(PER_PAGE + 1);
 
-  const results = await mainQuery;
+  const [results, overrides] = await Promise.all([mainQuery, loadCollectionOverrides()]);
 
   const hasNext = results.length > PER_PAGE;
   const nextCursor = hasNext ? cursorAfter(results[PER_PAGE - 1]!) : undefined;
 
   return {
     nextCursor,
-    objekts: results.slice(0, PER_PAGE).map((a) => mapOwnedObjekt(a.objekt, a.collection)),
+    objekts: results
+      .slice(0, PER_PAGE)
+      .map((a) => mapOwnedObjekt(a.objekt, a.collection, overrides.map)),
   };
 }
 
@@ -126,7 +131,7 @@ const CACHE_TTL = 60 * 5;
  * only one row per collection meets the collection table; the lowest-serial
  * token is one indexed probe per collection, not a sort of every token.
  */
-async function countHeld(addr: string): Promise<HeldObjekt[]> {
+async function countHeld(addr: string) {
   const held = indexer.$with("held").as(
     indexer
       .select({
@@ -168,14 +173,7 @@ async function countHeld(addr: string): Promise<HeldObjekt[]> {
     .innerJoin(collections, eq(collections.id, held.collectionId))
     .innerJoinLateral(first, sql`true`);
 
-  return results.map((row): HeldObjekt =>
-    Object.assign(overrideCollection(row.collection), {
-      copies: row.copies,
-      minSerial: row.minSerial,
-      minSerialTokenId: row.minSerialTokenId,
-      firstReceivedAt: new Date(row.firstReceivedAt).toISOString(),
-    }),
-  );
+  return results;
 }
 
 export async function fetchHeldObjekts(
@@ -185,10 +183,21 @@ export async function fetchHeldObjekts(
   const addr = address.toLowerCase();
 
   // only Spin's pass is slow enough to cache; one entry whatever the artist scope
-  const all =
+  // the cache keeps source colours, so an override applies on the next read
+  const [rows, overrides] = await Promise.all([
     addr === Addresses.SPIN
-      ? await getCache(`held-by:v2:${addr}`, CACHE_TTL, () => countHeld(addr))
-      : await countHeld(addr);
+      ? getCache(`held-by:v3:${addr}`, CACHE_TTL, () => countHeld(addr))
+      : countHeld(addr),
+    loadCollectionOverrides(),
+  ]);
+  const all = rows.map((row): HeldObjekt =>
+    Object.assign(overrideCollection(row.collection, overrides.map), {
+      copies: row.copies,
+      minSerial: row.minSerial,
+      minSerialTokenId: row.minSerialTokenId,
+      firstReceivedAt: new Date(row.firstReceivedAt).toISOString(),
+    }),
+  );
   const artists = artist?.map((a) => a.toLowerCase());
 
   return {

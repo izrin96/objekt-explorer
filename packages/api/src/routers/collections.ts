@@ -83,6 +83,15 @@ export const collectionsRouter = {
         return { status: 304 as const, headers: { "last-modified": lastModified } };
       }
 
+      // fallback colours carry no date, so the browser asks again on its next load
+      if (!list.fresh) {
+        return {
+          status: 200 as const,
+          headers: { "last-modified": undefined, "cache-control": "no-store" },
+          body: list.result,
+        };
+      }
+
       return {
         status: 200 as const,
         headers: {

@@ -131,7 +131,7 @@ export function UserMenu({ user }: { user: User }) {
           </MenuItem>
 
           {isStaffRole(user.role) && (
-            <MenuItem render={<Link to="/mod/reports" />}>
+            <MenuItem render={<Link to="/mod" />}>
               <ShieldCheckIcon />
               {m.nav_mod_reports()}
             </MenuItem>

@@ -1,4 +1,3 @@
-import { isStaffRole } from "@repo/api/schemas/moderation";
 import { isAddress } from "@repo/lib";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 
@@ -8,15 +7,13 @@ import {
   AddressHistorySkeleton,
 } from "@/features/moderation/console/address-history";
 import { addressHistoryOptions } from "@/features/moderation/console/queries";
-import { currentUserOptions } from "@/features/user/queries";
+import { canOpenTab } from "@/features/moderation/staff-tabs";
 import { generateMetadata } from "@/lib/meta";
 import { m } from "@/paraglide/messages";
 
-// not-found for everyone else, before any loader runs: the console's existence stays unconfirmed
 export const Route = createFileRoute("/(container)/mod/addresses/$address")({
-  beforeLoad: async ({ context: { queryClient }, params }) => {
-    const user = await queryClient.query({ ...currentUserOptions, staleTime: "static" });
-    if (!user || !isStaffRole(user.user.role) || !isAddress(params.address)) throw notFound();
+  beforeLoad: ({ context: { viewerRole }, params }) => {
+    if (!canOpenTab("addresses", viewerRole) || !isAddress(params.address)) throw notFound();
   },
   loader: async ({ context: { queryClient }, params }) => {
     await queryClient

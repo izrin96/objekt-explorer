@@ -4,6 +4,7 @@ import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
 import { listEntries, lists, messagePref } from "@repo/db/schema";
 import type { UserAddress } from "@repo/db/schema";
+import { loadCollectionOverrides } from "@repo/lib/server/collection-override";
 import { overrideCollection } from "@repo/lib/server/objekt";
 import { and, eq, inArray, isNotNull, isNull } from "drizzle-orm";
 
@@ -251,7 +252,7 @@ export async function fetchListPreviews(slugs: string[]): Promise<ListPreview[]>
   const collectionSlugs = entries.map((e) => e.collectionSlug).filter((s) => s !== null);
   const objektIds = entries.map((e) => e.objektId).filter((s) => s !== null);
 
-  const [bySlug, byObjekt] = await Promise.all([
+  const [bySlug, byObjekt, overrides] = await Promise.all([
     fetchCollectionsBySlug(collectionSlugs, []),
     objektIds.length
       ? indexer
@@ -260,10 +261,13 @@ export async function fetchListPreviews(slugs: string[]): Promise<ListPreview[]>
           .innerJoin(collections, eq(collections.id, objekts.collectionId))
           .where(inArray(objekts.id, objektIds))
       : [],
+    loadCollectionOverrides(),
   ]);
 
   const slugMap = new Map(bySlug.map((c) => [c.slug, c]));
-  const objektMap = new Map(byObjekt.map((o) => [o.objektId, overrideCollection(o.collection)]));
+  const objektMap = new Map(
+    byObjekt.map((o) => [o.objektId, overrideCollection(o.collection, overrides.map)]),
+  );
 
   return found.map((list) => ({
     slug: list.slug,

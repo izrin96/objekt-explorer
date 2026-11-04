@@ -5,6 +5,7 @@ import { toReputation } from "../lib/offer-rules";
 import { unique } from "../lib/unique";
 import { type Reputation, reputationKey, reputationSchema } from "../schemas/reputation";
 import { redis, redisFailOpen } from "./redis";
+import { faultSql } from "./trade-fault";
 
 const TTL_SECONDS = 600;
 
@@ -37,23 +38,7 @@ async function computeReputation(userIds: string[]) {
         SELECT user_b FROM completed WHERE user_b = ANY(${ids}::text[])
       ) t GROUP BY id
     ),
-    fault AS (
-      SELECT t.id AS trade_id,
-        CASE
-          WHEN a.owes AND NOT b.owes THEN t.user_a
-          WHEN b.owes AND NOT a.owes THEN t.user_b
-        END AS culprit
-      FROM trade t
-      CROSS JOIN LATERAL (
-        SELECT coalesce(bool_or(l.verified_at IS NULL), false) AS owes
-        FROM trade_leg l WHERE l.trade_id = t.id AND l.from_user_id = t.user_a
-      ) a
-      CROSS JOIN LATERAL (
-        SELECT coalesce(bool_or(l.verified_at IS NULL), false) AS owes
-        FROM trade_leg l WHERE l.trade_id = t.id AND l.from_user_id = t.user_b
-      ) b
-      WHERE t.status = 'failed'
-    ),
+    fault AS (${faultSql}),
     linked AS (
       SELECT user_id AS id, array_agg(lower(address::text)) AS addresses
       FROM user_address WHERE user_id = ANY(${ids}::text[])

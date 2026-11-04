@@ -2,10 +2,12 @@ import { type ValidArtist, toIndexedArtist } from "@repo/cosmo/types/common";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts, transfers } from "@repo/db/indexer/schema";
 import { Addresses } from "@repo/lib";
+import { loadCollectionOverrides } from "@repo/lib/server/collection-override";
 import { overrideCollection } from "@repo/lib/server/objekt";
 import { fetchPublicNicknames } from "@repo/lib/server/user";
 import { type SQL, and, asc, count, desc, eq, inArray, lte, ne, sql } from "drizzle-orm";
 
+import { nextModifiedAt } from "../lib/collection-bump";
 import type {
   CollectionMetadataOutput,
   CollectionListOutput,
@@ -15,45 +17,68 @@ import type {
 import { getCollectionColumns } from "./objekt";
 import { redis, redisFailOpen } from "./redis";
 
+const MODIFIED_AT_KEY = "collection:modified-at";
+
 type CollectionListQuery = { artist: ValidArtist[]; at?: string };
 
 type CollectionList =
   | { notModified: true; lastModifiedMs: number }
-  | { notModified: false; lastModifiedMs: number; result: CollectionListOutput };
+  | {
+      notModified: false;
+      lastModifiedMs: number;
+      result: CollectionListOutput;
+      /** false when the overrides could not be read, so the colours may be stale */
+      fresh: boolean;
+    };
+
+type BuiltList = { result: CollectionListOutput; fresh: boolean };
 
 // Nearly every request is the unfiltered list, so it is built once and reused
 // until Last-Modified moves past it. The TTL picks up in-place edits that don't
 // move it, such as indexer upserts.
 const FULL_LIST_TTL_MS = 5 * 60 * 1000;
 let fullListCache:
-  | { lastModifiedMs: number; expiresAt: number; result: Promise<CollectionListOutput> }
+  | { lastModifiedMs: number; expiresAt: number; result: Promise<BuiltList> }
   | undefined;
 
-function getFullList(whereQuery: SQL | undefined, lastModifiedMs: number) {
+function getFullList(whereQuery: SQL | undefined, lastModifiedMs: number, freshAfter?: number) {
   if (
     !fullListCache ||
     fullListCache.lastModifiedMs < lastModifiedMs ||
     fullListCache.expiresAt <= Date.now()
   ) {
-    const result = queryCollections(whereQuery);
+    const result = queryCollections(whereQuery, freshAfter);
     fullListCache = { lastModifiedMs, expiresAt: Date.now() + FULL_LIST_TTL_MS, result };
-    void result.catch(() => {
-      if (fullListCache?.result === result) fullListCache = undefined;
-    });
+    // a list built on fallback colours is never kept: it would be served under this date
+    // after the database recovers
+    void result.then(
+      (built) => {
+        if (!built.fresh && fullListCache?.result === result) fullListCache = undefined;
+      },
+      () => {
+        if (fullListCache?.result === result) fullListCache = undefined;
+      },
+    );
   }
   return fullListCache.result;
 }
 
-async function queryCollections(whereQuery: SQL | undefined): Promise<CollectionListOutput> {
-  const result = await indexer
-    .select({
-      ...getCollectionColumns(),
-    })
-    .from(collections)
-    .where(whereQuery)
-    .orderBy(desc(collections.id));
+async function queryCollections(whereQuery: SQL | undefined, freshAfter?: number) {
+  const [rows, overrides] = await Promise.all([
+    indexer
+      .select({
+        ...getCollectionColumns(),
+      })
+      .from(collections)
+      .where(whereQuery)
+      .orderBy(desc(collections.id)),
+    loadCollectionOverrides({ freshAfter }),
+  ]);
 
-  return { collections: result.map(overrideCollection) };
+  return {
+    result: { collections: rows.map((row) => overrideCollection(row, overrides.map)) },
+    fresh: overrides.fresh,
+  } satisfies BuiltList;
 }
 
 /**
@@ -74,7 +99,7 @@ export async function fetchCollectionList(
   const whereQuery = and(...filters);
 
   const [overrideStr, [latest]] = await Promise.all([
-    redisFailOpen("collection modified-at", () => redis.get("collection:modified-at")),
+    redisFailOpen("collection modified-at", () => redis.get(MODIFIED_AT_KEY)),
     indexer
       .select({
         createdAt: collections.createdAt,
@@ -85,7 +110,9 @@ export async function fetchCollectionList(
       .limit(1),
   ]);
 
-  if (!latest) return { notModified: false, lastModifiedMs: 0, result: { collections: [] } };
+  if (!latest) {
+    return { notModified: false, lastModifiedMs: 0, result: { collections: [] }, fresh: true };
+  }
 
   const overrideMs = overrideStr ? new Date(overrideStr).getTime() : 0;
   const createdAtMs = new Date(latest.createdAt).getTime();
@@ -95,12 +122,46 @@ export async function fetchCollectionList(
     return { notModified: true, lastModifiedMs };
   }
 
-  const result =
+  // the raw bump, not the floored date: a map read before a save in the same second is stale
+  const freshAfter = overrideMs > 0 ? overrideMs : undefined;
+  const { result, fresh } =
     filters.length === 0
-      ? await getFullList(whereQuery, lastModifiedMs)
-      : await queryCollections(whereQuery);
+      ? await getFullList(whereQuery, lastModifiedMs, freshAfter)
+      : await queryCollections(whereQuery, freshAfter);
 
-  return { notModified: false, lastModifiedMs, result };
+  return { notModified: false, lastModifiedMs, result, fresh };
+}
+
+/**
+ * Marks the collection list as changed now, so every browser's next load gets it again instead
+ * of a 304. The one writer of `collection:modified-at` besides `process-collection-images`.
+ * Call it after the change commits; `refreshed: false` means Redis did not take it.
+ */
+export async function bumpCollectionList() {
+  const written = await redisFailOpen("collection modified-at bump", async () => {
+    const previous = await redis.get(MODIFIED_AT_KEY);
+    const next = new Date(nextModifiedAt(Date.now(), previous)).toISOString();
+    await redis.set(MODIFIED_AT_KEY, next);
+    return next;
+  });
+  return { refreshed: written !== null, modifiedAt: written };
+}
+
+/** When the full collection list last changed: the later of the last bump and the newest collection. */
+export async function collectionListModifiedAt() {
+  const [stored, [latest]] = await Promise.all([
+    redisFailOpen("collection modified-at", () => redis.get(MODIFIED_AT_KEY)),
+    indexer
+      .select({ createdAt: collections.createdAt })
+      .from(collections)
+      .orderBy(desc(collections.id))
+      .limit(1),
+  ]);
+  const ms = Math.max(
+    stored ? Date.parse(stored) || 0 : 0,
+    latest ? new Date(latest.createdAt).getTime() : 0,
+  );
+  return ms > 0 ? new Date(ms).toISOString() : null;
 }
 
 export async function fetchCollectionMetadata(slug: string): Promise<CollectionMetadataOutput> {

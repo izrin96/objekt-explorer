@@ -106,10 +106,10 @@ export function NotificationPanel({
   const sections = Map.groupBy(items, (item) => sectionOf(item, tradeNotes, now));
   const sheet = variant === "sheet";
 
-  // a moderator notice leads nowhere, so opening it only marks it read
+  // a moderator notice leads nowhere, so opening it only marks it read, unless it names a profile
   const openRow = (item: Notification) => {
     if (item.readAt === null) markRead.mutate({ ids: [item.id] });
-    if (item.type !== "sanction") onNavigate();
+    if (item.type !== "sanction" || item.payload.profile) onNavigate();
   };
 
   return (

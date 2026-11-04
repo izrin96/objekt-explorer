@@ -45,18 +45,20 @@ async function flagCounts(userIds: string[]) {
 }
 
 /**
- * The trades attached to the account's open reports: status, legs, hashes and times, and
- * never message text.
+ * Trades as they stand, relative to no one: status, legs with giver and receiver, hashes and
+ * times, and never message text or an offer note.
  */
-async function attachedTrades(userId: string, tradeIds: number[]) {
+export async function tradeDetail(tradeIds: number[]) {
   const ids = [...new Set(tradeIds)];
   if (ids.length === 0) return { trades: [], collections: {} };
   const [rows, legs, autoLegs] = await Promise.all([
     db
       .select({
         id: trade.id,
+        offerId: trade.offerId,
         status: trade.status,
         cancelReason: trade.cancelReason,
+        cancelledBy: trade.cancelledBy,
         userA: trade.userA,
         userB: trade.userB,
         acceptedAt: trade.acceptedAt,
@@ -86,11 +88,14 @@ async function attachedTrades(userId: string, tradeIds: number[]) {
   return {
     trades: rows.map((t) => ({
       id: t.id,
+      offerId: t.offerId,
       status: t.status,
       cancelReason: t.cancelReason,
+      cancelledBy: t.cancelledBy,
+      userA: t.userA,
+      userB: t.userB,
       acceptedAt: iso(t.acceptedAt)!,
       endedAt: iso(t.endedAt),
-      otherId: t.userA === userId ? t.userB : t.userA,
       legs: legs
         .filter((leg) => leg.tradeId === t.id)
         .map((leg) => {
@@ -102,25 +107,60 @@ async function attachedTrades(userId: string, tradeIds: number[]) {
               : null;
           return {
             id: leg.id,
+            fromUserId: leg.fromUserId,
+            toUserId: leg.toUserId,
             collectionSlug: leg.collectionSlug,
             objektId: leg.objektId,
             serial: leg.objektId === null ? null : serial(leg.objektId).serial,
             serialEstimated: leg.objektId === null ? false : serial(leg.objektId).estimated,
-            /** the reported account gives this leg */
-            fromTarget: leg.fromUserId === userId,
             state: (leg.verifiedAt !== null ? "verified" : leg.open ? "waiting" : "closed") as
               | "verified"
               | "waiting"
               | "closed",
             verifiedAt: iso(leg.verifiedAt),
+            confirmedAt: iso(leg.confirmedAt),
             txHash: leg.txHash,
             verifiedObjektId: leg.verifiedObjektId,
             /** set when the leg verified through a wrong copy */
             verifiedSerial: swapped?.serial ?? null,
             verifiedSerialEstimated: swapped?.estimated ?? false,
             autoAccepted: autoLegs.has(leg.id),
+            awayAt: iso(leg.awayAt),
+            untransferableAt: iso(leg.untransferableAt),
           };
         }),
+    })),
+    collections,
+  };
+}
+
+/** The trades attached to the account's open reports, each leg relative to that account. */
+async function attachedTrades(userId: string, tradeIds: number[]) {
+  const { trades, collections } = await tradeDetail(tradeIds);
+  return {
+    trades: trades.map((t) => ({
+      id: t.id,
+      status: t.status,
+      cancelReason: t.cancelReason,
+      acceptedAt: t.acceptedAt,
+      endedAt: t.endedAt,
+      otherId: t.userA === userId ? t.userB : t.userA,
+      legs: t.legs.map((leg) => ({
+        id: leg.id,
+        collectionSlug: leg.collectionSlug,
+        objektId: leg.objektId,
+        serial: leg.serial,
+        serialEstimated: leg.serialEstimated,
+        /** the reported account gives this leg */
+        fromTarget: leg.fromUserId === userId,
+        state: leg.state,
+        verifiedAt: leg.verifiedAt,
+        txHash: leg.txHash,
+        verifiedObjektId: leg.verifiedObjektId,
+        verifiedSerial: leg.verifiedSerial,
+        verifiedSerialEstimated: leg.verifiedSerialEstimated,
+        autoAccepted: leg.autoAccepted,
+      })),
     })),
     collections,
   };

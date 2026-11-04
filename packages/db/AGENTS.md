@@ -15,6 +15,10 @@ Pending migrations run before the new code is live, so each one must work with t
 
 A column can leave `schema.ts` before it leaves the database: generate the migration so its snapshot drops the column, then replace its SQL with a no-op (`20261024135516_retire_privacy_columns`). Otherwise the next `db:generate` writes the `DROP COLUMN` into whatever change comes next. `user_address.private_profile`, `private_serial`, `hide_transfer` and `hide_nickname` are kept that way, values intact, until the owner approves their drop.
 
+## Collection overrides
+
+`collection_override` is app data keyed by the indexer's collection slug, with no foreign key across the two databases: staff colour fixes, kept out of the indexer so a reindex or resync never touches them. A colour is lowercase `#` and six hex digits (CHECK), and a row with neither colour is deleted.
+
 ## Link history
 
 `address_link_event` is append-only and has no foreign key on `user_id` or `actor_id`: an event outlives its account. `user_address` stays the authority for the current holder. The backfill has two gaps: links made between its migration and the deploy, and past holders who never traded (only trade snapshots name them). `holdersOf` adds the current holder to cover the first.

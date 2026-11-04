@@ -10,11 +10,14 @@ export function BannerThumb({
   bannerImgType,
   initial,
   videoRef,
+  autoPlay = false,
 }: {
   bannerImgUrl: string | null | undefined;
   bannerImgType: string | null | undefined;
   initial?: string;
   videoRef?: RefObject<HTMLVideoElement | null>;
+  /** play a video banner as soon as it shows, rather than when the caller starts it */
+  autoPlay?: boolean;
 }) {
   if (bannerImgUrl && bannerImgType) {
     return (
@@ -26,6 +29,7 @@ export function BannerThumb({
             muted
             loop
             playsInline
+            autoPlay={autoPlay}
             preload="metadata"
             className="absolute inset-0 size-full object-cover"
           />

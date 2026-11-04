@@ -7,41 +7,16 @@ import type {
   ProcessedImageField,
 } from "../types/objekt";
 
-type CollectionOverride = Partial<{
+/** A staff override of a collection's colours; an absent colour keeps the source's. */
+export type CollectionOverride = Partial<{
   backgroundColor: string;
   textColor: string;
 }>;
 
+/** Every collection override, by slug (`loadCollectionOverrides`). */
+export type CollectionOverrides = ReadonlyMap<string, CollectionOverride>;
+
 type CollectionInput = Pick<Collection, CollectionField | ProcessedImageField>;
-
-/**
- * Override color for some collection
- */
-const collectionOverrides = {
-  // Divine collections
-  "divine01-seoyeon-117z": { backgroundColor: "#B400FF" },
-  "divine01-seoyeon-118z": { backgroundColor: "#B400FF" },
-  "divine01-seoyeon-119z": { backgroundColor: "#B400FF" },
-  "divine01-seoyeon-120z": { backgroundColor: "#B400FF" },
-  "divine01-seoyeon-317z": { backgroundColor: "#df2e37" },
-
-  // Binary collections
-  "binary01-choerry-201z": { backgroundColor: "#FFFFFF" },
-  "binary01-choerry-202z": { backgroundColor: "#FFFFFF" },
-
-  // Atom collections
-  "atom01-yubin-302z": { backgroundColor: "#D300BB" },
-  "atom01-nakyoung-302z": { backgroundColor: "#D300BB" },
-  "atom01-yooyeon-302z": { backgroundColor: "#D300BB" },
-  "atom01-hyerin-302z": { backgroundColor: "#D300BB" },
-  "atom01-heejin-322z": { textColor: "#FFFFFF" },
-  "atom01-heejin-323z": { textColor: "#FFFFFF" },
-  "atom01-heejin-324z": { textColor: "#FFFFFF" },
-  "atom01-heejin-325z": { textColor: "#FFFFFF" },
-
-  // Ever collections
-  "ever01-seoyeon-338z": { textColor: "#07328D" },
-} as const satisfies Record<string, CollectionOverride>;
 
 /**
  * Get custom band image
@@ -74,9 +49,11 @@ function getBandImageUrl(objekt: CollectionInput) {
  * Apply color and band image overrides to any objekt type. Fields are listed
  * rather than spread, so a full row (the activity feed's) carries no other column.
  */
-export function overrideCollection(collection: CollectionInput): IndexedObjekt {
-  const overrides: CollectionOverride =
-    collectionOverrides[collection.slug as keyof typeof collectionOverrides] ?? {};
+export function overrideCollection(
+  collection: CollectionInput,
+  overrides: CollectionOverrides,
+): IndexedObjekt {
+  const override = overrides.get(collection.slug) ?? {};
 
   return {
     id: collection.id,
@@ -94,8 +71,8 @@ export function overrideCollection(collection: CollectionInput): IndexedObjekt {
     backImage: collection.processedBackImage ?? collection.backImage,
     originalFrontImage: collection.frontImage,
     originalBackImage: collection.backImage,
-    backgroundColor: overrides.backgroundColor ?? collection.backgroundColor,
-    textColor: overrides.textColor ?? collection.textColor,
+    backgroundColor: override.backgroundColor ?? collection.backgroundColor,
+    textColor: override.textColor ?? collection.textColor,
     onOffline: collection.onOffline,
     bandImageUrl: getBandImageUrl(collection),
     frontMedia: collection.frontMedia,
@@ -106,9 +83,13 @@ export function overrideCollection(collection: CollectionInput): IndexedObjekt {
 /**
  * Map database Objekt + Collection to OwnedObjekt type
  */
-export function mapOwnedObjekt(objekt: Objekt, collection: CollectionInput): OwnedObjekt {
+export function mapOwnedObjekt(
+  objekt: Objekt,
+  collection: CollectionInput,
+  overrides: CollectionOverrides,
+): OwnedObjekt {
   return {
-    ...overrideCollection(collection),
+    ...overrideCollection(collection, overrides),
     id: objekt.id,
     serial: objekt.serial,
     receivedAt: new Date(objekt.receivedAt).toISOString(),
