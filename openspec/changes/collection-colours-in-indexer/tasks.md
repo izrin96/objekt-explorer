@@ -82,11 +82,11 @@ The branch is unmerged and undeployed, so this change edits the admin-area code 
 No package code changes in this group: lint, typecheck and build stand as groups 1 to 6 left them.
 
 
-- [ ] 7.1 **Stop for approval.** Then the user applies the indexer migration (task 1.1) to production by hand with `SET lock_timeout = '5s'`, or restarts the indexer from this branch. Verify, read-only, that both columns and the check exist and every source is null. Then run, read-only, the checks tasks 4.2 and 6.1 deferred until the columns exist:
+- [ ] 7.1 **Stop for approval.** Then the user applies the indexer migration (task 1.1) to production by hand, or restarts the indexer from this branch. The file guards every ALTER behind an existence check and sets `lock_timeout` to 5 s itself, so a rerun takes no lock and a busy `collection` makes the indexer exit and retry on restart. Verify, read-only, that both columns and the check exist and every source is null. Then run, read-only, the checks tasks 4.2 and 6.1 deferred until the columns exist:
   - a dev server on the production read-only indexer loads `/mod/collections`, and Overrides only reads "every collection shows the source's colours";
   - the replay dry run against the local app database plus the production read-only indexer lists the 16 slugs;
   - the replay dry run against production (`.env` only, `PGOPTIONS='-c default_transaction_read_only=on'`) lists nothing to do.
-- [ ] 7.2 **Stop for approval.** Then the user applies the app migrations (`20261104062659` and task 5.1's) to production before any deploy. Verify, read-only, that `collection_override` is absent and 16 `collection_override` audit entries exist with no actor.
+- [ ] 7.2 **Stop for approval.** Then the user applies the app migrations (`20261104062659` and task 5.1's) to production before any deploy, at a quiet time: both set `lock_timeout` to 3 s (the drop takes ACCESS EXCLUSIVE on `"user"` when it removes the foreign key), so a busy table makes the run fail and roll back rather than queue sign-ins; rerun it. Verify, read-only, that `collection_override` is absent and 16 `collection_override` audit entries exist with no actor.
 - [ ] 7.3 Run the replay dry run against production read-only and show the user the 16 planned rows.
 - [ ] 7.4 **Stop for approval.** Then run the replay with `APPLY=1` against production. Verify, read-only, that the 16 rows carry the colours and their sources, and that `main` still shows the same colours.
 - [ ] 7.5 Only after 7.4: the user deploys web and worker. Verify that `/mod/collections` Overrides only lists the 16 with no one named, and that the collection page shows the seeded colours.

@@ -1,3 +1,6 @@
+-- A lock this migration waits on would queue every later reader of the table behind it, so give up
+-- after 3 s instead (the setting lasts to the end of the migrate transaction); rerun at a quiet time.
+SELECT set_config('lock_timeout', '3s', true);--> statement-breakpoint
 -- Staff colours now live on the indexer's collection row. Each override becomes an audit entry,
 -- the history the replay script reads to put it on the row, then the table goes. Guarded, so a
 -- database that never had the table runs this as a no-op.

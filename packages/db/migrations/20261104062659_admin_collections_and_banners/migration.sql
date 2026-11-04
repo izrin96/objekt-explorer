@@ -1,3 +1,6 @@
+-- A lock this migration waits on would queue every later reader of the table behind it, so give up
+-- after 3 s instead (the setting lasts to the end of the migrate transaction); rerun at a quiet time.
+SELECT set_config('lock_timeout', '3s', true);--> statement-breakpoint
 CREATE TABLE "collection_override" (
 	"slug" text PRIMARY KEY,
 	"text_color" text,
