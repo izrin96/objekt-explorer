@@ -10,11 +10,11 @@ import type { SharePreview } from "./share-preview";
 export function personPageHead(data: { url: string; preview: SharePreview | null } | undefined) {
   const preview = data?.preview;
   if (!data || !preview) return generateMetadata({ title: m.page_titles_trade() });
-  const { title, description, image } = preview;
+  const { title, description } = preview;
   return generateMetadata({
     title,
     url: data.url,
-    openGraph: { description, images: image ? [{ url: image }] : undefined },
-    twitter: { card: "summary", title, description, images: image ? [image] : undefined },
+    openGraph: { description },
+    twitter: { card: "summary", title, description },
   });
 }

@@ -25,11 +25,7 @@ export const Route = createFileRoute("/(container)/trade/@{$handle}/$slug")({
       // a post that is gone previews as plain Trade, though the page still shows the person
       preview:
         row && target?.kind === "post"
-          ? sharePreview(
-              { handle: person.handle, posts: row.posts },
-              target.post,
-              loaded.collections,
-            )
+          ? sharePreview({ handle: person.handle, posts: row.posts }, target.post)
           : null,
     };
   },

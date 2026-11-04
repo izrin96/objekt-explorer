@@ -113,11 +113,11 @@ Each page SHALL set, in the server-rendered page, a title, a description, an Ope
 - **THEN** the page has the plain Trade title and no preview
 
 ### Requirement: Share preview wording
-A person page SHALL be titled "<name> on Trade" and described by its post count and tags. A post page SHALL be titled "<name>'s <tags> post" and described by its sides ("Has 4 · Wants 2"), with the first objekt of its offering side, in the list's own order, as the card image, at an absolute URL. A post with nothing to offer SHALL have no card image.
+A person page SHALL be titled "<name> on Trade" and described by its post count and tags. A post page SHALL be titled "<name>'s <tags> post" and described by its sides ("Has 4 · Wants 2"). Neither page SHALL have a card image.
 
 #### Scenario: Shared post
 - **WHEN** a link to rin.trades's WTT post with 4 objekts on its have list and 2 on its want list is pasted into Discord
-- **THEN** the preview reads "rin.trades's WTT post", "Has 4 · Wants 2", with the first objekt of the have list as its image
+- **THEN** the preview reads "rin.trades's WTT post" and "Has 4 · Wants 2", with no image
 
 #### Scenario: Shared person
 - **WHEN** a link to rin.trades's page is shared, and rin.trades has 3 WTT posts and 1 WTS post

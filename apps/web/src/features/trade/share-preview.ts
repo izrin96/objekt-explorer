@@ -1,5 +1,4 @@
 import { handleName } from "@repo/api/schemas/trade-person";
-import type { ValidObjekt } from "@repo/lib/types/objekt";
 
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
@@ -19,7 +18,7 @@ const tagsText = (tags: Iterable<PostTag>, separator: string) => {
 
 const count = (value: number) => value.toLocaleString(getLocale());
 
-export type SharePreview = { title: string; description: string; image?: string };
+export type SharePreview = { title: string; description: string };
 
 /**
  * What a shared person or post page previews as. Built from the handle and the posts' own
@@ -29,7 +28,6 @@ export type SharePreview = { title: string; description: string; image?: string 
 export function sharePreview(
   { handle, posts }: { handle: string; posts: readonly PersonPostData[] },
   post?: PersonPostData,
-  collections: Readonly<Record<string, ValidObjekt | undefined>> = {},
 ): SharePreview {
   const name = handleName(handle);
   if (!post) {
@@ -51,11 +49,5 @@ export function sharePreview(
         : m.trade_share_post_has({ count: count(side.copyCount) }),
     )
     .join(" · ");
-  const offering = post.sides.find((side) => side.role !== "want");
-  const first = offering?.first ? collections[offering.first] : undefined;
-  return {
-    title: m.trade_share_post_title({ name, tags: tagsText(post.tags, "/") }),
-    description,
-    ...(first ? { image: first.thumbnailImage } : {}),
-  };
+  return { title: m.trade_share_post_title({ name, tags: tagsText(post.tags, "/") }), description };
 }
