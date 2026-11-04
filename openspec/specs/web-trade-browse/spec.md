@@ -1247,6 +1247,25 @@ On a side that swaps (a have list, or a want list unless the post is Buy), the p
 - **WHEN** the viewer picks Buy and want list "store hunt"
 - **THEN** the preview offers no ratio
 
+### Requirement: Edit list in the composer
+Each picked side of the preview SHALL offer Edit list beside its list's name, opening the list page's edit form for that list, with no Trade line (see `web-lists` Trade line in the list form). Saving SHALL apply to the list at once and keep the composer's picks; a rename SHALL show in the preview and the side's dropdown, and leaving the composer SHALL keep the edit. A refused save SHALL say why and keep the form's input. Closing the form SHALL return focus to Edit list.
+
+#### Scenario: Rename while posting
+- **WHEN** the viewer picks Swap with have list "spares" and want list "binary hunt", activates Edit list on the Has side and saves the name "spares 2"
+- **THEN** the form closes, the Has side and its dropdown read "spares 2", and Swap, both lists and the options are as before
+
+#### Scenario: No Trade line
+- **WHEN** the viewer activates Edit list on want list "binary hunt", which is in their Swap post
+- **THEN** the form shows no Trade line and offers neither Edit post nor Post it
+
+#### Scenario: Leave without posting
+- **WHEN** the viewer changes the description of "binary hunt" through Edit list, then leaves without posting
+- **THEN** "binary hunt" keeps the new description, and its Trade state is as before
+
+#### Scenario: Cancel
+- **WHEN** the viewer opens Edit list on "spares" and cancels the form
+- **THEN** "spares" is unchanged, the picks are as before, and focus is back on Edit list
+
 ### Requirement: New list in the composer
 Each side's dropdown SHALL end with New have list…, New sale list… or New want list…, opening a dialog, and SHALL show even with no list of that type. A created list SHALL be picked for that side, empty and off Trade, and stays off Trade if the viewer leaves. A refused create SHALL say why and keep the dialog's input and the previous pick. Closing the dialog SHALL return focus to the dropdown.
 

@@ -402,7 +402,7 @@ While the copy form's binding or profile differs from the source, the form SHALL
 - **THEN** the success message says seven were carried over and three left out
 
 ### Requirement: Trade line in the list form
-The edit form of a have, want or sale list SHALL show one Trade line: the post that holds the list, with its tags, pair and option, or that the list is off Trade. A sale list's line in a post SHALL also name its Open to (Sell only or Sell or swap) and Market. It SHALL offer Edit post when the list is in a post and Post it otherwise, each opening the composer with this list picked (see `web-trade-browse`). Creating a have or want list, or a sale list bound to a profile, SHALL offer Post it, except from the composer, which picks the new list instead (see `web-trade-browse` New list form).
+The edit form of a have, want or sale list SHALL show one Trade line: the post that holds the list, with its tags, pair and option, or that the list is off Trade. A sale list's line in a post SHALL also name its Open to (Sell only or Sell or swap) and Market. It SHALL offer Edit post when the list is in a post and Post it otherwise, each opening the composer with this list picked (see `web-trade-browse`). Opened from the composer's Edit list, the form SHALL show no Trade line. Creating a have or want list, or a sale list bound to a profile, SHALL offer Post it, except from the composer, which picks the new list instead (see `web-trade-browse` New list form).
 
 #### Scenario: List in a post
 - **WHEN** the owner edits want list "binary hunt", which is in a Swap post with "spares" that would also pay
@@ -455,6 +455,10 @@ The edit form of a have, want or sale list SHALL show one Trade line: the post t
 #### Scenario: Created from the composer
 - **WHEN** the owner creates have list "spares" through New have list… in the composer
 - **THEN** the dialog closes without offering Post it, and "spares" is picked in the composer
+
+#### Scenario: Edited from the composer
+- **WHEN** the owner activates Edit list on "binary hunt" in the composer
+- **THEN** the form shows no Trade line, and saving keeps the owner on the composer with its picks
 
 ### Requirement: Want list rules
 A want list SHALL hold rules beside its objekts. A rule is one of:
