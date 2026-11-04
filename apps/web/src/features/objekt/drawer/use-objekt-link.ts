@@ -54,13 +54,14 @@ export function useObjektLink<T extends GridObjekt>(
       setPicked(objekt);
       const token = tokenIdOf(objekt);
       void navigate({
+        to: ".",
         replace: true,
-        search: ((prev: ObjektSearch) => ({
+        search: (prev: ObjektSearch): ObjektSearch => ({
           ...prev,
           slug: token === undefined ? objekt.slug : undefined,
           id: token,
           serial: undefined,
-        })) as never,
+        }),
         resetScroll: false,
       });
     },
@@ -70,9 +71,11 @@ export function useObjektLink<T extends GridObjekt>(
   const close = useCallback(() => {
     setPicked(null);
     void navigate({
+      to: ".",
       replace: true,
       resetScroll: false,
-      search: (({ slug: _slug, id: _id, serial: _serial, ...rest }: ObjektSearch) => rest) as never,
+      search: ({ slug: _slug, id: _id, serial: _serial, ...rest }: ObjektSearch): ObjektSearch =>
+        rest,
     });
   }, [navigate]);
 
@@ -83,9 +86,10 @@ export function useObjektLink<T extends GridObjekt>(
       // an emptied serial field reports 0
       if (value !== undefined && value < 1) return;
       void navigate({
+        to: ".",
         replace: true,
         resetScroll: false,
-        search: ((prev: ObjektSearch) => ({ ...prev, serial: value })) as never,
+        search: (prev: ObjektSearch): ObjektSearch => ({ ...prev, serial: value }),
       });
     },
     [navigate],

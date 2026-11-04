@@ -30,12 +30,14 @@ export function useSetTradesType(): (type: TransferType) => void {
   return useCallback(
     (type: TransferType) => {
       void navigate({
+        from: "/@{$nickname}/trades",
+        to: ".",
         replace: true,
         resetScroll: false,
-        search: ((prev: TradesSearch) => ({
+        search: (prev): TradesSearch => ({
           ...prev,
           type: type === "all" ? undefined : type,
-        })) as never,
+        }),
       });
     },
     [navigate],
@@ -48,9 +50,11 @@ export function useResetTrades(): () => void {
   const navigate = useNavigate();
   return useCallback(() => {
     void navigate({
+      from: "/@{$nickname}/trades",
+      to: ".",
       replace: true,
       resetScroll: false,
-      search: ((prev: TradesSearch) => ({ ...resetPatch, at: prev.at })) as never,
+      search: (prev): TradesSearch => ({ ...resetPatch, at: prev.at }),
     });
   }, [navigate]);
 }

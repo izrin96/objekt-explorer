@@ -31,12 +31,14 @@ export function useSetActivityType(): (type: ActivityType) => void {
   return useCallback(
     (type: ActivityType) => {
       void navigate({
+        from: "/activity",
+        to: ".",
         replace: true,
         resetScroll: false,
-        search: ((prev: ActivitySearch) => ({
+        search: (prev): ActivitySearch => ({
           ...prev,
           type: type === "all" ? undefined : type,
-        })) as never,
+        }),
       });
     },
     [navigate],
@@ -47,6 +49,12 @@ export function useSetActivityType(): (type: ActivityType) => void {
 export function useResetActivity(): () => void {
   const navigate = useNavigate();
   return useCallback(() => {
-    void navigate({ replace: true, resetScroll: false, search: (() => resetPatch) as never });
+    void navigate({
+      from: "/activity",
+      to: ".",
+      replace: true,
+      resetScroll: false,
+      search: (): ActivitySearch => resetPatch,
+    });
   }, [navigate]);
 }

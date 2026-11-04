@@ -103,8 +103,9 @@ export function BrowseView({ surface, search }: { surface: Surface; search: Feed
     options: { replace?: boolean } = {},
   ) =>
     void navigate({
-      to: forYou ? "/trade/for-you" : "/trade",
-      search: next as never,
+      from: forYou ? "/trade/for-you" : "/trade",
+      to: ".",
+      search: next,
       resetScroll: false,
       ...options,
     });

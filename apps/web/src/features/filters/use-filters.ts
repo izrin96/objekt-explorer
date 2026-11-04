@@ -79,14 +79,14 @@ export function useSetFilters(): (patch: FilterPatch) => void {
   return useCallback(
     (patch: FilterPatch) => {
       void navigate({
+        // every filtering route declares `filterSearchSchema`; `to: "."` types the
+        // search loosely across them, so the updater's own types do the checking
+        to: ".",
         // `replace`: a filter is a view of one page, not a place to go back to
         replace: true,
         // the grid the user is looking at should not jump to the top on every filter
         resetScroll: false,
-        // every filtering route declares `filterSearchSchema`, but `navigate`
-        // with no `to` types the search against all routes at once and lands on
-        // `never`; the schema re-validates whatever is written here
-        search: ((prev: FilterSearch) => withoutEmpty({ ...prev, ...patch })) as never,
+        search: (prev: FilterSearch): FilterSearch => withoutEmpty({ ...prev, ...patch }),
       });
     },
     [navigate],

@@ -24,11 +24,12 @@ export function useSetCompare(): (next: ActiveCompare | null) => void {
   return useCallback(
     (next: ActiveCompare | null) => {
       void navigate({
+        // the detail routes declare the schema; `to: "."` types the search
+        // loosely across them, so the updater's own types do the checking
+        to: ".",
         replace: next === null,
         resetScroll: false,
-        // the detail routes declare the schema; `navigate` with no `to` types
-        // the search against every route at once and lands on `never`
-        search: ((prev: CompareSearch) => ({ ...prev, ...CLEARED, ...next })) as never,
+        search: (prev: CompareSearch): CompareSearch => ({ ...prev, ...CLEARED, ...next }),
       });
     },
     [navigate],
