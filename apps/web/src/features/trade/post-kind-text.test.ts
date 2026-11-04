@@ -127,8 +127,8 @@ describe("previewTags", () => {
     ).toEqual(["wts", "wtt", "wtb"]);
   });
 
-  test("a Sell post with swaps and no sale list falls back to wts", () => {
-    check(previewTags(picks("sell", { alsoSwap: true }))).toEqual(["wts"]);
+  test("a Sell post with swaps and no sale list shows wts, wtt", () => {
+    check(previewTags(picks("sell", { alsoSwap: true }))).toEqual(["wts", "wtt"]);
   });
 
   test("a Swap post with also pay adds wtb", () => {

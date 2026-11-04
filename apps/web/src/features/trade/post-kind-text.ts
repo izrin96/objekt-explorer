@@ -90,8 +90,9 @@ export function matchLines({ kind, have, want, alsoPay, alsoSwap }: Picks) {
         ];
 }
 
-/** The tags the preview shows: the choice's own, or its kind's while nothing is picked. */
+/** The tags the preview shows: the choice's own, or its kind's while nothing is picked. A Sell
+ * post reads as if its sale list were picked, so turning swaps on shows WTT before one is. */
 export function previewTags(picks: Picks): PostTag[] {
-  const tags = choiceTags(picks);
+  const tags = choiceTags(picks.kind === "sell" ? { ...picks, sale: true } : picks);
   return tags.length > 0 ? tags : [KIND_TAG[picks.kind]];
 }
