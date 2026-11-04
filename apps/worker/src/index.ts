@@ -69,10 +69,11 @@ if (tokenRefresh) {
 }
 
 if (indexerWrites) {
-  // replay transfers the indexer held while Cosmo had no metadata for their token
+  // replay transfers the indexer held while Cosmo had no metadata for their token; every 5
+  // minutes because a held transfer pins the verifier's seenUntil, showing users "behind"
   const runReplayPending = safeRun("fix-collection", replayPendingTransfers);
   startupRuns.push(runReplayPending);
-  crons.push(cron("0 * * * *", runReplayPending));
+  crons.push(cron("*/5 * * * *", runReplayPending));
 
   // populate missing serials for online objekts
   const runSerialOnline = safeRun("serial-online", populateSerial);
