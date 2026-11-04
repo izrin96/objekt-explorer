@@ -21,4 +21,4 @@ The indexer applies both migration sets on start (`start` runs `squid-typeorm-mi
 
 ## Production database
 
-Postgres 18 on a Dokploy swarm service with its data on a named volume: **Reload** is safe, **Rebuild** is not. `pg_stat_statements` is installed; read it before any index decision. Build production indexes `CONCURRENTLY`. The spin partial indexes (`idx_objekt_spin_transferable` and its siblings) exist only in the database, with no migration.
+Postgres 18 on a Dokploy swarm service with its data on a named volume: **Reload** is safe, **Rebuild** is not. `pg_stat_statements` is installed; read it before any index decision. Build production indexes `CONCURRENTLY` by hand, then record the same change in `packages/db/indexer-migrations/` as `CREATE INDEX IF NOT EXISTS` or `DROP INDEX IF EXISTS`, so it is a no-op there and a fresh database gets the same index set (`20261104000000_match_prod_indexes` holds those made before).
