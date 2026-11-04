@@ -132,12 +132,6 @@ export const objekts = pgTable(
       table.receivedAt.desc().nullsFirst(),
       table.id.desc().nullsFirst(),
     ),
-    index("idx_objekt_spin_received_id")
-      .using("btree", table.receivedAt.desc().nullsFirst(), table.id.desc().nullsFirst())
-      .where(sql`(owner = '0xd3d5f29881ad87bb10c1100e2c709c9596de345f'::text)`),
-    index("idx_objekt_spin_serial_id")
-      .using("btree", table.serial.asc().nullsLast(), table.id.asc().nullsLast())
-      .where(sql`(owner = '0xd3d5f29881ad87bb10c1100e2c709c9596de345f'::text)`),
     index("idx_objekt_spin_transferable")
       .using("btree", table.id.asc().nullsLast())
       .where(sql`((owner = '0xd3d5f29881ad87bb10c1100e2c709c9596de345f'::text) AND transferable)`),

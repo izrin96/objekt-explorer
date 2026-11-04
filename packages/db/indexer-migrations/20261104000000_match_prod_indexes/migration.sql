@@ -21,12 +21,14 @@ DROP INDEX IF EXISTS "idx_transfer_timestamp_cosmo_spin";--> statement-breakpoin
 DROP INDEX IF EXISTS "transfer_collection_timestamp_id_idx";--> statement-breakpoint
 DROP INDEX IF EXISTS "transfer_from_timestamp_id_idx";--> statement-breakpoint
 DROP INDEX IF EXISTS "transfer_to_timestamp_id_idx";--> statement-breakpoint
+-- drop these two in production with DROP INDEX CONCURRENTLY before this runs; here a plain drop
+-- would lock objekt behind every running read
+DROP INDEX IF EXISTS "idx_objekt_spin_received_id";--> statement-breakpoint
+DROP INDEX IF EXISTS "idx_objekt_spin_serial_id";--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS idx_objekt_collection_cover ON objekt USING btree (collection_id) INCLUDE (id, serial, minted_at);--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS idx_objekt_collection_serial ON objekt USING btree (collection_id, serial);--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS idx_objekt_minted_at ON objekt USING btree (minted_at);--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS idx_objekt_owner_received_id ON objekt USING btree (owner, received_at DESC, id DESC);--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS idx_objekt_spin_received_id ON objekt USING btree (received_at DESC, id DESC) WHERE (owner = '0xd3d5f29881ad87bb10c1100e2c709c9596de345f'::text);--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS idx_objekt_spin_serial_id ON objekt USING btree (serial, id) WHERE (owner = '0xd3d5f29881ad87bb10c1100e2c709c9596de345f'::text);--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS idx_objekt_spin_transferable ON objekt USING btree (id) WHERE ((owner = '0xd3d5f29881ad87bb10c1100e2c709c9596de345f'::text) AND transferable);--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS idx_transfer_collection_from_id ON transfer USING btree (collection_id, "from", id DESC);--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS idx_transfer_collection_to_id ON transfer USING btree (collection_id, "to", id DESC);--> statement-breakpoint
