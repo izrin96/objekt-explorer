@@ -2,7 +2,6 @@ import { toIndexedArtist } from "@repo/cosmo/types/common";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts, transfers } from "@repo/db/indexer/schema";
 import { Addresses, chunkMap } from "@repo/lib";
-import { loadCollectionOverrides } from "@repo/lib/server/collection-override";
 import { mapOwnedObjekt, overrideCollection } from "@repo/lib/server/objekt";
 import type { HeldObjekt } from "@repo/lib/types/objekt";
 import { and, asc, count, desc, eq, getColumns, inArray, lt, lte, or, sql } from "drizzle-orm";
@@ -10,7 +9,7 @@ import type { AnyPgColumn } from "drizzle-orm/pg-core";
 
 import type { HeldByOutput, OwnedByFilters, OwnedByOutput } from "../schemas/objekts";
 import { getCollectionColumns } from "./objekt";
-import { getCache } from "./redis";
+import { getCache, redis, redisFailOpen } from "./redis";
 import { TOKEN_CHUNK_SIZE } from "./utils";
 
 const PER_PAGE = 8000;
@@ -84,16 +83,14 @@ export async function fetchOwnedObjekts(
       .orderBy(...orderBy(latest.timestamp))
       .limit(PER_PAGE + 1);
 
-    const [results, overrides] = await Promise.all([mainQuery, loadCollectionOverrides()]);
+    const results = await mainQuery;
 
     const hasNext = results.length > PER_PAGE;
     const nextCursor = hasNext ? cursorAfter(results[PER_PAGE - 1]!) : undefined;
 
     return {
       nextCursor,
-      objekts: results
-        .slice(0, PER_PAGE)
-        .map((a) => mapOwnedObjekt(a.objekt, a.collection, overrides.map)),
+      objekts: results.slice(0, PER_PAGE).map((a) => mapOwnedObjekt(a.objekt, a.collection)),
     };
   }
 
@@ -110,20 +107,25 @@ export async function fetchOwnedObjekts(
     .orderBy(...orderBy(objekts.receivedAt))
     .limit(PER_PAGE + 1);
 
-  const [results, overrides] = await Promise.all([mainQuery, loadCollectionOverrides()]);
+  const results = await mainQuery;
 
   const hasNext = results.length > PER_PAGE;
   const nextCursor = hasNext ? cursorAfter(results[PER_PAGE - 1]!) : undefined;
 
   return {
     nextCursor,
-    objekts: results
-      .slice(0, PER_PAGE)
-      .map((a) => mapOwnedObjekt(a.objekt, a.collection, overrides.map)),
+    objekts: results.slice(0, PER_PAGE).map((a) => mapOwnedObjekt(a.objekt, a.collection)),
   };
 }
 
 const CACHE_TTL = 60 * 5;
+
+const heldKey = (addr: string) => `held-by:v3:${addr}`;
+
+/** Drops Spin's cached held list, which carries collection colours, after a colour save. */
+export function forgetSpinHeld() {
+  return redisFailOpen("held-by evict", () => redis.del(heldKey(Addresses.SPIN)));
+}
 
 /**
  * Held copies counted per collection, for an owner too large to list token by
@@ -183,15 +185,12 @@ export async function fetchHeldObjekts(
   const addr = address.toLowerCase();
 
   // only Spin's pass is slow enough to cache; one entry whatever the artist scope
-  // the cache keeps source colours, so an override applies on the next read
-  const [rows, overrides] = await Promise.all([
+  const rows =
     addr === Addresses.SPIN
-      ? getCache(`held-by:v3:${addr}`, CACHE_TTL, () => countHeld(addr))
-      : countHeld(addr),
-    loadCollectionOverrides(),
-  ]);
+      ? await getCache(heldKey(addr), CACHE_TTL, () => countHeld(addr))
+      : await countHeld(addr);
   const all = rows.map((row): HeldObjekt =>
-    Object.assign(overrideCollection(row.collection, overrides.map), {
+    Object.assign(overrideCollection(row.collection), {
       copies: row.copies,
       minSerial: row.minSerial,
       minSerialTokenId: row.minSerialTokenId,

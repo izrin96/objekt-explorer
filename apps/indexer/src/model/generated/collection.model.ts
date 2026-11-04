@@ -102,6 +102,12 @@ export class Collection {
   @Column({ type: "varchar", nullable: true, length: 32 })
   imageSyncHash!: string | null;
 
+  @Column("text", { nullable: true })
+  sourceTextColor!: string | null;
+
+  @Column("text", { nullable: true })
+  sourceBackgroundColor!: string | null;
+
   @Column({ type: "jsonb", nullable: true })
   serialBatches!: { start: number; end: number }[] | null;
 

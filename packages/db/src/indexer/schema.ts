@@ -14,6 +14,7 @@ import {
   unique,
   bigserial,
   jsonb,
+  check,
 } from "drizzle-orm/pg-core";
 
 export const collections = pgTable(
@@ -52,8 +53,16 @@ export const collections = pgTable(
       jsonb("serial_anchors").$type<
         { tokenId: number; serial: number; note: string; addedAt: string }[]
       >(),
+    // staff colour fixes: non-null while staff override that colour, holding the value it replaced
+    // as the source gave it; Drizzle-owned, never in the indexer's TypeORM model
+    sourceTextColor: text("source_text_color"),
+    sourceBackgroundColor: text("source_background_color"),
   },
   (table) => [
+    check(
+      "collection_staff_colors",
+      sql`(${table.sourceTextColor} IS NULL OR ${table.textColor} ~ '^#[0-9a-f]{6}$') AND (${table.sourceBackgroundColor} IS NULL OR ${table.backgroundColor} ~ '^#[0-9a-f]{6}$')`,
+    ),
     index("IDX_429351eac26f87942861266e48").using("btree", table.onOffline.asc().nullsLast()),
     index("IDX_6f89ec57ebbfd978e196751051").using("btree", table.artist.asc().nullsLast()),
     uniqueIndex("IDX_75a6fd6eedd7fa7378de400b0a").using("btree", table.slug.asc().nullsLast()),

@@ -2,7 +2,6 @@ import { toIndexedArtist } from "@repo/cosmo/types/common";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts, transfers } from "@repo/db/indexer/schema";
 import { Addresses } from "@repo/lib";
-import { loadCollectionOverrides } from "@repo/lib/server/collection-override";
 import { mapOwnedObjekt, mapTransfer } from "@repo/lib/server/objekt";
 import { fetchPublicNicknames } from "@repo/lib/server/user";
 import { type SQL, and, arrayOverlaps, desc, eq, inArray, ne, sql } from "drizzle-orm";
@@ -14,10 +13,7 @@ import { getCollectionColumns } from "./objekt";
 const PAGE_SIZE = 300;
 
 export async function fetchActivityPage(query: ActivityFeedInput): Promise<ActivityFeedOutput> {
-  const [transferResults, overrides] = await Promise.all([
-    fetchTransfers(query),
-    loadCollectionOverrides(),
-  ]);
+  const transferResults = await fetchTransfers(query);
 
   const slicedResults = transferResults.slice(0, PAGE_SIZE);
 
@@ -32,7 +28,7 @@ export async function fetchActivityPage(query: ActivityFeedInput): Promise<Activ
         to: nicknameOf(t.transfer.to),
       },
       transfer: mapTransfer(t.transfer),
-      objekt: mapOwnedObjekt(t.objekt, t.collection, overrides.map),
+      objekt: mapOwnedObjekt(t.objekt, t.collection),
     };
   });
 

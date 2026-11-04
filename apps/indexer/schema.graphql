@@ -26,6 +26,8 @@ type Collection @entity {
   processedFrontImage: String
   processedBackImage: String
   imageSyncHash: String
+  sourceTextColor: String
+  sourceBackgroundColor: String
   serialBatches: JSON
   serialAnchors: JSON
   transfers: [Transfer!] @derivedFrom(field: "collection")

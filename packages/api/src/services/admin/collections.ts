@@ -1,8 +1,10 @@
 import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { collections } from "@repo/db/indexer/schema";
-import { collectionOverride, modAudit } from "@repo/db/schema";
-import { desc, eq, inArray, sql } from "drizzle-orm";
+import { modAudit } from "@repo/db/schema";
+import { type ColourRow, overridesOf, planColourWrite } from "@repo/lib/collection-colours";
+import { colourColumns, lockColourRow, writeColourSet } from "@repo/lib/server/collection-colours";
+import { and, desc, eq, inArray, isNotNull, or, sql } from "drizzle-orm";
 
 import { refuse } from "../../lib/refuse";
 import { iso } from "../../lib/time";
@@ -10,74 +12,77 @@ import type { SetCollectionColorsInput } from "../../schemas/admin";
 import { fetchPartners } from "../chat";
 import { bumpCollectionList, collectionListModifiedAt } from "../collection";
 import { audit } from "../moderation/core";
+import { forgetSpinHeld } from "../owned";
 
 const HISTORY_LIMIT = 50;
 
-type Colors = { textColor: string | null; backgroundColor: string | null };
-type SourceColors = { textColor: string; backgroundColor: string };
+const slugOfEntry = sql<string>`${modAudit.detail}->>'slug'`;
 
-/** The source's colours of each slug, from the indexer. */
-async function sourceColors(slugs: string[]) {
-  if (slugs.length === 0) return new Map<string, SourceColors>();
-  const rows = await indexer
-    .select({
-      slug: collections.slug,
-      textColor: collections.textColor,
-      backgroundColor: collections.backgroundColor,
+/** Who last changed each slug's colours and when: its latest `collection_override` entry. */
+async function lastChanges(slugs: string[]) {
+  if (slugs.length === 0) return new Map<string, { actorId: string | null; at: string }>();
+  const rows = await db
+    .selectDistinctOn([slugOfEntry], {
+      slug: slugOfEntry,
+      actorId: modAudit.actorId,
+      createdAt: modAudit.createdAt,
     })
-    .from(collections)
-    .where(inArray(collections.slug, slugs));
-  return new Map<string, SourceColors>(
-    rows.map((row) => [
-      row.slug,
-      {
-        textColor: row.textColor.toLowerCase(),
-        backgroundColor: row.backgroundColor.toLowerCase(),
-      },
-    ]),
-  );
+    .from(modAudit)
+    .where(and(eq(modAudit.action, "collection_override"), inArray(slugOfEntry, slugs)))
+    .orderBy(slugOfEntry, desc(modAudit.createdAt), desc(modAudit.id));
+  return new Map(rows.map((row) => [row.slug, { actorId: row.actorId, at: row.createdAt }]));
 }
 
-const overrideColumns = {
-  slug: collectionOverride.slug,
-  textColor: collectionOverride.textColor,
-  backgroundColor: collectionOverride.backgroundColor,
-  updatedBy: collectionOverride.updatedBy,
-  updatedAt: collectionOverride.updatedAt,
-};
+/** The colours staff override (null where the source's apply) and the source's colours. */
+function colourView(row: ColourRow) {
+  return {
+    ...overridesOf(row),
+    source: {
+      textColor: row.sourceTextColor ?? row.textColor,
+      backgroundColor: row.sourceBackgroundColor ?? row.backgroundColor,
+    },
+  };
+}
 
-/** One collection's source colours, its override, and who changed it and when. */
+const isOverridden = (row: ColourRow) =>
+  row.sourceTextColor !== null || row.sourceBackgroundColor !== null;
+
+/** One collection's source colours, its override, and who changed it last and when. */
 export async function collectionColors(slug: string) {
-  const [sources, [row]] = await Promise.all([
-    sourceColors([slug]),
-    db.select(overrideColumns).from(collectionOverride).where(eq(collectionOverride.slug, slug)),
-  ]);
-  const source = sources.get(slug);
-  if (!source) {
+  const [row] = await indexer
+    .select(colourColumns)
+    .from(collections)
+    .where(eq(collections.slug, slug));
+  if (!row) {
     refuse("NOT_FOUND", "admin_collection_not_found", "No collection has this slug");
   }
-  const people = await fetchPartners(row?.updatedBy ? [row.updatedBy] : []);
+  const { source, ...override } = colourView(row);
+  if (!isOverridden(row)) return { slug, source, override: null };
+  const change = (await lastChanges([slug])).get(slug);
+  const people = await fetchPartners(change?.actorId ? [change.actorId] : []);
   return {
     slug,
     source,
-    override: row
-      ? {
-          textColor: row.textColor,
-          backgroundColor: row.backgroundColor,
-          updatedBy: row.updatedBy ? (people.get(row.updatedBy) ?? null) : null,
-          updatedAt: iso(row.updatedAt)!,
-        }
-      : null,
+    override: {
+      ...override,
+      updatedBy: change?.actorId ? (people.get(change.actorId) ?? null) : null,
+      updatedAt: change ? iso(change.at) : null,
+    },
   };
 }
 
 /**
- * Every override, newest change first, each with its source colours; the latest collection audit
- * entries; and when the collection list last changed.
+ * Every overridden collection, newest change first and those with no history last, each with its
+ * source colours; the latest collection audit entries; and when the collection list last changed.
  */
 export async function collectionOverrides() {
   const [rows, history, modifiedAt] = await Promise.all([
-    db.select(overrideColumns).from(collectionOverride).orderBy(desc(collectionOverride.updatedAt)),
+    indexer
+      .select({ slug: collections.slug, ...colourColumns })
+      .from(collections)
+      .where(
+        or(isNotNull(collections.sourceTextColor), isNotNull(collections.sourceBackgroundColor)),
+      ),
     db
       .select({
         id: modAudit.id,
@@ -92,27 +97,30 @@ export async function collectionOverrides() {
       .limit(HISTORY_LIMIT),
     collectionListModifiedAt(),
   ]);
-  const [sources, people] = await Promise.all([
-    sourceColors(rows.map((row) => row.slug)),
-    fetchPartners([
-      ...new Set(
-        [...rows.map((row) => row.updatedBy), ...history.map((entry) => entry.actorId)].filter(
-          (id) => id !== null,
-        ),
-      ),
-    ]),
+  const changes = await lastChanges(rows.map((row) => row.slug));
+  const people = await fetchPartners([
+    ...new Set(
+      [
+        ...[...changes.values()].map((c) => c.actorId),
+        ...history.map((entry) => entry.actorId),
+      ].filter((id) => id !== null),
+    ),
   ]);
   const personOf = (id: string | null) => (id === null ? null : (people.get(id) ?? null));
-  return {
-    overrides: rows.map((row) => ({
+  const overrides = rows.map((row) => {
+    const change = changes.get(row.slug);
+    return Object.assign(colourView(row), {
       slug: row.slug,
-      textColor: row.textColor,
-      backgroundColor: row.backgroundColor,
-      /** null when the indexer has no such collection any more */
-      source: sources.get(row.slug) ?? null,
-      updatedBy: personOf(row.updatedBy),
-      updatedAt: iso(row.updatedAt)!,
-    })),
+      updatedBy: personOf(change?.actorId ?? null),
+      /** null for a changed row with no history entry */
+      updatedAt: change ? iso(change.at) : null,
+    });
+  });
+  overrides.sort(
+    (a, b) => (b.updatedAt ?? "").localeCompare(a.updatedAt ?? "") || a.slug.localeCompare(b.slug),
+  );
+  return {
+    overrides,
     history: history.map((entry) => ({
       id: entry.id,
       action: entry.action as "collection_override" | "collection_refresh",
@@ -125,55 +133,42 @@ export async function collectionOverrides() {
 }
 
 /**
- * Sets or resets a collection's colours. A colour left out keeps its override; null resets it to
- * the source's, and with both reset the row goes. The list is bumped after the commit.
+ * Sets or resets a collection's colours on its indexer row. A colour left out keeps its override;
+ * null resets it to the source kept beside it. The audit entry commits inside the row lock, before
+ * the indexer, so no stored colour lacks history (and the replay can restore it); then the list is
+ * bumped and Spin's cached held list, which carries colours, is dropped.
  */
 export async function setCollectionColors(me: string, input: SetCollectionColorsInput) {
-  const sources = await sourceColors([input.slug]);
-  if (!sources.has(input.slug)) {
-    refuse("NOT_FOUND", "admin_collection_not_found", "No collection has this slug");
+  let audited = false;
+  try {
+    await indexer.transaction(async (itx) => {
+      const row = await lockColourRow(itx, input.slug);
+      if (!row) {
+        refuse("NOT_FOUND", "admin_collection_not_found", "No collection has this slug");
+      }
+      const { set, before, after } = planColourWrite(row, input);
+      await writeColourSet(itx, input.slug, set);
+      await db.transaction((tx) =>
+        audit(tx, {
+          actorId: me,
+          action: "collection_override",
+          targetUserId: null,
+          detail: { slug: input.slug, before, after },
+        }),
+      );
+      audited = true;
+    });
+  } catch (error) {
+    if (audited) {
+      console.error(
+        `Collection colours of ${input.slug}: the history entry committed but the indexer did not; the replay applies it`,
+        error,
+      );
+    }
+    throw error;
   }
 
-  await db.transaction(async (tx) => {
-    const [current] = await tx
-      .select({
-        textColor: collectionOverride.textColor,
-        backgroundColor: collectionOverride.backgroundColor,
-      })
-      .from(collectionOverride)
-      .where(eq(collectionOverride.slug, input.slug))
-      .for("update");
-    const before: Colors = {
-      textColor: current?.textColor ?? null,
-      backgroundColor: current?.backgroundColor ?? null,
-    };
-    const after: Colors = {
-      textColor: input.textColor === undefined ? before.textColor : input.textColor,
-      backgroundColor:
-        input.backgroundColor === undefined ? before.backgroundColor : input.backgroundColor,
-    };
-
-    if (after.textColor === null && after.backgroundColor === null) {
-      await tx.delete(collectionOverride).where(eq(collectionOverride.slug, input.slug));
-    } else {
-      await tx
-        .insert(collectionOverride)
-        .values({ slug: input.slug, ...after, updatedBy: me, updatedAt: sql`now()` })
-        .onConflictDoUpdate({
-          target: collectionOverride.slug,
-          set: { ...after, updatedBy: me, updatedAt: sql`now()` },
-        });
-    }
-
-    await audit(tx, {
-      actorId: me,
-      action: "collection_override",
-      targetUserId: null,
-      detail: { slug: input.slug, before, after },
-    });
-  });
-
-  const { refreshed } = await bumpCollectionList();
+  const [{ refreshed }] = await Promise.all([bumpCollectionList(), forgetSpinHeld()]);
   return { refreshed };
 }
 

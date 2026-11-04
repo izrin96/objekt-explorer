@@ -2,7 +2,6 @@ import { type ValidArtist, toIndexedArtist } from "@repo/cosmo/types/common";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts, transfers } from "@repo/db/indexer/schema";
 import { Addresses } from "@repo/lib";
-import { loadCollectionOverrides } from "@repo/lib/server/collection-override";
 import { overrideCollection } from "@repo/lib/server/objekt";
 import { fetchPublicNicknames } from "@repo/lib/server/user";
 import { type SQL, and, asc, count, desc, eq, inArray, lte, ne, sql } from "drizzle-orm";
@@ -23,62 +22,41 @@ type CollectionListQuery = { artist: ValidArtist[]; at?: string };
 
 type CollectionList =
   | { notModified: true; lastModifiedMs: number }
-  | {
-      notModified: false;
-      lastModifiedMs: number;
-      result: CollectionListOutput;
-      /** false when the overrides could not be read, so the colours may be stale */
-      fresh: boolean;
-    };
-
-type BuiltList = { result: CollectionListOutput; fresh: boolean };
+  | { notModified: false; lastModifiedMs: number; result: CollectionListOutput };
 
 // Nearly every request is the unfiltered list, so it is built once and reused
 // until Last-Modified moves past it. The TTL picks up in-place edits that don't
 // move it, such as indexer upserts.
 const FULL_LIST_TTL_MS = 5 * 60 * 1000;
 let fullListCache:
-  | { lastModifiedMs: number; expiresAt: number; result: Promise<BuiltList> }
+  | { lastModifiedMs: number; expiresAt: number; result: Promise<CollectionListOutput> }
   | undefined;
 
-function getFullList(whereQuery: SQL | undefined, lastModifiedMs: number, freshAfter?: number) {
+function getFullList(whereQuery: SQL | undefined, lastModifiedMs: number) {
   if (
     !fullListCache ||
     fullListCache.lastModifiedMs < lastModifiedMs ||
     fullListCache.expiresAt <= Date.now()
   ) {
-    const result = queryCollections(whereQuery, freshAfter);
+    const result = queryCollections(whereQuery);
     fullListCache = { lastModifiedMs, expiresAt: Date.now() + FULL_LIST_TTL_MS, result };
-    // a list built on fallback colours is never kept: it would be served under this date
-    // after the database recovers
-    void result.then(
-      (built) => {
-        if (!built.fresh && fullListCache?.result === result) fullListCache = undefined;
-      },
-      () => {
-        if (fullListCache?.result === result) fullListCache = undefined;
-      },
-    );
+    void result.catch(() => {
+      if (fullListCache?.result === result) fullListCache = undefined;
+    });
   }
   return fullListCache.result;
 }
 
-async function queryCollections(whereQuery: SQL | undefined, freshAfter?: number) {
-  const [rows, overrides] = await Promise.all([
-    indexer
-      .select({
-        ...getCollectionColumns(),
-      })
-      .from(collections)
-      .where(whereQuery)
-      .orderBy(desc(collections.id)),
-    loadCollectionOverrides({ freshAfter }),
-  ]);
+async function queryCollections(whereQuery: SQL | undefined): Promise<CollectionListOutput> {
+  const result = await indexer
+    .select({
+      ...getCollectionColumns(),
+    })
+    .from(collections)
+    .where(whereQuery)
+    .orderBy(desc(collections.id));
 
-  return {
-    result: { collections: rows.map((row) => overrideCollection(row, overrides.map)) },
-    fresh: overrides.fresh,
-  } satisfies BuiltList;
+  return { collections: result.map(overrideCollection) };
 }
 
 /**
@@ -110,9 +88,7 @@ export async function fetchCollectionList(
       .limit(1),
   ]);
 
-  if (!latest) {
-    return { notModified: false, lastModifiedMs: 0, result: { collections: [] }, fresh: true };
-  }
+  if (!latest) return { notModified: false, lastModifiedMs: 0, result: { collections: [] } };
 
   const overrideMs = overrideStr ? new Date(overrideStr).getTime() : 0;
   const createdAtMs = new Date(latest.createdAt).getTime();
@@ -122,14 +98,12 @@ export async function fetchCollectionList(
     return { notModified: true, lastModifiedMs };
   }
 
-  // the raw bump, not the floored date: a map read before a save in the same second is stale
-  const freshAfter = overrideMs > 0 ? overrideMs : undefined;
-  const { result, fresh } =
+  const result =
     filters.length === 0
-      ? await getFullList(whereQuery, lastModifiedMs, freshAfter)
-      : await queryCollections(whereQuery, freshAfter);
+      ? await getFullList(whereQuery, lastModifiedMs)
+      : await queryCollections(whereQuery);
 
-  return { notModified: false, lastModifiedMs, result, fresh };
+  return { notModified: false, lastModifiedMs, result };
 }
 
 /**

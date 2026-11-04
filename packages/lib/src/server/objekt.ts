@@ -7,15 +7,6 @@ import type {
   ProcessedImageField,
 } from "../types/objekt";
 
-/** A staff override of a collection's colours; an absent colour keeps the source's. */
-export type CollectionOverride = Partial<{
-  backgroundColor: string;
-  textColor: string;
-}>;
-
-/** Every collection override, by slug (`loadCollectionOverrides`). */
-export type CollectionOverrides = ReadonlyMap<string, CollectionOverride>;
-
 type CollectionInput = Pick<Collection, CollectionField | ProcessedImageField>;
 
 /**
@@ -46,15 +37,10 @@ function getBandImageUrl(objekt: CollectionInput) {
 }
 
 /**
- * Apply color and band image overrides to any objekt type. Fields are listed
- * rather than spread, so a full row (the activity feed's) carries no other column.
+ * Apply band image overrides to any objekt type; staff colours are already on the row. Fields are
+ * listed rather than spread, so a full row (the activity feed's) carries no other column.
  */
-export function overrideCollection(
-  collection: CollectionInput,
-  overrides: CollectionOverrides,
-): IndexedObjekt {
-  const override = overrides.get(collection.slug) ?? {};
-
+export function overrideCollection(collection: CollectionInput): IndexedObjekt {
   return {
     id: collection.id,
     createdAt: new Date(collection.createdAt).toISOString(),
@@ -71,8 +57,8 @@ export function overrideCollection(
     backImage: collection.processedBackImage ?? collection.backImage,
     originalFrontImage: collection.frontImage,
     originalBackImage: collection.backImage,
-    backgroundColor: override.backgroundColor ?? collection.backgroundColor,
-    textColor: override.textColor ?? collection.textColor,
+    backgroundColor: collection.backgroundColor,
+    textColor: collection.textColor,
     onOffline: collection.onOffline,
     bandImageUrl: getBandImageUrl(collection),
     frontMedia: collection.frontMedia,
@@ -83,13 +69,9 @@ export function overrideCollection(
 /**
  * Map database Objekt + Collection to OwnedObjekt type
  */
-export function mapOwnedObjekt(
-  objekt: Objekt,
-  collection: CollectionInput,
-  overrides: CollectionOverrides,
-): OwnedObjekt {
+export function mapOwnedObjekt(objekt: Objekt, collection: CollectionInput): OwnedObjekt {
   return {
-    ...overrideCollection(collection, overrides),
+    ...overrideCollection(collection),
     id: objekt.id,
     serial: objekt.serial,
     receivedAt: new Date(objekt.receivedAt).toISOString(),

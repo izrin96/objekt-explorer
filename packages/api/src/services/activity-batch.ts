@@ -1,5 +1,4 @@
 import type { Collection, Objekt, Transfer } from "@repo/db/indexer/schema";
-import { loadCollectionOverrides } from "@repo/lib/server/collection-override";
 import { mapOwnedObjekt } from "@repo/lib/server/objekt";
 import { fetchPublicNicknames } from "@repo/lib/server/user";
 
@@ -13,10 +12,7 @@ export type TransferData = Transfer & {
 
 /** Rows for the live feed, in the batch's order, with the nicknames and objekts the feed draws. */
 export async function enrichTransfers(transfers: TransferData[]): Promise<ActivityItem[]> {
-  const [nicknameOf, overrides] = await Promise.all([
-    fetchPublicNicknames(transfers.flatMap((a) => [a.from, a.to])),
-    loadCollectionOverrides(),
-  ]);
+  const nicknameOf = await fetchPublicNicknames(transfers.flatMap((a) => [a.from, a.to]));
 
   const batch: ActivityItem[] = [];
   for (const transfer of transfers) {
@@ -27,7 +23,7 @@ export async function enrichTransfers(transfers: TransferData[]): Promise<Activi
         to: nicknameOf(transfer.to),
       },
       transfer: rest,
-      objekt: mapOwnedObjekt(objekt, collection, overrides.map),
+      objekt: mapOwnedObjekt(objekt, collection),
     });
   }
   return batch;

@@ -32,6 +32,10 @@ Serials of objekts minted offline come from `populateSerialOffline` (`job/popula
 
 `script/backfill-banner-compression.ts` re-encodes profile banners uploaded before the browser compressed them, to the targets in `@repo/lib/banner` (`sharp` for stills, ffmpeg with libx264 for GIF and video). It runs by hand on a machine with ffmpeg, never in the container, and is a dry run until `APPLY=1`. It points a profile at the new object with a compare-and-set on the old URL and never deletes the original; its done-log holds each old and new URL for a rollback. The rules are pure, in `lib/banner-backfill.ts`.
 
+## Collection colours replay
+
+`script/replay-collection-colours.ts` applies each slug's latest `collection_override` audit entry (app database) to its indexer `collection` row: a colour it sets goes on the row with the row's own kept as the source, a colour it reset goes back to the source. A dry run, with plain reads only, until `APPLY=1`, which locks each row, plans again under the lock, writes, and bumps `collection:modified-at`; it adds no audit entry. It reports slugs no collection has and rows with a staff colour but no history. Run it after an indexer resync from scratch, dry first. For a dry run against production, pass `PGOPTIONS='-c default_transaction_read_only=on'`.
+
 ## Price history
 
 `job/snapshot-price-history.ts` runs hourly at minute 5 and on startup. It writes only today's UTC rows of `collection_price_history`, never touches a past day, and skips the run when the rate table is empty. It reads and writes the app database only, so it runs outside `if (indexerWrites)`.

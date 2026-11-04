@@ -15,6 +15,10 @@ Subsquid processor that writes production data, so changes here are small, targe
 
 The indexer applies both migration sets on start (`start` runs `squid-typeorm-migration apply`, then `migrate-drizzle`).
 
+## Staff colours on `collection`
+
+The web writes staff colours onto `collection` (`text_color`, `background_color` and their Drizzle-owned `source_*` columns; `packages/db/AGENTS.md`, Collection colours), under a row lock, while `handleCollection`'s upsert writes every model column back with the values it loaded. A staff save survives that only because each batch runs SERIALIZABLE (`TypeormDatabase` with no isolation level): a row changed after the batch began fails the upsert with 40001, and Subsquid reruns the batch, reloading the staff colour. Keep the batch SERIALIZABLE or REPEATABLE READ. The `source_*` columns are in `schema.graphql` and the model, like the `processed*` columns, so a generated Subsquid migration never drops them; nothing in the indexer sets them. Never write `text_color` or `background_color` of an existing row whose source column is set (for example by adding a colour to `collectionFields`): `collection_staff_colors` would fail that batch on every retry. After a resync from scratch, run the worker's `script/replay-collection-colours.ts` (`apps/worker/AGENTS.md`), or every collection shows its source colours.
+
 ## Resync scope
 
 `START_BLOCK` (`src/env.ts`) sits tens of millions of blocks behind the tip, and early 2025 is dense (566,500 mints in one day). A from-scratch resync takes about a day; budget for that and read the current `START_BLOCK` rather than an earlier estimate.

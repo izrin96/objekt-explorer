@@ -850,31 +850,6 @@ export const modAudit = pgTable(
   (t) => [index("mod_audit_target_created_idx").on(t.targetUserId, t.createdAt.desc())],
 );
 
-/**
- * Staff fixes to a collection's colours, keyed by the indexer's slug (another database, so no
- * foreign key). Kept apart from the indexer's rows, so a reindex never touches them.
- */
-export const collectionOverride = pgTable(
-  "collection_override",
-  {
-    slug: text("slug").primaryKey(),
-    textColor: text("text_color"),
-    backgroundColor: text("background_color"),
-    updatedBy: text("updated_by").references(() => user.id, { onDelete: "set null" }),
-    updatedAt: timestamp("updated_at", { mode: "string", withTimezone: true })
-      .notNull()
-      .defaultNow(),
-  },
-  (t) => [
-    check("collection_override_text_color", sql`${t.textColor} ~ '^#[0-9a-f]{6}$'`),
-    check("collection_override_background_color", sql`${t.backgroundColor} ~ '^#[0-9a-f]{6}$'`),
-    check(
-      "collection_override_some_color",
-      sql`${t.textColor} IS NOT NULL OR ${t.backgroundColor} IS NOT NULL`,
-    ),
-  ],
-);
-
 export const pins = pgTable(
   "pins",
   {
@@ -930,7 +905,6 @@ export const collectionPriceHistory = pgTable(
 export type AccessToken = typeof accessToken.$inferSelect;
 export type UserAddress = typeof userAddress.$inferSelect;
 export type Pin = typeof pins.$inferSelect;
-export type CollectionOverrideRow = typeof collectionOverride.$inferSelect;
 
 export type User = typeof user.$inferSelect;
 export type Session = typeof session.$inferSelect;
