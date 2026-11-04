@@ -112,8 +112,9 @@ if (indexerWrites) {
 }
 
 // weekly safety-net full scan for stale entries the outbox drain missed
-// (no startup run: full scan is heavy, drain handles the common case)
-crons.push(cron("0 4 * * 1", safeRun("cleanup", cleanupStaleEntries)));
+// (no startup run: full scan is heavy, drain handles the common case). Off the hour, so its
+// indexer reads never stack with the hourly jobs at minute 0.
+crons.push(cron("30 4 * * 1", safeRun("cleanup", cleanupStaleEntries)));
 
 // cache collection rarity list
 const runRarity = safeRun("rarity", populateRarity);
