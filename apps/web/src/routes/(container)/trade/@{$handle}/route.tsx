@@ -7,6 +7,7 @@ import { withHandle } from "@/features/trade/person-page";
 import { tradePersonOptions } from "@/features/trade/queries";
 import { generateMetadata } from "@/lib/meta";
 import { isBadRequest, isClientError, isNotFound } from "@/lib/orpc-error";
+import { isRefusalError, refusalText } from "@/lib/refusal";
 import { m } from "@/paraglide/messages";
 
 /**
@@ -18,15 +19,20 @@ import { m } from "@/paraglide/messages";
 export const Route = createFileRoute("/(container)/trade/@{$handle}")({
   staticData: { tradeChrome: false },
   beforeLoad: async ({ params, location, context: { queryClient } }) => {
+    // worded here, since only a string survives the trip to the page
+    let refusal: string | null = null;
     const person = await queryClient
       .query(tradePersonOptions({ handle: params.handle }))
       .catch((error: unknown) => {
         // a handle that can't be one (empty, too long) names no one either
         if (isNotFound(error) || isBadRequest(error)) throw notFound();
-        if (isClientError(error)) return null;
+        if (isClientError(error)) {
+          if (isRefusalError(error)) refusal = refusalText(error);
+          return null;
+        }
         throw error;
       });
-    if (!person) return { person: null };
+    if (!person) return { person: null, refusal };
     // an account with no linked profile has no page
     if (!person.handle) throw notFound();
     if (person.handle !== params.handle) {
@@ -37,7 +43,7 @@ export const Route = createFileRoute("/(container)/trade/@{$handle}")({
         state: { offerBack: location.state.offerBack },
       });
     }
-    return { person: { userId: person.userId, handle: person.handle } };
+    return { person: { userId: person.userId, handle: person.handle }, refusal: null };
   },
   // a handle that resolves to no one keeps the plain Trade title; the pages set their own
   head: () => generateMetadata({ title: m.page_titles_trade() }),

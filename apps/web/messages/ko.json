@@ -1010,6 +1010,7 @@
   "notification_alert_mutual_desc": "내 게시물 하나 안에서 서로 교환할 수 있는 사람만 알립니다. 판매 목록은 제외됩니다. 연결이 없는 목록은 교환 목록에 대해 알립니다.",
   "nav_trade": "거래",
   "page_titles_trade": "거래",
+  "page_titles_trade_for_you": "추천 · 거래",
   "trade_tabs_label": "거래 보기",
   "trade_tab_browse": "둘러보기",
   "trade_tab_for_you": "추천",

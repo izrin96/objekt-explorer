@@ -22,6 +22,7 @@ import { requireSignedIn } from "@/features/user/queries";
 import { generateMetadata } from "@/lib/meta";
 import { orpc } from "@/lib/orpc";
 import { isBadRequest, isClientError, isNotFound } from "@/lib/orpc-error";
+import { isRefusalError, refusalText } from "@/lib/refusal";
 import { m } from "@/paraglide/messages";
 
 /**
@@ -38,7 +39,13 @@ export const Route = createFileRoute("/(container)/trade/@{$handle}/offer")({
   }),
   beforeLoad: ({ context, location }) => requireSignedIn({ context, location }),
   loader: async ({ context: { queryClient, person }, deps }) => {
-    const none = { counter: null, unavailable: null, foreign: false, refused: false };
+    const none = {
+      counter: null,
+      unavailable: null,
+      foreign: false,
+      refused: false,
+      refusal: null as string | null,
+    };
     if (!person) return { ...none, name: null };
     const name = handleName(person.handle);
     try {
@@ -105,7 +112,14 @@ export const Route = createFileRoute("/(container)/trade/@{$handle}/offer")({
     } catch (error) {
       // a refusal (the rate limit) offers the person page's retry under the plain Trade title,
       // never the error page
-      if (isClientError(error)) return { ...none, name: null, refused: true };
+      if (isClientError(error)) {
+        return {
+          ...none,
+          name: null,
+          refused: true,
+          refusal: isRefusalError(error) ? refusalText(error) : null,
+        };
+      }
       throw error;
     }
   },
@@ -121,10 +135,10 @@ export const Route = createFileRoute("/(container)/trade/@{$handle}/offer")({
 });
 
 function OfferRoute() {
-  const { person } = Route.useRouteContext();
+  const { person, refusal: lookupRefusal } = Route.useRouteContext();
   const search = Route.useSearch();
-  const { counter, unavailable, foreign, refused } = Route.useLoaderData();
-  if (!person || refused) return <PersonPageRefused />;
+  const { counter, unavailable, foreign, refused, refusal } = Route.useLoaderData();
+  if (!person || refused) return <PersonPageRefused refusal={refusal ?? lookupRefusal} />;
   const name = handleName(person.handle);
   const back = backPath(search.from, person.handle);
   if (unavailable) {

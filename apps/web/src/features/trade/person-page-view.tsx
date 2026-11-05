@@ -180,13 +180,14 @@ export function PersonPageView({
 }
 
 /** A person page whose handle lookup was refused (the rate limit): a way to try again. */
-export function PersonPageRefused() {
+/** `refusal`: why the lookup was refused, worded, when it was a refusal the app words (the rate limit). */
+export function PersonPageRefused({ refusal }: { refusal: string | null }) {
   const router = useRouter();
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-3">
       <h1 className="sr-only">{m.nav_trade()}</h1>
       <BackToTrade />
-      <LoadError onRetry={() => void router.invalidate()} />
+      <LoadError hint={refusal} onRetry={() => void router.invalidate()} />
     </div>
   );
 }

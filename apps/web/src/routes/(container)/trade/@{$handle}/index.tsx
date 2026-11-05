@@ -22,7 +22,7 @@ export const Route = createFileRoute("/(container)/trade/@{$handle}/")({
 });
 
 function PersonPage() {
-  const { person } = Route.useRouteContext();
-  if (!person) return <PersonPageRefused />;
+  const { person, refusal } = Route.useRouteContext();
+  if (!person) return <PersonPageRefused refusal={refusal} />;
   return <PersonPageView userId={person.userId} handle={person.handle} />;
 }

@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Menu, MenuItem, MenuPopup, MenuSeparator, MenuTrigger } from "@/components/ui/menu";
 import { Popover, PopoverPopup, PopoverTrigger } from "@/components/ui/popover";
 import { SheetDescription, SheetHeader, SheetPanel, SheetTitle } from "@/components/ui/sheet";
+import { Skeleton } from "@/components/ui/skeleton";
+import { LoadError } from "@/features/chat/attach/attach-picker-parts";
 import { useEditList } from "@/features/list/actions";
 import { type StoredList, toDraft, toEditInput } from "@/features/list/list-draft";
 import { formatPrice } from "@/features/list/list-price";
@@ -307,7 +309,8 @@ export function AllObjekts({
   select: boolean;
 }) {
   const { data: stored } = useQuery(listFindOptions(slug, true));
-  const { data: entries } = useQuery(listEntriesOptions(slug, []));
+  const entriesQuery = useQuery(listEntriesOptions(slug, []));
+  const entries = entriesQuery.data;
   const title = useRef<HTMLHeadingElement>(null);
   const { actions, bulkActions, dialogs, currency } = useSideDialogs({
     slug,
@@ -364,30 +367,43 @@ export function AllObjekts({
           </SheetTitle>
           {entries && entries.length > 0 ? <SelectModeButton /> : null}
         </div>
+        {/* the count only once it is known, never a 0 while loading */}
         <SheetDescription>
-          {selecting
-            ? m.trade_composer_all_select_desc({ count, list: name })
-            : m.trade_composer_all_desc({ count, list: name })}
+          {entries === undefined
+            ? name
+            : selecting
+              ? m.trade_composer_all_select_desc({ count, list: name })
+              : m.trade_composer_all_desc({ count, list: name })}
         </SheetDescription>
       </SheetHeader>
       <SheetPanel data-entry-grid="">
-        <PanelCardGrid
-          sections={[{ title: null, items: entries ?? [] }]}
-          getKey={(entry) => String(entry.entryId)}
-          renderItem={(entry) =>
-            selecting ? (
-              <SelectThumb entry={entry} ticked={ids.has(entry.id)} />
-            ) : (
-              <EntryThumb
-                entry={entry}
-                side={ratio}
-                listRatio={listRatio}
-                actions={actions}
-                currency={currency}
-              />
-            )
-          }
-        />
+        {entriesQuery.isError ? (
+          <LoadError onRetry={() => void entriesQuery.refetch()} />
+        ) : entriesQuery.isPending ? (
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(6rem,1fr))] gap-3">
+            {Array.from({ length: 8 }, (_, index) => (
+              <Skeleton key={index} className="rounded-photocard aspect-photocard" />
+            ))}
+          </div>
+        ) : (
+          <PanelCardGrid
+            sections={[{ title: null, items: entries ?? [] }]}
+            getKey={(entry) => String(entry.entryId)}
+            renderItem={(entry) =>
+              selecting ? (
+                <SelectThumb entry={entry} ticked={ids.has(entry.id)} />
+              ) : (
+                <EntryThumb
+                  entry={entry}
+                  side={ratio}
+                  listRatio={listRatio}
+                  actions={actions}
+                  currency={currency}
+                />
+              )
+            }
+          />
+        )}
       </SheetPanel>
       {selecting ? (
         <div className="flex px-6 pt-3 pb-6">

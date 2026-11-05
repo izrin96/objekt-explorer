@@ -34,8 +34,8 @@ export const Route = createFileRoute("/(container)/trade/@{$handle}/$slug")({
 });
 
 function PostPage() {
-  const { person } = Route.useRouteContext();
+  const { person, refusal } = Route.useRouteContext();
   const { slug } = Route.useParams();
-  if (!person) return <PersonPageRefused />;
+  if (!person) return <PersonPageRefused refusal={refusal} />;
   return <PersonPageView userId={person.userId} handle={person.handle} slug={slug} />;
 }

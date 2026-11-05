@@ -1010,6 +1010,7 @@
   "notification_alert_mutual_desc": "Only people you can swap with, inside one of your posts. Sale listings are left out. A list with no link alerts on swap listings.",
   "nav_trade": "Trade",
   "page_titles_trade": "Trade",
+  "page_titles_trade_for_you": "For you · Trade",
   "trade_tabs_label": "Trade views",
   "trade_tab_browse": "Browse",
   "trade_tab_for_you": "For you",

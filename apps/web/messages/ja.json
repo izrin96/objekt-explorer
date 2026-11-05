@@ -1010,6 +1010,7 @@
   "notification_alert_mutual_desc": "あなたの投稿1つの中でお互いに交換できる人だけを通知します。販売リストは含みません。紐付けのないリストは交換の掲載について通知します。",
   "nav_trade": "取引",
   "page_titles_trade": "取引",
+  "page_titles_trade_for_you": "おすすめ · 取引",
   "trade_tabs_label": "取引の表示",
   "trade_tab_browse": "投稿",
   "trade_tab_for_you": "おすすめ",

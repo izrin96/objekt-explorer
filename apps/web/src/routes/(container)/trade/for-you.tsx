@@ -35,7 +35,7 @@ export const Route = createFileRoute("/(container)/trade/for-you")({
     if (!canMatchOf(user?.lists ?? [])) return;
     await loadBrowse({ queryClient, search: deps, cause, surface: "forYou" });
   },
-  head: () => generateMetadata({ title: m.page_titles_trade() }),
+  head: () => generateMetadata({ title: m.page_titles_trade_for_you() }),
   component: ForYouPage,
   pendingComponent: BrowsePending,
 });
