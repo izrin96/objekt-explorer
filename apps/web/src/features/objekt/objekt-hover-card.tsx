@@ -67,14 +67,8 @@ export function ObjektHoverCard() {
           {/* the container context `rounded-photocard` (5.4cqi) needs */}
           <div className="@container">
             <div className="rounded-photocard bg-secondary aspect-photocard relative overflow-hidden">
-              {/* the row already loaded the thumbnail, so it holds the frame until the front lands */}
-              <img
-                src={objekt.thumbnailImage}
-                alt=""
-                decoding="async"
-                className="absolute inset-0 size-full object-cover"
-              />
-              <ObjektArtwork objekt={objekt} image="front" />
+              {/* the thumbnail, not the front: at w-36 it is sharp, and the row already loaded it */}
+              <ObjektArtwork objekt={objekt} priority />
             </div>
           </div>
           <ObjektName objekt={objekt} className="px-0.5 text-xs leading-snug" />
