@@ -1,6 +1,6 @@
 import type { SanctionType } from "../schemas/moderation";
 import { TRADE_EXPIRE_DAYS, type TradeStatus } from "../schemas/offer";
-import type { DeleteRefusal, DeletionStep } from "../schemas/user";
+import { type DeleteRefusal, type DeletionStep, hasDeliverableEmail } from "../schemas/user";
 import { cancelRefusal } from "./offer-rules";
 import { DAY_MS } from "./time";
 
@@ -80,19 +80,6 @@ export function refusalOf(blockers: DeletionBlocker[]): DeleteRefusal | null {
   if (blockers.some((blocker) => blocker.kind === "sanction")) return "sanctioned";
   if (blockers.some((blocker) => blocker.kind === "trade")) return "trade_in_progress";
   return null;
-}
-
-/**
- * `.invalid` is reserved by RFC 6761: Better Auth's `*.placeholder.invalid` and the scrub's
- * `deleted.invalid`. Discord sign-ups without an email get `*.placeholder.local`.
- */
-export function hasDeliverableEmail(email: string) {
-  const domain = email.slice(email.lastIndexOf("@") + 1).toLowerCase();
-  return !(
-    domain === "invalid" ||
-    domain.endsWith(".invalid") ||
-    domain.endsWith(".placeholder.local")
-  );
 }
 
 export function deletionStep(email: string, sessionCreatedAt: Date, now: Date): DeletionStep {

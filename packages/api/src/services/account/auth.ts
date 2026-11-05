@@ -10,10 +10,9 @@ import { and, eq, ne } from "drizzle-orm";
 
 import { SITE_NAME } from "../../constants";
 import { serverEnv } from "../../env";
-import { hasDeliverableEmail } from "../../lib/account-deletion";
 import { ac, roles } from "../../permissions";
 import { banNoticeMessage } from "../../schemas/moderation";
-import { isDeleteRefusal } from "../../schemas/user";
+import { hasDeliverableEmail, isDeleteRefusal } from "../../schemas/user";
 import { betterAuthLocale } from "./auth-locale";
 import { deleteRefusal, refusalError } from "./delete";
 import { sendDeleteAccountVerification, sendResetPassword, sendVerificationEmail } from "./mail";

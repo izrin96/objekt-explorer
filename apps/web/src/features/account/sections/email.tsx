@@ -1,5 +1,5 @@
 import { WarningIcon } from "@phosphor-icons/react";
-import { hasDeliverableEmail } from "@repo/api/lib/account-deletion";
+import { hasDeliverableEmail } from "@repo/api/schemas/user";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import * as z from "zod";

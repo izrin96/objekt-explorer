@@ -1,11 +1,11 @@
 import { describe, expect, test } from "bun:test";
 
+import { hasDeliverableEmail } from "../schemas/user";
 import {
   type DeletionSanction,
   type DeletionTrade,
   deletionBlockers,
   deletionStep,
-  hasDeliverableEmail,
   refusalOf,
 } from "./account-deletion";
 import { cancelRefusal } from "./offer-rules";

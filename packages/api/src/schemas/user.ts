@@ -90,6 +90,19 @@ export const isDeleteRefusal = (code: unknown): code is DeleteRefusal =>
 export const DELETION_STEPS = ["send-email", "delete", "sign-in-again"] as const;
 export type DeletionStep = (typeof DELETION_STEPS)[number];
 
+/**
+ * `.invalid` is reserved by RFC 6761: Better Auth's `*.placeholder.invalid` and the scrub's
+ * `deleted.invalid`. Discord sign-ups without an email get `*.placeholder.local`.
+ */
+export function hasDeliverableEmail(email: string) {
+  const domain = email.slice(email.lastIndexOf("@") + 1).toLowerCase();
+  return !(
+    domain === "invalid" ||
+    domain.endsWith(".invalid") ||
+    domain.endsWith(".placeholder.local")
+  );
+}
+
 export const deletionCheckOutputSchema = z.object({
   blockers: z
     .discriminatedUnion("kind", [
