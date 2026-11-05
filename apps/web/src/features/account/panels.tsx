@@ -29,7 +29,9 @@ export function EmailPanel() {
   const { data } = useCurrentUser();
   return (
     <AccountSection title={m.auth_account_email_label()}>
-      {data?.user ? <EmailSection email={data.user.email} /> : null}
+      {data?.user ? (
+        <EmailSection email={data.user.email} verified={data.user.emailVerified} />
+      ) : null}
     </AccountSection>
   );
 }
