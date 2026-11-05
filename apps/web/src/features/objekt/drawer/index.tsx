@@ -334,6 +334,7 @@ function DrawerBody({
           <TabsPanel value="metadata">
             <MetadataPanel
               objekt={objekt}
+              originals={metadata.data}
               tokenId={own.data?.tokenId ?? null}
               mintedAt={mintedAt}
             />

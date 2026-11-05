@@ -36,9 +36,9 @@ export type ProcessedImageField =
  * act on `tokenId`, `entryId` or `slug`.
  */
 export type IndexedObjekt = Pick<Collection, CollectionField> & {
-  /** the Cosmo-hosted image, before the processed copy replaced `frontImage` */
-  originalFrontImage: string;
-  originalBackImage: string;
+  /** the Cosmo-hosted image, before the processed copy replaced `frontImage`; the web's collection list leaves both out */
+  originalFrontImage?: string;
+  originalBackImage?: string;
 };
 
 export type OwnedObjekt = IndexedObjekt &

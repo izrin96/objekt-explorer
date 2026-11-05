@@ -24,8 +24,8 @@ export const indexedObjektSchema = z.object({
   bandImageUrl: z.string().nullable(),
   frontMedia: z.string().nullable(),
   hasAudio: z.boolean(),
-  originalFrontImage: z.string(),
-  originalBackImage: z.string(),
+  originalFrontImage: z.string().optional(),
+  originalBackImage: z.string().optional(),
 }) satisfies z.ZodType<IndexedObjekt>;
 
 export const ownedObjektSchema = indexedObjektSchema.extend({

@@ -4,12 +4,16 @@ import { artistsArraySchema } from "./common/artist";
 import { checkpointSchema } from "./common/checkpoint";
 import { collectionSlugInputSchema } from "./common/collection";
 import { indexedObjektSchema } from "./common/objekt";
+import { queryBoolean } from "./common/query";
 import { transferRowSchema } from "./common/transfer";
 
 export const collectionMetadataOutputSchema = z.object({
   transferable: z.number(),
   total: z.number(),
   spin: z.number(),
+  // the Cosmo-hosted images, which the web's collection list leaves out
+  originalFrontImage: z.string().optional(),
+  originalBackImage: z.string().optional(),
 });
 export type CollectionMetadataOutput = z.infer<typeof collectionMetadataOutputSchema>;
 
@@ -84,6 +88,11 @@ export type HoldersOutput = z.infer<typeof holdersOutputSchema>;
 export const collectionListInputSchema = z.object({
   artist: artistsArraySchema.default([]),
   at: checkpointSchema.optional(),
+  // the web sends false: the two Cosmo URLs are 43% of the gzipped list and only the drawer
+  // shows them, read from the collection's metadata instead
+  originals: queryBoolean
+    .default(true)
+    .meta({ description: "false leaves out originalFrontImage and originalBackImage" }),
 });
 
 export const serialTransfersInputSchema = collectionSlugInputSchema.extend({

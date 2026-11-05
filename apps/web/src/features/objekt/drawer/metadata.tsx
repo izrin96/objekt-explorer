@@ -1,3 +1,4 @@
+import type { CollectionMetadataOutput } from "@repo/api/schemas/collections";
 import { getCollectionEdition } from "@repo/lib/collection-edition";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import type { ReactNode } from "react";
@@ -51,10 +52,13 @@ function MetaLink({ href }: { href: string | null }) {
 
 export function MetadataPanel({
   objekt,
+  originals,
   tokenId,
   mintedAt,
 }: {
   objekt: ValidObjekt;
+  /** the collection's metadata, which carries the Cosmo URLs the collection list leaves out */
+  originals: Pick<CollectionMetadataOutput, "originalFrontImage" | "originalBackImage"> | undefined;
   tokenId: string | null;
   mintedAt: Date | null;
 }) {
@@ -113,10 +117,14 @@ export function MetadataPanel({
       </MetaRow>
 
       <MetaRow label={m.objekt_front_image()} mono>
-        <MetaLink href={objekt.originalFrontImage ?? objekt.frontImage} />
+        <MetaLink
+          href={objekt.originalFrontImage ?? originals?.originalFrontImage ?? objekt.frontImage}
+        />
       </MetaRow>
       <MetaRow label={m.objekt_back_image()} mono>
-        <MetaLink href={objekt.originalBackImage ?? objekt.backImage} />
+        <MetaLink
+          href={objekt.originalBackImage ?? originals?.originalBackImage ?? objekt.backImage}
+        />
       </MetaRow>
       <MetaRow label={m.objekt_band_image_alt()} mono>
         <MetaLink href={objekt.bandImageUrl} />

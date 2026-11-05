@@ -19,7 +19,8 @@ export const collectionOptions = (filters?: OwnedByFilters) =>
       // plain GET rather than RPC, so the browser revalidates its cached copy with Last-Modified
       const fetchCollections = (cache?: RequestCache) =>
         ofetch<CollectionListOutput | undefined>("/api/v1/collections", {
-          query: { ...filters },
+          // the drawer reads the Cosmo URLs from the collection's metadata instead
+          query: { ...filters, originals: false },
           cache,
         }).then((response) => response?.collections);
 

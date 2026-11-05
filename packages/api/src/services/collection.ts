@@ -18,7 +18,7 @@ import { redis, redisFailOpen } from "./redis";
 
 const MODIFIED_AT_KEY = "collection:modified-at";
 
-type CollectionListQuery = { artist: ValidArtist[]; at?: string };
+type CollectionListQuery = { artist: ValidArtist[]; at?: string; originals?: boolean };
 
 type CollectionList =
   | { notModified: true; lastModifiedMs: number }
@@ -29,10 +29,27 @@ type CollectionList =
 // move it, such as indexer upserts.
 const FULL_LIST_TTL_MS = 5 * 60 * 1000;
 let fullListCache:
-  | { lastModifiedMs: number; expiresAt: number; result: Promise<CollectionListOutput> }
+  | {
+      lastModifiedMs: number;
+      expiresAt: number;
+      result: Promise<CollectionListOutput>;
+      /** the same list without the Cosmo URLs, built on first request */
+      slim?: Promise<CollectionListOutput>;
+    }
   | undefined;
 
-function getFullList(whereQuery: SQL | undefined, lastModifiedMs: number) {
+function withoutOriginals(list: CollectionListOutput): CollectionListOutput {
+  return {
+    collections: list.collections.map((collection) => {
+      const slim = { ...collection };
+      delete slim.originalFrontImage;
+      delete slim.originalBackImage;
+      return slim;
+    }),
+  };
+}
+
+function getFullList(whereQuery: SQL | undefined, lastModifiedMs: number, originals: boolean) {
   if (
     !fullListCache ||
     fullListCache.lastModifiedMs < lastModifiedMs ||
@@ -44,7 +61,9 @@ function getFullList(whereQuery: SQL | undefined, lastModifiedMs: number) {
       if (fullListCache?.result === result) fullListCache = undefined;
     });
   }
-  return fullListCache.result;
+  if (originals) return fullListCache.result;
+  fullListCache.slim ??= fullListCache.result.then(withoutOriginals);
+  return fullListCache.slim;
 }
 
 async function queryCollections(whereQuery: SQL | undefined): Promise<CollectionListOutput> {
@@ -98,10 +117,13 @@ export async function fetchCollectionList(
     return { notModified: true, lastModifiedMs };
   }
 
+  const originals = query.originals ?? true;
   const result =
     filters.length === 0
-      ? await getFullList(whereQuery, lastModifiedMs)
-      : await queryCollections(whereQuery);
+      ? await getFullList(whereQuery, lastModifiedMs, originals)
+      : await queryCollections(whereQuery).then((list) =>
+          originals ? list : withoutOriginals(list),
+        );
 
   return { notModified: false, lastModifiedMs, result };
 }
@@ -139,20 +161,30 @@ export async function collectionListModifiedAt() {
 }
 
 export async function fetchCollectionMetadata(slug: string): Promise<CollectionMetadataOutput> {
-  const [result] = await indexer
-    .select({
-      total: count(),
-      spin: sql`count(case when ${objekts.owner}=${Addresses.SPIN} then 1 end)`.mapWith(Number),
-      transferable:
-        sql`count(case when transferable = true and ${objekts.owner}!=${Addresses.SPIN} then 1 end)`.mapWith(
-          Number,
-        ),
-    })
-    .from(collections)
-    .innerJoin(objekts, eq(collections.id, objekts.collectionId))
-    .where(eq(collections.slug, slug));
+  const [[result], [images]] = await Promise.all([
+    indexer
+      .select({
+        total: count(),
+        spin: sql`count(case when ${objekts.owner}=${Addresses.SPIN} then 1 end)`.mapWith(Number),
+        transferable:
+          sql`count(case when transferable = true and ${objekts.owner}!=${Addresses.SPIN} then 1 end)`.mapWith(
+            Number,
+          ),
+      })
+      .from(collections)
+      .innerJoin(objekts, eq(collections.id, objekts.collectionId))
+      .where(eq(collections.slug, slug)),
+    indexer
+      .select({
+        originalFrontImage: collections.frontImage,
+        originalBackImage: collections.backImage,
+      })
+      .from(collections)
+      .where(eq(collections.slug, slug))
+      .limit(1),
+  ]);
 
-  return result ?? { total: 0, spin: 0, transferable: 0 };
+  return { ...(result ?? { total: 0, spin: 0, transferable: 0 }), ...images };
 }
 
 export async function fetchSerialList(slug: string): Promise<SerialsOutput> {
