@@ -1,17 +1,30 @@
+import { CurrencyDollarIcon, ScalesIcon, TrashIcon } from "@phosphor-icons/react";
 import type { ListObjekt } from "@repo/lib/types/objekt";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { type RefObject, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { Popover, PopoverPopup, PopoverTitle, PopoverTrigger } from "@/components/ui/popover";
+import { Menu, MenuItem, MenuPopup, MenuSeparator, MenuTrigger } from "@/components/ui/menu";
+import { Popover, PopoverPopup, PopoverTrigger } from "@/components/ui/popover";
 import { SheetDescription, SheetHeader, SheetPanel, SheetTitle } from "@/components/ui/sheet";
-import { useEditList, useSetRatio } from "@/features/list/actions";
+import { useEditList } from "@/features/list/actions";
 import { type StoredList, toDraft, toEditInput } from "@/features/list/list-draft";
+import { formatPrice } from "@/features/list/list-price";
 import { listEntriesOptions, listFindOptions } from "@/features/list/queries";
 import { RatioChip } from "@/features/list/ratio-chip";
 import { RatioPicker } from "@/features/list/ratio-picker";
-import { appliedRatio, type RatioSide, ratioLabel, ratioText } from "@/features/list/ratio-text";
-import { ObjektCard } from "@/features/objekt/objekt-card";
+import {
+  appliedRatio,
+  type RatioSide,
+  ratioLabel,
+  ratioName,
+  ratioText,
+} from "@/features/list/ratio-text";
+import { RemoveFromListDialog } from "@/features/list/remove-from-list-dialog";
+import { SetPriceDialog } from "@/features/list/set-price-dialog";
+import { SetRatioDialog } from "@/features/list/set-ratio-dialog";
+import { useEntryDialogs } from "@/features/list/use-entry-dialogs";
+import { ObjektCard, PriceCaption, RATIO_ON_CARD } from "@/features/objekt/objekt-card";
 import { collectionName } from "@/features/objekt/objekt-label";
 import { PanelCardGrid } from "@/features/objekt/virtual-card-grid";
 import { m } from "@/paraglide/messages";
@@ -51,102 +64,201 @@ export function ListRatioControl({ stored, side }: { stored: StoredList; side: R
   );
 }
 
-/** A thumbnail; on a side that takes a ratio, it opens a picker for that objekt's own. */
+type EntryAction = (entry: ListObjekt, thumb: HTMLElement) => void;
+
+/** what a thumbnail's menu offers; null where the side takes no price or ratio */
+export type EntryActions = {
+  price: EntryAction | null;
+  ratio: EntryAction | null;
+  remove: EntryAction;
+};
+
+/** A thumbnail opening the list page's entry actions for its objekt. */
 export function EntryThumb({
   entry,
-  slug,
   side,
   listRatio,
+  actions,
+  currency,
 }: {
   entry: ListObjekt;
-  slug: string;
   side: RatioSide | null;
   listRatio: number | null;
+  actions: EntryActions;
+  /** a sale side's, to draw the price under the card; the preview's thumbnails are too small for it */
+  currency?: string | null;
 }) {
-  const [open, setOpen] = useState(false);
+  const trigger = useRef<HTMLButtonElement>(null);
   const applied = side ? appliedRatio(entry.ratio, listRatio) : null;
   const name = collectionName(entry.slug, entry);
-  const face = (
-    <>
-      <ObjektCard objekt={entry} image="thumbnail" hideLabel />
-      {applied && side ? (
-        <RatioChip
-          ratio={applied.ratio}
-          side={side}
-          owner
-          inherited={applied.inherited}
-          // opaque: in dark mode the outline badge's fill is nearly clear, and the artwork shows through
-          className="text-xxs sm:text-xxs bg-background dark:bg-background pointer-events-none absolute end-0.5 bottom-0.5 h-4 px-0.5 shadow-xs sm:h-4"
-        />
-      ) : null}
-    </>
-  );
-  if (!side) return <div className="@container relative">{face}</div>;
+  const run = (action: EntryAction) => () => {
+    if (trigger.current) action(entry, trigger.current);
+  };
 
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger
+  const menu = (
+    <Menu>
+      <MenuTrigger
+        ref={trigger}
+        data-entry-thumb={String(entry.entryId)}
         aria-label={
-          applied
-            ? m.trade_composer_objekt_ratio_set({
+          applied && side
+            ? m.trade_composer_objekt_options_ratio({
                 name,
                 ratio: ratioLabel(applied.ratio, side, {
                   owner: true,
                   inherited: applied.inherited,
                 }),
               })
-            : m.trade_composer_objekt_ratio({ name })
+            : m.trade_composer_objekt_options({ name })
+        }
+        // the chip lies inert over the card, so the trigger carries its tooltip
+        title={
+          applied && side
+            ? ratioName(applied.ratio, side, { owner: true, inherited: applied.inherited })
+            : undefined
         }
         className="rounded-photocard focus-visible:ring-ring @container relative block w-full cursor-pointer outline-none focus-visible:ring-2"
       >
-        {face}
-      </PopoverTrigger>
-      <PopoverPopup className="w-80">
-        <PopoverTitle className="text-sm">{name}</PopoverTitle>
-        <div className="mt-2">
-          <EntryRatioPicker
-            entry={entry}
-            slug={slug}
+        <ObjektCard objekt={entry} image="thumbnail" hideLabel />
+        {applied && side ? (
+          <RatioChip
+            ratio={applied.ratio}
             side={side}
-            listRatio={listRatio}
-            onDone={() => setOpen(false)}
+            owner
+            inherited={applied.inherited}
+            className={RATIO_ON_CARD}
           />
-        </div>
-      </PopoverPopup>
-    </Popover>
+        ) : null}
+      </MenuTrigger>
+      <MenuPopup align="start" className="min-w-44">
+        {actions.price ? (
+          <MenuItem onClick={run(actions.price)}>
+            <CurrencyDollarIcon />
+            {m.objekt_menu_set_price()}
+          </MenuItem>
+        ) : null}
+        {actions.ratio ? (
+          <MenuItem onClick={run(actions.ratio)}>
+            <ScalesIcon />
+            {m.objekt_menu_set_ratio()}
+          </MenuItem>
+        ) : null}
+        {actions.price || actions.ratio ? <MenuSeparator /> : null}
+        <MenuItem variant="destructive" onClick={run(actions.remove)}>
+          <TrashIcon />
+          {m.objekt_menu_remove_from_list()}
+        </MenuItem>
+      </MenuPopup>
+    </Menu>
   );
-}
+  if (!currency || !actions.price) return menu;
 
-/** Mounted with the popover, so a thumbnail that stays closed holds no mutation. */
-function EntryRatioPicker({
-  entry,
-  slug,
-  side,
-  listRatio,
-  onDone,
-}: {
-  entry: ListObjekt;
-  slug: string;
-  side: RatioSide;
-  listRatio: number | null;
-  onDone: () => void;
-}) {
-  const setRatio = useSetRatio();
   return (
-    <RatioPicker
-      side={side}
-      label={m.ratio_label()}
-      value={entry.ratio ?? null}
-      listRatio={listRatio}
-      disabled={setRatio.isPending}
-      onChange={(ratio) =>
-        setRatio.mutate({ slug, entryIds: [entry.entryId], ratio }, { onSuccess: onDone })
-      }
-    />
+    <div className="flex min-w-0 flex-col gap-1.5">
+      {menu}
+      <PriceCaption
+        price={formatPrice(currency, entry, true)}
+        priceMuted={entry.price === null && !entry.isQyop}
+        note={entry.note}
+        onPriceClick={run(actions.price)}
+      />
+    </div>
   );
 }
 
-/** "+N": every objekt of a side, each opening its ratio where the side takes one. */
+const THUMBS = "[data-entry-thumb], [data-entry-more]";
+
+/** where an action's dialog returns focus: looked up when it closes, since a remove can remount the thumbnails */
+type FocusTarget = {
+  grid: Element | null;
+  id: string;
+  /** the next thumbnail's objekt; null when `thumb` was the last thumbnail or sat before "+N" */
+  next: string | null;
+  index: number;
+  removed: boolean;
+};
+
+function focusTarget(target: FocusTarget | null, fallback: HTMLElement | null) {
+  if (!target?.grid) return fallback;
+  const thumbs = [...target.grid.querySelectorAll<HTMLElement>(THUMBS)];
+  const byId = (id: string | null) =>
+    id === null ? undefined : thumbs.find((el) => el.dataset.entryThumb === id);
+  // after a remove, whatever moved into the removed thumbnail's place: the objekt that slid in from
+  // behind "+N", "+N" itself, or nothing when it was the last
+  const found = target.removed ? (byId(target.next) ?? thumbs[target.index]) : byId(target.id);
+  return found ?? fallback;
+}
+
+/**
+ * The list page's Set price, Set ratio and Remove dialogs for one side, mounted once, not per
+ * thumbnail. Focus returns to the objekt's thumbnail, or after a remove to the next one, else
+ * `fallback`.
+ */
+export function useSideDialogs({
+  slug,
+  stored,
+  side,
+  fallback,
+}: {
+  slug: string;
+  stored: StoredList | undefined;
+  side: RatioSide | null;
+  fallback: RefObject<HTMLElement | null>;
+}) {
+  const { openPrice, openRatio, openRemove, price, ratio, remove } = useEntryDialogs();
+  const target = useRef<FocusTarget | null>(null);
+  const currency = stored?.listType === "sale" ? (stored.currency ?? null) : null;
+  const listRatio = stored?.ratio ?? null;
+
+  const opening =
+    (open: (objekts: ListObjekt[]) => void): EntryAction =>
+    (entry, thumb) => {
+      const grid = thumb.closest("[data-entry-grid]");
+      const thumbs = grid ? [...grid.querySelectorAll<HTMLElement>(THUMBS)] : [];
+      const index = thumbs.indexOf(thumb);
+      target.current = {
+        grid,
+        id: String(entry.entryId),
+        next: thumbs[index + 1]?.dataset.entryThumb ?? null,
+        index,
+        removed: false,
+      };
+      open([entry]);
+    };
+  const finalFocus = () => focusTarget(target.current, fallback.current);
+  const actions: EntryActions = {
+    price: currency === null ? null : opening(openPrice),
+    ratio: side === null ? null : opening(openRatio),
+    remove: opening(openRemove),
+  };
+  const dialogs = (
+    <>
+      {currency === null ? null : (
+        <SetPriceDialog {...price} slug={slug} currency={currency} finalFocus={finalFocus} />
+      )}
+      {side === null ? null : (
+        <SetRatioDialog
+          {...ratio}
+          slug={slug}
+          side={side}
+          listRatio={listRatio}
+          finalFocus={finalFocus}
+        />
+      )}
+      <RemoveFromListDialog
+        {...remove}
+        slug={slug}
+        finalFocus={finalFocus}
+        onRemoved={() => {
+          if (target.current) target.current.removed = true;
+        }}
+      />
+    </>
+  );
+  return { actions, dialogs, currency };
+}
+
+/** "+N": every objekt of a side, each opening the menu its thumbnail opens in the preview. */
 export function AllObjekts({
   slug,
   name,
@@ -158,27 +270,39 @@ export function AllObjekts({
 }) {
   const { data: stored } = useQuery(listFindOptions(slug, true));
   const { data: entries } = useQuery(listEntriesOptions(slug, []));
+  const title = useRef<HTMLHeadingElement>(null);
+  const { actions, dialogs, currency } = useSideDialogs({
+    slug,
+    stored,
+    side: ratio,
+    fallback: title,
+  });
   const listRatio = stored?.ratio ?? null;
   const count = (entries?.length ?? 0).toLocaleString(getLocale());
   return (
     <>
       <SheetHeader>
-        <SheetTitle className="font-display">{m.trade_composer_all_title()}</SheetTitle>
-        <SheetDescription>
-          {ratio
-            ? m.trade_composer_all_desc_ratio({ count, list: name })
-            : m.trade_composer_all_desc({ count, list: name })}
-        </SheetDescription>
+        <SheetTitle ref={title} tabIndex={-1} className="font-display outline-none">
+          {m.trade_composer_all_title()}
+        </SheetTitle>
+        <SheetDescription>{m.trade_composer_all_desc({ count, list: name })}</SheetDescription>
       </SheetHeader>
-      <SheetPanel>
+      <SheetPanel data-entry-grid="">
         <PanelCardGrid
           sections={[{ title: null, items: entries ?? [] }]}
           getKey={(entry) => String(entry.entryId)}
           renderItem={(entry) => (
-            <EntryThumb entry={entry} slug={slug} side={ratio} listRatio={listRatio} />
+            <EntryThumb
+              entry={entry}
+              side={ratio}
+              listRatio={listRatio}
+              actions={actions}
+              currency={currency}
+            />
           )}
         />
       </SheetPanel>
+      {dialogs}
     </>
   );
 }

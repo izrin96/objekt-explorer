@@ -15,6 +15,16 @@ import { ObjektNote } from "./objekt-note";
 import { getCollectionShortNo, isObjektOwned } from "./objekt-utils";
 import { SelectionOrderContext } from "./selection-order";
 
+/**
+ * A copy count's pill over a card's bottom-start corner, and a ratio chip over its bottom-end one:
+ * a pair, each a step up on a card wide enough for the label's bigger type. Opaque: in dark mode the
+ * outline badge's fill is nearly clear, and the artwork shows through. The caller places the count.
+ */
+export const QTY_BADGE =
+  "border-input bg-background text-foreground grid h-4 min-w-4 place-items-center rounded-full border px-1 text-xxs leading-none font-medium tabular-nums shadow-xs @[9rem]:h-5 @[9rem]:min-w-5 @[9rem]:px-1.5 @[9rem]:text-xs";
+export const RATIO_ON_CARD =
+  "text-xxs sm:text-xxs bg-background dark:bg-background pointer-events-none absolute end-0.5 bottom-0.5 h-4 px-0.5 shadow-xs sm:h-4 @[9rem]:end-1 @[9rem]:bottom-1 @[9rem]:h-5 @[9rem]:px-1 @[9rem]:text-xs";
+
 // wraps rather than truncates, and only at a space: a clipped price reads as a different price
 const priceClass =
   "text-xxs text-center leading-tight font-semibold text-balance tabular-nums @[9rem]:text-xs";
@@ -40,6 +50,8 @@ type ObjektCardProps<T extends ValidObjekt> = {
   note?: string | null;
   /** a chip under the label, such as a list entry's trade ratio */
   badge?: ReactNode;
+  /** inert, over the artwork's bottom-end corner, opposite `qty`; it positions itself */
+  cornerBadge?: ReactNode;
   /** overrides the hide-label setting; the drawer's big card always hides it */
   hideLabel?: boolean;
   /** the collection can no longer be minted, so no total counts it */
@@ -105,6 +117,7 @@ export function ObjektCard<T extends ValidObjekt>({
   onPriceClick,
   note,
   badge,
+  cornerBadge,
   hideLabel,
   unobtainable = false,
   faded = false,
@@ -218,11 +231,17 @@ export function ObjektCard<T extends ValidObjekt>({
           )}
 
           {qty !== undefined && (
-            <div className="bg-scrim absolute bottom-[4cqw] left-[4cqw] grid h-[14cqw] min-w-[16cqw] place-items-center rounded-full px-[5cqw] text-[7.5cqw] font-semibold text-white tabular-nums">
+            <div
+              className={cn(
+                QTY_BADGE,
+                "pointer-events-none absolute start-0.5 bottom-0.5 @[9rem]:start-1 @[9rem]:bottom-1",
+              )}
+            >
               {qty}
             </div>
           )}
         </div>
+        {cornerBadge}
 
         {(onToggleSelect || children) && (
           /* A flush row in the corner, the mirror of the pin/lock tag:
@@ -287,40 +306,59 @@ export function ObjektCard<T extends ValidObjekt>({
           {badge != null && <div className="flex justify-center">{badge}</div>}
 
           {price !== undefined && (
-            <div className="flex min-w-0 flex-col items-center">
-              <div className="flex min-w-0 flex-wrap items-center justify-center gap-x-1">
-                {onPriceClick ? (
-                  <button
-                    type="button"
-                    onClick={() => onPriceClick(objekt)}
-                    className={cn(
-                      priceClass,
-                      "focus-visible:ring-ring cursor-pointer rounded-xs underline-offset-2 outline-none hover:underline focus-visible:ring-2",
-                      priceMuted ? "text-muted-foreground" : "text-foreground",
-                    )}
-                  >
-                    {price}
-                  </button>
-                ) : (
-                  <span
-                    className={cn(
-                      priceClass,
-                      priceMuted ? "text-muted-foreground" : "text-foreground",
-                    )}
-                  >
-                    {price}
-                  </span>
-                )}
-                {note ? <ObjektNote note={note} /> : null}
-              </div>
-              {priceConverted !== undefined && (
-                <span className={cn(priceClass, "text-muted-foreground font-normal")}>
-                  ≈{priceConverted}
-                </span>
-              )}
-            </div>
+            <PriceCaption
+              price={price}
+              priceMuted={priceMuted}
+              priceConverted={priceConverted}
+              note={note}
+              onPriceClick={onPriceClick ? () => onPriceClick(objekt) : undefined}
+            />
           )}
         </div>
+      )}
+    </div>
+  );
+}
+
+/** A card's price and note, also drawn under a card whose image is a control that can't hold the note's button. */
+export function PriceCaption({
+  price,
+  priceMuted,
+  priceConverted,
+  note,
+  onPriceClick,
+}: {
+  price: string;
+  priceMuted?: boolean;
+  priceConverted?: string;
+  note?: string | null;
+  onPriceClick?: () => void;
+}) {
+  const tone = priceMuted ? "text-muted-foreground" : "text-foreground";
+  return (
+    <div className="flex min-w-0 flex-col items-center">
+      <div className="flex min-w-0 flex-wrap items-center justify-center gap-x-1">
+        {onPriceClick ? (
+          <button
+            type="button"
+            onClick={onPriceClick}
+            className={cn(
+              priceClass,
+              "focus-visible:ring-ring cursor-pointer rounded-xs underline-offset-2 outline-none hover:underline focus-visible:ring-2",
+              tone,
+            )}
+          >
+            {price}
+          </button>
+        ) : (
+          <span className={cn(priceClass, tone)}>{price}</span>
+        )}
+        {note ? <ObjektNote note={note} /> : null}
+      </div>
+      {priceConverted !== undefined && (
+        <span className={cn(priceClass, "text-muted-foreground font-normal")}>
+          ≈{priceConverted}
+        </span>
       )}
     </div>
   );

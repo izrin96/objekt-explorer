@@ -7,7 +7,7 @@ import { getListLinkOption } from "@/features/list/list-link";
 import { LIST_TYPE_LABEL, LIST_TYPE_TONE } from "@/features/list/list-type-badge";
 import { RatioChip } from "@/features/list/ratio-chip";
 import { type RatioSide, ratioName, ratioSideOf } from "@/features/list/ratio-text";
-import { ObjektCard } from "@/features/objekt/objekt-card";
+import { ObjektCard, QTY_BADGE, RATIO_ON_CARD } from "@/features/objekt/objekt-card";
 import { useElementSize } from "@/hooks/use-element-size";
 import { nearCountText, nearRingText } from "@/lib/near-text";
 import { TONE_INK, toneChip } from "@/lib/tone";
@@ -27,9 +27,8 @@ import { NEAR_RING, RING, SlugTile, TILE } from "./thumb-grid";
 /** `w-10` and `gap-1.5`, in px */
 const FIT = { thumb: 40, gap: 6, fallback: 4, lines: 1 };
 
-/** `ObjektCard`'s own count scales with the card, too small to read at `w-10` */
-const STACK_COUNT =
-  "pointer-events-none absolute top-0.5 left-0.5 bg-scrim rounded-full px-1 text-xxs leading-4 font-semibold text-white tabular-nums";
+/** top-start, clear of the ratio chip on a tile too narrow for both along the bottom */
+const STACK_COUNT = cn(QTY_BADGE, "pointer-events-none absolute start-0.5 top-0.5");
 
 const STRIP_MORE =
   "hover:text-foreground focus-visible:ring-ring text-xs tabular-nums outline-none focus-visible:ring-2";
@@ -194,13 +193,7 @@ const StripTile = memo(function StripTile({
         </span>
       ) : null}
       {ratio !== undefined && ratioSide ? (
-        <RatioChip
-          ratio={ratio}
-          side={ratioSide}
-          owner={owner}
-          // opaque: in dark mode the outline badge's fill is nearly clear, and the artwork shows through
-          className="text-xxs sm:text-xxs bg-background dark:bg-background pointer-events-none absolute end-0.5 bottom-0.5 h-4 px-0.5 shadow-xs sm:h-4"
-        />
+        <RatioChip ratio={ratio} side={ratioSide} owner={owner} className={RATIO_ON_CARD} />
       ) : null}
     </li>
   );

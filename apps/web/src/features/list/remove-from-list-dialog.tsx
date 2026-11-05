@@ -19,18 +19,24 @@ export function RemoveFromListDialog({
   onOpenChange,
   objekts,
   slug,
+  finalFocus,
+  onRemoved,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   objekts: ListObjekt[];
   slug: string;
+  /** the element focus returns to, looked up as the dialog closes */
+  finalFocus?: () => HTMLElement | null;
+  /** before the dialog closes, so a caller can move `finalFocus` off an objekt that just left */
+  onRemoved?: () => void;
 }) {
   const remove = useRemoveObjektsFromList();
   const clearSelection = useSelection((s) => s.clear);
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogPopup className="max-w-sm">
+      <AlertDialogPopup className="max-w-sm" finalFocus={finalFocus}>
         <AlertDialogHeader>
           <AlertDialogTitle className="font-display">
             {m.list_manage_objekt_remove_title()}
@@ -52,6 +58,7 @@ export function RemoveFromListDialog({
                 {
                   // the removed entries are gone from the grid, so a selection of them would linger unseen
                   onSuccess: () => {
+                    onRemoved?.();
                     clearSelection();
                     onOpenChange(false);
                   },

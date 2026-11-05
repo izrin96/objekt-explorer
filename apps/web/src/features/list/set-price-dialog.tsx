@@ -23,12 +23,14 @@ type Props = {
   objekts: ListObjekt[];
   slug: string;
   currency: string;
+  /** the element focus returns to, looked up as the dialog closes */
+  finalFocus?: () => HTMLElement | null;
 };
 
-export function SetPriceDialog({ open, onOpenChange, objekts, slug, currency }: Props) {
+export function SetPriceDialog({ open, onOpenChange, objekts, slug, currency, finalFocus }: Props) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogPopup className="max-w-sm">
+      <DialogPopup className="max-w-sm" finalFocus={finalFocus}>
         <SetPriceForm
           objekts={objekts}
           slug={slug}
@@ -51,7 +53,7 @@ function SetPriceForm({
   slug,
   currency,
   onDone,
-}: Omit<Props, "open" | "onOpenChange"> & { onDone: () => void }) {
+}: Omit<Props, "open" | "onOpenChange" | "finalFocus"> & { onDone: () => void }) {
   const update = useUpdateEntryPrices();
   const first = objekts[0];
   const [value, setValue] = useState<PriceValue>({

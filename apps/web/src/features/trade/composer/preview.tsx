@@ -23,7 +23,7 @@ import type { PostInput } from "../composer-choice";
 import { matchLines, previewTags } from "../post-kind-text";
 import { TILE } from "../thumb-grid";
 import { AddObjektsSheet } from "./add-objekts";
-import { AllObjekts, EntryThumb, ListRatioControl } from "./preview-entries";
+import { AllObjekts, EntryThumb, ListRatioControl, useSideDialogs } from "./preview-entries";
 import { PreviewRules } from "./preview-rules";
 import { type PreviewSide, previewSides } from "./preview-sides";
 
@@ -203,6 +203,8 @@ function PickedSide({
   const [editOpen, setEditOpen] = useState(false);
   // Safari doesn't focus a clicked button, so the dialog's default return would land on the page
   const editButton = useRef<HTMLButtonElement>(null);
+  const addTile = useRef<HTMLButtonElement>(null);
+  const { actions, dialogs } = useSideDialogs({ slug, stored, side: ratio, fallback: addTile });
 
   return (
     <div className="flex min-w-0 flex-col gap-2.5">
@@ -254,9 +256,10 @@ function PickedSide({
           ))}
         </div>
       ) : (
-        <ul className={THUMB_GRID}>
+        <ul data-entry-grid="" className={THUMB_GRID}>
           <li className="@container min-w-0">
             <button
+              ref={addTile}
               type="button"
               aria-label={m.trade_composer_add_tile({ list: name })}
               title={m.trade_composer_add_tile({ list: name })}
@@ -271,13 +274,14 @@ function PickedSide({
           </li>
           {shown.map((entry) => (
             <li key={entry.entryId} className="min-w-0">
-              <EntryThumb entry={entry} slug={slug} side={ratio} listRatio={listRatio} />
+              <EntryThumb entry={entry} side={ratio} listRatio={listRatio} actions={actions} />
             </li>
           ))}
           {rest > 0 ? (
             <li className="@container min-w-0">
               <button
                 type="button"
+                data-entry-more=""
                 onClick={() => onOpenSheet({ view: "all", slug, name, ratio })}
                 className={cn(
                   TILE,
@@ -297,6 +301,7 @@ function PickedSide({
         showTradeLine={false}
         finalFocus={editButton}
       />
+      {dialogs}
     </div>
   );
 }

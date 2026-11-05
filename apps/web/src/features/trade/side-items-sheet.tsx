@@ -19,9 +19,9 @@ import { Tabs, TabsList, TabsPanel, TabsTab } from "@/components/ui/tabs";
 import { getListLinkOption } from "@/features/list/list-link";
 import { LIST_TYPE_LABEL } from "@/features/list/list-type-badge";
 import { RatioChip } from "@/features/list/ratio-chip";
-import { type RatioSide, ratioSideOf } from "@/features/list/ratio-text";
+import { type RatioSide, ratioName, ratioSideOf } from "@/features/list/ratio-text";
 import { CardGridSkeleton } from "@/features/objekt/card-grid";
-import { ObjektCard } from "@/features/objekt/objekt-card";
+import { ObjektCard, RATIO_ON_CARD } from "@/features/objekt/objekt-card";
 import { PanelCardGrid } from "@/features/objekt/virtual-card-grid";
 import { formatCurrency } from "@/features/settings/use-currency";
 import { nearCountText, nearRingText } from "@/lib/near-text";
@@ -70,23 +70,30 @@ function SideCard({
     currency !== null
       ? stackPriceText(item, (amount) => formatCurrency(amount, currency))
       : undefined;
+  const ratio = item.ratio !== undefined && ratioSide ? item.ratio : undefined;
   return (
-    <ObjektCard
-      objekt={collection}
-      image="thumbnail"
-      qty={item.qty > 1 ? item.qty : undefined}
-      onOpen={(objekt) => onOpen(objekt, near)}
-      imageClassName={ring}
-      description={description}
-      price={price?.text}
-      priceMuted={price?.muted}
-      note={currency !== null ? item.notes?.join("\n") : undefined}
-      badge={
-        item.ratio !== undefined && ratioSide ? (
-          <RatioChip ratio={item.ratio} side={ratioSide} owner={owner} />
-        ) : undefined
-      }
-    />
+    // the chip lies inert over the card, so the card carries its tooltip
+    <div
+      className="min-w-0"
+      title={ratio !== undefined && ratioSide ? ratioName(ratio, ratioSide, { owner }) : undefined}
+    >
+      <ObjektCard
+        objekt={collection}
+        image="thumbnail"
+        qty={item.qty > 1 ? item.qty : undefined}
+        onOpen={(objekt) => onOpen(objekt, near)}
+        imageClassName={ring}
+        description={description}
+        price={price?.text}
+        priceMuted={price?.muted}
+        note={currency !== null ? item.notes?.join("\n") : undefined}
+        cornerBadge={
+          ratio !== undefined && ratioSide ? (
+            <RatioChip ratio={ratio} side={ratioSide} owner={owner} className={RATIO_ON_CARD} />
+          ) : undefined
+        }
+      />
+    </div>
   );
 }
 

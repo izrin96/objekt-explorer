@@ -26,12 +26,22 @@ type Props = {
   side: RatioSide;
   /** the list's Ratio for all, which 1:1 follows */
   listRatio: number | null;
+  /** the element focus returns to, looked up as the dialog closes */
+  finalFocus?: () => HTMLElement | null;
 };
 
-export function SetRatioDialog({ open, onOpenChange, objekts, slug, side, listRatio }: Props) {
+export function SetRatioDialog({
+  open,
+  onOpenChange,
+  objekts,
+  slug,
+  side,
+  listRatio,
+  finalFocus,
+}: Props) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogPopup className="max-w-sm">
+      <DialogPopup className="max-w-sm" finalFocus={finalFocus}>
         <SetRatioForm
           objekts={objekts}
           slug={slug}
@@ -51,7 +61,7 @@ function SetRatioForm({
   side,
   listRatio,
   onDone,
-}: Omit<Props, "open" | "onOpenChange"> & { onDone: () => void }) {
+}: Omit<Props, "open" | "onOpenChange" | "finalFocus"> & { onDone: () => void }) {
   const setRatio = useSetRatio();
   const [ratio, setValue] = useState<number | null>(() => highestOwn(objekts));
   // a save that changes nothing would still touch the list
