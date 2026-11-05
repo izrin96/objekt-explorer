@@ -1,17 +1,21 @@
 import { CardsThreeIcon } from "@phosphor-icons/react";
 import type { PublicList } from "@repo/api/schemas/list";
-import { useQuery } from "@tanstack/react-query";
+import { useQueries, useQuery } from "@tanstack/react-query";
 import { Link, type LinkComponentProps } from "@tanstack/react-router";
 
 import { EmptyState } from "@/components/shared/empty-state";
 import { Button } from "@/components/ui/button";
 import { getListLinkOption } from "@/features/list/list-link";
 import { listPreviewsOptions } from "@/features/list/queries";
+import { listRulesOptions } from "@/features/list/rules/queries";
+import { useUserLists } from "@/features/user/hooks";
 import { m } from "@/paraglide/messages";
 
 /**
  * For you under Any with no post matching: the way out to Browse, and back to the viewer's own
  * lists. The entry counts are read only here, so a viewer whose lists are empty learns that is why.
+ * A preview's count leaves out a rule's objekts, which still match, so a want list with a rule is
+ * never empty.
  */
 export function NoMatches({
   compared,
@@ -27,9 +31,15 @@ export function NoMatches({
   onAllLists: () => void;
 }) {
   const { data: previews } = useQuery(listPreviewsOptions(counted));
+  const lists = useUserLists();
+  const wants = counted.filter(
+    (slug) => lists.find((list) => list.slug === slug)?.listType === "want",
+  );
+  const rules = useQueries({ queries: wants.map((slug) => listRulesOptions(slug)) });
   const empty =
     previews !== undefined &&
     counted.length > 0 &&
+    rules.every((query) => query.data !== undefined && query.data.length === 0) &&
     counted.every((slug) => (previews.get(slug)?.count ?? 0) === 0);
 
   return (

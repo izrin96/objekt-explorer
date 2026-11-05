@@ -6,7 +6,7 @@ import { lists, message, report, trade, userBlock } from "@repo/db/schema";
 import { and, desc, eq, gt, inArray, or, sql } from "drizzle-orm";
 
 import { canReport } from "../../lib/offer-rules";
-import { postSnapshot } from "../../lib/report-post";
+import { namedListVerdict, postSnapshot } from "../../lib/report-post";
 import { reportRetryAt, shapeExcerpt, shapeExcerptOffer } from "../../lib/sanctions";
 import type { ReportInput } from "../../schemas/moderation";
 import { lockUsersForWrite } from "../account/cosmo-link";
@@ -87,10 +87,9 @@ const snapshotColumns = {
  */
 async function reportedPost(targetUserId: string, listId: number) {
   const [named] = await db.select(snapshotColumns).from(lists).where(eq(lists.id, listId));
+  const verdict = namedListVerdict(named, targetUserId);
+  if (verdict === "refuse") throw new ORPCError("NOT_FOUND");
   if (!named) return null;
-  if (named.userId !== targetUserId || !["have", "want", "sale"].includes(named.listType)) {
-    throw new ORPCError("NOT_FOUND");
-  }
   const partner =
     named.linkedListId === null
       ? []

@@ -7,7 +7,6 @@ import { MoreCount } from "@/components/shared/more-count";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetPopup } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
-import { LoadError } from "@/features/chat/attach/attach-picker-parts";
 import { EditListDialog } from "@/features/list/edit-list-dialog";
 import { LIST_TYPE_LABEL, LIST_TYPE_TONE } from "@/features/list/list-type-badge";
 import { listEntriesOptions, listFindOptions } from "@/features/list/queries";
@@ -21,6 +20,7 @@ import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
 
 import type { PostInput } from "../composer-choice";
+import { LoadError } from "../load-error";
 import { matchLines, previewTags } from "../post-kind-text";
 import { unshownEntriesOptions } from "../queries";
 import { TILE } from "../thumb-grid";
@@ -297,7 +297,11 @@ function PickedSide({
         ) : null}
 
         {entries.isError ? (
-          <LoadError onRetry={() => void entries.refetch()} />
+          <LoadError
+            bordered={false}
+            error={entries.error}
+            onRetry={() => void entries.refetch()}
+          />
         ) : entries.isPending ? (
           <div className={THUMB_GRID}>
             {Array.from({ length: 6 }, (_, index) => (

@@ -8,7 +8,6 @@ import { Menu, MenuItem, MenuPopup, MenuSeparator, MenuTrigger } from "@/compone
 import { Popover, PopoverPopup, PopoverTrigger } from "@/components/ui/popover";
 import { SheetDescription, SheetHeader, SheetPanel, SheetTitle } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
-import { LoadError } from "@/features/chat/attach/attach-picker-parts";
 import { useEditList } from "@/features/list/actions";
 import { AddToListProvider } from "@/features/list/add-to-list-dialog";
 import { AddToListAction, AddToListMenuItem } from "@/features/list/add-to-list-menu-item";
@@ -33,6 +32,7 @@ import { collectionName } from "@/features/objekt/objekt-label";
 import { SelectBar, type SelectBarAction, SelectModeButton } from "@/features/objekt/select-bar";
 import { SelectedMark } from "@/features/objekt/selected-mark";
 import { PanelCardGrid } from "@/features/objekt/virtual-card-grid";
+import { LoadError } from "@/features/trade/load-error";
 import { activateOnKey } from "@/lib/a11y";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
@@ -403,7 +403,11 @@ export function AllObjekts({
       </SheetHeader>
       <SheetPanel data-entry-grid="">
         {entriesQuery.isError ? (
-          <LoadError onRetry={() => void entriesQuery.refetch()} />
+          <LoadError
+            bordered={false}
+            error={entriesQuery.error}
+            onRetry={() => void entriesQuery.refetch()}
+          />
         ) : entriesQuery.isPending ? (
           <div className="grid grid-cols-[repeat(auto-fill,minmax(6rem,1fr))] gap-3">
             {Array.from({ length: 8 }, (_, index) => (

@@ -13,14 +13,18 @@ export function LoadError({
   error,
   hint,
   onRetry,
+  bordered,
 }: {
   error?: unknown;
   hint?: string | null;
   onRetry: () => void;
+  /** off inside a panel, which frames it already */
+  bordered?: boolean;
 }) {
   return (
     <EmptyState
       icon={WarningIcon}
+      bordered={bordered}
       title={m.common_error_loading_data()}
       hint={hint ?? (isRefusalError(error) ? refusalText(error) : undefined)}
       action={

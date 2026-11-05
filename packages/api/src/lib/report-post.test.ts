@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 
 import { reportInputSchema } from "../schemas/moderation";
 import { flagsOf } from "../schemas/open-to";
-import { type SnapshotList, postSnapshot } from "./report-post";
+import { namedListVerdict, type SnapshotList, postSnapshot } from "./report-post";
 
 const base = {
   userId: "rin",
@@ -76,7 +76,10 @@ describe("postSnapshot", () => {
       isProfileBind: false,
       ...flagsOf("buying"),
     };
-    expect(postSnapshot([buying], 30)?.tags).toEqual(["wtb"]);
+    const snapshot = postSnapshot([buying], 30);
+    expect(snapshot?.tags).toEqual(["wtb"]);
+    expect(snapshot?.lists).toHaveLength(1);
+    expect(snapshot?.linkedListId).toBeNull();
   });
 
   test("a post off Trade is kept and marked so", () => {
@@ -117,5 +120,25 @@ describe("reportInputSchema", () => {
     expect(
       reportInputSchema.safeParse({ userId: "rin", reason: "spam", postListId: 0 }).success,
     ).toBe(false);
+  });
+});
+
+describe("namedListVerdict", () => {
+  test("a list that no longer exists is dropped", () => {
+    expect(namedListVerdict(undefined, "u1")).toBe("drop");
+  });
+
+  test("another account's list is refused", () => {
+    expect(namedListVerdict({ userId: "u2", listType: "have" }, "u1")).toBe("refuse");
+  });
+
+  test("a list that isn't a have, want or sale list is refused", () => {
+    expect(namedListVerdict({ userId: "u1", listType: "general" }, "u1")).toBe("refuse");
+  });
+
+  test("the reported account's trade list is kept", () => {
+    for (const listType of ["have", "want", "sale"] as const) {
+      expect(namedListVerdict({ userId: "u1", listType }, "u1")).toBe("ok");
+    }
   });
 });

@@ -987,7 +987,7 @@ The help beside the controls SHALL describe the mutual score as what the two peo
 
 #### Scenario: No list that can match
 - **WHEN** a signed-in viewer whose only list is a have list not bound to a Cosmo profile opens `/trade/for-you?list=spares&member=SeoYeon`
-- **THEN** the browser is at `/trade?member=SeoYeon`
+- **THEN** the page stays at that address and shows "Nothing to match yet", naming "spares" as not bound to a Cosmo profile, with New want list and Open your lists
 
 #### Scenario: Phone
 - **WHEN** the viewer opens `/trade/for-you?match=mutual&list=spares` at 390 px

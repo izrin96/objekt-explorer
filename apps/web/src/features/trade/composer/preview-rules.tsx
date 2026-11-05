@@ -16,7 +16,6 @@ import { Popover, PopoverPopup, PopoverTitle, PopoverTrigger } from "@/component
 import { SheetDescription, SheetHeader, SheetPanel, SheetTitle } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toastManager } from "@/components/ui/toast";
-import { LoadError } from "@/features/chat/attach/attach-picker-parts";
 import { RatioChip } from "@/features/list/ratio-chip";
 import { RatioPicker } from "@/features/list/ratio-picker";
 import { appliedRatio, type RatioSide, ratioLabel } from "@/features/list/ratio-text";
@@ -27,6 +26,7 @@ import { ConfirmRule } from "@/features/list/rules/rules-strip";
 import { ruleText, shortNo } from "@/features/list/rules/words";
 import { ObjektCard } from "@/features/objekt/objekt-card";
 import { PanelCardGrid } from "@/features/objekt/virtual-card-grid";
+import { LoadError } from "@/features/trade/load-error";
 import { client } from "@/lib/orpc";
 import { refusalText } from "@/lib/refusal";
 import { cn } from "@/lib/utils";
@@ -207,7 +207,7 @@ export function RuleObjektsSheet({ slug, rule }: { slug: string; rule: Rule }) {
       <SheetPanel>
         {query.data === undefined ? (
           query.isError ? (
-            <LoadError onRetry={() => void query.refetch()} />
+            <LoadError bordered={false} error={query.error} onRetry={() => void query.refetch()} />
           ) : (
             <div className="grid grid-cols-[repeat(auto-fill,minmax(6rem,1fr))] gap-3">
               {Array.from({ length: 8 }, (_, index) => (

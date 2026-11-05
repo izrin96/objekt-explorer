@@ -314,4 +314,15 @@ describe("withoutGone", () => {
     expect(result.gone).toEqual(["want"]);
     expect(result.choice).toEqual({ ...picks, want: null, alsoPay: false });
   });
+
+  test("a gone have list keeps the want list's pay option", () => {
+    const result = withoutGone(picks, [lists[1]!]);
+    expect(result.gone).toEqual(["have"]);
+    expect(result.choice).toEqual({ ...picks, have: null });
+  });
+
+  test("a gone pick undoes Unpair, which named the pair it split", () => {
+    const result = withoutGone({ ...picks, unpair: true }, [lists[0]!]);
+    expect(result.choice.unpair).toBe(false);
+  });
 });

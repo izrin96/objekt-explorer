@@ -25,6 +25,21 @@ export const listOnTrade = (list: {
 }) => list.discoverable && canBeOnTrade(list.listType, list.isProfileBind);
 
 /**
+ * What a report does with the list it names: `drop` when it no longer exists (the report files
+ * without it), `refuse` when it isn't one of the reported account's have, want or sale lists.
+ */
+export function namedListVerdict(
+  named: { userId: string; listType: ListType } | undefined,
+  targetUserId: string,
+): "drop" | "refuse" | "ok" {
+  if (!named) return "drop";
+  if (named.userId !== targetUserId) return "refuse";
+  return named.listType === "have" || named.listType === "want" || named.listType === "sale"
+    ? "ok"
+    : "refuse";
+}
+
+/**
  * The post that holds `namedId` among `lists` (the named list and its pair partner), as a report
  * keeps it; null when no post holds it. Either half of a pair names the post, anchor first.
  */
