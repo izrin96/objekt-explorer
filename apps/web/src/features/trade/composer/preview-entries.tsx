@@ -1,7 +1,7 @@
 import { CurrencyDollarIcon, ScalesIcon, TrashIcon } from "@phosphor-icons/react";
 import type { ListObjekt } from "@repo/lib/types/objekt";
 import { useQuery } from "@tanstack/react-query";
-import { type RefObject, useEffect, useRef, useState } from "react";
+import { type ReactNode, type RefObject, useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Menu, MenuItem, MenuPopup, MenuSeparator, MenuTrigger } from "@/components/ui/menu";
@@ -10,6 +10,8 @@ import { SheetDescription, SheetHeader, SheetPanel, SheetTitle } from "@/compone
 import { Skeleton } from "@/components/ui/skeleton";
 import { LoadError } from "@/features/chat/attach/attach-picker-parts";
 import { useEditList } from "@/features/list/actions";
+import { AddToListProvider } from "@/features/list/add-to-list-dialog";
+import { AddToListAction, AddToListMenuItem } from "@/features/list/add-to-list-menu-item";
 import { type StoredList, toDraft, toEditInput } from "@/features/list/list-draft";
 import { formatPrice } from "@/features/list/list-price";
 import { listEntriesOptions, listFindOptions } from "@/features/list/queries";
@@ -35,6 +37,28 @@ import { activateOnKey } from "@/lib/a11y";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
 import { selectIsSelecting, useSelection } from "@/stores/selection";
+
+/**
+ * Add to list for one side's objekts, as the list page offers it: a bound list's objekts may also
+ * go to that profile's other bound lists, and a hide-serial one's are added by entry.
+ */
+export function SideAddToList({
+  stored,
+  children,
+}: {
+  stored: StoredList | undefined;
+  children: ReactNode;
+}) {
+  const bound = stored?.isProfileBind === true;
+  return (
+    <AddToListProvider
+      address={bound ? (stored.profileAddress ?? undefined) : undefined}
+      sourceList={bound && stored.hideSerial ? stored.slug : undefined}
+    >
+      {children}
+    </AddToListProvider>
+  );
+}
 
 /** "Ratio for all" by the list's name: `list.edit` takes the whole list, so it starts from the stored one. */
 export function ListRatioControl({ stored, side }: { stored: StoredList; side: RatioSide }) {
@@ -137,6 +161,7 @@ export function EntryThumb({
         ) : null}
       </MenuTrigger>
       <MenuPopup align="start" className="min-w-44">
+        <AddToListMenuItem objekts={[entry]} />
         {actions.price ? (
           <MenuItem onClick={run(actions.price)}>
             <CurrencyDollarIcon />
@@ -149,7 +174,7 @@ export function EntryThumb({
             {m.objekt_menu_set_ratio()}
           </MenuItem>
         ) : null}
-        {actions.price || actions.ratio ? <MenuSeparator /> : null}
+        <MenuSeparator />
         <MenuItem variant="destructive" onClick={run(actions.remove)}>
           <TrashIcon />
           {m.objekt_menu_remove_from_list()}
@@ -359,7 +384,7 @@ export function AllObjekts({
   ];
 
   return (
-    <>
+    <SideAddToList stored={stored}>
       <SheetHeader>
         <div className="flex items-start justify-between gap-3 pe-7">
           <SheetTitle ref={title} tabIndex={-1} className="font-display outline-none">
@@ -407,10 +432,12 @@ export function AllObjekts({
       </SheetPanel>
       {selecting ? (
         <div className="flex px-6 pt-3 pb-6">
-          <SelectBar objekts={entries ?? []} secondary={bulk} />
+          <SelectBar objekts={entries ?? []} secondary={bulk}>
+            <AddToListAction objekts={entries ?? []} />
+          </SelectBar>
         </div>
       ) : null}
       {dialogs}
-    </>
+    </SideAddToList>
   );
 }

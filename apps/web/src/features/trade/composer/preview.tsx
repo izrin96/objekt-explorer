@@ -25,7 +25,13 @@ import { matchLines, previewTags } from "../post-kind-text";
 import { unshownEntriesOptions } from "../queries";
 import { TILE } from "../thumb-grid";
 import { AddObjektsSheet } from "./add-objekts";
-import { AllObjekts, EntryThumb, ListRatioControl, useSideDialogs } from "./preview-entries";
+import {
+  AllObjekts,
+  EntryThumb,
+  ListRatioControl,
+  SideAddToList,
+  useSideDialogs,
+} from "./preview-entries";
 import { PreviewRules, type Rule, RuleObjektsSheet } from "./preview-rules";
 import { type PreviewSide, previewSides } from "./preview-sides";
 
@@ -228,132 +234,136 @@ function PickedSide({
   const { actions, dialogs } = useSideDialogs({ slug, stored, side: ratio, fallback: addTile });
 
   return (
-    <div className="flex min-w-0 flex-col gap-2.5">
-      <div className="flex min-w-0 flex-col gap-1.5">
-        <div className="flex min-w-0 items-center gap-1">
-          <SideHeading role={role}>
-            <span aria-hidden className="text-muted-foreground shrink-0">
-              ·
-            </span>
-            <span className="text-foreground min-w-0 truncate normal-case" title={name}>
-              {name}
-            </span>
-            {entries.data ? (
-              <span className="text-muted-foreground shrink-0 tabular-nums">
-                {total.toLocaleString(getLocale())}
+    <SideAddToList stored={stored}>
+      <div className="flex min-w-0 flex-col gap-2.5">
+        <div className="flex min-w-0 flex-col gap-1.5">
+          <div className="flex min-w-0 items-center gap-1">
+            <SideHeading role={role}>
+              <span aria-hidden className="text-muted-foreground shrink-0">
+                ·
               </span>
-            ) : null}
-          </SideHeading>
-          <Button
-            ref={editButton}
-            variant="ghost"
-            size="icon-xs"
-            className="shrink-0"
-            aria-label={m.trade_composer_edit_list({ list: name })}
-            title={m.trade_composer_edit_list({ list: name })}
-            onClick={() => setEditOpen(true)}
-          >
-            <PencilSimpleIcon />
-          </Button>
-          {total > 0 ? (
+              <span className="text-foreground min-w-0 truncate normal-case" title={name}>
+                {name}
+              </span>
+              {entries.data ? (
+                <span className="text-muted-foreground shrink-0 tabular-nums">
+                  {total.toLocaleString(getLocale())}
+                </span>
+              ) : null}
+            </SideHeading>
             <Button
+              ref={editButton}
               variant="ghost"
               size="icon-xs"
               className="shrink-0"
-              aria-label={m.trade_composer_select_list({ list: name })}
-              title={m.trade_composer_select_list({ list: name })}
-              onClick={() => onOpenSheet({ view: "all", slug, name, ratio, select: true })}
+              aria-label={m.trade_composer_edit_list({ list: name })}
+              title={m.trade_composer_edit_list({ list: name })}
+              onClick={() => setEditOpen(true)}
             >
-              <CheckSquareIcon />
+              <PencilSimpleIcon />
             </Button>
-          ) : null}
+            {total > 0 ? (
+              <Button
+                variant="ghost"
+                size="icon-xs"
+                className="shrink-0"
+                aria-label={m.trade_composer_select_list({ list: name })}
+                title={m.trade_composer_select_list({ list: name })}
+                onClick={() => onOpenSheet({ view: "all", slug, name, ratio, select: true })}
+              >
+                <CheckSquareIcon />
+              </Button>
+            ) : null}
+          </div>
+          {ratio && stored ? <ListRatioControl stored={stored} side={ratio} /> : null}
         </div>
-        {ratio && stored ? <ListRatioControl stored={stored} side={ratio} /> : null}
-      </div>
 
-      {role === "want" ? (
-        <PreviewRules
-          slug={slug}
-          listRatio={listRatio}
-          ratio={ratio}
-          onAddRule={() =>
-            onOpenSheet({ view: "rule", slug, name, listRatio, withRatio: ratio !== null })
-          }
-          onEditRule={(rule, from) =>
-            onOpenSheet(
-              { view: "rule", slug, name, listRatio, withRatio: ratio !== null, rule },
-              from,
-            )
-          }
-          onSeeObjekts={(rule, from) => onOpenSheet({ view: "rule-objekts", slug, rule }, from)}
-        />
-      ) : null}
+        {role === "want" ? (
+          <PreviewRules
+            slug={slug}
+            listRatio={listRatio}
+            ratio={ratio}
+            onAddRule={() =>
+              onOpenSheet({ view: "rule", slug, name, listRatio, withRatio: ratio !== null })
+            }
+            onEditRule={(rule, from) =>
+              onOpenSheet(
+                { view: "rule", slug, name, listRatio, withRatio: ratio !== null, rule },
+                from,
+              )
+            }
+            onSeeObjekts={(rule, from) => onOpenSheet({ view: "rule-objekts", slug, rule }, from)}
+          />
+        ) : null}
 
-      {entries.isError ? (
-        <LoadError onRetry={() => void entries.refetch()} />
-      ) : entries.isPending ? (
-        <div className={THUMB_GRID}>
-          {Array.from({ length: 6 }, (_, index) => (
-            <Skeleton key={index} className="rounded-photocard aspect-photocard" />
-          ))}
-        </div>
-      ) : (
-        <ul data-entry-grid="" className={THUMB_GRID}>
-          <li className="@container min-w-0">
-            <button
-              ref={addTile}
-              type="button"
-              aria-label={m.trade_composer_add_tile({ list: name })}
-              title={m.trade_composer_add_tile({ list: name })}
-              onClick={() => onOpenSheet({ view: "add", slug, name })}
-              className={cn(
-                TILE,
-                "hover:text-foreground hover:border-foreground/40 hover:bg-muted focus-visible:ring-ring w-full border border-dashed bg-transparent outline-none focus-visible:ring-2",
-              )}
-            >
-              <PlusIcon aria-hidden className="size-5" />
-            </button>
-          </li>
-          {shown.map((entry) => (
-            <li key={entry.entryId} className="min-w-0">
-              <EntryThumb entry={entry} side={ratio} listRatio={listRatio} actions={actions} />
-            </li>
-          ))}
-          {rest > 0 ? (
+        {entries.isError ? (
+          <LoadError onRetry={() => void entries.refetch()} />
+        ) : entries.isPending ? (
+          <div className={THUMB_GRID}>
+            {Array.from({ length: 6 }, (_, index) => (
+              <Skeleton key={index} className="rounded-photocard aspect-photocard" />
+            ))}
+          </div>
+        ) : (
+          <ul data-entry-grid="" className={THUMB_GRID}>
             <li className="@container min-w-0">
               <button
+                ref={addTile}
                 type="button"
-                data-entry-more=""
-                onClick={() => onOpenSheet({ view: "all", slug, name, ratio, select: false })}
+                aria-label={m.trade_composer_add_tile({ list: name })}
+                title={m.trade_composer_add_tile({ list: name })}
+                onClick={() => onOpenSheet({ view: "add", slug, name })}
                 className={cn(
                   TILE,
-                  "hover:text-foreground focus-visible:ring-ring w-full text-xs tabular-nums outline-none focus-visible:ring-2",
+                  "hover:text-foreground hover:border-foreground/40 hover:bg-muted focus-visible:ring-ring w-full border border-dashed bg-transparent outline-none focus-visible:ring-2",
                 )}
               >
-                <MoreCount count={rest} />
+                <PlusIcon aria-hidden className="size-5" />
               </button>
             </li>
-          ) : null}
-        </ul>
-      )}
-      {unshownCount > 0 ? (
-        <p className="text-muted-foreground flex items-start gap-1.5 text-xs text-pretty">
-          <WarningIcon aria-hidden className="text-warning-foreground mt-px size-3.5 shrink-0" />
-          {unshownCount === total
-            ? m.trade_composer_unshown_all()
-            : unshownCount === 1
-              ? m.trade_composer_unshown_one()
-              : m.trade_composer_unshown_some({ count: unshownCount.toLocaleString(getLocale()) })}
-        </p>
-      ) : null}
-      <EditListDialog
-        slug={slug}
-        open={editOpen}
-        onOpenChange={setEditOpen}
-        showTradeLine={false}
-        finalFocus={editButton}
-      />
-      {dialogs}
-    </div>
+            {shown.map((entry) => (
+              <li key={entry.entryId} className="min-w-0">
+                <EntryThumb entry={entry} side={ratio} listRatio={listRatio} actions={actions} />
+              </li>
+            ))}
+            {rest > 0 ? (
+              <li className="@container min-w-0">
+                <button
+                  type="button"
+                  data-entry-more=""
+                  onClick={() => onOpenSheet({ view: "all", slug, name, ratio, select: false })}
+                  className={cn(
+                    TILE,
+                    "hover:text-foreground focus-visible:ring-ring w-full text-xs tabular-nums outline-none focus-visible:ring-2",
+                  )}
+                >
+                  <MoreCount count={rest} />
+                </button>
+              </li>
+            ) : null}
+          </ul>
+        )}
+        {unshownCount > 0 ? (
+          <p className="text-muted-foreground flex items-start gap-1.5 text-xs text-pretty">
+            <WarningIcon aria-hidden className="text-warning-foreground mt-px size-3.5 shrink-0" />
+            {unshownCount === total
+              ? m.trade_composer_unshown_all()
+              : unshownCount === 1
+                ? m.trade_composer_unshown_one()
+                : m.trade_composer_unshown_some({
+                    count: unshownCount.toLocaleString(getLocale()),
+                  })}
+          </p>
+        ) : null}
+        <EditListDialog
+          slug={slug}
+          open={editOpen}
+          onOpenChange={setEditOpen}
+          showTradeLine={false}
+          finalFocus={editButton}
+        />
+        {dialogs}
+      </div>
+    </SideAddToList>
   );
 }

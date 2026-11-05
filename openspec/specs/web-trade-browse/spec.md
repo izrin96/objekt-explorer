@@ -1577,7 +1577,7 @@ When its list is already on Trade, which only a list in the post being edited ca
 - **THEN** the sheet has no on-Trade note
 
 ### Requirement: Objekt menu in the composer
-Each objekt thumbnail of a picked side of the preview, and of its "+N" sheet, SHALL open a menu of the list page's entry actions for that objekt: Set price on a sale list with a currency, Set ratio on a side that swaps, and Remove from list on every side. Each SHALL open the list page's own dialog, Remove asking first. A save SHALL apply to the list at once and keep the composer's picks, also when the viewer leaves without posting. A refused save SHALL say why and keep the dialog open.
+Each objekt thumbnail of a picked side of the preview, and of its "+N" sheet, SHALL open a menu of the list page's entry actions for that objekt: Add to list… on every side, Set price on a sale list with a currency, Set ratio on a side that swaps, and Remove from list on every side. Each SHALL open the list page's own dialog, Remove asking first; Add to list… offers the lists the list page's does, a bound list's objekts also going to that profile's other bound lists. A save SHALL apply to the list at once and keep the composer's picks, also when the viewer leaves without posting. A refused save SHALL say why and keep the dialog open.
 
 #### Scenario: Remove while posting
 - **WHEN** the viewer picks Swap with have list "spares" holding Lynn SCO #12 and Lynn SCO #30, opens the menu of Lynn SCO #12, chooses Remove from list and confirms
@@ -1589,7 +1589,7 @@ Each objekt thumbnail of a picked side of the preview, and of its "+N" sheet, SH
 
 #### Scenario: What each side offers
 - **WHEN** the viewer opens the menu of an objekt on a sale list, on a Swap post's have list, and on a Buy post's want list
-- **THEN** the sale objekt offers Set price and Remove from list, the have objekt Set ratio and Remove from list, and the Buy want objekt only Remove from list
+- **THEN** the sale objekt offers Add to list…, Set price and Remove from list, the have objekt Add to list…, Set ratio and Remove from list, and the Buy want objekt Add to list… and Remove from list
 
 #### Scenario: From the "+N" sheet
 - **WHEN** "spares" holds 30 objekts, the viewer opens "+8", and removes Lynn SCO #30 from its menu in the sheet
@@ -1607,7 +1607,7 @@ On a sale list with a currency, the "+N" sheet SHALL show each objekt's price an
 - **THEN** Lynn SCO #12's card shows MYR 5 under it, and choosing that price opens Set price with 5
 
 ### Requirement: Select several objekts in the composer
-Each picked side with at least one objekt SHALL offer Select by its list's name, opening the side's "+N" sheet in select mode, whatever the side holds; the sheet SHALL also offer Select beside its title, and Cancel while selecting. In select mode a tap on an objekt SHALL tick or untick it, and a bar under the objekts SHALL offer the list page's select actions for the ticked objekts: Remove from list on every side, Set price on a sale list with a currency, Set ratio on a side that swaps, and Select all. Each SHALL open the list page's own dialog, applying to the list at once and keeping the composer's picks, as the objekt menu does. A remove SHALL leave select mode. Closing the sheet SHALL clear the selection. Selection stays within one sheet, so it never holds objekts of two lists. Focus after a dialog SHALL go to the sheet's title.
+Each picked side with at least one objekt SHALL offer Select by its list's name, opening the side's "+N" sheet in select mode, whatever the side holds; the sheet SHALL also offer Select beside its title, and Cancel while selecting. In select mode a tap on an objekt SHALL tick or untick it, and a bar under the objekts SHALL offer the list page's select actions for the ticked objekts: Add to list and Remove from list on every side, Set price on a sale list with a currency, Set ratio on a side that swaps, and Select all. Each SHALL open the list page's own dialog, applying to the list at once and keeping the composer's picks, as the objekt menu does. A remove SHALL leave select mode. Closing the sheet SHALL clear the selection. Selection stays within one sheet, so it never holds objekts of two lists. Focus after a dialog SHALL go to the sheet's title.
 
 #### Scenario: Remove several at once
 - **WHEN** the viewer picks Swap with have list "spares" holding 5 objekts, chooses Select by "spares", ticks 3 of them, chooses Remove from list and confirms
@@ -1619,7 +1619,7 @@ Each picked side with at least one objekt SHALL offer Select by its list's name,
 
 #### Scenario: What the bar offers
 - **WHEN** the viewer selects objekts on a Buy post's want list
-- **THEN** the bar offers Remove from list and Select all, and no Set price or Set ratio
+- **THEN** the bar offers Add to list, Remove from list and Select all, and no Set price or Set ratio
 
 ### Requirement: Focus after an objekt action
 After a remove from an objekt's menu, focus SHALL move to the next thumbnail, else the side's Add objekts tile; in the "+N" sheet, to the next objekt, else the sheet's title. Saving a price or ratio, or cancelling any of the dialogs, SHALL return focus to the thumbnail.
