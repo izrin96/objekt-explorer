@@ -37,7 +37,7 @@ import { CopyListDialog } from "./copy-list-dialog";
 import { DeleteListDialog } from "./delete-list-dialog";
 import { EditListDialog } from "./edit-list-dialog";
 import { ExportListDialog } from "./export-list-dialog";
-import { getListLinkOption } from "./list-link";
+import { getListLinkOption, tradePostLink } from "./list-link";
 import { listPostTags } from "./list-post-tags";
 import { useListTarget } from "./list-provider";
 import { ListBoundBadge, ListCurrencyBadge, ListTypeBadge } from "./list-type-badge";
@@ -85,7 +85,12 @@ export function ListHeader() {
             {list.isProfileBind ? <ListBoundBadge /> : null}
             {list.listType !== "general" ? <ListTypeBadge type={list.listType} /> : null}
             {list.discoverable && canBeOnTrade(list.listType, list.isProfileBind) ? (
-              <Badge variant="outline" size="sm" render={<Link to="/trade" />}>
+              <Badge
+                variant="outline"
+                size="sm"
+                // a post page's loader reads the row against the feed's rate limit
+                render={<Link {...(tradePostLink(list) ?? { to: "/trade" })} preload={false} />}
+              >
                 <ArrowsLeftRightIcon aria-hidden />
                 {m.list_on_trade()}
               </Badge>

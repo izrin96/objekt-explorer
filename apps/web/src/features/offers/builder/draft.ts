@@ -195,6 +195,43 @@ export function resolveAsks(
   });
 }
 
+/**
+ * The get side as shown: an any-copy ask (from one collection of a Trade post's list) asks for a
+ * copy that list offers. An any-copy entry on that list keeps the ask, since the list may be asked
+ * for any copy; else the first copies that can be sent, not already on the side, stand in for it;
+ * else the ask stays, and `pickProblem` says it can't be sent. Only the ask's own list is read.
+ */
+export function resolveGetAsks(
+  get: readonly OfferPick[],
+  items: readonly CandidateItem[],
+): OfferPick[] {
+  const taken = new Set(get.flatMap((pick) => (pick.objektId ? [pick.objektId] : [])));
+  return get.flatMap((pick) => {
+    if (pick.objektId !== null || pick.listSlug === null) return [pick];
+    const onList = items.filter(
+      (item) => item.listSlug === pick.listSlug && item.collectionSlug === pick.collectionSlug,
+    );
+    if (onList.some((item) => item.objektId === null)) return [pick];
+    const found: OfferPick[] = [];
+    for (const copy of onList) {
+      if (found.length >= countOf(pick)) break;
+      if (
+        copy.objektId === null ||
+        taken.has(copy.objektId) ||
+        pick.skip?.includes(copy.objektId) ||
+        blockedReason(copy) !== null
+      ) {
+        continue;
+      }
+      taken.add(copy.objektId);
+      found.push({ ...toPick(copy), replaces: pick.key });
+    }
+    if (found.length === 0) return [pick];
+    const left = countOf(pick) - found.length;
+    return left > 0 ? [...found, { ...pick, count: left }] : found;
+  });
+}
+
 type Live = ReadonlyMap<string, CandidateItem>;
 
 /** The pick's own flags, else their lists' live ones. */

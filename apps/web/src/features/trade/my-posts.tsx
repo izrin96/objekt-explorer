@@ -2,6 +2,7 @@ import {
   ArrowClockwiseIcon,
   ArrowFatLineDownIcon,
   ArrowFatLineUpIcon,
+  ArrowSquareOutIcon,
   CaretDownIcon,
   DotsThreeIcon,
   PencilSimpleIcon,
@@ -25,7 +26,7 @@ import { getLocale } from "@/paraglide/runtime";
 import { useSettings } from "@/stores/settings";
 
 import { useBumpPost, useCopyTradeLink, useTakeDownPost } from "./actions";
-import { CopyLinkItem } from "./copy-link-item";
+import { CopyLinkItem, ReasonItem } from "./copy-link-item";
 import { summarizePosts } from "./my-posts-summary";
 import { KIND_LABEL } from "./post-kind-text";
 import { postTime } from "./post-time";
@@ -187,6 +188,7 @@ export function MyPosts({ onNew, onEdit }: MyPostsProps) {
                 post={post}
                 now={now}
                 onEdit={onEdit}
+                handle={handle}
                 copyReason={linkReason({ handle, blocked, listed: post.listed })}
                 onCopy={() => {
                   if (handle) void copyLink({ handle, slug: post.slug });
@@ -237,12 +239,15 @@ function MyPostRow({
   post,
   now,
   onEdit,
+  handle,
   copyReason,
   onCopy,
 }: {
   post: MyPost;
   now: number;
   onEdit: (slug: string) => void;
+  handle: string | null;
+  /** why the post's page can't be opened or copied, or null */
   copyReason: string | null;
   onCopy: () => void;
 }) {
@@ -310,6 +315,21 @@ function MyPostRow({
             <PencilSimpleIcon />
             {m.trade_composer_edit_title()}
           </MenuItem>
+          <ReasonItem
+            icon={ArrowSquareOutIcon}
+            label={m.trade_post_view()}
+            reason={copyReason}
+            link={
+              handle ? (
+                <Link
+                  to="/trade/@{$handle}/$slug"
+                  params={{ handle, slug: post.slug }}
+                  // a post page's loader reads the row against the feed's rate limit
+                  preload={false}
+                />
+              ) : undefined
+            }
+          />
           <CopyLinkItem reason={copyReason} onCopy={onCopy} />
           <MenuItem onClick={() => void takeDown.takeDown(post.slug)}>
             <ArrowFatLineDownIcon />

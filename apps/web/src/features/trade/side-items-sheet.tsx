@@ -132,6 +132,7 @@ export function SideItemsSheet({
   onOpen,
   finalFocus,
   owner = false,
+  actions,
 }: {
   side: PostSideData;
   /** the feed's filters left objekts out of the strip; the sheet shows them all */
@@ -145,6 +146,8 @@ export function SideItemsSheet({
   finalFocus?: RefObject<HTMLElement | null>;
   /** the viewer's own post: a ratio reads "You ask" */
   owner?: boolean;
+  /** led by the footer: the post's Message and Make offer, on another person's post */
+  actions?: ReactNode;
 }) {
   const compare = use(SideCompareContext);
   const ratioSide = ratioSideOf(side.role);
@@ -270,7 +273,8 @@ export function SideItemsSheet({
             </Tabs>
           )}
         </SheetPanel>
-        <SheetFooter>
+        <SheetFooter className="flex-wrap">
+          {actions}
           <Button variant="outline" render={<Link {...getListLinkOption(side.list)} />}>
             {m.trade_side_open_list()}
           </Button>

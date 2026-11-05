@@ -40,8 +40,9 @@ import { HiddenPartnersDialog } from "./hidden-partners-dialog";
 import { LoadError } from "./load-error";
 import { ComparedLine, MatchingControls } from "./matching-controls";
 import { MyPosts } from "./my-posts";
-import type { NearOpen } from "./near";
+import type { NearOpen, ObjektAsk } from "./near";
 import { NearNote } from "./near-note";
+import { ObjektOfferNote } from "./objekt-offer-note";
 import { PersonRow, PersonRowSkeleton } from "./person-row-view";
 import { usePlanLists } from "./post-plan";
 import type { PersonData } from "./post-types";
@@ -86,10 +87,11 @@ export function BrowseView({ surface, search }: { surface: Surface; search: Feed
     objekt: ValidObjekt;
     slug?: string;
     near?: NearOpen;
+    ask?: ObjektAsk;
   } | null>(null);
   const active = opened && opened.slug === search.slug ? opened.objekt : null;
-  const setActive = (objekt: ValidObjekt | null, near?: NearOpen) =>
-    setOpened(objekt ? { objekt, slug: search.slug, near } : null);
+  const setActive = (objekt: ValidObjekt | null, near?: NearOpen, ask?: ObjektAsk) =>
+    setOpened(objekt ? { objekt, slug: search.slug, near, ask } : null);
   const openComposer = useOpenComposer();
   const planLists = usePlanLists();
   const [hiddenOpen, setHiddenOpen] = useState(false);
@@ -422,6 +424,9 @@ export function BrowseView({ surface, search }: { surface: Surface; search: Feed
               onClose={() => setActive(null)}
               onCompose={openComposer}
             />
+          ) : active && opened?.ask ? (
+            // a near match's line carries its own Make offer
+            <ObjektOfferNote ask={opened.ask} onClose={() => setActive(null)} />
           ) : undefined
         }
       />

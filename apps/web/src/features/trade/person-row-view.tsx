@@ -1,6 +1,12 @@
-import { CaretDownIcon, DotsThreeIcon, EyeSlashIcon } from "@phosphor-icons/react";
+import {
+  ArrowSquareOutIcon,
+  CaretDownIcon,
+  DotsThreeIcon,
+  EyeSlashIcon,
+} from "@phosphor-icons/react";
 import { handleName } from "@repo/api/schemas/trade-person";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
+import { Link } from "@tanstack/react-router";
 import { memo, type ReactNode, use, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 
@@ -15,7 +21,7 @@ import { getLocale } from "@/paraglide/runtime";
 
 import { useCopyTradeLink, useHideWithUndo } from "./actions";
 import type { Surface } from "./browse-search";
-import { CopyLinkItem } from "./copy-link-item";
+import { CopyLinkItem, ReasonItem } from "./copy-link-item";
 import { MatchChip, MatchCounts } from "./match-summary";
 import type { OpenObjekt } from "./near";
 import { anchorOf, offerHandleOf } from "./person-page";
@@ -138,6 +144,25 @@ export const PersonRow = memo(function PersonRow({
   const copyPerson = () => {
     if (person.handle) void copyLink({ handle: person.handle });
   };
+  // left out on the person page itself, where it would lead nowhere new
+  const viewPage =
+    page && focus === undefined ? null : (
+      <ReasonItem
+        icon={ArrowSquareOutIcon}
+        label={m.trade_person_view_page()}
+        reason={copyReason}
+        link={
+          person.handle ? (
+            <Link
+              to="/trade/@{$handle}"
+              params={{ handle: person.handle }}
+              // a person page's loader reads the row against the feed's rate limit
+              preload={false}
+            />
+          ) : undefined
+        }
+      />
+    );
 
   return (
     // padding, not margin, so virtua measures the gap between people with the row
@@ -185,6 +210,7 @@ export const PersonRow = memo(function PersonRow({
                 report
                 extraItems={
                   <>
+                    {viewPage}
                     <CopyLinkItem reason={copyReason} onCopy={copyPerson} />
                     <MenuItem onClick={() => hide(person.userId, person.identity.name)}>
                       <EyeSlashIcon />
@@ -208,6 +234,7 @@ export const PersonRow = memo(function PersonRow({
                   <DotsThreeIcon weight="bold" />
                 </MenuTrigger>
                 <MenuPopup align="end" className="min-w-44">
+                  {viewPage}
                   <CopyLinkItem reason={copyReason} onCopy={copyPerson} />
                 </MenuPopup>
               </Menu>

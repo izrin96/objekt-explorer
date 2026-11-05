@@ -37,6 +37,7 @@ import {
   pickFlags,
   pickProblem,
   resolveAsks,
+  resolveGetAsks,
   sendGate,
   toggleTopup,
   topupForNear,
@@ -125,9 +126,18 @@ export function BuilderForm({
     copies.map((query) => query.data),
   );
 
+  // an ask for one collection of a list (Make offer for this objekt) takes a copy that list
+  // offers, once their lists have loaded
+  const getShown = resolveGetAsks(get, theirs.data?.items ?? []);
+  const loadingGet = new Set(
+    theirs.isPending
+      ? get.filter((pick) => pick.objektId === null && pick.listSlug !== null).map((p) => p.key)
+      : [],
+  );
+
   const reasonOf = (side: OfferSide, pick: OfferPick) =>
     pickProblem(side, pick, {
-      get,
+      get: getShown,
       live: theirFlags,
       loaded: theirs.data !== undefined,
       source,
@@ -136,10 +146,11 @@ export function BuilderForm({
 
   const gate = sendGate({
     give: giveShown,
-    get,
+    get: getShown,
     blocked:
+      loadingGet.size > 0 ||
       giveShown.some((pick) => reasonOf("give", pick) !== null) ||
-      get.some((pick) => reasonOf("get", pick) !== null),
+      getShown.some((pick) => reasonOf("get", pick) !== null),
     topup: topupNow,
     note,
   });
@@ -219,7 +230,7 @@ export function BuilderForm({
         }
         const keys = refusedKeys(refusal);
         const named = joinList(
-          [...giveShown, ...get]
+          [...giveShown, ...getShown]
             .filter((pick) => keys.has(pick.key))
             .map((pick) => itemLabel({ ...pick, serialEstimated: estimatedOf(pick) }, collections)),
         );
@@ -254,7 +265,7 @@ export function BuilderForm({
     create.mutate(
       offerInput(to, {
         give: giveShown,
-        get,
+        get: getShown,
         topup: topupNow,
         note,
       }),
@@ -262,7 +273,7 @@ export function BuilderForm({
   };
 
   const sides = { give: [give, setGive], get: [get, setGet] } as const;
-  const shown = { give: giveShown, get };
+  const shown = { give: giveShown, get: getShown };
 
   // a target the sender may not reach is refused before anything can be picked
   const upFront = offerRefusalOf(theirs.error);
@@ -320,7 +331,7 @@ export function BuilderForm({
                     estimatedOf={estimatedOf}
                     reasonOf={(pick) => reasonOf(side, pick)}
                     refused={refused}
-                    loading={side === "give" ? loadingAsks : undefined}
+                    loading={side === "give" ? loadingAsks : loadingGet}
                     source={source}
                     onAdd={() => setPicking(side)}
                     onRemove={(pick) => setPicks(takeOut(picks, pick))}
@@ -329,7 +340,7 @@ export function BuilderForm({
                 );
               })}
             </div>
-            {[...giveShown, ...get].some(
+            {[...giveShown, ...getShown].some(
               (pick) => pick.objektId !== null && pick.serial !== null && estimatedOf(pick),
             ) ? (
               <EstimatedSerialNote />
@@ -420,9 +431,13 @@ export function BuilderForm({
               source={source ?? "lists"}
               theirLists={theirs.data?.lists ?? []}
               startList={request.startList}
-              picked={sides[picking][0]}
+              // the get side as shown, so a copy standing in for an ask can be swapped for another
+              picked={picking === "get" ? getShown : sides[picking][0]}
               onDone={(picks, found) => {
-                sides[picking][1](picks);
+                // a picked copy is the sender's own now, no longer standing in for an ask
+                sides[picking][1](
+                  picking === "get" ? picks.map(({ replaces: _r, ...pick }) => pick) : picks,
+                );
                 setSeen((current) => ({ ...current, ...found }));
                 setPicking(null);
               }}

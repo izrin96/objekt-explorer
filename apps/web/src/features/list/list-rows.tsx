@@ -33,7 +33,7 @@ import { getLocale } from "@/paraglide/runtime";
 import { CopyListDialog } from "./copy-list-dialog";
 import { DeleteListDialog } from "./delete-list-dialog";
 import { EditListDialog } from "./edit-list-dialog";
-import { getListLinkOption } from "./list-link";
+import { getListLinkOption, tradePostLink } from "./list-link";
 import { listPostTags } from "./list-post-tags";
 import {
   LIST_TYPE_LABEL,
@@ -237,7 +237,13 @@ function ListTradeMark({ list }: { list: PublicList }) {
   const tags = listPostTags(list);
   return (
     <>
-      <Badge variant="outline" size="sm" className="relative z-10" render={<Link to="/trade" />}>
+      <Badge
+        variant="outline"
+        size="sm"
+        className="relative z-10"
+        // a post page's loader reads the row against the feed's rate limit
+        render={<Link {...(tradePostLink(list) ?? { to: "/trade" })} preload={false} />}
+      >
         <ArrowsLeftRightIcon aria-hidden />
         {m.list_on_trade()}
       </Badge>

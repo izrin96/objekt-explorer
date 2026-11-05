@@ -1,15 +1,17 @@
 import {
   ArrowFatLineDownIcon,
+  ArrowFatLineUpIcon,
   ArrowLeftIcon,
   CardsThreeIcon,
   InfoIcon,
   PencilSimpleIcon,
+  PlusIcon,
   ShareNetworkIcon,
 } from "@phosphor-icons/react";
 import { handleName } from "@repo/api/schemas/trade-person";
 import { startForPost } from "@repo/api/schemas/trade-post";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { Link, useRouter } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 
@@ -22,20 +24,24 @@ import { useSelectedArtists } from "@/features/artist/use-selected-artists";
 import { AddToListProvider } from "@/features/list/add-to-list-dialog";
 import { ObjektDrawer } from "@/features/objekt/drawer";
 import { useCurrentUser, useUserLists } from "@/features/user/hooks";
+import { relativeTime } from "@/lib/time";
 import { m } from "@/paraglide/messages";
 
-import { useCopyTradeLink, useTakeDownPost } from "./actions";
+import { useBumpPost, useCopyTradeLink, useTakeDownPost } from "./actions";
 import { personSearch } from "./browse-loader";
 import { toBrowseInput } from "./browse-search";
 import { tradeListsOf } from "./compare-rule";
+import { NEW_POST } from "./composer/link";
 import { useOpenComposer } from "./composer/use-open-composer";
 import { LoadError } from "./load-error";
-import type { NearOpen } from "./near";
+import { ownEmptyKind } from "./my-posts-summary";
+import type { NearOpen, ObjektAsk } from "./near";
 import { NearNote } from "./near-note";
+import { ObjektOfferNote } from "./objekt-offer-note";
 import { anchorOf, slugTarget } from "./person-page";
 import { PersonRow, PersonRowSkeleton } from "./person-row-view";
 import { usePlanLists } from "./post-plan";
-import { peopleOptions } from "./queries";
+import { myPostsOptions, peopleOptions } from "./queries";
 import { sharePreview } from "./share-preview";
 import { SideCompareContext } from "./side-items-sheet";
 
@@ -66,9 +72,13 @@ export function PersonPageView({
   );
   const query = useInfiniteQuery(peopleOptions(input));
   const openComposer = useOpenComposer();
-  const [opened, setOpened] = useState<{ objekt: ValidObjekt; near?: NearOpen } | null>(null);
-  const setActive = (objekt: ValidObjekt | null, near?: NearOpen) =>
-    setOpened(objekt ? { objekt, near } : null);
+  const [opened, setOpened] = useState<{
+    objekt: ValidObjekt;
+    near?: NearOpen;
+    ask?: ObjektAsk;
+  } | null>(null);
+  const setActive = (objekt: ValidObjekt | null, near?: NearOpen, ask?: ObjektAsk) =>
+    setOpened(objekt ? { objekt, near, ask } : null);
   // rows read from their fetch, so "3 hours ago" agrees with the server's render
   const [now, setNow] = useState(query.dataUpdatedAt);
   if (!query.isPlaceholderData && query.dataUpdatedAt !== now) setNow(query.dataUpdatedAt);
@@ -77,7 +87,9 @@ export function PersonPageView({
   const current = query.isPlaceholderData ? undefined : query.data?.pages[0];
   const row = current?.people.find((person) => person.userId === userId) ?? null;
   const collections = (current?.collections ?? {}) as Record<string, ValidObjekt | undefined>;
-  const own = row?.userId === user?.user.id;
+  // from the page's user, not the row: with no row the owner still sees their own empty state
+  const own = !!user && userId === user.user.id;
+  const myPosts = useQuery({ ...myPostsOptions(), enabled: own });
 
   const target = row && slug !== undefined ? slugTarget(row.posts, slug) : undefined;
   const focused =
@@ -112,6 +124,8 @@ export function PersonPageView({
             <PendingStatus />
             <PersonRowSkeleton />
           </>
+        ) : !row && own && myPosts.data ? (
+          <OwnEmpty kind={ownEmptyKind(myPosts.data)} />
         ) : !row ? (
           <EmptyState
             icon={CardsThreeIcon}
@@ -130,9 +144,11 @@ export function PersonPageView({
               focus={focused?.id}
               page
               ownActions={
-                own && focused ? (
+                !own ? undefined : focused ? (
                   <OwnPostActions handle={handle} slug={anchorOf(focused)?.list.slug ?? ""} />
-                ) : undefined
+                ) : (
+                  <OwnBump />
+                )
               }
               collections={collections}
               now={now}
@@ -153,6 +169,9 @@ export function PersonPageView({
               onClose={() => setActive(null)}
               onCompose={openComposer}
             />
+          ) : opened?.ask ? (
+            // a near match's line carries its own Make offer
+            <ObjektOfferNote ask={opened.ask} onClose={() => setActive(null)} />
           ) : undefined
         }
       />
@@ -181,7 +200,98 @@ function BackToTrade() {
   );
 }
 
-/** The owner's Edit post, Copy link and Take off Trade, as Your posts offers them. */
+/**
+ * Why the owner's row doesn't show, and the fix: New post, Bump with Your posts, or Your posts.
+ * Your posts is the row on Browse.
+ */
+function OwnEmpty({ kind }: { kind: ReturnType<typeof ownEmptyKind> }) {
+  const openComposer = useOpenComposer();
+  const openPosts = (
+    <Button variant="outline" size="sm" render={<Link to="/trade" />}>
+      {m.trade_own_open_posts()}
+    </Button>
+  );
+  if (kind === "none") {
+    return (
+      <EmptyState
+        icon={CardsThreeIcon}
+        title={m.trade_my_posts_empty_title()}
+        hint={m.trade_my_posts_empty_hint()}
+        action={
+          <Button size="sm" onClick={() => openComposer(NEW_POST)}>
+            <PlusIcon />
+            {m.trade_new_post()}
+          </Button>
+        }
+      />
+    );
+  }
+  if (kind === "blocked") {
+    return (
+      <EmptyState
+        icon={CardsThreeIcon}
+        title={m.trade_own_blocked_title()}
+        hint={m.trade_post_copy_link_blocked()}
+      />
+    );
+  }
+  if (kind === "idle") {
+    return (
+      <EmptyState
+        icon={CardsThreeIcon}
+        title={m.trade_own_idle_title()}
+        hint={m.trade_own_idle_hint()}
+        action={
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <OwnBump />
+            {openPosts}
+          </div>
+        }
+      />
+    );
+  }
+  return (
+    <EmptyState
+      icon={CardsThreeIcon}
+      title={m.trade_own_empty_title()}
+      hint={m.trade_own_empty_hint()}
+      action={openPosts}
+    />
+  );
+}
+
+/**
+ * The owner's Bump, one for every post as in Your posts, which reads the same `myPosts`. Disabled
+ * until the next bump is allowed, with that time beside it.
+ */
+function OwnBump() {
+  const query = useQuery(myPostsOptions());
+  const bump = useBumpPost();
+  const nextBumpAt = query.data?.[0]?.nextBumpAt ?? null;
+  return (
+    <>
+      <Button
+        variant="outline"
+        size="sm"
+        disabled={!query.data || nextBumpAt !== null}
+        loading={bump.isPending}
+        onClick={() => bump.mutate()}
+      >
+        <ArrowFatLineUpIcon />
+        {m.trade_bump()}
+      </Button>
+      {nextBumpAt ? (
+        <span className="text-muted-foreground text-sm tabular-nums">
+          {m.trade_bump_next({
+            time: relativeTime(new Date(nextBumpAt).getTime(), query.dataUpdatedAt, "hour"),
+          })}
+        </span>
+      ) : null}
+    </>
+  );
+}
+
+/** The owner's Edit post, Copy link, Take off Trade and Bump, as Your posts offers them. */
 function OwnPostActions({ handle, slug }: { handle: string; slug: string }) {
   const openComposer = useOpenComposer();
   const planLists = usePlanLists();
@@ -206,6 +316,7 @@ function OwnPostActions({ handle, slug }: { handle: string; slug: string }) {
         <ArrowFatLineDownIcon />
         {m.trade_take_off()}
       </Button>
+      <OwnBump />
     </>
   );
 }

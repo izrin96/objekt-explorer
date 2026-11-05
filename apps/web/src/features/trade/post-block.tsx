@@ -1,25 +1,38 @@
-import { DotsThreeIcon, HandshakeIcon, SquaresFourIcon } from "@phosphor-icons/react";
+import {
+  ArrowFatLineDownIcon,
+  ArrowSquareOutIcon,
+  ChatCircleIcon,
+  DotsThreeIcon,
+  HandshakeIcon,
+  PencilSimpleIcon,
+  SquaresFourIcon,
+} from "@phosphor-icons/react";
+import { startForPost } from "@repo/api/schemas/trade-post";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
-import { use, useRef, useState } from "react";
+import { Link } from "@tanstack/react-router";
+import { type ReactNode, use, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { FramePanel } from "@/components/ui/frame";
 import { Menu, MenuItem, MenuPopup, MenuSeparator, MenuTrigger } from "@/components/ui/menu";
+import { useStartConversation } from "@/features/chat/message-button";
 import { TagBadges } from "@/features/list/tag-label";
 import { useOpenOffer } from "@/features/offers/make-offer-button";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
-import { useCopyTradeLink } from "./actions";
+import { useCopyTradeLink, useTakeDownPost } from "./actions";
 import type { Surface } from "./browse-search";
-import { CopyLinkItem } from "./copy-link-item";
-import type { OpenObjekt } from "./near";
+import { useOpenComposer } from "./composer/use-open-composer";
+import { CopyLinkItem, ReasonItem } from "./copy-link-item";
+import type { ObjektAsk, OpenObjekt } from "./near";
 import { anchorOf } from "./person-page";
 import { listCount, matchedListIds } from "./person-row";
+import { usePlanLists } from "./post-plan";
 import { EmptySide, isEmptySide, SideAllDialog, SideNotes, SideStrip } from "./post-side";
-import type { PersonPostData } from "./post-types";
+import type { PersonPostData, PostSideData } from "./post-types";
 import { SideCompareContext } from "./side-items-sheet";
-import type { TradeContact } from "./trade-actions";
+import { NoProfileOffer, type TradeContact } from "./trade-actions";
 import { TradeSides } from "./trade-row";
 
 /** The post as its own viewer sees it: no rings, since the viewer's row counts nothing. */
@@ -70,6 +83,7 @@ export function PostBlock({
   const offering = post.sides.find((side) => side.role !== "want");
   const compare = use(SideCompareContext);
   const openOffer = useOpenOffer();
+  const conversation = useStartConversation();
   const menuRef = useRef<HTMLButtonElement>(null);
   // one "+N" dialog per strip, shared with Show all; each mounts on its first open only, since a
   // feed holds many strips and most are never opened
@@ -82,8 +96,19 @@ export function PostBlock({
     setAllOpen(listId);
   };
   const offersHere = contact.kind === "open" && !!anchor && offerHandle !== null;
+  // with no linked Cosmo profile there is no offer page, so Make offer says why instead
+  const noProfileOffer = contact.kind === "open" && !!anchor && offerHandle === null;
+  /** Message about this post: its own card, carrying the match only when one of its strips counts one */
+  const messageAbout = () => {
+    if (contact.kind !== "open" || !anchor) return;
+    const withMatch = strips.some((side) => listCount(post, side) > 0);
+    conversation.start(
+      { kind: "list", slug: anchor.list.slug },
+      { kind: "post", listSlug: anchor.list.slug, withMatch },
+    );
+  };
   // a near match's drawer names the person, and offers it on this post when the row offers one
-  const openNear: OpenObjekt = (objekt, near) =>
+  const openNear: OpenObjekt = (objekt, near, ask) =>
     onOpen(
       objekt,
       near && {
@@ -91,7 +116,31 @@ export function PostBlock({
         person: name,
         makeOffer: offersHere ? () => makeOffer(objekt.slug) : undefined,
       },
+      ask,
     );
+  /**
+   * Per strip: an objekt from a have or sale strip, or its sheet, also offers itself, asking from
+   * that strip's list. The sheet forwards only the objekt and its near match, so this adds the ask.
+   */
+  const openFrom =
+    (side: PostSideData): OpenObjekt =>
+    (objekt, near) => {
+      const ask: ObjektAsk | undefined =
+        offersHere && side.role !== "want"
+          ? {
+              person: name,
+              list: side.list.name,
+              offer: () =>
+                openOffer({
+                  handle: offerHandle,
+                  to: { list: anchor.list.slug },
+                  startList: side.list.slug,
+                  ask: { collectionSlug: objekt.slug, objektId: null, serial: null },
+                }),
+            }
+          : undefined;
+      openNear(objekt, near, ask);
+    };
   /** `addNear`: Make offer with it, from a near match's drawer */
   const makeOffer = (addNear?: string) => {
     if (!anchor || offerHandle === null) return;
@@ -109,6 +158,76 @@ export function PostBlock({
       near: addNear,
     });
   };
+
+  const linkReason = handle ? null : m.trade_post_copy_link_no_profile();
+  // the "+N" sheet's footer offers what the post's menu leads with; each closes the sheet first
+  const sheetActions =
+    contact.kind === "open" && anchor ? (
+      <>
+        <Button
+          variant="outline"
+          onClick={() => {
+            setAllOpen(null);
+            messageAbout();
+          }}
+        >
+          <ChatCircleIcon />
+          {m.trade_post_message()}
+        </Button>
+        {offersHere ? (
+          <Button
+            onClick={() => {
+              setAllOpen(null);
+              makeOffer();
+            }}
+          >
+            <HandshakeIcon />
+            {m.trade_post_make_offer()}
+          </Button>
+        ) : (
+          <NoProfileOffer name={name} label={m.trade_post_make_offer()} size="default" />
+        )}
+      </>
+    ) : undefined;
+  // Show all, View post and Copy link, which the owner's Edit post and Take off Trade surround
+  const postItems = anchor ? (
+    <>
+      {strips.length > 0 ? (
+        <>
+          {strips.map((side) => (
+            <MenuItem key={side.list.id} onClick={() => showAll(side.list.id, true)}>
+              <SquaresFourIcon />
+              {m.trade_post_show_all({ list: side.list.name })}
+            </MenuItem>
+          ))}
+          <MenuSeparator />
+        </>
+      ) : null}
+      {focused ? null : (
+        <ReasonItem
+          icon={ArrowSquareOutIcon}
+          label={m.trade_post_view()}
+          reason={linkReason}
+          link={
+            handle ? (
+              <Link
+                to="/trade/@{$handle}/$slug"
+                params={{ handle, slug: anchor.list.slug }}
+                // a post page's loader reads the row against the feed's rate limit
+                preload={false}
+              />
+            ) : undefined
+          }
+        />
+      )}
+      <CopyLinkItem
+        reason={linkReason}
+        onCopy={() => {
+          if (handle) void copyLink({ handle, slug: anchor.list.slug });
+        }}
+      />
+    </>
+  ) : null;
 
   return (
     <FramePanel
@@ -134,7 +253,7 @@ export function PostBlock({
               ruleMatches={own || side.role === "want" ? undefined : post.ruleMatches}
               narrowed={post.narrowed}
               collections={collections}
-              onOpen={openNear}
+              onOpen={openFrom(side)}
               onShowAll={() => showAll(side.list.id, false)}
               owner={own}
             />
@@ -161,32 +280,28 @@ export function PostBlock({
             <DotsThreeIcon weight="bold" />
           </MenuTrigger>
           <MenuPopup align="end" className="min-w-44">
-            {offersHere ? (
+            {contact.kind === "open" ? (
               <>
-                <MenuItem onClick={() => makeOffer()}>
-                  <HandshakeIcon />
-                  {m.trade_post_make_offer()}
+                {offersHere ? (
+                  <MenuItem onClick={() => makeOffer()}>
+                    <HandshakeIcon />
+                    {m.trade_post_make_offer()}
+                  </MenuItem>
+                ) : noProfileOffer ? (
+                  <ReasonItem
+                    icon={HandshakeIcon}
+                    label={m.trade_post_make_offer()}
+                    reason={m.trade_offer_no_profile({ name })}
+                  />
+                ) : null}
+                <MenuItem onClick={messageAbout}>
+                  <ChatCircleIcon />
+                  {m.trade_post_message()}
                 </MenuItem>
                 <MenuSeparator />
               </>
             ) : null}
-            {strips.length > 0 ? (
-              <>
-                {strips.map((side) => (
-                  <MenuItem key={side.list.id} onClick={() => showAll(side.list.id, true)}>
-                    <SquaresFourIcon />
-                    {m.trade_post_show_all({ list: side.list.name })}
-                  </MenuItem>
-                ))}
-                <MenuSeparator />
-              </>
-            ) : null}
-            <CopyLinkItem
-              reason={handle ? null : m.trade_post_copy_link_no_profile()}
-              onCopy={() => {
-                if (handle) void copyLink({ handle, slug: anchor.list.slug });
-              }}
-            />
+            {own ? <OwnPostItems slug={anchor.list.slug}>{postItems}</OwnPostItems> : postItems}
           </MenuPopup>
         </Menu>
       ) : null}
@@ -198,13 +313,41 @@ export function PostBlock({
             side={side}
             narrowed={post.narrowed}
             collections={collections}
-            onOpen={openNear}
+            onOpen={openFrom(side)}
             open={allOpen === side.list.id}
             onOpenChange={(open) => setAllOpen(open ? side.list.id : null)}
             finalFocus={fromMenu ? menuRef : undefined}
             owner={own}
+            actions={sheetActions}
           />
         ))}
     </FramePanel>
+  );
+}
+
+/**
+ * The owner's Edit post first and Take off Trade last, around the post's other items. A child of
+ * its own, mounted only for the owner's posts with the menu open: the take-off hooks also read the
+ * viewer's lists, and a feed holds many posts. Take off's toast and Undo run off the mutation's
+ * promise, not `mutate`'s callbacks, so they outlive the closed menu.
+ */
+function OwnPostItems({ slug, children }: { slug: string; children: ReactNode }) {
+  const openComposer = useOpenComposer();
+  const planLists = usePlanLists();
+  const takeDown = useTakeDownPost();
+  return (
+    <>
+      <MenuItem onClick={() => openComposer(startForPost(planLists, slug))}>
+        <PencilSimpleIcon />
+        {m.trade_composer_edit_title()}
+      </MenuItem>
+      <MenuSeparator />
+      {children}
+      <MenuSeparator />
+      <MenuItem onClick={() => void takeDown.takeDown(slug)}>
+        <ArrowFatLineDownIcon />
+        {m.trade_take_off()}
+      </MenuItem>
+    </>
   );
 }

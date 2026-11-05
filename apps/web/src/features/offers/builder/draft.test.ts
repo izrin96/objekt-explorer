@@ -23,6 +23,7 @@ import {
   pickFlags,
   pickProblem,
   resolveAsks,
+  resolveGetAsks,
   sendGate,
   toggleTopup,
   topupForNear,
@@ -266,6 +267,66 @@ describe("resolveAsks", () => {
     expect(shown[1]!.replaces).toBe(a.key);
     expect(shown[2]!.replaces).toBe(a.key);
     expect(shown[3]).toEqual({ ...a, count: 1 });
+  });
+});
+
+describe("resolveGetAsks", () => {
+  const LIST = "doubles";
+  const getAsk = (over: Partial<OfferPick> = {}) =>
+    pick({ key: `any:${SLUG}`, collectionSlug: SLUG, listSlug: LIST, ...over });
+  const theirs = (id: string | null, over: Partial<CandidateItem> = {}) =>
+    copy(id, { listSlug: LIST, ...over });
+
+  test("an any-copy item on the list keeps the ask", () => {
+    const a = getAsk();
+    expect(resolveGetAsks([a], [theirs("c1"), theirs(null)])).toEqual([a]);
+  });
+
+  test("the first copy that can be sent stands in for the ask", () => {
+    const shown = resolveGetAsks([getAsk()], [theirs("c1"), theirs("c2")]);
+    expect(keysOf(shown)).toEqual(["c1"]);
+    expect(shown[0]).toMatchObject({ objektId: "c1", listSlug: LIST, replaces: `any:${SLUG}` });
+  });
+
+  test("reserved and untransferable copies are passed over", () => {
+    const shown = resolveGetAsks(
+      [getAsk()],
+      [theirs("rs", { reserved: true }), theirs("nt", { transferable: false }), theirs("ok")],
+    );
+    expect(keysOf(shown)).toEqual(["ok"]);
+  });
+
+  test("a copy on another of their lists is ignored", () => {
+    const a = getAsk();
+    expect(resolveGetAsks([a], [theirs("c1", { listSlug: "spares" })])).toEqual([a]);
+  });
+
+  test("another collection on the list is ignored", () => {
+    const a = getAsk();
+    expect(resolveGetAsks([a], [theirs("c1", { collectionSlug: "other" })])).toEqual([a]);
+  });
+
+  test("with no copy to ask for, the ask stays", () => {
+    const a = getAsk();
+    expect(resolveGetAsks([a], [theirs("rs", { reserved: true })])).toEqual([a]);
+    expect(resolveGetAsks([a], [])).toEqual([a]);
+  });
+
+  test("a pick naming a copy is untouched", () => {
+    const named = pick({ key: "o1", objektId: "o1", serial: 3, listSlug: LIST });
+    expect(resolveGetAsks([named], [theirs("c1")])).toEqual([named]);
+  });
+
+  test("a copy the side already names is not taken again", () => {
+    const named = pick({ key: "c1", objektId: "c1", serial: 1, listSlug: LIST });
+    const shown = resolveGetAsks([named, getAsk()], [theirs("c1"), theirs("c2")]);
+    expect(keysOf(shown)).toEqual(["c1", "c2"]);
+  });
+
+  test("taking the stand-in out removes the ask", () => {
+    const a = getAsk();
+    const [shown] = resolveGetAsks([a], [theirs("c1")]);
+    expect(takeOut([a], shown!)).toEqual([]);
   });
 });
 

@@ -17,5 +17,17 @@ export type NearOpen = {
   makeOffer?: () => void;
 };
 
-/** Opens an objekt from a strip or a dialog, with its near match when it is one. */
-export type OpenObjekt = (objekt: ValidObjekt, near?: NearOpen) => void;
+/** Make offer for one objekt of another person's have or sale list, where the post offers one. */
+export type ObjektAsk = {
+  person: string;
+  /** the strip's list, which the offer asks from */
+  list: string;
+  /** opens the offer builder asking for this collection from that list */
+  offer: () => void;
+};
+
+/**
+ * Opens an objekt from a strip or a dialog, with its near match when it is one, and the offer for
+ * it from a have or sale strip of another person's post.
+ */
+export type OpenObjekt = (objekt: ValidObjekt, near?: NearOpen, ask?: ObjektAsk) => void;

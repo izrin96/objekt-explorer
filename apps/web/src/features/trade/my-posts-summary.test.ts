@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { summarizePosts } from "./my-posts-summary";
+import { ownEmptyKind, summarizePosts } from "./my-posts-summary";
 
 const post = (listed: boolean) => ({ listed });
 
@@ -24,5 +24,29 @@ describe("summarizePosts", () => {
       idle: 2,
       shownByDefault: true,
     });
+  });
+});
+
+describe("ownEmptyKind", () => {
+  const own = (listed: boolean, tradeBlocked = false) => ({ listed, tradeBlocked });
+
+  test("no posts", () => {
+    expect(ownEmptyKind([])).toBe("none");
+  });
+
+  test("a trade block wins over idle posts", () => {
+    expect(ownEmptyKind([own(false, true), own(false, true)])).toBe("blocked");
+  });
+
+  test("a trade block wins over listed posts", () => {
+    expect(ownEmptyKind([own(true, true)])).toBe("blocked");
+  });
+
+  test("every post idle", () => {
+    expect(ownEmptyKind([own(false), own(false)])).toBe("idle");
+  });
+
+  test("listed but nothing left to show", () => {
+    expect(ownEmptyKind([own(true), own(false)])).toBe("empty");
   });
 });

@@ -447,6 +447,7 @@ export function SideAllDialog({
   onOpenChange,
   finalFocus,
   owner = false,
+  actions,
 }: {
   side: PostSideData;
   narrowed: boolean;
@@ -457,6 +458,8 @@ export function SideAllDialog({
   finalFocus?: RefObject<HTMLElement | null>;
   /** the viewer's own post: a ratio reads "You ask" */
   owner?: boolean;
+  /** the sheet footer's Message and Make offer, on another person's post */
+  actions?: ReactNode;
 }) {
   return (
     <SideItemsSheet
@@ -467,6 +470,7 @@ export function SideAllDialog({
       onOpen={onOpen}
       finalFocus={finalFocus}
       owner={owner}
+      actions={actions}
       rules={
         side.rules.length > 0 ? (
           // the objekt view is a modal of its own, so the sheet gives way to it
