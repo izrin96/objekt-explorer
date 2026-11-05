@@ -106,7 +106,7 @@ export function PersonPageView({
         ) : null}
 
         {current === undefined && query.isError ? (
-          <LoadError onRetry={() => void query.refetch()} />
+          <LoadError error={query.error} onRetry={() => void query.refetch()} />
         ) : current === undefined ? (
           <>
             <PendingStatus />
@@ -201,7 +201,7 @@ function OwnPostActions({ handle, slug }: { handle: string; slug: string }) {
         variant="ghost"
         size="sm"
         loading={takeDown.isPending}
-        onClick={() => takeDown.takeDown(slug)}
+        onClick={() => void takeDown.takeDown(slug)}
       >
         <ArrowFatLineDownIcon />
         {m.trade_take_off()}

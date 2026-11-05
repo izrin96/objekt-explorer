@@ -80,3 +80,41 @@ export function resolveStart(search: ComposerSearch, lists: PlanList[]): Compose
 export function returnPath(from: string | undefined) {
   return from !== undefined && isSafeRedirect(from) ? from : "/trade";
 }
+
+/** Whether the picks differ from where the page opened, so leaving would lose them. */
+export function picksChanged(
+  start: ComposerStart,
+  choice: Omit<ComposerStart, "replaces"> & { unpair: boolean },
+) {
+  return (
+    choice.unpair ||
+    choice.kind !== start.kind ||
+    choice.have !== start.have ||
+    choice.want !== start.want ||
+    choice.sale !== start.sale ||
+    choice.alsoPay !== start.alsoPay ||
+    choice.alsoSwap !== start.alsoSwap
+  );
+}
+
+/**
+ * Where leaving after a save or a take off goes: `returnPath(from)`, unless `from` is the edited
+ * post's own page and the post is now anchored elsewhere (`anchor`), or off Trade (null), where
+ * that page would say the post is gone. Then it is the new anchor's page, or Browse.
+ */
+export function returnAfter(
+  from: string | undefined,
+  replaces: string | null,
+  anchor: string | null,
+) {
+  const path = returnPath(from);
+  if (replaces === null || anchor === replaces) return path;
+  const url = new URL(path, "http://x");
+  const segments = url.pathname.split("/");
+  const onPostPage =
+    segments[1] === "trade" && segments[2]?.startsWith("@") && segments.length === 4;
+  if (!onPostPage || decodeURIComponent(segments[3]!) !== replaces) return path;
+  if (anchor === null) return "/trade";
+  segments[3] = encodeURIComponent(anchor);
+  return segments.join("/") + url.search;
+}

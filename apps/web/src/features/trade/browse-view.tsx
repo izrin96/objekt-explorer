@@ -11,7 +11,7 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { InfiniteSentinel } from "@/components/shared/infinite-sentinel";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
+import { useArtistScopeNarrowed, useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import { useSelectedArtists } from "@/features/artist/use-selected-artists";
 import { FACET_KEYS } from "@/features/filters/facet-controls";
 import { SingleSelect } from "@/features/filters/single-select";
@@ -68,6 +68,7 @@ export function BrowseView({ surface, search }: { surface: Surface; search: Feed
   const tradeLists = useMemo(() => tradeListsOf(userLists), [userLists]);
   const { artists } = useCosmoArtist();
   const { data: selected } = useSelectedArtists();
+  const scopeNarrowed = useArtistScopeNarrowed();
   const input = useMemo(
     () => toBrowseInput(search, artists, selected, surface, tradeLists),
     [search, artists, selected, surface, tradeLists],
@@ -266,7 +267,7 @@ export function BrowseView({ surface, search }: { surface: Surface; search: Feed
           <BrowseFeedSkeleton />
         </>
       ) : query.isError && people.length === 0 ? (
-        <LoadError onRetry={() => void query.refetch()} />
+        <LoadError error={query.error} onRetry={() => void query.refetch()} />
       ) : people.length === 0 && !query.hasNextPage && forYou && collectionFiltering ? (
         <EmptyState
           icon={CardsThreeIcon}
@@ -316,7 +317,15 @@ export function BrowseView({ surface, search }: { surface: Surface; search: Feed
         <EmptyState
           icon={CardsThreeIcon}
           title={m.trade_browse_empty_title()}
-          hint={filtering ? m.trade_browse_empty_hint() : m.trade_browse_empty_none_hint()}
+          hint={
+            filtering
+              ? m.trade_browse_empty_hint()
+              : scopeNarrowed
+                ? user
+                  ? m.trade_browse_scope_empty_hint_menu()
+                  : m.trade_browse_scope_empty_hint_settings()
+                : m.trade_browse_empty_none_hint()
+          }
           action={
             filtering ? (
               <Button variant="outline" size="sm" onClick={reset}>

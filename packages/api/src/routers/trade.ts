@@ -20,6 +20,7 @@ import {
   tabCountsOutputSchema,
   takeDownPostInputSchema,
   tradePartnerInputSchema,
+  unshownEntriesInputSchema,
 } from "../schemas/trade";
 import { tradePersonInputSchema, tradePersonOutputSchema } from "../schemas/trade-person";
 import { bumpTradeVersions } from "../services/moderation/safety-cache";
@@ -35,6 +36,7 @@ import {
   fetchProfileMatches,
   fetchSideItems,
 } from "../services/trade/feed/sides";
+import { fetchUnshownEntries } from "../services/trade/feed/unshown";
 import { mutualCount } from "../services/trade/matches/mutual";
 import { resolveTradePerson } from "../services/trade/person";
 import { savePost, takeDownPost } from "../services/trade/post";
@@ -129,6 +131,16 @@ export const tradeRouter = {
   bump: authed.handler(async ({ context: { session } }) => bumpPerson(session.user.id)),
 
   myPosts: authed.handler(async ({ context: { session } }) => fetchMyPosts(session.user.id)),
+
+  /** The composer's note on a have or sale side: which of its entries Trade leaves out. */
+  unshownEntries: authed
+    .input(unshownEntriesInputSchema)
+    .handler(async ({ input: { slug }, context: { session } }) => {
+      // its own budget: every list write in the composer refetches it, and it must not spend the feed's
+      if (await userRateLimited("trade-unshown", session.user.id, 60, 60))
+        refuse("TOO_MANY_REQUESTS", "user_rate_limit", "Too many requests, try again shortly");
+      return fetchUnshownEntries(session.user.id, slug);
+    }),
 
   /** Creates or edits a post: its lists, their link, the want list's Open to and Trade state, at once. */
   savePost: authed.input(savePostInputSchema).handler(async ({ input, context: { session } }) => {

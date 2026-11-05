@@ -20,13 +20,13 @@ Trade SHALL match the signed-in user, one person at a time, against the other ac
 - **WHEN** the user's only have list is not bound to a Cosmo profile, and a person wants a collection on it
 - **THEN** that collection does not count toward the person, and Compare with does not offer the list
 
-#### Scenario: Buying-only want list in the person sheet
+#### Scenario: Buying-only want list on a row
 - **WHEN** the user's only want list is set to Buying only, and a person's have list and sale list each hold a different collection on it
 - **THEN** the person's row counts only the sale list's collection as one they have that the user wants
 
 #### Scenario: No lists
 - **WHEN** a signed-in user with no want list and no bound have list opens `/trade`
-- **THEN** there is no Matches control, and a line asks them for such a list with a Post a list control
+- **THEN** there is no Matches control and no line about lists (see `web-trade-browse` Matches to the signed-in viewer), and Trade shows no For you tab
 
 #### Scenario: Opened from Browse
 - **WHEN** the user follows a link to `/trade?person=<id>`, which leads to that person's page
@@ -121,7 +121,7 @@ Matching SHALL reflect the user's own list changes on the next load. Other accou
 
 A row SHALL say how fresh it is with the time of its newest post (see `web-trade-browse` Trade card). It SHALL not show when the matches were worked out.
 
-The time SHALL be relative, rendered by the browser, and in monospace. It SHALL carry its full date and time as its machine-readable value.
+The time SHALL be relative, rendered by the browser, in the sans face. It SHALL carry its full date and time as its machine-readable value.
 
 #### Scenario: Own edit
 - **WHEN** the user adds a collection to their want list and returns to Browse
@@ -143,7 +143,7 @@ Message on a person's row, on Browse or For you, SHALL follow `web-trade-browse`
 - **THEN** the conversation with nakyoung.cards opens, with a post card for that have list carrying the match
 
 ### Requirement: Blocks and trade blocks
-Matching SHALL leave out people the user blocked, people who blocked the user, and people under an active trade block. Their posts SHALL not be listed on Browse, and they SHALL not count toward Mutual N. Each post's ⋯ menu and the person sheet's ⋯ menu SHALL offer Block and Report.
+Matching SHALL leave out people the user blocked, people who blocked the user, and people under an active trade block. Their posts SHALL not be listed on Browse, and they SHALL not count toward Mutual N. The ⋯ menu of each person's row SHALL offer Block and Report (see `web-trade-browse` Trade card).
 
 #### Scenario: Blocked partner
 - **WHEN** the user has blocked kaede.k
@@ -161,11 +161,11 @@ Make offer on a person's row, on Browse or For you, SHALL follow `web-trade-brow
 - **THEN** You give holds only the matches from "doubles" inside the pair the row's Can swap counts
 
 ### Requirement: Partner reputation
-The person sheet SHALL show the person's reputation line (see `web-verified-trades`) beside their name.
+Each person's row SHALL show the person's reputation line (see `web-verified-trades`) beside their name.
 
 #### Scenario: Row
-- **WHEN** the user opens kaede.k's sheet, and kaede.k has 8 completed trades
-- **THEN** the sheet shows "8 verified" with kaede.k's positive share
+- **WHEN** the user sees kaede.k's row, and kaede.k has 8 completed trades
+- **THEN** the row shows "8 verified" with kaede.k's positive share
 
 ### Requirement: Old For you address
 `/trade/for-you` is the For you tab (see `web-trade-browse` Matches and Compare with). It SHALL also accept the parameters of For you links from before the merge into Browse, mapping them in place:

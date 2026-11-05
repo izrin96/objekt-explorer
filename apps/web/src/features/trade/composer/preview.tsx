@@ -1,4 +1,4 @@
-import { PencilSimpleIcon, PlusIcon } from "@phosphor-icons/react";
+import { PencilSimpleIcon, PlusIcon, WarningIcon } from "@phosphor-icons/react";
 import type { PlanList } from "@repo/api/schemas/trade-post";
 import { useQuery } from "@tanstack/react-query";
 import { type ReactNode, useId, useRef, useState } from "react";
@@ -7,6 +7,7 @@ import { MoreCount } from "@/components/shared/more-count";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetPopup } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
+import { LoadError } from "@/features/chat/attach/attach-picker-parts";
 import { EditListDialog } from "@/features/list/edit-list-dialog";
 import { LIST_TYPE_LABEL, LIST_TYPE_TONE } from "@/features/list/list-type-badge";
 import { listEntriesOptions, listFindOptions } from "@/features/list/queries";
@@ -21,6 +22,7 @@ import { getLocale } from "@/paraglide/runtime";
 
 import type { PostInput } from "../composer-choice";
 import { matchLines, previewTags } from "../post-kind-text";
+import { unshownEntriesOptions } from "../queries";
 import { TILE } from "../thumb-grid";
 import { AddObjektsSheet } from "./add-objekts";
 import { AllObjekts, EntryThumb, ListRatioControl, useSideDialogs } from "./preview-entries";
@@ -198,6 +200,11 @@ function PickedSide({
   const entries = useQuery(listEntriesOptions(slug, []));
   const listRatio = stored?.ratio ?? null;
   const total = entries.data?.length ?? 0;
+  // a have or sale entry its owner can no longer trade is left out of the post (see the spec's
+  // "Only what is still owned"), so the preview says so rather than promise it
+  const { data: unshown } = useQuery(unshownEntriesOptions(slug, role !== "want"));
+  const unshownIds = new Set(unshown?.entryIds ?? []);
+  const unshownCount = entries.data?.filter((entry) => unshownIds.has(entry.entryId)).length ?? 0;
   const shown = entries.data?.slice(0, SHOWN) ?? [];
   const rest = total - shown.length;
   const [editOpen, setEditOpen] = useState(false);
@@ -249,7 +256,9 @@ function PickedSide({
         />
       ) : null}
 
-      {entries.isPending ? (
+      {entries.isError ? (
+        <LoadError onRetry={() => void entries.refetch()} />
+      ) : entries.isPending ? (
         <div className={THUMB_GRID}>
           {Array.from({ length: 6 }, (_, index) => (
             <Skeleton key={index} className="rounded-photocard aspect-photocard" />
@@ -294,6 +303,16 @@ function PickedSide({
           ) : null}
         </ul>
       )}
+      {unshownCount > 0 ? (
+        <p className="text-muted-foreground flex items-start gap-1.5 text-xs text-pretty">
+          <WarningIcon aria-hidden className="text-warning-foreground mt-px size-3.5 shrink-0" />
+          {unshownCount === total
+            ? m.trade_composer_unshown_all()
+            : unshownCount === 1
+              ? m.trade_composer_unshown_one()
+              : m.trade_composer_unshown_some({ count: unshownCount.toLocaleString(getLocale()) })}
+        </p>
+      ) : null}
       <EditListDialog
         slug={slug}
         open={editOpen}

@@ -302,6 +302,9 @@ export const savePostInputSchema = z.object({
 /** Any list of the post names it. */
 export const takeDownPostInputSchema = z.object({ slug: z.string().min(1) });
 
+/** One of the viewer's own lists, for the entries Trade leaves out of its post. */
+export const unshownEntriesInputSchema = z.object({ slug: z.string().min(1) });
+
 export const collectionPostCountsInputSchema = z.object({ slug: z.string() });
 export const collectionPostCountsOutputSchema = z.object({
   have: z.number().int(),

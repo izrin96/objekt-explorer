@@ -197,7 +197,10 @@ The posts left out SHALL be left out by the server, so every page of the feed ho
 - otherwise under Any, the feed SHALL say that no posts match the viewer's lists and offer to show all posts on Browse, keeping the filters;
 - otherwise under Mutual, it SHALL say that no one can swap with the viewer and offer to switch to Any;
 - under Any and Mutual, while Compare with names a list, the message SHALL name it ("No posts match spares", "No one can swap with you for spares");
-- with other filters set, it SHALL offer Reset.
+- with other filters set, it SHALL offer Reset;
+- with no filter set while the viewer's selected artists leave some out, it SHALL say that nobody has a post under the selected artists and where to change them (the avatar menu signed in, Settings signed out), since Reset clears no artist selection.
+
+A feed read refused by the rate limit SHALL say so under its error, with Retry.
 
 A filter value that does not parse SHALL be ignored.
 
@@ -291,7 +294,7 @@ For a signed-in viewer, each person's row on Browse and on For you SHALL show th
 - "You have N they want": collections on the person's want lists that are on one of the viewer's have or sale lists that is bound to a Cosmo profile and still tradeable by the viewer. A have list, and a sale list open to swaps, count for a want list open to swaps; every sale list counts for a want list open to buying.
 - The mutual score: what the person and the viewer can swap within one post on each side. A post here is a linked pair: a have list, or a sale list open to swaps, and the want list linked to it, posted or not on the viewer's side. For each pairing of one of the viewer's posts with one of the person's posts there are two swap counts: the collections on the person's post's have list, or sale list open to swaps, that are on the viewer's post's want list when it is open to swaps (Swaps only, or Swaps or buying); and the collections on the person's post's want list, when it is open to swaps, that are on the viewer's post's have list, or sale list open to swaps, bound to a Cosmo profile and still tradeable by the viewer. A pairing scores the smaller of the two, and the person's mutual score is the highest score of any pairing. A list with no link, the person's or the viewer's, SHALL never count toward the mutual score, though it counts toward the two counts above. A sale list set to Sell only, the person's or the viewer's, SHALL never count toward the mutual score either: a sale is not a swap, so a person matched only through such lists is one way. A want list set to buying only never counts toward it.
 
-The counts show once, in the row's header sentence (see Trade card). Each list in the row SHALL also show its own count, by the same rules, taken on that list alone: on a have or sale list the collections the viewer wants ("14 you want"), on a want list the collections the viewer has ("2 you have"). Matched objekts SHALL be marked with a ring, judged on the list's own objekts. There SHALL be no match chip, no popover of matched lists and no All matches control.
+The counts show once, in the row's header sentence (see Trade card). Each list in the row SHALL also show its own count, by the same rules, taken on that list alone: on a have or sale list the collections the viewer wants ("14 you want"), on a want list the collections the viewer has ("2 you have"). Matched objekts SHALL be marked with a ring, judged on the list's own objekts. There SHALL be no match chip beside the name and no All matches control; each list's count opens its own popover of matched lists (see Trade card).
 
 A person with a mutual score of zero SHALL read as one way, with no mark beside the name, whatever directions their counts run: whether the swaps cross posts, run through lists with no link, or one or both directions run only through sale lists set to Sell only or want lists set to buying only.
 
@@ -576,7 +579,7 @@ The feed SHALL leave out, for each viewer:
 - posts by accounts that blocked the viewer;
 - posts by any account under an active trade block or ban.
 
-The drawer's On Trade counts SHALL leave out trade-blocked and banned accounts. Each post not owned by the viewer SHALL offer Block and Report… in its menu.
+The drawer's On Trade counts SHALL leave out trade-blocked and banned accounts. Each person's row not the viewer's SHALL offer Block and Report… in its ⋯ menu (see Trade card).
 
 #### Scenario: Trade-blocked owner
 - **WHEN** rin.trades is under a trade block
@@ -1137,7 +1140,7 @@ Make offer on this post SHALL go through the same sign-in gate as the row's Make
 - **THEN** the builder opens empty, addressed to that post's list, with no status line
 
 ### Requirement: Where Make offer on one post shows
-Make offer on this post SHALL be left out on the viewer's own posts and on a row that shows "Not taking messages". The menu then offers Show all only.
+Make offer on this post SHALL be left out on the viewer's own posts and on a row that shows "Not taking messages". The menu then offers Show all and Copy link.
 
 #### Scenario: One post on the row
 - **WHEN** a user opens the ⋯ menu on mina.swaps's row, whose only post is the have list "extras"
@@ -1149,11 +1152,11 @@ Make offer on this post SHALL be left out on the viewer's own posts and on a row
 
 #### Scenario: Not taking messages
 - **WHEN** the row shows "Not taking messages"
-- **THEN** each post's menu offers Show all only
+- **THEN** each post's menu offers Show all and Copy link
 
 #### Scenario: Own post
 - **WHEN** the viewer opens the ⋯ menu on one of their own posts
-- **THEN** it offers Show all only
+- **THEN** it offers Show all and Copy link
 
 ### Requirement: Ratio on post tiles
 A Trade post's objekt tile and rule tile SHALL show its ratio (its own, or else its list's) as a chip ("1:2" on a have side, "2:1" on a want side) on Browse, For you and the full side list, when the side swaps: a have list, or a want list open to swaps. On an objekt tile the chip SHALL lie over the card's bottom-end corner, with the worded ratio as the tile's hover tooltip. The chip's accessible name SHALL use words ("They ask 2 for this"). A ratio SHALL NOT change any count, ring or order on the page.
@@ -1182,7 +1185,7 @@ A want list set to Buying only SHALL show no ratio chips. A tile that folds seve
 - **THEN** the tile shows "1:3"
 
 ### Requirement: Composer page
-The composer SHALL be the page `/trade/new`. Edit post SHALL open it with `edit` naming the post, titled Edit post and starting on the post's kind and lists. Every control that opened the composer SHALL open this page with the same picks. Posting SHALL return the viewer to the page they came from, or Browse. A signed-out visitor SHALL be sent to sign in and come back.
+The composer SHALL be the page `/trade/new`. Edit post SHALL open it with `edit` naming the post, titled Edit post and starting on the post's kind and lists. Every control that opened the composer SHALL open this page with the same picks. Posting SHALL return the viewer to the page they came from, or Browse (see Leaving the composer). A signed-out visitor SHALL be sent to sign in and come back.
 
 #### Scenario: From the list page
 - **WHEN** the viewer activates Post it on want list "binary hunt", paired with have list "spares"
@@ -1195,6 +1198,44 @@ The composer SHALL be the page `/trade/new`. Edit post SHALL open it with `edit`
 #### Scenario: Signed out
 - **WHEN** a signed-out visitor opens `/trade/new`
 - **THEN** the browser is at `/login?redirect=/trade/new`
+
+### Requirement: Leaving the composer
+Beside Post, the composer SHALL offer Cancel, which returns to the page the viewer came from, or Browse. Leaving with picks that differ from those the page opened on, by Cancel, a link or the browser, SHALL first ask "Leave without posting?" (on Edit post, "Leave without saving?"), saying the picks will be lost while list changes made in the composer are already saved; Keep editing stays. Post, Save and Take off Trade leave without asking.
+
+After Save on Edit post, or Take off Trade, a return to the edited post's own page SHALL go instead to the page of the post's new anchor list, or to Browse when the post is off Trade, since the old page would say the post is gone.
+
+#### Scenario: Cancel with changed picks
+- **WHEN** the viewer opened `/trade/new` from "binary hunt", picks have list "spares" and activates Cancel
+- **THEN** a dialog asks "Leave without posting?", and Discard returns to "binary hunt"
+
+#### Scenario: Cancel with nothing changed
+- **WHEN** the viewer opens Edit post and activates Cancel without changing a pick
+- **THEN** the page they came from opens without a dialog
+
+#### Scenario: New anchor
+- **WHEN** the viewer opened Edit post from `/trade/@rin/spares`, swaps have list "spares" for "extras" and saves
+- **THEN** the browser is at `/trade/@rin/extras`
+
+### Requirement: Take off Trade on Edit post
+Edit post SHALL offer Take off Trade beside its title. It takes the post off Trade as Your posts' Take off Trade does, with Undo on its toast, and leaves the composer.
+
+#### Scenario: Take off from the composer
+- **WHEN** the viewer activates Take off Trade on Edit post of their Swap post "spares"
+- **THEN** the post leaves Trade, a toast offers Undo, and the viewer is back where they came from
+
+### Requirement: What Trade leaves out, in the preview
+Under a picked have or sale side, the preview SHALL say how many of its objekts Trade will leave out because the viewer's linked profiles no longer own them or they can't be transferred (see Only what is still owned), or that none of them will show. It SHALL say nothing on a want side, or when every objekt will show. Post SHALL stay available.
+
+#### Scenario: Some sold
+- **WHEN** have list "spares" holds 30 objekts and the viewer has since sent 4 of them away
+- **THEN** under "spares" the preview reads that 4 of these won't show on Trade
+
+### Requirement: Trade block in the composer
+A viewer under a trade block, who has a post, SHALL see a warning at the top of the composer that the block hides their posts from Trade.
+
+#### Scenario: Blocked poster
+- **WHEN** a viewer with a trade block and one post opens Edit post
+- **THEN** the composer warns that the trade block hides their posts from Trade
 
 ### Requirement: Composer page layout
 On a wide screen the composer page SHALL hold a narrow settings column with the post's preview beside it. Below that width, the preview SHALL follow the settings and Post SHALL stay in reach at the bottom.
@@ -1211,14 +1252,14 @@ Each list of a post SHALL be picked from one dropdown per side. A list the compo
 - **THEN** the Looking for dropdown lists "store hunt" disabled with "In your Buy post"
 
 ### Requirement: Post preview
-The composer SHALL show the post as Trade will show it: its tags, Has (Selling for a sale list) and Wants, each with its list's name and up to 23 objekt thumbnails followed by "+N", the want list's rules, and who it matches. "+N" SHALL open every objekt of that side in a side sheet as wide as a list's "+N" sheet on Trade. The preview SHALL follow every pick as it changes.
+The composer SHALL show the post as Trade will show it: its tags, Has (Selling for a sale list) and Wants, each with its list's name, an Add objekts tile and up to 22 objekt thumbnails followed by "+N", the want list's rules, and who it matches. "+N" SHALL open every objekt of that side in a side sheet as wide as a list's "+N" sheet on Trade. The preview SHALL follow every pick as it changes.
 
 #### Scenario: Preview follows picks
 - **WHEN** the viewer picks Swap, have list "spares" holding 30 objekts and want list "binary hunt" holding the rule CC366
-- **THEN** the preview shows WTT, "spares" with 23 thumbnails and "+7", and "binary hunt" with the CC366 rule
+- **THEN** the preview shows WTT, "spares" with 22 thumbnails and "+8", and "binary hunt" with the CC366 rule
 
 #### Scenario: All objekts
-- **WHEN** the viewer activates "+7"
+- **WHEN** the viewer activates "+8"
 - **THEN** a side sheet as wide as Trade's "+N" sheet shows all 30 objekts of "spares"
 
 ### Requirement: Rules in the composer
@@ -1473,7 +1514,7 @@ Each objekt thumbnail of a picked side of the preview, and of its "+N" sheet, SH
 - **THEN** the sale objekt offers Set price and Remove from list, the have objekt Set ratio and Remove from list, and the Buy want objekt only Remove from list
 
 #### Scenario: From the "+N" sheet
-- **WHEN** "spares" holds 30 objekts, the viewer opens "+7", and removes Lynn SCO #30 from its menu in the sheet
+- **WHEN** "spares" holds 30 objekts, the viewer opens "+8", and removes Lynn SCO #30 from its menu in the sheet
 - **THEN** Lynn SCO #30 leaves the sheet and "spares", the sheet stays open, and focus is on the next objekt
 
 #### Scenario: Post already on Trade
@@ -1484,7 +1525,7 @@ Each objekt thumbnail of a picked side of the preview, and of its "+N" sheet, SH
 On a sale list with a currency, the "+N" sheet SHALL show each objekt's price and note under its card, the price opening Set price. The preview's thumbnails SHALL show no price.
 
 #### Scenario: Prices in the "+N" sheet
-- **WHEN** "binary sale" in MYR holds 30 objekts, Lynn SCO #12 priced MYR 5, and the viewer opens "+7"
+- **WHEN** "binary sale" in MYR holds 30 objekts, Lynn SCO #12 priced MYR 5, and the viewer opens "+8"
 - **THEN** Lynn SCO #12's card shows MYR 5 under it, and choosing that price opens Set price with 5
 
 ### Requirement: Focus after an objekt action

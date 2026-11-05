@@ -4,12 +4,20 @@ import { SocialBadge } from "@/components/shared/social-badge";
 import { TrustLine } from "@/features/offers/trust-line";
 import { OnlineAvatar } from "@/features/presence/online-avatar";
 import { ProfileLink } from "@/features/profile/profile-hover-card";
+import { displayNickname } from "@/lib/address";
+import { joinList } from "@/lib/text";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 export type TradePerson = {
   userId: string;
-  identity: { name: string; address: string | null; nickname: string | null };
+  identity: {
+    name: string;
+    address: string | null;
+    nickname: string | null;
+    /** the other profiles their matched lists are bound to */
+    also?: readonly { address: string; nickname: string | null }[];
+  };
   user: { image: string | null; discord: string | null; twitter: string | null };
   reputation: ComponentProps<typeof TrustLine>["reputation"];
 };
@@ -36,6 +44,7 @@ export function TradeHeader({
   className?: string;
 }) {
   const { identity, user } = person;
+  const also = (identity.also ?? []).map((ref) => displayNickname(ref.address, ref.nickname));
 
   return (
     <div className={cn("flex items-start gap-x-3", className)}>
@@ -59,6 +68,12 @@ export function TradeHeader({
             ) : (
               identity.name
             )}
+            {also.length > 0 ? (
+              <span className="text-muted-foreground text-sm font-normal">
+                {" · "}
+                {m.trade_also({ names: joinList(also) })}
+              </span>
+            ) : null}
           </h2>
           {handle ? (
             <span className="text-muted-foreground min-w-0 text-xs break-all">@{handle}</span>

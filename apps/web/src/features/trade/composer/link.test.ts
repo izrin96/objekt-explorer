@@ -4,7 +4,15 @@ import type { PlanList } from "@repo/api/schemas/trade-post";
 
 import { parseSearch, stringifySearch } from "@/features/filters/search-params";
 
-import { NEW_POST, composerSearch, composerSearchSchema, resolveStart, returnPath } from "./link";
+import {
+  NEW_POST,
+  composerSearch,
+  composerSearchSchema,
+  picksChanged,
+  resolveStart,
+  returnAfter,
+  returnPath,
+} from "./link";
 
 const list = (over: Partial<PlanList> & Pick<PlanList, "id" | "slug" | "listType">): PlanList => ({
   name: over.slug,
@@ -154,5 +162,45 @@ describe("returnPath", () => {
 
   test("from when it is a path", () => {
     expect(returnPath("/list/spares")).toBe("/list/spares");
+  });
+});
+
+describe("picksChanged", () => {
+  const start = { ...NEW_POST, kind: "swap" as const, have: "spares", want: "hunt" };
+
+  test("the picks the page opened on are no change", () => {
+    expect(picksChanged(start, { ...start, unpair: false })).toBe(false);
+  });
+
+  test("another list, kind or Open to is a change", () => {
+    expect(picksChanged(start, { ...start, have: "extras", unpair: false })).toBe(true);
+    expect(picksChanged(start, { ...start, kind: "sell", unpair: false })).toBe(true);
+    expect(picksChanged(start, { ...start, alsoPay: true, unpair: false })).toBe(true);
+  });
+
+  test("choosing to unpair is a change", () => {
+    expect(picksChanged(start, { ...start, unpair: true })).toBe(true);
+  });
+});
+
+describe("returnAfter", () => {
+  test("a save that keeps the anchor goes back where it came from", () => {
+    expect(returnAfter("/trade/@rin/spares", "spares", "spares")).toBe("/trade/@rin/spares");
+  });
+
+  test("a new anchor moves the edited post's page to it", () => {
+    expect(returnAfter("/trade/@rin/spares?x=1", "spares", "extras")).toBe(
+      "/trade/@rin/extras?x=1",
+    );
+  });
+
+  test("a post taken off Trade leaves its own page for Browse", () => {
+    expect(returnAfter("/trade/@rin/spares", "spares", null)).toBe("/trade");
+  });
+
+  test("any other page is kept", () => {
+    expect(returnAfter("/list/abc", "spares", null)).toBe("/list/abc");
+    expect(returnAfter("/trade/@rin", "spares", "extras")).toBe("/trade/@rin");
+    expect(returnAfter(undefined, null, "spares")).toBe("/trade");
   });
 });

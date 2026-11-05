@@ -43,6 +43,10 @@ export const tradePersonOptions = (input: { handle: string } | { userId: string 
 
 export const myPostsOptions = () => orpc.trade.myPosts.queryOptions({ staleTime: 0 });
 
+/** Under `trade`, so every list write refetches it with the rest of Trade. */
+export const unshownEntriesOptions = (slug: string, enabled: boolean) =>
+  orpc.trade.unshownEntries.queryOptions({ input: { slug }, enabled, retry: retryUnlessRefused });
+
 export const collectionPostCountsOptions = (slug: string) =>
   orpc.trade.collectionPostCounts.queryOptions({ input: { slug }, staleTime: 60_000 });
 

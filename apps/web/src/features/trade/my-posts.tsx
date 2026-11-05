@@ -311,7 +311,7 @@ function MyPostRow({
             {m.trade_composer_edit_title()}
           </MenuItem>
           <CopyLinkItem reason={copyReason} onCopy={onCopy} />
-          <MenuItem onClick={() => takeDown.takeDown(post.slug)}>
+          <MenuItem onClick={() => void takeDown.takeDown(post.slug)}>
             <ArrowFatLineDownIcon />
             {m.trade_take_off()}
           </MenuItem>

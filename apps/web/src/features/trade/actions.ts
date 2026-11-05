@@ -180,13 +180,17 @@ export function useTakeDownPost() {
   return {
     isPending: takeDown.isPending,
     // not `mutate`'s callbacks: the row that calls this leaves Your posts, and an unmounted observer skips them
+    /** Resolves whether the post came off, so a caller can move on. */
     takeDown: (slug: string) => {
       const start = startForPost(lists, slug);
-      void takeDown.mutateAsync({ slug }).then(
+      return takeDown.mutateAsync({ slug }).then(
         () => {
           const title = m.trade_take_off_success();
           const { kind } = start;
-          if (!kind) return void toastManager.add({ type: "success", title });
+          if (!kind) {
+            toastManager.add({ type: "success", title });
+            return true;
+          }
           addActionToast(
             { type: "success", title },
             {
@@ -195,9 +199,10 @@ export function useTakeDownPost() {
               onClick: () => save.mutate(postInput({ ...start, kind }, null)),
             },
           );
+          return true;
         },
         // the mutation's own onError shows the toast
-        () => {},
+        () => false,
       );
     },
   };

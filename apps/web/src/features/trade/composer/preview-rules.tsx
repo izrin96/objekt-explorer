@@ -32,12 +32,26 @@ export function PreviewRules({
   ratio: RatioSide | null;
   onAddRule: () => void;
 }) {
-  const { data: rules } = useQuery(listRulesOptions(slug));
+  const rulesQuery = useQuery(listRulesOptions(slug));
+  const rules = rulesQuery.data;
   // kept after closing so the dialog can animate out and hand focus back to its button
   const [deleting, setDeleting] = useState<{ rule: Rule; open: boolean } | null>(null);
   const addRef = useRef<HTMLButtonElement>(null);
   return (
     <div className="flex min-w-0 flex-col gap-1.5">
+      {rulesQuery.isError ? (
+        <p className="text-muted-foreground flex flex-wrap items-center gap-x-2 text-xs">
+          {m.common_error_loading_data()}
+          <Button
+            type="button"
+            variant="outline"
+            size="xs"
+            onClick={() => void rulesQuery.refetch()}
+          >
+            {m.common_error_retry()}
+          </Button>
+        </p>
+      ) : null}
       {rules && rules.length > 0 ? (
         <ul className="flex flex-wrap gap-1.5">
           {rules.map((rule) => (
