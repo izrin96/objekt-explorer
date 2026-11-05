@@ -1,7 +1,7 @@
 import { CurrencyDollarIcon, ScalesIcon, TrashIcon } from "@phosphor-icons/react";
 import type { ListObjekt } from "@repo/lib/types/objekt";
 import { useQuery } from "@tanstack/react-query";
-import { type RefObject, useRef, useState } from "react";
+import { type RefObject, useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Menu, MenuItem, MenuPopup, MenuSeparator, MenuTrigger } from "@/components/ui/menu";
@@ -26,9 +26,13 @@ import { SetRatioDialog } from "@/features/list/set-ratio-dialog";
 import { useEntryDialogs } from "@/features/list/use-entry-dialogs";
 import { ObjektCard, PriceCaption, RATIO_ON_CARD } from "@/features/objekt/objekt-card";
 import { collectionName } from "@/features/objekt/objekt-label";
+import { SelectBar, type SelectBarAction, SelectModeButton } from "@/features/objekt/select-bar";
+import { SelectedMark } from "@/features/objekt/selected-mark";
 import { PanelCardGrid } from "@/features/objekt/virtual-card-grid";
+import { activateOnKey } from "@/lib/a11y";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
+import { selectIsSelecting, useSelection } from "@/stores/selection";
 
 /** "Ratio for all" by the list's name: `list.edit` takes the whole list, so it starts from the stored one. */
 export function ListRatioControl({ stored, side }: { stored: StoredList; side: RatioSide }) {
@@ -225,7 +229,17 @@ export function useSideDialogs({
       };
       open([entry]);
     };
+  // a bulk action has no thumbnail to return to, so focus goes to `fallback`
+  const bulk = (open: (objekts: ListObjekt[]) => void) => (objekts: ListObjekt[]) => {
+    target.current = null;
+    open(objekts);
+  };
   const finalFocus = () => focusTarget(target.current, fallback.current);
+  const bulkActions = {
+    price: currency === null ? null : bulk(openPrice),
+    ratio: side === null ? null : bulk(openRatio),
+    remove: bulk(openRemove),
+  };
   const actions: EntryActions = {
     price: currency === null ? null : opening(openPrice),
     ratio: side === null ? null : opening(openRatio),
@@ -255,7 +269,28 @@ export function useSideDialogs({
       />
     </>
   );
-  return { actions, dialogs, currency };
+  return { actions, bulkActions, dialogs, currency };
+}
+
+/** A thumbnail in select mode: a tap ticks it, as the Add objekts picker's tiles do. */
+function SelectThumb({ entry, ticked }: { entry: ListObjekt; ticked: boolean }) {
+  const toggle = useSelection((s) => s.toggle);
+  const onToggle = () => toggle(entry.id);
+  // not a `<button>`: WebKit collapses the card's `aspect-ratio` box inside one
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      aria-pressed={ticked}
+      aria-label={collectionName(entry.slug, entry)}
+      onClick={onToggle}
+      onKeyDown={(event) => activateOnKey(event, onToggle)}
+      className="focus-visible:ring-ring @container relative cursor-pointer rounded-md outline-none focus-visible:ring-2"
+    >
+      <ObjektCard objekt={entry} image="thumbnail" hideLabel />
+      {ticked ? <SelectedMark /> : null}
+    </div>
+  );
 }
 
 /** "+N": every objekt of a side, each opening the menu its thumbnail opens in the preview. */
@@ -263,15 +298,18 @@ export function AllObjekts({
   slug,
   name,
   ratio,
+  select,
 }: {
   slug: string;
   name: string;
   ratio: RatioSide | null;
+  /** opens in select mode, for a side's Select button */
+  select: boolean;
 }) {
   const { data: stored } = useQuery(listFindOptions(slug, true));
   const { data: entries } = useQuery(listEntriesOptions(slug, []));
   const title = useRef<HTMLHeadingElement>(null);
-  const { actions, dialogs, currency } = useSideDialogs({
+  const { actions, bulkActions, dialogs, currency } = useSideDialogs({
     slug,
     stored,
     side: ratio,
@@ -279,29 +317,83 @@ export function AllObjekts({
   });
   const listRatio = stored?.ratio ?? null;
   const count = (entries?.length ?? 0).toLocaleString(getLocale());
+
+  const ids = useSelection((s) => s.ids);
+  const selecting = useSelection(selectIsSelecting);
+  // the store spans every surface and the composer never navigates while the sheet is up, so each
+  // sheet starts and ends with a clean selection
+  useEffect(() => {
+    const { clear, enter } = useSelection.getState();
+    clear();
+    if (select) enter();
+    return clear;
+  }, [select]);
+  const selected = entries?.filter((entry) => ids.has(entry.id)) ?? [];
+  const bulk: SelectBarAction[] = [
+    {
+      label: m.filter_remove_from_list(),
+      icon: <TrashIcon />,
+      onClick: () => bulkActions.remove(selected),
+    },
+    ...(bulkActions.price
+      ? [
+          {
+            label: m.filter_set_price(),
+            icon: <CurrencyDollarIcon />,
+            onClick: () => bulkActions.price?.(selected),
+          },
+        ]
+      : []),
+    ...(bulkActions.ratio
+      ? [
+          {
+            label: m.filter_set_ratio(),
+            icon: <ScalesIcon />,
+            onClick: () => bulkActions.ratio?.(selected),
+          },
+        ]
+      : []),
+  ];
+
   return (
     <>
       <SheetHeader>
-        <SheetTitle ref={title} tabIndex={-1} className="font-display outline-none">
-          {m.trade_composer_all_title()}
-        </SheetTitle>
-        <SheetDescription>{m.trade_composer_all_desc({ count, list: name })}</SheetDescription>
+        <div className="flex items-start justify-between gap-3 pe-7">
+          <SheetTitle ref={title} tabIndex={-1} className="font-display outline-none">
+            {m.trade_composer_all_title()}
+          </SheetTitle>
+          {entries && entries.length > 0 ? <SelectModeButton /> : null}
+        </div>
+        <SheetDescription>
+          {selecting
+            ? m.trade_composer_all_select_desc({ count, list: name })
+            : m.trade_composer_all_desc({ count, list: name })}
+        </SheetDescription>
       </SheetHeader>
       <SheetPanel data-entry-grid="">
         <PanelCardGrid
           sections={[{ title: null, items: entries ?? [] }]}
           getKey={(entry) => String(entry.entryId)}
-          renderItem={(entry) => (
-            <EntryThumb
-              entry={entry}
-              side={ratio}
-              listRatio={listRatio}
-              actions={actions}
-              currency={currency}
-            />
-          )}
+          renderItem={(entry) =>
+            selecting ? (
+              <SelectThumb entry={entry} ticked={ids.has(entry.id)} />
+            ) : (
+              <EntryThumb
+                entry={entry}
+                side={ratio}
+                listRatio={listRatio}
+                actions={actions}
+                currency={currency}
+              />
+            )
+          }
         />
       </SheetPanel>
+      {selecting ? (
+        <div className="flex px-6 pt-3 pb-6">
+          <SelectBar objekts={entries ?? []} secondary={bulk} />
+        </div>
+      ) : null}
       {dialogs}
     </>
   );

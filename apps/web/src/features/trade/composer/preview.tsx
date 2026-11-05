@@ -1,4 +1,4 @@
-import { PencilSimpleIcon, PlusIcon, WarningIcon } from "@phosphor-icons/react";
+import { CheckSquareIcon, PencilSimpleIcon, PlusIcon, WarningIcon } from "@phosphor-icons/react";
 import type { PlanList } from "@repo/api/schemas/trade-post";
 import { useQuery } from "@tanstack/react-query";
 import { type ReactNode, useId, useRef, useState } from "react";
@@ -35,7 +35,7 @@ const SHOWN = 22;
 type SheetView =
   | { view: "add"; slug: string; name: string }
   | { view: "rule"; slug: string; name: string; listRatio: number | null; withRatio: boolean }
-  | { view: "all"; slug: string; name: string; ratio: RatioSide | null };
+  | { view: "all"; slug: string; name: string; ratio: RatioSide | null; select: boolean };
 
 /**
  * The post as Trade will show it, built from the picks: its tags, who it matches, and each side's
@@ -152,6 +152,7 @@ export function ComposerPreview({
               slug={sheet.slug}
               name={sheet.name}
               ratio={sheet.ratio}
+              select={sheet.select}
             />
           ) : null}
         </SheetPopup>
@@ -241,6 +242,18 @@ function PickedSide({
           >
             <PencilSimpleIcon />
           </Button>
+          {total > 0 ? (
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              className="shrink-0"
+              aria-label={m.trade_composer_select_list({ list: name })}
+              title={m.trade_composer_select_list({ list: name })}
+              onClick={() => onOpenSheet({ view: "all", slug, name, ratio, select: true })}
+            >
+              <CheckSquareIcon />
+            </Button>
+          ) : null}
         </div>
         {ratio && stored ? <ListRatioControl stored={stored} side={ratio} /> : null}
       </div>
@@ -291,7 +304,7 @@ function PickedSide({
               <button
                 type="button"
                 data-entry-more=""
-                onClick={() => onOpenSheet({ view: "all", slug, name, ratio })}
+                onClick={() => onOpenSheet({ view: "all", slug, name, ratio, select: false })}
                 className={cn(
                   TILE,
                   "hover:text-foreground focus-visible:ring-ring w-full text-xs tabular-nums outline-none focus-visible:ring-2",

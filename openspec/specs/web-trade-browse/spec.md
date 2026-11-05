@@ -1594,6 +1594,21 @@ On a sale list with a currency, the "+N" sheet SHALL show each objekt's price an
 - **WHEN** "binary sale" in MYR holds 30 objekts, Lynn SCO #12 priced MYR 5, and the viewer opens "+8"
 - **THEN** Lynn SCO #12's card shows MYR 5 under it, and choosing that price opens Set price with 5
 
+### Requirement: Select several objekts in the composer
+Each picked side with at least one objekt SHALL offer Select by its list's name, opening the side's "+N" sheet in select mode, whatever the side holds; the sheet SHALL also offer Select beside its title, and Cancel while selecting. In select mode a tap on an objekt SHALL tick or untick it, and a bar under the objekts SHALL offer the list page's select actions for the ticked objekts: Remove from list on every side, Set price on a sale list with a currency, Set ratio on a side that swaps, and Select all. Each SHALL open the list page's own dialog, applying to the list at once and keeping the composer's picks, as the objekt menu does. A remove SHALL leave select mode. Closing the sheet SHALL clear the selection. Selection stays within one sheet, so it never holds objekts of two lists. Focus after a dialog SHALL go to the sheet's title.
+
+#### Scenario: Remove several at once
+- **WHEN** the viewer picks Swap with have list "spares" holding 5 objekts, chooses Select by "spares", ticks 3 of them, chooses Remove from list and confirms
+- **THEN** those 3 leave "spares", the sheet shows the other 2 out of select mode, and the picks are as before
+
+#### Scenario: Price several sale objekts
+- **WHEN** the viewer picks Sell with sale list "binary sale" in MYR, selects 4 objekts in its sheet and sets their price to 5
+- **THEN** all 4 are priced MYR 5 on "binary sale"
+
+#### Scenario: What the bar offers
+- **WHEN** the viewer selects objekts on a Buy post's want list
+- **THEN** the bar offers Remove from list and Select all, and no Set price or Set ratio
+
 ### Requirement: Focus after an objekt action
 After a remove from an objekt's menu, focus SHALL move to the next thumbnail, else the side's Add objekts tile; in the "+N" sheet, to the next objekt, else the sheet's title. Saving a price or ratio, or cancelling any of the dialogs, SHALL return focus to the thumbnail.
 

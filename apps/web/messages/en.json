@@ -2294,6 +2294,8 @@
   "trade_composer_side_pick": "Pick a list",
   "trade_composer_all_title": "All objekts",
   "trade_composer_all_desc": "{count} in {list}. Pick one to change or remove it.",
+  "trade_composer_select_list": "Select objekts in {list}",
+  "trade_composer_all_select_desc": "{count} in {list}. Tick the ones to change or remove together.",
   "trade_composer_objekt_options": "Options for {name}",
   "trade_composer_objekt_options_ratio": "Options for {name}, ratio {ratio}",
   "trade_composer_list_ratio_set": "Ratio for all, now {ratio}",

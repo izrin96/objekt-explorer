@@ -2294,6 +2294,8 @@
   "trade_composer_side_pick": "リストを選んでください",
   "trade_composer_all_title": "すべてのオブジェクト",
   "trade_composer_all_desc": "{list}に{count}個。1つ選んで変更や削除ができます。",
+  "trade_composer_select_list": "{list}のオブジェクトを選択",
+  "trade_composer_all_select_desc": "{list}に{count}個。まとめて変更や削除するものにチェックを入れます。",
   "trade_composer_objekt_options": "{name}のオプション",
   "trade_composer_objekt_options_ratio": "{name}のオプション、比率{ratio}",
   "trade_composer_list_ratio_set": "全体の比率、現在は{ratio}",
