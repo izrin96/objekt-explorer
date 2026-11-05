@@ -3,6 +3,7 @@ import {
   ArrowSquareOutIcon,
   ChatCircleIcon,
   DotsThreeIcon,
+  FlagIcon,
   HandshakeIcon,
   PencilSimpleIcon,
   SquaresFourIcon,
@@ -10,13 +11,14 @@ import {
 import { startForPost } from "@repo/api/schemas/trade-post";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { Link } from "@tanstack/react-router";
-import { type ReactNode, use, useRef, useState } from "react";
+import { type ReactNode, type RefObject, use, useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { FramePanel } from "@/components/ui/frame";
 import { Menu, MenuItem, MenuPopup, MenuSeparator, MenuTrigger } from "@/components/ui/menu";
 import { useStartConversation } from "@/features/chat/message-button";
 import { TagBadges } from "@/features/list/tag-label";
+import { useSafetyDialogs } from "@/features/moderation/safety-dialogs";
 import { useOpenOffer } from "@/features/offers/make-offer-button";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -52,6 +54,8 @@ export function PostBlock({
   post,
   surface,
   own,
+  signedIn,
+  ownerId,
   contact,
   name,
   handle,
@@ -63,6 +67,10 @@ export function PostBlock({
   post: PersonPostData;
   surface: Surface;
   own: boolean;
+  /** Report this post… needs an account */
+  signedIn: boolean;
+  /** the poster's user id, whom Report this post… reports */
+  ownerId: string;
   /** the row's contact: Make offer on this post shows only where the row's Make offer does */
   contact: TradeContact;
   name: string;
@@ -90,6 +98,8 @@ export function PostBlock({
   const [allOpen, setAllOpen] = useState<number | null>(null);
   const [mounted, setMounted] = useState<ReadonlySet<number>>(new Set());
   const [fromMenu, setFromMenu] = useState(false);
+  // each Report this post… mounts a fresh report, which opens itself; none until the first
+  const [reportRequest, setReportRequest] = useState(0);
   const showAll = (listId: number, viaMenu: boolean) => {
     setMounted((current) => new Set(current).add(listId));
     setFromMenu(viaMenu);
@@ -226,6 +236,15 @@ export function PostBlock({
           if (handle) void copyLink({ handle, slug: anchor.list.slug });
         }}
       />
+      {!own && signedIn ? (
+        <>
+          <MenuSeparator />
+          <MenuItem onClick={() => setReportRequest((n) => n + 1)}>
+            <FlagIcon />
+            {m.trade_post_report()}
+          </MenuItem>
+        </>
+      ) : null}
     </>
   ) : null;
 
@@ -321,8 +340,49 @@ export function PostBlock({
             actions={sheetActions}
           />
         ))}
+      {reportRequest > 0 && anchor ? (
+        <PostReport
+          key={reportRequest}
+          userId={ownerId}
+          name={name}
+          listId={post.id}
+          list={anchor.list.name}
+          menuRef={menuRef}
+        />
+      ) : null}
     </FramePanel>
   );
+}
+
+/**
+ * Report this post…'s dialog, opened as it mounts. A child of its own, mounted from the first
+ * click only: the report and block hooks would otherwise run for every post in a feed. The menu
+ * item that opened it unmounts with the menu, so focus returns to the menu's button.
+ */
+function PostReport({
+  userId,
+  name,
+  listId,
+  list,
+  menuRef,
+}: {
+  userId: string;
+  name: string;
+  listId: number;
+  list: string;
+  menuRef: RefObject<HTMLButtonElement | null>;
+}) {
+  const { openReport, dialogs } = useSafetyDialogs({
+    userId,
+    name,
+    post: { listId, attachment: m.mod_report_post_attached({ list }) },
+    finalFocus: menuRef,
+  });
+  // once per mount: the parent remounts this for each Report this post…
+  useEffect(() => {
+    openReport();
+  }, []);
+  return dialogs;
 }
 
 /**

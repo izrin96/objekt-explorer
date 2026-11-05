@@ -2,7 +2,8 @@ import { db } from "@repo/db";
 import { listEntries, lists, user } from "@repo/db/schema";
 import { and, eq, inArray, isNotNull, or, sql } from "drizzle-orm";
 
-import { pairPosts, previewSide } from "../../../lib/trade-feed";
+import { listOnTrade } from "../../../lib/report-post";
+import { pairPosts, type PostTag, previewSide } from "../../../lib/trade-feed";
 import { addressesByUser, nicknamesByAddress, toPartnerIdentity } from "../../../lib/trade-rank";
 import { unique } from "../../../lib/unique";
 import type { PostCardView } from "../../../schemas/chat";
@@ -125,6 +126,71 @@ export async function fetchPostCards(
         price && post.sale?.currency
           ? { min: Number(price.min), max: Number(price.max), currency: post.sale.currency }
           : null,
+    });
+  }
+  return result;
+}
+
+export type StaffPostState = "posted" | "off_trade" | "deleted";
+
+export type StaffPost = {
+  state: StaffPostState;
+  /** null once the list is deleted */
+  now: {
+    tags: PostTag[];
+    /** the anchor first */
+    lists: { id: number; type: "have" | "want" | "sale"; name: string }[];
+    slug: string;
+    profileSlug: string | null;
+    profileAddress: string | null;
+  } | null;
+};
+
+/**
+ * Posts as staff read them, by the id of a list a report named: the post that holds it now, with
+ * no `visibleOnTrade` filter, so a block, a sanction or Trade hiding the post never hides it from
+ * the console. A trade-blocked owner's post reads as posted; the console shows the sanction.
+ */
+export async function staffPosts(listIds: number[]): Promise<Map<number, StaffPost>> {
+  const result = new Map<number, StaffPost>(
+    listIds.map((id) => [id, { state: "deleted", now: null }]),
+  );
+  if (listIds.length === 0) return result;
+
+  const columns = { ...feedListColumns, discoverable: lists.discoverable };
+  const named = await db
+    .select({ id: lists.id, linkedListId: lists.linkedListId })
+    .from(lists)
+    .where(inArray(lists.id, listIds));
+  if (named.length === 0) return result;
+  const partnerIds = named.flatMap((list) =>
+    list.linkedListId === null ? [] : [list.linkedListId],
+  );
+  const rows = await db
+    .select(columns)
+    .from(lists)
+    .where(
+      or(inArray(lists.id, [...listIds, ...partnerIds]), inArray(lists.linkedListId, listIds)),
+    );
+  const posts = pairPosts(rows);
+
+  for (const id of listIds) {
+    const post = posts.find((p) => [p.have, p.want, p.sale].some((list) => list?.id === id));
+    if (!post) continue;
+    const members = [post.anchor, ...(post.want && post.want !== post.anchor ? [post.want] : [])];
+    result.set(id, {
+      state: listOnTrade(post.anchor) ? "posted" : "off_trade",
+      now: {
+        tags: post.tags,
+        lists: members.map((list) => ({
+          id: list.id,
+          type: list.listType as "have" | "want" | "sale",
+          name: list.name,
+        })),
+        slug: post.anchor.slug,
+        profileSlug: post.anchor.profileSlug,
+        profileAddress: post.anchor.profileAddress?.toLowerCase() ?? null,
+      },
     });
   }
   return result;

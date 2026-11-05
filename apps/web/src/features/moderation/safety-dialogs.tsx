@@ -1,5 +1,5 @@
 import type { ReportReason } from "@repo/api/schemas/moderation";
-import { useState } from "react";
+import { type RefObject, useState } from "react";
 
 import { m } from "@/paraglide/messages";
 
@@ -16,6 +16,8 @@ export function useSafetyDialogs({
   name,
   conversationId,
   trade,
+  post,
+  finalFocus,
 }: {
   userId: string;
   name: string;
@@ -23,6 +25,10 @@ export function useSafetyDialogs({
   conversationId?: number;
   /** Report a problem: the trade goes along, and the reason starts on scam */
   trade?: { id: number; attachment: string; reason: ReportReason };
+  /** a Trade post of this account, by its anchor list id, named on the report */
+  post?: { listId: number; attachment: string };
+  /** where focus returns when the report closes, if the control that opened it is gone */
+  finalFocus?: RefObject<HTMLElement | null>;
 }) {
   const [blockOpen, setBlockOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
@@ -53,7 +59,8 @@ export function useSafetyDialogs({
           name={name}
           fromConversation={conversationId !== undefined}
           defaultReason={trade?.reason}
-          attachment={trade?.attachment}
+          attachment={trade?.attachment ?? post?.attachment}
+          finalFocus={finalFocus}
           pending={report.isPending}
           error={report.error ? (reportRefusal(report.error) ?? m.mod_report_error()) : null}
           onSubmit={(values) =>
@@ -65,6 +72,7 @@ export function useSafetyDialogs({
               share: values.share,
               alsoBlock: values.alsoBlock,
               tradeId: trade?.id,
+              postListId: post?.listId,
             })
           }
         />

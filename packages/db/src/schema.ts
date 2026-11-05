@@ -724,6 +724,8 @@ export const report = pgTable(
     resolvedBy: text("resolved_by").references(() => user.id, { onDelete: "set null" }),
     resolvedAt: timestamp("resolved_at", { mode: "string", withTimezone: true }),
     tradeId: integer("trade_id").references((): AnyPgColumn => trade.id, { onDelete: "set null" }),
+    // a snapshot plus the list id, with no foreign key: it outlives the list and the account
+    post: jsonb("post"),
   },
   (t) => [
     index("report_trade_id_idx")

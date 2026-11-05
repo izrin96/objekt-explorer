@@ -208,6 +208,15 @@ export const PersonRow = memo(function PersonRow({
                 userId={person.userId}
                 name={person.identity.name}
                 report
+                // a post page's Report names its post; elsewhere the lead post would be an arbitrary pick
+                post={
+                  focused && anchor
+                    ? {
+                        listId: focused.id,
+                        attachment: m.mod_report_post_attached({ list: anchor.list.name }),
+                      }
+                    : undefined
+                }
                 extraItems={
                   <>
                     {viewPage}
@@ -259,6 +268,8 @@ export const PersonRow = memo(function PersonRow({
                 name={person.identity.name}
                 handle={person.handle}
                 offerHandle={offerHandle}
+                signedIn={signedIn}
+                ownerId={person.userId}
                 focused={post === focused}
                 collections={collections}
                 onOpen={onOpen}

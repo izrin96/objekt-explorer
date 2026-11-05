@@ -16,12 +16,15 @@ export function SafetyMenu({
   userId,
   name,
   report = false,
+  post,
   extraItems,
   className,
 }: {
   userId: string;
   name: string;
   report?: boolean;
+  /** the Trade post Report… names, by its anchor list id */
+  post?: { listId: number; attachment: string };
   /** the surface's own items, above Block */
   extraItems?: ReactNode;
   className?: string;
@@ -33,6 +36,7 @@ export function SafetyMenu({
       userId={userId}
       name={name}
       report={report}
+      post={post}
       extraItems={extraItems}
       className={className}
     />
@@ -43,16 +47,18 @@ function SafetyMenuInner({
   userId,
   name,
   report,
+  post,
   extraItems,
   className,
 }: {
   userId: string;
   name: string;
   report: boolean;
+  post: { listId: number; attachment: string } | undefined;
   extraItems: ReactNode;
   className?: string;
 }) {
-  const safety = useSafetyDialogs({ userId, name });
+  const safety = useSafetyDialogs({ userId, name, post });
 
   return (
     <>

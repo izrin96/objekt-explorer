@@ -75,6 +75,8 @@ export const reportInputSchema = z.object({
   alsoBlock: z.boolean().default(false),
   /** Report a problem: a trade between the reporter and the reported account */
   tradeId: z.number().int().positive().optional(),
+  /** a Trade post of the reported account, by either half's list id */
+  postListId: z.number().int().positive().optional(),
 });
 export type ReportInput = z.infer<typeof reportInputSchema>;
 
@@ -160,6 +162,28 @@ export const excerptEntrySchema = z.object({
   unsent: z.boolean(),
 });
 export type ExcerptEntry = z.infer<typeof excerptEntrySchema>;
+
+/**
+ * The Trade post a report names, as it stood when the report was filed. `listId` is the anchor
+ * then, with no foreign key, so the report keeps it after the list or the account is deleted.
+ */
+export const reportPostSchema = z.object({
+  listId: z.number(),
+  linkedListId: z.number().nullable(),
+  /** the anchor first */
+  lists: z
+    .object({
+      id: z.number(),
+      type: z.enum(["have", "want", "sale"]),
+      name: z.string(),
+      slug: z.string(),
+      description: z.string().nullable(),
+    })
+    .array(),
+  tags: z.enum(["wtt", "wtb", "wts"]).array(),
+  onTrade: z.boolean(),
+});
+export type ReportPost = z.infer<typeof reportPostSchema>;
 
 /** The ban sign-in error's message: data only, so the client words it in the viewer's language. */
 const banNoticeSchema = z.object({ reason: z.string(), until: z.string().nullable() });

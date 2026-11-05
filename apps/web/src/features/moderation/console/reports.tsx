@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
 
+import { ReportPost } from "./report-post";
 import { type Account, personName, sectionTitle } from "./shared";
 import { When } from "./when";
 
@@ -135,6 +136,7 @@ function ReportCard({
       {report.note ? (
         <p className="text-sm text-pretty break-words whitespace-pre-wrap">{report.note}</p>
       ) : null}
+      {report.post ? <ReportPost post={report.post} /> : null}
       {report.excerpt ? (
         <Excerpt
           entries={report.excerpt}

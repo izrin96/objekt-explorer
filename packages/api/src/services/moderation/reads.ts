@@ -15,11 +15,17 @@ import { and, desc, eq, gt, inArray, ne, or, sql } from "drizzle-orm";
 import { flagExcerpt } from "../../lib/excerpt-flags";
 import { iso } from "../../lib/time";
 import { FLAG_CATEGORIES, type FlagCategory } from "../../schemas/chat";
-import { excerptEntrySchema, REPORT_REASONS, type ReportReason } from "../../schemas/moderation";
+import {
+  excerptEntrySchema,
+  REPORT_REASONS,
+  type ReportReason,
+  reportPostSchema,
+} from "../../schemas/moderation";
 import { sanctionedAmong } from "../account/cosmo-link";
 import { fetchPartners, hydrateCards } from "../chat";
 import { autoAcceptedLegs } from "../offer/verify";
 import { reputationOf } from "../reputation";
+import { staffPosts } from "../trade/feed/post-cards";
 import { findAccount, sanctionColumns } from "./core";
 import { linkEventsWhere } from "./links";
 
@@ -266,6 +272,7 @@ export async function accountDossier(userId: string) {
           status: report.status,
           conversationId: report.conversationId,
           tradeId: report.tradeId,
+          post: report.post,
           createdAt: report.createdAt,
           resolvedAt: report.resolvedAt,
         })
@@ -319,6 +326,16 @@ export async function accountDossier(userId: string) {
     userId,
     reports.flatMap((r) => (r.status === "open" && r.tradeId !== null ? [r.tradeId] : [])),
   );
+  // resolved reports too: that is where staff look back when the account comes up again
+  const reportedPosts = new Map(
+    reports.flatMap((r) => {
+      const post = reportPostSchema.safeParse(r.post);
+      return post.success ? [[r.id, post.data] as const] : [];
+    }),
+  );
+  const postsNow = await staffPosts([
+    ...new Set([...reportedPosts.values()].map((post) => post.listId)),
+  ]);
   const people = await fetchPartners([
     ...attached.trades.map((t) => t.otherId),
     ...reports.map((r) => r.reporterId),
@@ -352,6 +369,8 @@ export async function accountDossier(userId: string) {
     ),
     reports: reports.map((r) => {
       const excerpt = excerptEntrySchema.array().safeParse(r.excerpt);
+      const reported = reportedPosts.get(r.id);
+      const now = reported ? postsNow.get(reported.listId) : undefined;
       return {
         id: r.id,
         reporter: nameOf(r.reporterId),
@@ -361,6 +380,13 @@ export async function accountDossier(userId: string) {
         fromConversation: r.conversationId !== null,
         tradeId: r.tradeId,
         excerpt: excerpt.success ? flagExcerpt(excerpt.data) : null,
+        post: reported
+          ? {
+              reported,
+              state: now?.state ?? ("deleted" as const),
+              now: now?.now ?? null,
+            }
+          : null,
         createdAt: iso(r.createdAt)!,
         resolvedAt: iso(r.resolvedAt),
       };

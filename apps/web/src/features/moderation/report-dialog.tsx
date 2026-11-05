@@ -4,7 +4,7 @@ import {
   REPORT_REASONS,
   type ReportReason,
 } from "@repo/api/schemas/moderation";
-import { type FormEvent, useId, useRef, useState } from "react";
+import { type FormEvent, type RefObject, useId, useRef, useState } from "react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -48,6 +48,7 @@ export function ReportDialog({
   fromConversation,
   defaultReason,
   attachment,
+  finalFocus,
   pending = false,
   error,
   onSubmit,
@@ -59,13 +60,15 @@ export function ReportDialog({
   defaultReason?: ReportReason;
   /** what goes along with the report besides the form, e.g. a trade */
   attachment?: string;
+  /** where focus returns on close, when the control that opened the dialog has unmounted */
+  finalFocus?: RefObject<HTMLElement | null>;
   pending?: boolean;
   error?: string | null;
   onSubmit: (values: ReportValues) => void;
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogPopup className="max-w-md">
+      <DialogPopup className="max-w-md" finalFocus={finalFocus}>
         {/* remounted per open, so a closed report never leaves its choices behind */}
         {open ? (
           <ReportForm

@@ -2,10 +2,11 @@ import { ORPCError } from "@orpc/server";
 import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { objekts } from "@repo/db/indexer/schema";
-import { message, report, trade, userBlock } from "@repo/db/schema";
+import { lists, message, report, trade, userBlock } from "@repo/db/schema";
 import { and, desc, eq, gt, inArray, or, sql } from "drizzle-orm";
 
 import { canReport } from "../../lib/offer-rules";
+import { postSnapshot } from "../../lib/report-post";
 import { reportRetryAt, shapeExcerpt, shapeExcerptOffer } from "../../lib/sanctions";
 import type { ReportInput } from "../../schemas/moderation";
 import { lockUsersForWrite } from "../account/cosmo-link";
@@ -64,6 +65,39 @@ async function excerptOffers(offerIds: number[], targetUserId: string, now: Date
   );
 }
 
+const snapshotColumns = {
+  id: lists.id,
+  userId: lists.userId,
+  listType: lists.listType,
+  linkedListId: lists.linkedListId,
+  takesSwaps: lists.takesSwaps,
+  matchSale: lists.matchSale,
+  matchHave: lists.matchHave,
+  name: lists.name,
+  slug: lists.slug,
+  description: lists.description,
+  discoverable: lists.discoverable,
+  isProfileBind: lists.isProfileBind,
+};
+
+/**
+ * The post a report names, as it stands now. A list deleted before the report arrives is left
+ * off, so the report still goes through; another account's list, or one of another type, is
+ * refused as a mismatched conversation or trade is. Being on Trade is recorded, never required.
+ */
+async function reportedPost(targetUserId: string, listId: number) {
+  const [named] = await db.select(snapshotColumns).from(lists).where(eq(lists.id, listId));
+  if (!named) return null;
+  if (named.userId !== targetUserId || !["have", "want", "sale"].includes(named.listType)) {
+    throw new ORPCError("NOT_FOUND");
+  }
+  const partner =
+    named.linkedListId === null
+      ? []
+      : await db.select(snapshotColumns).from(lists).where(eq(lists.id, named.linkedListId));
+  return postSnapshot([named, ...partner], named.id);
+}
+
 /** The excerpt and the also-block land in the report's transaction, or not at all. */
 export async function fileReport(me: string, input: ReportInput) {
   if (input.userId === me) refuseModeration("self");
@@ -90,6 +124,9 @@ export async function fileReport(me: string, input: ReportInput) {
       refuseModeration("not_reportable");
     }
   }
+
+  const post =
+    input.postListId === undefined ? null : await reportedPost(input.userId, input.postListId);
 
   const { id, cancelled } = await db.transaction(async (tx) => {
     await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext('chat_report'), hashtext(${me}))`);
@@ -140,6 +177,7 @@ export async function fileReport(me: string, input: ReportInput) {
         targetUserId: input.userId,
         conversationId: input.conversationId ?? null,
         tradeId: input.tradeId ?? null,
+        post,
         reason: input.reason,
         note: input.note || null,
         excerpt: shared
