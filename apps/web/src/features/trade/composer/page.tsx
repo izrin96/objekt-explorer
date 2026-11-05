@@ -22,7 +22,7 @@ import { m } from "@/paraglide/messages";
 import { useSavePost, useTakeDownPost } from "../actions";
 import { type Choice, postInput, withoutGone } from "../composer-choice";
 import { usePlanLists } from "../post-plan";
-import { myPostsOptions } from "../queries";
+import { tradeBlockedOptions } from "../queries";
 import { picksChanged, returnAfter } from "./link";
 import { ComposerPreview } from "./preview";
 import { ComposerSettings, PostButton } from "./settings";
@@ -46,9 +46,7 @@ export function ComposerPage({
   const router = useRouter();
   const save = useSavePost();
   const takeDown = useTakeDownPost();
-  // only the viewer's posts carry it, so a first post under a trade block goes unwarned
-  const { data: posts } = useQuery(myPostsOptions());
-  const tradeBlocked = posts?.[0]?.tradeBlocked ?? false;
+  const tradeBlocked = useQuery(tradeBlockedOptions()).data?.blocked ?? false;
   // the lists can change in another tab, which a deleted pick must notice on coming back
   useQuery({ ...currentUserOptions, refetchOnWindowFocus: "always" });
   const [picked, setPicked] = useState<Choice>(() => ({ ...start, unpair: false }));

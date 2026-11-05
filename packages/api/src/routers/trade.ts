@@ -28,7 +28,7 @@ import { tabCounts } from "../services/offer/tab-counts";
 import { toPublicUser } from "../services/profile";
 import { ipRateLimited, refuseOverUserLimit, userRateLimited } from "../services/redis";
 import { collectionPostCounts } from "../services/trade/feed/counts";
-import { bumpPerson, fetchMyPosts } from "../services/trade/feed/mine";
+import { bumpPerson, fetchMyPosts, isTradeBlocked } from "../services/trade/feed/mine";
 import { peopleFeed } from "../services/trade/feed/people";
 import {
   fetchListMatches,
@@ -131,6 +131,11 @@ export const tradeRouter = {
   bump: authed.handler(async ({ context: { session } }) => bumpPerson(session.user.id)),
 
   myPosts: authed.handler(async ({ context: { session } }) => fetchMyPosts(session.user.id)),
+
+  /** Whether a trade block hides the viewer's posts, for the composer: `myPosts` carries it only on a post. */
+  blocked: authed.handler(async ({ context: { session } }) => ({
+    blocked: await isTradeBlocked(session.user.id),
+  })),
 
   /** The composer's note on a have or sale side: which of its entries Trade leaves out. */
   unshownEntries: authed

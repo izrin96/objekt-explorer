@@ -67,7 +67,7 @@ export async function fetchMyPosts(userId: string) {
     }));
 }
 
-async function isTradeBlocked(userId: string) {
+export async function isTradeBlocked(userId: string) {
   const { rows } = await db.execute<{ blocked: boolean }>(
     sql`SELECT NOT ${notTradeSanctioned(userId)} AS blocked`,
   );

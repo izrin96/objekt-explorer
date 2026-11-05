@@ -1297,11 +1297,15 @@ Under a picked have or sale side, the preview SHALL say how many of its objekts 
 - **THEN** under "spares" the preview reads that 4 of these won't show on Trade
 
 ### Requirement: Trade block in the composer
-A viewer under a trade block, who has a post, SHALL see a warning at the top of the composer that the block hides their posts from Trade.
+A viewer under a trade block SHALL see a warning at the top of the composer that the block hides their posts from Trade, whether or not they have a post yet.
 
 #### Scenario: Blocked poster
 - **WHEN** a viewer with a trade block and one post opens Edit post
 - **THEN** the composer warns that the trade block hides their posts from Trade
+
+#### Scenario: Blocked, first post
+- **WHEN** a viewer with a trade block and no post opens New post
+- **THEN** the composer shows the same warning
 
 ### Requirement: Composer page layout
 On a wide screen the composer page SHALL hold a narrow settings column with the post's preview beside it. Below that width, the preview SHALL follow the settings and Post SHALL stay in reach at the bottom.
