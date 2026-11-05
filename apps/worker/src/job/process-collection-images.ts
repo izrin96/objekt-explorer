@@ -42,10 +42,10 @@ async function convertToWebp(buf: ArrayBuffer, maxHeight?: number) {
 
   if (maxHeight && height > maxHeight) {
     const newWidth = Math.round(width * (maxHeight / height));
-    const opts = sourceIsWebp ? ({ lossless: true } as const) : ({ quality: 80 } as const);
+    // lossy even from a WebP source: a lossless 583×900 thumbnail is ~500 KB, q80 ~50 KB
     return await img
       .resize(newWidth || 1, maxHeight)
-      .webp(opts)
+      .webp({ quality: 80 })
       .toBuffer();
   }
 
