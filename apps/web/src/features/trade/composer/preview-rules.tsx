@@ -1,41 +1,70 @@
-import { PlusIcon, TrashIcon } from "@phosphor-icons/react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  DotsThreeIcon,
+  EyeIcon,
+  ListBulletsIcon,
+  PencilSimpleIcon,
+  PlusIcon,
+  TrashIcon,
+} from "@phosphor-icons/react";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Menu, MenuItem, MenuPopup, MenuSeparator, MenuTrigger } from "@/components/ui/menu";
 import { Popover, PopoverPopup, PopoverTitle, PopoverTrigger } from "@/components/ui/popover";
+import { SheetDescription, SheetHeader, SheetPanel, SheetTitle } from "@/components/ui/sheet";
+import { Skeleton } from "@/components/ui/skeleton";
 import { toastManager } from "@/components/ui/toast";
+import { LoadError } from "@/features/chat/attach/attach-picker-parts";
 import { RatioChip } from "@/features/list/ratio-chip";
 import { RatioPicker } from "@/features/list/ratio-picker";
 import { appliedRatio, type RatioSide, ratioLabel } from "@/features/list/ratio-text";
-import { listRulesOptions, RULE_KEYS } from "@/features/list/rules/queries";
+import { listRulesOptions, RULE_KEYS, ruleObjektsOptions } from "@/features/list/rules/queries";
 import { ruleInputOf } from "@/features/list/rules/rule-draft";
+import { mergeRulePages } from "@/features/list/rules/rule-layout";
 import { ConfirmRule } from "@/features/list/rules/rules-strip";
-import { ruleText } from "@/features/list/rules/words";
+import { ruleText, shortNo } from "@/features/list/rules/words";
+import { ObjektCard } from "@/features/objekt/objekt-card";
+import { PanelCardGrid } from "@/features/objekt/virtual-card-grid";
 import { client } from "@/lib/orpc";
 import { refusalText } from "@/lib/refusal";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
+import { getLocale } from "@/paraglide/runtime";
 
-type Rule = Awaited<ReturnType<typeof client.list.rules>>[number];
+export type Rule = Awaited<ReturnType<typeof client.list.rules>>[number];
 
-/** A want side's rules, each opening its own ratio where the side takes one, and Add rule. */
+/** a rule action that opens the side sheet; `from` is where focus goes back to */
+type RuleSheetAction = (rule: Rule, from: HTMLElement | null) => void;
+
+/**
+ * A want side's rules, each opening its own ratio where the side takes one, and the list page's
+ * rule actions in its menu; then Add rule.
+ */
 export function PreviewRules({
   slug,
   listRatio,
   ratio,
   onAddRule,
+  onEditRule,
+  onSeeObjekts,
 }: {
   slug: string;
   listRatio: number | null;
   ratio: RatioSide | null;
   onAddRule: () => void;
+  onEditRule: RuleSheetAction;
+  onSeeObjekts: RuleSheetAction;
 }) {
   const rulesQuery = useQuery(listRulesOptions(slug));
   const rules = rulesQuery.data;
   // kept after closing so the dialog can animate out and hand focus back to its button
-  const [deleting, setDeleting] = useState<{ rule: Rule; open: boolean } | null>(null);
+  const [confirm, setConfirm] = useState<{
+    rule: Rule;
+    action: "delete" | "detach";
+    open: boolean;
+  } | null>(null);
   const addRef = useRef<HTMLButtonElement>(null);
   return (
     <div className="flex min-w-0 flex-col gap-1.5">
@@ -57,32 +86,27 @@ export function PreviewRules({
           {rules.map((rule) => (
             <li key={rule.id} className="flex min-w-0 items-start gap-0.5">
               <RuleChip rule={rule} slug={slug} listRatio={listRatio} ratio={ratio} />
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-xs"
-                className="text-muted-foreground hover:text-destructive-foreground shrink-0"
-                aria-label={m.trade_composer_rule_delete({ rule: ruleText(rule) })}
-                title={m.rule_delete()}
-                onClick={() => setDeleting({ rule, open: true })}
-              >
-                <TrashIcon />
-              </Button>
+              <RuleMenu
+                rule={rule}
+                onSeeObjekts={onSeeObjekts}
+                onEditRule={onEditRule}
+                onConfirm={(action) => setConfirm({ rule, action, open: true })}
+              />
             </li>
           ))}
         </ul>
       ) : null}
-      {deleting ? (
+      {confirm ? (
         <ConfirmRule
-          key={deleting.rule.id}
+          key={confirm.rule.id}
           slug={slug}
-          rule={deleting.rule}
+          rule={confirm.rule}
           focusAfterDone={addRef}
-          action={deleting.open ? "delete" : null}
+          action={confirm.open ? confirm.action : null}
           onClose={() =>
             // a delete that finishes after another rule's dialog opened must not close that one
-            setDeleting((current) =>
-              current?.rule.id === deleting.rule.id ? { ...current, open: false } : current,
+            setConfirm((current) =>
+              current?.rule.id === confirm.rule.id ? { ...current, open: false } : current,
             )
           }
         />
@@ -99,6 +123,117 @@ export function PreviewRules({
         {m.rule_add()}
       </Button>
     </div>
+  );
+}
+
+/** The list page's rule menu: See objekts, Edit rule, Turn into objekts, then Delete. */
+function RuleMenu({
+  rule,
+  onSeeObjekts,
+  onEditRule,
+  onConfirm,
+}: {
+  rule: Rule;
+  onSeeObjekts: RuleSheetAction;
+  onEditRule: RuleSheetAction;
+  onConfirm: (action: "delete" | "detach") => void;
+}) {
+  // the menu item is gone once the sheet opens, so the sheet hands focus back to the trigger
+  const trigger = useRef<HTMLButtonElement>(null);
+  return (
+    <Menu>
+      <MenuTrigger
+        ref={trigger}
+        render={
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-xs"
+            className="text-muted-foreground shrink-0"
+            aria-label={m.rule_menu({ rule: ruleText(rule) })}
+          />
+        }
+      >
+        <DotsThreeIcon weight="bold" />
+      </MenuTrigger>
+      <MenuPopup align="end" className="min-w-44">
+        <MenuItem onClick={() => onSeeObjekts(rule, trigger.current)}>
+          <EyeIcon />
+          {rule.covers === 1
+            ? m.rule_see_objekts_one()
+            : m.rule_see_objekts({ count: rule.covers.toLocaleString(getLocale()) })}
+        </MenuItem>
+        <MenuItem onClick={() => onEditRule(rule, trigger.current)}>
+          <PencilSimpleIcon />
+          {m.rule_edit()}
+        </MenuItem>
+        <MenuItem onClick={() => onConfirm("detach")}>
+          <ListBulletsIcon />
+          {m.rule_detach()}
+        </MenuItem>
+        <MenuSeparator />
+        <MenuItem variant="destructive" onClick={() => onConfirm("delete")}>
+          <TrashIcon />
+          {m.rule_delete()}
+        </MenuItem>
+      </MenuPopup>
+    </Menu>
+  );
+}
+
+/**
+ * See objekts in the side sheet: the list page's grid of what a rule covers, a heading per
+ * collection where those help, the held ones faded. A page at a time, as the end comes near.
+ */
+export function RuleObjektsSheet({ slug, rule }: { slug: string; rule: Rule }) {
+  const query = useInfiniteQuery(ruleObjektsOptions(slug, rule.id));
+  const groups = query.data ? mergeRulePages(query.data.pages) : [];
+  const headed = query.data?.pages[0]?.headed ?? false;
+  const sections = headed
+    ? groups.map((group) => ({
+        title: `${shortNo(group.season, group.collectionNo)} · ${m.rule_can_match({
+          count: group.canMatch.toLocaleString(getLocale()),
+        })}`,
+        items: group.objekts,
+      }))
+    : [{ title: null, items: groups.flatMap((group) => group.objekts) }];
+
+  return (
+    <>
+      <SheetHeader>
+        <SheetTitle className="font-display">{ruleText(rule)}</SheetTitle>
+        <SheetDescription>{m.rule_faded_note()}</SheetDescription>
+      </SheetHeader>
+      <SheetPanel>
+        {query.data === undefined ? (
+          query.isError ? (
+            <LoadError onRetry={() => void query.refetch()} />
+          ) : (
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(6rem,1fr))] gap-3">
+              {Array.from({ length: 8 }, (_, index) => (
+                <Skeleton key={index} className="rounded-photocard aspect-photocard" />
+              ))}
+            </div>
+          )
+        ) : groups.length === 0 && !query.hasNextPage ? (
+          <p className="text-muted-foreground text-sm">{m.rule_no_collections()}</p>
+        ) : (
+          <PanelCardGrid
+            sections={sections}
+            getKey={(objekt) => objekt.slug}
+            renderItem={(objekt) => (
+              <ObjektCard objekt={objekt} faded={!objekt.wanted} hideLabel={false} />
+            )}
+            more={{
+              has: query.hasNextPage,
+              loading: query.isFetchingNextPage,
+              failed: query.isFetchNextPageError,
+              load: () => void query.fetchNextPage({ cancelRefetch: false }),
+            }}
+          />
+        )}
+      </SheetPanel>
+    </>
   );
 }
 

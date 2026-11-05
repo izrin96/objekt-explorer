@@ -2300,7 +2300,6 @@
   "trade_composer_objekt_options": "{name} 옵션",
   "trade_composer_objekt_options_ratio": "{name} 옵션, 비율 {ratio}",
   "trade_composer_list_ratio_set": "전체 비율, 현재 {ratio}",
-  "trade_composer_rule_delete": "규칙 {rule} 삭제",
   "trade_composer_rule_ratio": "규칙 {rule}의 비율",
   "trade_composer_rule_ratio_set": "규칙 {rule}의 비율, 현재 {ratio}",
   "list_create_picked_desc": "만들면 이 게시물에 바로 선택됩니다.",

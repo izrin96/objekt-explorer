@@ -2300,7 +2300,6 @@
   "trade_composer_objekt_options": "{name}のオプション",
   "trade_composer_objekt_options_ratio": "{name}のオプション、比率{ratio}",
   "trade_composer_list_ratio_set": "全体の比率、現在は{ratio}",
-  "trade_composer_rule_delete": "ルール {rule} を削除",
   "trade_composer_rule_ratio": "ルール {rule} の比率",
   "trade_composer_rule_ratio_set": "ルール {rule} の比率、現在は{ratio}",
   "list_create_picked_desc": "作成すると、この投稿に選択されます。",

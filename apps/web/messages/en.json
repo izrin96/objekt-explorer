@@ -2300,7 +2300,6 @@
   "trade_composer_objekt_options": "Options for {name}",
   "trade_composer_objekt_options_ratio": "Options for {name}, ratio {ratio}",
   "trade_composer_list_ratio_set": "Ratio for all, now {ratio}",
-  "trade_composer_rule_delete": "Delete the rule {rule}",
   "trade_composer_rule_ratio": "Ratio for the rule {rule}",
   "trade_composer_rule_ratio_set": "Ratio for the rule {rule}, now {ratio}",
   "list_create_picked_desc": "Once created, it's picked for your post.",

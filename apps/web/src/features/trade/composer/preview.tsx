@@ -26,7 +26,7 @@ import { unshownEntriesOptions } from "../queries";
 import { TILE } from "../thumb-grid";
 import { AddObjektsSheet } from "./add-objekts";
 import { AllObjekts, EntryThumb, ListRatioControl, useSideDialogs } from "./preview-entries";
-import { PreviewRules } from "./preview-rules";
+import { PreviewRules, type Rule, RuleObjektsSheet } from "./preview-rules";
 import { type PreviewSide, previewSides } from "./preview-sides";
 
 /** thumbnails before "+N", which opens the rest in the side sheet; the Add objekts tile comes first */
@@ -34,7 +34,16 @@ const SHOWN = 22;
 
 type SheetView =
   | { view: "add"; slug: string; name: string }
-  | { view: "rule"; slug: string; name: string; listRatio: number | null; withRatio: boolean }
+  | {
+      view: "rule";
+      slug: string;
+      name: string;
+      listRatio: number | null;
+      withRatio: boolean;
+      /** the rule Edit rule opened; none for Add rule */
+      rule?: Rule;
+    }
+  | { view: "rule-objekts"; slug: string; rule: Rule }
   | { view: "all"; slug: string; name: string; ratio: RatioSide | null; select: boolean };
 
 /**
@@ -57,8 +66,9 @@ export function ComposerPreview({
   const [sheetOpen, setSheetOpen] = useState(false);
   // opened from code, not a trigger, so the sheet is told where focus goes back to
   const opener = useRef<HTMLElement | null>(null);
-  const openSheet = (view: SheetView) => {
-    opener.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  const openSheet = (view: SheetView, from?: HTMLElement | null) => {
+    opener.current =
+      from ?? (document.activeElement instanceof HTMLElement ? document.activeElement : null);
     setSheet((prev) => ({ ...view, session: (prev?.session ?? 0) + 1 }));
     setSheetOpen(true);
   };
@@ -123,7 +133,7 @@ export function ComposerPreview({
           className={
             sheet?.view === "add"
               ? "h-[88dvh] max-sm:h-[calc(100dvh-(--spacing(12)))]"
-              : sheet?.view === "all"
+              : sheet?.view === "all" || sheet?.view === "rule-objekts"
                 ? "sm:max-w-3xl"
                 : "sm:max-w-lg"
           }
@@ -143,6 +153,7 @@ export function ComposerPreview({
               listName={sheet.name}
               listRatio={sheet.listRatio}
               withRatio={sheet.withRatio}
+              rule={sheet.rule}
               parts={SHEET_PARTS}
               onDone={() => setSheetOpen(false)}
             />
@@ -154,6 +165,8 @@ export function ComposerPreview({
               ratio={sheet.ratio}
               select={sheet.select}
             />
+          ) : sheet?.view === "rule-objekts" ? (
+            <RuleObjektsSheet key={sheet.session} slug={sheet.slug} rule={sheet.rule} />
           ) : null}
         </SheetPopup>
       </Sheet>
@@ -193,7 +206,7 @@ function PickedSide({
 }: {
   side: PreviewSide & { slug: string };
   name: string;
-  onOpenSheet: (view: SheetView) => void;
+  onOpenSheet: (view: SheetView, from?: HTMLElement | null) => void;
 }) {
   const { slug, role, ratio } = side;
   const { data: stored } = useQuery(listFindOptions(slug, true));
@@ -266,6 +279,13 @@ function PickedSide({
           onAddRule={() =>
             onOpenSheet({ view: "rule", slug, name, listRatio, withRatio: ratio !== null })
           }
+          onEditRule={(rule, from) =>
+            onOpenSheet(
+              { view: "rule", slug, name, listRatio, withRatio: ratio !== null, rule },
+              from,
+            )
+          }
+          onSeeObjekts={(rule, from) => onOpenSheet({ view: "rule-objekts", slug, rule }, from)}
         />
       ) : null}
 

@@ -1329,7 +1329,7 @@ The composer SHALL show the post as Trade will show it: its tags, Has (Selling f
 - **THEN** a side sheet as wide as Trade's "+N" sheet shows all 30 objekts of "spares"
 
 ### Requirement: Rules in the composer
-While a want list is picked, its side of the preview SHALL list its rules and offer Add rule, which SHALL open the list page's rule form in a side sheet. Adding a rule SHALL save it to the list at once, close the sheet and keep the composer's picks; leaving the composer SHALL keep the rule. Each listed rule SHALL carry Delete rule, which asks first as the list page does, then removes the rule from the list at once and keeps the picks.
+While a want list is picked, its side of the preview SHALL list its rules and offer Add rule, which SHALL open the list page's rule form in a side sheet. Adding a rule SHALL save it to the list at once, close the sheet and keep the composer's picks; leaving the composer SHALL keep the rule. Each listed rule SHALL carry a menu of the list page's rule actions: See objekts, which opens what the rule covers in a side sheet as the list page's grid shows it, held ones faded and loading a page at a time; Edit rule, which opens the list page's rule form for that rule in a side sheet; Turn into objekts; and Delete rule. Turn into objekts and Delete rule ask first as the list page does. Each change SHALL save to the list at once and keep the picks. Closing a sheet SHALL return focus to the rule's menu button.
 
 #### Scenario: Add a rule while posting
 - **WHEN** the viewer picks Swap and want list "binary hunt", activates Add rule and adds the rule CC366, any member
@@ -1340,8 +1340,20 @@ While a want list is picked, its side of the preview SHALL list its rules and of
 - **THEN** "binary hunt" holds the rule, and its Trade state is as before
 
 #### Scenario: Delete a rule while posting
-- **WHEN** the viewer activates Delete rule beside the CC366 rule on "binary hunt" and confirms
+- **WHEN** the viewer chooses Delete rule in the CC366 rule's menu on "binary hunt" and confirms
 - **THEN** the rule leaves "binary hunt" and the Wants side, and the picks are as before
+
+#### Scenario: Edit a rule while posting
+- **WHEN** the viewer chooses Edit rule in the CC366 rule's menu, adds SeoYeon as a priority member and saves
+- **THEN** the sheet closes, the rule on "binary hunt" carries SeoYeon, and the picks are as before
+
+#### Scenario: Turn a rule into objekts while posting
+- **WHEN** the viewer chooses Turn into objekts in the CC366 rule's menu and confirms
+- **THEN** the rule leaves the Wants side, its collections show there as objekts of "binary hunt", and the picks are as before
+
+#### Scenario: See a rule's objekts
+- **WHEN** the viewer chooses See objekts in the CC366 rule's menu
+- **THEN** a side sheet titled with the rule lists the collections it covers, the ones the viewer holds faded
 
 #### Scenario: Rule limit
 - **WHEN** "binary hunt" already holds 20 rules and the viewer adds another
