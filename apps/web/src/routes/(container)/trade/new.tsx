@@ -27,5 +27,12 @@ export const Route = createFileRoute("/(container)/trade/new")({
 function ComposerRoute() {
   const search = Route.useSearch();
   const { start } = Route.useLoaderData();
-  return <ComposerPage key={JSON.stringify(search)} start={start} from={search.from} />;
+  return (
+    <ComposerPage
+      key={JSON.stringify(search)}
+      start={start}
+      from={search.from}
+      staleEdit={search.edit !== undefined && start.replaces === null}
+    />
+  );
 }

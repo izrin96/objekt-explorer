@@ -12,6 +12,7 @@ import {
   postInput,
   unpairedNames,
   withAlsoSwap,
+  withoutGone,
 } from "./composer-choice";
 
 let nextId = 1;
@@ -284,5 +285,33 @@ describe("undo after take down", () => {
     const plan = planPost(takenDown, undo("s8"));
     expect(plan.ok).toBe(true);
     if (plan.ok) expect(plan.saleSwaps).toEqual({ id: 23, takesSwaps: true });
+  });
+});
+
+describe("withoutGone", () => {
+  const lists = [
+    list({ slug: "spares", listType: "have" }),
+    list({ slug: "hunt", listType: "want" }),
+  ];
+  const picks: Choice = {
+    kind: "swap",
+    have: "spares",
+    want: "hunt",
+    sale: null,
+    alsoPay: true,
+    alsoSwap: false,
+    unpair: false,
+  };
+
+  test("picks of lists the viewer still has stay as they are", () => {
+    const result = withoutGone(picks, lists);
+    expect(result.gone).toEqual([]);
+    expect(result.choice).toBe(picks);
+  });
+
+  test("a deleted list's slot empties, and a gone want list drops its pay option", () => {
+    const result = withoutGone(picks, [lists[0]!]);
+    expect(result.gone).toEqual(["want"]);
+    expect(result.choice).toEqual({ ...picks, want: null, alsoPay: false });
   });
 });

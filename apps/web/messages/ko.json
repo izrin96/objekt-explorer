@@ -2310,6 +2310,8 @@
   "trade_composer_sale_needs_profile": "Trade가 보유 오브젝트를 확인하므로 판매 목록에는 연결된 Cosmo 프로필이 필요합니다.",
   "trade_composer_unshown_one": "이 중 1개는 거래에 표시되지 않습니다. 연결된 프로필이 더 이상 보유하지 않거나 전송할 수 없습니다.",
   "trade_composer_unshown_some": "이 중 {count}개는 거래에 표시되지 않습니다. 연결된 프로필이 더 이상 보유하지 않거나 전송할 수 없습니다.",
+  "trade_composer_stale_edit": "그 게시물은 더 이상 거래에 없거나 내 게시물이 아니므로 새 게시물로 시작합니다.",
+  "trade_composer_list_gone": "고른 목록이 삭제되어 선택이 해제되었습니다.",
   "trade_composer_unshown_all": "이 중 거래에 표시되는 것이 없습니다. 연결된 프로필이 더 이상 보유하지 않거나 전송할 수 없습니다.",
   "trade_composer_discard_title": "게시하지 않고 나갈까요?",
   "trade_composer_discard_desc": "이 게시물에서 고른 항목은 사라집니다. 리스트에서 바꾼 내용은 이미 저장되었습니다.",

@@ -69,6 +69,20 @@ export function pickList(
   return next;
 }
 
+/**
+ * The picks less any list the viewer no longer has (deleted in another tab), with the slots that
+ * lost one. A dropped want list takes its pay option with it.
+ */
+export function withoutGone(choice: Choice, lists: readonly PlanList[]) {
+  const has = (slug: string | null) => slug === null || lists.some((list) => list.slug === slug);
+  const gone = (["have", "want", "sale"] as const).filter((slot) => !has(choice[slot]));
+  if (gone.length === 0) return { choice, gone };
+  const next = { ...choice, unpair: false };
+  for (const slot of gone) next[slot] = null;
+  if (next.want === null) next.alsoPay = false;
+  return { choice: next, gone };
+}
+
 /** Sell's "also open to swaps": off drops the want list and its pay option. */
 export function withAlsoSwap(prev: Choice, on: boolean): Choice {
   return {

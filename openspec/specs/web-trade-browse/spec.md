@@ -1243,7 +1243,7 @@ A want list set to Buying only SHALL show no ratio chips. A tile that folds seve
 - **THEN** the tile shows "1:3"
 
 ### Requirement: Composer page
-The composer SHALL be the page `/trade/new`. Edit post SHALL open it with `edit` naming the post, titled Edit post and starting on the post's kind and lists. Every control that opened the composer SHALL open this page with the same picks. Posting SHALL return the viewer to the page they came from, or Browse (see Leaving the composer). A signed-out visitor SHALL be sent to sign in and come back.
+The composer SHALL be the page `/trade/new`. Edit post SHALL open it with `edit` naming the post, titled Edit post and starting on the post's kind and lists. Every control that opened the composer SHALL open this page with the same picks. Posting SHALL return the viewer to the page they came from, or Browse (see Leaving the composer). A signed-out visitor SHALL be sent to sign in and come back. A link whose `edit` names no post of the viewer's SHALL open a new post and say that the post is no longer on Trade or no longer theirs. A picked list deleted while the page is open SHALL drop out of the picks, with a notice that it was deleted.
 
 #### Scenario: From the list page
 - **WHEN** the viewer activates Post it on want list "binary hunt", paired with have list "spares"
@@ -1256,6 +1256,14 @@ The composer SHALL be the page `/trade/new`. Edit post SHALL open it with `edit`
 #### Scenario: Signed out
 - **WHEN** a signed-out visitor opens `/trade/new`
 - **THEN** the browser is at `/login?redirect=/trade/new`
+
+#### Scenario: Old edit link
+- **WHEN** the viewer opens Edit post from a link to a post they have since taken apart
+- **THEN** the page reads New post and says that post is no longer on Trade or no longer theirs
+
+#### Scenario: Picked list deleted
+- **WHEN** the viewer has "spares" picked, deletes it on the list page in another tab and comes back
+- **THEN** What you're offering reads No list, and a notice says a list they picked was deleted
 
 ### Requirement: Leaving the composer
 Beside Post, the composer SHALL offer Cancel, which returns to the page the viewer came from, or Browse. Leaving with picks that differ from those the page opened on, by Cancel, a link or the browser, SHALL first ask "Leave without posting?" (on Edit post, "Leave without saving?"), saying the picks will be lost while list changes made in the composer are already saved; Keep editing stays. Post, Save and Take off Trade leave without asking.

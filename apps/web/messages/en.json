@@ -2310,6 +2310,8 @@
   "trade_composer_sale_needs_profile": "A sale list needs a linked Cosmo profile, since Trade checks what it holds.",
   "trade_composer_unshown_one": "One of these won't show on Trade: your linked profiles no longer own it, or it can't be transferred.",
   "trade_composer_unshown_some": "{count} of these won't show on Trade: your linked profiles no longer own them, or they can't be transferred.",
+  "trade_composer_stale_edit": "That post is no longer on Trade or no longer yours, so this starts a new post.",
+  "trade_composer_list_gone": "A list you picked was deleted, so it's no longer picked.",
   "trade_composer_unshown_all": "None of these will show on Trade: your linked profiles no longer own them, or they can't be transferred.",
   "trade_composer_discard_title": "Leave without posting?",
   "trade_composer_discard_desc": "Your picks for this post will be lost. Changes you made to your lists are already saved.",

@@ -1,8 +1,8 @@
-import { ArrowFatLineDownIcon, WarningIcon } from "@phosphor-icons/react";
+import { ArrowFatLineDownIcon, InfoIcon, WarningIcon } from "@phosphor-icons/react";
 import { type ComposerStart, planPost } from "@repo/api/schemas/trade-post";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useBlocker, useRouter } from "@tanstack/react-router";
-import { useRef, useState } from "react";
+import { type SetStateAction, useRef, useState } from "react";
 
 import { PageHeader } from "@/components/shared/page-header";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -16,10 +16,11 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { currentUserOptions } from "@/features/user/queries";
 import { m } from "@/paraglide/messages";
 
 import { useSavePost, useTakeDownPost } from "../actions";
-import { type Choice, postInput } from "../composer-choice";
+import { type Choice, postInput, withoutGone } from "../composer-choice";
 import { usePlanLists } from "../post-plan";
 import { myPostsOptions } from "../queries";
 import { picksChanged, returnAfter } from "./link";
@@ -31,7 +32,16 @@ import { ComposerSettings, PostButton } from "./settings";
  * preview under the settings with Post in a bar at the bottom. Mounted per search, so a new link
  * starts afresh while a list refetch keeps the picks.
  */
-export function ComposerPage({ start, from }: { start: ComposerStart; from?: string }) {
+export function ComposerPage({
+  start,
+  from,
+  staleEdit = false,
+}: {
+  start: ComposerStart;
+  from?: string;
+  /** the link named a post to edit that is no longer the viewer's, so this opened as a new post */
+  staleEdit?: boolean;
+}) {
   const lists = usePlanLists();
   const router = useRouter();
   const save = useSavePost();
@@ -39,7 +49,16 @@ export function ComposerPage({ start, from }: { start: ComposerStart; from?: str
   // only the viewer's posts carry it, so a first post under a trade block goes unwarned
   const { data: posts } = useQuery(myPostsOptions());
   const tradeBlocked = posts?.[0]?.tradeBlocked ?? false;
-  const [choice, setChoice] = useState<Choice>(() => ({ ...start, unpair: false }));
+  // the lists can change in another tab, which a deleted pick must notice on coming back
+  useQuery({ ...currentUserOptions, refetchOnWindowFocus: "always" });
+  const [picked, setPicked] = useState<Choice>(() => ({ ...start, unpair: false }));
+  // a picked list deleted meanwhile drops out here, and the next change stores the cleaned picks
+  const { choice, gone } = withoutGone(picked, lists);
+  const setChoice = (update: SetStateAction<Choice>) =>
+    setPicked((prev) => {
+      const base = withoutGone(prev, lists).choice;
+      return typeof update === "function" ? update(base) : update;
+    });
   const editing = start.replaces !== null;
   const kind = choice.kind;
   const request = kind ? postInput({ ...choice, kind }, start.replaces) : null;
@@ -98,6 +117,20 @@ export function ComposerPage({ start, from }: { start: ComposerStart; from?: str
           ) : undefined
         }
       />
+      {staleEdit ? (
+        <Alert variant="info">
+          <InfoIcon aria-hidden />
+          <AlertDescription>{m.trade_composer_stale_edit()}</AlertDescription>
+        </Alert>
+      ) : null}
+      <div role="status">
+        {gone.length > 0 ? (
+          <Alert variant="info">
+            <InfoIcon aria-hidden />
+            <AlertDescription>{m.trade_composer_list_gone()}</AlertDescription>
+          </Alert>
+        ) : null}
+      </div>
       {tradeBlocked ? (
         <Alert variant="warning">
           <WarningIcon aria-hidden />

@@ -2310,6 +2310,8 @@
   "trade_composer_sale_needs_profile": "Tradeは所持しているObjektを確認するため、販売リストには連携済みのCosmoプロフィールが必要です。",
   "trade_composer_unshown_one": "このうち1件は取引に表示されません。リンク済みのプロフィールがもう所有していないか、譲渡できません。",
   "trade_composer_unshown_some": "このうち{count}件は取引に表示されません。リンク済みのプロフィールがもう所有していないか、譲渡できません。",
+  "trade_composer_stale_edit": "その投稿はもう取引にないか自分の投稿ではないため、新しい投稿として始めます。",
+  "trade_composer_list_gone": "選んだリストが削除されたため、選択が解除されました。",
   "trade_composer_unshown_all": "このうち取引に表示されるものはありません。リンク済みのプロフィールがもう所有していないか、譲渡できません。",
   "trade_composer_discard_title": "投稿せずに移動しますか？",
   "trade_composer_discard_desc": "この投稿で選んだ内容は失われます。リストへの変更はすでに保存されています。",
