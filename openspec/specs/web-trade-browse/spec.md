@@ -194,8 +194,8 @@ The header sentence SHALL count the person across all of their listed lists, and
 
 The posts left out SHALL be left out by the server, so every page of the feed holds up to a full page of people. The order is newest bump first on Browse, as Mutual order defines under Mutual, and as the Mutual and One way sections define under Any (see Matches and Compare with). The filters SHALL combine. When no post is listed:
 - on For you with a collection filter or `slug` set, under Any or Mutual, it SHALL say that no posts match the filters and offer Reset, which keeps `match` and `list`;
-- otherwise under Any, the feed SHALL say that no posts match the viewer's lists and offer to show all posts on Browse, keeping the filters;
-- otherwise under Mutual, it SHALL say that no one can swap with the viewer and offer to switch to Any;
+- otherwise under Any, the feed SHALL say that no posts match the viewer's lists and offer to show all posts on Browse, keeping the filters. With Compare with naming a list it SHALL also offer All my lists and Open list for that list, and otherwise Open your lists (`/list`). When every list the matches were taken from holds no objekts, it SHALL say so instead of that nobody has what they ask for;
+- otherwise under Mutual, it SHALL say that no one can swap with the viewer and offer to switch to Any, and with Compare with naming a list, All my lists;
 - under Any and Mutual, while Compare with names a list, the message SHALL name it ("No posts match spares", "No one can swap with you for spares");
 - with other filters set, it SHALL offer Reset;
 - with no filter set while the viewer's selected artists leave some out, it SHALL say that nobody has a post under the selected artists and where to change them (the avatar menu signed in, Settings signed out), since Reset clears no artist selection.
@@ -400,7 +400,7 @@ Browse SHALL list the viewer's own row, so they can see where a bump put them, w
 
 #### Scenario: No list that can match
 - **WHEN** a signed-in viewer whose only list is a have list not bound to a Cosmo profile opens `/trade`
-- **THEN** no line shows beside the Post type menu, and the For you tab is hidden
+- **THEN** no line shows beside the Post type menu, and the For you tab still shows (see Matches and Compare with, Who sees it)
 
 #### Scenario: Hidden partner
 - **WHEN** the viewer hid rin.trades
@@ -522,7 +522,7 @@ With no choice saved in this browser, the posts SHALL start shown when any of th
 - **THEN** View post and Copy link are disabled, each saying to bump first
 
 ### Requirement: Trade tabs
-`/trade`, `/trade/for-you` and `/trade/mine` SHALL share a tab bar, marking the current one. It reads Browse, For you and My trades. For you SHALL be shown only to a signed-in viewer with at least one list that takes part in Trade (a want list, or a have or sale list bound to a Cosmo profile); for anyone else the bar reads Browse and My trades. For a signed-out visitor, My trades SHALL lead to `/login?redirect=/trade/mine`. The Trade item in the primary navigation SHALL open Browse. A trade's own page, `/trade/mine/$tradeId`, SHALL show neither the Trade page title nor the tab bar; its breadcrumb leads back (see `web-verified-trades`, Trade page header).
+`/trade`, `/trade/for-you` and `/trade/mine` SHALL share a tab bar, marking the current one. It reads Browse, For you and My trades. For you SHALL be shown to every signed-in viewer, whose lists can match or not (see Matches and Compare with, Who sees it); for a signed-out visitor the bar reads Browse and My trades. For a signed-out visitor, My trades SHALL lead to `/login?redirect=/trade/mine`. The Trade item in the primary navigation SHALL open Browse. A trade's own page, `/trade/mine/$tradeId`, SHALL show neither the Trade page title nor the tab bar; its breadcrumb leads back (see `web-verified-trades`, Trade page header).
 
 For a signed-in user, My trades SHALL carry a count after its label, in monospace: the open offers waiting on the user (Needs you) plus the trades in progress:
 - zero SHALL show nothing;
@@ -549,7 +549,7 @@ The count SHALL be read when the tab bar loads and when the user moves between T
 
 #### Scenario: No list that can match
 - **WHEN** a signed-in user whose only list is a have list not bound to a Cosmo profile opens `/trade`
-- **THEN** the tabs read Browse and My trades, with no For you tab
+- **THEN** the tabs read Browse, For you and My trades
 
 #### Scenario: Signed out
 - **WHEN** a signed-out visitor opens `/trade`
@@ -849,9 +849,9 @@ For you (`/trade/for-you`) SHALL list the same people as Browse, in the same row
 - **Any**: only posts holding at least one objekt that matches the viewer are kept, judged on each post's own lists (see Filters), and only people with a kept post are listed, in two sections (see Any order).
 - **Mutual**: only people whose mutual score is above zero, as the person's header sentence computes it (see Matches to the signed-in viewer). Of those people's posts, only those holding a match are kept, as under Any.
 
-**Who sees it.** For you SHALL require a signed-in viewer with at least one list that takes part in Trade (a want list, or a have or sale list bound to a Cosmo profile):
+**Who sees it.** For you SHALL require a signed-in viewer, and matches only one with at least one list that takes part in Trade (a want list, or a have or sale list bound to a Cosmo profile):
 - a signed-out visitor opening it SHALL be sent to `/login`, and back to the same For you address after signing in;
-- a signed-in viewer without such a list SHALL be sent to `/trade`, keeping the filters, and dropping `match` and `list`.
+- a signed-in viewer without such a list SHALL see, in place of the feed, that nothing can match yet and why, and the feed SHALL not be read for them. With no have, sale or want list it says to make a want list, or a have list bound to a Cosmo profile. With have or sale lists and no linked Cosmo profile it names those lists and offers Link a Cosmo profile. With a linked profile it names them and says that a list's profile is set when it's made, so to copy one as a new bound list from Lists. Each offers New want list, which makes the page a feed once the list is saved.
 
 **Post type menu.** On Browse and For you, the post type SHALL be one menu labelled Post type, offering All, WTT, WTB and WTS, with each tag spelled out ("WTT · Want to trade"). It replaces the Type tabs, so the controls beside it never move. Mutual is a swap between two people, and a WTB or WTS post is one-way money, so Mutual SHALL list WTT posts only: the menu SHALL read WTT with every other option disabled, a `type` in the URL or in a request SHALL be ignored, by the server as well as the page, and turning Can swap on SHALL drop it from the URL. Who counts as Mutual is unchanged (see Matches to the signed-in viewer).
 

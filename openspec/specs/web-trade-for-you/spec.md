@@ -26,7 +26,7 @@ Trade SHALL match the signed-in user, one person at a time, against the other ac
 
 #### Scenario: No lists
 - **WHEN** a signed-in user with no want list and no bound have list opens `/trade`
-- **THEN** there is no Matches control and no line about lists (see `web-trade-browse` Matches to the signed-in viewer), and Trade shows no For you tab
+- **THEN** there is no Matches control and no line about lists (see `web-trade-browse` Matches to the signed-in viewer); the For you tab shows, and opening it says that nothing can match yet, with New want list
 
 #### Scenario: Opened from Browse
 - **WHEN** the user follows a link to `/trade?person=<id>`, which leads to that person's page

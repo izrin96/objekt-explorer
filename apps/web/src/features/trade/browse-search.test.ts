@@ -7,6 +7,7 @@ import {
   forYouFallback,
   forYouNormalise,
   forYouSearchSchema,
+  matchBlockOf,
   matchModeOf,
   oldPersonLink,
   postTypeOf,
@@ -288,5 +289,39 @@ describe("postTypeOf", () => {
 
   test("Mutual on Browse never applies", () => {
     expect(postTypeOf({ type: "wts", match: "mutual" }, "browse")).toBe("wts");
+  });
+});
+
+describe("matchBlockOf", () => {
+  const list = (
+    name: string,
+    listType: "have" | "want" | "sale" | "general",
+    isProfileBind = false,
+  ) => ({
+    name,
+    listType,
+    isProfileBind,
+  });
+
+  test("a want list or a bound have list can match", () => {
+    expect(matchBlockOf([list("hunt", "want")], false)).toBeNull();
+    expect(matchBlockOf([list("spares", "have", true)], true)).toBeNull();
+  });
+
+  test("no list that can be on Trade", () => {
+    expect(matchBlockOf([], true)).toEqual({ kind: "none" });
+    expect(matchBlockOf([list("all", "general")], false)).toEqual({ kind: "none" });
+  });
+
+  test("unbound have and sale lists, with or without a profile to bind to", () => {
+    const lists = [list("spares", "have"), list("binary sale", "sale"), list("all", "general")];
+    expect(matchBlockOf(lists, true)).toEqual({
+      kind: "unbound",
+      lists: ["spares", "binary sale"],
+    });
+    expect(matchBlockOf(lists, false)).toEqual({
+      kind: "no_profile",
+      lists: ["spares", "binary sale"],
+    });
   });
 });

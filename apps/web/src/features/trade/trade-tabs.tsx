@@ -3,11 +3,10 @@ import { Link, useLocation, useNavigate, useRouter } from "@tanstack/react-route
 import { useEffect } from "react";
 
 import { Tabs, TabsList, TabsTab } from "@/components/ui/tabs";
-import { useCurrentUser, useUserLists } from "@/features/user/hooks";
+import { useCurrentUser } from "@/features/user/hooks";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
 
-import { canMatchOf } from "./browse-search";
 import { tabCountsOptions } from "./queries";
 
 const BROWSE = { label: m.trade_tab_browse, to: "/trade" } as const;
@@ -24,9 +23,9 @@ export function TradeTabs() {
   const queryClient = useQueryClient();
   const { data: currentUser } = useCurrentUser();
   const signedIn = currentUser != null;
-  const canMatch = canMatchOf(useUserLists());
   const { data: counts } = useQuery(tabCountsOptions(signedIn));
-  const items = canMatch ? [BROWSE, FOR_YOU, MINE] : [BROWSE, MINE];
+  // For you explains itself to a signed-in viewer whose lists can't match yet
+  const items = signedIn ? [BROWSE, FOR_YOU, MINE] : [BROWSE, MINE];
   const paths = items.map((item) => router.buildLocation({ to: item.to }).pathname);
   // a trade page under My trades marks My trades
   const current =

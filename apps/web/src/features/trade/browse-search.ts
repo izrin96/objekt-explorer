@@ -97,6 +97,30 @@ export function canMatchOf(lists: readonly { listType: ListType; isProfileBind: 
   return lists.some((list) => canBeOnTrade(list.listType, list.isProfileBind));
 }
 
+/**
+ * Why For you has nothing to match, or null when it can. A have or sale list counts only bound to a
+ * Cosmo profile, and a list's binding is fixed when it is made: `unbound` names the lists that would
+ * count if bound, `no_profile` says the viewer has no profile to bind one to, and `none` that they
+ * have no have, sale or want list at all.
+ */
+export function matchBlockOf(
+  lists: readonly { name: string; listType: ListType; isProfileBind: boolean }[],
+  hasProfile: boolean,
+):
+  | { kind: "none" }
+  | { kind: "no_profile"; lists: string[] }
+  | { kind: "unbound"; lists: string[] }
+  | null {
+  if (canMatchOf(lists)) return null;
+  const offering = lists
+    .filter((list) => list.listType === "have" || list.listType === "sale")
+    .map((list) => list.name);
+  if (offering.length === 0) return { kind: "none" };
+  return hasProfile
+    ? { kind: "unbound", lists: offering }
+    : { kind: "no_profile", lists: offering };
+}
+
 /** For you's Matches option: Any unless the URL says Mutual. */
 export function matchModeOf(search: { match?: string }): "any" | "mutual" {
   return search.match === "mutual" ? "mutual" : "any";

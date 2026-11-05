@@ -33,7 +33,7 @@ import {
   postTypeOf,
   toBrowseInput,
 } from "./browse-search";
-import { comparedList, scopeOf, tradeListsOf } from "./compare-rule";
+import { comparedList, pickOf, scopeOf, tradeListsOf } from "./compare-rule";
 import { NEW_POST } from "./composer/link";
 import { useOpenComposer } from "./composer/use-open-composer";
 import { HiddenPartnersDialog } from "./hidden-partners-dialog";
@@ -42,6 +42,7 @@ import { ComparedLine, MatchingControls } from "./matching-controls";
 import { MyPosts } from "./my-posts";
 import type { NearOpen, ObjektAsk } from "./near";
 import { NearNote } from "./near-note";
+import { NoMatches } from "./no-matches";
 import { ObjektOfferNote } from "./objekt-offer-note";
 import { PersonRow, PersonRowSkeleton } from "./person-row-view";
 import { usePlanLists } from "./post-plan";
@@ -147,9 +148,10 @@ export function BrowseView({ surface, search }: { surface: Surface; search: Feed
   const collectionFiltering =
     search.slug !== undefined || FACET_KEYS.some((key) => (search[key]?.length ?? 0) > 0);
   const filtering = (!mutual && search.type !== undefined) || collectionFiltering;
-  const comparedName = forYou
-    ? comparedList(search.list, tradeLists, scopeOf(mode, type))?.name
+  const comparedTrade = forYou
+    ? comparedList(search.list, tradeLists, scopeOf(mode, type))
     : undefined;
+  const comparedName = comparedTrade?.name;
   // a person who moved between two pages can come back once more: first place wins
   const people = useMemo(() => {
     const seen = new Set<string>();
@@ -291,29 +293,32 @@ export function BrowseView({ surface, search }: { surface: Surface; search: Feed
           }
           hint={m.trade_browse_no_mutual_hint()}
           action={
-            <Button variant="outline" size="sm" onClick={() => setSearch({ match: "any" })}>
-              {m.trade_browse_show_any()}
-            </Button>
+            <div className="flex flex-wrap justify-center gap-2">
+              {comparedName ? (
+                <Button variant="outline" size="sm" onClick={() => setSearch({ list: undefined })}>
+                  {m.trade_list_all()}
+                </Button>
+              ) : null}
+              <Button variant="outline" size="sm" onClick={() => setSearch({ match: "any" })}>
+                {m.trade_browse_show_any()}
+              </Button>
+            </div>
           }
         />
       ) : people.length === 0 && !query.hasNextPage && mode === "any" ? (
-        <EmptyState
-          icon={CardsThreeIcon}
-          title={
-            comparedName
-              ? m.trade_browse_no_matches_list_title({ list: comparedName })
-              : m.trade_browse_no_matches_title()
+        <NoMatches
+          compared={
+            comparedTrade ? userLists.find((list) => list.slug === comparedTrade.slug) : undefined
           }
-          hint={m.trade_browse_no_matches_hint()}
-          action={
-            <Button
-              variant="outline"
-              size="sm"
-              render={<Link to="/trade" search={forYouFallback(search)} />}
-            >
-              {m.trade_browse_show_all_posts()}
-            </Button>
+          counted={
+            comparedTrade
+              ? [comparedTrade, pickOf(comparedTrade, tradeLists).paired].flatMap((list) =>
+                  list ? [list.slug] : [],
+                )
+              : tradeLists.map((list) => list.slug)
           }
+          showAll={forYouFallback(search)}
+          onAllLists={() => setSearch({ list: undefined })}
         />
       ) : people.length === 0 && !query.hasNextPage ? (
         <EmptyState
