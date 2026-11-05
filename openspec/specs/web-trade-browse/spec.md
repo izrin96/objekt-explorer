@@ -443,9 +443,9 @@ A signed-in viewer's posts SHALL be summarised above the feed in one row: the ti
 - each list with its role: Offering for a have list, Looking for for a want list, Selling for a sale list, each linking to its list page;
 - the option it carries: "Would also pay" on a Swap post that would, "Also on Market" on a Sell post;
 - whether the post is listed or idle, and when it was last changed;
-- a menu with Edit post, Copy link and Take off Trade.
+- a menu with Edit post, View post, Copy link and Take off Trade.
 
-The row's Copy link SHALL copy the viewer's person page (see `web-trade-person-pages`), `/trade/@<their handle>`, and each entry's menu SHALL also hold Copy link, copying that post's page, `/trade/@<their handle>/<anchor slug>`; each confirms with "Link copied" and the copied address. The row's Copy link SHALL be disabled while none of the posts is listed, the viewer is under a trade block, or the viewer has no linked Cosmo profile and so no handle, staying focusable and saying which reason applies. An entry's Copy link SHALL be disabled in the same way while that post is idle, or for the same block or missing profile.
+The row's Copy link SHALL copy the viewer's person page (see `web-trade-person-pages`), `/trade/@<their handle>`, and each entry's menu SHALL also hold Copy link, copying that post's page, `/trade/@<their handle>/<anchor slug>`; each confirms with "Link copied" and the copied address. The row's Copy link SHALL be disabled while none of the posts is listed, the viewer is under a trade block, or the viewer has no linked Cosmo profile and so no handle, staying focusable and saying which reason applies. An entry's View post SHALL open that post's page in the same tab. An entry's View post and Copy link SHALL each be disabled in the same way while that post is idle, or for the same block or missing profile.
 
 With no choice saved in this browser, the posts SHALL start shown when any of them is idle, and hidden otherwise. Showing or hiding them SHALL be remembered in this browser, and that choice SHALL win over the default. A viewer with no posts SHALL see the row say they have no posts on Trade, with New post. A signed-out visitor activating New post SHALL be sent to `/login?redirect=/trade`.
 
@@ -513,6 +513,14 @@ With no choice saved in this browser, the posts SHALL start shown when any of th
 - **WHEN** a signed-in viewer has no posts
 - **THEN** the row says they have no posts on Trade and offers New post
 
+#### Scenario: View one post
+- **WHEN** the viewer chooses View post in the menu of their listed Swap post anchored on "spares"
+- **THEN** `/trade/@<their handle>/<spares slug>` opens, showing that post outlined
+
+#### Scenario: View post on an idle post
+- **WHEN** the viewer opens the menu of an idle post
+- **THEN** View post and Copy link are disabled, each saying to bump first
+
 ### Requirement: Trade tabs
 `/trade`, `/trade/for-you` and `/trade/mine` SHALL share a tab bar, marking the current one. It reads Browse, For you and My trades. For you SHALL be shown only to a signed-in viewer with at least one list that takes part in Trade (a want list, or a have or sale list bound to a Cosmo profile); for anyone else the bar reads Browse and My trades. For a signed-out visitor, My trades SHALL lead to `/login?redirect=/trade/mine`. The Trade item in the primary navigation SHALL open Browse. A trade's own page, `/trade/mine/$tradeId`, SHALL show neither the Trade page title nor the tab bar; its breadcrumb leads back (see `web-verified-trades`, Trade page header).
 
@@ -563,7 +571,7 @@ Show on Trade changes and bumps SHALL show on every viewer's next load of `/trad
 - **THEN** viewers see it in the post within 1 minute
 
 ### Requirement: Message a post's owner
-Each person's row not the viewer's own SHALL offer Message, under the rules in `web-chat`. Message SHALL open the conversation with the person, adding a post card for the row's lead post (see Trade card), never an objekt card. When the viewer has matches with the person, as the row's header sentence shows, the post card SHALL carry the match; otherwise it SHALL carry none. A person who doesn't take messages from the viewer SHALL show "Not taking messages" in place of Message and Make offer.
+Each person's row not the viewer's own SHALL offer Message, under the rules in `web-chat`. Message SHALL open the conversation with the person, adding a post card for the row's lead post (see Trade card), never an objekt card. When the viewer has matches with the person, as the row's header sentence shows, the post card SHALL carry the match; otherwise it SHALL carry none. Each post of such a row SHALL also offer Message about this post, in its ⋯ menu and its "+N" sheet's footer: it opens the same conversation with a post card for that post instead of the lead post, carrying the match when one of that post's strips counts a match and none otherwise. A person who doesn't take messages from the viewer SHALL show "Not taking messages" in place of Message and Make offer, and their posts SHALL offer no Message about this post.
 
 #### Scenario: From a post
 - **WHEN** a signed-in user with a linked address and no matches with rin.trades activates Message on rin.trades's row, whose lead post is a WTT post
@@ -572,6 +580,18 @@ Each person's row not the viewer's own SHALL offer Message, under the rules in `
 #### Scenario: From a post with matches
 - **WHEN** a signed-in user whose row for mina reads "You can swap 2" activates Message on it
 - **THEN** the conversation opens with a post card for mina's lead post, carrying the match, attached
+
+#### Scenario: About one post
+- **WHEN** a signed-in user chooses Message about this post in the ⋯ menu of rin.trades's WTS post "spares", which is not rin.trades's lead post and counts no match
+- **THEN** the conversation with rin.trades opens with a post card for "spares", carrying no match, and no card for the lead post
+
+#### Scenario: About one post with a match
+- **WHEN** a signed-in user chooses Message about this post on mina's post "extras", whose HAVE strip reads "2 you want"
+- **THEN** the conversation opens with a post card for "extras", carrying the match
+
+#### Scenario: Not taking messages
+- **WHEN** a row shows "Not taking messages"
+- **THEN** no post of that row offers Message about this post, in its menu or its "+N" sheet
 
 ### Requirement: Blocks and trade blocks
 The feed SHALL leave out, for each viewer:
@@ -590,6 +610,8 @@ Each row that shows Message SHALL also offer Make offer. It opens the offer buil
 
 The builder SHALL open with the viewer's matches with the person already added, chosen from those the row counts under the current Compare with list by the rule the row's chip follows (see `web-trade-offers` Matches added when the builder opens), and with none when the row has no match. Add SHALL open the full picker.
 
+A person with no linked Cosmo profile has no Trade handle and so no offer page (see `web-trade-person-pages` Trade handle), and an offer to them could never be accepted. For them, Make offer SHALL show disabled, staying focusable, and say that offers need a linked Cosmo profile, which they have not linked yet; activating it SHALL say the same. It SHALL never be left out without a reason while Message shows.
+
 #### Scenario: From a WTT post
 - **WHEN** a user activates Make offer on rin.trades's row, whose lead post is the have list "doubles" with the most matches, and rin.trades also has the sale list "spares" on Trade
 - **THEN** the builder opens addressed to rin.trades, and You get's picker lists the entries of "doubles" and "spares"
@@ -601,6 +623,10 @@ The builder SHALL open with the viewer's matches with the person already added, 
 #### Scenario: Row with no match
 - **WHEN** a user activates Make offer on a row with no header sentence, since nothing matches
 - **THEN** the builder opens with nothing under You give or You get
+
+#### Scenario: Person with no Cosmo profile
+- **WHEN** a signed-in user sees the row of hana, whose account links no Cosmo profile and whose only post is a want list
+- **THEN** the row shows Message and a disabled Make offer, and focusing or activating Make offer says that offers need a linked Cosmo profile, which hana hasn't linked yet
 
 ### Requirement: Owner reputation on posts
 Each post SHALL show its owner's reputation line (see `web-verified-trades`) beside the owner's name.
@@ -617,20 +643,20 @@ Each person in the feed SHALL be one row, a bordered card on the card surface, o
   - the reputation line (see `web-verified-trades`), wrapping between its " · " segments rather than truncating, so its full text always shows;
   - for a signed-in viewer on another person's row, the header sentence, from the counts in Matches to the signed-in viewer, with A the "They have" count, B the "You have" count and M the mutual score. Beside the name, a chip: "You can swap M", tinted, when M is above zero; any other row has no chip. Under the reputation line, a muted line with "They have A you want" when A is above zero and "You have B they want" when B is above zero. With no count above zero the row SHALL show neither, so a row without them reads as no match. Each number SHALL be in monospace and stand out from the words, and the visible words SHALL be the accessible text;
   - on the reputation line, after it, muted: the number of the person's kept lists ("3 lists") and when their newest post was last bumped, or last changed if that is later;
-  - the ⋯ menu, holding Copy link (their person page, see `web-trade-person-pages`), Hide, Block and Report for a signed-in viewer who is not the person; a signed-out visitor's menu holds Copy link alone. Copy link SHALL be disabled, saying why, for a person with no linked Cosmo profile.
-- **Actions**: Message, then Make offer as the primary button, both for the row's lead post (see Message a post's owner and Make offer on a post). An account that doesn't take messages from the viewer shows "Not taking messages" in their place. The viewer's own row has no actions.
+  - the ⋯ menu, holding View Trade page, which opens their person page, and Copy link, which copies it (see `web-trade-person-pages`), then Hide, Block and Report for a signed-in viewer who is not the person; a signed-out visitor's menu holds View Trade page and Copy link alone. View Trade page SHALL be left out on the person page itself. Both SHALL be disabled, saying why, for a person with no linked Cosmo profile. The name keeps linking to the profile.
+- **Actions**: Message, then Make offer as the primary button, both for the row's lead post (see Message a post's owner and Make offer on a post). An account that doesn't take messages from the viewer shows "Not taking messages" in their place. For a person with no linked Cosmo profile, Make offer shows disabled with its reason. The viewer's own row has no Message or Make offer; on their person and post pages it carries the owner's actions instead (see `web-trade-person-pages` Owner's view).
 - **Posts**, under the header: each of the person's kept posts, in this order: posts with a list count above zero first, most matched collections first; then the rest, newest bump first. The first post in this order is the row's lead post. Each post shows:
   - its tags, which say what it takes (see Tag help);
   - a WTT post with both lists: the HAVE strip and the WANT strip side by side, sharing the width equally, with a ⇄ mark between them;
   - a post with one side (WTS, WTB, or half a pair): that one strip across the width;
   - a side with no related objekt or no entries: the muted line Filters describes, under the other strip, with no ⇄ mark;
   - its lists' descriptions, empty sides' included, in one muted block set off by a rule at its start edge, under all its sides: each clipped to eight lines, keeping the owner's line breaks. A text both lists of a pair share SHALL show once. When two different descriptions show, each SHALL lead with its side's role label in its list type's colour. Under all the sides, never under one strip, so a description never pushes one strip's thumbnails below the other's.
-  - a ⋯ menu holding Copy link, which copies that post's page (see `web-trade-person-pages`) and is disabled, saying why, for a person with no linked Cosmo profile.
+  - a ⋯ menu (see Post menu) holding View post, which opens that post's page, and Copy link, which copies it (see `web-trade-person-pages`), both disabled, saying why, for a person with no linked Cosmo profile. View post SHALL be left out on that post's own page.
 - **All lists**: the row SHALL show every post it holds.
 
 **Strip**: a monospace role label in its list type's colour, then " · " and the list's name, truncated to one line, then the list's own count when above zero ("14 you want", "2 you have"), on a tinted chip in monospace; under a narrowing filter the label reads as Filters says. The label SHALL link to the list page, carrying the list's name in its title; the list's description sits under the post's sides (see Posts). The count SHALL sit beside the link, not in it, and activating it SHALL open a popover, "Matched with your lists", naming each of the viewer's lists that count was taken against, with its type and a link to it: on a want list the viewer's have and sale lists, on a have or sale list the viewer's want lists, as Compare with narrows them. Under a want list, it SHALL also name each rule the match went through, "via rule" with the rule's label and how many collections, on Browse as on For you (see Matched through your rules). Under it, one line of thumbnails 2.5rem wide with no caption, ringed objekts first. A strip SHALL never wrap: it shows as many thumbnails as fit its width, and when some don't fit, the last place holds a "+N" tile counting the copies not shown. On a narrowed strip that shows its count chip, which counts collections, the "+N" tile SHALL count the collections not shown instead, and "of N" the list's collections, as its sheet's All tab does, so they all read in one unit.
 
-**All of a list.** Activating a strip's "+N" tile SHALL open a sheet of that one list, never of the person's other posts, sliding in from the end side at every width: the viewport less 3rem below `sm`, up to 48rem from `sm` up. Its title is the list's name and its description the list's type. When the list has a description, the sheet SHALL show it in full above the objekts, scrolling with them. It SHALL list the list's objekts in columns that follow its width, one per 112 px and at least three, as the objekt pickers lay theirs out, copies of a collection stacked into one card with their count, those that match the viewer ringed as the strip rings them and first, then newest; a rule's objekts stay on its tile. When any match, two tabs SHALL lead it, "N you want" (on a want list "N you have") and "All N", counting collections, with the matching tab open first; otherwise it shows the list alone. Every collection of the list SHALL be reachable by scrolling, however many it holds: the objekts load in pages as the viewer nears the end of those shown, and nothing is left for the list page to show. On a sale side, each card SHALL show its price under its art, as the list page shows it: one price when every priced copy of its stack agrees, the lowest and highest ("RM 10–RM 15") when they differ, "QYOP" when no copy is priced and one is QYOP, and otherwise "No price", muted. A card whose copies carry notes SHALL offer them behind the note button beside its price, each distinct note once. A have or want side's cards SHALL show no price or note. The rings follow For you's Compare with, the owner's own list rings nothing, and a signed-out visitor sees no rings or tabs. A want side's rules SHALL lead the sheet as the strip's RULE tiles, since its objekt counts leave them out. When the feed's filters or matching narrowed the strip, the sheet SHALL still show the whole list of objekts and say that those aren't filtered; the RULE tiles keep the strip's counts. The objekts SHALL load only when the sheet opens. Activating an objekt SHALL close the sheet and open the objekt view. The footer SHALL offer Open list, which goes to the list page, and Close.
+**All of a list.** Activating a strip's "+N" tile SHALL open a sheet of that one list, never of the person's other posts, sliding in from the end side at every width: the viewport less 3rem below `sm`, up to 48rem from `sm` up. Its title is the list's name and its description the list's type. When the list has a description, the sheet SHALL show it in full above the objekts, scrolling with them. It SHALL list the list's objekts in columns that follow its width, one per 112 px and at least three, as the objekt pickers lay theirs out, copies of a collection stacked into one card with their count, those that match the viewer ringed as the strip rings them and first, then newest; a rule's objekts stay on its tile. When any match, two tabs SHALL lead it, "N you want" (on a want list "N you have") and "All N", counting collections, with the matching tab open first; otherwise it shows the list alone. Every collection of the list SHALL be reachable by scrolling, however many it holds: the objekts load in pages as the viewer nears the end of those shown, and nothing is left for the list page to show. On a sale side, each card SHALL show its price under its art, as the list page shows it: one price when every priced copy of its stack agrees, the lowest and highest ("RM 10–RM 15") when they differ, "QYOP" when no copy is priced and one is QYOP, and otherwise "No price", muted. A card whose copies carry notes SHALL offer them behind the note button beside its price, each distinct note once. A have or want side's cards SHALL show no price or note. The rings follow For you's Compare with, the owner's own list rings nothing, and a signed-out visitor sees no rings or tabs. A want side's rules SHALL lead the sheet as the strip's RULE tiles, since its objekt counts leave them out. When the feed's filters or matching narrowed the strip, the sheet SHALL still show the whole list of objekts and say that those aren't filtered; the RULE tiles keep the strip's counts. The objekts SHALL load only when the sheet opens. Activating an objekt SHALL close the sheet and open the objekt view. The footer SHALL offer Open list, which goes to the list page, and Close. On a post not the viewer's own, it SHALL first offer Message about this post and Make offer on this post, for the same post and under the same rules as its ⋯ menu (see Message a post's owner and Where Make offer on one post shows), each closing the sheet before it opens anything. The footer SHALL wrap rather than scroll sideways.
 
 From `@3xl` of the feed's width, the actions SHALL sit at the header's end and the posts SHALL be indented to start under the name. Narrower, the row SHALL stack: the header, each strip at full width with the ⇄ mark turned to point down, then the actions in one row, Make offer filling the remaining width. The strips SHALL still not wrap, and the page SHALL not scroll sideways. Every row SHALL have the same layout whatever the number of objekts.
 
@@ -664,7 +690,7 @@ From `@3xl` of the feed's width, the actions SHALL sit at the header's end and t
 
 #### Scenario: Hide from a post
 - **WHEN** a signed-in viewer opens the ⋯ menu on rin.trades's row
-- **THEN** it offers Copy link, Hide, Block and Report, and Copy link copies `/trade/@rin.trades`
+- **THEN** it offers View Trade page, Copy link, Hide, Block and Report, and Copy link copies `/trade/@rin.trades`
 
 #### Scenario: Copy a post's link from the row
 - **WHEN** a visitor chooses Copy link in the ⋯ menu of rin.trades's post anchored on "spares"
@@ -773,6 +799,34 @@ From `@3xl` of the feed's width, the actions SHALL sit at the header's end and t
 #### Scenario: Mutual post on For you
 - **WHEN** on For you a person has a mutual score of 2 with the viewer
 - **THEN** the chip beside the name reads "You can swap 2" on an indigo tint
+
+#### Scenario: View a person's Trade page
+- **WHEN** a viewer on Browse chooses View Trade page in the ⋯ menu of rin.trades's row
+- **THEN** `/trade/@rin.trades` opens, and activating rin.trades's name on the row still opens their profile
+
+#### Scenario: No View Trade page on the person page
+- **WHEN** a viewer opens the ⋯ menu of the row on `/trade/@rin.trades`
+- **THEN** it offers Copy link and no View Trade page
+
+#### Scenario: View a post's page
+- **WHEN** a visitor chooses View post in the ⋯ menu of rin.trades's post anchored on "spares"
+- **THEN** `/trade/@rin.trades/<spares slug>` opens
+
+#### Scenario: Actions in the sheet
+- **WHEN** a signed-in user opens "+20" on rin.trades's post "doubles" and activates Make offer on this post in the sheet's footer
+- **THEN** the sheet closes and the builder opens as Make offer on this post on "doubles" opens it
+
+#### Scenario: Message from the sheet
+- **WHEN** a signed-in user activates Message about this post in the footer of the sheet of rin.trades's post "spares"
+- **THEN** the sheet closes and the conversation with rin.trades opens with a post card for "spares"
+
+#### Scenario: Own sheet
+- **WHEN** the viewer opens "+N" on one of their own posts
+- **THEN** the footer offers Open list and Close only
+
+#### Scenario: Sheet footer on a phone
+- **WHEN** at 390 px a signed-in user opens "+N" on another person's post
+- **THEN** the footer's four controls wrap onto as many lines as they need, and the sheet doesn't scroll sideways
 
 ### Requirement: Trade colours
 Trade rows on Browse and For you SHALL colour their type marks (see `web-lists` List type colours):
@@ -1114,11 +1168,11 @@ For a signed-in viewer, each rule tile SHALL read "N you have", N being the rule
 - **THEN** the rule tiles show their labels with no count and no ring
 
 ### Requirement: Post menu
-Each post on a person's row, on Browse and For you, SHALL carry a ⋯ menu: a ghost icon button in a column of its own at the post's top end, never inside a strip's label. Its accessible name SHALL be "More actions for the post {list}", where `{list}` is the post's own list (the have list of a pair). The menu SHALL offer Make offer on this post first, then Show all of {list} for each strip, which opens that strip's "+N" sheet whether or not it has the tile.
+Each post on a person's row, on Browse, For you and the person and post pages, SHALL carry a ⋯ menu: a ghost icon button in a column of its own at the post's top end, never inside a strip's label. Its accessible name SHALL be "More actions for the post {list}", where `{list}` is the post's own list (the have list of a pair). On another person's post, the menu SHALL offer Make offer on this post and Message about this post first, then Show all of {list} for each strip, which opens that strip's "+N" sheet whether or not it has the tile, then View post and Copy link. On the viewer's own post it SHALL offer Edit post first, then Show all of {list} for each strip, then View post, Copy link and Take off Trade (see Owner actions on a post).
 
 #### Scenario: Menu on a WTT post
 - **WHEN** a user opens the ⋯ menu of rin.trades's post with the have list "doubles" and the want list "wants", on a row that also has the post "spares"
-- **THEN** its button is named "More actions for the post doubles", and it offers Make offer on this post, Show all of doubles and Show all of wants
+- **THEN** its button is named "More actions for the post doubles", and it offers Make offer on this post, Message about this post, Show all of doubles, Show all of wants, View post and Copy link
 
 #### Scenario: Show all without a "+N" tile
 - **WHEN** a strip shows all of its 5 objekts, so it has no "+N" tile, and the user chooses its Show all
@@ -1140,11 +1194,11 @@ Make offer on this post SHALL go through the same sign-in gate as the row's Make
 - **THEN** the builder opens empty, addressed to that post's list, with no status line
 
 ### Requirement: Where Make offer on one post shows
-Make offer on this post SHALL be left out on the viewer's own posts and on a row that shows "Not taking messages". The menu then offers Show all and Copy link.
+Make offer on this post and Message about this post SHALL be left out on the viewer's own posts and on a row that shows "Not taking messages"; the menu then offers Show all, View post and Copy link, and on the viewer's own posts also the owner's actions. For a person with no linked Cosmo profile, Make offer on this post SHALL show disabled with its reason as a second line, as on the row (see Make offer on a post), and Message about this post SHALL still show.
 
 #### Scenario: One post on the row
 - **WHEN** a user opens the ⋯ menu on mina.swaps's row, whose only post is the have list "extras"
-- **THEN** it offers Make offer on this post and Show all of extras, as on a row of several posts
+- **THEN** it offers Make offer on this post, Message about this post and Show all of extras, as on a row of several posts
 
 #### Scenario: Sell-only post
 - **WHEN** a user opens the ⋯ menu of a WTS post on a Sell only sale list
@@ -1152,11 +1206,15 @@ Make offer on this post SHALL be left out on the viewer's own posts and on a row
 
 #### Scenario: Not taking messages
 - **WHEN** the row shows "Not taking messages"
-- **THEN** each post's menu offers Show all and Copy link
+- **THEN** each post's menu offers Show all, View post and Copy link
 
 #### Scenario: Own post
 - **WHEN** the viewer opens the ⋯ menu on one of their own posts
-- **THEN** it offers Show all and Copy link
+- **THEN** it offers Edit post, Show all, View post, Copy link and Take off Trade
+
+#### Scenario: No Cosmo profile
+- **WHEN** a signed-in user opens the ⋯ menu of a post by hana, whose account links no Cosmo profile
+- **THEN** it offers Message about this post, a disabled Make offer on this post whose second line says hana hasn't linked a Cosmo profile, Show all, and View post and Copy link disabled with their reason
 
 ### Requirement: Ratio on post tiles
 A Trade post's objekt tile and rule tile SHALL show its ratio (its own, or else its list's) as a chip ("1:2" on a have side, "2:1" on a want side) on Browse, For you and the full side list, when the side swaps: a have list, or a want list open to swaps. On an objekt tile the chip SHALL lie over the card's bottom-end corner, with the worded ratio as the tile's hover tooltip. The chip's accessible name SHALL use words ("They ask 2 for this"). A ratio SHALL NOT change any count, ring or order on the page.
@@ -1542,3 +1600,45 @@ After a remove from an objekt's menu, focus SHALL move to the next thumbnail, el
 #### Scenario: Cancel
 - **WHEN** the viewer chooses Remove from list on Lynn SCO #12 and cancels
 - **THEN** "spares" is unchanged and focus is on the thumbnail of Lynn SCO #12
+
+### Requirement: Owner actions on a post
+On the viewer's own post, on Browse, For you and the person and post pages, the ⋯ menu SHALL offer Edit post and Take off Trade, each acting as in Your posts (see Edit and take off a post). Edit post SHALL return to the page it was chosen on. Bump SHALL stay a control of the person, not of a post, since one bump bumps every post: it shows in the Your posts row and the owner's person and post pages (see `web-trade-person-pages` Owner's view), never in a post's menu.
+
+#### Scenario: Edit from Browse
+- **WHEN** the viewer chooses Edit post in the ⋯ menu of their own post "spares" on `/trade`
+- **THEN** the post composer opens on that post, and Post returns to `/trade`
+
+#### Scenario: Take off from a post page
+- **WHEN** the owner chooses Take off Trade in the ⋯ menu of their post on `/trade/@<their handle>/<spares slug>`
+- **THEN** the post leaves Trade with the same Undo toast Your posts shows, and the page says the post is no longer on Trade
+
+#### Scenario: No Bump in a post's menu
+- **WHEN** the viewer opens the ⋯ menu of their own post
+- **THEN** it offers no Bump
+
+### Requirement: Make offer for one objekt of a post
+An objekt opened from a have or sale strip of another person's post, or from that strip's "+N" sheet, SHALL show a line in the objekt view offering Make offer for this objekt wherever that post's menu offers an enabled Make offer on this post. It opens the offer builder asking for that collection from that strip's list (see `web-trade-offers` Ask for one objekt of a post). A near match keeps its own line instead.
+
+#### Scenario: From a have strip
+- **WHEN** a signed-in user opens SeoYeon 204Z from the HAVE strip of rin.trades's post "doubles" and activates Make offer for this objekt
+- **THEN** the objekt view closes and rin.trades's offer page opens addressed to "doubles", asking for SeoYeon 204Z from "doubles"
+
+#### Scenario: From the sheet
+- **WHEN** a signed-in user opens an objekt from the "+N" sheet of rin.trades's sale list "spares"
+- **THEN** the objekt view offers Make offer for this objekt, asking from "spares"
+
+#### Scenario: Want strip
+- **WHEN** a user opens an objekt from the WANT strip of another person's post
+- **THEN** the objekt view shows no Make offer for this objekt
+
+#### Scenario: Own post, closed or no profile
+- **WHEN** the objekt comes from the viewer's own post, from a row that shows "Not taking messages", or from a post of a person with no linked Cosmo profile
+- **THEN** the objekt view shows no Make offer for this objekt
+
+#### Scenario: Near match
+- **WHEN** the objekt is a near match on that strip
+- **THEN** the objekt view shows the near match's line with its own Make offer with it, and no second line
+
+#### Scenario: Signed out
+- **WHEN** a signed-out visitor activates Make offer for this objekt
+- **THEN** they are asked to sign in, as the row's Make offer asks, and no builder opens
