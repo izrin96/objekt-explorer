@@ -121,7 +121,8 @@ export function EntryThumb({
   const trigger = useRef<HTMLButtonElement>(null);
   const applied = side ? appliedRatio(entry.ratio, listRatio) : null;
   const name = collectionName(entry.slug, entry);
-  const run = (action: EntryAction) => () => {
+  const { price, ratio, remove } = actions;
+  const run = (action: EntryAction) => {
     if (trigger.current) action(entry, trigger.current);
   };
 
@@ -162,27 +163,27 @@ export function EntryThumb({
       </MenuTrigger>
       <MenuPopup align="start" className="min-w-44">
         <AddToListMenuItem objekts={[entry]} />
-        {actions.price ? (
-          <MenuItem onClick={run(actions.price)}>
+        {price ? (
+          <MenuItem onClick={() => run(price)}>
             <CurrencyDollarIcon />
             {m.objekt_menu_set_price()}
           </MenuItem>
         ) : null}
-        {actions.ratio ? (
-          <MenuItem onClick={run(actions.ratio)}>
+        {ratio ? (
+          <MenuItem onClick={() => run(ratio)}>
             <ScalesIcon />
             {m.objekt_menu_set_ratio()}
           </MenuItem>
         ) : null}
         <MenuSeparator />
-        <MenuItem variant="destructive" onClick={run(actions.remove)}>
+        <MenuItem variant="destructive" onClick={() => run(remove)}>
           <TrashIcon />
           {m.objekt_menu_remove_from_list()}
         </MenuItem>
       </MenuPopup>
     </Menu>
   );
-  if (!currency || !actions.price) return menu;
+  if (!currency || !price) return menu;
 
   return (
     <div className="flex min-w-0 flex-col gap-1.5">
@@ -191,7 +192,7 @@ export function EntryThumb({
         price={formatPrice(currency, entry, true)}
         priceMuted={entry.price === null && !entry.isQyop}
         note={entry.note}
-        onPriceClick={run(actions.price)}
+        onPriceClick={() => run(price)}
       />
     </div>
   );
@@ -241,36 +242,34 @@ export function useSideDialogs({
   const currency = stored?.listType === "sale" ? (stored.currency ?? null) : null;
   const listRatio = stored?.ratio ?? null;
 
-  const opening =
-    (open: (objekts: ListObjekt[]) => void): EntryAction =>
-    (entry, thumb) => {
-      const grid = thumb.closest("[data-entry-grid]");
-      const thumbs = grid ? [...grid.querySelectorAll<HTMLElement>(THUMBS)] : [];
-      const index = thumbs.indexOf(thumb);
-      target.current = {
-        grid,
-        id: String(entry.entryId),
-        next: thumbs[index + 1]?.dataset.entryThumb ?? null,
-        index,
-        removed: false,
-      };
-      open([entry]);
+  const openAt = (open: (objekts: ListObjekt[]) => void, entry: ListObjekt, thumb: HTMLElement) => {
+    const grid = thumb.closest("[data-entry-grid]");
+    const thumbs = grid ? [...grid.querySelectorAll<HTMLElement>(THUMBS)] : [];
+    const index = thumbs.indexOf(thumb);
+    target.current = {
+      grid,
+      id: String(entry.entryId),
+      next: thumbs[index + 1]?.dataset.entryThumb ?? null,
+      index,
+      removed: false,
     };
+    open([entry]);
+  };
   // a bulk action has no thumbnail to return to, so focus goes to `fallback`
-  const bulk = (open: (objekts: ListObjekt[]) => void) => (objekts: ListObjekt[]) => {
+  const openAll = (open: (objekts: ListObjekt[]) => void, objekts: ListObjekt[]) => {
     target.current = null;
     open(objekts);
   };
   const finalFocus = () => focusTarget(target.current, fallback.current);
   const bulkActions = {
-    price: currency === null ? null : bulk(openPrice),
-    ratio: side === null ? null : bulk(openRatio),
-    remove: bulk(openRemove),
+    price: currency === null ? null : (objekts: ListObjekt[]) => openAll(openPrice, objekts),
+    ratio: side === null ? null : (objekts: ListObjekt[]) => openAll(openRatio, objekts),
+    remove: (objekts: ListObjekt[]) => openAll(openRemove, objekts),
   };
   const actions: EntryActions = {
-    price: currency === null ? null : opening(openPrice),
-    ratio: side === null ? null : opening(openRatio),
-    remove: opening(openRemove),
+    price: currency === null ? null : (entry, thumb) => openAt(openPrice, entry, thumb),
+    ratio: side === null ? null : (entry, thumb) => openAt(openRatio, entry, thumb),
+    remove: (entry, thumb) => openAt(openRemove, entry, thumb),
   };
   const dialogs = (
     <>
