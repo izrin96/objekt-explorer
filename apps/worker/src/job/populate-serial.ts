@@ -7,6 +7,7 @@ import { heartbeat, log, type Logger } from "@/lib/log";
 import { preAssignedCollections as excludeCollections } from "@/lib/serial-constants";
 import {
   computeOfflineSerialUpdates,
+  shiftedSerials,
   computeOnlineSerials,
   planRediscovery,
   V1_CUTOFF_MS,
@@ -279,6 +280,13 @@ async function processCollectionOffline(collectionId: string): Promise<OfflineOu
   const updates = computeOfflineSerialUpdates(allObjekts, batches, collection.serialAnchors ?? []);
 
   if (updates.length === 0) return "skipped";
+
+  const shift = shiftedSerials(allObjekts, updates);
+  if (shift) {
+    offlineLog.warn(
+      `${collectionId}: ${shift.count} shown serial(s) moved by ${shift.min}..${shift.max}`,
+    );
+  }
 
   await writeSerialUpdates(updates);
   offlineBeat.count("objekts updated", updates.length);

@@ -87,6 +87,23 @@ export function computeOfflineSerialUpdates(
 }
 
 /**
+ * The updates that move a serial already shown (not 0), and by how much.
+ * After a grid is applied this only happens when a rewrite drops the grid or
+ * finds a real boundary change, which a person should look at.
+ */
+export function shiftedSerials(
+  rows: { id: string; serial: number }[],
+  updates: { id: string; newSerial: number }[],
+): { count: number; min: number; max: number } | null {
+  const serialOf = new Map(rows.map((o) => [o.id, o.serial] as const));
+  const deltas = updates
+    .filter((u) => (serialOf.get(u.id) ?? 0) > 0)
+    .map((u) => u.newSerial - serialOf.get(u.id)!);
+  if (deltas.length === 0) return null;
+  return { count: deltas.length, min: Math.min(...deltas), max: Math.max(...deltas) };
+}
+
+/**
  * Compute the serial of every objekt from the discovered batch ranges, anchored
  * on pre-cutoff v1 serials.
  *

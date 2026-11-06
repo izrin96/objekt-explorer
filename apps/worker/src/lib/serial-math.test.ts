@@ -9,6 +9,7 @@ import {
   discoveryBoundaries,
   gapSeparators,
   holdoutExact,
+  shiftedSerials,
   mayHoldReservedBlocks,
   planRediscovery,
   probeWindow,
@@ -495,5 +496,25 @@ describe("gapSeparators", () => {
 
   test("empty inputs give an empty list", () => {
     expect(gapSeparators([], [], gap)).toEqual([]);
+  });
+});
+
+describe("shiftedSerials", () => {
+  test("counts only serials that were already set", () => {
+    const rows = [
+      { id: "1", serial: 40 },
+      { id: "2", serial: 41 },
+      { id: "3", serial: 0 },
+    ];
+    const updates = [
+      { id: "1", newSerial: 77 },
+      { id: "2", newSerial: 78 },
+      { id: "3", newSerial: 79 },
+    ];
+    expect(shiftedSerials(rows, updates)).toEqual({ count: 2, min: 37, max: 37 });
+  });
+
+  test("numbering new mints only is no shift", () => {
+    expect(shiftedSerials([{ id: "1", serial: 0 }], [{ id: "1", newSerial: 5 }])).toBeNull();
   });
 });

@@ -49,6 +49,7 @@ import { log } from "@/lib/log";
 import { preAssignedCollections as excludeCollections } from "@/lib/serial-constants";
 import {
   computeOfflineSerialUpdates,
+  shiftedSerials,
   discoveryBoundaries,
   type ManualAnchor,
   V1_CUTOFF_MS,
@@ -329,6 +330,12 @@ export async function verifyBatchBoundaries(scope: ProbeScope, dryRun = false) {
 
     if (updates.length > 0) {
       await writeSerialUpdates(updates);
+    }
+    const shift = shiftedSerials(rows, updates);
+    if (shift) {
+      verifyLog.warn(
+        `${t.slug}: ${shift.count} shown serial(s) moved by ${shift.min}..${shift.max}`,
+      );
     }
 
     fixed++;
