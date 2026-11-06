@@ -53,9 +53,11 @@ function VideoEcho({ video }: { video: HTMLVideoElement | null }) {
     const context = canvas?.getContext("2d");
     if (!video || !canvas || !context || !("requestVideoFrameCallback" in video)) return;
 
+    // Safari before 17.4 has no checkVisibility; draw every frame there
+    const canCheck = "checkVisibility" in canvas;
     let handle = 0;
     const draw = () => {
-      if (video.videoWidth && canvas.checkVisibility()) {
+      if (video.videoWidth && (!canCheck || canvas.checkVisibility())) {
         // setting the height clears the canvas even when it is unchanged
         const height = Math.round((ECHO_WIDTH * video.videoHeight) / video.videoWidth);
         if (canvas.height !== height) canvas.height = height;
