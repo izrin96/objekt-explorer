@@ -7,7 +7,6 @@ import { createContext, type ReactNode, type RefObject, use } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
-  SheetClose,
   SheetDescription,
   SheetFooter,
   SheetHeader,
@@ -273,12 +272,12 @@ export function SideItemsSheet({
             </Tabs>
           )}
         </SheetPanel>
-        <SheetFooter className="flex-wrap">
+        {/* a row that wraps, not the phone column of full-width buttons, so the grid keeps the height; the header X closes */}
+        <SheetFooter className="flex-row flex-wrap py-3 *:flex-1 sm:*:flex-none">
           {actions}
           <Button variant="outline" render={<Link {...getListLinkOption(side.list)} />}>
             {m.trade_side_open_list()}
           </Button>
-          <SheetClose render={<Button variant="outline" />}>{m.common_modal_close()}</SheetClose>
         </SheetFooter>
       </SheetPopup>
     </Sheet>
