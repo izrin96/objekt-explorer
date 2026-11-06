@@ -5,7 +5,6 @@ import { AboutDialog } from "@/components/layout/about";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
-  DialogClose,
   DialogDescription,
   DialogFooter,
   DialogHeader,
@@ -149,7 +148,6 @@ export function SettingsDialog({
             <InfoIcon />
             {m.nav_about()}
           </Button>
-          <DialogClose render={<Button variant="outline" />}>{m.common_modal_close()}</DialogClose>
         </DialogFooter>
       </DialogPopup>
       <AboutDialog open={aboutOpen} onOpenChange={setAboutOpen} />

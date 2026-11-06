@@ -1,11 +1,8 @@
 import type { RefObject } from "react";
 
-import { Button } from "@/components/ui/button";
 import {
   Dialog,
-  DialogClose,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogPopup,
   DialogTitle,
@@ -61,9 +58,6 @@ export function AttachObjektDialog({
             <ListPicker onPick={pick} />
           </TabsPanel>
         </Tabs>
-        <DialogFooter>
-          <DialogClose render={<Button variant="outline" />}>{m.common_modal_cancel()}</DialogClose>
-        </DialogFooter>
       </DialogPopup>
     </Dialog>
   );

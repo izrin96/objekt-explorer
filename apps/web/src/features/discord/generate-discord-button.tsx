@@ -5,7 +5,6 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
-  DialogClose,
   DialogDescription,
   DialogFooter,
   DialogHeader,
@@ -86,8 +85,8 @@ function GenerateDiscordDialog({
           <ChoicesFields flags={VISITOR_FLAGS} choices={choices} onChange={setChoices} />
           <FormattedText id="generate-discord-output" text={text} onTextChange={setText} />
         </DialogPanel>
-        <DialogFooter>
-          <DialogClose render={<Button variant="outline" />}>{m.common_modal_close()}</DialogClose>
+        {/* one row on phones too; the header X closes */}
+        <DialogFooter className="flex-row *:flex-1 sm:*:flex-none">
           <Button
             variant="outline"
             onClick={() => {
