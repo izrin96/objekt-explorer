@@ -5,6 +5,7 @@ import {
   CaretLineRightIcon,
   CaretRightIcon,
 } from "@phosphor-icons/react";
+import type { CollectionMetadataOutput } from "@repo/api/schemas/collections";
 import type { UseQueryResult } from "@tanstack/react-query";
 import { type ReactNode, useMemo, useState } from "react";
 
@@ -47,7 +48,9 @@ export function SerialsPanel({
   serials: number[];
   /** the serials COSMO Spin holds, ascending */
   spun: number[];
-  metadata: UseQueryResult<{ total: number; spin: number; transferable: number }>;
+  metadata: UseQueryResult<
+    Pick<CollectionMetadataOutput, "total" | "spin" | "transferable" | "serialEstimate">
+  >;
   /** a physical objekt's copies only exist once scanned, so its total counts scans */
   physical: boolean;
   loading: boolean;
@@ -199,7 +202,9 @@ function SerialStats({
   metadata,
   physical,
 }: {
-  metadata: UseQueryResult<{ total: number; spin: number; transferable: number }>;
+  metadata: UseQueryResult<
+    Pick<CollectionMetadataOutput, "total" | "spin" | "transferable" | "serialEstimate">
+  >;
   physical: boolean;
 }) {
   if (metadata.isError) {
@@ -217,11 +222,15 @@ function SerialStats({
   }
 
   const data = metadata.data;
+  const serialEstimate = data ? serialEstimateText(data.serialEstimate) : null;
+  // the estimate comes only with offline ranges, so a physical objekt keeps its place while loading
+  const showEstimate = data ? serialEstimate !== null : physical;
   const stats: Stat[] = [
     {
       label: physical ? m.objekt_scanned_copies() : m.objekt_copies(),
       value: data ? data.total.toLocaleString(getLocale()) : null,
     },
+    ...(showEstimate ? [{ label: m.objekt_max_serial_estimate(), value: serialEstimate }] : []),
     {
       label: m.objekt_event_spun(),
       value: data ? data.spin.toLocaleString(getLocale()) : null,
@@ -242,8 +251,24 @@ function SerialStats({
   ];
 
   // Transferable carries a percentage and a count, so it takes the width it
-  // needs and the three single figures share the rest
+  // needs and the single figures share the rest
   return (
-    <StatRow stats={stats} className="grid-cols-2 sm:grid-cols-[repeat(3,minmax(0,1fr))_auto]" />
+    <StatRow
+      stats={stats}
+      className={
+        showEstimate
+          ? "grid-cols-3 sm:grid-cols-[repeat(4,minmax(0,1fr))_auto]"
+          : "grid-cols-2 sm:grid-cols-[repeat(3,minmax(0,1fr))_auto]"
+      }
+    />
   );
+}
+
+/** "≈ 1,350", "1,300–1,400", or "≥ 1,300" when only the low end is known. */
+function serialEstimateText(estimate: CollectionMetadataOutput["serialEstimate"]) {
+  if (estimate === null) return null;
+  const n = (v: number) => v.toLocaleString(getLocale());
+  if (estimate.max === null) return `≥ ${n(estimate.min)}`;
+  if (estimate.max === estimate.min) return `≈ ${n(estimate.min)}`;
+  return `${n(estimate.min)}–${n(estimate.max)}`;
 }

@@ -98,7 +98,7 @@ export const collectionsRouter = {
       method: "GET",
       path: "/collections/{collectionSlug}/metadata",
       tags: ["Collections"],
-      summary: "Copies minted, spun and transferable",
+      summary: "Copies minted, spun and transferable, and the serial estimate",
     })
     .input(collectionSlugInputSchema)
     .output(documented(collectionMetadataOutputSchema))

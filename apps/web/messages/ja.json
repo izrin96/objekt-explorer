@@ -857,6 +857,7 @@
   "objekt_serials_loading": "シリアルを読み込み中…",
   "objekt_copies": "発行数",
   "objekt_scanned_copies": "スキャン済み数",
+  "objekt_max_serial_estimate": "最大シリアル（推定）",
   "objekt_error_fetching_metadata": "メタデータの取得に失敗しました",
   "objekt_serial_pick": "シリアルを選ぶと取引履歴が表示されます",
   "objekt_serial_missing_hint": "このシリアルでミントされたObjektはありません",

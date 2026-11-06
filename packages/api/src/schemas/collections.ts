@@ -11,6 +11,10 @@ export const collectionMetadataOutputSchema = z.object({
   transferable: z.number(),
   total: z.number(),
   spin: z.number(),
+  serialEstimate: z.object({ min: z.number(), max: z.number().nullable() }).nullable().meta({
+    description:
+      "How many serials an offline collection has, estimated from its reserved token ranges. min equal to max is exact; max null means at least min; null means no estimate (online collections and Atom01).",
+  }),
   // the Cosmo-hosted images, which the web's collection list leaves out
   originalFrontImage: z.string().optional(),
   originalBackImage: z.string().optional(),

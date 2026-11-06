@@ -857,6 +857,7 @@
   "objekt_serials_loading": "Loading serials…",
   "objekt_copies": "Copies",
   "objekt_scanned_copies": "Scanned copies",
+  "objekt_max_serial_estimate": "Max serial (est.)",
   "objekt_error_fetching_metadata": "Error fetching metadata",
   "objekt_serial_pick": "Pick a serial to see its trade history",
   "objekt_serial_missing_hint": "Nothing has been minted at this serial",

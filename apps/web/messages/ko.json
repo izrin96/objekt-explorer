@@ -857,6 +857,7 @@
   "objekt_serials_loading": "시리얼을 불러오는 중…",
   "objekt_copies": "발행 수량",
   "objekt_scanned_copies": "스캔 수량",
+  "objekt_max_serial_estimate": "최대 시리얼 (추정)",
   "objekt_error_fetching_metadata": "메타데이터 가져오기 오류",
   "objekt_serial_pick": "시리얼을 선택하면 거래 내역이 표시됩니다",
   "objekt_serial_missing_hint": "이 시리얼로 민팅된 오브젝트가 없습니다",

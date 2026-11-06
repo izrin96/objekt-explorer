@@ -2,11 +2,13 @@ import { type ValidArtist, toIndexedArtist } from "@repo/cosmo/types/common";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts, transfers } from "@repo/db/indexer/schema";
 import { Addresses } from "@repo/lib";
+import { estimateSerials, ESTIMATE_LOOKAHEAD } from "@repo/lib/serial";
 import { overrideCollection } from "@repo/lib/server/objekt";
 import { fetchPublicNicknames } from "@repo/lib/server/user";
-import { type SQL, and, asc, count, desc, eq, inArray, lte, ne, sql } from "drizzle-orm";
+import { type SQL, and, asc, count, desc, eq, inArray, lte, ne, or, sql } from "drizzle-orm";
 
 import { nextModifiedAt } from "../lib/collection-bump";
+import { tokenIdWindow } from "../lib/token-id-window";
 import type {
   CollectionMetadataOutput,
   CollectionListOutput,
@@ -161,7 +163,7 @@ export async function collectionListModifiedAt() {
 }
 
 export async function fetchCollectionMetadata(slug: string): Promise<CollectionMetadataOutput> {
-  const [[result], [images]] = await Promise.all([
+  const [[result], [row]] = await Promise.all([
     indexer
       .select({
         total: count(),
@@ -170,12 +172,17 @@ export async function fetchCollectionMetadata(slug: string): Promise<CollectionM
           sql`count(case when transferable = true and ${objekts.owner}!=${Addresses.SPIN} then 1 end)`.mapWith(
             Number,
           ),
+        topSerial: sql`coalesce(max(${objekts.serial}), 0)`.mapWith(Number),
       })
       .from(collections)
       .innerJoin(objekts, eq(collections.id, objekts.collectionId))
       .where(eq(collections.slug, slug)),
     indexer
       .select({
+        id: collections.id,
+        season: collections.season,
+        onOffline: collections.onOffline,
+        batches: collections.serialBatches,
         originalFrontImage: collections.frontImage,
         originalBackImage: collections.backImage,
       })
@@ -184,7 +191,40 @@ export async function fetchCollectionMetadata(slug: string): Promise<CollectionM
       .limit(1),
   ]);
 
-  return { ...(result ?? { total: 0, spin: 0, transferable: 0 }), ...images };
+  const { topSerial, ...counts } = result ?? { total: 0, spin: 0, transferable: 0, topSerial: 0 };
+  if (!row) return { ...counts, serialEstimate: null };
+  const { id, season, onOffline, batches, ...images } = row;
+  const serialEstimate =
+    onOffline === "offline" && batches && batches.length > 0
+      ? estimateSerials({
+          season,
+          batches,
+          ceiling: await ceilingAbove(id, batches.at(-1)!.end),
+          topSerial,
+        })
+      : null;
+  return { ...counts, serialEstimate, ...images };
+}
+
+// the first token minted above `end`, within the lookahead: another
+// collection's closes the last range, the collection's own means its stored
+// ranges are behind, so neither bounds it
+async function ceilingAbove(collectionId: string, end: number) {
+  const window = tokenIdWindow(end + 1, end + ESTIMATE_LOOKAHEAD);
+  const [next] = await indexer
+    .select({ id: objekts.id, collectionId: objekts.collectionId })
+    .from(objekts)
+    .where(
+      or(
+        ...window.map(
+          (w) =>
+            sql`(length(${objekts.id}) = ${w.length} and ${objekts.id} between ${w.lo} and ${w.hi})`,
+        ),
+      ),
+    )
+    .orderBy(asc(sql`length(${objekts.id})`), asc(objekts.id))
+    .limit(1);
+  return next && next.collectionId !== collectionId ? parseInt(next.id) : null;
 }
 
 export async function fetchSerialList(slug: string): Promise<SerialsOutput> {

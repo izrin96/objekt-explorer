@@ -21,7 +21,7 @@ Jobs log only through `log(tag)` (`src/lib/log.ts`). A run that changed somethin
 Serials of objekts minted offline come from `populateSerialOffline` (`job/populate-serial.ts`), checked daily by `job/verify-batch-boundaries.ts`. The model:
 
 - Modhaus reserves token-id ranges per **batch**. A collection has many non-contiguous batches; the serial runs continuously across them, and an unminted token inside a reserved range still consumes a serial.
-- From Atom02 on, batches are whole **100-token blocks** separated by one to three foreign tokens. Earlier seasons are listed in `preBlockSeasons` (`lib/serial-constants.ts`); Atom01 is scattered and outside the model.
+- From Atom02 on, batches are whole **100-token blocks** separated by one to three foreign tokens. Earlier seasons are listed in `preBlockSeasons` (`@repo/lib/serial`, which the API's printed estimate also reads; `lib/serial-constants.ts` re-exports it); Atom01 is scattered and outside the model.
 - Discovery only sees minted tokens, so `refineBatches` (`job/serial-batches.ts`) fills reserved gaps and snaps lengths to whole blocks. Gap tokens come from the indexer database, not the Cosmo API. The indexer lacks a token id Cosmo assigned to another collection but never minted on chain, so `refineBatches` also takes `knownForeign` separators; the verifier passes the foreign edge tokens it learned (from the indexer or its probes) and `discoveryBoundaries` of the rediscovered batches.
 - v1 serials are ground truth: an objekt minted before `V1_CUTOFF_MS` anchors its batch exactly. Batches with no such anchor (all of Summer26) are estimates.
 - `objektNo` from the authenticated Cosmo API is visible only to the objekt's owner, so it is no general source of truth.
