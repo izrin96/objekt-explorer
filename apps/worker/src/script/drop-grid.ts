@@ -29,6 +29,7 @@ import {
   type DropKey,
   type DropMember,
   loadDrop,
+  dropFitMemo,
   loadMemberRuns,
   type MemberKey,
   writeSerialUpdates,
@@ -192,6 +193,8 @@ async function review(name: string, members: DropMember[], start: number, grid: 
   });
 }
 
+const dropFitted = dropFitMemo();
+
 for (const key of drops) {
   const name = dropName(key);
   const drop = await loadDrop(key);
@@ -209,7 +212,7 @@ for (const key of drops) {
 }
 
 for (const key of memberKeys) {
-  for (const run of await loadMemberRuns(key)) {
+  for (const run of await loadMemberRuns(key, undefined, dropFitted)) {
     const nos = await collectionNos(run.members.map((m) => m.id));
     if (collectionNo !== undefined && !nos.includes(collectionNo)) continue;
     const name = `${memberName(key)} [${nos.join(", ")}]`;

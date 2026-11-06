@@ -344,18 +344,43 @@ export async function loadDrop(
   };
 }
 
+/** Whether a drop fits its grid, from the stored batches. */
+export type DropFitted = (key: DropKey) => Promise<boolean>;
+
+/** A DropFitted that loads and fits each drop once. */
+export function dropFitMemo(): DropFitted {
+  const seen = new Map<string, Promise<boolean>>();
+  return (key) => {
+    const name = `${key.season}|${key.collectionNo}|${key.artist}`;
+    let fitted = seen.get(name);
+    if (!fitted) {
+      fitted = loadDrop(key).then(
+        (drop) => drop !== null && fitDropGrid(drop.region).grid !== null,
+      );
+      seen.set(name, fitted);
+    }
+    return fitted;
+  };
+}
+
 /**
- * The collection's batches with its drop-grid slot in place of everything
- * inside the drop, when its drop fits exactly one slot size; otherwise the
- * batches unchanged. Runs after refineBatches on every path that stores
- * ranges, so a rediscovery never undoes the grid.
+ * The collection's batches with its grid slot in place of everything inside
+ * the grid: the drop grid's when its drop fits, else the member grid's when its
+ * member run fits, else the batches unchanged. Runs after refineBatches on every
+ * path that stores ranges, so a rediscovery never undoes a grid. `dropFitted`
+ * lets a caller that checks many collections share drop fits.
  */
-export async function applyDropGrid(collectionId: string, batches: Batch[]): Promise<Batch[]> {
+export async function applyGrids(
+  collectionId: string,
+  batches: Batch[],
+  dropFitted: DropFitted = dropFitMemo(),
+): Promise<Batch[]> {
   const [c] = await indexer
     .select({
       season: collections.season,
       collectionNo: collections.collectionNo,
       artist: collections.artist,
+      member: collections.member,
       onOffline: collections.onOffline,
     })
     .from(collections)
@@ -363,17 +388,34 @@ export async function applyDropGrid(collectionId: string, batches: Batch[]): Pro
     .limit(1);
   if (!c || !isGridDrop(c)) return batches;
 
-  const drop = await loadDrop(c, { collectionId, batches });
-  if (!drop) return batches;
-  const { grid } = fitDropGrid(drop.region);
-  const i = drop.members.findIndex((m) => m.id === collectionId);
-  if (!grid || i === -1) return batches;
+  const override = { collectionId, batches };
+  const drop = await loadDrop(c, override);
+  const dropGrid = drop ? fitDropGrid(drop.region).grid : null;
+  const i = drop?.members.findIndex((m) => m.id === collectionId) ?? -1;
+  if (drop && dropGrid && i !== -1) {
+    return mergeGridRanges(
+      batches,
+      dropGrid.ranges[i]!,
+      { start: drop.region.start, end: dropGrid.end },
+      drop.members[i]!.tokens,
+    );
+  }
 
+  // the collection's own drop was just fitted with its new batches, so only
+  // the other collections' drops come from `dropFitted`
+  const ownUnfitted = new Set([`${c.season}|${c.collectionNo}|${c.artist}`]);
+  const run = await fittedMemberRun(c, collectionId, override, (key) =>
+    ownUnfitted.has(`${key.season}|${key.collectionNo}|${key.artist}`)
+      ? Promise.resolve(false)
+      : dropFitted(key),
+  );
+  if (!run) return batches;
+  const j = run.members.findIndex((m) => m.id === collectionId);
   return mergeGridRanges(
     batches,
-    grid.ranges[i]!,
-    { start: drop.region.start, end: grid.end },
-    drop.members[i]!.tokens,
+    run.grid.ranges[j]!,
+    { start: run.region.start, end: run.grid.end },
+    run.members[j]!.tokens,
   );
 }
 
@@ -398,6 +440,7 @@ export type MemberRun = {
 export async function loadMemberRuns(
   key: MemberKey,
   override?: { collectionId: string; batches: Batch[] },
+  dropFitted: DropFitted = dropFitMemo(),
 ): Promise<MemberRun[]> {
   if (preBlockSeasons.includes(key.season)) return [];
   const rows = await indexer
@@ -482,11 +525,9 @@ export async function loadMemberRuns(
 
     let heldByDrop = false;
     for (const m of members) {
-      const drop = await loadDrop(
-        { season: key.season, collectionNo: m.collectionNo, artist: key.artist },
-        override,
-      );
-      if (drop && fitDropGrid(drop.region).grid) {
+      if (
+        await dropFitted({ season: key.season, collectionNo: m.collectionNo, artist: key.artist })
+      ) {
         heldByDrop = true;
         break;
       }
@@ -521,42 +562,13 @@ export async function fittedMemberRun(
   key: MemberKey,
   collectionId: string,
   override?: { collectionId: string; batches: Batch[] },
+  dropFitted?: DropFitted,
 ) {
-  const runs = await loadMemberRuns(key, override);
+  const runs = await loadMemberRuns(key, override, dropFitted);
   const run = runs.find((r) => r.members.some((m) => m.id === collectionId));
   if (!run || !run.pinned || run.heldByDrop) return null;
   const { grid } = fitMemberRun(run.region);
   return grid ? { ...run, grid } : null;
-}
-
-/**
- * The collection's batches with its member-run slot in place of everything
- * inside the run, when its run is fitted; otherwise the batches unchanged.
- * Runs after applyDropGrid on every path that stores ranges.
- */
-export async function applyMemberGrid(collectionId: string, batches: Batch[]): Promise<Batch[]> {
-  const [c] = await indexer
-    .select({
-      season: collections.season,
-      collectionNo: collections.collectionNo,
-      artist: collections.artist,
-      member: collections.member,
-      onOffline: collections.onOffline,
-    })
-    .from(collections)
-    .where(eq(collections.id, collectionId))
-    .limit(1);
-  if (!c || !isGridDrop(c)) return batches;
-
-  const run = await fittedMemberRun(c, collectionId, { collectionId, batches });
-  if (!run) return batches;
-  const i = run.members.findIndex((m) => m.id === collectionId);
-  return mergeGridRanges(
-    batches,
-    run.grid.ranges[i]!,
-    { start: run.region.start, end: run.grid.end },
-    run.members[i]!.tokens,
-  );
 }
 
 const DB_BATCH_SIZE = 500;

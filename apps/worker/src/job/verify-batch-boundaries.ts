@@ -32,8 +32,7 @@ import { and, asc, eq, inArray, isNotNull, ne, or, sql } from "drizzle-orm";
 import { FetchError } from "ofetch";
 
 import {
-  applyDropGrid,
-  applyMemberGrid,
+  applyGrids,
   type DropKey,
   discoverBatches,
   fittedMemberRun,
@@ -141,12 +140,14 @@ export async function verifyBatchBoundaries(scope: ProbeScope, dryRun = false) {
     return span;
   };
 
+  const dropFitted = (key: DropKey) => dropSpanOf(key).then((span) => span !== null);
+
   // each collection's fitted member run is fitted once per run, by the run's first lookup
   const runSpans = new Map<string, Promise<{ start: number; end: number } | null>>();
   const runSpanOf = (key: MemberKey, collectionId: string) => {
     let span = runSpans.get(collectionId);
     if (!span) {
-      span = fittedMemberRun(key, collectionId).then((run) => {
+      span = fittedMemberRun(key, collectionId, undefined, dropFitted).then((run) => {
         const value = run ? { start: run.region.start, end: run.grid.end } : null;
         for (const m of run?.members ?? []) runSpans.set(m.id, Promise.resolve(value));
         return value;
@@ -311,8 +312,7 @@ export async function verifyBatchBoundaries(scope: ProbeScope, dryRun = false) {
       ...knownForeign,
       ...discoveryBoundaries(fresh),
     ]);
-    fresh = await applyDropGrid(t.id, fresh);
-    fresh = await applyMemberGrid(t.id, fresh);
+    fresh = await applyGrids(t.id, fresh, dropFitted);
     if (fresh.length === 0) return;
 
     const same =

@@ -16,8 +16,7 @@ import {
 import {
   discoverBatches,
   findBoundaryTokenId,
-  applyDropGrid,
-  applyMemberGrid,
+  applyGrids,
   refineBatches,
   writeSerialUpdates,
 } from "./serial-batches";
@@ -257,8 +256,7 @@ async function processCollectionOffline(collectionId: string): Promise<OfflineOu
     }
 
     batches = await refineBatches(collection.season, batches, presentTokenIds);
-    batches = await applyDropGrid(collectionId, batches);
-    batches = await applyMemberGrid(collectionId, batches);
+    batches = await applyGrids(collectionId, batches);
 
     if (batches.length === 0) {
       offlineBeat.count("no batches discovered");
