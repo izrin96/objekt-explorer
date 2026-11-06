@@ -1,10 +1,11 @@
 import { fetchMetadataV3, normalizeV3 } from "@repo/cosmo/server/metadata";
 import { indexer } from "@repo/db/indexer";
-import { objekts } from "@repo/db/indexer/schema";
+import { collections, objekts } from "@repo/db/indexer/schema";
 import { slugifyObjekt } from "@repo/lib";
-import { and, between, inArray, or, sql } from "drizzle-orm";
+import { and, between, eq, inArray, or, sql } from "drizzle-orm";
 import { FetchError } from "ofetch";
 
+import { type DropRegion, fitDropGrid, MAX_SLOT, mergeGridRanges } from "@/lib/drop-grid";
 import { preBlockSeasons } from "@/lib/serial-constants";
 import {
   type Batch,
@@ -247,6 +248,126 @@ export async function refineBatches(
   return snapBatchLengths(
     await fillReservedGaps(batches, presentTokenIds, knownForeign),
     presentTokenIds,
+  );
+}
+
+export type DropKey = {
+  season: string;
+  collectionNo: string;
+  artist: (typeof collections.$inferSelect)["artist"];
+};
+
+export type DropMember = { id: string; slug: string; batches: Batch[]; tokens: number[] };
+
+/** an "A" drop of a block season, whose members may share a grid */
+export function isGridDrop(c: { season: string; collectionNo: string; onOffline: string }) {
+  return (
+    c.onOffline === "offline" && c.collectionNo.endsWith("A") && !preBlockSeasons.includes(c.season)
+  );
+}
+
+/**
+ * A drop's minted members in member order and the region the grid is fitted
+ * on, read from the indexer. `override` stands in for one member's stored
+ * batches while they are being rewritten. Null when fewer than two members
+ * have minted.
+ */
+export async function loadDrop(
+  key: DropKey,
+  override?: { collectionId: string; batches: Batch[] },
+): Promise<{ members: DropMember[]; region: DropRegion } | null> {
+  const rows = await indexer
+    .select({ id: collections.id, slug: collections.slug, batches: collections.serialBatches })
+    .from(collections)
+    .where(
+      and(
+        eq(collections.season, key.season),
+        eq(collections.collectionNo, key.collectionNo),
+        eq(collections.artist, key.artist),
+        eq(collections.onOffline, "offline"),
+      ),
+    );
+  if (rows.length < 2) return null;
+
+  const minted = await indexer
+    .select({ id: objekts.id, collectionId: objekts.collectionId })
+    .from(objekts)
+    .where(
+      inArray(
+        objekts.collectionId,
+        rows.map((r) => r.id),
+      ),
+    );
+  const tokensOf = new Map<string, number[]>();
+  for (const o of minted) {
+    if (o.collectionId === null) continue;
+    const list = tokensOf.get(o.collectionId) ?? [];
+    list.push(parseInt(o.id));
+    tokensOf.set(o.collectionId, list);
+  }
+
+  const members = rows
+    .map((r) => ({
+      id: r.id,
+      slug: r.slug,
+      batches: override?.collectionId === r.id ? override.batches : (r.batches ?? []),
+      tokens: (tokensOf.get(r.id) ?? []).sort((a, b) => a - b),
+    }))
+    .filter((m) => m.tokens.length > 0)
+    .sort((a, b) => a.tokens[0]! - b.tokens[0]!);
+  if (members.length < 2) return null;
+
+  const first = members[0]!;
+  const start = Math.min(first.tokens[0]!, ...first.batches.map((b) => b.start));
+  const highest = Math.max(...members.map((m) => m.tokens.at(-1)!));
+  const readUntil = Math.min(highest, start + members.length * MAX_SLOT) + MAX_SLOT;
+
+  const memberIds = new Set(members.map((m) => m.id));
+  const region = await indexer
+    .select({ id: objekts.id, collectionId: objekts.collectionId })
+    .from(objekts)
+    .where(tokenIdRange(start, readUntil));
+  const foreign = region
+    .filter((o) => o.collectionId === null || !memberIds.has(o.collectionId))
+    .map((o) => parseInt(o.id))
+    .sort((a, b) => a - b);
+
+  return {
+    members,
+    region: { start, memberTokens: members.map((m) => m.tokens), foreign, readUntil },
+  };
+}
+
+/**
+ * The collection's batches with its drop-grid slot in place of everything
+ * inside the drop, when its drop fits exactly one slot size; otherwise the
+ * batches unchanged. Runs after refineBatches on every path that stores
+ * ranges, so a rediscovery never undoes the grid.
+ */
+export async function applyDropGrid(collectionId: string, batches: Batch[]): Promise<Batch[]> {
+  const [c] = await indexer
+    .select({
+      season: collections.season,
+      collectionNo: collections.collectionNo,
+      artist: collections.artist,
+      onOffline: collections.onOffline,
+    })
+    .from(collections)
+    .where(eq(collections.id, collectionId))
+    .limit(1);
+  if (!c || !isGridDrop(c)) return batches;
+
+  const drop = await loadDrop(c, { collectionId, batches });
+  if (!drop) return batches;
+  const { grid } = fitDropGrid(drop.region);
+  const i = drop.members.findIndex((m) => m.id === collectionId);
+  if (!grid || i === -1) return batches;
+
+  return mergeGridRanges(
+    batches,
+    grid.ranges[i]!,
+    { start: drop.region.start, end: grid.end },
+    drop.members[i]!.tokens,
   );
 }
 

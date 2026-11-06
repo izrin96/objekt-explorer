@@ -19,22 +19,15 @@ import { collections, objekts } from "@repo/db/indexer/schema";
 import { chunk } from "@repo/lib";
 import { and, asc, eq, inArray, isNotNull, lte, notInArray, or } from "drizzle-orm";
 
-import { refineBatches, writeSerialUpdates } from "@/job/serial-batches";
+import { applyDropGrid, refineBatches, writeSerialUpdates } from "@/job/serial-batches";
 import {
   preAssignedCollections as excludeCollections,
   preBlockSeasons,
 } from "@/lib/serial-constants";
-import {
-  computeOfflineSerials,
-  computeOfflineSerialUpdates,
-  V1_CUTOFF_MS,
-} from "@/lib/serial-math";
+import { computeOfflineSerialUpdates, holdoutExact } from "@/lib/serial-math";
 
 const CONCURRENCY = 5;
 const APPLY = process.env.APPLY === "1";
-
-type Batch = { start: number; end: number };
-type Row = { id: string; serial: number; mintedAt: string };
 
 const targets = await indexer
   .select({
@@ -86,19 +79,6 @@ function seasonStats(season: string) {
   return s;
 }
 
-// serials chained from the ranges alone (cutoff 0 and no manual anchors: no
-// ground truth), scored against the real v1 serial of every pre-cutoff objekt
-function holdoutExact(rows: Row[], batches: Batch[]) {
-  const truth = rows.filter((o) => o.serial > 0 && Date.parse(o.mintedAt) < V1_CUTOFF_MS);
-  const chained = new Map(
-    computeOfflineSerials(truth, batches, 0, []).map((c) => [c.id, c.serial]),
-  );
-  return {
-    total: truth.length,
-    exact: truth.filter((o) => chained.get(o.id) === o.serial).length,
-  };
-}
-
 async function processOne(t: (typeof targets)[number]) {
   const stored = t.batches ?? [];
   if (stored.length === 0) return;
@@ -116,7 +96,7 @@ async function processOne(t: (typeof targets)[number]) {
   if (rows.length === 0) return;
 
   const tokenIds = rows.map((o) => parseInt(o.id));
-  const refined = await refineBatches(t.season, stored, tokenIds);
+  const refined = await applyDropGrid(t.id, await refineBatches(t.season, stored, tokenIds));
 
   const storedKeys = new Set(stored.map((b) => `${b.start}-${b.end}`));
   const storedEnds = new Set(stored.map((b) => b.end));

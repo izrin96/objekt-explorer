@@ -8,6 +8,7 @@ import {
   computeOnlineSerials,
   discoveryBoundaries,
   gapSeparators,
+  holdoutExact,
   mayHoldReservedBlocks,
   planRediscovery,
   probeWindow,
@@ -185,6 +186,14 @@ describe("computeOfflineSerials with manual anchors", () => {
     expect(
       computeOfflineSerialUpdates(rows, [{ start: 100, end: 120 }], [{ tokenId: 100, serial: 50 }]),
     ).toEqual([{ id: "101", newSerial: 6 }]);
+  });
+});
+
+describe("holdoutExact", () => {
+  test("scores the ranges against v1 serials with every anchor hidden", () => {
+    const rows = [objekt(105, 6, PRE), objekt(110, 99, PRE), objekt(120, 0)];
+    // chained from 1 at token 100: token 105 is #6 (exact), token 110 is #11 (not 99)
+    expect(holdoutExact(rows, [{ start: 100, end: 199 }])).toEqual({ total: 2, exact: 1 });
   });
 });
 

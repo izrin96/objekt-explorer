@@ -31,11 +31,16 @@ import { and, asc, eq, inArray, isNotNull, ne, or } from "drizzle-orm";
 import { FetchError } from "ofetch";
 
 import {
+  applyDropGrid,
+  type DropKey,
   discoverBatches,
+  isGridDrop,
+  loadDrop,
   refineBatches,
   tokenIdRange,
   writeSerialUpdates,
 } from "@/job/serial-batches";
+import { fitDropGrid, insideDrop } from "@/lib/drop-grid";
 import { log } from "@/lib/log";
 import { preAssignedCollections as excludeCollections } from "@/lib/serial-constants";
 import {
@@ -71,6 +76,9 @@ export async function verifyBatchBoundaries(dryRun = false) {
       slug: collections.slug,
       cid: collections.collectionId,
       season: collections.season,
+      collectionNo: collections.collectionNo,
+      artist: collections.artist,
+      onOffline: collections.onOffline,
       batches: collections.serialBatches,
       anchors: collections.serialAnchors,
     })
@@ -89,13 +97,32 @@ export async function verifyBatchBoundaries(dryRun = false) {
   let drifted = 0;
   let fixed = 0;
   let unchanged = 0;
+  let gridSkipped = 0;
   const failed: string[] = [];
+
+  // each drop is fitted once per run: the span of a grid-fitted drop, else null
+  const dropSpans = new Map<string, Promise<{ start: number; end: number } | null>>();
+  const dropSpanOf = (key: DropKey) => {
+    const name = `${key.season}|${key.collectionNo}|${key.artist}`;
+    let span = dropSpans.get(name);
+    if (!span) {
+      span = loadDrop(key).then((drop) => {
+        const grid = drop ? fitDropGrid(drop.region).grid : null;
+        return drop && grid ? { start: drop.region.start, end: grid.end } : null;
+      });
+      dropSpans.set(name, span);
+    }
+    return span;
+  };
 
   async function processOne(t: {
     id: string;
     slug: string;
     cid: string;
     season: string;
+    collectionNo: string;
+    artist: DropKey["artist"];
+    onOffline: string;
     batches: Batch[] | null;
     anchors: ManualAnchor[] | null;
   }) {
@@ -124,6 +151,15 @@ export async function verifyBatchBoundaries(dryRun = false) {
     const atRisk = batches.filter((b) => !isAnchored(b));
     if (atRisk.length === 0) return;
 
+    // a grid-fitted drop's foreign neighbours already confirm its slot edges, so
+    // only the indexer check below covers those batches
+    const span = isGridDrop(t) ? await dropSpanOf(t) : null;
+    const toProbe = span ? atRisk.filter((b) => !insideDrop(b, span)) : atRisk;
+    if (toProbe.length < atRisk.length) {
+      gridSkipped++;
+      verifyLog.debug(`${t.slug}: ${atRisk.length - toProbe.length} grid batch(es), not probed`);
+    }
+
     const targetSlug = slugifyObjekt(t.cid);
     const tokenIds = rows.map((o) => parseInt(o.id));
 
@@ -147,7 +183,7 @@ export async function verifyBatchBoundaries(dryRun = false) {
     const knownForeign: number[] = [];
 
     try {
-      for (const b of atRisk) {
+      for (const b of toProbe) {
         const isFrontier = b === frontier;
         // our lowest/highest minted token inside the batch: the stored edges can
         // sit in a still-unminted stretch, so the token right next to our own
@@ -222,6 +258,7 @@ export async function verifyBatchBoundaries(dryRun = false) {
       ...knownForeign,
       ...discoveryBoundaries(fresh),
     ]);
+    fresh = await applyDropGrid(t.id, fresh);
     if (fresh.length === 0) return;
 
     const same =
@@ -253,6 +290,7 @@ export async function verifyBatchBoundaries(dryRun = false) {
   done(
     `Done. ${drifted} drifted, ${dryRun ? "would fix" : "fixed"} ${fixed}` +
       (unchanged ? `, ${unchanged} unchanged after rediscovery` : "") +
+      (gridSkipped ? `, ${gridSkipped} grid-fitted not probed` : "") +
       "." +
       (failed.length ? ` Failed (API): ${failed.length} — ${failed.join(", ")}` : ""),
   );

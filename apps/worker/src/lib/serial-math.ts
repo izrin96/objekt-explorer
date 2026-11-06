@@ -181,6 +181,24 @@ export function computeOfflineSerials(
 }
 
 /**
+ * How many pre-cutoff v1 serials the ranges alone reproduce, with every anchor
+ * hidden (cutoff 0, no manual anchors): the score of a range model.
+ */
+export function holdoutExact(
+  rows: { id: string; serial: number; mintedAt: string }[],
+  batches: { start: number; end: number }[],
+): { total: number; exact: number } {
+  const truth = rows.filter((o) => o.serial > 0 && Date.parse(o.mintedAt) < V1_CUTOFF_MS);
+  const chained = new Map(
+    computeOfflineSerials(truth, batches, 0, []).map((c) => [c.id, c.serial]),
+  );
+  return {
+    total: truth.length,
+    exact: truth.filter((o) => chained.get(o.id) === o.serial).length,
+  };
+}
+
+/**
  * Why a reported serial cannot be stored as a manual anchor, or null when it can.
  * `rows` are every objekt of the collection; `stored` are its other anchors,
  * which the new one is judged together with.
