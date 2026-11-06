@@ -250,9 +250,7 @@ function ShowChips({ show, onPick }: { show: InboxShow; onPick: () => void }) {
           }
         >
           {SHOW_LABEL[key]()}
-          {count(key) === null ? null : (
-            <span className="text-xs tabular-nums opacity-70">{count(key)}</span>
-          )}
+          {count(key) === null ? null : <span className="text-xs opacity-70">{count(key)}</span>}
         </TogglePrimitive>
       ))}
     </ToggleGroupPrimitive>

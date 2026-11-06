@@ -30,7 +30,7 @@ export function PreviewSection({
       <div className="flex items-baseline justify-between gap-2">
         <span className="text-sm font-medium">{m.list_add_preview_label()}</span>
         {copyCount && (
-          <span className="text-muted-foreground text-xs tabular-nums">
+          <span className="text-muted-foreground text-xs">
             {m.list_add_copies_count({
               picked: copyCount.picked.toLocaleString(getLocale()),
               total: copyCount.total.toLocaleString(getLocale()),
@@ -56,7 +56,7 @@ export function PreviewSection({
                         variant="outline"
                         pressed={!unpicked.has(copy.tokenId)}
                         onPressedChange={() => onToggle(copy.tokenId)}
-                        className="not-data-pressed:text-muted-foreground font-mono text-xs tabular-nums not-data-pressed:line-through"
+                        className="not-data-pressed:text-muted-foreground font-mono text-xs not-data-pressed:line-through"
                       >
                         #{copy.serial}
                       </Toggle>

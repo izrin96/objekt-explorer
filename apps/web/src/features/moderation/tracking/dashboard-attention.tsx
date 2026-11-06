@@ -30,7 +30,7 @@ export function Attention({ days }: { days: StaffDays }) {
       <section aria-labelledby="mod-attention" className="flex flex-col gap-2">
         <h2 id="mod-attention" className="text-sm font-semibold">
           {m.mod_trades_attention_title()}{" "}
-          <span className="text-muted-foreground font-normal tabular-nums">{count(total)}</span>
+          <span className="text-muted-foreground font-normal">{count(total)}</span>
         </h2>
         {rows.length === 0 ? (
           <p className="text-muted-foreground rounded-lg border border-dashed py-8 text-center text-sm">
@@ -40,7 +40,7 @@ export function Attention({ days }: { days: StaffDays }) {
           <AttentionTable rows={rows} />
         )}
         {total > rows.length ? (
-          <p className="text-muted-foreground text-xs tabular-nums">
+          <p className="text-muted-foreground text-xs">
             {m.mod_trades_attention_capped({ shown: count(rows.length), total: count(total) })}
           </p>
         ) : null}
@@ -56,7 +56,7 @@ export function Attention({ days }: { days: StaffDays }) {
             {repeatBreakers.map((row) => (
               <li key={row.person.userId} className="flex items-center gap-2">
                 <PersonLink person={row.person} />
-                <span className="text-muted-foreground tabular-nums">
+                <span className="text-muted-foreground">
                   {m.mod_trades_breakers_count({ count: count(row.failed) })}
                 </span>
               </li>
@@ -105,7 +105,7 @@ function AttentionTable({ rows }: { rows: TradeAttention["rows"] }) {
                         <span className="text-muted-foreground text-xs">
                           <Slotted
                             text={(time) => ATTENTION_DETAIL[reason.reason]({ time })}
-                            node={<When iso={reason.at} className="tabular-nums" />}
+                            node={<When iso={reason.at} />}
                           />
                         </span>
                       )}

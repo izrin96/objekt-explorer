@@ -109,10 +109,7 @@ export function ShowMyMatches({
         <MatchedListsChip
           listIds={listIds}
           near={near}
-          className={cn(
-            toneChip("success"),
-            "h-6 shrink-0 rounded-sm border px-1.5 text-xs tabular-nums",
-          )}
+          className={cn(toneChip("success"), "h-6 shrink-0 rounded-sm border px-1.5 text-xs")}
         >
           {matching === "have"
             ? m.trade_list_count_you_have({ count: count.toLocaleString(getLocale()) })

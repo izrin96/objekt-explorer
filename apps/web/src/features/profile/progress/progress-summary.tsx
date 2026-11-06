@@ -34,10 +34,7 @@ export function ProgressSummary({
     <div className="grid gap-3 md:grid-cols-[1.4fr_1fr]">
       <Panel title={m.progress_overall()}>
         {/* hidden from screen readers: the meter below announces the same figures */}
-        <div
-          aria-hidden
-          className="text-3xl leading-none font-semibold tracking-tight tabular-nums"
-        >
+        <div aria-hidden className="text-3xl leading-none font-semibold tracking-tight">
           {totals.pct.toFixed(1)}
           <small className="text-muted-foreground text-sm font-medium tracking-normal">
             % · {totals.owned.toLocaleString(getLocale())} /{" "}
@@ -60,7 +57,7 @@ export function ProgressSummary({
         {best && (
           <p className="text-muted-foreground mt-2 text-xs">
             {m.progress_best_member()}: <b className="text-foreground">{best.member}</b>{" "}
-            <b className="text-foreground tabular-nums">{best.pct.toFixed(0)}%</b>
+            <b className="text-foreground">{best.pct.toFixed(0)}%</b>
           </p>
         )}
       </Panel>

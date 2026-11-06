@@ -73,10 +73,7 @@ function ColumnsSelect() {
 
   return (
     <Select value={columns} onValueChange={(value: number | null) => value && setColumns(value)}>
-      <SelectPrimitive.Trigger
-        aria-label={m.filter_column()}
-        className={cn(toolbarTrigger, "tabular-nums")}
-      >
+      <SelectPrimitive.Trigger aria-label={m.filter_column()} className={toolbarTrigger}>
         <ColumnsIcon />
         <SelectValue />
       </SelectPrimitive.Trigger>

@@ -63,7 +63,7 @@ export function PriceFields({
                 className="rounded-s-none"
                 aria-label={m.list_price_decrease()}
               />
-              <NumberFieldInput className="tabular-nums" />
+              <NumberFieldInput />
               <NumberFieldIncrement aria-label={m.list_price_increase()} />
             </NumberFieldGroup>
           </div>

@@ -109,7 +109,7 @@ export function Topup({
             <NumberFieldGroup>
               <NumberFieldInput
                 ref={amountRef}
-                className="text-start tabular-nums"
+                className="text-start"
                 aria-invalid={error !== null || undefined}
                 aria-describedby={error !== null ? errorId : undefined}
                 onBlur={onAmountBlur}

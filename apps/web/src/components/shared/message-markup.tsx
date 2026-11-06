@@ -43,9 +43,7 @@ export function MessageMarkup({
 
 /** The `{#b}` of a count message: the number stands out of muted text. */
 export const countMarkup = {
-  b: (children: ReactNode) => (
-    <b className="text-foreground font-semibold tabular-nums">{children}</b>
-  ),
+  b: (children: ReactNode) => <b className="text-foreground font-semibold">{children}</b>,
 };
 
 /** A message with markup in its slots; private-use stand-ins keep each locale's word order. */

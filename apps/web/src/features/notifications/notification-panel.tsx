@@ -122,7 +122,7 @@ export function NotificationPanel({
             <PopoverTitle className="font-display text-base">{m.notification_title()}</PopoverTitle>
           )}
           {unread > 0 ? (
-            <span className="text-muted-foreground text-xs tabular-nums">
+            <span className="text-muted-foreground text-xs">
               {m.notification_new_count({ count: unread.toLocaleString(getLocale()) })}
             </span>
           ) : null}

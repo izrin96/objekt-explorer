@@ -278,7 +278,7 @@ function TradeMatchesLink({
       <UsersIcon />
       {m.nav_trade_matches()}
       {shown === undefined ? null : (
-        <Badge variant="secondary" size="sm" className="tabular-nums">
+        <Badge variant="secondary" size="sm">
           {shown.toLocaleString(getLocale())}
         </Badge>
       )}

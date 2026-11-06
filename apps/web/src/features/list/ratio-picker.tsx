@@ -60,7 +60,6 @@ export function RatioPicker({
               ? m.ratio_none_name()
               : m.ratio_same_as_list_name({ ratio: inherited })
           }
-          className="tabular-nums"
         >
           {inherited === null ? "1:1" : m.ratio_same_as_list()}
         </ToggleGroupItem>
@@ -69,7 +68,6 @@ export function RatioPicker({
             key={ratio}
             value={String(ratio)}
             aria-label={ratioLabel(ratio, side, { owner: true })}
-            className="tabular-nums"
           >
             {ratioText(ratio, side)}
           </ToggleGroupItem>

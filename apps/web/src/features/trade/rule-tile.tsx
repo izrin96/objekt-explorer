@@ -67,10 +67,7 @@ function RuleTile({
       <span className="w-full text-xs text-pretty">{ruleText(tile.rule)}</span>
       {tile.matched !== null ? (
         <span
-          className={cn(
-            "text-xs tabular-nums",
-            ringed ? "text-success-foreground" : "text-muted-foreground",
-          )}
+          className={cn("text-xs", ringed ? "text-success-foreground" : "text-muted-foreground")}
         >
           {m.trade_list_count_you_have({ count: tile.matched.toLocaleString(getLocale()) })}
         </span>

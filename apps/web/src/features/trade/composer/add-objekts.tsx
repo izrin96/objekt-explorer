@@ -205,7 +205,7 @@ function AddObjektsBody({
             <PopoverTrigger render={<Button variant="outline" className="shrink-0" />}>
               <CardsThreeIcon aria-hidden />
               <span className="sr-only">{m.trade_composer_add_ticked()}</span>
-              <span className="tabular-nums">{count.toLocaleString(getLocale())}</span>
+              <span>{count.toLocaleString(getLocale())}</span>
               <CaretUpIcon aria-hidden className="size-3.5 opacity-60" />
             </PopoverTrigger>
             <PopoverPopup side="top" align="start" className="w-80 max-w-full">
@@ -281,9 +281,7 @@ function Tray({
         <span ref={heading} tabIndex={-1} className="text-sm font-medium outline-none">
           {m.trade_composer_add_ticked()}
         </span>
-        <Badge variant="outline" className="tabular-nums">
-          {count.toLocaleString(getLocale())}
-        </Badge>
+        <Badge variant="outline">{count.toLocaleString(getLocale())}</Badge>
         <Button
           variant="ghost"
           size="xs"

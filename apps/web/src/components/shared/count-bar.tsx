@@ -19,7 +19,7 @@ export function TotalCount({ count }: { count: number }) {
 export function CountBar({ children, aside }: { children: ReactNode; aside?: ReactNode }) {
   return (
     <div className="flex items-center justify-between gap-2">
-      <div className="text-muted-foreground text-xs tabular-nums">{children}</div>
+      <div className="text-muted-foreground text-xs">{children}</div>
       {aside}
     </div>
   );

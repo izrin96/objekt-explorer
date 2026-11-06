@@ -98,7 +98,7 @@ export function ObjektTile({
         {times && times > 1 ? (
           <span
             aria-hidden
-            className="bg-foreground text-background absolute start-1 bottom-1 rounded-sm px-1 text-xs leading-4 font-semibold tabular-nums"
+            className="bg-foreground text-background absolute start-1 bottom-1 rounded-sm px-1 text-xs leading-4 font-semibold"
           >
             ×{times}
           </span>
@@ -107,7 +107,7 @@ export function ObjektTile({
       <span className={cn("flex min-w-0 flex-col text-start", compact && "hidden")}>
         <span className="truncate text-xs font-medium">{collection?.member ?? slug}</span>
         {/* a narrow tile puts the serial on its own line rather than cut the code */}
-        <span className="text-muted-foreground flex min-w-0 flex-wrap gap-x-1 font-mono text-xs tabular-nums">
+        <span className="text-muted-foreground flex min-w-0 flex-wrap gap-x-1 font-mono text-xs">
           <span className="max-w-full truncate">
             {collection ? getCollectionShortNo(collection) : null}
           </span>

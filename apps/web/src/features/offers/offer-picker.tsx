@@ -179,7 +179,7 @@ function PickerBody({
         )}
       </div>
       <SheetFooter className="flex-row items-center">
-        <p className="text-muted-foreground me-auto text-xs tabular-nums" aria-live="polite">
+        <p className="text-muted-foreground me-auto text-xs" aria-live="polite">
           {m.offer_picker_count({
             count: total.toLocaleString(getLocale()),
             max: OFFER_SIDE_LIMIT,

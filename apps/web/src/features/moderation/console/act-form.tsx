@@ -267,7 +267,7 @@ export function ActForm({
             className="flex-wrap"
           >
             {(action === "chat_mute" ? MUTE_DAYS : BAN_DAYS).map((value) => (
-              <ToggleGroupItem key={value} value={String(value)} className="tabular-nums">
+              <ToggleGroupItem key={value} value={String(value)}>
                 {value === 0
                   ? m.mod_act_no_end()
                   : value === 1

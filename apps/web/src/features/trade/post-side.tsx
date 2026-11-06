@@ -31,7 +31,7 @@ const FIT = { thumb: 40, gap: 6, fallback: 4, lines: 1 };
 const STACK_COUNT = cn(QTY_BADGE, "pointer-events-none absolute start-0.5 top-0.5");
 
 const STRIP_MORE =
-  "hover:text-foreground focus-visible:ring-ring text-xs tabular-nums outline-none focus-visible:ring-2";
+  "hover:text-foreground focus-visible:ring-ring text-xs outline-none focus-visible:ring-2";
 
 type StripItem = {
   key: string | number;
@@ -94,7 +94,7 @@ function PostStrip({
     <section className="flex min-w-0 flex-col gap-1">
       <h3
         className={cn(
-          "flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs uppercase tabular-nums",
+          "flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs uppercase",
           tone,
         )}
       >
@@ -277,7 +277,7 @@ export function EmptySide({ side, surface }: { side: PostSideData; surface: Surf
     <Link
       {...getListLinkOption(side.list)}
       className={cn(
-        "text-muted-foreground hover:text-foreground w-fit text-xs uppercase tabular-nums",
+        "text-muted-foreground hover:text-foreground w-fit text-xs uppercase",
         SIDE_LINK,
       )}
     >
@@ -424,7 +424,7 @@ export function SideStrip({
             <Link
               {...getListLinkOption(list)}
               className={cn(
-                "text-muted-foreground hover:text-foreground text-xs whitespace-nowrap tabular-nums",
+                "text-muted-foreground hover:text-foreground text-xs whitespace-nowrap",
                 SIDE_LINK,
               )}
             >

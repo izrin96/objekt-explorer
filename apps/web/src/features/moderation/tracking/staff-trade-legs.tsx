@@ -79,7 +79,7 @@ export function LegsTable({
                     <span className="text-warning-foreground text-xs">
                       <Slotted
                         text={(time) => m.mod_staff_trade_away({ time })}
-                        node={<When iso={leg.breaksAt} className="tabular-nums" />}
+                        node={<When iso={leg.breaksAt} />}
                       />
                     </span>
                   )}
@@ -97,10 +97,7 @@ export function LegsTable({
                   <span className="flex flex-col gap-0.5">
                     <TxLink hash={leg.txHash} />
                     {leg.verifiedAt === null ? null : (
-                      <When
-                        iso={leg.verifiedAt}
-                        className="text-muted-foreground text-xs tabular-nums"
-                      />
+                      <When iso={leg.verifiedAt} className="text-muted-foreground text-xs" />
                     )}
                   </span>
                 )}

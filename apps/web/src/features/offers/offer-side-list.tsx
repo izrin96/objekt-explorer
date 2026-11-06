@@ -61,8 +61,7 @@ export function OfferSideList({
             onClick={() => setSheetOpen(true)}
             className="text-muted-foreground hover:text-foreground focus-visible:ring-ring rounded-sm tracking-wide uppercase outline-none focus-visible:ring-2"
           >
-            {label} ·{" "}
-            <span className="tabular-nums">{items.length.toLocaleString(getLocale())}</span>
+            {label} · <span>{items.length.toLocaleString(getLocale())}</span>
           </button>
         ) : (
           <span className="text-muted-foreground tracking-wide uppercase">{label}</span>
@@ -96,7 +95,7 @@ export function OfferSideList({
                 type="button"
                 aria-label={showAll}
                 onClick={() => setSheetOpen(true)}
-                className="text-foreground hover:bg-accent/60 focus-visible:ring-ring rounded-photocard aspect-photocard grid w-full place-items-center border border-dashed text-xs font-semibold tabular-nums outline-none focus-visible:ring-2"
+                className="text-foreground hover:bg-accent/60 focus-visible:ring-ring rounded-photocard aspect-photocard grid w-full place-items-center border border-dashed text-xs font-semibold outline-none focus-visible:ring-2"
               >
                 <MoreCount count={more} />
               </button>
@@ -108,8 +107,7 @@ export function OfferSideList({
         <SheetPopup>
           <SheetHeader>
             <SheetTitle className="text-base">
-              {label} ·{" "}
-              <span className="tabular-nums">{items.length.toLocaleString(getLocale())}</span>
+              {label} · <span>{items.length.toLocaleString(getLocale())}</span>
             </SheetTitle>
           </SheetHeader>
           <SheetPanel>
@@ -128,7 +126,7 @@ export function OfferSideList({
                   <span className="min-w-0 flex-1 text-sm break-words">
                     <ItemLabel item={item} collections={collections} />
                     {count > 1 ? (
-                      <span className="text-muted-foreground tabular-nums">
+                      <span className="text-muted-foreground">
                         {" "}
                         {m.offer_any_copy_times({ count: count.toLocaleString(getLocale()) })}
                       </span>

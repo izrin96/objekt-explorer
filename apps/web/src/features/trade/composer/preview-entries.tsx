@@ -74,7 +74,7 @@ export function ListRatioControl({ stored, side }: { stored: StoredList; side: R
         })}
       >
         {m.ratio_for_all()}
-        <span className="tabular-nums">{ratio === null ? "1:1" : ratioText(ratio, side)}</span>
+        <span>{ratio === null ? "1:1" : ratioText(ratio, side)}</span>
       </PopoverTrigger>
       <PopoverPopup className="w-80" align="start">
         <RatioPicker

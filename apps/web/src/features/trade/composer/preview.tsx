@@ -338,7 +338,7 @@ function PickedSide({
                   onClick={() => onOpenSheet({ view: "all", slug, name, ratio, select: false })}
                   className={cn(
                     TILE,
-                    "hover:text-foreground focus-visible:ring-ring w-full text-xs tabular-nums outline-none focus-visible:ring-2",
+                    "hover:text-foreground focus-visible:ring-ring w-full text-xs outline-none focus-visible:ring-2",
                   )}
                 >
                   <MoreCount count={rest} />

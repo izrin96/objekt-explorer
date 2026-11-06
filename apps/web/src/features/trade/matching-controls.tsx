@@ -72,7 +72,7 @@ function MutualButton({
     >
       {m.trade_mutual_only()}
       {count > 0 ? (
-        <span aria-hidden className="text-muted-foreground text-xs tabular-nums">
+        <span aria-hidden className="text-muted-foreground text-xs">
           {shown}
         </span>
       ) : null}

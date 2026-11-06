@@ -192,7 +192,7 @@ function LinkStep({
       <div className="flex min-h-7 items-center gap-3">
         <span
           className={cn(
-            "grid size-6 flex-none place-items-center rounded-full border text-xs tabular-nums",
+            "grid size-6 flex-none place-items-center rounded-full border text-xs",
             status === "done" && toneChip("success"),
             status === "current" && "border-foreground text-foreground font-medium",
             status === "upcoming" && "text-muted-foreground",

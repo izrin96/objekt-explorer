@@ -59,9 +59,7 @@ export function FilterCollection({
       >
         <span>
           {label}
-          {value.length > 0 && (
-            <span className="text-muted-foreground tabular-nums"> · {value.length}</span>
-          )}
+          {value.length > 0 && <span className="text-muted-foreground"> · {value.length}</span>}
         </span>
         <ComboboxPrimitive.Icon>
           <CaretDownIcon className="size-3.5 opacity-50" />

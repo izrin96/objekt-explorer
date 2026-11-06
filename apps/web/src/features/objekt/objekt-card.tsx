@@ -21,13 +21,12 @@ import { SelectionOrderContext } from "./selection-order";
  * outline badge's fill is nearly clear, and the artwork shows through. The caller places the count.
  */
 export const QTY_BADGE =
-  "border-input bg-background text-foreground grid h-4 min-w-4 place-items-center rounded-full border px-1 text-xxs leading-none font-medium tabular-nums shadow-xs @[9rem]:h-5 @[9rem]:min-w-5 @[9rem]:px-1.5 @[9rem]:text-xs";
+  "border-input bg-background text-foreground grid h-4 min-w-4 place-items-center rounded-full border px-1 text-xxs leading-none font-medium shadow-xs @[9rem]:h-5 @[9rem]:min-w-5 @[9rem]:px-1.5 @[9rem]:text-xs";
 export const RATIO_ON_CARD =
   "text-xxs sm:text-xxs bg-background dark:bg-background pointer-events-none absolute end-0.5 bottom-0.5 h-4 px-0.5 shadow-xs sm:h-4 @[9rem]:end-1 @[9rem]:bottom-1 @[9rem]:h-5 @[9rem]:px-1 @[9rem]:text-xs";
 
 // wraps rather than truncates, and only at a space: a clipped price reads as a different price
-const priceClass =
-  "text-xxs text-center leading-tight font-semibold text-balance tabular-nums @[9rem]:text-xs";
+const priceClass = "text-xxs text-center leading-tight font-semibold text-balance @[9rem]:text-xs";
 
 type ObjektCardProps<T extends ValidObjekt> = {
   objekt: T;

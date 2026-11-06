@@ -302,7 +302,7 @@ export function CollectionView() {
       ) : (
         <>
           <div className="flex items-center justify-between gap-2">
-            <p className="text-muted-foreground text-xs tabular-nums">
+            <p className="text-muted-foreground text-xs">
               <MessageMarkup
                 parts={m.profile_count_summary.parts({
                   shown: `${copiesIn(filtered).toLocaleString(getLocale())}${hasNextPage ? "+" : ""}`,

@@ -74,7 +74,7 @@ function GroupHeading({ group, id }: { group: ExchangeGroup; id: string }) {
     <h4 id={id} className={cn("flex items-center gap-2 text-xs font-medium", TONE_INK[meta.tone])}>
       <span aria-hidden className={cn("size-2 rounded-full", TONE_SOLID[meta.tone])} />
       {title}
-      <span className="text-muted-foreground tabular-nums">{group.legs.length}</span>
+      <span className="text-muted-foreground">{group.legs.length}</span>
     </h4>
   );
 }
@@ -141,7 +141,7 @@ export function Group({
                   <span className="min-w-0 flex-1 truncate">
                     {itemLabel({ ...leg, serial: null }, collections)}
                   </span>
-                  <span className="text-muted-foreground shrink-0 font-mono text-xs tabular-nums">
+                  <span className="text-muted-foreground shrink-0 font-mono text-xs">
                     <LegSerial leg={leg} />
                   </span>
                   <span

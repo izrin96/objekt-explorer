@@ -116,9 +116,7 @@ function MineSection({
       <h2 id={headingId} className="flex flex-wrap items-baseline gap-x-2 text-sm font-medium">
         {title}
         {counted ? (
-          <span className="text-muted-foreground text-xs font-normal tabular-nums">
-            {rows.length}
-          </span>
+          <span className="text-muted-foreground text-xs font-normal">{rows.length}</span>
         ) : null}
         {/* an empty group stays one line, so the groups with rows lead */}
         {rows.length === 0 ? (

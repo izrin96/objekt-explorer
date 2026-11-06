@@ -50,7 +50,7 @@ export function FloorPriceFilter({ className }: { className?: string }) {
           >
             <Label htmlFor={minId}>{m.filter_floor_min({ currency })}</Label>
             <NumberFieldGroup>
-              <NumberFieldInput className="tabular-nums" />
+              <NumberFieldInput />
             </NumberFieldGroup>
           </NumberField>
 
@@ -63,7 +63,7 @@ export function FloorPriceFilter({ className }: { className?: string }) {
           >
             <Label htmlFor={maxId}>{m.filter_floor_max({ currency })}</Label>
             <NumberFieldGroup>
-              <NumberFieldInput className="tabular-nums" />
+              <NumberFieldInput />
             </NumberFieldGroup>
           </NumberField>
 

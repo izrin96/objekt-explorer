@@ -69,7 +69,7 @@ export function TradeTabs() {
             >
               {item.label()}
               {count > 0 ? (
-                <span aria-hidden className="text-muted-foreground ms-1.5 text-xs tabular-nums">
+                <span aria-hidden className="text-muted-foreground ms-1.5 text-xs">
                   {shown}
                 </span>
               ) : null}

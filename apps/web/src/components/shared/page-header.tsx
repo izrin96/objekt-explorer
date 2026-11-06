@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-/** `description` is a node: pages put counts inside the sentence, in the sans with `tabular-nums`. */
+/** `description` is a node: pages put counts inside the sentence, in the sans. */
 export function PageHeader({
   title,
   description,

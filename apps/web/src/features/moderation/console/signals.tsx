@@ -68,7 +68,7 @@ export function LinkedProfiles({ data, viewerIsAdmin }: { data: Account; viewerI
                 <span className="font-medium break-all">
                   {displayNickname(address.address, address.nickname)}
                 </span>
-                <span className="text-muted-foreground font-mono text-xs tabular-nums">
+                <span className="text-muted-foreground font-mono text-xs">
                   {truncateAddress(address.address)}
                   {address.linkedAt ? (
                     <>

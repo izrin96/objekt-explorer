@@ -43,7 +43,7 @@ export function StaffTradeHeader({ trade }: { trade: StaffTrade }) {
           </h1>
           <p className="text-muted-foreground flex flex-wrap items-center gap-x-1.5 gap-y-1 text-sm">
             <span>
-              {m.offer_trade_accepted()} <When iso={trade.acceptedAt} className="tabular-nums" />
+              {m.offer_trade_accepted()} <When iso={trade.acceptedAt} />
             </span>
             {first && second ? (
               <>

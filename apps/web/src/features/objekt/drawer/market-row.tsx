@@ -83,7 +83,7 @@ export function MarketRow({
             type="button"
             className={cn(
               FOCUS_RING,
-              "hover:text-foreground cursor-pointer rounded-sm font-mono font-medium tabular-nums underline-offset-2 hover:underline",
+              "hover:text-foreground cursor-pointer rounded-sm font-mono font-medium underline-offset-2 hover:underline",
             )}
             onClick={() => onOpenSerial(item.serial ?? 0)}
           >

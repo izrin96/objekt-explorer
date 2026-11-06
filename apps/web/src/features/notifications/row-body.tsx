@@ -103,7 +103,7 @@ export function Progress({ verified, total }: { verified: number; total: number 
           />
         ))}
       </span>
-      <span className="text-muted-foreground text-xs tabular-nums">
+      <span className="text-muted-foreground text-xs">
         {m.offer_trade_step_progress({ verified, total })}
       </span>
     </span>

@@ -105,7 +105,7 @@ function StripFrame({
               <span aria-hidden className="shrink-0 max-md:hidden">
                 ·
               </span>
-              <span className="shrink-0 tabular-nums max-md:hidden">{text.trailing}</span>
+              <span className="shrink-0 max-md:hidden">{text.trailing}</span>
             </>
           ) : null}
         </p>

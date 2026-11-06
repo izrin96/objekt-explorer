@@ -94,7 +94,7 @@ function FilterChips({
           }
         >
           {FILTER_LABEL[filter]()}
-          <span className="text-xs tabular-nums opacity-70">{counts[filter]}</span>
+          <span className="text-xs opacity-70">{counts[filter]}</span>
         </TogglePrimitive>
       ))}
     </ToggleGroupPrimitive>
@@ -248,7 +248,7 @@ export function TradeExchange({
               )}
             >
               {side.title}
-              <span className="text-xs tabular-nums opacity-70">{side.legs.length}</span>
+              <span className="text-xs opacity-70">{side.legs.length}</span>
             </button>
           ))}
         </div>
@@ -276,7 +276,7 @@ export function TradeExchange({
               <div className="flex items-center justify-between gap-2 max-sm:sr-only">
                 <h3 className="text-sm font-medium">
                   {side.title}{" "}
-                  <span className="text-muted-foreground text-xs font-normal tabular-nums">
+                  <span className="text-muted-foreground text-xs font-normal">
                     {side.legs.length}
                   </span>
                 </h3>

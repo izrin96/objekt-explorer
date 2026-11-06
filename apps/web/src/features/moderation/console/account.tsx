@@ -194,7 +194,7 @@ function AccountHeader({ data }: { data: Account }) {
             {account.deletedAt ? (
               <Badge variant="outline" size="sm">
                 {m.mod_account_deleted()}
-                <When iso={account.deletedAt} className="text-muted-foreground tabular-nums" />
+                <When iso={account.deletedAt} className="text-muted-foreground" />
               </Badge>
             ) : null}
             {bannedBadge ? (
@@ -212,14 +212,13 @@ function AccountHeader({ data }: { data: Account }) {
                 {sanction.expiresAt ? (
                   <>
                     {" · "}
-                    {m.mod_sanction_ends()}{" "}
-                    <When iso={sanction.expiresAt} className="tabular-nums" />
+                    {m.mod_sanction_ends()} <When iso={sanction.expiresAt} />
                   </>
                 ) : null}
               </Badge>
             ))}
             {warnings > 0 ? (
-              <Badge variant="outline" size="sm" className="text-muted-foreground tabular-nums">
+              <Badge variant="outline" size="sm" className="text-muted-foreground">
                 {m.mod_warnings_before({ count: warnings.toLocaleString(getLocale()) })}
               </Badge>
             ) : null}
@@ -251,7 +250,7 @@ function ActionBar({
     <>
       {/* -mx-5 -mb-10 undo PageMain's px-5 pb-10, so the bar spans the screen and sits flush */}
       <div className="bg-background sticky bottom-0 -mx-5 -mb-10 flex items-center gap-3 border-t px-5 pt-3 pb-[calc(env(safe-area-inset-bottom,0px)+--spacing(4))] xl:hidden">
-        <span className="text-muted-foreground min-w-0 flex-1 text-sm tabular-nums">
+        <span className="text-muted-foreground min-w-0 flex-1 text-sm">
           {m.mod_queue_open({ count: openReports.toLocaleString(getLocale()) })}
         </span>
         <Button size="lg" onClick={() => setOpen(true)}>

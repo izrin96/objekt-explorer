@@ -185,7 +185,7 @@ function AddressHeader({
                 {personName(holder)}
               </Link>
               {linkedAt ? (
-                <span className="text-muted-foreground text-xs tabular-nums">
+                <span className="text-muted-foreground text-xs">
                   {m.mod_signal_linked()} <When iso={linkedAt} />
                 </span>
               ) : null}

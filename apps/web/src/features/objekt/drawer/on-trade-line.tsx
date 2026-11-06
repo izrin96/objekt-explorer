@@ -24,7 +24,7 @@ export function OnTradeLine({ slug }: { slug: string }) {
       search={{ slug }}
       className="hover:bg-secondary/60 focus-visible:ring-ring flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-sm outline-none focus-visible:ring-2"
     >
-      <span className="tabular-nums">{text}</span>
+      <span>{text}</span>
       <CaretRightIcon className="text-muted-foreground size-4 shrink-0" aria-hidden />
     </Link>
   );

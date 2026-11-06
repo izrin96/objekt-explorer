@@ -80,11 +80,11 @@ export function Reports({
           <TabsList aria-label={m.mod_reports_tabs()}>
             <TabsTab value="open">
               {m.mod_status_open()}
-              <span className="text-xs tabular-nums opacity-70">{open.length}</span>
+              <span className="text-xs opacity-70">{open.length}</span>
             </TabsTab>
             <TabsTab value="resolved">
               {m.mod_reports_resolved()}
-              <span className="text-xs tabular-nums opacity-70">{resolved.length}</span>
+              <span className="text-xs opacity-70">{resolved.length}</span>
             </TabsTab>
           </TabsList>
         </div>
@@ -201,7 +201,7 @@ function Excerpt({
                     {entry.fromTarget ? targetName : reporterName}
                   </span>
                 ) : null}
-                <When iso={entry.at} className="tabular-nums" />
+                <When iso={entry.at} />
                 {entry.unsent ? (
                   <span className="text-warning-foreground font-medium">
                     {m.mod_excerpt_unsent()}

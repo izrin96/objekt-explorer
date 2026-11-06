@@ -123,7 +123,7 @@ export function OwnedPanel({
                   type="button"
                   className={cn(
                     FOCUS_RING,
-                    "hover:text-foreground inline-flex cursor-pointer items-center gap-1.5 rounded-sm font-mono font-medium tabular-nums underline-offset-2 hover:underline",
+                    "hover:text-foreground inline-flex cursor-pointer items-center gap-1.5 rounded-sm font-mono font-medium underline-offset-2 hover:underline",
                   )}
                   onClick={() => onOpenSerial(item.serial)}
                 >
@@ -142,7 +142,7 @@ export function OwnedPanel({
                   )}
                 </button>
               </th>
-              <td className="px-3 py-1.5 font-mono tabular-nums">{item.tokenId}</td>
+              <td className="px-3 py-1.5 font-mono">{item.tokenId}</td>
               <td className="px-3 py-1.5 whitespace-nowrap tabular-nums">
                 {formatTimestamp(new Date(item.receivedAt))}
               </td>

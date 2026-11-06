@@ -51,7 +51,6 @@ export function RangeControl({
           key={option}
           size="xs"
           variant={option === days ? "secondary" : "ghost"}
-          className="tabular-nums"
           render={
             <Link
               to={to}
@@ -71,10 +70,7 @@ export function RangeControl({
 export function CountedAt({ iso }: { iso: string }) {
   return (
     <span className="text-muted-foreground text-xs">
-      <Slotted
-        text={(time) => m.mod_totals_counted({ time })}
-        node={<When iso={iso} className="tabular-nums" />}
-      />
+      <Slotted text={(time) => m.mod_totals_counted({ time })} node={<When iso={iso} />} />
       {" · "}
       {m.mod_totals_utc()}
     </span>
@@ -93,7 +89,7 @@ export function Stat({
   return (
     <div className="flex min-w-0 flex-col gap-0.5">
       <span className="text-muted-foreground text-xs">{label}</span>
-      <span className="text-lg font-semibold tabular-nums">{value}</span>
+      <span className="text-lg font-semibold">{value}</span>
       {hint === undefined ? null : <span className="text-muted-foreground text-xs">{hint}</span>}
     </div>
   );

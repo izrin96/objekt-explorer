@@ -189,7 +189,7 @@ export function TradesView() {
         />
       ) : (
         <>
-          <p className="text-muted-foreground text-xs tabular-nums">
+          <p className="text-muted-foreground text-xs">
             {rows.length === 1 && !query.hasNextPage
               ? m.trades_count_one()
               : m.trades_count({

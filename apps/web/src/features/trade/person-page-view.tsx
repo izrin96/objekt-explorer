@@ -282,7 +282,7 @@ function OwnBump() {
         {m.trade_bump()}
       </Button>
       {nextBumpAt ? (
-        <span className="text-muted-foreground text-sm tabular-nums">
+        <span className="text-muted-foreground text-sm">
           {m.trade_bump_next({
             time: relativeTime(new Date(nextBumpAt).getTime(), query.dataUpdatedAt, "hour"),
           })}

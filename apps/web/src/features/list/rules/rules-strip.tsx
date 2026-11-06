@@ -62,7 +62,7 @@ export function RulesStrip() {
       <CollapsibleTrigger className="hover:bg-muted/48 flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-start">
         <ListBulletsIcon className="text-muted-foreground size-4 shrink-0" aria-hidden />
         <span className="text-sm font-semibold">{m.rules_heading()}</span>
-        <span className="text-muted-foreground text-sm tabular-nums">
+        <span className="text-muted-foreground text-sm">
           {m.rules_summary({
             count: rules.length.toLocaleString(getLocale()),
             canMatch: canMatch.toLocaleString(getLocale()),

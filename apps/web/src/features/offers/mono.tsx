@@ -8,7 +8,7 @@ import { progressText, topupAmount } from "./format";
 
 /** Identifiers (offer and trade numbers, serials) are set in mono with tabular figures. */
 export function Mono({ className, ...props }: ComponentProps<"span">) {
-  return <span className={cn("font-mono tabular-nums", className)} {...props} />;
+  return <span className={cn("font-mono", className)} {...props} />;
 }
 
 export function Progress({ verified, total }: { verified: number; total: number }) {
@@ -19,7 +19,7 @@ export function Progress({ verified, total }: { verified: number; total: number 
 export function TopupText({ topup }: { topup: TopupView }) {
   const amount = topupAmount(topup);
   return (
-    <span className="tabular-nums">
+    <span>
       {topup.payer === "you"
         ? m.offer_topup_you_pay({ amount })
         : m.offer_topup_they_pay({ amount })}

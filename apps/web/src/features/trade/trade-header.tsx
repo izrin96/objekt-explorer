@@ -89,7 +89,7 @@ export function TradeHeader({
         </div>
         <div className="flex min-w-0 flex-col gap-0.5">
           {/* wraps between " · " segments, so beside the owner's buttons nothing is cut off */}
-          <span className="text-muted-foreground block text-xs text-pretty tabular-nums">
+          <span className="text-muted-foreground block text-xs text-pretty">
             <TrustLine reputation={person.reputation} className="inline" />
             {meta ? (
               <>

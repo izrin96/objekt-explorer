@@ -60,7 +60,7 @@ function HealthLine({ health }: { health: TrackerHealth }) {
                   ),
                 })
               }
-              node={<When iso={indexer.seenUntil} className="tabular-nums" />}
+              node={<When iso={indexer.seenUntil} />}
             />
           </span>
         ) : null}
@@ -70,11 +70,11 @@ function HealthLine({ health }: { health: TrackerHealth }) {
           ) : (
             <Slotted
               text={(time) => m.mod_trades_health_verifier({ time })}
-              node={<When iso={health.verifierLastRun} className="tabular-nums" />}
+              node={<When iso={health.verifierLastRun} />}
             />
           )}
         </span>
-        <span className="tabular-nums">
+        <span>
           {m.mod_trades_health_open({
             legs: count(health.open.legs),
             away: count(health.open.away),

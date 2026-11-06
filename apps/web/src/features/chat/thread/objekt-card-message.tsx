@@ -43,7 +43,7 @@ export function ObjektCardMessage({
           <CollectionLabel slug={card.collectionSlug} collection={collection} />
         </p>
         {card.serial !== null ? (
-          <p className="text-muted-foreground font-mono text-xs tabular-nums">
+          <p className="text-muted-foreground font-mono text-xs">
             {m.chat_card_serial({ serial: card.serial })}
           </p>
         ) : null}
@@ -58,7 +58,7 @@ export function ObjektCardMessage({
             <ListRoleBadge type={list.listType} />
           </p>
         ) : null}
-        {price ? <p className="mt-auto font-semibold tabular-nums">{price}</p> : null}
+        {price ? <p className="mt-auto font-semibold">{price}</p> : null}
       </div>
     </Card>
   );

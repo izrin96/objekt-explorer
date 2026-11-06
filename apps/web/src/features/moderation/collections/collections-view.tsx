@@ -146,8 +146,7 @@ export function CollectionsView() {
           <div className="flex flex-wrap items-center gap-3">
             {admin.modifiedAt ? (
               <span className="text-muted-foreground text-xs">
-                {m.mod_collections_last_changed()}{" "}
-                <When iso={admin.modifiedAt} className="tabular-nums" />
+                {m.mod_collections_last_changed()} <When iso={admin.modifiedAt} />
               </span>
             ) : null}
             <Button
@@ -201,7 +200,7 @@ export function CollectionsView() {
         >
           {m.mod_collections_overrides_only()}
         </Toggle>
-        <span className="text-muted-foreground text-xs tabular-nums" aria-live="polite">
+        <span className="text-muted-foreground text-xs" aria-live="polite">
           {collections
             ? m.mod_collections_count({ count: rows.length.toLocaleString(getLocale()) })
             : null}

@@ -110,7 +110,7 @@ export function ProgressView() {
         )
       ) : (
         <div className="flex flex-col gap-8">
-          <p className="font-mono text-sm font-semibold tabular-nums">
+          <p className="font-mono text-sm font-semibold">
             <TallyValue row={totals} />
           </p>
 

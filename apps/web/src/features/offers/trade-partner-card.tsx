@@ -94,10 +94,7 @@ function Figures({ reputation }: { reputation: Reputation }) {
         <div key={figure.key} className="bg-muted flex flex-col rounded-lg p-2.5">
           <dt className="text-muted-foreground truncate text-xs">{figure.label}</dt>
           <dd
-            className={cn(
-              "text-base font-semibold tabular-nums",
-              figure.warn && "text-warning-foreground",
-            )}
+            className={cn("text-base font-semibold", figure.warn && "text-warning-foreground")}
             title={figure.warn ? m.trust_unfinished_hint() : undefined}
           >
             {figure.value}
@@ -179,7 +176,7 @@ export function TradePartnerRow({ trade }: { trade: Trade }) {
           isNew(reputation) ? (
             <TrustLine reputation={reputation} variant="compact" className="self-start" />
           ) : (
-            <span className="text-muted-foreground text-xs tabular-nums">
+            <span className="text-muted-foreground text-xs">
               {m.trust_verified({ count: reputation.verified.toLocaleString(locale) })}
               {reputation.unfinished > 0 ? (
                 <>

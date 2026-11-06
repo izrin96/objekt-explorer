@@ -136,7 +136,7 @@ function Strip({
 }) {
   return (
     <section className="flex min-w-0 flex-col gap-1">
-      <h3 className={cn("text-xs uppercase tabular-nums", TONE_INK[role])}>
+      <h3 className={cn("text-xs uppercase", TONE_INK[role])}>
         {LIST_TYPE_LABEL[role]()} {copyCount ?? slugs.length + more}
       </h3>
       {slugs.length === 0 ? (
@@ -150,7 +150,7 @@ function Strip({
             className="w-8 shrink-0"
           />
           {more > 0 ? (
-            <li className="text-muted-foreground ps-1 text-xs tabular-nums">
+            <li className="text-muted-foreground ps-1 text-xs">
               <MoreCount count={more} />
             </li>
           ) : null}
@@ -174,7 +174,7 @@ function MatchRow({
   if (count === 0) return null;
   return (
     <section className="flex min-w-0 flex-col gap-1.5">
-      <h3 className="text-sm tabular-nums">{label({ count })}</h3>
+      <h3 className="text-sm">{label({ count })}</h3>
       <ul className="flex min-w-0 items-center gap-1.5">
         <Thumbs slugs={slugs} collections={collections} onOpen={onOpen} className="w-10 shrink-0" />
       </ul>
@@ -185,7 +185,7 @@ function MatchRow({
 function PostPrice({ price }: { price: NonNullable<NonNullable<PostCardView["post"]>["price"]> }) {
   const { min, max } = formatPostPrices(price.min, price.max, price.currency);
   return (
-    <p className="font-semibold tabular-nums">
+    <p className="font-semibold">
       {price.min === price.max ? min : m.chat_post_price({ min, max })}
     </p>
   );

@@ -78,7 +78,7 @@ export function TradeLegs<L extends StaffLeg>({
           {leg.txHash ? (
             <span className="text-muted-foreground flex flex-wrap items-baseline gap-x-2 text-xs">
               <span className="font-mono break-all">{leg.txHash}</span>
-              {leg.verifiedAt ? <When iso={leg.verifiedAt} className="tabular-nums" /> : null}
+              {leg.verifiedAt ? <When iso={leg.verifiedAt} /> : null}
             </span>
           ) : null}
         </li>
@@ -112,7 +112,7 @@ export function AttachedTrades({
                 <Link
                   to="/mod/trades/$tradeId"
                   params={{ tradeId: String(trade.id) }}
-                  className="font-semibold tabular-nums hover:underline"
+                  className="font-semibold hover:underline"
                 >
                   {tradeNo(trade.id)}
                 </Link>
@@ -121,8 +121,7 @@ export function AttachedTrades({
                 </Badge>
                 <span className="text-muted-foreground">{m.mod_trade_with({ name: other })}</span>
                 <span className="text-muted-foreground text-xs">
-                  {m.offer_trade_accepted()}{" "}
-                  <When iso={trade.acceptedAt} className="tabular-nums" />
+                  {m.offer_trade_accepted()} <When iso={trade.acceptedAt} />
                 </span>
               </div>
               <TradeLegs

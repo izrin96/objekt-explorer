@@ -44,8 +44,7 @@ export function checkpointDate(at: string | undefined): Date | undefined {
 const EARLIEST = new Date(2022, 7, 1);
 const END_OF_DAY_TIME = "23:59:59";
 /** Safari centres a time value unless its inner field is told otherwise */
-const dateTimeClass =
-  "tabular-nums [&_input]:appearance-none [&_input::-webkit-date-and-time-value]:text-left";
+const dateTimeClass = "[&_input]:appearance-none [&_input::-webkit-date-and-time-value]:text-left";
 
 /** weekdays, month names and the calendar's screen-reader labels follow the app's language */
 const CALENDAR_LOCALE: Record<Locale, DayPickerLocale> = { en: enUS, ko, ja };
@@ -87,7 +86,7 @@ function CalendarDropdown({ options, value, onChange, "aria-label": ariaLabel }:
         onChange?.({ target: { value: next } } as React.ChangeEvent<HTMLSelectElement>);
       }}
     >
-      <SelectTrigger size="sm" aria-label={ariaLabel} className="tabular-nums">
+      <SelectTrigger size="sm" aria-label={ariaLabel}>
         <SelectValue />
       </SelectTrigger>
       <SelectPopup>

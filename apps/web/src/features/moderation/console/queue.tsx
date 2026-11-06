@@ -80,7 +80,7 @@ export function ModQueue() {
 
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-muted-foreground text-xs tabular-nums">
+      <p className="text-muted-foreground text-xs">
         {m.mod_queue_summary({
           reports: openReports.toLocaleString(getLocale()),
           accounts: query.data.length.toLocaleString(getLocale()),
@@ -105,9 +105,7 @@ export function ModQueue() {
             className="text-muted-foreground data-pressed:text-foreground gap-1.5"
           >
             {FILTER_LABEL[value]()}
-            <span className="text-xs tabular-nums opacity-70">
-              {query.data.filter(MATCHES[value]).length}
-            </span>
+            <span className="text-xs opacity-70">{query.data.filter(MATCHES[value]).length}</span>
           </ToggleGroupItem>
         ))}
       </ToggleGroup>
@@ -150,7 +148,7 @@ function QueueRow({ row, current }: { row: Row; current: boolean }) {
         <span className="flex min-w-0 flex-1 flex-col gap-1">
           {/* the name has the line to itself: beside a full timestamp the sidebar left it a few letters */}
           <span className="truncate font-semibold">{name}</span>
-          <span className="text-muted-foreground flex flex-wrap gap-x-1.5 text-xs tabular-nums">
+          <span className="text-muted-foreground flex flex-wrap gap-x-1.5 text-xs">
             <span>
               {m.mod_queue_open({ count: row.openReports.toLocaleString(getLocale()) })}
               {row.sharedExcerpts > 0 ? (
@@ -164,12 +162,12 @@ function QueueRow({ row, current }: { row: Row; current: boolean }) {
           </span>
           <span className="flex flex-wrap items-center gap-1.5">
             {reason ? (
-              <Badge variant="outline" size="sm" className="tabular-nums">
+              <Badge variant="outline" size="sm">
                 {REASON_LABEL[reason]()} · {row.reasons[reason]}
               </Badge>
             ) : null}
             {flag ? (
-              <Badge variant="warning" size="sm" className="tabular-nums">
+              <Badge variant="warning" size="sm">
                 {m.mod_flag_count({
                   label: FLAG_LABEL[flag](),
                   count: row.flags[flag].toLocaleString(getLocale()),

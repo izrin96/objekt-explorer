@@ -83,13 +83,13 @@ function TradeBody({ trade }: { trade: StaffTrade }) {
                           }),
                         })}
                         {" · "}
-                        <When iso={copy.transferredAt} className="tabular-nums" />
+                        <When iso={copy.transferredAt} />
                       </span>
                       {copy.status === "pending" && copy.acceptBy !== null ? (
                         <span className="text-muted-foreground text-xs">
                           <Slotted
                             text={(time) => m.mod_trades_detail_copy({ time })}
-                            node={<When iso={copy.acceptBy} className="tabular-nums" />}
+                            node={<When iso={copy.acceptBy} />}
                           />
                         </span>
                       ) : null}
@@ -112,18 +112,12 @@ function TradeBody({ trade }: { trade: StaffTrade }) {
                     className="flex flex-wrap items-baseline gap-x-2 px-3 py-2"
                   >
                     <span>{m.mod_staff_trade_request_by({ name: nameOf(ask.askedBy) })}</span>
-                    <When
-                      iso={ask.askedAt}
-                      className="text-muted-foreground text-xs tabular-nums"
-                    />
+                    <When iso={ask.askedAt} className="text-muted-foreground text-xs" />
                     <Badge variant={ask.status === "pending" ? "warning" : "outline"} size="sm">
                       {REQUEST_STATUS[ask.status]()}
                     </Badge>
                     {ask.answeredAt === null ? null : (
-                      <When
-                        iso={ask.answeredAt}
-                        className="text-muted-foreground text-xs tabular-nums"
-                      />
+                      <When iso={ask.answeredAt} className="text-muted-foreground text-xs" />
                     )}
                   </li>
                 ))}

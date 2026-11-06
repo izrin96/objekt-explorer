@@ -59,7 +59,7 @@ export function LinkHistory({
                   </Link>
                 )}
                 <span className="font-medium">{linkEventLabel(event)}</span>
-                <When iso={event.at} className="text-muted-foreground text-xs tabular-nums" />
+                <When iso={event.at} className="text-muted-foreground text-xs" />
               </span>
               <Link
                 to="/mod/addresses/$address"

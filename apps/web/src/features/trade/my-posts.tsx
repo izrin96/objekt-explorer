@@ -115,7 +115,7 @@ export function MyPosts({ onNew, onEdit }: MyPostsProps) {
             </MetaItem>
             {summary.idle > 0 ? (
               <MetaItem>
-                <Badge variant="outline" size="sm" className="tabular-nums">
+                <Badge variant="outline" size="sm">
                   {m.trade_my_posts_idle({ count: summary.idle.toLocaleString(getLocale()) })}
                 </Badge>
               </MetaItem>
@@ -206,7 +206,7 @@ type MyPost = Outputs["trade"]["myPosts"][number];
 
 function MetaItem({ children }: { children: ReactNode }) {
   return (
-    <span className="text-muted-foreground inline-flex items-center gap-2 whitespace-nowrap tabular-nums">
+    <span className="text-muted-foreground inline-flex items-center gap-2 whitespace-nowrap">
       <span aria-hidden>·</span>
       {children}
     </span>

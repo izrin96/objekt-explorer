@@ -13,7 +13,7 @@ function BlockerRow({ blocker }: { blocker: Blocker }) {
     return (
       <li className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 py-2">
         <span className="text-sm font-medium">{SANCTION_LABEL[blocker.type]()}</span>
-        <span className="text-muted-foreground text-xs tabular-nums">
+        <span className="text-muted-foreground text-xs">
           {blocker.until
             ? m.auth_account_delete_sanction_until({
                 date: untilLabel(blocker.until),
@@ -31,10 +31,10 @@ function BlockerRow({ blocker }: { blocker: Blocker }) {
         className="hover:bg-accent -mx-2 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 rounded-md px-2 py-2"
       >
         <span className="flex min-w-0 items-baseline gap-2">
-          <span className="font-mono text-sm tabular-nums">T-{blocker.tradeId}</span>
+          <span className="font-mono text-sm">T-{blocker.tradeId}</span>
           <span className="truncate text-sm">{blocker.partner.name}</span>
         </span>
-        <span className="text-muted-foreground text-xs tabular-nums">
+        <span className="text-muted-foreground text-xs">
           {blocker.cancelLocked
             ? m.auth_account_delete_cancel_locked({
                 date: untilLabel(blocker.endsBy),

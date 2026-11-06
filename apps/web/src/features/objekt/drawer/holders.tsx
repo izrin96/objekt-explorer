@@ -212,7 +212,7 @@ function SpreadChart({ summary }: { summary: Summary }) {
           <span key={b.key} className="inline-flex items-center gap-1.5">
             <span className={cn("size-2 rounded-xs", BUCKETS[b.key].color)} />
             {BUCKETS[b.key].label()}
-            <span className="tabular-nums">{b.holders.toLocaleString(getLocale())}</span>
+            <span>{b.holders.toLocaleString(getLocale())}</span>
           </span>
         ))}
       </figcaption>
@@ -242,7 +242,7 @@ function SpreadBar({
                 key={b.key}
                 style={{ flexGrow: b[pick] }}
                 className={cn(
-                  "text-background flex min-w-0.5 basis-0 items-center overflow-hidden px-1 font-medium tabular-nums",
+                  "text-background flex min-w-0.5 basis-0 items-center overflow-hidden px-1 font-medium",
                   BUCKETS[b.key].color,
                 )}
               >

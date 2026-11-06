@@ -106,7 +106,7 @@ export function ViewRow({
         {override ? (
           <>
             {override.updatedBy?.identity?.name ? `${override.updatedBy.identity.name} · ` : null}
-            {override.updatedAt ? <When iso={override.updatedAt} className="tabular-nums" /> : null}
+            {override.updatedAt ? <When iso={override.updatedAt} /> : null}
           </>
         ) : (
           m.mod_collections_source()

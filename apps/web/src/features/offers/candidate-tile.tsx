@@ -121,7 +121,7 @@ export function CandidateTile({
         <span className="font-medium break-words">
           <CollectionLabel slug={item.collectionSlug} collection={collection} />
         </span>
-        {detail ? <span className="text-muted-foreground tabular-nums">{detail}</span> : null}
+        {detail ? <span className="text-muted-foreground">{detail}</span> : null}
         {/* only the partner's have-list items carry one, so this is always what they ask */}
         {item.ratio !== undefined ? (
           <RatioChip ratio={item.ratio} side="have" owner={false} className="mt-0.5 self-start" />

@@ -29,7 +29,6 @@ export function RatioChip({
       size="sm"
       title={name}
       className={cn(
-        "tabular-nums",
         owner && inherited && "text-muted-foreground border-muted-foreground border-dashed",
         className,
       )}

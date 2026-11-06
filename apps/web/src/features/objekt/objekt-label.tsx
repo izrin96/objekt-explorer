@@ -15,7 +15,7 @@ export function collectionName(
 /** "#537", or "~#537" read as "estimated #537" when we computed the serial, not Cosmo. */
 export function SerialNo({ serial, estimated }: { serial: number; estimated?: boolean }) {
   return (
-    <span className="font-mono whitespace-nowrap tabular-nums">
+    <span className="font-mono whitespace-nowrap">
       {estimated ? (
         <>
           <span aria-hidden="true">~</span>
@@ -44,7 +44,7 @@ export function CollectionLabel({
       {collection ? (
         <>
           {collection.member}{" "}
-          <span className="whitespace-nowrap tabular-nums">{getCollectionShortNo(collection)}</span>
+          <span className="whitespace-nowrap">{getCollectionShortNo(collection)}</span>
         </>
       ) : (
         <span className="font-mono break-all">{slug}</span>

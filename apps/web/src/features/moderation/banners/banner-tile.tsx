@@ -49,11 +49,7 @@ export function BannerTile({
             {name}
           </Link>
           <span className="text-muted-foreground text-xs text-pretty">
-            {banner.updatedAt ? (
-              <When iso={banner.updatedAt} className="tabular-nums" />
-            ) : (
-              m.mod_banners_time_unknown()
-            )}
+            {banner.updatedAt ? <When iso={banner.updatedAt} /> : m.mod_banners_time_unknown()}
             {" · "}
             {banner.holder ? (
               <Link

@@ -229,7 +229,7 @@ function DealLine({ deal, muted }: { deal: NonNullable<ConversationRow["deal"]>;
           <span aria-hidden className="shrink-0">
             ·
           </span>
-          <span className="shrink-0 tabular-nums">{trailing}</span>
+          <span className="shrink-0">{trailing}</span>
         </>
       ) : null}
     </span>

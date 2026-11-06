@@ -118,7 +118,7 @@ export function MessageItem({
       ) : null}
       <time
         dateTime={message.createdAt}
-        className={showTime ? "text-muted-foreground px-1 text-xs tabular-nums" : "sr-only"}
+        className={showTime ? "text-muted-foreground px-1 text-xs" : "sr-only"}
       >
         {hydrated ? messageTime(message.createdAt) : null}
       </time>

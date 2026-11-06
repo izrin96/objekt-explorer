@@ -38,7 +38,7 @@ export function RulePreview({
             </span>
           ) : (
             <>
-              <span className="text-muted-foreground text-xs tabular-nums">
+              <span className="text-muted-foreground text-xs">
                 {counts.covers === 1
                   ? m.rule_preview_counts_one({ owned: counts.owned.toLocaleString(getLocale()) })
                   : m.rule_preview_counts({

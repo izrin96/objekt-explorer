@@ -29,7 +29,7 @@ export function WithNumbers<K extends string>({
         index % 2 === 0 ? (
           <Fragment key={index}>{part}</Fragment>
         ) : (
-          <b key={index} className={cn("font-semibold tabular-nums", className)}>
+          <b key={index} className={cn("font-semibold", className)}>
             {entries[Number(part)]?.[1]?.toLocaleString(getLocale())}
           </b>
         ),
