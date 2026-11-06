@@ -20,6 +20,7 @@ import { verifyBatchBoundaries } from "./job/verify-batch-boundaries";
 import { sendWantAlerts } from "./job/want-alerts";
 import { log } from "./lib/log";
 import { releaseHeldLocks, withRedisLock } from "./lib/redis-lock";
+import { probeScopeFor } from "./lib/verify-plan";
 
 const workerLog = log("worker");
 const verifierLog = log("verifier");
@@ -95,14 +96,14 @@ if (indexerWrites) {
   startupRuns.push(runDrain);
   crons.push(cron("*/2 * * * *", runDrain));
 
-  // weekly boundary-drift check for un-anchored offline serial batches
-  // (no startup run: cheap but not needed on every deploy/restart). It rewrites the same serials
-  // as populateSerialOffline, so it takes that job's lock, off that job's 5-minute grid so the
-  // two don't race for it in the same minute.
+  // daily boundary-drift check for un-anchored offline serial batches: indexer only on most days,
+  // Cosmo probes on Mondays (probeScopeFor). No startup run, so a deploy never adds a probe pass.
+  // It rewrites the same serials as populateSerialOffline, so it takes that job's lock, off that
+  // job's 5-minute grid so the two don't race for it in the same minute.
   crons.push(
     cron(
-      "2 3 * * 1",
-      safeRun("serial-offline", () => verifyBatchBoundaries()),
+      "2 3 * * *",
+      safeRun("serial-offline", () => verifyBatchBoundaries(probeScopeFor(new Date()))),
     ),
   );
 

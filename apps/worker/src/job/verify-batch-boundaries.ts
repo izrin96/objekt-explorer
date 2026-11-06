@@ -7,27 +7,28 @@
  * no ground truth, so a boundary that was guessed from an unminted (404) token
  * which later minted as *foreign* would silently shift their serials.
  *
- * This detects that cheaply: instead of a full gap scan, it probes only the
+ * This detects that cheaply: instead of a full gap scan, it checks only the
  * EDGE tokens of each un-anchored batch — the stored start/end plus the first
- * gap token past our own mints (the stored edge can sit in a still-unminted
- * stretch long after the foreign collection has minted right next to our
- * tokens, so probing next to our mints catches drift much earlier). On any
- * drift it re-runs full discovery for that one collection and rewrites the
- * affected serials — so the expensive path runs only for the few that moved.
+ * gap token past our own mints. The indexer judges every edge token it has
+ * minted; only the tokens it lacks go to the Cosmo API, and only on a probe
+ * run (`probeScopeFor`: recent collections on Mondays, all on the first
+ * Monday of the month). On any drift it re-runs full discovery for that one
+ * collection and rewrites the affected serials.
  *
  * It also asks the indexer whether a foreign objekt has minted inside a stored
  * range. That catches a reserved block that refineBatches claimed from a gap
  * but which turned out to belong to another collection.
  *
- * Runs weekly from the worker cron. Manual run:
- *   DRY_RUN=1 bun run --env-file=../../.env src/job/verify-batch-boundaries.ts
+ * Runs daily from the worker cron. Manual run (PROBES=none|recent|all, default
+ * today's scheduled scope):
+ *   DRY_RUN=1 PROBES=none bun run --env-file=../../.env src/job/verify-batch-boundaries.ts
  *   bun run --env-file=../../.env src/job/verify-batch-boundaries.ts
  */
 import { fetchMetadataV3, normalizeV3 } from "@repo/cosmo/server/metadata";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
 import { chunk, slugifyObjekt } from "@repo/lib";
-import { and, asc, eq, inArray, isNotNull, ne, or } from "drizzle-orm";
+import { and, asc, eq, inArray, isNotNull, ne, or, sql } from "drizzle-orm";
 import { FetchError } from "ofetch";
 
 import {
@@ -49,12 +50,22 @@ import {
   type ManualAnchor,
   V1_CUTOFF_MS,
 } from "@/lib/serial-math";
+import {
+  type BatchEdges,
+  isRecent,
+  judgeEdges,
+  PROBE_SCOPES,
+  probeScopeFor,
+  type ProbeScope,
+} from "@/lib/verify-plan";
 
 const CONCURRENCY = 5;
 const verifyLog = log("verify-batches");
 
 type Batch = { start: number; end: number };
 type Probe = "ours" | "foreign" | "unminted";
+// owner recorded for a token a probe found foreign; never a collection id
+const FOREIGN = "";
 
 async function probe(tokenId: number, targetSlug: string): Promise<Probe> {
   if (tokenId < 1) return "foreign"; // below token 1 == out of our range
@@ -68,8 +79,8 @@ async function probe(tokenId: number, targetSlug: string): Promise<Probe> {
   }
 }
 
-export async function verifyBatchBoundaries(dryRun = false) {
-  // only collections that already have discovered ranges stored
+export async function verifyBatchBoundaries(scope: ProbeScope, dryRun = false) {
+  // only collections that already have discovered ranges stored, with a batch no v1 objekt anchors
   const targets = await indexer
     .select({
       id: collections.id,
@@ -87,17 +98,27 @@ export async function verifyBatchBoundaries(dryRun = false) {
       and(
         or(eq(collections.onOffline, "offline"), inArray(collections.slug, excludeCollections)),
         isNotNull(collections.serialBatches),
+        // a batch holding a v1 objekt is anchored, so a collection with none left
+        // unanchored never needs its objekts loaded; manual anchors are checked below
+        sql`exists (
+          select 1 from jsonb_array_elements(${collections.serialBatches}) b
+          where not exists (
+            select 1 from ${objekts} o
+            where o.collection_id = ${collections.id} and o.serial > 0
+              and o.minted_at < ${new Date(V1_CUTOFF_MS).toISOString()}
+              and o.id::bigint between (b->>'start')::bigint and (b->>'end')::bigint))`,
       ),
     );
 
   verifyLog.debug(
-    `${dryRun ? "DRY RUN — " : ""}checking ${targets.length} offline collections with stored batches`,
+    `${dryRun ? "DRY RUN — " : ""}checking ${targets.length} offline collections with stored batches, probes: ${scope}`,
   );
 
   let drifted = 0;
   let fixed = 0;
   let unchanged = 0;
   let gridSkipped = 0;
+  let probes = 0;
   const failed: string[] = [];
 
   // each drop is fitted once per run: the span of a grid-fitted drop, else null
@@ -180,63 +201,72 @@ export async function verifyBatchBoundaries(dryRun = false) {
       .limit(1);
     if (foreignInside) reasons.push(`foreign token ${foreignInside.id} inside a stored range`);
 
-    const knownForeign: number[] = [];
-
-    try {
-      for (const b of toProbe) {
-        const isFrontier = b === frontier;
-        // our lowest/highest minted token inside the batch: the stored edges can
-        // sit in a still-unminted stretch, so the token right next to our own
-        // mints is the earliest place foreign drift becomes observable
-        let firstOurs = Infinity;
-        let lastOurs = -Infinity;
-        for (const tid of tokenIds) {
-          if (tid < b.start || tid > b.end) continue;
-          if (tid < firstOurs) firstOurs = tid;
-          if (tid > lastOurs) lastOurs = tid;
-        }
-        const afterOursTid = lastOurs >= b.start && lastOurs < b.end ? lastOurs + 1 : null;
-        const beforeOursTid = firstOurs <= b.end && firstOurs > b.start ? firstOurs - 1 : null;
-
-        const [endTok, endNext, startTok, startPrev, afterOurs, beforeOurs] = await Promise.all([
-          isFrontier ? Promise.resolve(null) : probe(b.end, targetSlug),
-          isFrontier ? Promise.resolve(null) : probe(b.end + 1, targetSlug),
-          probe(b.start, targetSlug),
-          probe(b.start - 1, targetSlug),
-          afterOursTid === null || isFrontier
-            ? Promise.resolve(null)
-            : probe(afterOursTid, targetSlug),
-          beforeOursTid === null ? Promise.resolve(null) : probe(beforeOursTid, targetSlug),
-        ]);
-        const probed = [
-          [b.end, endTok],
-          [b.end + 1, endNext],
-          [b.start, startTok],
-          [b.start - 1, startPrev],
-          [afterOursTid, afterOurs],
-          [beforeOursTid, beforeOurs],
-        ] as const;
-        for (const [tid, result] of probed) {
-          if (result === "foreign" && tid !== null && tid >= 1) knownForeign.push(tid);
-        }
-        if (endTok === "foreign") reasons.push(`end ${b.end} is foreign (too big)`);
-        if (endNext === "ours") reasons.push(`end+1 ${b.end + 1} is ours (too small)`);
-        if (startTok === "foreign") reasons.push(`start ${b.start} is foreign`);
-        if (startPrev === "ours") reasons.push(`start-1 ${b.start - 1} is ours (too small)`);
-        // "ours" here just means our own mint the indexer hasn't caught up on —
-        // only foreign proves the reserved range is smaller than stored
-        if (afterOurs === "foreign") {
-          reasons.push(`gap token ${afterOursTid} after last ours is foreign (end too big)`);
-        }
-        if (beforeOurs === "foreign") {
-          reasons.push(`gap token ${beforeOursTid} below first ours is foreign (start too small)`);
-        }
+    // per batch: the stored edges plus the gap tokens next to our own mints. The
+    // stored edges can sit in a still-unminted stretch, so the token right next to
+    // our mints is the earliest place foreign drift becomes observable.
+    const edges: BatchEdges[] = toProbe.map((b) => {
+      const isFrontier = b === frontier;
+      let firstOurs = Infinity;
+      let lastOurs = -Infinity;
+      for (const tid of tokenIds) {
+        if (tid < b.start || tid > b.end) continue;
+        if (tid < firstOurs) firstOurs = tid;
+        if (tid > lastOurs) lastOurs = tid;
       }
-    } catch {
-      verifyLog.debug(`${t.slug}: Cosmo API error, skipping`);
-      failed.push(t.slug);
-      return;
+      return {
+        end: isFrontier ? null : b.end,
+        endNext: isFrontier ? null : b.end + 1,
+        start: b.start,
+        startPrev: b.start - 1,
+        afterOurs: !isFrontier && lastOurs >= b.start && lastOurs < b.end ? lastOurs + 1 : null,
+        beforeOurs: firstOurs <= b.end && firstOurs > b.start ? firstOurs - 1 : null,
+      };
+    });
+
+    // a token the indexer has minted has a fixed owner, which is what a probe would
+    // return, so only the tokens it lacks go to the Cosmo API
+    const owners = new Map<number, string>();
+    const edgeTokens = [
+      ...new Set(
+        edges.flatMap((e) =>
+          [e.end, e.endNext, e.start, e.startPrev, e.afterOurs, e.beforeOurs].filter(
+            (tid): tid is number => tid !== null && tid >= 1,
+          ),
+        ),
+      ),
+    ];
+    await chunk(edgeTokens, 1000, async (ids) => {
+      const found = await indexer
+        .select({ id: objekts.id, collectionId: objekts.collectionId })
+        .from(objekts)
+        .where(inArray(objekts.id, ids.map(String)));
+      for (const o of found) if (o.collectionId) owners.set(parseInt(o.id), o.collectionId);
+    });
+
+    let judged = judgeEdges(edges, owners, t.id);
+    const newestMint = rows.reduce((max, o) => Math.max(max, Date.parse(o.mintedAt)), 0);
+    const probing = scope === "all" || (scope === "recent" && isRecent(newestMint, Date.now()));
+
+    if (probing && judged.unknown.length > 0) {
+      try {
+        await chunk(judged.unknown, 6, async (ids) => {
+          const results = await Promise.all(ids.map((tid) => probe(tid, targetSlug)));
+          probes += ids.length;
+          ids.forEach((tid, i) => {
+            if (results[i] === "ours") owners.set(tid, t.id);
+            else if (results[i] === "foreign") owners.set(tid, FOREIGN);
+          });
+        });
+      } catch {
+        verifyLog.debug(`${t.slug}: Cosmo API error, skipping`);
+        failed.push(t.slug);
+        return;
+      }
+      judged = judgeEdges(edges, owners, t.id);
     }
+
+    reasons.push(...judged.reasons);
+    const knownForeign = judged.foreign;
 
     if (reasons.length === 0) return;
 
@@ -288,7 +318,7 @@ export async function verifyBatchBoundaries(dryRun = false) {
 
   const done = failed.length > 0 ? verifyLog.warn : drifted > 0 ? verifyLog.info : verifyLog.debug;
   done(
-    `Done. ${drifted} drifted, ${dryRun ? "would fix" : "fixed"} ${fixed}` +
+    `Done (probes: ${scope}, ${probes} Cosmo calls). ${drifted} drifted, ${dryRun ? "would fix" : "fixed"} ${fixed}` +
       (unchanged ? `, ${unchanged} unchanged after rediscovery` : "") +
       (gridSkipped ? `, ${gridSkipped} grid-fitted not probed` : "") +
       "." +
@@ -297,6 +327,11 @@ export async function verifyBatchBoundaries(dryRun = false) {
 }
 
 if (import.meta.main) {
-  await verifyBatchBoundaries(process.env.DRY_RUN === "1");
+  const env = process.env.PROBES;
+  if (env !== undefined && !PROBE_SCOPES.includes(env as ProbeScope)) {
+    throw new Error(`PROBES must be one of ${PROBE_SCOPES.join(", ")}`);
+  }
+  const scope = (env as ProbeScope | undefined) ?? probeScopeFor(new Date());
+  await verifyBatchBoundaries(scope, process.env.DRY_RUN === "1");
   process.exit(0);
 }
