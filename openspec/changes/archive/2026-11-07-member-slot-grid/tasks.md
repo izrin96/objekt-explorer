@@ -19,7 +19,7 @@
 
 - [x] 4.1 Read-only dry run of the script over every block season with `PGOPTIONS='-c default_transaction_read_only=on'`. Verify: no fitted run with v1 serials matches fewer of them than its stored ranges, and the report gives the runs fitted, the known serials matched before and after, and the serials that would change; share it with the user.
 - [x] 4.2 With the user's approval, export `serial_batches` and every objekt serial of the fitted runs' collections to a local backup file outside the repo. Verify: the row counts in the file match the dry run's collections and objekts.
-- [ ] 4.3 With the user's approval, deploy the worker and run the script with `APPLY=1`. Verify: a rerun reports 0 serials to change, and `cream02-kaede-336a`'s range is 27533650–27534149.
+- [x] 4.3 With the user's approval, deploy the worker and run the script with `APPLY=1`. Verify: a rerun reports 0 serials to change, and `cream02-kaede-336a`'s range is 27533650–27534149.
 
 ## 5. Documentation
 
