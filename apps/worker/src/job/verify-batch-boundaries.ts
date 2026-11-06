@@ -142,7 +142,6 @@ export async function verifyBatchBoundaries(scope: ProbeScope, dryRun = false) {
 
   const dropFitted = (key: DropKey) => dropSpanOf(key).then((span) => span !== null);
 
-  // each collection's fitted member run is fitted once per run, by the run's first lookup
   const runSpans = new Map<string, Promise<{ start: number; end: number } | null>>();
   const runSpanOf = (key: MemberKey, collectionId: string) => {
     let span = runSpans.get(collectionId);

@@ -19,7 +19,7 @@ import { collections, objekts } from "@repo/db/indexer/schema";
 import { chunk } from "@repo/lib";
 import { and, asc, eq, inArray, isNotNull, lte, notInArray, or } from "drizzle-orm";
 
-import { applyGrids, dropFitMemo, refineBatches, writeSerialUpdates } from "@/job/serial-batches";
+import { applyGrids, refineBatches, writeSerialUpdates } from "@/job/serial-batches";
 import {
   preAssignedCollections as excludeCollections,
   preBlockSeasons,
@@ -79,8 +79,6 @@ function seasonStats(season: string) {
   return s;
 }
 
-const dropFitted = dropFitMemo();
-
 async function processOne(t: (typeof targets)[number]) {
   const stored = t.batches ?? [];
   if (stored.length === 0) return;
@@ -98,11 +96,8 @@ async function processOne(t: (typeof targets)[number]) {
   if (rows.length === 0) return;
 
   const tokenIds = rows.map((o) => parseInt(o.id));
-  const refined = await applyGrids(
-    t.id,
-    await refineBatches(t.season, stored, tokenIds),
-    dropFitted,
-  );
+  // no shared drop-fit memo: this run writes ranges as it goes, which can change a drop's fit
+  const refined = await applyGrids(t.id, await refineBatches(t.season, stored, tokenIds));
 
   const storedKeys = new Set(stored.map((b) => `${b.start}-${b.end}`));
   const storedEnds = new Set(stored.map((b) => b.end));

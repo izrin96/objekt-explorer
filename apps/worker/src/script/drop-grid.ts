@@ -212,7 +212,8 @@ for (const key of drops) {
 }
 
 for (const key of memberKeys) {
-  for (const run of await loadMemberRuns(key, undefined, dropFitted)) {
+  // APPLY writes runs as it goes, which can change a drop a later run checks
+  for (const run of await loadMemberRuns(key, undefined, APPLY ? undefined : dropFitted)) {
     const nos = await collectionNos(run.members.map((m) => m.id));
     if (collectionNo !== undefined && !nos.includes(collectionNo)) continue;
     const name = `${memberName(key)} [${nos.join(", ")}]`;

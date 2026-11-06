@@ -104,7 +104,6 @@ function foreignBelow(foreign: number[], t: number) {
   return lo;
 }
 
-// the real token at a compressed position, and the separators skipped below it
 function realAt(start: number, foreign: number[], pos: number) {
   let k = 0;
   while (k < foreign.length && foreign[k]! <= start + pos + k) k++;
