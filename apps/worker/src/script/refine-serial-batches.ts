@@ -19,7 +19,12 @@ import { collections, objekts } from "@repo/db/indexer/schema";
 import { chunk } from "@repo/lib";
 import { and, asc, eq, inArray, isNotNull, lte, notInArray, or } from "drizzle-orm";
 
-import { applyDropGrid, refineBatches, writeSerialUpdates } from "@/job/serial-batches";
+import {
+  applyDropGrid,
+  applyMemberGrid,
+  refineBatches,
+  writeSerialUpdates,
+} from "@/job/serial-batches";
 import {
   preAssignedCollections as excludeCollections,
   preBlockSeasons,
@@ -96,7 +101,10 @@ async function processOne(t: (typeof targets)[number]) {
   if (rows.length === 0) return;
 
   const tokenIds = rows.map((o) => parseInt(o.id));
-  const refined = await applyDropGrid(t.id, await refineBatches(t.season, stored, tokenIds));
+  const refined = await applyMemberGrid(
+    t.id,
+    await applyDropGrid(t.id, await refineBatches(t.season, stored, tokenIds)),
+  );
 
   const storedKeys = new Set(stored.map((b) => `${b.start}-${b.end}`));
   const storedEnds = new Set(stored.map((b) => b.end));

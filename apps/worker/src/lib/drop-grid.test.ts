@@ -1,6 +1,12 @@
 import { describe, expect, test } from "bun:test";
 
-import { type DropRegion, fitDropGrid, insideDrop, mergeGridRanges } from "./drop-grid";
+import {
+  type DropRegion,
+  fitDropGrid,
+  fitMemberRun,
+  insideDrop,
+  mergeGridRanges,
+} from "./drop-grid";
 
 const runs = (...pairs: [number, number][]) =>
   pairs.flatMap(([lo, hi]) => Array.from({ length: hi - lo + 1 }, (_, i) => lo + i));
@@ -235,5 +241,91 @@ describe("insideDrop", () => {
     expect(insideDrop({ start: 999, end: 1500 }, drop)).toBe(false);
     expect(insideDrop({ start: 1900, end: 2100 }, drop)).toBe(false);
     expect(insideDrop({ start: 3000, end: 3099 }, drop)).toBe(false);
+  });
+});
+
+// Cream02 KaeDe 334A-337A, trimmed to each collection's lowest and highest token
+const kaede334a: DropRegion = {
+  start: 27532650,
+  memberTokens: [
+    [27532674, 27533115],
+    [27533174, 27533612],
+    [27533663, 27534149],
+    [27534150, 27534646],
+  ],
+  foreign: [27534650],
+  readUntil: 27540000,
+};
+
+// Binary02 DaHyun 339A-340A: three unminted tokens sit after the second slot
+const dahyun339a: DropRegion = {
+  start: 21331821,
+  memberTokens: [
+    [21331822, 21333170],
+    [21333173, 21334518],
+  ],
+  foreign: [21334524],
+  readUntil: 21340000,
+};
+
+describe("fitMemberRun", () => {
+  test("Cream02 KaeDe fits 500-token slots", () => {
+    const { slots, grid } = fitMemberRun(kaede334a);
+    expect(slots).toEqual([500]);
+    expect(grid?.ranges[2]).toEqual([{ start: 27533650, end: 27534149 }]);
+  });
+
+  test("unseen tokens after the last slot are left out, not spread over the slots", () => {
+    const { slots, grid } = fitMemberRun(dahyun339a);
+    expect(slots).toEqual([1350]);
+    expect(grid?.end).toBe(21334520);
+    expect(grid?.ranges[1]).toEqual([{ start: 21333171, end: 21334520 }]);
+  });
+
+  test("more than 9 tokens before the next foreign token rule a size out", () => {
+    expect(fitMemberRun({ ...dahyun339a, foreign: [21334533] }).slots).toEqual([]);
+  });
+
+  test("a run token inside the slack rules a size out", () => {
+    const memberTokens = [dahyun339a.memberTokens[0]!, [21333173, 21334518, 21334522]];
+    expect(fitMemberRun({ ...dahyun339a, memberTokens }).slots).toEqual([]);
+  });
+
+  test("a token in a neighbour's slot rules a size out", () => {
+    const memberTokens = kaede334a.memberTokens.with(0, [27532674, 27533115, 27533160]);
+    expect(fitMemberRun({ ...kaede334a, memberTokens }).slots).not.toContain(500);
+  });
+
+  test("every collection needs a token in its slot", () => {
+    const memberTokens = kaede334a.memberTokens.with(1, []);
+    expect(fitMemberRun({ ...kaede334a, memberTokens }).grid).toBeNull();
+  });
+
+  test("more than one fitting size is no grid", () => {
+    const region: DropRegion = {
+      start: 1000,
+      memberTokens: [[1000], [1300]],
+      foreign: [1500, 1521],
+      readUntil: 2000,
+    };
+    const { slots, grid } = fitMemberRun(region);
+    expect(slots).toEqual([250, 260]);
+    expect(grid).toBeNull();
+  });
+
+  test("a separator inside a slot splits it", () => {
+    const region: DropRegion = {
+      start: 1000,
+      memberTokens: [
+        [1000, 1100],
+        [1101, 1200],
+      ],
+      foreign: [1050, 1201],
+      readUntil: 2000,
+    };
+    expect(fitMemberRun(region).grid?.ranges[0]).toEqual([
+      { start: 1000, end: 1049 },
+      { start: 1051, end: 1100 },
+    ]);
   });
 });

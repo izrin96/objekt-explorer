@@ -33,10 +33,13 @@ import { FetchError } from "ofetch";
 
 import {
   applyDropGrid,
+  applyMemberGrid,
   type DropKey,
   discoverBatches,
+  fittedMemberRun,
   isGridDrop,
   loadDrop,
+  type MemberKey,
   refineBatches,
   tokenIdRange,
   writeSerialUpdates,
@@ -89,6 +92,7 @@ export async function verifyBatchBoundaries(scope: ProbeScope, dryRun = false) {
       season: collections.season,
       collectionNo: collections.collectionNo,
       artist: collections.artist,
+      member: collections.member,
       onOffline: collections.onOffline,
       batches: collections.serialBatches,
       anchors: collections.serialAnchors,
@@ -136,6 +140,21 @@ export async function verifyBatchBoundaries(scope: ProbeScope, dryRun = false) {
     return span;
   };
 
+  // each collection's fitted member run is fitted once per run, by the run's first lookup
+  const runSpans = new Map<string, Promise<{ start: number; end: number } | null>>();
+  const runSpanOf = (key: MemberKey, collectionId: string) => {
+    let span = runSpans.get(collectionId);
+    if (!span) {
+      span = fittedMemberRun(key, collectionId).then((run) => {
+        const value = run ? { start: run.region.start, end: run.grid.end } : null;
+        for (const m of run?.members ?? []) runSpans.set(m.id, Promise.resolve(value));
+        return value;
+      });
+      runSpans.set(collectionId, span);
+    }
+    return span;
+  };
+
   async function processOne(t: {
     id: string;
     slug: string;
@@ -143,6 +162,7 @@ export async function verifyBatchBoundaries(scope: ProbeScope, dryRun = false) {
     season: string;
     collectionNo: string;
     artist: DropKey["artist"];
+    member: string;
     onOffline: string;
     batches: Batch[] | null;
     anchors: ManualAnchor[] | null;
@@ -174,8 +194,10 @@ export async function verifyBatchBoundaries(scope: ProbeScope, dryRun = false) {
 
     // a grid-fitted drop's foreign neighbours already confirm its slot edges, so
     // only the indexer check below covers those batches
-    const span = isGridDrop(t) ? await dropSpanOf(t) : null;
-    const toProbe = span ? atRisk.filter((b) => !insideDrop(b, span)) : atRisk;
+    const spans = isGridDrop(t)
+      ? [await dropSpanOf(t), await runSpanOf(t, t.id)].filter((s) => s !== null)
+      : [];
+    const toProbe = atRisk.filter((b) => !spans.some((span) => insideDrop(b, span)));
     if (toProbe.length < atRisk.length) {
       gridSkipped++;
       verifyLog.debug(`${t.slug}: ${atRisk.length - toProbe.length} grid batch(es), not probed`);
@@ -289,6 +311,7 @@ export async function verifyBatchBoundaries(scope: ProbeScope, dryRun = false) {
       ...discoveryBoundaries(fresh),
     ]);
     fresh = await applyDropGrid(t.id, fresh);
+    fresh = await applyMemberGrid(t.id, fresh);
     if (fresh.length === 0) return;
 
     const same =

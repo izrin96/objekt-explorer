@@ -2,10 +2,16 @@ import { fetchMetadataV3, normalizeV3 } from "@repo/cosmo/server/metadata";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
 import { slugifyObjekt } from "@repo/lib";
-import { and, between, eq, inArray, or, sql } from "drizzle-orm";
+import { and, between, eq, inArray, like, or, sql } from "drizzle-orm";
 import { FetchError } from "ofetch";
 
-import { type DropRegion, fitDropGrid, MAX_SLOT, mergeGridRanges } from "@/lib/drop-grid";
+import {
+  type DropRegion,
+  fitDropGrid,
+  fitMemberRun,
+  MAX_SLOT,
+  mergeGridRanges,
+} from "@/lib/drop-grid";
 import { preBlockSeasons } from "@/lib/serial-constants";
 import {
   type Batch,
@@ -368,6 +374,188 @@ export async function applyDropGrid(collectionId: string, batches: Batch[]): Pro
     grid.ranges[i]!,
     { start: drop.region.start, end: grid.end },
     drop.members[i]!.tokens,
+  );
+}
+
+export type MemberKey = Omit<DropKey, "collectionNo"> & { member: string };
+
+export type MemberRun = {
+  members: DropMember[];
+  region: DropRegion;
+  // the token right before the start is a minted Z-collection token
+  pinned: boolean;
+  // a collection of the run sits in a grid-fitted drop, which keeps precedence
+  heldByDrop: boolean;
+};
+
+/**
+ * One member's runs in one block season: their A collections in token order,
+ * split wherever another A collection's minted token sits between two of them
+ * or more than MAX_SLOT tokens part them. Only runs of two or more come back.
+ * `override` stands in for one collection's stored batches while they are
+ * being rewritten.
+ */
+export async function loadMemberRuns(
+  key: MemberKey,
+  override?: { collectionId: string; batches: Batch[] },
+): Promise<MemberRun[]> {
+  if (preBlockSeasons.includes(key.season)) return [];
+  const rows = await indexer
+    .select({
+      id: collections.id,
+      slug: collections.slug,
+      collectionNo: collections.collectionNo,
+      batches: collections.serialBatches,
+    })
+    .from(collections)
+    .where(
+      and(
+        eq(collections.season, key.season),
+        eq(collections.artist, key.artist),
+        eq(collections.member, key.member),
+        eq(collections.onOffline, "offline"),
+        like(collections.collectionNo, "%A"),
+      ),
+    );
+  if (rows.length < 2) return [];
+
+  const minted = await indexer
+    .select({ id: objekts.id, collectionId: objekts.collectionId })
+    .from(objekts)
+    .where(
+      inArray(
+        objekts.collectionId,
+        rows.map((r) => r.id),
+      ),
+    );
+  const tokensOf = new Map<string, number[]>();
+  for (const o of minted) {
+    if (o.collectionId === null) continue;
+    const list = tokensOf.get(o.collectionId) ?? [];
+    list.push(parseInt(o.id));
+    tokensOf.set(o.collectionId, list);
+  }
+  const ordered = rows
+    .map((r) => ({
+      id: r.id,
+      slug: r.slug,
+      collectionNo: r.collectionNo,
+      batches: override?.collectionId === r.id ? override.batches : (r.batches ?? []),
+      tokens: (tokensOf.get(r.id) ?? []).sort((a, b) => a - b),
+    }))
+    .filter((m) => m.tokens.length > 0)
+    .sort((a, b) => a.tokens[0]! - b.tokens[0]!);
+
+  const groups: (typeof ordered)[] = [];
+  for (const m of ordered) {
+    const run = groups.at(-1);
+    const prev = run?.at(-1);
+    if (run && prev && (await joinsRun(prev.tokens.at(-1)!, m.tokens[0]!))) run.push(m);
+    else groups.push([m]);
+  }
+
+  const runs: MemberRun[] = [];
+  for (const members of groups) {
+    if (members.length < 2) continue;
+    const first = members[0]!;
+    const start = Math.min(first.tokens[0]!, ...first.batches.map((b) => b.start));
+    const highest = Math.max(...members.map((m) => m.tokens.at(-1)!));
+    const readUntil = Math.min(highest, start + members.length * MAX_SLOT) + MAX_SLOT;
+
+    const ids = new Set(members.map((m) => m.id));
+    const region = await indexer
+      .select({
+        id: objekts.id,
+        collectionId: objekts.collectionId,
+        collectionNo: collections.collectionNo,
+      })
+      .from(objekts)
+      .leftJoin(collections, eq(collections.id, objekts.collectionId))
+      .where(tokenIdRange(start - 1, readUntil));
+    const before = region.find((o) => parseInt(o.id) === start - 1);
+    const foreign = region
+      .filter(
+        (o) => parseInt(o.id) >= start && (o.collectionId === null || !ids.has(o.collectionId)),
+      )
+      .map((o) => parseInt(o.id))
+      .sort((a, b) => a - b);
+
+    let heldByDrop = false;
+    for (const m of members) {
+      const drop = await loadDrop(
+        { season: key.season, collectionNo: m.collectionNo, artist: key.artist },
+        override,
+      );
+      if (drop && fitDropGrid(drop.region).grid) {
+        heldByDrop = true;
+        break;
+      }
+    }
+
+    runs.push({
+      members: members.map(({ collectionNo: _, ...m }) => m),
+      region: { start, memberTokens: members.map((m) => m.tokens), foreign, readUntil },
+      pinned: before?.collectionNo != null && /z$/i.test(before.collectionNo),
+      heldByDrop,
+    });
+  }
+  return runs;
+}
+
+// two of a member's collections are neighbours in a run when no other A
+// collection minted between them
+async function joinsRun(prevHighest: number, nextLowest: number) {
+  if (nextLowest - prevHighest > MAX_SLOT) return false;
+  if (nextLowest - prevHighest <= 1) return true;
+  const [between] = await indexer
+    .select({ id: objekts.id })
+    .from(objekts)
+    .innerJoin(collections, eq(collections.id, objekts.collectionId))
+    .where(and(tokenIdRange(prevHighest + 1, nextLowest - 1), like(collections.collectionNo, "%A")))
+    .limit(1);
+  return between === undefined;
+}
+
+/** The fitted run holding the collection, with its grid, or null. */
+export async function fittedMemberRun(
+  key: MemberKey,
+  collectionId: string,
+  override?: { collectionId: string; batches: Batch[] },
+) {
+  const runs = await loadMemberRuns(key, override);
+  const run = runs.find((r) => r.members.some((m) => m.id === collectionId));
+  if (!run || !run.pinned || run.heldByDrop) return null;
+  const { grid } = fitMemberRun(run.region);
+  return grid ? { ...run, grid } : null;
+}
+
+/**
+ * The collection's batches with its member-run slot in place of everything
+ * inside the run, when its run is fitted; otherwise the batches unchanged.
+ * Runs after applyDropGrid on every path that stores ranges.
+ */
+export async function applyMemberGrid(collectionId: string, batches: Batch[]): Promise<Batch[]> {
+  const [c] = await indexer
+    .select({
+      season: collections.season,
+      collectionNo: collections.collectionNo,
+      artist: collections.artist,
+      member: collections.member,
+      onOffline: collections.onOffline,
+    })
+    .from(collections)
+    .where(eq(collections.id, collectionId))
+    .limit(1);
+  if (!c || !isGridDrop(c)) return batches;
+
+  const run = await fittedMemberRun(c, collectionId, { collectionId, batches });
+  if (!run) return batches;
+  const i = run.members.findIndex((m) => m.id === collectionId);
+  return mergeGridRanges(
+    batches,
+    run.grid.ranges[i]!,
+    { start: run.region.start, end: run.grid.end },
+    run.members[i]!.tokens,
   );
 }
 
