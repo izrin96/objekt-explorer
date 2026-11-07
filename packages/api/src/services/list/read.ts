@@ -2,7 +2,7 @@ import { ORPCError } from "@orpc/server";
 import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
-import { listEntries, lists, messagePref } from "@repo/db/schema";
+import { listEntries, lists, messagePref, userAddress } from "@repo/db/schema";
 import type { UserAddress } from "@repo/db/schema";
 import { overrideCollection } from "@repo/lib/server/objekt";
 import { and, eq, inArray, isNotNull, isNull } from "drizzle-orm";
@@ -14,7 +14,7 @@ import { type ListPreview, type PublicList } from "../../schemas/list";
 import { isBlockedEither } from "../moderation/core";
 import { isBanned } from "../moderation/safety";
 import { getCollectionColumns } from "../objekt";
-import { toPublicUser } from "../profile";
+import { assertProfileOwned, toPublicUser } from "../profile";
 import { fetchCollectionsBySlug } from "./collections";
 
 export async function fetchListWithEntries(slug: string) {
@@ -133,6 +133,7 @@ export async function isListMessageable(listId: number, viewerId: string | undef
 export async function fetchOwnedLists(
   column: "userId" | "profileAddress",
   identifier: string,
+  ownerId?: string,
 ): Promise<PublicList[]> {
   const result = await db.query.lists.findMany({
     columns: {
@@ -153,6 +154,7 @@ export async function fetchOwnedLists(
     },
     where: {
       [column]: identifier,
+      ...(ownerId === undefined ? {} : { userId: ownerId }),
     },
     with: {
       userAddress: {
@@ -212,8 +214,30 @@ export async function fetchOwnedLists(
   });
 }
 
+/**
+ * Only the lists of the account holding the address now: one that unlinked it, or lost it to a
+ * staff move, keeps its rows but no longer shows under the profile.
+ */
 export async function fetchProfileLists(profileAddress: string): Promise<PublicList[]> {
-  return fetchOwnedLists("profileAddress", profileAddress);
+  const [holder] = await db
+    .select({ userId: userAddress.userId })
+    .from(userAddress)
+    .where(eq(userAddress.address, profileAddress));
+  if (!holder?.userId) return [];
+  return fetchOwnedLists("profileAddress", profileAddress, holder.userId);
+}
+
+/**
+ * A list bound to a Cosmo profile takes entries and prices only while its owner still holds that
+ * address, or an account that lost it could keep listing what the address holds now.
+ */
+export async function refuseUnheldProfile(
+  list: { isProfileBind: boolean; profileAddress: string | null },
+  userId: string,
+) {
+  if (list.isProfileBind && list.profileAddress) {
+    await assertProfileOwned(list.profileAddress, userId);
+  }
 }
 
 /** Each list's entry count and its latest few artworks, newest first. */

@@ -16,7 +16,7 @@ import {
 import { ruleLine } from "../schemas/list-rule";
 import { takesRatio } from "../schemas/trade-ratio";
 import { buildListEntries, fetchPartialOwnedListCollections } from "../services/list/entry-view";
-import { fetchListWithEntries, findOwnedList } from "../services/list/read";
+import { fetchListWithEntries, findOwnedList, refuseUnheldProfile } from "../services/list/read";
 import { fetchRuleDefs } from "../services/list/rules";
 import { touchList } from "../services/list/shared";
 import { escapeCSV } from "../services/utils";
@@ -38,6 +38,7 @@ export const listUtils = {
       if (updates.length === 0) return;
 
       const list = await findOwnedList(slug, user.id);
+      await refuseUnheldProfile(list, user.id);
 
       // Only sale lists can set prices
       if (list.listType !== "sale") {

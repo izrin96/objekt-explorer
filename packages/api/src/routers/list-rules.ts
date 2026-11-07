@@ -15,7 +15,7 @@ import {
   ruleObjektsOutputSchema,
   updateRuleInputSchema,
 } from "../schemas/list-rule";
-import { findOwnedList } from "../services/list/read";
+import { findOwnedList, refuseUnheldProfile } from "../services/list/read";
 import {
   addRule,
   deleteRule,
@@ -66,6 +66,7 @@ export const listRulesRouter = {
     .handler(async ({ input: { slug, rule, ratio }, context: { session } }) => {
       await limitRuleWrites(session.user.id);
       const list = await findOwnedList(slug, session.user.id);
+      await refuseUnheldProfile(list, session.user.id);
       return addRule(list, rule, ratio ?? null, session.user.id);
     }),
 
@@ -74,6 +75,7 @@ export const listRulesRouter = {
     .handler(async ({ input: { slug, ruleId, rule, ratio }, context: { session } }) => {
       await limitRuleWrites(session.user.id);
       const list = await findOwnedList(slug, session.user.id);
+      await refuseUnheldProfile(list, session.user.id);
       await updateRule(list, ruleId, rule, ratio, session.user.id);
     }),
 

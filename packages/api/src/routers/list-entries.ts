@@ -23,6 +23,7 @@ import {
   fetchListWithEntries,
   fetchProfileLists,
   findOwnedList,
+  refuseUnheldProfile,
 } from "../services/list/read";
 import { touchList } from "../services/list/shared";
 import { refuseOverUserLimit } from "../services/redis";
@@ -83,6 +84,7 @@ export const listEntriesRouter = {
     }) => {
       await refuseOverUserLimit("list-add", user.id, 60, 60);
       const list = await findOwnedList(slug, user.id);
+      await refuseUnheldProfile(list, user.id);
       const trimmed = note?.trim() || null;
       const priced = isQyop === true || price != null || trimmed !== null;
       if (priced && list.listType !== "sale") {

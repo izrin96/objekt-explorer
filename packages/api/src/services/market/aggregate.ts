@@ -31,6 +31,11 @@ export function countedListings() {
     eq(lists.discoverable, true),
     isNotNull(listEntries.collectionSlug),
     notTradeSanctioned(sql`${lists.userId}`),
+    // a list naming a profile its owner no longer holds would sell under that profile's name
+    sql`(${lists.profileAddress} IS NULL OR EXISTS (
+      SELECT 1 FROM user_address ua
+      WHERE ua.address = ${lists.profileAddress} AND ua.user_id = ${lists.userId}
+    ))`,
   );
 }
 
