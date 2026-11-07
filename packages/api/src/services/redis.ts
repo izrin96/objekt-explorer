@@ -254,6 +254,33 @@ export function ipRateLimited(scope: string, headers: Headers, max: number, wind
   return rateLimitedFailOpen(scope, `${scope}:rl:ip:${ip}`, max, windowSeconds);
 }
 
+/**
+ * A per-email-address limit, failing open (`rateLimitedFailOpen`). The key holds a hash, so
+ * Valkey never stores the address itself.
+ */
+export function recipientRateLimited(
+  scope: string,
+  email: string,
+  max: number,
+  windowSeconds: number,
+) {
+  const hashed = new Bun.CryptoHasher("sha256").update(email.trim().toLowerCase()).digest("hex");
+  return rateLimitedFailOpen(scope, `${scope}:rl:to:${hashed}`, max, windowSeconds);
+}
+
+/**
+ * Better Auth's rate limit kept in Valkey, so its counters survive a deploy and are shared by
+ * every web process; failing open as every limit here does.
+ */
+export async function consumeAuthLimit(key: string, rule: { window: number; max: number }) {
+  const attempts = await redisFailOpen("rate-limit auth", () =>
+    rateLimit(`auth:rl:${key}`, rule.window),
+  );
+  return attempts === null || attempts <= rule.max
+    ? { allowed: true, retryAfter: null }
+    : { allowed: false, retryAfter: rule.window };
+}
+
 /** One limit shared by every caller, failing open (`rateLimitedFailOpen`). */
 export function globalRateLimited(scope: string, max: number, windowSeconds: number) {
   return rateLimitedFailOpen(scope, `${scope}:rl:global`, max, windowSeconds);

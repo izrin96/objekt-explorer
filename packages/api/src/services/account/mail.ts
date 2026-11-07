@@ -3,6 +3,7 @@ import { type RenderedEmail, deleteAccount, resetPassword, verifyEmail } from "@
 
 import { SITE_NAME } from "../../constants";
 import { serverEnv } from "../../env";
+import { recipientRateLimited } from "../redis";
 
 const ses = new SESv2Client({
   region: serverEnv.SES_REGION,
@@ -17,8 +18,17 @@ const ses = new SESv2Client({
 const MAIL_FROM = `${SITE_NAME} <${serverEnv.SES_MAIL_FROM}>`;
 const site = { name: SITE_NAME, url: serverEnv.SITE_URL };
 
-async function sendMail(to: string, email: Promise<RenderedEmail>) {
-  const { subject, html, text } = await email;
+// Better Auth limits these sends per IP only, so a few IPs could bury one inbox and spend the
+// SES sending reputation every auth email depends on; past the cap a send is skipped
+const RECIPIENT_MAX = 5;
+const RECIPIENT_WINDOW_SECONDS = 60 * 60;
+
+async function sendMail(to: string, render: () => Promise<RenderedEmail>) {
+  if (await recipientRateLimited("auth-mail", to, RECIPIENT_MAX, RECIPIENT_WINDOW_SECONDS)) {
+    console.warn("[mail] recipient over its hourly limit; send skipped");
+    return;
+  }
+  const { subject, html, text } = await render();
   await ses.send(
     new SendEmailCommand({
       FromEmailAddress: MAIL_FROM,
@@ -39,10 +49,10 @@ async function sendMail(to: string, email: Promise<RenderedEmail>) {
 }
 
 export const sendVerificationEmail = (to: string, url: string) =>
-  sendMail(to, verifyEmail({ site, url }));
+  sendMail(to, () => verifyEmail({ site, url }));
 
 export const sendResetPassword = (to: string, url: string) =>
-  sendMail(to, resetPassword({ site, url }));
+  sendMail(to, () => resetPassword({ site, url }));
 
 export const sendDeleteAccountVerification = (to: string, url: string) =>
-  sendMail(to, deleteAccount({ site, url }));
+  sendMail(to, () => deleteAccount({ site, url }));

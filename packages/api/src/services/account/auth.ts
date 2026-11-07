@@ -13,6 +13,7 @@ import { serverEnv } from "../../env";
 import { ac, roles } from "../../permissions";
 import { banNoticeMessage } from "../../schemas/moderation";
 import { hasDeliverableEmail, isDeleteRefusal } from "../../schemas/user";
+import { consumeAuthLimit } from "../redis";
 import { betterAuthLocale } from "./auth-locale";
 import { deleteRefusal, refusalError } from "./delete";
 import { sendDeleteAccountVerification, sendResetPassword, sendVerificationEmail } from "./mail";
@@ -99,6 +100,12 @@ export const auth = betterAuth({
         twitter: profile.data.username,
       }),
     },
+  },
+  // the app edits an account through `user.updateAccount`, which validates; this endpoint
+  // would write any `name` and `image` URL straight to the user
+  disabledPaths: ["/update-user"],
+  rateLimit: {
+    customStorage: { consume: consumeAuthLimit },
   },
   baseURL: serverEnv.SITE_URL,
   // a phone on the LAN reaches the dev server by IP, which is not the baseURL origin
