@@ -8,6 +8,7 @@ import { type SQL, and, asc, desc, eq, gt, inArray, lt, lte, ne, or } from "driz
 import type { AddressTransfersOutput, AddressTransfersFilters } from "../schemas/transfers";
 import { getCollectionFilters } from "./activity-feed";
 import { getCollectionColumns } from "./objekt";
+import { withSpinRewards } from "./spin-rewards";
 import { mergeSortedTransfers } from "./transfer-merge";
 
 const PER_PAGE = 150;
@@ -35,16 +36,16 @@ export async function fetchAddressTransfers(
 
   return {
     nextCursor,
-    results: slicedResults.map((row) => {
-      return {
+    results: await withSpinRewards(
+      slicedResults.map((row) => ({
         transfer: mapTransfer(row.transfer),
         objekt: mapOwnedObjekt(row.objekt, row.collection),
         nickname: {
           from: nicknameOf(row.transfer.from),
           to: nicknameOf(row.transfer.to),
         },
-      };
-    }),
+      })),
+    ),
   };
 }
 

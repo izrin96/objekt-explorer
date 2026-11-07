@@ -4,13 +4,14 @@ import * as z from "zod";
 import { timestampCursorSchema } from "./common/cursor";
 import { collectionFiltersSchema } from "./common/filters";
 import { ownedObjektSchema } from "./common/objekt";
-import { transferNicknamesSchema, transferRowSchema } from "./common/transfer";
+import { spinFields, transferNicknamesSchema, transferRowSchema } from "./common/transfer";
 
 /** the socket parses live rows with this in the browser, so its objekt stays unchecked */
 export const activityItemSchema = z.object({
   transfer: transferRowSchema.extend({ hash: z.string() }),
   objekt: z.custom<OwnedObjekt>(),
   nickname: transferNicknamesSchema,
+  ...spinFields(z.custom<OwnedObjekt>()),
 });
 export type ActivityItem = z.infer<typeof activityItemSchema>;
 
@@ -22,7 +23,9 @@ export const activityMessageSchema = z.object({
 export type ActivityMessage = z.infer<typeof activityMessageSchema>;
 
 export const activityFeedOutputSchema = z.object({
-  items: z.array(activityItemSchema.extend({ objekt: ownedObjektSchema })),
+  items: z.array(
+    activityItemSchema.extend({ objekt: ownedObjektSchema, ...spinFields(ownedObjektSchema) }),
+  ),
   nextCursor: timestampCursorSchema.optional(),
 });
 export type ActivityFeedOutput = z.infer<typeof activityFeedOutputSchema>;

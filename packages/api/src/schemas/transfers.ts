@@ -4,12 +4,13 @@ import { checkpointSchema } from "./common/checkpoint";
 import { timestampCursorSchema } from "./common/cursor";
 import { collectionFiltersSchema } from "./common/filters";
 import { ownedObjektSchema } from "./common/objekt";
-import { transferNicknamesSchema, transferRowSchema } from "./common/transfer";
+import { spinFields, transferNicknamesSchema, transferRowSchema } from "./common/transfer";
 
 const transferItemSchema = z.object({
   transfer: transferRowSchema,
   objekt: ownedObjektSchema,
   nickname: transferNicknamesSchema,
+  ...spinFields(ownedObjektSchema),
 });
 export type TransferItem = z.infer<typeof transferItemSchema>;
 

@@ -9,6 +9,7 @@ import { type SQL, and, arrayOverlaps, desc, eq, inArray, ne, sql } from "drizzl
 import type { ActivityFeedInput, ActivityFeedOutput } from "../schemas/activity";
 import type { CollectionFilters } from "../schemas/common/filters";
 import { getCollectionColumns } from "./objekt";
+import { withSpinRewards } from "./spin-rewards";
 
 const PAGE_SIZE = 300;
 
@@ -40,7 +41,7 @@ export async function fetchActivityPage(query: ActivityFeedInput): Promise<Activ
       }
     : undefined;
 
-  return { items, nextCursor };
+  return { items: await withSpinRewards(items), nextCursor };
 }
 
 export function getCollectionFilters(query: CollectionFilters): SQL[] {
