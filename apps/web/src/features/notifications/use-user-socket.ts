@@ -5,6 +5,7 @@ import { useEffect } from "react";
 
 import {
   applyChatMessage,
+  applySeen,
   applyUnsent,
   fetchNewer,
   fetchNewerEverywhere,
@@ -64,6 +65,9 @@ export function useUserSocket() {
           void invalidateChatLists(queryClient);
           void invalidateOfferLists(queryClient);
           void fetchNewer(queryClient, event.data.conversationId);
+          break;
+        case "chat_seen":
+          applySeen(queryClient, event.data.conversationId, event.data.upTo);
           break;
         case "chat_typing":
           showTyping(event.data.conversationId);

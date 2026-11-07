@@ -6,6 +6,7 @@ import type * as z from "zod";
 
 import { isMuted, rowUnread, searchPatterns } from "../../lib/chat-rules";
 import { HOUR_MS } from "../../lib/time";
+import { publishNotify } from "../../realtime";
 import {
   CONVERSATION_PAGE_SIZE,
   type ChatBox,
@@ -363,7 +364,7 @@ export async function loadThread(me: string, input: z.infer<typeof threadInputSc
 }
 
 export async function markConversationRead(me: string, id: number, upTo: number | undefined) {
-  const { changed } = await updateMember(id, me, (state, lastMessageId) => {
+  const { changed, state } = await updateMember(id, me, (state, lastMessageId) => {
     if (lastMessageId === null) return null;
     const messageId = Math.min(upTo ?? lastMessageId, lastMessageId);
     return messageId > (state.lastReadMessageId ?? 0) ? { type: "read", messageId } : null;
@@ -372,7 +373,13 @@ export async function markConversationRead(me: string, id: number, upTo: number 
   const { partnerId } = await findMembership(id, me);
   // the partner's open thread moves its Seen only when the reader's Seen reaches them
   const { toPartner } = await activityBetween(id, me, partnerId);
-  await publishChatChanged(toPartner ? [me, partnerId] : [me], id);
+  const readTo = state.lastReadMessageId;
+  await Promise.all([
+    publishChatChanged([me], id),
+    toPartner && readTo !== null
+      ? publishNotify(partnerId, { type: "chat_seen", conversationId: id, upTo: readTo })
+      : null,
+  ]);
 }
 
 export async function muteConversation(me: string, { id, until }: z.infer<typeof muteInputSchema>) {

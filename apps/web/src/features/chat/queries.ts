@@ -22,6 +22,7 @@ import {
   rowIsFresh,
   takeLiveOrder,
 } from "./live-message";
+import { type ThreadData, withPartnerRead } from "./thread-cache";
 import { createThreadSync, type ThreadSync, type ThreadSyncPort } from "./thread-sync";
 
 /** Polls only while the live socket is down; focus always refetches. */
@@ -186,6 +187,13 @@ export function applyChatMessage(queryClient: QueryClient, event: ChatMessageEve
     queryKey: orpc.chat.list.key(),
     predicate: (query) => !unfilteredLists.has(hashKey(query.queryKey)),
   });
+}
+
+/** The partner's read reached this tab: only a cached thread's Seen moves. */
+export function applySeen(queryClient: QueryClient, id: number, upTo: number) {
+  queryClient.setQueryData<ThreadData>(threadOptions(id).queryKey, (old) =>
+    old ? withPartnerRead(old, upTo) : old,
+  );
 }
 
 /** Appends what a cached thread is missing, then re-reads its live offers; see `thread-sync.ts`. */

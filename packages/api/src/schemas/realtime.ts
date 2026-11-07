@@ -22,6 +22,12 @@ export const realtimeEventSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("notifications_changed") }),
   z.object({ type: z.literal("chat_changed"), conversationId: z.number().int() }),
   z.object({ type: z.literal("chat_typing"), conversationId: z.number().int() }),
+  /** the partner read up to `upTo`: only the open thread's Seen moves, nothing is fetched */
+  z.object({
+    type: z.literal("chat_seen"),
+    conversationId: z.number().int(),
+    upTo: z.number().int(),
+  }),
   z.object({
     type: z.literal("chat_unsent"),
     conversationId: z.number().int(),

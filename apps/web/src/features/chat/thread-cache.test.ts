@@ -16,6 +16,7 @@ import {
   threadMessages,
   type ThreadData,
   unsentIds,
+  withPartnerRead,
 } from "./thread-cache";
 
 const message = (id: number) => ({
@@ -297,5 +298,18 @@ describe("catchUpDelay", () => {
     expect([0, 1, 2, 3, 4, 5, 6, 20].map(catchUpDelay)).toEqual([
       1000, 2000, 4000, 8000, 16_000, 30_000, 30_000, 30_000,
     ]);
+  });
+});
+
+describe("withPartnerRead", () => {
+  const readTo = (data: ThreadData) => data.pages[0]?.conversation.partnerReadMessageId;
+
+  test("moves Seen forward on the newest page", () => {
+    expect(readTo(withPartnerRead(thread([4, 5], [1, 2, 3]), 5))).toBe(5);
+  });
+
+  test("never moves it back", () => {
+    const read = withPartnerRead(thread([4, 5]), 5);
+    expect(withPartnerRead(read, 4)).toBe(read);
   });
 });

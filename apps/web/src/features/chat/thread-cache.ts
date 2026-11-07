@@ -53,6 +53,19 @@ export function appendToThread(data: ThreadData, incoming: Incoming): ThreadData
   };
 }
 
+/** The partner read further: Seen moves on the newest page, never back. */
+export function withPartnerRead(data: ThreadData, upTo: number): ThreadData {
+  const [first, ...rest] = data.pages;
+  if (!first || upTo <= (first.conversation.partnerReadMessageId ?? 0)) return data;
+  return {
+    ...data,
+    pages: [
+      { ...first, conversation: { ...first.conversation, partnerReadMessageId: upTo } },
+      ...rest,
+    ],
+  };
+}
+
 export function mergeCollections(data: ThreadData) {
   return Object.assign(
     {},
