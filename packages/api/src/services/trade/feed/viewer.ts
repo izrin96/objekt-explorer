@@ -4,7 +4,12 @@ import { tradeVersionKey } from "@repo/lib/server/list-touch";
 import { and, eq, isNotNull } from "drizzle-orm";
 
 import { narrowIndex, type RuleWant, type Viewer } from "../../../lib/trade-feed";
-import { addressesByUser, collectionVerdict, groupBySlug } from "../../../lib/trade-rank";
+import {
+  addressesByUser,
+  collectionVerdict,
+  copyPairsOf,
+  groupBySlug,
+} from "../../../lib/trade-rank";
 import { unique } from "../../../lib/unique";
 import { getCache, redis, redisFailOpen } from "../../redis";
 import { offersOnTrade, takesPartInTrade } from "../lists";
@@ -39,8 +44,7 @@ async function computeHaveIndex(userId: string): Promise<[string, number[]][]> {
   }));
   const holdings = await fetchHoldings(
     unique(owned.flatMap((entry) => (entry.objektId ? [entry.objektId] : []))),
-    unique(owned.flatMap((entry) => (entry.objektId ? [] : [entry.slug]))),
-    [...addresses],
+    copyPairsOf(owned.map((entry) => ({ slug: entry.slug, objektId: entry.objektId, addresses }))),
   );
 
   return [...groupBySlug(owned)].flatMap(([slug, group]) => {

@@ -81,6 +81,29 @@ export type Holdings = {
 
 export const copyKey = (owner: string, slug: string) => `${owner}:${slug}`;
 
+/** An address and a collection whose copies there `fetchHoldings` reads. */
+export type CopyPair = { owner: string; slug: string };
+
+/**
+ * Every (address, collection) `entryVerdict` reads `copies` for, each once: an any-copy entry
+ * (no `objektId`) at each of its addresses; a specific one reads `objekts` instead. A caller
+ * judging whether someone holds any copy at all passes the entry with `objektId: null`.
+ */
+export function copyPairsOf(
+  entries: Iterable<{
+    slug: string;
+    objektId: string | null;
+    addresses: Iterable<string>;
+  }>,
+): CopyPair[] {
+  const pairs = new Map<string, CopyPair>();
+  for (const { slug, objektId, addresses } of entries) {
+    if (objektId !== null) continue;
+    for (const owner of addresses) pairs.set(copyKey(owner, slug), { owner, slug });
+  }
+  return [...pairs.values()];
+}
+
 const VERDICT_RANK: Record<Verdict, number> = { ok: 2, not_transferable: 1, not_owned: 0 };
 
 export function entryVerdict(

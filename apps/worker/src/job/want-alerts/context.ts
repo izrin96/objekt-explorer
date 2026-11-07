@@ -1,13 +1,8 @@
-import {
-  addressesByUser,
-  copyKey,
-  type Holdings,
-  toPartnerIdentity,
-} from "@repo/api/lib/trade-rank";
+import { addressesByUser, copyPairsOf, toPartnerIdentity } from "@repo/api/lib/trade-rank";
 import { NOTIFICATION_TYPES } from "@repo/api/schemas/notification";
 import { offersSwapsSql, takesPartInTradeSql } from "@repo/api/services/trade/lists";
+import { fetchHoldings } from "@repo/api/services/trade/matches/holdings";
 import { db } from "@repo/db";
-import { indexer } from "@repo/db/indexer";
 import { lists, notificationPref, user, userAddress } from "@repo/db/schema";
 import { and, asc, inArray, sql } from "drizzle-orm";
 
@@ -90,11 +85,27 @@ export async function loadContext<P extends AlertPair>(pairs: P[]) {
     ]),
   );
 
-  const owners = unique(listRows.flatMap((list) => Array.from(addresses.get(list.userId) ?? [])));
+  const addressesOfList = new Map(
+    listRows.map((list) => [list.id, addresses.get(list.userId) ?? new Set<string>()]),
+  );
+  const noAddresses = new Set<string>();
   const holdings = await fetchHoldings(
     unique(pairs.flatMap((pair) => (pair.objektId ? [pair.objektId] : []))),
-    unique(pairs.map((pair) => pair.slug)),
-    owners,
+    // what judging an alert reads: whether the wanter holds any copy, and the offer's own entry
+    copyPairsOf(
+      pairs.flatMap((pair) => [
+        {
+          slug: pair.slug,
+          objektId: null,
+          addresses: addressesOfList.get(pair.wantListId) ?? noAddresses,
+        },
+        {
+          slug: pair.slug,
+          objektId: pair.objektId,
+          addresses: addressesOfList.get(pair.offerListId) ?? noAddresses,
+        },
+      ]),
+    ),
   );
 
   return {
@@ -111,35 +122,4 @@ export async function loadContext<P extends AlertPair>(pairs: P[]) {
       ),
     ),
   };
-}
-
-type HoldingRow = { owner: string; key: string; transferable: boolean; token: boolean };
-
-/** Every copy counts here, transferable or not: a wanter holding any copy is not alerted. */
-async function fetchHoldings(
-  tokenIds: string[],
-  slugs: string[],
-  owners: string[],
-): Promise<Holdings> {
-  const objekts = new Map<string, { owner: string; transferable: boolean }>();
-  const copies = new Map<string, boolean>();
-  if (tokenIds.length === 0 && owners.length === 0) return { objekts, copies };
-
-  const result = await indexer.execute<HoldingRow>(sql`
-    SELECT o.owner, c.slug AS key, bool_or(o.transferable) AS transferable, false AS token
-    FROM collection c
-    JOIN objekt o ON o.collection_id = c.id
-    WHERE c.slug = ANY(${sql.param(slugs)}::text[]) AND o.owner = ANY(${sql.param(owners)}::text[])
-    GROUP BY o.owner, c.slug
-    UNION ALL
-    SELECT owner, id, transferable, true FROM objekt
-    WHERE id = ANY(${sql.param(tokenIds)}::varchar[])
-  `);
-
-  for (const row of result.rows) {
-    const owner = row.owner.toLowerCase();
-    if (row.token) objekts.set(row.key, { owner, transferable: row.transferable });
-    else copies.set(copyKey(owner, row.key), row.transferable);
-  }
-  return { objekts, copies };
 }

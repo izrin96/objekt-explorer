@@ -6,6 +6,7 @@ import { matchCounts } from "../../../lib/trade-person";
 import {
   addressesByUser,
   collectionVerdict,
+  copyPairsOf,
   groupBySlug,
   matchSides,
   type MyHaves,
@@ -125,11 +126,12 @@ export async function recountPartners(
   ];
   const holdings = await fetchHoldings(
     unique(owned.flatMap(({ entry }) => (entry.objektId ? [entry.objektId] : []))),
-    unique(owned.flatMap(({ entry }) => (entry.objektId ? [] : [entry.slug]))),
-    unique(
-      owned.flatMap(({ entry, userId: owner }) =>
-        entry.objektId ? [] : Array.from(addressesOf.get(owner) ?? none),
-      ),
+    copyPairsOf(
+      owned.map(({ entry, userId: owner }) => ({
+        slug: entry.slug,
+        objektId: entry.objektId,
+        addresses: addressesOf.get(owner) ?? none,
+      })),
     ),
   );
 

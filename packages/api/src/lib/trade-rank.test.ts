@@ -4,6 +4,7 @@ import type { PostOf } from "./trade-person";
 import {
   type Candidate,
   copyKey,
+  copyPairsOf,
   entryVerdict,
   groupBySlug,
   type Holdings,
@@ -15,6 +16,7 @@ import {
   type MyList,
   type MyWant,
   oneWayPeople,
+  type OwnedEntry,
   PARTNER_LIMIT,
   rankPartners,
   recount as recountWith,
@@ -1101,5 +1103,47 @@ describe("viewerPostOf", () => {
   test("a link to a list not taking part keys to nothing", () => {
     // the have list it links to is unbound, so it is not among the lists
     expect(viewerPostOf([{ id: 3, listType: "want", linkedListId: 1 }])).toEqual({});
+  });
+});
+
+describe("copyPairsOf", () => {
+  test("asks for each any-copy entry at each of its addresses, once, and skips specific ones", () => {
+    const pairs = copyPairsOf([
+      { slug: "a", objektId: null, addresses: ["0x1", "0x2"] },
+      { slug: "a", objektId: null, addresses: ["0x1"] },
+      { slug: "b", objektId: "123", addresses: ["0x1"] },
+    ]);
+    expect(pairs).toEqual([
+      { owner: "0x1", slug: "a" },
+      { owner: "0x2", slug: "a" },
+    ]);
+  });
+
+  test("covers every copy entryVerdict reads", () => {
+    const entries: OwnedEntry[] = [
+      { listId: 1, slug: "a", objektId: null },
+      { listId: 2, slug: "b", objektId: null },
+      { listId: 2, slug: "c", objektId: "9" },
+    ];
+    const addresses = new Set(["0x1", "0x2"]);
+    const read: string[] = [];
+    const copies = new Map<string, boolean>();
+    const recording = {
+      objekts: new Map(),
+      copies: {
+        get: (key: string) => {
+          read.push(key);
+          return copies.get(key);
+        },
+      } as unknown as ReadonlyMap<string, boolean>,
+    };
+    for (const entry of entries) entryVerdict(entry, addresses, recording);
+    const asked = new Set(
+      copyPairsOf(
+        entries.map((entry) => ({ slug: entry.slug, objektId: entry.objektId, addresses })),
+      ).map((pair) => copyKey(pair.owner, pair.slug)),
+    );
+    expect(read.length).toBeGreaterThan(0);
+    for (const key of read) expect(asked.has(key)).toBe(true);
   });
 });

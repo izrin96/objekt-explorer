@@ -3,7 +3,7 @@ import { indexer } from "@repo/db/indexer";
 import { userAddress } from "@repo/db/schema";
 import { asc, inArray, sql } from "drizzle-orm";
 
-import { type Holdings, copyKey } from "../../../lib/trade-rank";
+import { type CopyPair, type Holdings, copyKey } from "../../../lib/trade-rank";
 
 type AddressRow = {
   userId: string | null;
@@ -31,24 +31,28 @@ export function fetchAddresses(userIds: string[]): Promise<AddressRow[]> {
 
 type HoldingRow = { owner: string; key: string; transferable: boolean; token: boolean };
 
-/** Restricted to the matched collections, so no wallet is scanned whole. */
+/**
+ * The copies of exactly these (address, collection) pairs (`copyPairsOf`), and these tokens' owners. Asking for
+ * every collection at every address instead reads every copy the addresses hold: on want-list
+ * sizes that was 5 s and 28,711 rows for the 170 that were needed, against 0.13 s by pair.
+ */
 export async function fetchHoldings(
   tokenIds: string[],
-  slugs: string[],
-  owners: string[],
+  pairs: readonly CopyPair[],
 ): Promise<Holdings> {
   const objekts = new Map<string, { owner: string; transferable: boolean }>();
   const copies = new Map<string, boolean>();
-  if (tokenIds.length === 0 && (slugs.length === 0 || owners.length === 0)) {
-    return { objekts, copies };
-  }
+  if (tokenIds.length === 0 && pairs.length === 0) return { objekts, copies };
 
   const result = await indexer.execute<HoldingRow>(sql`
-    SELECT o.owner, c.slug AS key, bool_or(o.transferable) AS transferable, false AS token
-    FROM collection c
-    JOIN objekt o ON o.collection_id = c.id
-    WHERE c.slug = ANY(${sql.param(slugs)}::text[]) AND o.owner = ANY(${sql.param(owners)}::text[])
-    GROUP BY o.owner, c.slug
+    SELECT p.owner, p.slug AS key, bool_or(o.transferable) AS transferable, false AS token
+    FROM unnest(
+      ${sql.param(pairs.map((pair) => pair.owner))}::text[],
+      ${sql.param(pairs.map((pair) => pair.slug))}::text[]
+    ) AS p(owner, slug)
+    JOIN collection c ON c.slug = p.slug
+    JOIN objekt o ON o.owner = p.owner AND o.collection_id = c.id
+    GROUP BY p.owner, p.slug
     UNION ALL
     SELECT owner, id, transferable, true FROM objekt
     WHERE id = ANY(${sql.param(tokenIds)}::varchar[])
