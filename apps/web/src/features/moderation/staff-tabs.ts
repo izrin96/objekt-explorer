@@ -8,7 +8,7 @@ type StaffRole = (typeof STAFF_ROLES)[number];
  * The staff area's tabs, in strip order. A tab is added here and by its route, which checks
  * `canOpenTab` in `beforeLoad` before its loader runs.
  */
-export const STAFF_TABS = [
+const STAFF_TABS = [
   {
     id: "reports",
     to: "/mod/reports",

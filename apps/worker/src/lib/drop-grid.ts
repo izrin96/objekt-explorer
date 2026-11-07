@@ -57,7 +57,7 @@ export function fitDropGrid(region: DropRegion): { slots: number[]; grid: DropGr
   }
 }
 
-export const MAX_RUN_SLACK = 9;
+const MAX_RUN_SLACK = 9;
 
 /**
  * The member grid of one member's run of collections: every slot size that

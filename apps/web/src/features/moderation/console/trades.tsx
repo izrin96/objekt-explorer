@@ -52,7 +52,7 @@ export function LegCopyLine({ leg }: { leg: StaffLeg }) {
 }
 
 /** Legs with giver and receiver by name, state, hash and time; no message text. */
-export function TradeLegs<L extends StaffLeg>({
+function TradeLegs<L extends StaffLeg>({
   legs,
   collections,
   names,
