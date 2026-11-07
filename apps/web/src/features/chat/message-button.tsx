@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { toastManager } from "@/components/ui/toast";
 import { useStartGate } from "@/features/user/start-gate";
 import { orpc } from "@/lib/orpc";
+import { isRefusalError, refusalText as sharedRefusalText } from "@/lib/refusal";
 import { m } from "@/paraglide/messages";
 import { putDraftCard } from "@/stores/chat-draft";
 
@@ -101,7 +102,11 @@ export function useStartConversation() {
         }
         toastManager.add({
           type: "error",
-          title: refusal ? refusalText(refusal) : m.chat_start_error(),
+          title: refusal
+            ? refusalText(refusal)
+            : isRefusalError(error)
+              ? sharedRefusalText(error)
+              : m.chat_start_error(),
         });
       },
     }),

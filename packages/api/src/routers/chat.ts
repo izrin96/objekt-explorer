@@ -26,13 +26,14 @@ import { updateMember } from "../services/chat/members";
 import { publishActivityChanged, publishChatChanged } from "../services/chat/notify";
 import { notifyTyping, sendMessage, startConversation, unsendMessage } from "../services/chat/send";
 import { fetchSettings, saveSettings } from "../services/chat/settings";
+import { refuseOverUserLimit } from "../services/redis";
 
 export const chatRouter = {
-  start: authed
-    .input(startInputSchema)
-    .handler(({ input, context: { session } }) =>
-      startConversation(session.user.id, new Date(session.user.createdAt), input),
-    ),
+  start: authed.input(startInputSchema).handler(async ({ input, context: { session } }) => {
+    // the 30-a-minute send guard doesn't count starts, and each can create a conversation
+    await refuseOverUserLimit("chat-start", session.user.id, 30, 60);
+    return startConversation(session.user.id, new Date(session.user.createdAt), input);
+  }),
 
   send: authed
     .input(sendInputSchema)
