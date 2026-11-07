@@ -56,7 +56,7 @@ export function useUserSocket() {
           refetchNotifications();
           // a moderator's mute arrives only as a notification; open threads swap the
           // message box for the mute notice from the conversation state this returns
-          void fetchNewerEverywhere(queryClient);
+          if (event.data.threads) void fetchNewerEverywhere(queryClient);
           break;
         case "chat_message":
           applyChatMessage(queryClient, event.data);

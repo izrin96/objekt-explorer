@@ -26,6 +26,9 @@ import {
 import { activeSanctionWhere } from "./safety";
 import { bumpSafetyVersions } from "./safety-cache";
 
+// a mute shows in an open thread only from the conversation state its refetch returns
+const MOD_NOTIFY = { type: "notifications_changed", threads: true } as const;
+
 export async function applyModAction(me: string, isAdmin: boolean, input: ActInput) {
   if (input.userId === me) refuseModeration("self");
   const target = await findAccount(input.userId);
@@ -110,7 +113,7 @@ export async function applyModAction(me: string, isAdmin: boolean, input: ActInp
     await bumpSafetyVersions([input.userId]);
   }
   if (input.action === "ban") await disconnectUser(input.userId);
-  else if (input.action !== "dismiss") await publishNotify(input.userId);
+  else if (input.action !== "dismiss") await publishNotify(input.userId, MOD_NOTIFY);
   if (result.cancelled) await publishCancelled(result.cancelled);
   return { sanctionId: result.sanctionId, resolvedReports: result.resolvedReports };
 }
@@ -157,7 +160,7 @@ export async function revokeSanction(me: string, isAdmin: boolean, input: Revoke
     await bumpSafetyVersions([sanction.userId]);
   }
   // an open tab drops the mute notice, or shows its trade lists again
-  await publishNotify(sanction.userId);
+  await publishNotify(sanction.userId, MOD_NOTIFY);
 }
 
 export async function setUserRole(me: string, isAdmin: boolean, input: SetRoleInput) {

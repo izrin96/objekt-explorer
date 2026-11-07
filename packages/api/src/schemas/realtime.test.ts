@@ -50,6 +50,10 @@ describe("realtimeEventSchema", () => {
     expect(realtimeEventSchema.parse({ type: "notifications_changed" }).type).toBe(
       "notifications_changed",
     );
+    expect(realtimeEventSchema.parse({ type: "notifications_changed", threads: true })).toEqual({
+      type: "notifications_changed",
+      threads: true,
+    });
     expect(realtimeEventSchema.parse({ type: "chat_changed", conversationId: 7 })).toEqual({
       type: "chat_changed",
       conversationId: 7,

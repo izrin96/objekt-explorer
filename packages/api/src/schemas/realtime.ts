@@ -19,7 +19,11 @@ export const userChannel = (userId: string) => `user:#${userId}`;
 
 /** What reaches a user's tabs; the server builds each from the viewer's own point of view. */
 export const realtimeEventSchema = z.discriminatedUnion("type", [
-  z.object({ type: z.literal("notifications_changed") }),
+  z.object({
+    type: z.literal("notifications_changed"),
+    /** a moderator changed what the user may send: open threads read their state again */
+    threads: z.literal(true).optional(),
+  }),
   z.object({ type: z.literal("chat_changed"), conversationId: z.number().int() }),
   z.object({ type: z.literal("chat_typing"), conversationId: z.number().int() }),
   /** the partner read up to `upTo`: only the open thread's Seen moves, nothing is fetched */
