@@ -49,7 +49,7 @@ function usePinDnd(wanted: boolean) {
   useEffect(() => {
     if (!wanted || loaded) return;
     let live = true;
-    loadPinDnd().then(
+    void loadPinDnd().then(
       (mod) => {
         if (live) setLoaded(mod);
       },

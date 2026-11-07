@@ -73,6 +73,7 @@ export const listUtils = {
       },
     }) => {
       const list = await findOwnedList(slug, user.id);
+      await refuseUnheldProfile(list, user.id);
       if (!takesRatio(list.listType)) {
         refuse("BAD_REQUEST", "list_ratio_list_type", "Only have and want lists take a ratio");
       }
