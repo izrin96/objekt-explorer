@@ -14,6 +14,7 @@ import { filterSearchSchema } from "@/features/filters/search-schema";
 import { useResetFilters } from "@/features/filters/use-filters";
 import { AddToListProvider } from "@/features/list/add-to-list-dialog";
 import { AddToListAction, AddToListMenuItem } from "@/features/list/add-to-list-menu-item";
+import { collectionsUrl } from "@/features/objekt/collections-url";
 import { ObjektDrawer } from "@/features/objekt/drawer";
 import { objektSearchSchema } from "@/features/objekt/drawer/search-schema";
 import { useObjektLink } from "@/features/objekt/drawer/use-objekt-link";
@@ -24,12 +25,26 @@ import { SelectBar, SelectModeButton } from "@/features/objekt/select-bar";
 import { SkeletonGrid } from "@/features/objekt/skeleton-grid";
 import { useCollectionObjekts } from "@/features/objekt/use-collection-objekts";
 import { useCurrentUser } from "@/features/user/hooks";
+import { orpc } from "@/lib/orpc";
 import { m } from "@/paraglide/messages";
 import { useClearSelectionOnNavigate, useSelection } from "@/stores/selection";
 
 export const Route = createFileRoute("/(container)/")({
   // the homepage lists collections, which carry no token to link
   validateSearch: filterSearchSchema.extend(objektSearchSchema.omit({ id: true }).shape),
+  // the grid's list starts downloading with the document rather than after hydration; the root
+  // loader has already read the artist scope the query will ask with
+  head: ({ match }) => {
+    const artist = match.context.queryClient.getQueryData(
+      orpc.config.getSelectedArtists.queryKey(),
+    );
+    if (!artist) return {};
+    return {
+      links: [
+        { rel: "preload", as: "fetch", href: collectionsUrl({ artist }), crossOrigin: "anonymous" },
+      ],
+    };
+  },
   component: HomePage,
 });
 

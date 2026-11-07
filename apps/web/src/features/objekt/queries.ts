@@ -7,6 +7,7 @@ import { ofetch } from "ofetch";
 
 import { client, orpc } from "@/lib/orpc";
 
+import { collectionsUrl } from "./collections-url";
 import { mapObjektWithTag } from "./objekt-utils";
 
 /** Never changes under a given artist scope, so it is fetched once and filtered in the browser. */
@@ -18,11 +19,9 @@ export const collectionOptions = (filters?: OwnedByFilters) =>
     queryFn: async () => {
       // plain GET rather than RPC, so the browser revalidates its cached copy with Last-Modified
       const fetchCollections = (cache?: RequestCache) =>
-        ofetch<CollectionListOutput | undefined>("/api/v1/collections", {
-          // the drawer reads the Cosmo URLs from the collection's metadata instead
-          query: { ...filters, originals: false },
-          cache,
-        }).then((response) => response?.collections);
+        ofetch<CollectionListOutput | undefined>(collectionsUrl(filters), { cache }).then(
+          (response) => response?.collections,
+        );
 
       // Safari can hand the server's empty 304 to fetch instead of its cached copy (WEB-1F)
       const result = (await fetchCollections()) ?? (await fetchCollections("no-store"));

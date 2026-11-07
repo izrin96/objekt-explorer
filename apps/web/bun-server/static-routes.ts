@@ -49,6 +49,8 @@ interface AssetMetadata {
  */
 interface InMemoryAsset {
   raw: Uint8Array;
+  /** written at build time by `brotli-assets.ts` */
+  br?: Uint8Array;
   gz?: Uint8Array;
   etag?: string;
   type: string;
@@ -124,7 +126,14 @@ function createResponseHandler(asset: InMemoryAsset): (req: Request) => Response
       headers.ETag = asset.etag;
     }
 
-    if (ENABLE_GZIP && asset.gz && req.headers.get("accept-encoding")?.includes("gzip")) {
+    const accepts = req.headers.get("accept-encoding") ?? "";
+    if (asset.br || asset.gz) headers.Vary = "Accept-Encoding";
+    if (ENABLE_GZIP && asset.br && accepts.includes("br")) {
+      headers["Content-Encoding"] = "br";
+      headers["Content-Length"] = String(asset.br.byteLength);
+      return new Response(new Uint8Array(asset.br), { status: 200, headers });
+    }
+    if (ENABLE_GZIP && asset.gz && accepts.includes("gzip")) {
       headers["Content-Encoding"] = "gzip";
       headers["Content-Length"] = String(asset.gz.byteLength);
       const gzCopy = new Uint8Array(asset.gz);
@@ -175,6 +184,8 @@ export async function initializeStaticRoutes(clientDirectory: string): Promise<P
   try {
     const glob = createCompositeGlobPattern();
     for await (const relativePath of glob.scan({ cwd: clientDirectory })) {
+      // a brotli copy is served for its asset, never as a route of its own
+      if (relativePath.endsWith(".br")) continue;
       const filepath = path.join(clientDirectory, relativePath);
       const route = `/${relativePath.split(path.sep).join(path.posix.sep)}`;
 
@@ -201,9 +212,12 @@ export async function initializeStaticRoutes(clientDirectory: string): Promise<P
           // Preload small files into memory with ETag and Gzip support
           const bytes = new Uint8Array(await file.arrayBuffer());
           const gz = compressDataIfAppropriate(bytes, metadata.type);
+          const brFile = Bun.file(`${filepath}.br`);
+          const br = gz && (await brFile.exists()) ? await brFile.bytes() : undefined;
           const etag = ENABLE_ETAG ? computeEtag(bytes) : undefined;
           const asset: InMemoryAsset = {
             raw: bytes,
+            br,
             gz,
             etag,
             type: metadata.type,
