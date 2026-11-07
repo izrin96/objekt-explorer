@@ -132,6 +132,19 @@ export async function revokeSanction(me: string, isAdmin: boolean, input: Revoke
       .set({ revokedAt: sql`now()`, revokedBy: me })
       .where(eq(userSanction.id, sanction.id));
     if (sanction.type === "ban") await syncBan(tx, sanction.userId, { revokeSessions: false });
+    if (sanction.type === "chat_mute" || sanction.type === "trade_block") {
+      await tx.insert(notification).values({
+        userId: sanction.userId,
+        type: "sanction",
+        payload: {
+          action: sanction.type === "chat_mute" ? "chat_mute_lifted" : "trade_block_lifted",
+          reason: sanction.reason,
+          endsAt: null,
+        } satisfies SanctionPayload,
+        // not the sanction's own key: the unread-group index would refuse it while that is unread
+        groupKey: `sanction-lifted:${sanction.id}`,
+      });
+    }
     await audit(tx, {
       actorId: me,
       action: "revoke",

@@ -1367,6 +1367,8 @@
   "notification_sanction_chat_mute_always": "メッセージを送信できません: {reason}",
   "notification_sanction_trade_block": "あなたのリストはマーケットと取引に表示されなくなりました: {reason}",
   "notification_sanction_banner_remove": "あなたのプロフィール{profile}のバナーが削除されました: {reason}",
+  "notification_sanction_chat_mute_lifted": "再びメッセージを送信できます",
+  "notification_sanction_trade_block_lifted": "あなたのリストは再びマーケットと取引に表示されます",
   "mod_audit_banner_remove": "バナー削除",
   "mod_audit_collection_override": "コレクションの色",
   "mod_audit_collection_refresh": "コレクション一覧の更新",

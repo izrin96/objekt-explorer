@@ -155,6 +155,15 @@ describe("sanctionText", () => {
     );
   });
 
+  test("a lifted mute or block says so without any reason", () => {
+    check(sanctionText({ action: "chat_mute_lifted", reason: "r", endsAt: null }, until)).toBe(
+      m.notification_sanction_chat_mute_lifted(),
+    );
+    check(sanctionText({ action: "trade_block_lifted", reason: "r", endsAt: null }, until)).toBe(
+      m.notification_sanction_trade_block_lifted(),
+    );
+  });
+
   test("an action this tab does not know draws nothing", () => {
     check(sanctionText(fromAny({ action: "ban", reason: "r", endsAt: null }), until)).toBeNull();
   });

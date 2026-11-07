@@ -31,7 +31,10 @@ export function notificationTone(notification: ToneInput): Toned {
     case "have_wanted":
       return { icon: "package", tone: "have" };
     case "sanction":
-      return { icon: "shield", tone: "destructive" };
+      return notification.payload.action === "chat_mute_lifted" ||
+        notification.payload.action === "trade_block_lifted"
+        ? { icon: "shield", tone: "success" }
+        : { icon: "shield", tone: "destructive" };
     case "trade":
       switch (notification.payload.event) {
         case "leg_verified":

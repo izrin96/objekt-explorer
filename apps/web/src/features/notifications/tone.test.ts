@@ -89,6 +89,14 @@ describe("notificationTone", () => {
     });
   });
 
+  test("a lifted sanction is a green shield", () => {
+    for (const action of ["chat_mute_lifted", "trade_block_lifted"] as const) {
+      expect(
+        notificationTone(fromPartial<Notification>({ type: "sanction", payload: { action } })),
+      ).toEqual({ icon: "shield", tone: "success" });
+    }
+  });
+
   test("an event a newer server sends stays neutral", () => {
     expect(
       notificationTone(fromAny({ type: "offer", payload: { event: "something_new" } })),

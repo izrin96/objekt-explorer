@@ -1367,6 +1367,8 @@
   "notification_sanction_chat_mute_always": "메시지를 보낼 수 없습니다: {reason}",
   "notification_sanction_trade_block": "내 목록이 마켓과 거래에 더 이상 표시되지 않습니다: {reason}",
   "notification_sanction_banner_remove": "내 프로필 {profile}의 배너가 삭제되었습니다: {reason}",
+  "notification_sanction_chat_mute_lifted": "다시 메시지를 보낼 수 있습니다",
+  "notification_sanction_trade_block_lifted": "내 목록이 다시 마켓과 거래에 표시됩니다",
   "mod_audit_banner_remove": "배너 삭제",
   "mod_audit_collection_override": "컬렉션 색상",
   "mod_audit_collection_refresh": "컬렉션 목록 새로 고침",

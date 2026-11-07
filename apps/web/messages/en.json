@@ -1367,6 +1367,8 @@
   "notification_sanction_chat_mute_always": "You can't send messages: {reason}",
   "notification_sanction_trade_block": "Your lists no longer show on Market or Trade: {reason}",
   "notification_sanction_banner_remove": "The banner of your profile {profile} was removed: {reason}",
+  "notification_sanction_chat_mute_lifted": "You can send messages again",
+  "notification_sanction_trade_block_lifted": "Your lists show on Market and Trade again",
   "mod_audit_banner_remove": "Banner removed",
   "mod_audit_collection_override": "Collection colours",
   "mod_audit_collection_refresh": "Collection list refresh",

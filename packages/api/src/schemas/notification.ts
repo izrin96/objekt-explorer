@@ -56,7 +56,15 @@ const rowFields = {
 
 /** A moderator's notice; never grouped, and not something a user can turn off. */
 const sanctionPayloadSchema = z.object({
-  action: z.enum(["warn", "chat_mute", "trade_block", "banner_remove"]),
+  action: z.enum([
+    "warn",
+    "chat_mute",
+    "trade_block",
+    "banner_remove",
+    // a moderator revoked it early; `reason` is the sanction's own, never the revoke's
+    "chat_mute_lifted",
+    "trade_block_lifted",
+  ]),
   reason: z.string(),
   endsAt: z.string().nullable(),
   /** the profile a `banner_remove` took the banner from; opening the notice goes there */

@@ -34,6 +34,10 @@ export function sanctionText(
             reason,
           })
         : null;
+    case "chat_mute_lifted":
+      return m.notification_sanction_chat_mute_lifted();
+    case "trade_block_lifted":
+      return m.notification_sanction_trade_block_lifted();
     default:
       return null;
   }
