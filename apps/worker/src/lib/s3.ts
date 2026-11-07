@@ -19,10 +19,15 @@ const s3Client = new S3Client({
 });
 
 export async function uploadWebp(key: string, buffer: Buffer) {
+  await putWebp(`${FOLDER}/${key}`, buffer);
+}
+
+/** `key` is the whole bucket key, folder included. */
+export async function putWebp(key: string, buffer: Buffer) {
   await s3Client.send(
     new PutObjectCommand({
       Bucket: BUCKET,
-      Key: `${FOLDER}/${key}`,
+      Key: key,
       Body: buffer,
       ContentType: "image/webp",
       CacheControl: CACHE_CONTROL,
@@ -41,6 +46,11 @@ export async function deleteObject(key: string) {
 
 export function s3Url(key: string) {
   return `${publicUrl}/${FOLDER}/${key}`;
+}
+
+/** The public URL of a whole bucket key; `objectUrl("")` is the bucket's prefix. */
+export function objectUrl(key: string) {
+  return `${publicUrl}/${key}`;
 }
 
 /**

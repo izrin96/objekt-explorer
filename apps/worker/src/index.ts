@@ -6,6 +6,7 @@ import { relayActivity } from "./job/activity-relay";
 import { replayPendingTransfers } from "./job/collection";
 import { updateTransferableCosmoSpin } from "./job/cosmo-spin";
 import { cleanupStaleEntries, drainOutbox } from "./job/drain";
+import { mirrorArtistImages } from "./job/mirror-artist-images";
 import { populateRarity } from "./job/populate-rarity";
 import { populateSerial, populateSerialOffline } from "./job/populate-serial";
 import { processCollectionImages } from "./job/process-collection-images";
@@ -122,6 +123,11 @@ crons.push(cron("30 4 * * 1", safeRun("cleanup", cleanupStaleEntries)));
 const runRarity = safeRun("rarity", populateRarity);
 startupRuns.push(runRarity);
 crons.push(cron("0 * * * *", runRarity));
+
+// member avatars and artist logos into the bucket; touches the bucket and Valkey, never the indexer
+const runArtistImages = safeRun("artist-images", mirrorArtistImages);
+startupRuns.push(runArtistImages);
+crons.push(cron("*/10 * * * *", runArtistImages));
 
 // update currency exchange rates daily at 1 AM
 const runRates = safeRun("rates", updateCurrencyRates);

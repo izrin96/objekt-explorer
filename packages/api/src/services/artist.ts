@@ -2,9 +2,10 @@ import { fetchArtist, fetchArtists } from "@repo/cosmo/server/artists";
 import type { CosmoArtistWithMembersBFF, CosmoMemberBFF } from "@repo/cosmo/types/artists";
 import type { ValidArtist } from "@repo/cosmo/types/common";
 import { validArtists } from "@repo/cosmo/types/common";
+import { ARTIST_IMAGES_KEY, ARTISTS_CACHE_KEY, withMirroredImages } from "@repo/lib/artist-images";
 
 import snapshot from "../data/artists.json";
-import { getStaleCache } from "./redis";
+import { getStaleCache, redis, redisFailOpen } from "./redis";
 import { getAccessToken } from "./token";
 
 const missingMembers: CosmoMemberBFF[] = [
@@ -32,7 +33,7 @@ const missingMembers: CosmoMemberBFF[] = [
  */
 export async function getArtists() {
   try {
-    return await getStaleCache("artists", 60 * 60, fetchArtistsFromCosmo);
+    return await getStaleCache(ARTISTS_CACHE_KEY, 60 * 60, fetchArtistsFromCosmo);
   } catch {
     return structuredClone(snapshot) as CosmoArtistWithMembersBFF[];
   }
@@ -63,5 +64,8 @@ async function fetchArtistsFromCosmo() {
   );
   if (missing.length > 0) throw new Error(`Cosmo returned no members for ${missing.join(", ")}`);
 
-  return artistMembers;
+  // the worker's `artist-images` job mirrors what this list shows, so a new image keeps its
+  // Cosmo URL until the refresh after it is copied
+  const mirrored = await redisFailOpen("artist images", () => redis.hgetall(ARTIST_IMAGES_KEY));
+  return withMirroredImages(artistMembers, mirrored ?? {});
 }
