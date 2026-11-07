@@ -30,7 +30,20 @@ export const useColumnStore = create<ColumnState>()(
   ),
 );
 
-/** The count follows the viewport until the user picks one; a pick then holds at every width. */
+/**
+ * The picked count, or `"viewport"` while the count still follows the viewport: for markup the
+ * server draws, which can't read the viewport, so `ObjektGrid` sets that count by CSS breakpoint.
+ */
+export function useColumnsOrViewport(): number | "viewport" {
+  const columns = useColumnStore((s) => s.columns);
+  const initial = useColumnStore((s) => s.initial);
+  return initial ? "viewport" : columns;
+}
+
+/**
+ * The count follows the viewport until the user picks one; a pick then holds at every width.
+ * The widths are Tailwind's `md` and `lg`, which `ObjektGrid`'s `"viewport"` columns use too.
+ */
 export function useColumns(): number {
   const columns = useColumnStore((s) => s.columns);
   const initial = useColumnStore((s) => s.initial);

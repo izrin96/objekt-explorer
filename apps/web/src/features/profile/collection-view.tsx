@@ -328,7 +328,9 @@ export function CollectionView() {
       <CollectionNotices address={address} at={filters.at} />
 
       {matchesFailed ? null : isPending || matchesPending ? (
-        <SkeletonGrid columns={columns} />
+        // no count passed while the profile's is the responsive one, so the skeleton the server
+        // draws follows the viewport by CSS and doesn't jump on a phone
+        <SkeletonGrid />
       ) : (
         <>
           <div className="flex items-center justify-between gap-2">
@@ -346,7 +348,7 @@ export function CollectionView() {
 
           {wanted && filtered.length === 0 && hasNextPage ? (
             // matches are sparse: a later page may still bring the first one
-            <SkeletonGrid columns={columns} />
+            <SkeletonGrid />
           ) : wanted && filtered.length === 0 ? (
             <EmptyState
               icon={MagnifyingGlassIcon}
