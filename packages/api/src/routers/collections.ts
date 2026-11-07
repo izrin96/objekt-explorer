@@ -19,6 +19,7 @@ import { documented, errorResponses } from "../schemas/common/documented";
 import {
   fetchCollectionList,
   fetchCollectionMetadata,
+  fetchLeadCollections,
   fetchSerialList,
   fetchSerialTransfers,
 } from "../services/collection";
@@ -59,6 +60,10 @@ export const collectionsRouter = {
     .input(holdersInputSchema)
     .output(documented(holdersOutputSchema))
     .handler(({ input, context: { session } }) => fetchHolders(input, session?.user.id)),
+
+  lead: pub
+    .input(collectionListInputSchema.pick({ artist: true }))
+    .handler(({ input }) => fetchLeadCollections(input.artist)),
 
   /** Answers a conditional GET with 304, so a browser revalidates its copy instead of downloading it again. */
   list: pub

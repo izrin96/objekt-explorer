@@ -138,6 +138,43 @@ export async function fetchCollectionList(
 }
 
 /**
+ * The newest collections in scope, in the list's order and the web's slim shape: the cards a
+ * default grid draws first, which the home page sends with its HTML so they paint before the
+ * whole list arrives. Three rows of the widest grid, as many as its loading grid holds.
+ */
+const LEAD_COLLECTIONS = 21;
+const LEAD_TTL_MS = 60 * 1000;
+// the home page waits on this, and it is only a head start: past this, the page goes without it
+const LEAD_WAIT_MS = 150;
+const leadCache = new Map<string, { expiresAt: number; rows: Promise<ShapedList> }>();
+const NO_LEAD: ShapedList = { collections: [] };
+
+export async function fetchLeadCollections(artist: CollectionListInput["artist"]) {
+  const key = artist.toSorted().join(",");
+  let entry = leadCache.get(key);
+  if (!entry || entry.expiresAt <= Date.now()) {
+    const rows = queryLeadCollections(artist);
+    entry = { expiresAt: Date.now() + LEAD_TTL_MS, rows };
+    leadCache.set(key, entry);
+    void rows.catch(() => {
+      if (leadCache.get(key)?.rows === rows) leadCache.delete(key);
+    });
+  }
+  const timeout = new Promise<ShapedList>((resolve) => setTimeout(resolve, LEAD_WAIT_MS, NO_LEAD));
+  return Promise.race([entry.rows.catch(() => NO_LEAD), timeout]);
+}
+
+async function queryLeadCollections(artist: CollectionListInput["artist"]) {
+  const rows = await indexer
+    .select(getCollectionColumns())
+    .from(collections)
+    .where(artist.length ? inArray(collections.artist, artist.map(toIndexedArtist)) : undefined)
+    .orderBy(desc(collections.id))
+    .limit(LEAD_COLLECTIONS);
+  return shapeRows(rows.map(overrideCollection), { originals: false, ids: false });
+}
+
+/**
  * Marks the collection list as changed now, so every browser's next load gets it again instead
  * of a 304. The one writer of `collection:modified-at` besides `process-collection-images`.
  * Call it after the change commits; `refreshed: false` means Redis did not take it.

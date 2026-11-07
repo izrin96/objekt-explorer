@@ -62,6 +62,8 @@ type ObjektCardProps<T extends ValidObjekt> = {
   image?: "thumbnail" | "front";
   /** load eagerly — the first rows are above the fold */
   priority?: boolean;
+  /** `high` on the first row, whose image is the page's largest paint */
+  fetchPriority?: "high";
   /** read with the card's own name, for state its artwork shows */
   description?: string;
   /** extra controls, rendered after the check in the top-right block */
@@ -123,6 +125,7 @@ export function ObjektCard<T extends ValidObjekt>({
   hideSerial = false,
   image = "thumbnail",
   priority = false,
+  fetchPriority,
   description,
   children,
   className,
@@ -206,6 +209,7 @@ export function ObjektCard<T extends ValidObjekt>({
             image={image}
             hideSerial={serialHidden}
             priority={priority}
+            fetchPriority={fetchPriority}
           />
           {description !== undefined && <span className="sr-only">{description}</span>}
 

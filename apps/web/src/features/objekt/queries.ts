@@ -10,6 +10,11 @@ import { client, orpc } from "@/lib/orpc";
 import { collectionsUrl } from "./collections-url";
 import { mapObjektWithTag } from "./objekt-utils";
 
+/** Rows of the slim list (asked without ids, `collectionsUrl`): the slug stands in, as the row's key only. */
+export function toGridCollections(rows: SlimCollectionListOutput["collections"]) {
+  return rows.map((collection) => mapObjektWithTag({ ...collection, id: collection.slug }));
+}
+
 /** Never changes under a given artist scope, so it is fetched once and filtered in the browser. */
 export const collectionOptions = (filters?: OwnedByFilters) =>
   queryOptions({
@@ -27,8 +32,7 @@ export const collectionOptions = (filters?: OwnedByFilters) =>
       const result = (await fetchCollections()) ?? (await fetchCollections("no-store"));
       if (!result) throw new Error("Collections response had no body");
 
-      // asked without ids (`collectionsUrl`): the slug stands in, as the row's key only
-      return result.map((collection) => mapObjektWithTag({ ...collection, id: collection.slug }));
+      return toGridCollections(result);
     },
     throwOnError: true,
   });
