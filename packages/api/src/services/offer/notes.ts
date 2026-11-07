@@ -1,6 +1,6 @@
 import type { Tx } from "@repo/db";
 import { notification, notificationPref, offer, offerItem } from "@repo/db/schema";
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, eq, inArray, isNull, sql } from "drizzle-orm";
 
 import { unique } from "../../lib/unique";
 import {
@@ -47,8 +47,8 @@ async function offerObjekts(tx: Tx, notes: Note[]) {
 }
 
 /**
- * One unread row per group, holding the latest event; a type the user switched off writes
- * nothing. Each row names up to three of the offer's collections, what the reader gets first.
+ * One unread row per group, holding the latest event; the event it replaces stays as a read row,
+ * listed under the head's updates. A type the user switched off writes nothing. Each row names up to three of the offer's collections, what the reader gets first.
  * Shared by the API and the worker, so it imports nothing request-bound.
  */
 export async function writeNotes(tx: Tx, notes: Note[]): Promise<string[]> {
@@ -69,14 +69,21 @@ export async function writeNotes(tx: Tx, notes: Note[]): Promise<string[]> {
   for (const note of kept) {
     const objekts = objektsOf?.(note) ?? [];
     const payload = objekts.length === 0 ? note.payload : { ...note.payload, objekts };
+    const groupKey = groupKeyOf(note);
+    await tx
+      .update(notification)
+      .set({ readAt: sql`now()` })
+      .where(
+        and(
+          eq(notification.userId, note.userId),
+          eq(notification.groupKey, groupKey),
+          isNull(notification.readAt),
+        ),
+      );
+    // the conflict is left only to a writer racing this one on the same group
     await tx
       .insert(notification)
-      .values({
-        userId: note.userId,
-        type: note.type,
-        payload,
-        groupKey: groupKeyOf(note),
-      })
+      .values({ userId: note.userId, type: note.type, payload, groupKey })
       .onConflictDoUpdate({
         target: [notification.userId, notification.groupKey],
         targetWhere: sql`read_at IS NULL`,
