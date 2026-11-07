@@ -7,7 +7,12 @@ import type { HeldObjekt } from "@repo/lib/types/objekt";
 import { and, asc, count, desc, eq, getColumns, inArray, lt, lte, or, sql } from "drizzle-orm";
 import type { AnyPgColumn } from "drizzle-orm/pg-core";
 
-import type { HeldByOutput, OwnedByFilters, OwnedByOutput } from "../schemas/objekts";
+import type {
+  HeldByOutput,
+  OwnedByFilters,
+  OwnedByOutput,
+  OwnedCopiesOutput,
+} from "../schemas/objekts";
 import { getCollectionColumns } from "./objekt";
 import { getCache, redis, redisFailOpen } from "./redis";
 import { TOKEN_CHUNK_SIZE } from "./utils";
@@ -45,6 +50,40 @@ export async function fetchOwnedObjekts(
   address: string,
   query: OwnedByFilters,
 ): Promise<OwnedByOutput> {
+  const { rows, nextCursor } = await ownedRows(address, query, getCollectionColumns());
+  return {
+    nextCursor,
+    objekts: rows.map((row) => mapOwnedObjekt(row.objekt, row.collection)),
+  };
+}
+
+/**
+ * The same pages as `fetchOwnedObjekts` with each copy's own fields only: every row would
+ * otherwise repeat its collection's twenty-odd fields, about 85% of the response.
+ */
+export async function fetchOwnedCopies(
+  address: string,
+  query: OwnedByFilters,
+): Promise<OwnedCopiesOutput> {
+  const { rows, nextCursor } = await ownedRows(address, query, { slug: collections.slug });
+  return {
+    nextCursor,
+    copies: rows.map(({ objekt, collection }) => ({
+      id: objekt.id,
+      slug: collection.slug,
+      serial: objekt.serial,
+      receivedAt: new Date(objekt.receivedAt).toISOString(),
+      mintedAt: new Date(objekt.mintedAt).toISOString(),
+      transferable: objekt.transferable,
+    })),
+  };
+}
+
+async function ownedRows<C extends Record<string, AnyPgColumn>>(
+  address: string,
+  query: OwnedByFilters,
+  collectionColumns: C,
+) {
   const addr = address.toLowerCase();
 
   const collectionFilters = buildCollectionFilters(query);
@@ -74,7 +113,7 @@ export async function fetchOwnedObjekts(
           ...getColumns(objekts),
           receivedAt: latest.timestamp,
         },
-        collection: getCollectionColumns(),
+        collection: collectionColumns,
       })
       .from(latest)
       .innerJoin(objekts, eq(latest.objektId, objekts.id))
@@ -83,21 +122,13 @@ export async function fetchOwnedObjekts(
       .orderBy(...orderBy(latest.timestamp))
       .limit(PER_PAGE + 1);
 
-    const results = await mainQuery;
-
-    const hasNext = results.length > PER_PAGE;
-    const nextCursor = hasNext ? cursorAfter(results[PER_PAGE - 1]!) : undefined;
-
-    return {
-      nextCursor,
-      objekts: results.slice(0, PER_PAGE).map((a) => mapOwnedObjekt(a.objekt, a.collection)),
-    };
+    return page(await mainQuery);
   }
 
   const mainQuery = indexer
     .select({
       objekt: objekts,
-      collection: getCollectionColumns(),
+      collection: collectionColumns,
     })
     .from(objekts)
     .innerJoin(collections, eq(objekts.collectionId, collections.id))
@@ -107,14 +138,14 @@ export async function fetchOwnedObjekts(
     .orderBy(...orderBy(objekts.receivedAt))
     .limit(PER_PAGE + 1);
 
-  const results = await mainQuery;
+  return page(await mainQuery);
+}
 
+function page<R extends { objekt: { receivedAt: Date | string; id: string } }>(results: R[]) {
   const hasNext = results.length > PER_PAGE;
-  const nextCursor = hasNext ? cursorAfter(results[PER_PAGE - 1]!) : undefined;
-
   return {
-    nextCursor,
-    objekts: results.slice(0, PER_PAGE).map((a) => mapOwnedObjekt(a.objekt, a.collection)),
+    nextCursor: hasNext ? cursorAfter(results[PER_PAGE - 1]!) : undefined,
+    rows: results.slice(0, PER_PAGE),
   };
 }
 

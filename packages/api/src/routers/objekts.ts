@@ -6,8 +6,14 @@ import {
   ownedByInputSchema,
   heldByOutputSchema,
   ownedByOutputSchema,
+  ownedCopiesOutputSchema,
 } from "../schemas/objekts";
-import { fetchHeldObjekts, fetchOwnedObjekts, isCheckpointUnavailable } from "../services/owned";
+import {
+  fetchHeldObjekts,
+  fetchOwnedCopies,
+  fetchOwnedObjekts,
+  isCheckpointUnavailable,
+} from "../services/owned";
 
 export const objektsRouter = {
   ownedBy: pub
@@ -29,6 +35,29 @@ export const objektsRouter = {
         );
       }
       return fetchOwnedObjekts(address, query);
+    }),
+
+  ownedCopies: pub
+    .route({
+      method: "GET",
+      path: "/objekts/owned-copies/{address}",
+      tags: ["Objekts"],
+      summary: "An address's copies without their collection fields, newest received first",
+      description:
+        "The pages of owned-by with each copy's own fields only; join them to /collections by slug.",
+      spec: errorResponses(400),
+    })
+    .input(ownedByInputSchema)
+    .output(documented(ownedCopiesOutputSchema))
+    .handler(({ input: { address, ...query } }) => {
+      if (isCheckpointUnavailable(address, query)) {
+        refuse(
+          "BAD_REQUEST",
+          "objekt_checkpoint_unavailable",
+          "Checkpoint is unavailable for COSMO Spin",
+        );
+      }
+      return fetchOwnedCopies(address, query);
     }),
 
   heldBy: pub

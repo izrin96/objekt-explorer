@@ -1,4 +1,4 @@
-import type { OwnedByFilters, OwnedByOutput } from "@repo/api/schemas/objekts";
+import type { OwnedByFilters, OwnedByOutput, OwnedCopiesOutput } from "@repo/api/schemas/objekts";
 import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query";
 import type * as z from "zod";
 
@@ -27,6 +27,23 @@ export const ownedCollectionOptions = (address: string, filters?: OwnedByFilters
         nextCursor: result.nextCursor,
       })),
     initialPageParam: undefined as OwnedByOutput["nextCursor"],
+    getNextPageParam: (lastPage) => lastPage.nextCursor,
+    refetchOnWindowFocus: false,
+    // a past state never changes, so a checkpoint page is fetched once
+    staleTime: filters?.at ? Infinity : 1000 * 60 * 5,
+    throwOnError: true,
+  });
+
+/**
+ * The profile's copies without their collection fields, which `joinOwned` takes from the
+ * collection list: the full rows repeat them per copy, about 85% of every page.
+ */
+export const ownedCopiesOptions = (address: string, filters?: OwnedByFilters) =>
+  infiniteQueryOptions({
+    queryKey: ["owned-copies", address, filters],
+    queryFn: ({ pageParam }) =>
+      client.objekts.ownedCopies({ ...filters, address, cursor: pageParam }),
+    initialPageParam: undefined as OwnedCopiesOutput["nextCursor"],
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     refetchOnWindowFocus: false,
     // a past state never changes, so a checkpoint page is fetched once

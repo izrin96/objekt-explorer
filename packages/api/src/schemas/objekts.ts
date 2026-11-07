@@ -23,6 +23,24 @@ export const ownedByOutputSchema = z.object({
 });
 export type OwnedByOutput = z.infer<typeof ownedByOutputSchema>;
 
+/** One owned copy without its collection, which a caller holding the collection list joins by `slug`. */
+export const ownedCopySchema = z.object({
+  /** the token id */
+  id: z.string(),
+  slug: z.string(),
+  serial: z.number().int(),
+  receivedAt: z.string(),
+  mintedAt: z.string(),
+  transferable: z.boolean(),
+});
+export type OwnedCopy = z.infer<typeof ownedCopySchema>;
+
+export const ownedCopiesOutputSchema = z.object({
+  nextCursor: receivedAtCursorSchema.optional(),
+  copies: z.array(ownedCopySchema),
+});
+export type OwnedCopiesOutput = z.infer<typeof ownedCopiesOutputSchema>;
+
 export const heldByOutputSchema = z.object({
   collections: z.array(heldObjektSchema),
 });

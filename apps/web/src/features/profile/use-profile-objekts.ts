@@ -2,7 +2,7 @@ import type { OwnedByFilters } from "@repo/api/schemas/objekts";
 import { Addresses } from "@repo/lib";
 import type { GridObjekt, PinState } from "@repo/lib/types/objekt";
 import { useInfiniteQuery, useQueries, useQuery } from "@tanstack/react-query";
-import { useDeferredValue, useMemo } from "react";
+import { useDeferredValue, useEffect, useMemo, useRef } from "react";
 
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import { filterObjekts } from "@/features/filters/filter-utils";
@@ -13,13 +13,9 @@ import { collectionOptions } from "@/features/objekt/queries";
 import { useCollectionRarity } from "@/features/objekt/use-collection-rarity";
 import { useLoadAllPages } from "@/hooks/use-load-all-pages";
 
+import { joinOwned } from "./owned-join";
 import { useProfile } from "./profile-provider";
-import {
-  heldCollectionsOptions,
-  locksOptions,
-  ownedCollectionOptions,
-  pinsOptions,
-} from "./queries";
+import { heldCollectionsOptions, locksOptions, ownedCopiesOptions, pinsOptions } from "./queries";
 
 const NO_PINS: ReadonlyMap<string, number> = new Map();
 const NO_LOCKS: ReadonlySet<string> = new Set();
@@ -43,28 +39,56 @@ function ownedServerFilters(
 /**
  * Filters, sorts and the missing set are computed in the browser, so every
  * page is fetched up front rather than on scroll. Spin holds millions of
- * tokens, so it loads one counted row per collection instead.
+ * tokens, so it loads one counted row per collection instead. The copies carry
+ * no collection fields: they join the collection list, fetched beside them.
  */
 function useOwnedPages(address: string, filters: OwnedByFilters) {
   const spin = isSpinAddress(address);
-  const query = useInfiniteQuery({ ...ownedCollectionOptions(address, filters), enabled: !spin });
+  const query = useInfiniteQuery({ ...ownedCopiesOptions(address, filters), enabled: !spin });
   const held = useQuery({ ...heldCollectionsOptions(address, filters.artist), enabled: spin });
+  const catalogue = useQuery(collectionOptions({ artist: filters.artist, at: filters.at }));
   const { hasNextPage, isFetchingNextPage, fetchNextPage } = query;
   // the profile header and the open tab both observe this query, so both page it in one commit
   useLoadAllPages(!spin, query);
 
   const pages = query.data?.pages;
-  const objekts = useMemo<GridObjekt[]>(
-    () => (spin ? (held.data ?? []) : (pages?.flatMap((page) => page.objekts) ?? [])),
-    [spin, held.data, pages],
-  );
+  const joined = useMemo(() => {
+    if (spin) return { objekts: held.data ?? [], missing: NO_SLUGS };
+    if (!pages || !catalogue.data) return { objekts: [], missing: NO_SLUGS };
+    return joinOwned(
+      pages.flatMap((page) => page.copies),
+      catalogue.data,
+    );
+  }, [spin, held.data, pages, catalogue.data]);
+  useCatalogueCatchUp(joined.missing, catalogue);
+
   return {
-    objekts,
-    isPending: spin ? held.isPending : query.isPending,
+    objekts: joined.objekts as GridObjekt[],
+    catalogue,
+    isPending: spin ? held.isPending : query.isPending || catalogue.isPending,
     hasNextPage,
     isFetchingNextPage,
     fetchNextPage,
   };
+}
+
+const NO_SLUGS: string[] = [];
+
+/**
+ * The collection list is cached for good, so a copy of a collection made since it loaded finds
+ * no match; that list is fetched again once (a 304 when nothing changed) per set of misses.
+ */
+function useCatalogueCatchUp(
+  missing: string[],
+  { isFetching, refetch }: { isFetching: boolean; refetch: () => Promise<unknown> },
+) {
+  const asked = useRef<string | null>(null);
+  const key = missing.join(",");
+  useEffect(() => {
+    if (key === "" || isFetching || asked.current === key) return;
+    asked.current = key;
+    void refetch();
+  }, [key, isFetching, refetch]);
 }
 
 /** Spin is counted from today's holdings alone, so a checkpoint in its URL is dropped. */
@@ -90,13 +114,7 @@ function useProfileSources() {
 
   const serverFilters = ownedServerFilters(selectedArtistIds, filters);
   const owned = useOwnedPages(profile.address, serverFilters);
-  // the catalogue is only worth fetching once every owned page is in, or the
-  // missing set would be measured against a partial collection
-  const collections = useQuery({
-    ...collectionOptions({ artist: selectedArtistIds, at: filters.at }),
-    enabled: !owned.hasNextPage,
-  });
-  return { profile, deferredFilters, owned, collections };
+  return { profile, deferredFilters, owned, collections: owned.catalogue };
 }
 
 /**
@@ -133,8 +151,9 @@ export function useProfileObjekts() {
   const derived = useMemo(() => {
     const owned = filterObjekts(deferredFilters, withMarks);
     const ownedSlugs = new Set(owned.map((objekt) => objekt.slug));
+    // measured against every owned page, or a copy still loading would read as missing
     const missing =
-      deferredFilters.unowned || deferredFilters.missing
+      !hasNextPage && (deferredFilters.unowned || deferredFilters.missing)
         ? filterObjekts(
             deferredFilters,
             (collections.data ?? []).filter((objekt) => !ownedSlugs.has(objekt.slug)),
@@ -143,11 +162,11 @@ export function useProfileObjekts() {
 
     const filtered: GridObjekt[] = [...owned, ...missing];
     return { filtered, ownedSlugs, allOwned: withMarks };
-  }, [deferredFilters, withMarks, collections.data]);
+  }, [deferredFilters, withMarks, collections.data, hasNextPage]);
 
   return {
     ...derived,
-    catalogue: collections.data,
+    catalogue: hasNextPage ? undefined : collections.data,
     filters: deferredFilters,
     rarityMap,
     hasNextPage,
@@ -195,7 +214,7 @@ export function useProfileSummary() {
 /** Owned objekts and the catalogue behind them, for Progress and Statistics. */
 export function useProfileCatalogue() {
   const { deferredFilters, owned: ownedPages, collections } = useProfileSources();
-  const { objekts, isPending } = ownedPages;
+  const { objekts, isPending, hasNextPage } = ownedPages;
 
   const derived = useMemo(
     () => ({
@@ -208,6 +227,7 @@ export function useProfileCatalogue() {
   return {
     ...derived,
     filters: deferredFilters,
-    isPending: isPending || collections.isPending,
+    // progress and statistics count against every owned page
+    isPending: isPending || collections.isPending || hasNextPage,
   };
 }
