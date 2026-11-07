@@ -43,14 +43,14 @@ export const nearEnd = (el: HTMLElement) =>
   el.scrollHeight - el.scrollTop - el.clientHeight < STICK_PX;
 
 /**
- * Marks what the reader has seen: once per newer message, and only while the page is visible
+ * Marks what the reader has seen: once per newer message of theirs, and only while the page is visible
  * and focused and the thread is scrolled to its newest message. Looks again when any of
  * those becomes true. The scroller is read too, since opening on the New line moves it before
  * a scroll event reaches `atBottom`.
  */
 export function useMarkRead(
   id: number,
-  newest: ChatMessage | undefined,
+  newestIncoming: number | undefined,
   lastReadMessageId: number | null,
   atBottom: boolean,
   scroller: RefObject<HTMLElement | null>,
@@ -60,7 +60,8 @@ export function useMarkRead(
     orpc.chat.markRead.mutationOptions({ onSuccess: () => invalidateChatLists(queryClient) }),
   );
   const marked = useRef(0);
-  const upTo = newest && !newest.mine ? newest.id : 0;
+  // their newest, even under a reply of ours, which reads nothing on the server
+  const upTo = newestIncoming ?? 0;
 
   useEffect(() => {
     if (!atBottom || upTo <= Math.max(marked.current, lastReadMessageId ?? 0)) return;

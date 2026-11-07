@@ -278,7 +278,7 @@ function ThreadView({
       { highlight: true },
     );
 
-  useMarkRead(id, newest, conversation.lastReadMessageId, atBottom && !jumping, scroller);
+  useMarkRead(id, newestIncoming, conversation.lastReadMessageId, atBottom && !jumping, scroller);
   useMuteEnd(id, conversation.sendBlocked?.until ?? null);
 
   return (

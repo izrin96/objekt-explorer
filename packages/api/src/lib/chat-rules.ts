@@ -215,7 +215,7 @@ export function startMembers(): { sender: MemberState; recipient: MemberState } 
 }
 
 export type MemberEvent =
-  | { type: "send"; messageId: number }
+  | { type: "send" }
   /** `first`: the conversation's first message; `listed`: it is about the recipient's lists (`firstListed`) */
   | { type: "incoming"; first?: boolean; listed?: boolean }
   | { type: "read"; messageId: number }
@@ -230,13 +230,9 @@ const maxId = (a: number | null, b: number) => (a === null ? b : Math.max(a, b))
 /** `now` is an ISO time. Declining keeps `request`, so the conversation never reaches the Inbox unasked. */
 export function nextMemberState(state: MemberState, event: MemberEvent, now: string): MemberState {
   switch (event.type) {
+    // a send reads nothing: a message of theirs that landed just before it may be unseen
     case "send":
-      return {
-        ...state,
-        request: false,
-        archivedAt: null,
-        lastReadMessageId: maxId(state.lastReadMessageId, event.messageId),
-      };
+      return { ...state, request: false, archivedAt: null };
     case "incoming":
       return {
         ...state,

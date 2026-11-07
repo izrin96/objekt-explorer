@@ -139,9 +139,7 @@ export async function appendMessage(
   const now = new Date().toISOString();
   for (const { userId, ...state } of members) {
     const event: MemberEvent =
-      userId === senderId
-        ? { type: "send", messageId: inserted.id }
-        : { type: "incoming", first, listed };
+      userId === senderId ? { type: "send" } : { type: "incoming", first, listed };
     await writeMember(tx, conversationId, userId, nextMemberState(state, event, now));
   }
   // read under the row lock, so it is the message this one follows

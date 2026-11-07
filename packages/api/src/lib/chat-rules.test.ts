@@ -171,9 +171,15 @@ describe("requests", () => {
 
   test("accept by reply", () => {
     const { recipient } = startMembers();
-    const replied = nextMemberState(recipient, { type: "send", messageId: 2 }, NOW_ISO);
+    const replied = nextMemberState(recipient, { type: "send" }, NOW_ISO);
     expect(boxOf(replied)).toBe("inbox");
-    expect(replied.lastReadMessageId).toBe(2);
+  });
+
+  test("a send marks nothing read, so a message of theirs it overtook stays unread", () => {
+    const seen = { ...startMembers().sender, lastReadMessageId: 4 };
+    const sent = nextMemberState(seen, { type: "send" }, NOW_ISO);
+    expect(sent.lastReadMessageId).toBe(4);
+    expect(isUnread({ id: 5, senderId: "them" }, "me", sent.lastReadMessageId)).toBe(true);
   });
 
   test("decline archives and stays a request", () => {
