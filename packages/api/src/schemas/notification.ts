@@ -118,8 +118,9 @@ export const listNotificationsInputSchema = z.object({
   cursor: notificationCursorSchema.optional(),
 });
 
+/** `kind` is still accepted from tabs built when Mark all read cleared only the open tab. */
 export const markAllReadInputSchema = z.object({
-  kind: z.enum(NOTIFICATION_KINDS).default("all"),
+  kind: z.enum(NOTIFICATION_KINDS).optional(),
 });
 
 export const markReadInputSchema = z.object({

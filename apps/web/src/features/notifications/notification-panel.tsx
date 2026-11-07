@@ -93,8 +93,7 @@ export function NotificationPanel({
   const markRead = useMutation(orpc.notifications.markRead.mutationOptions({ onSettled: refetch }));
   const selectedTab = useRef<HTMLButtonElement>(null);
   // the button disables itself while it works and once nothing is unread, which drops focus
-  const markAll = () =>
-    markAllRead.mutate({ kind }, { onSettled: () => selectedTab.current?.focus() });
+  const markAll = () => markAllRead.mutate({}, { onSettled: () => selectedTab.current?.focus() });
 
   const items = (query.data?.pages.flatMap((page) => page.items) ?? []).filter(renderable);
   const empty = query.isSuccess && items.length === 0;
