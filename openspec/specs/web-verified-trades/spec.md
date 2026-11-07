@@ -142,7 +142,8 @@ Only the receiver SHALL be able to accept or decline, and only while the trade i
 A pending wrong copy SHALL count as accepted, with nobody pressing Accept, at the first of:
 - **its deadline**, 72 hours after it was recorded;
 - **the trade's expiry**, `TRADE_EXPIRE_DAYS` after accept;
-- **its leg breaking**: the asked-for objekt leaving the giver (see Broken trades).
+- **its leg breaking**: the asked-for objekt leaving the giver (see Broken trades);
+- **another leg breaking**: a break on any other leg of the trade ending it (see Broken trades). Each open leg holding a pending copy then accepts it before the trade's outcome, and who is at fault, is decided.
 
 Each of these SHALL wait until the indexer has read the chain past it (see Indexer delay), so an asked-for objekt sent in time verifies the leg first. Accepting it SHALL verify the leg exactly as Accept does, and mark the leg as accepted automatically. Of several pending copies on one leg, the earliest sent SHALL be accepted. A copy whose transfer has verified another leg SHALL no longer be offered or accepted. Moving the copy on from the receiver's wallet SHALL not stop it.
 
@@ -196,6 +197,14 @@ A copy that was already pending when this rule shipped SHALL have its 72 hours c
 #### Scenario: Expiry first
 - **WHEN** a wrong copy is recorded on day 13, and the trade reaches its 14-day expiry with that copy still pending
 - **THEN** the copy is accepted then, and the trade ends as its legs decide instead of Failed for the copy
+
+#### Scenario: Another leg breaks
+- **WHEN** A owes #1203 and sent wrong copy #1207, still pending, and B's leg then breaks because B sold the objekt B owes
+- **THEN** #1207 is accepted automatically, A's leg shows Verified "#1207 in place of #1203", the trade ends Failed with B at fault, and A can leave feedback
+
+#### Scenario: Another leg breaks with a declined copy
+- **WHEN** A's wrong copy #1207 was declined, and B's leg then breaks
+- **THEN** #1207 stays declined, A's leg stays unverified, and the trade ends Failed
 
 #### Scenario: Several copies
 - **WHEN** a leg holds pending copies #1207 and #1209, sent in that order, and the deadline passes
