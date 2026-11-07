@@ -79,3 +79,38 @@ export function placeConversation(
     ],
   };
 }
+
+/**
+ * What a tab has applied from live messages: the newest message per conversation, and the newest
+ * message whose badge counts it took. Each event is built after its message commits, but two can
+ * arrive in either order, so an older one must not overwrite what a newer one set.
+ */
+export type LiveOrder = { rows: Map<number, number>; counts: number };
+
+export const createLiveOrder = (): LiveOrder => ({ rows: new Map(), counts: 0 });
+
+/**
+ * Whether the event's row is newer than what the tab holds for that conversation, read from
+ * the events applied and from the cached lists, which a refetch may have moved past both.
+ */
+export function rowIsFresh(
+  order: LiveOrder,
+  lists: readonly (ConversationsData | undefined)[],
+  row: ConversationRow,
+) {
+  if (row.last.id <= (order.rows.get(row.id) ?? 0)) return false;
+  return !lists.some((data) =>
+    data?.pages.some((page) =>
+      page.items.some((item) => item.id === row.id && item.last.id >= row.last.id),
+    ),
+  );
+}
+
+/** Records an applied event; returns whether its badge counts are the newest seen. */
+export function takeLiveOrder(order: LiveOrder, event: ChatMessageEvent, rowFresh: boolean) {
+  const { id } = event.message;
+  if (rowFresh) order.rows.set(event.conversationId, id);
+  if (id <= order.counts) return false;
+  order.counts = id;
+  return true;
+}

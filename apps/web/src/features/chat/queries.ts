@@ -15,8 +15,12 @@ import {
   boxOf,
   type ChatMessageEvent,
   type ConversationsData,
+  createLiveOrder,
   dropConversation,
+  type LiveOrder,
   placeConversation,
+  rowIsFresh,
+  takeLiveOrder,
 } from "./live-message";
 import { createThreadSync, type ThreadSync, type ThreadSyncPort } from "./thread-sync";
 
@@ -125,25 +129,57 @@ function threadSync(queryClient: QueryClient) {
   return sync;
 }
 
+const liveOrders = new WeakMap<QueryClient, LiveOrder>();
+
+function liveOrder(queryClient: QueryClient) {
+  let order = liveOrders.get(queryClient);
+  if (!order) {
+    order = createLiveOrder();
+    liveOrders.set(queryClient, order);
+  }
+  return order;
+}
+
 /**
  * A message arrived with its content: it joins the cached thread, its row heads the box it
- * belongs in, and the badges take the server's counts, so nothing is requested. A searched
+ * belongs in, and the badges take the server's counts, so nothing is requested. An event older
+ * than one already applied changes neither. A searched
  * list cannot be patched (it matches by name and card), so it reads again if it is open.
  */
 export function applyChatMessage(queryClient: QueryClient, event: ChatMessageEvent) {
   threadSync(queryClient).message(event);
-  const home = boxOf(event.conversation);
-  for (const box of CHAT_BOXES) {
-    queryClient.setQueryData<ConversationsData>(conversationsOptions(box).queryKey, (old) => {
-      if (!old) return old;
-      return box === home
-        ? placeConversation(old, event.conversation, event.collections)
-        : dropConversation(old, event.conversationId);
-    });
+  const order = liveOrder(queryClient);
+  const keys = CHAT_BOXES.map((box) => [box, conversationsOptions(box).queryKey] as const);
+  const fresh = rowIsFresh(
+    order,
+    keys.map(([, key]) => queryClient.getQueryData<ConversationsData>(key)),
+    event.conversation,
+  );
+  if (fresh) {
+    const home = boxOf(event.conversation);
+    for (const [box, key] of keys) {
+      queryClient.setQueryData<ConversationsData>(key, (old) => {
+        if (!old) return old;
+        return box === home
+          ? placeConversation(old, event.conversation, event.collections)
+          : dropConversation(old, event.conversationId);
+      });
+    }
   }
-  queryClient.setQueryData(orpc.chat.unreadCount.queryKey(), event.unread);
-  queryClient.setQueryData(orpc.chat.requestCount.queryKey(), event.requests);
-  queryClient.setQueryData(orpc.chat.requestsUnseen.queryKey(), event.requestsUnseen);
+  if (takeLiveOrder(order, event, fresh)) {
+    queryClient.setQueryData(orpc.chat.unreadCount.queryKey(), event.unread);
+    queryClient.setQueryData(orpc.chat.requestCount.queryKey(), event.requests);
+    queryClient.setQueryData(orpc.chat.requestsUnseen.queryKey(), event.requestsUnseen);
+  } else if (fresh) {
+    // another conversation's message can commit after a higher id was counted, so ask again
+    for (const queryKey of [
+      orpc.chat.unreadCount.queryKey(),
+      orpc.chat.requestCount.queryKey(),
+      orpc.chat.requestsUnseen.queryKey(),
+    ]) {
+      void queryClient.invalidateQueries({ queryKey });
+    }
+  }
   void queryClient.invalidateQueries({ queryKey: orpc.chat.inboxCounts.key() });
   // a filtered list needs the server's predicate to know whether the row still belongs
   void queryClient.invalidateQueries({

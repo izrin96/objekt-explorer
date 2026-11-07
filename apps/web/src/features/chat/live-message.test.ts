@@ -8,8 +8,11 @@ import {
   boxOf,
   type ChatMessageEvent,
   type ConversationsData,
+  createLiveOrder,
   dropConversation,
   placeConversation,
+  rowIsFresh,
+  takeLiveOrder,
 } from "./live-message";
 import { type ThreadData, threadMessages } from "./thread-cache";
 
@@ -150,5 +153,37 @@ describe("dropConversation", () => {
     const data = list([5, 6], [7]);
     expect(ids(dropConversation(data, 7))).toEqual([5, 6]);
     expect(dropConversation(data, 99)).toBe(data);
+  });
+});
+
+describe("live order", () => {
+  const withLast = (id: number, lastId: number) => row(id, fromPartial({ last: { id: lastId } }));
+  const listOf = (...items: ConversationRow[]): ConversationsData =>
+    fromPartial({ pages: [{ items, collections: {} }], pageParams: [undefined] });
+  const eventFor = (conversationId: number, messageId: number) =>
+    fromPartial<ChatMessageEvent>({ conversationId, message: { id: messageId } });
+
+  test("an event older than one applied changes neither the row nor the badges", () => {
+    const order = createLiveOrder();
+    expect(takeLiveOrder(order, eventFor(7, 11), rowIsFresh(order, [], withLast(7, 11)))).toBe(
+      true,
+    );
+    const late = rowIsFresh(order, [], withLast(7, 10));
+    expect(late).toBe(false);
+    expect(takeLiveOrder(order, eventFor(7, 10), late)).toBe(false);
+  });
+
+  test("a cached row a refetch moved past the event keeps it out", () => {
+    const order = createLiveOrder();
+    expect(rowIsFresh(order, [undefined, listOf(withLast(7, 12))], withLast(7, 11))).toBe(false);
+    expect(rowIsFresh(order, [listOf(withLast(7, 10))], withLast(7, 11))).toBe(true);
+  });
+
+  test("another conversation's row stays fresh, but its older counts are skipped", () => {
+    const order = createLiveOrder();
+    takeLiveOrder(order, eventFor(7, 20), true);
+    const other = rowIsFresh(order, [], withLast(8, 19));
+    expect(other).toBe(true);
+    expect(takeLiveOrder(order, eventFor(8, 19), other)).toBe(false);
   });
 });
