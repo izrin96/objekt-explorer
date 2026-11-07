@@ -164,7 +164,7 @@ Deletion SHALL keep the account's record, renamed "Deleted account", so partners
 It SHALL remove:
 - the email, username, avatar and linked social handles;
 - the lists, notifications, and notification and message settings;
-- the links to Cosmo profiles.
+- the links to Cosmo profiles, and each linked profile's banner and bio.
 
 It SHALL keep:
 - trades and their legs, each with the wallet addresses as they were at accept;
@@ -191,6 +191,10 @@ A wallet that was linked to the deleted account SHALL carry its unfinished trade
 #### Scenario: Same wallet, new account
 - **WHEN** rin.trades has 1 unfinished trade, deletes the account, and 7 days later links the same Cosmo wallet to a new account
 - **THEN** the new account's line reads "No verified trades · 1 unfinished"
+
+#### Scenario: Bio removed
+- **WHEN** rin.trades, whose profile rin.t has a bio, deletes the account
+- **THEN** rin.t keeps no bio, and an account that later links it starts with none
 
 ### Requirement: Accounts without a deliverable email
 An account whose email is a placeholder (a Discord sign-up without an email, an X sign-up) SHALL NOT be sent a deletion email. A request for one SHALL be refused with a reason, and no message SHALL claim an email was sent.
