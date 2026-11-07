@@ -18,10 +18,20 @@ export type LiveFeed = {
   queued: ActivityItem[];
   /** the batch that arrived last; `animate-live-animation-bg` plays once and settles */
   newIds: ReadonlySet<string>;
+  /** rewards paired here for spins that were pending, by spin id */
+  rewards: ReadonlyMap<string, LiveReward>;
+  /**
+   * The newest transfer time the socket has sent, matching or not: on a narrow
+   * filter the newest drawn row can be the pending spin itself, and it must
+   * still turn broke as the chain moves on.
+   */
+  clock: number;
 };
 
+export type LiveReward = Pick<ActivityItem, "transfer" | "objekt">;
+
 export function emptyFeed(key: ActivityParams): LiveFeed {
-  return { key, rows: [], queued: [], newIds: new Set() };
+  return { key, rows: [], queued: [], newIds: new Set(), rewards: new Map(), clock: 0 };
 }
 
 /** live rows kept above the first page before the feed starts again from a fresh one */
@@ -91,7 +101,7 @@ export function addToFeed(
   if (added.length === 0) return prev;
 
   return {
-    key: prev.key,
+    ...prev,
     rows: held ? prev.rows : [...added, ...prev.rows],
     queued: held ? [...added, ...prev.queued] : prev.queued,
     newIds: held ? prev.newIds : new Set(added.map((item) => item.transfer.id)),
@@ -114,4 +124,33 @@ export function releaseQueued(prev: LiveFeed): LiveFeed {
 export function mergeRows(live: ActivityItem[], paged: ActivityItem[]): ActivityItem[] {
   const pagedIds = new Set(paged.map((item) => item.transfer.id));
   return [...live.filter((item) => !pagedIds.has(item.transfer.id)), ...paged];
+}
+
+/**
+ * Past the cap the rows start again from a fresh first page. The clock carries
+ * over, and so do the rewards of that page's spins, or they would read pending
+ * until its refetch lands; the rest go, so a tab left open does not hoard them.
+ */
+export function restartFeed(
+  prev: LiveFeed,
+  key: ActivityParams,
+  firstPage: ActivityItem[],
+): LiveFeed {
+  const rewards = new Map<string, LiveReward>();
+  for (const item of firstPage) {
+    const reward = prev.rewards.get(item.transfer.id);
+    if (reward) rewards.set(item.transfer.id, reward);
+  }
+  return { ...emptyFeed(key), rewards, clock: prev.clock };
+}
+
+/** Only the 10-minute edge matters, so the clock steps in 30 s and a busy chain re-renders no faster. */
+const CLOCK_STEP_MS = 30_000;
+
+export function advanceClock(prev: LiveFeed, key: ActivityParams, batch: ActivityItem[]): LiveFeed {
+  if (prev.key !== key) return prev;
+  let newest = prev.clock;
+  for (const item of batch) newest = Math.max(newest, Date.parse(item.transfer.timestamp));
+  const clock = newest - (newest % CLOCK_STEP_MS);
+  return clock <= prev.clock ? prev : { ...prev, clock };
 }

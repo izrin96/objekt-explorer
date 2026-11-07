@@ -31,6 +31,8 @@ import { m } from "@/paraglide/messages";
 
 import { ActivityTable } from "./activity-table";
 import { useActivityType, useResetActivity, useSetActivityType } from "./search-schema";
+import { SpinGroupToggle, useSpinsGrouped } from "./spin-grouping";
+import { foldSpinRows } from "./spin-rows";
 import { useLiveActivity } from "./use-live-activity";
 
 const TYPE_LABEL: Record<ActivityType, () => string> = {
@@ -71,9 +73,28 @@ export function ActivityView() {
   const chips = useActiveChips();
 
   const [active, setActive] = useState<ValidObjekt | null>(null);
-  const { query, rows, newIds, paused, onPointerEnter, onPointerLeave } = useLiveActivity(
-    type,
-    filters,
+  const {
+    query,
+    rows: liveRows,
+    newIds,
+    paused,
+    onPointerEnter,
+    onPointerLeave,
+    rewards,
+    clock: socketClock,
+  } = useLiveActivity(type, filters);
+  const faceted = canReset(filters);
+  const grouped = useSpinsGrouped();
+  const rows = useMemo(
+    () =>
+      foldSpinRows(liveRows, {
+        all: grouped && type === "all",
+        faceted,
+        rewards,
+        // chain time, not the wall clock: a stalled indexer leaves spins pending
+        clock: Math.max(socketClock, liveRows[0] ? Date.parse(liveRows[0].transfer.timestamp) : 0),
+      }),
+    [liveRows, grouped, type, faceted, rewards, socketClock],
   );
 
   const setFacet = useSetFacet();
@@ -118,6 +139,7 @@ export function ActivityView() {
             values={values}
             onChange={setFacet}
           />
+          <SpinGroupToggle />
           <ResetButton onReset={reset} disabled={nothingToReset} />
         </QuickFilters>
       </div>
@@ -148,6 +170,7 @@ export function ActivityView() {
         <>
           <ActivityTable
             rows={rows}
+            grouped={grouped}
             newIds={newIds}
             onOpen={setActive}
             onPointerEnter={onPointerEnter}

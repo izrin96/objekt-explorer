@@ -15,9 +15,12 @@ const objektCardHandle = TooltipPrimitive.createHandle<OwnedObjekt>();
 export function ObjektNameButton({
   objekt,
   onOpen,
+  srPrefix,
 }: {
   objekt: OwnedObjekt;
   onOpen: (objekt: ValidObjekt) => void;
+  /** read before the name, for a relation the row only shows visually */
+  srPrefix?: string;
 }) {
   return (
     <TooltipPrimitive.Trigger
@@ -33,6 +36,7 @@ export function ObjektNameButton({
         />
       }
     >
+      {srPrefix !== undefined && <span className="sr-only">{srPrefix} </span>}
       <img
         src={objekt.thumbnailImage}
         alt=""
@@ -48,8 +52,9 @@ export function ObjektNameButton({
 function ObjektName({ objekt, className }: { objekt: OwnedObjekt; className?: string }) {
   return (
     <span className={className}>
-      {objekt.member}
-      <span className="ml-1.5 font-mono text-xs">
+      {/* a real space, so a screen reader does not run the member into the number */}
+      {objekt.member}{" "}
+      <span className="font-mono text-xs">
         {getCollectionShortNo(objekt)} <b className="font-semibold">#{objekt.serial}</b>
       </span>
     </span>

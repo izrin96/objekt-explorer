@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import { getEventKind } from "./live-feed";
+import { SpinOutcome } from "./spin-outcome";
 
 const EVENT_LABEL: Record<EventKind, () => string> = {
   mint: m.activity_event_type_mint,
@@ -50,10 +51,12 @@ function System({ label }: { label: string }) {
  */
 export const ActivityRow = memo(function ActivityRow({
   item,
+  grouped,
   isNew,
   onOpen,
 }: {
   item: ActivityItem;
+  grouped: boolean;
   isNew: boolean;
   onOpen: (objekt: ValidObjekt) => void;
 }) {
@@ -67,7 +70,11 @@ export const ActivityRow = memo(function ActivityRow({
       </DataTableCell>
 
       <DataTableCell>
-        <ObjektNameButton objekt={item.objekt} onOpen={onOpen} />
+        {kind === "spin" && grouped ? (
+          <SpinOutcome objekt={item.objekt} spin={item.spin} onOpen={onOpen} />
+        ) : (
+          <ObjektNameButton objekt={item.objekt} onOpen={onOpen} />
+        )}
       </DataTableCell>
 
       <DataTableCell>

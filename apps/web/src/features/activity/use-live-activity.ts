@@ -7,13 +7,16 @@ import type { useCanonicalFilters } from "@/features/filters/use-filters";
 
 import {
   addToFeed,
+  advanceClock,
   emptyFeed,
   exceedsCap,
   type LiveFeed,
   matchesFilters,
   mergeRows,
   releaseQueued,
+  restartFeed,
 } from "./live-feed";
+import { pairLiveRewards, withPendingSpin } from "./live-spins";
 import { activityInfiniteOptions } from "./queries";
 import { useActivitySocket } from "./use-activity-socket";
 
@@ -72,7 +75,15 @@ export function useLiveActivity(type: ActivityType, filters: Filters) {
       // the first page being fetched already holds whatever arrives meanwhile
       if (!loaded) return;
 
-      const fresh = message.data.filter((item) => matchesFilters(item, type, artist, filters));
+      const loadedRows = pages?.flatMap((page) => page.items) ?? [];
+      // rewards attach before the filter, which on a Spin feed drops every mint
+      setFeed((prev) =>
+        pairLiveRewards(advanceClock(prev, params, message.data), params, message.data, loadedRows),
+      );
+
+      const fresh = message.data
+        .filter((item) => matchesFilters(item, type, artist, filters))
+        .map(withPendingSpin);
       if (fresh.length === 0) return;
 
       // a held row is highlighted when it is released, not while it waits
@@ -81,7 +92,8 @@ export function useLiveActivity(type: ActivityType, filters: Filters) {
       // a tab left open would grow without end; trimming the oldest live rows
       // would open a gap above the first page, so start again from a fresh one
       if (exceedsCap(live, fresh.length)) {
-        setFeed(emptyFeed(params));
+        const kept = pages?.[0]?.items ?? [];
+        setFeed((prev) => restartFeed(prev, params, kept));
         queryClient.setQueryData(options.queryKey, (data) =>
           data ? { pages: data.pages.slice(0, 1), pageParams: data.pageParams.slice(0, 1) } : data,
         );
@@ -122,6 +134,8 @@ export function useLiveActivity(type: ActivityType, filters: Filters) {
     query,
     rows,
     newIds: live.newIds,
+    rewards: live.rewards,
+    clock: live.clock,
     paused: hovering && live.queued.length > 0,
     onPointerEnter,
     onPointerLeave,

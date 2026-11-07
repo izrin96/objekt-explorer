@@ -3,6 +3,7 @@ import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useCallback } from "react";
 import type * as z from "zod";
 
+import { spinsSearchSchema } from "@/features/activity/spin-grouping";
 import { defaultFilters, filterSearchSchema } from "@/features/filters/search-schema";
 
 const { at: _at, ...resetPatch } = defaultFilters;
@@ -13,6 +14,7 @@ const { at: _at, ...resetPatch } = defaultFilters;
  */
 export const tradesSearchSchema = filterSearchSchema.extend({
   type: transferTypeSchema.optional().catch(undefined),
+  spins: spinsSearchSchema,
 });
 
 type TradesSearch = z.infer<typeof tradesSearchSchema>;
@@ -54,7 +56,7 @@ export function useResetTrades(): () => void {
       to: ".",
       replace: true,
       resetScroll: false,
-      search: (prev): TradesSearch => ({ ...resetPatch, at: prev.at }),
+      search: (prev): TradesSearch => ({ ...resetPatch, at: prev.at, spins: prev.spins }),
     });
   }, [navigate]);
 }

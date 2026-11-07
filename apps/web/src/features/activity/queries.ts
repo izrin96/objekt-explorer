@@ -32,6 +32,14 @@ export const activityInfiniteOptions = (params: ActivityParams) =>
           transfer: item.transfer,
           nickname: item.nickname,
           objekt: mapObjektWithTag(item.objekt),
+          rewardOf: item.rewardOf,
+          spin: item.spin && {
+            outcome: item.spin.outcome,
+            reward: item.spin.reward && {
+              transfer: item.spin.reward.transfer,
+              objekt: mapObjektWithTag(item.spin.reward.objekt),
+            },
+          },
         })),
       };
     },

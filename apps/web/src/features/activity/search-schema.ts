@@ -5,6 +5,8 @@ import type * as z from "zod";
 
 import { defaultFilters, filterSearchSchema } from "@/features/filters/search-schema";
 
+import { spinsSearchSchema } from "./spin-grouping";
+
 /** `at` scopes a surface rather than filtering it, and the feed has no use for it. */
 const { at: _at, ...resetPatch } = defaultFilters;
 
@@ -14,6 +16,7 @@ const { at: _at, ...resetPatch } = defaultFilters;
  */
 export const activitySearchSchema = filterSearchSchema.extend({
   type: activityTypeSchema.optional().catch(undefined),
+  spins: spinsSearchSchema,
 });
 
 type ActivitySearch = z.infer<typeof activitySearchSchema>;
@@ -54,7 +57,7 @@ export function useResetActivity(): () => void {
       to: ".",
       replace: true,
       resetScroll: false,
-      search: (): ActivitySearch => resetPatch,
+      search: (prev): ActivitySearch => ({ ...resetPatch, spins: prev.spins }),
     });
   }, [navigate]);
 }

@@ -24,6 +24,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { SpinGroupToggle, useSpinsGrouped } from "@/features/activity/spin-grouping";
+import { SpinOutcome } from "@/features/activity/spin-outcome";
+import { foldSpinRows } from "@/features/activity/spin-rows";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import type { ExtraFacet } from "@/features/filters/facet-controls";
 import { LONG_TAIL } from "@/features/filters/long-tail";
@@ -82,9 +85,11 @@ function Counterparty({ row, isReceiver }: { row: TransferItem; isReceiver: bool
 function TradeRow({
   row,
   address,
+  grouped,
   onOpen,
 }: {
   row: TransferItem;
+  grouped: boolean;
   address: string;
   onOpen: (objekt: ValidObjekt) => void;
 }) {
@@ -96,7 +101,11 @@ function TradeRow({
         <Timestamp date={new Date(row.transfer.timestamp)} />
       </TableCell>
       <TableCell className="truncate px-3.5">
-        <ObjektNameButton objekt={row.objekt} onOpen={onOpen} />
+        {grouped && row.transfer.to === Addresses.SPIN ? (
+          <SpinOutcome objekt={row.objekt} spin={row.spin} onOpen={onOpen} />
+        ) : (
+          <ObjektNameButton objekt={row.objekt} onOpen={onOpen} />
+        )}
       </TableCell>
       <TableCell className="px-3.5">
         <Badge variant={isReceiver ? "info" : "error"} size="sm">
@@ -152,7 +161,17 @@ export function TradesView() {
     [type],
   );
 
-  const rows = query.data?.pages.flatMap((page) => page.results) ?? [];
+  const pages = query.data?.pages;
+  const faceted = canReset(filters);
+  const grouped = useSpinsGrouped();
+  const rows = useMemo(
+    () =>
+      foldSpinRows(
+        (pages ?? []).flatMap((page) => page.results),
+        { all: grouped && type === "all", faceted },
+      ),
+    [pages, grouped, type, faceted],
+  );
 
   const toolbar = (
     <ProfileToolbar
@@ -162,7 +181,12 @@ export function TradesView() {
       showColumns={false}
       extras={extras}
       extrasFirst
-      extra={<CheckpointPopover />}
+      extra={
+        <>
+          <SpinGroupToggle />
+          <CheckpointPopover />
+        </>
+      }
       onReset={reset}
       resetDisabled={!canReset(filters) && type === "all"}
     />
@@ -218,6 +242,7 @@ export function TradesView() {
                     key={row.transfer.id}
                     row={row}
                     address={profile.address}
+                    grouped={grouped}
                     onOpen={setActive}
                   />
                 ))}

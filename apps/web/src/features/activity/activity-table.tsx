@@ -13,12 +13,15 @@ const MIN_WIDTH = "min-w-172";
 
 export function ActivityTable({
   rows,
+  grouped,
   newIds,
   onOpen,
   onPointerEnter,
   onPointerLeave,
 }: {
   rows: ActivityItem[];
+  /** spin rows show what they returned */
+  grouped: boolean;
   newIds: ReadonlySet<string>;
   onOpen: (objekt: ValidObjekt) => void;
   onPointerEnter: () => void;
@@ -41,6 +44,7 @@ export function ActivityTable({
             <ActivityRow
               key={row.transfer.id}
               item={row}
+              grouped={grouped}
               isNew={newIds.has(row.transfer.id)}
               onOpen={onOpen}
             />
