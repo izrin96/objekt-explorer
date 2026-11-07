@@ -1,4 +1,4 @@
-import { type ValidArtist, toIndexedArtist } from "@repo/cosmo/types/common";
+import { toIndexedArtist } from "@repo/cosmo/types/common";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts, transfers } from "@repo/db/indexer/schema";
 import { Addresses } from "@repo/lib";
@@ -8,8 +8,10 @@ import { fetchPublicNicknames } from "@repo/lib/server/user";
 import { type SQL, and, asc, count, desc, eq, inArray, lte, ne, or, sql } from "drizzle-orm";
 
 import { nextModifiedAt } from "../lib/collection-bump";
+import { type ListShape, type ShapedList, shapeRows } from "../lib/collection-shape";
 import { tokenIdWindow } from "../lib/token-id-window";
 import type {
+  CollectionListInput,
   CollectionMetadataOutput,
   CollectionListOutput,
   SerialTransfersOutput,
@@ -20,11 +22,11 @@ import { redis, redisFailOpen } from "./redis";
 
 const MODIFIED_AT_KEY = "collection:modified-at";
 
-type CollectionListQuery = { artist: ValidArtist[]; at?: string; originals?: boolean };
+type CollectionListQuery = Pick<CollectionListInput, "artist" | "at"> & Partial<ListShape>;
 
 type CollectionList =
   | { notModified: true; lastModifiedMs: number }
-  | { notModified: false; lastModifiedMs: number; result: CollectionListOutput };
+  | { notModified: false; lastModifiedMs: number; result: ShapedList };
 
 // Nearly every request is the unfiltered list, so it is built once and reused
 // until Last-Modified moves past it. The TTL picks up in-place edits that don't
@@ -35,37 +37,43 @@ let fullListCache:
       lastModifiedMs: number;
       expiresAt: number;
       result: Promise<CollectionListOutput>;
-      /** the same list without the Cosmo URLs, built on first request */
-      slim?: Promise<CollectionListOutput>;
+      /** the list in the one slimmer shape last asked for, which is the web's */
+      slim?: { key: string; list: Promise<ShapedList> };
     }
   | undefined;
 
-function withoutOriginals(list: CollectionListOutput): CollectionListOutput {
-  return {
-    collections: list.collections.map((collection) => {
-      const slim = { ...collection };
-      delete slim.originalFrontImage;
-      delete slim.originalBackImage;
-      return slim;
-    }),
-  };
-}
-
-function getFullList(whereQuery: SQL | undefined, lastModifiedMs: number, originals: boolean) {
+function getFullList(
+  whereQuery: SQL | undefined,
+  lastModifiedMs: number,
+  shape: ListShape,
+): Promise<ShapedList> {
   if (
     !fullListCache ||
     fullListCache.lastModifiedMs < lastModifiedMs ||
     fullListCache.expiresAt <= Date.now()
   ) {
     const result = queryCollections(whereQuery);
-    fullListCache = { lastModifiedMs, expiresAt: Date.now() + FULL_LIST_TTL_MS, result };
+    fullListCache = {
+      lastModifiedMs,
+      expiresAt: Date.now() + FULL_LIST_TTL_MS,
+      result,
+    };
     void result.catch(() => {
       if (fullListCache?.result === result) fullListCache = undefined;
     });
   }
-  if (originals) return fullListCache.result;
-  fullListCache.slim ??= fullListCache.result.then(withoutOriginals);
-  return fullListCache.slim;
+  if (shape.originals && shape.ids) return fullListCache.result;
+  const key = `${shape.originals}:${shape.ids}`;
+  if (fullListCache.slim?.key !== key) {
+    const list = fullListCache.result.then((full) =>
+      shapeRows(
+        full.collections.map((row) => ({ ...row })),
+        shape,
+      ),
+    );
+    fullListCache.slim = { key, list };
+  }
+  return fullListCache.slim.list;
 }
 
 async function queryCollections(whereQuery: SQL | undefined): Promise<CollectionListOutput> {
@@ -119,13 +127,12 @@ export async function fetchCollectionList(
     return { notModified: true, lastModifiedMs };
   }
 
-  const originals = query.originals ?? true;
+  const shape = { originals: query.originals ?? true, ids: query.ids ?? true };
   const result =
     filters.length === 0
-      ? await getFullList(whereQuery, lastModifiedMs, originals)
-      : await queryCollections(whereQuery).then((list) =>
-          originals ? list : withoutOriginals(list),
-        );
+      ? await getFullList(whereQuery, lastModifiedMs, shape)
+      : // a fresh query's rows are its own, so they are shaped without another copy
+        await queryCollections(whereQuery).then((list) => shapeRows(list.collections, shape));
 
   return { notModified: false, lastModifiedMs, result };
 }

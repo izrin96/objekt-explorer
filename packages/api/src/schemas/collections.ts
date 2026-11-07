@@ -44,6 +44,12 @@ export const collectionListOutputSchema = z.object({
 });
 export type CollectionListOutput = z.infer<typeof collectionListOutputSchema>;
 
+/** The list as `ids: false` sends it. */
+export const slimCollectionListOutputSchema = z.object({
+  collections: z.array(indexedObjektSchema.omit({ id: true })),
+});
+export type SlimCollectionListOutput = z.infer<typeof slimCollectionListOutputSchema>;
+
 /** every minted serial of a collection, and which of them were spun */
 export const serialsOutputSchema = z.object({
   serials: z.array(z.number().int()),
@@ -97,7 +103,13 @@ export const collectionListInputSchema = z.object({
   originals: queryBoolean
     .default(true)
     .meta({ description: "false leaves out originalFrontImage and originalBackImage" }),
+  // the web sends false too and keys its rows by slug, which is unique: the ids are UUIDv7,
+  // time-ordered (the list's order and Last-Modified follow them) but barely compressible, a third
+  // of the gzipped list, and nothing the web sends back names a collection by its id
+  ids: queryBoolean.default(true).meta({ description: "false leaves out each collection's id" }),
 });
+
+export type CollectionListInput = z.infer<typeof collectionListInputSchema>;
 
 export const serialTransfersInputSchema = collectionSlugInputSchema.extend({
   serial: z.coerce.number().pipe(z.int32()),

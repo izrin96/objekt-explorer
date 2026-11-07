@@ -1,4 +1,4 @@
-import type { CollectionListOutput } from "@repo/api/schemas/collections";
+import type { SlimCollectionListOutput } from "@repo/api/schemas/collections";
 import type { SortBy, SortDir } from "@repo/api/schemas/market";
 import type { OwnedByFilters } from "@repo/api/schemas/objekts";
 import type { PriceHistoryRange } from "@repo/api/schemas/price-history";
@@ -19,7 +19,7 @@ export const collectionOptions = (filters?: OwnedByFilters) =>
     queryFn: async () => {
       // plain GET rather than RPC, so the browser revalidates its cached copy with Last-Modified
       const fetchCollections = (cache?: RequestCache) =>
-        ofetch<CollectionListOutput | undefined>(collectionsUrl(filters), { cache }).then(
+        ofetch<SlimCollectionListOutput | undefined>(collectionsUrl(filters), { cache }).then(
           (response) => response?.collections,
         );
 
@@ -27,7 +27,8 @@ export const collectionOptions = (filters?: OwnedByFilters) =>
       const result = (await fetchCollections()) ?? (await fetchCollections("no-store"));
       if (!result) throw new Error("Collections response had no body");
 
-      return result.map(mapObjektWithTag);
+      // asked without ids (`collectionsUrl`): the slug stands in, as the row's key only
+      return result.map((collection) => mapObjektWithTag({ ...collection, id: collection.slug }));
     },
     throwOnError: true,
   });

@@ -10,5 +10,7 @@ export function collectionsUrl(filters?: OwnedByFilters) {
   for (const artist of filters?.artist ?? []) params.append("artist", artist);
   if (filters?.at) params.set("at", filters.at);
   params.set("originals", "false");
+  // see `ids` on `collectionListInputSchema`
+  params.set("ids", "false");
   return `/api/v1/collections?${params}`;
 }

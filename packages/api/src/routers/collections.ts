@@ -5,6 +5,7 @@ import { optionalAuthed, pub } from "../orpc";
 import {
   collectionListInputSchema,
   collectionListOutputSchema,
+  slimCollectionListOutputSchema,
   collectionMetadataOutputSchema,
   collectionRarityOutputSchema,
   holdersInputSchema,
@@ -28,7 +29,7 @@ const collectionListOutput = z.union([
   z.object({
     status: z.literal(200),
     headers: z.object({ "last-modified": z.string().optional(), "cache-control": z.string() }),
-    body: documented(collectionListOutputSchema),
+    body: documented(z.union([collectionListOutputSchema, slimCollectionListOutputSchema])),
   }),
   z.object({
     status: z.literal(304).meta({ description: "Not modified since If-Modified-Since" }),
