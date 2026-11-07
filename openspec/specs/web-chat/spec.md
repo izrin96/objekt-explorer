@@ -245,7 +245,7 @@ When the Inbox is empty and requests are waiting, the empty state SHALL say how 
 - the messages;
 - a message box with Attach objekt.
 
-Attach objekt SHALL let the user pick an objekt from their own collection or a collection from their lists. Both pickers SHALL offer the offer pickers' filters, followed by where the objekts come from: **List**, naming each of the user's lists after its list type badge, or **Profile**, when the user has more than one linked Cosmo profile; either shows its current choice, and stays in view below `sm` when the filters fold behind their Filters button. On viewports below `md`, the list and the thread SHALL be separate screens with a back control; the back control SHALL also be there while the thread loads and when it fails to load. The back control of a thread opened by a Message button SHALL return to the page Message was used on, and SHALL be named "Go back"; otherwise it SHALL lead to the list. The page title SHALL name the other account ("{name} · Messages"). A conversation the user is not part of SHALL show the not-found surface.
+Attach objekt SHALL open a drawer from the bottom of the screen, sized like New post's Add objekts, that lets the user pick an objekt from their own collection or a collection from their lists. It SHALL offer the offer pickers' filters and one control for where the objekts come from: the user's linked Cosmo profiles under "My objekts", then their lists under "My lists", each list after its list type badge. The control SHALL show its current choice as "Profile · <name>" or "List · <name>", SHALL be there with a single linked profile, and SHALL stay in view below `sm` when the filters fold behind their Filters button. Switching source SHALL keep the filters. Picking a card SHALL attach it and close the drawer. With no linked profile and no list, the drawer SHALL offer to link a Cosmo profile. On viewports below `md`, the list and the thread SHALL be separate screens with a back control; the back control SHALL also be there while the thread loads and when it fails to load. The back control of a thread opened by a Message button SHALL return to the page Message was used on, and SHALL be named "Go back"; otherwise it SHALL lead to the list. The page title SHALL name the other account ("{name} · Messages"). A conversation the user is not part of SHALL show the not-found surface.
 
 **Read state.** A message SHALL be marked read only once the user can see it: the page is visible and focused, and the thread is scrolled to the newest message. While the user is scrolled up, newer messages SHALL show a "New messages" control that scrolls to them, and reaching the newest message marks them read.
 
@@ -274,6 +274,18 @@ Attach objekt SHALL let the user pick an objekt from their own collection or a c
 #### Scenario: Draft kept
 - **WHEN** the user types half a reply, opens another conversation, and comes back
 - **THEN** the half-written reply is still in the box
+
+#### Scenario: Attach from a list
+- **WHEN** izrin96, with two linked profiles and a have list "Tradeables", opens Attach objekt, opens the source control, and picks Tradeables under My lists
+- **THEN** the control reads "List · Tradeables", the drawer shows one card per collection on that list, and picking one attaches it and closes the drawer
+
+#### Scenario: Filters kept across sources
+- **WHEN** the user filters Attach objekt by a member on one profile and switches the source to a list
+- **THEN** the list's cards are shown filtered by the same member
+
+#### Scenario: Nothing to attach from
+- **WHEN** a user with no linked Cosmo profile and no list opens Attach objekt
+- **THEN** the drawer says to link a Cosmo profile and links to the profiles page
 
 ### Requirement: Realtime delivery
 A sent message SHALL appear in the recipient's open thread and inbox within 2 seconds while their live connection is open, carrying its content as the recipient sees it, so showing it needs no further request. The sender's other open tabs SHALL show it the same way. A message's content SHALL reach only the two members of its conversation. A live message that arrives while the thread is still loading SHALL appear once the load finishes.
