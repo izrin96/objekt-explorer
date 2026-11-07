@@ -13,7 +13,7 @@ import { collectionOptions } from "@/features/objekt/queries";
 import { useCollectionRarity } from "@/features/objekt/use-collection-rarity";
 import { useLoadAllPages } from "@/hooks/use-load-all-pages";
 
-import { joinOwned } from "./owned-join";
+import { joinOwnedPages } from "./owned-join";
 import { useProfile } from "./profile-provider";
 import { heldCollectionsOptions, locksOptions, ownedCopiesOptions, pinsOptions } from "./queries";
 
@@ -55,10 +55,7 @@ function useOwnedPages(address: string, filters: OwnedByFilters) {
   const joined = useMemo(() => {
     if (spin) return { objekts: held.data ?? [], missing: NO_SLUGS };
     if (!pages || !catalogue.data) return { objekts: [], missing: NO_SLUGS };
-    return joinOwned(
-      pages.flatMap((page) => page.copies),
-      catalogue.data,
-    );
+    return joinOwnedPages(pages, catalogue.data);
   }, [spin, held.data, pages, catalogue.data]);
   useCatalogueCatchUp(joined.missing, catalogue);
 

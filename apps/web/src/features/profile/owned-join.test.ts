@@ -3,7 +3,7 @@ import { describe, expect, test } from "bun:test";
 import type { OwnedCopy } from "@repo/api/schemas/objekts";
 import type { IndexedObjekt } from "@repo/lib/types/objekt";
 
-import { joinOwned } from "./owned-join";
+import { joinOwned, joinOwnedPages } from "./owned-join";
 
 const collection = (slug: string) =>
   ({ id: `uuid-${slug}`, slug, collectionId: "201Z" }) as unknown as IndexedObjekt;
@@ -55,5 +55,25 @@ describe("joinOwned", () => {
     const entry = collection("a");
     joinOwned([copy("1", "a")], [entry]);
     expect(entry.id).toBe("uuid-a");
+  });
+});
+
+describe("joinOwnedPages", () => {
+  test("joins every page in order and gathers the missing slugs once", () => {
+    const catalogue = [collection("a"), collection("b")];
+    const { objekts, missing } = joinOwnedPages(
+      [{ copies: [copy("3", "a"), copy("2", "x")] }, { copies: [copy("1", "b"), copy("0", "x")] }],
+      catalogue,
+    );
+    expect(objekts.map((objekt) => objekt.id)).toEqual(["3", "1"]);
+    expect(missing).toEqual(["x"]);
+  });
+
+  test("reuses a page's join while the catalogue is the same, and joins it again for a new one", () => {
+    const page = { copies: [copy("1", "a")] };
+    const first = [collection("a")];
+    const once = joinOwnedPages([page], first).objekts[0];
+    expect(joinOwnedPages([page], first).objekts[0]).toBe(once);
+    expect(joinOwnedPages([page], [collection("a")]).objekts[0]).not.toBe(once);
   });
 });

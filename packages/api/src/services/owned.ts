@@ -18,6 +18,9 @@ import { getCache, redis, redisFailOpen } from "./redis";
 import { TOKEN_CHUNK_SIZE } from "./utils";
 
 const PER_PAGE = 8000;
+// a slim copy is about a tenth of a full row, so a page holds five times the copies: a large
+// profile takes two requests and two rebuilds of its grid instead of ten
+const COPIES_PER_PAGE = 40_000;
 
 function buildCollectionFilters(query: OwnedByFilters) {
   if (!query.artist?.length) return [];
@@ -50,7 +53,7 @@ export async function fetchOwnedObjekts(
   address: string,
   query: OwnedByFilters,
 ): Promise<OwnedByOutput> {
-  const { rows, nextCursor } = await ownedRows(address, query, getCollectionColumns());
+  const { rows, nextCursor } = await ownedRows(address, query, getCollectionColumns(), PER_PAGE);
   return {
     nextCursor,
     objekts: rows.map((row) => mapOwnedObjekt(row.objekt, row.collection)),
@@ -65,7 +68,12 @@ export async function fetchOwnedCopies(
   address: string,
   query: OwnedByFilters,
 ): Promise<OwnedCopiesOutput> {
-  const { rows, nextCursor } = await ownedRows(address, query, { slug: collections.slug });
+  const { rows, nextCursor } = await ownedRows(
+    address,
+    query,
+    { slug: collections.slug },
+    COPIES_PER_PAGE,
+  );
   return {
     nextCursor,
     copies: rows.map(({ objekt, collection }) => ({
@@ -83,6 +91,7 @@ async function ownedRows<C extends Record<string, AnyPgColumn>>(
   address: string,
   query: OwnedByFilters,
   collectionColumns: C,
+  perPage: number,
 ) {
   const addr = address.toLowerCase();
 
@@ -120,9 +129,9 @@ async function ownedRows<C extends Record<string, AnyPgColumn>>(
       .innerJoin(collections, eq(collections.id, objekts.collectionId))
       .where(and(eq(latest.to, addr), ...collectionFilters, cursorWhere(query, latest.timestamp)))
       .orderBy(...orderBy(latest.timestamp))
-      .limit(PER_PAGE + 1);
+      .limit(perPage + 1);
 
-    return page(await mainQuery);
+    return page(await mainQuery, perPage);
   }
 
   const mainQuery = indexer
@@ -136,16 +145,19 @@ async function ownedRows<C extends Record<string, AnyPgColumn>>(
       and(eq(objekts.owner, addr), ...collectionFilters, cursorWhere(query, objekts.receivedAt)),
     )
     .orderBy(...orderBy(objekts.receivedAt))
-    .limit(PER_PAGE + 1);
+    .limit(perPage + 1);
 
-  return page(await mainQuery);
+  return page(await mainQuery, perPage);
 }
 
-function page<R extends { objekt: { receivedAt: Date | string; id: string } }>(results: R[]) {
-  const hasNext = results.length > PER_PAGE;
+function page<R extends { objekt: { receivedAt: Date | string; id: string } }>(
+  results: R[],
+  perPage: number,
+) {
+  const hasNext = results.length > perPage;
   return {
-    nextCursor: hasNext ? cursorAfter(results[PER_PAGE - 1]!) : undefined,
-    rows: results.slice(0, PER_PAGE),
+    nextCursor: hasNext ? cursorAfter(results[perPage - 1]!) : undefined,
+    rows: results.slice(0, perPage),
   };
 }
 
