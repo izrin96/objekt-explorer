@@ -25,7 +25,7 @@ import {
   type TradeParty,
 } from "../../lib/offer-rules";
 import { DAY_MS, iso } from "../../lib/time";
-import { firstPending } from "../../lib/trade-match";
+import { addressSet, firstPending } from "../../lib/trade-match";
 import {
   HISTORY_PAGE_SIZE,
   type HistoryCursor,
@@ -131,20 +131,26 @@ export async function cancelTrade(me: string, tradeId: number) {
   // another trade's leg takes doesn't lock this one
   const refuseIfSent = async () => {
     const legs = await loadOpenLegs([me, partnerId]);
-    const ours = new Set(legs.filter((leg) => leg.trade_id === tradeId).map((leg) => leg.id));
-    if (ours.size === 0) return;
+    const ourLegs = legs.filter((leg) => leg.trade_id === tradeId);
+    const ours = new Set(ourLegs.map((leg) => leg.id));
+    const between = {
+      from: ourLegs.flatMap((leg) => [...addressSet(leg.from_addresses, leg.from_current)]),
+      to: ourLegs.flatMap((leg) => [...addressSet(leg.to_addresses, leg.to_current)]),
+    };
+    if (ours.size === 0) return between;
     // only verified legs and held copies lock it, and neither waits on the away grace
     const { results, nearMisses } = await matchOpenLegs(legs, null);
     const locked =
       [...ours].some((id) => results.get(id)?.kind === "verified") ||
       nearMisses.some((miss) => ours.has(miss.legId));
     if (locked) refuseOffer("locked");
+    return between;
   };
   // checked once before the wait, so a trade already locked refuses at once
-  await refuseIfSent();
+  const between = await refuseIfSent();
   // the indexer trails the chain by seconds, so a send just made would not lock the trade yet:
   // wait until it has read every block mined before this cancel, then check again
-  const behind = isBehind(await readIndexerSeen(), Date.now()) || !(await indexerCaughtUp());
+  const behind = isBehind(await readIndexerSeen(), Date.now()) || !(await indexerCaughtUp(between));
   if (!behind) await refuseIfSent();
   const name = await partyNames([me]);
 

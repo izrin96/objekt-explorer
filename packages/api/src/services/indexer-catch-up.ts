@@ -31,19 +31,37 @@ async function indexedHeight() {
   return result.rows[0]?.height ?? null;
 }
 
+/** The pair `from` → `to` of addresses whose held transfers a caller must wait for, lowercased. */
+export type HeldBetween = { from: string[]; to: string[] };
+
+// a fresh mint's transfers wait in pending_transfer until Cosmo has its metadata, below the
+// height checked here, so a send just made between the parties would otherwise go unseen
+async function holdsTransferBetween({ from, to }: HeldBetween) {
+  if (from.length === 0 || to.length === 0) return false;
+  const result = await indexer.execute(sql`
+    SELECT 1 FROM pending_transfer
+    WHERE lower("from") = ANY(${sql.param(from)}::text[])
+      AND lower("to") = ANY(${sql.param(to)}::text[])
+    LIMIT 1
+  `);
+  return result.rows.length > 0;
+}
+
 /**
  * Whether the indexer has written every block mined before this call, waiting up to 20 seconds
- * for it. False when it can't tell (no RPC endpoint, a failed read), so a caller fails safe.
+ * for it, and holds no transfer between `between`'s addresses. False when it can't tell (no RPC
+ * endpoint, a failed read), so a caller fails safe.
  */
-export async function indexerCaughtUp() {
+export async function indexerCaughtUp(between: HeldBetween) {
   const endpoint = serverEnv.INDEXER_RPC_ENDPOINT;
   if (!endpoint) return false;
   try {
+    if (await holdsTransferBetween(between)) return false;
     const target = await chainHead(endpoint);
     const deadline = Date.now() + WAIT_MS;
     for (;;) {
       const height = await indexedHeight();
-      if (height !== null && height >= target) return true;
+      if (height !== null && height >= target) return !(await holdsTransferBetween(between));
       if (Date.now() >= deadline) return false;
       await new Promise((resolve) => setTimeout(resolve, POLL_MS));
     }
