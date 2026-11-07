@@ -21,6 +21,7 @@ import { dayLabel } from "@/features/chat/format";
 import { resyncThread, threadOptions } from "@/features/chat/queries";
 import { quoteOf } from "@/features/chat/reply";
 import {
+  canUnsend,
   latestOfferId,
   mergeCollections,
   seenMessageId,
@@ -407,7 +408,8 @@ function ThreadView({
                         }
                         position={position}
                         seen={message.id === seenId}
-                        now={now}
+                        // a yes or no, so the minute's tick re-renders only the messages it closes
+                        unsendable={canUnsend(message, now)}
                         replyFocus={messageBox}
                         onReply={reply}
                         onQuote={showQuoted}

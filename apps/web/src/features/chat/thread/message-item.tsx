@@ -5,7 +5,6 @@ import type { ReactNode, RefObject } from "react";
 
 import { messageTime } from "@/features/chat/format";
 import { canReply, quoteLabel, quoteText } from "@/features/chat/reply";
-import { canUnsend } from "@/features/chat/thread-cache";
 import { CautionLine } from "@/features/moderation/caution-line";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -25,7 +24,7 @@ export function MessageItem({
   offerCard,
   position,
   seen,
-  now,
+  unsendable: inWindow,
   replyFocus,
   onReply,
   onQuote,
@@ -39,7 +38,8 @@ export function MessageItem({
   position: RunPosition;
   /** the latest of the viewer's messages the partner has read */
   seen: boolean;
-  now: number;
+  /** still inside the unsend window by the viewer's clock */
+  unsendable: boolean;
   replyFocus: RefObject<HTMLElement | null>;
   /** null where the message box is hidden or replaced by a notice */
   onReply: ((message: ChatMessage) => void) | null;
@@ -52,7 +52,7 @@ export function MessageItem({
     message.card?.kind === "objekt" ? collections[message.card.collectionSlug] : undefined;
   const replyable = onReply !== null && canReply(message);
   // the clock is the viewer's, so the window is read once the client renders
-  const unsendable = hydrated && canUnsend(message, now);
+  const unsendable = hydrated && inWindow;
   // the last of a run from one side shows its time; the others keep it for screen readers
   const showTime = position === "single" || position === "last";
   return (

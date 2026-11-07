@@ -1,8 +1,7 @@
-import { arrayMove } from "@dnd-kit/sortable";
 import { CaretDownIcon, CaretUpIcon, MagnifyingGlassIcon } from "@phosphor-icons/react";
 import type { GridObjekt } from "@repo/lib/types/objekt";
 import { useQuery } from "@tanstack/react-query";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { EmptyState } from "@/components/shared/empty-state";
 import { countMarkup, MessageMarkup } from "@/components/shared/message-markup";
@@ -35,11 +34,40 @@ import { selectIsSelecting, useClearSelectionOnNavigate, useSelection } from "@/
 import { CheckpointPopover } from "./checkpoint-popover";
 import { CollectionEmpty, CollectionNotices } from "./collection-states";
 import { LockMenuItem, PinMenuItem, useOwnerActions } from "./owner-actions";
-import { PinDnd, SortablePin } from "./pin-dnd";
 import { useProfileColumns, useProfileAuthed, useProfile } from "./profile-provider";
 import { ProfileToolbar } from "./profile-toolbar";
 import { usePinOrder } from "./use-pin-order";
 import { isSpinAddress, useProfileObjekts } from "./use-profile-objekts";
+
+// dnd-kit serves only the owner's pin drag, so it loads when they view their own profile
+const loadPinDnd = () => import("./pin-dnd");
+type PinDndModule = Awaited<ReturnType<typeof loadPinDnd>>;
+
+/** The pin drag module once loaded for `wanted`; kept in state so the grid never suspends. */
+function usePinDnd(wanted: boolean) {
+  const [loaded, setLoaded] = useState<PinDndModule | null>(null);
+  useEffect(() => {
+    if (!wanted || loaded) return;
+    let live = true;
+    loadPinDnd().then(
+      (mod) => {
+        if (live) setLoaded(mod);
+      },
+      () => undefined,
+    );
+    return () => {
+      live = false;
+    };
+  }, [wanted, loaded]);
+  return loaded;
+}
+
+/** `items` with the one at `from` moved to `to`, as dnd-kit's `arrayMove`. */
+function moveItem<T>(items: readonly T[], from: number, to: number): T[] {
+  const next = [...items];
+  next.splice(to, 0, ...next.splice(from, 1));
+  return next;
+}
 
 export function CollectionView() {
   const profile = useProfile();
@@ -124,8 +152,10 @@ export function CollectionView() {
   // nothing to act with
   const showActions = Boolean(user) && filters.at === undefined;
 
+  const pinDnd = usePinDnd(isProfileAuthed);
   // one pin has nowhere to go
   const dndEnabled =
+    pinDnd !== null &&
     isProfileAuthed &&
     showActions &&
     !isFiltering(filters) &&
@@ -141,7 +171,7 @@ export function CollectionView() {
       // them with the hidden ones, so moves wait for the full list as a drag does.
       const pinIndex =
         owned?.isPin === true && !isFiltering(filters) ? pinnedIds.indexOf(owned.tokenId) : -1;
-      const move = (to: number) => reorder(arrayMove(pinnedIds, pinIndex, to), true);
+      const move = (to: number) => reorder(moveItem(pinnedIds, pinIndex, to), true);
       return (
         <>
           {canEdit && owned && (
@@ -215,15 +245,15 @@ export function CollectionView() {
       // and a second `useSortable` on its id would own the droppable instead.
       // Select mode disables the sortable rather than unwrapping it, so the
       // pins keep their subtree and do not remount on every toggle
-      return sortable ? (
-        <SortablePin id={objekt.tokenId} disabled={selecting}>
+      return sortable && pinDnd ? (
+        <pinDnd.SortablePin id={objekt.tokenId} disabled={selecting}>
           {card}
-        </SortablePin>
+        </pinDnd.SortablePin>
       ) : (
         card
       );
     },
-    [dndEnabled, renderCard, selecting],
+    [dndEnabled, pinDnd, renderCard, selecting],
   );
 
   // the floating copy is artwork only: a caption under it would cast the
@@ -331,7 +361,8 @@ export function CollectionView() {
           ) : filtered.length === 0 ? (
             <CollectionEmpty filtering={isFiltering(filters)} />
           ) : (
-            <PinDnd
+            <PinDndOrPlain
+              module={pinDnd}
               ids={pinnedIds}
               onReorder={reorder}
               renderOverlay={renderOverlay}
@@ -348,7 +379,7 @@ export function CollectionView() {
                 hasNextPage={hasNextPage}
                 isFetchingNextPage={isFetchingNextPage}
               />
-            </PinDnd>
+            </PinDndOrPlain>
           )}
         </>
       )}
@@ -370,4 +401,13 @@ export function CollectionView() {
       />
     </AddToListProvider>
   );
+}
+
+/** The pin drag context once its module is in; the plain grid until then, as for a visitor. */
+function PinDndOrPlain({
+  module,
+  ...props
+}: { module: PinDndModule | null } & Parameters<PinDndModule["PinDnd"]>[0]) {
+  if (!module) return props.children;
+  return <module.PinDnd {...props} />;
 }
