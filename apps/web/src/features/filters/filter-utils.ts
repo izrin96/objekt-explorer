@@ -1,7 +1,7 @@
 import type { GridObjekt, ValidObjekt } from "@repo/lib/types/objekt";
-import chroma from "chroma-js";
 
 import { isObjektOwned } from "@/features/objekt/objekt-utils";
+import { type Lab, deltaE2000, parseLab } from "@/lib/color-distance";
 
 import { isListedWithin } from "./listed-window";
 import {
@@ -124,17 +124,15 @@ export function searchMatcher(search: string | undefined) {
 
 // every objekt of a collection shares its background, so a grid parses a few hundred
 // colours, not one per row on every slider move; an unparsable one is stored as null
-const parsedColors = new Map<string, chroma.Color | null>();
+const parsedColors = new Map<string, Lab | null>();
 
-function parsedColor(objekt: GridObjekt): chroma.Color | null {
+function parsedColor(objekt: GridObjekt): Lab | null {
   const key = objekt.backgroundColor.trim();
   let color = parsedColors.get(key);
   if (color === undefined) {
-    try {
-      color = chroma(key);
-    } catch {
+    color = parseLab(key);
+    if (color === null) {
       console.error(`Error parsing background color for ${objekt.slug}`, objekt.backgroundColor);
-      color = null;
     }
     parsedColors.set(key, color);
   }
@@ -152,14 +150,7 @@ export function filterObjekts<T extends GridObjekt>(
 ): T[] {
   const matchesSearch = searchMatcher(filters.search);
 
-  let targetColor: chroma.Color | null = null;
-  if (filters.color) {
-    try {
-      targetColor = chroma(filters.color);
-    } catch (e) {
-      console.error("Invalid color format:", e);
-    }
-  }
+  const targetColor = filters.color ? parseLab(filters.color) : null;
 
   const memberSet = filters.member ? new Set(filters.member.map((a) => a.toLowerCase())) : null;
   const artistSet = filters.artist ? new Set(filters.artist.map((a) => a.toLowerCase())) : null;
@@ -230,7 +221,7 @@ export function filterObjekts<T extends GridObjekt>(
     if (targetColor) {
       const color = parsedColor(a);
       if (color === null) return false;
-      const deltaE = chroma.deltaE(targetColor, color);
+      const deltaE = deltaE2000(targetColor, color);
       if (deltaE > (filters.colorSensitivity ?? DEFAULT_COLOR_SENSITIVITY)) return false;
     }
 
