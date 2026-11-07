@@ -176,6 +176,9 @@ export const auth = betterAuth({
     accountLinking: {
       enabled: true,
       allowDifferentEmails: true,
+      // X sends an email only once confirmed (else the username), so trusting it can't link a
+      // stranger by email; Discord can send an unverified one, so it stays untrusted
+      trustedProviders: ["twitter"],
     },
   },
   session: {
