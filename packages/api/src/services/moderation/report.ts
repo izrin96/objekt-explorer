@@ -20,7 +20,6 @@ import {
 import { fetchOffers } from "../offer/view";
 import { findAccount, refuseModeration } from "./core";
 
-const EXCERPT_MESSAGE_LIMIT = 200;
 const REPORTS_PER_DAY = 20;
 
 /** The offers behind shared messages, as they stand now, so the report keeps what was offered. */
@@ -159,7 +158,6 @@ export async function fileReport(me: string, input: ReportInput) {
             .from(message)
             .where(eq(message.conversationId, input.conversationId))
             .orderBy(desc(message.id))
-            .limit(EXCERPT_MESSAGE_LIMIT)
         : null;
     const offers = shared
       ? await excerptOffers(
