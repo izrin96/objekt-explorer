@@ -9,6 +9,7 @@ import {
   disconnectRequest,
   firstApiError,
   publishRequest,
+  renewTokensRequest,
 } from "./realtime-requests";
 
 const changed: RealtimeEvent = { type: "notifications_changed" };
@@ -80,6 +81,13 @@ describe("requests", () => {
     expect(disconnectRequest("u9")).toEqual({
       path: "/api/disconnect",
       body: { user: "u9", disconnect: { code: 4501, reason: "session_revoked" } },
+    });
+  });
+
+  test("a revoked session makes every tab of the user reconnect with a new token", () => {
+    expect(renewTokensRequest("u9")).toEqual({
+      path: "/api/disconnect",
+      body: { user: "u9", disconnect: { code: 3014, reason: "session_changed" } },
     });
   });
 });

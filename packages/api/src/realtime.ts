@@ -6,6 +6,7 @@ import {
   disconnectRequest,
   firstApiError,
   publishRequest,
+  renewTokensRequest,
 } from "./lib/realtime-requests";
 import type { ActivityItem } from "./schemas/activity";
 import type { RealtimeEvent } from "./schemas/realtime";
@@ -125,4 +126,9 @@ export function publishActivity(items: ActivityItem[]) {
 /** Closes every connection of the user with a code their tabs do not reconnect after. */
 export function disconnectUser(userId: string) {
   return call(disconnectRequest(userId));
+}
+
+/** After a session of the user ends: open tabs renew their token, and the ended session's can't. */
+export function renewUserTokens(userId: string) {
+  return call(renewTokensRequest(userId));
 }

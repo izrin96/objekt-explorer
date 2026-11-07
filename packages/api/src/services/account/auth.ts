@@ -11,6 +11,7 @@ import { and, eq, ne } from "drizzle-orm";
 import { SITE_NAME } from "../../constants";
 import { serverEnv } from "../../env";
 import { ac, roles } from "../../permissions";
+import { renewUserTokens } from "../../realtime";
 import { banNoticeMessage } from "../../schemas/moderation";
 import { hasDeliverableEmail, isDeleteRefusal } from "../../schemas/user";
 import { consumeAuthLimit } from "../redis";
@@ -222,6 +223,16 @@ export const auth = betterAuth({
     }),
   },
   databaseHooks: {
+    session: {
+      delete: {
+        // a live socket outlives its session until the connection token expires; sign-out,
+        // revoking sessions and a password reset all delete through here
+        after: async (session) => {
+          if (session.expiresAt.getTime() <= Date.now()) return;
+          await renewUserTokens(session.userId);
+        },
+      },
+    },
     user: {
       delete: {
         // the row stays, scrubbed: returning false skips the delete, and Better Auth still ends

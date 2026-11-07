@@ -6,6 +6,12 @@ import { chatMessageSchema, conversationRowSchema } from "./chat";
 /** Centrifugo's disconnect code for a revoked session; 4500–4999 tells the client not to reconnect. */
 export const SESSION_REVOKED_CODE = 4501;
 export const SESSION_REVOKED_REASON = "session_revoked";
+/**
+ * centrifuge-js's `stateInvalidated`: the client drops its connection token and reconnects with a
+ * new one, which a revoked session is refused, so only its tabs stay disconnected.
+ */
+export const TOKEN_RENEW_CODE = 3014;
+export const TOKEN_RENEW_REASON = "session_changed";
 
 export const ACTIVITY_CHANNEL = "activity:feed";
 /** The `#` makes the channel the user's alone: only a connection of that user may subscribe to it. */

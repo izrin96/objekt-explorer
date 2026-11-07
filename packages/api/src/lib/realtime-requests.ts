@@ -4,6 +4,8 @@ import {
   type RealtimeEvent,
   SESSION_REVOKED_CODE,
   SESSION_REVOKED_REASON,
+  TOKEN_RENEW_CODE,
+  TOKEN_RENEW_REASON,
   userChannel,
 } from "../schemas/realtime";
 import { unique } from "./unique";
@@ -75,6 +77,17 @@ export function disconnectRequest(userId: string): ApiRequest {
     body: {
       user: userId,
       disconnect: { code: SESSION_REVOKED_CODE, reason: SESSION_REVOKED_REASON },
+    },
+  };
+}
+
+/** Reconnects every connection of the user with a fresh token, ending only revoked sessions. */
+export function renewTokensRequest(userId: string): ApiRequest {
+  return {
+    path: "/api/disconnect",
+    body: {
+      user: userId,
+      disconnect: { code: TOKEN_RENEW_CODE, reason: TOKEN_RENEW_REASON },
     },
   };
 }
