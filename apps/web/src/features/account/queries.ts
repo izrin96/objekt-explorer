@@ -1,12 +1,14 @@
 import { queryOptions } from "@tanstack/react-query";
 
-import { authClient } from "@/lib/auth-client";
 import { orpc } from "@/lib/orpc";
 
 /** Better Auth has no oRPC route, so the key is written out rather than derived. */
 export const ACCOUNTS_QUERY_KEY = ["accounts"] as const;
 
 async function listAccounts() {
+  // loaded on use: a route loader reads these options, so a static import puts better-auth's
+  // client on every page
+  const { authClient } = await import("@/lib/auth-client");
   const result = await authClient.listAccounts();
   if (result.error) throw new Error(result.error.message);
   return result.data;

@@ -2,7 +2,7 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useState } from "react";
 
 import { CreateListDialog } from "@/features/list/create-list-dialog";
-import { EMPTY_DRAFT } from "@/features/list/list-form";
+import { EMPTY_DRAFT } from "@/features/list/list-draft";
 import { loadBrowse, oldPersonTarget } from "@/features/trade/browse-loader";
 import { canMatchOf, forYouNormalise, forYouSearchSchema } from "@/features/trade/browse-search";
 import { BrowsePending, BrowseView } from "@/features/trade/browse-view";

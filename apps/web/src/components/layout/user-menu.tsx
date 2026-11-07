@@ -17,7 +17,7 @@ import { isStaffRole } from "@repo/api/schemas/moderation";
 import type { User } from "@repo/api/services/account/auth";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link, useLocation } from "@tanstack/react-router";
-import { useState } from "react";
+import { Suspense, lazy, useEffect, useState } from "react";
 
 import { AboutDialog } from "@/components/layout/about";
 import { PersonAvatar } from "@/components/shared/person-avatar";
@@ -36,15 +36,21 @@ import {
 import { toastManager } from "@/components/ui/toast";
 import { forgetSession } from "@/features/auth/forget-session";
 import { DiscordFormatDialog } from "@/features/discord/discord-format-dialog";
-import { CreateListDialog } from "@/features/list/create-list-dialog";
 import { getListLinkOption } from "@/features/list/list-link";
 import { ListTypeBadge } from "@/features/list/list-type-badge";
 import { ArtistsSubmenu } from "@/features/settings/artists-menu";
 import { SettingsDialog } from "@/features/settings/settings-dialog";
 import { useUserLists, useUserProfiles } from "@/features/user/hooks";
 import { displayNickname, nicknameParam } from "@/lib/address";
-import { authClient } from "@/lib/auth-client";
+import { preloadWhenIdle } from "@/lib/preload";
 import { m } from "@/paraglide/messages";
+
+// kept out of the entry: the menu is on every page, and the list form with its mutations is not
+// light; it is fetched once the page is idle, so the first open still animates
+const loadCreateList = () => import("@/features/list/create-list-dialog");
+const CreateListDialog = lazy(() =>
+  loadCreateList().then((mod) => ({ default: mod.CreateListDialog })),
+);
 
 export function UserAvatar({ user, className }: { user: User; className?: string }) {
   return <PersonAvatar name={user.name} image={user.image} className={className} />;
@@ -63,11 +69,16 @@ export function useSignInSearch(): { redirect: string | undefined } {
 export function UserMenu({ user }: { user: User }) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [createListOpen, setCreateListOpen] = useState(false);
+  // stays mounted once opened, so closing still animates
+  const [createListUsed, setCreateListUsed] = useState(false);
+  useEffect(() => preloadWhenIdle(loadCreateList), []);
   const [discordOpen, setDiscordOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const signOut = async () => {
+    // loaded on use: better-auth's client would otherwise ride on every page for this one call
+    const { authClient } = await import("@/lib/auth-client");
     await authClient.signOut();
     await forgetSession(queryClient);
     toastManager.add({ type: "info", title: m.nav_sign_out_success() });
@@ -75,7 +86,9 @@ export function UserMenu({ user }: { user: User }) {
 
   return (
     <>
-      <Menu>
+      {/* the menu opens before Create list can be picked, so an idle preload that hasn't run yet
+          starts here */}
+      <Menu onOpenChange={(open) => open && void loadCreateList()}>
         <MenuTrigger
           render={
             <button
@@ -109,7 +122,10 @@ export function UserMenu({ user }: { user: User }) {
           <ArtistsSubmenu />
 
           <MyListsSubmenu
-            onCreateList={() => setCreateListOpen(true)}
+            onCreateList={() => {
+              setCreateListUsed(true);
+              setCreateListOpen(true);
+            }}
             onDiscordFormat={() => setDiscordOpen(true)}
           />
 
@@ -153,7 +169,11 @@ export function UserMenu({ user }: { user: User }) {
         </MenuPopup>
       </Menu>
       <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
-      <CreateListDialog open={createListOpen} onOpenChange={setCreateListOpen} />
+      {createListUsed ? (
+        <Suspense fallback={null}>
+          <CreateListDialog open={createListOpen} onOpenChange={setCreateListOpen} />
+        </Suspense>
+      ) : null}
       <DiscordFormatDialog open={discordOpen} onOpenChange={setDiscordOpen} />
       <AboutDialog open={aboutOpen} onOpenChange={setAboutOpen} />
     </>

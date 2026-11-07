@@ -1,0 +1,259 @@
+import { CheckIcon, DotsThreeIcon } from "@phosphor-icons/react";
+import type { OwnedGridObjekt, ValidObjekt } from "@repo/lib/types/objekt";
+import { useQuery } from "@tanstack/react-query";
+import { type ReactNode, useMemo, useRef, useState } from "react";
+
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { DrawerDescription, DrawerHeader, DrawerPanel, DrawerTitle } from "@/components/ui/drawer";
+import { Menu, MenuPopup, MenuTrigger } from "@/components/ui/menu";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsList, TabsPanel, TabsTab } from "@/components/ui/tabs";
+import { Toggle } from "@/components/ui/toggle";
+import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
+import { unobtainableSlugs } from "@/lib/unobtainables";
+import { scrollXOnlyClass } from "@/lib/utils";
+import { m } from "@/paraglide/messages";
+import { getLocale } from "@/paraglide/runtime";
+import { useSelection } from "@/stores/selection";
+
+import { ObjektFlip } from "../objekt-flip";
+import { getCollectionShortNo, isObjektOwned } from "../objekt-utils";
+import { collectionMetadataOptions, serialListOptions, transfersOptions } from "../queries";
+import { HoldersPanel } from "./holders";
+import { MarketPanel } from "./market";
+import { MetadataPanel } from "./metadata";
+import { OwnedPanel, type OwnedRowMenu } from "./owned";
+import { SerialsPanel } from "./serials";
+import { ObjektSummary } from "./summary";
+import { Timeline, toTimeline } from "./timeline";
+
+export type DrawerTab = "owned" | "serials" | "market" | "metadata" | "holders";
+
+const NO_SERIALS: number[] = [];
+
+export function DrawerBody({
+  objekt,
+  initialSerial,
+  onSerialChange,
+  tab,
+  onTabChange,
+  owned: ownedCopies,
+  ownedMenu,
+  selectable,
+  menu,
+  note,
+}: {
+  objekt: ValidObjekt;
+  initialSerial?: number;
+  onSerialChange?: (serial: number | undefined) => void;
+  tab: DrawerTab;
+  onTabChange: (tab: DrawerTab) => void;
+  owned?: OwnedGridObjekt[];
+  ownedMenu?: OwnedRowMenu;
+  selectable: boolean;
+  menu?: ReactNode;
+  note?: ReactNode;
+}) {
+  const isSelected = useSelection((s) => selectable && s.ids.has(objekt.id));
+  const toggleSelect = useSelection((s) => s.toggle);
+  const owned = isObjektOwned(objekt);
+  const ownSerial = owned ? objekt.serial : null;
+  const { getArtist } = useCosmoArtist();
+  // the URL only seeds the serial: a surface writing it back on every change
+  // would otherwise remount the body or fight the number field mid-typing
+  const [serial, setSerial] = useState<number | null>(initialSerial ?? ownSerial);
+  const changeSerial = (value: number) => {
+    setSerial(value);
+    onSerialChange?.(value);
+  };
+  // the serial is only in the URL while the serials tab is showing
+  const changeTab = (next: DrawerTab) => {
+    if (next !== tab && onSerialChange) {
+      if (tab === "serials") onSerialChange(undefined);
+      else if (next === "serials") {
+        const value = serial ?? serials.data?.serials[0];
+        if (value !== undefined) onSerialChange(value);
+      }
+    }
+    onTabChange(next);
+  };
+
+  // the clicked serial button unmounts with its tab, so focus moves to the
+  // Serials tab, which is always mounted (its panel may still be loading)
+  const serialsTabRef = useRef<HTMLButtonElement>(null);
+  const openSerial = (value: number) => {
+    changeSerial(value);
+    onTabChange("serials");
+    serialsTabRef.current?.focus();
+  };
+
+  const metadata = useQuery(collectionMetadataOptions(objekt.slug));
+  const serials = useQuery(serialListOptions(objekt.slug));
+
+  // until the user picks one, a collection opens on the first minted serial
+  const selected = serial ?? serials.data?.serials[0] ?? null;
+  const transfers = useQuery(transfersOptions(objekt.slug, selected));
+
+  // the Metadata tab describes the token the card carried, not whatever serial
+  // the user has browsed to; usually the same request the timeline is showing
+  const sameSerial = ownSerial !== null && ownSerial === selected;
+  const ownTransfers = useQuery(transfersOptions(objekt.slug, sameSerial ? null : ownSerial));
+  const own = sameSerial ? transfers : ownTransfers;
+
+  const mintedAt = useMemo(() => {
+    if (ownSerial === null) return null;
+    const mint = toTimeline(own.data?.transfers ?? []).at(-1);
+    return mint?.kind === "mint" ? mint.at : null;
+  }, [ownSerial, own.data]);
+
+  const artistName = getArtist(objekt.artist)?.title ?? objekt.artist;
+
+  return (
+    <>
+      {/* the trailing padding clears the registry close button, which is absolute
+          at `inset-e-2 top-2` over the header */}
+      <DrawerHeader className="flex-row items-start gap-2 pe-13 sm:pe-12">
+        <div className="flex min-w-0 flex-1 flex-col gap-2">
+          <DrawerTitle className="font-display flex flex-wrap items-center gap-2">
+            {objekt.member}
+            {/* the season and collection no. are what name this objekt — full contrast, not a caption */}
+            <span className="font-mono text-base font-medium">{getCollectionShortNo(objekt)}</span>
+            {unobtainableSlugs.has(objekt.slug) && (
+              <Badge variant="error" size="sm">
+                {m.objekt_unobtainable()}
+              </Badge>
+            )}
+          </DrawerTitle>
+          {/* artist / season / class are the first rows of the attribute list a
+              few pixels below, so the line is only for a screen reader */}
+          <DrawerDescription className="sr-only">
+            {artistName} · {objekt.season} · {objekt.class}
+          </DrawerDescription>
+        </div>
+        {(selectable || menu) && (
+          <div className="flex shrink-0 items-center gap-1.5">
+            {selectable && (
+              <Toggle
+                variant="outline"
+                size="sm"
+                aria-label={m.objekt_select_aria()}
+                pressed={isSelected}
+                onPressedChange={() => toggleSelect(objekt.id)}
+                className="data-pressed:bg-foreground data-pressed:text-background data-pressed:border-foreground data-pressed:hover:bg-foreground/90 dark:data-pressed:bg-foreground dark:data-pressed:hover:bg-foreground/90"
+              >
+                <CheckIcon weight="bold" />
+              </Toggle>
+            )}
+            {menu && (
+              <Menu>
+                <MenuTrigger
+                  render={
+                    <Button variant="outline" size="icon-sm" aria-label={m.objekt_menu_aria()} />
+                  }
+                >
+                  <DotsThreeIcon weight="bold" />
+                </MenuTrigger>
+                <MenuPopup align="end" className="min-w-44">
+                  {menu}
+                </MenuPopup>
+              </Menu>
+            )}
+          </div>
+        )}
+      </DrawerHeader>
+      <DrawerPanel className="flex flex-col gap-5">
+        {note}
+        {/* one column below `sm`: the card beside an attribute list whose
+            labels alone are ~84px leaves the values under 100px, which is what
+            pushed the drawer into sideways scrolling */}
+        <div className="grid gap-5 sm:grid-cols-[minmax(0,14rem)_1fr]">
+          {/* on a phone the card is capped at ~40% of the screen height
+              (26dvh wide at the photocard ratio), so the tabs stay in view */}
+          <div className="w-full max-sm:mx-auto max-sm:max-w-[min(16rem,26dvh)]">
+            <ObjektFlip objekt={objekt} />
+          </div>
+          <ObjektSummary objekt={objekt} artistName={artistName} />
+        </div>
+
+        {/* at least a screen tall, so every tab scrolls the card away to the
+            same sticky strip and switching tabs never jumps the scroll */}
+        <Tabs
+          value={tab}
+          onValueChange={(value) => changeTab(value as DrawerTab)}
+          className="min-h-dvh"
+        >
+          {/* five tabs outrun a phone-width sheet, so the strip scrolls and the
+              sheet does not; the scroll area's root sets its own `position`,
+              so the sticky wrapper stays outside it */}
+          <div
+            // focus alone never scrolls the strip: a tab past the fold would
+            // stay clipped once reached by keyboard or by tap
+            onFocusCapture={(event) =>
+              event.target.scrollIntoView({ block: "nearest", inline: "nearest" })
+            }
+            className="bg-popover sticky top-0 z-10"
+          >
+            <ScrollArea data-scroll-x scrollFade className={scrollXOnlyClass}>
+              {/* `w-max min-w-full`, not `w-full`: `w-full` clamps the underline
+                rule to the scroller while the tabs spill past it */}
+              <TabsList
+                variant="underline"
+                aria-label={m.objekt_tab_aria()}
+                className="w-max min-w-full justify-start border-b"
+              >
+                {ownedCopies && (
+                  <TabsTab value="owned">
+                    {ownedCopies.length > 1
+                      ? m.objekt_owned_count({
+                          count: ownedCopies.length.toLocaleString(getLocale()),
+                        })
+                      : m.objekt_owned()}
+                  </TabsTab>
+                )}
+                <TabsTab ref={serialsTabRef} value="serials">
+                  {m.objekt_trades()}
+                </TabsTab>
+                <TabsTab value="market">{m.objekt_market()}</TabsTab>
+                <TabsTab value="holders">{m.objekt_holders()}</TabsTab>
+                <TabsTab value="metadata">{m.objekt_metadata()}</TabsTab>
+              </TabsList>
+            </ScrollArea>
+          </div>
+          {ownedCopies && (
+            <TabsPanel value="owned">
+              <OwnedPanel objekts={ownedCopies} menu={ownedMenu} onOpenSerial={openSerial} />
+            </TabsPanel>
+          )}
+          <TabsPanel value="serials">
+            <SerialsPanel
+              serial={selected}
+              serials={serials.data?.serials ?? NO_SERIALS}
+              spun={serials.data?.spun ?? NO_SERIALS}
+              metadata={metadata}
+              physical={objekt.onOffline === "offline"}
+              loading={serials.isPending}
+              onSerialChange={changeSerial}
+            >
+              <Timeline serial={selected} query={transfers} />
+            </SerialsPanel>
+          </TabsPanel>
+          <TabsPanel value="market">
+            <MarketPanel slug={objekt.slug} onOpenSerial={openSerial} />
+          </TabsPanel>
+          <TabsPanel value="holders">
+            <HoldersPanel slug={objekt.slug} physical={objekt.onOffline === "offline"} />
+          </TabsPanel>
+          <TabsPanel value="metadata">
+            <MetadataPanel
+              objekt={objekt}
+              originals={metadata.data}
+              tokenId={own.data?.tokenId ?? null}
+              mintedAt={mintedAt}
+            />
+          </TabsPanel>
+        </Tabs>
+      </DrawerPanel>
+    </>
+  );
+}
