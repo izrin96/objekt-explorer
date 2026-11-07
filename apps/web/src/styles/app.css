@@ -420,6 +420,19 @@
   }
 }
 
+@layer utilities {
+  /* a monospace space is a full 0.6em cell, so "A2 110Z" reads as two words
+     far apart; pull it back to about a sans space. Inherits, so a sans child
+     inside a mono run resets it. */
+  .font-mono {
+    word-spacing: -0.3em;
+  }
+  .font-sans,
+  .font-display {
+    word-spacing: normal;
+  }
+}
+
 @layer components {
   .calendar-button {
     @apply text-foreground not-in-data-selected:hover:bg-accent relative flex size-(--cell-size) items-center justify-center rounded-lg text-base disabled:pointer-events-none disabled:opacity-64 sm:text-sm [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='opacity-'])]:opacity-80 [&_svg:not([class*='size-'])]:size-4.5 sm:[&_svg:not([class*='size-'])]:size-4;
