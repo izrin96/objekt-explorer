@@ -1,81 +1,25 @@
-import { CardsThreeIcon, LinkIcon } from "@phosphor-icons/react";
+import { CardsThreeIcon } from "@phosphor-icons/react";
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
-import { useState } from "react";
 
 import { EmptyState } from "@/components/shared/empty-state";
-import { Button } from "@/components/ui/button";
 import type { Attachment } from "@/features/chat/attachment";
 import { filterObjekts } from "@/features/filters/filter-utils";
 import {
-  NO_PICKER_FILTERS,
-  PickerFilterBar,
   type PickerFacetFilters,
   pickerFiltered,
   toFilterSearch,
 } from "@/features/filters/picker-filter-bar";
-import { SingleSelect } from "@/features/filters/single-select";
 import { CardGridSkeleton } from "@/features/objekt/card-grid";
 import { ObjektCard } from "@/features/objekt/objekt-card";
 import { isObjektOwned } from "@/features/objekt/objekt-utils";
 import { VirtualCardGrid } from "@/features/objekt/virtual-card-grid";
 import { ownedCollectionOptions } from "@/features/profile/queries";
-import { useUserProfiles } from "@/features/user/hooks";
 import { useLoadAllPages } from "@/hooks/use-load-all-pages";
-import { displayNickname } from "@/lib/address";
 import { m } from "@/paraglide/messages";
 
 import { LoadError } from "./attach-picker-parts";
 
-export function OwnedPicker({ onPick }: { onPick: (attachment: Attachment) => void }) {
-  const profiles = useUserProfiles();
-  const [picked, setPicked] = useState(profiles[0]?.address ?? "");
-  const [filters, setFilters] = useState(NO_PICKER_FILTERS);
-  const address = profiles.some((p) => p.address === picked) ? picked : profiles[0]?.address;
-
-  if (!address) {
-    return (
-      <EmptyState
-        icon={LinkIcon}
-        bordered={false}
-        title={m.chat_attach_no_profile()}
-        action={
-          <Button variant="outline" size="sm" render={<Link to="/account/profiles" />}>
-            {m.link_link_cosmo()}
-          </Button>
-        }
-      />
-    );
-  }
-
-  return (
-    <div className="flex min-h-0 flex-1 flex-col gap-3">
-      <PickerFilterBar
-        filters={filters}
-        onChange={setFilters}
-        pinSource
-        source={
-          profiles.length > 1 ? (
-            <SingleSelect
-              label={m.chat_attach_profile_label()}
-              options={profiles.map((p) => ({
-                value: p.address,
-                label: displayNickname(p.address, p.nickname),
-              }))}
-              value={address}
-              defaultValue={profiles[0]!.address}
-              showValue
-              onChange={setPicked}
-            />
-          ) : null
-        }
-      />
-      <OwnedGrid address={address} filters={filters} onPick={onPick} />
-    </div>
-  );
-}
-
-function OwnedGrid({
+export function OwnedGrid({
   address,
   filters,
   onPick,

@@ -1256,7 +1256,6 @@
   "chat_attach_list_label": "リスト",
   "chat_attach_no_profile": "Objektを添付するにはCosmoプロフィールを連携してください",
   "chat_attach_no_objekts": "このプロフィールにObjektはありません",
-  "chat_attach_no_lists": "リストがまだありません",
   "chat_attach_list_empty": "このリストは空です",
   "chat_attach_no_match": "この絞り込みに合うものはありません",
   "chat_attach_remove": "添付したObjektを外す",

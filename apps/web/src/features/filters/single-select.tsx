@@ -1,7 +1,14 @@
 import { CaretDownIcon } from "@phosphor-icons/react";
 import type { ReactNode } from "react";
 
-import { Select, SelectItem, SelectPopup, SelectPrimitive } from "@/components/ui/select";
+import {
+  Select,
+  SelectGroup,
+  SelectGroupLabel,
+  SelectItem,
+  SelectPopup,
+  SelectPrimitive,
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
 import { toolbarTrigger } from "./toolbar-trigger";
@@ -14,6 +21,8 @@ type SingleOption<T extends string> = {
   disabled?: boolean;
   /** a short muted line under the label, such as why the option is disabled */
   hint?: string;
+  /** a heading the popup draws above a run of options that share it */
+  group?: string;
 };
 
 type SingleSelectProps<T extends string> = {
@@ -62,19 +71,43 @@ export function SingleSelect<T extends string>({
         </SelectPrimitive.Icon>
       </SelectPrimitive.Trigger>
       <SelectPopup alignItemWithTrigger={false} className="min-w-40">
-        {options.map((o) => (
-          <SelectItem key={o.value} value={o.value} label={o.text} disabled={o.disabled}>
-            {o.hint ? (
-              <span className="flex flex-col">
-                {o.label}
-                <span className="text-foreground text-xs">{o.hint}</span>
-              </span>
-            ) : (
-              o.label
-            )}
-          </SelectItem>
-        ))}
+        {groupRuns(options).map((run) =>
+          run.group === undefined ? (
+            run.options.map(optionItem)
+          ) : (
+            <SelectGroup key={run.group}>
+              <SelectGroupLabel>{run.group}</SelectGroupLabel>
+              {run.options.map(optionItem)}
+            </SelectGroup>
+          ),
+        )}
       </SelectPopup>
     </Select>
+  );
+}
+
+/** Consecutive options under the same `group`, in order. */
+function groupRuns<T extends string>(options: readonly SingleOption<T>[]) {
+  const runs: { group: string | undefined; options: SingleOption<T>[] }[] = [];
+  for (const option of options) {
+    const last = runs.at(-1);
+    if (last && last.group === option.group) last.options.push(option);
+    else runs.push({ group: option.group, options: [option] });
+  }
+  return runs;
+}
+
+function optionItem<T extends string>(o: SingleOption<T>) {
+  return (
+    <SelectItem key={o.value} value={o.value} label={o.text} disabled={o.disabled}>
+      {o.hint ? (
+        <span className="flex flex-col">
+          {o.label}
+          <span className="text-foreground text-xs">{o.hint}</span>
+        </span>
+      ) : (
+        o.label
+      )}
+    </SelectItem>
   );
 }

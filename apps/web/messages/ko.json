@@ -1256,7 +1256,6 @@
   "chat_attach_list_label": "목록",
   "chat_attach_no_profile": "오브젝트를 첨부하려면 Cosmo 프로필을 연결하세요",
   "chat_attach_no_objekts": "이 프로필에는 오브젝트가 없습니다",
-  "chat_attach_no_lists": "아직 목록이 없습니다",
   "chat_attach_list_empty": "이 목록은 비어 있습니다",
   "chat_attach_no_match": "이 필터에 맞는 항목이 없습니다",
   "chat_attach_remove": "첨부한 오브젝트 빼기",
