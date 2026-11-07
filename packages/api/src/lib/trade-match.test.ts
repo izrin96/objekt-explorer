@@ -3,6 +3,7 @@ import { describe, expect, test } from "bun:test";
 import { AWAY_GRACE_HOURS } from "../schemas/offer";
 import {
   batchMatters,
+  breakAcceptLegs,
   copyDue,
   copyReminderDue,
   copyRescue,
@@ -924,5 +925,38 @@ describe("copyReads", () => {
 
   test("skips a leg with no known collection or no givers", () => {
     expect(copyReads([leg({ collectionId: null }), leg({ giver: new Set() })])).toEqual([]);
+  });
+});
+
+describe("breakAcceptLegs", () => {
+  const broken: LegResult = { kind: "broken", transferId: "t9", at: "2026-10-03T00:00:00.000Z" };
+  const verified: LegResult = {
+    kind: "verified",
+    transferId: "t1",
+    txHash: "0x1",
+    objektId: "1",
+    at: "2026-10-02T00:00:00.000Z",
+  };
+
+  test("nothing while no leg is broken", () => {
+    expect(breakAcceptLegs(new Map<number, LegResult>([[1, { kind: "pending" }]]))).toEqual([]);
+  });
+
+  test("a break takes every leg still waiting, stuck ones too, but not verified ones", () => {
+    const applied = new Map<number, LegResult>([
+      [1, broken],
+      [2, { kind: "pending" }],
+      [3, verified],
+      [4, { kind: "stuck" }],
+    ]);
+    expect(breakAcceptLegs(applied)).toEqual([2, 4]);
+  });
+
+  test("nothing once every broken leg was rescued", () => {
+    const applied = new Map<number, LegResult>([
+      [1, verified],
+      [2, { kind: "pending" }],
+    ]);
+    expect(breakAcceptLegs(applied)).toEqual([]);
   });
 });

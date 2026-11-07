@@ -483,6 +483,18 @@ export function copyRescue<C extends HeldCopy>(result: LegResult, copies: C[]): 
   return result.kind === "broken" ? firstPending(copies, result.at) : null;
 }
 
+/**
+ * The open legs that accept a pending copy because a break still ends the trade, as at expiry, so
+ * fault falls on whoever still owes. Run after `copyRescue`; `applied` maps leg id to result.
+ */
+export function breakAcceptLegs(applied: ReadonlyMap<number, LegResult>): number[] {
+  const results = [...applied];
+  if (!results.some(([, result]) => result.kind === "broken")) return [];
+  return results.flatMap(([legId, result]) =>
+    result.kind === "verified" || result.kind === "broken" ? [] : [legId],
+  );
+}
+
 type DatedCopy = HeldCopy & { acceptBy: string | null };
 
 /** The copy a leg accepts at its deadline: the earliest pending one, once its own is due. */

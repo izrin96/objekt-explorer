@@ -1,5 +1,7 @@
 import {
   batchMatters,
+  breakAcceptLegs,
+  firstPending,
   legTransferable,
   copyRescue,
   giversOf,
@@ -285,14 +287,32 @@ async function settleTrade(
     // a leg broken with a pending copy sent before the break accepts that copy instead
     const rescued = await rescueBroken(tx, settled, applied, askedOf, progress, name);
     verified += rescued.accepted.length;
-    const rescuedIds = new Set(rescued.accepted);
-    const stillWaiting = waiting.filter((leg) => !rescuedIds.has(leg.id));
+    // a break that still ends the trade accepts the other legs' pending copies, as expiry does
+    const onBreak = await acceptOnBreak(
+      tx,
+      settled,
+      applied,
+      askedOf,
+      {
+        verified: progress.verified + rescued.accepted.length,
+        total: progress.total,
+      },
+      name,
+    );
+    verified += onBreak.accepted.length;
+    const acceptedIds = new Set([...rescued.accepted, ...onBreak.accepted]);
+    const stillWaiting = waiting.filter((leg) => !acceptedIds.has(leg.id));
 
     const { ended, notified, reputations } = await finishSettle(
       tx,
       settled,
       [...applied.values()],
-      { alreadyVerified, verified, total: state.length, autoAccepted: rescued.accepted.length },
+      {
+        alreadyVerified,
+        verified,
+        total: state.length,
+        autoAccepted: rescued.accepted.length + onBreak.accepted.length,
+      },
       name,
     );
 
@@ -332,6 +352,7 @@ async function settleTrade(
           ...notified,
           ...copyNotified,
           ...rescued.notified,
+          ...onBreak.notified,
           ...stuck.notified,
           ...away.notified,
         ],
@@ -369,6 +390,30 @@ async function rescueBroken(
   );
   for (const [legId, result] of rescued.results) applied.set(legId, result);
   return rescued;
+}
+
+/** Under the trade's row lock, after `rescueBroken`: see `breakAcceptLegs`. */
+async function acceptOnBreak(
+  tx: Tx,
+  settled: SettledTrade,
+  applied: Map<number, LegResult>,
+  askedOf: ReadonlyMap<number, string>,
+  progress: { verified: number; total: number },
+  name: Name,
+) {
+  const legIds = breakAcceptLegs(applied);
+  if (legIds.length === 0) return { accepted: [], notified: [] };
+  const accepted = await acceptPicked(
+    tx,
+    settled,
+    legIds,
+    (_, copies) => firstPending(copies),
+    askedOf,
+    progress,
+    name,
+  );
+  for (const [legId, result] of accepted.results) applied.set(legId, result);
+  return accepted;
 }
 
 /**
