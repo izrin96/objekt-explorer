@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { m } from "@/paraglide/messages";
 
-import { useDeleteList } from "./actions";
+import { useDeleteList, useForgetDeletedList } from "./actions";
 
 export function DeleteListDialog({
   slug,
@@ -29,6 +29,7 @@ export function DeleteListDialog({
 }) {
   const navigate = useNavigate();
   const remove = useDeleteList();
+  const forget = useForgetDeletedList();
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -50,9 +51,11 @@ export function DeleteListDialog({
               remove.mutate(
                 { slug },
                 {
-                  onSuccess: () => {
+                  onSuccess: async () => {
                     onOpenChange(false);
-                    if (redirectOnDelete) void navigate({ to: "/list" });
+                    // removed under the still-mounted page, its reads would refetch and 404
+                    if (redirectOnDelete) await navigate({ to: "/list" });
+                    forget(slug);
                   },
                 },
               )

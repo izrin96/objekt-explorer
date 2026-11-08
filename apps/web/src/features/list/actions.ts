@@ -162,6 +162,30 @@ export function useDeleteList() {
   );
 }
 
+/**
+ * Drops a deleted list's reads once its page is gone. Invalidated, they would stay cached, and the
+ * list routes' static loader read would serve the deleted list again on Back.
+ */
+export function useForgetDeletedList() {
+  const queryClient = useQueryClient();
+
+  return (slug: string) => {
+    // both of its addresses, the profile-scoped one keyed by `profileSlug`
+    queryClient.removeQueries({
+      queryKey: LIST_QUERY_KEY,
+      predicate: (query) => (query.state.data as { slug?: unknown } | undefined)?.slug === slug,
+    });
+    for (const key of [
+      orpc.list.listEntries.key({ input: { slug } }),
+      orpc.list.find.key({ input: { slug } }),
+      orpc.list.rules.key({ input: { slug } }),
+      orpc.list.ruleObjekts.key({ input: { slug } }),
+    ]) {
+      queryClient.removeQueries({ queryKey: key });
+    }
+  };
+}
+
 /** The caller reports the outcome: only it knows how many objekts it asked for. */
 export function useAddToList() {
   const invalidate = useListInvalidation();
