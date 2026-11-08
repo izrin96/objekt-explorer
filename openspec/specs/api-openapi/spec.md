@@ -14,10 +14,11 @@ request and response contracts third-party clients build against.
 `/collections/{collectionSlug}/holders`, `/filters`, `/lists/previews`, `/lists/{slug}`,
 `/lists/{slug}/entries`, `/lists/{slug}/export`, `/lists/{slug}/rules`,
 `/lists/{slug}/rules/{ruleId}/objekts`, `/objekts/owned-by/{address}`,
-`/objekts/held-by/{address}`, `/transfers/{address}`, `/users/search`, `/live-sessions`,
-`/market`, `/market/rates`, `/market/{collectionSlug}/listings`,
-`/market/{collectionSlug}/stats`, `/market/{collectionSlug}/history`,
-`/trade/people`, `/trade/lists/{listId}/items`, `/trade/collections/{slug}/post-counts`,
+`/objekts/owned-copies/{address}`, `/objekts/held-by/{address}`, `/transfers/{address}`,
+`/users/search`, `/live-sessions`, `/market`, `/market/rates`,
+`/market/{collectionSlug}/listings`, `/market/{collectionSlug}/stats`,
+`/market/{collectionSlug}/history`, `/trade/people`, `/trade/person`,
+`/trade/lists/{listId}/items`, `/trade/collections/{slug}/post-counts`,
 `/profiles/{address}`, `/profiles/{address}/pins`,
 `/profiles/{address}/locked-objekts`, `/profiles/{address}/lists` and `/status`.
 No procedure that writes data or needs a signed-in account SHALL be reachable under
