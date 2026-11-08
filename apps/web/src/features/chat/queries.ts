@@ -7,7 +7,6 @@ import {
 import { hashKey, type QueryClient } from "@tanstack/react-query";
 
 import { LOADER_READ_STALE_MS, client, orpc } from "@/lib/orpc";
-import { isNotFound } from "@/lib/orpc-error";
 import { markRepliesUnsent } from "@/stores/chat-draft";
 import { pollUnlessLive } from "@/stores/user-socket";
 
@@ -77,7 +76,6 @@ export const threadOptions = (id: number) =>
     getNextPageParam: (page) => (page.hasMore ? page.messages[0]?.id : undefined),
     staleTime: Infinity,
     refetchOnWindowFocus: false,
-    retry: (count, error) => !isNotFound(error) && count < 2,
   });
 
 export const chatSettingsOptions = () => orpc.chat.settings.queryOptions({ staleTime: 0 });
