@@ -48,7 +48,8 @@ export const Route = createFileRoute("/(container)/list/$slug")({
       });
     }
 
-    if (list.listType === "want") {
+    // unlike the entries, small enough to stream with the server render
+    if (list.listType === "want" && cause !== "preload") {
       void queryClient.query(listRulesOptions(params.slug)).catch(noop);
     }
 
