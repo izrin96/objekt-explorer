@@ -1,4 +1,4 @@
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { noop, useSuspenseQuery } from "@tanstack/react-query";
 import { Outlet, createFileRoute, useParams } from "@tanstack/react-router";
 
 import { PageMain } from "@/components/layout/page-main";
@@ -13,15 +13,26 @@ import { ProfileNotFound } from "@/features/profile/profile-not-found";
 import { ProfileProvider } from "@/features/profile/profile-provider";
 import { ProfileStats } from "@/features/profile/profile-stats";
 import { ProfileTabs } from "@/features/profile/profile-tabs";
-import { profileQuery } from "@/features/profile/queries";
+import { locksOptions, pinsOptions, profileQuery } from "@/features/profile/queries";
 import { isSpinAddress, useProfileSummary } from "@/features/profile/use-profile-objekts";
 import { orpc } from "@/lib/orpc";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
 
 export const Route = createFileRoute("/@{$nickname}")({
-  loader: ({ params, context: { queryClient } }) =>
-    queryClient.query({ ...profileQuery({ nickname: params.nickname }), staleTime: "static" }),
+  loader: async ({ params, cause, context: { queryClient } }) => {
+    const profile = await queryClient.query({
+      ...profileQuery({ nickname: params.nickname }),
+      staleTime: "static",
+    });
+    // the pins and locks mark the owned grid; started here, they come with the first document
+    // rather than after hydration. A hover preload leaves them to the click
+    if (cause !== "preload") {
+      void queryClient.query(pinsOptions(profile.address)).catch(noop);
+      void queryClient.query(locksOptions(profile.address)).catch(noop);
+    }
+    return profile;
+  },
   // the header and every tab read the owned copies joined to the collection list, which the browser
   // would only ask for after hydration; preloaded, they download beside the scripts. The URLs match
   // the queries' exactly (`useProfileSummary`), or the browser fetches twice. Only the first document
