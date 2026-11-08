@@ -6,7 +6,7 @@ import type { QueryClient } from "@tanstack/react-query";
 
 import type { OfferMatches } from "@/features/offers/builder/types";
 import { LOADER_READ_STALE_MS, orpc } from "@/lib/orpc";
-import { isNotFound, retryUnlessRefused } from "@/lib/orpc-error";
+import { retryUnlessRefused } from "@/lib/orpc-error";
 import { pollUnlessLive } from "@/stores/user-socket";
 
 export type OfferAddress = { conversationId: number } | { target: ChatTarget };
@@ -130,7 +130,7 @@ export const tradeOptions = (tradeId: number, live = true) =>
     // no event fires when the indexer falls behind or catches up, so an in-progress trade polls
     refetchInterval: (query) =>
       query.state.data?.trade.status === "in_progress" ? 60_000 : pollUnlessLive(live),
-    retry: (count, error) => !isNotFound(error) && count < 2,
+    retry: retryUnlessRefused,
   });
 
 const offerListKeys = [
