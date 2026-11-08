@@ -1,6 +1,14 @@
 import { describe, expect, test } from "bun:test";
 
-import { estimateSerials, isSerialEstimated, shownSerial, V1_CUTOFF_MS } from "./serial";
+import {
+  dropStillMinting,
+  estimateSerials,
+  isGridDrop,
+  isSerialEstimated,
+  OPEN_DROP_DAYS,
+  shownSerial,
+  V1_CUTOFF_MS,
+} from "./serial";
 
 describe("isSerialEstimated", () => {
   test("before the cutoff is Cosmo's serial", () => {
@@ -143,5 +151,63 @@ describe("estimateSerials", () => {
     expect(
       estimateSerials({ season: "Cream02", batches: [], ceiling: null, topSerial: 0 }),
     ).toBeNull();
+  });
+});
+
+describe("isGridDrop", () => {
+  test("an offline A collection of a block season", () => {
+    expect(isGridDrop({ season: "Cream02", collectionNo: "355A", onOffline: "offline" })).toBe(
+      true,
+    );
+  });
+
+  test("a Z collection, an online one and a pre-block season are not", () => {
+    expect(isGridDrop({ season: "Cream02", collectionNo: "107Z", onOffline: "offline" })).toBe(
+      false,
+    );
+    expect(isGridDrop({ season: "Cream02", collectionNo: "355A", onOffline: "online" })).toBe(
+      false,
+    );
+    expect(isGridDrop({ season: "Cream01", collectionNo: "305A", onOffline: "offline" })).toBe(
+      false,
+    );
+  });
+});
+
+describe("dropStillMinting", () => {
+  const firstCreatedAt = "2026-11-08T01:38:03Z";
+  const at = (hours: number) => Date.parse(firstCreatedAt) + hours * 60 * 60 * 1000;
+
+  test("an unfitted drop under the window is open", () => {
+    expect(dropStillMinting({ fitted: false, firstCreatedAt, now: at(4) })).toBe(true);
+  });
+
+  test("a fitted drop is closed", () => {
+    expect(dropStillMinting({ fitted: true, firstCreatedAt, now: at(4) })).toBe(false);
+  });
+
+  test("the window closes at exactly OPEN_DROP_DAYS", () => {
+    const edge = OPEN_DROP_DAYS * 24;
+    expect(dropStillMinting({ fitted: false, firstCreatedAt, now: at(edge) - 1 })).toBe(true);
+    expect(dropStillMinting({ fitted: false, firstCreatedAt, now: at(edge) })).toBe(false);
+  });
+});
+
+describe("estimateSerials for an open drop", () => {
+  const input = { season: "Cream02", batches: [{ start: 1, end: 437 }], ceiling: 501 };
+
+  test("open ignores the ceiling: at least the stored ranges", () => {
+    expect(estimateSerials({ ...input, topSerial: 0 })).toEqual({ min: 500, max: 500 });
+    expect(estimateSerials({ ...input, topSerial: 0, open: true })).toEqual({
+      min: 437,
+      max: null,
+    });
+  });
+
+  test("a known serial still floors min", () => {
+    expect(estimateSerials({ ...input, topSerial: 520, open: true })).toEqual({
+      min: 520,
+      max: null,
+    });
   });
 });

@@ -2,7 +2,12 @@ import { toIndexedArtist } from "@repo/cosmo/types/common";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts, transfers } from "@repo/db/indexer/schema";
 import { Addresses } from "@repo/lib";
-import { estimateSerials, ESTIMATE_LOOKAHEAD } from "@repo/lib/serial";
+import {
+  dropStillMinting,
+  estimateSerials,
+  ESTIMATE_LOOKAHEAD,
+  isGridDrop,
+} from "@repo/lib/serial";
 import { overrideCollection } from "@repo/lib/server/objekt";
 import { fetchPublicNicknames } from "@repo/lib/server/user";
 import { type SQL, and, asc, count, desc, eq, inArray, lte, ne, or, sql } from "drizzle-orm";
@@ -225,6 +230,8 @@ export async function fetchCollectionMetadata(slug: string): Promise<CollectionM
       .select({
         id: collections.id,
         season: collections.season,
+        collectionNo: collections.collectionNo,
+        artist: collections.artist,
         onOffline: collections.onOffline,
         batches: collections.serialBatches,
         originalFrontImage: collections.frontImage,
@@ -237,17 +244,45 @@ export async function fetchCollectionMetadata(slug: string): Promise<CollectionM
 
   const { topSerial, ...counts } = result ?? { total: 0, spin: 0, transferable: 0, topSerial: 0 };
   if (!row) return { ...counts, serialEstimate: null };
-  const { id, season, onOffline, batches, ...images } = row;
-  const serialEstimate =
-    onOffline === "offline" && batches && batches.length > 0
-      ? estimateSerials({
-          season,
-          batches,
-          ceiling: await ceilingAbove(id, batches.at(-1)!.end),
-          topSerial,
-        })
-      : null;
+  const { id, season, collectionNo, artist, onOffline, batches, ...images } = row;
+  if (onOffline !== "offline" || !batches || batches.length === 0) {
+    return { ...counts, serialEstimate: null, ...images };
+  }
+  const [open, ceiling] = await Promise.all([
+    isGridDrop({ season, collectionNo, onOffline }) && dropOpen(season, collectionNo, artist),
+    ceilingAbove(id, batches.at(-1)!.end),
+  ]);
+  const serialEstimate = estimateSerials({ season, batches, ceiling, topSerial, open });
   return { ...counts, serialEstimate, ...images };
+}
+
+// a drop's members share one creation window and one fit: any member without a
+// fit mark keeps the whole drop open
+async function dropOpen(
+  season: string,
+  collectionNo: string,
+  artist: (typeof collections.$inferSelect)["artist"],
+) {
+  const [drop] = await indexer
+    .select({
+      firstCreatedAt: sql<string | null>`min(${collections.createdAt})`,
+      fitted: sql<boolean | null>`bool_and(${collections.gridFittedAt} is not null)`,
+    })
+    .from(collections)
+    .where(
+      and(
+        eq(collections.season, season),
+        eq(collections.collectionNo, collectionNo),
+        eq(collections.artist, artist),
+        eq(collections.onOffline, "offline"),
+      ),
+    );
+  if (!drop?.firstCreatedAt) return false;
+  return dropStillMinting({
+    fitted: drop.fitted === true,
+    firstCreatedAt: drop.firstCreatedAt,
+    now: Date.now(),
+  });
 }
 
 // the first token minted above `end`, within the lookahead: another

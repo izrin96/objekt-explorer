@@ -19,7 +19,8 @@ import { collections, objekts } from "@repo/db/indexer/schema";
 import { chunk } from "@repo/lib";
 import { and, asc, eq, inArray, isNotNull, lte, notInArray, or } from "drizzle-orm";
 
-import { applyGrids, refineBatches, writeSerialUpdates } from "@/job/serial-batches";
+import { fitRanges, rewriteSerials, storeRanges } from "@/job/serial-batches";
+import { log } from "@/lib/log";
 import {
   preAssignedCollections as excludeCollections,
   preBlockSeasons,
@@ -28,6 +29,7 @@ import { computeOfflineSerialUpdates, holdoutExact } from "@/lib/serial-math";
 
 const CONCURRENCY = 5;
 const APPLY = process.env.APPLY === "1";
+const refineLog = log("refine");
 
 const targets = await indexer
   .select({
@@ -97,7 +99,8 @@ async function processOne(t: (typeof targets)[number]) {
 
   const tokenIds = rows.map((o) => parseInt(o.id));
   // no shared drop-fit memo: this run writes ranges as it goes, which can change a drop's fit
-  const refined = await applyGrids(t.id, await refineBatches(t.season, stored, tokenIds));
+  const grids = await fitRanges(t.id, t.season, stored, tokenIds);
+  const refined = grids.batches;
 
   const storedKeys = new Set(stored.map((b) => `${b.start}-${b.end}`));
   const storedEnds = new Set(stored.map((b) => b.end));
@@ -134,8 +137,8 @@ async function processOne(t: (typeof targets)[number]) {
 
   if (!APPLY) return;
 
-  await indexer.update(collections).set({ serialBatches: refined }).where(eq(collections.id, t.id));
-  if (updates.length > 0) await writeSerialUpdates(updates);
+  await storeRanges(t.id, stored, grids);
+  await rewriteSerials(rows, refined, t.anchors ?? [], refineLog, t.slug);
 }
 
 await chunk(targets, CONCURRENCY, async (group) => {

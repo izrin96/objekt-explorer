@@ -2,21 +2,27 @@ import { fetchMetadataV3, normalizeV3 } from "@repo/cosmo/server/metadata";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
 import { slugifyObjekt } from "@repo/lib";
-import { and, between, eq, inArray, like, or, sql } from "drizzle-orm";
+import { isGridDrop } from "@repo/lib/serial";
+import { and, between, eq, inArray, isNotNull, isNull, like, lte, or, sql } from "drizzle-orm";
 import { FetchError } from "ofetch";
 
 import {
+  type DropGrid,
   type DropRegion,
   fitDropGrid,
   fitMemberRun,
   MAX_SLOT,
   mergeGridRanges,
 } from "@/lib/drop-grid";
+import type { Logger } from "@/lib/log";
 import { preBlockSeasons } from "@/lib/serial-constants";
 import {
   type Batch,
   claimGapBlocks,
+  computeOfflineSerialUpdates,
   gapSeparators,
+  type ManualAnchor,
+  shiftedSerials,
   mayHoldReservedBlocks,
   probeWindow,
   snapBatchLengths,
@@ -244,7 +250,7 @@ async function fillReservedGaps(
  * Apply the 100-token block rules to discovered batches. Idempotent, so it can
  * run on a mix of stored and freshly discovered ranges.
  */
-export async function refineBatches(
+async function refineBatches(
   season: string,
   batches: Batch[],
   presentTokenIds: number[],
@@ -265,23 +271,19 @@ export type DropKey = {
 
 export type DropMember = { id: string; slug: string; batches: Batch[]; tokens: number[] };
 
-/** an "A" drop of a block season, whose members may share a grid */
-export function isGridDrop(c: { season: string; collectionNo: string; onOffline: string }) {
-  return (
-    c.onOffline === "offline" && c.collectionNo.endsWith("A") && !preBlockSeasons.includes(c.season)
-  );
-}
+export { isGridDrop };
 
 /**
  * A drop's minted members in member order and the region the grid is fitted
  * on, read from the indexer. `override` stands in for one member's stored
  * batches while they are being rewritten. Null when fewer than two members
- * have minted.
+ * have minted. `pinned`: the token right before the start is another
+ * collection's minted token; a first member yet to mint leaves it unminted.
  */
-export async function loadDrop(
+async function loadDrop(
   key: DropKey,
   override?: { collectionId: string; batches: Batch[] },
-): Promise<{ members: DropMember[]; region: DropRegion } | null> {
+): Promise<{ members: DropMember[]; region: DropRegion; pinned: boolean } | null> {
   const rows = await indexer
     .select({ id: collections.id, slug: collections.slug, batches: collections.serialBatches })
     .from(collections)
@@ -295,6 +297,42 @@ export async function loadDrop(
     );
   if (rows.length < 2) return null;
 
+  const members = await mintedMembers(rows, override);
+  if (members.length < 2) return null;
+
+  const first = members[0]!;
+  const start = Math.min(first.tokens[0]!, ...first.batches.map((b) => b.start));
+  const highest = Math.max(...members.map((m) => m.tokens.at(-1)!));
+  const readUntil = Math.min(highest, start + members.length * MAX_SLOT) + MAX_SLOT;
+
+  const memberIds = new Set(members.map((m) => m.id));
+  const region = await indexer
+    .select({ id: objekts.id, collectionId: objekts.collectionId })
+    .from(objekts)
+    .where(tokenIdRange(start - 1, readUntil));
+  const isForeign = (o: (typeof region)[number]) =>
+    o.collectionId === null || !memberIds.has(o.collectionId);
+  const before = region.find((o) => parseInt(o.id) === start - 1);
+  const foreign = region
+    .filter((o) => parseInt(o.id) >= start && isForeign(o))
+    .map((o) => parseInt(o.id))
+    .sort((a, b) => a - b);
+
+  return {
+    members,
+    region: { start, memberTokens: members.map((m) => m.tokens), foreign, readUntil },
+    pinned: before !== undefined && isForeign(before),
+  };
+}
+
+/**
+ * The collections' minted tokens, sorted, with their stored batches (or
+ * `override`'s), keeping only collections with a mint, in token order.
+ */
+async function mintedMembers<R extends { id: string; batches: Batch[] | null }>(
+  rows: R[],
+  override?: { collectionId: string; batches: Batch[] },
+) {
   const minted = await indexer
     .select({ id: objekts.id, collectionId: objekts.collectionId })
     .from(objekts)
@@ -311,55 +349,40 @@ export async function loadDrop(
     list.push(parseInt(o.id));
     tokensOf.set(o.collectionId, list);
   }
-
-  const members = rows
+  return rows
     .map((r) => ({
-      id: r.id,
-      slug: r.slug,
+      ...r,
       batches: override?.collectionId === r.id ? override.batches : (r.batches ?? []),
       tokens: (tokensOf.get(r.id) ?? []).sort((a, b) => a - b),
     }))
     .filter((m) => m.tokens.length > 0)
     .sort((a, b) => a.tokens[0]! - b.tokens[0]!);
-  if (members.length < 2) return null;
-
-  const first = members[0]!;
-  const start = Math.min(first.tokens[0]!, ...first.batches.map((b) => b.start));
-  const highest = Math.max(...members.map((m) => m.tokens.at(-1)!));
-  const readUntil = Math.min(highest, start + members.length * MAX_SLOT) + MAX_SLOT;
-
-  const memberIds = new Set(members.map((m) => m.id));
-  const region = await indexer
-    .select({ id: objekts.id, collectionId: objekts.collectionId })
-    .from(objekts)
-    .where(tokenIdRange(start, readUntil));
-  const foreign = region
-    .filter((o) => o.collectionId === null || !memberIds.has(o.collectionId))
-    .map((o) => parseInt(o.id))
-    .sort((a, b) => a - b);
-
-  return {
-    members,
-    region: { start, memberTokens: members.map((m) => m.tokens), foreign, readUntil },
-  };
 }
 
-/** Whether a drop fits its grid, from the stored batches. */
-export type DropFitted = (key: DropKey) => Promise<boolean>;
+/** A drop loaded and fitted: every slot size that fits, and the grid when exactly one does. */
+export async function fitDrop(key: DropKey, override?: { collectionId: string; batches: Batch[] }) {
+  const drop = await loadDrop(key, override);
+  if (!drop) return { drop: null, slots: [], grid: null };
+  const { slots, grid } = fitDropGrid(drop.region);
+  return { drop, slots, grid };
+}
 
-/** A DropFitted that loads and fits each drop once. */
-export function dropFitMemo(): DropFitted {
-  const seen = new Map<string, Promise<boolean>>();
+/** The token span of a grid-fitted drop, from the stored batches, else null. */
+export type DropSpanOf = (key: DropKey) => Promise<{ start: number; end: number } | null>;
+
+/** A DropSpanOf that loads and fits each drop once. */
+export function dropSpanMemo(): DropSpanOf {
+  const seen = new Map<string, ReturnType<DropSpanOf>>();
   return (key) => {
     const name = `${key.season}|${key.collectionNo}|${key.artist}`;
-    let fitted = seen.get(name);
-    if (!fitted) {
-      fitted = loadDrop(key).then(
-        (drop) => drop !== null && fitDropGrid(drop.region).grid !== null,
+    let span = seen.get(name);
+    if (!span) {
+      span = fitDrop(key).then(({ drop, grid }) =>
+        drop && grid ? { start: drop.region.start, end: grid.end } : null,
       );
-      seen.set(name, fitted);
+      seen.set(name, span);
     }
-    return fitted;
+    return span;
   };
 }
 
@@ -367,14 +390,17 @@ export function dropFitMemo(): DropFitted {
  * The collection's batches with its grid slot in place of everything inside
  * the grid: the drop grid's when its drop fits, else the member grid's when its
  * member run fits, else the batches unchanged. Runs after refineBatches on every
- * path that stores ranges, so a rediscovery never undoes a grid. `dropFitted`
- * lets a caller that checks many collections share drop fits.
+ * path that stores ranges, so a rediscovery never undoes a grid. `dropSpanOf`
+ * lets a caller that checks many collections share drop fits. `fitted`: the
+ * batches come from a start-pinned drop fit or a run fit, so the collection
+ * may carry a fit mark.
  */
-export async function applyGrids(
+async function applyGrids(
   collectionId: string,
   batches: Batch[],
-  dropFitted: DropFitted = dropFitMemo(),
-): Promise<Batch[]> {
+  dropSpanOf: DropSpanOf = dropSpanMemo(),
+): Promise<{ batches: Batch[]; fitted: boolean }> {
+  const unfitted = { batches, fitted: false };
   const [c] = await indexer
     .select({
       season: collections.season,
@@ -386,37 +412,205 @@ export async function applyGrids(
     .from(collections)
     .where(eq(collections.id, collectionId))
     .limit(1);
-  if (!c || !isGridDrop(c)) return batches;
+  if (!c || !isGridDrop(c)) return unfitted;
 
   const override = { collectionId, batches };
-  const drop = await loadDrop(c, override);
-  const dropGrid = drop ? fitDropGrid(drop.region).grid : null;
+  const { drop, grid: dropGrid } = await fitDrop(c, override);
   const i = drop?.members.findIndex((m) => m.id === collectionId) ?? -1;
   if (drop && dropGrid && i !== -1) {
-    return mergeGridRanges(
-      batches,
-      dropGrid.ranges[i]!,
-      { start: drop.region.start, end: dropGrid.end },
-      drop.members[i]!.tokens,
-    );
+    return {
+      batches: mergeGridRanges(
+        batches,
+        dropGrid.ranges[i]!,
+        { start: drop.region.start, end: dropGrid.end },
+        drop.members[i]!.tokens,
+      ),
+      fitted: drop.pinned,
+    };
   }
 
   // the collection's own drop was just fitted with its new batches, so only
-  // the other collections' drops come from `dropFitted`
+  // the other collections' drops come from `dropSpanOf`
   const ownUnfitted = new Set([`${c.season}|${c.collectionNo}|${c.artist}`]);
   const run = await fittedMemberRun(c, collectionId, override, (key) =>
     ownUnfitted.has(`${key.season}|${key.collectionNo}|${key.artist}`)
-      ? Promise.resolve(false)
-      : dropFitted(key),
+      ? Promise.resolve(null)
+      : dropSpanOf(key),
   );
-  if (!run) return batches;
+  if (!run) return unfitted;
   const j = run.members.findIndex((m) => m.id === collectionId);
-  return mergeGridRanges(
-    batches,
-    run.grid.ranges[j]!,
-    { start: run.region.start, end: run.grid.end },
-    run.members[j]!.tokens,
-  );
+  return {
+    batches: mergeGridRanges(
+      batches,
+      run.grid.ranges[j]!,
+      { start: run.region.start, end: run.grid.end },
+      run.members[j]!.tokens,
+    ),
+    fitted: true,
+  };
+}
+
+export type GridPlan = {
+  member: DropMember;
+  own: { id: string; serial: number; mintedAt: string }[];
+  anchors: ManualAnchor[];
+  batches: Batch[];
+  updates: { id: string; newSerial: number }[];
+  rangesChange: boolean;
+};
+
+/**
+ * Each member's ranges with its slot of a fitted drop or run merged in, and
+ * the serial updates they give, anchors passed. `mintedBefore` leaves younger
+ * mints to the populate job's own delay.
+ */
+export async function planGridWrites(
+  members: DropMember[],
+  start: number,
+  grid: DropGrid,
+  opts: { mintedBefore?: string } = {},
+): Promise<GridPlan[]> {
+  const span = { start, end: grid.end };
+  const ids = members.map((m) => m.id);
+  const rows = await indexer
+    .select({
+      id: objekts.id,
+      serial: objekts.serial,
+      mintedAt: objekts.mintedAt,
+      collectionId: objekts.collectionId,
+    })
+    .from(objekts)
+    .where(
+      and(
+        inArray(objekts.collectionId, ids),
+        opts.mintedBefore ? lte(objekts.mintedAt, opts.mintedBefore) : undefined,
+      ),
+    );
+  const anchorRows = await indexer
+    .select({ id: collections.id, anchors: collections.serialAnchors })
+    .from(collections)
+    .where(inArray(collections.id, ids));
+  const anchorsOf = new Map(anchorRows.map((r) => [r.id, r.anchors ?? []] as const));
+
+  return members.map((member, i) => {
+    const own = rows.filter((r) => r.collectionId === member.id);
+    const anchors = anchorsOf.get(member.id) ?? [];
+    const batches = mergeGridRanges(member.batches, grid.ranges[i]!, span, member.tokens);
+    const rangesChange =
+      batches.length !== member.batches.length ||
+      batches.some(
+        (b, j) => b.start !== member.batches[j]!.start || b.end !== member.batches[j]!.end,
+      );
+    const updates = computeOfflineSerialUpdates(own, batches, anchors);
+    return { member, own, anchors, batches, updates, rangesChange };
+  });
+}
+
+/**
+ * Write a fitted drop's or run's planned ranges and serials and mark
+ * `markIds`, in one transaction. Marks land even when nothing else changes.
+ */
+export async function applyGridWrites(plans: GridPlan[], markIds: string[]) {
+  await indexer.transaction(async (tx) => {
+    for (const p of plans) {
+      if (!p.rangesChange && p.updates.length === 0) continue;
+      await tx
+        .update(collections)
+        .set({ serialBatches: p.batches })
+        .where(eq(collections.id, p.member.id));
+      await writeSerialUpdates(p.updates, tx);
+    }
+    if (markIds.length > 0) {
+      await tx
+        .update(collections)
+        .set({ gridFittedAt: sql`now()` })
+        .where(and(inArray(collections.id, markIds), isNull(collections.gridFittedAt)));
+    }
+  });
+}
+
+/**
+ * Mark or clear the one collection a range write stored. Only that collection
+ * holds its grid slot now, so the rest of its drop or run waits for its own
+ * write (or `settleOpenDrops`) before it is marked; an existing mark keeps its time.
+ */
+async function writeFitMark(
+  db: IndexerTransaction | typeof indexer,
+  collectionId: string,
+  fitted: boolean,
+) {
+  await db
+    .update(collections)
+    .set({ gridFittedAt: fitted ? sql`now()` : null })
+    .where(
+      and(
+        eq(collections.id, collectionId),
+        fitted ? isNull(collections.gridFittedAt) : isNotNull(collections.gridFittedAt),
+      ),
+    );
+}
+
+/**
+ * Discovered batches as a rewrite stores them: refined to whole blocks, then
+ * fitted to the collection's grid.
+ */
+export async function fitRanges(
+  collectionId: string,
+  season: string,
+  discovered: Batch[],
+  tokenIds: number[],
+  opts: { knownForeign?: number[]; dropSpanOf?: DropSpanOf } = {},
+) {
+  const refined = await refineBatches(season, discovered, tokenIds, opts.knownForeign);
+  return applyGrids(collectionId, refined, opts.dropSpanOf);
+}
+
+/**
+ * Store `next` in place of `stored`, with its fit marks. Unchanged ranges are
+ * not rewritten, but their marks still are. True when the ranges changed.
+ */
+export async function storeRanges(
+  collectionId: string,
+  stored: Batch[],
+  next: { batches: Batch[]; fitted: boolean },
+) {
+  const same =
+    next.batches.length === stored.length &&
+    next.batches.every((b, i) => b.start === stored[i]!.start && b.end === stored[i]!.end);
+  if (same) {
+    await writeFitMark(indexer, collectionId, next.fitted);
+    return false;
+  }
+  await indexer.transaction(async (tx) => {
+    await tx
+      .update(collections)
+      .set({ serialBatches: next.batches })
+      .where(eq(collections.id, collectionId));
+    await writeFitMark(tx, collectionId, next.fitted);
+  });
+  return true;
+}
+
+/**
+ * Recompute a collection's offline serials from its ranges, anchors passed,
+ * write those that changed, and warn when serials already shown move.
+ * Returns how many were written.
+ */
+export async function rewriteSerials(
+  rows: { id: string; serial: number; mintedAt: string }[],
+  batches: Batch[],
+  anchors: ManualAnchor[],
+  logger: Logger,
+  label: string,
+) {
+  const updates = computeOfflineSerialUpdates(rows, batches, anchors);
+  if (updates.length === 0) return 0;
+  const shift = shiftedSerials(rows, updates);
+  if (shift) {
+    logger.warn(`${label}: ${shift.count} shown serial(s) moved by ${shift.min}..${shift.max}`);
+  }
+  await writeSerialUpdates(updates);
+  return updates.length;
 }
 
 export type MemberKey = Omit<DropKey, "collectionNo"> & { member: string };
@@ -440,7 +634,7 @@ export type MemberRun = {
 export async function loadMemberRuns(
   key: MemberKey,
   override?: { collectionId: string; batches: Batch[] },
-  dropFitted: DropFitted = dropFitMemo(),
+  dropSpanOf: DropSpanOf = dropSpanMemo(),
 ): Promise<MemberRun[]> {
   if (preBlockSeasons.includes(key.season)) return [];
   const rows = await indexer
@@ -462,32 +656,7 @@ export async function loadMemberRuns(
     );
   if (rows.length < 2) return [];
 
-  const minted = await indexer
-    .select({ id: objekts.id, collectionId: objekts.collectionId })
-    .from(objekts)
-    .where(
-      inArray(
-        objekts.collectionId,
-        rows.map((r) => r.id),
-      ),
-    );
-  const tokensOf = new Map<string, number[]>();
-  for (const o of minted) {
-    if (o.collectionId === null) continue;
-    const list = tokensOf.get(o.collectionId) ?? [];
-    list.push(parseInt(o.id));
-    tokensOf.set(o.collectionId, list);
-  }
-  const ordered = rows
-    .map((r) => ({
-      id: r.id,
-      slug: r.slug,
-      collectionNo: r.collectionNo,
-      batches: override?.collectionId === r.id ? override.batches : (r.batches ?? []),
-      tokens: (tokensOf.get(r.id) ?? []).sort((a, b) => a - b),
-    }))
-    .filter((m) => m.tokens.length > 0)
-    .sort((a, b) => a.tokens[0]! - b.tokens[0]!);
+  const ordered = await mintedMembers(rows, override);
 
   const groups: (typeof ordered)[] = [];
   for (const m of ordered) {
@@ -526,7 +695,7 @@ export async function loadMemberRuns(
     let heldByDrop = false;
     for (const m of members) {
       if (
-        await dropFitted({ season: key.season, collectionNo: m.collectionNo, artist: key.artist })
+        await dropSpanOf({ season: key.season, collectionNo: m.collectionNo, artist: key.artist })
       ) {
         heldByDrop = true;
         break;
@@ -562,9 +731,9 @@ export async function fittedMemberRun(
   key: MemberKey,
   collectionId: string,
   override?: { collectionId: string; batches: Batch[] },
-  dropFitted?: DropFitted,
+  dropSpanOf?: DropSpanOf,
 ) {
-  const runs = await loadMemberRuns(key, override, dropFitted);
+  const runs = await loadMemberRuns(key, override, dropSpanOf);
   const run = runs.find((r) => r.members.some((m) => m.id === collectionId));
   if (!run || !run.pinned || run.heldByDrop) return null;
   const { grid } = fitMemberRun(run.region);

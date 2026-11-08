@@ -32,27 +32,21 @@ import { and, asc, eq, inArray, isNotNull, ne, or, sql } from "drizzle-orm";
 import { FetchError } from "ofetch";
 
 import {
-  applyGrids,
   type DropKey,
   discoverBatches,
+  dropSpanMemo,
+  fitRanges,
   fittedMemberRun,
   isGridDrop,
-  loadDrop,
   type MemberKey,
-  refineBatches,
+  rewriteSerials,
+  storeRanges,
   tokenIdRange,
-  writeSerialUpdates,
 } from "@/job/serial-batches";
-import { fitDropGrid, insideDrop } from "@/lib/drop-grid";
+import { insideDrop } from "@/lib/drop-grid";
 import { log } from "@/lib/log";
 import { preAssignedCollections as excludeCollections } from "@/lib/serial-constants";
-import {
-  computeOfflineSerialUpdates,
-  shiftedSerials,
-  discoveryBoundaries,
-  type ManualAnchor,
-  V1_CUTOFF_MS,
-} from "@/lib/serial-math";
+import { discoveryBoundaries, type ManualAnchor, V1_CUTOFF_MS } from "@/lib/serial-math";
 import {
   type BatchEdges,
   isRecent,
@@ -125,28 +119,14 @@ export async function verifyBatchBoundaries(scope: ProbeScope, dryRun = false) {
   let probes = 0;
   const failed: string[] = [];
 
-  // each drop is fitted once per run: the span of a grid-fitted drop, else null
-  const dropSpans = new Map<string, Promise<{ start: number; end: number } | null>>();
-  const dropSpanOf = (key: DropKey) => {
-    const name = `${key.season}|${key.collectionNo}|${key.artist}`;
-    let span = dropSpans.get(name);
-    if (!span) {
-      span = loadDrop(key).then((drop) => {
-        const grid = drop ? fitDropGrid(drop.region).grid : null;
-        return drop && grid ? { start: drop.region.start, end: grid.end } : null;
-      });
-      dropSpans.set(name, span);
-    }
-    return span;
-  };
-
-  const dropFitted = (key: DropKey) => dropSpanOf(key).then((span) => span !== null);
+  // each drop is fitted once per run
+  const dropSpanOf = dropSpanMemo();
 
   const runSpans = new Map<string, Promise<{ start: number; end: number } | null>>();
   const runSpanOf = (key: MemberKey, collectionId: string) => {
     let span = runSpans.get(collectionId);
     if (!span) {
-      span = fittedMemberRun(key, collectionId, undefined, dropFitted).then((run) => {
+      span = fittedMemberRun(key, collectionId, undefined, dropSpanOf).then((run) => {
         const value = run ? { start: run.region.start, end: run.grid.end } : null;
         for (const m of run?.members ?? []) runSpans.set(m.id, Promise.resolve(value));
         return value;
@@ -307,38 +287,21 @@ export async function verifyBatchBoundaries(scope: ProbeScope, dryRun = false) {
       failed.push(t.slug);
       return;
     }
-    fresh = await refineBatches(t.season, fresh, tokenIds, [
-      ...knownForeign,
-      ...discoveryBoundaries(fresh),
-    ]);
-    fresh = await applyGrids(t.id, fresh, dropFitted);
-    if (fresh.length === 0) return;
+    const next = await fitRanges(t.id, t.season, fresh, tokenIds, {
+      knownForeign: [...knownForeign, ...discoveryBoundaries(fresh)],
+      dropSpanOf,
+    });
+    if (next.batches.length === 0) return;
 
-    const same =
-      fresh.length === batches.length &&
-      fresh.every((b, i) => b.start === batches[i]!.start && b.end === batches[i]!.end);
-    if (same) {
+    if (!(await storeRanges(t.id, batches, next))) {
       unchanged++;
       verifyLog.debug(`${t.slug}: rediscovery gave back the stored batches, nothing written`);
       return;
     }
 
-    await indexer.update(collections).set({ serialBatches: fresh }).where(eq(collections.id, t.id));
-
-    const updates = computeOfflineSerialUpdates(rows, fresh, manualAnchors);
-
-    if (updates.length > 0) {
-      await writeSerialUpdates(updates);
-    }
-    const shift = shiftedSerials(rows, updates);
-    if (shift) {
-      verifyLog.warn(
-        `${t.slug}: ${shift.count} shown serial(s) moved by ${shift.min}..${shift.max}`,
-      );
-    }
-
+    const updated = await rewriteSerials(rows, next.batches, manualAnchors, verifyLog, t.slug);
     fixed++;
-    verifyLog.info(`${t.slug}: fixed — ${fresh.length} batches, ${updates.length} serials updated`);
+    verifyLog.info(`${t.slug}: fixed — ${next.batches.length} batches, ${updated} serials updated`);
   }
 
   await chunk(targets, CONCURRENCY, async (group) => {

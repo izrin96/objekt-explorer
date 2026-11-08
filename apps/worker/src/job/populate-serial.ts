@@ -1,23 +1,31 @@
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
 import { chunk } from "@repo/lib";
-import { and, eq, gte, notInArray, inArray, or, lte } from "drizzle-orm";
+import { OPEN_DROP_DAYS } from "@repo/lib/serial";
+import { and, eq, gte, notInArray, inArray, like, or, lte, sql } from "drizzle-orm";
 
 import { heartbeat, log, type Logger } from "@/lib/log";
-import { preAssignedCollections as excludeCollections } from "@/lib/serial-constants";
 import {
-  computeOfflineSerialUpdates,
-  shiftedSerials,
+  preAssignedCollections as excludeCollections,
+  preBlockSeasons,
+} from "@/lib/serial-constants";
+import {
   computeOnlineSerials,
   planRediscovery,
+  shiftedSerials,
   V1_CUTOFF_MS,
 } from "@/lib/serial-math";
 
 import {
+  applyGridWrites,
   discoverBatches,
+  type DropKey,
   findBoundaryTokenId,
-  applyGrids,
-  refineBatches,
+  fitDrop,
+  fitRanges,
+  planGridWrites,
+  rewriteSerials,
+  storeRanges,
   writeSerialUpdates,
 } from "./serial-batches";
 
@@ -153,6 +161,13 @@ async function processCollection(collectionId: string): Promise<number> {
 }
 
 export async function populateSerialOffline() {
+  // a failed settle must not hold back the serials of new mints
+  try {
+    await settleOpenDrops();
+  } catch (error) {
+    offlineLog.warn(`open drops not settled this run: ${String(error)}`);
+  }
+
   const affectedCollections = await indexer
     .selectDistinctOn([collections.id], { id: collections.id })
     .from(collections)
@@ -183,6 +198,84 @@ export async function populateSerialOffline() {
     offlineLog.warn(`Cosmo API failed for ${apiErrors} collections; they retry next run`);
   }
   offlineBeat.flush();
+}
+
+/**
+ * Fit every recent A drop that still has an unmarked collection, and on a
+ * start-pinned fit write its slots and serials and mark it. Without this a
+ * drop closed by a foreign mint after its last member's waits for a member's
+ * rediscovery to pick up its grid.
+ */
+async function settleOpenDrops() {
+  const since = new Date(Date.now() - OPEN_DROP_DAYS * 24 * 60 * 60 * 1000).toISOString();
+  const open = await indexer
+    .select({
+      season: collections.season,
+      collectionNo: collections.collectionNo,
+      artist: collections.artist,
+    })
+    .from(collections)
+    .where(
+      and(
+        eq(collections.onOffline, "offline"),
+        like(collections.collectionNo, "%A"),
+        notInArray(collections.season, preBlockSeasons),
+        // only drops with a collection inside the window, through the created_at index;
+        // HAVING still checks every collection of those drops
+        sql`(${collections.season}, ${collections.collectionNo}, ${collections.artist}) in (
+          select season, collection_no, artist from ${collections} where created_at > ${since})`,
+      ),
+    )
+    .groupBy(collections.season, collections.collectionNo, collections.artist)
+    .having(
+      and(
+        sql`min(${collections.createdAt}) > ${since}`,
+        sql`bool_or(${collections.gridFittedAt} is null)`,
+      ),
+    );
+
+  let failed = 0;
+  const settled: string[] = [];
+  for (const key of open) {
+    const name = `${key.season} ${key.collectionNo} ${key.artist}`;
+    try {
+      const updates = await settleDrop(name, key);
+      if (updates !== null) settled.push(`${name} (${updates} serials)`);
+    } catch (error) {
+      failed++;
+      offlineLog.debug(`${name}: settle failed: ${String(error)}`);
+    }
+  }
+  if (settled.length > 0) {
+    offlineBeat.count("drops settled", settled.length);
+    offlineLog.info(`settled ${settled.length} open drop(s): ${settled.join("; ")}`);
+  }
+  if (failed > 0) offlineLog.warn(`${failed} open drop(s) failed to settle; they retry next run`);
+}
+
+/** Serials written when the drop settled, or null when it did not. */
+async function settleDrop(name: string, key: DropKey) {
+  const { drop, grid } = await fitDrop(key);
+  if (!drop || !grid || !drop.pinned) {
+    offlineLog.debug(`${name}: open drop not settled (${!grid ? "no fit" : "not start-pinned"})`);
+    return null;
+  }
+  const plans = await planGridWrites(drop.members, drop.region.start, grid, {
+    mintedBefore: new Date(Date.now() - MINT_DELAY_MS).toISOString(),
+  });
+  await applyGridWrites(
+    plans,
+    drop.members.map((m) => m.id),
+  );
+  for (const p of plans) {
+    const shift = shiftedSerials(p.own, p.updates);
+    if (shift) {
+      offlineLog.warn(
+        `${p.member.slug}: ${shift.count} shown serial(s) moved by ${shift.min}..${shift.max}`,
+      );
+    }
+  }
+  return plans.reduce((n, p) => n + p.updates.length, 0);
 }
 
 /** Objekts updated, or why nothing was written. */
@@ -255,8 +348,8 @@ async function processCollectionOffline(collectionId: string): Promise<OfflineOu
       return "api error";
     }
 
-    batches = await refineBatches(collection.season, batches, presentTokenIds);
-    batches = await applyGrids(collectionId, batches);
+    const next = await fitRanges(collectionId, collection.season, batches, presentTokenIds);
+    batches = next.batches;
 
     if (batches.length === 0) {
       offlineBeat.count("no batches discovered");
@@ -264,10 +357,7 @@ async function processCollectionOffline(collectionId: string): Promise<OfflineOu
       return "skipped";
     }
 
-    await indexer
-      .update(collections)
-      .set({ serialBatches: batches })
-      .where(eq(collections.id, collectionId));
+    await storeRanges(collectionId, collection.serialBatches ?? [], next);
   }
 
   // Recompute the serial of every objekt from the batch ranges (anchored on
@@ -275,19 +365,16 @@ async function processCollectionOffline(collectionId: string): Promise<OfflineOu
   // heals objekts whose serial was written before a new/intermediate batch was
   // discovered (which shifts every later serial), not just newly-minted
   // serial=0 objekts.
-  const updates = computeOfflineSerialUpdates(allObjekts, batches, collection.serialAnchors ?? []);
+  const updated = await rewriteSerials(
+    allObjekts,
+    batches,
+    collection.serialAnchors ?? [],
+    offlineLog,
+    collectionId,
+  );
+  if (updated === 0) return "skipped";
 
-  if (updates.length === 0) return "skipped";
-
-  const shift = shiftedSerials(allObjekts, updates);
-  if (shift) {
-    offlineLog.warn(
-      `${collectionId}: ${shift.count} shown serial(s) moved by ${shift.min}..${shift.max}`,
-    );
-  }
-
-  await writeSerialUpdates(updates);
-  offlineBeat.count("objekts updated", updates.length);
-  offlineLog.debug(`${collectionId}: updated ${updates.length} objekts`);
-  return updates.length;
+  offlineBeat.count("objekts updated", updated);
+  offlineLog.debug(`${collectionId}: updated ${updated} objekts`);
+  return updated;
 }

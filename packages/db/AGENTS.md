@@ -15,6 +15,10 @@ Pending migrations run before the new code is live, so each one must work with t
 
 A column can leave `schema.ts` before it leaves the database: generate the migration so its snapshot drops the column, then replace its SQL with a no-op (`20261024135516_retire_privacy_columns`). Otherwise the next `db:generate` writes the `DROP COLUMN` into whatever change comes next. `user_address.private_profile`, `private_serial`, `hide_transfer` and `hide_nickname` are kept that way, values intact, until the owner approves their drop.
 
+## Serial columns
+
+`collection.serial_batches`, `serial_anchors` and `grid_fitted_at` are Drizzle-owned columns the worker writes (see `apps/worker/AGENTS.md`, Offline serials). `grid_fitted_at` (`20261108000000_add_grid_fitted_at`) is set while a collection's stored ranges come from a fitted grid and cleared when a rewrite no longer fits; the API's serial estimate reads it.
+
 ## Collection colours
 
 Staff colour fixes live on the indexer's `collection` row: `text_color` and `background_color` hold the colour shown, and `source_text_color` / `source_background_color` (Drizzle-owned, `20261104150000_collection_colour_source`) hold the value a staff colour replaced, as the source gave it, null where the source applies. `collection_staff_colors` requires a staff-set colour to be lowercase `#` and six hex digits; a source stays unchecked, since 20 production rows hold malformed ones. The history is the app's `mod_audit` (`collection_override` entries); the worker's `replay-collection-colours.ts` puts it back on the rows after a resync. `.env.local`'s read-only indexer is what stops a local save from reaching production: it fails at the row lock and writes nothing, so keep `default_transaction_read_only=on` there.

@@ -16,6 +16,30 @@ export function shownSerial(serial: number) {
 // the batch model altogether.
 export const preBlockSeasons = ["Atom01", "Binary01", "Cream01", "Divine01", "Ever01"];
 
+/** an "A" drop of a block season, whose members may share a grid */
+export function isGridDrop(c: { season: string; collectionNo: string; onOffline: string }) {
+  return (
+    c.onOffline === "offline" && c.collectionNo.endsWith("A") && !preBlockSeasons.includes(c.season)
+  );
+}
+
+// a drop whose last member mints later than this is left to the estimate's own rules
+export const OPEN_DROP_DAYS = 7;
+
+/**
+ * A drop is still minting while some collection of it carries no grid fit
+ * time and its earliest collection is younger than OPEN_DROP_DAYS: a member
+ * yet to mint has no collection row, so its reserved slot is invisible.
+ */
+export function dropStillMinting(input: {
+  fitted: boolean;
+  firstCreatedAt: Date | string;
+  now: number;
+}) {
+  const age = input.now - new Date(input.firstCreatedAt).getTime();
+  return !input.fitted && age < OPEN_DROP_DAYS * 24 * 60 * 60 * 1000;
+}
+
 // a range wider than this reads as no answer, so only its low end is shown
 const ESTIMATE_RANGE_MAX = 100;
 // unseen tokens at a batch's end: unminted separators or the tail's own copies
@@ -44,10 +68,13 @@ export function estimateSerials(input: {
   batches: { start: number; end: number }[];
   ceiling: number | null;
   topSerial: number;
+  // the collection's drop is still minting: the next foreign mint may sit past
+  // slots of members yet to mint, so it bounds nothing
+  open?: boolean;
 }): SerialEstimate | null {
-  const { season, batches, ceiling, topSerial } = input;
+  const { season, batches, ceiling, topSerial, open = false } = input;
   if (season === "Atom01" || batches.length === 0) return null;
-  const fromRanges = rangeEstimate(season, batches, ceiling);
+  const fromRanges = rangeEstimate(season, batches, open ? null : ceiling);
   if (topSerial > (fromRanges.max ?? fromRanges.min)) return { min: topSerial, max: null };
   return { min: Math.max(fromRanges.min, topSerial), max: fromRanges.max };
 }
