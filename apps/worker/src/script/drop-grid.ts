@@ -13,8 +13,8 @@
  * tokens inside are marked for a closer look.
  *
  * Dry run by default. APPLY=1 stores the fitted drops' ranges and rewrites
- * their serials, one transaction per drop, then does the same for the fitted
- * runs, one transaction per run. It also sets `grid_fitted_at` on every
+ * their serials, one transaction per member, then does the same for the
+ * fitted runs. It also sets `grid_fitted_at` on every
  * collection of a fitted run and of a fitted drop whose start is pinned (the
  * token before it is another collection's mint) and whose whole roster has
  * minted (as many members as the season's largest other A drop of the artist);

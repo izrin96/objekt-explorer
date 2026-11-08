@@ -27,6 +27,7 @@
 ## 6. Review fix: roster check
 
 - [x] 6.1 A review after the deploy showed a drop whose middle member has not minted can fit a wrong slot size while start-pinned, and the open-drop step would then write and mark it. Add `rosterComplete(minted, otherDropSizes)` to `lib/drop-grid.ts` (tested: a missing middle member, every member minted, a subunit drop, the first A drop of a season), `complete` to `loadDrop` (row counts of the season's other A drops of the artist), and require it beside `pinned` in `settleDrop`, in `applyGrids`' mark and in `script/drop-grid.ts`'s marks and report. `fitDropGrid` and the ranges it gives are unchanged. Verify that `bun run check --filter=worker` passes and that a read-only `script/drop-grid.ts` run still reports Cream02 355A and 356A fitted with no reason left unmarked. Result on 2026-11-08: both fitted and marked; the drops it newly leaves unmarked are Atom02 349A, 351A, 353A, 363A and 368A–371A, Spring26 201A, Summer25 217A and Winter26 213A and 214A (subunit drops, or the only A drop of their season), none under 7 days old.
+- [x] 6.2 Write a settled drop one member at a time: `applyGridWrites` stores each member's ranges and serials in its own transaction, then sets the marks, so a large shift never holds every member's objekt rows at once and a failure part way leaves the drop unmarked for the next run. Update the `script/drop-grid.ts` header. Verify that `bun run check --filter=worker` passes and that a read-only `script/drop-grid.ts Cream02 356A triples` run still reports the drop fitted.
 
 ## Workflow follow-up
 

@@ -535,26 +535,29 @@ export async function planGridWrites(
 }
 
 /**
- * Write a fitted drop's or run's planned ranges and serials and mark
- * `markIds`, in one transaction. Marks land even when nothing else changes.
+ * Write a fitted drop's or run's planned ranges and serials, one transaction
+ * per member, then mark `markIds`. A whole drop in one transaction would hold
+ * thousands of objekt row locks the indexer's transfer writes wait on. Marks
+ * go last, so a write that fails part way leaves the drop unmarked and
+ * `settleOpenDrops` writes it again. Marks land even when nothing else changes.
  */
 export async function applyGridWrites(plans: GridPlan[], markIds: string[]) {
-  await indexer.transaction(async (tx) => {
-    for (const p of plans) {
-      if (!p.rangesChange && p.updates.length === 0) continue;
+  for (const p of plans) {
+    if (!p.rangesChange && p.updates.length === 0) continue;
+    await indexer.transaction(async (tx) => {
       await tx
         .update(collections)
         .set({ serialBatches: p.batches })
         .where(eq(collections.id, p.member.id));
       await writeSerialUpdates(p.updates, tx);
-    }
-    if (markIds.length > 0) {
-      await tx
-        .update(collections)
-        .set({ gridFittedAt: sql`now()` })
-        .where(and(inArray(collections.id, markIds), isNull(collections.gridFittedAt)));
-    }
-  });
+    });
+  }
+  if (markIds.length > 0) {
+    await indexer
+      .update(collections)
+      .set({ gridFittedAt: sql`now()` })
+      .where(and(inArray(collections.id, markIds), isNull(collections.gridFittedAt)));
+  }
 }
 
 /**

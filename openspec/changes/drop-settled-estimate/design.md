@@ -54,7 +54,7 @@ A review after the deploy showed the pin only catches a missing first member. Wh
 `populateSerialOffline` gains a step before the per-collection loop:
 
 1. List the A drops of block seasons with `min(created_at) > now() - 7 days` and `bool_or(grid_fitted_at IS NULL)`. This is one grouped query over `collection`, and it returns a handful of drops.
-2. For each, `loadDrop` + `fitDropGrid` once. On a fit that is start-pinned, for each member, merge its slot (`mergeGridRanges`, as `script/drop-grid.ts` does), compute serial updates with its anchors (`computeOfflineSerialUpdates`) and write ranges, serials and the mark in one transaction per drop.
+2. For each, `loadDrop` + `fitDropGrid` once. On a fit that is start-pinned, for each member, merge its slot (`mergeGridRanges`, as `script/drop-grid.ts` does), compute serial updates with its anchors (`computeOfflineSerialUpdates`) and write each member's ranges and serials in one transaction per member, then the marks. A first draft wrote the whole drop in one transaction; the review after the deploy pointed out it holds every member's objekt row locks while the indexer's transfer writes wait on them. With the marks last, a write that fails part way leaves the drop unmarked, so the next run writes it again.
 
 The write is the one `script/drop-grid.ts`'s `review()` makes, so it moves into `job/serial-batches.ts` as `planGridWrites` (ranges and serial updates per member) and `applyGridWrites` (one transaction, with the marks), which both call. That keeps a single source of truth for what "apply a fitted drop" writes.
 
