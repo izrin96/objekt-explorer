@@ -235,6 +235,8 @@ function ListItem({ notification, collections, now, onOpen, variant }: RowProps<
     <Link
       to="/trade/for-you"
       search={{ match: notification.payload.match ?? "any", list: notification.payload.list.slug }}
+      // each row is its own feed read, which spends the feed's rate limit on a hover
+      preload={false}
       onClick={onOpen}
       className={rowClass(unread, variant)}
     >

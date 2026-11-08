@@ -22,6 +22,8 @@ export function OnTradeLine({ slug }: { slug: string }) {
     <Link
       to="/trade"
       search={{ slug }}
+      // each collection is its own feed read, which spends the feed's rate limit on a hover
+      preload={false}
       className="hover:bg-secondary/60 focus-visible:ring-ring flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-sm outline-none focus-visible:ring-2"
     >
       <span>{text}</span>
