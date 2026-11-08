@@ -375,7 +375,7 @@
 
   ::selection {
     background-color: var(--selection);
-    color: var(--foreground);
+    /* color: var(--foreground); */
   }
 
   ::-webkit-scrollbar {
