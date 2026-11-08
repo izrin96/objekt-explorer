@@ -7,7 +7,7 @@ import { ListHeader, ListPageSkeleton } from "@/features/list/list-header";
 import { ListNotFound } from "@/features/list/list-not-found";
 import { ListProvider } from "@/features/list/list-provider";
 import { ListView } from "@/features/list/list-view";
-import { listBySlugQuery } from "@/features/list/queries";
+import { listEntriesPreload, listBySlugQuery } from "@/features/list/queries";
 import { ProfileProvider } from "@/features/profile/profile-provider";
 import { profileQuery } from "@/features/profile/queries";
 import { generateMetadata } from "@/lib/meta";
@@ -26,8 +26,17 @@ export const Route = createFileRoute("/(container)/@{$nickname}_/list/$slug")({
     });
     return { list };
   },
-  head: ({ loaderData }) =>
-    loaderData ? generateMetadata({ title: m.page_titles_list_detail(loaderData.list) }) : {},
+  head: ({ loaderData, match }) => {
+    if (!loaderData) return {};
+    const { meta, links } = generateMetadata({ title: m.page_titles_list_detail(loaderData.list) });
+    return {
+      meta,
+      links: [
+        ...links,
+        ...listEntriesPreload(match.context.queryClient, loaderData.list.slug, match.search),
+      ],
+    };
+  },
   component: ProfileListDetailPage,
   notFoundComponent: ListNotFound,
   pendingComponent: ListPageSkeleton,

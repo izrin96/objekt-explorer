@@ -1,12 +1,11 @@
-import { createORPCErrorFromJson, isORPCErrorJson } from "@orpc/client";
 import type { OwnedByFilters, OwnedByOutput, OwnedCopiesOutput } from "@repo/api/schemas/objekts";
 import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query";
-import { ofetch } from "ofetch";
 import type * as z from "zod";
 
 import { mapObjektWithTag } from "@/features/objekt/objekt-utils";
 import { getProfile, type profileInputSchema } from "@/lib/functions/profile";
 import { client, orpc } from "@/lib/orpc";
+import { preloadedGet } from "@/lib/preloaded-get";
 
 import { ownedCopiesUrl } from "./owned-copies-url";
 
@@ -39,18 +38,6 @@ export const ownedCollectionOptions = (address: string, filters?: OwnedByFilters
   });
 
 /**
- * A plain GET of the URL the profile layout preloads, so the first page downloads beside the
- * scripts instead of after hydration. An error comes back as the oRPC error RPC would throw, which
- * is what the error reporting and `refusalText` read.
- */
-function fetchFirstOwnedPage(address: string, filters?: OwnedByFilters) {
-  return ofetch<OwnedCopiesOutput>(ownedCopiesUrl(address, filters)).catch((error: unknown) => {
-    const body = (error as { data?: unknown }).data;
-    throw isORPCErrorJson(body) ? createORPCErrorFromJson(body) : error;
-  });
-}
-
-/**
  * The profile's copies without their collection fields, which `joinOwned` takes from the
  * collection list: the full rows repeat them per copy, about 85% of every page.
  */
@@ -59,7 +46,8 @@ export const ownedCopiesOptions = (address: string, filters?: OwnedByFilters) =>
     queryKey: ["owned-copies", address, filters],
     queryFn: ({ pageParam }) =>
       pageParam === undefined
-        ? fetchFirstOwnedPage(address, filters)
+        ? // the profile layout preloads the first page
+          preloadedGet<OwnedCopiesOutput>(ownedCopiesUrl(address, filters))
         : client.objekts.ownedCopies({ ...filters, address, cursor: pageParam }),
     initialPageParam: undefined as OwnedCopiesOutput["nextCursor"],
     getNextPageParam: (lastPage) => lastPage.nextCursor,
