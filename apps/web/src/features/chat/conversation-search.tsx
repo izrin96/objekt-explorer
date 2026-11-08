@@ -37,8 +37,12 @@ export function ConversationSearch({ box, q }: { box: ChatBox; q: string | undef
   const input = useRef<HTMLInputElement>(null);
   const [focused, setFocused] = useState(false);
   // the list is already loading this query; an empty Requests or Archived box has nothing to
-  // search, but the field stays while it is in use, so clearing a search never drops focus
-  const { data, isSuccess, isPlaceholderData } = useInfiniteQuery(conversationsOptions(box, q));
+  // search, but the field stays while it is in use, so clearing a search never drops focus. The
+  // Inbox always keeps the field, and its chip would make this a second, unfiltered list
+  const { data, isSuccess, isPlaceholderData } = useInfiniteQuery({
+    ...conversationsOptions(box, q),
+    enabled: box !== "inbox",
+  });
   const nothingToSearch =
     box !== "inbox" &&
     q === undefined &&
