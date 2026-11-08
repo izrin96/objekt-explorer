@@ -114,6 +114,9 @@ export class Collection {
   @Column({ type: "jsonb", nullable: true })
   serialAnchors!: { tokenId: number; serial: number; note: string; addedAt: string }[] | null;
 
+  @Column("timestamp with time zone", { nullable: true })
+  gridFittedAt!: Date | null;
+
   @OneToMany(() => Transfer, (e) => e.collection)
   transfers!: Transfer[];
 

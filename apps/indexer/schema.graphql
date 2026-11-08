@@ -30,6 +30,7 @@ type Collection @entity {
   sourceBackgroundColor: String
   serialBatches: JSON
   serialAnchors: JSON
+  gridFittedAt: DateTime
   transfers: [Transfer!] @derivedFrom(field: "collection")
   objekts: [Objekt!] @derivedFrom(field: "collection")
 }

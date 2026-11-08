@@ -53,6 +53,8 @@ export const collections = pgTable(
       jsonb("serial_anchors").$type<
         { tokenId: number; serial: number; note: string; addedAt: string }[]
       >(),
+    // Drizzle-owned: when the worker first stored ranges from a fitted grid, null once a rewrite no longer fits
+    gridFittedAt: timestamp("grid_fitted_at", { withTimezone: true, mode: "string" }),
     // staff colour fixes: non-null while staff override that colour, holding the value it replaced
     // as the source gave it; Drizzle-owned, never in the indexer's TypeORM model
     sourceTextColor: text("source_text_color"),
