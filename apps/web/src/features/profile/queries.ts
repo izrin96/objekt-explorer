@@ -87,7 +87,6 @@ export const pinsOptions = (address: string) =>
   orpc.pins.list.queryOptions({
     input: { address },
     refetchOnWindowFocus: false,
-    staleTime: 1000 * 60 * 5,
     select: (data) => new Map(data.map((pin) => [pin.tokenId, pin.order])),
   });
 
@@ -95,6 +94,5 @@ export const locksOptions = (address: string) =>
   orpc.lockedObjekt.list.queryOptions({
     input: { address },
     refetchOnWindowFocus: false,
-    staleTime: 1000 * 60 * 5,
     select: (data) => new Set(data.map((lock) => lock.tokenId)),
   });

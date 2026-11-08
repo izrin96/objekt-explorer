@@ -24,6 +24,13 @@ export const isClientError = (error: unknown) => error instanceof ORPCError && e
 export const retryUnlessClientError = (failureCount: number, error: unknown) =>
   !isClientError(error) && failureCount < 3;
 
+/**
+ * The retry of a rate-limited read (the Trade feed, the offer builder's candidates): as
+ * `retryUnlessClientError`, but twice, since each try counts against the limit.
+ */
+export const retryUnlessRefused = (failureCount: number, error: unknown) =>
+  !isClientError(error) && failureCount < 2;
+
 export const isBadRequest = (error: unknown) =>
   error instanceof ORPCError && error.code === "BAD_REQUEST";
 

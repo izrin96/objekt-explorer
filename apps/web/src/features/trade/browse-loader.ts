@@ -1,5 +1,5 @@
 import type { Outputs } from "@repo/api";
-import type { InfiniteData, QueryClient } from "@tanstack/react-query";
+import { type InfiniteData, type QueryClient, noop } from "@tanstack/react-query";
 
 import { currentUserOptions } from "@/features/user/queries";
 import { orpc } from "@/lib/orpc";
@@ -34,17 +34,15 @@ export async function loadBrowse({
   );
   // a filter change keeps the current posts on screen while the next ones load
   if (cause === "stay") {
-    void queryClient.infiniteQuery(options).catch(() => undefined);
+    void queryClient.infiniteQuery(options).catch(noop);
     return;
   }
   // a failed read leaves the view to show its error and retry, not the page to fail
-  const feed = queryClient
-    .infiniteQuery({ ...options, staleTime: "static" })
-    .catch(() => undefined);
+  const feed = queryClient.infiniteQuery({ ...options, staleTime: "static" }).catch(noop);
   // Your posts sits above the feed, so it is in the first paint rather than pushing it down
   const mine =
     user && surface === "browse"
-      ? queryClient.query({ ...myPostsOptions(), staleTime: "static" }).catch(() => undefined)
+      ? queryClient.query({ ...myPostsOptions(), staleTime: "static" }).catch(noop)
       : undefined;
   await Promise.all([feed, mine]);
 }

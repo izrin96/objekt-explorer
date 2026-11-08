@@ -1,3 +1,4 @@
+import { noop } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 
 import { LinkedProfilesPanel, LinkedProfilesPending } from "@/features/link/linked-profiles";
@@ -15,7 +16,7 @@ export const Route = createFileRoute("/(container)/account/profiles")({
         ...linkedPreviewsOptions(user?.profiles.map((profile) => profile.address) ?? []),
         staleTime: "static",
       })
-      .catch(() => undefined);
+      .catch(noop);
   },
   head: () => generateMetadata({ title: m.account_section_profiles() }),
   component: LinkedProfilesPanel,

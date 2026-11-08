@@ -1,4 +1,4 @@
-import { orpc } from "@/lib/orpc";
+import { LOADER_READ_STALE_MS, orpc } from "@/lib/orpc";
 
 export const collectionOverridesOptions = () =>
-  orpc.admin.collectionOverrides.queryOptions({ staleTime: 10_000, retry: false });
+  orpc.admin.collectionOverrides.queryOptions({ staleTime: LOADER_READ_STALE_MS, retry: false });

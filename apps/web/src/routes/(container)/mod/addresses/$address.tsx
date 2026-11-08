@@ -1,4 +1,5 @@
 import { isAddress } from "@repo/lib";
+import { noop } from "@tanstack/react-query";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 
 import { PageHeader } from "@/components/shared/page-header";
@@ -18,7 +19,7 @@ export const Route = createFileRoute("/(container)/mod/addresses/$address")({
   loader: async ({ context: { queryClient }, params }) => {
     await queryClient
       .query({ ...addressHistoryOptions(params.address), staleTime: "static" })
-      .catch(() => undefined);
+      .catch(noop);
   },
   head: () => generateMetadata({ title: m.mod_address_title() }),
   component: AddressPage,

@@ -15,10 +15,13 @@ export function toGridCollections(rows: SlimCollectionListOutput["collections"])
   return rows.map((collection) => mapObjektWithTag({ ...collection, id: collection.slug }));
 }
 
+/** the prefix of every artist scope's collection list */
+export const COLLECTIONS_KEY = ["collections"] as const;
+
 /** Never changes under a given artist scope, so it is fetched once and filtered in the browser. */
 export const collectionOptions = (filters?: OwnedByFilters) =>
   queryOptions({
-    queryKey: ["collections", filters],
+    queryKey: [...COLLECTIONS_KEY, filters],
     staleTime: Infinity,
     refetchOnWindowFocus: false,
     queryFn: async () => {
@@ -88,5 +91,4 @@ export const marketStatsOptions = (slug: string) =>
 export const priceHistoryOptions = (slug: string, range: PriceHistoryRange) =>
   orpc.market.priceHistory.queryOptions({
     input: { collectionSlug: slug, range },
-    staleTime: 1000 * 60 * 5,
   });

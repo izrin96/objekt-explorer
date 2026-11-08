@@ -1,8 +1,8 @@
-import { ORPCError } from "@orpc/client";
 import type { PeopleCursor } from "@repo/api/schemas/trade";
 import { keepPreviousData } from "@tanstack/react-query";
 
-import { orpc } from "@/lib/orpc";
+import { LOADER_READ_STALE_MS, orpc } from "@/lib/orpc";
+import { retryUnlessRefused } from "@/lib/orpc-error";
 
 import type { BrowseInput } from "./browse-search";
 
@@ -18,10 +18,6 @@ export const hiddenPartnersOptions = (enabled: boolean) =>
 
 /** a fresh document always refetches; this only spares the request right after hydration */
 const BROWSE_STALE_MS = 30_000;
-
-/** a refusal (the feed's rate limit) answers the same on every try, and each try counts */
-const retryUnlessRefused = (count: number, error: unknown) =>
-  !(error instanceof ORPCError && error.status < 500) && count < 2;
 
 export const peopleOptions = (input: BrowseInput) =>
   orpc.trade.people.infiniteOptions({
@@ -41,8 +37,8 @@ export const peopleOptions = (input: BrowseInput) =>
 export const tradePersonOptions = (input: { handle: string } | { userId: string }) =>
   orpc.trade.person.queryOptions({ input, staleTime: 60_000, retry: retryUnlessRefused });
 
-// 10s: long enough that Browse does not refetch what its loader just read
-export const myPostsOptions = () => orpc.trade.myPosts.queryOptions({ staleTime: 10_000 });
+export const myPostsOptions = () =>
+  orpc.trade.myPosts.queryOptions({ staleTime: LOADER_READ_STALE_MS });
 
 export const tradeBlockedOptions = () => orpc.trade.blocked.queryOptions({ staleTime: 0 });
 

@@ -11,7 +11,6 @@ export const transfersOptions = (address: string, query: TransfersParams) =>
     initialPageParam: undefined as AddressTransfersOutput["nextCursor"],
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     refetchOnWindowFocus: false,
-    staleTime: 1000 * 60 * 5,
     retry: false,
     throwOnError: true,
   });

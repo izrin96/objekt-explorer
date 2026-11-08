@@ -1,4 +1,5 @@
 import { CardsThreeIcon, DiscordLogoIcon, PlusIcon } from "@phosphor-icons/react";
+import { noop } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 
@@ -26,7 +27,7 @@ export const Route = createFileRoute("/(container)/list/")({
         ...listPreviewsOptions(user?.lists.map((list) => list.slug) ?? []),
         staleTime: "static",
       })
-      .catch(() => undefined);
+      .catch(noop);
   },
   head: () => generateMetadata({ title: m.page_titles_my_list() }),
   component: ListsPage,

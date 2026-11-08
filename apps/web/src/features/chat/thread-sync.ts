@@ -1,5 +1,5 @@
 import { OFFER_VIEWS_LIMIT } from "@repo/api/schemas/offer";
-import type { QueryClient, QueryKey } from "@tanstack/react-query";
+import { type QueryClient, type QueryKey, noop } from "@tanstack/react-query";
 
 import { appendLiveMessage, type ChatMessageEvent } from "./live-message";
 import {
@@ -111,7 +111,7 @@ export function createThreadSync(queryClient: QueryClient, port: ThreadSyncPort)
   async function appendNewer(id: number) {
     // a nudge during the first load is not lost: that page may have been read before it
     const loading = threadQuery(id);
-    if (loading?.state.fetchStatus === "fetching") await loading.promise?.catch(() => undefined);
+    if (loading?.state.fetchStatus === "fetching") await loading.promise?.catch(noop);
     if (!(await pullNewer(id))) {
       if (isShown(id)) void retryNewer(id);
       else behind.add(id);

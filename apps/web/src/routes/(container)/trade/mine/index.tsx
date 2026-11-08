@@ -1,3 +1,4 @@
+import { noop } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 
 import { MyTradesSkeleton, MyTradesView } from "@/features/offers/my-trades-view";
@@ -8,9 +9,7 @@ import { m } from "@/paraglide/messages";
 export const Route = createFileRoute("/(container)/trade/mine/")({
   loader: async ({ context: { queryClient } }) => {
     // a failed read leaves the view to show its error and retry, not the page to fail
-    await queryClient
-      .infiniteQuery({ ...mineOptions(), staleTime: "static" })
-      .catch(() => undefined);
+    await queryClient.infiniteQuery({ ...mineOptions(), staleTime: "static" }).catch(noop);
   },
   head: () => generateMetadata({ title: m.page_titles_trade_mine() }),
   component: MyTradesView,

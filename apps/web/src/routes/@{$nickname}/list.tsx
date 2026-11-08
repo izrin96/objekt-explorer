@@ -1,4 +1,4 @@
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { noop, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 
 import { ProfileLists, ProfileListsSkeleton } from "@/features/list/profile-lists";
@@ -21,7 +21,7 @@ export const Route = createFileRoute("/@{$nickname}/list")({
     // a failed preview read leaves the rows to fetch it again, not the page to fail
     await queryClient
       .query({ ...listPreviewsOptions(lists.map((list) => list.slug)), staleTime: "static" })
-      .catch(() => undefined);
+      .catch(noop);
     return profile;
   },
   head: ({ loaderData }) =>

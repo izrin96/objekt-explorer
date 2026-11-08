@@ -1,3 +1,4 @@
+import { noop } from "@tanstack/react-query";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 
 import { canOpenTab } from "@/features/moderation/staff-tabs";
@@ -15,9 +16,7 @@ export const Route = createFileRoute("/(container)/mod/messages")({
   loaderDeps: ({ search }) => ({ days: search.days }),
   loader: async ({ context: { queryClient }, deps: { days } }) => {
     // a failed read leaves the page to show the error and retry
-    await queryClient
-      .query({ ...messageTotalsOptions(days), staleTime: "static" })
-      .catch(() => undefined);
+    await queryClient.query({ ...messageTotalsOptions(days), staleTime: "static" }).catch(noop);
   },
   head: () => generateMetadata({ title: m.mod_messages_title() }),
   component: MessagesPage,

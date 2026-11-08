@@ -42,3 +42,6 @@ const getORPCClient = createIsomorphicFn()
 export const client: RouterClient<typeof router> = getORPCClient();
 
 export const orpc = createTanstackQueryUtils(client);
+
+/** The stale time of a query a loader reads: long enough that the page does not refetch it at once. */
+export const LOADER_READ_STALE_MS = 10_000;

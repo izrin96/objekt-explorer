@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { noop, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useLocation, useNavigate, useRouter } from "@tanstack/react-router";
 import { useEffect } from "react";
 
@@ -33,7 +33,7 @@ export function TradeTabs() {
 
   // the tab bar outlives each tab, so moving between tabs asks again; a fresh count is kept
   useEffect(() => {
-    if (signedIn) void queryClient.query(tabCountsOptions(true)).catch(() => undefined);
+    if (signedIn) void queryClient.query(tabCountsOptions(true)).catch(noop);
   }, [queryClient, signedIn, current]);
 
   return (

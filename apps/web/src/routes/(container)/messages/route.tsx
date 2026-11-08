@@ -1,5 +1,6 @@
 import { GearIcon } from "@phosphor-icons/react";
 import type { ChatBox } from "@repo/api/schemas/chat";
+import { noop } from "@tanstack/react-query";
 import { Link, Outlet, createFileRoute, useLocation, useParams } from "@tanstack/react-router";
 import { type ReactNode, useEffect, useRef } from "react";
 
@@ -23,7 +24,7 @@ export const Route = createFileRoute("/(container)/messages")({
     // a failed read leaves the list to show its error and retry, not the page to fail
     await queryClient
       .infiniteQuery({ ...conversationsOptions(deps.box, deps.q, deps.show), staleTime: "static" })
-      .catch(() => undefined);
+      .catch(noop);
   },
   component: MessagesLayout,
   pendingComponent: MessagesPending,

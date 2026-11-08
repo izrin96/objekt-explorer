@@ -1,3 +1,4 @@
+import { noop } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 
 import {
@@ -20,7 +21,7 @@ export const Route = createFileRoute("/(container)/mod/trades/")({
         queryClient.query({ ...trackerHealthOptions(), staleTime: "static" }),
         queryClient.query({ ...tradeTotalsOptions(days), staleTime: "static" }),
         queryClient.query({ ...tradeAttentionOptions(days), staleTime: "static" }),
-      ].map((read) => read.catch(() => undefined)),
+      ].map((read) => read.catch(noop)),
     );
   },
   head: () => generateMetadata({ title: m.mod_trades_title() }),

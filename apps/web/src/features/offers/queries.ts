@@ -1,4 +1,3 @@
-import { ORPCError } from "@orpc/client";
 import type { ChatTarget } from "@repo/api/schemas/chat";
 import type { CollectionFilters } from "@repo/api/schemas/common/filters";
 import type { CandidateCursor, HistoryCursor, PickerNarrowing } from "@repo/api/schemas/offer";
@@ -6,15 +5,11 @@ import type { ValidObjekt } from "@repo/lib/types/objekt";
 import type { QueryClient } from "@tanstack/react-query";
 
 import type { OfferMatches } from "@/features/offers/builder/types";
-import { orpc } from "@/lib/orpc";
-import { isNotFound } from "@/lib/orpc-error";
+import { LOADER_READ_STALE_MS, orpc } from "@/lib/orpc";
+import { isNotFound, retryUnlessRefused } from "@/lib/orpc-error";
 import { pollUnlessLive } from "@/stores/user-socket";
 
 export type OfferAddress = { conversationId: number } | { target: ChatTarget };
-
-/** A refusal answers the same on every try. */
-const retryUnlessRefused = (count: number, error: unknown) =>
-  !(error instanceof ORPCError && error.status < 500) && count < 2;
 
 /** What the picker narrows a side to; empty arrays mean no filter. */
 export type PickerFilters = Pick<
@@ -123,16 +118,14 @@ export const mineOptions = () =>
     input: (cursor: HistoryCursor | undefined) => ({ cursor }),
     initialPageParam: undefined as HistoryCursor | undefined,
     getNextPageParam: (page) => page.history.nextCursor ?? undefined,
-    // long enough that the page does not refetch what its loader just read
-    staleTime: 10_000,
+    staleTime: LOADER_READ_STALE_MS,
   });
 
 /** A trade changes on chain with no message, so it polls while the live socket is down. */
 export const tradeOptions = (tradeId: number, live = true) =>
   orpc.offer.trade.queryOptions({
     input: { tradeId },
-    // long enough that the page does not refetch what its loader just read
-    staleTime: 10_000,
+    staleTime: LOADER_READ_STALE_MS,
     refetchOnWindowFocus: true,
     // no event fires when the indexer falls behind or catches up, so an in-progress trade polls
     refetchInterval: (query) =>

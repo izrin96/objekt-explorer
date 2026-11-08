@@ -12,7 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toastManager } from "@/components/ui/toast";
 import { Toggle } from "@/components/ui/toggle";
 import { When } from "@/features/moderation/console/when";
-import { collectionOptions } from "@/features/objekt/queries";
+import { COLLECTIONS_KEY, collectionOptions } from "@/features/objekt/queries";
 import { orpc } from "@/lib/orpc";
 import { refusalText } from "@/lib/refusal";
 import { cn } from "@/lib/utils";
@@ -46,7 +46,7 @@ export function CollectionsView() {
     Promise.all([
       queryClient.invalidateQueries({ queryKey: collectionOverridesOptions().queryKey }),
       // every artist scope: the browser revalidates each against the bumped date
-      queryClient.invalidateQueries({ queryKey: ["collections"] }),
+      queryClient.invalidateQueries({ queryKey: COLLECTIONS_KEY }),
     ]);
 
   const save = useMutation(

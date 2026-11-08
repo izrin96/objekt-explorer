@@ -1,3 +1,4 @@
+import { noop } from "@tanstack/react-query";
 import { Outlet, createFileRoute, notFound, useParams } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 
@@ -14,7 +15,7 @@ export const Route = createFileRoute("/(container)/mod/reports")({
   },
   loader: async ({ context: { queryClient } }) => {
     // a failed read leaves the queue to show its error and retry, not the page to fail
-    await queryClient.query({ ...queueOptions(), staleTime: "static" }).catch(() => undefined);
+    await queryClient.query({ ...queueOptions(), staleTime: "static" }).catch(noop);
   },
   component: ConsoleLayout,
   pendingComponent: ConsolePending,

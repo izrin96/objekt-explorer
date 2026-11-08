@@ -6,7 +6,7 @@ import {
 } from "@repo/api/schemas/chat";
 import { hashKey, type QueryClient } from "@tanstack/react-query";
 
-import { client, orpc } from "@/lib/orpc";
+import { LOADER_READ_STALE_MS, client, orpc } from "@/lib/orpc";
 import { isNotFound } from "@/lib/orpc-error";
 import { markRepliesUnsent } from "@/stores/chat-draft";
 import { pollUnlessLive } from "@/stores/user-socket";
@@ -59,8 +59,7 @@ export const conversationsOptions = (box: ChatBox, q?: string, show: InboxShow =
     }),
     initialPageParam: undefined as ConversationCursor | undefined,
     getNextPageParam: (page) => page.nextCursor ?? undefined,
-    // long enough that the page does not refetch what its loader just read
-    staleTime: 10_000,
+    staleTime: LOADER_READ_STALE_MS,
     meta: { box },
     // typing a search keeps the list on screen until the new results arrive; another box does not
     placeholderData: (previous, previousQuery) =>
