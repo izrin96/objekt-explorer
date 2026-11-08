@@ -6,6 +6,7 @@ import {
   fitMemberRun,
   insideDrop,
   mergeGridRanges,
+  rosterComplete,
 } from "./drop-grid";
 
 const runs = (...pairs: [number, number][]) =>
@@ -327,5 +328,25 @@ describe("fitMemberRun", () => {
       { start: 1000, end: 1049 },
       { start: 1051, end: 1100 },
     ]);
+  });
+});
+
+describe("rosterComplete", () => {
+  test("a drop missing a member that hasn't minted is not complete", () => {
+    // A and C minted, B (between them) not yet: the two fit a wrong grid
+    expect(rosterComplete(2, [3, 3])).toBe(false);
+    expect(rosterComplete(23, [24, 12, 24])).toBe(false);
+  });
+
+  test("a drop with every member minted is complete", () => {
+    expect(rosterComplete(24, [24, 12, 24])).toBe(true);
+  });
+
+  test("a subunit drop never is", () => {
+    expect(rosterComplete(12, [24, 24])).toBe(false);
+  });
+
+  test("the first A drop of a season, with nothing to compare, never is", () => {
+    expect(rosterComplete(24, [])).toBe(false);
   });
 });

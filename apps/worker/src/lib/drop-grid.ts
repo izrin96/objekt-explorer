@@ -184,3 +184,14 @@ export function mergeGridRanges(
   }
   return [...kept, ...slotRanges].sort((a, b) => a.start - b.start);
 }
+
+/**
+ * Whether a drop's minted members can be its whole roster: at least as many
+ * as the largest other A drop of its season and artist. A member yet to mint
+ * in the middle of a drop can leave the rest fitting a wrong grid, and the
+ * start pin can't see it. With no other drop to compare, it is never complete.
+ * A subunit drop never is either, so it waits as an unsettled drop would.
+ */
+export function rosterComplete(minted: number, otherDropSizes: number[]): boolean {
+  return otherDropSizes.length > 0 && minted >= Math.max(...otherDropSizes);
+}

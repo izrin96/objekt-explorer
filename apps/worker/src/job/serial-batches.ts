@@ -3,7 +3,7 @@ import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
 import { slugifyObjekt } from "@repo/lib";
 import { isGridDrop } from "@repo/lib/serial";
-import { and, between, eq, inArray, isNotNull, isNull, like, lte, or, sql } from "drizzle-orm";
+import { and, between, eq, inArray, isNotNull, isNull, like, lte, ne, or, sql } from "drizzle-orm";
 import { FetchError } from "ofetch";
 
 import {
@@ -13,6 +13,7 @@ import {
   fitMemberRun,
   MAX_SLOT,
   mergeGridRanges,
+  rosterComplete,
 } from "@/lib/drop-grid";
 import type { Logger } from "@/lib/log";
 import { preBlockSeasons } from "@/lib/serial-constants";
@@ -279,11 +280,19 @@ export { isGridDrop };
  * batches while they are being rewritten. Null when fewer than two members
  * have minted. `pinned`: the token right before the start is another
  * collection's minted token; a first member yet to mint leaves it unminted.
+ * `complete`: as many members minted as the largest other A drop of the
+ * season and artist (`rosterComplete`). A fit marks or settles a drop only
+ * when both hold.
  */
 async function loadDrop(
   key: DropKey,
   override?: { collectionId: string; batches: Batch[] },
-): Promise<{ members: DropMember[]; region: DropRegion; pinned: boolean } | null> {
+): Promise<{
+  members: DropMember[];
+  region: DropRegion;
+  pinned: boolean;
+  complete: boolean;
+} | null> {
   const rows = await indexer
     .select({ id: collections.id, slug: collections.slug, batches: collections.serialBatches })
     .from(collections)
@@ -318,10 +327,29 @@ async function loadDrop(
     .map((o) => parseInt(o.id))
     .sort((a, b) => a - b);
 
+  // collection rows appear at a member's first mint, so a row count is a minted count
+  const others = await indexer
+    .select({ size: sql<number>`count(*)::int` })
+    .from(collections)
+    .where(
+      and(
+        eq(collections.season, key.season),
+        eq(collections.artist, key.artist),
+        eq(collections.onOffline, "offline"),
+        like(collections.collectionNo, "%A"),
+        ne(collections.collectionNo, key.collectionNo),
+      ),
+    )
+    .groupBy(collections.collectionNo);
+
   return {
     members,
     region: { start, memberTokens: members.map((m) => m.tokens), foreign, readUntil },
     pinned: before !== undefined && isForeign(before),
+    complete: rosterComplete(
+      members.length,
+      others.map((o) => o.size),
+    ),
   };
 }
 
@@ -392,8 +420,8 @@ export function dropSpanMemo(): DropSpanOf {
  * member run fits, else the batches unchanged. Runs after refineBatches on every
  * path that stores ranges, so a rediscovery never undoes a grid. `dropSpanOf`
  * lets a caller that checks many collections share drop fits. `fitted`: the
- * batches come from a start-pinned drop fit or a run fit, so the collection
- * may carry a fit mark.
+ * batches come from a run fit, or a drop fit that is start-pinned with its
+ * whole roster minted, so the collection may carry a fit mark.
  */
 async function applyGrids(
   collectionId: string,
@@ -425,7 +453,7 @@ async function applyGrids(
         { start: drop.region.start, end: dropGrid.end },
         drop.members[i]!.tokens,
       ),
-      fitted: drop.pinned,
+      fitted: drop.pinned && drop.complete,
     };
   }
 

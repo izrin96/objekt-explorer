@@ -202,7 +202,8 @@ export async function populateSerialOffline() {
 
 /**
  * Fit every recent A drop that still has an unmarked collection, and on a
- * start-pinned fit write its slots and serials and mark it. Without this a
+ * start-pinned fit with its whole roster minted write its slots and serials
+ * and mark it. Without this a
  * drop closed by a foreign mint after its last member's waits for a member's
  * rediscovery to pick up its grid.
  */
@@ -256,8 +257,9 @@ async function settleOpenDrops() {
 /** Serials written when the drop settled, or null when it did not. */
 async function settleDrop(name: string, key: DropKey) {
   const { drop, grid } = await fitDrop(key);
-  if (!drop || !grid || !drop.pinned) {
-    offlineLog.debug(`${name}: open drop not settled (${!grid ? "no fit" : "not start-pinned"})`);
+  if (!drop || !grid || !drop.pinned || !drop.complete) {
+    const why = !grid ? "no fit" : !drop.pinned ? "not start-pinned" : "members still to mint";
+    offlineLog.debug(`${name}: open drop not settled (${why})`);
     return null;
   }
   const plans = await planGridWrites(drop.members, drop.region.start, grid, {

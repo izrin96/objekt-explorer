@@ -16,8 +16,9 @@
  * their serials, one transaction per drop, then does the same for the fitted
  * runs, one transaction per run. It also sets `grid_fitted_at` on every
  * collection of a fitted run and of a fitted drop whose start is pinned (the
- * token before it is another collection's mint); a fitted drop that is not
- * start-pinned is reported and left unmarked.
+ * token before it is another collection's mint) and whose whole roster has
+ * minted (as many members as the season's largest other A drop of the artist);
+ * any other fitted drop is reported and left unmarked.
  *
  *   bun run --env-file=../../.env src/script/drop-grid.ts
  *   bun run --env-file=../../.env src/script/drop-grid.ts Cream02
@@ -107,11 +108,11 @@ const totals = {
   members: 0,
 };
 const unchecked: string[] = [];
-const unpinnedDrops: string[] = [];
+const unmarkedDrops: string[] = [];
 
 /**
  * Report one fitted drop or run and, under APPLY, write it and mark
- * `markIds` (empty for a drop that is not start-pinned).
+ * `markIds`; `unmarked` says why a drop marks none.
  */
 async function review(
   name: string,
@@ -119,6 +120,7 @@ async function review(
   start: number,
   grid: DropGrid,
   markIds: string[],
+  unmarked?: string,
 ) {
   const span = { start, end: grid.end };
   const plans = await planGridWrites(members, start, grid);
@@ -160,10 +162,10 @@ async function review(
   totals.updates += changes;
   totals.members += writes.length;
   if (known === 0 && changes > 0) unchecked.push(name);
-  if (markIds.length === 0) unpinnedDrops.push(name);
+  if (unmarked) unmarkedDrops.push(`${name} (${unmarked})`);
 
   console.log(
-    `[drop-grid] ${name}: fitted${markIds.length === 0 ? " (not start-pinned)" : ""}, slot ${grid.slot}, ${grid.separators} separator(s), tokens ${span.start}-${span.end} | known ${exactBefore}→${exactAfter}/${known} | ${writes.length} member(s) with new ranges, ${changes} serial(s) to change`,
+    `[drop-grid] ${name}: fitted${unmarked ? ` (${unmarked})` : ""}, slot ${grid.slot}, ${grid.separators} separator(s), tokens ${span.start}-${span.end} | known ${exactBefore}→${exactAfter}/${known} | ${writes.length} member(s) with new ranges, ${changes} serial(s) to change`,
   );
   for (const line of lines) console.log(line);
 
@@ -185,12 +187,18 @@ for (const key of drops) {
     continue;
   }
   totals.fitted++;
+  const unmarked = !drop.pinned
+    ? "not start-pinned"
+    : !drop.complete
+      ? "members still to mint"
+      : undefined;
   await review(
     name,
     drop.members,
     drop.region.start,
     grid,
-    drop.pinned ? drop.members.map((m) => m.id) : [],
+    unmarked ? [] : drop.members.map((m) => m.id),
+    unmarked,
   );
 }
 
@@ -253,10 +261,8 @@ console.table([
     [APPLY ? "serials updated" : "serials to update"]: totals.updates,
   },
 ]);
-if (unpinnedDrops.length > 0) {
-  console.log(
-    `[drop-grid] fitted but not start-pinned, left unmarked: ${unpinnedDrops.join("; ")}`,
-  );
+if (unmarkedDrops.length > 0) {
+  console.log(`[drop-grid] fitted but left unmarked: ${unmarkedDrops.join("; ")}`);
 }
 if (unchecked.length > 0) {
   console.log(`[drop-grid] fitted with no known serial to check: ${unchecked.join("; ")}`);

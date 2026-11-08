@@ -45,6 +45,10 @@ A drop is **start-pinned** when the token right before its start is a minted tok
 
 The pin gates only the mark and the open-drop step, never `fitDropGrid` itself. Atom02 350A is fitted with an unminted token before its start: putting the pin into the grid would send its ranges back to the discovered ones. It's old, so it needs no mark. `loadDrop` returns `pinned`, reading the owner of `start - 1` with its region, as `loadMemberRuns` does for runs.
 
+### A roster check beside the pin
+
+A review after the deploy showed the pin only catches a missing first member. When a middle member has not minted, the minted members can fit a single wrong slot size (a 3-member drop with B missing fits slot 150 for A and C instead of 100), and the open-drop step would write it to every member and mark them. So a drop is also required to be roster-complete: at least as many minted members as the largest other A drop of its season and artist, counting collection rows, which appear at a member's first mint. The season's own drops are the reference because rosters change between seasons (idntt went 7, 20, 15). A drop with no sibling in its season, and a subunit drop, never pass; they keep their discovered or rediscovered ranges, carry no mark and read "at least" until they are 7 days old, which is the safe failure. Like the pin, the check gates only the mark and the open-drop step, never `fitDropGrid`. A season whose only other A drops are subunits can still pass a full drop with a member missing; no such season exists today.
+
 ### An open-drop step in the populate job
 
 `populateSerialOffline` gains a step before the per-collection loop:
