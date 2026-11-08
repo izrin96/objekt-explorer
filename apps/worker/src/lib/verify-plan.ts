@@ -10,12 +10,6 @@ export const PROBE_SCOPES: readonly ProbeScope[] = ["none", "recent", "all"];
 
 const RECENT_MS = 8 * 7 * 24 * 60 * 60 * 1000;
 
-/** The first Monday of a month probes everything, other Mondays recent collections, other days nothing. UTC, so the container's timezone never moves it. */
-export function probeScopeFor(date: Date): ProbeScope {
-  if (date.getUTCDay() !== 1) return "none";
-  return date.getUTCDate() <= 7 ? "all" : "recent";
-}
-
 /** A collection whose newest mint is at most 8 weeks old can still drift. */
 export function isRecent(newestMintedAt: number, now: number): boolean {
   return now - newestMintedAt <= RECENT_MS;

@@ -17,11 +17,10 @@ import { snapshotPriceHistory } from "./job/snapshot-price-history";
 import { runTradeVerifier, watchVerifierTriggers } from "./job/trade-verifier";
 import { relayTransfers } from "./job/transfers-relay";
 import { updateCurrencyRates } from "./job/update-currency-rates";
-import { verifyBatchBoundaries } from "./job/verify-batch-boundaries";
+import { verifyBatchBoundaries, verifyRecentDrift } from "./job/verify-batch-boundaries";
 import { sendWantAlerts } from "./job/want-alerts";
 import { log } from "./lib/log";
 import { releaseHeldLocks, withRedisLock } from "./lib/redis-lock";
-import { probeScopeFor } from "./lib/verify-plan";
 
 const workerLog = log("worker");
 const verifierLog = log("verifier");
@@ -35,13 +34,13 @@ const JOB_LOCK = { ttlMs: 5 * 60 * 1000, refreshMs: 60 * 1000 };
 // wraps a job so a failure is logged instead of crashing the worker (an uncaught rejection in a
 // cron callback would take the process down). `tag` is the job's log tag and lock name.
 // `lock: false` is for a job that takes its own lock.
-function safeRun(tag: string, fn: () => Promise<void>, { lock = true } = {}) {
+function safeRun(tag: string, fn: () => Promise<void>, { lock = true, warnOnSkip = false } = {}) {
   const logger = log(tag);
   return async () => {
     try {
       if (!lock) return await fn();
       const ran = await withRedisLock(`worker:lock:${tag}`, { ...JOB_LOCK, label: tag }, fn);
-      if (!ran) logger.debug("Another run holds the lock; skipped");
+      if (!ran) (warnOnSkip ? logger.warn : logger.debug)("Another run holds the lock; skipped");
     } catch (error) {
       logger.error("Job failed:", error);
     }
@@ -97,14 +96,24 @@ if (indexerWrites) {
   startupRuns.push(runDrain);
   crons.push(cron("*/2 * * * *", runDrain));
 
-  // daily boundary-drift check for un-anchored offline serial batches: indexer only on most days,
-  // Cosmo probes on Mondays (probeScopeFor). No startup run, so a deploy never adds a probe pass.
-  // It rewrites the same serials as populateSerialOffline, so it takes that job's lock, off that
-  // job's 5-minute grid so the two don't race for it in the same minute.
+  // boundary-drift checks for un-anchored offline serial batches, indexer only. Every 15 minutes:
+  // only collections whose ranges hold another collection's mint from the last 24 hours; a skip
+  // warns, since populate outlasting a pass during a busy drop is when drift matters most.
+  // Weekly at 19:08 UTC Sunday (03:08 Monday in Malaysia): every collection, as a backstop, in the
+  // quietest hour since it holds the lock ~10 minutes, and off the 15-minute pass's minutes so it
+  // never loses the lock to one; its skip warns too. No startup run. Both rewrite the same serials
+  // as populateSerialOffline, so they take that job's lock, off its 5-minute grid so they don't
+  // race for it in the same minute.
   crons.push(
     cron(
-      "2 3 * * *",
-      safeRun("serial-offline", () => verifyBatchBoundaries(probeScopeFor(new Date()))),
+      "2,17,32,47 * * * *",
+      safeRun("serial-offline", () => verifyRecentDrift(), { warnOnSkip: true }),
+    ),
+  );
+  crons.push(
+    cron(
+      "8 19 * * 0",
+      safeRun("serial-offline", () => verifyBatchBoundaries("none"), { warnOnSkip: true }),
     ),
   );
 

@@ -1,25 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { type BatchEdges, isRecent, judgeEdges, probeScopeFor } from "./verify-plan";
-
-describe("probeScopeFor", () => {
-  test("the first Monday of the month probes all", () => {
-    expect(probeScopeFor(new Date("2026-11-02T03:02:00Z"))).toBe("all");
-  });
-
-  test("the second Monday probes recent collections", () => {
-    expect(probeScopeFor(new Date("2026-11-09T03:02:00Z"))).toBe("recent");
-  });
-
-  test("a Sunday probes nothing", () => {
-    expect(probeScopeFor(new Date("2026-11-08T03:02:00Z"))).toBe("none");
-  });
-
-  test("follows UTC when the local day is still Sunday", () => {
-    // Sunday 22:00 at UTC-5 is Monday 03:00 UTC
-    expect(probeScopeFor(new Date("2026-11-01T22:00:00-05:00"))).toBe("all");
-  });
-});
+import { type BatchEdges, isRecent, judgeEdges } from "./verify-plan";
 
 describe("isRecent", () => {
   const now = Date.parse("2026-11-06T00:00:00Z");
