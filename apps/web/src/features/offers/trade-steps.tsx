@@ -2,7 +2,7 @@ import type { TradeView } from "@repo/api/schemas/offer";
 import { useHydrated } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 
-import { TONE_INK, TONE_SOLID, type Tone } from "@/lib/tone";
+import { STEP_TONE, TONE_INK, TONE_SOLID, type Tone } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
@@ -16,14 +16,7 @@ type Mark = "done" | "todo" | Tone;
 function marks(status: TradeView["status"], kind: StepKind) {
   switch (status) {
     case "in_progress": {
-      const transfers =
-        kind === "youDecide" ||
-        kind === "theyDecide" ||
-        kind === "theyAskCancel" ||
-        kind === "youAskCancel"
-          ? "warning"
-          : "progress";
-      return { marks: ["done", "done", transfers, "todo"] as Mark[], current: 2 };
+      return { marks: ["done", "done", STEP_TONE[kind], "todo"] as Mark[], current: 2 };
     }
     case "completed":
       return { marks: ["success", "success", "success", "success"] as Mark[], current: 3 };
