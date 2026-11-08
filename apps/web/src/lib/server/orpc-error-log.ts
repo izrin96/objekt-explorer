@@ -44,6 +44,8 @@ export function logORPCError(error: unknown, request: HandlerRequest) {
   // a refusal (a signed-out poll's 401, say) is one line, not a stack with minified source
   if (isExpectedError(error)) {
     const { status, code } = error as ORPCError<string, unknown>;
+    // a stale tab or an old link asks for what was deleted, which tells nothing worth a line
+    if (code === "NOT_FOUND") return;
     console.warn("ORPC refused:", where, status, code, { ua });
     return;
   }
